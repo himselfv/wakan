@@ -1,0 +1,5 @@
+- JLPT
+- links from chardetails
+- clipboard viewer 800x600
+- radicals display only
+- dblclk on radical on details

@@ -1,0 +1,614 @@
+UNIHAN DESCRIPTION:
+
+#
+#	Name: Unihan database
+#	Unicode version: 3.2.0
+#	Table version: 1.1
+#	Date: 15 March 2002
+#
+#	Copyright (c) 1996-2002 Unicode, Inc. All Rights reserved.
+#
+#	This file is provided as-is by Unicode, Inc. (The Unicode Consortium).
+#	No claims are made as to fitness for any particular purpose. No
+#	warranties of any kind are expressed or implied. The recipient
+#	agrees to determine applicability of information provided. If this
+#	file has been provided on magnetic media by Unicode, Inc., the sole
+#	remedy for any claim will be exchange of defective media within 90
+#	days of receipt.
+#
+#	Recipient is granted the right to make copies in any form for
+#	internal distribution and to freely use the information supplied
+#	in the creation of products supporting Unicode. Unicode, Inc.
+#	specifically excludes the right to re-distribute this file directly
+#	to third parties or other organizations whether for profit or not.
+#
+#	In other words: Don't put this file on the Internet. People who want to get it
+#	over the Internet should do so directly from ftp://ftp.unicode.org. They
+#	can therefore be assured of getting the most recent and accurate version.
+#	And don't put it on CD-ROMs.
+#
+#	Format information:
+#
+#	Each line of this file consists of three tab-separated fields.
+#	The first is the Unicode scalar value as U+[x]xxxx (that is, there are
+#		either four or five hex digits)
+#	The second is a tag indicating the type of information in the third field
+#	The third is the line's value (in UTF-8)
+#
+#	The tags and their formats are as follows (in alphabetical order):
+#	
+#	kAccountingNumeric
+#		The value of the character when used in the writing of accounting numerals.
+#	kAlternateKangXi
+#		An alternate possible position for the character in the KangXi dictionary
+#	kAlternateMorohashi
+#		An alternate possible position for the character in the Morohashi dictionary
+#	kBigFive
+#		The Big Five mapping for this character in hex; note that this does *not* cover
+#			any of the Big Five extensions in common use, including the ETEN extensions.
+#	kCCCII
+#		The CCCII mapping for this character in hex
+#	kCNS1986
+#		The CNS 11643-1986 mapping for this character in hex
+#	kCNS1992
+#		The CNS 11643-1992 mapping for this character in hex
+#	kCangjie*
+#		The cangjie input code for the character.  This incorporates data from
+#			the file cangjie-table.b5 by Christian Wittern
+#	kCantonese
+#		The Cantonese pronunciation(s) for this character
+#		The romanization used is a modified version of the Yale romanization, 
+#			modified as follows:
+#		(1) No effort is made to distinguish between Yale's "high level" and
+#			"high falling" tones, which are not universally reflected in all
+#			Cantonese romanizations and which appear to be no longer
+#			distinctive in Hong Kong Cantonese. As a general rule, syllables 
+#			which end with a stop (p, t, or k) have the "high level" tone; 
+#			but there are numerous exceptions.
+#		(2) Digits 1-6 are used to indicate the tones --
+#				1 == High level/high falling
+#				2 == High rising
+#				3 == Middle level
+#				4 == Low falling
+#				5 == Low rising
+#				6 == Low level
+#		(3) Accordingly, the letter "H" is *not* used as a tone indicator
+#		Cantonese pronunciations are sorted alphabetically, not in order of
+#		frequency
+#	kCihaiT*
+#		The position of this character in the Cihai (辭海) dictionary, single
+#			volume edition, published in Hong Kong by the Zhonghua Bookstore,
+#			1983 (reprint of the 1947 edition), ISBN 962-231-005-2.
+#		The position is indicated by a decimal number.  The digits to the left
+#			of the decimal are the page number.  The first digit after the
+#			decimal is the row on the page, and the remaining two digits after
+#			the decimal are the position on the row.  
+#	kCompatibilityVariant*
+#		The compatibility decomposition for this ideograph, derived from the
+#			UnicodeData.txt file.
+#	kCowles*
+#		The index of this character in Roy T. Cowles, _A Pocket Dictionary
+#			of Cantonese_, Hong Kong: University Press, 1999.
+#	kDaeJaweon
+#		The position of this character in the Dae Jaweon (Korean) dictionary
+#			used in the four-dictionary sorting algorithm. The position is
+#			in the form "page.position" with the final digit in the position
+#			being "0" for characters actually in the dictionary and "1" for
+#			characters not found in the dictionary and assigned a "virtual"
+#			position in the dictionary.
+#		Thus, "1187.060" indicates the sixth character on page 1187. A character
+#			not in this dictionary but assigned a position between the 6th and
+#			7th characters on page 1187 for sorting purposes would have the
+#			code "1187.061"
+#		The edition used is the first edition, published in Seoul by Samseong
+#			Publishing Co., Ltd., 1988.
+#	kDefinition
+#		An English definition for this character
+#	kEACC
+#		The EACC mapping for this character in hex
+#	kFenn*
+#		Data on the character from _Fenn's Chinese-English Pocket Dictionary_
+#			by Courtenay H. Fenn, Cambridge, Mass.: Harvard University Press,
+#			1942.  The data here consists of a decimal number followed by a
+#			letter A through K.  The decimal number gives the Soothill number
+#			for the character's phonetic, and the letter is a rough frequency
+#			indication, with A indicating the 500 most common ideographs, B
+#			the next five hundred, and so on.  
+#	kFrequency
+#		A rough fequency measurement for the character based on analysis of Chinese
+#			USENET postings
+#	kGB0
+#		The GB 2312-80 mapping for this character in ku/ten form
+#	kGB1
+#		The GB 12345-90 mapping for this character in ku/ten form
+#	kGB3
+#		The GB 7589-87 mapping for this character in ku/ten form
+#	kGB5
+#		The GB 7590-87 mapping for this character in ku/ten form
+#	kGB7
+#		The "General Use Characters for Modern Chinese" mapping for this character
+#	kGB8
+#		The GB 8565-89 mapping for this character in ku/ten form
+#	kGradeLevel*
+#		The grade in the Hong Kong school system by which a student is expected to know
+#			the character.
+#	kHanYu
+#		The position of this character in the Hanyu Da Zidian (HDZ) 
+#			Chinese character dictionary (bibliographic information below).
+#		The character references are given in the form "ABCDE.XYZ", in 
+#			which: "A" is the volume number [1..8]; "BCDE" is the 
+#			zero-padded page number [0001..4809]; "XY" is the zero-padded 
+#			number of the character on the page [01..32]; "Z" is "0" for a 
+#			character actually in the dictionary, and greater than 0 for a 
+#			character assigned a "virtual" position in the dictionary. For 
+#			example, 53044.060 indicates an actual HDZ character, the 6th 
+#			character on Page 3,044 of Volume 5 (i.e. [U+269a4]). Note that 
+#			the Volume 8 "BCDE" references are in the range [0008..0044] 
+#			inclusive, referring to the pagination of the "Appendix of 
+#			Addendum" at the end of that volume (beginning after p. 5746).
+#		
+#		Release information:
+#		
+#		This data set contains a total of 56097 records, 54728 of which 
+#			are actual HDZ character references (positions are given for all
+#			HDZ head entries, including source-internal unifications), and 
+#			1369 of which are virtual character positions (see note below). 
+#			All HDZ references in this data set are unique. Because of IRG 
+#			source-internal unifications, a given UCS-4 Scalar Value (USV) 
+#			may have more than one HDZ reference. Source-internal 
+#			unifications are of two types: (1) unifications of graphical 
+#			variants; (2) unifications of duplicate head entries.
+#		The proofing of all references was done primarily on the basis 
+#			of cross-checks of three versions of the reference data: (1) the
+#			original print source; (2) the "kIRGHanyuDaZidian" field of 
+#			Unihan.txt (release 3.1.1d1); (3) "HDZ.txt", originally produced
+#			and proofed for Academia Sinica's Institute of Information 
+#			Technology (Document Processing Laboratory). In addition, the 
+#			data was checked against the "kHanYu" and "kAlternateHanYu" 
+#			fields of Unihan.txt (release 3.1.1d1), which the present data 
+#			set supersedes.
+#		String value, string length, compound key, field count, and page
+#			total validations were all performed. Altogether, 578 omissions/
+#			errors in source (2) were identified/corrected. Any remaining 
+#			errors will likely relate to virtual positions, or to the 
+#			ordering of actual characters within a given page. It is 
+#			unlikely that errors across page breaks remain. Possible future 
+#			deunifications of source-internal unifications will necessitate 
+#			update of USV for some references. Under no circumstances should
+#			the source-internal unification (duplicate USV) mappings be 
+#			removed from this data set.
+#		Note: Source (3) contributed only actual HDZ character 
+#			references to the proofing process, while source (2) contributed
+#			all virtual positions. It seems that the compilers of source (2) 
+#			usually assigned virtual positions based on stroke count, though
+#			occasionally the virtual position brings the virtual character 
+#			together with the actual HDZ character of which it is a variant,
+#			without regard to actual stroke count.
+#		
+#		Bibliographic information for the print source:
+#		
+#		<<Hanyu Da Zidian>> ['Great Chinese Character Dictionary' (in 8 
+#			Volumes)]. XU Zhongshu (Editor in Chief). Wuhan, Hubei Province 
+#			(PRC): Hubei and Sichuan Dictionary Publishing Collectives, 1986
+#			-1990. ISBN: 7-5403-0030-2/H.16.
+#		《�-�語大字典》。�-力䪥个䪪�-�徐中舒个編�-�
+#			�-��-�語大字典工作委員會�-�。武�-��-�四川辭書
+#			�|版社�-��|�北辭書�|版社,1986-1990. ISBN: 7-5403-0030 2/H.16.
+#	kHKGlyph*
+#		The index of the character in 常用字字形表 (�|�零零零�|+䪮訂本), 
+#			香港: 香港教�-學院, 2000, ISBN 962-949-040-4.  This publication
+#			gives the "proper" shapes for characters as used in the Hong Kong school
+#			system.  
+#	kHKSCS
+#		Mappings to the Big Five extended code points used for the Hong Kong
+#			Supplementary Character Set
+#	kIBMJapan
+#		The IBM Japanese mapping for this character in hex
+#	kIRG_GSource
+#		The IRG "G" source mapping for this character in hex. The IRG "G" source
+#			consists of data from the following national standards, publications, and lists
+#			from the People's Republic of China and Singapore. The versions of the
+#			standards used are those provided by the PRC to the IRG and may not always
+#			reflect published versions of the standards generally available.
+#			4K	Siku Quanshu
+#			BK	Chinese Encyclopedia
+#			CH	The Ci Hai (PRC edition)
+#			CY	The Ci Yuan
+#			FZ and FZ_BK	Founder Press System
+#			G0	GB2312-80
+#			G1	GB12345-90 with 58 Hong Kong and 92 Korean "Idu" characters
+#			G3	GB7589-87 unsimplified forms
+#			G5	GB7590-87 unsimplified forms
+#			G7	General Purpose Hanzi List for Modern Chinese Language, and
+#				General List of Simplified Hanzi
+#			GS	Singapore characters
+#			G8	GB8685-88
+#			GE	GB16500-95
+#			HC	The Hanyu Da Cidian
+#			HZ	The Hanyu Da Zidian
+#			KX	The KangXi dictionary
+#	kIRG_HSource
+#		The IRG "H" source mapping for this character in hex. The IRG "H" source
+#			consists of data from the Hong Kong Supplementary Characer Set.
+#	kIRG_JSource
+#		The IRG "J" source mapping for this character in hex. The IRG "J" source
+#			consists of data from the following national standards and lists from Japan.
+#			J0	JIS X 0208-1990
+#			J1	JIS X 0212-1990
+#			J3	JIS X 0213-2000
+#			J4	JIS X 0213-2000
+#			JA	Unified Japanese IT Vendors Contemporary Ideographs, 1993
+#	kIRG_KSource
+#		The IRG "K" source mapping for this character in hex. The IRG "K" source
+#			consists of data from the following national standards and lists from 
+#			the Republic of Korea (South Korea).
+#			K0	KS C 5601-1987
+#			K1	KS C 5657-1991
+#			K2	PKS C 5700-1 1994
+#			K3	PKS C 5700-2 1994
+#			K4	PKS 5700-3:1998
+#	kIRG_KPSource
+#		The IRG "KP" source mapping for this character in hex. The IRG "KP" source
+#			consists of data from the following national standards and lists from the
+#			Democratic People's Republic of Korea (North Korea).
+#			KP0	KPS 9566-97
+#			KP1	KPS 10721-2000
+#	kIRG_TSource
+#		The IRG "T" source mapping for this character in hex. The IRG "T" source
+#			consists of data from the following national standards and lists from the
+#			Republic of China (Taiwan).
+#			T1	CNS 11643-1992, plane 1
+#			T2	CNS 11643-1992, plane 2
+#			T3	CNS 11643-1992, plane 3 (with some additional characters)
+#			T4	CNS 11643-1992, plane 4
+#			T5	CNS 11643-1992, plane 5
+#			T6	CNS 11643-1992, plane 6
+#			T7	CNS 11643-1992, plane 7
+#			TF	CNS 11643-1992, plane 15
+#	kIRG_VSource
+#		The IRG "V" source mapping for this character in hex. The IRG "V" source
+#		consists of data from the following national standards and lists from Vietnam.
+#			V0	TCVN 5773:1993
+#			V1	VHN 01:1998
+#			V2	VHN 02:1998
+#			V3	TCVN 6056:1995
+#	kIRGDaeJaweon
+#		The position of this character in the Dae Jaweon (Korean) dictionary
+#			used in the four-dictionary sorting algorithm. The position is
+#			in the form "page.position" with the final digit in the position
+#			being "0" for characters actually in the dictionary and "1" for
+#			characters not found in the dictionary and assigned a "virtual"
+#			position in the dictionary.
+#		Thus, "1187.060" indicates the sixth character on page 1187. A character
+#			not in this dictionary but assigned a position between the 6th and
+#			7th characters on page 1187 for sorting purposes would have the
+#			code "1187.061"
+#		This field represents the official position of the character within the
+#			Dae Jaweon dictionary as used by the IRG in the four-dictionary sorting
+#			algorithm.
+#		The edition used is the first edition, published in Seoul by Samseong
+#			Publishing Co., Ltd., 1988.
+#	kIRGDaiKanwaZiten
+#		The index of this character in the Dae Kanwa Ziten, aka Morohashi dictionary
+#			(Japanese) used in the four-dictionary sorting algorithm.
+#		This field represents the official position of the character within the
+#			DaiKanwa dictionary as used by the IRG in the four-dictionary sorting
+#			algorithm.
+#		The edition used is the revised edition, published in Tokyo by Taishuukan Shoten,
+#			1986.
+#	kIRGHanyuDaZidian
+#		The position of this character in the Hanyu Da Zidian (PRC) dictionary
+#			used in the four-dictionary sorting algorithm. The position is
+#			in the form "volume page.position" with the final digit in the position
+#			being "0" for characters actually in the dictionary and "1" for
+#			characters not found in the dictionary and assigned a "virtual"
+#			position in the dictionary.
+#		Thus, "32264.080" indicates the eighth character on page 2264 in volume 3.
+#			A character not in this dictionary but assigned a position between the 8th and
+#			9th characters on this page for sorting purposes would have the
+#			code "32264.081"
+#		This field represents the official position of the character within the
+#			Hanyu Da Zidian dictionary as used by the IRG in the four-dictionary sorting
+#			algorithm.
+#		The edition of the Hanyu Da Zidian used is the first edition, published in Chengdu
+#			by Sichuan Cishu Publishing, 1986.  
+#	kIRGKangXi
+#		The position of this character in the KangXi dictionary
+#			used in the four-dictionary sorting algorithm. The position is
+#			in the form "page.position" with the final digit in the position
+#			being "0" for characters actually in the dictionary and "1" for
+#			characters not found in the dictionary and assigned a "virtual"
+#			position in the dictionary.
+#		Thus, "1187.060" indicates the sixth character on page 1187. A character
+#			not in this dictionary but assigned a position between the 6th and
+#			7th characters on page 1187 for sorting purposes would have the
+#			code "1187.061"
+#		This field represents the official position of the character within the
+#			KangXi dictionary as used by the IRG in the four-dictionary sorting
+#			algorithm.
+#		The edition of the KangXi dictionary used is the 7th edition published by
+#			Zhonghua Bookstore in Beijing, 1989.
+#	kJapaneseKun
+#		The Japanese pronunciation(s) of this character
+#	kJapaneseOn
+#		The Sino-Japanese pronunciation(s) of this character
+#	kJIS0213
+#		The JIS X 0213-2000 mapping for this character in min,ku,ten form
+#	kJis0
+#		The JIS X 0208-1990 mapping for this character in ku/ten form
+#	kJis1
+#		The JIS X 0212-1990 mapping for this character in ku/ten form
+#	kKPS0
+#		The KP 9566-97 mapping for this character in hexadecimal form.
+#	kKPS1
+#		The KPS 10721-2000 mapping for this character in hexadecimal form.  
+#	kKSC0
+#		The KS X 1001:1992 (KS C 5601-1989) mapping for this character in ku/ten form
+#	kKSC1
+#		The KS X 1002:1991 (KS C 5657-1991) mapping for this character in ku/ten form
+#	kKangXi
+#		The position of this character in the KangXi dictionary
+#			used in the four-dictionary sorting algorithm. The position is
+#			in the form "page.position" with the final digit in the position
+#			being "0" for characters actually in the dictionary and "1" for
+#			characters not found in the dictionary and assigned a "virtual"
+#			position in the dictionary.
+#		Thus, "1187.060" indicates the sixth character on page 1187. A character
+#			not in this dictionary but assigned a position between the 6th and
+#			7th characters on page 1187 for sorting purposes would have the
+#			code "1187.061"
+#		The edition of the KangXi dictionary used is the 7th edition published by
+#			Zhonghua Bookstore in Beijing, 1989.
+#	kKarlgren*
+#		The index of this character in _Analytic Dictionary of Chinese and
+#			Sino-Japanese_ by Bernhard Karlgren, New York: Dover Publications, 
+#			Inc., 1974.  
+#		If the index is followed by an asterisk (*), then the index is an 
+#			interpolated one, indicating where the character would be found
+#			if it were to have been included in the dictionary.
+#	kKorean
+#		The Korean pronunciation(s) of this character
+#	kLau*
+#		The index of this character in _A Practical Cantonese-English Dictionary_
+#			by Sidney Lau, Hong Kong: The Government Printer, 1977. 
+#	kMainlandTelegraph
+#		The PRC telegraph code for this character, derived from "Kanzi denpou koudo 
+#			henkan-hyou" ("Chinese character telegraph code conversion table"), 
+#			Lin Jinyi, KDD Engineering and Consulting, Tokyo, 1984
+#	kMandarin
+#		The Mandarin pronunciation(s) for this character in pinyin; Mandarin pronunciations
+#			are sorted alphabetically, not in order of frequency
+#	kMatthews
+#		The index of this character in _Mathews' Chinese-English Dictionary_ by 
+#			Robert H. Mathews, Cambrige: Harvard University Press, 1975. Note that
+#			the field name is kMatthews instead of kMathews to maintain compatibility
+#			with earlier versions of this file, where it was inadvertently misspelled.
+#	kMeyerWempe*
+#		The index of this character in the Student's Cantonese-English Dictionary
+#			by Bernard F. Meyer and Theodore F. Wempe (3rd edition, 1947)
+#	kMorohashi
+#		The index of this character in the Dae Kanwa Ziten, aka Morohashi dictionary
+#			(Japanese) used in the four-dictionary sorting algorithm.
+#		The edition used is the revised edition, published in Tokyo by Taishuukan Shoten,
+#			1986.
+#	kNelson
+#		The index of this character in _The Modern Reader's Japanese-English
+#			Character Dictionary_ by Andrew Nathaniel Nelson, Rutland, Vermont: Charles
+#			E. Tuttle Company, 1974.  
+#	kOtherNumeric
+#		The numeric value for the character in certain unusual, specialized contexts.
+#	kPhonetic*
+#		The phonetic index for the character from _Ten Thousand Characters: An
+#		Analytic Dictionary_ by G. Hugh Casey, S.J. Hong Kong: Kelley and Walsh,
+#		1980.
+#	kPrimaryNumeric
+#		The value of the character when used in the writing of numbers in the
+#			standard fashion.
+#	kPseudoGB1
+#		A "GB 12345-90" code point assigned this character for the purposes
+#			of including it within Unihan. Pseudo-GB1 codes were used to provide
+#			official code points for characters not already in national standards, 
+#			such as characters used to write Cantonese, and so on.
+#	kRSJapanese
+#		A Japanese radical/stroke count for this character in the form
+#			"radical.additional strokes". A ' after the radical indicates
+#			the simplified version of the given radical
+#	kRSKanWa
+#		A Morohashi radical/stroke count for this character in the form
+#			"radical.additional strokes". A ' after the radical indicates
+#			the simplified version of the given radical
+#	kRSKangXi
+#		A KangXi radical/stroke count for this character in the form
+#			"radical.additional strokes". A ' after the radical indicates
+#			the simplified version of the given radical
+#	kRSKorean
+#		A Korean radical/stroke count for this character in the form
+#			"radical.additional strokes". A ' after the radical indicates
+#			the simplified version of the given radical
+#	kRSUnicode
+#		A standard radical/stroke count for this character in the form
+#			"radical.additional strokes". A ' after the radical indicates
+#			the simplified version of the given radical
+#	kSemanticVariant	
+#		The Unicode value for a semantic variant for this character. A semantic
+#			variant is an x- or y-variant with similar or identical meaning which
+#			can generally be used in place of the indicated character.
+#	kSBGY
+#		The position of this character in the Song Ben Guang Yun (SBGY) Medieval Chinese character dictionary (bibliographic and general information below).
+#		The 25330 character references are given in the form "ABC.XY", in which: "ABC" is the zero-padded page number [004..546]; "XY" is the zero-padded number of the character on the page [01..73]. For example, 364.38 indicates the 38th character on Page 364 (i.e. 澍). Where a given Unicode Scalar Value (USV) has more than one reference, these are space-delimited.
+#		Release information (20020310):
+#			This data set contains a total of 25330 references, for 19511 different hanzi. The original data was input under the direction of Prof. LUO Fengzhu at Taiwan Taoyuanxian Yuan Zhi University  (see below) using an early version of the Big5-based CDP encoding scheme developed at Academia Sinica. During 2000-2002 this raw data was processed and revised by Richard Cook as follows: the data was converted to Unicode encoding using his revised kHanYu mapping tables (first provided to the Unicode Consortium for the Unihan.txt release 3.1.1d1) and also using several other mapping tables developed specifically for this project; the kSBGY indices were generated based on hand-counts of all page totals; numerous indexing errors were corrected; and the data underwent final proofing.
+#		About the print sources:
+#			The SBGY text, which dates to the beginning of the Song Dynasty (c. 1008, edited by �-彭�|+ CHEN Pengnian et al.) is an enlargement of an earlier text known as Qie Yun (dated to c. 601, edited by 陸�-�言 LU Fayan). With 25,330 head entries, this large early lexicon is important in part for the information which it provides for historical Chinese phonology. The GY dictionary employs a Chinese transcription method (known as 反切) to give pronunciations for each of its head entries. In addition, each syllable is also given a brief gloss.
+#			It must be emphasized that the mapping of a particular SBGY glyph to a single USV may in some cases be merely an approximation or may have required the choice of a "best possible glyph" (out of those available in the Unicode repertoire). This indexing data in conjunction with the print sources will be useful for evaluating the degree of distinctive variation in the character forms appearing in this text, and future proofing of this data may reveal additional Chinese glyphs for IRG encoding.
+#		Bibliographic information on the print sources:
+#			《宋本媣韪》 <<Song Ben Guang Yun>> ['Song Dynasty edition of the Guang Yun Rhyming Dictionary'], edited by �-彭�|+ CHEN Pengnian et al. (c. 1008).
+#		Two modern editions of this work were consulted in building the kSBGY indices:
+#			《�-校正切宋本媣韪》。�-灣骎明文化�|�業公司�|版�-�林�-|校訂1976 �|+�|版。[This was the edition used in by Prof. LUO �-灣桃園縣元�|大學中語�-�羅�--珠, and in the subsequent revision, conversion, indexing and proofing.]
+#			《�-校�|�訪‧宋本媣韪》。香港中文大學,余�|�-�1993,2000�|+�|版。ISBN: 962-201-413-5; 7-5326-0685-6. [Textual problems were resolved on the basis of this extensively annotated modern edition of the text.]
+#		Further Information:
+#			For further information on this index data and the databases from which it is excerpted, or to report errata, please contact Richard S. Cook <rscook@socrates.berkeley.edu>. 
+#	kSimplifiedVariant
+#		The Unicode value for the simplified Chinese variant for this character (if any).
+#		Note that a character can be *both* a traditional Chinese character in its own
+#			right *and* the simplified variant for other characters (e.g., U+53F0).  
+#		In such case, the character is listed as its own simplified variant and one of
+#			its own traditional variants.  This distinguishes this from the case where
+#			the character is not the simplified form for any character (e.g., U+4E95).
+#		Much of the of the data on simplified and traditional variants was supplied
+#			by Wenlin <http://www.wenlin.com>
+#	kSpecializedSemanticVariant
+#		The Unicode value for a specialized semantic variant for this character.
+#		A specialized semantic variant is an x- or y-variant with similar or identical
+#			meaning only in certain contexts (such as accountants' numerals).
+#	kTaiwanTelegraph
+#		The Taiwanese telegraph code for this character, derived from "Kanzi denpou koudo 
+#			henkan-hyou" ("Chinese character telegraph code conversion table"), 
+#			Lin Jinyi, KDD Engineering and Consulting, Tokyo, 1984
+#	kTang*
+#		The Tang dynasty pronunciation(s) of this character, derived from _T'ang 
+#			Poetic Vocabulary_ by Hugh M. Stimson, Far Eastern Publications, Yale Univ. 1976.
+#			Stimson's romanization has been modified as follows:
+#		The tones are indicated using numerals 1 through 4.  Stimson leaves the 
+#			level (tone 1) and entering (tone 4) tones unmarked (the latter being 
+#			found in syllables ending in a stop, -p, -t, or -k), uses a hacek accent for 
+#			the rising tone (tone 2), and a grave accent the departing tone (tone 3)
+#		Stimson's script a (-�, U+0251) is replaced with a-umlaut (+�, U+00E4)
+#		Stimson's open e (-�, U+025B) is replaced with e-umlaut (+�, U+00EB)
+#		Stimson's schwa (-�, U+0259) is replaced with e-circumflex (+�, U+00EA)
+#	kTotalStrokes
+#		The total number of strokes in the character (including the radical)
+#	kTraditionalVariant
+#		The Unicode value(s) for the traditional Chinese variant(s) for this character.
+#		Note that a character can be *both* a traditional Chinese character in its own
+#			right *and* the simplified variant for other characters (e.g., U+53F0).  
+#		In such case, the character is listed as its own simplified variant and one of
+#			its own traditional variants.  This distinguishes this from the case where
+#			the character is not the simplified form for any character (e.g., U+4E95).
+#		Much of the of the data on simplified and traditional variants was supplied
+#			by Wenlin Institute, Inc. <http://www.wenlin.com>
+#	kVietnamese
+#		The character's pronunciation(s) in Qu᪑c ng᪯
+#	kXerox
+#		The Xerox code for this character
+#	kZVariant
+#		The Unicode value(s) for known z-variants of this character
+#
+#
+#	ACCURACY OF THE DATA:
+#
+#	Not all of these fields have been checked and proofed as carefully as some
+#		others have been. Please report errata, corrections, and additions at 
+#		<http://www.unicode.org/unicode/reporting.html>.
+#
+#	The following fields may be taken as completely accurate and their values are
+#		*normative* parts of Unicode and ISO/IEC 10646-1 and -2:
+#
+#	kIRG_GSource, kIRG_TSource, kIRG_JSource, kIRG_KSource, kIRG_KPSource, kIRG_VSource
+#
+#	The IRG dictionary fields have also been extensively proofed by IRG experts and may
+#		be taken as accurate.  
+#
+#	The following fields have been extensively proofed by experts world-wide and may be
+#		taken as accurate:
+#
+#	kBigFive, kCNS1986, kGB0, kGB1, kGB3, kGB5, kGB7, kGB8, kJis0, kJis1, kJIS0213,
+#		kKSC0, kKSC1, kPseudoGB1, kCCCII, kCNS1992, kDaeJaweon, kHanYu, kIBMJapan, 
+#		kKangXi, kMatthews, kMorohashi, kNelson, kXerox
+#
+#	The remaining fields have not been as extensively proofed and their values should be
+#		taken as provisional.  Some of these fields are still in the process of being
+#		populated; more data will be available in future releases of this file.  Such fields
+#		are marked in this header with an asterisk (*).  
+#
+#
+#	KNOWN ERRORS:
+#
+#	U+6B06 should map to the kIRG_KSource 2-3D7B, not 7-3D7B.  This error is in a normative
+#		part of the standard; the relevant standards bodies are aware of it, but we cannot
+#		fix it in this file until the fix is officially adopted
+#
+#	U+2F958 should map to the kIRG_TSource 6-4267, not 6-4627.  This error is in a normative
+#		part of the standard; the relevant standards bodies are aware of it, but we cannot
+#		fix it in this file until the fix is officially adopted
+#
+#	The Japanese and Korean readings need to be normalized.  The Mandarin vowel +� is
+#		not consistently represented as pinyin requires
+#
+# 
+
+KANJIDIC DESCRIPTION:
+
+INFORMATION FIELDS
+
+There are currently a variety of predefined fields (programs using KANJIDIC should not make any assumptions about the presence or absence of any of these fields, as KANJIDIC is certain to be extended in the future):
+
+    * B<num> -- the radical (Bushu) number. There is one per entry. As far as possible, this is the radical number used in the Nelson "Modern Japanese-English Character Dictionary" (i.e. the Classic, not the New Nelson). Where the classical or historical radical number differs from this, it is present as a separate C<num> entry.
+
+    * C<num> -- the historical or classical radical number, as recorded in the KangXi Zidian (where this differs from the B<num> entry.) There will be at most one of these.
+
+    * F<num> -- the frequency-of-use ranking. At most one per line. The 2,501 most-used characters have a ranking; those characters that lack this field are not ranked. The frequency is a number from 1 to 2,501 that expresses the relative frequency of occurrence of a character in modern Japanese. The data is based on an analysis of word frequencies in the Mainichi Shimbun over 4 years by Alexandre Girardi. From this the relative frequencies have been derived. Note:
+         1. these frequencies are biassed towards words and kanji used in newspaper articles,
+         2. the relative frequencies for the last few hundred kanji so graded is quite imprecise.
+      (Earlier editions of the KANJIDIC file used a frequency-of-use ranking from the National Language Research Institute (Tokyo), interpreted and adapted by Jack Halpern.)
+
+    * G<num> -- the Jouyou grade level. At most one per line. G1 through G6 indicate Jouyou grades 1-6. G8 indicates general-use characters. G9 indicates Jinmeiyou ("for use in names") characters. If not present, it is a kanji outside these categories.
+
+    * H<num> -- the index number in the New Japanese-English Character Dictionary, edited by Jack Halpern. At most one allowed per line. If not preset, the character is not in Halpern.
+
+    * N<num> -- the index number in the "Modern Reader's Japanese-English Character Dictionary", edited by Andrew Nelson. At most one allowed per line. If not present, the character is not in Nelson, or is considered to be a non-standard version, in which case it may have a cross-reference code in the form: XNnnnn. (Note that many kanji currently used are what Nelson described as "non-standard" forms or glyphs.)
+
+    * V<num> -- the index number in The New Nelson Japanese-English Character Dictionary, edited by John Haig.
+
+    * D<code> -- the "D" codes will be progressively used for dictionary based codes.
+         1. DRnnnn - these are the codes developed by Father Joseph De Roo, and published in his book "2001 Kanji" (Bojinsha). Fr De Roo has given his permission for these codes to be included.
+
+         2. DKnnnn - the index numbers used by Jack Halpern in his Kanji Learners Dictionary, published by Kodansha in 1999. The numbers have been provided by Mr Halpern.
+
+         3. DOnnnn - the index numbers used in P.G. O'Neill's Essential Kanji (ISBN 0-8348-0222-8). The numbers have been provided by Glenn Rosenthal.
+
+         4. DSnnnn - the index numbers used in "A Guide To Reading and Writing Japanese" edited by Florence Sakade.
+
+         5. DTnnn - the index numbers used in the Tuttle Kanji Cards, compiled by Alexander Kask.
+
+         6. DCnnnn - the index numbers used in "The Kanji Way to Japanese Language Power" by Dale Crowley.
+
+         7. DJnnn - the index numbers used in "Kanji in Context" by Nishiguchi and Kono.
+
+         8. DGnnn - the index numbers used in "Japanese For Busy People" vols I-III, published by the AJLT. The codes are the volume.chapter.
+
+         9. DBnnn - the index numbers used in the "Kodansha Compact Kanji Guide".
+
+    * P<code> -- the SKIP pattern code. The <code> is of the form "P<num>-<num>-<num>". The System of Kanji Indexing by Patterns (SKIP) is a scheme for the classification and rapid retrieval of Chinese characters on the basis of geometrical patterns. Developed by Jack Halpern, it first appeared in the New Japanese-English Character Dictionary (Kenkyusha, Tokyo 1990; NTC, Chicago 1993), and is being used in a series of dictionaries and learning tools called KIT (Kanji Integrated Tools). SKIP is protected by copyright, copyleft and patent laws. The commercial utilization of SKIP in any form is strictly forbidden without the written permission of Jack Halpern, the copyright holder (jhalpern@cc.win.or.jp). (A brief summary of the method is in Appendix C. See Appendix E. for some of the rules applied when counting strokes in some of the radicals.)
+
+    * S<num> -- the stroke count. At least one per line. If more than one, the first is considered the accepted count, while subsequent ones are common miscounts. (See Appendix E. For some of the rules applied when counting strokes in some of the radicals.)
+
+    * U<hexnum> -- the Unicode encoding of the kanji. See Appendix B for further information on this code. There is exactly one per line.
+
+    * I<code> -- the index codes in the reference books by Spahn & Hadamitzky. These codes take two forms:
+         1. for The Kanji Dictionary (Tuttle 1996), they are in the form nxnn.n, e.g. 3k11.2, where the kanji has 3 strokes in the identifying radical, it is radical "k" in the S&H classification system, there are 11 other strokes, and it is the 2nd kanji in the 3k11 sequence. I am very grateful to Mark Spahn for providing the (almost) full list of these descriptor codes for the kanji in this file. At the time of writing some 800 kanji in the file lack the SH descriptor. This is because the book used a different glyph as the primary kanji. The gaps are gradually being filled in. Where the JIS X 0208 glyph is the second kanji for a particular descriptor code, it has a "-2" appended to the code.
+
+         2. for the Kanji & Kana book (Tuttle), they are in the form INnnnn, where nnnn is the number of the kanji referenced in that book (2nd edition.)
+    * Qnnnn.n -- the "Four Corner" code for that kanji. This is a code invented by Wang Chen in 1928, it has since then been widely used for dictionaries in China and Japan. In some cases there are two of these codes, as it is can be little ambiguous, and Morohashi has some kanji coded differently from their traditional Chinese codes. See Appendix D for an overview of the Four Corner System. Christian Wittern, who passed on these codes, comments that they are in need of proof-reading and thus users are advised to be cautious using the codes for serious scholarship.
+
+    * MNnnnnnnn and MPnn.nnnn -- the index number and volume.page respectively of the kanji in the 13-volume Morohashi Daikanwajiten. In the MNnnn field, a terminal `P`, e.g. MN4879P, indicates that it is 4879' in the original. In some 500 cases, the number is terminated with an `X`, to indicate that the kanji in Morohashi has a close, but not identical, glyph to the form in the JIS X 0208 standard.
+
+    * Ennnn -- the index number used in "A Guide To Remembering Japanese Characters" by Kenneth G. Henshall. There are 1945 kanji with these numbers (i.e. the Jouyou subset.)
+
+    * Knnnn -- the index number in the Gakken Kanji Dictionary ("A New Dictionary of Kanji Usage"). Some of the numbers relate to the list at the back of the book, jouyou kanji not contained in the dictionary, and various historical tables at the end.
+
+    * Lnnnn -- the index number used in "Remembering The Kanji" by James Heisig.
+
+    * Onnnn -- the index number in "Japanese Names", by P.G. O'Neill. (Weatherhill, 1972) (A warning: some of the numbers end with 'A'. This is how they appear in the book; it is not a problem with the file.)
+
+    * Wxxxx -- the romanized form of the Korean reading(s) of the kanji. Most of these kanji have one Korean reading, a few have two or more. The readings are in the (Republic of Korea) Ministry of Education style of romanization.
+
+    * Yxxxxx -- the "Pinyin" of each kanji, i.e. the (Mandarin or Beijing) Chinese romanization. About 6,000 of the kanji have these. Obviously most of the native Japanese kokuji do not have Pinyin, however at least one does as it was taken into Chinese at a later date.
+
+    * Xxxxxxx -- a cross-reference code. An entry of, say, XN1234 will mean that the user is referred to the kanji with the (unique) Nelson index of 1234. XJ0xxxx and XJ1xxxx are cross-references to the kanji with the JIS hexadecimal code of xxxx. The `0' means the reference is to a JIS X 0208 kanji, and the `1' references a JIS X 0212 kanji.
+
+    * Zxxxxxx -- a mis-classification code. It means that this kanji is sometimes mis-classified as having the xxxxxx coding. In the case of the SKIP classifications, an extra letter code is used to indicate the type of mis-classification. ZPPn-n-n, ZSPn-n-n and ZBPn-n-n indicate mis-classification according to position, stroke-count and both position and stroke-count. (ZRPn-n-n codes are where Jim Breen & Jack Halpern are having a [hopefully temporary] disagreement over the number of strokes.)
+
+If the final field of a line is not an English field, there is a final space. Each reading and information field is therefore bracketed by space characters (which makes it convenient for searches using programs like "grep".)
+
+As far as possible all entries will have their yomikata and readings attached, even if they are a recognized variant of another kanji. This is to facilitate electronic searches using these fields as keys, and should not be taken as a recommendation to use such obscure kanji. 

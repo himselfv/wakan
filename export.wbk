@@ -1,0 +1,28 @@
+$User
+>Index;English;Phonetic;PhoneticSort;Kanji;Added;Printed;Learned;Mastered;NoPrinted;Score;MaxScore
++16096;(my) wife;304B306A3044;062102;5BB65185;20041124;00000000;00000000;00000000;0;1;1
++16098;(flower) vase;304B30733093;062748;82B174F6;20041124;00000000;00000000;00000000;0;1;1
+.
+$UserIdx
+>Word;Kanji;Begin
++16096;5185;F
++16096;5BB6;T
++16098;6EE1;F
++16098;74F6;F
++16098;82B1;T
++16098;9971;T
++16096;9971;T
+.
+$UserCat
+>Index;Name;Type;Created
++1;k~LEARNED;81;20041121
++11;j~test;71;20041124
+.
+$UserSheet
+>Word;Number;Pos
++16098;11;1
++16096;11;2
+.
+$KnownKanji
+>Unicode
+.

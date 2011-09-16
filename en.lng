@@ -1,0 +1,1037 @@
+; WaKan language file
+;
+; translates UI of Wakan - Japanese & Chinese Learning tool, http://wakan.manga.cz
+; please send new languages or updates of existing ones to dreamfly@centrum.cz
+;
+; Line format: <5-digit line id><delimiter><text>
+; <text> must not contain CR or LF, delimiter is "+" if the text is continued on the next line, otherwise ">"
+;
+; Language: English
+; Author: Filip Kabrt (dreamfly@centrum.cz)
+;
+#LANG>English
+#AUTH>Filip Kábrt
+#VERS>1.50
+00001>Alphabets
+00002>Print to BMP
+00003>Width (in pixels):
+00004>Height (in pixels):
+00005>Filename prefix:
+00006>%d.BMP will be added after prefix (%d is page number).
+00007>Cancel
+00008>Make sure you have files EDICT.UNI, KANJIDIC.UNI and UNIHAN.TXT (optional) in current directory.
+00009>This operation can take a long time (about 10 minutes).
+00010>Check also if you have at least 200 MB of free disk space.
+00011>Do you want to continue?
+00012>Dictionary generation
+00013>Converting EDICT.UNI...
+00014>Converting KANJIDIC.UNI...
+00015>Converting UNIHAN.TXT...
+00016>Emptying tables...
+00017>Parsing Edict...
+00018>Parsing Edict (
+00019>Cannot convert Edict. Conversion to romaji failed (unknown kana). Problems written to ROMAJI.ERR.
+00020>Error
+00021>Parsing KanjiDic...
+00022>Parsing KanjiDic (
+00023>Parsing UniHan...
+00024>Parsing UniHan (
+00025>Generation successfully completed.
+00026> dictionary entries converted
+00027> Kanji entries generated
+00028>Vocabulary categories
+00029>Check all categories
+00030>Edit category
+00031>Delete category
+00032>Select list of categories (lessons / groups / temporary / word lists)
+00033>Character details item
+00034>Item:
+00035>Description:
+00036>Source:
+00037>Display type
+00038>Whole line
+00039>One column
+00040>More lines (word wrap)
+00041>Display label
+00042>Display label
+00043>Display label on whole line
+00044>Do not display label
+00045>Mode display
+00046>Display in both modes
+00047>Display in japanese mode only
+00048>Display in chinese mode only
+00049>Display even if information is missing
+00050>Cancel
+00051>Font size
+00052>Small
+00053>Medium
+00054>Big
+00055>Custom title:
+00056>Clipboard contents
+00057>Add into vocabulary
+00058>Meaning (editable):
+00059>Category:
+00060>Phonetic:
+00061>Written:
+00062>Add to vocabulary
+00063>EDICT character coding
+00064>Please select language of the input EDICT file:
+00065+Please note:
+00065+For encodings different than "Unicode 16-bit" you need the UNICONV utility in the current directory.
+00065>This utility can be downloaded from ftp.cc.monash.edu.au/pub/nihongo/uniconv.zip.
+00066>Language / Character coding
+00067>Japanese (autodetect)
+00068>Chinese (autodetect)
+00069>Korean (autodetect)
+00070>UNICONV.EXE was not found. It is required for encoding conversion.
+00071>Dictionary import
+00072>File name (without extension):
+00073>Dictionary name:
+00074>Included EDICT format files:
+00075>Version:
+00076>Priority
+00077>Build
+00078>Add
+00079>Remove
+00080>Language
+00081>Japanese
+00082>Mandarin chinese
+00083>Build with word index (allows English searching)
+00084>Build with character index (enables character compounds display)
+00085>Converting 
+00086>Reading && parsing 
+00087>Input file: 
+00088>Unsupported file coding ().
+00089>Cannot romanize following line:
+00090>Warning
+00091>Building dictionary table
+00092>Sorting indexes...
+00093>Dictionary was built.
+00094>Success
+00095>Dictionary manager
+00096>Dictionaries:
+00097>Filename:
+00098>Word entries:
+00099>Build date:
+00100>Priority:
+00101>Word index:
+00102>Character index:
+00103>Select the dictionary for use with group 1
+00104>Group 1
+00105>Select the dictionary for use with group 2
+00106>Group 2
+00107>Select the dictionary for use with group 3
+00108>Group 3
+00109>Use the dictionary for compounds
+00110>Use for compounds
+00111>Use the dictionary for popup tool & editor
+00112>Use for popup/editor
+00113>Refresh && rescan
+00114>Import from EDICT
+00115>Present
+00116>Absent
+00117>Character list
+00118>No characters were found.
+00119>Search & change sort order
+00120>Search && sort
+00121>Sort (Ctrl-Alt-O)
+00122>Sort
+00123>Details (Ctrl-D)
+00124>Details
+00125>Compounds
+00126>Show stroke order
+00127>Print Kanji cards (for memorizing) (Ctrl-F6)
+00128>Print cards
+00129>Found
+00130>Found
+00131> traditional
+00132> simplified
+00133> characters
+00134>Kanji cards
+00135>Simplified:
+00136>Traditional:
+00137>Char #
+00138>Set as learned
+00139>Set as non-learned
+00140>Learned
+00141>Common
+00142>Rare
+00143>Used in names
+00144>Japanese and chinese
+00145>Japanese only
+00146>Radical
+00147>Stroke count
+00148>Frequency
+00149>Random
+00150>Feature not implemented yet.
+00151>Show user vocabulary compounds
+00152>UserDict
+00153>Show dictionary compounds
+00154>Dict.
+00155>No words were found.
+00156>Show only compounds with beginning character
+00157>Only beginning
+00158>Show only compounds marked as popular
+00159>Character details
+00160>Radical:
+00161>Insert character into clipboard
+00162>Stroke count:
+00163>www.zhongwen.com - Etymological information about the character
+00164>www.csse.monash.edu.au/'jwb/wwwjdic - Jim Breen's WWWJDIC dictionary server
+00165>charts.unicode.org/unihan - UniHan entry for this character
+00166>www.ocrat.com - Animated stroke order
+00167>web.mit.edu/jpnet/ji - KanjiProject Data Page
+00168>Show/hide stroke order (only for Japanese Jouyou-kanji)
+00169>Order
+00170>Close
+00171>Docks / undocks this window into main window
+00172>Undock
+00173>Dock
+00174>Search characters
+00175>Filter by PinYin (chinese reading) (Ctrl-I)
+00176>Filter by japanese reading (Ctrl-Y)
+00177>Filter by radical (Ctrl-R)
+00178>Radical
+00179>Filter by definition (meaning) (Ctrl-M)
+00180>Definition
+00181>Filter by SKIP code (see KANJIDIC for explanation)
+00182>Display all characters (Ctrl-N)
+00183>All filters off
+00184>Display only learned characters
+00185>Learned
+00186>Display only common characters
+00187>Common
+00188>Display only characters in clipboard
+00189>In clipboard
+00190>Filter by stroke count (you can search by range, ex. 1-6)
+00191>Stroke #
+00192>Filter by Unicode / Nelson index / Halpern index
+00193>Other
+00194>Filter by Jouyou grade (Japanese school grade)
+00195>List...
+00196>Non-learned
+00197>Sort by
+00198>Learner index
+00199>Character order
+00200>Layout manager
+00201>Standard layouts:
+00202>Percentage screen occupation:
+00203>Windowed
+00204>Complete
+00205>Kanji search
+00206>Learning
+00207>Translation
+00208>Set standard layout
+00209>Save layout
+00210>Load layout
+00211>WaKan 1.50 - Tool for learning Japanese & Chinese
+00212>Character list (Ctrl-F1)
+00213>Characters
+00214>Vocabulary manager (Ctrl-F4)
+00215>Vocabulary
+00216>Word dictionary (Ctrl-F2)
+00217>Dictionary
+00218>Chinese mode (F9)
+00219>Japanese mode (F8)
+00220>Clear clipboard
+00221>Text editor (Ctrl-F3)
+00222>Editor / Translator
+00223>Activate/deactivate screen popup tool
+00224>Activate/deactivate WaKan popup tool
+00225>&Save user changes
+00226>&Cancel user changes
+00227>S&tatistics...
+00228>&Exit
+00229>Character &list
+00230>&Search
+00231>S&ort
+00232>&Details
+00233>&Compounds
+00234>&Print cards...
+00235>&Word dictionary
+00236>&Selected word
+00237>&Characters in word
+00238>&Information
+00239>&Add to vocabulary
+00240>&Editor && translator
+00241>Vocabulary &list
+00242>&Add word
+00243>List &settings
+00244>&Category
+00245>&Word details
+00246>&Print list...
+00247>&List generator...
+00248>&Settings...
+00249>&Dictionary manager...
+00250>Layout &manager...
+00251>&Windowed
+00252>&Complete
+00253>&Char. &search
+00254>&Learning
+00255>&Translation
+00256>Window &borders
+00257>&Help contents...
+00258>&About...
+00259>&Japanese mode
+00260>&Chinese mode
+00261>New
+00262>Open...
+00263>Save
+00264>Save as...
+00265>Cut
+00266>Copy
+00267>Paste
+00268>Select all
+00269>Character mode
+00270>Kana mode
+00271>ASCII mode
+00272>Display reading
+00273>Display meaning
+00274>Clear translation
+00275>Auto-fill translation
+00276>Set translation
+00277>Print...
+00278>Display all
+00279>Learned only
+00280>Common only
+00281>In clipboard only
+00282>Search by PinYin
+00283>Search by Yomi
+00284>Search by radical...
+00285>Add to clipboard
+00286>Full details
+00287>Japanese/Chinese -> English
+00288>English -> Japanese/Chinese
+00289>Search by clipboard
+00290>Search exact word
+00291>Search beginning
+00292>Search ending
+00293>Character window
+00294>Set as (un)learned
+00295>Search by meaning
+00296>Editor window
+00297>Large
+00298>Character list
+00299>Text editor
+00300>Text translator
+00301>Search inflected words
+00302>Auto-search while typing
+00303>Use dictionaries in group 1
+00304>Use dictionaries in group 2
+00305>Use dictionaries in group 3
+00306>Examples panel
+00307>Vocabulary panel
+00308>Filter panel
+00309>Use colors
+00310>&Database
+00311>&Tools
+00312>&Characters
+00313>D&ictionary
+00314>Used dictionary group
+00315>Examples
+00316>Save kana transcript...
+00317>Translation
+00318>&Vocabulary
+00319>&Add word...
+00320>&Help
+00321>Cannot register dictionary 
+00322>Cannot build dictionary 
+00323>Dictionary loading
+00324>Loading dictionary 
+00325>Cannot load dictionary 
+00326>It is not recommended to use old style JALET.DIC dictionary.
+00327+No valid japanese dictionary was found.
+00327>Please download some japanese .DIC files from WAKAN website.
+00328+No valid chinese dictionary was found.
+00328>Please download some chinese .DIC files from WAKAN website.
+00329>Japanese ->English
+00330>English -> Japanese
+00331>Chinese ->English
+00332>English -> Chinese
+00333>Couldn't load example file EXAMPLES_.PKG.
+00334+Cannot load layout. Outdated version.
+00334>Settings standard layout instead.
+00335>Layout loading
+00336>Advanced layouts require at least 1024x768 resolution.
+00337>Resolution too low
+00338+File WAKAN.USR has old structure.
+00338+It must be converted.
+00338+You should make backup before converting
+00338>Do you want to convert it now?
+00339>Old structure
+00340>User data was changed. Do you want to save it?
+00341>Application exit
+00342>Too large data.
+00343+This is a public beta version of WaKan.
+00343+This version is not freely distributable but the final version will be.You use this software on your own risk, I take no responsibility for the program behavior.
+00343>Please mail comments to dreamfly@centrum.cz.
+00344>Public beta version
+00345+This version of WaKan requires at least 800x600 resolution.
+00345>Please set the correct resolution and restart the application.
+00346+File WAKAN.CHR was not found.
+00346+This file is required for application to run.
+00346+Please download this file from WAKAN website.
+00346>Application will now be terminated.
+00347+File WAKAN.CFG is missing.
+00347+This file contains important configuration parameters and is required for application to run.
+00347>Application will now be terminated.
+00348+No fonts of there character sets were found on your computer:
+00348+You must have at least one font of each of these sets on your computer to run this application.
+00348+I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.
+00348+These fonts are automatically installed when you install support for reading Japanese & Chinese language in windows.
+00348>Please install required fonts and run this application again.
+00349+You are running WaKan for the first time.
+00349+WaKan will now try to locate and set all the recommended fonts.
+00349>You can restart this process by selecting "Select recommended fonts" in settings.
+00350>Font autodetection
+00351+Font autodetection failed. Some characters may not be displayed correctly.
+00351>Do you want to continue?
+00352+Cannot load main configuration file.
+00352+File WAKAN.CFG is corrupted.
+00352>Application will now exit.
+00353+Some standard fonts were not found on your system.Please reselect all fonts in the following dialog. Missing fonts are preceded by !.
+00353>Application cannot continue unless all fonts are selected.
+00354+WAKAN.CHR has old structure. Please download new version.
+00354>Application will now exit.
+00355+WAKAN.CHR has newer structure. Please download new WAKAN.EXE.
+00355>Application will now exit.
+00356+Cannot load main dictionary file.
+00356+File WAKAN.CHR is corrupted.
+00356>Application will now exit.
+00357+File WAKAN.RAD was not found.
+00357>Japanese advanced radicals search will be disabled.
+00358+Cannot load Japanese radicals file.
+00358+File WAKAN.RAD is corrupted.
+00358>Application will now exit.
+00359+File WAKAN.SOD was not found.
+00359>Japanese stroke-order display will be disabled.
+00360+Cannot load Japanese stroke-order file.
+00360+File WAKAN.SOD is corrupted.
+00360>Application will now exit.
+00361+Cannot load user data file.
+00361+File WAKAN.USR is corrupted.
+00361+If you delete this file, it will be created anew.
+00361>Application will now exit.
+00362+Unable to create user data file WAKAN.USR.
+00362+Please run this program from a folder that is not read-only.
+00362>Application will not exit.
+00363>Help file is under construction, the information may be inaccurate.
+00364>Notice
+00365>Help file is out of date. Please download new help file from WaKan website: wakan.manga.cz.
+00366>Cannot find file WAKAN.CHM.
+00367>Cannot find file WAKANH.DLL.
+00368+!!THIS FEATURE IS EXPERIMENTAL!!
+00368+WARNING: Screen popup tool is currently under heavy testing.Because it needs to install a system-wide hook DLL, you are advised to save all yourcritical work before continuing. Please report to me any system unstability you encounter.
+00368>Do you want to continue?
+00369>Do not forget to fill kana readings or use the auto-fill function before using this feature.
+00370>New category
+00371>Name:
+00372>Type
+00373>Lesson
+00374>Group
+00375>Temporary
+00376>Print preview
+00377>First page
+00378>Previous page
+00379>Next page
+00380>Last page
+00381>Print settings
+00382>Print
+00383>Zoom in
+00384>Full display
+00385>Zoom out
+00386>Page settings
+00387>Radical list
+00388>Multi-radical filter method: Select any suspected radical by clicking the mouse
+00389>Parts of characters filter method: Select all parts that occur in character
+00390>Set filter
+00391>Display variants
+00392>Display learned radicals in blue
+00393>Display uncommon radicals gray
+00394>Search method
+00395>Parts of characters
+00396>Classical radicals
+00397>Settings
+00398>General
+00399>Dictionary entries grid font height:
+00400>minutes
+00401>Saves statistical information to disk, filename is generated by date so you can check your progress
+00402>Save statistics to disk (folder STAT)
+00403>Shows words with non-learned kanji in different color
+00404>Differentiate words with non-learned characters
+00405>Colors: green - mastered, yellow - learned, cyan - unlearned, red - problematic
+00406>Show word learned-status by different background color
+00407>Auto-save user data on exit
+00408>Load dictionaries on demand
+00409>Multi-line word grids
+00410>Auto-save user database every 
+00411>Make backup of user file into BACKUP folder every day
+00412>Romanization
+00413>Romanization of japanese
+00414>Romanization test:
+00415>Japanese:
+00416>English:
+00417>Czech:
+00418>Select romanization system used in both input and display
+00419>Romanization system
+00420>Kunreishiki romaji (japanese)
+00421>Hepburn (english)
+00422>Czech
+00423>Show phonetic in
+00424>Hiragana / Katakana
+00425>Romaji
+00426>Romanization of chinese
+00427>Displayed radical:
+00428>Character size in grid
+00429>Small
+00430>Medium
+00431>Large
+00432>Selects what chinese characters are displayed
+00433>Show chinese characters
+00434>Traditional (Big5) only
+00435>Simplified (GB2312) only
+00436>All characters (Unicode)
+00437>Show stroke count in grid
+00438>Japanese
+00439>Korean
+00440>Use grid font for displaying stroke order
+00441>Not used dictionary files
+00442>Search results order
+00443>Prefer words in user dictionary
+00444>Prefer nouns and verbs
+00445>Prefer polite words
+00446>Prefer popular words (marked by "pop")
+00447>Replace kanji with kana for words marked "kana"
+00448>Display only results that fit one page in "Auto" mode
+00449>Auto-switch to Examples panel
+00450>Fonts
+00451>Romanization and english font:
+00452>Choose
+00453>Japanese fonts
+00454>Font for characters in grid:
+00455>Font for big characters:
+00456>Font for small text:
+00457>Chinese fonts:
+00458>Big5 font for traditional characters in grid:
+00459>Big5 font for big traditional characters:
+00460>Complete unicode font:
+00461>GB2312 font for simplified characters in grid:
+00462>GB2312 font for big simplified characters:
+00463>Make sure that the Big5 and GB2312 fonts are either the same or at least look the same.
+00464>Select recommended fonts
+00465>Word list printing
+00466>Number of lines on square page:
+00467>Print horizontal lines
+00468>Print vertical lines
+00469>Vary colors
+00470>Do not print unlearned kanji
+00471>Columns
+00472>User settings:
+00473>Phonetic            |Meaning
+00474>Written             |Meaning
+00475>Phonetic |Written   |Meaning
+00476>Written  |Phonetic  |Meaning
+00477>Romaji   |Kana      |Meaning
+00478>Phonetic1           |Phonetic2
+00479>Written1            |Written2
+00480>Meaning1            |Meaning2
+00481>Phonetic1|Phonetic2 |Phonetic3|Phonetic4
+00482>Written1 |Written2  |Written3 |Written4
+00483>Meaning1 |Meaning2  |Meaning3 |Meaning4
+00484>Phonetic1|Written1  |Phonetic2|Written2
+00485>Phonetic1|Meaning1  |Phonetic2|Meaning2
+00486>Written1 |Meaning1  |Written2 |Meaning2
+00487>User settings
+00488>Character cards printing
+00489>Vertical number of characters on square page:
+00490>Space for compounds (in characters):
+00491>Vertical number of compounds:
+00492>Calligraphy font:
+00493>Print compounds
+00494>Print radical
+00495>Print alternate form
+00496>Print outer lines
+00497>Print readings
+00498>Print inner lines
+00499>Print vertically (right to left)
+00500>Leave space between columns
+00501>Print definition
+00502>Print stroke count
+00503>Print stroke order
+00504>Database maintenance
+00505>Check dictionary database indexes
+00506>Export user database into delimited text file
+00507>Import user database from delimited text file
+00508>Check user dictionary categories
+00509>Show memory allocation stats
+00510>Number of lines reserved to meaning:
+00511>Printing
+00512>Number of lines on square page:
+00513>Display meaning
+00514>Do not use colors
+00515>Print vertically in columns
+00516>Display lines
+00517>Do not display meaning in learned words
+00518>Do not search for particles
+00519>Do not display reading of learned kanji
+00520>Display hiragana transcript above katakana
+00521>Do not translate hiragana-only words
+00522>Display words with user-defined translation in bold
+00523>Leave space between lines
+00524>Break lines only at word boundaries
+00525>Double size
+00526>Display non-japanese chars in grey
+00527>Show editor hint
+00528>Display meaning on hint
+00529>Leave space even when reading is off
+00530>Character details
+00531>Displayed items:
+00532>Move up
+00533>Move down
+00534>Add...
+00535>Change...
+00536>Delete
+00537>Reset to default
+00538>Popup tool
+00539>Popup delay (x100 ms):
+00540>Text scan range (pixels):
+00541>Left
+00542>Right
+00543>Max. number of dictionary entries:
+00544>Character card size factor:
+00545>Number of characters reserved for compounds on a card (affects overall popup width):
+00546>Minimum:
+00547>Maximum:
+00548>Show translation for japanese/chinese text
+00549>Show translation for english text (only for screen)
+00550>Show character details
+00551>Colors
+00552>Category
+00553>Change
+00554>Revert to default
+00555>Set all to default
+00556>Word grids
+00557>Word markers
+00558>Editor & translator
+00559>Popup tool
+00560>Do not use colors in character list, use Windows default colors instead
+00561>Do not use colors in editor, use Windows default colors instead
+00562>Colors: black - common, grey - uncommon, blue - learned, green - only in names
+00563>Do not use colors in word grids, use Windows default colors instead
+00564+Please make sure that the font you select is a Unicode font with complete "CJK Unified Ideographs" range.
+00564>MingLiu is an example of such font.
+00565>When selecting the font you must ensure that it is really a simplified chinese font.Some fonts support GB2312 standard but instead of simplified characters they show the traditional ones.These fonts would display improper characters in this program.You can identify the right font very easily. In the font selection dialoglook at the first character. If it does not look like arrow pointing up, you should select another font.
+00566>Notice
+00567>Some fonts may not be able to display some characters. If you see that some characters look different in style or aren't displayed properly, select another font.
+00568>Export was finished.
+00569>Indexes are okay.
+00570>Index check
+00571>Indexes are damaged. Replace the dictionary file WAKAN.CHR.
+00572+This action replaces all data in user database.
+00572+It can take a long time.
+00572>Do you want to continue?
+00573>Warning
+00574>Import was finished.
+00575+This function tests whether all the words in user vocabulary
+00575+are in exactly one group category and at least in one lesson category.
+00575>Do you want to continue?
+00576>Check categories
+00577>No errors were found.
+00578>Following recommended fonts were not found on your system:
+00579+Reasonable substitution was found, however for better font quality installation of these fonts and restart
+00579>of the autodetection routine is recommended.
+00580+No reasonable substitution was found, program will probably display characters incorrectly.
+00580>Installation of these fonts and restart of the autodetection routine is HIGHLY recommended.
+00581+These fonts can be found in following Microsoft(R) products:
+00581+1. Microsoft(R) Windows(R) XP - Select "Install eastern-Asian fonts" in language settings in Control Panel.
+00581+2. Microsoft(R) Internet Explorer - Install "support for Japanese, traditional Chinese and simplified Chinese writing".
+00581>3. Microsoft(R) Office 2000/XP - Install Japanese, traditional Chinese and simplified Chinese fonts.
+00582>Missing fonts
+00583+Congratulations!
+00583>All recommended fonts were located on your system and were installed.
+00584+This function will replace all your settings.
+00584>Do you want to continue?
+00585>Statistics
+00586>Program dictionary (WAKAN.CHR)
+00587>User database (WAKAN.USR)
+00588>Dictionary file build date
+00589>KANJIDIC version:
+00590>UNIHAN version:
+00591>Chinese character database:
+00592>Japanese characters:
+00593>All characters:
+00594>Vocabulary entries:
+00595>Learned words:
+00596>Mastered words:
+00597>Problematic words:
+00598>Number of katakana words:
+00599>Number of kanji in words:
+00600>Learned kanji:
+00601>Unlearned basic kanji:
+00602>Non-popular words:
+00603>Learned non-basic kanji:
+00604>Non-basic kanji in words:
+00605>Learned chinese-only characters:
+00606>Words with known writing:
+00607>Learned radicals:
+00608>Stroke order
+00609>Not available
+00610>Text editor / translator
+00611>Open (Ctrl-O)
+00612>Save (Ctrl-S)
+00613>New (Ctrl-N)
+00614>Cut (Ctrl-X)
+00615>ASCII mode (Ctrl-P)
+00616>Character mode (Ctrl-Q)
+00617>Kana mode (Ctrl-W)
+00618>Display reading (Ctrl-H)
+00619>Display meaning (Ctrl-J)
+00620>Clear translation (Ctrl-B)
+00621>Auto-fill translation (Ctrl-F)
+00622>Set translation (Ctrl-T)
+00623>Print (Ctrl-F7)
+00624>Copy (Ctrl-C)
+00625>Paste (Ctrl-V)
+00626><UNNAMED>
+00627>Controls: SPACE - convert to kanji, ENTER - leave in kana, [ - previous match, ] - next match
+00628>Show dictionary tool as part of this window
+00629>Show character details (Ctrl-D)
+00630>Char. details
+00631>Show translation state by colors
+00632>Written
+00633>Added / Learned
+00634>Categories
+00635>Known kanji list has outdated structure and will not be loaded.
+00636>Font name
+00637>Charsets
+00638>Problematic
+00639>Unlearned
+00640>Learned
+00641>Mastered
+00642>Dictionary lookup
+00643>Search by japanese reading (F2)
+00644>J -> E
+00645>Search by english meaning (F3)
+00646>&E -> J
+00647>Search by Kanji stored in clipboard (F4)
+00648>Selected word (Ctrl-Alt-F)
+00649>Selected word
+00650>Characters in word
+00651>Char. in word
+00652>Information (Ctrl-Alt-I)
+00653>Word information
+00654>Editor && translator  (Ctrl-Alt-E)
+00655>Editor / translator
+00656>Search exact word (F5)
+00657>Search beginning (F6)
+00658>Search end (F7)
+00659>Insert word into clipboard
+00660>Clipboard
+00661>Search for inflected words / conjugated verbs
+00662>Auto-preview while typing (full search with arrow button)
+00663>Use dictionaries in group 1 (Ctrl-1)
+00664>Use dictionaries in group 2 (Ctrl-2)
+00665>Use dictionaries in group 3 (Ctrl-3)
+00666>All visible
+00667>Insert word into vocabulary
+00668>Search results did not fit one page, click to display everything
+00669>Search
+00670>All
+00671>Search results (partial)
+00672>Search results
+00673>by phonetic
+00674>by meaning
+00675>by written (clipboard)
+00676>by written (text)
+00677>Not in vocabulary
+00678><UNNAMED>
+00679>This is not a valid UTF-8 or JTT file.
+00680+This JTT file was made using different WAKAN.CHR version. Translation cannot be loaded.
+00680>Do you want to continue?
+00681+This JTT file was created by old version of WaKan.
+00681>It is not compatible with the current version.
+00682+No block is selected. Do you want generate translation for entire document?
+00682>This action can take a very long time.
+00683>Confirmation
+00684>Translator
+00685>Translating...
+00686>Translated text
+00687>There is unsaved text in the Editor. Do you want to save it?
+00688>Example database was not found. Download it from WaKan website.
+00689>No examples available.
+00690>Written (from clipboard):
+00691>Meaning:
+00692>Vocabulary word details
+00693>Status:
+00694>Created:
+00695>Learning list:
+00696>Learned:
+00697>Mastered:
+00698>Move up in the category
+00699>Move down in the category
+00700>Delete this word
+00701>Delete
+00702>Set as
+00703>Mastered
+00704>Vocabulary settings
+00705>Categories:
+00706>Category order
+00707>Phonetic
+00708>Written
+00709>Meaning
+00710>Added date
+00711>Status
+00712>Filter
+00713>Display unlearned words
+00714>Display learned words
+00715>Display mastered words
+00716>Display problematic words
+00717>Add word into vocabulary
+00718>Display translation
+00719>Trans
+00720>Display example in small font
+00721>Small
+00722>Display example in big font
+00723>Big
+00724>Previous example
+00725>Next example
+00726>Clip
+00727>Copy example to clipboard
+00728>This
+00729>Copy all examples to clipboard
+00730>Random order of examples
+00731>Under construction. Will be implemented in next WaKan version.
+00732>Word details
+00733>Categories:
+00734>Kanji / Radical:
+00735>Learning list wizard
+00736>Welcome
+00737+Welcome to the word list generation wizard.
+00737+This wizard can select the proper words for learning. You can check whether you know the selected words and then print the ones you don't know. This method is ideal for learning new words.
+00737+You can perform these three tasks using this wizard:
+00737+1) Let the wizard select you the words that are suitable for learning or repeating (this process is random but you can alter the criteria)
+00737+2) Check whether you know the selected words (words you know are automatically selected as learned)
+00737+3) Print or display the words you didn't know
+00737>Steps 2 and 3 are optional.
+00738>Word selection
+00739>Number of selected words:
+00740>Number of words the list will be selected from:
+00741>Select words from
+00742>Displayed list
+00743>Entire vocabulary
+00744>Selection method
+00745>Select some words proper for learning
+00746>Select some words completely randomly
+00747>Select all words
+00748>Fit the page
+00749>Randomize word order
+00750>Selection criteria
+00751>Select which words do you prefer to be in the list and how strongly you prefer them.
+00752>Learn status
+00753>Not learned - strongly
+00754>Not learned - mildly
+00755>Learned - mildly
+00756>Learned - strongly
+00757>Balance
+00758>I don't care
+00759>Word added date
+00760>Old - strongly
+00761>Old - mildly
+00762>New - mildly
+00763>New - strongly
+00764>Word complexity and popularity
+00765>Simple - strongly
+00766>Simple - mildly
+00767>Complex - mildly
+00768>Complex - strongly
+00769>Frequency of inclusions into learning list
+00770>Seldom - strongly
+00771>Seldom - mildly
+00772>Often - mildly
+00773>Often - strongly
+00774>Prefer problematic words
+00775>Choose only few mastered words
+00776>Default for learning
+00777>Default for repeating
+00778>List statistics
+00779>New learning list was built. It contains these word characteristics.
+00780>Rebuild word list
+00781>Next step
+00782>Check whether you know each word in the newly generated list
+00783>Skip learning test and proceed to printing list
+00784>Learning test settings
+00785>Display
+00786>Meaning
+00787>Phonetic && Written
+00788>Phonetic && Meaning
+00789>Written && Meaning
+00790>50% phonetic, 50% written
+00791>66% phonetic, 33% written
+00792>33% phonetic, 33% written, 33% meaning
+00793>25% phonetic, 25% written, 50% meaning
+00794>50% phonetic, 25% written, 25% meaning
+00795>Learning test
+00796>Test controls
+00797>Test result:
+00798>State will be changed to:
+00799>(&Z) Unknown
+00800>(&X) Known
+00801>(&C) Well known
+00802>(SPACE) Show word
+00803>Learning test results
+00804>No change:
+00805>Learned -> Problematic:
+00806>Mastered -> Problematic:
+00807>Mastered -> Unlearned:
+00808>Problematic -> Unlearned:
+00809>Problematic -> Learned:
+00810>Unlearned -> Learned:
+00811>Unlearned -> Mastered:
+00812>Learned -> Mastered:
+00813>Next action
+00814>Update word states by test results and proceed to next phase
+00815>Forget test results and proceed to next phase
+00816>Display / print learning list
+00817>Category name:
+00818>Update learning list statistics of each word
+00819>Remove from learning list
+00820>Nothing
+00821>All mastered words
+00822>All learned words
+00823>Print learning list
+00824>Save learning list as new category and display it
+00825>Continue
+00826>Back
+00827>Finish
+00828>Vocabulary list
+00829>Add word
+00830>List settings
+00831>Categories (Ctrl-Alt-T)
+00832>Word details
+00833>Export vocabulary
+00834>Import vocabulary
+00835>Print vocabulary list (Ctrl-F8)
+00836>Recommend characters for learning based on current vocabulary
+00837>Recommend kanji
+00838>Automatically generate learning list
+00839>Learning list
+00840>Phonetic is not filled. Cannot add word.
+00841>Meaning is not filled. Cannot add word.
+00842>Category is not filled. Cannot add word.
+00843>This word is already in vocabulary and is in this category.
+00844>New word was successfully added into vocabulary.
+00845>Success
+00846>Word was added into new category.
+00847>This is not a WaKan word list file.
+00848>This WaKan word list file version is not supported.
+00849>Importing word list (000000 words imported - 000000 new words)...
+00850>Importing word list ( words imported -  new words)...
+00851>Word list imported
+00852>Really delete this word?
+00853>Confirmation
+00854>Present
+00855>Absent
+00856>Character recommendation
+00857>Do you really want to delete the category including all word links to it?
+00858>Invalid number of words (must be between 1 and 500).
+00859>Number of words in displayed list must be at least three times higher.
+00860>Building learning list...
+00861>Learning list
+00862>Number of input words must be at least two times higher than number of selected words.
+00863>Number of input words must not be lower than number of selected words.
+00864>Input list cannot be empty.
+00865>Generated list will be lost. Do you want to continue?
+00866>Current test data will be lost. Do you want to continue?
+00867>Select font
+#VERS>1.51
+00868>Tool for learning Japanese & Chinese
+00869>Clip
+00870>Show
+00871>Add
+00872>Repl
+00873>Dict
+00874>Char
+00875>Stroke order display font:
+00876>Display written only if all characters are learned
+#VERS>1.52
+#VERS>1.55
+00877>Unsorted
+00878>Beg.
+00879>Categories:
+00880>Uncheck all categories
+00881>Add category
+00882>Do you really want to delete the category including all character links to it?
+00883>Chinese character mode && character conversion
+00884>Display transcript above kana
+00885>Warning
+00886>Category was not deleted.
+00887>Aborted
+#VERS>1.60
+00888>Select file type
+00889>File type
+00890>Cancel
+00891>Search by yomi can ignore okurigana
+00892>Go to example
+00893>Enter the number of the example:
+00894>Vocabulary category
+00895>Enter category in which the new words will be added:
+#VERS>1.61
+00896>Editor
+00897>Printer is not ready.
+00898>Error
+00899>WKL format is outdated. Import/export routine is maintained for compatibility only. Please use CSV format in the future.
+00900>Notice
+00901>Importing word list (
+00902> words imported - 
+00903> new words)...
+00904>Batch-adding words 
+00905>Batch-adding word categories 
+00906>Batch-adding character indexes 
+00907>Rebuilding indexes
+00908>Vocabulary export
+00909>Choose which information include
+00910>Category && learned state
+00911>Category only
+00912>Neither category nor learned state
+00913>Cancel
+#VERS>1.65
+00914>Build with frequency information (requires WORDFREQ_CK.UNI)
+00915>Cannot find WORDFREQ_CK.UNI file.
+00916>Error
+00917>Creating frequency chart...
+00918>Load entire dictionary into memory (much faster)
+00919>Search substring
+00920>How many most frequent compounds to display in "Freq" mode:
+00921>Order by word frequency (where available)
+00922>Display word count for each word
+00923>English font:
+00924>Romanization && PinYin font:
+00925>Really delete all these words?Opravdu smazat vsechna tato slova?
+00926>Warning
+00927+This operation will affect multiple words.
+00927>Do you want to continue?
+00928><multiple words>
+00929>Change language
+00930>Search middle
+00931>Go to this word in vocabulary
+00932>Dic.search
+00933>Please wait. Searching dictionary...
+00934>Export
+00935>Import
+00936>Add to vocabulary
+00937>Word not found
+00938>Vocabulary
+00939>Phonetic
+00940>Settings...
+00941>Small font
+00942>Large font
+00943>Middle font
+00944>Save characters to file...
+00945+into the clipboard sorted by usefullness.
+00945>Do you want to start this function?
+00946>This function inserts a list of some unlearned characters that are in current vocabulary list
+#VERS>1.67
+00947>Show compounds sorted by frequency
+00948>&Add word into vocabulary
+00949>Auto-save file on exit
+00950>Auto-load last opened file on start

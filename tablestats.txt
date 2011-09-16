@@ -1,0 +1,195 @@
+wakan.chr->Char
+  Records: 20902
+  Indexes: 6
+  Data size: 313k
+  Indexes size: 501k
+  Structure size: 146k
+  Total size: 856k
+  Field Index: 83k
+  Field Chinese: 20k
+  Field Type: 20k
+  Field Unicode: 41k
+  Field StrokeCount: 20k
+  Field JpFrequency: 41k
+  Field ChFrequency: 41k
+  Field JouyouGrade: 20k
+  Field JpStrokeCount: 20k
+
+wakan.chr->CharRead
+  Records: 468861
+  Indexes: 2
+  Data size: 6688k
+  Indexes size: 3750k
+  Structure size: 2813k
+  Total size: 10908k
+  Field Index: 1875k
+  Field Kanji: 937k
+  Field Type: 468k
+  Field Reading: 2468k
+  Field ReadDot: 468k
+  Field Position: 468k
+
+wakan.chr->Radicals
+  Records: 214
+  Indexes: 0
+  Data size: 2k
+  Indexes size: 0k
+  Structure size: 1k
+  Total size: 3k
+  Field Number: 0k
+  Field Variant: 0k
+  Field Unicode: 0k
+  Field StrokeCount: 0k
+  Field BushuCount: 0k
+  Field UnicodeCount: 0k
+  Field JapaneseCount: 0k
+  Field KangXiCount: 0k
+
+wakan.usr->User
+  Records: 2677
+  Indexes: 8
+  Data size: 333k
+  Indexes size: 85k
+  Structure size: 35k
+  Total size: 454k
+  Field Index: 10k
+  Field English: 105k
+  Field Phonetic: 18k
+  Field PhoneticSort: 18k
+  Field Kanji: 12k
+  Field Added: 21k
+  Field Printed: 21k
+  Field Learned: 21k
+  Field Mastered: 21k
+  Field NoPrinted: 10k
+  Field Score: 2k
+  Field MaxScore: 2k
+
+wakan.usr->UserIdx
+  Records: 3699
+  Indexes: 1
+  Data size: 91k
+  Indexes size: 14k
+  Structure size: 23k
+  Total size: 129k
+  Field Word: 14k
+  Field Kanji: 7k
+  Field Begin: 3k
+
+wakan.usr->UserSheet
+  Records: 5461
+  Indexes: 2
+  Data size: 109k
+  Indexes size: 43k
+  Structure size: 28k
+  Total size: 181k
+  Field Word: 21k
+  Field Number: 10k
+  Field Pos: 10k
+
+wakan.usr->UserCat
+  Records: 90
+  Indexes: 4
+  Data size: 67k
+  Indexes size: 1k
+  Structure size: 1k
+  Total size: 70k
+  Field Index: 0k
+  Field Name: 0k
+  Field Type: 0k
+  Field Created: 0k
+
+wakan.usr->UserPrior
+  Records: 439
+  Indexes: 2
+  Data size: 68k
+  Indexes size: 3k
+  Structure size: 3k
+  Total size: 75k
+  Field Kanji: 1k
+  Field Count: 0k
+
+classical.dic->Dict
+  Records: 537
+  Indexes: 4
+  Data size: 112k
+  Indexes size: 8k
+  Structure size: 6k
+  Total size: 127k
+  Field Index: 2k
+  Field English: 32k
+  Field Phonetic: 4k
+  Field Kanji: 4k
+  Field Sort: 3k
+  Field Markers: 0k
+
+edict.dic->Dict
+  Records: 108216
+  Indexes: 4
+  Data size: 5874k
+  Indexes size: 1731k
+  Structure size: 1083k
+  Total size: 8689k
+  Field Index: 432k
+  Field English: 2472k
+  Field Phonetic: 1118k
+  Field Kanji: 743k
+  Field Sort: 924k
+  Field Markers: 118k
+
+j_places.dic->Dict
+  Records: 78390
+  Indexes: 4
+  Data size: 4164k
+  Indexes size: 1254k
+  Structure size: 784k
+  Total size: 6203k
+  Field Index: 313k
+  Field English: 1388k
+  Field Phonetic: 994k
+  Field Kanji: 534k
+  Field Sort: 867k
+  Field Markers: 0k
+
+enamdict.dic->Dict
+  Records: 353689
+  Indexes: 4
+  Data size: 13362k
+  Indexes size: 5659k
+  Structure size: 3537k
+  Total size: 22559k
+  Field Index: 1414k
+  Field English: 4276k
+  Field Phonetic: 2989k
+  Field Kanji: 1998k
+  Field Sort: 2617k
+  Field Markers: 0k
+
+scicomp.dic->Dict
+  Records: 70638
+  Indexes: 4
+  Data size: 4371k
+  Indexes size: 1130k
+  Structure size: 707k
+  Total size: 6208k
+  Field Index: 282k
+  Field English: 1406k
+  Field Phonetic: 1035k
+  Field Kanji: 687k
+  Field Sort: 833k
+  Field Markers: 60k
+
+wadoku.dic->Dict
+  Records: 267750
+  Indexes: 4
+  Data size: 21463k
+  Indexes size: 4284k
+  Structure size: 2678k
+  Total size: 28426k
+  Field Index: 1071k
+  Field English: 11521k
+  Field Phonetic: 3421k
+  Field Kanji: 2511k
+  Field Sort: 2872k
+  Field Markers: 0k
+

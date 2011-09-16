@@ -1,0 +1,1039 @@
+; WaKan language file
+;
+; translates UI of Wakan - Japanese & Chinese Learning tool, http://wakan.manga.cz
+; please send new languages or updates of existing ones to dreamfly@centrum.cz
+;
+; Line format: <5-digit line id><delimiter><text>
+; <text> must not contain CR or LF, delimiter is "+" if the text is continued on the next line, otherwise ">"
+;
+; Language: Czech
+; Author: Filip Kabrt (dreamfly@centrum.cz)
+;
+#LANG>Èesky
+#AUTH>Filip Kábrt
+#VERS>1.50
+00001>Abecedy
+00002>Tisk do BMP
+00003>Šíøka (v pixelech):
+00004>Výška (v pixelech):
+00005>Prefix jména souboru:
+00006>%d.BMP bude pøidáno za prefix (%d je èíslo stránky)
+00007>Zrušit
+00008>Ujistìte se, že máte soubory EDICT.UNI a KANJIDIC.UNI v aktuálním adresáøi.
+00009>Tato operace mùže trvat velmi dlouho (kolem 30 minut).
+00010>Zkontrolujte také, zda máte alespoò 500 MB volného místa na disku.
+00011>Chcete pokraèovat?
+00012>Generování slovníku
+00013>Konvertuji EDICT.UNI...
+00014>Konvertuji KANJIDIC.UNI...
+00015>Konvertuji UNIHAN.TXT...
+00016>Vyprazdòuji tabulky...
+00017>Parsuji Edict...
+00018>Generuji Edict (
+00019>Nemohu pøevést Edict. Konverze do romaji selhala (neznámá kana). Problémy zapsány do ROMAJI.ERR.
+00020>Chyba
+00021>Generuji KanjiDic...
+00022>Generuji KanjiDic (
+00023>Generuji UniHan...
+00024>Generuji UniHan (
+00025>Generování úspìšnì dokonèeno.
+00026> hesel slovníku zkonvertováno
+00027> Kanji záznamù vygenerováno
+00028>Kategorie slovíèek
+00029>Oznaè všechny kategorie
+00030>Upravit kategorii
+00031>Smazat kategorii
+00032>Výbìr seznamu kategorií (lekce / skupiny / pøechodné / seznamy slov)
+00033>Položka detailù znaku
+00034>Položka:
+00035>Popis:
+00036>Zdroj:
+00037>Typ zobrazení
+00038>Celá øádka
+00039>Jeden sloupec
+00040>Více øádek (lámat slova)
+00041>Zobrazování titulku
+00042>Zobrazit titulek
+00043>Zobrazit titulek na celé øádce
+00044>Nezobrazovat titulek
+00045>Zobrazit režim
+00046>Zobrazit v obou režimech
+00047>Zobrazit jen v režimu japonštiny
+00048>Zobrazit jen v režimu èínštiny
+00049>Zobrazit i když chybí informace
+00050>Storno
+00051>Velikost písma
+00052>Malá
+00053>Støední
+00054>Velká
+00055>Vlastní titulek:
+00056>Obsah schránky
+00057>Pøidat do slovíèek
+00058>Význam (upravitelný):
+00059>Kategorie:
+00060>Ètení:
+00061>Zápis:
+00062>Pøidat do slovíèek
+00063>Kódování znakù EDICT
+00064>Zvolte prosím jazyk vsupního EDICT souboru:
+00065+Upozornìní:
+00065+Pro kódování jiná než "Unicode 16-bit" potøebujete mít utilitu UNICONV v aktuálním adresáøi.
+00065>Tato utilita se dá stáhnout z ftp.cc.monash.edu.au/pub/nihongo/uniconv.zip.
+00066>Jazyk / kódování znakù
+00067>Japonština (autodetekce)
+00068>Èínština (autodetekce)
+00069>Korejština (autodetekce)
+00070>Soubor UNICONV.EXE nebyl nalezen. Je vyžadován pro konverzi kódování.
+00071>Import slovníku
+00072>Název souboru (bez pøípony):
+00073>Název slovníku:
+00074>Importované soubory ve formátu EDICT:
+00075>Verze:
+00076>Priorita
+00077>Vytvoøit
+00078>Pøidat
+00079>Odebrat
+00080>Jazyk
+00081>Japonština
+00082>Mandarínská èínština
+00083>Vybudovat index slov (umožòuje anglické vyhledávání)
+00084>Vybudovat index znakù (umožòuje zobrazení složenin)
+00085>Konvertuji 
+00086>Naèítám a parsuji 
+00087>Vstupní soubor: 
+00088>Nepodporované kódování souboru ()
+00089>Nemohu pøevést následující øádek do romanizace:
+00090>Varování
+00091>Vytváøím tabulku slovníku
+00092>Tøídím indexy...
+00093>Slovník byl vytvoøen.
+00094>Hotovo
+00095>Manažer slovníkù
+00096>Slovníky:
+00097>Soubor:
+00098>Poèet hesel:
+00099>Datum vytvoøení:
+00100>Priorita:
+00101>Index slov:
+00102>Index znakù:
+00103>Nastavit slovník k použití se skupinou 1
+00104>Skupina 1
+00105>Nastavit slovník k použití se skupinou 2
+00106>Skupina 2
+00107>Nastavit slovník k použití se skupinou 3
+00108>Skupina 3
+00109>Použít slovník pro složeniny
+00110>Použít pro složeniny
+00111>Použít slovník pro popup nástroj a editor
+00112>Použít pro popup/editor
+00113>Obnovit seznam
+00114>Importovat z EDICT
+00115>Ano
+00116>Ne
+00117>Seznam znakù
+00118>Žádné znaky nebyly nalezeny.
+00119>Hledat a zmìnit poøadí tøídìní
+00120>Hledat && tøídit
+00121>Tøídit (Ctrl-Alt-O)
+00122>Tøídit
+00123>Detaily (Ctrl-D)
+00124>Detaily
+00125>Složeniny
+00126>Zobrazit poøadí tahù
+00127>Tisknout karty znakù (pro opakování) (Ctrl-F6)
+00128>Tisk karet
+00129>Nalezené
+00130>Nalezená
+00131> tradièní
+00132> zjednodušené
+00133> znaky
+00134>Karty znakù
+00135>Zjednoduš.:
+00136>Tradièní:
+00137>Znak #
+00138>Zaøadit mezi nauèené
+00139>Zaøadit mezi nenauèené
+00140>Nauèený
+00141>Bìžný
+00142>Vzácný
+00143>Používaný ve jménech
+00144>Japonský i èínský
+00145>Pouze japonský
+00146>Radikálu
+00147>Poètu tahù
+00148>Frekvence
+00149>Náhodnì
+00150>Funkce není doposud implementována.
+00151>Zobrazit složeniny z uživatelského slovníèku
+00152>Uživ.slov.
+00153>Zobraz složeniny ze slovníku
+00154>Slovník
+00155>Žádná slova nebyla nalezena.
+00156>Zobrazit pouze složeniny s poèáteèním znakem
+00157>Pouze zaèínající
+00158>Zobrazit pouze složeniny oznaèené jako populární
+00159>Detaily znaku
+00160>Radikál:
+00161>Vložit znak do schránky
+00162>Poèet tahù:
+00163>www.zhongwen.com - Etymologická informace o znaku
+00164>www.csse.monash.edu.au/'jwb/wwwjdic - Informace o znaku ve slovníku
+00165>charts.unicode.org/unihan - UniHan záznam pro tento znak
+00166>www.ocrat.com - Animované poøadí tahù
+00167>web.mit.edu/jpnet/ji - Datová stránka Kanji Projectu
+00168>Zobrazit/schovat poøadí tahù (pouze pro japonské Jouyou-kanji)
+00169>Poøadí
+00170>Zavøít
+00171>Zaøadí nebo vyøadí okno z hlavního okna
+00172>Oddokovat
+00173>Zadokovat
+00174>Hledání znakù
+00175>Filtrovat podle PinYinu (èínské ètení) (Ctrl-I)
+00176>Filtrovat podle japonského ètení) (Ctrl-Y)
+00177>Filtrovat podle radikálu (Ctrl-R)
+00178>Radikál
+00179>Filtrovat podle definice (významu) (Ctrl-M)
+00180>Definice
+00181>Filtrovat podle SKIP kódu (viz KANJIDIC pro vysvìtlení)
+00182>Zobrazit všechny znaky (Ctrl-U)
+00183>Zrušit všechny filtry
+00184>Zobrazit pouze nauèené znaky
+00185>Nauèené
+00186>Zobrazit pouze bìžné znaky
+00187>Bìžné
+00188>Zobrazit pouze znaky ve schránce
+00189>Ve schránce
+00190>Filtrovat podle poètu tahù (mùžete zadat rozpìtí, napø. 1-6)
+00191># tahù
+00192>Filtrovat podle Unicode / Nelsonova indexu / Halpernova indexu
+00193>Ostatní
+00194>Filtrovat podle stupnì Jouyou (tøída v japonské škole)
+00195>Seznam...
+00196>Nenauèené
+00197>Tøídit podle
+00198>Uèební index
+00199>Poøadí znakù
+00200>Manažer rozvržení obrazovky
+00201>Standardní rozvržení:
+00202>Procentuální obsazení obrazovky:
+00203>Okenní
+00204>Úplné
+00205>Hledání znakù
+00206>Uèební
+00207>Pøekládání
+00208>Nastavit standardní rozvržení
+00209>Uložit rozvržení
+00210>Nahrát rozvržení
+00211>WaKan 1.50 - Nástroj pro studenty japonštiny a èínštiny
+00212>Seznam znakù (Ctrl-F1)
+00213>Znaky
+00214>Manažer slovíèek (Ctrl-F4)
+00215>Slovíèka
+00216>Slovník (Ctrl-F2)
+00217>Slovník
+00218>Režim èínštiny (F9)
+00219>Režim japonštiny (F8)
+00220>Vymazat schránku
+00221>Textový editor (Ctrl-F3)
+00222>Editor / pøeklad
+00223>Aktivovat/deaktivovat nástroj Screen popup - vyskakovací nápovìdu obrazovky
+00224>Aktivovat/deaktivovat nástroj Screen popup - vyskakovací nápovìdu WaKanu
+00225>&Uložit uživatelské nastavení
+00226>&Zrušit uživatelské zmìny
+00227>&Statistika...
+00228>&Ukonèit
+00229>Seznam &znakù
+00230>&Hledání
+00231>&Tøídìní
+00232>&Detaily
+00233>&Složeniny
+00234>T&isk karet...
+00235>&Slovník
+00236>&Vybrané slovo
+00237>&Znaky ve slovì
+00238>&Informace
+00239>&Pøidat do slovíèek
+00240>&Editace a pøeklad
+00241>Seznam &slovíèek
+00242>&Pøidat slovíèko
+00243>&Nastavení seznamu
+00244>&Kategorie
+00245>&Detaily slovíèka
+00246>&Tisk seznamu...
+00247>&Generátor seznamu...
+00248>&Nastavení...
+00249>&Manažer slovníkù...
+00250>Správce &rozvržení...
+00251>&Okenní
+00252>&Úplné
+00253>Hledání &znakù
+00254>&Uèební
+00255>&Pøekládání
+00256>&Okraje oken
+00257>&Obsah nápovìdy...
+00258>&O programu...
+00259>Režim &japonštiny
+00260>Režim èínštin&y
+00261>Nový
+00262>Otevøít...
+00263>Uložit
+00264>Uložit jako...
+00265>Vyjmout
+00266>Kopírovat
+00267>Vložit
+00268>Vybrat vše
+00269>Režim znakù
+00270>Režim kany
+00271>Režim ASCII
+00272>Zobrazit ètení
+00273>Zobrazit zápis
+00274>Smazat pøeklad
+00275>Automaticky doplnit pøeklad
+00276>Nastavit pøeklad
+00277>Tisk...
+00278>Zobrazit všechny
+00279>Pouze nauèené
+00280>Pouze bìžné
+00281>Pouze ve schránce
+00282>Hledat podle PinYin
+00283>Hledat podle Yomi
+00284>Hledat podle radikálu...
+00285>Pøidat do schránky
+00286>Plné detaily
+00287>Japonsky/Èínsky -> Anglicky
+00288>Anglicky -> Japonsky/Èínsky
+00289>Hledat podle schránky
+00290>Hledat pøesné slovo
+00291>Hledat zaèátek
+00292>Hledat konec
+00293>Okno znakù
+00294>Nastavit jako (ne)nauèené
+00295>Hledat podle významu
+00296>Okno editoru
+00297>Velká
+00298>Seznam znakù
+00299>Textový editor
+00300>Pøeklad textu
+00301>Hledat inflektovaná slova
+00302>Automaticky hledat pøi psaní
+00303>Používat slovníky ze skupiny 1
+00304>Používat slovníky ze skupiny 2
+00305>Používat slovníky ze skupiny 3
+00306>Panel Pøíklady
+00307>Panel Slovíèka
+00308>Panel filtr
+00309>Používat barvy
+00310>&Databáze
+00311>&Nástroje
+00312>&Znaky
+00313>S&lovník
+00314>Použitá skupina slovníkù
+00315>Pøíklady
+00316>Uložit pøepis do kany...
+00317>Pøeklad
+00318>&Slovíèka
+00319>&Pøidat slovíèko...
+00320>&Nápovìda
+00321>Nepodaøilo se zaregistrovat slovník 
+00322>Nepodaøilo se vytvoøit slovník 
+00323>Nahrávání slovníku
+00324>Nahrávám slovník 
+00325>Nepodaøilo se nahrát slovník 
+00326>Použivání staré verze slovníku JALET.DIC není doporuèeno.
+00327+Nebyl nalezen žádný japonský slovník.
+00327>Nahrajte si prosím nìjaké japonské .DIC soubory z webové stránky WAKANu.
+00328+Nebyl nalezen žádný èínský slovník.
+00328>Nahrajte si prosím nìjaké èínské .DIC soubory z webové stránky WAKANu.
+00329>Japonsky -> Anglicky
+00330>Anglicky -> Japonsky
+00331>Èínsky -> Anglicky
+00332>Anglicky -> Èínsky
+00333>Nepodaøilo se nahrát soubor EXAMPLES_.PKG.
+00334+Nemohu nahrát rozvržení. Zastaralá verze.
+00334>Nastavuji místo toho standardní rozvržení.
+00335>Nahrávání rozvržení
+00336>Pokroèilá rozvržení vyžadují rozlišení alespoò 1024x768.
+00337>Pøíliš nízké rozlišení
+00338+Soubor WAKAN.USR má starou strukturu.
+00338+Bude muset být zkonvertován.
+00338+Pøed konverzí byste mìli udìlat zálohu.
+00338>Chcete provést konverzi teï?
+00339>Stará struktura
+00340>Uživatelská data byla zmìnìna. Chcete je uložit?
+00341>Ukonèení aplikace
+00342>Pøíliš mnoho dat.
+00343+Toto je veøejná beta verze programu JaLeT.
+00343+Tato verze není volnì šíøitelná, aèkoli finální verze bude.
+00343+Použití tohoto software je na vlastní nebezpeèí, autor nenese žádnou odpovìdnost za chování programu.
+00343>Pøipomínky posílejte na dreamfly@centrum.cz
+00344>Veøejná vývojová verze
+00345+Tato verze programu WaKan vyžaduje rozlišení alespoò 800x600.
+00345>Prosím nastavte správné rozlišení a spuste tento program znovu.
+00346+Soubor WAKAN.CHR nebyl nalezen.
+00346+Tento soubor je potøeba ke spuštìní aplikace.
+00346+Nahrajte si tento soubor ze stránky WAKANu
+00346>Aplikace bude nyní ukonèena.
+00347+Soubor WAKAN.CFG nebyl nalezen.
+00347+Tento soubor obsahuje dùležité konfiguraèní parametry a je potøeba ke spuštìní aplikace.
+00347>Aplikace bude nyní ukonèena.
+00348+Na vašem poèítaèi nebyly nalezeny žádné fonty z tìchto znakových sad:
+00348+Musíte mít nainstalován alespoò jeden font z každé z tìchto znakových sad, abyste mohli spustit aplikaci.
+00348+Doporuèuji nainstalovat fonty MS Mincho, MS Gothic, SimSun a MingLiU.
+00348+Tyto fonty se nainstalují automaticky, jakmile nainstalujete podporu pro ètení èínštiny a japonštiny ve Windows.
+00348>Prosím nainsalujte vyžadované fonty a spuste tuto aplikaci znovu.
+00349+Spouštíte WaKan poprvé.
+00349+Nyní probìhne pokus o nalezení a nastavení doporuèovaných fontù.
+00349>Tento proces mùžete zopakovat volbou "Nastavit doporuèené fonty" v nastavení.
+00350>Autodetekce fontù
+00351+Autodetekce fontù selhala. Nìkteré znaky nemusí být zobrazeny správnì.
+00351>Chcete pokraèovat?
+00352+Nepodaøilo se nahrát hlavní soubor s konfigurací.
+00352+Soubor WAKAN.CFG je poškozen.
+00352>Aplikace bude nyní ukonèena.
+00353>Na vašem systému nebyl nalezen nìkterý ze standardních fontù.V následujícím dialogu prosím vyberte správné fonty. Chybìjící fonty jsou oznaèeny vykøièníkem.Bez vybrání všech fontù nemùže aplikace správnì fungovat.
+00354+WAKAN.CHR má starou strukturu. Stáhnìte si prosím novou verzi.
+00354>Aplikace bude ukonèena.
+00355+WAKAN.CHR má novìjší strukturu. Stáhnìte si prosím novou verzi WAKAN.EXE.
+00355>Aplikace bude ukonèena.
+00356+Nepodaøilo se nahrát hlavní soubor se slovníkem.
+00356+Soubor WAKAN.CHR je poškozen.
+00356>Aplikace bude nyní ukonèena.
+00357+Soubor WAKAN.RAD nebyl nalezen.
+00357>Vylepšené hledání podle japonských radikálù bude zakázáno.
+00358+Nepodaøilo se nahrát soubor s japonskými radikály.
+00358+Soubor WAKAN.RAD je poškozen.
+00358>Aplikace bude nyní ukonèena.
+00359+Soubor WAKAN.SOD nebyl nalezen.
+00359>Zobrazování poøadí tahù bude zakázáno.
+00360+Nepodaøilo se nahrát soubor s poøadím tahù.
+00360+Soubor WAKAN.SOD je poškozen.
+00360>Aplikace bude nyní ukonèena.
+00361+Nepodaøilo se nahrát hlavní soubor s uživatelskými daty.
+00361+Soubor WAKAN.USR je poškozen.
+00361+Pokud tento soubor odstraníte, bude znovu vytvoøen.
+00361>Aplikace bude nyní ukonèena.
+00362+Nemohu vytvoøit soubor s uživatelskými daty WAKAN.USRProsím spuste tento program ze složky, která není pouze pro ètení.
+00362>Aplikace bude nyní ukonèena.
+00363>Na nápovìdì se pracuje, v souèasném stavu mohou být nìkteré informace nepøesné.
+00364>Upozornìní
+00365>Soubor nápovìdy je zastaralý. Stáhnìte si prosím novou nápovìdu ze stránky wakan.manga.cz.
+00366>Nemohu nalézt soubor WAKAN.CHM.
+00367>Nemohu najít soubor WAKANH.DLL.
+00368+!!TAKO FUNKCE JE SILNÌ EXPERIMENTÁLNÍ!!
+00368+UPOZORNÌNÍ: Vyskakovací popup pro obrazovku je nyní testován.Protože je potøeba nainstalovat hook DLL do celého systému, doporuèuji uložitvšechnu rozdìlanou práci v jiných aplikacích pøed pokraèováním. Nahlaste mi prosím, pokud narazíte na nestabilitu systému.
+00368>Chcete pokraèovat?
+00369>Nezapomeòte pøed použitím této funkce vyplnit kana ètení anebo použijte funkci pro automatický pøeklad.
+00370>Nová kategorie
+00371>Název:
+00372>Typ
+00373>Lekce
+00374>Skupina
+00375>Pøechodná
+00376>Náhled tisku
+00377>První stránka
+00378>Pøedchozí stránka
+00379>Další stránka
+00380>Poslední stránka
+00381>Nastavení tisku
+00382>Tisk
+00383>Zvìtšit
+00384>Zobraz celé
+00385>Zmenšit
+00386>Nastavení stránky
+00387>Seznam radikálù
+00388>Multi-radikálová výbìrová metoda: Zvolte všechny podezøelé radikály pomocí myši
+00389>Výbìr pomocí èástí znaku: Vyberte všechny èásti, které jsou souèástí znaku 
+00390>Nastavit filtr
+00391>Zobrazit varianty
+00392>Zobrazit nauèené radikály modøe
+00393>Zobrazit vzácné radikály šedì
+00394>Výbìrová metoda
+00395>Èásti znaku
+00396>Klasické radikály
+00397>Nastavení
+00398>Obecné
+00399>Velikost písma v møížce slovníku:
+00400>minut
+00401>Uloží na disk údaje o statistice podle aktuálního data takže mùžete sledovat vývoj statistiky
+00402>Ukládat statistiku na disk (složka STAT)
+00403>Zobrazuje slova s nenauèenými znaky odlišnou barvou
+00404>Odlišovat slova s nenauèenými znaky
+00405>Barvy: zelená - dobøe nauèeno, žlutá - nauèeno, modrá - nenauèeno, èervená - problematické
+00406>Zobrazit nauèenost slov pomocí rùzných barev pozadí
+00407>Pøi ukonèení automaticky uložit uživatelská data
+00408>Nahrávat slovníky pouze pøi žádosti
+00409>Více øádkové møížky slov
+00410>Automaticky uložit uživ. databázi každých
+00411>Udìlat zálohu uživatelského souboru do BACKUP adresáøe každý den
+00412>Romanizace
+00413>Romanizace japonštiny
+00414>Test romanizace:
+00415>Japonské:
+00416>Anglické:
+00417>Èeské:
+00418>Výbìr romanizaèního systému pro vstup i pro zobrazení
+00419>Romanizaèní systém
+00420>Kunreišiki rómadži (japonský)
+00421>Hepburnùv (anglický)
+00422>Èeský
+00423>Zobraz fonetické zápisy v
+00424>Hiraganì / Katakanì
+00425>Rómadži
+00426>Romanizace èínštiny
+00427>Zobrazený radikál:
+00428>Velikost znaku v møížce
+00429>Malá
+00430>Støední
+00431>Velká
+00432>Výbìr typu èínských znakù, které jsou zobrazeny
+00433>Zobrazit èínské znaky
+00434>Pouze tradièní (Big5)
+00435>Pouze zjednodušené (GB2312)
+00436>Všechny znaky (Unicode)
+00437>Zobrazovat poèet tahù v møížce
+00438>Japonský
+00439>Korejský
+00440>Použít font møížky pro zobrazení poøadí tahù
+00441>Nepoužívané soubory se slovníky:
+00442>Poøadí výsledkù hledání
+00443>Preferovat slova v uživatelském slovníku
+00444>Preferovat podstatná jména a slovesa
+00445>Preferovat zdvoøilá slova
+00446>Preferovat populární slova (oznaèena "pop")
+00447>Nahradit kanji pomocí kany u slov oznaèených "kana"
+00448>Zobrazit jen výsledky, které se vejdou na stránku v "Auto" režimu
+00449>Automaticky pøepnout na panel Pøíklady
+00450>Fonty
+00451>Font pro romanizaci a anglický text:
+00452>Vybrat
+00453>Japonské fonty
+00454>Font pro znaky v møížce:
+00455>Font pro velké znaky:
+00456>Font pro drobné nápisy:
+00457>Èínské fonty:
+00458>Big5 font pro tradièní znaky v møížce:
+00459>Big5 font pro velké tradièní znaky:
+00460>Kompletní unicode font:
+00461>GB2312 font pro zjednodušené znaky v møížce:
+00462>GB2312 font pro velké zjednodušené znaky:
+00463>Ujistìte se, že oba Big5 a GB2312 fonty jsou buï stejné nebo stejnì vypadají.
+00464>Nastavit doporuèené fonty
+00465>Tisk seznamu slov
+00466>Poèet øádek na ètvercové stranì:
+00467>Tisknout horizontální èáry
+00468>Tisknout vertikální èáry
+00469>Støídat barvy
+00470>Netisknout nenauèené znaky
+00471>Sloupce
+00472>Uživatelské nastavení:
+00473>Ètení            |Význam
+00474>Zápis            |Význam
+00475>Ètení   |Zápis   |Význam
+00476>Zápis   |Ètení   |Význam
+00477>Romaji  |Kana    |Význam
+00478>Ètení1           |Ètení2
+00479>Zápis1           |Zápis2
+00480>Význam1          |Význam2
+00481>Ètení1  |Ètení2  |Ètení3  |Ètení4
+00482>Zápis1  |Zápis2  |Zápis3  |Zápis4
+00483>Význam1 |Význam2 |Význam3 |Význam4
+00484>Ètení1  |Zápis1  |Ètení2  |Zápis2
+00485>Ètení1  |Význam1 |Ètení2  |Význam2
+00486>Zápis1  |Význam1 |Zápis2  |Význam2
+00487>Uživatelské nastavení
+00488>Tisk karet znakù
+00489>Poèet znakù na výšku na ètvercové stranì:
+00490>Prostor pro složeniny (ve znacích):
+00491>Poèet složenin na výšku:
+00492>Kaligrafický font:
+00493>Tisknout složeniny
+00494>Tisknout radikál
+00495>Tisknout alternativní formu
+00496>Tisknout vnìjší èáry
+00497>Tisknout ètení
+00498>Tisknout vnitøní èáry
+00499>Tisknout vertikálnì (zprava doleva)
+00500>Vynech místo mezi sloupci
+00501>Tisknout definici
+00502>Tisknout poèet tahù
+00503>Tisknout poøadí tahù
+00504>Údržba databáze
+00505>Otestuj indexy databáze slovníku
+00506>Exportovat uživatelskou databázi do textového souboru s oddìlovaèi
+00507>Importovat uživatelskou databázi z textového souboru s oddìlovaèi
+00508>Otestovat kategorie slovíèek
+00509>Zobrazit statistiky alokace pamìti
+00510>Poèet øádek rezervovaných pro význam:
+00511>Tisk
+00512>Poèet øádek na ètvercové stranì:
+00513>Zobrazit význam
+00514>Nepoužívat barvy
+00515>Tisknout vertikálnì do sloupcù
+00516>Zobrazovat èáry
+00517>Nezobrazovat význam nauèených slova
+00518>Nevyhledávat partikule
+00519>Nezobrazovat ètení nauèených znakù
+00520>Zobrazovat hiraganový pøepis nad katakanou
+00521>Nepøekládat slova pouze v hiraganì
+00522>Zobrazovat slova s uživatelsky definovaným pøekladem tuènì
+00523>Vynechat místo mezi øádky
+00524>Rozdìlovat øádky jen na rozhraní slov
+00525>Dvojnásobná velikost
+00526>Zobrazovat nejaponské znaky šedì
+00527>Zobrazit nápovìdu pøi psaní
+00528>Zobrazit význam v nápovìdì
+00529>Vynechat místo i když je ètení vypnuto
+00530>Detaily znakù
+00531>Zobrazené položky:
+00532>Pøesuò nahoru
+00533>Pøesuò dolù
+00534>Pøidat...
+00535>Zmìnit...
+00536>Zrušit
+00537>Nastavit implicitní
+00538>Popup okno
+00539>Zpoždìní pøed zobrazením (x100 ms):
+00540>Rozsah prohledávání textu (pixely):
+00541>Doleva
+00542>Doprava
+00543>Maximální poèet položek ze slovníku:
+00544>Faktor velikosti karty znaku:
+00545>Poèet znakù rezervovaných pro složeniny na kartì (ovlivní celkovou šíøku okna):
+00546>Minimálnì:
+00547>Maximálnì:
+00548>Zobrazit pøeklad pro japonský/èínský text
+00549>Zobrazit pøeklad pro anglický text (pouze v režimu obrazovky)
+00550>Zobrazit detaily znaku
+00551>Barvy
+00552>Kategorie
+00553>Zmìnit
+00554>Vrátit na výchozí
+00555>Nastavit vše na výchozí
+00556>Møížky slov
+00557>Pøíznaky slov
+00558>Editor / Pøekládání
+00559>Popup nástroj
+00560>Nepoužívat barvy v seznamu znakù, použít nastavení Windows
+00561>Nepoužívat barvy v editoru, použít místo toho barvy Windows
+00562>Barvy: èerná - bìžný znak, šedá - vzácný, modrá - nauèený, zelená - pouze ve jménech
+00563>Nepoužívat barvy v møížce slov, použít barvy Windows
+00564+Ujistìte se, že font, který vyberete je Unicode font s kompletní "CJK Unified Ideographs" rozsahem.
+00564>Takovým fontem je napøíklad MingLiu.
+00565>Pøi výbìru znakù se musíte ujistit, že se jedná opravdu o zjednodušený font.Nìkteré fonty podporují standard GB2312, ale místo zjednodušených znakù zobrazují znaky tradièní.Tyto fonty by zobrazovaly v tomto programu špatné znaky.Správný font poznáte jednoduše. Ve výbìru fontù se podívejte na první znak,pokud nevypadá jako šipka smìøující vzhùru, vyberte jiný font.
+00566>Varování
+00567>Nìkteré fonty nemusí být schopny zobrazit všechny znaky. Pokud nebudou nìkteré znaky zobrazeny v poøádku nebo budou zobrazeny v jiném stylu, vyberte jiný font.
+00568>Export byl dokonèen.
+00569>Indexy jsou v poøádku.
+00570>Test indexù
+00571>Indexy jsou v poškozeny. Vymìòte soubor WAKAN.CHR.
+00572+Tato akce nahradí všechna data v uživatelské databázi.
+00572+Akce mùže trvat velmi dlouho.
+00572>Opravdu chcete pokraèovat?
+00573>Upozornìní
+00574>Import byl dokonèen.
+00575+Tato funkce otestuje jestli jsou všechna slovíèka
+00575+v právì jedné skupinové kategorii a alespoò jedné kategorii lekce.
+00575>Chcete pokraèovat?
+00576>Otestovat kategorie
+00577>Žádné chyby nebyly nalezeny.
+00578>Následující doporuèené fonty nebyly na vašem systému nalezeny:
+00579+Byla nalezena rozumná substituce za tyto fonty, avšak pro lepší kvalitu písma
+00579>+doporuèujeme nainstalovat tyto fonty a restartovat autodetekci.
+00580+Za tyto fonty nebyla nalezena rozumná náhrada, program mùže zobrazovat znaky nesprávnì.
+00580>Instalace tìchto fontù a restartování autodetekce je SILNÌ doporuèováno.
+00581+Tyto fonty se nacházejí v tìchto produktech Microsoftu:
+00581+1. Microsoft(R) Windows(R) XP - Zvolte "Nainstalovat soubory pro jazyky východní Asie" v jazykových nastaveních v Ovládacím panelu.
+00581+2. Microsoft(R) Internet Explorer - Nainstalujte "podporu pro zápis japonštiny, tradièní a zjednodušené èínštiny".
+00581>3. Microsoft(R) Office 2000/XP - Nainstalujte japonské, tradièní a zjednodušené èínské fonty.
+00582>Chybìjící fonty
+00583+Gratulujeme!
+00583>Všechny doporuèované fonty byly na vašem systému nalezeny a byly nainstalovány.
+00584+Tato funkce nahradí všechna vaše nastavení.
+00584>Chcete pokraèovat?
+00585>Statistika
+00586>Programový slovník (WAKAN.CHR)
+00587>Uživatelská databáze (WAKAN.USR)
+00588>Datum pøekladu slovníku:
+00589>Verze KANJIDIC:
+00590>Verze UNIHAN:
+00591>Databáze èínských znakù:
+00592>Japonských znakù:
+00593>Všech znakù:
+00594>Poèet slovíèek:
+00595>Nauèených slovíèek:
+00596>Dobøe nauèených slovíèek:
+00597>Problematických slovíèek:
+00598>Poèet slovíèek v katakanì:
+00599>Poèet kanji ve slovíèkách::
+00600>Nauèeno kanji:
+00601>Nenauèených základních kanji:
+00602>Nepopulární slovíèka:
+00603>Nauèených nezákladních znakù:
+00604>Nezákladní kanji ve slovíèkách:
+00605>Nauèených pouze-èínských znakù:
+00606>Slovíèka se známým zápisem:
+00607>Nauèených radikálù:
+00608>Poøadí tahù
+00609>Není k dispozici
+00610>Editace a pøeklad textu
+00611>Otevøít (Ctrl-O)
+00612>Uložit (Ctrl-S)
+00613>Nový (Ctrl-N)
+00614>Vyjmout (Ctrl-X)
+00615>Režim ASCII (Ctrl-P)
+00616>Režim znakù (Ctrl-Q)
+00617>Režim kany (Ctrl-W)
+00618>Zobrazit ètení (Ctrl-H)
+00619>Zobrazit význam (Ctrl-J)
+00620>Smazat pøeklad (Ctrl-B)
+00621>Automaticky doplnit pøeklad (Ctrl-F)
+00622>Nastavit pøeklad (Ctrl-T)
+00623>Vytisknout (Ctrl-F7)
+00624>Kopírovat (Ctrl-C)
+00625>Vložit (Ctrl-V)
+00626><BEZEJMENNÝ>
+00627>Ovládání: SPACE - pøevést do kanji, ENTER - nechat v kanì, [ - pøedchozí možnost, ] - další možnost
+00628>Zobrazit slovník jako souèást tohoto okna
+00629>Zobrazit detaily znaku (Ctrl-D)
+00630>Detaily znaku
+00631>Zobrazit stav pøekladu barvami
+00632>Zápis
+00633>Pøidáno / Nauèeno
+00634>Kategorie
+00635>Seznam nauèených znakù má zastaralou strukturu a proto nebude nahrán.
+00636>Název fontu
+00637>Znakové sady
+00638>Problematické
+00639>Nenauèené
+00640>Nauèené
+00641>Dobøe nauèené
+00642>Hledání ve slovníku
+00643>Hledat podle japonského ètení (F2)
+00644>J -> A
+00645>Hledat podle anglického významu (F3)
+00646>A -> J
+00647>Hledat podle znakù ve schránce (F4)
+00648>Vybrané slovo (Ctrl-Alt-F)
+00649>Vybrané slovo
+00650>Znaky ve slovì
+00651>Znaky ve slovì
+00652>Informace (Ctrl-Alt-I)
+00653>Informace o slovu
+00654>Editace a pøeklad (Ctrl-Alt-E)
+00655>Editace / pøeklad
+00656>Hledat pøesné slovo (F5)
+00657>Hledat zaèátek (F6)
+00658>Hledat konec (F7)
+00659>Vložit slovo do schránky
+00660>Schránka
+00661>Hledat inflektovaná slova
+00662>Automatický náhled pøi psaní (plný seznam na tlaèítku s šipkou)
+00663>Použít slovníky ve skupinì 1 (Ctrl-1)
+00664>Použít slovníky ve skupinì 2 (Ctrl-2)
+00665>Použít slovníky ve skupinì 3 (Ctrl-3)
+00666>Vše zobrazeno
+00667>Vložit slovo do slovíèek
+00668>Výsledky hledání se nevešly na jednu stranu, stiskni pro zobrazení všeho
+00669>Hledat
+00670>Vše
+00671>Výsledky hledání (èásteèné)
+00672>Výsledky hledání
+00673>podle ètení
+00674>podle významu
+00675>podle zápisu (schránka)
+00676>podle zápisu (text)
+00677>Není ve slovíèkách
+00678><BEZEJMÉNA>
+00679>Toto není platný UTF-8 nebo JTT soubor.
+00680+Tento JTT soubor byl vytvoøen s použitím jiné verze WAKAN.CHR. Pøeklad nemùže být nahrán.
+00680>Chcete pokraèovat?
+00681+Tento JTT soubor byl vytvoøen starou verzí WaKanu.
+00681>Se souèasnou verzí není kompatibilní.
+00682+Není zvolen žádný blok. Chcete vygenerovat informace o pøekladu pro celý dokument?
+00682>Tato akce mùže trvat velmi dlouho.
+00683>Potvrzení
+00684>Pøekladaè
+00685>Pøekládám...
+00686>Pøeložený text
+00687>Dokument byl zmìnìn. Chcete ho uložit?
+00688>Databáze pøíkladù nebyla nalezena. Stáhnìte ji ze stránky WaKanu.
+00689>Žádné pøíklady nejsou k dispozici.
+00690>Zápis (ze schránky):
+00691>Význam:
+00692>Detaily slovíèka
+00693>Stav:
+00694>Vytvoøeno:
+00695>Uèební seznam:
+00696>Nauèeno:
+00697>Dobøe nauèeno:
+00698>Pøesuò nahoru v kategorii
+00699>Pøesuò dolù v kategorii
+00700>Smazat toto slovíèko
+00701>Smazat
+00702>Nastav jako
+00703>Dobøe nauèeno
+00704>Nastavení slovíèek
+00705>Kategorie:
+00706>Poøadí v kategorii
+00707>Ètení
+00708>Zápisu
+00709>Významu
+00710>Datumu pøidání
+00711>Stavu
+00712>Filtr
+00713>Zobrazit nenauèená slovíèka
+00714>Zobrazit nauèená slovíèka
+00715>Zobrazit dobøe nauèená slovíèka
+00716>Zobrazit problematická slovíèka
+00717>Pøidat slovo do slovíèek
+00718>Zobrazit pøeklad
+00719>Pøeklad
+00720>Zobrazit pøíklad v malém fontu
+00721>Malé
+00722>Zobrazit pøíklad ve velkém fontu
+00723>Velké
+00724>Pøedchozí pøíklad
+00725>Další pøíklad
+00726>Schr.
+00727>Zkopírovat pøíklad do schránky
+00728>Toto
+00729>Zkopírovat všechny pøíklady do schránky
+00730>Náhodné poøadí pøíkladù
+00731>Ve výstavbì. Bude hotovo v pøíští verzi WaKanu.
+00732>Detaily slova
+00733>Kategorie:
+00734>Kanji / Radikál:
+00735>Prùvodce uèebním seznamem
+00736>Vítejte
+00737+Vítejte v prùvodci generováním uèebního seznamu.
+00737+Tento prùvodce vám pomùže vybrat vhodná slova k nauèení. Mùžete zjistit jestli vybraná slova umíte a poté vytisknout ta, která neumíte. Tato metoda je ideální pro uèení nových slovíèek.
+00737+S tímto prùvodcem mùžete udìlat tyto tøi èinnosti:
+00737>1) Nechat program vybrat slovíèka, která jsou vhodná k nauèení nebo opakování (tento proces je náhodný, ale kritéria mùžete z
+00738>Výbìr slovíèek
+00739>Poèet vybraných slovíèek:
+00740>Poèet slovíèek, ze kterých bude vybrán seznam:
+00741>Vybrat slovíèka z
+00742>Zobrazeného seznamu
+00743>Celého slovníèku
+00744>Metoda výbìru
+00745>Vybrat nìjaká slovíèka podle vhodnosti k nauèení
+00746>Vybrat nìjaká slovíèka úplnì náhodnì
+00747>Vybrat všechna slovíèka
+00748>Akorát na stránku
+00749>Poøadí slovíèek urèit náhodnì
+00750>Kritéria výbìru
+00751>Vyberte, která slova upøednostòujete aby byly v seznamu a jak silnì.
+00752>Stav nauèení
+00753>Nenauèeno - silnì
+00754>Nenauèeno - slabì
+00755>Nauèeno - slabì
+00756>Nauèeno - silnì
+00757>Vyvážit
+00758>Je mi to jedno
+00759>Datum pøidání slovíèka
+00760>Stará - silnì
+00761>Stará - slabì
+00762>Nová - slabì
+00763>Nová - silnì
+00764>Popularita a složitost slovíèka
+00765>Jednoduchá - silnì
+00766>Jednoduchá - slabì
+00767>Složitá - slabì
+00768>Složitá - silnì
+00769>Frekvence zaøazení do uèebního seznamu
+00770>Zøídka - silnì
+00771>Zøídka - slabì
+00772>Èasto - slabì
+00773>Èasto - silnì
+00774>Upøednostnit problematická slova
+00775>Vybrat jenom nìkolik dobøe nauèených slovíèek
+00776>Výchozí pro uèení
+00777>Výchozí pro opakování
+00778>Statistiky seznamu
+00779>Byl vytvoøen nový uèební seznam. Obsahuje tyto charakteristiky slovíèek:
+00780>Vytvoøit seznam znovu
+00781>Další krok
+00782>Zjistit, zda umíte každé slovíèko v novì vygenerovaném seznamu
+00783>Pøeskoèit test znalosti a pøejít k tisku seznamu
+00784>Nastavení testu znalosti slovíèek
+00785>Zobrazovat
+00786>Význam
+00787>Ètení a zápis
+00788>Ètení a význam
+00789>Zápis a význam
+00790>50% ètení, 50% zápis
+00791>66% ètení, 33% zápis
+00792>33% ètení, 33% zápis, 33% význam
+00793>25% ètení, 25% zápis, 50% význam
+00794>50% ètení, 25% zápis, 25% význam
+00795>Test znalosti slovíèek
+00796>Ovládání testu
+00797>Výsledek testu:
+00798>Stav bude zmìnìn na:
+00799>(&Z) Neznámé
+00800>(&X) Známé
+00801>(&C) Dobøe známé
+00802>(SPACE) Zobrazit slovo
+00803>Výsledky testu znalosti slovíèek
+00804>Beze zmìny:
+00805>Nauèeno -> Problematické:
+00806>Dobøe nauèeno -> Problematické:
+00807>Dobøe nauèeno -> Nenauèeno:
+00808>Problematické -> Nenauèeno:
+00809>Problematické -> Nauèeno:
+00810>Nenauèeno -> Nauèeno:
+00811>Nenauèeno -> Dobøe nauèeno:
+00812>Nauèeno -> Dobøe nauèeno:
+00813>Další akce
+00814>Aktualizovat stav slovíèek podle výsledkù testu a pokraèovat další fází
+00815>Zapomenout výsledky testu a pokraèovat další fází
+00816>Tisk / zobrazení uèebního seznamu
+00817>Název kategorie:
+00818>Aktualizovat statistiku uèebního seznamu u každého slovíèka
+00819>Z uèebního seznamu vyøadit
+00820>Nic
+00821>Všechna dobøe nauèená slovíèka
+00822>Všechna nauèená slovíèka
+00823>Vytisknout uèební seznam
+00824>Uložit uèební seznam jako novou kategorii a zobrazit ho
+00825>Pokraèovat
+00826>Zpìt
+00827>Dokonèit
+00828>Seznam slovíèek
+00829>Pøidat slovíèko
+00830>Nastavení seznamu
+00831>Kategorie (Ctrl-Alt-T)
+00832>Detaily slovíèka
+00833>Exportovat slovíèka
+00834>Importovat slovíèka
+00835>Tisknout seznam slovíèek (Ctrl-F8)
+00836>Doporuèit znaky k nauèení podle aktuálních slovíèek
+00837>Doporuèit kanji
+00838>Automaticky generovat uèební seznam
+00839>Uèební seznam
+00840>Ètení není vyplnìno. Nemohu pøidat slovo.
+00841>Význam není vyplnìn. Nemohu pøidat slovo.
+00842>Kategorie není vyplnìna. Nemohu pøidat slovo.
+00843>Toto slovo již bylo pøidáno a je v této kategorii.
+00844>Nové slovo bylo úspìšnì pøidáno.
+00845>Úspìch
+00846>Slovo bylo pøidáno do nové kategorie.
+00847>Toto není soubor se slovy WaKan.
+00848>Tato verze souboru se slovy WaKan není podporována.
+00849>Importuji seznam slovíèek (00000 slov importováno - 000000 nových slov...
+00850>Importuji seznam slovíèek ( slov importováno -  nových slov...
+00851>Seznam slovíèek naimportován
+00852>Opravdu chcete smazat toto slovo?
+00853>Ovìøení
+00854>Pøítomna
+00855>Nepøítomna
+00856>Doporuèení znakù
+00857>Opravdu chcete smazat kategorii vèetnì pøiøazení všech slov do ní?
+00858>Neplatný poèet slov (musí být mezi 1 a 500).
+00859>Poèet slovíèek v zobrazeném seznamu musí být alespoò tøikrát vìtší.
+00860>Vytváøím uèební seznam...
+00861>Uèební seznam
+00862>Poèet vstupních slovíèek musí být alespoò dvakrát vìtší než poèet vybíraných slovíèek.
+00863>Poèet vstupních slovíèek nesmí být menší než poèet vybíraných slovíèek.
+00864>Vstupní seznam nemùže být prázdný.
+00865>Vygenerovaný seznam bude ztracen. Chcete pokraèovat?
+00866>Souèasná testovací data budou ztracena. Chcete pokraèovat?
+00867>Výbìr fontu
+#VERS>1.51
+00868>Nástroj pro studenty japonštiny a èínštiny
+00869>Schr
+00870>Ukaž
+00871>CPøid
+00872>Pøep
+00873>Slov
+00874>Znak
+00875>Font pro zobrazení poøadí tahù:
+00876>Zobrazit zápis jen, když jsou všechny znaky nauèeny
+#VERS>1.52
+#VERS>1.55
+00877>Netøídit
+00878>Zaè.
+00879>Kategorie:
+00880>Odznaè všechny kategorie
+00881>Pøidat kategorii
+00882>Opravdu chcete smazat kategorii vèetnì pøiøazení všech znakù do ní?
+00883>Režim èínských znakù a konverze
+00884>Zobrazovat pøepis nad kanou
+00885>Varování
+00886>Kategorie nebyla smazána.
+00887>Zrušeno
+#VERS>1.60
+00888>Zvolte typ souboru
+00889>Typ souboru
+00890>Storno
+00891>Hledání podle yomi mùže ignorovat okuriganu
+00892>Pøejít na pøíklad
+00893>Zadejte èíslo pøíkladu:
+00894>Kategorie slovíèek
+00895>Zadejte kategorii do které budou pøidána nová slovíèka
+#VERS>1.61
+00896>Editor
+00897>Tiskárna není pøipravena.
+00898>Chyba
+00899>Formát WKL je zastaralý. Importovací/exportovací rutina je zachována pouze kvùli kompatibilitì.
+00900>Upozornìní
+00901>Importuji seznam slovíèek (
+00902> slov importováno - 
+00903> nových slov...
+00904>Pøidávám slova 
+00905>Pøidávám kategorie slov 
+00906>Pøidávám indexy znakù 
+00907>Vytváøím indexy...
+00908>Export slovíèek
+00909>Zvolte, které informace zahrnout
+00910>Kategorii a stav nauèení
+00911>Pouze kategorii
+00912>Ani kategorii ani stav nauèení
+00913>Zrušit
+#VERS>1.65
+00914>Vytváøet slovník s informací o frekvenci slov (vyžaduje WORDFREQ_CK.UNI)
+00915>Nemohu najít soubor WORDFREQ_CK.UNI
+00916>Chyba
+00917>Vytváøím tabulku frekvence...
+00918>Nahrát celý slovník do pamìti (mnohem rychlejší)
+00919>Hledat podøetìzec
+00920>Kolik nejfrekventovanìjších složenin zobrazit v režimu "Freq"
+00921>Tøídit podle frekvence slov (když je k dispozici)
+00922>Zobrazovat frekvenèní poèet u každého slova
+00923>Font pro anglické texty:
+00924>Romanizaèní a PinYin font:
+00926>Varovani
+00927+Tato operace ovlivni mnoho slov.
+00927>Chcete pokracovat?
+00928><více slov>
+00929>Zmìna jazyka
+00930>Hledat prostøedek
+00931>Pøejít na toto slovo ve slovíèkách
+00932>Slovník
+00933>Prosím èekejte. Prohledávám slovník...
+00934>Export
+00935>Import
+00936>Pøidat do slovíèek
+00937>Slovo nebylo nalezeno
+00938>Slovíèka
+00939>Ètení
+00940>Nastavení...
+00941>Malé písmo
+00942>Velké písmo
+00943>Støední písmo
+00944>Uložit znaky do souboru...
+00945+seøazený podle vhodnosti znakù k nauèení.
+00945>Chcete tuto funkci spustit?
+00946>Tato funkce vloží do schránky seznam nìkterých doposud nenauèených znakù v aktuálním seznamu slovíèek
+#VERS>1.67
+00947>Zobrazit složeniny setøídìné podle frekvence
+00948>&Pøidat slovíèko
+00949>Automaticky uložit soubor pøi ukonèení
+00950>Automaticky nahrát naposled otevøený soubor pøi startu
+00951>Poèet plných složenin
+00952>Místo pro složeniny ze slovíèek (ve znacích):
+00953>Vertikální poèet složenin ze slovíèek:
+00954>Tisknout plné složeniny
+00955>Tisknout složeniny ze slovíèek
+00956>Tøídit plné složeniny podle frekvence
+00957>Oznaèit / odznaèit všechny kategorie

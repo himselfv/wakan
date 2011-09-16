@@ -1,0 +1,930 @@
+object fMain: TfMain
+  Left = 27
+  Top = 5
+  BorderStyle = bsDialog
+  Caption = 'Japanese Word Builder'
+  ClientHeight = 667
+  ClientWidth = 969
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'MS Sans Serif'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poScreenCenter
+  OnClose = FormClose
+  OnShow = FormShow
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Label6: TLabel
+    Left = 320
+    Top = 8
+    Width = 374
+    Height = 32
+    Caption = 'JAPANESE WORD BUILDER'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -27
+    Font.Name = 'Book Antiqua'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object GroupBox1: TGroupBox
+    Left = 8
+    Top = 48
+    Width = 417
+    Height = 113
+    Caption = 'Print wordsheet'
+    TabOrder = 0
+    object SpeedButton1: TSpeedButton
+      Left = 152
+      Top = 24
+      Width = 129
+      Height = 22
+      GroupIndex = 1
+      Down = True
+      Caption = 'Learn'
+    end
+    object SpeedButton2: TSpeedButton
+      Left = 152
+      Top = 48
+      Width = 129
+      Height = 22
+      GroupIndex = 1
+      Caption = 'Fun'
+    end
+    object SpeedButton3: TSpeedButton
+      Left = 152
+      Top = 72
+      Width = 129
+      Height = 22
+      GroupIndex = 1
+      Caption = 'Recap'
+    end
+    object Label1: TLabel
+      Left = 16
+      Top = 24
+      Width = 83
+      Height = 13
+      Caption = 'Number of words:'
+    end
+    object Edit1: TEdit
+      Left = 16
+      Top = 40
+      Width = 121
+      Height = 21
+      TabOrder = 0
+      Text = '20'
+    end
+    object CheckBox1: TCheckBox
+      Left = 16
+      Top = 72
+      Width = 97
+      Height = 17
+      Caption = 'Written first'
+      TabOrder = 1
+    end
+    object Button2: TButton
+      Left = 296
+      Top = 24
+      Width = 113
+      Height = 73
+      Caption = 'PRINT'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -21
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 2
+      OnClick = Button2Click
+    end
+  end
+  object GroupBox2: TGroupBox
+    Left = 8
+    Top = 168
+    Width = 417
+    Height = 177
+    Caption = 'Add word'
+    TabOrder = 1
+    object Label2: TLabel
+      Left = 16
+      Top = 16
+      Width = 37
+      Height = 13
+      Caption = 'Written:'
+    end
+    object Label3: TLabel
+      Left = 16
+      Top = 67
+      Width = 45
+      Height = 13
+      Caption = 'Phonetic:'
+    end
+    object Label4: TLabel
+      Left = 16
+      Top = 120
+      Width = 37
+      Height = 13
+      Caption = 'English:'
+    end
+    object UnicodeEdit1: TUnicodeEdit
+      Left = 16
+      Top = 32
+      Width = 257
+      Height = 32
+      AutoSize = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'MS Mincho'
+      Font.Style = []
+      ImeMode = imHira
+      ParentFont = False
+      TabOrder = 0
+    end
+    object UnicodeEdit2: TUnicodeEdit
+      Left = 16
+      Top = 83
+      Width = 257
+      Height = 32
+      AutoSize = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'MS Mincho'
+      Font.Style = []
+      ImeMode = imHira
+      ParentFont = False
+      TabOrder = 1
+    end
+    object Button1: TButton
+      Left = 296
+      Top = 24
+      Width = 105
+      Height = 25
+      Caption = 'Search dictionary'
+      TabOrder = 3
+      OnClick = Button1Click
+    end
+    object Edit2: TEdit
+      Left = 16
+      Top = 136
+      Width = 385
+      Height = 24
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'MS Mincho'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 2
+    end
+    object Button3: TButton
+      Left = 296
+      Top = 64
+      Width = 105
+      Height = 57
+      Caption = 'ADD'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -21
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 4
+      OnClick = Button3Click
+    end
+  end
+  object GroupBox3: TGroupBox
+    Left = 432
+    Top = 128
+    Width = 337
+    Height = 217
+    Caption = 'Statistics'
+    TabOrder = 3
+    object Label7: TLabel
+      Left = 16
+      Top = 32
+      Width = 45
+      Height = 16
+      Caption = 'Added:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label8: TLabel
+      Left = 16
+      Top = 56
+      Width = 60
+      Height = 16
+      Caption = 'Learned:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label9: TLabel
+      Left = 16
+      Top = 80
+      Width = 69
+      Height = 16
+      Caption = 'Mastered:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label10: TLabel
+      Left = 168
+      Top = 104
+      Width = 78
+      Height = 28
+      Caption = 'Score:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label11: TLabel
+      Left = 16
+      Top = 168
+      Width = 73
+      Height = 28
+      Caption = 'Level:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label12: TLabel
+      Left = 168
+      Top = 56
+      Width = 81
+      Height = 16
+      Caption = 'Experience:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label13: TLabel
+      Left = 168
+      Top = 80
+      Width = 54
+      Height = 16
+      Caption = 'Needed:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label15: TLabel
+      Left = 145
+      Top = 32
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label16: TLabel
+      Left = 145
+      Top = 56
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label17: TLabel
+      Left = 145
+      Top = 80
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label18: TLabel
+      Left = 313
+      Top = 56
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label19: TLabel
+      Left = 313
+      Top = 80
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label21: TLabel
+      Left = 306
+      Top = 136
+      Width = 15
+      Height = 27
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label22: TLabel
+      Left = 138
+      Top = 168
+      Width = 15
+      Height = 27
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -24
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Gauge1: TGauge
+      Left = 176
+      Top = 168
+      Width = 145
+      Height = 25
+      ForeColor = clNavy
+      Progress = 0
+    end
+    object Gauge2: TGauge
+      Left = 168
+      Top = 32
+      Width = 153
+      Height = 17
+      Progress = 0
+    end
+    object Label14: TLabel
+      Left = 16
+      Top = 104
+      Width = 88
+      Height = 16
+      Caption = 'Kana known:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Label20: TLabel
+      Left = 145
+      Top = 104
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label23: TLabel
+      Left = 145
+      Top = 128
+      Width = 8
+      Height = 18
+      Alignment = taRightJustify
+      Caption = '0'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = []
+      ParentFont = False
+    end
+    object Label24: TLabel
+      Left = 16
+      Top = 128
+      Width = 89
+      Height = 16
+      Caption = 'Kanji known:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -13
+      Font.Name = 'Bookman Old Style'
+      Font.Style = [fsBold]
+      ParentFont = False
+    end
+    object Button5: TButton
+      Left = 8
+      Top = 16
+      Width = 75
+      Height = 25
+      Caption = 'CALC'
+      TabOrder = 0
+      Visible = False
+      OnClick = Button5Click
+    end
+  end
+  object GroupBox4: TGroupBox
+    Left = 432
+    Top = 48
+    Width = 337
+    Height = 73
+    Caption = 'Return wordsheet'
+    TabOrder = 2
+    object Label5: TLabel
+      Left = 16
+      Top = 24
+      Width = 93
+      Height = 13
+      Caption = 'Wordsheet number:'
+    end
+    object Edit3: TEdit
+      Left = 16
+      Top = 40
+      Width = 105
+      Height = 21
+      TabOrder = 0
+      Text = '1'
+    end
+    object Button4: TButton
+      Left = 216
+      Top = 16
+      Width = 105
+      Height = 41
+      Caption = 'RETURN'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -21
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 1
+      OnClick = Button4Click
+    end
+  end
+  object GroupBox5: TGroupBox
+    Left = 8
+    Top = 352
+    Width = 953
+    Height = 305
+    Caption = 'User dictionary'
+    TabOrder = 4
+    object UnicodeStringGrid1: TUnicodeStringGrid
+      Left = 16
+      Top = 24
+      Width = 921
+      Height = 265
+      ColCount = 4
+      DefaultColWidth = 100
+      DefaultRowHeight = 16
+      FixedCols = 0
+      Font.Charset = GB2312_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Mincho'
+      Font.Style = []
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goRowSelect]
+      ParentFont = False
+      TabOrder = 0
+      Visible = False
+      OnDblClick = UnicodeStringGrid1DblClick
+      ColWidths = (
+        148
+        146
+        372
+        227)
+      RowHeights = (
+        16
+        16
+        16
+        16
+        16)
+    end
+    object UnicodeRichEdit1: TUnicodeRichEdit
+      Left = 560
+      Top = 88
+      Width = 185
+      Height = 89
+      AutoURLDetect = adNone
+      CustomURLs = <
+        item
+          Name = 'e-mail'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'http'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'file'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'mailto'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'ftp'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'https'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'gopher'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'nntp'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'prospero'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'telnet'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'news'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end
+        item
+          Name = 'wais'
+          Color = clWindowText
+          Cursor = crDefault
+          Underline = True
+        end>
+      LangOptions = [loAutoFont]
+      Language = 1041
+      ShowSelectionBar = False
+      TabOrder = 1
+      URLColor = clBlue
+      URLCursor = crHandPoint
+      Visible = False
+      InputFormat = ifUnicode
+      OutputFormat = ofUnicode
+      SelectedInOut = False
+      PlainRTF = False
+      UndoLimit = 0
+      AllowInPlace = False
+    end
+  end
+  object GroupBox6: TGroupBox
+    Left = 776
+    Top = 48
+    Width = 185
+    Height = 297
+    Caption = 'Dictionary viewer'
+    TabOrder = 5
+    object Button6: TButton
+      Left = 8
+      Top = 248
+      Width = 169
+      Height = 33
+      Caption = 'APPLY'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -21
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 0
+      OnClick = Button6Click
+    end
+    object RadioGroup1: TRadioGroup
+      Left = 8
+      Top = 16
+      Width = 169
+      Height = 97
+      Caption = 'Sort by'
+      ItemIndex = 0
+      Items.Strings = (
+        'Phonetic'
+        'Written'
+        'English'
+        'Added date'
+        'Status')
+      TabOrder = 1
+    end
+    object GroupBox7: TGroupBox
+      Left = 8
+      Top = 120
+      Width = 169
+      Height = 121
+      Caption = 'Filter'
+      TabOrder = 2
+      object CheckBox2: TCheckBox
+        Left = 8
+        Top = 16
+        Width = 97
+        Height = 17
+        Caption = 'Unlearned'
+        Checked = True
+        State = cbChecked
+        TabOrder = 0
+      end
+      object CheckBox3: TCheckBox
+        Left = 8
+        Top = 32
+        Width = 97
+        Height = 17
+        Caption = 'Learned'
+        Checked = True
+        State = cbChecked
+        TabOrder = 1
+      end
+      object CheckBox4: TCheckBox
+        Left = 8
+        Top = 48
+        Width = 97
+        Height = 17
+        Caption = 'Mastered'
+        Checked = True
+        State = cbChecked
+        TabOrder = 2
+      end
+      object CheckBox5: TCheckBox
+        Left = 8
+        Top = 64
+        Width = 97
+        Height = 17
+        Caption = 'Other levels'
+        Checked = True
+        State = cbChecked
+        TabOrder = 3
+      end
+      object CheckBox6: TCheckBox
+        Left = 8
+        Top = 80
+        Width = 97
+        Height = 17
+        Caption = 'Unprinted'
+        Checked = True
+        State = cbChecked
+        TabOrder = 4
+      end
+      object CheckBox7: TCheckBox
+        Left = 8
+        Top = 96
+        Width = 97
+        Height = 17
+        Caption = 'Printed'
+        Checked = True
+        State = cbChecked
+        TabOrder = 5
+      end
+    end
+  end
+  object Memo1: TMemo
+    Left = 272
+    Top = 440
+    Width = 185
+    Height = 89
+    Lines.Strings = (
+      '-'
+      '-'
+      'a'
+      '-'
+      'i'
+      '-'
+      'u'
+      '-'
+      'e'
+      '-'
+      'o'
+      'ka'
+      'ga'
+      'ki'
+      'gi'
+      'ku'
+      'gu'
+      'ke'
+      'ge'
+      'ko'
+      'go'
+      'sa'
+      'za'
+      'si,shi'
+      'zi,dzi,ji'
+      'su'
+      'zu'
+      'se'
+      'ze'
+      'so'
+      'zo'
+      'ta'
+      'da'
+      'ti,chi'
+      'di,dzi,ji'
+      '-'
+      'tu,tsu,cu'
+      'du,dzu'
+      'te'
+      'de'
+      'to'
+      'do'
+      'na'
+      'ni'
+      'nu'
+      'ne'
+      'no'
+      'ha'
+      'ba'
+      'pa'
+      'hi'
+      'bi'
+      'pi'
+      'hu,fu'
+      'bu'
+      'pu'
+      'he'
+      'be'
+      'pe'
+      'ho'
+      'bo'
+      'po'
+      'ma'
+      'mi'
+      'mu'
+      'me'
+      'mo'
+      '-'
+      'ya'
+      '-'
+      'yu'
+      '-'
+      'yo'
+      'ra'
+      'ri'
+      'ru'
+      're'
+      'ro'
+      '-'
+      'wa'
+      'wi'
+      'we'
+      'wo'
+      'nn'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-'
+      '-')
+    TabOrder = 6
+    Visible = False
+  end
+  object Button7: TButton
+    Left = 888
+    Top = 16
+    Width = 75
+    Height = 25
+    Caption = 'Kana test'
+    TabOrder = 7
+    OnClick = Button7Click
+  end
+  object Tbl: TTable
+    IndexName = 'Main_Ind'
+    TableName = 'JWB.DB'
+    Left = 112
+    Top = 352
+    object TblKey: TAutoIncField
+      FieldName = 'Key'
+      ReadOnly = True
+    end
+    object TblEnglish: TStringField
+      FieldName = 'English'
+      Size = 200
+    end
+    object TblPhonetic: TStringField
+      FieldName = 'Phonetic'
+      Size = 200
+    end
+    object TblKanji: TStringField
+      FieldName = 'Kanji'
+      Size = 200
+    end
+    object TblAdded: TDateField
+      FieldName = 'Added'
+    end
+    object TblPrinted: TDateField
+      FieldName = 'Printed'
+    end
+    object TblLearned: TDateField
+      FieldName = 'Learned'
+    end
+    object TblMastered: TDateField
+      FieldName = 'Mastered'
+    end
+    object TblLevelAdded: TSmallintField
+      FieldName = 'LevelAdded'
+    end
+    object TblLevelLearned: TSmallintField
+      FieldName = 'LevelLearned'
+    end
+    object TblLevelMastered: TSmallintField
+      FieldName = 'LevelMastered'
+    end
+    object TblNoPrinted: TIntegerField
+      FieldName = 'NoPrinted'
+    end
+    object TblSumScore: TIntegerField
+      FieldName = 'SumScore'
+    end
+    object TblScore: TSmallintField
+      FieldName = 'Score'
+    end
+    object TblNoDescend: TIntegerField
+      FieldName = 'NoDescend'
+    end
+    object TblMaxScore: TSmallintField
+      FieldName = 'MaxScore'
+    end
+    object TblSheetNo: TIntegerField
+      FieldName = 'SheetNo'
+    end
+    object TblSheetOrder: TIntegerField
+      FieldName = 'SheetOrder'
+    end
+  end
+end
