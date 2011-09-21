@@ -1,0 +1,29 @@
+[DSP upload]
+Filename=graphic.zip
+Replacements=graphic.zip
+Version=2.14
+FileURL=
+Description=A collection of graphic controls that will enhance the  appearance of your applications.(new for CB1)
+Delphi 1.0=N
+Delphi 2.0=Y
+Delphi 3.0=Y
+C++Builder 1.0=Y
+File Status=Freeware
+Full Source=Included
+Category=Components Collection
+Note=
+Additional info=
+
+[DSP Support]
+DSP Support=Y
+
+[Versions available]
+Delphi 1.0=
+Delphi 2.0=Y
+Delphi 3.0=Y
+C++Builder 1.0=Y
+
+[Uploader]
+Author name=William Yang
+Author E-mail=yang@btinternet.com
+Author URL=http://www.btinternet.com/~yang
