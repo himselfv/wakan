@@ -107,13 +107,15 @@ end;
 
 function TfLanguage.LoadLanguage(fname:string):string;
 var t:textfile;
-    pref,s,aut,ver:string;
-    i:integer;
+  pref,s: string;
+  i:integer;
+  aut,ver,lang: string; { service fields }
 begin
   if not fileexists(fname) then
   begin
-    Application.MessageBox(pchar('GUI translation file '+fname+' was not found. It should be located in Wakan folder.'#13'No translation has been loaded.'),'Error',
-      MB_ICONWARNING or MB_OK);
+    Application.MessageBox(pchar('GUI translation file '+fname+' was not found. '
+      +'It should be located in Wakan folder.'#13'No translation has been loaded.'),
+      'Error', MB_ICONWARNING or MB_OK);
     exit;
   end;
   curGUILanguage:=lowercase(fname);
@@ -125,16 +127,28 @@ begin
   while not eof(t) do
   begin
     readln(t,s);
-    if copy(s,1,6)='#AUTH>'then aut:=copy(s,7,length(s)-6);
-    if copy(s,1,6)='#VERS>'then ver:=copy(s,7,length(s)-6);
-    if (length(s)>0) and (s[1]<>';') and (s[6]='+') then pref:=pref+copy(s,7,length(s)-6)+#13;
-    if (length(s)>0) and (s[1]<>';') and (s[6]='>') then
-    begin
-      i:=0;
-      try i:=strtoint(copy(s,1,5)); except end;
-      if i>0 then curtrans.add(copy(s,1,6)+pref+copy(s,7,length(s)-6));
-      pref:='';
-    end;
+   { if it's a service field, read it }
+    if copy(s,1,6)='#LANG>' then
+      lang := copy(s,7,length(s)-6)
+    else
+    if copy(s,1,6)='#AUTH>' then
+      aut := copy(s,7,length(s)-6)
+    else
+    if copy(s,1,6)='#VERS>' then
+      ver := copy(s,7,length(s)-6)
+    else
+   { else it's 00016>some string }
+    if (length(s)>0) and (s[1]<>';') then
+      if s[6]='+' then
+        pref := pref+copy(s,7,length(s)-6)+#13
+      else
+      if s[6]='>' then
+      begin
+        i:=0;
+        try i:=strtoint(copy(s,1,5)); except end;
+        if i>0 then curtrans.add(copy(s,1,6)+pref+copy(s,7,length(s)-6));
+        pref:='';
+      end;
   end;
   closefile(t);
   result:=aut;
