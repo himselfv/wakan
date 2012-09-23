@@ -9,7 +9,7 @@ unit ColorMan;
 
 interface
 
-uses Windows, SysUtils, Graphics, NumMan, VBitmap;
+uses Windows, SysUtils, Graphics, NumMan, VBitmap, Variants;
 
 //Common Used in Quick Basic
 function QBColor (n:Integer) : TColor;

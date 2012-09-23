@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Buttons, ExtCtrls, Animate, GIFCtrl, StdCtrls, ComCtrls;
+  Buttons, ExtCtrls, rxAnimate, StdCtrls, ComCtrls, rxGIFCtrl;
 
 type
   TfStrokeOrder = class(TForm)

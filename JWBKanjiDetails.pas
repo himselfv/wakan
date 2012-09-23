@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, StdCtrls, RXCtrls, Placemnt, ProCtrls, ProUrl;
+  ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, ProCtrls, ProUrl;
 
 type
   TfKanjiDetails = class(TForm)

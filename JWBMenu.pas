@@ -7,8 +7,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, ArtLabel, RXCtrls, ProCtrls, ProUrl, Db,
-  DBTables, ExtCtrls, Grids, TextTable, Buttons, ThemeMgr, MemSource, ShellApi,
-  ActnList, Menus, Placemnt{MCH, madCodeHook};
+  DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
+  ActnList, Menus, rxPlacemnt{MCH, madCodeHook};
 
 type
   TfMenu = class(TForm)
@@ -187,7 +187,6 @@ type
     N11: TMenuItem;
     eAboutcOprogramu1: TMenuItem;
     Timer2: TTimer;
-    ThemeManager1: TThemeManager;
     Panel3: TPanel;
     Panel2: TPanel;
     Shape9: TShape;

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Placemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons;
+  rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons;
 
 type                 
   TfUser = class(TForm)
