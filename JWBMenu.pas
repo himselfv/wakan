@@ -463,7 +463,15 @@ type
     procedure AnnotShowMedia(kanji,kana:string);
 //    procedure LoadLayout(filename:string);
 //    procedure SaveFixedLayout(filename:string);
-    { Public declarations }
+
+  protected //Clipboard viewer
+   { SetClipboardViewer is supported starting with Windows 2000,
+    so if there's a need we can implement dynamic linking and fall back to polling -
+    it's kept as a safety measure anyway since CB chains are prone to breaking }
+    CbNextViewer: HWND;
+    procedure WmChangeCbChain(var Msg: TMessage); message WM_CHANGECBCHAIN;
+    procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
+
   end;
   TJaletDic = class
     public
@@ -2280,6 +2288,9 @@ end;
 
 procedure TfMenu.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+ { Disconnect from clipboard viewer }
+  ChangeClipboardChain(Self.Handle, CbNextViewer);
+
   if not FlushUserData then Action:=caNone;
   if not fUser.CommitFile then Action:=caNone;
   FormPlacement1.SaveFormPlacement;
@@ -2311,6 +2322,25 @@ begin
   if fUser.Visible then fUser.Look(false);
   if fWords.Visible then fWords.ShowIt(false);
   if fTranslate.Visible then fUser.RepaintText;
+end;
+
+procedure TfMenu.WmChangeCbChain(var Msg: TMessage);
+begin
+  if Msg.wParam=CbNextViewer then begin
+   // Replace next window and return
+    CbNextViewer := Msg.lParam;
+    Msg.Result := 0;
+  end else
+   // Pass to the next window
+    if CbNextViewer<>0 then
+      Msg.Result := SendMessage(CbNextViewer, Msg.Msg, Msg.wParam, Msg.lParam);
+end;
+
+procedure TfMenu.WmDrawClipboard(var Msg: TMessage);
+begin
+  Clipboard_Timer1Timer(Timer1);
+  if CbNextViewer<>0 then
+    SendMessage(CbNextViewer, Msg.Msg, Msg.wParam, Msg.lParam); //call next viewer
 end;
 
 procedure TfMenu.Clipboard_PaintBox3Paint(Sender: TObject);
@@ -3128,7 +3158,12 @@ begin
       fUser.OpenFile;
     except end;
   end;
+
+ { Init clipboard viewer }
+  CbNextViewer := SetClipboardViewer(Self.Handle);
+
   initdone:=true;
+
   Timer1.Enabled:=true;
   Timer1Timer(Sender);
 //  fKanji.Show;
