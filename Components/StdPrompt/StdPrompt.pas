@@ -171,7 +171,7 @@ var frm:TSMPromptForm;
     vi:TMsgDlgBtn;
     nobuttons:byte;
     buttspace,butty,buttx,buttlim:integer;
-    butt:TButton;
+    butt:TBitBtn;
 begin
   Application.CreateForm(TSMPromptForm,frm);
   if sign='' then
@@ -291,6 +291,7 @@ begin
     WarningStyle:result:=SMPromptDlg(buttons,'!',title,mess);
     ErrorStyle:result:=SMPromptDlg(buttons,'#',title,mess);
     AskStyle:result:=SMPromptDlg(buttons,'?',title,mess);
+  else Result := mbCancel;
   end;
 end;
 
