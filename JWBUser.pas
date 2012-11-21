@@ -448,7 +448,6 @@ end;
 {
 Requirements:
 - "search" has to be in 4-char-per-symbol hex encoding (=> length divisible by 4)
-- "search" has to be under 99*4 chars in length -- or it WILL break
 }
 procedure TfUser.DicSearch(search:string;a:integer;partial,reverse,full,plusplus:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
 var i,j,k,l,ii:integer;
@@ -463,14 +462,7 @@ var i,j,k,l,ii:integer;
     _s:string;
     cursearch:string;
     part:string;
-    se:TCandidateTranslationList;
-  { Candidate translations.
-      Strings stored in this list have a format:
-        [1 symbol WTF] [2 symbols length] "F" [string] --- produced here
-        [1 symbol WTF] [2 symbols length] "A" [string] --- filled in by Deflex()
-      Apparently, WTF symbol is some sort of priority indication.
-      It's filled with (9-len) and used to increase sort order by (9-WTF)*10000
-   }
+    se:TCandidateTranslationList; { Candidate translations -- see comments where this type is declared }
     ui,sxx:string;
     sp:integer;
     sdef:char;
@@ -494,10 +486,6 @@ var i,j,k,l,ii:integer;
     mess:TSMPromptForm;
     nowt:TDateTime;
 begin
- { This way we can be more or less sure that the length will fit into encoding format used by "se" (2 chars). }
-  if Length(search) div 4 > 99 then
-    raise Exception.Create('TfUser.DicSearch cannot handle strings longer than 99 characters');
-
   mess:=nil;
   if search='' then exit;
   se:=TCandidateTranslationList.Create;
@@ -537,7 +525,6 @@ begin
                 partfound:=true;
 //              if ((i<(length(_s) div 4)) and every) or (wt=2) then
               if (every) or ((i>1) and (partial)) or (i=length(_s) div 4) or (partfound) then
-               // If j is bigger than 9 it would break, so we cut it to 9.
                 se.Add(max(9-j, 0), i, 'F', copy(_s,1,i*4));
             end;
           end;
@@ -549,12 +536,7 @@ begin
         end;
       end;
   end;
-{
-  s:='';
-  for i:=0 to se.Count-1 do
-    s:=s+copy(se[i],1,4)+KanaToRomaji(copy(se[i],5,length(se[i])-4),1,'j')+#13;
-// showmessage(s);
-}
+
   for di:=0 to dicts.Count-1 do if (dicts.Objects[di] as TJaletDic).loaded then
   begin
     dic:=dicts.Objects[di] as TJaletDic;
