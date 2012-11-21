@@ -774,20 +774,24 @@ This function here is a major source of slowness when translating,
 so we're going to try and implement it reallly fast.
 }
 
-//Compares exactly "len" symbols in a and b. Neither string can be empty.
+//Compares exactly "len" symbols in a and b.
 //Used to replace things like "if copy(s,1,4)="
-function PcharCmp(a, b: PAnsiChar; len: integer): boolean; inline;
+function PcharCmp(a, b: PAnsiChar; len: integer): boolean;// inline;
 begin
+  if (a=nil) or (b=nil) then begin
+    Result := false;
+    exit;
+  end;
   while (len>0) and (a^=b^) do begin
     Inc(a);
     Inc(b);
     Dec(len);
   end;
-  Result := (len>0);
+  Result := (len<=0);
 end;
 
 //ps must have at least one 4-char symbol in it
-function SingleKanaToRomaji(var ps: PAnsiChar; romatype: integer): string;
+function SingleKanaToRomaji(var ps: PAnsiChar; romatype: integer): string; inline;
 const
   UH_HYPHEN='002D'; //UnicodeToHex('-')
   UH_LOWLINE='005F'; //UnicodeToHex('_');
@@ -828,6 +832,7 @@ begin
     Inc(ps, 4);
     exit;
   end;
+  Inc(ps, 4);
   Result := '?';
 end;
 
