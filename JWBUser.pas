@@ -115,7 +115,7 @@ type
     curkanji,curphonetic,curmeaning,curkanjid:string;
     docfilename:string;
     doctp:byte;
-    procedure Look(nogriddisplay:boolean);
+    procedure Look(nogriddisplay:boolean; NoScreenUpdates: boolean = false);
     procedure ShowWord;
     procedure ShowText(dolook:boolean);
     procedure RepaintText;
@@ -836,7 +836,12 @@ begin
   if Assigned(mess) then mess.Free;
 end;
 
-procedure TfUser.Look(nogriddisplay:boolean);
+{
+NoScreenUpdates: Do not update anything on the screen.
+  Mainly, don't do fKanji.SetCharDetails, because we're translating a large block of text.
+  I don't clearly understand why it's there, but surely it's not needed when translating.
+}
+procedure TfUser.Look(nogriddisplay:boolean; NoScreenUpdates: boolean);
 var a:integer;
     wt:integer;
     full:boolean;
@@ -937,7 +942,7 @@ begin
        end else
        begin
          s:=GetDocWord(rcurx,rcury,wt,nogriddisplay);
-         if (length(s)>=4) then fKanji.SetCharDetails(copy(s,1,4));
+         if (not NoScreenUpdates) and (length(s)>=4) then fKanji.SetCharDetails(copy(s,1,4)); //TODO: For testing only! Enable back!
          DicSearch(s,4,true,false,full,false,wt,maxwords,dicsl,5,wasfull);
        end;
   end;
@@ -2979,6 +2984,8 @@ var i,j:integer;
     p,pn:boolean;
     sp:TSMPromptForm;
     bg,en:integer;
+  updateProgressEvery: integer;
+  lastUpdateProgress: integer;
 begin
   oldcurx:=rcurx;
   oldcury:=rcury;
@@ -2992,14 +2999,27 @@ begin
     blocktoy:=doc.Count-1;
   end else CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
+
   sp:=SMProgressDlg(_l('#00684^eTranslator^cPøekladaè'),_l('#00685^eTranslating...^cPøekládám...'),blocktoy-blockfromy+1);
+ //We don't want to update very often since redrawing is slow.
+ //Let's only update on every percent or less.
+  updateProgressEvery := (blocktoy-blockfromy+1) div 100;
+  if updateProgressEvery<1 then updateProgressEvery := 1; //<100 items
+  lastUpdateProgress := -updateProgressEvery-1; //update now
+
   for i:=blockfromy to blocktoy do
   begin
     bg:=0;
     en:=(length(doc[i]) div 4)-1;
     if i=blockfromy then bg:=blockfromx;
     if i=blocktoy then en:=blocktox;
-    sp.SetProgress(i-blockfromy);
+
+    //Do not update progress too often
+    if i-blockfromy > lastUpdateProgress + updateProgressEvery then begin
+      sp.SetProgress(i-blockfromy);
+      lastUpdateProgress := i-blockfromy;
+    end;
+
     j:=bg;
     while j<=en do if (upcase(GetDocTr(j,i)[1])<>GetDocTr(j,i)[1]) then
     begin
@@ -3013,7 +3033,7 @@ begin
       SpeedButton2.Down:=false;
       SpeedButton3.Down:=false;
       dic_ignorekana:=true;
-      Look(true);
+      Look(true, {NoScreenUpdates=}true);
       dic_ignorekana:=false;
       a:=SetWordTrans(j,i,true,true,false);
       if a=0 then a:=1;
