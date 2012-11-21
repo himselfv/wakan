@@ -183,7 +183,8 @@ implementation
 
 uses JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBWordAdd,
-  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, JWBConvert;
+  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, JWBConvert,
+  Math;
 
 var curword:integer;
     view,curx,cury,lcurx,lcury,insx,insy,inslen:integer;
@@ -452,6 +453,11 @@ begin
     end;
 end;
 
+{
+Requirements:
+- "search" has to be in 4-char-per-symbol hex encoding (=> length divisible by 4)
+- "search" has to be under 99*4 chars in length -- or it WILL break
+}
 procedure TfUser.DicSearch(search:string;a:integer;partial,reverse,full,plusplus:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
 var i,j,k,l,ii:integer;
     wif:integer;
@@ -465,7 +471,13 @@ var i,j,k,l,ii:integer;
     s:string;
     cursearch:string;
     part:string;
-    se:TStringList;
+    se:TStringList; { Candidate translations.
+      Strings stored in this list have a format:
+        [1 symbol WTF] [2 symbols length] "F" [string] --- produced here
+        [1 symbol WTF] [2 symbols length] "A" [string] --- filled in by Deflex()
+      Apparently, WTF symbol is some sort of priority indication.
+      It's filled with (9-len) and used to increase sort order by (9-WTF)*10000
+      }
     ui,sxx:string;
     sp:integer;
     sdef:char;
@@ -489,6 +501,10 @@ var i,j,k,l,ii:integer;
     mess:TSMPromptForm;
     nowt:TDateTime;
 begin
+ { This way we can be more or less sure that the length will fit into encoding format used by "se" (2 chars). }
+  if Length(search) div 4 > 99 then
+    raise Exception.Create('TfUser.DicSearch cannot handle strings longer than 99 characters');
+
   mess:=nil;
   if search='' then exit;
   se:=TStringList.Create;
@@ -528,25 +544,21 @@ begin
                 partfound:=true;
 //              if ((i<(length(s) div 4)) and every) or (wt=2) then
               if (every) or ((i>1) and (partial)) or (i=length(s) div 4) or (partfound) then
-              begin
-                if i<=9 then
-                  se.Add(inttostr(9-j)+'0'+inttostr(i)+'F'+copy(s,1,i*4)) else
-                    se.Add(inttostr(9-j)+inttostr(i)+'F'+copy(s,1,i*4));
-              end;
+               // If j is bigger than 9 it would break, so we cut it to 9.
+                se.Add(Format('%d%.2dF%s', [max(9-j, 0), i, copy(s,1,i*4)]));
             end;
           end;
           if (wt=3) then
           begin
             s:=ChinFrom(search);
-            if length(s) div 4<=9 then
-              se.Add('90'+inttostr(length(s) div 4)+'F'+s) else
-                se.Add('9'+inttostr(length(s) div 4)+'F'+s);
+            se.Add(Format('9%.2dF%s', [Length(s) div 4, s]));
           end;
         end;
       end;
   end;
   s:='';
-  for i:=0 to se.Count-1 do s:=s+copy(se[i],1,4)+KanaToRomaji(copy(se[i],5,length(se[i])-4),1,'j')+#13;
+  for i:=0 to se.Count-1 do
+    s:=s+copy(se[i],1,4)+KanaToRomaji(copy(se[i],5,length(se[i])-4),1,'j')+#13;
 // showmessage(s);
   for di:=0 to dicts.Count-1 do if (dicts.Objects[di] as TJaletDic).loaded then
   begin
@@ -717,7 +729,7 @@ begin
             end;
             if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.TDict.Int(dic.TDictFrequency)>0) then s2:=s2+' <pwc'+dic.TDict.Str(dic.TDictFrequency)+'>';
             s2:=s2+' <d'+dic.name+'>';
-            sort:=0;
+            sort:=0; //the bigger the worse (will apear later in list)
             if a=2 then
             begin
               if (pos(trim(uppercase(Edit1.Text)),trim(uppercase(dic.TDict.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
