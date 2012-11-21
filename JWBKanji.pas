@@ -649,6 +649,7 @@ var piny,engy,kory,s,cany,chiny:string;
     s2:string;
     cv:string;
     scat:string;
+    cv_i1, cv_i2: integer;
 begin
   curkanji:='';
   curradical:='';
@@ -677,10 +678,11 @@ begin
   fKanjiDetails.ProURLLabel3.Enabled:=true;
   fKanjiDetails.ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(curKanji);
   cv:=fMenu.GetCharValue(curindex,54);
-  fKanjiDetails.ProURLLabel4.Enabled:=cv<>'';
-  try
-    fKanjiDetails.ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[strtoint(copy(cv,1,2))+160,strtoint(copy(cv,3,2))+160]))+'.html';
-  except fKanjiDetails.ProURLLabel4.Enabled:=false; end;
+  fKanjiDetails.ProURLLabel4.Enabled:=(cv<>'')
+    and TryStrToInt(copy(cv,1,2), cv_i1)
+    and TryStrToInt(copy(cv,3,2), cv_i2);
+  if fKanjiDetails.ProURLLabel4.Enabled then
+    fKanjiDetails.ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
   cv:=fMenu.GetCharValue(curindex,57);
   fKanjiDetails.ProURLLabel5.Enabled:=cv<>'';
   fKanjiDetails.ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
