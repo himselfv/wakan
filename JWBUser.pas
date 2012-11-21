@@ -120,7 +120,6 @@ type
     procedure ShowText(dolook:boolean);
     procedure RepaintText;
     procedure FormatClipboard;
-    procedure flushtim(var tim:TDateTime;s:string);
     procedure Deflex(w:string;sl:TCandidateTranslationList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
@@ -423,14 +422,6 @@ end;
 function TfUser.CursorScreenY:integer;
 begin
   if (cursorend) and (curx=0) and (cury>0) then result:=cury-1 else result:=cury;
-end;
-
-procedure TfUser.flushtim(var tim:TDateTime;s:string);
-var h,m,ss,s100:word;
-begin
-  DecodeTime(now-tim,h,m,ss,s100);
-  Label1.Caption:=Label1.Caption+s+':'+inttostr(ss*100+s100);
-  tim:=now;
 end;
 
 function TfUser.CompareUnicode(sub,str:string):boolean;
@@ -807,7 +798,6 @@ begin
       end;
     end;
   end;
-  flushtim(tim,'loc');
   sl.Sort;
   for i:=0 to sl.Count-1 do
   begin

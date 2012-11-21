@@ -16,7 +16,8 @@ const //Character types for EvalChar
   EC_KATAKANA_HW      = 8; // half-width katakana
 
 function UnicodeToHex(s:widestring):string;
-function HexToUnicode(s:string):widestring;
+function HexToUnicode(ps:PAnsiChar; maxlen: integer): WideString; overload;
+function HexToUnicode(s:string):widestring; overload;
 function CombUniToHex(s:string):string;
 function HexToCombUni(s:string):string;
 function UnicodeToML(s:widestring):string;
@@ -74,12 +75,25 @@ procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:in
 const Color_Max=100;
 
 var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,FontJapaneseGrid,FontJapanese,FontSmall,FontRadical,FontEnglish,FontPinYin:string;
-    kcchind,kcchcomp,roma,romac:TStringList;
+    kcchind,kcchcomp:TStringList;
     GridFontSize:integer;
+
+   { Romaji translation table in a wonderful format:
+       hiragana  [4xhex]
+       katakana  [4xhex]
+       japanese
+       english
+       czech
+       [repeat]
+     Hiragana and katakana hex is already upcased! Do not upcase. }
+    roma: TStringList;
+
+   { Chinese version, not upcased. Someone upgrade this one too... }
+    romac: TStringList;
 
 implementation
 
-uses JWBMenu, UnicodeFont, JWBSettings, JWBUser;
+uses StrUtils, JWBMenu, UnicodeFont, JWBSettings, JWBUser;
 
 type TIntTextInfo=record
         act:boolean;
@@ -212,25 +226,70 @@ begin
   result:=s2;
 end;
 
-function HexToUnicode(s:string):widestring;
-var s2:widestring;
-    d:word;
-    c:widechar;
-    i:integer;
+{
+HexToUnicode() is used in RomajiToKana() so it can be a bottleneck.
+We'll try to do it fast.
+}
+
+//Increments a valid PChar pointer 4 characters or returns false if the string ends before that 
+function EatOneSymbol(var pc: PAnsiChar): boolean;
 begin
-  s2:='';
-  try
-    if (length(s)>0) and (s[1]='U') then delete(s,1,1);
-    for i:=1 to length(s) div 4 do
-    begin
-      d:=StrToInt('0x'+copy(s,(i-1)*4+1,4));
-      c:=widechar(d);
-      s2:=s2+c;
-    end;
-  except
-    if Application.MessageBox(pchar('I''m really sorry but INTERNAL ERROR has occured. Please report this error to the author.'#13#13'HtU warning: '+s+#13#13'Raise exception?'),'Internal error',MB_ICONERROR or MB_YESNO)=idYes then raise;
+  Result := false;
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  Result := true;
+end;
+
+//Returns a value in range 0..15 for a given hex character, or throws an exception
+function HexCharCode(c:AnsiChar): byte; inline;
+begin
+  if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
+    Result := ord(c)-ord('0')
+  else
+  if (ord(c)>=ord('A')) and (ord(c)<=ord('F')) then
+    Result := 10 + ord(c)-ord('A')
+  else
+  if (ord(c)>=ord('a')) and (ord(c)<=ord('f')) then
+    Result := 10 + ord(c)-ord('a')
+  else
+    raise Exception.Create('Invalid hex character "'+c+'"');
+end;
+
+//Converts up to maxlen hex characters into 4-character unicode symbols.
+//Maxlen ought to be a multiplier of 4.
+function HexToUnicode(ps:PAnsiChar; maxlen: integer): WideString; overload;
+var pn: PAnsiChar; //next symbol pointer
+  cc: word; //character code
+begin
+  Result := '';
+  if (ps=nil) or (ps^=#00) then exit;
+  if ps^='U' then Inc(ps);
+  pn := ps;
+  while (maxlen>=4) and EatOneSymbol(pn) do begin
+    cc := HexCharCode(ps^) shl 12;
+    Inc(ps);
+    Inc(cc, HexCharCode(ps^) shl 8);
+    Inc(ps);
+    Inc(cc, HexCharCode(ps^) shl 4);
+    Inc(ps);
+    Inc(cc, HexCharCode(ps^));
+    Result := Result + WideChar(cc);
+    ps := pn;
   end;
-  result:=s2;
+end;
+
+function HexToUnicode(s:string):widestring; overload;
+begin
+  if s='' then
+    Result := ''
+  else
+    Result := HexToUnicode(pointer(s), Length(s));
 end;
 
 function DrawTone(c:TCanvas;x,y,fw:integer;s:string;unicode:boolean;dodraw:boolean):string;
@@ -708,33 +767,95 @@ begin
   if posout>0 then result:=lowercase(s2) else result:=s2;
 end;
 
+
+{
+KanaToRomaji().
+This function here is a major source of slowness when translating,
+so we're going to try and implement it reallly fast.
+}
+
+//Compares exactly "len" symbols in a and b. Neither string can be empty.
+//Used to replace things like "if copy(s,1,4)="
+function PcharCmp(a, b: PAnsiChar; len: integer): boolean; inline;
+begin
+  while (len>0) and (a^=b^) do begin
+    Inc(a);
+    Inc(b);
+    Dec(len);
+  end;
+  Result := (len>0);
+end;
+
+//ps must have at least one 4-char symbol in it
+function SingleKanaToRomaji(var ps: PAnsiChar; romatype: integer): string;
+const
+  UH_HYPHEN='002D'; //UnicodeToHex('-')
+  UH_LOWLINE='005F'; //UnicodeToHex('_');
+var i:integer;
+  pe: PAnsiChar;
+begin
+  if PcharCmp(ps, UH_HYPHEN, 4) then begin
+    Inc(ps, 4);
+    Result := '-';
+    exit;
+  end;
+  if PcharCmp(ps, UH_LOWLINE, 4) then begin
+    Inc(ps, 4);
+    Result := '_';
+    exit;
+  end;
+ //first try 8 symbols
+ //but we have to test that we have at least two symbols
+  pe := ps;
+  Inc(pe, 4); //first symbol must be there
+  if EatOneSymbol(pe) then begin
+    for i:=0 to roma.Count-1 do if (i mod 5=0) or (i mod 5=1) then
+      if PcharCmp(ps, pointer(roma[i]), 8) then begin
+        ps := pe;
+        Result:=roma[(i div 5)*5+romatype+1];
+        exit;
+      end;
+  end;
+ //this time 4 symbols only
+  for i:=0 to roma.Count-1 do if (i mod 5=0) or (i mod 5=1) then
+    if PcharCmp(ps, pointer(roma[i]), 4) then begin
+      Inc(ps, 4);
+      Result:=roma[(i div 5)*5+romatype+1];
+      exit;
+    end;
+  if (ps^='0') and (PAnsiChar(integer(ps)+1)^='0') then begin
+    Result := HexToUnicode(ps, 4);
+    Inc(ps, 4);
+    exit;
+  end;
+  Result := '?';
+end;
+
 function KanaToRomaji(s:string;romatype:integer;lang:char):string;
 var curkana:string;
     i:integer;
     fn:string;
     s2:string;
+    ps, pn: PAnsiChar;
 begin
   if lang='j'then
   begin
-    while length(s)>0 do
-    begin
-      fn:='';
-      if (copy(s,1,4)=UnicodeToHex('-')) then fn:='-';
-      if (copy(s,1,4)=UnicodeToHex('_')) then fn:='_';
-      curkana:=copy(s,1,8);
-      for i:=0 to roma.Count-1 do if (i mod 5=0) or (i mod 5=1) then
-        if (Uppercase(curkana)=Uppercase(roma[i])) then
-          begin fn:=roma[(i div 5)*5+romatype+1]; break; end;
-      if fn='' then delete(curkana,5,4);
-      if fn='' then for i:=0 to roma.Count-1 do if (i mod 5=0) or (i mod 5=1) then
-        if Uppercase(curkana)=Uppercase(roma[i]) then
-          begin fn:=roma[(i div 5)*5+romatype+1]; break; end;
-      if fn='' then if (curkana[1]='0') and (curkana[2]='0') then fn:=HexToUnicode(curkana);
-      if fn='' then fn:='?';
-      delete(s,1,length(curkana));
-      if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]);
-      s2:=s2+fn;
+    if Length(s)<=0 then begin
+      Result := '';
+      exit;
     end;
+    s := Uppercase(s);
+    s2 := '';
+    ps := pointer(s);
+    pn := ps;
+    while EatOneSymbol(pn) do begin
+      fn := SingleKanaToRomaji(ps, romatype); //also eats one or two symbols
+      if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///WTF?!!
+      s2:=s2+fn;
+      pn := ps; //because pn might have advanced further
+    end;
+
+   {THIS HERE doesn't make much of a difference for speed}
     repl(s2,'a-','aa');
     repl(s2,'i-','ii');
     repl(s2,'u-','uu');
@@ -773,6 +894,7 @@ begin
       repl(s2,'oo','ó');
       repl(s2,'ee','é');
     end;
+  {/THIS HERE}
     if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
     result:=s2;
   end;
@@ -910,8 +1032,8 @@ begin
   TRomaji.First;
   while not TRomaji.EOF do
   begin
-    roma.Add(TRomaji.Str(TRomaji.Field('Hiragana')));
-    roma.Add(TRomaji.Str(TRomaji.Field('Katakana')));
+    roma.Add(Uppercase(TRomaji.Str(TRomaji.Field('Hiragana'))));
+    roma.Add(Uppercase(TRomaji.Str(TRomaji.Field('Katakana'))));
     roma.Add(TRomaji.Str(TRomaji.Field('Japanese')));
     roma.Add(TRomaji.Str(TRomaji.Field('English')));
     roma.Add(TRomaji.Str(TRomaji.Field('Czech')));
