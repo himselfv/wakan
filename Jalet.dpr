@@ -53,7 +53,8 @@ uses
   JWBConvert in 'JWBConvert.pas',
   JWBFileType in 'JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'JWBWordsExpChoose.pas' {fWordsExpChoose},
-  JWBMedia in 'JWBMedia.pas' {fMedia};
+  JWBMedia in 'JWBMedia.pas' {fMedia},
+  JWBUtils in 'JWBUtils.pas';
 
 {$R *.RES}
 

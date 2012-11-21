@@ -4,9 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons;
+  rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
+  JWBUtils;
 
-type                 
+type
   TfUser = class(TForm)
     Panel1: TPanel;
     SpeedButton1: TSpeedButton;
@@ -120,7 +121,7 @@ type
     procedure RepaintText;
     procedure FormatClipboard;
     procedure flushtim(var tim:TDateTime;s:string);
-    procedure Deflex(w:string;sl:TStringList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
+    procedure Deflex(w:string;sl:TCandidateTranslationList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     function GetLineAttr(i,a:integer;ll:TStringList):integer;
@@ -257,106 +258,97 @@ begin
   doctr[ay]:=copy(doctr[ay],1,ax*9)+s+copy(doctr[ay],ax*9+10,length(doctr[ay])-(ax*9+9));
 end;
 
-procedure TfUser.Deflex(w:string;sl:TStringList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
-var ws:string;
+
+
+procedure TfUser.Deflex(w:string;sl:TCandidateTranslationList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
+var ws: integer; //length of w in symbols. Not sure if needed but let's keep it for a while
     i,j,k:integer;
     s,s2:string;
-    dc:char;
     roma:string;
     core:string;
     pass:boolean;
     lastkanji:integer;
     fnd:boolean;
     ad:string;
-    sss:string;
-    sufcat:char;
     suf:string;
     sufokay:boolean;
+    dr: TDeflectionRule;
+    ct: TCandidateTranslation;
 begin
-  sss:='';
   if prior>9 then prior:=9;
   if priordfl>9 then priordfl:=9;
-  ws:=inttostr(length(w) div 4);
-  if length(ws)<2 then ws:='0'+ws;
+  ws:=length(w) div 4;
   if curlang='j'then
   begin
     lastkanji:=0;
-    for i:=1 to length(w) div 4 do if EvalChar(copy(w,i*4-3,4))<>2 then lastkanji:=i else break;
+    for i:=1 to length(w) div 4 do if EvalChar(copy(w,i*4-3,4))<>EC_HIRAGANA then lastkanji:=i else break;
     core:=copy(w,1,lastkanji*4);
     roma:=copy(w,lastkanji*4+1,length(w)-lastkanji*4);
-    sss:='';
     if (SpeedButton4.Down) or (alwaysdeflect) then
       for i:=0 to defll.Count-1 do
       begin
-        s:=defll[i];
-        dc:=s[1];
-        delete(s,1,1);
-        sufcat:=s[1];
-        delete(s,1,1);
-        s2:=copy(s,1,pos('->',s)-1);
-        delete(s,1,length(s2)+2);
-        for j:=0 to (length(roma)-length(s2)) div 4 do
-          if (copy(roma,j*4+1,length(s2))=s2) or
-             ((s2='KKKK') and (j=0) and (core<>'')) then
-          if ((dc<>'K') and (dc<>'I')) or ((dc='K') and (j=0) and ((core='') or (core='6765')))
-             or ((dc='I') and (j=0) and ((core='') or (core='884C'))) then
+        dr := defll[i]^; //copy to speed up access a bit (pointer deref)
+
+        for j:=0 to (length(roma)-length(dr.infl)) div 4 do
+          if (copy(roma,j*4+1,length(dr.infl))=dr.infl) or
+             ((dr.infl='KKKK') and (j=0) and (core<>'')) then
+          if ((dr.vt<>'K') and (dr.vt<>'I')) or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
+             or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
           begin
-            if (length(s)+j*4<=24) and (core+copy(roma,1,j*4)+s<>w) then
+            if (length(dr.defl)+j*4<=24) and (core+copy(roma,1,j*4)+dr.defl<>w) then
             begin
-//              ws:=inttostr(length(core+copy(roma,1,j*4)+s2) div 4);
-//              if s2='KKKK'then ws:=inttostr(length(core) div 4);
-//              if strtoint(ws)<=length(core) div 4 then ws:=inttostr((length(core)+4) div 4);
-//              if strtoint(ws)<=1 then ws:=inttostr(2);
-              ws:=inttostr(length(w) div 4);
-              if length(ws)<2 then ws:='0'+ws;
-              ad:=ws+dc+core+copy(roma,1,j*4)+s;
-              suf:=copy(roma,j*4+1+length(s2),length(roma)-j*4-length(s2));
+//              ws:=length(core+copy(roma,1,j*4)+dr.infl) div 4;
+//              if dr.infl='KKKK'then ws:=length(core) div 4;
+//              if ws<=length(core) div 4 then ws:=(length(core)+4) div 4;
+//              if ws<=1 then ws:=2;
+              ws:=length(w) div 4;
+              ad:=core+copy(roma,1,j*4)+dr.defl;
+              suf:=copy(roma,j*4+1+length(dr.infl),length(roma)-j*4-length(dr.infl));
               sufokay:=(suf='');
               for k:=0 to suffixl.Count-1 do
-                if (sufcat+suf=suffixl[k]) or ((sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
+                if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
                   sufokay:=true;
               fnd:=false;
-              for k:=0 to sl.Count-1 do if copy(sl[k],2,length(sl[k])-1)=ad then fnd:=true;
+              for k:=0 to sl.Count-1 do
+                if (sl[k].len=ws)
+                and (sl[k].verbType=dr.vt)
+                and (sl[k].str=ad) then
+                  fnd:=true;
               if (not fnd) and (sufokay or not mustSufokay) then
               begin
-                if (sufokay) and (s2<>'KKKK') then sl.Add(inttostr(priordfl)+ad) else sl.Add('1'+ad);
-                sss:=sss+ad+#13;
-                Label1.Caption:=label1.Caption+ad+'#';
+                if (sufokay) and (dr.infl<>'KKKK') then sl.Add(priordfl, ws, dr.vt, ad) else sl.Add(1, ws, dr.vt, ad);
+                Label1.Caption:=label1.Caption+IntToStr(ws)+dr.vt+ad+'#';
               end;
             end;
           end;
       end;
-    ws:=inttostr(length(w) div 4);
-    if length(ws)<2 then ws:='0'+ws;
-    sl.Add(inttostr(prior)+ws+'F'+w);
+    ws:=length(w) div 4;
+    sl.Add(prior, ws, 'F', w);
   end;
   if curlang='c'then
   begin
-    sl.Add(inttostr(prior)+ws+'F'+w);
+    sl.Add(prior, ws, 'F', w);
     if pos('?',KanaToRomaji(w,romasys,'c'))>0 then exit;
     repeat
       pass:=true;
       i:=0;
       while i<sl.Count do
       begin
-        s:=sl[i];
-        s2:=s;
-        delete(s,1,4);
-        if pos('F030',s)>0 then
-        begin
+        ct := sl[i]^;
+        j := pos('F030',ct.str);
+        if j>0 then begin
           pass:=false;
-          sl.Delete(i);
-          j:=pos('F030',s)+7;
-          s2[j]:='1';
-          sl.Add(s2);
-          s2[j]:='2';
-          sl.Add(s2);
-          s2[j]:='3';
-          sl.Add(s2);
-          s2[j]:='4';
-          sl.Add(s2);
-          s2[j]:='5';
-          sl.Add(s2);
+         //First version is modified in-place to avoid slow deletions
+          sl[i]^.str[j] := '1';
+         //Next versions are made into copies
+          ct.str[j]:='2';
+          sl.Add(ct);
+          ct.str[j]:='3';
+          sl.Add(ct);
+          ct.str[j]:='4';
+          sl.Add(ct);
+          ct.str[j]:='5';
+          sl.Add(ct);
         end else inc(i);
       end;
     until pass;
@@ -468,20 +460,21 @@ var i,j,k,l,ii:integer;
     popclas:integer;
     status:integer;
     statpref:string;
-    s:string;
+    _s:string;
     cursearch:string;
     part:string;
-    se:TStringList; { Candidate translations.
+    se:TCandidateTranslationList;
+  { Candidate translations.
       Strings stored in this list have a format:
         [1 symbol WTF] [2 symbols length] "F" [string] --- produced here
         [1 symbol WTF] [2 symbols length] "A" [string] --- filled in by Deflex()
       Apparently, WTF symbol is some sort of priority indication.
       It's filled with (9-len) and used to increase sort order by (9-WTF)*10000
-      }
+   }
     ui,sxx:string;
     sp:integer;
     sdef:char;
-    slen:string;
+    slen:integer;
     limitkana:boolean;
     markers,converted:string;
     dic:TJaletDic;
@@ -507,7 +500,7 @@ begin
 
   mess:=nil;
   if search='' then exit;
-  se:=TStringList.Create;
+  se:=TCandidateTranslationList.Create;
   presentl:=TStringList.Create;
   presindl:=TStringList.Create;
   p4reading:=false;
@@ -517,49 +510,51 @@ begin
   case a of
     1:if curlang='j'then Deflex(RomajiToKana('H'+search,romasys,true,'j'),se,9,8,true,false) else
        Deflex(RomajiToKana(search,romasys,true,'c'),se,9,8,true,false);
-    2:se.Add('901F'+search);
+    2:se.Add(9, 1, 'F', search);
     3:Deflex(ChinFrom(search),se,9,8,true,false);
     4:begin
         if wt<0 then
         begin
-          s:=ChinFrom(search);
-          Deflex(s,se,9,8,false,true);
+          _s:=ChinFrom(search);
+          Deflex(_s,se,9,8,false,true);
           p4reading:=wt=-1;
           if wt=-1 then if partl.IndexOf(search)>-1 then
-            sl.Add('000000000000000000'+inttostr(length(search) div 4)+'P          '+s+' ['+s+'] {'+KanaToRomaji(search,1,'j')+' particle}');
+            sl.Add('000000000000000000'+inttostr(length(search) div 4)+'P          '+_s+' ['+_s+'] {'+KanaToRomaji(search,1,'j')+' particle}');
         end else
         begin
           if (wt=1) or (wt=2) then
           begin
-            s:=ChinFrom(search);
-            if wt=1 then Deflex(s,se,9,8,false,true);
-            for i:=(length(s) div 4) downto 1 do
+            _s:=ChinFrom(search);
+            if wt=1 then Deflex(_s,se,9,8,false,true);
+            for i:=(length(_s) div 4) downto 1 do
             begin
-              j:=(length(s) div 4)-i+1;
+              j:=(length(_s) div 4)-i+1;
               if j<1 then j:=1;
               partfound:=false;
               every:=false;
-              if EvalChar(copy(s,i*4-3,4))=1 then every:=true;
-              if (wt=2) and (i<(length(s) div 4)) and (i>=(length(s) div 4)-4) and (partl.IndexOf(copy(s,i*4+1,length(s)-i*4))>-1) then
+              if EvalChar(copy(_s,i*4-3,4))=1 then every:=true;
+              if (wt=2) and (i<(length(_s) div 4)) and (i>=(length(_s) div 4)-4) and (partl.IndexOf(copy(_s,i*4+1,length(_s)-i*4))>-1) then
                 partfound:=true;
-//              if ((i<(length(s) div 4)) and every) or (wt=2) then
-              if (every) or ((i>1) and (partial)) or (i=length(s) div 4) or (partfound) then
+//              if ((i<(length(_s) div 4)) and every) or (wt=2) then
+              if (every) or ((i>1) and (partial)) or (i=length(_s) div 4) or (partfound) then
                // If j is bigger than 9 it would break, so we cut it to 9.
-                se.Add(Format('%d%.2dF%s', [max(9-j, 0), i, copy(s,1,i*4)]));
+                se.Add(max(9-j, 0), i, 'F', copy(_s,1,i*4));
             end;
           end;
           if (wt=3) then
           begin
-            s:=ChinFrom(search);
-            se.Add(Format('9%.2dF%s', [Length(s) div 4, s]));
+            _s:=ChinFrom(search);
+            se.Add(9, Length(_s) div 4, 'F', _s);
           end;
         end;
       end;
   end;
+{
   s:='';
   for i:=0 to se.Count-1 do
     s:=s+copy(se[i],1,4)+KanaToRomaji(copy(se[i],5,length(se[i])-4),1,'j')+#13;
 // showmessage(s);
+}
   for di:=0 to dicts.Count-1 do if (dicts.Objects[di] as TJaletDic).loaded then
   begin
     dic:=dicts.Objects[di] as TJaletDic;
@@ -573,14 +568,14 @@ begin
           for j:=0 to se.Count-1 do
           begin
             if ((a=1) or (a=3)) and (plusplus) then begin dic.TDict.SetOrder('Index_Ind'); dic.TDict.First; end;
-            sxx:=copy(se[j],5,length(se[j])-4);
+            sxx:=se[j].str;
             if sxx='' then continue;
             if (a=1) or (a=4) then sxxr:=KanaToRomaji(sxx,1,curlang);
-            sp:=strtoint(se[j][1]);
-            sdef:=se[j][4];
-            slen:=copy(se[j],2,2);
+            sp:=se[j].priority;
+            sdef:=se[j].verbType;
+            slen:=se[j].len;
             limitkana:=false;
-            if a<3 then slen:='01';
+            if a<3 then slen:=1;
             if a=3 then
             begin
               a3kana:=true;
@@ -764,7 +759,7 @@ begin
             sorts:=inttostr(sort);
             if length(sorts)>5 then sorts:='99999';
             while length(sorts)<5 do sorts:='0'+sorts;
-            sorts:=sorts+ui+slen;
+            sorts:=sorts+ui+Format('%.2d',[slen]);
             // if sdef<>'F'then sorts:=sorts+'I'else sorts:=sorts+'F';
             if (pos('-v>',s2)>0) then sorts:=sorts+'I'else sorts:=sorts+'F';
             // 5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname)

@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, ArtLabel, RXCtrls, ProCtrls, ProUrl, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
-  ActnList, Menus, rxPlacemnt{MCH, madCodeHook};
+  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBUtils;
 
 type
   TfMenu = class(TForm)
@@ -556,7 +556,8 @@ var
   MaxCategoryIndex,MaxUserIndex:integer;
   ChinesePresent:boolean;
   doc,doctr,docdic:TStringList;
-  defll,partl,bopomofol,markersl,suffixl,ignorel,readchl:TStringList;
+  defll: TDeflectionList;
+  partl,bopomofol,markersl,suffixl,ignorel,readchl:TStringList;
   firstact:boolean;
   userdataloaded:boolean;
   curlang:char;
@@ -2523,7 +2524,7 @@ begin
   doc:=TStringList.Create;
   doctr:=TStringList.Create;
   docdic:=TStringList.Create;
-  defll:=TStringList.Create;
+  defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;
   chardetl:=TStringList.Create;

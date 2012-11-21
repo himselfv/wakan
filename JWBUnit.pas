@@ -4,6 +4,17 @@ interface
 
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry;
 
+const //Character types for EvalChar
+  EC_UNKNOWN          = 0; // unrecognized
+  EC_IDG_CHAR         = 1; // ideographic char
+  EC_HIRAGANA         = 2; // hiragana
+  EC_KATAKANA         = 3; // katakana
+  EC_IDG_PUNCTUATION  = 4; // ideographic punctuation
+  EC_IDG_OTHER        = 5; // ideographic other
+  EC_LATIN_FW         = 6; // full-width latin
+  EC_LATIN_HW         = 7; // half-width latin
+  EC_KATAKANA_HW      = 8; // half-width katakana
+
 function UnicodeToHex(s:widestring):string;
 function HexToUnicode(s:string):widestring;
 function CombUniToHex(s:string):string;
@@ -1916,17 +1927,17 @@ end;
 function EvalChar(char:string):integer;
 begin
   if char='3005'then result:=1 else // kurikaeshi
-  if (char>='3000') and (char<='303F') then result:=4 else // ideographic punctuation
-  if (char>='3040') and (char<='309F') then result:=2 else // hiragana
-  if (char>='30A0') and (char<='30FF') then result:=3 else // katakana
-  if (char>='3200') and (char<='33FF') then result:=5 else // ideographic other
-  if (char>='3400') and (char<='9FFF') then result:=1 else // ideographic char
-  if (char>='F900') and (char<='FAFF') then result:=1 else // ideographic char
-  if (char>='FE30') and (char<='FE4F') then result:=4 else // ideographic punctuation
-  if (char>='FF00') and (char<='FF5F') then result:=6 else // full-width latin
-  if (char>='FF60') and (char<='FF9F') then result:=8 else // half-width katakana
-  if (char>='0000') and (char<='007F') then result:=7 else // half-width latin
-  result:=0; // unrecognized
+  if (char>='3000') and (char<='303F') then result:=EC_IDG_PUNCTUATION else
+  if (char>='3040') and (char<='309F') then result:=EC_HIRAGANA else
+  if (char>='30A0') and (char<='30FF') then result:=EC_KATAKANA else
+  if (char>='3200') and (char<='33FF') then result:=EC_IDG_OTHER else
+  if (char>='3400') and (char<='9FFF') then result:=EC_IDG_CHAR else
+  if (char>='F900') and (char<='FAFF') then result:=EC_IDG_CHAR else
+  if (char>='FE30') and (char<='FE4F') then result:=EC_IDG_PUNCTUATION else
+  if (char>='FF00') and (char<='FF5F') then result:=EC_LATIN_FW else
+  if (char>='FF60') and (char<='FF9F') then result:=EC_KATAKANA_HW else
+  if (char>='0000') and (char<='007F') then result:=EC_LATIN_HW else
+  result:=EC_UNKNOWN;
 end;
 
 function StateStr(i:integer):string;
