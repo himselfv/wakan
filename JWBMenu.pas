@@ -4304,17 +4304,17 @@ begin
   if maxwordss<10 then maxwordss:=10;
   if wt=7 then
   begin
-    fUser.DicSearch(HexToUnicode(s),2,false,false,false,false,7,maxwordss,screenTipList,5,wasfull);
+    fUser.DicSearch(HexToUnicode(s),2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
     if (screenTipList.Count=0) then
     begin
       ss:=HexToUnicode(s);
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      fUser.DicSearch(ss,2,false,false,false,false,7,maxwordss,screenTipList,5,wasfull);
+      fUser.DicSearch(ss,2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
     end;
   end;
   if wt<7 then
-    fUser.DicSearch(s,4,false,false,false,false,wt,maxwordss,screenTipList,5,wasfull);
+    fUser.DicSearch(s,4,mtExactMatch,false,wt,maxwordss,screenTipList,5,wasfull);
   if maxwords>screenTipList.Count then maxwords:=screenTipList.Count;
   screenTipWords:=maxwords;
   tpp:=20;
