@@ -5,6 +5,18 @@ interface
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
   JWBUtils;
 
+type
+ //On older compilers we don't have a new, faster UnicodeString,
+ //but we can (mostly) safely use a slower WideString in its stead.
+ {$IF CompilerVersion < 21}
+  UnicodeString = WideString;
+  PUnicodeString = PWideString;
+ {$IFEND}
+
+{ Wakan uses a special Ansi string format, where each unicode symbol is kept
+ as a 4 character (four-char) hex code. }
+
+
 const //Character types for EvalChar
   EC_UNKNOWN          = 0; // unrecognized
   EC_IDG_CHAR         = 1; // ideographic char
@@ -17,8 +29,8 @@ const //Character types for EvalChar
   EC_KATAKANA_HW      = 8; // half-width katakana
 
 function UnicodeToHex(s:widestring):string;
-function HexToUnicode(ps:PAnsiChar; maxlen: integer): WideString; overload;
-function HexToUnicode(s:string):widestring; overload;
+function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
+function HexToUnicode(s:string):UnicodeString; overload;
 function CombUniToHex(s:string):string;
 function HexToCombUni(s:string):string;
 function UnicodeToML(s:widestring):string;
@@ -267,7 +279,7 @@ end;
 
 //Converts up to maxlen hex characters into 4-character unicode symbols.
 //Maxlen ought to be a multiplier of 4.
-function HexToUnicode(ps:PAnsiChar; maxlen: integer): WideString; overload;
+function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
 var pn: PAnsiChar; //next symbol pointer
   cc: word; //character code
 begin
@@ -288,7 +300,7 @@ begin
   end;
 end;
 
-function HexToUnicode(s:string):widestring; overload;
+function HexToUnicode(s:string): UnicodeString; overload;
 begin
   if s='' then
     Result := ''
@@ -804,6 +816,7 @@ const
   UH_LOWLINE='005F'; //UnicodeToHex('_');
 var i:integer;
   pe: PAnsiChar;
+  r: PRomajiTranslationRule;
 begin
  {$IFDEF INTEGER_HELL}
   if pinteger(ps)^=pinteger(@UH_HYPHEN[1])^ then begin
@@ -828,7 +841,8 @@ begin
   pe := ps;
   Inc(pe, 4); //first symbol must be there
   if EatOneSymbol(pe) then begin
-    for i := 0 to roma_t.Count - 1 do
+    for i := 0 to roma_t.Count - 1 do begin
+      r := roma_t[i];
      {$IFDEF INTEGER_HELL}
       {
       Note on integer comparison optimization:
@@ -837,42 +851,45 @@ begin
       to any 4-char hex combination.
       It also won't AV because the memory's dword aligned and hiragana[5] is accessible already.
       }
-      if ((pinteger(ps)^=pinteger(roma_t[i].hiragana_ptr)^)
-      and (pinteger(integer(ps)+4)^=pinteger(integer(roma_t[i].hiragana_ptr)+4)^))
-      or ((pinteger(ps)^=pinteger(roma_t[i].katakana_ptr)^)
-      and (pinteger(integer(ps)+4)^=pinteger(integer(roma_t[i].katakana_ptr)+4)^)) then begin
+      if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
+      and (pinteger(integer(ps)+4)^=pinteger(integer(r.hiragana_ptr)+4)^))
+      or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
+      and (pinteger(integer(ps)+4)^=pinteger(integer(r.katakana_ptr)+4)^)) then begin
      {$ELSE}
-      if FcharCmp(ps, roma_t[i].hiragana_ptr, 2)
-      or FcharCmp(ps, roma_t[i].katakana_ptr, 2) then begin
+      if FcharCmp(ps, r.hiragana_ptr, 2)
+      or FcharCmp(ps, r.katakana_ptr, 2) then begin
      {$ENDIF}
         case romatype of
-          2: Result := roma_t[i].english;
-          3: Result := roma_t[i].czech;
+          2: Result := r.english;
+          3: Result := r.czech;
         else
-          Result := roma_t[i].japanese;
+          Result := r.japanese;
         end;
         ps := pe;
         exit;
       end;
+    end;
   end;
  //this time 4 symbols only
-  for i := 0 to roma_t.Count - 1 do
+  for i := 0 to roma_t.Count - 1 do begin
+    r := roma_t[i];
    {$IFDEF INTEGER_HELL}
-    if (pinteger(ps)^=pinteger(roma_t[i].hiragana_ptr)^)
-    or (pinteger(ps)^=pinteger(roma_t[i].katakana_ptr)^) then begin
+    if (pinteger(ps)^=pinteger(r.hiragana_ptr)^)
+    or (pinteger(ps)^=pinteger(r.katakana_ptr)^) then begin
    {$ELSE}
-    if FcharCmp(ps, roma_t[i].hiragana_ptr, 1)
-    or FcharCmp(ps, roma_t[i].katakana_ptr, 1) then begin
+    if FcharCmp(ps, r.hiragana_ptr, 1)
+    or FcharCmp(ps, r.katakana_ptr, 1) then begin
    {$ENDIF}
       case romatype of
-        2: Result := roma_t[i].english;
-        3: Result := roma_t[i].czech;
+        2: Result := r.english;
+        3: Result := r.czech;
       else
-        Result := roma_t[i].japanese;
+        Result := r.japanese;
       end;
       Inc(ps, 4);
       exit;
     end;
+  end;
   if (ps^='0') and (PAnsiChar(integer(ps)+1)^='0') then begin
     Result := HexToUnicode(ps, 4);
     Inc(ps, 4);
@@ -883,9 +900,7 @@ begin
 end;
 
 function KanaToRomaji(s:string;romatype:integer;lang:char):string;
-var curkana:string;
-    i:integer;
-    fn:string;
+var fn:string;
     s2:string;
     ps, pn: PAnsiChar;
 begin
