@@ -2981,8 +2981,14 @@ begin
   oldcury:=rcury;
   if (blockx=rcurx) and (blocky=rcury) then
   begin
-    if Application.MessageBox(pchar(_l('#00682^eNo block is selected. Do you want generate translation for entire document?'#13#13'This action can take a very long time.^cNení zvolen žádný blok. Chcete vygenerovat informace o pøekladu pro celý dokument?'#13#13'Tato akce mùže trvat velmi dlouho.')),pchar(_l('#00683^eConfirmation^cPotvrzení')),
-    MB_ICONWARNING or MB_YESNO)<>idYes then exit;
+    if not fSettings.cbTranslateNoLongTextWarning.Checked then
+      if Application.MessageBox(
+        pchar(_l('#00682^eNo block is selected. Do you want generate translation for entire document?'#13#13
+          +'This action can take a very long time.'
+          +'^cNení zvolen žádný blok. Chcete vygenerovat informace o pøekladu pro celý dokument?'#13#13
+          +'Tato akce mùže trvat velmi dlouho.')),
+        pchar(_l('#00683^eConfirmation^cPotvrzení')),
+        MB_ICONWARNING or MB_YESNO)<>idYes then exit;
     blockfromx:=0;
     blockfromy:=0;
     blocktox:=(length(doc[doc.Count-1]) div 4)-1;

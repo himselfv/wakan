@@ -2780,6 +2780,7 @@ begin
   fSettings.CheckBox30.Checked:=reg.ReadBool('Translate','PrintMeaning',true);
   fSettings.CheckBox31.Checked:=reg.ReadBool('Translate','NoPrintColors',true);
   fSettings.CheckBox37.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
+  fSettings.cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',false);  
   aEditorColors.Checked:=reg.ReadBool('Translate','TransColors',true);
   fTranslate.SpeedButton21.Down:=aEditorColors.Checked;
   fTranslate.SpeedButton8.Down:=reg.ReadBool('Translate','Reading',true);

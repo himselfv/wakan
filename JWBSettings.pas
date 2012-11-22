@@ -241,6 +241,7 @@ type
     Bevel1: TBevel;
     Button16: TButton;
     CheckBox70: TCheckBox;
+    cbTranslateNoLongTextWarning: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -550,6 +551,7 @@ begin
   reg.WriteBool('Translate','Meaning',fTranslate.SpeedButton9.Down);
   reg.WriteBool('Translate','Dictionary',fTranslate.SpeedButton19.Down);
   reg.WriteBool('Translate','TransColors',fMenu.aEditorColors.Checked);
+  reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);
   reg.WriteBool('Annotate','Rebuild',CheckBox65.Checked);
   reg.WriteBool('Annotate','Sound',CheckBox66.Checked);

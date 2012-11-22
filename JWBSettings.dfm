@@ -1777,6 +1777,14 @@ object fSettings: TfSettings
           'dyž je ètení vypnuto'
         TabOrder = 15
       end
+      object cbTranslateNoLongTextWarning: TCheckBox
+        Left = 16
+        Top = 386
+        Width = 457
+        Height = 17
+        Caption = '^eDo not warn when translating large text chunks'
+        TabOrder = 16
+      end
     end
     object TabSheet10: TTabSheet
       Caption = '#00530^eCharacter details^cDetaily znakù'
