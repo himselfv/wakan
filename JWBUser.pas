@@ -120,7 +120,7 @@ type
     procedure ShowText(dolook:boolean);
     procedure RepaintText;
     procedure FormatClipboard;
-    procedure Deflex(w:string;sl:TCandidateTranslationList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
+    procedure Deflex(w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     function GetLineAttr(i,a:integer;ll:TStringList):integer;
@@ -259,7 +259,7 @@ end;
 
 
 
-procedure TfUser.Deflex(w:string;sl:TCandidateTranslationList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
+procedure TfUser.Deflex(w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
 var ws: integer; //length of w in symbols. Not sure if needed but let's keep it for a while
     i,j,k:integer;
     s,s2:string;
@@ -272,7 +272,7 @@ var ws: integer; //length of w in symbols. Not sure if needed but let's keep it 
     suf:string;
     sufokay:boolean;
     dr: TDeflectionRule;
-    ct: TCandidateTranslation;
+    ct: TCandidateLookup;
 begin
   if prior>9 then prior:=9;
   if priordfl>9 then priordfl:=9;
@@ -453,7 +453,7 @@ var i,j,k,l,ii:integer;
     _s:string;
     cursearch:string;
     part:string;
-    se:TCandidateTranslationList; { Candidate translations -- see comments where this type is declared }
+    se:TCandidateLookupList; { Candidate lookups -- see comments where this type is declared }
     ui,sxx:string;
     sp:integer;
     sdef:char;
@@ -479,7 +479,7 @@ var i,j,k,l,ii:integer;
 begin
   mess:=nil;
   if search='' then exit;
-  se:=TCandidateTranslationList.Create;
+  se:=TCandidateLookupList.Create;
   presentl:=TStringList.Create;
   presindl:=TStringList.Create;
   p4reading:=false;

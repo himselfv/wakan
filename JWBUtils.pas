@@ -1,4 +1,4 @@
-unit JWBUtils;
+﻿unit JWBUtils;
 {
 Various high-speed containers used in program.
 For now they are grouped together but may be regrouped in the future.
@@ -89,14 +89,34 @@ type
 
 
 {
-Candidate translation list for JWBUser's dictionary lookups.
+Candidate lookup list for JWBUser's dictionary lookups.
 Should be reasonably fast.
 Not thread safe.
+
+Example:
+指示を飛ばされている turns into this list:
+1 1 指示を飛ばす
+1 1 指示を飛ばされつ
+1 1 指示を飛ぶ
+1 1 指示を飛ばさる
+1 2 指示を飛ばされる
+1 2 指示る
+9 F 指示を飛ばされている
+8 F 指示を飛ばされている
+7 F 指示を飛ばされてい
+6 F 指示を飛ばされて
+5 F 指示を飛ばされ
+4 F 指示を飛ばさ
+3 F 指示を飛ば
+2 F 指示を飛
+1 F 指示を
+0 F 指示
+0 F 指
 }
 
 type
-  TCandidateTranslation = record
-    priority: integer; {1..9}
+  TCandidateLookup = record
+    priority: integer; {0..anything, 0 is the worst}
     len: integer;  {
       I'm not sure why we can't just take length(str),
       but for now I will replicate how it was done in Wakan with strings }
@@ -107,22 +127,22 @@ type
     }
     str: string;
   end;
-  PCandidateTranslation = ^TCandidateTranslation;
-  TCandidateTranslationArray = array of TCandidateTranslation;
-  TCandidateTranslationList = class
+  PCandidateLookup = ^TCandidateLookup;
+  TCandidateLookupArray = array of TCandidateLookup;
+  TCandidateLookupList = class
   protected
-    FList: TCandidateTranslationArray;
+    FList: TCandidateLookupArray;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PCandidateTranslation;{$IFDEF INLINE} inline;{$ENDIF}
-    function MakeNewItem: PCandidateTranslation;
+    function GetItemPtr(Index: integer): PCandidateLookup;{$IFDEF INLINE} inline;{$ENDIF}
+    function MakeNewItem: PCandidateLookup;
   public
     procedure Add(priority: integer; len: integer; verbType: char; const str: string); overload;
-    procedure Add(ct: TCandidateTranslation); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(ct: TCandidateLookup); overload;{$IFDEF INLINE} inline;{$ENDIF}
     procedure Delete(Index: integer);
     procedure Clear;
     property Count: integer read FListUsed;
-    property Items[Index: integer]: PCandidateTranslation read GetItemPtr; default;
+    property Items[Index: integer]: PCandidateLookup read GetItemPtr; default;
   end;
 
 implementation
@@ -243,12 +263,12 @@ begin
 end;
 
 
-function TCandidateTranslationList.GetItemPtr(Index: integer): PCandidateTranslation;
+function TCandidateLookupList.GetItemPtr(Index: integer): PCandidateLookup;
 begin
   Result := @FList[Index]; //valid until next list growth
 end;
 
-function TCandidateTranslationList.MakeNewItem: PCandidateTranslation;
+function TCandidateLookupList.MakeNewItem: PCandidateLookup;
 begin
  //Thread unsafe
   Grow(1);
@@ -257,7 +277,7 @@ begin
 end;
 
 //Reserves enough memory to store at least ARequiredFreeLen additional items to list.
-procedure TCandidateTranslationList.Grow(ARequiredFreeLen: integer);
+procedure TCandidateLookupList.Grow(ARequiredFreeLen: integer);
 const MIN_GROW_LEN = 20;
 begin
   if Length(FList)-FListUsed>=ARequiredFreeLen then exit; //already have the space
@@ -267,11 +287,10 @@ begin
   SetLength(FList, Length(FList)+ARequiredFreeLen);
 end;
 
-procedure TCandidateTranslationList.Add(priority: integer; len: integer; verbType: char; const str: string);
-var item: PCandidateTranslation;
+procedure TCandidateLookupList.Add(priority: integer; len: integer; verbType: char; const str: string);
+var item: PCandidateLookup;
 begin
- //Only priorities 0..9 are supported
-  if priority>9 then priority := 9;
+ //Only priorities >=0 are supported
   if priority<0 then priority := 0;
 
   item := MakeNewItem;
@@ -281,13 +300,13 @@ begin
   item.str := str;
 end;
 
-procedure TCandidateTranslationList.Add(ct: TCandidateTranslation);
+procedure TCandidateLookupList.Add(ct: TCandidateLookup);
 begin
   Add(ct.priority, ct.len, ct.verbType, ct.str);
 end;
 
 //Slow, so try to not use
-procedure TCandidateTranslationList.Delete(Index: integer);
+procedure TCandidateLookupList.Delete(Index: integer);
 begin
  //Properly release the cell's data
   Finalize(FList[Index]);
@@ -298,7 +317,7 @@ begin
   FillChar(FList[FListUsed], SizeOf(FList[0]), 00); //so that we don't properly release last cell's data, it's been moved to previous cell
 end;
 
-procedure TCandidateTranslationList.Clear;
+procedure TCandidateLookupList.Clear;
 begin
   SetLength(FList, 0);
   FListUsed := 0;
