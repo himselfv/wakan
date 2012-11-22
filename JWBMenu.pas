@@ -2491,6 +2491,38 @@ begin
   end;
 end;
 
+//Same but doesn't add it anywhere
+type
+  TStringArray = array of string;
+
+function SplitStr(s: string; cnt: integer): TStringArray;
+var i:integer;
+begin
+  SetLength(Result, cnt);
+  i:=0;
+  while i<cnt do
+  begin
+    if pos(',',s)>0 then
+    begin
+      Result[i] := copy(s,1,pos(',',s)-1);
+      delete(s,1,pos(',',s));
+    end else
+    begin
+      Result[i] := s;
+      s:='';
+    end;
+    inc(i);
+  end;
+end;
+
+procedure StrListAdd(sl: TStringList; sa: TStringArray);
+var i: integer;
+begin
+  for i := 0 to Length(sa) - 1 do
+    sl.Add(sa[i]);
+end;
+
+
 procedure TfMenu.FormShow(Sender: TObject);
 var tt:TTextTable;
     ps:TPackageSource;
@@ -2506,6 +2538,7 @@ var tt:TTextTable;
     sortset,otherset:integer;
     meanset,userset:boolean;
     t:textfile;
+    s_parts: TStringArray;
 begin
   TAnnots:=nil;
   lastautosave:=now;
@@ -2811,6 +2844,7 @@ begin
   ps:=TPackageSource.Create('wakan.chr',791564,978132,978123);
   roma:=TStringList.Create;
   romac:=TStringList.Create;
+  roma_t := TRomajiTranslationTable.Create;
   vi:=TStringList.Create;
   ms:=ps['jalet.ver'].Lock;
   vi.LoadFromStream(ms);
@@ -2850,7 +2884,15 @@ begin
         begin
           if sect=1 then partl.Add(s);
           if sect=2 then defll.Add(s);
-          if sect=3 then splitadd(roma,s,5);
+          if sect=3 then begin
+           //Romaji is loaded both in old format
+            s_parts := SplitStr(s, 5);
+            s_parts[0] := Uppercase(s_parts[0]);
+            s_parts[1] := Uppercase(s_parts[1]);
+            StrListAdd(roma, s_parts);
+           //And in new format
+            roma_t.Add(s_parts[0], s_parts[1], s_parts[2], s_parts[3], s_parts[4]);
+          end;
           if sect=4 then splitadd(romac,s,4);
           if sect=5 then chartypel.Add(s);
           if sect=6 then splitadd(romasortl,s,2);

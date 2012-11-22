@@ -2,7 +2,8 @@ unit JWBUnit;
 
 interface
 
-uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry;
+uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
+  JWBUtils;
 
 const //Character types for EvalChar
   EC_UNKNOWN          = 0; // unrecognized
@@ -87,6 +88,9 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
        [repeat]
      Hiragana and katakana hex is already upcased! Do not upcase. }
     roma: TStringList;
+   { A new version which is faster! Cooler! And all that.
+    But we're keeping the old one for backward compability. }
+    roma_t: TRomajiTranslationTable;
 
    { Chinese version, not upcased. Someone upgrade this one too... }
     romac: TStringList;
@@ -770,40 +774,51 @@ end;
 
 {
 KanaToRomaji().
-This function here is a major source of slowness when translating,
+This function here is a major bottleneck when translating,
 so we're going to try and implement it reallly fast.
 }
 
-//Compares exactly "len" symbols in a and b.
-//Used to replace things like "if copy(s,1,4)="
-function PcharCmp(a, b: PAnsiChar; len: integer): boolean;// inline;
+//Try to compare strings as integers, without any string routines
+{$DEFINE INTEGER_HELL}
+
+{$IFNDEF INTEGER_HELL}
+//Compares a cnt of 4-characters!
+//There should be at least this number of 4-characters in at least one of a, b
+function FcharCmp(a, b: PAnsiChar; cnt: integer): boolean;
+var ia: PInteger absolute a;
+  ib: PInteger absolute b;
 begin
-  if (a=nil) or (b=nil) then begin
-    Result := false;
-    exit;
+  while (cnt>0) and (ia^=ib^) do begin
+    Inc(ia);
+    Inc(ib);
+    Dec(cnt);
   end;
-  while (len>0) and (a^=b^) do begin
-    Inc(a);
-    Inc(b);
-    Dec(len);
-  end;
-  Result := (len<=0);
+  Result := cnt<=0;
 end;
+{$ENDIF}
 
 //ps must have at least one 4-char symbol in it
-function SingleKanaToRomaji(var ps: PAnsiChar; romatype: integer): string; inline;
+function SingleKanaToRomaji(var ps: PAnsiChar; romatype: integer): string;// inline;
 const
   UH_HYPHEN='002D'; //UnicodeToHex('-')
   UH_LOWLINE='005F'; //UnicodeToHex('_');
 var i:integer;
   pe: PAnsiChar;
 begin
-  if PcharCmp(ps, UH_HYPHEN, 4) then begin
+ {$IFDEF INTEGER_HELL}
+  if pinteger(ps)^=pinteger(@UH_HYPHEN[1])^ then begin
+ {$ELSE}
+  if FcharCmp(ps, UH_HYPHEN, 1) then begin
+ {$ENDIF}
     Inc(ps, 4);
     Result := '-';
     exit;
   end;
-  if PcharCmp(ps, UH_LOWLINE, 4) then begin
+ {$IFDEF INTEGER_HELL}
+  if pinteger(ps)^=pinteger(@UH_LOWLINE[1])^ then begin
+ {$ELSE}
+  if FcharCmp(ps, UH_LOWLINE, 1) then begin
+ {$ENDIF}
     Inc(ps, 4);
     Result := '_';
     exit;
@@ -813,18 +828,49 @@ begin
   pe := ps;
   Inc(pe, 4); //first symbol must be there
   if EatOneSymbol(pe) then begin
-    for i:=0 to roma.Count-1 do if (i mod 5=0) or (i mod 5=1) then
-      if PcharCmp(ps, pointer(roma[i]), 8) then begin
+    for i := 0 to roma_t.Count - 1 do
+     {$IFDEF INTEGER_HELL}
+      {
+      Note on integer comparison optimization:
+      We're not checking if roma_t[i].hiragana has one or two 4-chars.
+      It's okay. If it has one, then roma_t[i].hiragana[5]==#00, and it wouldn't match
+      to any 4-char hex combination.
+      It also won't AV because the memory's dword aligned and hiragana[5] is accessible already.
+      }
+      if ((pinteger(ps)^=pinteger(roma_t[i].hiragana_ptr)^)
+      and (pinteger(integer(ps)+4)^=pinteger(integer(roma_t[i].hiragana_ptr)+4)^))
+      or ((pinteger(ps)^=pinteger(roma_t[i].katakana_ptr)^)
+      and (pinteger(integer(ps)+4)^=pinteger(integer(roma_t[i].katakana_ptr)+4)^)) then begin
+     {$ELSE}
+      if FcharCmp(ps, roma_t[i].hiragana_ptr, 2)
+      or FcharCmp(ps, roma_t[i].katakana_ptr, 2) then begin
+     {$ENDIF}
+        case romatype of
+          2: Result := roma_t[i].english;
+          3: Result := roma_t[i].czech;
+        else
+          Result := roma_t[i].japanese;
+        end;
         ps := pe;
-        Result:=roma[(i div 5)*5+romatype+1];
         exit;
       end;
   end;
  //this time 4 symbols only
-  for i:=0 to roma.Count-1 do if (i mod 5=0) or (i mod 5=1) then
-    if PcharCmp(ps, pointer(roma[i]), 4) then begin
+  for i := 0 to roma_t.Count - 1 do
+   {$IFDEF INTEGER_HELL}
+    if (pinteger(ps)^=pinteger(roma_t[i].hiragana_ptr)^)
+    or (pinteger(ps)^=pinteger(roma_t[i].katakana_ptr)^) then begin
+   {$ELSE}
+    if FcharCmp(ps, roma_t[i].hiragana_ptr, 1)
+    or FcharCmp(ps, roma_t[i].katakana_ptr, 1) then begin
+   {$ENDIF}
+      case romatype of
+        2: Result := roma_t[i].english;
+        3: Result := roma_t[i].czech;
+      else
+        Result := roma_t[i].japanese;
+      end;
       Inc(ps, 4);
-      Result:=roma[(i div 5)*5+romatype+1];
       exit;
     end;
   if (ps^='0') and (PAnsiChar(integer(ps)+1)^='0') then begin
@@ -1027,21 +1073,32 @@ procedure FreeRomaList;
 begin
   roma.Free;
   romac.Free;
+  roma_t.Free;
 end;
 
+//NOTE: This function is not actually being used as of now!
+// Romaji translation table is loaded from wakan.cfg with everything else.
 procedure BuildRomaList;
 var i,j:integer;
     s,s2:string;
+  s_hira, s_kata, s_jap, s_en, s_cz: string;
 begin
   roma:=TStringList.Create;
   TRomaji.First;
   while not TRomaji.EOF do
   begin
-    roma.Add(Uppercase(TRomaji.Str(TRomaji.Field('Hiragana'))));
-    roma.Add(Uppercase(TRomaji.Str(TRomaji.Field('Katakana'))));
-    roma.Add(TRomaji.Str(TRomaji.Field('Japanese')));
-    roma.Add(TRomaji.Str(TRomaji.Field('English')));
-    roma.Add(TRomaji.Str(TRomaji.Field('Czech')));
+    s_hira := Uppercase(TRomaji.Str(TRomaji.Field('Hiragana')));
+    s_kata := Uppercase(TRomaji.Str(TRomaji.Field('Katakana')));
+    s_jap := TRomaji.Str(TRomaji.Field('Japanese'));
+    s_en := TRomaji.Str(TRomaji.Field('English'));
+    s_cz := TRomaji.Str(TRomaji.Field('Czech'));
+    roma.Add(s_hira);
+    roma.Add(s_kata);
+    roma.Add(s_jap);
+    roma.Add(s_en);
+    roma.Add(s_cz);
+   //Serve in new format too, in case this function ever goes back to life
+    roma_t.Add(s_hira, s_kata, s_jap, s_en, s_cz);
     TRomaji.Next;
   end;
   romac:=TStringList.Create;
