@@ -135,7 +135,7 @@ begin
   Result.vt := s[1];
   Result.sufcat := s[2];
   i := pos('->', s);
-  Result.infl := copy(s,3,i-1);
+  Result.infl := copy(s,3,i-3);
   Result.defl := copy(s,i+2,Length(s)-(i+2)+1);
 end;
 
