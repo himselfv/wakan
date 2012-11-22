@@ -516,7 +516,7 @@ begin
                 partfound:=true;
 //              if ((i<(length(_s) div 4)) and every) or (wt=2) then
               if (every) or ((i>1) and (partial)) or (i=length(_s) div 4) or (partfound) then
-                se.Add(max(9-j, 0), i, 'F', copy(_s,1,i*4));
+                se.Add(i, i, 'F', copy(_s,1,i*4));
             end;
           end;
           if (wt=3) then
@@ -703,8 +703,8 @@ begin
               if (pos(trim(uppercase(Edit1.Text)),trim(uppercase(dic.TDict.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
               sort:=sort+popclas*100;
             end;
-            if a=1 then sort:=(10000*(9-sp))+length(dic.TDict.Str(dic.TDictPhonetic))*1000+popclas*10;
-            if (a=3) or (a=4) then sort:=(10000*(9-sp))+popclas*10;
+            if a=1 then sort:=(10000*(9-min(sp,9)))+length(dic.TDict.Str(dic.TDictPhonetic))*1000+popclas*10;
+            if (a=3) or (a=4) then sort:=(10000*(9-min(sp,9)))+popclas*10;
             sort:=sort+10000;
 //            if (a=4) and (p4reading) then sort:=10000+popclas*10;
             if (fSettings.CheckBox4.Checked) and (status>-1) then dec(sort,1000);
