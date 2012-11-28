@@ -763,9 +763,10 @@ function TTextTable.Locate(seek,value:string;number:boolean):boolean;
 var sn:integer;
     fn:integer;
     l,r,c:integer;
-    i:integer;
-    s,s2:string;
+    s:string;
     reverse:boolean;
+  i_val: integer;    //integer value for "value", when number==true
+  i_s: integer;      //integer value for "s", when number==true
 begin
   if not loaded then load;
   sn:=seeks.IndexOf(seek)-1;
@@ -777,55 +778,53 @@ begin
   end;
   fn:=fieldlist.IndexOf(seek);
   if reverse then value:=ReverseString(value);
-  if (sn>=-1) and (fn>=0) then
-  begin
-    l:=0;
-    r:=reccount-1;
-    if l<=r then repeat
-      c:=((r-l) div 2)+l;
-      s:=GetField(TransOrder(c,sn),fn);
-      if reverse then s:=ReverseString(s);
-      if number then
-      begin
-        if (length(s)>0) and (s[length(s)]='''') then system.delete(s,length(s),1);
-        if (length(s)>0) and (s[1]='''') then system.delete(s,1,1);
-        try
-          if strtoint(value)<strtoint(s) then r:=c else
-          if strtoint(value)>strtoint(s) then l:=c+1 else
-          if strtoint(value)=strtoint(s) then r:=c;
-        except
-          r:=c;
-        end;
-      end else begin
+
+  Result := false;
+  if (sn<-1) or (fn<0) then
+    exit;
+
+  if number then begin
+    if not TryStrToInt(value, i_val) then
+      exit;
+  end else
+    value := uppercase(value);
+  
+ //Initiate binary search
+  l:=0;
+  r:=reccount-1;
+  if l<=r then repeat
+    c:=((r-l) div 2)+l;
+    s:=GetField(TransOrder(c,sn),fn);
+    if reverse then s:=ReverseString(s);
+    if number then
+    begin
+      if (length(s)>0) and (s[length(s)]='''') then system.delete(s,length(s),1);
+      if (length(s)>0) and (s[1]='''') then system.delete(s,1,1);
+      if not TryStrToInt(s, i_s) then
+        r := c
+      else
+        if i_val<=i_s then r:=c else l:=c+1;
+    end else begin
       if rawindex then
+        if value<=uppercase(s) then r:=c else l:=c+1
+      else
+        if AnsiCompareStr(value,uppercase(s))<=0 then r:=c else l:=c+1;
+    end;
+    if l>=r then
+    begin
+      result:=true;
+      cur:=l;
+      tcur:=TransOrder(l,sn);
+      while (cur<reccount) and (IsDeleted(tcur)) do
       begin
-        if uppercase(value)<uppercase(s) then r:=c else
-        if uppercase(value)>uppercase(s) then l:=c+1 else
-        if uppercase(value)=uppercase(s) then r:=c;
-      end else
-      begin
-        if AnsiCompareStr(uppercase(value),uppercase(s))<0 then r:=c else
-        if AnsiCompareStr(uppercase(value),uppercase(s))>0 then l:=c+1 else
-        if AnsiCompareStr(uppercase(value),uppercase(s))=0 then r:=c;
+        inc(cur);
+        tcur:=TransOrder(cur,sn);
       end;
-      end;
-      if l>=r then
-      begin
-        result:=true;
-        cur:=l;
-        tcur:=TransOrder(l,sn);
-        while (cur<reccount) and (IsDeleted(tcur)) do
-        begin
-          inc(cur);
-          tcur:=TransOrder(cur,sn);
-        end;
-        if cur<reccount then s:=GetField(TransOrder(cur,sn),fn);
-        if (cur>=reccount) or (uppercase(value)<>uppercase(s)) then result:=false;
-        exit;
-      end;
-    until false;
-  end;
-  result:=false;
+      if cur<reccount then s:=GetField(TransOrder(cur,sn),fn);
+      if (cur>=reccount) or (value<>uppercase(s)) then result:=false;
+      exit;
+    end;
+  until false;
 end;
 
 procedure TTextTable.First;
