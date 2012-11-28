@@ -3026,10 +3026,13 @@ var i,j:integer;
     a:integer;
     oldcurx,oldcury:integer;
     p,pn:boolean;
-    sp:TSMPromptForm;
     bg,en:integer;
+    
+  sp:TSMPromptForm;    
   updateProgressEvery: integer;
   lastUpdateProgress: integer;
+  startTime: cardinal;
+
 begin
   oldcurx:=rcurx;
   oldcury:=rcury;
@@ -3050,12 +3053,14 @@ begin
   end else CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
 
-  sp:=SMProgressDlg(_l('#00684^eTranslator^cPøekladaè'),_l('#00685^eTranslating...^cPøekládám...'),blocktoy-blockfromy+1);
  //We don't want to update very often since redrawing is slow.
  //Let's only update on every percent or less.
   updateProgressEvery := (blocktoy-blockfromy+1) div 100;
   if updateProgressEvery<1 then updateProgressEvery := 1; //<100 items
-  lastUpdateProgress := -updateProgressEvery-1; //update now
+  lastUpdateProgress := 0; //whatever, we'll set it when we show the window
+ //We also don't show the window at all unless the operation is taking long time.
+  sp := nil;
+  startTime := GetTickCount;
 
   for i:=blockfromy to blocktoy do
   begin
@@ -3066,8 +3071,17 @@ begin
 
     //Do not update progress too often
     if i-blockfromy > lastUpdateProgress + updateProgressEvery then begin
-      sp.SetProgress(i-blockfromy);
+      if sp<>nil then
+        sp.SetProgress(i-blockfromy);
       lastUpdateProgress := i-blockfromy;
+    end;
+
+    //If the operation is taking too long to be noticeable
+    if (sp=nil) and (GetTickCount-startTime > 200) then begin
+     //Bring up the progress window
+      sp:=SMProgressDlg(_l('#00684^eTranslator^cPøekladaè'),
+        _l('#00685^eTranslating...^cPøekládám...'),blocktoy-blockfromy+1);
+      lastUpdateProgress := -updateProgressEvery-1; //update right now
     end;
 
     j:=bg;
