@@ -535,14 +535,7 @@ begin
 end;
 
 function TTextTable.GetField(rec:integer;field:integer):string;
-procedure movedataofs(p:pointer;ofs,len:integer);
-begin
-  if offline then
-  begin
-    source.ReadRawData(p^,datafpos+ofs,len)
-  end
-  else moveofs(data,p,ofs,0,len);
-end;
+const HexChars: AnsiString = '0123456789ABCDEF';
 var i,ii:integer;
     ofs:integer;
     sz:byte;
@@ -551,16 +544,13 @@ var i,ii:integer;
     w,w2:word;
     l:integer;
     c:char;
-    s:shortstring;
+    pb: PByte;
 begin
   if not loaded then load;
   if rec>=reccount then
-  begin
-//    showmessage('READ BEYOND!!');
     raise Exception.Create('Read beyond!');
-  end;
   ii:=rec*5+varfields*rec;
-  moveofs(struct,@ofs,ii+1,0,4);
+  ofs:=PInteger(integer(struct)+ii+1)^;
   w2:=0;
   for i:=0 to field-1 do w2:=w2+GetFieldSize(rec,i);
   tp:=fieldtypes[field+1];
@@ -568,37 +558,60 @@ begin
   ofs:=ofs+w2;
 //  showmessage('GF: rec:'+inttostr(rec)+' fld:'+inttostr(field)+' ofs:'+inttostr(ofs)+' sz:'+inttostr(sz));
   case tp of
-    'b':begin
-          movedataofs(@b,ofs,1);
-          result:=inttostr(b);
-        end;
-    'w':begin
-          movedataofs(@w,ofs,2);
-          result:=inttostr(w);
-        end;
-    'i':begin
-          movedataofs(@l,ofs,4);
-          result:=inttostr(l);
-        end;
-    'l':begin
-          movedataofs(@c,ofs,1);
-          if (c>#0) and (c<>'F') and (c<>'f') then c:='T' else c:='F';
-          result:=c;
-        end;
-    's':begin
-          s[0]:=chr(sz);
-          movedataofs(@(s[1]),ofs,sz);
-          result:=s;
-        end;
-    'x':begin
-          result:='';
-          for l:=1 to sz do
-          begin
-            movedataofs(@b,ofs+l-1,1);
-            result:=result+format('%2.2X',[b]);
-          end;
-        end;
-  end;
+  'b': begin
+     if offline then
+       source.ReadRawData(b,datafpos+ofs,1)
+     else
+       b := PByte(integer(data)+ofs)^;
+     result:=inttostr(b);
+   end;
+  'w':begin
+     if offline then
+       source.ReadRawData(w,datafpos+ofs,2)
+     else
+       w := PWord(integer(data)+ofs)^;
+     result:=inttostr(w);
+   end;
+  'i':begin
+     if offline then
+       source.ReadRawData(l,datafpos+ofs,4)
+     else
+       l := PInteger(integer(data)+ofs)^;
+     result:=inttostr(l);
+   end;
+  'l':begin
+     if offline then
+       source.ReadRawData(c,datafpos+ofs,1)
+     else
+       c := PChar(integer(data)+ofs)^;
+     if (c>#0) and (c<>'F') and (c<>'f') then c:='T' else c:='F';
+     result:=c;
+   end;
+  's':begin
+     SetLength(Result, sz);
+     if offline then
+       source.ReadRawData(Result[1],datafpos+ofs,sz)
+     else
+       move(PChar(integer(data)+ofs)^, Result[1], sz);
+   end;
+  'x': begin
+     SetLength(Result, 2*sz);
+     if offline then begin
+      //If we're offline we beter read everything in one go!
+      //Position it in the second half of the buffer so that it won't be
+      //overwritten too early when we rewrite the string.
+       source.ReadRawData(Result[sz+1],datafpos+ofs,sz);
+       pb := PByte(@Result[sz+1]);
+     end else
+      //If we have data in memory, let's just use it from there.
+       pb := PByte(integer(data)+ofs);
+     for l:=0 to sz-1 do begin
+       Result[2*l+1]:=HexChars[1 + pb^ shr 4];
+       Result[2*l+2]:=HexChars[1 + pb^ and $0F];
+       Inc(pb);
+     end;
+   end;
+   end;
 end;
 
 function TTextTable.FilterPass(rec:integer;fil:string):boolean;
@@ -764,7 +777,7 @@ begin
   end;
   fn:=fieldlist.IndexOf(seek);
   if reverse then value:=ReverseString(value);
-  if (sn<>-2) and (fn<>-1) then
+  if (sn>=-1) and (fn>=0) then
   begin
     l:=0;
     r:=reccount-1;
