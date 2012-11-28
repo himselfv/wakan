@@ -141,6 +141,7 @@ type
     procedure Add(ct: TCandidateLookup); overload;{$IFDEF INLINE} inline;{$ENDIF}
     procedure Delete(Index: integer);
     procedure Clear;
+    function Find(len: integer; verbType: char; const str: string): integer;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PCandidateLookup read GetItemPtr; default;
   end;
@@ -287,7 +288,8 @@ begin
   SetLength(FList, Length(FList)+ARequiredFreeLen);
 end;
 
-procedure TCandidateLookupList.Add(priority: integer; len: integer; verbType: char; const str: string);
+procedure TCandidateLookupList.Add(priority: integer; len: integer; verbType: char;
+  const str: string);
 var item: PCandidateLookup;
 begin
  //Only priorities >=0 are supported
@@ -321,6 +323,19 @@ procedure TCandidateLookupList.Clear;
 begin
   SetLength(FList, 0);
   FListUsed := 0;
+end;
+
+function TCandidateLookupList.Find(len: integer; verbType: char; const str: string): integer;
+var k: integer;
+begin
+  Result := -1;
+  for k:=0 to Self.Count-1 do
+    if (FList[k].len=len)
+    and (FList[k].verbType=verbType)
+    and (FList[k].str=str) then begin
+      Result := k;
+      break;
+    end;
 end;
 
 

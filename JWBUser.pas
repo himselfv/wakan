@@ -122,7 +122,7 @@ type
     procedure ShowText(dolook:boolean);
     procedure RepaintText;
     procedure FormatClipboard;
-    procedure Deflex(w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
+    procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     function GetLineAttr(i,a:integer;ll:TStringList):integer;
@@ -262,7 +262,7 @@ end;
 
 
 
-procedure TfUser.Deflex(w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
+procedure TfUser.Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
 var ws: integer; //length of w in symbols. Not sure if needed but let's keep it for a while
     i,j,k:integer;
     s,s2:string;
@@ -270,11 +270,10 @@ var ws: integer; //length of w in symbols. Not sure if needed but let's keep it 
     core:string;
     pass:boolean;
     lastkanji:integer;
-    fnd:boolean;
     ad:string;
     suf:string;
     sufokay:boolean;
-    dr: TDeflectionRule;
+    dr: PDeflectionRule;
     ct: TCandidateLookup;
 begin
   if prior>9 then prior:=9;
@@ -283,13 +282,17 @@ begin
   if curlang='j'then
   begin
     lastkanji:=0;
-    for i:=1 to length(w) div 4 do if EvalChar(copy(w,i*4-3,4))<>EC_HIRAGANA then lastkanji:=i else break;
+    for i:=1 to length(w) div 4 do
+      if EvalChar(copy(w,i*4-3,4))<>EC_HIRAGANA then
+        lastkanji:=i
+      else
+        break;
     core:=copy(w,1,lastkanji*4);
     roma:=copy(w,lastkanji*4+1,length(w)-lastkanji*4);
     if (SpeedButton4.Down) or (alwaysdeflect) then
       for i:=0 to defll.Count-1 do
       begin
-        dr := defll[i]^; //copy to speed up access a bit (pointer deref)
+        dr := defll[i];
 
         for j:=0 to (length(roma)-length(dr.infl)) div 4 do
           if (copy(roma,j*4+1,length(dr.infl))=dr.infl) or
@@ -306,20 +309,15 @@ begin
               ws:=length(w) div 4;
               ad:=core+copy(roma,1,j*4)+dr.defl;
               suf:=copy(roma,j*4+1+length(dr.infl),length(roma)-j*4-length(dr.infl));
+              if sl.Find(ws, dr.vt, ad)>=0 then
+                continue; //already added
               sufokay:=(suf='');
               for k:=0 to suffixl.Count-1 do
                 if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
                   sufokay:=true;
-              fnd:=false;
-              for k:=0 to sl.Count-1 do
-                if (sl[k].len=ws)
-                and (sl[k].verbType=dr.vt)
-                and (sl[k].str=ad) then
-                  fnd:=true;
-              if (not fnd) and (sufokay or not mustSufokay) then
+              if (sufokay or not mustSufokay) then
               begin
                 if (sufokay) and (dr.infl<>'KKKK') then sl.Add(priordfl, ws, dr.vt, ad) else sl.Add(1, ws, dr.vt, ad);
-                Label1.Caption:=label1.Caption+IntToStr(ws)+dr.vt+ad+'#';
               end;
             end;
           end;
