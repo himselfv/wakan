@@ -4,75 +4,103 @@ interface
 
 uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows;
 
-const AllocDataBuffer=65536;
-      AllocOrderBuffer=1024;
-      AllocStructBuffer=1024;
+{
+TextTable relies heavily on in-memory structures.
+Table header is always kept in memory, and if TextTable.offline is true then
+the whole table is, too.
+Otherwise the data is read from the disk on demand. 
+}
 
-type TTextTable=class
-       fieldlist:TStringList;
-       seeks:TStringList;
-       seekbuild:TStringList;
-       fieldbuild:TStringList;
-       orders:TStringList;
-       data,struct,index:pointer;
-       fieldtypes:string;
-       fieldsizes:string;
-       varfields:integer;
-       cur,tcur:integer;
-       curorder:integer;
-       filter:string;
-       fieldcount:byte;
-       reccount:integer;
-       rawindex:boolean;
-       databuffer,structbuffer:integer;
-       prebuffer:boolean;
-       datalen:integer;
-       justinserted:boolean;
-       numberdeleted:integer;
-       nocommit:boolean;
-       tablename:string;
-       load_source:TPackageSource;
-       load_filename:string;
-       load_rawread:boolean;
-       loaded:boolean;
-       offline:boolean;
-       datafpos:integer;
-       source:TPackageSource;
-       function GetField(rec:integer;field:integer):string;
-       function FilterPass(rec:integer;fil:string):boolean;
-       function TransOrder(rec,order:integer):integer;
-       function IsDeleted(rec:integer):boolean;
-       procedure Commit(rec:integer);
-       function SortRec(r:integer;fld:string):string;
-       public
-       constructor Create(source:TPackageSource;filename:string;rawread,offline:boolean);
-       destructor Destroy; override;
-       procedure First;
-       procedure Next;
-       function EOF:boolean;
-       function GetFieldSize(recno,field:integer):byte;
-       function Field(field:string):integer;
-       function HasIndex(index:string):boolean;
-       function Str(field:integer):string;
-       function Int(field:integer):integer;
-       function Bool(field:integer):boolean;
-       procedure SetOrder(index:string);
-       procedure SetFilter(filtr:string);
-       function Locate(seek,value:string;number:boolean):boolean;
-       function Test(fil:string):boolean;
-       procedure WriteTable(filename:string;nodelete:boolean);
-       property RecordCount:integer read reccount;
-       procedure Insert(values:array of string);
-       procedure Delete;
-       procedure Edit(fields:array of byte;values:array of string);
-       procedure ExportToText(var t:textfile;ord:string);
-       procedure ImportFromText(var t:textfile;smf:TSMPromptForm;mess:string);
-       procedure Reindex;
-       procedure Load;
-       function CheckIndex:boolean;
-       property NoCommitting:boolean read nocommit write nocommit;
-     end;
-     TDataCache=array[0..30,0..1] of word;
+const
+  AllocDataBuffer=65536;
+  AllocOrderBuffer=1024;
+  AllocStructBuffer=1024;
+
+type
+ //Seek table reference to speed up Locate()
+ //You retrieve it once, you use it instead of a textual name.
+ //For common tables and common seeks, global references are kept.
+  TSeekObject = record
+    ind_i: integer; //seek table index
+    fld_i: integer; //field index
+    reverse: boolean;
+  end;
+  PSeekObject = ^TSeekObject;
+
+  TTextTable=class
+    fieldlist:TStringList;
+   { Seek tables.
+    The point of seek table is to keep records sorted in a particular order.
+    The way it's done now, you just have to KNOW what order was that,
+    if you're going to use the index. }
+    seeks:TStringList;
+    seekbuild:TStringList;
+    fieldbuild:TStringList;
+    orders:TStringList;
+    data,struct,index:pointer;
+    fieldtypes:string;
+    fieldsizes:string;
+    varfields:integer;
+    cur,tcur:integer;
+    curorder:integer;
+    filter:string;
+    fieldcount:byte;
+    reccount:integer;
+    rawindex:boolean;
+    databuffer,structbuffer:integer;
+    prebuffer:boolean;
+    datalen:integer;
+    justinserted:boolean;
+    numberdeleted:integer;
+    nocommit:boolean;
+    tablename:string;
+    load_source:TPackageSource;
+    load_filename:string;
+    load_rawread:boolean;
+    loaded:boolean;
+    offline:boolean;
+    datafpos:integer;
+    source:TPackageSource;
+    function GetField(rec:integer;field:integer):string;
+    function FilterPass(rec:integer;fil:string):boolean;
+    function TransOrder(rec,order:integer):integer; inline;
+    function IsDeleted(rec:integer):boolean;
+    procedure Commit(rec:integer);
+    function SortRec(r:integer;fld:string):string;
+  public
+    constructor Create(source:TPackageSource;filename:string;rawread,offline:boolean);
+    destructor Destroy; override;
+    procedure First;
+    procedure Next;
+    function EOF:boolean;
+    function GetFieldSize(recno,field:integer):byte;
+    function Field(field:string):integer;
+    function HasIndex(index:string):boolean;
+    function Str(field:integer):string;
+    function Int(field:integer):integer;
+    function Bool(field:integer):boolean;
+    procedure SetOrder(index:string);
+    procedure SetFilter(filtr:string);
+    function Test(fil:string):boolean;
+    procedure WriteTable(filename:string;nodelete:boolean);
+    property RecordCount:integer read reccount;
+    procedure Insert(values:array of string);
+    procedure Delete;
+    procedure Edit(fields:array of byte;values:array of string);
+    procedure ExportToText(var t:textfile;ord:string);
+    procedure ImportFromText(var t:textfile;smf:TSMPromptForm;mess:string);
+    procedure Reindex;
+    procedure Load;
+    function CheckIndex:boolean;
+    property NoCommitting:boolean read nocommit write nocommit;
+
+  public
+    function GetSeekObject(seek: string): TSeekObject;
+    function Locate(seek: PSeekObject; value:string; number:boolean):boolean; overload;
+    function Locate(seek,value:string;number:boolean):boolean; overload;
+
+  end;
+  TDataCache=array[0..30,0..1] of word;
 
 procedure LogAlloc(s:string;len:integer);
 procedure ShowAllocStats;
@@ -87,6 +115,11 @@ procedure ShowAllocStats;
 begin
   statlist.SaveToFile('tablestats.txt');
   winexec('notepad.exe tablestats.txt',SW_SHOW);
+end;
+
+function OffsetPtr(source: pointer; ofs: integer): PByte; inline;
+begin
+  Result := PByte(integer(source)+ofs); 
 end;
 
 procedure MoveOfs(source,dest:pointer;ofssource,ofsdest:integer;size:integer);
@@ -389,16 +422,17 @@ begin
 //  closefile(t);
 end;
 
+{
+Heavily used function. Should be very optimized.
+}
 function TTextTable.GetFieldSize(recno,field:integer):byte;
-var b:byte;
-    c:char;
+var c:char;
 begin
   c:=fieldsizes[field+1];
-  if (c>='1') and (c<='9') then result:=ord(c)-ord('0')
-    else begin
-      moveofs(struct,@b,recno*(varfields+5)+(ord(c)-ord('a'))+5,0,1);
-      result:=b;
-    end;
+  if (c>='1') and (c<='9') then
+    Result := ord(c)-ord('0')
+  else
+    Result := OffsetPtr(struct, recno*(varfields+5)+(ord(c)-ord('a'))+5)^;
 end;
 
 procedure TTextTable.WriteTable(filename:string;nodelete:boolean);
@@ -534,6 +568,12 @@ begin
   freemem(struct);
 end;
 
+{
+Read the field value for a record.
+This is a HEAVILY used function, so let's be as fast as we can.
+Everything which is already in memory is read from memory directly. If we're
+working in offline mode, it's read from the disc in one go.
+}
 function TTextTable.GetField(rec:integer;field:integer):string;
 const HexChars: AnsiString = '0123456789ABCDEF';
 var i,ii:integer;
@@ -541,49 +581,47 @@ var i,ii:integer;
     sz:byte;
     tp:char;
     b:byte;
-    w,w2:word;
+    w:word;
     l:integer;
     c:char;
     pb: PByte;
+    pc: PChar;
 begin
   if not loaded then load;
   if rec>=reccount then
     raise Exception.Create('Read beyond!');
   ii:=rec*5+varfields*rec;
-  ofs:=PInteger(integer(struct)+ii+1)^;
-  w2:=0;
-  for i:=0 to field-1 do w2:=w2+GetFieldSize(rec,i);
+  ofs:=PInteger(OffsetPtr(struct, ii+1))^;
+  for i:=0 to field-1 do ofs:=ofs+GetFieldSize(rec,i);
   tp:=fieldtypes[field+1];
   sz:=GetFieldSize(rec,field);
-  ofs:=ofs+w2;
-//  showmessage('GF: rec:'+inttostr(rec)+' fld:'+inttostr(field)+' ofs:'+inttostr(ofs)+' sz:'+inttostr(sz));
   case tp of
   'b': begin
      if offline then
        source.ReadRawData(b,datafpos+ofs,1)
      else
-       b := PByte(integer(data)+ofs)^;
+       b := OffsetPtr(data, ofs)^;
      result:=inttostr(b);
    end;
   'w':begin
      if offline then
        source.ReadRawData(w,datafpos+ofs,2)
      else
-       w := PWord(integer(data)+ofs)^;
+       w := PWord(OffsetPtr(data, ofs))^;
      result:=inttostr(w);
    end;
   'i':begin
      if offline then
        source.ReadRawData(l,datafpos+ofs,4)
      else
-       l := PInteger(integer(data)+ofs)^;
+       l := PInteger(OffsetPtr(data, ofs))^;
      result:=inttostr(l);
    end;
   'l':begin
      if offline then
        source.ReadRawData(c,datafpos+ofs,1)
      else
-       c := PChar(integer(data)+ofs)^;
+       c := PChar(OffsetPtr(data, ofs))^;
      if (c>#0) and (c<>'F') and (c<>'f') then c:='T' else c:='F';
      result:=c;
    end;
@@ -592,7 +630,7 @@ begin
      if offline then
        source.ReadRawData(Result[1],datafpos+ofs,sz)
      else
-       move(PChar(integer(data)+ofs)^, Result[1], sz);
+       move(OffsetPtr(data, ofs)^, Result[1], sz);
    end;
   'x': begin
      SetLength(Result, 2*sz);
@@ -604,10 +642,13 @@ begin
        pb := PByte(@Result[sz+1]);
      end else
       //If we have data in memory, let's just use it from there.
-       pb := PByte(integer(data)+ofs);
+       pb := OffsetPtr(data, ofs);
+     pc := PChar(@Result[1]);
      for l:=0 to sz-1 do begin
-       Result[2*l+1]:=HexChars[1 + pb^ shr 4];
-       Result[2*l+2]:=HexChars[1 + pb^ and $0F];
+       pc^ := HexChars[1 + pb^ shr 4];
+       Inc(pc);
+       pc^ := HexChars[1 + pb^ and $0F];
+       Inc(pc);
        Inc(pb);
      end;
    end;
@@ -674,19 +715,14 @@ begin
   except result:=false; end;
 end;
 
+{ Retrieves a record number by a seek table id (order) and a seek table record number (rec).
+  The table has to be loaded. }
 function TTextTable.TransOrder(rec,order:integer):integer;
-var p:integer;
-    olen:integer;
 begin
-  if not loaded then load;
-  olen:=reccount*4;
   if order=-1 then
-  begin
-    result:=rec;
-    exit;
-  end;
-  moveofs(index,@p,olen*order+rec*4,0,4);
-  result:=p;
+    Result:=rec
+  else
+    Result := PInteger(OffsetPtr(index, (order*reccount+rec)*4))^;
 end;
 
 procedure TTextTable.Next;
@@ -759,25 +795,41 @@ begin
   for i:=length(s) downto 1 do result:=result+s[i];
 end;
 
+function TTextTable.GetSeekObject(seek: string): TSeekObject;
+begin
+  if not loaded then load;
+  Result.ind_i:=seeks.IndexOf(seek)-1;
+  Result.reverse:=false;
+  if (seek[1]='<') then
+  begin
+    system.delete(seek,1,1);
+    Result.reverse:=true;
+  end;
+  Result.fld_i:=fieldlist.IndexOf(seek);
+end;
+
+//Slower version, specifying seek by a string name
 function TTextTable.Locate(seek,value:string;number:boolean):boolean;
-var sn:integer;
-    fn:integer;
-    l,r,c:integer;
-    s:string;
-    reverse:boolean;
+var so: TSeekObject;
+begin
+  so := GetSeekObject(seek);
+  Result := Locate(@so, value, number);
+end;
+
+//Faster version, by seek object
+function TTextTable.Locate(seek: PSeekObject; value:string; number:boolean):boolean;
+var sn:integer;       //seek table number
+  fn:integer;         //field number
+  reverse:boolean;
+  l,r,c:integer;
+  s:string;
   i_val: integer;    //integer value for "value", when number==true
   i_s: integer;      //integer value for "s", when number==true
 begin
   if not loaded then load;
-  sn:=seeks.IndexOf(seek)-1;
-  reverse:=false;
-  if (seek[1]='<') then
-  begin
-    system.delete(seek,1,1);
-    reverse:=true;
-  end;
-  fn:=fieldlist.IndexOf(seek);
-  if reverse then value:=ReverseString(value);
+  sn := seek.ind_i;
+  fn := seek.fld_i;
+  reverse := seek.reverse;
 
   Result := false;
   if (sn<-1) or (fn<0) then
@@ -786,16 +838,19 @@ begin
   if number then begin
     if not TryStrToInt(value, i_val) then
       exit;
-  end else
+  end else begin
+    if reverse then value:=ReverseString(value);
     value := uppercase(value);
-  
+  end;
+
  //Initiate binary search
   l:=0;
   r:=reccount-1;
   if l<=r then repeat
     c:=((r-l) div 2)+l;
     s:=GetField(TransOrder(c,sn),fn);
-    if reverse then s:=ReverseString(s);
+    if reverse then
+      s:=ReverseString(s);
     if number then
     begin
       if (length(s)>0) and (s[length(s)]='''') then system.delete(s,length(s),1);
@@ -1122,6 +1177,7 @@ var c:integer;
     i,k:integer;
     sc,sa:string;
 begin
+  if not loaded then load;
   if a=b then exit;
   // choose cue point
   c:=a+(b-a) div 2;
@@ -1298,7 +1354,7 @@ end;
 
 function TTextTable.HasIndex(index:string):boolean;
 begin
-  if orders.IndexOf(index)=-1 then result:=false else result:=true;
+  Result := orders.IndexOf(index)>=0;
 end;
 
 initialization
