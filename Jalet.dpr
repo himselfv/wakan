@@ -54,7 +54,8 @@ uses
   JWBFileType in 'JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'JWBWordsExpChoose.pas' {fWordsExpChoose},
   JWBMedia in 'JWBMedia.pas' {fMedia},
-  JWBUtils in 'JWBUtils.pas';
+  JWBUtils in 'JWBUtils.pas',
+  JWBDicSearch in 'JWBDicSearch.pas';
 
 {$R *.RES}
 

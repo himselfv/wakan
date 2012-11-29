@@ -5,10 +5,17 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBUtils;
+  JWBUtils, JWBDicSearch;
 
 type
-  TMatchType = (mtExactMatch, mtMatchLeft, mtMatchRight, mtMatchAnywhere);
+  TLookSettings = record
+    dgroup:integer;
+    full: boolean;
+    maxwords: integer;
+    clips:string;
+    mt: TMatchType;
+  end;
+  PLookSettings = ^TLookSettings;
 
   TfUser = class(TForm)
     Panel1: TPanel;
@@ -117,12 +124,10 @@ type
     curkanji,curphonetic,curmeaning,curkanjid:string;
     docfilename:string;
     doctp:byte;
-    procedure Look(nogriddisplay:boolean; NoScreenUpdates: boolean = false);
     procedure ShowWord;
     procedure ShowText(dolook:boolean);
     procedure RepaintText;
     procedure FormatClipboard;
-    procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustSufokay,alwaysdeflect:boolean);
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     function GetLineAttr(i,a:integer;ll:TStringList):integer;
@@ -156,8 +161,6 @@ type
     procedure PasteEditorBitmap;
     procedure SetCurPos(x,y:integer);
     procedure HandleWheel(down:boolean);
-    procedure DicSearch(search:string;a:integer; MatchType: TMatchType;
-      full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
     procedure CalcMouseCoords(x,y:integer;var rx,ry:integer);
     procedure DetailsForKanji(n:integer);
     procedure GetTextWordInfo(cx,cy:integer;var meaning,reading,kanji:string);
@@ -170,12 +173,16 @@ type
     procedure ExampleClipboard(all:boolean);
     procedure GotoExample(num:integer);
     procedure OpenFile;
-    function CompareUnicode(sub,str:string):boolean;
     function HalfWidthChar(c:string):boolean;
     function HalfWidth(x,y:integer):boolean;
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
-    { Public declarations }
+
+  public
+    procedure Look_Setup(a: integer; out st: TLookSettings);
+    procedure Look_Run(a: integer; st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+    procedure Look(nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+
   end;
 
 var
@@ -219,7 +226,6 @@ var curword:integer;
     ex_indfirst,ex_indlast,ex_indcur:integer;
     ex_jap,ex_en:string;
     randbank:TStringList;
-    dic_ignorekana:boolean;
     donotsetbegset:boolean;
 
 {$R *.DFM}
@@ -258,101 +264,6 @@ end;
 procedure SetDocTr(ax,ay:integer;s:string);
 begin
   doctr[ay]:=copy(doctr[ay],1,ax*9)+s+copy(doctr[ay],ax*9+10,length(doctr[ay])-(ax*9+9));
-end;
-
-
-
-procedure TfUser.Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
-var ws: integer; //length of w in symbols. Not sure if needed but let's keep it for a while
-    i,j,k:integer;
-    s,s2:string;
-    roma:string;
-    core:string;
-    pass:boolean;
-    lastkanji:integer;
-    ad:string;
-    suf:string;
-    sufokay:boolean;
-    dr: PDeflectionRule;
-    ct: TCandidateLookup;
-begin
-  if prior>9 then prior:=9;
-  if priordfl>9 then priordfl:=9;
-  ws:=length(w) div 4;
-  if curlang='j'then
-  begin
-    lastkanji:=0;
-    for i:=1 to length(w) div 4 do
-      if EvalChar(copy(w,i*4-3,4))<>EC_HIRAGANA then
-        lastkanji:=i
-      else
-        break;
-    core:=copy(w,1,lastkanji*4);
-    roma:=copy(w,lastkanji*4+1,length(w)-lastkanji*4);
-    if (SpeedButton4.Down) or (alwaysdeflect) then
-      for i:=0 to defll.Count-1 do
-      begin
-        dr := defll[i];
-
-        for j:=0 to (length(roma)-length(dr.infl)) div 4 do
-          if (copy(roma,j*4+1,length(dr.infl))=dr.infl) or
-             ((dr.infl='KKKK') and (j=0) and (core<>'')) then
-          if ((dr.vt<>'K') and (dr.vt<>'I')) or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
-             or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
-          begin
-            if (length(dr.defl)+j*4<=24) and (core+copy(roma,1,j*4)+dr.defl<>w) then
-            begin
-//              ws:=length(core+copy(roma,1,j*4)+dr.infl) div 4;
-//              if dr.infl='KKKK'then ws:=length(core) div 4;
-//              if ws<=length(core) div 4 then ws:=(length(core)+4) div 4;
-//              if ws<=1 then ws:=2;
-              ws:=length(w) div 4;
-              ad:=core+copy(roma,1,j*4)+dr.defl;
-              suf:=copy(roma,j*4+1+length(dr.infl),length(roma)-j*4-length(dr.infl));
-              if sl.Find(ws, dr.vt, ad)>=0 then
-                continue; //already added
-              sufokay:=(suf='');
-              for k:=0 to suffixl.Count-1 do
-                if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
-                  sufokay:=true;
-              if (sufokay or not mustSufokay) then
-              begin
-                if (sufokay) and (dr.infl<>'KKKK') then sl.Add(priordfl, ws, dr.vt, ad) else sl.Add(1, ws, dr.vt, ad);
-              end;
-            end;
-          end;
-      end;
-    ws:=length(w) div 4;
-    sl.Add(prior, ws, 'F', w);
-  end;
-  if curlang='c'then
-  begin
-    sl.Add(prior, ws, 'F', w);
-    if pos('?',KanaToRomaji(w,romasys,'c'))>0 then exit;
-    repeat
-      pass:=true;
-      i:=0;
-      while i<sl.Count do
-      begin
-        ct := sl[i]^;
-        j := pos('F030',ct.str);
-        if j>0 then begin
-          pass:=false;
-         //First version is modified in-place to avoid slow deletions
-          sl[i]^.str[j] := '1';
-         //Next versions are made into copies
-          ct.str[j]:='2';
-          sl.Add(ct);
-          ct.str[j]:='3';
-          sl.Add(ct);
-          ct.str[j]:='4';
-          sl.Add(ct);
-          ct.str[j]:='5';
-          sl.Add(ct);
-        end else inc(i);
-      end;
-    until pass;
-  end;
 end;
 
 function TfUser.GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
@@ -425,472 +336,18 @@ begin
   if (cursorend) and (curx=0) and (cury>0) then result:=cury-1 else result:=cury;
 end;
 
-function TfUser.CompareUnicode(sub,str:string):boolean;
-var i:integer;
-begin
-  result:=false;
-  for i:=0 to ((length(str)-length(sub)) div 4) do
-    if copy(str,i*4+1,length(sub))=sub then
-    begin
-      result:=true;
-      exit;
-    end;
-end;
-
 {
-DicSearch()
-Searches the dictionary for all candidate translations to the line.
-
-search
-  string to look for
-a
-  search mode
-  1 = jp->en
-  2 = en->jp
-  3 = clipboard translation
-  4 = ???
-MatchType
-  How to match words (exact, match left, right or anywhere)
-full
-  Find all matches instead of only most relevant ones (slower)
-wt
-  WordType
-  ???
-  -2, -1, [0..4] from EvalChar
-maxwords
-  maximum number of words to look for [ignored if "full" is set?]
-sl
-  Match results to return.
-dictgroup
-  Dictionary group. Presently 5 are supported:
-    1..3 - user dictionary groups
-    4 - use for compounds
-    5 - use for popup/editor
-  No call to this function uses 4 though.
-wasfull
-  True if we have retrieved all of the available results.
-
-Note:
-- "search" has to be in 4-char-per-symbol hex encoding (=> length divisible by 4)
+Look()
+This function translates a chunk of currently selected text either in the editor
+or in the word lookup edit field.
+When translating from the editor, it's called thousands of times, and therefore
+we split the setup part and the work part.
 }
-procedure TfUser.DicSearch(search:string;a:integer; MatchType: TMatchType;
-  full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
-var i,j,k,l,ii:integer;
-    wif:integer;
-    di:integer;
-    sort:integer;
-    sorts,sorts2:string;
-    s2:string;
-    popclas:integer;
-    status:integer;
-    statpref:string;
-    _s:string;
-    cursearch:string;
-    part:string;
-    se:TCandidateLookupList; { Candidate lookups -- see comments where this type is declared }
-    ui,sxx:string;
-    sp:integer;
-    sdef:char;
-    slen:integer;
-    limitkana:boolean;
-    markers,converted:string;
-    dic:TJaletDic;
-    p4reading:boolean;
-    sl2i:integer;
-    tim:TDateTime;
-    sxxr:string;
-    sl2:TStringList;
-    ts:string;
-    partfound:boolean;
-    every:boolean;
-    a3kana:boolean;
-    presentl,presindl:TStringList;
-    willadd:boolean;
-    scomp,ssig,scur:string;
-    freq:integer;
-    mess:TSMPromptForm;
-    nowt:TDateTime;
-begin
-  mess:=nil;
-  if search='' then exit;
-  se:=TCandidateLookupList.Create;
-  presentl:=TStringList.Create;
-  presindl:=TStringList.Create;
-  p4reading:=false;
-  wasfull:=true;
-  nowt:=now;
-  presentl.Sorted:=true;
-  case a of
-    1:if curlang='j'then Deflex(RomajiToKana('H'+search,romasys,true,'j'),se,9,8,true,false) else
-       Deflex(RomajiToKana(search,romasys,true,'c'),se,9,8,true,false);
-    2:se.Add(9, 1, 'F', search);
-    3:Deflex(ChinFrom(search),se,9,8,true,false);
-    4:begin
-        if wt<0 then
-        begin
-          _s:=ChinFrom(search);
-          Deflex(_s,se,9,8,false,true);
-          p4reading:=wt=-1;
-          if wt=-1 then if partl.IndexOf(search)>-1 then
-            sl.Add('000000000000000000'+inttostr(length(search) div 4)+'P          '+_s+' ['+_s+'] {'+KanaToRomaji(search,1,'j')+' particle}');
-        end else
-        begin
-          if (wt=1) or (wt=2) then
-          begin
-            _s:=ChinFrom(search);
-            if wt=1 then Deflex(_s,se,9,8,false,true);
-            for i:=(length(_s) div 4) downto 1 do
-            begin
-              j:=(length(_s) div 4)-i+1;
-              if j<1 then j:=1;
-              partfound:=false;
-              every:=false;
-              if EvalChar(copy(_s,i*4-3,4))=1 then every:=true;
-              if (wt=2) and (i<(length(_s) div 4)) and (i>=(length(_s) div 4)-4) and (partl.IndexOf(copy(_s,i*4+1,length(_s)-i*4))>-1) then
-                partfound:=true;
-//              if ((i<(length(_s) div 4)) and every) or (wt=2) then
-              if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=length(_s) div 4) or (partfound) then
-                se.Add(i, i, 'F', copy(_s,1,i*4));
-            end;
-          end;
-          if (wt=3) then
-          begin
-            _s:=ChinFrom(search);
-            se.Add(9, Length(_s) div 4, 'F', _s);
-          end;
-        end;
-      end;
-  end;
 
-  for di:=0 to dicts.Count-1 do if (dicts.Objects[di] as TJaletDic).loaded then
-  begin
-    dic:=dicts.Objects[di] as TJaletDic;
-    if (dic.loaded) and (pos(','+dic.name,NotGroupDicts[dictgroup])=0) then
-    begin
-      dic.Demand;
-      if a=1 then if MatchType=mtMatchRight then dic.TDict.SetOrder('<Phonetic_Ind') else dic.TDict.SetOrder('Phonetic_Ind');
-      if (a=3) or (a=4) then if ((MatchType=mtMatchRight) and (a=3)) then dic.TDict.SetOrder('<Kanji_Ind') else dic.TDict.SetOrder('Kanji_Ind');
-      if maxwords<10 then maxwords:=10;
-      if (full) or ((fUser.SpeedButton13.Down) and (MatchType<>mtMatchAnywhere)) then
-          for j:=0 to se.Count-1 do
-          begin
-            if ((a=1) or (a=3)) and (MatchType=mtMatchAnywhere) then begin dic.TDict.SetOrder('Index_Ind'); dic.TDict.First; end;
-            sxx:=se[j].str;
-            if sxx='' then continue;
-            if (a=1) or (a=4) then sxxr:=KanaToRomaji(sxx,1,curlang);
-            sp:=se[j].priority;
-            sdef:=se[j].verbType;
-            slen:=se[j].len;
-            limitkana:=false;
-            if a<3 then slen:=1;
-            if a=3 then
-            begin
-              a3kana:=true;
-              for i:=1 to length(sxx) div 4 do
-              begin
-                k:=EvalChar(copy(sxx,(i-1)*4+1,4));
-                if (k<>2) and (k<>3) then a3kana:=false;
-              end;
-            end;
-            if (a=3) and (a3kana) then sxxr:=KanaToRomaji(sxx,1,curlang);
-            if (a=1) and (MatchType<>mtMatchAnywhere) then
-              if MatchType=mtMatchRight then
-                dic.TDict.Locate('<Sort',sxxr,false)
-              else
-                dic.TDict.Locate('Sort',sxxr,false);
-            if a=2 then dic.FindIndexString(true,lowercase(sxx));
-            if (a=3) and not a3kana and (MatchType<>mtMatchAnywhere) then
-              if MatchType=mtMatchRight then
-                dic.TDict.Locate('<Kanji',sxx,false)
-              else
-                dic.TDict.Locate('Kanji',sxx,false);
-            if (a=3) and a3kana and (MatchType<>mtMatchAnywhere) then
-              if MatchType=mtMatchRight then
-                dic.TDict.Locate('<Sort',sxxr,false)
-              else
-                dic.TDict.Locate('Sort',sxxr,false);
-            if a=4 then
-            if p4reading then
-            begin
-              dic.TDict.SetOrder('Phonetic_Ind');
-              dic.TDict.Locate('Sort',sxxr,false);
-              limitkana:=true;
-            end else
-            begin
-              if wt<>2 then
-              begin
-                dic.TDict.SetOrder('Kanji_Ind');
-                dic.TDict.Locate('Kanji',sxx,false);
-              end else
-              begin
-                limitkana:=true;
-                dic.TDict.SetOrder('Phonetic_Ind');
-                dic.TDict.Locate('Sort',sxxr,false);
-              end;
-            end;
-        i:=0;
-        if a=2 then wif:=dic.ReadIndex;
-        while
-          ((a=2) or (not dic.TDict.EOF)) and
-          (((a=1) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
-          ((a=1) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
-          ((a=1) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-          ((a=3) and (a3kana) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
-          ((a=3) and (a3kana) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
-          ((a=3) and (a3kana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-          ((a=2) and (wif<>0)) or
-          ((a=3) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))=1)) or
-          ((a=3) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))>0)) or
-          ((a=3) and (not a3kana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-          ((a=4) and (not limitkana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-          ((a=4) and (limitkana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-          (((a=1) or (a=3)) and (MatchType=mtMatchAnywhere)))
-        do
-        begin
-          if (mess=nil) and (now-nowt>1/24/60/60) then mess:=SMMessageDlg(_l('#00932^eDic.search^cSlovník'),_l('#00933^ePlease wait. Searching dictionary...^cProsím èekejte. Prohledávám slovník...'));
-{          showmessage(dic.TDict.Str(dic.TDictSort));
-          showmessage(dic.TDict.Str(dic.TDictEnglish));
-          showmessage(dic.TDict.Str(dic.TDictKanji));
-          showmessage(dic.TDict.Str(dic.TDictPhonetic));
-          showmessage(KanaToRomaji(dic.TDict.Str(dic.TDictPhonetic),1,'j'));
-          showmessage(dic.TDict.Str(dic.TDictMarkers));
-}          if a=2 then dic.TDict.Locate('Index',inttostr(wif),true);
-//          if a=2 then showmessage(Format('%4.4X',[wif])+'-'+dic.TDict.Str(dic.TDictEnglish));
-          if sdef<>'F'then s2:='~I'else s2:='~F';
-          if dic.TDictMarkers<>-1 then s2:=s2+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers)) else
-          begin
-            converted:=ConvertEdictEntry(dic.TDict.Str(dic.TDictEnglish),markers);
-            s2:=s2+EnrichDictEntry(converted,markers);
-          end;
-          if a=2 then ts:=lowercase(dic.TDict.Str(dic.TDictEnglish)+' ');
-//          showmessage(sdef+KanaToRomaji(sxx,1,'j')+','+s2);
-          if ((sdef='F') or
-               ((sdef='2') and (pos('<gru-v>',s2)>0)) or
-               ((sdef='S') and (pos('<gsuru-v>',s2)>0)) or
-               ((sdef='K') and (pos('<gkuru-v>',s2)>0)) or
-               ((sdef='I') and (pos('<gIku-v>',s2)>0)) or
-               ((sdef='1') and (pos('-v>',s2)>0) and (pos('<gru-v>',s2)=0)) or
-               ((sdef='A') and (pos('adj>',s2)>0) and (pos('<gna-adj>',s2)=0)) or
-               ((sdef='N') and (pos('gna-adj',s2)>0)))
-{            ((not p4reading) or (dic.TDict.Str(dic.TDictPhonetic)[3]<'A'))} then
-          if (a<>2) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
-            (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
-          if (not dic_ignorekana) or (not limitkana) or (pos('<skana>',s2)>0) then
-          if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.TDict.Str(dic.TDictPhonetic)))
-             or ((a=3) and (CompareUnicode(sxx,dic.TDict.Str(dic.TDictKanji)))) then
-          begin
-            popclas:=40;
-            if (fSettings.CheckBox5.Checked) and (pos('<gn',s2)>0) then dec(popclas,5);
-            if (fSettings.CheckBox5.Checked) and (pos('-v>',s2)>0) then dec(popclas,5);
-            if (fSettings.CheckBox5.Checked) and (pos('<g',s2)=0) then dec(popclas,5);
-            if (fSettings.CheckBox6.Checked) and (pos('<shonor>',s2)>0) then dec(popclas,1);
-            if (fSettings.CheckBox6.Checked) and (pos('<shum>',s2)>0) then dec(popclas,2);
-            if (fSettings.CheckBox6.Checked) and (pos('<spolite>',s2)>0) then dec(popclas,3);
-            if pos('<sobsolete>',s2)>0 then inc(popclas,20);
-            if pos('<sobscure>',s2)>0 then inc(popclas,20);
-            if (fSettings.CheckBox7.Checked) and (pos('<spop>',s2)>0) then dec(popclas,150);
-//            if ((a=1) or ((a=4) and (p4reading))) and (dic.TDict.Field('Priority')<>-1) then
-//              if dic.TDict.Int(dic.TDict.Field('Priority'))>9 then inc(popclas,90) else
-//              inc(popclas,dic.TDict.Int(dic.TDict.Field('Priority'))*10);
-            if (a=4) and (p4reading) then
-            begin
-              if TUserPrior.Locate('Kanji',dic.TDict.Str(dic.TDictKanji),false) then
-              begin
-                dec(popclas,10*TUserPrior.Int(TUserPrior.Field('Count')));
-              end;
-            end;
-            status:=-1;
-//            TUser.SetOrder('Kanji_Ind');
-            ui:='';
-            if pos('<skana>',s2)>0 then
-            begin
-              TUser.Locate('Kanji',dic.TDict.Str(dic.TDictPhonetic),false);
-              while (not TUser.EOF) and (dic.TDict.Str(dic.TDictPhonetic)=TUser.Str(TUserKanji)) do
-              begin
-                if dic.TDict.Str(dic.TDictPhonetic)=TUser.Str(TUserPhonetic) then
-                begin
-                  status:=TUser.Int(TUserScore);
-                  ui:=TUser.Str(TUserIndex);
-                end;
-                TUser.Next;
-              end;
-            end;
-            TUser.Locate('Kanji',dic.TDict.Str(dic.TDictKanji),false);
-            while (not TUser.EOF) and (dic.TDict.Str(dic.TDictKanji)=TUser.Str(TUserKanji)) do
-            begin
-              if dic.TDict.Str(dic.TDictPhonetic)=TUser.Str(TUserPhonetic) then
-              begin
-                status:=TUser.Int(TUserScore);
-                ui:=TUser.Str(TUserIndex);
-              end;
-              TUser.Next;
-            end;
-            if (status=-1) and (dic.TDict.Str(dic.TDictKanji)<>ChinTo(dic.TDict.Str(dic.TDictKanji))) then
-            begin
-              TUser.Locate('Kanji',ChinTo(dic.TDict.Str(dic.TDictKanji)),false);
-              while (not TUser.EOF) and (ChinTo(dic.TDict.Str(dic.TDictKanji))=TUser.Str(TUserKanji)) do
-              begin
-                if dic.TDict.Str(dic.TDictPhonetic)=TUser.Str(TUserPhonetic) then
-                begin
-                  status:=TUser.Int(TUserScore);
-                  ui:=TUser.Str(TUserIndex);
-                end;
-                TUser.Next;
-              end;
-            end;
-            if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.TDict.Int(dic.TDictFrequency)>0) then s2:=s2+' <pwc'+dic.TDict.Str(dic.TDictFrequency)+'>';
-            s2:=s2+' <d'+dic.name+'>';
-            sort:=0; //the bigger the worse (will apear later in list)
-            if a=2 then
-            begin
-              if (pos(trim(uppercase(Edit1.Text)),trim(uppercase(dic.TDict.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
-              sort:=sort+popclas*100;
-            end;
-            if a=1 then sort:=(10000*(9-min(sp,9)))+length(dic.TDict.Str(dic.TDictPhonetic))*1000+popclas*10;
-            if (a=3) or (a=4) then sort:=(10000*(9-min(sp,9)))+popclas*10;
-            sort:=sort+10000;
-//            if (a=4) and (p4reading) then sort:=10000+popclas*10;
-            if (fSettings.CheckBox4.Checked) and (status>-1) then dec(sort,1000);
-            if (fSettings.CheckBox4.Checked) and (status>1) then dec(sort,1000);
-            if dic.TDict.Str(dic.TDictPhonetic)[3]>='A'then inc(sort,1000);
-            sort:=sort+dic.priority*20000;
-            if (fSettings.CheckBox59.Checked) then
-            begin
-              if dic.TDictFrequency>-1 then
-              begin
-                freq:=dic.TDict.Int(dic.TDictFrequency);
-                if freq>=500000 then freq:=10000 else
-                if freq>=10000 then freq:=2000+(freq-10000) div 100 else
-                if freq>=1000 then freq:=1000+(freq-1000) div 10;
-              end;
-              sort:=sort+10000-freq;
-            end;
-            if sort>99999 then sort:=99999;
-            if sort<0 then sort:=0;
-            if (a=4) and (p4reading) then s2:=copy(s2,1,2)+'<pp'+inttostr(sort div 100)+'> '+copy(s2,3,length(s2)-2);
-            sorts:=dic.TDict.Str(dic.TDictIndex);
-            while length(sorts)<6 do sorts:='0'+sorts;
-            while length(ui)<6 do ui:='0'+ui;
-            ui:=ui+sorts;
-            sorts:=inttostr(sort);
-            if length(sorts)>5 then sorts:='99999';
-            while length(sorts)<5 do sorts:='0'+sorts;
-            sorts:=sorts+ui+Format('%.2d',[slen]);
-            // if sdef<>'F'then sorts:=sorts+'I'else sorts:=sorts+'F';
-            if (pos('-v>',s2)>0) then sorts:=sorts+'I'else sorts:=sorts+'F';
-            // 5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname)
-            sorts:=sorts+dic.name;
-            while length(sorts)<30 do sorts:=sorts+' ';
-            statpref:='';
-            if (fSettings.CheckBox11.Checked) and (status>-1) then statpref:='!'+inttostr(status);
-            ssig:=dic.TDict.Str(dic.TDictPhonetic)+'x'+dic.TDict.Str(dic.TDictKanji);
-            if (fSettings.CheckBox8.Checked) and (pos('<skana>',s2)<>0) then
-              scur:=sorts+statpref+dic.TDict.Str(dic.TDictPhonetic)+' ['+statpref+dic.TDict.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}'else
-            scur:=sorts+statpref+CheckKnownKanji(ChinTo(dic.TDict.Str(dic.TDictKanji)))+' ['+statpref+dic.TDict.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}';
-            if presentl.IndexOf(ssig)<>-1 then
-            begin
-              scomp:=sl[presindl.IndexOf(ssig)];
-              if pos(copy(s2,3,length(s2)-2),scomp)=0 then
-              begin
-                if copy(scomp,1,5)>copy(sorts,1,5) then
-                begin
-                  delete(scomp,1,pos(' {',scomp));
-                  delete(scomp,1,1);
-                  if (length(scomp)>0) and (scomp[1]='!') then delete(scomp,1,2);
-                  if (length(scomp)>0) and (scomp[1]='~') then delete(scomp,1,2);
-                  delete(scur,length(scur),1);
-                  scur:=scur+' / '+scomp;
-                  sl[presindl.IndexOf(ssig)]:=scur;
-                end else
-                begin
-                  delete(scomp,length(scomp),1);
-                  if (length(s2)>0) and (s2[1]='~') then delete(s2,1,2);
-                  scomp:=scomp+' / '+s2+'}';
-                  sl[presindl.IndexOf(ssig)]:=scomp;
-                end;
-              end;
-            end else
-            begin
-              if fMenu.IsAnnot then
-              begin
-                fMenu.AnnotSeekK(dic.TDict.Str(dic.TDictKanji),dic.TDict.Str(dic.TDictPhonetic));
-                s2:=fMenu.AnnotGetAll('t',', ');
-                if fMenu.AnnotGetOne('c')<>'' then s2:='%'+fMenu.AnnotGetOne('c')+s2;
-                ii:=pos('{'+statpref,scur)+length(statpref)+1;
-                if scur[ii]='!' then inc(ii,2);
-                if scur[ii]='~' then inc(ii,2);
-                if scur[ii]='!' then inc(ii,2);
-                if s2<>'' then
-                scur:=copy(scur,1,ii-1)+
-                  s2+' >> '+
-                  copy(scur,ii,length(scur)-ii+1);
-              end;
-              sl.Add(scur);
-              presentl.Add(ssig);
-              presindl.Add(ssig);
-            end;
-            inc(i);
-          end;
-          if (not full) and (i>=maxwords) then
-          begin
-            wasfull:=false;
-            break;
-          end;
-          if a<>2 then dic.TDict.Next else wif:=dic.ReadIndex;
-        end;
-      end;
-    end;
-  end;
-  sl.Sort;
-  for i:=0 to sl.Count-1 do
-  begin
-    if copy(sl[i],6,6)<>'000000'then
-    begin
-      TUser.Locate('Index',inttostr(strtoint(copy(sl[i],6,6))),true);
-      scomp:=sl[i];
-      scur:=sl[i];
-      delete(scomp,1,pos(' {',scomp));
-      delete(scomp,1,1);
-      if (length(scomp)>0) and (scomp[1]='!') then delete(scomp,1,2);
-      if (length(scomp)>0) and (scomp[1]='~') then delete(scomp,1,2);
-      scur:=copy(scur,1,length(sl[i])-length(scomp));
-      s2:=TUser.Str(TUserEnglish);
-      if pos(s2,scomp)>0 then scomp:=copy(scomp,1,pos(s2,scomp)-1)+copy(scomp,pos(s2,scomp)+length(s2),length(scomp)-length(s2)-pos(s2,scomp)+1) else scomp:=' // '+scomp;
-      sl2:=TStringList.Create;
-      fWords.ListWordCategories(TUser.Int(TUserIndex),sl2,'',false);
-      for sl2i:=0 to sl2.Count-1 do s2:=s2+' <l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+'>';
-      sl2.Free;
-      sl[i]:=scur+s2+scomp;
-    end;
-  end;
-  se.Free;
-  presentl.Free;
-  presindl.Free;
-  if Assigned(mess) then mess.Free;
-end;
-
-{
-NoScreenUpdates: Do not update anything on the screen.
-  Mainly, don't do fKanji.SetCharDetails, because we're translating a large block of text.
-  I don't clearly understand why it's there, but surely it's not needed when translating.
-}
-procedure TfUser.Look(nogriddisplay:boolean; NoScreenUpdates: boolean);
-var a:integer;
-    wt:integer;
-    full:boolean;
-    i:integer;
-    wasfull:boolean;
-    s:string;
-    b:boolean;
-    maxwords:integer;
-    dgroup:integer;
-    clips:string;
- mt: TMatchType;
+procedure TfUser.Look_Setup(a: integer; out st: TLookSettings);
+var i: integer;
 begin
   donotsetbegset:=true;
-  if SpeedButton1.Down then a:=1 else
-    if SpeedButton2.Down then a:=2 else
-    if SpeedButton3.Down then a:=3 else a:=4;
   if SpeedButton1.Down then dictmodeset:=0;
   if SpeedButton2.Down then dictmodeset:=1;
   if SpeedButton3.Down then dictmodeset:=2;
@@ -916,10 +373,10 @@ begin
   fMenu.aDictGroup3.Checked:=SpeedButton16.Down;
 
  //Dictionary group
-  if SpeedButton14.Down then dgroup:=1 else
-  if SpeedButton15.Down then dgroup:=2 else
-  if SpeedButton16.Down then dgroup:=3 else
-    dgroup := 1; //we must have some group chosen
+  if SpeedButton14.Down then st.dgroup:=1 else
+  if SpeedButton15.Down then st.dgroup:=2 else
+  if SpeedButton16.Down then st.dgroup:=3 else
+    st.dgroup := 1; //we must have some group chosen
 
   SpeedButton11.Enabled:=true;
   SpeedButton12.Enabled:=true;
@@ -931,7 +388,12 @@ begin
     3:fUser.SpeedButton18.Down:=true;
   end;
   Label1.Caption:='';
-  if (not SpeedButton13.Down) or (SpeedButton18.Down) then BitBtn1.Caption:=_l('#00669^eSearch^cHledat') else BitBtn1.Caption:=_l('#00670^eAll^cVše');
+
+  if (not SpeedButton13.Down) or (SpeedButton18.Down) then
+    BitBtn1.Caption:=_l('#00669^eSearch^cHledat')
+  else
+    BitBtn1.Caption:=_l('#00670^eAll^cVše');
+
   if (a<4) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
   begin
     BitBtn1.Visible:=true;
@@ -956,50 +418,87 @@ begin
     SpeedButton11.Enabled:=false;
   end;
   donotsetbegset:=false;
-  full:=not BitBtn1.Enabled;
+
+  st.full:=not BitBtn1.Enabled;
 //  if SpeedButton10.Down then full:=true;
-  dicsl.Clear;
+
   StringGrid1.RowCount:=200;
-  maxwords:=StringGrid1.VisibleRowCount;
+  st.maxwords:=StringGrid1.VisibleRowCount;
+
   if a=3 then
   begin
-    clips:='';
+    st.clips:='';
     for i:=1 to length(clip) div 4 do
-      if copy(clip,i*4-3,2)='00'then break else clips:=clips+copy(clip,i*4-3,4);
+      if copy(clip,i*4-3,2)='00'then break else st.clips:=st.clips+copy(clip,i*4-3,4);
   end;
-  if SpeedButton11.Down then mt := mtMatchLeft else
-  if SpeedButton12.Down then mt := mtMatchRight else
-  if SpeedButton18.Down then mt := mtMatchAnywhere else
-    mt := mtExactMatch;
-  if (a=2) and not (mt in [mtExactMatch, mtMatchLeft]) then
-    mt := mtExactMatch;
-  if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then full:=true;
+  if SpeedButton11.Down then st.mt := mtMatchLeft else
+  if SpeedButton12.Down then st.mt := mtMatchRight else
+  if SpeedButton18.Down then st.mt := mtMatchAnywhere else
+    st.mt := mtExactMatch;
+  if (a=2) and not (st.mt in [mtExactMatch, mtMatchLeft]) then
+    st.mt := mtExactMatch;
+
+  if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then st.full:=true;
+end;
+
+
+{
+NoScreenUpdates: Do not update anything on the screen.
+  Mainly, don't do fKanji.SetCharDetails, because we're translating a large block of text.
+  I don't clearly understand why it's there, but surely it's not needed when translating.
+}
+procedure TfUser.Look_Run(a: integer; st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+var wt:integer;
+    i:integer;
+    wasfull:boolean;
+    s:string;
+    b:boolean;
+begin
+  dicsl.Clear;
+
   case a of
-    1: DicSearch(Edit1.Text,1,mt,full,-1,maxwords,dicsl,dgroup,wasfull);
-    2: DicSearch(Edit1.Text,2,mt,full,-1,maxwords,dicsl,dgroup,wasfull);
-    3: DicSearch(clips,3,mt,full,-1,maxwords,dicsl,dgroup,wasfull);
+    1: DicSearch(Edit1.Text,1,st.mt,st.full,-1,st.maxwords,dicsl,st.dgroup,wasfull);
+    2: DicSearch(Edit1.Text,2,st.mt,st.full,-1,st.maxwords,dicsl,st.dgroup,wasfull);
+    3: DicSearch(st.clips,3,st.mt,st.full,-1,st.maxwords,dicsl,st.dgroup,wasfull);
     4: if insx<>-1 then
        begin
          if buffertype='H'then
-           DicSearch(GetInsertKana(false),4,mtExactMatch,full,-1,maxwords,dicsl,5,wasfull) else
-           DicSearch(GetInsertKana(false),4,mtExactMatch,full,-2,maxwords,dicsl,5,wasfull);
+           DicSearch(GetInsertKana(false),4,mtExactMatch,st.full,-1,st.maxwords,dicsl,5,wasfull) else
+           DicSearch(GetInsertKana(false),4,mtExactMatch,st.full,-2,st.maxwords,dicsl,5,wasfull);
        end else
        begin
          s:=GetDocWord(rcurx,rcury,wt,nogriddisplay);
-         if (not NoScreenUpdates) and (length(s)>=4) then fKanji.SetCharDetails(copy(s,1,4)); //TODO: For testing only! Enable back!
-         DicSearch(s,4,mtMatchLeft,full,wt,maxwords,dicsl,5,wasfull);
+         if (not NoScreenUpdates) and (length(s)>=4) then fKanji.SetCharDetails(copy(s,1,4));
+         DicSearch(s,4,mtMatchLeft,st.full,wt,st.maxwords,dicsl,5,wasfull);
        end;
   end;
+  
   ul.Clear;
-  if dicsl.Count=0 then Label3.Caption:='-'else
-    if not wasfull then Label3.Caption:=inttostr(dicsl.Count)+'+'else Label3.Caption:=inttostr(dicsl.Count);
-  for i:=0 to dicsl.Count-1 do ul.Add(copy(dicsl[i],6,25));
+ 
+  if a<>4 then
+    if dicsl.Count=0 then
+      Label3.Caption:='-'
+    else
+      if not wasfull then
+        Label3.Caption:=inttostr(dicsl.Count)+'+'
+      else
+        Label3.Caption:=inttostr(dicsl.Count);
+
+  for i:=0 to dicsl.Count-1 do
+    ul.Add(copy(dicsl[i],6,25));
+  
   if not nogriddisplay then
   begin
-    for i:=0 to dicsl.Count-1 do if (not full) and (i>=StringGrid1.VisibleRowCount) then dicsl.Delete(StringGrid1.VisibleRowCount) else dicsl[i]:=copy(dicsl[i],31,length(dicsl[i])-30);
+    for i:=0 to dicsl.Count-1 do if (not st.full) and (i>=StringGrid1.VisibleRowCount) then
+      dicsl.Delete(StringGrid1.VisibleRowCount)
+    else
+      dicsl[i]:=copy(dicsl[i],31,length(dicsl[i])-30);
     FillWordGrid(StringGrid1,dicsl,false,false);
-    if not wasfull then s:=_l('#00671^eSearch results (partial)^cVýsledky hledání (èásteèné)') else s:=_l('#00672^eSearch results^cVýsledky hledání');
-    BitBtn1.Visible:=not wasfull or (full and not BitBtn1.Enabled);
+    if not wasfull then
+      s:=_l('#00671^eSearch results (partial)^cVýsledky hledání (èásteèné)')
+    else
+      s:=_l('#00672^eSearch results^cVýsledky hledání');
+    BitBtn1.Visible:=not wasfull or (st.full and not BitBtn1.Enabled);
     Label2.Visible:=not BitBtn1.Visible;
     s:=s+' ';
     case a of
@@ -1015,6 +514,22 @@ begin
     if StringGrid1.Visible then curword:=1;
     ShowWord;
   end;
+end;
+
+{
+We keep the complete version for compability.
+}
+
+procedure TfUser.Look(nogriddisplay:boolean; NoScreenUpdates: boolean);
+var a: integer;
+  st: TLookSettings;
+begin
+  if SpeedButton1.Down then a:=1 else
+    if SpeedButton2.Down then a:=2 else
+    if SpeedButton3.Down then a:=3 else a:=4;
+
+  Look_Setup(a, st);
+  Look_Run(a, @st, nogriddisplay, noscreenupdates);
 end;
 
 procedure TfUser.Edit1Change(Sender: TObject);
@@ -3027,12 +2542,13 @@ var i,j:integer;
     oldcurx,oldcury:integer;
     p,pn:boolean;
     bg,en:integer;
-    
+
   sp:TSMPromptForm;    
   updateProgressEvery: integer;
   lastUpdateProgress: integer;
   startTime: cardinal;
 
+  st: TLookSettings;
 begin
   oldcurx:=rcurx;
   oldcury:=rcury;
@@ -3061,6 +2577,12 @@ begin
  //We also don't show the window at all unless the operation is taking long time.
   sp := nil;
   startTime := GetTickCount;
+
+ //Setup everything for translation
+  SpeedButton1.Down:=false;
+  SpeedButton2.Down:=false;
+  SpeedButton3.Down:=false;
+  Look_Setup(4, st);
 
   for i:=blockfromy to blocktoy do
   begin
@@ -3093,11 +2615,8 @@ begin
     begin
       rcurx:=j;
       rcury:=i;
-      SpeedButton1.Down:=false;
-      SpeedButton2.Down:=false;
-      SpeedButton3.Down:=false;
       dic_ignorekana:=true;
-      Look(true, {NoScreenUpdates=}true);
+      Look_Run(4, @st, {NoGridDisplay=}true, {NoScreenUpdates=}true);
       dic_ignorekana:=false;
       a:=SetWordTrans(j,i,true,true,false);
       if a=0 then a:=1;

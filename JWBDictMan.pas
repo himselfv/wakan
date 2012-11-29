@@ -58,7 +58,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBDictImport;
+uses JWBMenu, JWBDictImport, JWBDicSearch;
 
 {$R *.DFM}
 

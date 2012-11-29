@@ -49,7 +49,8 @@ var
 
 implementation
 
-uses JWBDictCoding, StdPrompt, JWBUnit, JWBMenu, PKGWrite, JWBConvert;
+uses JWBDictCoding, StdPrompt, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
+  JWBDicSearch;
 
 {$R *.DFM}
 

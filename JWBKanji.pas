@@ -98,7 +98,8 @@ implementation
 
 uses JWBMenu, JWBRadical, JWBUnit, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiSort, JWBKanjiCompounds, JWBKanjiDetails,
-  JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords;
+  JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
+  JWBDicSearch;
 
 var ki:TStringList;
     calfonts,kval:TStringList;

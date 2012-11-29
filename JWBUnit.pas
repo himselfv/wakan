@@ -109,7 +109,7 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
 
 implementation
 
-uses StrUtils, JWBMenu, UnicodeFont, JWBSettings, JWBUser;
+uses StrUtils, JWBMenu, UnicodeFont, JWBSettings, JWBUser, JWBDicSearch;
 
 type TIntTextInfo=record
         act:boolean;

@@ -473,41 +473,7 @@ type
     procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
 
   end;
-  TJaletDic = class
-    public
-    TDict:TTextTable;
-    TDictIndex,TDictEnglish,TDictKanji,TDictPhonetic,TDictSort,TDictMarkers,TDictFrequency:integer;
-    charidx,wordidx:pointer;
-    charno,wordno:integer;
-    charfsiz,wordfsiz:integer;
-    package:TPackageSource;
-    loaded:boolean;
-    pname:string;
-    version:string;
-    dicver:integer;
-    priority:integer;
-    builddate:TDateTime;
-    name,description:string;
-    language:char;
-    tested:boolean;
-    entries:integer;
-    copyright:string;
-    indexword:boolean;
-    indexfrom,indexto:integer;
-    demandloaded:boolean;
-    vocmode:integer;
-    constructor Create;
-    destructor Destroy; virtual;
-    procedure FillInfo(packagefile:string); virtual;
-    procedure Build(edictfile,packagefile:string); virtual;
-    procedure Load; virtual;
-    procedure Unload; virtual;
-    procedure Demand;
-    function ReadIndexString(word:boolean;loc:integer):string;
-    function ReadIndexInfo(word:boolean;loc:integer):integer;
-    procedure FindIndexString(word:boolean;locator:string);
-    function ReadIndex:integer;
-  end;
+
   TTextInfo = record
     hwnd:HWND;
     hdc:HDC;
@@ -616,87 +582,9 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBPopupButton, JWBFileType, JWBConvert,
-  JWBWordsExpChoose, JWBMedia;
+  JWBWordsExpChoose, JWBMedia, JWBDicSearch;
 
 {$R *.DFM}
-
-constructor TJaletDic.Create;
-begin
-  tested:=false;
-  loaded:=false;
-end;
-
-destructor TJaletDic.Destroy;
-begin
-  if loaded then Unload;
-end;
-
-function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
-var l:integer;
-    p:pchar;
-    b:byte;
-begin
-  if word then p:=wordidx else p:=charidx;
-  p:=p+loc*4;
-  move(p^,l,4);
-  result:=l;
-end;
-
-function TJaletDic.ReadIndexString(word:boolean;loc:integer):string;
-var l:array[0..3] of char;
-    p:pchar;
-begin
-  if word then p:=wordidx else p:=charidx;
-  p:=p+loc*4;
-  move(p^,l,4);
-  result:=l;
-end;
-
-procedure TJaletDic.FindIndexString(word:boolean;locator:string);
-var l,r,m,max:integer;
-    s,s2:string;
-begin
-  l:=0;
-  if word then max:=wordno-1 else max:=charno-1;
-  r:=max;
-  s:=locator;
-  s2:='';
-  while (pos(' ',s)>0) and (s2='') do
-  begin
-    s2:=copy(s,1,pos(' ',s)-1);
-    delete(s,1,pos(' ',s));
-    if ignorel.IndexOf(s2)<>-1 then s2:='';
-  end;
-  if s2='' then s2:=s;
-  locator:=s;
-  if length(locator)>4 then locator:=copy(locator,1,4);
-  while length(locator)<4 do locator:=locator+' ';
-  while l<=r do
-  begin
-    m:=l+(r-l) div 2;
-    s2:=ReadIndexString(word,m*2);
-    if s2=locator then break;
-    if s2<locator then l:=m+1 else r:=m-1;
-  end;
-  if l>r then indexfrom:=0 else
-  begin
-    indexfrom:=ReadIndexInfo(word,m*2+1)+(max+1)*2;
-    if m<max then indexto:=ReadIndexInfo(word,m*2+3)+(max+1)*2 else if word then indexto:=wordfsiz else indexto:=charfsiz;
-    indexword:=word;
-  end;
-end;
-
-function TJaletDic.ReadIndex:integer;
-begin
-  if (indexfrom=0) or (indexfrom>=indexto) then
-  begin
-    result:=0;
-    exit;
-  end;
-  result:=ReadIndexInfo(indexword,indexfrom);
-//  showmessage(Format('%4.4X-%4.4X',[indexfrom*4,result]));
-  inc(indexfrom);
-end;
 
 function TfMenu.GetCharDet(i,j:integer):string;
 var s:string;
@@ -759,115 +647,6 @@ begin
   end;
   if j<6 then delete(s,pos(',',s),length(s)-pos(',',s)+1);
   result:=s;
-end;
-
-procedure TJaletDic.FillInfo(packagefile:string);
-var ps:TPackageSource;
-    err:string;
-    vs:TStringList;
-begin
-  tested:=false;
-  pname:=packagefile;
-  err:='';
-  vs:=TStringList.Create;
-  try
-    ps:=TPackageSource.Create(pname,791564,978132,978123);
-    if ps.GetFileList.IndexOf('dict.ver')<>-1 then
-    begin
-      vs.LoadFromStream(ps.Files['dict.ver'].Lock);
-      ps.Files['dict.ver'].Unlock;
-      if vs[0]<>'DICT'then err:='Invalid DIC header'else
-      begin
-        dicver:=strtoint(vs[1]);
-        if dicver>CurDicVer then err:='Unsupported DIC version'else
-        if (dicver<CurDicVer) and ((CurDicVer<>4) or (dicver<>3)) then err:='Outdated DIC structure - please download new DIC file'else
-        if (dicver<CurDicVer) then err:='DIC indexes corrupted - bug in 1.47 DIC, you have to download this DIC anew (for 1.50+), I''m sorry for inconvenience'else
-        begin
-          builddate:=strtoint(vs[2]);
-          version:=vs[3];
-          name:=vs[4];
-          language:=vs[5][1];
-          description:=vs[6];
-          priority:=strtoint(vs[7]);
-          entries:=strtoint(vs[8]);
-          copyright:=vs[9];
-          tested:=true;
-        end;
-      end;
-    end else err:='Unknown file structure';
-    ps.Free;
-  except
-    err:=(ExceptObject as Exception).Message;
-  end;
-  if err<>'' then Application.MessageBox(pchar(_l('#00321^eCannot register dictionary ^cNepodaøilo se zaregistrovat slovník ')+pname+#13#13+err),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
-end;
-
-procedure TJaletDic.Build(edictfile,packagefile:string);
-var err:string;
-begin
-  pname:=packagefile;
-  err:='Building not supported yet.';
-  if err<>'' then Application.MessageBox(pchar(_l('#00322^eCannot build dictionary ^cNepodaøilo se vytvoøit slovník ')+pname+#13#13+err),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
-end;
-
-procedure TJaletDic.Load;
-begin
-  if loaded then Unload;
-  demandloaded:=false;
-  loaded:=true;
-  if not fSettings.CheckBox49.Checked then Demand;
-end;
-
-procedure TJaletDic.Demand;
-var pd:TSMPromptForm;
-    mf:TMemoryFile;
-begin
-  if demandloaded then exit;
-  pd:=SMMessageDlg(_l('#00323^eDictionary loading^cNahrávání slovníku'),_l('#00324^eLoading dictionary ^cNahrávám slovník ')+name+'...');
-  try
-    package:=TPackageSource.Create(pname,791564,978132,978123);
-    TDict:=TTextTable.Create(package,'Dict',true,pos(','+name,OfflineDicts)<>0);
-    TDictIndex:=TDict.Field('Index');
-    TDictEnglish:=TDict.Field('English');
-    TDictKanji:=TDict.Field('Kanji');
-    TDictPhonetic:=TDict.Field('Phonetic');
-    TDictEnglish:=TDict.Field('English');
-    TDictSort:=TDict.Field('Sort');
-    TDictMarkers:=TDict.Field('Markers');
-    TDictFrequency:=TDict.Field('Frequency');
-    WordIdx:=nil;
-    CharIdx:=nil;
-    mf:=package['WordIdx.bin'];
-    if mf<>nil then
-    begin
-      GetMem(WordIdx,mf.Size-4);
-      package.ReadRawData(WordNo,integer(mf.Position),4);
-      package.ReadRawData(WordIdx^,integer(mf.Position)+4,mf.Size-4);
-      wordfsiz:=(mf.Size div 4)-1;
-    end;
-    mf:=package['CharIdx.bin'];
-    if mf<>nil then
-    begin
-      GetMem(CharIdx,mf.Size-4);
-      package.ReadRawData(CharNo,integer(mf.Position),4);
-      package.ReadRawData(CharIdx^,integer(mf.Position)+4,mf.Size-4);
-      charfsiz:=(mf.Size div 4)-1;
-    end;
-  except
-    Application.MessageBox(pchar(_l('#00325^eCannot load dictionary ^cNepodaøilo se nahrát slovník ')+pname+#13#13+(ExceptObject as Exception).Message),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
-  end;
-  demandloaded:=true;
-  pd.Free;
-end;
-
-procedure TJaletDic.Unload;
-begin
-  if not demandloaded then exit;
-  TDict.Free;
-  package.Free;
-  if WordIdx<>nil then FreeMem(WordIdx);
-  if CharIdx<>nil then FreeMem(CharIdx);
-  loaded:=false;
 end;
 
 procedure TfMenu.ClearDicts;
@@ -4304,17 +4083,17 @@ begin
   if maxwordss<10 then maxwordss:=10;
   if wt=7 then
   begin
-    fUser.DicSearch(HexToUnicode(s),2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
+    DicSearch(HexToUnicode(s),2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
     if (screenTipList.Count=0) then
     begin
       ss:=HexToUnicode(s);
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      fUser.DicSearch(ss,2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
+      DicSearch(ss,2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
     end;
   end;
   if wt<7 then
-    fUser.DicSearch(s,4,mtExactMatch,false,wt,maxwordss,screenTipList,5,wasfull);
+    DicSearch(s,4,mtExactMatch,false,wt,maxwordss,screenTipList,5,wasfull);
   if maxwords>screenTipList.Count then maxwords:=screenTipList.Count;
   screenTipWords:=maxwords;
   tpp:=20;
