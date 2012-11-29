@@ -2197,6 +2197,16 @@ object fSettings: TfSettings
           'ed otevøený soubor pøi startu'
         TabOrder = 1
       end
+      object cbNoSaveChangesWarning: TCheckBox
+        Left = 8
+        Top = 56
+        Width = 457
+        Height = 17
+        Caption = 
+          '^eDo not ask to save changes on exit (WARNING: Use at your own r' +
+          'isk)'
+        TabOrder = 2
+      end
     end
     object TabSheet14: TTabSheet
       Caption = '^eAnnotations^cAnotace'

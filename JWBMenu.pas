@@ -2585,6 +2585,7 @@ begin
   fSettings.CheckBox59.Checked:=reg.ReadBool('Dict','OrderFreq',true);
   fSettings.CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
   fSettings.CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
+  fSettings.cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);  
   if fSettings.CheckBox61.Checked then
   begin
     fUser.DocFileName:=Reg.ReadString('Editor','DocFileName','');

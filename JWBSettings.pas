@@ -242,6 +242,7 @@ type
     Button16: TButton;
     CheckBox70: TCheckBox;
     cbTranslateNoLongTextWarning: TCheckBox;
+    cbNoSaveChangesWarning: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -495,6 +496,7 @@ begin
   reg.WriteBool('Dict','OrderFreq',CheckBox59.Checked);
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
   reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
+  reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
   reg.WriteString('Editor','DocFilename',fUser.DocFilename);
   reg.WriteInteger('Editor','DocType',fUser.DocTp);
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));

@@ -2923,33 +2923,65 @@ begin
   filechanged:=changed;
 end;
 
+{
+This function saves the changes to the file, possibly interacting with the user.
+It has three possible outcomes:
+1. "Yes": No changes or changes saved, dirty flag cleared.
+  Result = true
+2. "No": Changes not saved, do not ask again (dirty flag cleared).
+  Result = true
+3. "Cancel": Changes not saved, dirty flag not cleared, operation cancelled.
+  Result = false
+}
 function TfUser.CommitFile:boolean;
 var i:integer;
     s:string;
 begin
-  result:=true;
-  if (filechanged) and (fSettings.CheckBox60.Checked) and (docfilename<>'') then SaveToFile(docfilename,doctp,false) else
-  if filechanged then
-  begin
-    i:=Application.MessageBox(pchar(_l('#00687^eDocument has been changed. Do you want to save it?^cDokument byl zmìnìn. Chcete ho uložit?')),
-     pchar(_l('#00090^eWarning^cVarování')),MB_ICONWARNING or MB_YESNOCANCEL);
-    if i=idYes then
-    begin
-      if docfilename<>'' then SaveToFile(docfilename,doctp,false) else
-      begin
-        if SaveDialog1.Execute then
-        begin
-          if pos('.WTT',uppercase(SaveDialog1.FileName))=0 then doctp:=Conv_ChooseType(curlang='c',0);
-          SaveToFile(SaveDialog1.FileName,doctp,false);
-          docfilename:=SaveDialog1.FileName;
-          s:=SaveDialog1.FileName;
-          while pos('\',s)>0 do delete(s,1,pos('\',s));
-          fTranslate.Label1.Caption:=uppercase(s);
-        end else result:=false;
-      end;
-    end;
-    if i=idCancel then result:=false;
+  Result := true;
+  if not filechanged then exit;
+
+  if (fSettings.CheckBox60.Checked) and (docfilename<>'') then begin
+   //Auto-"Yes"
+    SaveToFile(docfilename,doctp,false);
+    filechanged := false;
+    exit;
   end;
+
+  if fSettings.cbNoSaveChangesWarning.Checked then begin
+   //We've been asked not to bother the user with save warnings. So "No".
+    filechanged := false;
+    exit;
+  end;
+
+  i:=Application.MessageBox(pchar(_l('#00687^eDocument has been changed. Do you want to save it?^cDokument byl zmìnìn. Chcete ho uložit?')),
+   pchar(_l('#00090^eWarning^cVarování')),MB_ICONWARNING or MB_YESNOCANCEL);
+  if i<>idYes then begin
+   //"No" or "Cancel"
+    if i=idCancel then Result:=false;
+    if i=idNo then filechanged := false;
+    exit;
+  end;
+
+  if docfilename<>'' then begin
+   //"Yes"
+    SaveToFile(docfilename,doctp,false);
+    filechanged := false;
+    exit;
+  end;
+
+  if not SaveDialog1.Execute then begin
+   //"Cancel" through cancelling dialog
+    Result := false;
+    exit;
+  end;
+
+ //"Yes"
+  if pos('.WTT',uppercase(SaveDialog1.FileName))=0 then doctp:=Conv_ChooseType(curlang='c',0);
+  SaveToFile(SaveDialog1.FileName,doctp,false);
+  docfilename:=SaveDialog1.FileName;
+  s:=SaveDialog1.FileName;
+  while pos('\',s)>0 do delete(s,1,pos('\',s));
+  fTranslate.Label1.Caption:=uppercase(s);
   filechanged:=false;
 end;
 
