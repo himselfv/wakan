@@ -16,17 +16,9 @@ type
 { Wakan uses a special Ansi string format, where each unicode symbol is kept
  as a 4 character (four-char) hex code. }
 
-
-const //Character types for EvalChar
-  EC_UNKNOWN          = 0; // unrecognized
-  EC_IDG_CHAR         = 1; // ideographic char
-  EC_HIRAGANA         = 2; // hiragana
-  EC_KATAKANA         = 3; // katakana
-  EC_IDG_PUNCTUATION  = 4; // ideographic punctuation
-  EC_IDG_OTHER        = 5; // ideographic other
-  EC_LATIN_FW         = 6; // full-width latin
-  EC_LATIN_HW         = 7; // half-width latin
-  EC_KATAKANA_HW      = 8; // half-width katakana
+{ Min and max so we don't have to link Math.pas just for that }
+function min(a, b: integer): integer; inline;
+function max(a, b: integer): integer; inline;
 
 function UnicodeToHex(s:widestring):string;
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
@@ -66,6 +58,18 @@ function ChinTo(s:string):string;
 function ChinFrom(s:string):string;
 procedure SetKnown(listno:integer;charno:string;known:boolean);
 function ChooseFont(charsets:array of TFontCharset;teststring:string;var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
+
+const //Character types for EvalChar
+  EC_UNKNOWN          = 0; // unrecognized
+  EC_IDG_CHAR         = 1; // ideographic char
+  EC_HIRAGANA         = 2; // hiragana
+  EC_KATAKANA         = 3; // katakana
+  EC_IDG_PUNCTUATION  = 4; // ideographic punctuation
+  EC_IDG_OTHER        = 5; // ideographic other
+  EC_LATIN_FW         = 6; // full-width latin
+  EC_LATIN_HW         = 7; // half-width latin
+  EC_KATAKANA_HW      = 8; // half-width katakana
+
 function EvalChar(char:string):integer;
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
@@ -108,8 +112,18 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
     romac: TStringList;
 
 implementation
-
 uses StrUtils, JWBMenu, UnicodeFont, JWBSettings, JWBUser, JWBDicSearch;
+
+function min(a, b: integer): integer;
+begin
+  if a<b then Result := a else Result := b;
+end;
+
+function max(a, b: integer): integer;
+begin
+  if a<b then Result := a else Result := b;
+end;
+
 
 type TIntTextInfo=record
         act:boolean;

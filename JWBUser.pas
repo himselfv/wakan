@@ -7,6 +7,21 @@ uses
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
   JWBUtils, JWBDicSearch;
 
+{
+Various notes go here.
+}
+{
+Document contents is stored in "doc", line by line (==text lines).
+"linl" contains triples of strings describing graphical lines:
+  attr[0] = xstart of this graphical line in logical line
+  attr[1] = ystart (line index in "doc")
+  attr[2] = length
+"view" is an index of a first visible graphical line.
+Selection is kept in logical coordinates - (logical line, start character) pairs.
+Latin characters are considered "half-width" and require only half the slot
+kanji and kana uses.
+}
+
 type
   TLookSettings = record
     dgroup:integer;
@@ -137,7 +152,7 @@ type
     function GetInsertKana(display:boolean):string;
     procedure InsertCharacter(c:char);
     procedure DrawCursor(blink:boolean);
-    procedure DrawBlock;
+    procedure DrawBlock(Canvas: TCanvas);
     procedure CheckTransCont(x,y:integer);
     procedure SplitLine(x,y:integer);
     procedure JoinLine(y:integer);
@@ -1003,7 +1018,7 @@ begin
   if mustrepaint then MakeEditorBitmap else
   begin
     DrawCursor(false);
-    DrawBlock;
+    DrawBlock(fTranslate.PaintBox6.Canvas);
   end;
   if mustrepaint then oldblockfromx:=-1;
   mustrepaint:=false;
@@ -2411,41 +2426,80 @@ begin
   oldcurx:=cursorscreenx; oldcury:=cursorscreeny;
 end;
 
-procedure TfUser.DrawBlock;
-procedure DrawIt(fx,fy,tx,ty:integer);
+{
+Updates text selection. A bit suboptimal, with two InSelection checks for every char.
+This function can be used without buffering, so try to only draw where it's really needed.
+Canvas:
+  A canvas to draw on. Either edit control (when updating) or backbuffer.
+}
+procedure TfUser.DrawBlock(Canvas: TCanvas);
 var rect:TRect;
-    i,j:integer;
-    js:integer;
-    xs,ys:integer;
+    i,js:integer;
+    hw: boolean;
+
+    ypos: integer;      //logical line containing this graphical line
+    xstart: integer;    //start of the graphical line in logical one 
+    xpos: integer;      //current symbol in the logical line
+    llen: integer;      //graphical line length
+
+
+  function InSelection(x, y: integer; x1, y1, x2, y2: integer): boolean;
+  begin
+    Result := ((y>y1) or ((y=y1) and (x>=x1)))
+      and ((y<y2) or ((y=y2) and (x<x2)));
+  end;
+
+ //Inverts color for a character at graphical position (i, j),
+ //where i is measured in lines and j in half-characters.
+  procedure InvertColor(i, js: integer; halfwidth: boolean);
+  begin
+    rect.top:=(i-view)*lastxsiz*lastycnt+2;
+    rect.left:=js*lastxsiz;
+    rect.bottom:=rect.top+lastxsiz*lastycnt-1;
+    if not halfwidth then
+      rect.right:=rect.left+lastxsiz*2
+    else
+      rect.right:=rect.left+lastxsiz;
+    InvertRect(Canvas.Handle,rect);
+  end;
+
 begin
-  for i:=0 to (linl.Count div 3)-1 do
-    if (GetLineAttr(i,1,linl)>=fy) and (GetLineAttr(i,1,linl)<=ty) then
-    begin
-      js:=0;
-      for j:=0 to GetLineAttr(i,2,linl)-1 do
-      begin
-        xs:=j+GetLineAttr(i,0,linl);
-        ys:=GetLineAttr(i,1,linl);
-        if  ((ys>fy) or ((ys=fy) and (xs>=fx))) and
-            ((ys<ty) or ((ys=ty) and (xs<tx))) and
-            (i>=view) and (i<view+printl) then
-        begin
-          rect.top:=(i-view)*lastxsiz*lastycnt+2;
-          rect.left:=js*lastxsiz;
-          rect.bottom:=rect.top+lastxsiz*lastycnt-1;
-          if not HalfWidth(xs,ys) then rect.right:=rect.left+lastxsiz*2 else
-            rect.right:=rect.left+lastxsiz;
-          InvertRect(fTranslate.PaintBox6.Canvas.Handle,rect);
-        end;
-        if HalfWidth(xs,ys) then inc(js) else inc(js,2);
-      end;
+  if oldblockfromx=-1 then begin
+   //safe values for the rest of the algorithm
+    oldblockfromx:=-1;
+    oldblocktox:=-1;
+    oldblockfromy:=-1;
+    oldblocktoy:=-1;
+  end;
+
+  CalcBlockFromTo(false);  
+
+ {
+  i: graphical line index
+  j: graphical character index
+ }
+ //For every visible graphical line
+  for i:=view to min((linl.Count div 3)-1, view+printl) do begin
+    xpos := GetLineAttr(i,0,linl);
+    ypos := GetLineAttr(i,1,linl);
+    llen := GetLineAttr(i,2,linl);
+
+    js:=0; //distantion in half-characters from the left
+    while llen>0 do begin
+      hw := HalfWidth(xpos, ypos);
+      if InSelection(xpos, ypos, oldblockfromx, oldblockfromy, oldblocktox, oldblocktoy)
+      xor InSelection(xpos, ypos, blockfromx, blockfromy, blocktox, blocktoy) then
+        InvertColor(i, js, hw);
+      if hw then inc(js) else inc(js,2);
+      Inc(xpos);
+      Dec(llen);
     end;
-end;
-begin
-  if oldblockfromx<>-1 then DrawIt(oldblockfromx,oldblockfromy,oldblocktox,oldblocktoy);
-  CalcBlockFromTo(false);
-  DrawIt(blockfromx,blockfromy,blocktox,blocktoy);
-  oldblockfromx:=blockfromx; oldblockfromy:=blockfromy; oldblocktox:=blocktox; oldblocktoy:=blocktoy;
+  end;
+
+  oldblockfromx:=blockfromx;
+  oldblockfromy:=blockfromy;
+  oldblocktox:=blocktox;
+  oldblocktoy:=blocktoy;
 end;
 
 procedure TfUser.BlockOp(copy,delete:boolean);
@@ -3121,9 +3175,9 @@ begin
   oldcurx:=-1;
   oldcury:=-1;
   oldblockfromx:=-1;
+  DrawBlock(editorbitmap.Canvas);
   PasteEditorBitmap;
   DrawCursor(false);
-  DrawBlock;
 end;
 
 procedure TfUser.PasteEditorBitmap;
