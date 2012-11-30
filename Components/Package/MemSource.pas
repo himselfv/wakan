@@ -4,94 +4,99 @@ interface
 
 uses SysUtils, Classes, Forms, Controls, Dialogs;
 
-const MemSource_verMajor=2;
-      MemSource_verMinor=11;
-      MemSource_verBuild=1; 
-      MemSource_date='25/02/2001';
-      MemSource_copy='(C) LABYRINTH 1999-2001';
+const
+  MemSource_verMajor=2;
+  MemSource_verMinor=11;
+  MemSource_verBuild=1;
+  MemSource_date='25/02/2001';
+  MemSource_copy='(C) LABYRINTH 1999-2001';
 
-type EMemorySourceError=class(Exception);
-     TMemoryLoadMode=( mlPermanentLoad, mlAutoLoad, mlDemandLoad, mlTemporaryLoad );
-     TMemorySource=class;
-     TMemoryFile=class
-                   private
-                     fLoadMode:TMemoryLoadMode;
-                     fLoaded:boolean;
-                     fLockCount:longint;
-                     fSize:longint;
-                     fFileName:string;
-                     fParent:TMemoryFile;
-                   protected
-                     Source:TMemorySource;
-                     Locator:variant;
-                     Stream:TMemoryStream;
-                     constructor Create( MSource:TMemorySource; MName:string; MSize:longint;
-                       const MLocator:variant; MLoadMode:TMemoryLoadMode; MParent:TMemoryFile );
-                     procedure Load;
-                     procedure Unload;
-                     procedure Refresh;
-                     procedure SetLoadMode( LM:TMemoryLoadMode );
-                     property LockCount:longint read fLockCount;
-                     property Loaded:boolean read fLoaded;
-                     property LoadMode:TMemoryLoadMode read fLoadMode write SetLoadMode;
-                     property Parent:TMemoryFile read fParent;
-                     destructor Destroy; override;
-                   public
-                     function Lock:TMemoryStream;
-                     procedure Unlock;
-                     procedure WriteToDisk(path:string);
-                     property Size:longint read fSize;
-                     property Name:string read fFileName;
-                     property Position:variant read Locator;
-                   end;
-     TMemoryFileClass=class of TMemoryFile;
-     TMemorySource=class
-                     private
-                       fFiles:TStringList;
-                       fDirectories:TList;
-                       fMemoryUsed,fMemoryFloor,fMemoryLimit,fMemoryCeiling:longint;
-                       fTree:TStringList;
-                       function GetFile( const Name:string ):TMemoryFile;
-                       procedure Add( Name:string;BF:TMemoryFile );
-                     protected
-                       procedure Fill( MFile:TMemoryFile; Stream:TStream ); virtual; abstract;
-                       procedure CreateTree;
-                     public
-                       constructor Create;
-                       destructor Destroy; override;
-                       function GetFileList:TStringList;
-                       procedure SetMemoryFloor( mFloor:longint );
-                       procedure SetMemoryLimit( mLimit:longint );
-                       procedure SetMemoryCeiling( mCeiling:longint );
-                       procedure RefreshAll;
-                       property Files[ const Name:string ]:TMemoryFile read GetFile; default;
-                       property MemoryFloor:longint read fMemoryFloor write SetMemoryFloor;
-                       property MemoryLimit:longint read fMemoryLimit write SetMemoryLimit;
-                       property MemoryCeiling:longint read fMemoryCeiling write SetMemoryCeiling;
-                       property MemoryUsed:longint read fMemoryUsed;
-                       property FileList:TStringList read GetFileList;
-                       property Tree:TStringList read fTree;
-                   end;
-     TMemorySourceClass=class of TMemorySource;
-     TPackageSource=class(TMemorySource)
-                      private
-                        PackageF:file;
-                        fCryptCode,fHeaderCode,fFileSysCode:longint;
-                        fFileName:string;
-                        fName:string;
-                        fActStart:longint;
-                      protected
-                        procedure Fill( MFile:TMemoryFile; Stream:TStream ); override;
-                      public
-                        procedure SetCryptCode( MCryptCode:longint );
-                        constructor Create( PKGFileName:string; MHeaderCode,MFileSysCode,MCryptCode:longint );
-                        destructor Destroy; override;
-                        property CryptCode:longint write SetCryptCode;
-                        property FileName:string read fFileName;
-                        property Name:string read fName;
-                        procedure ReadRawData(var x;position,length:integer);
-                    end;
-     TPackageSourceClass=class of TPackageSource;
+type
+  EMemorySourceError=class(Exception);
+  TMemoryLoadMode=(mlPermanentLoad, mlAutoLoad, mlDemandLoad, mlTemporaryLoad);
+  TMemorySource=class;
+
+  TMemoryFile=class
+  private
+    fLoadMode:TMemoryLoadMode;
+    fLoaded:boolean;
+    fLockCount:longint;
+    fSize:longint;
+    fFileName:string;
+    fParent:TMemoryFile;
+  protected
+    Source:TMemorySource;
+    Locator:variant;
+    Stream:TMemoryStream;
+    constructor Create( MSource:TMemorySource; MName:string; MSize:longint;
+    const MLocator:variant; MLoadMode:TMemoryLoadMode; MParent:TMemoryFile );
+    procedure Load;
+    procedure Unload;
+    procedure Refresh;
+    procedure SetLoadMode( LM:TMemoryLoadMode );
+    property LockCount:longint read fLockCount;
+    property Loaded:boolean read fLoaded;
+    property LoadMode:TMemoryLoadMode read fLoadMode write SetLoadMode;
+    property Parent:TMemoryFile read fParent;
+  public
+    function Lock:TMemoryStream;
+    procedure Unlock;
+    procedure WriteToDisk(path:string);
+    destructor Destroy; override;
+    property Size:longint read fSize;
+    property Name:string read fFileName;
+    property Position:variant read Locator;
+  end;
+  TMemoryFileClass=class of TMemoryFile;
+
+  TMemorySource=class
+  private
+    fFiles:TStringList;
+    fDirectories:TList;
+    fMemoryUsed,fMemoryFloor,fMemoryLimit,fMemoryCeiling:longint;
+    fTree:TStringList;
+    function GetFile( const Name:string ):TMemoryFile;
+    procedure Add( Name:string;BF:TMemoryFile );
+  protected
+    procedure Fill( MFile:TMemoryFile; Stream:TStream ); virtual; abstract;
+    procedure CreateTree;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function GetFileList:TStringList;
+    procedure SetMemoryFloor( mFloor:longint );
+    procedure SetMemoryLimit( mLimit:longint );
+    procedure SetMemoryCeiling( mCeiling:longint );
+    procedure RefreshAll;
+    property Files[ const Name:string ]:TMemoryFile read GetFile; default;
+    property MemoryFloor:longint read fMemoryFloor write SetMemoryFloor;
+    property MemoryLimit:longint read fMemoryLimit write SetMemoryLimit;
+    property MemoryCeiling:longint read fMemoryCeiling write SetMemoryCeiling;
+    property MemoryUsed:longint read fMemoryUsed;
+    property FileList:TStringList read GetFileList;
+    property Tree:TStringList read fTree;
+  end;
+  TMemorySourceClass=class of TMemorySource;
+
+  TPackageSource=class(TMemorySource)
+  private
+    PackageF:file;
+    fCryptCode,fHeaderCode,fFileSysCode:longint;
+    fFileName:string;
+    fName:string;
+    fActStart:longint;
+  protected
+    procedure Fill( MFile:TMemoryFile; Stream:TStream ); override;
+  public
+    procedure SetCryptCode( MCryptCode:longint );
+    constructor Create( PKGFileName:string; MHeaderCode,MFileSysCode,MCryptCode:longint );
+    destructor Destroy; override;
+    property CryptCode:longint write SetCryptCode;
+    property FileName:string read fFileName;
+    property Name:string read fName;
+    procedure ReadRawData(var x;position,length:integer);
+  end;
+  TPackageSourceClass=class of TPackageSource;
 
 procedure PKG_EnableCryptedHeader;
 
@@ -99,38 +104,38 @@ implementation
 
 type
   PKGHeader=packed record
-              PKGTag:array[0..7] of char;
-              MemoryLimit:longint;
-              HeaderLength:longint;
-              PKGName:string[25];
-            end;
+    PKGTag:array[0..7] of AnsiChar;
+    MemoryLimit:longint;
+    HeaderLength:longint;
+    PKGName:string[25];
+  end;
   PKGFile=packed record
-            PKGTag:array[0..3] of char;
-            FileName:string[128];
-            FileExt:string[16];
-            Directory:longint;
-            LoadMode:byte;
-            CryptMode:byte;
-            PackMode:byte;
-            CRCMode:byte;
-            FileLength:longint;
-            PackedLength:longint;
-            HeaderCRC:byte;
-          end;
+    PKGTag:array[0..3] of AnsiChar;
+    FileName:string[128];
+    FileExt:string[16];
+    Directory:longint;
+    LoadMode:byte;
+    CryptMode:byte;
+    PackMode:byte;
+    CRCMode:byte;
+    FileLength:longint;
+    PackedLength:longint;
+    HeaderCRC:byte;
+  end;
   PKGCryptHeader=packed record
-                   PKGTag:array[0..2] of char;
-                   MemoryLimit:longint;
-                   HeaderLength:longint;
-                 end;
+    PKGTag:array[0..2] of AnsiChar;
+    MemoryLimit:longint;
+    HeaderLength:longint;
+  end;
   PKGCryptStarter=packed record
-                    ActualStart:longint;
-                    PKGTag:word;
-                  end;
+    ActualStart:longint;
+    PKGTag:word;
+  end;
   PKGHuffRec=record
-               parent,bit1,bit0:integer;
-               count:longint;
-               active:boolean;
-             end;
+    parent,bit1,bit0:integer;
+    count:longint;
+    active:boolean;
+  end;
   PKGHuffArray=array[0..511] of PKGHuffRec;
 
 var CryptedHeaderEnabled:boolean;
@@ -415,7 +420,7 @@ var ph:PKGHeader;
     crc:byte;
     lm:TMemoryLoadMode;
     lng:longint;
-    pft:array[0..5] of char;
+    pft:array[0..5] of AnsiChar;
     savecurs:TCursor;
     totfsize:longint;
     mf:TMemoryFile;
