@@ -1400,6 +1400,16 @@ begin
   end;
 end;
 
+{
+x, y:
+  start point in logical line coordinates (line:first character)
+l, t, w, h:
+  left, top, width, height of the block to draw in on the canvas
+ll:
+  graphical line list (all lines for this control)
+printl (out):
+  total number of lines printed
+}
 procedure TfUser.RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
   ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
 var st0,lst0,st2,st3:boolean;
@@ -1433,12 +1443,31 @@ var st0,lst0,st2,st3:boolean;
     colback,coltext:TColor;
     gd1,gd2,gd0:string;
     a:integer;
-function RecodeChar(ch:string):string;
-var beg:string;
-begin
-  if ch='FF00'then ch:='0020';
-  result:=ch;
-end;
+
+  function RecodeChar(ch:string):string;
+  var beg:string;
+  begin
+    if ch='FF00'then ch:='0020';
+    result:=ch;
+  end;
+
+ //Traces the logical string back until the first character which provides wordstate and dictionary.
+ //Stores the result in lastwordstate, lastworddict
+  procedure FindLastWordState(cl: integer);
+  var xp, yp: integer;
+    s: string;
+  begin
+    xp := ll[cl].xs;
+    yp := ll[cl].ys;
+    s := GetDocTr(xp, yp);
+    while (xp>0) and (s[1]='<') do begin
+      Dec(xp);
+      s := GetDocTr(xp, yp);
+    end;
+    lastwordstate := s[1];
+    lastworddict:= copy(s,3,6);
+  end;
+
 begin
   colback:=Col('Editor_Back');
   coltext:=COl('Editor_Text');
@@ -1533,14 +1562,27 @@ begin
   xsiz:=rs;
   ycnt:=linec;
   if onlylinl then exit;
+
+ //Find a graphical line which covers the starting point
   for i:=0 to ll.Count-1 do
     if (ll[i].ys=y) and (ll[i].xs<=x) then cl:=i;
+
   lineh:=rs;
   cx:=x;
   cy:=y;
   py:=0;
   kanaq:='';
-  lastwordstate:='-';
+
+ { Last character's dictionary and word state
+  If next character has '<' as a wordstate, we extend these to it. }
+  lastwordstate := '-';
+  lastworddict := '';
+
+ { If we're starting from the middle of a paragraph, go back until we find a suitable wordstate }
+  if ll[cl].xs > 0 then
+    FindLastWordState(cl);
+  //else we except first character of a paragraph to not be '<'
+
   if printing then Canvas.Brush.Color:=clWhite else
   if fSettings.CheckBox39.Checked then Canvas.Brush.Color:=clWindow else Canvas.Brush.Color:=colBack;
   rect.Left:=l-2;
@@ -1551,11 +1593,6 @@ begin
   try
   while (py{+lineh*linec}<screenh) and (cl<ll.Count) do
   begin
-    if cl>0 then
-    begin
-//      showmessage('Here!'+inttostr(cl)+'-'+inttostr(py)+'-'+inttostr(x)+'-'+inttostr(y)+':'+inttostr(cx)+'-'+inttostr(cy));
-//      showmessage(ll[0]+','+ll[1]+','+ll[2]+':'+ll[3]+','+ll[4]+','+ll[5]);
-    end;
     cx:=ll[cl].xs;
     cy:=ll[cl].ys;
     wx:=cx+ll[cl].len;
@@ -1572,8 +1609,8 @@ begin
         canvas.MoveTo(l,py+rs*linec2+t-1);
         canvas.LineTo(l+(wx-cx)*rs*2,py+rs*linec2+t-1);
       end;
-    end;
-}    while (cx<wx) and ((cx<length(doc[cy]) div 4) or ((kanaq<>'') and st0)) do
+    end; }
+    while (cx<wx) and ((cx<length(doc[cy]) div 4) or ((kanaq<>'') and st0)) do
     begin
       try
       wordstate:=GetDocTr(cx,cy)[1];
@@ -1583,7 +1620,7 @@ begin
       CalcBlockFromTo(false);
       inblock:=false;
       GetTextWordInfo(cx,cy,meaning,reading,kanji);
-      kanjilearned:=false;
+
       kanjilearned:=kanji=CheckKnownKanji(kanji);
       worddict:=copy(GetDocTr(cx,cy),3,6);
       if wordstate='<'then worddict:=lastworddict;
