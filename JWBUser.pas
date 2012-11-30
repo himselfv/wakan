@@ -135,7 +135,7 @@ type
   private
     { Private declarations }
   public
-    linl:TStringList;
+    linl: TGraphicalLineList; //lines as they show on screen
     curkanji,curphonetic,curmeaning,curkanjid:string;
     docfilename:string;
     doctp:byte;
@@ -144,8 +144,8 @@ type
     procedure RepaintText;
     procedure FormatClipboard;
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
-    procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
-    function GetLineAttr(i,a:integer;ll:TStringList):integer;
+    procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
+      ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     function SetWordTrans(x,y:integer;scanparticle:boolean;gridfirst:boolean;user:boolean):integer;
     procedure DisplayInsert(convins,transins:string;leaveinserted:boolean);
     procedure ResolveInsert(final:boolean);
@@ -216,7 +216,7 @@ var curword:integer;
     rcurx,rcury,rviewx,rviewy:integer;
     entermode:boolean;
     ul:TStringList;
-    plinl:TStringList;
+    plinl:TGraphicalLineList;
     lastxsiz,lastycnt,printl:integer;
     oldcurx,oldcury,blockx,blocky:integer;
     printpl:integer;
@@ -343,7 +343,7 @@ end;
 
 function TfUser.CursorScreenX:integer;
 begin
-  if (cursorend) and (curx=0) and (cury>0) then result:=GetLineAttr(cury-1,2,linl) else result:=curx;
+  if (cursorend) and (curx=0) and (cury>0) then result:=linl[cury-1].len else result:=curx;
 end;
 
 function TfUser.CursorScreenY:integer;
@@ -957,7 +957,8 @@ var i:integer;
 begin
   if (not fTranslate.Visible) then exit;
   oldview:=view;
-  RenderText(-1,-1,fTranslate.PaintBox6.Canvas,0,0,fTranslate.PaintBox6.Width-4,fTranslate.PaintBox6.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
+  RenderText(-1,-1,fTranslate.PaintBox6.Canvas,0,0,fTranslate.PaintBox6.Width-4,
+    fTranslate.PaintBox6.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
   if linl.Count=0 then
   begin
     rcurx:=-1;
@@ -969,36 +970,36 @@ begin
     exit;
   end;
   if cury<0 then cury:=0;
-  if cury>=linl.Count div 3 then
+  if cury>=linl.Count then
   begin
-    cury:=(linl.Count div 3)-1;
+    cury:=linl.Count-1;
     curx:=2555;
   end;
   if curx<0 then curx:=0;
-  if (cursorend) and (curx=0) and (cury>0) and (GetLineAttr(cury-1,1,linl)<>GetLineAttr(cury,1,linl)) then
+  if (cursorend) and (curx=0) and (cury>0) and (linl[cury-1].ys<>linl[cury].ys) then
   begin
     dec(cury);
-    curx:=GetLineAttr(cury,2,linl)-1;
+    curx:=linl[cury].len-1;
     cursorend:=false;
   end;
-  if curx>=GetLineAttr(cury,2,linl) then
+  if curx>=linl[cury].len then
   begin
-    if (cury+1<linl.Count div 3) and (GetLineAttr(cury,1,linl)=GetLineAttr(cury+1,1,linl)) then
+    if (cury+1<linl.Count) and (linl[cury].ys=linl[cury+1].ys) then
     begin
       curx:=0;
       inc(cury);
       cursorend:=true;
-    end else curx:=GetLineAttr(cury,2,linl)-1;
+    end else curx:=linl[cury].len-1;
   end;
   if view>cury then if cury>0 then view:=cury else view:=0;
   if view+printl-1<cury then view:=cury-printl+1;
-  if view+printl-1>=(linl.Count div 3) then view:=(linl.Count div 3)-printl;
+  if view+printl-1>=linl.Count then view:=linl.Count-printl;
   if view<0 then view:=0;
-  if view>=(linl.Count div 3) then view:=0;
-  rcury:=GetLineAttr(cury,1,linl);
-  rcurx:=curx+GetLineAttr(cury,0,linl);
-  rviewx:=GetLineAttr(view,0,linl);
-  rviewy:=GetLineAttr(view,1,linl);
+  if view>=linl.Count then view:=0;
+  rcury:=linl[cury].ys;
+  rcurx:=curx+linl[cury].xs;
+  rviewx:=linl[view].xs;
+  rviewy:=linl[view].ys;
   if not shiftpressed then
   begin
     blockx:=rcurx;
@@ -1023,12 +1024,12 @@ begin
   if mustrepaint then oldblockfromx:=-1;
   mustrepaint:=false;
   shiftpressed:=false;
-  if (linl.Count div 3-printl<=0) then
+  if linl.Count-printl<=0 then
     fTranslate.ScrollBar1.Enabled:=false
   else
   begin
     fTranslate.ScrollBar1.Min:=0;
-    fTranslate.ScrollBar1.Max:=linl.Count div 3-printl;
+    fTranslate.ScrollBar1.Max:=linl.Count-printl;
     fTranslate.ScrollBar1.Position:=view;
     fTranslate.ScrollBar1.Enabled:=true;
   end;
@@ -1320,11 +1321,6 @@ begin
     ChangeFile(false);
 end;
 
-function TfUser.GetLineAttr(i,a:integer;ll:TStringList):integer;
-begin
-  if i>=ll.Count then result:=0 else result:=strtoint(ll[i*3+a]);
-end;
-
 procedure TfUser.CalcBlockFromTo(backtrack:boolean);
 begin
   if (rcury<blocky) or ((rcury=blocky) and (rcurx<blockx)) then
@@ -1404,7 +1400,8 @@ begin
   end;
 end;
 
-procedure TfUser.RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;ll:TStringList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
+procedure TfUser.RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
+  ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
 var st0,lst0,st2,st3:boolean;
     linec,linec2,lineh,screenh,screenw,lines:integer;
     st2c:integer;
@@ -1456,10 +1453,8 @@ begin
   if printing then st0:=fSettings.CheckBox29.Checked else st0:=fTranslate.SpeedButton8.Down;
   st3:=(fSettings.CheckBox42.Checked);
   linec:=2;
-  st2c:=1;
-  try
-    st2c:=strtoint(fSettings.Edit17.Text);
-  except end;
+  if not TryStrToInt(fSettings.Edit17.Text, st2c) then
+    st2c:=1;
   if st3 then inc(linec);
   if st0 or lst0 then inc(linec);
   if st2 then inc(linec,st2c);
@@ -1471,10 +1466,8 @@ begin
     if fTranslate.SpeedButton17.Down then rs:=16 else if fTranslate.SpeedButton18.Down then rs:=10 else rs:=8;
   end else
   begin
-    lineh:=20;
-    try
-      lineh:=strtoint(fSettings.Edit18.Text);
-    except end;
+    if not TryStrToInt(fSettings.Edit18.Text, lineh) then
+      lineh:=20;
     rs:=screenh div lineh div linec;
   end;
   a:=GetTickCount;
@@ -1489,14 +1482,12 @@ begin
     begin
       cy:=y;
       i:=0;
-      while i<ll.Count div 3 do
+      while i<ll.Count do
       begin
-        if strtoint(ll[i*3+1])=y then
+        if ll[i].ys=y then
         begin
           if insval=-1 then insval:=i;
-          ll.delete(i*3);
-          ll.delete(i*3);
-          ll.delete(i*3);
+          ll.Delete(i);
         end else inc(i);
       end;
     end;
@@ -1527,9 +1518,10 @@ begin
         if cy>=doc.Count then showmessage('Internal line-computing error!');
 //        if fSettings.CheckBox43.Checked then while GetDocTr(wx,cy)[1]='<'do dec(wx);
         if wx<=cx then wx:=wxo;
-        if doall then ll.Add(inttostr(cx)) else ll.Insert(insval*3,inttostr(cx));
-        if doall then ll.Add(inttostr(cy)) else ll.Insert(insval*3+1,inttostr(cy));
-        if doall then ll.Add(inttostr(wx-cx)) else ll.Insert(insval*3+2,inttostr(wx-cx));
+        if doall then
+          ll.Add(cx, cy, wx-cx)
+        else
+          ll.Insert(insval, cx, cy, wx-cx);
         cx:=wx;
       end;
     end;
@@ -1541,8 +1533,8 @@ begin
   xsiz:=rs;
   ycnt:=linec;
   if onlylinl then exit;
-  for i:=0 to (ll.Count div 3)-1 do
-    if (GetLineAttr(i,1,ll)=y) and (GetLineAttr(i,0,ll)<=x) then cl:=i;
+  for i:=0 to ll.Count-1 do
+    if (ll[i].ys=y) and (ll[i].xs<=x) then cl:=i;
   lineh:=rs;
   cx:=x;
   cy:=y;
@@ -1557,16 +1549,16 @@ begin
   rect.Bottom:=t+h+4;
   Canvas.FillRect(rect);
   try
-  while (py+lineh*linec<screenh) and (cl<ll.Count div 3) do
+  while (py+lineh*linec<screenh) and (cl<ll.Count) do
   begin
     if cl>0 then
     begin
 //      showmessage('Here!'+inttostr(cl)+'-'+inttostr(py)+'-'+inttostr(x)+'-'+inttostr(y)+':'+inttostr(cx)+'-'+inttostr(cy));
 //      showmessage(ll[0]+','+ll[1]+','+ll[2]+':'+ll[3]+','+ll[4]+','+ll[5]);
     end;
-    cx:=GetLineAttr(cl,0,ll);
-    cy:=GetLineAttr(cl,1,ll);
-    wx:=cx+GetLineAttr(cl,2,ll);
+    cx:=ll[cl].xs;
+    cy:=ll[cl].ys;
+    wx:=cx+ll[cl].len;
 {    if (fSettings.CheckBox32.Checked) and (st2) then
     begin
       linec2:=linec;
@@ -1847,8 +1839,8 @@ begin
     if key=VK_RIGHT then
     begin
       inc(curx);
-      if curx>=GetLineAttr(cury,2,linl) then
-        if cury+1<linl.Count div 3 then
+      if curx>=linl[cury].len then
+        if cury+1<linl.Count then
         begin
           inc(cury);
           curx:=0;
@@ -1862,7 +1854,7 @@ begin
         if cury>0 then
         begin
           dec(cury);
-          curx:=GetLineAttr(cury,2,linl)-1;
+          curx:=linl[cury].len-1;
         end else inc(curx);
       cursorend:=false;
     end
@@ -1875,7 +1867,7 @@ begin
     end
     else if (key=VK_NEXT) and (ssCtrl in Shift) then
     begin
-      cury:=linl.Count div 3-1;
+      cury:=linl.Count-1;
       curx:=100;
     end
     else if key=VK_PRIOR then recalcy(cury,cury-printl)
@@ -1935,11 +1927,11 @@ begin
   doctr[insy]:=copy(doctr[insy],1,insx*9)+transins+copy(doctr[insy],insx*9+1,length(doctr[insy])-insx*9);
   linl.Clear;
   RenderText(curx,cury,fTranslate.PaintBox6.Canvas,0,0,fTranslate.PaintBox6.Width-4,fTranslate.PaintBox6.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
-  for i:=0 to (linl.Count div 3)-1 do
+  for i:=0 to linl.Count-1 do
   begin
-    if (GetLineAttr(i,1,linl)=insy) and (GetLineAttr(i,0,linl)<=insx+inslen) and (insx+inslen-GetLineAttr(i,0,linl)<GetLineAttr(i,2,linl)) then
+    if (linl[i].xs=insy) and (linl[i].xs<=insx+inslen) and (insx+inslen-linl[i].xs<linl[i].len) then
     begin
-      curx:=insx+inslen-GetLineAttr(i,0,linl);
+      curx:=insx+inslen-linl[i].xs;
       cury:=i;
     end;
   end;
@@ -2073,7 +2065,7 @@ begin
         end else
         begin
           dec(cury);
-          curx:=GetLineAttr(cury,2,linl)-1;
+          curx:=linl[cury].len-1;
         end;
       end;
       ShowText(true);
@@ -2342,9 +2334,9 @@ begin
   cy:=y div (lastxsiz*lastycnt)+view;
   if cy<0 then cy:=0;
   cx:=WidthToPos(cx,cy);
-  if cy>=linl.Count div 3 then exit;
-  ry:=GetLineAttr(cy,1,linl);
-  rx:=cx+GetLineAttr(cy,0,linl);
+  if cy>=linl.Count then exit;
+  ry:=linl[cy].ys;
+  rx:=cx+linl[cy].xs;
   if (ry>=doc.Count) or (rx>=length(doc[ry]) div 4) then
   begin
     ry:=-1;
@@ -2384,10 +2376,10 @@ end;
 procedure TfUser.ScrollBar1Change(Sender: TObject);
 begin
   view:=fTranslate.ScrollBar1.Position;
-  if (view>=0) and (view<linl.Count div 3) then
+  if (view>=0) and (view<linl.Count) then
   begin
-    rviewx:=GetLineAttr(view,0,linl);
-    rviewy:=GetLineAttr(view,1,linl);
+    rviewx:=linl[view].xs;
+    rviewy:=linl[view].ys;
   end;
   MakeEditorBitmap;
 end;
@@ -2395,7 +2387,7 @@ end;
 procedure TfUser.DrawCursor(blink:boolean);
 function OnScreen(x,y:integer):boolean;
 begin
-  if (x<0) or (y<0) or (y>=linl.Count div 3) or (x>GetLineAttr(y,2,linl)) then
+  if (x<0) or (y<0) or (y>=linl.Count) or (x>linl[y].len) then
   begin
     result:=false;
     exit;
@@ -2479,10 +2471,10 @@ begin
   j: graphical character index
  }
  //For every visible graphical line
-  for i:=view to min((linl.Count div 3)-1, view+printl) do begin
-    xpos := GetLineAttr(i,0,linl);
-    ypos := GetLineAttr(i,1,linl);
-    llen := GetLineAttr(i,2,linl);
+  for i:=view to min(linl.Count-1, view+printl) do begin
+    xpos := linl[i].xs;
+    ypos := linl[i].ys;
+    llen := linl[i].len;
 
     js:=0; //distantion in half-characters from the left
     while llen>0 do begin
@@ -2691,16 +2683,19 @@ begin
   plinl.Clear;
   fUser.RenderText(0,0,canvas,width div 50,height div 50,width-width div 25,height-height div 25,plinl,pl,xs,yc,true,true);
   printpl:=pl;
-  result:=(((plinl.Count div 3)-1) div pl)+1;
+  result:=((plinl.Count-1) div pl)+1;
   if result<1 then result:=1;
 end;
 
 procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origheight:integer; userdata:pointer);
 var pl,xs,yc:integer;
 begin
-  if plinl.Count div 3<=(pagenum-1)*printpl then exit;
-  fUser.RenderText(fUser.GetLineAttr((pagenum-1)*printpl,0,plinl),fUser.GetLineAttr((pagenum-1)*printpl,1,plinl),
-    canvas,width div 50,height div 50,width-width div 25,height-height div 25,plinl,pl,xs,yc,true,false);
+  if plinl.Count<=(pagenum-1)*printpl then exit;
+  fUser.RenderText(
+    plinl[(pagenum-1)*printpl].xs,
+    plinl[(pagenum-1)*printpl].ys,
+    canvas,width div 50,height div 50,width-width div 25,height-height div 25,
+    plinl,pl,xs,yc,true,false);
 end;
 
 procedure PrintConfigure(userdata:pointer);
@@ -2921,8 +2916,8 @@ end;
 procedure TfUser.FormCreate(Sender: TObject);
 begin
   ul:=TStringList.Create;
-  linl:=TStringList.Create;
-  plinl:=TStringList.Create;
+  linl:=TGraphicalLineList.Create;
+  plinl:=TGraphicalLineList.Create;
   dicsl:=TStringList.Create;
   randbank:=TStringList.Create;
   fUser.docfilename:='';
@@ -2964,8 +2959,8 @@ procedure TfUser.Translate_SelectAll;
 begin
   blockx:=0;
   blocky:=0;
-  cury:=(linl.Count div 3)-1;
-  curx:=GetLineAttr((linl.Count div 3)-1,2,linl);
+  cury:=linl.Count-1;
+  curx:=linl[linl.Count-1].len;
   shiftpressed:=true;
   ShowText(true);
 end;
@@ -3171,7 +3166,8 @@ begin
   editorbitmap:=TBitmap.Create;
   editorbitmap.Width:=fTranslate.PaintBox6.Width;
   editorbitmap.Height:=fTranslate.PaintBox6.Height;
-  RenderText(rviewx,rviewy,editorbitmap.Canvas,2,2,fTranslate.PaintBox6.Width-4,fTranslate.PaintBox6.Height-4,linl,printl,lastxsiz,lastycnt,false,false);
+  RenderText(rviewx,rviewy,editorbitmap.Canvas,2,2,fTranslate.PaintBox6.Width-4,
+    fTranslate.PaintBox6.Height-4,linl,printl,lastxsiz,lastycnt,false,false);
   oldcurx:=-1;
   oldcury:=-1;
   oldblockfromx:=-1;
@@ -3193,10 +3189,10 @@ end;
 procedure TfUser.SetCurPos(x,y:integer);
 var i,j:integer;
 begin
-  for i:=0 to (linl.Count div 3)-1 do
-    if (GetLineAttr(i,1,linl)=y) and (GetLineAttr(i,0,linl)<=x) and (GetLineAttr(i,2,linl)+GetLineAttr(i,0,linl)>x) then
+  for i:=0 to linl.Count-1 do
+    if (linl[i].ys=y) and (linl[i].xs<=x) and (linl[i].xs+linl[i].len>x) then
   begin
-    curx:=x-GetLineAttr(i,0,linl);
+    curx:=x-linl[i].xs;
     cury:=i;
   end;
 end;
@@ -3207,8 +3203,8 @@ begin
   if down then inc(view) else dec(view);
   if (view>=0) and (view<=fTranslate.ScrollBar1.Max) then
   begin
-    rviewx:=GetLineAttr(view,0,linl);
-    rviewy:=GetLineAttr(view,1,linl);
+    rviewx:=linl[view].xs;
+    rviewy:=linl[view].ys;
   end else if view<0 then view:=0 else view:=fTranslate.ScrollBar1.Max;
   fTranslate.ScrollBar1.Position:=view;
   MakeEditorBitmap;
@@ -3474,13 +3470,13 @@ end;
 function TfUser.PosToWidth(x,y:integer):integer;
 var i,js,cx,cy:integer;
 begin
-  if (x<0) or (y<0) or (y>=linl.Count div 3) then
+  if (x<0) or (y<0) or (y>=linl.Count) then
   begin
     result:=-1;
     exit;
   end;
-  cx:=GetLineAttr(y,0,linl);
-  cy:=GetLineAttr(y,1,linl);
+  cx:=linl[y].xs;
+  cy:=linl[y].ys;
   result:=0;
   for i:=0 to x-1 do
   begin
@@ -3492,13 +3488,13 @@ end;
 function TfUser.WidthToPos(x,y:integer):integer;
 var i,jx,cx,cy:integer;
 begin
-  if (x<0) or (y<0) or (y>=linl.Count div 3) then
+  if (x<0) or (y<0) or (y>=linl.Count) then
   begin
     result:=-1;
     exit;
   end;
-  cx:=GetLineAttr(y,0,linl);
-  cy:=GetLineAttr(y,1,linl);
+  cx:=linl[y].xs;
+  cy:=linl[y].ys;
   jx:=0;
   for i:=0 to x-1 do
   begin
