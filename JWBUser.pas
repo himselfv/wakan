@@ -1549,7 +1549,7 @@ begin
   rect.Bottom:=t+h+4;
   Canvas.FillRect(rect);
   try
-  while (py+lineh*linec<screenh) and (cl<ll.Count) do
+  while (py{+lineh*linec}<screenh) and (cl<ll.Count) do
   begin
     if cl>0 then
     begin
