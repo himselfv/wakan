@@ -373,6 +373,7 @@ end;
 
 function TGraphicalLineList.GetItemPtr(Index: integer): PGraphicalLineInfo;
 begin
+  Assert(Index<FListUsed);
   Result := @FList[Index]; //valid until next list growth
 end;
 

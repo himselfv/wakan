@@ -12,10 +12,10 @@ Various notes go here.
 }
 {
 Document contents is stored in "doc", line by line (==text lines).
-"linl" contains triples of strings describing graphical lines:
-  attr[0] = xstart of this graphical line in logical line
-  attr[1] = ystart (line index in "doc")
-  attr[2] = length
+"linl" contains graphical line descriptions:
+  xs = first character of this graphical line in logical line
+  ys = logical line index in "doc"
+  len = length
 "view" is an index of a first visible graphical line.
 Selection is kept in logical coordinates - (logical line, start character) pairs.
 Latin characters are considered "half-width" and require only half the slot
@@ -1966,7 +1966,7 @@ begin
   RenderText(curx,cury,fTranslate.PaintBox6.Canvas,0,0,fTranslate.PaintBox6.Width-4,fTranslate.PaintBox6.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
   for i:=0 to linl.Count-1 do
   begin
-    if (linl[i].xs=insy) and (linl[i].xs<=insx+inslen) and (insx+inslen-linl[i].xs<linl[i].len) then
+    if (linl[i].ys=insy) and (linl[i].xs<=insx+inslen) and (insx+inslen-linl[i].xs<linl[i].len) then
     begin
       curx:=insx+inslen-linl[i].xs;
       cury:=i;
