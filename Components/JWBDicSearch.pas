@@ -177,7 +177,7 @@ end;
 
 function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
 var l:integer;
-    p:pchar;
+    p:PAnsiChar;
 begin
   if word then p:=wordidx else p:=charidx;
   p:=p+loc*4;
@@ -186,8 +186,8 @@ begin
 end;
 
 function TJaletDic.ReadIndexString(word:boolean;loc:integer):string;
-var l:array[0..3] of char;
-    p:pchar;
+var l:array[0..3] of AnsiChar;
+    p:PAnsiChar;
 begin
   if word then p:=wordidx else p:=charidx;
   p:=p+loc*4;
