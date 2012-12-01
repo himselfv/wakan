@@ -1016,6 +1016,10 @@ object fMenu: TfMenu
       Caption = '#00919^eSearch substring^cHledat podøetìzec'
       OnExecute = aDictMiddleExecute
     end
+    object aChangeLanguage: TAction
+      Caption = '#00929^eChange language...'
+      OnExecute = aChangeLanguageExecute
+    end
   end
   object MainMenu1: TMainMenu
     Left = 216
@@ -1082,6 +1086,9 @@ object fMenu: TfMenu
       object eSettingscNastaven2: TMenuItem
         Action = aSettings
         Caption = '#00940^eOptions...^cNastavení...'
+      end
+      object N00929eChangelanguage1: TMenuItem
+        Action = aChangeLanguage
       end
     end
     object eCharacterscZnaky1: TMenuItem

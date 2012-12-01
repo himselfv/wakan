@@ -328,10 +328,7 @@ end;
 
 procedure TfSettings.Button6Click(Sender: TObject);
 begin
-//  ML_ChooseLanguage('WaKan',false,'e+c+');
   fLanguage.ShowModal;
-  showmessage('Language has been changed. Please restart the application.'#13'Jazyk byl zmìnìn. Prosím restartujte aplikaci.');
-  Application.Terminate;
 end;
 
 procedure TfSettings.SpeedButton1Click(Sender: TObject);

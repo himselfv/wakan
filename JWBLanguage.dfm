@@ -14,8 +14,6 @@ object fLanguage: TfLanguage
   OldCreateOrder = False
   Position = poScreenCenter
   OnClose = FormClose
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -46,21 +44,21 @@ object fLanguage: TfLanguage
     Height = 13
     Caption = 'Author:'
   end
-  object Label4: TLabel
-    Left = 200
+  object lbLanguageFile: TLabel
+    Left = 187
     Top = 336
-    Width = 32
+    Width = 45
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label4'
+    Caption = '[filename]'
   end
-  object Label5: TLabel
-    Left = 200
+  object lbLanguageAuthor: TLabel
+    Left = 196
     Top = 360
-    Width = 32
+    Width = 36
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label5'
+    Caption = '[author]'
   end
   object RxLabel1: TRxLabel
     Left = 72
@@ -89,30 +87,30 @@ object fLanguage: TfLanguage
     Height = 25
     Shape = bsTopLine
   end
-  object ListBox1: TListBox
+  object lbLanguages: TListBox
     Left = 8
     Top = 104
     Width = 225
     Height = 225
     ItemHeight = 13
     TabOrder = 0
-    OnClick = ListBox1Click
+    OnClick = lbLanguagesClick
   end
-  object BitBtn1: TBitBtn
+  object bbOk: TBitBtn
     Left = 8
     Top = 384
     Width = 75
     Height = 25
-    TabOrder = 1
     Kind = bkOK
+    TabOrder = 1
   end
-  object Button1: TButton
+  object btnShowInfo: TButton
     Left = 160
     Top = 384
     Width = 75
     Height = 25
     Caption = 'More info...'
     TabOrder = 2
-    OnClick = Button1Click
+    OnClick = btnShowInfoClick
   end
 end

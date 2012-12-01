@@ -5,20 +5,32 @@ interface
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
   JWBUtils;
 
+{$IF CompilerVersion < 21}
 type
  //On older compilers we don't have a new, faster UnicodeString,
  //but we can (mostly) safely use a slower WideString in its stead.
- {$IF CompilerVersion < 21}
   UnicodeString = WideString;
   PUnicodeString = PWideString;
- {$IFEND}
+{$IFEND}
 
 { Wakan uses a special Ansi string format, where each unicode symbol is kept
  as a 4 character (four-char) hex code. }
 
+
+ { Math }
+
 { Min and max so we don't have to link Math.pas just for that }
 function min(a, b: integer): integer; inline;
 function max(a, b: integer): integer; inline;
+
+
+{ Files }
+
+function GetModuleFilenameStr(hModule: HMODULE = 0): string;
+function GetFileVersionInfoStr(Filename: string): string;
+
+
+{ Rest }
 
 function UnicodeToHex(s:widestring):string;
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
@@ -114,6 +126,8 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
 implementation
 uses StrUtils, JWBMenu, UnicodeFont, JWBSettings, JWBUser, JWBDicSearch;
 
+{ Math }
+
 function min(a, b: integer): integer;
 begin
   if a<b then Result := a else Result := b;
@@ -123,6 +137,95 @@ function max(a, b: integer): integer;
 begin
   if a<b then Result := a else Result := b;
 end;
+
+
+{ Files }
+
+(*
+  Returns full image address for specified module
+  If hModule is zero, returns full executable image address
+*)
+function GetModuleFilenameStr(hModule: HMODULE = 0): string;
+const MAX_PATH_LEN = 8192; //Max length, in symbols, of supported image path size.
+var nSize, nRes: dword;
+begin
+ (*
+   MSDN:
+    If the length of the path is less than nSize characters, the function succeeds
+    and the path is returned as a null-terminated string.
+
+    If the length of the path exceeds nSize, the function succeeds and the string
+    is truncated to nSize characters including the terminating null character.
+
+    Windows XP/2000: The string is truncated to nSize characters and is not null terminated.
+ *)
+
+  nSize := 256;
+  SetLength(Result, nSize);
+
+  nRes := GetModuleFilename(hModule, @Result[1], nSize);
+  while (nRes <> 0) and (nRes >= nSize) and (nSize < MAX_PATH_LEN) do begin
+    nSize := nSize * 2;
+    SetLength(Result, nSize+1);
+    nRes := GetModuleFilename(hModule, @Result[1], nSize);
+  end;
+
+  if nRes = 0 then begin
+    Result := ''; //cannot retrieve path, return null
+    exit;
+  end;
+
+  if nRes >= nSize then begin
+    Result := ''; //path too long, exceeded MAX_PATH_LEN and still not enough, return null
+    exit;
+  end;
+
+  SetLength(Result, nRes); //else truncate the string, set terminating null
+end;
+
+function GetFileVersionInfoStr(Filename: string): string;
+var verSize: dword;
+  verHandle: dword;
+  verData: array of byte;
+  buf: pointer;
+  len: cardinal;
+begin
+  verSize := GetFileVersionInfoSize(PChar(Filename), verHandle);
+  if verSize=0 then begin
+    Result := '';
+    exit;
+  end;
+
+  buf := nil;
+  len := 0;
+  SetLength(verData, verSize);
+  if not GetFileVersionInfo(PChar(Filename), verHandle, verSize, @verData[0]) then begin
+    Result := '';
+    exit;
+  end;
+
+  if not VerQueryValue(@verData[0], '\', buf, len)
+  or (len=0) then begin
+    Result := '';
+    exit;
+  end;
+
+  with PVSFixedFileInfo(buf)^ do begin
+   //dwFileVersionMS: Major version (HIWORD) + Minor version (LOWORD)
+   //dwFileVersionLS: Release (HIWORD) + Build (LOWORD)
+    Result :=
+      IntToStr(HIWORD(dwFileVersionMS)) + '.' + IntToStr(LOWORD(dwFileVersionMS));
+    if dwFileFlags and VS_FF_PRERELEASE = VS_FF_PRERELEASE then
+      Result := Result + ' (dev)';
+    if dwFileFlags and VS_FF_DEBUG = VS_FF_DEBUG then
+      Result := Result + ' (debug)';
+    if dwFileFlags and VS_FF_SPECIALBUILD = VS_FF_SPECIALBUILD then
+      Result := Result + ' (special build)';
+  end;
+end;
+
+
+
 
 
 type TIntTextInfo=record
@@ -1987,7 +2090,7 @@ function EnumProc(lpelf:pointer;lpnt:pointer;FontType:integer;lParam:integer):in
 var p:^ENUMLOGFONTEX;
 begin
   p:=lpelf;
-  fontlist.Add(p^.elfLogFont.lfFaceName+#9+inttostr(p^.elfLogFont.lfCharset));
+  fontlist.Add(AnsiString(p^.elfLogFont.lfFaceName)+#9+inttostr(p^.elfLogFont.lfCharset));
 end;
 
 function ChooseFont(charsets:array of TFontCharset;teststring:string;var supportedsets:string;defaultfont:string;selectfirst:boolean):string;

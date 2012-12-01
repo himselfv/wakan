@@ -1,4 +1,8 @@
 unit JWBLanguage;
+{
+Everything related to loading, applying, choosing a translation.
+Unicode-safe.
+}
 
 interface
 
@@ -7,109 +11,203 @@ uses
   StdCtrls, Buttons, TypInfo, ComCtrls, Menus, ExtCtrls, Registry, RXCtrls;
 
 type
+  TLanguageFileInfo = record
+    lName: string;
+    lAuthor: string;
+    lVersion: string;
+  end;
+  PLanguageFileInfo = ^TLanguageFileInfo;
+
+  TFilenameArray = array of string;
+
   TfLanguage = class(TForm)
     Label1: TLabel;
-    ListBox1: TListBox;
+    lbLanguages: TListBox;
     Label2: TLabel;
     Label3: TLabel;
-    Label4: TLabel;
-    Label5: TLabel;
-    BitBtn1: TBitBtn;
-    Button1: TButton;
+    lbLanguageFile: TLabel;
+    lbLanguageAuthor: TLabel;
+    bbOk: TBitBtn;
+    btnShowInfo: TButton;
     RxLabel1: TRxLabel;
     RxLabel2: TRxLabel;
     Bevel1: TBevel;
-    procedure Button1Click(Sender: TObject);
+    procedure btnShowInfoClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure ListBox1Click(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
+    procedure lbLanguagesClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
-    { Private declarations }
+  protected
+   //Lists all loaded languages
+    fnames: TFilenameArray; //without paths
+    finfo: array of TLanguageFileInfo;
+
   public
-    lfiles:TStringList;
-    curtrans:TStringList;
-    curlanguage:string;
-    function LoadLanguage(fname:string):string;
+    procedure LoadRegistrySettings; //when loading app
+    procedure SaveRegistrySettings; //save changes
+
+  public
+    procedure LoadLanguage(fname:string); //and use for translation
     function TranslateString(id:string):string;
     procedure TranslateForm(f:TForm);
-    { Public declarations }
+
   end;
 
 var
   fLanguage: TfLanguage;
-  curGUILanguage: string;
+
+  TransDir: string; //path to translations
+  curTransFile: string; //filename of active translation (without path)
+  curTrans: TStringList; //active translation data
+  curTransInfo: TLanguageFileInfo;
+  curGUILanguage: string; //same as curTransFile, only without an extension
+    //used for stuff like wakan_LNG.chm
+
+
 
 implementation
+uses JWBUnit;
 
 {$R *.DFM}
 
-procedure TfLanguage.Button1Click(Sender: TObject);
+procedure TfLanguage.btnShowInfoClick(Sender: TObject);
 begin
-  Application.MessageBox(pchar('User interface translations are loaded from .LNG files'#13+
-    #13#13'Please check WaKan website http://wakan.manga.cz'#13+
+  Application.MessageBox(pchar('User interface translations are loaded from .LNG files'#13#13+
+    'Please check WaKan website http://wakan.manga.cz'#13+
     'for new language files.'#13#13'If you want to volunteer for translating WaKan UI'#13+
     'into your language, please see WaKan forum for detailed'#13'information about how to do it.'#13#13+
-    'All contributions will be greatly appreciated.'),'Info about UI translations',MB_ICONINFORMATION or MB_OK);
+    'All contributions will be greatly appreciated.'),
+    'Info about UI translations',
+    MB_ICONINFORMATION or MB_OK);
+end;
+
+function ListFiles(mask: string): TFilenameArray;
+var sr: TSearchRec;
+begin
+  SetLength(Result, 0);
+  if FindFirst(mask,faAnyFile,sr)<>0 then exit;
+  repeat
+    SetLength(Result, Length(Result)+1);
+    Result[Length(Result)-1] := sr.Name;
+  until FindNext(sr)<>0;
+  FindClose(sr);
+end;
+
+{
+Loads language file into the container provided by the caller.
+fname:
+  Full path and file name of the translation file.
+}
+type
+  TLoadLanguageFlag = (llOnlyInfo);
+  TLoadLanguageFlags = set of TLoadLanguageFlag;
+
+procedure LoadLanguageFile(fname: string; flags: TLoadLanguageFlags;
+  out info: TLanguageFileInfo; data: TStringList);
+var t: TStringList; //temporary storage for .lng file contents
+  i, j: integer;
+  s, pref: string;
+begin
+  pref:='';
+  if data<>nil then
+    data.Clear;
+
+  info.lName := '';
+  info.lAuthor := '';
+  info.lVersion := '';
+
+  t := TStringList.Create;
+  try
+   //We support whatever encodings TStringList supports.
+   //This includes at least Ansi and UTF-16LE and that's enough for us.
+   //Don't encode translations in anything else.
+    t.LoadFromFile(fname);
+
+    for j := 0 to t.Count - 1 do begin
+      s := t[j];
+     { if it's a service field, read it }
+      if copy(s,1,6)='#LANG>' then
+        info.lName:=copy(s,7,length(s)-6)
+      else
+      if copy(s,1,6)='#AUTH>' then
+        info.lAuthor:=copy(s,7,length(s)-6)
+      else
+      if copy(s,1,6)='#VERS>' then
+        info.lVersion:=copy(s,7,length(s)-6)
+      else
+     { if we've been asked to read only info, skip the rest }
+      if llOnlyInfo in flags then
+        continue
+      else
+     { else it's 00016>some string }
+      if (length(s)>0) and (s[1]<>';') then
+        if s[6]='+' then
+          pref := pref+copy(s,7,length(s)-6)+#13
+        else
+        if s[6]='>' then
+        begin
+          if not TryStrToInt(copy(s,1,5), i) then
+            i := 0;
+          if i>0 then data.add(copy(s,1,6)+pref+copy(s,7,length(s)-6));
+          pref:='';
+        end;
+    end;
+  finally
+    t.Free;
+  end;
 end;
 
 procedure TfLanguage.FormShow(Sender: TObject);
-var sr:TSearchRec;
-    t:textfile;
-    s,lg,aut,ver:string;
-    ind,i:integer;
+var i, j: integer;
+  s: string;
 begin
-  ListBox1.Items.Clear;
-  lfiles.Clear;
-  ind:=0;
-  if FindFirst('*.lng',faAnyFile,sr)<>0 then
-  begin
-    Application.MessageBox('No .LNG files were found.'#13'These files must reside in Wakan folder.'#13#13'Please ensure that your copy of Wakan is complete.',
+  lbLanguages.Items.Clear;
+
+ //List translation files
+  fnames := ListFiles(TransDir+'\*.lng');
+  if Length(fnames)<=0 then begin
+   //We don't have to show this because it's perfectly okay not to have any tl files,
+   //but let's be nice to the user.
+    Application.MessageBox('No .LNG files were found.'#13
+      +'These files must reside in Wakan folder.'#13#13
+      +'Please make sure that your copy of Wakan is complete.',
       'Error',MB_ICONERROR or MB_OK);
-    Application.Terminate;
-    exit;
-  end else
-  repeat
-    assignfile(t,sr.name);
-    lg:='!';
-    reset(t);
-    while not eof(t) do
-    begin
-      readln(t,s);
-      if copy(s,1,6)='#LANG>'then lg:=copy(s,7,length(s)-6);
-      if copy(s,1,6)='#AUTH>'then aut:=copy(s,7,length(s)-6);
-      if copy(s,1,6)='#VERS>'then ver:=copy(s,7,length(s)-6);
+  end;
+
+ //Strip paths
+  for i := 0 to Length(fnames) - 1 do begin
+    fnames[i] := lowercase(ExtractFilename(fnames[i])); //lowercase for consistency
+   //Pop English to the top
+    if fnames[i]='en.lng' then begin
+      fnames[i] := ''; //free string
+      Move(fnames[0], fnames[1], sizeof(fnames[0])*i); //without refcounting
+      pointer(fnames[0]) := nil; //without refcounting
+      fnames[0]:='en.lng'; //with refcounting!
     end;
-    closefile(t);
-    if sr.name='en.lng'then
-    begin
-      ListBox1.Items.Insert(0,lg+' ('+ver+')');
-      lfiles.Insert(0,sr.name);
-    end else
-    begin
-      ListBox1.Items.Add(lg+' ('+ver+')');
-      lfiles.Add(sr.name);
+  end;
+
+ //Load headers with info
+  SetLength(finfo, Length(fnames));
+  for i := 0 to Length(fnames) - 1 do begin
+    LoadLanguageFile(TransDir+'\'+fnames[i], [llOnlyInfo], finfo[i], nil);
+    lbLanguages.Items.Add(finfo[i].lName+' ('+finfo[i].lVersion+')');
+  end;
+
+ //Select active language
+  for i := 0 to Length(fnames) - 1 do
+    if fnames[i]=curTransFile then begin
+      lbLanguages.ItemIndex := i;
+      lbLanguagesClick(lbLanguages);
+      break;
     end;
-  until FindNext(sr)<>0;
-  ind:=0;
-  for i:=0 to lfiles.Count-1 do if sr.name=lfiles[i] then ind:=i;
-  FindClose(sr);
-  ListBox1.ItemIndex:=ind;
-  ListBox1Click(sender);
 end;
 
-procedure TfLanguage.FormCreate(Sender: TObject);
-begin
-  lfiles:=TStringList.Create;
-  curtrans:=TStringList.Create;
-end;
-
-function TfLanguage.LoadLanguage(fname:string):string;
-var t:textfile;
-  pref,s: string;
-  i:integer;
-  aut,ver,lang: string; { service fields }
+{
+This one loads the language AND APPLIES IT TO THE PROGRAM.
+So use with care.
+fname:
+  Translation file name (without path; has to be in TransDir)
+}
+procedure TfLanguage.LoadLanguage(fname:string);
 begin
   if not fileexists(fname) then
   begin
@@ -118,53 +216,69 @@ begin
       'Error', MB_ICONWARNING or MB_OK);
     exit;
   end;
-  curGUILanguage:=lowercase(fname);
-  if pos('.',curGUILanguage)>0 then curGUILanguage:=copy(curGUILanguage,1,pos('.',curGUILanguage)-1);
-  assignfile(t,fname);
-  curtrans.Clear;
-  pref:='';
-  reset(t);
-  while not eof(t) do
-  begin
-    readln(t,s);
-   { if it's a service field, read it }
-    if copy(s,1,6)='#LANG>' then
-      lang := copy(s,7,length(s)-6)
-    else
-    if copy(s,1,6)='#AUTH>' then
-      aut := copy(s,7,length(s)-6)
-    else
-    if copy(s,1,6)='#VERS>' then
-      ver := copy(s,7,length(s)-6)
-    else
-   { else it's 00016>some string }
-    if (length(s)>0) and (s[1]<>';') then
-      if s[6]='+' then
-        pref := pref+copy(s,7,length(s)-6)+#13
-      else
-      if s[6]='>' then
-      begin
-        i:=0;
-        try i:=strtoint(copy(s,1,5)); except end;
-        if i>0 then curtrans.add(copy(s,1,6)+pref+copy(s,7,length(s)-6));
-        pref:='';
-      end;
+
+  curTransFile := fname;
+  curGUILanguage := ChangeFileExt(lowercase(fname), '');
+  LoadLanguageFile(TransDir+'\'+fname, [], curTransInfo, curTrans);
+end;
+
+procedure TfLanguage.lbLanguagesClick(Sender: TObject);
+begin
+  lbLanguageFile.Caption:=fnames[lbLanguages.ItemIndex];
+  lbLanguageAuthor.Caption:=finfo[lbLanguages.ItemIndex].lAuthor;
+end;
+
+{
+Reads registry settings and loads appropriate language.
+If it's not configured, asks the user to choose one.
+}
+procedure TfLanguage.LoadRegistrySettings;
+var reg:TRegIniFile;
+begin
+  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    curTransFile := reg.ReadString('Language','LNGFile','');
+  finally
+    reg.Free;
   end;
-  closefile(t);
-  result:=aut;
+  if curTransFile='' then begin
+    Self.ShowModal;
+    if curTransFile<>'' then //user cancelled
+      curTransFile := '?'; //can't be a filename; means: "don't need tl"
+  end;
+  if curTransFile <> '?' then
+    Self.LoadLanguage(curTransFile);
 end;
 
-procedure TfLanguage.ListBox1Click(Sender: TObject);
+procedure TfLanguage.SaveRegistrySettings;
+var reg:TRegIniFile;
 begin
-  Label5.Caption:=LoadLanguage(lfiles[ListBox1.ItemIndex]);
-  Label4.Caption:=lfiles[ListBox1.ItemIndex];
+  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    reg.WriteString('Language', 'LNGFile', curTransFile);
+  finally
+    reg.Free;
+  end;
 end;
 
-procedure TfLanguage.FormDestroy(Sender: TObject);
+{
+Save the choice and apply the language, OR -- cancel and exit.
+}
+procedure TfLanguage.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  lfiles.Free;
-  curtrans.Free;
+  if not IsPositiveResult(ModalResult) then exit;
+
+ //Else save the choice and load language
+  curTransFile := fnames[lbLanguages.ItemIndex];
+  SaveRegistrySettings();
+  LoadLanguage(curTransFile); //not really needed right now...
+
+ //Currently there's no choice but to do this
+  showmessage('Language has been changed. Please restart the application.');
+  Application.Terminate;
 end;
+
+
 
 function TfLanguage.TranslateString(id:string):string;
 var i,sk,m,l,r:integer;
@@ -205,7 +319,7 @@ begin
   end;
 end;
 
-function StringProperty(PropInfo : PPropInfo) : Boolean;
+function IsStringProperty(PropInfo: PPropInfo): Boolean;
 var aPropInfo:TPropInfo;
     ppType:PPTypeInfo;
     pType:PTypeInfo;
@@ -215,50 +329,56 @@ begin
   ppType:=aPropInfo.PropType;
   pType:=ppType^;
   TypeInfo:=pType^;
-  Result:=(TypeInfo.Kind=tkString) or (TypeInfo.Kind=tkLString) or
-     (TypeInfo.Kind=tkWString);
+  Result:=(TypeInfo.Kind=tkString)
+    or (TypeInfo.Kind=tkLString)
+    or (TypeInfo.Kind=tkWString)
+  {$IFDEF UNICODE}
+    or (TypeInfo.Kind=tkUString)
+  {$ENDIF};
 end;
 
 procedure TfLanguage.TranslateForm(f:TForm);
 var j,k:integer;
-    a:TComponent;
-    PropInfo:PPropInfo;
-procedure _set(a:TObject;prop:string);
-begin
-  if a is TControl then
+  a:TComponent;
+  PropInfo:PPropInfo;
+
+  procedure _set(a:TObject;prop:string);
   begin
-    PropInfo:=GetPropInfo(a.ClassInfo,prop);
-    if (PropInfo<>nil) and (StringProperty(PropInfo)) then
+    if a is TControl then
     begin
-      SetStrProp(a,PropInfo,TranslateString(GetStrProp(a,PropInfo)));
+      PropInfo:=GetPropInfo(a.ClassInfo,prop);
+      if (PropInfo<>nil) and IsStringProperty(PropInfo) then
+        SetStrProp(a,PropInfo,TranslateString(GetStrProp(a,PropInfo)));
     end;
   end;
-end;
-procedure _setlist(a:TObject;prop:string);
-var ss:TStringList;
-    i:integer;
-begin
-  if (a is TCustomListBox) or
-     (a is TCustomComboBox) or
-     (a is TCustomMemo) or
-     (a is TCustomRadioGroup)
-     then
+
+  procedure _setlist(a:TObject;prop:string);
+  var ss:TStringList;
+      i:integer;
   begin
-    PropInfo:=GetPropInfo(a.ClassInfo,prop);
-    if (PropInfo<>nil) then
+    if (a is TCustomListBox) or
+       (a is TCustomComboBox) or
+       (a is TCustomMemo) or
+       (a is TCustomRadioGroup)
+       then
     begin
-      ss:=TStringList(GetOrdProp(a,PropInfo));
-      for i:=0 to ss.Count-1 do
-        ss[i]:=TranslateString(ss[i]);
+      PropInfo:=GetPropInfo(a.ClassInfo,prop);
+      if (PropInfo<>nil) then
+      begin
+        ss:=TStringList(GetOrdProp(a,PropInfo));
+        for i:=0 to ss.Count-1 do
+          ss[i]:=TranslateString(ss[i]);
+      end;
     end;
   end;
-end;
-procedure _menuitem(mi:TMenuItem);
-var i:integer;
-begin
-  for i:=0 to mi.Count-1 do _menuitem(mi.Items[i]);
-  mi.Caption:=TranslateString(mi.Caption);
-end;
+
+  procedure _menuitem(mi:TMenuItem);
+  var i:integer;
+  begin
+    for i:=0 to mi.Count-1 do _menuitem(mi.Items[i]);
+    mi.Caption:=TranslateString(mi.Caption);
+  end;
+
 begin
   _set(f,'Caption');
   for j:=0 to f.ComponentCount-1 do
@@ -277,13 +397,17 @@ begin
   end;
 end;
 
-procedure TfLanguage.FormClose(Sender: TObject; var Action: TCloseAction);
-var reg:TRegIniFile;
-begin
-  curLanguage:=lfiles[ListBox1.ItemIndex];
-  reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
-  reg.WriteString('Language','LNGFile',curLanguage);
-  reg.Free;
-end;
+
+
+
+initialization
+  TransDir := ExtractFilePath(GetModuleFilenameStr(0));
+  curTransFile := '';
+  curTrans := TStringList.Create;
+  FillChar(curTransInfo, SizeOf(curTransInfo), 00);
+  curGUILanguage := '';
+
+finalization
+  curTrans.Free;
 
 end.
