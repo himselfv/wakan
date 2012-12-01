@@ -135,9 +135,9 @@ procedure MoveOfs(source,dest:pointer;ofssource,ofsdest:integer;size:integer);
 var sp,dp:pbyte;
 begin
   sp:=source;
-  sp:=sp+ofssource;
+  sp:=PByte(integer(sp)+ofssource); //older Delphi versions can't add pointers
   dp:=dest;
-  dp:=dp+ofsdest;
+  dp:=PByte(integer(dp)+ofsdest);
   move(sp^,dp^,size);
 end;
 
