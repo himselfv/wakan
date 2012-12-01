@@ -1,8 +1,15 @@
 unit TextTable;
 
 interface
-
 uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows;
+
+{
+Unicode status:
+- Dictionary format is not going to change so everything inside the dictionary
+is kept as AnsiStrings, encoded in old 4-char format.
+We convert it as we read it.
+- We return stuff in strings (UnicodeStrings).
+}
 
 {
 TextTable relies heavily on in-memory structures.
@@ -61,7 +68,6 @@ type
     offline:boolean;
     datafpos:integer;
     source:TPackageSource;
-    function GetField(rec:integer;field:integer):string;
     function FilterPass(rec:integer;fil:string):boolean;
     function TransOrder(rec,order:integer):integer; inline;
     function IsDeleted(rec:integer):boolean;
@@ -73,12 +79,8 @@ type
     procedure First;
     procedure Next;
     function EOF:boolean;
-    function GetFieldSize(recno,field:integer):byte;
     function Field(field:string):integer;
     function HasIndex(index:string):boolean;
-    function Str(field:integer):string;
-    function Int(field:integer):integer;
-    function Bool(field:integer):boolean;
     procedure SetOrder(index:string);
     procedure SetFilter(filtr:string);
     function Test(fil:string):boolean;
@@ -93,6 +95,13 @@ type
     procedure Load;
     function CheckIndex:boolean;
     property NoCommitting:boolean read nocommit write nocommit;
+
+  public //Field reading
+    function GetFieldSize(recno,field:integer):byte;
+    function GetField(rec:integer;field:integer):string;
+    function Str(field:integer):string;
+    function Int(field:integer):integer;
+    function Bool(field:integer):boolean;
 
   public
     function GetSeekObject(seek: string): TSeekObject;
@@ -123,7 +132,7 @@ begin
 end;
 
 procedure MoveOfs(source,dest:pointer;ofssource,ofsdest:integer;size:integer);
-var sp,dp:pchar;
+var sp,dp:pbyte;
 begin
   sp:=source;
   sp:=sp+ofssource;
@@ -161,7 +170,7 @@ var ms:TMemoryStream;
     w:word;
     stim,stim2:TDateTime;
     strubuf:pointer;
-    struptr:pchar;
+    struptr: PAnsiChar;
     precounted:boolean;
     ww:array[0..255] of byte;
     fs:string;
@@ -307,22 +316,22 @@ begin
       GetMem(struct,ms.Size+bufsize);
       ms.Read(struct^,ms.Size);
       mf.Unlock;
-      if mf.Size>4 then
+     { if mf.Size>4 then
       begin
-//        showmessage(inttostr(mf.Size)+'.');
-//        moveofs(strubuf,@i,mf.Size-3,0,4);
-//        showmessage(inttostr(i));
-      end;
+        showmessage(inttostr(mf.Size)+'.');
+        moveofs(strubuf,@i,mf.Size-3,0,4);
+        showmessage(inttostr(i));
+      end; }
     end else
     begin
       GetMem(struct,mf.Size+bufsize);
       source.ReadRawData(struct^,integer(mf.Position),mf.Size);
-      if mf.Size>4 then
+     { if mf.Size>4 then
       begin
-//        showmessage(inttostr(mf.Size)+'.');
-//        moveofs(strubuf,@i,mf.Size-3,0,4);
-//        showmessage(inttostr(i));
-      end;
+        showmessage(inttostr(mf.Size)+'.');
+        moveofs(strubuf,@i,mf.Size-3,0,4);
+        showmessage(inttostr(i));
+      end; }
     end;
     structalloc:=structalloc+(mf.Size+bufsize) div 1024;
     if not precounted then
@@ -420,19 +429,6 @@ begin
 //  rewrite(t);
 //  ExportToText(t,'Traa');
 //  closefile(t);
-end;
-
-{
-Heavily used function. Should be very optimized.
-}
-function TTextTable.GetFieldSize(recno,field:integer):byte;
-var c:char;
-begin
-  c:=fieldsizes[field+1];
-  if (c>='1') and (c<='9') then
-    Result := ord(c)-ord('0')
-  else
-    Result := OffsetPtr(struct, recno*(varfields+5)+(ord(c)-ord('a'))+5)^;
 end;
 
 procedure TTextTable.WriteTable(filename:string;nodelete:boolean);
@@ -568,6 +564,21 @@ begin
   freemem(struct);
 end;
 
+
+{
+GetFieldSize()
+Heavily used function. Should be very optimized.
+}
+function TTextTable.GetFieldSize(recno,field:integer):byte;
+var c:char;
+begin
+  c:=fieldsizes[field+1];
+  if (c>='1') and (c<='9') then
+    Result := ord(c)-ord('0')
+  else
+    Result := OffsetPtr(struct, recno*(varfields+5)+(ord(c)-ord('a'))+5)^;
+end;
+
 {
 Read the field value for a record.
 This is a HEAVILY used function, so let's be as fast as we can.
@@ -577,15 +588,18 @@ working in offline mode, it's read from the disc in one go.
 function TTextTable.GetField(rec:integer;field:integer):string;
 const HexChars: AnsiString = '0123456789ABCDEF';
 var i,ii:integer;
-    ofs:integer;
-    sz:byte;
-    tp:char;
-    b:byte;
-    w:word;
-    l:integer;
-    c:char;
-    pb: PByte;
-    pc: PChar;
+  ofs:integer;
+  sz:byte;
+  tp:char; //field type. Char because FieldTypes is string.
+  b:byte;
+  w:word;
+  l:integer;
+  c: AnsiChar;
+  pb: PByte;
+  pc: PChar;
+ {$IFDEF UNICODE}
+  ansi_s: AnsiString;
+ {$ENDIF}
 begin
   if not loaded then load;
   if rec>=reccount then
@@ -621,39 +635,78 @@ begin
      if offline then
        source.ReadRawData(c,datafpos+ofs,1)
      else
-       c := PChar(OffsetPtr(data, ofs))^;
+       c := PAnsiChar(OffsetPtr(data, ofs))^;
      if (c>#0) and (c<>'F') and (c<>'f') then c:='T' else c:='F';
      result:=c;
    end;
   's':begin
+    {$IFNDEF UNICODE}
      SetLength(Result, sz);
      if offline then
        source.ReadRawData(Result[1],datafpos+ofs,sz)
      else
        move(OffsetPtr(data, ofs)^, Result[1], sz);
+    {$ELSE}
+     SetLength(ansi_s, sz);
+     if offline then
+       source.ReadRawData(ansi_s[1],datafpos+ofs,sz)
+     else
+       move(OffsetPtr(data, ofs)^, ansi_s[1], sz);
+     Result := string(ansi_s);
+    {$ENDIF}
    end;
   'x': begin
      SetLength(Result, 2*sz);
      if offline then begin
       //If we're offline we beter read everything in one go!
+      {$IFNDEF UNICODE}
       //Position it in the second half of the buffer so that it won't be
       //overwritten too early when we rewrite the string.
        source.ReadRawData(Result[sz+1],datafpos+ofs,sz);
        pb := PByte(@Result[sz+1]);
+      {$ELSE}
+      //We have ansi_s all for ourselves
+       SetLength(ansi_s, sz);
+       source.ReadRawData(Result[1],datafpos+ofs,sz);
+       pb := PByte(@ansi_s[1]);
+      {$ENDIF}
      end else
       //If we have data in memory, let's just use it from there.
        pb := OffsetPtr(data, ofs);
      pc := PChar(@Result[1]);
      for l:=0 to sz-1 do begin
-       pc^ := HexChars[1 + pb^ shr 4];
+       pc^ := char(HexChars[1 + pb^ shr 4]);
        Inc(pc);
-       pc^ := HexChars[1 + pb^ and $0F];
+       pc^ := char(HexChars[1 + pb^ and $0F]);
        Inc(pc);
        Inc(pb);
      end;
    end;
    end;
 end;
+
+function TTextTable.Str(field:integer):string;
+begin
+  result:=GetField(tcur,field);
+end;
+
+function TTextTable.Int(field:integer):integer;
+begin
+  result:=0;
+  try
+    result:=strtoint(GetField(tcur,field));
+  except end;
+end;
+
+function TTextTable.Bool(field:integer):boolean;
+begin
+  result:=false;
+  try
+    if UpCase(GetField(tcur,field)[1])='T' then result:=true;
+  except end;
+end;
+
+
 
 function TTextTable.FilterPass(rec:integer;fil:string):boolean;
 var c,i:integer;
@@ -751,26 +804,6 @@ begin
   result:=cur>=reccount;
 end;
 
-function TTextTable.Str(field:integer):string;
-begin
-  result:=GetField(tcur,field);
-end;
-
-function TTextTable.Int(field:integer):integer;
-begin
-  result:=0;
-  try
-    result:=strtoint(GetField(tcur,field));
-  except end;
-end;
-
-function TTextTable.Bool(field:integer):boolean;
-begin
-  result:=false;
-  try
-    if UpCase(GetField(tcur,field)[1])='T' then result:=true;
-  except end;
-end;
 
 
 procedure TTextTable.SetOrder(index:string);

@@ -68,8 +68,14 @@ type
    //So there's no need to check for nil; they're also guaranteed to have at least two 4-chars available
    //(for real strings which are one 4-char in length, they have #00 as next 4-char's first symbol,
    // so it won't match to anything)
+   {$IFNDEF UNICODE}
     hiragana_ptr: PAnsiChar;
     katakana_ptr: PAnsiChar;
+   {$ELSE}
+   //And point to two UNICODE 4-chars (8 bytes)
+    hiragana_ptr: PWideChar;
+    katakana_ptr: PWideChar;
+   {$ENDIF}
   end;
   PRomajiTranslationRule = ^TRomajiTranslationRule;
   TRomajiTranslationTable = class
@@ -258,7 +264,7 @@ begin
 end;
 
 const
-  UNICODE_ZERO_CODE: AnsiString = '00000000';
+  UNICODE_ZERO_CODE: string = '00000000';
 
 //Makes various safety checks and sets up optimization fields for a rule
 procedure TRomajiTranslationTable.SetupRule(r: PRomajiTranslationRule);

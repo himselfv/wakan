@@ -5,6 +5,9 @@ interface
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
   JWBUtils;
 
+//Force inline for small functions - bad for debug, good for speed
+{$DEFINE INLINE}
+
 {$IF CompilerVersion < 21}
 type
  //On older compilers we don't have a new, faster UnicodeString,
@@ -14,10 +17,17 @@ type
 {$IFEND}
 
 { Wakan uses a special Ansi string format, where each unicode symbol is kept
- as a 4 character (four-char) hex code. }
+ as a 4 character (four-char) hex code.
+ Since we're in the transition to unicode we'll have a special type for that,
+ called four-char.
+ It'll resolve to normal character on the platform }
+type
+  FChar = char;
+  PFChar = PChar;
+  FString = string;
 
 
- { Math }
+{ Math }
 
 { Min and max so we don't have to link Math.pas just for that }
 function min(a, b: integer): integer; inline;
@@ -30,14 +40,18 @@ function GetModuleFilenameStr(hModule: HMODULE = 0): string;
 function GetFileVersionInfoStr(Filename: string): string;
 
 
-{ Rest }
+{ Strings }
 
-function UnicodeToHex(s:widestring):string;
+function UnicodeToHex(s:UnicodeString):string;
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
+function HexToUnicodeW(ps:PWideChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicode(s:string):UnicodeString; overload;
 function CombUniToHex(s:string):string;
 function HexToCombUni(s:string):string;
 function UnicodeToML(s:widestring):string;
+
+{ Rest }
+
 procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
 function FindDrawReg(p:TPaintBox;x,y:integer;var cx,cy,cy2:integer):string;
@@ -45,9 +59,9 @@ procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:string;fontface:string);
 function ConvertPinYin(s:string):string;
 function DeconvertPinYin(s:string):string;
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
-function KanaToRomaji(s:string;romatype:integer;lang:char):string;
-function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):string;
 procedure BuildRomaList;
+function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
+function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):FString;
 procedure FreeRomaList;
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:string; ch:integer;boldfont:boolean);
@@ -225,6 +239,160 @@ begin
 end;
 
 
+{ Strings }
+
+function UnicodeToHex(s:UnicodeString):string;
+var i:integer;
+    c:widechar;
+    d:word;
+    s2,s3:string;
+begin
+  s2:='';
+  for i:=1 to length(s) do
+  begin
+    c:=s[i];
+    d:=word(c);
+    s3:=format('%4.4X',[d]);
+    s2:=s2+s3;
+  end;
+  result:=s2;
+end;
+
+function UnicodeToML(s:widestring):string;
+var i:integer;
+    c:widechar;
+    d:word;
+    s2,s3:string;
+begin
+  s2:='';
+  for i:=1 to length(s) do
+  begin
+    c:=s[i];
+    d:=word(c);
+    s3:=format('&#%d,',[d]);
+    s2:=s2+s3;
+  end;
+  result:=s2;
+end;
+
+{
+HexToUnicode() is used in RomajiToKana() so it can be a bottleneck.
+We'll try to do it fast.
+}
+
+//Increments a valid PChar pointer 4 characters or returns false if the string ends before that
+function EatOneSymbol(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result := false;
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  Result := true;
+end;
+
+function EatOneSymbolW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result := false;
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  if pc^=#00 then exit;
+  Inc(pc);
+  Result := true;
+end;
+
+//Returns a value in range 0..15 for a given hex character, or throws an exception
+function HexCharCode(c:AnsiChar): byte; inline; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
+    Result := ord(c)-ord('0')
+  else
+  if (ord(c)>=ord('A')) and (ord(c)<=ord('F')) then
+    Result := 10 + ord(c)-ord('A')
+  else
+  if (ord(c)>=ord('a')) and (ord(c)<=ord('f')) then
+    Result := 10 + ord(c)-ord('a')
+  else
+    raise Exception.Create('Invalid hex character "'+c+'"');
+end;
+
+function HexCharCodeW(c:WideChar): byte; inline; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
+    Result := ord(c)-ord('0')
+  else
+  if (ord(c)>=ord('A')) and (ord(c)<=ord('F')) then
+    Result := 10 + ord(c)-ord('A')
+  else
+  if (ord(c)>=ord('a')) and (ord(c)<=ord('f')) then
+    Result := 10 + ord(c)-ord('a')
+  else
+    raise Exception.Create('Invalid hex character "'+c+'"');
+end;
+
+//Converts up to maxlen hex characters into 4-character unicode symbols.
+//Maxlen ought to be a multiplier of 4.
+function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
+var pn: PAnsiChar; //next symbol pointer
+  cc: word; //character code
+begin
+  Result := '';
+  if (ps=nil) or (ps^=#00) then exit;
+  if ps^='U' then Inc(ps);
+  pn := ps;
+  while (maxlen>=4) and EatOneSymbol(pn) do begin
+    cc := HexCharCode(ps^) shl 12;
+    Inc(ps);
+    Inc(cc, HexCharCode(ps^) shl 8);
+    Inc(ps);
+    Inc(cc, HexCharCode(ps^) shl 4);
+    Inc(ps);
+    Inc(cc, HexCharCode(ps^));
+    Result := Result + WideChar(cc);
+    ps := pn;
+  end;
+end;
+
+function HexToUnicodeW(ps:PWideChar; maxlen: integer): UnicodeString; overload;
+var pn: PWideChar; //next symbol pointer
+  cc: word; //character code
+begin
+  Result := '';
+  if (ps=nil) or (ps^=#00) then exit;
+  if ps^='U' then Inc(ps);
+  pn := ps;
+  while (maxlen>=4) and EatOneSymbolW(pn) do begin
+    cc := HexCharCodeW(ps^) shl 12;
+    Inc(ps);
+    Inc(cc, HexCharCodeW(ps^) shl 8);
+    Inc(ps);
+    Inc(cc, HexCharCodeW(ps^) shl 4);
+    Inc(ps);
+    Inc(cc, HexCharCodeW(ps^));
+    Result := Result + WideChar(cc);
+    ps := pn;
+  end;
+end;
+
+function HexToUnicode(s:string): UnicodeString; overload;
+begin
+  if s='' then
+    Result := ''
+  else
+   {$IFDEF UNICODE}
+    Result := HexToUnicodeW(PWideChar(pointer(s)), Length(s));
+   {$ELSE}
+    Result := HexToUnicode(PAnsiChar(pointer(s)), Length(s));
+   {$ENDIF}
+end;
 
 
 
@@ -325,105 +493,9 @@ begin
   canvas.Font.Style:=[];
 end;
 
-function UnicodeToHex(s:widestring):string;
-var i:integer;
-    c:widechar;
-    d:word;
-    s2,s3:string;
-begin
-  s2:='';
-  for i:=1 to length(s) do
-  begin
-    c:=s[i];
-    d:=word(c);
-    s3:=format('%4.4X',[d]);
-    s2:=s2+s3;
-  end;
-  result:=s2;
-end;
 
-function UnicodeToML(s:widestring):string;
-var i:integer;
-    c:widechar;
-    d:word;
-    s2,s3:string;
-begin
-  s2:='';
-  for i:=1 to length(s) do
-  begin
-    c:=s[i];
-    d:=word(c);
-    s3:=format('&#%d,',[d]);
-    s2:=s2+s3;
-  end;
-  result:=s2;
-end;
 
-{
-HexToUnicode() is used in RomajiToKana() so it can be a bottleneck.
-We'll try to do it fast.
-}
 
-//Increments a valid PChar pointer 4 characters or returns false if the string ends before that 
-function EatOneSymbol(var pc: PAnsiChar): boolean;
-begin
-  Result := false;
-  if pc^=#00 then exit;
-  Inc(pc);
-  if pc^=#00 then exit;
-  Inc(pc);
-  if pc^=#00 then exit;
-  Inc(pc);
-  if pc^=#00 then exit;
-  Inc(pc);
-  Result := true;
-end;
-
-//Returns a value in range 0..15 for a given hex character, or throws an exception
-function HexCharCode(c:AnsiChar): byte; inline;
-begin
-  if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
-    Result := ord(c)-ord('0')
-  else
-  if (ord(c)>=ord('A')) and (ord(c)<=ord('F')) then
-    Result := 10 + ord(c)-ord('A')
-  else
-  if (ord(c)>=ord('a')) and (ord(c)<=ord('f')) then
-    Result := 10 + ord(c)-ord('a')
-  else
-    raise Exception.Create('Invalid hex character "'+c+'"');
-end;
-
-//Converts up to maxlen hex characters into 4-character unicode symbols.
-//Maxlen ought to be a multiplier of 4.
-function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
-var pn: PAnsiChar; //next symbol pointer
-  cc: word; //character code
-begin
-  Result := '';
-  if (ps=nil) or (ps^=#00) then exit;
-  if ps^='U' then Inc(ps);
-  pn := ps;
-  while (maxlen>=4) and EatOneSymbol(pn) do begin
-    cc := HexCharCode(ps^) shl 12;
-    Inc(ps);
-    Inc(cc, HexCharCode(ps^) shl 8);
-    Inc(ps);
-    Inc(cc, HexCharCode(ps^) shl 4);
-    Inc(ps);
-    Inc(cc, HexCharCode(ps^));
-    Result := Result + WideChar(cc);
-    ps := pn;
-  end;
-end;
-
-function HexToUnicode(s:string): UnicodeString; overload;
-begin
-  if s='' then
-    Result := ''
-  else
-    Result := HexToUnicode(pointer(s), Length(s));
-end;
 
 function DrawTone(c:TCanvas;x,y,fw:integer;s:string;unicode:boolean;dodraw:boolean):string;
 var tb:integer;
@@ -913,10 +985,11 @@ so we're going to try and implement it reallly fast.
 {$IFNDEF INTEGER_HELL}
 //Compares a cnt of 4-characters!
 //There should be at least this number of 4-characters in at least one of a, b
-function FcharCmp(a, b: PAnsiChar; cnt: integer): boolean;
+function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 var ia: PInteger absolute a;
   ib: PInteger absolute b;
 begin
+ {$IFDEF UNICODE}cnt := cnt shl 1;{$ENDIF} //with WideChars we have to compare twice as many integers
   while (cnt>0) and (ia^=ib^) do begin
     Inc(ia);
     Inc(ib);
@@ -926,17 +999,32 @@ begin
 end;
 {$ENDIF}
 
+{$IFDEF INTEGER_HELL}
+//Returns a pointer to an integer p+#c counting from 0
+//This is pretty fast when inlined, basically the same as typing that inplace, so use without fear.
+//You can even put c==0 and the code will be almost eliminated at compilation time. Delphi is smart!
+function IntgOff(p: pointer; c: integer): PInteger; inline;
+begin
+  Result := PInteger(integer(p)+c*4);
+end;
+{$ENDIF}
+
 //ps must have at least one 4-char symbol in it
-function SingleKanaToRomaji(var ps: PAnsiChar; romatype: integer): string;// inline;
+function SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
 const
-  UH_HYPHEN='002D'; //UnicodeToHex('-')
-  UH_LOWLINE='005F'; //UnicodeToHex('_');
+  UH_HYPHEN:FString='002D'; //UnicodeToHex('-')
+  UH_LOWLINE:FString='005F'; //UnicodeToHex('_');
 var i:integer;
-  pe: PAnsiChar;
+  pe: PFChar;
   r: PRomajiTranslationRule;
 begin
  {$IFDEF INTEGER_HELL}
-  if pinteger(ps)^=pinteger(@UH_HYPHEN[1])^ then begin
+ {$IFNDEF UNICODE}
+  if pinteger(ps)^=pinteger(@UH_HYPHEN)^ then begin
+ {$ELSE}
+  if (pinteger(ps)^=pinteger(@UH_HYPHEN)^)
+  and (IntgOff(ps, 1)^=IntgOff(@UH_HYPHEN, 1)^) then begin
+ {$ENDIF}
  {$ELSE}
   if FcharCmp(ps, UH_HYPHEN, 1) then begin
  {$ENDIF}
@@ -945,7 +1033,12 @@ begin
     exit;
   end;
  {$IFDEF INTEGER_HELL}
-  if pinteger(ps)^=pinteger(@UH_LOWLINE[1])^ then begin
+ {$IFNDEF UNICODE}
+  if pinteger(ps)^=pinteger(@UH_LOWLINE)^ then begin
+ {$ELSE}
+  if (pinteger(ps)^=pinteger(@UH_LOWLINE)^)
+  and (IntgOff(ps, 1)^=IntgOff(@UH_LOWLINE, 1)^) then begin
+ {$ENDIF}
  {$ELSE}
   if FcharCmp(ps, UH_LOWLINE, 1) then begin
  {$ENDIF}
@@ -957,7 +1050,11 @@ begin
  //but we have to test that we have at least two symbols
   pe := ps;
   Inc(pe, 4); //first symbol must be there
+ {$IFDEF UNICODE}
+  if EatOneSymbolW(pe) then begin
+ {$ELSE}
   if EatOneSymbol(pe) then begin
+ {$ENDIF}
     for i := 0 to roma_t.Count - 1 do begin
       r := roma_t[i];
      {$IFDEF INTEGER_HELL}
@@ -968,10 +1065,21 @@ begin
       to any 4-char hex combination.
       It also won't AV because the memory's dword aligned and hiragana[5] is accessible already.
       }
+     {$IFNDEF UNICODE}
       if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-      and (pinteger(integer(ps)+4)^=pinteger(integer(r.hiragana_ptr)+4)^))
+      and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^))
       or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
-      and (pinteger(integer(ps)+4)^=pinteger(integer(r.katakana_ptr)+4)^)) then begin
+      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)) then begin
+     {$ELSE}
+      if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
+      and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^)
+      and (IntgOff(ps, 2)^=IntgOff(r.hiragana_ptr, 2)^)
+      and (IntgOff(ps, 3)^=IntgOff(r.hiragana_ptr, 3)^))
+      or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
+      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)
+      and (IntgOff(ps,2)^=IntgOff(r.katakana_ptr, 2)^)
+      and (IntgOff(ps,3)^=IntgOff(r.katakana_ptr, 3)^)) then begin
+     {$ENDIF}
      {$ELSE}
       if FcharCmp(ps, r.hiragana_ptr, 2)
       or FcharCmp(ps, r.katakana_ptr, 2) then begin
@@ -991,8 +1099,15 @@ begin
   for i := 0 to roma_t.Count - 1 do begin
     r := roma_t[i];
    {$IFDEF INTEGER_HELL}
+   {$IFNDEF UNICODE}
     if (pinteger(ps)^=pinteger(r.hiragana_ptr)^)
     or (pinteger(ps)^=pinteger(r.katakana_ptr)^) then begin
+   {$ELSE}
+    if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
+      and (IntgOff(ps,1)^=IntgOff(r.hiragana_ptr,1)^))
+    or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
+      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr,1)^)) then begin
+   {$ENDIF}
    {$ELSE}
     if FcharCmp(ps, r.hiragana_ptr, 1)
     or FcharCmp(ps, r.katakana_ptr, 1) then begin
@@ -1007,8 +1122,12 @@ begin
       exit;
     end;
   end;
-  if (ps^='0') and (PAnsiChar(integer(ps)+1)^='0') then begin
+  if (ps^='0') and (PChar(integer(ps)+1)^='0') then begin
+   {$IFDEF UNICODE}
+    Result := HexToUnicodeW(ps, 4);
+   {$ELSE}
     Result := HexToUnicode(ps, 4);
+   {$ENDIF}
     Inc(ps, 4);
     exit;
   end;
@@ -1016,10 +1135,14 @@ begin
   Result := '?';
 end;
 
-function KanaToRomaji(s:string;romatype:integer;lang:char):string;
+function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
 var fn:string;
-    s2:string;
-    ps, pn: PAnsiChar;
+  s2:string;
+ {$IFDEF UNICODE}
+  ps, pn: PWideChar;
+ {$ELSE}
+  ps, pn: PAnsiChar;
+ {$ENDIF}
 begin
   if lang='j'then
   begin
@@ -1029,9 +1152,17 @@ begin
     end;
     s := Uppercase(s);
     s2 := '';
-    ps := pointer(s);
+   {$IFDEF UNICODE}
+    ps := PWideChar(s);
+   {$ELSE}
+    ps := PAnsiChar(s);
+   {$ENDIF}
     pn := ps;
+   {$IFDEF UNICODE}
+    while EatOneSymbolW(pn) do begin
+   {$ELSE}
     while EatOneSymbol(pn) do begin
+   {$ENDIF}
       fn := SingleKanaToRomaji(ps, romatype); //also eats one or two symbols
       if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///WTF?!!
       s2:=s2+fn;
