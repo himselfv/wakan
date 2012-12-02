@@ -1778,7 +1778,8 @@ begin
   for i:=1 to 65536 do
   begin
     w:=widechar(i);
-    if IsKnown(KnownLearned,UnicodeToHex(w)) then writeln(t,'+'+UnicodeToHex(w));
+    if IsKnown(KnownLearned,{$IFDEF UNICODE}w{$ELSE}UnicodeToHex(w){$ENDIF}) then
+      writeln(t,'+'+UnicodeToHex(w));
   end;
   writeln(t,'.');
   closefile(t);
@@ -2159,20 +2160,19 @@ begin
       MyHandle:=Clipboard.GetAsHandle(CF_UNICODETEXT);
       TextPtr:=GlobalLock(MyHandle);
       s:=textptr;
-      if length(s)>64000 then s:=_l('#00342^cPøíliš mnoho dat.^eToo large data.');
-      clip:=UnicodeToHex(s);
+      if length(s)>64000 then s:=_l('#00342^eToo much data.^cPøíliš mnoho dat.');
+      clip := {$IFDEF UNICODE}s{$ELSE}UnicodeToHex(s){$ENDIF};
       cliptrans:='';
       GlobalUnlock(MyHandle);
       oldhandle:=MyHandle;
     end;
     Clipboard.Close;
   except
-    clip:=UnicodeToHex('ERROR');
+    clip := {$IFDEF UNICODE}'ERROR'{$ELSE}UnicodeToHex('ERROR'){$ENDIF};
   end;
   if clip<>oldclip then
   begin
     PaintBox3.Invalidate;
-    fUser.FormatClipboard;
     fUserAdd.PaintBox2.Invalidate;
     if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
     if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look(false);
@@ -2188,14 +2188,18 @@ end;
 
 procedure TfMenu.ChangeClipboard;
 var
-    DataHandle :  THandle;
-    FromPointer:  Pointer;
-    ToPointer  :  Pointer;
-    ws         :  WideString;
+  DataHandle :  THandle;
+  FromPointer:  Pointer;
+  ToPointer  :  Pointer;
+  ws         :  UnicodeString;
 begin
+ {$IFDEF UNICODE}
+  ws := clip;
+ {$ELSE}
   ws := HexToUnicode(clip);
   SetLength(ws, Length(ws)+1);
   ws[Length(ws)] := WideChar($0000);  // Null-terminator
+ {$ENDIF}
 
   DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE,
                             Length(ws)*SizeOf(WChar));
@@ -2211,7 +2215,7 @@ begin
   CloseClipboard;
   PaintBox3.Invalidate;
   fUserAdd.PaintBox2.Invalidate;
-  fUser.FormatClipboard;
+
   if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
   if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look(false);
 end;

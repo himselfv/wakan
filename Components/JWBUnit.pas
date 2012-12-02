@@ -19,9 +19,34 @@ type
  called four-char.
  It'll resolve to normal character on the platform }
 type
+ {$IFDEF UNICODE}
   FChar = char;
   PFChar = PChar;
   FString = string;
+ {$ELSE}
+  FChar = AnsiString; //because one character takes 4 AnsiChars
+  PFChar = PAnsiChar;
+  FString = AnsiString;
+ {$ENDIF}
+
+
+const
+ //Some character constants used throught the program
+ {$IFDEF UNICODE}
+  UH_NONE:FChar = #0000;
+  UH_ZERO:FChar = #0000;
+  UH_IDG_SPACE:FChar = #$3000; //Ideographic space (full-width)
+  UH_HYPHEN:FChar = '-';
+  UH_LOWLINE:FChar = '_';
+  UH_ELLIPSIS:FChar = #$2026;
+ {$ELSE}
+  UH_NONE:FChar = ''; //for initializing stuff with it
+  UH_ZERO:FChar = '0000'; //when you need zero char
+  UH_IDG_SPACE:FChar = '3000';
+  UH_HYPHEN:FChar = '002D'; //-
+  UH_LOWLINE:FChar = '005F'; //_
+  UH_ELLIPSIS:FChar = '2026'; //…
+ {$ENDIF}
 
 
 { Math }
@@ -38,6 +63,13 @@ function GetFileVersionInfoStr(Filename: string): string;
 
 
 { Strings }
+
+function flength(s:FString): integer; {$IFDEF INLINE}inline;{$ENDIF}
+function flenfc(lenn:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
+function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
+function fcopy(s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
+procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
+function fgetch(s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 
 function UnicodeToHex(s:UnicodeString):string;
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
@@ -60,7 +92,7 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
 function FindDrawReg(p:TPaintBox;x,y:integer;var cx,cy,cy2:integer):string;
-procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:string;fontface:string);
+procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
 function ConvertPinYin(s:string):string;
 function DeconvertPinYin(s:string):string;
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
@@ -82,11 +114,15 @@ procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 function ConvertEdictEntry(s:string;var mark:string):string;
 function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
-function IsKnown(listno:integer;charno:string):boolean;
 function CheckKnownKanji(kanji:string):string;
 function ChinTo(s:string):string;
 function ChinFrom(s:string):string;
-procedure SetKnown(listno:integer;charno:string;known:boolean);
+function IsKnown(listno:integer;char:FChar):boolean; overload;
+procedure SetKnown(listno:integer;char:FChar;known:boolean); overload;
+{$IFDEF UNICODE}
+function IsKnown(listno:integer;char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+procedure SetKnown(listno:integer;char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
+{$ENDIF}
 function ChooseFont(charsets:array of TFontCharset;teststring:string;var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
 
 const //Character types for EvalChar
@@ -241,6 +277,69 @@ end;
 
 
 { Strings }
+
+//returns length of the string in 4-characters
+function flength(s:FString):integer;
+begin
+ {$IFDEF UNICODE}
+  Result := Length(s);
+ {$ELSE}
+  Result := Length(s) div 4;
+ {$ENDIF}
+end;
+
+//returns length in Native characters by length in 4-characters
+//  i.e. 3 four-chars == 12 native characters on non-unicode
+//       3 four-chars == 3 native characters on unicode
+function flenn(lenfc:integer): integer;
+begin
+ {$IFDEF UNICODE}
+  Result := lenfc;
+ {$ELSE}
+  Result := lenfc * 4;
+ {$ENDIF}
+end;
+
+//returns length in 4-characters by length in native characters
+function flenfc(lenn:integer): integer;
+begin
+ {$IFDEF UNICODE}
+  Result := lenn;
+ {$ELSE}
+  Result := lenn div 4;
+ {$ENDIF}
+end;
+
+//a version of copy for FChars where you specify length in FChars
+//spares us multiplying by four every time, and on Unicode resolves to simpler version
+function fcopy(s: FString; Index, Count: Integer):FString;
+begin
+{$IFDEF UNICODE}
+  Result := copy(s, Index, Count);
+{$ELSE}
+  Result := copy(s, (Index-1)*4+1, Count*4);
+{$ENDIF}
+end;
+
+procedure fdelete(var s: FString; Index, Count: Integer);
+begin
+{$IFDEF UNICODE}
+  delete(s, Index, Count);
+{$ELSE}
+  delete(s, (Index-1)*4+1, Count*4);
+{$ENDIF}
+end;
+
+function fgetch(s: FString; Index: integer): FChar;
+begin
+{$IFDEF UNICODE}
+  Result := s[Index];
+{$ELSE}
+  Result := fcopy(s, Index, 1);
+{$ENDIF}
+end;
+
+
 
 function UnicodeToHex(s:UnicodeString):string;
 var i:integer;
@@ -549,7 +648,7 @@ end;
 
 
 
-function DrawTone(c:TCanvas;x,y,fw:integer;s:string;unicode:boolean;dodraw:boolean):string;
+function DrawTone(c:TCanvas;x,y,fw:integer;s:FString;dodraw:boolean):string;
 var tb:integer;
     flat:boolean;
     s2,s3,s4:string;
@@ -568,9 +667,9 @@ begin
   c.Font.Height:=fw;
   while s<>'' do
   begin
-    if unicode then s4:=copy(s,1,4) else s4:=s[1];
+    s4:=copy(s,1,4);
     s3:=s4;
-    if pos('F03',s3)=1 then delete(s3,1,3) else if unicode then s3:='XXXX';
+    if pos('F03',s3)=1 then delete(s3,1,3) else s3:='XXXX';
     if s3<>'' then sc:=s3[1] else sc:='?';
     sc:=upcase(sc);
     if (sc>='0') and (sc<='5') then
@@ -601,39 +700,41 @@ begin
   result:=s2;
 end;
 
-procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:string;fontface:string);
+procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
 var w:pwidechar;
     chn:string;
     i:integer;
 begin
-  if ch<>'' then
-  begin
-    SetBkMode(c.Handle,TRANSPARENT);
-    c.Font.Name:=fontface;
-    c.Font.Height:=fs;
+  if ch='' then exit;
+  SetBkMode(c.Handle,TRANSPARENT);
+  c.Font.Name:=fontface;
+  c.Font.Height:=fs;
 //    c.Font.Style:=[];
-    chn:=DrawTone(c,x,y,fs,ch,true,false);
-    w:=pwidechar(HexToUnicode(chn));
-    if chn<>ch then
-    begin
-      c.Font.Name:=FontRadical;
-      fs:=round(fs/8*7);
-      c.Font.Height:=fs;
-      y:=y+fs div 4;
-    end;
-    chn:=DrawTone(c,x,y-fs div 4,fs,ch,true,true);
-    if curpbox<>nil then for i:=1 to MAX_INTTEXTINFO do if not itt[i].act then
-    begin
-      itt[i].act:=true;
-      itt[i].p:=curpbox;
-      itt[i].x:=x;
-      itt[i].y:=y;
-      itt[i].fs:=fs;
-      itt[i].s:=chn;
-      break;
-    end;
-    TextOutW(c.Handle,x,y,w,length(chn) div 4);
+  chn:=DrawTone(c,x,y,fs,ch,false);
+ {$IFDEF UNICODE}
+  w := PWideChar(chn);
+ {$ELSE}
+  w := PWideChar(HexToUnicode(chn));
+ {$ENDIF}
+  if chn<>ch then
+  begin
+    c.Font.Name:=FontRadical;
+    fs:=round(fs/8*7);
+    c.Font.Height:=fs;
+    y:=y+fs div 4;
   end;
+  chn:=DrawTone(c,x,y-fs div 4,fs,ch,true);
+  if curpbox<>nil then for i:=1 to MAX_INTTEXTINFO do if not itt[i].act then
+  begin
+    itt[i].act:=true;
+    itt[i].p:=curpbox;
+    itt[i].x:=x;
+    itt[i].y:=y;
+    itt[i].fs:=fs;
+    itt[i].s:=chn;
+    break;
+  end;
+  TextOutW(c.Handle,x,y,w,flength(chn));
 end;
 
 function repl(var s:string;sub,repl:string):string;
@@ -1065,14 +1166,6 @@ end;
 //ps must have at least one 4-char symbol in it
 function SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
 {$IFDEF UNICODE}{$POINTERMATH ON}{$ENDIF}
-const
- {$IFNDEF UNICODE}
-  UH_HYPHEN:FString='002D'; //UnicodeToHex('-')
-  UH_LOWLINE:FString='005F'; //UnicodeToHex('_');
- {$ELSE}
-  UH_HYPHEN:FChar='-';
-  UH_LOWLINE:FChar='_';
- {$ENDIF}
 var i:integer;
   r: PRomajiTranslationRule;
  {$IFNDEF UNICODE}
@@ -1548,7 +1641,8 @@ begin
     AddWordGrid(grid,sp1,sp2,sp4,sp3);
   end;
   if fSettings.CheckBox53.Checked then
-    for i:=1 to grid.RowCount-1 do grid.RowHeights[i]:=(GridFontSize+2)*DrawWordInfo(grid.Canvas,grid.CellRect(2,i),false,false,2,grid.Cells[2,i],true,true,GridFontSize,true);
+    for i:=1 to grid.RowCount-1 do
+      grid.RowHeights[i]:=(GridFontSize+2)*DrawWordInfo(grid.Canvas,grid.CellRect(2,i),false,false,2,grid.Cells[2,i],true,true,GridFontSize,true);
   FinishWordGrid(grid);
 end;
 
@@ -2275,11 +2369,13 @@ begin
     stream.Read(KnownList[listno]^,KnownListSize);
 end;
 
-function IsKnown(listno:integer;charno:string):boolean;
-var ki,kj:integer;
-    w:widechar;
+function IsKnown(listno:integer;char:FChar):boolean;
+var w:widechar{$IFDEF UNICODE} absolute char{$ENDIF};
+  ki,kj:integer;
 begin
-  w:=HexToUnicode(charno)[1];
+ {$IFNDEF UNICODE}
+  w:=HexToUnicode(char)[1];
+ {$ENDIF}
   ki:=ord(w) div 8;
   kj:=ord(w) mod 8;
   if ki>=KnownListSize then
@@ -2290,12 +2386,14 @@ begin
   result:=(((TByteArray(KnownList[listno]^)[ki]) shr kj) and 1)<>0;
 end;
 
-procedure SetKnown(listno:integer;charno:string;known:boolean);
+procedure SetKnown(listno:integer;char:FChar;known:boolean);
 var ki,kj:integer;
-    a:byte;
-    w:widechar;
+  a:byte;
+  w:widechar{$IFDEF UNICODE} absolute char{$ENDIF};
 begin
-  w:=HexToUnicode(charno)[1];
+ {$IFNDEF UNICODE}
+  w:=HexToUnicode(char)[1];
+ {$ENDIF}
   ki:=ord(w) div 8;
   kj:=ord(w) mod 8;
   if ki>=KnownListSize then exit;
@@ -2303,6 +2401,19 @@ begin
   if known then a:=a or (1 shl kj) else a:=a and not (1 shl kj);
   TByteArray(KnownList[listno]^)[ki]:=a;
 end;
+
+{$IFDEF UNICODE}
+//Variants of the functions for cases where we pass a string
+function IsKnown(listno:integer;char:FString):boolean;
+begin
+  Result := (pointer(char)<>nil) and IsKnown(listno, PFChar(char)^);
+end;
+procedure SetKnown(listno:integer;char:FString;known:boolean);
+begin
+  if Length(char)>=1 then
+    SetKnown(listno, char[1], known);
+end;
+{$ENDIF}
 
 function EnumProc(lpelf:pointer;lpnt:pointer;FontType:integer;lParam:integer):integer; stdcall;
 var p:^ENUMLOGFONTEX;
@@ -2434,6 +2545,7 @@ begin
   TChar.Locate('Unicode',bk,false);
 end;
 
+//TODO: Upgrade this function to Unicode
 function ChinFrom(s:string):string;
 var s2,cd:string;
     bk:string;

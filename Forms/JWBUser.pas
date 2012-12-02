@@ -142,7 +142,7 @@ type
     procedure ShowWord;
     procedure ShowText(dolook:boolean);
     procedure RepaintText;
-    procedure FormatClipboard;
+
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
       ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
@@ -602,10 +602,6 @@ begin
   fMenu.ChangeClipboard;
 end;
 
-procedure TfUser.FormatClipboard;
-begin
-end;
-
 procedure TfUser.FormShow(Sender: TObject);
 begin
 //  fMenu.ShowForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
@@ -719,7 +715,7 @@ begin
         begin
           curkanjid:=curkanjid+s2+TRadicals.Str(TRadicalsUnicode);
           if TChar.Bool(TCharChinese) then curkanjid:=curkanjid+'J'else
-            if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then curkanjid:=curkanjid+'K'else
+            if IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then curkanjid:=curkanjid+'K'else
             if TChar.Int(TCharJouyouGrade)<9 then curkanjid:=curkanjid+'C'else
             if TChar.Int(TCharJouyouGrade)<10 then curkanjid:=curkanjid+'N'else
             curkanjid:=curkanjid+'U';
@@ -3125,50 +3121,50 @@ begin
 end;
 
 procedure TfUser.PaintHint;
-var kanjis:string;
-    i:integer;
-    cw,cwl:integer;
-    curk:string;
-    fs,fsl:integer;
-    rect:TRect;
+var kanjis:FString;
+  i:integer;
+  cw,cwl:integer;
+  curk:string;
+  fs,fsl:integer;
+  rect:TRect;
 begin
   fHint.PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
   cw:=-1;
   kanjis:='';
   for i:=1 to StringGrid1.RowCount-1 do
   begin
-    if kanjis<>'' then kanjis:=kanjis+'3000';
+    if kanjis<>'' then kanjis:=kanjis+UH_IDG_SPACE;
     curk:=remexcl(copy(StringGrid1.Cells[1,i],2,length(StringGrid1.Cells[1,i])-1));
     if StringGrid1.Row=i then
     begin
-      cw:=length(kanjis) div 4;
-      cwl:=length(curk) div 4;
+      cw:=flength(kanjis);
+      cwl:=flength(curk);
     end;
     kanjis:=kanjis+curk;
   end;
   fs:=18;
   fsl:=fHint.PaintBox1.Width div fs;
-  while (length(kanjis) div 4)>fsl do
+  while flength(kanjis)>fsl do
   begin
     if cw>1 then
     begin
-      while copy(kanjis,1,4)<>'3000'do
+      while fcopy(kanjis,1,1)<>UH_IDG_SPACE do
       begin
-        delete(kanjis,1,4);
+        fdelete(kanjis,1,1);
         dec(cw,1);
       end;
-      delete(kanjis,1,4);
-      kanjis:='2026'+kanjis;
+      fdelete(kanjis,1,1);
+      kanjis:=UH_ELLIPSIS+kanjis;
     end else
     begin
-      while copy(kanjis,length(kanjis)-3,4)<>'3000'do delete(kanjis,length(kanjis)-3,4);
-      delete(kanjis,length(kanjis)-3,4);
-      kanjis:=kanjis+'2026';
+      while fcopy(kanjis,flength(kanjis)-1,1)<>UH_IDG_SPACE do fdelete(kanjis,flength(kanjis)-1,1);
+      fdelete(kanjis,flength(kanjis)-1,1);
+      kanjis:=kanjis+UH_ELLIPSIS;
     end;
   end;
 //  fHint.PaintBox1.Canvas.Font.Style:=[];
   fHint.PaintBox1.Canvas.Font.Color:=Col('Editor_HintText');
-  DrawUnicode(fHint.PaintBox1.Canvas,2,2,fs,copy(kanjis,1,cw*4),FontJapaneseGrid);
+  DrawUnicode(fHint.PaintBox1.Canvas,2,2,fs,fcopy(kanjis,1,cw),FontJapaneseGrid);
 //  fHint.PaintBox1.Canvas.Font.Style:=[fsBold];
   fHint.PaintBox1.Canvas.Brush.Color:=Col('Editor_HintSelected');
   rect.Left:=2+cw*fs;
@@ -3176,10 +3172,10 @@ begin
   rect.Bottom:=fs+2;
   rect.Right:=2+cw*fs+cwl*fs;
   fHint.PaintBox1.Canvas.FillRect(rect);
-  DrawUnicode(fHint.PaintBox1.Canvas,2+cw*fs,2,fs,copy(kanjis,cw*4+1,cwl*4),FontJapaneseGrid);
+  DrawUnicode(fHint.PaintBox1.Canvas,2+cw*fs,2,fs,fcopy(kanjis,cw+1,cwl),FontJapaneseGrid);
 //  fHint.PaintBox1.Canvas.Font.Style:=[];
   fHint.PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
-  DrawUnicode(fHint.PaintBox1.Canvas,2+cw*fs+cwl*fs,2,fs,copy(kanjis,cw*4+cwl*4+1,length(kanjis)-cwl*4-cw*4),FontJapaneseGrid);
+  DrawUnicode(fHint.PaintBox1.Canvas,2+cw*fs+cwl*fs,2,fs,fcopy(kanjis,cw+cwl+1,flength(kanjis)-cwl-cw),FontJapaneseGrid);
   if fSettings.CheckBox13.Checked then
   begin
     fHint.PaintBox1.Canvas.Font.Name:=FontEnglish;

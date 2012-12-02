@@ -1282,8 +1282,11 @@ end;
 
 procedure TfWords.DoStatistic;
 var i,j,k,l,m,n,o,p,q:integer;
-    t:textfile;
-    a:pointer;
+  t:textfile;
+  a:pointer;
+  KanjiKnown: boolean;
+  JouyouGrade: integer;
+  InUserIdx: boolean;
 begin
   Screen.Cursor:=crHourGlass;
   if ChinesePresent then
@@ -1342,14 +1345,17 @@ begin
   TChar.First;
   while not TChar.EOF do
   begin
-    if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then inc(i);
-    if (IsKnown(KnownLearned,TChar.Str(TCharUnicode))) and (TChar.Int(TCharJouyouGrade)>=9) then inc(j);
-    if (not IsKnown(KnownLearned,TChar.Str(TCharUnicode))) and (TChar.Int(TCharJouyouGrade)<9) then inc(k);
-    if TChar.Int(TCharJouyouGrade)<9 then inc(o);
-    if TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode),false) then inc(l);
-    if (TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode),false)) and (TChar.Int(TCharJouyouGrade)>=9) then inc(m);
-    if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) and (TChar.Int(TCharChinese)=1) then inc(n);
-    if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then
+    KanjiKnown := IsKnown(KnownLearned,TChar.Fch(TCharUnicode));
+    JouyouGrade := TChar.Int(TCharJouyouGrade);
+    InUserIdx := TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode),false);
+    if KanjiKnown then inc(i);
+    if KanjiKnown and (JouyouGrade>=9) then inc(j);
+    if (not KanjiKnown) and (JouyouGrade<9) then inc(k);
+    if JouyouGrade<9 then inc(o);
+    if InUserIdx then inc(l);
+    if InUserIdx and (JouyouGrade>=9) then inc(m);
+    if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(n);
+    if KanjiKnown then
     begin
       TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),13)),true);
       if TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode) then inc(q);
@@ -1401,7 +1407,7 @@ begin
       begin
         s2:=copy(s,((j-1)*4)+1,4);
         if TChar.Locate('Unicode',s2,false) then
-        if not IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then
+        if not IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
         begin
           v:=trunc(ln(TChar.Int(TCharStrokeCount))*5000);
           if TChar.Int(TCharJouyouGrade)<10 then
@@ -1411,7 +1417,7 @@ begin
             v:=v+TChar.Int(TCharJpFrequency)*3 else v:=v+7000;
           TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),12)),true);
           TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode),false);
-          if (TRadicals.Str(TRadicalsUnicode)<>s2) and (not IsKnown(KnownLearned,TChar.Str(TCharUnicode))) then inc(v,8000);
+          if (TRadicals.Str(TRadicalsUnicode)<>s2) and (not IsKnown(KnownLearned,TChar.Fch(TCharUnicode))) then inc(v,8000);
           if TRadicals.Str(TRadicalsUnicode)=s2 then dec(v,3000);
           vb:=v;
           for k:=0 to csl.Count-1 do if copy(csl[k],11,4)=s2 then

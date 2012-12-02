@@ -104,7 +104,7 @@ begin
         rl.Add(TRadicals.Str(TRadicalsUnicode));
         if (TRadicals.Int(TRadicalsVariant)=1) then
         begin
-          knw:=IsKnown(KnownLearned,TRadicals.Str(TRadicalsUnicode));
+          knw:=IsKnown(KnownLearned,TRadicals.Fch(TRadicalsUnicode));
           jap:=TRadicals.Int(TRadicalsJapaneseCount);
         end;
         if (CheckBox2.Checked) and (knw) then rlc.Add('0999') else
@@ -133,7 +133,7 @@ begin
         rli.Add('0');
       end;
       rl.Add(copy(s,1,4));
-      if (CheckBox2.Checked) and (IsKnown(KnownLearned,copy(s,1,4))) then rlc.Add('0999') else
+      if (CheckBox2.Checked) and (IsKnown(KnownLearned,fgetch(s,1))) then rlc.Add('0999') else
         if CheckBox3.Checked then
         begin
           if strtoint(copy(s,9,4))>100 then rlc.Add('0020')
@@ -304,15 +304,15 @@ begin
 end;
 
 procedure TfRadical.DrawGrid1KeyPress(Sender: TObject; var Key: Char);
-var i:string;
+var c: FChar;
 begin
   if key='l'then
   begin
     if selradical<>'' then
     begin
       TChar.Locate('Unicode',selradical,false);
-      i:=TChar.Str(TCharUnicode);
-      SetKnown(KnownLearned,i,not IsKnown(KnownLearned,i));
+      c:=TChar.Fch(TCharUnicode);
+      SetKnown(KnownLearned,c,not IsKnown(KnownLearned,c));
     end;
   end;
 end;

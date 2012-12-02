@@ -102,6 +102,11 @@ type
     function Str(field:integer):string;
     function Int(field:integer):integer;
     function Bool(field:integer):boolean;
+   {$IFDEF UNICODE}
+    function Fch(field:integer):WideChar;
+   {$ELSE}
+    function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+   {$ENDIF}
 
   public
     function GetSeekObject(seek: string): TSeekObject;
@@ -586,7 +591,9 @@ Everything which is already in memory is read from memory directly. If we're
 working in offline mode, it's read from the disc in one go.
 }
 function TTextTable.GetField(rec:integer;field:integer):string;
+{$IFNDEF UNICODE}
 const HexChars: AnsiString = '0123456789ABCDEF';
+{$ENDIF}
 var i,ii:integer;
   ofs:integer;
   sz:byte;
@@ -639,37 +646,45 @@ begin
      if (c>#0) and (c<>'F') and (c<>'f') then c:='T' else c:='F';
      result:=c;
    end;
+  //AnsiString.
   's':begin
     {$IFNDEF UNICODE}
      SetLength(Result, sz);
      if offline then
-       source.ReadRawData(Result[1],datafpos+ofs,sz)
+       source.ReadRawData(PAnsiChar(Result)^,datafpos+ofs,sz)
      else
-       move(OffsetPtr(data, ofs)^, Result[1], sz);
+       move(OffsetPtr(data, ofs)^, PAnsiChar(Result)^, sz);
     {$ELSE}
      SetLength(ansi_s, sz);
      if offline then
-       source.ReadRawData(ansi_s[1],datafpos+ofs,sz)
+       source.ReadRawData(PAnsiChar(ansi_s)^,datafpos+ofs,sz)
      else
-       move(OffsetPtr(data, ofs)^, ansi_s[1], sz);
+       move(OffsetPtr(data, ofs)^, PAnsiChar(ansi_s)^, sz);
      Result := string(ansi_s);
     {$ENDIF}
    end;
+  //UnicodeString. On non-unicode compilers reads as hex, thus 'x'.
   'x': begin
+    {$IFDEF UNICODE}
+     SetLength(Result, sz div 2 + sz mod 2);
+     if offline then
+       source.ReadRawData(PWideChar(Result)^,datafpos+ofs,sz)
+     else
+       move(OffsetPtr(data, ofs)^, PWideChar(Result)^, sz);
+    //Swap bytes
+     for l := 0 to sz div 2 - 1 do begin
+       b := PByteArray(Result)[2*l+0];
+       PByteArray(Result)[2*l+0] := PByteArray(Result)[2*l+1];
+       PByteArray(Result)[2*l+1] := b;
+     end;
+    {$ELSE}
      SetLength(Result, 2*sz);
      if offline then begin
       //If we're offline we beter read everything in one go!
-      {$IFNDEF UNICODE}
       //Position it in the second half of the buffer so that it won't be
       //overwritten too early when we rewrite the string.
        source.ReadRawData(Result[sz+1],datafpos+ofs,sz);
        pb := PByte(@Result[sz+1]);
-      {$ELSE}
-      //We have ansi_s all for ourselves
-       SetLength(ansi_s, sz);
-       source.ReadRawData(Result[1],datafpos+ofs,sz);
-       pb := PByte(@ansi_s[1]);
-      {$ENDIF}
      end else
       //If we have data in memory, let's just use it from there.
        pb := OffsetPtr(data, ofs);
@@ -681,6 +696,7 @@ begin
        Inc(pc);
        Inc(pb);
      end;
+    {$ENDIF}
    end;
    end;
 end;
@@ -690,20 +706,35 @@ begin
   result:=GetField(tcur,field);
 end;
 
+//Returns one character (in older versions nothing is guaranteed but it was always this way)
+{$IFDEF UNICODE}
+function TTextTable.Fch(field:integer):WideChar;
+var s: string;
+begin
+  s := Str(field);
+  if Length(s)<=0 then
+    Result := #0000
+  else
+    Result := s[1];
+end;
+{$ELSE}
+function TTextTable.Fch(field:integer):string;
+begin
+  Result := Str(field);
+end;
+{$ENDIF}
+
 function TTextTable.Int(field:integer):integer;
 begin
-  result:=0;
-  try
-    result:=strtoint(GetField(tcur,field));
-  except end;
+  if not TryStrToInt(GetField(tcur,field), Result) then
+    Result := 0;
 end;
 
 function TTextTable.Bool(field:integer):boolean;
+var s: string;
 begin
-  result:=false;
-  try
-    if UpCase(GetField(tcur,field)[1])='T' then result:=true;
-  except end;
+  s := GetField(tcur,field);
+  Result :=(Length(s)>0) and (UpCase(s[1])='T');
 end;
 
 
