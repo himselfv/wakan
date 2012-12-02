@@ -47,6 +47,14 @@ function CombUniToHex(s:string):string;
 function HexToCombUni(s:string):string;
 function UnicodeToML(s:widestring):string;
 
+type
+  TStringArray = array of string;
+
+procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
+function SplitStr(s: string; cnt: integer): TStringArray;
+procedure StrListAdd(sl: TStringList; sa: TStringArray);
+
+
 { Rest }
 
 procedure BeginDrawReg(p:TPaintBox);
@@ -56,7 +64,6 @@ procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:string;fontface:string);
 function ConvertPinYin(s:string):string;
 function DeconvertPinYin(s:string):string;
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
-procedure BuildRomaList;
 function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
 function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):FString;
 procedure FreeRomaList;
@@ -124,15 +131,11 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
     kcchind,kcchcomp:TStringList;
     GridFontSize:integer;
 
-   { Romaji translation table in a wonderful format:
-       hiragana  [4xhex]
-       katakana  [4xhex]
-       japanese
-       english
-       czech
-       [repeat]
-     Hiragana and katakana hex is already upcased! Do not upcase. }
-    roma: TStringList;
+   { Romaji translation table.
+    See comments where class is defined.
+
+      }
+//    roma: TStringList;
    { A new version which is faster! Cooler! And all that.
     But we're keeping the old one for backward compability. }
     roma_t: TRomajiTranslationTable;
@@ -395,6 +398,56 @@ begin
    {$ELSE}
     Result := HexToUnicode(PAnsiChar(pointer(s)), Length(s));
    {$ENDIF}
+end;
+
+
+
+
+procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
+var i:integer;
+begin
+  i:=0;
+  while i<cnt do
+  begin
+    inc(i);
+    if pos(',',s)>0 then
+    begin
+      sl.Add(copy(s,1,pos(',',s)-1));
+      delete(s,1,pos(',',s));
+    end else
+    begin
+      sl.Add(s);
+      s:='';
+    end;
+  end;
+end;
+
+//Same but doesn't add it anywhere
+function SplitStr(s: string; cnt: integer): TStringArray;
+var i:integer;
+begin
+  SetLength(Result, cnt);
+  i:=0;
+  while i<cnt do
+  begin
+    if pos(',',s)>0 then
+    begin
+      Result[i] := copy(s,1,pos(',',s)-1);
+      delete(s,1,pos(',',s));
+    end else
+    begin
+      Result[i] := s;
+      s:='';
+    end;
+    inc(i);
+  end;
+end;
+
+procedure StrListAdd(sl: TStringList; sa: TStringArray);
+var i: integer;
+begin
+  for i := 0 to Length(sa) - 1 do
+    sl.Add(sa[i]);
 end;
 
 
@@ -1419,54 +1472,8 @@ end;
 
 procedure FreeRomaList;
 begin
-  roma.Free;
   romac.Free;
   roma_t.Free;
-end;
-
-//NOTE: This function is not actually being used as of now!
-// Romaji translation table is loaded from wakan.cfg with everything else.
-procedure BuildRomaList;
-var i,j:integer;
-    s,s2:string;
-  s_hira, s_kata, s_jap, s_en, s_cz: string;
-begin
-  roma:=TStringList.Create;
-  TRomaji.First;
-  while not TRomaji.EOF do
-  begin
-    s_hira := Uppercase(TRomaji.Str(TRomaji.Field('Hiragana')));
-    s_kata := Uppercase(TRomaji.Str(TRomaji.Field('Katakana')));
-    s_jap := TRomaji.Str(TRomaji.Field('Japanese'));
-    s_en := TRomaji.Str(TRomaji.Field('English'));
-    s_cz := TRomaji.Str(TRomaji.Field('Czech'));
-    roma.Add(s_hira);
-    roma.Add(s_kata);
-    roma.Add(s_jap);
-    roma.Add(s_en);
-    roma.Add(s_cz);
-   //Serve in new format too, in case this function ever goes back to life
-    roma_t.Add(s_hira, s_kata, s_jap, s_en, s_cz);
-    TRomaji.Next;
-  end;
-  romac:=TStringList.Create;
-  for i:=0 to bopomofol.Count-1 do
-  begin
-    s:=bopomofol[i];
-    j:=0;
-    while s<>'' do
-    begin
-      while (s<>'') and (s[1]=' ') do delete(s,1,1);
-      inc(j);
-      if pos(' ',s)>0 then s2:=copy(s,1,pos(' ',s)-1) else s2:=s;
-      delete(s,1,length(s2));
-      if (s2<>'') and (s2[1]='<') then delete(s2,1,1);
-      if (s2<>'') and (s2[length(s2)]='>') then delete(s2,length(s2),1);
-      if (j>=4) and (j<=7) then romac.Add(s2);
-      while (s<>'') and (s[1]=' ') do delete(s,1,1);
-    end;
-    if (j<>7) and (j<>0) then showmessage('BOPOMOFO.LST: Internal error: '+bopomofol[i]+' >>> '+inttostr(j));
-  end;
 end;
 
 procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);

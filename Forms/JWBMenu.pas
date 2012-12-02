@@ -500,7 +500,7 @@ var
   showroma,jshowroma,cshowroma:boolean;
   CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
   dicts:TStringList;
-  TAnnots,TChar,TCharRead,TRomaji,TRadicals,TUser,TUserIdx,TUserSheet,TUserCat,TKanaKanji,TUserPrior:TTextTable;
+  TAnnots,TChar,TCharRead,TRadicals,TUser,TUserIdx,TUserSheet,TUserCat,TKanaKanji,TUserPrior:TTextTable;
   TCharIndex,TCharChinese,TCharType,TCharUnicode,
   TCharStrokeCount,TCharJpStrokeCount,TCharJpFrequency,TCharChFrequency,
   TCharJouyouGrade,TCharReadKanji,TCharReadType,TCharReadReading,TCharReadIndex,
@@ -2043,7 +2043,6 @@ procedure TfMenu.FormDestroy(Sender: TObject);
 begin
   TChar.Free;
   TCharRead.Free;
-//  TRomaji.Free;
   TRadicals.Free;
   FreeKnownLists;
   FreeRomaList;
@@ -2258,57 +2257,6 @@ procedure TfMenu.FormCreate(Sender: TObject);
 begin
   initdone:=false;
 end;
-
-procedure splitadd(sl:TStringList;s:string;cnt:integer);
-var i:integer;
-begin
-  i:=0;
-  while i<cnt do
-  begin
-    inc(i);
-    if pos(',',s)>0 then
-    begin
-      sl.Add(copy(s,1,pos(',',s)-1));
-      delete(s,1,pos(',',s));
-    end else
-    begin
-      sl.Add(s);
-      s:='';
-    end;
-  end;
-end;
-
-//Same but doesn't add it anywhere
-type
-  TStringArray = array of string;
-
-function SplitStr(s: string; cnt: integer): TStringArray;
-var i:integer;
-begin
-  SetLength(Result, cnt);
-  i:=0;
-  while i<cnt do
-  begin
-    if pos(',',s)>0 then
-    begin
-      Result[i] := copy(s,1,pos(',',s)-1);
-      delete(s,1,pos(',',s));
-    end else
-    begin
-      Result[i] := s;
-      s:='';
-    end;
-    inc(i);
-  end;
-end;
-
-procedure StrListAdd(sl: TStringList; sa: TStringArray);
-var i: integer;
-begin
-  for i := 0 to Length(sa) - 1 do
-    sl.Add(sa[i]);
-end;
-
 
 procedure TfMenu.FormShow(Sender: TObject);
 var tt:TTextTable;
@@ -2627,7 +2575,6 @@ begin
   fSplash.Update;
   try
   ps:=TPackageSource.Create('wakan.chr',791564,978132,978123);
-  roma:=TStringList.Create;
   romac:=TStringList.Create;
   roma_t := TRomajiTranslationTable.Create;
   vi:=TStringList.Create;
@@ -2644,8 +2591,8 @@ begin
     defll.Clear;
     suffixl.Clear;
     partl.Clear;
-    roma.Clear;
     romac.Clear;
+    roma_t.Clear;
     while not eof(conft) do
     begin
       readln(conft,s);
@@ -2669,15 +2616,7 @@ begin
         begin
           if sect=1 then partl.Add(s);
           if sect=2 then defll.Add(s);
-          if sect=3 then begin
-           //Romaji is loaded both in old format
-            s_parts := SplitStr(s, 5);
-            s_parts[0] := Uppercase(s_parts[0]);
-            s_parts[1] := Uppercase(s_parts[1]);
-            StrListAdd(roma, s_parts);
-           //And in new format
-            roma_t.Add(s_parts[0], s_parts[1], s_parts[2], s_parts[3], s_parts[4]);
-          end;
+          if sect=3 then roma_t.Add(s);
           if sect=4 then splitadd(romac,s,4);
           if sect=5 then chartypel.Add(s);
           if sect=6 then splitadd(romasortl,s,2);

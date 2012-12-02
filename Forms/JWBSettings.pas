@@ -667,7 +667,7 @@ end;
 procedure TfSettings.Button2Click(Sender: TObject);
 begin
   Screen.Cursor:=crHourglass;
-  if (TChar.CheckIndex) and (TCharRead.CheckIndex) and (TRomaji.CheckIndex) and
+  if (TChar.CheckIndex) and (TCharRead.CheckIndex) and
      (TRadicals.CheckIndex) then
        Application.MessageBox(pchar(_l('#00569^eIndexes are okay.^cIndexy jsou v poøádku.')),
        pchar(_l('#00570^eIndex check^cTest indexù')),MB_OK or MB_ICONINFORMATION)

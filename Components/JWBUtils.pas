@@ -55,6 +55,7 @@ For more info see wakan.cfg.
 }
 type
   TRomajiTranslationRule = record
+   { Hiragana and katakana: FStrings. Hex is already upcased! Do not upcase. }
     hiragana: string;
     katakana: string;
     japanese: string;
@@ -86,6 +87,8 @@ type
   public
     procedure Add(r: TRomajiTranslationRule); overload;
     procedure Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string); overload;
+    procedure Add(s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Clear;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiTranslationRule read GetItemPtr; default;
   end;
@@ -185,7 +188,7 @@ uses JWBUnit;
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseDeflectionRule(s: string): TDeflectionRule; inline;
+function ParseDeflectionRule(s: string): TDeflectionRule; {$IFDEF INLINE}inline;{$ENDIF}
 var i: integer;
 begin
   Result.vt := s[1];
@@ -312,6 +315,35 @@ begin
   r.english := AEnglish;
   r.czech := ACzech;
   SetupRule(r);
+end;
+
+//Parses romaji translation rule from string form into record
+//See comments in wakan.cfg for format details.
+function ParseRomajiTranslationRule(s: string): TRomajiTranslationRule; {$IFDEF INLINE}inline;{$ENDIF}
+var s_parts: TStringArray;
+begin
+  s_parts := SplitStr(s, 5);
+ {$IFDEF UNICODE}
+  Result.hiragana := HexToUnicode(s_parts[0]);
+  Result.katakana := HexToUnicode(s_parts[1]);
+ {$ELSE}
+  Result.hiragana := Uppercase(s_parts[0]);
+  Result.katakana := Uppercase(s_parts[1]);
+ {$ENDIF}
+  Result.japanese := s_parts[2];
+  Result.english := s_parts[3];
+  Result.czech := s_parts[4];
+end;
+
+procedure TRomajiTranslationTable.Add(s: string);
+begin
+  Add(ParseRomajiTranslationRule(s));
+end;
+
+procedure TRomajiTranslationTable.Clear;
+begin
+  SetLength(FList, 0);
+  FListUsed := 0;
 end;
 
 
