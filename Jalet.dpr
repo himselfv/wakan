@@ -1,4 +1,9 @@
 program Jalet;
+{
+Stuff you can define for the whole project:
+  UNICODE -- defined by the compiler if the default string type is UnicodeString
+  INLINE -- inline small functions (bad for debug)
+}
 
 uses
   Forms,
@@ -6,12 +11,12 @@ uses
   MemSource in 'Components\Package\MemSource.pas',
   PKGWrite in 'Components\Package\PKGWrite.pas' {PKGWriteForm},
   StdPrompt in 'Components\StdPrompt\StdPrompt.pas' {SMPromptForm},
-  UnicodeFont in 'Forms\UnicodeFont.pas' {fSelectFont}
+  UnicodeFont in 'Forms\UnicodeFont.pas' {fSelectFont},
   JWBUnit in 'Components\JWBUnit.pas',
   JWBConvertTbl in 'Components\JWBConvertTbl.pas',
   JWBConvert in 'Components\JWBConvert.pas',
   JWBUtils in 'Components\JWBUtils.pas',
-  JWBDicSearch in 'Components\JWBDicSearch.pas',  
+  JWBDicSearch in 'Components\JWBDicSearch.pas',
   JWBMenu in 'Forms\JWBMenu.pas' {fMenu},
   JWBKanji in 'Forms\JWBKanji.pas' {fKanji},
   JWBRadical in 'Forms\JWBRadical.pas' {fRadical},

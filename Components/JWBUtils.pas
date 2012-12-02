@@ -4,9 +4,6 @@ Various high-speed containers used in program.
 For now they are grouped together but may be regrouped in the future.
 }
 
-//If defined, inline small functions. Bad for debug.
-{$DEFINE INLINE}
-
 interface
 uses SysUtils, Classes;
 
@@ -72,7 +69,7 @@ type
     hiragana_ptr: PAnsiChar;
     katakana_ptr: PAnsiChar;
    {$ELSE}
-   //And point to two UNICODE 4-chars (8 bytes)
+   //These point to two UNICODE chars (4 bytes)
     hiragana_ptr: PWideChar;
     katakana_ptr: PWideChar;
    {$ENDIF}
@@ -184,6 +181,7 @@ type
 
 
 implementation
+uses JWBUnit;
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.
@@ -193,8 +191,17 @@ begin
   Result.vt := s[1];
   Result.sufcat := s[2];
   i := pos('->', s);
+ {$IFDEF UNICODE}
+  s := copy(s,3,i-3);
+  if s='KKKK' then
+    Result.infl := 'KKKK'
+  else
+    Result.infl := HexToUnicode(s);
+  Result.defl := HexToUnicode(copy(s,i+2,Length(s)-(i+2)+1));
+ {$ELSE}
   Result.infl := copy(s,3,i-3);
   Result.defl := copy(s,i+2,Length(s)-(i+2)+1);
+ {$ENDIF}
 end;
 
 function TDeflectionList.GetItemPtr(Index: integer): PDeflectionRule;
@@ -264,22 +271,28 @@ begin
 end;
 
 const
+ {$IFDEF UNICODE}
+  UNICODE_ZERO_CODE: string = #00#00;
+ {$ELSE}
   UNICODE_ZERO_CODE: string = '00000000';
+ {$ENDIF}
 
 //Makes various safety checks and sets up optimization fields for a rule
 procedure TRomajiTranslationTable.SetupRule(r: PRomajiTranslationRule);
 begin
+ {$IFNDEF UNICODE}
  //Make sure hiragana and katakana have at least one 4-char in length, or are disabled
   if Length(r.hiragana)<4 then SetLength(r.hiragana, 0);
   if Length(r.katakana)<4 then SetLength(r.katakana, 0);
  //Drop symbols till the nearest 4-char
   if Length(r.hiragana) mod 4 <> 0 then SetLength(r.hiragana, Length(r.hiragana) - Length(r.hiragana) mod 4);
   if Length(r.katakana) mod 4 <> 0 then SetLength(r.katakana, Length(r.katakana) - Length(r.katakana) mod 4);
+ {$ENDIF}
  //Setup optimization pointers
   r.hiragana_ptr := pointer(r.hiragana);
-  if r.hiragana_ptr=nil then r.hiragana_ptr := @UNICODE_ZERO_CODE[1];
+  if r.hiragana_ptr=nil then r.hiragana_ptr := pointer(UNICODE_ZERO_CODE);
   r.katakana_ptr := pointer(r.katakana);
-  if r.katakana_ptr=nil then r.katakana_ptr := @UNICODE_ZERO_CODE[1];
+  if r.katakana_ptr=nil then r.katakana_ptr := pointer(UNICODE_ZERO_CODE);
 end;
 
 procedure TRomajiTranslationTable.Add(r: TRomajiTranslationRule);
@@ -288,6 +301,7 @@ begin
   MakeNewItem^ := r;
 end;
 
+//Hiragana and katakana must be in decoded format (unicode on UFCHAR builds)
 procedure TRomajiTranslationTable.Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string);
 var r: PRomajiTranslationRule;
 begin
@@ -325,6 +339,7 @@ begin
   SetLength(FList, Length(FList)+ARequiredFreeLen);
 end;
 
+//str must be in decoded format (Unicode on UFCHAR builds)
 procedure TCandidateLookupList.Add(priority: integer; len: integer; verbType: char;
   const str: string);
 var item: PCandidateLookup;

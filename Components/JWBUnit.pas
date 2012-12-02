@@ -5,9 +5,6 @@ interface
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
   JWBUtils;
 
-//Force inline for small functions - bad for debug, good for speed
-{$DEFINE INLINE}
-
 {$IF CompilerVersion < 21}
 type
  //On older compilers we don't have a new, faster UnicodeString,
@@ -96,7 +93,13 @@ const //Character types for EvalChar
   EC_LATIN_HW         = 7; // half-width latin
   EC_KATAKANA_HW      = 8; // half-width katakana
 
-function EvalChar(char:string):integer;
+{$IFDEF UNICODE}
+function EvalChar(char:WideChar):integer; overload; {$IFDEF INLINE}inline;{$ENDIF}
+function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{$ENDIF}
+{$ELSE}
+function EvalChar(const char:FString):integer;
+{$ENDIF}
+
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
 procedure WritelnMixUni(var f:file;s:string);
@@ -281,7 +284,7 @@ We'll try to do it fast.
 }
 
 //Increments a valid PChar pointer 4 characters or returns false if the string ends before that
-function EatOneSymbol(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 begin
   Result := false;
   if pc^=#00 then exit;
@@ -295,7 +298,7 @@ begin
   Result := true;
 end;
 
-function EatOneSymbolW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 begin
   Result := false;
   if pc^=#00 then exit;
@@ -310,7 +313,7 @@ begin
 end;
 
 //Returns a value in range 0..15 for a given hex character, or throws an exception
-function HexCharCode(c:AnsiChar): byte; inline; {$IFDEF INLINE}inline;{$ENDIF}
+function HexCharCode(c:AnsiChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 begin
   if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
     Result := ord(c)-ord('0')
@@ -324,7 +327,7 @@ begin
     raise Exception.Create('Invalid hex character "'+c+'"');
 end;
 
-function HexCharCodeW(c:WideChar): byte; inline; {$IFDEF INLINE}inline;{$ENDIF}
+function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 begin
   if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
     Result := ord(c)-ord('0')
@@ -338,7 +341,7 @@ begin
     raise Exception.Create('Invalid hex character "'+c+'"');
 end;
 
-//Converts up to maxlen hex characters into 4-character unicode symbols.
+//Converts up to maxlen hex characters into unicode symbols.
 //Maxlen ought to be a multiplier of 4.
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
 var pn: PAnsiChar; //next symbol pointer
@@ -348,7 +351,7 @@ begin
   if (ps=nil) or (ps^=#00) then exit;
   if ps^='U' then Inc(ps);
   pn := ps;
-  while (maxlen>=4) and EatOneSymbol(pn) do begin
+  while (maxlen>=4) and EatOneFChar(pn) do begin
     cc := HexCharCode(ps^) shl 12;
     Inc(ps);
     Inc(cc, HexCharCode(ps^) shl 8);
@@ -369,7 +372,7 @@ begin
   if (ps=nil) or (ps^=#00) then exit;
   if ps^='U' then Inc(ps);
   pn := ps;
-  while (maxlen>=4) and EatOneSymbolW(pn) do begin
+  while (maxlen>=4) and EatOneFCharW(pn) do begin
     cc := HexCharCodeW(ps^) shl 12;
     Inc(ps);
     Inc(cc, HexCharCodeW(ps^) shl 8);
@@ -393,6 +396,7 @@ begin
     Result := HexToUnicode(PAnsiChar(pointer(s)), Length(s));
    {$ENDIF}
 end;
+
 
 
 
@@ -918,6 +922,7 @@ begin
   result:=marg+mar1+s2+mars;
 end;
 
+//TODO: Upgrade so this supports UNICODE
 function ResolveCrom(s:string;posin,posout:integer;clean:boolean):string;
 var s2,s3:string;
     cr:string;
@@ -1011,52 +1016,72 @@ end;
 
 //ps must have at least one 4-char symbol in it
 function SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
+{$IFDEF UNICODE}{$POINTERMATH ON}{$ENDIF}
 const
+ {$IFNDEF UNICODE}
   UH_HYPHEN:FString='002D'; //UnicodeToHex('-')
   UH_LOWLINE:FString='005F'; //UnicodeToHex('_');
-var i:integer;
-  pe: PFChar;
-  r: PRomajiTranslationRule;
-begin
- {$IFDEF INTEGER_HELL}
- {$IFNDEF UNICODE}
-  if pinteger(ps)^=pinteger(@UH_HYPHEN)^ then begin
  {$ELSE}
-  if (pinteger(ps)^=pinteger(@UH_HYPHEN)^)
-  and (IntgOff(ps, 1)^=IntgOff(@UH_HYPHEN, 1)^) then begin
+  UH_HYPHEN:FChar='-';
+  UH_LOWLINE:FChar='_';
  {$ENDIF}
+var i:integer;
+  r: PRomajiTranslationRule;
+ {$IFNDEF UNICODE}
+  pe: PFChar;
+ {$ENDIF}
+begin
+ {$IFDEF UNICODE}
+  if ps^=UH_HYPHEN then begin
+    Inc(ps);
+ {$ELSE}
+ {$IFDEF INTEGER_HELL}
+  if pinteger(ps)^=pinteger(@UH_HYPHEN)^ then begin
  {$ELSE}
   if FcharCmp(ps, UH_HYPHEN, 1) then begin
  {$ENDIF}
     Inc(ps, 4);
+ {$ENDIF}
     Result := '-';
     exit;
   end;
- {$IFDEF INTEGER_HELL}
- {$IFNDEF UNICODE}
-  if pinteger(ps)^=pinteger(@UH_LOWLINE)^ then begin
+
+ {$IFDEF UNICODE}
+  if ps^=UH_LOWLINE then begin
+    Inc(ps);
  {$ELSE}
-  if (pinteger(ps)^=pinteger(@UH_LOWLINE)^)
-  and (IntgOff(ps, 1)^=IntgOff(@UH_LOWLINE, 1)^) then begin
- {$ENDIF}
+ {$IFDEF INTEGER_HELL}
+  if pinteger(ps)^=pinteger(@UH_LOWLINE)^ then begin
  {$ELSE}
   if FcharCmp(ps, UH_LOWLINE, 1) then begin
  {$ENDIF}
     Inc(ps, 4);
+ {$ENDIF}
     Result := '_';
     exit;
   end;
- //first try 8 symbols
- //but we have to test that we have at least two symbols
+
+ //first try 2 FChars
+ //but we have to test that we have at least that much
+ {$IFDEF UNICODE}
+  if (ps^<>#00) and ((ps+1)^<>#00) then begin
+ {$ELSE}
   pe := ps;
   Inc(pe, 4); //first symbol must be there
- {$IFDEF UNICODE}
-  if EatOneSymbolW(pe) then begin
- {$ELSE}
-  if EatOneSymbol(pe) then begin
+  if EatOneFChar(pe) then begin
  {$ENDIF}
     for i := 0 to roma_t.Count - 1 do begin
       r := roma_t[i];
+     {$IFDEF UNICODE}
+     //Compare two characters at once (see note below)
+      if (PInteger(ps)^=PInteger(r.hiragana_ptr)^)
+      or (PInteger(ps)^=PInteger(r.katakana_ptr)^) then begin
+     {
+     //Safer and slower version:
+      if ((ps^=r.hiragana_ptr^) and ((ps+1)^=(r.hiragana_ptr+1)^))
+      or ((ps^=r.katakana_ptr^) and ((ps+1)^=(r.katakana_ptr+1)^)) then
+     }
+     {$ELSE}
      {$IFDEF INTEGER_HELL}
       {
       Note on integer comparison optimization:
@@ -1065,24 +1090,14 @@ begin
       to any 4-char hex combination.
       It also won't AV because the memory's dword aligned and hiragana[5] is accessible already.
       }
-     {$IFNDEF UNICODE}
       if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
       and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^))
       or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
       and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)) then begin
      {$ELSE}
-      if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-      and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^)
-      and (IntgOff(ps, 2)^=IntgOff(r.hiragana_ptr, 2)^)
-      and (IntgOff(ps, 3)^=IntgOff(r.hiragana_ptr, 3)^))
-      or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
-      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)
-      and (IntgOff(ps,2)^=IntgOff(r.katakana_ptr, 2)^)
-      and (IntgOff(ps,3)^=IntgOff(r.katakana_ptr, 3)^)) then begin
-     {$ENDIF}
-     {$ELSE}
       if FcharCmp(ps, r.hiragana_ptr, 2)
       or FcharCmp(ps, r.katakana_ptr, 2) then begin
+     {$ENDIF}
      {$ENDIF}
         case romatype of
           2: Result := r.english;
@@ -1090,27 +1105,29 @@ begin
         else
           Result := r.japanese;
         end;
+       {$IFDEF UNICODE}
+        Inc(ps, 2);
+       {$ELSE}
         ps := pe;
+       {$ENDIF}
         exit;
       end;
     end;
   end;
- //this time 4 symbols only
+
+ //this time 1 FChar only
   for i := 0 to roma_t.Count - 1 do begin
     r := roma_t[i];
+   {$IFDEF UNICODE}
+    if (ps^=r.hiragana_ptr^) or (ps^=r.katakana_ptr^) then begin
+   {$ELSE}
    {$IFDEF INTEGER_HELL}
-   {$IFNDEF UNICODE}
     if (pinteger(ps)^=pinteger(r.hiragana_ptr)^)
     or (pinteger(ps)^=pinteger(r.katakana_ptr)^) then begin
    {$ELSE}
-    if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-      and (IntgOff(ps,1)^=IntgOff(r.hiragana_ptr,1)^))
-    or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
-      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr,1)^)) then begin
-   {$ENDIF}
-   {$ELSE}
     if FcharCmp(ps, r.hiragana_ptr, 1)
     or FcharCmp(ps, r.katakana_ptr, 1) then begin
+   {$ENDIF}
    {$ENDIF}
       case romatype of
         2: Result := r.english;
@@ -1118,28 +1135,42 @@ begin
       else
         Result := r.japanese;
       end;
+     {$IFDEF UNICODE}
+      Inc(ps);
+     {$ELSE}
       Inc(ps, 4);
+     {$ENDIF}
       exit;
     end;
   end;
+
+ //Latin symbol
+ {$IFDEF UNICODE}
+  if PWord(ps)^ and $FF00 = 0 then begin
+    Result := ps^;
+    Inc(ps);
+ {$ELSE}
   if (ps^='0') and (PChar(integer(ps)+1)^='0') then begin
-   {$IFDEF UNICODE}
-    Result := HexToUnicodeW(ps, 4);
-   {$ELSE}
     Result := HexToUnicode(ps, 4);
-   {$ENDIF}
     Inc(ps, 4);
+ {$ENDIF}
     exit;
   end;
+
+ {$IFDEF UNICODE}
+  Inc(ps);
+ {$ELSE}
   Inc(ps, 4);
+ {$ENDIF}
   Result := '?';
+{$IFDEF UNICODE}{$POINTERMATH OFF}{$ENDIF}
 end;
 
 function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
 var fn:string;
   s2:string;
  {$IFDEF UNICODE}
-  ps, pn: PWideChar;
+  ps: PWideChar;
  {$ELSE}
   ps, pn: PAnsiChar;
  {$ENDIF}
@@ -1157,16 +1188,19 @@ begin
    {$ELSE}
     ps := PAnsiChar(s);
    {$ENDIF}
-    pn := ps;
+
    {$IFDEF UNICODE}
-    while EatOneSymbolW(pn) do begin
+    while ps^<>#00 do begin
    {$ELSE}
-    while EatOneSymbol(pn) do begin
+    pn := ps;
+    while EatOneFChar(pn) do begin
    {$ENDIF}
       fn := SingleKanaToRomaji(ps, romatype); //also eats one or two symbols
       if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///WTF?!!
       s2:=s2+fn;
-      pn := ps; //because pn might have advanced further
+     {$IFNDEF UNICODE}
+      pn := ps; //because ps might have advanced further
+     {$ENDIF}
     end;
 
    {THIS HERE doesn't make much of a difference for speed}
@@ -1219,9 +1253,9 @@ begin
 end;
 
 function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):string;
-var s2,s3,fn:string;
-    kata:integer;
-    l,i,j:integer;
+var sr,s2,s3,fn:string;
+  kata:integer;
+  l,i,j:integer;
 begin
   if lang='j'then
   begin
@@ -1279,33 +1313,84 @@ begin
     while length(s2)>0 do
     begin
       fn:='';
+     {$IFDEF UNICODE}
+      if s2[1]='_'then fn:='_';
+      if s2[1]='-'then fn:='-';
+     {$ELSE}
       if s2[1]='_'then fn:=UnicodeToHex('_');
       if s2[1]='-'then fn:=UnicodeToHex('-');
-      for i:=0 to (roma.Count div 5)-1 do
+     {$ENDIF}
+      for i:=0 to roma_t.Count-1 do
       begin
-        if (pos(roma[i*5+1+romatype],s2)=1) then
+        case romatype of
+          2: sr := roma_t[i].english;
+          3: sr := roma_t[i].czech;
+        else
+          sr := roma_t[i].japanese;
+        end;
+        if pos(sr,s2)=1 then
         begin
-          l:=length(roma[i*5+1+romatype]);
-          fn:=roma[i*5+kata];
+          l:=length(sr);
+          if kata=0 then
+            fn := roma_t[i].hiragana
+          else
+            fn := roma_t[i].katakana;
           break;
         end else
-        if (romatype>0) and (pos(roma[i*5+2],s2)=1) then
+        if (romatype>0) and (pos(roma_t[i].english,s2)=1) then
         begin
-          l:=length(roma[i*5+2]);
-          fn:=roma[i*5+kata];
+          l:=length(roma_t[i].japanese);
+          if kata=0 then
+            fn := roma_t[i].hiragana
+          else
+            fn := roma_t[i].katakana;
           break;
         end;
       end;
+
+     //If we haven't found the match, try other romaji types
       if fn='' then
-      for j:=2 to 4 do for i:=0 to (roma.Count div 5)-1 do if pos(roma[i*5+j],s2)=1 then
-      begin
-        fn:=roma[i*5+kata];
-        l:=length(roma[i*5+j]);
-        break;
-      end;
+      for i:=0 to roma_t.Count-1 do
+        if pos(roma_t[i].japanese,s2)=1 then
+        begin
+          l:=length(roma_t[i].japanese);
+          if kata=0 then
+            fn := roma_t[i].hiragana
+          else
+            fn := roma_t[i].katakana;
+          break;
+        end else
+        if pos(roma_t[i].english,s2)=1 then
+        begin
+          l:=length(roma_t[i].english);
+          if kata=0 then
+            fn := roma_t[i].hiragana
+          else
+            fn := roma_t[i].katakana;
+          break;
+        end else
+        if pos(roma_t[i].czech,s2)=1 then
+        begin
+          l:=length(roma_t[i].czech);
+          if kata=0 then
+            fn := roma_t[i].hiragana
+          else
+            fn := roma_t[i].katakana;
+          break;
+        end;
+
       if fn='' then
       begin
-        if clean then fn:='' else if s2[1]<>'''' then fn:=Format('00%2.2X',[ord(s2[1])]) else fn:='';
+        if not clean then
+          if s2[1]<>'''' then
+           //Latin letter (supposedly)
+           {$IFDEF UNICODE}
+            fn := s2[1]
+           {$ELSE}
+            fn:=Format('00%2.2X',[ord(s2[1])])
+           {$ENDIF}
+          else
+            fn:='';
         l:=1;
       end;
       if s2[1]='H'then
@@ -2371,7 +2456,30 @@ begin
   TChar.Locate('Unicode',bk,false);
 end;
 
-function EvalChar(char:string):integer;
+{$IFDEF UNICODE}
+function EvalChar(char:WideChar):integer;
+var ch: Word absolute char;
+begin
+  if ch=$3005 then result:=1 else // kurikaeshi
+  if (ch>=$3000) and (ch<=$303F) then result:=EC_IDG_PUNCTUATION else
+  if (ch>=$3040) and (ch<=$309F) then result:=EC_HIRAGANA else
+  if (ch>=$30A0) and (ch<=$30FF) then result:=EC_KATAKANA else
+  if (ch>=$3200) and (ch<=$33FF) then result:=EC_IDG_OTHER else
+  if (ch>=$3400) and (ch<=$9FFF) then result:=EC_IDG_CHAR else
+  if (ch>=$F900) and (ch<=$FAFF) then result:=EC_IDG_CHAR else
+  if (ch>=$FE30) and (ch<=$FE4F) then result:=EC_IDG_PUNCTUATION else
+  if (ch>=$FF00) and (ch<=$FF5F) then result:=EC_LATIN_FW else
+  if (ch>=$FF60) and (ch<=$FF9F) then result:=EC_KATAKANA_HW else
+  if (ch>=$0000) and (ch<=$007F) then result:=EC_LATIN_HW else
+  result:=EC_UNKNOWN;
+end;
+
+function EvalChar(const char:FString):integer;
+begin
+  Result := EvalChar(WideChar(PWideChar(char)^));
+end;
+{$ELSE}
+function EvalChar(const char:FString):integer;
 begin
   if char='3005'then result:=1 else // kurikaeshi
   if (char>='3000') and (char<='303F') then result:=EC_IDG_PUNCTUATION else
@@ -2386,6 +2494,7 @@ begin
   if (char>='0000') and (char<='007F') then result:=EC_LATIN_HW else
   result:=EC_UNKNOWN;
 end;
+{$ENDIF}
 
 function StateStr(i:integer):string;
 begin
