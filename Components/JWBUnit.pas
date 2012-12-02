@@ -132,12 +132,7 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
     GridFontSize:integer;
 
    { Romaji translation table.
-    See comments where class is defined.
-
-      }
-//    roma: TStringList;
-   { A new version which is faster! Cooler! And all that.
-    But we're keeping the old one for backward compability. }
+    See comments where class is defined. }
     roma_t: TRomajiTranslationTable;
 
    { Chinese version, not upcased. Someone upgrade this one too... }
