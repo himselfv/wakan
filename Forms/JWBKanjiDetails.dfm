@@ -205,7 +205,7 @@ object fKanjiDetails: TfKanjiDetails
     Top = 198
     Width = 54
     Height = 13
-    Cursor = 15000
+    Cursor = crHandPoint
     Hint = 
       '#00163^ewww.zhongwen.com - Etymological information about the ch' +
       'aracter^cwww.zhongwen.com - Etymologická informace o znaku'
@@ -224,7 +224,7 @@ object fKanjiDetails: TfKanjiDetails
     Top = 198
     Width = 56
     Height = 13
-    Cursor = 15000
+    Cursor = crHandPoint
     Hint = 
       '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
       'C dictionary server^cwww.csse.monash.edu.au/~jwb/wwwjdic - Infor' +
@@ -244,7 +244,7 @@ object fKanjiDetails: TfKanjiDetails
     Top = 198
     Width = 36
     Height = 13
-    Cursor = 15000
+    Cursor = crHandPoint
     Hint = 
       '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
       'ter^ccharts.unicode.org/unihan - UniHan záznam pro tento znak'
@@ -263,7 +263,7 @@ object fKanjiDetails: TfKanjiDetails
     Top = 198
     Width = 26
     Height = 13
-    Cursor = 15000
+    Cursor = crHandPoint
     Hint = 
       '#00166^ewww.ocrat.com - Animated stroke order^cwww.ocrat.com - A' +
       'nimované poøadí tahù'
@@ -282,7 +282,7 @@ object fKanjiDetails: TfKanjiDetails
     Top = 198
     Width = 56
     Height = 13
-    Cursor = 15000
+    Cursor = crHandPoint
     Hint = 
       '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page^cweb.mit.e' +
       'du/jpnet/ji - Datová stránka Kanji Projectu'
