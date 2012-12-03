@@ -4069,8 +4069,8 @@ begin
     rect.bottom:=100;
     if (length(s1)>0) and (s1[1]='!') then delete(s1,1,2);
     if (length(s2)>0) and (s2[1]='!') then delete(s2,1,2);
-    if (length(s1)>0) and (s1[1]='U') then delete(s1,1,1);
-    if (length(s2)>0) and (s2[1]='U') then delete(s2,1,1);
+    if (length(s1)>0) and (s1[1]=UH_UNKNOWN_KANJI) then delete(s1,1,1);
+    if (length(s2)>0) and (s2[1]=UH_UNKNOWN_KANJI) then delete(s2,1,1);
     cw:=DrawWordInfo(fScreenTip.pb.Canvas,rect,false,false,2,s3,false,true,GridFontSize,true)+GridFontSize*(3+length(s1+s2) div 4);
     if cw>optwidth then optwidth:=cw;
   end;
@@ -4796,7 +4796,7 @@ begin
         if (length(s)>1) and (s[1]='#') then delete(s,1,1);
         if (length(s)>1) and (s[1]='@') then delete(s,1,1);
         rect:=intmoGrid.CellRect(gc.x,gc.y);
-        if (length(s)>0) and (s[1]='U') then delete(s,1,1);
+        if (length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
         if not mo then delete(s,1,((intmocx-rect.left-2) div GridFontSize)*4);
         if mo then
         begin
@@ -5058,7 +5058,7 @@ procedure TfMenu.AnnotSeekK(kanji, kana: string);
 begin
   if (curlang<>'j') or (kana='') then
   begin
-    if length(kanji)>4 then AnnotSeek([kanji]) else AnnotSeek([kanji,UnicodeToHex('U'+kanji)]);
+    if length(kanji)>4 then AnnotSeek([kanji]) else AnnotSeek([kanji,UnicodeToHex(UH_UNKNOWN_KANJI+kanji)]);
   end else
     AnnotSeek([kanji,kana,UnicodeToHex(KanaToRomaji(kana,1,'j')),kanji+UnicodeToHex('+')+kana]);
 end;

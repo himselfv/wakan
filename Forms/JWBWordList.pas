@@ -294,7 +294,7 @@ begin
   PaintBox6.Canvas.Brush.Color:=clWindow;
   x:=fWords.twkanji;
   PaintBox6.Canvas.Font.Color:=clWindowText;
-  if x[1]='U'then
+  if x[1]=UH_UNKNOWN_KANJI then
   begin
     delete(x,1,1);
     PaintBox6.Canvas.Font.Color:=Col('Dict_UnknownChar');

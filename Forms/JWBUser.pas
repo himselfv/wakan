@@ -249,8 +249,8 @@ function remexcl(s:string):string;
 begin
   if (length(s)>1) and (s[2]='!') then delete(s,2,2);
   if (length(s)>1) and (s[1]='!') then delete(s,1,2);
-  if (length(s)>1) and (s[2]='U') then delete(s,2,1);
-  if (length(s)>1) and (s[1]='U') then delete(s,1,1);
+  if (length(s)>1) and (s[2]=UH_UNKNOWN_KANJI) then delete(s,2,1);
+  if (length(s)>1) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
   if (length(s)>1) and (s[1]='~') then delete(s,1,2);
   result:=s;
 end;
@@ -1617,7 +1617,7 @@ begin
       inblock:=false;
       GetTextWordInfo(cx,cy,meaning,reading,kanji);
 
-      kanjilearned:=kanji=CheckKnownKanji(kanji);
+      kanjilearned:=(FirstUnknownKanjiIndex(kanji)<0);
       worddict:=copy(GetDocTr(cx,cy),3,6);
       if wordstate='<'then worddict:=lastworddict;
       if wordstate='<'then wordstate:=lastwordstate;

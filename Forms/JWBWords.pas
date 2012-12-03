@@ -1164,7 +1164,7 @@ begin
       if showroma then
         tp:=UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang)) else
         tp:=TUser.Str(TUserPhonetic);
-      if (not fSettings.CheckBox17.Checked) or (CheckKnownKanji(TUser.Str(TUserKanji))[1]<>'U') then
+      if (not fSettings.CheckBox17.Checked) or (FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0) then
         tw:=TUser.Str(TUserKanji) else tw:='';
       for k:=1 to 4 do if (ps[k*2]=chr(ord('1')+j)) then
       begin
@@ -1312,7 +1312,7 @@ begin
     if TUser.Int(TUserScore)=3 then inc(k);
     if pos('<spop>',TUser.Str(TUserEnglish))=0 then inc(l);
     if (length(TUser.Str(TUserPhonetic))>1) and (TUser.Str(TUserPhonetic)[3]>='A') then inc(m);
-    if CheckKnownKanji(TUser.Str(TUserKanji))=TUser.Str(TUserKanji) then inc(n);
+    if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then inc(n);
     TUser.Next;
   end;
   TUser.First;
@@ -1919,7 +1919,7 @@ begin
         ca[2]:=800-DateOld(TUser.Str(TUserAdded),500)*3;
         if pos('<spop>',TUser.Str(TUserEnglish))>0 then ca[3]:=-500 else ca[3]:=0;
         ca[3]:=ca[3]-length(TUser.Str(TUserPhonetic))*10;
-        if CheckKnownKanji(TUser.Str(TUserKanji))<>TUser.Str(TUserKanji) then ca[3]:=ca[3]+800;
+        if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))>=0 then ca[3]:=ca[3]+800;
         if ca[3]>900 then ca[3]:=900;
         if ca[3]<-900 then ca[3]:=-900;
         if TUser.Int(TUserNoPrinted)<=10 then ca[4]:=-200+TUser.Int(TUserNoPrinted)*50 else
@@ -2010,7 +2010,7 @@ begin
     if TUser.Int(TUserScore)=3 then inc(k);
     if pos('<spop>',TUser.Str(TUserEnglish))=0 then inc(l);
     if (length(TUser.Str(TUserPhonetic))>1) and (TUser.Str(TUserPhonetic)[3]>='A') then inc(m);
-    if CheckKnownKanji(TUser.Str(TUserKanji))=TUser.Str(TUserKanji) then inc(n);
+    if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0then inc(n);
     TUser.Next;
   end;
   fWordList.Label26.Caption:=perc(j,ll.Count);
@@ -2107,7 +2107,7 @@ begin
     9:if random(100)<25 then i:=1 else if random(75)<25 then i:=2 else i:=3;
     10:if random(100)<50 then i:=1 else if random(50)<25 then i:=2 else i:=3;
   end;
-  if (i=2) and (fWordList.CheckBox6.Checked) and (CheckKnownKanji(TUser.Str(TUserKanji))<>TUser.Str(TUserKanji)) then i:=1;
+  if (i=2) and (fWordList.CheckBox6.Checked) and (FirstUnknownKanjiIndex(TUser.Str(TUserKanji))>=0) then i:=1;
   if i=1 then
   begin
     fWordList.PaintBox1.Visible:=true;

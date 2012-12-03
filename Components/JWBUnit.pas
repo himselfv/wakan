@@ -27,6 +27,9 @@ type
   FChar = AnsiString; //because one character takes 4 AnsiChars
   PFChar = PAnsiChar;
   FString = AnsiString;
+  //Useful for looking into FChars
+  FCharData = array[1..4] of AnsiChar;
+  PFCharData = ^FCharData;
  {$ENDIF}
 
 
@@ -35,17 +38,20 @@ const
  {$IFDEF UNICODE}
   UH_NONE:FChar = #0000;
   UH_ZERO:FChar = #0000;
-  UH_IDG_SPACE:FChar = #$3000; //Ideographic space (full-width)
   UH_HYPHEN:FChar = '-';
   UH_LOWLINE:FChar = '_';
   UH_ELLIPSIS:FChar = #$2026;
+  UH_IDG_SPACE:FChar = #$3000; //Ideographic space (full-width)
+ //Symbols U+E000..U+F8FF are for private use. We're free to assign whatever meaning we want.
+  UH_UNKNOWN_KANJI:Char = 'U'; //Set by CheckKnownKanji
  {$ELSE}
   UH_NONE:FChar = ''; //for initializing stuff with it
   UH_ZERO:FChar = '0000'; //when you need zero char
-  UH_IDG_SPACE:FChar = '3000';
   UH_HYPHEN:FChar = '002D'; //-
   UH_LOWLINE:FChar = '005F'; //_
   UH_ELLIPSIS:FChar = '2026'; //…
+  UH_IDG_SPACE:FChar = '3000';
+  UH_UNKNOWN_KANJI:Char = 'U'; //Char, not FChar
  {$ENDIF}
 
 
@@ -70,6 +76,10 @@ function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function fcopy(s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
+
+{$IFNDEF UNICODE}
+function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+{$ENDIF}
 
 function UnicodeToHex(s:UnicodeString):string;
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
@@ -114,15 +124,18 @@ procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 function ConvertEdictEntry(s:string;var mark:string):string;
 function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
-function CheckKnownKanji(kanji:string):string;
 function ChinTo(s:string):string;
 function ChinFrom(s:string):string;
-function IsKnown(listno:integer;char:FChar):boolean; overload;
-procedure SetKnown(listno:integer;char:FChar;known:boolean); overload;
+
+function IsKnown(listno:integer;const char:FChar):boolean; overload;
+procedure SetKnown(listno:integer;const char:FChar;known:boolean); overload;
+function FirstUnknownKanjiIndex(const kanji:FString):integer;
+function CheckKnownKanji(const kanji:FString): FString;
 {$IFDEF UNICODE}
-function IsKnown(listno:integer;char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-procedure SetKnown(listno:integer;char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
+function IsKnown(listno:integer;const char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
+
 function ChooseFont(charsets:array of TFontCharset;teststring:string;var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
 
 const //Character types for EvalChar
@@ -340,6 +353,23 @@ begin
 end;
 
 
+{$IFNDEF UNICODE}
+//Compares a cnt of 4-characters
+//There should be at least this number of 4-characters in at least one of a, b
+function FcharCmp(a, b: PFChar; cnt: integer): boolean;
+var ia: PInteger absolute a;
+  ib: PInteger absolute b;
+begin
+  while (cnt>0) and (ia^=ib^) do begin
+    Inc(ia);
+    Inc(ib);
+    Dec(cnt);
+  end;
+  Result := cnt<=0;
+end;
+{$ENDIF}
+
+
 
 function UnicodeToHex(s:UnicodeString):string;
 var i:integer;
@@ -446,7 +476,9 @@ var pn: PAnsiChar; //next symbol pointer
 begin
   Result := '';
   if (ps=nil) or (ps^=#00) then exit;
-  if ps^='U' then Inc(ps);
+ {$IFNDEF UNICODE}
+  if ps^=UH_UNKNOWN_KANJI then Inc(ps);
+ {$ENDIF}
   pn := ps;
   while (maxlen>=4) and EatOneFChar(pn) do begin
     cc := HexCharCode(ps^) shl 12;
@@ -467,7 +499,9 @@ var pn: PWideChar; //next symbol pointer
 begin
   Result := '';
   if (ps=nil) or (ps^=#00) then exit;
-  if ps^='U' then Inc(ps);
+ {$IFNDEF UNICODE}
+  if ps^=WideChar(UH_UNKNOWN_KANJI) then Inc(ps);
+ {$ENDIF}
   pn := ps;
   while (maxlen>=4) and EatOneFCharW(pn) do begin
     cc := HexCharCodeW(ps^) shl 12;
@@ -1136,23 +1170,6 @@ so we're going to try and implement it reallly fast.
 //Try to compare strings as integers, without any string routines
 {$DEFINE INTEGER_HELL}
 
-{$IFNDEF INTEGER_HELL}
-//Compares a cnt of 4-characters!
-//There should be at least this number of 4-characters in at least one of a, b
-function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
-var ia: PInteger absolute a;
-  ib: PInteger absolute b;
-begin
- {$IFDEF UNICODE}cnt := cnt shl 1;{$ENDIF} //with WideChars we have to compare twice as many integers
-  while (cnt>0) and (ia^=ib^) do begin
-    Inc(ia);
-    Inc(ib);
-    Dec(cnt);
-  end;
-  Result := cnt<=0;
-end;
-{$ENDIF}
-
 {$IFDEF INTEGER_HELL}
 //Returns a pointer to an integer p+#c counting from 0
 //This is pretty fast when inlined, basically the same as typing that inplace, so use without fear.
@@ -1693,7 +1710,7 @@ begin
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
-    if (s[1]='U') then
+    if (s[1]=UH_UNKNOWN_KANJI) then
     begin
       if (fSettings.CheckBox10.Checked) then Canvas.Font.COlor:=Col('Dict_UnknownChar') else Canvas.Font.Color:=Col('Dict_Text');
       delete(s,1,1);
@@ -1838,7 +1855,7 @@ begin
   end;
   if (s2<>s1) and (curlang='j') then
   begin
-    if s2[1]='!'then s2:='!'+s1[2]+'U'+copy(s2,3,length(s2)-2) else s2:='U'+s2;
+    if s2[1]='!'then s2:='!'+s1[2]+UH_UNKNOWN_KANJI+copy(s2,3,length(s2)-2) else s2:=UH_UNKNOWN_KANJI+s2;
     DrawWordInfo(Canvas,rect,false,false,1,'@'+s2,false,false,ch-3,boldfont);
     rect.left:=rect.left+(length(s2) div 4)*ch;
   end;
@@ -1935,7 +1952,7 @@ begin
     begin
       TUser.Locate('Index',TUserIdx.Str(TUserIdxWord),true);
       if length(TUser.Str(TUserKanji)) div 4<10 then
-//      if CheckKnownKanji(TUser.Str(TUserKanji))=TUser.Str(TUserKanji) then
+//      if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
         if TUserIdx.Bool(TUserIdxBegin) then
           sl.Add('+'+inttostr(length(TUser.Str(TUserKanji)) div 4)+TUser.Str(TUserKanji)) else
           sl.Add('-'+inttostr(length(TUser.Str(TUserKanji)) div 4)+TUser.Str(TUserKanji));
@@ -2369,7 +2386,7 @@ begin
     stream.Read(KnownList[listno]^,KnownListSize);
 end;
 
-function IsKnown(listno:integer;char:FChar):boolean;
+function IsKnown(listno:integer;const char:FChar):boolean;
 var w:widechar{$IFDEF UNICODE} absolute char{$ENDIF};
   ki,kj:integer;
 begin
@@ -2386,7 +2403,7 @@ begin
   result:=(((TByteArray(KnownList[listno]^)[ki]) shr kj) and 1)<>0;
 end;
 
-procedure SetKnown(listno:integer;char:FChar;known:boolean);
+procedure SetKnown(listno:integer;const char:FChar;known:boolean);
 var ki,kj:integer;
   a:byte;
   w:widechar{$IFDEF UNICODE} absolute char{$ENDIF};
@@ -2402,13 +2419,62 @@ begin
   TByteArray(KnownList[listno]^)[ki]:=a;
 end;
 
+{
+Parses the string, fchar by fchar, checking that all kanji are "Learned".
+If it encounters a character you haven't learned, it returns that character's
+number, else it just returns -1.
+}
+function FirstUnknownKanjiIndex(const kanji:FString):integer;
+{$IFDEF UNICODE}
+var i: integer;
+begin
+  Result := -1;
+  for i := 1 to Length(kanji) - 1 do
+    if (Word(kanji[i]) and $F000 > $3000) and not IsKnown(KnownLearned, kanji[i]) then begin
+      Result := i;
+      break;
+    end;
+end;
+{$ELSE}
+var i, ch: integer;
+begin
+  Result := -1;
+ //Original function had similar check so let's keep it
+  if Length(kanji) mod 4 <> 0 then
+    raise Exception.Create('Invalid FChar string at FirstUnknownKanjiIndex(): '+kanji);
+
+  for i := 1 to Length(kanji) div 4 do begin
+    ch := PInteger(@kanji[4*(i-1)+1])^;
+    if (PFCharData(@ch)^[1]>'3') and not IsKnown(KnownLearned, fcopy(kanji, i, 1)) then begin
+      Result := i;
+      break;
+    end;
+  end;
+end;
+{$ENDIF}
+
+{
+Backward compability.
+Prepends 'U' to the string if it contains kanjis not yet "learned".
+}
+function CheckKnownKanji(const kanji:FString): FString;
+var i: integer;
+begin
+  i := FirstUnknownKanjiIndex(kanji);
+  if i<0 then
+    Result := kanji
+  else
+    Result := UH_UNKNOWN_KANJI + kanji;
+end;
+
+
 {$IFDEF UNICODE}
 //Variants of the functions for cases where we pass a string
-function IsKnown(listno:integer;char:FString):boolean;
+function IsKnown(listno:integer;const char:FString):boolean;
 begin
   Result := (pointer(char)<>nil) and IsKnown(listno, PFChar(char)^);
 end;
-procedure SetKnown(listno:integer;char:FString;known:boolean);
+procedure SetKnown(listno:integer;const char:FString;known:boolean);
 begin
   if Length(char)>=1 then
     SetKnown(listno, char[1], known);
@@ -2500,25 +2566,6 @@ begin
   end;
   if fSelectFont.ShowModal<>idOK then result:=defaultfont else result:=fSelectFont.selfont;
   supportedsets:=fSelectFont.selcoding;
-end;
-
-function CheckKnownKanji(kanji:string):string;
-var s,s2:string;
-    oldchar:string;
-begin
-  result:=kanji;
-  s:=kanji;
-  while s<>'' do
-  begin
-    s2:=copy(s,1,4);
-    delete(s,1,4);
-    if length(s2)<>4 then showmessage('Error in kanji: '+s2+' ('+kanji+')') else
-    if (s2[1]>'3') and (not IsKnown(KnownLearned,s2)) then
-    begin
-      result:='U'+kanji;
-      exit;
-    end;
-  end;
 end;
 
 function ChinTo(s:string):string;
