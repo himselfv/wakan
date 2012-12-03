@@ -6,7 +6,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, ArtLabel, RXCtrls, ProCtrls, ProUrl, Db,
+  StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
   ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBUtils;
 
@@ -191,7 +191,6 @@ type
     Panel2: TPanel;
     Shape9: TShape;
     PaintBox3: TPaintBox;
-    FormPlacement1: TFormPlacement;
     aMode1: TAction;
     aMode2: TAction;
     aMode3: TAction;

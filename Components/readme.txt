@@ -1,9 +1,8 @@
 COMPONENTS FOR WAKAN COMPILATION
 
 1. Install Prolib controls
-2. Install RX controls
-3. Install ArtLabel from Graphic controls
-4. The rest is used as it is.
+2. Register RX controls
+3. The rest is used as it is.
 
 NOTE:
 1. You can install newer versions of common controls as per below. But don't come crying when it doesn't work.
@@ -18,9 +17,7 @@ INSTALLATION HOWTO
 Required by some versions, but be sure to disable it's auto-insertion functionality (Tools-> Mad Except Configuration-> Adjust project uses clause).
 
 2. RX Library (http://sourceforge.net/projects/rxlib/)
-The installation is pretty straightforward and documented in readme.
-After install:
-* Add source folder to the shell's library path (Tools->Options->Delphi Options->Library - Win32->Library path).
+The installation is pretty straightforward and documented in RxLib\Install_eng.txt
 
 3. ProLib (http://barabash.com/prolib/history.html)
 To compile ProLibDB90.bpl you might have to add this to Pro.inc before {$IFDEF VCL_3_OR_HIGHER}:
@@ -42,11 +39,11 @@ After install:
 * Add source folder to the shell's library path.
 
 4. Dream Graphic Pack by William Yang (http://www.torry.net/authorsmore.php?id=667)
+NOTE: Apparently, this pack is not needed.
 This one is tricky:
 1. Create a new package and add all *.pas files except for ColorBtnEdit.pas.
 2. When Delphi complains, add "Variants" and "Controls" to uses list where needed.
 3. When Delphi complains, change "DsgnIntf" to "DesignIntf", "DsgnWindows" to "DesignWindows" and add "DesignEditors" to uses list where needed.
 4. When Delphi complains, upgrade the function definition from DesignEditors.
 Otherwise, build and install the package.
-
 
