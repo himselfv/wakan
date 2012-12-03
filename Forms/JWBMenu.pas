@@ -243,6 +243,7 @@ type
     N00242eAddwordcPidatslovko1: TMenuItem;
     N00929eChangelanguage1: TMenuItem;
     aChangeLanguage: TAction;
+    FormPlacement1: TFormPlacement;
     procedure Button6Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -4905,7 +4906,7 @@ begin
   if not FileExists('ANNOTATE.PKG') then bld:=true;
   if bld then
   begin
-    pd:=SMMessageDlg(_l('^eAnnotations^cPoznámky'),_l('#^eRebuilding annotations...^cNahrávám poznámky...'));
+    pd:=SMMessageDlg(_l('^eAnnotations^cPoznámky'),_l('^eRebuilding annotations...^cNahrávám poznámky...'));
     {$I-}
     mkdir('annot');
     {$I+}

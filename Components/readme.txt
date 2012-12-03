@@ -1,8 +1,8 @@
 COMPONENTS FOR WAKAN COMPILATION
 
-1. Install Prolib controls
-2. Register RX controls
-3. The rest is used as it is.
+1. Install RX controls
+2. Install UrlLabel
+3. Add Components, Components\Package, Components\TextTable, Components\UrlLabel to the search path.
 
 NOTE:
 1. You can install newer versions of common controls as per below. But don't come crying when it doesn't work.
@@ -14,12 +14,17 @@ NOTE:
 
 INSTALLATION HOWTO
 1. MadExcept (http://madshi.net/madExceptDescription.htm). Has an installer.
+NOTE: Not required. Do not install.
 Required by some versions, but be sure to disable it's auto-insertion functionality (Tools-> Mad Except Configuration-> Adjust project uses clause).
 
 2. RX Library (http://sourceforge.net/projects/rxlib/)
 The installation is pretty straightforward and documented in RxLib\Install_eng.txt
 
-3. ProLib (http://barabash.com/prolib/history.html)
+3. UrlLabel.
+Add UrlLabel.pas to a package and install that.
+
+4. ProLib (http://barabash.com/prolib/history.html)
+NOTE: Not used anymore. Do not install.
 To compile ProLibDB90.bpl you might have to add this to Pro.inc before {$IFDEF VCL_3_OR_HIGHER}:
 {$IF CompilerVersion>17}
   {$DEFINE DELPHI_9}
@@ -38,8 +43,8 @@ The rest is per readme.
 After install:
 * Add source folder to the shell's library path.
 
-4. Dream Graphic Pack by William Yang (http://www.torry.net/authorsmore.php?id=667)
-NOTE: Apparently, this pack is not needed.
+5. Dream Graphic Pack by William Yang (http://www.torry.net/authorsmore.php?id=667)
+NOTE: Not used anymore. Do not install.
 This one is tricky:
 1. Create a new package and add all *.pas files except for ColorBtnEdit.pas.
 2. When Delphi complains, add "Variants" and "Controls" to uses list where needed.

@@ -4,43 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls;
+  StdCtrls, PackageCommon;
 
 type
-  PKGHeader=packed record
-              PKGTag:array[0..7] of char;
-              MemoryLimit:longint;
-              HeaderLength:longint;
-              PKGName:string[25];
-            end;
-  PKGCryptHeader=packed record
-                   PKGTag:array[0..2] of char;
-                   MemoryLimit:longint;
-                   HeaderLength:longint;
-                 end;
-  PKGCryptStarter=packed record
-                    ActualStart:longint;
-                    PKGTag:word;
-                  end;
-  PKGFile=packed record
-            PKGTag:array[0..3] of char;
-            FileName:string[128];
-            FileExt:string[16];
-            Directory:longint;
-            LoadMode:byte;
-            CryptMode:byte;
-            PackMode:byte;
-            CRCMode:byte;
-            FileLength:longint;
-            PackedLength:longint;
-            HeaderCRC:byte;
-          end;
-  PKGHuffRec=record
-               parent,bit1,bit0:integer;
-               count:longint;
-               active:boolean;
-             end;
-  PKGHuffArray=array[0..511] of PKGHuffRec;
   TPKGWriteForm = class(TForm)
     Memo1: TMemo;
     Label1: TLabel;
@@ -50,17 +16,17 @@ type
   private
     pkgf:file;
     pkgfilename:string;
-    companyname,copyrightname,titlename,commentname,name,versionname,formatname:string;
+    companyname,copyrightname,titlename,commentname,name,versionname,formatname:AnsiString;
     loadmode,packmode,cryptmode,crcmode:byte;
     memorylimit:longint;
     filesyscode,headercode,cryptcode:longint;
-    headertextname:string;
+    headertextname:AnsiString;
     totfsize:longint;
     filenamespecified,fileopened:boolean;
-    inclfname:string;
-    inclmask,inclrmask:string;
+    inclfname:AnsiString;
+    inclmask,inclrmask:AnsiString;
     notshow:boolean;
-    cryptheader:string;
+    cryptheader:AnsiString;
     LastDirectory:longint;
     pkghs:PKGCryptStarter;
     curcmd:string;
@@ -75,14 +41,13 @@ type
     BitStack:array[0..256] of boolean;
     BitStackLen:byte;
     TempCount:longint;
-    LogF:textfile;
     procedure IncludePath(path:string;mask:string;dirno:longint;recursive:boolean);
     function PrepareHuffman(var inf:file):longint;
     function ProcessHuffman(var inf:file;var buf;buflen:word;LZ77:boolean):integer;
-    { Private declarations }
+
   public
     function PKGWriteCmd(cmd:string):boolean;
-    { Public declarations }
+
   end;
 
 var
@@ -92,7 +57,7 @@ implementation
 
 {$R *.DFM}
 
-procedure pkgerr(errs,cmd:string);
+procedure pkgerr(errs:string;cmd:string);
 begin
   filemode:=2;
   MessageDlg('An error occured while building package file:'+#13+errs+#13+
@@ -388,7 +353,6 @@ var sr:tsearchrec;
     buf:array[1..2000] of byte;
     pkghf:pkgfile;
     tmpf,hdrf:file;
-    nm,nm2:string;
     ab,ax:boolean;
     b:byte;
     pkghfarr:array[1..sizeof(pkgfile)*2] of byte;
@@ -420,9 +384,7 @@ begin
     begin
     if (sr.attr and faDirectory=0) then
     begin
-      nm:=path;
-      nm:=nm+sr.name;
-      assignfile(hdrf,nm);
+      assignfile(hdrf,path+sr.name);
       try
       ab:=false;
       filemode:=0;
@@ -458,7 +420,8 @@ begin
     if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=lowercase(pkghf.FileExt);
     if not ab then
     begin
-    pkghf.FileName:=corr(pkghf.FileName); if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=corr(pkghf.FileExt);
+    pkghf.FileName:=corr(pkghf.FileName);
+    if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=corr(pkghf.FileExt);
     pkghf.pkgtag:='PKGF';
     b:=125;
     pkghf.cryptmode:=cryptmode;
@@ -629,17 +592,12 @@ var cmds,cmdp:string;
     tmpf,hdrf:file;
     i:integer;
     reat:integer;
-    crc:cardinal;
-    crch:byte;
     tmpt:textfile;
     pkgh:pkgheader;
-    pkghf:pkgfile;
     pkghc:pkgcryptheader;
-    pkghfarr:array[1..sizeof(pkgfile)*2] of byte;
-    pkgft:array[0..5] of char;
+    pkgft:array[0..5] of AnsiChar;
     b:byte;
     buf:array[1..2000] of byte;
-    nm,nm2:string;
     w:word;
     rnx:word;
 begin

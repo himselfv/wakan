@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, ProCtrls, ProUrl;
+  ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, UrlLabel;
 
 type
   TfKanjiDetails = class(TForm)
@@ -27,11 +27,11 @@ type
     Shape1: TShape;
     Button1: TButton;
     FormPlacement1: TFormPlacement;
-    ProUrlLabel1: TProUrlLabel;
-    ProUrlLabel2: TProUrlLabel;
-    ProUrlLabel3: TProUrlLabel;
-    ProUrlLabel4: TProUrlLabel;
-    ProUrlLabel5: TProUrlLabel;
+    ProUrlLabel1: TUrlLabel;
+    ProUrlLabel2: TUrlLabel;
+    ProUrlLabel3: TUrlLabel;
+    ProUrlLabel4: TUrlLabel;
+    ProUrlLabel5: TUrlLabel;
     Label2: TLabel;
     Button2: TButton;
     SpeedButton1: TSpeedButton;
