@@ -200,7 +200,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object ProUrlLabel1: TProUrlLabel
+  object ProUrlLabel1: TUrlLabel
     Left = 8
     Top = 198
     Width = 54
@@ -219,7 +219,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentShowHint = False
     ShowHint = True
   end
-  object ProUrlLabel2: TProUrlLabel
+  object ProUrlLabel2: TUrlLabel
     Left = 83
     Top = 198
     Width = 56
@@ -239,7 +239,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentShowHint = False
     ShowHint = True
   end
-  object ProUrlLabel3: TProUrlLabel
+  object ProUrlLabel3: TUrlLabel
     Left = 161
     Top = 198
     Width = 36
@@ -258,7 +258,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentShowHint = False
     ShowHint = True
   end
-  object ProUrlLabel4: TProUrlLabel
+  object ProUrlLabel4: TUrlLabel
     Left = 218
     Top = 198
     Width = 26
@@ -277,7 +277,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentShowHint = False
     ShowHint = True
   end
-  object ProUrlLabel5: TProUrlLabel
+  object ProUrlLabel5: TUrlLabel
     Left = 263
     Top = 198
     Width = 56
