@@ -11,10 +11,6 @@ type
     Shape1: TShape;
     PaintBox1: TPaintBox;
     procedure PaintBox1Paint(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

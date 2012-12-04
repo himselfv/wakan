@@ -2197,16 +2197,15 @@ begin
   ws := clip;
  {$ELSE}
   ws := HexToUnicode(clip);
-  SetLength(ws, Length(ws)+1);
-  ws[Length(ws)] := WideChar($0000);  // Null-terminator
  {$ENDIF}
 
+ //Copy data + final NULL
   DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE,
-                            Length(ws)*SizeOf(WChar));
+                            (Length(ws)+1)*SizeOf(WChar));
 
   ToPointer   := GlobalLock(DataHandle);
   FromPointer := @ws[1];
-  Move(FromPointer^, ToPointer^, Length(ws)*SizeOf(WChar));
+  Move(FromPointer^, ToPointer^, (Length(ws)+1)*SizeOf(WChar));
   GlobalUnlock(DataHandle);
 
   OpenClipboard(Handle);
@@ -4183,7 +4182,7 @@ begin
     4:begin
         if fRadical.Visible then exit;
         if not fKanjiDetails.Visible then aKanjiDetails.Execute;
-        fKanji.SetCharDetails(copy(screenTipText,1,4));
+        fKanji.SetCharDetails(fcopy(screenTipText,1,1));
       end;
   end;
 end;

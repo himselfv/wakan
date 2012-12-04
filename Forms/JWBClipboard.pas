@@ -12,10 +12,6 @@ type
     procedure PaintBox3Paint(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var
