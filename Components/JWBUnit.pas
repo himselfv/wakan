@@ -34,24 +34,62 @@ type
 
 
 const
- //Some character constants used throught the program
- {$IFDEF UNICODE}
-  UH_NONE:FChar = #0000;
-  UH_ZERO:FChar = #0000;
-  UH_HYPHEN:FChar = '-';
-  UH_LOWLINE:FChar = '_';
-  UH_ELLIPSIS:FChar = #$2026;
-  UH_IDG_SPACE:FChar = #$3000; //Ideographic space (full-width)
- //Symbols U+E000..U+F8FF are for private use. We're free to assign whatever meaning we want.
-  UH_UNKNOWN_KANJI:Char = 'U'; //Set by CheckKnownKanji
- {$ELSE}
+ {
+  Some character constants used throught the program
+  Names MUST be descriptive. If you name something 'UH_SPACE' it means it FUNCTIONS as space,
+  not just looks like one.
+ }
+ {$IFNDEF UNICODE}
   UH_NONE:FChar = ''; //for initializing stuff with it
   UH_ZERO:FChar = '0000'; //when you need zero char
+  UH_LF: FChar = '000A'; //linefeed
+  UH_CR: FChar = '000D'; //carriage return
+  UH_SPACE:FChar = '0020';
   UH_HYPHEN:FChar = '002D'; //-
   UH_LOWLINE:FChar = '005F'; //_
   UH_ELLIPSIS:FChar = '2026'; //…
-  UH_IDG_SPACE:FChar = '3000';
-  UH_UNKNOWN_KANJI:Char = 'U'; //Char, not FChar
+  UH_IDG_SPACE:FChar = '3000'; //Ideographic space (full-width)
+
+ {
+  Control Characters.
+  Wakan uses single characters like 'U', '~', '@' to control text markup.
+  We can't do that in Unicode because those characters can legitimately occur in text.
+  Instead we use symbols U+E000..U+F8FF which are for private use by applications.
+
+  Not all control characters are well understood, so they don't yet have descriptive names.
+  For non-descriptive names use prefix ALTCH_
+ }
+  UH_UNKNOWN_KANJI:Char = 'U'; //Set by CheckKnownKanji
+
+ { All used by DrawWordInfo }
+  ALTCH_EXCL:Char = '!';
+  ALTCH_SHARP:Char = '#';
+  ALTCH_AT:Char = '@';
+  ALTCH_TILDE:Char = '~'; //followed by 'I' and means 'italic'
+  UH_SETCOLOR:Char = '%'; //followed by 6 character hex color
+  ALTCH_GREQ:Char = '>';
+  ALTCH_LEQ:Char = '<';
+
+ {$ELSE}
+  UH_NONE:FChar = #$0000;
+  UH_ZERO:FChar = #$0000;
+  UH_LF: FChar = #$000A;
+  UH_CR: FChar = #$000D;
+  UH_SPACE:FChar = #$0020;
+  UH_HYPHEN:FChar = '-';
+  UH_LOWLINE:FChar = '_';
+  UH_ELLIPSIS:FChar = #$2026;
+  UH_IDG_SPACE:FChar = #$3000;
+
+  UH_UNKNOWN_KANJI:Char = #$E001;
+
+  ALTCH_EXCL:Char = #$E002;
+  ALTCH_SHARP:Char = #$E003;
+  ALTCH_AT:Char = #$E004;
+  ALTCH_TILDE:Char = #$E005;
+  UH_SETCOLOR:Char = #$E006;
+  ALTCH_GREQ:Char = #$E007;
+  ALTCH_LEQ:Char = #$E008;
  {$ENDIF}
 
 
@@ -96,8 +134,11 @@ procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
 function SplitStr(s: string; cnt: integer): TStringArray;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
 
+function remexcl(s:string):string;
+
 
 { Rest }
+
 
 procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
@@ -576,6 +617,17 @@ var i: integer;
 begin
   for i := 0 to Length(sa) - 1 do
     sl.Add(sa[i]);
+end;
+
+
+function remexcl(s:string):string;
+begin
+  if (length(s)>1) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
+  if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
+  if (length(s)>1) and (s[2]=UH_UNKNOWN_KANJI) then delete(s,2,1);
+  if (length(s)>1) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
+  if (length(s)>1) and (s[1]=ALTCH_TILDE) then delete(s,1,2);
+  result:=s;
 end;
 
 
@@ -1597,8 +1649,8 @@ end;
 
 procedure AddWordGrid(var grid:TStringGrid;sp1,sp2,sp4,sp3:string);
 begin
-  grid.Cells[0,wgcur]:='#'+sp2;
-  grid.Cells[1,wgcur]:='@'+sp1;
+  grid.Cells[0,wgcur]:=ALTCH_SHARP+sp2;
+  grid.Cells[1,wgcur]:=ALTCH_AT+sp1;
   grid.Cells[2,wgcur]:=sp4;
   if sp3<>'' then grid.Cells[3,wgcur]:=sp3;
   inc(wgcur);
@@ -1685,8 +1737,8 @@ begin
   if (fSettings.CheckBox11.Checked) and (not fSettings.CheckBox9.Checked) and (not titrow) then
   begin
     c:=' ';
-    if (length(s)>1) and (s[1]='!') then c:=s[2];
-    if (length(s)>2) and (s[2]='!') then c:=s[3];
+    if (length(s)>1) and (s[1]=ALTCH_EXCL) then c:=s[2];
+    if (length(s)>2) and (s[2]=ALTCH_EXCL) then c:=s[3];
     case c of
       ' ':if sel then Canvas.Brush.Color:=Col('Dict_SelBack') else Canvas.Brush.Color:=Col('Dict_Back');
       '0':if sel then Canvas.Brush.Color:=Col('Dict_SelProblematic') else Canvas.Brush.Color:=Col('Dict_Problematic');
@@ -1695,9 +1747,9 @@ begin
       '3':if sel then Canvas.Brush.Color:=Col('Dict_SelMastered') else Canvas.Brush.Color:=Col('Dict_Mastered');
     end;
   end;
-  if (length(s)>1) and (s[1]='!') then delete(s,1,2);
-  if (length(s)>2) and (s[2]='!') then delete(s,2,2);
-  if (length(s)>0) and (Colx=0) and (s[1]='#') then
+  if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
+  if (length(s)>2) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
+  if (length(s)>0) and (Colx=0) and (s[1]=ALTCH_SHARP) then
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
@@ -1706,7 +1758,7 @@ begin
 //    DrawUnicode(Grid.Canvas,Rect.Left+2,Rect.Top+2,12,s,FontSmall);
     DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,romasys,curlang);
   end else
-  if (length(s)>0) and (s[1]='@') then
+  if (length(s)>0) and (s[1]=ALTCH_AT) then
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
@@ -1723,15 +1775,17 @@ begin
     cursiv:=false;
     FontColor:=Col('Dict_Text');
     if fSettings.CheckBox9.Checked then FontColor:=clWindowText;
-    if (length(s)>1) and (s[1]='~') then
+    if (length(s)>1) and (s[1]=ALTCH_TILDE) then
     begin
       if s[2]='I'then cursiv:=true;
 //      if not fUser.CheckBox1.Checked then cursiv:=false;
       delete(s,1,2);
     end;
-    if (length(s)>1) and (s[1]='%') then
+    if (length(s)>1) and (s[1]=UH_SETCOLOR) then
     begin
-      if (fSettings.CheckBox69.Checked) then try FontColor:=strtoint('0x'+copy(s,6,2)+copy(s,4,2)+copy(s,2,2)); except FontColor:=clWindowText; end;
+      if (fSettings.CheckBox69.Checked) then
+        if not TryStrToInt('0x'+copy(s,6,2)+copy(s,4,2)+copy(s,2,2), integer(FontColor)) then
+          FontColor:=clWindowText;
       delete(s,1,7);
     end;
     if not onlycount then Canvas.FillRect(Rect);
@@ -1749,11 +1803,11 @@ begin
       sbef:=s;
       inc(cnt);
       if inmar then
-        if pos('>',s)>0 then curs:=copy(s,1,pos('>',s)-1) else curs:=s;
+        if pos(ALTCH_GREQ,s)>0 then curs:=copy(s,1,pos(ALTCH_GREQ,s)-1) else curs:=s;
       if not inmar then
-        if pos('<',s)>0 then curs:=copy(s,1,pos('<',s)-1) else curs:=s;
+        if pos(ALTCH_LEQ,s)>0 then curs:=copy(s,1,pos(ALTCH_LEQ,s)-1) else curs:=s;
       delete(s,1,length(curs));
-      if (length(s)>0) and ((s[1]='<') or (s[1]='>')) then delete(s,1,1);
+      if (length(s)>0) and ((s[1]=ALTCH_LEQ) or (s[1]=ALTCH_GREQ)) then delete(s,1,1);
       rect2:=rect;
       rect2.Left:=rect.left+x+2;
       rect2.Top:=rect.top+y;
@@ -1788,10 +1842,10 @@ begin
         resinmar:=false;
         if (multiline) and (rect.left+2+x+w>rect.right) then
         begin
-          if (length(curs)>0) and (curs[1]=' ') then curs[1]:='~';
+          if (length(curs)>0) and (curs[1]=' ') then curs[1]:=ALTCH_TILDE;
           if inmar or (pos(' ',curs)=0) or (Canvas.TextExtent(copy(curs,1,pos(' ',curs)-1)).cx+rect.left+2+x>rect.right) then
           begin
-            if (length(curs)>0) and (curs[1]='~') then curs[1]:=' ';
+            if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
             x:=0;
             y:=y+FontSize+2;
             rect2.left:=rect.left+2;
@@ -1800,15 +1854,15 @@ begin
           end else
           if not inmar and (pos(' ',curs)>0) then
           begin
-            if (length(curs)>0) and (curs[1]=' ') then curs[1]:='~';
-            s:=copy(curs,pos(' ',curs),length(curs)-pos(' ',curs)+1)+'<'+s;
+            if (length(curs)>0) and (curs[1]=' ') then curs[1]:=ALTCH_TILDE;
+            s:=copy(curs,pos(' ',curs),length(curs)-pos(' ',curs)+1)+ALTCH_LEQ+s;
             curs:=copy(curs,1,pos(' ',curs)-1);
-            if (length(curs)>0) and (curs[1]='~') then curs[1]:=' ';
+            if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
             resinmar:=true;
           end else
           begin
             curs:=s;
-            if (length(curs)>0) and (curs[1]='~') then curs[1]:=' ';
+            if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
             s:='';
           end;
         end;
@@ -1841,22 +1895,22 @@ begin
   SplitWord(s,s1,s2,s3,s4);
   if curlang='c'then
   begin
-    if s2[1]='!'then delete(s2,1,2);
+    if s2[1]=ALTCH_EXCL then delete(s2,1,2);
     s2:=KanaToRomaji(s2,romasys,curlang);
     s2:=ConvertPinYin(s2);
     sx1:=s1;
-    s1:=s1+'0020'+s2;
-    DrawWordInfo(Canvas,rect,false,false,0,'@'+s1,false,false,ch-3,boldfont);
+    s1:=s1+UH_SPACE+s2;
+    DrawWordInfo(Canvas,rect,false,false,0,ALTCH_AT+s1,false,false,ch-3,boldfont);
     rect.left:=rect.left+(length(sx1) div 4)*ch+ch+(length(s2) div 8)*ch;
   end else
   begin
-    DrawWordInfo(Canvas,rect,false,false,0,'@'+s1,false,false,ch-3,boldfont);
+    DrawWordInfo(Canvas,rect,false,false,0,ALTCH_AT+s1,false,false,ch-3,boldfont);
     rect.left:=rect.left+(length(s1) div 4)*ch;
   end;
   if (s2<>s1) and (curlang='j') then
   begin
-    if s2[1]='!'then s2:='!'+s1[2]+UH_UNKNOWN_KANJI+copy(s2,3,length(s2)-2) else s2:=UH_UNKNOWN_KANJI+s2;
-    DrawWordInfo(Canvas,rect,false,false,1,'@'+s2,false,false,ch-3,boldfont);
+    if s2[1]=ALTCH_EXCL then s2:=ALTCH_EXCL+s1[2]+UH_UNKNOWN_KANJI+copy(s2,3,length(s2)-2) else s2:=UH_UNKNOWN_KANJI+s2;
+    DrawWordInfo(Canvas,rect,false,false,1,ALTCH_AT+s2,false,false,ch-3,boldfont);
     rect.left:=rect.left+(length(s2) div 4)*ch;
   end;
   DrawWordInfo(Canvas,rect,false,false,2,s3,false,false,ch-3,boldfont);

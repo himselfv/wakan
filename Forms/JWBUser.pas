@@ -245,16 +245,6 @@ var curword:integer;
 
 {$R *.DFM}
 
-function remexcl(s:string):string;
-begin
-  if (length(s)>1) and (s[2]='!') then delete(s,2,2);
-  if (length(s)>1) and (s[1]='!') then delete(s,1,2);
-  if (length(s)>1) and (s[2]=UH_UNKNOWN_KANJI) then delete(s,2,1);
-  if (length(s)>1) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
-  if (length(s)>1) and (s[1]='~') then delete(s,1,2);
-  result:=s;
-end;
-
 function strip(s:string):string;
 begin
   while (pos('<',s)>0) and (pos('>',s)>0) and (pos('>',s)>pos('<',s)) do

@@ -4076,8 +4076,9 @@ begin
     rect.right:=Screen.Width;
     rect.top:=0;
     rect.bottom:=100;
-    if (length(s1)>0) and (s1[1]='!') then delete(s1,1,2);
-    if (length(s2)>0) and (s2[1]='!') then delete(s2,1,2);
+    //TODO: replace with remexcl?
+    if (length(s1)>0) and (s1[1]=ALTCH_EXCL) then delete(s1,1,2);
+    if (length(s2)>0) and (s2[1]=ALTCH_EXCL) then delete(s2,1,2);
     if (length(s1)>0) and (s1[1]=UH_UNKNOWN_KANJI) then delete(s1,1,1);
     if (length(s2)>0) and (s2[1]=UH_UNKNOWN_KANJI) then delete(s2,1,1);
     cw:=DrawWordInfo(fScreenTip.pb.Canvas,rect,false,false,2,s3,false,true,GridFontSize,true)+GridFontSize*(3+length(s1+s2) div 4);
@@ -4710,10 +4711,10 @@ begin
           mo:=(gc2.x=gc.x) and (gc2.y=gc.y);
         end else mo:=false;
         s:=(TStringGrid(intmoGrid)).Cells[gc.x,gc.y];
-        if (length(s)>1) and (s[1]='!') then delete(s,1,2);
-        if (length(s)>2) and (s[2]='!') then delete(s,2,2);
-        if (length(s)>1) and (s[1]='#') then delete(s,1,1);
-        if (length(s)>1) and (s[1]='@') then delete(s,1,1);
+        if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
+        if (length(s)>2) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
+        if (length(s)>1) and (s[1]=ALTCH_SHARP) then delete(s,1,1);
+        if (length(s)>1) and (s[1]=ALTCH_AT) then delete(s,1,1);
         rect:=intmoGrid.CellRect(gc.x,gc.y);
         if (length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
         if not mo then fdelete(s,1,((intmocx-rect.left-2) div GridFontSize));
@@ -4958,7 +4959,7 @@ begin
       curd:=''; curt:='';
       while s<>'' do
       begin
-        if s='000A' then
+        if s=UH_LF then
         begin
           if (curd<>'') and (curt<>'') and (copy(curt,1,4)<>UnicodeToHex('#')) then
             tt.Insert([curt,dd,HexToCombUni(curd)]);
@@ -4966,7 +4967,7 @@ begin
           curt:='';
           moded:=false;
         end else if (not moded) and ((s=UnicodeToHex(';')) or (s=UnicodeToHex(':'))) then
-          moded:=true else if s<>'000D' then
+          moded:=true else if s<>UH_CR then
           if moded then curd:=curd+s else curt:=curt+s;
         s:=Conv_Read;
       end;
