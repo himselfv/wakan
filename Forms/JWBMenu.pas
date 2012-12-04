@@ -385,6 +385,7 @@ type
       Sender: TObject);
     procedure aDictMiddleExecute(Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
+
   private
     initdone:boolean;
     { Private declarations }
@@ -402,13 +403,7 @@ type
     screenTipImmediate:boolean;
     ctlFileMap:cardinal;
     ptrFileMap:pointer;
-    intorgPaint:TPaintBox;
-    intorgGrid:TDrawGrid;
-    intorgcx,intorgcy,intorgsx,intorgsy:integer;
-    intmoPaint:TPaintBox;
-    intmoGrid:TDrawGrid;
-    intmocx,intmocy,intmosx,intmosy:integer;
-    intcurString:string;
+
     procedure XPResFix(form:TForm);
     procedure Clipboard_PaintBox3Paint(Sender: TObject);
     procedure Clipboard_Timer1Timer(Sender: TObject);
@@ -446,9 +441,6 @@ type
     procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
     procedure HideScreenTip;
     procedure PaintScreenTip;
-    procedure CalculateCurString;
-    procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
-    procedure IntTipGridOver(sg:TDrawGrid;x,y:integer;leftDown:boolean);
     procedure DrawPopupButtons(sel:integer);
     procedure PopupMouseMove(x,y:integer);
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
@@ -466,6 +458,24 @@ type
     procedure AnnotShowMedia(kanji,kana:string);
 //    procedure LoadLayout(filename:string);
 //    procedure SaveFixedLayout(filename:string);
+
+
+  private //Text under mouse
+    intcurString:string; { String under the mouse pointer right now.
+      Only CalculateCurString changes this member, and only ScreenTimerTimer uses it.
+      And CalculateCurString is only called from IntTipPaintOver/IntTipGridOver }
+    //What. Are. These.
+    //And why are there two of them?
+    intorgPaint:TPaintBox;
+    intorgGrid:TDrawGrid;
+    intorgcx,intorgcy,intorgsx,intorgsy:integer;
+    intmoPaint:TPaintBox;
+    intmoGrid:TDrawGrid;
+    intmocx,intmocy,intmosx,intmosy:integer;
+    procedure CalculateCurString;
+  public
+    procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
+    procedure IntTipGridOver(sg:TDrawGrid;x,y:integer;leftDown:boolean);
 
   protected //Clipboard viewer
    { SetClipboardViewer is supported starting with Windows 2000,
@@ -4422,15 +4432,10 @@ begin
     pt:=Mouse.CursorPos;
   except inproc:=false; exit; end;
   try
-  try
-    ttim:=strtoint(fSettings.Edit21.Text);
-    tleft:=strtoint(fSettings.Edit22.Text);
-    tright:=strtoint(fSettings.Edit23.Text);
-  except
-    ttim:=10;
-    tleft:=10;
-    tright:=100;
-  end;
+  if not TryStrToInt(fSettings.Edit21.Text, ttim) then ttim := 10;
+  if not TryStrToInt(fSettings.Edit22.Text, tleft) then tleft:=10;
+  if not TryStrToInt(fSettings.Edit23.Text, tright) then tright:=100;
+
   if (popcreated) and (pt.x>=fScreenTip.Left-10) and
      (pt.y>=fScreenTip.Top-10) and (pt.x<=fScreenTip.Left+fScreenTip.Width+10) and
      (pt.y<=fScreenTip.Top+fScreenTip.Height+10) then
@@ -4622,6 +4627,15 @@ begin
   end;
 end;
 
+
+{
+IntTipPaintOver(), IntTipGridOver()
+Various controls from all over the program call these on mouse move,
+to determine which characters are under mouse cursor right now.
+This information is used only by ScreenTimerTimer (showing popup tip),
+so we could have calculated it there, but we'd need to figure out the class
+of control mouse is over.
+}
 procedure TfMenu.IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
 begin
   if leftDown and ((intorgGrid<>nil) or (intorgPaint<>p)) then
@@ -4629,6 +4643,8 @@ begin
     intorgcx:=x; intorgcy:=y; intorgsx:=Mouse.CursorPos.x; intorgsy:=Mouse.CursorPos.y;
     intorgPaint:=p; intorgGrid:=nil;
   end;
+  //TODO: Why are we doing this through common vars? Does anyone else use these?
+  //  Maybe make them into params?
   intmocx:=x; intmocy:=y; intmosx:=Mouse.CursorPos.x; intmosy:=Mouse.CursorPos.y;
   intmopaint:=p;
   intmogrid:=nil;
@@ -4647,6 +4663,83 @@ begin
   intmogrid:=sg;
   CalculateCurString;
 end;
+
+procedure TfMenu.CalculateCurString;
+var s,s2:string;
+    rx,ry,wtt:integer;
+    x1,y1,x2,y2:integer;
+    gc,gc2:TGridCoord;
+    rect:TRect;
+    mox1,mox2:integer;
+    mo:boolean;
+begin
+  SetScreenTipBlock(0,0,0,0,nil);
+  if (intmoPaint<>nil) and (intmoPaint<>fTranslate.PaintBox6) then
+  begin
+    s:=FindDrawReg(intmoPaint,intmocx,intmocy,x1,y1,y2);
+    if (intorgPaint=intmoPaint) then
+    begin
+      s2:=FindDrawReg(intorgPaint,intorgcx,intorgcy,x2,y1,y2);
+      if length(s2)>length(s) then
+      begin
+        s2:=s;
+        x2:=x1;
+        s:=FindDrawReg(intorgPaint,intorgcx,intorgcy,x1,y1,y2);
+      end;
+      if copy(s,length(s)-length(s2)+1,length(s2))=s2 then
+      begin
+        s:=copy(s,1,length(s)-length(s2));
+        SetScreenTipBlock(x1,y1,x2,y2,intmoPaint.Canvas);
+      end;
+    end;
+  end else
+  if intmoPaint=fTranslate.PaintBox6 then
+  begin
+    fUser.CalcMouseCoords(intmocx,intmocy,rx,ry);
+    if ry<>-1 then s:=fUser.GetDocWord(rx,ry,wtt,false);
+  end else
+  begin
+    gc:=intmoGrid.MouseCoord(intmocx,intmocy);
+    if (intmoGrid<>fKanji.DrawGrid1) and (intmoGrid<>fRadical.DrawGrid1) then
+    begin
+      if (gc.x>=0) and (gc.x<2) and (gc.y>0) then
+      begin
+        if intorgGrid=intmoGrid then
+        begin
+          gc2:=intmoGrid.MouseCoord(intorgcx,intorgcy);
+          mo:=(gc2.x=gc.x) and (gc2.y=gc.y);
+        end else mo:=false;
+        s:=(TStringGrid(intmoGrid)).Cells[gc.x,gc.y];
+        if (length(s)>1) and (s[1]='!') then delete(s,1,2);
+        if (length(s)>2) and (s[2]='!') then delete(s,2,2);
+        if (length(s)>1) and (s[1]='#') then delete(s,1,1);
+        if (length(s)>1) and (s[1]='@') then delete(s,1,1);
+        rect:=intmoGrid.CellRect(gc.x,gc.y);
+        if (length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
+        if not mo then fdelete(s,1,((intmocx-rect.left-2) div GridFontSize));
+        if mo then
+        begin
+          if intorgcx>intmocx then
+          begin
+            mox1:=intmocx;
+            mox2:=intorgcx;
+          end else
+          begin
+            mox1:=intorgcx;
+            mox2:=intmocx;
+          end;
+          mox1:=(mox1-rect.left-2) div GridFontSize;
+          mox2:=(mox2-rect.left-2) div GridFontSize;
+          s:=fcopy(s,mox1,(mox2-mox1));
+          SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,intmoGrid.Canvas);
+        end;
+      end;
+    end else if intmoGrid=fKanji.DrawGrid1 then
+      s:=fKanji.GetKanji(gc.x,gc.y) else s:=fRadical.GetKanji(gc.x,gc.y);
+  end;
+  intcurString:=s;
+end;
+
 
 procedure TfMenu.PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
@@ -4742,82 +4835,6 @@ end;
 function _l(id:string):string;
 begin
   result:=fLanguage.TranslateString(id);
-end;
-
-procedure TfMenu.CalculateCurString;
-var s,s2:string;
-    rx,ry,wtt:integer;
-    x1,y1,x2,y2:integer;
-    gc,gc2:TGridCoord;
-    rect:TRect;
-    mox1,mox2:integer;
-    mo:boolean;
-begin
-  SetScreenTipBlock(0,0,0,0,nil);
-  if (intmoPaint<>nil) and (intmoPaint<>fTranslate.PaintBox6) then
-  begin
-    s:=FindDrawReg(intmoPaint,intmocx,intmocy,x1,y1,y2);
-    if (intorgPaint=intmoPaint) then
-    begin
-      s2:=FindDrawReg(intorgPaint,intorgcx,intorgcy,x2,y1,y2);
-      if length(s2)>length(s) then
-      begin
-        s2:=s;
-        x2:=x1;
-        s:=FindDrawReg(intorgPaint,intorgcx,intorgcy,x1,y1,y2);
-      end;
-      if copy(s,length(s)-length(s2)+1,length(s2))=s2 then
-      begin
-        s:=copy(s,1,length(s)-length(s2));
-        SetScreenTipBlock(x1,y1,x2,y2,intmoPaint.Canvas);
-      end;
-    end;
-  end else
-  if intmoPaint=fTranslate.PaintBox6 then
-  begin
-    fUser.CalcMouseCoords(intmocx,intmocy,rx,ry);
-    if ry<>-1 then s:=fUser.GetDocWord(rx,ry,wtt,false);
-  end else
-  begin
-    gc:=intmoGrid.MouseCoord(intmocx,intmocy);
-    if (intmoGrid<>fKanji.DrawGrid1) and (intmoGrid<>fRadical.DrawGrid1) then
-    begin
-      if (gc.x>=0) and (gc.x<2) and (gc.y>0) then
-      begin
-        if intorgGrid=intmoGrid then
-        begin
-          gc2:=intmoGrid.MouseCoord(intorgcx,intorgcy);
-          mo:=(gc2.x=gc.x) and (gc2.y=gc.y);
-        end else mo:=false;
-        s:=(TStringGrid(intmoGrid)).Cells[gc.x,gc.y];
-        if (length(s)>1) and (s[1]='!') then delete(s,1,2);
-        if (length(s)>2) and (s[2]='!') then delete(s,2,2);
-        if (length(s)>1) and (s[1]='#') then delete(s,1,1);
-        if (length(s)>1) and (s[1]='@') then delete(s,1,1);
-        rect:=intmoGrid.CellRect(gc.x,gc.y);
-        if (length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
-        if not mo then delete(s,1,((intmocx-rect.left-2) div GridFontSize)*4);
-        if mo then
-        begin
-          if intorgcx>intmocx then
-          begin
-            mox1:=intmocx;
-            mox2:=intorgcx;
-          end else
-          begin
-            mox1:=intorgcx;
-            mox2:=intmocx;
-          end;
-          mox1:=(mox1-rect.left-2) div GridFontSize;
-          mox2:=(mox2-rect.left-2) div GridFontSize;
-          s:=copy(s,mox1*4+1,(mox2-mox1)*4);
-          SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,intmoGrid.Canvas);
-        end;
-      end;
-    end else if intmoGrid=fKanji.DrawGrid1 then
-      s:=fKanji.GetKanji(gc.x,gc.y) else s:=fRadical.GetKanji(gc.x,gc.y);
-  end;
-  intcurString:=s;
 end;
 
 procedure TfMenu.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
