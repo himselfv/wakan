@@ -2252,6 +2252,7 @@ begin
   sl.Free;
 end;
 
+//TODO: Convert to Unicode
 function ConvertPinYin(s:string):string;
 var nch:string;
     li:integer;
@@ -2322,6 +2323,7 @@ begin
 //    result:=UnicodeToHex(s);
 end;
 
+//TODO: Convert to Unicode
 function DeconvertPinYin(s:string):string;
 var nch:string;
     cnv,cnv2:string;

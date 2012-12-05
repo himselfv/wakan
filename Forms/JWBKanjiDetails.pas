@@ -316,13 +316,13 @@ begin
   curkun:='';
   curnanori:='';
   cursimple:='';
-  fKanjiDetails.PaintBox1.Invalidate;
-  fKanjiDetails.PaintBox2.Invalidate;
-  fKanjiDetails.PaintBox3.Invalidate;
-  fKanjiDetails.RxLabel35.Hide;
-  fKanjiDetails.PaintBox4.Hide;
-  fKanjiDetails.Shape10.Hide;
-  fKanjiDetails.Label1.Caption:='-';
+  PaintBox1.Invalidate;
+  PaintBox2.Invalidate;
+  PaintBox3.Invalidate;
+  RxLabel35.Hide;
+  PaintBox4.Hide;
+  Shape10.Hide;
+  Label1.Caption:='-';
   kix:=unicode;
   if not TChar.Locate('Unicode',kix,false) then exit;
   Screen.Cursor:=crHourGlass;
@@ -330,21 +330,21 @@ begin
   curindex:=TChar.Int(TCharIndex);
   ld:=false;
   cv:=fMenu.GetCharValue(curindex,51);
-  fKanjiDetails.ProURLLabel1.Enabled:=cv<>'';
-  fKanjiDetails.ProURLLabel1.URL:='http://www.zhongwen.com/cgi-bin/zipux2.cgi?b5=%'+copy(cv,1,2)+'%'+copy(cv,3,2);
-  fKanjiDetails.ProURLLabel2.Enabled:=TChar.Int(TCharChinese)=0;
-  fKanjiDetails.ProURLLabel2.URL:='http://www.csse.monash.edu.au/cgi-bin/cgiwrap/jwb/wwwjdic?1MKU'+lowercase(curKanji);
-  fKanjiDetails.ProURLLabel3.Enabled:=true;
-  fKanjiDetails.ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(curKanji);
+  ProURLLabel1.Enabled:=cv<>'';
+  ProURLLabel1.URL:='http://www.zhongwen.com/cgi-bin/zipux2.cgi?b5=%'+copy(cv,1,2)+'%'+copy(cv,3,2);
+  ProURLLabel2.Enabled:=TChar.Int(TCharChinese)=0;
+  ProURLLabel2.URL:='http://www.csse.monash.edu.au/cgi-bin/cgiwrap/jwb/wwwjdic?1MKU'+lowercase(curKanji);
+  ProURLLabel3.Enabled:=true;
+  ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(curKanji);
   cv:=fMenu.GetCharValue(curindex,54);
-  fKanjiDetails.ProURLLabel4.Enabled:=(cv<>'')
+  ProURLLabel4.Enabled:=(cv<>'')
     and TryStrToInt(copy(cv,1,2), cv_i1)
     and TryStrToInt(copy(cv,3,2), cv_i2);
-  if fKanjiDetails.ProURLLabel4.Enabled then
-    fKanjiDetails.ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
+  if ProURLLabel4.Enabled then
+    ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
   cv:=fMenu.GetCharValue(curindex,57);
-  fKanjiDetails.ProURLLabel5.Enabled:=cv<>'';
-  fKanjiDetails.ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
+  ProURLLabel5.Enabled:=cv<>'';
+  ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
   fStrokeOrder.TrackBar1.Max:=0;
   if (fMenu.StrokeOrderPackage<>nil) and (fMenu.GetCharValueInt(TChar.Int(TCharIndex),101)<65535) then
   begin
@@ -379,36 +379,36 @@ begin
   if fMenu.GetCharValue(TChar.Int(TCharIndex),43)<>'' then
   begin
     cursimple:=fMenu.GetCharValue(TChar.Int(TCharIndex),43);
-    fKanjiDetails.RxLabel35.Caption:=_l('#00135^cZjednoduš.:^eSimplified:');
-    fKanjiDetails.RxLabel35.Show;
-    fKanjiDetails.PaintBox4.Show;
-    fKanjiDetails.Shape10.Show;
+    RxLabel35.Caption:=_l('#00135^eSimplified:');
+    RxLabel35.Show;
+    PaintBox4.Show;
+    Shape10.Show;
   end else
   if fMenu.GetCharValue(TChar.Int(TCharIndex),44)<>'' then
   begin
     cursimple:=fMenu.GetCharValue(TChar.Int(TCharIndex),44);
-    fKanjiDetails.RxLabel35.Caption:=_l('#00136^cTradièní:^eTraditional:');
-    fKanjiDetails.RxLabel35.Show;
-    fKanjiDetails.PaintBox4.Show;
-    fKanjiDetails.Shape10.Show;
+    RxLabel35.Caption:=_l('#00136^eTraditional:');
+    RxLabel35.Show;
+    PaintBox4.Show;
+    Shape10.Show;
   end else
   begin
     cursimple:='';
-    fKanjiDetails.RxLabel35.Hide;
-    fKanjiDetails.PaintBox4.Hide;
-    fKanjiDetails.Shape10.Hide;
+    RxLabel35.Hide;
+    PaintBox4.Hide;
+    Shape10.Hide;
   end;
   i:=fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf);
   curradno:=inttostr(i);
-  fKanjiDetails.Label2.Caption:=curradno;
+  Label2.Caption:=curradno;
   if i=255 then curradical:='' else
   begin
     if TRadicals.Locate('Number',inttostr(i),true) then
       curradical:=TRadicals.Str(TRadicalsUnicode) else curradical:='';
   end;
 {  if chin then
-    fKanjiDetails.RxLabel21.Caption:=_l('#00137^eChar #^cZnak #')+inttostr(DrawGrid1.ColCount*Arow+Acol+1) else
-    fKanjiDetails.RxLabel21.Caption:='Kanji #'+inttostr(DrawGrid1.ColCount*Arow+Acol+1);}
+    RxLabel21.Caption:=_l('#00137^eChar #')+inttostr(DrawGrid1.ColCount*Arow+Acol+1) else
+    RxLabel21.Caption:='Kanji #'+inttostr(DrawGrid1.ColCount*Arow+Acol+1);}
   if not chin then
   begin
     if TChar.Int(TCharJouyouGrade)<9 then kig:='C'else
@@ -417,32 +417,32 @@ begin
   end else
     if TChar.Int(TCharChFrequency)<=5 then kig:='C'else kig:='U';
   if IsKnown(KnownLearned,kix) then kig:='K';
-  if not IsKnown(strtoint(kanjicatuniqs[fKanjiDetails.ComboBox1.ItemIndex]),kix) then fKanjiDetails.SpeedButton21.Caption:='+'
-  else fKanjiDetails.SpeedButton21.Caption:='-';
-  if chin then if TChar.Int(TCharStrokeCount)<255 then fKanjiDetails.Label9.Caption:=TChar.Str(TCharStrokeCount) else fKanjiDetails.Label9.Caption:='-';
-  if not chin then if TChar.Int(TCharJpStrokeCount)<255 then fKanjiDetails.Label9.Caption:=TChar.Str(TCharJpStrokeCount) else fKanjiDetails.Label9.Caption:='-';
+  if not IsKnown(strtoint(kanjicatuniqs[ComboBox1.ItemIndex]),kix) then SpeedButton21.Caption:='+'
+  else SpeedButton21.Caption:='-';
+  if chin then if TChar.Int(TCharStrokeCount)<255 then Label9.Caption:=TChar.Str(TCharStrokeCount) else Label9.Caption:='-';
+  if not chin then if TChar.Int(TCharJpStrokeCount)<255 then Label9.Caption:=TChar.Str(TCharJpStrokeCount) else Label9.Caption:='-';
   scat:='';
   for i:=0 to kanjicatuniqs.Count-1 do
   begin
     if IsKnown(strtoint(kanjicatuniqs[i]),kix) then
-      if scat='' then scat:=fKanjiDetails.ComboBox1.Items[i] else
-        scat:=scat+', '+fKanjiDetails.ComboBox1.Items[i];
+      if scat='' then scat:=ComboBox1.Items[i] else
+        scat:=scat+', '+ComboBox1.Items[i];
   end;
   if scat='' then scat:='-';
-  fKanjiDetails.Label3.Caption:=scat;
+  Label3.Caption:=scat;
   case kig[1] of
-    'K':fKanjiDetails.RxLabel38.Font.Color:=Col('Kanji_Learned');
-    'C':fKanjiDetails.RxLabel38.Font.Color:=Col('Kanji_Common');
-    'U':fKanjiDetails.RxLabel38.Font.Color:=Col('Kanji_Rare');
-    'N':fKanjiDetails.RxLabel38.Font.Color:=Col('Kanji_Names');
+    'K':RxLabel38.Font.Color:=Col('Kanji_Learned');
+    'C':RxLabel38.Font.Color:=Col('Kanji_Common');
+    'U':RxLabel38.Font.Color:=Col('Kanji_Rare');
+    'N':RxLabel38.Font.Color:=Col('Kanji_Names');
   end;
   case kig[1] of
-    'K':fKanjiDetails.RxLabel38.Caption:=_l('#00140^cNauèený^eLearned');
-    'C':fKanjiDetails.RxLabel38.Caption:=_l('#00141^cBìžný^eCommon');
-    'U':fKanjiDetails.RxLabel38.Caption:=_l('#00142^cVzácný^eRare');
-    'N':fKanjiDetails.RxLabel38.Caption:=_l('#00143^cPoužívaný ve jménech^eUsed in names');
-    'A':fKanjiDetails.RxLabel38.Caption:=_l('#00144^cJaponský i èínský^eJapanese and chinese');
-    'J':fKanjiDetails.RxLabel38.Caption:=_l('#00145^cPouze japonský^eJapanese only');
+    'K':RxLabel38.Caption:=_l('#00140^eLearned');
+    'C':RxLabel38.Caption:=_l('#00141^eCommon');
+    'U':RxLabel38.Caption:=_l('#00142^eRare');
+    'N':RxLabel38.Caption:=_l('#00143^eUsed in names');
+    'A':RxLabel38.Caption:=_l('#00144^eJapanese and chinese');
+    'J':RxLabel38.Caption:=_l('#00145^eJapanese only');
   end;
   piny:='';
   engy:='';
@@ -456,38 +456,42 @@ begin
   TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
   while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
   begin
+   //Readings are stored as STRINGS which contain HEX.
+   //So there's nothing we can do to avoid HexToUnicode conversion.
     s:=TCharRead.Str(TCharReadReading);
     if (TCharRead.Int(TCharReadType)>3) and (TCharRead.Int(TCharReadType)<7) then
     begin
-          ws:='';
-          adddot:=0;
-          if s[1]='+'then
-          begin
-            ws:=HexToUnicode('FF0B');
-            delete(s,1,1);
-            adddot:=1;
-          end;
-          if s[1]='-'then
-          begin
-            ws:=ws+HexToUnicode('FF0D');
-            delete(s,1,1);
-            adddot:=1;
-          end;
-          if TCharRead.Int(TCharReadReadDot)>0 then
-          begin
-            ws:=ws+HexToUnicode(copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot));
-            ws:=ws+HexToUnicode('FF0E');
-            delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
-          end;
-          if s[length(s)]='-'then ws:=ws+HexToUnicode(copy(s,1,length(s)-1))+HexToUnicode('FF0D')
-            else ws:=ws+HexToUnicode(s);
+      ws:='';
+      adddot:=0;
+      if s[1]='+'then
+      begin
+        ws:=#$FF0B;
+        delete(s,1,1);
+        adddot:=1;
+      end;
+      if s[1]='-'then
+      begin
+        ws:=ws+#$FF0D;
+        delete(s,1,1);
+        adddot:=1;
+      end;
+      if TCharRead.Int(TCharReadReadDot)>0 then
+      begin
+        ws:=ws+HexToUnicode(copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot));
+        ws:=ws+#$FF0E;
+        delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
+      end;
+      if s[length(s)]='-'then
+        ws:=ws+HexToUnicode(copy(s,1,length(s)-1))+#$FF0D
+      else
+        ws:=ws+HexToUnicode(s);
     end;
     case TCharRead.Int(TCharReadType) of
       1:if kory='' then kory:=s else kory:=kory+', '+s;
       2:if piny='' then piny:=s else piny:=piny+','+s;
-      4:if ony='' then ony:=ws else ony:=ony+HexToUnicode('FF0C')+ws;
-      5:if kuny='' then kuny:=ws else kuny:=kuny+HexToUnicode('FF0C')+ws;
-      6:if nany='' then nany:=ws else nany:=nany+HexToUnicode('FF0C')+ws;
+      4:if ony='' then ony:=ws else ony:=ony+#$FF0C+ws;
+      5:if kuny='' then kuny:=ws else kuny:=kuny+#$FF0C+ws;
+      6:if nany='' then nany:=ws else nany:=nany+#$FF0C+ws;
       7:if chiny='' then chiny:=s else chiny:=chiny+', '+s;
       3:if engy='' then engy:=s else engy:=engy+', '+s;
       8:if cany='' then cany:=s else cany:=cany+', '+s;
@@ -495,11 +499,11 @@ begin
     TCharRead.Next;
   end;
   if chin then
-    fKanjiDetails.Label1.Caption:=chiny else
-    fKanjiDetails.Label1.Caption:=engy;
-  curon:=UnicodeToHex(ony);
-  curkun:=UnicodeToHex(kuny);
-  curnanori:=UnicodeToHex(nany);
+    Label1.Caption:=chiny else
+    Label1.Caption:=engy;
+  curon:=fstr(ony);
+  curkun:=fstr(kuny);
+  curnanori:=fstr(nany);
   curpinyin:=piny;
   kval.Clear;
   for i:=0 to chardetl.Count-1 do
@@ -513,9 +517,9 @@ begin
         1:s:=LowerCase(kory);
         2:s:=ConvertPinYin(piny);
         3:s:=engy;
-        4:s:=UnicodeToHex(ony);
-        5:s:=UnicodeToHex(kuny);
-        6:s:=UnicodeToHex(nany);
+        4:s:=fstr(ony);
+        5:s:=fstr(kuny);
+        6:s:=fstr(nany);
         7:s:=chiny;
         8:s:=LowerCase(cany);
         100:s:=curkanji;
@@ -549,8 +553,8 @@ begin
       kval.Add(s);
     end;
   end;
-  h:=InfoPaint(fKanjiDetails.PaintBox3.Canvas,fKanjiDetails.PaintBox3.Width,true);
-  fKanjiDetails.PaintBox3.Height:=h;
+  h:=InfoPaint(PaintBox3.Canvas,PaintBox3.Width,true);
+  PaintBox3.Height:=h;
   sl.Free;
   curcali:=curkanji;
   Screen.Cursor:=crDefault;
