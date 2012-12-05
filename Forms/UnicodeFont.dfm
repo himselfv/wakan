@@ -2,7 +2,7 @@ object fSelectFont: TfSelectFont
   Left = 241
   Top = 233
   BorderStyle = bsDialog
-  Caption = '#00867^eSelect font^cVýbìr fontu'
+  Caption = '#00867^eSelect font'
   ClientHeight = 359
   ClientWidth = 526
   Color = clBtnFace
@@ -15,6 +15,9 @@ object fSelectFont: TfSelectFont
   Position = poScreenCenter
   Scaled = False
   OnShow = FormShow
+  DesignSize = (
+    526
+    359)
   PixelsPerInch = 96
   TextHeight = 13
   object Shape9: TShape
@@ -55,15 +58,15 @@ object fSelectFont: TfSelectFont
     Top = 328
     Width = 113
     Height = 25
-    TabOrder = 1
     Kind = bkOK
+    TabOrder = 1
   end
   object BitBtn2: TBitBtn
     Left = 368
     Top = 328
     Width = 121
     Height = 25
-    TabOrder = 2
     Kind = bkCancel
+    TabOrder = 2
   end
 end

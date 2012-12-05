@@ -116,8 +116,8 @@ begin
     fontlist.Add(Screen.Fonts[i]+#9+inttostr(ANSI_CHARSET));
   fontlist.Sort;
   fSelectFont.StringGrid1.RowCount:=2;
-  fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name^cNázev fontu');
-  fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets^cZnakové sady');
+  fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name');
+  fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets');
   curfont:='';
   y:=1;
   for i:=0 to fontlist.Count-1 do
