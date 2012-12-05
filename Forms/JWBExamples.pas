@@ -1,6 +1,6 @@
-unit JWBWordAdd;
+unit JWBExamples;
 {
-I don't know why it's called JWBWordAdd but this form manages examples.
+Code to handle example sentences.
 }
 
 interface
@@ -99,8 +99,8 @@ end;
 procedure TfExamples.SpeedButton1Click(Sender: TObject);
 var n:string;
 begin
-  n:=InputBox(_l('#00892^eGo to example^cPøejít na pøíklad'),
-    _l('#00893^eEnter the number of the example:^cZadejte èíslo pøíkladu:'),'');
+  n:=InputBox(_l('#00892^eGo to example'),
+    _l('#00893^eEnter the number of the example:'),'');
   if n<>'' then
   try
     GotoExample(strtoint(n));
@@ -229,14 +229,14 @@ begin
   if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then
   begin
     if curlang='j'then
-      ex_jap:=fstr(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.^cDatabáze pøíkladù nebyla nalezena. Stáhnìte ji ze stránky WaKanu.'))
+      ex_jap:=fstr(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.'))
     else
-      ex_jap:=fstr(' === '+_l('^eExamples are not available in Chinese mode.^cV režimu èínštiny nejsou pøíklady k dispozici.'));
+      ex_jap:=fstr(' === '+_l('^eExamples are not available in Chinese mode.'));
     ex_indfirst:=-1;
   end
   else
   if ex_indfirst=-1 then
-    ex_jap:=fstr(' === '+_l('#00689^eNo examples available.^cŽádné pøíklady nejsou k dispozici.'))
+    ex_jap:=fstr(' === '+_l('#00689^eNo examples available.'))
   else
   begin
     p:=examstruct;
@@ -325,8 +325,9 @@ begin
     if ex_indlast-ex_indfirst>99 then
     begin
       max:=ex_indfirst+99;
-      Application.MessageBox(pchar(_l('^eThere are too many examples. Only first hundred have been copied.^cPøíkladù je pøíliš mnoho. Pouze prvních sto bylo zkopírováno.')),
-        pchar(_l('#00364^eNotice^cUpozornìní')),MB_ICONINFORMATION or MB_OK);
+      Application.MessageBox(
+        pchar(_l('^eThere are too many examples. Only first hundred have been copied.')),
+        pchar(_l('#00364^eNotice')),MB_ICONINFORMATION or MB_OK);
     end else max:=ex_indlast;
     for i:=ex_indfirst to max do
     begin

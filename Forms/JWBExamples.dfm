@@ -65,7 +65,7 @@ object fExamples: TfExamples
     object Label3: TLabel
       Left = 346
       Top = 2
-      Width = 123
+      Width = 79
       Height = 13
       Anchors = [akTop, akRight]
       Caption = '#00726^eClip'
@@ -79,7 +79,7 @@ object fExamples: TfExamples
     object Label4: TLabel
       Left = 317
       Top = 15
-      Width = 66
+      Width = 33
       Height = 13
       Anchors = [akTop, akRight]
       Caption = '^ePos:'
@@ -87,7 +87,7 @@ object fExamples: TfExamples
     object Label5: TLabel
       Left = 317
       Top = 1
-      Width = 62
+      Width = 31
       Height = 13
       Anchors = [akTop, akRight]
       Caption = '^eEx#'
@@ -144,8 +144,7 @@ object fExamples: TfExamples
       Top = 32
       Width = 27
       Height = 16
-      Hint = 
-        '#00729^eCopy all examples to clipboard'
+      Hint = '#00729^eCopy all examples to clipboard'
       Anchors = [akTop, akRight]
       Caption = '#00670^eAll'
       Flat = True
@@ -188,8 +187,7 @@ object fExamples: TfExamples
       Top = 16
       Width = 35
       Height = 16
-      Hint = 
-        '#00720^eDisplay example in small font'
+      Hint = '#00720^eDisplay example in small font'
       Anchors = [akTop, akRight]
       GroupIndex = 2
       Caption = '#00721^eSmall'
@@ -203,8 +201,7 @@ object fExamples: TfExamples
       Top = 32
       Width = 35
       Height = 16
-      Hint = 
-        '#00722^eDisplay example in big font'
+      Hint = '#00722^eDisplay example in big font'
       Anchors = [akTop, akRight]
       GroupIndex = 2
       Caption = '#00723^eBig'
@@ -270,8 +267,7 @@ object fExamples: TfExamples
       Top = 16
       Width = 26
       Height = 16
-      Hint = 
-        '#00727^eCopy example to clipboard'
+      Hint = '#00727^eCopy example to clipboard'
       Anchors = [akTop, akRight]
       Caption = '#00728^eThis'
       Flat = True

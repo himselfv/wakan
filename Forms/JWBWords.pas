@@ -114,7 +114,7 @@ implementation
 
 uses JWBMenu, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBWait, JWBUserDetails, JWBUserAdd,
-  JWBUserFilters, JWBUserCategory, StdPrompt, PKGWrite, JWBWordAdd, JWBUser,
+  JWBUserFilters, JWBUserCategory, StdPrompt, PKGWrite, JWBExamples, JWBUser,
   JWBConvert, JWBWordsExpChoose;
 
 var wl,wlc:TStringList;

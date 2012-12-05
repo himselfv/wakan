@@ -304,7 +304,7 @@ implementation
 
 uses JWBMenu, JWBUnit, registry, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
-  JWBWordAdd, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
+  JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont;
 
 var fontlist:TStringList;

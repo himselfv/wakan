@@ -40,7 +40,7 @@ uses
   JWBTranslate in 'Forms\JWBTranslate.pas' {fTranslate},
   JWBWordDetails in 'Forms\JWBWordDetails.pas' {fWordDetails},
   JWBWordKanji in 'Forms\JWBWordKanji.pas' {fWordKanji},
-  JWBWordAdd in 'Forms\JWBWordAdd.pas' {fWordAdd},
+  JWBExamples in 'Forms\JWBExamples.pas' {fExamples},
   JWBWordCategory in 'Forms\JWBWordCategory.pas' {fWordCategory},
   JWBUserDetails in 'Forms\JWBUserDetails.pas' {fUserDetails},
   JWBUserAdd in 'Forms\JWBUserAdd.pas' {fUserAdd},
@@ -94,7 +94,7 @@ begin
   Application.CreateForm(TfTranslate, fTranslate);
   Application.CreateForm(TfWordDetails, fWordDetails);
   Application.CreateForm(TfWordKanji, fWordKanji);
-  Application.CreateForm(TfWordAdd, fWordAdd);
+  Application.CreateForm(TfExamples, fExamples);
   Application.CreateForm(TfWordCategory, fWordCategory);
   Application.CreateForm(TfUserDetails, fUserDetails);
   Application.CreateForm(TfUserAdd, fUserAdd);

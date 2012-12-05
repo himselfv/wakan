@@ -199,7 +199,7 @@ var
 implementation
 
 uses JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
-  JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBWordAdd,
+  JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, JWBConvert,
   Math;
 
