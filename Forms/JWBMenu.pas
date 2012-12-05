@@ -2199,7 +2199,6 @@ end;
 procedure TfMenu.ChangeClipboard;
 var
   DataHandle :  THandle;
-  FromPointer:  Pointer;
   ToPointer  :  Pointer;
   ws         :  UnicodeString;
 begin
@@ -2214,8 +2213,11 @@ begin
                             (Length(ws)+1)*SizeOf(WChar));
 
   ToPointer   := GlobalLock(DataHandle);
-  FromPointer := @ws[1];
-  Move(FromPointer^, ToPointer^, (Length(ws)+1)*SizeOf(WChar));
+  if pointer(ws)<>nil then
+    Move(Pointer(ws)^, ToPointer^, (Length(ws)+1)*SizeOf(WChar))
+  else
+   //Just set the terminating null
+    PChar(ToPointer)^ := #00;
   GlobalUnlock(DataHandle);
 
   OpenClipboard(Handle);
