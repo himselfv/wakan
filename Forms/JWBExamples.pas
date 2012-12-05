@@ -228,13 +228,12 @@ begin
   while l<=r do
   begin
     m:=l+(r-l) div 2;
-    p:=examindex;
-    p:=p+m*16;
+    p:=PByte(integer(examindex)+m*16);
     s2:='';
     for j:=1 to 6 do
     begin
       w := PWord(p)^;
-      p:=p+2;
+      Inc(p, 2);
      {$IFNDEF UNICODE}
       s2:=s2+Format('%4.4X',[w]);
      {$ELSE}
@@ -248,10 +247,9 @@ begin
     ex_indfirst:=-1
   else
   begin
-    p:=examindex;
-    p:=p+m*16+12;
+    p:=PByte(integer(examindex)+m*16+12);
     ex_indfirst := PInteger(p)^;
-    p:=p+16;
+    Inc(p, 16);
     if m<max then
       ex_indlast := PInteger(p)^
     else
@@ -288,8 +286,7 @@ begin
     ex_jap:=fstr(' === '+_l('#00689^eNo examples available.'))
   else
   begin
-    p:=examstruct;
-    p:=p+ex_indcur*4;
+    p:=PByte(integer(examstruct)+ex_indcur*4);
     ofs := PInteger(p)^;
     exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
 
@@ -299,7 +296,7 @@ begin
     SetLength(ex_jap, siz);
     move(PByte(@buf[1])^, PByte(ex_jap)^, siz*SizeOf(Char));
    {$ELSE}
-    ex_jap := ByteToHex(PByte(@buf[1]), siz);
+    ex_jap := UnicodeToHex(PWideChar(@buf[1]), siz);
    {$ENDIF}
 
    //Translation
@@ -421,5 +418,9 @@ begin
   end;
   ShowExample;
 end;
+
+initialization
+  ex_jap := '';
+  ex_en := '';
 
 end.

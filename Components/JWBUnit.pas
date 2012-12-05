@@ -110,13 +110,13 @@ function GetFileVersionInfoStr(Filename: string): string;
 
 { Strings }
 
-function flength(s:FString): integer; {$IFDEF INLINE}inline;{$ENDIF}
+function flength(const s:FString): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function flenfc(lenn:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
-function fcopy(s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
+function fcopy(const s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
-function fgetch(s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
-function fstr(s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
+function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
+function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -128,7 +128,8 @@ function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicodeW(ps:PWideChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicode(const s:string):UnicodeString; overload;
 function ByteToHex(pb:PByte;sz:integer):string;
-function UnicodeToHex(const s:UnicodeString):string;
+function UnicodeToHex(pc:PWideChar; len: integer):string; overload;
+function UnicodeToHex(const s:UnicodeString):string; overload;
 function AnsiToHex(const s:AnsiString):string; {$IFDEF INLINE}inline;{$ENDIF}
 function CombUniToHex(s:string):string;
 function HexToCombUni(s:string):string;
@@ -339,7 +340,7 @@ end;
 { Strings }
 
 //returns length of the string in 4-characters
-function flength(s:FString):integer;
+function flength(const s:FString):integer;
 begin
  {$IFDEF UNICODE}
   Result := Length(s);
@@ -372,7 +373,7 @@ end;
 
 //a version of copy for FChars where you specify length in FChars
 //spares us multiplying by four every time, and on Unicode resolves to simpler version
-function fcopy(s: FString; Index, Count: Integer):FString;
+function fcopy(const s: FString; Index, Count: Integer):FString;
 begin
 {$IFDEF UNICODE}
   Result := copy(s, Index, Count);
@@ -390,7 +391,7 @@ begin
 {$ENDIF}
 end;
 
-function fgetch(s: FString; Index: integer): FChar;
+function fgetch(const s: FString; Index: integer): FChar;
 begin
 {$IFDEF UNICODE}
   Result := s[Index];
@@ -400,7 +401,9 @@ begin
 end;
 
 //Converts raw (unicode) data to FString. On unicode does nothing!
-function fstr(s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
+//Only Unicode input is accepted because Ansi MUST be converted to Unicode.
+//We can't do AnsiToHex, that would leave us with 2-byte and not 4-byte symbols.
+function fstr(const s: UnicodeString): FString;
 begin
  {$IFDEF UNICODE}
   Result := s;
@@ -561,8 +564,8 @@ begin
 
   SetLength(Result, sz*2);
   for i := 0 to sz - 1 do begin
-    Result[i*2+0] := HexChars[PByte(pb)^ shr 4];
-    Result[i*2+1] := HexChars[PByte(pb)^ and $0F];
+    Result[i*2+1] := HexChars[1 + PByte(pb)^ shr 4];
+    Result[i*2+2] := HexChars[1 + PByte(pb)^ and $0F];
     Inc(pb);
   end;
 end;
@@ -573,25 +576,28 @@ We're translating text in CHARS which are two-byte. I.e.
   ByteToHex:    01 02 03 04 05 06 07 08 09 10...
   UnicodeToHex: 02 01 04 03 06 05 08 07 10 09...
 }
-function UnicodeToHex(const s:UnicodeString):string;
+function UnicodeToHex(pc:PWideChar; len: integer):string;
 const HexChars: string = '0123456789ABCDEF';
 var i:integer;
-  pc: PWideChar;
 begin
-  pc := PWideChar(s);
   if pc=nil then begin
     Result := '';
     exit;
   end;
 
-  SetLength(Result, Length(s)*4);
-  for i := 0 to Length(s) - 1 do begin
-    Result[i*4+1] := HexChars[PWord(pc)^ shr 12];
-    Result[i*4+2] := HexChars[(PWord(pc)^ shr 8) and $0F];
-    Result[i*4+3] := HexChars[(PWord(pc)^ shr 4) and $0F];
-    Result[i*4+4] := HexChars[PWord(pc)^ and $0F];
+  SetLength(Result, len*4);
+  for i := 0 to len - 1 do begin
+    Result[i*4+1] := HexChars[1 + PWord(pc)^ shr 12];
+    Result[i*4+2] := HexChars[1 + (PWord(pc)^ shr 8) and $0F];
+    Result[i*4+3] := HexChars[1 + (PWord(pc)^ shr 4) and $0F];
+    Result[i*4+4] := HexChars[1 + PWord(pc)^ and $0F];
     Inc(pc);
   end;
+end;
+
+function UnicodeToHex(const s:UnicodeString):string;
+begin
+  Result := UnicodeToHex(PWideChar(s), Length(s));
 end;
 
 function AnsiToHex(const s:AnsiString):string;
@@ -689,7 +695,6 @@ begin
   end;
   result:=trim(s);
 end;
-
 
 
 

@@ -1370,32 +1370,30 @@ begin
 end;
 
 procedure FixReading(gd0,gd1,gd2:FChar; var reading:FString);
-{$IFDEF UNICODE}
 var gd: FString;
-{$ENDIF}
 begin
   if (EvalChar(gd1)=EC_KATAKANA) and not showroma then
     reading := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,true,'j');
   if (EvalChar(gd1) in [EC_HIRAGANA, EC_KATAKANA]) and showroma then
   begin
+    gd := '';  
    {$IFNDEF UNICODE}
-    if (gd1='30C3') or (gd1='3063') then gd1:='' else
+    if (gd1='30C3') or (gd1='3063') then gd:='' else
     if ((gd0='30C3') or (gd0='3063')) and
        ((gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
        (gd2='3083') or (gd2='3085') or (gd2='3087') or
        (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
-       (gd2='30E3') or (gd2='30E5') or (gd2='30E7')) then gd1:=gd0+gd1+gd2 else
-    if (gd0='30C3') or (gd0='3063') then gd1:=gd0+gd1 else
+       (gd2='30E3') or (gd2='30E5') or (gd2='30E7')) then gd:=gd0+gd1+gd2 else
+    if (gd0='30C3') or (gd0='3063') then gd:=gd0+gd1 else
     if (gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
        (gd2='3083') or (gd2='3085') or (gd2='3087') or
        (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
-       (gd2='30E3') or (gd2='30E5') or (gd2='30E7') then gd1:=gd1+gd2 else
+       (gd2='30E3') or (gd2='30E5') or (gd2='30E7') then gd:=gd1+gd2 else
     if (gd1='3041') or (gd1='3043') or (gd1='3045') or (gd1='3047') or (gd1='3049') or
        (gd1='3083') or (gd1='3085') or (gd1='3087') or
        (gd1='30A1') or (gd1='30A3') or (gd1='30A5') or (gd1='30A7') or (gd1='30A9') or
-       (gd1='30E3') or (gd1='30E5') or (gd1='30E7') then gd1:='';
+       (gd1='30E3') or (gd1='30E5') or (gd1='30E7') then gd:='';
    {$ELSE}
-    gd := '';
     if (gd1=#$30C3) or (gd1=#$3063) then gd:='' else
     if ((gd0=#$30C3) or (gd0=#$3063)) and
        ((gd2=#$3041) or (gd2=#$3043) or (gd2=#$3045) or (gd2=#$3047) or (gd2=#$3049) or
