@@ -122,10 +122,14 @@ function fstr(s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
 
-function UnicodeToHex(s:UnicodeString):string;
+function HexCharCode(c:AnsiChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
+function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicodeW(ps:PWideChar; maxlen: integer): UnicodeString; overload;
-function HexToUnicode(s:string):UnicodeString; overload;
+function HexToUnicode(const s:string):UnicodeString; overload;
+function ByteToHex(pb:PByte;sz:integer):string;
+function UnicodeToHex(const s:UnicodeString):string;
+function AnsiToHex(const s:AnsiString):string; {$IFDEF INLINE}inline;{$ENDIF}
 function CombUniToHex(s:string):string;
 function HexToCombUni(s:string):string;
 function UnicodeToML(s:widestring):string;
@@ -423,41 +427,6 @@ end;
 {$ENDIF}
 
 
-
-function UnicodeToHex(s:UnicodeString):string;
-var i:integer;
-    c:widechar;
-    d:word;
-    s2,s3:string;
-begin
-  s2:='';
-  for i:=1 to length(s) do
-  begin
-    c:=s[i];
-    d:=word(c);
-    s3:=format('%4.4X',[d]);
-    s2:=s2+s3;
-  end;
-  result:=s2;
-end;
-
-function UnicodeToML(s:widestring):string;
-var i:integer;
-    c:widechar;
-    d:word;
-    s2,s3:string;
-begin
-  s2:='';
-  for i:=1 to length(s) do
-  begin
-    c:=s[i];
-    d:=word(c);
-    s3:=format('&#%d,',[d]);
-    s2:=s2+s3;
-  end;
-  result:=s2;
-end;
-
 {
 HexToUnicode() is used in RomajiToKana() so it can be a bottleneck.
 We'll try to do it fast.
@@ -493,7 +462,7 @@ begin
 end;
 
 //Returns a value in range 0..15 for a given hex character, or throws an exception
-function HexCharCode(c:AnsiChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
+function HexCharCode(c:AnsiChar): byte;
 begin
   if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
     Result := ord(c)-ord('0')
@@ -507,7 +476,7 @@ begin
     raise Exception.Create('Invalid hex character "'+c+'"');
 end;
 
-function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
+function HexCharCodeW(c:WideChar): byte;
 begin
   if (ord(c)>=ord('0')) and (ord(c)<=ord('9')) then
     Result := ord(c)-ord('0')
@@ -569,7 +538,7 @@ begin
   end;
 end;
 
-function HexToUnicode(s:string): UnicodeString; overload;
+function HexToUnicode(const s:string): UnicodeString; overload;
 begin
   if s='' then
     Result := ''
@@ -579,6 +548,72 @@ begin
    {$ELSE}
     Result := HexToUnicode(PAnsiChar(pointer(s)), Length(s));
    {$ENDIF}
+end;
+
+function ByteToHex(pb:PByte;sz:integer):string;
+const HexChars: string = '0123456789ABCDEF';
+var i:integer;
+begin
+  if pb=nil then begin
+    Result := '';
+    exit;
+  end;
+
+  SetLength(Result, sz*2);
+  for i := 0 to sz - 1 do begin
+    Result[i*2+0] := HexChars[PByte(pb)^ shr 4];
+    Result[i*2+1] := HexChars[PByte(pb)^ and $0F];
+    Inc(pb);
+  end;
+end;
+
+{
+This is NOT equiualent to ByteToHex(s, Length(s)*2).
+We're translating text in CHARS which are two-byte. I.e.
+  ByteToHex:    01 02 03 04 05 06 07 08 09 10...
+  UnicodeToHex: 02 01 04 03 06 05 08 07 10 09...
+}
+function UnicodeToHex(const s:UnicodeString):string;
+const HexChars: string = '0123456789ABCDEF';
+var i:integer;
+  pc: PWideChar;
+begin
+  pc := PWideChar(s);
+  if pc=nil then begin
+    Result := '';
+    exit;
+  end;
+
+  SetLength(Result, Length(s)*4);
+  for i := 0 to Length(s) - 1 do begin
+    Result[i*4+1] := HexChars[PWord(pc)^ shr 12];
+    Result[i*4+2] := HexChars[(PWord(pc)^ shr 8) and $0F];
+    Result[i*4+3] := HexChars[(PWord(pc)^ shr 4) and $0F];
+    Result[i*4+4] := HexChars[PWord(pc)^ and $0F];
+    Inc(pc);
+  end;
+end;
+
+function AnsiToHex(const s:AnsiString):string;
+begin
+  Result := ByteToHex(PByte(s), Length(s));
+end;
+
+function UnicodeToML(s:widestring):string;
+var i:integer;
+    c:widechar;
+    d:word;
+    s2,s3:string;
+begin
+  s2:='';
+  for i:=1 to length(s) do
+  begin
+    c:=s[i];
+    d:=word(c);
+    s3:=format('&#%d,',[d]);
+    s2:=s2+s3;
+  end;
+  result:=s2;
 end;
 
 

@@ -52,6 +52,9 @@ type
     randbank:TStringList;
 
   public
+    procedure ReloadExamples;
+
+  public
     procedure SetExamples(kanji:string);
     procedure ShowExample;
     procedure PaintExample;
@@ -67,7 +70,7 @@ var
 
   ex_indfirst,ex_indlast,ex_indcur:integer;
   ex_jap: FString;
-  ex_en:string;
+  ex_en: string;
 
   examstruct,examindex:pointer;
   examstructsiz,examindexsiz:integer;
@@ -162,12 +165,49 @@ begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
 end;
 
+//There can be different example packages for japanese and chinese,
+//so we reload every time study language changes.
+procedure TfExamples.ReloadExamples;
+var mf:TMemoryFile;
+begin
+  if exampackage<>nil then exampackage.Free;
+  if examstruct<>nil then FreeMem(examstruct);
+  if examindex<>nil then FreeMem(examindex);
+  exampackage:=nil;
+  examstruct:=nil;
+  examindex:=nil;
+  try
+    if FileExists('examples_'+curlang+'.pkg') then
+    begin
+      exampackage:=TPackageSource.Create('examples_'+curlang+'.pkg',791564,978132,978123);
+      mf:=exampackage['struct.bin'];
+      if mf=nil then raise Exception.Create('Important file missing.');
+      GetMem(examstruct,mf.Size);
+      exampackage.ReadRawData(examstruct^,integer(mf.Position),mf.Size);
+      examstructsiz:=mf.Size div 4;
+      mf:=exampackage['index.bin'];
+      if mf=nil then raise Exception.Create('Important file missing.');
+      GetMem(examindex,mf.Size);
+      exampackage.ReadRawData(examindex^,integer(mf.Position),mf.Size);
+      examindexsiz:=mf.Size div 16;
+      examfile:=exampackage['examples.bin'];
+      if examfile=nil then raise Exception.Create('Important file missing.');
+    end;
+  except
+    Application.MessageBox(pchar(_l('#00333^eCouldn''t load example file EXAMPLES_'+upcase(curlang)+'.PKG.')),
+      pchar(_l('#00020^eError')),MB_ICONERROR or MB_OK);
+    exampackage:=nil;
+    examstruct:=nil;
+    examindex:=nil;
+  end;
+end;
+
 procedure TfExamples.SetExamples(kanji:string);
 var l,r,m,max:integer;
-    s2:string;
-    p:pchar;
-    w:word;
-    j:integer;
+  s2:string;
+  p:PByte;
+  w:word;
+  j:integer;
 begin
   ex_indfirst:=-1;
   if kanji='' then
@@ -193,20 +233,29 @@ begin
     s2:='';
     for j:=1 to 6 do
     begin
-      move(p^,w,2);
+      w := PWord(p)^;
       p:=p+2;
+     {$IFNDEF UNICODE}
       s2:=s2+Format('%4.4X',[w]);
+     {$ELSE}
+      s2:=s2+WideChar(w);
+     {$ENDIF}
     end;
     if s2=kanji then break;
     if s2<kanji then l:=m+1 else r:=m-1;
   end;
-  if l>r then ex_indfirst:=-1 else
+  if l>r then
+    ex_indfirst:=-1
+  else
   begin
     p:=examindex;
     p:=p+m*16+12;
-    move(p^,ex_indfirst,4);
+    ex_indfirst := PInteger(p)^;
     p:=p+16;
-    if m<max then move(p^,ex_indlast,4) else ex_indlast:=examstructsiz;
+    if m<max then
+      ex_indlast := PInteger(p)^
+    else
+      ex_indlast:=examstructsiz;
     dec(ex_indlast);
   end;
   ex_indcur:=ex_indfirst;
@@ -217,10 +266,10 @@ begin
 end;
 
 procedure TfExamples.ShowExample;
-var p:pchar;
+var p:PByte;
     ofs:integer;
     buf:array[0..1023] of byte;
-    i,j,siz,siz2:integer;
+    i,siz,siz2:integer;
     ms:string;
     pos:integer;
 begin
@@ -241,12 +290,22 @@ begin
   begin
     p:=examstruct;
     p:=p+ex_indcur*4;
-    move(p^,ofs,4);
+    ofs := PInteger(p)^;
     exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
+
+   //Example sentence
     siz:=buf[0];
-    for i:=1 to siz do ex_jap:=ex_jap+Format('%2.2X%2.2X',[buf[i*2],buf[i*2-1]]);
+   {$IFDEF UNICODE}
+    SetLength(ex_jap, siz);
+    move(PByte(@buf[1])^, PByte(ex_jap)^, siz*SizeOf(Char));
+   {$ELSE}
+    ex_jap := ByteToHex(PByte(@buf[1]), siz);
+   {$ENDIF}
+
+   //Translation
     siz2:=buf[siz*2+1];
-    for j:=siz*2+2 to siz*2+1+siz2 do ex_en:=ex_en+chr(buf[j]);
+    for i:=siz*2+2 to siz*2+1+siz2 do
+      ex_en:=ex_en+chr(buf[i]);
   end;
   if ex_indfirst=-1 then ms:='0'else if (ex_indlast-ex_indfirst)<99 then ms:=inttostr(ex_indlast-ex_indfirst+1) else ms:='lot';
   pos:=0;
@@ -272,7 +331,7 @@ begin
   if SpeedButton5.Down then DrawUnicode(PaintBox3.Canvas,3,15,16,ex_jap,FontSmall);
   if SpeedButton6.Down then DrawUnicode(PaintBox3.Canvas,3,5,24,ex_jap,FontJapanese);
   EndDrawReg;
-  if SpeedButton4.Down then DrawUnicode(PaintBox3.Canvas,3,22,16,UnicodeToHex(ex_en),FontEnglish);
+  if SpeedButton4.Down then DrawUnicode(PaintBox3.Canvas,3,22,16,fstr(ex_en),FontEnglish);
 end;
 
 procedure TfExamples.MoveExample(right:boolean);

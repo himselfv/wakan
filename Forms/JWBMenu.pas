@@ -712,7 +712,6 @@ begin
 end;
 
 procedure TfMenu.SwitchLanguage(lanchar:char);
-var mf:TMemoryFile;
 begin
   curlang:=lanchar;
   if lanchar='j'then
@@ -738,36 +737,7 @@ begin
   fKanji.KanjiSearch_SpeedButton20Click(self);
 //  fUser.SpeedButton4.Enabled:=lanchar='j';
   if (not fUser.SpeedButton3.Enabled) and (fUser.SpeedButton3.Down) then fUser.SpeedButton1.Down:=true;
-  if exampackage<>nil then exampackage.Free;
-  if examstruct<>nil then FreeMem(examstruct);
-  if examindex<>nil then FreeMem(examindex);
-  exampackage:=nil;
-  examstruct:=nil;
-  examindex:=nil;
-  try
-    if FileExists('examples_'+lanchar+'.pkg') then
-    begin
-      exampackage:=TPackageSource.Create('examples_'+lanchar+'.pkg',791564,978132,978123);
-      mf:=exampackage['struct.bin'];
-      if mf=nil then raise Exception.Create('Important file missing.');
-      GetMem(examstruct,mf.Size);
-      exampackage.ReadRawData(examstruct^,integer(mf.Position),mf.Size);
-      examstructsiz:=mf.Size div 4;
-      mf:=exampackage['index.bin'];
-      if mf=nil then raise Exception.Create('Important file missing.');
-      GetMem(examindex,mf.Size);
-      exampackage.ReadRawData(examindex^,integer(mf.Position),mf.Size);
-      examindexsiz:=mf.Size div 16;
-      examfile:=exampackage['examples.bin'];
-      if examfile=nil then raise Exception.Create('Important file missing.');
-    end;
-  except
-    Application.MessageBox(pchar(_l('#00333^eCouldn''t load example file EXAMPLES_'+upcase(lanchar)+'.PKG.^cNepodaøilo se nahrát soubor EXAMPLES_'+upcase(lanchar)+'.PKG.')),
-      pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
-    exampackage:=nil;
-    examstruct:=nil;
-    examindex:=nil;
-  end;
+  fExamples.ReloadExamples;
   fUser.Look(false);
   RefreshCategory;
   RefreshKanjiCategory;
