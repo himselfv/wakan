@@ -179,14 +179,6 @@ type
     procedure CalcMouseCoords(x,y:integer;var rx,ry:integer);
     procedure DetailsForKanji(n:integer);
     procedure GetTextWordInfo(cx,cy:integer;var meaning,reading,kanji:string);
-    procedure ChangeNotebook;
-    procedure SetExamples(kanji:string);
-    procedure ShowExample;
-    procedure PaintExample;
-    procedure MoveExample(right:boolean);
-    procedure RandomExample;
-    procedure ExampleClipboard(all:boolean);
-    procedure GotoExample(num:integer);
     procedure OpenFile;
     function HalfWidthChar(c:string):boolean;
     function HalfWidth(x,y:integer):boolean;
@@ -238,9 +230,6 @@ var curword:integer;
     priorkanji:string;
     lastmmx,lastmmy:integer;
     dicsl:TStringList;
-    ex_indfirst,ex_indlast,ex_indcur:integer;
-    ex_jap,ex_en:string;
-    randbank:TStringList;
     donotsetbegset:boolean;
 
 {$R *.DFM}
@@ -591,7 +580,7 @@ begin
 //  fMenu.ShowForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
 //  fMenu.ShowForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
 //  fMenu.ShowForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
-//  fMenu.ShowForm(SpeedButton9,fMenu.aDictAdd,fWordAdd);
+//  fMenu.ShowForm(SpeedButton9,fMenu.aDictAdd,fExamples);
 //  fMenu.ShowForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
   fMenu.aDict.Checked:=true;
   if Edit1.Enabled then Edit1.SetFocus;
@@ -677,7 +666,7 @@ begin
     curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
     curkanji:=remexcl(copy(StringGrid1.Cells[1,curword],2,length(StringGrid1.Cells[1,curword])-1));
     curmeaning:=strip_fl(remexcl(StringGrid1.Cells[2,curword]));
-    SetExamples(curkanji);
+    fExamples.SetExamples(curkanji);
     s:=remexcl(StringGrid1.Cells[2,curword]);
     if pos(' >> ',s)>0 then delete(s,1,pos(' >> ',s)+3);
     fDicAdd.Edit3.Text:=s;
@@ -762,7 +751,7 @@ begin
     if ki<7 then fWordKanji.PaintBoxK7.Visible:=false else fWordKanji.PaintBoxK7.Visible:=true;
     if ki<8 then fWordKanji.PaintBoxK8.Visible:=false else fWordKanji.PaintBoxK8.Visible:=true;
     if ki<9 then fWordKanji.PaintBoxK9.Visible:=false else fWordKanji.PaintBoxK9.Visible:=true;
-  end else SetExamples('');
+  end else fExamples.SetExamples('');
   fWordDetails.PaintBox1.Invalidate;
   fWordDetails.PaintBox2.Invalidate;
   fWordDetails.PaintBox5.Invalidate;
@@ -2946,7 +2935,7 @@ end;
 
 procedure TfUser.SpeedButton9Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fWordAdd,SpeedButton9,fMenu.aDictAdd);
+  fMenu.ToggleForm(fExamples,SpeedButton9,fMenu.aDictAdd);
 end;
 
 procedure TfUser.FormHide(Sender: TObject);
@@ -2954,7 +2943,7 @@ begin
 //  fMenu.HideForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
 //  fMenu.HideForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
 //  fMenu.HideForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
-//  fMenu.HideForm(SpeedButton9,fMenu.aDictAdd,fWordAdd);
+//  fMenu.HideForm(SpeedButton9,fMenu.aDictAdd,fExamples);
 //  fMenu.HideForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
   fMenu.aDict.Checked:=false;
 end;
@@ -2970,7 +2959,6 @@ begin
   linl:=TGraphicalLineList.Create;
   plinl:=TGraphicalLineList.Create;
   dicsl:=TStringList.Create;
-  randbank:=TStringList.Create;
   fUser.docfilename:='';
   fUser.doctp:=0;
 end;
@@ -3277,213 +3265,6 @@ begin
   if CharDetDocked then exit;
   fKanji.SetCharDetails(copy(curkanjid,(n-1)*9+1,4));
   if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
-end;
-
-procedure TfUser.ChangeNotebook;
-begin
-{  if fWordAdd.SpeedButton1.Down then fWordAdd.Notebook1.ActivePage:='Examples';
-  if fWordAdd.SpeedButton2.Down then fWordAdd.Notebook1.ActivePage:='Add';
-  if fWordAdd.SpeedButton3.Down then fWordAdd.Notebook1.ActivePage:='Filters';
-  fMenu.aDictVoc1.Checked:=fWordAdd.SpeedButton1.Down;
-  fMenu.aDictVoc2.Checked:=fWordAdd.SpeedButton2.Down;
-  fMenu.aDictVoc3.Checked:=fWordAdd.SpeedButton3.Down;}
-  fWordAdd.Notebook1.ActivePage:='Examples';
-end;
-
-procedure TfUser.SetExamples(kanji:string);
-var l,r,m,max:integer;
-    s2:string;
-    p:pchar;
-    w:word;
-    j:integer;
-begin
-  ex_indfirst:=-1;
-  if kanji='' then
-  begin
-    ShowExample;
-    exit;
-  end;
-  if examindex=nil then
-  begin
-    ShowExample;
-    exit;
-  end;
-  while length(kanji)<24 do kanji:=kanji+'0000';
-  if length(kanji)>24 then kanji:=copy(kanji,1,24);
-  l:=0;
-  max:=examindexsiz;
-  r:=max;
-  while l<=r do
-  begin
-    m:=l+(r-l) div 2;
-    p:=examindex;
-    p:=p+m*16;
-    s2:='';
-    for j:=1 to 6 do
-    begin
-      move(p^,w,2);
-      p:=p+2;
-      s2:=s2+Format('%4.4X',[w]);
-    end;
-    if s2=kanji then break;
-    if s2<kanji then l:=m+1 else r:=m-1;
-  end;
-  if l>r then ex_indfirst:=-1 else
-  begin
-    p:=examindex;
-    p:=p+m*16+12;
-    move(p^,ex_indfirst,4);
-    p:=p+16;
-    if m<max then move(p^,ex_indlast,4) else ex_indlast:=examstructsiz;
-    dec(ex_indlast);
-  end;
-  ex_indcur:=ex_indfirst;
-  randbank.Clear;
-  randbank.Add(inttostr(ex_indfirst+random(ex_indlast-ex_indfirst+1)));
-  if fWordAdd.SpeedButton11.Down then ex_indcur:=strtoint(randbank[0]);
-  ShowExample;
-end;
-
-procedure TfUser.ShowExample;
-var p:pchar;
-    ofs:integer;
-    buf:array[0..1023] of byte;
-    i,j,siz,siz2:integer;
-    ms:string;
-    pos:integer;
-begin
-  ex_jap:='';
-  ex_en:='';
-  if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then
-  begin
-    if curlang='j'then
-      ex_jap:=UnicodeToHex(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.^cDatabбze pшнkladщ nebyla nalezena. Stбhnмte ji ze strбnky WaKanu.')) else
-      ex_jap:=UnicodeToHex(' === '+_l('^eExamples are not available in Chinese mode.^cV reћimu инnљtiny nejsou pшнklady k dispozici.'));
-    ex_indfirst:=-1;
-  end
-  else if ex_indfirst=-1 then ex_jap:=UnicodeToHex(' === '+_l('#00689^eNo examples available.^cЋбdnй pшнklady nejsou k dispozici.')) else
-  begin
-    p:=examstruct;
-    p:=p+ex_indcur*4;
-    move(p^,ofs,4);
-    exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
-    siz:=buf[0];
-    for i:=1 to siz do ex_jap:=ex_jap+Format('%2.2X%2.2X',[buf[i*2],buf[i*2-1]]);
-    siz2:=buf[siz*2+1];
-    for j:=siz*2+2 to siz*2+1+siz2 do ex_en:=ex_en+chr(buf[j]);
-  end;
-  if ex_indfirst=-1 then ms:='0'else if (ex_indlast-ex_indfirst)<99 then ms:=inttostr(ex_indlast-ex_indfirst+1) else ms:='lot';
-  pos:=0;
-  if ex_indfirst=-1 then fWordAdd.Label2.Caption:='0/0'else
-  begin
-    if not fWordAdd.SpeedButton11.Down then pos:=ex_indcur-ex_indfirst else pos:=randbank.IndexOf(inttostr(ex_indcur));
-    fWordAdd.Label2.Caption:=inttostr(pos+1)+'/'+ms;
-  end;
-  if ex_indfirst=-1 then fWordAdd.Label6.Caption:='-'else fWordAdd.Label6.Caption:=inttostr(ex_indcur-ex_indfirst+1);
-  fWordAdd.SpeedButton7.Enabled:=(ex_indfirst>-1) and (pos>0);
-  fWordAdd.SpeedButton8.Enabled:=(ex_indfirst>-1) and (pos<ex_indlast-ex_indfirst);
-  fWordAdd.SpeedButton9.Enabled:=(ex_indfirst>-1);
-  fWordAdd.SpeedButton10.Enabled:=(ex_indfirst>-1);
-  fWordAdd.PaintBox3.Invalidate;
-end;
-
-procedure TfUser.PaintExample;
-begin
-  fWordAdd.PaintBox3.Canvas.Brush.Color:=clWindow;
-  fWordAdd.PaintBox3.Canvas.Font.Style:=[];
-  BeginDrawReg(fWordAdd.PaintBox3);
-  if fWordAdd.SpeedButton4.Down then DrawUnicode(fWordAdd.PaintBox3.Canvas,3,3,16,ex_jap,FontSmall);
-  if fWordAdd.SpeedButton5.Down then DrawUnicode(fWordAdd.PaintBox3.Canvas,3,15,16,ex_jap,FontSmall);
-  if fWordAdd.SpeedButton6.Down then DrawUnicode(fWordAdd.PaintBox3.Canvas,3,5,24,ex_jap,FontJapanese);
-  EndDrawReg;
-  if fWordAdd.SpeedButton4.Down then DrawUnicode(fWordAdd.PaintBox3.Canvas,3,22,16,UnicodeToHex(ex_en),FontEnglish);
-end;
-
-procedure TfUser.MoveExample(right:boolean);
-var pos:integer;
-    a:integer;
-begin
-  if not fWordAdd.SpeedButton11.Down then
-    if right then inc(ex_indcur) else dec(ex_indcur);
-  if fWordAdd.SpeedButton11.Down then
-  begin
-    pos:=randbank.IndexOf(inttostr(ex_indcur));
-    if not right then dec(pos) else inc(pos);
-    if (pos>=randBank.Count) or (pos<0) then
-    begin
-      a:=random(ex_indlast-ex_indfirst+1-randbank.Count)+1;
-      ex_indcur:=ex_indfirst-1;
-      while a>0 do
-      begin
-        inc(ex_indcur);
-        while (randbank.IndexOf(inttostr(ex_indcur))>-1) do inc(ex_indcur);
-        dec(a);
-      end;
-      randbank.Add(inttostr(ex_indcur));
-    end else ex_indcur:=strtoint(randbank[pos]);
-  end;
-  ShowExample;
-end;
-
-procedure TfUser.RandomExample;
-begin
-  ex_indcur:=ex_indfirst+random(ex_indlast-ex_indfirst+1);
-  ShowExample;
-end;
-
-procedure TfUser.ExampleClipboard(all:boolean);
-var i:integer;
-    p:pchar;
-    ofs:integer;
-    buf:array[0..1023] of byte;
-    j,siz,siz2:integer;
-    max:integer;
-begin
-  if not all then
-  begin
-    if fWordAdd.SpeedButton4.Down then clip:=ex_jap+'000D000A'+UnicodeToHex(ex_en)
-    else clip:=ex_jap;
-  end else
-  begin
-    clip:='';
-    if ex_indlast-ex_indfirst>99 then
-    begin
-      max:=ex_indfirst+99;
-      Application.MessageBox(pchar(_l('^eThere are too many examples. Only first hundred have been copied.^cPшнkladщ je pшнliљ mnoho. Pouze prvnнch sto bylo zkopнrovбno.')),
-        pchar(_l('#00364^eNotice^cUpozornмnн')),MB_ICONINFORMATION or MB_OK);
-    end else max:=ex_indlast;
-    for i:=ex_indfirst to max do
-    begin
-      p:=examstruct;
-      p:=p+i*4;
-      move(p^,ofs,4);
-      exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
-      siz:=buf[0];
-      for j:=1 to siz do clip:=clip+Format('%2.2X%2.2X',[buf[j*2],buf[j*2-1]]);
-      siz2:=buf[siz*2+1];
-      clip:=clip+'000D000A';
-      if fWordAdd.SpeedButton4.Down then for j:=siz*2+2 to siz*2+1+siz2 do clip:=clip+UnicodeToHex(chr(buf[j]));
-      if fWordAdd.SpeedButton4.Down then clip:=clip+'000D000A';
-    end;
-  end;
-  fMenu.ChangeClipboard;
-end;
-
-procedure TfUser.GotoExample(num:integer);
-var pos:integer;
-begin
-  if num>ex_indlast-ex_indfirst then exit;
-  if ex_indfirst=-1 then exit;
-  if num<0 then exit;
-  if not fWordAdd.SpeedButton11.Down then
-    ex_indcur:=ex_indfirst+num-1 else
-  if fWordAdd.SpeedButton11.Down then
-  begin
-    ex_indcur:=ex_indfirst+num-1;
-    pos:=randbank.IndexOf(inttostr(num));
-    if pos=-1 then randbank.Add(inttostr(ex_indfirst+num-1));
-  end;
-  ShowExample;
 end;
 
 procedure TfUser.SpeedButton17Click(Sender: TObject);

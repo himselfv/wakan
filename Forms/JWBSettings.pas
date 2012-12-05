@@ -488,7 +488,7 @@ begin
   reg.WriteBool('Dict','AutoPage',CheckBox12.Checked);
   reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
   reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
-  reg.WriteBool('Dict','RandomExamples',fWordAdd.SpeedButton11.Down);
+  reg.WriteBool('Dict','RandomExamples',fExamples.SpeedButton11.Down);
   reg.WriteBool('Dict','ShowFreq',CheckBox58.Checked);
   reg.WriteBool('Dict','OrderFreq',CheckBox59.Checked);
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);

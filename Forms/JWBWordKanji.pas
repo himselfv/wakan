@@ -94,10 +94,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxK9MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
+
   end;
 
 var

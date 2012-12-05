@@ -258,7 +258,7 @@ end;
 procedure TfWords.FormShow(Sender: TObject);
 begin
   fMenu.ShowForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
-  fMenu.ShowForm(SpeedButton1,fMenu.aUserExamples,fWordAdd);
+  fMenu.ShowForm(SpeedButton1,fMenu.aUserExamples,fExamples);
 //  fMenu.ShowForm(SpeedButton3,fMenu.aUserCategory,fUserCategory);
   fMenu.ShowForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
   fMenu.aUser.Checked:=true;
@@ -2365,7 +2365,7 @@ end;
 
 procedure TfWords.SpeedButton1Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fWordAdd,SpeedButton1,fMenu.aUserExamples);
+  fMenu.ToggleForm(fExamples,SpeedButton1,fMenu.aUserExamples);
 end;
 
 procedure TfWords.SpeedButton2Click(Sender: TObject);
@@ -2692,7 +2692,7 @@ begin
   if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
   curkanji:=TUser.Str(TUserKanji);
   curphonetic:=TUser.Str(TUserPhonetic);
-  fUser.SetExamples(curkanji);
+  fExamples.SetExamples(curkanji);
   case TUser.Int(TUserScore) of
     0:fUserDetails.RxLabel3.Caption:=_l('#00638^eProblematic^cProblematické');
     1:fUserDetails.RxLabel3.Caption:=_l('#00639^eUnlearned^cNenauèené');

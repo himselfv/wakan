@@ -1,34 +1,35 @@
 unit JWBWordAdd;
+{
+I don't know why it's called JWBWordAdd but this form manages examples.
+}
 
 interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons;
+  StdCtrls, ExtCtrls, Buttons, MemSource, JWBUnit;
 
 type
-  TfWordAdd = class(TForm)
+  TfExamples = class(TForm)
     Panel1: TPanel;
-    Notebook1: TNotebook;
-    Label1: TLabel;
-    Shape9: TShape;
-    PaintBox3: TPaintBox;
+    Bevel2: TBevel;
+    Bevel3: TBevel;
     Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    PaintBox3: TPaintBox;
+    Shape9: TShape;
+    SpeedButton1: TSpeedButton;
+    SpeedButton10: TSpeedButton;
+    SpeedButton11: TSpeedButton;
     SpeedButton4: TSpeedButton;
     SpeedButton5: TSpeedButton;
     SpeedButton6: TSpeedButton;
     SpeedButton7: TSpeedButton;
     SpeedButton8: TSpeedButton;
-    Bevel2: TBevel;
-    Label3: TLabel;
     SpeedButton9: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    Bevel3: TBevel;
-    SpeedButton11: TSpeedButton;
-    Label4: TLabel;
-    Label5: TLabel;
-    Label6: TLabel;
-    SpeedButton1: TSpeedButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton1Click(Sender: TObject);
     procedure PaintBox3Paint(Sender: TObject);
@@ -44,14 +45,34 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+
   private
-    { Private declarations }
+    randbank:TStringList;
+
   public
-    { Public declarations }
+    procedure SetExamples(kanji:string);
+    procedure ShowExample;
+    procedure PaintExample;
+    procedure MoveExample(right:boolean);
+    procedure RandomExample;
+    procedure ExampleClipboard(all:boolean);
+    procedure GotoExample(num:integer);
+
   end;
 
 var
-  fWordAdd: TfWordAdd;
+  fExamples: TfExamples;
+
+  ex_indfirst,ex_indlast,ex_indcur:integer;
+  ex_jap: FString;
+  ex_en:string;
+
+  examstruct,examindex:pointer;
+  examstructsiz,examindexsiz:integer;
+  exampackage: TPackageSource;
+  examfile:TMemoryFile;
 
 implementation
 
@@ -59,75 +80,286 @@ uses JWBUser, JWBMenu, JWBSettings, JWBWords;
 
 {$R *.DFM}
 
-procedure TfWordAdd.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfExamples.FormCreate(Sender: TObject);
+begin
+  randbank:=TStringList.Create;
+end;
+
+procedure TfExamples.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(randbank);
+end;
+
+procedure TfExamples.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   fUser.SpeedButton9.Down:=false;
   fMenu.aDictAdd.Checked:=false;
 end;
 
-procedure TfWordAdd.SpeedButton1Click(Sender: TObject);
+procedure TfExamples.SpeedButton1Click(Sender: TObject);
 var n:string;
 begin
-  n:=InputBox(_l('#00892^eGo to example^cPøejít na pøíklad'),_l('#00893^eEnter the number of the example:^cZadejte èíslo pøíkladu:'),'');
+  n:=InputBox(_l('#00892^eGo to example^cPøejít na pøíklad'),
+    _l('#00893^eEnter the number of the example:^cZadejte èíslo pøíkladu:'),'');
   if n<>'' then
   try
-    fUser.GotoExample(strtoint(n));
+    GotoExample(strtoint(n));
   except end;
 end;
 
-procedure TfWordAdd.PaintBox3Paint(Sender: TObject);
+procedure TfExamples.PaintBox3Paint(Sender: TObject);
 begin
-  fUser.PaintExample;
+  PaintExample;
 end;
 
-procedure TfWordAdd.PaintBox3MouseMove(Sender: TObject; Shift: TShiftState;
+procedure TfExamples.PaintBox3MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
   fMenu.IntTipPaintOver(PaintBox3,x,y,ssLeft in Shift);
 end;
 
-procedure TfWordAdd.SpeedButton7Click(Sender: TObject);
+procedure TfExamples.SpeedButton7Click(Sender: TObject);
 begin
-  fUser.MoveExample(false);
+  MoveExample(false);
 end;
 
-procedure TfWordAdd.SpeedButton8Click(Sender: TObject);
+procedure TfExamples.SpeedButton8Click(Sender: TObject);
 begin
-  fUser.MoveExample(true);
+  MoveExample(true);
 end;
 
-procedure TfWordAdd.SpeedButton4Click(Sender: TObject);
+procedure TfExamples.SpeedButton4Click(Sender: TObject);
 begin
   PaintBox3.Invalidate;
 end;
 
-procedure TfWordAdd.SpeedButton11Click(Sender: TObject);
+procedure TfExamples.SpeedButton11Click(Sender: TObject);
 var cansel:boolean;
 begin
   if fUser.Visible then fUser.ShowWord else
   if fWords.Visible then fWords.StringGrid1SelectCell(sender,fWords.StringGrid1.Col,fWords.StringGrid1.Row,cansel);
 end;
 
-procedure TfWordAdd.SpeedButton9Click(Sender: TObject);
+procedure TfExamples.SpeedButton9Click(Sender: TObject);
 begin
-  fUser.ExampleClipboard(false);
+  ExampleClipboard(false);
 end;
 
-procedure TfWordAdd.SpeedButton10Click(Sender: TObject);
+procedure TfExamples.SpeedButton10Click(Sender: TObject);
 begin
-  fUser.ExampleClipboard(true);
+  ExampleClipboard(true);
 end;
 
-procedure TfWordAdd.PaintBox3MouseDown(Sender: TObject;
+procedure TfExamples.PaintBox3MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
-procedure TfWordAdd.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
+procedure TfExamples.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
+end;
+
+procedure TfExamples.SetExamples(kanji:string);
+var l,r,m,max:integer;
+    s2:string;
+    p:pchar;
+    w:word;
+    j:integer;
+begin
+  ex_indfirst:=-1;
+  if kanji='' then
+  begin
+    ShowExample;
+    exit;
+  end;
+  if examindex=nil then
+  begin
+    ShowExample;
+    exit;
+  end;
+  while flength(kanji)<6 do kanji:=kanji+UH_ZERO;
+  if flength(kanji)>6 then kanji:=fcopy(kanji,1,6);
+  l:=0;
+  max:=examindexsiz;
+  r:=max;
+  while l<=r do
+  begin
+    m:=l+(r-l) div 2;
+    p:=examindex;
+    p:=p+m*16;
+    s2:='';
+    for j:=1 to 6 do
+    begin
+      move(p^,w,2);
+      p:=p+2;
+      s2:=s2+Format('%4.4X',[w]);
+    end;
+    if s2=kanji then break;
+    if s2<kanji then l:=m+1 else r:=m-1;
+  end;
+  if l>r then ex_indfirst:=-1 else
+  begin
+    p:=examindex;
+    p:=p+m*16+12;
+    move(p^,ex_indfirst,4);
+    p:=p+16;
+    if m<max then move(p^,ex_indlast,4) else ex_indlast:=examstructsiz;
+    dec(ex_indlast);
+  end;
+  ex_indcur:=ex_indfirst;
+  randbank.Clear;
+  randbank.Add(inttostr(ex_indfirst+random(ex_indlast-ex_indfirst+1)));
+  if SpeedButton11.Down then ex_indcur:=strtoint(randbank[0]);
+  ShowExample;
+end;
+
+procedure TfExamples.ShowExample;
+var p:pchar;
+    ofs:integer;
+    buf:array[0..1023] of byte;
+    i,j,siz,siz2:integer;
+    ms:string;
+    pos:integer;
+begin
+  ex_jap:='';
+  ex_en:='';
+  if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then
+  begin
+    if curlang='j'then
+      ex_jap:=fstr(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.^cDatabáze pøíkladù nebyla nalezena. Stáhnìte ji ze stránky WaKanu.'))
+    else
+      ex_jap:=fstr(' === '+_l('^eExamples are not available in Chinese mode.^cV režimu èínštiny nejsou pøíklady k dispozici.'));
+    ex_indfirst:=-1;
+  end
+  else
+  if ex_indfirst=-1 then
+    ex_jap:=fstr(' === '+_l('#00689^eNo examples available.^cŽádné pøíklady nejsou k dispozici.'))
+  else
+  begin
+    p:=examstruct;
+    p:=p+ex_indcur*4;
+    move(p^,ofs,4);
+    exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
+    siz:=buf[0];
+    for i:=1 to siz do ex_jap:=ex_jap+Format('%2.2X%2.2X',[buf[i*2],buf[i*2-1]]);
+    siz2:=buf[siz*2+1];
+    for j:=siz*2+2 to siz*2+1+siz2 do ex_en:=ex_en+chr(buf[j]);
+  end;
+  if ex_indfirst=-1 then ms:='0'else if (ex_indlast-ex_indfirst)<99 then ms:=inttostr(ex_indlast-ex_indfirst+1) else ms:='lot';
+  pos:=0;
+  if ex_indfirst=-1 then Label2.Caption:='0/0'else
+  begin
+    if not SpeedButton11.Down then pos:=ex_indcur-ex_indfirst else pos:=randbank.IndexOf(inttostr(ex_indcur));
+    Label2.Caption:=inttostr(pos+1)+'/'+ms;
+  end;
+  if ex_indfirst=-1 then Label6.Caption:='-'else Label6.Caption:=inttostr(ex_indcur-ex_indfirst+1);
+  SpeedButton7.Enabled:=(ex_indfirst>-1) and (pos>0);
+  SpeedButton8.Enabled:=(ex_indfirst>-1) and (pos<ex_indlast-ex_indfirst);
+  SpeedButton9.Enabled:=(ex_indfirst>-1);
+  SpeedButton10.Enabled:=(ex_indfirst>-1);
+  PaintBox3.Invalidate;
+end;
+
+procedure TfExamples.PaintExample;
+begin
+  PaintBox3.Canvas.Brush.Color:=clWindow;
+  PaintBox3.Canvas.Font.Style:=[];
+  BeginDrawReg(PaintBox3);
+  if SpeedButton4.Down then DrawUnicode(PaintBox3.Canvas,3,3,16,ex_jap,FontSmall);
+  if SpeedButton5.Down then DrawUnicode(PaintBox3.Canvas,3,15,16,ex_jap,FontSmall);
+  if SpeedButton6.Down then DrawUnicode(PaintBox3.Canvas,3,5,24,ex_jap,FontJapanese);
+  EndDrawReg;
+  if SpeedButton4.Down then DrawUnicode(PaintBox3.Canvas,3,22,16,UnicodeToHex(ex_en),FontEnglish);
+end;
+
+procedure TfExamples.MoveExample(right:boolean);
+var pos:integer;
+    a:integer;
+begin
+  if not SpeedButton11.Down then
+    if right then inc(ex_indcur) else dec(ex_indcur);
+  if SpeedButton11.Down then
+  begin
+    pos:=randbank.IndexOf(inttostr(ex_indcur));
+    if not right then dec(pos) else inc(pos);
+    if (pos>=randBank.Count) or (pos<0) then
+    begin
+      a:=random(ex_indlast-ex_indfirst+1-randbank.Count)+1;
+      ex_indcur:=ex_indfirst-1;
+      while a>0 do
+      begin
+        inc(ex_indcur);
+        while (randbank.IndexOf(inttostr(ex_indcur))>-1) do inc(ex_indcur);
+        dec(a);
+      end;
+      randbank.Add(inttostr(ex_indcur));
+    end else ex_indcur:=strtoint(randbank[pos]);
+  end;
+  ShowExample;
+end;
+
+procedure TfExamples.RandomExample;
+begin
+  ex_indcur:=ex_indfirst+random(ex_indlast-ex_indfirst+1);
+  ShowExample;
+end;
+
+procedure TfExamples.ExampleClipboard(all:boolean);
+var i:integer;
+    p:pchar;
+    ofs:integer;
+    buf:array[0..1023] of byte;
+    j,siz,siz2:integer;
+    max:integer;
+begin
+  if not all then
+  begin
+    if SpeedButton4.Down then clip:=ex_jap+'000D000A'+UnicodeToHex(ex_en)
+    else clip:=ex_jap;
+  end else
+  begin
+    clip:='';
+    if ex_indlast-ex_indfirst>99 then
+    begin
+      max:=ex_indfirst+99;
+      Application.MessageBox(pchar(_l('^eThere are too many examples. Only first hundred have been copied.^cPøíkladù je pøíliš mnoho. Pouze prvních sto bylo zkopírováno.')),
+        pchar(_l('#00364^eNotice^cUpozornìní')),MB_ICONINFORMATION or MB_OK);
+    end else max:=ex_indlast;
+    for i:=ex_indfirst to max do
+    begin
+      p:=examstruct;
+      p:=p+i*4;
+      move(p^,ofs,4);
+      exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
+      siz:=buf[0];
+      for j:=1 to siz do clip:=clip+Format('%2.2X%2.2X',[buf[j*2],buf[j*2-1]]);
+      siz2:=buf[siz*2+1];
+      clip:=clip+UH_CR+UH_LF;
+      if SpeedButton4.Down then for j:=siz*2+2 to siz*2+1+siz2 do clip:=clip+UnicodeToHex(chr(buf[j]));
+      if SpeedButton4.Down then clip:=clip+UH_CR+UH_LF;
+    end;
+  end;
+  fMenu.ChangeClipboard;
+end;
+
+procedure TfExamples.GotoExample(num:integer);
+var pos:integer;
+begin
+  if num>ex_indlast-ex_indfirst then exit;
+  if ex_indfirst=-1 then exit;
+  if num<0 then exit;
+  if not SpeedButton11.Down then
+    ex_indcur:=ex_indfirst+num-1 else
+  if SpeedButton11.Down then
+  begin
+    ex_indcur:=ex_indfirst+num-1;
+    pos:=randbank.IndexOf(inttostr(num));
+    if pos=-1 then randbank.Add(inttostr(ex_indfirst+num-1));
+  end;
+  ShowExample;
 end;
 
 end.

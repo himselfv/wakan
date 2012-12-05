@@ -559,10 +559,6 @@ var
   ftextpos:integer;
   inproc:boolean;
   popcreated:boolean;
-  examstruct,examindex:pointer;
-  examstructsiz,examindexsiz:integer;
-  exampackage:TPackageSource;
-  examfile:TMemoryFile;
   vocmode,exmode:integer;
   rainesearch:pointer;
   raineradicals:TStringList;
@@ -930,7 +926,7 @@ begin
   fLanguage.TranslateForm(fKanjiSearch);
   fLanguage.TranslateForm(fKanjiCompounds);
   fLanguage.TranslateForm(fWordDetails);
-  fLanguage.TranslateForm(fWordAdd);
+  fLanguage.TranslateForm(fExamples);
   fLanguage.TranslateForm(fWordCategory);
   fLanguage.TranslateForm(fWordKanji);
   fLanguage.TranslateForm(fTranslate);
@@ -1132,7 +1128,7 @@ begin
   SetFormLayout(fKanji,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fWords,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fUser,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fWordAdd,s,bsSizeToolWin,so,sd); readln(t,s);
+  SetFormLayout(fExamples,s,bsSizeToolWin,so,sd); readln(t,s);
 //  SetFormLayout(fUserCategory,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fUserFilters,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fUserDetails,s,bsToolWindow,so,sd); readln(t,s);
@@ -1141,7 +1137,7 @@ begin
   SetFormLayout(fKanjiSearch,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fKanjiCompounds,s,bsSizeToolWin,so,sd); readln(t,s);
 //  SetFormLayout(fWordDetails,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fWordAdd,s,bsSizeToolWin,so,sd); readln(t,s);
+  SetFormLayout(fExamples,s,bsSizeToolWin,so,sd); readln(t,s);
 //  SetFormLayout(fWordCategory,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fWordKanji,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fTranslate,s,bsSizeToolWin,so,sd); readln(t,s);
@@ -1169,7 +1165,7 @@ begin
   s:=GetFormLayout(fKanji); writeln(t,s);
   s:=GetFormLayout(fWords); writeln(t,s);
   s:=GetFormLayout(fUser); writeln(t,s);
-  s:=GetFormLayout(fWordAdd); writeln(t,s);
+  s:=GetFormLayout(fExamples); writeln(t,s);
 //  s:=GetFormLayout(fUserCategory); writeln(t,s);
   s:=GetFormLayout(fUserFilters); writeln(t,s);
   s:=GetFormLayout(fUserDetails); writeln(t,s);
@@ -1178,7 +1174,7 @@ begin
   s:=GetFormLayout(fKanjiSearch); writeln(t,s);
   s:=GetFormLayout(fKanjiCompounds); writeln(t,s);
 //  s:=GetFormLayout(fWordDetails); writeln(t,s);
-  s:=GetFormLayout(fWordAdd); writeln(t,s);
+  s:=GetFormLayout(fExamples); writeln(t,s);
 //  s:=GetFormLayout(fWordCategory); writeln(t,s);
   s:=GetFormLayout(fWordKanji); writeln(t,s);
   s:=GetFormLayout(fTranslate); writeln(t,s);
@@ -1250,7 +1246,7 @@ begin
         sd:=sd1; so:=so1;
         sfl(fUser,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
         fWordKanji.Tag:=1;
-        fWordAdd.Tag:=0;
+        fExamples.Tag:=0;
         sfl(fTranslate,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
         sfl(fWords,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
         fUserFilters.Tag:=1;
@@ -1263,7 +1259,7 @@ begin
         fKanjiDetails.Height:=350;
         sfl(fUser,'VISIBLE,Y,BOTTOM,=,180,=,0,=,'+inttostr(sd.x-fWordKanji.Width)+',LEAVE');
         sfl(fWordKanji,'VISIBLE,Y,BOTTOM,=,180,=,'+inttostr(sd.x-fWordKanji.Width)+',.,0,SET');
-        sfl(fWordAdd,'HIDDEN,Y,BOTTOM,.,0,=,0,r,0,LEAVE');
+        sfl(fExamples,'HIDDEN,Y,BOTTOM,.,0,=,0,r,0,LEAVE');
         sfl(fTranslate,'VISIBLE,Y,BOTTOM,=,'+inttostr(sd.y-fKanjiDetails.Height)+',=,0,r,0,SET');
         sfl(fStrokeOrder,'HIDDEN,Y,BOTTOM,.,0,=,0,.,0,LEAVE');
         sfl(fKanjiDetails,'VISIBLE,Y,RIGHT,.,0,=,0,.,0,SET');
@@ -1282,8 +1278,8 @@ begin
 //        sfl(fKanjiSort,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
         sd:=sd1; so:=so1;
 //        sfl(fWordDetails,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
-        sfl(fUser,'HIDDEN,Y,TOP,=,'+inttostr(sd.y-180-fWordAdd.Height)+',=,0,r,0,SET');
-        sfl(fWordAdd,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
+        sfl(fUser,'HIDDEN,Y,TOP,=,'+inttostr(sd.y-180-fExamples.Height)+',=,0,r,0,SET');
+        sfl(fExamples,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
 //        sfl(fWordCategory,'HIDDEN,Y,BOTTOM,.,0,=,'+inttostr(sd.x-fWordCategory.Width)+',r,0,LEAVE');
         sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,r,0,SET');
         sfl(fTranslate,'HIDDEN,Y,BOTTOM,%,100,=,0,r,0,LEAVE');
@@ -1293,7 +1289,7 @@ begin
         fKanjiDetails.Height:=300;
         sfl(fTranslate,'HIDDEN,Y,BOTTOM,%,100,=,0,r,0,LEAVE');
 //        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-        sfl(fWordAdd,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
+        sfl(fExamples,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
         sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,=,180,LEAVE');
 //        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
         sfl(fUser,'VISIBLE,Y,TOP,=,180,=,0,=,'+inttostr(sd.x-fWordKanji.width)+',SET');
@@ -1316,7 +1312,7 @@ begin
         sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,=,180,LEAVE');
 //        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
         sfl(fUser,'VISIBLE,Y,TOP,=,180,=,0,=,'+inttostr(sd.x-fWordKanji.width)+',SET');
-        sfl(fWordAdd,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
+        sfl(fExamples,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
         sfl(fTranslate,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
         StdVocab;
       end;
@@ -1330,7 +1326,7 @@ begin
         sfl(fWordKanji,'HIDDEN,Y,RIGHT,.,0,=,0,=,180,LEAVE');
 //        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
         sfl(fUser,'VISIBLE,Y,TOP,=,300,=,0,=,'+inttostr(sd.x-fKanjiDetails.width)+',SET');
-        sfl(fWordAdd,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
+        sfl(fExamples,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
 //        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
         sfl(fTranslate,'VISIBLE,Y,TOP,%,100,=,0,r,0,LEAVE');
         StdVocab;
@@ -2094,9 +2090,9 @@ begin
   FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
   begin
-    if fWordAdd.SpeedButton4.Down then exmode:=0;
-    if fWordAdd.SpeedButton5.Down then exmode:=1;
-    if fWordAdd.SpeedButton6.Down then exmode:=2;
+    if fExamples.SpeedButton4.Down then exmode:=0;
+    if fExamples.SpeedButton5.Down then exmode:=1;
+    if fExamples.SpeedButton6.Down then exmode:=2;
     if SpeedButton1.Down then
     begin
       Screen.Cursor:=crHourGlass;
@@ -2467,13 +2463,13 @@ begin
     fUser.DocFileName:=Reg.ReadString('Editor','DocFileName','');
     fUser.DocTp:=Reg.ReadInteger('Editor','DocType',0);
   end;
-  fWordAdd.SpeedButton11.Down:=reg.ReadBool('Dict','RandomExamples',false);
+  fExamples.SpeedButton11.Down:=reg.ReadBool('Dict','RandomExamples',false);
   vocmode:=reg.ReadInteger('Dict','VocMode',0);
   exmode:=reg.ReadInteger('Dict','ExMode',0);
   fSettings.Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
-  if exmode=0 then fWordAdd.SpeedButton4.Down:=true;
-  if exmode=1 then fWordAdd.SpeedButton5.Down:=true;
-  if exmode=2 then fWordAdd.SpeedButton6.Down:=true;
+  if exmode=0 then fExamples.SpeedButton4.Down:=true;
+  if exmode=1 then fExamples.SpeedButton5.Down:=true;
+  if exmode=2 then fExamples.SpeedButton6.Down:=true;
   fSettings.Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
   GridFontSize:=strtoint(fSettings.Edit25.text);
   fSettings.ListBox1.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
@@ -2837,7 +2833,7 @@ begin
 //  XPResFix(fKanjiSearch);
   XPResFix(fKanjiCompounds);
   XPResFix(fWordDetails);
-//  XPResFix(fWordAdd);
+//  XPResFix(fExamples);
   XPResFix(fTranslate);
   XPResFix(fClipboard);
   timproc:=now-tim;
@@ -2913,7 +2909,7 @@ begin
   end;
   fMenu.ToggleForm(fKanjiCompounds,fKanji.SpeedButton3,fMenu.aKanjiCompounds);
   fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
-  fMenu.ToggleForm(fWordAdd,fUser.SpeedButton9,fMenu.aDictAdd);
+  fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
   fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
 //  fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
@@ -2925,14 +2921,13 @@ begin
   if setwindows and 1<>1 then fMenu.ToggleForm(fKanjiSearch,fKanji.SpeedButton5,fMenu.aKanjiSearch);
   if setwindows and 2<>2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.SpeedButton3,fMenu.aKanjiCompounds);
   if setwindows and 4<>4 then fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
-  if setwindows and 8<>8 then fMenu.ToggleForm(fWordAdd,fUser.SpeedButton9,fMenu.aDictAdd);
-  if setwindows and 16=16 then fMenu.ToggleForm(fWordAdd,fWords.SpeedButton1,fMenu.aUserExamples);
+  if setwindows and 8<>8 then fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
+  if setwindows and 16=16 then fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
   if setwindows and 32<>32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   if setwindows and 64<>64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
   if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
   fTranslate.SpeedButton20.Down:=fKanji.SpeedButton2.Down;
   screenTipShown:=false;
-  fUser.ChangeNotebook;
   fUser.ChangeFile(false);
   if (fSettings.CheckBox61.Checked) and (fUser.docfilename<>'') then
   begin
@@ -3006,7 +3001,7 @@ begin
 //  SetBorder(fKanjiSearch,bsSizeToolWin);
 //  SetBorder(fKanjiCompounds,bsSizeToolWin);
 //  SetBorder(fWordDetails,bsSizeToolWin);
-//  SetBorder(fWordAdd,bsSizeToolWin);
+//  SetBorder(fExamples,bsSizeToolWin);
 //  SetBorder(fWordCategory,bsToolWindow);
 //  SetBorder(fWordKanji,bsToolWindow);
   SetBorder(fTranslate,bsSizeToolWin);
@@ -3223,7 +3218,7 @@ begin
   pre:=aDictAdd.Checked;
   if not fUser.Visible then ToggleForm(fUser,nil,nil);
   if aDictAdd.Checked<>pre then exit;
-  ToggleForm(fWordAdd,fUser.SpeedButton9,aDictAdd);
+  ToggleForm(fExamples,fUser.SpeedButton9,aDictAdd);
 end;
 
 procedure TfMenu.aDictEditorExecute(Sender: TObject);
@@ -3699,8 +3694,8 @@ end;
 begin
   if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji,fKanji.Panel3,1);
   if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji,fKanji.Panel2,3);
-  if ((form=fWordAdd) or (form=nil)) and (curdisplaymode<>5) then DockProc(fWordAdd,fUser,fUser.Panel2,3);
-  if ((form=fWordAdd) or (form=nil)) and (curdisplaymode=5) then DockProc(fWordAdd,fWords,fWords.Panel5,3);
+  if ((form=fExamples) or (form=nil)) and (curdisplaymode<>5) then DockProc(fExamples,fUser,fUser.Panel2,3);
+  if ((form=fExamples) or (form=nil)) and (curdisplaymode=5) then DockProc(fExamples,fWords,fWords.Panel5,3);
   if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser,fUser.Panel3,2);
   if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords,fWords.Panel2,2);
   if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords,fWords.Panel4,3);
@@ -3836,11 +3831,11 @@ begin
       CharDetNowDocked:=CharDetDockedVis2;
     end;
   end;
-  if fWordAdd.visible then
+  if fExamples.visible then
   begin
-    fWordAdd.hide;
-    DockExpress(fWordAdd,false);
-    fWordAdd.tag:=0;
+    fExamples.hide;
+    DockExpress(fExamples,false);
+    fExamples.tag:=0;
   end;
   case displaymode of
     1:begin
@@ -3905,10 +3900,10 @@ begin
   if (((curdisplaymode=2) or (displaymode=4)) and (aDictAdd.Checked)) or
      ((curdisplaymode=5) and (aUserExamples.Checked)) then
   begin
-    fWordAdd.tag:=1;
-    DockExpress(fWordAdd,true);
-    fWordAdd.show;
-    fWordAdd.tag:=2;
+    fExamples.tag:=1;
+    DockExpress(fExamples,true);
+    fExamples.show;
+    fExamples.tag:=2;
   end;
 end;
 
@@ -4799,22 +4794,19 @@ end;
 procedure TfMenu.aDictVoc1Execute(Sender: TObject);
 begin
 {  if not fUser.Visible then aDictExecute(Sender);
-  fWordAdd.SpeedButton1.Down:=true;
-  fUser.ChangeNotebook;}
+  fExamples.SpeedButton1.Down:=true;}
 end;
 
 procedure TfMenu.aDictVoc2Execute(Sender: TObject);
 begin
 {  if not fUser.Visible then aDictExecute(Sender);
-  fWordAdd.SpeedButton2.Down:=true;
-  fUser.ChangeNotebook;}
+  fExamples.SpeedButton2.Down:=true;}
 end;
 
 procedure TfMenu.aDictVoc3Execute(Sender: TObject);
 begin
 {  if not fUser.Visible then aDictExecute(Sender);
-  fWordAdd.SpeedButton3.Down:=true;
-  fUser.ChangeNotebook;}
+  fExamples.SpeedButton3.Down:=true;}
 end;
 
 procedure TfMenu.aUserExamplesExecute(Sender: TObject);
@@ -4823,7 +4815,7 @@ begin
   pre:=aUserExamples.Checked;
   if not fWords.Visible then ToggleForm(fWords,nil,nil);
   if aUserExamples.Checked<>pre then exit;
-  ToggleForm(fWordAdd,fWords.SpeedButton1,aUserExamples);
+  ToggleForm(fExamples,fWords.SpeedButton1,aUserExamples);
 end;
 
 procedure TfMenu.aEditorColorsExecute(Sender: TObject);

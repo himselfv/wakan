@@ -116,6 +116,7 @@ function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function fcopy(s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
+function fstr(s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -392,6 +393,16 @@ begin
 {$ELSE}
   Result := fcopy(s, Index, 1);
 {$ENDIF}
+end;
+
+//Converts raw (unicode) data to FString. On unicode does nothing!
+function fstr(s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+ {$IFDEF UNICODE}
+  Result := s;
+ {$ELSE}
+  Result := UnicodeToHex(s);
+ {$ENDIF}
 end;
 
 
