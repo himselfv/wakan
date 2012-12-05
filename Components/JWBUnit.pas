@@ -152,8 +152,8 @@ procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
 function FindDrawReg(p:TPaintBox;x,y:integer;var cx,cy,cy2:integer):string;
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
-function ConvertPinYin(s:string):string;
-function DeconvertPinYin(s:string):string;
+function ConvertPinYin(s:string):FString;
+function DeconvertPinYin(s:FString):string;
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
 function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
 function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):FString;
@@ -2253,78 +2253,98 @@ begin
 end;
 
 //TODO: Convert to Unicode
-function ConvertPinYin(s:string):string;
+//Make the function build the string in unicode and conver to hex at exit, if non-unicode
+//Doesn't work!
+function ConvertPinYin(s:string):FString;
+const UH_DUMMY_CHAR:FChar = #$F8F0; //used in place of a char when it's unknown or whatever
 var nch:string;
-    li:integer;
-    ali:string;
-    cnv,cnv2,cv2aft:string;
-    cc:char;
-    i:integer;
-    iscomma:boolean;
+  li:integer;
+  ali:string;
+  cnv,cv2aft:string;
+  cnv2: FString;
+  cc:char;
+  i:integer;
+  iscomma:boolean;
 begin
-    cnv:=lowercase(s);
-    cnv2:='';
-    li:=0;
-    ali:='';
-    iscomma:=false;
-    for i:=1 to length(cnv) do
+  cnv:=lowercase(s);
+  cnv2:='';
+  li:=0;
+  ali:='';
+  iscomma:=false;
+  for i:=1 to length(cnv) do
+  begin
+    if (li=0) and ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
+    if (li<i) and ((cnv[li]='i') or (cnv[li]='u') or (cnv[li]='ü')) and
+      ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
+    if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
     begin
-      if (li=0) and ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
-      if (li<i) and ((cnv[li]='i') or (cnv[li]='u') or (cnv[li]='ü')) and
-        ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
-      if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
-      begin
-        cc:=cnv[li];
-        ali:=copy(cnv2,length(cnv2)-(i-li-1)*4+1,(i-li-1)*4);
-        delete(cnv2,length(cnv2)-(i-li-1)*4-3,(i-li-1)*4+4);
-        if iscomma and (cc='u') then cc:='w';
-        case cnv[i] of
-          '2':case cc of
-                'a':cnv2:=cnv2+'00E1';
-                'e':cnv2:=cnv2+'00E9';
-                'i':cnv2:=cnv2+'00ED';
-                'o':cnv2:=cnv2+'00F3';
-                'u':cnv2:=cnv2+'00FA';
-                'w':cnv2:=cnv2+'01D8';
-              end;
-          '4':case cc of
-                'a':cnv2:=cnv2+'00E0';
-                'e':cnv2:=cnv2+'00E8';
-                'i':cnv2:=cnv2+'00EC';
-                'o':cnv2:=cnv2+'00F2';
-                'u':cnv2:=cnv2+'00F9';
-                'w':cnv2:=cnv2+'01DC';
-              end;
-          '1':case cc of
-                'a':cnv2:=cnv2+'0101';
-                'e':cnv2:=cnv2+'0113';
-                'i':cnv2:=cnv2+'012B';
-                'o':cnv2:=cnv2+'014D';
-                'u':cnv2:=cnv2+'016B';
-                'w':cnv2:=cnv2+'01D6';
-              end;
-          '3':case cc of
-                'a':cnv2:=cnv2+'01CE';
-                'e':cnv2:=cnv2+'011B';
-                'i':cnv2:=cnv2+'01D0';
-                'o':cnv2:=cnv2+'01D2';
-                'u':cnv2:=cnv2+'01D4';
-                'w':cnv2:=cnv2+'01DA';
-              end;
-        end;
-        li:=0;
-        if (cnv[i]='0') or (cnv[i]='5') then if cc='w'then cnv2:=cnv2+'00FC'else cnv2:=cnv2+UnicodeToHex(cc);
-        cnv2:=cnv2+ali;
-        iscomma:=false;
-      end else if cnv[i]=':'then begin cnv2:=cnv2+'XXXX'; iscomma:=true end else if (cnv[i]<'0') or (cnv[i]>'5') then cnv2:=cnv2+UnicodeToHex(cnv[i]);
-    end;
-    while pos('XXXX',cnv2)>0 do delete(cnv2,pos('XXXX',cnv2),4);
-    result:=cnv2;
-//    result:=UnicodeToHex(s);
+      cc:=cnv[li];
+      ali:=copy(cnv2,length(cnv2)-i-li,i-li-1);
+      delete(cnv2,length(cnv2)-i-li-1,i-li);
+      if iscomma and (cc='u') then cc:='w';
+      case cnv[i] of
+        '2':case cc of
+              'a':cnv2:=cnv2+#$00E1;
+              'e':cnv2:=cnv2+#$00E9;
+              'i':cnv2:=cnv2+#$00ED;
+              'o':cnv2:=cnv2+#$00F3;
+              'u':cnv2:=cnv2+#$00FA;
+              'w':cnv2:=cnv2+#$01D8;
+            end;
+        '4':case cc of
+              'a':cnv2:=cnv2+#$00E0;
+              'e':cnv2:=cnv2+#$00E8;
+              'i':cnv2:=cnv2+#$00EC;
+              'o':cnv2:=cnv2+#$00F2;
+              'u':cnv2:=cnv2+#$00F9;
+              'w':cnv2:=cnv2+#$01DC;
+            end;
+        '1':case cc of
+              'a':cnv2:=cnv2+#$0101;
+              'e':cnv2:=cnv2+#$0113;
+              'i':cnv2:=cnv2+#$012B;
+              'o':cnv2:=cnv2+#$014D;
+              'u':cnv2:=cnv2+#$016B;
+              'w':cnv2:=cnv2+#$01D6;
+            end;
+        '3':case cc of
+              'a':cnv2:=cnv2+#$01CE;
+              'e':cnv2:=cnv2+#$011B;
+              'i':cnv2:=cnv2+#$01D0;
+              'o':cnv2:=cnv2+#$01D2;
+              'u':cnv2:=cnv2+#$01D4;
+              'w':cnv2:=cnv2+#$01DA;
+            end;
+      end;
+      li:=0;
+      if (cnv[i]='0') or (cnv[i]='5') then
+        if cc='w'then
+          cnv2:=cnv2+#$00FC
+        else
+          cnv2:=cnv2+cc;
+      cnv2:=cnv2+ali;
+      iscomma:=false;
+    end else
+    if cnv[i]=':'then begin
+      cnv2:=cnv2+UH_DUMMY_CHAR;
+      iscomma:=true
+    end else
+    if (cnv[i]<'0') or (cnv[i]>'5') then
+      cnv2:=cnv2+cnv[i];
+  end;
+
+  //Remove dummy chars
+  while pos(UH_DUMMY_CHAR,cnv2)>0 do
+    delete(cnv2,pos(UH_DUMMY_CHAR,cnv2),1);
+ {$IFDEF UNICODE}
+  Result := cnv2;
+ {$ELSE}
+  Result := UnicodeToHex(cnv2);
+ {$ENDIF}
 end;
 
 //TODO: Convert to Unicode
-function DeconvertPinYin(s:string):string;
+function DeconvertPinYin(s:FString):string;
 var nch:string;
     cnv,cnv2:string;
     i,j:integer;
