@@ -68,8 +68,8 @@ const
   ALTCH_AT:Char = '@';
   ALTCH_TILDE:Char = '~'; //followed by 'I' and means 'italic'
   UH_SETCOLOR:Char = '%'; //followed by 6 character hex color
-  ALTCH_GREQ:Char = '>';
-  ALTCH_LEQ:Char = '<';
+  UH_LBEG: Char ='<'; //begin flag text (ex.: <dEDICT> <gram> <suf>)
+  UH_LEND: Char = '>'; //end flag text
 
  {$ELSE}
   UH_NONE:FChar = #$0000;
@@ -90,8 +90,8 @@ const
   ALTCH_AT:Char = #$E004;
   ALTCH_TILDE:Char = #$E005;
   UH_SETCOLOR:Char = #$E006;
-  ALTCH_GREQ:Char = #$E007;
-  ALTCH_LEQ:Char = #$E008;
+  UH_LBEG:Char = #$E008;
+  UH_LEND:Char = #$E007;
  {$ENDIF}
 
 
@@ -632,10 +632,14 @@ begin
 end;
 
 function strip_fl(s:string):string;
+var beg, en: integer;
 begin
-  while (pos(ALTCH_LEQ,s)>0) and (pos(ALTCH_GREQ,s)>0) and (pos(ALTCH_GREQ,s)>pos(ALTCH_LEQ,s)) do
-  begin
-    delete(s,pos(ALTCH_LEQ,s),pos(ALTCH_GREQ,s)-pos(ALTCH_LEQ,s)+1);
+  beg := pos(UH_LBEG,s);
+  en := pos(UH_LEND,s);
+  while (beg>0) and (en>0) and (en>beg) do begin
+    delete(s,beg,en-beg+1);
+    beg := pos(UH_LBEG,s);
+    en := pos(UH_LEND,s);
   end;
   result:=trim(s);
 end;
@@ -1159,14 +1163,14 @@ begin
   for i:=1 to length(mark) do
   begin
     s3:=GetMarkAbbr(mark[i]);
-    if s3[1]='s'then mars:=mars+' '+ALTCH_LEQ+s3+ALTCH_GREQ;
-    if s3[1]='g'then marg:=marg+ALTCH_LEQ+s3+ALTCH_GREQ+' ';
-    if s3[1]='1'then mar1:=mar1+ALTCH_LEQ+s3+ALTCH_GREQ+' ';
+    if s3[1]='s'then mars:=mars+' '+UH_LBEG+s3+UH_LEND;
+    if s3[1]='g'then marg:=marg+UH_LBEG+s3+UH_LEND+' ';
+    if s3[1]='1'then mar1:=mar1+UH_LBEG+s3+UH_LEND+' ';
   end;
   result:=marg+mar1+s2+mars;
 end;
 
-//TODO: Upgrade so this supports UNICODE
+//TODO: Upgrade to Unicode
 function ResolveCrom(s:string;posin,posout:integer;clean:boolean):string;
 var s2,s3:string;
     cr:string;
@@ -1812,11 +1816,11 @@ begin
       sbef:=s;
       inc(cnt);
       if inmar then
-        if pos(ALTCH_GREQ,s)>0 then curs:=copy(s,1,pos(ALTCH_GREQ,s)-1) else curs:=s;
+        if pos(UH_LEND,s)>0 then curs:=copy(s,1,pos(UH_LEND,s)-1) else curs:=s;
       if not inmar then
-        if pos(ALTCH_LEQ,s)>0 then curs:=copy(s,1,pos(ALTCH_LEQ,s)-1) else curs:=s;
+        if pos(UH_LBEG,s)>0 then curs:=copy(s,1,pos(UH_LBEG,s)-1) else curs:=s;
       delete(s,1,length(curs));
-      if (length(s)>0) and ((s[1]=ALTCH_LEQ) or (s[1]=ALTCH_GREQ)) then delete(s,1,1);
+      if (length(s)>0) and ((s[1]=UH_LBEG) or (s[1]=UH_LEND)) then delete(s,1,1);
       rect2:=rect;
       rect2.Left:=rect.left+x+2;
       rect2.Top:=rect.top+y;
@@ -1864,7 +1868,7 @@ begin
           if not inmar and (pos(' ',curs)>0) then
           begin
             if (length(curs)>0) and (curs[1]=' ') then curs[1]:=ALTCH_TILDE;
-            s:=copy(curs,pos(' ',curs),length(curs)-pos(' ',curs)+1)+ALTCH_LEQ+s;
+            s:=copy(curs,pos(' ',curs),length(curs)-pos(' ',curs)+1)+UH_LBEG+s;
             curs:=copy(curs,1,pos(' ',curs)-1);
             if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
             resinmar:=true;
@@ -1948,7 +1952,9 @@ begin
   kcchcomp.Clear;
 end;
 
-procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;sizhor,sizvert,nofullcomp:integer;calfont:string);
+procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
+  stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;
+  sizhor,sizvert,nofullcomp:integer;calfont:string);
 var ony,kuny,defy:string;
     radf:integer;
     sl:TStringList;
@@ -2064,7 +2070,7 @@ begin
           freq:='0000000';
           if (dic.TDictFrequency<>-1) and (sortfreq) then freq:=inttostr(9999999-dic.TDict.Int(dic.TDictFrequency));
           while length(freq)<7 do freq:='0'+freq;
-          if pos('<spop>',EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark))=0 then freq[1]:='a';
+          if pos(UH_LBEG+'spop'+UH_LEND,EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark))=0 then freq[1]:='a';
           if freq<>'9999999'then
           sl.Add(freq+#9+ChinTo(dic.TDict.Str(dic.TDictKanji))+' ['+dic.TDict.Str(dic.TDictPhonetic)+'] {'+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark)+'}{');
           j:=dic.ReadIndex;
@@ -2128,23 +2134,23 @@ begin
           adddot:=0;
           if s[1]='+'then
           begin
-            ws:='FF0B';
+            ws:={$IFNDEF UNICODE}'FF0B'{$ELSE}#$FF0B{$ENDIF};
             delete(s,1,1);
             adddot:=1;
           end;
           if s[1]='-'then
           begin
-            ws:=ws+'FF0D';
+            ws:=ws+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF};
             delete(s,1,1);
             adddot:=1;
           end;
           if TCharRead.Int(TCharReadReadDot)>0 then
           begin
             ws:=ws+copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
-            ws:=ws+'FF0E';
+            ws:=ws+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
             delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
           end;
-          if s[length(s)]='-'then ws:=ws+copy(s,1,length(s)-1)+'FF0D'
+          if s[length(s)]='-'then ws:=ws+copy(s,1,length(s)-1)+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
             else ws:=ws+s;
         end;
       if curlang='c'then ws:=TCharRead.Str(TCharReadReading);

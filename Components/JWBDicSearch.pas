@@ -520,15 +520,15 @@ end;
 function GetPopClass(s2: string): integer;
 begin
   Result := 40;
-  if (fSettings.CheckBox5.Checked) and (pos('<gn',s2)>0) then dec(Result,5);
-  if (fSettings.CheckBox5.Checked) and (pos('-v>',s2)>0) then dec(Result,5);
-  if (fSettings.CheckBox5.Checked) and (pos('<g',s2)=0) then dec(Result,5);
-  if (fSettings.CheckBox6.Checked) and (pos('<shonor>',s2)>0) then dec(Result,1);
-  if (fSettings.CheckBox6.Checked) and (pos('<shum>',s2)>0) then dec(Result,2);
-  if (fSettings.CheckBox6.Checked) and (pos('<spolite>',s2)>0) then dec(Result,3);
-  if pos('<sobsolete>',s2)>0 then inc(Result,20);
-  if pos('<sobscure>',s2)>0 then inc(Result,20);
-  if (fSettings.CheckBox7.Checked) and (pos('<spop>',s2)>0) then dec(Result,150);
+  if (fSettings.CheckBox5.Checked) and (pos(UH_LBEG+'gn',s2)>0) then dec(Result,5);
+  if (fSettings.CheckBox5.Checked) and (pos('-v'+UH_LEND,s2)>0) then dec(Result,5);
+  if (fSettings.CheckBox5.Checked) and (pos(UH_LBEG+'g',s2)=0) then dec(Result,5);
+  if (fSettings.CheckBox6.Checked) and (pos(UH_LBEG+'shonor'+UH_LEND,s2)>0) then dec(Result,1);
+  if (fSettings.CheckBox6.Checked) and (pos(UH_LBEG+'shum'+UH_LEND,s2)>0) then dec(Result,2);
+  if (fSettings.CheckBox6.Checked) and (pos(UH_LBEG+'spolite'+UH_LEND,s2)>0) then dec(Result,3);
+  if pos(UH_LBEG+'sobsolete'+UH_LEND,s2)>0 then inc(Result,20);
+  if pos(UH_LBEG+'sobscure'+UH_LEND,s2)>0 then inc(Result,20);
+  if (fSettings.CheckBox7.Checked) and (pos(UH_LBEG+'spop'+UH_LEND,s2)>0) then dec(Result,150);
 end;
 
 
@@ -713,12 +713,12 @@ function IsAppropriateVerbType(sdef: string; s2: string): boolean;
 begin
   Result :=
        ((sdef='F') or
-       ((sdef='2') and (pos('<gru-v>',s2)>0)) or
-       ((sdef='S') and (pos('<gsuru-v>',s2)>0)) or
-       ((sdef='K') and (pos('<gkuru-v>',s2)>0)) or
-       ((sdef='I') and (pos('<gIku-v>',s2)>0)) or
-       ((sdef='1') and (pos('-v>',s2)>0) and (pos('<gru-v>',s2)=0)) or
-       ((sdef='A') and (pos('adj>',s2)>0) and (pos('<gna-adj>',s2)=0)) or
+       ((sdef='2') and (pos(UH_LBEG+'gru-v'+UH_LEND,s2)>0)) or
+       ((sdef='S') and (pos(UH_LBEG+'gsuru-v'+UH_LEND,s2)>0)) or
+       ((sdef='K') and (pos(UH_LBEG+'gkuru-v'+UH_LEND,s2)>0)) or
+       ((sdef='I') and (pos(UH_LBEG+'gIku-v'+UH_LEND,s2)>0)) or
+       ((sdef='1') and (pos('-v'+UH_LEND,s2)>0) and (pos(UH_LBEG+'gru-v'+UH_LEND,s2)=0)) or
+       ((sdef='A') and (pos('adj'+UH_LEND,s2)>0) and (pos(UH_LBEG+'gna-adj'+UH_LEND,s2)=0)) or
        ((sdef='N') and (pos('gna-adj',s2)>0)));
 end;
 
@@ -816,7 +816,7 @@ begin
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
     if a=2 then dic.TDict.Locate(dic.stIndex,inttostr(wif),true);
     //if a=2 then showmessage(Format('%4.4X',[wif])+'-'+dic.TDict.Str(dic.TDictEnglish));
-    if sdef<>'F'then s2:='~I'else s2:='~F';
+    if sdef<>'F'then s2:=ALTCH_TILDE+'I'else s2:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
       s2:=s2+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers))
     else begin
@@ -824,11 +824,10 @@ begin
       s2:=s2+EnrichDictEntry(converted, markers);
     end;
     if a=2 then ts:=lowercase(dic.TDict.Str(dic.TDictEnglish)+' ');
-    //showmessage(sdef+KanaToRomaji(sxx,1,'j')+','+s2);
     if IsAppropriateVerbType(sdef, s2) then
     if (a<>2) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
     (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
-    if (not dic_ignorekana) or (not limitkana) or (pos('<skana>',s2)>0) then
+    if (not dic_ignorekana) or (not limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,s2)>0) then
     if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.TDict.Str(dic.TDictPhonetic)))
     or ((a=3) and (CompareUnicode(sxx,dic.TDict.Str(dic.TDictKanji)))) then
     begin
@@ -848,15 +847,15 @@ begin
 
       UserScore:=-1;
       UserIndex:='';
-      if pos('<skana>',s2)>0 then
+      if pos(UH_LBEG+'skana'+UH_LEND,s2)>0 then
         TryGetUserScore(dic.TDict.Str(dic.TDictPhonetic));
       TryGetUserScore(dic.TDict.Str(dic.TDictKanji));
       if (UserScore=-1) and (dic.TDict.Str(dic.TDictKanji)<>ChinTo(dic.TDict.Str(dic.TDictKanji))) then
         TryGetUserScore(ChinTo(dic.TDict.Str(dic.TDictKanji)));
 
       if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.TDict.Int(dic.TDictFrequency)>0) then
-        s2:=s2+' <pwc'+dic.TDict.Str(dic.TDictFrequency)+'>';
-      s2:=s2+' <d'+dic.name+'>';
+        s2:=s2+' '+UH_LBEG+'pwc'+dic.TDict.Str(dic.TDictFrequency)+UH_LEND;
+      s2:=s2+' '+UH_LBEG+'d'+dic.name+UH_LEND;
 
      //Calculate sorting order
       sort:=0; //the bigger the worse (will apear later in list)
@@ -888,7 +887,7 @@ begin
       if sort<0 then sort:=0;
 
       if (a=4) and (p4reading) then
-        s2:=copy(s2,1,2)+'<pp'+inttostr(sort div 100)+'> '+copy(s2,3,length(s2)-2);
+        s2:=copy(s2,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(s2,3,length(s2)-2);
 
       sorts:=dic.TDict.Str(dic.TDictIndex);
       while length(sorts)<6 do
@@ -903,7 +902,7 @@ begin
         sorts:='0'+sorts;
       sorts:=sorts+UserIndex+Format('%.2d',[slen]);
       // if sdef<>'F'then sorts:=sorts+'I'else sorts:=sorts+'F';
-      if (pos('-v>',s2)>0) then
+      if (pos('-v'+UH_LEND,s2)>0) then
         sorts:=sorts+'I'
       else
         sorts:=sorts+'F';
@@ -916,7 +915,7 @@ begin
       if (fSettings.CheckBox11.Checked) and (UserScore>-1) then
         statpref:='!'+inttostr(UserScore);
       ssig:=dic.TDict.Str(dic.TDictPhonetic)+'x'+dic.TDict.Str(dic.TDictKanji);
-      if (fSettings.CheckBox8.Checked) and (pos('<skana>',s2)<>0) then
+      if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,s2)<>0) then
         scur:=sorts+statpref+dic.TDict.Str(dic.TDictPhonetic)
           +' ['+statpref+dic.TDict.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}'
       else
@@ -932,15 +931,15 @@ begin
           begin
             delete(scomp,1,pos(' {',scomp));
             delete(scomp,1,1);
-            if (length(scomp)>0) and (scomp[1]='!') then delete(scomp,1,2);
-            if (length(scomp)>0) and (scomp[1]='~') then delete(scomp,1,2);
+            if (length(scomp)>0) and (scomp[1]=ALTCH_EXCL) then delete(scomp,1,2);
+            if (length(scomp)>0) and (scomp[1]=ALTCH_TILDE) then delete(scomp,1,2);
             delete(scur,length(scur),1);
             scur:=scur+' / '+scomp;
             sl[presindl.IndexOf(ssig)]:=scur;
           end else
           begin
             delete(scomp,length(scomp),1);
-            if (length(s2)>0) and (s2[1]='~') then delete(s2,1,2);
+            if (length(s2)>0) and (s2[1]=ALTCH_TILDE) then delete(s2,1,2);
             scomp:=scomp+' / '+s2+'}';
             sl[presindl.IndexOf(ssig)]:=scomp;
           end;
@@ -951,11 +950,11 @@ begin
         begin
           fMenu.AnnotSeekK(dic.TDict.Str(dic.TDictKanji),dic.TDict.Str(dic.TDictPhonetic));
           s2:=fMenu.AnnotGetAll('t',', ');
-          if fMenu.AnnotGetOne('c')<>'' then s2:='%'+fMenu.AnnotGetOne('c')+s2;
+          if fMenu.AnnotGetOne('c')<>'' then s2:=UH_SETCOLOR+fMenu.AnnotGetOne('c')+s2;
           ii:=pos('{'+statpref,scur)+length(statpref)+1;
-          if scur[ii]='!' then inc(ii,2);
-          if scur[ii]='~' then inc(ii,2);
-          if scur[ii]='!' then inc(ii,2);
+          if scur[ii]=ALTCH_EXCL then inc(ii,2);
+          if scur[ii]=ALTCH_TILDE then inc(ii,2);
+          if scur[ii]=ALTCH_EXCL then inc(ii,2);
           if s2<>'' then
             scur:=copy(scur,1,ii-1)+
               s2+' >> '+
@@ -996,8 +995,8 @@ begin
       scur:=sl[i];
       delete(scomp,1,pos(' {',scomp));
       delete(scomp,1,1);
-      if (length(scomp)>0) and (scomp[1]='!') then delete(scomp,1,2);
-      if (length(scomp)>0) and (scomp[1]='~') then delete(scomp,1,2);
+      if (length(scomp)>0) and (scomp[1]=ALTCH_EXCL) then delete(scomp,1,2);
+      if (length(scomp)>0) and (scomp[1]=ALTCH_TILDE) then delete(scomp,1,2);
       scur:=copy(scur,1,length(sl[i])-length(scomp));
       s2:=TUser.Str(TUserEnglish);
       if pos(s2,scomp)>0 then
@@ -1006,7 +1005,7 @@ begin
         scomp:=' // '+scomp;
       sl2:=TStringList.Create;
       fWords.ListWordCategories(TUser.Int(TUserIndex),sl2,'',false);
-      for sl2i:=0 to sl2.Count-1 do s2:=s2+' <l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+'>';
+      for sl2i:=0 to sl2.Count-1 do s2:=s2+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
       sl2.Free;
       sl[i]:=scur+s2+scomp;
     end;

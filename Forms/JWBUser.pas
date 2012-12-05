@@ -2301,10 +2301,10 @@ begin
       worddict:=copy(ul[i],7,6);
       s:=dicsl[i];
       globdict:='0';
-      if (pos('<d',s)>0) then
+      if (pos(UH_LBEG+'d',s)>0) then
       begin
-        globdict:=copy(s,pos('<d',s)+2,length(s)-pos('<d',s)-1);
-        globdict:=copy(globdict,1,pos('>',globdict)-1);
+        globdict:=copy(s,pos(UH_LBEG+'d',s)+2,length(s)-pos(UH_LBEG+'d',s)-1);
+        globdict:=copy(globdict,1,pos(UH_LEND,globdict)-1);
         if docdic.IndexOf(globdict)<>-1 then globdict:=inttostr(docdic.IndexOf(globdict)) else
         begin
           docdic.add(globdict);

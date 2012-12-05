@@ -1062,22 +1062,6 @@ begin
   inc(numberdeleted);
 end;
 
-function HexToUnicode(s:string):widestring;
-var s2:widestring;
-    d:word;
-    c:widechar;
-    i:integer;
-begin
-  s2:='';
-  for i:=1 to length(s) div 4 do
-  begin
-    d:=StrToInt('0x'+copy(s,(i-1)*4+1,4));
-    c:=widechar(d);
-    s2:=s2+c;
-  end;
-  result:=s2;
-end;
-
 procedure TTextTable.Edit(fields:array of byte;values:array of string);
 var i,j,k,l:integer;
     b:byte;
