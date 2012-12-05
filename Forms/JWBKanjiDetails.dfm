@@ -1,10 +1,10 @@
 object fKanjiDetails: TfKanjiDetails
   Left = 686
   Top = 140
-  Width = 337
-  Height = 452
   BorderStyle = bsSizeToolWin
-  Caption = '#00159^eCharacter details^cDetaily znaku'
+  Caption = '#00159^eCharacter details'
+  ClientHeight = 418
+  ClientWidth = 321
   Color = clBtnFace
   Constraints.MaxWidth = 337
   Constraints.MinHeight = 254
@@ -16,17 +16,19 @@ object fKanjiDetails: TfKanjiDetails
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
-  Position = poDefaultPosOnly
   OnClose = FormClose
   OnHide = FormHide
   OnKeyPress = FormKeyPress
   OnShow = FormShow
+  DesignSize = (
+    321
+    418)
   PixelsPerInch = 96
   TextHeight = 13
   object Shape1: TShape
     Left = 6
     Top = 220
-    Width = 315
+    Width = 307
     Height = 162
     Anchors = [akLeft, akTop, akRight, akBottom]
   end
@@ -117,9 +119,9 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel10: TRxLabel
     Left = 166
     Top = 5
-    Width = 168
+    Width = 107
     Height = 13
-    Caption = '#00160^eRadical:^cRadikál:'
+    Caption = '#00160^eRadical:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -189,9 +191,9 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel39: TRxLabel
     Left = 5
     Top = 165
-    Width = 217
+    Width = 137
     Height = 13
-    Caption = '#00162^eStroke count:^cPoèet tahù:'
+    Caption = '#00162^eStroke count:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -208,7 +210,7 @@ object fKanjiDetails: TfKanjiDetails
     Cursor = crHandPoint
     Hint = 
       '#00163^ewww.zhongwen.com - Etymological information about the ch' +
-      'aracter^cwww.zhongwen.com - Etymologická informace o znaku'
+      'aracter'
     Caption = 'ZhongWen'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlue
@@ -220,15 +222,14 @@ object fKanjiDetails: TfKanjiDetails
     ShowHint = True
   end
   object ProUrlLabel2: TUrlLabel
-    Left = 83
+    Left = 79
     Top = 198
     Width = 56
     Height = 13
     Cursor = crHandPoint
     Hint = 
       '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
-      'C dictionary server^cwww.csse.monash.edu.au/~jwb/wwwjdic - Infor' +
-      'mace o znaku ve slovníku'
+      'C dictionary server'
     Caption = 'WWWJDIC'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlue
@@ -240,14 +241,14 @@ object fKanjiDetails: TfKanjiDetails
     ShowHint = True
   end
   object ProUrlLabel3: TUrlLabel
-    Left = 161
+    Left = 154
     Top = 198
     Width = 36
     Height = 13
     Cursor = crHandPoint
     Hint = 
       '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
-      'ter^ccharts.unicode.org/unihan - UniHan záznam pro tento znak'
+      'ter'
     Caption = 'UniHan'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlue
@@ -259,14 +260,12 @@ object fKanjiDetails: TfKanjiDetails
     ShowHint = True
   end
   object ProUrlLabel4: TUrlLabel
-    Left = 218
+    Left = 210
     Top = 198
     Width = 26
     Height = 13
     Cursor = crHandPoint
-    Hint = 
-      '#00166^ewww.ocrat.com - Animated stroke order^cwww.ocrat.com - A' +
-      'nimované poøadí tahù'
+    Hint = '#00166^ewww.ocrat.com - Animated stroke order'
     Caption = 'Ocrat'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlue
@@ -278,14 +277,12 @@ object fKanjiDetails: TfKanjiDetails
     ShowHint = True
   end
   object ProUrlLabel5: TUrlLabel
-    Left = 263
+    Left = 257
     Top = 198
     Width = 56
     Height = 13
     Cursor = crHandPoint
-    Hint = 
-      '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page^cweb.mit.e' +
-      'du/jpnet/ji - Datová stránka Kanji Projectu'
+    Hint = '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page'
     Caption = 'KanjiProject'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlue
@@ -318,12 +315,10 @@ object fKanjiDetails: TfKanjiDetails
     Top = 163
     Width = 38
     Height = 17
-    Hint = 
-      '#00168^eShow/hide stroke order (only for Japanese Jouyou-kanji)^' +
-      'cZobrazit/schovat poøadí tahù (pouze pro japonské Jouyou-kanji)'
+    Hint = '#00168^eShow/hide stroke order (only for Japanese Jouyou-kanji)'
     AllowAllUp = True
     GroupIndex = 99
-    Caption = '#00169^eOrder^cPoøadí'
+    Caption = '#00169^eOrder^cPo'#1096'ad'#1085
     ParentShowHint = False
     ShowHint = True
     OnClick = SpeedButton1Click
@@ -331,9 +326,9 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel1: TRxLabel
     Left = 5
     Top = 182
-    Width = 196
+    Width = 124
     Height = 13
-    Caption = '#00879^eCategories:^cKategorie:'
+    Caption = '#00879^eCategories:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -359,7 +354,7 @@ object fKanjiDetails: TfKanjiDetails
   object ScrollBox1: TScrollBox
     Left = 7
     Top = 221
-    Width = 313
+    Width = 304
     Height = 160
     VertScrollBar.Position = 258
     VertScrollBar.Tracking = True
@@ -380,23 +375,21 @@ object fKanjiDetails: TfKanjiDetails
   object Button1: TButton
     Left = 6
     Top = 390
-    Width = 235
+    Width = 225
     Height = 17
     Anchors = [akLeft, akRight, akBottom]
-    Caption = '#00170^eClose^cZavøít'
+    Caption = '#00170^eClose'
     Default = True
     TabOrder = 1
     OnClick = Button1Click
     OnKeyPress = Button1KeyPress
   end
   object Button2: TButton
-    Left = 248
-    Top = 391
+    Left = 237
+    Top = 390
     Width = 75
     Height = 17
-    Hint = 
-      '#00171^eDocks / undocks this window into main window^cZaøadí neb' +
-      'o vyøadí okno z hlavního okna'
+    Hint = '#00171^eDocks / undocks this window into main window'
     Anchors = [akRight, akBottom]
     Caption = 'DOCK'
     TabOrder = 2
@@ -408,14 +401,13 @@ object fKanjiDetails: TfKanjiDetails
     Width = 127
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
     TabOrder = 3
     OnChange = ComboBox1Change
   end
   object FormPlacement1: TFormPlacement
     Active = False
     IniSection = '\Software\Labyrinth\Wakan\DetailPos'
-    UseRegistry = True
+    UseRegistry = False
     Left = 96
     Top = 112
   end

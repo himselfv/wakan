@@ -456,7 +456,7 @@ begin
        end else
        begin
          s:=GetDocWord(rcurx,rcury,wt,nogriddisplay);
-         if (not NoScreenUpdates) and (length(s)>=4) then fKanji.SetCharDetails(copy(s,1,4));
+         if (not NoScreenUpdates) and (length(s)>=4) then fKanjiDetails.SetCharDetails(copy(s,1,4));
          DicSearch(s,4,mtMatchLeft,st.full,wt,st.maxwords,dicsl,5,wasfull);
        end;
   end;
@@ -982,7 +982,7 @@ begin
   if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then Look(false) else
   if dolook then begin
     s:=GetDocWord(rcurx,rcury,wt,false);
-    if (length(s)>=4) then fKanji.SetCharDetails(copy(s,1,4));
+    if (length(s)>=4) then fKanjiDetails.SetCharDetails(copy(s,1,4));
   end;
   if oldview<>view then mustrepaint:=true;
   if mustrepaint then MakeEditorBitmap else
@@ -3263,7 +3263,7 @@ end;
 procedure TfUser.DetailsForKanji(n:integer);
 begin
   if CharDetDocked then exit;
-  fKanji.SetCharDetails(copy(curkanjid,(n-1)*9+1,4));
+  fKanjiDetails.SetCharDetails(copy(curkanjid,(n-1)*9+1,4));
   if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
 end;
 

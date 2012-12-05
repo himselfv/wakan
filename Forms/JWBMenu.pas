@@ -4160,7 +4160,7 @@ begin
     4:begin
         if fRadical.Visible then exit;
         if not fKanjiDetails.Visible then aKanjiDetails.Execute;
-        fKanji.SetCharDetails(fcopy(screenTipText,1,1));
+        fKanjiDetails.SetCharDetails(fcopy(screenTipText,1,1));
       end;
   end;
 end;
