@@ -53,15 +53,6 @@ var curcphonetic,curckanji,curcmeaning:string;
 
 {$R *.DFM}
 
-function strip(s:string):string;
-begin
-  while (pos('<',s)>0) and (pos('>',s)>0) and (pos('>',s)>pos('<',s)) do
-  begin
-    delete(s,pos('<',s),pos('>',s)-pos('<',s)+1);
-  end;
-  result:=trim(s);
-end;
-
 procedure TfKanjiCompounds.StringGrid1DrawCell(Sender: TObject; ACol,
   ARow: Integer; Rect: TRect; State: TGridDrawState);
 begin
@@ -112,7 +103,7 @@ procedure TfKanjiCompounds.StringGrid1SelectCell(Sender: TObject; ACol,
 begin
   curcphonetic:=remexcl(copy(StringGrid1.Cells[0,ARow],2,length(StringGrid1.Cells[0,ARow])-1));
   curckanji:=remexcl(copy(StringGrid1.Cells[1,ARow],2,length(StringGrid1.Cells[1,ARow])-1));
-  curcmeaning:=strip(remexcl(StringGrid1.Cells[2,ARow]));
+  curcmeaning:=strip_fl(remexcl(StringGrid1.Cells[2,ARow]));
   fDicAdd.Edit3.Text:=remexcl(StringGrid1.Cells[2,ARow]);
 end;
 

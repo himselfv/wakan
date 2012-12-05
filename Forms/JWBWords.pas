@@ -1112,14 +1112,6 @@ begin
   showmessage(_l('#00150^cFunkce není doposud implementována.^eFeature not implemented yet.'));
 end;
 
-function strip(s:string):string;
-begin
-  while (pos('<',s)>0) and (pos('>',s)>0) do
-  begin
-    delete(s,pos('<',s),pos('>',s)-pos('<',s)+1);
-  end;
-  result:=trim(s);
-end;
 
 function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
 var pr,ph:integer;
@@ -1158,7 +1150,7 @@ begin
     begin
       wn:=strtoint(wl[(pagenum-1)*pr*c+i+j*pr]);
       TUser.Locate('Index',inttostr(wn),true);
-      tm:=UnicodeToHex(strip(TUser.Str(TUserEnglish)));
+      tm:=UnicodeToHex(strip_fl(TUser.Str(TUserEnglish)));
       tk:=TUser.Str(TUserPhonetic);
       tr:=UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang));
       if showroma then
@@ -2045,7 +2037,7 @@ begin
   TUser.Locate('Index',ll[twi],true);
   twkanji:=CheckKnownKanji(TUser.Str(TUserKanji));
   twphonetic:=TUser.Str(TUserPhonetic);
-  twmeaning:=strip(TUser.Str(TUserEnglish));
+  twmeaning:=strip_fl(TUser.Str(TUserEnglish));
   fWordList.Gauge1.MaxValue:=ll.Count;
   fWordList.Gauge1.Progress:=twi;
   fWordList.Label38.Caption:=DateForm(TUser.Str(TUserAdded));

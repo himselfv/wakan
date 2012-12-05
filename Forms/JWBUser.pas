@@ -1,4 +1,4 @@
-unit JWBUser;
+Ôªøunit JWBUser;
 
 interface
 
@@ -245,19 +245,12 @@ var curword:integer;
 
 {$R *.DFM}
 
-function strip(s:string):string;
-begin
-  while (pos('<',s)>0) and (pos('>',s)>0) and (pos('>',s)>pos('<',s)) do
-  begin
-    delete(s,pos('<',s),pos('>',s)-pos('<',s)+1);
-  end;
-  result:=trim(s);
-end;
 
-function GetDoc(ax,ay:integer):string;
+
+function GetDoc(ax,ay:integer):FChar;
 begin
   if ay>=doc.Count then showmessage('Illegal doc access!');
-  if ax>=length(doc[ay]) div 4 then result:='0000'else result:=copy(doc[ay],ax*4+1,4);
+  if ax>=flength(doc[ay]) then result:=UH_ZERO else result:=fgetch(doc[ay],ax+1);
 end;
 
 function GetDocTr(ax,ay:integer):string;
@@ -299,7 +292,8 @@ begin
   end;
   tc:=copy(doc[y],x*4+1,4);
   honor:=false;
-  if (tc='304A') or (tc='3054') then honor:=true;
+  if (tc={$IFNDEF UNICODE}'304A'{$ELSE}#$304A{$ENDIF})
+  or (tc={$IFNDEF UNICODE}'3054'{$ELSE}#$3054{$ENDIF}) then honor:=true;
   if (honor) and (length(doc[y])>x*4+5) and (EvalChar(copy(doc[y],x*4+5,4))<=2) then
     wordtype:=EvalChar(copy(doc[y],x*4+5,4)) else wordtype:=EvalChar(copy(doc[y],x*4+1,4));
   if wordtype>4 then wordtype:=4;
@@ -397,7 +391,7 @@ begin
   if (not SpeedButton13.Down) or (SpeedButton18.Down) then
     BitBtn1.Caption:=_l('#00669^eSearch^cHledat')
   else
-    BitBtn1.Caption:=_l('#00670^eAll^cVöe');
+    BitBtn1.Caption:=_l('#00670^eAll^cV—ôe');
 
   if (a<4) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
   begin
@@ -500,17 +494,17 @@ begin
       dicsl[i]:=copy(dicsl[i],31,length(dicsl[i])-30);
     FillWordGrid(StringGrid1,dicsl,false,false);
     if not wasfull then
-      s:=_l('#00671^eSearch results (partial)^cV˝sledky hled·nÌ (Ë·steËnÈ)')
+      s:=_l('#00671^eSearch results (partial)^cV—çsledky hled–±n–Ω (–∏–±ste–∏n–π)')
     else
-      s:=_l('#00672^eSearch results^cV˝sledky hled·nÌ');
+      s:=_l('#00672^eSearch results^cV—çsledky hled–±n–Ω');
     BitBtn1.Visible:=not wasfull or (st.full and not BitBtn1.Enabled);
     Label2.Visible:=not BitBtn1.Visible;
     s:=s+' ';
     case a of
-      1:s:=s+_l('#00673^eby phonetic^cpodle ËtenÌ');
-      2:s:=s+_l('#00674^eby meaning^cpodle v˝znamu');
-      3:s:=s+_l('#00675^eby written (clipboard)^cpodle z·pisu (schr·nka)');
-      4:s:=s+_l('#00676^eby written (text)^cpodle z·pisu (text)');
+      1:s:=s+_l('#00673^eby phonetic^cpodle –∏ten–Ω');
+      2:s:=s+_l('#00674^eby meaning^cpodle v—çznamu');
+      3:s:=s+_l('#00675^eby written (clipboard)^cpodle z–±pisu (schr–±nka)');
+      4:s:=s+_l('#00676^eby written (text)^cpodle z–±pisu (text)');
     end;
     s:=s+' ('+inttostr(dicsl.Count)+')';
     curword:=0;
@@ -682,14 +676,14 @@ begin
   begin
     curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
     curkanji:=remexcl(copy(StringGrid1.Cells[1,curword],2,length(StringGrid1.Cells[1,curword])-1));
-    curmeaning:=strip(remexcl(StringGrid1.Cells[2,curword]));
+    curmeaning:=strip_fl(remexcl(StringGrid1.Cells[2,curword]));
     SetExamples(curkanji);
     s:=remexcl(StringGrid1.Cells[2,curword]);
     if pos(' >> ',s)>0 then delete(s,1,pos(' >> ',s)+3);
     fDicAdd.Edit3.Text:=s;
     SpeedButton17.Enabled:=true;
     SpeedButton23.Enabled:=true;
-    fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary^cNenÌ ve slovÌËk·ch');
+    fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary^cNen–Ω ve slov–Ω–∏k–±ch');
     ki:=0;
     s:=remexcl(curkanji);
     curkanjid:='';
@@ -1035,7 +1029,7 @@ begin
   curx:=0;
   cury:=0;
   view:=0;
-  fTranslate.Label1.Caption:=_l('#00678^e<UNNAMED>^c<BEZEJM…NA>');
+  fTranslate.Label1.Caption:=_l('#00678^e<UNNAMED>^c<BEZEJM–ôNA>');
   docfilename:='';
   mustrepaint:=true;
   ShowText(true);
@@ -1088,7 +1082,7 @@ begin
       blockread(f,w,1,reat);
       if (reat<1) or (w<>$f1ff) then
       begin
-        Application.MessageBox(pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.^cToto nenÌ platn˝ UTF-8 nebo JTT soubor.')),pchar(_l('#00020^eError^cChyba')),MB_OK);
+        Application.MessageBox(pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.^cToto nen–Ω platn—ç UTF-8 nebo JTT soubor.')),pchar(_l('#00020^eError^cChyba')),MB_OK);
         closefile(f);
         exit;
       end;
@@ -1101,7 +1095,7 @@ begin
       s:=ws;
       if copy(s,1,22)<>'WaKan Translated Text>'then
       begin
-        Application.MessageBox(pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.^cToto nenÌ platn˝ UTF-8 nebo JTT soubor.')),pchar(_l('#00020^eError^cChyba')),MB_OK);
+        Application.MessageBox(pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.^cToto nen–Ω platn—ç UTF-8 nebo JTT soubor.')),pchar(_l('#00020^eError^cChyba')),MB_OK);
         closefile(f);
         exit;
       end;
@@ -1109,7 +1103,7 @@ begin
       if copy(s,1,length(fStatistics.Label15.Caption))<>fStatistics.Label15.Caption then
       begin
         if Application.MessageBox(pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. Translation cannot be loaded.'#13#13'Do you want to continue?'+
-        '^cTento JTT soubor byl vytvo¯en s pouûitÌm jinÈ verze WAKAN.CHR. P¯eklad nem˘ûe b˝t nahr·n.'#13#13'Chcete pokraËovat?')),pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_YESNO or MB_ICONWARNING)=idNo then
+        '^cTento JTT soubor byl vytvo—àen s pou—õit–Ωm jin–π verze WAKAN.CHR. P—àeklad nem—â—õe b—çt nahr–±n.'#13#13'Chcete pokra–∏ovat?')),pchar(_l('#00090^eWarning^cVarov–±n–Ω')),MB_YESNO or MB_ICONWARNING)=idNo then
         begin
           closefile(f);
           exit;
@@ -1120,7 +1114,7 @@ begin
       if w<>3294 then
       begin
         Application.MessageBox(pchar(_l('#00681^eThis JTT file was created by old version of WaKan.'#13'It is not compatible with the current version.'+
-          '^cTento JTT soubor byl vytvo¯en starou verzÌ WaKanu.'#13'Se souËasnou verzÌ nenÌ kompatibilnÌ.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          '^cTento JTT soubor byl vytvo—àen starou verz–Ω WaKanu.'#13'Se sou–∏asnou verz–Ω nen–Ω kompatibiln–Ω.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
         exit;
       end;
       blockread(f,w,1);
@@ -1287,7 +1281,7 @@ begin
           begin
             reading:='';
             if kana then GetTextWordInfo(j,i,meaning,reading,kanji);
-            if reading<>'' then reading:='0020'+reading;
+            if reading<>'' then reading:=UH_SPACE+reading;
             inreading:=reading<>'';
             if reading='' then reading:=GetDoc(j,i);
             while length(reading)>0 do
@@ -1297,8 +1291,8 @@ begin
             end;
           end;
         end;
-        Conv_Write('000D');
-        Conv_Write('000A');
+        Conv_Write(UH_CR);
+        Conv_Write(UH_LF);
       end;
       Conv_Flush;
       Conv_Close;
@@ -1384,6 +1378,59 @@ begin
     delete(reading,length(reading)-3,4);
     delete(kanji,length(kanji)-3,4);
   end;
+end;
+
+procedure FixReading(gd0,gd1,gd2:FChar; var reading:FString);
+{$IFDEF UNICODE}
+var gd: FString;
+{$ENDIF}
+begin
+  if (EvalChar(gd1)=EC_KATAKANA) and not showroma then
+    reading := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,true,'j');
+  if (EvalChar(gd1) in [EC_HIRAGANA, EC_KATAKANA]) and showroma then
+  begin
+   {$IFNDEF UNICODE}
+    if (gd1='30C3') or (gd1='3063') then gd1:='' else
+    if ((gd0='30C3') or (gd0='3063')) and
+       ((gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
+       (gd2='3083') or (gd2='3085') or (gd2='3087') or
+       (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
+       (gd2='30E3') or (gd2='30E5') or (gd2='30E7')) then gd1:=gd0+gd1+gd2 else
+    if (gd0='30C3') or (gd0='3063') then gd1:=gd0+gd1 else
+    if (gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
+       (gd2='3083') or (gd2='3085') or (gd2='3087') or
+       (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
+       (gd2='30E3') or (gd2='30E5') or (gd2='30E7') then gd1:=gd1+gd2 else
+    if (gd1='3041') or (gd1='3043') or (gd1='3045') or (gd1='3047') or (gd1='3049') or
+       (gd1='3083') or (gd1='3085') or (gd1='3087') or
+       (gd1='30A1') or (gd1='30A3') or (gd1='30A5') or (gd1='30A7') or (gd1='30A9') or
+       (gd1='30E3') or (gd1='30E5') or (gd1='30E7') then gd1:='';
+   {$ELSE}
+    gd := '';
+    if (gd1=#$30C3) or (gd1=#$3063) then gd:='' else
+    if ((gd0=#$30C3) or (gd0=#$3063)) and
+       ((gd2=#$3041) or (gd2=#$3043) or (gd2=#$3045) or (gd2=#$3047) or (gd2=#$3049) or
+       (gd2=#$3083) or (gd2=#$3085) or (gd2=#$3087) or
+       (gd2=#$30A1) or (gd2=#$30A3) or (gd2=#$30A5) or (gd2=#$30A7) or (gd2=#$30A9) or
+       (gd2=#$30E3) or (gd2=#$30E5) or (gd2=#$30E7)) then gd:=gd0+gd1+gd2 else
+    if (gd0=#$30C3) or (gd0=#$3063) then gd:=gd0+gd1 else
+    if (gd2=#$3041) or (gd2=#$3043) or (gd2=#$3045) or (gd2=#$3047) or (gd2=#$3049) or
+       (gd2=#$3083) or (gd2=#$3085) or (gd2=#$3087) or
+       (gd2=#$30A1) or (gd2=#$30A3) or (gd2=#$30A5) or (gd2=#$30A7) or (gd2=#$30A9) or
+       (gd2=#$30E3) or (gd2=#$30E5) or (gd2=#$30E7) then gd:=gd1+gd2 else
+    if (gd1=#$3041) or (gd1=#$3043) or (gd1=#$3045) or (gd1=#$3047) or (gd1=#$3049) or
+       (gd1=#$3083) or (gd1=#$3085) or (gd1=#$3087) or
+       (gd1=#$30A1) or (gd1=#$30A3) or (gd1=#$30A5) or (gd1=#$30A7) or (gd1=#$30A9) or
+       (gd1=#$30E3) or (gd1=#$30E5) or (gd1=#$30E7) then gd:='';
+   {$ENDIF}
+    if EvalChar(fcopy(gd,1,1))=3 then gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,true,'j');
+    reading:=gd;
+  end;
+ {$IFNDEF UNICODE}
+  if (gd1='30FC') then reading:='30FC';
+ {$ELSE}
+  if (gd1=#$30FC) then reading:=#$30FC;
+ {$ENDIF}
 end;
 
 {
@@ -1615,32 +1662,10 @@ begin
       lastworddict:=worddict;
       undersolid:=worddict<>'000000';
       if (upcase(wordstate)<>'F') and (upcase(wordstate)<>'D') then reading:='';
-      if (fSettings.CheckBox36.Checked) and (EvalChar(GetDoc(cx,cy))=3) and (not showroma) then reading:=
-        RomajiToKana('H'+KanaToRomaji(GetDoc(cx,cy),1,'j'),1,true,'j');
-      if (fSettings.CheckBox36.Checked) and (EvalChar(GetDoc(cx,cy))>1) and (EvalChar(GetDoc(cx,cy))<4) and (showroma) then
-      begin
-        gd1:=GetDoc(cx,cy);
-        gd2:=GetDoc(cx+1,cy);
-        gd0:=GetDoc(cx-1,cy);
-        if (gd1='30C3') or (gd1='3063') then gd1:='' else
-        if ((gd0='30C3') or (gd0='3063')) and
-           ((gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
-           (gd2='3083') or (gd2='3085') or (gd2='3087') or
-           (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
-           (gd2='30E3') or (gd2='30E5') or (gd2='30E7')) then gd1:=gd0+gd1+gd2 else
-        if (gd0='30C3') or (gd0='3063') then gd1:=gd0+gd1 else
-        if (gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
-           (gd2='3083') or (gd2='3085') or (gd2='3087') or
-           (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
-           (gd2='30E3') or (gd2='30E5') or (gd2='30E7') then gd1:=gd1+gd2 else
-        if (gd1='3041') or (gd1='3043') or (gd1='3045') or (gd1='3047') or (gd1='3049') or
-           (gd1='3083') or (gd1='3085') or (gd1='3087') or
-           (gd1='30A1') or (gd1='30A3') or (gd1='30A5') or (gd1='30A7') or (gd1='30A9') or
-           (gd1='30E3') or (gd1='30E5') or (gd1='30E7') then gd1:='';
-        if EvalChar(copy(gd1,1,4))=3 then gd1:=RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,true,'j');
-        reading:=gd1;
-      end;
-      if (fSettings.CheckBox36.Checked) and (GetDoc(cx,cy)='30FC') then reading:='30FC';
+
+      if (fSettings.CheckBox36.Checked) then
+        FixReading(GetDoc(cx-1,cy),GetDoc(cx,cy),GetDoc(cx+1,cy),reading);
+
       if not fSettings.CheckBox32.Checked then undersolid:=false;
       if fSettings.CheckBox39.Checked then color:=clWindow else color:=colBack;
       if fSettings.CheckBox39.Checked then fcolor:=clWindowText else fcolor:=colText;
@@ -2099,18 +2124,18 @@ begin
   end;
   immchar:='';
   case c of
-    ',':immchar:='3001';
-    '.':immchar:='3002';
-    '"':immchar:='3003';
-    '<':immchar:='3008';
-    '>':immchar:='3009';
-    '(':immchar:='300C';
-    ')':immchar:='300D';
-    '[':immchar:='3016';
-    ']':immchar:='3017';
-    '{':immchar:='3010';
-    '}':immchar:='3011';
-    ' ':immchar:='0020';
+    ',':immchar:={$IFNDEF UNICODE}'3001'{$ELSE}#$3001{$ENDIF};
+    '.':immchar:={$IFNDEF UNICODE}'3002'{$ELSE}#$3002{$ENDIF};
+    '"':immchar:={$IFNDEF UNICODE}'3003'{$ELSE}#$3003{$ENDIF};
+    '<':immchar:={$IFNDEF UNICODE}'3008'{$ELSE}#$3008{$ENDIF};
+    '>':immchar:={$IFNDEF UNICODE}'3009'{$ELSE}#$3009{$ENDIF};
+    '(':immchar:={$IFNDEF UNICODE}'300C'{$ELSE}#$300C{$ENDIF};
+    ')':immchar:={$IFNDEF UNICODE}'300D'{$ELSE}#$300D{$ENDIF};
+    '[':immchar:={$IFNDEF UNICODE}'3016'{$ELSE}#$3016{$ENDIF};
+    ']':immchar:={$IFNDEF UNICODE}'3017'{$ELSE}#$3017{$ENDIF};
+    '{':immchar:={$IFNDEF UNICODE}'3010'{$ELSE}#$3010{$ENDIF};
+    '}':immchar:={$IFNDEF UNICODE}'3011'{$ELSE}#$3011{$ENDIF};
+    ' ':immchar:={$IFNDEF UNICODE}'0020'{$ELSE}#$0020{$ENDIF};
   end;
   chartype:='-';
   if (AnsiUppercase(c)=c) and ((c<'0') or (c>'9')) then
@@ -2301,7 +2326,7 @@ begin
   if wordpart<>'-'then
   case wt of
     2:if fSettings.CheckBox38.Checked then s:='-'else s:='H';
-    3:if s2='30FC'then s:='-'else s:='K';
+    3:if s2={$IFNDEF UNICODE}'30FC'{$ELSE}#$30FC{$ENDIF}then s:='-'else s:='K';
     1:if wordpart='I'then s:='D'else s:='F';
     else s:='-';
   end;
@@ -2627,9 +2652,9 @@ begin
       if Application.MessageBox(
         pchar(_l('#00682^eNo block is selected. Do you want generate translation for entire document?'#13#13
           +'This action can take a very long time.'
-          +'^cNenÌ zvolen û·dn˝ blok. Chcete vygenerovat informace o p¯ekladu pro cel˝ dokument?'#13#13
-          +'Tato akce m˘ûe trvat velmi dlouho.')),
-        pchar(_l('#00683^eConfirmation^cPotvrzenÌ')),
+          +'^cNen–Ω zvolen —õ–±dn—ç blok. Chcete vygenerovat informace o p—àekladu pro cel—ç dokument?'#13#13
+          +'Tato akce m—â—õe trvat velmi dlouho.')),
+        pchar(_l('#00683^eConfirmation^cPotvrzen–Ω')),
         MB_ICONWARNING or MB_YESNO)<>idYes then exit;
     blockfromx:=0;
     blockfromy:=0;
@@ -2670,8 +2695,8 @@ begin
     //If the operation is taking too long to be noticeable
     if (sp=nil) and (GetTickCount-startTime > 200) then begin
      //Bring up the progress window
-      sp:=SMProgressDlg(_l('#00684^eTranslator^cP¯ekladaË'),
-        _l('#00685^eTranslating...^cP¯ekl·d·m...'),blocktoy-blockfromy+1);
+      sp:=SMProgressDlg(_l('#00684^eTranslator^cP—àeklada–∏'),
+        _l('#00685^eTranslating...^cP—àekl–±d–±m...'),blocktoy-blockfromy+1);
       lastUpdateProgress := -updateProgressEvery-1; //update right now
     end;
 
@@ -2729,7 +2754,7 @@ end;
 
 procedure TfUser.Translate_Button9Click(Sender: TObject);
 begin
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text^cP¯eloûen˝ text'));
+  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text^cP—àelo—õen—ç text'));
 end;
 
 procedure TfUser.Translate_Button6Click(Sender: TObject);
@@ -2845,7 +2870,10 @@ begin
           delete(reading,length(reading)-3,4);
           delete(kanji,length(kanji)-3,4);
         end;
-        while length(romafrm)<j*8 do if romafrm='' then romafrm:='3002'else romafrm:=romafrm+'3000';
+        while length(romafrm)<j*8 do if romafrm='' then
+          romafrm:={$IFNDEF UNICODE}'3002'{$ELSE}#$3002{$ENDIF}
+        else
+          romafrm:=romafrm+UH_IDG_SPACE;
         romafrm:=romafrm+reading;
         if (reading='') and (GetDocTr(j,i)[1]<>'<') then reading:=GetDoc(j,i);
         roma:=roma+reading;
@@ -2880,8 +2908,8 @@ begin
           end;
         end;
       end;
-      while length(kanfrm)<length(romafrm) div 2 do kanfrm:=kanfrm+'3000';
-      while length(romafrm)*2<length(kanfrm) do romafrm:=romafrm+'3000';
+      while length(kanfrm)<length(romafrm) div 2 do kanfrm:=kanfrm+UH_IDG_SPACE;
+      while length(romafrm)*2<length(kanfrm) do romafrm:=romafrm+UH_IDG_SPACE;
       writelnmixuni(f,'r{'+roma+'}');
       writelnmixuni(f,'f{'+kanfrm+'}');
       writelnmixuni(f,'F{'+romafrm+'}');
@@ -3025,8 +3053,8 @@ begin
     exit;
   end;
 
-  i:=Application.MessageBox(pchar(_l('#00687^eDocument has been changed. Do you want to save it?^cDokument byl zmÏnÏn. Chcete ho uloûit?')),
-   pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_YESNOCANCEL);
+  i:=Application.MessageBox(pchar(_l('#00687^eDocument has been changed. Do you want to save it?^cDokument byl zm–ºn–ºn. Chcete ho ulo—õit?')),
+   pchar(_l('#00090^eWarning^cVarov–±n–Ω')),MB_ICONWARNING or MB_YESNOCANCEL);
   if i<>idYes then begin
    //"No" or "Cancel"
     if i=idCancel then Result:=false;
@@ -3174,7 +3202,7 @@ begin
     rect.left:=2;
     rect.right:=fHint.PaintBox1.Width-4;
     rect.bottom:=fs*2;
-    fHint.PaintBox1.Canvas.TextRect(rect,2,fs+2,strip(remexcl(StringGrid1.Cells[2,curword])));
+    fHint.PaintBox1.Canvas.TextRect(rect,2,fs+2,strip_fl(remexcl(StringGrid1.Cells[2,curword])));
   end;
 end;
 
@@ -3329,11 +3357,11 @@ begin
   if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then
   begin
     if curlang='j'then
-      ex_jap:=UnicodeToHex(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.^cDatab·ze p¯Ìklad˘ nebyla nalezena. St·hnÏte ji ze str·nky WaKanu.')) else
-      ex_jap:=UnicodeToHex(' === '+_l('^eExamples are not available in Chinese mode.^cV reûimu ËÌnötiny nejsou p¯Ìklady k dispozici.'));
+      ex_jap:=UnicodeToHex(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.^cDatab–±ze p—à–Ωklad—â nebyla nalezena. St–±hn–ºte ji ze str–±nky WaKanu.')) else
+      ex_jap:=UnicodeToHex(' === '+_l('^eExamples are not available in Chinese mode.^cV re—õimu –∏–Ωn—ôtiny nejsou p—à–Ωklady k dispozici.'));
     ex_indfirst:=-1;
   end
-  else if ex_indfirst=-1 then ex_jap:=UnicodeToHex(' === '+_l('#00689^eNo examples available.^cé·dnÈ p¯Ìklady nejsou k dispozici.')) else
+  else if ex_indfirst=-1 then ex_jap:=UnicodeToHex(' === '+_l('#00689^eNo examples available.^c–ã–±dn–π p—à–Ωklady nejsou k dispozici.')) else
   begin
     p:=examstruct;
     p:=p+ex_indcur*4;
@@ -3421,8 +3449,8 @@ begin
     if ex_indlast-ex_indfirst>99 then
     begin
       max:=ex_indfirst+99;
-      Application.MessageBox(pchar(_l('^eThere are too many examples. Only first hundred have been copied.^cP¯Ìklad˘ je p¯Ìliö mnoho. Pouze prvnÌch sto bylo zkopÌrov·no.')),
-        pchar(_l('#00364^eNotice^cUpozornÏnÌ')),MB_ICONINFORMATION or MB_OK);
+      Application.MessageBox(pchar(_l('^eThere are too many examples. Only first hundred have been copied.^cP—à–Ωklad—â je p—à–Ωli—ô mnoho. Pouze prvn–Ωch sto bylo zkop–Ωrov–±no.')),
+        pchar(_l('#00364^eNotice^cUpozorn–ºn–Ω')),MB_ICONINFORMATION or MB_OK);
     end else max:=ex_indlast;
     for i:=ex_indfirst to max do
     begin

@@ -49,6 +49,7 @@ const
   UH_LOWLINE:FChar = '005F'; //_
   UH_ELLIPSIS:FChar = '2026'; //…
   UH_IDG_SPACE:FChar = '3000'; //Ideographic space (full-width)
+  UH_IDG_COMMA:FChar = '3001';
 
  {
   Control Characters.
@@ -80,6 +81,7 @@ const
   UH_LOWLINE:FChar = '_';
   UH_ELLIPSIS:FChar = #$2026;
   UH_IDG_SPACE:FChar = #$3000;
+  UH_IDG_COMMA:FChar = #$3001;
 
   UH_UNKNOWN_KANJI:Char = #$E001;
 
@@ -135,6 +137,7 @@ function SplitStr(s: string; cnt: integer): TStringArray;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
 
 function remexcl(s:string):string;
+function strip_fl(s:string):string;
 
 
 { Rest }
@@ -176,8 +179,6 @@ function CheckKnownKanji(const kanji:FString): FString;
 function IsKnown(listno:integer;const char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
 procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
-
-function ChooseFont(charsets:array of TFontCharset;teststring:string;var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
 
 const //Character types for EvalChar
   EC_UNKNOWN          = 0; // unrecognized
@@ -229,7 +230,7 @@ var FontStrokeOrder,FontChinese,FontChineseGB,FontChineseGrid,FontChineseGridGB,
     romac: TStringList;
 
 implementation
-uses StrUtils, JWBMenu, UnicodeFont, JWBSettings, JWBUser, JWBDicSearch;
+uses StrUtils, JWBMenu, JWBSettings, JWBUser, JWBDicSearch;
 
 { Math }
 
@@ -630,6 +631,15 @@ begin
   result:=s;
 end;
 
+function strip_fl(s:string):string;
+begin
+  while (pos(ALTCH_LEQ,s)>0) and (pos(ALTCH_GREQ,s)>0) and (pos(ALTCH_GREQ,s)>pos(ALTCH_LEQ,s)) do
+  begin
+    delete(s,pos(ALTCH_LEQ,s),pos(ALTCH_GREQ,s)-pos(ALTCH_LEQ,s)+1);
+  end;
+  result:=trim(s);
+end;
+
 
 
 
@@ -644,7 +654,6 @@ const MAX_INTTEXTINFO = 4000;
 
 var KnownList:array[1..20000] of pointer;
     KnownListSize:integer;
-    fontlist:TStringList;
     wgcur:integer;
     itt:array[1..MAX_INTTEXTINFO] of TIntTextInfo;
     curpbox:TPaintBox;
@@ -1150,9 +1159,9 @@ begin
   for i:=1 to length(mark) do
   begin
     s3:=GetMarkAbbr(mark[i]);
-    if s3[1]='s'then mars:=mars+' <'+s3+'>';
-    if s3[1]='g'then marg:=marg+'<'+s3+'> ';
-    if s3[1]='1'then mar1:=mar1+'<'+s3+'> ';
+    if s3[1]='s'then mars:=mars+' '+ALTCH_LEQ+s3+ALTCH_GREQ;
+    if s3[1]='g'then marg:=marg+ALTCH_LEQ+s3+ALTCH_GREQ+' ';
+    if s3[1]='1'then mar1:=mar1+ALTCH_LEQ+s3+ALTCH_GREQ+' ';
   end;
   result:=marg+mar1+s2+mars;
 end;
@@ -2019,7 +2028,7 @@ begin
       s:='';
       while (p<sl.Count) and ((length(sl[p])-2) div 4+length(s) div 4+1<=sizhor) do
       begin
-        s:=s+copy(sl[p],3,length(sl[p])-2)+'3001';
+        s:=s+copy(sl[p],3,length(sl[p])-2)+UH_IDG_COMMA;
         inc(p);
       end;
       if (p>=sl.Count) and (length(s)>3) then delete(s,length(s)-3,4);
@@ -2142,8 +2151,8 @@ begin
       case TCharRead.Int(TCharReadType) of
         2:if curlang='c'then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+UnicodeToHex(', ')+ConvertPinYin(ws);
         8:if curlang='c'then if kuny='' then kuny:=UnicodeToHex(lowercase(ws)) else kuny:=kuny+UnicodeToHex(', ')+UnicodeToHex(lowercase(ws));
-        4:if curlang='j'then if length(ony) div 4+length(ws) div 4+2<=nch then if ony='' then ony:=ws else ony:=ony+'3001'+ws;
-        5:if curlang='j'then if length(kuny) div 4+length(ws) div 4+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+'3001'+ws;
+        4:if curlang='j'then if length(ony) div 4+length(ws) div 4+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
+        5:if curlang='j'then if length(kuny) div 4+length(ws) div 4+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
       end;
       TCharRead.Next;
     end;
@@ -2535,93 +2544,6 @@ begin
 end;
 {$ENDIF}
 
-function EnumProc(lpelf:pointer;lpnt:pointer;FontType:integer;lParam:integer):integer; stdcall;
-var p:^ENUMLOGFONTEX;
-begin
-  p:=lpelf;
-  fontlist.Add(AnsiString(p^.elfLogFont.lfFaceName)+#9+inttostr(p^.elfLogFont.lfCharset));
-end;
-
-function ChooseFont(charsets:array of TFontCharset;teststring:string;var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
-var lf:LOGFONT;
-    sl:TStringList;
-    i:integer;
-    curfont:string;
-    csets:string;
-    s:string;
-    ci:integer;
-    y:integer;
-begin
-  fillchar(lf,sizeof(lf),0);
-  fontlist:=TStringList.Create;
-{  for i:=0 to High(charsets) do
-  begin
-    lf.lfCharset:=charsets[i];
-    EnumFontFamiliesEx(fMenu.Canvas.Handle,lf,@EnumProc,0,0);
-  end;}
-  lf.lfCharset:=ANSI_CHARSET;
-//  EnumFontFamiliesEx(fMenu.Canvas.Handle,lf,@EnumProc,0,0);
-  for i:=0 to Screen.Fonts.Count-1 do fontlist.Add(Screen.Fonts[i]+#9+inttostr(ANSI_CHARSET));
-  fontlist.Sort;
-  fSelectFont.StringGrid1.RowCount:=2;
-  fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name^cNázev fontu');
-  fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets^cZnakové sady');
-  curfont:='';
-  y:=1;
-  for i:=0 to fontlist.Count-1 do
-  begin
-    s:=fontlist[i];
-    if (length(s)>0) and (s[1]<>'@') then
-    begin
-      ci:=strtoint(copy(s,pos(#9,s)+1,length(s)-pos(#9,s)));
-      delete(s,pos(#9,s),length(s)-pos(#9,s)+1);
-      if (curfont<>s) and (curfont<>'') then
-      begin
-        if length(csets)>0 then delete(csets,length(csets),1);
-        fSelectFont.StringGrid1.Cells[0,y]:=curfont;
-        fSelectFont.StringGrid1.Cells[1,y]:=csets;
-        csets:='';
-        curfont:=s;
-        inc(y);
-        fSelectFont.StringGrid1.RowCount:=y+1;
-      end;
-      curfont:=s;
-      case ci of
-        ANSI_CHARSET:csets:=csets+'ANSI,';
-        ARABIC_CHARSET:csets:=csets+'Arabic,';
-        BALTIC_CHARSET:csets:=csets+'Baltic,';
-        DEFAULT_CHARSET:csets:=csets+'Def,';
-        EASTEUROPE_CHARSET:csets:=csets+'EastEurope,';
-        GB2312_CHARSET:csets:=csets+'GB2312,';
-        GREEK_CHARSET:csets:=csets+'Greek,';
-        HANGEUL_CHARSET:csets:=csets+'Hangeul,';
-        HEBREW_CHARSET:csets:=csets+'Hebrew,';
-        CHINESEBIG5_CHARSET:csets:=csets+'Big5,';
-        JOHAB_CHARSET:csets:=csets+'Johab,';
-        MAC_CHARSET:csets:=csets+'Mac,';
-        OEM_CHARSET:csets:=csets+'OEM,';
-        RUSSIAN_CHARSET:csets:=csets+'Russian,';
-        SHIFTJIS_CHARSET:csets:=csets+'Shift-JIS,';
-        SYMBOL_CHARSET:csets:=csets+'Symbol,';
-        THAI_CHARSET:csets:=csets+'Thai,';
-        TURKISH_CHARSET:csets:=csets+'Turkish,';
-      end;
-    end;
-  end;
-  fSelectFont.teststring:=teststring;
-  fSelectFont.deffont:=defaultfont;
-  fSelectFont.StringGrid1.RowCount:=y;
-  s:='';
-  fontlist.Free;
-  if selectfirst then
-  begin
-    if y>1 then result:=curfont else result:='!';
-    exit;
-  end;
-  if fSelectFont.ShowModal<>idOK then result:=defaultfont else result:=fSelectFont.selfont;
-  supportedsets:=fSelectFont.selcoding;
-end;
-
 function ChinTo(s:string):string;
 var s2,cd:string;
     bk:string;
@@ -2710,6 +2632,7 @@ begin
   result:=EC_UNKNOWN;
 end;
 {$ENDIF}
+
 
 function StateStr(i:integer):string;
 begin

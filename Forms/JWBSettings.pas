@@ -305,7 +305,7 @@ implementation
 uses JWBMenu, JWBUnit, registry, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBWordAdd, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage;
+  JWBLanguage, UnicodeFont;
 
 var fontlist:TStringList;
     colorfrom:integer;
@@ -334,42 +334,42 @@ end;
 procedure TfSettings.SpeedButton1Click(Sender: TObject);
 var sup:string;
 begin
-  FontJapaneseGrid:=ChooseFont([SHIFTJIS_CHARSET],'3042305A308C30AE30DD30C34EBA99AC9FA0571281D3',sup,edit1.text,false);
+  FontJapaneseGrid:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit1.text,false);
   Edit1.Text:=FontJapaneseGrid;
 end;
 
 procedure TfSettings.SpeedButton4Click(Sender: TObject);
 var sup:string;
 begin
-  FontEnglish:=ChooseFont([ANSI_CHARSET],'00410042004300440045004600470048004900610062',sup,edit4.text,false);
+  FontEnglish:=ChooseFont([ANSI_CHARSET],FS_ENGLISH_CHARTEST,sup,edit4.text,false);
   Edit4.Text:=FontEnglish;
 end;
 
 procedure TfSettings.SpeedButton5Click(Sender: TObject);
 var sup:string;
 begin
-  FontSmall:=ChooseFont([SHIFTJIS_CHARSET],'3042305A308C30AE30DD30C34EBA99AC9FA0571281D3',sup,edit5.text,false);
+  FontSmall:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit5.text,false);
   Edit5.Text:=FontSmall;
 end;
 
 procedure TfSettings.SpeedButton2Click(Sender: TObject);
 var sup:string;
 begin
-  FontJapanese:=ChooseFont([SHIFTJIS_CHARSET],'3042305A308C30AE30DD30C34EBA99AC9FA0571281D3',sup,edit2.text,false);
+  FontJapanese:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit2.text,false);
   Edit2.Text:=FontJapanese;
 end;
 
 procedure TfSettings.SpeedButton6Click(Sender: TObject);
 var sup:string;
 begin
-  FontChineseGrid:=ChooseFont([CHINESEBIG5_CHARSET],'8C66699E659658EC793A5C7158389FA057129F98',sup,edit6.text,false);
+  FontChineseGrid:=ChooseFont([CHINESEBIG5_CHARSET],FS_CHINESE_CHARTEST,sup,edit6.text,false);
   Edit6.Text:=FontChineseGrid;
 end;
 
 procedure TfSettings.SpeedButton7Click(Sender: TObject);
 var sup:string;
 begin
-  FontChinese:=ChooseFont([CHINESEBIG5_CHARSET],'8C66699E659658EC793A5C7158389FA057129F98',sup,Edit7.text,false);
+  FontChinese:=ChooseFont([CHINESEBIG5_CHARSET],FS_CHINESE_CHARTEST,sup,Edit7.text,false);
   Edit7.Text:=FontChinese;
 end;
 
@@ -380,7 +380,7 @@ begin
   ' complete "CJK Unified Ideographs" range.'#13'MingLiu is an example of such font.^cUjistìte se, že font, který vyberete je Unicode font s'+
   ' kompletní "CJK Unified Ideographs" rozsahem.'#13'Takovým fontem je napøíklad MingLiu.')),
   pchar(_l('#00364^eNotice^cUpozornìní')),MB_OK or MB_ICONINFORMATION);
-  FontRadical:=ChooseFont([CHINESEBIG5_CHARSET],'4E004E284E854EBB51AB9CE59E1F',sup,Edit8.Text,false);
+  FontRadical:=ChooseFont([CHINESEBIG5_CHARSET],FS_RADICAL_CHARTEST,sup,Edit8.Text,false);
   Edit8.Text:=FontRadical;
 end;
 
@@ -397,7 +397,7 @@ begin
   +'Tyto fonty by zobrazovaly v tomto programu špatné znaky.'+#13+
   'Správný font poznáte jednoduše. Ve výbìru fontù se podívejte na první znak,'+
   #13+'pokud nevypadá jako šipka smìøující vzhùru, vyberte jiný font.')),pchar(_l('#00566^eNotice^cVarování')),MB_OK or MB_ICONINFORMATION);
-  FontChineseGridGB:=ChooseFont([GB2312_CHARSET],'4E2A4EA962D772F87C9884E695089F99',sup,Edit3.Text,false);
+  FontChineseGridGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit3.Text,false);
   Edit3.Text:=FontChineseGridGB;
 end;
 
@@ -414,7 +414,7 @@ begin
   +'Tyto fonty by zobrazovaly v tomto programu špatné znaky.'+#13+
   'Správný font poznáte jednoduše. Ve výbìru fontù se podívejte na první znak,'+
   #13+'pokud nevypadá jako šipka smìøující vzhùru, vyberte jiný font.')),pchar(_l('#00566^eNotice^cVarování')),MB_OK or MB_ICONINFORMATION);
-  FontChineseGB:=ChooseFont([GB2312_CHARSET],'4E2A4EA962D772F87C9884E695089F99',sup,Edit9.Text,false);
+  FontChineseGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit9.Text,false);
   Edit9.Text:=FontChineseGB;
 end;
 
@@ -1079,14 +1079,14 @@ end;
 procedure TfSettings.SpeedButton13Click(Sender: TObject);
 var sup:string;
 begin
-  FontStrokeOrder:=ChooseFont([SHIFTJIS_CHARSET],'3042305A308C30AE30DD30C34EBA99AC9FA0571281D3',sup,edit32.text,false);
+  FontStrokeOrder:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit32.text,false);
   Edit32.Text:=FontStrokeOrder;
 end;
 
 procedure TfSettings.SpeedButton14Click(Sender: TObject);
 var sup:string;
 begin
-  FontPinYin:=ChooseFont([ANSI_CHARSET],'01010113012B014D016B01D600F300F2014D01D201DA01D601DC01D8',sup,edit33.text,false);
+  FontPinYin:=ChooseFont([ANSI_CHARSET],FS_PINYIN_CHARTEST,sup,edit33.text,false);
   Edit33.Text:=FontPinYin;
 end;
 
