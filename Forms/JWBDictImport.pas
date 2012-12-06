@@ -50,7 +50,7 @@ var
 implementation
 
 uses JWBDictCoding, StdPrompt, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBDicSearch;
+  JWBDicSearch, JWBCore;
 
 {$R *.DFM}
 

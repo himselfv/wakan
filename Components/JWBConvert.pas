@@ -1,7 +1,7 @@
 unit JWBConvert;
 
 interface
-uses JWBUnit;
+uses JWBCore;
 
 function Conv_DetectType(filename:string):byte;
 procedure Conv_Open(filename:string; tp:byte);

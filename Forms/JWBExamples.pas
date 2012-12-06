@@ -7,7 +7,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, MemSource, JWBUnit;
+  StdCtrls, ExtCtrls, Buttons, MemSource, JWBCore;
 
 type
   TfExamples = class(TForm)
@@ -81,7 +81,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu, JWBSettings, JWBWords;
+uses JWBUser, JWBMenu, JWBSettings, JWBWords, JWBUnit;
 
 {$R *.DFM}
 

@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
-  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBUtils;
+  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBCore, JWBUtils;
 
 type
   TfMenu = class(TForm)
@@ -535,7 +535,7 @@ var
   MaxCategoryIndex,MaxUserIndex:integer;
   ChinesePresent:boolean;
   defll: TDeflectionList;
-  partl,bopomofol,markersl,suffixl,ignorel,readchl:TStringList;
+  partl,bopomofol,suffixl,ignorel,readchl:TStringList;
   firstact:boolean;
   userdataloaded:boolean;
   curlang:char;
@@ -593,7 +593,7 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBPopupButton, JWBFileType, JWBConvert,
-  JWBWordsExpChoose, JWBMedia, JWBDicSearch;
+  JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard;
 
 {$R *.DFM}
 
@@ -2021,12 +2021,13 @@ begin
   TCharRead.Free;
   TRadicals.Free;
   FreeKnownLists;
-  FreeRomaList;
+  romac.Free;
+  roma_t.Free;
   defll.Free;
   suffixl.Free;
   partl.Free;
   bopomofol.Free;
-  markersl.Free;
+
   dicts.Free;
   kanjicatuniqs.Free;
 end;
@@ -2272,7 +2273,7 @@ begin
   chardetl:=TStringList.Create;
   chartypel:=TStringList.Create;
   bopomofol:=TStringList.Create;
-  markersl:=TStringList.Create;
+
   romasortl:=TStringList.Create;
   ignorel:=TStringList.Create;
   readchl:=TStringList.Create;

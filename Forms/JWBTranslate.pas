@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBUnit;
+  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBCore;
 
 {
 Various notes go here.
@@ -212,7 +212,7 @@ var
 implementation
 
 uses JWBUser, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
-  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt;
+  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit;
 
 {$R *.DFM}
 

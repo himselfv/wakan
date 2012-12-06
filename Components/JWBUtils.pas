@@ -184,7 +184,7 @@ type
 
 
 implementation
-uses JWBUnit;
+uses JWBCore;
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.

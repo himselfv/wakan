@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBUnit,
+  StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBCore,
   RXCtrls, Grids, DB, ShellAPI;
 
 type
@@ -90,7 +90,7 @@ implementation
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiSort, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
-  JWBDicSearch;
+  JWBDicSearch, JWBKanjiCard, JWBUnit;
 
 var ki:TStringList;
     calfonts:TStringList;

@@ -302,10 +302,10 @@ var
 
 implementation
 
-uses JWBMenu, JWBUnit, registry, JWBKanji, JWBTranslate,
+uses JWBMenu, JWBCore, JWBUnit, registry, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage, UnicodeFont;
+  JWBLanguage, UnicodeFont, JWBKanjiCard;
 
 var fontlist:TStringList;
     colorfrom:integer;

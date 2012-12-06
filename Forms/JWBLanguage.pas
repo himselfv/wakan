@@ -65,7 +65,7 @@ var
 
 
 implementation
-uses JWBUnit;
+uses JWBCore;
 
 {$R *.DFM}
 
@@ -395,8 +395,6 @@ begin
     end;
   end;
 end;
-
-
 
 
 initialization

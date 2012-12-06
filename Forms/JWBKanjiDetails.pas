@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, UrlLabel, JWBUnit;
+  ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, UrlLabel, JWBCore;
 
 type
   TfKanjiDetails = class(TForm)
@@ -86,7 +86,8 @@ var
 
 implementation
 
-uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate, JWBSettings, JWBStrokeOrder;
+uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
+  JWBSettings, JWBStrokeOrder, JWBUnit;
 
 {$R *.DFM}
 

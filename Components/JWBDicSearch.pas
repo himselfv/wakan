@@ -6,7 +6,7 @@ Has a lot of dark legacy in code form.
 }
 
 interface
-uses SysUtils, Classes, JWBUtils, TextTable, MemSource, StdPrompt;
+uses SysUtils, Classes, JWBCore, JWBUtils, TextTable, MemSource, StdPrompt;
 
 type
   TJaletDic = class
@@ -1013,7 +1013,11 @@ begin
     end;
 end;
 
+
 initialization
+  markersl:=TStringList.Create;
+
 finalization
+  markersl.Free;
 
 end.

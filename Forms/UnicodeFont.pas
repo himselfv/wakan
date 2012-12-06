@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, Grids, JWBUnit;
+  StdCtrls, Buttons, ExtCtrls, Grids, JWBCore;
 
 type
   TfSelectFont = class(TForm)
@@ -48,7 +48,7 @@ function ChooseFont(charsets:array of TFontCharset;teststring:FString;
   var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
 
 implementation
-uses JWBMenu;
+uses JWBMenu, JWBUnit;
 
 {$R *.DFM}
 
