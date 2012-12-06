@@ -5,9 +5,11 @@ uses JWBUnit;
 
 function Conv_DetectType(filename:string):byte;
 procedure Conv_Open(filename:string; tp:byte);
-function Conv_Read:FString;
+function Conv_Read:FString; //reads one char as string
+function Conv_ReadChar:FChar; //reads one char as char
 procedure Conv_Create(filename:string; tp:byte);
 procedure Conv_Write(s:FString);
+procedure Conv_WriteChar(s:FChar);
 procedure Conv_Close;
 procedure Conv_Flush;
 function Conv_ChooseType(chinese:boolean; def:byte):byte;
@@ -508,7 +510,8 @@ begin
   ftp:=tp;
 end;
 
-function Conv_Read:string;
+//Reads one char as FString or returns empty string
+function Conv_Read:FString;
 var i:integer;
 begin
   i:=_input(ftp);
@@ -516,6 +519,18 @@ begin
   if i=-1 then result:='' else result:=Format('%4.4x',[i]);
  {$ELSE}
   if i=-1 then Result:='' else Result := WideChar(i);
+ {$ENDIF}
+end;
+
+//Reads one char as char or returns:
+//  Unicode: #$FFFF
+//  Non-unicode: empty string
+function Conv_ReadChar:FChar;
+begin
+ {$IFDEF UNICODE}
+  Result := WideChar(_input(ftp));
+ {$ELSE}
+  Result := Conv_Read();
  {$ENDIF}
 end;
 
@@ -549,6 +564,15 @@ begin
     delete(s,1,1);
    {$ENDIF}
   end;
+end;
+
+procedure Conv_WriteChar(s:FChar);
+begin
+ {$IFDEF UNICODE}
+  _output(ftp, Word(s));
+ {$ELSE}
+  Conv_Write(s);
+ {$ENDIF}
 end;
 
 procedure Conv_Rewind;

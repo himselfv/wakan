@@ -59,7 +59,6 @@ type
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
-    procedure Button10Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure Button7Click(Sender: TObject);
     procedure Button8Click(Sender: TObject);
@@ -148,10 +147,10 @@ type
     procedure DeleteCharacter(x,y:integer);
     procedure RefreshLines;
     procedure ClearInsBlock;
-    procedure BlockOp(copy,delete:boolean);
+    procedure BlockOp(docopy,dodelete:boolean);
     procedure PasteOp;
 
-    procedure GetTextWordInfo(cx,cy:integer;var meaning,reading,kanji:string);
+    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
   public
@@ -159,7 +158,9 @@ type
 
 
   public //Document
-    doc,doctr,docdic:TStringList;
+    doc: TStringList; //document lines
+    doctr: TStringList; //don't know what, but it's STRINGS and not FSTRINGS here.
+    docdic: TStringList;
     function GetDoc(ax,ay:integer):FChar;
     function GetDocTr(ax,ay:integer):string;
     procedure SetDocTr(ax,ay:integer;s:string);
@@ -194,6 +195,8 @@ type
   protected
     FFileChanged: boolean;
     procedure SetFileChanged(Value: boolean);
+    procedure LoadText(filename:string;tp:byte);
+    procedure SaveText(filename:string;tp:byte;kana:boolean);
   public //File open/save
     procedure OpenFile(filename:string;tp:byte);
     procedure SaveToFile(filename:string;tp:byte;kana:boolean);
@@ -345,8 +348,6 @@ begin
 end;
 
 //TODO: Convert to Unicode
-// - Multiple '000D's
-// - Loads file as hex on unicode
 procedure TfTranslate.OpenFile(filename:string;tp:byte);
 var s,s2,s3:string;
   i:integer;
@@ -387,6 +388,7 @@ begin
   dot:=true;
   if jtt then
   begin
+   //TODO: Convert this subblock to unicode
     blockread(f,ws,16);
     s:=ws;
     if copy(s,1,22)<>'WaKan Translated Text>'then
@@ -462,34 +464,16 @@ begin
           end;
         end;
     end;
+    closefile(f);
+    if s<>'' then
+    begin
+      doc.Add(s);
+      doctr.Add(s3);
+    end;
   end else
    //Not jtt
-    begin
-      Conv_Open(docfilename,tp);
-      s2:=Conv_Read;
-      while s2<>'' do
-      begin
-        if s2=UH_CR then
-        begin
-          doc.Add(s);
-          doctr.Add(s3);
-          s:='';
-          s3:='';
-        end else
-        if s2<>UH_LF then begin
-          s:=s+s2;
-          s3:=s3+'-90000001';
-        end;
-        s2:=Conv_Read;
-      end;
-      Conv_Close;
-    end;
-  if jtt then closefile(f);
-  if s<>'' then
-  begin
-    doc.Add(s);
-    doctr.Add(s3);
-  end;
+    LoadText(docfilename, tp);
+
   view:=0;
   curx:=0;
   cury:=0;
@@ -508,8 +492,6 @@ var f:file;
     s:string;
     l:integer;
     w:word;
-    meaning,reading,kanji:string;
-    inreading:boolean;
 begin
   Screen.Cursor:=crHourGlass;
   assignfile(f,filename);
@@ -517,6 +499,7 @@ begin
   jtt:=pos('.WTT',UpperCase(filename))>0;
   if jtt then
   begin
+   //TODO: Convert this subblock to unicode
     sig:=$f1ff;
     blockwrite(f,sig,1);
     s:='WaKan Translated Text>'+fStatistics.Label15.Caption;
@@ -561,35 +544,80 @@ begin
     blockwrite(f,buf,bc);
     bc:=0;
     closefile(f);
-  end else
-  begin
-    Conv_Create(filename,tp);
-    for i:=0 to doc.Count-1 do
-    begin
-      for j:=0 to (length(doc[i]) div 4)-1 do
-      begin
-        if (not inreading) or (GetDocTr(j,i)[1]<>'<') then
-        begin
-          reading:='';
-          if kana then GetTextWordInfo(j,i,meaning,reading,kanji);
-          if reading<>'' then reading:=UH_SPACE+reading;
-          inreading:=reading<>'';
-          if reading='' then reading:=GetDoc(j,i);
-          while length(reading)>0 do
-          begin
-            Conv_Write(copy(reading,1,4));
-            delete(reading,1,4);
-          end;
-        end;
-      end;
-      Conv_Write(UH_CR);
-      Conv_Write(UH_LF);
-    end;
-    Conv_Flush;
-    Conv_Close;
+  end else begin
+    SaveText(docfilename, doctp,kana);
   end;
   Screen.Cursor:=crDefault;
   FileChanged:=false;
+end;
+
+//Loads classic text file in any encoding.
+procedure TfTranslate.LoadText(filename:string;tp:byte);
+var s: FString;
+  s2: FChar;
+  s3: string;
+begin
+  s := '';
+  s3 := '';
+  Conv_Open(filename,tp);
+  s2 := Conv_ReadChar;
+ {$IFDEF UNICODE}
+  while s2<>#$FFFF do
+ {$ELSE}
+  while s2<>'' do
+ {$ENDIF}
+  begin
+    if s2=UH_CR then
+    begin
+      doc.Add(s);
+      doctr.Add(s3);
+      s:='';
+      s3:='';
+    end else
+    if s2<>UH_LF then begin
+      s:=s+s2;
+      s3:=s3+'-90000001';
+    end;
+    s2 := Conv_ReadChar;
+  end;
+  Conv_Close;
+  if s<>'' then
+  begin
+    doc.Add(s);
+    doctr.Add(s3);
+  end;
+end;
+
+procedure TfTranslate.SaveText(filename:string;tp:byte;kana:boolean);
+var i,j: integer;
+  inreading:boolean;
+  meaning,reading,kanji:string;
+begin
+  inreading := false;
+  Conv_Create(filename,tp);
+  for i:=0 to doc.Count-1 do
+  begin
+    for j:=0 to flength(doc[i])-1 do
+    begin
+      if (not inreading) or (GetDocTr(j,i)[1]<>'<') then
+      begin
+        reading:='';
+        if kana then GetTextWordInfo(j,i,meaning,reading,kanji);
+        if reading<>'' then reading:=UH_SPACE+reading;
+        inreading:=reading<>'';
+        if reading='' then reading:=GetDoc(j,i);
+        while length(reading)>0 do
+        begin
+          Conv_WriteChar(fgetch(reading,1));
+          fdelete(reading,1,1);
+        end;
+      end;
+    end;
+    Conv_WriteChar(UH_CR);
+    Conv_Write(UH_LF);
+  end;
+  Conv_Flush;
+  Conv_Close;
 end;
 
 procedure TfTranslate.SaveAs;
@@ -713,150 +741,6 @@ begin
     SaveAs;
 end;
 
-//Apparently, this is unused?!
-procedure TfTranslate.Button10Click(Sender: TObject);
-function GetDoc(ax,ay:integer):string; //TODO: GetDoc/GetDocTr duplicates! But GetDocTr is slightly different, WTF...
-begin
-  if ax>=length(doc[ay]) div 4 then result:=UH_ZERO else result:=copy(doc[ay],ax*4+1,4);
-end;
-function GetDocTr(ax,ay:integer):string;
-begin
-  if ax>=length(doctr[ay]) div 18 then result:='!9000000          'else result:=copy(doctr[ay],ax*18+1,18);
-end;
-var f:file;
-    b:byte;
-    i,j,k:integer;
-    roma,romafrm:string;
-    kan,kanfrm:string;
-    kanji,meaning,reading:string;
-    ml,jl:TStringList;
-    wl,kl:TStringList;
-    on,kun,def1,def2:string;
-    radf:integer;
-    dnam:string;
-    dic:TJaletDic;
-    markers:string;
-begin
-  if SaveAnnotationDialog.Execute then
-  begin
-    assignfile(f,SaveAnnotationDialog.FileName);
-    rewrite(f,1);
-    ml:=TStringList.Create;
-    wl:=TStringList.Create;
-    kl:=TStringList.Create;
-    jl:=TStringList.Create;
-    TCharRead.SetOrder('');
-    b:=255;
-    blockwrite(f,b,1);
-    b:=254;
-    blockwrite(f,b,1);
-    for i:=0 to doc.Count-1 do
-    begin
-      ml.Clear;
-      jl.Clear;
-      kl.Clear;
-      wl.Clear;
-      writelnmixuni(f,'>{'+doc[i]+'}');
-      kan:='';
-      roma:='';
-      romafrm:='';
-      kanfrm:='';
-      for j:=0 to length(doc[i]) div 4 do
-      begin
-        meaning:='';
-        reading:='';
-        kan:=kan+GetDoc(j,i);
-        kanfrm:=kanfrm+GetDoc(j,i);
-        if copy(GetDocTr(j,i),3,6)<>'000000'then
-        begin
-          dnam:=copy(GetDocTr(j,i),9,10);
-          dic:=nil;
-          for k:=0 to dicts.Count-1 do
-          begin
-            if (dicts.Objects[k] as TJaletDic).loaded then
-              if trim(dnam)=(dicts.Objects[k] as TJaletDic).name then
-                dic:=dicts.Objects[k] as TJaletDic;
-          end;
-          if dic<>nil then
-          begin
-            dic.Demand;
-            dic.TDict.Locate('Index',copy(GetDocTr(j,i),3,6),true);
-            if dic.TDictMarkers<>-1 then meaning:=dic.TDict.Str(dic.TDictEnglish) else
-              meaning:=ConvertEdictEntry(dic.TDict.Str(dic.TDictEnglish),markers);
-            reading:=dic.TDict.Str(dic.TDictPhonetic);
-            if (GetDocTr(j,i)[1]='K') or (GetDocTr(j,i)[1]='H') then reading:='';
-            kanji:=dic.TDict.Str(dic.TDictKanji);
-            if (meaning<>'') and (wl.IndexOf(copy(GetDocTr(j,i),3,6))=-1) then
-            begin
-              if length(meaning)>60 then
-              begin
-                delete(meaning,58,length(meaning)-57);
-                meaning:=meaning+'...';
-              end;
-              ml.Add('{'+kanji+'};{'+reading+'};'+meaning);
-              wl.Add(copy(GetDocTr(j,i),3,6));
-            end;
-          end;
-        end;
-        while (reading<>'') and (kanji<>'') and (copy(reading,length(reading)-3,4)=copy(kanji,length(kanji)-3,4)) do
-        begin
-          delete(reading,length(reading)-3,4);
-          delete(kanji,length(kanji)-3,4);
-        end;
-        while length(romafrm)<j*8 do if romafrm='' then
-          romafrm:={$IFNDEF UNICODE}'3002'{$ELSE}#$3002{$ENDIF}
-        else
-          romafrm:=romafrm+UH_IDG_SPACE;
-        romafrm:=romafrm+reading;
-        if (reading='') and (GetDocTr(j,i)[1]<>'<') then reading:=GetDoc(j,i);
-        roma:=roma+reading;
-        if TChar.Locate('Unicode',GetDoc(j,i),false) then
-        begin
-          if (kl.IndexOf(GetDoc(j,i))=-1) then
-          begin
-            kl.Add(GetDoc(j,i));
-            on:='';
-            kun:='';
-            def1:='';
-            def2:='';
-            TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
-            while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
-            begin
-              k:=TCharRead.Int(TCharReadType);
-              if (on='') and (k=4) then on:=TCharRead.Str(TCharReadReading) else
-              if (kun='') and (k=5) then kun:=TCharRead.Str(TCharReadReading) else
-              if (def1='') and (k=3) then def1:=TCharRead.Str(TCharReadReading) else
-              if (def2='') and (k=3) then def2:=TCharRead.Str(TCharReadReading);
-              TCharRead.Next;
-            end;
-            if (length(kun)>0) and (kun[1]='-') then delete(kun,1,1);
-            if (length(kun)>0) and (kun[1]='+') then delete(kun,1,1);
-            if (length(kun)>0) and (kun[length(kun)]='-') then delete(kun,length(kun),1);
-            if (length(on)>0) and (on[1]='-') then delete(on,1,1);
-            if (length(on)>0) and (on[1]='+') then delete(on,1,1);
-            if (length(on)>0) and (on[length(on)]='-') then delete(on,length(on),1);
-            radf:=fSettings.ComboBox1.ItemIndex+12;
-            TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)),true);
-            jl.Add('{'+GetDoc(j,i)+'};{'+TRadicals.Str(TRadicalsUnicode)+'};'+TChar.Str(TCharJouyouGrade)+';{'+on+'};{'+kun+'};'+def1+';'+def2);
-          end;
-        end;
-      end;
-      while length(kanfrm)<length(romafrm) div 2 do kanfrm:=kanfrm+UH_IDG_SPACE;
-      while length(romafrm)*2<length(kanfrm) do romafrm:=romafrm+UH_IDG_SPACE;
-      writelnmixuni(f,'r{'+roma+'}');
-      writelnmixuni(f,'f{'+kanfrm+'}');
-      writelnmixuni(f,'F{'+romafrm+'}');
-      for j:=0 to ml.Count-1 do writelnmixuni(f,':'+ml[j]);
-      for j:=0 to jl.Count-1 do writelnmixuni(f,'%'+jl[j]);
-    end;
-    closefile(f);
-    ml.Free;
-    wl.Free;
-    kl.Free;
-    jl.Free;
-  end;
-end;
-
 procedure TfTranslate.Button6Click(Sender: TObject);
 begin
   Button2Click(Sender);
@@ -887,7 +771,7 @@ begin
         MB_ICONWARNING or MB_YESNO)<>idYes then exit;
     blockfromx:=0;
     blockfromy:=0;
-    blocktox:=(length(doc[doc.Count-1]) div 4)-1;
+    blocktox:=flength(doc[doc.Count-1])-1;
     blocktoy:=doc.Count-1;
   end else CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
@@ -910,7 +794,7 @@ begin
   for i:=blockfromy to blocktoy do
   begin
     bg:=0;
-    en:=(length(doc[i]) div 4)-1;
+    en:=flength(doc[i])-1;
     if i=blockfromy then bg:=blockfromx;
     if i=blocktoy then en:=blocktox;
 
@@ -1138,7 +1022,7 @@ begin
   for i:=blockfromy to blocktoy do
   begin
     bg:=0;
-    en:=(length(doc[i]) div 4)-1;
+    en:=flength(doc[i])-1;
     if i=blockfromy then bg:=blockfromx;
     if i=blocktoy then en:=blocktox;
     for j:=bg to en do SetDocTr(j,i,'-90000001');
@@ -1420,7 +1304,7 @@ begin
   if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then fUser.Look(false) else
   if dolook then begin
     s:=GetDocWord(rcurx,rcury,wt,false);
-    if (length(s)>=4) then fKanjiDetails.SetCharDetails(copy(s,1,4));
+    if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
   end;
   if oldview<>view then mustrepaint:=true;
   if mustrepaint then MakeEditorBitmap else
@@ -1510,7 +1394,7 @@ begin
        (gd1=#$30A1) or (gd1=#$30A3) or (gd1=#$30A5) or (gd1=#$30A7) or (gd1=#$30A9) or
        (gd1=#$30E3) or (gd1=#$30E5) or (gd1=#$30E7) then gd:='';
    {$ENDIF}
-    if EvalChar(fcopy(gd,1,1))=3 then gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,true,'j');
+    if EvalChar(fgetch(gd,1))=3 then gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,true,'j');
     reading:=gd;
   end;
  {$IFNDEF UNICODE}
@@ -1538,11 +1422,12 @@ var st0,lst0,st2,st3:boolean;
     rs:integer;
     vert:boolean;
     cl,cx,cxsc,cy,px,py,wx,wxo,wxl:integer;
-    kanaq:string;
+    kanaq:FString;
     undersolid:boolean;
     color,fcolor:TColor;
     boldness:boolean;
-    meaning,reading,kanji:string;
+    meaning:string;
+    reading,kanji:FString;
     learnstate:integer;
     wordstate,lastwordstate:char;
     kanjilearned:boolean;
@@ -1564,9 +1449,13 @@ var st0,lst0,st2,st3:boolean;
     gd1,gd2,gd0:string;
     a:integer;
 
-  function RecodeChar(ch:string):string;
+  function RecodeChar(ch:FChar):FChar;
   begin
-    if ch='FF00'then ch:='0020'; //TODO: chars! --> FChars
+   {$IFNDEF UNICODE}
+    if ch='FF00' then ch:='0020';
+   {$ELSE}
+    if ch=#$FF00 then ch:=#$0020;
+   {$ENDIF}
     result:=ch;
   end;
 
@@ -1584,12 +1473,12 @@ var st0,lst0,st2,st3:boolean;
       s := GetDocTr(xp, yp);
     end;
     lastwordstate := s[1];
-    lastworddict:= copy(s,3,6);
+    lastworddict := copy(s,3,6);
   end;
 
 begin
   colback:=Col('Editor_Back');
-  coltext:=COl('Editor_Text');
+  coltext:=Col('Editor_Text');
   if doc.Count=0 then
   begin
     doc.Add('');
@@ -1651,7 +1540,7 @@ begin
         inc(wxl);
       end;
       dec(wxl);
-      wx:=length(doc[cy]) div 4;
+      wx:=flength(doc[cy]);
       if wx>wxl then wx:=wxl else wx:=wx+1;
       if (wx<=cx) then
       begin
@@ -1729,7 +1618,7 @@ begin
         canvas.LineTo(l+(wx-cx)*rs*2,py+rs*linec2+t-1);
       end;
     end; }
-    while (cx<wx) and ((cx<length(doc[cy]) div 4) or ((kanaq<>'') and st0)) do
+    while (cx<wx) and ((cx<flength(doc[cy])) or ((kanaq<>'') and st0)) do
     begin
       try
       wordstate:=GetDocTr(cx,cy)[1];
@@ -1847,8 +1736,11 @@ begin
           end;
         end;
       end;
-      if showroma then if curlang='c'then reading:=ConvertPinYin(KanaToRomaji(reading,romasys,curlang)) else
-                                           reading:=UnicodeToHex(KanaToRomaji(reading,romasys,curlang));
+      if showroma then
+        if curlang='c'then
+          reading:=ConvertPinYin(KanaToRomaji(reading,romasys,curlang))
+        else
+          reading:=fstr(KanaToRomaji(reading,romasys,curlang));
       if reading<>'' then kanaq:=kanaq+reading;
       cntx:=px;
       inblock:=false;
@@ -1886,15 +1778,15 @@ begin
         if showroma then
         begin
           if curlang='c'then
-            DrawUnicode(canvas,realx+l,realy+t-1,rs,copy(kanaq,1,8),FontChineseGrid) else
-            DrawUnicode(canvas,realx+l,realy+t-1,rs,copy(kanaq,1,8),FontJapaneseGrid);
-          delete(kanaq,1,8);
+            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontChineseGrid) else
+            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
+          fdelete(kanaq,1,2);
         end else
         begin
           if curlang='c'then
-            DrawUnicode(canvas,realx+l,realy+t-1,rs,copy(kanaq,1,4),FontChineseGrid) else
-            DrawUnicode(canvas,realx+l,realy+t-1,rs,copy(kanaq,1,4),FontJapaneseGrid);
-          delete(kanaq,1,4);
+            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontChineseGrid) else
+            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
+          fdelete(kanaq,1,1);
         end;
         inc(cntx,rs);
       end;
@@ -1962,15 +1854,15 @@ begin
     inslen:=0;
   end;
   s:=doc[insy];
-  delete(s,insx*4+1,inslen*4);
+  fdelete(s,insx+1,inslen);
   doc[insy]:=s;
   s:=doctr[insy];
   delete(s,insx*9+1,inslen*9);
   doctr[insy]:=s;
-  inslen:=length(convins) div 4;
+  inslen:=flength(convins);
   if transins='' then
-    for i:=1 to length(convins) div 4 do transins:=transins+'I90000001';
-  doc[insy]:=copy(doc[insy],1,insx*4)+convins+copy(doc[insy],insx*4+1,length(doc[insy])-insx*4);
+    for i:=1 to flength(convins) do transins:=transins+'I90000001';
+  doc[insy]:=fcopy(doc[insy],1,insx)+convins+fcopy(doc[insy],insx+1,flength(doc[insy])-insx);
   doctr[insy]:=copy(doctr[insy],1,insx*9)+transins+copy(doctr[insy],insx*9+1,length(doctr[insy])-insx*9);
   linl.Clear;
   RenderText(curx,cury,EditorPaintBox.Canvas,0,0,EditorPaintBox.Width-4,
@@ -2003,12 +1895,14 @@ begin
       priorkanji:=curkanji;
       s2:=GetInsertKana(false);
       s3:=curphonetic;
-      while (copy(s,length(s)-3,4)=copy(s3,length(s3)-3,4)) and (s<>'') do
+      while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
       begin
-        delete(s,length(s)-3,4);
-        delete(s3,length(s3)-3,4);
+        fdelete(s,flength(s),1);
+        fdelete(s3,flength(s3),1);
       end;
-      if (s='') and (curkanji[3]>='A') then s:=curkanji else
+      if (s='') and (curkanji[3]>='A') then //TODO: curkanji[3]? wtf?
+        s:=curkanji
+      else
         s:=s+copy(s2,length(s3)+1,length(s2)-length(s3));
       DisplayInsert(s,'',true);
     end else if not final then DisplayInsert(GetInsertKana(true),'',true);
@@ -2025,7 +1919,7 @@ begin
     begin
       s:=GetInsertKana(false);
       s2:='';
-      for i:=0 to (length(s) div 4)-1 do
+      for i:=0 to flength(s)-1 do
         if i=0 then s2:=s2+buffertype+'90000001'else s2:=s2+'<90000001';
       DisplayInsert(s,s2,true);
       if resolvebuffer then SetWordTrans(insx,insy,false,false,true);
@@ -2195,7 +2089,7 @@ end;
 procedure TfTranslate.SplitLine(x,y:integer);
 var ins,ints:string;
 begin
-  if length(doc[y]) div 4<=x then
+  if flength(doc[y])<=x then
   begin
     if doc.Count-1=y then
     begin
@@ -2208,7 +2102,7 @@ begin
     end;
   end else
   begin
-    ins:=copy(doc[y],x*4+1,length(doc[y])-x*4);
+    ins:=fcopy(doc[y],x+1,flength(doc[y])-x);
     ints:=copy(doctr[y],x*9+1,length(doctr[y])-x*9);
     if doc.Count-1=y then
     begin
@@ -2219,7 +2113,7 @@ begin
       doc.Insert(y+1,ins);
       doctr.Insert(y+1,ints);
     end;
-    ins:=copy(doc[y],1,x*4);
+    ins:=fcopy(doc[y],1,x);
     ints:=copy(doctr[y],1,x*9);
     doc[y]:=ins;
     doctr[y]:=ints;
@@ -2241,9 +2135,9 @@ end;
 
 procedure TfTranslate.DeleteCharacter(x,y:integer);
 begin
-  if length(doc[y]) div 4<=x then JoinLine(y) else
+  if flength(doc[y])<=x then JoinLine(y) else
   begin
-    doc[y]:=copy(doc[y],1,x*4)+copy(doc[y],x*4+5,length(doc[y])-x*4-4);
+    doc[y]:=fcopy(doc[y],1,x)+fcopy(doc[y],x+2,flength(doc[y])-x-1);
     doctr[y]:=copy(doctr[y],1,x*9)+copy(doctr[y],x*9+10,length(doctr[y])-x*9-9);
     CheckTransCont(x,y);
   end;
@@ -2273,7 +2167,7 @@ begin
   s2:=GetDoc(x,y);
   dw:=GetDocWord(x,y,wt,not user);
   result:=0;
-  rlen:=length(dw) div 4;
+  rlen:=flength(dw);
   worddict:='';
   globdict:='0';
 
@@ -2339,23 +2233,24 @@ begin
   if s[1]='-'then s:='-9000000';
   SetDocTr(x,y,s+globdict);
   for i:=2 to rlen do
-    if (x+i-1)*4<length(doc[y]) then
+    if (x+i-1)<flength(doc[y]) then
       SetDocTr(x+i-1,y,'<'+lst+'000000'+globdict);
-  delete(dw,1,rlen*4);
-  if (s[1]='K') and (length(doc[y])>(x+rlen)*4) then
+  fdelete(dw,1,rlen);
+  if (s[1]='K') and (flength(doc[y])>x+rlen) then
   begin
     dw:=GetDocWord(x+rlen,y,wt,false);
     if wt<>2 then dw:='';
   end;
-  if length(dw)>16 then dw:=copy(dw,1,16);
-  for i:=length(dw) div 4 downto 1 do if EvalChar(copy(dw,i*4-3,4))=1 then delete(dw,i*4-3,length(dw)-i*4+4);
+  if flength(dw)>4 then dw:=fcopy(dw,1,4); //yes 4
+  for i:=flength(dw) downto 1 do
+    if EvalChar(fgetch(dw,i))=1 then fdelete(dw,i,length(dw)-i+1);
   result:=rlen;
   if (scanparticle) and (s[1]<>'-') and (partl.IndexOf(dw)>-1) then
   begin
     if user then s:='p90000001'else s:='P90000001';
     SetDocTr(x+rlen,y,s);
-    for i:=2 to length(dw) div 4 do SetDocTr(x+rlen+i-1,y,'<90000001');
-    result:=rlen+length(dw) div 4;
+    for i:=2 to flength(dw) do SetDocTr(x+rlen+i-1,y,'<90000001');
+    result:=rlen+flength(dw);
     exit;
   end;
 end;
@@ -2515,20 +2410,24 @@ begin
 
   SplitLine(rcurx,rcury);
   y:=rcury;
-  for i:=1 to length(clip) div 4 do
+  for i:=1 to flength(clip) do
   begin
-    if copy(clip,i*4-3,4)='000A'then
+    if fgetch(clip,i)=UH_LF then
     begin
       inc(y);
       doc.Insert(y,'');
       doctr.Insert(y,'');
-    end else if copy(clip,i*4-3,4)<>'000D'then
+    end else
+    if fgetch(clip,i)<>UH_CR then
     begin
-      doc[y]:=doc[y]+copy(clip,i*4-3,4);
-      if cliptrans<>'' then doctr[y]:=doctr[y]+copy(cliptrans,i*9-8,9) else doctr[y]:=doctr[y]+'-90000001';
+      doc[y]:=doc[y]+fgetch(clip,i-1);
+      if cliptrans<>'' then
+        doctr[y]:=doctr[y]+copy(cliptrans,i*9-8,9)
+      else
+        doctr[y]:=doctr[y]+'-90000001';
     end;
   end;
-  l:=length(doc[y]) div 4;
+  l:=flength(doc[y]);
   JoinLine(y);
   RefreshLines;
   SetCurPos(l,y);
@@ -2536,13 +2435,13 @@ begin
   ShowText(true);
 end;
 
-procedure TfTranslate.BlockOp(copy,delete:boolean);
+procedure TfTranslate.BlockOp(docopy,dodelete:boolean);
 var i,j:integer;
     bx,tx:integer;
     befclip,befcliptrans:string;
 begin
   CalcBlockFromTo(false);
-  if copy then
+  if docopy then
   begin
     befclip:=clip;
     befcliptrans:=cliptrans;
@@ -2551,7 +2450,7 @@ begin
     for i:=blockfromy to blocktoy do
     begin
       if i=blockfromy then bx:=blockfromx else bx:=0;
-      if i=blocktoy then tx:=blocktox-1 else tx:=(length(doc[i]) div 4)-1;
+      if i=blocktoy then tx:=blocktox-1 else tx:=flength(doc[i])-1;
       for j:=bx to tx do
       begin
         clip:=clip+GetDoc(j,i);
@@ -2567,18 +2466,20 @@ begin
     end;
     fMenu.ChangeClipboard;
   end;
-  if delete then
+  if dodelete then
   begin
     SetCurPos(blockfromx,blockfromy);
     if blockfromy=blocktoy then
     begin
-      doc[blockfromy]:=system.copy(doc[blockfromy],1,blockfromx*4)+system.copy(doc[blockfromy],blocktox*4+1,length(doc[blockfromy])-blocktox*4);
-      doctr[blockfromy]:=system.copy(doctr[blockfromy],1,blockfromx*9)+system.copy(doctr[blockfromy],blocktox*9+1,length(doctr[blockfromy])-blocktox*9);
+      doc[blockfromy]:=fcopy(doc[blockfromy],1,blockfromx)
+        +fcopy(doc[blockfromy],blocktox+1,flength(doc[blockfromy])-blocktox);
+      doctr[blockfromy]:=system.copy(doctr[blockfromy],1,blockfromx*9)
+        +system.copy(doctr[blockfromy],blocktox*9+1,length(doctr[blockfromy])-blocktox*9);
     end else
     begin
-      doc[blockfromy]:=system.copy(doc[blockfromy],1,blockfromx*4);
+      doc[blockfromy]:=fcopy(doc[blockfromy],1,blockfromx);
       doctr[blockfromy]:=system.copy(doctr[blockfromy],1,blockfromx*9);
-      doc[blocktoy]:=system.copy(doc[blocktoy],blocktox*4+1,length(doc[blocktoy])-blocktox*4);
+      doc[blocktoy]:=fcopy(doc[blocktoy],blocktox+1,flength(doc[blocktoy])-blocktox);
       doctr[blocktoy]:=system.copy(doctr[blocktoy],blocktox*9+1,length(doctr[blocktoy])-blocktox*9);
       for i:=blockfromy+1 to blocktoy-1 do
       begin
@@ -2593,7 +2494,7 @@ begin
 end;
 
 
-procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning,reading,kanji:string);
+procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
 var dnam:string;
     dic:TJaletDic;
     i:integer;
@@ -2604,9 +2505,10 @@ begin
   kanji:='';
   if copy(GetDocTr(cx,cy),3,6)<>'000000'then
   begin
-    try
-      dnam:=docdic[strtoint(copy(GetDocTr(cx,cy),9,1))];
-    except dnam:='UNKNOWN'; end;
+    if TryStrToInt(copy(GetDocTr(cx,cy),9,1), i) then
+      dnam := docdic[i]
+    else
+      dnam:='UNKNOWN';
     dic:=nil;
     try
       for i:=0 to dicts.Count-1 do
@@ -2643,10 +2545,10 @@ begin
       meaning:=defy;
     end;
   end;
-  while (reading<>'') and (kanji<>'') and (copy(reading,length(reading)-3,4)=copy(kanji,length(kanji)-3,4)) do
+  while (reading<>'') and (kanji<>'') and (fgetch(reading,flength(reading))=fgetch(kanji,flength(kanji))) do
   begin
-    delete(reading,length(reading)-3,4);
-    delete(kanji,length(kanji)-3,4);
+    fdelete(reading,flength(reading),1);
+    fdelete(kanji,flength(kanji),1);
   end;
 end;
 
@@ -2658,7 +2560,7 @@ var wt2:integer;
     honor:boolean;
     stray:integer;
 begin
-  if (y=-1) or (y>doc.Count-1) or (x>length(doc[y]) div 4-1) or (x=-1) then
+  if (y=-1) or (y>doc.Count-1) or (x>flength(doc[y])-1) or (x=-1) then
   begin
     wordtype:=0;
     result:='';
@@ -2670,29 +2572,31 @@ begin
     wordtype:=1;
     for i:=1 to 4 do
     begin
-      result:=result+copy(doc[y],x*4+1,4);
+      result:=result+fgetch(doc[y],x+1);
       inc(x);
-      if x=length(doc[y]) div 4 then exit;
+      if x=flength(doc[y]) then exit;
     end;
     exit;
   end;
-  tc:=copy(doc[y],x*4+1,4);
+  tc:=fgetch(doc[y],x+1);
   honor:=false;
   if (tc={$IFNDEF UNICODE}'304A'{$ELSE}#$304A{$ENDIF})
   or (tc={$IFNDEF UNICODE}'3054'{$ELSE}#$3054{$ENDIF}) then honor:=true;
-  if (honor) and (length(doc[y])>x*4+5) and (EvalChar(copy(doc[y],x*4+5,4))<=2) then
-    wordtype:=EvalChar(copy(doc[y],x*4+5,4)) else wordtype:=EvalChar(copy(doc[y],x*4+1,4));
+  if (honor) and (flength(doc[y])>x+2) and (EvalChar(fgetch(doc[y],x+2))<=2) then
+    wordtype:=EvalChar(fgetch(doc[y],x+2))
+  else
+    wordtype:=EvalChar(fgetch(doc[y],x+1));
   if wordtype>4 then wordtype:=4;
   nmk:=false;
   stray:=0;
-  result:=copy(doc[y],x*4+1,4);
+  result:=fgetch(doc[y],x+1);
   repeat
     inc(x);
     if stopuser and (upcase(GetDocTr(x,y)[1])<>GetDocTr(x,y)[1]) then exit;
     wt2:=0;
-    if (x<length(doc[y]) div 4) then
+    if x<flength(doc[y]) then
     begin
-      wt2:=EvalChar(copy(doc[y],x*4+1,4));
+      wt2:=EvalChar(fgetch(doc[y],x+1));
       if wt2>4 then wt2:=4;
       if (wordtype=1) and (wt2=2) then begin
         nmk:=true;
@@ -2707,7 +2611,7 @@ begin
       if (wt2<>wordtype) and ((wordtype<>1) or (wt2<>2)) then exit;
     end;
     if wt2=0 then exit;
-    result:=result+copy(doc[y],x*4+1,4);
+    result:=result+fgetch(doc[y],x+1);
   until false;
 end;
 
@@ -2733,7 +2637,7 @@ begin
   if cy>=linl.Count then exit;
   ry:=linl[cy].ys;
   rx:=cx+linl[cy].xs;
-  if (ry>=doc.Count) or (rx>=length(doc[ry]) div 4) then
+  if (ry>=doc.Count) or (rx>=flength(doc[ry])) then
   begin
     ry:=-1;
     rx:=-1;

@@ -148,12 +148,12 @@ procedure SortResults(sl: TStringList); forward;
 Utility functions
 }
 
-function CompareUnicode(sub,str:string):boolean;
+function CompareUnicode(sub,str:FString):boolean;
 var i:integer;
 begin
   result:=false;
-  for i:=0 to ((length(str)-length(sub)) div 4) do
-    if copy(str,i*4+1,length(sub))=sub then
+  for i:=0 to flength(str)-flength(sub) do
+    if fcopy(str,i+1,flength(sub))=sub then
     begin
       result:=true;
       exit;
@@ -176,18 +176,16 @@ begin
 end;
 
 function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
-var l:integer;
-    p:PAnsiChar;
 begin
-  if word then p:=wordidx else p:=charidx;
-  p:=p+loc*4;
-  move(p^,l,4);
-  result:=l;
+  if word then
+    Result := PInteger(integer(wordidx)+loc*4)^
+  else
+    Result := PInteger(integer(charidx)+loc*4)^;
 end;
 
 function TJaletDic.ReadIndexString(word:boolean;loc:integer):string;
 var l:array[0..3] of AnsiChar;
-    p:PAnsiChar;
+  p:PAnsiChar;
 begin
   if word then p:=wordidx else p:=charidx;
   p:=p+loc*4;
@@ -237,7 +235,6 @@ begin
     exit;
   end;
   result:=ReadIndexInfo(indexword,indexfrom);
-//  showmessage(Format('%4.4X-%4.4X',[indexfrom*4,result]));
   inc(indexfrom);
 end;
 
@@ -387,37 +384,37 @@ var ws: integer; //length of w in symbols. Not sure if needed but let's keep it 
 begin
   if prior>9 then prior:=9;
   if priordfl>9 then priordfl:=9;
-  ws:=length(w) div 4;
+  ws:=flength(w);
   if curlang='j'then
   begin
     lastkanji:=0;
-    for i:=1 to length(w) div 4 do
-      if EvalChar(copy(w,i*4-3,4))<>EC_HIRAGANA then
+    for i:=1 to flength(w) do
+      if EvalChar(fgetch(w,i))<>EC_HIRAGANA then
         lastkanji:=i
       else
         break;
-    core:=copy(w,1,lastkanji*4);
-    roma:=copy(w,lastkanji*4+1,length(w)-lastkanji*4);
+    core:=fcopy(w,1,lastkanji);
+    roma:=fcopy(w,lastkanji+1,flength(w)-lastkanji);
     if (fUser.SpeedButton4.Down) or (alwaysdeflect) then
       for i:=0 to defll.Count-1 do
       begin
         dr := defll[i];
 
-        for j:=0 to (length(roma)-length(dr.infl)) div 4 do
-          if (copy(roma,j*4+1,length(dr.infl))=dr.infl) or
+        for j:=0 to flength(roma)-flength(dr.infl) do
+          if (fcopy(roma,j+1,flength(dr.infl))=dr.infl) or
              ((dr.infl='KKKK') and (j=0) and (core<>'')) then
           if ((dr.vt<>'K') and (dr.vt<>'I')) or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
              or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
           begin
-            if (length(dr.defl)+j*4<=24) and (core+copy(roma,1,j*4)+dr.defl<>w) then
+            if (flength(dr.defl)+j<=6) and (core+fcopy(roma,1,j)+dr.defl<>w) then
             begin
-//              ws:=length(core+copy(roma,1,j*4)+dr.infl) div 4;
-//              if dr.infl='KKKK'then ws:=length(core) div 4;
-//              if ws<=length(core) div 4 then ws:=(length(core)+4) div 4;
+//              ws:=flength(core+fcopy(roma,1,j)+dr.infl);
+//              if dr.infl='KKKK'then ws:=flength(core);
+//              if ws<=flength(core) then ws:=flength(core)+1;
 //              if ws<=1 then ws:=2;
-              ws:=length(w) div 4;
-              ad:=core+copy(roma,1,j*4)+dr.defl;
-              suf:=copy(roma,j*4+1+length(dr.infl),length(roma)-j*4-length(dr.infl));
+              ws:=flength(w);
+              ad:=core+fcopy(roma,1,j)+dr.defl;
+              suf:=fcopy(roma,j+1+flength(dr.infl),flength(roma)-j-flength(dr.infl));
               if sl.Find(ws, dr.vt, ad)>=0 then
                 continue; //already added
               sufokay:=(suf='');
@@ -431,7 +428,7 @@ begin
             end;
           end;
       end;
-    ws:=length(w) div 4;
+    ws:=flength(w);
     sl.Add(prior, ws, 'F', w);
   end;
   if curlang='c'then
@@ -493,22 +490,23 @@ begin
           begin
             _s:=ChinFrom(search);
             if wt=1 then Deflex(_s,se,9,8,false,true);
-            for i:=(length(_s) div 4) downto 1 do
+            for i:=flength(_s) downto 1 do
             begin
               partfound:=false;
               every:=false;
-              if EvalChar(copy(_s,i*4-3,4))=1 then every:=true;
-              if (wt=2) and (i<(length(_s) div 4)) and (i>=(length(_s) div 4)-4) and (partl.IndexOf(copy(_s,i*4+1,length(_s)-i*4))>-1) then
+              if EvalChar(fgetch(_s,i))=1 then every:=true;
+              if (wt=2) and (i<flength(_s)) and (i>=flength(_s)-1)
+              and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
                 partfound:=true;
-//              if ((i<(length(_s) div 4)) and every) or (wt=2) then
-              if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=length(_s) div 4) or (partfound) then
-                se.Add(i, i, 'F', copy(_s,1,i*4));
+//              if ((i<flength(_s)) and every) or (wt=2) then
+              if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=flength(_s)) or (partfound) then
+                se.Add(i, i, 'F', fcopy(_s,1,i));
             end;
           end;
           if (wt=3) then
           begin
             _s:=ChinFrom(search);
-            se.Add(9, Length(_s) div 4, 'F', _s);
+            se.Add(9, fLength(_s), 'F', _s);
           end;
         end;
       end;
@@ -624,7 +622,7 @@ begin
       p4reading:=wt=-1;
       if wt=-1 then if partl.IndexOf(search)>-1 then begin
         _s := ChinFrom(search);
-        sl.Add('000000000000000000'+inttostr(length(search) div 4)+'P          '
+        sl.Add('000000000000000000'+inttostr(flength(search))+'P          '
           +_s+' ['+_s+'] {'+KanaToRomaji(search,1,'j')+' particle}');
       end;
     end;
@@ -777,8 +775,8 @@ begin
   if a<3 then slen:=1;
   if a=3 then begin
     a3kana:=true;
-    for i:=1 to length(sxx) div 4 do
-      if not (EvalChar(copy(sxx,(i-1)*4+1,4)) in [EC_HIRAGANA, EC_KATAKANA]) then begin
+    for i:=1 to flength(sxx) do
+      if not (EvalChar(fgetch(sxx,i)) in [EC_HIRAGANA, EC_KATAKANA]) then begin
         a3kana := false;
         break;
       end;

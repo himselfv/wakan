@@ -1,30 +1,33 @@
 unit JWBUnit;
+{ Common stuff for Wakan. }
 
 interface
-
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
   JWBUtils;
 
 {$IF CompilerVersion < 21}
 type
- //On older compilers we don't have a new, faster UnicodeString,
- //but we can (mostly) safely use a slower WideString in its stead.
+{ For cases when we need a HARD unicode string ("unicode on any versions"):
+  On older compilers we don't have a new, faster UnicodeString,
+  but we can safely use a slower WideString in its stead. }
   UnicodeString = WideString;
   PUnicodeString = PWideString;
 {$IFEND}
 
 { Wakan uses a special Ansi string format, where each unicode symbol is kept
  as a 4 character (four-char) hex code.
- Since we're in the transition to unicode we'll have a special type for that,
- called four-char.
- It'll resolve to normal character on the platform }
+ On Unicode it's replaced with normal unicode string.
+ Please use a special set of functions defined further below when working with
+ such strings. }
 type
  {$IFDEF UNICODE}
-  FChar = char;
-  PFChar = PChar;
-  FString = string;
+ //Wired to WideChar and not Char because who knows,
+ //we might want to compile on Ansi with UNICODE set!
+  FChar = WideChar;
+  PFChar = PWideChar;
+  FString = UnicodeString;
  {$ELSE}
-  FChar = AnsiString; //because one character takes 4 AnsiChars
+  FChar = AnsiString; //because one 4-character takes 4 AnsiChars
   PFChar = PAnsiChar;
   FString = AnsiString;
   //Useful for looking into FChars
@@ -32,13 +35,10 @@ type
   PFCharData = ^FCharData;
  {$ENDIF}
 
-
 const
- {
-  Some character constants used throught the program
+ { Some character constants used throught the program
   Names MUST be descriptive. If you name something 'UH_SPACE' it means it FUNCTIONS as space,
-  not just looks like one.
- }
+  not just looks like one. }
  {$IFNDEF UNICODE}
   UH_NONE:FChar = ''; //for initializing stuff with it
   UH_ZERO:FChar = '0000'; //when you need zero char
@@ -51,15 +51,13 @@ const
   UH_IDG_SPACE:FChar = '3000'; //Ideographic space (full-width)
   UH_IDG_COMMA:FChar = '3001';
 
- {
-  Control Characters.
+ { Control Characters.
   Wakan uses single characters like 'U', '~', '@' to control text markup.
   We can't do that in Unicode because those characters can legitimately occur in text.
   Instead we use symbols U+E000..U+F8FF which are for private use by applications.
 
   Not all control characters are well understood, so they don't yet have descriptive names.
-  For non-descriptive names use prefix ALTCH_
- }
+  For non-descriptive names use prefix ALTCH_ }
   UH_UNKNOWN_KANJI:Char = 'U'; //Set by CheckKnownKanji
 
  { All used by DrawWordInfo }
@@ -108,7 +106,28 @@ function GetModuleFilenameStr(hModule: HMODULE = 0): string;
 function GetFileVersionInfoStr(Filename: string): string;
 
 
-{ Strings }
+{ FChar string functions.
+Please use these when working with FChars! They'll resolve to proper manipulations,
+whether we are working with UnicodeStrings or 4-character hex AnsiStrings.
+If you need a general purpose string functions which works differently
+on Ansi and Unicode builds, add it here.
+
+In particular:
+  (length(s) div 4)-1   --> flength(s)-1
+  copy(s,i*4-3,4)       --> fgetch(s,i)            but note that fgetch requires the symbol to exist, copy doesn't
+  copy(s,i*4+1,4)       --> fgetch(s,i+1)
+  copy(s,i*4+5,4)       --> fgetch(s,i+2)
+  copy(s,i*4+1,len*4)   --> fcopy(s,i+1,len)
+  delete(s,i*4+1,len*4) --> fdelete(s,i+1,len)
+  HexToUnicode(unistr)  --> fstr(unistr)           when converting to FStrings
+
+As a rule, any "length()" inside of "fcopy()" MUST be "flength()".
+
+When working with normal strings, or when accessing control characters in FStrings,
+please continue to use normal functions:
+  var sample: FString;
+  if (Length(sample)>0) and (sample[1]='~')  --- keep intact!
+}
 
 function flength(const s:FString): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function flenfc(lenn:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
@@ -121,6 +140,9 @@ function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
+
+
+{ General purpose string functions }
 
 function HexCharCode(c:AnsiChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
@@ -147,7 +169,6 @@ function strip_fl(s:string):string;
 
 
 { Rest }
-
 
 procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
