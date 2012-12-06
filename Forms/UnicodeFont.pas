@@ -57,7 +57,6 @@ var
 
 procedure TfSelectFont.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
-var s:string;
 begin
   selfont:=StringGrid1.Cells[0,ARow];
   selcoding:=StringGrid1.Cells[1,ARow];
@@ -95,7 +94,6 @@ end;
 function ChooseFont(charsets:array of TFontCharset;teststring:FString;
   var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
 var lf:LOGFONT;
-    sl:TStringList;
     i:integer;
     curfont:string;
     csets:string;

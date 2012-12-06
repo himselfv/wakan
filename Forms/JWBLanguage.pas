@@ -157,8 +157,7 @@ begin
 end;
 
 procedure TfLanguage.FormShow(Sender: TObject);
-var i, j: integer;
-  s: string;
+var i: integer;
 begin
   lbLanguages.Items.Clear;
 

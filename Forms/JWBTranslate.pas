@@ -2258,13 +2258,12 @@ end;
 
 function TfTranslate.SetWordTrans(x,y:integer;scanparticle:boolean;gridfirst:boolean;user:boolean):integer;
 var wordpart:char;
-    worddict,worduser:string;
+    worddict:string;
     lst:string;
     i:integer;
     rlen:integer;
     s,s2:string;
     wt:integer;
-    wd:string;
     globdict:string;
     dw:string;
 begin

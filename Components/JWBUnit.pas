@@ -2259,7 +2259,11 @@ end;
 //Make the function build the string in unicode and conver to hex at exit, if non-unicode
 //Doesn't work!
 function ConvertPinYin(s:string):FString;
+{$IFDEF UNICODE}
 const UH_DUMMY_CHAR:FChar = #$F8F0; //used in place of a char when it's unknown or whatever
+{$ELSE}
+const UH_DUMMY_CHAR:FChar = 'XXXX';
+{$ENDIF}
 var nch:string;
   li:integer;
   ali:string;
