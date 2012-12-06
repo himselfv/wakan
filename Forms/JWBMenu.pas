@@ -2056,7 +2056,7 @@ begin
   ChangeClipboardChain(Self.Handle, CbNextViewer);
 
   if not FlushUserData then Action:=caNone;
-  if not fUser.CommitFile then Action:=caNone;
+  if not fTranslate.CommitFile then Action:=caNone;
   FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
   begin
@@ -2085,7 +2085,7 @@ begin
   if fKanji.Visible then fKanji.DoIt;
   if fUser.Visible then fUser.Look(false);
   if fWords.Visible then fWords.ShowIt(false);
-  if fTranslate.Visible then fUser.RepaintText;
+  if fTranslate.Visible then fTranslate.RepaintText;
 end;
 
 procedure TfMenu.WmChangeCbChain(var Msg: TMessage);
@@ -2430,8 +2430,8 @@ begin
   fSettings.cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);  
   if fSettings.CheckBox61.Checked then
   begin
-    fUser.DocFileName:=Reg.ReadString('Editor','DocFileName','');
-    fUser.DocTp:=Reg.ReadInteger('Editor','DocType',0);
+    fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
+    fTranslate.DocTp:=Reg.ReadInteger('Editor','DocType',0);
   end;
   fExamples.SpeedButton11.Down:=reg.ReadBool('Dict','RandomExamples',false);
   vocmode:=reg.ReadInteger('Dict','VocMode',0);
@@ -2495,10 +2495,10 @@ begin
   fSettings.CheckBox37.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   fSettings.cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',false);  
   aEditorColors.Checked:=reg.ReadBool('Translate','TransColors',true);
-  fTranslate.SpeedButton21.Down:=aEditorColors.Checked;
-  fTranslate.SpeedButton8.Down:=reg.ReadBool('Translate','Reading',true);
-  fTranslate.SpeedButton9.Down:=reg.ReadBool('Translate','Meaning',true);
-  fTranslate.SpeedButton19.Down:=reg.ReadBool('Translate','Dictionary',false);
+  fTranslate.sbUseTlColors.Down:=aEditorColors.Checked;
+  fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
+  fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
+  fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
   CharDetDocked:=reg.ReadBool('Layout','CharDetailsDocked',false);
   CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
   CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
@@ -2516,12 +2516,12 @@ begin
   screenModeWk:=SpeedButton2.Down;
   setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
   setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
-  aEditorReading.Checked:=fTranslate.SpeedButton8.Down;
-  aEditorMeaning.Checked:=fTranslate.SpeedButton9.Down;
+  aEditorReading.Checked:=fTranslate.sbDisplayReading.Down;
+  aEditorMeaning.Checked:=fTranslate.sbDisplayMeaning.Down;
   case reg.ReadInteger('Translate','FontSize',2) of
-    0:fTranslate.SpeedButton16.Down:=true;
-    1:fTranslate.SpeedButton18.Down:=true;
-    2:fTranslate.SpeedButton17.Down:=true;
+    0:fTranslate.sbSmallFont.Down:=true;
+    1:fTranslate.sbMiddleFont.Down:=true;
+    2:fTranslate.sbLargeFont.Down:=true;
   end;
   case reg.ReadInteger('Translate','FontSize',2) of
     0:aEditorSmallFont.Checked:=true;
@@ -2896,14 +2896,18 @@ begin
   if setwindows and 32<>32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   if setwindows and 64<>64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
   if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
-  fTranslate.SpeedButton20.Down:=fKanji.SpeedButton2.Down;
+  fTranslate.sbDockKanjiDetails.Down:=fKanji.SpeedButton2.Down;
   screenTipShown:=false;
-  fUser.ChangeFile(false);
-  if (fSettings.CheckBox61.Checked) and (fUser.docfilename<>'') then
-  begin
-    try
-      fUser.OpenFile;
-    except end;
+  fTranslate.FileChanged := false;
+  if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
+  try
+    fTranslate.OpenFile(fTranslate.docfilename, fTranslate.doctp);
+  except
+    on E: Exception do begin
+     //Re-raise with additional comment
+      E.Message := 'Cannot autoload your last-used file: '+E.Message;
+      raise;
+    end;
   end;
 
  { Init clipboard viewer }
@@ -3123,7 +3127,7 @@ begin
     begin
       fMenu.aKanjiDetails.Checked:=false;
       fKanji.SpeedButton2.Down:=false;
-      fTranslate.SpeedButton20.Down:=false;
+      fTranslate.sbDockKanjiDetails.Down:=false;
       CharDetDocked:=false
     end else
     begin
@@ -3136,7 +3140,7 @@ begin
   if not CharDetDocked then
   begin
     fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
-    fTranslate.SpeedButton20.Down:=fKanji.SpeedButton2.Down;
+    fTranslate.sbDockKanjiDetails.Down:=fKanji.SpeedButton2.Down;
     fKanjiDetails.FormPlacement1.RestoreFormPlacement;
   end;
 end;
@@ -3320,109 +3324,109 @@ end;
 procedure TfMenu.aEditorNewExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton3Click(sender);
+  fTranslate.sbFileNewClick(sender);
 end;
 
 procedure TfMenu.aEditorOpenExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton1Click(sender);
+  fTranslate.sbFileOpenClick(sender);
 end;
 
 procedure TfMenu.aEditorSaveExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton2Click(sender);
+  fTranslate.sbFileSaveClick(sender);
 end;
 
 procedure TfMenu.aEditorSaveAsExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fUser.Translate_SaveAs;
+  fTranslate.SaveAs;
 end;
 
 procedure TfMenu.aEditorCutExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton4Click(sender);
+  fTranslate.sbClipCutClick(sender);
 end;
 
 procedure TfMenu.aEditorCopyExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton14Click(sender);
+  fTranslate.sbClipCopyClick(sender);
 end;
 
 procedure TfMenu.aEditorPasteExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton15Click(sender);
+  fTranslate.sbClipPasteClick(sender);
 end;
 
 procedure TfMenu.aEditorSelectAllExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fUser.Translate_SelectAll;
+  fTranslate.SelectAll;
 end;
 
 procedure TfMenu.aEditorKanjiModeExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton6Click(sender);
+  fTranslate.sbKanjiModeClick(sender);
 end;
 
 procedure TfMenu.aEditorKanaModeExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton7Click(sender);
+  fTranslate.sbKanaModeClick(sender);
 end;
 
 procedure TfMenu.aEditorASCIIModeExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton5Click(sender);
+  fTranslate.sbAsciiModeClick(sender);
 end;
 
 procedure TfMenu.aEditorReadingExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton8.Down:=not fTranslate.SpeedButton8.Down;
-  fTranslate.SpeedButton8Click(sender);
+  fTranslate.sbDisplayReading.Down:=not fTranslate.sbDisplayReading.Down;
+  fTranslate.sbDisplayReadingClick(sender);
 end;
 
 procedure TfMenu.aEditorMeaningExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton9.Down:=not fTranslate.SpeedButton9.Down;
-  fTranslate.SpeedButton9Click(sender);
+  fTranslate.sbDisplayMeaning.Down:=not fTranslate.sbDisplayMeaning.Down;
+  fTranslate.sbDisplayMeaningClick(sender);
 end;
 
 procedure TfMenu.aEditorClearExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton10Click(sender);
+  fTranslate.sbClearTranslationClick(sender);
 end;
 
 procedure TfMenu.aEditorFillExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton11Click(sender);
+  fTranslate.sbAutoTranslateClick(sender);
 end;
 
 procedure TfMenu.aEditorSetExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton12Click(sender);
+  fTranslate.sbSetTranslationClick(sender);
 end;
 
 procedure TfMenu.aEditorPrintExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton13Click(sender);
+  fTranslate.sbPrintClick(sender);
 end;
 
 procedure TfMenu.aKanjiAllExecute(Sender: TObject);
@@ -3566,22 +3570,22 @@ end;
 procedure TfMenu.aEditorSmallFontExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton16.Down:=true;
-  fTranslate.SpeedButton16Click(sender);
+  fTranslate.sbSmallFont.Down:=true;
+  fTranslate.sbSmallFontClick(sender);
 end;
 
 procedure TfMenu.aEditorLargeFontExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton17.Down:=true;
-  fTranslate.SpeedButton17Click(sender);
+  fTranslate.sbLargeFont.Down:=true;
+  fTranslate.sbLargeFontClick(sender);
 end;
 
 procedure TfMenu.aEditorMedFontExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.SpeedButton18.Down:=true;
-  fTranslate.SpeedButton18Click(sender);
+  fTranslate.sbMiddleFont.Down:=true;
+  fTranslate.sbMiddleFontClick(sender);
 end;
 
 procedure TfMenu.Timer2Timer(Sender: TObject);
@@ -3796,7 +3800,7 @@ begin
         fKanjiDetails.Align:=alClient;
         fKanjiDetails.Show;
       end;
-      fTranslate.SpeedButton20.Down:=CharDetDockedVis2;
+      fTranslate.sbDockKanjiDetails.Down:=CharDetDockedVis2;
       aKanjiDetails.Checked:=CharDetDockedVis2;
       CharDetNowDocked:=CharDetDockedVis2;
     end;
@@ -3845,7 +3849,7 @@ begin
         fTranslate.Align:=alClient;
         fTranslate.Show;
         tab3.Down:=true;
-        fTranslate.SpeedButton19.Down:=false;
+        fTranslate.sbDockDictionary.Down:=false;
         aMode3.Checked:=true;
       end;
     4:begin
@@ -3861,7 +3865,7 @@ begin
         fTranslate.Width:=Panel3.ClientWidth;
         fTranslate.Height:=Panel3.ClientHeight;
         tab3.Down:=true;
-        fTranslate.SpeedButton19.Down:=true;
+        fTranslate.sbDockDictionary.Down:=true;
         aMode3.Checked:=true;
       end;
   end;
@@ -3881,8 +3885,8 @@ procedure TfMenu.TabControl1Change(Sender: TObject);
 begin
   if tab1.Down then displaymode:=1;
   if tab2.Down then displaymode:=2;
-  if tab3.Down and not fTranslate.SpeedButton19.Down then displaymode:=3;
-  if tab3.Down and fTranslate.SpeedButton19.Down then displaymode:=4;
+  if tab3.Down and not fTranslate.sbDockDictionary.Down then displaymode:=3;
+  if tab3.Down and fTranslate.sbDockDictionary.Down then displaymode:=4;
   if tab5.Down then displaymode:=5;
   ChangeDisplay;
 end;
@@ -3919,7 +3923,7 @@ end;
 
 procedure TfMenu.aMode3Execute(Sender: TObject);
 begin
-  if fTranslate.SpeedButton19.Down then displaymode:=4 else displaymode:=3;
+  if fTranslate.sbDockDictionary.Down then displaymode:=4 else displaymode:=3;
   ChangeDisplay;
 end;
 
@@ -4642,7 +4646,7 @@ var s,s2:string;
     mo:boolean;
 begin
   SetScreenTipBlock(0,0,0,0,nil);
-  if (intmoPaint<>nil) and (intmoPaint<>fTranslate.PaintBox6) then
+  if (intmoPaint<>nil) and (intmoPaint<>fTranslate.EditorPaintBox) then
   begin
     s:=FindDrawReg(intmoPaint,intmocx,intmocy,x1,y1,y2);
     if (intorgPaint=intmoPaint) then
@@ -4661,10 +4665,10 @@ begin
       end;
     end;
   end else
-  if intmoPaint=fTranslate.PaintBox6 then
+  if intmoPaint=fTranslate.EditorPaintBox then
   begin
-    fUser.CalcMouseCoords(intmocx,intmocy,rx,ry);
-    if ry<>-1 then s:=fUser.GetDocWord(rx,ry,wtt,false);
+    fTranslate.CalcMouseCoords(intmocx,intmocy,rx,ry);
+    if ry<>-1 then s:=fTranslate.GetDocWord(rx,ry,wtt,false);
   end else
   begin
     gc:=intmoGrid.MouseCoord(intmocx,intmocy);
@@ -4723,7 +4727,7 @@ begin
     '^cNezapomeòte pøed použitím této funkce vyplnit kana ètení anebo použijte funkci pro automatický pøeklad.')),
     pchar(_l('#00364^eNotice^cUpozornìní')),MB_ICONINFORMATION or MB_OK);
   if SaveDialog1.Execute then
-    fUser.SaveToFile(SaveDialog1.FileName,Conv_ChooseType(false,0),true);
+    fTranslate.SaveToFile(SaveDialog1.FileName,Conv_ChooseType(false,0),true);
 end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
@@ -4792,9 +4796,9 @@ procedure TfMenu.aEditorColorsExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
   aEditorColors.Checked:=not aEditorColors.Checked;
-  fTranslate.SpeedButton21.Down:=aEditorColors.Checked;
-  mustrepaint:=true;
-  fUser.ShowText(true);
+  fTranslate.sbUseTlColors.Down:=aEditorColors.Checked;
+  fTranslate.mustrepaint:=true;
+  fTranslate.ShowText(true);
 end;
 
 function _l(id:string):string;

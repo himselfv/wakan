@@ -2,7 +2,7 @@ object fTranslate: TfTranslate
   Left = 303
   Top = 453
   BorderStyle = bsNone
-  Caption = '#00610^eText editor / translator^cEditace a pøeklad textu'
+  Caption = '#00610^eText editor / translator'
   ClientHeight = 175
   ClientWidth = 801
   Color = clBtnFace
@@ -16,12 +16,16 @@ object fTranslate: TfTranslate
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate
   OnHide = FormHide
   OnMouseWheelDown = FormMouseWheelDown
   OnMouseWheelUp = FormMouseWheelUp
   OnResize = FormResize
   OnShow = FormShow
+  DesignSize = (
+    801
+    175)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -46,7 +50,7 @@ object fTranslate: TfTranslate
     Height = 104
     Anchors = [akLeft, akTop, akRight, akBottom]
   end
-  object PaintBox6: TPaintBox
+  object EditorPaintBox: TPaintBox
     Left = 9
     Top = 40
     Width = 764
@@ -60,18 +64,18 @@ object fTranslate: TfTranslate
     Font.Style = []
     ParentColor = False
     ParentFont = False
-    OnClick = PaintBox6Click
-    OnDblClick = PaintBox6DblClick
-    OnMouseDown = PaintBox6MouseDown
-    OnMouseMove = PaintBox6MouseMove
-    OnPaint = PaintBox6Paint
+    OnClick = EditorPaintBoxClick
+    OnDblClick = EditorPaintBoxDblClick
+    OnMouseDown = EditorPaintBoxMouseDown
+    OnMouseMove = EditorPaintBoxMouseMove
+    OnPaint = EditorPaintBoxPaint
   end
-  object SpeedButton1: TSpeedButton
+  object sbFileOpen: TSpeedButton
     Left = 34
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00611^eOpen (Ctrl-O)^cOtevøít (Ctrl-O)'
+    Hint = '#00611^eOpen (Ctrl-O)'
     Flat = True
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -110,14 +114,14 @@ object fTranslate: TfTranslate
       FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton1Click
+    OnClick = sbFileOpenClick
   end
-  object SpeedButton2: TSpeedButton
+  object sbFileSave: TSpeedButton
     Left = 58
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00612^eSave (Ctrl-S)^cUložit (Ctrl-S)'
+    Hint = '#00612^eSave (Ctrl-S)'
     Flat = True
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -156,14 +160,14 @@ object fTranslate: TfTranslate
       FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton2Click
+    OnClick = sbFileSaveClick
   end
-  object SpeedButton3: TSpeedButton
+  object sbFileNew: TSpeedButton
     Left = 10
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00613^eNew (Ctrl-N)^cNový (Ctrl-N)'
+    Hint = '#00613^eNew (Ctrl-N)'
     Flat = True
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -202,14 +206,14 @@ object fTranslate: TfTranslate
       FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton3Click
+    OnClick = sbFileNewClick
   end
-  object SpeedButton4: TSpeedButton
+  object sbClipCut: TSpeedButton
     Left = 88
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00614^eCut (Ctrl-X)^cVyjmout (Ctrl-X)'
+    Hint = '#00614^eCut (Ctrl-X)'
     Flat = True
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -248,14 +252,14 @@ object fTranslate: TfTranslate
       FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton4Click
+    OnClick = sbClipCutClick
   end
-  object SpeedButton5: TSpeedButton
+  object sbAsciiMode: TSpeedButton
     Left = 216
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00615^eASCII mode (Ctrl-P)^cRežim ASCII (Ctrl-P)'
+    Hint = '#00615^eASCII mode (Ctrl-P)'
     GroupIndex = 1
     Caption = 'A'
     Flat = True
@@ -267,14 +271,14 @@ object fTranslate: TfTranslate
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton5Click
+    OnClick = sbAsciiModeClick
   end
-  object SpeedButton6: TSpeedButton
+  object sbKanjiMode: TSpeedButton
     Left = 168
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00616^eCharacter mode (Ctrl-Q)^cRežim znakù (Ctrl-Q)'
+    Hint = '#00616^eCharacter mode (Ctrl-Q)'
     GroupIndex = 1
     Down = True
     Flat = True
@@ -307,14 +311,14 @@ object fTranslate: TfTranslate
       E0E1AEAFB0F7F8F9FAFBFCFAFBFCFAFBFCFAFBFCFAFBFCFAFBFC}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton6Click
+    OnClick = sbKanjiModeClick
   end
-  object SpeedButton7: TSpeedButton
+  object sbKanaMode: TSpeedButton
     Left = 192
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00617^eKana mode (Ctrl-W)^cRežim kany (Ctrl-W)'
+    Hint = '#00617^eKana mode (Ctrl-W)'
     GroupIndex = 1
     Flat = True
     Glyph.Data = {
@@ -328,14 +332,14 @@ object fTranslate: TfTranslate
       55F55555BA2F55F5F5555F5F55555F5555F5FFFFFFFFFFFFFFFF}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton7Click
+    OnClick = sbKanaModeClick
   end
-  object SpeedButton8: TSpeedButton
+  object sbDisplayReading: TSpeedButton
     Left = 248
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00618^eDisplay reading (Ctrl-H)^cZobrazit ètení (Ctrl-H)'
+    Hint = '#00618^eDisplay reading (Ctrl-H)'
     AllowAllUp = True
     GroupIndex = 2
     Down = True
@@ -351,14 +355,14 @@ object fTranslate: TfTranslate
       555554E22E55557855552F555555557955555555555555735555}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton8Click
+    OnClick = sbDisplayReadingClick
   end
-  object SpeedButton9: TSpeedButton
+  object sbDisplayMeaning: TSpeedButton
     Left = 272
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00619^eDisplay meaning (Ctrl-J)^cZobrazit význam (Ctrl-J)'
+    Hint = '#00619^eDisplay meaning (Ctrl-J)'
     AllowAllUp = True
     GroupIndex = 3
     Flat = True
@@ -373,14 +377,14 @@ object fTranslate: TfTranslate
       5555555555F55E25555555555504B85555555555558474555555}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton9Click
+    OnClick = sbDisplayMeaningClick
   end
-  object SpeedButton10: TSpeedButton
+  object sbClearTranslation: TSpeedButton
     Left = 328
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00620^eClear translation (Ctrl-B)^cSmazat pøeklad (Ctrl-B)'
+    Hint = '#00620^eClear translation (Ctrl-B)'
     Flat = True
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -398,16 +402,14 @@ object fTranslate: TfTranslate
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton10Click
+    OnClick = sbClearTranslationClick
   end
-  object SpeedButton11: TSpeedButton
+  object sbAutoTranslate: TSpeedButton
     Left = 352
     Top = 8
     Width = 23
     Height = 22
-    Hint = 
-      '#00621^eAuto-fill translation (Ctrl-F)^cAutomaticky doplnit pøek'+
-      'lad (Ctrl-F)'
+    Hint = '#00621^eAuto-fill translation (Ctrl-F)'
     Flat = True
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -425,14 +427,14 @@ object fTranslate: TfTranslate
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton11Click
+    OnClick = sbAutoTranslateClick
   end
-  object SpeedButton12: TSpeedButton
+  object sbSetTranslation: TSpeedButton
     Left = 376
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00622^eSet translation (Ctrl-T)^cNastavit pøeklad (Ctrl-T)'
+    Hint = '#00622^eSet translation (Ctrl-T)'
     Flat = True
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -450,14 +452,14 @@ object fTranslate: TfTranslate
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton12Click
+    OnClick = sbSetTranslationClick
   end
-  object SpeedButton13: TSpeedButton
+  object sbPrint: TSpeedButton
     Left = 491
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00623^ePrint (Ctrl-F7)^cVytisknout (Ctrl-F7)'
+    Hint = '#00623^ePrint (Ctrl-F7)'
     Flat = True
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -475,14 +477,14 @@ object fTranslate: TfTranslate
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton13Click
+    OnClick = sbPrintClick
   end
-  object SpeedButton14: TSpeedButton
+  object sbClipCopy: TSpeedButton
     Left = 112
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00624^eCopy (Ctrl-C)^cKopírovat (Ctrl-C)'
+    Hint = '#00624^eCopy (Ctrl-C)'
     Flat = True
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -521,14 +523,14 @@ object fTranslate: TfTranslate
       FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton14Click
+    OnClick = sbClipCopyClick
   end
-  object SpeedButton15: TSpeedButton
+  object sbClipPaste: TSpeedButton
     Left = 136
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00625^ePaste (Ctrl-V)^cVložit (Ctrl-V)'
+    Hint = '#00625^ePaste (Ctrl-V)'
     Flat = True
     Glyph.Data = {
       36040000424D3604000000000000360000002800000010000000100000000100
@@ -567,14 +569,14 @@ object fTranslate: TfTranslate
       FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton15Click
+    OnClick = sbClipPasteClick
   end
   object Label1: TLabel
     Left = 547
     Top = 13
-    Width = 244
+    Width = 134
     Height = 13
-    Caption = '#00626^e<UNNAMED>^c<BEZEJMENNÝ>'
+    Caption = '#00626^e<UNNAMED>'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -588,12 +590,12 @@ object fTranslate: TfTranslate
     Width = 161
     Height = 23
   end
-  object SpeedButton16: TSpeedButton
+  object sbSmallFont: TSpeedButton
     Left = 406
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00941^eSmall font^cMalé písmo'
+    Hint = '#00941^eSmall font'
     AllowAllUp = True
     GroupIndex = 4
     Caption = 'A'
@@ -606,14 +608,14 @@ object fTranslate: TfTranslate
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton16Click
+    OnClick = sbSmallFontClick
   end
-  object SpeedButton17: TSpeedButton
+  object sbLargeFont: TSpeedButton
     Left = 453
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00942^eLarge font^cVelké písmo'
+    Hint = '#00942^eLarge font'
     AllowAllUp = True
     GroupIndex = 4
     Caption = 'A'
@@ -626,14 +628,14 @@ object fTranslate: TfTranslate
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton17Click
+    OnClick = sbLargeFontClick
   end
-  object SpeedButton18: TSpeedButton
+  object sbMiddleFont: TSpeedButton
     Left = 430
     Top = 8
     Width = 23
     Height = 22
-    Hint = '#00943^eMiddle font^cStøední písmo'
+    Hint = '#00943^eMiddle font'
     AllowAllUp = True
     GroupIndex = 4
     Down = True
@@ -647,9 +649,9 @@ object fTranslate: TfTranslate
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton18Click
+    OnClick = sbMiddleFontClick
   end
-  object Label2: TLabel
+  object lblControlsHint: TLabel
     Left = 128
     Top = 153
     Width = 552
@@ -657,23 +659,19 @@ object fTranslate: TfTranslate
     Anchors = [akLeft, akRight, akBottom]
     AutoSize = False
     Caption = 
-      '#00627^eControls: SPACE - convert to kanji, ENTER - leave in kan'+
-      'a, [ - previous match, ] - next match^cOvládání: SPACE - pøevést'+
-      ' do kanji, ENTER - nechat v kanì, [ - pøedchozí možnost, ] - dal'+
-      'ší možnost'
+      '#00627^eControls: SPACE - convert to kanji, ENTER - leave in kan' +
+      'a, [ - previous match, ] - next match'
   end
-  object SpeedButton19: TSpeedButton
+  object sbDockDictionary: TSpeedButton
     Left = 8
     Top = 150
     Width = 113
     Height = 17
-    Hint = 
-      '#00628^eShow dictionary tool as part of this window^cZobrazit sl'+
-      'ovník jako souèást tohoto okna'
+    Hint = '#00628^eShow dictionary tool as part of this window'
     AllowAllUp = True
     Anchors = [akLeft, akBottom]
     GroupIndex = 222
-    Caption = '#00217^eDictionary^cSlovník'
+    Caption = '#00217^eDictionary'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -682,20 +680,18 @@ object fTranslate: TfTranslate
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton19Click
+    OnClick = sbDockDictionaryClick
   end
-  object SpeedButton20: TSpeedButton
+  object sbDockKanjiDetails: TSpeedButton
     Left = 684
     Top = 150
     Width = 108
     Height = 17
-    Hint = 
-      '#00629^eShow character details (Ctrl-D)^cZobrazit detaily znaku '+
-      '(Ctrl-D)'
+    Hint = '#00629^eShow character details (Ctrl-D)'
     AllowAllUp = True
     Anchors = [akRight, akBottom]
     GroupIndex = 90
-    Caption = '#00630^eChar. details^cDetaily znaku'
+    Caption = '#00630^eChar. details'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -704,16 +700,14 @@ object fTranslate: TfTranslate
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton20Click
+    OnClick = sbDockKanjiDetailsClick
   end
-  object SpeedButton21: TSpeedButton
+  object sbUseTlColors: TSpeedButton
     Left = 296
     Top = 8
     Width = 23
     Height = 22
-    Hint = 
-      '#00631^eShow translation state by colors^cZobrazit stav pøekladu'+
-      ' barvami'
+    Hint = '#00631^eShow translation state by colors'
     AllowAllUp = True
     GroupIndex = 5
     Flat = True
@@ -746,7 +740,7 @@ object fTranslate: TfTranslate
       00FF00FF0000FF0000FF0000FF0000FF0000FF0000FF0000FF00}
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton21Click
+    OnClick = sbUseTlColorsClick
   end
   object ListBox1: TListBox
     Left = 758
@@ -761,7 +755,7 @@ object fTranslate: TfTranslate
     OnKeyDown = ListBox1KeyDown
     OnKeyPress = ListBox1KeyPress
   end
-  object ScrollBar1: TScrollBar
+  object EditorScrollBar: TScrollBar
     Left = 775
     Top = 41
     Width = 16
@@ -770,15 +764,38 @@ object fTranslate: TfTranslate
     Kind = sbVertical
     PageSize = 0
     TabOrder = 1
-    OnChange = ScrollBar1Change
+    OnChange = EditorScrollBarChange
   end
-  object Button1: TButton
-    Left = 416
-    Top = 80
-    Width = 75
-    Height = 25
-    Caption = 'Button1'
-    TabOrder = 2
-    Visible = False
+  object BlinkCursorTimer: TTimer
+    Interval = 500
+    OnTimer = BlinkCursorTimerTimer
+    Left = 736
+    Top = 48
+  end
+  object OpenTextDialog: TOpenDialog
+    DefaultExt = '.txt'
+    Filter = 
+      'Text file (all supported formats) (*.txt)|*.txt|WaKan text with ' +
+      'translations (*.wtt)|*.wtt|Any file (all supported formats) (*.*' +
+      ')|*.*'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
+    Left = 31
+    Top = 44
+  end
+  object SaveTextDialog: TSaveDialog
+    DefaultExt = '.txt'
+    Filter = 
+      'Text file (*.txt)|*.txt|WaKan text with translations (*.wtt)|*.w' +
+      'tt'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
+    Left = 103
+    Top = 44
+  end
+  object SaveAnnotationDialog: TSaveDialog
+    DefaultExt = '.txt'
+    Filter = 'UTF-8 annotation file (*.txt)|*.txt'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
+    Left = 175
+    Top = 44
   end
 end

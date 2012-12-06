@@ -203,6 +203,7 @@ function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{
 {$ELSE}
 function EvalChar(const char:FString):integer;
 {$ENDIF}
+function IsHalfWidthChar(c:FChar): boolean;
 
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
@@ -800,7 +801,6 @@ end;
 
 function DrawTone(c:TCanvas;x,y,fw:integer;s:FString;dodraw:boolean):string;
 var tb:integer;
-    flat:boolean;
     s2,s3,s4:string;
     sc:char;
     i:integer;
@@ -812,7 +812,6 @@ begin
   s2:='';
   tb:=1;
   i:=0;
-  flat:=false;
   s5:='';
   c.Font.Height:=fw;
   while s<>'' do
@@ -837,7 +836,6 @@ begin
       s5:=s5+floattostrf(tr,ffNumber,7,2)+',';
       if w<>'' then TextOutW(c.Handle,round(tr*fw),y,w,1);
       c.TextFlags:=oldtextflags;
-      flat:=false;
       tb:=i+1;
     end else
     begin
@@ -2711,6 +2709,16 @@ begin
   result:=EC_UNKNOWN;
 end;
 {$ENDIF}
+
+function IsHalfWidthChar(c:FChar):boolean;
+begin
+ {$IFNDEF UNICODE}
+  Result:=(c[1]='0') and (c[2]='0');
+ {$ELSE}
+  Result := (Word(c) and $FF00 = 0);
+ {$ENDIF}
+end;
+
 
 
 function StateStr(i:integer):string;

@@ -1,10 +1,10 @@
 object fUser: TfUser
   Left = 57
   Top = 137
-  Width = 712
-  Height = 252
   BorderStyle = bsSizeToolWin
-  Caption = '#00642^eDictionary lookup^cHledánEve slovnúˆu'
+  Caption = '#00642^eDictionary lookup'
+  ClientHeight = 214
+  ClientWidth = 696
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -26,23 +26,24 @@ object fUser: TfUser
     Left = 0
     Top = 0
     Width = 696
-    Height = 216
+    Height = 214
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
+    DesignSize = (
+      696
+      214)
     object SpeedButton1: TSpeedButton
       Left = 11
       Top = 4
       Width = 110
       Height = 22
-      Hint = 
-        '#00643^eSearch by japanese reading (F2)^cHledat podle japonského' +
-        ' ètení (F2)'
+      Hint = '#00643^eSearch by japanese reading (F2)'
       AllowAllUp = True
       GroupIndex = 1
       Down = True
-      Caption = '#00644^eJ -> E^cJ -> A'
+      Caption = '#00644^eJ -> E'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -56,12 +57,10 @@ object fUser: TfUser
       Top = 4
       Width = 107
       Height = 22
-      Hint = 
-        '#00645^eSearch by english meaning (F3)^cHledat podle anglického ' +
-        'významu (F3)'
+      Hint = '#00645^eSearch by english meaning (F3)'
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00646^e&E -> J^cA -> J'
+      Caption = '#00646^e&E -> J'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -75,12 +74,10 @@ object fUser: TfUser
       Top = 4
       Width = 73
       Height = 22
-      Hint = 
-        '#00647^eSearch by Kanji stored in clipboard (F4)^cHledat podle z' +
-        'nakù ve schránce (F4)'
+      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00289^eBy clipboard^cPodle schránky'
+      Caption = '#00289^eBy clipboard'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -93,16 +90,17 @@ object fUser: TfUser
       Left = 10
       Top = 63
       Width = 687
-      Height = 124
+      Height = 122
       Anchors = [akLeft, akTop, akRight, akBottom]
       Brush.Color = clWindow
+      ExplicitHeight = 124
     end
     object Label16: TLabel
       Left = 30
       Top = 90
-      Width = 482
+      Width = 240
       Height = 19
-      Caption = '#00155^eNo words were found.^cŽádná slova nebyla nalezena.'
+      Caption = '#00155^eNo words were found.'
       Color = clBtnFace
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -115,14 +113,14 @@ object fUser: TfUser
     end
     object SpeedButton5: TSpeedButton
       Left = 290
-      Top = 195
+      Top = 193
       Width = 128
       Height = 17
-      Hint = '#00648^eSelected word (Ctrl-Alt-F)^cVybrané slovo (Ctrl-Alt-F)'
+      Hint = '#00648^eSelected word (Ctrl-Alt-F)'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 2
-      Caption = '#00649^eSelected word^cVybrané slovo'
+      Caption = '#00649^eSelected word'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -133,17 +131,18 @@ object fUser: TfUser
       ShowHint = True
       Visible = False
       OnClick = SpeedButton5Click
+      ExplicitTop = 195
     end
     object SpeedButton6: TSpeedButton
       Left = 7
-      Top = 195
+      Top = 193
       Width = 123
       Height = 17
-      Hint = '#00650^eCharacters in word^cZnaky ve slovì'
+      Hint = '#00650^eCharacters in word'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 6
-      Caption = '#00651^eChar. in word^cZnaky ve slovì'
+      Caption = '#00651^eChar. in word'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -153,17 +152,18 @@ object fUser: TfUser
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton6Click
+      ExplicitTop = 195
     end
     object SpeedButton7: TSpeedButton
       Left = 271
-      Top = 195
+      Top = 193
       Width = 123
       Height = 17
-      Hint = '#00652^eInformation (Ctrl-Alt-I)^cInformace (Ctrl-Alt-I)'
+      Hint = '#00652^eInformation (Ctrl-Alt-I)'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 3
-      Caption = '#00653^eWord information^cInformace o slovu'
+      Caption = '#00653^eWord information'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -174,19 +174,18 @@ object fUser: TfUser
       ShowHint = True
       Visible = False
       OnClick = SpeedButton7Click
+      ExplicitTop = 195
     end
     object SpeedButton8: TSpeedButton
       Left = 305
-      Top = 195
+      Top = 193
       Width = 117
       Height = 17
-      Hint = 
-        '#00654^eEditor && translator  (Ctrl-Alt-E)^cEditace a pøeklad (C' +
-        'trl-Alt-E)'
+      Hint = '#00654^eEditor && translator  (Ctrl-Alt-E)'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 5
-      Caption = '#00655^eEditor / translator^cEditace / pøeklad'
+      Caption = '#00655^eEditor / translator'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -197,17 +196,18 @@ object fUser: TfUser
       ShowHint = True
       Visible = False
       OnClick = SpeedButton8Click
+      ExplicitTop = 195
     end
     object SpeedButton9: TSpeedButton
       Left = 135
-      Top = 195
+      Top = 193
       Width = 130
       Height = 17
-      Hint = '#00062^eAdd to vocabulary^cPøidat do slovíèek'
+      Hint = '#00062^eAdd to vocabulary'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 4
-      Caption = '#00315^eExamples^cPøíklady'
+      Caption = '#00315^eExamples'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -217,13 +217,14 @@ object fUser: TfUser
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton9Click
+      ExplicitTop = 195
     end
     object SpeedButton10: TSpeedButton
       Left = 311
       Top = 4
       Width = 23
       Height = 22
-      Hint = '#00656^eSearch exact word (F5)^cHledat pøesné slovo (F5)'
+      Hint = '#00656^eSearch exact word (F5)'
       GroupIndex = 7
       Down = True
       Caption = 'A'
@@ -240,7 +241,7 @@ object fUser: TfUser
       Top = 4
       Width = 23
       Height = 22
-      Hint = '#00657^eSearch beginning (F6)^cHledat zaèátek (F6)'
+      Hint = '#00657^eSearch beginning (F6)'
       GroupIndex = 7
       Caption = 'A+'
       Font.Charset = DEFAULT_CHARSET
@@ -256,7 +257,7 @@ object fUser: TfUser
       Top = 4
       Width = 23
       Height = 22
-      Hint = '#00658^eSearch end (F7)^cHledat konec (F7)'
+      Hint = '#00658^eSearch end (F7)'
       GroupIndex = 7
       Caption = '+A'
       Font.Charset = DEFAULT_CHARSET
@@ -269,12 +270,12 @@ object fUser: TfUser
     end
     object SpeedButton23: TSpeedButton
       Left = 617
-      Top = 187
+      Top = 185
       Width = 80
       Height = 22
-      Hint = '#00659^eInsert word into clipboard^cVložit slovo do schránky'
+      Hint = '#00659^eInsert word into clipboard'
       Anchors = [akRight, akBottom]
-      Caption = '#00660^eClipboard^cSchránka'
+      Caption = '#00660^eClipboard'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -292,24 +293,24 @@ object fUser: TfUser
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton23Click
+      ExplicitTop = 187
     end
     object Label1: TLabel
       Left = 8
-      Top = 211
+      Top = 209
       Width = 32
       Height = 13
       Anchors = [akLeft, akBottom]
       Caption = 'Label1'
       Visible = False
+      ExplicitTop = 211
     end
     object SpeedButton4: TSpeedButton
       Left = 414
       Top = 4
       Width = 23
       Height = 22
-      Hint = 
-        '#00661^eSearch for inflected words / conjugated verbs^cHledat in' +
-        'flektovaná slova'
+      Hint = '#00661^eSearch for inflected words / conjugated verbs'
       AllowAllUp = True
       GroupIndex = 8
       Caption = 'Inf'
@@ -328,8 +329,7 @@ object fUser: TfUser
       Height = 22
       Hint = 
         '#00662^eAuto-preview while typing (full search with arrow button' +
-        ')^cAutomatický náhled pøi psaní (plný seznam na tlaèítku s šipko' +
-        'u)'
+        ')'
       AllowAllUp = True
       GroupIndex = 9
       Caption = 'Auto'
@@ -346,9 +346,7 @@ object fUser: TfUser
       Top = 4
       Width = 25
       Height = 22
-      Hint = 
-        '#00663^eUse dictionaries in group 1 (Ctrl-1)^cPoužít slovníky ve' +
-        ' skupinì 1 (Ctrl-1)'
+      Hint = '#00663^eUse dictionaries in group 1 (Ctrl-1)'
       GroupIndex = 10
       Down = True
       Caption = 'D1'
@@ -365,9 +363,7 @@ object fUser: TfUser
       Top = 4
       Width = 25
       Height = 22
-      Hint = 
-        '#00664^eUse dictionaries in group 2 (Ctrl-2)^cPoužít slovníky ve' +
-        ' skupinì 2 (Ctrl-2)'
+      Hint = '#00664^eUse dictionaries in group 2 (Ctrl-2)'
       GroupIndex = 10
       Caption = 'D2'
       Font.Charset = DEFAULT_CHARSET
@@ -383,9 +379,7 @@ object fUser: TfUser
       Top = 4
       Width = 25
       Height = 22
-      Hint = 
-        '#00665^eUse dictionaries in group 3 (Ctrl-3)^cPoužít slovníky ve' +
-        ' skupinì 3 (Ctrl-3)'
+      Hint = '#00665^eUse dictionaries in group 3 (Ctrl-3)'
       GroupIndex = 10
       Caption = 'D3'
       Font.Charset = DEFAULT_CHARSET
@@ -397,23 +391,23 @@ object fUser: TfUser
       OnClick = SpeedButton1Click
     end
     object Label2: TLabel
-      Left = 522
+      Left = 604
       Top = 37
-      Width = 174
+      Width = 92
       Height = 13
       Alignment = taRightJustify
       Anchors = [akTop, akRight]
-      Caption = '#00666^eAll visible^cVše zobrazeno'
+      Caption = '#00666^eAll visible'
       Enabled = False
     end
     object SpeedButton17: TSpeedButton
       Left = 521
-      Top = 187
+      Top = 185
       Width = 94
       Height = 22
-      Hint = '#00667^eInsert word into vocabulary^cVložit slovo do slovíèek'
+      Hint = '#00667^eInsert word into vocabulary'
       Anchors = [akRight, akBottom]
-      Caption = '#00215^eVocabulary^cSlovíèka'
+      Caption = '#00215^eVocabulary'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -431,6 +425,7 @@ object fUser: TfUser
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton17Click
+      ExplicitTop = 187
     end
     object Label3: TLabel
       Left = 688
@@ -446,7 +441,7 @@ object fUser: TfUser
       Top = 4
       Width = 25
       Height = 22
-      Hint = '#00930^eSearch middle^cHledat prostøedek'
+      Hint = '#00930^eSearch middle'
       GroupIndex = 7
       Caption = '+A+'
       Font.Charset = DEFAULT_CHARSET
@@ -459,14 +454,12 @@ object fUser: TfUser
     end
     object SpeedButton19: TSpeedButton
       Left = 425
-      Top = 187
+      Top = 185
       Width = 94
       Height = 22
-      Hint = 
-        '#00931^eGo to this word in vocabulary^cPøejít na toto slovo ve s' +
-        'lovíèkách'
+      Hint = '#00931^eGo to this word in vocabulary'
       Anchors = [akRight, akBottom]
-      Caption = '#00215^eVocabulary^cSlovíèka'
+      Caption = '#00215^eVocabulary'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -484,6 +477,7 @@ object fUser: TfUser
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton19Click
+      ExplicitTop = 187
     end
     object Edit1: TEdit
       Left = 8
@@ -505,7 +499,7 @@ object fUser: TfUser
       Left = 11
       Top = 65
       Width = 685
-      Height = 121
+      Height = 119
       Anchors = [akLeft, akTop, akRight, akBottom]
       BorderStyle = bsNone
       ColCount = 3
@@ -531,19 +525,15 @@ object fUser: TfUser
       Height = 25
       Hint = 
         '#00668^eSearch results did not fit one page, click to display ev' +
-        'erything^cVýsledky hledání se nevešly na jednu stranu, stiskni p' +
-        'ro zobrazení všeho'
+        'erything'
       Anchors = [akTop, akRight]
-      Caption = '#00669^eSearch^cHledat'
+      Caption = '#00669^eSearch'
       Default = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
       Font.Style = []
-      ParentFont = False
-      TabOrder = 2
-      OnClick = BitBtn1Click
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -558,11 +548,14 @@ object fUser: TfUser
         33333337FFFFFF7FF3333333000000000333333777777777F33333330000000B
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
+      ParentFont = False
+      TabOrder = 2
+      OnClick = BitBtn1Click
     end
   end
   object Panel2: TPanel
     Left = 0
-    Top = 216
+    Top = 214
     Width = 696
     Height = 0
     Align = alBottom
@@ -573,41 +566,9 @@ object fUser: TfUser
     Left = 696
     Top = 0
     Width = 0
-    Height = 216
+    Height = 214
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
-  end
-  object OpenDialog1: TOpenDialog
-    DefaultExt = '.txt'
-    Filter = 
-      'Text file (all supported formats) (*.txt)|*.txt|WaKan text with ' +
-      'translations (*.wtt)|*.wtt|Any file (all supported formats) (*.*' +
-      ')|*.*'
-    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 247
-    Top = 84
-  end
-  object SaveDialog1: TSaveDialog
-    DefaultExt = '.txt'
-    Filter = 
-      'Text file (*.txt)|*.txt|WaKan text with translations (*.wtt)|*.w' +
-      'tt'
-    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 279
-    Top = 84
-  end
-  object SaveDialog2: TSaveDialog
-    DefaultExt = '.txt'
-    Filter = 'UTF-8 annotation file (*.txt)|*.txt'
-    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 311
-    Top = 82
-  end
-  object Timer1: TTimer
-    Interval = 500
-    OnTimer = Timer1Timer
-    Left = 352
-    Top = 88
   end
 end

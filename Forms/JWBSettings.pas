@@ -494,8 +494,8 @@ begin
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
   reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
   reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
-  reg.WriteString('Editor','DocFilename',fUser.DocFilename);
-  reg.WriteInteger('Editor','DocType',fUser.DocTp);
+  reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
+  reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
   reg.WriteInteger('Dict','VocMode',vocmode);
   reg.WriteInteger('Dict','ExMode',exmode);
@@ -546,9 +546,9 @@ begin
   reg.WriteBool('Translate','PrintMeaning',CheckBox30.Checked);
   reg.WriteBool('Translate','NoPrintColors',CheckBox31.Checked);
   reg.WriteBool('Translate','VerticalPrint',CheckBox37.Checked);
-  reg.WriteBool('Translate','Reading',fTranslate.SpeedButton8.Down);
-  reg.WriteBool('Translate','Meaning',fTranslate.SpeedButton9.Down);
-  reg.WriteBool('Translate','Dictionary',fTranslate.SpeedButton19.Down);
+  reg.WriteBool('Translate','Reading',fTranslate.sbDisplayReading.Down);
+  reg.WriteBool('Translate','Meaning',fTranslate.sbDisplayMeaning.Down);
+  reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
   reg.WriteBool('Translate','TransColors',fMenu.aEditorColors.Checked);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);
@@ -557,9 +557,9 @@ begin
   reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
   reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
   reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
-  if fTranslate.SpeedButton16.Down then reg.WriteInteger('Translate','FontSize',0);
-  if fTranslate.SpeedButton18.Down then reg.WriteInteger('Translate','FontSize',1);
-  if fTranslate.SpeedButton17.Down then reg.WriteInteger('Translate','FontSize',2);
+  if fTranslate.sbSmallFont.Down then reg.WriteInteger('Translate','FontSize',0);
+  if fTranslate.sbMiddleFont.Down then reg.WriteInteger('Translate','FontSize',1);
+  if fTranslate.sbLargeFont.Down then reg.WriteInteger('Translate','FontSize',2);
   reg.WriteInteger('Layout','QLayout',curqlayout);
   reg.WriteString('Translate','MeaningLines',Edit17.text);
   reg.WriteString('Translate','PrintLines',Edit18.text);
