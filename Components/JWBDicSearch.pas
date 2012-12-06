@@ -74,6 +74,10 @@ type
 type
   TMatchType = (mtExactMatch, mtMatchLeft, mtMatchRight, mtMatchAnywhere);
 
+ { SatanString is a string which is FString except for when you search for English,
+  then it contains raw english. Happy debugging. }
+  SatanString = string;
+
  //Dictionary search class
  //Reuse it if you want, it'll be faster than re-creating it and filling the
  //settings again.
@@ -87,7 +91,7 @@ type
     1 = jp->en
     2 = en->jp
     3 = clipboard translation
-    4 = ??? }
+    4 = text translation, editor input translation }
     a:integer;
    { How to match words (exact, match left, right or anywhere) }
     MatchType: TMatchType;
@@ -104,7 +108,7 @@ type
     procedure Prepare; //Call after changing settings
 
   public
-    procedure Search(search: string; wt: integer; sl: TStringList);
+    procedure Search(search:SatanString; wt: integer; sl: TStringList);
 
   public //Output
     WasFull: boolean;
@@ -595,14 +599,14 @@ wasfull
   True if we have retrieved all of the available results.
 Note:
 - "search" has to be in 4-char-per-symbol hex encoding (=> length divisible by 4)
+- Except for mode=2, then "search" must be raw english
 }
 
-procedure TDicSearchRequest.Search(search:string; wt: integer; sl:TStringList);
+procedure TDicSearchRequest.Search(search:SatanString; wt: integer; sl:TStringList);
 var i:integer;
     di:integer;
     _s:string;
     dic:TJaletDic;
-
 begin
   if search='' then exit;
   mess := nil;

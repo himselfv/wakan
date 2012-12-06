@@ -136,6 +136,7 @@ function fcopy(const s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
+function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -431,6 +432,16 @@ begin
   Result := s;
  {$ELSE}
   Result := UnicodeToHex(s);
+ {$ENDIF}
+end;
+
+//Converts FString to UnicodeString. On unicode does nothing!
+function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+ {$IFDEF UNICODE}
+  Result := s;
+ {$ELSE}
+  Result := HexToUnicode(s);
  {$ENDIF}
 end;
 

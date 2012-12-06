@@ -3982,7 +3982,7 @@ begin
   end;
 end;
 
-procedure TfMenu.ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
+procedure TfMenu.ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
 var maxwords,maxwordss:integer;
     wasfull:boolean;
     s1,s2,s3,s4:string;
@@ -4010,10 +4010,15 @@ begin
   if maxwordss<10 then maxwordss:=10;
   if wt=7 then
   begin
-    DicSearch(HexToUnicode(s),2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
+    //Apparently, word type 7 means "latin word", so we try to look for one
+    //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
+    DicSearch(fstrtouni(s),2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
     if (screenTipList.Count=0) then
     begin
-      ss:=HexToUnicode(s);
+      ss:=fstrtouni(s);
+     //What the hell are we doing here?! "If nothing matches, try deleting
+     //some letters, but only if those are 'ed' or 's'"?
+     //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
       DicSearch(ss,2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
@@ -4171,8 +4176,7 @@ end;
 
 procedure TfMenu.PaintScreenTip;
 var sl:TStringList;
-    maxwords,maxwordss:integer;
-    wasfull:boolean;
+    maxwords:integer;
     ss:string;
     ch,kch:integer;
     rect:TRect;

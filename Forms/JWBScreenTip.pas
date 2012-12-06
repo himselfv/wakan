@@ -14,10 +14,6 @@ type
       Y: Integer);
     procedure pbMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var
