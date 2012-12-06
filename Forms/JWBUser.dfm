@@ -4,7 +4,7 @@ object fUser: TfUser
   BorderStyle = bsSizeToolWin
   Caption = '#00642^eDictionary lookup'
   ClientHeight = 214
-  ClientWidth = 696
+  ClientWidth = 704
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,14 +25,14 @@ object fUser: TfUser
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 696
+    Width = 702
     Height = 214
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
     DesignSize = (
-      696
+      702
       214)
     object SpeedButton1: TSpeedButton
       Left = 11
@@ -529,6 +529,7 @@ object fUser: TfUser
       Anchors = [akTop, akRight]
       Caption = '#00669^eSearch'
       Default = True
+      DoubleBuffered = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -548,6 +549,7 @@ object fUser: TfUser
         33333337FFFFFF7FF3333333000000000333333777777777F33333330000000B
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       ParentFont = False
       TabOrder = 2
       OnClick = BitBtn1Click
@@ -556,14 +558,14 @@ object fUser: TfUser
   object Panel2: TPanel
     Left = 0
     Top = 214
-    Width = 696
+    Width = 702
     Height = 0
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
   end
   object Panel3: TPanel
-    Left = 696
+    Left = 702
     Top = 0
     Width = 0
     Height = 214
