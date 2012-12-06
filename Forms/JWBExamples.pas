@@ -54,6 +54,8 @@ type
   public
     procedure ReloadExamples;
 
+  protected
+    procedure ReadExample(ex_ind: integer; out ex_jap: FString; out ex_en: string);
   public
     procedure SetExamples(kanji:string);
     procedure ShowExample;
@@ -263,13 +265,32 @@ begin
   ShowExample;
 end;
 
+procedure TfExamples.ReadExample(ex_ind: integer; out ex_jap: FString; out ex_en: string);
+var buf:array[0..1023] of byte;
+  ofs:integer;
+  i,siz,siz2:integer;
+begin
+  ofs := PInteger(integer(examstruct)+ex_ind*4)^;
+  exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
+
+ //Example sentence
+  siz:=buf[0];
+ {$IFDEF UNICODE}
+  SetLength(ex_jap, siz);
+  move(PByte(@buf[1])^, PByte(ex_jap)^, siz*SizeOf(Char));
+ {$ELSE}
+  ex_jap := UnicodeToHex(PWideChar(@buf[1]), siz);
+ {$ENDIF}
+
+ //Translation
+  siz2:=buf[siz*2+1];
+  for i:=siz*2+2 to siz*2+1+siz2 do
+    ex_en:=ex_en+chr(buf[i]);
+end;
+
 procedure TfExamples.ShowExample;
-var p:PByte;
-    ofs:integer;
-    buf:array[0..1023] of byte;
-    i,siz,siz2:integer;
-    ms:string;
-    pos:integer;
+var ms:string;
+  pos:integer;
 begin
   ex_jap:='';
   ex_en:='';
@@ -285,25 +306,7 @@ begin
   if ex_indfirst=-1 then
     ex_jap:=fstr(' === '+_l('#00689^eNo examples available.'))
   else
-  begin
-    p:=PByte(integer(examstruct)+ex_indcur*4);
-    ofs := PInteger(p)^;
-    exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
-
-   //Example sentence
-    siz:=buf[0];
-   {$IFDEF UNICODE}
-    SetLength(ex_jap, siz);
-    move(PByte(@buf[1])^, PByte(ex_jap)^, siz*SizeOf(Char));
-   {$ELSE}
-    ex_jap := UnicodeToHex(PWideChar(@buf[1]), siz);
-   {$ENDIF}
-
-   //Translation
-    siz2:=buf[siz*2+1];
-    for i:=siz*2+2 to siz*2+1+siz2 do
-      ex_en:=ex_en+chr(buf[i]);
-  end;
+    ReadExample(ex_indcur, ex_jap, ex_en);
   if ex_indfirst=-1 then ms:='0'else if (ex_indlast-ex_indfirst)<99 then ms:=inttostr(ex_indlast-ex_indfirst+1) else ms:='lot';
   pos:=0;
   if ex_indfirst=-1 then Label2.Caption:='0/0'else
@@ -365,16 +368,20 @@ end;
 
 procedure TfExamples.ExampleClipboard(all:boolean);
 var i:integer;
-    p:pchar;
-    ofs:integer;
-    buf:array[0..1023] of byte;
-    j,siz,siz2:integer;
-    max:integer;
+  p:PByte;
+  ofs:integer;
+  buf:array[0..1023] of byte;
+  j,siz,siz2:integer;
+  max:integer;
+  tmp_jap: FString;
+  tmp_en: string;
 begin
   if not all then
   begin
-    if SpeedButton4.Down then clip:=ex_jap+'000D000A'+UnicodeToHex(ex_en)
-    else clip:=ex_jap;
+    if SpeedButton4.Down then
+      clip:=ex_jap+UH_CR+UH_LF+fstr(ex_en)
+    else
+      clip:=ex_jap;
   end else
   begin
     clip:='';
@@ -387,16 +394,11 @@ begin
     end else max:=ex_indlast;
     for i:=ex_indfirst to max do
     begin
-      p:=examstruct;
-      p:=p+i*4;
-      move(p^,ofs,4);
-      exampackage.ReadRawData(buf,integer(examfile.Position)+ofs,1024);
-      siz:=buf[0];
-      for j:=1 to siz do clip:=clip+Format('%2.2X%2.2X',[buf[j*2],buf[j*2-1]]);
-      siz2:=buf[siz*2+1];
-      clip:=clip+UH_CR+UH_LF;
-      if SpeedButton4.Down then for j:=siz*2+2 to siz*2+1+siz2 do clip:=clip+UnicodeToHex(chr(buf[j]));
-      if SpeedButton4.Down then clip:=clip+UH_CR+UH_LF;
+      ReadExample(i, tmp_jap, tmp_en);
+      if SpeedButton4.Down then
+        clip:=tmp_jap+UH_CR+UH_LF+fstr(tmp_en)+UH_CR+UH_LF
+      else
+        clip:=tmp_jap+UH_CR+UH_LF;
     end;
   end;
   fMenu.ChangeClipboard;
