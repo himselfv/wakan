@@ -6,7 +6,7 @@ object fMenu: TfMenu
     '#00868^eTool for learning Japanese & Chinese^cN'#1073'stroj pro studen' +
     'ty japon'#1113'tiny a '#1080#1085'n'#1113'tiny'
   ClientHeight = 485
-  ClientWidth = 684
+  ClientWidth = 694
   Color = clBtnFace
   Constraints.MinHeight = 543
   Constraints.MinWidth = 700
@@ -132,13 +132,13 @@ object fMenu: TfMenu
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 684
+    Width = 694
     Height = 33
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     DesignSize = (
-      684
+      694
       33)
     object tab1: TSpeedButton
       Left = 3
@@ -555,7 +555,7 @@ object fMenu: TfMenu
   object Panel3: TPanel
     Left = 0
     Top = 33
-    Width = 499
+    Width = 509
     Height = 340
     Align = alClient
     BevelOuter = bvNone
@@ -564,14 +564,14 @@ object fMenu: TfMenu
   object Panel2: TPanel
     Left = 0
     Top = 373
-    Width = 684
+    Width = 694
     Height = 112
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
   end
   object Panel4: TPanel
-    Left = 499
+    Left = 509
     Top = 33
     Width = 185
     Height = 340

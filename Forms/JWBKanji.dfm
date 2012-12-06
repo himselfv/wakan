@@ -1,10 +1,10 @@
 object fKanji: TfKanji
   Left = 591
   Top = 473
-  Width = 640
-  Height = 376
   BorderStyle = bsSizeToolWin
-  Caption = '#00117^cSeznam znakù^eCharacter list'
+  Caption = '#00117^cSeznam znak'#1097'^eCharacter list'
+  ClientHeight = 342
+  ClientWidth = 624
   Color = clBtnFace
   DragKind = dkDock
   Font.Charset = DEFAULT_CHARSET
@@ -24,11 +24,14 @@ object fKanji: TfKanji
     Left = 0
     Top = 0
     Width = 624
-    Height = 340
+    Height = 342
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
+    DesignSize = (
+      624
+      342)
     object RxLabel15: TRxLabel
       Left = 8
       Top = 8
@@ -46,12 +49,13 @@ object fKanji: TfKanji
       Left = 7
       Top = 32
       Width = 618
-      Height = 282
+      Height = 284
       Anchors = [akLeft, akTop, akRight, akBottom]
+      ExplicitHeight = 282
     end
     object Label18: TLabel
       Left = 413
-      Top = 173
+      Top = 174
       Width = 5
       Height = 13
       Alignment = taRightJustify
@@ -64,14 +68,15 @@ object fKanji: TfKanji
       Font.Style = [fsBold]
       ParentFont = False
       Transparent = True
+      ExplicitTop = 173
     end
     object Label24: TLabel
       Left = 15
       Top = 40
-      Width = 520
-      Height = 19
+      Width = 525
+      Height = 21
       Anchors = [akLeft, akTop, akRight, akBottom]
-      Caption = '#00118^eNo characters were found.^cŽádné znaky nebyly nalezeny.'
+      Caption = '#00118^eNo characters were found.^c'#1035#1073'dn'#1081' znaky nebyly nalezeny.'
       Color = clBtnFace
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -81,19 +86,20 @@ object fKanji: TfKanji
       ParentColor = False
       ParentFont = False
       Transparent = True
+      ExplicitHeight = 19
     end
     object SpeedButton5: TSpeedButton
       Left = 8
-      Top = 321
+      Top = 323
       Width = 113
       Height = 17
       Hint = 
-        '#00119^eSearch & change sort order^cHledat a zmìnit poøadí tøídì' +
-        'ní'
+        '#00119^eSearch & change sort order^cHledat a zm'#1084'nit po'#1096'ad'#1085' t'#1096#1085'd'#1084 +
+        'n'#1085
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 2
-      Caption = '#00120^eSearch && sort^cHledat && tøídit'
+      Caption = '#00120^eSearch && sort^cHledat && t'#1096#1085'dit'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -103,17 +109,18 @@ object fKanji: TfKanji
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton5Click
+      ExplicitTop = 321
     end
     object SpeedButton1: TSpeedButton
       Left = 216
-      Top = 321
+      Top = 323
       Width = 65
       Height = 17
-      Hint = '#00121^eSort (Ctrl-Alt-O)^cTøídit (Ctrl-Alt-O)'
+      Hint = '#00121^eSort (Ctrl-Alt-O)^cT'#1096#1085'dit (Ctrl-Alt-O)'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 3
-      Caption = '#00122^eSort^cTøídit'
+      Caption = '#00122^eSort^cT'#1096#1085'dit'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -124,10 +131,11 @@ object fKanji: TfKanji
       ShowHint = True
       Visible = False
       OnClick = SpeedButton1Click
+      ExplicitTop = 321
     end
     object SpeedButton2: TSpeedButton
       Left = 559
-      Top = 321
+      Top = 323
       Width = 65
       Height = 17
       Hint = '#00123^eDetails (Ctrl-D)^cDetaily (Ctrl-D)'
@@ -144,17 +152,18 @@ object fKanji: TfKanji
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton2Click
+      ExplicitTop = 321
     end
     object SpeedButton3: TSpeedButton
       Left = 128
-      Top = 321
+      Top = 323
       Width = 81
       Height = 17
-      Hint = '#00125^eCompounds^cSloženiny'
+      Hint = '#00125^eCompounds^cSlo'#1115'eniny'
       AllowAllUp = True
       Anchors = [akLeft, akBottom]
       GroupIndex = 5
-      Caption = '#00125^eCompounds^cSloženiny'
+      Caption = '#00125^eCompounds^cSlo'#1115'eniny'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -164,13 +173,14 @@ object fKanji: TfKanji
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton3Click
+      ExplicitTop = 321
     end
     object SpeedButton4: TSpeedButton
       Left = 461
       Top = 7
       Width = 25
       Height = 17
-      Hint = '#00126^eShow stroke order^cZobrazit poøadí tahù'
+      Hint = '#00126^eShow stroke order^cZobrazit po'#1096'ad'#1085' tah'#1097
       AllowAllUp = True
       Anchors = [akTop, akRight]
       GroupIndex = 6
@@ -189,7 +199,7 @@ object fKanji: TfKanji
       Left = 8
       Top = 33
       Width = 616
-      Height = 280
+      Height = 282
       Anchors = [akLeft, akTop, akRight, akBottom]
       BorderStyle = bsNone
       ColCount = 10
@@ -215,7 +225,7 @@ object fKanji: TfKanji
       Height = 21
       Hint = 
         '#00127^ePrint Kanji cards (for memorizing) (Ctrl-F6)^cTisknout k' +
-        'arty znakù (pro opakování) (Ctrl-F6)'
+        'arty znak'#1097' (pro opakov'#1073'n'#1085') (Ctrl-F6)'
       Anchors = [akTop, akRight]
       Caption = '#00128^ePrint cards^cTisk karet'
       Font.Charset = DEFAULT_CHARSET
@@ -241,7 +251,7 @@ object fKanji: TfKanji
   end
   object Panel2: TPanel
     Left = 0
-    Top = 340
+    Top = 342
     Width = 624
     Height = 0
     Align = alBottom

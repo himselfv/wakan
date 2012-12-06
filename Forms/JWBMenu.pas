@@ -534,7 +534,6 @@ var
   globheight:integer;
   MaxCategoryIndex,MaxUserIndex:integer;
   ChinesePresent:boolean;
-  doc,doctr,docdic:TStringList;
   defll: TDeflectionList;
   partl,bopomofol,markersl,suffixl,ignorel,readchl:TStringList;
   firstact:boolean;
@@ -2023,9 +2022,6 @@ begin
   TRadicals.Free;
   FreeKnownLists;
   FreeRomaList;
-  doc.Free;
-  doctr.Free;
-  docdic.Free;
   defll.Free;
   suffixl.Free;
   partl.Free;
@@ -2270,9 +2266,6 @@ begin
   curlang:='j';
   intmopaint:=nil;
   intmogrid:=nil;
-  doc:=TStringList.Create;
-  doctr:=TStringList.Create;
-  docdic:=TStringList.Create;
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;

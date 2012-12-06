@@ -949,28 +949,29 @@ procedure wrid;
 var s:string;
     x:integer;
 begin
-  doc.Add(o);
+  fTranslate.doc.Add(o);
   s:='';
-  for x:=1 to length(o) div 4 do s:=s+'-90000001';
-  doctr.Add(s);
+  for x:=1 to length(o) div 4 do
+    s:=s+'-90000001';
+  fTranslate.doctr.Add(s);
   o:='';
 end;
 begin
-  doc.Clear;
-  doctr.Clear;
+  fTranslate.doc.Clear;
+  fTranslate.doctr.Clear;
   wd:=6;
   o:='';
   add:=TStringList.Create;
-  o:='002000200020';
+  o:=UH_SPACE+UH_SPACE+UH_SPACE;
   for i:=0 to readchl.Count-1 do
   begin
     s:=readchl[i];
     if s[1]='e'then
     begin
       delete(s,1,1);
-      if s='' then s:='0020';
+      if s='' then s:=UH_SPACE;
       o:=o+s;
-      for j:=1 to wd do o:=o+'0020';
+      for j:=1 to wd do o:=o+UH_SPACE;
     end;
   end;
   wrid;
@@ -981,8 +982,8 @@ begin
     if s[1]='b'then
     begin
       delete(s,1,1);
-      o:=o+s+'0020';
-      if length(s)<=4 then o:=o+'0020';
+      o:=o+s+UH_SPACE;
+      if length(s)<=4 then o:=o+UH_SPACE;
       k:=0;
       for j:=0 to readchl.Count-1 do
       begin
@@ -1013,11 +1014,11 @@ begin
       l:=((l-1) div wd)+1;
       for j:=1 to l do
       begin
-        if j>1 then o:=o+'002000200020';
+        if j>1 then o:=o+UH_SPACE+UH_SPACE+UH_SPACE;
         for k:=1 to 7 do
         begin
-          for m:=1 to wd do if length(chars[k])<((j-1)*wd+m)*4 then o:=o+'0020'else o:=o+copy(chars[k],((j-1)*wd+m-1)*4+1,4);
-          o:=o+'0020';
+          for m:=1 to wd do if length(chars[k])<((j-1)*wd+m)*4 then o:=o+UH_SPACE else o:=o+copy(chars[k],((j-1)*wd+m-1)*4+1,4);
+          o:=o+UH_SPACE;
         end;
         wrid;
       end;

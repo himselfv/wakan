@@ -58,7 +58,6 @@ type
     SaveAnnotationDialog: TSaveDialog;
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
-    procedure Button4Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button10Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
@@ -152,30 +151,36 @@ type
     procedure BlockOp(copy,delete:boolean);
     procedure PasteOp;
 
-    procedure SetCurPos(x,y:integer);
     procedure GetTextWordInfo(cx,cy:integer;var meaning,reading,kanji:string);
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
   public
     procedure CalcMouseCoords(x,y:integer;var rx,ry:integer);
 
+
+  public //Document
+    doc,doctr,docdic:TStringList;
+    function GetDoc(ax,ay:integer):FChar;
+    function GetDocTr(ax,ay:integer):string;
+    procedure SetDocTr(ax,ay:integer;s:string);
+    function IsHalfWidth(x,y:integer):boolean;
+    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
+
   protected
     oldcurx,oldcury: integer; //last cursor position, where it was drawn.
     curx,cury: integer; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
+    procedure SetCurPos(x,y:integer);
   public
     view:integer; //index of a first visible graphical line
     rviewx,rviewy:integer; //logical coordinates of a start of a first visible graphical line
     rcurx,rcury: integer; //cursor position in logical coordinates
       //also translation position when translating
     cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
+    lastxsiz,lastycnt,printl:integer;
     //Actual cursor position --- differs from (curx,cury) if we're at the end of the text
     function CursorScreenX:integer;
     function CursorScreenY:integer;
     procedure SelectAll;
-
-  public
-    lastxsiz,lastycnt,printl:integer;
-    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
 
   protected //Insert buffer
     insertbuffer:string;
@@ -223,24 +228,24 @@ var
   priorkanji:string;
   cursorblinked:boolean;
 
-function GetDoc(ax,ay:integer):FChar;
+function TfTranslate.GetDoc(ax,ay:integer):FChar;
 begin
   if ay>=doc.Count then showmessage('Illegal doc access!');
   if ax>=flength(doc[ay]) then result:=UH_ZERO else result:=fgetch(doc[ay],ax+1);
 end;
 
-function GetDocTr(ax,ay:integer):string;
+function TfTranslate.GetDocTr(ax,ay:integer):string;
 begin
   if ay>=doctr.Count then showmessage('Illegal doctr access!');
   if ax>=length(doctr[ay]) div 9 then result:='!90000001'else result:=copy(doctr[ay],ax*9+1,9);
 end;
 
-procedure SetDocTr(ax,ay:integer;s:string);
+procedure TfTranslate.SetDocTr(ax,ay:integer;s:string);
 begin
   doctr[ay]:=copy(doctr[ay],1,ax*9)+s+copy(doctr[ay],ax*9+10,length(doctr[ay])-(ax*9+9));
 end;
 
-function IsHalfWidth(x,y:integer):boolean;
+function TfTranslate.IsHalfWidth(x,y:integer):boolean;
 begin
   result:=IsHalfWidthChar(GetDoc(x,y));
 end;
@@ -271,6 +276,10 @@ end;
 
 procedure TfTranslate.FormCreate(Sender: TObject);
 begin
+  doc:=TStringList.Create;
+  doctr:=TStringList.Create;
+  docdic:=TStringList.Create;
+
   docfilename:='';
   doctp:=0;
   FileChanged:=false;
@@ -303,6 +312,9 @@ begin
   linl.Free;
   plinl.Free;
   EditorBitmap.Free;
+  doc.Free;
+  doctr.Free;
+  docdic.Free;
 end;
 
 procedure TfTranslate.FormShow(Sender: TObject);
@@ -449,28 +461,29 @@ begin
             if not dot then s3:=s3+'-90000001'else s3:=s3+dp+inttostr(buf[i*4] div 256)+ls+chr(buf[i*4+2] div 256);
           end;
         end;
-      end;
-    end else
+    end;
+  end else
+   //Not jtt
+    begin
+      Conv_Open(docfilename,tp);
+      s2:=Conv_Read;
+      while s2<>'' do
       begin
-        Conv_Open(docfilename,tp);
-        s2:=Conv_Read;
-        while s2<>'' do
+        if s2=UH_CR then
         begin
-          if s2='000D'then
-          begin
-            doc.Add(s);
-            doctr.Add(s3);
-            s:='';
-            s3:='';
-          end else
-          if s2<>'000A'then begin
-            s:=s+s2;
-            s3:=s3+'-90000001';
-          end;
-          s2:=Conv_Read;
+          doc.Add(s);
+          doctr.Add(s3);
+          s:='';
+          s3:='';
+        end else
+        if s2<>UH_LF then begin
+          s:=s+s2;
+          s3:=s3+'-90000001';
         end;
-        Conv_Close;
-  end;
+        s2:=Conv_Read;
+      end;
+      Conv_Close;
+    end;
   if jtt then closefile(f);
   if s<>'' then
   begin
@@ -692,15 +705,6 @@ begin
   end;
 end;
 
-procedure TfTranslate.Button4Click(Sender: TObject);
-var i:integer;
-begin
-  clip:='';
-  for i:=0 to doc.Count-1 do clip:=clip+doc[i]+'000E'; //TODO: Raw char!
-  delete(clip,length(clip)-3,4);
-  fMenu.ChangeClipboard;
-end;
-
 procedure TfTranslate.Button5Click(Sender: TObject);
 begin
   if docfilename<>'' then
@@ -713,7 +717,7 @@ end;
 procedure TfTranslate.Button10Click(Sender: TObject);
 function GetDoc(ax,ay:integer):string; //TODO: GetDoc/GetDocTr duplicates! But GetDocTr is slightly different, WTF...
 begin
-  if ax>=length(doc[ay]) div 4 then result:='0000'else result:=copy(doc[ay],ax*4+1,4);
+  if ax>=length(doc[ay]) div 4 then result:=UH_ZERO else result:=copy(doc[ay],ax*4+1,4);
 end;
 function GetDocTr(ax,ay:integer):string;
 begin

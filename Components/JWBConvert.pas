@@ -1,12 +1,13 @@
 unit JWBConvert;
 
 interface
+uses JWBUnit;
 
 function Conv_DetectType(filename:string):byte;
 procedure Conv_Open(filename:string; tp:byte);
-function Conv_Read:string;
+function Conv_Read:FString;
 procedure Conv_Create(filename:string; tp:byte);
-procedure Conv_Write(s:string);
+procedure Conv_Write(s:FString);
 procedure Conv_Close;
 procedure Conv_Flush;
 function Conv_ChooseType(chinese:boolean; def:byte):byte;
@@ -511,7 +512,11 @@ function Conv_Read:string;
 var i:integer;
 begin
   i:=_input(ftp);
+ {$IFNDEF UNICODE}
   if i=-1 then result:='' else result:=Format('%4.4x',[i]);
+ {$ELSE}
+  if i=-1 then Result:='' else Result := WideChar(i);
+ {$ENDIF}
 end;
 
 procedure Conv_Create(filename:string; tp:byte);
@@ -524,14 +529,25 @@ begin
   ftp:=tp;
 end;
 
-procedure Conv_Write(s:string);
-var s2:string;
+procedure Conv_Write(s:FString);
+{$IFNDEF UNICODE}
+var s2:FString;
+{$ENDIF}
 begin
   while length(s)>0 do
   begin
+   {$IFNDEF UNICODE}
     s2:=copy(s,1,4);
     delete(s,1,4);
-    try _output(ftp,strtoint('0x'+s2)); except _output(ftp,0); end;
+    try
+      _output(ftp,strtoint('0x'+s2));
+    except
+      _output(ftp,0);
+    end;
+   {$ELSE}
+    _output(ftp,word(s[1]));
+    delete(s,1,1);
+   {$ENDIF}
   end;
 end;
 
