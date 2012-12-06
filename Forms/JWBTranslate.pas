@@ -973,15 +973,16 @@ end;
 procedure TfTranslate.EditorPaintBoxMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if not (ssLeft in Shift) then exit;
-  curx:=(x+lastxsiz div 2) div (lastxsiz);
-  cury:=y div (lastxsiz*lastycnt)+view;
-  curx:=WidthToPos(curx,cury);
-  if (curx=lastmmx) and (cury=lastmmy) then exit;
-  lastmmx:=curx;
-  lastmmy:=cury;
-  shiftpressed:=true;
-  ShowText(false);
+  if ssLeft in Shift then begin;
+    curx:=(x+lastxsiz div 2) div (lastxsiz);
+    cury:=y div (lastxsiz*lastycnt)+view;
+    curx:=WidthToPos(curx,cury);
+    if (curx=lastmmx) and (cury=lastmmy) then exit;
+    lastmmx:=curx;
+    lastmmy:=cury;
+    shiftpressed:=true;
+    ShowText(false);
+  end;
 
   fMenu.IntTipPaintOver(EditorPaintBox,x,y,false);
 end;

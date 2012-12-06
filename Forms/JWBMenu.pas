@@ -4330,33 +4330,9 @@ begin
     ass:=true;
   end;
 end;
-function EvChar(i:integer):integer;
-begin
-  if ((i>=ord('a')) and (i<=ord('z'))) or
-     ((i>=ord('A')) and (i<=ord('Z'))) then
-     begin
-       result:=7;
-       exit;
-     end;
-  if (i>=$3040) and (i<=$309F) then
-  begin
-    result:=2;
-    exit;
-  end;
-  if (i>=$30A0) and (i<=$30FF) then
-  begin
-    result:=3;
-    exit;
-  end;
-  if (i>=$4E00) and (i<=$9FFF) then
-  begin
-    result:=1;
-    exit;
-  end;
-  result:=0;
-end;
 var pt:TPoint;
-    s,s2:string;
+    s:string;
+    s2:FString;
     i,j:integer;
     b:byte;
     wbg,wen:integer;
@@ -4397,7 +4373,7 @@ begin
     pt:=Mouse.CursorPos;
   except inproc:=false; exit; end;
   try
-  if not TryStrToInt(fSettings.Edit21.Text, ttim) then ttim := 10;
+  if not TryStrToInt(fSettings.Edit21.Text, ttim) then ttim:=10;
   if not TryStrToInt(fSettings.Edit22.Text, tleft) then tleft:=10;
   if not TryStrToInt(fSettings.Edit23.Text, tright) then tright:=100;
 
@@ -4406,7 +4382,7 @@ begin
      (pt.y<=fScreenTip.Top+fScreenTip.Height+10) then
   begin
     inproc:=false;
-     exit;
+    exit;
   end;
   if ((pt.x<>oldpt.x) or (pt.y<>oldpt.y)) and (not screenTipImmediate) then
   begin
@@ -4435,7 +4411,7 @@ begin
       s:=intcurString;
     end;
     begpt:=pt;
-    if length(s)>=4 then evc:=EvChar(word(HexToUnicode(copy(s,1,4))[1]));
+    if flength(s)>=1 then evc:=EvalChar(fgetch(s,1));
   end;
   if (s='') and screenModeSc then
   begin
@@ -4477,28 +4453,28 @@ begin
     end;
     wnd:=WindowFromPoint(pt);
     wt[0]:=AnsiChar(chr(Windows.GetWindowText(wnd,@(wt[1]),255)));
-    s2:=s2+UnicodeToHex('Window name: '+wt)+'000D000A';
+    s2:=s2+fstr('Window name: '+wt)+UH_CR+UH_LF;
     Windows.GetWindowRect(wnd,wr);
-    s2:=s2+UnicodeToHex('Window rect: ['+inttostr(wr.Left)+':'+
-      inttostr(wr.Top)+']-['+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+']')+'000D000A';
+    s2:=s2+fstr('Window rect: ['+inttostr(wr.Left)+':'+
+      inttostr(wr.Top)+']-['+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+']')+UH_CR+UH_LF;
     Windows.GetClientRect(wnd,wr);
-    s2:=s2+UnicodeToHex('Client area: '+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+'')+'000D000A';
-    s2:=s2+UnicodeToHex('Cursor pos: '+inttostr(pt.x)+':'+inttostr(pt.y))+'000D000A';
-    s2:=s2+'000D000A'+UnicodeToHex('BitBlts:')+'000D000A';
+    s2:=s2+fstr('Client area: '+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+'')+UH_CR+UH_LF;
+    s2:=s2+fstr('Cursor pos: '+inttostr(pt.x)+':'+inttostr(pt.y))+UH_CR+UH_LF;
+    s2:=s2+UH_CR+UH_LF+fstr('BitBlts:')+UH_CR+UH_LF;
     for i:=1 to bitcnt do
     begin
-      s2:=s2+UnicodeToHex(inttostr(i)+'# Mod:');
+      s2:=s2+fstr(inttostr(i)+'# Mod:');
       for j:=1 to rdcnt do if curbit[i].srcdc=curtext[j].hdc then
       begin
-        s2:=s2+UnicodeToHex(inttostr(j)+';');
+        s2:=s2+fstr(inttostr(j)+';');
         curtext[j].hwnd:=curbit[i].hwnd;
         curtext[j].x:=curtext[j].x+curbit[i].xofs;
         curtext[j].y:=curtext[j].y+curbit[i].yofs;
     //    s:=s+'T+'+inttostr(curbit[i].xofs)+'='+inttostr(curbit[i].yofs)+'+';
       end;
-      s2:=s2+UnicodeToHex(' Ofs:'+inttostr(curbit[i].xofs)+':'+inttostr(curbit[i].yofs))+'000D000A';
+      s2:=s2+fstr(' Ofs:'+inttostr(curbit[i].xofs)+':'+inttostr(curbit[i].yofs))+UH_CR+UH_LF;
     end;
-    s2:=s2+'000D000A'+UnicodeToHex('TextOuts:')+'000D000A';
+    s2:=s2+UH_CR+UH_LF+fstr('TextOuts:')+UH_CR+UH_LF;
     for i:=1 to rdcnt do
     begin
       lp.x:=curtext[i].x;
@@ -4506,15 +4482,16 @@ begin
       Windows.GetWindowRect(wnd,wr);
       lp.x:=lp.x+wr.Left;
       lp.y:=lp.y+wr.Top;
-      s2:=s2+UnicodeToHex(inttostr(i)+'# "');
-      for j:=0 to curtext[i].slen-1 do if curtext[i].str[j]>=32 then s2:=s2+UnicodeToHex(widechar(curtext[i].str[j]));
-      s2:=s2+UnicodeToHex('"'+
+      s2:=s2+fstr(inttostr(i)+'# "');
+      for j:=0 to curtext[i].slen-1 do if curtext[i].str[j]>=32 then
+        s2:=s2+fstr(widechar(curtext[i].str[j]));
+      s2:=s2+fstr('"'+
         ' Org:'+inttostr(savedx[i])+':'+inttostr(savedy[i])+
         ' Align:'+inttostr(curtext[i].x)+':'+inttostr(curtext[i].y)+
         ' Trans:'+inttostr(lp.x)+':'+inttostr(lp.y)+
         ' Size:'+inttostr(curtext[i].w)+':'+inttostr(curtext[i].h)+' ');
-      if curtext[i].hwnd=wnd then s2:=s2+UnicodeToHex('OK') else s2:=s2+UnicodeToHex('BAD WND');
-      s2:=s2+'000D000A';
+      if curtext[i].hwnd=wnd then s2:=s2+fstr('OK') else s2:=s2+fstr('BAD WND');
+      s2:=s2+UH_CR+UH_LF;
     end;
     for i:=1 to rdcnt do if (curtext[i].slen>0) and (curtext[i].hwnd=wnd) then
     begin
@@ -4563,16 +4540,18 @@ begin
     if (ftextpos>0) and (ftextbeg[0]<=pt.x+2) then
     for i:=0 to ftextpos-1 do
     begin
-      if cev=0 then cev:=EvChar(ftext[i]);
-      ev:=EvChar(ftext[i]);
+      if cev=0 then cev:=EvalChar(WideChar(ftext[i]));
+      ev:=EvalChar(WideChar(ftext[i]));
       if (cev=ev) or ((cev=1) and (ev=2)) then
-      begin if (ev<>0) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then s:=s+UnicodeToHex(widechar(ftext[i]))
+      begin
+        if (ev<>0) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then
+          s:=s+fstr(widechar(ftext[i]))
       end else break;
       cx:=ftextbeg[i];
       last:=ftext[i];
-      cev:=EvChar(ftext[i]);
+      cev:=EvalChar(WideChar(ftext[i]));
     end;
-    if s<>'' then evc:=EvChar(ftext[0]);
+    if s<>'' then evc:=EvalChar(WideChar(ftext[0]));
   end;
   screenTipDebug:=s2;
   if paramstr(1)='debug'then
@@ -4582,7 +4561,8 @@ begin
   end;
   if s<>'' then
   begin
-    if screenTipImmediate then fMenu.ShowScreenTip(pt.x-10,pt.y-10,s,evc,true) else
+    if screenTipImmediate then
+      fMenu.ShowScreenTip(pt.x-10,pt.y-10,s,evc,true) else
       fMenu.ShowScreenTip(pt.x+10,pt.y+10,s,evc,false);
     if screenTipShown then popcreated:=true;
   end;
