@@ -111,9 +111,9 @@ function GetFileVersionInfoStr(Filename: string): string;
 
 
 { FChar string functions.
-Please use these when working with FChars! They'll resolve to proper manipulations,
+Please use these when working with FChars! They resolve to proper manipulations,
 whether we are working with UnicodeStrings or 4-character hex AnsiStrings.
-If you need a general purpose string functions which works differently
+If you need a general purpose string function which works differently
 on Ansi and Unicode builds, add it here.
 
 In particular:
@@ -131,6 +131,14 @@ When working with normal strings, or when accessing control characters in FStrin
 please continue to use normal functions:
   var sample: FString;
   if (Length(sample)>0) and (sample[1]='~')  --- keep intact!
+
+It is very important that in release builds these functions are all inlined.
+Therefore if you're doing the building, READ THIS:
+  http://docwiki.embarcadero.com/RADStudio/XE/en/Calling_Procedures_and_Functions#Using_the_inline_Directive
+Note the list of cases when the inlining is not done.
+Enable inlining.
+Disable Compiling> String format checking in Delphi Project Options:
+  http://www.micro-isv.asia/2008/10/needless-string-checks-with-ensureunicodestring/
 }
 
 function flength(const s:FString): integer; {$IFDEF INLINE}inline;{$ENDIF}
