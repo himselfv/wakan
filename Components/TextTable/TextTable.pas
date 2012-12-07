@@ -99,6 +99,7 @@ type
   public //Field reading
     function GetFieldSize(recno,field:integer):byte;
     function GetField(rec:integer;field:integer):string;
+    procedure SetField(rec:integer;field:integer;const value:string);
     function Str(field:integer):string;
     function Int(field:integer):integer;
     function Bool(field:integer):boolean;
@@ -584,6 +585,20 @@ begin
     Result := OffsetPtr(struct, recno*(varfields+5)+(ord(c)-ord('a'))+5)^;
 end;
 
+//Swaps bytes in every word
+//sz is the number of bytes
+procedure SwapBytes(pb: PByte; sz: integer); inline;
+var b: byte;
+  i: integer;
+begin
+  //Swap bytes
+  for i := 0 to sz div 2 - 1 do begin
+    b := PByteArray(pb)[2*i+0];
+    PByteArray(pb)[2*i+0] := PByteArray(pb)[2*i+1];
+    PByteArray(pb)[2*i+1] := b;
+  end;
+end;
+
 {
 Read the field value for a record.
 This is a HEAVILY used function, so let's be as fast as we can.
@@ -671,12 +686,7 @@ begin
        source.ReadRawData(PWideChar(Result)^,datafpos+ofs,sz)
      else
        move(OffsetPtr(data, ofs)^, PWideChar(Result)^, sz);
-    //Swap bytes
-     for l := 0 to sz div 2 - 1 do begin
-       b := PByteArray(Result)[2*l+0];
-       PByteArray(Result)[2*l+0] := PByteArray(Result)[2*l+1];
-       PByteArray(Result)[2*l+1] := b;
-     end;
+     SwapBytes(PByte(Result), sz);
     {$ELSE}
      SetLength(Result, 2*sz);
      if offline then begin
@@ -698,7 +708,89 @@ begin
      end;
     {$ENDIF}
    end;
+  end;
+end;
+
+//Setting fields is not supported for offline dictionaries.
+//It's only used for user data anyway, which is never offline.
+procedure TTextTable.SetField(rec:integer;field:integer;const value:string);
+var i,ii:integer;
+  ofs:integer;
+  sz:byte;
+  tp:char;
+  b:byte;
+  w:word;
+  l:integer;
+ {$IFDEF UNICODE}
+  ansi_s: AnsiString;
+  value_c: UnicodeString;
+ {$ENDIF}
+begin
+  if rec>=reccount then
+    raise Exception.Create('Write beyond!');
+  ii:=rec*5+varfields*rec;
+  ofs:=PInteger(OffsetPtr(struct, ii+1))^;
+  for i:=0 to field-1 do ofs:=ofs+GetFieldSize(rec,i);
+  tp:=fieldtypes[field+1];
+  sz:=GetFieldSize(rec,field);
+
+  case tp of
+  'b': begin
+     if TryStrToInt(value, l) then
+       b := l
+     else
+       b := 0;
+     PByte(OffsetPtr(data, ofs))^ := b;
    end;
+  'w': begin
+     if TryStrToInt(value, l) then
+       w := l
+     else
+       w := 0;
+     PWord(OffsetPtr(data, ofs))^ := w;
+   end;
+  'i': begin
+     if not TryStrToInt(value, l) then
+       l := 0;
+     PInteger(OffsetPtr(data, ofs))^ := l;
+   end;
+  'l': begin
+     if upcase(value[1])='T' then b:=1 else b:=0;
+     PByte(OffsetPtr(data, ofs))^ := b;
+   end;
+  's': begin
+    {$IFNDEF UNICODE}
+     if sz>0 then
+       move(PAnsiChar(value)^, OffsetPtr(data, ofs)^, sz);
+    {$ELSE}
+     if sz>0 then begin
+       ansi_s := AnsiString(value);
+       move(PAnsiChar(ansi_s)^, OffsetPtr(data, ofs)^, sz);
+     end;
+    {$ENDIF}
+   end;
+  'x': begin
+    {$IFNDEF UNICODE}
+    //TODO: Test for non-unicode
+     pb := OffsetPtr(data, ofs);
+     pc := PChar(value);
+     for i := 0 to sz div 2 - 1 do begin
+       pb^ := HexCharCode(pc^) shl 4;
+       Inc(pc);
+       pb^ := pb^ + HexCharCode(pc^);
+       Inc(pc);
+       Inc(pb);
+     end;
+    {$ELSE}
+     if sz>0 then begin
+       value_c := value; //can't mess with someone else's string
+       UniqueString(value_c);
+       SwapBytes(PByte(value_c), sz);
+       move(PWideChar(value_c)^, OffsetPtr(data, ofs)^, sz);
+     end;
+    {$ENDIF}
+   end;
+  end;
 end;
 
 function TTextTable.Str(field:integer):string;
@@ -972,6 +1064,24 @@ begin
   result:=b;
 end;
 
+function GetFieldValueSize(ftype: char; const fval: string): integer;
+begin
+  case ftype of
+    'b':Result:=1;
+    'w':Result:=2;
+    'i':Result:=4;
+    'l':Result:=1;
+    's':Result:=length(fval);
+   {$IFDEF UNICODE}
+    'x':Result:=length(fval) * 2;
+   {$ELSE}
+    'x':Result:=length(fval) div 2;
+   {$ENDIF}
+  else
+    Result := 0;
+  end;
+end;
+
 procedure TTextTable.Insert(values:array of string);
 var totsize:integer;
     i,j:integer;
@@ -995,14 +1105,7 @@ begin
     values[i]:=copy(values[i],1,250);
   end;
   for i:=0 to fieldcount-1 do
-    case fieldbuild[i][1] of
-      'b':inc(totsize,1);
-      'w':inc(totsize,2);
-      'i':inc(totsize,4);
-      'l':inc(totsize,1);
-      'x':inc(totsize,length(values[i]) div 2);
-      's':inc(totsize,length(values[i]));
-    end;
+    Inc(totsize, GetFieldValueSize(fieldbuild[i][1], values[i]));
   if databuffer<totsize then
   begin
     GetMem(p,datalen+AllocDataBuffer);
@@ -1029,14 +1132,7 @@ begin
   for i:=0 to fieldcount-1 do
   begin
     c:=fieldbuild[i][1];
-    case c of
-      'b':b:=1;
-      'w':b:=2;
-      'i':b:=4;
-      'l':b:=1;
-      'x':b:=length(values[i]) div 2;
-      's':b:=length(values[i]);
-    end;
+    b := GetFieldValueSize(c, values[i]);
     if (c='x') or (c='s') then
     begin
       moveofs(@b,struct,0,reccount*(varfields+5)+5+k,1);
@@ -1085,8 +1181,13 @@ begin
   begin
     sz:=GetFieldSize(tcur,fields[i]);
     tp:=fieldtypes[fields[i]+1];
-    if ((tp='s') and (sz<>length(values[i]))) or
-       ((tp='x') and (sz<>length(values[i]) div 2)) then willinsert:=true;
+    if ((tp='s') and (sz<>length(values[i])))
+   {$IFDEF UNICODE}
+    or ((tp='x') and (sz<>length(values[i]) * 2))
+   {$ELSE}
+    or ((tp='x') and (sz<>length(values[i]) div 2))
+   {$ENDIF}
+    then willinsert:=true;
   end;
   if not justinserted and willinsert then
   begin
@@ -1094,11 +1195,12 @@ begin
     for i:=0 to fieldcount-1 do
     begin
       fnd:=false;
-      for j:=0 to High(values) do if fields[j]=i then
-      begin
-        fnd:=true;
-        a[i]:=values[j];
-      end;
+      for j:=0 to High(values) do
+        if fields[j]=i then
+        begin
+          fnd:=true;
+          a[i]:=values[j];
+        end;
       if not fnd then a[i]:=Str(i);
     end;
     Delete;
@@ -1106,40 +1208,7 @@ begin
     exit;
   end;
   for i:=0 to High(values) do
-  begin
-    sz:=GetFieldSize(tcur,fields[i]);
-    moveofs(struct,@l,(varfields*tcur)+tcur*5+1,0,4);
-    for j:=0 to fields[i]-1 do l:=l+GetFieldSize(tcur,j);
-    tp:=fieldtypes[fields[i]+1];
-    case tp of
-      'b':begin
-            b:=0; try b:=strtoint(values[i]); except end;
-            moveofs(@b,data,0,l,1);
-          end;
-      'w':begin
-            w:=0; try w:=strtoint(values[i]); except end;
-            moveofs(@w,data,0,l,2);
-          end;
-      'i':begin
-            k:=0; try k:=strtoint(values[i]); except end;
-            moveofs(@k,data,0,l,4);
-          end;
-      'l':begin
-            if upcase(values[i][1])='T' then b:=1 else b:=0;
-            moveofs(@b,data,0,l,1);
-          end;
-      's':begin
-            moveofs(@(values[i][1]),data,0,l,sz);
-          end;
-      'x':begin
-            for m:=1 to sz div 2 do
-            begin
-              w:=strtoint('0x'+copy(values[i],(m-1)*4+3,2)+copy(values[i],(m-1)*4+1,2));
-              moveofs(@w,data,0,l+(m-1)*2,2);
-            end;
-          end;
-    end;
-  end;
+    SetField(tcur, fields[i], values[i]);
   if not nocommit then Commit(tcur);
 end;
 

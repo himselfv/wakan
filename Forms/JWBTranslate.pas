@@ -809,7 +809,7 @@ begin
 
     j:=bg;
     while j<=en do
-      if not IsUpcase(doctr[i].chars[j].wordstate) then
+      if IsLocaseLatin(doctr[i].chars[j].wordstate) then
       begin
         inc(j);
         while doctr[i].chars[j].wordstate='<'do inc(j);
@@ -1861,12 +1861,12 @@ begin
   fdelete(s,insx+1,inslen);
   doc[insy]:=s;
   lp:=doctr[insy];
-  lp.DeleteChars(insx+1,inslen);
+  lp.DeleteChars(insx,inslen);
   inslen:=flength(convins);
   if transins=nil then begin
     SetLength(transins, flength(convins));
     for i:=1 to flength(convins) do
-      transins[i].SetChar('I', 9, 0, 1);
+      transins[i-1].SetChar('I', 9, 0, 1);
   end;
   doc[insy]:=fcopy(doc[insy],1,insx)+convins+fcopy(doc[insy],insx+1,flength(doc[insy])-insx);
   doctr[insy].InsertChars(insx,transins);
@@ -2264,7 +2264,7 @@ begin
       doctr[y].chars[x+i-1].SetChar('<', learnstate, 0, globdict);
 
   fdelete(dw,1,rlen);
-  if (s[1]='K') and (flength(doc[y])>x+rlen) then
+  if (wordstate='K') and (flength(doc[y])>x+rlen) then
   begin
     dw:=GetDocWord(x+rlen,y,wt,false);
     if wt<>2 then dw:='';
@@ -2273,7 +2273,7 @@ begin
   for i:=flength(dw) downto 1 do
     if EvalChar(fgetch(dw,i))=1 then fdelete(dw,i,length(dw)-i+1);
   result:=rlen;
-  if (scanparticle) and (s[1]<>'-') and (partl.IndexOf(dw)>-1) then
+  if (scanparticle) and (wordstate<>'-') and (partl.IndexOf(dw)>-1) then
   begin
     if user then
       doctr[y].chars[x+rlen].SetChar('p', 9, 0, 1)
@@ -2555,7 +2555,7 @@ begin
     if dic<>nil then
     begin
       s := IntToStr(doctr[cy].chars[cx].dicidx);
-      while length(s)<6 do s := s + ' ';
+      while length(s)<6 do s := '0'+s;
       dic.Demand;
       dic.TDict.Locate('Index',s,true);
       if dic.TDictMarkers<>-1 then meaning:=dic.TDict.Str(dic.TDictEnglish) else
@@ -2629,7 +2629,7 @@ begin
   result:=fgetch(doc[y],x+1);
   repeat
     inc(x);
-    if stopuser and not IsUpcase(doctr[y].chars[x].wordstate) then exit;
+    if stopuser and IsLocaseLatin(doctr[y].chars[x].wordstate) then exit;
     wt2:=0;
     if x<flength(doc[y]) then
     begin

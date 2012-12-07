@@ -181,10 +181,10 @@ function remexcl(s:string):string;
 function strip_fl(s:string):string;
 function repl(var s:string;sub,repl:string):string;
 
-function IsUpcase(ch: AnsiChar): boolean; overload; inline;
-function IsUpcase(ch: WideChar): boolean; overload; inline;
-function IsLocase(ch: AnsiChar): boolean; overload; inline;
-function IsLocase(ch: WideChar): boolean; overload; inline;
+function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
+function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
+function IsLocaseLatin(ch: AnsiChar): boolean; overload; inline;
+function IsLocaseLatin(ch: WideChar): boolean; overload; inline;
 function LoCase(ch: AnsiChar): AnsiChar; overload; inline; //Delphi has UpCase but not LoCase for chars
 function LoCase(Ch: WideChar): WideChar; overload; inline;
 
@@ -727,24 +727,24 @@ begin
   result:=s;
 end;
 
-function IsUpcase(ch: AnsiChar): boolean;
+function IsUpcaseLatin(ch: AnsiChar): boolean;
 begin
   Result := ch in ['A'..'Z'];
 end;
 
-function IsUpcase(ch: WideChar): boolean;
+function IsUpcaseLatin(ch: WideChar): boolean;
 begin
   Result := ch in ['A'..'Z'];
 end;
 
-function IsLocase(ch: AnsiChar): boolean;
+function IsLocaseLatin(ch: AnsiChar): boolean;
 begin
-  Result := not IsUpcase(ch);
+  Result := ch in ['a'..'z'];
 end;
 
-function IsLocase(ch: WideChar): boolean;
+function IsLocaseLatin(ch: WideChar): boolean;
 begin
-  Result := not IsUpcase(ch);
+  Result := ch in ['a'..'z'];
 end;
 
 function LoCase(ch: AnsiChar): AnsiChar;

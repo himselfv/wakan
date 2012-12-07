@@ -39,14 +39,14 @@ type
     function GetItemPtr(Index: integer): PDeflectionRule;{$IFDEF INLINE} inline;{$ENDIF}
     function MakeNewItem: PDeflectionRule;
   public
-    procedure Add(r: TDeflectionRule); overload;
-    procedure Add(s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const r: TDeflectionRule); overload;
+    procedure Add(const s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
     procedure Clear;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PDeflectionRule read GetItemPtr; default;
   end;
 
-function ParseDeflectionRule(s: string): TDeflectionRule; inline;
+function ParseDeflectionRule(const s: string): TDeflectionRule; inline;
 
 
 {
@@ -85,9 +85,9 @@ type
     function MakeNewItem: PRomajiTranslationRule;
     procedure SetupRule(r: PRomajiTranslationRule);
   public
-    procedure Add(r: TRomajiTranslationRule); overload;
+    procedure Add(const r: TRomajiTranslationRule); overload;
     procedure Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string); overload;
-    procedure Add(s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
     procedure Clear;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiTranslationRule read GetItemPtr; default;
@@ -144,7 +144,7 @@ type
     function MakeNewItem: PCandidateLookup;
   public
     procedure Add(priority: integer; len: integer; verbType: char; const str: string); overload;
-    procedure Add(ct: TCandidateLookup); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const ct: TCandidateLookup); overload;{$IFDEF INLINE} inline;{$ENDIF}
     procedure Delete(Index: integer);
     procedure Clear;
     function Find(len: integer; verbType: char; const str: string): integer;
@@ -206,7 +206,7 @@ type
     charcount: integer;
     procedure Grow(ARequiredFreeLen: integer);
     function AddChar(): PCharacterProps; overload;
-    function AddChar(cp: TCharacterProps): PCharacterProps; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function AddChar(const cp: TCharacterProps): PCharacterProps; overload; {$IFDEF INLINE}inline;{$ENDIF}
     procedure AddChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); overload; {$IFDEF INLINE}inline;{$ENDIF}
     procedure AddChars(Count: integer); overload;
     procedure AddChars(const AChars: TCharacterPropArray); overload; {$IFDEF INLINE}inline;{$ENDIF}
@@ -232,8 +232,8 @@ type
   public
     function AddNewLine: PCharacterLineProps;
     function InsertNewLine(Index: integer): PCharacterLineProps;
-    procedure AddLine(l: TCharacterLineProps); {$IFDEF INLINE}inline;{$ENDIF}
-    procedure InsertLine(Index: integer; l: TCharacterLineProps); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure AddLine(const l: TCharacterLineProps); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure InsertLine(Index: integer; const l: TCharacterLineProps); {$IFDEF INLINE}inline;{$ENDIF}
     procedure DeleteLine(Index: integer);
     procedure Clear;
     property Count: integer read FListUsed;
@@ -248,18 +248,16 @@ uses JWBStrings;
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseDeflectionRule(s: string): TDeflectionRule; {$IFDEF INLINE}inline;{$ENDIF}
+function ParseDeflectionRule(const s: string): TDeflectionRule; {$IFDEF INLINE}inline;{$ENDIF}
 var i: integer;
 begin
   Result.vt := s[1];
   Result.sufcat := s[2];
   i := pos('->', s);
  {$IFDEF UNICODE}
-  s := copy(s,3,i-3);
-  if s='KKKK' then
-    Result.infl := 'KKKK'
-  else
-    Result.infl := HexToUnicode(s);
+  Result.infl := copy(s,3,i-3);
+  if Result.infl<>'KKKK' then
+    Result.infl := HexToUnicode(Result.infl);
   Result.defl := HexToUnicode(copy(s,i+2,Length(s)-(i+2)+1));
  {$ELSE}
   Result.infl := copy(s,3,i-3);
@@ -291,12 +289,12 @@ begin
   SetLength(FList, Length(FList)+ARequiredFreeLen);
 end;
 
-procedure TDeflectionList.Add(r: TDeflectionRule);
+procedure TDeflectionList.Add(const r: TDeflectionRule);
 begin
   MakeNewItem^ := r;
 end;
 
-procedure TDeflectionList.Add(s: string);
+procedure TDeflectionList.Add(const s: string);
 begin
   Add(ParseDeflectionRule(s));
 end;
@@ -358,7 +356,7 @@ begin
   if r.katakana_ptr=nil then r.katakana_ptr := pointer(UNICODE_ZERO_CODE);
 end;
 
-procedure TRomajiTranslationTable.Add(r: TRomajiTranslationRule);
+procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule);
 begin
   SetupRule(@r);
   MakeNewItem^ := r;
@@ -379,7 +377,7 @@ end;
 
 //Parses romaji translation rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseRomajiTranslationRule(s: string): TRomajiTranslationRule; {$IFDEF INLINE}inline;{$ENDIF}
+function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule; {$IFDEF INLINE}inline;{$ENDIF}
 var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 5);
@@ -395,7 +393,7 @@ begin
   Result.czech := s_parts[4];
 end;
 
-procedure TRomajiTranslationTable.Add(s: string);
+procedure TRomajiTranslationTable.Add(const s: string);
 begin
   Add(ParseRomajiTranslationRule(s));
 end;
@@ -446,7 +444,7 @@ begin
   item.str := str;
 end;
 
-procedure TCandidateLookupList.Add(ct: TCandidateLookup);
+procedure TCandidateLookupList.Add(const ct: TCandidateLookup);
 begin
   Add(ct.priority, ct.len, ct.verbType, ct.str);
 end;
@@ -589,7 +587,7 @@ begin
   Inc(charcount);
 end;
 
-function TCharacterLineProps.AddChar(cp: TCharacterProps): PCharacterProps;
+function TCharacterLineProps.AddChar(const cp: TCharacterProps): PCharacterProps;
 begin
   AddChar^ := cp;
 end;
@@ -643,7 +641,7 @@ procedure TCharacterLineProps.InsertChars(Index: integer; Count: integer);
 begin
   Grow(Count);
  //Move everything down one cell
-  Move(chars[Index], chars[Index+Count], (charcount-(Index+Count))*SizeOf(chars[0]));
+  Move(chars[Index], chars[Index+Count], (charcount-Index)*SizeOf(chars[0]));
   Inc(charcount, Count);
  //Zero out the cells so that no reference counting is done
   FillChar(chars[Index], SizeOf(chars[Index])*Count, 00);
@@ -672,10 +670,10 @@ end;
 procedure TCharacterLineProps.DeleteChars(Index: integer; Count: integer);
 var i: integer;
 begin
-  if Count<=0 then
+  if Count<0 then
     Count := charcount+Count;
  //Move everything up Count cell
-  Move(chars[Index+Count], chars[Index], (charcount-(Index+Count)-1)*SizeOf(chars[0]));
+  Move(chars[Index+Count], chars[Index], (charcount-(Index+Count))*SizeOf(chars[0]));
   Dec(charcount, Count);
  //Zero out last cells
   FillChar(chars[charcount], SizeOf(chars[0])*Count, 00);
@@ -750,14 +748,20 @@ begin
   Result := @FList[Index];
 end;
 
-procedure TCharacterPropList.AddLine(l: TCharacterLineProps);
+procedure TCharacterPropList.AddLine(const l: TCharacterLineProps);
+var nl: PCharacterLineProps;
 begin
-  AddNewLine^ := l;
+  nl := AddNewLine;
+  nl^ := l;
+  nl.chars := Copy(l.chars);
 end;
 
-procedure TCharacterPropList.InsertLine(Index: integer; l: TCharacterLineProps);
+procedure TCharacterPropList.InsertLine(Index: integer; const l: TCharacterLineProps);
+var nl: PCharacterLineProps;
 begin
-  InsertNewLine(Index)^ := l;
+  nl := InsertNewLine(Index);
+  nl^ := l;
+  nl.chars := Copy(l.chars);
 end;
 
 procedure TCharacterPropList.DeleteLine(Index: integer);
