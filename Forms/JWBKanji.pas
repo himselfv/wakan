@@ -90,7 +90,7 @@ implementation
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiSort, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
-  JWBDicSearch, JWBKanjiCard, JWBUnit;
+  JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -946,14 +946,14 @@ var di:integer;
     o:string;
     add:TStringList;
 procedure wrid;
-var s:string;
+var s:TCharacterLineProps;
     x:integer;
 begin
   fTranslate.doc.Add(o);
-  s:='';
-  for x:=1 to length(o) div 4 do
-    s:=s+'-90000001';
-  fTranslate.doctr.Add(s);
+  s.AddChars(flength(o));
+  for x:=1 to flength(o) do
+    s.chars[x-1].SetChar('-', 9, 0, 1);
+  fTranslate.doctr.AddLine(s);
   o:='';
 end;
 begin

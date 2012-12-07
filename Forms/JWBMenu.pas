@@ -524,7 +524,8 @@ var
   TUserSheetWord,TUserSheetNumber,TUserSheetPos,TUserCatIndex,TUserCatName,TUserCatType,TUserCatCreated:integer;
   TUserConvertKanji,TUserConvertCount:integer;
   KnownLearned:integer;
-  Clip,cliptrans:string;
+  Clip:string;
+  cliptrans:TCharacterLineProps;
   NotUsedDicts:string;
   NotGroupDicts:array[1..5] of string;
   OfflineDicts:string;
@@ -2133,9 +2134,9 @@ begin
       MyHandle:=Clipboard.GetAsHandle(CF_UNICODETEXT);
       TextPtr:=GlobalLock(MyHandle);
       s:=textptr;
-      if length(s)>64000 then s:=_l('#00342^eToo much data.^cPøíliš mnoho dat.');
+      if length(s)>64000 then s:=_l('#00342^eToo much data.');
       clip := {$IFDEF UNICODE}s{$ELSE}UnicodeToHex(s){$ENDIF};
-      cliptrans:='';
+      cliptrans.Clear;
       GlobalUnlock(MyHandle);
       oldhandle:=MyHandle;
     end;

@@ -181,6 +181,14 @@ function remexcl(s:string):string;
 function strip_fl(s:string):string;
 function repl(var s:string;sub,repl:string):string;
 
+function IsUpcase(ch: AnsiChar): boolean; overload; inline;
+function IsUpcase(ch: WideChar): boolean; overload; inline;
+function IsLocase(ch: AnsiChar): boolean; overload; inline;
+function IsLocase(ch: WideChar): boolean; overload; inline;
+function LoCase(ch: AnsiChar): AnsiChar; overload; inline; //Delphi has UpCase but not LoCase for chars
+function LoCase(Ch: WideChar): WideChar; overload; inline;
+
+
 
 { Character processing }
 
@@ -717,6 +725,42 @@ begin
   while pos(sub,s)>0 do
     s:=copy(s,1,pos(sub,s)-1)+repl+copy(s,pos(sub,s)+length(sub),length(s)-pos(sub,s)+1-length(sub));
   result:=s;
+end;
+
+function IsUpcase(ch: AnsiChar): boolean;
+begin
+  Result := ch in ['A'..'Z'];
+end;
+
+function IsUpcase(ch: WideChar): boolean;
+begin
+  Result := ch in ['A'..'Z'];
+end;
+
+function IsLocase(ch: AnsiChar): boolean;
+begin
+  Result := not IsUpcase(ch);
+end;
+
+function IsLocase(ch: WideChar): boolean;
+begin
+  Result := not IsUpcase(ch);
+end;
+
+function LoCase(ch: AnsiChar): AnsiChar;
+begin
+  Result := Ch;
+  if Result in ['A'..'Z'] then
+    Inc(Result, Ord('a')-Ord('A'));
+end;
+
+function LoCase(Ch: WideChar): WideChar;
+begin
+  Result := Ch;
+  case Ch of
+    'A'..'Z':
+      Result := WideChar(Word(Ch) or $0020);
+  end;
 end;
 
 
