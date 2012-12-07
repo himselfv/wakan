@@ -7,7 +7,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, MemSource, JWBCore;
+  StdCtrls, ExtCtrls, Buttons, MemSource, JWBStrings;
 
 type
   TfExamples = class(TForm)

@@ -112,7 +112,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBCore, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
+uses JWBMenu, JWBStrings, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBWait, JWBUserDetails, JWBUserAdd,
   JWBUserFilters, JWBUserCategory, StdPrompt, PKGWrite, JWBExamples, JWBUser,
   JWBConvert, JWBWordsExpChoose;

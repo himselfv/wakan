@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
-  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBCore, JWBUtils;
+  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings, JWBUtils;
 
 type
   TfMenu = class(TForm)

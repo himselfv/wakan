@@ -7,12 +7,15 @@ Stuff you can define for the whole project:
 
 uses
   Forms,
+  JWBStrings in 'Components\JWBStrings.pas',
+  PackageCommon in 'Components\Package\PackageCommon.pas',
   TextTable in 'Components\TextTable\TextTable.pas',
   MemSource in 'Components\Package\MemSource.pas',
   PKGWrite in 'Components\Package\PKGWrite.pas' {PKGWriteForm},
   StdPrompt in 'Components\StdPrompt\StdPrompt.pas' {SMPromptForm},
   UnicodeFont in 'Forms\UnicodeFont.pas' {fSelectFont},
   JWBUnit in 'Components\JWBUnit.pas',
+  JWBKanjiCard in 'Components\JWBKanjiCard.pas',
   JWBConvertTbl in 'Components\JWBConvertTbl.pas',
   JWBConvert in 'Components\JWBConvert.pas',
   JWBUtils in 'Components\JWBUtils.pas',
@@ -60,8 +63,7 @@ uses
   JWBPopupButton in 'Forms\JWBPopupButton.pas' {fPopupButton},
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
-  JWBMedia in 'Forms\JWBMedia.pas' {fMedia},
-  PackageCommon in 'Components\Package\PackageCommon.pas';
+  JWBMedia in 'Forms\JWBMedia.pas' {fMedia};
 
 {$R *.RES}
 

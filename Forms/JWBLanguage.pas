@@ -65,7 +65,7 @@ var
 
 
 implementation
-uses JWBCore;
+uses JWBStrings;
 
 {$R *.DFM}
 

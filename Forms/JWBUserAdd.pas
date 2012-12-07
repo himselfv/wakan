@@ -37,7 +37,7 @@ var
 
 implementation
 
-uses JWBWords, JWBCore, JWBUnit, JWBMenu;
+uses JWBWords, JWBStrings, JWBUnit, JWBMenu;
 
 {$R *.DFM}
 

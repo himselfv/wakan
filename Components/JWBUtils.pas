@@ -184,7 +184,7 @@ type
 
 
 implementation
-uses JWBCore;
+uses JWBStrings;
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.
@@ -497,6 +497,5 @@ begin
   SetLength(FList, 0);
   FListUsed := 0;
 end;
-
 
 end.

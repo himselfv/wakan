@@ -302,7 +302,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBCore, JWBUnit, registry, JWBKanji, JWBTranslate,
+uses JWBMenu, JWBStrings, JWBUnit, registry, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard;

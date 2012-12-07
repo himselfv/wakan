@@ -57,7 +57,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBCore, JWBUnit, JWBKanji, JWBSettings, JWBKanjiSearch,
+uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBSettings, JWBKanjiSearch,
   JWBKanjiSort, PKGWrite;
 
 var sel:array[1..300] of boolean;

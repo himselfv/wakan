@@ -47,7 +47,7 @@ var
 
 implementation
 
-uses JWBKanji, JWBCore, JWBUnit, JWBMenu, JWBDicAdd, JWBUser, JWBWords;
+uses JWBKanji, JWBStrings, JWBUnit, JWBMenu, JWBDicAdd, JWBUser, JWBWords;
 
 var curcphonetic,curckanji,curcmeaning:string;
 

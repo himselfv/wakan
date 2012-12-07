@@ -118,7 +118,7 @@ var
 
 implementation
 
-uses JWBCore, JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
+uses JWBStrings, JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math;
 

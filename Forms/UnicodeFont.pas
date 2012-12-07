@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, Grids, JWBCore;
+  StdCtrls, Buttons, ExtCtrls, Grids, JWBStrings;
 
 type
   TfSelectFont = class(TForm)

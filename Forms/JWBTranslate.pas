@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBCore;
+  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings;
 
 {
 Various notes go here.
