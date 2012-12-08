@@ -21,10 +21,16 @@ kanji and kana uses.
 }
 
 type
-  TSaveTextAnnotMode = (
-    amDefault,    //save only those annotations which were loaded from ruby
-    amKana,       //save as text with generated kana instead of kanji
-    amRuby        //save generated kana as aozora-ruby
+  TTextAnnotMode = (
+    amDefault,
+      //do not load ruby
+      //save only those annotations which were loaded from ruby
+    amKana,
+      //do not load ruby
+      //save as text with generated kana instead of kanji
+    amRuby
+      //load ruby
+      //save generated kana as aozora-ruby
   );
 
   TfTranslate = class(TForm)
@@ -195,15 +201,16 @@ type
     buffertype:char;
     function GetInsertKana(display:boolean):string;
 
-  protected
-    FileAnnotMode: TSaveTextAnnotMode; //if we have saved the file once, we remember the choice
+  protected //File opening/saving
     FFileChanged: boolean;
+    LoadAnnotMode: TTextAnnotMode; //how to display ruby in current file
+    SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
-    procedure LoadText(filename:string;tp:byte);
-    procedure SaveText(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
+    procedure LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
   public //File open/save
     procedure OpenFile(filename:string;tp:byte);
-    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
+    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
     function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
@@ -359,9 +366,16 @@ var s,s2:string;
 begin
   docfilename:=filename;
   doctp:=tp;
-  FileAnnotMode := amDefault;
-  //by default we set FileAnnotMode to default, meaning no preference has been chosen
+
+  //by default we set SaveAnnotMode to default, meaning no preference has been chosen
   //auto-loaded rubys will be saved either way
+  SaveAnnotMode := amDefault;
+
+  //LoadAnnotMode governs how we treat incoming ruby (loading/pasting)
+  if fSettings.cbLoadAozoraRuby.Checked then
+    LoadAnnotMode := amRuby
+  else
+    LoadAnnotMode := amDefault;
 
   lblFilename.Caption:=uppercase(ExtractFilename(filename));
   doc.Clear;
@@ -474,7 +488,7 @@ begin
     end;
   end else
    //Not jtt
-    LoadText(docfilename, tp);
+      LoadText(docfilename, tp, LoadAnnotMode);
 
   view:=0;
   curx:=0;
@@ -488,7 +502,7 @@ end;
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
-procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
+procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
 var f:file;
     i,j,bc:integer;
     buf:array[0..16383] of word;
@@ -558,57 +572,168 @@ begin
   FileChanged:=false;
 end;
 
-
 //Loads classic text file in any encoding.
-procedure TfTranslate.LoadText(filename:string;tp:byte);
-var s: FString;
-  s2: FChar;
-  s3: TCharacterLineProps;
+procedure TfTranslate.LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+var c: FChar;
+  cp: TCharacterProps;
+  s: FString; //current line text
+  sp: TCharacterLineProps; //current line props
+  idxLastTextBreak: integer; //index of last ruby text break (|) on the current line, or 0
+  rubyText: FString;
+  inRubyText: boolean;
+
+  { Tries to guess where's the start of the annotated word.
+   Receives:
+     idx -- index of a character in s which WOULD contain <<AORUBY_OPEN, if we put it there.
+     (in other words, it's Length(s)+1)
+   Returns: 1..idx-1
+   In rare cases returns 0 which means ruby was the first char on the line. }
+  function GuessLastTextBreak(curidx: integer): integer;
+  begin
+    Dec(curidx); //skip <<AORUBY_OPEN
+    while (curidx>1) and (sp.chars[curidx-1].wordstate='-') do //not yet annotated
+    begin
+     //Might do more guesswork in the future
+      if EvalChar(fgetch(s, curidx))<>EvalChar(fgetch(s, curidx-1)) then
+        break;
+      Dec(curidx);
+    end;
+    Result := curidx;
+  end;
+
+  //Called to finalize currently open ruby
+  procedure FinalizeRuby;
+  var cp: PCharacterProps;
+  begin
+    if idxLastTextBreak<=0 then begin
+     //this means ruby was the first char on the line, but we have to store it somehow
+     //on save we'll ignore UH_RUBY_PLACEHOLDERs and only write ruby
+      s := UH_RUBY_PLACEHOLDER + s;
+      sp.InsertChar(0);
+      idxLastTextBreak := 1;
+    end;
+
+    with sp.chars[idxLastTextBreak-1] do begin
+      wordstate := 'F';
+      ruby := rubyText;
+      flags := flags + [cfExplicitRuby, cfRoot];
+    end;
+
+    Inc(idxLastTextBreak);
+    while idxLastTextBreak<=Length(s) do begin
+      with sp.chars[idxLastTextBreak-1] do begin
+        wordstate := '<';
+        flags := flags + [cfRoot];
+      end;
+      Inc(idxLastTextBreak);
+    end;
+
+   //for now we don't try to guess the tail of the word
+
+    rubyText := '';
+    idxLastTextBreak := 0;
+    inRubyText := false;
+  end;
+
+  //Called before we go to the next line,
+  //to save whatever needs saving and apply whatever needs applying.
+  procedure FinalizeLine;
+  begin
+    if inRubyText then
+      FinalizeRuby; //line break automatically does this
+    doc.Add(s);
+    doctr.AddLine(sp);
+    s:='';
+    sp.Clear;
+    idxLastTextBreak := 0;
+  end;
+
 begin
   s := '';
-  s3.Clear;
+  sp.Clear;
+  rubyText := '';
+  inRubyText := false;
+  idxLastTextBreak := 0;
+
   Conv_Open(filename,tp);
-  s2 := Conv_ReadChar;
+  c := Conv_ReadChar;
  {$IFDEF UNICODE}
-  while s2<>#$FFFF do
+  while c<>#$FFFF do
  {$ELSE}
-  while s2<>'' do
+  while c<>'' do
  {$ENDIF}
   begin
-    if s2=UH_CR then
-    begin
-      doc.Add(s);
-      doctr.AddLine(s3);
-      s:='';
-      s3.Clear;
+
+   //Default properties for this character
+    cp.Reset;
+    cp.SetChar('-', 9, 0, 1);
+    cp.rubyTextBreak := btAuto;
+    cp.ruby := '';
+    cp.flags := [];
+
+   //A linebreak breaks everything, even a ruby
+    if c=UH_CR then
+      FinalizeLine
+    else
+
+   //Inside of a ruby skip everything until close
+    if inRubyText then begin
+      if c=UH_AORUBY_CLOSE then
+        FinalizeRuby
+      else
+        rubyText := rubyText + c;
     end else
-    if s2<>UH_LF then begin
-      s:=s+s2;
-      s3.AddChar('-', 9, 0, 1);
+
+   //Ruby text break
+    if (AnnotMode=amRuby) and (c=UH_AORUBY_TEXTBREAK) then begin
+      idxLastTextBreak := sp.charcount+1;
+      cp.rubyTextBreak := btBreak;
+     { And continue like nothing had happened.
+      If we encounter another TEXTBREAK, that one will override this one,
+      but this one will still appear in the saves since we've set the rubyTextBreak flag for this char.
+      On the other hand, if we find <<ruby opener>> only then we'll go back and mark
+      everything from here to there as "annotated". }
+    end else
+
+   //Ruby opener
+    if (AnnotMode=amRuby) and (c=UH_AORUBY_OPEN) then
+    begin
+      if idxLastTextBreak<1 then
+        idxLastTextBreak := GuessLastTextBreak(Length(s)+1);
+      inRubyText := true;
+      rubyText := '';
+    end else
+
+   { Ruby comments and tags are not parsed here.
+    They are colored dynamically on render; see comments there. }
+
+   //Normal symbol
+    if c<>UH_LF then begin
+      s:=s+c;
+      sp.AddChar(cp);
     end;
-    s2 := Conv_ReadChar;
+
+    c := Conv_ReadChar;
   end;
   Conv_Close;
   if s<>'' then
-  begin
-    doc.Add(s);
-    doctr.AddLine(s3);
-  end;
+    FinalizeLine();
 end;
 
 {
 Ruby saving strategy:
 - We always save "hard ruby" since if its present then we have loaded it from the file
-- As for soft ruby, we save that to the file according to the user's choice.
+- As for soft ruby, we save that to the file according to user's choice.
 }
 
-procedure TfTranslate.SaveText(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
+procedure TfTranslate.SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
   reading,kanji:FString;
   rubyTextBreak: TRubyTextBreakType;
   rootLen: integer; //remaining length of the word's root, if calculated dynamically. <0 means ignore this check
+  explicitRuby: boolean;
 
   procedure outp(s: FString);
   var i: integer;
@@ -620,6 +745,7 @@ var i,j,k: integer;
 begin
   inReading := false;
   rootLen := -1;
+  explicitRuby := true;
 
   Conv_Create(filename,tp);
   for i:=0 to doc.Count-1 do
@@ -631,9 +757,9 @@ begin
        //End of word
         if (doctr[i].chars[j].wordstate<>'<')
        //End of word root. That's where we output ruby and continue with just printing kana
-        or (cfRootEnd in doctr[i].chars[j].flags)
+        or (explicitRuby and not (cfRoot in doctr[i].chars[j].flags))
         or (rootLen=0) then begin
-         //End of annotated chain
+         //=> End of annotated chain
           if AnnotMode=amKana then begin
             if reading<>'' then
               reading:=UH_SPACE+reading
@@ -649,15 +775,14 @@ begin
             reading := UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE;
             outp(reading);
           end else
-           //Just write char
             Conv_WriteChar(GetDoc(j,i));
           inReading := false;
           reading := '';
+          explicitRuby := false;
          //and we continue through to the "no inReading" case where we might start a new chain
         end else begin
          //Inside of annotated chain
           if not (AnnotMode in [amKana]) then
-           //Just write char
             Conv_WriteChar(GetDoc(j,i));
          //in amKana we skip chars to be replaced
           continue; //handled this char
@@ -669,6 +794,7 @@ begin
         if cfExplicitRuby in doctr[i].chars[j].flags then begin
           reading := doctr[i].chars[j].ruby;
           inReading := true;
+          explicitRuby := true;
           rootLen := -1;
         end;
 
@@ -676,6 +802,7 @@ begin
         if (AnnotMode in [amKana, amRuby]) and not inReading then begin
           GetTextWordInfo(j,i,meaning,reading,kanji);
           inReading := (reading<>'');
+          explicitRuby := false;
           if inReading then begin
             rootLen := 0;
            //Explicit ruby has it from file, but with implicit we have to find the word root
@@ -686,7 +813,7 @@ begin
                 break;
             if (rootLen=0)
            //we have found no match per kanji, let's try it the other way:
-           //assume the whole word is matched and check if there's anything special to reading
+           //assume the whole word is matched and check if there's anything special to the reading
             and (reading<>fcopy(doc[i], j, j+flength(reading)))
             and (AnnotMode=amRuby) //better annotate something than nothing
               //in amKana it's the reverse: better replace nothing than too much
@@ -703,7 +830,7 @@ begin
         end;
 
        //Ruby break -- if we have some kind of reading
-        if (AnnotMode<>amKana) and inReading then begin //We don't write ruby in kana at all
+        if (AnnotMode<>amKana) and inReading then begin //We don't write ruby in kana mode at all
           rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
           if rubyTextBreak=btAuto then
             if j<=0 then
@@ -717,7 +844,9 @@ begin
             Conv_WriteChar(UH_AORUBY_TEXTBREAK);
         end;
 
-        if (AnnotMode<>amKana) or (reading='') then
+        if ((AnnotMode<>amKana) or (reading=''))
+        //placeholders are virtual
+        and ((AnnotMode<>amRuby) or (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER)) then
           Conv_WriteChar(GetDoc(j,i));
       end;
 
@@ -734,7 +863,7 @@ function TfTranslate.SaveAs: boolean;
 var tp: byte;
 begin
  //If configured to, or if we have chosen this option before
-  if (FileAnnotMode=amRuby) or fSettings.cbSaveAnnotationsToRuby.Checked then
+  if (SaveAnnotMode=amRuby) or fSettings.cbSaveAnnotationsToRuby.Checked then
     SaveTextDialog.FilterIndex := 2 //"Text with readings as Aozora Ruby"
   else
     SaveTextDialog.FilterIndex := 1; //"Text file"
@@ -743,8 +872,8 @@ begin
   if not Result then exit;
 
   case SaveTextDialog.FilterIndex of
-    1: FileAnnotMode := amDefault;
-    2: FileAnnotMode := amRuby;
+    1: SaveAnnotMode := amDefault;
+    2: SaveAnnotMode := amRuby;
    //WTT file option is handled differently, that's how it was inherited.
   end;
 
@@ -754,7 +883,7 @@ begin
   else
     tp:=0; //WTT doesn't need types
 
-  SaveToFile(SaveTextDialog.FileName,tp,FileAnnotMode);
+  SaveToFile(SaveTextDialog.FileName,tp,SaveAnnotMode);
   docfilename:=SaveTextDialog.FileName;
   doctp:=tp;
   lblFilename.Caption:=uppercase(ExtractFilename(SaveTextDialog.FileName));
@@ -785,7 +914,7 @@ begin
 
   if (fSettings.CheckBox60.Checked) and (docfilename<>'') then begin
    //Auto-"Yes"
-    SaveToFile(docfilename,doctp,FileAnnotMode);
+    SaveToFile(docfilename,doctp,SaveAnnotMode);
     filechanged := false;
     exit;
   end;
@@ -807,7 +936,7 @@ begin
 
   if docfilename<>'' then begin
    //"Yes"
-    SaveToFile(docfilename,doctp,FileAnnotMode);
+    SaveToFile(docfilename,doctp,SaveAnnotMode);
     filechanged := false;
     exit;
   end;
@@ -855,7 +984,7 @@ end;
 procedure TfTranslate.Button5Click(Sender: TObject);
 begin
   if docfilename<>'' then
-    SaveToFile(docfilename,doctp,FileAnnotMode)
+    SaveToFile(docfilename,doctp,SaveAnnotMode)
   else
     SaveAs;
 end;
@@ -1753,7 +1882,10 @@ begin
       learnstate:=doctr[cy].chars[cx].learnstate;
       CalcBlockFromTo(false);
       inblock:=false;
+
       GetTextWordInfo(cx,cy,meaning,reading,kanji);
+      if cfExplicitRuby in doctr[cy].chars[cx].flags then
+        reading := doctr[cy].chars[cx].ruby; //replacing GetTextWordInfo's reading
 
       kanjilearned:=(FirstUnknownKanjiIndex(kanji)<0);
       worddict:=doctr[cy].chars[cx].dicidx;

@@ -78,8 +78,11 @@ const
   ALTCH_AT:Char = '@';
   ALTCH_TILDE:Char = '~'; //followed by 'I' and means 'italic'
   UH_SETCOLOR:Char = '%'; //followed by 6 character hex color
-  UH_LBEG: Char ='<'; //begin flag text (ex.: <dEDICT> <gram> <suf>)
-  UH_LEND: Char = '>'; //end flag text
+  UH_LBEG:Char ='<'; //begin flag text (ex.: <dEDICT> <gram> <suf>)
+  UH_LEND:Char = '>'; //end flag text
+
+  UH_RUBY_PLACEHOLDER:FChar = 'E100'; //when ruby has nothing to be attached to,
+    //but we still have to store it in the decoded form
 
  {$ELSE}
   UH_NONE:FChar = #$0000;
@@ -110,6 +113,8 @@ const
   UH_SETCOLOR:Char = #$E006;
   UH_LBEG:Char = #$E008;
   UH_LEND:Char = #$E007;
+
+  UH_RUBY_PLACEHOLDER:FChar = #$E100;
  {$ENDIF}
 
 

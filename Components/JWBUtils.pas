@@ -216,9 +216,11 @@ type
 
   TCharacterFlag = (
     cfExplicitRuby, //this character had explicit ruby attached, even if it's empty
-    cfRootEnd       //word root ends here. If none found, word roots ends with the word
-      //Roots are needed so that we only annotate the root part (that's how ruby's usually done),
-      //but if we highlight/color the word then it's the whole word.
+    cfRoot          //word root character.
+      { Roots are needed so that we only annotate the root part (that's how ruby's usually done),
+       but if we highlight/color the word then it's the whole word.
+       Only explicit ruby currently supports word roots (for implicit annotations
+       word root is guessed dynamically) }
   );
   TCharacterFlags = set of TCharacterFlag;
 
@@ -236,6 +238,7 @@ type
     rubyTextBreak: TRubyTextBreakType;
     ruby: FString;
     flags: TCharacterFlags;
+    procedure Reset;
     procedure SetChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); {$IFDEF INLINE}inline;{$ENDIF}
     procedure SetRubyChar(awordstate: char; alearnstate: byte; arubyBreak: boolean; aruby: FString); {$IFDEF INLINE}inline;{$ENDIF}
   end;
@@ -247,7 +250,7 @@ type
     charcount: integer;
     procedure Grow(ARequiredFreeLen: integer);
     function AddChar(): PCharacterProps; overload;
-    function AddChar(const cp: TCharacterProps): PCharacterProps; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure AddChar(const acp: TCharacterProps); overload; {$IFDEF INLINE}inline;{$ENDIF}
     procedure AddChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); overload; {$IFDEF INLINE}inline;{$ENDIF}
     procedure AddChars(Count: integer); overload;
     procedure AddChars(const AChars: TCharacterPropArray); overload; {$IFDEF INLINE}inline;{$ENDIF}
@@ -599,6 +602,18 @@ end;
 
 { Character props }
 
+//Resets everything to most basic state
+procedure TCharacterProps.Reset;
+begin
+  wordstate := '-'; //nothing is known
+  learnstate := 9;
+  dicidx := 0;
+  docdic := 1;
+  ruby := '';
+  rubyTextBreak := btAuto;
+  flags := [];
+end;
+
 //Sets normally annotated char data
 procedure TCharacterProps.SetChar(awordstate: char; alearnstate: byte;
   adicidx: integer; adocdic: byte);
@@ -637,9 +652,9 @@ begin
   Inc(charcount);
 end;
 
-function TCharacterLineProps.AddChar(const cp: TCharacterProps): PCharacterProps;
+procedure TCharacterLineProps.AddChar(const acp: TCharacterProps);
 begin
-  AddChar^ := cp;
+  AddChar^ := acp;
 end;
 
 //Adds normally annotated char to a line
