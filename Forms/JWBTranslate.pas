@@ -201,6 +201,9 @@ type
     buffertype:char;
     function GetInsertKana(display:boolean):string;
 
+  protected //Ruby stuff
+    procedure CollapseRuby(var s: string; var sp: TCharacterLineProps);
+
   protected //File opening/saving
     FFileChanged: boolean;
     LoadAnnotMode: TTextAnnotMode; //how to display ruby in current file
@@ -572,25 +575,29 @@ begin
   FileChanged:=false;
 end;
 
-//Loads classic text file in any encoding.
-procedure TfTranslate.LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-var c: FChar;
-  cp: TCharacterProps;
-  s: FString; //current line text
-  sp: TCharacterLineProps; //current line props
+
+//Receives a string of characters and their properties.
+//Parses all aozora-ruby sequences and converts them to annotations, removing from the line
+//Has no particular adherrence to TfTranslate, we should probably move it someplace else.
+procedure TfTranslate.CollapseRuby(var s: string; var sp: TCharacterLineProps);
+var
+  idx: integer; //current char index
+  c: FChar; //current char
+
+  explicitTextBreak: boolean;
   idxLastTextBreak: integer; //index of last ruby text break (|) on the current line, or 0
-  rubyText: FString;
+  idxRubyOpen: integer;
   inRubyText: boolean;
+
+ //WARNING! Indexing in sp starts with 0, in s with 1, remember that while reading.
 
   { Tries to guess where's the start of the annotated word.
    Receives:
-     idx -- index of a character in s which WOULD contain <<AORUBY_OPEN, if we put it there.
-     (in other words, it's Length(s)+1)
+     idx -- index of a first character just before the annotation -- 0..Length(s)
    Returns: 1..idx-1
-   In rare cases returns 0 which means ruby was the first char on the line. }
+   When given 0, returns 0 which means ruby was the first char on the line. }
   function GuessLastTextBreak(curidx: integer): integer;
   begin
-    Dec(curidx); //skip <<AORUBY_OPEN
     while (curidx>1) and (sp.chars[curidx-1].wordstate='-') do //not yet annotated
     begin
      //Might do more guesswork in the future
@@ -611,16 +618,49 @@ var c: FChar;
       s := UH_RUBY_PLACEHOLDER + s;
       sp.InsertChar(0);
       idxLastTextBreak := 1;
+      Inc(idx);
+      Inc(idxRubyOpen);
+    end else
+    if explicitTextBreak then begin
+     //Delete the char
+      s := fcopy(s, 1, idxLastTextBreak-1) + fcopy(s, idxLastTextBreak+1, flength(s)-idxLastTextBreak);
+      sp.DeleteChar(idxLastTextBreak-1);
+      Dec(idx);
+      Dec(idxRubyOpen);
     end;
+    //Now idxLastTextBreak points to first character of an annotated word (or to <<AORUBY_OPEN)
 
+    Assert(idxRubyOpen>=idxLastTextBreak);
+    if idxRubyOpen=idxLastTextBreak then begin
+     //Again, empty annotated expression
+      s := fcopy(s, 1, idxLastTextBreak-1) + UH_RUBY_PLACEHOLDER + fcopy(s, idxLastTextBreak, flength(s)-idxLastTextBreak+1);
+      with sp.InsertChar(idxLastTextBreak-1)^ do
+        Reset; //init as default char
+      Inc(idx);
+      Inc(idxRubyOpen);
+    end;
+    //Now we have at least one character to be annotated
+
+    //Copy annotation itself to char props..
     with sp.chars[idxLastTextBreak-1] do begin
       wordstate := 'F';
-      ruby := rubyText;
+      ruby := fcopy(s, idxRubyOpen+1, idx-idxRubyOpen-1);
+      if explicitTextBreak then
+        rubyTextBreak := btBreak
+      else
+        rubyTextBreak := btSkip;
       flags := flags + [cfExplicitRuby, cfRoot];
     end;
 
+   //..and delete it
+    s := fcopy(s, 1, idxRubyOpen-1) + fcopy(s, idx+1, flength(s)-idx);
+    sp.DeleteChars(idxRubyOpen-1, idx-idxRubyOpen+1);
+    idx := idxRubyOpen-1;
+
+   //idx is now at the last char of the word to annotate
+   //first char is already marked, mark the rest as "word continuation"
     Inc(idxLastTextBreak);
-    while idxLastTextBreak<=Length(s) do begin
+    while idxLastTextBreak<=idx do begin
       with sp.chars[idxLastTextBreak-1] do begin
         wordstate := '<';
         flags := flags + [cfRoot];
@@ -630,30 +670,78 @@ var c: FChar;
 
    //for now we don't try to guess the tail of the word
 
-    rubyText := '';
+   //reset everything
+    explicitTextBreak := false;
     idxLastTextBreak := 0;
+    idxRubyOpen := 0;
     inRubyText := false;
   end;
+
+begin
+  explicitTextBreak := false;
+  idxLastTextBreak := 0;
+  idxRubyOpen := 0;
+  inRubyText := false;
+
+  idx := 1;
+  while idx<flength(s) do begin
+    c := fgetch(s,idx);
+
+   //Inside of a ruby skip everything until close
+    if inRubyText then begin
+      if c=UH_AORUBY_CLOSE then
+        FinalizeRuby;
+    end else
+
+   //Ruby text break
+    if c=UH_AORUBY_TEXTBREAK then begin
+      explicitTextBreak := true;
+      idxLastTextBreak := idx;
+     { And continue like nothing had happened.
+      If we encounter another TEXTBREAK, that one will override this one,
+      and this one will appear like a normal char.
+      On the other hand, if we find <<ruby opener>> only then we'll go back and mark
+      everything from here to there as "annotated". }
+    end else
+
+   //Ruby opener
+    if c=UH_AORUBY_OPEN then
+    begin
+      if idxLastTextBreak<1 then
+        idxLastTextBreak := GuessLastTextBreak(idx-1);
+      idxRubyOpen := idx;
+      inRubyText := true;
+    end;
+
+   { Ruby comments and tags are not parsed here.
+    They are colored dynamically on render; see comments there. }
+
+    Inc(idx);
+  end;
+end;
+
+//Loads classic text file in any encoding.
+procedure TfTranslate.LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+var c: FChar;
+  cp: TCharacterProps;
+  s: FString; //current line text
+  sp: TCharacterLineProps; //current line props
 
   //Called before we go to the next line,
   //to save whatever needs saving and apply whatever needs applying.
   procedure FinalizeLine;
   begin
-    if inRubyText then
-      FinalizeRuby; //line break automatically does this
+    if AnnotMode=amRuby then
+      CollapseRuby(s, sp);
     doc.Add(s);
     doctr.AddLine(sp);
     s:='';
     sp.Clear;
-    idxLastTextBreak := 0;
   end;
 
 begin
   s := '';
   sp.Clear;
-  rubyText := '';
-  inRubyText := false;
-  idxLastTextBreak := 0;
 
   Conv_Open(filename,tp);
   c := Conv_ReadChar;
@@ -675,37 +763,6 @@ begin
     if c=UH_CR then
       FinalizeLine
     else
-
-   //Inside of a ruby skip everything until close
-    if inRubyText then begin
-      if c=UH_AORUBY_CLOSE then
-        FinalizeRuby
-      else
-        rubyText := rubyText + c;
-    end else
-
-   //Ruby text break
-    if (AnnotMode=amRuby) and (c=UH_AORUBY_TEXTBREAK) then begin
-      idxLastTextBreak := sp.charcount+1;
-      cp.rubyTextBreak := btBreak;
-     { And continue like nothing had happened.
-      If we encounter another TEXTBREAK, that one will override this one,
-      but this one will still appear in the saves since we've set the rubyTextBreak flag for this char.
-      On the other hand, if we find <<ruby opener>> only then we'll go back and mark
-      everything from here to there as "annotated". }
-    end else
-
-   //Ruby opener
-    if (AnnotMode=amRuby) and (c=UH_AORUBY_OPEN) then
-    begin
-      if idxLastTextBreak<1 then
-        idxLastTextBreak := GuessLastTextBreak(Length(s)+1);
-      inRubyText := true;
-      rubyText := '';
-    end else
-
-   { Ruby comments and tags are not parsed here.
-    They are colored dynamically on render; see comments there. }
 
    //Normal symbol
     if c<>UH_LF then begin
@@ -2692,33 +2749,66 @@ end;
 
 
 procedure TfTranslate.PasteOp;
-var y:integer;
-    i:integer;
-    l:integer;
+var s: string;
+  sp: TCharacterLineProps;
+  AnnotMode: TTextAnnotMode;
+  y:integer;
+  i:integer;
+  l:integer;
+
+  procedure FinalizeLine;
+  begin
+    if AnnotMode=amRuby then
+      CollapseRuby(s, sp);
+    doc[y] := doc[y] + s;
+    doctr[y].AddChars(sp);
+    s := '';
+    sp.Clear;
+  end;
+
+  procedure InsertNewLine;
+  begin
+    inc(y);
+    doc.Insert(y,'');
+    doctr.InsertNewLine(y);
+  end;
+
 begin
   resolvebuffer:=false;
   if insertbuffer<>'' then ResolveInsert(true);
   ClearInsBlock;
 
+  if docfilename<>'' then
+    AnnotMode := LoadAnnotMode
+  else
+    if fSettings.cbLoadAozoraRuby.Checked then
+      AnnotMode := amRuby
+    else
+      AnnotMode := amDefault;
+
+  s := '';
+  sp.Clear;
+
   SplitLine(rcurx,rcury);
   y:=rcury;
   for i:=1 to flength(clip) do
   begin
-    if fgetch(clip,i)=UH_LF then
-    begin
-      inc(y);
-      doc.Insert(y,'');
-      doctr.InsertNewLine(y);
+    if fgetch(clip,i)=UH_LF then begin
+      FinalizeLine;
+      InsertNewLine;
     end else
     if fgetch(clip,i)<>UH_CR then
     begin
-      doc[y]:=doc[y]+fgetch(clip,i);
+      s:=s+fgetch(clip,i);
       if cliptrans.charcount>i-1 then
-        doctr[y].AddChar(cliptrans.chars[i-1])
+        sp.AddChar(cliptrans.chars[i-1])
       else
-        doctr[y].AddChar('-', 9, 0, 1);
+        sp.AddChar('-', 9, 0, 1);
     end;
   end;
+
+  if Length(s)>0 then
+    FinalizeLine;
 
   l:=flength(doc[y]);
   JoinLine(y);
@@ -2768,13 +2858,13 @@ begin
     begin
       doc[blockfromy]:=fcopy(doc[blockfromy],1,blockfromx)
         +fcopy(doc[blockfromy],blocktox+1,flength(doc[blockfromy])-blocktox);
-      doctr[blockfromy].DeleteChars(blockfromx+1, blocktox-blockfromx-1);
+      doctr[blockfromy].DeleteChars(blockfromx, blocktox-blockfromx);
     end else
     begin
       doc[blockfromy]:=fcopy(doc[blockfromy],1,blockfromx);
       doc[blocktoy]:=fcopy(doc[blocktoy],blocktox+1,flength(doc[blocktoy])-blocktox);
-      doctr[blockfromy].DeleteChars(blockfromx+1);
-      doctr[blocktoy].DeleteChars(1, blocktox);
+      doctr[blockfromy].DeleteChars(blockfromx);
+      doctr[blocktoy].DeleteChars(0, blocktox);
       for i:=blockfromy+1 to blocktoy-1 do
       begin
         doc.Delete(blockfromy+1);

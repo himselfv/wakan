@@ -650,6 +650,7 @@ begin
   Grow(1);
   Result := @chars[charcount];
   Inc(charcount);
+  Result^.Reset;
 end;
 
 procedure TCharacterLineProps.AddChar(const acp: TCharacterProps);
