@@ -55,6 +55,14 @@ const
   UH_IDG_SPACE:FChar = '3000'; //Ideographic space (full-width)
   UH_IDG_COMMA:FChar = '3001';
 
+  UH_AORUBY_BLOCKOPEN:FChar = 'FF5C';
+  UH_AORUBY_OPEN:FChar = '300A';
+  UH_AORUBY_CLOSE:FChar = '300B';
+  UH_AORUBY_COMM_OPEN:FChar = 'FF3B'
+  UH_AORUBY_COMM_CLOSE:FChar = 'FF3D';
+  UH_AORUBY_TAG_OPEN:FChar = '003C';
+  UH_AORUBY_TAG_CLOSE:FChar = '003E';
+
  { Control Characters.
   Wakan uses single characters like 'U', '~', '@' to control text markup.
   We can't do that in Unicode because those characters can legitimately occur in text.
@@ -84,6 +92,14 @@ const
   UH_ELLIPSIS:FChar = #$2026;
   UH_IDG_SPACE:FChar = #$3000;
   UH_IDG_COMMA:FChar = #$3001;
+
+  UH_AORUBY_TEXTBREAK:FChar = '｜';
+  UH_AORUBY_OPEN:FChar = '《';
+  UH_AORUBY_CLOSE:FChar = '》';
+  UH_AORUBY_COMM_OPEN:FChar = '［';
+  UH_AORUBY_COMM_CLOSE:FChar = '］';
+  UH_AORUBY_TAG_OPEN:FChar = '<';
+  UH_AORUBY_TAG_CLOSE:FChar = '>';
 
   UH_UNKNOWN_KANJI:Char = #$E001;
 

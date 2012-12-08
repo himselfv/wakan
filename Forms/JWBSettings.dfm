@@ -2,7 +2,7 @@ object fSettings: TfSettings
   Left = 451
   Top = 131
   BorderStyle = bsDialog
-  Caption = '#00397^eSettings^cNastavení'
+  Caption = '#00397^eSettings^cNastaven'#1085
   ClientHeight = 558
   ClientWidth = 497
   Color = clBtnFace
@@ -16,6 +16,9 @@ object fSettings: TfSettings
   Scaled = False
   ShowHint = True
   OnShow = FormShow
+  DesignSize = (
+    497
+    558)
   PixelsPerInch = 96
   TextHeight = 13
   object PageControl1: TPageControl
@@ -23,21 +26,21 @@ object fSettings: TfSettings
     Top = 8
     Width = 479
     Height = 508
-    ActivePage = TabSheet10
+    ActivePage = TabSheet13
     Anchors = [akLeft, akTop, akRight, akBottom]
     MultiLine = True
     TabOrder = 0
     object TabSheet8: TTabSheet
-      Caption = '#00398^eGeneral^cObecné'
+      Caption = '#00398^eGeneral^cObecn'#1081
       ImageIndex = 7
       object Label41: TLabel
         Left = 16
         Top = 224
-        Width = 376
+        Width = 390
         Height = 13
         Caption = 
-          '#00399^eDictionary entries grid font height:^cVelikost písma v m' +
-          'øížce slovníku:'
+          '#00399^eDictionary entries grid font height:^cVelikost p'#1085'sma v m' +
+          #1096#1085#1115'ce slovn'#1085'ku:'
       end
       object Label47: TLabel
         Left = 288
@@ -53,12 +56,12 @@ object fSettings: TfSettings
         Height = 17
         Hint = 
           '#00401^eSaves statistical information to disk, filename is gener' +
-          'ated by date so you can check your progress^cUloží na disk údaje' +
-          ' o statistice podle aktuálního data takže mùžete sledovat vývoj ' +
+          'ated by date so you can check your progress^cUlo'#1115#1085' na disk '#1098'daje' +
+          ' o statistice podle aktu'#1073'ln'#1085'ho data tak'#1115'e m'#1097#1115'ete sledovat v'#1101'voj ' +
           'statistiky'
         Caption = 
-          '#00402^eSave statistics to disk (folder STAT)^cUkládat statistik' +
-          'u na disk (složka STAT)'
+          '#00402^eSave statistics to disk (folder STAT)^cUkl'#1073'dat statistik' +
+          'u na disk (slo'#1115'ka STAT)'
         TabOrder = 0
       end
       object CheckBox10: TCheckBox
@@ -68,10 +71,10 @@ object fSettings: TfSettings
         Height = 17
         Hint = 
           '#00403^eShows words with non-learned kanji in different color^cZ' +
-          'obrazuje slova s nenauèenými znaky odlišnou barvou'
+          'obrazuje slova s nenau'#1080'en'#1101'mi znaky odli'#1113'nou barvou'
         Caption = 
-          '#00404^eDifferentiate words with non-learned characters^cOdlišov' +
-          'at slova s nenauèenými znaky'
+          '#00404^eDifferentiate words with non-learned characters^cOdli'#1113'ov' +
+          'at slova s nenau'#1080'en'#1101'mi znaky'
         TabOrder = 1
       end
       object CheckBox11: TCheckBox
@@ -81,11 +84,11 @@ object fSettings: TfSettings
         Height = 17
         Hint = 
           '#00405^eColors: green - mastered, yellow - learned, cyan - unlea' +
-          'rned, red - problematic^cBarvy: zelená - dobøe nauèeno, žlutá - ' +
-          'nauèeno, modrá - nenauèeno, èervená - problematické'
+          'rned, red - problematic^cBarvy: zelen'#1073' - dob'#1096'e nau'#1080'eno, '#1115'lut'#1073' - ' +
+          'nau'#1080'eno, modr'#1073' - nenau'#1080'eno, '#1080'erven'#1073' - problematick'#1081
         Caption = 
           '#00406^eShow word learned-status by different background color^c' +
-          'Zobrazit nauèenost slov pomocí rùzných barev pozadí'
+          'Zobrazit nau'#1080'enost slov pomoc'#1085' r'#1097'zn'#1101'ch barev pozad'#1085
         TabOrder = 2
       end
       object CheckBox46: TCheckBox
@@ -95,11 +98,11 @@ object fSettings: TfSettings
         Height = 17
         Hint = 
           '#00405^eColors: green - mastered, yellow - learned, cyan - unlea' +
-          'rned, red - problematic^cBarvy: zelená - dobøe nauèeno, žlutá - ' +
-          'nauèeno, modrá - nenauèeno, èervená - problematické'
+          'rned, red - problematic^cBarvy: zelen'#1073' - dob'#1096'e nau'#1080'eno, '#1115'lut'#1073' - ' +
+          'nau'#1080'eno, modr'#1073' - nenau'#1080'eno, '#1080'erven'#1073' - problematick'#1081
         Caption = 
-          '#00407^eAuto-save user data on exit^cPøi ukonèení automaticky ul' +
-          'ožit uživatelská data'
+          '#00407^eAuto-save user data on exit^cP'#1096'i ukon'#1080'en'#1085' automaticky ul' +
+          'o'#1115'it u'#1115'ivatelsk'#1073' data'
         TabOrder = 3
       end
       object Edit25: TEdit
@@ -116,8 +119,8 @@ object fSettings: TfSettings
         Width = 417
         Height = 17
         Caption = 
-          '#00408^eLoad dictionaries on demand^cNahrávat slovníky pouze pøi' +
-          ' žádosti'
+          '#00408^eLoad dictionaries on demand^cNahr'#1073'vat slovn'#1085'ky pouze p'#1096'i' +
+          ' '#1115#1073'dosti'
         TabOrder = 5
       end
       object CheckBox53: TCheckBox
@@ -125,7 +128,7 @@ object fSettings: TfSettings
         Top = 272
         Width = 353
         Height = 17
-        Caption = '#00409^eMulti-line word grids^cVíce øádkové møížky slov'
+        Caption = '#00409^eMulti-line word grids^cV'#1085'ce '#1096#1073'dkov'#1081' m'#1096#1085#1115'ky slov'
         TabOrder = 6
       end
       object CheckBox54: TCheckBox
@@ -134,8 +137,8 @@ object fSettings: TfSettings
         Width = 193
         Height = 17
         Caption = 
-          '#00410^eAuto-save user database every ^cAutomaticky uložit uživ.' +
-          ' databázi každých'
+          '#00410^eAuto-save user database every ^cAutomaticky ulo'#1115'it u'#1115'iv.' +
+          ' datab'#1073'zi ka'#1115'd'#1101'ch'
         TabOrder = 7
       end
       object Edit29: TEdit
@@ -153,7 +156,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00411^eMake backup of user file into BACKUP folder every day^cU' +
-          'dìlat zálohu uživatelského souboru do BACKUP adresáøe každý den'
+          'd'#1084'lat z'#1073'lohu u'#1115'ivatelsk'#1081'ho souboru do BACKUP adres'#1073#1096'e ka'#1115'd'#1101' den'
         TabOrder = 9
       end
       object RadioGroup5: TRadioGroup
@@ -162,16 +165,16 @@ object fSettings: TfSettings
         Width = 353
         Height = 85
         Hint = 
-          '#00432^eSelects what chinese characters are displayed^cVýbìr typ' +
-          'u èínských znakù, které jsou zobrazeny'
+          '#00432^eSelects what chinese characters are displayed^cV'#1101'b'#1084'r typ' +
+          'u '#1080#1085'nsk'#1101'ch znak'#1097', kter'#1081' jsou zobrazeny'
         Caption = 
-          '#00883^eChinese character mode && character conversion^cRežim èí' +
-          'nských znakù a konverze'
+          '#00883^eChinese character mode && character conversion^cRe'#1115'im '#1080#1085 +
+          'nsk'#1101'ch znak'#1097' a konverze'
         ItemIndex = 0
         Items.Strings = (
-          '#00434^eTraditional (Big5) only^cPouze tradièní (Big5)'
-          '#00435^eSimplified (GB2312) only^cPouze zjednodušené (GB2312)'
-          '#00436^eAll characters (Unicode)^cVšechny znaky (Unicode)')
+          '#00434^eTraditional (Big5) only^cPouze tradi'#1080'n'#1085' (Big5)'
+          '#00435^eSimplified (GB2312) only^cPouze zjednodu'#1113'en'#1081' (GB2312)'
+          '#00436^eAll characters (Unicode)^cV'#1113'echny znaky (Unicode)')
         TabOrder = 10
       end
       object CheckBox70: TCheckBox
@@ -181,7 +184,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '^eDisplay message when word is added to vocabulary^cZobrazit zpr' +
-          'ávu, když je slovíèko pøidáno do slovníku'
+          #1073'vu, kdy'#1115' je slov'#1085#1080'ko p'#1096'id'#1073'no do slovn'#1085'ku'
         TabOrder = 11
       end
     end
@@ -192,8 +195,11 @@ object fSettings: TfSettings
         Top = 8
         Width = 457
         Height = 177
-        Caption = '#00413^eRomanization of japanese^cRomanizace japonštiny'
+        Caption = '#00413^eRomanization of japanese^cRomanizace japon'#1113'tiny'
         TabOrder = 0
+        DesignSize = (
+          457
+          177)
         object Shape1: TShape
           Left = 16
           Top = 145
@@ -238,21 +244,21 @@ object fSettings: TfSettings
           Top = 120
           Width = 159
           Height = 13
-          Caption = '#00415^eJapanese:^cJaponské:'
+          Caption = '#00415^eJapanese:^cJaponsk'#1081':'
         end
         object Label18: TLabel
           Left = 248
           Top = 136
           Width = 142
           Height = 13
-          Caption = '#00416^eEnglish:^cAnglické:'
+          Caption = '#00416^eEnglish:^cAnglick'#1081':'
         end
         object Label19: TLabel
           Left = 248
           Top = 152
-          Width = 127
+          Width = 128
           Height = 13
-          Caption = '#00417^eCzech:^cÈeské:'
+          Caption = '#00417^eCzech:^c'#1048'esk'#1081':'
         end
         object Label20: TLabel
           Left = 344
@@ -310,15 +316,15 @@ object fSettings: TfSettings
           Height = 61
           Hint = 
             '#00418^eSelect romanization system used in both input and displa' +
-            'y^cVýbìr romanizaèního systému pro vstup i pro zobrazení'
-          Caption = '#00419^eRomanization system^cRomanizaèní systém'
+            'y^cV'#1101'b'#1084'r romaniza'#1080'n'#1085'ho syst'#1081'mu pro vstup i pro zobrazen'#1085
+          Caption = '#00419^eRomanization system^cRomaniza'#1080'n'#1085' syst'#1081'm'
           ItemIndex = 0
           Items.Strings = (
             
-              '#00420^eKunreishiki romaji (japanese)^cKunreišiki rómadži (japon' +
-              'ský)'
-            '#00421^eHepburn (english)^cHepburnùv (anglický)'
-            '#00422^eCzech^cÈeský')
+              '#00420^eKunreishiki romaji (japanese)^cKunrei'#1113'iki r'#1091'mad'#1115'i (japon' +
+              'sk'#1101')'
+            '#00421^eHepburn (english)^cHepburn'#1097'v (anglick'#1101')'
+            '#00422^eCzech^c'#1048'esk'#1101)
           TabOrder = 0
           OnClick = RadioGroup1Click
         end
@@ -327,11 +333,11 @@ object fSettings: TfSettings
           Top = 20
           Width = 225
           Height = 61
-          Caption = '#00423^eShow phonetic in^cZobraz fonetické zápisy v'
+          Caption = '#00423^eShow phonetic in^cZobraz fonetick'#1081' z'#1073'pisy v'
           ItemIndex = 0
           Items.Strings = (
-            '#00424^eHiragana / Katakana^cHiraganì / Katakanì'
-            '#00425^eRomaji^cRómadži')
+            '#00424^eHiragana / Katakana^cHiragan'#1084' / Katakan'#1084
+            '#00425^eRomaji^cR'#1091'mad'#1115'i')
           TabOrder = 1
           OnClick = RadioGroup1Click
         end
@@ -349,8 +355,11 @@ object fSettings: TfSettings
         Top = 192
         Width = 457
         Height = 161
-        Caption = '#00426^eRomanization of chinese^cRomanizace èínštiny'
+        Caption = '#00426^eRomanization of chinese^cRomanizace '#1080#1085'n'#1113'tiny'
         TabOrder = 1
+        DesignSize = (
+          457
+          161)
         object Label27: TLabel
           Left = 16
           Top = 88
@@ -449,8 +458,8 @@ object fSettings: TfSettings
           Height = 61
           Hint = 
             '#00418^eSelect romanization system used in both input and displa' +
-            'y^cVýbìr romanizaèního systému pro vstup i pro zobrazení'
-          Caption = '#00419^eRomanization system^cRomanizaèní systém'
+            'y^cV'#1101'b'#1084'r romaniza'#1080'n'#1085'ho syst'#1081'mu pro vstup i pro zobrazen'#1085
+          Caption = '#00419^eRomanization system^cRomaniza'#1080'n'#1085' syst'#1081'm'
           ItemIndex = 0
           Items.Strings = (
             'PinYin'
@@ -464,7 +473,7 @@ object fSettings: TfSettings
           Top = 20
           Width = 225
           Height = 61
-          Caption = '#00423^eShow phonetic in^cZobraz fonetické zápisy v'
+          Caption = '#00423^eShow phonetic in^cZobraz fonetick'#1081' z'#1073'pisy v'
           ItemIndex = 0
           Items.Strings = (
             'BoPoMoFo'
@@ -483,23 +492,23 @@ object fSettings: TfSettings
       end
     end
     object TabSheet2: TTabSheet
-      Caption = '#00298^eCharacter list^cSeznam znakù'
+      Caption = '#00298^eCharacter list^cSeznam znak'#1097
       ImageIndex = 1
       object Label35: TLabel
         Left = 16
         Top = 96
-        Width = 231
+        Width = 232
         Height = 13
-        Caption = '#00427^eDisplayed radical:^cZobrazený radikál:'
+        Caption = '#00427^eDisplayed radical:^cZobrazen'#1101' radik'#1073'l:'
       end
       object Label52: TLabel
         Left = 13
         Top = 192
-        Width = 647
+        Width = 659
         Height = 13
         Caption = 
           '#00920^eHow many most frequent compounds to display in "Freq" mo' +
-          'de:^cKolik nejfrekventovanìjších složenin zobrazit v režimu "Fre' +
+          'de:^cKolik nejfrekventovan'#1084'j'#1113#1085'ch slo'#1115'enin zobrazit v re'#1115'imu "Fre' +
           'q"'
       end
       object RadioGroup3: TRadioGroup
@@ -507,12 +516,12 @@ object fSettings: TfSettings
         Top = 12
         Width = 401
         Height = 77
-        Caption = '#00428^cVelikost znaku v møížce^eCharacter size in grid'
+        Caption = '#00428^cVelikost znaku v m'#1096#1085#1115'ce^eCharacter size in grid'
         ItemIndex = 0
         Items.Strings = (
-          '#00429^cMalá^eSmall'
-          '#00430^cStøední^eMedium'
-          '#00431^cVelká^eLarge')
+          '#00429^cMal'#1073'^eSmall'
+          '#00430^cSt'#1096'edn'#1085'^eMedium'
+          '#00431^cVelk'#1073'^eLarge')
         TabOrder = 0
       end
       object CheckBox1: TCheckBox
@@ -521,7 +530,7 @@ object fSettings: TfSettings
         Width = 305
         Height = 17
         Caption = 
-          '#00437^eShow stroke count in grid^cZobrazovat poèet tahù v møížc' +
+          '#00437^eShow stroke count in grid^cZobrazovat po'#1080'et tah'#1097' v m'#1096#1085#1115'c' +
           'e'
         TabOrder = 1
       end
@@ -531,15 +540,14 @@ object fSettings: TfSettings
         Width = 233
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 2
         Items.Strings = (
           'Bushu'
           'Unicode'
-          '#00438^eJapanese^cJaponský'
+          '#00438^eJapanese^cJaponsk'#1101
           'KanWa'
           'KangXi'
-          '#00439^eKorean^cKorejský')
+          '#00439^eKorean^cKorejsk'#1101)
       end
       object CheckBox51: TCheckBox
         Left = 8
@@ -547,8 +555,8 @@ object fSettings: TfSettings
         Width = 433
         Height = 17
         Caption = 
-          '#00440^eUse grid font for displaying stroke order^cPoužít font m' +
-          'øížky pro zobrazení poøadí tahù'
+          '#00440^eUse grid font for displaying stroke order^cPou'#1115#1085't font m' +
+          #1096#1085#1115'ky pro zobrazen'#1085' po'#1096'ad'#1085' tah'#1097
         TabOrder = 3
         Visible = False
       end
@@ -558,8 +566,8 @@ object fSettings: TfSettings
         Width = 433
         Height = 17
         Caption = 
-          '#00891^eSearch by yomi can ignore okurigana^cHledání podle yomi ' +
-          'mùže ignorovat okuriganu'
+          '#00891^eSearch by yomi can ignore okurigana^cHled'#1073'n'#1085' podle yomi ' +
+          'm'#1097#1115'e ignorovat okuriganu'
         TabOrder = 4
       end
       object Edit34: TEdit
@@ -572,15 +580,15 @@ object fSettings: TfSettings
       end
     end
     object TabSheet4: TTabSheet
-      Caption = '#00217^eDictionary^cSlovník'
+      Caption = '#00217^eDictionary^cSlovn'#1085'k'
       ImageIndex = 3
       object Label26: TLabel
         Left = 16
         Top = 280
-        Width = 336
+        Width = 343
         Height = 13
         Caption = 
-          '#00441^eNot used dictionary files^cNepoužívané soubory se slovní' +
+          '#00441^eNot used dictionary files^cNepou'#1115#1085'van'#1081' soubory se slovn'#1085 +
           'ky:'
         Visible = False
       end
@@ -589,7 +597,7 @@ object fSettings: TfSettings
         Top = 16
         Width = 441
         Height = 137
-        Caption = '#00442^eSearch results order^cPoøadí výsledkù hledání'
+        Caption = '#00442^eSearch results order^cPo'#1096'ad'#1085' v'#1101'sledk'#1097' hled'#1073'n'#1085
         TabOrder = 0
         object CheckBox4: TCheckBox
           Left = 8
@@ -597,8 +605,8 @@ object fSettings: TfSettings
           Width = 401
           Height = 17
           Caption = 
-            '#00443^ePrefer words in user dictionary^cPreferovat slova v uživ' +
-            'atelském slovníku'
+            '#00443^ePrefer words in user dictionary^cPreferovat slova v u'#1115'iv' +
+            'atelsk'#1081'm slovn'#1085'ku'
           TabOrder = 0
         end
         object CheckBox5: TCheckBox
@@ -607,7 +615,7 @@ object fSettings: TfSettings
           Width = 401
           Height = 17
           Caption = 
-            '#00444^ePrefer nouns and verbs^cPreferovat podstatná jména a slo' +
+            '#00444^ePrefer nouns and verbs^cPreferovat podstatn'#1073' jm'#1081'na a slo' +
             'vesa'
           TabOrder = 1
         end
@@ -616,7 +624,7 @@ object fSettings: TfSettings
           Top = 64
           Width = 385
           Height = 17
-          Caption = '#00445^ePrefer polite words^cPreferovat zdvoøilá slova'
+          Caption = '#00445^ePrefer polite words^cPreferovat zdvo'#1096'il'#1073' slova'
           TabOrder = 2
         end
         object CheckBox7: TCheckBox
@@ -626,7 +634,7 @@ object fSettings: TfSettings
           Height = 17
           Caption = 
             '#00446^ePrefer popular words (marked by "pop")^cPreferovat popul' +
-            'ární slova (oznaèena "pop")'
+            #1073'rn'#1085' slova (ozna'#1080'ena "pop")'
           TabOrder = 3
         end
         object CheckBox59: TCheckBox
@@ -635,8 +643,8 @@ object fSettings: TfSettings
           Width = 417
           Height = 17
           Caption = 
-            '#00921^eOrder by word frequency (where available)^cTøídit podle ' +
-            'frekvence slov (když je k dispozici)'
+            '#00921^eOrder by word frequency (where available)^cT'#1096#1085'dit podle ' +
+            'frekvence slov (kdy'#1115' je k dispozici)'
           TabOrder = 4
         end
       end
@@ -647,7 +655,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00447^eReplace kanji with kana for words marked "kana"^cNahradi' +
-          't kanji pomocí kany u slov oznaèených "kana"'
+          't kanji pomoc'#1085' kany u slov ozna'#1080'en'#1101'ch "kana"'
         TabOrder = 1
       end
       object Edit19: TEdit
@@ -668,7 +676,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00448^eDisplay only results that fit one page in "Auto" mode^cZ' +
-          'obrazit jen výsledky, které se vejdou na stránku v "Auto" režimu'
+          'obrazit jen v'#1101'sledky, kter'#1081' se vejdou na str'#1073'nku v "Auto" re'#1115'imu'
         TabOrder = 3
       end
       object CheckBox50: TCheckBox
@@ -677,8 +685,8 @@ object fSettings: TfSettings
         Width = 433
         Height = 17
         Caption = 
-          '#00449^eAuto-switch to Examples panel^cAutomaticky pøepnout na p' +
-          'anel Pøíklady'
+          '#00449^eAuto-switch to Examples panel^cAutomaticky p'#1096'epnout na p' +
+          'anel P'#1096#1085'klady'
         TabOrder = 4
       end
       object CheckBox58: TCheckBox
@@ -687,8 +695,8 @@ object fSettings: TfSettings
         Width = 441
         Height = 17
         Caption = 
-          '#00922^eDisplay word count for each word^cZobrazovat frekvenèní ' +
-          'poèet u každého slova'
+          '#00922^eDisplay word count for each word^cZobrazovat frekven'#1080'n'#1085' ' +
+          'po'#1080'et u ka'#1115'd'#1081'ho slova'
         TabOrder = 5
       end
     end
@@ -700,7 +708,7 @@ object fSettings: TfSettings
         Top = 367
         Width = 229
         Height = 13
-        Caption = '#00923^eEnglish font:^cFont pro anglické texty:'
+        Caption = '#00923^eEnglish font:^cFont pro anglick'#1081' texty:'
       end
       object SpeedButton4: TSpeedButton
         Left = 376
@@ -721,7 +729,7 @@ object fSettings: TfSettings
         Top = 341
         Width = 257
         Height = 13
-        Caption = '#00456^eFont for small text:^cFont pro drobné nápisy:'
+        Caption = '#00456^eFont for small text:^cFont pro drobn'#1081' n'#1073'pisy:'
       end
       object SpeedButton5: TSpeedButton
         Left = 376
@@ -740,9 +748,9 @@ object fSettings: TfSettings
       object Label51: TLabel
         Left = 8
         Top = 395
-        Width = 319
+        Width = 322
         Height = 13
-        Caption = '#00924^eRomanization && PinYin font:^cRomanizaèní a PinYin font:'
+        Caption = '#00924^eRomanization && PinYin font:^cRomaniza'#1080'n'#1085' a PinYin font:'
       end
       object SpeedButton14: TSpeedButton
         Left = 376
@@ -763,14 +771,14 @@ object fSettings: TfSettings
         Top = 40
         Width = 457
         Height = 108
-        Caption = '#00453^eJapanese fonts^cJaponské fonty'
+        Caption = '#00453^eJapanese fonts^cJaponsk'#1081' fonty'
         TabOrder = 0
         object Label1: TLabel
           Left = 8
           Top = 24
-          Width = 301
+          Width = 309
           Height = 13
-          Caption = '#00454^eFont for characters in grid:^cFont pro znaky v møížce:'
+          Caption = '#00454^eFont for characters in grid:^cFont pro znaky v m'#1096#1085#1115'ce:'
         end
         object SpeedButton1: TSpeedButton
           Left = 368
@@ -791,7 +799,7 @@ object fSettings: TfSettings
           Top = 51
           Width = 272
           Height = 13
-          Caption = '#00455^eFont for big characters:^cFont pro velké znaky:'
+          Caption = '#00455^eFont for big characters:^cFont pro velk'#1081' znaky:'
         end
         object SpeedButton2: TSpeedButton
           Left = 368
@@ -810,11 +818,11 @@ object fSettings: TfSettings
         object Label50: TLabel
           Left = 8
           Top = 78
-          Width = 327
+          Width = 340
           Height = 13
           Caption = 
-            '#00875^eStroke order display font:^cFont pro zobrazení poøadí ta' +
-            'hù:'
+            '#00875^eStroke order display font:^cFont pro zobrazen'#1085' po'#1096'ad'#1085' ta' +
+            'h'#1097':'
         end
         object SpeedButton13: TSpeedButton
           Left = 368
@@ -876,16 +884,16 @@ object fSettings: TfSettings
         Top = 153
         Width = 457
         Height = 178
-        Caption = '#00457^eChinese fonts:^cÈínské fonty:'
+        Caption = '#00457^eChinese fonts:^c'#1048#1085'nsk'#1081' fonty:'
         TabOrder = 2
         object Label6: TLabel
           Left = 8
           Top = 24
-          Width = 429
+          Width = 440
           Height = 13
           Caption = 
             '#00458^eBig5 font for traditional characters in grid:^cBig5 font' +
-            ' pro tradièní znaky v møížce:'
+            ' pro tradi'#1080'n'#1085' znaky v m'#1096#1085#1115'ce:'
         end
         object SpeedButton6: TSpeedButton
           Left = 368
@@ -904,11 +912,11 @@ object fSettings: TfSettings
         object Label7: TLabel
           Left = 8
           Top = 76
-          Width = 400
+          Width = 403
           Height = 13
           Caption = 
             '#00459^eBig5 font for big traditional characters:^cBig5 font pro' +
-            ' velké tradièní znaky:'
+            ' velk'#1081' tradi'#1080'n'#1085' znaky:'
         end
         object SpeedButton7: TSpeedButton
           Left = 368
@@ -927,9 +935,9 @@ object fSettings: TfSettings
         object Label8: TLabel
           Left = 8
           Top = 145
-          Width = 282
+          Width = 285
           Height = 13
-          Caption = '#00460^eComplete unicode font:^cKompletní unicode font:'
+          Caption = '#00460^eComplete unicode font:^cKompletn'#1085' unicode font:'
         end
         object SpeedButton8: TSpeedButton
           Left = 368
@@ -948,11 +956,11 @@ object fSettings: TfSettings
         object Label3: TLabel
           Left = 8
           Top = 50
-          Width = 493
+          Width = 506
           Height = 13
           Caption = 
             '#00461^eGB2312 font for simplified characters in grid:^cGB2312 f' +
-            'ont pro zjednodušené znaky v møížce:'
+            'ont pro zjednodu'#1113'en'#1081' znaky v m'#1096#1085#1115'ce:'
         end
         object SpeedButton3: TSpeedButton
           Left = 368
@@ -971,11 +979,11 @@ object fSettings: TfSettings
         object Label9: TLabel
           Left = 8
           Top = 102
-          Width = 464
+          Width = 469
           Height = 13
           Caption = 
             '#00462^eGB2312 font for big simplified characters:^cGB2312 font ' +
-            'pro velké zjednodušené znaky:'
+            'pro velk'#1081' zjednodu'#1113'en'#1081' znaky:'
         end
         object SpeedButton9: TSpeedButton
           Left = 368
@@ -994,12 +1002,12 @@ object fSettings: TfSettings
         object Label10: TLabel
           Left = 8
           Top = 126
-          Width = 872
+          Width = 878
           Height = 14
           Caption = 
             '#00463^eMake sure that the Big5 and GB2312 fonts are either the ' +
-            'same or at least look the same.^cUjistìte se, že oba Big5 a GB23' +
-            '12 fonty jsou buï stejné nebo stejnì vypadají.'
+            'same or at least look the same.^cUjist'#1084'te se, '#1115'e oba Big5 a GB23' +
+            '12 fonty jsou bu'#1087' stejn'#1081' nebo stejn'#1084' vypadaj'#1085'.'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -1063,7 +1071,7 @@ object fSettings: TfSettings
         Top = 8
         Width = 457
         Height = 25
-        Caption = '#00464^eSelect recommended fonts^cNastavit doporuèené fonty'
+        Caption = '#00464^eSelect recommended fonts^cNastavit doporu'#1080'en'#1081' fonty'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1100,10 +1108,10 @@ object fSettings: TfSettings
       object Label11: TLabel
         Left = 16
         Top = 344
-        Width = 374
+        Width = 380
         Height = 13
         Caption = 
-          '#00466^cPoèet øádek na ètvercové stranì:^eNumber of lines on squ' +
+          '#00466^cPo'#1080'et '#1096#1073'dek na '#1080'tvercov'#1081' stran'#1084':^eNumber of lines on squ' +
           'are page:'
       end
       object CheckBox14: TCheckBox
@@ -1111,7 +1119,7 @@ object fSettings: TfSettings
         Top = 296
         Width = 241
         Height = 17
-        Caption = '#00467^ePrint horizontal lines^cTisknout horizontální èáry'
+        Caption = '#00467^ePrint horizontal lines^cTisknout horizont'#1073'ln'#1085' '#1080#1073'ry'
         TabOrder = 0
       end
       object CheckBox15: TCheckBox
@@ -1119,7 +1127,7 @@ object fSettings: TfSettings
         Top = 296
         Width = 241
         Height = 17
-        Caption = '#00468^ePrint vertical lines^cTisknout vertikální èáry'
+        Caption = '#00468^ePrint vertical lines^cTisknout vertik'#1073'ln'#1085' '#1080#1073'ry'
         TabOrder = 1
       end
       object CheckBox16: TCheckBox
@@ -1127,7 +1135,7 @@ object fSettings: TfSettings
         Top = 320
         Width = 241
         Height = 17
-        Caption = '#00469^eVary colors^cStøídat barvy'
+        Caption = '#00469^eVary colors^cSt'#1096#1085'dat barvy'
         TabOrder = 2
       end
       object CheckBox17: TCheckBox
@@ -1135,7 +1143,7 @@ object fSettings: TfSettings
         Top = 320
         Width = 313
         Height = 17
-        Caption = '#00470^eDo not print unlearned kanji^cNetisknout nenauèené znaky'
+        Caption = '#00470^eDo not print unlearned kanji^cNetisknout nenau'#1080'en'#1081' znaky'
         TabOrder = 3
       end
       object GroupBox4: TGroupBox
@@ -1148,9 +1156,9 @@ object fSettings: TfSettings
         object Label23: TLabel
           Left = 16
           Top = 248
-          Width = 233
+          Width = 237
           Height = 13
-          Caption = '#00472^eUser settings:^cUživatelské nastavení:'
+          Caption = '#00472^eUser settings:^cU'#1115'ivatelsk'#1081' nastaven'#1085':'
         end
         object ListBox1: TListBox
           Left = 16
@@ -1164,33 +1172,33 @@ object fSettings: TfSettings
           Font.Style = []
           ItemHeight = 14
           Items.Strings = (
-            '#00473^ePhonetic            |Meaning^cÈtení            |Význam'
-            '#00474^eWritten             |Meaning^cZápis            |Význam'
-            '#00475^ePhonetic |Written   |Meaning^cÈtení   |Zápis   |Význam'
-            '#00476^eWritten  |Phonetic  |Meaning^cZápis   |Ètení   |Význam'
-            '#00477^eRomaji   |Kana      |Meaning^cRomaji  |Kana    |Význam'
-            '#00478^ePhonetic1           |Phonetic2^cÈtení1           |Ètení2'
-            '#00479^eWritten1            |Written2^cZápis1           |Zápis2'
-            '#00480^eMeaning1            |Meaning2^cVýznam1          |Význam2'
+            '#00473^ePhonetic            |Meaning^c'#1048'ten'#1085'            |V'#1101'znam'
+            '#00474^eWritten             |Meaning^cZ'#1073'pis            |V'#1101'znam'
+            '#00475^ePhonetic |Written   |Meaning^c'#1048'ten'#1085'   |Z'#1073'pis   |V'#1101'znam'
+            '#00476^eWritten  |Phonetic  |Meaning^cZ'#1073'pis   |'#1048'ten'#1085'   |V'#1101'znam'
+            '#00477^eRomaji   |Kana      |Meaning^cRomaji  |Kana    |V'#1101'znam'
+            '#00478^ePhonetic1           |Phonetic2^c'#1048'ten'#1085'1           |'#1048'ten'#1085'2'
+            '#00479^eWritten1            |Written2^cZ'#1073'pis1           |Z'#1073'pis2'
+            '#00480^eMeaning1            |Meaning2^cV'#1101'znam1          |V'#1101'znam2'
             
-              '#00481^ePhonetic1|Phonetic2 |Phonetic3|Phonetic4^cÈtení1  |Ètení' +
-              '2  |Ètení3  |Ètení4'
+              '#00481^ePhonetic1|Phonetic2 |Phonetic3|Phonetic4^c'#1048'ten'#1085'1  |'#1048'ten'#1085 +
+              '2  |'#1048'ten'#1085'3  |'#1048'ten'#1085'4'
             
-              '#00482^eWritten1 |Written2  |Written3 |Written4^cZápis1  |Zápis2' +
-              '  |Zápis3  |Zápis4'
+              '#00482^eWritten1 |Written2  |Written3 |Written4^cZ'#1073'pis1  |Z'#1073'pis2' +
+              '  |Z'#1073'pis3  |Z'#1073'pis4'
             
-              '#00483^eMeaning1 |Meaning2  |Meaning3 |Meaning4^cVýznam1 |Význam' +
-              '2 |Význam3 |Význam4'
+              '#00483^eMeaning1 |Meaning2  |Meaning3 |Meaning4^cV'#1101'znam1 |V'#1101'znam' +
+              '2 |V'#1101'znam3 |V'#1101'znam4'
             
-              '#00484^ePhonetic1|Written1  |Phonetic2|Written2^cÈtení1  |Zápis1' +
-              '  |Ètení2  |Zápis2'
+              '#00484^ePhonetic1|Written1  |Phonetic2|Written2^c'#1048'ten'#1085'1  |Z'#1073'pis1' +
+              '  |'#1048'ten'#1085'2  |Z'#1073'pis2'
             
-              '#00485^ePhonetic1|Meaning1  |Phonetic2|Meaning2^cÈtení1  |Význam' +
-              '1 |Ètení2  |Význam2'
+              '#00485^ePhonetic1|Meaning1  |Phonetic2|Meaning2^c'#1048'ten'#1085'1  |V'#1101'znam' +
+              '1 |'#1048'ten'#1085'2  |V'#1101'znam2'
             
-              '#00486^eWritten1 |Meaning1  |Written2 |Meaning2^cZápis1  |Význam' +
-              '1 |Zápis2  |Význam2'
-            '#00487^eUser settings^cUživatelské nastavení')
+              '#00486^eWritten1 |Meaning1  |Written2 |Meaning2^cZ'#1073'pis1  |V'#1101'znam' +
+              '1 |Z'#1073'pis2  |V'#1101'znam2'
+            '#00487^eUser settings^cU'#1115'ivatelsk'#1081' nastaven'#1085)
           ParentFont = False
           TabOrder = 0
           OnClick = ListBox1Click
@@ -1214,41 +1222,41 @@ object fSettings: TfSettings
       end
     end
     object TabSheet6: TTabSheet
-      Caption = '#00488^eCharacter cards printing^cTisk karet znakù'
+      Caption = '#00488^eCharacter cards printing^cTisk karet znak'#1097
       ImageIndex = 5
       object Label12: TLabel
         Left = 8
         Top = 8
-        Width = 486
+        Width = 497
         Height = 13
         Caption = 
-          '#00489^cPoèet znakù na výšku na ètvercové stranì:^eVertical numb' +
+          '#00489^cPo'#1080'et znak'#1097' na v'#1101#1113'ku na '#1080'tvercov'#1081' stran'#1084':^eVertical numb' +
           'er of characters on square page:'
       end
       object Label13: TLabel
         Left = 8
         Top = 56
-        Width = 512
+        Width = 519
         Height = 13
         Caption = 
-          '#00952^cProstor pro složeniny ze slovíèek (ve znacích):^eSpace f' +
+          '#00952^cProstor pro slo'#1115'eniny ze slov'#1085#1080'ek (ve znac'#1085'ch):^eSpace f' +
           'or vocabulary compounds (in characters):'
       end
       object Label14: TLabel
         Left = 8
         Top = 104
-        Width = 437
+        Width = 447
         Height = 13
         Caption = 
-          '#00953^cPoèet složenin ze slovíèek na výšku:^eVertical number of' +
+          '#00953^cPo'#1080'et slo'#1115'enin ze slov'#1085#1080'ek na v'#1101#1113'ku:^eVertical number of' +
           ' vocabulary compounds:'
       end
       object Label15: TLabel
         Left = 8
         Top = 152
-        Width = 214
+        Width = 215
         Height = 13
-        Caption = '#00492^eCalligraphy font:^cKaligrafický font:'
+        Caption = '#00492^eCalligraphy font:^cKaligrafick'#1101' font:'
       end
       object SpeedButton10: TSpeedButton
         Left = 136
@@ -1267,9 +1275,9 @@ object fSettings: TfSettings
       object Label53: TLabel
         Left = 208
         Top = 104
-        Width = 293
+        Width = 295
         Height = 13
-        Caption = '#00951^cPoèet plných složenin:^eNumber of full compounds:'
+        Caption = '#00951^cPo'#1080'et pln'#1101'ch slo'#1115'enin:^eNumber of full compounds:'
       end
       object Edit11: TEdit
         Left = 8
@@ -1301,7 +1309,7 @@ object fSettings: TfSettings
         Width = 217
         Height = 17
         Caption = 
-          '#00493^ePrint vocabulary compounds^cTisknout složeniny ze slovíè' +
+          '#00493^ePrint vocabulary compounds^cTisknout slo'#1115'eniny ze slov'#1085#1080 +
           'ek'
         TabOrder = 3
       end
@@ -1310,7 +1318,7 @@ object fSettings: TfSettings
         Top = 224
         Width = 209
         Height = 17
-        Caption = '#00494^ePrint radical^cTisknout radikál'
+        Caption = '#00494^ePrint radical^cTisknout radik'#1073'l'
         TabOrder = 4
       end
       object CheckBox20: TCheckBox
@@ -1318,7 +1326,7 @@ object fSettings: TfSettings
         Top = 248
         Width = 225
         Height = 17
-        Caption = '#00495^ePrint alternate form^cTisknout alternativní formu'
+        Caption = '#00495^ePrint alternate form^cTisknout alternativn'#1085' formu'
         TabOrder = 5
       end
       object CheckBox21: TCheckBox
@@ -1326,7 +1334,7 @@ object fSettings: TfSettings
         Top = 272
         Width = 257
         Height = 17
-        Caption = '#00496^ePrint outer lines^cTisknout vnìjší èáry'
+        Caption = '#00496^ePrint outer lines^cTisknout vn'#1084'j'#1113#1085' '#1080#1073'ry'
         TabOrder = 6
       end
       object CheckBox22: TCheckBox
@@ -1334,7 +1342,7 @@ object fSettings: TfSettings
         Top = 224
         Width = 209
         Height = 17
-        Caption = '#00497^ePrint readings^cTisknout ètení'
+        Caption = '#00497^ePrint readings^cTisknout '#1080'ten'#1085
         TabOrder = 7
       end
       object CheckBox23: TCheckBox
@@ -1342,7 +1350,7 @@ object fSettings: TfSettings
         Top = 296
         Width = 225
         Height = 17
-        Caption = '#00498^ePrint inner lines^cTisknout vnitøní èáry'
+        Caption = '#00498^ePrint inner lines^cTisknout vnit'#1096'n'#1085' '#1080#1073'ry'
         TabOrder = 8
       end
       object Edit14: TEdit
@@ -1361,7 +1369,7 @@ object fSettings: TfSettings
         Width = 241
         Height = 17
         Caption = 
-          '#00499^ePrint vertically (right to left)^cTisknout vertikálnì (z' +
+          '#00499^ePrint vertically (right to left)^cTisknout vertik'#1073'ln'#1084' (z' +
           'prava doleva)'
         TabOrder = 10
       end
@@ -1370,7 +1378,7 @@ object fSettings: TfSettings
         Top = 344
         Width = 241
         Height = 17
-        Caption = '#00500^eLeave space between columns^cVynech místo mezi sloupci'
+        Caption = '#00500^eLeave space between columns^cVynech m'#1085'sto mezi sloupci'
         TabOrder = 11
       end
       object CheckBox44: TCheckBox
@@ -1386,7 +1394,7 @@ object fSettings: TfSettings
         Top = 272
         Width = 217
         Height = 17
-        Caption = '#00502^ePrint stroke count^cTisknout poèet tahù'
+        Caption = '#00502^ePrint stroke count^cTisknout po'#1080'et tah'#1097
         TabOrder = 13
       end
       object CheckBox52: TCheckBox
@@ -1394,7 +1402,7 @@ object fSettings: TfSettings
         Top = 296
         Width = 225
         Height = 17
-        Caption = '#00503^ePrint stroke order^cTisknout poøadí tahù'
+        Caption = '#00503^ePrint stroke order^cTisknout po'#1096'ad'#1085' tah'#1097
         TabOrder = 14
       end
       object CheckBox62: TCheckBox
@@ -1402,7 +1410,7 @@ object fSettings: TfSettings
         Top = 200
         Width = 217
         Height = 17
-        Caption = '#00954^ePrint full compounds^cTisknout plné složeniny'
+        Caption = '#00954^ePrint full compounds^cTisknout pln'#1081' slo'#1115'eniny'
         TabOrder = 15
       end
       object CheckBox63: TCheckBox
@@ -1411,7 +1419,7 @@ object fSettings: TfSettings
         Width = 217
         Height = 17
         Caption = 
-          '#00956^eSort compounds by frequency^cTøídit složeniny podle frek' +
+          '#00956^eSort compounds by frequency^cT'#1096#1085'dit slo'#1115'eniny podle frek' +
           'vence'
         TabOrder = 16
       end
@@ -1425,7 +1433,7 @@ object fSettings: TfSettings
       end
     end
     object TabSheet7: TTabSheet
-      Caption = '#00504^eDatabase maintenance^cÚdržba databáze'
+      Caption = '#00504^eDatabase maintenance^c'#1066'dr'#1115'ba datab'#1073'ze'
       ImageIndex = 6
       object Label48: TLabel
         Left = 224
@@ -1447,8 +1455,8 @@ object fSettings: TfSettings
         Width = 441
         Height = 25
         Caption = 
-          '#00505^eCheck dictionary database indexes^cOtestuj indexy databá' +
-          'ze slovníku'
+          '#00505^eCheck dictionary database indexes^cOtestuj indexy datab'#1073 +
+          'ze slovn'#1085'ku'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1466,7 +1474,7 @@ object fSettings: TfSettings
         Height = 25
         Caption = 
           '#00506^eExport user database into delimited text file^cExportova' +
-          't uživatelskou databázi do textového souboru s oddìlovaèi'
+          't u'#1115'ivatelskou datab'#1073'zi do textov'#1081'ho souboru s odd'#1084'lova'#1080'i'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1483,7 +1491,7 @@ object fSettings: TfSettings
         Height = 25
         Caption = 
           '#00507^eImport user database from delimited text file^cImportova' +
-          't uživatelskou databázi z textového souboru s oddìlovaèi'
+          't u'#1115'ivatelskou datab'#1073'zi z textov'#1081'ho souboru s odd'#1084'lova'#1080'i'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1500,7 +1508,7 @@ object fSettings: TfSettings
         Height = 25
         Caption = 
           '#00508^eCheck user dictionary categories^cOtestovat kategorie sl' +
-          'ovíèek'
+          'ov'#1085#1080'ek'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1517,7 +1525,7 @@ object fSettings: TfSettings
         Height = 25
         Caption = 
           '#00509^eShow memory allocation stats^cZobrazit statistiky alokac' +
-          'e pamìti'
+          'e pam'#1084'ti'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1554,16 +1562,16 @@ object fSettings: TfSettings
       end
     end
     object TabSheet9: TTabSheet
-      Caption = '#00300^eText translator^cPøeklad textu'
+      Caption = '#00300^eText translator^cP'#1096'eklad textu'
       ImageIndex = 8
       object Label25: TLabel
         Left = 16
         Top = 248
-        Width = 428
+        Width = 434
         Height = 13
         Caption = 
-          '#00510^eNumber of lines reserved to meaning:^cPoèet øádek rezerv' +
-          'ovaných pro význam:'
+          '#00510^eNumber of lines reserved to meaning:^cPo'#1080'et '#1096#1073'dek rezerv' +
+          'ovan'#1101'ch pro v'#1101'znam:'
       end
       object GroupBox5: TGroupBox
         Left = 16
@@ -1575,18 +1583,18 @@ object fSettings: TfSettings
         object Label24: TLabel
           Left = 16
           Top = 72
-          Width = 374
+          Width = 380
           Height = 13
           Caption = 
-            '#00512^eNumber of lines on square page:^cPoèet øádek na ètvercov' +
-            'é stranì:'
+            '#00512^eNumber of lines on square page:^cPo'#1080'et '#1096#1073'dek na '#1080'tvercov' +
+            #1081' stran'#1084':'
         end
         object CheckBox29: TCheckBox
           Left = 16
           Top = 24
           Width = 193
           Height = 17
-          Caption = '#00272^eDisplay reading^cZobrazit ètení'
+          Caption = '#00272^eDisplay reading^cZobrazit '#1080'ten'#1085
           TabOrder = 0
         end
         object CheckBox30: TCheckBox
@@ -1594,7 +1602,7 @@ object fSettings: TfSettings
           Top = 24
           Width = 209
           Height = 17
-          Caption = '#00513^eDisplay meaning^cZobrazit význam'
+          Caption = '#00513^eDisplay meaning^cZobrazit v'#1101'znam'
           TabOrder = 1
         end
         object CheckBox31: TCheckBox
@@ -1602,7 +1610,7 @@ object fSettings: TfSettings
           Top = 48
           Width = 265
           Height = 17
-          Caption = '#00514^eDo not use colors^cNepoužívat barvy'
+          Caption = '#00514^eDo not use colors^cNepou'#1115#1085'vat barvy'
           TabOrder = 2
         end
         object CheckBox37: TCheckBox
@@ -1611,8 +1619,8 @@ object fSettings: TfSettings
           Width = 377
           Height = 17
           Caption = 
-            '#00515^ePrint vertically in columns^cTisknout vertikálnì do slou' +
-            'pcù'
+            '#00515^ePrint vertically in columns^cTisknout vertik'#1073'ln'#1084' do slou' +
+            'pc'#1097
           TabOrder = 3
         end
         object Edit18: TEdit
@@ -1629,7 +1637,7 @@ object fSettings: TfSettings
         Top = 32
         Width = 401
         Height = 17
-        Caption = '#00516^eDisplay lines^cZobrazovat èáry'
+        Caption = '#00516^eDisplay lines^cZobrazovat '#1080#1073'ry'
         Checked = True
         State = cbChecked
         TabOrder = 1
@@ -1640,8 +1648,8 @@ object fSettings: TfSettings
         Width = 353
         Height = 17
         Caption = 
-          '#00517^eDo not display meaning in learned words^cNezobrazovat vý' +
-          'znam nauèených slova'
+          '#00517^eDo not display meaning in learned words^cNezobrazovat v'#1101 +
+          'znam nau'#1080'en'#1101'ch slova'
         TabOrder = 2
       end
       object CheckBox34: TCheckBox
@@ -1649,7 +1657,7 @@ object fSettings: TfSettings
         Top = 128
         Width = 353
         Height = 17
-        Caption = '#00518^eDo not search for particles^cNevyhledávat partikule'
+        Caption = '#00518^eDo not search for particles^cNevyhled'#1073'vat partikule'
         TabOrder = 3
       end
       object CheckBox35: TCheckBox
@@ -1658,8 +1666,8 @@ object fSettings: TfSettings
         Width = 377
         Height = 17
         Caption = 
-          '#00519^eDo not display reading of learned kanji^cNezobrazovat èt' +
-          'ení nauèených znakù'
+          '#00519^eDo not display reading of learned kanji^cNezobrazovat '#1080't' +
+          'en'#1085' nau'#1080'en'#1101'ch znak'#1097
         TabOrder = 4
       end
       object CheckBox36: TCheckBox
@@ -1668,7 +1676,7 @@ object fSettings: TfSettings
         Width = 393
         Height = 17
         Caption = 
-          '#00884^eDisplay transcript above kana^cZobrazovat pøepis nad kan' +
+          '#00884^eDisplay transcript above kana^cZobrazovat p'#1096'epis nad kan' +
           'ou'
         Checked = True
         State = cbChecked
@@ -1680,8 +1688,8 @@ object fSettings: TfSettings
         Width = 377
         Height = 17
         Caption = 
-          '#00521^eDo not translate hiragana-only words^cNepøekládat slova ' +
-          'pouze v hiraganì'
+          '#00521^eDo not translate hiragana-only words^cNep'#1096'ekl'#1073'dat slova ' +
+          'pouze v hiragan'#1084
         TabOrder = 6
       end
       object CheckBox40: TCheckBox
@@ -1691,7 +1699,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00522^eDisplay words with user-defined translation in bold^cZob' +
-          'razovat slova s uživatelsky definovaným pøekladem tuènì'
+          'razovat slova s u'#1115'ivatelsky definovan'#1101'm p'#1096'ekladem tu'#1080'n'#1084
         Checked = True
         State = cbChecked
         TabOrder = 7
@@ -1709,7 +1717,7 @@ object fSettings: TfSettings
         Top = 176
         Width = 225
         Height = 17
-        Caption = '#00523^eLeave space between lines^cVynechat místo mezi øádky'
+        Caption = '#00523^eLeave space between lines^cVynechat m'#1085'sto mezi '#1096#1073'dky'
         Checked = True
         State = cbChecked
         TabOrder = 9
@@ -1720,8 +1728,8 @@ object fSettings: TfSettings
         Width = 433
         Height = 17
         Caption = 
-          '#00524^eBreak lines only at word boundaries^cRozdìlovat øádky je' +
-          'n na rozhraní slov'
+          '#00524^eBreak lines only at word boundaries^cRozd'#1084'lovat '#1096#1073'dky je' +
+          'n na rozhran'#1085' slov'
         Checked = True
         State = cbChecked
         TabOrder = 10
@@ -1731,7 +1739,7 @@ object fSettings: TfSettings
         Top = 248
         Width = 97
         Height = 17
-        Caption = '#00525^eDouble size^cDvojnásobná velikost'
+        Caption = '#00525^eDouble size^cDvojn'#1073'sobn'#1073' velikost'
         TabOrder = 11
       end
       object CheckBox41: TCheckBox
@@ -1741,7 +1749,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00526^eDisplay non-japanese chars in grey^cZobrazovat nejaponsk' +
-          'é znaky šedì'
+          #1081' znaky '#1113'ed'#1084
         Checked = True
         State = cbChecked
         TabOrder = 12
@@ -1752,7 +1760,7 @@ object fSettings: TfSettings
         Top = 224
         Width = 401
         Height = 17
-        Caption = '#00527^eShow editor hint^cZobrazit nápovìdu pøi psaní'
+        Caption = '#00527^eShow editor hint^cZobrazit n'#1073'pov'#1084'du p'#1096'i psan'#1085
         Checked = True
         State = cbChecked
         TabOrder = 13
@@ -1762,7 +1770,7 @@ object fSettings: TfSettings
         Top = 224
         Width = 225
         Height = 17
-        Caption = '#00528^eDisplay meaning on hint^cZobrazit význam v nápovìdì'
+        Caption = '#00528^eDisplay meaning on hint^cZobrazit v'#1101'znam v n'#1073'pov'#1084'd'#1084
         Checked = True
         State = cbChecked
         TabOrder = 14
@@ -1773,8 +1781,8 @@ object fSettings: TfSettings
         Width = 217
         Height = 17
         Caption = 
-          '#00529^eLeave space even when reading is off^cVynechat místo i k' +
-          'dyž je ètení vypnuto'
+          '#00529^eLeave space even when reading is off^cVynechat m'#1085'sto i k' +
+          'dy'#1115' je '#1080'ten'#1085' vypnuto'
         TabOrder = 15
       end
       object cbTranslateNoLongTextWarning: TCheckBox
@@ -1787,21 +1795,24 @@ object fSettings: TfSettings
       end
     end
     object TabSheet10: TTabSheet
-      Caption = '#00530^eCharacter details^cDetaily znakù'
+      Caption = '#00530^eCharacter details^cDetaily znak'#1097
       ImageIndex = 9
+      DesignSize = (
+        471
+        372)
       object Label34: TLabel
         Left = 8
         Top = 8
-        Width = 230
+        Width = 231
         Height = 13
-        Caption = '#00531^eDisplayed items:^cZobrazené položky:'
+        Caption = '#00531^eDisplayed items:^cZobrazen'#1081' polo'#1115'ky:'
       end
       object SpeedButton11: TSpeedButton
         Left = 448
         Top = 98
         Width = 23
         Height = 79
-        Hint = '#00532^eMove up^cPøesuò nahoru'
+        Hint = '#00532^eMove up^cP'#1096'esu'#1090' nahoru'
         Anchors = [akTop, akRight]
         Enabled = False
         Glyph.Data = {
@@ -1827,7 +1838,7 @@ object fSettings: TfSettings
         Top = 234
         Width = 23
         Height = 79
-        Hint = '#00533^eMove down^cPøesuò dolù'
+        Hint = '#00533^eMove down^cP'#1096'esu'#1090' dol'#1097
         Anchors = [akTop, akRight]
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
@@ -1863,7 +1874,7 @@ object fSettings: TfSettings
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
-        Caption = '#00534^eAdd...^cPøidat...'
+        Caption = '#00534^eAdd...^cP'#1096'idat...'
         TabOrder = 1
         OnClick = Button7Click
       end
@@ -1873,7 +1884,7 @@ object fSettings: TfSettings
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
-        Caption = '#00535^eChange...^cZmìnit...'
+        Caption = '#00535^eChange...^cZm'#1084'nit...'
         TabOrder = 2
         OnClick = Button8Click
       end
@@ -1883,7 +1894,7 @@ object fSettings: TfSettings
         Width = 97
         Height = 25
         Anchors = [akLeft, akBottom]
-        Caption = '#00536^eDelete^cZrušit'
+        Caption = '#00536^eDelete^cZru'#1113'it'
         TabOrder = 3
         OnClick = Button9Click
       end
@@ -1892,7 +1903,7 @@ object fSettings: TfSettings
         Top = 1
         Width = 150
         Height = 22
-        Caption = '#00537^eReset to default^cNastavit implicitní'
+        Caption = '#00537^eReset to default^cNastavit implicitn'#1085
         TabOrder = 4
         OnClick = Button10Click
       end
@@ -1903,19 +1914,19 @@ object fSettings: TfSettings
       object Label36: TLabel
         Left = 8
         Top = 80
-        Width = 349
+        Width = 362
         Height = 13
         Caption = 
-          '#00539^ePopup delay (x100 ms):^cZpoždìní pøed zobrazením (x100 m' +
+          '#00539^ePopup delay (x100 ms):^cZpo'#1115'd'#1084'n'#1085' p'#1096'ed zobrazen'#1085'm (x100 m' +
           's):'
       end
       object Label37: TLabel
         Left = 8
         Top = 112
-        Width = 341
+        Width = 344
         Height = 13
         Caption = 
-          '#00540^eText scan range (pixels):^cRozsah prohledávání textu (pi' +
+          '#00540^eText scan range (pixels):^cRozsah prohled'#1073'v'#1073'n'#1085' textu (pi' +
           'xely):'
       end
       object Label38: TLabel
@@ -1935,11 +1946,11 @@ object fSettings: TfSettings
       object Label40: TLabel
         Left = 8
         Top = 144
-        Width = 396
+        Width = 403
         Height = 13
         Caption = 
-          '#00543^eMax. number of dictionary entries:^cMaximální poèet polo' +
-          'žek ze slovníku:'
+          '#00543^eMax. number of dictionary entries:^cMaxim'#1073'ln'#1085' po'#1080'et polo' +
+          #1115'ek ze slovn'#1085'ku:'
       end
       object Label43: TLabel
         Left = 8
@@ -1953,26 +1964,26 @@ object fSettings: TfSettings
       object Label44: TLabel
         Left = 8
         Top = 208
-        Width = 850
+        Width = 872
         Height = 13
         Caption = 
           '#00545^eNumber of characters reserved for compounds on a card (a' +
-          'ffects overall popup width):^cPoèet znakù rezervovaných pro slož' +
-          'eniny na kartì (ovlivní celkovou šíøku okna):'
+          'ffects overall popup width):^cPo'#1080'et znak'#1097' rezervovan'#1101'ch pro slo'#1115 +
+          'eniny na kart'#1084' (ovlivn'#1085' celkovou '#1113#1085#1096'ku okna):'
       end
       object Label45: TLabel
         Left = 104
         Top = 224
-        Width = 155
+        Width = 157
         Height = 13
-        Caption = '#00546^eMinimum:^cMinimálnì:'
+        Caption = '#00546^eMinimum:^cMinim'#1073'ln'#1084':'
       end
       object Label46: TLabel
         Left = 264
         Top = 224
-        Width = 161
+        Width = 163
         Height = 13
-        Caption = '#00547^eMaximum:^cMaximálnì:'
+        Caption = '#00547^eMaximum:^cMaxim'#1073'ln'#1084':'
       end
       object CheckBox28: TCheckBox
         Left = 8
@@ -1980,8 +1991,8 @@ object fSettings: TfSettings
         Width = 353
         Height = 17
         Caption = 
-          '#00548^eShow translation for japanese/chinese text^cZobrazit pøe' +
-          'klad pro japonský/èínský text'
+          '#00548^eShow translation for japanese/chinese text^cZobrazit p'#1096'e' +
+          'klad pro japonsk'#1101'/'#1080#1085'nsk'#1101' text'
         TabOrder = 0
       end
       object CheckBox47: TCheckBox
@@ -1991,7 +2002,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00549^eShow translation for english text (only for screen)^cZob' +
-          'razit pøeklad pro anglický text (pouze v režimu obrazovky)'
+          'razit p'#1096'eklad pro anglick'#1101' text (pouze v re'#1115'imu obrazovky)'
         TabOrder = 1
       end
       object CheckBox48: TCheckBox
@@ -2062,6 +2073,9 @@ object fSettings: TfSettings
     object TabSheet12: TTabSheet
       Caption = '#00551^eColors^cBarvy'
       ImageIndex = 11
+      DesignSize = (
+        471
+        372)
       object Shape2: TShape
         Left = 8
         Top = 332
@@ -2092,7 +2106,7 @@ object fSettings: TfSettings
         Width = 217
         Height = 25
         Anchors = [akLeft, akBottom]
-        Caption = '#00553^eChange^cZmìnit'
+        Caption = '#00553^eChange^cZm'#1084'nit'
         TabOrder = 1
         OnClick = Button12Click
       end
@@ -2102,7 +2116,7 @@ object fSettings: TfSettings
         Width = 121
         Height = 25
         Anchors = [akLeft, akBottom]
-        Caption = '#00554^eRevert to default^cVrátit na výchozí'
+        Caption = '#00554^eRevert to default^cVr'#1073'tit na v'#1101'choz'#1085
         TabOrder = 2
         OnClick = Button14Click
       end
@@ -2111,7 +2125,7 @@ object fSettings: TfSettings
         Top = 8
         Width = 129
         Height = 25
-        Caption = '#00555^eSet all to default^cNastavit vše na výchozí'
+        Caption = '#00555^eSet all to default^cNastavit v'#1113'e na v'#1101'choz'#1085
         TabOrder = 3
         OnClick = Button15Click
       end
@@ -2121,15 +2135,14 @@ object fSettings: TfSettings
         Width = 313
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 4
         OnChange = ComboBox2Change
         Items.Strings = (
-          '#00298^eCharacter list^cSeznam znakù'
-          '#00556^eWord grids^cMøížky slov'
-          '#00557^eWord markers^cPøíznaky slov'
-          '#00558^eEditor & translator^cEditor / Pøekládání'
-          '#00559^ePopup tool^cPopup nástroj')
+          '#00298^eCharacter list^cSeznam znak'#1097
+          '#00556^eWord grids^cM'#1096#1085#1115'ky slov'
+          '#00557^eWord markers^cP'#1096#1085'znaky slov'
+          '#00558^eEditor & translator^cEditor / P'#1096'ekl'#1073'd'#1073'n'#1085
+          '#00559^ePopup tool^cPopup n'#1073'stroj')
       end
       object CheckBox3: TCheckBox
         Left = 8
@@ -2138,8 +2151,8 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00560^eDo not use colors in character list, use Windows default' +
-          ' colors instead^cNepoužívat barvy v seznamu znakù, použít nastav' +
-          'ení Windows'
+          ' colors instead^cNepou'#1115#1085'vat barvy v seznamu znak'#1097', pou'#1115#1085't nastav' +
+          'en'#1085' Windows'
         Checked = True
         State = cbChecked
         TabOrder = 5
@@ -2152,7 +2165,7 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '#00561^eDo not use colors in editor, use Windows default colors ' +
-          'instead^cNepoužívat barvy v editoru, použít místo toho barvy Win' +
+          'instead^cNepou'#1115#1085'vat barvy v editoru, pou'#1115#1085't m'#1085'sto toho barvy Win' +
           'dows'
         Checked = True
         State = cbChecked
@@ -2166,11 +2179,11 @@ object fSettings: TfSettings
         Height = 17
         Hint = 
           '#00562^eColors: black - common, grey - uncommon, blue - learned,' +
-          ' green - only in names^cBarvy: èerná - bìžný znak, šedá - vzácný' +
-          ', modrá - nauèený, zelená - pouze ve jménech'
+          ' green - only in names^cBarvy: '#1080'ern'#1073' - b'#1084#1115'n'#1101' znak, '#1113'ed'#1073' - vz'#1073'cn'#1101 +
+          ', modr'#1073' - nau'#1080'en'#1101', zelen'#1073' - pouze ve jm'#1081'nech'
         Caption = 
           '#00563^eDo not use colors in word grids, use Windows default col' +
-          'ors instead^cNepoužívat barvy v møížce slov, použít barvy Window' +
+          'ors instead^cNepou'#1115#1085'vat barvy v m'#1096#1085#1115'ce slov, pou'#1115#1085't barvy Window' +
           's'
         TabOrder = 7
         OnClick = CheckBox9Click
@@ -2179,33 +2192,97 @@ object fSettings: TfSettings
     object TabSheet13: TTabSheet
       Caption = '^eEditor^cEditor'
       ImageIndex = 12
-      object CheckBox60: TCheckBox
+      object lblAozoraRuby: TLabel
         Left = 8
-        Top = 8
-        Width = 457
-        Height = 17
-        Caption = '^eAuto-save file on exit^cAutomaticky uložit soubor pøi ukonèení'
-        TabOrder = 0
+        Top = 109
+        Width = 77
+        Height = 13
+        Caption = 'Aozora Ruby:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
       end
-      object CheckBox61: TCheckBox
+      object lblSaving: TLabel
+        Left = 8
+        Top = 13
+        Width = 114
+        Height = 13
+        Caption = 'Saving and loading:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object lblSaveAnnotationsToRubyDesc: TLabel
+        Left = 16
+        Top = 218
+        Width = 315
+        Height = 13
+        Caption = 
+          '^eIf not, you'#39'll have the option of choosing that when you save ' +
+          'file.'
+      end
+      object lblAozoraTagsInColor: TLabel
+        Left = 16
+        Top = 174
+        Width = 174
+        Height = 13
+        Caption = '^eYou can set colors on Colors page'
+      end
+      object CheckBox60: TCheckBox
         Left = 8
         Top = 32
         Width = 457
         Height = 17
-        Caption = 
-          '^eAuto-load last opened file on start^cAutomaticky nahrát naposl' +
-          'ed otevøený soubor pøi startu'
+        Caption = '^eAuto-save file on exit'
+        TabOrder = 0
+      end
+      object CheckBox61: TCheckBox
+        Left = 8
+        Top = 56
+        Width = 457
+        Height = 17
+        Caption = '^eAuto-load last opened file on start'
         TabOrder = 1
       end
       object cbNoSaveChangesWarning: TCheckBox
         Left = 8
-        Top = 56
+        Top = 80
         Width = 457
         Height = 17
         Caption = 
           '^eDo not ask to save changes on exit (WARNING: Use at your own r' +
           'isk)'
         TabOrder = 2
+      end
+      object cbLoadAozoraRuby: TCheckBox
+        Left = 8
+        Top = 128
+        Width = 457
+        Height = 17
+        Caption = '^eShow Aozora-Ruby as annotations (requires text reload)'
+        TabOrder = 3
+      end
+      object cbAozoraTagsInColor: TCheckBox
+        Left = 8
+        Top = 151
+        Width = 457
+        Height = 17
+        Caption = '^eShow Aozora-Ruby tags in color'
+        TabOrder = 4
+      end
+      object cbSaveAnnotationsToRuby: TCheckBox
+        Left = 8
+        Top = 195
+        Width = 457
+        Height = 17
+        Caption = '^eSave annotations as Aozora-Ruby tags by default'
+        TabOrder = 5
       end
     end
     object TabSheet14: TTabSheet
@@ -2235,8 +2312,8 @@ object fSettings: TfSettings
         Height = 17
         Caption = 
           '^eRebuild ANNOTATE.PKG from .ANO files if needed whenever WaKan ' +
-          'starts^cVytvoøit ANNOTATE.PKG ze souborù .ANO pøi každém startu ' +
-          'WaKanu když je potøeba'
+          'starts^cVytvo'#1096'it ANNOTATE.PKG ze soubor'#1097' .ANO p'#1096'i ka'#1115'd'#1081'm startu ' +
+          'WaKanu kdy'#1115' je pot'#1096'eba'
         TabOrder = 1
       end
       object CheckBox66: TCheckBox
@@ -2245,8 +2322,8 @@ object fSettings: TfSettings
         Width = 326
         Height = 17
         Caption = 
-          '^eAllow annotations to play sound files^cPovolit anotacím pøehrá' +
-          't zvukové soubory '
+          '^eAllow annotations to play sound files^cPovolit anotac'#1085'm p'#1096'ehr'#1073 +
+          't zvukov'#1081' soubory '
         TabOrder = 2
         Visible = False
       end
@@ -2256,8 +2333,8 @@ object fSettings: TfSettings
         Width = 326
         Height = 17
         Caption = 
-          '^eAllow annotations to display pictures^cPovolit anotacím zobraz' +
-          'it obrázky'
+          '^eAllow annotations to display pictures^cPovolit anotac'#1085'm zobraz' +
+          'it obr'#1073'zky'
         TabOrder = 3
       end
       object CheckBox68: TCheckBox
@@ -2266,8 +2343,8 @@ object fSettings: TfSettings
         Width = 326
         Height = 17
         Caption = 
-          '^eAllow annotations to display web pages^cPovolit anotacím zobra' +
-          'zit webové stránky'
+          '^eAllow annotations to display web pages^cPovolit anotac'#1085'm zobra' +
+          'zit webov'#1081' str'#1073'nky'
         TabOrder = 4
       end
       object CheckBox69: TCheckBox
@@ -2276,8 +2353,8 @@ object fSettings: TfSettings
         Width = 326
         Height = 17
         Caption = 
-          '^eAllow annotations to change foreground color^cPovolit anotacím' +
-          ' mìnit barvu popøedí'
+          '^eAllow annotations to change foreground color^cPovolit anotac'#1085'm' +
+          ' m'#1084'nit barvu pop'#1096'ed'#1085
         TabOrder = 5
       end
       object Button16: TButton
@@ -2286,7 +2363,7 @@ object fSettings: TfSettings
         Width = 337
         Height = 25
         Caption = 
-          '^eHelp for the annotation feature^cNápovìda pro funkci anotace (' +
+          '^eHelp for the annotation feature^cN'#1073'pov'#1084'da pro funkci anotace (' +
           'anglicky)'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -2305,9 +2382,11 @@ object fSettings: TfSettings
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
+    DoubleBuffered = True
+    Kind = bkOK
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = BitBtn1Click
-    Kind = bkOK
   end
   object Button6: TButton
     Left = 8
@@ -2315,7 +2394,7 @@ object fSettings: TfSettings
     Width = 177
     Height = 21
     Anchors = [akLeft, akBottom]
-    Caption = '#00929^eChange language^cZmìna jazyka'
+    Caption = '#00929^eChange language^cZm'#1084'na jazyka'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -2340,7 +2419,6 @@ object fSettings: TfSettings
     Top = 16
   end
   object ColorDialog1: TColorDialog
-    Ctl3D = True
     Left = 148
     Top = 352
   end

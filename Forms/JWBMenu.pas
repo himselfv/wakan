@@ -2422,7 +2422,10 @@ begin
   fSettings.CheckBox59.Checked:=reg.ReadBool('Dict','OrderFreq',true);
   fSettings.CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
   fSettings.CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
-  fSettings.cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);  
+  fSettings.cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);
+  fSettings.cbLoadAozoraRuby.Checked:=reg.readBool('Editor','LoadAozoraRuby', true);
+  fSettings.cbAozoraTagsInColor.Checked:=reg.readBool('Editor','AozoraTagsInColor', true);
+  fSettings.cbSaveAnnotationsToRuby.Checked:=reg.readBool('Editor','SaveAnnotationsToRuby', false);
   if fSettings.CheckBox61.Checked then
   begin
     fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
@@ -4702,11 +4705,13 @@ procedure TfMenu.eSavekanatranscriptcUloitpepisdokany1Click(
   Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  Application.MessageBox(pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.'+
-    '^cNezapomeòte pøed použitím této funkce vyplnit kana ètení anebo použijte funkci pro automatický pøeklad.')),
-    pchar(_l('#00364^eNotice^cUpozornìní')),MB_ICONINFORMATION or MB_OK);
+  Application.MessageBox(
+    pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
+    pchar(_l('#00364^eNotice')),
+    MB_ICONINFORMATION or MB_OK);
   if SaveDialog1.Execute then
-    fTranslate.SaveToFile(SaveDialog1.FileName,Conv_ChooseType(false,0),true);
+    fTranslate.SaveToFile(SaveDialog1.FileName,Conv_ChooseType(false,0),amKana);
+    //This will not save amKana as FileAnnotMode choice. That is correct.
 end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);

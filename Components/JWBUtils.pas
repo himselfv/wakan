@@ -5,7 +5,7 @@ For now they are grouped together but may be regrouped in the future.
 }
 
 interface
-uses SysUtils, Classes;
+uses SysUtils, Classes, JWBStrings;
 
 {
 Deflection parsing code and deflection list.
@@ -13,8 +13,6 @@ For more info see wakan.cfg.
 }
 type
  //Verb deflection rule --- see comments in wakan.cfg
- //Rules should probably be parsed on loading and stored in that form,
- //but for now we have what we have. 
   TDeflectionRule = record
     vt: char;       {
       Supported verb types:
@@ -183,12 +181,51 @@ type
   end;
 
 
-{
-Character properties for the editor.
-Originally they were stored in strings, taking 9 characters for one property set:
+{ Character properties for the editor.
+Each character gets its own set of properties. They are made into chains with
+the help of wordState field. '<' means continue looking backwards to find:
+- reading
+- translation
+- or word information.
+Usually the three are kept together at the start of the word, but chains can
+cover several words. It's possible to have a chain like this:
+  * chain and word start (has reading + meaning)
+  < char
+  < char
+  < word start (has meaning)
+  < char
+  < char
+So if you need anything, go backwards till the start of the chain (or the string),
+and look for the first character that has it set. }
+{ Porting notes:
+Originally properties were stored in strings, taking 9 characters for one property set:
   -90000001
-}
+1 char: wordstate
+1 char: learnstate as digit
+6 chars: dicidx as integer in text form
+1 char: docdic as digit }
 type
+ { Aozora ruby supports explicit marks to show what text is being annotated:
+     text text | text <<ruby>> text text
+   Usually this is not needed. }
+  TRubyTextBreakType = (
+    btAuto,     //guess if ruby text break mark is needed
+    btBreak,    //force break mark before this char
+    btSkip      //don't use break mark. If we add anything new before this char, this should be changed to "Auto"
+  );
+
+  TCharacterFlag = (
+    cfExplicitRuby, //this character had explicit ruby attached, even if it's empty
+    cfRootEnd       //word root ends here. If none found, word roots ends with the word
+      //Roots are needed so that we only annotate the root part (that's how ruby's usually done),
+      //but if we highlight/color the word then it's the whole word.
+  );
+  TCharacterFlags = set of TCharacterFlag;
+
+ { A character can have both ruby (loaded from file) and normal translation (dictionary+index)
+  In that case, reading is taken from ruby and meaning from normal tl.
+  Be careful when adding translations: don't break the existing ruby chains (something like '-<<<<' in wordstates). }
+
   TCharacterProps = record
     wordstate: char;
     learnstate: byte;
@@ -196,7 +233,11 @@ type
     docdic: byte; //document dictionary index.
       //I don't know why the hell do we have "local dictionaries", but it's a pain
       //to replace this system since they're saved into wtt files too.
+    rubyTextBreak: TRubyTextBreakType;
+    ruby: FString;
+    flags: TCharacterFlags;
     procedure SetChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure SetRubyChar(awordstate: char; alearnstate: byte; arubyBreak: boolean; aruby: FString); {$IFDEF INLINE}inline;{$ENDIF}
   end;
   PCharacterProps = ^TCharacterProps;
   TCharacterPropArray = array of TCharacterProps;
@@ -244,7 +285,6 @@ function CharPropArray(a: array of TCharacterProps): TCharacterPropArray;
 
 
 implementation
-uses JWBStrings;
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.
@@ -559,6 +599,7 @@ end;
 
 { Character props }
 
+//Sets normally annotated char data
 procedure TCharacterProps.SetChar(awordstate: char; alearnstate: byte;
   adicidx: integer; adocdic: byte);
 begin
@@ -566,7 +607,16 @@ begin
   learnstate := alearnstate;
   dicidx := adicidx;
   docdic := adocdic;
- //And reset the rest
+ //Leave the rest alone
+end;
+
+procedure TCharacterProps.SetRubyChar(awordstate: char; alearnstate: byte; arubyBreak: boolean; aruby: FString);
+begin
+  if arubyBreak then
+    rubyTextBreak := btBreak
+  else
+    rubyTextBreak := btSkip;
+  ruby := aruby;
 end;
 
 //Reserves enough memory to store at least ARequiredFreeLen additional lines.
@@ -592,14 +642,10 @@ begin
   AddChar^ := cp;
 end;
 
+//Adds normally annotated char to a line
 procedure TCharacterLineProps.AddChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte);
 begin
-  with AddChar^ do begin
-    wordstate := awordstate;
-    learnstate := alearnstate;
-    dicidx := adicidx;
-    docdic := adocdic;
-  end;
+  AddChar^.SetChar(awordstate, alearnstate, adicidx, adocdic);
 end;
 
 procedure TCharacterLineProps.AddChars(Count: integer);

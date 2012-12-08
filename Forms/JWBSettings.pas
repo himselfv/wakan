@@ -243,6 +243,13 @@ type
     CheckBox70: TCheckBox;
     cbTranslateNoLongTextWarning: TCheckBox;
     cbNoSaveChangesWarning: TCheckBox;
+    cbLoadAozoraRuby: TCheckBox;
+    lblAozoraRuby: TLabel;
+    cbAozoraTagsInColor: TCheckBox;
+    lblSaving: TLabel;
+    cbSaveAnnotationsToRuby: TCheckBox;
+    lblSaveAnnotationsToRubyDesc: TLabel;
+    lblAozoraTagsInColor: TLabel;
     procedure RadioGroup1Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -494,6 +501,9 @@ begin
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
   reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
   reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
+  reg.WriteBool('Editor','LoadAozoraRuby',cbLoadAozoraRuby.Checked);
+  reg.WriteBool('Editor','AozoraTagsInColor',cbAozoraTagsInColor.Checked);
+  reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
   reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
   reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
@@ -1051,7 +1061,7 @@ end;
 
 procedure TfSettings.Button12Click(Sender: TObject);
 begin
-  ColorDialog1.COlor:=GetCol(colorFrom+ListBox3.ItemIndex);
+  ColorDialog1.Color:=GetCol(colorFrom+ListBox3.ItemIndex);
   if ColorDialog1.Execute then SetCol(colorFrom+ListBox3.ItemIndex,ColorDialog1.Color);
   ListBox3Click(Sender);
 end;

@@ -1,4 +1,4 @@
-unit JWBUnit;
+Ôªøunit JWBUnit;
 { Common stuff for Wakan. }
 
 interface
@@ -400,8 +400,8 @@ begin
     repl(s2,'Dy','yy');
     repl(s2,'Dw','ww');
     repl(s2,'Dj','jj');
-    repl(s2,'Dö','öö');
-    repl(s2,'DË','ËË');
+    repl(s2,'D—ô','—ô—ô');
+    repl(s2,'D–∏','–∏–∏');
     repl(s2,'Df','ff');
     repl(s2,'Dc','cc');
     repl(s2,'''','');
@@ -410,11 +410,11 @@ begin
     if romatype>1 then repl(s2,'nm','mm');
     if romatype=3 then
     begin
-      repl(s2,'aa','·');
-      repl(s2,'ii','Ì');
-      repl(s2,'uu','˙');
-      repl(s2,'oo','Û');
-      repl(s2,'ee','È');
+      repl(s2,'aa','–±');
+      repl(s2,'ii','–Ω');
+      repl(s2,'uu','—ä');
+      repl(s2,'oo','—É');
+      repl(s2,'ee','–π');
     end;
   {/THIS HERE}
     if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
@@ -453,18 +453,18 @@ begin
     repl(s2,'yy','Dy');
     repl(s2,'ww','Dw');
     repl(s2,'jj','Dj');
-    repl(s2,'öö','Dö');
-    repl(s2,'ËË','DË');
+    repl(s2,'—ô—ô','D—ô');
+    repl(s2,'–∏–∏','D–∏');
     repl(s2,'ff','Df');
     repl(s2,'cc','Dc');
     if romatype=3 then
     begin
-      repl(s2,'·','aa');
-      repl(s2,'Ì','ii');
-      repl(s2,'Û','oo');
-      repl(s2,'˙','uu');
-      repl(s2,'˘','uu');
-      repl(s2,'È','ee');
+      repl(s2,'–±','aa');
+      repl(s2,'–Ω','ii');
+      repl(s2,'—É','oo');
+      repl(s2,'—ä','uu');
+      repl(s2,'—â','uu');
+      repl(s2,'–π','ee');
     end;
     kata:=0;
     s3:='';
@@ -617,7 +617,7 @@ begin
   for i:=1 to length(cnv) do
   begin
     if (li=0) and ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
-    if (li<i) and ((cnv[li]='i') or (cnv[li]='u') or (cnv[li]='¸')) and
+    if (li<i) and ((cnv[li]='i') or (cnv[li]='u') or (cnv[li]='—å')) and
       ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
     if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
     begin
@@ -1186,7 +1186,7 @@ begin
         end;
     end;
   end
-//    Application.MessageBox(pchar(_l('#00635^cSeznam nauËen˝ch znak˘ m· zastaralou strukturu a proto nebude nahr·n.^eKnown kanji list has outdated structure and will not be loaded.')),pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_OK)
+//    Application.MessageBox(pchar(_l('#00635^cSeznam nau–∏en—çch znak—â m–± zastaralou strukturu a proto nebude nahr–±n.^eKnown kanji list has outdated structure and will not be loaded.')),pchar(_l('#00090^eWarning^cVarov–±n–Ω')),MB_ICONWARNING or MB_OK)
   else
     stream.Read(KnownList[listno]^,KnownListSize);
 end;
@@ -1315,11 +1315,11 @@ begin
   grid.Hide;
   grid.DefaultRowHeight:=GridFontSize+2;
   grid.FixedRows:=1;
-  grid.Cells[0,0]:=_l('#00939^ePhonetic^c»tenÌ');
-  grid.Cells[1,0]:=_l('#00632^eWritten^cZ·pis');
-  grid.Cells[2,0]:=_l('#00317^eTranslation^cP¯eklad');
+  grid.Cells[0,0]:=_l('#00939^ePhonetic^c–òten–Ω');
+  grid.Cells[1,0]:=_l('#00632^eWritten^cZ–±pis');
+  grid.Cells[2,0]:=_l('#00317^eTranslation^cP—àeklad');
   if stat then if learn then
-    grid.Cells[3,0]:=_l('#00633^eAdded / Learned^cP¯id·no / NauËeno') else
+    grid.Cells[3,0]:=_l('#00633^eAdded / Learned^cP—àid–±no / Nau–∏eno') else
     grid.Cells[3,0]:=_l('#00634^eCategories^cKategorie');
   wgcur:=1;
 end;
@@ -1397,10 +1397,10 @@ end;
 function StateStr(i:integer):string;
 begin
   case i of
-    0:result:=_l('#00638^eProblematic^cProblematickÈ');
-    1:result:=_l('#00639^eUnlearned^cNenauËenÈ');
-    2:result:=_l('#00640^eLearned^cNauËenÈ');
-    3:result:=_l('#00641^eMastered^cDob¯e nauËenÈ');
+    0:result:=_l('#00638^eProblematic^cProblematick–π');
+    1:result:=_l('#00639^eUnlearned^cNenau–∏en–π');
+    2:result:=_l('#00640^eLearned^cNau–∏en–π');
+    3:result:=_l('#00641^eMastered^cDob—àe nau–∏en–π');
   end;
 end;
 
@@ -1468,51 +1468,54 @@ var i:integer;
     s2:string;
 begin
   colarr:=TStringList.Create;
-  colarr.add('0Kanji_Back=FFFFFF,^eBackground^cPozadÌ');
-  colarr.add('0Kanji_Common=000000,^eCommon characters^cBÏûnÈ znaky');
-  colarr.add('0Kanji_Rare=4F4F4F,^eRare characters^cVz·cnÈ znaky');
-  colarr.add('0Kanji_Names=005F00,^eCharacters in names^cZnaky ve jmÈnech');
-  colarr.add('0Kanji_Learned=7F0000,^eLearned characters^cNauËenÈ znaky');
-  colarr.add('0Kanji_RadCommon=000000,^eCommon radicals^cBÏûnÈ radik·ly');
-  colarr.add('0Kanji_RadRare=4F4F4F,^eRare radicals^cVz·cnÈ radik·ly');
-  colarr.add('0Kanji_RadLearned=7F0000,^eLearned radicals^cNauËenÈ radik·ly');
-  colarr.add('1Dict_Back=FFFFFF,^eBackground^cPozadÌ');
+  colarr.add('0Kanji_Back=FFFFFF,^eBackground^cPozad–Ω');
+  colarr.add('0Kanji_Common=000000,^eCommon characters^cB–º—õn–π znaky');
+  colarr.add('0Kanji_Rare=4F4F4F,^eRare characters^cVz–±cn–π znaky');
+  colarr.add('0Kanji_Names=005F00,^eCharacters in names^cZnaky ve jm–πnech');
+  colarr.add('0Kanji_Learned=7F0000,^eLearned characters^cNau–∏en–π znaky');
+  colarr.add('0Kanji_RadCommon=000000,^eCommon radicals^cB–º—õn–π radik–±ly');
+  colarr.add('0Kanji_RadRare=4F4F4F,^eRare radicals^cVz–±cn–π radik–±ly');
+  colarr.add('0Kanji_RadLearned=7F0000,^eLearned radicals^cNau–∏en–π radik–±ly');
+  colarr.add('1Dict_Back=FFFFFF,^eBackground^cPozad–Ω');
   colarr.add('1Dict_Text=000000,^eText^cText');
-  colarr.add('1Dict_UnknownChar=2F2F7F,^eUnknown characters^cNezn·mÈ znaky');
-  colarr.add('1Dict_Problematic=DDDDFF,^eProblematic words^cProblematick· slova');
-  colarr.add('1Dict_Unlearned=FFEEDD,^eUnlearned words^cNenauËen· slova');
-  colarr.add('1Dict_Learned=BBFFFF,^eLearned words^cNauËen· slova');
-  colarr.add('1Dict_Mastered=BBFFBB,^eMastered words^cDob¯e nauËen· slova');
-  colarr.add('1Dict_SelBack=BBBBBB,^eBackground (selected)^cPozadÌ (vybranÈ)');
-  colarr.add('1Dict_SelProblematic=9999BB,^eProblematic words (selected)^cProblematick· slova (vybran·)');
-  colarr.add('1Dict_SelUnlearned=BBAA99,^eUnlearned words (selected)^cNenauËen· slova (vybran·)');
-  colarr.add('1Dict_SelLearned=99BBBB,^eLearned words (selected)^cNauËen· slova (vybran·)');
-  colarr.add('1Dict_SelMastered=77BB77,^eMastered words (selected)^cDob¯e nauËen· slova (vybran·)');
-  colarr.add('2Mark_Special=7F007F,^eSpecial markers^cSpeci·lnÌ p¯Ìznaky');
-  colarr.add('2Mark_Usage=00007F,^eUsage markers^cP¯Ìznaky pouûitÌ');
-  colarr.add('2Mark_Grammatical=7F0000,^eGrammatical markers^cGramatickÈ p¯Ìznaky');
-  colarr.add('2Mark_Dict=4F4F4F,^eDictionary markers^cP¯Ìznaky slovnÌku');
-  colarr.add('2Mark_Lesson=004F00,^eLesson markers,^cP¯Ìznaky lekce');
-  colarr.add('3Editor_Back=FFFFFF,^eBackground^cPozadÌ');
-  colarr.add('3Editor_Text=000000,^eText color^cBarva pÌsma');
+  colarr.add('1Dict_UnknownChar=2F2F7F,^eUnknown characters^cNezn–±m–π znaky');
+  colarr.add('1Dict_Problematic=DDDDFF,^eProblematic words^cProblematick–± slova');
+  colarr.add('1Dict_Unlearned=FFEEDD,^eUnlearned words^cNenau–∏en–± slova');
+  colarr.add('1Dict_Learned=BBFFFF,^eLearned words^cNau–∏en–± slova');
+  colarr.add('1Dict_Mastered=BBFFBB,^eMastered words^cDob—àe nau–∏en–± slova');
+  colarr.add('1Dict_SelBack=BBBBBB,^eBackground (selected)^cPozad–Ω (vybran–π)');
+  colarr.add('1Dict_SelProblematic=9999BB,^eProblematic words (selected)^cProblematick–± slova (vybran–±)');
+  colarr.add('1Dict_SelUnlearned=BBAA99,^eUnlearned words (selected)^cNenau–∏en–± slova (vybran–±)');
+  colarr.add('1Dict_SelLearned=99BBBB,^eLearned words (selected)^cNau–∏en–± slova (vybran–±)');
+  colarr.add('1Dict_SelMastered=77BB77,^eMastered words (selected)^cDob—àe nau–∏en–± slova (vybran–±)');
+  colarr.add('2Mark_Special=7F007F,^eSpecial markers^cSpeci–±ln–Ω p—à–Ωznaky');
+  colarr.add('2Mark_Usage=00007F,^eUsage markers^cP—à–Ωznaky pou—õit–Ω');
+  colarr.add('2Mark_Grammatical=7F0000,^eGrammatical markers^cGramatick–π p—à–Ωznaky');
+  colarr.add('2Mark_Dict=4F4F4F,^eDictionary markers^cP—à–Ωznaky slovn–Ωku');
+  colarr.add('2Mark_Lesson=004F00,^eLesson markers,^cP—à–Ωznaky lekce');
+  colarr.add('3Editor_Back=FFFFFF,^eBackground^cPozad–Ω');
+  colarr.add('3Editor_Text=000000,^eText color^cBarva p–Ωsma');
   colarr.add('3Editor_ASCII=2F2F2F,^eASCII text^cASCII text');
-  colarr.add('3Editor_Active=FF0000,^eText being written^cText, kter˝ je pr·vÏ ps·n');
-  colarr.add('3Editor_Aftertouch=0000FF,^eText just converted^cText pr·vÏ zkonvertov·n');
-  colarr.add('3Editor_Untranslated=FFFFFF,^eUntranslated text^cNep¯eloûen˝ text');
-  colarr.add('3Editor_NotFound=003FFF,^eText where translation failed^cText, u kterÈho p¯eklad selhal');
-  colarr.add('3Editor_Particle=FFAAFF,^eEstimated particle^cOdhadovan· partikule');
-  colarr.add('3Editor_Translated=EEEEEE,^eWord not in vocabulary^cSlovo, kterÈ nenÌ ve slovÌËk·ch');
-  colarr.add('3Editor_Problematic=DDDDFF,^eProblematic vocabulary word^cProblematickÈ slovÌËko');
-  colarr.add('3Editor_Unlearned=FFEEDD,^eUnlearned vocabulary word^cNenauËenÈ slovÌËko');
-  colarr.add('3Editor_Learned=BBFFFF,^eLearned vocabulary word^cNauËenÈ slovÌËko');
-  colarr.add('3Editor_Mastered=BBFFBB,^eMastered vocabulary word^cDob¯e nauËenÈ slovÌËko');
-  colarr.add('3Editor_HintBack=EFEFEF,^eHint background^cPozadÌ n·povÏdy');
-  colarr.add('3Editor_HintSelected=00FFFF,^eHint selected background^cVybranÈ pozadÌ n·povÏdy');
-  colarr.add('3Editor_HintText=000000,^eHint text^cText n·povÏdy');
-  colarr.add('4Popup_Back=A0FFFF,^eBackground^cPozadÌ');
-  colarr.add('4Popup_Lines=000000,^eLines^c»·ry');
+  colarr.add('3Editor_Active=FF0000,^eText being written^cText, kter—ç je pr–±v–º ps–±n');
+  colarr.add('3Editor_Aftertouch=0000FF,^eText just converted^cText pr–±v–º zkonvertov–±n');
+  colarr.add('3Editor_Untranslated=FFFFFF,^eUntranslated text^cNep—àelo—õen—ç text');
+  colarr.add('3Editor_NotFound=003FFF,^eText where translation failed^cText, u kter–πho p—àeklad selhal');
+  colarr.add('3Editor_Particle=FFAAFF,^eEstimated particle^cOdhadovan–± partikule');
+  colarr.add('3Editor_Translated=EEEEEE,^eWord not in vocabulary^cSlovo, kter–π nen–Ω ve slov–Ω–∏k–±ch');
+  colarr.add('3Editor_Problematic=DDDDFF,^eProblematic vocabulary word^cProblematick–π slov–Ω–∏ko');
+  colarr.add('3Editor_Unlearned=FFEEDD,^eUnlearned vocabulary word^cNenau–∏en–π slov–Ω–∏ko');
+  colarr.add('3Editor_Learned=BBFFFF,^eLearned vocabulary word^cNau–∏en–π slov–Ω–∏ko');
+  colarr.add('3Editor_Mastered=BBFFBB,^eMastered vocabulary word^cDob—àe nau–∏en–π slov–Ω–∏ko');
+  colarr.add('3Editor_HintBack=EFEFEF,^eHint background^cPozad–Ω n–±pov–ºdy');
+  colarr.add('3Editor_HintSelected=00FFFF,^eHint selected background^cVybran–π pozad–Ω n–±pov–ºdy');
+  colarr.add('3Editor_HintText=000000,^eHint text^cText n–±pov–ºdy');
+  colarr.add('3Editor_AozoraTag=B4C0D4,^eAozora Ruby <tag>');
+  colarr.add('3Editor_AozoraComment=B4C0D4,^eAozora Ruby ÔºªcommentÔºΩ');
+  colarr.add('3Editor_AozoraRuby=B4C0D4,^eAozora Ruby „Ääruby„Äã');
+  colarr.add('4Popup_Back=A0FFFF,^eBackground^cPozad–Ω');
+  colarr.add('4Popup_Lines=000000,^eLines^c–ò–±ry');
   colarr.add('4Popup_Card=FFFFFF,^eCharacter card^cKarta znaku');
-  colarr.add('4Popup_Text=000000,^eText on the caracter card^cText na kartÏ znaku');
+  colarr.add('4Popup_Text=000000,^eText on the caracter card^cText na kart–º znaku');
   colval:=TStringList.Create;
   reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
   colsarr:=TStringList.Create;
@@ -1773,9 +1776,9 @@ begin
 end;
 
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
-var w:pwidechar;
-    chn:string;
-    i:integer;
+var w:UnicodeString;
+  chn:string;
+  i:integer;
 begin
   if ch='' then exit;
   SetBkMode(c.Handle,TRANSPARENT);
@@ -1784,9 +1787,9 @@ begin
 //    c.Font.Style:=[];
   chn:=DrawTone(c,x,y,fs,ch,false);
  {$IFDEF UNICODE}
-  w := PWideChar(chn);
+  w := chn;
  {$ELSE}
-  w := PWideChar(HexToUnicode(chn));
+  w := HexToUnicode(chn);
  {$ENDIF}
   if chn<>ch then
   begin
@@ -1806,7 +1809,7 @@ begin
     itt[i].s:=chn;
     break;
   end;
-  TextOutW(c.Handle,x,y,w,flength(chn));
+  TextOutW(c.Handle,x,y,PWideChar(w),flength(chn));
 end;
 
 

@@ -21,6 +21,12 @@ kanji and kana uses.
 }
 
 type
+  TSaveTextAnnotMode = (
+    amDefault,    //save only those annotations which were loaded from ruby
+    amKana,       //save as text with generated kana instead of kanji
+    amRuby        //save generated kana as aozora-ruby
+  );
+
   TfTranslate = class(TForm)
     Shape10: TShape;
     EditorPaintBox: TPaintBox;
@@ -43,7 +49,7 @@ type
     Bevel2: TBevel;
     sbClipCopy: TSpeedButton;
     sbClipPaste: TSpeedButton;
-    Label1: TLabel;
+    lblFilename: TLabel;
     Bevel3: TBevel;
     sbSmallFont: TSpeedButton;
     sbLargeFont: TSpeedButton;
@@ -191,14 +197,15 @@ type
     function GetInsertKana(display:boolean):string;
 
   protected
+    FileAnnotMode: TSaveTextAnnotMode; //if we have saved the file once, we remember the choice
     FFileChanged: boolean;
     procedure SetFileChanged(Value: boolean);
     procedure LoadText(filename:string;tp:byte);
-    procedure SaveText(filename:string;tp:byte;kana:boolean);
+    procedure SaveText(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
   public //File open/save
     procedure OpenFile(filename:string;tp:byte);
-    procedure SaveToFile(filename:string;tp:byte;kana:boolean);
-    procedure SaveAs;
+    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
+    function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
 
@@ -353,7 +360,11 @@ var s,s2:string;
 begin
   docfilename:=filename;
   doctp:=tp;
-  Label1.Caption:=uppercase(ExtractFilename(filename));
+  FileAnnotMode := amDefault;
+  //by default we set FileAnnotMode to default, meaning no preference has been chosen
+  //auto-loaded rubys will be saved either way
+
+  lblFilename.Caption:=uppercase(ExtractFilename(filename));
   doc.Clear;
   doctr.Clear;
   docdic.Clear;
@@ -475,7 +486,10 @@ begin
   FileChanged:=false;
 end;
 
-procedure TfTranslate.SaveToFile(filename:string;tp:byte;kana:boolean);
+{ Doesn't save Filename, tp or AnnotMode choice. That is correct.
+This function can be called by others to make one-time special-format save.
+SaveAs does the choice remembering. }
+procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
 var f:file;
     i,j,bc:integer;
     buf:array[0..16383] of word;
@@ -539,11 +553,12 @@ begin
     bc:=0;
     closefile(f);
   end else begin
-    SaveText(docfilename, doctp,kana);
+    SaveText(filename,tp,AnnotMode);
   end;
   Screen.Cursor:=crDefault;
   FileChanged:=false;
 end;
+
 
 //Loads classic text file in any encoding.
 procedure TfTranslate.LoadText(filename:string;tp:byte);
@@ -582,30 +597,124 @@ begin
   end;
 end;
 
-procedure TfTranslate.SaveText(filename:string;tp:byte;kana:boolean);
-var i,j: integer;
-  inreading:boolean;
-  meaning,reading,kanji:string;
+{
+Ruby saving strategy:
+- We always save "hard ruby" since if its present then we have loaded it from the file
+- As for soft ruby, we save that to the file according to the user's choice.
+}
+
+procedure TfTranslate.SaveText(filename:string;tp:byte;AnnotMode:TSaveTextAnnotMode);
+var i,j,k: integer;
+  inReading:boolean;
+  meaning: string;
+  reading,kanji:FString;
+  rubyTextBreak: TRubyTextBreakType;
+  rootLen: integer; //remaining length of the word's root, if calculated dynamically. <0 means ignore this check
+
+  procedure outp(s: FString);
+  var i: integer;
+  begin
+    for i := 1 to flength(s) do
+      Conv_WriteChar(fgetch(reading,i));
+  end;
+
 begin
-  inreading := false;
+  inReading := false;
+  rootLen := -1;
+
   Conv_Create(filename,tp);
   for i:=0 to doc.Count-1 do
   begin
     for j:=0 to flength(doc[i])-1 do
     begin
-      if (not inreading) or (doctr[i].chars[j].wordstate<>'<') then
-      begin
-        reading:='';
-        if kana then GetTextWordInfo(j,i,meaning,reading,kanji);
-        if reading<>'' then reading:=UH_SPACE+reading;
-        inreading:=reading<>'';
-        if reading='' then reading:=GetDoc(j,i);
-        while length(reading)>0 do
-        begin
-          Conv_WriteChar(fgetch(reading,1));
-          fdelete(reading,1,1);
+      if inReading then begin
+        Dec(rootLen);
+       //End of word
+        if (doctr[i].chars[j].wordstate<>'<')
+       //End of word root. That's where we output ruby and continue with just printing kana
+        or (cfRootEnd in doctr[i].chars[j].flags)
+        or (rootLen=0) then begin
+         //End of annotated chain
+          if AnnotMode=amKana then begin
+            if reading<>'' then
+              reading:=UH_SPACE+reading
+            else
+             //Don't have a reading, write a char (maybe we didn't want it expanded)
+              reading:=GetDoc(j,i);
+            outp(reading);
+          end else
+          if AnnotMode=amRuby then begin
+           //We don't check that reading is not empty, because if it was empty
+           //we wouldn't have set inReading, except if it was explicit ruby,
+           //in which case we must write it even if empty.
+            reading := UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE;
+            outp(reading);
+          end else
+           //Just write char
+            Conv_WriteChar(GetDoc(j,i));
+          inReading := false;
+          reading := '';
+         //and we continue through to the "no inReading" case where we might start a new chain
+        end else begin
+         //Inside of annotated chain
+          if not (AnnotMode in [amKana]) then
+           //Just write char
+            Conv_WriteChar(GetDoc(j,i));
+         //in amKana we skip chars to be replaced
+          continue; //handled this char
         end;
+      end; //yep, no 'else'!
+
+      if not inReading then begin
+       //Explicit ruby load, even if ruby's empty
+        if cfExplicitRuby in doctr[i].chars[j].flags then begin
+          reading := doctr[i].chars[j].ruby;
+          inReading := true;
+          rootLen := -1;
+        end;
+
+       //Implicit ruby load (if explicit is not loaded -- checked by inReading)
+        if (AnnotMode in [amKana, amRuby]) and not inReading then begin
+          GetTextWordInfo(j,i,meaning,reading,kanji);
+          inReading := (reading<>'');
+          if inReading then begin
+            rootLen := 0;
+           //Explicit ruby has it from file, but with implicit we have to find the word root
+            for k := j to min(j+Length(kanji), doctr[i].charcount) do
+              if kanji[k-j+1]=GetDoc(k,i) then
+                Inc(rootLen)
+              else
+                break;
+            if (rootLen=0) and (AnnotMode=amRuby) then
+              rootLen := -1; //better annotate something than nothing
+             //in amKana it's the reverse: better replace nothing than too much
+           //Don't write words which are in kana to begin with!
+//            for k := 1 to min(Length()) - 1 do
+
+            if kanji=reading then
+              rootLen := 0; //just stop
+          end;
+        end;
+
+       //Ruby break -- if we have some kind of reading
+        if (AnnotMode<>amKana) and inReading then begin //We don't write ruby in kana at all
+          rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
+          if rubyTextBreak=btAuto then
+            if j<=0 then
+              rubyTextBreak := btSkip //first char in a line
+            else
+              if EvalChar(GetDoc(j,i))=EvalChar(GetDoc(j-1,i)) then
+                rubyTextBreak := btBreak //break when there are two characters of the same type in a row
+              else
+                rubyTextBreak := btSkip;
+          if rubyTextBreak=btBreak then
+            Conv_WriteChar(UH_AORUBY_TEXTBREAK);
+        end;
+
+        if (AnnotMode<>amKana) or (reading='') then
+          Conv_WriteChar(GetDoc(j,i));
       end;
+
     end;
     Conv_WriteChar(UH_CR);
     Conv_Write(UH_LF);
@@ -614,19 +723,35 @@ begin
   Conv_Close;
 end;
 
-procedure TfTranslate.SaveAs;
-var s:string;
+//Returns false if user have cancelled the dialog
+function TfTranslate.SaveAs: boolean;
+var tp: byte;
 begin
-  if SaveTextDialog.Execute then
-  begin
-    doctp:=0;
-    if pos('.WTT',uppercase(SaveTextDialog.FileName))=0 then doctp:=Conv_ChooseType(curlang='c',0);
-    SaveToFile(SaveTextDialog.FileName,doctp,false);
-    docfilename:=SaveTextDialog.FileName;
-    s:=SaveTextDialog.FileName;
-    while pos('\',s)>0 do delete(s,1,pos('\',s));
-    Label1.Caption:=uppercase(s);
+ //If configured to, or if we have chosen this option before
+  if (FileAnnotMode=amRuby) or fSettings.cbSaveAnnotationsToRuby.Checked then
+    SaveTextDialog.FilterIndex := 2 //"Text with readings as Aozora Ruby"
+  else
+    SaveTextDialog.FilterIndex := 1; //"Text file"
+
+  Result := SaveTextDialog.Execute;
+  if not Result then exit;
+
+  case SaveTextDialog.FilterIndex of
+    1: FileAnnotMode := amDefault;
+    2: FileAnnotMode := amRuby;
+   //WTT file option is handled differently, that's how it was inherited.
   end;
+
+  //Choose encoding
+  if pos('.WTT',uppercase(SaveTextDialog.FileName))=0 then
+    tp:=Conv_ChooseType(curlang='c',0)
+  else
+    tp:=0; //WTT doesn't need types
+
+  SaveToFile(SaveTextDialog.FileName,tp,FileAnnotMode);
+  docfilename:=SaveTextDialog.FileName;
+  doctp:=tp;
+  lblFilename.Caption:=uppercase(ExtractFilename(SaveTextDialog.FileName));
 end;
 
 procedure TfTranslate.SetFileChanged(Value: boolean);
@@ -648,14 +773,13 @@ It has three possible outcomes:
 }
 function TfTranslate.CommitFile:boolean;
 var i:integer;
-    s:string;
 begin
   Result := true;
   if not filechanged then exit;
 
   if (fSettings.CheckBox60.Checked) and (docfilename<>'') then begin
    //Auto-"Yes"
-    SaveToFile(docfilename,doctp,false);
+    SaveToFile(docfilename,doctp,FileAnnotMode);
     filechanged := false;
     exit;
   end;
@@ -677,25 +801,20 @@ begin
 
   if docfilename<>'' then begin
    //"Yes"
-    SaveToFile(docfilename,doctp,false);
+    SaveToFile(docfilename,doctp,FileAnnotMode);
     filechanged := false;
     exit;
   end;
 
-  if not SaveTextDialog.Execute then begin
+  if not SaveAs then begin
    //"Cancel" through cancelling dialog
     Result := false;
     exit;
   end;
 
  //"Yes"
-  if pos('.WTT',uppercase(SaveTextDialog.FileName))=0 then doctp:=Conv_ChooseType(curlang='c',0);
-  SaveToFile(SaveTextDialog.FileName,doctp,false);
-  docfilename:=SaveTextDialog.FileName;
-  s:=SaveTextDialog.FileName;
-  while pos('\',s)>0 do delete(s,1,pos('\',s));
-  Label1.Caption:=uppercase(s);
   filechanged:=false;
+  Result := true;
 end;
 
 
@@ -709,7 +828,7 @@ begin
   curx:=0;
   cury:=0;
   view:=0;
-  Label1.Caption:=_l('#00678^e<UNNAMED>');
+  lblFilename.Caption:=_l('#00678^e<UNNAMED>');
   docfilename:='';
   mustrepaint:=true;
   ShowText(true);
@@ -730,7 +849,7 @@ end;
 procedure TfTranslate.Button5Click(Sender: TObject);
 begin
   if docfilename<>'' then
-    SaveToFile(docfilename,doctp,false)
+    SaveToFile(docfilename,doctp,FileAnnotMode)
   else
     SaveAs;
 end;
@@ -1757,7 +1876,8 @@ begin
         if fSettings.CheckBox39.Checked then canvas.Font.Color:=clWindowText else canvas.Font.Color:=ColText;
         if (not fSettings.CheckBox39.Checked) then
         begin
-          if (fSettings.CheckBox41.Checked) and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then canvas.Font.Color:=Col('Editor_ASCII');
+          if (fSettings.CheckBox41.Checked) and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
+            canvas.Font.Color:=Col('Editor_ASCII');
           if wordstate='I'then canvas.Font.Color:=Col('Editor_Active') else
           begin
             canvas.Font.Color:=fcolor;
@@ -1781,13 +1901,15 @@ begin
         if showroma then
         begin
           if curlang='c'then
-            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontChineseGrid) else
+            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontChineseGrid)
+          else
             DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
           fdelete(kanaq,1,2);
         end else
         begin
           if curlang='c'then
-            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontChineseGrid) else
+            DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontChineseGrid)
+          else
             DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
           fdelete(kanaq,1,1);
         end;
@@ -1812,7 +1934,8 @@ begin
       rect.Bottom:=realy+t+rs*2;
       canvas.FillRect(rect);
       if curlang='c'then
-        DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid) else
+        DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
+      else
         DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
 //        showmessage(inttostr(realx)+#13+inttostr(realy)+#13+RecodeChar(GetDoc(cx,cy)));
       if (undersolid) and (st2) and (fSettings.CheckBox32.Checked) then
@@ -2269,7 +2392,7 @@ begin
     dw:=GetDocWord(x+rlen,y,wt,false);
     if wt<>2 then dw:='';
   end;
-  if flength(dw)>4 then dw:=fcopy(dw,1,4); //yes 4
+  if flength(dw)>4 then dw:=fcopy(dw,1,4); //yes 4 in unicode
   for i:=flength(dw) downto 1 do
     if EvalChar(fgetch(dw,i))=1 then fdelete(dw,i,length(dw)-i+1);
   result:=rlen;
@@ -2451,15 +2574,12 @@ begin
     end else
     if fgetch(clip,i)<>UH_CR then
     begin
-      doc[y]:=doc[y]+fgetch(clip,i-1);
+      doc[y]:=doc[y]+fgetch(clip,i);
+      if cliptrans.charcount>i-1 then
+        doctr[y].AddChar(cliptrans.chars[i-1])
+      else
+        doctr[y].AddChar('-', 9, 0, 1);
     end;
-  end;
- //Also copy doctr
-  if cliptrans.charcount>0 then
-    doctr[y].AddChars(cliptrans)
-  else begin
-    for i := 0 to flength(clip) - 1 do
-      doctr[y].AddChar('-', 9, 0, 1);
   end;
 
   l:=flength(doc[y]);
