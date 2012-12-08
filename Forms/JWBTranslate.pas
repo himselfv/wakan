@@ -155,8 +155,6 @@ type
     procedure ClearInsBlock;
     procedure BlockOp(docopy,dodelete:boolean);
     procedure PasteOp;
-
-    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
   public
@@ -170,6 +168,7 @@ type
     function GetDoc(ax,ay:integer):FChar;
     function IsHalfWidth(x,y:integer):boolean;
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
+    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
 
   protected
     oldcurx,oldcury: integer; //last cursor position, where it was drawn.
@@ -680,19 +679,26 @@ begin
           if inReading then begin
             rootLen := 0;
            //Explicit ruby has it from file, but with implicit we have to find the word root
-            for k := j to min(j+Length(kanji), doctr[i].charcount) do
-              if kanji[k-j+1]=GetDoc(k,i) then
+            for k := j to min(j+flength(kanji), doctr[i].charcount) do
+              if fgetch(kanji, k-j+1)=GetDoc(k,i) then
                 Inc(rootLen)
               else
                 break;
-            if (rootLen=0) and (AnnotMode=amRuby) then
-              rootLen := -1; //better annotate something than nothing
-             //in amKana it's the reverse: better replace nothing than too much
-           //Don't write words which are in kana to begin with!
-//            for k := 1 to min(Length()) - 1 do
+            if (rootLen=0)
+           //we have found no match per kanji, let's try it the other way:
+           //assume the whole word is matched and check if there's anything special to reading
+            and (reading<>fcopy(doc[i], j, j+flength(reading)))
+            and (AnnotMode=amRuby) //better annotate something than nothing
+              //in amKana it's the reverse: better replace nothing than too much
+            then
+              rootLen := -1; //annotate whole word
 
-            if kanji=reading then
-              rootLen := 0; //just stop
+           //In these cases we also hide reading during the rendering.
+           //I'm not yet sure what are these
+            if (upcase(doctr[i].chars[j].wordstate)<>'F') and (upcase(doctr[i].chars[j].wordstate)<>'D') then
+              rootLen := 0;
+            if rootLen=0 then
+              inReading := false;
           end;
         end;
 
