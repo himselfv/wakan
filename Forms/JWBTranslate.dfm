@@ -571,7 +571,7 @@ object fTranslate: TfTranslate
     ShowHint = True
     OnClick = sbClipPasteClick
   end
-  object Label1: TLabel
+  object lblFilename: TLabel
     Left = 547
     Top = 13
     Width = 134
@@ -785,8 +785,8 @@ object fTranslate: TfTranslate
   object SaveTextDialog: TSaveDialog
     DefaultExt = '.txt'
     Filter = 
-      'Text file (*.txt)|*.txt|WaKan text with translations (*.wtt)|*.w' +
-      'tt'
+      'Text file (*.txt)|*.txt|Text file with kana readings as Aozora R' +
+      'uby (*.txt)|*.txt|WaKan text with translations (*.wtt)|*.wtt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Left = 103
     Top = 44
