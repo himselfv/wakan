@@ -2548,7 +2548,7 @@ begin
           learnstate:=9
         else
         if (Ord(learnstate_s[1])>=Ord('0')) and (Ord(learnstate_s[1])<=Ord('9')) then
-          learnstate := Ord(learnstate_s)-Ord(0)
+          learnstate := Ord(learnstate_s[1])-Ord(0)
         else
           learnstate := 9;
       end;

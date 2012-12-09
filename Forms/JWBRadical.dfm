@@ -94,12 +94,14 @@ object fRadical: TfRadical
     Anchors = [akLeft, akBottom]
     Caption = '#00390^eSet filter'
     Default = True
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 1
+    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -118,10 +120,6 @@ object fRadical: TfRadical
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
-    ParentFont = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 600
@@ -130,17 +128,15 @@ object fRadical: TfRadical
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '#00170^eClose'
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    Kind = bkCancel
-    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 2
     OnClick = BitBtn2Click
+    Kind = bkCancel
   end
   object CheckBox1: TCheckBox
     Left = 256

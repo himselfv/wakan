@@ -33,6 +33,10 @@ object fSettings: TfSettings
     object TabSheet8: TTabSheet
       Caption = '#00398^eGeneral^cObecn'#1081
       ImageIndex = 7
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label41: TLabel
         Left = 16
         Top = 224
@@ -190,6 +194,10 @@ object fSettings: TfSettings
     end
     object TabSheet1: TTabSheet
       Caption = '#00412^eRomanization^cRomanizace'
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -494,6 +502,10 @@ object fSettings: TfSettings
     object TabSheet2: TTabSheet
       Caption = '#00298^eCharacter list^cSeznam znak'#1097
       ImageIndex = 1
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -540,6 +552,7 @@ object fSettings: TfSettings
         Width = 233
         Height = 21
         Style = csDropDownList
+        ItemHeight = 0
         TabOrder = 2
         Items.Strings = (
           'Bushu'
@@ -582,6 +595,10 @@ object fSettings: TfSettings
     object TabSheet4: TTabSheet
       Caption = '#00217^eDictionary^cSlovn'#1085'k'
       ImageIndex = 3
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -703,6 +720,10 @@ object fSettings: TfSettings
     object TabSheet3: TTabSheet
       Caption = '#00450^eFonts^cFonty'
       ImageIndex = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1105,6 +1126,10 @@ object fSettings: TfSettings
     object TabSheet5: TTabSheet
       Caption = '#00465^eWord list printing^cTisk seznamu slov'
       ImageIndex = 4
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1224,6 +1249,10 @@ object fSettings: TfSettings
     object TabSheet6: TTabSheet
       Caption = '#00488^eCharacter cards printing^cTisk karet znak'#1097
       ImageIndex = 5
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1435,6 +1464,10 @@ object fSettings: TfSettings
     object TabSheet7: TTabSheet
       Caption = '#00504^eDatabase maintenance^c'#1066'dr'#1115'ba datab'#1073'ze'
       ImageIndex = 6
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label48: TLabel
         Left = 224
         Top = 176
@@ -1564,6 +1597,10 @@ object fSettings: TfSettings
     object TabSheet9: TTabSheet
       Caption = '#00300^eText translator^cP'#1096'eklad textu'
       ImageIndex = 8
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label25: TLabel
         Left = 16
         Top = 248
@@ -1797,6 +1834,10 @@ object fSettings: TfSettings
     object TabSheet10: TTabSheet
       Caption = '#00530^eCharacter details^cDetaily znak'#1097
       ImageIndex = 9
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         471
         372)
@@ -1911,6 +1952,10 @@ object fSettings: TfSettings
     object TabSheet11: TTabSheet
       Caption = '#00538^ePopup tool^cPopup okno'
       ImageIndex = 10
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -2073,6 +2118,10 @@ object fSettings: TfSettings
     object TabSheet12: TTabSheet
       Caption = '#00551^eColors^cBarvy'
       ImageIndex = 11
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         471
         372)
@@ -2135,6 +2184,7 @@ object fSettings: TfSettings
         Width = 313
         Height = 21
         Style = csDropDownList
+        ItemHeight = 0
         TabOrder = 4
         OnChange = ComboBox2Change
         Items.Strings = (
@@ -2288,6 +2338,10 @@ object fSettings: TfSettings
     object TabSheet14: TTabSheet
       Caption = '^eAnnotations^cAnotace'
       ImageIndex = 13
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2382,11 +2436,9 @@ object fSettings: TfSettings
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
-    Kind = bkOK
-    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = BitBtn1Click
+    Kind = bkOK
   end
   object Button6: TButton
     Left = 8

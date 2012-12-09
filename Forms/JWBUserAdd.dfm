@@ -142,6 +142,7 @@ object fUserAdd: TfUserAdd
     Width = 371
     Height = 21
     Anchors = [akTop, akRight]
+    ItemHeight = 0
     TabOrder = 2
   end
   object BitBtn1: TBitBtn
@@ -151,10 +152,8 @@ object fUserAdd: TfUserAdd
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '#00062^eAdd to vocabulary'
-    DoubleBuffered = True
-    Kind = bkOK
-    ParentDoubleBuffered = False
     TabOrder = 3
+    Kind = bkOK
   end
   object BitBtn2: TBitBtn
     Left = 537
@@ -163,9 +162,7 @@ object fUserAdd: TfUserAdd
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '#00050^eCancel'
-    DoubleBuffered = True
-    Kind = bkCancel
-    ParentDoubleBuffered = False
     TabOrder = 4
+    Kind = bkCancel
   end
 end

@@ -55,10 +55,10 @@ const
   UH_IDG_SPACE:FChar = '3000'; //Ideographic space (full-width)
   UH_IDG_COMMA:FChar = '3001';
 
-  UH_AORUBY_BLOCKOPEN:FChar = 'FF5C';
+  UH_AORUBY_TEXTBREAK:FChar = 'FF5C';
   UH_AORUBY_OPEN:FChar = '300A';
   UH_AORUBY_CLOSE:FChar = '300B';
-  UH_AORUBY_COMM_OPEN:FChar = 'FF3B'
+  UH_AORUBY_COMM_OPEN:FChar = 'FF3B';
   UH_AORUBY_COMM_CLOSE:FChar = 'FF3D';
   UH_AORUBY_TAG_OPEN:FChar = '003C';
   UH_AORUBY_TAG_CLOSE:FChar = '003E';
@@ -175,6 +175,8 @@ function fstrtohex(const s: FString): string; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
 
 
@@ -455,7 +457,7 @@ begin
     Dec(cnt);
   end;
   Result := cnt<=0;
-end;
+end;                                        
 {$ENDIF}
 
 
@@ -465,7 +467,7 @@ We'll try to do it fast.
 }
 
 //Increments a valid PChar pointer 4 characters or returns false if the string ends before that
-function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFChar(var pc: PAnsiChar): boolean;
 begin
   Result := false;
   if pc^=#00 then exit;
@@ -479,7 +481,7 @@ begin
   Result := true;
 end;
 
-function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFCharW(var pc: PWideChar): boolean;
 begin
   Result := false;
   if pc^=#00 then exit;

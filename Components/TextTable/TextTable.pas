@@ -121,6 +121,7 @@ procedure LogAlloc(s:string;len:integer);
 procedure ShowAllocStats;
 
 implementation
+uses JWBStrings;
 
 var dataalloc,structalloc,indexalloc:integer;
     tottim,datatim,othtim,proctim:double;
@@ -724,6 +725,9 @@ var i,ii:integer;
  {$IFDEF UNICODE}
   ansi_s: AnsiString;
   value_c: UnicodeString;
+ {$ELSE}
+  pb: PByte;
+  pc: PChar;
  {$ENDIF}
 begin
   if rec>=reccount then

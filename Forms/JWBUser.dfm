@@ -25,14 +25,14 @@ object fUser: TfUser
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 702
+    Width = 704
     Height = 214
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
     DesignSize = (
-      702
+      704
       214)
     object SpeedButton1: TSpeedButton
       Left = 11
@@ -529,12 +529,14 @@ object fUser: TfUser
       Anchors = [akTop, akRight]
       Caption = '#00669^eSearch'
       Default = True
-      DoubleBuffered = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
       Font.Style = []
+      ParentFont = False
+      TabOrder = 2
+      OnClick = BitBtn1Click
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -549,23 +551,19 @@ object fUser: TfUser
         33333337FFFFFF7FF3333333000000000333333777777777F33333330000000B
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
-      ParentDoubleBuffered = False
-      ParentFont = False
-      TabOrder = 2
-      OnClick = BitBtn1Click
     end
   end
   object Panel2: TPanel
     Left = 0
     Top = 214
-    Width = 702
+    Width = 704
     Height = 0
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
   end
   object Panel3: TPanel
-    Left = 702
+    Left = 704
     Top = 0
     Width = 0
     Height = 214

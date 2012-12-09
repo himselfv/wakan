@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Grids, ExtCtrls, RXCtrls, Buttons, StdCtrls;
 
-type
+type           
   TfRadical = class(TForm)
     DrawGrid1: TDrawGrid;
     RxLabel17: TRxLabel;
