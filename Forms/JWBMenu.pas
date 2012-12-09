@@ -393,12 +393,8 @@ type
     ResFixVal:integer;
     StrokeOrderPackage:TPackageSource;
     screenTipShown:boolean;
-    screenTipText:string;
-    screenTipWt:integer;
+
     screenTipDebug:string;
-    screenTipList:TStringList;
-    screenTipWords,ScreenTipWidth:integer;
-    screenTipButton:integer;
     screenModeSc,screenModeWk:boolean;
     screenTipImmediate:boolean;
     ctlFileMap:cardinal;
@@ -440,9 +436,6 @@ type
     procedure FormUndock(form:TForm);
     procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
     procedure HideScreenTip;
-    procedure PaintScreenTip;
-    procedure DrawPopupButtons(sel:integer);
-    procedure PopupMouseMove(x,y:integer);
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
     procedure PopupImmediate(left:boolean);
     procedure RebuildUserIndex;
@@ -577,9 +570,7 @@ const
   CurDictVer=7;
   CurDicVer=4;
 
-  PopupButtonNum=4;
-  PopupButtonWidth=23;
-  PopupButtonSep=2;
+
 
 function _l(id:string):string;
 
@@ -4010,15 +4001,14 @@ begin
   if ((wt<7) and (not fSettings.CheckBox28.Checked)) then exit;
   fScreenTip:=TfScreenTip.Create(nil);
   screenTipShown:=true;
-  screenTipList:=TStringList.Create;
   maxwords:=strtoint(fSettings.Edit24.Text);
   if maxwordss<10 then maxwordss:=10;
   if wt=7 then
   begin
     //Apparently, word type 7 means "latin word", so we try to look for one
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
-    if (screenTipList.Count=0) then
+    DicSearch(fstrtouni(s),2,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    if (fScreenTip.screenTipList.Count=0) then
     begin
       ss:=fstrtouni(s);
      //What the hell are we doing here?! "If nothing matches, try deleting
@@ -4026,13 +4016,14 @@ begin
      //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,2,mtExactMatch,false,7,maxwordss,screenTipList,5,wasfull);
+      DicSearch(ss,2,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
     end;
   end;
   if wt<7 then
-    DicSearch(s,4,mtExactMatch,false,wt,maxwordss,screenTipList,5,wasfull);
-  if maxwords>screenTipList.Count then maxwords:=screenTipList.Count;
-  screenTipWords:=maxwords;
+    DicSearch(s,4,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+  if maxwords>fScreenTip.screenTipList.Count then
+    maxwords:=fScreenTip.screenTipList.Count;
+  fScreenTip.screenTipWords:=maxwords;
   tpp:=20;
   ch:=GridFontSize+3;
   kch:=strtoint(fSettings.Edit26.Text);
@@ -4041,7 +4032,7 @@ begin
   maxslen:=0;
   for i:=0 to maxwords-1 do
   begin
-    ss:=screenTipList[i];
+    ss:=fScreenTip.screenTipList[i];
     slen:=strtoint(copy(ss,18,2));
     if slen>maxslen then maxslen:=slen;
     delete(ss,1,30);
@@ -4065,16 +4056,17 @@ begin
   optwidth:=optwidth div kch;
   if optwidth<strtoint(fSettings.Edit27.Text) then optwidth:=strtoint(fSettings.Edit27.Text);
   if optwidth>strtoint(fSettings.Edit28.Text) then optwidth:=strtoint(fSettings.Edit28.Text);
-  ScreenTipWidth:=optwidth;
+  fScreenTip.ScreenTipWidth:=optwidth;
   hsiz:=optwidth;
   sep:=4;
   vfsiz:=vsiz+5;
   hfsiz:=hsiz+vsiz+4;
   kkcw:=hfsiz*kch;
   kkch:=vfsiz*kch;
-  screenTipText:=s;
-  if proposeds<>'' then screenTipText:=proposeds;
-  screenTipWt:=wt;
+  fScreenTip.screenTipText:=s;
+  if proposeds<>'' then
+    fScreenTip.screenTipText:=proposeds;
+  fScreenTip.screenTipWt:=wt;
   fScreenTip.Left:=x;
   fScreenTip.Top:=y;
   fScreenTip.Width:=kkcw+sep*2+1;
@@ -4086,88 +4078,34 @@ begin
     if x+fScreenTip.Width>Screen.Width then fScreenTip.Left:=Screen.Width-fScreenTip.Width;
   end;
   SetWindowPos(fScreenTip.handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
-  screenTipButton:=0;
-  PopupMouseMove(Mouse.CursorPos.x-fScreenTip.left,Mouse.CursorPos.y-fScreenTip.Top);
-end;
-
-procedure TfMenu.DrawPopupButtons(sel:integer);
-var i:integer;
-    rect:TRect;
-    s1,s2:string;
-begin
-  for i:=0 to PopupButtonNum-1 do
-  begin
-    fScreenTip.pb.Canvas.Pen.Color:=clBlack;
-    if sel=i+1 then fScreenTip.pb.Canvas.Brush.Color:=clBlack else fScreenTip.pb.Canvas.Brush.Color:=clWhite;
-    rect.left:=2+PopupButtonWidth*i+PopupButtonSep*(i+1);
-    rect.right:=rect.left+PopupButtonWidth;
-    rect.top:=3;
-    rect.bottom:=22;
-    fScreenTip.pb.Canvas.Rectangle(rect);
-    case i of
-      0:s1:='#00869^eClip^cSchr';
-      1:s1:='#00869^eClip^cSchr';
-      2:s1:='#00870^eShow^cUkaž';
-      3:s1:='#00870^eShow^cUkaž';
-    end;
-    case i of
-      0:s2:='#00871^eAdd^cCPøid';
-      1:s2:='#00872^eRepl^cPøep';
-      2:s2:='#00873^eDict^cSlov';
-      3:s2:='#00874^eChar^cZnak';
-    end;
-    rect.left:=rect.left+1;
-    rect.top:=rect.top+1;
-    rect.right:=rect.right-1;
-    rect.bottom:=rect.bottom-1;
-    if sel=i+1 then fScreenTip.pb.Canvas.Font.Color:=clWhite else fScreenTip.pb.Canvas.Font.Color:=clBlack;
-    fScreenTip.pb.Canvas.Font.Name:='Arial';
-    fScreenTip.pb.Canvas.Font.Height:=9;
-    fScreenTip.pb.Canvas.Font.Style:=[];
-    fScreenTip.pb.Canvas.TextRect(rect,rect.left+1,rect.top,_l(s1));
-    rect.top:=rect.top+9;
-    fScreenTip.pb.Canvas.TextRect(rect,rect.left+1,rect.top,_l(s2));
-  end;
-end;
-
-procedure TfMenu.PopupMouseMove(x,y:integer);
-var sb:integer;
-begin
-  x:=x-2-PopupButtonSep;
-  sb:=(x div (PopupButtonWidth+PopupButtonSep))+1;
-  if (sb>PopupButtonNum) or (y<3) or (y>22) or (x mod (PopupButtonWidth+PopupButtonSep)>PopupButtonWidth) then
-    sb:=0;
-  if sb<>screenTipButton then
-  begin
-    screenTipButton:=sb;
-    DrawPopupButtons(screenTipButton);
-  end;
+  fScreenTip.screenTipButton:=0;
+  fScreenTip.PopupMouseMove(Mouse.CursorPos.x-fScreenTip.left,Mouse.CursorPos.y-fScreenTip.Top);
 end;
 
 procedure TfMenu.PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
 begin
   if fRadical.Visible then exit;
-  PopupMouseMove(x,y);
-  if screenTipButton=0 then exit;
-  if (screenTipButton>2) and (not fMenu.Focused) then fMenu.Show;
-  case screenTipButton of
+  fScreenTip.PopupMouseMove(x,y);
+  if fScreenTip.screenTipButton=0 then exit;
+  if (fScreenTip.screenTipButton>2) and (not fMenu.Focused) then fMenu.Show;
+  case fScreenTip.screenTipButton of
     1:begin
-        clip:=clip+screenTipText;
+        clip:=clip+fScreenTip.screenTipText;
         ChangeClipboard;
       end;
     2:begin
-        clip:=screenTipText;
+        clip:=fScreenTip.screenTipText;
         ChangeClipboard;
       end;
     3:begin
-        clip:=screenTipText;
+        clip:=fScreenTip.screenTipText;
         ChangeClipboard;
         if not fRadical.Visible then aDictClipboard.Execute;
       end;
     4:begin
         if fRadical.Visible then exit;
         if not fKanjiDetails.Visible then aKanjiDetails.Execute;
-        fKanjiDetails.SetCharDetails(fcopy(screenTipText,1,1));
+        fKanjiDetails.SetCharDetails(fcopy(fScreenTip.screenTipText,1,1));
       end;
   end;
 end;
@@ -4179,101 +4117,10 @@ begin
   screenTipImmediate:=false;
 end;
 
-procedure TfMenu.PaintScreenTip;
-var sl:TStringList;
-    maxwords:integer;
-    ss:string;
-    ch,kch:integer;
-    rect:TRect;
-    kkch,kkcw:integer;
-    vsiz,hsiz,vfsiz,hfsiz:integer;
-    i:integer;
-    s:string;
-    wt:integer;
-    sep:integer;
-    tpp:integer;
-    cl:TColor;
-    FontJpCh:string;
-begin
-  s:=screenTipText;
-  wt:=screenTipWt;
-  sl:=screenTipList;
-  cl:=Col('Popup_Back');
-  maxwords:=strtoint(fSettings.Edit24.Text);
-  if maxwords>sl.Count then maxwords:=sl.Count;
-  maxwords:=screenTipWords;
-  tpp:=20;
-  ch:=GridFontSize+3;
-  kch:=strtoint(fSettings.Edit26.Text);
-  vsiz:=5;
-  hsiz:=ScreenTipWidth;
-  sep:=4;
-  vfsiz:=vsiz+5;
-  hfsiz:=hsiz+vsiz+4;
-  kkcw:=hfsiz*kch;
-  kkch:=vfsiz*kch;
-  fScreenTip.Width:=kkcw+sep*2;
-  fScreenTip.pb.Canvas.Brush.Color:=cl;
-  fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
-  fScreenTip.pb.Canvas.Rectangle(0,0,fScreenTip.Width,fScreenTip.Height);
-//  fScreenTip.pb.Canvas.Brush.Color:=cl;
-//  fScreenTip.pb.Canvas.Pen.Color:=clBlack;
-//  fScreenTip.pb.Canvas.Rectangle(sep,sep,fScreenTip.Width-sep,tpp+1+sep);
-  DrawPopupButtons(screenTipButton);
-  fScreenTip.pb.Canvas.Brush.Color:=cl;
-  fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
-  DrawUnicode(fScreenTip.pb.Canvas,sep+2+PopupButtonNum*PopupButtonWidth+PopupButtonNum*PopupButtonSep+sep,sep,tpp-4,s,FontSmall);
-  fScreenTip.pb.Canvas.Rectangle(sep,sep+tpp,fScreenTip.Width-sep,sep+maxwords*ch+tpp);
-  if curlang='c'then FontJpCh:=FontChinese else FontJpCh:=FontJapanese;
-  for i:=0 to maxwords-1 do
-  begin
-    ss:=sl[i];
-    delete(ss,1,30);
-    rect.left:=sep+1;
-    rect.right:=fScreenTip.Width-sep-2;
-    rect.top:=sep+ch*i+1+tpp;
-    rect.bottom:=sep+ch*i+ch+tpp;
-    DrawPackedWordInfo(fScreenTip.pb.Canvas,rect,ss,ch,true);
-    fScreenTip.pb.Canvas.MoveTo(sep+1,sep+ch*i+ch+tpp);
-    fScreenTip.pb.Canvas.LineTo(fScreenTip.Width-sep-1,sep+ch*i+ch+tpp);
-  end;
-  fScreenTip.pb.canvas.Font.Style:=[];
-  fScreenTip.pb.canvas.Font.Color:=Col('Popup_Text');
-  if (wt=1) and (fSettings.CheckBox48.Checked) then
-  begin
-    fScreenTip.pb.Canvas.Brush.Color:=Col('Popup_Card');
-    fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    fScreenTip.pb.Canvas.Rectangle(sep,sep*2+maxwords*ch+tpp,fScreenTip.Width-sep,sep*2+maxwords*ch+kkch+tpp);
-    fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    DrawKanjiCard(fScreenTip.pb.Canvas,copy(s,1,4),sep,sep*2+maxwords*ch+tpp,
-    kch,false,false,true,true,true,true,true,true,false,true,true,hsiz,vsiz,2,FontJpCh);
-    fScreenTip.pb.Canvas.Brush.Color:=Col('Popup_Text');
-    fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    rect.left:=sep;
-    rect.top:=tpp+sep*2+maxwords*ch;
-    rect.right:=fScreenTip.Width-sep;
-    rect.bottom:=fScreenTip.Height-sep;
-    fScreenTip.pb.Canvas.FrameRect(rect);
-  end;
-  fScreenTip.pb.Canvas.Brush.Color:=Col('Popup_Text');
-  fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
-  rect.left:=sep;
-  rect.top:=tpp+sep;
-  rect.right:=fScreenTip.Width-sep;
-  rect.bottom:=tpp+sep+maxwords*ch+1;
-  fScreenTip.pb.Canvas.FrameRect(rect);
-  fScreenTip.pb.Canvas.Font.Height:=12;
-  fScreenTip.pb.Canvas.Font.Name:='Arial';
-  fScreenTip.pb.Canvas.Brush.Color:=clWhite;
-  fScreenTip.pb.Canvas.Pen.Color:=clBlack;
-//  DrawUnicode(fScreenTip.pb.Canvas,7,fScreenTip.Height-20,12,screenTipDebug,FontSmall);
-end;
-
 procedure TfMenu.HideScreenTip;
 begin
   fScreenTip.Hide;
   fScreenTip.Free;
-  screenTipList.Free;
   screenTipShown:=false;
 end;
 

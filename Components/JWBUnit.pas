@@ -79,7 +79,7 @@ procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:in
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
-procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:string; ch:integer;boldfont:boolean);
+procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 procedure PaintScreenTipBlock;
@@ -1342,7 +1342,7 @@ begin
   end;
 end;
 
-procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
+procedure SplitWord(s:FString; var sp1,sp2,sp4,sp3:FString);
 begin
   sp2:='';
   sp1:='';
@@ -1987,8 +1987,8 @@ begin
   Canvas.Font.Size:=9;
 end;
 
-procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:string; ch:integer;boldfont:boolean);
-var s1,sx1,s2,s3,s4:string;
+procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
+var s1,sx1,s2,s3,s4:FString;
 begin
   SplitWord(s,s1,s2,s3,s4);
   if curlang='c'then
@@ -1999,17 +1999,17 @@ begin
     sx1:=s1;
     s1:=s1+UH_SPACE+s2;
     DrawWordInfo(Canvas,rect,false,false,0,ALTCH_AT+s1,false,false,ch-3,boldfont);
-    rect.left:=rect.left+(length(sx1) div 4)*ch+ch+(length(s2) div 8)*ch;
+    rect.left:=rect.left+flength(sx1)*ch+ch+(flength(s2) div 2)*ch;
   end else
   begin
     DrawWordInfo(Canvas,rect,false,false,0,ALTCH_AT+s1,false,false,ch-3,boldfont);
-    rect.left:=rect.left+(length(s1) div 4)*ch;
+    rect.left:=rect.left+flength(remexcl(s1))*ch;
   end;
   if (s2<>s1) and (curlang='j') then
   begin
     if s2[1]=ALTCH_EXCL then s2:=ALTCH_EXCL+s1[2]+UH_UNKNOWN_KANJI+copy(s2,3,length(s2)-2) else s2:=UH_UNKNOWN_KANJI+s2;
     DrawWordInfo(Canvas,rect,false,false,1,ALTCH_AT+s2,false,false,ch-3,boldfont);
-    rect.left:=rect.left+(length(s2) div 4)*ch;
+    rect.left:=rect.left+flength(remexcl(s2))*ch;
   end;
   DrawWordInfo(Canvas,rect,false,false,2,s3,false,false,ch-3,boldfont);
 end;

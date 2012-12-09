@@ -170,6 +170,8 @@ procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;
 function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
+function hextofstr(const s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
+function fstrtohex(const s: FString): string; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -416,6 +418,26 @@ begin
   Result := s;
  {$ELSE}
   Result := HexToUnicode(s);
+ {$ENDIF}
+end;
+
+//Converts Hex to FString. On Ansi builds does nothing!
+function hextofstr(const s: string): FString;
+begin
+ {$IFDEF UNICODE}
+  Result := HexToUnicode(s);
+ {$ELSE}
+  Result := s;
+ {$ENDIF}
+end;
+
+//Converts FString to Hex. On Ansi builds does nothing
+function fstrtohex(const s: FString): string;
+begin
+ {$IFDEF UNICODE}
+  Result := UnicodeToHex(s);
+ {$ELSE}
+  Result := s;
  {$ENDIF}
 end;
 
@@ -755,7 +777,7 @@ end;
 
 function IsUpcaseLatin(ch: WideChar): boolean;
 begin
-  Result := ch in ['A'..'Z'];
+  Result := (Word(ch) and $FF00 = 0) and (AnsiChar(ch) in ['A'..'Z']);
 end;
 
 function IsLocaseLatin(ch: AnsiChar): boolean;
@@ -765,7 +787,7 @@ end;
 
 function IsLocaseLatin(ch: WideChar): boolean;
 begin
-  Result := ch in ['a'..'z'];
+  Result := (Word(ch) and $FF00 = 0) and (AnsiChar(ch) in ['a'..'z']);
 end;
 
 function LoCase(ch: AnsiChar): AnsiChar;

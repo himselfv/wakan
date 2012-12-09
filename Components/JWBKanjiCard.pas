@@ -21,9 +21,10 @@ procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
 var ony,kuny,defy:string;
     radf:integer;
     sl:TStringList;
-    s,ws:string;
+    s:string; //can contain fstring too
+    ws:FString;
     p:integer;
-    i,j,k:integer;
+    i,j:integer;
     rect:TRect;
     nch,ncv:integer;
     fontjpch:string;
@@ -32,6 +33,7 @@ var ony,kuny,defy:string;
     adddot:integer;
     dic:TJaletDic;
     mark,freq:string;
+    rt: integer; //TCharRead.Int(TCharReadType)
 begin
   if curlang='j'then fontjpch:=FontJapanese else fontjpch:=FontChinese;
   if curlang='j'then fontjpchgrid:=FontJapaneseGrid else fontjpchgrid:=FontChineseGrid;
@@ -47,11 +49,12 @@ begin
   TChar.Locate('Unicode',u,false);
   DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),u,calfont);
   if stcount then
-    if curlang<>'j'then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),UnicodeToHex(TChar.Str(TCharStrokeCount)),FontEnglish);
+    if curlang<>'j'then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TCharStrokeCount)),FontEnglish);
   if stcount then
-    if curlang='j'then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),UnicodeToHex(TChar.Str(TCharJpStrokeCount)),FontEnglish);
+    if curlang='j'then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TCharJpStrokeCount)),FontEnglish);
   if strokeorder then
     DrawStrokeOrder(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),trunc((sizvert-1)*ch),u,trunc(ch/3*2),clBlack);
+
   {outer lines}
   if outlin then
   begin
@@ -61,11 +64,13 @@ begin
     canvas.LineTo(x,trunc(y+ncv*ch));
     canvas.LineTo(x,y);
   end;
+
   {alternate}
   radf:=fSettings.ComboBox1.ItemIndex+12;
   TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)),true);
   if alt then
     DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
+
   {radical}
   if rad then
     DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2+(sizvert/2)*ch),trunc((sizvert/8*3)*ch),u,FontJpchGrid);
@@ -74,6 +79,7 @@ begin
     canvas.MoveTo(trunc(x+ch*sizvert),trunc(y+ch/2));
     canvas.LineTo(trunc(x+ch*sizvert),trunc(y+ch*sizvert-ch/2));
   end;
+
   {compounds}
   sl.Clear;
   if comp then
@@ -83,11 +89,11 @@ begin
     while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=u) do
     begin
       TUser.Locate('Index',TUserIdx.Str(TUserIdxWord),true);
-      if length(TUser.Str(TUserKanji)) div 4<10 then
+      if flength(TUser.Str(TUserKanji))<10 then
 //      if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
         if TUserIdx.Bool(TUserIdxBegin) then
-          sl.Add('+'+inttostr(length(TUser.Str(TUserKanji)) div 4)+TUser.Str(TUserKanji)) else
-          sl.Add('-'+inttostr(length(TUser.Str(TUserKanji)) div 4)+TUser.Str(TUserKanji));
+          sl.Add('+'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji)) else
+          sl.Add('-'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji));
       TUserIdx.Next;
     end;
     sl.Sort;
@@ -95,12 +101,12 @@ begin
     for j:=0 to sizvert-2 do
     begin
       s:='';
-      while (p<sl.Count) and ((length(sl[p])-2) div 4+length(s) div 4+1<=sizhor) do
+      while (p<sl.Count) and (flenfc(length(sl[p])-2)+flength(s)+1<=sizhor) do
       begin
         s:=s+copy(sl[p],3,length(sl[p])-2)+UH_IDG_COMMA;
         inc(p);
       end;
-      if (p>=sl.Count) and (length(s)>3) then delete(s,length(s)-3,4);
+      if (p>=sl.Count) and (flength(s)>0) then fdelete(s,flength(s),1);
       if alt or rad then
         DrawUnicode(canvas,trunc(x+((sizvert)*3*ch)/2+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid) else
         DrawUnicode(canvas,trunc(x+(sizvert)*ch+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid);
@@ -111,6 +117,7 @@ begin
       canvas.LineTo(trunc(x+ch*(((sizvert*3)/2)+1)),trunc(y+ch*sizvert-ch/2));
     end;
   end;
+
   {full compounds}
   sl.Clear;
   if fullcomp then
@@ -123,12 +130,10 @@ begin
         dic:=dicts.Objects[i] as TJaletDic;
         dic.Demand;
         dic.FindIndexString(false,u);
-        k:=0;
         j:=dic.ReadIndex;
         while (j>0) do
         begin
           dic.TDict.Locate('Index',inttostr(j),true);
-          inc(k);
           if dic.TDictMarkers<>-1 then mark:=dic.TDict.Str(dic.TDictMarkers) else mark:='';
           freq:='0000000';
           if (dic.TDictFrequency<>-1) and (sortfreq) then freq:=inttostr(9999999-dic.TDict.Int(dic.TDictFrequency));
@@ -175,6 +180,7 @@ begin
       canvas.LineTo(trunc(x+nch*ch-ch/2),rect.top);
     end;
   end;
+
   {readings}
   if read then
   begin
@@ -189,9 +195,14 @@ begin
     TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
     while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
     begin
-      s:=TCharRead.Str(TCharReadReading);
+     //Unfortunately for us, TCharReadReading is stored as Hex text, type Ansi, and mixed with control characters
+     //so there's nothing we can do to convert it to unicode automatically on reading.
+     //We'll do it just before using the string.
+      s := TCharRead.Str(TCharReadReading);
+      rt := TCharRead.Int(TCharReadType);
       if curlang='j'then
-        if (TCharRead.Int(TCharReadType)>3) and (TCharRead.Int(TCharReadType)<7) then
+       //Make some adjustments to the string (replace control chars with FChar equivalents)
+        if (rt>3) and (rt<7) then
         begin
           ws:='';
           adddot:=0;
@@ -213,23 +224,26 @@ begin
             ws:=ws+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
             delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
           end;
-          if s[length(s)]='-'then ws:=ws+copy(s,1,length(s)-1)+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
-            else ws:=ws+s;
+          if s[length(s)]='-' then
+            ws:=ws+hextofstr(copy(s,1,length(s)-1))+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
+          else
+            ws:=ws+hextofstr(s);
         end;
-      if curlang='c'then ws:=TCharRead.Str(TCharReadReading);
-      case TCharRead.Int(TCharReadType) of
-        2:if curlang='c'then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+UnicodeToHex(', ')+ConvertPinYin(ws);
-        8:if curlang='c'then if kuny='' then kuny:=UnicodeToHex(lowercase(ws)) else kuny:=kuny+UnicodeToHex(', ')+UnicodeToHex(lowercase(ws));
-        4:if curlang='j'then if length(ony) div 4+length(ws) div 4+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
-        5:if curlang='j'then if length(kuny) div 4+length(ws) div 4+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
+      if curlang='c' then ws:=hextofstr(s);
+      case rt of
+        2:if curlang='c'then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+fstr(', ')+ConvertPinYin(ws);
+        8:if curlang='c'then if kuny='' then kuny:=fstr(lowercase(ws)) else kuny:=kuny+fstr(', ')+fstr(lowercase(ws));
+        4:if curlang='j'then if flength(ony)+flength(ws)+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
+        5:if curlang='j'then if flength(kuny)+flength(ws)+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
       end;
       TCharRead.Next;
     end;
-//        ony:=UnicodeToHex(KanaToRomaji(ony,3));
-//        kuny:=UnicodeToHex(KanaToRomaji(ony,3));
+//        ony:=fstr(KanaToRomaji(ony,3));
+//        kuny:=fstr(KanaToRomaji(ony,3));
     DrawUnicode(canvas,trunc(x+ch/2),trunc(y+sizvert*ch+ch/2),trunc(ch),ony,FontJpEnGrid);
     DrawUnicode(canvas,trunc(x+ch/2),trunc(y+sizvert*ch+ch/2+ch),trunc(ch),kuny,FontJpEnGrid);
   end;
+
   if mean then
   begin
     if inlin then if not read then
