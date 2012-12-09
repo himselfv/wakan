@@ -134,10 +134,7 @@ type
     procedure PaintBox6Paint(Sender: TObject);
     procedure PaintBox2Paint(Sender: TObject);
     procedure Button10Click(Sender: TObject);
-  private
-    { Private declarations }
   public
-    { Public declarations }
     step:integer;
     procedure Upd;
   end;

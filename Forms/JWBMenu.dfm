@@ -2,9 +2,7 @@ object fMenu: TfMenu
   Left = 373
   Top = 272
   VertScrollBar.Visible = False
-  Caption = 
-    '#00868^eTool for learning Japanese & Chinese^cN'#1073'stroj pro studen' +
-    'ty japon'#1113'tiny a '#1080#1085'n'#1113'tiny'
+  Caption = '#00868^eTool for learning Japanese & Chinese'
   ClientHeight = 485
   ClientWidth = 694
   Color = clBtnFace
@@ -145,10 +143,10 @@ object fMenu: TfMenu
       Top = 4
       Width = 71
       Height = 25
-      Hint = '#00212^eCharacter list (Ctrl-F1)^cSeznam znak'#1097' (Ctrl-F1)'
+      Hint = '#00212^eCharacter list (Ctrl-F1)'
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00213^eCharacters^cZnaky'
+      Caption = '#00213^eCharacters'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -165,10 +163,10 @@ object fMenu: TfMenu
       Top = 4
       Width = 69
       Height = 25
-      Hint = '#00214^eVocabulary manager (Ctrl-F4)^cMana'#1115'er slov'#1085#1080'ek (Ctrl-F4)'
+      Hint = '#00214^eVocabulary manager (Ctrl-F4)'
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00215^eVocabulary^cSlov'#1085#1080'ka'
+      Caption = '#00215^eVocabulary'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -185,10 +183,10 @@ object fMenu: TfMenu
       Top = 4
       Width = 71
       Height = 25
-      Hint = '#00216^eWord dictionary (Ctrl-F2)^cSlovn'#1085'k (Ctrl-F2)'
+      Hint = '#00216^eWord dictionary (Ctrl-F2)'
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00217^eDictionary^cSlovn'#1085'k'
+      Caption = '#00217^eDictionary'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -205,7 +203,7 @@ object fMenu: TfMenu
       Top = 2
       Width = 42
       Height = 29
-      Hint = '#00218^eChinese mode (F9)^cRe'#1115'im '#1080#1085'n'#1113'tiny (F9)'
+      Hint = '#00218^eChinese mode (F9)'
       AllowAllUp = True
       GroupIndex = 10
       Flat = True
@@ -304,7 +302,7 @@ object fMenu: TfMenu
       Top = 2
       Width = 42
       Height = 29
-      Hint = '#00219^eJapanese mode (F8)^cRe'#1115'im japon'#1113'tiny (F8)'
+      Hint = '#00219^eJapanese mode (F8)'
       AllowAllUp = True
       GroupIndex = 10
       Flat = True
@@ -397,7 +395,7 @@ object fMenu: TfMenu
       Top = 4
       Width = 25
       Height = 26
-      Hint = '#00220^eClear clipboard^cVymazat schr'#1073'nku'
+      Hint = '#00220^eClear clipboard'
       Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -429,10 +427,10 @@ object fMenu: TfMenu
       Top = 4
       Width = 123
       Height = 25
-      Hint = '#00221^eText editor (Ctrl-F3)^cTextov'#1101' editor (Ctrl-F3)'
+      Hint = '#00221^eText editor (Ctrl-F3)'
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00222^eEditor / Translator^cEditor / p'#1096'eklad'
+      Caption = '#00222^eEditor / Translator'
       Flat = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -476,9 +474,7 @@ object fMenu: TfMenu
       Top = 4
       Width = 25
       Height = 25
-      Hint = 
-        '#00223^eActivate/deactivate screen popup tool^cAktivovat/deaktiv' +
-        'ovat n'#1073'stroj Screen popup - vyskakovac'#1085' n'#1073'pov'#1084'du obrazovky'
+      Hint = '#00223^eActivate/deactivate screen popup tool'
       AllowAllUp = True
       GroupIndex = 20
       Flat = True
@@ -516,9 +512,7 @@ object fMenu: TfMenu
       Top = 4
       Width = 25
       Height = 25
-      Hint = 
-        '#00224^eActivate/deactivate WaKan popup tool^cAktivovat/deaktivo' +
-        'vat n'#1073'stroj Screen popup - vyskakovac'#1085' n'#1073'pov'#1084'du WaKanu'
+      Hint = '#00224^eActivate/deactivate WaKan popup tool'
       AllowAllUp = True
       GroupIndex = 21
       Flat = True
@@ -590,131 +584,129 @@ object fMenu: TfMenu
     Left = 464
     Top = 64
     object aSaveUser: TAction
-      Caption = '#00225^e&Save user changes^c&Ulo'#1115'it u'#1115'ivatelsk'#1081' nastaven'#1085
+      Caption = '#00225^e&Save user changes'
       OnExecute = aSaveUserExecute
     end
     object aCancelUser: TAction
-      Caption = '#00226^e&Cancel user changes^c&Zru'#1113'it u'#1115'ivatelsk'#1081' zm'#1084'ny'
+      Caption = '#00226^e&Cancel user changes'
       OnExecute = aCancelUserExecute
     end
     object aStatistics: TAction
-      Caption = '#00227^eS&tatistics...^c&Statistika...'
+      Caption = '#00227^eS&tatistics...'
       OnExecute = aStatisticsExecute
     end
     object aExit: TAction
-      Caption = '#00228^e&Exit^c&Ukon'#1080'it'
+      Caption = '#00228^e&Exit'
       ShortCut = 32856
       OnExecute = aExitExecute
     end
     object aKanji: TAction
-      Caption = '#00229^eCharacter &list^cSeznam &znak'#1097
+      Caption = '#00229^eCharacter &list'
       OnExecute = aKanjiExecute
     end
     object aKanjiSearch: TAction
-      Caption = '#00230^e&Search^c&Hled'#1073'n'#1085
+      Caption = '#00230^e&Search'
       OnExecute = aKanjiSearchExecute
     end
     object aKanjiSort: TAction
-      Caption = '#00231^eS&ort^c&T'#1096#1085'd'#1084'n'#1085
-      OnExecute = aKanjiSortExecute
+      Caption = '#00231^eS&ort'
     end
     object aKanjiDetails: TAction
-      Caption = '#00232^e&Details^c&Detaily'
+      Caption = '#00232^e&Details'
       ShortCut = 16452
       OnExecute = aKanjiDetailsExecute
     end
     object aKanjiCompounds: TAction
-      Caption = '#00233^e&Compounds^c&Slo'#1115'eniny'
+      Caption = '#00233^e&Compounds'
       OnExecute = aKanjiCompoundsExecute
     end
     object aKanjiPrint: TAction
-      Caption = '#00234^e&Print cards...^cT&isk karet...'
+      Caption = '#00234^e&Print cards...'
       ShortCut = 16501
       OnExecute = aKanjiPrintExecute
     end
     object aDict: TAction
-      Caption = '#00235^e&Word dictionary^c&Slovn'#1085'k'
+      Caption = '#00235^e&Word dictionary'
       OnExecute = aDictExecute
     end
     object aDictDetails: TAction
-      Caption = '#00236^e&Selected word^c&Vybran'#1081' slovo'
+      Caption = '#00236^e&Selected word'
       OnExecute = aDictDetailsExecute
     end
     object aDictKanji: TAction
-      Caption = '#00237^e&Characters in word^c&Znaky ve slov'#1084
+      Caption = '#00237^e&Characters in word'
       OnExecute = aDictKanjiExecute
     end
     object aDictCategories: TAction
-      Caption = '#00238^e&Information^c&Informace'
+      Caption = '#00238^e&Information'
       OnExecute = aDictCategoriesExecute
     end
     object aDictAdd: TAction
-      Caption = '#00239^e&Add to vocabulary^c&P'#1096'idat do slov'#1085#1080'ek'
+      Caption = '#00239^e&Add to vocabulary'
       OnExecute = aDictAddExecute
     end
     object aDictEditor: TAction
-      Caption = '#00240^e&Editor && translator^c&Editace a p'#1096'eklad'
+      Caption = '#00240^e&Editor && translator'
       OnExecute = aDictEditorExecute
     end
     object aUser: TAction
-      Caption = '#00241^eVocabulary &list^cSeznam &slov'#1085#1080'ek'
+      Caption = '#00241^eVocabulary &list'
       OnExecute = aUserExecute
     end
     object aUserAdd: TAction
-      Caption = '#00242^e&Add word^c&P'#1096'idat slov'#1085#1080'ko'
+      Caption = '#00242^e&Add word'
       ShortCut = 16459
       OnExecute = aUserAddExecute
     end
     object aUserSettings: TAction
-      Caption = '#00243^eList &settings^c&Nastaven'#1085' seznamu'
+      Caption = '#00243^eList &settings'
       OnExecute = aUserSettingsExecute
     end
     object aUserCategory: TAction
-      Caption = '#00244^e&Category^c&Kategorie'
-      OnExecute = aUserCategoryExecute
+      Caption = '#00244^e&Category'
     end
     object aUserDetails: TAction
-      Caption = '#00245^e&Word details^c&Detaily slov'#1085#1080'ka'
+      Caption = '#00245^e&Word details'
       OnExecute = aUserDetailsExecute
     end
     object aUserPrint: TAction
-      Caption = '#00246^e&Print list...^c&Tisk seznamu...'
+      Caption = '#00246^e&Print list...'
       ShortCut = 16503
       OnExecute = aUserPrintExecute
     end
     object aUserGenerate: TAction
-      Caption = '#00247^e&List generator...^c&Gener'#1073'tor seznamu...'
+      Caption = '#00247^e&List generator...'
       OnExecute = aUserGenerateExecute
     end
     object aSettings: TAction
-      Caption = '#00248^e&Settings...^c&Nastaven'#1085'...'
+      Caption = '#00248^e&Settings...'
       OnExecute = aSettingsExecute
     end
     object aSettingsDict: TAction
-      Caption = '#00249^e&Dictionary manager...^c&Mana'#1115'er slovn'#1085'k'#1097'...'
+      Caption = '#00249^e&Dictionary manager...'
       OnExecute = aSettingsDictExecute
     end
     object aLayout: TAction
-      Caption = '#00250^eLayout &manager...^cSpr'#1073'vce &rozvr'#1115'en'#1085'...'
+      Caption = '#00250^eLayout &manager...'
     end
     object aQuick1: TAction
-      Caption = '#00251^e&Windowed^c&Okenn'#1085
+      Caption = '#00251^e&Windowed'
       OnExecute = aQuick1Execute
     end
     object aQuick2: TAction
-      Caption = '#00252^e&Complete^c&'#1066'pln'#1081
+      Caption = '#00252^e&Complete'
       OnExecute = aQuick2Execute
     end
     object aQuick3: TAction
-      Caption = '#00253^e&Char. &search^cHled'#1073'n'#1085' &znak'#1097
+      Caption = '#00253^e&Char. &search'
       OnExecute = aQuick3Execute
     end
     object aQuick4: TAction
-      Caption = '#00254^e&Learning^c&U'#1080'ebn'#1085
+      Caption = '#00254^e&Learning'
       OnExecute = aQuick4Execute
     end
     object aQuick5: TAction
-      Caption = '#00255^e&Translation^c&P'#1096'ekl'#1073'd'#1073'n'#1085
+      Caption = '#00255^e&Translation'
       OnExecute = aQuick5Execute
     end
     object aQuick6: TAction
@@ -722,300 +714,294 @@ object fMenu: TfMenu
       OnExecute = aQuick6Execute
     end
     object aBorders: TAction
-      Caption = '#00256^eWindow &borders^c&Okraje oken'
+      Caption = '#00256^eWindow &borders'
       OnExecute = aBordersExecute
     end
     object aHelp: TAction
-      Caption = '#00257^e&Help contents...^c&Obsah n'#1073'pov'#1084'dy...'
+      Caption = '#00257^e&Help contents...'
       ShortCut = 112
       OnExecute = aHelpExecute
     end
     object aAbout: TAction
-      Caption = '#00258^e&About...^c&O programu...'
+      Caption = '#00258^e&About...'
       OnExecute = aAboutExecute
     end
     object aJapanese: TAction
-      Caption = '#00259^e&Japanese mode^cRe'#1115'im &japon'#1113'tiny'
+      Caption = '#00259^e&Japanese mode'
       ShortCut = 119
       OnExecute = aJapaneseExecute
     end
     object aChinese: TAction
-      Caption = '#00260^e&Chinese mode^cRe'#1115'im '#1080#1085'n'#1113'tin&y'
+      Caption = '#00260^e&Chinese mode'
       ShortCut = 120
       OnExecute = aChineseExecute
     end
     object aEditorNew: TAction
-      Caption = '#00261^eNew^cNov'#1101
+      Caption = '#00261^eNew'
       ShortCut = 16462
       OnExecute = aEditorNewExecute
     end
     object aEditorOpen: TAction
-      Caption = '#00262^eOpen...^cOtev'#1096#1085't...'
+      Caption = '#00262^eOpen...'
       ShortCut = 16463
       OnExecute = aEditorOpenExecute
     end
     object aEditorSave: TAction
-      Caption = '#00263^eSave^cUlo'#1115'it'
+      Caption = '#00263^eSave'
       ShortCut = 16467
       OnExecute = aEditorSaveExecute
     end
     object aEditorSaveAs: TAction
-      Caption = '#00264^eSave as...^cUlo'#1115'it jako...'
+      Caption = '#00264^eSave as...'
       OnExecute = aEditorSaveAsExecute
     end
     object aEditorCut: TAction
-      Caption = '#00265^eCut^cVyjmout'
+      Caption = '#00265^eCut'
       ShortCut = 16472
       OnExecute = aEditorCutExecute
     end
     object aEditorCopy: TAction
-      Caption = '#00266^eCopy^cKop'#1085'rovat'
+      Caption = '#00266^eCopy'
       ShortCut = 16451
       OnExecute = aEditorCopyExecute
     end
     object aEditorPaste: TAction
-      Caption = '#00267^ePaste^cVlo'#1115'it'
+      Caption = '#00267^ePaste'
       ShortCut = 16470
       OnExecute = aEditorPasteExecute
     end
     object aEditorSelectAll: TAction
-      Caption = '#00268^eSelect all^cVybrat v'#1113'e'
+      Caption = '#00268^eSelect all'
       ShortCut = 16449
       OnExecute = aEditorSelectAllExecute
     end
     object aEditorKanjiMode: TAction
-      Caption = '#00269^eCharacter mode^cRe'#1115'im znak'#1097
+      Caption = '#00269^eCharacter mode'
       Checked = True
       ShortCut = 16465
       OnExecute = aEditorKanjiModeExecute
     end
     object aEditorKanaMode: TAction
-      Caption = '#00270^eKana mode^cRe'#1115'im kany'
+      Caption = '#00270^eKana mode'
       ShortCut = 16471
       OnExecute = aEditorKanaModeExecute
     end
     object aEditorASCIIMode: TAction
-      Caption = '#00271^eASCII mode^cRe'#1115'im ASCII'
+      Caption = '#00271^eASCII mode'
       ShortCut = 16464
       OnExecute = aEditorASCIIModeExecute
     end
     object aEditorReading: TAction
-      Caption = '#00272^eDisplay reading^cZobrazit '#1080'ten'#1085
+      Caption = '#00272^eDisplay reading'
       Checked = True
       ShortCut = 16456
       OnExecute = aEditorReadingExecute
     end
     object aEditorMeaning: TAction
-      Caption = '#00273^eDisplay meaning^cZobrazit z'#1073'pis'
+      Caption = '#00273^eDisplay meaning'
       Checked = True
       ShortCut = 16458
       OnExecute = aEditorMeaningExecute
     end
     object aEditorClear: TAction
-      Caption = '#00274^eClear translation^cSmazat p'#1096'eklad'
+      Caption = '#00274^eClear translation'
       ShortCut = 16450
       OnExecute = aEditorClearExecute
     end
     object aEditorFill: TAction
-      Caption = '#00275^eAuto-fill translation^cAutomaticky doplnit p'#1096'eklad'
+      Caption = '#00275^eAuto-fill translation'
       ShortCut = 16454
       OnExecute = aEditorFillExecute
     end
     object aEditorSet: TAction
-      Caption = '#00276^eSet translation^cNastavit p'#1096'eklad'
+      Caption = '#00276^eSet translation'
       ShortCut = 16468
       OnExecute = aEditorSetExecute
     end
     object aEditorPrint: TAction
-      Caption = '#00277^ePrint...^cTisk...'
+      Caption = '#00277^ePrint...'
       ShortCut = 16502
       OnExecute = aEditorPrintExecute
     end
     object aKanjiAll: TAction
-      Caption = '#00278^eDisplay all^cZobrazit v'#1113'echny'
+      Caption = '#00278^eDisplay all'
       ShortCut = 16469
       OnExecute = aKanjiAllExecute
     end
     object aKanjiLearned: TAction
-      Caption = '#00279^eLearned only^cPouze nau'#1080'en'#1081
+      Caption = '#00279^eLearned only'
       OnExecute = aKanjiLearnedExecute
     end
     object aKanjiCommon: TAction
-      Caption = '#00280^eCommon only^cPouze b'#1084#1115'n'#1081
+      Caption = '#00280^eCommon only'
       OnExecute = aKanjiCommonExecute
     end
     object aKanjiClipboard: TAction
-      Caption = '#00281^eIn clipboard only^cPouze ve schr'#1073'nce'
+      Caption = '#00281^eIn clipboard only'
       OnExecute = aKanjiClipboardExecute
     end
     object aKanjiPinYin: TAction
-      Caption = '#00282^eSearch by PinYin^cHledat podle PinYin'
+      Caption = '#00282^eSearch by PinYin'
       ShortCut = 16457
       OnExecute = aKanjiPinYinExecute
     end
     object aKanjiYomi: TAction
-      Caption = '#00283^eSearch by Yomi^cHledat podle Yomi'
+      Caption = '#00283^eSearch by Yomi'
       ShortCut = 16473
       OnExecute = aKanjiYomiExecute
     end
     object aKanjiRadical: TAction
-      Caption = '#00284^eSearch by radical...^cHledat podle radik'#1073'lu...'
+      Caption = '#00284^eSearch by radical...'
       ShortCut = 16466
       OnExecute = aKanjiRadicalExecute
     end
     object aKanjiAddClipboard: TAction
-      Caption = '#00285^eAdd to clipboard^cP'#1096'idat do schr'#1073'nky'
+      Caption = '#00285^eAdd to clipboard'
       ShortCut = 16455
       OnExecute = aKanjiAddClipboardExecute
     end
     object aKanjiFullDetails: TAction
-      Caption = '#00286^eFull details^cPln'#1081' detaily'
+      Caption = '#00286^eFull details'
       OnExecute = aKanjiFullDetailsExecute
     end
     object aDictJapanese: TAction
-      Caption = '#00287^eJapanese/Chinese -> English^cJaponsky/'#1048#1085'nsky -> Anglicky'
+      Caption = '#00287^eJapanese/Chinese -> English'
       ShortCut = 113
       OnExecute = aDictJapaneseExecute
     end
     object aDictEnglish: TAction
-      Caption = '#00288^eEnglish -> Japanese/Chinese^cAnglicky -> Japonsky/'#1048#1085'nsky'
+      Caption = '#00288^eEnglish -> Japanese/Chinese'
       ShortCut = 114
       OnExecute = aDictEnglishExecute
     end
     object aDictClipboard: TAction
-      Caption = '#00289^eSearch by clipboard^cHledat podle schr'#1073'nky'
+      Caption = '#00289^eSearch by clipboard'
       ShortCut = 115
       OnExecute = aDictClipboardExecute
     end
     object aDictAddClipboard: TAction
-      Caption = '#00285^eAdd to clipboard^cP'#1096'idat do schr'#1073'nky'
+      Caption = '#00285^eAdd to clipboard'
       OnExecute = aDictAddClipboardExecute
     end
     object aDictExact: TAction
-      Caption = '#00290^eSearch exact word^cHledat p'#1096'esn'#1081' slovo'
+      Caption = '#00290^eSearch exact word'
       ShortCut = 116
       OnExecute = aDictExactExecute
     end
     object aDictBeginning: TAction
-      Caption = '#00291^eSearch beginning^cHledat za'#1080#1073'tek'
+      Caption = '#00291^eSearch beginning'
       ShortCut = 117
       OnExecute = aDictBeginningExecute
     end
     object aDictEnd: TAction
-      Caption = '#00292^eSearch ending^cHledat konec'
+      Caption = '#00292^eSearch ending'
       ShortCut = 118
       OnExecute = aDictEndExecute
     end
     object aKanjiWindow: TAction
-      Caption = '#00293^eCharacter window^cOkno znak'#1097
+      Caption = '#00293^eCharacter window'
       ShortCut = 16459
       OnExecute = aKanjiWindowExecute
     end
     object aKanjiSetLearned: TAction
-      Caption = '#00294^eSet as (un)learned^cNastavit jako (ne)nau'#1080'en'#1081
+      Caption = '#00294^eSet as (un)learned'
       ShortCut = 16460
       OnExecute = aKanjiSetLearnedExecute
     end
     object aKanjiMeaning: TAction
-      Caption = '#00295^eSearch by meaning^cHledat podle v'#1101'znamu'
+      Caption = '#00295^eSearch by meaning'
       ShortCut = 16461
       OnExecute = aKanjiMeaningExecute
     end
     object aEditorWindow: TAction
-      Caption = '#00296^eEditor window^cOkno editoru'
+      Caption = '#00296^eEditor window'
       ShortCut = 16453
       OnExecute = aEditorWindowExecute
     end
     object aEditorSmallFont: TAction
-      Caption = '#00052^eSmall^cMal'#1073
+      Caption = '#00052^eSmall'
       OnExecute = aEditorSmallFontExecute
     end
     object aEditorLargeFont: TAction
-      Caption = '#00297^eLarge^cVelk'#1073
+      Caption = '#00297^eLarge'
       OnExecute = aEditorLargeFontExecute
     end
     object aEditorMedFont: TAction
-      Caption = '#00053^eMedium^cSt'#1096'edn'#1085
+      Caption = '#00053^eMedium'
       OnExecute = aEditorMedFontExecute
     end
     object aMode1: TAction
-      Caption = '#00298^eCharacter list^cSeznam znak'#1097
+      Caption = '#00298^eCharacter list'
       ShortCut = 16496
       OnExecute = aMode1Execute
     end
     object aMode2: TAction
-      Caption = '#00217^eDictionary^cSlovn'#1085'k'
+      Caption = '#00217^eDictionary'
       ShortCut = 16497
       OnExecute = aMode2Execute
     end
     object aMode3: TAction
-      Caption = '#00299^eText editor^cTextov'#1101' editor'
+      Caption = '#00299^eText editor'
       ShortCut = 16498
       OnExecute = aMode3Execute
     end
     object aMode4: TAction
-      Caption = '#00300^eText translator^cP'#1096'eklad textu'
+      Caption = '#00300^eText translator'
       OnExecute = aMode4Execute
     end
     object aMode5: TAction
-      Caption = '#00215^eVocabulary^cSlov'#1085#1080'ka'
+      Caption = '#00215^eVocabulary'
       ShortCut = 16499
       OnExecute = aMode5Execute
     end
     object aDictInflect: TAction
-      Caption = '#00301^eSearch inflected words^cHledat inflektovan'#1073' slova'
+      Caption = '#00301^eSearch inflected words'
       OnExecute = aDictInflectExecute
     end
     object aDictAuto: TAction
-      Caption = '#00302^eAuto-search while typing^cAutomaticky hledat p'#1096'i psan'#1085
+      Caption = '#00302^eAuto-search while typing'
       OnExecute = aDictAutoExecute
     end
     object aDictGroup1: TAction
-      Caption = 
-        '#00303^eUse dictionaries in group 1^cPou'#1115#1085'vat slovn'#1085'ky ze skupin' +
-        'y 1'
+      Caption = '#00303^eUse dictionaries in group 1'
       ShortCut = 16433
       OnExecute = aDictGroup1Execute
     end
     object aDictGroup2: TAction
-      Caption = 
-        '#00304^eUse dictionaries in group 2^cPou'#1115#1085'vat slovn'#1085'ky ze skupin' +
-        'y 2'
+      Caption = '#00304^eUse dictionaries in group 2'
       ShortCut = 16434
       OnExecute = aDictGroup2Execute
     end
     object aDictGroup3: TAction
-      Caption = 
-        '#00305^eUse dictionaries in group 3^cPou'#1115#1085'vat slovn'#1085'ky ze skupin' +
-        'y 3'
+      Caption = '#00305^eUse dictionaries in group 3'
       ShortCut = 16435
       OnExecute = aDictGroup3Execute
     end
     object aDictVoc1: TAction
-      Caption = '#00306^eExamples panel^cPanel P'#1096#1085'klady'
+      Caption = '#00306^eExamples panel'
       ShortCut = 16436
       OnExecute = aDictVoc1Execute
     end
     object aDictVoc2: TAction
-      Caption = '#00307^eVocabulary panel^cPanel Slov'#1085#1080'ka'
+      Caption = '#00307^eVocabulary panel'
       ShortCut = 16437
       OnExecute = aDictVoc2Execute
     end
     object aDictVoc3: TAction
-      Caption = '#00308^eFilter panel^cPanel filtr'
+      Caption = '#00308^eFilter panel'
       ShortCut = 16438
       OnExecute = aDictVoc3Execute
     end
     object aUserExamples: TAction
-      Caption = 'P'#1096#1085'klady'
+      Caption = 'Examples'
       OnExecute = aUserExamplesExecute
     end
     object aEditorColors: TAction
-      Caption = '#00309^eUse colors^cPou'#1115#1085'vat barvy'
+      Caption = '#00309^eUse colors'
       OnExecute = aEditorColorsExecute
     end
     object aDictMiddle: TAction
-      Caption = '#00919^eSearch substring^cHledat pod'#1096'et'#1084'zec'
+      Caption = '#00919^eSearch substring'
       OnExecute = aDictMiddleExecute
     end
     object aChangeLanguage: TAction
@@ -1027,7 +1013,7 @@ object fMenu: TfMenu
     Left = 216
     Top = 48
     object fdfd1: TMenuItem
-      Caption = '#00310^e&Database^c&Datab'#1073'ze'
+      Caption = '#00310^e&Database'
       object eSaveuserchangescUloituivatelskzmny1: TMenuItem
         Action = aSaveUser
       end
@@ -1048,7 +1034,7 @@ object fMenu: TfMenu
       end
     end
     object eModecReim1: TMenuItem
-      Caption = '#00311^e&Tools^c&N'#1073'stroje'
+      Caption = '#00311^e&Tools'
       object eCharacterlistcSeznamznak1: TMenuItem
         Action = aMode1
         RadioItem = True
@@ -1087,14 +1073,14 @@ object fMenu: TfMenu
       end
       object eSettingscNastaven2: TMenuItem
         Action = aSettings
-        Caption = '#00940^eOptions...^cNastaven'#1085'...'
+        Caption = '#00940^eOptions...'
       end
       object N00929eChangelanguage1: TMenuItem
         Action = aChangeLanguage
       end
     end
     object eCharacterscZnaky1: TMenuItem
-      Caption = '#00312^e&Characters^c&Znaky'
+      Caption = '#00312^e&Characters'
       object eCharacterlistcSeznamznak2: TMenuItem
         Action = aMode1
       end
@@ -1156,12 +1142,12 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object eSavecharacterstofilecUloitznakydosouboru1: TMenuItem
-        Caption = '#00944^eSave characters to file...^cUlo'#1115'it znaky do souboru...'
+        Caption = '#00944^eSave characters to file...'
         OnClick = eSavecharacterstofilecUloitznakydosouboru1Click
       end
     end
     object eDictionarycSlovnk1: TMenuItem
-      Caption = '#00313^eD&ictionary^cS&lovn'#1085'k'
+      Caption = '#00313^eD&ictionary'
       object eDictionarycSlovnk3: TMenuItem
         Action = aMode2
       end
@@ -1202,20 +1188,20 @@ object fMenu: TfMenu
         Action = aDictAuto
       end
       object eUseddictionarygroupcPouitskupinaslovnk1: TMenuItem
-        Caption = '#00314^eUsed dictionary group^cPou'#1115'it'#1073' skupina slovn'#1085'k'#1097
+        Caption = '#00314^eUsed dictionary group'
         object eUsedictionariesingroup1cPouvatslovnkyzeskupiny11: TMenuItem
           Action = aDictGroup1
-          Caption = '#00104^eGroup 1^cSkupina 1'
+          Caption = '#00104^eGroup 1'
           RadioItem = True
         end
         object eUsedictionariesingroup2cPouvatslovnkyzeskupiny21: TMenuItem
           Action = aDictGroup2
-          Caption = '#00106^eGroup 2^cSkupina 2'
+          Caption = '#00106^eGroup 2'
           RadioItem = True
         end
         object eUsedictionariesingroup3cPouvatslovnkyzeskupiny31: TMenuItem
           Action = aDictGroup3
-          Caption = '#00108^eGroup 3^cSkupina 3'
+          Caption = '#00108^eGroup 3'
           RadioItem = True
         end
       end
@@ -1227,7 +1213,7 @@ object fMenu: TfMenu
       end
       object N00242eAddwordcPidatslovko1: TMenuItem
         Action = aUserAdd
-        Caption = '^e&Add word into vocabulary^c&P'#1096'idat slov'#1085#1080'ko'
+        Caption = '^e&Add word into vocabulary'
       end
       object N16: TMenuItem
         Caption = '-'
@@ -1237,11 +1223,11 @@ object fMenu: TfMenu
       end
       object eAddtovocabularycPidatdoslovek1: TMenuItem
         Action = aDictAdd
-        Caption = '#00315^eExamples^cP'#1096#1085'klady'
+        Caption = '#00315^eExamples'
       end
     end
     object Editor2: TMenuItem
-      Caption = '#00896^eEditor^cEditor'
+      Caption = '#00896^eEditor'
       object eTexteditorcTextoveditor2: TMenuItem
         Action = aMode3
       end
@@ -1261,7 +1247,7 @@ object fMenu: TfMenu
         Action = aEditorSaveAs
       end
       object eSavekanatranscriptcUloitpepisdokany1: TMenuItem
-        Caption = '#00316^eSave kana transcript...^cUlo'#1115'it p'#1096'epis do kany...'
+        Caption = '#00316^eSave kana transcript...'
         OnClick = eSavekanatranscriptcUloitpepisdokany1Click
       end
       object N17: TMenuItem
@@ -1307,7 +1293,7 @@ object fMenu: TfMenu
         Action = aEditorColors
       end
       object eFontsizecVelikostpsma1: TMenuItem
-        Caption = '#00051^eFont size^cVelikost p'#1085'sma'
+        Caption = '#00051^eFont size'
         object eSmallcMal1: TMenuItem
           Action = aEditorSmallFont
           RadioItem = True
@@ -1325,7 +1311,7 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object eTranslationcPeklad1: TMenuItem
-        Caption = '#00317^eTranslation^cP'#1096'eklad'
+        Caption = '#00317^eTranslation'
         object eCleartranslationcSmazatpeklad1: TMenuItem
           Action = aEditorClear
         end
@@ -1344,7 +1330,7 @@ object fMenu: TfMenu
       end
     end
     object eVocabularycSlovka1: TMenuItem
-      Caption = '#00318^e&Vocabulary^c&Slov'#1085#1080'ka'
+      Caption = '#00318^e&Vocabulary'
       object eVocabularycSlovka3: TMenuItem
         Action = aMode5
       end
@@ -1353,7 +1339,7 @@ object fMenu: TfMenu
       end
       object Pklady1: TMenuItem
         Action = aUserExamples
-        Caption = '#00315^eExamples^cP'#1096#1085'klady'
+        Caption = '#00315^eExamples'
       end
       object eListsettingscNastavenseznamu1: TMenuItem
         Action = aUserSettings
@@ -1366,7 +1352,7 @@ object fMenu: TfMenu
       end
       object eAddwordcPidatslovko1: TMenuItem
         Action = aUserAdd
-        Caption = '#00319^e&Add word...^c&P'#1096'idat slov'#1085#1080'ko...'
+        Caption = '#00319^e&Add word...'
       end
       object ePrintlistcTiskseznamu1: TMenuItem
         Action = aUserPrint

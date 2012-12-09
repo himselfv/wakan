@@ -1,10 +1,10 @@
 object fClipboard: TfClipboard
   Left = 569
   Top = 486
-  Width = 299
-  Height = 103
   BorderStyle = bsSizeToolWin
-  Caption = '#00056^eClipboard contents^cObsah schránky'
+  Caption = '#00056^eClipboard contents'
+  ClientHeight = 69
+  ClientWidth = 283
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

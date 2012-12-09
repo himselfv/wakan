@@ -16,11 +16,8 @@ type
     BitBtn2: TBitBtn;
     procedure BitBtn1Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
-  private
-    { Private declarations }
   public
     succeeded:boolean;
-    { Public declarations }
   end;
 
 var
@@ -36,7 +33,11 @@ procedure TfDictCoding.BitBtn1Click(Sender: TObject);
 begin
   if (RadioGroup1.ItemIndex>0) and (not FileExists('UniConv.exe')) then
   begin
-    Application.MessageBox(pchar(_l('#00070^eUNICONV.EXE was not found. It is required for encoding conversion.^cSoubor UNICONV.EXE nebyl nalezen. Je vyžadován pro konverzi kódování.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00070^eUNICONV.EXE was not found. It is required for encoding '
+        +'conversion.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
     exit;
   end;
   succeeded:=true;

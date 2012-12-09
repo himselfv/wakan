@@ -2,7 +2,7 @@ object fUserFilters: TfUserFilters
   Left = 562
   Top = 172
   BorderStyle = bsNone
-  Caption = '#00704^eVocabulary settings^cNastavení slovíèek'
+  Caption = '#00704^eVocabulary settings'
   ClientHeight = 490
   ClientWidth = 192
   Color = clBtnFace
@@ -14,6 +14,9 @@ object fUserFilters: TfUserFilters
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  DesignSize = (
+    192
+    490)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -29,9 +32,7 @@ object fUserFilters: TfUserFilters
     Top = 463
     Width = 23
     Height = 22
-    Hint = 
-      '#00957^eCheck / uncheck all categories^cOznaè / odznaè všechny k' +
-      'ategorie'
+    Hint = '#00957^eCheck / uncheck all categories'
     Anchors = [akRight, akBottom]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -56,7 +57,7 @@ object fUserFilters: TfUserFilters
     Top = 463
     Width = 23
     Height = 22
-    Hint = '#00030^eEdit category^cUpravit kategorii'
+    Hint = '#00030^eEdit category'
     Anchors = [akRight, akBottom]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -81,7 +82,7 @@ object fUserFilters: TfUserFilters
     Top = 463
     Width = 23
     Height = 22
-    Hint = '#00031^eDelete category^cSmazat kategorii'
+    Hint = '#00031^eDelete category'
     Anchors = [akRight, akBottom]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -104,24 +105,24 @@ object fUserFilters: TfUserFilters
   object Label1: TLabel
     Left = 8
     Top = 214
-    Width = 162
+    Width = 102
     Height = 13
-    Caption = '#00705^eCategories:^cKategorie:'
+    Caption = '#00705^eCategories:'
   end
   object RadioGroup2: TRadioGroup
     Left = 7
     Top = 104
     Width = 177
     Height = 105
-    Caption = '#00197^eSort by^cTøídit podle'
+    Caption = '#00197^eSort by'
     ItemIndex = 0
     Items.Strings = (
-      '#00706^eCategory order^cPoøadí v kategorii'
-      '#00707^ePhonetic^cÈtení'
-      '#00708^eWritten^cZápisu'
-      '#00709^eMeaning^cVýznamu'
-      '#00710^eAdded date^cDatumu pøidání'
-      '#00711^eStatus^cStavu')
+      '#00706^eCategory order'
+      '#00707^ePhonetic'
+      '#00708^eWritten'
+      '#00709^eMeaning'
+      '#00710^eAdded date'
+      '#00711^eStatus')
     TabOrder = 0
     OnClick = CheckBox1Click
   end
@@ -130,15 +131,15 @@ object fUserFilters: TfUserFilters
     Top = 8
     Width = 177
     Height = 89
-    Caption = '#00712^eFilter^cFiltr'
+    Caption = '#00712^eFilter'
     TabOrder = 1
     object CheckBox1: TCheckBox
       Left = 8
       Top = 16
       Width = 97
       Height = 17
-      Hint = '#00713^eDisplay unlearned words^cZobrazit nenauèená slovíèka'
-      Caption = '#00639^eUnlearned^cNenauèené'
+      Hint = '#00713^eDisplay unlearned words'
+      Caption = '#00639^eUnlearned'
       Checked = True
       State = cbChecked
       TabOrder = 0
@@ -149,8 +150,8 @@ object fUserFilters: TfUserFilters
       Top = 32
       Width = 97
       Height = 17
-      Hint = '#00714^eDisplay learned words^cZobrazit nauèená slovíèka'
-      Caption = '#00640^eLearned^cNauèené'
+      Hint = '#00714^eDisplay learned words'
+      Caption = '#00640^eLearned'
       Checked = True
       State = cbChecked
       TabOrder = 1
@@ -161,8 +162,8 @@ object fUserFilters: TfUserFilters
       Top = 48
       Width = 145
       Height = 17
-      Hint = '#00715^eDisplay mastered words^cZobrazit dobøe nauèená slovíèka'
-      Caption = '#00641^eMastered^cDobøe nauèené'
+      Hint = '#00715^eDisplay mastered words'
+      Caption = '#00641^eMastered'
       Checked = True
       State = cbChecked
       TabOrder = 2
@@ -173,10 +174,8 @@ object fUserFilters: TfUserFilters
       Top = 64
       Width = 113
       Height = 17
-      Hint = 
-        '#00716^eDisplay problematic words^cZobrazit problematická slovíè' +
-        'ka'
-      Caption = '#00638^eProblematic^cProblematické'
+      Hint = '#00716^eDisplay problematic words'
+      Caption = '#00638^eProblematic'
       Checked = True
       State = cbChecked
       TabOrder = 3
@@ -190,8 +189,7 @@ object fUserFilters: TfUserFilters
     Height = 21
     Hint = 
       '#00032^eSelect list of categories (lessons / groups / temporary ' +
-      '/ word lists)^cVýbìr seznamu kategorií (lekce / skupiny / pøecho' +
-      'dné / seznamy slov)'
+      '/ word lists)'
     Anchors = [akLeft, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText

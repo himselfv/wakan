@@ -318,7 +318,7 @@ object fKanjiDetails: TfKanjiDetails
     Hint = '#00168^eShow/hide stroke order (only for Japanese Jouyou-kanji)'
     AllowAllUp = True
     GroupIndex = 99
-    Caption = '#00169^eOrder^cPo'#1096'ad'#1085
+    Caption = '#00169^eOrder'
     ParentShowHint = False
     ShowHint = True
     OnClick = SpeedButton1Click
@@ -401,6 +401,7 @@ object fKanjiDetails: TfKanjiDetails
     Width = 127
     Height = 21
     Style = csDropDownList
+    ItemHeight = 0
     TabOrder = 3
     OnChange = ComboBox1Change
   end

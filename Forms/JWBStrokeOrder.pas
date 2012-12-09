@@ -20,13 +20,10 @@ type
     procedure SpeedButton3Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure TrackBar1Change(Sender: TObject);
-  private
-    { Private declarations }
   public
     strokenum:integer;
     procedure GoUp;
     procedure GoDown;
-    { Public declarations }
   end;
 
 var

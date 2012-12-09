@@ -2,7 +2,7 @@ object fFileType: TfFileType
   Left = 192
   Top = 111
   BorderStyle = bsDialog
-  Caption = '#00888^eSelect file type^cZvolte typ souboru'
+  Caption = '#00888^eSelect file type'
   ClientHeight = 192
   ClientWidth = 281
   Color = clBtnFace
@@ -21,7 +21,7 @@ object fFileType: TfFileType
     Top = 8
     Width = 265
     Height = 145
-    Caption = '#00889^eFile type^cTyp souboru'
+    Caption = '#00889^eFile type'
     TabOrder = 0
   end
   object BitBtn1: TBitBtn
@@ -37,7 +37,7 @@ object fFileType: TfFileType
     Top = 160
     Width = 75
     Height = 25
-    Caption = '#00890^eCancel^cStorno'
+    Caption = '#00890^eCancel'
     TabOrder = 2
     Kind = bkCancel
   end

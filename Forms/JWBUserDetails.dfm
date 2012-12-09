@@ -2,7 +2,7 @@ object fUserDetails: TfUserDetails
   Left = 237
   Top = 305
   BorderStyle = bsNone
-  Caption = '#00692^eVocabulary word details^cDetaily slov˚Gka'
+  Caption = '#00692^eVocabulary word details'
   ClientHeight = 219
   ClientWidth = 752
   Color = clBtnFace
@@ -14,6 +14,9 @@ object fUserDetails: TfUserDetails
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  DesignSize = (
+    752
+    219)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -27,9 +30,9 @@ object fUserDetails: TfUserDetails
   object Label5: TLabel
     Left = 8
     Top = 9
-    Width = 134
+    Width = 138
     Height = 13
-    Caption = '#00060^ePhonetic:^c»tenÌ:'
+    Caption = '#00060^ePhonetic:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -67,7 +70,7 @@ object fUserDetails: TfUserDetails
     Top = 9
     Width = 127
     Height = 13
-    Caption = '#00061^eWritten:^cZ·pis:'
+    Caption = '#00061^eWritten:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -108,7 +111,7 @@ object fUserDetails: TfUserDetails
     Width = 119
     Height = 13
     Anchors = [akTop, akRight]
-    Caption = '#00693^eStatus:^cStav:'
+    Caption = '#00693^eStatus:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -120,9 +123,9 @@ object fUserDetails: TfUserDetails
   object Label9: TLabel
     Left = 8
     Top = 65
-    Width = 145
+    Width = 146
     Height = 13
-    Caption = '#00691^eMeaning:^cV˝znam:'
+    Caption = '#00691^eMeaning:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -134,9 +137,9 @@ object fUserDetails: TfUserDetails
   object Label11: TLabel
     Left = 8
     Top = 113
-    Width = 153
+    Width = 157
     Height = 13
-    Caption = '#00694^eCreated:^cVytvo¯eno:'
+    Caption = '#00694^eCreated:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -148,9 +151,9 @@ object fUserDetails: TfUserDetails
   object Label12: TLabel
     Left = 336
     Top = 113
-    Width = 197
+    Width = 200
     Height = 13
-    Caption = '#00695^eLearning list:^cUËebnÌ seznam:'
+    Caption = '#00695^eLearning list:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -164,7 +167,7 @@ object fUserDetails: TfUserDetails
     Top = 113
     Width = 150
     Height = 13
-    Caption = '#00696^eLearned:^cNauËeno:'
+    Caption = '#00696^eLearned:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -176,9 +179,9 @@ object fUserDetails: TfUserDetails
   object Label14: TLabel
     Left = 200
     Top = 113
-    Width = 186
+    Width = 190
     Height = 13
-    Caption = '#00697^eMastered:^cDob¯e nauËeno:'
+    Caption = '#00697^eMastered:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -248,7 +251,7 @@ object fUserDetails: TfUserDetails
     Top = 26
     Width = 23
     Height = 23
-    Hint = '#00698^eMove up in the category^cP¯esuÚ nahoru v kategorii'
+    Hint = '#00698^eMove up in the category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -273,7 +276,7 @@ object fUserDetails: TfUserDetails
     Top = 26
     Width = 23
     Height = 23
-    Hint = '#00699^eMove down in the category^cP¯esuÚ dol˘ v kategorii'
+    Hint = '#00699^eMove down in the category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -298,9 +301,9 @@ object fUserDetails: TfUserDetails
     Top = 7
     Width = 75
     Height = 17
-    Hint = '#00700^eDelete this word^cSmazat toto slovÌËko'
+    Hint = '#00700^eDelete this word'
     Anchors = [akTop, akRight]
-    Caption = '#00701^eDelete^cSmazat'
+    Caption = '#00701^eDelete'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -324,7 +327,7 @@ object fUserDetails: TfUserDetails
     Top = 80
     Width = 75
     Height = 23
-    Caption = '#00553^eChange^cZmÅEit'
+    Caption = '#00553^eChange'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -339,7 +342,7 @@ object fUserDetails: TfUserDetails
     Top = 161
     Width = 473
     Height = 50
-    Caption = '#00702^eSet as^cNastav jako'
+    Caption = '#00702^eSet as'
     Color = clBtnFace
     ParentColor = False
     TabOrder = 3
@@ -348,7 +351,7 @@ object fUserDetails: TfUserDetails
       Top = 16
       Width = 113
       Height = 25
-      Caption = '#00638^eProblematic^cProblematick'
+      Caption = '#00638^eProblematic'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -363,7 +366,7 @@ object fUserDetails: TfUserDetails
       Top = 16
       Width = 106
       Height = 25
-      Caption = '#00639^eUnlearned^cNenauËen'
+      Caption = '#00639^eUnlearned'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -378,7 +381,7 @@ object fUserDetails: TfUserDetails
       Top = 16
       Width = 107
       Height = 25
-      Caption = '#00640^eLearned^cNauËen'
+      Caption = '#00640^eLearned'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -393,7 +396,7 @@ object fUserDetails: TfUserDetails
       Top = 16
       Width = 113
       Height = 25
-      Caption = '#00703^eMastered^cDob¯e nauËeno'
+      Caption = '#00703^eMastered'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -410,10 +413,13 @@ object fUserDetails: TfUserDetails
     Width = 256
     Height = 146
     Anchors = [akLeft, akTop, akRight]
-    Caption = '#00634^eCategories^cKategorie'
+    Caption = '#00634^eCategories'
     Color = clBtnFace
     ParentColor = False
     TabOrder = 4
+    DesignSize = (
+      256
+      146)
     object ComboBox2: TComboBox
       Left = 9
       Top = 20
@@ -430,7 +436,7 @@ object fUserDetails: TfUserDetails
       Width = 57
       Height = 22
       Anchors = [akRight, akBottom]
-      Caption = '#00078^eAdd^cP¯idat'
+      Caption = '#00078^eAdd'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -455,7 +461,7 @@ object fUserDetails: TfUserDetails
       Width = 57
       Height = 18
       Anchors = [akRight, akBottom]
-      Caption = '#00079^eRemove^cOdebrat'
+      Caption = '#00079^eRemove'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11

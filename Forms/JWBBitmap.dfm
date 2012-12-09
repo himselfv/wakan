@@ -2,7 +2,7 @@ object fBitmap: TfBitmap
   Left = 261
   Top = 231
   BorderStyle = bsDialog
-  Caption = '#00002^ePrint to BMP^cTisk do BMP'
+  Caption = '#00002^ePrint to BMP'
   ClientHeight = 154
   ClientWidth = 363
   Color = clBtnFace
@@ -19,9 +19,9 @@ object fBitmap: TfBitmap
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 187
+    Width = 235
     Height = 13
-    Caption = '#00003^eWidth (in pixels):^cŠíøka (v pixelech):'
+    Caption = '#00003^eWidth (in pixels):'
   end
   object Label2: TLabel
     Left = 176
@@ -29,23 +29,22 @@ object fBitmap: TfBitmap
     Width = 193
     Height = 13
     AutoSize = False
-    Caption = '#00004^eHeight (in pixels):^cVýška (v pixelech):'
+    Caption = '#00004^eHeight (in pixels):'
   end
   object Label3: TLabel
     Left = 8
     Top = 56
-    Width = 198
+    Width = 235
     Height = 13
-    Caption = '#00005^eFilename prefix:^cPrefix jména souboru:'
+    Caption = '#00005^eFilename prefix:'
   end
   object Label4: TLabel
     Left = 8
     Top = 96
-    Width = 559
+    Width = 603
     Height = 14
     Caption = 
-      '#00006^e%d.BMP will be added after prefix (%d is page number).^c%d.BMP'+
-      ' bude pøidáno za prefix (%d je èíslo stránky)'
+      '#00006^e%d.BMP will be added after prefix (%d is page number).'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -66,7 +65,7 @@ object fBitmap: TfBitmap
     Top = 120
     Width = 91
     Height = 25
-    Caption = '#00007^eCancel^cZrušit'
+    Caption = '#00007^eCancel'
     TabOrder = 1
     Kind = bkCancel
   end

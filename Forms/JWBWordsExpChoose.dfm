@@ -2,7 +2,7 @@ object fWordsExpChoose: TfWordsExpChoose
   Left = 374
   Top = 278
   BorderStyle = bsDialog
-  Caption = '#00908^eVocabulary export^cExport slovíèek'
+  Caption = '#00908^eVocabulary export'
   ClientHeight = 119
   ClientWidth = 355
   Color = clBtnFace
@@ -21,15 +21,12 @@ object fWordsExpChoose: TfWordsExpChoose
     Width = 345
     Height = 73
     Caption = 
-      '#00909^eChoose which information include^cZvolte, které informace zahr'+
-      'nout'
+      '#00909^eChoose which information include'
     ItemIndex = 0
     Items.Strings = (
-      '#00910^eCategory & learned state^cKategorii a stav nauèení'
+      '#00910^eCategory & learned state'
       '#00911^eCategory only^cPouze kategorii'
-      
-        '#00912^eNeither category nor learned state^cAni kategorii ani stav nau'+
-        'èení')
+      '#00912^eNeither category nor learned state')
     TabOrder = 0
   end
   object BitBtn1: TBitBtn
@@ -45,7 +42,7 @@ object fWordsExpChoose: TfWordsExpChoose
     Top = 88
     Width = 91
     Height = 25
-    Caption = '#00913^eCancel^cZrušit'
+    Caption = '#00913^eCancel'
     TabOrder = 2
     Kind = bkCancel
   end

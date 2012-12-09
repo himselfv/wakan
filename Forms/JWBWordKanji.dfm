@@ -2,7 +2,7 @@ object fWordKanji: TfWordKanji
   Left = 757
   Top = 301
   BorderStyle = bsNone
-  Caption = '#00650^eCharacters in word^cZnaky ve slov'
+  Caption = '#00650^eCharacters in word'
   ClientHeight = 605
   ClientWidth = 220
   Color = clBtnFace
@@ -47,7 +47,7 @@ object fWordKanji: TfWordKanji
     Top = 6
     Width = 207
     Height = 13
-    Caption = '#00734^eKanji / Radical:^cKanji / Radikál:'
+    Caption = '#00734^eKanji / Radical:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -59,9 +59,9 @@ object fWordKanji: TfWordKanji
   object Label3: TLabel
     Left = 117
     Top = 7
-    Width = 145
+    Width = 146
     Height = 13
-    Caption = '#00691^eMeaning:^cVýznam:'
+    Caption = '#00691^eMeaning:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

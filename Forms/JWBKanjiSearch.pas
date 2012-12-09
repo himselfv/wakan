@@ -286,10 +286,10 @@ end;
 procedure TfKanjiSearch.SpeedButton25Click(Sender: TObject);
 begin
   if fKanjiSearch.ListBox1.ItemIndex=-1 then exit;
-  if Application.MessageBox(pchar(_l(
-    '#00882^eDo you really want to delete the category including all character links to it?'+
-    '^cOpravdu chcete smazat kategorii vèetnì pøiøazení všech znakù do ní?')),
-    pchar(_l('#00573^eWarning^cUpozornìní')),MB_ICONWARNING or MB_YESNO)=idYes then
+  if Application.MessageBox(
+    pchar(_l('#00882^eDo you really want to delete the category including all character links to it?')),
+    pchar(_l('#00573^eWarning')),
+    MB_ICONWARNING or MB_YESNO)=idYes then
   begin
     TUserCat.Locate('Name','k~'+fKanjiSearch.ListBox1.Items[fKanjiSearch.ListBox1.ItemIndex],false);
     TUserCat.Delete;
@@ -301,7 +301,7 @@ end;
 procedure TfKanjiSearch.SpeedButton20Click(Sender: TObject);
 begin
   if fKanjiSearch.ListBox1.ItemIndex=-1 then exit;
-  fNewCategory.Caption:=_l('^eEdit category^cUpravit kategorii');
+  fNewCategory.Caption:=_l('^eEdit category');
   TUserCat.Locate('Name','k~'+fKanjiDetails.ComboBox1.Items[fKanjiSearch.ListBox1.ItemIndex],false);
   fNewCategory.Edit1.Text:=StripCatName(TUserCat.Str(TUserCatName));
   fNewCategory.RadioGroup1.Enabled:=false;
@@ -312,7 +312,7 @@ begin
     fMenu.ChangeUserData;
   end;
   fNewCategory.RadioGroup1.Enabled:=true;
-  fNewCategory.Caption:=_l('^eNew category^cNová kategorie')
+  fNewCategory.Caption:=_l('^eNew category')
 end;
 
 procedure TfKanjiSearch.ListBox1DrawItem(Control: TWinControl;

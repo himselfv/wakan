@@ -53,11 +53,10 @@ object fWords: TfWords
       object Shape7: TShape
         Left = 10
         Top = 26
-        Width = 764
-        Height = 407
+        Width = 756
+        Height = 402
         Anchors = [akLeft, akTop, akRight, akBottom]
         Brush.Color = clWindow
-        ExplicitHeight = 403
       end
       object RxLabel1: TRxLabel
         Left = 8
@@ -90,7 +89,7 @@ object fWords: TfWords
       end
       object SpeedButton1: TSpeedButton
         Left = 10
-        Top = 439
+        Top = 432
         Width = 138
         Height = 17
         Hint = '#00829^eAdd word'
@@ -107,11 +106,10 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton1Click
-        ExplicitTop = 435
       end
       object SpeedButton2: TSpeedButton
         Left = 154
-        Top = 439
+        Top = 432
         Width = 138
         Height = 17
         Hint = '#00830^eList settings'
@@ -128,33 +126,10 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton2Click
-        ExplicitTop = 435
-      end
-      object SpeedButton3: TSpeedButton
-        Left = 466
-        Top = 439
-        Width = 90
-        Height = 17
-        Hint = '#00831^eCategories (Ctrl-Alt-T)'
-        AllowAllUp = True
-        Anchors = [akLeft, akBottom]
-        GroupIndex = 3
-        Caption = '#00634^eCategories'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        Visible = False
-        OnClick = SpeedButton3Click
-        ExplicitTop = 435
       end
       object SpeedButton4: TSpeedButton
         Left = 298
-        Top = 439
+        Top = 432
         Width = 159
         Height = 17
         Hint = '#00832^eWord details'
@@ -171,13 +146,12 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton4Click
-        ExplicitTop = 435
       end
       object StringGrid1: TStringGrid
         Left = 11
         Top = 27
-        Width = 762
-        Height = 405
+        Width = 754
+        Height = 400
         Anchors = [akLeft, akTop, akRight, akBottom]
         BorderStyle = bsNone
         ColCount = 4
@@ -199,8 +173,8 @@ object fWords: TfWords
           159)
       end
       object Button9: TButton
-        Left = 554
-        Top = 6
+        Left = 546
+        Top = 5
         Width = 71
         Height = 21
         Hint = '#00833^eExport vocabulary'
@@ -216,8 +190,8 @@ object fWords: TfWords
         OnClick = Button9Click
       end
       object Button10: TButton
-        Left = 626
-        Top = 6
+        Left = 618
+        Top = 5
         Width = 72
         Height = 21
         Hint = '#00834^eImport vocabulary'
@@ -233,8 +207,8 @@ object fWords: TfWords
         OnClick = Button10Click
       end
       object Button15: TButton
-        Left = 699
-        Top = 6
+        Left = 691
+        Top = 5
         Width = 75
         Height = 21
         Hint = '#00835^ePrint vocabulary list (Ctrl-F8)'
@@ -250,8 +224,8 @@ object fWords: TfWords
         OnClick = Button15Click
       end
       object Button18: TButton
-        Left = 434
-        Top = 6
+        Left = 426
+        Top = 5
         Width = 119
         Height = 21
         Hint = 
@@ -269,8 +243,8 @@ object fWords: TfWords
         OnClick = Button18Click
       end
       object Button19: TButton
-        Left = 323
-        Top = 6
+        Left = 315
+        Top = 5
         Width = 111
         Height = 21
         Hint = '#00838^eAutomatically generate learning list'
@@ -286,8 +260,8 @@ object fWords: TfWords
         OnClick = Button19Click
       end
       object Button2: TButton
-        Left = 252
-        Top = 6
+        Left = 244
+        Top = 5
         Width = 71
         Height = 21
         Hint = '#00936^eAdd to vocabulary'

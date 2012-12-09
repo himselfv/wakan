@@ -2,7 +2,7 @@ program Jalet;
 {
 Stuff you can define for the whole project:
   UNICODE -- defined by the compiler if the default string type is UnicodeString
-  INLINE -- inline small functions (bad for debug)
+  INLINE -- inline small functions (bad for debug, very good for speed)
 }
 
 uses
@@ -26,18 +26,14 @@ uses
   JWBUser in 'Forms\JWBUser.pas' {fUser},
   JWBSettings in 'Forms\JWBSettings.pas' {fSettings},
   JWBSplash in 'Forms\JWBSplash.pas' {fSplash},
-  JWBAlphabet in 'Forms\JWBAlphabet.pas' {fAlphabet},
   JWBWords in 'Forms\JWBWords.pas' {fWords},
   JWBNewCategory in 'Forms\JWBNewCategory.pas' {fNewCategory},
   JWBPrint in 'Forms\JWBPrint.pas' {fPrint},
-  JWBSizeCheck in 'Forms\JWBSizeCheck.pas' {fSizeCheck},
   JWBStatistics in 'Forms\JWBStatistics.pas' {fStatistics},
   JWBWordList in 'Forms\JWBWordList.pas' {fWordList},
-  JWBWait in 'Forms\JWBWait.pas' {fWait},
   JWBBitmap in 'Forms\JWBBitmap.pas' {fBitmap},
   JWBClipboard in 'Forms\JWBClipboard.pas' {fClipboard},
   JWBKanjiSearch in 'Forms\JWBKanjiSearch.pas' {fKanjiSearch},
-  JWBKanjiSort in 'Forms\JWBKanjiSort.pas' {fKanjiSort},
   JWBKanjiCompounds in 'Forms\JWBKanjiCompounds.pas' {fKanjiCompounds},
   JWBKanjiDetails in 'Forms\JWBKanjiDetails.pas' {fKanjiDetails},
   JWBTranslate in 'Forms\JWBTranslate.pas' {fTranslate},
@@ -48,7 +44,6 @@ uses
   JWBUserDetails in 'Forms\JWBUserDetails.pas' {fUserDetails},
   JWBUserAdd in 'Forms\JWBUserAdd.pas' {fUserAdd},
   JWBUserFilters in 'Forms\JWBUserFilters.pas' {fUserFilters},
-  JWBUserCategory in 'Forms\JWBUserCategory.pas' {fUserCategory},
   JWBLayout in 'Forms\JWBLayout.pas' {fLayout},
   JWBStrokeOrder in 'Forms\JWBStrokeOrder.pas' {fStrokeOrder},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
@@ -60,7 +55,6 @@ uses
   JWBInvalidator in 'Forms\JWBInvalidator.pas' {fInvalidator},
   JWBDicAdd in 'Forms\JWBDicAdd.pas' {fDicAdd},
   JWBLanguage in 'Forms\JWBLanguage.pas' {fLanguage},
-  JWBPopupButton in 'Forms\JWBPopupButton.pas' {fPopupButton},
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
   JWBMedia in 'Forms\JWBMedia.pas' {fMedia};
@@ -78,19 +72,15 @@ begin
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfSplash, fSplash);
   Application.CreateForm(TPKGWriteForm, PKGWriteForm);
-  Application.CreateForm(TfAlphabet, fAlphabet);
   Application.CreateForm(TfSelectFont, fSelectFont);
   Application.CreateForm(TfWords, fWords);
   Application.CreateForm(TfNewCategory, fNewCategory);
   Application.CreateForm(TfPrint, fPrint);
-  Application.CreateForm(TfSizeCheck, fSizeCheck);
   Application.CreateForm(TfStatistics, fStatistics);
   Application.CreateForm(TfWordList, fWordList);
-  Application.CreateForm(TfWait, fWait);
   Application.CreateForm(TfBitmap, fBitmap);
   Application.CreateForm(TfClipboard, fClipboard);
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
-  Application.CreateForm(TfKanjiSort, fKanjiSort);
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
   Application.CreateForm(TfTranslate, fTranslate);
@@ -101,7 +91,6 @@ begin
   Application.CreateForm(TfUserDetails, fUserDetails);
   Application.CreateForm(TfUserAdd, fUserAdd);
   Application.CreateForm(TfUserFilters, fUserFilters);
-  Application.CreateForm(TfUserCategory, fUserCategory);
   Application.CreateForm(TfLayout, fLayout);
   Application.CreateForm(TfStrokeOrder, fStrokeOrder);
   Application.CreateForm(TfDictMan, fDictMan);

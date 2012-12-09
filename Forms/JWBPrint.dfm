@@ -1,9 +1,9 @@
 object fPrint: TfPrint
   Left = 222
   Top = 163
-  Width = 694
-  Height = 474
-  Caption = '#00376^ePrint preview^cNáhled tisku'
+  Caption = '#00376^ePrint preview'
+  ClientHeight = 436
+  ClientWidth = 678
   Color = clBtnFace
   Constraints.MinHeight = 200
   Constraints.MinWidth = 300
@@ -21,18 +21,22 @@ object fPrint: TfPrint
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 686
+    Width = 678
     Height = 38
     Align = alTop
     BevelInner = bvLowered
     BorderWidth = 2
     TabOrder = 0
+    ExplicitWidth = 686
+    DesignSize = (
+      678
+      38)
     object SpeedButton1: TSpeedButton
       Left = 8
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00377^eFirst page^cPrvní stránka'
+      Hint = '#00377^eFirst page'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -56,7 +60,7 @@ object fPrint: TfPrint
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00378^ePrevious page^cPøedchozí stránka'
+      Hint = '#00378^ePrevious page'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -80,7 +84,7 @@ object fPrint: TfPrint
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00379^eNext page^cDalší stránka'
+      Hint = '#00379^eNext page'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -104,7 +108,7 @@ object fPrint: TfPrint
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00380^eLast page^cPoslední stránka'
+      Hint = '#00380^eLast page'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -124,11 +128,11 @@ object fPrint: TfPrint
       OnClick = SpeedButton4Click
     end
     object SpeedButton5: TSpeedButton
-      Left = 572
+      Left = 564
       Top = 8
       Width = 25
       Height = 22
-      Hint = '#00381^ePrint settings^cNastavení tisku'
+      Hint = '#00381^ePrint settings'
       Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -147,13 +151,14 @@ object fPrint: TfPrint
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton5Click
+      ExplicitLeft = 572
     end
     object SpeedButton6: TSpeedButton
-      Left = 630
+      Left = 622
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00382^ePrint^cTisk'
+      Hint = '#00382^ePrint'
       Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -172,13 +177,14 @@ object fPrint: TfPrint
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton6Click
+      ExplicitLeft = 630
     end
     object SpeedButton7: TSpeedButton
       Left = 112
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00383^eZoom in^cZvìtšit'
+      Hint = '#00383^eZoom in'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -202,7 +208,7 @@ object fPrint: TfPrint
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00384^eFull display^cZobraz celé'
+      Hint = '#00384^eFull display'
       AllowAllUp = True
       GroupIndex = 1
       Down = True
@@ -229,7 +235,7 @@ object fPrint: TfPrint
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00385^eZoom out^cZmenšit'
+      Hint = '#00385^eZoom out'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -251,15 +257,16 @@ object fPrint: TfPrint
     object Shape1: TShape
       Left = 192
       Top = 8
-      Width = 375
+      Width = 367
       Height = 22
       Anchors = [akLeft, akTop, akRight]
       Brush.Color = clWindow
+      ExplicitWidth = 375
     end
     object Label1: TLabel
       Left = 196
       Top = 11
-      Width = 363
+      Width = 355
       Height = 16
       Anchors = [akLeft, akTop, akRight]
       AutoSize = False
@@ -273,13 +280,14 @@ object fPrint: TfPrint
       ParentColor = False
       ParentFont = False
       Transparent = True
+      ExplicitWidth = 363
     end
     object SpeedButton10: TSpeedButton
-      Left = 598
+      Left = 590
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00386^ePage settings^cNastavení stránky'
+      Hint = '#00386^ePage settings'
       Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -298,13 +306,14 @@ object fPrint: TfPrint
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton10Click
+      ExplicitLeft = 598
     end
     object SpeedButton11: TSpeedButton
-      Left = 654
+      Left = 646
       Top = 8
       Width = 23
       Height = 22
-      Hint = '#00002^ePrint to BMP^cTisk do BMP'
+      Hint = '#00002^ePrint to BMP'
       Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -323,18 +332,21 @@ object fPrint: TfPrint
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton11Click
+      ExplicitLeft = 654
     end
   end
   object ScrollBox1: TScrollBox
     Left = 0
     Top = 38
-    Width = 686
-    Height = 405
+    Width = 678
+    Height = 398
     HorzScrollBar.Tracking = True
     VertScrollBar.Tracking = True
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 1
+    ExplicitWidth = 686
+    ExplicitHeight = 405
     object PaintBox1: TPaintBox
       Left = 152
       Top = 24

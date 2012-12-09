@@ -2,7 +2,7 @@ object fCharItem: TfCharItem
   Left = 292
   Top = 274
   BorderStyle = bsDialog
-  Caption = '#00033^eCharacter details item^cPoložka detailù znaku'
+  Caption = '#00033^eCharacter details item'
   ClientHeight = 300
   ClientWidth = 583
   Color = clBtnFace
@@ -20,9 +20,9 @@ object fCharItem: TfCharItem
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 125
+    Width = 126
     Height = 13
-    Caption = '#00034^eItem:^cPoložka:'
+    Caption = '#00034^eItem:'
   end
   object Label2: TLabel
     Left = 104
@@ -36,14 +36,14 @@ object fCharItem: TfCharItem
     Top = 32
     Width = 146
     Height = 13
-    Caption = '#00035^eDescription:^cPopis:'
+    Caption = '#00035^eDescription:'
   end
   object Label4: TLabel
     Left = 8
     Top = 48
     Width = 125
     Height = 13
-    Caption = '#00036^eSource:^cZdroj:'
+    Caption = '#00036^eSource:'
   end
   object Label5: TLabel
     Left = 104
@@ -58,7 +58,7 @@ object fCharItem: TfCharItem
     Width = 473
     Height = 21
     Style = csDropDownList
-    ItemHeight = 13
+    ItemHeight = 0
     TabOrder = 0
     OnChange = ComboBox1Change
   end
@@ -67,12 +67,12 @@ object fCharItem: TfCharItem
     Top = 72
     Width = 297
     Height = 73
-    Caption = '#00037^eDisplay type^cTyp zobrazení'
+    Caption = '#00037^eDisplay type'
     ItemIndex = 0
     Items.Strings = (
-      '#00038^eWhole line^cCelá øádka'
-      '#00039^eOne column^cJeden sloupec'
-      '#00040^eMore lines (word wrap)^cVíce øádek (lámat slova)')
+      '#00038^eWhole line'
+      '#00039^eOne column'
+      '#00040^eMore lines (word wrap)')
     TabOrder = 1
   end
   object RadioGroup2: TRadioGroup
@@ -80,14 +80,12 @@ object fCharItem: TfCharItem
     Top = 72
     Width = 265
     Height = 73
-    Caption = '#00041^eDisplay label^cZobrazování titulku'
+    Caption = '#00041^eDisplay label'
     ItemIndex = 0
     Items.Strings = (
-      '#00042^eDisplay label^cZobrazit titulek'
-      
-        '#00043^eDisplay label on whole line^cZobrazit titulek na celé øá'+
-        'dce'
-      '#00044^eDo not display label^cNezobrazovat titulek')
+      '#00042^eDisplay label'
+      '#00043^eDisplay label on whole line'
+      '#00044^eDo not display label')
     TabOrder = 2
   end
   object RadioGroup3: TRadioGroup
@@ -95,16 +93,12 @@ object fCharItem: TfCharItem
     Top = 152
     Width = 297
     Height = 73
-    Caption = '#00045^eMode display^cZobrazit režim'
+    Caption = '#00045^eMode display'
     ItemIndex = 0
     Items.Strings = (
-      '#00046^eDisplay in both modes^cZobrazit v obou režimech'
-      
-        '#00047^eDisplay in japanese mode only^cZobrazit jen v režimu jap'+
-        'onštiny'
-      
-        '#00048^eDisplay in chinese mode only^cZobrazit jen v režimu èínš'+
-        'tiny')
+      '#00046^eDisplay in both modes'
+      '#00047^eDisplay in japanese mode only'
+      '#00048^eDisplay in chinese mode only')
     TabOrder = 3
   end
   object CheckBox1: TCheckBox
@@ -113,8 +107,7 @@ object fCharItem: TfCharItem
     Width = 265
     Height = 17
     Caption = 
-      '#00049^eDisplay even if information is missing^cZobrazit i když '+
-      'chybí informace'
+      '#00049^eDisplay even if information is missing'
     TabOrder = 4
   end
   object Edit1: TEdit
@@ -138,7 +131,7 @@ object fCharItem: TfCharItem
     Top = 264
     Width = 107
     Height = 25
-    Caption = '#00050^eCancel^cStorno'
+    Caption = '#00050^eCancel'
     TabOrder = 7
     Kind = bkCancel
   end
@@ -147,13 +140,13 @@ object fCharItem: TfCharItem
     Top = 176
     Width = 265
     Height = 49
-    Caption = '#00051^eFont size^cVelikost písma'
+    Caption = '#00051^eFont size'
     Columns = 3
     ItemIndex = 1
     Items.Strings = (
-      '#00052^eSmall^cMalá'
-      '#00053^eMedium^cStøední'
-      '#00054^eBig^cVelká')
+      '#00052^eSmall'
+      '#00053^eMedium'
+      '#00054^eBig')
     TabOrder = 8
   end
   object CheckBox2: TCheckBox
@@ -161,7 +154,7 @@ object fCharItem: TfCharItem
     Top = 232
     Width = 161
     Height = 17
-    Caption = '#00055^eCustom title:^cVlastní titulek:'
+    Caption = '#00055^eCustom title:'
     TabOrder = 9
     OnClick = CheckBox2Click
   end

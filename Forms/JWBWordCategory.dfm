@@ -1,10 +1,10 @@
 object fWordCategory: TfWordCategory
   Left = 76
   Top = 102
-  Width = 290
-  Height = 157
   BorderStyle = bsSizeToolWin
-  Caption = '#00732^eWord details^cDetaily slova'
+  Caption = '#00732^eWord details'
+  ClientHeight = 123
+  ClientWidth = 274
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,17 +18,19 @@ object fWordCategory: TfWordCategory
   object Bevel1: TBevel
     Left = 0
     Top = 0
-    Width = 282
-    Height = 126
+    Width = 274
+    Height = 123
     Align = alClient
     Style = bsRaised
+    ExplicitWidth = 282
+    ExplicitHeight = 126
   end
   object Label30: TLabel
     Left = 6
     Top = 8
-    Width = 99
+    Width = 142
     Height = 13
-    Caption = '#00693^eStatus:^cStav:'
+    Caption = '#00693^eStatus:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -40,9 +42,9 @@ object fWordCategory: TfWordCategory
   object Label32: TLabel
     Left = 4
     Top = 56
-    Width = 139
+    Width = 186
     Height = 13
-    Caption = '#00694^eCreated:^cVytvoøeno:'
+    Caption = '#00694^eCreated:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -54,9 +56,9 @@ object fWordCategory: TfWordCategory
   object Label34: TLabel
     Left = 4
     Top = 101
-    Width = 193
+    Width = 239
     Height = 13
-    Caption = '#00695^eLearning list:^cUèební seznam:'
+    Caption = '#00695^eLearning list:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -68,9 +70,9 @@ object fWordCategory: TfWordCategory
   object Label36: TLabel
     Left = 4
     Top = 71
-    Width = 134
+    Width = 177
     Height = 13
-    Caption = '#00696^eLearned:^cNauèeno:'
+    Caption = '#00696^eLearned:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -82,9 +84,9 @@ object fWordCategory: TfWordCategory
   object Label37: TLabel
     Left = 4
     Top = 86
-    Width = 177
+    Width = 224
     Height = 13
-    Caption = '#00697^eMastered:^cDobøe nauèeno:'
+    Caption = '#00697^eMastered:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -96,9 +98,9 @@ object fWordCategory: TfWordCategory
   object Label54: TLabel
     Left = 5
     Top = 40
-    Width = 151
+    Width = 194
     Height = 13
-    Caption = '#00733^cKategorie:^eCategories:'
+    Caption = '#00733^eCategories:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

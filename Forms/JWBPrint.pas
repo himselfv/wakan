@@ -42,10 +42,7 @@ type
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
     procedure SpeedButton11Click(Sender: TObject);
-  private
-    { Private declarations }
   public
-    { Public declarations }
     GetPageNum:TPrintGetPageNum;
     DrawPage:TPrintDrawPage;
     PrintConfigure:TPrintConfigure;
@@ -193,8 +190,15 @@ end;
 procedure TfPrint.SpeedButton6Click(Sender: TObject);
 var i:integer;
 begin
-  try Printer.Title:=Description; except Application.MessageBox(pchar(_l('#00897^ePrinter is not ready.^cTiskárna není pøipravena.')),
-    pchar(_l('#00898^eError^cChyba')),MB_ICONERROR or MB_OK); exit; end;
+  try
+    Printer.Title:=Description;
+  except
+    Application.MessageBox(
+      pchar(_l('#00897^ePrinter is not ready.')),
+      pchar(_l('#00898^eError')),
+      MB_ICONERROR or MB_OK);
+    exit;
+  end;
   Printer.BeginDoc;
   for i:=1 to PageNum do
   begin

@@ -2,7 +2,7 @@ object fNewCategory: TfNewCategory
   Left = 232
   Top = 145
   BorderStyle = bsDialog
-  Caption = '#00370^eNew category^cNová kategorie'
+  Caption = '#00370^eNew category'
   ClientHeight = 146
   ClientWidth = 388
   Color = clBtnFace
@@ -19,9 +19,9 @@ object fNewCategory: TfNewCategory
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 89
+    Width = 126
     Height = 13
-    Caption = '#00371^eName:^cNázev:'
+    Caption = '#00371^eName:'
   end
   object Edit1: TEdit
     Left = 8
@@ -36,13 +36,13 @@ object fNewCategory: TfNewCategory
     Top = 56
     Width = 369
     Height = 41
-    Caption = '#00372^eType^cTyp'
+    Caption = '#00372^eType'
     Columns = 3
     ItemIndex = 1
     Items.Strings = (
-      '#00373^eLesson^cLekce'
-      '#00374^eGroup^cSkupina'
-      '#00375^eTemporary^cPøechodná')
+      '#00373^eLesson'
+      '#00374^eGroup'
+      '#00375^eTemporary')
     TabOrder = 1
   end
   object BitBtn1: TBitBtn
@@ -58,7 +58,7 @@ object fNewCategory: TfNewCategory
     Top = 112
     Width = 99
     Height = 25
-    Caption = '#00007^eCancel^cZrušit'
+    Caption = '#00007^eCancel'
     TabOrder = 3
     Kind = bkCancel
   end

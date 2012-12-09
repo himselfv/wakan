@@ -550,7 +550,7 @@ begin
       end;
       if fMenu.GetCharDet(i,6)<>'' then
         kval.Add(fMenu.GetCharType(j,3)+';'+chardetl[i]) else
-        kval.Add(fMenu.GetCharType(j,3)+';'+chardetl[i]+_l('^e'+fMenu.GetCharType(j,4)+'^c'+fMenu.GetCharType(j,5)));
+        kval.Add(fMenu.GetCharType(j,3)+';'+chardetl[i]+_l('^e'+fMenu.GetCharType(j,4)));
       kval.Add(s);
     end;
   end;

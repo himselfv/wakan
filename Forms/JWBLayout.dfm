@@ -1,9 +1,9 @@
 object fLayout: TfLayout
   Left = 318
   Top = 357
-  Width = 407
-  Height = 338
-  Caption = '#00200^eLayout manager^cManažer rozvržení obrazovky'
+  Caption = '#00200^eLayout manager'
+  ClientHeight = 300
+  ClientWidth = 391
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,18 +17,17 @@ object fLayout: TfLayout
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 207
+    Width = 251
     Height = 13
-    Caption = '#00201^cStandardní rozvržení:^eStandard layouts:'
+    Caption = '#00201^eStandard layouts:'
   end
   object Label2: TLabel
     Left = 8
     Top = 160
-    Width = 334
+    Width = 377
     Height = 13
     Caption = 
-      '#00202^ePercentage screen occupation:^cProcentuální obsazení obrazovky'+
-      ':'
+      '#00202^ePercentage screen occupation:'
   end
   object ListBox1: TListBox
     Left = 8
@@ -37,11 +36,11 @@ object fLayout: TfLayout
     Height = 129
     ItemHeight = 13
     Items.Strings = (
-      '#00203^eWindowed^cOkenní'
-      '#00204^eComplete^cÚplné'
-      '#00205^eKanji search^cHledání znakù'
-      '#00206^eLearning^cUèební'
-      '#00207^eTranslation^cPøekládání'
+      '#00203^eWindowed'
+      '#00204^eComplete'
+      '#00205^eKanji search'
+      '#00206^eLearning'
+      '#00207^eTranslation'
       'Editor')
     TabOrder = 0
   end
@@ -51,22 +50,17 @@ object fLayout: TfLayout
     Width = 185
     Height = 33
     Max = 100
-    Orientation = trHorizontal
     PageSize = 20
     Frequency = 10
     Position = 100
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 1
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
   end
   object Button1: TButton
     Left = 16
     Top = 200
     Width = 369
     Height = 25
-    Caption = '#00208^eSet standard layout^cNastavit standardní rozvržení'
+    Caption = '#00208^eSet standard layout'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -81,7 +75,7 @@ object fLayout: TfLayout
     Top = 232
     Width = 369
     Height = 25
-    Caption = '#00209^eSave layout^cUložit rozvržení'
+    Caption = '#00209^eSave layout'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -96,7 +90,7 @@ object fLayout: TfLayout
     Top = 264
     Width = 369
     Height = 25
-    Caption = '#00210^eLoad layout^cNahrát rozvržení'
+    Caption = '#00210^eLoad layout'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

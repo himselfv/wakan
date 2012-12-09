@@ -18,7 +18,6 @@ type
     Label24: TLabel;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
     SpeedButton4: TSpeedButton;
     StringGrid1: TStringGrid;
     Button9: TButton;
@@ -68,7 +67,6 @@ type
     procedure Button19Click(sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
     procedure SpeedButton4Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -110,8 +108,8 @@ var
 implementation
 
 uses JWBMenu, JWBStrings, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
-  JWBStatistics, JWBWordList, JWBWait, JWBUserDetails, JWBUserAdd,
-  JWBUserFilters, JWBUserCategory, StdPrompt, PKGWrite, JWBExamples, JWBUser,
+  JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
+  JWBUserFilters, {JWBUserCategory,} StdPrompt, PKGWrite, JWBExamples, JWBUser,
   JWBConvert, JWBWordsExpChoose;
 
 var wl,wlc:TStringList;
@@ -258,7 +256,6 @@ procedure TfWords.FormShow(Sender: TObject);
 begin
   fMenu.ShowForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
   fMenu.ShowForm(SpeedButton1,fMenu.aUserExamples,fExamples);
-//  fMenu.ShowForm(SpeedButton3,fMenu.aUserCategory,fUserCategory);
   fMenu.ShowForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
   fMenu.aUser.Checked:=true;
   ShowIt(false);
@@ -1942,6 +1939,9 @@ var il,sl:TStringList;
     rand:integer;
     coef:double;
     s:string;
+
+  sp: TSMPromptForm;
+
 procedure SetPaQa(q:integer;w:integer);
 begin
   case w of
@@ -1954,11 +1954,12 @@ begin
   end;
 end;
 begin
-  fWait.Panel1.Caption:=_l('#00860^eBuilding learning list...');
-  fWait.Show;
+  sp:=SMProgressDlg(
+    _l('#00860^eBuilding learning list...'),
+    _l('#00685^ePlease wait...'),
+    100); //for now we don't track progress, so set max to 100
+
   fWordList.Label52.Caption:='';
-  fWait.Invalidate;
-  fWait.Update;
   ll.Clear;
   Screen.Cursor:=crHourGlass;
   il:=TStringList.Create;
@@ -2001,10 +2002,8 @@ begin
     begin
       if i mod 10=0 then
       begin
-        fWait.Panel1.Caption:=_l('#00860^eBuilding learning list...')+' ('+inttostr(trunc(i/wnum*100))+'%)';
-        fWait.Panel1.Invalidate;
-        fWait.Panel1.Update;
-        Application.ProcessMessages;
+        sp.SetProgress(trunc(i/wnum*100));
+        sp.ProcessModalMessages;
       end;
       bestw:=0;
       best:=100001;
@@ -2119,7 +2118,7 @@ begin
   fWordList.RadioGroup7.ItemIndex:=0;
   fWordList.RadioGroup7.Enabled:=true;
   Screen.Cursor:=crDefault;
-  fWait.Hide;
+  sp.Free;
 end;
 
 function StateNew(i,j:integer):integer;
@@ -2491,11 +2490,6 @@ begin
   FormResize(sender);
 end;
 
-procedure TfWords.SpeedButton3Click(Sender: TObject);
-begin
-  fMenu.ToggleForm(fUserCategory,SpeedButton3,fMenu.aUserCategory);
-end;
-
 procedure TfWords.SpeedButton4Click(Sender: TObject);
 begin
   fMenu.ToggleForm(fUserDetails,SpeedButton4,fMenu.aUserDetails);
@@ -2510,7 +2504,6 @@ procedure TfWords.FormHide(Sender: TObject);
 begin
 //  fMenu.HideForm(SpeedButton1,fMenu.aUserAdd,fUserAdd);
 //  fMenu.HideForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
-//  fMenu.HideForm(SpeedButton3,fMenu.aUserCategory,fUserCategory);
 //  fMenu.HideForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
   fMenu.aUser.Checked:=false;
 end;

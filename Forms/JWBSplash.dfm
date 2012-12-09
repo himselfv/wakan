@@ -25,6 +25,9 @@ object fSplash: TfSplash
     BevelOuter = bvNone
     Color = clWhite
     TabOrder = 0
+    DesignSize = (
+      523
+      407)
     object Shape1: TShape
       Left = 0
       Top = 0
@@ -7855,7 +7858,6 @@ object fSplash: TfSplash
       Width = 349
       Height = 17
       Anchors = [akLeft, akTop, akRight]
-      Min = 0
       Max = 4
       TabOrder = 0
     end
@@ -7885,14 +7887,14 @@ object fSplash: TfSplash
         ''
         'EDICT (Japanese English Dictionary File)'
         
-          '  (C) 2001-2003 The Electronic Dictionary Research and Developme'+
+          '  (C) 2001-2003 The Electronic Dictionary Research and Developme' +
           'nt Group, Monash University,'
         '  www.csse.monash.edu.au/~jwb/edict.html'
         
-          'KANJIDIC (A Database of Information on the 6,355 Kanji in the JI'+
+          'KANJIDIC (A Database of Information on the 6,355 Kanji in the JI' +
           'S X 0208 Standard)'
         
-          '  (C) 2001-2003 The Electronic Dictionary Research and Developme'+
+          '  (C) 2001-2003 The Electronic Dictionary Research and Developme' +
           'nt Group, Monash University,'
         ' www.csse.monash.edu.au/~jwb/kanjidic.html'
         'CEDICT (Chinese English Dictionary File)'
@@ -7902,12 +7904,12 @@ object fSplash: TfSplash
         '  (C) 1996-2003 Unicode, Inc., '
         '  www.unicode.org/charts/unihan.html'
         
-          'RADKFILE (Parts-of-character Japanese Radical Lookup Method File'+
+          'RADKFILE (Parts-of-character Japanese Radical Lookup Method File' +
           ') '
-        '  '' 1995 Michael Raine, J.W.Breen '
+        '  '#39' 1995 Michael Raine, J.W.Breen '
         '  www.omarbazavilvazo.com/kanjis/japkanji-1.6.4/radkfile'
         'STROKES (Stroke Order Diagrams for Japanese Jouyou Kanji) '
-        '  '' 2004 Gabriel SanRoman '
+        '  '#39' 2004 Gabriel SanRoman '
         '  usuarios.lycos.es/gsanroman')
       ParentFont = False
       ReadOnly = True

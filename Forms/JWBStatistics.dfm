@@ -2,7 +2,7 @@ object fStatistics: TfStatistics
   Left = 248
   Top = 209
   BorderStyle = bsDialog
-  Caption = '#00585^eStatistics^cStatistika'
+  Caption = '#00585^eStatistics'
   ClientHeight = 305
   ClientWidth = 599
   Color = clBtnFace
@@ -23,7 +23,7 @@ object fStatistics: TfStatistics
     Height = 18
     Alignment = taCenter
     AutoSize = False
-    Caption = '#00585^eStatistics^cStatistika'
+    Caption = '#00585^eStatistics'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -45,9 +45,7 @@ object fStatistics: TfStatistics
     Height = 13
     Alignment = taCenter
     AutoSize = False
-    Caption = 
-      '#00586^eProgram dictionary (WAKAN.CHR)^cProgramový slovník (WAKA' +
-      'N.CHR)'
+    Caption = '#00586^eProgram dictionary (WAKAN.CHR)'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -62,9 +60,7 @@ object fStatistics: TfStatistics
     Height = 13
     Alignment = taCenter
     AutoSize = False
-    Caption = 
-      '#00587^eUser database (WAKAN.USR)^cUživatelská databáze (WAKAN.U' +
-      'SR)'
+    Caption = '#00587^eUser database (WAKAN.USR)'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -82,9 +78,9 @@ object fStatistics: TfStatistics
   object Label1: TLabel
     Left = 8
     Top = 64
-    Width = 356
+    Width = 196
     Height = 13
-    Caption = '#00588^eDictionary file build date^cDatum pøekladu slovníku:'
+    Caption = '#00588^eDictionary file build date'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -95,9 +91,9 @@ object fStatistics: TfStatistics
   object Label3: TLabel
     Left = 8
     Top = 80
-    Width = 273
+    Width = 163
     Height = 13
-    Caption = '#00589^eKANJIDIC version:^cVerze KANJIDIC:'
+    Caption = '#00589^eKANJIDIC version:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -108,9 +104,9 @@ object fStatistics: TfStatistics
   object Label4: TLabel
     Left = 8
     Top = 96
-    Width = 257
+    Width = 155
     Height = 13
-    Caption = '#00590^eUNIHAN version:^cVerze UNIHAN:'
+    Caption = '#00590^eUNIHAN version:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -121,9 +117,9 @@ object fStatistics: TfStatistics
   object Label6: TLabel
     Left = 280
     Top = 64
-    Width = 386
+    Width = 221
     Height = 13
-    Caption = '#00591^eChinese character database:^cDatabáze èínských znakù:'
+    Caption = '#00591^eChinese character database:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -134,9 +130,9 @@ object fStatistics: TfStatistics
   object Label7: TLabel
     Left = 280
     Top = 80
-    Width = 303
+    Width = 180
     Height = 13
-    Caption = '#00592^eJapanese characters:^cJaponských znakù:'
+    Caption = '#00592^eJapanese characters:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -147,9 +143,9 @@ object fStatistics: TfStatistics
   object Label8: TLabel
     Left = 280
     Top = 96
-    Width = 231
+    Width = 140
     Height = 13
-    Caption = '#00593^eAll characters:^cVšech znakù:'
+    Caption = '#00593^eAll characters:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -208,9 +204,9 @@ object fStatistics: TfStatistics
   object Label17: TLabel
     Left = 8
     Top = 152
-    Width = 270
+    Width = 167
     Height = 13
-    Caption = '#00594^eVocabulary entries:^cPoèet slovíèek:'
+    Caption = '#00594^eVocabulary entries:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -221,9 +217,9 @@ object fStatistics: TfStatistics
   object Label18: TLabel
     Left = 8
     Top = 168
-    Width = 279
+    Width = 145
     Height = 13
-    Caption = '#00595^eLearned words:^cNauèených slovíèek:'
+    Caption = '#00595^eLearned words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -234,9 +230,9 @@ object fStatistics: TfStatistics
   object Label19: TLabel
     Left = 8
     Top = 184
-    Width = 322
+    Width = 151
     Height = 13
-    Caption = '#00596^eMastered words:^cDobøe nauèených slovíèek:'
+    Caption = '#00596^eMastered words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -247,9 +243,9 @@ object fStatistics: TfStatistics
   object Label20: TLabel
     Left = 8
     Top = 200
-    Width = 328
+    Width = 165
     Height = 13
-    Caption = '#00597^eProblematic words:^cProblematických slovíèek:'
+    Caption = '#00597^eProblematic words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -260,9 +256,9 @@ object fStatistics: TfStatistics
   object Label21: TLabel
     Left = 8
     Top = 232
-    Width = 385
+    Width = 214
     Height = 13
-    Caption = '#00598^eNumber of katakana words:^cPoèet slovíèek v katakanì:'
+    Caption = '#00598^eNumber of katakana words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -273,9 +269,9 @@ object fStatistics: TfStatistics
   object Label22: TLabel
     Left = 280
     Top = 152
-    Width = 372
+    Width = 202
     Height = 13
-    Caption = '#00599^eNumber of kanji in words:^cPoèet kanji ve slovíèkách::'
+    Caption = '#00599^eNumber of kanji in words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -286,9 +282,9 @@ object fStatistics: TfStatistics
   object Label23: TLabel
     Left = 280
     Top = 184
-    Width = 239
+    Width = 139
     Height = 13
-    Caption = '#00600^eLearned kanji:^cNauèeno kanji:'
+    Caption = '#00600^eLearned kanji:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -299,9 +295,9 @@ object fStatistics: TfStatistics
   object Label24: TLabel
     Left = 280
     Top = 200
-    Width = 378
+    Width = 185
     Height = 13
-    Caption = '#00601^eUnlearned basic kanji:^cNenauèených základních kanji:'
+    Caption = '#00601^eUnlearned basic kanji:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -376,9 +372,9 @@ object fStatistics: TfStatistics
   object Label33: TLabel
     Left = 8
     Top = 216
-    Width = 307
+    Width = 168
     Height = 13
-    Caption = '#00602^eNon-popular words:^cNepopulární slovíèka:'
+    Caption = '#00602^eNon-popular words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -389,9 +385,9 @@ object fStatistics: TfStatistics
   object Label34: TLabel
     Left = 280
     Top = 216
-    Width = 398
+    Width = 198
     Height = 13
-    Caption = '#00603^eLearned non-basic kanji:^cNauèených nezákladních znakù:'
+    Caption = '#00603^eLearned non-basic kanji:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -431,11 +427,9 @@ object fStatistics: TfStatistics
   object Label38: TLabel
     Left = 280
     Top = 168
-    Width = 398
+    Width = 201
     Height = 13
-    Caption = 
-      '#00604^eNon-basic kanji in words:^cNezákladní kanji ve slovíèkác' +
-      'h:'
+    Caption = '#00604^eNon-basic kanji in words:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -454,11 +448,9 @@ object fStatistics: TfStatistics
   object Label40: TLabel
     Left = 280
     Top = 232
-    Width = 460
+    Width = 247
     Height = 13
-    Caption = 
-      '#00605^eLearned chinese-only characters:^cNauèených pouze-èínský' +
-      'ch znakù:'
+    Caption = '#00605^eLearned chinese-only characters:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -477,9 +469,9 @@ object fStatistics: TfStatistics
   object Label42: TLabel
     Left = 8
     Top = 248
-    Width = 389
+    Width = 207
     Height = 13
-    Caption = '#00606^eWords with known writing:^cSlovíèka se známým zápisem:'
+    Caption = '#00606^eWords with known writing:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -490,9 +482,9 @@ object fStatistics: TfStatistics
   object Label43: TLabel
     Left = 280
     Top = 248
-    Width = 287
+    Width = 156
     Height = 13
-    Caption = '#00607^eLearned radicals:^cNauèených radikálù:'
+    Caption = '#00607^eLearned radicals:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

@@ -31,7 +31,6 @@ type
     aExit: TAction;
     aKanji: TAction;
     aKanjiSearch: TAction;
-    aKanjiSort: TAction;
     aKanjiDetails: TAction;
     aKanjiCompounds: TAction;
     aKanjiPrint: TAction;
@@ -44,7 +43,6 @@ type
     aUser: TAction;
     aUserAdd: TAction;
     aUserSettings: TAction;
-    aUserCategory: TAction;
     aUserDetails: TAction;
     aUserPrint: TAction;
     aUserGenerate: TAction;
@@ -281,7 +279,6 @@ type
     procedure aDictExecute(Sender: TObject);
     procedure aUserExecute(Sender: TObject);
     procedure aKanjiSearchExecute(Sender: TObject);
-    procedure aKanjiSortExecute(Sender: TObject);
     procedure aKanjiDetailsExecute(Sender: TObject);
     procedure aKanjiCompoundsExecute(Sender: TObject);
     procedure aKanjiPrintExecute(Sender: TObject);
@@ -292,7 +289,6 @@ type
     procedure aDictEditorExecute(Sender: TObject);
     procedure aUserAddExecute(Sender: TObject);
     procedure aUserSettingsExecute(Sender: TObject);
-    procedure aUserCategoryExecute(Sender: TObject);
     procedure aUserDetailsExecute(Sender: TObject);
     procedure aUserPrintExecute(Sender: TObject);
     procedure aUserGenerateExecute(Sender: TObject);
@@ -577,14 +573,14 @@ function _l(id:string):string;
 implementation
 
 uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
-  JWBSettings, JWBSplash, PKGWrite, JWBAlphabet, JWBUser, UnicodeFont, registry, clipbrd,
-  JWBWords, JWBNewCategory, JWBPrint, JWBSizeCheck, JWBStatistics,
+  JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
+  JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBClipboard, JWBKanjiCompounds,
-  JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserCategory, JWBUserFilters,
-  JWBKanjiDetails, JWBKanjiSort, JWBKanjiSearch, JWBWordDetails,
+  JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters,
+  JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
-  JWBInvalidator, JWBDicAdd, JWBLanguage, JWBPopupButton, JWBFileType, JWBConvert,
+  JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard;
 
 {$R *.DFM}
@@ -679,7 +675,10 @@ begin
     if dic.tested then
     begin
       if Uppercase(dic.pname)='JALET.DIC'then
-        Application.MessageBox(pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.^cPouûiv·nÌ starÈ verze slovnÌku JALET.DIC nenÌ doporuËeno.')),pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_OK);
+        Application.MessageBox(
+          pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
+          pchar(_l('#00090^eWarning')),
+          MB_ICONWARNING or MB_OK);
       if (curlang=dic.language) then
       begin
         dicts.AddObject(dic.language+dic.name,dic);
@@ -696,8 +695,17 @@ begin
   if (dicts.Count=0) and (paramstr(1)<>'makedic') and (paramstr(1)<>'makeexamples') then
   begin
     if curlang='j'then
-      Application.MessageBox(pchar(_l('#00327^eNo valid japanese dictionary was found.'#13'Please download some japanese .DIC files from WAKAN website.^cNebyl nalezen û·dn˝ japonsk˝ slovnÌk.'#13'Nahrajte si prosÌm nÏjakÈ japonskÈ .DIC soubory z webovÈ str·nky WAKANu.')),pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_OK) else
-      Application.MessageBox(pchar(_l('#00328^eNo valid chinese dictionary was found.'#13'Please download some chinese .DIC files from WAKAN website.^cNebyl nalezen û·dn˝ ËÌnsk˝ slovnÌk.'#13'Nahrajte si prosÌm nÏjakÈ ËÌnskÈ .DIC soubory z webovÈ str·nky WAKANu.')),pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00327^eNo valid japanese dictionary was found.'#13
+          +'Please download some japanese .DIC files from WAKAN website.')),
+        pchar(_l('#00090^eWarning')),
+        MB_ICONWARNING or MB_OK)
+    else
+      Application.MessageBox(
+        pchar(_l('#00328^eNo valid chinese dictionary was found.'#13
+          +'Please download some chinese .DIC files from WAKAN website.')),
+          pchar(_l('#00090^eWarning')),
+          MB_ICONWARNING or MB_OK);
   end else
     fDictMan.CheckListBox1.ItemIndex:=0;
 end;
@@ -712,8 +720,8 @@ begin
     SpeedButton14.Down:=true;
     aJapanese.Checked:=true;
     aChinese.Checked:=false;
-    fUser.SpeedButton1.Caption:=_l('#00329^eJapanese ->English^cJaponsky -> Anglicky');
-    fUser.SpeedButton2.Caption:=_l('#00330^eEnglish -> Japanese^cAnglicky -> Japonsky');
+    fUser.SpeedButton1.Caption:=_l('#00329^eJapanese ->English');
+    fUser.SpeedButton2.Caption:=_l('#00330^eEnglish -> Japanese');
   end else
   begin
     romasys:=fSettings.RadioGroup6.ItemIndex+1;
@@ -721,8 +729,8 @@ begin
     SpeedButton13.Down:=true;
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
-    fUser.SpeedButton1.Caption:=_l('#00331^eChinese ->English^c»Ìnsky -> Anglicky');
-    fUser.SpeedButton2.Caption:=_l('#00332^eEnglish -> Chinese^cAnglicky -> »Ìnsky');
+    fUser.SpeedButton1.Caption:=_l('#00331^eChinese ->English');
+    fUser.SpeedButton2.Caption:=_l('#00332^eEnglish -> Chinese');
   end;
   RescanDicts;
   fKanji.KanjiSearch_SpeedButton20Click(self);
@@ -868,7 +876,6 @@ begin
   fLanguage.TranslateForm(self);
   fLanguage.TranslateForm(fKanji);
   fLanguage.TranslateForm(fRadical);
-  fLanguage.TranslateForm(fAlphabet);
   fLanguage.TranslateForm(fWords);
   fLanguage.TranslateForm(fUser);
   fLanguage.TranslateForm(fSettings);
@@ -879,11 +886,9 @@ begin
   fLanguage.TranslateForm(fWordList);
   fLanguage.TranslateForm(fBitmap);
   fLanguage.TranslateForm(fUserAdd);
-  fLanguage.TranslateForm(fUserCategory);
   fLanguage.TranslateForm(fUserFilters);
   fLanguage.TranslateForm(fUserDetails);
   fLanguage.TranslateForm(fKanjiDetails);
-  fLanguage.TranslateForm(fKanjiSort);
   fLanguage.TranslateForm(fKanjiSearch);
   fLanguage.TranslateForm(fKanjiCompounds);
   fLanguage.TranslateForm(fWordDetails);
@@ -1075,7 +1080,11 @@ begin
   v2:=false;
   if s<>'VERSION,6'then
   begin
-    Application.MessageBox(pchar(_l('#00334^eCannot load layout. Outdated version.'#13#13'Settings standard layout instead.^cNemohu nahr·t rozvrûenÌ. Zastaral· verze.'#13#13'Nastavuji mÌsto toho standardnÌ rozvrûenÌ.')),pchar(_l('#00335^eLayout loading^cNahr·v·nÌ rozvrûenÌ')),MB_ICONINFORMATION or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00334^eCannot load layout. Outdated version.'#13#13
+        +'Settings standard layout instead.')),
+      pchar(_l('#00335^eLayout loading')),
+      MB_ICONINFORMATION or MB_OK);
     closefile(t);
     StandardLayout(0,100);
     exit;
@@ -1090,11 +1099,9 @@ begin
   SetFormLayout(fWords,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fUser,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fExamples,s,bsSizeToolWin,so,sd); readln(t,s);
-//  SetFormLayout(fUserCategory,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fUserFilters,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fUserDetails,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fKanjiDetails,s,bsSizeToolWin,so,sd); readln(t,s);
-//  SetFormLayout(fKanjiSort,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fKanjiSearch,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fKanjiCompounds,s,bsSizeToolWin,so,sd); readln(t,s);
 //  SetFormLayout(fWordDetails,s,bsSizeToolWin,so,sd); readln(t,s);
@@ -1127,11 +1134,9 @@ begin
   s:=GetFormLayout(fWords); writeln(t,s);
   s:=GetFormLayout(fUser); writeln(t,s);
   s:=GetFormLayout(fExamples); writeln(t,s);
-//  s:=GetFormLayout(fUserCategory); writeln(t,s);
   s:=GetFormLayout(fUserFilters); writeln(t,s);
   s:=GetFormLayout(fUserDetails); writeln(t,s);
   s:=GetFormLayout(fKanjiDetails); writeln(t,s);
-//  s:=GetFormLayout(fKanjiSort); writeln(t,s);
   s:=GetFormLayout(fKanjiSearch); writeln(t,s);
   s:=GetFormLayout(fKanjiCompounds); writeln(t,s);
 //  s:=GetFormLayout(fWordDetails); writeln(t,s);
@@ -1150,7 +1155,10 @@ var so,sd,so1,sd1:TPoint;
 procedure sfl(form:TForm;s:string);
 begin
   if (form=fUserFilters)
-    or (form=fKanjiSort) or (form=fWordCategory) or (form=fWordKanji) or (form=fUserDetails) or (form=fKanjiCompounds) then
+  or (form=fWordCategory)
+  or (form=fWordKanji)
+  or (form=fUserDetails)
+  or (form=fKanjiCompounds) then
     SetFormLayout(form,s,bsToolWindow,so,sd) else
     SetFormLayout(form,s,bsSizeToolWin,so,sd);
 end;
@@ -1166,14 +1174,16 @@ begin
   sfl(fUserFilters,'VISIBLE,Y,RIGHT,.,0,=,0,.,0,LEAVE');
   sfl(fWords,'HIDDEN,Y,TOP,=,'+inttostr(fUserFilters.height)+',=,0,=,'+inttostr(sd.x-fUserFilters.width)+',SET');
   sfl(fUserDetails,'VISIBLE,Y,TOP,.,0,=,0,.,0,LEAVE');
-//  sfl(fUserCategory,'VISIBLE,Y,TOP,=,'+inttostr(fUserDetails.height)+',=,'+inttostr(fUserDetails.width)+',r,0,SET');
   sfl(fUserAdd,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
 end;
 var sx:string;
 begin
   if ((Screen.Width<1024) or (Screen.Height<768)) and (lay>0) then
   begin
-    Application.MessageBox(pchar(_l('#00336^eAdvanced layouts require at least 1024x768 resolution.^cPokroËil· rozvrûenÌ vyûadujÌ rozliöenÌ alespoÚ 1024x768.')),pchar(_l('#00337^eResolution too low^cP¯Ìliö nÌzkÈ rozliöenÌ')),MB_ICONERROR or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00336^eAdvanced layouts require at least 1024x768 resolution.')),
+      pchar(_l('#00337^eResolution too low')),
+      MB_ICONERROR or MB_OK);
     exit;
   end;
   fUser.Hide;
@@ -1226,7 +1236,6 @@ begin
         sfl(fKanjiDetails,'VISIBLE,Y,RIGHT,.,0,=,0,.,0,SET');
         sfl(fKanji,'VISIBLE,Y,TOP,=,170,=,0,r,0,SET');
         sfl(fKanjiSearch,'HIDDEN,Y,LEFT,.,0,=,0,.,0,LEAVE');
-//        sfl(fKanjiSort,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
         sfl(fKanjiCompounds,'VISIBLE,Y,TOP,%,100,=,0,r,0,SET');
         StdVocab;
       end;
@@ -1236,7 +1245,6 @@ begin
         sfl(fKanjiDetails,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
         sfl(fKanjiCompounds,'VISIBLE,Y,TOP,=,'+inttostr(sd.y-fKanjiSearch.height)+',=,0,r,0,SET');
         sfl(fKanjiSearch,'VISIBLE,Y,LEFT,%,100,=,0,.,0,SET');
-//        sfl(fKanjiSort,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
         sd:=sd1; so:=so1;
 //        sfl(fWordDetails,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
         sfl(fUser,'HIDDEN,Y,TOP,=,'+inttostr(sd.y-180-fExamples.Height)+',=,0,r,0,SET');
@@ -1258,7 +1266,6 @@ begin
         sfl(fKanjiDetails,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
         sfl(fKanjiCompounds,'VISIBLE,Y,TOP,=,'+inttostr(sd.y-fKanjiSearch.height)+',=,0,r,0,SET');
         sfl(fKanjiSearch,'VISIBLE,Y,LEFT,%,100,=,0,.,0,SET');
-//        sfl(fKanjiSort,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
         StdVocab;
       end;
     4:begin
@@ -1267,7 +1274,6 @@ begin
         sfl(fKanji,'HIDDEN,Y,TOP,=,190,=,0,r,0,SET');
         sfl(fKanjiCompounds,'VISIBLE,Y,TOP,=,'+inttostr(fKanjiDetails.height-190)+',=,0,r,0,SET');
         sfl(fKanjiSearch,'HIDDEN,Y,LEFT,.,0,=,0,r,0,LEAVE');
-//        sfl(fKanjiSort,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
         sd:=sd1; so:=so1;
 //        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
         sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,=,180,LEAVE');
@@ -1282,7 +1288,6 @@ begin
         sfl(fKanji,'HIDDEN,Y,BOTTOM,=,190,=,0,r,0,SET');
         sfl(fKanjiCompounds,'VISIBLE,Y,BOTTOM,=,'+inttostr(fKanjiDetails.height-190)+',=,0,r,0,SET');
         sfl(fKanjiSearch,'HIDDEN,Y,LEFT,.,0,=,0,.,0,LEAVE');
-//        sfl(fKanjiSort,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
         sd:=sd1; so:=so1;
         sfl(fWordKanji,'HIDDEN,Y,RIGHT,.,0,=,0,=,180,LEAVE');
 //        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
@@ -1565,9 +1570,11 @@ begin
     ps.Free;
     if ver<>CurStructVer then
     begin
-      if Application.MessageBox(pchar(_l('#00338^eFile WAKAN.USR has old structure.'#13'It must be converted.'#13'You should make backup before converting'#13#13'Do you want to convert it now?'+
-      '^cSoubor WAKAN.USR m· starou strukturu.'#13'Bude muset b˝t zkonvertov·n.'#13'P¯ed konverzÌ byste mÏli udÏlat z·lohu.'#13#13'Chcete provÈst konverzi teÔ?')),
-      pchar(_l('#00339^eOld structure^cStar· struktura')),MB_YESNO or MB_ICONWARNING)=idYes then
+      if Application.MessageBox(
+        pchar(_l('#00338^eFile WAKAN.USR has old structure.'#13'It must be converted.'#13
+          +'You should make backup before converting'#13#13'Do you want to convert it now?')),
+        pchar(_l('#00339^eOld structure')),
+        MB_YESNO or MB_ICONWARNING)=idYes then
       begin
         if ver<=0 then
         begin
@@ -1812,8 +1819,9 @@ begin
     if fSettings.CheckBox46.Checked then SaveUserData else
     begin
     res:=Application.MessageBox(
-      pchar(_l('#00340^eUser data was changed. Do you want to save it?^cUûivatelsk· data byla zmÏnÏna. Chcete je uloûit?')),
-      pchar(_l('#00341^eApplication exit^cUkonËenÌ aplikace')),MB_YESNOCANCEL or MB_ICONQUESTION);
+      pchar(_l('#00340^eUser data was changed. Do you want to save it?')),
+      pchar(_l('#00341^eApplication exit')),
+      MB_YESNOCANCEL or MB_ICONQUESTION);
     case res of
       idYes:SaveUserData;
       idNo:LoadUserData;
@@ -2276,39 +2284,36 @@ begin
 
   fLanguage.TranslateForm(fSplash);
   fSplash.Label4.Caption:=WakanVer;
-  Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese^cN·stroj pro studenty japonötiny a ËÌnötiny');
-{  Application.MessageBox(
-    pchar(_l('#00343^eThis is a public beta version of WaKan.'#13#13'This version is not freely distributable but the final version will be.'+
-    #13#13'You use this software on your own risk, I take no responsibility for the program behavior.'#13'Please mail comments to dreamfly@centrum.cz.^cToto je ve¯ejn· beta verze programu JaLeT.'#13#13+
-    'Tato verze nenÌ volnÏ öÌ¯iteln·, aËkoli fin·lnÌ verze bude.'#13#13'PouûitÌ tohoto software je na vlastnÌ nebezpeËÌ, autor nenese û·dnou odpovÏdnost za chov·nÌ programu.'#13'P¯ipomÌnky posÌlejte na dreamfly@centrum.cz')+
-    _l('^e'#13#13'For more information please visit http://jalet.fbi.cz^c'#13#13'Pro vÌce informacÌ prosÌm navötivte http://jalet.fbi.cz')),
-    pchar(_l('#00344^ePublic beta version^cVe¯ejn· v˝vojov· verze')),MB_ICONWARNING);
-}  if (Screen.Width<800) or (Screen.Height<600) then
-  begin
+  Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
+  if (Screen.Width<800) or (Screen.Height<600) then
     if Application.MessageBox(
-      pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?'+
-      '^cTato verze programu WaKan vyûaduje rozliöenÌ alespoÚ 800x600.'#13#13'Opravdu chcete pokraËovat?')),
-      pchar(_l('#00020^eError^cChyba')),MB_YESNO or MB_ICONERROR)=idNo then
-      begin
-        Application.Terminate;
-        exit;
-      end;
-  end;
+      pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?')),
+      pchar(_l('#00020^eError')),
+      MB_YESNO or MB_ICONERROR)=idNo then
+    begin
+      Application.Terminate;
+      exit;
+    end;
   if (not FileExists('wakan.chr')) then
   begin
     Application.MessageBox(
-      pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13'This file is required for application to run.'#13'Please download this file from WAKAN website.'#13#13'Application will now be terminated.'+
-      '^cSoubor WAKAN.CHR nebyl nalezen.'#13'Tento soubor je pot¯eba ke spuötÏnÌ aplikace.'#13'Nahrajte si tento soubor ze str·nky WAKANu'#13#13'Aplikace bude nynÌ ukonËena.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
+        +'This file is required for application to run.'#13
+        +'Please download this file from WAKAN website.'#13#13
+        +'Application will now be terminated.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     Application.Terminate;
     exit;
   end;
   if (not FileExists('wakan.cfg')) then
   begin
     Application.MessageBox(
-      pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13'This file contains important configuration parameters and is required for application to run.'#13#13'Application will now be terminated.'+
-      '^cSoubor WAKAN.CFG nebyl nalezen.'#13'Tento soubor obsahuje d˘leûitÈ konfiguraËnÌ parametry a je pot¯eba ke spuötÏnÌ aplikace.'#13#13'Aplikace bude nynÌ ukonËena.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
+        +'This file contains important configuration parameters and is required'
+        +'for application to run.'#13#13'Application will now be terminated.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     Application.Terminate;
     exit;
   end;
@@ -2320,17 +2325,20 @@ begin
   begin
     delete(sx,1,1);
     Application.MessageBox(
-      pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13+sx+#13#13'You must have at least one font of each of these sets on your computer to run this application.'#13#13+
-      'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13'These fonts are automatically installed when you install support for reading Japanese & Chinese language in windows.'#13#13+
-      'Please install required fonts and run this application again.'+
-      '^cNa vaöem poËÌtaËi nebyly nalezeny û·dnÈ fonty z tÏchto znakov˝ch sad:'#13#13+sx+#13#13'MusÌte mÌt nainstalov·n alespoÚ jeden font z kaûdÈ z tÏchto znakov˝ch sad, abyste mohli spustit aplikaci.'#13#13+
-      'DoporuËuji nainstalovat fonty MS Mincho, MS Gothic, SimSun a MingLiU.'#13'Tyto fonty se nainstalujÌ automaticky, jakmile nainstalujete podporu pro ËtenÌ ËÌnötiny a japonötiny ve Windows.'#13#13+
-      'ProsÌm nainsalujte vyûadovanÈ fonty a spusùte tuto aplikaci znovu.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13
+        +sx+#13#13
+        +'You must have at least one font of each of these sets on your computer '
+        +'to run this application.'#13#13
+        +'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13
+        +'These fonts are automatically installed when you install support for '
+        +'reading Japanese & Chinese language in windows.'#13#13
+        +'Please install required fonts and run this application again.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     Application.Terminate;
     exit;
-  end;
-}  oldhandle:=0;
+  end; }
+  oldhandle:=0;
   critsec:=false;
   TranslateAll;
   romasys:=1;
@@ -2367,16 +2375,20 @@ begin
   if FileExists('WAKAN.CDT') then chardetl.LoadFromFile('WAKAN.CDT') else fSettings.Button10Click(sender);
   if reg.ReadString('Fonts','FontSet','0')<>'1'then
   begin
-    Application.MessageBox(pchar(_l('#00349^eYou are running WaKan for the first time.'#13'WaKan will now try to locate and set all the recommended fonts.'#13+
-    'You can restart this process by selecting "Select recommended fonts" in settings.^cSpouötÌte WaKan poprvÈ.'#13+
-    'NynÌ probÏhne pokus o nalezenÌ a nastavenÌ doporuËovan˝ch font˘.'#13+
-    'Tento proces m˘ûete zopakovat volbou "Nastavit doporuËenÈ fonty" v nastavenÌ.')),
-    pchar(_l('#00350^eFont autodetection^cAutodetekce font˘')),MB_ICONINFORMATION or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00349^eYou are running WaKan for the first time.'#13
+        +'WaKan will now try to locate and set all the recommended fonts.'#13
+        +'You can restart this process by selecting "Select recommended fonts" '
+        +'in settings.')),
+      pchar(_l('#00350^eFont autodetection')),
+      MB_ICONINFORMATION or MB_OK);
     if not fSettings.AutoDetectFonts then
     begin
-      if Application.MessageBox(pchar(_l('#00351^eFont autodetection failed. Some characters may not be displayed correctly.'#13#13+
-      'Do you want to continue?^cAutodetekce font˘ selhala. NÏkterÈ znaky nemusÌ b˝t zobrazeny spr·vnÏ.'#13#13'Chcete pokraËovat?')),
-      pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONERROR or MB_YESNO)=idNo then
+      if Application.MessageBox(
+        pchar(_l('#00351^eFont autodetection failed. Some characters may not be '
+          +'displayed correctly.'#13#13+'Do you want to continue?')),
+        pchar(_l('#00090^eWarning')),
+        MB_ICONERROR or MB_YESNO)=idNo then
       begin
         Application.Terminate;
         exit;
@@ -2601,9 +2613,10 @@ begin
     suffixl.Sort;
   except
     Application.MessageBox(
-      pchar(_l('#00352^eCannot load main configuration file.'#13'File WAKAN.CFG is corrupted.'#13#13'Application will now exit.'+
-      '^cNepoda¯ilo se nahr·t hlavnÌ soubor s konfiguracÌ.'#13'Soubor WAKAN.CFG je poökozen.'#13#13'Aplikace bude nynÌ ukonËena.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00352^eCannot load main configuration file.'#13
+        +'File WAKAN.CFG is corrupted.'#13#13'Application will now exit.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     Application.Terminate;
     exit;
   end;
@@ -2612,27 +2625,33 @@ begin
     (pos('!',FontChineseGB)>0) or (pos('!',FontChineseGridGB)>0) or
     (pos('!',FontSmall)>0) or (pos('!',FontRadical)>0) or (pos('!',FontEnglish)>0) or (pos('!',FontPinYin)>0) or (pos('!',FontStrokeOrder)>0) do
   begin
-    Application.MessageBox(pchar(_l('#00353^cNa vaöem systÈmu nebyl nalezen nÏkter˝ ze standardnÌch font˘.'+
-    #13'V n·sledujÌcÌm dialogu prosÌm vyberte spr·vnÈ fonty. ChybÏjÌcÌ fonty jsou oznaËeny vyk¯iËnÌkem.'+
-    #13'Bez vybr·nÌ vöech font˘ nem˘ûe aplikace spr·vnÏ fungovat.^eSome standard fonts were not found on your system.'+
-    #13'Please reselect all fonts in the following dialog. Missing fonts are preceded by !.'#13+
-    'Application cannot continue unless all fonts are selected.')),pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00353^eSome standard fonts were not found on your system.'#13
+        +'Please reselect all fonts in the following dialog. Missing fonts are '
+        +'preceded by !.'#13
+        +'Application cannot continue unless all fonts are selected.')),
+      pchar(_l('#00090^eWarning')),
+      MB_ICONWARNING or MB_OK);
     fSettings.PageControl1.ActivePage:=fSettings.TabSheet3;
     fSettings.ShowModal;
   end;
   if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then raise Exception.Create('Unknown DICT.VER header.');
   if strtoint(vi[1])<CurDictVer then
   begin
-    Application.MessageBox(pchar(_l('#00354^eWAKAN.CHR has old structure. Please download new version.'#13#13'Application will now exit.'+
-      '^cWAKAN.CHR m· starou strukturu. St·hnÏte si prosÌm novou verzi.'#13#13'Aplikace bude ukonËena.')),pchar(_l('#00020^eError^cChyba')),
+    Application.MessageBox(
+      pchar(_l('#00354^eWAKAN.CHR has old structure. Please download new '
+        +'version.'#13#13'Application will now exit.')),
+      pchar(_l('#00020^eError')),
       MB_ICONERROR or MB_OK);
     Application.Terminate;
     exit;
   end;
   if strtoint(vi[1])>CurDictVer then
   begin
-    Application.MessageBox(pchar(_l('#00355^eWAKAN.CHR has newer structure. Please download new WAKAN.EXE.'#13#13'Application will now exit.'+
-      '^cWAKAN.CHR m· novÏjöÌ strukturu. St·hnÏte si prosÌm novou verzi WAKAN.EXE.'#13#13'Aplikace bude ukonËena.')),pchar(_l('#00020^eError^cChyba')),
+    Application.MessageBox(
+      pchar(_l('#00355^eWAKAN.CHR has newer structure. Please download new '
+        +'WAKAN.EXE.'#13#13'Application will now exit.')),
+      pchar(_l('#00020^eError')),
       MB_ICONERROR or MB_OK);
     Application.Terminate;
     exit;
@@ -2663,18 +2682,20 @@ begin
 //  showmessage(TChar.GetField(2,3));
   except
     Application.MessageBox(
-      pchar(_l('#00356^eCannot load main dictionary file.'#13'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.'+
-      '^cNepoda¯ilo se nahr·t hlavnÌ soubor se slovnÌkem.'#13'Soubor WAKAN.CHR je poökozen.'#13#13'Aplikace bude nynÌ ukonËena.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00356^eCannot load main dictionary file.'#13
+        +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     Application.Terminate;
     exit;
   end;
   if (not FileExists('wakan.rad')) then
   begin
     Application.MessageBox(
-      pchar(_l('#00357^eFile WAKAN.RAD was not found.'#13'Japanese advanced radicals search will be disabled.'+
-      '^cSoubor WAKAN.RAD nebyl nalezen.'#13'VylepöenÈ hled·nÌ podle japonsk˝ch radik·l˘ bude zak·z·no.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00357^eFile WAKAN.RAD was not found.'#13
+        +'Japanese advanced radicals search will be disabled.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     rainesearch:=nil;
   end else
   begin
@@ -2691,9 +2712,10 @@ begin
       ps.Free;
     except
       Application.MessageBox(
-        pchar(_l('#00358^eCannot load Japanese radicals file.'#13'File WAKAN.RAD is corrupted.'#13#13'Application will now exit.'+
-        '^cNepoda¯ilo se nahr·t soubor s japonsk˝mi radik·ly.'#13'Soubor WAKAN.RAD je poökozen.'#13#13'Aplikace bude nynÌ ukonËena.')),
-        pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+        pchar(_l('#00358^eCannot load Japanese radicals file.'#13
+          +'File WAKAN.RAD is corrupted.'#13#13'Application will now exit.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
       Application.Terminate;
       exit;
     end;
@@ -2701,9 +2723,10 @@ begin
   if (not FileExists('wakan.sod')) then
   begin
     Application.MessageBox(
-      pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13'Japanese stroke-order display will be disabled.'+
-      '^cSoubor WAKAN.SOD nebyl nalezen.'#13'Zobrazov·nÌ po¯adÌ tah˘ bude zak·z·no.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13
+        +'Japanese stroke-order display will be disabled.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     sobin:=nil;
   end else
   begin
@@ -2720,9 +2743,10 @@ begin
       ps.Free;
     except
       Application.MessageBox(
-        pchar(_l('#00360^eCannot load Japanese stroke-order file.'#13'File WAKAN.SOD is corrupted.'#13#13'Application will now exit.'+
-        '^cNepoda¯ilo se nahr·t soubor s po¯adÌm tah˘.'#13'Soubor WAKAN.SOD je poökozen.'#13#13'Aplikace bude nynÌ ukonËena.')),
-        pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+        pchar(_l('#00360^eCannot load Japanese stroke-order file.'#13
+          +'File WAKAN.SOD is corrupted.'#13#13'Application will now exit.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
       Application.Terminate;
       exit;
     end;
@@ -2734,13 +2758,16 @@ begin
   LoadUserData;
   except
     if FileExists('WAKAN.USR') then Application.MessageBox(
-      pchar(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13'If you delete this file, it will be created anew.'#13#13'Application will now exit.'+
-      '^cNepoda¯ilo se nahr·t hlavnÌ soubor s uûivatelsk˝mi daty.'#13'Soubor WAKAN.USR je poökozen.'#13'Pokud tento soubor odstranÌte, bude znovu vytvo¯en.'#13#13'Aplikace bude nynÌ ukonËena.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR)
+      pchar(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13
+        +'If you delete this file, it will be created anew.'#13#13'Application will now exit.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR)
     else Application.MessageBox(
-      pchar(_l('#00362^eUnable to create user data file WAKAN.USR.'#13'Please run this program from a folder that is not read-only.'#13#13'Application will not exit.^cNemohu vytvo¯it soubor s uûivatelsk˝mi daty WAKAN.USR'+#13+
-      'ProsÌm spusùte tento program ze sloûky, kter· nenÌ pouze pro ËtenÌ.'#13#13+'Aplikace bude nynÌ ukonËena.')),
-      pchar(_l('#00020^eError^cChyba')),MB_OK or MB_ICONERROR);
+      pchar(_l('#00362^eUnable to create user data file WAKAN.USR.'#13
+        +'Please run this program from a folder that is not read-only.'#13#13
+        +'Application will now exit.')),
+      pchar(_l('#00020^eError')),
+      MB_OK or MB_ICONERROR);
     Application.Terminate;
     exit;
   end;
@@ -2752,10 +2779,6 @@ begin
 //  BuildRomaList;
 //  Left:=0;
 //  Top:=0;
-//  fSizeCheck.WindowState:=wsMaximized;
-//  fSizeCheck.Show;
-//  globheight:=fSizeCheck.Height;
-//  fSizeCheck.Close;
   SetFormPos(fKanji);
   SetFormPos(fWords);
   SetFormPos(fUser);
@@ -2788,7 +2811,6 @@ begin
   XPResFix(fWords);
   XPResFix(fUser);
   XPResFix(fUserAdd);
-  XPResFix(fUserCategory);
 //  XPResFix(fKanjiSearch);
   XPResFix(fKanjiCompounds);
   XPResFix(fWordDetails);
@@ -2956,11 +2978,9 @@ begin
   SetBorder(fWords,bsSizeToolWin);
   SetBorder(fUser,bsSizeToolWin);
 //  SetBorder(fUserAdd,bsSizeToolWin);
-//  SetBorder(fUserCategory,bsSizeToolWin);
 //  SetBorder(fUserFilters,bsToolWindow);
 //  SetBorder(fUserDetails,bsToolWindow);
   SetBorder(fKanjiDetails,bsToolWindow);
-//  SetBorder(fKanjiSort,bsToolWindow);
 //  SetBorder(fKanjiSearch,bsSizeToolWin);
 //  SetBorder(fKanjiCompounds,bsSizeToolWin);
 //  SetBorder(fWordDetails,bsSizeToolWin);
@@ -3018,17 +3038,23 @@ begin
     ShellExecute(fMenu.handle,nil,'wakan.chm',nil,nil,SW_SHOW) else
   if FileExists('wakan_bld.chm') then
   begin
-    Application.MessageBox(pchar(_l('#00363^eHelp file is under construction, the information may be inaccurate.'+
-      '^cNa n·povÏdÏ se pracuje, v souËasnÈm stavu mohou b˝t nÏkterÈ informace nep¯esnÈ.')),
-      pchar(_l('#00364^eNotice^cUpozornÏnÌ')),MB_ICONWARNING or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00363^eHelp file is under construction, the information may be inaccurate.')),
+      pchar(_l('#00364^eNotice')),
+      MB_ICONWARNING or MB_OK);
     ShellExecute(fMenu.handle,nil,'wakan_bld.chm',nil,nil,SW_SHOW);
-  end else if FileExists('wakan_en.chm') then
-    Application.MessageBox(pchar(_l('#00365^eHelp file is out of date. Please download new help file from WaKan website: wakan.manga.cz.'+
-      '^cSoubor n·povÏdy je zastaral˝. St·hnÏte si prosÌm novou n·povÏdu ze str·nky wakan.manga.cz.')),
-      pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK) else
-    Application.MessageBox(pchar(_l('#00366^eCannot find file WAKAN.CHM.'+
-      '^cNemohu nalÈzt soubor WAKAN.CHM.')),
-      pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+  end else
+  if FileExists('wakan_en.chm') then
+    Application.MessageBox(
+      pchar(_l('#00365^eHelp file is out of date. Please download new help file '
+        +'from WaKan website: wakan.manga.cz.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK)
+  else
+    Application.MessageBox(
+      pchar(_l('#00366^eCannot find file WAKAN.CHM.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
 end;
 
 procedure TfMenu.Action1Execute(Sender: TObject);
@@ -3097,15 +3123,6 @@ begin
   if not fKanji.Visible then ToggleForm(fKanji,nil,nil);
   if aKanjiSearch.Checked<>pre then exit;
   ToggleForm(fKanjiSearch,fKanji.SpeedButton5,aKanjiSearch);
-end;
-
-procedure TfMenu.aKanjiSortExecute(Sender: TObject);
-var pre:boolean;
-begin
-  pre:=aKanjiSort.Checked;
-  if not fKanji.Visible then ToggleForm(fKanji,nil,nil);
-  if aKanjiSort.Checked<>pre then exit;
-  ToggleForm(fKanjiSort,fKanji.SpeedButton1,aKanjiSort);
 end;
 
 procedure TfMenu.aKanjiDetailsExecute(Sender: TObject);
@@ -3208,15 +3225,6 @@ begin
   if not fWords.Visible then ToggleForm(fWords,nil,nil);
   if aUserSettings.Checked<>pre then exit;
   ToggleForm(fUserFilters,fWords.SpeedButton2,aUserSettings);
-end;
-
-procedure TfMenu.aUserCategoryExecute(Sender: TObject);
-var pre:boolean;
-begin
-  pre:=aUserCategory.Checked;
-  if not fWords.Visible then ToggleForm(fWords,nil,nil);
-  if aUserCategory.Checked<>pre then exit;
-  ToggleForm(fUserCategory,fWords.SpeedButton3,aUserCategory);
 end;
 
 procedure TfMenu.aUserDetailsExecute(Sender: TObject);
@@ -3934,22 +3942,12 @@ begin
   begin
     if not FileExists('wakanh.dll') then
     begin
-      Application.MessageBox(pchar(_l('#00367^eCannot find file WAKANH.DLL.^cNemohu najÌt soubor WAKANH.DLL.')),
-        pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00367^eCannot find file WAKANH.DLL.')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
       exit;
     end;
-{    if Application.MessageBox(pchar(_l(
-      '#00368^e!!THIS FEATURE IS EXPERIMENTAL!!'#13#13'WARNING: Screen popup tool is currently under heavy testing.'+
-      #13'Because it needs to install a system-wide hook DLL, you are advised to save all your'+
-      #13'critical work before continuing. Please report to me any system unstability you encounter.'#13#13'Do you want to continue?'+
-      '^c!!TAKO FUNKCE JE SILNÃ EXPERIMENT¡LNÕ!!'#13#13'UPOZORNÃNÕ: VyskakovacÌ popup pro obrazovku je nynÌ testov·n.'+
-      #13'Protoûe je pot¯eba nainstalovat hook DLL do celÈho systÈmu, doporuËuji uloûit'+
-      #13'vöechnu rozdÏlanou pr·ci v jin˝ch aplikacÌch p¯ed pokraËov·nÌm. Nahlaste mi prosÌm, pokud narazÌte na nestabilitu systÈmu.'#13#13'Chcete pokraËovat?')),
-      pchar(_l('#00090^eWarning^cVarov·nÌ')),MB_ICONWARNING or MB_YESNO)=idNo then
-      begin
-        SpeedButton1.Down:=false;
-        exit;
-      end;}
     Screen.Cursor:=crHourGlass;
     ctlFileMap:=CreateFileMapping($FFFFFFFF,nil,PAGE_READWRITE,0,1,'wakanh_ctl_sharemem');
     if ctlFileMap=0 then
@@ -4722,7 +4720,9 @@ begin
   if not FileExists('ANNOTATE.PKG') then bld:=true;
   if bld then
   begin
-    pd:=SMMessageDlg(_l('^eAnnotations^cPozn·mky'),_l('^eRebuilding annotations...^cNahr·v·m pozn·mky...'));
+    pd:=SMMessageDlg(
+      _l('^eAnnotations'),
+      _l('^eRebuilding annotations...'));
     {$I-}
     mkdir('annot');
     {$I+}
@@ -4798,8 +4798,11 @@ begin
     TAnnots:=TTextTable.Create(ps,'annot',false,false);
     ps.Free;
   except
-    Application.MessageBox(pchar(_l('^eAnnotations file ANNOTATE.PKG is corrupt and wasn''t loaded.'#13'If you delete it, it will be recreated.'+
-      '^cSoubor s anotacemi ANNOTATE.PKG je poökozen a nebyl nahr·n. Pokud ho smaûete, bude vytvo¯en znovu.')),pchar(_l('^eError^cChyba')),MB_ICONERROR or MB_OK);
+    Application.MessageBox(
+      pchar(_l('^eAnnotations file ANNOTATE.PKG is corrupt and wasn''t loaded.'#13
+        +'If you delete it, it will be recreated.')),
+      pchar(_l('^eError')),
+      MB_ICONERROR or MB_OK);
   end;
 end;
 

@@ -89,6 +89,9 @@ type
     procedure SetProgress(i:integer);
     // if the dialog contains the progress bar, sets the Progress of the
     // progress bar to i and repaints it
+    procedure ProcessModalMessages;
+    // processes messages from the queue so that the system doesn't think we're stuck.
+    // ignores those sent to parent windows though 
   end;
 
 type TPromptType=(InfoStyle,WarningStyle,SuccessStyle,AskStyle,ErrorStyle);
@@ -397,6 +400,13 @@ begin
   ProgressBar.Position:=i;
   ProgressBar.Invalidate;
   ProgressBar.Update;
+end;
+
+procedure TSMPromptForm.ProcessModalMessages;
+begin
+  //TODO: Write this one. (Possibly copy from TForm.ShowModal)
+  //Also don't process messages too often. Keep last processing time
+  // and only call API once in a while
 end;
 
 procedure TSMPromptForm.YesToAllButtonClick(Sender: TObject);

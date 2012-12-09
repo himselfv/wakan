@@ -27,13 +27,10 @@ type
     procedure FormShow(Sender: TObject);
     procedure CheckBox2Click(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
-  private
-    { Private declarations }
   public
     inputs:string;
     results:string;
     function GetDet(j:integer):string;
-    { Public declarations }
   end;
 
 var
@@ -91,7 +88,7 @@ var i:integer;
 begin
   if inputs='' then inputs:='0;L;L;B;Y;M;';
   ComboBox1.Items.Clear;
-  for i:=0 to chartypel.Count-1 do ComboBox1.Items.Add(_l('^e'+fMenu.GetCharType(i,4)+'^c'+fMenu.GetCharType(i,5)));
+  for i:=0 to chartypel.Count-1 do ComboBox1.Items.Add(_l('^e'+fMenu.GetCharType(i,4)));
   ComboBox1.ItemIndex:=0;
   for i:=0 to chartypel.Count-1 do if fMenu.GetCharType(i,0)=GetDet(0) then ComboBox1.ItemIndex:=i;
   if GetDet(1)='L'then RadioGroup1.ItemIndex:=0;

@@ -174,16 +174,16 @@ begin
     rect.bottom:=22;
     fScreenTip.pb.Canvas.Rectangle(rect);
     case i of
-      0:s1:='#00869^eClip^cSchr';
-      1:s1:='#00869^eClip^cSchr';
-      2:s1:='#00870^eShow^cUkaž';
-      3:s1:='#00870^eShow^cUkaž';
+      0:s1:='#00869^eClip';
+      1:s1:='#00869^eClip';
+      2:s1:='#00870^eShow';
+      3:s1:='#00870^eShow';
     end;
     case i of
-      0:s2:='#00871^eAdd^cCPøid';
-      1:s2:='#00872^eRepl^cPøep';
-      2:s2:='#00873^eDict^cSlov';
-      3:s2:='#00874^eChar^cZnak';
+      0:s2:='#00871^eAdd';
+      1:s2:='#00872^eRepl';
+      2:s2:='#00873^eDict';
+      3:s2:='#00874^eChar';
     end;
     rect.left:=rect.left+1;
     rect.top:=rect.top+1;

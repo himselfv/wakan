@@ -2,7 +2,7 @@ object fKanjiSearch: TfKanjiSearch
   Left = 359
   Top = 186
   BorderStyle = bsNone
-  Caption = '#00174^eSearch characters^cHledání znakù'
+  Caption = '#00174^eSearch characters'
   ClientHeight = 209
   ClientWidth = 618
   Color = clBtnFace
@@ -14,6 +14,9 @@ object fKanjiSearch: TfKanjiSearch
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  DesignSize = (
+    618
+    209)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -39,8 +42,7 @@ object fKanjiSearch: TfKanjiSearch
     Width = 57
     Height = 22
     Hint = 
-      '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)^cFiltrovat p' +
-      'odle PinYinu (èínské ètení) (Ctrl-I)'
+      '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)'
     AllowAllUp = True
     GroupIndex = 10
     Caption = '&PinYin'
@@ -58,8 +60,7 @@ object fKanjiSearch: TfKanjiSearch
     Width = 57
     Height = 22
     Hint = 
-      '#00176^eFilter by japanese reading (Ctrl-Y)^cFiltrovat podle jap' +
-      'onského ètení) (Ctrl-Y)'
+      '#00176^eFilter by japanese reading (Ctrl-Y)'
     AllowAllUp = True
     GroupIndex = 11
     Caption = 'Yomi'
@@ -77,11 +78,10 @@ object fKanjiSearch: TfKanjiSearch
     Width = 58
     Height = 22
     Hint = 
-      '#00177^eFilter by radical (Ctrl-R)^cFiltrovat podle radikálu (Ct' +
-      'rl-R)'
+      '#00177^eFilter by radical (Ctrl-R)'
     AllowAllUp = True
     GroupIndex = 15
-    Caption = '#00178^eRadical^cRadikál'
+    Caption = '#00178^eRadical'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -96,11 +96,10 @@ object fKanjiSearch: TfKanjiSearch
     Width = 57
     Height = 22
     Hint = 
-      '#00179^eFilter by definition (meaning) (Ctrl-M)^cFiltrovat podle' +
-      ' definice (významu) (Ctrl-M)'
+      '#00179^eFilter by definition (meaning) (Ctrl-M)'
     AllowAllUp = True
     GroupIndex = 12
-    Caption = '#00180^eDefinition^cDefinice'
+    Caption = '#00180^eDefinition'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -123,8 +122,7 @@ object fKanjiSearch: TfKanjiSearch
     Width = 57
     Height = 22
     Hint = 
-      '#00181^eFilter by SKIP code (see KANJIDIC for explanation)^cFilt' +
-      'rovat podle SKIP kódu (viz KANJIDIC pro vysvìtlení)'
+      '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
     AllowAllUp = True
     GroupIndex = 16
     Caption = 'SKIP'
@@ -142,11 +140,10 @@ object fKanjiSearch: TfKanjiSearch
     Width = 131
     Height = 22
     Hint = 
-      '#00182^eDisplay all characters (Ctrl-N)^cZobrazit všechny znaky ' +
-      '(Ctrl-U)'
+      '#00182^eDisplay all characters (Ctrl-N)'
     AllowAllUp = True
     Anchors = [akTop, akRight]
-    Caption = '#00183^eAll filters off^cZrušit všechny filtry'
+    Caption = '#00183^eAll filters off'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -161,12 +158,11 @@ object fKanjiSearch: TfKanjiSearch
     Width = 131
     Height = 22
     Hint = 
-      '#00186^eDisplay only common characters^cZobrazit pouze bìžné zna' +
-      'ky'
+      '#00186^eDisplay only common characters'
     AllowAllUp = True
     Anchors = [akTop, akRight]
     GroupIndex = 20
-    Caption = '#00187^cBìžné^eCommon'
+    Caption = '#00187^eCommon'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -181,12 +177,11 @@ object fKanjiSearch: TfKanjiSearch
     Width = 131
     Height = 22
     Hint = 
-      '#00188^eDisplay only characters in clipboard^cZobrazit pouze zna' +
-      'ky ve schránce'
+      '#00188^eDisplay only characters in clipboard'
     AllowAllUp = True
     Anchors = [akTop, akRight]
     GroupIndex = 21
-    Caption = '#00189^cVe schránce^eIn clipboard'
+    Caption = '#00189^eIn clipboard'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -202,10 +197,10 @@ object fKanjiSearch: TfKanjiSearch
     Height = 22
     Hint = 
       '#00190^eFilter by stroke count (you can search by range, ex. 1-6' +
-      ')^cFiltrovat podle poètu tahù (mùžete zadat rozpìtí, napø. 1-6)'
+      ')'
     AllowAllUp = True
     GroupIndex = 14
-    Caption = '#00191^eStroke #^c# tahù'
+    Caption = '#00191^eStroke #'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -220,11 +215,10 @@ object fKanjiSearch: TfKanjiSearch
     Width = 57
     Height = 22
     Hint = 
-      '#00192^eFilter by Unicode / Nelson index / Halpern index^cFiltro' +
-      'vat podle Unicode / Nelsonova indexu / Halpernova indexu'
+      '#00192^eFilter by Unicode / Nelson index / Halpern index'
     AllowAllUp = True
     GroupIndex = 13
-    Caption = '#00193^eOther^cOstatní'
+    Caption = '#00193^eOther'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -239,8 +233,7 @@ object fKanjiSearch: TfKanjiSearch
     Width = 57
     Height = 22
     Hint = 
-      '#00194^eFilter by Jouyou grade (Japanese school grade)^cFiltrova' +
-      't podle stupnì Jouyou (tøída v japonské škole)'
+      '#00194^eFilter by Jouyou grade (Japanese school grade)'
     AllowAllUp = True
     GroupIndex = 18
     Caption = 'Jouyou'
@@ -258,11 +251,10 @@ object fKanjiSearch: TfKanjiSearch
     Width = 63
     Height = 22
     Hint = 
-      '#00177^eFilter by radical (Ctrl-R)^cFiltrovat podle radikálu (Ct' +
-      'rl-R)'
+      '#00177^eFilter by radical (Ctrl-R)'
     AllowAllUp = True
     Anchors = [akTop, akRight]
-    Caption = '#00195^eList...^cSeznam...'
+    Caption = '#00195^eList...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -366,7 +358,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 153
     Width = 23
     Height = 22
-    Hint = '#00880^eUncheck all categories^cOdznaè všechny kategorie'
+    Hint = '#00880^eUncheck all categories'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -391,7 +383,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 153
     Width = 23
     Height = 22
-    Hint = '#00030^eEdit category^cUpravit kategorii'
+    Hint = '#00030^eEdit category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -416,7 +408,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 153
     Width = 23
     Height = 22
-    Hint = '#00031^eDelete category^cSmazat kategorii'
+    Hint = '#00031^eDelete category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -441,7 +433,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 153
     Width = 23
     Height = 22
-    Hint = '#00881^eAdd category^cPøidat kategorii'
+    Hint = '#00881^eAdd category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
@@ -540,7 +532,7 @@ object fKanjiSearch: TfKanjiSearch
     Width = 129
     Height = 119
     Anchors = [akTop, akRight]
-    Caption = '#00197^eSort by^cTøídit podle'
+    Caption = '#00197^eSort by'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -548,13 +540,13 @@ object fKanjiSearch: TfKanjiSearch
     Font.Style = []
     ItemIndex = 0
     Items.Strings = (
-      '#00146^eRadical^cRadikálu'
-      '#00147^eStroke count^cPoètu tahù'
-      '#00148^eFrequency^cFrekvence'
-      '#00198^eLearner index^cUèební index'
+      '#00146^eRadical'
+      '#00147^eStroke count'
+      '#00148^eFrequency'
+      '#00198^eLearner index'
       'Gakken Kanji'
       'Remembering Kanji'
-      '#00149^eRandom^cNáhodnì')
+      '#00149^eRandom')
     ParentFont = False
     TabOrder = 9
     OnClick = RadioGroup1Click
@@ -566,7 +558,7 @@ object fKanjiSearch: TfKanjiSearch
     Height = 21
     Style = csDropDownList
     Anchors = [akTop, akRight]
-    ItemHeight = 13
+    ItemHeight = 0
     TabOrder = 8
     OnChange = ComboBox1Change
   end

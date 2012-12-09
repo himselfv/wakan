@@ -18,10 +18,6 @@ type
     BitBtn1: TBitBtn;
     Memo1: TMemo;
     Shape1: TShape;
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

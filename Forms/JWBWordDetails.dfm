@@ -1,10 +1,10 @@
 object fWordDetails: TfWordDetails
   Left = 404
   Top = 453
-  Width = 464
-  Height = 139
   BorderStyle = bsSizeToolWin
-  Caption = '#00649^eSelected word^cVybrané slovo'
+  Caption = '#00649^eSelected word'
+  ClientHeight = 105
+  ClientWidth = 448
   Color = clBtnFace
   Constraints.MaxHeight = 139
   Constraints.MinHeight = 139
@@ -16,15 +16,20 @@ object fWordDetails: TfWordDetails
   Font.Style = []
   OldCreateOrder = False
   OnClose = FormClose
+  DesignSize = (
+    448
+    105)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
     Left = 0
     Top = 0
-    Width = 456
-    Height = 108
+    Width = 448
+    Height = 105
     Align = alClient
     Style = bsRaised
+    ExplicitWidth = 456
+    ExplicitHeight = 108
   end
   object Shape2: TShape
     Left = 7
@@ -67,7 +72,7 @@ object fWordDetails: TfWordDetails
     Top = 38
     Width = 24
     Height = 27
-    Hint = '#00161^eInsert character into clipboard^cVložit znak do schránky'
+    Hint = '#00161^eInsert character into clipboard'
     Anchors = [akTop, akRight]
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100

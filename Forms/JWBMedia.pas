@@ -17,11 +17,8 @@ type
       var AllowChange: Boolean);
     procedure WebBrowser1DocumentComplete(Sender: TObject;
       const pDisp: IDispatch; var URL: OleVariant);
-  private
-    { Private declarations }
   public
     media:TStringList;
-    { Public declarations }
   end;
 
 var

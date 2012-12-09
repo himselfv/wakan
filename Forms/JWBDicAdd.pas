@@ -22,10 +22,6 @@ type
     BitBtn2: TBitBtn;
     procedure PaintBox1Paint(Sender: TObject);
     procedure PaintBox2Paint(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

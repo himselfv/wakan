@@ -2,7 +2,7 @@ object fDicAdd: TfDicAdd
   Left = 365
   Top = 568
   BorderStyle = bsDialog
-  Caption = '#00057^eAdd into vocabulary^cPøidat do slovíèek'
+  Caption = '#00057^eAdd into vocabulary'
   ClientHeight = 194
   ClientWidth = 682
   Color = clBtnFace
@@ -13,6 +13,9 @@ object fDicAdd: TfDicAdd
   Font.Style = []
   OldCreateOrder = False
   Position = poScreenCenter
+  DesignSize = (
+    682
+    194)
   PixelsPerInch = 96
   TextHeight = 13
   object Shape2: TShape
@@ -54,9 +57,9 @@ object fDicAdd: TfDicAdd
   object Label6: TLabel
     Left = 9
     Top = 103
-    Width = 251
+    Width = 253
     Height = 13
-    Caption = '#00058^eMeaning (editable):^cVýznam (upravitelný):'
+    Caption = '#00058^eMeaning (editable):'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -70,7 +73,7 @@ object fDicAdd: TfDicAdd
     Top = 148
     Width = 154
     Height = 13
-    Caption = '#00059^eCategory:^cKategorie:'
+    Caption = '#00059^eCategory:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -82,9 +85,9 @@ object fDicAdd: TfDicAdd
   object Label1: TLabel
     Left = 9
     Top = 5
-    Width = 134
+    Width = 138
     Height = 13
-    Caption = '#00060^ePhonetic:^cÈtení:'
+    Caption = '#00060^ePhonetic:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -98,7 +101,7 @@ object fDicAdd: TfDicAdd
     Top = 54
     Width = 127
     Height = 13
-    Caption = '#00061^eWritten:^cZápis:'
+    Caption = '#00061^eWritten:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -120,7 +123,7 @@ object fDicAdd: TfDicAdd
     Top = 164
     Width = 376
     Height = 21
-    ItemHeight = 13
+    ItemHeight = 0
     TabOrder = 1
   end
   object BitBtn1: TBitBtn
@@ -129,7 +132,7 @@ object fDicAdd: TfDicAdd
     Width = 129
     Height = 25
     Anchors = [akTop, akRight]
-    Caption = '#00062^eAdd to vocabulary^cPøidat do slovíèek'
+    Caption = '#00062^eAdd to vocabulary'
     TabOrder = 2
     Kind = bkOK
   end
@@ -139,7 +142,7 @@ object fDicAdd: TfDicAdd
     Width = 129
     Height = 25
     Anchors = [akTop, akRight]
-    Caption = '#00050^eCancel^cStorno'
+    Caption = '#00050^eCancel'
     TabOrder = 3
     Kind = bkCancel
   end

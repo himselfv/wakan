@@ -280,7 +280,11 @@ begin
   except
     err:=(ExceptObject as Exception).Message;
   end;
-  if err<>'' then Application.MessageBox(pchar(_l('#00321^eCannot register dictionary ^cNepodaøilo se zaregistrovat slovník ')+pname+#13#13+err),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+  if err<>'' then
+    Application.MessageBox(
+      pchar(_l('#00321^eCannot register dictionary ')+pname+#13#13+err),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
 end;
 
 procedure TJaletDic.Build(edictfile,packagefile:string);
@@ -288,7 +292,11 @@ var err:string;
 begin
   pname:=packagefile;
   err:='Building not supported yet.';
-  if err<>'' then Application.MessageBox(pchar(_l('#00322^eCannot build dictionary ^cNepodaøilo se vytvoøit slovník ')+pname+#13#13+err),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+  if err<>'' then
+    Application.MessageBox(
+      pchar(_l('#00322^eCannot build dictionary ')+pname+#13#13+err),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
 end;
 
 procedure TJaletDic.Load;
@@ -304,7 +312,9 @@ var pd:TSMPromptForm;
     mf:TMemoryFile;
 begin
   if demandloaded then exit;
-  pd:=SMMessageDlg(_l('#00323^eDictionary loading^cNahrávání slovníku'),_l('#00324^eLoading dictionary ^cNahrávám slovník ')+name+'...');
+  pd:=SMMessageDlg(
+    _l('#00323^eDictionary loading'),
+    _l('#00324^eLoading dictionary ')+name+'...');
   try
     package:=TPackageSource.Create(pname,791564,978132,978123);
     TDict:=TTextTable.Create(package,'Dict',true,pos(','+name,OfflineDicts)<>0);
@@ -336,7 +346,10 @@ begin
     end;
     SetupSeekObjects;
   except
-    Application.MessageBox(pchar(_l('#00325^eCannot load dictionary ^cNepodaøilo se nahrát slovník ')+pname+#13#13+(ExceptObject as Exception).Message),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00325^eCannot load dictionary ')+pname+#13#13+(ExceptObject as Exception).Message),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
   end;
   demandloaded:=true;
   pd.Free;
@@ -661,8 +674,8 @@ begin
 end;
 
 resourcestring
-  sDicSearchTitle='#00932^eDic.search^cSlovník';
-  sDicSearchText='#00933^ePlease wait. Searching dictionary...^cProsím èekejte. Prohledávám slovník...';
+  sDicSearchTitle='#00932^eDic.search';
+  sDicSearchText='#00933^ePlease wait. Searching dictionary...';
 
 procedure TDicSearchRequest.DicInitialLookup(dic: TJaletDic; wt: integer; sxxr: string; sxx: string);
 begin

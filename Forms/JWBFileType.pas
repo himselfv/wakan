@@ -12,10 +12,6 @@ type
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     procedure FormShow(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

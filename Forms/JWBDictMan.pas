@@ -75,8 +75,8 @@ begin
   label14.caption:=inttostr(dic.priority);
   label15.caption:=dic.description;
   label17.caption:=dic.copyright;
-  if dic.wordidx<>nil then label19.Caption:=_l('#00115^ePresent^cAno') else label19.Caption:=_l('#00116^eAbsent^cNe');
-  if dic.charidx<>nil then label21.Caption:=_l('#00115^ePresent^cAno') else label21.Caption:=_l('#00116^eAbsent^cNe');
+  if dic.wordidx<>nil then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
+  if dic.charidx<>nil then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
   SpeedButton1.Down:=pos(','+dic.name,NotGroupDicts[1])=0;
   SpeedButton2.Down:=pos(','+dic.name,NotGroupDicts[2])=0;
   SpeedButton3.Down:=pos(','+dic.name,NotGroupDicts[3])=0;

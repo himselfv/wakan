@@ -1103,13 +1103,6 @@ begin
     if i=blockfromy then bg:=blockfromx;
     if i=blocktoy then en:=blocktox;
 
-    //Do not update progress too often
-    if i-blockfromy > lastUpdateProgress + updateProgressEvery then begin
-      if sp<>nil then
-        sp.SetProgress(i-blockfromy);
-      lastUpdateProgress := i-blockfromy;
-    end;
-
     //If the operation is taking too long to be noticeable
     if (sp=nil) and (GetTickCount-startTime > 200) then begin
      //Bring up the progress window
@@ -1117,6 +1110,16 @@ begin
         _l('#00685^eTranslating...'),blocktoy-blockfromy+1);
       lastUpdateProgress := -updateProgressEvery-1; //update right now
     end;
+
+    //Do not update progress too often
+    if i-blockfromy > lastUpdateProgress + updateProgressEvery then begin
+      if sp<>nil then
+        sp.SetProgress(i-blockfromy);
+      lastUpdateProgress := i-blockfromy;
+    end;
+
+    if sp<>nil then
+      sp.ProcessModalMessages;
 
     j:=bg;
     while j<=en do
@@ -1734,7 +1737,7 @@ var st0,lst0,st2,st3:boolean;
     st2c:integer;
     rs:integer;
     vert:boolean;
-    cl,cx,cxsc,cy,px,py,wx,wxo,wxl:integer;
+    cl,cx,cxsc,cy,px,py,wx,wxl:integer;
     kanaq:FString;
     undersolid:boolean;
     color,fcolor:TColor;

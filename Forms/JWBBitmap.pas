@@ -17,10 +17,6 @@ type
     Edit2: TEdit;
     Edit3: TEdit;
     Label4: TLabel;
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

@@ -21,10 +21,6 @@ type
     procedure PaintBox5Paint(Sender: TObject);
     procedure SpeedButton23Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

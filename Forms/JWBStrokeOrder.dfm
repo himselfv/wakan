@@ -2,7 +2,7 @@ object fStrokeOrder: TfStrokeOrder
   Left = 304
   Top = 185
   BorderStyle = bsToolWindow
-  Caption = '#00608^eStroke order^cPoøadí tahù'
+  Caption = '#00608^eStroke order'
   ClientHeight = 303
   ClientWidth = 274
   Color = clBtnFace
@@ -14,14 +14,17 @@ object fStrokeOrder: TfStrokeOrder
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  DesignSize = (
+    274
+    303)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 72
     Top = 136
-    Width = 291
+    Width = 366
     Height = 18
-    Caption = '#00609^eNot available^cNení k dispozici'
+    Caption = '#00609^eNot available'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -74,14 +77,7 @@ object fStrokeOrder: TfStrokeOrder
     Width = 229
     Height = 26
     Anchors = []
-    Orientation = trHorizontal
-    Frequency = 1
-    Position = 0
-    SelEnd = 0
-    SelStart = 0
     TabOrder = 0
-    TickMarks = tmBottomRight
-    TickStyle = tsAuto
     OnChange = TrackBar1Change
   end
   object Timer1: TTimer

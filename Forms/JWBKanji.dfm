@@ -3,8 +3,8 @@ object fKanji: TfKanji
   Top = 473
   BorderStyle = bsSizeToolWin
   Caption = '#00117^eCharacter list'
-  ClientHeight = 342
-  ClientWidth = 624
+  ClientHeight = 348
+  ClientWidth = 630
   Color = clBtnFace
   DragKind = dkDock
   Font.Charset = DEFAULT_CHARSET
@@ -23,15 +23,15 @@ object fKanji: TfKanji
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 624
-    Height = 342
+    Width = 630
+    Height = 348
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
     DesignSize = (
-      624
-      342)
+      630
+      348)
     object RxLabel15: TRxLabel
       Left = 8
       Top = 8
@@ -106,28 +106,6 @@ object fKanji: TfKanji
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton5Click
-      ExplicitTop = 321
-    end
-    object SpeedButton1: TSpeedButton
-      Left = 216
-      Top = 323
-      Width = 65
-      Height = 17
-      Hint = '#00121^eSort (Ctrl-Alt-O)'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 3
-      Caption = '#00122^eSort'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      Visible = False
-      OnClick = SpeedButton1Click
       ExplicitTop = 321
     end
     object SpeedButton2: TSpeedButton
@@ -246,8 +224,8 @@ object fKanji: TfKanji
   end
   object Panel2: TPanel
     Left = 0
-    Top = 342
-    Width = 624
+    Top = 348
+    Width = 630
     Height = 0
     Align = alBottom
     BevelOuter = bvNone
@@ -258,7 +236,7 @@ object fKanji: TfKanji
   object Panel3: TPanel
     Left = 0
     Top = 0
-    Width = 624
+    Width = 630
     Height = 0
     Align = alTop
     BevelOuter = bvNone

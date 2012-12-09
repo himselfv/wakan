@@ -495,8 +495,8 @@ begin
                       writeln(romap,s4);
                       writeln(romap,string(HexToUnicode(pphon)));
                     end;
-//                      Application.MessageBox(pchar(_l('#00089^eCannot romanize following line:^cNemohu pøevést následující øádek do romanizace:')+#13+#13+s2+#13+s4),
-//                       pchar(_l('#00090^eWarning^cVarování')),MB_ICONWARNING or MB_OK);
+//                      Application.MessageBox(pchar(_l('#00089^eCannot romanize following line:')+#13+#13+s2+#13+s4),
+//                       pchar(_l('#00090^eWarning')),MB_ICONWARNING or MB_OK);
                     repl(s4,'?','');
                     if s4='' then s4:='XXX';
                     s3:=ConvertEdictEntry(writ,s2);

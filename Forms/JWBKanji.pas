@@ -15,7 +15,6 @@ type
     Label18: TLabel;
     Label24: TLabel;
     SpeedButton5: TSpeedButton;
-    SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     SpeedButton3: TSpeedButton;
     SpeedButton4: TSpeedButton;
@@ -30,7 +29,6 @@ type
     procedure FormHide(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
     procedure DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -88,7 +86,7 @@ var
 implementation
 
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
-  JWBKanjiSearch, JWBKanjiSort, JWBKanjiCompounds, JWBKanjiDetails,
+  JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
   JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils;
 
@@ -109,11 +107,10 @@ begin
   fKanjiSearch.ComboBox1.Items.Add('Unicode');
   for i:=0 to chartypel.Count-1 do
     if strtoint(fMenu.GetCharType(i,0))>20 then
-      fKanjiSearch.ComboBox1.Items.Add(_l('^e'+fMenu.GetCharType(i,4)+'^c'+fMenu.GetCharType(i,5)));
+      fKanjiSearch.ComboBox1.Items.Add(_l('^e'+fMenu.GetCharType(i,4)));
   fKanjiSearch.ComboBox1.ItemIndex:=0;
   if bk<fKanjiSearch.ComboBox1.Items.Count-1 then fKanjiSearch.ComboBox1.ItemIndex:=bk;
 //  fMenu.ShowForm(SpeedButton5,fMenu.aKanjiSearch,fKanjiSearch);
-//  fMenu.ShowForm(SpeedButton1,fMenu.aKanjiSort,fKanjiSort);
 //  fMenu.ShowForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
 //  fMenu.ShowForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
 //  fMenu.ShowForm(SpeedButton4,nil,fStrokeOrder);
@@ -132,7 +129,6 @@ procedure TfKanji.FormHide(Sender: TObject);
 begin
   fMenu.aKanji.Checked:=false;
 //  fMenu.HideForm(SpeedButton5,fMenu.aKanjiSearch,fKanjiSearch);
-//  fMenu.HideForm(SpeedButton1,fMenu.aKanjiSort,fKanjiSort);
 //  fMenu.HideForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
 //  fMenu.HideForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
 //  fMenu.HideForm(SpeedButton4,nil,fStrokeOrder);
@@ -604,11 +600,6 @@ end;
 procedure TfKanji.RadioGroup1Click(Sender: TObject);
 begin
   DoIt;
-end;
-
-procedure TfKanji.SpeedButton1Click(Sender: TObject);
-begin
-  fMenu.ToggleForm(fKanjiSort,SpeedButton1,fMenu.aKanjiSort);
 end;
 
 //It's not an event handler, actually. fMenu calls this on language reload.

@@ -2,7 +2,7 @@ object fDictCoding: TfDictCoding
   Left = 192
   Top = 114
   BorderStyle = bsDialog
-  Caption = '#00063^eEDICT character coding^cKódování znakù EDICT'
+  Caption = '#00063^eEDICT character coding'
   ClientHeight = 273
   ClientWidth = 322
   Color = clBtnFace
@@ -23,8 +23,7 @@ object fDictCoding: TfDictCoding
     Height = 13
     AutoSize = False
     Caption = 
-      '#00064^ePlease select language of the input EDICT file:^cZvolte '+
-      'prosím jazyk vsupního EDICT souboru:'
+      '#00064^ePlease select language of the input EDICT file:'
   end
   object Label2: TLabel
     Left = 8
@@ -46,13 +45,10 @@ object fDictCoding: TfDictCoding
     Height = 73
     AutoSize = False
     Caption = 
-      '#00065^ePlease note:'#13#10'For encodings different than "Unicode 16-b'+
-      'it" you need the UNICONV utility in the current directory.'#13#10'This'+
-      ' utility can be downloaded from ftp.cc.monash.edu.au/pub/nihongo'+
-      '/uniconv.zip.'#13#10'^cUpozornìní:'#13#10'Pro kódování jiná než "Unicode 16-'+
-      'bit" potøebujete mít utilitu UNICONV v aktuálním adresáøi.'#13#10'Tato'+
-      ' utilita se dá stáhnout z ftp.cc.monash.edu.au/pub/nihongo/unico'+
-      'nv.zip.'
+      '#00065^ePlease note:'#13#10'For encodings different than "Unicode 16-b' +
+      'it" you need the UNICONV utility in the current directory.'#13#10'This' +
+      ' utility can be downloaded from ftp.cc.monash.edu.au/pub/nihongo' +
+      '/uniconv.zip.'#13#10''
     WordWrap = True
   end
   object RadioGroup1: TRadioGroup
@@ -60,13 +56,13 @@ object fDictCoding: TfDictCoding
     Top = 56
     Width = 305
     Height = 89
-    Caption = '#00066^eLanguage / Character coding^cJazyk / kódování znakù'
+    Caption = '#00066^eLanguage / Character coding'
     ItemIndex = 1
     Items.Strings = (
       'Unicode 16-bit'
-      '#00067^eJapanese (autodetect)^cJaponština (autodetekce)'
-      '#00068^eChinese (autodetect)^cÈínština (autodetekce)'
-      '#00069^eKorean (autodetect)^cKorejština (autodetekce)')
+      '#00067^eJapanese (autodetect)'
+      '#00068^eChinese (autodetect)'
+      '#00069^eKorean (autodetect)')
     TabOrder = 0
   end
   object BitBtn1: TBitBtn
@@ -109,7 +105,7 @@ object fDictCoding: TfDictCoding
     Width = 75
     Height = 25
     Cancel = True
-    Caption = '#00007^eCancel^cZrušit'
+    Caption = '#00007^eCancel'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

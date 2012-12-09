@@ -2,7 +2,7 @@ object fWordList: TfWordList
   Left = 246
   Top = 175
   BorderStyle = bsDialog
-  Caption = '#00735^eLearning list wizard^cPrùvodce uèebním seznamem'
+  Caption = '#00735^eLearning list wizard'
   ClientHeight = 399
   ClientWidth = 608
   Color = clBtnFace
@@ -41,7 +41,7 @@ object fWordList: TfWordList
         Top = 4
         Width = 254
         Height = 18
-        Caption = '#00736^eWelcome^cVítejte'
+        Caption = '#00736^eWelcome'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -65,14 +65,7 @@ object fWordList: TfWordList
           's process is random but you can alter the criteria)'#13#10'2) Check wh' +
           'ether you know the selected words (words you know are automatica' +
           'lly selected as learned)'#13#10'3) Print or display the words you didn' +
-          #39't know'#13#10'Steps 2 and 3 are optional.'#13#10'^cVítejte v prùvodci gener' +
-          'ováním uèebního seznamu.'#13#10'Tento prùvodce vám pomùže vybrat vhodn' +
-          'á slova k nauèení. Mùžete zjistit jestli vybraná slova umíte a p' +
-          'oté vytisknout ta, která neumíte. Tato metoda je ideální pro uèe' +
-          'ní nových slovíèek.'#13#10'S tímto prùvodcem mùžete udìlat tyto tøi èi' +
-          'nnosti:'#13#10'1) Nechat program vybrat slovíèka, která jsou vhodná k ' +
-          'nauèení nebo opakování (tento proces je náhodný, ale kritéria mù' +
-          'žete z'
+          #39't know'#13#10'Steps 2 and 3 are optional.'
         Transparent = True
         WordWrap = True
       end
@@ -95,7 +88,7 @@ object fWordList: TfWordList
         Top = 4
         Width = 371
         Height = 18
-        Caption = '#00738^eWord selection^cVýbìr slovíèek'
+        Caption = '#00738^eWord selection'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -108,7 +101,7 @@ object fWordList: TfWordList
         Top = 208
         Width = 313
         Height = 13
-        Caption = '#00739^eNumber of selected words:^cPoèet vybraných slovíèek:'
+        Caption = '#00739^eNumber of selected words:'
       end
       object Label22: TLabel
         Left = 16
@@ -116,8 +109,7 @@ object fWordList: TfWordList
         Width = 609
         Height = 13
         Caption = 
-          '#00740^eNumber of words the list will be selected from:^cPoèet s' +
-          'lovíèek, ze kterých bude vybrán seznam:'
+          '#00740^eNumber of words the list will be selected from:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -138,11 +130,11 @@ object fWordList: TfWordList
         Top = 64
         Width = 361
         Height = 57
-        Caption = '#00741^eSelect words from^cVybrat slovíèka z'
+        Caption = '#00741^eSelect words from'
         ItemIndex = 0
         Items.Strings = (
-          '#00742^eDisplayed list^cZobrazeného seznamu'
-          '#00743^eEntire vocabulary^cCelého slovníèku')
+          '#00742^eDisplayed list'
+          '#00743^eEntire vocabulary')
         TabOrder = 0
         OnClick = RadioGroup1Click
       end
@@ -151,16 +143,12 @@ object fWordList: TfWordList
         Top = 128
         Width = 361
         Height = 73
-        Caption = '#00744^eSelection method^cMetoda výbìru'
+        Caption = '#00744^eSelection method'
         ItemIndex = 0
         Items.Strings = (
-          
-            '#00745^eSelect some words proper for learning^cVybrat nìjaká slo' +
-            'víèka podle vhodnosti k nauèení'
-          
-            '#00746^eSelect some words completely randomly^cVybrat nìjaká slo' +
-            'víèka úplnì náhodnì'
-          '#00747^eSelect all words^cVybrat všechna slovíèka')
+            '#00745^eSelect some words proper for learning'
+            '#00746^eSelect some words completely randomly'
+          '#00747^eSelect all words')
         TabOrder = 1
         OnClick = RadioGroup2Click
       end
@@ -177,7 +165,7 @@ object fWordList: TfWordList
         Top = 208
         Width = 105
         Height = 25
-        Caption = '#00748^eFit the page^cAkorát na stránku'
+        Caption = '#00748^eFit the page'
         TabOrder = 3
         TabStop = False
         OnClick = Button1Click
@@ -187,7 +175,7 @@ object fWordList: TfWordList
         Top = 240
         Width = 361
         Height = 17
-        Caption = '#00749^eRandomize word order^cPoøadí slovíèek urèit náhodnì'
+        Caption = '#00749^eRandomize word order'
         Checked = True
         State = cbChecked
         TabOrder = 4
@@ -202,7 +190,7 @@ object fWordList: TfWordList
         Top = 4
         Width = 393
         Height = 18
-        Caption = '#00750^eSelection criteria^cKritéria výbìru'
+        Caption = '#00750^eSelection criteria'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -217,24 +205,23 @@ object fWordList: TfWordList
         Height = 13
         Caption = 
           '#00751^eSelect which words do you prefer to be in the list and h' +
-          'ow strongly you prefer them.^cVyberte, která slova upøednostòuje' +
-          'te aby byly v seznamu a jak silnì.'
+          'ow strongly you prefer them.'
       end
       object RadioGroup3: TRadioGroup
         Left = 16
         Top = 64
         Width = 561
         Height = 57
-        Caption = '#00752^eLearn status^cStav nauèení'
+        Caption = '#00752^eLearn status'
         Columns = 3
         ItemIndex = 0
         Items.Strings = (
-          '#00753^eNot learned - strongly^cNenauèeno - silnì'
-          '#00754^eNot learned - mildly^cNenauèeno - slabì'
-          '#00755^eLearned - mildly^cNauèeno - slabì'
-          '#00756^eLearned - strongly^cNauèeno - silnì'
-          '#00757^eBalance^cVyvážit'
-          '#00758^eI don'#39't care^cJe mi to jedno')
+          '#00753^eNot learned - strongly'
+          '#00754^eNot learned - mildly'
+          '#00755^eLearned - mildly'
+          '#00756^eLearned - strongly'
+          '#00757^eBalance'
+          '#00758^eI don'#39't care')
         TabOrder = 0
       end
       object RadioGroup4: TRadioGroup
@@ -242,16 +229,16 @@ object fWordList: TfWordList
         Top = 128
         Width = 561
         Height = 57
-        Caption = '#00759^eWord added date^cDatum pøidání slovíèka'
+        Caption = '#00759^eWord added date'
         Columns = 3
         ItemIndex = 4
         Items.Strings = (
-          '#00760^eOld - strongly^cStará - silnì'
-          '#00761^eOld - mildly^cStará - slabì'
-          '#00762^eNew - mildly^cNová - slabì'
-          '#00763^eNew - strongly^cNová - silnì'
-          '#00757^eBalance^cVyvážit'
-          '#00758^eI don'#39't care^cJe mi to jedno')
+          '#00760^eOld - strongly'
+          '#00761^eOld - mildly'
+          '#00762^eNew - mildly'
+          '#00763^eNew - strongly'
+          '#00757^eBalance'
+          '#00758^eI don'#39't care')
         TabOrder = 1
       end
       object RadioGroup5: TRadioGroup
@@ -260,17 +247,16 @@ object fWordList: TfWordList
         Width = 561
         Height = 57
         Caption = 
-          '#00764^eWord complexity and popularity^cPopularita a složitost s' +
-          'lovíèka'
+          '#00764^eWord complexity and popularity'
         Columns = 3
         ItemIndex = 1
         Items.Strings = (
-          '#00765^eSimple - strongly^cJednoduchá - silnì'
-          '#00766^eSimple - mildly^cJednoduchá - slabì'
-          '#00767^eComplex - mildly^cSložitá - slabì'
-          '#00768^eComplex - strongly^cSložitá - silnì'
-          '#00757^eBalance^cVyvážit'
-          '#00758^eI don'#39't care^cJe mi to jedno')
+          '#00765^eSimple - strongly'
+          '#00766^eSimple - mildly'
+          '#00767^eComplex - mildly'
+          '#00768^eComplex - strongly'
+          '#00757^eBalance'
+          '#00758^eI don'#39't care')
         TabOrder = 2
       end
       object RadioGroup6: TRadioGroup
@@ -279,17 +265,16 @@ object fWordList: TfWordList
         Width = 561
         Height = 57
         Caption = 
-          '#00769^eFrequency of inclusions into learning list^cFrekvence za' +
-          'øazení do uèebního seznamu'
+          '#00769^eFrequency of inclusions into learning list'
         Columns = 3
         ItemIndex = 1
         Items.Strings = (
-          '#00770^eSeldom - strongly^cZøídka - silnì'
-          '#00771^eSeldom - mildly^cZøídka - slabì'
-          '#00772^eOften - mildly^cÈasto - slabì'
-          '#00773^eOften - strongly^cÈasto - silnì'
-          '#00757^eBalance^cVyvážit'
-          '#00758^eI don'#39't care^cJe mi to jedno')
+          '#00770^eSeldom - strongly'
+          '#00771^eSeldom - mildly'
+          '#00772^eOften - mildly'
+          '#00773^eOften - strongly'
+          '#00757^eBalance'
+          '#00758^eI don'#39't care')
         TabOrder = 3
       end
       object CheckBox2: TCheckBox
@@ -298,8 +283,7 @@ object fWordList: TfWordList
         Width = 281
         Height = 17
         Caption = 
-          '#00774^ePrefer problematic words^cUpøednostnit problematická slo' +
-          'va'
+          '#00774^ePrefer problematic words'
         Checked = True
         State = cbChecked
         TabOrder = 4
@@ -310,8 +294,7 @@ object fWordList: TfWordList
         Width = 273
         Height = 17
         Caption = 
-          '#00775^eChoose only few mastered words^cVybrat jenom nìkolik dob' +
-          'øe nauèených slovíèek'
+          '#00775^eChoose only few mastered words'
         Checked = True
         State = cbChecked
         TabOrder = 5
@@ -321,7 +304,7 @@ object fWordList: TfWordList
         Top = 0
         Width = 113
         Height = 25
-        Caption = '#00776^eDefault for learning^cVýchozí pro uèení'
+        Caption = '#00776^eDefault for learning'
         TabOrder = 6
         OnClick = Button2Click
       end
@@ -330,7 +313,7 @@ object fWordList: TfWordList
         Top = 0
         Width = 121
         Height = 25
-        Caption = '#00777^eDefault for repeating^cVýchozí pro opakování'
+        Caption = '#00777^eDefault for repeating'
         TabOrder = 7
         OnClick = Button3Click
       end
@@ -344,7 +327,7 @@ object fWordList: TfWordList
         Top = 72
         Width = 279
         Height = 13
-        Caption = '#00595^eLearned words:^cNauèených slovíèek:'
+        Caption = '#00595^eLearned words:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -357,7 +340,7 @@ object fWordList: TfWordList
         Top = 88
         Width = 322
         Height = 13
-        Caption = '#00596^eMastered words:^cDobøe nauèených slovíèek:'
+        Caption = '#00596^eMastered words:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -370,7 +353,7 @@ object fWordList: TfWordList
         Top = 104
         Width = 328
         Height = 13
-        Caption = '#00597^eProblematic words:^cProblematických slovíèek:'
+        Caption = '#00597^eProblematic words:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -383,7 +366,7 @@ object fWordList: TfWordList
         Top = 136
         Width = 385
         Height = 13
-        Caption = '#00598^eNumber of katakana words:^cPoèet slovíèek v katakanì:'
+        Caption = '#00598^eNumber of katakana words:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -428,7 +411,7 @@ object fWordList: TfWordList
         Top = 120
         Width = 307
         Height = 13
-        Caption = '#00602^eNon-popular words:^cNepopulární slovíèka:'
+        Caption = '#00602^eNon-popular words:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -449,7 +432,7 @@ object fWordList: TfWordList
         Top = 152
         Width = 389
         Height = 13
-        Caption = '#00606^eWords with known writing:^cSlovíèka se známým zápisem:'
+        Caption = '#00606^eWords with known writing:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -470,7 +453,7 @@ object fWordList: TfWordList
         Top = 4
         Width = 391
         Height = 18
-        Caption = '#00778^eList statistics^cStatistiky seznamu'
+        Caption = '#00778^eList statistics'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -485,8 +468,7 @@ object fWordList: TfWordList
         Height = 13
         Caption = 
           '#00779^eNew learning list was built. It contains these word char' +
-          'acteristics.^cByl vytvoøen nový uèební seznam. Obsahuje tyto cha' +
-          'rakteristiky slovíèek:'
+          'acteristics.'
       end
       object Label52: TLabel
         Left = 320
@@ -506,7 +488,7 @@ object fWordList: TfWordList
         Top = 200
         Width = 241
         Height = 25
-        Caption = '#00780^eRebuild word list^cVytvoøit seznam znovu'
+        Caption = '#00780^eRebuild word list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -521,16 +503,12 @@ object fWordList: TfWordList
         Top = 272
         Width = 561
         Height = 65
-        Caption = '#00781^eNext step^cDalší krok'
+        Caption = '#00781^eNext step'
         ItemIndex = 0
         Items.Strings = (
-          
             '#00782^eCheck whether you know each word in the newly generated ' +
-            'list^cZjistit, zda umíte každé slovíèko v novì vygenerovaném sez' +
-            'namu'
-          
-            '#00783^eSkip learning test and proceed to printing list^cPøeskoè' +
-            'it test znalosti a pøejít k tisku seznamu')
+            'list'
+            '#00783^eSkip learning test and proceed to printing list')
         TabOrder = 1
       end
     end
@@ -544,8 +522,7 @@ object fWordList: TfWordList
         Width = 588
         Height = 18
         Caption = 
-          '#00784^eLearning test settings^cNastavení testu znalosti slovíèe' +
-          'k'
+          '#00784^eLearning test settings'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -558,26 +535,20 @@ object fWordList: TfWordList
         Top = 40
         Width = 545
         Height = 265
-        Caption = '#00785^eDisplay^cZobrazovat'
+        Caption = '#00785^eDisplay'
         ItemIndex = 6
         Items.Strings = (
-          '#00707^ePhonetic^cÈtení'
-          '#00632^eWritten^cZápis'
-          '#00786^eMeaning^cVýznam'
-          '#00787^ePhonetic && Written^cÈtení a zápis'
-          '#00788^ePhonetic && Meaning^cÈtení a význam'
-          '#00789^eWritten && Meaning^cZápis a význam'
-          '#00790^e50% phonetic, 50% written^c50% ètení, 50% zápis'
-          '#00791^e66% phonetic, 33% written^c66% ètení, 33% zápis'
-          
-            '#00792^e33% phonetic, 33% written, 33% meaning^c33% ètení, 33% z' +
-            'ápis, 33% význam'
-          
-            '#00793^e25% phonetic, 25% written, 50% meaning^c25% ètení, 25% z' +
-            'ápis, 50% význam'
-          
-            '#00794^e50% phonetic, 25% written, 25% meaning^c50% ètení, 25% z' +
-            'ápis, 25% význam')
+          '#00707^ePhonetic'
+          '#00632^eWritten'
+          '#00786^eMeaning'
+          '#00787^ePhonetic && Written'
+          '#00788^ePhonetic && Meaning'
+          '#00789^eWritten && Meaning'
+          '#00790^e50% phonetic, 50% written'
+          '#00791^e66% phonetic, 33% written'
+            '#00792^e33% phonetic, 33% written, 33% meaning'
+            '#00793^e25% phonetic, 25% written, 50% meaning'
+            '#00794^e50% phonetic, 25% written, 25% meaning')
         TabOrder = 0
       end
       object CheckBox6: TCheckBox
@@ -586,8 +557,7 @@ object fWordList: TfWordList
         Width = 545
         Height = 17
         Caption = 
-          '#00876^eDisplay written only if all characters are learned^cZobr' +
-          'azit zápis jen, když jsou všechny znaky nauèeny'
+          '#00876^eDisplay written only if all characters are learned'
         TabOrder = 1
       end
     end
@@ -600,7 +570,7 @@ object fWordList: TfWordList
         Top = 4
         Width = 416
         Height = 18
-        Caption = '#00795^eLearning test^cTest znalosti slovíèek'
+        Caption = '#00795^eLearning test'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -621,7 +591,7 @@ object fWordList: TfWordList
         Width = 160
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00060^ePhonetic:^cÈtení:'
+        Caption = '#00060^ePhonetic:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -662,7 +632,7 @@ object fWordList: TfWordList
         Width = 152
         Height = 13
         Anchors = [akRight, akBottom]
-        Caption = '#00061^eWritten:^cZápis:'
+        Caption = '#00061^eWritten:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -702,7 +672,7 @@ object fWordList: TfWordList
         Width = 142
         Height = 13
         Anchors = [akRight, akBottom]
-        Caption = '#00693^eStatus:^cStav:'
+        Caption = '#00693^eStatus:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -717,7 +687,7 @@ object fWordList: TfWordList
         Width = 171
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00691^eMeaning:^cVýznam:'
+        Caption = '#00691^eMeaning:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -732,7 +702,7 @@ object fWordList: TfWordList
         Width = 182
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00694^eCreated:^cVytvoøeno:'
+        Caption = '#00694^eCreated:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -747,7 +717,7 @@ object fWordList: TfWordList
         Width = 236
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00695^eLearning list:^cUèební seznam:'
+        Caption = '#00695^eLearning list:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -762,7 +732,7 @@ object fWordList: TfWordList
         Width = 177
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00696^eLearned:^cNauèeno:'
+        Caption = '#00696^eLearned:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -777,7 +747,7 @@ object fWordList: TfWordList
         Width = 220
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00697^eMastered:^cDobøe nauèeno:'
+        Caption = '#00697^eMastered:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -870,7 +840,7 @@ object fWordList: TfWordList
         Width = 194
         Height = 13
         Anchors = [akLeft, akBottom]
-        Caption = '#00733^cKategorie:^eCategories:'
+        Caption = '#00733^eCategories:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -892,7 +862,7 @@ object fWordList: TfWordList
         Width = 553
         Height = 73
         Anchors = [akLeft, akBottom]
-        Caption = '#00796^eTest controls^cOvládání testu'
+        Caption = '#00796^eTest controls'
         Color = clBtnFace
         ParentColor = False
         TabOrder = 0
@@ -916,7 +886,7 @@ object fWordList: TfWordList
           Top = 24
           Width = 223
           Height = 13
-          Caption = '#00797^eTest result:^cVýsledek testu:'
+          Caption = '#00797^eTest result:'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -929,7 +899,7 @@ object fWordList: TfWordList
           Top = 48
           Width = 341
           Height = 13
-          Caption = '#00798^eState will be changed to:^cStav bude zmìnìn na:'
+          Caption = '#00798^eState will be changed to:'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -972,7 +942,7 @@ object fWordList: TfWordList
           Top = 16
           Width = 113
           Height = 25
-          Caption = '#00799^e(&Z) Unknown^c(&Z) Neznámé'
+          Caption = '#00799^e(&Z) Unknown'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -988,7 +958,7 @@ object fWordList: TfWordList
           Top = 16
           Width = 106
           Height = 25
-          Caption = '#00800^e(&X) Known^c(&X) Známé'
+          Caption = '#00800^e(&X) Known'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -1004,7 +974,7 @@ object fWordList: TfWordList
           Top = 16
           Width = 107
           Height = 25
-          Caption = '#00801^e(&C) Well known^c(&C) Dobøe známé'
+          Caption = '#00801^e(&C) Well known'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -1019,7 +989,7 @@ object fWordList: TfWordList
           Top = 32
           Width = 337
           Height = 25
-          Caption = '#00802^e(SPACE) Show word^c(SPACE) Zobrazit slovo'
+          Caption = '#00802^e(SPACE) Show word'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -1040,7 +1010,7 @@ object fWordList: TfWordList
         Top = 4
         Width = 568
         Height = 18
-        Caption = '#00803^eLearning test results^cVýsledky testu znalosti slovíèek'
+        Caption = '#00803^eLearning test results'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -1053,7 +1023,7 @@ object fWordList: TfWordList
         Top = 48
         Width = 209
         Height = 13
-        Caption = '#00804^eNo change:^cBeze zmìny:'
+        Caption = '#00804^eNo change:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1066,7 +1036,7 @@ object fWordList: TfWordList
         Top = 80
         Width = 361
         Height = 13
-        Caption = '#00805^eLearned -> Problematic:^cNauèeno -> Problematické:'
+        Caption = '#00805^eLearned -> Problematic:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1080,8 +1050,7 @@ object fWordList: TfWordList
         Width = 404
         Height = 13
         Caption = 
-          '#00806^eMastered -> Problematic:^cDobøe nauèeno -> Problematické' +
-          ':'
+          '#00806^eMastered -> Problematic:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1094,7 +1063,7 @@ object fWordList: TfWordList
         Top = 112
         Width = 381
         Height = 13
-        Caption = '#00807^eMastered -> Unlearned:^cDobøe nauèeno -> Nenauèeno:'
+        Caption = '#00807^eMastered -> Unlearned:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1107,7 +1076,7 @@ object fWordList: TfWordList
         Top = 136
         Width = 387
         Height = 13
-        Caption = '#00808^eProblematic -> Unlearned:^cProblematické -> Nenauèeno:'
+        Caption = '#00808^eProblematic -> Unlearned:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1120,7 +1089,7 @@ object fWordList: TfWordList
         Top = 152
         Width = 361
         Height = 13
-        Caption = '#00809^eProblematic -> Learned:^cProblematické -> Nauèeno:'
+        Caption = '#00809^eProblematic -> Learned:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1133,7 +1102,7 @@ object fWordList: TfWordList
         Top = 168
         Width = 338
         Height = 13
-        Caption = '#00810^eUnlearned -> Learned:^cNenauèeno -> Nauèeno:'
+        Caption = '#00810^eUnlearned -> Learned:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1146,7 +1115,7 @@ object fWordList: TfWordList
         Top = 192
         Width = 381
         Height = 13
-        Caption = '#00811^eUnlearned -> Mastered:^cNenauèeno -> Dobøe nauèeno:'
+        Caption = '#00811^eUnlearned -> Mastered:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1159,7 +1128,7 @@ object fWordList: TfWordList
         Top = 208
         Width = 355
         Height = 13
-        Caption = '#00812^eLearned -> Mastered:^cNauèeno -> Dobøe nauèeno:'
+        Caption = '#00812^eLearned -> Mastered:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1244,16 +1213,12 @@ object fWordList: TfWordList
         Top = 280
         Width = 545
         Height = 57
-        Caption = '#00813^eNext action^cDalší akce'
+        Caption = '#00813^eNext action'
         ItemIndex = 0
         Items.Strings = (
-          
             '#00814^eUpdate word states by test results and proceed to next p' +
-            'hase^cAktualizovat stav slovíèek podle výsledkù testu a pokraèov' +
-            'at další fází'
-          
-            '#00815^eForget test results and proceed to next phase^cZapomenou' +
-            't výsledky testu a pokraèovat další fází')
+            'hase'
+            '#00815^eForget test results and proceed to next phase')
         TabOrder = 0
       end
     end
@@ -1267,8 +1232,7 @@ object fWordList: TfWordList
         Width = 656
         Height = 18
         Caption = 
-          '#00816^eDisplay / print learning list^cTisk / zobrazení uèebního' +
-          ' seznamu'
+          '#00816^eDisplay / print learning list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -1281,7 +1245,7 @@ object fWordList: TfWordList
         Top = 200
         Width = 216
         Height = 13
-        Caption = '#00817^eCategory name:^cNázev kategorie:'
+        Caption = '#00817^eCategory name:'
         Enabled = False
       end
       object CheckBox4: TCheckBox
@@ -1290,8 +1254,7 @@ object fWordList: TfWordList
         Width = 385
         Height = 17
         Caption = 
-          '#00818^eUpdate learning list statistics of each word^cAktualizov' +
-          'at statistiku uèebního seznamu u každého slovíèka'
+          '#00818^eUpdate learning list statistics of each word'
         Checked = True
         State = cbChecked
         TabOrder = 0
@@ -1301,12 +1264,12 @@ object fWordList: TfWordList
         Top = 40
         Width = 561
         Height = 81
-        Caption = '#00819^eRemove from learning list^cZ uèebního seznamu vyøadit'
+        Caption = '#00819^eRemove from learning list'
         ItemIndex = 1
         Items.Strings = (
-          '#00820^eNothing^cNic'
-          '#00821^eAll mastered words^cVšechna dobøe nauèená slovíèka'
-          '#00822^eAll learned words^cVšechna nauèená slovíèka')
+          '#00820^eNothing'
+          '#00821^eAll mastered words'
+          '#00822^eAll learned words')
         TabOrder = 1
       end
       object Button5: TButton
@@ -1314,7 +1277,7 @@ object fWordList: TfWordList
         Top = 136
         Width = 561
         Height = 25
-        Caption = '#00823^ePrint learning list^cVytisknout uèební seznam'
+        Caption = '#00823^ePrint learning list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1330,8 +1293,7 @@ object fWordList: TfWordList
         Width = 489
         Height = 17
         Caption = 
-          '#00824^eSave learning list as new category and display it^cUloži' +
-          't uèební seznam jako novou kategorii a zobrazit ho'
+          '#00824^eSave learning list as new category and display it'
         TabOrder = 3
         OnClick = CheckBox5Click
       end
@@ -1352,7 +1314,7 @@ object fWordList: TfWordList
     Width = 99
     Height = 25
     Cancel = True
-    Caption = '#00007^eCancel^cZrušit'
+    Caption = '#00007^eCancel'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -1385,7 +1347,7 @@ object fWordList: TfWordList
     Top = 368
     Width = 107
     Height = 25
-    Caption = '#00825^eContinue^cPokraèovat'
+    Caption = '#00825^eContinue'
     Default = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -1415,7 +1377,7 @@ object fWordList: TfWordList
     Top = 368
     Width = 105
     Height = 25
-    Caption = '#00826^eBack^cZpìt'
+    Caption = '#00826^eBack'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -1444,7 +1406,7 @@ object fWordList: TfWordList
     Top = 368
     Width = 113
     Height = 25
-    Caption = '#00827^eFinish^cDokonèit'
+    Caption = '#00827^eFinish'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11

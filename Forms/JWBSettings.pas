@@ -383,10 +383,11 @@ end;
 procedure TfSettings.SpeedButton8Click(Sender: TObject);
 var sup:string;
 begin
-  Application.MessageBox(pchar(_l('#00564^ePlease make sure that the font you select is a Unicode font with'+
-  ' complete "CJK Unified Ideographs" range.'#13'MingLiu is an example of such font.^cUjistìte se, že font, který vyberete je Unicode font s'+
-  ' kompletní "CJK Unified Ideographs" rozsahem.'#13'Takovým fontem je napøíklad MingLiu.')),
-  pchar(_l('#00364^eNotice^cUpozornìní')),MB_OK or MB_ICONINFORMATION);
+  Application.MessageBox(
+    pchar(_l('#00564^ePlease make sure that the font you select is a Unicode font with '
+      +'complete "CJK Unified Ideographs" range.'#13'MingLiu is an example of such font.')),
+    pchar(_l('#00364^eNotice')),
+    MB_OK or MB_ICONINFORMATION);
   FontRadical:=ChooseFont([CHINESEBIG5_CHARSET],FS_RADICAL_CHARTEST,sup,Edit8.Text,false);
   Edit8.Text:=FontRadical;
 end;
@@ -394,16 +395,16 @@ end;
 procedure TfSettings.SpeedButton3Click(Sender: TObject);
 var sup:string;
 begin
-  Application.MessageBox(pchar(_l('#00565^eWhen selecting the font you must ensure that it is really a simplified chinese font.'+
-  #13+'Some fonts support GB2312 standard but instead of simplified characters they show the traditional ones.'+#13
-  +'These fonts would display improper characters in this program.'+#13+
-  'You can identify the right font very easily. In the font selection dialog'+#13+
-  'look at the first character. If it does not look like arrow pointing up, you should select another font.'+
-  '^cPøi výbìru znakù se musíte ujistit, že se jedná opravdu o zjednodušený font.'+#13+
-  'Nìkteré fonty podporují standard GB2312, ale místo zjednodušených znakù zobrazují znaky tradièní.'+#13
-  +'Tyto fonty by zobrazovaly v tomto programu špatné znaky.'+#13+
-  'Správný font poznáte jednoduše. Ve výbìru fontù se podívejte na první znak,'+
-  #13+'pokud nevypadá jako šipka smìøující vzhùru, vyberte jiný font.')),pchar(_l('#00566^eNotice^cVarování')),MB_OK or MB_ICONINFORMATION);
+  Application.MessageBox(
+    pchar(_l('#00565^eWhen selecting the font you must ensure that it is really '
+      +'a simplified chinese font.'#13'Some fonts support GB2312 standard but '
+      +'instead of simplified characters they show the traditional ones.'#13
+      +'These fonts would display improper characters in this program.'#13
+      +'You can identify the right font very easily. In the font selection dialog'#13
+      +'look at the first character. If it does not look like an arrow pointing up, '
+      +'you should select another font.')),
+    pchar(_l('#00566^eNotice')),
+    MB_OK or MB_ICONINFORMATION);
   FontChineseGridGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit3.Text,false);
   Edit3.Text:=FontChineseGridGB;
 end;
@@ -411,16 +412,16 @@ end;
 procedure TfSettings.SpeedButton9Click(Sender: TObject);
 var sup:string;
 begin
-  Application.MessageBox(pchar(_l('#00565^eWhen selecting the font you must ensure that it is really a simplified chinese font.'+
-  #13+'Some fonts support GB2312 standard but instead of simplified characters they show the traditional ones.'+#13
-  +'These fonts would display improper characters in this program.'+#13+
-  'You can identify the right font very easily. In the font selection dialog'+#13+
-  'look at the first character. If it does not look like arrow pointing up, you should select another font.'+
-  '^cPøi výbìru znakù se musíte ujistit, že se jedná opravdu o zjednodušený font.'+#13+
-  'Nìkteré fonty podporují standard GB2312, ale místo zjednodušených znakù zobrazují znaky tradièní.'+#13
-  +'Tyto fonty by zobrazovaly v tomto programu špatné znaky.'+#13+
-  'Správný font poznáte jednoduše. Ve výbìru fontù se podívejte na první znak,'+
-  #13+'pokud nevypadá jako šipka smìøující vzhùru, vyberte jiný font.')),pchar(_l('#00566^eNotice^cVarování')),MB_OK or MB_ICONINFORMATION);
+  Application.MessageBox(
+    pchar(_l('#00565^eWhen selecting the font you must ensure that it is really '
+      +'a simplified chinese font.'#13'Some fonts support GB2312 standard but '
+      +'instead of simplified characters they show the traditional ones.'#13
+      +'These fonts would display improper characters in this program.'#13
+      +'You can identify the right font very easily. In the font selection dialog'#13
+      +'look at the first character. If it does not look like an arrow pointing up, '
+      +'you should select another font.')),
+    pchar(_l('#00566^eNotice')),
+    MB_OK or MB_ICONINFORMATION);
   FontChineseGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit9.Text,false);
   Edit9.Text:=FontChineseGB;
 end;
@@ -621,8 +622,12 @@ end;
 procedure TfSettings.SpeedButton10Click(Sender: TObject);
 var sup:string;
 begin
-  Application.MessageBox(pchar(_l('#00567^eSome fonts may not be able to display some characters. If you see that some characters look different in style or aren''t displayed properly, select another font.'+
-  '^cNìkteré fonty nemusí být schopny zobrazit všechny znaky. Pokud nebudou nìkteré znaky zobrazeny v poøádku nebo budou zobrazeny v jiném stylu, vyberte jiný font.')),pchar(_l('#00566^eNotice^cVarování')),MB_OK or MB_ICONINFORMATION);
+  Application.MessageBox(
+    pchar(_l('#00567^eSome fonts may not be able to display some characters. '
+      +'If you see that some characters look different in style or aren''t '
+      +'displayed properly, select another font.')),
+    pchar(_l('#00566^eNotice')),
+  MB_OK or MB_ICONINFORMATION);
   Edit14.Text:=ChooseFont([CHINESEBIG5_CHARSET,GB2312_CHARSET,SHIFTJIS_CHARSET],testkanji,sup,Edit9.Text,false);
 end;
 
@@ -670,31 +675,43 @@ begin
     Screen.Cursor:=crHourGlass;
     fMenu.ExportUserData(SaveDialog2.FileName);
     Screen.Cursor:=crDefault;
-    Application.MessageBox(pchar(_l('#00568^eExport was finished.^cExport byl dokonèen.')),'Export',MB_ICONINFORMATION or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00568^eExport was finished.')),
+      'Export',
+      MB_ICONINFORMATION or MB_OK);
   end;
 end;
 
 procedure TfSettings.Button2Click(Sender: TObject);
 begin
   Screen.Cursor:=crHourglass;
-  if (TChar.CheckIndex) and (TCharRead.CheckIndex) and
-     (TRadicals.CheckIndex) then
-       Application.MessageBox(pchar(_l('#00569^eIndexes are okay.^cIndexy jsou v poøádku.')),
-       pchar(_l('#00570^eIndex check^cTest indexù')),MB_OK or MB_ICONINFORMATION)
-  else Application.MessageBox(pchar(_l('#00571^eIndexes are damaged. Replace the dictionary file WAKAN.CHR.^cIndexy jsou v poškozeny. Vymìòte soubor WAKAN.CHR.')),
-       pchar(_l('#00570^eIndex check^cTest indexù')),MB_OK or MB_ICONERROR);
+  if (TChar.CheckIndex) and (TCharRead.CheckIndex) and (TRadicals.CheckIndex) then
+    Application.MessageBox(
+      pchar(_l('#00569^eIndexes are okay.')),
+      pchar(_l('#00570^eIndex check')),
+      MB_OK or MB_ICONINFORMATION)
+  else
+    Application.MessageBox(
+      pchar(_l('#00571^eIndexes are damaged. Replace the dictionary file WAKAN.CHR.')),
+      pchar(_l('#00570^eIndex check')),
+      MB_OK or MB_ICONERROR);
   Screen.Cursor:=crDefault;
 end;
 
 procedure TfSettings.Button3Click(Sender: TObject);
 begin
   if OpenDialog2.Execute then
-  if Application.MessageBox(pchar(_l('#00572^eThis action replaces all data in user database.'#13'It can take a long time.'#13#13'Do you want to continue?'+
-  '^cTato akce nahradí všechna data v uživatelské databázi.'#13'Akce mùže trvat velmi dlouho.'#13#13'Opravdu chcete pokraèovat?')),
-  pchar(_l('#00573^eWarning^cUpozornìní')),MB_ICONWARNING or MB_YESNO)=idYes then
+  if Application.MessageBox(
+    pchar(_l('#00572^eThis action replaces all data in user database.'#13
+      +'It can take a long time.'#13#13'Do you want to continue?')),
+    pchar(_l('#00573^eWarning')),
+    MB_ICONWARNING or MB_YESNO)=idYes then
   begin
     fMenu.ImportUserData(OpenDialog2.FileName);
-    Application.MessageBox(pchar(_l('#00574^eImport was finished.^cImport byl dokonèen.')),'Import',MB_ICONINFORMATION or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00574^eImport was finished.')),
+      'Import',
+      MB_ICONINFORMATION or MB_OK);
   end;
 end;
 
@@ -730,11 +747,13 @@ var lfound:boolean;
     ssum:string;
     word:integer;
 begin
-  if Application.MessageBox(pchar(_l('#00575^eThis function tests whether all the words in user vocabulary'#13+
-    'are in exactly one group category and at least in one lesson category.'#13#13+'Do you want to continue?^cTato funkce otestuje jestli jsou všechna slovíèka'#13+
-    'v právì jedné skupinové kategorii a alespoò jedné kategorii lekce.'#13#13'Chcete pokraèovat?')),pchar(_l('#00576^eCheck categories^cOtestovat kategorie')),
+  if Application.MessageBox(
+    pchar(_l('#00575^eThis function tests whether all the words in user vocabulary'#13
+      +'are in exactly one group category and at least in one lesson category.'#13#13
+      +'Do you want to continue?')),
+    pchar(_l('#00576^eCheck categories')),
     MB_ICONINFORMATION or MB_YESNO)=idYes then
-    begin
+  begin
       Screen.Cursor:=crHourGlass;
       TUser.First;
       lfn:=0; gfn:=0; gmn:=0;
@@ -776,12 +795,20 @@ begin
       end;
       ssum:='';
       Screen.Cursor:=crDefault;
-      if lfn>0 then ssum:=ssum+_l('^eWords without assigned lesson^cSlova bez pøiøazené lekce')+' ('+inttostr(lfn)+'):'#13+lfs+#13#13;
-      if gfn>0 then ssum:=ssum+_l('^eWords without assigned group^cSlova bez pøiøazené skupiny')+' ('+inttostr(gfn)+'):'#13+gfs+#13#13;
-      if gmn>0 then ssum:=ssum+_l('^eWords with more assigned group^cSlova s více pøiøazenými skupinami')+' ('+inttostr(gmn)+'):'#13+gms+#13#13;
-      if ssum<>'' then Application.MessageBox(pchar(ssum),pchar(_l('^eErrors^cChyby')),MB_ICONERROR or MB_OK) else
-        Application.MessageBox(pchar(_l('#00577^eNo errors were found.^cŽádné chyby nebyly nalezeny.')),pchar(_l('#00094^eSuccess^cHotovo')),MB_ICONINFORMATION or MB_OK);
-    end;
+      if lfn>0 then ssum:=ssum+_l('^eWords without assigned lesson')+' ('+inttostr(lfn)+'):'#13+lfs+#13#13;
+      if gfn>0 then ssum:=ssum+_l('^eWords without assigned group')+' ('+inttostr(gfn)+'):'#13+gfs+#13#13;
+      if gmn>0 then ssum:=ssum+_l('^eWords with more assigned group')+' ('+inttostr(gmn)+'):'#13+gms+#13#13;
+      if ssum<>'' then
+        Application.MessageBox(
+          pchar(ssum),
+          pchar(_l('^eErrors')),
+          MB_ICONERROR or MB_OK)
+      else
+        Application.MessageBox(
+          pchar(_l('#00577^eNo errors were found.')),
+          pchar(_l('#00094^eSuccess')),
+          MB_ICONINFORMATION or MB_OK);
+  end;
 end;
 
 procedure TfSettings.PaintBox2Paint(Sender: TObject);
@@ -852,29 +879,37 @@ begin
   if missingfonts<>'' then
   begin
     delete(missingfonts,1,1);
-    s:=_l('#00578^eFollowing recommended fonts were not found on your system:^cNásledující doporuèené fonty nebyly na vašem systému nalezeny:')+#13#13;
+    s:=_l('#00578^eFollowing recommended fonts were not found on your system:')+#13#13;
     s:=s+missingfonts+#13#13;
     if substituted then
-      s:=s+_l('#00579^eReasonable substitution was found, however for better font quality installation of these fonts and restart'#13'of the autodetection routine is recommended.'+
-        '^cByla nalezena rozumná substituce za tyto fonty, avšak pro lepší kvalitu písma'#13'+doporuèujeme nainstalovat tyto fonty a restartovat autodetekci.') else
-      s:=s+_l('#00580^eNo reasonable substitution was found, program will probably display characters incorrectly.'#13+
-              'Installation of these fonts and restart of the autodetection routine is HIGHLY recommended.'+
-              '^cZa tyto fonty nebyla nalezena rozumná náhrada, program mùže zobrazovat znaky nesprávnì.'#13+
-              'Instalace tìchto fontù a restartování autodetekce je SILNÌ doporuèováno.');
+      s:=s+_l('#00579^eReasonable substitution was found, however for better '
+        +'font quality installation of these fonts and restart'#13'of the '
+        +'autodetection routine is recommended.')
+    else
+      s:=s+_l('#00580^eNo reasonable substitution was found, program will '
+        +'probably display characters incorrectly.'#13+'Installation of these '
+        +'fonts and restart of the autodetection routine is HIGHLY recommended.');
     s:=s+#13#13;
-    s:=s+_l('#00581^eThese fonts can be found in following Microsoft(R) products:'#13#13+
-      '1. Microsoft(R) Windows(R) XP - Select "Install eastern-Asian fonts" in language settings in Control Panel.'#13+
-      '2. Microsoft(R) Internet Explorer - Install "support for Japanese, traditional Chinese and simplified Chinese writing".'#13+
-      '3. Microsoft(R) Office 2000/XP - Install Japanese, traditional Chinese and simplified Chinese fonts.'+
-      '^cTyto fonty se nacházejí v tìchto produktech Microsoftu:'#13#13+
-      '1. Microsoft(R) Windows(R) XP - Zvolte "Nainstalovat soubory pro jazyky východní Asie" v jazykových nastaveních v Ovládacím panelu.'#13+
-      '2. Microsoft(R) Internet Explorer - Nainstalujte "podporu pro zápis japonštiny, tradièní a zjednodušené èínštiny".'#13+
-      '3. Microsoft(R) Office 2000/XP - Nainstalujte japonské, tradièní a zjednodušené èínské fonty.');
+    s:=s+_l('#00581^eThese fonts can be found in following Microsoft(R) products:'#13#13
+      +'1. Microsoft(R) Windows(R) XP - Select "Install eastern-Asian fonts" in language settings in Control Panel.'#13
+      +'2. Microsoft(R) Internet Explorer - Install "support for Japanese, traditional Chinese and simplified Chinese writing".'#13
+      +'3. Microsoft(R) Office 2000/XP - Install Japanese, traditional Chinese and simplified Chinese fonts.');
     if substituted then
-      Application.MessageBox(pchar(s),pchar(_l('#00582^eMissing fonts^cChybìjící fonty')), MB_ICONWARNING or MB_OK) else
-      Application.MessageBox(pchar(s),pchar(_l('#00582^eMissing fonts^cChybìjící fonty')), MB_ICONERROR or MB_OK);
-  end else Application.MessageBox(pchar(_l('#00583^eCongratulations!'#13#13'All recommended fonts were located on your system and were installed.^cGratulujeme!'#13#13+
-  'Všechny doporuèované fonty byly na vašem systému nalezeny a byly nainstalovány.')),pchar(_l('#00350^eFont autodetection^cAutodetekce fontù')),MB_ICONINFORMATION or MB_OK);
+      Application.MessageBox(
+        pchar(s),
+        pchar(_l('#00582^eMissing fonts')),
+        MB_ICONWARNING or MB_OK)
+    else
+      Application.MessageBox(
+        pchar(s),
+        pchar(_l('#00582^eMissing fonts')),
+        MB_ICONERROR or MB_OK);
+  end else
+    Application.MessageBox(
+      pchar(_l('#00583^eCongratulations!'#13#13'All recommended fonts were '
+        +'located on your system and were installed.')),
+      pchar(_l('#00350^eFont autodetection')),
+      MB_ICONINFORMATION or MB_OK);
   result:=(missingfonts='') or (substituted);
 end;
 
@@ -894,8 +929,8 @@ begin
     for j:=0 to chartypel.Count-1 do if fMenu.GetCharType(j,0)=fMenu.GetCharDet(i,0) then
     begin
       if fMenu.GetCharDet(i,6)<>'' then
-        ListBox2.Items.Add(_l('^e'+fMenu.GetCharType(j,4)+'^c'+fMenu.GetCharType(j,5))+' ('+fMenu.GetCharDet(i,6)+')') else
-        ListBox2.Items.Add(_l('^e'+fMenu.GetCharType(j,4)+'^c'+fMenu.GetCharType(j,5)));
+        ListBox2.Items.Add(_l('^e'+fMenu.GetCharType(j,4))+' ('+fMenu.GetCharDet(i,6)+')') else
+        ListBox2.Items.Add(_l('^e'+fMenu.GetCharType(j,4)));
     end;
   end;
   Button8.Enabled:=ListBox2.Items.Count<>0;
@@ -1042,9 +1077,10 @@ end;
 procedure TfSettings.Button15Click(Sender: TObject);
 var i:integer;
 begin
-  if Application.MessageBox(pchar(_l('#00584^eThis function will replace all your settings.'#13#13'Do you want to continue?'+
-  '^cTato funkce nahradí všechna vaše nastavení.'#13#13'Chcete pokraèovat?')),
-  pchar(_l('#00090^eWarning^cVarování')),MB_ICONWARNING or MB_YESNO)=idNo then exit;
+  if Application.MessageBox(
+    pchar(_l('#00584^eThis function will replace all your settings.'#13#13'Do you want to continue?')),
+    pchar(_l('#00090^eWarning')),
+    MB_ICONWARNING or MB_YESNO)=idNo then exit;
   i:=0;
   repeat
     SetColDefault(i);

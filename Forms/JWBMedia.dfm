@@ -4,7 +4,7 @@ object fMedia: TfMedia
   Width = 870
   Height = 640
   BorderStyle = bsSizeToolWin
-  Caption = '^eAnnotations Media Window^cOkno s médii pro anotace'
+  Caption = '^eAnnotations Media Window'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
