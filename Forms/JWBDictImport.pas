@@ -35,13 +35,10 @@ type
     procedure Button2Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
-  private
-    { Private declarations }
   public
     entries:integer;
     procedure CreateDictTables(dictlang:char);
     procedure WriteDictPackage(dictlang:char);
-    { Public declarations }
   end;
 
 var
@@ -285,7 +282,8 @@ begin
   PutToBuf(b[0],b[1],b[2],b[3]);
 end;
 begin
-  prog:=SMProgressDlg(_l('#00071^eDictionary import^cImport slovníku'),'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',100);
+  prog:=SMProgressDlg(_l('#00071^eDictionary import'),
+    'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',100);
   abort:=false;
   case RadioGroup2.ItemIndex of
     0:diclang:='j';
@@ -299,14 +297,16 @@ begin
   linecount:=0;
   if not FileExists('wordfreq_ck.uni') and CheckBox3.Checked then
   begin
-    Application.MessageBox(pchar(_l('#00915^eCannot find WORDFREQ_CK.UNI file.^cNemohu najít soubor WORDFREQ_CK.UNI')),pchar(_l('#00916^eError^cChyba')),
+    Application.MessageBox(
+      pchar(_l('#00915^eCannot find WORDFREQ_CK.UNI file.')),
+      pchar(_l('#00916^eError')),
       MB_ICONERROR or MB_OK);
     exit;
   end;
   try
   if CheckBox3.Checked then
   begin
-    prog.SetMessage(_l('#00917^eCreating frequency chart...^cVytváøím tabulku frekvence...'));
+    prog.SetMessage(_l('#00917^eCreating frequency chart...'));
     Conv_Open('wordfreq_ck.uni',1);
     s:=Conv_Read;
     newline:=true;
@@ -340,7 +340,10 @@ begin
   freql.Sorted:=true;
   freql.Sort;
   except
-    Application.MessageBox(pchar('Frequency list creation failed. Exception:'+(ExceptObject as Exception).Message),'Error',MB_ICONERROR or MB_OK);
+    Application.MessageBox(
+      pchar('Frequency list creation failed. Exception:'+(ExceptObject as Exception).Message),
+      'Error',
+      MB_ICONERROR or MB_OK);
   end;
   assignfile(romap,'roma_problems.txt');
   rewrite(romap);
@@ -361,13 +364,13 @@ begin
     begin
       fname:='DICT_'+inttostr(fi)+'.TMP';
       case phase of
-        0:mes:=_l('#00085^eConverting ^cKonvertuji ');
-        1:mes:=_l('#00086^eReading && parsing ^cNaèítám a parsuji ');
+        0:mes:=_l('#00085^eConverting ');
+        1:mes:=_l('#00086^eReading && parsing ');
       end;
       prog.SetMessage(mes+ListBox1.Items[fi]+'...');
       if phase=0 then
       begin
-        fDictCoding.Label2.Caption:=_l('#00087^eInput file: ^cVstupní soubor: ')+ListBox1.Items[fi];
+        fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ListBox1.Items[fi];
         if paramstr(1)<>'makedic'then fDictCoding.ShowModal;
         if (not fDictCoding.succeeded) and (paramstr(1)<>'makedic') then abort:=true else
         begin
@@ -389,7 +392,10 @@ begin
           end;
           if not FileExists(fname) then
           begin
-            Application.MessageBox(pchar(_l('^eFile conversion failed ('+ListBox1.Items[fi]+').^cNepodaøilo se zkonvertovat soubor ('+ListBox1.Items[fi]+')')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+            Application.MessageBox(
+              pchar(_l('^eFile conversion failed ('+ListBox1.Items[fi]+').')),
+              pchar(_l('#00020^eError')),
+              MB_ICONERROR or MB_OK);
             abort:=true;
           end;
         end;
@@ -420,7 +426,10 @@ begin
         blockread(buff,buf,2);
         if (buf[0]<>255) or (buf[1]<>254) then
         begin
-          Application.MessageBox(pchar(_l('#00088^eUnsupported file coding ('+ListBox1.Items[fi]+').^cNepodporované kódování souboru ('+ListBox1.Items[fi]+')')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          Application.MessageBox(
+            pchar(_l('#00088^eUnsupported file coding ('+ListBox1.Items[fi]+').')),
+            pchar(_l('#00020^eError')),
+            MB_ICONERROR or MB_OK);
           abort:=true;
         end else
         begin
@@ -601,13 +610,13 @@ begin
     dic.Demand;
     assignfile(fo,'DICT_IMP1.TMP');
     reset(fo);
-    dic.TDict.ImportFromText(fo,prog,_l('#00091^eBuilding dictionary table^cVytváøím tabulku slovníku'));
+    dic.TDict.ImportFromText(fo,prog,_l('#00091^eBuilding dictionary table'));
     closefile(fo);
     {$I-}
     mkdir('dict');
     {$I+}
     ioresult;
-    prog.SetMessage(_l('#00092^eSorting indexes...^cTøídím indexy...'));
+    prog.SetMessage(_l('#00092^eSorting indexes...'));
     wordidx.Sorted:=false;
     charidx.Sorted:=false;
     for i:=0 to wordidx.Count-1 do while length(wordidx[i])<4 do wordidx[i]:=wordidx[i]+' ';
@@ -615,7 +624,7 @@ begin
     for i:=0 to charidx.Count-1 do charidx[i]:=charidx[i]+'    '+charidx2[i];
     wordidx.CustomSort(CustomSortCompare);
     charidx.CustomSort(CustomSortCompare);
-    prog.SetMessage(_l('^eWriting character index...^cZapisuji index znakù...'));
+    prog.SetMessage(_l('^eWriting character index...'));
     assignfile(fb,'dict\CharIdx.bin');
     bufp:=0;
     rewrite(fb,1);
@@ -634,7 +643,7 @@ begin
     end;
     blockwrite(fb,buf,bufp);
     closefile(fb);
-    prog.SetMessage(_l('^eWriting word index...^cZapisuji index slov...'));
+    prog.SetMessage(_l('^eWriting word index...'));
     assignfile(fb,'dict\WordIdx.bin');
     bufp:=0;
     rewrite(fb,1);
@@ -685,7 +694,11 @@ begin
   if not abort then
   begin
     close;
-    if paramstr(1)<>'makedic'then Application.MessageBox(pchar(_l('#00093^eDictionary was built.^cSlovník byl vytvoøen.')),pchar(_l('#00094^eSuccess^cHotovo')),MB_ICONINFORMATION or MB_OK);
+    if paramstr(1)<>'makedic' then
+      Application.MessageBox(
+        pchar(_l('#00093^eDictionary was built.')),
+        pchar(_l('#00094^eSuccess')),
+        MB_ICONINFORMATION or MB_OK);
   end;
 end;
 

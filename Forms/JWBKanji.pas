@@ -478,10 +478,10 @@ begin
   sl4.Free;
   sl10.Free;
   if chin then
-    s:=_l('#00129^eFound^cNalezené') else s:=_l('#00130^eFound^cNalezená');
-  if (chin) and (fSettings.RadioGroup5.ItemIndex=0) then s:=s+_l('#00131^e traditional^c tradièní');
-  if (chin) and (fSettings.RadioGroup5.ItemIndex=1) then s:=s+_l('#00132^e simplified^c zjednodušené');
-  if chin then s:=s+_l('#00133^e characters^c znaky') else s:=s+' Kanji';
+    s:=_l('#00129^eFound') else s:=_l('#00130^eFound');
+  if (chin) and (fSettings.RadioGroup5.ItemIndex=0) then s:=s+_l('#00131^e traditional');
+  if (chin) and (fSettings.RadioGroup5.ItemIndex=1) then s:=s+_l('#00132^e simplified');
+  if chin then s:=s+_l('#00133^e characters') else s:=s+' Kanji';
   s:=s+' ('+inttostr(ki.Count)+_l(')');
   RxLabel15.Caption:=s;
   DrawGrid1.ColCount:=(DrawGrid1.Width-32) div grs;
@@ -598,7 +598,7 @@ end;
 procedure TfKanji.Button1Click(Sender: TObject);
 begin
   ClearKanjiCardCache;
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards^cKarty znakù'));
+  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards'));
 end;
 
 procedure TfKanji.RadioGroup1Click(Sender: TObject);
@@ -618,18 +618,18 @@ begin
   fKanjiSearch.RadioGroup1.Items.Clear;
   if chin then
   begin
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00146^eRadical^cRadikálu'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00147^eStroke count^cPoètu tahù'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00148^eFrequency^cFrekvence'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00149^eRandom^cNáhodnì'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00877^eUnsorted^cNetøídit'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00146^eRadical'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00147^eStroke count'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00148^eFrequency'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00149^eRandom'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00877^eUnsorted'));
   end else
   begin
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00146^eRadical^cRadikálu'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00147^eStroke count^cPoètu tahù'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00148^eFrequency^cFrekvence'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00149^eRandom^cNáhodnì'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00877^eUnsorted^cNetøídit'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00146^eRadical'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00147^eStroke count'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00148^eFrequency'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00149^eRandom'));
+    fKanjiSearch.RadioGroup1.Items.Add(_l('#00877^eUnsorted'));
   end;
   fKanjiSearch.RadioGroup1.ItemIndex:=0;
   DoIt;
@@ -851,12 +851,12 @@ end;
 
 procedure TfKanji.SpeedButton15Click(Sender: TObject);
 begin
-  showmessage(_l('#00150^cFunkce není doposud implementována.^eFeature not implemented yet.'));
+  showmessage(_l('#00150^eFeature not implemented yet.'));
 end;
 
 procedure TfKanji.SpeedButton17Click(Sender: TObject);
 begin
-  showmessage(_l('#00150^cFunkce není doposud implementována.^eFeature not implemented yet.'));
+  showmessage(_l('#00150^eFeature not implemented yet.'));
 end;
 
 procedure TfKanji.DrawGrid1KeyPress(Sender: TObject; var Key: Char);

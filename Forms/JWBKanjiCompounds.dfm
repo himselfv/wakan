@@ -2,7 +2,7 @@ object fKanjiCompounds: TfKanjiCompounds
   Left = 227
   Top = 187
   BorderStyle = bsNone
-  Caption = '#00125^eCompounds^cSloûeniny'
+  Caption = '#00125^eCompounds'
   ClientHeight = 178
   ClientWidth = 468
   Color = clBtnFace
@@ -16,6 +16,9 @@ object fKanjiCompounds: TfKanjiCompounds
   OnClose = FormClose
   OnResize = FormResize
   OnShow = FormShow
+  DesignSize = (
+    468
+    178)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
@@ -31,13 +34,11 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 153
     Width = 60
     Height = 22
-    Hint = 
-      '#00151^eShow user vocabulary compounds^cZobrazit sloûeniny z uûi' +
-      'vatelskÈho slovnÌËku'
+    Hint = '#00151^eShow user vocabulary compounds'
     Anchors = [akLeft, akBottom]
     GroupIndex = 4
     Down = True
-    Caption = '#00152^eUserDict^cUûiv.slov.'
+    Caption = '#00152^eUserDict'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -51,10 +52,10 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 153
     Width = 54
     Height = 22
-    Hint = '#00153^eShow dictionary compounds^cZobraz sloûeniny ze slovnÌku'
+    Hint = '#00153^eShow dictionary compounds'
     Anchors = [akLeft, akBottom]
     GroupIndex = 4
-    Caption = '#00154^eDict.^cSlovnÌk'
+    Caption = '#00154^eDict.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -74,10 +75,10 @@ object fKanjiCompounds: TfKanjiCompounds
   object Label25: TLabel
     Left = 127
     Top = 20
-    Width = 482
+    Width = 240
     Height = 19
     Anchors = [akTop]
-    Caption = '#00155^eNo words were found.^cé·dn· slova nebyla nalezena.'
+    Caption = '#00155^eNo words were found.'
     Color = clBtnFace
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -93,9 +94,9 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 149
     Width = 80
     Height = 22
-    Hint = '#00659^eInsert word into clipboard^cVloûit slovo do schr·nky'
+    Hint = '#00659^eInsert word into clipboard'
     Anchors = [akRight, akBottom]
-    Caption = '#00660^eClipboard^cSchr·nka'
+    Caption = '#00660^eClipboard'
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -119,9 +120,9 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 149
     Width = 94
     Height = 22
-    Hint = '#00667^eInsert word into vocabulary^cVloûit slovo do slovÌËek'
+    Hint = '#00667^eInsert word into vocabulary'
     Anchors = [akRight, akBottom]
-    Caption = '#00215^eVocabulary^cSlovÌËka'
+    Caption = '#00215^eVocabulary'
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000130B0000130B00001000000000000000000000000000
@@ -145,10 +146,8 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 154
     Width = 89
     Height = 17
-    Hint = 
-      '#00156^eShow only compounds with beginning character^cZobrazit p' +
-      'ouze sloûeniny s poË·teËnÌm znakem'
-    Caption = '#00878^eBeg.^cZaÅE'
+    Hint = '#00156^eShow only compounds with beginning character'
+    Caption = '#00878^eBeg.'
     Checked = True
     State = cbChecked
     TabOrder = 0
@@ -182,10 +181,8 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 154
     Width = 39
     Height = 17
-    Hint = 
-      '#00158^eShow only compounds marked as popular^cZobrazit pouze sl' +
-      'oûeniny oznaËenÈ jako popul·rnÌ'
-    Caption = '^ePop^cPop'
+    Hint = '#00158^eShow only compounds marked as popular'
+    Caption = '^ePop'
     ParentShowHint = False
     ShowHint = True
     TabOrder = 2
@@ -196,10 +193,8 @@ object fKanjiCompounds: TfKanjiCompounds
     Top = 154
     Width = 39
     Height = 17
-    Hint = 
-      '^eShow compounds sorted by frequency^cZobrazit sloûeniny set¯ÌdÏ' +
-      'nÈ podle frekvence'
-    Caption = '^eFreq^cFreq'
+    Hint = '^eShow compounds sorted by frequency'
+    Caption = '^eFreq'
     ParentShowHint = False
     ShowHint = True
     TabOrder = 3

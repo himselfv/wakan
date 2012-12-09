@@ -40,13 +40,10 @@ type
       Y: Integer);
     procedure RadioGroup1Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
-  private
-    { Private declarations }
   public
     procedure ShowIt;
     procedure DoSearch;
     function GetKanji(x,y:integer):string;
-    { Public declarations }
   end;
 
 var

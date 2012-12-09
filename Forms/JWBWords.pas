@@ -82,8 +82,6 @@ type
     procedure StringGrid1Click(Sender: TObject);
     procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-  private
-    { Private declarations }
   public
     WordListCount:integer;
     twkanji,twphonetic,twmeaning:string;
@@ -104,7 +102,6 @@ type
     procedure UpdateWordListStats;
     procedure SetGroupStatus(st:integer);
     procedure SearchWord(wordind:integer);
-    { Public declarations }
   end;
 
 var
@@ -239,12 +236,14 @@ begin
   end;
   FinishWordGrid(StringGrid1);
   Reset;
-  if (sw=0) and (warningifnotfound) then Application.MessageBox(pchar(_l('^eThe searched word does not match the current filters.^cHledané slovo neodpovídá aktuálním filtrùm.')),
-    pchar(_l('#00937^eWord not found^cSlovo nebylo nalezeno')),MB_ICONWARNING or MB_OK);
+  if (sw=0) and (warningifnotfound) then
+    Application.MessageBox(
+      pchar(_l('^eThe searched word does not match the current filters.')),
+      pchar(_l('#00937^eWord not found')),MB_ICONWARNING or MB_OK);
   if sw=0 then sw:=1;
   if StringGrid1.Visible then StringGrid1Click(self);
   if StringGrid1.Visible then StringGrid1.Row:=sw;
-  s:=_l('#00938^cSlovíèka^eVocabulary');
+  s:=_l('#00938^eDict');
   s:=s+' ('+inttostr(wl.Count)+')';
   RxLabel1.Caption:=s;
   cl.Free;
@@ -285,22 +284,36 @@ begin
   result:=false;
   if kanji='' then
   begin
-    if not nomessages then Application.MessageBox(pchar(_l('^eWriting is not filled. Cannot add word.^cZápis není vyplnìn. Nemohu pøidat slovo.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+    if not nomessages then
+      Application.MessageBox(
+        pchar(_l('^eWriting is not filled. Cannot add word.')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
     exit;
   end;
   if phonetic='' then
   begin
-    if not nomessages then Application.MessageBox(pchar(_l('#00840^ePhonetic is not filled. Cannot add word.^cÈtení není vyplnìno. Nemohu pøidat slovo.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+    if not nomessages then
+      Application.MessageBox(
+        pchar(_l('#00840^ePhonetic is not filled. Cannot add word.')),
+        pchar(_l('#00020^eError')),MB_ICONERROR or MB_OK);
     exit;
   end;
   if english='' then
   begin
-    if not nomessages then Application.MessageBox(pchar(_l('#00841^eMeaning is not filled. Cannot add word.^cVýznam není vyplnìn. Nemohu pøidat slovo.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+    if not nomessages then
+      Application.MessageBox(
+        pchar(_l('#00841^eMeaning is not filled. Cannot add word.')),
+        pchar(_l('#00020^eError')),MB_ICONERROR or MB_OK);
     exit;
   end;
   if category='' then
   begin
-    if not nomessages then Application.MessageBox(pchar(_l('#00842^eCategory is not filled. Cannot add word.^cKategorie není vyplnìna. Nemohu pøidat slovo.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+    if not nomessages then
+      Application.MessageBox(
+        pchar(_l('#00842^eCategory is not filled. Cannot add word.')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
     exit;
   end;
   if TUserCat.Locate('Name',category,false) then cat:=TUserCat.Int(TUserCatIndex) else
@@ -345,7 +358,11 @@ begin
     if TUserSheet.Int(TUserSheetPos)>=catord then catord:=TUserSheet.Int(TUserSheetPos)+1;
     if TUserSheet.Int(TUserSheetWord)=wordidx then
     begin
-      if not nomessages then Application.MessageBox(pchar(_l('#00843^eThis word is already in vocabulary and is in this category.^cToto slovo již bylo pøidáno a je v této kategorii.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+      if not nomessages then
+        Application.MessageBox(
+          pchar(_l('#00843^eThis word is already in vocabulary and is in this category.')),
+          pchar(_l('#00020^eError')),
+          MB_ICONERROR or MB_OK);
       exit;
     end;
     TUserSheet.Next;
@@ -390,8 +407,15 @@ begin
   end;
   TUserSheet.Insert([inttostr(wordidx),inttostr(cat),inttostr(catord)]);
   if (not nomessages) and (fSettings.CheckBox70.Checked) then if insertword then
-    Application.MessageBox(pchar(_l('#00844^eNew word was successfully added into vocabulary.^cNové slovo bylo úspìšnì pøidáno.')),pchar(_l('#00845^eSuccess^cÚspìch')),MB_ICONINFORMATION or MB_OK)
-    else Application.MessageBox(pchar(_l('#00846^eWord was added into new category.^cSlovo bylo pøidáno do nové kategorie.')),pchar(_l('#00845^eSuccess^cÚspìch')),MB_ICONINFORMATION or MB_OK);
+    Application.MessageBox(
+      pchar(_l('#00844^eNew word was successfully added into vocabulary.')),
+      pchar(_l('#00845^eSuccess')),
+      MB_ICONINFORMATION or MB_OK)
+  else
+    Application.MessageBox(
+      pchar(_l('#00846^eWord was added into new category.')),
+      pchar(_l('#00845^eSuccess')),
+      MB_ICONINFORMATION or MB_OK);
   if not nomessages then ShowIt(false);
   if not nomessages then fMenu.ChangeUserData;
   lastwordadded:=insertword;
@@ -445,8 +469,11 @@ begin
   begin
     if pos('.WKL',uppercase(SaveDialog1.FileName))>0 then
     begin
-      Application.MessageBox(pchar(_l('#00899^eWKL format is outdated. Import/export routine is maintained for compatibility only. Please use CSV format in the future.'#13+
-        '^cFormát WKL je zastaralý. Importovací/exportovací rutina je zachována pouze kvùli kompatibilitì.')),pchar(_l('#00900^eNotice^cUpozornìní')),MB_ICONWARNING or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00899^eWKL format is outdated. Import/export routine is '
+          +'maintained for compatibility only. Please use CSV format in the future.'#13)),
+        pchar(_l('#00900^eNotice')),
+        MB_ICONWARNING or MB_OK);
       Screen.Cursor:=crHourGlass;
       assignfile(t,SaveDialog1.FileName);
       rewrite(t);
@@ -633,7 +660,11 @@ var t:textfile;
         if TUserSheet.Int(TUserSheetNumber)=cat then
         begin
           lastwordadded:=insertword;
-          if not nomessages then Application.MessageBox(pchar(_l('#00843^eThis word is already in vocabulary and is in this category.^cToto slovo již bylo pøidáno a je v této kategorii.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          if not nomessages then
+            Application.MessageBox(
+              pchar(_l('#00843^eThis word is already in vocabulary and is in this category.')),
+              pchar(_l('#00020^eError')),
+              MB_ICONERROR or MB_OK);
           exit;
         end;
         TUserSheet.Next;
@@ -693,8 +724,15 @@ var t:textfile;
     awf_insusersheet.Add(inttostr(cat));
     awf_insusersheet.Add(inttostr(catord));
     if not nomessages then if insertword then
-      Application.MessageBox(pchar(_l('#00844^eNew word was successfully added into vocabulary.^cNové slovo bylo úspìšnì pøidáno.')),pchar(_l('#00845^eSuccess^cÚspìch')),MB_ICONINFORMATION or MB_OK)
-      else Application.MessageBox(pchar(_l('#00846^eWord was added into new category.^cSlovo bylo pøidáno do nové kategorie.')),pchar(_l('#00845^eSuccess^cÚspìch')),MB_ICONINFORMATION or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00844^eNew word was successfully added into vocabulary.')),
+        pchar(_l('#00845^eSuccess')),
+        MB_ICONINFORMATION or MB_OK)
+    else
+      Application.MessageBox(
+        pchar(_l('#00846^eWord was added into new category.')),
+        pchar(_l('#00845^eSuccess')),
+        MB_ICONINFORMATION or MB_OK);
     if not nomessages then ShowIt(false);
     if not nomessages then fMenu.ChangeUserData;
     lastwordadded:=insertword;
@@ -717,8 +755,11 @@ begin
     TUserSheet.First;
     if pos('.WKL',uppercase(OpenDialog1.FileName))>0 then
     begin
-      Application.MessageBox(pchar(_l('#00899^eWKL format is outdated. Import/export routine is maintained for compatibility only. Please use CSV format in the future.'#13+
-        '^cFormát WKL je zastaralý. Importovací/exportovací rutina je zachována pouze kvùli kompatibilitì.')),pchar(_l('#00900^eNotice^cUpozornìní')),MB_ICONWARNING or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00899^eWKL format is outdated. Import/export routine '
+          +'is maintained for compatibility only. Please use CSV format in the future.'#13)),
+        pchar(_l('#00900^eNotice')),
+        MB_ICONWARNING or MB_OK);
       assignfile(t,OpenDialog1.Filename);
       system.reset(t);
       linc:=0;
@@ -734,15 +775,24 @@ begin
       readln(t,s);
       if pos('WaKan Word List',s)<>1 then
       begin
-        Application.MessageBox(pchar(_l('#00847^eThis is not a WaKan word list file.^cToto není soubor se slovy WaKan.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+        Application.MessageBox(
+          pchar(_l('#00847^eThis is not a WaKan word list file.')),
+          pchar(_l('#00020^eError')),
+          MB_ICONERROR or MB_OK);
         exit;
       end;
       if s<>'WaKan Word List 1'then
       begin
-        Application.MessageBox(pchar(_l('#00848^eThis WaKan word list file version is not supported.^cTato verze souboru se slovy WaKan není podporována.')),pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+        Application.MessageBox(
+          pchar(_l('#00848^eThis WaKan word list file version is not supported.')),
+          pchar(_l('#00020^eError')),
+          MB_ICONERROR or MB_OK);
         exit;
       end;
-      sp:=SMProgressDlg(_l('#00215^eVocabulary^cSlovíèka'),_l('#00849^eImporting word list (000000 words imported - 000000 new words)...^cImportuji seznam slovíèek (00000 slov importováno - 000000 nových slov...'),linc);
+      sp:=SMProgressDlg(
+        _l('#00215^eVocabulary'),
+        _l('#00849^eImporting word list (000000 words imported - 000000 new words)...'),
+        linc);
       Screen.Cursor:=crHourGlass;
       linc:=0;
       repeat
@@ -760,7 +810,11 @@ begin
         if not eof(t) then readln(t,s);
         inc(linc,4);
         sp.show;
-        sp.SetMessage(_l('#00901^eImporting word list (^cImportuji seznam slovíèek (')+inttostr(catw)+_l('#00902^e words imported - ^c slov importováno - ')+inttostr(addw)+_l('#00903^e new words)...^c nových slov...'));
+        sp.SetMessage(_l('#00901^eImporting word list (')
+          +inttostr(catw)
+          +_l('#00902^e words imported - ')
+          +inttostr(addw)
+          +_l('#00903^e new words)...'));
         sp.SetProgress(linc);
       end;
       Screen.Cursor:=crDefault;
@@ -768,7 +822,11 @@ begin
       sp.Free;
       fMenu.ChangeUserData;
       ShowIt(false);
-      Application.MessageBox(pchar(_l('^e'+inttostr(catw)+' words imported'#13+inttostr(addw)+' new words^c'+inttostr(catw)+' slov importováno'#13+inttostr(addw)+' nových slov')),pchar(_l('#00851^eWord list imported^cSeznam slovíèek naimportován')),MB_ICONINFORMATION or MB_OK);
+      Application.MessageBox(
+        pchar(_l('^e'+inttostr(catw)+' words imported'#13
+          +inttostr(addw)+' new words')),
+        pchar(_l('#00851^eWord list imported')),
+        MB_ICONINFORMATION or MB_OK);
     end else
     begin
       abortprocess:=false;
@@ -791,7 +849,10 @@ begin
       s2:='';
       catw:=0;
       addw:=0;
-      sp:=SMProgressDlg(_l('#00215^eVocabulary^cSlovíèka'),_l('#00849^eImporting word list (000000 words imported - 000000 new words)...^cImportuji seznam slovíèek (00000 slov importováno - 000000 nových slov...'),linc);
+      sp:=SMProgressDlg(
+        _l('#00215^eVocabulary'),
+        _l('#00849^eImporting word list (000000 words imported - 000000 new words)...'),
+        linc);
       linc:=0;
       Screen.Cursor:=crHourGlass;
       s:=Conv_Read;
@@ -848,7 +909,9 @@ begin
               if curcat='' then curcat:=unknowncat;
               if curcat='' then
               begin
-                curcat:=InputBox(_l('#00894^eVocabulary category^cKategorie slovíèek'), _l('#00895^eEnter category in which the new words will be added:^cZadejte kategorii do které budou pøidána nová slovíèka'),
+                curcat:=InputBox(
+                  _l('#00894^eVocabulary category'),
+                  _l('#00895^eEnter category in which the new words will be added:'),
                   'noname');
                 unknowncat:=curcat;
               end;
@@ -882,7 +945,12 @@ begin
           if linc mod 10=0 then
           begin
             sp.show;
-            sp.SetMessage(_l('#00901^eImporting word list (^cImportuji seznam slovíèek (')+inttostr(catw)+_l('#00902^e words imported - ^c slov importováno - ')+inttostr(addw)+_l('#00903^e new words)...^c nových slov...'));
+            sp.SetMessage(
+              _l('#00901^eImporting word list (')
+              +inttostr(catw)
+              +_l('#00902^e words imported - ')
+              +inttostr(addw)
+              +_l('#00903^e new words)...'));
             sp.SetProgress(linc);
           end;
         end;
@@ -893,16 +961,16 @@ begin
       TUserSheet.nocommitting:=true;
       TUserIdx.nocommitting:=true;
       sp.show;
-      sp.SetMessage(_l('#00904^eBatch-adding words ^cPøidávám slova ')+'('+inttostr(awf_insuser.Count div 12)+')');
+      sp.SetMessage(_l('#00904^eBatch-adding words ')+'('+inttostr(awf_insuser.Count div 12)+')');
       for i:=0 to (awf_insuser.Count div 12)-1 do
         TUser.Insert([awf_insuser[i*12],awf_insuser[i*12+1],awf_insuser[i*12+2],awf_insuser[i*12+3],awf_insuser[i*12+4],awf_insuser[i*12+5],
                       awf_insuser[i*12+6],awf_insuser[i*12+7],awf_insuser[i*12+8],awf_insuser[i*12+9],awf_insuser[i*12+10],awf_insuser[i*12+11]]);
       sp.show;
-      sp.SetMessage(_l('#00905^eBatch-adding word categories ^cPøidávám kategorie slov ')+'('+inttostr(awf_insusersheet.Count div 3)+')');
+      sp.SetMessage(_l('#00905^eBatch-adding word categories ')+'('+inttostr(awf_insusersheet.Count div 3)+')');
       for i:=0 to (awf_insusersheet.Count div 3)-1 do
         TUserSheet.Insert([awf_insusersheet[i*3],awf_insusersheet[i*3+1],awf_insusersheet[i*3+2]]);
       sp.show;
-      sp.SetMessage(_l('#00906^eBatch-adding character indexes ^cPøidávám indexy znakù ')+'('+inttostr(awf_insuseridx.Count div 3)+')');
+      sp.SetMessage(_l('#00906^eBatch-adding character indexes ')+'('+inttostr(awf_insuseridx.Count div 3)+')');
       for i:=0 to (awf_insuseridx.Count div 3)-1 do
         TUserIdx.Insert([awf_insuseridx[i*3],awf_insuseridx[i*3+1],awf_insuseridx[i*3+2]]);
       TUser.nocommitting:=false;
@@ -912,7 +980,7 @@ begin
       awf_insuseridx.Free;
       awf_insusersheet.Free;
       sp.show;
-      sp.SetMessage(_l('#00907^eRebuilding indexes^cVytváøím indexy...'));
+      sp.SetMessage(_l('#00907^eRebuilding indexes'));
       TUser.Reindex;
       TUserSheet.Reindex;
       TUserIdx.Reindex;
@@ -920,7 +988,10 @@ begin
       sp.Free;
       fMenu.ChangeUserData;
       ShowIt(false);
-      Application.MessageBox(pchar(_l('^e'+inttostr(catw)+' words imported'#13+inttostr(addw)+' new words^c'+inttostr(catw)+' slov importováno'#13+inttostr(addw)+' nových slov')),pchar(_l('#00851^eWord list imported^cSeznam slovíèek naimportován')),MB_ICONINFORMATION or MB_OK);
+      Application.MessageBox(
+        pchar(_l('^e'+inttostr(catw)+' words imported'#13+inttostr(addw)+' new words')),
+        pchar(_l('#00851^eWord list imported')),
+        MB_ICONINFORMATION or MB_OK);
     end;
   end;
   fMenu.RefreshCategory;
@@ -1043,11 +1114,16 @@ var i:integer;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
   begin
-    if Application.MessageBox(pchar(_l('#00925^eReally delete all these words?Opravdu smazat vsechna tato slova?')),
-      pchar(_l('#00926^eWarning^cVarovani')),MB_ICONWARNING or MB_YESNO)=idNo then exit;
+    if Application.MessageBox(
+      pchar(_l('#00925^eReally delete all these words?')),
+      pchar(_l('#00926^eWarning')),
+      MB_ICONWARNING or MB_YESNO)=idNo then exit;
   end else
   begin
-    if Application.MessageBox(pchar(_l('#00852^eReally delete this word?^cOpravdu chcete smazat toto slovo?')),pchar(_l('#00853^eConfirmation^cOvìøení')),MB_ICONWARNING or MB_YESNO)=idNo then
+    if Application.MessageBox(
+      pchar(_l('#00852^eReally delete this word?')),
+      pchar(_l('#00853^eConfirmation')),
+      MB_ICONWARNING or MB_YESNO)=idNo then
       exit;
   end;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
@@ -1092,8 +1168,12 @@ var cl:TStringList;
     i:integer;
     s:string;
 begin
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then if Application.MessageBox(pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?^cTato operace ovlivni mnoho slov.'#13#13'Chcete pokracovat?')),
-    pchar(_l('#00926^eWarning^cVarovani')),MB_ICONWARNING or MB_YESNO)=idNo then exit;
+  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
+    if Application.MessageBox(
+      pchar(_l('#00927^eThis operation will affect multiple words.'#13#13
+        +'Do you want to continue?')),
+      pchar(_l('#00926^eWarning')),
+      MB_ICONWARNING or MB_YESNO)=idNo then exit;
   cl:=TStringList.Create;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
@@ -1109,7 +1189,7 @@ end;
 
 procedure TfWords.Button14Click(Sender: TObject);
 begin
-  showmessage(_l('#00150^cFunkce není doposud implementována.^eFeature not implemented yet.'));
+  showmessage(_l('#00150^eFeature not implemented yet.'));
 end;
 
 
@@ -1248,21 +1328,32 @@ procedure TfWords.UserDetails_Button4Click(Sender: TObject);
 var i:integer;
     s:string;
 begin
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then if Application.MessageBox(pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?^cTato operace ovlivni mnoho slov.'#13#13'Chcete pokracovat?')),
-    pchar(_l('#00926^eWarning^cVarovani')),MB_ICONWARNING or MB_YESNO)=idNo then exit;
+  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
+    if Application.MessageBox(
+      pchar(_l('#00927^eThis operation will affect multiple words.'#13#13
+        +'Do you want to continue?')),
+      pchar(_l('#00926^eWarning')),
+      MB_ICONWARNING or MB_YESNO)=idNo then exit;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
     if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
-    AddWord(TUser.Str(TUserKanji),TUser.Str(TUserPhonetic),TUser.Str(TUserEnglish),fUserDetails.ComboBox2.text,'?',StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom,1);
+    AddWord(
+      TUser.Str(TUserKanji),
+      TUser.Str(TUserPhonetic),
+      TUser.Str(TUserEnglish),
+      fUserDetails.ComboBox2.text,
+      '?',
+      StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom,
+      1);
   end;
   ShowIt(false);
 end;
 
 procedure TfWords.Button15Click(Sender: TObject);
 begin
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00828^eVocabulary list^cSeznam slovíèek'));
+  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00828^eVocabulary list'));
 end;
 
 function perc(i,j:integer):string;
@@ -1282,8 +1373,8 @@ var i,j,k,l,m,n,o,p,q:integer;
 begin
   Screen.Cursor:=crHourGlass;
   if ChinesePresent then
-    fStatistics.Label10.Caption:=_l('#00854^ePresent^cPøítomna') else
-    fStatistics.Label10.Caption:=_l('#00855^eAbsent^cNepøítomna');
+    fStatistics.Label10.Caption:=_l('#00854^ePresent') else
+    fStatistics.Label10.Caption:=_l('#00855^eAbsent');
   TChar.First;
   i:=0;
   while not TChar.EOF do
@@ -1387,8 +1478,13 @@ var csl:TStringList;
     a,b:integer;
     tol:integer;
 begin
-  if Application.MessageBox(pchar(_l('#00946^cTato funkce vloží do schránky seznam nìkterých doposud nenauèených znakù v aktuálním seznamu slovíèek^eThis function inserts a list of some unlearned characters that are in current vocabulary list')+#13+
-  _l('#00945^cseøazený podle vhodnosti znakù k nauèení.'#13#13'Chcete tuto funkci spustit?^einto the clipboard sorted by usefullness.'#13#13'Do you want to start this function?')),pchar(_l('#00856^cDoporuèení znakù^eCharacter recommendation')),MB_ICONINFORMATION or MB_YESNO)=idYes then
+  if Application.MessageBox(
+    pchar(_l('#00946^eThis function inserts a list of some unlearned characters '
+      +'that are in current vocabulary list')+#13+
+      _l('#00945^einto the clipboard sorted by usefullness.'#13#13'Do you want '
+      +'to start this function?')),
+    pchar(_l('#00856^eCharacter recommendation')),
+    MB_ICONINFORMATION or MB_YESNO)=idYes then
   begin
     csl:=TStringList.Create;
     for i:=0 to wl.Count-1 do
@@ -1551,7 +1647,7 @@ procedure TfWords.UserCategory_SpeedButton2Click(Sender: TObject);
 var ct:string;
 begin
   if fUserFilters.ListBox1.ItemIndex=-1 then exit;
-  fNewCategory.Caption:=_l('^eEdit category^cUpravit kategorii');
+  fNewCategory.Caption:=_l('^eEdit category');
   TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex],false);
   fNewCategory.Edit1.Text:=StripCatName(TUserCat.Str(TUserCatName));
   case chr(TUserCat.Int(TUserCatType)) of
@@ -1570,7 +1666,7 @@ begin
     fMenu.RefreshCategory;
     fMenu.ChangeUserData;
   end;
-  fNewCategory.Caption:=_l('^eNew category^cNová kategorie')
+  fNewCategory.Caption:=_l('^eNew category')
 end;
 
 procedure TfWords.UserCategory_SpeedButton3Click(Sender: TObject);
@@ -1579,10 +1675,10 @@ var sl:TStringList;
 begin
   if fUserFilters.ListBox1.ItemIndex=-1 then exit;
   confirmed:=false;
-  if Application.MessageBox(pchar(_l(
-    '#00857^eDo you really want to delete the category including all word links to it?'+
-    '^cOpravdu chcete smazat kategorii vèetnì pøiøazení všech slov do ní?')),
-    pchar(_l('#00573^eWarning^cUpozornìní')),MB_ICONWARNING or MB_YESNO)=idYes then
+  if Application.MessageBox(
+    pchar(_l('#00857^eDo you really want to delete the category including all word links to it?')),
+    pchar(_l('#00573^eWarning')),
+    MB_ICONWARNING or MB_YESNO)=idYes then
   begin
     sl:=TStringList.Create;
     TUser.First;
@@ -1591,11 +1687,16 @@ begin
       ListWordCategories(TUser.Int(TUserIndex),sl,'',false);
       if (sl.Count=1) and (sl[0]=curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex]) then
       begin
-        if not confirmed then if Application.MessageBox(pchar(_l('^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?'+
-          '^cNìkterá slovíèka jsou pøiøazena jen do této kategorie. Chcete je odstranit ze slovíèek?')),
-          pchar(_l('#00885^eWarning^cVarování')),MB_ICONWARNING or MB_YESNO)=idNo then
+        if not confirmed then
+          if Application.MessageBox(
+            pchar(_l('^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?')),
+            pchar(_l('#00885^eWarning')),
+            MB_ICONWARNING or MB_YESNO)=idNo then
           begin
-            Application.MessageBox(pchar(_l('#00886^eCategory was not deleted.^cKategorie nebyla smazána.')),pchar(_l('#00887^eAborted^cZrušeno')),MB_ICONERROR or MB_OK);
+            Application.MessageBox(
+              pchar(_l('#00886^eCategory was not deleted.')),
+              pchar(_l('#00887^eAborted')),
+              MB_ICONERROR or MB_OK);
             exit;
           end;
         confirmed:=true;
@@ -1678,14 +1779,18 @@ begin
     try wnum:=strtoint(fWordList.Edit2.Text); except end;
     if (wnum<1) or (wnum>500) then
     begin
-      Application.MessageBox(pchar(_l('#00858^eInvalid number of words (must be between 1 and 500).^cNeplatný poèet slov (musí být mezi 1 a 500).')),
-        pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00858^eInvalid number of words (must be between 1 and 500).')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
       exit;
     end;
     if (wl.Count<3*wnum) then
     begin
-      Application.MessageBox(pchar(_l('#00859^eNumber of words in displayed list must be at least three times higher.^cPoèet slovíèek v zobrazeném seznamu musí být alespoò tøikrát vìtší.')),
-        pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+      Application.MessageBox(
+        pchar(_l('#00859^eNumber of words in displayed list must be at least three times higher.')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
       exit;
     end;
     Screen.Cursor:=crHourglass;
@@ -1849,7 +1954,7 @@ begin
   end;
 end;
 begin
-  fWait.Panel1.Caption:=_l('#00860^eBuilding learning list...^cVytváøím uèební seznam...');
+  fWait.Panel1.Caption:=_l('#00860^eBuilding learning list...');
   fWait.Show;
   fWordList.Label52.Caption:='';
   fWait.Invalidate;
@@ -1896,7 +2001,7 @@ begin
     begin
       if i mod 10=0 then
       begin
-        fWait.Panel1.Caption:=_l('#00860^eBuilding learning list...^cVytváøím uèební seznam...')+' ('+inttostr(trunc(i/wnum*100))+'%)';
+        fWait.Panel1.Caption:=_l('#00860^eBuilding learning list...')+' ('+inttostr(trunc(i/wnum*100))+'%)';
         fWait.Panel1.Invalidate;
         fWait.Panel1.Update;
         Application.ProcessMessages;
@@ -2239,7 +2344,7 @@ begin
        (TUser.Int(TUserScore)<2) then
       wl.Add(ll[i]);
   end;
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00861^eLearning list^cUèební seznam'));
+  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00861^eLearning list'));
   wl.Clear;
   wl.Assign(bk);
   bk.Free;
@@ -2290,26 +2395,34 @@ begin
         j:=0; try j:=strtoint(fWordList.Label23.Caption); except end;
         if (fWordList.RadioGroup2.ItemIndex<2) and ((i<1) or (i>500)) then
         begin
-          Application.MessageBox(pchar(_l('#00858^eInvalid number of words (must be between 1 and 500).^cNeplatný poèet slov (musí být mezi 1 a 500).')),
-            pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          Application.MessageBox(
+            pchar(_l('#00858^eInvalid number of words (must be between 1 and 500).')),
+            pchar(_l('#00020^eError')),
+            MB_ICONERROR or MB_OK);
           exit;
         end;
         if (fWordList.RadioGroup2.ItemIndex=0) and (2*i>j) then
         begin
-          Application.MessageBox(pchar(_l('#00862^eNumber of input words must be at least two times higher than number of selected words.^cPoèet vstupních slovíèek musí být alespoò dvakrát vìtší než poèet vybíraných slovíèek.')),
-            pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          Application.MessageBox(
+            pchar(_l('#00862^eNumber of input words must be at least two times higher than number of selected words.')),
+            pchar(_l('#00020^eError')),
+            MB_ICONERROR or MB_OK);
           exit;
         end;
         if (fWordList.RadioGroup2.ItemIndex=1) and (i>j) then
         begin
-          Application.MessageBox(pchar(_l('#00863^eNumber of input words must not be lower than number of selected words.^cPoèet vstupních slovíèek nesmí být menší než poèet vybíraných slovíèek.')),
-            pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          Application.MessageBox(
+            pchar(_l('#00863^eNumber of input words must not be lower than number of selected words.')),
+            pchar(_l('#00020^eError')),
+            MB_ICONERROR or MB_OK);
           exit;
         end;
         if j<1 then
         begin
-          Application.MessageBox(pchar(_l('#00864^eInput list cannot be empty.^cVstupní seznam nemùže být prázdný.')),
-            pchar(_l('#00020^eError^cChyba')),MB_ICONERROR or MB_OK);
+          Application.MessageBox(
+            pchar(_l('#00864^eInput list cannot be empty.')),
+            pchar(_l('#00020^eError')),
+            MB_ICONERROR or MB_OK);
           exit;
         end;
         if fWordList.RadioGroup2.ItemIndex=0 then result:=3 else result:=4;
@@ -2350,13 +2463,17 @@ begin
     2:result:=1;
     3:result:=2;
     4:begin
-        if Application.MessageBox(pchar(_l('#00865^eGenerated list will be lost. Do you want to continue?^cVygenerovaný seznam bude ztracen. Chcete pokraèovat?')),
-        pchar(_l('#00573^eWarning^cUpozornìní')),MB_YESNO or MB_ICONWARNING)=idYes then result:=2;
+        if Application.MessageBox(
+          pchar(_l('#00865^eGenerated list will be lost. Do you want to continue?')),
+          pchar(_l('#00573^eWarning')),
+          MB_YESNO or MB_ICONWARNING)=idYes then result:=2;
       end;
     5:result:=4;
     6,7:begin
-        if Application.MessageBox(pchar(_l('#00866^eCurrent test data will be lost. Do you want to continue?^cSouèasná testovací data budou ztracena. Chcete pokraèovat?')),
-        pchar(_l('#00573^eWarning^cUpozornìní')),MB_YESNO or MB_ICONWARNING)=idYes then result:=5;
+        if Application.MessageBox(
+          pchar(_l('#00866^eCurrent test data will be lost. Do you want to continue?')),
+          pchar(_l('#00573^eWarning')),
+          MB_YESNO or MB_ICONWARNING)=idYes then result:=5;
       end;
     8:result:=4;
     9:result:=0;
@@ -2663,7 +2780,7 @@ begin
   if StringGrid1.Selection.Bottom-StringGrid1.Selection.Top>0 then
   begin
     Reset;
-    curkanji:=UnicodeToHex(_l('#00928^e<multiple words>^c<více slov>'));
+    curkanji:=UnicodeToHex(_l('#00928^e<multiple words>'));
     fUserDetails.ListBox2.Items.Clear;
     cl:=TStringList.Create;
     for j:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
@@ -2694,10 +2811,10 @@ begin
   curphonetic:=TUser.Str(TUserPhonetic);
   fExamples.SetExamples(curkanji);
   case TUser.Int(TUserScore) of
-    0:fUserDetails.RxLabel3.Caption:=_l('#00638^eProblematic^cProblematické');
-    1:fUserDetails.RxLabel3.Caption:=_l('#00639^eUnlearned^cNenauèené');
-    2:fUserDetails.RxLabel3.Caption:=_l('#00640^eLearned^cNauèené');
-    3:fUserDetails.RxLabel3.Caption:=_l('#00641^eMastered^cDobøe nauèené');
+    0:fUserDetails.RxLabel3.Caption:=_l('#00638^eProblematic');
+    1:fUserDetails.RxLabel3.Caption:=_l('#00639^eUnlearned');
+    2:fUserDetails.RxLabel3.Caption:=_l('#00640^eLearned');
+    3:fUserDetails.RxLabel3.Caption:=_l('#00641^eMastered');
   end;
   fUserDetails.Edit4.Text:=TUser.Str(TUserEnglish);
   fUserDetails.Edit4.ReadOnly:=false;
@@ -2739,8 +2856,10 @@ var i,ms:integer;
     s:string;
     b:boolean;
 begin
-  if Application.MessageBox(pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?^cTato operace ovlivni mnoho slov.'#13#13'Chcete pokracovat?')),
-    pchar(_l('#00926^eWarning^cVarovani')),MB_ICONWARNING or MB_YESNO)=idNo then exit;
+  if Application.MessageBox(
+    pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?')),
+    pchar(_l('#00926^eWarning')),
+    MB_ICONWARNING or MB_YESNO)=idNo then exit;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
     s:=wl[i-1];

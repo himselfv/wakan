@@ -36,10 +36,6 @@ type
     procedure SpeedButton17Click(Sender: TObject);
     procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var

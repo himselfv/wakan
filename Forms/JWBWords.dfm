@@ -1,10 +1,10 @@
 object fWords: TfWords
   Left = 374
   Top = 508
-  Width = 792
-  Height = 489
   BorderStyle = bsSizeToolWin
-  Caption = '#00215^eVocabulary^cSlov˚Gka'
+  Caption = '#00215^eVocabulary'
+  ClientHeight = 455
+  ClientWidth = 776
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,7 +25,7 @@ object fWords: TfWords
     Left = 776
     Top = 0
     Width = 0
-    Height = 453
+    Height = 455
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 0
@@ -34,7 +34,7 @@ object fWords: TfWords
     Left = 0
     Top = 0
     Width = 776
-    Height = 453
+    Height = 455
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
@@ -42,25 +42,29 @@ object fWords: TfWords
       Left = 0
       Top = 0
       Width = 776
-      Height = 453
+      Height = 455
       Align = alClient
       BevelInner = bvRaised
       BevelOuter = bvLowered
       TabOrder = 0
+      DesignSize = (
+        776
+        455)
       object Shape7: TShape
         Left = 10
         Top = 26
         Width = 764
-        Height = 403
+        Height = 407
         Anchors = [akLeft, akTop, akRight, akBottom]
         Brush.Color = clWindow
+        ExplicitHeight = 403
       end
       object RxLabel1: TRxLabel
         Left = 8
         Top = 5
-        Width = 324
+        Width = 185
         Height = 16
-        Caption = '#00828^eVocabulary list^cSeznam slovÌËek'
+        Caption = '#00828^eVocabulary list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -13
@@ -71,9 +75,9 @@ object fWords: TfWords
       object Label24: TLabel
         Left = 24
         Top = 42
-        Width = 482
+        Width = 240
         Height = 19
-        Caption = '#00155^eNo words were found.^cé·dn· slova nebyla nalezena.'
+        Caption = '#00155^eNo words were found.'
         Color = clBtnFace
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -86,14 +90,14 @@ object fWords: TfWords
       end
       object SpeedButton1: TSpeedButton
         Left = 10
-        Top = 435
+        Top = 439
         Width = 138
         Height = 17
-        Hint = '#00829^eAdd word^cP¯idat slovÌËko'
+        Hint = '#00829^eAdd word'
         AllowAllUp = True
         Anchors = [akLeft, akBottom]
         GroupIndex = 1
-        Caption = '#00315^eExamples^cP¯Ìklady'
+        Caption = '#00315^eExamples'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -103,17 +107,18 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton1Click
+        ExplicitTop = 435
       end
       object SpeedButton2: TSpeedButton
         Left = 154
-        Top = 435
+        Top = 439
         Width = 138
         Height = 17
-        Hint = '#00830^eList settings^cNastavenÌ seznamu'
+        Hint = '#00830^eList settings'
         AllowAllUp = True
         Anchors = [akLeft, akBottom]
         GroupIndex = 2
-        Caption = '#00830^eList settings^cNastavenÌ seznamu'
+        Caption = '#00830^eList settings'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -123,17 +128,18 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton2Click
+        ExplicitTop = 435
       end
       object SpeedButton3: TSpeedButton
         Left = 466
-        Top = 435
+        Top = 439
         Width = 90
         Height = 17
-        Hint = '#00831^eCategories (Ctrl-Alt-T)^cKategorie (Ctrl-Alt-T)'
+        Hint = '#00831^eCategories (Ctrl-Alt-T)'
         AllowAllUp = True
         Anchors = [akLeft, akBottom]
         GroupIndex = 3
-        Caption = '#00634^eCategories^cKategorie'
+        Caption = '#00634^eCategories'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -144,17 +150,18 @@ object fWords: TfWords
         ShowHint = True
         Visible = False
         OnClick = SpeedButton3Click
+        ExplicitTop = 435
       end
       object SpeedButton4: TSpeedButton
         Left = 298
-        Top = 435
+        Top = 439
         Width = 159
         Height = 17
-        Hint = '#00832^eWord details^cDetaily slovÌËka'
+        Hint = '#00832^eWord details'
         AllowAllUp = True
         Anchors = [akLeft, akBottom]
         GroupIndex = 4
-        Caption = '#00832^eWord details^cDetaily slovÌËka'
+        Caption = '#00832^eWord details'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -164,12 +171,13 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton4Click
+        ExplicitTop = 435
       end
       object StringGrid1: TStringGrid
         Left = 11
         Top = 27
         Width = 762
-        Height = 401
+        Height = 405
         Anchors = [akLeft, akTop, akRight, akBottom]
         BorderStyle = bsNone
         ColCount = 4
@@ -195,9 +203,9 @@ object fWords: TfWords
         Top = 6
         Width = 71
         Height = 21
-        Hint = '#00833^eExport vocabulary^cExportovat slovÌËka'
+        Hint = '#00833^eExport vocabulary'
         Anchors = [akTop, akRight]
-        Caption = '#00934^eExport^cExport'
+        Caption = '#00934^eExport'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -212,9 +220,9 @@ object fWords: TfWords
         Top = 6
         Width = 72
         Height = 21
-        Hint = '#00834^eImport vocabulary^cImportovat slovÌËka'
+        Hint = '#00834^eImport vocabulary'
         Anchors = [akTop, akRight]
-        Caption = '#00935^eImport^cImport'
+        Caption = '#00935^eImport'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -229,11 +237,9 @@ object fWords: TfWords
         Top = 6
         Width = 75
         Height = 21
-        Hint = 
-          '#00835^ePrint vocabulary list (Ctrl-F8)^cTisknout seznam slovÌËe' +
-          'k (Ctrl-F8)'
+        Hint = '#00835^ePrint vocabulary list (Ctrl-F8)'
         Anchors = [akTop, akRight]
-        Caption = '#00382^ePrint^cTisk'
+        Caption = '#00382^ePrint'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -250,9 +256,9 @@ object fWords: TfWords
         Height = 21
         Hint = 
           '#00836^eRecommend characters for learning based on current vocab' +
-          'ulary^cDoporuËit znaky k nauËenÌ podle aktu·lnÌch slovÌËek'
+          'ulary'
         Anchors = [akTop, akRight]
-        Caption = '#00837^eRecommend kanji^cDoporuËit kanji'
+        Caption = '#00837^eRecommend kanji'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -267,11 +273,9 @@ object fWords: TfWords
         Top = 6
         Width = 111
         Height = 21
-        Hint = 
-          '#00838^eAutomatically generate learning list^cAutomaticky genero' +
-          'vat uËebnÌ seznam'
+        Hint = '#00838^eAutomatically generate learning list'
         Anchors = [akTop, akRight]
-        Caption = '#00839^cUËebnÅEseznam^eLearning list'
+        Caption = '#00839^eLearning list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -286,9 +290,9 @@ object fWords: TfWords
         Top = 6
         Width = 71
         Height = 21
-        Hint = '#00936^eAdd to vocabulary^cP¯idat do slovÌËek'
+        Hint = '#00936^eAdd to vocabulary'
         Anchors = [akTop, akRight]
-        Caption = '#00534^eAdd...^cP¯idat...'
+        Caption = '#00534^eAdd...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -301,7 +305,7 @@ object fWords: TfWords
     end
     object Panel4: TPanel
       Left = 0
-      Top = 453
+      Top = 455
       Width = 776
       Height = 0
       Align = alBottom
@@ -310,7 +314,7 @@ object fWords: TfWords
     end
     object Panel5: TPanel
       Left = 0
-      Top = 453
+      Top = 455
       Width = 776
       Height = 0
       Align = alBottom

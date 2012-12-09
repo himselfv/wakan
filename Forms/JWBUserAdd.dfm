@@ -2,7 +2,7 @@ object fUserAdd: TfUserAdd
   Left = 328
   Top = 259
   BorderStyle = bsDialog
-  Caption = '#00057^eAdd into vocabulary^cPøidat do slovíèek'
+  Caption = '#00057^eAdd into vocabulary'
   ClientHeight = 225
   ClientWidth = 671
   Color = clBtnFace
@@ -15,14 +15,17 @@ object fUserAdd: TfUserAdd
   Position = poScreenCenter
   Scaled = False
   OnClose = FormClose
+  DesignSize = (
+    671
+    225)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 134
+    Width = 94
     Height = 13
-    Caption = '#00060^ePhonetic:^cÈtení:'
+    Caption = '#00060^ePhonetic:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -50,9 +53,9 @@ object fUserAdd: TfUserAdd
   object Label7: TLabel
     Left = 8
     Top = 80
-    Width = 268
+    Width = 161
     Height = 13
-    Caption = '#00690^eWritten (from clipboard):^cZápis (ze schránky):'
+    Caption = '#00690^eWritten (from clipboard):'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -81,10 +84,10 @@ object fUserAdd: TfUserAdd
   object Label2: TLabel
     Left = 6
     Top = 181
-    Width = 154
+    Width = 94
     Height = 13
     Anchors = [akTop, akRight]
-    Caption = '#00059^eCategory:^cKategorie:'
+    Caption = '#00059^eCategory:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -95,9 +98,9 @@ object fUserAdd: TfUserAdd
   object Label4: TLabel
     Left = 8
     Top = 136
-    Width = 145
+    Width = 93
     Height = 13
-    Caption = '#00691^eMeaning:^cVýznam:'
+    Caption = '#00691^eMeaning:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -139,7 +142,6 @@ object fUserAdd: TfUserAdd
     Width = 371
     Height = 21
     Anchors = [akTop, akRight]
-    ItemHeight = 13
     TabOrder = 2
   end
   object BitBtn1: TBitBtn
@@ -148,9 +150,11 @@ object fUserAdd: TfUserAdd
     Width = 129
     Height = 25
     Anchors = [akTop, akRight]
-    Caption = '#00062^eAdd to vocabulary^cPøidat do slovíèek'
-    TabOrder = 3
+    Caption = '#00062^eAdd to vocabulary'
+    DoubleBuffered = True
     Kind = bkOK
+    ParentDoubleBuffered = False
+    TabOrder = 3
   end
   object BitBtn2: TBitBtn
     Left = 537
@@ -158,8 +162,10 @@ object fUserAdd: TfUserAdd
     Width = 129
     Height = 25
     Anchors = [akTop, akRight]
-    Caption = '#00050^eCancel^cStorno'
-    TabOrder = 4
+    Caption = '#00050^eCancel'
+    DoubleBuffered = True
     Kind = bkCancel
+    ParentDoubleBuffered = False
+    TabOrder = 4
   end
 end

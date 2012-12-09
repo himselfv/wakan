@@ -2,7 +2,7 @@ object fRadical: TfRadical
   Left = 454
   Top = 263
   BorderStyle = bsDialog
-  Caption = '#00387^eRadical list^cSeznam radik·l'
+  Caption = '#00387^eRadical list'
   ClientHeight = 536
   ClientWidth = 770
   Color = clBtnFace
@@ -18,14 +18,17 @@ object fRadical: TfRadical
   OnDestroy = FormDestroy
   OnResize = FormResize
   OnShow = FormShow
+  DesignSize = (
+    770
+    536)
   PixelsPerInch = 96
   TextHeight = 13
   object RxLabel17: TRxLabel
     Left = 24
     Top = 24
-    Width = 353
+    Width = 186
     Height = 18
-    Caption = '#00387^eRadical list^cSeznam radik·l˘'
+    Caption = '#00387^eRadical list'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -48,8 +51,7 @@ object fRadical: TfRadical
     Anchors = [akTop, akRight]
     Caption = 
       '#00388^eMulti-radical filter method: Select any suspected radica' +
-      'l by clicking the mouse'#13#10'^cMulti-radik·lov· v˝bÏrov· metoda: Zvo' +
-      'lte vöechny podez¯elÈ radik·ly pomocÌ myöi'
+      'l by clicking the mouse'#13#10
   end
   object Label2: TLabel
     Left = 360
@@ -59,8 +61,7 @@ object fRadical: TfRadical
     Anchors = [akTop, akRight]
     Caption = 
       '#00389^eParts of characters filter method: Select all parts that' +
-      ' occur in character'#13#10'^cV˝bÏr pomocÌ Ë·stÌ znaku: Vyberte vöechny' +
-      ' Ë·sti, kterÈ jsou souË·stÌ znaku '
+      ' occur in character'#13#10
   end
   object DrawGrid1: TDrawGrid
     Left = 8
@@ -91,16 +92,14 @@ object fRadical: TfRadical
     Width = 225
     Height = 25
     Anchors = [akLeft, akBottom]
-    Caption = '#00390^eSet filter^cNastavit filtr'
+    Caption = '#00390^eSet filter'
     Default = True
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -119,6 +118,10 @@ object fRadical: TfRadical
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 1
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 600
@@ -126,16 +129,18 @@ object fRadical: TfRadical
     Width = 161
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = '#00170^eClose^cZav¯Ìt'
+    Caption = '#00170^eClose'
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
+    Kind = bkCancel
+    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 2
     OnClick = BitBtn2Click
-    Kind = bkCancel
   end
   object CheckBox1: TCheckBox
     Left = 256
@@ -143,7 +148,7 @@ object fRadical: TfRadical
     Width = 121
     Height = 17
     Anchors = [akLeft, akBottom]
-    Caption = '#00391^eDisplay variants^cZobrazit varianty'
+    Caption = '#00391^eDisplay variants'
     Checked = True
     State = cbChecked
     TabOrder = 3
@@ -155,9 +160,7 @@ object fRadical: TfRadical
     Width = 193
     Height = 17
     Anchors = [akLeft, akBottom]
-    Caption = 
-      '#00392^eDisplay learned radicals in blue^cZobrazit nauËenÅEradik' +
-      '·ly mod¯e'
+    Caption = '#00392^eDisplay learned radicals in blue'
     TabOrder = 4
     OnClick = CheckBox2Click
   end
@@ -167,9 +170,7 @@ object fRadical: TfRadical
     Width = 185
     Height = 17
     Anchors = [akLeft, akBottom]
-    Caption = 
-      '#00393^eDisplay uncommon radicals gray^cZobrazit vz·cnÅEradik·ly' +
-      ' öed'
+    Caption = '#00393^eDisplay uncommon radicals gray'
     Checked = True
     State = cbChecked
     TabOrder = 5
@@ -180,12 +181,12 @@ object fRadical: TfRadical
     Top = 8
     Width = 401
     Height = 35
-    Caption = '#00394^eSearch method^cV˝bÅEovÅEmetoda'
+    Caption = '#00394^eSearch method'
     Columns = 2
     ItemIndex = 0
     Items.Strings = (
-      '#00395^eParts of characters^c»·sti znaku'
-      '#00396^eClassical radicals^cKlasickÈ radik·ly')
+      '#00395^eParts of characters'
+      '#00396^eClassical radicals')
     TabOrder = 6
     OnClick = RadioGroup1Click
   end

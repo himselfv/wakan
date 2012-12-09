@@ -2,7 +2,7 @@ object fDictImport: TfDictImport
   Left = 184
   Top = 231
   BorderStyle = bsDialog
-  Caption = '#00071^eDictionary import^cImport slovníku'
+  Caption = '#00071^eDictionary import'
   ClientHeight = 548
   ClientWidth = 535
   Color = clBtnFace
@@ -20,11 +20,9 @@ object fDictImport: TfDictImport
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 409
+    Width = 227
     Height = 13
-    Caption = 
-      '#00072^eFile name (without extension):^cNázev souboru (bez pøípo' +
-      'ny):'
+    Caption = '#00072^eFile name (without extension):'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -35,9 +33,9 @@ object fDictImport: TfDictImport
   object Label2: TLabel
     Left = 8
     Top = 32
-    Width = 259
+    Width = 153
     Height = 13
-    Caption = '#00073^eDictionary name:^cNázev slovníku:'
+    Caption = '#00073^eDictionary name:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -48,11 +46,9 @@ object fDictImport: TfDictImport
   object Label3: TLabel
     Left = 8
     Top = 56
-    Width = 459
+    Width = 218
     Height = 13
-    Caption = 
-      '#00074^eIncluded EDICT format files:^cImportované soubory ve for' +
-      'mátu EDICT:'
+    Caption = '#00074^eIncluded EDICT format files:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -63,9 +59,9 @@ object fDictImport: TfDictImport
   object Label4: TLabel
     Left = 8
     Top = 288
-    Width = 154
+    Width = 104
     Height = 13
-    Caption = '#00075^eVersion:^cVerze:'
+    Caption = '#00075^eVersion:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -76,9 +72,9 @@ object fDictImport: TfDictImport
   object Label5: TLabel
     Left = 8
     Top = 392
-    Width = 175
+    Width = 126
     Height = 13
-    Caption = '#00035^eDescription:^cPopis:'
+    Caption = '#00035^eDescription:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -136,7 +132,7 @@ object fDictImport: TfDictImport
     Top = 344
     Width = 409
     Height = 41
-    Caption = '#00076^ePriority^cPriorita'
+    Caption = '#00076^ePriority'
     Columns = 5
     ItemIndex = 0
     Items.Strings = (
@@ -168,16 +164,14 @@ object fDictImport: TfDictImport
     Top = 512
     Width = 113
     Height = 25
-    Caption = '#00077^eBuild^cVytvoøit'
+    Caption = '#00077^eBuild'
     Default = True
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 7
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -196,6 +190,10 @@ object fDictImport: TfDictImport
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 7
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 344
@@ -203,15 +201,13 @@ object fDictImport: TfDictImport
     Width = 105
     Height = 25
     Cancel = True
-    Caption = '#00007^eCancel^cZrušit'
+    Caption = '#00007^eCancel'
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 8
-    OnClick = BitBtn2Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -230,13 +226,17 @@ object fDictImport: TfDictImport
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 8
+    OnClick = BitBtn2Click
   end
   object Button1: TButton
     Left = 424
     Top = 72
     Width = 105
     Height = 25
-    Caption = '#00078^eAdd^cPøidat'
+    Caption = '#00078^eAdd'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -251,7 +251,7 @@ object fDictImport: TfDictImport
     Top = 104
     Width = 105
     Height = 25
-    Caption = '#00079^eRemove^cOdebrat'
+    Caption = '#00079^eRemove'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -266,12 +266,12 @@ object fDictImport: TfDictImport
     Top = 304
     Width = 409
     Height = 41
-    Caption = '#00080^eLanguage^cJazyk'
+    Caption = '#00080^eLanguage'
     Columns = 2
     ItemIndex = 0
     Items.Strings = (
-      '#00081^eJapanese^cJaponština'
-      '#00082^eMandarin chinese^cMandarínská èínština')
+      '#00081^eJapanese'
+      '#00082^eMandarin chinese')
     TabOrder = 11
   end
   object CheckBox1: TCheckBox
@@ -279,9 +279,7 @@ object fDictImport: TfDictImport
     Top = 440
     Width = 513
     Height = 17
-    Caption = 
-      '#00083^eBuild with word index (allows English searching)^cVybudo' +
-      'vat index slov (umožòuje anglické vyhledávání)'
+    Caption = '#00083^eBuild with word index (allows English searching)'
     Checked = True
     State = cbChecked
     TabOrder = 12
@@ -293,7 +291,7 @@ object fDictImport: TfDictImport
     Height = 17
     Caption = 
       '#00084^eBuild with character index (enables character compounds ' +
-      'display)^cVybudovat index znakù (umožòuje zobrazení složenin)'
+      'display)'
     Checked = True
     State = cbChecked
     TabOrder = 13
@@ -305,8 +303,7 @@ object fDictImport: TfDictImport
     Height = 17
     Caption = 
       '#00914^eBuild with frequency information (requires WORDFREQ_CK.U' +
-      'NI)^cVytváøet slovník s informací o frekvenci slov (vyžaduje WOR' +
-      'DFREQ_CK.UNI)'
+      'NI)'
     TabOrder = 14
   end
   object OpenDialog1: TOpenDialog
