@@ -684,7 +684,7 @@ begin
   inRubyText := false;
 
   idx := 1;
-  while idx<flength(s) do begin
+  while idx<=flength(s) do begin
     c := fgetch(s,idx);
 
    //Inside of a ruby skip everything until close
@@ -1865,10 +1865,7 @@ begin
       end;
       if cont then
       begin
-        wxo:=wx;
         if cy>=doc.Count then showmessage('Internal line-computing error!');
-//        if fSettings.CheckBox43.Checked then while GetDocTr(wx,cy)[1]='<'do dec(wx);
-        if wx<=cx then wx:=wxo;
         if doall then
           ll.Add(cx, cy, wx-cx)
         else
@@ -2746,7 +2743,7 @@ begin
   inslen:=0;
   insertbuffer:='';
 end;
-
+                                  
 
 procedure TfTranslate.PasteOp;
 var s: string;
