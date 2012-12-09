@@ -70,7 +70,7 @@ uses
 begin
   Application.Initialize;
   Application.Title := 'wakan';
-  Application.HelpFile := 'C:\Projects\Jalet\wakan_en.chm';
+  Application.HelpFile := 'wakan_en.chm';
   Application.CreateForm(TfMenu, fMenu);
   Application.CreateForm(TfKanji, fKanji);
   Application.CreateForm(TfRadical, fRadical);
