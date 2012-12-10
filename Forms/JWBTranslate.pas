@@ -202,7 +202,7 @@ type
     function GetInsertKana(display:boolean):string;
 
   protected //Ruby stuff
-    procedure CollapseRuby(var s: string; var sp: TCharacterLineProps);
+    procedure CollapseRuby(var s: FString; var sp: TCharacterLineProps);
 
   protected //File opening/saving
     FFileChanged: boolean;
@@ -579,7 +579,7 @@ end;
 //Receives a string of characters and their properties.
 //Parses all aozora-ruby sequences and converts them to annotations, removing from the line
 //Has no particular adherrence to TfTranslate, we should probably move it someplace else.
-procedure TfTranslate.CollapseRuby(var s: string; var sp: TCharacterLineProps);
+procedure TfTranslate.CollapseRuby(var s: FString; var sp: TCharacterLineProps);
 var
   idx: integer; //current char index
   c: FChar; //current char
@@ -752,7 +752,6 @@ begin
   while c<>'' do
  {$ENDIF}
   begin
-
    //Default properties for this character
     cp.Reset;
     cp.SetChar('-', 9, 0, 1);
@@ -800,6 +799,29 @@ var i,j,k: integer;
       Conv_WriteChar(fgetch(reading,i));
   end;
 
+  procedure FinalizeRuby();
+  begin
+    if AnnotMode=amKana then begin
+      if reading<>'' then
+        reading:=UH_SPACE+reading
+      else
+       //Don't have a reading, write a char (maybe we didn't want it expanded)
+        reading:=GetDoc(j,i);
+      outp(reading);
+    end else
+    if (AnnotMode=amRuby) or explicitRuby then begin
+     //We don't check that reading is not empty, because if it was empty
+     //we wouldn't have set inReading, except if it was explicit ruby,
+     //in which case we must write it even if empty.
+      reading := UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE;
+      outp(reading);
+    end else
+      Conv_WriteChar(GetDoc(j,i));
+    inReading := false;
+    reading := '';
+    explicitRuby := false;
+  end;
+
 begin
   inReading := false;
   rootLen := -1;
@@ -818,25 +840,7 @@ begin
         or (explicitRuby and not (cfRoot in doctr[i].chars[j].flags))
         or (rootLen=0) then begin
          //=> End of annotated chain
-          if AnnotMode=amKana then begin
-            if reading<>'' then
-              reading:=UH_SPACE+reading
-            else
-             //Don't have a reading, write a char (maybe we didn't want it expanded)
-              reading:=GetDoc(j,i);
-            outp(reading);
-          end else
-          if AnnotMode=amRuby then begin
-           //We don't check that reading is not empty, because if it was empty
-           //we wouldn't have set inReading, except if it was explicit ruby,
-           //in which case we must write it even if empty.
-            reading := UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE;
-            outp(reading);
-          end else
-            Conv_WriteChar(GetDoc(j,i));
-          inReading := false;
-          reading := '';
-          explicitRuby := false;
+          FinalizeRuby;
          //and we continue through to the "no inReading" case where we might start a new chain
         end else begin
          //Inside of annotated chain
@@ -904,11 +908,14 @@ begin
 
         if ((AnnotMode<>amKana) or (reading=''))
         //placeholders are virtual
-        and ((AnnotMode<>amRuby) or (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER)) then
+        and (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER) then
           Conv_WriteChar(GetDoc(j,i));
       end;
 
     end;
+
+    if inReading then
+      FinalizeRuby;
     Conv_WriteChar(UH_CR);
     Conv_Write(UH_LF);
   end;
