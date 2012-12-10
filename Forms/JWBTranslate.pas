@@ -782,6 +782,8 @@ Ruby saving strategy:
 - We always save "hard ruby" since if its present then we have loaded it from the file
 - As for soft ruby, we save that to the file according to user's choice.
 }
+//Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
+//and just write strings here.
 
 procedure TfTranslate.SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
 var i,j,k: integer;
