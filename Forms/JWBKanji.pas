@@ -504,7 +504,7 @@ begin
   DrawGrid1.Selection:=mr;
   if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then DrawGrid1.TopRow:=mr.Top-1 else
   DrawGrid1.TopRow:=0;
-  curkanji:=UH_NONE;
+  curkanji:=UH_NOCHAR;
   DrawGrid1SelectCell(self,mr.Left,mr.Top,b);
   Screen.Cursor:=crDefault;
   DrawGrid1.Invalidate;
@@ -1283,7 +1283,7 @@ initialization
   calfonts:=TStringList.Create;
   ki:=TStringList.Create;
   kval:=TStringList.Create;
-  curkanji:=UH_NONE;
+  curkanji:=UH_NOCHAR;
   curradical:='';
   curradsearch:='';
 

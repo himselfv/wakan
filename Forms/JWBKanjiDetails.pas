@@ -311,7 +311,7 @@ var piny,engy,kory,s,cany,chiny:string;
     scat:string;
     cv_i1, cv_i2: integer;
 begin
-  curkanji:=UH_NONE;
+  curkanji:=UH_NOCHAR;
   curradical:='';
   curon:='';
   curkun:='';

@@ -593,17 +593,28 @@ var
 
   { Tries to guess where's the start of the annotated word.
    Receives:
-     idx -- index of a first character just before the annotation -- 0..Length(s)
+     idx -- index of an annotation open char -- 0..Length(s)
    Returns: 1..idx-1
-   When given 0, returns 0 which means ruby was the first char on the line. }
+   When given 0, returns 0 which means ruby was the first char on the line.
+   Rarely returns idx which means, all chars before are already ruby-fied. }
   function GuessLastTextBreak(curidx: integer): integer;
   begin
-    while (curidx>1) and (sp.chars[curidx-1].wordstate='-') do //not yet annotated
+   //Note: sp.chars is 0-indexes, curidx is 1-indexed
+    if curidx<=1 then begin //beginning of the string
+      Result := curidx;
+      exit;
+    end else
+    if (sp.chars[(curidx-1)-1].wordstate<>'-') then begin //char before is already annotated
+      Result := curidx;
+      exit;
+    end;
+    Dec(curidx); //ok we have a char just before, move to it and start comparing EvalChar
+    while (curidx>1) and (sp.chars[(curidx-1)-1].wordstate='-') do //char before is not yet annotated
     begin
      //Might do more guesswork in the future
-      if EvalChar(fgetch(s, curidx))<>EvalChar(fgetch(s, curidx-1)) then
+      if EvalChar(fgetch(s, curidx))<>EvalChar(fgetch(s, curidx-1)) then //and char before is of the same kind
         break;
-      Dec(curidx);
+      Dec(curidx); //go to char before
     end;
     Result := curidx;
   end;
@@ -709,7 +720,7 @@ begin
     if c=UH_AORUBY_OPEN then
     begin
       if idxLastTextBreak<1 then
-        idxLastTextBreak := GuessLastTextBreak(idx-1);
+        idxLastTextBreak := GuessLastTextBreak(idx);
       idxRubyOpen := idx;
       inRubyText := true;
     end;
@@ -1772,7 +1783,7 @@ var st0,lst0,st2,st3:boolean;
     worddict:integer; //word's dicidx
     lastworddict:integer; //last word's dicidx
     colback, coltext:TColor; //standard colors for editor's text and background
-    gd1,gd2,gd0:string;
+    gd1,gd2,gd0:FChar;
     a:integer;
 
   inRubyTag: boolean;
@@ -1812,9 +1823,9 @@ var st0,lst0,st2,st3:boolean;
   begin
     s := doc[yp];
     Dec(xp); //once, because the current symbol doesn't matter
-    while (xp>0) and (s[xp]<>tagOpenSymbol) and (s[xp]<>tagCloseSymbol) do
+    while (xp>0) and (fgetch(s, xp)<>tagOpenSymbol) and (fgetch(s, xp)<>tagCloseSymbol) do
       Dec(xp);
-    Result := (xp>0) and (s[xp]=tagOpenSymbol);
+    Result := (xp>0) and (fgetch(s, xp)=tagOpenSymbol);
   end;
 
 begin
@@ -1969,6 +1980,9 @@ begin
     end; }
     while (cx<wx) and ((cx<flength(doc[cy])) or ((kanaq<>'') and st0)) do
     try
+     { Note that we can get here even if CX is outside the legal characters for the string.
+      This happens if we have some reading remainder in kanaq. Be careful. }
+
       wordstate:=doctr[cy].chars[cx].wordstate;
       learnstate:=doctr[cy].chars[cx].learnstate;
       CalcBlockFromTo(false);
@@ -1988,12 +2002,15 @@ begin
       undersolid:=worddict<>0;
       if (upcase(wordstate)<>'F') and (upcase(wordstate)<>'D') then reading:='';
 
-      if (fSettings.CheckBox36.Checked) then
-        FixReading(GetDoc(cx-1,cy),GetDoc(cx,cy),GetDoc(cx+1,cy),reading);
+      if fSettings.CheckBox36.Checked then begin
+        if cx>0 then gd0 := GetDoc(cx-1,cy) else gd0 := UH_NOCHAR;
+        if cx<flength(doc[cy]) then gd2 := GetDoc(cx+1,cy) else gd2 := UH_NOCHAR;
+        FixReading(gd0,GetDoc(cx,cy),gd2,reading);
+      end;
 
-      if doc[cy][cx+1]=UH_AORUBY_TAG_OPEN then
+      if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_OPEN then
         inRubyTag := true;
-      if doc[cy][cx+1]=UH_AORUBY_COMM_OPEN then
+      if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_OPEN then
         inRubyComment := true;
      //will check for closers after we draw current symbol as is (closers are still inside the tag)
 
@@ -2191,9 +2208,9 @@ begin
         DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
 
      //we check for openers before rendering, and for closers here
-      if doc[cy][cx+1]=UH_AORUBY_TAG_CLOSE then
+      if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
         inRubyTag := false;
-      if doc[cy][cx+1]=UH_AORUBY_COMM_CLOSE then
+      if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
         inRubyComment := false;
 
       if undersolid and st2 and fSettings.cbDisplayLines.Checked then

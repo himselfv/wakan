@@ -44,7 +44,7 @@ const
   Names MUST be descriptive. If you name something 'UH_SPACE' it means it FUNCTIONS as space,
   not just looks like one. }
  {$IFNDEF UNICODE}
-  UH_NONE:FChar = ''; //for initializing stuff with it
+  UH_NOCHAR:FChar = ''; //for initializing stuff with it
   UH_ZERO:FChar = '0000'; //when you need zero char
   UH_LF: FChar = '000A'; //linefeed
   UH_CR: FChar = '000D'; //carriage return
@@ -85,7 +85,7 @@ const
     //but we still have to store it in the decoded form
 
  {$ELSE}
-  UH_NONE:FChar = #$0000;
+  UH_NOCHAR:FChar = #$0000;
   UH_ZERO:FChar = #$0000;
   UH_LF: FChar = #$000A;
   UH_CR: FChar = #$000D;
@@ -168,6 +168,7 @@ function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function fcopy(const s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
+function fgetchl(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
 function hextofstr(const s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
@@ -392,12 +393,26 @@ begin
 {$ENDIF}
 end;
 
+//Returns a character from the string
 function fgetch(const s: FString; Index: integer): FChar;
 begin
 {$IFDEF UNICODE}
   Result := s[Index];
 {$ELSE}
   Result := fcopy(s, Index, 1);
+{$ENDIF}
+end;
+
+//Safe fgetch: if Index<1 or Index>Length it's guaranteed to not fail (return UH_NOCHAR, in fact)
+function fgetchl(const s: FString; Index: integer): FChar;
+begin
+{$IFDEF UNICODE}
+  if (Index<1) or (Index>Length(s)) then
+    Result := UH_NOCHAR
+  else
+    Result := s[Index];
+{$ELSE}
+  Result := fcopy(s, Index, 1); //UH_NOCHAR='' on non-unicode, so it's okay
 {$ENDIF}
 end;
 
