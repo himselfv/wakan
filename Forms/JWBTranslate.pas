@@ -206,7 +206,6 @@ type
 
   protected //File opening/saving
     FFileChanged: boolean;
-    LoadAnnotMode: TTextAnnotMode; //how to display ruby in current file
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
     procedure LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
@@ -366,6 +365,7 @@ var s,s2:string;
   l:integer;
   ls:string;
   dp:char;
+  LoadAnnotMode: TTextAnnotMode;
 begin
   docfilename:=filename;
   doctp:=tp;
@@ -1761,10 +1761,12 @@ var st0,lst0,st2,st3:boolean;
     insval:integer;
     worddict:integer; //word's dicidx
     lastworddict:integer; //last word's dicidx
-    inblock:boolean;
-    colback,coltext:TColor;
+    colback, coltext:TColor; //standard colors for editor's text and background
     gd1,gd2,gd0:string;
     a:integer;
+
+  inRubyTag: boolean;
+  inRubyComment: boolean;
 
   function RecodeChar(ch:FChar):FChar;
   begin
@@ -1791,6 +1793,18 @@ var st0,lst0,st2,st3:boolean;
     end;
     lastwordstate := s.wordstate;
     lastworddict := s.dicidx;
+  end;
+
+  //Goes back the line and checks if we're ALREADY inside a given tag (this symbol notwithstanding).
+  //Note that ruby tags spanning multiple lines are not supported
+  function IsInRubyTag(xp, yp: integer; tagOpenSymbol, tagCloseSymbol: FChar): boolean;
+  var s: string;
+  begin
+    s := doc[yp];
+    Dec(xp); //once, because the current symbol doesn't matter
+    while (xp>0) and (s[xp]<>tagOpenSymbol) and (s[xp]<>tagCloseSymbol) do
+      Dec(xp);
+    Result := (xp>0) and (s[xp]=tagOpenSymbol);
   end;
 
 begin
@@ -1901,12 +1915,23 @@ begin
   lastworddict := 0;
 
  { If we're starting from the middle of a paragraph, go back until we find a suitable wordstate }
-  if ll[cl].xs > 0 then
+  if ll[cl].xs > 0 then begin
     FindLastWordState(cl);
+    inRubyTag := IsInRubyTag(cx+1,cy,UH_AORUBY_TAG_OPEN,UH_AORUBY_TAG_CLOSE);
+    inRubyComment := IsInRubyTag(cx+1,cy,UH_AORUBY_COMM_OPEN,UH_AORUBY_COMM_CLOSE);
+  end else begin
+    inRubyTag := false;
+    inRubyComment := false;
+  end;
   //else we except first character of a paragraph to not be '<'
 
-  if printing then Canvas.Brush.Color:=clWhite else
-  if fSettings.CheckBox39.Checked then Canvas.Brush.Color:=clWindow else Canvas.Brush.Color:=colBack;
+  if printing then
+    Canvas.Brush.Color:=clWhite
+  else
+  if fSettings.CheckBox39.Checked then
+    Canvas.Brush.Color:=clWindow
+  else
+    Canvas.Brush.Color:=colBack;
   rect.Left:=l-2;
   rect.Top:=t-2;
   rect.Right:=l+w+4;
@@ -1933,12 +1958,10 @@ begin
       end;
     end; }
     while (cx<wx) and ((cx<flength(doc[cy])) or ((kanaq<>'') and st0)) do
-    begin
-      try
+    try
       wordstate:=doctr[cy].chars[cx].wordstate;
       learnstate:=doctr[cy].chars[cx].learnstate;
       CalcBlockFromTo(false);
-      inblock:=false;
 
       GetTextWordInfo(cx,cy,meaning,reading,kanji);
       if cfExplicitRuby in doctr[cy].chars[cx].flags then
@@ -1958,13 +1981,18 @@ begin
       if (fSettings.CheckBox36.Checked) then
         FixReading(GetDoc(cx-1,cy),GetDoc(cx,cy),GetDoc(cx+1,cy),reading);
 
+      if doc[cy][cx+1]=UH_AORUBY_TAG_OPEN then
+        inRubyTag := true;
+      if doc[cy][cx+1]=UH_AORUBY_COMM_OPEN then
+        inRubyComment := true;
+     //will check for closers after we draw current symbol as is (closers are still inside the tag)
+
       if not fSettings.CheckBox32.Checked then undersolid:=false;
       if fSettings.CheckBox39.Checked then color:=clWindow else color:=colBack;
       if fSettings.CheckBox39.Checked then fcolor:=clWindowText else fcolor:=colText;
       if printing then color:=clWhite;
-      if not fSettings.CheckBox39.Checked then
-      begin
-        if printing and fSettings.CheckBox31.Checked then
+      if not fSettings.CheckBox39.Checked then begin
+        if printing and fSettings.CheckBox31.Checked then begin
           case upcase(wordstate) of
             '-','X':color:=$00FFFFFF;
             '?':color:=$00FFFFFF;
@@ -1974,8 +2002,10 @@ begin
             'D':color:=$00FFFFFF;
             'H':color:=$00FFFFFF;
             'K':color:=$00FFFFFF;
-          end else
-          if fMenu.aEditorColors.Checked then case upcase(wordstate) of
+          end;
+        end else
+        if fMenu.aEditorColors.Checked then begin
+          case upcase(wordstate) of
             '-','X':color:=Col('Editor_Untranslated');
             '?':color:=Col('Editor_NotFound');
             'P':color:=Col('Editor_Particle');
@@ -1984,7 +2014,11 @@ begin
             'D':color:=Col('Editor_Translated');
             'H':color:=Col('Editor_Translated');
             'K':color:=Col('Editor_Translated');
-          end else color:=Col('Editor_Untranslated');
+          end;
+        end else
+          color:=Col('Editor_Untranslated');
+        if inRubyTag then fcolor:=Col('Editor_AozoraTag');
+        if inRubyComment then fcolor:=Col('Editor_AozoraComment');
       end;
       invert:=false;
       if (fSettings.CheckBox33.Checked) and (learnstate>1) and (learnstate<4) then meaning:='';
@@ -1998,10 +2032,19 @@ begin
       end;
       if not fSettings.CheckBox40.Checked then boldness:=false;
       if (fSettings.CheckBox35.Checked) and (kanjilearned) then reading:='';
-      if printing then Canvas.Brush.Color:=clWhite else
-      if fSettings.CheckBox39.Checked then Canvas.Brush.Color:=clWindow else Canvas.Brush.Color:=colBack;
-      if printing then canvas.Font.Color:=clBlack else
-      if fSettings.CheckBox39.Checked then canvas.Font.Color:=clWindowText else canvas.Font.Color:=ColText;
+
+      if printing then begin
+        Canvas.Brush.Color:=clWhite;
+        Canvas.Font.Color:=clBlack;
+      end else
+      if fSettings.CheckBox39.Checked then begin
+        Canvas.Brush.Color:=clWindow;
+        Canvas.Font.Color:=clWindowText;
+      end else begin
+        Canvas.Brush.Color:=colBack;
+        Canvas.Font.Color:=colText;
+      end;
+
       if (st2) and (meaning<>'') then
       begin
         cnty:=py+rs*2;
@@ -2060,27 +2103,29 @@ begin
           reading:=fstr(KanaToRomaji(reading,romasys,curlang));
       if reading<>'' then kanaq:=kanaq+reading;
       cntx:=px;
-      inblock:=false;
-      if inblock then
+
+      if printing then
+        Canvas.Font.Color:=clBlack
+      else
+      if fSettings.CheckBox39.Checked then
+        Canvas.Font.Color:=clWindowText
+      else
+        Canvas.Font.Color:=colText;
+      if (not fSettings.CheckBox39.Checked) then
       begin
-        canvas.Font.Color:=color;
-        canvas.Brush.Color:=ColText;
-      end else
-      begin
-        if printing then canvas.Font.Color:=clBlack else
-        if fSettings.CheckBox39.Checked then canvas.Font.Color:=clWindowText else canvas.Font.Color:=ColText;
-        if (not fSettings.CheckBox39.Checked) then
+        if (fSettings.CheckBox41.Checked) and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
+          canvas.Font.Color:=Col('Editor_ASCII');
+        if wordstate='I'then
+          canvas.Font.Color:=Col('Editor_Active')
+        else
         begin
-          if (fSettings.CheckBox41.Checked) and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
-            canvas.Font.Color:=Col('Editor_ASCII');
-          if wordstate='I'then canvas.Font.Color:=Col('Editor_Active') else
-          begin
-            canvas.Font.Color:=fcolor;
-            if (cy=insy) and (cx>=insx) and (cx<insx+inslen) then canvas.Font.Color:=Col('Editor_Aftertouch');
-            canvas.Brush.Color:=color;
-          end;
+          canvas.Font.Color:=fcolor;
+          if (cy=insy) and (cx>=insx) and (cx<insx+inslen) then
+            canvas.Font.Color:=Col('Editor_Aftertouch');
+          canvas.Brush.Color:=color;
         end;
       end;
+
       if st0 then for i:=1 to 2 do if kanaq<>'' then
       if (i=1) or (vert) or (not IsHalfWidth(cx,cy)) then
       begin
@@ -2133,6 +2178,13 @@ begin
       else
         DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
 //        showmessage(inttostr(realx)+#13+inttostr(realy)+#13+RecodeChar(GetDoc(cx,cy)));
+
+     //we check for openers before rendering, and for closers here
+      if doc[cy][cx+1]=UH_AORUBY_TAG_CLOSE then
+        inRubyTag := false;
+      if doc[cy][cx+1]=UH_AORUBY_COMM_CLOSE then
+        inRubyComment := false;
+
       if (undersolid) and (st2) and (fSettings.CheckBox32.Checked) then
         if vert then
         begin
@@ -2143,17 +2195,32 @@ begin
           canvas.MoveTo(realx+l,realy+t+rs*2);
           canvas.LineTo(realx+l+rs*2,realy+t+rs*2);
         end;
+
       canvas.Font.Style:=[];
-      if printing then Canvas.Brush.Color:=clWhite else
-      if fSettings.CheckBox39.Checked then Canvas.Brush.Color:=clWindow else Canvas.Brush.Color:=colBack;
-      if printing then canvas.Font.Color:=clBlack else
-      if fSettings.CheckBox39.Checked then canvas.Font.Color:=clWindowText else canvas.Font.Color:=colText;
+      if printing then begin
+        Canvas.Brush.Color:=clWhite;
+        Canvas.Font.Color:=clBlack;
+      end else
+      if fSettings.CheckBox39.Checked then begin
+        Canvas.Brush.Color:=clWindow;
+        Canvas.Font.Color:=clWindowText;
+      end else begin
+        Canvas.Brush.Color:=colBack;
+        Canvas.Font.Color:=colText;
+      end;
+
       if (not vert) and (IsHalfWidth(cx,cy)) then inc(px,rs) else inc(px,rs*2);
       inc(cx);
-      except
-        showmessage('Paint exception ('+inttostr(cx)+','+inttostr(cy)+': '+(ExceptObject as Exception).Message);
+    except
+      on E: Exception do begin
+        E.Message := 'Paint exception ('+inttostr(cx)+','+inttostr(cy)+': '+E.Message;
+        raise;
       end;
     end;
+
+   //Next line
+    inRubyTag := false;
+    inRubyComment := false;
     inc(py,rs*linec);
     px:=0;
     inc(cl);
@@ -2440,7 +2507,7 @@ begin
   end else
   begin
     ins:=fcopy(doc[y],x+1,flength(doc[y])-x);
-    lp := doctr[y].CopySubstr(x+1,0);
+    lp := doctr[y].CopySubstr(x,0);
     if doc.Count-1=y then
     begin
       doc.Add(ins);
@@ -2451,7 +2518,7 @@ begin
       doctr.InsertLine(y+1,lp);
     end;
     doc[y]:=fcopy(doc[y],1,x);
-    doctr[y].DeleteChars(x+1);
+    doctr[y].DeleteChars(x);
     CheckTransCont(0,y+1);
   end;
 end;
@@ -2778,13 +2845,10 @@ begin
   if insertbuffer<>'' then ResolveInsert(true);
   ClearInsBlock;
 
-  if docfilename<>'' then
-    AnnotMode := LoadAnnotMode
+  if fSettings.cbLoadAozoraRuby.Checked then
+    AnnotMode := amRuby
   else
-    if fSettings.cbLoadAozoraRuby.Checked then
-      AnnotMode := amRuby
-    else
-      AnnotMode := amDefault;
+    AnnotMode := amDefault;
 
   s := '';
   sp.Clear;

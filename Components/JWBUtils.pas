@@ -720,7 +720,7 @@ end;
 procedure TCharacterLineProps.DeleteChar(Index: integer);
 begin
  //Properly release the cell's data
- // Finalize(chars[Index]); //needs no finalize for now
+  Finalize(chars[Index]);
  //Move everything up one cell
   Move(chars[Index+1], chars[Index], (charcount-Index-1)*SizeOf(chars[0]));
   Dec(charcount);
@@ -734,6 +734,12 @@ var i: integer;
 begin
   if Count<0 then
     Count := charcount+Count;
+  if Count>charcount-Index then //we can't delete more than there is
+    Count := charcount-Index;
+  if Count<=0 then
+    exit; //nothing to do!
+ //Properly release the cell's data
+  Finalize(chars[Index], Count);
  //Move everything up Count cell
   Move(chars[Index+Count], chars[Index], (charcount-(Index+Count))*SizeOf(chars[0]));
   Dec(charcount, Count);
@@ -757,6 +763,10 @@ function TCharacterLineProps.CopySubstr(Index: integer; Count: integer): TCharac
 begin
   if Count<=0 then
     Count := charcount+Count;
+  if Count>charcount-Index then //we can't copy more than there is
+    Count := charcount-Index;
+  if Count<0 then
+    Count := 0; //copy checks for this but we don't want to set charcount to <0 later
   Result.chars := copy(Self.chars, Index, Count);
   Result.charcount := Count;
 end;

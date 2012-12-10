@@ -513,7 +513,7 @@ var
   TUserSheetWord,TUserSheetNumber,TUserSheetPos,TUserCatIndex,TUserCatName,TUserCatType,TUserCatCreated:integer;
   TUserConvertKanji,TUserConvertCount:integer;
   KnownLearned:integer;
-  Clip:string;
+  Clip:FString;
   cliptrans:TCharacterLineProps;
   NotUsedDicts:string;
   NotGroupDicts:array[1..5] of string;
@@ -2114,15 +2114,14 @@ end;
 
 procedure TfMenu.Clipboard_Timer1Timer(Sender: TObject);
 var i:integer;
-    h:boolean;
-    oldclip:string;
-    MyHandle:THandle;
-    textptr:PWideChar;
-    s:widestring;
+  h:boolean;
+  newclip:FString;
+  MyHandle:THandle;
+  textptr:PWideChar;
+  s:widestring;
 begin
   if critsec then exit;
   critsec:=true;
-  oldclip:=clip;
   try
     Clipboard.Open;
     h:=false;
@@ -2134,17 +2133,18 @@ begin
       TextPtr:=GlobalLock(MyHandle);
       s:=textptr;
       if length(s)>64000 then s:=_l('#00342^eToo much data.');
-      clip := {$IFDEF UNICODE}s{$ELSE}UnicodeToHex(s){$ENDIF};
-      cliptrans.Clear;
+      newclip := fstr(s);
       GlobalUnlock(MyHandle);
       oldhandle:=MyHandle;
     end;
     Clipboard.Close;
   except
-    clip := {$IFDEF UNICODE}'ERROR'{$ELSE}UnicodeToHex('ERROR'){$ENDIF};
+    newclip := {$IFDEF UNICODE}'ERROR'{$ELSE}UnicodeToHex('ERROR'){$ENDIF};
   end;
-  if clip<>oldclip then
+  if newclip<>clip then
   begin
+    clip := newclip;
+    cliptrans.Clear;
     PaintBox3.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
     if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;

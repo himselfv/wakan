@@ -1508,9 +1508,9 @@ begin
   colarr.add('3Editor_HintBack=EFEFEF,^eHint background');
   colarr.add('3Editor_HintSelected=00FFFF,^eHint selected background');
   colarr.add('3Editor_HintText=000000,^eHint text');
-  colarr.add('3Editor_AozoraTag=B4C0D4,^eAozora Ruby <tag>');
-  colarr.add('3Editor_AozoraComment=B4C0D4,^eAozora Ruby ［comment］');
-  colarr.add('3Editor_AozoraRuby=B4C0D4,^eAozora Ruby 《ruby》');
+  colarr.add('3Editor_AozoraTag=C0C0C0,^eAozora Ruby <tag>');
+  colarr.add('3Editor_AozoraComment=C0C0C),^eAozora Ruby ［comment］');
+  colarr.add('3Editor_AozoraRuby=C0C0C0,^eAozora Ruby 《ruby》');
   colarr.add('4Popup_Back=A0FFFF,^eBackground');
   colarr.add('4Popup_Lines=000000,^eLines');
   colarr.add('4Popup_Card=FFFFFF,^eCharacter card');
