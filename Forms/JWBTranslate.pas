@@ -616,7 +616,8 @@ var
      //this means ruby was the first char on the line, but we have to store it somehow
      //on save we'll ignore UH_RUBY_PLACEHOLDERs and only write ruby
       s := UH_RUBY_PLACEHOLDER + s;
-      sp.InsertChar(0);
+      with sp.InsertChar(0)^ do
+        Reset;
       idxLastTextBreak := 1;
       Inc(idx);
       Inc(idxRubyOpen);
@@ -1736,7 +1737,7 @@ var st0,lst0,st2,st3:boolean;
     linec,linec2,lineh,screenh,screenw,lines:integer;
     st2c:integer;
     rs:integer;
-    vert:boolean;
+    vert:boolean; //vertical printing. Only for printing.
     cl,cx,cxsc,cy,px,py,wx,wxl:integer;
     kanaq:FString;
     undersolid:boolean;
@@ -1815,18 +1816,18 @@ begin
     doc.Add('');
     doctr.AddNewLine();
   end;
-  if printing then st2:=fSettings.CheckBox30.Checked else st2:=sbDisplayMeaning.Down;
+  if printing then st2:=fSettings.cbPrintMeaning.Checked else st2:=sbDisplayMeaning.Down;
   lst0:=false;
   if fSettings.CheckBox56.Checked then lst0:=true;
-  if printing then st0:=fSettings.CheckBox29.Checked else st0:=sbDisplayReading.Down;
-  st3:=(fSettings.CheckBox42.Checked);
+  if printing then st0:=fSettings.cbPrintReading.Checked else st0:=sbDisplayReading.Down;
+  st3:=fSettings.CheckBox42.Checked;
   linec:=2;
   if not TryStrToInt(fSettings.Edit17.Text, st2c) then
     st2c:=1;
   if st3 then inc(linec);
   if st0 or lst0 then inc(linec);
   if st2 then inc(linec,st2c);
-  vert:=fSettings.CheckBox37.Checked and printing;
+  vert:=fSettings.cbVerticalPrint.Checked and printing;
   if vert then screenh:=w else screenh:=h;
   if vert then screenw:=h else screenw:=w;
   if not printing then
@@ -1844,7 +1845,7 @@ begin
   doall:=ll.Count=0;
   insval:=-1;
   try
-  if (doall) then
+  if doall then
   begin
     if not doall then
     begin
@@ -1928,7 +1929,7 @@ begin
   if printing then
     Canvas.Brush.Color:=clWhite
   else
-  if fSettings.CheckBox39.Checked then
+  if fSettings.cbNoColors.Checked then
     Canvas.Brush.Color:=clWindow
   else
     Canvas.Brush.Color:=colBack;
@@ -1943,7 +1944,7 @@ begin
     cx:=ll[cl].xs;
     cy:=ll[cl].ys;
     wx:=cx+ll[cl].len;
-{    if (fSettings.CheckBox32.Checked) and (st2) then
+{    if (fSettings.cbDisplayLines.Checked) and (st2) then
     begin
       linec2:=linec;
       if st3 then dec(linec2);
@@ -1987,12 +1988,12 @@ begin
         inRubyComment := true;
      //will check for closers after we draw current symbol as is (closers are still inside the tag)
 
-      if not fSettings.CheckBox32.Checked then undersolid:=false;
-      if fSettings.CheckBox39.Checked then color:=clWindow else color:=colBack;
-      if fSettings.CheckBox39.Checked then fcolor:=clWindowText else fcolor:=colText;
+      if not fSettings.cbDisplayLines.Checked then undersolid:=false;
+      if fSettings.cbNoColors.Checked then color:=clWindow else color:=colBack;
+      if fSettings.cbNoColors.Checked then fcolor:=clWindowText else fcolor:=colText;
       if printing then color:=clWhite;
-      if not fSettings.CheckBox39.Checked then begin
-        if printing and fSettings.CheckBox31.Checked then begin
+      if not fSettings.cbNoColors.Checked then begin
+        if printing and fSettings.cbNoPrintColors.Checked then begin
           case upcase(wordstate) of
             '-','X':color:=$00FFFFFF;
             '?':color:=$00FFFFFF;
@@ -2021,23 +2022,27 @@ begin
         if inRubyComment then fcolor:=Col('Editor_AozoraComment');
       end;
       invert:=false;
-      if (fSettings.CheckBox33.Checked) and (learnstate>1) and (learnstate<4) then meaning:='';
+      if (fSettings.cbNoMeaningLearned.Checked) and (learnstate>1) and (learnstate<4) then meaning:='';
       if upcase(wordstate)<>wordstate then boldness:=true else boldness:=false;
-      if printing and fSettings.CheckBox31.Checked then begin end else
-      if fMenu.aEditorColors.Checked then case learnstate of
-        0: color:=Col('Editor_Problematic');
-        1: color:=Col('Editor_Unlearned');
-        2: color:=Col('Editor_Learned');
-        3: color:=Col('Editor_Mastered');
-      end;
-      if not fSettings.CheckBox40.Checked then boldness:=false;
-      if (fSettings.CheckBox35.Checked) and (kanjilearned) then reading:='';
+      if printing and fSettings.cbNoPrintColors.Checked then
+      begin
+        //Nothing.
+      end else
+        if fMenu.aEditorColors.Checked then
+          case learnstate of
+            0: color:=Col('Editor_Problematic');
+            1: color:=Col('Editor_Unlearned');
+            2: color:=Col('Editor_Learned');
+            3: color:=Col('Editor_Mastered');
+          end;
+      if not fSettings.cbUserBold.Checked then boldness:=false;
+      if fSettings.cbNoReadingLearned.Checked and kanjilearned then reading:='';
 
       if printing then begin
         Canvas.Brush.Color:=clWhite;
         Canvas.Font.Color:=clBlack;
       end else
-      if fSettings.CheckBox39.Checked then begin
+      if fSettings.cbNoColors.Checked then begin
         Canvas.Brush.Color:=clWindow;
         Canvas.Font.Color:=clWindowText;
       end else begin
@@ -2079,8 +2084,7 @@ begin
           canvas.Font.Height:=rs*2;
         canvas.Font.Style:=[];
         DrawText(canvas.Handle,pchar(meaning),length(meaning),rect,DT_WORDBREAK);
-        if fSettings.CheckBox32.Checked then
-        begin
+        if fSettings.cbDisplayLines.Checked then
           if vert then
           begin
             canvas.MoveTo(realx2+l+1,realy+t);
@@ -2094,7 +2098,6 @@ begin
             canvas.LineTo(realx2+l,realy2+t-1);
             canvas.LineTo(realx2+l,realy+t-1);
           end;
-        end;
       end;
       if showroma then
         if curlang='c'then
@@ -2107,11 +2110,11 @@ begin
       if printing then
         Canvas.Font.Color:=clBlack
       else
-      if fSettings.CheckBox39.Checked then
+      if fSettings.cbNoColors.Checked then
         Canvas.Font.Color:=clWindowText
       else
         Canvas.Font.Color:=colText;
-      if (not fSettings.CheckBox39.Checked) then
+      if not fSettings.cbNoColors.Checked then
       begin
         if (fSettings.CheckBox41.Checked) and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
           canvas.Font.Color:=Col('Editor_ASCII');
@@ -2177,7 +2180,6 @@ begin
         DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
       else
         DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
-//        showmessage(inttostr(realx)+#13+inttostr(realy)+#13+RecodeChar(GetDoc(cx,cy)));
 
      //we check for openers before rendering, and for closers here
       if doc[cy][cx+1]=UH_AORUBY_TAG_CLOSE then
@@ -2185,7 +2187,7 @@ begin
       if doc[cy][cx+1]=UH_AORUBY_COMM_CLOSE then
         inRubyComment := false;
 
-      if (undersolid) and (st2) and (fSettings.CheckBox32.Checked) then
+      if undersolid and st2 and fSettings.cbDisplayLines.Checked then
         if vert then
         begin
           canvas.MoveTo(realx+l,realy+t);
@@ -2201,7 +2203,7 @@ begin
         Canvas.Brush.Color:=clWhite;
         Canvas.Font.Color:=clBlack;
       end else
-      if fSettings.CheckBox39.Checked then begin
+      if fSettings.cbNoColors.Checked then begin
         Canvas.Brush.Color:=clWindow;
         Canvas.Font.Color:=clWindowText;
       end else begin

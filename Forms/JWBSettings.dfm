@@ -519,7 +519,6 @@ object fSettings: TfSettings
         Width = 233
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 2
         Items.Strings = (
           'Bushu'
@@ -1520,7 +1519,7 @@ object fSettings: TfSettings
           Height = 13
           Caption = '#00512^eNumber of lines on square page:'
         end
-        object CheckBox29: TCheckBox
+        object cbPrintReading: TCheckBox
           Left = 16
           Top = 24
           Width = 193
@@ -1528,7 +1527,7 @@ object fSettings: TfSettings
           Caption = '#00272^eDisplay reading'
           TabOrder = 0
         end
-        object CheckBox30: TCheckBox
+        object cbPrintMeaning: TCheckBox
           Left = 232
           Top = 24
           Width = 209
@@ -1536,7 +1535,7 @@ object fSettings: TfSettings
           Caption = '#00513^eDisplay meaning'
           TabOrder = 1
         end
-        object CheckBox31: TCheckBox
+        object cbNoPrintColors: TCheckBox
           Left = 16
           Top = 48
           Width = 265
@@ -1544,7 +1543,7 @@ object fSettings: TfSettings
           Caption = '#00514^eDo not use colors'
           TabOrder = 2
         end
-        object CheckBox37: TCheckBox
+        object cbVerticalPrint: TCheckBox
           Left = 232
           Top = 48
           Width = 377
@@ -1561,7 +1560,7 @@ object fSettings: TfSettings
           Text = '20'
         end
       end
-      object CheckBox32: TCheckBox
+      object cbDisplayLines: TCheckBox
         Left = 16
         Top = 32
         Width = 401
@@ -1571,7 +1570,7 @@ object fSettings: TfSettings
         State = cbChecked
         TabOrder = 1
       end
-      object CheckBox33: TCheckBox
+      object cbNoMeaningLearned: TCheckBox
         Left = 16
         Top = 56
         Width = 353
@@ -1587,7 +1586,7 @@ object fSettings: TfSettings
         Caption = '#00518^eDo not search for particles'
         TabOrder = 3
       end
-      object CheckBox35: TCheckBox
+      object cbNoReadingLearned: TCheckBox
         Left = 16
         Top = 80
         Width = 377
@@ -1613,7 +1612,7 @@ object fSettings: TfSettings
         Caption = '#00521^eDo not translate hiragana-only words'
         TabOrder = 6
       end
-      object CheckBox40: TCheckBox
+      object cbUserBold: TCheckBox
         Left = 16
         Top = 200
         Width = 401
@@ -2047,7 +2046,6 @@ object fSettings: TfSettings
         Width = 313
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 4
         OnChange = ComboBox2Change
         Items.Strings = (
@@ -2070,7 +2068,7 @@ object fSettings: TfSettings
         TabOrder = 5
         OnClick = CheckBox3Click
       end
-      object CheckBox39: TCheckBox
+      object cbNoColors: TCheckBox
         Left = 8
         Top = 49
         Width = 457
@@ -2081,7 +2079,7 @@ object fSettings: TfSettings
         Checked = True
         State = cbChecked
         TabOrder = 6
-        OnClick = CheckBox39Click
+        OnClick = cbNoColorsClick
       end
       object CheckBox9: TCheckBox
         Left = 8
@@ -2101,10 +2099,6 @@ object fSettings: TfSettings
     object TabSheet13: TTabSheet
       Caption = '^eEditor'
       ImageIndex = 12
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2286,9 +2280,9 @@ object fSettings: TfSettings
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
+    Kind = bkOK
     TabOrder = 1
     OnClick = BitBtn1Click
-    Kind = bkOK
   end
   object Button6: TButton
     Left = 8
