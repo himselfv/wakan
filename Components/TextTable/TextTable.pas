@@ -34,15 +34,41 @@ type
   end;
   PSeekObject = ^TSeekObject;
 
+  TSeekFieldDescription = record
+    index: integer; //field index
+    reverse: boolean;
+    strdata: boolean //treat field data as string
+  end;
+  PSeekFieldDescription = ^TSeekFieldDescription;
+  TSeekFieldDescriptions = array of TSeekFieldDescription;
+
+  TSeekDescription = record
+    fields: TSeekFieldDescriptions;
+  end;
+  PSeekDescription = ^TSeekDescription;
+  TSeekDescriptions = array of TSeekDescription;
+
   TTextTable=class
     fieldlist:TStringList;
-   { Seek tables.
+   { Seek table names.
     The point of seek table is to keep records sorted in a particular order.
     The way it's done now, you just have to KNOW what order was that,
     if you're going to use the index. }
     seeks:TStringList;
+   { Seek table descriptions in the form "field1+field2+field3".
+    Loaded from the table file, used to rebuild indexes if needed.
+    First field name ("field1") becomes seek table name }
     seekbuild:TStringList;
+   { Seek table descriptions, parsed. }
+    seekbuilddesc:TSeekDescriptions;
     fieldbuild:TStringList;
+   { Orders are the same as seekbuilds, only they have different names
+     and there's 1 less of them:
+                  == seekbuild[0]
+        orders[0] == seekbuild[1]
+        orders[1] == seekbuild[2]
+        ...etc
+     Don't ask me why it's like that. }
     orders:TStringList;
     data,struct,index:pointer;
     fieldtypes:string;
@@ -72,7 +98,11 @@ type
     function TransOrder(rec,order:integer):integer; inline;
     function IsDeleted(rec:integer):boolean;
     procedure Commit(rec:integer);
-    function SortRec(r:integer;fld:string):string;
+   //Record sorting
+    function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
+    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function SortRecByStr(r:integer;fld:string):string; deprecated;
   public
     constructor Create(source:TPackageSource;filename:string;rawread,offline:boolean);
     destructor Destroy; override;
@@ -254,7 +284,10 @@ begin
   end;
   for i:=0 to seeks.Count-1 do
   begin
+   //Add to seekbuild
     seekbuild.Add(seeks[i]);
+   //Will parse to seekbuilddesc later when all schema is loaded
+   //Add to seek
     s:=seeks[i];
     if pos('+',seeks[i])>0 then system.delete(s,pos('+',seeks[i]),length(seeks[i])-pos('+',seeks[i])+1);
     seeks[i]:=s;
@@ -417,6 +450,15 @@ begin
     fieldbuild.Add(fieldlist[i]);
     fieldlist[i]:=copy(fieldlist[i],2,length(fieldlist[i])-1);
   end;
+
+ //Parse seekbuilds -- after schema has been loaded
+  SetLength(seekbuilddesc, seekbuild.Count);
+  for i := 0 to seekbuild.Count - 1 do begin
+   //First seekbuild is sometimes '0' and we don't actually seek by it
+    if (i=0) and (seekbuild[0]='0') then continue;
+    seekbuilddesc[i].fields := ParseSeekDescription(seekbuild[i]);
+  end;
+
   justinserted:=false;
   tottim:=tottim+(now-stim);
 {  if filename='Words' then showmessage(filename+#13#13+'Tot:'+formatdatetime('hh:nn:ss.zzz',tottim)+#13+
@@ -559,7 +601,6 @@ begin
 end;
 
 destructor TTextTable.Destroy;
-var i:integer;
 begin
   seeks.Free;
   orders.Free;
@@ -618,10 +659,11 @@ var i,ii:integer;
   w:word;
   l:integer;
   c: AnsiChar;
-  pb: PByte;
-  pc: PChar;
  {$IFDEF UNICODE}
   ansi_s: AnsiString;
+ {$ELSE}
+  pb: PByte;
+  pc: PChar;
  {$ENDIF}
 begin
   if not loaded then load;
@@ -660,7 +702,7 @@ begin
      else
        c := PAnsiChar(OffsetPtr(data, ofs))^;
      if (c>#0) and (c<>'F') and (c<>'f') then c:='T' else c:='F';
-     result:=c;
+     result:=Char(c);
    end;
   //AnsiString.
   's':begin
@@ -941,9 +983,6 @@ begin
 end;
 
 procedure TTextTable.SetFilter(filtr:string);
-var i,j:integer;
-    b:boolean;
-    s:string;
 begin
   filter:=filtr;
 end;
@@ -1043,7 +1082,6 @@ begin
 end;
 
 procedure TTextTable.First;
-var a:boolean;
 begin
   if not loaded then load;
   cur:=-1;
@@ -1163,16 +1201,12 @@ begin
 end;
 
 procedure TTextTable.Edit(fields:array of byte;values:array of string);
-var i,j,k,l:integer;
-    b:byte;
-    wo,w:word;
+var i,j:integer;
     sz:byte;
     tp:char;
     willinsert:boolean;
     a:array of string;
     fnd:boolean;
-    s:widestring;
-    m:integer;
 begin
   if not loaded then load;
   if offline then
@@ -1216,13 +1250,15 @@ begin
   if not nocommit then Commit(tcur);
 end;
 
-function TTextTable.SortRec(r:integer;fld:string):string;
-var s2,s3:string;
-    i:integer;
-    fx:string;
-    reverse:boolean;
+
+
+function TTextTable.ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+var i:integer;
+  fx:string;
+  reverse:boolean;
+  desc: PSeekFieldDescription;
 begin
-  s2:='';
+  SetLength(Result, 0);
   while length(fld)>0 do
   begin
     if pos('+',fld)>0 then
@@ -1242,19 +1278,54 @@ begin
     end;
     i:=Field(fx);
     if i=-1 then raise Exception.Create('Unknown seek field '+fx+' (TTextTable.Commit).');
-    if (fieldbuild[i][1]='s') or (fieldbuild[i][1]='x') then
+
+    SetLength(Result, Length(Result)+1);
+    desc := @Result[Length(Result)-1];
+    desc.index := i;
+    desc.reverse := reverse;
+    desc.strdata := (fieldbuild[i][1]='s') or (fieldbuild[i][1]='x')
+  end;
+end;
+
+function TTextTable.SortRec(r:integer;const fields:TSeekFieldDescriptions):string;
+var j, idx: integer;
+  s3: string;
+begin
+  Result := '';
+  for j := 0 to Length(fields) - 1 do begin
+    idx := fields[j].index;
+    if fields[j].strdata then
     begin
-      if not reverse then s2:=s2+GetField(r,i)+#9 else s2:=s2+ReverseString(GetField(r,i))+#9;
+      if not fields[j].reverse then
+        Result:=Result+GetField(r,idx)+#9
+      else
+        Result:=Result+ReverseString(GetField(r,idx))+#9;
     end else
     begin
-      s3:=GetField(r,i);
+      s3:=GetField(r,idx);
       while length(s3)<6 do s3:='0'+s3;
-      s2:=s2+s3+#9;
+      Result:=Result+s3+#9;
     end;
   end;
-  while (length(s2)>0) and (s2[length(s2)]=#9) do system.delete(s2,length(s2),1);
-  result:=uppercase(s2);
+  while (length(Result)>0) and (Result[length(Result)]=#9) do system.delete(Result,length(Result),1);
+  Result:=uppercase(Result);
 end;
+
+function TTextTable.SortRec(r:integer;seekIndex:integer):string;
+begin
+  Result := SortRec(r, seekbuilddesc[seekIndex].fields);
+end;
+
+{ This is the functionality older SortRec had. I'm keeping it just in case
+ there really is a case when we SortRec by something other than the contents of
+ a built-in index. }
+function TTextTable.SortRecByStr(r:integer;fld:string):string;
+var desc: TSeekFieldDescriptions;
+begin
+  desc := ParseSeekDescription(fld);
+  Result := SortRec(r, desc);
+end;
+
 
 procedure TTextTable.Commit(rec:integer);
 var p:pointer;
@@ -1279,9 +1350,9 @@ begin
   k:=rec;
   for i:=0 to orders.Count-1 do
   begin
-    s:=sortrec(rec,seekbuild[i+1]);
+    s:=sortrec(rec,i+1);
     fnd:=false;
-    for j:=0 to reccount-2 do if AnsiCompareStr(sortrec(TransOrder(j,i),seekbuild[i+1]),s)>=0 then
+    for j:=0 to reccount-2 do if AnsiCompareStr(sortrec(TransOrder(j,i),i+1),s)>=0 then
     begin
       moveofs(index,index,i*reccount*4+j*4,i*reccount*4+j*4+4,(reccount-j-1)*4);
       moveofs(@k,index,0,i*reccount*4+j*4,4);
@@ -1334,10 +1405,9 @@ begin
 end;
 
 procedure TTextTable.Reindex;
-var i,j,k,l:integer;
-    sl:TStringList;
-    s:string;
-    p:pointer;
+var i,j:integer;
+  sl:TStringList;
+  p:pointer;
 begin
   if not loaded then load;
   getmem(p,reccount*orders.Count*4);
@@ -1348,18 +1418,15 @@ begin
   begin
     sl.Clear;
     for j:=0 to reccount-1 do
-    begin
-      sl.AddObject(SortRec(j,seekbuild[i+1]),pointer(j));
-    end;
-    if rawindex then sl.CustomSort(CustomSortCompare) else sl.Sort;
+      sl.AddObject(SortRec(j,i+1),pointer(j));
+    if rawindex then
+      sl.CustomSort(CustomSortCompare)
+    else
+      sl.Sort;
     for j:=0 to reccount-1 do
-    begin
-      k:=integer(sl.Objects[j]);
-      moveofs(@k,index,0,i*reccount*4+j*4,4);
-    end;
+      PInteger(integer(index)+i*reccount*4+j*4)^ := integer(sl.Objects[j]);
   end;
   sl.Free;
-  if not CheckIndex then showmessage('INTERNAL ERROR: Reindex failed.');
 end;
 
 function TTextTable.CheckIndex:boolean;
@@ -1372,11 +1439,10 @@ begin
     s1:='';
     for j:=0 to reccount-1 do
     begin
-      s2:=sortrec(transorder(j,i),seekbuild[i+1]);
+      s2:=sortrec(transorder(j,i),i+1);
       if ((not rawindex) and (AnsiCompareStr(s2,s1)<0)) or
          ((rawindex) and (s2<s1)) then
       begin
-//        showmessage('CheckIndex fails:'#13#13+tablename+#13+orders[i]+';'+seekbuild[i+1]+#13+s1+#13+s2+#13+inttostr(j));
         result:=false;
         exit;
       end;
@@ -1440,7 +1506,6 @@ begin
     inc(cnt);
     if cnt mod 100=0 then if smf<>nil then smf.SetMessage(mess+' ('+inttostr(cnt)+')...');
     system.delete(s,1,1);
-    i:=0;
     SetLength(a,fieldcount);
     for i:=0 to fieldcount-1 do a[i]:='0';
     i:=0;

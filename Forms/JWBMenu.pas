@@ -1453,151 +1453,8 @@ begin
     TUserCat.Free;
     userdataloaded:=false;
   end;
-  if FileExists('wakan.usr') then
-  begin
-    ps:=TPackageSource.Create('wakan.usr',621030,587135,978312);
-    ver:=0;
-    TUser:=TTextTable.Create(ps,'User',false,false);
-    TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
-    TUserSheet:=TTextTable.Create(ps,'UserSheet',false,false);
-    TUserCat:=TTextTable.Create(ps,'UserCat',false,false);
-    if ps['UserPrior.info']<>nil then
-      TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false) else
-    begin
-      assignfile(t,'UserPrior.info');
-      rewrite(t);
-      writeln(t,'$TEXTTABLE');
-      writeln(t,'$PREBUFFER');
-      writeln(t,'$FIELDS');
-      writeln(t,'xKanji');
-      writeln(t,'wCount');
-      writeln(t,'$ORDERS');
-      writeln(t,'Kanji_Ind');
-      writeln(t,'Count_Ind');
-      writeln(t,'$SEEKS');
-      writeln(t,'0');
-      writeln(t,'Kanji');
-      writeln(t,'Count');
-      writeln(t,'$CREATE');
-      closefile(t);
-      TUserPrior:=TTextTable.Create(nil,'UserPrior',false,false);
-      DeleteFile('UserPrior.info');
-    end;
-    TCharIndex:=TChar.Field('Index');
-    TCharChinese:=TChar.Field('Chinese');
-    TCharType:=TChar.Field('Type');
-    TCharUnicode:=TChar.Field('Unicode');
-    TCharStrokeCount:=TChar.Field('StrokeCount');
-    TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
-    TCharJpFrequency:=TChar.Field('JpFrequency');
-    TCharChFrequency:=TChar.Field('ChFrequency');
-    TCharJouyouGrade:=TChar.Field('JouyouGrade');
-    TCharReadKanji:=TCharRead.Field('Kanji');
-    TCharReadType:=TCharRead.Field('Type');
-    TCharReadReading:=TCharRead.Field('Reading');
-    TCharReadIndex:=TCharRead.Field('Index');
-    TCharReadReadDot:=TCharRead.Field('ReadDot');
-    TCharReadPosition:=TCharRead.Field('Position');
-    TRadicalsNumber:=TRadicals.Field('Number');
-    TRadicalsVariant:=TRadicals.Field('Variant');
-    TRadicalsUnicode:=TRadicals.Field('Unicode');
-    TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
-    TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
-    TRadicalsBushuCount:=TRadicals.Field('BushuCount');
-    TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
-    TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
-    TUserIndex:=TUser.Field('Index');
-    TUserEnglish:=TUser.Field('English');
-    TUserPhonetic:=TUser.Field('Phonetic');
-    TUserPhoneticSort:=TUser.Field('PhoneticSort');
-    TUserKanji:=TUser.Field('Kanji');
-    TUserAdded:=TUser.Field('Added');
-    TUserPrinted:=TUser.Field('Printed');
-    TUserLearned:=TUser.Field('Learned');
-    TUserMastered:=TUser.Field('Mastered');
-    TUserNoPrinted:=TUser.Field('NoPrinted');
-    TUserScore:=TUser.Field('Score');
-    TUserMaxScore:=TUser.Field('MaxScore');
-    TUserIdxWord:=TUserIdx.Field('Word');
-    TUserIdxKanji:=TUserIdx.Field('Kanji');
-    TUserIdxBegin:=TUserIdx.Field('Begin');
-    TUserIdxIndex:=TUserIdx.Field('Index');
-    TUserSheetWord:=TUserSheet.Field('Word');
-    TUserSheetNumber:=TUserSheet.Field('Number');
-    TUserSheetPos:=TUserSheet.Field('Pos');
-    TUserCatIndex:=TUserCat.Field('Index');
-    TUserCatName:=TUserCat.Field('Name');
-    TUserCatType:=TUserCat.Field('Type');
-    TUserCatCreated:=TUserCat.Field('Created');
-    TUserCat.First;
-    lcat:=false;
-    ux:=0;
-    while not TUserCat.EOF do
-    begin
-      ux:=strtoint(TUserCat.Str(TUserCat.Field('Index')));
-      if TUserCat.Int(TUserCat.Field('Type'))=ord('Q') then
-      begin
-        lcat:=true;
-        ms:=ps['knownchar.bin'].Lock;
-        KnownLearned:=ux;
-        CreateKnownList(ux,0);
-        LoadKnownList(ux,ms);
-        ps['knownchar.bin'].Unlock;
-      end;
-      if TUserCat.Int(TUserCat.Field('Type'))=ord('K') then
-      begin
-        ms:=ps['char'+inttostr(ux)+'.bin'].Lock;
-        CreateKnownList(ux,0);
-        LoadKnownList(ux,ms);
-        ps['char'+inttostr(ux)+'.bin'].Unlock;
-      end;
-      TUserCat.Next;
-    end;
-    if not lcat then
-    begin
-      TUserCat.Insert([inttostr(ux+1),'k~'+_l('LEARNED'),inttostr(ord('Q')),FormatDateTime('yyyymmdd',now)]);
-      ms:=ps['knownchar.bin'].Lock;
-      CreateKnownList(ux+1,0);
-      KnownLearned:=ux+1;
-      LoadKnownList(ux+1,ms);
-      ps['knownchar.bin'].Unlock;
-    end;
-    try
-      ms:=ps['struct.ver'].Lock;
-      ms.Read(ver,1);
-      ps['struct.ver'].UnLock;
-    except end;
-    ps.Free;
-    if ver<>CurStructVer then
-    begin
-      if Application.MessageBox(
-        pchar(_l('#00338^eFile WAKAN.USR has old structure.'#13'It must be converted.'#13
-          +'You should make backup before converting'#13#13'Do you want to convert it now?')),
-        pchar(_l('#00339^eOld structure')),
-        MB_YESNO or MB_ICONWARNING)=idYes then
-      begin
-        if ver<=0 then
-        begin
-          ExportUserData('wakan_temp.jbk');
-          ImportUserData('wakan_temp.jbk');
-          DeleteFile('wakan_temp.jbk');
-        end;
-        if ver<=1 then
-        begin
-          RebuildUserIndex;
-          ChangeUserData;
-          SaveUserData;
-        end;
-      end else begin
-        Application.Terminate;
-        exit;
-      end;
-    end;
-    if not TUser.CheckIndex then TUser.Reindex;
-    if not TUserIdx.CheckIndex then TUserIdx.Reindex;
-    if not TUserSheet.CheckIndex then TUserSheet.Reindex;
-    if not TUserCat.CheckIndex then TUserCat.Reindex;
-  end else
+
+  if not FileExists('wakan.usr') then
   begin
     {$I-}
     mkdir('user');
@@ -1725,7 +1582,161 @@ begin
     rmdir('user');
     {$I+}
     ioresult;
-    LoadUserData;
+  end;
+
+  ps:=TPackageSource.Create('wakan.usr',621030,587135,978312);
+  ver:=0;
+  TUser:=TTextTable.Create(ps,'User',false,false);
+  TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
+  TUserSheet:=TTextTable.Create(ps,'UserSheet',false,false);
+  TUserCat:=TTextTable.Create(ps,'UserCat',false,false);
+  if ps['UserPrior.info']<>nil then
+    TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false) else
+  begin
+    assignfile(t,'UserPrior.info');
+    rewrite(t);
+    writeln(t,'$TEXTTABLE');
+    writeln(t,'$PREBUFFER');
+    writeln(t,'$FIELDS');
+    writeln(t,'xKanji');
+    writeln(t,'wCount');
+    writeln(t,'$ORDERS');
+    writeln(t,'Kanji_Ind');
+    writeln(t,'Count_Ind');
+    writeln(t,'$SEEKS');
+    writeln(t,'0');
+    writeln(t,'Kanji');
+    writeln(t,'Count');
+    writeln(t,'$CREATE');
+    closefile(t);
+    TUserPrior:=TTextTable.Create(nil,'UserPrior',false,false);
+    DeleteFile('UserPrior.info');
+  end;
+  TCharIndex:=TChar.Field('Index');
+  TCharChinese:=TChar.Field('Chinese');
+  TCharType:=TChar.Field('Type');
+  TCharUnicode:=TChar.Field('Unicode');
+  TCharStrokeCount:=TChar.Field('StrokeCount');
+  TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
+  TCharJpFrequency:=TChar.Field('JpFrequency');
+  TCharChFrequency:=TChar.Field('ChFrequency');
+  TCharJouyouGrade:=TChar.Field('JouyouGrade');
+  TCharReadKanji:=TCharRead.Field('Kanji');
+  TCharReadType:=TCharRead.Field('Type');
+  TCharReadReading:=TCharRead.Field('Reading');
+  TCharReadIndex:=TCharRead.Field('Index');
+  TCharReadReadDot:=TCharRead.Field('ReadDot');
+  TCharReadPosition:=TCharRead.Field('Position');
+  TRadicalsNumber:=TRadicals.Field('Number');
+  TRadicalsVariant:=TRadicals.Field('Variant');
+  TRadicalsUnicode:=TRadicals.Field('Unicode');
+  TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
+  TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
+  TRadicalsBushuCount:=TRadicals.Field('BushuCount');
+  TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
+  TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
+  TUserIndex:=TUser.Field('Index');
+  TUserEnglish:=TUser.Field('English');
+  TUserPhonetic:=TUser.Field('Phonetic');
+  TUserPhoneticSort:=TUser.Field('PhoneticSort');
+  TUserKanji:=TUser.Field('Kanji');
+  TUserAdded:=TUser.Field('Added');
+  TUserPrinted:=TUser.Field('Printed');
+  TUserLearned:=TUser.Field('Learned');
+  TUserMastered:=TUser.Field('Mastered');
+  TUserNoPrinted:=TUser.Field('NoPrinted');
+  TUserScore:=TUser.Field('Score');
+  TUserMaxScore:=TUser.Field('MaxScore');
+  TUserIdxWord:=TUserIdx.Field('Word');
+  TUserIdxKanji:=TUserIdx.Field('Kanji');
+  TUserIdxBegin:=TUserIdx.Field('Begin');
+  TUserIdxIndex:=TUserIdx.Field('Index');
+  TUserSheetWord:=TUserSheet.Field('Word');
+  TUserSheetNumber:=TUserSheet.Field('Number');
+  TUserSheetPos:=TUserSheet.Field('Pos');
+  TUserCatIndex:=TUserCat.Field('Index');
+  TUserCatName:=TUserCat.Field('Name');
+  TUserCatType:=TUserCat.Field('Type');
+  TUserCatCreated:=TUserCat.Field('Created');
+  TUserCat.First;
+  lcat:=false;
+  ux:=0;
+  while not TUserCat.EOF do
+  begin
+    ux:=strtoint(TUserCat.Str(TUserCat.Field('Index')));
+    if TUserCat.Int(TUserCat.Field('Type'))=ord('Q') then
+    begin
+      lcat:=true;
+      ms:=ps['knownchar.bin'].Lock;
+      KnownLearned:=ux;
+      CreateKnownList(ux,0);
+      LoadKnownList(ux,ms);
+      ps['knownchar.bin'].Unlock;
+    end;
+    if TUserCat.Int(TUserCat.Field('Type'))=ord('K') then
+    begin
+      ms:=ps['char'+inttostr(ux)+'.bin'].Lock;
+      CreateKnownList(ux,0);
+      LoadKnownList(ux,ms);
+      ps['char'+inttostr(ux)+'.bin'].Unlock;
+    end;
+    TUserCat.Next;
+  end;
+  if not lcat then
+  begin
+    TUserCat.Insert([inttostr(ux+1),'k~'+_l('LEARNED'),inttostr(ord('Q')),FormatDateTime('yyyymmdd',now)]);
+    ms:=ps['knownchar.bin'].Lock;
+    CreateKnownList(ux+1,0);
+    KnownLearned:=ux+1;
+    LoadKnownList(ux+1,ms);
+    ps['knownchar.bin'].Unlock;
+  end;
+  try
+    ms:=ps['struct.ver'].Lock;
+    ms.Read(ver,1);
+    ps['struct.ver'].UnLock;
+  except end;
+  ps.Free;
+  if ver<>CurStructVer then
+  begin
+    if Application.MessageBox(
+      pchar(_l('#00338^eFile WAKAN.USR has old structure.'#13'It must be converted.'#13
+        +'You should make backup before converting'#13#13'Do you want to convert it now?')),
+      pchar(_l('#00339^eOld structure')),
+      MB_YESNO or MB_ICONWARNING)=idYes then
+    begin
+      if ver<=0 then
+      begin
+        ExportUserData('wakan_temp.jbk');
+        ImportUserData('wakan_temp.jbk');
+        DeleteFile('wakan_temp.jbk');
+      end;
+      if ver<=1 then
+      begin
+        RebuildUserIndex;
+        ChangeUserData;
+        SaveUserData;
+      end;
+    end else begin
+      Application.Terminate;
+      exit;
+    end;
+  end;
+  if not TUser.CheckIndex then begin
+    TUser.Reindex;
+    UserDataChanged:=true; //or we'd be reindexing each load
+  end;
+  if not TUserIdx.CheckIndex then begin
+    TUserIdx.Reindex;
+    UserDataChanged:=true;
+  end;
+  if not TUserSheet.CheckIndex then begin
+    TUserSheet.Reindex;
+    UserDataChanged:=true;
+  end;
+  if not TUserCat.CheckIndex then begin
+    TUserCat.Reindex;
+    UserDataChanged:=true;
   end;
   Screen.Cursor:=crDefault;
   userdataloaded:=true;
