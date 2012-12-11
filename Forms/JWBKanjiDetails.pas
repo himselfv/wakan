@@ -83,6 +83,7 @@ var
   fKanjiDetails: TfKanjiDetails;
 
   curradno: string;
+  cursimple: FString;
 
 implementation
 
@@ -92,7 +93,7 @@ uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
 {$R *.DFM}
 
 var
-  curon,curkun: string; //not used anywhere outside of SetCharDetails! Why the hell are these unit-global...
+  curon,curkun: FString; //not used anywhere outside of SetCharDetails! Why the hell are these unit-global...
   curnanori: string; //same
   curindex: integer; //same
   curpinyin: string; //same
@@ -310,6 +311,7 @@ var piny,engy,kory,s,cany,chiny:string;
     cv:string;
     scat:string;
     cv_i1, cv_i2: integer;
+  charval: string; //GetCharValue
 begin
   curkanji:=UH_NOCHAR;
   curradical:='';
@@ -377,28 +379,33 @@ begin
   fStrokeOrder.RxGIFAnimator1.Visible:=ld;
   fStrokeOrder.Label1.Visible:=not ld;
   radf:=fSettings.ComboBox1.ItemIndex+12;
-  if fMenu.GetCharValue(TChar.Int(TCharIndex),43)<>'' then
+
+  charval := fMenu.GetCharValue(TChar.Int(TCharIndex),43);
+  if charval<>'' then
   begin
-    cursimple:=fMenu.GetCharValue(TChar.Int(TCharIndex),43);
+    cursimple:=hextofstr(charval);
     RxLabel35.Caption:=_l('#00135^eSimplified:');
     RxLabel35.Show;
     PaintBox4.Show;
     Shape10.Show;
-  end else
-  if fMenu.GetCharValue(TChar.Int(TCharIndex),44)<>'' then
-  begin
-    cursimple:=fMenu.GetCharValue(TChar.Int(TCharIndex),44);
-    RxLabel35.Caption:=_l('#00136^eTraditional:');
-    RxLabel35.Show;
-    PaintBox4.Show;
-    Shape10.Show;
-  end else
-  begin
-    cursimple:='';
-    RxLabel35.Hide;
-    PaintBox4.Hide;
-    Shape10.Hide;
+  end else begin
+    charval := fMenu.GetCharValue(TChar.Int(TCharIndex),44);
+    if charval<>'' then
+    begin
+      cursimple:=hextofstr(charval);
+      RxLabel35.Caption:=_l('#00136^eTraditional:');
+      RxLabel35.Show;
+      PaintBox4.Show;
+      Shape10.Show;
+    end else
+    begin
+      cursimple:='';
+      RxLabel35.Hide;
+      PaintBox4.Hide;
+      Shape10.Hide;
+    end;
   end;
+
   i:=fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf);
   curradno:=inttostr(i);
   Label2.Caption:=curradno;

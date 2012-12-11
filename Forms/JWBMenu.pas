@@ -502,7 +502,11 @@ var
   TAnnots,TChar,TCharRead,TRadicals,TUser,TUserIdx,TUserSheet,TUserCat,TKanaKanji,TUserPrior:TTextTable;
   TCharIndex,TCharChinese,TCharType,TCharUnicode,
   TCharStrokeCount,TCharJpStrokeCount,TCharJpFrequency,TCharChFrequency,
-  TCharJouyouGrade,TCharReadKanji,TCharReadType,TCharReadReading,TCharReadIndex,
+  TCharJouyouGrade,
+  TCharReadKanji,
+  TCharReadType,
+  TCharReadReading, //stored as 4-char hex AnsiString
+  TCharReadIndex,
   TCharReadReadDot,TCharReadPosition,
   TRadicalsNumber,TRadicalsVariant,TRadicalsUnicode,
   TRadicalsStrokeCount,TRadicalsUnicodeCount,TRadicalsBushuCount,

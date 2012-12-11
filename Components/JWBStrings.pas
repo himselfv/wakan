@@ -428,7 +428,8 @@ begin
  {$ENDIF}
 end;
 
-//Converts FString to UnicodeString. On unicode does nothing!
+//Converts FString to raw UnicodeString. On unicode does nothing!
+//Call when you want to pass FString to someone who accepts UnicodeStrings
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
 begin
  {$IFDEF UNICODE}
@@ -439,6 +440,7 @@ begin
 end;
 
 //Converts Hex to FString. On Ansi builds does nothing!
+//Call when you want to parse Ansi Hex data (ex. from file) to FString
 function hextofstr(const s: string): FString;
 begin
  {$IFDEF UNICODE}
@@ -449,6 +451,7 @@ begin
 end;
 
 //Converts FString to Hex. On Ansi builds does nothing
+//Call when you want to store FString as Ansi Hex data (ex. in file of such format)
 function fstrtohex(const s: FString): string;
 begin
  {$IFDEF UNICODE}

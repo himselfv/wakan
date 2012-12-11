@@ -195,9 +195,10 @@ begin
     TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
     while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
     begin
-     //Unfortunately for us, TCharReadReading is stored as Hex text, type Ansi, and mixed with control characters
-     //so there's nothing we can do to convert it to unicode automatically on reading.
-     //We'll do it just before using the string.
+     //Unfortunately for us, TCharReadReading is stored as Hex text in Ansi chars,
+     //and mixed with control characters, so there's nothing we can do to convert
+     //it to unicode automatically on reading.
+     //We'll have to do it when copying s->ws.
       s := TCharRead.Str(TCharReadReading);
       rt := TCharRead.Int(TCharReadType);
       if curlang='j'then
@@ -220,7 +221,7 @@ begin
           end;
           if TCharRead.Int(TCharReadReadDot)>0 then
           begin
-            ws:=ws+copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
+            ws:=ws+fstr(copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot));
             ws:=ws+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
             delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
           end;

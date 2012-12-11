@@ -79,7 +79,6 @@ var
 var
   curkanji: FChar;
   curradical: string;
-  cursimple: string;
   kval: TStringList;
   curcali:string;
 
@@ -120,7 +119,7 @@ begin
   if curlang='c'then chin:=true;
 //  if fKanjiSearch.SpeedButton20.Down then chin:=true;
   DoIt;
-  cursimple:='';
+  JWBKanjiDetails.cursimple:='';
   curcali:='';
   caltype:=0;
 end;
