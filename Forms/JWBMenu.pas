@@ -3994,7 +3994,8 @@ end;
 procedure TfMenu.ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
 var maxwords,maxwordss:integer;
     wasfull:boolean;
-    s1,s2,s3,s4:string;
+    s1,s2:FString; //kinda fstring, has control chars
+    s3,s4:string;
     ss:string;
     ch,kch:integer;
     rect:TRect;
@@ -4059,10 +4060,10 @@ begin
     if (length(s2)>0) and (s2[1]=ALTCH_EXCL) then delete(s2,1,2);
     if (length(s1)>0) and (s1[1]=UH_UNKNOWN_KANJI) then delete(s1,1,1);
     if (length(s2)>0) and (s2[1]=UH_UNKNOWN_KANJI) then delete(s2,1,1);
-    cw:=DrawWordInfo(fScreenTip.pb.Canvas,rect,false,false,2,s3,false,true,GridFontSize,true)+GridFontSize*(3+length(s1+s2) div 4);
+    cw:=DrawWordInfo(fScreenTip.pb.Canvas,rect,false,false,2,s3,false,true,GridFontSize,true)+GridFontSize*(3+flength(s1+s2));
     if cw>optwidth then optwidth:=cw;
   end;
-  if maxslen>0 then proposeds:=copy(s,1,maxslen*4);
+  if maxslen>0 then proposeds:=fcopy(s,1,maxslen);
   vsiz:=5;
   hsiz:=20;
   optwidth:=optwidth-5*kch;
@@ -4942,6 +4943,7 @@ initialization
   rdcnt:=0;
   inproc:=false;
   popcreated:=false;
-  WakanVer := GetFileVersionInfoStr(GetModuleFilenameStr(0));
+  WakanVer := GetFileVersionInfoStr(GetModuleFilenameStr(0))
+    {$IFDEF UNICODE}+' unicode'{$ENDIF};
 
 end.

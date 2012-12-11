@@ -221,7 +221,7 @@ begin
           end;
           if TCharRead.Int(TCharReadReadDot)>0 then
           begin
-            ws:=ws+fstr(copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot));
+            ws:=ws+hextofstr(copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot));
             ws:=ws+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
             delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
           end;

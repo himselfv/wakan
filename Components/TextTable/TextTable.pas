@@ -1126,7 +1126,7 @@ end;
 
 procedure TTextTable.Insert(values:array of string);
 var totsize:integer;
-    i,j:integer;
+    i:integer;
     p:pointer;
     c:char;
     b:byte;
@@ -1529,7 +1529,7 @@ begin
 end;
 
 procedure LogAlloc(s:string;len:integer);
-var t:textfile;
+//var t:textfile;
 begin
 {  assignfile(t,'alloc.log');
   append(t);
