@@ -1889,19 +1889,20 @@ begin
   PaintScreenTipBlock;
 end;
 
-
 procedure DeleteDirectory(dir:string);
 var sRec: TSearchRec;
 begin
   if dir='' then exit; //just in case! don't delete random files
-  if not FindFirst(dir + '\*.*', faNormal or faDirectory, sRec) = 0 then
+  if not FindFirst(dir + '\*.*', faAnyFile, sRec) = 0 then
     exit;
   repeat
-    if ((sRec.Attr and faDirectory) <> 0) and (sRec.Name <> '.') and
-      (sRec.Name <> '..') then
-      RemoveDirectory(PChar(dir + sRec.Name))
+    if sRec.Attr and faDirectory <> 0 then
+      if (sRec.Name = '.') or (sRec.Name = '..') then begin
+       //Nothing
+      end else
+        RemoveDirectory(PChar(dir + '\' + sRec.Name))
     else
-      DeleteFile(PChar(dir + sRec.Name));
+      DeleteFile(PChar(dir + '\' + sRec.Name));
   until FindNext(sRec) <> 0;
   FindClose(sRec);
   Windows.RemoveDirectory(PChar(dir));
