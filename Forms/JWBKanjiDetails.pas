@@ -88,7 +88,7 @@ var
 implementation
 
 uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
-  JWBSettings, JWBStrokeOrder, JWBUnit;
+  JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories;
 
 {$R *.DFM}
 

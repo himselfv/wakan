@@ -129,6 +129,9 @@ function max(a, b: integer): integer; inline;
 
 function GetModuleFilenameStr(hModule: HMODULE = 0): string;
 function GetFileVersionInfoStr(Filename: string): string;
+function GetTempPathStr: string;
+function CreateGuidStr: string;
+function CreateRandomTempDirName: string;
 
 
 { FChar string functions.
@@ -336,6 +339,26 @@ begin
     if dwFileFlags and VS_FF_SPECIALBUILD = VS_FF_SPECIALBUILD then
       Result := Result + ' (special build)';
   end;
+end;
+
+function GetTempPathStr: String;
+var tempFolder: array[0..MAX_PATH] of Char;
+begin
+ //TODO: Support more than MAX_PATH
+  GetTempPath(MAX_PATH, @tempFolder);
+  result := tempFolder;
+end;
+
+function CreateGuidStr: string;
+var g: TGuid;
+begin
+  CreateGuid(g);
+  Result := GuidToString(g);
+end;
+
+function CreateRandomTempDirName: string;
+begin
+  Result := GetTempPathStr() + '\' + CreateGuidStr();
 end;
 
 

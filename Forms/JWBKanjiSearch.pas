@@ -96,7 +96,7 @@ var
 implementation
 
 uses JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBRadical, JWBNewCategory,
-  JWBKanjiDetails;
+  JWBKanjiDetails, JWBCategories;
 
 {$R *.DFM}
 
@@ -299,20 +299,16 @@ begin
 end;
 
 procedure TfKanjiSearch.SpeedButton20Click(Sender: TObject);
+var catname: string;
 begin
   if fKanjiSearch.ListBox1.ItemIndex=-1 then exit;
-  fNewCategory.Caption:=_l('^eEdit category');
   TUserCat.Locate('Name','k~'+fKanjiDetails.ComboBox1.Items[fKanjiSearch.ListBox1.ItemIndex],false);
-  fNewCategory.Edit1.Text:=StripCatName(TUserCat.Str(TUserCatName));
-  fNewCategory.RadioGroup1.Enabled:=false;
-  if fNewCategory.ShowModal=idOK then
-  begin
-    TUserCat.Edit([TUserCatName],['k~'+fNewCategory.Edit1.Text]);
+  catname := StripCatName(TUserCat.Str(TUserCatName));
+  if fNewCategory.EditCategory(catname) then begin
+    TUserCat.Edit([TUserCatName],['k~'+catname]);
     fMenu.RefreshKanjiCategory;
     fMenu.ChangeUserData;
   end;
-  fNewCategory.RadioGroup1.Enabled:=true;
-  fNewCategory.Caption:=_l('^eNew category')
 end;
 
 procedure TfKanjiSearch.ListBox1DrawItem(Control: TWinControl;

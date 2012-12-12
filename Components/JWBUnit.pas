@@ -32,23 +32,6 @@ function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
 
 
-{ Known lists }
-
-procedure CreateKnownList(listno:integer;charnumber:integer);
-procedure FreeKnownLists;
-procedure SaveKnownList(listno:integer;filename:string);
-procedure LoadKnownList(listno:integer;stream:TStream);
-
-function IsKnown(listno:integer;const char:FChar):boolean; overload;
-procedure SetKnown(listno:integer;const char:FChar;known:boolean); overload;
-function FirstUnknownKanjiIndex(const kanji:FString):integer;
-function CheckKnownKanji(const kanji:FString): FString;
-{$IFDEF UNICODE}
-function IsKnown(listno:integer;const char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
-{$ENDIF}
-
-
 { WordGrid }
 
 procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
@@ -91,10 +74,11 @@ procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
 procedure WritelnMixUni(var f:file;s:string);
-function StripCatName(s:string):string;
 procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
 function ChinTo(s:string):string;
 function ChinFrom(s:string):string;
+
+procedure DeleteDirectory(dir:string);
 
 
 var
@@ -1132,160 +1116,6 @@ begin
 end;
 
 
-{ Known lists }
-
-var
-  KnownList:array[1..20000] of pointer;
-  KnownListSize:integer;
-
-procedure CreateKnownList(listno:integer;charnumber:integer);
-begin
-  KnownListSize:=65536 div 8;
-  if listno>20000 then showmessage('ListNo size exceeded!');
-  getmem(KnownList[listno],KnownListSize);
-  fillchar(KnownList[listno]^,KnownListSize,0);
-end;
-
-procedure FreeKnownLists;
-var i:integer;
-begin
-  for i:=1 to 20000 do if KnownList[i]<>nil then freemem(KnownList[i],KnownListSize);
-end;
-
-procedure SaveKnownList(listno:integer;filename:string);
-var f:file;
-begin
-  if listno>20000 then showmessage('ListNo size exceeded!');
-  assignfile(f,filename);
-  rewrite(f,1);
-  blockwrite(f,KnownList[listno]^,KnownListSize);
-  closefile(f);
-end;
-
-procedure LoadKnownList(listno:integer;stream:TStream);
-var f:file;
-    TempStr:TStream;
-    i,kj:integer;
-    b:byte;
-    w:integer;
-begin
-  if listno>20000 then showmessage('ListNo size exceeded!');
-  if stream.Size<KnownListSize then
-  begin
-    w:=stream.Size;
-    for i:=1 to w do
-    begin
-      stream.Read(b,1);
-      for kj:=0 to 7 do
-        if (((b) shr kj) and 1)<>0 then
-        begin
-          if TChar.Locate('Index',inttostr((i-1)*8+1+kj),true) then
-          begin
-            SetKnown(listno,TChar.Str(TChar.Field('Unicode')),true);
-          end;
-        end;
-    end;
-  end
-  else
-    stream.Read(KnownList[listno]^,KnownListSize);
-end;
-
-function IsKnown(listno:integer;const char:FChar):boolean;
-var w:widechar{$IFDEF UNICODE} absolute char{$ENDIF};
-  ki,kj:integer;
-begin
- {$IFNDEF UNICODE}
-  w:=HexToUnicode(char)[1];
- {$ENDIF}
-  ki:=ord(w) div 8;
-  kj:=ord(w) mod 8;
-  if ki>=KnownListSize then
-  begin
-    result:=false;
-    exit;
-  end;
-  result:=(((TByteArray(KnownList[listno]^)[ki]) shr kj) and 1)<>0;
-end;
-
-procedure SetKnown(listno:integer;const char:FChar;known:boolean);
-var ki,kj:integer;
-  a:byte;
-  w:widechar{$IFDEF UNICODE} absolute char{$ENDIF};
-begin
- {$IFNDEF UNICODE}
-  w:=HexToUnicode(char)[1];
- {$ENDIF}
-  ki:=ord(w) div 8;
-  kj:=ord(w) mod 8;
-  if ki>=KnownListSize then exit;
-  a:=TByteArray(KnownList[listno]^)[ki];
-  if known then a:=a or (1 shl kj) else a:=a and not (1 shl kj);
-  TByteArray(KnownList[listno]^)[ki]:=a;
-end;
-
-{
-Parses the string, fchar by fchar, checking that all kanji are "Learned".
-If it encounters a character you haven't learned, it returns that character's
-number, else it just returns -1.
-}
-function FirstUnknownKanjiIndex(const kanji:FString):integer;
-{$IFDEF UNICODE}
-var i: integer;
-begin
-  Result := -1;
-  for i := 1 to Length(kanji) - 1 do
-    if (Word(kanji[i]) and $F000 > $3000) and not IsKnown(KnownLearned, kanji[i]) then begin
-      Result := i;
-      break;
-    end;
-end;
-{$ELSE}
-var i, ch: integer;
-begin
-  Result := -1;
- //Original function had similar check so let's keep it
-  if Length(kanji) mod 4 <> 0 then
-    raise Exception.Create('Invalid FChar string at FirstUnknownKanjiIndex(): '+kanji);
-
-  for i := 1 to Length(kanji) div 4 do begin
-    ch := PInteger(@kanji[4*(i-1)+1])^;
-    if (PFCharData(@ch)^[1]>'3') and not IsKnown(KnownLearned, fcopy(kanji, i, 1)) then begin
-      Result := i;
-      break;
-    end;
-  end;
-end;
-{$ENDIF}
-
-{
-Backward compability.
-Prepends 'U' to the string if it contains kanjis not yet "learned".
-}
-function CheckKnownKanji(const kanji:FString): FString;
-var i: integer;
-begin
-  i := FirstUnknownKanjiIndex(kanji);
-  if i<0 then
-    Result := kanji
-  else
-    Result := UH_UNKNOWN_KANJI + kanji;
-end;
-
-
-{$IFDEF UNICODE}
-//Variants of the functions for cases where we pass a string
-function IsKnown(listno:integer;const char:FString):boolean;
-begin
-  Result := (pointer(char)<>nil) and IsKnown(listno, PFChar(char)^);
-end;
-procedure SetKnown(listno:integer;const char:FString;known:boolean);
-begin
-  if Length(char)>=1 then
-    SetKnown(listno, char[1], known);
-end;
-{$ENDIF}
-
-
 
 
 type TIntTextInfo=record
@@ -1452,12 +1282,6 @@ begin
   bl:=13;
   blockwrite(f,bl,1);
   blockwrite(f,bh,1);
-end;
-
-function StripCatName(s:string):string;
-begin
-  if (length(s)>1) and (s[2]='~') then delete(s,1,2);
-  result:=s;
 end;
 
 procedure InitColors;
@@ -2066,12 +1890,29 @@ begin
 end;
 
 
+procedure DeleteDirectory(dir:string);
+var sRec: TSearchRec;
+begin
+  if dir='' then exit; //just in case! don't delete random files
+  if not FindFirst(dir + '\*.*', faNormal or faDirectory, sRec) = 0 then
+    exit;
+  repeat
+    if ((sRec.Attr and faDirectory) <> 0) and (sRec.Name <> '.') and
+      (sRec.Name <> '..') then
+      RemoveDirectory(PChar(dir + sRec.Name))
+    else
+      DeleteFile(PChar(dir + sRec.Name));
+  until FindNext(sRec) <> 0;
+  FindClose(sRec);
+  Windows.RemoveDirectory(PChar(dir));
+end;
+
+
 
 var i:integer;
 initialization
   CurPBox:=nil;
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
-  for i:=1 to 20000 do KnownList[i]:=nil;
   GridFontSize:=14;
   STB_Canvas:=nil;
 

@@ -87,7 +87,6 @@ type
     procedure ShowIt(warningifnotfound:boolean);
     procedure Reset;
     function AddWord(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
-    function ListWordCategories(word:integer;sl:TStringList;delcategory:string;scanallow:boolean):boolean;
     function LLGoNext(page:integer):integer;
     function LLGoPrev(page:integer):integer;
     procedure BuildWordList;
@@ -109,8 +108,8 @@ implementation
 
 uses JWBMenu, JWBStrings, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
-  JWBUserFilters, {JWBUserCategory,} StdPrompt, PKGWrite, JWBExamples, JWBUser,
-  JWBConvert, JWBWordsExpChoose;
+  JWBUserFilters, StdPrompt, PKGWrite, JWBExamples, JWBUser,
+  JWBConvert, JWBWordsExpChoose, JWBCategories;
 
 var wl,wlc:TStringList;
     ll,ltl:TStringList;
@@ -121,31 +120,6 @@ var wl,wlc:TStringList;
     lastwordadded:boolean;
 
 {$R *.DFM}
-
-function TfWords.ListWordCategories(word:integer;sl:TStringList;delcategory:string;scanallow:boolean):boolean;
-var i:integer;
-    s:string;
-begin
-  result:=false;
-  TUserSheet.SetOrder('Word_Ind');
-  TUserSheet.Locate('Word',inttostr(word),true);
-  sl.Clear;
-  while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
-  begin
-    TUserCat.Locate('Index',TUserSheet.Str(TUserSheetNumber),true);
-    if delcategory=copy(TUserCat.Str(TUserCatName),3,length(TUserCat.Str(TUserCatName))-2) then TUserSheet.Delete else
-    begin
-      s:=TUserCat.Str(TUserCatName);
-      sl.Add(s);
-      if scanallow then
-      begin
-        i:=fUserFilters.ListBox1.Items.IndexOf(copy(s,3,length(s)-2));
-        if (i<>-1) and (fUserFilters.ListBox1.Checked[i]) and (copy(s,1,1)=curlang) then result:=true;
-      end;
-    end;
-    TUserSheet.Next;
-  end;
-end;
 
 procedure TfWords.ShowIt(warningifnotfound:boolean);
 var sl:TStringList;
@@ -187,7 +161,8 @@ begin
               ((not fUserFilters.CheckBox11.Checked) and (TUser.Int(TUserScore)=0))) then
       begin
         stp:=TUser.Str(TUserScore);
-        all:=ListWordCategories(TUser.Int(TUserIndex),cl,'',true);
+        ListWordCategories(TUser.Int(TUserIndex),cl);
+        all:=CheckEnabledCategories(cl);
 //        for i:=0 to fUserFilters.ListBox1.Items.Count-1 do
 //          if (fUserFilters.ListBox1.Checked[i]) and (cl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[i])<>-1) then all:=true;
         if all then
@@ -195,7 +170,11 @@ begin
           cls:='';
           for i:=0 to cl.Count-1 do cls:=cls+', '+StripCatName(cl[i]);
           if length(cls)>0 then delete(cls,1,2);
-          AddWordGrid(StringGrid1,'!'+stp+CheckKnownKanji(TUser.Str(TUserKanji)),'!'+stp+TUser.Str(TUserPhonetic),'!'+stp+TUser.Str(TUserEnglish),'!'+stp+cls);
+          AddWordGrid(StringGrid1,
+            ALTCH_EXCL+stp+CheckKnownKanji(TUser.Str(TUserKanji)),
+            ALTCH_EXCL+stp+TUser.Str(TUserPhonetic),
+            ALTCH_EXCL+stp+TUser.Str(TUserEnglish),
+            ALTCH_EXCL+stp+cls);
           wl.Add(TUser.Str(TUserIndex));
           if TUser.Int(TUserIndex)=lastwordind then sw:=wl.Count;
         end;
@@ -222,8 +201,12 @@ begin
                 ((not fUserFilters.CheckBox11.Checked) and (TUser.Int(TUserScore)=0))) then
         begin
           stp:=TUser.Str(TUserScore);
-//          AddWordGrid(StringGrid1,'!14E00','4E00','al','al');
-          AddWordGrid(StringGrid1,'!'+stp+CheckKnownKanji(TUser.Str(TUserKanji)),'!'+stp+TUser.Str(TUserPhonetic),'!'+stp+TUser.Str(TUserEnglish),'!'+stp+cats+' #'+inttostr(j));
+//          AddWordGrid(StringGrid1,ALTCH_EXCL+'14E00','4E00','al','al');
+          AddWordGrid(StringGrid1,
+            ALTCH_EXCL+stp+CheckKnownKanji(TUser.Str(TUserKanji)),
+            ALTCH_EXCL+stp+TUser.Str(TUserPhonetic),
+            ALTCH_EXCL+stp+TUser.Str(TUserEnglish),
+            ALTCH_EXCL+stp+cats+' '+ALTCH_SHARP+inttostr(j));
           wl.Add(TUser.Str(TUserIndex));
           wlc.Add(inttostr(a));
           if TUser.Int(TUserIndex)=lastwordind then sw:=wl.Count;
@@ -313,27 +296,11 @@ begin
         MB_ICONERROR or MB_OK);
     exit;
   end;
-  if TUserCat.Locate('Name',category,false) then cat:=TUserCat.Int(TUserCatIndex) else
-  begin
-    if cattype='?'then
-    begin
-      fNewCategory.Edit1.Text:=StripCatName(category);
-      if fNewCategory.ShowModal<>idOK then exit;
-      case fNewCategory.RadioGroup1.ItemIndex of
-        0:cattype:='L';
-        1:cattype:='G';
-        2:cattype:='T';
-      end;
-      category:=curlang+'~'+fNewCategory.Edit1.Text;
-    end;
-    inc(MaxCategoryIndex);
-    if TUserCat.Locate('Name',category,false) then cat:=TUserCat.Int(TUserCatIndex) else
-    begin
-      TUserCat.Insert([inttostr(MaxCategoryIndex),category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
-      fMenu.RefreshCategory;
-      cat:=MaxCategoryIndex;
-    end;
-  end;
+
+  cat := NeedCategory(category, cattype, {silent=}false);
+  if cat<0 then //user cancelled
+    exit;
+
   TUser.SetOrder('Kanji_Ind');
   TUser.Locate('Kanji',kanji,false);
   insertword:=true;
@@ -484,7 +451,7 @@ begin
       sl:=TStringList.Create;
       for i:=0 to wl.Count-1 do
       begin
-        ListWordCategories(strtoint(wl[i]),sl,'',false);
+        ListWordCategories(strtoint(wl[i]),sl);
         TUser.Locate('Index',wl[i],true);
         for j:=0 to fUserFilters.ListBox1.Items.Count-1 do
           if (fUserFilters.ListBox1.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[j])<>-1) then
@@ -522,7 +489,7 @@ begin
       sl:=TStringList.Create;
       for i:=0 to wl.Count-1 do
       begin
-        ListWordCategories(strtoint(wl[i]),sl,'',false);
+        ListWordCategories(strtoint(wl[i]),sl);
         TUser.Locate('Index',wl[i],true);
         for j:=0 to fUserFilters.ListBox1.Items.Count-1 do
           if (fUserFilters.ListBox1.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[j])<>-1) then
@@ -577,6 +544,7 @@ begin
   ltl.Free;
 end;
 
+//TODO: Convert this function to unicode
 procedure TfWords.Button10Click(Sender: TObject);
 var t:textfile;
     s,s2,s3,s4:string;
@@ -609,27 +577,17 @@ var t:textfile;
   begin
     if (length(category)<2) or (category[2]<>'~') then category:=curlang+'~'+category;
     result:=false;
-    if category=awf_lastcatname then cat:=awf_lastcatindex
-    else if TUserCat.Locate('Name',category,false) then cat:=TUserCat.Int(TUserCatIndex) else
+    if category=awf_lastcatname then
+      cat:=awf_lastcatindex
+    else
     begin
-      if cattype='?'then
-      begin
-        fNewCategory.Edit1.Text:=StripCatName(category);
-        if fNewCategory.ShowModal<>idOK then begin abortprocess:=true; exit; end;
-        case fNewCategory.RadioGroup1.ItemIndex of
-          0:cattype:='L';
-          1:cattype:='G';
-          2:cattype:='T';
-        end;
-        category:=curlang+'~'+fNewCategory.Edit1.Text;
-      end;
-      if TUserCat.Locate('Name',category,false) then cat:=TUserCat.Int(TUserCatIndex) else
-      begin
-        inc(MaxCategoryIndex);
-        TUserCat.Insert([inttostr(MaxCategoryIndex),category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
-        cat:=MaxCategoryIndex;
+      cat := NeedCategory(category, cattype, {silent=}true);
+      if cat<0 then begin //user cancelled
+        abortprocess:=true;
+        exit;
       end;
     end;
+
     awf_lastcatname:=category;
     awf_lastcatindex:=cat;
     insertword:=true;
@@ -991,7 +949,9 @@ begin
         MB_ICONINFORMATION or MB_OK);
     end;
   end;
+  //We've been doing silent AddCategories, so refresh now
   fMenu.RefreshCategory;
+  fMenu.ChangeUserData;
 end;
 
 procedure TfWords.Reset;
@@ -1161,9 +1121,8 @@ begin
 end;
 
 procedure TfWords.UserDetails_Button13Click(Sender: TObject);
-var cl:TStringList;
-    i:integer;
-    s:string;
+var i:integer;
+  s:string;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
     if Application.MessageBox(
@@ -1171,15 +1130,13 @@ begin
         +'Do you want to continue?')),
       pchar(_l('#00926^eWarning')),
       MB_ICONWARNING or MB_YESNO)=idNo then exit;
-  cl:=TStringList.Create;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
     if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
-    ListWordCategories(lastwordind,cl,fUserDetails.ListBox2.Items[fUserDetails.ListBox2.ItemIndex],false);
+    RemoveWordFromCategory(lastwordind, fUserDetails.ListBox2.Items[fUserDetails.ListBox2.ItemIndex]);
   end;
-  cl.Free;
   fMenu.ChangeUserData;
   ShowIt(false);
 end;
@@ -1641,79 +1598,27 @@ begin
 end;
 
 procedure TfWords.UserCategory_SpeedButton2Click(Sender: TObject);
-var ct:string;
+var catname:string;
+  cattype: char;
 begin
   if fUserFilters.ListBox1.ItemIndex=-1 then exit;
-  fNewCategory.Caption:=_l('^eEdit category');
   TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex],false);
-  fNewCategory.Edit1.Text:=StripCatName(TUserCat.Str(TUserCatName));
-  case chr(TUserCat.Int(TUserCatType)) of
-    'L':fNewCategory.RadioGroup1.ItemIndex:=0;
-    'G':fNewCategory.RadioGroup1.ItemIndex:=1;
-    'T':fNewCategory.RadioGroup1.ItemIndex:=2;
-  end;
-  if fNewCategory.ShowModal=idOK then
-  begin
-    case fNewCategory.RadioGroup1.ItemIndex of
-      0:ct:='L';
-      1:ct:='G';
-      2:ct:='T';
-    end;
-    TUserCat.Edit([TUserCatName,TUserCatType],[curlang+'~'+fNewCategory.Edit1.Text,inttostr(ord(ct[1]))]);
+  catname := StripCatName(TUserCat.Str(TUserCatName));
+  cattype := chr(TUserCat.Int(TUserCatType));
+  if fNewCategory.EditCategory(catname, cattype) then begin
+    TUserCat.Edit([TUserCatName,TUserCatType],[curlang+'~'+catname,inttostr(ord(cattype))]);
     fMenu.RefreshCategory;
     fMenu.ChangeUserData;
   end;
-  fNewCategory.Caption:=_l('^eNew category')
 end;
 
 procedure TfWords.UserCategory_SpeedButton3Click(Sender: TObject);
-var sl:TStringList;
-    confirmed:boolean;
 begin
   if fUserFilters.ListBox1.ItemIndex=-1 then exit;
-  confirmed:=false;
-  if Application.MessageBox(
-    pchar(_l('#00857^eDo you really want to delete the category including all word links to it?')),
-    pchar(_l('#00573^eWarning')),
-    MB_ICONWARNING or MB_YESNO)=idYes then
-  begin
-    sl:=TStringList.Create;
-    TUser.First;
-    while not TUser.EOF do
-    begin
-      ListWordCategories(TUser.Int(TUserIndex),sl,'',false);
-      if (sl.Count=1) and (sl[0]=curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex]) then
-      begin
-        if not confirmed then
-          if Application.MessageBox(
-            pchar(_l('^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?')),
-            pchar(_l('#00885^eWarning')),
-            MB_ICONWARNING or MB_YESNO)=idNo then
-          begin
-            Application.MessageBox(
-              pchar(_l('#00886^eCategory was not deleted.')),
-              pchar(_l('#00887^eAborted')),
-              MB_ICONERROR or MB_OK);
-            exit;
-          end;
-        confirmed:=true;
-        TUser.Delete;
-      end;
-      TUser.Next;
-    end;
-    TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex],false);
-    TUserSheet.First;
-    while not TUserSheet.EOF do
-    begin
-      if TUserSheet.Int(TUserSheetNumber)=TUserCat.Int(TUserCatIndex) then TUserSheet.Delete;
-      TUserSheet.Next;
-    end;
-    TUserCat.Delete;
-    sl.Free;
-    fMenu.RefreshCategory;
-    fMenu.RebuildUserIndex;
-    fMenu.ChangeUserData;
-  end;
+  DeleteCategoryUI(curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex]);
+  fMenu.RefreshCategory;
+  fMenu.RebuildUserIndex;
+  fMenu.ChangeUserData;
 end;
 
 function DateOld(s:string;threshold:integer):integer;
@@ -2155,7 +2060,7 @@ begin
   fWordList.RxLabel12.Caption:=StateStr(StateNew(TUser.Int(TUserScore),2));
   sl:=TStringList.Create;
   sl.Clear;
-  ListWordCategories(strtoint(ll[twi]),sl,'',false);
+  ListWordCategories(strtoint(ll[twi]),sl);
   for i:=0 to sl.Count-1 do if s='' then s:=sl[i] else s:=s+', '+sl[i];
   fWordList.Label55.Caption:=s;
   sl.Free;
@@ -2353,7 +2258,7 @@ procedure TfWords.SaveWordList;
 var i:integer;
     fnd:boolean;
 begin
-  inc(MaxCategoryIndex);
+  Inc(MaxCategoryIndex);
   TUserCat.Insert([inttostr(MaxCategoryIndex),fWordList.Edit1.Text,inttostr(ord('W')),FormatDateTime('yyyymmdd',now)]);
   for i:=0 to ll.Count-1 do
   begin
@@ -2779,7 +2684,7 @@ begin
     for j:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
     begin
       s:=wl[j-1];
-      ListWordCategories(strtoint(s),cl,'',false);
+      ListWordCategories(strtoint(s),cl);
       for i:=0 to cl.Count-1 do if fUserDetails.ListBox2.Items.IndexOf(copy(cl[i],3,length(cl[i])-2))=-1 then fUserDetails.ListBOx2.Items.Add(copy(cl[i],3,length(cl[i])-2));
     end;
     if cl.Count>1 then fUserDetails.Button13.Enabled:=true;
@@ -2835,7 +2740,7 @@ begin
     fUserDetails.SpeedButton4.Enabled:=(StringGrid1.Row>1) and (wlc[StringGrid1.Row-2]=wlc[StringGrid1.Row-1]);
     fUserDetails.SpeedButton5.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
   end;
-  ListWordCategories(strtoint(s),cl,'',false);
+  ListWordCategories(strtoint(s),cl);
   for i:=0 to cl.Count-1 do fUserDetails.ListBOx2.Items.Add(copy(cl[i],3,length(cl[i])-2));
   if cl.Count>1 then
   fUserDetails.Button13.Enabled:=true;

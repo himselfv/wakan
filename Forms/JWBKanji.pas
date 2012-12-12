@@ -87,7 +87,7 @@ implementation
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
-  JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils;
+  JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils, JWBCategories;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -721,7 +721,7 @@ begin
       if (not fKanjiCompounds.CheckBox1.Checked) or (TUserIdx.Bool(TUserIdxBegin)) then
       begin
         sl2.Clear;
-        fWords.ListWordCategories(TUserIdx.Int(TUserIdxWord),sl2,'',false);
+        ListWordCategories(TUserIdx.Int(TUserIdxWord),sl2);
         pass:=false;
         for l:=0 to sl2.Count-1 do if (pos(curlang+'~',sl2[l])=1) or (length(sl2[l])<2) or (copy(sl2[l],2,1)<>'~') then pass:=true;
         if (pass) and (TUser.Locate('Index',TUserIdx.Str(TUserIdxWord),true)) then

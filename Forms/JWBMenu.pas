@@ -403,10 +403,9 @@ type
     procedure TranslateAll;
     procedure SetFormPos(form:TForm);
     procedure ChangeClipboard;
-    procedure WriteUserPackage;
+    procedure WriteUserPackage(dir:string);
     procedure SaveUserData;
     procedure LoadUserData;
-    procedure ChangeUserData;
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure ExportUserData(filename:string);
@@ -447,6 +446,14 @@ type
     procedure AnnotShowMedia(kanji,kana:string);
 //    procedure LoadLayout(filename:string);
 //    procedure SaveFixedLayout(filename:string);
+
+
+  protected
+    FUserDataChanged:boolean;
+    procedure SetUserDataChanged(Value: boolean);
+  public
+    procedure ChangeUserData;
+    property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
 
 
   private //Text under mouse
@@ -499,7 +506,18 @@ var
   showroma,jshowroma,cshowroma:boolean;
   CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
   dicts:TStringList;
-  TAnnots,TChar,TCharRead,TRadicals,TUser,TUserIdx,TUserSheet,TUserCat,TKanaKanji,TUserPrior:TTextTable;
+  //Tables
+  TAnnots,
+  TChar,
+  TCharRead,
+  TRadicals,
+  TUser,
+  TUserIdx,
+  TUserSheet,
+  TUserCat,
+  TKanaKanji,
+  TUserPrior:TTextTable;
+  //Field indexes
   TCharIndex,TCharChinese,TCharType,TCharUnicode,
   TCharStrokeCount,TCharJpStrokeCount,TCharJpFrequency,TCharChFrequency,
   TCharJouyouGrade,
@@ -513,10 +531,25 @@ var
   TRadicalsJapaneseCount,TRadicalsKangXiCount,
   TUserEnglish,TUserPhonetic,TUserPhoneticSort,TUserKanji,TUserAdded,
   TUserPrinted,TUserLearned,TUserMastered,TUserNoPrinted,TUserScore,TUserMaxScore,
-  TUserIdxWord,TUserIdxKanji,TUserIdxBegin,TUserIdxIndex,TUserIndex,
-  TUserSheetWord,TUserSheetNumber,TUserSheetPos,TUserCatIndex,TUserCatName,TUserCatType,TUserCatCreated:integer;
+
+  TUserIdxWord,
+  TUserIdxKanji,
+  TUserIdxBegin,
+  TUserIdxIndex,
+  TUserIndex: integer;
+  MaxUserIndex:integer;
+
+  TUserSheetWord,
+  TUserSheetNumber,
+  TUserSheetPos:integer;
+
+  TUserCatIndex,
+  TUserCatName, //string, prefix~Category name. See commens in JWBCategories
+  TUserCatType, //TCatType, see comments in JWBCategories
+  TUserCatCreated: integer; //string, datetime of creation
+  MaxCategoryIndex: integer;
+
   TUserConvertKanji,TUserConvertCount:integer;
-  KnownLearned:integer;
   Clip:FString;
   cliptrans:TCharacterLineProps;
   NotUsedDicts:string;
@@ -524,9 +557,7 @@ var
   OfflineDicts:string;
   oldhandle:THandle;
   critsec:boolean;
-  UserDataChanged:boolean;
   globheight:integer;
-  MaxCategoryIndex,MaxUserIndex:integer;
   ChinesePresent:boolean;
   defll: TDeflectionList;
   partl,bopomofol,suffixl,ignorel,readchl:TStringList;
@@ -585,7 +616,8 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
-  JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard;
+  JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
+  JWBCategories;
 
 {$R *.DFM}
 
@@ -922,12 +954,16 @@ begin
   fUserAdd.ComboBox1.Items.Clear;
   fUserDetails.ComboBox2.Items.Clear;
   fUserFilters.TabSet1Change(fMenu,fUserFilters.TabSet1.TabIndex,b);
+
   TUserCat.First;
   while not TUserCat.EOF do
   begin
     s:=TUserCat.Str(TUserCatName);
-    lc:='j';
-    if (length(s)>1) and (s[2]='~') then lc:=s[1] else TUserCat.Edit([TUserCatName],['j~'+s]);
+    lc:=GetCatPrefix(s);
+    if lc='?' then begin
+      lc := 'j';
+      TUserCat.Edit([TUserCatName],['j~'+s])
+    end;
     s:=StripCatName(s);
     if lc=curlang then
     begin
@@ -937,6 +973,7 @@ begin
     end;
     TUserCat.Next;
   end;
+
   if fDicAdd.ComboBox1.Items.Count>0 then fDicAdd.ComboBox1.Text:=fDicAdd.ComboBox1.Items[0];
   if fUserAdd.ComboBox1.Items.Count>0 then fUserAdd.ComboBox1.Text:=fUserAdd.ComboBox1.Items[0];
 end;
@@ -949,12 +986,16 @@ begin
   fKanjiDetails.ComboBox1.Items.Clear;
   fKanjiSearch.ListBox1.Items.Clear;
   kanjicatuniqs.Clear;
+
   TUserCat.First;
   while not TUserCat.EOF do
   begin
     s:=TUserCat.Str(TUserCatName);
-    lc:='j';
-    if (length(s)>1) and (s[2]='~') then lc:=s[1] else TUserCat.Edit([TUserCatName],['j~'+s]);
+    lc:=GetCatPrefix(s);
+    if lc='?' then begin
+      lc := 'j';
+      TUserCat.Edit([TUserCatName],['j~'+s])
+    end;
     s:=StripCatName(s);
     if lc='k'then
     begin
@@ -964,6 +1005,7 @@ begin
     end;
     TUserCat.Next;
   end;
+
   if fKanjiDetails.ComboBox1.Items.Count=0 then showmessage('Internal error: No category!');
   fKanjiDetails.ComboBox1.Text:=fKanjiDetails.ComboBox1.Items[0];
   fKanjiDetails.ComboBox1.ItemIndex:=0;
@@ -1331,11 +1373,34 @@ begin
 //  if fClipboard.tag=1 then fClipboard.Show;
 end;
 
-procedure TfMenu.WriteUserPackage;
+//Used in several places when loading
+function FindMaxUserIndex(): integer;
+begin
+  Result:=0;
+  while not TUser.EOF do
+  begin
+    if TUser.Int(TUserIndex)>Result then Result:=TUser.Int(TUserIndex);
+    TUser.Next;
+  end;
+end;
+
+function FindMaxCategoryIndex(): integer;
+begin
+  Result:=0;
+  TUserCat.First;
+  while not TUserCat.EOF do
+  begin
+    if TUserCat.Int(TUserCatIndex)>Result then Result:=TUserCat.Int(TUserCatIndex);
+    TUserCat.Next;
+  end;
+end;
+
+
+procedure TfMenu.WriteUserPackage(dir:string);
 var f:file of byte;
     b:byte;
 begin
-  assignfile(f,'user\struct.ver');
+  assignfile(f,dir+'\struct.ver');
   rewrite(f);
   b:=CurStructVer;
   write(f,b);
@@ -1358,90 +1423,68 @@ begin
   PKGWriteForm.PKGWriteCmd('CRCMode 0');
   PKGWriteForm.PKGWriteCmd('PackMode 0');
   PKGWriteForm.PKGWriteCmd('CryptCode 978312');
-  PKGWriteForm.PKGWriteCmd('Include user');
+  PKGWriteForm.PKGWriteCmd('Include '+dir);
   PKGWriteForm.PKGWriteCmd('Finish');
+end;
+
+procedure TfMenu.SetUserDataChanged(Value: boolean);
+begin
+  FUserDataChanged := Value;
+//  SpeedButton2.Enabled:=FUserDataChanged;
+//  SpeedButton7.Enabled:=FUserDataChanged;
+  aSaveUser.Enabled:=FUserDataChanged;
+  aCancelUser.Enabled:=FUserDataChanged;
 end;
 
 procedure TfMenu.ChangeUserData;
 begin
   UserDataChanged:=true;
-//  SpeedButton2.Enabled:=true;
-//  SpeedButton7.Enabled:=true;
-  aSaveUser.Enabled:=true;
-  aCancelUser.Enabled:=true;
 end;
 
 procedure TfMenu.SaveUserData;
 var un,i:integer;
+  tempDir: string;
 begin
-  if UserDataChanged then
+  if not UserDataChanged then exit;
+
+  CopyFile('wakan.usr','wakan.bak',false);
+  RefreshKanjiCategory;
+  Screen.Cursor:=crHourGlass;
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+  for i:=0 to kanjicatuniqs.Count-1 do
   begin
-    CopyFile('wakan.usr','wakan.bak',false);
-    RefreshKanjiCategory;
-    Screen.Cursor:=crHourGlass;
-    {$I-}
-    mkdir('user');
-    {$I+}
-    ioresult;
-    for i:=0 to kanjicatuniqs.Count-1 do
-    begin
-      un:=strtoint(kanjicatuniqs[i]);
-      if un=KnownLearned then SaveKnownList(un,'user\knownchar.bin')
-        else SaveKnownList(un,'user\char'+inttostr(un)+'.bin');
-    end;
-    TUser.WriteTable('user\User',false);
-    TUserIdx.WriteTable('user\UserIdx',false);
-    TUserSheet.WriteTable('user\UserSheet',false);
-    TUserCat.WriteTable('user\UserCat',false);
-    TUserPrior.WriteTable('user\UserPrior',false);
-    WriteUserPackage;
-    DeleteFile('user\knownchar.bin');
-    DeleteFile('user\User.info');
-    DeleteFile('user\UserIdx.info');
-    DeleteFile('user\UserSheet.info');
-    DeleteFile('user\UserCat.info');
-    DeleteFile('user\UserPrior.info');
-    DeleteFile('user\User.data');
-    DeleteFile('user\UserIdx.data');
-    DeleteFile('user\UserSheet.data');
-    DeleteFile('user\UserCat.data');
-    DeleteFile('user\UserPrior.data');
-    DeleteFile('user\User.struct');
-    DeleteFile('user\UserIdx.struct');
-    DeleteFile('user\UserSheet.struct');
-    DeleteFile('user\UserCat.struct');
-    DeleteFile('user\UserPrior.struct');
-    DeleteFile('user\User.index');
-    DeleteFile('user\UserIdx.index');
-    DeleteFile('user\UserSheet.index');
-    DeleteFile('user\UserCat.index');
-    DeleteFile('user\UserPrior.index');
-    DeleteFile('user\struct.ver');
-    {$I-}
-    rmdir('user');
-    {$I+}
-    ioresult;
-    {$I-}
-    mkdir('backup');
-    {$I+}
-    ioresult;
-    CopyFile('wakan.usr',pchar('backup\'+FormatDateTime('yyyymmdd',now)+'.usr'),false);
-    Screen.Cursor:=crDefault;
-    UserDataChanged:=false;
-//    SpeedButton2.Enabled:=false;
-//    SpeedButton7.Enabled:=false;
-    aSaveUser.Enabled:=false;
-    aCancelUser.Enabled:=false;
+    un:=strtoint(kanjicatuniqs[i]);
+    if un=KnownLearned then
+      SaveKnownList(un,tempDir+'\knownchar.bin')
+    else
+      SaveKnownList(un,tempDir+'\char'+inttostr(un)+'.bin');
   end;
+  TUser.WriteTable(tempDir+'\User',false);
+  TUserIdx.WriteTable(tempDir+'\UserIdx',false);
+  TUserSheet.WriteTable(tempDir+'\UserSheet',false);
+  TUserCat.WriteTable(tempDir+'\UserCat',false);
+  TUserPrior.WriteTable(tempDir+'\UserPrior',false);
+  WriteUserPackage(tempDir);
+  DeleteDirectory(tempDir);
+  {$I-}
+  mkdir('backup');
+  {$I+}
+  ioresult;
+  CopyFile('wakan.usr',pchar('backup\'+FormatDateTime('yyyymmdd',now)+'.usr'),false);
+  Screen.Cursor:=crDefault;
+  UserDataChanged:=false;
 end;
 
 procedure TfMenu.LoadUserData;
-var t:textfile;
-    ps:TPackageSource;
-    ms:TMemoryStream;
-    ver:integer;
-    lcat:boolean;
-    ux:integer;
+var tempDir: string;
+  t:textfile;
+  ps:TPackageSource;
+  ms:TMemoryStream;
+  ver:integer;
+  CatIdx:integer;
+  CatName: string;
+  CatType: char;
 begin
   UserDataChanged:=false;
 //  SpeedButton2.Enabled:=false;
@@ -1460,13 +1503,11 @@ begin
 
   if not FileExists('wakan.usr') then
   begin
-    {$I-}
-    mkdir('user');
-    {$I+}
-    ioresult;
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
     CreateKnownList(1,0);
-    SaveKnownList(1,'user\knownchar.bin');
-    assignfile(t,'user\User.info');
+    SaveKnownList(1,tempDir+'\knownchar.bin');
+    assignfile(t,tempDir+'\User.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -1504,7 +1545,7 @@ begin
     writeln(t,'Score+PhoneticSort');
     writeln(t,'$CREATE');
     closefile(t);
-    assignfile(t,'user\UserIdx.info');
+    assignfile(t,tempDir+'\UserIdx.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -1519,7 +1560,7 @@ begin
     writeln(t,'Kanji');
     writeln(t,'$CREATE');
     closefile(t);
-    assignfile(t,'user\UserSheet.info');
+    assignfile(t,tempDir+'\UserSheet.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -1536,7 +1577,7 @@ begin
     writeln(t,'Number+Pos');
     writeln(t,'$CREATE');
     closefile(t);
-    assignfile(t,'user\UserCat.info');
+    assignfile(t,tempDir+'\UserCat.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -1558,7 +1599,7 @@ begin
     writeln(t,'Created+Name');
     writeln(t,'$CREATE');
     closefile(t);
-    assignfile(t,'user\UserPrior.info');
+    assignfile(t,tempDir+'\UserPrior.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -1574,18 +1615,8 @@ begin
     writeln(t,'Count');
     writeln(t,'$CREATE');
     closefile(t);
-    WriteUserPackage;
-    DeleteFile('user\knownchar.bin');
-    DeleteFile('user\User.info');
-    DeleteFile('user\UserIdx.info');
-    DeleteFile('user\UserSheet.info');
-    DeleteFile('user\UserCat.info');
-    DeleteFile('user\UserPrior.info');
-    DeleteFile('user\struct.ver');
-    {$I-}
-    rmdir('user');
-    {$I+}
-    ioresult;
+    WriteUserPackage(tempDir);
+    DeleteDirectory(tempDir);
   end;
 
   ps:=TPackageSource.Create('wakan.usr',621030,587135,978312);
@@ -1662,39 +1693,53 @@ begin
   TUserCatName:=TUserCat.Field('Name');
   TUserCatType:=TUserCat.Field('Type');
   TUserCatCreated:=TUserCat.Field('Created');
+
+  KnownLearned:=-1; //not found
   TUserCat.First;
-  lcat:=false;
-  ux:=0;
   while not TUserCat.EOF do
   begin
-    ux:=strtoint(TUserCat.Str(TUserCat.Field('Index')));
-    if TUserCat.Int(TUserCat.Field('Type'))=ord('Q') then
+    CatIdx:=strtoint(TUserCat.Str(TUserCatIndex));
+    CatName:=TUserCat.Str(TUserCatName);
+    CatType:=chr(TUserCat.Int(TUserCatType));
+
+    if CatType='Q' then
     begin
-      lcat:=true;
+     //First Q category is selected as LEARNED, rest are bugs and are ignored here.
+     //But we still load them, that'd do us no harm and simplify processing later.
+      if KnownLearned<0 then
+        KnownLearned:=CatIdx;
       ms:=ps['knownchar.bin'].Lock;
-      KnownLearned:=ux;
-      CreateKnownList(ux,0);
-      LoadKnownList(ux,ms);
+      CreateKnownList(CatIdx,0);
+      LoadKnownList(CatIdx,ms);
       ps['knownchar.bin'].Unlock;
-    end;
-    if TUserCat.Int(TUserCat.Field('Type'))=ord('K') then
+    end else
+    if CatType='K' then
     begin
-      ms:=ps['char'+inttostr(ux)+'.bin'].Lock;
-      CreateKnownList(ux,0);
-      LoadKnownList(ux,ms);
-      ps['char'+inttostr(ux)+'.bin'].Unlock;
+      ms:=ps['char'+inttostr(CatIdx)+'.bin'].Lock;
+      CreateKnownList(CatIdx,0);
+      LoadKnownList(CatIdx,ms);
+      ps['char'+inttostr(CatIdx)+'.bin'].Unlock;
     end;
+
     TUserCat.Next;
   end;
-  if not lcat then
+
+  if FixDuplicateCategories() then //have to do this after we (perhaps) found the KnownLearned
+    UserDataChanged := true;
+
+ //Add "LEARNED" category, if missing
+  if KnownLearned<0 then
   begin
-    TUserCat.Insert([inttostr(ux+1),'k~'+_l('LEARNED'),inttostr(ord('Q')),FormatDateTime('yyyymmdd',now)]);
+    KnownLearned := FindMaxCategoryIndex()+1; //can't use CatIdx since we want MAX index, not the LAST one
+    TUserCat.Insert([IntToStr(KnownLearned), 'k~'+_l('LEARNED'), inttostr(ord('Q')), FormatDateTime('yyyymmdd',now)]);
     ms:=ps['knownchar.bin'].Lock;
-    CreateKnownList(ux+1,0);
-    KnownLearned:=ux+1;
-    LoadKnownList(ux+1,ms);
+    CreateKnownList(KnownLearned+1,0);
+    KnownLearned:=KnownLearned+1;
+    LoadKnownList(KnownLearned+1,ms);
     ps['knownchar.bin'].Unlock;
+    UserDataChanged := true;
   end;
+
   try
     ms:=ps['struct.ver'].Lock;
     ms.Read(ver,1);
@@ -1726,6 +1771,7 @@ begin
       exit;
     end;
   end;
+
   if not TUser.CheckIndex then begin
     TUser.Reindex;
     UserDataChanged:=true; //or we'd be reindexing each load
@@ -1742,8 +1788,9 @@ begin
     TUserCat.Reindex;
     UserDataChanged:=true;
   end;
+
   Screen.Cursor:=crDefault;
-  userdataloaded:=true;
+  UserDataLoaded:=true;
 end;
 
 procedure TfMenu.ExportUserData(filename:string);
@@ -1808,19 +1855,8 @@ begin
   closefile(t);
   ChangeUserData;
   SaveUserData;
-  MaxUserIndex:=0;
-  while not TUser.EOF do
-  begin
-    if TUser.Int(TUserIndex)>MaxUserIndex then MaxUserIndex:=TUser.Int(TUserIndex);
-    TUser.Next;
-  end;
-  MaxCategoryIndex:=0;
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    if TUserCat.Int(TUserCatIndex)>MaxCategoryIndex then MaxCategoryIndex:=TUserCat.Int(TUserCatIndex);
-    TUserCat.Next;
-  end;
+  MaxUserIndex := FindMaxUserIndex();
+  MaxCategoryIndex := FindMaxCategoryIndex();
   RefreshCategory;
   Screen.Cursor:=crDefault;
 end;
@@ -1829,19 +1865,21 @@ function TfMenu.FlushUserData:boolean;
 var res:integer;
 begin
   result:=true;
-  if UserDataChanged then
+  if not UserDataChanged then
+    exit;
+
+  if fSettings.CheckBox46.Checked then
+    SaveUserData
+  else
   begin
-    if fSettings.CheckBox46.Checked then SaveUserData else
-    begin
     res:=Application.MessageBox(
       pchar(_l('#00340^eUser data was changed. Do you want to save it?')),
       pchar(_l('#00341^eApplication exit')),
       MB_YESNOCANCEL or MB_ICONQUESTION);
     case res of
       idYes:SaveUserData;
-      idNo:LoadUserData;
-      idCancel:result:=false;
-    end;
+      idNo:UserDataChanged:=false; //do not save
+      idCancel:Result:=false;
     end;
   end;
 end;
@@ -2798,19 +2836,8 @@ begin
   SetFormPos(fWords);
   SetFormPos(fUser);
   TUser.First;
-  MaxUserIndex:=0;
-  while not TUser.EOF do
-  begin
-    if TUser.Int(TUserIndex)>MaxUserIndex then MaxUserIndex:=TUser.Int(TUserIndex);
-    TUser.Next;
-  end;
-  MaxCategoryIndex:=0;
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    if TUserCat.Int(TUserCatIndex)>MaxCategoryIndex then MaxCategoryIndex:=TUserCat.Int(TUserCatIndex);
-    TUserCat.Next;
-  end;
+  MaxUserIndex := FindMaxUserIndex;
+  MaxCategoryIndex := FindMaxCategoryIndex();
   RefreshCategory;
   RefreshKanjiCategory;
   StrokeOrderPackage:=nil;

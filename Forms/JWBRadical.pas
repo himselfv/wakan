@@ -55,7 +55,7 @@ var
 implementation
 
 uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBSettings, JWBKanjiSearch,
-  PKGWrite;
+  PKGWrite, JWBCategories;
 
 var sel:array[1..300] of boolean;
 

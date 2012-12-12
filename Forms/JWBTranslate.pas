@@ -225,7 +225,7 @@ var
 implementation
 
 uses JWBUser, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
-  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit;
+  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit, JWBCategories;
 
 {$R *.DFM}
 

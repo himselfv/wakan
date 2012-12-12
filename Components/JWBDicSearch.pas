@@ -142,7 +142,8 @@ var
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
 
 implementation
-uses Forms, Windows, JWBMenu, JWBUnit, JWBUser, JWBSettings, JWBWords, Math;
+uses Forms, Windows, JWBMenu, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
+  JWBCategories;
 
 
 procedure SortResults(sl: TStringList); forward;
@@ -1019,7 +1020,7 @@ begin
       else
         scomp:=' // '+scomp;
       sl2:=TStringList.Create;
-      fWords.ListWordCategories(TUser.Int(TUserIndex),sl2,'',false);
+      ListWordCategories(TUser.Int(TUserIndex),sl2);
       for sl2i:=0 to sl2.Count-1 do s2:=s2+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
       sl2.Free;
       sl[i]:=scur+s2+scomp;

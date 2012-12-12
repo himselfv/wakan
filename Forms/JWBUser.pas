@@ -120,7 +120,8 @@ implementation
 
 uses JWBStrings, JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
-  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math;
+  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
+  JWBCategories;
 
 var curword:integer;
     hinthide:boolean;
@@ -510,7 +511,7 @@ begin
       fWordCategory.RxLabel9.Caption:=StateStr(TUser.Int(TUserScore));
       sl:=TStringList.Create;
       sl.Clear;
-      fWords.ListWordCategories(strtoint(copy(ul[curword-1],1,6)),sl,'',false);
+      ListWordCategories(strtoint(copy(ul[curword-1],1,6)),sl);
       s:='';
       for i:=0 to sl.Count-1 do if s='' then s:=sl[i] else s:=s+', '+sl[i];
       fWordCategory.Label55.Caption:=s;
