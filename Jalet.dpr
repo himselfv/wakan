@@ -15,11 +15,12 @@ uses
   StdPrompt in 'Components\StdPrompt\StdPrompt.pas' {SMPromptForm},
   UnicodeFont in 'Forms\UnicodeFont.pas' {fSelectFont},
   JWBUnit in 'Components\JWBUnit.pas',
+  JWBUtils in 'Components\JWBUtils.pas',
+  JWBCategories in 'Components\JWBCategories.pas',
+  JWBDicSearch in 'Components\JWBDicSearch.pas',
   JWBKanjiCard in 'Components\JWBKanjiCard.pas',
   JWBConvertTbl in 'Components\JWBConvertTbl.pas',
   JWBConvert in 'Components\JWBConvert.pas',
-  JWBUtils in 'Components\JWBUtils.pas',
-  JWBDicSearch in 'Components\JWBDicSearch.pas',
   JWBMenu in 'Forms\JWBMenu.pas' {fMenu},
   JWBKanji in 'Forms\JWBKanji.pas' {fKanji},
   JWBRadical in 'Forms\JWBRadical.pas' {fRadical},
@@ -57,8 +58,7 @@ uses
   JWBLanguage in 'Forms\JWBLanguage.pas' {fLanguage},
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
-  JWBMedia in 'Forms\JWBMedia.pas' {fMedia},
-  JWBCategories in 'Components\JWBCategories.pas';
+  JWBMedia in 'Forms\JWBMedia.pas' {fMedia};
 
 {$R *.RES}
 
