@@ -1121,7 +1121,6 @@ begin
 
       //If the operation is taking too long to be noticeable
       if (sp=nil) and (GetTickCount-startTime > 200) then begin
-        SMYesNo(true, 'blah', 'mess');
        //Bring up the progress window
         sp:=SMProgressDlgCreate(
           _l('#00684^eTranslator'),

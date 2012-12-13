@@ -89,7 +89,6 @@ object SMPromptForm: TSMPromptForm
     Width = 97
     Height = 25
     Caption = 'mbAll'
-    DoubleBuffered = True
     Glyph.Data = {
       F2010000424DF201000000000000760000002800000024000000130000000100
       0400000000007C01000000000000000000001000000010000000000000000000
@@ -108,7 +107,6 @@ object SMPromptForm: TSMPromptForm
       A224333333333333338F38F300003333333333333A223333333333333338F8F3
       000033333333333333A3333333333333333383330000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 0
     OnClick = AllButtonClick
   end
@@ -119,7 +117,6 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Caption = 'mbYes'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -138,7 +135,6 @@ object SMPromptForm: TSMPromptForm
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = YesButtonClick
   end
@@ -149,7 +145,6 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Cancel = True
     Caption = 'mbNo'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -168,7 +163,6 @@ object SMPromptForm: TSMPromptForm
       3333333333338888883333330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 2
     OnClick = NoButtonClick
   end
@@ -179,7 +173,6 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Cancel = True
     Caption = 'mbCancel'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -198,7 +191,6 @@ object SMPromptForm: TSMPromptForm
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 3
     OnClick = CancelButtonClick
   end
@@ -208,7 +200,6 @@ object SMPromptForm: TSMPromptForm
     Width = 97
     Height = 25
     Caption = 'mbRetry'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -227,7 +218,6 @@ object SMPromptForm: TSMPromptForm
       3333333333338888883333330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 4
     OnClick = RetryButtonClick
   end
@@ -237,7 +227,6 @@ object SMPromptForm: TSMPromptForm
     Width = 97
     Height = 25
     Caption = 'mbIgnore'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -256,7 +245,6 @@ object SMPromptForm: TSMPromptForm
       33333333333333833F3333330000333333336663333333333333333888333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 5
     OnClick = IgnoreButtonClick
   end
@@ -266,9 +254,7 @@ object SMPromptForm: TSMPromptForm
     Width = 97
     Height = 25
     Caption = 'mbHelp'
-    DoubleBuffered = True
     Kind = bkHelp
-    ParentDoubleBuffered = False
     TabOrder = 6
     OnClick = HelpButtonClick
   end
@@ -279,7 +265,6 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Cancel = True
     Caption = 'mbAbort'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -298,7 +283,6 @@ object SMPromptForm: TSMPromptForm
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 7
     OnClick = AbortButtonClick
   end
@@ -316,7 +300,6 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Caption = 'mbOK'
     Default = True
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -335,7 +318,6 @@ object SMPromptForm: TSMPromptForm
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 9
     OnClick = OKButtonClick
   end
@@ -345,7 +327,6 @@ object SMPromptForm: TSMPromptForm
     Width = 97
     Height = 25
     Caption = 'mbYesToAll'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -364,7 +345,6 @@ object SMPromptForm: TSMPromptForm
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 10
     OnClick = YesToAllButtonClick
   end
@@ -375,7 +355,6 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Cancel = True
     Caption = 'mbNoToAll'
-    DoubleBuffered = True
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000010000000000000000000
@@ -394,7 +373,6 @@ object SMPromptForm: TSMPromptForm
       3333333333338888883333330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     TabOrder = 11
     OnClick = NoToAllButtonClick
   end
