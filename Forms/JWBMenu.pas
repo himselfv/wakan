@@ -2556,7 +2556,7 @@ begin
   fSettings.cbPrintMeaning.Checked:=reg.ReadBool('Translate','PrintMeaning',true);
   fSettings.cbNoPrintColors.Checked:=reg.ReadBool('Translate','NoPrintColors',true);
   fSettings.cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
-  fSettings.cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',false);  
+  fSettings.cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
   aEditorColors.Checked:=reg.ReadBool('Translate','TransColors',true);
   fTranslate.sbUseTlColors.Down:=aEditorColors.Checked;
   fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);

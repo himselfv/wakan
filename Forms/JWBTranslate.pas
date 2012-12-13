@@ -225,7 +225,8 @@ var
 implementation
 
 uses JWBUser, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
-  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit, JWBCategories;
+  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit,
+  JWBCategories, ComCtrls;
 
 {$R *.DFM}
 
@@ -1103,51 +1104,69 @@ begin
  //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
   startTime := GetTickCount;
+  try
 
- //Setup everything for translation
-  fUser.SpeedButton1.Down:=false;
-  fUser.SpeedButton2.Down:=false;
-  fUser.SpeedButton3.Down:=false;
-  fUser.Look_Setup(4, st);
+   //Setup everything for translation
+    fUser.SpeedButton1.Down:=false;
+    fUser.SpeedButton2.Down:=false;
+    fUser.SpeedButton3.Down:=false;
+    fUser.Look_Setup(4, st);
 
-  for i:=blockfromy to blocktoy do
-  begin
-    bg:=0;
-    en:=flength(doc[i])-1;
-    if i=blockfromy then bg:=blockfromx;
-    if i=blocktoy then en:=blocktox;
+    for i:=blockfromy to blocktoy do
+    begin
+      bg:=0;
+      en:=flength(doc[i])-1;
+      if i=blockfromy then bg:=blockfromx;
+      if i=blocktoy then en:=blocktox;
 
-    //If the operation is taking too long to be noticeable
-    if (sp=nil) and (GetTickCount-startTime > 200) then
-     //Bring up the progress window
-      sp:=SMProgressDlg(_l('#00684^eTranslator'),
-        _l('#00685^eTranslating...'),blocktoy-blockfromy+1);
+      //If the operation is taking too long to be noticeable
+      if (sp=nil) and (GetTickCount-startTime > 200) then begin
+       //Bring up the progress window
+        sp:=SMProgressDlg(_l('#00684^eTranslator'),
+          _l('#00685^eTranslating...'),blocktoy-blockfromy+1,{canCancel=}true);
+        sp.Width := 200;
+      end;
 
-    if sp<>nil then begin
-     //Internally we only update once in a while
-      sp.SetProgress(i-blockfromy);
-      sp.ProcessMessages;
+      if sp<>nil then begin
+       //Internally we only update once in a while
+        sp.SetProgress(i-blockfromy);
+        sp.ProcessMessages;
+        if sp.ModalResult=mrCancel then begin
+          sp.Hide;
+          if Application.MessageBox(
+            PChar(_l('^eThe text has only been partially translated. Do you '
+              +'really want to abort the operation?')),
+            PChar(_l('^eConfirm abort')),
+            MB_ICONQUESTION+MB_YESNO
+          )=idYes then
+             break; //and restore+repaint
+          sp.ModalResult := 0;
+          sp.Show;
+        end;
+      end;
+
+      j:=bg;
+      while j<=en do
+        if IsLocaseLatin(doctr[i].chars[j].wordstate) then
+        begin
+          inc(j);
+          while doctr[i].chars[j].wordstate='<'do inc(j);
+        end else
+        begin
+          rcurx:=j;
+          rcury:=i;
+          dic_ignorekana:=true;
+          fUser.Look_Run(4, @st, {NoGridDisplay=}true, {NoScreenUpdates=}true);
+          dic_ignorekana:=false;
+          a:=SetWordTrans(j,i,true,true,false);
+          if a=0 then a:=1;
+          inc(j,a);
+        end;
     end;
 
-    j:=bg;
-    while j<=en do
-      if IsLocaseLatin(doctr[i].chars[j].wordstate) then
-      begin
-        inc(j);
-        while doctr[i].chars[j].wordstate='<'do inc(j);
-      end else
-      begin
-        rcurx:=j;
-        rcury:=i;
-        dic_ignorekana:=true;
-        fUser.Look_Run(4, @st, {NoGridDisplay=}true, {NoScreenUpdates=}true);
-        dic_ignorekana:=false;
-        a:=SetWordTrans(j,i,true,true,false);
-        if a=0 then a:=1;
-        inc(j,a);
-      end;
+  finally
+    sp.Free; //Important, because it's modal window
   end;
-  sp.Free;
   rcurx:=oldcurx;
   rcury:=oldcury;
   mustrepaint:=true;

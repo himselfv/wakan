@@ -154,7 +154,7 @@ function SMMessageDlg(title,mess:string):TSMPromptForm;
 // creates buttonless message form and displays it
 function SMMessageFixDlg(title,mess:string;minsizex:integer):TSMPromptForm;
 // creates buttonless message form of given minimal size and displays it
-function SMProgressDlg(title,mess:string;maxprogress:integer):TSMPromptForm;
+function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean=false;AOwner:TWinControl=nil):TSMPromptForm;
 // creates buttonless message form with a progress bar that has its
 // maximum position maxprogress and displays it
 function SMPromptDlg(buttons:TMsgDlgButtons;sign,title,mess:string):TMsgDlgBtn;
@@ -192,6 +192,8 @@ const
 constructor TSMPromptForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  CurRes := mbOK; //by default
+  ModalResult := 0;
 end;
 
 destructor TSMPromptForm.Destroy;
@@ -319,66 +321,77 @@ end;
 procedure TSMPromptForm.IgnoreButtonClick(Sender: TObject);
 begin
   curres:=mbIgnore;
+  ModalResult:=mrIgnore;
   Close;
 end;
 
 procedure TSMPromptForm.OKButtonClick(Sender: TObject);
 begin
   curres:=mbOK;
+  ModalResult:=mrOK;
   Close;
 end;
 
 procedure TSMPromptForm.NoButtonClick(Sender: TObject);
 begin
   curres:=mbNo;
+  ModalResult:=mrNo;
   Close;
 end;
 
 procedure TSMPromptForm.YesButtonClick(Sender: TObject);
 begin
   curres:=mbYes;
+  ModalResult:=mrYes;
   Close;
 end;
 
 procedure TSMPromptForm.CancelButtonClick(Sender: TObject);
 begin
   curres:=mbCancel;
+  ModalResult:=mrCancel;
   Close;
 end;
 
 procedure TSMPromptForm.RetryButtonClick(Sender: TObject);
 begin
   curres:=mbRetry;
+  ModalResult:=mrRetry;
   Close;
 end;
 
 procedure TSMPromptForm.HelpButtonClick(Sender: TObject);
 begin
   curres:=mbHelp;
+  ModalResult:=mrCancel;
   Close;
 end;
 
 procedure TSMPromptForm.AllButtonClick(Sender: TObject);
 begin
   curres:=mbAll;
+  ModalResult:=mrAll;
   Close;
 end;
 
 procedure TSMPromptForm.AbortButtonClick(Sender: TObject);
 begin
   curres:=mbAbort;
+  ModalResult:=mrAbort;
   Close;
 end;
 
 procedure TSMPromptForm.YesToAllButtonClick(Sender: TObject);
 begin
   curres:=mbYesToAll;
+  ModalResult:=mrYesToAll;
   Close;
 end;
 
 procedure TSMPromptForm.NoToAllButtonClick(Sender: TObject);
 begin
   curres:=mbNoToAll;
+  ModalResult:=mrNoToAll;
   Close;
 end;
 
@@ -486,10 +499,16 @@ begin
   result.Appear;
 end;
 
-function SMProgressDlg(title,mess:string;maxprogress:integer):TSMPromptForm;
+function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean;AOwner:TWinControl):TSMPromptForm;
+var btns: TMsgDlgButtons;
 begin
-  result:=SMCreateDlg([],200,0,true,'',title,mess);
+  if canCancel then
+    btns := [mbCancel]
+  else
+    btns := [];
+  result:=SMCreateDlg(btns,200,0,true,'',title,mess);
   result.SetMaxProgress(maxprogress);
+  Result.Parent := AOwner;
   result.AppearModal;
 end;
 
