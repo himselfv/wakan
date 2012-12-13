@@ -49,6 +49,10 @@ uses
   StdCtrls, ExtCtrls, Buttons, ComCtrls;
 
 type
+ {$IF CompilerVersion<21}
+  TTaskWindowList = pointer; //not defined on older compilers
+ {$IFEND}
+
   TSMPromptForm = class(TForm)
     Sign1Label: TLabel;
     Sign2Label: TLabel;
@@ -78,6 +82,7 @@ type
     procedure AbortButtonClick(Sender: TObject);
     procedure YesToAllButtonClick(Sender: TObject);
     procedure NoToAllButtonClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
 
   protected //Progress bar
     updateProgressEvery: integer;
@@ -100,6 +105,18 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+  protected //Buttons
+    FButtonYPos: integer; //set by FormResize
+    FVisibleButtons: TMsgDlgButtons;
+    FVisibleButtonCount: integer; //available after setting visible buttons
+    FTotalButtonWidth: integer; //same
+    procedure SetVisibleButtons(buttons: TMsgDlgButtons);
+  public
+    property ButtonYPos: integer read FButtonYPos;
+    property VisibleButtons: TMsgDlgButtons read FVisibleButtons write SetVisibleButtons;
+    property VisibleButtonCount: integer read FVisibleButtonCount;
+    property TotalButtonWidth: integer read FTotalButtonWidth;
 
   protected
     CurRes:TMsgDlgBtn; //Why do we have this when there's ModalResult?..
@@ -138,8 +155,9 @@ procedure SMSetButtonCaption(button:TMsgDlgBtn;cap:string);
 // valid buttons are:
 //   mbOK, mbCancel, mbAll, mbYes, mbYesToAll, mbNo, mbNoToAll,
 //   mbAbort, mbRetry, mbIgnore, mbHelp
+
 function SMCreateDlg(buttons:TMsgDlgButtons;minsizex,minsizey:integer;
-           hasprogress:boolean;sign,title,mess:string):TSMPromptForm;
+  hasprogress:boolean;sign,title,mess:string):TSMPromptForm;
 // creates the dialog form (but does not show it, use Appear method to
 // show it) and returns the created form
 // buttons - buttons on the form, [] means form without buttons
@@ -153,8 +171,10 @@ function SMCreateDlg(buttons:TMsgDlgButtons;minsizex,minsizey:integer;
 function SMMessageDlg(title,mess:string):TSMPromptForm;
 // creates buttonless message form and displays it
 function SMMessageFixDlg(title,mess:string;minsizex:integer):TSMPromptForm;
-// creates buttonless message form of given minimal size and displays it
+
 function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean=false;AOwner:TWinControl=nil):TSMPromptForm;
+function SMProgressDlgCreate(title,mess:string;maxprogress:integer;canCancel:boolean=false):TSMPromptForm;
+
 // creates buttonless message form with a progress bar that has its
 // maximum position maxprogress and displays it
 function SMPromptDlg(buttons:TMsgDlgButtons;sign,title,mess:string):TMsgDlgBtn;
@@ -188,6 +208,11 @@ const
  //SMPromptForm.ProcessMessages won't check for messages more often than in this interval
  //(don't set too high - this'll slow down code which uses the progress form)
   PROCESS_MESSAGES_EVERY_MSEC = 50;
+
+var
+ //Initialized with english defaults
+  SMButtonCaps:array[TMsgDlgBtn] of string;
+  SMText:string='';
 
 constructor TSMPromptForm.Create(AOwner: TComponent);
 begin
@@ -254,6 +279,7 @@ begin
 
   Application.ModalFinished;
 end;
+
 
 procedure TSMPromptForm.SetMessage(s:string);
 begin
@@ -397,22 +423,97 @@ end;
 
 
 
-var SMButtonCaps:array[TMsgDlgBtn] of string;
-    SMText:string='';
+procedure TSMPromptForm.FormResize(Sender: TObject);
+begin
+  //Frame bevel
+  FrameBevel.Width:=ClientWidth-FrameBevel.Left-16;
+  FrameBevel.Height:=ClientHeight-FrameBevel.Top-32-OKButton.Height;
+  FButtonYPos := FrameBevel.Top+FrameBevel.Height+16;
+
+  //Progress bar - may be invisible
+  ProgressBar.Left:=MessageEdit.Left;
+  ProgressBar.Top:=FrameBevel.Top+FrameBevel.Height-24;
+  ProgressBar.Width:=FrameBevel.Width-16;
+
+  //Reposition buttons
+  SetVisibleButtons(FVisibleButtons);
+end;
+
+procedure TSMPromptForm.SetVisibleButtons(buttons: TMsgDlgButtons);
+const
+  SZ_MINBTNSPACE = 4; //we can't leave less than this space between buttons
+var btnlim: integer;   //total space available for buttons
+  btnspace: integer; //space between buttons -- grows when there's too much of available space
+  btnx: integer; //current button x
+  btn: TBitBtn;
+  vi:TMsgDlgBtn;
+begin
+  FVisibleButtons := buttons;
+
+  //Calculate button count
+  FVisibleButtonCount:=0;
+  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
+    if vi in buttons then inc(FVisibleButtonCount);
+
+  //Calculate button space and total width
+  btnlim:=FrameBevel.Width+12;
+  btnspace:=(btnlim-(VisibleButtonCount*OKButton.Width)) div (VisibleButtonCount+1);
+  if btnspace<SZ_MINBTNSPACE then btnspace := SZ_MINBTNSPACE;
+  FTotalButtonWidth:=VisibleButtonCount*(OKButton.Width+btnspace)+btnspace;
+
+  //Reposition buttons
+  btnx := (FrameBevel.Left-6)+(btnlim - TotalButtonWidth) div 2 + btnspace; //can be negative
+  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
+  begin
+    case vi of
+      mbOK:btn:=OKButton;
+      mbCancel:btn:=CancelButton;
+      mbYes:btn:=YesButton;
+      mbNo:btn:=NoButton;
+      mbAll:btn:=AllButton;
+      mbHelp:btn:=HelpButton;
+      mbAbort:btn:=AbortButton;
+      mbRetry:btn:=RetryButton;
+      mbIgnore:btn:=IgnoreButton;
+      mbNoToAll:btn:=NoToAllButton;
+      mbYesToAll:btn:=YesToAllButton;
+    else
+      btn := nil; //crash and burn
+    end;
+    if btn<>nil then
+      if not (vi in FVisibleButtons) then
+        btn.Visible:=false
+      else
+      begin
+        btn.Visible:=true;
+        btn.Left:=btnx; //minus 3 because they have icons... they look unbalanced when centered properly
+        btn.Caption:=SMButtonCaps[vi];
+        btn.Top:=ButtonYPos;
+        btn.TabOrder:=integer(vi);
+        Inc(btnx, btnspace+btn.Width);
+      end;
+  end;
+
+  //Somehow Help button is the pariah...
+  HelpButton.Visible:=false;  
+end;
+
+
 
 procedure SMSetButtonCaption(button:TMsgDlgBtn;cap:string);
 begin
   SMButtonCaps[button]:=cap;
 end;
 
-function SMCreateDlg(buttons:TMsgDlgButtons;minsizex,minsizey:integer;hasprogress:boolean;sign,title,mess:string):TSMPromptForm;
+function SMCreateDlg(buttons:TMsgDlgButtons;minsizex,minsizey:integer;
+  hasprogress:boolean;sign,title,mess:string):TSMPromptForm;
 var frm:TSMPromptForm;
-    vi:TMsgDlgBtn;
-    nobuttons:byte;
-    buttspace,butty,buttx,buttlim:integer;
-    butt:TBitBtn;
+  formw: integer;
+  formh: integer;
+  cli: TRect;
 begin
   Application.CreateForm(TSMPromptForm,frm);
+  frm.Caption:=title;
   if sign='' then
   begin
     frm.Sign1Label.Visible:=false;
@@ -421,69 +522,36 @@ begin
     frm.FrameBevel.Left:=16;
     frm.MessageEdit.Left:=24;
   end;
-  frm.MessageEdit.Caption:=mess;
-  frm.FrameBevel.Width:=frm.MessageEdit.Width+16;
-  frm.FrameBevel.Height:=frm.MessageEdit.Height+16;
-  if hasprogress then
-    frm.FrameBevel.Height:=frm.MessageEdit.Height+48;
-  nobuttons:=0;
-  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
-    if vi in buttons then inc(nobuttons);
-  butty:=frm.FrameBevel.Top+frm.FrameBevel.Height+24;
-  if (butty<120) and (sign<>'') then butty:=120;
-  if butty<minsizey then butty:=minsizey;
-  buttlim:=frm.FrameBevel.Left+frm.FrameBevel.Width+16;
-  if (buttlim<330) and (nobuttons>0) then buttlim:=330;
-  if buttlim<minsizex then buttlim:=minsizex;
-  if buttlim<12+(8+frm.OKButton.Width)*nobuttons then
-    buttlim:=12+(8+frm.OKButton.Width)*nobuttons;
-  buttspace:=(buttlim-4-(nobuttons*frm.OKButton.Width)) div (nobuttons+1);
-  buttx:=2+buttspace;
-  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
-  begin
-    case vi of
-      mbOK:butt:=frm.OKButton;
-      mbCancel:butt:=frm.CancelButton;
-      mbYes:butt:=frm.YesButton;
-      mbNo:butt:=frm.NoButton;
-      mbAll:butt:=frm.AllButton;
-      mbHelp:butt:=frm.HelpButton;
-      mbAbort:butt:=frm.AbortButton;
-      mbRetry:butt:=frm.RetryButton;
-      mbIgnore:butt:=frm.IgnoreButton;
-      mbNoToAll:butt:=frm.NoToAllButton;
-      mbYesToAll:butt:=frm.YesToAllButton;
-    end;
-    if not (vi in buttons) then butt.Visible:=false else
-    begin
-      butt.Visible:=true;
-      butt.Left:=buttx;
-      butt.Caption:=SMButtonCaps[vi];
-      buttx:=buttx+buttspace+butt.Width;
-      butt.Top:=butty;
-      butt.TabOrder:=integer(vi);
-    end;
-  end;
-  frm.HelpButton.Visible:=false;
   frm.Sign1Label.Caption:=sign;
   frm.Sign2Label.Caption:=sign;
   frm.Sign3Label.Caption:=sign;
-  frm.Caption:=title;
-  frm.ClientWidth:=buttlim;
-  frm.ClientHeight:=butty+frm.OKButton.Height+12;
+  frm.MessageEdit.Caption:=mess;
+
+  //Adjust width and height to the size of the content
+  formw := frm.FrameBevel.Left+(frm.MessageEdit.Width+16)+16;
+  formh := frm.FrameBevel.Top+(frm.MessageEdit.Height+16)+(24+frm.OKButton.Height);
+  if hasprogress then formh := formh+32;
+
+  //Calculate buttons size
+  frm.VisibleButtons := buttons;
+
+  //Adjust sizes some more
+  if (formh<120) and (sign<>'') then formh:=120;
+  if formh<minsizey then formh:=minsizey;
+  if (formw<330) and (frm.VisibleButtonCount>0) then formw:=330;
+  if formw<minsizex then formw:=minsizex;
+  if formw<frm.TotalButtonWidth then formw := frm.TotalButtonWidth;
+  if frm.VisibleButtonCount<=0 then formh := formh - frm.OKButton.Height - 12; //no button line
+
+  //Apply form size
+  cli := frm.GetClientRect;
+  frm.SetBounds(cli.Left, cli.Right, frm.Width - cli.Right + formw, frm.Height - cli.Bottom + formh);
+
+  //Position form at the center of the screen by default
   frm.Left:=Screen.Width div 2-(frm.Width div 2);
   frm.Top:=Screen.Height div 2-(frm.Height div 2);
-  frm.FrameBevel.Width:=frm.ClientWidth-frm.FrameBevel.Left-16;
-  frm.FrameBevel.Height:=frm.ClientHeight-frm.FrameBevel.Top-32-frm.OKButton.Height;
-  if nobuttons=0 then frm.ClientHeight:=butty;
-  if hasprogress then
-  begin
-    frm.ProgressBar.Visible:=true;
-    frm.ProgressBar.Left:=frm.MessageEdit.Left;
-    frm.ProgressBar.Top:=frm.FrameBevel.Top+frm.FrameBevel.Height-24;
-    frm.ProgressBar.Width:=frm.FrameBevel.Width-16;
-  end else
-    frm.ProgressBar.Visible:=false;
+
+  frm.ProgressBar.Visible:=hasprogress;  
   result:=frm;
 end;
 
@@ -499,6 +567,7 @@ begin
   result.Appear;
 end;
 
+//Creates buttonless message form of given minimal size and displays it
 function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean;AOwner:TWinControl):TSMPromptForm;
 var btns: TMsgDlgButtons;
 begin
@@ -506,10 +575,22 @@ begin
     btns := [mbCancel]
   else
     btns := [];
-  result:=SMCreateDlg(btns,200,0,true,'',title,mess);
-  result.SetMaxProgress(maxprogress);
+  Result:=SMCreateDlg(btns,200,0,true,'',title,mess);
+  Result.SetMaxProgress(maxprogress);
   Result.Parent := AOwner;
-  result.AppearModal;
+  Result.AppearModal;
+end;
+
+//Same but doesn't display it
+function SMProgressDlgCreate(title,mess:string;maxprogress:integer;canCancel:boolean=false):TSMPromptForm;
+var btns: TMsgDlgButtons;
+begin
+  if canCancel then
+    btns := [mbCancel]
+  else
+    btns := [];
+  Result:=SMCreateDlg(btns,200,0,true,'',title,mess);
+  Result.SetMaxProgress(maxprogress);
 end;
 
 function SMPromptDlg(buttons:TMsgDlgButtons;sign,title,mess:string):TMsgDlgBtn;

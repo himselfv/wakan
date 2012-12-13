@@ -1121,10 +1121,16 @@ begin
 
       //If the operation is taking too long to be noticeable
       if (sp=nil) and (GetTickCount-startTime > 200) then begin
+        SMYesNo(true, 'blah', 'mess');
        //Bring up the progress window
-        sp:=SMProgressDlg(_l('#00684^eTranslator'),
-          _l('#00685^eTranslating...'),blocktoy-blockfromy+1,{canCancel=}true);
-        sp.Width := 200;
+        sp:=SMProgressDlgCreate(
+          _l('#00684^eTranslator'),
+          _l('#00685^eTranslating...'),
+          blocktoy-blockfromy+1,
+          {canCancel=}true);
+        sp.Parent := Application.MainForm;
+        sp.Width := 200; //we like it narrow
+        sp.AppearModal;
       end;
 
       if sp<>nil then begin
