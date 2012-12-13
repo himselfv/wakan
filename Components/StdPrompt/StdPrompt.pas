@@ -78,20 +78,43 @@ type
     procedure AbortButtonClick(Sender: TObject);
     procedure YesToAllButtonClick(Sender: TObject);
     procedure NoToAllButtonClick(Sender: TObject);
+
+  protected //Progress bar
+    updateProgressEvery: integer;
+    lastUpdateProgress: integer;
+  public
+    procedure SetMaxProgress(maxprogr:integer);
+    procedure SetProgress(i:integer); {$IFDEF INLINE}inline;{$ENDIF} //Set progress and repaint if needed
+
+  { This form can be displayed as "Modal non-execution-stealing". This is useful
+   for displaying the responsive progress bar.
+   Modal enter/exit code is copied with some omissions from TForm.ShowModal }
+  protected
+    LastProcessMessages: cardinal;
+    //Some of the stuff ShowModal saves
+    WindowList: TTaskWindowList;
+    LSaveFocusState: TFocusState;
+    ActiveWindow: HWnd;
+    procedure EnterModal;
+    procedure ReleaseModal;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+  protected
+    CurRes:TMsgDlgBtn; //Why do we have this when there's ModalResult?..
   public
     procedure SetMessage(s:string);
     // changes the message of the dialog, but DOES NOT resize the dialog
     // to fit the new message size
     procedure Appear;
     // shows the dialog
+    procedure AppearModal;
+    // shows the dialog in modal mode (but doesn't steal the execution like ShowModal does. Call ProcessModalMessages please.)
     procedure Refresh;
     // repaints the dialog
-    procedure SetProgress(i:integer);
-    // if the dialog contains the progress bar, sets the Progress of the
-    // progress bar to i and repaints it
-    procedure ProcessModalMessages;
+    procedure ProcessMessages;
     // processes messages from the queue so that the system doesn't think we're stuck.
-    // ignores those sent to parent windows though 
   end;
 
 type TPromptType=(InfoStyle,WarningStyle,SuccessStyle,AskStyle,ErrorStyle);
@@ -157,12 +180,212 @@ function SMYesNo(warningst:boolean;title,mess:string):boolean;
 // user pressed Yes button and False if user pressed No button
 
 implementation
-
-var SMButtonCaps:array[TMsgDlgBtn] of string;
-    CurRes:TMsgDlgBtn;
-    SMText:string='';
+uses Consts;
 
 {$R *.DFM}
+
+const
+ //SMPromptForm.ProcessMessages won't check for messages more often than in this interval
+ //(don't set too high - this'll slow down code which uses the progress form)
+  PROCESS_MESSAGES_EVERY_MSEC = 50;
+
+constructor TSMPromptForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+end;
+
+destructor TSMPromptForm.Destroy;
+begin
+  ReleaseModal();
+  inherited;
+end;
+
+//Makes this form Modal, but doesn't steal the execution like ShowModal does.
+procedure TSMPromptForm.EnterModal;
+begin
+  CancelDrag;
+  if Visible or not Enabled or (fsModal in FFormState) or
+    (FormStyle = fsMDIChild) then
+    raise EInvalidOperation.Create(SCannotShowModal);
+  if GetCapture <> 0 then SendMessage(GetCapture, WM_CANCELMODE, 0, 0);
+  ReleaseCapture;
+  Application.ModalStarted;
+
+  { RecreateWnd could change the active window }
+  ActiveWindow := GetActiveWindow;
+  Include(FFormState, fsModal);
+  if (PopupMode = pmNone) and (Application.ModalPopupMode <> pmNone) then
+  begin
+    RecreateWnd;
+    HandleNeeded;
+    { The active window might have become invalid, refresh it }
+    if (ActiveWindow = 0) or not IsWindow(ActiveWindow) then
+      ActiveWindow := GetActiveWindow;
+  end;
+  LSaveFocusState := SaveFocusState;
+  Screen.SaveFocusedList.Insert(0, Screen.FocusedForm);
+  Screen.FocusedForm := Self;
+  WindowList := DisableTaskWindows(0);
+  Show;
+end;
+
+procedure TSMPromptForm.ReleaseModal;
+begin
+  if not (fsModal in FormState) then exit;
+  SendMessage(Handle, CM_DEACTIVATE, 0, 0);
+  Hide;
+
+  EnableTaskWindows(WindowList);
+  if Screen.SaveFocusedList.Count > 0 then
+  begin
+    Screen.FocusedForm := TCustomForm(Screen.SaveFocusedList.First);
+    Screen.SaveFocusedList.Remove(Screen.FocusedForm);
+  end else Screen.FocusedForm := nil;
+  { ActiveWindow might have been destroyed and using it as active window will
+    force Windows to activate another application }
+  if (ActiveWindow <> 0) and not IsWindow(ActiveWindow) then
+    ActiveWindow := 0;
+  if ActiveWindow <> 0 then
+    SetActiveWindow(ActiveWindow);
+  RestoreFocusState(LSaveFocusState);
+  Exclude(FFormState, fsModal);
+
+  Application.ModalFinished;
+end;
+
+procedure TSMPromptForm.SetMessage(s:string);
+begin
+  MessageEdit.Caption:=s;
+  MessageEdit.Invalidate;
+  MessageEdit.Update;
+end;
+
+procedure TSMPromptForm.Refresh;
+begin
+  Invalidate;
+  Update;
+end;
+
+procedure TSMPromptForm.Appear;
+begin
+  LastProcessMessages := GetTickCount - PROCESS_MESSAGES_EVERY_MSEC;
+  Show;
+  Refresh;
+end;
+
+procedure TSMPromptForm.AppearModal;
+begin
+  LastProcessMessages := GetTickCount - PROCESS_MESSAGES_EVERY_MSEC;
+  EnterModal;
+  Show;
+  SendMessage(Handle, CM_ACTIVATE, 0, 0);
+  Refresh;
+end;
+
+procedure TSMPromptForm.SetMaxProgress(maxprogr:integer);
+begin
+  ProgressBar.Max := maxprogr;
+ //We don't want to update very often since redrawing is slow.
+ //Let's only update on every percent or less.
+  updateProgressEvery := maxprogr div 100;
+  if updateProgressEvery<1 then updateProgressEvery := 1; //<100 items
+  lastUpdateProgress := -updateProgressEvery-1; //update right now
+  SetProgress(0);
+end;
+
+procedure TSMPromptForm.SetProgress(i:integer);
+begin
+  //Do not update progress too often
+  if i < lastUpdateProgress + updateProgressEvery then exit;
+  //This only works if the progress always goes up. If it goes down, we'll
+  //have to check in the reverse direction too.
+
+  ProgressBar.Position:=i;
+  ProgressBar.Invalidate;
+  ProgressBar.Update;
+  lastUpdateProgress := i;
+end;
+
+procedure TSMPromptForm.ProcessMessages;
+var tm: cardinal;
+begin
+  tm := GetTickCount;
+  if tm-LastProcessMessages > PROCESS_MESSAGES_EVERY_MSEC then begin
+    Application.ProcessMessages;
+    LastProcessMessages := tm;
+  end;
+end;
+
+procedure TSMPromptForm.IgnoreButtonClick(Sender: TObject);
+begin
+  curres:=mbIgnore;
+  Close;
+end;
+
+procedure TSMPromptForm.OKButtonClick(Sender: TObject);
+begin
+  curres:=mbOK;
+  Close;
+end;
+
+procedure TSMPromptForm.NoButtonClick(Sender: TObject);
+begin
+  curres:=mbNo;
+  Close;
+end;
+
+procedure TSMPromptForm.YesButtonClick(Sender: TObject);
+begin
+  curres:=mbYes;
+  Close;
+end;
+
+procedure TSMPromptForm.CancelButtonClick(Sender: TObject);
+begin
+  curres:=mbCancel;
+  Close;
+end;
+
+procedure TSMPromptForm.RetryButtonClick(Sender: TObject);
+begin
+  curres:=mbRetry;
+  Close;
+end;
+
+procedure TSMPromptForm.HelpButtonClick(Sender: TObject);
+begin
+  curres:=mbHelp;
+  Close;
+end;
+
+procedure TSMPromptForm.AllButtonClick(Sender: TObject);
+begin
+  curres:=mbAll;
+  Close;
+end;
+
+procedure TSMPromptForm.AbortButtonClick(Sender: TObject);
+begin
+  curres:=mbAbort;
+  Close;
+end;
+
+procedure TSMPromptForm.YesToAllButtonClick(Sender: TObject);
+begin
+  curres:=mbYesToAll;
+  Close;
+end;
+
+procedure TSMPromptForm.NoToAllButtonClick(Sender: TObject);
+begin
+  curres:=mbNoToAll;
+  Close;
+end;
+
+
+
+var SMButtonCaps:array[TMsgDlgBtn] of string;
+    SMText:string='';
 
 procedure SMSetButtonCaption(button:TMsgDlgBtn;cap:string);
 begin
@@ -246,7 +469,8 @@ begin
     frm.ProgressBar.Left:=frm.MessageEdit.Left;
     frm.ProgressBar.Top:=frm.FrameBevel.Top+frm.FrameBevel.Height-24;
     frm.ProgressBar.Width:=frm.FrameBevel.Width-16;
-  end else frm.ProgressBar.Visible:=false;
+  end else
+    frm.ProgressBar.Visible:=false;
   result:=frm;
 end;
 
@@ -265,8 +489,8 @@ end;
 function SMProgressDlg(title,mess:string;maxprogress:integer):TSMPromptForm;
 begin
   result:=SMCreateDlg([],200,0,true,'',title,mess);
-  result.ProgressBar.Max:=maxprogress;
-  result.Appear;
+  result.SetMaxProgress(maxprogress);
+  result.AppearModal;
 end;
 
 function SMPromptDlg(buttons:TMsgDlgButtons;sign,title,mess:string):TMsgDlgBtn;
@@ -274,7 +498,7 @@ var frm:TSMPromptForm;
 begin
   frm:=SMCreateDlg(buttons,0,0,false,sign,title,mess);
   frm.ShowModal;
-  result:=curres;
+  result:=frm.curres;
 end;
 
 procedure ClearSM;
@@ -322,104 +546,7 @@ begin
     result:=SMAsk(InfoStyle,YesNoButtons,title,mess)=mbYes;
 end;
 
-procedure TSMPromptForm.IgnoreButtonClick(Sender: TObject);
-begin
-  curres:=mbIgnore;
-  Close;
-end;
 
-procedure TSMPromptForm.OKButtonClick(Sender: TObject);
-begin
-  curres:=mbOK;
-  Close;
-end;
-
-procedure TSMPromptForm.NoButtonClick(Sender: TObject);
-begin
-  curres:=mbNo;
-  Close;
-end;
-
-procedure TSMPromptForm.YesButtonClick(Sender: TObject);
-begin
-  curres:=mbYes;
-  Close;
-end;
-
-procedure TSMPromptForm.CancelButtonClick(Sender: TObject);
-begin
-  curres:=mbCancel;
-  Close;
-end;
-
-procedure TSMPromptForm.RetryButtonClick(Sender: TObject);
-begin
-  curres:=mbRetry;
-  Close;
-end;
-
-procedure TSMPromptForm.HelpButtonClick(Sender: TObject);
-begin
-  curres:=mbHelp;
-  Close;
-end;
-
-procedure TSMPromptForm.AllButtonClick(Sender: TObject);
-begin
-  curres:=mbAll;
-  Close;
-end;
-
-procedure TSMPromptForm.AbortButtonClick(Sender: TObject);
-begin
-  curres:=mbAbort;
-  Close;
-end;
-
-procedure TSMPromptForm.SetMessage(s:string);
-begin
-  MessageEdit.Caption:=s;
-  MessageEdit.Invalidate;
-  MessageEdit.Update;
-end;
-
-procedure TSMPromptForm.Refresh;
-begin
-  Invalidate;
-  Update;
-end;
-
-procedure TSMPromptForm.Appear;
-begin
-  Show;
-  Refresh;
-end;
-
-procedure TSMPromptForm.SetProgress(i:integer);
-begin
-  ProgressBar.Position:=i;
-  ProgressBar.Invalidate;
-  ProgressBar.Update;
-end;
-
-procedure TSMPromptForm.ProcessModalMessages;
-begin
-  //TODO: Write this one. (Possibly copy from TForm.ShowModal)
-  //Also don't process messages too often. Keep last processing time
-  // and only call API once in a while
-end;
-
-procedure TSMPromptForm.YesToAllButtonClick(Sender: TObject);
-begin
-  curres:=mbYesToAll;
-  Close;
-end;
-
-procedure TSMPromptForm.NoToAllButtonClick(Sender: TObject);
-begin
-  curres:=mbNoToAll;
-  Close;
-end;
 
 initialization
   SMSetButtonCaption(mbOK,'&OK');

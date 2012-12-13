@@ -1079,8 +1079,6 @@ var i,j:integer;
   bg,en:integer;
 
   sp: TSMPromptForm;
-  updateProgressEvery: integer;
-  lastUpdateProgress: integer;
   startTime: cardinal;
 
   st: TLookSettings;
@@ -1102,12 +1100,7 @@ begin
   end else CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
 
- //We don't want to update very often since redrawing is slow.
- //Let's only update on every percent or less.
-  updateProgressEvery := (blocktoy-blockfromy+1) div 100;
-  if updateProgressEvery<1 then updateProgressEvery := 1; //<100 items
-  lastUpdateProgress := 0; //whatever, we'll set it when we show the window
- //We also don't show the window at all unless the operation is taking long time.
+ //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
   startTime := GetTickCount;
 
@@ -1125,22 +1118,16 @@ begin
     if i=blocktoy then en:=blocktox;
 
     //If the operation is taking too long to be noticeable
-    if (sp=nil) and (GetTickCount-startTime > 200) then begin
+    if (sp=nil) and (GetTickCount-startTime > 200) then
      //Bring up the progress window
       sp:=SMProgressDlg(_l('#00684^eTranslator'),
         _l('#00685^eTranslating...'),blocktoy-blockfromy+1);
-      lastUpdateProgress := -updateProgressEvery-1; //update right now
-    end;
 
-    //Do not update progress too often
-    if i-blockfromy > lastUpdateProgress + updateProgressEvery then begin
-      if sp<>nil then
-        sp.SetProgress(i-blockfromy);
-      lastUpdateProgress := i-blockfromy;
+    if sp<>nil then begin
+     //Internally we only update once in a while
+      sp.SetProgress(i-blockfromy);
+      sp.ProcessMessages;
     end;
-
-    if sp<>nil then
-      sp.ProcessModalMessages;
 
     j:=bg;
     while j<=en do

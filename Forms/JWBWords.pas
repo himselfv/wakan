@@ -1908,7 +1908,7 @@ begin
       if i mod 10=0 then
       begin
         sp.SetProgress(trunc(i/wnum*100));
-        sp.ProcessModalMessages;
+        sp.ProcessMessages;
       end;
       bestw:=0;
       best:=100001;

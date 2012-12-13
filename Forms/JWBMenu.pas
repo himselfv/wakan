@@ -1724,8 +1724,17 @@ begin
     TUserCat.Next;
   end;
 
-  if FixDuplicateCategories() then //have to do this after we (perhaps) found the KnownLearned
+  if FixDuplicateCategories() then begin //have to do this after we (perhaps) found the KnownLearned
     UserDataChanged := true;
+    Application.MessageBox(
+      PChar(_l('^eYour user data contained duplicate kanji/word groups. This is a result '
+      +'of a bug in older versions of Wakan.'#13
+      +'The data has been repaired and duplicates have been merged. Please check '
+      +'your user groups, save user data, and you should never see this message again.')),
+      PChar(_l('User data repaired')),
+      MB_ICONINFORMATION or MB_OK
+    );
+  end;
 
  //Add "LEARNED" category, if missing
   if KnownLearned<0 then
