@@ -45,7 +45,7 @@ object fWordKanji: TfWordKanji
   object Label2: TLabel
     Left = 6
     Top = 6
-    Width = 207
+    Width = 122
     Height = 13
     Caption = '#00734^eKanji / Radical:'
     Font.Charset = DEFAULT_CHARSET
@@ -59,7 +59,7 @@ object fWordKanji: TfWordKanji
   object Label3: TLabel
     Left = 117
     Top = 7
-    Width = 146
+    Width = 93
     Height = 13
     Caption = '#00691^eMeaning:'
     Font.Charset = DEFAULT_CHARSET
@@ -70,35 +70,38 @@ object fWordKanji: TfWordKanji
     ParentFont = False
     Transparent = True
   end
-  object PaintBox7: TPaintBox
+  object PaintBoxK1: TPaintBox
+    Tag = 1
     Left = 9
     Top = 27
     Width = 89
     Height = 41
-    OnClick = PaintBox7Click
-    OnMouseMove = PaintBox7MouseMove
-    OnMouseUp = PaintBox7MouseUp
-    OnPaint = PaintBox7Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
-  object PaintBox8: TPaintBox
+  object PaintBoxK2: TPaintBox
+    Tag = 2
     Left = 9
     Top = 75
     Width = 89
     Height = 41
-    OnClick = PaintBox8Click
-    OnMouseMove = PaintBox8MouseMove
-    OnMouseUp = PaintBox8MouseUp
-    OnPaint = PaintBox8Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
-  object PaintBox9: TPaintBox
+  object PaintBoxK3: TPaintBox
+    Tag = 3
     Left = 9
     Top = 123
     Width = 89
     Height = 41
-    OnClick = PaintBox9Click
-    OnMouseMove = PaintBox9MouseMove
-    OnMouseUp = PaintBox9MouseUp
-    OnPaint = PaintBox9Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object Label8: TLabel
     Left = 121
@@ -149,34 +152,37 @@ object fWordKanji: TfWordKanji
     Height = 43
   end
   object PaintBoxK4: TPaintBox
+    Tag = 4
     Left = 9
     Top = 171
     Width = 89
     Height = 41
-    OnClick = PaintBoxK4Click
-    OnMouseMove = PaintBoxK4MouseMove
-    OnMouseUp = PaintBoxK4MouseUp
-    OnPaint = PaintBoxK4Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object PaintBoxK5: TPaintBox
+    Tag = 5
     Left = 9
     Top = 219
     Width = 89
     Height = 41
-    OnClick = PaintBoxK5Click
-    OnMouseMove = PaintBoxK5MouseMove
-    OnMouseUp = PaintBoxK5MouseUp
-    OnPaint = PaintBoxK5Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object PaintBoxK6: TPaintBox
+    Tag = 6
     Left = 9
     Top = 267
     Width = 89
     Height = 41
-    OnClick = PaintBoxK6Click
-    OnMouseMove = PaintBoxK6MouseMove
-    OnMouseUp = PaintBoxK6MouseUp
-    OnPaint = PaintBoxK6Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object Label1: TLabel
     Left = 121
@@ -227,34 +233,37 @@ object fWordKanji: TfWordKanji
     Height = 43
   end
   object PaintBoxK7: TPaintBox
+    Tag = 7
     Left = 9
     Top = 315
     Width = 89
     Height = 41
-    OnClick = PaintBoxK7Click
-    OnMouseMove = PaintBoxK7MouseMove
-    OnMouseUp = PaintBoxK7MouseUp
-    OnPaint = PaintBoxK7Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object PaintBoxK8: TPaintBox
+    Tag = 8
     Left = 9
     Top = 363
     Width = 89
     Height = 41
-    OnClick = PaintBoxK8Click
-    OnMouseMove = PaintBoxK8MouseMove
-    OnMouseUp = PaintBoxK8MouseUp
-    OnPaint = PaintBoxK8Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object PaintBoxK9: TPaintBox
+    Tag = 9
     Left = 9
     Top = 411
     Width = 89
     Height = 41
-    OnClick = PaintBoxK9Click
-    OnMouseMove = PaintBoxK9MouseMove
-    OnMouseUp = PaintBoxK9MouseUp
-    OnPaint = PaintBoxK9Paint
+    OnClick = PaintBoxK1Click
+    OnMouseMove = PaintBoxK1MouseMove
+    OnMouseUp = PaintBoxK1MouseUp
+    OnPaint = PaintBoxK1Paint
   end
   object Label6: TLabel
     Left = 121

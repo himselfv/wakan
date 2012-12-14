@@ -166,14 +166,12 @@ object fDictImport: TfDictImport
     Height = 25
     Caption = '#00077^eBuild'
     Default = True
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 7
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -192,6 +190,10 @@ object fDictImport: TfDictImport
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 7
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 344
@@ -200,14 +202,12 @@ object fDictImport: TfDictImport
     Height = 25
     Cancel = True
     Caption = '#00007^eCancel'
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 8
-    OnClick = BitBtn2Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -226,6 +226,10 @@ object fDictImport: TfDictImport
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 8
+    OnClick = BitBtn2Click
   end
   object Button1: TButton
     Left = 424

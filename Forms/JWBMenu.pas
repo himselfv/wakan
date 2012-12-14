@@ -2119,9 +2119,9 @@ begin
   FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
   begin
-    if fExamples.SpeedButton4.Down then exmode:=0;
-    if fExamples.SpeedButton5.Down then exmode:=1;
-    if fExamples.SpeedButton6.Down then exmode:=2;
+    if fExamples.btnDisplayTranslation.Down then exmode:=0;
+    if fExamples.btnUseBigFont.Down then exmode:=1;
+    if fExamples.btnUseSmallFont.Down then exmode:=2;
     if SpeedButton1.Down then
     begin
       Screen.Cursor:=crHourGlass;
@@ -2496,13 +2496,13 @@ begin
     fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
     fTranslate.DocTp:=Reg.ReadInteger('Editor','DocType',0);
   end;
-  fExamples.SpeedButton11.Down:=reg.ReadBool('Dict','RandomExamples',false);
+  fExamples.btnRandomOrder.Down:=reg.ReadBool('Dict','RandomExamples',false);
   vocmode:=reg.ReadInteger('Dict','VocMode',0);
   exmode:=reg.ReadInteger('Dict','ExMode',0);
   fSettings.Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
-  if exmode=0 then fExamples.SpeedButton4.Down:=true;
-  if exmode=1 then fExamples.SpeedButton5.Down:=true;
-  if exmode=2 then fExamples.SpeedButton6.Down:=true;
+  if exmode=0 then fExamples.btnDisplayTranslation.Down:=true;
+  if exmode=1 then fExamples.btnUseBigFont.Down:=true;
+  if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
   fSettings.Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
   GridFontSize:=strtoint(fSettings.Edit25.text);
   fSettings.ListBox1.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
@@ -2856,7 +2856,7 @@ begin
   except
     StrokeOrderPackage:=nil;
   end;}
-  fKanji.SpeedButton4.Visible:=StrokeOrderPackage<>nil;
+  fKanji.btnStrokeOrder.Visible:=StrokeOrderPackage<>nil;
   XPResFix(fMenu);
   XPResFix(fKanji);
   XPResFix(fWords);
@@ -2939,26 +2939,26 @@ begin
     Application.Terminate;
     exit;
   end;
-  fMenu.ToggleForm(fKanjiCompounds,fKanji.SpeedButton3,fMenu.aKanjiCompounds);
+  fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
   fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
   fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
   fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
-//  fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
-  fMenu.ToggleForm(fKanjiSearch,fKanji.SpeedButton5,fMenu.aKanjiSearch);
+//  fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+  fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
   displaymode:=setlayout;
   CharDetNowDocked:=false;
   if (setwindows and 128<>128) and (CharDetDocked) then aKanjiDetails.Checked:=true;
   ChangeDisplay;
-  if setwindows and 1<>1 then fMenu.ToggleForm(fKanjiSearch,fKanji.SpeedButton5,fMenu.aKanjiSearch);
-  if setwindows and 2<>2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.SpeedButton3,fMenu.aKanjiCompounds);
+  if setwindows and 1<>1 then fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
+  if setwindows and 2<>2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
   if setwindows and 4<>4 then fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
   if setwindows and 8<>8 then fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
   if setwindows and 16=16 then fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
   if setwindows and 32<>32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   if setwindows and 64<>64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
-  if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
-  fTranslate.sbDockKanjiDetails.Down:=fKanji.SpeedButton2.Down;
+  if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+  fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
   screenTipShown:=false;
   fTranslate.FileChanged := false;
   if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
@@ -3173,7 +3173,7 @@ begin
   pre:=aKanjiSearch.Checked;
   if not fKanji.Visible then ToggleForm(fKanji,nil,nil);
   if aKanjiSearch.Checked<>pre then exit;
-  ToggleForm(fKanjiSearch,fKanji.SpeedButton5,aKanjiSearch);
+  ToggleForm(fKanjiSearch,fKanji.btnSearchSort,aKanjiSearch);
 end;
 
 procedure TfMenu.aKanjiDetailsExecute(Sender: TObject);
@@ -3183,7 +3183,7 @@ begin
     if (curdisplaymode=2) or (curdisplaymode=5) then
     begin
       fMenu.aKanjiDetails.Checked:=false;
-      fKanji.SpeedButton2.Down:=false;
+      fKanji.btnKanjiDetails.Down:=false;
       fTranslate.sbDockKanjiDetails.Down:=false;
       CharDetDocked:=false
     end else
@@ -3196,8 +3196,8 @@ begin
   end;
   if not CharDetDocked then
   begin
-    fMenu.ToggleForm(fKanjiDetails,fKanji.SpeedButton2,fMenu.aKanjiDetails);
-    fTranslate.sbDockKanjiDetails.Down:=fKanji.SpeedButton2.Down;
+    fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+    fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
     fKanjiDetails.FormPlacement1.RestoreFormPlacement;
   end;
 end;
@@ -3208,12 +3208,12 @@ begin
   pre:=aKanjiCompounds.Checked;
   if not fKanji.Visible then ToggleForm(fKanji,nil,nil);
   if aKanjiCompounds.Checked<>pre then exit;
-  ToggleForm(fKanjiCompounds,fKanji.SpeedButton3,aKanjiCompounds);
+  ToggleForm(fKanjiCompounds,fKanji.btnCompounds,aKanjiCompounds);
 end;
 
 procedure TfMenu.aKanjiPrintExecute(Sender: TObject);
 begin
-  fKanji.Button1Click(sender);
+  fKanji.btnPrintCardsClick(Sender);
 end;
 
 procedure TfMenu.aDictDetailsExecute(Sender: TObject);
@@ -3835,7 +3835,7 @@ begin
         fKanjiDetails.Align:=alClient;
         fKanjiDetails.Show;
       end;
-      fKanji.SpeedButton2.Down:=CharDetDockedVis1;
+      fKanji.btnKanjiDetails.Down:=CharDetDockedVis1;
       aKanjiDetails.Checked:=CharDetDockedVis1;
       CharDetNowDocked:=CharDetDockedVis1;
     end;

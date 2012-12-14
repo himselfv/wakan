@@ -91,7 +91,6 @@ begin
 end;
 
 function split(var s:string;c:char):string;
-var s2:string;
 begin
   if pos(c,s)=0 then
   begin
@@ -158,7 +157,6 @@ end;
 
 procedure TfDictImport.WriteDictPackage(dictlang:char);
 var f:textfile;
-    b:byte;
 begin
   assignfile(f,'dict\dict.ver');
   rewrite(f);
@@ -197,7 +195,6 @@ end;
 procedure EnsortIndex(sl,sl2:TStringList;des,ind:string);
 var i:integer;
     s:string;
-    j:integer;
     f:boolean;
 begin
   i:=sl.IndexOf(des);

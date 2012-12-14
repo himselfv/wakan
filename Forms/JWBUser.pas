@@ -62,15 +62,6 @@ type
     procedure WordDetails_SpeedButton23Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure WordDetails_PaintBox5Paint(Sender: TObject);
-    procedure WordKanji_PaintBox7Paint(Sender: TObject);
-    procedure WordKanji_PaintBox8Paint(Sender: TObject);
-    procedure WordKanji_PaintBox9Paint(Sender: TObject);
-    procedure WordKanji_PaintBoxK4Paint(Sender: TObject);
-    procedure WordKanji_PaintBoxK5Paint(Sender: TObject);
-    procedure WordKanji_PaintBoxK6Paint(Sender: TObject);
-    procedure WordKanji_PaintBoxK7Paint(Sender: TObject);
-    procedure WordKanji_PaintBoxK8Paint(Sender: TObject);
-    procedure WordKanji_PaintBoxK9Paint(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton8Click(Sender: TObject);
@@ -95,6 +86,10 @@ type
     procedure SpeedButton10Click(Sender: TObject);
     procedure SpeedButton19Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+
+  public
+    procedure WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
+
   public
     curkanji,curphonetic,curmeaning,curkanjid:string;
     procedure ShowWord;
@@ -435,9 +430,9 @@ begin
   fWordKanji.Shape9.Visible:=false;
   fWordKanji.Shape7.Visible:=false;
   fWordKanji.Shape5.Visible:=false;
-  fWordKanji.PaintBox7.Visible:=false;
-  fWordKanji.PaintBox8.Visible:=false;
-  fWordKanji.PaintBox9.Visible:=false;
+  fWordKanji.PaintBoxK1.Visible:=false;
+  fWordKanji.PaintBoxK2.Visible:=false;
+  fWordKanji.PaintBoxK3.Visible:=false;
   fWordKanji.PaintBoxK4.Visible:=false;
   fWordKanji.PaintBoxK5.Visible:=false;
   fWordKanji.PaintBoxK6.Visible:=false;
@@ -525,9 +520,9 @@ begin
     if ki<7 then fWordKanji.Shape9.Visible:=false else fWordKanji.Shape9.Visible:=true;
     if ki<8 then fWordKanji.Shape7.Visible:=false else fWordKanji.Shape7.Visible:=true;
     if ki<9 then fWordKanji.Shape5.Visible:=false else fWordKanji.Shape5.Visible:=true;
-    if ki<1 then fWordKanji.PaintBox7.Visible:=false else fWordKanji.PaintBox7.Visible:=true;
-    if ki<2 then fWordKanji.PaintBox8.Visible:=false else fWordKanji.PaintBox8.Visible:=true;
-    if ki<3 then fWordKanji.PaintBox9.Visible:=false else fWordKanji.PaintBox9.Visible:=true;
+    if ki<1 then fWordKanji.PaintBoxK1.Visible:=false else fWordKanji.PaintBoxK1.Visible:=true;
+    if ki<2 then fWordKanji.PaintBoxK2.Visible:=false else fWordKanji.PaintBoxK2.Visible:=true;
+    if ki<3 then fWordKanji.PaintBoxK3.Visible:=false else fWordKanji.PaintBoxK3.Visible:=true;
     if ki<4 then fWordKanji.PaintBoxK4.Visible:=false else fWordKanji.PaintBoxK4.Visible:=true;
     if ki<5 then fWordKanji.PaintBoxK5.Visible:=false else fWordKanji.PaintBoxK5.Visible:=true;
     if ki<6 then fWordKanji.PaintBoxK6.Visible:=false else fWordKanji.PaintBoxK6.Visible:=true;
@@ -538,9 +533,9 @@ begin
   fWordDetails.PaintBox1.Invalidate;
   fWordDetails.PaintBox2.Invalidate;
   fWordDetails.PaintBox5.Invalidate;
-  fWordKanji.PaintBox7.Invalidate;
-  fWordKanji.PaintBox8.Invalidate;
-  fWordKanji.PaintBox9.Invalidate;
+  fWordKanji.PaintBoxK1.Invalidate;
+  fWordKanji.PaintBoxK2.Invalidate;
+  fWordKanji.PaintBoxK3.Invalidate;
   fWordKanji.PaintBoxK4.Invalidate;
   fWordKanji.PaintBoxK5.Invalidate;
   fWordKanji.PaintBoxK6.Invalidate;
@@ -556,150 +551,24 @@ begin
   DrawUnicode(fWordDetails.PaintBox5.Canvas,1,1,22,UnicodeToHex(curmeaning),FontEnglish);
 end;
 
-procedure TfUser.WordKanji_PaintBox7Paint(Sender: TObject);
+//Paints fWordKanji.PaintBoxK1...PaintBoxK9 contents.
+//KN: 1..9
+procedure TfUser.WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
 begin
-  if length(curkanjid)<9 then exit;
-  BeginDrawReg(fWordKanji.PaintBox7);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBox7.Canvas,44,4,16,copy(curkanjid,5,4),FontJapaneseGrid);
-  case curkanjid[9] of
-    'K':fWordKanji.PaintBox7.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBox7.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBox7.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBox7.Canvas.Font.Color:=Col('Kanji_Names');
+  Assert((KN>=1) and (KN<=9));
+  if length(curkanjid)<9*KN then exit;
+  BeginDrawReg(pb);
+  pb.Canvas.Brush.Color:=Col('Kanji_Back');
+  DrawUnicode(pb.Canvas,44,4,16,copy(curkanjid,9*KN-4,4),FontJapaneseGrid);
+  case curkanjid[9*KN] of
+    'K':pb.Canvas.Font.Color:=Col('Kanji_Learned');
+    'C':pb.Canvas.Font.Color:=Col('Kanji_Common');
+    'U':pb.Canvas.Font.Color:=Col('Kanji_Rare');
+    'N':pb.Canvas.Font.Color:=Col('Kanji_Names');
   end;
-  DrawUnicode(fWordKanji.PaintBox7.Canvas,4,2,36,copy(curkanjid,1,4),FontJapaneseGrid);
+  DrawUnicode(pb.Canvas,4,2,36,copy(curkanjid,9*KN-8,4),FontJapaneseGrid);
   EndDrawReg;
 end;
-
-procedure TfUser.WordKanji_PaintBox8Paint(Sender: TObject);
-begin
-  if length(curkanjid)<18 then exit;
-  BeginDrawReg(fWordKanji.PaintBox8);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBox8.Canvas,44,4,16,copy(curkanjid,14,4),FontJapaneseGrid);
-  case curkanjid[18] of
-    'K':fWordKanji.PaintBox8.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBox8.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBox8.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBox8.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBox8.Canvas,4,2,36,copy(curkanjid,10,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBox9Paint(Sender: TObject);
-begin
-  if length(curkanjid)<27 then exit;
-  BeginDrawReg(fWordKanji.PaintBox9);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBox9.Canvas,44,4,16,copy(curkanjid,23,4),FontJapaneseGrid);
-  case curkanjid[27] of
-    'K':fWordKanji.PaintBox9.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBox9.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBox9.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBox9.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBox9.Canvas,4,2,36,copy(curkanjid,19,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBoxK4Paint(Sender: TObject);
-begin
-  if length(curkanjid)<36 then exit;
-  BeginDrawReg(fWordKanji.PaintBoxK4);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBoxK4.Canvas,44,4,16,copy(curkanjid,32,4),FontJapaneseGrid);
-  case curkanjid[36] of
-    'K':fWordKanji.PaintBoxK4.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBoxK4.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBoxK4.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBoxK4.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBoxK4.Canvas,4,2,36,copy(curkanjid,28,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBoxK5Paint(Sender: TObject);
-begin
-  if length(curkanjid)<45 then exit;
-  BeginDrawReg(fWordKanji.PaintBoxK5);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBoxK5.Canvas,44,4,16,copy(curkanjid,41,4),FontJapaneseGrid);
-  case curkanjid[45] of
-    'K':fWordKanji.PaintBoxK5.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBoxK5.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBoxK5.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBoxK5.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBoxK5.Canvas,4,2,36,copy(curkanjid,37,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBoxK6Paint(Sender: TObject);
-begin
-  if length(curkanjid)<54 then exit;
-  BeginDrawReg(fWordKanji.PaintBoxK6);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBoxK6.Canvas,44,4,16,copy(curkanjid,50,4),FontJapaneseGrid);
-  case curkanjid[54] of
-    'K':fWordKanji.PaintBoxK6.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBoxK6.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBoxK6.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBoxK6.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBoxK6.Canvas,4,2,36,copy(curkanjid,46,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBoxK7Paint(Sender: TObject);
-begin
-  if length(curkanjid)<63 then exit;
-  BeginDrawReg(fWordKanji.PaintBoxK7);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBoxK7.Canvas,44,4,16,copy(curkanjid,59,4),FontJapaneseGrid);
-  case curkanjid[63] of
-    'K':fWordKanji.PaintBoxK7.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBoxK7.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBoxK7.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBoxK7.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBoxK7.Canvas,4,2,36,copy(curkanjid,55,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBoxK8Paint(Sender: TObject);
-begin
-  if length(curkanjid)<72 then exit;
-  BeginDrawReg(fWordKanji.PaintBoxK8);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBoxK8.Canvas,44,4,16,copy(curkanjid,68,4),FontJapaneseGrid);
-  case curkanjid[72] of
-    'K':fWordKanji.PaintBoxK8.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBoxK8.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBoxK8.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBoxK8.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBoxK8.Canvas,4,2,36,copy(curkanjid,64,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
-procedure TfUser.WordKanji_PaintBoxK9Paint(Sender: TObject);
-begin
-  if length(curkanjid)<81 then exit;
-  BeginDrawReg(fWordKanji.PaintBoxK9);
-  fWordKanji.PaintBox7.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(fWordKanji.PaintBoxK9.Canvas,44,4,16,copy(curkanjid,77,4),FontJapaneseGrid);
-  case curkanjid[81] of
-    'K':fWordKanji.PaintBoxK9.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':fWordKanji.PaintBoxK9.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':fWordKanji.PaintBoxK9.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':fWordKanji.PaintBoxK9.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(fWordKanji.PaintBoxK9.Canvas,4,2,36,copy(curkanjid,73,4),FontJapaneseGrid);
-  EndDrawReg;
-end;
-
 
 procedure TfUser.SpeedButton1Click(Sender: TObject);
 begin

@@ -41,8 +41,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 8
     Width = 57
     Height = 22
-    Hint = 
-      '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)'
+    Hint = '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)'
     AllowAllUp = True
     GroupIndex = 10
     Caption = '&PinYin'
@@ -59,8 +58,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 32
     Width = 57
     Height = 22
-    Hint = 
-      '#00176^eFilter by japanese reading (Ctrl-Y)'
+    Hint = '#00176^eFilter by japanese reading (Ctrl-Y)'
     AllowAllUp = True
     GroupIndex = 11
     Caption = 'Yomi'
@@ -77,8 +75,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 104
     Width = 58
     Height = 22
-    Hint = 
-      '#00177^eFilter by radical (Ctrl-R)'
+    Hint = '#00177^eFilter by radical (Ctrl-R)'
     AllowAllUp = True
     GroupIndex = 15
     Caption = '#00178^eRadical'
@@ -95,8 +92,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 56
     Width = 57
     Height = 22
-    Hint = 
-      '#00179^eFilter by definition (meaning) (Ctrl-M)'
+    Hint = '#00179^eFilter by definition (meaning) (Ctrl-M)'
     AllowAllUp = True
     GroupIndex = 12
     Caption = '#00180^eDefinition'
@@ -121,8 +117,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 128
     Width = 57
     Height = 22
-    Hint = 
-      '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
+    Hint = '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
     AllowAllUp = True
     GroupIndex = 16
     Caption = 'SKIP'
@@ -139,8 +134,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 178
     Width = 131
     Height = 22
-    Hint = 
-      '#00182^eDisplay all characters (Ctrl-N)'
+    Hint = '#00182^eDisplay all characters (Ctrl-N)'
     AllowAllUp = True
     Anchors = [akTop, akRight]
     Caption = '#00183^eAll filters off'
@@ -157,8 +151,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 132
     Width = 131
     Height = 22
-    Hint = 
-      '#00186^eDisplay only common characters'
+    Hint = '#00186^eDisplay only common characters'
     AllowAllUp = True
     Anchors = [akTop, akRight]
     GroupIndex = 20
@@ -176,8 +169,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 155
     Width = 131
     Height = 22
-    Hint = 
-      '#00188^eDisplay only characters in clipboard'
+    Hint = '#00188^eDisplay only characters in clipboard'
     AllowAllUp = True
     Anchors = [akTop, akRight]
     GroupIndex = 21
@@ -214,8 +206,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 176
     Width = 57
     Height = 22
-    Hint = 
-      '#00192^eFilter by Unicode / Nelson index / Halpern index'
+    Hint = '#00192^eFilter by Unicode / Nelson index / Halpern index'
     AllowAllUp = True
     GroupIndex = 13
     Caption = '#00193^eOther'
@@ -232,8 +223,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 152
     Width = 57
     Height = 22
-    Hint = 
-      '#00194^eFilter by Jouyou grade (Japanese school grade)'
+    Hint = '#00194^eFilter by Jouyou grade (Japanese school grade)'
     AllowAllUp = True
     GroupIndex = 18
     Caption = 'Jouyou'
@@ -250,8 +240,7 @@ object fKanjiSearch: TfKanjiSearch
     Top = 104
     Width = 63
     Height = 22
-    Hint = 
-      '#00177^eFilter by radical (Ctrl-R)'
+    Hint = '#00177^eFilter by radical (Ctrl-R)'
     AllowAllUp = True
     Anchors = [akTop, akRight]
     Caption = '#00195^eList...'
@@ -558,7 +547,6 @@ object fKanjiSearch: TfKanjiSearch
     Height = 21
     Style = csDropDownList
     Anchors = [akTop, akRight]
-    ItemHeight = 0
     TabOrder = 8
     OnChange = ComboBox1Change
   end

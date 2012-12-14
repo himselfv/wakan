@@ -192,7 +192,7 @@ end;
 procedure TfKanjiSearch.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fKanji.SpeedButton5.Down:=false;
+  fKanji.btnSearchSort.Down:=false;
   fMenu.aKanjiSearch.Checked:=false;
 end;
 

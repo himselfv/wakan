@@ -155,7 +155,7 @@ end;
 procedure TfKanjiDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fKanji.SpeedButton2.Down:=false;
+  fKanji.btnKanjiDetails.Down:=false;
   fTranslate.sbDockKanjiDetails.Down:=false;
   fMenu.aKanjiDetails.Checked:=false;
   if not CharDetDocked then FormPlacement1.SaveFormPlacement;
@@ -191,7 +191,7 @@ end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
 begin
-  fKanji.SpeedButton2.Down:=false;
+  fKanji.btnKanjiDetails.Down:=false;
   fMenu.aKanjiDetails.Checked:=false;
 end;
 

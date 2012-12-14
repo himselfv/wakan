@@ -19,31 +19,31 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
-    PaintBox3: TPaintBox;
+    PaintBox: TPaintBox;
     Shape9: TShape;
-    SpeedButton1: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    SpeedButton11: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton7: TSpeedButton;
-    SpeedButton8: TSpeedButton;
-    SpeedButton9: TSpeedButton;
+    btnGoToExample: TSpeedButton;
+    btnCopyAllToClipboard: TSpeedButton;
+    btnRandomOrder: TSpeedButton;
+    btnDisplayTranslation: TSpeedButton;
+    btnUseSmallFont: TSpeedButton;
+    btnUseBigFont: TSpeedButton;
+    btnPrevious: TSpeedButton;
+    btnNext: TSpeedButton;
+    btnCopyToClipboard: TSpeedButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure PaintBox3Paint(Sender: TObject);
-    procedure PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
+    procedure btnGoToExampleClick(Sender: TObject);
+    procedure PaintBoxPaint(Sender: TObject);
+    procedure PaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure SpeedButton7Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
-    procedure SpeedButton11Click(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton10Click(Sender: TObject);
-    procedure PaintBox3MouseDown(Sender: TObject; Button: TMouseButton;
+    procedure btnPreviousClick(Sender: TObject);
+    procedure btnNextClick(Sender: TObject);
+    procedure btnDisplayTranslationClick(Sender: TObject);
+    procedure btnRandomOrderClick(Sender: TObject);
+    procedure btnCopyToClipboardClick(Sender: TObject);
+    procedure btnCopyAllToClipboardClick(Sender: TObject);
+    procedure PaintBoxMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
+    procedure PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -101,7 +101,7 @@ begin
   fMenu.aDictAdd.Checked:=false;
 end;
 
-procedure TfExamples.SpeedButton1Click(Sender: TObject);
+procedure TfExamples.btnGoToExampleClick(Sender: TObject);
 var n:string;
 begin
   n:=InputBox(_l('#00892^eGo to example'),
@@ -112,56 +112,56 @@ begin
   except end;
 end;
 
-procedure TfExamples.PaintBox3Paint(Sender: TObject);
+procedure TfExamples.PaintBoxPaint(Sender: TObject);
 begin
   PaintExample;
 end;
 
-procedure TfExamples.PaintBox3MouseMove(Sender: TObject; Shift: TShiftState;
+procedure TfExamples.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(PaintBox3,x,y,ssLeft in Shift);
+  fMenu.IntTipPaintOver(PaintBox,x,y,ssLeft in Shift);
 end;
 
-procedure TfExamples.SpeedButton7Click(Sender: TObject);
+procedure TfExamples.btnPreviousClick(Sender: TObject);
 begin
   MoveExample(false);
 end;
 
-procedure TfExamples.SpeedButton8Click(Sender: TObject);
+procedure TfExamples.btnNextClick(Sender: TObject);
 begin
   MoveExample(true);
 end;
 
-procedure TfExamples.SpeedButton4Click(Sender: TObject);
+procedure TfExamples.btnDisplayTranslationClick(Sender: TObject);
 begin
-  PaintBox3.Invalidate;
+  PaintBox.Invalidate;
 end;
 
-procedure TfExamples.SpeedButton11Click(Sender: TObject);
+procedure TfExamples.btnRandomOrderClick(Sender: TObject);
 var cansel:boolean;
 begin
   if fUser.Visible then fUser.ShowWord else
   if fWords.Visible then fWords.StringGrid1SelectCell(sender,fWords.StringGrid1.Col,fWords.StringGrid1.Row,cansel);
 end;
 
-procedure TfExamples.SpeedButton9Click(Sender: TObject);
+procedure TfExamples.btnCopyToClipboardClick(Sender: TObject);
 begin
   ExampleClipboard(false);
 end;
 
-procedure TfExamples.SpeedButton10Click(Sender: TObject);
+procedure TfExamples.btnCopyAllToClipboardClick(Sender: TObject);
 begin
   ExampleClipboard(true);
 end;
 
-procedure TfExamples.PaintBox3MouseDown(Sender: TObject;
+procedure TfExamples.PaintBoxMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
-procedure TfExamples.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
+procedure TfExamples.PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
@@ -261,7 +261,7 @@ begin
   ex_indcur:=ex_indfirst;
   randbank.Clear;
   randbank.Add(inttostr(ex_indfirst+random(ex_indlast-ex_indfirst+1)));
-  if SpeedButton11.Down then ex_indcur:=strtoint(randbank[0]);
+  if btnRandomOrder.Down then ex_indcur:=strtoint(randbank[0]);
   ShowExample;
 end;
 
@@ -311,36 +311,36 @@ begin
   pos:=0;
   if ex_indfirst=-1 then Label2.Caption:='0/0'else
   begin
-    if not SpeedButton11.Down then pos:=ex_indcur-ex_indfirst else pos:=randbank.IndexOf(inttostr(ex_indcur));
+    if not btnRandomOrder.Down then pos:=ex_indcur-ex_indfirst else pos:=randbank.IndexOf(inttostr(ex_indcur));
     Label2.Caption:=inttostr(pos+1)+'/'+ms;
   end;
   if ex_indfirst=-1 then Label6.Caption:='-'else Label6.Caption:=inttostr(ex_indcur-ex_indfirst+1);
-  SpeedButton7.Enabled:=(ex_indfirst>-1) and (pos>0);
-  SpeedButton8.Enabled:=(ex_indfirst>-1) and (pos<ex_indlast-ex_indfirst);
-  SpeedButton9.Enabled:=(ex_indfirst>-1);
-  SpeedButton10.Enabled:=(ex_indfirst>-1);
-  PaintBox3.Invalidate;
+  btnPrevious.Enabled:=(ex_indfirst>-1) and (pos>0);
+  btnNext.Enabled:=(ex_indfirst>-1) and (pos<ex_indlast-ex_indfirst);
+  btnCopyToClipboard.Enabled:=(ex_indfirst>-1);
+  btnCopyAllToClipboard.Enabled:=(ex_indfirst>-1);
+  PaintBox.Invalidate;
 end;
 
 procedure TfExamples.PaintExample;
 begin
-  PaintBox3.Canvas.Brush.Color:=clWindow;
-  PaintBox3.Canvas.Font.Style:=[];
-  BeginDrawReg(PaintBox3);
-  if SpeedButton4.Down then DrawUnicode(PaintBox3.Canvas,3,3,16,ex_jap,FontSmall);
-  if SpeedButton5.Down then DrawUnicode(PaintBox3.Canvas,3,15,16,ex_jap,FontSmall);
-  if SpeedButton6.Down then DrawUnicode(PaintBox3.Canvas,3,5,24,ex_jap,FontJapanese);
+  PaintBox.Canvas.Brush.Color:=clWindow;
+  PaintBox.Canvas.Font.Style:=[];
+  BeginDrawReg(PaintBox);
+  if btnDisplayTranslation.Down then DrawUnicode(PaintBox.Canvas,3,3,16,ex_jap,FontSmall);
+  if btnUseSmallFont.Down then DrawUnicode(PaintBox.Canvas,3,15,16,ex_jap,FontSmall);
+  if btnUseBigFont.Down then DrawUnicode(PaintBox.Canvas,3,5,24,ex_jap,FontJapanese);
   EndDrawReg;
-  if SpeedButton4.Down then DrawUnicode(PaintBox3.Canvas,3,22,16,fstr(ex_en),FontEnglish);
+  if btnDisplayTranslation.Down then DrawUnicode(PaintBox.Canvas,3,22,16,fstr(ex_en),FontEnglish);
 end;
 
 procedure TfExamples.MoveExample(right:boolean);
 var pos:integer;
     a:integer;
 begin
-  if not SpeedButton11.Down then
+  if not btnRandomOrder.Down then begin
     if right then inc(ex_indcur) else dec(ex_indcur);
-  if SpeedButton11.Down then
+  end else
   begin
     pos:=randbank.IndexOf(inttostr(ex_indcur));
     if not right then dec(pos) else inc(pos);
@@ -368,17 +368,13 @@ end;
 
 procedure TfExamples.ExampleClipboard(all:boolean);
 var i:integer;
-  p:PByte;
-  ofs:integer;
-  buf:array[0..1023] of byte;
-  j,siz,siz2:integer;
   max:integer;
   tmp_jap: FString;
   tmp_en: string;
 begin
   if not all then
   begin
-    if SpeedButton4.Down then
+    if btnDisplayTranslation.Down then
       clip:=ex_jap+UH_CR+UH_LF+fstr(ex_en)
     else
       clip:=ex_jap;
@@ -395,7 +391,7 @@ begin
     for i:=ex_indfirst to max do
     begin
       ReadExample(i, tmp_jap, tmp_en);
-      if SpeedButton4.Down then
+      if btnDisplayTranslation.Down then
         clip:=tmp_jap+UH_CR+UH_LF+fstr(tmp_en)+UH_CR+UH_LF
       else
         clip:=tmp_jap+UH_CR+UH_LF;
@@ -410,9 +406,9 @@ begin
   if num>ex_indlast-ex_indfirst then exit;
   if ex_indfirst=-1 then exit;
   if num<0 then exit;
-  if not SpeedButton11.Down then
-    ex_indcur:=ex_indfirst+num-1 else
-  if SpeedButton11.Down then
+  if not btnRandomOrder.Down then begin
+    ex_indcur:=ex_indfirst+num-1;
+  end else
   begin
     ex_indcur:=ex_indfirst+num-1;
     pos:=randbank.IndexOf(inttostr(num));

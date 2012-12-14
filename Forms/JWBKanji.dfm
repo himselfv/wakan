@@ -87,7 +87,7 @@ object fKanji: TfKanji
       ParentFont = False
       Transparent = True
     end
-    object SpeedButton5: TSpeedButton
+    object btnSearchSort: TSpeedButton
       Left = 8
       Top = 323
       Width = 113
@@ -105,10 +105,10 @@ object fKanji: TfKanji
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton5Click
+      OnClick = btnSearchSortClick
       ExplicitTop = 321
     end
-    object SpeedButton2: TSpeedButton
+    object btnKanjiDetails: TSpeedButton
       Left = 559
       Top = 323
       Width = 65
@@ -126,10 +126,10 @@ object fKanji: TfKanji
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton2Click
+      OnClick = btnKanjiDetailsClick
       ExplicitTop = 321
     end
-    object SpeedButton3: TSpeedButton
+    object btnCompounds: TSpeedButton
       Left = 128
       Top = 323
       Width = 81
@@ -147,10 +147,10 @@ object fKanji: TfKanji
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton3Click
+      OnClick = btnCompoundsClick
       ExplicitTop = 321
     end
-    object SpeedButton4: TSpeedButton
+    object btnStrokeOrder: TSpeedButton
       Left = 461
       Top = 7
       Width = 25
@@ -168,7 +168,7 @@ object fKanji: TfKanji
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton4Click
+      OnClick = btnStrokeOrderClick
     end
     object DrawGrid1: TDrawGrid
       Left = 8
@@ -193,7 +193,7 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnSelectCell = DrawGrid1SelectCell
     end
-    object Button1: TButton
+    object btnPrintCards: TButton
       Left = 495
       Top = 4
       Width = 128
@@ -209,9 +209,9 @@ object fKanji: TfKanji
       ParentFont = False
       TabOrder = 1
       TabStop = False
-      OnClick = Button1Click
+      OnClick = btnPrintCardsClick
     end
-    object Button2: TButton
+    object btnReadingChart: TButton
       Left = 344
       Top = 8
       Width = 115
@@ -219,7 +219,7 @@ object fKanji: TfKanji
       Caption = 'ReadingChart'
       TabOrder = 2
       Visible = False
-      OnClick = Button2Click
+      OnClick = btnReadingChartClick
     end
   end
   object Panel2: TPanel
@@ -244,16 +244,16 @@ object fKanji: TfKanji
     DockSite = True
     TabOrder = 2
   end
-  object Timer1: TTimer
-    Enabled = False
-    OnTimer = Timer1Timer
-    Left = 352
-    Top = 65528
-  end
   object SaveDialog1: TSaveDialog
     DefaultExt = '.txt'
     Filter = 'Text file (*.txt)|*.txt'
-    Left = 288
-    Top = 8
+    Left = 152
+    Top = 40
+  end
+  object UpdateTimer: TTimer
+    Enabled = False
+    OnTimer = UpdateTimerTimer
+    Left = 222
+    Top = 40
   end
 end

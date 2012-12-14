@@ -529,14 +529,12 @@ object fUser: TfUser
       Anchors = [akTop, akRight]
       Caption = '#00669^eSearch'
       Default = True
+      DoubleBuffered = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
       Font.Style = []
-      ParentFont = False
-      TabOrder = 2
-      OnClick = BitBtn1Click
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -551,6 +549,10 @@ object fUser: TfUser
         33333337FFFFFF7FF3333333000000000333333777777777F33333330000000B
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      ParentFont = False
+      TabOrder = 2
+      OnClick = BitBtn1Click
     end
   end
   object Panel2: TPanel

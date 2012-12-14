@@ -100,7 +100,7 @@ object fExamples: TfExamples
       Anchors = [akTop, akRight]
       Caption = 'Label6'
     end
-    object PaintBox3: TPaintBox
+    object PaintBox: TPaintBox
       Left = 2
       Top = 2
       Width = 311
@@ -108,17 +108,17 @@ object fExamples: TfExamples
       Anchors = [akLeft, akTop, akRight]
       Color = clBtnFace
       ParentColor = False
-      OnMouseDown = PaintBox3MouseDown
-      OnMouseMove = PaintBox3MouseMove
-      OnMouseUp = PaintBox3MouseUp
-      OnPaint = PaintBox3Paint
+      OnMouseDown = PaintBoxMouseDown
+      OnMouseMove = PaintBoxMouseMove
+      OnMouseUp = PaintBoxMouseUp
+      OnPaint = PaintBoxPaint
     end
-    object SpeedButton1: TSpeedButton
+    object btnGoToExample: TSpeedButton
       Left = 372
       Top = 0
       Width = 18
       Height = 17
-      Hint = '#00725^eNext example'
+      Hint = '^Go to example...'
       Anchors = [akTop, akRight]
       Flat = True
       Glyph.Data = {
@@ -137,9 +137,9 @@ object fExamples: TfExamples
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton1Click
+      OnClick = btnGoToExampleClick
     end
-    object SpeedButton10: TSpeedButton
+    object btnCopyAllToClipboard: TSpeedButton
       Left = 437
       Top = 32
       Width = 27
@@ -150,9 +150,9 @@ object fExamples: TfExamples
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton10Click
+      OnClick = btnCopyAllToClipboardClick
     end
-    object SpeedButton11: TSpeedButton
+    object btnRandomOrder: TSpeedButton
       Left = 316
       Top = 29
       Width = 37
@@ -165,9 +165,9 @@ object fExamples: TfExamples
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton11Click
+      OnClick = btnRandomOrderClick
     end
-    object SpeedButton4: TSpeedButton
+    object btnDisplayTranslation: TSpeedButton
       Left = 396
       Top = 1
       Width = 35
@@ -180,9 +180,9 @@ object fExamples: TfExamples
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton4Click
+      OnClick = btnDisplayTranslationClick
     end
-    object SpeedButton5: TSpeedButton
+    object btnUseSmallFont: TSpeedButton
       Left = 396
       Top = 16
       Width = 35
@@ -194,9 +194,9 @@ object fExamples: TfExamples
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton4Click
+      OnClick = btnDisplayTranslationClick
     end
-    object SpeedButton6: TSpeedButton
+    object btnUseBigFont: TSpeedButton
       Left = 396
       Top = 32
       Width = 35
@@ -208,9 +208,9 @@ object fExamples: TfExamples
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton4Click
+      OnClick = btnDisplayTranslationClick
     end
-    object SpeedButton7: TSpeedButton
+    object btnPrevious: TSpeedButton
       Left = 354
       Top = 29
       Width = 18
@@ -234,9 +234,9 @@ object fExamples: TfExamples
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton7Click
+      OnClick = btnPreviousClick
     end
-    object SpeedButton8: TSpeedButton
+    object btnNext: TSpeedButton
       Left = 373
       Top = 30
       Width = 18
@@ -260,9 +260,9 @@ object fExamples: TfExamples
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton8Click
+      OnClick = btnNextClick
     end
-    object SpeedButton9: TSpeedButton
+    object btnCopyToClipboard: TSpeedButton
       Left = 437
       Top = 16
       Width = 26
@@ -273,7 +273,7 @@ object fExamples: TfExamples
       Flat = True
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton9Click
+      OnClick = btnCopyToClipboardClick
     end
   end
 end

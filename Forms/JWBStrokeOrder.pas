@@ -38,7 +38,7 @@ uses JWBKanji;
 procedure TfStrokeOrder.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fKanji.SpeedButton4.Down:=false;
+  fKanji.btnStrokeOrder.Down:=false;
 end;
 
 procedure TfStrokeOrder.SpeedButton1Click(Sender: TObject);

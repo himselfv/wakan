@@ -7,6 +7,9 @@ uses
   StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBStrings,
   RXCtrls, Grids, DB, ShellAPI;
 
+//{$DEFINE UPDATE_WITH_DELAY}
+// If set, DoItTimer() will really use timer and not just update instanteneously.
+
 type
   TfKanji = class(TForm)
     Panel1: TPanel;
@@ -14,20 +17,20 @@ type
     Shape6: TShape;
     Label18: TLabel;
     Label24: TLabel;
-    SpeedButton5: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton4: TSpeedButton;
+    btnSearchSort: TSpeedButton;
+    btnKanjiDetails: TSpeedButton;
+    btnCompounds: TSpeedButton;
+    btnStrokeOrder: TSpeedButton;
     DrawGrid1: TDrawGrid;
-    Button1: TButton;
-    Timer1: TTimer;
+    btnPrintCards: TButton;
     Panel2: TPanel;
     Panel3: TPanel;
-    Button2: TButton;
+    btnReadingChart: TButton;
     SaveDialog1: TSaveDialog;
+    UpdateTimer: TTimer;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure btnPrintCardsClick(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
@@ -37,15 +40,15 @@ type
     procedure SpeedButton15Click(Sender: TObject);
     procedure SpeedButton17Click(Sender: TObject);
     procedure DrawGrid1KeyPress(Sender: TObject; var Key: Char);
-    procedure Timer1Timer(Sender: TObject);
+    procedure UpdateTimerTimer(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
+    procedure btnStrokeOrderClick(Sender: TObject);
     procedure SpeedButton25Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure SpeedButton5Click(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+    procedure btnSearchSortClick(Sender: TObject);
+    procedure btnKanjiDetailsClick(Sender: TObject);
+    procedure btnCompoundsClick(Sender: TObject);
+    procedure btnReadingChartClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -142,10 +145,8 @@ begin
 end;
 
 function TfKanji.OffsetRange(tx:string;min,max:integer):string;
-var fnd:boolean;
-    curtx,txleft,otx:string;
+var curtx,txleft,otx:string;
     nn1,nn2:integer;
-    i:integer;
 begin
   txleft:=tx;
   otx:='';
@@ -178,7 +179,13 @@ begin
   result:=otx;
 end;
 
+//---------------------------------------
+//filter kanji and show them in the grid
+//---------------------------------------
 procedure TfKanji.DoIt;
+
+//split value string into string list. values are separated by comma or ;
+//if numeric, values can have format n1-n2 (e.g. 3-5 is expanded into 3,4,5)
 procedure MakeList(tx:string;number:boolean;sl:TStringList);
 var fnd:boolean;
     curtx,txleft:string;
@@ -217,11 +224,13 @@ begin
   end;
   if sl.Count=0 then sl.Add('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
 end;
+
 function InRange(tx,fld:string;number:boolean;sl:TStringList):boolean;
 begin
   MakeList(tx,number,sl);
   result:=sl.IndexOf(uppercase(fld))>-1;
 end;
+
 procedure ReadFilter(flt:TStringList;tx:string;typ1,typ2:integer;partial,space,number,takedot:boolean);
 var s:string;
     sl:TStringList;
@@ -256,6 +265,7 @@ begin
   flt.Sort;
   flt.Sorted:=true;
 end;
+
 var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     accept:boolean;
     radf:integer;
@@ -590,7 +600,7 @@ begin
   fSettings.ShowModal;
 end;
 
-procedure TfKanji.Button1Click(Sender: TObject);
+procedure TfKanji.btnPrintCardsClick(Sender: TObject);
 begin
   ClearKanjiCardCache;
   fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards'));
@@ -873,14 +883,17 @@ end;
 
 procedure TfKanji.DoItTimer;
 begin
-//  Timer1.Interval:=1000;
-//  Timer1.Enabled:=true;
+{$IFDEF UPDATE_WITH_DELAY}
+  UpdateTimer.Interval:=1000;
+  UpdateTimer.Enabled:=true;
+{$ELSE}
   DoIt;
+{$ENDIF}
 end;
 
-procedure TfKanji.Timer1Timer(Sender: TObject);
+procedure TfKanji.UpdateTimerTimer(Sender: TObject);
 begin
-  Timer1.Enabled:=false;
+  UpdateTimer.Enabled:=false;
   DoIt;
 end;
 
@@ -889,9 +902,9 @@ begin
   DrawGrid1.SetFocus;
 end;
 
-procedure TfKanji.SpeedButton4Click(Sender: TObject);
+procedure TfKanji.btnStrokeOrderClick(Sender: TObject);
 begin
-  fMenu.ToggleForm(fStrokeOrder,SpeedButton4,nil);
+  fMenu.ToggleForm(fStrokeOrder,btnStrokeOrder,nil);
 end;
 
 procedure TfKanji.SpeedButton25Click(Sender: TObject);
@@ -910,24 +923,24 @@ begin
   if DrawGrid1.ColCount<>(DrawGrid1.ClientWidth-32) div grs then DoIt;
 end;
 
-procedure TfKanji.SpeedButton5Click(Sender: TObject);
+procedure TfKanji.btnSearchSortClick(Sender: TObject);
 begin
-  fMenu.ToggleForm(fKanjiSearch,SpeedButton5,fMenu.aKanjiSearch);
+  fMenu.ToggleForm(fKanjiSearch,btnSearchSort,fMenu.aKanjiSearch);
 end;
 
-procedure TfKanji.SpeedButton2Click(Sender: TObject);
+procedure TfKanji.btnKanjiDetailsClick(Sender: TObject);
 begin
   fMenu.aKanjiDetails.Execute;
 end;
 
-procedure TfKanji.SpeedButton3Click(Sender: TObject);
+procedure TfKanji.btnCompoundsClick(Sender: TObject);
 var CanSelect:boolean;
 begin
-  fMenu.ToggleForm(fKanjiCompounds,SpeedButton3,fMenu.aKanjiCompounds);
+  fMenu.ToggleForm(fKanjiCompounds,btnCompounds,fMenu.aKanjiCompounds);
   DrawGrid1SelectCell(Sender, DrawGrid1.Col, DrawGrid1.Row, CanSelect);
 end;
 
-procedure TfKanji.Button2Click(Sender: TObject);
+procedure TfKanji.btnReadingChartClick(Sender: TObject);
 var di:integer;
     chars:array[1..7] of string;
     i,j,k,l,m:integer;

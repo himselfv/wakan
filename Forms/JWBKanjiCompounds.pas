@@ -63,7 +63,7 @@ end;
 procedure TfKanjiCompounds.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fKanji.SpeedButton3.Down:=false;
+  fKanji.btnCompounds.Down:=false;
   fMenu.aKanjiCompounds.Checked:=false;
 end;
 

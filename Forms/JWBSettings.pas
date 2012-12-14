@@ -295,13 +295,10 @@ type
     procedure SpeedButton13Click(Sender: TObject);
     procedure SpeedButton14Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
-  private
-    { Private declarations }
   public
     function CheckFontBool(s:string):boolean;
     function AutoDetectFonts:boolean;
     procedure ResetDetList;
-    { Public declarations }
   end;
 
 var
@@ -314,8 +311,7 @@ uses JWBMenu, JWBStrings, JWBUnit, registry, JWBKanji, JWBTranslate,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard;
 
-var fontlist:TStringList;
-    colorfrom:integer;
+var colorfrom:integer;
 
 {$R *.DFM}
 
@@ -432,26 +428,10 @@ var reg:TRegIniFile;
     setwindows:integer;
 begin
   if edit11.text='0' then edit11.text:='1';
-  i:=0;
-  try
-    i:=strtoint(Edit10.Text);
-  except i:=0; end;
-  if i=0 then Edit10.Text:='0';
-  i:=0;
-  try
-    i:=strtoint(Edit11.Text);
-  except i:=0; end;
-  if i=0 then Edit11.Text:='0';
-  i:=0;
-  try
-    i:=strtoint(Edit12.Text);
-  except i:=0; end;
-  if i=0 then Edit12.Text:='0';
-  i:=0;
-  try
-    i:=strtoint(Edit13.Text);
-  except i:=0; end;
-  if i=0 then Edit13.Text:='0';
+  if not TryStrToInt(Edit10.Text, i) then Edit10.Text := '0';
+  if not TryStrToInt(Edit11.Text, i) then Edit11.Text := '0';
+  if not TryStrToInt(Edit12.Text, i) then Edit12.Text := '0';
+  if not TryStrToInt(Edit13.Text, i) then Edit13.Text := '0';
   reg:=TRegIniFile.Create('Software\Labyrinth\WaKan');
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
@@ -496,7 +476,7 @@ begin
   reg.WriteBool('Dict','AutoPage',CheckBox12.Checked);
   reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
   reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
-  reg.WriteBool('Dict','RandomExamples',fExamples.SpeedButton11.Down);
+  reg.WriteBool('Dict','RandomExamples',fExamples.btnRandomOrder.Down);
   reg.WriteBool('Dict','ShowFreq',CheckBox58.Checked);
   reg.WriteBool('Dict','OrderFreq',CheckBox59.Checked);
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
@@ -853,7 +833,6 @@ end;
 var s:string;
 begin
   substituted:=true;
-  result:=true;
   fSettings.Edit1.Text:=ReturnStdFont('MS Mincho','MS Gothic');
   fSettings.Edit2.Text:=ReturnStdFont('MS Mincho','MS Gothic');
   fSettings.Edit5.Text:=ReturnStdFont('MS Gothic','MS Mincho');

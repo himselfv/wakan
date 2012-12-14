@@ -2099,6 +2099,10 @@ object fSettings: TfSettings
     object TabSheet13: TTabSheet
       Caption = '^eEditor'
       ImageIndex = 12
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2280,7 +2284,9 @@ object fSettings: TfSettings
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
+    DoubleBuffered = True
     Kind = bkOK
+    ParentDoubleBuffered = False
     TabOrder = 1
     OnClick = BitBtn1Click
   end
