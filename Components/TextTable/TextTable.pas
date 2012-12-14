@@ -18,6 +18,11 @@ the whole table is, too.
 Otherwise the data is read from the disk on demand. 
 }
 
+{$DEFINE CURSOR_IN_TABLE}
+{ To navigate TTextTable you must use TTextTableCursor.
+ However, old code used to call TTextTable.First/Next and so we keep a copy
+ of a cursor code inside of a TTextTable. }
+
 const
   AllocDataBuffer=65536;
   AllocOrderBuffer=1024;
@@ -74,16 +79,17 @@ type
     fieldtypes:string;
     fieldsizes:string;
     varfields:integer;
+   {$IFDEF CURSOR_IN_TABLE}
     cur,tcur:integer;
     curorder:integer;
     filter:string;
+   {$ENDIF}
     fieldcount:byte;
     reccount:integer;
     rawindex:boolean;
     databuffer,structbuffer:integer;
     prebuffer:boolean;
     datalen:integer;
-    justinserted:boolean;
     numberdeleted:integer;
     nocommit:boolean;
     tablename:string;
@@ -97,7 +103,7 @@ type
     function FilterPass(rec:integer;fil:string):boolean;
     function TransOrder(rec,order:integer):integer; inline;
     function IsDeleted(rec:integer):boolean;
-    procedure Commit(rec:integer);
+
    //Record sorting
     function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
     function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
@@ -106,19 +112,11 @@ type
   public
     constructor Create(source:TPackageSource;filename:string;rawread,offline:boolean);
     destructor Destroy; override;
-    procedure First;
-    procedure Next;
-    function EOF:boolean;
     function Field(field:string):integer;
     function HasIndex(index:string):boolean;
-    procedure SetOrder(index:string);
-    procedure SetFilter(filtr:string);
-    function Test(fil:string):boolean;
     procedure WriteTable(filename:string;nodelete:boolean);
     property RecordCount:integer read reccount;
-    procedure Insert(values:array of string);
-    procedure Delete;
-    procedure Edit(fields:array of byte;values:array of string);
+
     procedure ExportToText(var t:textfile;ord:string);
     procedure ImportFromText(var t:textfile;smf:TSMPromptForm;mess:string);
     procedure Reindex;
@@ -126,26 +124,94 @@ type
     function CheckIndex:boolean;
     property NoCommitting:boolean read nocommit write nocommit;
 
+ {$IFDEF CURSOR_IN_TABLE}
+  public
+    procedure First;
+    procedure Next;
+    function EOF:boolean;
+    procedure SetOrder(index:string);
+    procedure SetFilter(filtr:string);
+    function Test(fil:string):boolean;
+ {$ENDIF}
+
+  public
+    function AddRecord(values:array of string): integer;
+    procedure DeleteRecord(RecNo: integer);
+    procedure EditRecord(RecNo: integer; fields:array of byte;values:array of string;JustInserted:boolean=false);
+    procedure Commit(RecNo:integer; JustInserted: boolean = false);
+   {$IFDEF CURSOR_IN_TABLE}
+    procedure Insert(values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Edit(fields:array of byte;values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+   {$ENDIF}
+
   public //Field reading
     function GetFieldSize(recno,field:integer):byte;
     function GetField(rec:integer;field:integer):string;
     procedure SetField(rec:integer;field:integer;const value:string);
-    function Str(field:integer):string;
-    function Int(field:integer):integer;
-    function Bool(field:integer):boolean;
+
+ {$IFDEF CURSOR_IN_TABLE}
+  public
+    function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+    function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
+    function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
    {$IFDEF UNICODE}
-    function Fch(field:integer):WideChar;
+    function Fch(field:integer):WideChar; {$IFDEF INLINE}inline;{$ENDIF}
+   {$ELSE}
+    function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+   {$ENDIF}
+ {$ENDIF}
+
+  public
+    function GetSeekObject(seek: string): TSeekObject;
+    function LocateRecord(seek: PSeekObject; value:string; number:boolean; out idx: integer):boolean;
+   {$IFDEF CURSOR_IN_TABLE}
+    function Locate(seek: PSeekObject; value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek,value:string;number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+   {$ENDIF}
+
+  end;
+  TDataCache=array[0..30,0..1] of word;
+
+ { Implements navigation through TextTable records. }
+  TTextTableCursor = class
+  protected
+    FTable: TTextTable;
+    cur: integer; //current position in index
+    tcur: integer; //current RecdNo (for this index position)
+    curorder:integer;
+    filter:string;
+  public
+    constructor Create(ATable: TTextTable);
+    procedure First;
+    procedure Next;
+    function EOF:boolean;
+    procedure SetOrder(index:string);
+    procedure SetFilter(filtr:string);
+    function Test(fil:string):boolean;
+    property Table: TTextTable read FTable;
+
+  public
+   { Write access to TTextTable MUST BE EXCLUSIVE. ALWAYS. NO EXCEPTIONS. }
+    procedure Insert(values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Edit(fields:array of byte;values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+
+  public
+    function Locate(seek: PSeekObject; value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek,value:string;number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+
+  public
+    function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+    function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
+    function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
+   {$IFDEF UNICODE}
+    function Fch(field:integer):WideChar; {$IFDEF INLINE}inline;{$ENDIF}
    {$ELSE}
     function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
    {$ENDIF}
 
-  public
-    function GetSeekObject(seek: string): TSeekObject;
-    function Locate(seek: PSeekObject; value:string; number:boolean):boolean; overload;
-    function Locate(seek,value:string;number:boolean):boolean; overload;
-
   end;
-  TDataCache=array[0..30,0..1] of word;
 
 procedure LogAlloc(s:string;len:integer);
 procedure ShowAllocStats;
@@ -233,8 +299,10 @@ begin
   fieldbuild:=TStringList.Create;
   numberdeleted:=0;
   rawindex:=false;
+ {$IFDEF CURSOR_IN_TABLE}
   cur:=0;
   curorder:=-1;
+ {$ENDIF}
 //  cachedrec:=-1;
   sl:=TStringList.Create;
   if source<>nil then
@@ -459,7 +527,6 @@ begin
     seekbuilddesc[i].fields := ParseSeekDescription(seekbuild[i]);
   end;
 
-  justinserted:=false;
   tottim:=tottim+(now-stim);
 {  if filename='Words' then showmessage(filename+#13#13+'Tot:'+formatdatetime('hh:nn:ss.zzz',tottim)+#13+
                               'Data:'+formatdatetime('hh:nn:ss.zzz',datatim)+#13+
@@ -839,9 +906,23 @@ begin
   end;
 end;
 
+{$IFDEF CURSOR_IN_TABLE}
 function TTextTable.Str(field:integer):string;
 begin
   result:=GetField(tcur,field);
+end;
+
+function TTextTable.Int(field:integer):integer;
+begin
+  if not TryStrToInt(GetField(tcur,field), Result) then
+    Result := 0;
+end;
+
+function TTextTable.Bool(field:integer):boolean;
+var s: string;
+begin
+  s := GetField(tcur,field);
+  Result :=(Length(s)>0) and (UpCase(s[1])='T');
 end;
 
 //Returns one character (in older versions nothing is guaranteed but it was always this way)
@@ -861,19 +942,7 @@ begin
   Result := Str(field);
 end;
 {$ENDIF}
-
-function TTextTable.Int(field:integer):integer;
-begin
-  if not TryStrToInt(GetField(tcur,field), Result) then
-    Result := 0;
-end;
-
-function TTextTable.Bool(field:integer):boolean;
-var s: string;
-begin
-  s := GetField(tcur,field);
-  Result :=(Length(s)>0) and (UpCase(s[1])='T');
-end;
+{$ENDIF}
 
 
 
@@ -944,7 +1013,21 @@ begin
   if order=-1 then
     Result:=rec
   else
-    Result := PInteger(OffsetPtr(index, (order*reccount+rec)*4))^;
+    Result:=PInteger(OffsetPtr(index, (order*reccount+rec)*4))^;
+end;
+
+{$IFDEF CURSOR_IN_TABLE}
+procedure TTextTable.First;
+begin
+  if not loaded then load;
+  cur:=-1;
+  tcur:=0;
+  Next;
+end;
+
+function TTextTable.Test(fil:string):boolean;
+begin
+  result:=FilterPass(tcur,fil);
 end;
 
 procedure TTextTable.Next;
@@ -973,8 +1056,6 @@ begin
   result:=cur>=reccount;
 end;
 
-
-
 procedure TTextTable.SetOrder(index:string);
 begin
   if not loaded then load;
@@ -986,6 +1067,8 @@ procedure TTextTable.SetFilter(filtr:string);
 begin
   filter:=filtr;
 end;
+{$ENDIF}
+
 
 function ReverseString(s:string):string;
 var i:integer;
@@ -1007,16 +1090,13 @@ begin
   Result.fld_i:=fieldlist.IndexOf(seek);
 end;
 
-//Slower version, specifying seek by a string name
-function TTextTable.Locate(seek,value:string;number:boolean):boolean;
-var so: TSeekObject;
-begin
-  so := GetSeekObject(seek);
-  Result := Locate(@so, value, number);
-end;
+{ LocateRecord():
+ Locates first matching record by using a given seek table.
+ Returns true and record index in seek table if there are matches,
+ or false and record index for record just after where the match would have occured.
+ To convert seek index to record index call TransOrder(idx, seek.ind_i) }
 
-//Faster version, by seek object
-function TTextTable.Locate(seek: PSeekObject; value:string; number:boolean):boolean;
+function TTextTable.LocateRecord(seek: PSeekObject; value:string; number:boolean; out idx: integer):boolean;
 var sn:integer;       //seek table number
   fn:integer;         //field number
   reverse:boolean;
@@ -1024,12 +1104,14 @@ var sn:integer;       //seek table number
   s:string;
   i_val: integer;    //integer value for "value", when number==true
   i_s: integer;      //integer value for "s", when number==true
+  RecNo: integer;
 begin
   if not loaded then load;
   sn := seek.ind_i;
   fn := seek.fld_i;
   reverse := seek.reverse;
 
+  idx := -1;
   Result := false;
   if (sn<-1) or (fn<0) then
     exit;
@@ -1066,33 +1148,50 @@ begin
     end;
     if l>=r then
     begin
-      result:=true;
-      cur:=l;
-      tcur:=TransOrder(l,sn);
-      while (cur<reccount) and (IsDeleted(tcur)) do
+      idx:=l;
+      RecNo:=TransOrder(idx,sn);
+      while (idx<reccount) and (IsDeleted(RecNo)) do
       begin
-        inc(cur);
-        tcur:=TransOrder(cur,sn);
+        inc(idx);
+        RecNo:=TransOrder(idx,sn);
       end;
-      if cur<reccount then s:=GetField(TransOrder(cur,sn),fn);
-      if (cur>=reccount) or (value<>uppercase(s)) then result:=false;
+      if idx<reccount then
+        s:=GetField(TransOrder(idx,sn),fn);
+      Result := (idx<reccount);
+      if Result then
+        if number then begin
+          if (not TryStrToInt(s, i_s)) or (i_val<>i_s) then
+            Result := false;
+        end else begin
+          if value<>uppercase(s) then
+            Result := false;
+        end;
       exit;
     end;
   until false;
 end;
 
-procedure TTextTable.First;
+{$IFDEF CURSOR_IN_TABLE}
+//Slower version, specifying seek by a string name
+function TTextTable.Locate(seek,value:string;number:boolean):boolean;
+var so: TSeekObject;
 begin
-  if not loaded then load;
-  cur:=-1;
-  tcur:=0;
-  Next;
+  so := GetSeekObject(seek);
+  Result := Locate(@so, value, number);
 end;
 
-function TTextTable.Test(fil:string):boolean;
+//Faster version, by seek object
+function TTextTable.Locate(seek: PSeekObject; value:string; number:boolean):boolean;
+var idx: integer;
 begin
-  result:=FilterPass(tcur,fil);
+  Result := LocateRecord(seek, value, number, idx);
+  cur := idx;
+  if idx>=0 then
+    tcur := TransOrder(idx, seek.ind_i)
+  else
+    tcur := -1;
 end;
+{$ENDIF}
 
 function TTextTable.Field(field:string):integer;
 begin
@@ -1124,7 +1223,8 @@ begin
   end;
 end;
 
-procedure TTextTable.Insert(values:array of string);
+{ Appends record to the table, returns its RecNo }
+function TTextTable.AddRecord(values:array of string): integer;
 var totsize:integer;
     i:integer;
     p:pointer;
@@ -1136,16 +1236,12 @@ var totsize:integer;
 begin
   if not loaded then load;
   if offline then
-  begin
-    showmessage('Cannot insert into OFFLINE table!');
-    exit;
-  end;
+    raise Exception.Create('Cannot insert into offline table.');
   totsize:=0;
   if High(values)+1<>fieldcount then raise Exception.Create('Invalid values array count (TTextTable.Insert).');
-  for i:=0 to fieldcount-1 do if length(values[i])>250 then
-  begin
-    values[i]:=copy(values[i],1,250);
-  end;
+  for i:=0 to fieldcount-1 do
+    if length(values[i])>250 then
+      values[i]:=copy(values[i],1,250);
   for i:=0 to fieldcount-1 do
     Inc(totsize, GetFieldValueSize(fieldbuild[i][1], values[i]));
   if databuffer<totsize then
@@ -1185,22 +1281,19 @@ begin
   SetLength(a,fieldcount);
   for i:=0 to fieldcount-1 do a[i]:=i;
   inc(reccount);
-  tcur:=reccount-1;
-  justinserted:=true;
-  Edit(a,values);
-  justinserted:=false;
+  Result := reccount-1;
+  EditRecord(RecordCount-1, a, values, {JustInserted=}true);
 end;
 
-procedure TTextTable.Delete;
-var b:boolean;
+procedure TTextTable.DeleteRecord(RecNo: integer);
 begin
   if not loaded then load;
-  b:=true;
-  moveofs(@b,struct,0,tcur*(varfields+5),1);
+  PBoolean(integer(struct)+RecNo*(varfields+5))^ := true;
   inc(numberdeleted);
 end;
 
-procedure TTextTable.Edit(fields:array of byte;values:array of string);
+procedure TTextTable.EditRecord(RecNo: integer; fields:array of byte;values:array of string;
+  JustInserted:boolean=false);
 var i,j:integer;
     sz:byte;
     tp:char;
@@ -1217,7 +1310,7 @@ begin
   willinsert:=false;
   for i:=0 to High(values) do
   begin
-    sz:=GetFieldSize(tcur,fields[i]);
+    sz:=GetFieldSize(RecNo,fields[i]);
     tp:=fieldtypes[fields[i]+1];
     if ((tp='s') and (sz<>length(values[i])))
    {$IFDEF UNICODE}
@@ -1246,9 +1339,26 @@ begin
     exit;
   end;
   for i:=0 to High(values) do
-    SetField(tcur, fields[i], values[i]);
-  if not nocommit then Commit(tcur);
+    SetField(RecNo, fields[i], values[i]);
+  if not nocommit then Commit(RecNo, JustInserted);
 end;
+
+{$IFDEF CURSOR_IN_TABLE}
+procedure TTextTable.Insert(values:array of string);
+begin
+  tcur := AddRecord(values);
+end;
+
+procedure TTextTable.Delete;
+begin
+  DeleteRecord(tcur);
+end;
+
+procedure TTextTable.Edit(fields:array of byte;values:array of string);
+begin
+  EditRecord(tcur, fields, values);
+end;
+{$ENDIF}
 
 
 
@@ -1326,8 +1436,7 @@ begin
   Result := SortRec(r, desc);
 end;
 
-
-procedure TTextTable.Commit(rec:integer);
+procedure TTextTable.Commit(RecNo:integer; JustInserted: boolean);
 var p:pointer;
     i:integer;
     j,k:integer;
@@ -1344,13 +1453,13 @@ begin
   end else
   begin
     for i:=0 to orders.Count-1 do
-      for j:=0 to reccount-1 do if TransOrder(j,i)=rec then
+      for j:=0 to reccount-1 do if TransOrder(j,i)=RecNo then
         moveofs(index,index,i*reccount*4+j*4+4,i*reccount*4+j*4,(reccount-j-1)*4);
   end;
-  k:=rec;
+  k:=RecNo;
   for i:=0 to orders.Count-1 do
   begin
-    s:=sortrec(rec,i+1);
+    s:=sortrec(RecNo,i+1);
     fnd:=false;
     for j:=0 to reccount-2 do if AnsiCompareStr(sortrec(TransOrder(j,i),i+1),s)>=0 then
     begin
@@ -1542,6 +1651,151 @@ function TTextTable.HasIndex(index:string):boolean;
 begin
   Result := orders.IndexOf(index)>=0;
 end;
+
+
+
+
+{ TTextTableCursor }
+
+constructor TTextTableCursor.Create(ATable: TTextTable);
+begin
+  inherited Create;
+  FTable := ATable;
+  cur:=-1;
+  tcur:=0;
+  curorder:=-1;
+  filter:='';
+end;
+
+procedure TTextTableCursor.First;
+begin
+  if not Table.Loaded then Table.Load;
+  cur:=-1;
+  tcur:=0;
+  Next;
+end;
+
+procedure TTextTableCursor.Next;
+var stop:boolean;
+begin
+  if not Table.Loaded then Table.Load;
+  repeat
+    stop:=false;
+    inc(cur);
+    if cur<Table.RecCount then
+    begin
+      tcur:=Table.TransOrder(cur,curorder);
+      if tcur>=Table.RecCount then showmessage('index problem!');
+      if filter='' then
+        stop:=not Table.IsDeleted(tcur)
+      else
+        stop:=not Table.IsDeleted(tcur) and Table.FilterPass(tcur,filter);
+    end else
+    begin
+      tcur:=cur;
+      stop:=true;
+    end;
+  until stop;
+end;
+
+function TTextTableCursor.EOF:boolean;
+begin
+  if not Table.Loaded then Table.Load;
+  result:=(cur>=Table.RecCount);
+end;
+
+procedure TTextTableCursor.SetOrder(index:string);
+begin
+  if not Table.Loaded then Table.Load;
+  curorder:=Table.orders.IndexOf(index);
+  First;
+end;
+
+procedure TTextTableCursor.SetFilter(filtr:string);
+begin
+  filter:=filtr;
+end;
+
+function TTextTableCursor.Test(fil:string):boolean;
+begin
+  Result := Table.FilterPass(tcur,fil);
+end;
+
+
+procedure TTextTableCursor.Insert(values:array of string);
+begin
+  tcur := Table.AddRecord(values);
+end;
+
+procedure TTextTableCursor.Delete;
+begin
+  Table.DeleteRecord(tcur);
+end;
+
+procedure TTextTableCursor.Edit(fields:array of byte;values:array of string);
+begin
+  Table.EditRecord(tcur, fields, values);
+end;
+
+
+//Slower version, specifying seek by a string name
+function TTextTableCursor.Locate(seek,value:string;number:boolean):boolean;
+var so: TSeekObject;
+begin
+  so := Table.GetSeekObject(seek);
+  Result := Locate(@so, value, number);
+end;
+
+//Faster version, by seek object
+function TTextTableCursor.Locate(seek: PSeekObject; value:string; number:boolean):boolean;
+var idx: integer;
+begin
+  Result := Table.LocateRecord(seek, value, number, idx);
+  cur := idx;
+  if idx>=0 then
+    tcur := Table.TransOrder(idx, seek.ind_i)
+  else
+    tcur := -1;
+end;
+
+
+
+function TTextTableCursor.Str(field:integer):string;
+begin
+  Result:=Table.GetField(tcur,field);
+end;
+
+function TTextTableCursor.Int(field:integer):integer;
+begin
+  if not TryStrToInt(Table.GetField(tcur,field), Result) then
+    Result := 0;
+end;
+
+function TTextTableCursor.Bool(field:integer):boolean;
+var s: string;
+begin
+  s := Table.GetField(tcur,field);
+  Result :=(Length(s)>0) and (UpCase(s[1])='T');
+end;
+
+//Returns one character (in older versions nothing is guaranteed but it was always this way)
+{$IFDEF UNICODE}
+function TTextTableCursor.Fch(field:integer):WideChar;
+var s: string;
+begin
+  s := Str(field);
+  if Length(s)<=0 then
+    Result := #0000
+  else
+    Result := s[1];
+end;
+{$ELSE}
+function TTextTableCursor.Fch(field:integer):string;
+begin
+  Result := Str(field);
+end;
+{$ENDIF}
+
 
 initialization
   dataalloc:=0;
