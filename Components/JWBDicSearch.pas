@@ -136,7 +136,7 @@ type
 
   protected
     a3kana:boolean;   //a==3 and only kana in string
-    limitkana: boolean;
+    a4limitkana:boolean;
     procedure DicInitialLookup(dic: TJaletDic; wt: integer; sxxr: string; sxx: string);
 
   end;
@@ -719,22 +719,13 @@ begin
       end;
   stEditorInsert,
   stEditorAuto:
-    if p4reading then begin
+    if a4limitkana then begin
       dic.TDict.SetOrder('Phonetic_Ind');
       dic.TDict.Locate(dic.stSort,sxxr,false);
-      limitkana:=true;
     end else
     begin
-      if wt<>2 then
-      begin
-        dic.TDict.SetOrder('Kanji_Ind');
-        dic.TDict.Locate(dic.stKanji,sxx,false);
-      end else
-      begin
-        limitkana:=true;
-        dic.TDict.SetOrder('Phonetic_Ind');
-        dic.TDict.Locate(dic.stSort,sxxr,false);
-      end;
+      dic.TDict.SetOrder('Kanji_Ind');
+      dic.TDict.Locate(dic.stKanji,sxx,false);
     end;
   end;
 end;
@@ -803,7 +794,6 @@ begin
   sdef:=lc.verbType;
   slen:=lc.len;
 
-  limitkana:=false;
   if a in [stJp,stEn] then slen:=1;
   if a = stClipboard then begin
     a3kana:=true;
@@ -814,13 +804,21 @@ begin
       end;
   end;
 
+ //stEditorInsert/stEditorAuto:
+ //If this is set, we're going to convert kanji+kana to ??+romaji and search for that.
+ //Makes sense only if we're sure our word is all kana.
+  a4limitkana:=(a in [stEditorInsert, stEditorAuto]) and (p4reading or (wt=2));
+
+ { KanaToRomaji is VERY expensive so let's only call it when really needed }
   case a of
-    stJp,
-    stEditorInsert,
-    stEditorAuto:
+    stJp:
       sxxr:=KanaToRomaji(sxx,1,curlang);
     stClipboard:
-      if a3kana then sxxr:=KanaToRomaji(sxx,1,curlang);
+      if a3kana then sxxr:=KanaToRomaji(sxx,1,curlang); //only with a3kana
+    stEditorInsert,
+    stEditorAuto:
+      if a4limitkana then
+        sxxr:=KanaToRomaji(sxx,1,curlang);
   end;
 
   DicInitialLookup(dic, wt, sxxr, sxx);
@@ -840,8 +838,8 @@ begin
     ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))=1)) or
     ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))>0)) or
     ((a=stClipboard) and (not a3kana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-    ((a in [stEditorInsert, stEditorAuto]) and (not limitkana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-    ((a in [stEditorInsert, stEditorAuto]) and (limitkana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
+    ((a in [stEditorInsert, stEditorAuto]) and (not a4limitkana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
+    ((a in [stEditorInsert, stEditorAuto]) and (a4limitkana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
     (((a=stJp) or (a=stClipboard)) and (MatchType=mtMatchAnywhere)))
   do
   begin
@@ -860,7 +858,7 @@ begin
     if IsAppropriateVerbType(sdef, s2) then
     if (a<>stEn) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
     (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
-    if (not dic_ignorekana) or (not limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,s2)>0) then
+    if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,s2)>0) then
     if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.TDict.Str(dic.TDictPhonetic)))
     or ((a=stClipboard) and (CompareUnicode(sxx,dic.TDict.Str(dic.TDictKanji)))) then
     begin
