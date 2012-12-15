@@ -773,7 +773,7 @@ begin
 //  fUser.SpeedButton4.Enabled:=lanchar='j';
   if (not fUser.SpeedButton3.Enabled) and (fUser.SpeedButton3.Down) then fUser.SpeedButton1.Down:=true;
   fExamples.ReloadExamples;
-  fUser.Look(false);
+  fUser.Look();
   RefreshCategory;
   RefreshKanjiCategory;
 end;
@@ -2142,7 +2142,7 @@ begin
   fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
   fSettings.ShowModal;
   if fKanji.Visible then fKanji.DoIt;
-  if fUser.Visible then fUser.Look(false);
+  if fUser.Visible then fUser.Look();
   if fWords.Visible then fWords.ShowIt(false);
   if fTranslate.Visible then fTranslate.RepaintText;
 end;
@@ -2194,7 +2194,7 @@ begin
       MyHandle:=Clipboard.GetAsHandle(CF_UNICODETEXT);
       TextPtr:=GlobalLock(MyHandle);
       s:=textptr;
-      if length(s)>64000 then s:=_l('#00342^eToo much data.');
+//      if length(s)>64000 then s:=_l('#00342^eToo much data.');
       newclip := fstr(s);
       GlobalUnlock(MyHandle);
       oldhandle:=MyHandle;
@@ -2210,7 +2210,7 @@ begin
     PaintBox3.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
     if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
-    if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look(false);
+    if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look();
   end;
   critsec:=false;
 end;
@@ -2253,7 +2253,7 @@ begin
   fUserAdd.PaintBox2.Invalidate;
 
   if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
-  if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look(false);
+  if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look();
 end;
 
 procedure TfMenu.ArtLabel1Click(Sender: TObject);
@@ -4058,7 +4058,7 @@ begin
   begin
     //Apparently, word type 7 means "latin word", so we try to look for one
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),2,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(fstrtouni(s),stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
     if (fScreenTip.screenTipList.Count=0) then
     begin
       ss:=fstrtouni(s);
@@ -4067,11 +4067,11 @@ begin
      //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,2,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+      DicSearch(ss,stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
     end;
   end;
   if wt<7 then
-    DicSearch(s,4,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(s,stEditorInsert,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
   if maxwords>fScreenTip.screenTipList.Count then
     maxwords:=fScreenTip.screenTipList.Count;
   fScreenTip.screenTipWords:=maxwords;

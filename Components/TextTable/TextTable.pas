@@ -140,9 +140,9 @@ type
     procedure EditRecord(RecNo: integer; fields:array of byte;values:array of string;JustInserted:boolean=false);
     procedure Commit(RecNo:integer; JustInserted: boolean = false);
    {$IFDEF CURSOR_IN_TABLE}
-    procedure Insert(values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Insert(values:array of string);
     procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
-    procedure Edit(fields:array of byte;values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Edit(fields:array of byte;values:array of string);
    {$ENDIF}
 
   public //Field reading
@@ -193,9 +193,9 @@ type
 
   public
    { Write access to TTextTable MUST BE EXCLUSIVE. ALWAYS. NO EXCEPTIONS. }
-    procedure Insert(values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Insert(values:array of string);
     procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
-    procedure Edit(fields:array of byte;values:array of string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Edit(fields:array of byte;values:array of string);
 
   public
     function Locate(seek: PSeekObject; value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}

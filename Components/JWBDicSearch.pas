@@ -72,7 +72,21 @@ type
   end;
 
 type
-  TMatchType = (mtExactMatch, mtMatchLeft, mtMatchRight, mtMatchAnywhere);
+ { How to match words (exact, match left, right or anywhere) }
+  TMatchType = (
+    mtExactMatch,
+    mtMatchLeft,
+    mtMatchRight,
+    mtMatchAnywhere);
+
+ { Translation type }
+  TSearchType = (
+    stJp,           //jp->en
+    stEn,           //en->jp
+    stClipboard,    //clipboard translation
+    stEditorInsert, //editor input translation
+    stEditorAuto    //text translation (no UI)
+  );
 
  { SatanString is a string which is FString except for when you search for English,
   then it contains raw english. Happy debugging. }
@@ -87,13 +101,7 @@ type
     destructor Destroy; override;
 
   public //Settings
-   { search mode
-    1 = jp->en
-    2 = en->jp
-    3 = clipboard translation
-    4 = text translation, editor input translation }
-    a:integer;
-   { How to match words (exact, match left, right or anywhere) }
+    a: TSearchType;
     MatchType: TMatchType;
    { Maximum number of words to look for [ignored if "full" is set?] }
     maxwords: integer;
@@ -134,7 +142,7 @@ type
   end;
 
 //Compability
-procedure DicSearch(search:string;a:integer; MatchType: TMatchType;
+procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
   full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
@@ -488,41 +496,44 @@ var _s: string;
   every:boolean;
 begin
   case a of
-    1:if curlang='j'then
+    stJp:
+      if curlang='j'then
         Deflex(RomajiToKana('H'+search,romasys,true,'j'),se,9,8,true,false)
       else
         Deflex(RomajiToKana(search,romasys,true,'c'),se,9,8,true,false);
-    2:se.Add(9, 1, 'F', search);
-    3:Deflex(ChinFrom(search),se,9,8,true,false);
-    4:begin
-        if wt<0 then
+    stEn:
+      se.Add(9, 1, 'F', search);
+    stClipboard:
+      Deflex(ChinFrom(search),se,9,8,true,false);
+    stEditorInsert,
+    stEditorAuto:
+      if wt<0 then
+      begin
+        _s:=ChinFrom(search);
+        Deflex(_s,se,9,8,false,true);
+      end else
+      begin
+        if (wt=1) or (wt=2) then
         begin
           _s:=ChinFrom(search);
-          Deflex(_s,se,9,8,false,true);
-        end else
+          if wt=1 then Deflex(_s,se,9,8,false,true);
+          for i:=flength(_s) downto 1 do
+          begin
+            partfound:=false;
+            every:=false;
+            if EvalChar(fgetch(_s,i))=1 then every:=true;
+            if (wt=2) and (i<flength(_s)) and (i>=flength(_s)-1)
+            and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
+              partfound:=true;
+            //if ((i<flength(_s)) and every) or (wt=2) then
+            if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=flength(_s)) or (partfound) then
+              se.Add(i, i, 'F', fcopy(_s,1,i));
+          end;
+        end;
+        if (wt=3) then
         begin
-          if (wt=1) or (wt=2) then
-          begin
-            _s:=ChinFrom(search);
-            if wt=1 then Deflex(_s,se,9,8,false,true);
-            for i:=flength(_s) downto 1 do
-            begin
-              partfound:=false;
-              every:=false;
-              if EvalChar(fgetch(_s,i))=1 then every:=true;
-              if (wt=2) and (i<flength(_s)) and (i>=flength(_s)-1)
-              and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
-                partfound:=true;
-//              if ((i<flength(_s)) and every) or (wt=2) then
-              if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=flength(_s)) or (partfound) then
-                se.Add(i, i, 'F', fcopy(_s,1,i));
-            end;
-          end;
-          if (wt=3) then
-          begin
-            _s:=ChinFrom(search);
-            se.Add(9, fLength(_s), 'F', _s);
-          end;
+          _s:=ChinFrom(search);
+          se.Add(9, fLength(_s), 'F', _s);
         end;
       end;
   end;
@@ -550,7 +561,7 @@ end;
 DicSearch()
 Don't use if you're doing a lot of searches, use TDicSearchRequest instead.
 }
-procedure DicSearch(search:string;a:integer; MatchType: TMatchType;
+procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
   full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
 var req: TDicSearchRequest;
 begin
@@ -633,7 +644,8 @@ begin
   MakeLookupList(se, search, wt);
 
   case a of
-    4: begin
+    stEditorInsert,
+    stEditorAuto: begin
       p4reading:=wt=-1;
       if wt=-1 then if partl.IndexOf(search)>-1 then begin
         _s := ChinFrom(search);
@@ -656,9 +668,13 @@ begin
     dic.Demand;
 
     case a of
-      1: if MatchType=mtMatchRight then dic.TDict.SetOrder('<Phonetic_Ind') else dic.TDict.SetOrder('Phonetic_Ind');
-      3: if MatchType=mtMatchRight then dic.TDict.SetOrder('<Kanji_Ind') else dic.TDict.SetOrder('Kanji_Ind');
-      4: dic.TDict.SetOrder('Kanji_Ind');
+      stJp:
+        if MatchType=mtMatchRight then dic.TDict.SetOrder('<Phonetic_Ind') else dic.TDict.SetOrder('Phonetic_Ind');
+      stClipboard:
+        if MatchType=mtMatchRight then dic.TDict.SetOrder('<Kanji_Ind') else dic.TDict.SetOrder('Kanji_Ind');
+      stEditorInsert,
+      stEditorAuto:
+        dic.TDict.SetOrder('Kanji_Ind');
     end;
 
     for i:=0 to se.Count-1 do
@@ -678,15 +694,15 @@ resourcestring
 procedure TDicSearchRequest.DicInitialLookup(dic: TJaletDic; wt: integer; sxxr: string; sxx: string);
 begin
   case a of
-  1:
+  stJp:
     case MatchType of
       mtMatchAnywhere: begin end; //nothing
       mtMatchRight: dic.TDict.Locate(dic.stSortReverse,sxxr,false);
     else
       dic.TDict.Locate(dic.stSort,sxxr,false);
     end;
-  2: dic.FindIndexString(true,lowercase(sxx));
-  3:
+  stEn: dic.FindIndexString(true,lowercase(sxx));
+  stClipboard:
     if a3kana then
       case MatchType of
         mtMatchAnywhere: begin end;
@@ -701,7 +717,8 @@ begin
       else
         dic.TDict.Locate(dic.stKanji,sxx,false);
       end;
-  4:
+  stEditorInsert,
+  stEditorAuto:
     if p4reading then begin
       dic.TDict.SetOrder('Phonetic_Ind');
       dic.TDict.Locate(dic.stSort,sxxr,false);
@@ -775,7 +792,7 @@ var
   end;
 
 begin
-  if ((a=1) or (a=3)) and (MatchType=mtMatchAnywhere) then begin
+  if ((a=stJp) or (a=stClipboard)) and (MatchType=mtMatchAnywhere) then begin
     dic.TDict.SetOrder('Index_Ind');
     dic.TDict.First;
   end;
@@ -787,8 +804,8 @@ begin
   slen:=lc.len;
 
   limitkana:=false;
-  if a<3 then slen:=1;
-  if a=3 then begin
+  if a in [stJp,stEn] then slen:=1;
+  if a = stClipboard then begin
     a3kana:=true;
     for i:=1 to flength(sxx) do
       if not (EvalChar(fgetch(sxx,i)) in [EC_HIRAGANA, EC_KATAKANA]) then begin
@@ -798,37 +815,40 @@ begin
   end;
 
   case a of
-    1, 4: sxxr:=KanaToRomaji(sxx,1,curlang);
-    3: if a3kana then sxxr:=KanaToRomaji(sxx,1,curlang);
+    stJp,
+    stEditorInsert,
+    stEditorAuto:
+      sxxr:=KanaToRomaji(sxx,1,curlang);
+    stClipboard:
+      if a3kana then sxxr:=KanaToRomaji(sxx,1,curlang);
   end;
 
   DicInitialLookup(dic, wt, sxxr, sxx);
 
   i:=0;
-  if a=2 then wif:=dic.ReadIndex;
-
+  if a=stEn then wif:=dic.ReadIndex;
 
   while
-    ((a=2) or (not dic.TDict.EOF)) and
-    (((a=1) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
-    ((a=1) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
-    ((a=1) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-    ((a=3) and (a3kana) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
-    ((a=3) and (a3kana) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
-    ((a=3) and (a3kana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-    ((a=2) and (wif<>0)) or
-    ((a=3) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))=1)) or
-    ((a=3) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))>0)) or
-    ((a=3) and (not a3kana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-    ((a=4) and (not limitkana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-    ((a=4) and (limitkana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-    (((a=1) or (a=3)) and (MatchType=mtMatchAnywhere)))
+    ((a=stEn) or (not dic.TDict.EOF)) and
+    (((a=stJp) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
+    ((a=stJp) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
+    ((a=stJp) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
+    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
+    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
+    ((a=stClipboard) and (a3kana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
+    ((a=stEn) and (wif<>0)) or
+    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))=1)) or
+    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))>0)) or
+    ((a=stClipboard) and (not a3kana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
+    ((a in [stEditorInsert, stEditorAuto]) and (not limitkana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
+    ((a in [stEditorInsert, stEditorAuto]) and (limitkana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
+    (((a=stJp) or (a=stClipboard)) and (MatchType=mtMatchAnywhere)))
   do
   begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
-    if a=2 then dic.TDict.Locate(dic.stIndex,inttostr(wif),true);
-    //if a=2 then showmessage(Format('%4.4X',[wif])+'-'+dic.TDict.Str(dic.TDictEnglish));
+    if a=stEn then dic.TDict.Locate(dic.stIndex,inttostr(wif),true);
+    //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.TDict.Str(dic.TDictEnglish));
     if sdef<>'F'then s2:=ALTCH_TILDE+'I'else s2:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
       s2:=s2+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers))
@@ -836,13 +856,13 @@ begin
       converted := ConvertEdictEntry(dic.TDict.Str(dic.TDictEnglish), markers);
       s2:=s2+EnrichDictEntry(converted, markers);
     end;
-    if a=2 then ts:=lowercase(dic.TDict.Str(dic.TDictEnglish)+' ');
+    if a=stEn then ts:=lowercase(dic.TDict.Str(dic.TDictEnglish)+' ');
     if IsAppropriateVerbType(sdef, s2) then
-    if (a<>2) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
+    if (a<>stEn) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
     (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
     if (not dic_ignorekana) or (not limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,s2)>0) then
     if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.TDict.Str(dic.TDictPhonetic)))
-    or ((a=3) and (CompareUnicode(sxx,dic.TDict.Str(dic.TDictKanji)))) then
+    or ((a=stClipboard) and (CompareUnicode(sxx,dic.TDict.Str(dic.TDictKanji)))) then
     begin
 
      //Calculate popularity class
@@ -852,7 +872,7 @@ begin
       //    inc(popclas,90)
       //  else
       //    inc(popclas,dic.TDict.Int(dic.TDict.Field('Priority'))*10);
-      if (a=4) and (p4reading)
+      if (a in [stEditorInsert, stEditorAuto]) and (p4reading)
       and TUserPrior.Locate('Kanji',dic.TDict.Str(dic.TDictKanji),false) then
         dec(popclas,10*TUserPrior.Int(TUserPrior.Field('Count')));
 
@@ -872,15 +892,15 @@ begin
 
      //Calculate sorting order
       sort:=0; //the bigger the worse (will apear later in list)
-      if a=2 then
+      if a=stEn then
       begin
         if (pos(trim(uppercase(sxx)),trim(uppercase(dic.TDict.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
         sort:=sort+popclas*100;
       end;
-      if a=1 then sort:=(10000*(9-min(sp,9)))+length(dic.TDict.Str(dic.TDictPhonetic))*1000+popclas*10;
-      if (a=3) or (a=4) then sort:=(10000*(9-min(sp,9)))+popclas*10;
+      if a=stJp then sort:=(10000*(9-min(sp,9)))+length(dic.TDict.Str(dic.TDictPhonetic))*1000+popclas*10;
+      if a in [stClipboard, stEditorInsert, stEditorAuto] then sort:=(10000*(9-min(sp,9)))+popclas*10;
       sort:=sort+10000;
-      //if (a=4) and (p4reading) then sort:=10000+popclas*10;
+      //if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then sort:=10000+popclas*10;
       if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
       if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
       if dic.TDict.Str(dic.TDictPhonetic)[3]>='A' then inc(sort,1000);
@@ -899,7 +919,7 @@ begin
       if sort>99999 then sort:=99999;
       if sort<0 then sort:=0;
 
-      if (a=4) and (p4reading) then
+      if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then
         s2:=copy(s2,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(s2,3,length(s2)-2);
 
       sorts:=dic.TDict.Str(dic.TDictIndex);
@@ -986,7 +1006,7 @@ begin
       break;
     end;
 
-    if a<>2 then dic.TDict.Next else wif:=dic.ReadIndex;
+    if a<>stEn then dic.TDict.Next else wif:=dic.ReadIndex;
   end;
 
 end;

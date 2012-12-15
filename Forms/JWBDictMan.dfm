@@ -341,14 +341,12 @@ object fDictMan: TfDictMan
     Width = 129
     Height = 25
     Caption = '^eApply'
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     Kind = bkOK
-    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 3
     OnClick = BitBtn1Click

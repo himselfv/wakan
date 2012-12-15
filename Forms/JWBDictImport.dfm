@@ -166,7 +166,6 @@ object fDictImport: TfDictImport
     Height = 25
     Caption = '#00077^eBuild'
     Default = True
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -190,7 +189,6 @@ object fDictImport: TfDictImport
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 7
     OnClick = BitBtn1Click
@@ -202,7 +200,6 @@ object fDictImport: TfDictImport
     Height = 25
     Cancel = True
     Caption = '#00007^eCancel'
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -226,7 +223,6 @@ object fDictImport: TfDictImport
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 8
     OnClick = BitBtn2Click

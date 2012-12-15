@@ -8,18 +8,6 @@ uses
   JWBUtils, JWBDicSearch;
 
 type
-  TLookSettings = record
-    req: TDicSearchRequest;
-    //These don't need to be duplicated outside of req but whatever
-    a: integer;
-    dgroup:integer;
-    full: boolean;
-    maxwords: integer;
-    clips:string;
-    mt: TMatchType;
-  end;
-  PLookSettings = ^TLookSettings;
-
   TfUser = class(TForm)
     Panel1: TPanel;
     SpeedButton1: TSpeedButton;
@@ -105,17 +93,20 @@ type
   public
     procedure UpdateLookMode;
 
+  protected
+    procedure Look_Run(req: TDicSearchRequest);
   public
-   { If you do a lot of similar queries, use this interface.
-    Call Setup once, then Run multiple times, then Release no matter what happens. }
-    procedure Look_Setup(a: integer; out st: TLookSettings);
-    procedure Look_Run(st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
-    procedure Look_Release(st: PLookSettings);
-
-  public
-    ul:TStringList;
-    dicsl:TStringList;
-    procedure Look(nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+   {
+    Some may reference "ul". That was a redundant string list before.
+    As a rule,
+      ul[i]==copy(dicl[i],6,25).
+      dicsl[i]=copy(dicl[i],31,length(dicsl[i])-30). }
+    dicrl:TStringList;
+   { Search with current settings, populate the results }
+    procedure Look();
+   { Initialize a TDicSearchRequest to search like Look() would.
+    You can then do a lot of searches without affecting the UI. }
+    procedure SetupSearchRequest(a: TSearchType; out req: TDicSearchRequest);
 
   end;
 
@@ -203,143 +194,135 @@ begin
 end;
 
 {
-Look()
-This function translates a chunk of currently selected text either in the editor
-or in the word lookup edit field.
-When translating from the editor, it's called thousands of times, and therefore
-we split the setup part and the work part.
+SetupSearchParams()
+Creates a TDicSearchRequest, configured according to user settings and the type of search request:
+  1: jp->en
+  2: en->jp
+  3: clipboard translation
+  4: word insert/translate text
+This is called automatically when doing Look(), or manually on auto-translation.
 }
 
-procedure TfUser.Look_Setup(a: integer; out st: TLookSettings);
-var i: integer;
+procedure TfUser.SetupSearchRequest(a: TSearchType; out req: TDicSearchRequest);
 begin
-  st.a := a;
+  req := TDicSearchRequest.Create;
+  req.a := a;
 
  //Dictionary group
-  if SpeedButton14.Down then st.dgroup:=1 else
-  if SpeedButton15.Down then st.dgroup:=2 else
-  if SpeedButton16.Down then st.dgroup:=3 else
-    st.dgroup := 1; //we must have some group chosen
+  if SpeedButton14.Down then req.dictgroup:=1 else
+  if SpeedButton15.Down then req.dictgroup:=2 else
+  if SpeedButton16.Down then req.dictgroup:=3 else
+    req.dictgroup := 1; //we must have some group chosen
 
-  st.full:=not BitBtn1.Enabled;
-//  if SpeedButton10.Down then full:=true;
+  req.full:=not BitBtn1.Enabled;
+//  if SpeedButton10.Down then req.full:=true;
 
-  st.maxwords:=StringGrid1.VisibleRowCount;
+  req.maxwords:=StringGrid1.VisibleRowCount;
 
-  if a=3 then
-  begin
-    st.clips:='';
-    for i:=1 to length(clip) div 4 do
-      if copy(clip,i*4-3,2)='00'then break else st.clips:=st.clips+copy(clip,i*4-3,4); //TODO:!!
-  end;
-  if SpeedButton11.Down then st.mt := mtMatchLeft else
-  if SpeedButton12.Down then st.mt := mtMatchRight else
-  if SpeedButton18.Down then st.mt := mtMatchAnywhere else
-    st.mt := mtExactMatch;
-  if (a=2) and not (st.mt in [mtExactMatch, mtMatchLeft]) then
-    st.mt := mtExactMatch;
+  if SpeedButton11.Down then req.MatchType := mtMatchLeft else
+  if SpeedButton12.Down then req.MatchType := mtMatchRight else
+  if SpeedButton18.Down then req.MatchType := mtMatchAnywhere else
+    req.MatchType := mtExactMatch;
+  if (a=stEn) and not (req.MatchType in [mtExactMatch, mtMatchLeft]) then
+    req.MatchType := mtExactMatch;
 
-  if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then st.full:=true;
+  if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then req.full:=true;
 
-  if a=4 then begin //ignore some UI settings in this mode
-    st.dgroup := 5;
-    //In "word insert" mode
-    if fTranslate.insx<>-1 then
-      st.mt := mtExactMatch
-    //In "translate text" mode
-    else
-      st.mt := mtMatchLeft;
+  if a=stEditorInsert then begin //ignore some UI settings in these modes
+    req.dictgroup := 5;
+    req.MatchType := mtExactMatch
+  end else
+  if a=stEditorAuto then begin
+    req.dictgroup := 5;
+    req.MatchType := mtMatchLeft;
   end;
 
-  //Create and cache a search request
-  st.req := TDicSearchRequest.Create;
-  st.req.a := a;
-  st.req.MatchType := st.mt;
-  st.req.full := st.full;
-  st.req.maxwords := st.maxwords;
-  st.req.dictgroup := st.dgroup;
-  st.req.dic_ignorekana := false; //by default, but this can be overriden
-  st.req.Prepare;
+  req.dic_ignorekana := false; //by default, but this can be overriden
+  req.Prepare;
 end;
-
-procedure TfUser.Look_Release(st: PLookSettings);
-begin
-  FreeAndNil(st.req);
-end;
-
 
 {
-NoScreenUpdates: Do not update anything on the screen.
-  Mainly, don't do fKanji.SetCharDetails, because we're translating a large block of text.
-  I don't clearly understand why it's there, but surely it's not needed when translating.
+Look_Run()
+Called with a TDicSearchRequest initialized by SetupSearchRequest() to do a search
+and populate the grid with the results
+Don't call directly.
 }
-procedure TfUser.Look_Run(st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+procedure TfUser.Look_Run(req: TDicSearchRequest);
 var wt:integer;
   i:integer;
   wasfull:boolean;
   s:string;
   b:boolean;
+  tmp: TStringList;
 begin
-  dicsl.Clear;
+  dicrl.Clear;
 
-  case st.a of
-    1: begin s := Edit1.Text; wt := -1; end;
-    2: begin s := Edit1.Text; wt := -1; end;
-    3: begin s:= st.clips; wt := -1; end;
-    4: //In "word insert" mode
-      if fTranslate.insx<>-1 then
-      begin
-        s := fTranslate.GetInsertKana(false);
-        if fTranslate.buffertype='H'then
-          wt := -1
-        else
-          wt := -2;
-      end else
-      //In "translate text" mode
-      begin
-        s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,nogriddisplay);
-        if (not NoScreenUpdates) and (length(s)>=4) then fKanjiDetails.SetCharDetails(copy(s,1,4));
-      end;
+  case req.a of
+    stJp: begin s := Edit1.Text; wt := -1; end;
+    stEn: begin s := Edit1.Text; wt := -1; end;
+    stClipboard: begin
+      s:='';
+      for i:=1 to length(clip) div 4 do
+        if copy(clip,i*4-3,2)='00'then break else s:=s+copy(clip,i*4-3,4); //TODO:!!
+      wt := -1;
+    end;
+    stEditorInsert: begin //In "word insert" mode
+      s := fTranslate.GetInsertKana(false);
+      if fTranslate.buffertype='H'then
+        wt := -1
+      else
+        wt := -2;
+    end;
+    stEditorAuto: //In "translate text" mode
+      s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,{stopuser=}req.a=stEditorAuto);
   end;
 
-  st.req.Search(s, wt, dicsl);
-  wasfull := st.req.WasFull;
+  req.Search(s, wt, dicrl);
+  wasfull := req.WasFull;
 
-  ul.Clear;
- 
-  if st.a<>4 then
-    if dicsl.Count=0 then
+  if not (req.a in [stEditorInsert, stEditorAuto]) then
+    if dicrl.Count=0 then
       Label3.Caption:='-'
     else
       if not wasfull then
-        Label3.Caption:=inttostr(dicsl.Count)+'+'
+        Label3.Caption:=inttostr(dicrl.Count)+'+'
       else
-        Label3.Caption:=inttostr(dicsl.Count);
-
-  for i:=0 to dicsl.Count-1 do
-    ul.Add(copy(dicsl[i],6,25));
+        Label3.Caption:=inttostr(dicrl.Count);
   
-  if not nogriddisplay then
+  if req.a <> stEditorAuto then //update result list
   begin
-    for i:=0 to dicsl.Count-1 do if (not st.full) and (i>=StringGrid1.VisibleRowCount) then
-      dicsl.Delete(StringGrid1.VisibleRowCount)
-    else
-      dicsl[i]:=copy(dicsl[i],31,length(dicsl[i])-30);
-    FillWordGrid(StringGrid1,dicsl,false,false);
+   {
+    for i:=0 to dicsl.Count-1 do
+      if (not req.full) and (i>=StringGrid1.VisibleRowCount) then
+        dicsl.Delete(StringGrid1.VisibleRowCount)
+      else
+        dicsl[i]:=copy(dicsl[i],31,length(dicsl[i])-30);
+   }
+
+    tmp := TStringList.Create;
+    try
+      for i:=0 to dicrl.Count - 1 do
+        if req.full or (i<StringGrid1.VisibleRowCount) then
+          tmp.Add(copy(dicrl[i],31,length(dicrl[i])-30));
+      FillWordGrid(StringGrid1,tmp,false,false);
+    finally
+      FreeAndNil(tmp);
+    end;
+
     if not wasfull then
       s:=_l('#00671^eSearch results (partial)')
     else
       s:=_l('#00672^eSearch results');
-    BitBtn1.Visible:=not wasfull or (st.full and not BitBtn1.Enabled);
+    BitBtn1.Visible:=not wasfull or (req.full and not BitBtn1.Enabled);
     Label2.Visible:=not BitBtn1.Visible;
     s:=s+' ';
-    case st.a of
-      1:s:=s+_l('#00673^eby phonetic');
-      2:s:=s+_l('#00674^eby meaning');
-      3:s:=s+_l('#00675^eby written (clipboard)');
-      4:s:=s+_l('#00676^eby written (text)');
+    case req.a of
+      stJp: s:=s+_l('#00673^eby phonetic');
+      stEn: s:=s+_l('#00674^eby meaning');
+      stClipboard: s:=s+_l('#00675^eby written (clipboard)');
+      stEditorInsert: s:=s+_l('#00676^eby written (text)');
     end;
-    s:=s+' ('+inttostr(dicsl.Count)+')';
+    s:=s+' ('+inttostr(dicrl.Count)+')';
     curword:=0;
     if StringGrid1.Visible then StringGrid1SelectCell(self,0,1,b);
     if StringGrid1.Visible then StringGrid1.Row:=1;
@@ -349,42 +332,51 @@ begin
 end;
 
 {
-We keep the complete version for compability.
+Look()
+Searches for currently entered word and populates the grid with results.
+Do not use for stEditorAuto-Translation, there's SetupSearchRequest()+Look_Run() for that.
 }
-
-procedure TfUser.Look(nogriddisplay:boolean; NoScreenUpdates: boolean);
-var a: integer;
-  st: TLookSettings;
+procedure TfUser.Look();
+var a: TSearchType;
+  req: TDicSearchRequest;
 begin
-  if SpeedButton1.Down then a:=1 else
-    if SpeedButton2.Down then a:=2 else
-    if SpeedButton3.Down then a:=3 else a:=4;
+  if SpeedButton1.Down then
+    a:=stJp
+  else
+  if SpeedButton2.Down then
+    a:=stEn
+  else
+  if SpeedButton3.Down then
+    a:=stClipboard
+  else
+    a:=stEditorInsert;
 
   UpdateLookMode;
 
-  if (a<4) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
+  //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
+  if (a<>stEditorInsert) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
   begin
     BitBtn1.Visible:=true;
     Label2.Visible:=false;
     StringGrid1.Visible:=false;
-    Label16.Visible:=(edit1.text<>'') or (a=4);
+    Label16.Visible:=(edit1.text<>'') or (a=stEditorInsert);
     curword:=0;
     ShowWord;
     exit;
   end;
 
-  Look_Setup(a, st);
+  SetupSearchRequest(a, req);
   try
-    Look_Run(@st, nogriddisplay, noscreenupdates);
+    Look_Run(req);
   finally
-    Look_Release(@st);
+    FreeAndNil(req);
   end;
 end;
 
 procedure TfUser.Edit1Change(Sender: TObject);
 begin
   BitBtn1.Enabled:=true;
-  Look(false);
+  Look();
 end;
 
 procedure TfUser.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -395,24 +387,24 @@ end;
 
 procedure TfUser.Edit2Change(Sender: TObject);
 begin
-  Look(false);
+  Look();
 end;
 
 procedure TfUser.Edit2Click(Sender: TObject);
 begin
-  Look(false);
+  Look();
 end;
 
 procedure TfUser.Edit1Click(Sender: TObject);
 begin
-  Look(false);
+  Look();
 end;
 
 procedure TfUser.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
   curword:=ARow;
-  if curword<=ul.Count then ShowWord;
+  if curword<=dicrl.Count then ShowWord;
 end;
 
 procedure TfUser.WordDetails_PaintBox1Paint(Sender: TObject);
@@ -444,7 +436,7 @@ begin
 //  fMenu.ShowForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
   fMenu.aDict.Checked:=true;
   if Edit1.Enabled then Edit1.SetFocus;
-  Look(false);
+  Look();
 end;
 
 
@@ -511,10 +503,10 @@ begin
     ki:=0;
     s:=remexcl(curkanji);
     curkanjid:='';
-    while length(s)>3 do
+    while flength(s)>0 do
     begin
-      s2:=copy(s,1,4);
-      delete(s,1,4);
+      s2:=fcopy(s,1,1);
+      fdelete(s,1,1);
       if TChar.Locate('Unicode',s2,false) then
       begin
         inc(ki);
@@ -551,10 +543,10 @@ begin
         end;
       end;
     end;
-    if copy(ul[curword-1],1,6)<>'000000'then
+    if copy(dicrl[curword-1],6,6)<>'000000'then
     begin
       SpeedButton19.Enabled:=true;
-      TUser.Locate('Index',copy(ul[curword-1],1,6),true);
+      TUser.Locate('Index',copy(dicrl[curword-1],6,6),true);
       fWordCategory.Label11.Caption:=DateForm(TUser.Str(TUserAdded));
       fWordCategory.Label12.Caption:=DateForm(TUser.Str(TUserLearned));
       fWordCategory.Label13.Caption:=DateForm(TUser.Str(TUserMastered));
@@ -563,7 +555,7 @@ begin
       fWordCategory.RxLabel9.Caption:=StateStr(TUser.Int(TUserScore));
       sl:=TStringList.Create;
       sl.Clear;
-      ListWordCategories(strtoint(copy(ul[curword-1],1,6)),sl);
+      ListWordCategories(strtoint(copy(dicrl[curword-1],6,6)),sl);
       s:='';
       for i:=0 to sl.Count-1 do if s='' then s:=sl[i] else s:=s+', '+sl[i];
       fWordCategory.Label55.Caption:=s;
@@ -630,14 +622,14 @@ end;
 procedure TfUser.SpeedButton1Click(Sender: TObject);
 begin
   UpdateLookMode;
-  Look(false);
+  Look();
   if Edit1.Enabled then Edit1.SetFocus;
 end;
 
 procedure TfUser.BitBtn1Click(Sender: TObject);
 begin
   BitBtn1.Enabled:=false;
-  Look(false);
+  Look();
 end;
 
 procedure TfUser.SpeedButton8Click(Sender: TObject);
@@ -682,13 +674,12 @@ end;
 
 procedure TfUser.FormCreate(Sender: TObject);
 begin
-  ul:=TStringList.Create;
-  dicsl:=TStringList.Create;
+  dicrl:=TStringList.Create;
 end;
 
 procedure TfUser.FormDestroy(Sender: TObject);
 begin
-  ul.Free;
+  FreeAndNil(dicrl);
 end;
 
 procedure TfUser.FormResize(Sender: TObject);
@@ -834,7 +825,7 @@ begin
   if fDicAdd.ShowModal=mrOK then
   begin
     if not fWords.AddWord(curkanji,curphonetic,fDicAdd.edit3.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
-    Look(false);
+    Look();
     if Edit1.Enabled then Edit1.SetFocus;
   end;
 end;
@@ -860,15 +851,15 @@ begin
     if fUser.SpeedButton12.Down then dictbeginset:=2;
     if fUser.SpeedButton18.Down then dictbeginset:=3;
   end;
-  Look(false);
+  Look();
   if Edit1.Enabled then Edit1.SetFocus;
 end;
 
 procedure TfUser.SpeedButton19Click(Sender: TObject);
 begin
   fMenu.aMode5Execute(sender);
-  if copy(ul[curword-1],1,6)<>'000000' then
-    fWords.SearchWord(strtoint(copy(ul[curword-1],1,6)));
+  if copy(dicrl[curword-1],6,6)<>'000000' then
+    fWords.SearchWord(strtoint(copy(dicrl[curword-1],6,6)));
 end;
 
 

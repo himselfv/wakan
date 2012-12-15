@@ -730,7 +730,6 @@ end;
 
 //See CopySubstr comment about count
 procedure TCharacterLineProps.DeleteChars(Index: integer; Count: integer);
-var i: integer;
 begin
   if Count<0 then
     Count := charcount+Count;

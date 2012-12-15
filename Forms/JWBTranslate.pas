@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser;
+  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
+  JWBDicSearch;
 
 {
 Various notes go here.
@@ -32,6 +33,12 @@ type
       //load ruby
       //save generated kana as aozora-ruby
   );
+
+  TSetWordTransFlag = (
+    tfScanParticle,
+    tfManuallyChosen
+  );
+  TSetWordTransFlags = set of TSetWordTransFlag;
 
   TfTranslate = class(TForm)
     Shape10: TShape;
@@ -145,7 +152,8 @@ type
     procedure HandleWheel(down:boolean);
     procedure CalcBlockFromTo(backtrack:boolean);
 
-    function SetWordTrans(x,y:integer;scanparticle:boolean;gridfirst:boolean;user:boolean):integer;
+    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
+    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;word:string):integer; overload;
     procedure DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
     procedure ResolveInsert(final:boolean);
     procedure InsertCharacter(c:char);
@@ -216,7 +224,8 @@ type
     property FileChanged: boolean read FFileChanged write SetFileChanged;
 
   protected
-    procedure AutoTranslateLine(y: integer; x_bg, x_en: integer; st: PLookSettings);
+    procedure AutoTranslateLine(y: integer; x_bg, x_en: integer;
+      req: TDicSearchRequest; dicsl: TStringList);
   public
     procedure AutoTranslate();
     procedure SetTranslation();
@@ -235,7 +244,7 @@ var
 implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
-  JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit,
+  JWBSettings, JWBPrint, JWBConvert, StdPrompt, JWBUnit,
   JWBCategories, ComCtrls;
 
 {$R *.DFM}
@@ -1088,7 +1097,11 @@ begin
   inherited Create({CreateSuspended=}true);
   BlockFromY := ABlockFromY;
   BlockToY := ABlockToY;
+ {$IF CompilerVersion>=20}
+  Start; //Resume() is deprecated on newer compilers
+ {$ELSE}
   Resume;
+ {$IFEND}
 end;
 
 procedure TTranslationThread.Execute;
@@ -1097,14 +1110,14 @@ begin
 end;
 
 procedure TfTranslate.AutoTranslate;
-var i,j:integer;
+var i:integer;
   oldcurx,oldcury:integer;
   bg,en:integer;
 
   sp: TSMPromptForm;
   startTime: cardinal;
-
-  st: TLookSettings;
+  req: TDicSearchRequest;
+  dicsl: TStringList;
 begin
   oldcurx:=rcurx;
   oldcury:=rcury;
@@ -1125,16 +1138,17 @@ begin
 
  //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
+  req := nil;
+  dicsl := TStringList.Create;
   startTime := GetTickCount;
-  FillChar(st, sizeof(st), 00);
   try
 
    //Setup everything for translation
     fUser.SpeedButton1.Down:=false;
     fUser.SpeedButton2.Down:=false;
     fUser.SpeedButton3.Down:=false;
-    fUser.Look_Setup(4, st);
-    st.req.dic_ignorekana := true;
+    fUser.SetupSearchRequest(stEditorAuto, req);
+    req.dic_ignorekana := true;
 
     for i:=blockfromy to blocktoy do
     begin
@@ -1174,12 +1188,13 @@ begin
         end;
       end;
 
-      AutoTranslateLine(i, bg, en, @st);
+      AutoTranslateLine(i, bg, en, req, dicsl);
     end;
 
   finally
     sp.Free; //Important, because it's modal window
-    fUser.Look_Release(@st); //else memory leak
+    FreeAndNil(req);
+    FreeAndNil(dicsl);
   end;
   rcurx:=oldcurx;
   rcury:=oldcury;
@@ -1188,9 +1203,12 @@ begin
   Screen.Cursor:=crDefault;
 end;
 
-procedure TfTranslate.AutoTranslateLine(y: integer; x_bg, x_en: integer; st: PLookSettings);
+procedure TfTranslate.AutoTranslateLine(y: integer; x_bg, x_en: integer;
+  req: TDicSearchRequest; dicsl: TStringList);
 var x: integer;
   a:integer;
+  s:string;
+  wt:integer;
 begin
   x:=x_bg;
   while x<=x_en do
@@ -1200,10 +1218,11 @@ begin
       while doctr[y].chars[x].wordstate='<'do inc(x);
     end else
     begin
-      rcurx:=x;
-      rcury:=y;
-      fUser.Look_Run(st, {NoGridDisplay=}true, {NoScreenUpdates=}true);
-      a:=SetWordTrans(x,y,true,true,false);
+      dicsl.Clear;
+      s:=GetDocWord(x,y,wt,{stopuser=}true);
+      req.Search(s, wt, dicsl);
+      if dicsl.Count>0 then s:=dicsl[0] else s:='';
+      a:=SetWordTrans(x,y,[tfScanParticle],s);
       if a=0 then a:=1;
       inc(x,a);
     end;
@@ -1213,7 +1232,7 @@ procedure TfTranslate.SetTranslation();
 begin
   if (blockx=rcurx) and (blocky=rcury) then
   begin
-    SetWordTrans(rcurx,rcury,true,false,true);
+    SetWordTrans(rcurx,rcury,[tfScanParticle,tfManuallyChosen],false);
     mustrepaint:=true;
     ShowText(true);
   end else
@@ -1679,7 +1698,7 @@ begin
   fUser.SpeedButton1.Down:=false;
   fUser.SpeedButton2.Down:=false;
   fUser.SpeedButton3.Down:=false;
-  if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then fUser.Look(false) else
+  if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then fUser.Look() else
   if dolook then begin
     s:=GetDocWord(rcurx,rcury,wt,false);
     if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
@@ -2371,7 +2390,7 @@ begin
       DisplayInsert(GetInsertKana(true),nil,true);
     if final then
     begin
-      SetWordTrans(insx,insy,false,false,true);
+      SetWordTrans(insx,insy,[tfManuallyChosen],false);
       insconfirmed:=true;
       mustrepaint:=true;
       ShowText(false);
@@ -2388,7 +2407,7 @@ begin
         else
           lp[i].SetChar('<', 9, 0, 1); //word continues
       DisplayInsert(s,lp,true);
-      if resolvebuffer then SetWordTrans(insx,insy,false,false,true);
+      if resolvebuffer then SetWordTrans(insx,insy,[tfManuallyChosen],false);
       insconfirmed:=true;
       mustrepaint:=true;
       ShowText(false);
@@ -2618,7 +2637,36 @@ begin
   ShowText(true);
 end;
 
-function TfTranslate.SetWordTrans(x,y:integer;scanparticle:boolean;gridfirst:boolean;user:boolean):integer;
+{ Set word translation to whatever is selected in Dictionary Search results grid,
+ or to the first result if gridfirst==true }
+function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer;
+var i: integer;
+  word: string;
+begin
+  with fUser do
+  begin
+    if gridfirst then
+      i:=0
+    else
+      if not StringGrid1.Visible then
+        i:=-1
+      else
+        i:=StringGrid1.Row-1;
+    if dicrl.Count=0 then i:=-1;
+    if i=-1 then
+      word := ''
+    else
+      word := dicrl[i];
+  end;
+  Result := SetWordTrans(x,y,flags,word);
+end;
+
+{
+Set word translation to the specified article.
+word:
+  a string specifying dictionary + article index, in fUser.dicrl list format
+}
+function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;word:string):integer;
 var wordpart:char;
     i:integer;
     rlen:integer;
@@ -2635,66 +2683,59 @@ var wordpart:char;
   globdict: integer;
 begin
   FileChanged:=true;
-  if fSettings.CheckBox34.Checked then scanparticle:=false;
-  if (y=-1) or (y>=doctr.Count) or (x=-1) then exit;
+  if fSettings.CheckBox34.Checked then flags := flags - [tfScanParticle];
+  if (y=-1) or (y>=doctr.Count) or (x=-1) then begin
+    Result := 0;
+    exit;
+  end;
   s2:=GetDoc(x,y);
-  dw:=GetDocWord(x,y,wt,not user);
+  dw:=GetDocWord(x,y,wt,not (tfManuallyChosen in flags));
   rlen:=flength(dw);
-  worddict:=0;
   globdict:=0;
 
-  with fUser do
+  if word='' then
   begin
-    if gridfirst then i:=0 else
-      if not StringGrid1.Visible then
-        i:=-1
-      else
-        i:=StringGrid1.Row-1;
-    if ul.Count=0 then i:=-1;
-    if i=-1 then
+    wordpart:='-';
+    worddict:=0;
+    learnstate:=9;
+    if wt=1 then rlen:=1;
+  end else
+  begin
+    wordpart:=word[20];
+    worddict:=StrToint(copy(word,12,6));
+    s:=copy(word,31,length(word)-30);
+    globdict:=0;
+    if (pos(UH_LBEG+'d',s)>0) then
     begin
-      wordpart:='-';
-      worddict:=0;
-      learnstate:=9;
-      if wt=1 then rlen:=1;
-    end else
-    begin
-      wordpart:=ul[i][15];
-      worddict:=StrToint(copy(ul[i],7,6));
-      s:=dicsl[i];
-      globdict:=0;
-      if (pos(UH_LBEG+'d',s)>0) then
+      globdict_s:=copy(s,pos(UH_LBEG+'d',s)+2,length(s)-pos(UH_LBEG+'d',s)-1);
+      globdict_s:=copy(globdict_s,1,pos(UH_LEND,globdict_s)-1);
+      globdict := docdic.IndexOf(globdict_s);
+      if globdict<0 then
       begin
-        globdict_s:=copy(s,pos(UH_LBEG+'d',s)+2,length(s)-pos(UH_LBEG+'d',s)-1);
-        globdict_s:=copy(globdict_s,1,pos(UH_LEND,globdict_s)-1);
-        globdict := docdic.IndexOf(globdict_s);
-        if globdict<0 then
-        begin
-          docdic.add(globdict_s);
-          globdict:=docdic.Count-1;
-        end;
+        docdic.add(globdict_s);
+        globdict:=docdic.Count-1;
       end;
-      if copy(ul[i],1,6)='000000'then
+    end;
+    if copy(word,6,6)='000000'then
+      learnstate:=9
+    else
+    begin
+      TUser.Locate('Index',copy(word,6,6),true);
+      learnstate_s:=TUser.Str(TUserScore);
+      if learnstate_s='' then
         learnstate:=9
       else
-      begin
-        TUser.Locate('Index',copy(ul[i],1,6),true);
-        learnstate_s:=TUser.Str(TUserScore);
-        if learnstate_s='' then
-          learnstate:=9
-        else
-        if (Ord(learnstate_s[1])>=Ord('0')) and (Ord(learnstate_s[1])<=Ord('9')) then
-          learnstate := Ord(learnstate_s[1])-Ord(0)
-        else
-          learnstate := 9;
-      end;
-
-      rlen:=strtoint(copy(ul[i],13,2));
+      if (Ord(learnstate_s[1])>=Ord('0')) and (Ord(learnstate_s[1])<=Ord('9')) then
+        learnstate := Ord(learnstate_s[1])-Ord(0)
+      else
+        learnstate := 9;
     end;
+
+    rlen:=strtoint(copy(word,18,2));
   end;
  //This subroutine ^^^:
  //local --- s, i, globdict_s, learnstate_s
- //in    --> wt
+ //in    --> word, wt
  //out   <-- wordpart, worddict, globdict, learnstate, rlen,
 
   if wordpart='-' then begin
@@ -2707,7 +2748,7 @@ begin
       else wordstate:='-';
     end;
   if wordpart='P'then wordstate:='P';
-  if user then wordstate:=LoCase(wordstate);
+  if tfManuallyChosen in flags then wordstate:=LoCase(wordstate);
 
   if wordstate='-' then
     doctr[y].chars[x].SetChar(wordstate, 9, 0, globdict)
@@ -2727,9 +2768,9 @@ begin
   for i:=flength(dw) downto 1 do
     if EvalChar(fgetch(dw,i))=1 then fdelete(dw,i,length(dw)-i+1);
   result:=rlen;
-  if (scanparticle) and (wordstate<>'-') and (partl.IndexOf(dw)>-1) then
+  if (tfScanParticle in flags) and (wordstate<>'-') and (partl.IndexOf(dw)>-1) then
   begin
-    if user then
+    if tfManuallyChosen in flags then
       doctr[y].chars[x+rlen].SetChar('p', 9, 0, 1)
     else
       doctr[y].chars[x+rlen].SetChar('P', 9, 0, 1);
