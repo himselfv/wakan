@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings;
+  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser;
 
 {
 Various notes go here.
@@ -72,8 +72,6 @@ type
     procedure Button3Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
-    procedure Button7Click(Sender: TObject);
-    procedure Button8Click(Sender: TObject);
     procedure Button9Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
     procedure ListBox1KeyDown(Sender: TObject; var Key: Word;
@@ -217,6 +215,18 @@ type
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
 
+  protected
+    procedure AutoTranslateLine(y: integer; x_bg, x_en: integer; st: PLookSettings);
+  public
+    procedure AutoTranslate();
+    procedure SetTranslation();
+
+  end;
+
+  TTranslationThread = class(TThread)
+  public
+    constructor Create(ablockfromy, ablocktoy: integer);
+    procedure Execute; override;
   end;
 
 var
@@ -224,7 +234,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
+uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
   JWBSettings, JWBPrint, JWBConvert, JWBDicSearch, StdPrompt, JWBUnit,
   JWBCategories, ComCtrls;
 
@@ -1073,9 +1083,21 @@ begin
   Button2Click(Sender);
 end;
 
-procedure TfTranslate.Button7Click(Sender: TObject);
+constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer);
+begin
+  inherited Create({CreateSuspended=}true);
+  BlockFromY := ABlockFromY;
+  BlockToY := ABlockToY;
+  Resume;
+end;
+
+procedure TTranslationThread.Execute;
+begin
+
+end;
+
+procedure TfTranslate.AutoTranslate;
 var i,j:integer;
-  a:integer;
   oldcurx,oldcury:integer;
   bg,en:integer;
 
@@ -1104,6 +1126,7 @@ begin
  //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
   startTime := GetTickCount;
+  FillChar(st, sizeof(st), 00);
   try
 
    //Setup everything for translation
@@ -1111,6 +1134,7 @@ begin
     fUser.SpeedButton2.Down:=false;
     fUser.SpeedButton3.Down:=false;
     fUser.Look_Setup(4, st);
+    st.req.dic_ignorekana := true;
 
     for i:=blockfromy to blocktoy do
     begin
@@ -1150,27 +1174,12 @@ begin
         end;
       end;
 
-      j:=bg;
-      while j<=en do
-        if IsLocaseLatin(doctr[i].chars[j].wordstate) then
-        begin
-          inc(j);
-          while doctr[i].chars[j].wordstate='<'do inc(j);
-        end else
-        begin
-          rcurx:=j;
-          rcury:=i;
-          dic_ignorekana:=true;
-          fUser.Look_Run(4, @st, {NoGridDisplay=}true, {NoScreenUpdates=}true);
-          dic_ignorekana:=false;
-          a:=SetWordTrans(j,i,true,true,false);
-          if a=0 then a:=1;
-          inc(j,a);
-        end;
+      AutoTranslateLine(i, bg, en, @st);
     end;
 
   finally
     sp.Free; //Important, because it's modal window
+    fUser.Look_Release(@st); //else memory leak
   end;
   rcurx:=oldcurx;
   rcury:=oldcury;
@@ -1179,7 +1188,28 @@ begin
   Screen.Cursor:=crDefault;
 end;
 
-procedure TfTranslate.Button8Click(Sender: TObject);
+procedure TfTranslate.AutoTranslateLine(y: integer; x_bg, x_en: integer; st: PLookSettings);
+var x: integer;
+  a:integer;
+begin
+  x:=x_bg;
+  while x<=x_en do
+    if IsLocaseLatin(doctr[y].chars[x].wordstate) then
+    begin
+      inc(x);
+      while doctr[y].chars[x].wordstate='<'do inc(x);
+    end else
+    begin
+      rcurx:=x;
+      rcury:=y;
+      fUser.Look_Run(st, {NoGridDisplay=}true, {NoScreenUpdates=}true);
+      a:=SetWordTrans(x,y,true,true,false);
+      if a=0 then a:=1;
+      inc(x,a);
+    end;
+end;
+
+procedure TfTranslate.SetTranslation();
 begin
   if (blockx=rcurx) and (blocky=rcury) then
   begin
@@ -1187,12 +1217,12 @@ begin
     mustrepaint:=true;
     ShowText(true);
   end else
-    Button7Click(Sender);
+    AutoTranslate();
 end;
 
 procedure PrintConfigure(userdata:pointer);
 begin
-  fSettings.PageControl1.ActivePage:=fSettings.TabSheet9;
+  fSettings.pcPages.ActivePage:=fSettings.tsTextTranslator;
   fSettings.ShowModal;
 end;
 
@@ -1381,12 +1411,12 @@ end;
 
 procedure TfTranslate.sbAutoTranslateClick(Sender: TObject);
 begin
-  Self.Button7Click(Sender);
+  Self.AutoTranslate();
 end;
 
 procedure TfTranslate.sbSetTranslationClick(Sender: TObject);
 begin
-  Self.Button8Click(Sender);
+  Self.SetTranslation();
 end;
 
 procedure TfTranslate.sbPrintClick(Sender: TObject);

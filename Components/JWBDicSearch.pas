@@ -105,6 +105,7 @@ type
       5 - use for popup/editor
     No call to this function uses 4 though. }
     dictgroup: integer;
+    dic_ignorekana: boolean;
     procedure Prepare; //Call after changing settings
 
   public
@@ -135,9 +136,6 @@ type
 //Compability
 procedure DicSearch(search:string;a:integer; MatchType: TMatchType;
   full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
-
-var
-  dic_ignorekana:boolean;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
 
@@ -389,7 +387,6 @@ Deflection and lookup lists
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
 var ws: integer; //length of w in symbols. Not sure if needed but let's keep it for a while
     i,j,k:integer;
-    s,s2:string;
     roma:string;
     core:string;
     pass:boolean;

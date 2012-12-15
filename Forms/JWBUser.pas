@@ -9,6 +9,9 @@ uses
 
 type
   TLookSettings = record
+    req: TDicSearchRequest;
+    //These don't need to be duplicated outside of req but whatever
+    a: integer;
     dgroup:integer;
     full: boolean;
     maxwords: integer;
@@ -100,10 +103,18 @@ type
     procedure DetailsForKanji(n:integer);
 
   public
+    procedure UpdateLookMode;
+
+  public
+   { If you do a lot of similar queries, use this interface.
+    Call Setup once, then Run multiple times, then Release no matter what happens. }
+    procedure Look_Setup(a: integer; out st: TLookSettings);
+    procedure Look_Run(st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+    procedure Look_Release(st: PLookSettings);
+
+  public
     ul:TStringList;
     dicsl:TStringList;
-    procedure Look_Setup(a: integer; out st: TLookSettings);
-    procedure Look_Run(a: integer; st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
     procedure Look(nogriddisplay:boolean; NoScreenUpdates: boolean = false);
 
   end;
@@ -124,19 +135,14 @@ var curword:integer;
 
 {$R *.DFM}
 
-
-{
-Look()
-This function translates a chunk of currently selected text either in the editor
-or in the word lookup edit field.
-When translating from the editor, it's called thousands of times, and therefore
-we split the setup part and the work part.
-}
-
-procedure TfUser.Look_Setup(a: integer; out st: TLookSettings);
-var i: integer;
+//Called when any of the configuration buttons are pressed
+procedure TfUser.UpdateLookMode;
+var a: integer;
 begin
-  donotsetbegset:=true;
+  if SpeedButton1.Down then a:=1 else
+    if SpeedButton2.Down then a:=2 else
+    if SpeedButton3.Down then a:=3 else a:=4;
+
   if SpeedButton1.Down then dictmodeset:=0;
   if SpeedButton2.Down then dictmodeset:=1;
   if SpeedButton3.Down then dictmodeset:=2;
@@ -161,11 +167,7 @@ begin
   fMenu.aDictGroup2.Checked:=SpeedButton15.Down;
   fMenu.aDictGroup3.Checked:=SpeedButton16.Down;
 
- //Dictionary group
-  if SpeedButton14.Down then st.dgroup:=1 else
-  if SpeedButton15.Down then st.dgroup:=2 else
-  if SpeedButton16.Down then st.dgroup:=3 else
-    st.dgroup := 1; //we must have some group chosen
+  donotsetbegset:=true;
 
   SpeedButton11.Enabled:=true;
   SpeedButton12.Enabled:=true;
@@ -183,17 +185,6 @@ begin
   else
     BitBtn1.Caption:=_l('#00670^eAll');
 
-  if (a<4) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
-  begin
-    BitBtn1.Visible:=true;
-    Label2.Visible:=false;
-    StringGrid1.Visible:=false;
-    Label16.Visible:=(edit1.text<>'') or (a=4);
-    curword:=0;
-    donotsetbegset:=false;
-    ShowWord;
-    exit;
-  end;
   if ((a=2) or (a=4)) then
   begin
     if SpeedButton12.Down then SpeedButton10.Down:=true;
@@ -208,17 +199,38 @@ begin
   end;
   donotsetbegset:=false;
 
+  StringGrid1.RowCount:=200;
+end;
+
+{
+Look()
+This function translates a chunk of currently selected text either in the editor
+or in the word lookup edit field.
+When translating from the editor, it's called thousands of times, and therefore
+we split the setup part and the work part.
+}
+
+procedure TfUser.Look_Setup(a: integer; out st: TLookSettings);
+var i: integer;
+begin
+  st.a := a;
+
+ //Dictionary group
+  if SpeedButton14.Down then st.dgroup:=1 else
+  if SpeedButton15.Down then st.dgroup:=2 else
+  if SpeedButton16.Down then st.dgroup:=3 else
+    st.dgroup := 1; //we must have some group chosen
+
   st.full:=not BitBtn1.Enabled;
 //  if SpeedButton10.Down then full:=true;
 
-  StringGrid1.RowCount:=200;
   st.maxwords:=StringGrid1.VisibleRowCount;
 
   if a=3 then
   begin
     st.clips:='';
     for i:=1 to length(clip) div 4 do
-      if copy(clip,i*4-3,2)='00'then break else st.clips:=st.clips+copy(clip,i*4-3,4);
+      if copy(clip,i*4-3,2)='00'then break else st.clips:=st.clips+copy(clip,i*4-3,4); //TODO:!!
   end;
   if SpeedButton11.Down then st.mt := mtMatchLeft else
   if SpeedButton12.Down then st.mt := mtMatchRight else
@@ -228,6 +240,31 @@ begin
     st.mt := mtExactMatch;
 
   if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then st.full:=true;
+
+  if a=4 then begin //ignore some UI settings in this mode
+    st.dgroup := 5;
+    //In "word insert" mode
+    if fTranslate.insx<>-1 then
+      st.mt := mtExactMatch
+    //In "translate text" mode
+    else
+      st.mt := mtMatchLeft;
+  end;
+
+  //Create and cache a search request
+  st.req := TDicSearchRequest.Create;
+  st.req.a := a;
+  st.req.MatchType := st.mt;
+  st.req.full := st.full;
+  st.req.maxwords := st.maxwords;
+  st.req.dictgroup := st.dgroup;
+  st.req.dic_ignorekana := false; //by default, but this can be overriden
+  st.req.Prepare;
+end;
+
+procedure TfUser.Look_Release(st: PLookSettings);
+begin
+  FreeAndNil(st.req);
 end;
 
 
@@ -236,37 +273,41 @@ NoScreenUpdates: Do not update anything on the screen.
   Mainly, don't do fKanji.SetCharDetails, because we're translating a large block of text.
   I don't clearly understand why it's there, but surely it's not needed when translating.
 }
-procedure TfUser.Look_Run(a: integer; st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
+procedure TfUser.Look_Run(st: PLookSettings; nogriddisplay:boolean; NoScreenUpdates: boolean = false);
 var wt:integer;
-    i:integer;
-    wasfull:boolean;
-    s:string;
-    b:boolean;
+  i:integer;
+  wasfull:boolean;
+  s:string;
+  b:boolean;
 begin
   dicsl.Clear;
 
-  case a of
-    1: DicSearch(Edit1.Text,1,st.mt,st.full,-1,st.maxwords,dicsl,st.dgroup,wasfull);
-    2: DicSearch(Edit1.Text,2,st.mt,st.full,-1,st.maxwords,dicsl,st.dgroup,wasfull);
-    3: DicSearch(st.clips,3,st.mt,st.full,-1,st.maxwords,dicsl,st.dgroup,wasfull);
+  case st.a of
+    1: begin s := Edit1.Text; wt := -1; end;
+    2: begin s := Edit1.Text; wt := -1; end;
+    3: begin s:= st.clips; wt := -1; end;
     4: //In "word insert" mode
-       if fTranslate.insx<>-1 then
-       begin
-         if fTranslate.buffertype='H'then
-           DicSearch(fTranslate.GetInsertKana(false),4,mtExactMatch,st.full,-1,st.maxwords,dicsl,5,wasfull) else
-           DicSearch(fTranslate.GetInsertKana(false),4,mtExactMatch,st.full,-2,st.maxwords,dicsl,5,wasfull);
-       end else
-       //In "translate text" mode
-       begin
-         s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,nogriddisplay);
-         if (not NoScreenUpdates) and (length(s)>=4) then fKanjiDetails.SetCharDetails(copy(s,1,4));
-         DicSearch(s,4,mtMatchLeft,st.full,wt,st.maxwords,dicsl,5,wasfull);
-       end;
+      if fTranslate.insx<>-1 then
+      begin
+        s := fTranslate.GetInsertKana(false);
+        if fTranslate.buffertype='H'then
+          wt := -1
+        else
+          wt := -2;
+      end else
+      //In "translate text" mode
+      begin
+        s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,nogriddisplay);
+        if (not NoScreenUpdates) and (length(s)>=4) then fKanjiDetails.SetCharDetails(copy(s,1,4));
+      end;
   end;
-  
+
+  st.req.Search(s, wt, dicsl);
+  wasfull := st.req.WasFull;
+
   ul.Clear;
  
-  if a<>4 then
+  if st.a<>4 then
     if dicsl.Count=0 then
       Label3.Caption:='-'
     else
@@ -292,7 +333,7 @@ begin
     BitBtn1.Visible:=not wasfull or (st.full and not BitBtn1.Enabled);
     Label2.Visible:=not BitBtn1.Visible;
     s:=s+' ';
-    case a of
+    case st.a of
       1:s:=s+_l('#00673^eby phonetic');
       2:s:=s+_l('#00674^eby meaning');
       3:s:=s+_l('#00675^eby written (clipboard)');
@@ -319,8 +360,25 @@ begin
     if SpeedButton2.Down then a:=2 else
     if SpeedButton3.Down then a:=3 else a:=4;
 
+  UpdateLookMode;
+
+  if (a<4) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
+  begin
+    BitBtn1.Visible:=true;
+    Label2.Visible:=false;
+    StringGrid1.Visible:=false;
+    Label16.Visible:=(edit1.text<>'') or (a=4);
+    curword:=0;
+    ShowWord;
+    exit;
+  end;
+
   Look_Setup(a, st);
-  Look_Run(a, @st, nogriddisplay, noscreenupdates);
+  try
+    Look_Run(@st, nogriddisplay, noscreenupdates);
+  finally
+    Look_Release(@st);
+  end;
 end;
 
 procedure TfUser.Edit1Change(Sender: TObject);
@@ -387,7 +445,6 @@ begin
   fMenu.aDict.Checked:=true;
   if Edit1.Enabled then Edit1.SetFocus;
   Look(false);
-  dic_ignorekana:=false;
 end;
 
 
@@ -572,6 +629,7 @@ end;
 
 procedure TfUser.SpeedButton1Click(Sender: TObject);
 begin
+  UpdateLookMode;
   Look(false);
   if Edit1.Enabled then Edit1.SetFocus;
 end;
