@@ -8,14 +8,12 @@ uses
 
 type
   TfSettings = class(TForm)
-    PageControl1: TPageControl;
-    TabSheet1: TTabSheet;
-    TabSheet2: TTabSheet;
+    pcPages: TPageControl;
+    tsRomanization: TTabSheet;
+    tsCharacterList: TTabSheet;
     RadioGroup3: TRadioGroup;
     CheckBox1: TCheckBox;
-    BitBtn1: TBitBtn;
-    Button6: TButton;
-    TabSheet3: TTabSheet;
+    tsFonts: TTabSheet;
     GroupBox1: TGroupBox;
     Label1: TLabel;
     Edit1: TEdit;
@@ -43,14 +41,14 @@ type
     SpeedButton9: TSpeedButton;
     Edit9: TEdit;
     Label10: TLabel;
-    TabSheet4: TTabSheet;
+    tsDictionary: TTabSheet;
     GroupBox3: TGroupBox;
     CheckBox4: TCheckBox;
     CheckBox5: TCheckBox;
     CheckBox6: TCheckBox;
     CheckBox7: TCheckBox;
     CheckBox8: TCheckBox;
-    TabSheet5: TTabSheet;
+    tsWordListPrinting: TTabSheet;
     CheckBox14: TCheckBox;
     CheckBox15: TCheckBox;
     CheckBox16: TCheckBox;
@@ -59,7 +57,7 @@ type
     ListBox1: TListBox;
     Label11: TLabel;
     Edit10: TEdit;
-    TabSheet6: TTabSheet;
+    tsCharacterCardPrinting: TTabSheet;
     Label12: TLabel;
     Edit11: TEdit;
     Label13: TLabel;
@@ -77,39 +75,19 @@ type
     SpeedButton10: TSpeedButton;
     CheckBox24: TCheckBox;
     CheckBox25: TCheckBox;
-    TabSheet7: TTabSheet;
+    tsDatabaseMaintenance: TTabSheet;
     Button2: TButton;
     Button1: TButton;
     OpenDialog2: TOpenDialog;
     SaveDialog2: TSaveDialog;
     Button3: TButton;
-    TabSheet8: TTabSheet;
+    tsGeneral: TTabSheet;
     CheckBox26: TCheckBox;
     Label23: TLabel;
     Edit16: TEdit;
     CheckBox10: TCheckBox;
     CheckBox11: TCheckBox;
-    TabSheet9: TTabSheet;
-    GroupBox5: TGroupBox;
-    cbPrintReading: TCheckBox;
-    cbPrintMeaning: TCheckBox;
-    cbNoPrintColors: TCheckBox;
-    cbDisplayLines: TCheckBox;
-    cbNoMeaningLearned: TCheckBox;
-    CheckBox34: TCheckBox;
-    cbNoReadingLearned: TCheckBox;
-    CheckBox36: TCheckBox;
-    cbVerticalPrint: TCheckBox;
-    CheckBox38: TCheckBox;
-    cbUserBold: TCheckBox;
-    Label24: TLabel;
-    Label25: TLabel;
-    Edit17: TEdit;
-    Edit18: TEdit;
-    CheckBox42: TCheckBox;
-    CheckBox43: TCheckBox;
-    CheckBox27: TCheckBox;
-    CheckBox41: TCheckBox;
+    tsTextTranslator: TTabSheet;
     CheckBox44: TCheckBox;
     CheckBox45: TCheckBox;
     Button4: TButton;
@@ -144,9 +122,7 @@ type
     RadioGroup7: TRadioGroup;
     Edit20: TEdit;
     Button5: TButton;
-    CheckBox2: TCheckBox;
-    CheckBox13: TCheckBox;
-    TabSheet10: TTabSheet;
+    tsCharacterDetails: TTabSheet;
     Label34: TLabel;
     ListBox2: TListBox;
     Button7: TButton;
@@ -158,7 +134,7 @@ type
     CheckBox46: TCheckBox;
     SpeedButton11: TSpeedButton;
     SpeedButton12: TSpeedButton;
-    TabSheet11: TTabSheet;
+    tsPopupTool: TTabSheet;
     CheckBox28: TCheckBox;
     CheckBox47: TCheckBox;
     CheckBox48: TCheckBox;
@@ -177,7 +153,7 @@ type
     CheckBox12: TCheckBox;
     CheckBox49: TCheckBox;
     CheckBox50: TCheckBox;
-    TabSheet12: TTabSheet;
+    tsColors: TTabSheet;
     ListBox3: TListBox;
     Shape2: TShape;
     Button12: TButton;
@@ -203,7 +179,6 @@ type
     Edit29: TEdit;
     Label47: TLabel;
     CheckBox55: TCheckBox;
-    CheckBox56: TCheckBox;
     Button13: TButton;
     Edit30: TEdit;
     Edit31: TEdit;
@@ -224,14 +199,14 @@ type
     CheckBox59: TCheckBox;
     Edit34: TEdit;
     Label52: TLabel;
-    TabSheet13: TTabSheet;
+    tsEditor: TTabSheet;
     CheckBox60: TCheckBox;
     CheckBox61: TCheckBox;
     Label53: TLabel;
     CheckBox62: TCheckBox;
     CheckBox63: TCheckBox;
     Edit35: TEdit;
-    TabSheet14: TTabSheet;
+    tsAnnotations: TTabSheet;
     CheckBox64: TCheckBox;
     CheckBox65: TCheckBox;
     CheckBox66: TCheckBox;
@@ -241,7 +216,6 @@ type
     Bevel1: TBevel;
     Button16: TButton;
     CheckBox70: TCheckBox;
-    cbTranslateNoLongTextWarning: TCheckBox;
     cbNoSaveChangesWarning: TCheckBox;
     cbLoadAozoraRuby: TCheckBox;
     lblAozoraRuby: TLabel;
@@ -250,6 +224,36 @@ type
     cbSaveAnnotationsToRuby: TCheckBox;
     lblSaveAnnotationsToRubyDesc: TLabel;
     lblAozoraTagsInColor: TLabel;
+    sbTextTranslator: TScrollBox;
+    Label25: TLabel;
+    GroupBox5: TGroupBox;
+    Label24: TLabel;
+    cbPrintReading: TCheckBox;
+    cbPrintMeaning: TCheckBox;
+    cbNoPrintColors: TCheckBox;
+    cbVerticalPrint: TCheckBox;
+    Edit18: TEdit;
+    cbDisplayLines: TCheckBox;
+    cbNoMeaningLearned: TCheckBox;
+    CheckBox34: TCheckBox;
+    cbNoReadingLearned: TCheckBox;
+    CheckBox36: TCheckBox;
+    CheckBox38: TCheckBox;
+    cbUserBold: TCheckBox;
+    Edit17: TEdit;
+    CheckBox42: TCheckBox;
+    CheckBox43: TCheckBox;
+    CheckBox27: TCheckBox;
+    CheckBox41: TCheckBox;
+    CheckBox2: TCheckBox;
+    CheckBox13: TCheckBox;
+    CheckBox56: TCheckBox;
+    cbTranslateNoLongTextWarning: TCheckBox;
+    cbMultithreadedTranslation: TCheckBox;
+    lbContents: TListBox;
+    pnlButtons: TPanel;
+    Button6: TButton;
+    btnOk: TBitBtn;
     procedure RadioGroup1Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -261,7 +265,7 @@ type
     procedure SpeedButton8Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
-    procedure BitBtn1Click(Sender: TObject);
+    procedure btnOkClick(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
     procedure PaintBox3Paint(Sender: TObject);
     procedure Edit15Change(Sender: TObject);
@@ -295,10 +299,18 @@ type
     procedure SpeedButton13Click(Sender: TObject);
     procedure SpeedButton14Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure pcPagesChange(Sender: TObject);
+    procedure lbContentsClick(Sender: TObject);
   public
     function CheckFontBool(s:string):boolean;
     function AutoDetectFonts:boolean;
     procedure ResetDetList;
+
+  protected
+    procedure BuildContents;
+    procedure SelectActiveContentItem;
+
   end;
 
 var
@@ -314,6 +326,57 @@ uses JWBMenu, JWBStrings, JWBUnit, registry, JWBKanji, JWBTranslate,
 var colorfrom:integer;
 
 {$R *.DFM}
+
+
+procedure TfSettings.FormCreate(Sender: TObject);
+begin
+  BuildContents;
+end;
+
+//Populates contents list from available pages
+procedure TfSettings.BuildContents;
+var i: integer;
+begin
+  lbContents.Clear;
+  for i := 0 to pcPages.PageCount - 1 do
+    lbContents.AddItem(pcPages.Pages[i].Caption, pcPages.Pages[i]);
+  SelectActiveContentItem;
+end;
+
+procedure TfSettings.SelectActiveContentItem;
+var i: integer;
+  found: boolean;
+begin
+  found := false;
+  for i := 0 to lbContents.Items.Count - 1 do
+    if lbContents.Items.Objects[i] = pcPages.ActivePage then begin
+      found := true;
+      lbContents.ItemIndex := i;
+      break;
+    end;
+  if not found then
+    lbContents.ItemIndex := -1; //deselect
+end;
+
+procedure TfSettings.FormShow(Sender: TObject);
+begin
+ { pcPages.OnChange is not triggered when ActivePage is loaded initially from FormSettings,
+  so whatever, we'll do this on show just to be safe: }
+  SelectActiveContentItem();
+
+  Button13.Visible:=paramstr(1)='debug';
+  Edit30.Visible:=paramstr(1)='debug';
+  Edit31.Visible:=paramstr(1)='debug';
+  Label48.Visible:=paramstr(1)='debug';
+  Label49.Visible:=paramstr(1)='debug';
+  Edit15Change(sender);
+  Edit20Change(sender);
+  Edit19.Text:=NotUsedDicts;
+  ResetDetList;
+  ComboBox2.ItemIndex:=0;
+  ClearKanjiCardCache;
+  ComboBox2Change(sender);
+end;
 
 procedure TfSettings.RadioGroup1Click(Sender: TObject);
 begin
@@ -422,7 +485,7 @@ begin
   Edit9.Text:=FontChineseGB;
 end;
 
-procedure TfSettings.BitBtn1Click(Sender: TObject);
+procedure TfSettings.btnOkClick(Sender: TObject);
 var reg:TRegIniFile;
     i:integer;
     setwindows:integer;
@@ -542,6 +605,7 @@ begin
   reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
   reg.WriteBool('Translate','TransColors',fMenu.aEditorColors.Checked);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
+  reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
   reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);
   reg.WriteBool('Annotate','Rebuild',CheckBox65.Checked);
   reg.WriteBool('Annotate','Sound',CheckBox66.Checked);
@@ -617,6 +681,18 @@ begin
   DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,RadioGroup1.ItemIndex+1,false,'j'),FontSmall);
 end;
 
+procedure TfSettings.lbContentsClick(Sender: TObject);
+begin
+  if lbContents.ItemIndex >= 0 then
+    pcPages.ActivePage := TTabSheet(lbContents.Items.Objects[lbContents.ItemIndex]);
+    //will trigger pointless SelectActiveContentItem(), but whatever
+end;
+
+procedure TfSettings.pcPagesChange(Sender: TObject);
+begin
+  SelectActiveContentItem();
+end;
+
 procedure TfSettings.Edit15Change(Sender: TObject);
 begin
   PaintBox3.Invalidate;
@@ -624,22 +700,6 @@ begin
   Label20.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,true,'j'),1,'j');
   Label21.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,true,'j'),2,'j');
   Label22.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,true,'j'),3,'j');
-end;
-
-procedure TfSettings.FormShow(Sender: TObject);
-begin
-  Button13.Visible:=paramstr(1)='debug';
-  Edit30.Visible:=paramstr(1)='debug';
-  Edit31.Visible:=paramstr(1)='debug';
-  Label48.Visible:=paramstr(1)='debug';
-  Label49.Visible:=paramstr(1)='debug';
-  Edit15Change(sender);
-  Edit20Change(sender);
-  Edit19.Text:=NotUsedDicts;
-  ResetDetList;
-  ComboBox2.ItemIndex:=0;
-  ClearKanjiCardCache;
-  ComboBox2Change(sender);
 end;
 
 procedure TfSettings.PaintBox1Paint(Sender: TObject);

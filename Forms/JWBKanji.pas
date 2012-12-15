@@ -596,7 +596,7 @@ end;
 
 procedure PrintConfigure(userdata:pointer);
 begin
-  fSettings.PageControl1.ActivePage:=fSettings.TabSheet6;
+  fSettings.pcPages.ActivePage:=fSettings.tsCharacterCardPrinting;
   fSettings.ShowModal;
 end;
 

@@ -3,8 +3,8 @@ object fSettings: TfSettings
   Top = 131
   BorderStyle = bsDialog
   Caption = '#00397^eSettings'
-  ClientHeight = 558
-  ClientWidth = 497
+  ClientHeight = 565
+  ClientWidth = 661
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,31 +12,28 @@ object fSettings: TfSettings
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   Scaled = False
   ShowHint = True
+  OnCreate = FormCreate
   OnShow = FormShow
-  DesignSize = (
-    497
-    558)
   PixelsPerInch = 96
   TextHeight = 13
-  object PageControl1: TPageControl
-    Left = 8
-    Top = 8
-    Width = 479
-    Height = 508
-    ActivePage = TabSheet13
-    Anchors = [akLeft, akTop, akRight, akBottom]
+  object pcPages: TPageControl
+    Left = 177
+    Top = 0
+    Width = 484
+    Height = 524
+    ActivePage = tsTextTranslator
+    Align = alClient
     MultiLine = True
+    Style = tsButtons
     TabOrder = 0
-    object TabSheet8: TTabSheet
+    OnChange = pcPagesChange
+    object tsGeneral: TTabSheet
       Caption = '#00398^eGeneral'
       ImageIndex = 7
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label41: TLabel
         Left = 16
         Top = 224
@@ -164,12 +161,9 @@ object fSettings: TfSettings
         TabOrder = 11
       end
     end
-    object TabSheet1: TTabSheet
+    object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -469,13 +463,10 @@ object fSettings: TfSettings
         end
       end
     end
-    object TabSheet2: TTabSheet
+    object tsCharacterList: TTabSheet
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -554,13 +545,10 @@ object fSettings: TfSettings
         Text = '0'
       end
     end
-    object TabSheet4: TTabSheet
+    object tsDictionary: TTabSheet
       Caption = '#00217^eDictionary'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -661,13 +649,10 @@ object fSettings: TfSettings
         TabOrder = 5
       end
     end
-    object TabSheet3: TTabSheet
+    object tsFonts: TTabSheet
       Caption = '#00450^eFonts'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1056,13 +1041,10 @@ object fSettings: TfSettings
         Text = 'Arial'
       end
     end
-    object TabSheet5: TTabSheet
+    object tsWordListPrinting: TTabSheet
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1165,13 +1147,10 @@ object fSettings: TfSettings
         Text = 'Edit10'
       end
     end
-    object TabSheet6: TTabSheet
+    object tsCharacterCardPrinting: TTabSheet
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1368,13 +1347,10 @@ object fSettings: TfSettings
         Text = 'Edit35'
       end
     end
-    object TabSheet7: TTabSheet
+    object tsDatabaseMaintenance: TTabSheet
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label48: TLabel
         Left = 224
         Top = 176
@@ -1491,231 +1467,242 @@ object fSettings: TfSettings
         Text = 'JLPT4'
       end
     end
-    object TabSheet9: TTabSheet
+    object tsTextTranslator: TTabSheet
       Caption = '#00300^eText translator'
       ImageIndex = 8
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object Label25: TLabel
-        Left = 16
-        Top = 248
-        Width = 224
-        Height = 13
-        Caption = '#00510^eNumber of lines reserved to meaning:'
-      end
-      object GroupBox5: TGroupBox
-        Left = 16
-        Top = 272
-        Width = 449
-        Height = 105
-        Caption = '#00511^ePrinting'
+      TabVisible = False
+      object sbTextTranslator: TScrollBox
+        Left = 0
+        Top = 0
+        Width = 476
+        Height = 514
+        Align = alClient
+        BorderStyle = bsNone
         TabOrder = 0
-        object Label24: TLabel
-          Left = 16
-          Top = 72
-          Width = 202
+        object Label25: TLabel
+          Left = 12
+          Top = 250
+          Width = 224
           Height = 13
-          Caption = '#00512^eNumber of lines on square page:'
+          Caption = '#00510^eNumber of lines reserved to meaning:'
         end
-        object cbPrintReading: TCheckBox
-          Left = 16
-          Top = 24
-          Width = 193
-          Height = 17
-          Caption = '#00272^eDisplay reading'
+        object GroupBox5: TGroupBox
+          Left = 12
+          Top = 274
+          Width = 449
+          Height = 105
+          Caption = '#00511^ePrinting'
           TabOrder = 0
+          object Label24: TLabel
+            Left = 16
+            Top = 72
+            Width = 202
+            Height = 13
+            Caption = '#00512^eNumber of lines on square page:'
+          end
+          object cbPrintReading: TCheckBox
+            Left = 16
+            Top = 24
+            Width = 193
+            Height = 17
+            Caption = '#00272^eDisplay reading'
+            TabOrder = 0
+          end
+          object cbPrintMeaning: TCheckBox
+            Left = 232
+            Top = 24
+            Width = 209
+            Height = 17
+            Caption = '#00513^eDisplay meaning'
+            TabOrder = 1
+          end
+          object cbNoPrintColors: TCheckBox
+            Left = 16
+            Top = 48
+            Width = 265
+            Height = 17
+            Caption = '#00514^eDo not use colors'
+            TabOrder = 2
+          end
+          object cbVerticalPrint: TCheckBox
+            Left = 232
+            Top = 48
+            Width = 377
+            Height = 17
+            Caption = '#00515^ePrint vertically in columns'
+            TabOrder = 3
+          end
+          object Edit18: TEdit
+            Left = 216
+            Top = 72
+            Width = 121
+            Height = 21
+            TabOrder = 4
+            Text = '20'
+          end
         end
-        object cbPrintMeaning: TCheckBox
-          Left = 232
-          Top = 24
-          Width = 209
+        object cbDisplayLines: TCheckBox
+          Left = 12
+          Top = 34
+          Width = 401
           Height = 17
-          Caption = '#00513^eDisplay meaning'
+          Caption = '#00516^eDisplay lines'
+          Checked = True
+          State = cbChecked
           TabOrder = 1
         end
-        object cbNoPrintColors: TCheckBox
-          Left = 16
-          Top = 48
-          Width = 265
+        object cbNoMeaningLearned: TCheckBox
+          Left = 12
+          Top = 58
+          Width = 353
           Height = 17
-          Caption = '#00514^eDo not use colors'
+          Caption = '#00517^eDo not display meaning in learned words'
           TabOrder = 2
         end
-        object cbVerticalPrint: TCheckBox
-          Left = 232
-          Top = 48
-          Width = 377
+        object CheckBox34: TCheckBox
+          Left = 12
+          Top = 130
+          Width = 353
           Height = 17
-          Caption = '#00515^ePrint vertically in columns'
+          Caption = '#00518^eDo not search for particles'
           TabOrder = 3
         end
-        object Edit18: TEdit
-          Left = 216
-          Top = 72
+        object cbNoReadingLearned: TCheckBox
+          Left = 12
+          Top = 82
+          Width = 377
+          Height = 17
+          Caption = '#00519^eDo not display reading of learned kanji'
+          TabOrder = 4
+        end
+        object CheckBox36: TCheckBox
+          Left = 12
+          Top = 106
+          Width = 393
+          Height = 17
+          Caption = '#00884^eDisplay transcript above kana'
+          Checked = True
+          State = cbChecked
+          TabOrder = 5
+        end
+        object CheckBox38: TCheckBox
+          Left = 12
+          Top = 154
+          Width = 377
+          Height = 17
+          Caption = '#00521^eDo not translate hiragana-only words'
+          TabOrder = 6
+        end
+        object cbUserBold: TCheckBox
+          Left = 12
+          Top = 202
+          Width = 401
+          Height = 17
+          Caption = '#00522^eDisplay words with user-defined translation in bold'
+          Checked = True
+          State = cbChecked
+          TabOrder = 7
+        end
+        object Edit17: TEdit
+          Left = 228
+          Top = 250
           Width = 121
           Height = 21
-          TabOrder = 4
-          Text = '20'
+          TabOrder = 8
+          Text = '2'
+        end
+        object CheckBox42: TCheckBox
+          Left = 12
+          Top = 178
+          Width = 225
+          Height = 17
+          Caption = '#00523^eLeave space between lines'
+          Checked = True
+          State = cbChecked
+          TabOrder = 9
+        end
+        object CheckBox43: TCheckBox
+          Left = 12
+          Top = 10
+          Width = 433
+          Height = 17
+          Caption = '#00524^eBreak lines only at word boundaries'
+          Checked = True
+          State = cbChecked
+          TabOrder = 10
+        end
+        object CheckBox27: TCheckBox
+          Left = 356
+          Top = 250
+          Width = 97
+          Height = 17
+          Caption = '#00525^eDouble size'
+          TabOrder = 11
+        end
+        object CheckBox41: TCheckBox
+          Left = 170
+          Top = 35
+          Width = 401
+          Height = 17
+          Caption = '#00526^eDisplay non-japanese chars in grey'
+          Checked = True
+          State = cbChecked
+          TabOrder = 12
+          Visible = False
+        end
+        object CheckBox2: TCheckBox
+          Left = 12
+          Top = 226
+          Width = 401
+          Height = 17
+          Caption = '#00527^eShow editor hint'
+          Checked = True
+          State = cbChecked
+          TabOrder = 13
+        end
+        object CheckBox13: TCheckBox
+          Left = 228
+          Top = 226
+          Width = 225
+          Height = 17
+          Caption = '#00528^eDisplay meaning on hint'
+          Checked = True
+          State = cbChecked
+          TabOrder = 14
+        end
+        object CheckBox56: TCheckBox
+          Left = 244
+          Top = 178
+          Width = 217
+          Height = 17
+          Caption = '#00529^eLeave space even when reading is off'
+          TabOrder = 15
+        end
+        object cbTranslateNoLongTextWarning: TCheckBox
+          Left = 10
+          Top = 388
+          Width = 457
+          Height = 17
+          Caption = '^eDo not warn when translating large text blocks'
+          TabOrder = 16
+        end
+        object cbMultithreadedTranslation: TCheckBox
+          Left = 10
+          Top = 410
+          Width = 457
+          Height = 17
+          Caption = '^eMultithreaded translation'
+          TabOrder = 17
         end
       end
-      object cbDisplayLines: TCheckBox
-        Left = 16
-        Top = 32
-        Width = 401
-        Height = 17
-        Caption = '#00516^eDisplay lines'
-        Checked = True
-        State = cbChecked
-        TabOrder = 1
-      end
-      object cbNoMeaningLearned: TCheckBox
-        Left = 16
-        Top = 56
-        Width = 353
-        Height = 17
-        Caption = '#00517^eDo not display meaning in learned words'
-        TabOrder = 2
-      end
-      object CheckBox34: TCheckBox
-        Left = 16
-        Top = 128
-        Width = 353
-        Height = 17
-        Caption = '#00518^eDo not search for particles'
-        TabOrder = 3
-      end
-      object cbNoReadingLearned: TCheckBox
-        Left = 16
-        Top = 80
-        Width = 377
-        Height = 17
-        Caption = '#00519^eDo not display reading of learned kanji'
-        TabOrder = 4
-      end
-      object CheckBox36: TCheckBox
-        Left = 16
-        Top = 104
-        Width = 393
-        Height = 17
-        Caption = '#00884^eDisplay transcript above kana'
-        Checked = True
-        State = cbChecked
-        TabOrder = 5
-      end
-      object CheckBox38: TCheckBox
-        Left = 16
-        Top = 152
-        Width = 377
-        Height = 17
-        Caption = '#00521^eDo not translate hiragana-only words'
-        TabOrder = 6
-      end
-      object cbUserBold: TCheckBox
-        Left = 16
-        Top = 200
-        Width = 401
-        Height = 17
-        Caption = '#00522^eDisplay words with user-defined translation in bold'
-        Checked = True
-        State = cbChecked
-        TabOrder = 7
-      end
-      object Edit17: TEdit
-        Left = 232
-        Top = 248
-        Width = 121
-        Height = 21
-        TabOrder = 8
-        Text = '2'
-      end
-      object CheckBox42: TCheckBox
-        Left = 16
-        Top = 176
-        Width = 225
-        Height = 17
-        Caption = '#00523^eLeave space between lines'
-        Checked = True
-        State = cbChecked
-        TabOrder = 9
-      end
-      object CheckBox43: TCheckBox
-        Left = 16
-        Top = 8
-        Width = 433
-        Height = 17
-        Caption = '#00524^eBreak lines only at word boundaries'
-        Checked = True
-        State = cbChecked
-        TabOrder = 10
-      end
-      object CheckBox27: TCheckBox
-        Left = 360
-        Top = 248
-        Width = 97
-        Height = 17
-        Caption = '#00525^eDouble size'
-        TabOrder = 11
-      end
-      object CheckBox41: TCheckBox
-        Left = 248
-        Top = 32
-        Width = 401
-        Height = 17
-        Caption = '#00526^eDisplay non-japanese chars in grey'
-        Checked = True
-        State = cbChecked
-        TabOrder = 12
-        Visible = False
-      end
-      object CheckBox2: TCheckBox
-        Left = 16
-        Top = 224
-        Width = 401
-        Height = 17
-        Caption = '#00527^eShow editor hint'
-        Checked = True
-        State = cbChecked
-        TabOrder = 13
-      end
-      object CheckBox13: TCheckBox
-        Left = 232
-        Top = 224
-        Width = 225
-        Height = 17
-        Caption = '#00528^eDisplay meaning on hint'
-        Checked = True
-        State = cbChecked
-        TabOrder = 14
-      end
-      object CheckBox56: TCheckBox
-        Left = 248
-        Top = 176
-        Width = 217
-        Height = 17
-        Caption = '#00529^eLeave space even when reading is off'
-        TabOrder = 15
-      end
-      object cbTranslateNoLongTextWarning: TCheckBox
-        Left = 16
-        Top = 386
-        Width = 457
-        Height = 17
-        Caption = '^eDo not warn when translating large text chunks'
-        TabOrder = 16
-      end
     end
-    object TabSheet10: TTabSheet
+    object tsCharacterDetails: TTabSheet
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       DesignSize = (
-        471
-        426)
+        476
+        514)
       object Label34: TLabel
         Left = 8
         Top = 8
@@ -1724,7 +1711,7 @@ object fSettings: TfSettings
         Caption = '#00531^eDisplayed items:'
       end
       object SpeedButton11: TSpeedButton
-        Left = 448
+        Left = 453
         Top = 98
         Width = 23
         Height = 79
@@ -1748,9 +1735,10 @@ object fSettings: TfSettings
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton11Click
+        ExplicitLeft = 448
       end
       object SpeedButton12: TSpeedButton
-        Left = 448
+        Left = 453
         Top = 234
         Width = 23
         Height = 79
@@ -1773,12 +1761,13 @@ object fSettings: TfSettings
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton12Click
+        ExplicitLeft = 448
       end
       object ListBox2: TListBox
         Left = 8
         Top = 24
-        Width = 438
-        Height = 308
+        Width = 443
+        Height = 396
         Anchors = [akLeft, akTop, akRight, akBottom]
         ItemHeight = 13
         TabOrder = 0
@@ -1786,7 +1775,7 @@ object fSettings: TfSettings
       end
       object Button7: TButton
         Left = 8
-        Top = 339
+        Top = 427
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -1796,7 +1785,7 @@ object fSettings: TfSettings
       end
       object Button8: TButton
         Left = 180
-        Top = 339
+        Top = 427
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -1806,7 +1795,7 @@ object fSettings: TfSettings
       end
       object Button9: TButton
         Left = 350
-        Top = 339
+        Top = 427
         Width = 97
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -1824,13 +1813,10 @@ object fSettings: TfSettings
         OnClick = Button10Click
       end
     end
-    object TabSheet11: TTabSheet
+    object tsPopupTool: TTabSheet
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -1977,22 +1963,20 @@ object fSettings: TfSettings
         Text = 'Edit28'
       end
     end
-    object TabSheet12: TTabSheet
+    object tsColors: TTabSheet
       Caption = '#00551^eColors'
       ImageIndex = 11
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       DesignSize = (
-        471
-        426)
+        476
+        514)
       object Shape2: TShape
         Left = 8
-        Top = 332
+        Top = 420
         Width = 105
         Height = 25
         Anchors = [akLeft, akBottom]
+        ExplicitTop = 332
       end
       object Label42: TLabel
         Left = 8
@@ -2005,7 +1989,7 @@ object fSettings: TfSettings
         Left = 8
         Top = 72
         Width = 457
-        Height = 257
+        Height = 345
         Anchors = [akLeft, akTop, akBottom]
         ItemHeight = 13
         TabOrder = 0
@@ -2013,7 +1997,7 @@ object fSettings: TfSettings
       end
       object Button12: TButton
         Left = 120
-        Top = 332
+        Top = 420
         Width = 217
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -2023,7 +2007,7 @@ object fSettings: TfSettings
       end
       object Button14: TButton
         Left = 344
-        Top = 332
+        Top = 420
         Width = 121
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -2096,13 +2080,10 @@ object fSettings: TfSettings
         OnClick = CheckBox9Click
       end
     end
-    object TabSheet13: TTabSheet
+    object tsEditor: TTabSheet
       Caption = '^eEditor'
       ImageIndex = 12
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2196,13 +2177,10 @@ object fSettings: TfSettings
         TabOrder = 5
       end
     end
-    object TabSheet14: TTabSheet
+    object tsAnnotations: TTabSheet
       Caption = '^eAnnotations'
       ImageIndex = 13
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      TabVisible = False
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2278,47 +2256,71 @@ object fSettings: TfSettings
       end
     end
   end
-  object BitBtn1: TBitBtn
-    Left = 200
-    Top = 523
-    Width = 75
-    Height = 25
-    Anchors = [akLeft, akBottom]
-    DoubleBuffered = True
-    Kind = bkOK
-    ParentDoubleBuffered = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
-  end
-  object Button6: TButton
-    Left = 8
-    Top = 527
+  object lbContents: TListBox
+    Left = 0
+    Top = 0
     Width = 177
-    Height = 21
-    Anchors = [akLeft, akBottom]
-    Caption = '#00929^eChange language'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Arial'
-    Font.Style = []
-    ParentFont = False
+    Height = 524
+    Align = alLeft
+    ItemHeight = 13
+    TabOrder = 1
+    OnClick = lbContentsClick
+  end
+  object pnlButtons: TPanel
+    Left = 0
+    Top = 524
+    Width = 661
+    Height = 41
+    Align = alBottom
+    BevelOuter = bvNone
     TabOrder = 2
-    OnClick = Button6Click
+    ExplicitWidth = 805
+    DesignSize = (
+      661
+      41)
+    object Button6: TButton
+      Left = 12
+      Top = 12
+      Width = 177
+      Height = 21
+      Anchors = [akLeft, akBottom]
+      Caption = '#00929^eChange language'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 0
+      OnClick = Button6Click
+    end
+    object btnOk: TBitBtn
+      Left = 520
+      Top = 8
+      Width = 130
+      Height = 25
+      Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkOK
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnOkClick
+      ExplicitLeft = 664
+    end
   end
   object OpenDialog2: TOpenDialog
     DefaultExt = '.wbk'
     Filter = 'WaKan User Data Backup|*.wbk'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 344
-    Top = 24
+    Left = 200
+    Top = 112
   end
   object SaveDialog2: TSaveDialog
     DefaultExt = '.wbk'
     Filter = 'WaKan User Data Bakup|*.wbk'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 392
-    Top = 16
+    Left = 272
+    Top = 112
   end
   object ColorDialog1: TColorDialog
     Left = 148

@@ -2128,7 +2128,7 @@ begin
 {MCH      UninjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
       Screen.Cursor:=crDefault;
     end;
-    fSettings.BitBtn1Click(self);
+    fSettings.btnOkClick(self);
     if curqlayout=0 then WriteLayout('wakan.lay');
     fTranslate.Close;
     fUser.Close;
@@ -2139,7 +2139,7 @@ end;
 
 procedure TfMenu.SpeedButton5Click(Sender: TObject);
 begin
-  fSettings.PageControl1.ActivePage:=fSettings.TabSheet1;
+  fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
   fSettings.ShowModal;
   if fKanji.Visible then fKanji.DoIt;
   if fUser.Visible then fUser.Look(false);
@@ -2557,6 +2557,7 @@ begin
   fSettings.cbNoPrintColors.Checked:=reg.ReadBool('Translate','NoPrintColors',true);
   fSettings.cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   fSettings.cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
+  fSettings.cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
   aEditorColors.Checked:=reg.ReadBool('Translate','TransColors',true);
   fTranslate.sbUseTlColors.Down:=aEditorColors.Checked;
   fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
@@ -2694,7 +2695,7 @@ begin
         +'Application cannot continue unless all fonts are selected.')),
       pchar(_l('#00090^eWarning')),
       MB_ICONWARNING or MB_OK);
-    fSettings.PageControl1.ActivePage:=fSettings.TabSheet3;
+    fSettings.pcPages.ActivePage:=fSettings.tsFonts;
     fSettings.ShowModal;
   end;
   if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then raise Exception.Create('Unknown DICT.VER header.');

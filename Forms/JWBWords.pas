@@ -1245,7 +1245,7 @@ end;
 
 procedure PrintConfigure(userdata:pointer);
 begin
-  fSettings.PageControl1.ActivePage:=fSettings.TabSheet5;
+  fSettings.pcPages.ActivePage:=fSettings.tsWordListPrinting;
   fSettings.ShowModal;
 end;
 
