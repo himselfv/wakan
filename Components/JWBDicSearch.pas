@@ -783,7 +783,7 @@ var
   end;
 
 begin
-  if ((a=stJp) or (a=stClipboard)) and (MatchType=mtMatchAnywhere) then begin
+  if (a in [stJp, stClipboard]) and (MatchType=mtMatchAnywhere) then begin
     dic.TDict.SetOrder('Index_Ind');
     dic.TDict.First;
   end;

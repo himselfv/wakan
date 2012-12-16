@@ -238,7 +238,6 @@ begin
   end;
 
   req.dic_ignorekana := false; //by default, but this can be overriden
-  req.Prepare;
 end;
 
 {
@@ -274,7 +273,7 @@ begin
         wt := -2;
     end;
     stEditorAuto: //In "translate text" mode
-      s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,{stopuser=}req.a=stEditorAuto);
+      s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,{stopuser=}true);
   end;
 
   req.Search(s, wt, dicrl);
@@ -291,14 +290,6 @@ begin
   
   if req.a <> stEditorAuto then //update result list
   begin
-   {
-    for i:=0 to dicsl.Count-1 do
-      if (not req.full) and (i>=StringGrid1.VisibleRowCount) then
-        dicsl.Delete(StringGrid1.VisibleRowCount)
-      else
-        dicsl[i]:=copy(dicsl[i],31,length(dicsl[i])-30);
-   }
-
     tmp := TStringList.Create;
     try
       for i:=0 to dicrl.Count - 1 do
@@ -367,6 +358,7 @@ begin
 
   SetupSearchRequest(a, req);
   try
+    req.Prepare;
     Look_Run(req);
   finally
     FreeAndNil(req);

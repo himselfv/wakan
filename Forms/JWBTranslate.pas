@@ -153,7 +153,7 @@ type
     procedure CalcBlockFromTo(backtrack:boolean);
 
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
-    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;word:string):integer; overload;
+    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:string):integer; overload;
     procedure DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
     procedure ResolveInsert(final:boolean);
     procedure InsertCharacter(c:char);
@@ -233,8 +233,17 @@ type
   end;
 
   TTranslationThread = class(TThread)
+  protected
+    req: TDicSearchRequest;
+    dicsl: TStringList;
+    blockfromy: integer;
+    blocktoy: integer;
+    blockfromx: integer;
+    blocktox: integer;
   public
-    constructor Create(ablockfromy, ablocktoy: integer);
+    constructor Create(ablockfromy, ablocktoy: integer;
+      ablockfromx, ablocktox: integer; areq: TDicSearchRequest=nil);
+    destructor Destroy; override;
     procedure Execute; override;
   end;
 
@@ -1092,11 +1101,16 @@ begin
   Button2Click(Sender);
 end;
 
-constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer);
+constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer;
+  ablockfromx, ablocktox: integer; areq: TDicSearchRequest);
 begin
   inherited Create({CreateSuspended=}true);
-  BlockFromY := ABlockFromY;
-  BlockToY := ABlockToY;
+  blockfromy := ablockfromy;
+  blocktoy := ablocktoy;
+  blockfromx := ablockfromx;
+  blocktox := ablocktox;
+  req := areq;
+  dicsl := nil;
  {$IF CompilerVersion>=20}
   Start; //Resume() is deprecated on newer compilers
  {$ELSE}
@@ -1104,13 +1118,42 @@ begin
  {$IFEND}
 end;
 
-procedure TTranslationThread.Execute;
+destructor TTranslationThread.Destroy;
 begin
+  inherited;
+end;
 
+procedure TTranslationThread.Execute;
+var bg, en: integer;
+  i: integer;
+begin
+  if req=nil then begin
+    fUser.SetupSearchRequest(stEditorAuto, req);
+    req.dic_ignorekana := true;
+    req.Prepare;
+  end;
+
+  dicsl := TStringList.Create;
+  try
+    i := blockfromy;
+    while (not Terminated) and (i<=blocktoy) do begin
+      bg:=0;
+      en:=flength(fTranslate.doc[i])-1; //TODO: receive doc/doctr in Create()
+      if i=blockfromy then bg:=blockfromx;
+      if i=blocktoy then en:=blocktox;
+
+      fTranslate.AutoTranslateLine(i, bg, en, req, dicsl);
+      Inc(i);
+    end;
+
+  finally
+    FreeAndNil(dicsl);
+    FreeAndNil(req);
+  end;
 end;
 
 procedure TfTranslate.AutoTranslate;
-var i:integer;
+var i,j:integer;
   oldcurx,oldcury:integer;
   bg,en:integer;
 
@@ -1118,6 +1161,11 @@ var i:integer;
   startTime: cardinal;
   req: TDicSearchRequest;
   dicsl: TStringList;
+
+  threads: array of TTranslationThread;
+  useThreads: boolean;
+  threadsCreated: boolean;
+  sysinfo: SYSTEM_INFO;
 begin
   oldcurx:=rcurx;
   oldcury:=rcury;
@@ -1136,6 +1184,9 @@ begin
   end else CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
 
+  useThreads := fSettings.cbMultithreadedTranslation.Checked;
+  threadsCreated := false;
+
  //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
   req := nil;
@@ -1149,8 +1200,10 @@ begin
     fUser.SpeedButton3.Down:=false;
     fUser.SetupSearchRequest(stEditorAuto, req);
     req.dic_ignorekana := true;
+    req.Prepare;
 
-    for i:=blockfromy to blocktoy do
+    i := blockfromy;
+    while i<=blocktoy do
     begin
       bg:=0;
       en:=flength(doc[i])-1;
@@ -1188,7 +1241,17 @@ begin
         end;
       end;
 
+      if useThreads and not threadsCreated and (GetTickCount-startTime > 400) then begin
+        threadsCreated := true; //skip this block afterwards
+        GetSystemInfo(sysinfo);
+        if sysinfo.dwNumberOfProcessors>1 then begin
+          SetLength(threads, sysinfo.dwNumberOfProcessors-1);
+          //TODO:
+        end;
+      end;
+
       AutoTranslateLine(i, bg, en, req, dicsl);
+      Inc(i);
     end;
 
   finally
@@ -2666,7 +2729,7 @@ Set word translation to the specified article.
 word:
   a string specifying dictionary + article index, in fUser.dicrl list format
 }
-function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;word:string):integer;
+function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:string):integer;
 var wordpart:char;
     i:integer;
     rlen:integer;
