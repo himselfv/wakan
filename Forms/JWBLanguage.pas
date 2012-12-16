@@ -80,14 +80,14 @@ begin
     MB_ICONINFORMATION or MB_OK);
 end;
 
-function ListFiles(mask: string): TFilenameArray;
+//Adds files to array by mask
+procedure ListFiles(mask: string; var files: TFilenameArray);
 var sr: TSearchRec;
 begin
-  SetLength(Result, 0);
   if FindFirst(mask,faAnyFile,sr)<>0 then exit;
   repeat
-    SetLength(Result, Length(Result)+1);
-    Result[Length(Result)-1] := sr.Name;
+    SetLength(files, Length(files)+1);
+    files[Length(files)-1] := sr.Name;
   until FindNext(sr)<>0;
   FindClose(sr);
 end;
@@ -162,7 +162,9 @@ begin
   lbLanguages.Items.Clear;
 
  //List translation files
-  fnames := ListFiles(TransDir+'\*.lng');
+  SetLength(fnames, 0);
+  ListFiles(TransDir+'\*.lng', fnames);
+  ListFiles(TransDir+'\lng\*.lng', fnames); //support this too
   if Length(fnames)<=0 then begin
    //We don't have to show this because it's perfectly okay not to have any tl files,
    //but let's be nice to the user.
@@ -187,7 +189,10 @@ begin
  //Load headers with info
   SetLength(finfo, Length(fnames));
   for i := 0 to Length(fnames) - 1 do begin
-    LoadLanguageFile(TransDir+'\'+fnames[i], [llOnlyInfo], finfo[i], nil);
+    if FileExists(TransDir+'\'+fnames[i]) then
+      LoadLanguageFile(TransDir+'\'+fnames[i], [llOnlyInfo], finfo[i], nil)
+    else
+      LoadLanguageFile(TransDir+'\lng\'+fnames[i], [llOnlyInfo], finfo[i], nil);
     lbLanguages.Items.Add(finfo[i].lName+' ('+finfo[i].lVersion+')');
   end;
 
@@ -207,8 +212,14 @@ fname:
   Translation file name (without path; has to be in TransDir)
 }
 procedure TfLanguage.LoadLanguage(fname:string);
+var fullfname: string;
 begin
-  if not fileexists(fname) then
+  if FileExists(TransDir+'\'+fname) then
+    fullfname := TransDir+'\'+fname
+  else
+  if FileExists(TransDir+'\lng\'+fname) then
+    fullfname := TransDir+'\lng\'+fname
+  else
   begin
     Application.MessageBox(pchar('GUI translation file '+fname+' was not found. '
       +'It should be located in Wakan folder.'#13'No translation has been loaded.'),
@@ -218,7 +229,7 @@ begin
 
   curTransFile := fname;
   curGUILanguage := ChangeFileExt(lowercase(fname), '');
-  LoadLanguageFile(TransDir+'\'+fname, [], curTransInfo, curTrans);
+  LoadLanguageFile(fullfname, [], curTransInfo, curTrans)
 end;
 
 procedure TfLanguage.lbLanguagesClick(Sender: TObject);
@@ -268,13 +279,15 @@ begin
   if not IsPositiveResult(ModalResult) then exit;
 
  //Else save the choice and load language
-  curTransFile := fnames[lbLanguages.ItemIndex];
-  SaveRegistrySettings();
-  LoadLanguage(curTransFile); //not really needed right now...
+  if lbLanguages.ItemIndex>=0 then begin
+    curTransFile := fnames[lbLanguages.ItemIndex];
+    SaveRegistrySettings();
+    LoadLanguage(curTransFile); //not really needed right now...
 
- //Currently there's no choice but to do this
-  showmessage('Language has been changed. Please restart the application.');
-  Application.Terminate;
+   //Currently there's no choice but to do this
+    showmessage('Language has been changed. Please restart the application.');
+    Application.Terminate;
+  end;
 end;
 
 

@@ -302,7 +302,7 @@
 00286>Full details
 00287>Japanese/Chinese -> English
 00288>English -> Japanese/Chinese
-00289>Search by clipboard
+00289>By clipboard
 00290>Search exact word
 00291>Search beginning
 00292>Search ending
@@ -756,7 +756,7 @@
 00684>Translator
 00685>Translating...
 00686>Translated text
-00687>There is unsaved text in the Editor. Do you want to save it?
+00687>Document has been changed. Do you want to save it?
 00688>Example database was not found. Download it from WaKan website.
 00689>No examples available.
 00690>Written (from clipboard):
@@ -1035,3 +1035,10 @@
 00948>&Add word into vocabulary
 00949>Auto-save file on exit
 00950>Auto-load last opened file on start
+00951>Number of full compounds:
+00952>Space for vocabulary compounds (in characters):
+00953>Vertical number of vocabulary compounds:
+00954>Print full compounds
+00955>Print vocabulary compounds
+00956>Sort full compounds by frequency
+00957>Check / uncheck all categories

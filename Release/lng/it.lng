@@ -1,0 +1,964 @@
+; File lingua di WaKan
+;
+; traduce l'interfaccia di Wakan - Japanese & Chinese Learning tool, http://wakan.manga.cz
+; please send new languages or updates of existing ones to dreamfly@centrum.cz
+;
+; Line format: <5-digit line id><delimiter><text>
+; <text> must not contain CR or LF, delimiter is "+" if the text is continued on the next line, otherwise ">"
+;
+; Language: Italiano
+; Author: Roberto Muzzioli (postazero@yahoo.it)
+;
+#LANG>Italiano
+#AUTH>Roberto Muzzioli
+#VERS>1.00
+00001>Alfabeti
+00002>Stampa in BMP
+00003>Larghezza (in pixel):
+00004>Altezza (in pixel):
+00005>Prefisso nome file:
+00006>%d.BMP verra' aggiunto dopo il prefisso (%d e' il numero di pagina).
+00007>Annulla
+00008>Assicurati di avere i file EDICT.UNI, KANJIDIC.UNI e UNIHAN.TXT (opzionale) nella directory corrente.
+00009>Questa operazione puo' richiedere molto tempo (circa 10 minuti).
+00010>Controllare inoltre di avere almeno 200 MB di spazio libero sul disco.
+00011>Vuoi continuare?
+00012>Generazione dizionario
+00013>Conversione EDICT.UNI..
+00014>Conversione KANJIDIC.UNI...
+00015>Conversione UNIHAN.TXT...
+00016>Svuotamento tabelle...
+00017>Analisi di Edict...
+00018>Analisi di Edict (
+00019>Impossibile convertire Edict. Conversione in romaji fallita (kana sconosciuto). Problemi scritti in ROMAJI.ERR.
+00020>Errore
+00021>Analisi di KanjiDic...
+00022>Analisi di KanjiDic (
+00023>Analisi di UniHan...
+00024>Analisi di UniHan (
+00025>Generazione completata con successo.
+00026> Voce di dizionario convertita
+00027> Voce kanji generata
+00028>Categorie di vocabolario
+00029>Seleziona tutte le categorie
+00030>Modifica  categoria
+00031>Elimina categoria
+00032>Seleziona la lista delle categorie (lezioni / gruppi / temporanee / liste di parole)
+00033>Oggetto dettaglio carattere
+00034>Oggetto:
+00035>Descrizione:
+00036>Sorgente:
+00037>Tipo di visualizzazione
+00038>Linea completa
+00039>Una colonna
+00040>Piu' linee (parole a capo)
+00041>Mostra etichetta
+00042>Mostra etichetta
+00043>Mostra etichetta su tutta la linea
+00044>Non mostrare etichetta
+00045>Modo di visualizzazione
+00046>Visualizza in entrambi i modi
+00047>Visualizza solo modalita' giapponese
+00048>Visualizza solo modalita' cinese
+00049>Visualizza anche in assenza di informazioni
+00050>Annulla
+00051>Dimensione carattere
+00052>Piccolo
+00053>Medio
+00054>Grande
+00055>Titolo personalizzato:
+00056>Contenuti clipboard
+00057>Aggiungi al vocabolario
+00058>Significato (editabile):
+00059>Categoria:
+00060>Pronuncia:
+00061>Scritto:
+00062>Aggiungi al vocabolario
+00063>Codifica carattere di EDICT
+00064>Selezionare la lingua di input del file EDICT:
+00065+Attenzione:
+00065+Per codifiche diverse da "Unicode 16-bit" e' necessaria l'utility UNICONV nella directory attuale.
+00065>Questa utility puo' essere scaricata da ftp.cc.monash.edu.au/pub/nihongo/uniconv.zip.
+00066>Codifica Lingua / Carattere
+00067>Giapponese (autorilevamento)
+00068>Cinese (autorilevamento)
+00069>Coreano (autorilevamento)
+00070>UNICONV.EXE non e' stato trovato. E' necessario per per la conversione di codifica.
+00071>Importa dizionario
+00072>Nome file (senza estensione):
+00073>Nome dizionario :
+00074>File in formato EDICT inclusi:
+00075>Versione:
+00076>Priorita':
+00077>Build:
+00078>Aggiungi:
+00079>Rimuovi:
+00080>Lingua
+00081>Giapponese
+00082>Mandarino cinese
+00083>Versione con indice dei vocaboli (permette ricerche in Inglese)
+00084>Versione con indicizzazione dei caratteri (permette la visualizzazione dei caratteri di compunds)
+00085>Sto convertendo 
+00086>Lettura && analisi 
+00087>Input file: 
+00088>Codifica file non supportata ().
+00089>Impossibile romanizzare la linea seguente:
+00090>Attenzione
+00091>Costruzione tabella del dizionario
+00092>Ordinamento indici...
+00093>Il dizionario e' stato costruito.
+00094>Successo
+00095>Gestione dizionari
+00096>Dizionari:
+00097>Nome file:
+00098>Numero di parole:
+00099>Data di build:
+00100>Priorita':
+00101>Indice parole:
+00102>Indice caratteri:
+00103>Selezionare i dizionari per il gruppo 1
+00104>Gruppo 1
+00105>Selezionare i dizionari per il gruppo 2
+00106>Gruppo 2
+00107>Selezionare i dizionari per il gruppo 3
+00108>Gruppo 3
+00109>Usa il dizionario per gli esempi
+00110>Usa per gli esempi
+00111>Usa il dizionario per il popup tool e l'editor
+00112>Usa per popup/editor
+00113>Riaggiorna && rianalizza
+00114>Importa da EDICT
+00115>Presente
+00116>Assente
+00117>Lista caratteri
+00118>Nessun carattere trovato.
+00119>Cerca & cambia l'ordine
+00120>Cerca && ordina
+00121>Ordina (Ctrl-Alt-O)
+00122>Ordina
+00123>Dettagli (Ctrl-D)
+00124>Dettagli
+00125>Esempi
+00126>Mostra sequenza dei tratti
+00127>Stampa le Kanji cards (per memorizzazione) (Ctrl-F6)
+00128>Stampa carte
+00129>Trovato
+00130>Trovato
+00131> tradizionale
+00132> semplificato
+00133> caratteri
+00134>Kanji cards
+00135>Semplificato:
+00136>Tradizionale:
+00137>Carattere #
+00138>Imposta come appreso
+00139>Imposta come non appreso
+00140>Appreso
+00141>Comune
+00142>Raro
+00143>Usato in nomi
+00144>Giapponese e cinese
+00145>Solo Giapponese
+00146>Radicale
+00147>Conteggio tratti
+00148>Frequenza
+00149>Casuale
+00150>Funzionalita' non ancora implementata.
+00151>Mostra gli esempi nel dizionario dell'utente
+00152>UserDict
+00153>Mostra gli esempi nel dizionario
+00154>Dict.
+00155>Nessuna parola trovata.
+00156>Mostra solo gli esempi con il carattere iniziale
+00157>Solo con l'inizio
+00158>Mostra solo gli esempi classificati come popolari
+00159>Dettagli carattere
+00160>Radicale:
+00161>Inserisci il carattere nella clipboard
+00162>Conteggio tratti:
+00163>www.zhongwen.com - Informazioni etimologiche sul carattere.
+00164>www.csse.monash.edu.au/'jwb/wwwjdic - Server dizionari del WWWJDIC di Jim Breen
+00165>charts.unicode.org/unihan - Valore UniHan per questo carattere
+00166>www.ocrat.com - Ordine animato dei tratti
+00167>web.mit.edu/jpnet/ji - Pagina dati del sito KanjiProject
+00168>Mostra/Nascondi conteggio tratti (solo per giapponese Jouyou-kanji)
+00169>Ordina
+00170>Chiudi
+00171>Attacca / Stacca questa finestra nella finestra principale
+00172>Stacca
+00173>Attacca
+00174>Cerca Caratteri
+00175>Filtra per PinYin (lettura cinese) (Ctrl-I)
+00176>Filtra per lettura giapponese (Ctrl-Y)
+00177>Filtra per radicale (Ctrl-R)
+00178>Radicale
+00179>Filtra per definizione (significato) (Ctrl-M)
+00180>Definizione
+00181>Filtra per codice SKIP (vedi KANJIDIC per spiegazioni)
+00182>Mostra tutti i caratteri (Ctrl-N)
+00183>Tutti i filtri disattivati
+00184>Mostra solo i caratteri imparati
+00185>Appreso
+00186>Mostra solo i caratteri comuni
+00187>Comune
+00188>Mostra solo i caratteri nella clipboard
+00189>Contenuti clipboard
+00190>Filtra per conteggio tratti (puoi selezionare un gruppo, es. 1-6)
+00191>Tratto #
+00192>Filtra per Unicode / Nelson index / Halpern index
+00193>Altro
+00194>Filtra per grado Jouyou (grado scuola giapponese)
+00195>Lista...
+00196>Non-appresi
+00197>Ordina per
+00198>Indice per appresi
+00199>Ordine caratteri
+00200>Gestore visualizzatore
+00201>Visualizzazioni standard:
+00202>Percentuale di occupazione dello schermo:
+00203>In finestra
+00204>Completo
+00205>Ricerca Kanji
+00206>Appresi
+00207>Traduzione
+00208>Imposta visualizzazione standard
+00209>Salva visualizzazione 
+00210>Carica visualizzazione 
+00211>WaKan 1.65 - Programma per l'apprendimento di cinese e giapponese
+00212>Lista caratteri (Ctrl-F1)
+00213>Caratteri
+00214>Gestore vocabolari (Ctrl-F4)
+00215>Vocabolario
+00216>Dizionario (Ctrl-F2)
+00217>Dizionario
+00218>Modalita' cinese (F9)
+00219>Modalita' giapponese (F8)
+00220>Svuota clipboard
+00221>Editor di testo (Ctrl-F3)
+00222>Editor / Traduttore
+00223>Attiva/disattiva lo screen popup tool
+00224>Attiva/disattiva il WaKan popup tool
+00225>&Salva modifiche utente
+00226>&Annulla modifiche utente
+00227>S&tatistiche...
+00228>&Esci
+00229>&Lista caratteri
+00230>&Cerca
+00231>&Ordina
+00232>&Dettagli
+00233>&Esempi
+00234>Stam&pa carte...
+00235>&Dizionario parole
+00236>&Parole selezionate
+00237>&Caratteri nelle parole
+00238>&Informazioni
+00239>&Aggiungi al vocabolario
+00240>&Editor && traduttore
+00241>Vocabolario &lista
+00242>&Aggiungi parola
+00243>Lista impo&stazioni
+00244>&Categoria
+00245>&Dettagli parola
+00246>Stam&pa lista...
+00247>Generatore &Lista...
+00248>Impo&stazioni...
+00249>Gestione &Dizionari...
+00250>Gestione &Visualizzazioni...
+00251>&In finestra
+00252>&Completo
+00253>&Char. &search
+00254>&Appreso
+00255>&Traduzione
+00256>Finestra &bordi
+00257>Contenuti &Help...
+00258>&Info...
+00259>Modo &Giapponese
+00260>Modo &Cinese
+00261>Nuovo
+00262>Apri...
+00263>Salva
+00264>Salva come...
+00265>Taglia
+00266>Copia
+00267>Incolla
+00268>Seleziona tutto
+00269>Modalita' Carattere
+00270>Modalita' Kana
+00271>Modalita' ASCII
+00272>Visualizza lettura
+00273>Visualizza significato
+00274>Annulla traduzione
+00275>Auto-completa traduzione
+00276>Imposta traduzione
+00277>Stampa...
+00278>Visualizza tutto
+00279>Solo appresi
+00280>Solo comuni
+00281>Solo contenuto della clipboard
+00282>Cerca per PinYin
+00283>Cerca per Yomi
+00284>Cerca per radicale...
+00285>Aggiungi alla clipboard
+00286>Dettaglio completo
+00287>Giapponese/Cinese -> Inglese
+00288>Inglese -> Giapponese/Cinese
+00289>Cerca nella clipboard
+00290>Cerca parola esatta
+00291>Cerca per inizio parola
+00292>Cerca per fine parola
+00293>Finestra carattere
+00294>Imposta come (non)appreso
+00295>Cerca per significato
+00296>Finestra editor
+00297>Grande
+00298>Lista caratteri
+00299>Editor di testo
+00300>Traduttore di testo
+00301>Cerca parole INFLECTED
+00302>Auto-cerca mentre scrivi
+00303>Usa i dizionari nel gruppo 1
+00304>Usa i dizionari nel gruppo 2
+00305>Usa i dizionari nel gruppo 3
+00306>Pannello esempi
+00307>Pannello vocabolario
+00308>Pannello filtri
+00309>Usa colori
+00310>&Database
+00311>&Tools
+00312>&Caratteri
+00313>D&izionario
+00314>Gruppo dizionari utilizzato
+00315>Esempi
+00316>Salva trascrizione kana...
+00317>Traduzione
+00318>&Vocabolario
+00319>&Aggiungi parola
+00320>&Aiuto
+00321>Impossibile registrare il dizionario
+00322>Impossibile costruire il dizionario
+00323>Caricamento dizionario
+00324>Caricamento dizionario
+00325>Impossibile caricare il dizionario
+00326>Non e' raccomandato usare il dizionario vecchio stile JALET.DIC.
+00327+Nessun dizionario giapponese valido trovato.
+00327>Scaricare i file .DIC in giapponese dal sito di WAKAN.
+00328+Nessun dizionario cinese valido trovato.
+00328>Scaricare i file .DIC in cinese dal sito di WAKAN.
+00329>Giapponese ->Inglese
+00330>Inglese -> Giapponese
+00331>Cinese ->Inglese
+00332>Inglese -> Cinese
+00333>impossibile caricare il file di esempi EXAMPLES_.PKG.
+00334+Impossibile caricare il layout. Versione obsoleta.
+00334>Caricamento alternativo del layout standard.
+00335>Caricamento layout
+00336>I layout avanzati richiedono una risoluzione minima di 1024x768.
+00337>Risoluzione troppo bassa.
+00338+Il file WAKAN.USR ha una struttra vecchia.
+00338+Deve essere convertito.
+00338+Si consiglia di eseguire una copia di sicurezza prima di procedere alla conversione.
+00338>Vuoi convertire ora?
+00339>Struttura vecchia
+00340>Dati utenti cambiati.Vuoi salvare i cambiamenti?
+00341>Uscita applicazione
+00342>Dati troppo grossi.
+00343+Questa e' una beta release pubblica di WAKAN.
+00343+Questa versione non e' liberamente distribuibile, ma la versione definitiva lo sara'. L'utente si assume i rischi derivanti dall'utilizzo di questo software, non si assumono responsabilita' per il comportamento del programma.
+00343>Pregasi inviare commenti a dreamfly@centrum.cz
+00344>Versione Beta pubblica
+00345+Questa versione di WAKAN richiede una risoluzione minima di 800x600.
+00345>Per favore, impostare la risoluzione corretta e riavviare l'applicazione.
+00346+Il file WAKAN.CHR non e' stato trovato.
+00346+Questo file e' richiesto per l'esecuzione dell'applicazione.
+00346+Scaricare il file dal sito web di WAKAN.
+00346>L'applicazione verra' ora terminata.
+00347+File WAKAN.CFG mancante.
+00347+Questo file contiene importanti parametri di configurazione ed e' necessario per l'esecuzione dell'applicazione.
+00347>L'applicazione verra' ora terminata.
+00348+Nessun font dei set di caratteri richiesti e' stato trovato sul computer:
+00348+Devono essere presenti almeno un font per ogni set per poter eseguire l'applicazione.
+00348+Si raccomanda di installare i font Ms Mincho, MS Gothic, SimSun e MingLiU.
+00348+Questi font vengono installati in windows automaticamente all'installazione del supporto per la lettura delle lingua gaipponese e cinese.
+00348>Si prega di installare i font richiesti e riavviare l'applicazione.
+00349+Stai usando Wakan per la prima volta.
+00349+WaKan provera' ora a localizzare e configurare i font adatti.
+00349>Puoi riavviare questo processo selezionando "Seleziona i font raccomandati" nelle impostazioni
+00350>Autorilevamento Font
+00351+Autorilevamento Font fallito. Alcuni caratteri potrebbero non essere visualizzati correttamente.
+00351>Vuoi continuare?
+00352+Impossibile caricare il file di configurazione principale.
+00352+Il file WAKAN.CFG e' corrotto.
+00352>L' applicazione verra' ora terminata.
+00353+Alcuni font standard non sono stati rilevati sul sistema. Prego riselezionare tutti i font nelle prossime schermate.I font mancanti sono preceduti da !.
+00353>L'applicazione non puo' procedere fin quando tutti i font non sono stati selezionati.
+00354+WAKAN.CHR ha una struttura vecchia. Si prega di scaricare una versione aggiornata.
+00354>L'applicazione verra' ora terminata.
+00355+WAKAN.CHR ha una struttura nuova. Si prega di scaricare una versione aggiornata di WAKAN.EXE.
+00355>L'applicazione verra' ora terminata.
+00356+Impossibile caricare il file dizionario principale.
+00356+Il file WAKAN.CHR e' corrotto.
+00356>L'applicazione verra' ora terminata.
+00357+Il file WAKAN.RAD non e' stato trovato.
+00357>La ricerca avanzata dei radicali giapponesi verra' disabilitata.
+00358+Impossibile caricare il file dei radicali giapponesi.
+00358+Il file WAKAN.RAD e' corrotto.
+00358>L'applicazione verra' ora terminata.
+00359+Il file WAKAN.SOD non e' stato trovato.
+00359>La visualizzazione dell'ordine dei tratti per il Giapponese verra' disabilitata.
+00360+Impossibile caricare il file per l'ordine dei tratti Giapponese.
+00360+Il file WAKAN.SOD e' corrotto.
+00360>L'applicazione verra' ora terminata.
+00361+Impossibile caricare il file dati utente.
+00361+Il file WAKAN.USR e' corrotto.
+00361+Se elimini questo file ne verra' creato uno nuovo.
+00361>L'applicazione verra' ora terminata.
+00362+Impossibile creare il file dati utente WAKAN.USR.
+00362+Prova ad eseguire questo programma in una cartella che non sia di sola lettura.
+00362>L'applicazione verra' ora terminata.
+00363>Il file Help e' in sviluppo. Le informazioni potrebbero essere imprecise.
+00364>Avviso
+00365>Il file Help e' obsoleto. Si prega di scaricare un nuovo file di help dal sito di Wakan:wakan.manga.cz.
+00366>Impossibile trovare il file WAKAN.CHM.
+00367>Impossibile trovare il file WAKANH.DLL.
+00368+!!QUESTA FUNZIONALITA' E' SPERIMENTALE!!
+00368+ATTENZIONE: Il popup tool a schermo e' attualmente pesantemente sotto test. Siccome esso installa un'ampia gamma di DLL sei avvisato di salvare tutto il tuo lavoro prima di continuare. Si prega di riportare all'autore qualunque qualunque instabilita'a di sistema rilevata.
+00368>Vuoi continuare?
+00369>Non dimenticare di riempire la pronuncia kana o utilizza la funzione di auto-completamento prima di utilizzare questa funzionalita'.
+00370>Nuova categoria
+00371>Nome:
+00372>Tipo:
+00373>Lezione:
+00374>Gruppo:
+00375>Temporanea:
+00376>Anteprima di stampa
+00377>Prima pagina
+00378>Pagina precedente
+00379>Pagina successiva
+00380>Ultima pagina
+00381>Impostazioni di stampa
+00382>Stampa
+00383>Zoom in
+00384>Visualizzazione completa
+00385>Zoom out
+00386>Impostazioni pagina
+00387>Lista radicali
+00388>Metodo di filtraggio multi-radicale: seleziona ogni radicale sospetto cliccandolo con il mouse
+00389>Metodo di filtraggio per porzioni di caratteri: Seleziona tutte le parti che sono presenti in un carattere
+00390>Imposta filtro
+00391>Varianti di visualizzazione
+00392>Visualizza i radicali appresi in blu
+00393>Visualizza i radicali non-comuni in grigio
+00394>Metodo di ricerca
+00395>Porzioni di caratteri
+00396>Radicali classici
+00397>Impostazioni
+00398>Generale
+00399>Altezza dei font nella griglia del dizionario:
+00400>minuti
+00401>Salva informazioni statistiche sul disco, il nome del file viene generato in base alla data in modo che sia possibile verificare i propri progressi
+00402>Salva le statistiche sul disco (cartella STAT)
+00403>Mostra le parole con i kanji non-appresi con colori differenti
+00404>Differenzia le parole con caratteri sconosciuti
+00405>Colori: verde - masterizzato, giallo - imparato, ciano - non imparato, rosso - problematico
+00406>Mostra lo stato di conoscenza delle parole differenziando il colore di sfondo
+00407>Salva automaticamente i dati utente all'uscita
+00408>Carica i dizionari a richiesta
+00409>Griglia parole multi-linea
+00410>Salva automaticaamente il database utente ogni
+00411>Realizza copia del file utente nella cartella BACKCUP ogni giorno
+00412>Romanizzazione
+00413>Romanizzazione del Giapponese
+00414>Test Romanizzazione:
+00415>Giapponese:
+00416>Inglese:
+00417>Ceco:
+00418>Seleziona il sistema di romanizzazione per l'input e per la visualizzazione.
+00419>Sistema di romanizzazione
+00420>Kunreishiki romaji (giapponese)
+00421>Hepburn (inglese)
+00422>Ceco
+00423>Mostra la pronuncia in
+00424>Hiragana / Katakana
+00425>Romaji
+00426>Romanizzazione del cinese
+00427>Radicale visualizzato:
+00428>Dimensione carattere nella griglia
+00429>Piccolo
+00430>Medio
+00431>Grande
+00432>Seleziona quali caratteri cinesi vengono visualizzati
+00433>Mostra caratteri cinesi
+00434>Solo tradizionale (Big5)
+00435>Solo semplificato (GB2312)
+00436>Tutti i caratteri (Unicode)
+00437>Mostra il numero di tratti nella griglia
+00438>Giapponese
+00439>Coreano
+00440>Usa il font della griglia per la visualizzazione dell'ordine dei tratti
+00441>File dizionario non utilizzato
+00442>Cerca ordine dei risultati
+00443>Preferenza alle parole nel dizionario utente
+00444>Preferenza a nomi e verbi
+00445>Preferenza alle parole educate
+00446>Preferenza alle parole popolari (identificate da "pop")
+00447>Sostituisci i kanji con i kana per le parole segnate come "kana"
+00448>Visulaizza solo i risultati che riempono una pagina in modalita' "Auto"
+00449>Vai automaticamente al pannello Esempi
+00450>Font
+00451>Romanizzazione e font inglesi:
+00452>Scegli:
+00453>Font per il Giapponese:
+00454>Font per caratteri nella griglia:
+00455>Font per caratteri grossi:
+00456>Font per testo piccolo:
+00457>Font per il Cinese:
+00458>Font Big5 per i caratteri tradizionali nella griglia:
+00460>Font Unicode completo:
+00461>GB2312 font per caratteri semplificati nella griglia:
+00462>GB2312 font per caratteri grandi semplificati nella griglia:
+00463>Assicurati che i font Big5 and GB2312 siano lo stesso o appaiono simili.
+00464>Seleziona i font raccomandati
+00465>Stampa lista parole
+00466>Numero di linee su pagina quadrata
+00467>Stampa linee orizzontali
+00468>Stampa linee  verticali
+00469>Varia i colori
+00470>Non stampare i kanji non imparati
+00471>Colonne
+00472>Impostazioni utente:
+00473>Pronuncia            |Significato
+00474>Scritto              |Significato
+00475>Pronuncia |Scritto   |Significato
+00476>Scritto   |Pronuncia |Significato
+00477>Romaji    |Kana      |Significato
+00478>Pronuncia1           |Pronuncia2
+00479>Scritto1             |Scritto2
+00480>Significato1         |Significato2
+00481>Pronuncia1|Pronuncia2|Pronuncia3|Pronuncia4
+00482>Scritto1  |Scritto2  |Scritto3  |Scritto4
+00483>Significato1 |Significato2      |Significato3 |Significato4
+00484>Pronuncia1   |Scritto1          |Pronuncia2   |Scritto2
+00485>Pronuncia1   |Significato1      |Pronuncia2   |Significato2
+00486>Scritto1     |Significato1      |Scritto2     |Significato2
+00487>Impostazioni Utente
+00488>Stampa schede caratteri
+00489>Numero di caratteri verticali per pagina quadrata:
+00490>Spazio per esempi (in caratteri):
+00491>Numero verticale di esempi:
+00492>Font calligrafia:
+00493>Stampa esempi
+00494>Stampa radicale
+00495>Stampa alternate form
+00496>Stampa linee esterne
+00497>Stampa letture
+00498>Stampa linee interne
+00499>Stampa verticalmente (da destra a sinistra)
+00500>Lascia spazio tra le colonne
+00501>Stampa definizione
+00502>Stampa conteggio tratti
+00503>Stampa ordine tratti
+00504>Manutenzione database
+00505>Controllo degli indici del database dei dizionari
+00506>Esporta database utente in file di testo delimitato
+00507>Importa database utente da file di testo delimitato
+00508>Controllo categorie dizionario utente
+00509>Mostra statistiche allocazione memoria
+00510>Numero di linee riservate al significato
+00511>Stampa
+00512>Numero di linee per pagina quadrata
+00513>Mostra significato
+00514>Non utilizzare i colori
+00515>Stampa verticalmente in colonne
+00516>Mostra linee
+00517>Non mostratre il significato per le parole imparate
+00518>Non cercare le particelle
+00519>Non mostrare la pronucia dei kanji imparati
+00520>Mostra la trascrizione in hiragana sopra i segni katakana
+00521>Non tradurre parole in solo hiragana
+00522>Mostra le parole con le definizioni date dall'utente in bold
+00523>Lascia spazio tra le linee
+00524>Interrompi linee solo a inizio/fine parola
+00525>Dimensione doppia
+00526>Mostra i caratteri non Giapponesi in grigio
+00527>Mostra suggerimenti per l'editor
+00528>Mostra significato per i suggerimenti
+00529>Lascia lo spazio anche quando la pronuncia e' disabilitata
+00530>Dettagli carattere
+00531>Oggetti visualizzati:
+00532>Muovi su
+00533>Muovi giu'
+00534>Aggiungi...
+00535>Modifica...
+00536>Cancella
+00537>Ripristina i default
+00538>Popup tool
+00539>Popup delay (x100 ms):
+00540>Intervallo  di analisi del testo (pixels):
+00541>Sinistra
+00542>Destra
+00543>Numero massimo di oggetti per dizionari:
+00544>Fattore di dimensione per le carte caratteri:
+00545>Numero di caratteri riservati per i compound su una scheda (influenza la larghezza dei popup):
+00546>Minimo:
+00547>Massimo:
+00548>Mostra traduzione per testo Giapponese/Cinese
+00549>Mostra traduzione per testo Inglese (solo a schermo)
+00550>Mostra dettagli carattere
+00551>Colori
+00552>Categoria
+00553>Cambia
+00554>Ripristina i default
+00555>Imposta tutti i valori ai predefiniti
+00556>Griglia parole
+00557>Marcatori parole
+00558>Editor & Traduttore
+00559>Popup tool
+00560>Non utilizzare i colori della lista caratteri, utilizza i colori di windows
+00561>Non utilizzare i colori nell'editor, utilizza i colori di windows
+00562>Colori: nero - comune, grigio - non comune, blu - appreso, verde - solo per i nomi
+00563>Non utilizzare i colori nella griglia vocaboli, utilizza i colori di windows
+00564+Accertarsi che il font selezionato sia un font unicode con "CJK Unified Ideographs" completo
+00564>MingLiu e' un esempio di questo tipo di font.
+00565>Quando si seleziona un font, accertarsi che sia realmente un font cinese simplificato. Alcuni font supportano lo standard GB2312 ma anziche' mostrare i caratteri semplificati mostrano quelli tradizionali. Questi font potrebbero visualizzare caratteri impropri in questo programma. E' possibile identificare correttamente i font idonei molto facilmente. Nella maschera di selezione dei font osservare il primo carattere. Se non assomiglia ad una freccia verso l'alto bisogna selezionare un font differente.
+00566>Avviso
+00567>Alcuni font potrebbero non visualizzare alcuni caratteri. Se alcuni caratteri non vengono visualizzati correttamente o sembrano diversi, selezionare un altro font.
+00568>L'esportazione e' terminata.
+00569>Gli indici sono corretti.
+00570>Controllo indici.
+00571>Indici danneggiati. Sostituire il file dizionario WAKAN.CHR.
+00572+Questa azione sostituisce tutti i dati nel database utente.
+00572+Puo' occorrere parecchio tempo.
+00572>Vuoi continuare?
+00573>Avviso
+00574>L'importazione e' terminata.
+00575+Questa funzione verifica se tutte le parole nel dizionario utente
+00575+sono in un gruppo di categoria e se sono almeno in una lezione.
+00575>Vuoi continuare?
+00576>Controllo categorie
+00577>Nessun errore.
+00578>I seguenti font raccomandati non sono stati trovati sul sistema:
+00579+E' stata trovata una sostituzione ragionevole, comunque si consiglia l'installazione dei font consigliati e il riavvio dell'applicazione e della routine di autorilevamento font
+00580+Nessuna valida sostituzione trovata per i font consigliati, il programma probabilmente visualizzera' erroneamente vari caratteri.
+00580>L'installazione dei font raccomandati e il riavvio della routine di auto-rilevamento font e' ALTAMENTE consigliata.
+00581+Questi font possono essere reperiti nei seguenti prodotti Microsoft(R)
+00581+1. Microsoft(R) Windows(R) XP - Selezionare "Installa font asiatici" nelle impostazioni per la lingua nel pannello di controllo.
+00581+2. Microsoft(R) Internet Explorer - Installare "supporto per Giapponese, Cinese tradizionale e Cinese simplificato
+00581>3. Microsoft(R) Office 2000/XP - Installare i font per Giapponese, Cinese tradizionale e Cinese simplificato.
+00582>font mancanti
+00583+Congratulazioni!
+00583>Tutti i font consigliati sono stati trovati ed installati sul tuo computer.
+00584+Statistiche
+00585>
+00586>Programma dizionario (WAKAN.CHR)
+00587>Database utente (WAKAN.USR)
+00588>Data dizionario:
+00589>versione KANJIDIC :
+00590>versione UNIHAN :
+00591>Database caratteri cinesi:
+00592>Caratteri Giapponesi:
+00593>Tutti i caratteri:
+00594>Voci di vocabolario:
+00595>Parole apprese:
+00596>Parole masterizzate:
+00597>Parole problematiche:
+00598>Numero di parole katakana:
+00599>Number di kanji nelle parole:
+00600>Kanji appresi:
+00601>Kanji di base non appresi:
+00602>Parole non comuni:
+00603>Kanji non di base appresi:
+00604>Kanji non di base nelle parole:
+00605>Caratteri solo-cinesi appresi:
+00606>Parole con scrittura conosciuta:
+00607>Radicali appresi:
+00608>Ordine tratti
+00609>Non disponibile
+00610>Editor di testo / Traduttore
+00611>Apri (Ctrl-O)
+00612>Salva (Ctrl-S)
+00613>Nuovo (Ctrl-N)
+00614>Taglia (Ctrl-X)
+00615>Modalita'ASCII (Ctrl-P)
+00616>Modalita' Carattere (Ctrl-Q)
+00617>Modalita' Kana (Ctrl-W)
+00618>Visualizza pronuncia (Ctrl-H)
+00619>Visualizza significato (Ctrl-J)
+00620>Annulla traduzione(Ctrl-B)
+00621>Completamento automatico traduzione (Ctrl-F)
+00622>Imposta traduzione (Ctrl-T)
+00623>Stampa (Ctrl-F7)
+00624>Copia (Ctrl-C)
+00625>Incolla (Ctrl-V)
+00626><SENZANOME>
+00627>Controlli: SPAZIO - converti in kanji, ENTER - lascia in kana, [ - valore precedente, ] - valore successivo
+00628>Mostra il dizionario come parte di questa finestra
+00629>Mostra detaglio carattere (Ctrl-D)
+00630>Dettaglio carattere
+00631>Mostra lo stato di traduzione con colori
+00632>Scritto
+00633>Aggiunto / Appreso
+00634>Categorie
+00635>Le liste dei kanji conosciuti hanno una struttura obsoleta e non verranno caricate.
+00636>Nome font
+00637>Set caratteri
+00638>Problematico
+00639>Non Appreso
+00640>Appreso
+00641>Masterizzato
+00642>Ricerca dizionario
+00643>Cerca per pronuncia Giapponese (F2)
+00644>J -> E
+00645>Cerca per significato inglese (F3)
+00646>&E -> J
+00647>Cerca tra i kanji nella clipboard (F4)
+00648>Parola selezionata (Ctrl-Alt-F)
+00649>Parola selezionata
+00650>Caratteri nella parola
+00651>Caratteri nella parola
+00652>Informazioni (Ctrl-Alt-I)
+00653>Informazioni sulla parola
+00654>Editor && traduttore  (Ctrl-Alt-E)
+00655>Editor / traduttore
+00656>Cerca parola esatta (F5)
+00657>Cerca l'inizio (F6)
+00658>Cerca la fine (F7)
+00659>Inserisci parola nella clipboard
+00660>Clipboard
+00661>Cerca per parole inflected / verbi coniugati
+00662>Auto-anteprima durante digitazione (ricerca completa con tasto freccia)
+00663>Usa i dizionari nel gruppo 1 (Ctrl-1)
+00664>Usa i dizionari nel gruppo 2 (Ctrl-2)
+00665>Usa i dizionari nel gruppo 3 (Ctrl-3)
+00666>Tutto visibile
+00667>Inserisci parola nel vocabolario
+00668>Il risultato di ricerca eccede una pagina, clicca per visualizzare tutto
+00669>Cerca
+00670>Tutto
+00671>Risultati ricerca (parziale)
+00672>Risultati ricerca
+00673>per pronuncia
+00674>per significato
+00675>per scrittura (clipboard)
+00676>per scrittura (testo)
+00677>Non nel vocabolario
+00678><SENZANOME>
+00679>Questo non e' un file UTF-8 o JTT valido.
+00680+Questo file JTT e' stato creato utilizzando una versione di WAKAN.CHR diversa. La traduzione non puo' essere caricata.
+00680>Vuoi continuare?
+00681+Questo file JTT e' stato creato con una vecchia versione di WAKAN.
+00681>E' incompatibile con la versione attuale.
+00682+Nessun blocco selezionato. Vuoi genereare la traduzione per l'intero documento?
+00682>Questa operazione puo' richiedere parecchio tempo.
+00683>Conferma
+00684>Traduttore
+00685>Traduzione in corso...
+00686>Testo tradotto
+00687>Il documento e' stato modificato. Vuoi salvarlo?
+00688>Database degli esempi non trovato. Scaricalo dal sito web di  WaKan.
+00689>Nessun esempio disponibile.
+00690>Scritto (dalla clipboard):
+00691>Significato:
+00692>Dettaglio parole del vocabolario
+00693>Stato:
+00694>Creata:
+00695>Lista di apprendimento:
+00696>Appreso:
+00697>Masterizzato:
+00698>Muovi in alto nella categoria
+00699>Muovi in basso nella categoria
+00700>Elimina questa parola
+00701>Elimina
+00702>Imposta come
+00703>Masterizzato
+00704>Impostazioni vocabolario:
+00705>Categorie:
+00706>Ordine categorie
+00707>Pronunciato
+00708>Scritto
+00709>Significato
+00710>Aggiunto in data
+00711>Stato
+00712>Filtro
+00713>Mostra parole non apprese
+00714>Mostra parole apprese
+00715>Mostra parole masterizzate
+00716>Mostra parole problematiche
+00717>Aggiungi parola nel vocabolario
+00718>Visualizza traduzione
+00719>Trans
+00720>Visualizza esempi con font piccoli
+00721>Piccolo
+00722>Visualizza esempi con font grandi
+00723>Grande
+00724>Esempio precedente
+00725>Esempio successivo
+00726>Clip
+00727>Copia esempio nella clipboard
+00728>Questo
+00729>Copia tutti gli esempi nella clipboard
+00730>Ordine casuale degli esempi
+00731>In costruzione.Verra' implementato nella prossima release di Wakan.
+00732>Dettaglio parola:
+00733>Categorie:
+00734>Kanji / radicale:
+00735>Wizard lista di apprendimento
+00736>Benvenuto
+00737+Benvenuto al wizard lista di apprendimento.
+00737+Questo wizard permette di selezionare le parole per l'apprendimento. Puoi verificare quali parole conosci e stampare quelle che non conosci. Questo metodo e' ideale per imaparare nuove parole.
+00737+Usando questo wizard puoi eseguire le tre seguenti operazioni:
+00737+1) Lasciare che il wizard selezioni le parole che sono adatte all'apprendimento ed al miglioramento della pronuncia con la ripetizione (questo processo e' casuale ma puoi modificare i criteri)
+00737+2) Controllare se conosci le parole selezionate (le parole che conosci vengono automaticamente considerate come apprese)
+00737+3) Satmpare o visualizzare le parole che non conosci.
+00737>Il passo 2 ed il passo tre sono opzionali.
+00738>Selezione parola
+00739>Numero di parole selezionate:
+00740>Numero di parole da  cui verra' selezionata la lista:
+00741>Seleziona parole da:
+00742>Lista visualizzata
+00743>Tutto il vocabolario
+00744>Metodo di selezione
+00745>Selezione alcune parole valide per l'apprendimento
+00746>Seleziona alcune parole completamente a caso
+00747>Seleziona tutte le parole
+00748>Adatta alla pagina
+00749>Ordine casuale delle parole
+00750>Selezione criteri
+00751>Seleziona quali parole preferisci siano presenti nella lista e quanto frequentemente le preferisci.
+00752>Stato apprendimento
+00753>Non appresa- frequentemente 
+00754>Non appresa- mediamente
+00755>Appresa - mediamente
+00756>Appresa - frequentemente 
+00757>Bilanciamento
+00758>Non importa
+00759>Data aggiunta parola
+00760>Vecchie - frequentemente 
+00761>Vecchie - mediamente
+00762>Nuove - mediamente
+00763>Nuove - frequentemente 
+00764>Parole per frequenza e popolarita'
+00765>Semplice - frequentemente 
+00766>Semplice - mediamente
+00767>Complesso - mediamente
+00768>Complesso - frequentemente 
+00769>Frequenza delle inclusioni nella lista di apprendimento
+00770>Raramente - frequentemente 
+00771>Raramente - mediamente
+00772>Spesso - mediamente
+00773>Spesso - frequentemente 
+00774>Preferenza ai vocaboli problematici
+00775>Scegli solo vocaboli masterizzati
+00776>Default per apprendimento
+00777>Default per ripetizione
+00778>Statistiche lista
+00779>Una nuova lista di apprendimento e' stata creata. Contiene queste caratteristiche dei vocaboli.
+00780>Ricostruisci lista vocaboli
+00781>Passo successivo
+00782>Controlla se ogni parola e' conoscitua nella nuova lista generata
+00783>Salta i test di apprendimento e continua alla lista di stampa
+00784>Impostazioni Test di apprendimento
+00785>Visualizza
+00786>Significato
+00787>Pronuncia && scritto
+00788>Pronuncia && significato
+00789>Scritto && significato
+00790>50% Pronuncia, 50% scritto
+00791>66% Pronuncia, 33% scritto
+00792>33% Pronuncia, 33% scritto, 33% significato
+00793>25% Pronuncia, 25% scritto, 50% significato
+00794>50% Pronuncia, 25% scritto, 25% significato
+00795>Test di apprendimento
+00796>Controlli Test
+00797>Risultati Test:
+00798>Lo stato verra' cambiato in:
+00799>(&Z) Sconosciuta
+00800>(&X) Conosciuta
+00801>(&C) Conosciuta a fondo
+00802>(SPAZIO) Mostra parola
+00803>Risultati test di apprendimento
+00804>Nessun cambiamento:
+00805>Imparata -> Problematica:
+00806>Masterdizzata -> Problematica:
+00807>Masterdizzata -> Non Appresa:
+00808>Problematica -> Non Appresa:
+00809>Problematica -> Appresa:
+00810>Non Appresa -> Appresa:
+00811>Non Appresa -> Masterizzata:
+00812>Imparata -> Masterizzata:
+00813>Prossima azione
+00814>Aggiorna lo stato delle parole in base ai risultati del test e procedi alla fase successiva
+00815>Ignora i risultati di test e procedi alla fase successiva
+00817>Nome Categoria:
+00818>Aggiorna le statistiche della lista di apprendimento per ogni parola
+00819>Rimuovi dalla lista di apprendimento
+00820>Niente
+00821>Tutte le parole masterizzate
+00822>Tutte le parole imparate
+00823>Stampa lista di apprendimento
+00824>Salva lista di apprendimento come nuova categoria e visualizzala
+00825>Continua
+00826>Indietro
+00827>Finisci
+00828>Lista vocabolario
+00829>Aggiungi parola
+00830>Impostazioni lista
+00831>Categorie (Ctrl-Alt-T)
+00832>Dettagli vocabolo
+00833>Esporta vocabolario
+00834>Importa vocabolario
+00835>Stampa lista vocabolario (Ctrl-F8)
+00836>Caratteri raccomandati per l'apprendimento di base sul vocabolario corrente
+00837>Kanji raccomandati
+00838>Lista di apprendimento generata automaticamente
+00839>Lista di apprendimento
+00840>Pronuncia non compilata. Impossibile aggiungere la parola.
+00841>Significato non compilato.mpossibile aggiungere la parola.
+00842>Categoria non compilata. Impossibile aggiungere la parola.
+00843>Questa parola e' gia' presente nel vocabolario e nella categoria.
+00844>La nuova parola e' stata importata con sucesso nel vocabolario.
+00845>Successo
+00846>La parola e' stata aggiunta in una nuova categoria.
+00847>Questo file non e' una lista di vocaboli per wakan.
+00848>Questa versione del file di lista parole non e' supportata.
+00849>Lista di parole importata (000000 parole importate - 000000 parole nuove)...
+00850>Lista di parole importata ( parole importate -  parole nuove)...
+00851>Lista di parole importata
+00852>Vuoi veramente eliminare questa parola?
+00853>Conferma
+00854>Presente
+00855>Assente
+00856>Raccomandazione caratteri
+00857>Vuoi veramente eliminare la categoria e tutti e icollegamenti dei caratteri inclusi in essa?
+00858>Numero di parole non valido (deve essere compreso tra 1 e 500).
+00859>Il numero di parole nella lista visualizzata deve essere almeno tre volte piu' grande .
+00860>Creazione lista avanzamento conoscenza...
+00861>Lista di avanzamento conoscenza
+00862>Il numero di parole inserite deve essere almeno il doppio piu' grande delle parole selezionate.
+00863>Il numero di parole inserite non puo' essere inferiore al numero di parole selezionate.
+00864>La lista di input non puo' essere vuota.
+00865>La lista generata verra' perduta. Vuoi continuare?
+00866>I dati di test attuali verranno perduti. Vuoi continuare?
+00867>Seleziona il font
+#VERS>1.51
+00868>Strumento per imparare il Giapponese ed il Cinese
+00869>Clip
+00870>Mostra
+00871>Aggiungi
+00872>Repl
+00873>Dizionario
+00874>Carattere
+00875>Font di visualizzazione sequenza tratti
+00876>Visualizza scrittura solo se se tutti i caratteri sono imparati
+#VERS>1.52
+#VERS>1.55
+00877>Non ordinato
+00878>Beg.
+00879>Categorie:
+00880>Deseleziona tutte le categorie
+00881>Aggiungi categoria
+00882>Vuoi veramente eliminare la categoria e tutti i collegamenti dei caratteri inclusi in essa?
+00883>Modalita' caratteri cinesi && conversione caratteri
+00884>Visualizza trascrizione sopra i kana
+00885>Attenzione
+00886>La categoria non e' stata rimossa.
+00887>Annullato
