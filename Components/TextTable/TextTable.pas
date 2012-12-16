@@ -1094,6 +1094,8 @@ begin
     value := uppercase(value);
   end;
 
+  idx := RecCount+1; //if there are no records this'll be used
+
  //Initiate binary search
   l:=0;
   r:=reccount-1;
@@ -1714,10 +1716,10 @@ var idx: integer;
 begin
   Result := Table.LocateRecord(seek, value, number, idx);
   cur := idx;
-  if idx>=0 then
+  if (idx>=0) and (idx<Table.RecordCount) then
     tcur := Table.TransOrder(idx, seek.ind_i)
   else
-    tcur := -1;
+    tcur := Table.RecordCount; //-1 is not detected as EOF
 end;
 
 

@@ -32,10 +32,7 @@ procedure AnnotShowMedia(kanji,kana:string);
 implementation
 uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBConvert, JWBMenu;
 
-//TODO: Issue 38.
-//TODO: Convert to Unicode
-procedure RebuildAnnotations;
-procedure WriteAnnotPackage;
+procedure WriteAnnotPackage(tempDir: string);
 begin
   PKGWriteForm.PKGWriteCmd('NotShow');
   PKGWriteForm.PKGWriteCmd('PKGFileName annotate.pkg');
@@ -55,21 +52,25 @@ begin
   PKGWriteForm.PKGWriteCmd('CRCMode 0');
   PKGWriteForm.PKGWriteCmd('PackMode 0');
   PKGWriteForm.PKGWriteCmd('CryptCode 453267');
-  PKGWriteForm.PKGWriteCmd('Include annot');
+  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
   PKGWriteForm.PKGWriteCmd('Finish');
 end;
-var t:textfile;
-    chk,nchk:TStringList;
-    s:string;
-    sr:TSearchRec;
-    bld:boolean;
-    pd:TSMPromptForm;
-    ps:TPackageSource;
-    tt:TTextTable;
-    ftp:byte;
-    moded:boolean;
-    curt,curd:string;
-    dd:string;
+
+//TODO: Convert to Unicode
+procedure RebuildAnnotations;
+var tempDir: string;
+  t:textfile;
+  chk,nchk:TStringList;
+  s:string;
+  sr:TSearchRec;
+  bld:boolean;
+  pd:TSMPromptForm;
+  ps:TPackageSource;
+  tt:TTextTable;
+  ftp:byte;
+  moded:boolean;
+  curt,curd:string;
+  dd:string;
 begin
   chk:=TStringList.Create;
   nchk:=TStringList.Create;
@@ -85,17 +86,17 @@ begin
   nchk.SaveToFile('ANNOTATE.CHK');
   chk.Free;
   nchk.Free;
+
   if not FileExists('ANNOTATE.PKG') then bld:=true;
   if bld then
   begin
     pd:=SMMessageDlg(
       _l('^eAnnotations'),
       _l('^eRebuilding annotations...'));
-    {$I-}
-    mkdir('annot');
-    {$I+}
-    ioresult;
-    assignfile(t,'annot\Annot.info');
+
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
+    assignfile(t,tempDir+'\Annot.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -110,8 +111,9 @@ begin
     writeln(t,'Tag');
     writeln(t,'$CREATE');
     closefile(t);
-    WriteAnnotPackage;
-    DeleteFile('annot\Annot.Info');
+    WriteAnnotPackage(tempDir);
+    DeleteDirectory(tempDir);
+
     ps:=TPackageSource.Create('annotate.pkg',621030,587135,453267);
     tt:=TTextTable.Create(ps,'annot',false,false);
     tt.Nocommitting:=true;
@@ -142,16 +144,12 @@ begin
     until FindNext(sr)<>0;
     tt.Nocommitting:=false;
     tt.ReIndex;
-    tt.WriteTable('annot\Annot',true);
-    WriteAnnotPackage;
-{    DeleteFile('annot\Annot.info');
-    DeleteFile('annot\Annot.data');
-    DeleteFile('annot\Annot.struct');
-    DeleteFile('annot\Annot.index');}
-    {$I-}
-    rmdir('annot');
-    {$I+}
-    ioresult;
+
+    ForceDirectories(tempDir);
+    tt.WriteTable(tempDir+'\Annot',true);
+    WriteAnnotPackage(tempDir);
+    DeleteDirectory(tempDir);
+
     pd.Free;
   end;
 end;
