@@ -71,7 +71,7 @@ function FixDuplicateCategories(): boolean;
 
 
 implementation
-uses Forms, Windows, JWBMenu, JWBUserFilters;
+uses Forms, Windows, TextTable, JWBMenu, JWBUserFilters;
 
 function GetCatPrefix(s:string):char;
 begin
@@ -221,21 +221,31 @@ end;
 //Moves all the words from idxCat to idxIntoCat, and deletes idxCat
 procedure MergeCategory(idxCat: integer; idxIntoCat: integer);
 var sidxCat: string;
+  cUserSheet: TTextTableCursor;
 begin
   sidxCat := IntToStr(idxCat);
 
-  TUserSheet.First;
-  while not TUserSheet.EOF do
-  begin
-    if TUserSheet.Int(TUserSheetNumber)=idxCat then begin
-      TUserSheet.SetField(TUserSheet.tcur, TUserSheetNumber, sidxCat);
-      TUserSheet.Commit(TUserSheet.tcur);
+  cUserSheet := TUserSheet.NewCursor;
+  try
+    cUserSheet.First;
+    while not cUserSheet.EOF do
+    begin
+      if cUserSheet.Int(TUserSheetNumber)=idxCat then begin
+        TUserSheet.SetField(cUserSheet.tcur, TUserSheetNumber, sidxCat);
+        TUserSheet.Commit(cUserSheet.tcur);
+      end;
+      cUserSheet.Next;
     end;
-    TUserSheet.Next;
+  finally
+    cUserSheet.Free;
   end;
 
-  TUserCat.Locate('Index',sidxCat,false);
-  TUserCat.Delete;
+  with TUserCat.NewCursor do try
+    Locate('Index',sidxCat,false);
+    Delete;
+  finally
+    Free;
+  end;
 end;
 
 { Known lists }

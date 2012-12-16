@@ -1,14 +1,24 @@
 unit JWBDicSearch;
 {
-Dictionary search engine.
-Split into a proper object from a bunch of functions which existed in JWBUser.
+Dictionary engine.
 Has a lot of dark legacy in code form.
 }
 
 interface
 uses SysUtils, Classes, JWBStrings, JWBUtils, TextTable, MemSource, StdPrompt;
 
+//See comments to TextTable.CURSOR_IN_TABLE
+{$DEFINE DIC_CURSOR_IN_TABLE}
+
 type
+ { Dictionary group. Presently 5 are supported:
+    1..3 - user dictionary groups
+    4 - use for compounds
+    5 - use for popup/editor }
+  TDictGroup = integer;
+
+  TDicCursor = class;
+
   TJaletDic = class
   public
     TDict:TTextTable;
@@ -34,10 +44,11 @@ type
     tested:boolean;
     entries:integer;
     copyright:string;
-    indexword:boolean;
-    indexfrom,indexto:integer;
     demandloaded:boolean;
     vocmode:integer;
+   {$IFDEF DIC_CURSOR_IN_TABLE}
+    _intcur: TDicCursor;
+   {$ENDIF}
     constructor Create;
     destructor Destroy; override;
     procedure FillInfo(packagefile:string); virtual;
@@ -47,8 +58,10 @@ type
     procedure Demand;
     function ReadIndexString(word:boolean;loc:integer):string;
     function ReadIndexInfo(word:boolean;loc:integer):integer;
-    procedure FindIndexString(word:boolean;locator:string);
-    function ReadIndex:integer;
+   {$IFDEF DIC_CURSOR_IN_TABLE}
+    procedure FindIndexString(word:boolean;locator:string); {$IFDEF INLINE}inline;{$ENDIF}
+    function ReadIndex:integer; {$IFDEF INLINE}inline;{$ENDIF}
+   {$ENDIF}
 
   protected
    { To speed up access to certain seek tables we're going to keep pre-calculated
@@ -62,7 +75,7 @@ type
     TDict.GetSeekObject('seek name') }
     procedure SetupSeekObjects;
   public
-   { Public references in form of pointers. Pass these to Locate and have no care in life. }
+   { Public pointers. Pass these to Locate and have no care in life. }
     stSort: PSeekObject;
     stSortReverse: PSeekObject;
     stKanji: PSeekObject;
@@ -70,6 +83,35 @@ type
     stIndex: PSeekObject;
 
   end;
+
+  TDicCursor = class(TTextTableCursor)
+  public
+    dic: TJaletDic;
+   { Copied from TJaletDic on Create() for code readability }
+    TDictIndex,
+    TDictEnglish,
+    TDictKanji,
+    TDictPhonetic,
+    TDictSort,
+    TDictMarkers,
+    TDictFrequency:integer;
+    stSort: PSeekObject;
+    stSortReverse: PSeekObject;
+    stKanji: PSeekObject;
+    stKanjiReverse: PSeekObject;
+    stIndex: PSeekObject;
+    constructor Create(ADic: TJaletDic);
+
+  protected
+   { JaletDic cursor -- independent from basic cursor functionality }
+    indexword:boolean;
+    indexfrom,indexto:integer;
+  public
+    procedure FindIndexString(word:boolean;locator:string);
+    function ReadIndex:integer;
+
+  end;
+
 
 type
  { How to match words (exact, match left, right or anywhere) }
@@ -92,9 +134,8 @@ type
   then it contains raw english. Happy debugging. }
   SatanString = string;
 
- //Dictionary search class
- //Reuse it if you want, it'll be faster than re-creating it and filling the
- //settings again.
+ { Dictionary search class. Reusable.
+  Create, fill params, Prepare(), then do multiple Search()es. }
   TDicSearchRequest = class
   public
     constructor Create;
@@ -107,15 +148,19 @@ type
     maxwords: integer;
    { Find all matches instead of only most relevant ones (slower) }
     full: boolean;
-   { Dictionary group. Presently 5 are supported:
-      1..3 - user dictionary groups
-      4 - use for compounds
-      5 - use for popup/editor
-    No call to this function uses 4 though. }
-    dictgroup: integer;
+    dictgroup: TDictGroup;
     dic_ignorekana: boolean;
     procedure Prepare; //Call after changing settings
 
+  protected
+    dics: array of TDicCursor; //empty field => dic was not loaded, skip
+    //Cached cursors and seeks for User tables
+    CUser: TTextTableCursor;
+    stUserKanji: TSeekObject;
+    stUserIndex: TSeekObject;
+    CUserPrior: TTextTableCursor;
+    stUserPriorKanji: TSeekObject;
+    fldUserPriorCount: integer;
   public
     procedure Search(search:SatanString; wt: integer; sl: TStringList);
 
@@ -131,13 +176,14 @@ type
     se: TCandidateLookupList; //Lookup candidates -- see comments where this type is declared
     presentl,presindl:TStringList;
     p4reading:boolean;
-    procedure TestLookupCandidate(dic: TJaletDic; lc: PCandidateLookup; wt: integer;
+    procedure TestLookupCandidate(dic: TDicCursor; lc: PCandidateLookup; wt: integer;
       sl: TStringList);
 
   protected
     a3kana:boolean;   //a==3 and only kana in string
     a4limitkana:boolean;
-    procedure DicInitialLookup(dic: TJaletDic; wt: integer; sxxr: string; sxx: string);
+    procedure DicInitialLookup(dic: TDicCursor; wt: integer; sxxr: string; sxx: string);
+    procedure SortResults(sl: TStringList);
 
   end;
 
@@ -151,8 +197,6 @@ implementation
 uses Forms, Windows, JWBMenu, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
   JWBCategories;
 
-
-procedure SortResults(sl: TStringList); forward;
 
 
 {
@@ -177,6 +221,10 @@ Dictionary
 }
 constructor TJaletDic.Create;
 begin
+ {$IFDEF DIC_CURSOR_IN_TABLE}
+  _intcur := nil;
+  //We don't create cursor here because the table needs to be already loaded for that
+ {$ENDIF}
   tested:=false;
   loaded:=false;
 end;
@@ -184,69 +232,9 @@ end;
 destructor TJaletDic.Destroy;
 begin
   if loaded then Unload;
-end;
-
-function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
-begin
-  if word then
-    Result := PInteger(integer(wordidx)+loc*4)^
-  else
-    Result := PInteger(integer(charidx)+loc*4)^;
-end;
-
-function TJaletDic.ReadIndexString(word:boolean;loc:integer):string;
-var l:array[0..3] of AnsiChar;
-  p:PAnsiChar;
-begin
-  if word then p:=wordidx else p:=charidx;
-  p:=p+loc*4;
-  move(p^,l,4);
-  result:=l;
-end;
-
-procedure TJaletDic.FindIndexString(word:boolean;locator:string);
-var l,r,m,max:integer;
-    s,s2:string;
-begin
-  l:=0;
-  if word then max:=wordno-1 else max:=charno-1;
-  r:=max;
-  s:=locator;
-  s2:='';
-  while (pos(' ',s)>0) and (s2='') do
-  begin
-    s2:=copy(s,1,pos(' ',s)-1);
-    delete(s,1,pos(' ',s));
-    if ignorel.IndexOf(s2)<>-1 then s2:='';
-  end;
-  if s2='' then s2:=s;
-  locator:=s;
-  if length(locator)>4 then locator:=copy(locator,1,4);
-  while length(locator)<4 do locator:=locator+' ';
-  while l<=r do
-  begin
-    m:=l+(r-l) div 2;
-    s2:=ReadIndexString(word,m*2);
-    if s2=locator then break;
-    if s2<locator then l:=m+1 else r:=m-1;
-  end;
-  if l>r then indexfrom:=0 else
-  begin
-    indexfrom:=ReadIndexInfo(word,m*2+1)+(max+1)*2;
-    if m<max then indexto:=ReadIndexInfo(word,m*2+3)+(max+1)*2 else if word then indexto:=wordfsiz else indexto:=charfsiz;
-    indexword:=word;
-  end;
-end;
-
-function TJaletDic.ReadIndex:integer;
-begin
-  if (indexfrom=0) or (indexfrom>=indexto) then
-  begin
-    result:=0;
-    exit;
-  end;
-  result:=ReadIndexInfo(indexword,indexfrom);
-  inc(indexfrom);
+ {$IFDEF DIC_CURSOR_IN_TABLE}
+  FreeAndNil(_intcur);
+ {$ENDIF}
 end;
 
 procedure TJaletDic.FillInfo(packagefile:string);
@@ -358,6 +346,9 @@ begin
       pchar(_l('#00020^eError')),
       MB_ICONERROR or MB_OK);
   end;
+ {$IFDEF DIC_CURSOR_IN_TABLE}
+  _intcur:=TDicCursor.Create(Self);
+ {$ENDIF}
   demandloaded:=true;
   pd.Free;
 end;
@@ -385,6 +376,106 @@ begin
   stKanji := @FstKanji;
   stKanjiReverse := @FstKanjiReverse;
   stIndex := @FstIndex;
+end;
+
+function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
+begin
+  if word then
+    Result := PInteger(integer(wordidx)+loc*4)^
+  else
+    Result := PInteger(integer(charidx)+loc*4)^;
+end;
+
+function TJaletDic.ReadIndexString(word:boolean;loc:integer):string;
+var l:array[0..3] of AnsiChar;
+  p:PAnsiChar;
+begin
+  if word then p:=wordidx else p:=charidx;
+  p:=p+loc*4;
+  move(p^,l,4);
+  result:=l;
+end;
+
+{$IFDEF DIC_CURSOR_IN_TABLE}
+procedure TJaletDic.FindIndexString(word:boolean;locator:string);
+begin
+  _intcur.FindIndexString(word,locator);
+end;
+
+function TJaletDic.ReadIndex:integer;
+begin
+  Result := _intcur.ReadIndex;
+end;
+{$ENDIF}
+
+
+{
+Cursor
+}
+constructor TDicCursor.Create(ADic: TJaletDic);
+begin
+  inherited Create(ADic.TDict);
+  self.dic := ADic;
+  self.TDictIndex := ADic.TDictIndex;
+  self.TDictEnglish := ADic.TDictEnglish;
+  self.TDictKanji := ADic.TDictKanji;
+  self.TDictPhonetic := ADic.TDictPhonetic;
+  self.TDictSort := ADic.TDictSort;
+  self.TDictMarkers := ADic.TDictMarkers;
+  self.TDictFrequency := ADic.TDictFrequency;
+  self.stSort := ADic.stSort;
+  self.stSortReverse := ADic.stSortReverse;
+  self.stKanji := ADic.stKanji;
+  self.stKanjiReverse := ADic.stKanjiReverse;
+  self.stIndex := ADic.stIndex;
+end;
+
+procedure TDicCursor.FindIndexString(word:boolean;locator:string);
+var l,r,m,max:integer;
+    s,s2:string;
+begin
+  l:=0;
+  if word then max:=dic.wordno-1 else max:=dic.charno-1;
+  r:=max;
+  s:=locator;
+  s2:='';
+  while (pos(' ',s)>0) and (s2='') do
+  begin
+    s2:=System.copy(s,1,pos(' ',s)-1);
+    System.delete(s,1,pos(' ',s));
+    if ignorel.IndexOf(s2)<>-1 then s2:='';
+  end;
+  if s2='' then s2:=s;
+  locator:=s;
+  if length(locator)>4 then locator:=copy(locator,1,4);
+  while length(locator)<4 do locator:=locator+' ';
+  while l<=r do
+  begin
+    m:=l+(r-l) div 2;
+    s2:=dic.ReadIndexString(word,m*2);
+    if s2=locator then break;
+    if s2<locator then l:=m+1 else r:=m-1;
+  end;
+  if l>r then indexfrom:=0 else
+  begin
+    indexfrom:=dic.ReadIndexInfo(word,m*2+1)+(max+1)*2;
+    if m<max then
+      indexto:=dic.ReadIndexInfo(word,m*2+3)+(max+1)*2
+    else
+      if word then indexto:=dic.wordfsiz else indexto:=dic.charfsiz;
+    indexword:=word;
+  end;
+end;
+
+function TDicCursor.ReadIndex:integer;
+begin
+  if (indexfrom=0) or (indexfrom>=indexto) then
+  begin
+    result:=0;
+    exit;
+  end;
+  result:=dic.ReadIndexInfo(indexword,indexfrom);
+  inc(indexfrom);
 end;
 
 
@@ -591,10 +682,15 @@ begin
   se:=TCandidateLookupList.Create;
   presentl:=TStringList.Create;
   presindl:=TStringList.Create;
+  SetLength(dics, 0);
 end;
 
 destructor TDicSearchRequest.Destroy;
+var di: integer;
 begin
+  //Destroy cursors
+  for di := 0 to Length(dics) - 1 do
+    FreeAndNil(dics[di]);
   se.Destroy;
   presentl.Destroy;
   presindl.Destroy;
@@ -602,8 +698,39 @@ begin
 end;
 
 procedure TDicSearchRequest.Prepare;
+var di: integer;
+  dic: TJaletDic;
 begin
   if maxwords<10 then maxwords:=10;
+
+  //Destroy existing cursors
+  for di := 0 to Length(dics) - 1 do
+    FreeAndNil(dics[di]);
+  FreeAndNil(CUser);
+  FreeAndNil(CUserPrior);
+
+  //Create dictionary cursors
+  SetLength(dics, dicts.Count);
+  for di:=0 to dicts.Count-1 do begin
+    dics[di] := nil;
+    if not (dicts.Objects[di] as TJaletDic).loaded then continue;
+
+    dic:=dicts.Objects[di] as TJaletDic;
+    if pos(','+dic.name,NotGroupDicts[dictgroup])<>0 then
+      continue; //dic excluded from this dictgroup
+
+    dic.Demand;
+    dics[di] := TDicCursor.Create(dic);
+    dics[di].dic := dic;
+  end; //of dict enum
+
+  //Create cached table cursors
+  CUser := TTextTableCursor.Create(TUser);
+  stUserKanji := TUser.GetSeekObject('Kanji');
+  stUserIndex := TUser.GetSeekObject('Index');
+  CUserPrior := TTextTableCursor.Create(TUserPrior);
+  stUserPriorKanji := TUserPrior.GetSeekObject('Kanji');
+  fldUserPriorCount := TUserPrior.Field('Count');
 end;
 
 {
@@ -628,7 +755,6 @@ procedure TDicSearchRequest.Search(search:SatanString; wt: integer; sl:TStringLi
 var i:integer;
     di:integer;
     _s:string;
-    dic:TJaletDic;
 begin
   if search='' then exit;
   mess := nil;
@@ -658,27 +784,21 @@ begin
  //I don't know WHY the following line is needed,
  //but it does exactly what it did in old Wakan. Whatever that is.  
   if full or (fUser.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then
-  for di:=0 to dicts.Count-1 do begin
-    if not (dicts.Objects[di] as TJaletDic).loaded then continue;
-
-    dic:=dicts.Objects[di] as TJaletDic;
-    if pos(','+dic.name,NotGroupDicts[dictgroup])<>0 then
-      continue; //dic excluded from this dictgroup
-
-    dic.Demand;
+  for di:=0 to Length(dics)-1 do begin
+    if dics[di]=nil then continue;
 
     case a of
       stJp:
-        if MatchType=mtMatchRight then dic.TDict.SetOrder('<Phonetic_Ind') else dic.TDict.SetOrder('Phonetic_Ind');
+        if MatchType=mtMatchRight then dics[di].SetOrder('<Phonetic_Ind') else dics[di].SetOrder('Phonetic_Ind');
       stClipboard:
-        if MatchType=mtMatchRight then dic.TDict.SetOrder('<Kanji_Ind') else dic.TDict.SetOrder('Kanji_Ind');
+        if MatchType=mtMatchRight then dics[di].SetOrder('<Kanji_Ind') else dics[di].SetOrder('Kanji_Ind');
       stEditorInsert,
       stEditorAuto:
-        dic.TDict.SetOrder('Kanji_Ind');
+        dics[di].SetOrder('Kanji_Ind');
     end;
 
     for i:=0 to se.Count-1 do
-      TestLookupCandidate(dic, se[i], wt, sl);
+      TestLookupCandidate(dics[di], se[i], wt, sl);
 
   end; //of dict enum
 
@@ -691,41 +811,42 @@ resourcestring
   sDicSearchTitle='#00932^eDic.search';
   sDicSearchText='#00933^ePlease wait. Searching dictionary...';
 
-procedure TDicSearchRequest.DicInitialLookup(dic: TJaletDic; wt: integer; sxxr: string; sxx: string);
+procedure TDicSearchRequest.DicInitialLookup(dic: TDicCursor; wt: integer; sxxr: string; sxx: string);
 begin
   case a of
   stJp:
     case MatchType of
       mtMatchAnywhere: begin end; //nothing
-      mtMatchRight: dic.TDict.Locate(dic.stSortReverse,sxxr,false);
+      mtMatchRight: dic.Locate(dic.stSortReverse,sxxr,false);
     else
-      dic.TDict.Locate(dic.stSort,sxxr,false);
+      dic.Locate(dic.stSort,sxxr,false);
     end;
-  stEn: dic.FindIndexString(true,lowercase(sxx));
+  stEn:
+    dic.FindIndexString(true,lowercase(sxx));
   stClipboard:
     if a3kana then
       case MatchType of
         mtMatchAnywhere: begin end;
-        mtMatchRight: dic.TDict.Locate(dic.stSortReverse,sxxr,false);
+        mtMatchRight: dic.Locate(dic.stSortReverse,sxxr,false);
       else
-        dic.TDict.Locate(dic.stSort,sxxr,false);
+        dic.Locate(dic.stSort,sxxr,false);
       end
     else
       case MatchType of
         mtMatchAnywhere: begin end;
-        mtMatchRight: dic.TDict.Locate(dic.stKanjiReverse,sxx,false);
+        mtMatchRight: dic.Locate(dic.stKanjiReverse,sxx,false);
       else
-        dic.TDict.Locate(dic.stKanji,sxx,false);
+        dic.Locate(dic.stKanji,sxx,false);
       end;
   stEditorInsert,
   stEditorAuto:
     if a4limitkana then begin
-      dic.TDict.SetOrder('Phonetic_Ind');
-      dic.TDict.Locate(dic.stSort,sxxr,false);
+      dic.SetOrder('Phonetic_Ind');
+      dic.Locate(dic.stSort,sxxr,false);
     end else
     begin
-      dic.TDict.SetOrder('Kanji_Ind');
-      dic.TDict.Locate(dic.stKanji,sxx,false);
+      dic.SetOrder('Kanji_Ind');
+      dic.Locate(dic.stKanji,sxx,false);
     end;
   end;
 end;
@@ -743,7 +864,7 @@ begin
        ((sdef='N') and (pos('gna-adj',s2)>0)));
 end;
 
-procedure TDicSearchRequest.TestLookupCandidate(dic: TJaletDic; lc: PCandidateLookup;
+procedure TDicSearchRequest.TestLookupCandidate(dic: TDicCursor; lc: PCandidateLookup;
   wt: integer; sl: TStringList);
 var
   i, ii: integer;
@@ -770,22 +891,22 @@ var
  //Used several times with different kanji_vals
   procedure TryGetUserScore(kanji_val: string);
   begin
-    TUser.Locate('Kanji',kanji_val,false);
-    while (not TUser.EOF) and (kanji_val=TUser.Str(TUserKanji)) do
+    CUser.Locate(@stUserKanji,kanji_val,false);
+    while (not CUser.EOF) and (kanji_val=CUser.Str(TUserKanji)) do
     begin
-      if dic.TDict.Str(dic.TDictPhonetic)=TUser.Str(TUserPhonetic) then
+      if dic.Str(dic.TDictPhonetic)=CUser.Str(TUserPhonetic) then
       begin
-        UserScore:=TUser.Int(TUserScore);
-        UserIndex:=TUser.Str(TUserIndex);
+        UserScore:=CUser.Int(TUserScore);
+        UserIndex:=CUser.Str(TUserIndex);
       end;
-      TUser.Next;
+      CUser.Next;
     end;
   end;
 
 begin
   if (a in [stJp, stClipboard]) and (MatchType=mtMatchAnywhere) then begin
-    dic.TDict.SetOrder('Index_Ind');
-    dic.TDict.First;
+    dic.SetOrder('Index_Ind');
+    dic.First;
   end;
 
   sxx:=lc.str;
@@ -827,87 +948,87 @@ begin
   if a=stEn then wif:=dic.ReadIndex;
 
   while
-    ((a=stEn) or (not dic.TDict.EOF)) and
-    (((a=stJp) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
-    ((a=stJp) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
-    ((a=stJp) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
-    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))=1)) or
-    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchRight) and (pos(sxxr,dic.TDict.Str(dic.TDictSort))>0)) or
-    ((a=stClipboard) and (a3kana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
+    ((a=stEn) or (not dic.EOF)) and
+    (((a=stJp) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.Str(dic.TDictSort))=1)) or
+    ((a=stJp) and (MatchType=mtMatchRight) and (pos(sxxr,dic.Str(dic.TDictSort))>0)) or
+    ((a=stJp) and (sxxr=dic.Str(dic.TDictSort))) or
+    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.Str(dic.TDictSort))=1)) or
+    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchRight) and (pos(sxxr,dic.Str(dic.TDictSort))>0)) or
+    ((a=stClipboard) and (a3kana) and (sxxr=dic.Str(dic.TDictSort))) or
     ((a=stEn) and (wif<>0)) or
-    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))=1)) or
-    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.TDict.Str(dic.TDictKanji))>0)) or
-    ((a=stClipboard) and (not a3kana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-    ((a in [stEditorInsert, stEditorAuto]) and (not a4limitkana) and (sxx=dic.TDict.Str(dic.TDictKanji))) or
-    ((a in [stEditorInsert, stEditorAuto]) and (a4limitkana) and (sxxr=dic.TDict.Str(dic.TDictSort))) or
+    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.Str(dic.TDictKanji))=1)) or
+    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.Str(dic.TDictKanji))>0)) or
+    ((a=stClipboard) and (not a3kana) and (sxx=dic.Str(dic.TDictKanji))) or
+    ((a in [stEditorInsert, stEditorAuto]) and (not a4limitkana) and (sxx=dic.Str(dic.TDictKanji))) or
+    ((a in [stEditorInsert, stEditorAuto]) and (a4limitkana) and (sxxr=dic.Str(dic.TDictSort))) or
     (((a=stJp) or (a=stClipboard)) and (MatchType=mtMatchAnywhere)))
   do
   begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
-    if a=stEn then dic.TDict.Locate(dic.stIndex,inttostr(wif),true);
-    //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.TDict.Str(dic.TDictEnglish));
+    if a=stEn then dic.Locate(dic.stIndex,inttostr(wif),true);
+    //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.Str(dic.TDictEnglish));
     if sdef<>'F'then s2:=ALTCH_TILDE+'I'else s2:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
-      s2:=s2+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers))
+      s2:=s2+EnrichDictEntry(dic.Str(dic.TDictEnglish),dic.Str(dic.TDictMarkers))
     else begin
-      converted := ConvertEdictEntry(dic.TDict.Str(dic.TDictEnglish), markers);
+      converted := ConvertEdictEntry(dic.Str(dic.TDictEnglish), markers);
       s2:=s2+EnrichDictEntry(converted, markers);
     end;
-    if a=stEn then ts:=lowercase(dic.TDict.Str(dic.TDictEnglish)+' ');
+    if a=stEn then ts:=lowercase(dic.Str(dic.TDictEnglish)+' ');
     if IsAppropriateVerbType(sdef, s2) then
     if (a<>stEn) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
     (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
     if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,s2)>0) then
-    if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.TDict.Str(dic.TDictPhonetic)))
-    or ((a=stClipboard) and (CompareUnicode(sxx,dic.TDict.Str(dic.TDictKanji)))) then
+    if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.Str(dic.TDictPhonetic)))
+    or ((a=stClipboard) and (CompareUnicode(sxx,dic.Str(dic.TDictKanji)))) then
     begin
 
      //Calculate popularity class
       popclas := GetPopClass(s2);
-      //if ((a=1) or ((a=4) and (p4reading))) and (dic.TDict.Field('Priority')<>-1) then
-      //  if dic.TDict.Int(dic.TDict.Field('Priority'))>9 then
+      //if ((a=1) or ((a=4) and (p4reading))) and (dic.Field('Priority')<>-1) then
+      //  if dic.Int(dic.Field('Priority'))>9 then
       //    inc(popclas,90)
       //  else
-      //    inc(popclas,dic.TDict.Int(dic.TDict.Field('Priority'))*10);
+      //    inc(popclas,dic.Int(dic.Field('Priority'))*10);
       if (a in [stEditorInsert, stEditorAuto]) and (p4reading)
-      and TUserPrior.Locate('Kanji',dic.TDict.Str(dic.TDictKanji),false) then
-        dec(popclas,10*TUserPrior.Int(TUserPrior.Field('Count')));
+      and CUserPrior.Locate(@stUserPriorKanji,dic.Str(dic.TDictKanji),false) then
+        dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
 
-      //TUser.SetOrder('Kanji_Ind');
+      //CUser.SetOrder('Kanji_Ind');
 
       UserScore:=-1;
       UserIndex:='';
       if pos(UH_LBEG+'skana'+UH_LEND,s2)>0 then
-        TryGetUserScore(dic.TDict.Str(dic.TDictPhonetic));
-      TryGetUserScore(dic.TDict.Str(dic.TDictKanji));
-      if (UserScore=-1) and (dic.TDict.Str(dic.TDictKanji)<>ChinTo(dic.TDict.Str(dic.TDictKanji))) then
-        TryGetUserScore(ChinTo(dic.TDict.Str(dic.TDictKanji)));
+        TryGetUserScore(dic.Str(dic.TDictPhonetic));
+      TryGetUserScore(dic.Str(dic.TDictKanji));
+      if (UserScore=-1) and (dic.Str(dic.TDictKanji)<>ChinTo(dic.Str(dic.TDictKanji))) then
+        TryGetUserScore(ChinTo(dic.Str(dic.TDictKanji)));
 
-      if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.TDict.Int(dic.TDictFrequency)>0) then
-        s2:=s2+' '+UH_LBEG+'pwc'+dic.TDict.Str(dic.TDictFrequency)+UH_LEND;
-      s2:=s2+' '+UH_LBEG+'d'+dic.name+UH_LEND;
+      if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.Int(dic.TDictFrequency)>0) then
+        s2:=s2+' '+UH_LBEG+'pwc'+dic.Str(dic.TDictFrequency)+UH_LEND;
+      s2:=s2+' '+UH_LBEG+'d'+dic.dic.name+UH_LEND;
 
      //Calculate sorting order
       sort:=0; //the bigger the worse (will apear later in list)
       if a=stEn then
       begin
-        if (pos(trim(uppercase(sxx)),trim(uppercase(dic.TDict.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
+        if (pos(trim(uppercase(sxx)),trim(uppercase(dic.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
         sort:=sort+popclas*100;
       end;
-      if a=stJp then sort:=(10000*(9-min(sp,9)))+length(dic.TDict.Str(dic.TDictPhonetic))*1000+popclas*10;
+      if a=stJp then sort:=(10000*(9-min(sp,9)))+length(dic.Str(dic.TDictPhonetic))*1000+popclas*10;
       if a in [stClipboard, stEditorInsert, stEditorAuto] then sort:=(10000*(9-min(sp,9)))+popclas*10;
       sort:=sort+10000;
       //if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then sort:=10000+popclas*10;
       if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
       if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
-      if dic.TDict.Str(dic.TDictPhonetic)[3]>='A' then inc(sort,1000);
-      sort:=sort+dic.priority*20000;
+      if dic.Str(dic.TDictPhonetic)[3]>='A' then inc(sort,1000);
+      sort:=sort+dic.dic.priority*20000;
       if (fSettings.CheckBox59.Checked) then
       begin
         if dic.TDictFrequency>-1 then
         begin
-          freq:=dic.TDict.Int(dic.TDictFrequency);
+          freq:=dic.Int(dic.TDictFrequency);
           if freq>=500000 then freq:=10000 else
           if freq>=10000 then freq:=2000+(freq-10000) div 100 else
           if freq>=1000 then freq:=1000+(freq-1000) div 10;
@@ -920,7 +1041,7 @@ begin
       if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then
         s2:=copy(s2,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(s2,3,length(s2)-2);
 
-      sorts:=dic.TDict.Str(dic.TDictIndex);
+      sorts:=dic.Str(dic.TDictIndex);
       while length(sorts)<6 do
         sorts:='0'+sorts;
       while length(UserIndex)<6 do
@@ -938,20 +1059,20 @@ begin
       else
         sorts:=sorts+'F';
       // 5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname)
-      sorts:=sorts+dic.name;
+      sorts:=sorts+dic.dic.name;
       while length(sorts)<30 do
         sorts:=sorts+' ';
 
       statpref:='';
       if (fSettings.CheckBox11.Checked) and (UserScore>-1) then
         statpref:='!'+inttostr(UserScore);
-      ssig:=dic.TDict.Str(dic.TDictPhonetic)+'x'+dic.TDict.Str(dic.TDictKanji);
+      ssig:=dic.Str(dic.TDictPhonetic)+'x'+dic.Str(dic.TDictKanji);
       if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,s2)<>0) then
-        scur:=sorts+statpref+dic.TDict.Str(dic.TDictPhonetic)
-          +' ['+statpref+dic.TDict.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}'
+        scur:=sorts+statpref+dic.Str(dic.TDictPhonetic)
+          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}'
       else
-        scur:=sorts+statpref+CheckKnownKanji(ChinTo(dic.TDict.Str(dic.TDictKanji)))
-          +' ['+statpref+dic.TDict.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}';
+        scur:=sorts+statpref+CheckKnownKanji(ChinTo(dic.Str(dic.TDictKanji)))
+          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}';
 
       if presentl.IndexOf(ssig)<>-1 then
       begin
@@ -979,7 +1100,7 @@ begin
       begin
         if fMenu.IsAnnot then
         begin
-          fMenu.AnnotSeekK(dic.TDict.Str(dic.TDictKanji),dic.TDict.Str(dic.TDictPhonetic));
+          fMenu.AnnotSeekK(dic.Str(dic.TDictKanji),dic.Str(dic.TDictPhonetic));
           s2:=fMenu.AnnotGetAll('t',', ');
           if fMenu.AnnotGetOne('c')<>'' then s2:=UH_SETCOLOR+fMenu.AnnotGetOne('c')+s2;
           ii:=pos('{'+statpref,scur)+length(statpref)+1;
@@ -1004,12 +1125,12 @@ begin
       break;
     end;
 
-    if a<>stEn then dic.TDict.Next else wif:=dic.ReadIndex;
+    if a<>stEn then dic.Next else wif:=dic.ReadIndex;
   end;
 
 end;
 
-procedure SortResults(sl: TStringList);
+procedure TDicSearchRequest.SortResults(sl: TStringList);
 var i: integer;
   scomp, scur:string;
   s2: string;
@@ -1021,7 +1142,7 @@ begin
   for i:=0 to sl.Count-1 do
     if copy(sl[i],6,6)<>'000000'then
     begin
-      TUser.Locate('Index',inttostr(strtoint(copy(sl[i],6,6))),true);
+      CUser.Locate(@stUserIndex,inttostr(strtoint(copy(sl[i],6,6))),true);
       scomp:=sl[i];
       scur:=sl[i];
       delete(scomp,1,pos(' {',scomp));
@@ -1029,13 +1150,13 @@ begin
       if (length(scomp)>0) and (scomp[1]=ALTCH_EXCL) then delete(scomp,1,2);
       if (length(scomp)>0) and (scomp[1]=ALTCH_TILDE) then delete(scomp,1,2);
       scur:=copy(scur,1,length(sl[i])-length(scomp));
-      s2:=TUser.Str(TUserEnglish);
+      s2:=CUser.Str(TUserEnglish);
       if pos(s2,scomp)>0 then
         scomp:=copy(scomp,1,pos(s2,scomp)-1)+copy(scomp,pos(s2,scomp)+length(s2),length(scomp)-length(s2)-pos(s2,scomp)+1)
       else
         scomp:=' // '+scomp;
       sl2:=TStringList.Create;
-      ListWordCategories(TUser.Int(TUserIndex),sl2);
+      ListWordCategories(CUser.Int(TUserIndex),sl2);
       for sl2i:=0 to sl2.Count-1 do s2:=s2+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
       sl2.Free;
       sl[i]:=scur+s2+scomp;

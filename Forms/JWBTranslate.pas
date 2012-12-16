@@ -1153,9 +1153,9 @@ begin
 end;
 
 procedure TfTranslate.AutoTranslate;
-var i,j:integer;
-  oldcurx,oldcury:integer;
+var j:integer;
   bg,en:integer;
+  y:integer;
 
   sp: TSMPromptForm;
   startTime: cardinal;
@@ -1167,8 +1167,6 @@ var i,j:integer;
   threadsCreated: boolean;
   sysinfo: SYSTEM_INFO;
 begin
-  oldcurx:=rcurx;
-  oldcury:=rcury;
   if (blockx=rcurx) and (blocky=rcury) then
   begin
     if not fSettings.cbTranslateNoLongTextWarning.Checked then
@@ -1202,13 +1200,13 @@ begin
     req.dic_ignorekana := true;
     req.Prepare;
 
-    i := blockfromy;
-    while i<=blocktoy do
+    y := blockfromy;
+    while y<=blocktoy do
     begin
       bg:=0;
-      en:=flength(doc[i])-1;
-      if i=blockfromy then bg:=blockfromx;
-      if i=blocktoy then en:=blocktox;
+      en:=flength(doc[y])-1;
+      if y=blockfromy then bg:=blockfromx;
+      if y=blocktoy then en:=blocktox;
 
       //If the operation is taking too long to be noticeable
       if (sp=nil) and (GetTickCount-startTime > 200) then begin
@@ -1225,7 +1223,7 @@ begin
 
       if sp<>nil then begin
        //Internally we only update once in a while
-        sp.SetProgress(i-blockfromy);
+        sp.SetProgress(y-blockfromy);
         sp.ProcessMessages;
         if sp.ModalResult=mrCancel then begin
           sp.Hide;
@@ -1246,12 +1244,13 @@ begin
         GetSystemInfo(sysinfo);
         if sysinfo.dwNumberOfProcessors>1 then begin
           SetLength(threads, sysinfo.dwNumberOfProcessors-1);
+          //threads[i] := TTranslationThread.Create(bfromy, btoy, bfromx, btox);
           //TODO:
         end;
       end;
 
-      AutoTranslateLine(i, bg, en, req, dicsl);
-      Inc(i);
+      AutoTranslateLine(y, bg, en, req, dicsl);
+      Inc(y);
     end;
 
   finally
@@ -1259,8 +1258,7 @@ begin
     FreeAndNil(req);
     FreeAndNil(dicsl);
   end;
-  rcurx:=oldcurx;
-  rcury:=oldcury;
+
   mustrepaint:=true;
   ShowText(true);
   Screen.Cursor:=crDefault;
