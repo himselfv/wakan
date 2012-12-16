@@ -98,9 +98,12 @@ var
   GridFontSize:integer;
 
 
+{ Translation }
+
+function _l(const id:string):string;
 
 implementation
-uses StrUtils, JWBMenu, JWBSettings;
+uses StrUtils, JWBMenu, JWBSettings, JWBLanguage;
 
 
 { Romaji conversions }
@@ -1908,6 +1911,11 @@ begin
   Windows.RemoveDirectory(PChar(dir));
 end;
 
+
+function _l(const id:string):string;
+begin
+  result:=fLanguage.TranslateString(id);
+end;
 
 
 var i:integer;

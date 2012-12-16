@@ -118,7 +118,7 @@ implementation
 uses JWBStrings, JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
-  JWBCategories;
+  JWBCategories, JWBAnnotations;
 
 var curword:integer;
     hinthide:boolean;
@@ -583,7 +583,7 @@ begin
   fWordKanji.PaintBoxK7.Invalidate;
   fWordKanji.PaintBoxK8.Invalidate;
   fWordKanji.PaintBoxK9.Invalidate;
-  fMenu.AnnotShowMedia(curkanji,curphonetic);
+  AnnotShowMedia(curkanji,curphonetic);
 end;
 
 procedure TfUser.WordDetails_PaintBox5Paint(Sender: TObject);

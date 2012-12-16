@@ -434,16 +434,6 @@ type
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
     procedure PopupImmediate(left:boolean);
     procedure RebuildUserIndex;
-    procedure RebuildAnnotations;
-    procedure LoadAnnotations;
-    function IsAnnot:boolean;
-    procedure AnnotSeek(des:array of string);
-    procedure AnnotSeekK(kanji,kana:string);
-    procedure AnnotFirst;
-    function AnnotGet(cmd:char):string;
-    function AnnotGetOne(cmd:char):string;
-    function AnnotGetAll(cmd:char; delimit:string):string;
-    procedure AnnotShowMedia(kanji,kana:string);
 //    procedure LoadLayout(filename:string);
 //    procedure SaveFixedLayout(filename:string);
 
@@ -500,14 +490,11 @@ type
 
 var
   fMenu: TfMenu;
-  curAnnot:string;
-  curAnnotPos:integer;
   romasys,jromasys,cromasys:integer;
   showroma,jshowroma,cshowroma:boolean;
   CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
   dicts:TStringList;
   //Tables
-  TAnnots,
   TChar,
   TCharRead,
   TRadicals,
@@ -603,7 +590,7 @@ const
 
 
 
-function _l(id:string):string;
+function _l(const id:string):string; //shouldn't inline because it's for cases when JWBUnit is not in Uses!
 
 implementation
 
@@ -617,7 +604,7 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
-  JWBCategories;
+  JWBCategories, JWBAnnotations;
 
 {$R *.DFM}
 
@@ -2315,7 +2302,6 @@ var tt:TTextTable;
     t:textfile;
     s_parts: TStringArray;
 begin
-  TAnnots:=nil;
   lastautosave:=now;
   screenTipImmediate:=false;
   examstruct:=nil;
@@ -4683,9 +4669,9 @@ begin
   fTranslate.ShowText(true);
 end;
 
-function _l(id:string):string;
+function _l(const id:string):string;
 begin
-  result:=fLanguage.TranslateString(id);
+  Result := JWBUnit._l(id);
 end;
 
 procedure TfMenu.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
@@ -4719,261 +4705,6 @@ begin
   fUser.SpeedButton1Click(Sender);
 end;
 
-procedure TfMenu.RebuildAnnotations;
-procedure WriteAnnotPackage;
-begin
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName annotate.pkg');
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name WaKan Compiled Annotations');
-  PKGWriteForm.PKGWriteCmd('TitleName WaKan Compiled Annotations');
-  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Filip Kábrt 2005');
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 587135');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 453267');
-  PKGWriteForm.PKGWriteCmd('Include annot');
-  PKGWriteForm.PKGWriteCmd('Finish');
-end;
-var t:textfile;
-    chk,nchk:TStringList;
-    s:string;
-    sr:TSearchRec;
-    bld:boolean;
-    pd:TSMPromptForm;
-    ps:TPackageSource;
-    tt:TTextTable;
-    ftp:byte;
-    moded:boolean;
-    curt,curd:string;
-    dd:string;
-begin
-  chk:=TStringList.Create;
-  nchk:=TStringList.Create;
-  bld:=false;
-  if FileExists('ANNOTATE.CHK') then chk.LoadFromFile('ANNOTATE.CHK');
-  if FindFirst('*.ANO',faAnyFile,sr)=0 then
-  repeat
-    s:=sr.name+';'+inttostr(sr.size)+';'+inttostr(sr.time);
-    if chk.IndexOf(s)=-1 then bld:=true;
-    nchk.Add(s);
-  until FindNext(sr)<>0;
-  FindClose(sr);
-  nchk.SaveToFile('ANNOTATE.CHK');
-  chk.Free;
-  nchk.Free;
-  if not FileExists('ANNOTATE.PKG') then bld:=true;
-  if bld then
-  begin
-    pd:=SMMessageDlg(
-      _l('^eAnnotations'),
-      _l('^eRebuilding annotations...'));
-    {$I-}
-    mkdir('annot');
-    {$I+}
-    ioresult;
-    assignfile(t,'annot\Annot.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'xTag');
-    writeln(t,'bUser');
-    writeln(t,'sData');
-    writeln(t,'$ORDERS');
-    writeln(t,'Tag_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Tag');
-    writeln(t,'$CREATE');
-    closefile(t);
-    WriteAnnotPackage;
-    DeleteFile('annot\Annot.Info');
-    ps:=TPackageSource.Create('annotate.pkg',621030,587135,453267);
-    tt:=TTextTable.Create(ps,'annot',false,false);
-    tt.Nocommitting:=true;
-    if FindFirst('*.ANO',faAnyFile,sr)=0 then
-    repeat
-      ftp:=Conv_DetectType(sr.name);
-      if ftp=0 then ftp:=98;
-      Conv_Open(sr.name,ftp);
-      s:=Conv_Read;
-      if Uppercase(sr.name)='_USER.ANO' then dd:='1' else dd:='0';
-      moded:=false;
-      curd:=''; curt:='';
-      while s<>'' do
-      begin
-        if s=UH_LF then
-        begin
-          if (curd<>'') and (curt<>'') and (copy(curt,1,4)<>UnicodeToHex('#')) then
-            tt.Insert([curt,dd,HexToCombUni(curd)]);
-          curd:='';
-          curt:='';
-          moded:=false;
-        end else if (not moded) and ((s=UnicodeToHex(';')) or (s=UnicodeToHex(':'))) then
-          moded:=true else if s<>UH_CR then
-          if moded then curd:=curd+s else curt:=curt+s;
-        s:=Conv_Read;
-      end;
-      Conv_Close;
-    until FindNext(sr)<>0;
-    tt.Nocommitting:=false;
-    tt.ReIndex;
-    tt.WriteTable('annot\Annot',true);
-    WriteAnnotPackage;
-{    DeleteFile('annot\Annot.info');
-    DeleteFile('annot\Annot.data');
-    DeleteFile('annot\Annot.struct');
-    DeleteFile('annot\Annot.index');}
-    {$I-}
-    rmdir('annot');
-    {$I+}
-    ioresult;
-    pd.Free;
-  end;
-end;
-
-procedure TfMenu.LoadAnnotations;
-var ps:TPackageSource;
-begin
-  try
-    if not fileexists('annotate.pkg') then RebuildAnnotations;
-    if not fileexists('annotate.pkg') then exit;
-    ps:=TPackageSource.Create('annotate.pkg',621030,587135,453267);
-    TAnnots:=TTextTable.Create(ps,'annot',false,false);
-    ps.Free;
-  except
-    Application.MessageBox(
-      pchar(_l('^eAnnotations file ANNOTATE.PKG is corrupt and wasn''t loaded.'#13
-        +'If you delete it, it will be recreated.')),
-      pchar(_l('^eError')),
-      MB_ICONERROR or MB_OK);
-  end;
-end;
-
-procedure TfMenu.AnnotSeek(des: array of string);
-var i:integer;
-    tagf,dataf:integer;
-begin
-  tagf:=TAnnots.Field('Tag');
-  dataf:=TAnnots.Field('Data');
-  curAnnot:='';
-  for i:=0 to High(des) do
-  begin
-    if TAnnots=nil then exit;
-    TAnnots.SetOrder('Tag_Ind');
-    TAnnots.Locate('Tag',des[i],false);
-    while (not TAnnots.EOF) and (TAnnots.Str(tagf)=des[i]) do
-    begin
-      if curAnnot<>'' then curAnnot:=curAnnot+',';
-      curAnnot:=curAnnot+TAnnots.Str(dataf);
-      TAnnots.Next;
-    end;
-  end;
-  AnnotFirst;
-end;
-
-procedure TfMenu.AnnotFirst;
-begin
-  curAnnotPos:=1;
-end;
-
-function TfMenu.AnnotGet(cmd: char): string;
-begin
-  result:='';
-  if curAnnotPos+1>length(curAnnot) then exit;
-  while (curAnnotPos<length(curAnnot)) and
-    ((upcase(curAnnot[curAnnotPos])<>upcase(cmd)) or (curAnnot[curAnnotPos+1]<>':')) do
-    begin
-      while (curAnnotPos<length(curAnnot)) and (curAnnot[curAnnotPos]<>',') do inc(curAnnotPos);
-      inc(curAnnotPos);
-    end;
-  inc(curAnnotPos,2);
-  if curAnnotPos>length(curAnnot) then exit;
-  while (curAnnotPos<=length(curAnnot)) and (curAnnot[curAnnotPos]<>',') do
-  begin
-    result:=result+curAnnot[curAnnotPos];
-    inc(curAnnotPos);
-  end;
-  inc(curAnnotPos);
-end;
-
-function TfMenu.AnnotGetAll(cmd: char; delimit: string): string;
-var s:string;
-begin
-  AnnotFirst;
-  result:='';
-  s:=AnnotGet(cmd);
-  while s<>'' do
-  begin
-    if result<>'' then result:=result+delimit;
-    result:=result+s;
-    s:=AnnotGet(cmd);
-  end;
-end;
-
-function TfMenu.AnnotGetOne(cmd: char): string;
-begin
-  AnnotFirst;
-  result:=AnnotGet(cmd);
-end;
-
-procedure TfMenu.AnnotSeekK(kanji, kana: string);
-begin
-  if (curlang<>'j') or (kana='') then
-  begin
-    if length(kanji)>4 then AnnotSeek([kanji]) else AnnotSeek([kanji,UnicodeToHex(UH_UNKNOWN_KANJI+kanji)]);
-  end else
-    AnnotSeek([kanji,kana,UnicodeToHex(KanaToRomaji(kana,1,'j')),kanji+UnicodeToHex('+')+kana]);
-end;
-
-function TfMenu.IsAnnot: boolean;
-begin
-  result:=TAnnots<>nil;
-end;
-
-procedure TfMenu.AnnotShowMedia(kanji, kana: string);
-var s:string;
-    b:boolean;
-begin
-  AnnotSeekK(kanji,kana);
-  fMedia.media.Clear;
-  fMedia.TabSet1.Tabs.Clear;
- // images
-  AnnotFirst;
-  s:=AnnotGet('I');
-  while s<>'' do
-  begin
-    fMedia.media.Add(s);
-    fMedia.TabSet1.Tabs.Add(inttostr(fMedia.TabSet1.Tabs.Count+1)+': '+copy(s,1,pos('.',s)-1));
-    s:=AnnotGet('I');
-  end;
-  // pages
-  AnnotFirst;
-  s:=AnnotGet('W');
-  while s<>'' do
-  begin
-    fMedia.media.Add('http://'+s);
-    fMedia.TabSet1.Tabs.Add(inttostr(fMedia.TabSet1.Tabs.Count+1)+': '+s);
-    s:=AnnotGet('W');
-  end;
-  if fMedia.media.Count>0 then
-  begin
-    fMedia.Show;
-    fMedia.TabSet1.Visible:=fMedia.media.Count>1;
-    fMedia.TabSet1.TabIndex:=0;
-    fMedia.TabSet1Change(self,0,b);
-    SetFocus;
-  end else fMedia.Hide;
-end;
 
 initialization
   tim:=0;

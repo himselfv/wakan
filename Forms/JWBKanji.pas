@@ -90,7 +90,8 @@ implementation
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
-  JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils, JWBCategories;
+  JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils, JWBCategories,
+  JWBAnnotations;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -766,7 +767,7 @@ begin
   kix:=ki[DrawGrid1.ColCount*ARow+Acol];
   delete(kix,1,1);
   fKanjiDetails.SetCharDetails(kix);
-  fMenu.AnnotShowMedia(kix,'');
+  AnnotShowMedia(kix,'');
   if fKanjiCompounds.Visible then SetCharCompounds;
 end;
 
@@ -808,10 +809,10 @@ begin
       'N':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Names');
     end;
   end;
-  if fSettings.CheckBox69.Checked and fMenu.IsAnnot then
+  if fSettings.CheckBox69.Checked and HaveAnnotations then
   begin
-    fMenu.AnnotSeekK(TChar.Str(TCharUnicode),'');
-    s:=fMenu.AnnotGetOne('c');
+    Annot.SeekK(TChar.Str(TCharUnicode),'');
+    s:=Annot.GetOne('c');
     if s<>'' then try
       DrawGrid1.Canvas.Font.Color:=strtoint('0x'+copy(s,5,2)+copy(s,3,2)+copy(s,1,2));
     except end;

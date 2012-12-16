@@ -5,7 +5,8 @@ Has a lot of dark legacy in code form.
 }
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBUtils, TextTable, MemSource, StdPrompt;
+uses SysUtils, Classes, JWBStrings, JWBUtils, TextTable, MemSource, StdPrompt,
+  JWBAnnotations;
 
 //See comments to TextTable.CURSOR_IN_TABLE
 {$DEFINE DIC_CURSOR_IN_TABLE}
@@ -161,6 +162,7 @@ type
     CUserPrior: TTextTableCursor;
     stUserPriorKanji: TSeekObject;
     fldUserPriorCount: integer;
+    CAnnot: TAnnotationCursor;
   public
     procedure Search(search:SatanString; wt: integer; sl: TStringList);
 
@@ -731,6 +733,10 @@ begin
   CUserPrior := TTextTableCursor.Create(TUserPrior);
   stUserPriorKanji := TUserPrior.GetSeekObject('Kanji');
   fldUserPriorCount := TUserPrior.Field('Count');
+  if HaveAnnotations() then
+    CAnnot := TAnnotationCursor.Create(TAnnots)
+  else
+    CAnnot := nil;
 end;
 
 {
@@ -1098,11 +1104,11 @@ begin
         end;
       end else
       begin
-        if fMenu.IsAnnot then
+        if CAnnot<>nil then
         begin
-          fMenu.AnnotSeekK(dic.Str(dic.TDictKanji),dic.Str(dic.TDictPhonetic));
-          s2:=fMenu.AnnotGetAll('t',', ');
-          if fMenu.AnnotGetOne('c')<>'' then s2:=UH_SETCOLOR+fMenu.AnnotGetOne('c')+s2;
+          CAnnot.SeekK(dic.Str(dic.TDictKanji),dic.Str(dic.TDictPhonetic));
+          s2:=CAnnot.GetAll('t',', ');
+          if CAnnot.GetOne('c')<>'' then s2:=UH_SETCOLOR+CAnnot.GetOne('c')+s2;
           ii:=pos('{'+statpref,scur)+length(statpref)+1;
           if scur[ii]=ALTCH_EXCL then inc(ii,2);
           if scur[ii]=ALTCH_TILDE then inc(ii,2);

@@ -21,6 +21,9 @@ Latin characters are considered "half-width" and require only half the slot
 kanji and kana uses.
 }
 
+//If enabled, support multithreaded translation
+{$DEFINE MTHREAD_SUPPORT}
+
 type
   TTextAnnotMode = (
     amDefault,
@@ -39,6 +42,9 @@ type
     tfManuallyChosen
   );
   TSetWordTransFlags = set of TSetWordTransFlag;
+
+  TTranslationThread = class;
+  TTranslationThreads = array of TTranslationThread;
 
   TfTranslate = class(TForm)
     Shape10: TShape;
@@ -224,6 +230,9 @@ type
     property FileChanged: boolean read FFileChanged write SetFileChanged;
 
   protected
+   {$IFDEF MTHREAD_SUPPORT}
+    function CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
+   {$ENDIF}
     procedure AutoTranslateLine(y: integer; x_bg, x_en: integer;
       req: TDicSearchRequest; dicsl: TStringList);
   public
@@ -241,8 +250,7 @@ type
     blockfromx: integer;
     blocktox: integer;
   public
-    constructor Create(ablockfromy, ablocktoy: integer;
-      ablockfromx, ablocktox: integer; areq: TDicSearchRequest=nil);
+    constructor Create(ablockfromy, ablocktoy: integer);
     destructor Destroy; override;
     procedure Execute; override;
   end;
@@ -1101,19 +1109,22 @@ begin
   Button2Click(Sender);
 end;
 
-constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer;
-  ablockfromx, ablocktox: integer; areq: TDicSearchRequest);
+constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer);
 begin
+ {$IF CompilerVersion<21}
   inherited Create({CreateSuspended=}true);
+ {$ELSE}
+ { On newer compilers non-suspended threads are still suspended until the end of Create().
+  Moreover, if we CreateSuspeneded and do Resume()/Start() manually,
+  it'll clear CreateSuspended and it'll be called again in AfterConstruction => bug.
+  This sucks. }
+  inherited Create(false);
+ {$IFEND}
   blockfromy := ablockfromy;
   blocktoy := ablocktoy;
-  blockfromx := ablockfromx;
-  blocktox := ablocktox;
-  req := areq;
+  req := nil;
   dicsl := nil;
- {$IF CompilerVersion>=20}
-  Start; //Resume() is deprecated on newer compilers
- {$ELSE}
+ {$IF CompilerVersion<21}
   Resume;
  {$IFEND}
 end;
@@ -1127,11 +1138,9 @@ procedure TTranslationThread.Execute;
 var bg, en: integer;
   i: integer;
 begin
-  if req=nil then begin
-    fUser.SetupSearchRequest(stEditorAuto, req);
-    req.dic_ignorekana := true;
-    req.Prepare;
-  end;
+  fUser.SetupSearchRequest(stEditorAuto, req);
+  req.dic_ignorekana := true;
+  req.Prepare;
 
   dicsl := TStringList.Create;
   try
@@ -1139,8 +1148,6 @@ begin
     while (not Terminated) and (i<=blocktoy) do begin
       bg:=0;
       en:=flength(fTranslate.doc[i])-1; //TODO: receive doc/doctr in Create()
-      if i=blockfromy then bg:=blockfromx;
-      if i=blocktoy then en:=blocktox;
 
       fTranslate.AutoTranslateLine(i, bg, en, req, dicsl);
       Inc(i);
@@ -1152,6 +1159,31 @@ begin
   end;
 end;
 
+{$IFDEF MTHREAD_SUPPORT}
+{ Creates enough translation threads to use available cores and distributes work between those.
+ Always leaves the last chunk to the calling thread because the last line of the last chunk
+ might be incomplete and it's easier to care about that only in the main thread.
+ On exit sets y to reflect calling thread's new share of work. }
+function TfTranslate.CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
+var sysinfo: SYSTEM_INFO;
+  i, yshare: integer;
+begin
+  GetSystemInfo(sysinfo);
+  SetLength(Result,0);
+  if sysinfo.dwNumberOfProcessors<=1 then exit;
+  if blocktoy-y < y-blockfromy then exit; //don't start threads if there's less left than we have done
+  if abtoy-y < integer(sysinfo.dwNumberOfProcessors) then exit; //less than one line per thread!
+
+  SetLength(Result, sysinfo.dwNumberOfProcessors-1);
+  yshare := (abtoy-y) div (Length(Result)+1);
+  for i := 0 to Length(Result)-1 do begin
+    Result[i] := TTranslationThread.Create(y, y+yshare);
+    Inc(y, yshare);
+  end;
+end;
+{$ENDIF}
+
+
 procedure TfTranslate.AutoTranslate;
 var j:integer;
   bg,en:integer;
@@ -1162,10 +1194,14 @@ var j:integer;
   req: TDicSearchRequest;
   dicsl: TStringList;
 
-  threads: array of TTranslationThread;
+  donework: integer;
+  totalwork: integer;
+
+ {$IFDEF MTHREAD_SUPPORT}
+  threads: TTranslationThreads;
   useThreads: boolean;
   threadsCreated: boolean;
-  sysinfo: SYSTEM_INFO;
+ {$ENDIF}
 begin
   if (blockx=rcurx) and (blocky=rcury) then
   begin
@@ -1182,8 +1218,10 @@ begin
   end else CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
 
+ {$IFDEF MTHREAD_SUPPORT}
   useThreads := fSettings.cbMultithreadedTranslation.Checked;
   threadsCreated := false;
+ {$ENDIF}
 
  //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
@@ -1200,6 +1238,9 @@ begin
     req.dic_ignorekana := true;
     req.Prepare;
 
+    totalwork := blocktoy-blockfromy+1;
+    donework := 0;
+
     y := blockfromy;
     while y<=blocktoy do
     begin
@@ -1214,7 +1255,7 @@ begin
         sp:=SMProgressDlgCreate(
           _l('#00684^eTranslator'),
           _l('#00685^eTranslating...'),
-          blocktoy-blockfromy+1,
+          totalwork,
           {canCancel=}true);
         sp.Parent := Application.MainForm;
         sp.Width := 200; //we like it narrow
@@ -1223,7 +1264,7 @@ begin
 
       if sp<>nil then begin
        //Internally we only update once in a while
-        sp.SetProgress(y-blockfromy);
+        sp.SetProgress(donework);
         sp.ProcessMessages;
         if sp.ModalResult=mrCancel then begin
           sp.Hide;
@@ -1233,28 +1274,42 @@ begin
             PChar(_l('^eConfirm abort')),
             MB_ICONQUESTION+MB_YESNO
           )=idYes then
-             break; //and restore+repaint
+          begin
+           {$IFDEF MTHREAD_SUPPORT}
+            for j := 0 to Length(threads) - 1 do
+              threads[j].Terminate; //even if it was doing work
+           {$ENDIF}
+            break; //and restore+repaint
+          end;
           sp.ModalResult := 0;
           sp.Show;
         end;
       end;
 
-      if useThreads and not threadsCreated and (GetTickCount-startTime > 400) then begin
+     {$IFDEF MTHREAD_SUPPORT}
+      if useThreads and not threadsCreated and (GetTickCount-startTime > 200) then begin
         threadsCreated := true; //skip this block afterwards
-        GetSystemInfo(sysinfo);
-        if sysinfo.dwNumberOfProcessors>1 then begin
-          SetLength(threads, sysinfo.dwNumberOfProcessors-1);
-          //threads[i] := TTranslationThread.Create(bfromy, btoy, bfromx, btox);
-          //TODO:
-        end;
+        threads := CreateTranslationThreads(blockfromy,blocktoy,y);
+        //recalculate total work
+        totalwork := (blocktoy-y+1)+donework;
+        if sp<>nil then
+          sp.SetMaxProgress(totalwork);
       end;
+     {$ENDIF}
 
       AutoTranslateLine(y, bg, en, req, dicsl);
       Inc(y);
+      Inc(donework);
     end;
 
   finally
     sp.Free; //Important, because it's modal window
+   {$IFDEF MTHREAD_SUPPORT}
+    for j := 0 to Length(threads) - 1 do begin
+      threads[j].WaitFor;
+      threads[j].Free;
+    end;
+   {$ENDIF}
     FreeAndNil(req);
     FreeAndNil(dicsl);
   end;

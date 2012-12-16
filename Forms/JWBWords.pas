@@ -109,7 +109,7 @@ implementation
 uses JWBMenu, JWBStrings, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
   JWBUserFilters, StdPrompt, PKGWrite, JWBExamples, JWBUser,
-  JWBConvert, JWBWordsExpChoose, JWBCategories;
+  JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations;
 
 var wl,wlc:TStringList;
     ll,ltl:TStringList;
@@ -2746,7 +2746,7 @@ begin
   fUserDetails.Button13.Enabled:=true;
   fUserDetails.ListBox2.ItemIndex:=0;
   cl.Free;
-  fMenu.AnnotShowMedia(curkanji,curphonetic);
+  AnnotShowMedia(curkanji,curphonetic);
 end;
 
 procedure TfWords.SetGroupStatus(st: integer);

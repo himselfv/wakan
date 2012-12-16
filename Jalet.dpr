@@ -58,7 +58,8 @@ uses
   JWBLanguage in 'Forms\JWBLanguage.pas' {fLanguage},
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
-  JWBMedia in 'Forms\JWBMedia.pas' {fMedia};
+  JWBMedia in 'Forms\JWBMedia.pas' {fMedia},
+  JWBAnnotations in 'Components\JWBAnnotations.pas';
 
 {$R *.RES}
 
