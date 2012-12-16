@@ -58,10 +58,16 @@ end;
 
 //TODO: Convert to Unicode
 procedure RebuildAnnotations;
-var tempDir: string;
+const
+  UH_COMMENT:FChar = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
+  UH_SEP_SEMICOLON:FChar = {$IFDEF UNICODE}';'{$ELSE}'003B'{$ENDIF};
+  UH_SEP_COLON:FChar = {$IFDEF UNICODE}':'{$ELSE}'003A'{$ENDIF};
+var
+  tempDir: string;
   t:textfile;
   chk,nchk:TStringList;
-  s:string;
+  ch:FChar;
+  ss: string;
   sr:TSearchRec;
   bld:boolean;
   pd:TSMPromptForm;
@@ -69,7 +75,7 @@ var tempDir: string;
   tt:TTextTable;
   ftp:byte;
   moded:boolean;
-  curt,curd:string;
+  curt,curd:FString;
   dd:string;
 begin
   chk:=TStringList.Create;
@@ -78,9 +84,9 @@ begin
   if FileExists('ANNOTATE.CHK') then chk.LoadFromFile('ANNOTATE.CHK');
   if FindFirst('*.ANO',faAnyFile,sr)=0 then
   repeat
-    s:=sr.name+';'+inttostr(sr.size)+';'+inttostr(sr.time);
-    if chk.IndexOf(s)=-1 then bld:=true;
-    nchk.Add(s);
+    ss:=sr.name+';'+inttostr(sr.size)+';'+inttostr(sr.time);
+    if chk.IndexOf(ss)=-1 then bld:=true;
+    nchk.Add(ss);
   until FindNext(sr)<>0;
   SysUtils.FindClose(sr);
   nchk.SaveToFile('ANNOTATE.CHK');
@@ -122,23 +128,30 @@ begin
       ftp:=Conv_DetectType(sr.name);
       if ftp=0 then ftp:=98;
       Conv_Open(sr.name,ftp);
-      s:=Conv_Read;
+      ch:=Conv_ReadChar;
       if Uppercase(sr.name)='_USER.ANO' then dd:='1' else dd:='0';
       moded:=false;
       curd:=''; curt:='';
-      while s<>'' do
+     {$IFDEF UNICODE}
+      while Ord(ch)<>$FFFF do
+     {$ELSE}
+      while ch<>'' do
+     {$ENDIF}
       begin
-        if s=UH_LF then
+        if ch=UH_LF then
         begin
-          if (curd<>'') and (curt<>'') and (copy(curt,1,4)<>UnicodeToHex('#')) then
-            tt.Insert([curt,dd,HexToCombUni(curd)]);
+          if (curd<>'') and (curt<>'') and (fgetch(curt,1)<>UH_COMMENT) then
+            tt.Insert([curt,dd,fstrtohex(curd)]);
           curd:='';
           curt:='';
           moded:=false;
-        end else if (not moded) and ((s=UnicodeToHex(';')) or (s=UnicodeToHex(':'))) then
-          moded:=true else if s<>UH_CR then
-          if moded then curd:=curd+s else curt:=curt+s;
-        s:=Conv_Read;
+        end else
+          if (not moded) and ((ch=UH_SEP_SEMICOLON) or (ch=UH_SEP_COLON)) then
+            moded:=true
+          else
+          if ch<>UH_CR then
+            if moded then curd:=curd+ch else curt:=curt+ch;
+        ch:=Conv_ReadChar;
       end;
       Conv_Close;
     until FindNext(sr)<>0;

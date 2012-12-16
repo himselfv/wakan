@@ -5,10 +5,15 @@ uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows;
 
 {
 Unicode status:
-- Dictionary format is not going to change so everything inside the dictionary
-is kept as AnsiStrings, encoded in old 4-char format.
-We convert it as we read it.
-- We return stuff in strings (UnicodeStrings).
+- Table formats aren't going to change and some fields in some tables are
+ kept in Ansi hex.
+- Strings are returned as FStrings (although not typed as such):
+    Ansi field @ Ansi compiler     =>  Ansi contents
+    Ansi field @ Unicode compiler  =>  Ansi contents in UnicodeString
+    Wide field @ Ansi compiler     =>  Ansi hex contents
+    Wide field @ Unicode compiler  =>  Unicode contents
+ So basically, you get unchanged text from Ansi fields (and it might be hex)
+ and FString from Unicode fields.
 }
 
 {

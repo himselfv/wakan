@@ -195,8 +195,6 @@ function ByteToHex(pb:PByte;sz:integer):string;
 function UnicodeToHex(pc:PWideChar; len: integer):string; overload;
 function UnicodeToHex(const s:UnicodeString):string; overload;
 function AnsiToHex(const s:AnsiString):string; {$IFDEF INLINE}inline;{$ENDIF}
-function CombUniToHex(s:string):string;
-function HexToCombUni(s:string):string;
 function UnicodeToML(s:widestring):string;
 
 type
@@ -693,45 +691,6 @@ begin
   end;
   result:=s2;
 end;
-
-function CombUniToHex(s:string):string;
-var i,lhcount:integer;
-begin
-  result:='';
-  lhcount:=0;
-  for i:=1 to length(s) do
-    if lhcount>0 then
-    begin
-      dec(lhcount);
-      result:=result+format('%2.2X',[ord(s[i])]);
-    end else if ord(s[i])>128 then lhcount:=(ord(s[i])-128)*2 else
-      result:=result+'00'+format('%2.2X',[ord(s[i])]);
-end;
-
-function HexToCombUni(s:string):string;
-var i,j,lhcount:integer;
-begin
-  result:='';
-  lhcount:=0;
-  for i:=0 to (length(s) div 4)-1 do
-  begin
-    j:=i;
-    if (lhcount=0) then
-    begin
-      while (j<(length(s) div 4)) and ((s[j*4+1]<>'0') or (s[j*4+2]<>'0') or (s[j*4+3]>'7')) do
-      begin
-        inc(j); inc(lhcount);
-      end;
-      if lhcount>0 then result:=result+chr(128+lhcount);
-    end;
-    if lhcount>0 then
-    begin
-      dec(lhcount);
-      result:=result+chr(StrToInt('0x'+copy(s,i*4+1,2)))+chr(StrToInt('0x'+copy(s,i*4+3,2)));
-    end else result:=result+chr(StrToInt('0x'+copy(s,i*4+3,2)));
-  end;
-end;
-
 
 
 
