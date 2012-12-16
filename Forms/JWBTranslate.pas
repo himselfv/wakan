@@ -1,4 +1,4 @@
-unit JWBTranslate;
+﻿unit JWBTranslate;
 
 interface
 
@@ -23,6 +23,9 @@ kanji and kana uses.
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
+
+//Display a window showing how much time Auto-TL took
+{$DEFINE TLSPEEDREPORT}
 
 type
   TTextAnnotMode = (
@@ -1067,7 +1070,6 @@ begin
   Result := true;
 end;
 
-
 procedure TfTranslate.Button2Click(Sender: TObject);
 begin
   if not CommitFile then exit;
@@ -1314,6 +1316,13 @@ begin
     FreeAndNil(dicsl);
   end;
 
+ {$IFDEF TLSPEEDREPORT}
+  Application.MessageBox(
+    PChar('total time: '+IntToStr(GetTickCount-startTime)),
+    PChar('thread test results'),
+    MB_OK
+  );
+ {$ENDIF}
   mustrepaint:=true;
   ShowText(true);
   Screen.Cursor:=crDefault;

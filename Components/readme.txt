@@ -2,7 +2,12 @@ COMPONENTS FOR WAKAN COMPILATION
 
 1. Install RX controls
 2. Install UrlLabel
-3. Add Components, Components\Package, Components\TextTable, Components\UrlLabel to the search path.
+3. Add to the project's search path:
+  Components
+  Components\Package
+  Components\TextTable
+  Components\UrlLabel
+  Components\ScaleMM
 
 NOTE:
 1. You can install newer versions of common controls as per below. But don't come crying when it doesn't work.

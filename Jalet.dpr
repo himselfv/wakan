@@ -6,6 +6,7 @@ Stuff you can define for the whole project:
 }
 
 uses
+  ScaleMM2 in 'Components\ScaleMM\ScaleMM2.pas',
   Forms,
   JWBStrings in 'Components\JWBStrings.pas',
   PackageCommon in 'Components\Package\PackageCommon.pas',
