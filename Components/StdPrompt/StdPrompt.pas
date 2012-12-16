@@ -172,7 +172,7 @@ function SMMessageDlg(title,mess:string):TSMPromptForm;
 // creates buttonless message form and displays it
 function SMMessageFixDlg(title,mess:string;minsizex:integer):TSMPromptForm;
 
-function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean=false;AOwner:TWinControl=nil):TSMPromptForm;
+function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean=false):TSMPromptForm;
 function SMProgressDlgCreate(title,mess:string;maxprogress:integer;canCancel:boolean=false):TSMPromptForm;
 
 // creates buttonless message form with a progress bar that has its
@@ -568,7 +568,7 @@ begin
 end;
 
 //Creates buttonless message form of given minimal size and displays it
-function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean;AOwner:TWinControl):TSMPromptForm;
+function SMProgressDlg(title,mess:string;maxprogress:integer;canCancel:boolean):TSMPromptForm;
 var btns: TMsgDlgButtons;
 begin
   if canCancel then
@@ -577,7 +577,6 @@ begin
     btns := [];
   Result:=SMCreateDlg(btns,200,0,true,'',title,mess);
   Result.SetMaxProgress(maxprogress);
-  Result.Parent := AOwner;
   Result.AppearModal;
 end;
 

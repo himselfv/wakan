@@ -25,7 +25,7 @@ kanji and kana uses.
 {$DEFINE MTHREAD_SUPPORT}
 
 //Display a window showing how much time Auto-TL took
-{$DEFINE TLSPEEDREPORT}
+//{$DEFINE TLSPEEDREPORT}
 
 type
   TTextAnnotMode = (
@@ -1259,7 +1259,6 @@ begin
           _l('#00685^eTranslating...'),
           totalwork,
           {canCancel=}true);
-        sp.Parent := Application.MainForm;
         sp.Width := 200; //we like it narrow
         sp.AppearModal;
       end;
