@@ -1179,7 +1179,7 @@ begin
   SetLength(Result, sysinfo.dwNumberOfProcessors-1);
   yshare := (abtoy-y) div (Length(Result)+1);
   for i := 0 to Length(Result)-1 do begin
-    Result[i] := TTranslationThread.Create(y, y+yshare);
+    Result[i] := TTranslationThread.Create(y, y+yshare-1);
     Inc(y, yshare);
   end;
 end;
