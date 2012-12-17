@@ -156,9 +156,13 @@ begin
 end;
 
 procedure TfDictImport.WriteDictPackage(dictlang:char);
-var f:textfile;
+var
+  tempDir: string;
+  f:textfile;
 begin
-  assignfile(f,'dict\dict.ver');
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+  assignfile(f,tempDir+'\dict.ver');
   rewrite(f);
   writeln(f,'DICT');
   writeln(f,'4');
@@ -188,8 +192,9 @@ begin
   PKGWriteForm.PKGWriteCmd('CRCMode 0');
   PKGWriteForm.PKGWriteCmd('PackMode 0');
   PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-  PKGWriteForm.PKGWriteCmd('Include dict');
+  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
   PKGWriteForm.PKGWriteCmd('Finish');
+  DeleteDirectory(tempDir);
 end;
 
 procedure EnsortIndex(sl,sl2:TStringList;des,ind:string);

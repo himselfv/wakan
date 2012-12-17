@@ -2890,7 +2890,7 @@ begin
   FormPlacement1.RestoreFormPlacement;
   if paramstr(1)='makeexamples'then
   begin
-    fWords.Button1Click(self);
+    fExamples.BuildExamplesPackage;
     exit;
   end;
   if paramstr(1)='makedic'then

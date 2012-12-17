@@ -52,6 +52,7 @@ type
     randbank:TStringList;
 
   public
+    procedure BuildExamplesPackage;
     procedure ReloadExamples;
 
   protected
@@ -81,7 +82,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu, JWBSettings, JWBWords, JWBUnit;
+uses JWBUser, JWBMenu, JWBSettings, JWBWords, JWBUnit, PKGWrite;
 
 {$R *.DFM}
 
@@ -202,6 +203,173 @@ begin
     examstruct:=nil;
     examindex:=nil;
   end;
+end;
+
+procedure TfExamples.BuildExamplesPackage;
+var
+  tempDir: string;
+  f:file of byte;
+  f2:file of word;
+  f3:file of byte;
+  f4:file of integer;
+  sl:TStringList;
+  b,h,l:byte;
+  i,j,curpos,nextpos:integer;
+  s2:TStringList;
+  poss:string;
+  curs:string;
+  act:boolean;
+  w:word;
+  s:string;
+begin
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+
+  assignfile(f,'examples.uni');
+  assignfile(f2,tempDir+'\index.bin');
+  assignfile(f4,tempDir+'\struct.bin');
+  assignfile(f3,tempDir+'\examples.bin');
+  system.reset(f);
+  rewrite(f2);
+  rewrite(f3);
+  rewrite(f4);
+  sl:=TStringList.Create;
+  s2:=TStringList.Create;
+  curpos:=0;
+  read(f,b);
+  read(f,b);
+  while not eof(f) do
+  begin
+    read(f,b);
+    while b=ord('#') do
+    begin
+      read(f,b);
+      h:=0; l:=0;
+      while (h<>0) or (l<>10) do
+      begin
+        read(f,l); read(f,h);
+      end;
+{      h:=0; l:=0;
+      while (h<>0) or (l<>10) do
+      begin
+        read(f,l); read(f,h);
+      end;}
+      read(f,b);
+    end;
+    if b<>ord('A') then showmessage('BAD STRUCTURE - '+inttostr(b));
+    for i:=1 to 5 do read(f,b);
+    h:=0; l:=0;
+    s2.Clear;
+    while (h<>0) or (l<>9) do
+    begin
+      read(f,l);
+      read(f,h);
+      if ((h<>0) or (l<>9)) and (s2.Count<508) then
+      begin
+        s2.Add(inttostr(l));
+        s2.Add(inttostr(h));
+      end;
+    end;
+    if s2.Count>510 then showmessage('OVERFLOW1');
+    b:=s2.Count div 2;
+    write(f3,b);
+    for i:=0 to s2.Count-1 do
+    begin
+      b:=strtoint(s2[i]);
+      write(f3,b);
+    end;
+    inc(nextpos,s2.Count+1);
+    s2.Clear;
+    while (h<>0) or (l<>10) do
+    begin
+      read(f,l);
+      read(f,h);
+      if ((h<>0) or (l<>10)) and (s2.Count<255) then s2.Add(inttostr(l));
+    end;
+    if s2.Count>255 then showmessage('OVERFLOW2');
+    b:=s2.Count;
+    write(f3,b);
+    for i:=0 to s2.Count-1 do
+    begin
+      b:=strtoint(s2[i]);
+      write(f3,b);
+    end;
+    read(f,b);
+    if b<>ord('B') then showmessage('BAD STRUCTURE');
+    for i:=1 to 5 do read(f,b);
+    inc(nextpos,s2.Count+1);
+    poss:=Format('%8.8X',[curpos]);
+    curs:='';
+    b:=0;
+    l:=0;
+    act:=true;
+    while (h<>0) or (l<>10) do
+    begin
+      read(f,l);
+      read(f,h);
+      if (h=0) and (l=ord('(')) then act:=false else
+      if (h=0) and (l=ord('[')) then act:=false else
+      if (h=0) and (l=ord(')')) then act:=true else
+      if (h=0) and (l=ord(']')) then act:=true else
+      if (h=0) and (l=32) then
+      begin
+        while length(curs)<24 do curs:=curs+'0000';
+        if length(curs)>24 then curs:=copy(curs,1,24);
+        sl.Add(curs+poss);
+        curs:='';
+      end else if (h<>0) and (act) then curs:=curs+Format('%2.2X%2.2X',[h,l]);
+    end;
+    curpos:=nextpos;
+  end;
+  sl.Sort;
+  curpos:=0;
+  s:='';
+  for i:=0 to sl.Count-1 do
+  begin
+    curs:=sl[i];
+    if (copy(curs,1,24)<>s) then
+    begin
+      s:=copy(curs,1,24);
+      for j:=1 to 6 do
+      begin
+        h:=strtoint('0x'+copy(curs,(j-1)*4+1,2));
+        l:=strtoint('0x'+copy(curs,(j-1)*4+3,2));
+        w:=h*256+l;
+        write(f2,w);
+      end;
+      w:=curpos mod 65536;
+      write(f2,w);
+      w:=curpos div 65536;
+      write(f2,w);
+    end;
+    j:=strtoint('0x'+copy(curs,25,8));
+    inc(curpos);
+    write(f4,j);
+  end;
+  closefile(f2);
+  closefile(f3);
+  closefile(f4);
+  closefile(f);
+  PKGWriteForm.PKGWriteCmd('PKGFileName examples_j.pkg');
+  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
+  PKGWriteForm.PKGWriteCmd('Name Examples');
+  PKGWriteForm.PKGWriteCmd('TitleName Japanese dictionary examples');
+  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
+  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Gabriel SanRoman');
+  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
+  PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
+  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
+  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
+  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
+  PKGWriteForm.PKGWriteCmd('WriteHeader');
+  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
+  PKGWriteForm.PKGWriteCmd('CryptMode 0');
+  PKGWriteForm.PKGWriteCmd('CRCMode 0');
+  PKGWriteForm.PKGWriteCmd('PackMode 0');
+  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
+  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
+  PKGWriteForm.PKGWriteCmd('Finish');
+  DeleteDirectory(tempDir);
 end;
 
 procedure TfExamples.SetExamples(kanji:string);
@@ -416,6 +584,7 @@ begin
   end;
   ShowExample;
 end;
+
 
 initialization
   ex_jap := '';
