@@ -17,6 +17,8 @@ object fKanjiDetails: TfKanjiDetails
   FormStyle = fsStayOnTop
   OldCreateOrder = False
   OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnHide = FormHide
   OnKeyPress = FormKeyPress
   OnShow = FormShow

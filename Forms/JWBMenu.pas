@@ -422,8 +422,6 @@ type
     procedure SwitchLanguage(lanchar:char);
     procedure DockExpress(form:TForm;dock:boolean);
     procedure FixConstraints(form:TForm;w,h:integer);
-    function GetCharDet(i,j:integer):string;
-    function GetCharType(i,j:integer):string;
     function GetCharValue(index,vt:integer):string;
     function GetCharValueInt(index,vt:integer):integer;
     function GetCharValueRad(index,vt:integer):integer;
@@ -554,8 +552,6 @@ var
   curqlayout:integer;
   proposedlayout:integer;
   borderchange:boolean;
-  chardetl:TStringList;
-  chartypel:TStringList;
   romasortl:TStringList;
   displaymode:integer;
   curdisplaymode:integer;
@@ -581,14 +577,35 @@ var
   kanji_othersearch:integer;
 
 var
+  CharPropTypes:TStringList; { All possible pieces of information to display in KanjiDetails info box. }
+  chardetl:TStringList; { User configuration for KanjiDetails info box. }
+
+{
+Character property information available:
+  0 - charPropId
+  1 - sourceType -- where did we get that info
+    'D': EDICT
+    'U': UNIHAN
+  2 - sourceField
+  3 - propType -- controls how data for this property is stored and handled
+    'U', 'P': stored as 'a'-type hex string, contains unicode
+    'R', 'N', 'T'
+  4 - english name
+  5 - czech name
+  6 - description (english)
+}
+function GetCharPropType(idx:integer;fld:integer):string;
+function GetCharDet(i,j:integer):string;
+function FindCharPropType(charPropId: string): integer;
+
+
+var
   WakanVer: string = ''; //taken from resources on load
 
 const
   CurStructVer=2;
   CurDictVer=7;
   CurDicVer=4;
-
-
 
 function _l(const id:string):string; //shouldn't inline because it's for cases when JWBUnit is not in Uses!
 
@@ -608,9 +625,22 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
 
 {$R *.DFM}
 
-{ TfMenu }
+{ Pieces of information about Kanji }
 
-function TfMenu.GetCharDet(i,j:integer):string;
+function GetCharPropType(idx:integer;fld:integer):string;
+var s:string;
+begin
+  s:=CharPropTypes[idx];
+  while fld>0 do
+  begin
+    delete(s,1,pos(',',s));
+    dec(fld);
+  end;
+  if fld<6 then delete(s,pos(',',s),length(s)-pos(',',s)+1);
+  result:=s;
+end;
+
+function GetCharDet(i,j:integer):string;
 var s:string;
 begin
   s:=chardetl[i];
@@ -623,14 +653,28 @@ begin
   result:=s;
 end;
 
+//Returns chartypel index for a given char type, or -1
+function FindCharPropType(charPropId: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to CharPropTypes.Count - 1 do
+    if charPropId=GetCharPropType(i,0) then begin
+      Result := i;
+      break;
+    end;
+end;
+
+
+{ TfMenu }
+
 function TfMenu.GetCharValueInt(index,vt:integer):integer;
 var s:string;
 begin
   s:=GetCharValue(index,vt);
-  try
-    if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-    if s='' then result:=65535 else result:=strtoint(s);
-  except end;
+  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
+  if (s='') or not TryStrToInt(s, Result) then
+    Result:=65535;
 end;
 
 function TfMenu.GetCharValueRad(index,vt:integer):integer;
@@ -638,10 +682,9 @@ var s:string;
 begin
   s:=GetCharValue(index,vt);
   if pos('.',s)>0 then delete(s,pos('.',s),length(s)-pos('.',s)+1);
-  try
-    if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-    if s='' then result:=65535 else result:=strtoint(s);
-  except end;
+  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
+  if (s='') or not TryStrToInt(s, Result) then
+    Result:=65535;
 end;
 
 function TfMenu.GetCharValue(index,vt:integer):string;
@@ -658,19 +701,6 @@ begin
     TCharRead.Next;
   end;
   result:='';
-end;
-
-function TfMenu.GetCharType(i,j:integer):string;
-var s:string;
-begin
-  s:=chartypel[i];
-  while j>0 do
-  begin
-    delete(s,1,pos(',',s));
-    dec(j);
-  end;
-  if j<6 then delete(s,pos(',',s),length(s)-pos(',',s)+1);
-  result:=s;
 end;
 
 procedure TfMenu.ClearDicts;
@@ -966,9 +996,8 @@ begin
 end;
 
 procedure TfMenu.RefreshKanjiCategory;
-var b:boolean;
-    lc:char;
-    s:string;
+var lc:char;
+  s:string;
 begin
   fKanjiDetails.ComboBox1.Items.Clear;
   fKanjiSearch.ListBox1.Items.Clear;
@@ -1103,14 +1132,12 @@ end;
 
 procedure TfMenu.ReadLayout(filename:string);
 var t:textfile;
-    s:string;
-    so,sd:TPoint;
-    v2:boolean;
+  s:string;
+  so,sd:TPoint;
 begin
   assignfile(t,filename);
   reset(t);
   readln(t,s);
-  v2:=false;
   if s<>'VERSION,6'then
   begin
     Application.MessageBox(
@@ -1881,7 +1908,6 @@ begin
 end;
 
 procedure TfMenu.SetFormPos(form:TForm);
-var maxh:integer;
 begin
 {  form.Left:=0;
   form.Width:=Width;
@@ -1962,18 +1988,6 @@ begin
   closefile(t);
 end;
 
-function split(var s:string;c:char):string;
-var s2:string;
-begin
-  if pos(c,s)=0 then
-  begin
-    result:='';
-    exit;
-  end;
-  result:=copy(s,1,pos(c,s)-1);
-  delete(s,1,pos(c,s));
-end;
-
 procedure TfMenu.Button3Click(Sender: TObject);
 var t,t2,t3:textfile;
     s:string;
@@ -1981,8 +1995,6 @@ var t,t2,t3:textfile;
     dic:TJaletDic;
     recn:integer;
     en:string;
-    prob:boolean;
-    mark:string;
 begin
   ConvUniToMixUni(fSettings.edit31.text+'.uni',fSettings.edit31.text+'.cnv',recn);
   assignfile(t,fSettings.edit31.text+'.cnv');
@@ -2018,7 +2030,6 @@ begin
       if phon='' then phon:=kanj;
       if pos('FF08',phon)>0 then phon:=kanj;
       dic.TDict.SetOrder('Kanji_Ind');
-      prob:=false;
       if dic.TDict.Locate('Kanji',kanj,false) then
       begin
         en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
@@ -2027,7 +2038,6 @@ begin
         if dic.TDict.Str(dic.TDictPhonetic)<>phon then
         begin
           writeln(t3,'Phonetic problem:'+KanaToRomaji(phon,1,'j'));
-          prob:=true;
         end else en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
         writeln(t2,kanj);
         writeln(t2,phon);
@@ -2136,7 +2146,7 @@ end;
 
 procedure TfMenu.WmChangeCbChain(var Msg: TMessage);
 begin
-  if Msg.wParam=CbNextViewer then begin
+  if HWND(Msg.wParam)=CbNextViewer then begin
    // Replace next window and return
     CbNextViewer := Msg.lParam;
     Msg.Result := 0;
@@ -2154,7 +2164,6 @@ begin
 end;
 
 procedure TfMenu.Clipboard_PaintBox3Paint(Sender: TObject);
-var s:string;
 begin
   PaintBox3.Canvas.Brush.Color:=clWindow;
   PaintBox3.Canvas.Font.Color:=clWindowText;
@@ -2286,21 +2295,18 @@ begin
 end;
 
 procedure TfMenu.FormShow(Sender: TObject);
-var tt:TTextTable;
-    ps:TPackageSource;
-    sl:TStringList;
-    reg:TRegIniFile;
-    s,sx:string;
-    vi:TStringList;
-    ms:TMemoryStream;
-    setlayout,setwindows:integer;
-    tim,timbeg,timload,timoth,timuser,timproc,timdict:TDateTime;
-    conft:textfile;
-    sect:integer;
-    sortset,otherset:integer;
-    meanset,userset:boolean;
-    t:textfile;
-    s_parts: TStringArray;
+var ps:TPackageSource;
+  reg:TRegIniFile;
+  s,sx:string;
+  vi:TStringList;
+  ms:TMemoryStream;
+  setlayout,setwindows:integer;
+{  tim,timbeg,timload,timoth,timuser,timproc,timdict:TDateTime;}
+  conft:textfile;
+  sect:integer;
+  sortset,otherset:integer;
+  userset:boolean;
+  t:textfile;
 begin
   lastautosave:=now;
   screenTipImmediate:=false;
@@ -2309,7 +2315,7 @@ begin
   exampackage:=nil;
   screenModeSc:=false;
   screenModeWk:=false;
-  tim:=now;
+{  tim:=now;}
   firstact:=true;
   if initdone then exit;
   curlang:='j';
@@ -2318,8 +2324,6 @@ begin
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;
-  chardetl:=TStringList.Create;
-  chartypel:=TStringList.Create;
   bopomofol:=TStringList.Create;
 
   romasortl:=TStringList.Create;
@@ -2649,7 +2653,7 @@ begin
           if sect=2 then defll.Add(s);
           if sect=3 then roma_t.Add(s);
           if sect=4 then splitadd(romac,s,4);
-          if sect=5 then chartypel.Add(s);
+          if sect=5 then CharPropTypes.Add(s);
           if sect=6 then splitadd(romasortl,s,2);
           if sect=7 then suffixl.Add(s);
           if sect=8 then ignorel.Add(s);
@@ -2710,8 +2714,8 @@ begin
   fStatistics.Label16.Caption:=vi[5];
   ChinesePresent:=vi[6]='CHINESE';
   vi.Free;
-  timbeg:=now-tim;
-  tim:=now;
+{  timbeg:=now-tim;
+  tim:=now;}
   fSplash.ProgressBar1.Position:=1;
   fSplash.ProgressBar1.Update;
   TChar:=TTextTable.Create(ps,'Char',true,false);
@@ -2722,8 +2726,8 @@ begin
   fSplash.ProgressBar1.Update;
   TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
 //  TKanaKanji:=TTextTable.Create(ps,'KanaKanji',true);
-  timload:=now-tim;
-  tim:=now;
+{  timload:=now-tim;
+  tim:=now;}
   if (fSettings.CheckBox64.Checked) and (fSettings.CheckBox65.Checked) then RebuildAnnotations;
   if (fSettings.CheckBox64.Checked) then LoadAnnotations;
 //  showmessage(TChar.GetField(0,3));
@@ -2801,8 +2805,8 @@ begin
     end;
   end;
   try
-  timuser:=now-tim;
-  tim:=now;
+{  timuser:=now-tim;
+  tim:=now;}
   userdataloaded:=false;
   LoadUserData;
   except
@@ -2855,16 +2859,16 @@ begin
 //  XPResFix(fExamples);
   XPResFix(fTranslate);
   XPResFix(fClipboard);
-  timproc:=now-tim;
-  tim:=now;
+{  timproc:=now-tim;
+  tim:=now;}
   SwitchLanguage(curlang);
   fKanjiSearch.RadioGroup1.ItemIndex:=sortset;
   kanji_othersearch:=otherset;
   fKanjiSearch.ComboBox1.ItemIndex:=-1;
   if dictmodeset=1 then fUser.SpeedButton2.Down:=true else fUser.SpeedButton1.Down:=true;
   if userset then fKanjiCompounds.SpeedButton8.Down:=true else fKanjiCompounds.SpeedButton9.Down:=true;
-  timdict:=now-tim;
-{  showmessage('Beg:'+formatdatetime('hh:nn:ss.zzz',timbeg)+#13+
+{  timdict:=now-tim;
+  showmessage('Beg:'+formatdatetime('hh:nn:ss.zzz',timbeg)+#13+
               'Load:'+formatdatetime('hh:nn:ss.zzz',timload)+#13+
               'User:'+formatdatetime('hh:nn:ss.zzz',timuser)+#13+
               'Proc:'+formatdatetime('hh:nn:ss.zzz',timproc)+#13+
@@ -3126,7 +3130,6 @@ begin
 end;
 
 procedure TfMenu.aStatisticsExecute(Sender: TObject);
-var a:pointer;
 begin
   fWords.DoStatistic;
 end;
@@ -3240,7 +3243,6 @@ begin
 end;
 
 procedure TfMenu.aDictEditorExecute(Sender: TObject);
-var pre:boolean;
 begin
   displaymode:=3;
   ChangeDisplay;
@@ -3646,14 +3648,15 @@ procedure TfMenu.DockExpress(form:TForm;dock:boolean);
 procedure DockProc(slave,host:TForm;panel:TPanel;dir:integer);
 var adocked:boolean;
     vert:boolean;
-    fixsiz,flomin,clisiz:integer;
+    fixsiz,flomin:integer;
     rect:TRect;
     bch,bcw:integer;
-    smw,smh,sxw,sxh:integer;
-    simulshow:boolean;
+{    smw,smh,sxw,sxh:integer;}
+{    clisiz:integer;
+    simulshow:boolean;}
 begin
   adocked:=slave.tag>=2;
-  simulshow:=slave.tag=0;
+{  simulshow:=slave.tag=0; }
   if adocked=dock then exit;
   vert:=(dir=1) or (dir=3);
   bch:=slave.Height;
@@ -3667,10 +3670,10 @@ begin
   if (not dock) and (vert) then host.Constraints.MinHeight:=host.Constraints.MinHeight-fixsiz;
   if (not dock) and (not vert) then host.Constraints.MinWidth:=host.Constraints.MinWidth-fixsiz;}
   if (dock) then if (vert) then panel.height:=fixsiz else panel.width:=fixsiz;
-  smw:=slave.Constraints.MinWidth;
+{  smw:=slave.Constraints.MinWidth;
   smh:=slave.Constraints.MinHeight;
   sxw:=slave.Constraints.MaxWidth;
-  sxh:=slave.Constraints.MaxHeight;
+  sxh:=slave.Constraints.MaxHeight;}
   if not vert then slave.Width:=panel.width else slave.Height:=panel.Height;
   if dock then
   begin
@@ -4184,45 +4187,44 @@ begin
 end;
 
 procedure TfMenu.ScreenTimerTimer(Sender: TObject);
-procedure wwadd(bg,en:integer;w:word);
-var b:integer;
-    i,j,k:integer;
-    ass:boolean;
-begin
-  b:=0;
-  for i:=0 to ftextpos-1 do if (ftextend[i]=en) and (ftextbeg[i]=bg) then
-  begin end else
+  procedure wwadd(bg,en:integer;w:word);
+  var b:integer;
+      i,j:integer;
+      ass:boolean;
   begin
-    ftext[b]:=ftext[i];
-    ftextbeg[b]:=ftextbeg[i];
-    ftextend[b]:=ftextend[i];
-    inc(b);
-  end;
-  ftextpos:=b;
-  ass:=false;
-  for i:=0 to ftextpos-1 do if (not ass) and (ftextbeg[i]>bg) then
-  begin
-    for j:=ftextpos-1 downto i do
+    b:=0;
+    for i:=0 to ftextpos-1 do if (ftextend[i]=en) and (ftextbeg[i]=bg) then
+    begin end else
     begin
-      ftext[j+1]:=ftext[j];
-      ftextbeg[j+1]:=ftextbeg[j];
-      ftextend[j+1]:=ftextend[j];
+      ftext[b]:=ftext[i];
+      ftextbeg[b]:=ftextbeg[i];
+      ftextend[b]:=ftextend[i];
+      inc(b);
     end;
-    ftext[i]:=w;
-    ftextbeg[i]:=bg;
-    ftextend[i]:=en;
-    inc(ftextpos);
-    ass:=true;
+    ftextpos:=b;
+    ass:=false;
+    for i:=0 to ftextpos-1 do if (not ass) and (ftextbeg[i]>bg) then
+    begin
+      for j:=ftextpos-1 downto i do
+      begin
+        ftext[j+1]:=ftext[j];
+        ftextbeg[j+1]:=ftextbeg[j];
+        ftextend[j+1]:=ftextend[j];
+      end;
+      ftext[i]:=w;
+      ftextbeg[i]:=bg;
+      ftextend[i]:=en;
+      inc(ftextpos);
+      ass:=true;
+    end;
+    if not ass then
+    begin
+      ftext[ftextpos]:=w;
+      ftextbeg[ftextpos]:=bg;
+      ftextend[ftextpos]:=en;
+      inc(ftextpos);
+    end;
   end;
-  if not ass then
-  begin
-    ftext[ftextpos]:=w;
-    ftextbeg[ftextpos]:=bg;
-    ftextend[ftextpos]:=en;
-    inc(ftextpos);
-    ass:=true;
-  end;
-end;
 var pt:TPoint;
     s:string;
     s2:FString;
@@ -4713,5 +4715,10 @@ initialization
   popcreated:=false;
   WakanVer := GetFileVersionInfoStr(GetModuleFilenameStr(0))
     {$IFDEF UNICODE}+' unicode'{$ENDIF};
+
+  chardetl:=TStringList.Create;
+  CharPropTypes:=TStringList.Create;
+
+finalization
 
 end.

@@ -45,7 +45,7 @@ uses JWBMenu;
 procedure TfCharItem.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   results:='';
-  results:=results+fMenu.GetCharType(ComboBox1.ItemIndex,0)+';';
+  results:=results+GetCharPropType(ComboBox1.ItemIndex,0)+';';
   case RadioGroup1.ItemIndex of
     0:results:=results+'L;';
     1:results:=results+'C;';
@@ -88,9 +88,13 @@ var i:integer;
 begin
   if inputs='' then inputs:='0;L;L;B;Y;M;';
   ComboBox1.Items.Clear;
-  for i:=0 to chartypel.Count-1 do ComboBox1.Items.Add(_l('^e'+fMenu.GetCharType(i,4)));
-  ComboBox1.ItemIndex:=0;
-  for i:=0 to chartypel.Count-1 do if fMenu.GetCharType(i,0)=GetDet(0) then ComboBox1.ItemIndex:=i;
+  for i:=0 to CharPropTypes.Count-1 do
+    ComboBox1.Items.Add(_l('^e'+GetCharPropType(i,4)));
+  i := FindCharPropType(GetDet(0));
+  if i<0 then
+    ComboBox1.ItemIndex:=0
+  else
+    ComboBox1.ItemIndex:=i;
   if GetDet(1)='L'then RadioGroup1.ItemIndex:=0;
   if GetDet(1)='C'then RadioGroup1.ItemIndex:=1;
   if GetDet(1)='W'then RadioGroup1.ItemIndex:=2;
@@ -107,10 +111,7 @@ begin
   CheckBox2.Checked:=GetDet(6)<>'';
   Edit1.Enabled:=CheckBox2.Checked;
   Edit1.Text:=GetDet(6);
-  Label2.Caption:=fMenu.GetCharType(ComboBox1.ItemIndex,6);
-  if fMenu.GetCharType(ComboBox1.ItemIndex,1)='D'then
-    Label5.Caption:='EDICT -> '+fMenu.GetCharType(ComboBox1.ItemIndex,2) else
-    Label5.Caption:='UNIHAN -> '+fMenu.GetCharType(ComboBox1.ItemIndex,2);
+  Combobox1Change(Combobox1);
 end;
 
 procedure TfCharItem.CheckBox2Click(Sender: TObject);
@@ -120,10 +121,11 @@ end;
 
 procedure TfCharItem.ComboBox1Change(Sender: TObject);
 begin
-  Label2.Caption:=fMenu.GetCharType(ComboBox1.ItemIndex,6);
-  if fMenu.GetCharType(ComboBox1.ItemIndex,1)='D'then
-    Label5.Caption:='EDICT -> '+fMenu.GetCharType(ComboBox1.ItemIndex,2) else
-    Label5.Caption:='UNIHAN -> '+fMenu.GetCharType(ComboBox1.ItemIndex,2);
+  Label2.Caption:=GetCharPropType(ComboBox1.ItemIndex,6);
+  if GetCharPropType(ComboBox1.ItemIndex,1)='D'then
+    Label5.Caption:='EDICT -> '+GetCharPropType(ComboBox1.ItemIndex,2)
+  else
+    Label5.Caption:='UNIHAN -> '+GetCharPropType(ComboBox1.ItemIndex,2);
 end;
 
 end.

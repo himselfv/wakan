@@ -1,7 +1,7 @@
 unit TextTable;
 
 interface
-uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows;
+uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows,JWBStrings;
 
 {
 Unicode status:
@@ -210,6 +210,7 @@ type
    {$ELSE}
     function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
    {$ENDIF}
+    function Dehex(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
 
   end;
 
@@ -217,7 +218,6 @@ procedure LogAlloc(s:string;len:integer);
 procedure ShowAllocStats;
 
 implementation
-uses JWBStrings;
 
 var dataalloc,structalloc,indexalloc:integer;
     tottim,datatim,othtim,proctim:double;
@@ -1747,7 +1747,10 @@ begin
   Result :=(Length(s)>0) and (UpCase(s[1])='T');
 end;
 
-//Returns one character (in older versions nothing is guaranteed but it was always this way)
+{
+For single characters stored as 'x'-type strings.
+Returns one unicode character in FChar.
+}
 {$IFDEF UNICODE}
 function TTextTableCursor.Fch(field:integer):WideChar;
 var s: string;
@@ -1759,11 +1762,25 @@ begin
     Result := s[1];
 end;
 {$ELSE}
+//On older versions character is not guaranteed, but it was always this way.
 function TTextTableCursor.Fch(field:integer):string;
 begin
   Result := Str(field);
 end;
 {$ENDIF}
+
+{
+For unicode strings stored as hex in 'a'-type strings.
+Returns contents in FString.
+}
+function TTextTableCursor.Dehex(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+ {$IFDEF UNICODE}
+  Result := HexToUnicode(Str(field));
+ {$ELSE}
+  Result := Str(field);
+ {$ENDIF}
+end;
 
 
 initialization

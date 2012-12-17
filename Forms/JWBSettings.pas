@@ -965,12 +965,13 @@ begin
   ListBox2.Items.Clear;
   for i:=0 to chardetl.Count-1 do
   begin
-    for j:=0 to chartypel.Count-1 do if fMenu.GetCharType(j,0)=fMenu.GetCharDet(i,0) then
-    begin
-      if fMenu.GetCharDet(i,6)<>'' then
-        ListBox2.Items.Add(_l('^e'+fMenu.GetCharType(j,4))+' ('+fMenu.GetCharDet(i,6)+')') else
-        ListBox2.Items.Add(_l('^e'+fMenu.GetCharType(j,4)));
-    end;
+    j := FindCharPropType(GetCharDet(i,0));
+    if j<0 then continue;
+
+    if GetCharDet(i,6)<>'' then
+      ListBox2.Items.Add(_l('^e'+GetCharPropType(j,4))+' ('+GetCharDet(i,6)+')')
+    else
+      ListBox2.Items.Add(_l('^e'+GetCharPropType(j,4)));
   end;
   Button8.Enabled:=ListBox2.Items.Count<>0;
   Button9.Enabled:=ListBox2.Items.Count<>0;

@@ -65,25 +65,18 @@ type
     procedure RefreshDetails;
     procedure SetCharCompounds;
     procedure SelRadical;
-    procedure DrawItem(canvas:TCanvas;its,txs:string;l,r:integer;var x,y,rh:integer;onlycount:boolean);
-    procedure DrawSingleText(canvas:TCanvas;tp:char;l,t,r,fh:integer;s:string);
-    function FitText(canvas:TCanvas;tp:char;wrap:boolean;w,fh:integer;fname:string;var l:integer;var s:string):string;
     function GetKanji(cx,cy:integer):string;
   end;
 
 var
   fKanji: TfKanji;
   chin:boolean;
-  clip2:string;
   testkanji:string;
-  curradsearch:string;
   raineradsearch:boolean;
 
 var
   curkanji: FChar;
-  curradical: string;
-  kval: TStringList;
-  curcali:string;
+  curradsearch:string;
 
 implementation
 
@@ -108,9 +101,9 @@ begin
   if bk=-1 then bk:=kanji_othersearch;
   fKanjiSearch.ComboBox1.Items.Clear;
   fKanjiSearch.ComboBox1.Items.Add('Unicode');
-  for i:=0 to chartypel.Count-1 do
-    if strtoint(fMenu.GetCharType(i,0))>20 then
-      fKanjiSearch.ComboBox1.Items.Add(_l('^e'+fMenu.GetCharType(i,4)));
+  for i:=0 to CharPropTypes.Count-1 do
+    if strtoint(GetCharPropType(i,0))>20 then
+      fKanjiSearch.ComboBox1.Items.Add(_l('^e'+GetCharPropType(i,4)));
   fKanjiSearch.ComboBox1.ItemIndex:=0;
   if bk<fKanjiSearch.ComboBox1.Items.Count-1 then fKanjiSearch.ComboBox1.ItemIndex:=bk;
 //  fMenu.ShowForm(SpeedButton5,fMenu.aKanjiSearch,fKanjiSearch);
@@ -123,8 +116,6 @@ begin
   if curlang='c'then chin:=true;
 //  if fKanjiSearch.SpeedButton20.Down then chin:=true;
   DoIt;
-  JWBKanjiDetails.cursimple:='';
-  curcali:='';
   caltype:=0;
 end;
 
@@ -135,14 +126,6 @@ begin
 //  fMenu.HideForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
 //  fMenu.HideForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
 //  fMenu.HideForm(SpeedButton4,nil,fStrokeOrder);
-end;
-
-function InClipboard(s:string):boolean;
-var s2:string;
-begin
-  s2:=clip;
-  result:=false;
-  if pos(','+uppercase(s),clip2)>0 then result:=true;
 end;
 
 function TfKanji.OffsetRange(tx:string;min,max:integer):string;
@@ -352,11 +335,14 @@ begin
   begin
     if fKanjiSearch.ComboBox1.ItemIndex=0 then fltother.Add(fKanjiSearch.Edit8.Text) else
     j:=0;
-    for i:=0 to chartypel.Count-1 do if strtoint(fMenu.GetCharType(i,0))>20 then
-    begin
-      inc(j);
-      if j=fKanjiSearch.ComboBox1.ItemIndex then ReadFilter(fltother,fKanjiSearch.Edit8.Text,strtoint(fMenu.GetCharType(i,0)),0,false,false,fMenu.GetCharType(i,3)='N',false);
-    end;
+    for i:=0 to CharPropTypes.Count-1 do
+      if strtoint(GetCharPropType(i,0))>20 then
+      begin
+        inc(j);
+        if j=fKanjiSearch.ComboBox1.ItemIndex then
+          ReadFilter(fltother,fKanjiSearch.Edit8.Text,strtoint(GetCharPropType(i,0)),
+            0,false,false,GetCharPropType(i,3)='N',false);
+      end;
   end;
   if fKanjiSearch.SpeedButton7.Down then if chin then
     ReadFilter(fltmean,fKanjiSearch.edit3.text,7,0,true,true,false,false) else
@@ -1068,174 +1054,10 @@ begin
   closefile(t);
 end;
 
-function TfKanji.FitText(canvas:TCanvas;tp:char;wrap:boolean;w,fh:integer;fname:string;var l:integer;var s:string):string;
-function countwidth(tp:char;fh:integer;s:string):integer;
-var ts:TSize;
-begin
-  if tp='P'then result:=0 else
-  if (tp='U') then result:=(length(s) div 4)*(fh-2)
-  else begin
-    ts:=canvas.TextExtent(s);
-    result:=ts.cx;
-  end;
-end;
-var st,stl:string;
-    i,ii,iii:integer;
-begin
-  canvas.Font.Name:=fname;
-  canvas.Font.Height:=fh;
-  if countwidth(tp,fh,s)<=w then
-  begin
-    l:=countwidth(tp,fh,s);
-    result:=s;
-    s:='';
-    exit;
-  end;
-  i:=0;
-  stl:='';
-  st:='';
-  ii:=0;
-  iii:=0;
-  repeat
-    stl:=st;
-    iii:=ii;
-    ii:=i;
-    if (tp='U') or (tp='P') then st:=copy(s,1,i*4) else st:=copy(s,1,i);
-    if not wrap then if (tp='U') or (tp='P') then st:=st+'2026'else st:=st+'...';
-    if (tp='U') or (tp='P') or (not wrap) then inc(i) else
-    begin
-      inc(i);
-      while (i<length(s)) and (s[i+1]<>' ') do inc(i);
-    end;
-  until countwidth(tp,fh,st)>w;
-  if stl='' then stl:=st;
-  i:=iii;
-  if i<0 then i:=0;
-  if wrap then
-  begin
-    result:=stl;
-    if (tp='U') or (tp='P') then delete(s,1,i*4) else delete(s,1,i);
-    l:=countwidth(tp,fh,stl);
-  end else
-  begin
-    result:=stl;
-    s:='';
-    l:=countwidth(tp,fh,stl);
-  end;
-end;
-
-procedure TfKanji.DrawSingleText(canvas:TCanvas;tp:char;l,t,r,fh:integer;s:string);
-var font:string;
-begin
-  if chin then font:=FontRadical else font:=FontSmall;
-  if tp='P'then font:=FontEnglish;
-  if (tp='U') or (tp='P') then DrawUnicode(canvas,l,t,fh-2,s,font) else
-  if (tp='N') or (tp='T') then canvas.TextOut(r-canvas.TextExtent(s).cx,t,s) else
-    canvas.TextOut(l,t,s);
-end;
-
-procedure TfKanji.DrawItem(canvas:TCanvas;its,txs:string;l,r:integer;var x,y,rh:integer;onlycount:boolean);
-var fh:integer;
-    fname:string;
-    lbl:string;
-function DoesFit(s:string):boolean;
-var l:integer;
-begin
-  FitText(canvas,its[1],true,r-x,fh,fname,l,s);
-  if s<>'' then result:=false else result:=true;
-end;
-function GetDet(j:integer):string;
-var s:string;
-begin
-  s:=its;
-  while j>0 do
-  begin
-    delete(s,1,pos(';',s));
-    dec(j);
-  end;
-  delete(s,pos(';',s),length(s)-pos(';',s)+1);
-  result:=s;
-end;
-var lw,rr:integer;
-    ws:string;
-    s:string;
-begin
-  if (GetDet(4)='C') and not chin then exit;
-  if (GetDet(4)='J') and chin then exit;
-  if (GetDet(5)='N') and (txs='') and (its[1]<>'-') then exit;
-  if its[1]='R'then its[1]:='U';
-  if txs='' then if (its[1]<>'U') and (its[1]<>'R') and (its[1]<>'P') then txs:='-';
-  canvas.Font.Style:=[fsBold];
-  case GetDet(6)[1] of
-    'B':fh:=20;
-    'M':fh:=16;
-    'S':fh:=12;
-  end;
-  fname:=FontEnglish;
-  if GetDet(3)<>'N'then
-  begin
-    lbl:=GetDet(7);
-    if its[1]<>'-'then lbl:=lbl+':';
-    if (GetDet(2)='C') and (x>l) then
-    begin
-      if not DoesFit(lbl) then
-      begin
-        x:=l;
-        y:=y+rh;
-      end;
-    end else if x>l then
-    begin
-      x:=l;
-      y:=y+rh;
-    end;
-    lbl:=FitText(canvas,'S',false,r-x,fh,fname,lw,lbl);
-    if not onlycount then if txs<>'---'then DrawSingleText(canvas,'S',x,y,r,fh,lbl);
-    lw:=lw+5;
-    canvas.Font.Style:=[];
-    if (GetDet(3)='W') or ((GetDet(3)='L') and (GetDet(2)='W') and (lw>(r-x) div 2)) then
-    begin
-      x:=l;
-      y:=y+fh+2;
-    end else x:=x+lw;
-  end;
-  canvas.Font.Style:=[];
-    if (its[1]='U') or (its[1]='R') then fname:=FontSmall else fname:=FontEnglish;
-  rh:=fh+2;
-  rr:=r;
-  if (GetDet(2)='C') and (x<r div 2) then rr:=(r div 2)-5;
-  if (GetDet(2)='W') and (txs<>'---') then
-  begin
-    s:=txs;
-    while s<>'' do
-    begin
-      ws:=FitText(canvas,its[1],true,r-x,fh,fname,lw,s);
-      if not onlycount then if txs<>'---'then DrawSingleText(canvas,its[1],x,y,r,fh,ws);
-      x:=l;
-      inc(y,rh);
-    end;
-  end else
-  begin
-    s:=txs;
-    ws:=FitText(canvas,its[1],false,rr-x,fh,fname,lw,s);
-    if not onlycount then if txs<>'---'then DrawSingleText(canvas,its[1],x,y,rr,fh,ws);
-    if (not onlycount) and (txs='---') then
-    begin
-      canvas.MoveTo(l,y+7);
-      canvas.LineTo(r,y+7);
-    end;
-    if rr=r then
-    begin
-      x:=l;
-      inc(y,rh);
-    end else x:=rr+5;
-  end;
-end;
-
-
 procedure TfKanji.SelRadical;
 begin
   fKanjiSearch.Edit2.Text:=JWBKanjiDetails.curradno;
-  curradsearch:=curradical;
+  curradsearch:=JWBKanjiDetails.curradical;
   fKanjiSearch.PaintBox1.Invalidate;
   fKanji.DoIt;
 end;
@@ -1295,14 +1117,11 @@ end;
 initialization
   calfonts:=TStringList.Create;
   ki:=TStringList.Create;
-  kval:=TStringList.Create;
   curkanji:=UH_NOCHAR;
-  curradical:='';
   curradsearch:='';
 
 finalization
   ki.Free;
   calfonts.Free;
-  kval.Free;
 
 end.
