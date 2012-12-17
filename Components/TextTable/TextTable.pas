@@ -1773,7 +1773,7 @@ end;
 For unicode strings stored as hex in 'a'-type strings.
 Returns contents in FString.
 }
-function TTextTableCursor.Dehex(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+function TTextTableCursor.Dehex(field:integer):string;
 begin
  {$IFDEF UNICODE}
   Result := HexToUnicode(Str(field));
