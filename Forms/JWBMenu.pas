@@ -1756,9 +1756,9 @@ begin
     KnownLearned := FindMaxCategoryIndex()+1; //can't use CatIdx since we want MAX index, not the LAST one
     TUserCat.Insert([IntToStr(KnownLearned), 'k~'+_l('LEARNED'), inttostr(ord('Q')), FormatDateTime('yyyymmdd',now)]);
     ms:=ps['knownchar.bin'].Lock;
-    CreateKnownList(KnownLearned+1,0);
-    KnownLearned:=KnownLearned+1;
-    LoadKnownList(KnownLearned+1,ms);
+    CreateKnownList(KnownLearned,0);
+    KnownLearned:=KnownLearned;
+    LoadKnownList(KnownLearned,ms);
     ps['knownchar.bin'].Unlock;
     UserDataChanged := true;
   end;
