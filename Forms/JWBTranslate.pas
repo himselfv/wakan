@@ -150,6 +150,8 @@ type
     EditorBitmap:TBitmap;
     procedure MakeEditorBitmap;
     procedure PasteEditorBitmap;
+    procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
+      screenw: integer; vert: boolean);
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
       ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
   public
@@ -606,7 +608,6 @@ begin
       end;
     end;
     blockwrite(f,buf,bc);
-    bc:=0;
     closefile(f);
   end else begin
     SaveText(filename,tp,AnnotMode);
@@ -661,7 +662,6 @@ var
 
   //Called to finalize currently open ruby
   procedure FinalizeRuby;
-  var cp: PCharacterProps;
   begin
     if idxLastTextBreak<=0 then begin
      //this means ruby was the first char on the line, but we have to store it somehow
@@ -1398,7 +1398,7 @@ begin
     if key=VK_RIGHT then
     begin
       inc(curx);
-      if curx>=linl[cury].len then
+      if curx>linl[cury].len then
         if cury+1<linl.Count then
         begin
           inc(cury);
@@ -1413,7 +1413,7 @@ begin
         if cury>0 then
         begin
           dec(cury);
-          curx:=linl[cury].len-1;
+          curx:=linl[cury].len;
         end else inc(curx);
       cursorend:=false;
     end
@@ -1793,18 +1793,17 @@ begin
   if (cursorend) and (curx=0) and (cury>0) and (linl[cury-1].ys<>linl[cury].ys) then
   begin
     dec(cury);
-    curx:=linl[cury].len-1;
+    curx:=linl[cury].len;
     cursorend:=false;
   end;
-  if curx>=linl[cury].len then
-  begin
+  if curx>linl[cury].len then
     if (cury+1<linl.Count) and (linl[cury].ys=linl[cury+1].ys) then
     begin
       curx:=0;
       inc(cury);
       cursorend:=true;
-    end else curx:=linl[cury].len-1;
-  end;
+    end else
+      curx:=linl[cury].len;
   if view>cury then if cury>0 then view:=cury else view:=0;
   if view+printl-1<cury then view:=cury-printl+1;
   if view+printl-1>=linl.Count then view:=linl.Count-printl;
@@ -1872,6 +1871,67 @@ begin
   end;
 end;
 
+{
+We should probably keep graphical lines for the whole document,
+and only re-process the parts which change.
+But for now we RecalculateGraphicalLines() every full render,
+and start with current position, not with the start of the document.
+}
+
+{
+RecalculateGraphicalLines()
+Does a full rebuild of graphical line schema for a document.
+rs: half-char size in pixels (depends on font)
+}
+procedure TfTranslate.RecalculateGraphicalLines(ll: TGraphicalLineList;
+  rs: integer; screenw: integer; vert: boolean);
+var
+  cx, cy: integer;
+  px: integer;
+  wx, wxl: integer;
+begin
+  ll.Clear;
+  cx:=0;
+  cy:=0;
+  while cy<doc.Count do
+  begin
+    wx:=flength(doc[cy]);
+
+    px:=0;
+    wxl:=cx;
+    while px<=screenw do
+    begin
+      if (not vert) and (wxl<wx) and IsHalfWidth(wxl,cy) then
+        inc(px,rs)
+      else
+        inc(px,rs*2);
+      inc(wxl);
+    end;
+    dec(wxl);
+    //wxl now points to a symbol which is at least partially visible
+
+    if wx>wxl then wx:=wxl;
+    //wx now points to a symbol just after the last one we can draw on this graphical line
+
+    if (wx<=cx) then
+    begin
+     { We can draw nothing. Either the logical line is over, or the graphical line
+      is too small to hold even one symbol.
+      Skip to the next line (or this'll never end). }
+      if cx=0 then
+        ll.Add(0, cy, 0); //or we would miss empty lines since they have no characters
+      inc(cy);
+      cx:=0;
+    end else
+    begin
+      ll.Add(cx, cy, wx-cx);
+      cx:=wx;
+    end;
+  end;
+
+  if ll.Count=0 then //empty document
+    ll.Add(0, 0, 0); //add one empty line
+end;
 
 
 procedure FixReading(gd0,gd1,gd2:FChar; var reading:FString);
@@ -1942,7 +2002,7 @@ var st0,lst0,st2,st3:boolean;
     st2c:integer;
     rs:integer;
     vert:boolean; //vertical printing. Only for printing.
-    cl,cx,cxsc,cy,px,py,wx,wxl:integer;
+    cl,cx,cxsc,cy,px,py,wx:integer;
     kanaq:FString;
     undersolid:boolean;
     color,fcolor:TColor;
@@ -1956,14 +2016,11 @@ var st0,lst0,st2,st3:boolean;
     realx,realy,realx2,realy2:integer;
     we:integer;
     rect:TRect;
-    cont:boolean;
     i:integer;
     invert:boolean;
     dnam:string;
     dic:TJaletDic;
     markers:string;
-    doall:boolean;
-    insval:integer;
     worddict:integer; //word's dicidx
     lastworddict:integer; //last word's dicidx
     colback, coltext:TColor; //standard colors for editor's text and background
@@ -2044,61 +2101,10 @@ begin
     rs:=screenh div lineh div linec;
   end;
   a:=GetTickCount;
-  cx:=0;
-  cy:=0;
-  doall:=ll.Count=0;
-  insval:=-1;
-  try
-  if doall then
-  begin
-    if not doall then
-    begin
-      cy:=y;
-      i:=0;
-      while i<ll.Count do
-      begin
-        if ll[i].ys=y then
-        begin
-          if insval=-1 then insval:=i;
-          ll.Delete(i);
-        end else inc(i);
-      end;
-    end;
-    while ((cy=y) or (doall)) and (cy<doc.Count) do
-    begin
-      cont:=true;
-      px:=0;
-      wxl:=cx;
-      while px<=screenw do
-      begin
-        if (not vert) and (IsHalfWidth(wxl,cy)) then inc(px,rs) else inc(px,rs*2);
-//        inc(px,rs*2);
-        inc(wxl);
-      end;
-      dec(wxl);
-      wx:=flength(doc[cy]);
-      if wx>wxl then wx:=wxl else wx:=wx+1;
-      if (wx<=cx) then
-      begin
-        inc(cy);
-        cx:=0;
-        px:=0;
-        cont:=false;
-      end;
-      if cont then
-      begin
-        if cy>=doc.Count then showmessage('Internal line-computing error!');
-        if doall then
-          ll.Add(cx, cy, wx-cx)
-        else
-          ll.Insert(insval, cx, cy, wx-cx);
-        cx:=wx;
-      end;
-    end;
-  end;
-  except
-    showmessage('Line count exception: '+(ExceptObject as Exception).Message);
-  end;
+
+  if ll.Count=0 then //has been invalidated
+    RecalculateGraphicalLines(ll, rs, screenw, vert);
+
   printl:=screenh div (rs*linec);
   xsiz:=rs;
   ycnt:=linec;
@@ -2111,6 +2117,7 @@ begin
   lineh:=rs;
   cx:=x;
   cy:=y;
+  px:=0;
   py:=0;
   kanaq:='';
 
@@ -2610,7 +2617,6 @@ begin
     if (blockx<>rcurx) or (blocky<>rcury) then BlockOp(false,true) else
     begin
       if curx>0 then dec(curx) else
-      begin
         if rcurx=0 then
         begin
           dec(cury);
@@ -2618,9 +2624,8 @@ begin
         end else
         begin
           dec(cury);
-          curx:=linl[cury].len-1;
+          curx:=linl[cury].len;
         end;
-      end;
       ShowText(true);
       DeleteCharacter(rcurx,rcury);
     end;
@@ -3024,7 +3029,7 @@ procedure TfTranslate.SetCurPos(x,y:integer);
 var i:integer;
 begin
   for i:=0 to linl.Count-1 do
-    if (linl[i].ys=y) and (linl[i].xs<=x) and (linl[i].xs+linl[i].len>x) then
+    if (linl[i].ys=y) and (linl[i].xs<=x) and (linl[i].xs+linl[i].len>=x) then
   begin
     curx:=x-linl[i].xs;
     cury:=i;
