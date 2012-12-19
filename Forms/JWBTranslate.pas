@@ -1,4 +1,43 @@
 ﻿unit JWBTranslate;
+{
+Text editor and translator.
+
+Contents
+============
+doc: TStringList -- contains document text, line by line.
+doctr: TPropList -- character properties, line by line.
+They are synchronized, except doc[y] lines are indexed starting from 1,
+and doctr[y] starting from 0.
+All operations on one must also similarly change the other.
+
+Layout
+============
+"linl" contains graphical line descriptions:
+  ys = source line index in "doc"
+  xs = first character in source line
+  len = length
+Latin characters are considered "half-width" and require only half the slot
+kanji and kana uses.
+
+Cursor
+============
+Cursor position is stored in curx, cury. Both are zero-based:
+  x==0         => before the first character
+  x==len(line) => after the last character
+When doing selection, mouse drag start is kept in blockx, blocky.
+
+CalcBlockFromTo() converts that to:
+  blockfromy      first line in selection
+  blockfromx      first selected char
+  blocktox        last line in selection
+  blocktoy        last selected char
+All inclusive.
+
+Breaking changes
+==================
+- Graphical lines were previously declared one character longer than needed.
+ This was WRONG and was fixed, but there could still be code which relied on that.
+}
 
 interface
 
@@ -6,20 +45,6 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
   JWBDicSearch;
-
-{
-Various notes go here.
-}
-{
-Document contents is stored in "doc", line by line (==text lines).
-"linl" contains graphical line descriptions:
-  xs = first character of this graphical line in logical line
-  ys = logical line index in "doc"
-  len = length
-Selection is kept in logical coordinates - (logical line, start character) pairs.
-Latin characters are considered "half-width" and require only half the slot
-kanji and kana uses.
-}
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
