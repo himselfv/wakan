@@ -272,17 +272,27 @@ uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
 {$R *.DFM}
 
 var
-  blockfromx,blockfromy,blocktox,blocktoy:integer;
-  oldblockfromx,oldblockfromy,oldblocktox,oldblocktoy:integer;
+ //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
+  blockfromx,
+  blockfromy,
+  blocktox,
+  blocktoy:integer;
+
+ //Selection block last time it was repainted (allows us to only repaint changed parts)
+  oldblockfromx,
+  oldblockfromy,
+  oldblocktox,
+  oldblocktoy:integer;
+
+ //When selecting, the position where we started dragging mouse.
+ //Selection block is generated from this on mouse-release.
   blockx,blocky:integer;
-  plinl:TGraphicalLineList;
-  printpl:integer;
+
   insconfirmed:boolean;
   leaveline:boolean;
   shiftpressed:boolean;
   cursorend:boolean;
   lastmmx,lastmmy:integer;
-
   priorkanji:string;
   cursorblinked:boolean;
 
@@ -296,6 +306,12 @@ function TfTranslate.IsHalfWidth(x,y:integer):boolean;
 begin
   result:=IsHalfWidthChar(GetDoc(x,y));
 end;
+
+
+var
+ //Printing vars
+  plinl:TGraphicalLineList; //graphical lines for printing
+  printpl:integer;
 
 function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
 var pl,xs,yc:integer;
@@ -1857,19 +1873,19 @@ begin
   begin
     blockfromx:=rcurx;
     blockfromy:=rcury;
-    blocktox:=blockx;
+    blocktox:=blockx-1;
     blocktoy:=blocky;
   end else
   begin
     blockfromx:=blockx;
     blockfromy:=blocky;
-    blocktox:=rcurx;
+    blocktox:=rcurx-1;
     blocktoy:=rcury;
   end;
   if backtrack then
   begin
-    while doctr[blockfromy].chars[blockfromx].wordstate='<'do dec(blockfromx);
-    while doctr[blocktoy].chars[blocktox+1].wordstate='<'do inc(blocktox);
+    while (blockfromx>=0) and (doctr[blockfromy].chars[blockfromx].wordstate='<') do dec(blockfromx);
+    while (blocktox+1<doctr[blocktoy].charcount) and (doctr[blocktoy].chars[blocktox+1].wordstate='<') do inc(blocktox);
   end;
 end;
 
@@ -2178,7 +2194,7 @@ begin
 
       wordstate:=doctr[cy].chars[cx].wordstate;
       learnstate:=doctr[cy].chars[cx].learnstate;
-      CalcBlockFromTo(false);
+//      CalcBlockFromTo(false); //why did we even call this here?
 
       GetTextWordInfo(cx,cy,meaning,reading,kanji);
       if cfExplicitRuby in doctr[cy].chars[cx].flags then
@@ -3002,6 +3018,12 @@ begin
     xpos := linl[i].xs;
     ypos := linl[i].ys;
     llen := linl[i].len;
+
+    if llen=0 then begin //empty lines get one half-character for selection to indicate they're there
+      if InSelection(xpos, ypos, oldblockfromx, oldblockfromy, oldblocktox, oldblocktoy)
+      xor InSelection(xpos, ypos, blockfromx, blockfromy, blocktox, blocktoy) then
+        InvertColor(i, 0, {HalfWidth=}true);
+    end;
 
     js:=0; //distantion in half-characters from the left
     while llen>0 do begin
