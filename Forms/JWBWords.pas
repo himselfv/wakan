@@ -4,9 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst;
+  StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings;
 
 type
+  TMoveDirection = (mdUp, mdDown);
+
   TfWords = class(TForm)
     OpenDialog1: TOpenDialog;
     SaveDialog1: TSaveDialog;
@@ -43,11 +45,6 @@ type
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure UserDetails_Button3Click(Sender: TObject);
-    procedure UserDetails_Button5Click(Sender: TObject);
-    procedure UserDetails_Button6Click(Sender: TObject);
-    procedure UserDetails_Button7Click(Sender: TObject);
-    procedure UserDetails_Button8Click(Sender: TObject);
-    procedure UserDetails_Button2Click(Sender: TObject);
     procedure UserDetails_PaintBox1Paint(Sender: TObject);
     procedure UserDetails_PaintBox6Paint(Sender: TObject);
     procedure UserDetails_Button13Click(Sender: TObject);
@@ -56,12 +53,9 @@ type
     procedure Button12Click(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
     procedure UserDetails_ComboBox2Change(Sender: TObject);
-    procedure UserDetails_Button4Click(Sender: TObject);
     procedure Button15Click(Sender: TObject);
     procedure Button18Click(Sender: TObject);
     procedure StringGrid1KeyPress(Sender: TObject; var Key: Char);
-    procedure UserDetails_SpeedButton4Click(Sender: TObject);
-    procedure UserDetails_SpeedButton5Click(Sender: TObject);
     procedure UserCategory_SpeedButton2Click(Sender: TObject);
     procedure UserCategory_SpeedButton3Click(Sender: TObject);
     procedure Button19Click(sender: TObject);
@@ -78,6 +72,17 @@ type
     procedure StringGrid1Click(Sender: TObject);
     procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+
+  public
+    procedure SetWordsLearnState(ls: integer);
+    procedure AddWordsToCategory(category: string);
+    procedure MoveWordsInCategory(moveDir: TMoveDirection);
+    procedure DeleteWords();
+
+  protected
+    function GetPhoneticSortStr(phonetic: FString): string;
+    function FindUserWord(kanji,phonetic: FString): integer;
+
   public
     WordListCount:integer;
     twkanji,twphonetic,twmeaning:string;
@@ -106,7 +111,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
+uses JWBMenu, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
   JWBUserFilters, StdPrompt, JWBExamples, JWBUser,
   JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite;
@@ -123,8 +128,6 @@ var wl,wlc:TStringList;
 
 procedure TfWords.ShowIt(warningifnotfound:boolean);
 var sl:TStringList;
-    status:string;
-    b:boolean;
     stp:string;
     cl:TStringList;
     cls:string;
@@ -134,7 +137,6 @@ var sl:TStringList;
     all:boolean;
     a:integer;
     cats:string;
-    rect:TRect;
 begin
   if not fWords.Visible then exit;
   wl.Clear;
@@ -250,6 +252,55 @@ begin
   DrawWordCell(StringGrid1,ACol,ARow,Rect,State);
 end;
 
+//Returns a string which will represent this phonetic in sorting.
+function TfWords.GetPhoneticSortStr(phonetic: FString): string;
+var s: FString;
+  s2: FChar;
+  a1,a2: string;
+  i, j: integer;
+begin
+  if curlang='j'then
+  begin
+    Result:='';
+    s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,true,'j');
+    for i:=0 to flength(s)-1 do
+    begin
+      s2:=fgetch(s,i+1);
+      a1:='';
+      a2:='';
+      for j:=0 to Length(romasortl)-1 do
+      begin
+        if romasortl[j].roma=s2 then a1:=romasortl[j].order;
+        if romasortl[j].roma=
+         {$IFNDEF UNICODE}
+          copy(s2,1,3)+chr(ord(s2[4])+1)
+         {$ELSE}
+          chr(ord(s2)+1)
+         {$ENDIF}
+        then a2:=romasortl[j].order;
+      end;
+      if a1='' then Result:=Result+a2 else Result:=Result+a1;
+    end;
+  end else
+    Result:=KanaToRomaji(phonetic,1,'c');
+end;
+
+//Locates user record for a given kanji+phonetic pair. Returns its TUserIndex or -1.
+function TfWords.FindUserWord(kanji,phonetic: FString): integer;
+begin
+  Result:=-1;
+  TUser.SetOrder('Kanji_Ind');
+  TUser.Locate('Kanji',kanji,false);
+  while (not TUser.EOF) and (TUser.Str(TUserKanji)=kanji) do
+  begin
+    if (TUser.Str(TUserPhonetic)=phonetic) then begin
+      Result:=TUser.Int(TUserIndex);
+      break;
+    end;
+    TUser.Next;
+  end;
+end;
+
 function TfWords.AddWord(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
 var s,s2:string;
     beg,insertword:boolean;
@@ -257,8 +308,6 @@ var s,s2:string;
     cat,catord:integer;
     wordidx:integer;
     phonsort:string;
-    i,j:integer;
-    a1,a2:string;
 begin
   if (length(category)<2) or (category[2]<>'~') then category:=curlang+'~'+category;
   result:=false;
@@ -301,20 +350,11 @@ begin
   if cat<0 then //user cancelled
     exit;
 
-  TUser.SetOrder('Kanji_Ind');
-  TUser.Locate('Kanji',kanji,false);
-  insertword:=true;
-  wordidx:=0;
-  while (not TUser.EOF) and (TUser.Str(TUserKanji)=kanji) do
-  begin
-    if (TUser.Str(TUserPhonetic)=phonetic) then
-    begin
-      insertword:=false;
-      wordidx:=TUser.Int(TUserIndex);
-    end;
-    TUser.Next;
-  end;
+  wordidx := FindUserWord(kanji, phonetic);
+  insertword := wordidx<0;
+
   catord:=1;
+
   TUserSheet.SetOrder('Sheet_Ind');
   TUserSheet.Locate('Number',inttostr(cat),true);
   while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=cat) do
@@ -331,27 +371,12 @@ begin
     end;
     TUserSheet.Next;
   end;
+
   if insertword then
   begin
     inc(MaxUserIndex);
     wordidx:=MaxUserIndex;
-    if curlang='j'then
-    begin
-      phonsort:='';
-      s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,true,'j');
-      for i:=0 to length(s) div 4-1 do
-      begin
-        s2:=copy(s,i*4+1,4);
-        a1:='';
-        a2:='';
-        for j:=0 to (romasortl.Count div 2)-1 do
-        begin
-          if romasortl[j*2]=s2 then a1:=romasortl[j*2+1];
-          if romasortl[j*2]=copy(s2,1,3)+chr(ord(s2[4])+1) then a2:=romasortl[j*2+1];
-        end;
-        if a1='' then phonsort:=phonsort+a2 else phonsort:=phonsort+a1;
-      end;
-    end else phonsort:=KanaToRomaji(phonetic,1,'c');
+    phonsort:=GetPhoneticSortStr(phonetic);
 //    showmessage(s+#13+KanaToRomaji(s,1)+#13+phonsort);
     TUser.Insert([inttostr(MaxUserIndex),english,phonetic,phonsort,
       kanji,FormatDateTime('yyyymmdd',now),'00000000','00000000','00000000','0',inttostr(status),inttostr(status)]);
@@ -369,7 +394,9 @@ begin
       beg:=false;
     end;
   end;
+
   TUserSheet.Insert([inttostr(wordidx),inttostr(cat),inttostr(catord)]);
+
   if (not nomessages) and (fSettings.CheckBox70.Checked) then if insertword then
     Application.MessageBox(
       pchar(_l('#00844^eNew word was successfully added into vocabulary.')),
@@ -416,7 +443,7 @@ procedure TfWords.UserDetails_Edit4Change(Sender: TObject);
 begin
   fUserDetails.Button3.Default:=true;
   fUserDetails.Button4.Default:=false;
-  fUserDetails.Button2.Default:=false;
+  fUserDetails.btnDelete.Default:=false;
 end;
 
 procedure TfWords.Button9Click(Sender: TObject);
@@ -572,8 +599,6 @@ var t:textfile;
       cat,catord:integer;
       wordidx:integer;
       phonsort:string;
-      i,j:integer;
-      a1,a2:string;
   begin
     if (length(category)<2) or (category[2]<>'~') then category:=curlang+'~'+category;
     result:=false;
@@ -588,24 +613,14 @@ var t:textfile;
       end;
     end;
 
+    wordidx := FindUserWord(kanji, phonetic);
+    insertword := wordidx<0;
+
     awf_lastcatname:=category;
     awf_lastcatindex:=cat;
-    insertword:=true;
-    wordidx:=0;
-    TUser.SetOrder('Kanji_Ind');
-    TUser.Locate('Kanji',kanji,false);
-    while (not TUser.EOF) and (TUser.Str(TUserKanji)=kanji) do
-    begin
-      if (TUser.Str(TUserPhonetic)=phonetic) then
-      begin
-        insertword:=false;
-        wordidx:=TUser.Int(TUserIndex);
-        break;
-      end;
-      TUser.Next;
-    end;
     catord:=awf_catcount[cat]+1;
     awf_catcount[cat]:=catord;
+
     TUserSheet.SetOrder('Word_Ind');
     if not insertword then
     begin
@@ -625,27 +640,12 @@ var t:textfile;
         TUserSheet.Next;
       end;
     end;
+
     if insertword then
     begin
       inc(MaxUserIndex);
       wordidx:=MaxUserIndex;
-      if curlang='j'then
-      begin
-        phonsort:='';
-        s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,true,'j');
-        for i:=0 to length(s) div 4-1 do
-        begin
-          s2:=copy(s,i*4+1,4);
-          a1:='';
-          a2:='';
-          for j:=0 to (romasortl.Count div 2)-1 do
-          begin
-            if romasortl[j*2]=s2 then a1:=romasortl[j*2+1];
-            if romasortl[j*2]=copy(s2,1,3)+chr(ord(s2[4])+1) then a2:=romasortl[j*2+1];
-          end;
-          if a1='' then phonsort:=phonsort+a2 else phonsort:=phonsort+a1;
-        end;
-      end else phonsort:=KanaToRomaji(phonetic,1,'c');
+      phonsort:=GetPhoneticSortStr(phonetic);
   //    showmessage(s+#13+KanaToRomaji(s,1)+#13+phonsort);
       awf_insuser.Add(inttostr(MaxUserIndex));
       awf_insuser.Add(english);
@@ -971,15 +971,11 @@ begin
   fUserDetails.Label16.Caption:='-';
   fUserDetails.Label17.Caption:='-';
   fUserDetails.Label18.Caption:='-';
-  fUserDetails.Button2.Enabled:=false;
-  fUserDetails.Button5.Enabled:=false;
-  fUserDetails.Button6.Enabled:=false;
-  fUserDetails.Button7.Enabled:=false;
-  fUserDetails.Button8.Enabled:=false;
-  fUserDetails.SpeedButton4.Visible:=fUserFilters.RadioGroup2.ItemIndex=0;
-  fUserDetails.SpeedButton5.Visible:=fUserFilters.RadioGroup2.ItemIndex=0;
-  fUserDetails.SpeedButton4.Enabled:=false;
-  fUserDetails.SpeedButton5.Enabled:=false;
+  fUserDetails.SetWordControlsEnabled(false);
+  fUserDetails.btnMoveUpInCategory.Visible:=fUserFilters.RadioGroup2.ItemIndex=0;
+  fUserDetails.btnMoveDownInCategory.Visible:=fUserFilters.RadioGroup2.ItemIndex=0;
+  fUserDetails.btnMoveUpInCategory.Enabled:=false;
+  fUserDetails.btnMoveDownInCategory.Enabled:=false;
   fUserDetails.PaintBox1.Invalidate;
   fUserDetails.PaintBox6.Invalidate;
 end;
@@ -993,115 +989,6 @@ end;
 procedure TfWords.UserDetails_Button3Click(Sender: TObject);
 begin
   TUser.Edit([TUserEnglish],[fUserDetails.Edit4.Text]);
-  fMenu.ChangeUserData;
-  ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_Button5Click(Sender: TObject);
-var ms:integer;
-    b:boolean;
-begin
-  ms:=0;
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
-  begin
-    SetGroupStatus(ms);
-    exit;
-  end;
-  if TUser.Int(TUserMaxScore)>ms then ms:=TUser.Int(TUserMaxScore);
-  TUser.Edit([TUserScore,TUserMaxScore],['0',inttostr(ms)]);
-  StringGrid1Click(self);
-  fMenu.ChangeUserData;
-  ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_Button6Click(Sender: TObject);
-var ms:integer;
-    b:boolean;
-begin
-  ms:=1;
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
-  begin
-    SetGroupStatus(ms);
-    exit;
-  end;
-  if TUser.Int(TUserMaxScore)>ms then ms:=TUser.Int(TUserMaxScore);
-  TUser.Edit([TUserScore,TUserMaxScore],['1',inttostr(ms)]);
-  StringGrid1Click(self);
-  fMenu.ChangeUserData;
-  ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_Button7Click(Sender: TObject);
-var ms:integer;
-    b:boolean;
-begin
-  ms:=2;
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
-  begin
-    SetGroupStatus(ms);
-    exit;
-  end;
-  if TUser.Int(TUserMaxScore)>ms then ms:=TUser.Int(TUserMaxScore);
-  TUser.Edit([TUserScore,TUserMaxScore,TUserLearned],['2',inttostr(ms),FormatDateTime('yyyymmdd',now)]);
-  StringGrid1Click(self);
-  fMenu.ChangeUserData;
-  ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_Button8Click(Sender: TObject);
-var ms:integer;
-    b:boolean;
-begin
-  ms:=3;
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
-  begin
-    SetGroupStatus(ms);
-    exit;
-  end;
-  if TUser.Int(TUserMaxScore)>ms then ms:=TUser.Int(TUserMaxScore);
-  TUser.Edit([TUserScore,TUserMaxScore,TUserMastered],['3',inttostr(ms),FormatDateTime('yyyymmdd',now)]);
-  StringGrid1Click(self);
-  fMenu.ChangeUserData;
-  ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_Button2Click(Sender: TObject);
-var i:integer;
-    s:string;
-begin
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
-  begin
-    if Application.MessageBox(
-      pchar(_l('#00925^eReally delete all these words?')),
-      pchar(_l('#00926^eWarning')),
-      MB_ICONWARNING or MB_YESNO)=idNo then exit;
-  end else
-  begin
-    if Application.MessageBox(
-      pchar(_l('#00852^eReally delete this word?')),
-      pchar(_l('#00853^eConfirmation')),
-      MB_ICONWARNING or MB_YESNO)=idNo then
-      exit;
-  end;
-  for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
-  begin
-    s:=wl[i-1];
-    lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
-    TUserIdx.First;
-    while not TUserIdx.EOF do
-    begin
-      if TUserIdx.Int(TUserIdxWord)=TUser.Int(TUserIndex) then TUserIdx.Delete;
-      TUserIdx.Next;
-    end;
-    TUserSheet.First;
-    while not TUserSheet.EOF do
-    begin
-      if TUserSheet.Int(TUserSheetWord)=TUser.Int(TUserIndex) then TUserSheet.Delete;
-      TUserSheet.Next;
-    end;
-    TUser.Delete;
-  end;
   fMenu.ChangeUserData;
   ShowIt(false);
 end;
@@ -1275,10 +1162,36 @@ procedure TfWords.UserDetails_ComboBox2Change(Sender: TObject);
 begin
   fUserDetails.Button3.Default:=false;
   fUserDetails.Button4.Default:=true;
-  fUserDetails.Button2.Default:=false;
+  fUserDetails.btnDelete.Default:=false;
 end;
 
-procedure TfWords.UserDetails_Button4Click(Sender: TObject);
+{ Word learning states:
+    0 - problematic
+    1 - unlearned
+    2 - learned
+    3 - mastered }
+procedure TfWords.SetWordsLearnState(ls: integer);
+var max_ls: integer;
+begin
+  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
+  begin
+    SetGroupStatus(ls);
+    exit;
+  end;
+  max_ls := TUser.Int(TUserMaxScore);
+  if ls>max_ls then max_ls:=ls;
+  case ls of
+    2: TUser.Edit([TUserScore,TUserMaxScore,TUserLearned],[inttostr(ls),inttostr(max_ls),FormatDateTime('yyyymmdd',now)]);
+    3: TUser.Edit([TUserScore,TUserMaxScore,TUserMastered],[inttostr(ls),inttostr(max_ls),FormatDateTime('yyyymmdd',now)]);
+  else
+    TUser.Edit([TUserScore,TUserMaxScore],[inttostr(ls),inttostr(max_ls)]);
+  end;
+  StringGrid1Click(self);
+  fMenu.UserDataChanged := true;
+  ShowIt(false);
+end;
+
+procedure TfWords.AddWordsToCategory(category: string);
 var i:integer;
     s:string;
 begin
@@ -1297,11 +1210,114 @@ begin
       TUser.Str(TUserKanji),
       TUser.Str(TUserPhonetic),
       TUser.Str(TUserEnglish),
-      fUserDetails.ComboBox2.text,
+      category,
       '?',
       StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom,
       1);
   end;
+  ShowIt(false);
+end;
+
+procedure TfWords.MoveWordsInCategory(moveDir: TMoveDirection);
+var ai,bi:integer;
+  ap,bp:integer;
+  s:string;
+  i:integer;
+begin
+  if moveDir=mdUp then begin
+    ai:=strtoint(wl[StringGrid1.Row-1]);
+    bi:=strtoint(wl[StringGrid1.Row-2]);
+  end else begin
+    ai:=strtoint(wl[StringGrid1.Row-1]);
+    bi:=strtoint(wl[StringGrid1.Row]);
+  end;
+  TUserSheet.SetOrder('Sheet_Ind');
+  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
+  while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
+  begin
+    if TUserSheet.Int(TUserSheetWord)=ai then ap:=TUserSheet.Int(TUserSheetPos);
+    if TUserSheet.Int(TUserSheetWord)=bi then bp:=TUserSheet.Int(TUserSheetPos);
+    TUserSheet.Next;
+  end;
+  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
+  while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
+  begin
+    if TUserSheet.Int(TUserSheetPos)=ap then TUserSheet.Edit([TUserSheetPos],[inttostr(bp)]) else
+    if TUserSheet.Int(TUserSheetPos)=bp then TUserSheet.Edit([TUserSheetPos],[inttostr(ap)]);
+    TUserSheet.Next;
+  end;
+  for i:=0 to 3 do
+  begin
+    s:=StringGrid1.Cells[i,StringGrid1.Row];
+    if i=3 then begin
+      if moveDir=mdUp then begin
+        StringGrid1.Cells[i,StringGrid1.Row]:= '!'+StringGrid1.Cells[i,stringGrid1.Row-1][2]+copy(s,3,length(s)-2);
+        StringGrid1.Cells[i,StringGrid1.Row-1]:= '!'+s[2]+copy(StringGrid1.Cells[i,StringGrid1.Row-1],3,length(StringGrid1.Cells[i,StringGrid1.Row-1])-2);
+      end else begin
+        StringGrid1.Cells[i,StringGrid1.Row]:= '!'+StringGrid1.Cells[i,stringGrid1.Row+1][2]+copy(s,3,length(s)-2);
+        StringGrid1.Cells[i,StringGrid1.Row+1]:= '!'+s[2]+copy(StringGrid1.Cells[i,StringGrid1.Row+1],3,length(StringGrid1.Cells[i,StringGrid1.Row+1])-2);
+      end;
+    end else begin
+      if moveDir=mdUp then begin
+        StringGrid1.Cells[i,stringGrid1.Row]:=StringGrid1.Cells[i,StringGrid1.Row-1];
+        StringGrid1.Cells[i,StringGrid1.Row-1]:=s;
+      end else begin
+        StringGrid1.Cells[i,stringGrid1.Row]:=StringGrid1.Cells[i,StringGrid1.Row+1];
+        StringGrid1.Cells[i,StringGrid1.Row+1]:=s;
+      end;
+    end;
+  end;
+  s:=wl[StringGrid1.Row-1];
+  if moveDir=mdUp then begin
+    wl[StringGrid1.Row-1]:=wl[StringGrid1.Row-2];
+    wl[StringGrid1.Row-2]:=s;
+    StringGrid1.Row:=StringGrid1.Row-1;
+  end else begin
+    wl[StringGrid1.Row-1]:=wl[StringGrid1.Row];
+    wl[StringGrid1.Row]:=s;
+    StringGrid1.Row:=StringGrid1.Row+1;
+  end;
+  fMenu.ChangeUserData;
+end;
+
+procedure TfWords.DeleteWords();
+var i:integer;
+    s:string;
+begin
+  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
+  begin
+    if Application.MessageBox(
+      pchar(_l('#00925^eReally delete all these words?')),
+      pchar(_l('#00926^eWarning')),
+      MB_ICONWARNING or MB_YESNO)=idNo then exit;
+  end else
+  begin
+    if Application.MessageBox(
+      pchar(_l('#00852^eReally delete this word?')),
+      pchar(_l('#00853^eConfirmation')),
+      MB_ICONWARNING or MB_YESNO)=idNo then
+      exit;
+  end;
+  for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
+  begin
+    s:=wl[i-1];
+    lastwordind:=strtoint(s);
+    if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    TUserIdx.First;
+    while not TUserIdx.EOF do
+    begin
+      if TUserIdx.Int(TUserIdxWord)=TUser.Int(TUserIndex) then TUserIdx.Delete;
+      TUserIdx.Next;
+    end;
+    TUserSheet.First;
+    while not TUserSheet.EOF do
+    begin
+      if TUserSheet.Int(TUserSheetWord)=TUser.Int(TUserIndex) then TUserSheet.Delete;
+      TUserSheet.Next;
+    end;
+    TUser.Delete;
+  end;
+  fMenu.ChangeUserData;
   ShowIt(false);
 end;
 
@@ -1504,97 +1520,13 @@ end;
 
 procedure TfWords.StringGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
-  if (Upcase(key)='L') and (fUserDetails.Button7.Enabled) then UserDetails_Button7Click(sender);
-  if (Upcase(key)='M') and (fUserDetails.Button8.Enabled) then UserDetails_Button8Click(sender);
-  if (Upcase(key)='U') and (fUserDetails.Button6.Enabled) then UserDetails_Button6Click(sender);
-  if (Upcase(key)='P') and (fUserDetails.Button5.Enabled) then UserDetails_Button5Click(sender);
-  if (Upcase(key)='A') and (fUserDetails.Button4.Enabled) then UserDetails_Button4Click(sender);
-  if (key=',') and (fUserDetails.SpeedButton4.Enabled) and (fUserDetails.SpeedButton4.Visible) then UserDetails_SpeedButton4Click(sender);
-  if (key='.') and (fUserDetails.SpeedButton5.Enabled) and (fUserDetails.SpeedButton5.Visible) then UserDetails_SpeedButton5Click(sender);
-end;
-
-procedure TfWords.UserDetails_SpeedButton4Click(Sender: TObject);
-var ai,bi:integer;
-    ap,bp:integer;
-    s:string;
-    i:integer;
-begin
-  ai:=strtoint(wl[StringGrid1.Row-1]);
-  bi:=strtoint(wl[StringGrid1.Row-2]);
-  TUserSheet.SetOrder('Sheet_Ind');
-  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
-  while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
-  begin
-    if TUserSheet.Int(TUserSheetWord)=ai then ap:=TUserSheet.Int(TUserSheetPos);
-    if TUserSheet.Int(TUserSheetWord)=bi then bp:=TUserSheet.Int(TUserSheetPos);
-    TUserSheet.Next;
-  end;
-  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
-  while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
-  begin
-    if TUserSheet.Int(TUserSheetPos)=ap then TUserSheet.Edit([TUserSheetPos],[inttostr(bp)]) else
-    if TUserSheet.Int(TUserSheetPos)=bp then TUserSheet.Edit([TUserSheetPos],[inttostr(ap)]);
-    TUserSheet.Next;
-  end;
-  for i:=0 to 3 do
-  begin
-    s:=StringGrid1.Cells[i,StringGrid1.Row];
-    if i=3 then
-      StringGrid1.Cells[i,StringGrid1.Row]:=
-        '!'+StringGrid1.Cells[i,stringGrid1.Row-1][2]+copy(s,3,length(s)-2)
-      else StringGrid1.Cells[i,stringGrid1.Row]:=StringGrid1.Cells[i,StringGrid1.Row-1];
-    if i=3 then
-      StringGrid1.Cells[i,StringGrid1.Row-1]:=
-        '!'+s[2]+copy(StringGrid1.Cells[i,StringGrid1.Row-1],3,length(StringGrid1.Cells[i,StringGrid1.Row-1])-2)
-      else StringGrid1.Cells[i,StringGrid1.Row-1]:=s;
-  end;
-  s:=wl[StringGrid1.Row-1];
-  wl[StringGrid1.Row-1]:=wl[StringGrid1.Row-2];
-  wl[StringGrid1.Row-2]:=s;
-  StringGrid1.Row:=StringGrid1.Row-1;
-  fMenu.ChangeUserData;
-end;
-
-procedure TfWords.UserDetails_SpeedButton5Click(Sender: TObject);
-var ai,bi:integer;
-    ap,bp:integer;
-    s:string;
-    i:integer;
-begin
-  ai:=strtoint(wl[StringGrid1.Row-1]);
-  bi:=strtoint(wl[StringGrid1.Row]);
-  TUserSheet.SetOrder('Sheet_Ind');
-  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
-  while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
-  begin
-    if TUserSheet.Int(TUserSheetWord)=ai then ap:=TUserSheet.Int(TUserSheetPos);
-    if TUserSheet.Int(TUserSheetWord)=bi then bp:=TUserSheet.Int(TUserSheetPos);
-    TUserSheet.Next;
-  end;
-  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
-  while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
-  begin
-    if TUserSheet.Int(TUserSheetPos)=ap then TUserSheet.Edit([TUserSheetPos],[inttostr(bp)]) else
-    if TUserSheet.Int(TUserSheetPos)=bp then TUserSheet.Edit([TUserSheetPos],[inttostr(ap)]);
-    TUserSheet.Next;
-  end;
-  for i:=0 to 3 do
-  begin
-    s:=StringGrid1.Cells[i,StringGrid1.Row];
-    if i=3 then
-      StringGrid1.Cells[i,StringGrid1.Row]:=
-        '!'+StringGrid1.Cells[i,stringGrid1.Row+1][2]+copy(s,3,length(s)-2)
-      else StringGrid1.Cells[i,stringGrid1.Row]:=StringGrid1.Cells[i,StringGrid1.Row+1];
-    if i=3 then
-      StringGrid1.Cells[i,StringGrid1.Row+1]:=
-        '!'+s[2]+copy(StringGrid1.Cells[i,StringGrid1.Row+1],3,length(StringGrid1.Cells[i,StringGrid1.Row+1])-2)
-      else StringGrid1.Cells[i,StringGrid1.Row+1]:=s;
-  end;
-  s:=wl[StringGrid1.Row-1];
-  wl[StringGrid1.Row-1]:=wl[StringGrid1.Row];
-  wl[StringGrid1.Row]:=s;
-  StringGrid1.Row:=StringGrid1.Row+1;
-  fMenu.ChangeUserData;
+  if (Upcase(key)='P') and (fUserDetails.btnSetProblematic.Enabled) then SetWordsLearnState(0);
+  if (Upcase(key)='U') and (fUserDetails.btnSetUnlearned.Enabled) then SetWordsLearnState(1);
+  if (Upcase(key)='L') and (fUserDetails.btnSetLearned.Enabled) then SetWordsLearnState(2);
+  if (Upcase(key)='M') and (fUserDetails.btnSetMastered.Enabled) then SetWordsLearnState(3);
+  if (Upcase(key)='A') and (fUserDetails.Button4.Enabled) then AddWordsToCategory(fUserDetails.ComboBox2.text);
+  if (key=',') and (fUserDetails.btnMoveUpInCategory.Enabled) and (fUserDetails.btnMoveUpInCategory.Visible) then MoveWordsInCategory(mdUp);
+  if (key='.') and (fUserDetails.btnMoveDownInCategory.Enabled) and (fUserDetails.btnMoveDownInCategory.Visible) then MoveWordsInCategory(mdDown);
 end;
 
 procedure TfWords.UserCategory_SpeedButton2Click(Sender: TObject);
@@ -2534,12 +2466,8 @@ begin
     end;
     if cl.Count>1 then fUserDetails.Button13.Enabled:=true;
     cl.Free;
-    fUserDetails.Button2.Enabled:=true;
+    fUserDetails.SetWordControlsEnabled(true);
     fUserDetails.Button4.Enabled:=true;
-    fUserDetails.Button5.Enabled:=true;
-    fUserDetails.Button6.Enabled:=true;
-    fUserDetails.Button7.Enabled:=true;
-    fUserDetails.Button8.Enabled:=true;
     fUserDetails.ComboBox2.Enabled:=true;
     fUserDetails.ListBox2.Enabled:=true;
     exit;
@@ -2568,22 +2496,18 @@ begin
   fUserDetails.Label17.Caption:=DateForm(TUser.Str(TUserMastered));
   fUserDetails.Label18.Caption:=DateForm(TUser.Str(TUserPrinted));
   if fUserDetails.Label18.Caption<>'-'then fUserDetails.Label18.Caption:=fUserDetails.Label18.Caption+' ('+TUser.Str(TUserNoPrinted)+'x)';
-  fUserDetails.Button2.Enabled:=true;
-  fUserDetails.Button5.Enabled:=true;
-  fUserDetails.Button6.Enabled:=true;
-  fUserDetails.Button7.Enabled:=true;
-  fUserDetails.Button8.Enabled:=true;
+  fUserDetails.SetWordControlsEnabled(true);
   fUserDetails.ComboBox2.Enabled:=true;
   fUserDetails.ListBox2.Enabled:=true;
   fUserDetails.PaintBox1.Invalidate;
   fUserDetails.PaintBox6.Invalidate;
-  fUserDetails.Button2.Default:=true;
+  fUserDetails.btnDelete.Default:=true;
   fUserDetails.Button3.Default:=false;
   fUserDetails.Button4.Default:=false;
   if fUserFilters.RadioGroup2.ItemIndex=0 then
   begin
-    fUserDetails.SpeedButton4.Enabled:=(StringGrid1.Row>1) and (wlc[StringGrid1.Row-2]=wlc[StringGrid1.Row-1]);
-    fUserDetails.SpeedButton5.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
+    fUserDetails.btnMoveUpInCategory.Enabled:=(StringGrid1.Row>1) and (wlc[StringGrid1.Row-2]=wlc[StringGrid1.Row-1]);
+    fUserDetails.btnMoveDownInCategory.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
   end;
   ListWordCategories(strtoint(s),cl);
   for i:=0 to cl.Count-1 do fUserDetails.ListBOx2.Items.Add(copy(cl[i],3,length(cl[i])-2));
@@ -2597,7 +2521,6 @@ end;
 procedure TfWords.SetGroupStatus(st: integer);
 var i,ms:integer;
     s:string;
-    b:boolean;
 begin
   if Application.MessageBox(
     pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?')),

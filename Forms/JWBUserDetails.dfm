@@ -30,7 +30,7 @@ object fUserDetails: TfUserDetails
   object Label5: TLabel
     Left = 8
     Top = 9
-    Width = 138
+    Width = 94
     Height = 13
     Caption = '#00060^ePhonetic:'
     Font.Charset = DEFAULT_CHARSET
@@ -68,7 +68,7 @@ object fUserDetails: TfUserDetails
   object Label6: TLabel
     Left = 298
     Top = 9
-    Width = 127
+    Width = 86
     Height = 13
     Caption = '#00061^eWritten:'
     Font.Charset = DEFAULT_CHARSET
@@ -108,7 +108,7 @@ object fUserDetails: TfUserDetails
   object Label8: TLabel
     Left = 554
     Top = 9
-    Width = 119
+    Width = 82
     Height = 13
     Anchors = [akTop, akRight]
     Caption = '#00693^eStatus:'
@@ -123,7 +123,7 @@ object fUserDetails: TfUserDetails
   object Label9: TLabel
     Left = 8
     Top = 65
-    Width = 146
+    Width = 93
     Height = 13
     Caption = '#00691^eMeaning:'
     Font.Charset = DEFAULT_CHARSET
@@ -137,7 +137,7 @@ object fUserDetails: TfUserDetails
   object Label11: TLabel
     Left = 8
     Top = 113
-    Width = 157
+    Width = 89
     Height = 13
     Caption = '#00694^eCreated:'
     Font.Charset = DEFAULT_CHARSET
@@ -151,7 +151,7 @@ object fUserDetails: TfUserDetails
   object Label12: TLabel
     Left = 336
     Top = 113
-    Width = 200
+    Width = 108
     Height = 13
     Caption = '#00695^eLearning list:'
     Font.Charset = DEFAULT_CHARSET
@@ -165,7 +165,7 @@ object fUserDetails: TfUserDetails
   object Label13: TLabel
     Left = 112
     Top = 113
-    Width = 150
+    Width = 91
     Height = 13
     Caption = '#00696^eLearned:'
     Font.Charset = DEFAULT_CHARSET
@@ -179,7 +179,7 @@ object fUserDetails: TfUserDetails
   object Label14: TLabel
     Left = 200
     Top = 113
-    Width = 190
+    Width = 96
     Height = 13
     Caption = '#00697^eMastered:'
     Font.Charset = DEFAULT_CHARSET
@@ -246,7 +246,7 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     Transparent = True
   end
-  object SpeedButton4: TSpeedButton
+  object btnMoveUpInCategory: TSpeedButton
     Left = 697
     Top = 26
     Width = 23
@@ -269,9 +269,9 @@ object fUserDetails: TfUserDetails
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton4Click
+    OnClick = btnMoveUpInCategoryClick
   end
-  object SpeedButton5: TSpeedButton
+  object btnMoveDownInCategory: TSpeedButton
     Left = 721
     Top = 26
     Width = 23
@@ -294,9 +294,9 @@ object fUserDetails: TfUserDetails
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton5Click
+    OnClick = btnMoveDownInCategoryClick
   end
-  object Button2: TButton
+  object btnDelete: TButton
     Left = 669
     Top = 7
     Width = 75
@@ -311,7 +311,7 @@ object fUserDetails: TfUserDetails
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    OnClick = Button2Click
+    OnClick = btnDeleteClick
   end
   object Edit4: TEdit
     Left = 8
@@ -346,7 +346,7 @@ object fUserDetails: TfUserDetails
     Color = clBtnFace
     ParentColor = False
     TabOrder = 3
-    object Button5: TButton
+    object btnSetProblematic: TButton
       Left = 8
       Top = 16
       Width = 113
@@ -359,9 +359,9 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 0
-      OnClick = Button5Click
+      OnClick = btnSetProblematicClick
     end
-    object Button6: TButton
+    object btnSetUnlearned: TButton
       Left = 128
       Top = 16
       Width = 106
@@ -374,9 +374,9 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 1
-      OnClick = Button6Click
+      OnClick = btnSetUnlearnedClick
     end
-    object Button7: TButton
+    object btnSetLearned: TButton
       Left = 240
       Top = 16
       Width = 107
@@ -389,9 +389,9 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 2
-      OnClick = Button7Click
+      OnClick = btnSetLearnedClick
     end
-    object Button8: TButton
+    object btnSetMastered: TButton
       Left = 352
       Top = 16
       Width = 113
@@ -404,7 +404,7 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 3
-      OnClick = Button8Click
+      OnClick = btnSetMasteredClick
     end
   end
   object GroupBox3: TGroupBox
@@ -426,7 +426,6 @@ object fUserDetails: TfUserDetails
       Width = 182
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 13
       TabOrder = 0
       OnChange = ComboBox2Change
     end

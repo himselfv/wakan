@@ -25,16 +25,16 @@ type
     Label16: TLabel;
     Label17: TLabel;
     Label18: TLabel;
-    SpeedButton4: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    Button2: TButton;
+    btnMoveUpInCategory: TSpeedButton;
+    btnMoveDownInCategory: TSpeedButton;
+    btnDelete: TButton;
     Edit4: TEdit;
     Button3: TButton;
     GroupBox2: TGroupBox;
-    Button5: TButton;
-    Button6: TButton;
-    Button7: TButton;
-    Button8: TButton;
+    btnSetProblematic: TButton;
+    btnSetUnlearned: TButton;
+    btnSetLearned: TButton;
+    btnSetMastered: TButton;
     GroupBox3: TGroupBox;
     ComboBox2: TComboBox;
     Button4: TButton;
@@ -44,24 +44,24 @@ type
     procedure PaintBox1Paint(Sender: TObject);
     procedure PaintBox6Paint(Sender: TObject);
     procedure Button4Click(Sender: TObject);
-    procedure Button5Click(Sender: TObject);
-    procedure Button6Click(Sender: TObject);
-    procedure Button7Click(Sender: TObject);
-    procedure Button8Click(Sender: TObject);
+    procedure btnSetProblematicClick(Sender: TObject);
+    procedure btnSetUnlearnedClick(Sender: TObject);
+    procedure btnSetLearnedClick(Sender: TObject);
+    procedure btnSetMasteredClick(Sender: TObject);
     procedure Button13Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
-    procedure SpeedButton5Click(Sender: TObject);
+    procedure btnDeleteClick(Sender: TObject);
+    procedure btnMoveUpInCategoryClick(Sender: TObject);
+    procedure btnMoveDownInCategoryClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure ComboBox2Change(Sender: TObject);
     procedure Edit4Change(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure PaintBox6MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-  private
-    { Private declarations }
+
   public
-    { Public declarations }
+    procedure SetWordControlsEnabled(Value: boolean);
+
   end;
 
 var
@@ -85,27 +85,27 @@ end;
 
 procedure TfUserDetails.Button4Click(Sender: TObject);
 begin
-  fWords.UserDetails_Button4Click(sender);
+  fWords.AddWordsToCategory(ComboBox2.text);
 end;
 
-procedure TfUserDetails.Button5Click(Sender: TObject);
+procedure TfUserDetails.btnSetProblematicClick(Sender: TObject);
 begin
-  fWords.UserDetails_Button5Click(sender);
+  fWords.SetWordsLearnState(0);
 end;
 
-procedure TfUserDetails.Button6Click(Sender: TObject);
+procedure TfUserDetails.btnSetUnlearnedClick(Sender: TObject);
 begin
-  fWords.UserDetails_Button6Click(sender);
+  fWords.SetWordsLearnState(1);
 end;
 
-procedure TfUserDetails.Button7Click(Sender: TObject);
+procedure TfUserDetails.btnSetLearnedClick(Sender: TObject);
 begin
-  fWords.UserDetails_Button7Click(sender);
+  fWords.SetWordsLearnState(2);
 end;
 
-procedure TfUserDetails.Button8Click(Sender: TObject);
+procedure TfUserDetails.btnSetMasteredClick(Sender: TObject);
 begin
-  fWords.UserDetails_Button8Click(sender);
+  fWords.SetWordsLearnState(3);
 end;
 
 procedure TfUserDetails.Button13Click(Sender: TObject);
@@ -113,19 +113,19 @@ begin
   fWords.UserDetails_Button13Click(sender);
 end;
 
-procedure TfUserDetails.Button2Click(Sender: TObject);
+procedure TfUserDetails.btnDeleteClick(Sender: TObject);
 begin
-  fWords.UserDetails_Button2Click(sender);
+  fWords.DeleteWords();
 end;
 
-procedure TfUserDetails.SpeedButton4Click(Sender: TObject);
+procedure TfUserDetails.btnMoveUpInCategoryClick(Sender: TObject);
 begin
-  fWords.UserDetails_SpeedButton4Click(sender);
+  fWords.MoveWordsInCategory(mdUp);
 end;
 
-procedure TfUserDetails.SpeedButton5Click(Sender: TObject);
+procedure TfUserDetails.btnMoveDownInCategoryClick(Sender: TObject);
 begin
-  fWords.UserDetails_SpeedButton5Click(sender);
+  fWords.MoveWordsInCategory(mdDown);
 end;
 
 procedure TfUserDetails.Button3Click(Sender: TObject);
@@ -154,6 +154,15 @@ procedure TfUserDetails.PaintBox6MouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   fMenu.IntTipPaintOver(PaintBox6,x,y,ssLeft in Shift);
+end;
+
+procedure TfUserDetails.SetWordControlsEnabled(Value: boolean);
+begin
+  fUserDetails.btnDelete.Enabled:=Value;
+  fUserDetails.btnSetProblematic.Enabled:=Value;
+  fUserDetails.btnSetUnlearned.Enabled:=Value;
+  fUserDetails.btnSetLearned.Enabled:=Value;
+  fUserDetails.btnSetMastered.Enabled:=Value;
 end;
 
 end.

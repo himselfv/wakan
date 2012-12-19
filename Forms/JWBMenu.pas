@@ -492,6 +492,7 @@ var
   showroma,jshowroma,cshowroma:boolean;
   CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
   dicts:TStringList;
+
   //Tables
   TChar,
   TCharRead,
@@ -535,7 +536,7 @@ var
   MaxCategoryIndex: integer;
 
   TUserConvertKanji,TUserConvertCount:integer;
-  Clip:FString;
+  clip:FString;
   cliptrans:TCharacterLineProps;
   NotUsedDicts:string;
   NotGroupDicts:array[1..5] of string;
@@ -544,15 +545,24 @@ var
   critsec:boolean;
   globheight:integer;
   ChinesePresent:boolean;
-  defll: TDeflectionList;
-  partl,bopomofol,suffixl,ignorel,readchl:TStringList;
+
+ //Loaded from config file -- see comments in wakan.cfg
+  partl: TStringList; //particles such as NO, NI, etc
+  suffixl: TStringList; //suffixes
+  defll: TDeflectionList; //verb deflections
+  romasortl: array of record //romaji sort order
+    roma: FString;
+    order: string; //although it's integer insidee
+  end;
+  ignorel: TStringList; //words to ignore when indexing dictionaries
+  readchl: TStringList; //list of readings to include to the reading chart
+
   firstact:boolean;
   userdataloaded:boolean;
   curlang:char;
   curqlayout:integer;
   proposedlayout:integer;
   borderchange:boolean;
-  romasortl:TStringList;
   displaymode:integer;
   curdisplaymode:integer;
   oldpt,begpt:TPoint;
@@ -2085,8 +2095,6 @@ begin
   defll.Free;
   suffixl.Free;
   partl.Free;
-  bopomofol.Free;
-
   dicts.Free;
   kanjicatuniqs.Free;
 end;
@@ -2294,6 +2302,21 @@ begin
   initdone:=false;
 end;
 
+procedure AddRomaSortRecord(s: string);
+var parts: TStringArray;
+  i: integer;
+begin
+  parts := SplitStr(s, 2);
+  if Length(parts)<=0 then exit;
+  i := Length(romasortl);
+  SetLength(romasortl, i+1);
+  romasortl[i].roma := hextofstr(parts[0]);
+  if Length(parts)>=2 then
+    romasortl[i].order := parts[1]
+  else
+    romasortl[i].order := '';
+end;
+
 procedure TfMenu.FormShow(Sender: TObject);
 var ps:TPackageSource;
   reg:TRegIniFile;
@@ -2324,9 +2347,6 @@ begin
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;
-  bopomofol:=TStringList.Create;
-
-  romasortl:=TStringList.Create;
   ignorel:=TStringList.Create;
   readchl:=TStringList.Create;
   kanjicatuniqs:=TStringList.Create;
@@ -2535,8 +2555,8 @@ begin
   fSettings.cbNoMeaningLearned.Checked:=reg.ReadBool('Translate','NoMeaningLearned',false);
   fSettings.cbNoReadingLearned.Checked:=reg.ReadBool('Translate','NoReadingLearned',false);
   fSettings.CheckBox36.Checked:=reg.ReadBool('Translate','ReadingKatakana',true);
-  fSettings.CheckBox34.Checked:=reg.ReadBool('Translate','NoSearchParticles',false);
-  fSettings.CheckBox38.Checked:=reg.ReadBool('Translate','NoTranslateHiragana',false);
+  fSettings.cbNoSearchParticles.Checked:=reg.ReadBool('Translate','NoSearchParticles',false);
+  fSettings.cbNoTranslateHiragana.Checked:=reg.ReadBool('Translate','NoTranslateHiragana',false);
   fSettings.cbNoColors.Checked:=reg.ReadBool('Translate','NoUseColors',false);
   fSettings.cbUserBold.Checked:=reg.ReadBool('Translate','UserBold',true);
   fSettings.CheckBox42.Checked:=reg.ReadBool('Translate','LeaveSpace',false);
@@ -2628,6 +2648,7 @@ begin
     partl.Clear;
     romac.Clear;
     roma_t.Clear;
+    SetLength(romasortl, 0);
     while not eof(conft) do
     begin
       readln(conft,s);
@@ -2649,15 +2670,16 @@ begin
           sect:=0;
         end else
         begin
-          if sect=1 then partl.Add(s);
+         //Some of the fields are in hex unicode, so we have to convert them
+          if sect=1 then partl.Add(hextofstr(s));
           if sect=2 then defll.Add(s);
           if sect=3 then roma_t.Add(s);
           if sect=4 then splitadd(romac,s,4);
           if sect=5 then CharPropTypes.Add(s);
-          if sect=6 then splitadd(romasortl,s,2);
-          if sect=7 then suffixl.Add(s);
+          if sect=6 then AddRomaSortRecord(s);
+          if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}
           if sect=8 then ignorel.Add(s);
-          if sect=9 then readchl.Add(s);
+          if sect=9 then readchl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{reading:fhex}
         end;
       end;
     end;

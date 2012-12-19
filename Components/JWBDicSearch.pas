@@ -183,7 +183,7 @@ type
 
   protected
     a3kana:boolean;   //a==3 and only kana in string
-    a4limitkana:boolean;
+    a4limitkana:boolean; //a in [4,5]
     procedure DicInitialLookup(dic: TDicCursor; wt: integer; sxxr: string; sxx: string);
     procedure SortResults(sl: TStringList);
 
@@ -974,7 +974,7 @@ begin
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
     if a=stEn then dic.Locate(dic.stIndex,inttostr(wif),true);
     //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.Str(dic.TDictEnglish));
-    if sdef<>'F'then s2:=ALTCH_TILDE+'I'else s2:=ALTCH_TILDE+'F';
+    if sdef<>'F' then s2:=ALTCH_TILDE+'I'else s2:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
       s2:=s2+EnrichDictEntry(dic.Str(dic.TDictEnglish),dic.Str(dic.TDictMarkers))
     else begin

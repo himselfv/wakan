@@ -303,11 +303,13 @@ object fWords: TfWords
       ' file (import as CSV) (*.*)|*.*'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Left = 632
+    Top = 40
   end
   object SaveDialog1: TSaveDialog
     DefaultExt = '.wkl'
     Filter = 'Word List in CSV (*.csv)|*.csv|WaKan Word List (*.wkl)|*.wkl'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Left = 664
+    Top = 40
   end
 end

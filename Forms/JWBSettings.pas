@@ -235,10 +235,10 @@ type
     Edit18: TEdit;
     cbDisplayLines: TCheckBox;
     cbNoMeaningLearned: TCheckBox;
-    CheckBox34: TCheckBox;
+    cbNoSearchParticles: TCheckBox;
     cbNoReadingLearned: TCheckBox;
     CheckBox36: TCheckBox;
-    CheckBox38: TCheckBox;
+    cbNoTranslateHiragana: TCheckBox;
     cbUserBold: TCheckBox;
     Edit17: TEdit;
     CheckBox42: TCheckBox;
@@ -589,8 +589,8 @@ begin
   reg.WriteBool('Translate','NoMeaningLearned',cbNoMeaningLearned.Checked);
   reg.WriteBool('Translate','NoReadingLearned',cbNoReadingLearned.Checked);
   reg.WriteBool('Translate','ReadingKatakana',CheckBox36.Checked);
-  reg.WriteBool('Translate','NoSearchParticles',CheckBox34.Checked);
-  reg.WriteBool('Translate','NoTranslateHiragana',CheckBox38.Checked);
+  reg.WriteBool('Translate','NoSearchParticles',cbNoSearchParticles.Checked);
+  reg.WriteBool('Translate','NoTranslateHiragana',cbNoTranslateHiragana.Checked);
   reg.WriteBool('Translate','NoUseColors',cbNoColors.Checked);
   reg.WriteBool('Translate','UserBold',cbUserBold.Checked);
   reg.WriteBool('Translate','LeaveSpace',CheckBox42.Checked);

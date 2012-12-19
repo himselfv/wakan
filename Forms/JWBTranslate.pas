@@ -1185,7 +1185,6 @@ begin
 end;
 {$ENDIF}
 
-
 procedure TfTranslate.AutoTranslate;
 var j:integer;
   bg,en:integer;
@@ -1443,7 +1442,10 @@ begin
     else if key=VK_DELETE then
     begin
       ResolveInsert(true);
-      if (blockx<>rcurx) or (blocky<>rcury) then BlockOp(false,true) else DeleteCharacter(rcurx,rcury);
+      if (blockx<>rcurx) or (blocky<>rcury) then
+        BlockOp(false,true)
+      else
+        DeleteCharacter(rcurx,rcury);
       RefreshLines;
     end else ukn:=true;
     if not ukn then
@@ -2812,7 +2814,7 @@ var wordpart:char;
   globdict: integer;
 begin
   FileChanged:=true;
-  if fSettings.CheckBox34.Checked then flags := flags - [tfScanParticle];
+  if fSettings.cbNoSearchParticles.Checked then flags := flags - [tfScanParticle];
   if (y=-1) or (y>=doctr.Count) or (x=-1) then begin
     Result := 0;
     exit;
@@ -2855,7 +2857,7 @@ begin
         learnstate:=9
       else
       if (Ord(learnstate_s[1])>=Ord('0')) and (Ord(learnstate_s[1])<=Ord('9')) then
-        learnstate := Ord(learnstate_s[1])-Ord(0)
+        learnstate := Ord(learnstate_s[1])-Ord('0')
       else
         learnstate := 9;
     end;
@@ -2871,12 +2873,12 @@ begin
     if wt<>1 then wordstate:='-' else wordstate:='?'
   end else
     case wt of
-      2:if fSettings.CheckBox38.Checked then wordstate:='-'else wordstate:='H';
+      2:if fSettings.cbNoTranslateHiragana.Checked then wordstate:='-'else wordstate:='H';
       3:if s2={$IFNDEF UNICODE}'30FC'{$ELSE}#$30FC{$ENDIF} then wordstate:='-' else wordstate:='K';
       1:if wordpart='I'then wordstate:='D' else wordstate:='F';
       else wordstate:='-';
     end;
-  if wordpart='P'then wordstate:='P';
+  if wordpart='P' then wordstate:='P';
   if tfManuallyChosen in flags then wordstate:=LoCase(wordstate);
 
   if wordstate='-' then
@@ -3052,7 +3054,6 @@ begin
   inslen:=0;
   insertbuffer:='';
 end;
-                                  
 
 procedure TfTranslate.PasteOp;
 var s: string;

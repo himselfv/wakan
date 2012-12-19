@@ -9,7 +9,7 @@ uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Regi
 { Romaji conversions }
 
 var
- { Romaji translation table.
+ { Romaji translation table. Populated on load.
   See comments where class is defined. }
   roma_t: TRomajiTranslationTable;
 
