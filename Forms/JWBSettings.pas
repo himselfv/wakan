@@ -401,6 +401,7 @@ end;
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var reg: TRegIniFile;
 begin
+
   reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
   try
     LoadRegistrySettings(reg);
@@ -408,13 +409,15 @@ begin
     reg.Free;
   end;
 
-  if not DelayUI then
-    ApplyUISettings();
-
   if FileExists('WAKAN.CDT') then
     chardetl.LoadFromFile('WAKAN.CDT')
   else
     Button10Click(Self);
+
+  InitColors;
+
+  if not DelayUI then
+    ApplyUISettings();
 end;
 
 procedure TfSettings.SaveSettings;
@@ -426,6 +429,9 @@ begin
   finally
     reg.Free;
   end;
+
+  if pointer(chardetl[9])=nil then
+    raise Exception.Create('What the hell.');
 
   chardetl.SaveToFile('WAKAN.CDT');
   WriteColors;
@@ -626,7 +632,7 @@ begin
   CheckBox2.Checked:=reg.ReadBool('Translate','ShowHint',true);
   CheckBox13.Checked:=reg.ReadBool('Translate','HintMeaning',true);
   s:=reg.ReadString('Dict','CurLanguage','j');
-  curlang:=s[1];
+  if Length(s)>1 then curlang:=s[1] else curlang:='j';
   ListBox1Click(self);
   FontJapanese:=Edit2.Text;
   FontJapaneseGrid:=Edit1.Text;

@@ -678,10 +678,10 @@ end;
 procedure TfMenu.FormCreate(Sender: TObject);
 begin
   initdone:=false;
+  TChar := nil; //will be created on FormShow
+  TCharRead := nil;
+  TRadicals := nil;
 
-  curlang:='j';
-  intmopaint:=nil;
-  intmogrid:=nil;
   romac:=TStringList.Create;
   roma_t:=TRomajiTranslationTable.Create;
   defll:=TDeflectionList.Create;
@@ -689,6 +689,11 @@ begin
   partl:=TStringList.Create;
   ignorel:=TStringList.Create;
   readchl:=TStringList.Create;
+  dicts:=TStringList.Create;
+
+  curlang:='j';
+  intmopaint:=nil;
+  intmogrid:=nil;
 end;
 
 procedure TfMenu.FormDestroy(Sender: TObject);
@@ -704,7 +709,7 @@ begin
   partl.Free; //+
   ignorel.Free; //+
   readchl.Free; //+
-  dicts.Free;
+  dicts.Free; //+
 end;
 
 procedure AddRomaSortRecord(s: string);
@@ -829,8 +834,6 @@ begin
   romasys:=1;
   showroma:=false;
   clip:='';
-  dicts:=TStringList.Create;
-  InitColors;
 
   fSettings.LoadSettings({DelayUI=}true);
 
@@ -1099,9 +1102,9 @@ begin
   XPResFix(fClipboard);
 
   SwitchLanguage(curlang);
-  //SwitchLanguage will do this:
-  //RefreshCategory;
-  //RefreshKanjiCategory;
+  { SwitchLanguage will do this:
+  RefreshCategory;
+  RefreshKanjiCategory; }
 
   fSplash.Hide;
 {  if ((Screen.Width<1024) or (Screen.Height<768)) then
@@ -1114,12 +1117,13 @@ begin
   aBorders.Checked:=true;
   proposedlayout:=0;
   borderchange:=false;
-//  if (FileExists('wakan.lay')) and (setlayout=0) then ReadLayout('wakan.lay') else
-//  begin
-//    proposedlayout:=setlayout;
-//    timer2.enabled:=true;
-//  end;
-//  StandardLayout(0,100);
+{ Old way of loading layout:
+  if (FileExists('wakan.lay')) and (setlayout=0) then ReadLayout('wakan.lay') else
+  begin
+    proposedlayout:=setlayout;
+    timer2.enabled:=true;
+  end;
+  StandardLayout(0,100); }
   curdisplaymode:=0;
   FormPlacement1.RestoreFormPlacement;
 
@@ -2563,7 +2567,7 @@ begin
       Screen.Cursor:=crDefault;
     end;
     fSettings.btnOkClick(self);
-    if curqlayout=0 then WriteLayout('wakan.lay');
+//    if curqlayout=0 then WriteLayout('wakan.lay'); //old way of saving layout
     fTranslate.Close;
     fUser.Close;
     fWords.Close;
