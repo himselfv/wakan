@@ -400,6 +400,10 @@ begin
     ProURLLabel5.Enabled:=cv<>'';
     ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
 
+   { Stroke order }
+   //TODO: Remove.
+   { Not used. A remnant of the old way to display stroke order, through GIFS.
+    fMenu.StrokeOrderPackage is always nil }
     fStrokeOrder.TrackBar1.Max:=0;
     if (fMenu.StrokeOrderPackage<>nil) and (fMenu.GetCharValueInt(CChar.Int(TCharIndex),101)<65535) then
     begin

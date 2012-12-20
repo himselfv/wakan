@@ -110,10 +110,10 @@ uses StrUtils, JWBMenu, JWBSettings, JWBLanguage;
 
 //TODO: Upgrade to Unicode
 function ResolveCrom(s:string;posin,posout:integer;clean:boolean):string;
-var s2,s3:string;
-    cr:string;
-    cl:integer;
-    i:integer;
+var s2:string;
+  cr:string;
+  cl:integer;
+  i:integer;
 begin
   s:=uppercase(s);
   s2:='';
@@ -587,10 +587,9 @@ const UH_DUMMY_CHAR:FChar = #$F8F0; //used in place of a char when it's unknown 
 {$ELSE}
 const UH_DUMMY_CHAR:FChar = 'XXXX';
 {$ENDIF}
-var nch:string;
-  li:integer;
+var li:integer;
   ali:string;
-  cnv,cv2aft:string;
+  cnv:string;
   cnv2: FString;
   cc:char;
   i:integer;

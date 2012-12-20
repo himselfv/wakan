@@ -2362,6 +2362,8 @@ begin
     end;
 end;
 
+//TODO: Remove.
+{ Not used. A remnant of the old way to display stroke order, through GIFS. }
 procedure TfWords.RebuildStrokeOrderPackage;
 var
   tempDir: string;

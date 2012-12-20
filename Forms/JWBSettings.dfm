@@ -35,6 +35,9 @@ object fSettings: TfSettings
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label41: TLabel
         Left = 16
@@ -166,6 +169,9 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object GroupBox6: TGroupBox
         Left = 8
@@ -470,6 +476,9 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label35: TLabel
         Left = 16
@@ -553,6 +562,9 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label26: TLabel
         Left = 16
@@ -658,6 +670,9 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label4: TLabel
         Left = 8
@@ -1051,6 +1066,9 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label11: TLabel
         Left = 16
@@ -1158,6 +1176,9 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label12: TLabel
         Left = 8
@@ -1359,6 +1380,9 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label48: TLabel
         Left = 224
@@ -1480,6 +1504,9 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 514
       object sbTextTranslator: TScrollBox
         Left = 0
@@ -1711,6 +1738,9 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       DesignSize = (
         476
@@ -1784,7 +1814,6 @@ object fSettings: TfSettings
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox2Click
-        ExplicitHeight = 310
       end
       object Button7: TButton
         Left = 8
@@ -1833,6 +1862,9 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Label36: TLabel
         Left = 8
@@ -1984,6 +2016,9 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       DesignSize = (
         476
@@ -2012,7 +2047,6 @@ object fSettings: TfSettings
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox3Click
-        ExplicitHeight = 259
       end
       object Button12: TButton
         Left = 120
@@ -2105,6 +2139,9 @@ object fSettings: TfSettings
       Caption = '^eEditor'
       ImageIndex = 12
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object lblAozoraRuby: TLabel
         Left = 8
@@ -2203,6 +2240,9 @@ object fSettings: TfSettings
       Caption = '^eAnnotations'
       ImageIndex = 13
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
       ExplicitHeight = 428
       object Bevel1: TBevel
         Left = 8
@@ -2288,7 +2328,6 @@ object fSettings: TfSettings
     ItemHeight = 13
     TabOrder = 1
     OnClick = lbContentsClick
-    ExplicitHeight = 524
   end
   object pnlButtons: TPanel
     Left = 0

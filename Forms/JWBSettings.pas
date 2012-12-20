@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls;
+  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, registry;
 
 type
   TfSettings = class(TForm)
@@ -311,6 +311,23 @@ type
     procedure BuildContents;
     procedure SelectActiveContentItem;
 
+  private
+   { When doing LoadSettings with DelayUI=true, we load some settings into
+    these variables and apply them later }
+    setlayout: integer;
+    setwindows: integer;
+    setsort: integer;
+    setothersearch: integer;
+    setusercompounds: boolean;
+  protected
+    procedure LoadRegistrySettings(reg: TRegIniFile);
+    procedure SaveRegistrySettings(reg: TRegIniFile);
+  public
+    procedure LoadSettings(DelayUI: boolean);
+    procedure ApplyUISettings;
+    procedure SaveSettings;
+
+
   end;
 
 var
@@ -318,15 +335,17 @@ var
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBUnit, registry, JWBKanji, JWBTranslate,
+uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage, UnicodeFont, JWBKanjiCard;
+  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords;
 
 var colorfrom:integer;
 
 {$R *.DFM}
 
+function checkfont(s:string):string; forward;
+function ReturnStdFont(curfont:string;japanese:boolean):string; forward;
 
 procedure TfSettings.FormCreate(Sender: TObject);
 begin
@@ -377,6 +396,470 @@ begin
   ClearKanjiCardCache;
   ComboBox2Change(sender);
 end;
+
+
+procedure TfSettings.LoadSettings(DelayUI: boolean);
+var reg: TRegIniFile;
+begin
+  reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    LoadRegistrySettings(reg);
+  finally
+    reg.Free;
+  end;
+
+  if not DelayUI then
+    ApplyUISettings();
+
+  if FileExists('WAKAN.CDT') then
+    chardetl.LoadFromFile('WAKAN.CDT')
+  else
+    Button10Click(Self);
+end;
+
+procedure TfSettings.SaveSettings;
+var reg: TRegIniFile;
+begin
+  reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    SaveRegistrySettings(reg);
+  finally
+    reg.Free;
+  end;
+
+  chardetl.SaveToFile('WAKAN.CDT');
+  WriteColors;
+end;
+
+procedure TfSettings.LoadRegistrySettings(reg: TRegIniFile);
+var s: string;
+begin
+  CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
+  CheckBox65.Checked:=reg.ReadBool('Annotate','Rebuild',true);
+  CheckBox66.Checked:=reg.ReadBool('Annotate','Sound',true);
+  CheckBox67.Checked:=reg.ReadBool('Annotate','Pictures',true);
+  CheckBox68.Checked:=reg.ReadBool('Annotate','WebPages',true);
+  CheckBox69.Checked:=reg.ReadBool('Annotate','Colors',true);
+  CheckBox46.Checked:=reg.ReadBool('Vocabulary','AutoSave',false);
+  CheckBox70.Checked:=reg.ReadBool('Vocabulary','DisplayMessage',true);
+  CheckBox54.Checked:=reg.ReadBool('Vocabulary','AutoSaveTimer',true);
+  CheckBox55.Checked:=reg.ReadBool('Vocabulary','MakeBackups',true);
+  Edit29.Text:=inttostr(reg.ReadInteger('Vocabulary','AutoSavePeriod',10));
+  RadioGroup1.ItemIndex:=reg.ReadInteger('Romanization','System',1);
+  RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
+  RadioGroup6.ItemIndex:=reg.ReadInteger('Romanization','ChineseSystem',0);
+  RadioGroup7.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
+  fKanjiCompounds.CheckBox1.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);
+  fKanjiCompounds.CheckBox2.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
+  fKanjiCompounds.CheckBox3.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
+  RadioGroup5.ItemIndex:=reg.ReadInteger('Characters','Chinese',0);
+  RadioGroup3.ItemIndex:=reg.ReadInteger('Characters','GridSize',1);
+  ComboBox1.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
+  CheckBox1.Checked:=reg.ReadBool('Characters','ShowStrokes',false);
+  CheckBox51.Checked:=reg.ReadBool('Characters','StrokeOrderGridFont',false);
+  CheckBox3.Checked:=reg.ReadBool('Characters','NoShowColors',false);
+  CheckBox57.Checked:=reg.ReadBool('Characters','YomiOkurigana',false);
+  if reg.ReadString('Fonts','FontSet','0')<>'1'then
+  begin
+    Application.MessageBox(
+      pchar(_l('#00349^eYou are running WaKan for the first time.'#13
+        +'WaKan will now try to locate and set all the recommended fonts.'#13
+        +'You can restart this process by selecting "Select recommended fonts" '
+        +'in settings.')),
+      pchar(_l('#00350^eFont autodetection')),
+      MB_ICONINFORMATION or MB_OK);
+    if not AutoDetectFonts then
+    begin
+      if Application.MessageBox(
+        pchar(_l('#00351^eFont autodetection failed. Some characters may not be '
+          +'displayed correctly.'#13#13+'Do you want to continue?')),
+        pchar(_l('#00090^eWarning')),
+        MB_ICONERROR or MB_YESNO)=idNo then
+      begin
+        Application.Terminate;
+        exit;
+      end;
+    end;
+  end else
+  begin
+    Edit1.Text:=checkfont(reg.ReadString('Fonts','JapaneseGrid','MS Mincho'));
+    Edit2.Text:=checkfont(reg.ReadString('Fonts','Japanese','MS Mincho'));
+    Edit5.Text:=checkfont(reg.ReadString('Fonts','Small','MS Gothic'));
+    Edit6.Text:=checkfont(reg.ReadString('Fonts','ChineseGrid','MingLiU'));
+    Edit3.Text:=checkfont(reg.ReadString('Fonts','ChineseGridGB','SimSun'));
+    Edit7.Text:=checkfont(reg.ReadString('Fonts','Chinese','MingLiU'));
+    Edit9.Text:=checkfont(reg.ReadString('Fonts','ChineseGB','SimSun'));
+    Edit8.Text:=checkfont(reg.ReadString('Fonts','Radical','MingLiU'));
+    Edit4.Text:=checkfont(reg.ReadString('Fonts','English','Verdana'));
+    Edit32.Text:=checkfont(reg.ReadString('Fonts','StrokeOrder','MS Mincho'));
+    Edit33.Text:=checkfont(reg.ReadString('Fonts','PinYin','Arial'));
+  end;
+  CheckBox4.Checked:=reg.ReadBool('Dict','PreferUser',true);
+  CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
+  CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
+  CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
+  fUser.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
+  CheckBox8.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
+  CheckBox9.Checked:=reg.ReadBool('Dict','NoUseColors',false);
+  CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
+  CheckBox11.Checked:=reg.ReadBool('Dict','StatusColors',true);
+  CheckBox12.Checked:=reg.ReadBool('Dict','AutoPage',true);
+  CheckBox49.Checked:=reg.ReadBool('Dict','DemandLoad',true);
+  CheckBox50.Checked:=reg.ReadBool('Dict','AutoExamples',true);
+  CheckBox53.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
+  CheckBox58.Checked:=reg.ReadBool('Dict','ShowFreq',false);
+  CheckBox59.Checked:=reg.ReadBool('Dict','OrderFreq',true);
+  CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
+  CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
+  cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);
+  cbLoadAozoraRuby.Checked:=reg.readBool('Editor','LoadAozoraRuby', true);
+  cbAozoraTagsInColor.Checked:=reg.readBool('Editor','AozoraTagsInColor', true);
+  cbSaveAnnotationsToRuby.Checked:=reg.readBool('Editor','SaveAnnotationsToRuby', false);
+  if CheckBox61.Checked then
+  begin
+    fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
+    fTranslate.DocTp:=Reg.ReadInteger('Editor','DocType',0);
+  end;
+  fExamples.btnRandomOrder.Down:=reg.ReadBool('Dict','RandomExamples',false);
+  vocmode:=reg.ReadInteger('Dict','VocMode',0);
+  exmode:=reg.ReadInteger('Dict','ExMode',0);
+  Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
+  if exmode=0 then fExamples.btnDisplayTranslation.Down:=true;
+  if exmode=1 then fExamples.btnUseBigFont.Down:=true;
+  if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
+  Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
+  GridFontSize:=strtoint(Edit25.text);
+  ListBox1.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
+  CheckBox14.Checked:=reg.ReadBool('WordSheet','InsideLines',true);
+  CheckBox15.Checked:=reg.ReadBool('WordSheet','OutsideLines',true);
+  CheckBox16.Checked:=reg.ReadBool('WordSheet','VaryColors',true);
+  CheckBox17.Checked:=reg.ReadBool('WordSheet','PrintUnlearned',true);
+  Edit10.Text:=inttostr(reg.ReadInteger('WordSheet','NoLines',40));
+  Edit16.Text:=reg.ReadString('WordSheet','UserColumns','p1--m1--');
+  Edit11.Text:=inttostr(reg.ReadInteger('KanjiCards','NoCharacters',10));
+  Edit12.Text:=inttostr(reg.ReadInteger('KanjiCards','NoCompoundsH',10));
+  Edit13.Text:=inttostr(reg.ReadInteger('KanjiCards','NoCompoundsV',6));
+  Edit35.Text:=inttostr(reg.ReadInteger('KanjiCards','NoFullCompounds',4));
+  Edit14.Text:=reg.ReadString('KanjiCards','Font','MingLiU');
+  NotUsedDicts:=reg.ReadString('Dict','NotUsedDicts','');
+  NotGroupDicts[1]:=reg.ReadString('Dict','NotGroup1Dicts','');
+  NotGroupDicts[2]:=reg.ReadString('Dict','NotGroup2Dicts','');
+  NotGroupDicts[3]:=reg.ReadString('Dict','NotGroup3Dicts','');
+  NotGroupDicts[4]:=reg.ReadString('Dict','NotGroup4Dicts','');
+  NotGroupDicts[5]:=reg.ReadString('Dict','NotGroup5Dicts','');
+  OfflineDicts:=reg.ReadString('Dict','OfflineDicts','');
+  CheckBox18.Checked:=reg.ReadBool('KanjiCards','PrintCompounds',true);
+  CheckBox19.Checked:=reg.ReadBool('KanjiCards','PrintRadical',true);
+  CheckBox20.Checked:=reg.ReadBool('KanjiCards','PrintAlternate',true);
+  CheckBox21.Checked:=reg.ReadBool('KanjiCards','PrintReadings',true);
+  CheckBox22.Checked:=reg.ReadBool('KanjiCards','PrintOuterLines',true);
+  CheckBox23.Checked:=reg.ReadBool('KanjiCards','PrintInnerLines',true);
+  CheckBox24.Checked:=reg.ReadBool('KanjiCards','PrintVertical',true);
+  CheckBox25.Checked:=reg.ReadBool('KanjiCards','ColumnSpace',true);
+  CheckBox44.Checked:=reg.ReadBool('KanjiCards','PrintDefinition',true);
+  CheckBox45.Checked:=reg.ReadBool('KanjiCards','PrintStrokeCount',false);
+  CheckBox52.Checked:=reg.ReadBool('KanjiCards','PrintStrokeOrder',false);
+  CheckBox62.Checked:=reg.ReadBool('KanjiCards','PrintFullComp',true);
+  CheckBox63.Checked:=reg.ReadBool('KanjiCards','SortFrequency',true);
+  CheckBox26.Checked:=reg.ReadBool('Vocabulary','SaveStat',false);
+  fUser.SpeedButton4.Down:=reg.ReadBool('Dict','DeflexItalic',true);
+  CheckBox43.Checked:=reg.ReadBool('Translate','BreakLines',true);
+  cbDisplayLines.Checked:=reg.ReadBool('Translate','DisplayLines',true);
+  CheckBox41.Checked:=reg.ReadBool('Translate','DisplayNonJapanese',true);
+  cbNoMeaningLearned.Checked:=reg.ReadBool('Translate','NoMeaningLearned',false);
+  cbNoReadingLearned.Checked:=reg.ReadBool('Translate','NoReadingLearned',false);
+  CheckBox36.Checked:=reg.ReadBool('Translate','ReadingKatakana',true);
+  cbNoSearchParticles.Checked:=reg.ReadBool('Translate','NoSearchParticles',false);
+  cbNoTranslateHiragana.Checked:=reg.ReadBool('Translate','NoTranslateHiragana',false);
+  cbNoColors.Checked:=reg.ReadBool('Translate','NoUseColors',false);
+  cbUserBold.Checked:=reg.ReadBool('Translate','UserBold',true);
+  CheckBox42.Checked:=reg.ReadBool('Translate','LeaveSpace',false);
+  CheckBox56.Checked:=reg.ReadBool('Translate','LeaveSpaceAlways',true);
+  CheckBox27.Checked:=reg.ReadBool('Translate','HalfSizeMeaning',false);
+  cbPrintReading.Checked:=reg.ReadBool('Translate','PrintReading',true);
+  cbPrintMeaning.Checked:=reg.ReadBool('Translate','PrintMeaning',true);
+  cbNoPrintColors.Checked:=reg.ReadBool('Translate','NoPrintColors',true);
+  cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
+  cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
+  cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
+  fMenu.aEditorColors.Checked:=reg.ReadBool('Translate','TransColors',true);
+  fTranslate.sbUseTlColors.Down:=fMenu.aEditorColors.Checked;
+  fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
+  fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
+  fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
+  CharDetDocked:=reg.ReadBool('Layout','CharDetailsDocked',false);
+  CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
+  CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
+  CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
+  CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
+  CheckBox48.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
+  Edit21.Text:=reg.ReadString('ScreenTrans','Delay','10');
+  Edit22.Text:=reg.ReadString('ScreenTrans','LeftRange','20');
+  Edit23.Text:=reg.ReadString('ScreenTrans','RightRange','100');
+  Edit24.Text:=reg.ReadString('ScreenTrans','DictEntries','4');
+  Edit26.Text:=reg.ReadString('ScreenTrans','SizeFactor','12');
+  Edit27.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
+  Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
+  SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
+  fMenu.screenModeWk:=SpeedButton2.Down;
+  setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
+  setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
+  fMenu.aEditorReading.Checked:=fTranslate.sbDisplayReading.Down;
+  fMenu.aEditorMeaning.Checked:=fTranslate.sbDisplayMeaning.Down;
+  case reg.ReadInteger('Translate','FontSize',2) of
+    0:fTranslate.sbSmallFont.Down:=true;
+    1:fTranslate.sbMiddleFont.Down:=true;
+    2:fTranslate.sbLargeFont.Down:=true;
+  end;
+  case reg.ReadInteger('Translate','FontSize',2) of
+    0:fMenu.aEditorSmallFont.Checked:=true;
+    1:fMenu.aEditorMedFont.Checked:=true;
+    2:fMenu.aEditorLargeFont.Checked:=true;
+  end;
+  Edit17.Text:=reg.ReadString('Translate','MeaningLines','2');
+  Edit18.Text:=reg.ReadString('Translate','PrintLines','20');
+  setsort:=reg.ReadInteger('Characters','Sort',0);
+  setothersearch:=reg.ReadInteger('Characters','OtherSearch',0);
+  setusercompounds:=reg.ReadBool('Characters','UserCompounds',false);
+  if reg.ReadBool('Dict','Meaning',false) then dictmodeset:=1 else dictmodeset:=0;
+  dictbeginset:=reg.ReadInteger('Dict','SearchBeg',0);
+  CheckBox2.Checked:=reg.ReadBool('Translate','ShowHint',true);
+  CheckBox13.Checked:=reg.ReadBool('Translate','HintMeaning',true);
+  s:=reg.ReadString('Dict','CurLanguage','j');
+  curlang:=s[1];
+  ListBox1Click(self);
+  FontJapanese:=Edit2.Text;
+  FontJapaneseGrid:=Edit1.Text;
+  FontChinese:=Edit7.Text;
+  FontChineseGrid:=Edit6.Text;
+  FontChineseGB:=Edit9.Text;
+  FontChineseGridGB:=Edit3.Text;
+  FontSmall:=Edit5.Text;
+  FontRadical:=Edit8.Text;
+  FontEnglish:=Edit4.Text;
+  FontPinYin:=Edit33.Text;
+  FontStrokeOrder:=Edit32.Text;
+  reg.Free;
+end;
+
+procedure TfSettings.ApplyUISettings;
+begin
+  fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
+  fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
+  fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
+  fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
+  fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
+//  fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+  fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
+  displaymode:=setlayout;
+  CharDetNowDocked:=false;
+  if (setwindows and 128<>128) and (CharDetDocked) then fMenu.aKanjiDetails.Checked:=true;
+  fMenu.ChangeDisplay;
+  if setwindows and 1<>1 then fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
+  if setwindows and 2<>2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
+  if setwindows and 4<>4 then fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
+  if setwindows and 8<>8 then fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
+  if setwindows and 16=16 then fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
+  if setwindows and 32<>32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
+  if setwindows and 64<>64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
+  if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+  fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
+
+  fKanjiSearch.RadioGroup1.ItemIndex:=setsort;
+  kanji_othersearch:=setothersearch;
+  fKanjiSearch.ComboBox1.ItemIndex:=-1;
+  if dictmodeset=1 then fUser.SpeedButton2.Down:=true else fUser.SpeedButton1.Down:=true;
+  if setusercompounds then fKanjiCompounds.SpeedButton8.Down:=true else fKanjiCompounds.SpeedButton9.Down:=true;
+end;
+
+procedure TfSettings.SaveRegistrySettings(reg: TRegIniFile);
+var setwindows:integer;
+begin
+  reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
+  reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
+  reg.WriteBool('Vocabulary','AutoSaveTimer',CheckBox54.Checked);
+  reg.WriteBool('Vocabulary','MakeBackups',CheckBox55.Checked);
+  reg.WriteInteger('Vocabulary','AutoSavePeriod',strtoint(edit29.text));
+  reg.WriteInteger('Romanization','System',RadioGroup1.ItemIndex);
+  reg.WriteInteger('Romanization','ShowKana',RadioGroup2.ItemIndex);
+  reg.WriteInteger('Romanization','ChineseSystem',RadioGroup6.ItemIndex);
+  reg.WriteInteger('Romanization','ShowBopomofo',RadioGroup7.ItemIndex);
+  reg.WriteInteger('Characters','Chinese',RadioGroup5.ItemIndex);
+  reg.WriteInteger('Characters','GridSize',RadioGroup3.ItemIndex);
+  reg.WriteInteger('Characters','RadicalType',ComboBox1.ItemIndex);
+  reg.WriteBool('Characters','ShowStrokes',CheckBox1.Checked);
+  reg.WriteBool('Characters','StrokeOrderGridFont',CheckBox51.Checked);
+  reg.WriteBool('Characters','NoShowColors',CheckBox3.Checked);
+  reg.WriteBool('Characters','YomiOkurigana',CheckBox57.Checked);
+  reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.CheckBox1.Checked);
+  reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.CheckBox2.Checked);
+  reg.WriteBool('Characters','CompoundsFreq',fKanjiCompounds.CheckBox3.Checked);
+  reg.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
+  reg.WriteString('Fonts','Japanese',FontJapanese);
+  reg.WriteString('Fonts','Small',FontSmall);
+  reg.WriteString('Fonts','ChineseGrid',FontChineseGrid);
+  reg.WriteString('Fonts','ChineseGridGB',FontChineseGridGB);
+  reg.WriteString('Fonts','Chinese',FontChinese);
+  reg.WriteString('Fonts','ChineseGB',FontChineseGB);
+  reg.WriteString('Fonts','Radical',FontRadical);
+  reg.WriteString('Fonts','English',FontEnglish);
+  reg.WriteString('Fonts','StrokeOrder',FontStrokeOrder);
+  reg.WriteString('Fonts','PinYin',FontPinYin);
+  reg.WriteString('Fonts','FontSet','1');
+  reg.WriteBool('Dict','PreferUser',CheckBox4.Checked);
+  reg.WriteBool('Dict','PreferNouns',CheckBox5.Checked);
+  reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
+  reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
+  reg.WriteBool('Dict','QuickSearch',fUser.SpeedButton13.Down);
+  reg.WriteBool('Dict','ReplaceKanji',CheckBox8.Checked);
+  reg.WriteBool('Dict','NoUseColors',CheckBox9.Checked);
+  reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
+  reg.WriteBool('Dict','StatusColors',CheckBox11.Checked);
+  reg.WriteBool('Dict','AutoPage',CheckBox12.Checked);
+  reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
+  reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
+  reg.WriteBool('Dict','RandomExamples',fExamples.btnRandomOrder.Down);
+  reg.WriteBool('Dict','ShowFreq',CheckBox58.Checked);
+  reg.WriteBool('Dict','OrderFreq',CheckBox59.Checked);
+  reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
+  reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
+  reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
+  reg.WriteBool('Editor','LoadAozoraRuby',cbLoadAozoraRuby.Checked);
+  reg.WriteBool('Editor','AozoraTagsInColor',cbAozoraTagsInColor.Checked);
+  reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
+  reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
+  reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
+  reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
+  reg.WriteInteger('Dict','VocMode',vocmode);
+  reg.WriteInteger('Dict','ExMode',exmode);
+  reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
+  reg.WriteBool('Dict','MultiLineGrid',CheckBox53.Checked);
+  reg.WriteInteger('WordSheet','Columns',ListBox1.ItemIndex);
+  reg.WriteBool('WordSheet','InsideLines',CheckBox14.Checked);
+  reg.WriteBool('WordSheet','OutsideLines',CheckBox15.Checked);
+  reg.WriteBool('WordSheet','VaryColors',CheckBox16.Checked);
+  reg.WriteBool('WordSheet','PrintUnlearned',CheckBox17.Checked);
+  reg.WriteInteger('WordSheet','NoLines',strtoint(Edit10.Text));
+  reg.WriteString('WordSheet','UserColumns',Edit16.Text);
+  reg.WriteInteger('KanjiCards','NoCharacters',strtoint(Edit11.Text));
+  reg.WriteInteger('KanjiCards','NoCompoundsH',strtoint(Edit12.Text));
+  reg.WriteInteger('KanjiCards','NoCompoundsV',strtoint(Edit13.Text));
+  reg.WriteInteger('KanjiCards','NoFullCompounds',strtoint(Edit35.Text));
+  reg.WriteString('KanjiCards','Font',Edit14.text);
+  reg.WriteBool('KanjiCards','PrintCompounds',CheckBox18.Checked);
+  reg.WriteBool('KanjiCards','PrintRadical',CheckBox19.Checked);
+  reg.WriteBool('KanjiCards','PrintAlternate',CheckBox20.Checked);
+  reg.WriteBool('KanjiCards','PrintReadings',CheckBox21.Checked);
+  reg.WriteBool('KanjiCards','PrintOuterLines',CheckBox22.Checked);
+  reg.WriteBool('KanjiCards','PrintInnerLines',CheckBox23.Checked);
+  reg.WriteBool('KanjiCards','PrintVertical',CheckBox24.Checked);
+  reg.WriteBool('KanjiCards','PrintStrokeOrder',CheckBox52.Checked);
+  reg.WriteBool('KanjiCards','ColumnSpace',CheckBox25.Checked);
+  reg.WriteBool('KanjiCards','PrintDefinition',CheckBox44.Checked);
+  reg.WriteBool('KanjiCards','PrintStrokeCount',CheckBox45.Checked);
+  reg.WriteBool('KanjiCards','PrintFullComp',CheckBox62.Checked);
+  reg.WriteBool('KanjiCards','SortFrequency',CheckBox63.Checked);
+  reg.WriteBool('Vocabulary','SaveStat',CheckBox26.Checked);
+  reg.WriteBool('Dict','DeflexItalic',fUser.SpeedButton4.Down);
+  reg.WriteBool('Translate','BreakLines',CheckBox43.Checked);
+  reg.WriteBool('Translate','DisplayLines',cbDisplayLines.Checked);
+  reg.WriteBool('Translate','DisplayNonJapanese',CheckBox41.Checked);
+  reg.WriteBool('Translate','NoMeaningLearned',cbNoMeaningLearned.Checked);
+  reg.WriteBool('Translate','NoReadingLearned',cbNoReadingLearned.Checked);
+  reg.WriteBool('Translate','ReadingKatakana',CheckBox36.Checked);
+  reg.WriteBool('Translate','NoSearchParticles',cbNoSearchParticles.Checked);
+  reg.WriteBool('Translate','NoTranslateHiragana',cbNoTranslateHiragana.Checked);
+  reg.WriteBool('Translate','NoUseColors',cbNoColors.Checked);
+  reg.WriteBool('Translate','UserBold',cbUserBold.Checked);
+  reg.WriteBool('Translate','LeaveSpace',CheckBox42.Checked);
+  reg.WriteBool('Translate','LeaveSpaceAlways',CheckBox56.Checked);
+  reg.WriteBool('Translate','HalfSizeMeaning',CheckBox27.Checked);
+  reg.WriteBool('Translate','PrintReading',cbPrintReading.Checked);
+  reg.WriteBool('Translate','PrintMeaning',cbPrintMeaning.Checked);
+  reg.WriteBool('Translate','NoPrintColors',cbNoPrintColors.Checked);
+  reg.WriteBool('Translate','VerticalPrint',cbVerticalPrint.Checked);
+  reg.WriteBool('Translate','Reading',fTranslate.sbDisplayReading.Down);
+  reg.WriteBool('Translate','Meaning',fTranslate.sbDisplayMeaning.Down);
+  reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
+  reg.WriteBool('Translate','TransColors',fMenu.aEditorColors.Checked);
+  reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
+  reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
+  reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);
+  reg.WriteBool('Annotate','Rebuild',CheckBox65.Checked);
+  reg.WriteBool('Annotate','Sound',CheckBox66.Checked);
+  reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
+  reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
+  reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
+  if fTranslate.sbSmallFont.Down then reg.WriteInteger('Translate','FontSize',0);
+  if fTranslate.sbMiddleFont.Down then reg.WriteInteger('Translate','FontSize',1);
+  if fTranslate.sbLargeFont.Down then reg.WriteInteger('Translate','FontSize',2);
+  reg.WriteInteger('Layout','QLayout',curqlayout);
+  reg.WriteString('Translate','MeaningLines',Edit17.text);
+  reg.WriteString('Translate','PrintLines',Edit18.text);
+  reg.WriteString('Dict','NotUsedDicts',NotUsedDicts);
+  reg.WriteString('Dict','NotGroup1Dicts',NotGroupDicts[1]);
+  reg.WriteString('Dict','NotGroup2Dicts',NotGroupDicts[2]);
+  reg.WriteString('Dict','NotGroup3Dicts',NotGroupDicts[3]);
+  reg.WriteString('Dict','NotGroup4Dicts',NotGroupDicts[4]);
+  reg.WriteString('Dict','NotGroup5Dicts',NotGroupDicts[5]);
+  reg.WriteString('Dict','OfflineDicts',OfflineDicts);
+  reg.WriteString('Dict','CurLanguage',curlang);
+  reg.WriteInteger('Characters','Sort',fKanjiSearch.RadioGroup1.ItemIndex);
+  reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.ComboBox1.ItemIndex);
+  reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.SpeedButton8.Down);
+  reg.WriteBool('Dict','Meaning',dictmodeset=1);
+  reg.WriteInteger('Dict','SearchBeg',dictbeginset);
+  reg.WriteBool('Translate','ShowHint',CheckBox2.Checked);
+  reg.WriteBool('Translate','HintMeaning',CheckBox13.Checked);
+  reg.WriteInteger('Layout','DisplayLayout',curdisplaymode);
+  reg.WriteBool('Layout','CharDetailsDocked',CharDetDocked);
+  reg.WriteBool('Layout','CharDetailsVisible1',CharDetDockedVis1);
+  reg.WriteBool('Layout','CharDetailsVisible2',CharDetDockedVis2);
+  reg.WriteBool('ScreenTrans','Japanese',CheckBox28.Checked);
+  reg.WriteBool('ScreenTrans','English',CheckBox47.Checked);
+  reg.WriteBool('ScreenTrans','Kanji',CheckBox48.Checked);
+  reg.WriteString('ScreenTrans','Delay',Edit21.Text);
+  reg.WriteString('ScreenTrans','LeftRange',Edit22.Text);
+  reg.WriteString('ScreenTrans','RightRange',Edit23.Text);
+  reg.WriteString('ScreenTrans','DictEntries',Edit24.Text);
+  reg.WriteString('ScreenTrans','SizeFactor',Edit26.Text);
+  reg.WriteString('ScreenTrans','MinCompounds',Edit27.Text);
+  reg.WriteString('ScreenTrans','MaxCompounds',Edit28.Text);
+  reg.WriteBool('ScreenTrans','WakanToolTip',fMenu.SpeedButton2.Down);
+
+  setwindows:=0;
+  if fMenu.aKanjiSearch.Checked then inc(setwindows,1);
+  if fMenu.aKanjiCompounds.Checked then inc(setwindows,2);
+  if fMenu.aDictKanji.Checked then inc(setwindows,4);
+  if fMenu.aDictAdd.Checked then inc(setwindows,8);
+  if fMenu.aUserExamples.Checked then inc(setwindows,16);
+  if fMenu.aUserDetails.Checked then inc(setwindows,32);
+  if fMenu.aUserSettings.Checked then inc(setwindows,64);
+  if fKanjiDetails.Visible then inc(setwindows,128);
+  reg.WriteInteger('Layout','SecondaryWindows',setwindows);
+end;
+
+function checkfont(s:string):string;
+begin
+  if Screen.Fonts.IndexOf(s)=-1 then result:='!'+s else result:=s;
+end;
+
+function ReturnStdFont(curfont:string;japanese:boolean):string;
+begin
+  if curfont[1]<>'!'then result:=curfont else
+  if (japanese) then
+  begin
+    if Screen.Fonts.IndexOf('MS Mincho')>-1 then result:='MS Mincho'else
+    if Screen.Fonts.IndexOf('MS Gothic')>-1 then result:='MS Gothic'else result:='!';
+  end else
+  if (not japanese) then
+  begin
+    if Screen.Fonts.IndexOf('MingLiU')>-1 then result:='MingLiU'else
+    if Screen.Fonts.IndexOf('SimSun')>-1 then result:='SimSun'else result:='!';
+  end;
+end;
+
+
 
 procedure TfSettings.RadioGroup1Click(Sender: TObject);
 begin
@@ -486,181 +969,16 @@ begin
 end;
 
 procedure TfSettings.btnOkClick(Sender: TObject);
-var reg:TRegIniFile;
-    i:integer;
-    setwindows:integer;
+var i:integer;
 begin
   if edit11.text='0' then edit11.text:='1';
   if not TryStrToInt(Edit10.Text, i) then Edit10.Text := '0';
   if not TryStrToInt(Edit11.Text, i) then Edit11.Text := '0';
   if not TryStrToInt(Edit12.Text, i) then Edit12.Text := '0';
   if not TryStrToInt(Edit13.Text, i) then Edit13.Text := '0';
-  reg:=TRegIniFile.Create('Software\Labyrinth\WaKan');
-  reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
-  reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
-  reg.WriteBool('Vocabulary','AutoSaveTimer',CheckBox54.Checked);
-  reg.WriteBool('Vocabulary','MakeBackups',CheckBox55.Checked);
-  reg.WriteInteger('Vocabulary','AutoSavePeriod',strtoint(edit29.text));
-  reg.WriteInteger('Romanization','System',RadioGroup1.ItemIndex);
-  reg.WriteInteger('Romanization','ShowKana',RadioGroup2.ItemIndex);
-  reg.WriteInteger('Romanization','ChineseSystem',RadioGroup6.ItemIndex);
-  reg.WriteInteger('Romanization','ShowBopomofo',RadioGroup7.ItemIndex);
-  reg.WriteInteger('Characters','Chinese',RadioGroup5.ItemIndex);
-  reg.WriteInteger('Characters','GridSize',RadioGroup3.ItemIndex);
-  reg.WriteInteger('Characters','RadicalType',ComboBox1.ItemIndex);
-  reg.WriteBool('Characters','ShowStrokes',CheckBox1.Checked);
-  reg.WriteBool('Characters','StrokeOrderGridFont',CheckBox51.Checked);
-  reg.WriteBool('Characters','NoShowColors',CheckBox3.Checked);
-  reg.WriteBool('Characters','YomiOkurigana',CheckBox57.Checked);
-  reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.CheckBox1.Checked);
-  reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.CheckBox2.Checked);
-  reg.WriteBool('Characters','CompoundsFreq',fKanjiCompounds.CheckBox3.Checked);
-  reg.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
-  reg.WriteString('Fonts','Japanese',FontJapanese);
-  reg.WriteString('Fonts','Small',FontSmall);
-  reg.WriteString('Fonts','ChineseGrid',FontChineseGrid);
-  reg.WriteString('Fonts','ChineseGridGB',FontChineseGridGB);
-  reg.WriteString('Fonts','Chinese',FontChinese);
-  reg.WriteString('Fonts','ChineseGB',FontChineseGB);
-  reg.WriteString('Fonts','Radical',FontRadical);
-  reg.WriteString('Fonts','English',FontEnglish);
-  reg.WriteString('Fonts','StrokeOrder',FontStrokeOrder);
-  reg.WriteString('Fonts','PinYin',FontPinYin);
-  reg.WriteString('Fonts','FontSet','1');
-  reg.WriteBool('Dict','PreferUser',CheckBox4.Checked);
-  reg.WriteBool('Dict','PreferNouns',CheckBox5.Checked);
-  reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
-  reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
-  reg.WriteBool('Dict','QuickSearch',fUser.SpeedButton13.Down);
-  reg.WriteBool('Dict','ReplaceKanji',CheckBox8.Checked);
-  reg.WriteBool('Dict','NoUseColors',CheckBox9.Checked);
-  reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
-  reg.WriteBool('Dict','StatusColors',CheckBox11.Checked);
-  reg.WriteBool('Dict','AutoPage',CheckBox12.Checked);
-  reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
-  reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
-  reg.WriteBool('Dict','RandomExamples',fExamples.btnRandomOrder.Down);
-  reg.WriteBool('Dict','ShowFreq',CheckBox58.Checked);
-  reg.WriteBool('Dict','OrderFreq',CheckBox59.Checked);
-  reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
-  reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
-  reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
-  reg.WriteBool('Editor','LoadAozoraRuby',cbLoadAozoraRuby.Checked);
-  reg.WriteBool('Editor','AozoraTagsInColor',cbAozoraTagsInColor.Checked);
-  reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
-  reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
-  reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
-  reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
-  reg.WriteInteger('Dict','VocMode',vocmode);
-  reg.WriteInteger('Dict','ExMode',exmode);
-  reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
-  reg.WriteBool('Dict','MultiLineGrid',CheckBox53.Checked);
-  reg.WriteInteger('WordSheet','Columns',ListBox1.ItemIndex);
   GridFontSize:=strtoint(Edit25.text);
-  reg.WriteBool('WordSheet','InsideLines',CheckBox14.Checked);
-  reg.WriteBool('WordSheet','OutsideLines',CheckBox15.Checked);
-  reg.WriteBool('WordSheet','VaryColors',CheckBox16.Checked);
-  reg.WriteBool('WordSheet','PrintUnlearned',CheckBox17.Checked);
-  reg.WriteInteger('WordSheet','NoLines',strtoint(Edit10.Text));
-  reg.WriteString('WordSheet','UserColumns',Edit16.Text);
-  reg.WriteInteger('KanjiCards','NoCharacters',strtoint(Edit11.Text));
-  reg.WriteInteger('KanjiCards','NoCompoundsH',strtoint(Edit12.Text));
-  reg.WriteInteger('KanjiCards','NoCompoundsV',strtoint(Edit13.Text));
-  reg.WriteInteger('KanjiCards','NoFullCompounds',strtoint(Edit35.Text));
-  reg.WriteString('KanjiCards','Font',Edit14.text);
-  reg.WriteBool('KanjiCards','PrintCompounds',CheckBox18.Checked);
-  reg.WriteBool('KanjiCards','PrintRadical',CheckBox19.Checked);
-  reg.WriteBool('KanjiCards','PrintAlternate',CheckBox20.Checked);
-  reg.WriteBool('KanjiCards','PrintReadings',CheckBox21.Checked);
-  reg.WriteBool('KanjiCards','PrintOuterLines',CheckBox22.Checked);
-  reg.WriteBool('KanjiCards','PrintInnerLines',CheckBox23.Checked);
-  reg.WriteBool('KanjiCards','PrintVertical',CheckBox24.Checked);
-  reg.WriteBool('KanjiCards','PrintStrokeOrder',CheckBox52.Checked);
-  reg.WriteBool('KanjiCards','ColumnSpace',CheckBox25.Checked);
-  reg.WriteBool('KanjiCards','PrintDefinition',CheckBox44.Checked);
-  reg.WriteBool('KanjiCards','PrintStrokeCount',CheckBox45.Checked);
-  reg.WriteBool('KanjiCards','PrintFullComp',CheckBox62.Checked);
-  reg.WriteBool('KanjiCards','SortFrequency',CheckBox63.Checked);
-  reg.WriteBool('Vocabulary','SaveStat',CheckBox26.Checked);
-  reg.WriteBool('Dict','DeflexItalic',fUser.SpeedButton4.Down);
-  reg.WriteBool('Translate','BreakLines',CheckBox43.Checked);
-  reg.WriteBool('Translate','DisplayLines',cbDisplayLines.Checked);
-  reg.WriteBool('Translate','DisplayNonJapanese',CheckBox41.Checked);
-  reg.WriteBool('Translate','NoMeaningLearned',cbNoMeaningLearned.Checked);
-  reg.WriteBool('Translate','NoReadingLearned',cbNoReadingLearned.Checked);
-  reg.WriteBool('Translate','ReadingKatakana',CheckBox36.Checked);
-  reg.WriteBool('Translate','NoSearchParticles',cbNoSearchParticles.Checked);
-  reg.WriteBool('Translate','NoTranslateHiragana',cbNoTranslateHiragana.Checked);
-  reg.WriteBool('Translate','NoUseColors',cbNoColors.Checked);
-  reg.WriteBool('Translate','UserBold',cbUserBold.Checked);
-  reg.WriteBool('Translate','LeaveSpace',CheckBox42.Checked);
-  reg.WriteBool('Translate','LeaveSpaceAlways',CheckBox56.Checked);
-  reg.WriteBool('Translate','HalfSizeMeaning',CheckBox27.Checked);
-  reg.WriteBool('Translate','PrintReading',cbPrintReading.Checked);
-  reg.WriteBool('Translate','PrintMeaning',cbPrintMeaning.Checked);
-  reg.WriteBool('Translate','NoPrintColors',cbNoPrintColors.Checked);
-  reg.WriteBool('Translate','VerticalPrint',cbVerticalPrint.Checked);
-  reg.WriteBool('Translate','Reading',fTranslate.sbDisplayReading.Down);
-  reg.WriteBool('Translate','Meaning',fTranslate.sbDisplayMeaning.Down);
-  reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
-  reg.WriteBool('Translate','TransColors',fMenu.aEditorColors.Checked);
-  reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
-  reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
-  reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);
-  reg.WriteBool('Annotate','Rebuild',CheckBox65.Checked);
-  reg.WriteBool('Annotate','Sound',CheckBox66.Checked);
-  reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
-  reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
-  reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
-  if fTranslate.sbSmallFont.Down then reg.WriteInteger('Translate','FontSize',0);
-  if fTranslate.sbMiddleFont.Down then reg.WriteInteger('Translate','FontSize',1);
-  if fTranslate.sbLargeFont.Down then reg.WriteInteger('Translate','FontSize',2);
-  reg.WriteInteger('Layout','QLayout',curqlayout);
-  reg.WriteString('Translate','MeaningLines',Edit17.text);
-  reg.WriteString('Translate','PrintLines',Edit18.text);
-  reg.WriteString('Dict','NotUsedDicts',NotUsedDicts);
-  reg.WriteString('Dict','NotGroup1Dicts',NotGroupDicts[1]);
-  reg.WriteString('Dict','NotGroup2Dicts',NotGroupDicts[2]);
-  reg.WriteString('Dict','NotGroup3Dicts',NotGroupDicts[3]);
-  reg.WriteString('Dict','NotGroup4Dicts',NotGroupDicts[4]);
-  reg.WriteString('Dict','NotGroup5Dicts',NotGroupDicts[5]);
-  reg.WriteString('Dict','OfflineDicts',OfflineDicts);
-  reg.WriteString('Dict','CurLanguage',curlang);
-  reg.WriteInteger('Characters','Sort',fKanjiSearch.RadioGroup1.ItemIndex);
-  reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.ComboBox1.ItemIndex);
-  reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.SpeedButton8.Down);
-  reg.WriteBool('Dict','Meaning',dictmodeset=1);
-  reg.WriteInteger('Dict','SearchBeg',dictbeginset);
-  reg.WriteBool('Translate','ShowHint',CheckBox2.Checked);
-  reg.WriteBool('Translate','HintMeaning',CheckBox13.Checked);
-  reg.WriteInteger('Layout','DisplayLayout',curdisplaymode);
-  reg.WriteBool('Layout','CharDetailsDocked',CharDetDocked);
-  reg.WriteBool('Layout','CharDetailsVisible1',CharDetDockedVis1);
-  reg.WriteBool('Layout','CharDetailsVisible2',CharDetDockedVis2);
-  reg.WriteBool('ScreenTrans','Japanese',CheckBox28.Checked);
-  reg.WriteBool('ScreenTrans','English',CheckBox47.Checked);
-  reg.WriteBool('ScreenTrans','Kanji',CheckBox48.Checked);
-  reg.WriteString('ScreenTrans','Delay',Edit21.Text);
-  reg.WriteString('ScreenTrans','LeftRange',Edit22.Text);
-  reg.WriteString('ScreenTrans','RightRange',Edit23.Text);
-  reg.WriteString('ScreenTrans','DictEntries',Edit24.Text);
-  reg.WriteString('ScreenTrans','SizeFactor',Edit26.Text);
-  reg.WriteString('ScreenTrans','MinCompounds',Edit27.Text);
-  reg.WriteString('ScreenTrans','MaxCompounds',Edit28.Text);
-  reg.WriteBool('ScreenTrans','WakanToolTip',fMenu.SpeedButton2.Down);
-  setwindows:=0;
-  if fMenu.aKanjiSearch.Checked then inc(setwindows,1);
-  if fMenu.aKanjiCompounds.Checked then inc(setwindows,2);
-  if fMenu.aDictKanji.Checked then inc(setwindows,4);
-  if fMenu.aDictAdd.Checked then inc(setwindows,8);
-  if fMenu.aUserExamples.Checked then inc(setwindows,16);
-  if fMenu.aUserDetails.Checked then inc(setwindows,32);
-  if fMenu.aUserSettings.Checked then inc(setwindows,64);
-  if fKanjiDetails.Visible then inc(setwindows,128);
-  reg.WriteInteger('Layout','SecondaryWindows',setwindows);
-  reg.Free;
-  chardetl.SaveToFile('WAKAN.CDT');
-  WriteColors;
+
+  SaveSettings();
 end;
 
 procedure TfSettings.SpeedButton10Click(Sender: TObject);
@@ -1100,10 +1418,14 @@ begin
   CheckBox3.Visible:=ComboBox2.ItemIndex=0;
   CheckBox9.Visible:=(ComboBox2.ItemIndex=1) or (ComboBox2.ItemIndex=2);
   cbNoColors.Visible:=ComboBox2.ItemIndex=3;
-  if ComboBox2.ItemIndex=0 then v:=not CheckBox3.Checked;
-  if ComboBox2.ItemIndex=1 then v:=not CheckBox9.Checked;
-  if ComboBox2.ItemIndex=2 then v:=not CheckBox9.Checked;
-  if ComboBox2.ItemIndex=3 then v:=not cbNoColors.Checked;
+  case Combobox2.ItemIndex of
+    0: v:=not CheckBox3.Checked;
+    1: v:=not CheckBox9.Checked;
+    2: v:=not CheckBox9.Checked;
+    3: v:=not cbNoColors.Checked;
+  else
+    v := false;
+  end;
   ListBox3.Enabled:=v;
   Button12.Enabled:=v;
   Button14.Enabled:=v;
