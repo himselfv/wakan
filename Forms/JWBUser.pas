@@ -273,7 +273,7 @@ begin
         wt := -2;
     end;
     stEditorAuto: //In "translate text" mode
-      s:=fTranslate.GetDocWord(fTranslate.rcurx,fTranslate.rcury,wt,{stopuser=}true);
+      s:=fTranslate.GetDocWord(fTranslate.rcur.x,fTranslate.rcur.y,wt,{stopuser=}true);
   end;
 
   req.Search(s, wt, dicrl);

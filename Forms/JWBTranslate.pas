@@ -53,6 +53,30 @@ uses
 //{$DEFINE TLSPEEDREPORT}
 
 type
+ { Character position in source text. }
+  TSourcePos = record
+    y: integer; //line, 0-based
+    x: integer  //char, 0-based
+  end;
+  PSourcePos = ^TSourcePos;
+
+ { Cursor position in graphical lines }
+  TCursorPos = record
+    y: integer; //line, 0-based
+    x: integer; //char, 0-based: [0..length(line)], length(line)=after last char
+  end;
+  PCursorPos = ^TCursorPos;
+
+ { Text selection in graphical lines. }
+  TSelection = record
+    fromy: integer;
+    fromx: integer;
+    toy: integer;
+    tox: integer;
+  end;
+  PSelection = ^TSelection;
+
+
   TTextAnnotMode = (
     amDefault,
       //do not load ruby
@@ -190,8 +214,6 @@ type
 
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:string):integer; overload;
-    procedure DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
-    procedure ResolveInsert(final:boolean);
     procedure InsertCharacter(c:char);
     procedure DrawCursor(blink:boolean);
     procedure DrawBlock(Canvas: TCanvas);
@@ -219,14 +241,13 @@ type
     procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
 
   protected
-    oldcurx,oldcury: integer; //last cursor position, where it was drawn.
-    curx,cury: integer; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
+    oldcur: TCursorPos; //last cursor position, where it was drawn.
+    cur: TCursorPos; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     procedure SetCurPos(x,y:integer);
   public
     view:integer; //index of a first visible graphical line
-    rviewx,rviewy:integer; //logical coordinates of a start of a first visible graphical line
-    rcurx,rcury: integer; //cursor position in logical coordinates
-      //also translation position when translating
+    rview: TSourcePos; //logical coordinates of a start of a first visible graphical line
+    rcur: TSourcePos; //cursor position in logical coordinates
     cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
     lastxsiz,lastycnt,printl:integer;
     //Actual cursor position --- differs from (curx,cury) if we're at the end of the text
@@ -236,10 +257,13 @@ type
 
   protected //Insert buffer
     insertbuffer:string;
-    resolvebuffer:boolean;
+    resolvebuffer:boolean; //set to true before doing ResolveInsert to replace kana with kanji suggestion, false to keep input intact
+    procedure DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
+    procedure ResolveInsert(final:boolean);
   public
    //Unfortunately some stuff is used from elswehere
-    insx,insy,inslen: integer; //editor aftertouch --- after we have inserted the word, it's highlighted
+    ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
+    inslen: integer;
     buffertype:char;
     function GetInsertKana(display:boolean):string;
 
@@ -296,28 +320,43 @@ uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
 
 {$R *.DFM}
 
+function SourcePos(x,y: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result.x := x;
+  Result.y := y;
+end;
+
+function CursorPos(x,y: integer): TCursorPos; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result.x := x;
+  Result.y := y;
+end;
+
+function Selection(fromx, fromy, tox, toy: integer): TSelection; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result.fromy := fromy;
+  Result.fromx := fromx;
+  Result.toy := toy;
+  Result.toy := tox;
+end;
+
 var
  //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
-  blockfromx,
-  blockfromy,
-  blocktox,
-  blocktoy:integer;
-
+  block: TSelection;
  //Selection block last time it was repainted (allows us to only repaint changed parts)
-  oldblockfromx,
-  oldblockfromy,
-  oldblocktox,
-  oldblocktoy:integer;
+  oldblock: TSelection;
 
  //When selecting, the position where we started dragging mouse.
  //Selection block is generated from this on mouse-release.
-  blockx,blocky:integer;
+  dragstart: TSourcePos;
+
+ //Last character which the mouse was over
+  lastmm:TCursorPos;
 
   insconfirmed:boolean;
   leaveline:boolean;
   shiftpressed:boolean;
   cursorend:boolean;
-  lastmmx,lastmmy:integer;
   priorkanji:string;
   cursorblinked:boolean;
 
@@ -372,11 +411,13 @@ begin
   doctp:=0;
   FileChanged:=false;
 
-  view:=0; rviewx:=-1; rviewy:=-1;
-  curx:=-1; cury:=-1;
-  rcurx:=-1; rcury:=-1;
-  oldcurx:=-1; oldcury:=-1;
-  insx:=-1; insy:=-1; inslen:=0;
+  view:=0;
+  rview := SourcePos(-1, -1);
+  cur := CursorPos(-1, -1);
+  oldcur := cur;
+  rcur := SourcePos(-1, -1);
+  ins := SourcePos(-1, -1);
+  inslen:=0;
   cursorposcache:=-1;
   lastxsiz:=16;
   lastycnt:=2;
@@ -577,8 +618,8 @@ begin
       LoadText(docfilename, tp, LoadAnnotMode);
 
   view:=0;
-  curx:=0;
-  cury:=0;
+  cur.x:=0;
+  cur.y:=0;
   mustrepaint:=true;
   ShowText(true);
   Screen.Cursor:=crDefault;
@@ -1118,8 +1159,7 @@ begin
   doctr.Clear;
   docdic.Clear;
   linl.Clear;
-  curx:=0;
-  cury:=0;
+  cur := CursorPos(0, 0);
   view:=0;
   lblFilename.Caption:=_l('#00678^e<UNNAMED>');
   docfilename:='';
@@ -1214,7 +1254,7 @@ begin
   GetSystemInfo(sysinfo);
   SetLength(Result,0);
   if sysinfo.dwNumberOfProcessors<=1 then exit;
-  if blocktoy-y < y-blockfromy then exit; //don't start threads if there's less left than we have done
+  if abtoy-y < y-abfromy then exit; //don't start threads if there's less left than we have done
   if abtoy-y < integer(sysinfo.dwNumberOfProcessors) then exit; //less than one line per thread!
 
   SetLength(Result, sysinfo.dwNumberOfProcessors-1);
@@ -1245,7 +1285,7 @@ var j:integer;
   threadsCreated: boolean;
  {$ENDIF}
 begin
-  if (blockx=rcurx) and (blocky=rcury) then
+  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
   begin
     if not fSettings.cbTranslateNoLongTextWarning.Checked then
       if Application.MessageBox(
@@ -1253,11 +1293,12 @@ begin
           +'This action can take a very long time.')),
         pchar(_l('#00683^eConfirmation')),
         MB_ICONWARNING or MB_YESNO)<>idYes then exit;
-    blockfromx:=0;
-    blockfromy:=0;
-    blocktox:=flength(doc[doc.Count-1])-1;
-    blocktoy:=doc.Count-1;
-  end else CalcBlockFromTo(true);
+    block.fromx:=0;
+    block.fromy:=0;
+    block.tox:=flength(doc[doc.Count-1])-1;
+    block.toy:=doc.Count-1;
+  end else
+    CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
 
  {$IFDEF MTHREAD_SUPPORT}
@@ -1280,16 +1321,16 @@ begin
     req.dic_ignorekana := true;
     req.Prepare;
 
-    totalwork := blocktoy-blockfromy+1;
+    totalwork := block.toy-block.fromy+1;
     donework := 0;
 
-    y := blockfromy;
-    while y<=blocktoy do
+    y := block.fromy;
+    while y<=block.toy do
     begin
       bg:=0;
       en:=flength(doc[y])-1;
-      if y=blockfromy then bg:=blockfromx;
-      if y=blocktoy then en:=blocktox;
+      if y=block.fromy then bg:=block.fromx;
+      if y=block.toy then en:=block.tox;
 
       //If the operation is taking too long to be noticeable
       if (sp=nil) and (GetTickCount-startTime > 200) then begin
@@ -1330,9 +1371,9 @@ begin
      {$IFDEF MTHREAD_SUPPORT}
       if useThreads and not threadsCreated and (GetTickCount-startTime > 200) then begin
         threadsCreated := true; //skip this block afterwards
-        threads := CreateTranslationThreads(blockfromy,blocktoy,y);
+        threads := CreateTranslationThreads(block.fromy,block.toy,y);
         //recalculate total work
-        totalwork := (blocktoy-y+1)+donework;
+        totalwork := (block.toy-y+1)+donework;
         if sp<>nil then
           sp.SetMaxProgress(totalwork);
       end;
@@ -1394,9 +1435,9 @@ end;
 
 procedure TfTranslate.SetTranslation();
 begin
-  if (blockx=rcurx) and (blocky=rcury) then
+  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
   begin
-    SetWordTrans(rcurx,rcury,[tfScanParticle,tfManuallyChosen],false);
+    SetWordTrans(rcur.x,rcur.y,[tfScanParticle,tfManuallyChosen],false);
     mustrepaint:=true;
     ShowText(true);
   end else
@@ -1425,68 +1466,68 @@ procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 procedure recalcy(oldy,newy:integer);
 begin
-  curx:=WidthToPos(PosToWidth(curx,oldy),newy);
-  cury:=newy;
+  cur.x:=WidthToPos(PosToWidth(cur.x,oldy),newy);
+  cur.y:=newy;
 end;
 var bx,by:integer;
     ukn:boolean;
 begin
-  bx:=curx; by:=cury;
-  if (insx=-1) or (insconfirmed) then
+  bx:=cur.x; by:=cur.y;
+  if (ins.x=-1) or (insconfirmed) then
   begin
     ukn:=false;
     if key=VK_RIGHT then
     begin
-      inc(curx);
-      if curx>linl[cury].len then
-        if cury+1<linl.Count then
+      inc(cur.x);
+      if cur.x>linl[cur.y].len then
+        if cur.y+1<linl.Count then
         begin
-          inc(cury);
-          curx:=0;
-        end else dec(curx);
+          inc(cur.y);
+          cur.x:=0;
+        end else dec(cur.x);
       cursorend:=false;
     end
     else if key=VK_LEFT then
     begin
-      dec(curx);
-      if curx<0 then
-        if cury>0 then
+      dec(cur.x);
+      if cur.x<0 then
+        if cur.y>0 then
         begin
-          dec(cury);
-          curx:=linl[cury].len;
-        end else inc(curx);
+          dec(cur.y);
+          cur.x:=linl[cur.y].len;
+        end else inc(cur.x);
       cursorend:=false;
     end
-    else if key=VK_UP then recalcy(cury,cury-1)
-    else if key=VK_DOWN then recalcy(cury,cury+1)
+    else if key=VK_UP then recalcy(cur.y,cur.y-1)
+    else if key=VK_DOWN then recalcy(cur.y,cur.y+1)
     else if (key=VK_PRIOR) and (ssCtrl in Shift) then
     begin
-      curx:=0;
-      cury:=0;
+      cur.x:=0;
+      cur.y:=0;
     end
     else if (key=VK_NEXT) and (ssCtrl in Shift) then
     begin
-      cury:=linl.Count-1;
-      curx:=100;
+      cur.y:=linl.Count-1;
+      cur.x:=100;
     end
-    else if key=VK_PRIOR then recalcy(cury,cury-printl)
-    else if key=VK_NEXT then recalcy(cury,cury+printl)
+    else if key=VK_PRIOR then recalcy(cur.y,cur.y-printl)
+    else if key=VK_NEXT then recalcy(cur.y,cur.y+printl)
     else if key=VK_HOME then
     begin
-      if (cursorend) and (cury>0) then dec(cury) else curx:=0;
+      if (cursorend) and (cur.y>0) then dec(cur.y) else cur.x:=0;
       cursorend:=false;
     end
     else if key=VK_END then
     begin
-      if not cursorend then curx:=100;
+      if not cursorend then cur.x:=100;
     end
     else if key=VK_DELETE then
     begin
       ResolveInsert(true);
-      if (blockx<>rcurx) or (blocky<>rcury) then
+      if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
         BlockOp(false,true)
       else
-        DeleteCharacter(rcurx,rcury);
+        DeleteCharacter(rcur.x,rcur.y);
       RefreshLines;
     end else ukn:=true;
     if not ukn then
@@ -1494,8 +1535,8 @@ begin
       ClearInsBlock;
       leaveline:=true;
       if ssShift in Shift then shiftpressed:=true;
-      if (bx<>curx) or (by<>cury) then ResolveInsert(true);
-      if (bx<>curx) or (by<>cury) then ShowText(true);
+      if (bx<>cur.x) or (by<>cur.y) then ResolveInsert(true);
+      if (bx<>cur.x) or (by<>cur.y) then ShowText(true);
       leaveline:=false;
     end;
   end else
@@ -1503,7 +1544,7 @@ begin
   begin
     if (key=VK_UP) and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
     if (key=VK_DOWN) and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (insx<>-1) then ShowHint else HideHint;
+    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
   end;
 end;
 
@@ -1520,9 +1561,9 @@ begin
   shiftpressed:=false;
   if insertbuffer<>'' then ResolveInsert(true);
   ClearInsBlock;
-  curx:=x div (lastxsiz);
-  cury:=y div (lastxsiz*lastycnt)+view;
-  curx:=WidthToPos(curx,cury);
+  cur.x:=x div (lastxsiz);
+  cur.y:=y div (lastxsiz*lastycnt)+view;
+  cur.x:=WidthToPos(cur.x,cur.y);
   mustrepaint:=true;
   ShowText(true);
 end;
@@ -1531,12 +1572,12 @@ procedure TfTranslate.EditorPaintBoxMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   if ssLeft in Shift then begin;
-    curx:=(x+lastxsiz div 2) div (lastxsiz);
-    cury:=y div (lastxsiz*lastycnt)+view;
-    curx:=WidthToPos(curx,cury);
-    if (curx=lastmmx) and (cury=lastmmy) then exit;
-    lastmmx:=curx;
-    lastmmy:=cury;
+    cur.x:=(x+lastxsiz div 2) div (lastxsiz);
+    cur.y:=y div (lastxsiz*lastycnt)+view;
+    cur.x:=WidthToPos(cur.x,cur.y);
+    if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
+    lastmm.x:=cur.x;
+    lastmm.y:=cur.y;
     shiftpressed:=true;
     ShowText(false);
   end;
@@ -1577,12 +1618,12 @@ var i,j:integer;
     bg,en:integer;
 begin
   CalcBlockFromTo(true);
-  for i:=blockfromy to blocktoy do
+  for i:=block.fromy to block.toy do
   begin
     bg:=0;
     en:=flength(doc[i])-1;
-    if i=blockfromy then bg:=blockfromx;
-    if i=blocktoy then en:=blocktox;
+    if i=block.fromy then bg:=block.fromx;
+    if i=block.toy then en:=block.tox;
     for j:=bg to en do
       with doctr[i].chars[j] do begin
         wordstate := '-';
@@ -1701,8 +1742,8 @@ begin
   view:=EditorScrollBar.Position;
   if (view>=0) and (view<linl.Count) then
   begin
-    rviewx:=linl[view].xs;
-    rviewy:=linl[view].ys;
+    rview.x:=linl[view].xs;
+    rview.y:=linl[view].ys;
   end;
   MakeEditorBitmap;
 end;
@@ -1764,10 +1805,11 @@ end;
 
 procedure TfTranslate.SelectAll;
 begin
-  blockx:=0;
-  blocky:=0;
-  cury:=linl.Count-1;
-  curx:=linl[linl.Count-1].len;
+ //Finalize insert before selecting all
+  resolvebuffer := false; //cancel suggestion
+  ResolveInsert(true);
+  dragstart := SourcePos(0, 0);
+  cur := CursorPos(linl[linl.Count-1].len, linl.Count-1);
   shiftpressed:=true;
   ShowText(true);
 end;
@@ -1778,11 +1820,10 @@ begin
   editorbitmap:=TBitmap.Create;
   editorbitmap.Width:=EditorPaintBox.Width;
   editorbitmap.Height:=EditorPaintBox.Height;
-  RenderText(rviewx,rviewy,editorbitmap.Canvas,2,2,EditorPaintBox.Width-4,
+  RenderText(rview.x,rview.y,editorbitmap.Canvas,2,2,EditorPaintBox.Width-4,
     EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,false);
-  oldcurx:=-1;
-  oldcury:=-1;
-  oldblockfromx:=-1;
+  oldcur := CursorPos(-1, -1);
+  oldblock := Selection(-1, -1, -1, -1);
   DrawBlock(EditorBitmap.Canvas);
   PasteEditorBitmap;
   DrawCursor(false);
@@ -1799,8 +1840,7 @@ begin
   if down then inc(view) else dec(view);
   if (view>=0) and (view<=EditorScrollBar.Max) then
   begin
-    rviewx:=linl[view].xs;
-    rviewy:=linl[view].ys;
+    rview := SourcePos(linl[view].xs, linl[view].ys);
   end else
     if view<0 then view:=0 else view:=EditorScrollBar.Max;
   EditorScrollBar.Position:=view;
@@ -1818,55 +1858,51 @@ begin
     EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
   if linl.Count=0 then
   begin
-    rcurx:=-1;
-    rcury:=-1;
-    rviewx:=0;
-    rviewy:=0;
+    rcur := SourcePos(-1, -1);
+    rview := SourcePos(0, 0);
     EditorPaintBox.Invalidate;
     EditorScrollBar.Enabled:=false;
     exit;
   end;
-  if cury<0 then cury:=0;
-  if cury>=linl.Count then
+  if cur.y<0 then cur.y:=0;
+  if cur.y>=linl.Count then
   begin
-    cury:=linl.Count-1;
-    curx:=2555;
+    cur.y:=linl.Count-1;
+    cur.x:=2555;
   end;
-  if curx<0 then curx:=0;
-  if (cursorend) and (curx=0) and (cury>0) and (linl[cury-1].ys<>linl[cury].ys) then
+  if cur.x<0 then cur.x:=0;
+  if (cursorend) and (cur.x=0) and (cur.y>0) and (linl[cur.y-1].ys<>linl[cur.y].ys) then
   begin
-    dec(cury);
-    curx:=linl[cury].len;
+    dec(cur.y);
+    cur.x:=linl[cur.y].len;
     cursorend:=false;
   end;
-  if curx>linl[cury].len then
-    if (cury+1<linl.Count) and (linl[cury].ys=linl[cury+1].ys) then
+  if cur.x>linl[cur.y].len then
+    if (cur.y+1<linl.Count) and (linl[cur.y].ys=linl[cur.y+1].ys) then
     begin
-      curx:=0;
-      inc(cury);
+      cur.x:=0;
+      inc(cur.y);
       cursorend:=true;
     end else
-      curx:=linl[cury].len;
-  if view>cury then if cury>0 then view:=cury else view:=0;
-  if view+printl-1<cury then view:=cury-printl+1;
+      cur.x:=linl[cur.y].len;
+  if view>cur.y then if cur.y>0 then view:=cur.y else view:=0;
+  if view+printl-1<cur.y then view:=cur.y-printl+1;
   if view+printl-1>=linl.Count then view:=linl.Count-printl;
   if view<0 then view:=0;
   if view>=linl.Count then view:=0;
-  rcury:=linl[cury].ys;
-  rcurx:=curx+linl[cury].xs;
-  rviewx:=linl[view].xs;
-  rviewy:=linl[view].ys;
+  rcur := SourcePos(linl[cur.y].xs+cur.x, linl[cur.y].ys);
+  rview := SourcePos(linl[view].xs, linl[view].ys);
   if not shiftpressed then
   begin
-    blockx:=rcurx;
-    blocky:=rcury;
+    dragstart.x:=rcur.x;
+    dragstart.y:=rcur.y;
   end;
   fUser.SpeedButton1.Down:=false;
   fUser.SpeedButton2.Down:=false;
   fUser.SpeedButton3.Down:=false;
   if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then fUser.Look() else
   if dolook then begin
-    s:=GetDocWord(rcurx,rcury,wt,false);
+    s:=GetDocWord(rcur.x,rcur.y,wt,false);
     if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
   end;
   if oldview<>view then mustrepaint:=true;
@@ -1875,7 +1911,7 @@ begin
     DrawCursor(false);
     DrawBlock(EditorPaintBox.Canvas);
   end;
-  if mustrepaint then oldblockfromx:=-1;
+  if mustrepaint then oldblock.fromx:=-1;
   mustrepaint:=false;
   shiftpressed:=false;
   if linl.Count-printl<=0 then
@@ -1888,29 +1924,30 @@ begin
     EditorScrollBar.Enabled:=true;
   end;
   with fUser do
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (insx<>-1) then ShowHint else HideHint;
+    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
   ListBox1.SetFocus;
 end;
 
+{ Converts startdrag+cursor positions to block selection. }
 procedure TfTranslate.CalcBlockFromTo(backtrack:boolean);
 begin
-  if (rcury<blocky) or ((rcury=blocky) and (rcurx<blockx)) then
+  if (rcur.y<dragstart.y) or ((rcur.y=dragstart.y) and (rcur.x<dragstart.x)) then
   begin
-    blockfromx:=rcurx;
-    blockfromy:=rcury;
-    blocktox:=blockx-1;
-    blocktoy:=blocky;
+    block.fromx:=rcur.x;
+    block.fromy:=rcur.y;
+    block.tox:=dragstart.x;
+    block.toy:=dragstart.y;
   end else
   begin
-    blockfromx:=blockx;
-    blockfromy:=blocky;
-    blocktox:=rcurx-1;
-    blocktoy:=rcury;
+    block.fromx:=dragstart.x;
+    block.fromy:=dragstart.y;
+    block.tox:=rcur.x;
+    block.toy:=rcur.y;
   end;
   if backtrack then
   begin
-    while (blockfromx>=0) and (doctr[blockfromy].chars[blockfromx].wordstate='<') do dec(blockfromx);
-    while (blocktox+1<doctr[blocktoy].charcount) and (doctr[blocktoy].chars[blocktox+1].wordstate='<') do inc(blocktox);
+    while (block.fromx>=0) and (doctr[block.fromy].chars[block.fromx].wordstate='<') do dec(block.fromx);
+    while (block.tox+1<doctr[block.toy].charcount) and (doctr[block.toy].chars[block.tox+1].wordstate='<') do inc(block.tox);
   end;
 end;
 
@@ -2154,8 +2191,10 @@ begin
   if onlylinl then exit;
 
  //Find a graphical line which covers the starting point
+  cl := -1;
   for i:=0 to ll.Count-1 do
     if (ll[i].ys=y) and (ll[i].xs<=x) then cl:=i;
+  Assert(cl>=0, 'Cannot find graphical line which covers the starting point');
 
   lineh:=rs;
   cx:=x;
@@ -2383,7 +2422,7 @@ begin
         else
         begin
           canvas.Font.Color:=fcolor;
-          if (cy=insy) and (cx>=insx) and (cx<insx+inslen) then
+          if (cy=ins.y) and (cx>=ins.x) and (cx<ins.x+inslen) then
             canvas.Font.Color:=Col('Editor_Aftertouch');
           canvas.Brush.Color:=color;
         end;
@@ -2475,7 +2514,7 @@ begin
       inc(cx);
     except
       on E: Exception do begin
-        E.Message := 'Paint exception ('+inttostr(cx)+','+inttostr(cy)+': '+E.Message;
+        E.Message := 'Paint exception ('+inttostr(cx)+','+inttostr(cy)+'): '+E.Message;
         raise;
       end;
     end;
@@ -2498,29 +2537,28 @@ var i:integer;
   s: string;
   lp: PCharacterLineProps;
 begin
-  if insx=-1 then
+  if ins.x=-1 then
   begin
-    insx:=rcurx;
-    insy:=rcury;
+    ins:=rcur;
     inslen:=0;
   end;
-  s:=doc[insy];
-  fdelete(s,insx+1,inslen);
-  doc[insy]:=s;
-  lp:=doctr[insy];
-  lp.DeleteChars(insx,inslen);
+  s:=doc[ins.y];
+  fdelete(s,ins.x+1,inslen);
+  doc[ins.y]:=s;
+  lp:=doctr[ins.y];
+  lp.DeleteChars(ins.x,inslen);
   inslen:=flength(convins);
   if transins=nil then begin
     SetLength(transins, flength(convins));
     for i:=1 to flength(convins) do
       transins[i-1].SetChar('I', 9, 0, 1);
   end;
-  doc[insy]:=fcopy(doc[insy],1,insx)+convins+fcopy(doc[insy],insx+1,flength(doc[insy])-insx);
-  doctr[insy].InsertChars(insx,transins);
+  doc[ins.y]:=fcopy(doc[ins.y],1,ins.x)+convins+fcopy(doc[ins.y],ins.x+1,flength(doc[ins.y])-ins.x);
+  doctr[ins.y].InsertChars(ins.x,transins);
   linl.Clear;
-  RenderText(curx,cury,EditorPaintBox.Canvas,0,0,EditorPaintBox.Width-4,
+  RenderText(cur.x,cur.y,EditorPaintBox.Canvas,0,0,EditorPaintBox.Width-4,
     EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
-  SetCurPos(insx+inslen, insy);
+  SetCurPos(ins.x+inslen, ins.y);
   if not leaveinserted then
   begin
     insconfirmed:=true;
@@ -2532,7 +2570,7 @@ var s,s2,s3:string;
   i:integer;
   lp: TCharacterPropArray;
 begin
-  if (insx=-1) and (final) then exit;
+  if (ins.x=-1) and (final) then exit;
   if (buffertype='H') and (resolvebuffer) then
   begin
     with fUser do
@@ -2557,7 +2595,7 @@ begin
       DisplayInsert(GetInsertKana(true),nil,true);
     if final then
     begin
-      SetWordTrans(insx,insy,[tfManuallyChosen],false);
+      SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
       insconfirmed:=true;
       mustrepaint:=true;
       ShowText(false);
@@ -2574,7 +2612,7 @@ begin
         else
           lp[i].SetChar('<', 9, 0, 1); //word continues
       DisplayInsert(s,lp,true);
-      if resolvebuffer then SetWordTrans(insx,insy,[tfManuallyChosen],false);
+      if resolvebuffer then SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
       insconfirmed:=true;
       mustrepaint:=true;
       ShowText(false);
@@ -2613,7 +2651,7 @@ begin
     if (c='[') and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
     if (c=']') and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
     if insconfirmed then ResolveInsert(true);
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (insx<>-1) then ShowHint else HideHint;
+    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
     exit;
   end;
   if insconfirmed then ClearInsBlock;
@@ -2642,28 +2680,28 @@ begin
   if c=#13 then
   begin
 //    if blockfromx<>-1 then BlockOp(false,true);
-    SplitLine(rcurx,rcury);
-    curx:=0;
-    inc(cury);
+    SplitLine(rcur.x,rcur.y);
+    cur.x:=0;
+    inc(cur.y);
     RefreshLines;
     exit;
   end;
   if c=#8 then
   begin
-    if (blockx<>rcurx) or (blocky<>rcury) then BlockOp(false,true) else
+    if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then BlockOp(false,true) else
     begin
-      if curx>0 then dec(curx) else
-        if rcurx=0 then
+      if cur.x>0 then dec(cur.x) else
+        if rcur.x=0 then
         begin
-          dec(cury);
-          curx:=2550;
+          dec(cur.y);
+          cur.x:=2550;
         end else
         begin
-          dec(cury);
-          curx:=linl[cury].len;
+          dec(cur.y);
+          cur.x:=linl[cur.y].len;
         end;
       ShowText(true);
-      DeleteCharacter(rcurx,rcury);
+      DeleteCharacter(rcur.x,rcur.y);
     end;
     RefreshLines;
     exit;
@@ -2969,15 +3007,17 @@ begin
   rect.right:=rect.left+2;
   InvertRect(EditorPaintBox.Canvas.Handle,rect);
 end;
+var tmp: TCursorPos;
 begin
   if not ListBox1.Focused then blink:=false;
-  if cursorposcache=-1 then CalcCache(oldcurx,oldcury);
-  if (OnScreen(oldcurx,oldcury)) and (not cursorblinked) then DrawIt(oldcurx,oldcury-view);
-  if (cursorposcache=-1) or (oldcurx<>cursorscreenx) or (oldcury<>cursorscreeny) then CalcCache(cursorscreenx,cursorscreeny);
-  if OnScreen(cursorscreenx,cursorscreeny) and ((not blink) or (cursorblinked)) then DrawIt(cursorscreenx,cursorscreeny-view);
+  if cursorposcache=-1 then CalcCache(oldcur.x,oldcur.y);
+  if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-view);
+  tmp := CursorPos(CursorScreenX(), CursorScreenY());
+  if (cursorposcache=-1) or (oldcur.x<>tmp.x) or (oldcur.y<>tmp.y) then CalcCache(tmp.x, tmp.y);
+  if OnScreen(tmp.x, tmp.y) and ((not blink) or (cursorblinked)) then DrawIt(tmp.x,tmp.y-view);
   if blink then cursorblinked:=not cursorblinked;
   if not blink then cursorblinked:=false;
-  oldcurx:=cursorscreenx; oldcury:=cursorscreeny;
+  oldcur := tmp;
 end;
 
 {
@@ -2996,10 +3036,10 @@ var rect:TRect;
     llen: integer;      //graphical line length
 
 
-  function InSelection(x, y: integer; x1, y1, x2, y2: integer): boolean;
+  function InSelection(x, y: integer; const sel: TSelection): boolean;
   begin
-    Result := ((y>y1) or ((y=y1) and (x>=x1)))
-      and ((y<y2) or ((y=y2) and (x<x2)));
+    Result := ((y>sel.fromy) or ((y=sel.fromy) and (x>=sel.fromx)))
+      and ((y<sel.toy) or ((y=sel.toy) and (x<sel.tox)));
   end;
 
  //Inverts color for a character at graphical position (i, j),
@@ -3017,14 +3057,9 @@ var rect:TRect;
   end;
 
 begin
-  if oldblockfromx=-1 then begin
+  if oldblock.fromx=-1 then
    //safe values for the rest of the algorithm
-    oldblockfromx:=-1;
-    oldblocktox:=-1;
-    oldblockfromy:=-1;
-    oldblocktoy:=-1;
-  end;
-
+    oldblock := Selection(-1, -1, -1, -1);
   CalcBlockFromTo(false);
 
  {
@@ -3038,16 +3073,16 @@ begin
     llen := linl[i].len;
 
     if llen=0 then begin //empty lines get one half-character for selection to indicate they're there
-      if InSelection(xpos, ypos, oldblockfromx, oldblockfromy, oldblocktox, oldblocktoy)
-      xor InSelection(xpos, ypos, blockfromx, blockfromy, blocktox, blocktoy) then
+      if InSelection(xpos, ypos, oldblock)
+      xor InSelection(xpos, ypos, block) then
         InvertColor(i, 0, {HalfWidth=}true);
     end;
 
     js:=0; //distantion in half-characters from the left
     while llen>0 do begin
       hw := IsHalfWidth(xpos, ypos);
-      if InSelection(xpos, ypos, oldblockfromx, oldblockfromy, oldblocktox, oldblocktoy)
-      xor InSelection(xpos, ypos, blockfromx, blockfromy, blocktox, blocktoy) then
+      if InSelection(xpos, ypos, oldblock)
+      xor InSelection(xpos, ypos, block) then
         InvertColor(i, js, hw);
       if hw then inc(js) else inc(js,2);
       Inc(xpos);
@@ -3055,10 +3090,7 @@ begin
     end;
   end;
 
-  oldblockfromx:=blockfromx;
-  oldblockfromy:=blockfromy;
-  oldblocktox:=blocktox;
-  oldblocktoy:=blocktoy;
+  oldblock := block;
 end;
 
 procedure TfTranslate.RepaintText;
@@ -3073,8 +3105,9 @@ begin
   for i:=0 to linl.Count-1 do
     if (linl[i].ys=y) and (linl[i].xs<=x) and (linl[i].xs+linl[i].len>=x) then
   begin
-    curx:=x-linl[i].xs;
-    cury:=i;
+    cur.x:=x-linl[i].xs;
+    cur.y:=i;
+    break;
   end;
 end;
 
@@ -3089,8 +3122,7 @@ begin
     priorkanji:='';
     fMenu.ChangeUserData;
   end;
-  insx:=-1;
-  insy:=-1;
+  ins := SourcePos(-1,-1);
   inslen:=0;
   insertbuffer:='';
 end;
@@ -3133,8 +3165,8 @@ begin
   s := '';
   sp.Clear;
 
-  SplitLine(rcurx,rcury);
-  y:=rcury;
+  SplitLine(rcur.x,rcur.y);
+  y:=rcur.y;
   for i:=1 to flength(clip) do
   begin
     if fgetch(clip,i)=UH_LF then begin
@@ -3173,16 +3205,16 @@ begin
   begin
     newclip := '';
     newcliptrans.Clear;
-    for i:=blockfromy to blocktoy do
+    for i:=block.fromy to block.toy do
     begin
-      if i=blockfromy then bx:=blockfromx else bx:=0;
-      if i=blocktoy then tx:=blocktox-1 else tx:=flength(doc[i])-1;
+      if i=block.fromy then bx:=block.fromx else bx:=0;
+      if i=block.toy then tx:=block.tox-1 else tx:=flength(doc[i])-1;
       for j:=bx to tx do
       begin
         newclip:=newclip+GetDoc(j,i);
         newcliptrans.AddChar(doctr[i].chars[j]);
       end;
-      if i<>blocktoy then begin
+      if i<>block.toy then begin
         newclip:=newclip+UH_CR+UH_LF;
         newcliptrans.AddChar('-', 9, 0, 1);
         newcliptrans.AddChar('-', 9, 0, 1);
@@ -3197,24 +3229,29 @@ begin
   end;
   if dodelete then
   begin
-    SetCurPos(blockfromx,blockfromy);
-    if blockfromy=blocktoy then
+    SetCurPos(block.fromx,block.fromy);
+    if block.fromy=block.toy then
     begin
-      doc[blockfromy]:=fcopy(doc[blockfromy],1,blockfromx)
-        +fcopy(doc[blockfromy],blocktox+1,flength(doc[blockfromy])-blocktox);
-      doctr[blockfromy].DeleteChars(blockfromx, blocktox-blockfromx);
+      doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
+        +fcopy(doc[block.fromy],block.tox+1,flength(doc[block.fromy])-block.tox);
+      doctr[block.fromy].DeleteChars(block.fromx, block.tox-block.fromx);
     end else
     begin
-      doc[blockfromy]:=fcopy(doc[blockfromy],1,blockfromx);
-      doc[blocktoy]:=fcopy(doc[blocktoy],blocktox+1,flength(doc[blocktoy])-blocktox);
-      doctr[blockfromy].DeleteChars(blockfromx);
-      doctr[blocktoy].DeleteChars(0, blocktox);
-      for i:=blockfromy+1 to blocktoy-1 do
+      doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx);
+      doc[block.toy]:=fcopy(doc[block.toy],block.tox+1,flength(doc[block.toy])-block.tox);
+      if block.fromx < doctr[block.fromy].charcount then
+        doctr[block.fromy].DeleteChars(block.fromx);
+      if block.tox < doctr[block.toy].charcount then
+        doctr[block.toy].DeleteChars(0, block.tox)
+      else
+        if doctr[block.toy].charcount>0 then
+          doctr[block.toy].DeleteChars(0);
+      for i:=block.fromy+1 to block.toy-1 do
       begin
-        doc.Delete(blockfromy+1);
-        doctr.DeleteLine(blockfromy+1);
+        doc.Delete(block.fromy+1);
+        doctr.DeleteLine(block.fromy+1);
       end;
-      JoinLine(blockfromy);
+      JoinLine(block.fromy);
       RefreshLines;
     end;
     FileChanged:=true;
@@ -3346,12 +3383,12 @@ end;
 
 function TfTranslate.CursorScreenX:integer;
 begin
-  if (cursorend) and (curx=0) and (cury>0) then result:=linl[cury-1].len else result:=curx;
+  if (cursorend) and (cur.x=0) and (cur.y>0) then result:=linl[cur.y-1].len else result:=cur.x;
 end;
 
 function TfTranslate.CursorScreenY:integer;
 begin
-  if (cursorend) and (curx=0) and (cury>0) then result:=cury-1 else result:=cury;
+  if (cursorend) and (cur.x=0) and (cur.y>0) then result:=cur.y-1 else result:=cur.y;
 end;
 
 procedure TfTranslate.CalcMouseCoords(x,y:integer;var rx,ry:integer);
@@ -3423,14 +3460,12 @@ begin
   priorkanji:='';
   cursorblinked:=false;
   shiftpressed:=false;
-  blockx:=-1;
-  blocky:=-1;
+  dragstart := SourcePos(-1, -1);
   leaveline:=false;
-  oldblockfromx:=-1; oldblockfromy:=-1; oldblocktox:=-1; oldblocktoy:=-1;
+  oldblock := Selection(-1, -1, -1, -1);
   insconfirmed:=false;
   cursorend:=false;
-  lastmmx:=-1;
-  lastmmy:=-1;
+  lastmm := CursorPos(-1, -1);
 end;
 
 initialization
