@@ -2520,14 +2520,7 @@ begin
   linl.Clear;
   RenderText(curx,cury,EditorPaintBox.Canvas,0,0,EditorPaintBox.Width-4,
     EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
-  for i:=0 to linl.Count-1 do
-  begin
-    if (linl[i].ys=insy) and (linl[i].xs<=insx+inslen) and (insx+inslen-linl[i].xs<linl[i].len) then
-    begin
-      curx:=insx+inslen-linl[i].xs;
-      cury:=i;
-    end;
-  end;
+  SetCurPos(insx+inslen, insy);
   if not leaveinserted then
   begin
     insconfirmed:=true;
