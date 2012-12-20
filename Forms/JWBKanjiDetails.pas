@@ -91,12 +91,15 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
 
-  public
-    procedure SetCharDetails(unicode: FString);
   protected
+    curChar: FChar; //displaying information for this character
     kval: THellspawnStringList;
     procedure ReloadReadings(CChar: TTextTableCursor; out read: TCharReadings);
     procedure PopulateKval(CChar: TTextTableCursor; const read: TCharReadings);
+  public
+    procedure SetCharDetails(unicode: FString);
+    procedure Reload;
+
 
   protected
    { Info box painting }
@@ -331,6 +334,11 @@ begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
 end;
 
+procedure TfKanjiDetails.Reload;
+begin
+  SetCharDetails(curChar);
+end;
+
 procedure TfKanjiDetails.SetCharDetails(unicode:FString);
 var s: string;
   radf:integer;
@@ -349,6 +357,11 @@ var s: string;
   curindex: integer;
   CChar: TTextTableCursor;
 begin
+  if flength(unicode)<1 then
+    curChar := UH_NOCHAR
+  else
+    curChar := fgetch(unicode,1);
+
   curkanji:=UH_NOCHAR;
   curradical:='';
   cursimple:='';

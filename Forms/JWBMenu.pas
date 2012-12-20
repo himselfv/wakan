@@ -1796,6 +1796,11 @@ begin
     UserDataChanged:=true;
   end;
 
+  //Refresh everything
+  RefreshCategory;
+  RefreshKanjiCategory;
+  fKanjiDetails.Reload;
+
   Screen.Cursor:=crDefault;
   UserDataLoaded:=true;
 end;
