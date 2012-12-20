@@ -184,10 +184,12 @@ end;
 
 
 procedure TfKanjiDetails.SpeedButton21Click(Sender: TObject);
+var catIndex: integer;
 begin
-  if curkanji<>'' then
-    SetKnown(strtoint(kanjicatuniqs[fKanjiDetails.ComboBox1.ItemIndex]),curkanji,
-      not IsKnown(strtoint(kanjicatuniqs[fKanjiDetails.ComboBox1.ItemIndex]),curkanji));
+  if curkanji<>'' then begin
+    catIndex := GetSelCatIdx(fKanjiDetails.ComboBox1);
+    SetKnown(catIndex, curkanji, not IsKnown(catIndex,curkanji));
+  end;
   fMenu.ChangeUserData;
   fKanjiDetails.SetCharDetails(curkanji);
 end;
@@ -462,20 +464,20 @@ begin
     end else
       if CChar.Int(TCharChFrequency)<=5 then kig:='C'else kig:='U';
     if IsKnown(KnownLearned,kix) then kig:='K';
-    if not IsKnown(strtoint(kanjicatuniqs[ComboBox1.ItemIndex]),kix) then
+    if not IsKnown(GetSelCatIdx(Combobox1),kix) then
       SpeedButton21.Caption:='+'
     else
       SpeedButton21.Caption:='-';
     if chin then if CChar.Int(TCharStrokeCount)<255 then Label9.Caption:=CChar.Str(TCharStrokeCount) else Label9.Caption:='-';
     if not chin then if CChar.Int(TCharJpStrokeCount)<255 then Label9.Caption:=CChar.Str(TCharJpStrokeCount) else Label9.Caption:='-';
     scat:='';
-    for i:=0 to kanjicatuniqs.Count-1 do
+    for i:=0 to Length(KanjiCats)-1 do
     begin
-      if IsKnown(strtoint(kanjicatuniqs[i]),kix) then
+      if IsKnown(KanjiCats[i].idx,kix) then
         if scat='' then
-          scat:=ComboBox1.Items[i]
+          scat:=KanjiCats[i].name
         else
-          scat:=scat+', '+ComboBox1.Items[i];
+          scat:=scat+', '+KanjiCats[i].name;
     end;
     if scat='' then scat:='-';
     Label3.Caption:=scat;

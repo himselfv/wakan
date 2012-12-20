@@ -84,10 +84,6 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure RadioGroup2Click(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
-  private
-    { Private declarations }
-  public
-    { Public declarations }
   end;
 
 var
@@ -273,9 +269,11 @@ begin
 end;
 
 procedure TfKanjiSearch.ListBox1Click(Sender: TObject);
+var IsKnownLearned: boolean;
 begin
-  SpeedButton25.Enabled:=strtoint(kanjicatuniqs[ListBox1.ItemIndex])<>KnownLearned;
-  SpeedButton20.Enabled:=strtoint(kanjicatuniqs[ListBox1.ItemIndex])<>KnownLearned;
+  IsKnownLearned := GetSelCatIdx(ListBox1)=KnownLearned;
+  SpeedButton25.Enabled:=not IsKnownLearned;
+  SpeedButton20.Enabled:=not IsKnownLearned;
 end;
 
 procedure TfKanjiSearch.ListBox1ClickCheck(Sender: TObject);
@@ -313,9 +311,12 @@ end;
 
 procedure TfKanjiSearch.ListBox1DrawItem(Control: TWinControl;
   Index: Integer; Rect: TRect; State: TOwnerDrawState);
+var IsKnownLearned: boolean;
 begin
-  if strtoint(kanjicatuniqs[index])=KnownLearned then
-    ListBox1.Canvas.Font.Style:=[fsBold] else
+  IsKnownLearned := GetCatIdx(ListBox1,index)=KnownLearned;
+  if IsKnownLearned then
+    ListBox1.Canvas.Font.Style:=[fsBold]
+  else
     ListBox1.Canvas.Font.Style:=[];
   ListBox1.Canvas.TextOut(Rect.Left,Rect.Top,ListBox1.Items[index]);
 end;

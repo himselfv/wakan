@@ -13,7 +13,7 @@ Throughout this file as a convention:
 }
 
 interface
-uses SysUtils, Classes, JWBStrings;
+uses SysUtils, Classes, StdCtrls, JWBStrings;
 
 type
   TCatPrefix = char;
@@ -44,6 +44,25 @@ function RemoveWordFromCategory(word:integer;catname:string): boolean;
 function RemoveAllWordsFromCategory(category:string): boolean;
 function DeleteCategoryUI(category: string): boolean;
 procedure MergeCategory(idxCat: integer; idxIntoCat: integer);
+
+{ List of kanji categories (populated by mainform, used by others).
+ It's okay to reload the list without reloading the controls which reference it,
+ because the controls store category indexes inside them anyway.
+ But it's better to reload everything in one go, in the mainform }
+
+var
+  KanjiCats: array of record
+    idx: integer;
+    name: string;
+  end;
+
+procedure ReloadKanjiCategories;
+{ Category string lists are used throughout the program }
+procedure PasteKanjiCategoriesTo(sl: TStrings);
+function GetSelCatIdx(ctl: TCustomListBox): integer; overload;
+function GetSelCatIdx(ctl: TCustomComboBox): integer; overload;
+function GetCatIdx(ctl: TCustomListBox; ItemIndex: integer): integer; overload;
+function GetCatIdx(ctl: TCustomComboBox; ItemIndex: integer): integer; overload;
 
 { Known lists }
 
@@ -247,6 +266,67 @@ begin
     Free;
   end;
 end;
+
+{ KanjiCategories }
+
+procedure ReloadKanjiCategories;
+var lc:char;
+  s:string;
+begin
+  SetLength(KanjiCats, 0);
+
+  TUserCat.First;
+  while not TUserCat.EOF do
+  begin
+    s:=TUserCat.Str(TUserCatName);
+    lc:=GetCatPrefix(s);
+    if lc='?' then begin
+      lc := 'j';
+      TUserCat.Edit([TUserCatName],['j~'+s])
+    end;
+    s:=StripCatName(s);
+    if lc='k'then
+    begin
+      setlength(KanjiCats, Length(KanjiCats)+1);
+      KanjiCats[Length(KanjiCats)-1].idx := TUserCat.Int(TUserCatIndex);
+      KanjiCats[Length(KanjiCats)-1].name := s;
+    end;
+    TUserCat.Next;
+  end;
+
+ //We create at least one when loading user data, and don't let anyone delete it.
+  Assert(Length(KanjiCats)>0, 'Internal error: No category!');
+end;
+
+{ Populate a string list with kanji categories. Also sets TObject references to category indexes. }
+procedure PasteKanjiCategoriesTo(sl: TStrings);
+var i: integer;
+begin
+  sl.Clear;
+  for i := 0 to Length(KanjiCats) - 1 do
+    sl.AddObject(KanjiCats[i].name, TObject(KanjiCats[i].idx));
+end;
+
+function GetSelCatIdx(ctl: TCustomListBox): integer;
+begin
+  Result := integer(ctl.Items.Objects[ctl.ItemIndex]);
+end;
+
+function GetSelCatIdx(ctl: TCustomComboBox): integer;
+begin
+  Result := integer(ctl.Items.Objects[ctl.ItemIndex]);
+end;
+
+function GetCatIdx(ctl: TCustomListBox; ItemIndex: integer): integer;
+begin
+  Result := integer(ctl.Items.Objects[ItemIndex]);
+end;
+
+function GetCatIdx(ctl: TCustomComboBox; ItemIndex: integer): integer;
+begin
+  Result := integer(ctl.Items.Objects[ItemIndex]);
+end;
+
 
 { Known lists }
 

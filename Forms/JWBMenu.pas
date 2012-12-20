@@ -582,7 +582,6 @@ var
   sodir:TStringList;
   sobin:pointer;
   lastautosave:TDateTime;
-  kanjicatuniqs:TStringList;
   dictbeginset,dictmodeset:integer;
   kanji_othersearch:integer;
 
@@ -1006,38 +1005,13 @@ begin
 end;
 
 procedure TfMenu.RefreshKanjiCategory;
-var lc:char;
-  s:string;
 begin
-  fKanjiDetails.ComboBox1.Items.Clear;
-  fKanjiSearch.ListBox1.Items.Clear;
-  kanjicatuniqs.Clear;
-
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    s:=TUserCat.Str(TUserCatName);
-    lc:=GetCatPrefix(s);
-    if lc='?' then begin
-      lc := 'j';
-      TUserCat.Edit([TUserCatName],['j~'+s])
-    end;
-    s:=StripCatName(s);
-    if lc='k'then
-    begin
-      fKanjiDetails.ComboBox1.Items.Add(s);
-      fKanjiSearch.ListBox1.Items.Add(s);
-      kanjicatuniqs.Add(TUserCat.Str(TUserCatIndex));
-    end;
-    TUserCat.Next;
-  end;
-
-  if fKanjiDetails.ComboBox1.Items.Count=0 then showmessage('Internal error: No category!');
-  fKanjiDetails.ComboBox1.Text:=fKanjiDetails.ComboBox1.Items[0];
+  ReloadKanjiCategories();
+  PasteKanjiCategoriesTo(fKanjiDetails.ComboBox1.Items);
+  PasteKanjiCategoriesTo(fKanjiSearch.ListBox1.Items);
   fKanjiDetails.ComboBox1.ItemIndex:=0;
   fKanjiSearch.ListBox1.ItemIndex:=0;
-  fKanjiSearch.SpeedButton25.Enabled:=strtoint(kanjicatuniqs[fKanjiSearch.ListBox1.ItemIndex])<>KnownLearned;
-  fKanjiSearch.SpeedButton20.Enabled:=strtoint(kanjicatuniqs[fKanjiSearch.ListBox1.ItemIndex])<>KnownLearned;
+  fKanjiSearch.ListBox1Click(Self); //react to changes
 end;
 
 function GetFormLayout(form:TForm):string;
@@ -1472,13 +1446,13 @@ begin
   if not UserDataChanged then exit;
 
   CopyFile('wakan.usr','wakan.bak',false);
-  RefreshKanjiCategory;
+  ReloadKanjiCategories(); //in case they weren't loaded which shouldn't happen
   Screen.Cursor:=crHourGlass;
   tempDir := CreateRandomTempDirName();
   ForceDirectories(tempDir);
-  for i:=0 to kanjicatuniqs.Count-1 do
+  for i:=0 to Length(KanjiCats)-1 do
   begin
-    un:=strtoint(kanjicatuniqs[i]);
+    un:=KanjiCats[i].idx;
     if un=KnownLearned then
       SaveKnownList(un,tempDir+'\knownchar.bin')
     else
@@ -2096,7 +2070,6 @@ begin
   suffixl.Free;
   partl.Free;
   dicts.Free;
-  kanjicatuniqs.Free;
 end;
 
 procedure TfMenu.RadioGroup1Click(Sender: TObject);
@@ -2349,7 +2322,6 @@ begin
   partl:=TStringList.Create;
   ignorel:=TStringList.Create;
   readchl:=TStringList.Create;
-  kanjicatuniqs:=TStringList.Create;
 
  //Load language or suggest to choose one
   fLanguage.LoadRegistrySettings;

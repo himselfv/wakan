@@ -419,11 +419,11 @@ begin
     begin
       if fKanjiSearch.RadioGroup2.ItemIndex=0 then accept:=false;
       onecheck:=false;
-      for k:=0 to kanjicatuniqs.Count-1 do
+      for k:=0 to fKanjiSearch.ListBox1.Items.Count-1 do
         if fKanjiSearch.ListBox1.Checked[k] then
       begin
         onecheck:=true;
-        if IsKnown(strtoint(kanjicatuniqs[k]),TChar.FCh(TCharUnicode)) then
+        if IsKnown(GetSelCatIdx(fKanjiSearch.ListBox1), TChar.FCh(TCharUnicode)) then
         begin
           if fKanjiSearch.RadioGroup2.ItemIndex=0 then accept:=true;
         end else
