@@ -1092,7 +1092,7 @@ begin
           scomp := copy(sorts,1,5) + copy(scomp,6,Length(scomp)-5);
         //add user index if missing
         if copy(scomp,6,6)='000000' then
-          scomp := copy(scomp,1,5) + copy(scur,6,6) + copy(scomp,12,Length(scomp)-11);
+          scomp := copy(scomp,1,5) + copy(scur,6,12) + copy(scomp,18,Length(scomp)-17);
         //add tl
         if pos(copy(entry,3,length(entry)-2),scomp)=0 then begin
          //for now we add everything to the end, ignoring what result had higher score
