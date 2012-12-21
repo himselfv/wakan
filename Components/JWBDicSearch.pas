@@ -683,6 +683,7 @@ begin
   inherited;
   se:=TCandidateLookupList.Create;
   presentl:=TStringList.Create;
+  presentl.Sorted := true; //faster searching
   SetLength(dics, 0);
 end;
 
@@ -768,7 +769,6 @@ begin
   p4reading:=false;
   wasfull:=true;
   nowt:=now;
-  presentl.Sorted:=true;
 
   MakeLookupList(se, search, wt);
 
@@ -1086,6 +1086,7 @@ begin
       existingIdx := presentl.IndexOf(ssig);
       if existingIdx>=0 then
       begin
+        existingIdx := integer(presentl.Objects[existingIdx]); //presentl is sorted, real indexes are kept this way
         scomp:=sl[existingIdx];
         //lower sorting order
         if copy(scomp,1,5)>copy(sorts,1,5) then
@@ -1101,7 +1102,6 @@ begin
           scomp:=scomp+' / '+entry+'}';
         end;
         sl[existingIdx]:=scomp;
-        presentl.Add(''); //we have to keep indexes synchronized, but we have added nothing this time
       end else
       begin
         if CAnnot<>nil then
@@ -1118,8 +1118,8 @@ begin
               s2+' >> '+
               copy(scur,ii,length(scur)-ii+1);
         end;
-        sl.Add(scur);
-        presentl.Add(ssig);
+        existingIdx := sl.Add(scur);
+        presentl.AddObject(ssig, TObject(existingIdx));
       end;
       inc(i);
     end;
