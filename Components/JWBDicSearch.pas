@@ -176,7 +176,7 @@ type
     nowt:TDateTime; //Search start time
     mess: TSMPromptForm; //"Please wait" form, created if the search takes too long
     se: TCandidateLookupList; //Lookup candidates -- see comments where this type is declared
-    presentl,presindl:TStringList;
+    presentl:TStringList;
     p4reading:boolean;
     procedure TestLookupCandidate(dic: TDicCursor; lc: PCandidateLookup; wt: integer;
       sl: TStringList);
@@ -683,7 +683,6 @@ begin
   inherited;
   se:=TCandidateLookupList.Create;
   presentl:=TStringList.Create;
-  presindl:=TStringList.Create;
   SetLength(dics, 0);
 end;
 
@@ -695,7 +694,6 @@ begin
     FreeAndNil(dics[di]);
   se.Destroy;
   presentl.Destroy;
-  presindl.Destroy;
   inherited;
 end;
 
@@ -766,7 +764,6 @@ begin
   mess := nil;
   se.Clear;
   presentl.Clear;
-  presindl.Clear;
 
   p4reading:=false;
   wasfull:=true;
@@ -1104,6 +1101,7 @@ begin
           scomp:=scomp+' / '+entry+'}';
         end;
         sl[existingIdx]:=scomp;
+        presentl.Add(''); //we have to keep indexes synchronized, but we have added nothing this time
       end else
       begin
         if CAnnot<>nil then
@@ -1122,7 +1120,6 @@ begin
         end;
         sl.Add(scur);
         presentl.Add(ssig);
-        presindl.Add(ssig);
       end;
       inc(i);
     end;
