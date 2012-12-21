@@ -1410,13 +1410,21 @@ var x: integer;
   a:integer;
   s:string;
   wt:integer;
+
 begin
   x:=x_bg;
   while x<=x_en do
+   //skip latin words
     if IsLocaseLatin(doctr[y].chars[x].wordstate) then
     begin
       inc(x);
-      while doctr[y].chars[x].wordstate='<'do inc(x);
+      while (x<doctr[y].charcount) and (doctr[y].chars[x].wordstate='<') do inc(x);
+    end else
+   //skip ruby-fied parts (by translating single words we'll break ruby-chain into parts, see Issue30@googlecode)
+    if cfExplicitRuby in doctr[y].chars[x].flags then
+    begin
+      inc(x);
+      while (x<doctr[y].charcount) and (doctr[y].chars[x].wordstate='<') do inc(x);
     end else
     begin
       dicsl.Clear;
