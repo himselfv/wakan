@@ -1119,6 +1119,7 @@ end;
 
 function DropEdictMarkers(s:string):string;
 var lst, lcnt: integer;
+  i: integer;
 begin
  //Count entries
   lst := -1; //LBEG marker pos
