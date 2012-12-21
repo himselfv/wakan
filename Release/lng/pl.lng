@@ -1,0 +1,1044 @@
+; Plik jêzykowy WaKan
+;
+; t³umaczenie UI Wakan - "Japanese & Chinese Learning tool", http://wakan.manga.cz
+; proszê o nadsy³anie nowych jêzyków, lub aktualizacji istniej¹cych na adres dreamfly@centrum.cz
+;
+; Format linii: <5-cyfrowy id linii><separator><tekst>
+; <tekst> nie mo¿e zawieraæ znaków CR lub LF, separator to "+" jeœli tekst jest kontynuowany w nastêpnej linii, w przeciwnym wypadku ">"
+;
+; Jêzyk: Polski (Polish)
+; Autor: Adam Zuzañski (faun3@wp.pl)
+;
+#LANG>Polski
+#AUTH>Adam Zuzañski
+#VERS>1.00
+00001>Alfabety
+00002>Drukuj do BMP
+00003>Szerokoœæ (w pikselach):
+00004>Wysokoœæ (w pikselach):
+00005>Prefiks nazwy pliku:
+00006>%d.BMP zostanie dodane po prefiksie (%d jest numerem strony).
+00007>Anuluj
+00008>Upewnij siê, ¿e posiadasz pliki EDICT.UNI, KANJIDIC.UNI i UNIHAN.TXT (opcjonalnie) w aktualnym katalogu.
+00009>Ta operacja mo¿e potrwaæ d³ugo czasu (ok. 10 minut).
+00010>Upewnij siê te¿, czy masz przynajmniej 200 MB wolnej przestrzeni dyskowej.
+00011>Czy chcesz kontynuowaæ?
+00012>Generowanie s³ownika
+00013>Konwertujê EDICT.UNI...
+00014>Konwertujê KANJIDIC.UNI...
+00015>Konwertujê UNIHAN.TXT...
+00016>Opró¿nianie tabel...
+00017>Parsowanie Edict...
+00018>Parsowanie Edict (
+00019>Nie mo¿na skonwertowaæ Edict. Konwersja do romaji nieudana (nieznana kana). Opis b³êdu zapisany w ROMAJI.ERR.
+00020>B³¹d
+00021>Parsowanie KanjiDic...
+00022>Parsowanie KanjiDic (
+00023>Parsowanie UniHan...
+00024>Parsowanie UniHan (
+00025>Generowanie zakoñczone sukcesem.
+00026> wpisy s³ownika skonwertowane
+00027> wpisy Kanji wygenerowane
+00028>Kategorie s³ownictwa
+00029>SprawdŸ wszystkie kategorie
+00030>Edytuj kategoriê
+00031>Usuñ kategoriê
+00032>Zaznacz listê kategorii (lekcje / grupy / tymczasowe / listy s³ów)
+00033>Sczegó³y znaku
+00034>Obiekt:
+00035>Opis:
+00036>ród³o:
+00037>Typ wyœwietlania
+00038>Ca³a linia
+00039>Jedna kolumna
+00040>Wiele linii (zawijanie s³ów)
+00041>Wyœwietl etykietê
+00042>Wyœwietl etykietê
+00043>Wyœwietl etykietê w ca³ej linii
+00044>Nie wyœwietlaj etykiety
+00045>Tryb wyœwietlania
+00046>Wyœwietl w obu trybach
+00047>Wyœwietl tylko w trybie japoñskim
+00048>Wyœwietl tylko w trybie chiñskim
+00049>Wyœwietl nawet jeœli brakuje informacji
+00050>Anuluj
+00051>Wielkoœæ czcionki
+00052>Ma³a
+00053>Œrednia
+00054>Du¿a
+00055>Tytu³ w³asny:
+00056>Zawartoœæ schowka
+00057>Dodaj do s³ownictwa
+00058>Znaczenie (edytowalne):
+00059>Kategoria:
+00060>Fonetycznie:
+00061>Zapis:
+00062>Dodaj do s³ownictwa
+00063>kodowanie znaków EDICT
+00064>Proszê wybraæ jêzyk wejœciowego pliku EDICT:
+00065+Uwaga:
+00065+Dla kodowania innego ni¿ "Unicode 16-bit" wymaga siê narzêdzia UNICONV w aktualnym katalogu.
+00065>Narzêdzie to mo¿e zostaæ pobrane z ftp.cc.monash.edu.au/pub/nihongo/uniconv.zip.
+00066>Jêzyk / Kodowanie znaków
+00067>Japoñski (autodetekcja)
+00068>Chiñski (autodetekcja)
+00069>Koreañski (autodetekcja)
+00070>UNICONV.EXE nie odnaleziony. Jest wymagany do konwersji kodowania!
+00071>Import s³ownika
+00072>Nazwa pliku (bez rozszerzenia):
+00073>Nazwa katalogu:
+00074>Za³¹czone pliki w formacie EDICT:
+00075>Wersja:
+00076>Priorytet
+00077>Stwórz
+00078>Dodaj
+00079>Usuñ
+00080>Jêzyk
+00081>Japoñski
+00082>Mandaryñski chiñski
+00083>Stwórz z indeksem s³ów (umo¿liwia wyszukiwanie po angielsku)
+00084>Stwórz z indeksem znaków (umo¿liwia wyœwietlanie z³o¿onych znaków)
+00085>Konwertowanie 
+00086>Czytanie && parsowanie 
+00087>Plik wejœciowy: 
+00088>Nieobs³ugiwane kodowanie pliku ().
+00089>Nie mo¿na zromanizowaæ nastêpuj¹cej linii:
+00090>Uwaga
+00091>Budowanie tabeli s³ownika
+00092>Sortowanie indeksów...
+00093>S³ownik utworzony.
+00094>Sukces
+00095>Manager s³owników
+00096>S³owniki:
+00097>Nazwa pliku:
+00098>Iloœæ s³ów:
+00099>Utworzony:
+00100>Priorytet:
+00101>Indeks s³ów:
+00102>Indeks znaków:
+00103>Zaznacz s³ownik do u¿ycia z grup¹ 1
+00104>Grupa 1
+00105>Zaznacz s³ownik do u¿ycia z grup¹ 2
+00106>Grupa 2
+00107>Zaznacz s³ownik do u¿ycia z grup¹ 3
+00108>Grupa 3
+00109>U¿yj s³ownika do z³o¿eñ
+00110>U¿yj do z³o¿eñ
+00111>U¿yj s³ownika w narzêdziu popup tool i edytorze
+00112>U¿yj w popup/edytor
+00113>Odœwie¿ i przeskanuj
+00114>Importuj z EDICT
+00115>Obecny
+00116>Brak
+00117>Lista znaków
+00118>Nie znaleziono ¿adnych znaków.
+00119>Narzêdzia sortowania i wyszukiwania
+00120>Szukaj && sortuj
+00121>Sortuj (Ctrl-Alt-O)
+00122>Sortuj
+00123>Szczegó³y (Ctrl-D)
+00124>Szczegó³y
+00125>Z³o¿enia
+00126>Poka¿ kolejnoœæ kresek
+00127>Wydrukuj karty Kanji (do nauki) (Ctrl-F6)
+00128>Drukuj karty
+00129>Znaleziono
+00130>Znaleziono
+00131> tradycyjnych
+00132> uproszczonych
+00133> znaków
+00134>Karty Kanji
+00135>Uproszczone:
+00136>Tradycyjne:
+00137>Znak #
+00138>Ustaw jako nauczony
+00139>Ustaw jako nie nauczony
+00140>Nauczony
+00141>Popularny
+00142>Rzadki
+00143>U¿ywany w nazwach
+00144>Japoñski i chiñski
+00145>Tylko japoñski
+00146>Radyka³ach
+00147>Iloœci kresek
+00148>Czêstoœci
+00149>Losowo
+00150>Funkcja nie jest jeszcze wspierana.
+00151>Poka¿ z³o¿enia wystêpuj¹ce w s³owniku u¿ytkownika
+00152>S³ow.U¿yt.
+00153>Poka¿ z³o¿enia wystêpuj¹ce w s³owniku
+00154>S³ow.
+00155>Nie znaleziono ¿adnych s³ów.
+00156>Poka¿ tylko z³o¿enia zaczynaj¹ce siê na dany znak
+00157>Tylko pocz¹tek
+00158>Poka¿ tylko z³o¿enia oznaczone jako popularne
+00159>Szczegó³y znaku
+00160>Radyka³y:
+00161>Wstaw znak do schowka
+00162>Iloœæ kresek:
+00163>www.zhongwen.com - Informacje etymologiczne o znaku
+00164>www.csse.monash.edu.au/'jwb/wwwjdic - serwer s³ownika WWWJDIC Jim-a Breen-a
+00165>charts.unicode.org/unihan - Wpis UniHan dla tego znaku
+00166>www.ocrat.com - Animowana kolejnoœæ rysowania kresek
+00167>web.mit.edu/jpnet/ji - KanjiProject Data Page
+00168>Poka¿/ukryj kolejnoœæ rysowania kresek (tylko dla japoñskich Jouyou-kanji)
+00169>Kolej.
+00170>Zamknij
+00171>Zadokuj / od³¹cz okno
+00172>Od³¹cz
+00173>Zadokuj
+00174>Szukaj znaków
+00175>Filtruj przez PinYin (chiñski odczyt) (Ctrl-I)
+00176>Filtruj przez japoñski odczyt (Ctrl-Y)
+00177>Filtruj przez radyka³y (Ctrl-R)
+00178>Radyka³y
+00179>Filtruj przez definicjê (znaczenie) (Ctrl-M)
+00180>Definicja
+00181>Filtruj przez kod SKIP (wyjaœnienia w KANJIDIC)
+00182>Wyœwietl wszystkie znaki (Ctrl-N)
+00183>Wy³¹cz filtry
+00184>Wyœwietl tylko nauczone znaki
+00185>Nauczone
+00186>Wyœwietl tylko popularne znaki
+00187>Popularne
+00188>Wyœwietl tylko znaki wystêpuj¹ce w schowku
+00189>W schowku
+00190>Filtruj przez iloœci kresek (mo¿esz wyszukiwaæ w zakresie, np. 1-6)
+00191>Kreski #
+00192>Filtruj przez Unicode / indeks Nelson-a / indeks Halpern-a
+00193>Inne
+00194>Filtruj przez stopieñ Jouyou (U¿ywany w japoñskim szkolnictwie - w uproszczeniu oznacza klasê w której wymagana jest znajomoœæ danego kanji)
+00195>Lista...
+00196>Nie nauczone
+00197>Sortuj po
+00198>Learner index
+00199>Porz¹dek znaków
+00200>Manager uk³adu obrazków
+00201>Standardowy uk³ad:
+00202>Procentowe zajêcie ekranu: 
+00203>W oknie
+00204>Complete
+00205>Szukanie Kanji
+00206>Nauka
+00207>T³umaczenie
+00208>Ustaw standardowy uk³ad
+00209>Zapisz uk³ad
+00210>Wczytaj uk³ad
+00211>WaKan 1.50 - Narzêdzie do nauki jêzyka japoñskiego i chiñskiego
+00212>Lista znaków (Ctrl-F1)
+00213>Znaki
+00214>Manager s³ownictwa (Ctrl-F4)
+00215>S³ownictwo
+00216>S³ownik (Ctrl-F2)
+00217>S³ownik
+00218>Tryb chiñski (F9)
+00219>Tryb japoñski (F8)
+00220>Czyœæ schowek
+00221>Edytor tekstu (Ctrl-F3)
+00222>Edytor / Translator
+00223>Aktywuj/deaktywuj narzêdzie ekranowe popup
+00224>Aktywuj/deaktywuj narzêdzie WaKan popup
+00225>&Zapisz zmiany u¿ytkownika
+00226>&Anuluj zmiany
+00227>S&tatystyka...
+00228>&Wyjœcie
+00229>&Lista znaków
+00230>&Szukaj
+00231>S&ortuj
+00232>Szczegó³y
+00233>&Z³o¿enia
+00234>&Drukuj karty...
+00235>S³o&wnik
+00236>Zaznaczone s³owo
+00237>Znaki w s³owie
+00238>&Informacje
+00239>Dod&aj do s³ownictwa
+00240>&Eytor && translator
+00241>&Lista s³ownictwa
+00242>Dod&aj s³owo
+00243>U&stawienia listy
+00244>&Kategoria
+00245>Szczegó³y s³o&wa
+00246>Drukuj listê...
+00247>Generator &listy...
+00248>U&stawienia...
+00249>Manager s³owników...
+00250>Manager uk³adu...
+00251>W oknie
+00252>Ca³oœæ
+00253>Szukaj znak.
+00254>Nauka
+00255>T³umaczenie
+00256>Ramki okien
+00257>&Pomoc...
+00258>&O programie...
+00259>Tryb &japoñski
+00260>Tryb &chiñski
+00261>Nowy
+00262>Otwórz...
+00263>Zapisz
+00264>Zapisz jako...
+00265>Wytnij
+00266>Kopiuj
+00267>Wklej
+00268>Zaznacz wszystko
+00269>Tryb znaków
+00270>Tryb Kana
+00271>Tryb ASCII
+00272>Wyœwietlaj odczyt
+00273>Wyœwietlaj znaczenie
+00274>Czyœæ t³umaczenie
+00275>Wype³nij t³um. automatycznie
+00276>Ustaw t³umaczenie
+00277>Drukuj...
+00278>Wyœwietlaj wszystko
+00279>Tylko nauczone
+00280>Tylko popularne
+00281>Tylko ze schowka
+00282>Szukaj po PinYin
+00283>Szukaj po Yomi
+00284>Szukaj po radyka³ach...
+00285>Dodaj do schowka
+00286>Pe³ne szczegó³y
+00287>Japoñski/Chiñski -> Angielski
+00288>Angielski -> Japoñski/Chiñski
+00289>Po schowku
+00290>Szukaj dok³adnie s³owa
+00291>Szukaj zaczynaj¹ce siê na
+00292>Szukaj koñcz¹ce siê na
+00293>Okno znaków
+00294>Ustaw jako (nie)nauczone
+00295>Szukaj po znaczeniu
+00296>Okno edytora
+00297>Du¿e
+00298>Lista znaków
+00299>Edytor tekstowy
+00300>Translator tekstu
+00301>Szukaj odmienionych s³ów
+00302>Szukaj automatycznie podczas wpisywania
+00303>U¿yj s³owników z grupy 1
+00304>U¿yj s³owników z grupy 2
+00305>U¿yj s³owników z grupy 3
+00306>Panel przyk³adów
+00307>Panel s³ownictwa
+00308>Panel filtrów
+00309>U¿yj kolorów
+00310>&Baza danych
+00311>&Narzêdzia
+00312>&Znaki
+00313>&S³ownik
+00314>U¿yta grupa s³owników
+00315>Przyk³ady
+00316>Zapisz transkrypt kana...
+00317>T³umaczenie
+00318>S³&ownictwo
+00319>&Dodaj s³owo...
+00320>&Pomoc
+00321>Nie mo¿na zarejestrowaæ s³ownika 
+00322>Nie mo¿na zbudowaæ s³ownika 
+00323>£adowanie s³ownika
+00324>£adujê s³ownik 
+00325>Nie mo¿na za³adowaæ s³ownika 
+00326>U¿ywanie s³ownika starego typu JALET.DIC nie jest wskazane.
+00327+Nie znaleziono poprawnego s³ownika jêzyka japoñskiego.
+00327>Proszê œci¹gn¹æ japoñskie s³owniki .DIC ze strony WAKAN.
+00328+Nie znaleziono poprawnego s³ownika jêzyka chiñskiego.
+00328>Proszê œci¹gn¹æ chiñskie s³owniki .DIC ze strony WAKAN.
+00329>Japoñski ->Angielski
+00330>Angielski -> Japoñski
+00331>Chiñski ->Angielski
+00332>Angielski -> Chiñski
+00333>Nie mo¿na za³adowaæ pliku przyk³adów EXAMPLES_.PKG.
+00334+Nie mo¿na wczytaæ uk³adu. Stara wersja.
+00334>W³¹czono ustawienia standardowe.
+00335>£adowanie uk³adu
+00336>Zaawansowane uk³ady wymagaj¹ rozdzielczoœci przynajmniej 1024x768
+00337>Zbyt ma³a rozdzielczoœæ
+00338+Plik WAKAN.USR ma star¹ strukturê.
+00338+Musi zostaæ skonwertowany.
+00338+Zaleca siê stworzenie backup-u przed konwersj¹
+00338>Czy chcesz dokonaæ konwersji teraz?
+00339>Stara struktura
+00340>Dane u¿ytkownika zosta³y zmienione. Czy chcesz je zapisaæ?
+00341>Wyjœcie z aplikacji
+00342>Zbyt du¿e dane.
+00343+To wersja public beta WaKan.
+00343+Tej wersji nie mo¿na dowolnie dystrybuowaæ, ale wersja finalna bêdzie udostêpniona w taki sposób. U¿ywasz tego oprogramowania na w³asne ryzyko. Nie ponoszê ¿adnej odpowiedzialnoœci za dzia³anie programu.
+00343>Komentarze proszê nadsy³aæ na adres dreamfly@centrum.cz.
+00344>Wersja public beta
+00345+Ta wersja WaKan wymaga rozdzielczoœci przynajmniej 800x600.
+00345>Proszê ustawiæ poprawn¹ rozdzielczoœæ i zrestartowaæ aplikacjê.
+00346+Plik WAKAN.CHR nie znaleziony.
+00346+Ten plik jest wymagany do uruchomienia aplikacji.
+00346+Proszê œci¹gn¹æ ten plik ze strony internetowej WAKAN.
+00346>Aplikacja zostanie zamkniêta.
+00347+Plik WAKAN.CFG nie zosta³ znaleziony.
+00347+Ten plik zawiera wa¿ne parametry konfiguracyjne i jest wymagany do uruchomienia aplikacji.
+00347>Aplikacja zostanie zamkniêta.
+00348+Nie znaleziono ¿adnych czcionek z nastêpuj¹cych zestawów znaków:
+00348+Musisz mieæ przynajmniej jedn¹ czcionkê z ka¿dego z tych zestawów w swoim systemie, aby uruchomiæ aplikacjê.
+00348+Rekomendowane czcionki to Ms Mincho, MS Gothic, SimSun i MingLiU.
+00348+Czcionki te zostan¹ automatycznie zainstalowane podczas instalacji wsparcia dla jêzyków chiñskiego i japoñskiego w systemie Windows.
+00348>Proszê zainstalowaæ wymagane czcionki i uruchomiæ aplikacjê ponownie.
+00349+Uruchomi³eœ WaKan po raz pierwszy.
+00349+WaKan spróbuje teraz zlokalizowaæ i ustawiæ wszystkie rekomendowane czcionki.
+00349>Mo¿esz zrestartowaæ ten proces zaznaczaj¹c "Wybierz rekomendowane czcionki" w ustawieniach.
+00350>Autodetekcja czcionek
+00351+Autodetekcja czcionek zakoñczona niepowodzeniem. Niektóre znaki mog¹ byæ wyœwietlone niepoprawnie.
+00351>Czy chcesz kontynuowaæ?
+00352+Nie mo¿na za³adowaæ g³ownego pliku konfiguracyjnego.
+00352+Plik WAKAN.CFG jest uszkodzony.
+00352>Aplikacja zostanie zamkniêta.
+00353+Nie odnaleziono niektórych standardowych czcionek. Wybierz ponownie wszystkie czcionki w nastêpuj¹cym dialogu. Brakuj¹ce czcionki zosta³y poprzedzone znakiem !.
+00353>Aplikacja nie mo¿e kontynuowaæ dzia³ania, dopóki nie zostan¹ wybrane wszystkie czcionki.
+00354+WAKAN.CHR ma star¹ strukturê. Proszê œci¹gn¹æ nowsz¹ wersjê.
+00354>Aplikacja zostanie zamkniêta.
+00355+WAKAN.CHR ma now¹ strukturê. Proszê œci¹gn¹æ now¹ wersjê WAKAN.EXE.
+00355>Aplikacja zostanie zamkniêta.
+00356+Nie mo¿na za³adowaæ g³ównego pliku s³ownika.
+00356+Plik WAKAN.CHR jest uszkodzony.
+00356>Aplikacja zostanie zamkniêta.
+00357+Plik WAKAN.RAD nie zosta³ znaleziony.
+00357>Wyszukiwanie po zaawansowanych japoñskich radyka³ach bêdzie wy³¹czone.
+00358+Nie mo¿na za³adowaæ pliku japoñskich radyka³ów.
+00358+Plik WAKAN.RAD jest uszkodzony.
+00358>Aplikacja zostanie zamkniêta.
+00359+Plik WAKAN.SOD nie zosta³ znaleziony.
+00359>Podgl¹d kolejnoœci rysowania kresek w japoñskich znakach bêdzie wy³¹czony.
+00360+Nie mo¿na za³adowaæ pliku zawieraj¹cego dane o kolejnoœci kresek w japoñskich znakach.
+00360+Plik WAKAN.SOD jest uszkodzony.
+00360>Aplikacja zostanie zamkniêta.
+00361+Nie mo¿na za³adowaæ pliku danych u¿ytkownika.
+00361+Plik WAKAN.USR jest uszkodzony.
+00361+Jeœli skasujesz ten plik, zostanie utworzony nowy (pusty).
+00361>Aplikacja zostanie zamkniêta.
+00362+Nie mo¿na stworzyæ pliku u¿ytkownika WAKAN.USR.
+00362+Proszê uruchomiæ program z folderu, który nie jest tylko do odczytu.
+00362>Aplikacja zostanie zamkniêta.
+00363>Plik pomocy jest w trakcie tworzenia, informacja mo¿e byæ nieprawid³owa.
+00364>Notka
+00365>Plik pomocy jest przestarza³y. Proszê œci¹gn¹æ nowy plik ze strony WaKan: wakan.manga.cz.
+00366>Nie mo¿na odnaleŸæ pliku WAKAN.CHM.
+00367>Nie mo¿na odnaleŸæ pliku WAKANH.DLL.
+00368+!!TA FUNKCJA JEST EKSPERYMENTALNA!!
+00368+UWAGA: Narzêdzie ekranowe popup poddawane jest aktualnie testom. Poniewa¿ musi zainstalowaæ systemow¹ bibliotekê DLL, zaleca siê zapisanie wszystkich wa¿nych danych, przed kontynuacj¹. Proszê o nadsy³anie informacji o ka¿dej niestabilnoœci systemu, która mo¿e wyst¹piæ.
+00368>Czy chcesz kontynuowaæ?
+00369>Nie zapomnij wype³niæ odczytu kana lub u¿yæ funkcji auto-wype³nienia przed uzyciem tej funkcji.
+00370>Nowa kategoria
+00371>Nazwa:
+00372>Typ
+00373>Lekcja
+00374>Grupa
+00375>Tymczasowa
+00376>Podgl¹d wydruku
+00377>Pierwsza strona
+00378>Poprzednia strona
+00379>Nastêpna strona
+00380>Ostatnia strona
+00381>Ustawienia wydruku
+00382>Drukuj
+00383>Zoom +
+00384>Pe³ny widok
+00385>Zoom -
+00386>Ustawienia strony
+00387>Lista radyka³ów
+00388>Zaznacz ka¿dy podejrzany radyka³ klikaj¹c na nim myszk¹
+00389>Zaznacz wszystkie elementy wystêpuj¹ce w znaku
+00390>Ustaw filtr
+00391>Wyœwietlaj warianty
+00392>Nauczone radyka³y na niebiesko
+00393>Rzadkie radyka³y na szaro
+00394>Metoda szukania
+00395>Elementy znaku
+00396>Klasyczne radyka³y
+00397>Ustawienia
+00398>Ogólne
+00399>Wielkoœæ czcionki w tabeli s³ownika:
+00400>minut
+00401>Zapisuje informacje statystyczne na dysk, nazwa pliku generowana jest w oparciu o datê, wiêc mo¿esz obserwowaæ swoje postêpy
+00402>Zapisz statystykê na dysk (katalog STAT)
+00403>Pokazuj s³owa zawieraj¹ce nienauczone kanji w innym kolorze
+00404>Wyró¿niaj s³owa zawieraj¹ce nienauczone znaki
+00405>Kolory: zielony - opanowany, ¿ó³ty - nauczony, b³êkit - nienauczony, czerwony - problematyczny
+00406>Pokazuj status nauczenia s³owa poprzez kolor t³a
+00407>Autozapis danych u¿ytkownika przy wyjœciu z aplikacji
+00408>£aduj s³owniki na ¿¹danie
+00409>S³owa w wielu liniach
+00410>Autozapis bazy u¿ytkownika co 
+00411>Stwórz codziennie kopiê zapasow¹ pliku u¿ytkownika w katalogu BACKUP.
+00412>Romanizacja
+00413>Romanizacja jêzyka japoñskiego
+00414>Test romanizacji:
+00415>Japoñski:
+00416>Angielski:
+00417>Czeski:
+00418>Zaznacz system romanizacji u¿ywany we wprowadzaniu i wyœwietlaniu
+00419>System romanizacji
+00420>Kunreishiki romaji (japoñski)
+00421>Hepburn (angielski)
+00422>Czeski
+00423>Poka¿ fonetykê w
+00424>Hiraganie / Katakanie
+00425>Romaji
+00426>Romanizacja jêzyka chiñskiego
+00427>Wyœwietlany radyka³:
+00428>Wielkoœæ znaków w liœcie znaków
+00429>Ma³e
+00430>Œrednie
+00431>Du¿e
+00432>Wybiera, które z chiñskich znaków bêd¹ wyœwietlane
+00433>Pokazuj chiñskie znaki
+00434>Tylko tradycyjne (Big5)
+00435>Tylko uproszczone (GB2312)
+00436>Wszystkie (Unicode)
+00437>Pokazuj iloœæ kresek w liœcie znaków
+00438>Japoñski
+00439>Koreañski
+00440>U¿yj czcionki z listy do wyœwietlania kolejnoœci kresek
+00441>Nie u¿ywane pliki s³ownika
+00442>Porz¹dek wyniku wyszukiwania
+00443>Preferuj s³owa ze s³ownika u¿ytkownika
+00444>Preferuj rzeczowniki i czasowniki
+00445>Preferuj grzeczne s³owa
+00446>Preferuj popularne s³owa (oznaczone "pop")
+00447>Zast¹p kanji kan¹, dla s³ów oznaczonych "kana"
+00448>Wyœwietlaj tylko wyniki, które mieszcz¹ siê na jednej stronie w trybie "Auto"
+00449>Prze³¹czaj automatycznie na panel przyk³adów
+00450>Czcionki
+00451>Czcionka romanizacji i jêzyka angielskiego:
+00452>Wybierz
+00453>Japoñskie czcionki
+00454>Czcionka dla znaków na liœcie:
+00455>Czcionka dla du¿ych znaków:
+00456>Czcionka dla ma³ego tekstu:
+00457>Chiñskie czcionki:
+00458>Czcionka Big5 dla trad. znaków na liœcie:
+00459>Czcionka Big5 dla trad. du¿ych znaków:
+00460>Kompletna czcionka Unicode:
+00461>Czcionka GB2312 dla upr. znaków na liœcie:
+00462>Czcionka GB2312 dla upr. du¿ych znaków:
+00463>Upewnij siê,¿e czcionki Big5 i GB2312 s¹ takie same lub przynajmniej wygl¹daj¹ tak samo.
+00464>Wybierz rekomendowane czcionki
+00465>Drukowanie listy s³ów
+00466>Liczba linii na kwadratowej stronie:
+00467>Drukuj linie poziome
+00468>Drukuj linie pionowe
+00469>Cieniuj nieparzyste wiersze
+00470>Nie drukuj nienauczonych kanji
+00471>Kolumny
+00472>Ustawienia w³asne:
+00473>Fonetycznie              |Znaczenie
+00474>Zapis                    |Znaczenie
+00475>Fonetycznie |Zapis       |Znaczenie
+00476>Zapis       |Fonetycznie |Znaczenie
+00477>Romaji      |Kana        |Znaczenie
+00478>Fonetycznie1             |Fonetycznie2
+00479>Zapis1                   |Zapis2
+00480>Znaczenie1               |Znaczenie2
+00481>Fonetycznie1|Fonetycznie2|Fonetycznie3|Fonetycznie4
+00482>Zapis1      |Zapis2      |Zapis3      |Zapis4
+00483>Znaczenie1  |Znaczenie2  |Znaczenie3  |Znaczenie4
+00484>Fonetycznie1|Zapis1      |Fonetycznie2|Zapis2
+00485>Fonetycznie1|Znaczenie1  |Fonetycznie2|Znaczenie2
+00486>Zapis1      |Znaczenie1  |Zapis2      |Znaczenie2
+00487>Ustawienia w³asne
+00488>Drukowanie kart znaków
+00489>Pionowa iloœæ znaków na kwadratowej stronie:
+00490>Miejsce dla z³o¿eñ (w znakach):
+00491>Pionowa iloœæ z³o¿eñ:
+00492>Czcionka Kaligraficzna:
+00493>Drukuj z³o¿enia
+00494>Drukuj radyka³y
+00495>Drukuj alternatywn¹ formê
+00496>Drukuj zew. linie
+00497>Drukuj odczyt
+00498>Drukuj wew. linie
+00499>Drukuj pionowo (od prawej do lewej)
+00500>Zostaw przestrzeñ miêdzy kolumnami
+00501>Definicja wydruku
+00502>Drukuj iloœæ kresek
+00503>Drukuj kolejnoœæ kresek
+00504>Konserwacja bazy danych
+00505>SprawdŸ indeksy bazy s³ownika
+00506>Eksportuj bazê u¿ytkownika do pliku dzielonego separatorami
+00507>Importuj bazê u¿ytkownika z pliku dzielonego separatorami
+00508>SprawdŸ kategoriê s³ownika u¿ytkownika
+00509>Poka¿ statystykê alokacji pamiêci
+00510>Liczba linii zarezerwowana dla znaczenia:
+00511>Wydruk
+00512>Liczba linii na kwadratowej stronie:
+00513>Wyœwietl znaczenie
+00514>Nie u¿ywaj kolorów
+00515>Drukuj pionowo w kolumnach
+00516>Wyœwietlaj linie
+00517>Nie wyœwietlaj znaczenia nauczonych s³ów
+00518>Nie wyszukuj partyku³
+00519>Nie wyœwietlaj odczytu nauczonych kanji
+00520>Wyœwietlaj transkrypt hiragana nad katakan¹
+00521>Nie t³umacz s³ów sk³adaj¹cych siê z samej hiragany
+00522>Pogrubiaj s³owa z t³umaczeniem zdefiniowanym przez u¿ytkownika
+00523>Zostaw miejsce miêdzy liniami
+00524>£am linie tylko na granicy s³ów
+00525>Rozmiar x2
+00526>Wyœwietlaj nie japoñskie znaki na szaro
+00527>Pokazuj podpowiedzi edytora
+00528>Pokazuj znaczenie w podpowiedziach
+00529>Zostaw miejsce przy wy³¹czonym odczycie
+00530>Szczegó³y znaku
+00531>Wyœwietlone elementy:
+00532>W górê
+00533>W dó³
+00534>Dodaj...
+00535>Zmieñ...
+00536>Usuñ
+00537>Przywróæ domyœlne
+00538>Narzêdzie popup
+00539>OpóŸnienie okienka (x100 ms):
+00540>Zakres skanowania (piksele):
+00541>Lewo
+00542>Prawo
+00543>Maks. iloœæ wpisów s³ownikowych:
+00544>Wspó³czynnik wielkoœci karty znaku:
+00545>Iloœæ znaków zarezerwowanych na z³o¿enia na karcie (wp³ywa na ogóln¹ szerokoœæ okienka):
+00546>Minimum:
+00547>Maksimum:
+00548>Poka¿ t³umaczenie dla tekstu japoñskiego/chiñskiego
+00549>Poka¿ t³umaczenie dla tekstu angielskiego (tylko ekran)
+00550>Poka¿ szczegó³y znaku
+00551>Kolory
+00552>Kategoria
+00553>Zmieñ
+00554>Przywróæ domyœlne
+00555>Przywróæ domyœlne
+00556>Listy s³ów
+00557>Znaczniki s³ów
+00558>Edytor i translator
+00559>Narzêdzie popup
+00560>Nie u¿ywaj kolorów w liœcie znaków, u¿yj domyœlnych ustawieñ Windows
+00561>Nie u¿ywaj kolorów w edytorze, u¿yj domyœlnych ustawieñ Windows
+00562>Kolory: czarny - popularny, szary - rzadki, niebieski - nauczony, zielony - tylko w nazwach
+00563>Nie u¿ywaj kolorów w listach s³ów, u¿yj domyœlnych ustawieñ Windows
+00564+Proszê upewniæ siê, ¿e wybrana czcionka jest czcionk¹ Unicode z kompletnym zakresem "CJK Unified Ideographs".
+00564>MingLiu to przyk³ad takiej czcionki.
+00565>Podczas wybierania czcionki musisz siê upewniæ, ¿e na pewno jest ona czcionk¹ uproszczonych znaków chiñskich. Niektóre czcionki wspieraj¹ standard GB2312, ale zamiast uproszczonych znaków zawieraj¹ tradycyjne. Te czcionki bêd¹ wyœwietlaæ niepoprawne znaki w programie. W³aœciw¹ czcionkê mo¿na rozpoznaæ bardzo ³atwo. Wystarczy spojrzeæ na pierwszy znak w oknie wyboru czcionki. Jeœli nie wygl¹da jak strza³ka skierowana ku górze, powinieneœ wybraæ inn¹ czcionkê.
+00566>Notka
+00567>Niektóre czcionki mog¹ nie byæ w stanie wyœwietlaæ niektórych znaków. Jeœli zauwa¿ysz, ¿e niektóre znaki wygl¹daj¹ inaczej (styl), lub nie s¹ wyœwietlane poprawnie, powinieneœ wybraæ inn¹ czcionkê.
+00568>Eksport zakoñczony.
+00569>Indeksy w porz¹dku.
+00570>Sprawdzanie indeksów
+00571>Indeksy uszkodzone. Zast¹p plik s³ownika WAKAN.CHR.
+00572+Procedura ta zastêpuje wszystkie dane w bazie u¿ytkownika.
+00572+Mo¿e zaj¹æ to du¿o czasu.
+00572>Czy chcesz kontynuowaæ?
+00573>Uwaga
+00574>Import zakoñczony.
+00575+Ta funkcja testuje, czy wszystkie s³owa w s³ownictwie u¿ytkownika
+00575+s¹ dok³adnie w jednej grupie i przynajmniej jednej lekcji.
+00575>Czy chcesz kontynuowaæ?
+00576>SprawdŸ kategorie
+00577>Nie znaleziono b³êdów.
+00578>Nastêpuj¹ce rekomendowane czcionki nie zosta³y znalezione w systemie:
+00579+Akceptowalne zamienniki zosta³y znalezione, jednak¿e dla lepszej jakoœci czcionek rekomenduje siê instalacjê tych czcionek i restart
+00579>procedury autodetekcji.
+00580+Nie zaleziono akceptowalnych zamienników, program najprawdopodobniej bêdzie wyœwietla³ znaki niepoprawnie.
+00580>Instalacja tych czcionek i restart procedury autodetekcji jest ZDECYDOWANIE wskazane.
+00581+Rekomendowane czcionki mo¿na znaleŸæ w nastêpuj¹ych produktach Microsoft(R):
+00581+1. Microsoft(R) Windows(R) XP.
+00581+2. Microsoft(R) Internet Explorer.
+00581>3. Microsoft(R) Office 2000/XP.
+00582>Brakuj¹ce czcionki
+00583+Gratulacje!
+00583>Wszystkie rekomendowane czcionki zosta³y znalezione w twoim systemie i zainstalowane.
+00584+Ta funkcja zast¹pi wszystkie twoje ustawienia.
+00584>Czy chcesz kontynuowaæ?
+00585>Statystyki
+00586>S³ownik programu (WAKAN.CHR)
+00587>Baza danych u¿ytkownika (WAKAN.USR)
+00588>Data utworzenia pliku s³ownika
+00589>Wersja KANJIDIC:
+00590>Wersja UNIHAN:
+00591>Baza chiñskich znaków:
+00592>Japoñskie znaki:
+00593>Wszystkie znaki:
+00594>S³ownictwo:
+00595>Nauczone s³owa:
+00596>Opanowane s³owa:
+00597>Problematyczne s³owa:
+00598>Liczba s³ów w katakanie:
+00599>Liczba kanji w s³owach:
+00600>Nauczone kanji:
+00601>Nienauczone podstawowe kanji:
+00602>Niepopularne s³owa:
+00603>Nauczone niepodstawowe kanji:
+00604>Niepodstawowe kanji w s³owach:
+00605>Nauczone tylko-chiñskie znaki:
+00606>S³owa ze znanym zapisem:
+00607>Nauczone radyka³y:
+00608>Kolejnoœæ kresek
+00609>Niedostêpne
+00610>Edytor tekstu / translator
+00611>Otwórz (Ctrl-O)
+00612>Zapisz (Ctrl-S)
+00613>Nowy (Ctrl-N)
+00614>Wytnij (Ctrl-X)
+00615>tryb ASCII (Ctrl-P)
+00616>tryb znakowy (Ctrl-Q)
+00617>tryb Kana (Ctrl-W)
+00618>Wyœwietlaj odczyt (Ctrl-H)
+00619>Wyœwietlaj znaczenie (Ctrl-J)
+00620>Wyczyœæ t³umaczenie (Ctrl-B)
+00621>Automatycznie wype³nij t³umaczenie (Ctrl-F)
+00622>Ustaw t³umaczenie (Ctrl-T)
+00623>Drukuj (Ctrl-F7)
+00624>Kopiuj (Ctrl-C)
+00625>Wklej (Ctrl-V)
+00626><NIENAZWANE>
+00627>Sterowanie: SPACJA - konweruj do kanji, ENTER - zostaw w kana, [ - poprzednie dopasowanie, ] - nastêpne dopasowanie
+00628>Poka¿ narzêdzie s³ownika jako czêœæ tego okna
+00629>Poka¿ szczegó³y znaku (Ctrl-D)
+00630>Szczegó³y znaku
+00631>Zaznacz stan t³umaczenia za pomoc¹ kolorów
+00632>Zapis
+00633>Dodane / Nauczone
+00634>Kategorie
+00635>Lista znanych kanji posiada przestarza³¹ strukturê i nie zostanie za³adowana.
+00636>Nazwa czcionki
+00637>Zestaw znaków
+00638>Problematyczny
+00639>Nienauczony
+00640>Nauczony
+00641>Opanowany
+00642>Przegl¹d s³ownika
+00643>Szukaj po japoñskim odczycie (F2)
+00644>J -> A
+00645>Szukaj po angielskim znaczeniu (F3)
+00646>&A -> J
+00647>Szukaj po kanji zgromadzonych w schowku (F4)
+00648>Zaznaczone s³owo (Ctrl-Alt-F)
+00649>Zaznaczone s³owo
+00650>Znaki w s³owie
+00651>Znaki w s³owie
+00652>Informacje (Ctrl-Alt-I)
+00653>Informacje o s³owie
+00654>Edytor i translator  (Ctrl-Alt-E)
+00655>Edytor / translator
+00656>Szukaj dok³adnie tego s³owa (F5)
+00657>Szukaj zaczynaj¹cych siê od... (F6)
+00658>Szukaj koñcz¹cych siê na... (F7)
+00659>Kopiuj s³owo do schowka
+00660>Schowek
+00661>Szukaj odmienionych s³ów
+00662>Autopodgl¹d podczas wpisywania (pe³ne szukanie za pomoc¹ strza³ek)
+00663>U¿yj s³owników z grupy 1 (Ctrl-1)
+00664>U¿yj s³owników z grupy 2 (Ctrl-2)
+00665>U¿yj s³owników z grupy 3 (Ctrl-3)
+00666>Widaæ ca³oœæ
+00667>WprowadŸ s³owo do s³ownictwa
+00668>Wyniki wyszukiwania nie mieszcz¹ siê na jednej stronie, kliknij, ¿eby wyœwietliæ wszystko
+00669>Szukaj
+00670>Ca³oœæ
+00671>Wynik wyszukiwania (czêœciowy)
+00672>Wynik wyszukiwania
+00673>po fonetyce
+00674>po znaczeniu
+00675>po zapisie (schowek)
+00676>po zapisie (tekst)
+00677>Nie w s³ownictwie
+00678><NIENAZWANE>
+00679>To nie jest prawid³owy plik UTF-8 lub JTT.
+00680+Ten plik JTT zosta³ utworzony przy pomocy innej wersji WAKAN.CHR. T³umaczenie nie mo¿e byæ za³adowane.
+00680>Czy chcesz kontynuowaæ?
+00681+Ten plik JTT zosta³ utworzony przy pomocy starej wersji WaKan.
+00681>Nie jest kompatybilny z aktualn¹ wersj¹.
+00682+¯aden blok nie zosta³ zaznaczony. Czy chcesz wygenerowaæ t³umaczenie dla ca³ego dokumentu?
+00682>Mo¿e zaj¹æ to bardzo du¿o czasu.
+00683>Potwierdzenie
+00684>Translator
+00685>T³umaczenie trwa...
+00686>Przet³umaczony tekst
+00687>Dokument siê zmieni³. Czy chcesz go zapisaæ?
+00688>Baza przyk³adów nie odnaleziona. Œci¹gnij j¹ ze strony internetowej WaKan.
+00689>Nie odnaleziono przykladow.
+00690>Zapis (ze schowka):
+00691>Znaczenie:
+00692>Szczegó³y s³owa ze s³ownictwa
+00693>Status:
+00694>Utworzone:
+00695>Lista do nauki:
+00696>Nauczone:
+00697>Opanowane:
+00698>Do góry w kategorii
+00699>Do do³u w kategorii
+00700>Usuñ to s³owo
+00701>Usuñ
+00702>Ustaw jako
+00703>Opanowany
+00704>Ustawienia s³ownictwa
+00705>Kategorie:
+00706>Kategorii
+00707>Fonetyka
+00708>Zapisie
+00709>Znaczeniu
+00710>Dacie dodania
+00711>Statusie
+00712>Filtruj
+00713>Wyœwietlaj nienauczone s³owa
+00714>Wyœwietlaj nauczone s³owa
+00715>Wyœwietlaj opanowane s³owa
+00716>Wyœwietlaj problematyczne s³owa
+00717>Dodaj s³owo do s³ownictwa
+00718>Wyœwietl t³umaczenie
+00719>T³um.
+00720>Wyœwietl przyk³ad ma³¹ czcionk¹
+00721>Ma³a
+00722>Wyœwietl przyk³ad du¿¹ czcionk¹
+00723>Du¿a
+00724>Poprzedni przyk³ad
+00725>Nastêpny przyk³ad
+00726>Scho.
+00727>Kopiuj przyk³ad do schowka
+00728>To
+00729>Skopiuj wszystkie przyk³ady do schowka
+00730>Losowa kolejnoœæ przyk³adów
+00731>W trakcie budowy. Zostanie zaimplementowane w nastêpnej wersji WaKan.
+00732>Szczegó³y s³owa
+00733>Kategorie:
+00734>Kanji / Radyka³y:
+00735>Kreator listy do nauki
+00736>Witaj
+00737+Witaj w kreatorze generowania listy s³ów.
+00737+Ten kreator mo¿e wybraæ s³owa odpowiednie do nauki. Mo¿esz sprawdziæ, czy znasz wybrane s³owa, a nastêpnie wydrukowaæ nieznane. Metoda ta jest idealna do nauki nowych s³ów.
+00737+Przy u¿yciu kreatora mo¿esz wykonaæ nastêpuj¹ce zadania:
+00737+1) Pozwoliæ kreatorowi na wybranie s³ów, które s¹ odpowiednie do nauki i powtarzania (ten proces jest losowy, ale mo¿esz ustawiæ kryteria)
+00737+2) Sprawdziæ, czy znasz wybrane s³owa (s³owa, które znasz zostaj¹ automatycznie ustawione jako nauczone)
+00737+3) Wydrukowaæ lub wyœwietliæ s³owa, których nie znasz
+00737>Etapy 2 i 3 s¹ opcjonalne.
+00738>Wybór s³ów
+00739>Liczba zaznaczonych s³ów:
+00740>Pula s³ów z których zostanie wybrana lista:
+00741>Wybierz s³owa z
+00742>Wyœwietlonej listy
+00743>Ca³ego s³ownictwa
+00744>Metoda wyboru
+00745>Wybieraj s³owa odpowiednie do nauki
+00746>Wybieraj s³owa ca³kowicie losowo
+00747>Wybieraj wszystkie s³owa
+00748>Dopasuj do strony
+00749>Kolejnoœæ s³ów losowa
+00750>Kryteria wyboru
+00751>Wybierz preferencje rodzaju wybieranych s³ów, oraz okreœl si³ê tych preferencji.
+00752>Status s³owa
+00753>Nie nauczone - bardzo czêsto
+00754>Nie nauczone - czêsto
+00755>Nauczone - czêsto
+00756>Nauczone - bardzo czêsto
+00757>Wypoœrodkuj
+00758>Nie bierz pod uwagê
+00759>Data dodania s³owa
+00760>Stare - bardzo czêsto
+00761>Stare - czêsto
+00762>Nowe - czêsto
+00763>Nowe - bardzo czêsto
+00764>Popularnoœæ i z³o¿onoœæ s³ów
+00765>Proste - bardzo czêsto
+00766>Proste - czêsto
+00767>Trudne - czêsto
+00768>Trudne - bardzo czêsto
+00769>Czêstoœæ wystêpowania s³owa na listach do nauki
+00770>Rzadko - bardzo czêsto
+00771>Rzadko - czêsto
+00772>Czêsto - bardzo czêsto
+00773>Czêsto - czêsto
+00774>Preferuj s³owa problematyczne
+00775>Wybieraj tylko kilka opanowanych s³ów
+00776>Ustaw do nauki
+00777>Ustaw do powtórek
+00778>Statystyka listy
+00779>Nowa lista do nauki zosta³a stworzona. Zawiera ona:
+00780>Przebuduj listê s³ów
+00781>Dalej
+00782>SprawdŸ czy znasz s³owa zawarte w wygenerowanej liœcie
+00783>Pomiñ test i przejdŸ do drukowania listy
+00784>Ustawienia testu
+00785>Wyœwietlaj
+00786>Znaczenie
+00787>Fonetyka i zapis
+00788>Fonetyka i znaczenie
+00789>Zapis i znaczenie
+00790>50% fonetyka, 50% zapis
+00791>66% fonetyka, 33% zapis
+00792>33% fonetyka, 33% zapis, 33% znaczenie
+00793>25% fonetyka, 25% zapis, 50% znaczenie
+00794>50% fonetyka, 25% zapis, 25% znaczenie
+00795>Test
+00796>Sterowanie testem
+00797>Wynik testu:
+00798>Status zostanie zmieniony na:
+00799>(&Z) Nieznane
+00800>(&X) Znane
+00801>(&C) Dobrze znane
+00802>(SPACJA) Poka¿ s³owo
+00803>Wynik testu
+00804>Bez zmian:
+00805>Nauczone -> Problematyczne:
+00806>Opanowane -> Problematyczne:
+00807>Opanowane -> Nienauczone:
+00808>Problematyczne -> Nienauczone:
+00809>Problematyczne -> Nauczone:
+00810>Nienauczone -> Nauczone:
+00811>Nienauczone -> Opanowane:
+00812>Nauczone -> Opanowane:
+00813>Dalej
+00814>Zmieñ status s³ów odpowiednio do wyników testu
+00815>Ignoruj wynik testu i przejdŸ dalej
+00816>Wyœwietlanie / wydruk listy do nauki
+00817>Nazwa kategorii:
+00818>Aktualizuj statystykê udzia³u s³ów w listach do nauki
+00819>Usuñ z listy do nauki
+00820>Nic
+00821>Wszystkie opanowane s³owa
+00822>Wszystkie nauczone s³owa
+00823>Wydrukuj listê do nauki
+00824>Zapisz listê jako now¹ kategoriê i wyœwietl j¹
+00825>Dalej
+00826>Wstecz
+00827>Zakoñcz
+00828>Lista s³ownictwa
+00829>Dodaj s³owo
+00830>Ustawienia listy
+00831>Kategorie (Ctrl-Alt-T)
+00832>Szczegó³y s³owa
+00833>Eksport s³ownictwa
+00834>Import s³ownictwa
+00835>Drukuj listê s³ownictwa (Ctrl-F8)
+00836>Rekomenduj znaki do nauki bazuj¹c na aktualnym s³ownictwie
+00837>Rekomenduj kanji
+00838>Automatycznie generuj listê do nauki
+00839>Lista do nauki
+00840>Fonetyka nie wype³niona. Nie mo¿na dodaæ s³owa.
+00841>Znaczenie nie wype³nione. Nie mo¿na dodaæ s³owa.
+00842>Kategoria nie wybrana. Nie mo¿na dodaæ s³owa.
+00843>To s³owo jest ju¿ w s³ownictwie i w tej kategorii
+00844>Nowe s³owo zosta³o dodane do s³ownictwa.
+00845>Sukces
+00846>S³owo zosta³o dodane do nowej kategorii.
+00847>To nie jest plik listy s³ów programu WaKan.
+00848>Wersja pliku listy s³ów nie jest wspierana.
+00849>Importowanie listy s³ów (000000 s³ów zaimportowanych - 000000 nowych)...
+00850>Importowanie listy s³ów ( s³ów zaimportowanych -  nowych)...
+00851>Lista s³ów zaimportowana
+00852>Czy na pewno chcesz usun¹æ to s³owo?
+00853>Potwierdzenie
+00854>Obecny
+00855>Brak
+00856>Rekomendacja znaku
+00857>Czy na pewno chcesz usun¹æ kategoriê w³¹cznie z wszystkimi po³¹czeniami s³ów do niej?
+00858>Niepoprawna iloœæ s³ów (musi byæ miêdzy 1 a 500).
+00859>Liczba s³ów na wyœwietlanej liœcie musi byæ przynajmniej trzy razy wiêksza.
+00860>Budowanie listy do nauki...
+00861>Lista do nauki
+00862>Liczba s³ów wejœciowych musi byæ przynajmniej dwa razy wiêksza ni¿ liczba wybieranych s³ów.
+00863>Liczba s³ów wejœciowych nie mo¿e byæ mniejsza ni¿ liczba zaznaczonych s³ów.
+00864>Lista wejœciowa nie mo¿e byæ pusta.
+00865>Wygenerowana lista zostanie utracona. Czy chcesz kontynuowaæ?
+00866>Aktualne dane testowe zostan¹ utracone. Czy chcesz kontynuowaæ?
+00867>Wybierz czcionkê
+#VERS>1.51
+00868>Narzêdzie do nauki jêzyka japoñskiego i chiñskiego
+00869>Schw
+00870>Pok¿
+00871>Dod
+00872>Zamñ
+00873>S³ow
+00874>Znak
+00875>Czcionka do wyœw. kolejnoœci kresek:
+00876>Wyœwietlaj zapis tylko jeœli wszystkie znaki s¹ nauczone
+#VERS>1.52
+#VERS>1.55
+00877>Nieposortowane
+00878>Pocz.
+00879>Kategorie:
+00880>Odznacz wszystkie kategorie
+00881>Dodaj kategoriê
+00882>Czy na pewno chcesz usun¹æ kategoriê w³¹cznie z wszystkimi po³¹czeniami s³ów do niej?
+00883>Chiñski tryb znaków i konwersji znaków
+00884>Wyœwietlaj transkrypt ponad kana
+00885>Uwaga
+00886>Kategoria nie zosta³a usuniêta.
+00887>Przerwano
+#VERS>1.60
+00888>Wybierz typ plików
+00889>Typ pliku
+00890>Anuluj
+00891>Wyszukiwanie yomi mo¿e ignowaæ okuriganê
+00892>IdŸ do przyk³adu
+00893>WprowadŸ numer przyk³adu:
+00894>Kategoria s³ownictwa
+00895>WprowadŸ kategoriê do której zostan¹ dodane nowe s³owa:
+#VERS>1.61
+00896>Edytor
+00897>Drukarka nie jest gotowa.
+00898>B³¹d
+00899>Format WKL jest przestarza³y. Procedura importu / eksportu utrzymywana jest jedynie w celach kompatybilnoœci. W przysz³oœci zaleca siê u¿ywanie formatu CSV.
+00900>Notka
+00901>Import listy s³ów (
+00902> s³ów zaimportowanych - 
+00903> nowych)...
+00904>Wsadowe dodawanie s³ów 
+00905>Wsadowe dodawanie kategorii s³ów 
+00906>Wsadowe dodawanie Indeksów s³ów 
+00907>Przebudowanie indeksów
+00908>Eksport s³ownictwa
+00909>Wybierz jak¹ informacjê uwzglêdniæ
+00910>Kategoriê i status nauki
+00911>Tylko kategoriê
+00912>Ani kategoriê ani status nauki
+00913>Anuluj
+#VERS>1.65
+00914>Zbuduj z informacj¹ o czêstoœci (wymaga WORDFREQ_CK.UNI)
+00915>Nie mo¿na odnaleŸæ pliku WORDFREQ_CK.UNI.
+00916>B³¹d
+00917>Tworzenie schematu czêstoœci...
+00918>£aduj ca³y s³ownik do pamiêci (szybsze dzia³anie)
+00919>Szukaj w œrodku
+00920>Ile najczêstszych z³o¿eñ wyœwietlaæ w trybie "Czêst":
+00921>Porz¹dkuj wedle czêstoœci (o ile to mo¿liwe)
+00922>Wyœwietlaj czêstoœæ dla ka¿dego s³owa
+00923>Czcionka angielska:
+00924>Czcionka romanizacji i PinYin:
+00925>Na pewno usun¹æ te wszystkie s³owa?Opravdu smazat vsechna tato slova?
+00926>Uwaga
+00927+Ta operacja wp³ynie na wiele s³ów.
+00927>Czy chcesz kontynuowaæ?
+00928><wiele s³ów>
+00929>Zmieñ jêzyk
+00930>Szukaj w œrodku
+00931>IdŸ do tego s³owa w s³ownictwie
+00932>S³ownikSzuk
+00933>Proszê czekaæ. Przeszukiwanie s³ownika...
+00934>Eksport
+00935>Import
+00936>Dodaj do s³ownictwa
+00937>S³owo nie znalezione
+00938>S³ownictwo
+00939>Fonetyka
+00940>Ustawienia...
+00941>Ma³a czcionka
+00942>Du¿a czcionka
+00943>Œrednia czcionka
+00944>Zapisz znaki do pliku...
+00945+do schowka posortowane po u¿ytecznoœci.
+00945>Czy chcesz zacz¹æ t¹ procedurê?
+00946>Ta funkcja wprowadza listê kilku nienauczonych znaków, które znajduj¹ siê w aktualnej liœcie s³ownictwa
+#VERS>1.67
+00947>Poka¿ z³o¿enia posortowane po czêstoœci
+00948>&Dodaj s³owo do s³ownictwa
+00949>Autozapis pliku przy wyjœciu
+00950>Otwieraj ostatnio otwarty plik przy starcie
+00951>Liczba pe³nych z³o¿eñ:
+00952>Miejsce dla z³o¿eñ ze s³ownictwa (w znakach):
+00953>Pionowa liczba z³o¿eñ ze s³ownictwa:
+00954>Drukuj pe³ne z³o¿enia
+00955>Drukuj z³o¿enia ze s³ownictwa
+00956>Sortuj pe³ne z³o¿enia po czêstoœci
+00957>Zaznacz / odznacz wszystkie kategorie
