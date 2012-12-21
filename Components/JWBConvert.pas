@@ -3,6 +3,10 @@ unit JWBConvert;
 interface
 uses JWBStrings;
 
+const
+ //Returned by Conv_ReadChar when no char can be read
+  CONV_NOCHAR:FChar = {$IFDEF UNICODE}#$FFFF{$ELSE}''{$ENDIF};
+
 function Conv_DetectType(filename:string):byte;
 procedure Conv_Open(filename:string; tp:byte);
 function Conv_Read:FString; //reads one char as string

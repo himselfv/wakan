@@ -29,16 +29,21 @@ type
     RadioGroup2: TRadioGroup;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
-    CheckBox3: TCheckBox;
+    cbAddFrequencyInfo: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure BitBtn2Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
-  public
+
+  protected
     entries:integer;
-    procedure CreateDictTables(dictlang:char);
-    procedure WriteDictPackage(tempDir: string; dictlang:char);
+    procedure CreateDictTables(diclang:char);
+    procedure WriteDictPackage(tempDir: string; diclang:char);
+
+  public
+    procedure ImportDictionary(diclang:char);
+
   end;
 
 var
@@ -113,7 +118,7 @@ begin
   if b then result:='T'else result:='F';
 end;
 
-procedure TfDictImport.CreateDictTables(dictlang:char);
+procedure TfDictImport.CreateDictTables(diclang:char);
 var tempDir: string;
   t:textfile;
 begin
@@ -145,11 +150,11 @@ begin
   writeln(t,'<Kanji');
   writeln(t,'$CREATE');
   closefile(t);
-  WriteDictPackage(tempDir, dictlang);
+  WriteDictPackage(tempDir, diclang);
   DeleteDirectory(tempDir);
 end;
 
-procedure TfDictImport.WriteDictPackage(tempDir: string; dictlang:char);
+procedure TfDictImport.WriteDictPackage(tempDir: string; diclang:char);
 var f:textfile;
 begin
   assignfile(f,tempDir+'\dict.ver');
@@ -159,7 +164,7 @@ begin
   writeln(f,inttostr(trunc(now)));
   writeln(f,edit3.text);
   writeln(f,edit2.text);
-  writeln(f,dictlang);
+  writeln(f,diclang);
   writeln(f,edit4.text);
   writeln(f,inttostr(radiogroup1.itemindex));
   writeln(f,inttostr(entries));
@@ -213,6 +218,20 @@ begin
 end;
 
 procedure TfDictImport.BitBtn1Click(Sender: TObject);
+var diclang:char;
+begin
+  case RadioGroup2.ItemIndex of
+    0:diclang:='j';
+    1:diclang:='c';
+  end;
+  ImportDictionary(diclang);
+end;
+
+procedure TfDictImport.ImportDictionary(diclang:char);
+const
+ //Edict format markers
+  UH_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
+  UH_TAB = {$IFDEF UNICODE}#$0009{$ELSE}'0009'{$ENDIF};
 var phase:integer;
     fi:integer;
     fname:string;
@@ -239,7 +258,6 @@ var phase:integer;
     beg:boolean;
     cnt2:integer;
     dic:TJaletDic;
-    diclang:char;
     romap:textfile;
     pphon:string;
     prior:integer;
@@ -256,40 +274,40 @@ var phase:integer;
     addkan,addnum:string;
 
     tempDir: string;
+    fc: FChar;
 
-procedure PutToBuf(b1,b2,b3,b4:byte);
-begin
-  buf[bufp]:=b1;
-  buf[bufp+1]:=b2;
-  buf[bufp+2]:=b3;
-  buf[bufp+3]:=b4;
-  inc(bufp,4);
-  if bufp=4000 then begin
-    blockwrite(fb,buf,4000);
-    bufp:=0;
+  procedure PutToBuf(b1,b2,b3,b4:byte);
+  begin
+    buf[bufp]:=b1;
+    buf[bufp+1]:=b2;
+    buf[bufp+2]:=b3;
+    buf[bufp+3]:=b4;
+    inc(bufp,4);
+    if bufp=4000 then begin
+      blockwrite(fb,buf,4000);
+      bufp:=0;
+    end;
   end;
-end;
-procedure PutToBufL(l:integer);
-var b:array[0..3] of byte;
-begin
-  move(l,b,4);
-  PutToBuf(b[0],b[1],b[2],b[3]);
-end;
+
+  procedure PutToBufL(l:integer);
+  var b:array[0..3] of byte;
+  begin
+    move(l,b,4);
+    PutToBuf(b[0],b[1],b[2],b[3]);
+  end;
+
 begin
   prog:=SMProgressDlg(_l('#00071^eDictionary import'),
     'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',100);
   abort:=false;
-  case RadioGroup2.ItemIndex of
-    0:diclang:='j';
-    1:diclang:='c';
-  end;
   wordidx:=TStringList.Create;
   charidx:=TStringList.Create;
   wordidx2:=TStringList.Create;
   charidx2:=TStringList.Create;
   freql:=TStringList.Create;
   linecount:=0;
-  if not FileExists('wordfreq_ck.uni') and CheckBox3.Checked then
+
+  if cbAddFrequencyInfo.Checked and not FileExists('wordfreq_ck.uni') then
   begin
     Application.MessageBox(
       pchar(_l('#00915^eCannot find WORDFREQ_CK.UNI file.')),
@@ -297,42 +315,47 @@ begin
       MB_ICONERROR or MB_OK);
     exit;
   end;
+
   try
-  if CheckBox3.Checked then
-  begin
-    prog.SetMessage(_l('#00917^eCreating frequency chart...'));
-    Conv_Open('wordfreq_ck.uni',1);
-    s:=Conv_Read;
-    newline:=true;
-    nownum:=false;
-    addkan:='';
-    addnum:='';
-    comment:=false;
-    while s<>'' do
+    if cbAddFrequencyInfo.Checked then
     begin
-      if (newline) and (s=UnicodeToHex('#')) then comment:=true;
-      newline:=false;
-      if s='000A'then
+      prog.SetMessage(_l('#00917^eCreating frequency chart...'));
+      Conv_Open('wordfreq_ck.uni',1);
+      fc:=Conv_ReadChar;
+      newline:=true;
+      nownum:=false;
+      addkan:='';
+      addnum:='';
+      comment:=false;
+      while fc<>CONV_NOCHAR do
       begin
-        if not comment and (addkan<>'') and (addnum<>'') then
+        if (newline) and (fc=UH_COMMENT) then comment:=true;
+        newline:=false;
+        if fc=UH_LF then
         begin
-          freql.AddObject(addkan,TObject(strtoint(addnum)));
-        end;
-        addkan:='';
-        addnum:='';
-        newline:=true;
-        comment:=false;
-        nownum:=false;
-      end else if not comment and (s='0009') then nownum:=true else
-      if not comment then if nownum then
-      begin
-        if (s>=UnicodeToHex('0')) and (s<=UnicodeToHex('9')) then addnum:=addnum+HexToUnicode(s);
-      end else addkan:=addkan+s;
-      s:=Conv_Read;
+          if not comment and (addkan<>'') and (addnum<>'') then
+          begin
+            freql.AddObject(addkan,TObject(strtoint(addnum)));
+          end;
+          addkan:='';
+          addnum:='';
+          newline:=true;
+          comment:=false;
+          nownum:=false;
+        end else
+        if not comment and (s=UH_TAB) then
+          nownum:=true
+        else
+        if not comment then if nownum then
+        begin
+          if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(s);
+        end else
+          addkan:=addkan+fc;
+        fc:=Conv_ReadChar;
+      end;
     end;
-  end;
-  freql.Sorted:=true;
-  freql.Sort;
+    freql.Sorted:=true;
+    freql.Sort;
   except
     Application.MessageBox(
       pchar('Frequency list creation failed. Exception:'+(ExceptObject as Exception).Message),
@@ -519,7 +542,7 @@ begin
                         if prior=0 then prior:=99;
                       end;
                     end;}
-                    if CheckBox3.Checked then
+                    if cbAddFrequencyInfo.Checked then
                     begin
                       freqi:=freql.IndexOf(kanji);
                       if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
@@ -594,6 +617,7 @@ begin
     end;
   end;
   closefile(romap);
+
   if not abort then
   begin
     CreateDictTables(diclang);

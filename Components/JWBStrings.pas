@@ -238,6 +238,7 @@ function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{
 function EvalChar(const char:FString):integer;
 {$ENDIF}
 function IsHalfWidthChar(c:FChar): boolean;
+function IsLatinDigit(c:FChar):boolean;
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
 
 implementation
@@ -858,6 +859,15 @@ begin
   Result:=(c[1]='0') and (c[2]='0');
  {$ELSE}
   Result := (Word(c) and $FF00 = 0);
+ {$ENDIF}
+end;
+
+function IsLatinDigit(c:FChar):boolean;
+begin
+ {$IFDEF UNICODE}
+  Result := (Ord(c)>=Ord('0')) and (Ord(c)<=Ord('9'));
+ {$ELSE}
+  Result := (char>='0030') and (char<='0039');
  {$ENDIF}
 end;
 

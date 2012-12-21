@@ -1156,7 +1156,7 @@ begin
     readln(t,s);
     if s='Y'then fDictImport.CheckBox2.Checked:=true else fDictImport.CheckBox2.Checked:=false;
     readln(t,s);
-    if s='Y'then fDictImport.CheckBox3.Checked:=true else fDictImport.CheckBox3.Checked:=false;
+    if s='Y'then fDictImport.cbAddFrequencyInfo.Checked:=true else fDictImport.cbAddFrequencyInfo.Checked:=false;
     while not eof(t) do
     begin
       readln(t,s);

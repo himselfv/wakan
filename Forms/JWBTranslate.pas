@@ -879,11 +879,7 @@ begin
 
   Conv_Open(filename,tp);
   c := Conv_ReadChar;
- {$IFDEF UNICODE}
-  while c<>#$FFFF do
- {$ELSE}
-  while c<>'' do
- {$ENDIF}
+  while c<>CONV_NOCHAR do
   begin
    //Default properties for this character
     cp.Reset;

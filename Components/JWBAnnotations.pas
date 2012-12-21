@@ -132,11 +132,7 @@ begin
       if Uppercase(sr.name)='_USER.ANO' then dd:='1' else dd:='0';
       moded:=false;
       curd:=''; curt:='';
-     {$IFDEF UNICODE}
-      while Ord(ch)<>$FFFF do
-     {$ELSE}
-      while ch<>'' do
-     {$ENDIF}
+      while ch<>CONV_NOCHAR do
       begin
         if ch=UH_LF then
         begin

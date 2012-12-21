@@ -292,7 +292,7 @@ object fDictImport: TfDictImport
     State = cbChecked
     TabOrder = 13
   end
-  object CheckBox3: TCheckBox
+  object cbAddFrequencyInfo: TCheckBox
     Left = 8
     Top = 488
     Width = 513
