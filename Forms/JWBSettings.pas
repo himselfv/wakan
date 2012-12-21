@@ -401,7 +401,6 @@ end;
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var reg: TRegIniFile;
 begin
-
   reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
   try
     LoadRegistrySettings(reg);
@@ -645,7 +644,6 @@ begin
   FontEnglish:=Edit4.Text;
   FontPinYin:=Edit33.Text;
   FontStrokeOrder:=Edit32.Text;
-  reg.Free;
 end;
 
 procedure TfSettings.ApplyUISettings;

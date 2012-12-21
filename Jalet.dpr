@@ -3,6 +3,8 @@ program Jalet;
 Stuff you can define for the whole project:
   UNICODE -- defined by the compiler if the default string type is UnicodeString
   INLINE -- inline small functions (bad for debug, very good for speed)
+
+Disable ScaleMM2 when tracking a memory bug (default memory mgr is better at reporting those)
 }
 
 uses
