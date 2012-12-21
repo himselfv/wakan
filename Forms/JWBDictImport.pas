@@ -38,7 +38,7 @@ type
   public
     entries:integer;
     procedure CreateDictTables(dictlang:char);
-    procedure WriteDictPackage(dictlang:char);
+    procedure WriteDictPackage(tempDir: string; dictlang:char);
   end;
 
 var
@@ -114,13 +114,12 @@ begin
 end;
 
 procedure TfDictImport.CreateDictTables(dictlang:char);
-var t:textfile;
+var tempDir: string;
+  t:textfile;
 begin
-  {$I-}
-  mkdir('dict');
-  {$I+}
-  ioresult;
-  assignfile(t,'dict\Dict.info');
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+  assignfile(t,tempDir+'\dict.info');
   rewrite(t);
   writeln(t,'$TEXTTABLE');
   writeln(t,'$PREBUFFER');
@@ -146,22 +145,13 @@ begin
   writeln(t,'<Kanji');
   writeln(t,'$CREATE');
   closefile(t);
-  WriteDictPackage(dictlang);
-  DeleteFile('dict\Dict.info');
-  DeleteFile('dict\dict.ver');
-  {$I-}
-  rmdir('dict');
-  {$I+}
-  ioresult;
+  WriteDictPackage(tempDir, dictlang);
+  DeleteDirectory(tempDir);
 end;
 
-procedure TfDictImport.WriteDictPackage(dictlang:char);
-var
-  tempDir: string;
-  f:textfile;
+procedure TfDictImport.WriteDictPackage(tempDir: string; dictlang:char);
+var f:textfile;
 begin
-  tempDir := CreateRandomTempDirName();
-  ForceDirectories(tempDir);
   assignfile(f,tempDir+'\dict.ver');
   rewrite(f);
   writeln(f,'DICT');
@@ -194,7 +184,6 @@ begin
   PKGWriteForm.PKGWriteCmd('CryptCode 978123');
   PKGWriteForm.PKGWriteCmd('Include '+tempDir);
   PKGWriteForm.PKGWriteCmd('Finish');
-  DeleteDirectory(tempDir);
 end;
 
 procedure EnsortIndex(sl,sl2:TStringList;des,ind:string);
@@ -265,6 +254,9 @@ var phase:integer;
     freqi:integer;
     newline,nownum,comment:boolean;
     addkan,addnum:string;
+
+    tempDir: string;
+
 procedure PutToBuf(b1,b2,b3,b4:byte);
 begin
   buf[bufp]:=b1;
@@ -347,6 +339,7 @@ begin
       'Error',
       MB_ICONERROR or MB_OK);
   end;
+
   assignfile(romap,'roma_problems.txt');
   rewrite(romap);
   for phase:=0 to 1 do
@@ -614,10 +607,10 @@ begin
     reset(fo);
     dic.TDict.ImportFromText(fo,prog,_l('#00091^eBuilding dictionary table'));
     closefile(fo);
-    {$I-}
-    mkdir('dict');
-    {$I+}
-    ioresult;
+
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
+
     prog.SetMessage(_l('#00092^eSorting indexes...'));
     wordidx.Sorted:=false;
     charidx.Sorted:=false;
@@ -627,7 +620,7 @@ begin
     wordidx.CustomSort(CustomSortCompare);
     charidx.CustomSort(CustomSortCompare);
     prog.SetMessage(_l('^eWriting character index...'));
-    assignfile(fb,'dict\CharIdx.bin');
+    assignfile(fb,tempDir+'\CharIdx.bin');
     bufp:=0;
     rewrite(fb,1);
     PutToBufL(charidx.Count);
@@ -646,7 +639,7 @@ begin
     blockwrite(fb,buf,bufp);
     closefile(fb);
     prog.SetMessage(_l('^eWriting word index...'));
-    assignfile(fb,'dict\WordIdx.bin');
+    assignfile(fb,tempDir+'\WordIdx.bin');
     bufp:=0;
     rewrite(fb,1);
     PutToBufL(wordidx.Count);
@@ -665,21 +658,11 @@ begin
     end;
     blockwrite(fb,buf,bufp);
     closefile(fb);
-    dic.TDict.WriteTable('dict\Dict',true);
+    dic.TDict.WriteTable(tempDir+'\Dict',true);
     dic.Free;
-    WriteDictPackage(diclang);
-//    showmessage('check prepared dic!');
-    DeleteFile('dict\Dict.info');
-    DeleteFile('dict\Dict.data');
-    DeleteFile('dict\Dict.index');
-    DeleteFile('dict\Dict.struct');
-    DeleteFile('dict\WordIdx.bin');
-    DeleteFile('dict\CharIdx.bin');
-    DeleteFile('dict\dict.ver');
-    {$I-}
-    rmdir('dict');
-    {$I+}
-    ioresult;
+
+    WriteDictPackage(tempDir, diclang);
+    DeleteDirectory(tempDir);
   end;
   wordidx.Free;
   charidx.Free;
