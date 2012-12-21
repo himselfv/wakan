@@ -30,7 +30,7 @@ var
 function ConvertEdictEntry(s:string;var mark:string):string;
 function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
-
+function DropEdictMarkers(s:string):string;
 
 { WordGrid }
 
@@ -1115,6 +1115,39 @@ begin
     if s3[1]='1'then mar1:=mar1+UH_LBEG+s3+UH_LEND+' ';
   end;
   result:=marg+mar1+s2+mars;
+end;
+
+function DropEdictMarkers(s:string):string;
+var lst, lcnt: integer;
+begin
+ //Count entries
+  lst := -1; //LBEG marker pos
+  lcnt := 0;
+  for i := 1 to Length(s) - 1 do
+    if s[i]=UH_LBEG then
+      lst := i
+    else
+    if (s[i]=UH_LEND) and (lst>=0) then begin
+      Inc(lcnt, i-lst+1);
+      lst := -1;
+    end;
+
+ //Allocate memory and process
+  SetLength(Result, Length(s)-lcnt);
+  lst := -1;
+  lcnt := 0;
+  for i := 1 to Length(s) - 1 do
+    if s[i]=UH_LBEG then
+      lst := i
+    else
+    if (s[i]=UH_LEND) and (lst>=0) then begin
+      Inc(lcnt, i-lst+1);
+      lst := -1;
+    end else
+    if (lst>=0) then begin
+     //skip char
+    end else
+      Result[i+lcnt] := s[i];
 end;
 
 

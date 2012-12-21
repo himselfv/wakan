@@ -882,6 +882,7 @@ var
   slen:integer; //==lc.len
 
   wif:integer;
+  entry:string; //translation entry text
   s2:string;
   converted, markers:string;
   ts:string;
@@ -892,7 +893,10 @@ var
   freq:integer;
   sorts:string;
   statpref:string;
-  ssig,scomp,scur:string;
+  ssig:string; //translation signature (reading x kanji) to merge duplicates
+  scomp,scur:string;
+
+  existingIdx: integer;
 
  //Used several times with different kanji_vals
   procedure TryGetUserScore(kanji_val: string);
@@ -974,24 +978,24 @@ begin
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
     if a=stEn then dic.Locate(dic.stIndex,inttostr(wif),true);
     //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.Str(dic.TDictEnglish));
-    if sdef<>'F' then s2:=ALTCH_TILDE+'I'else s2:=ALTCH_TILDE+'F';
+    if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
-      s2:=s2+EnrichDictEntry(dic.Str(dic.TDictEnglish),dic.Str(dic.TDictMarkers))
+      entry:=entry+EnrichDictEntry(dic.Str(dic.TDictEnglish),dic.Str(dic.TDictMarkers))
     else begin
       converted := ConvertEdictEntry(dic.Str(dic.TDictEnglish), markers);
-      s2:=s2+EnrichDictEntry(converted, markers);
+      entry:=entry+EnrichDictEntry(converted, markers);
     end;
     if a=stEn then ts:=lowercase(dic.Str(dic.TDictEnglish)+' ');
-    if IsAppropriateVerbType(sdef, s2) then
+    if IsAppropriateVerbType(sdef, entry) then
     if (a<>stEn) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
     (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
-    if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,s2)>0) then
+    if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
     if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.Str(dic.TDictPhonetic)))
     or ((a=stClipboard) and (CompareUnicode(sxx,dic.Str(dic.TDictKanji)))) then
     begin
 
      //Calculate popularity class
-      popclas := GetPopClass(s2);
+      popclas := GetPopClass(entry);
       //if ((a=1) or ((a=4) and (p4reading))) and (dic.Field('Priority')<>-1) then
       //  if dic.Int(dic.Field('Priority'))>9 then
       //    inc(popclas,90)
@@ -1005,15 +1009,15 @@ begin
 
       UserScore:=-1;
       UserIndex:='';
-      if pos(UH_LBEG+'skana'+UH_LEND,s2)>0 then
+      if pos(UH_LBEG+'skana'+UH_LEND,entry)>0 then
         TryGetUserScore(dic.Str(dic.TDictPhonetic));
       TryGetUserScore(dic.Str(dic.TDictKanji));
       if (UserScore=-1) and (dic.Str(dic.TDictKanji)<>ChinTo(dic.Str(dic.TDictKanji))) then
         TryGetUserScore(ChinTo(dic.Str(dic.TDictKanji)));
 
       if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.Int(dic.TDictFrequency)>0) then
-        s2:=s2+' '+UH_LBEG+'pwc'+dic.Str(dic.TDictFrequency)+UH_LEND;
-      s2:=s2+' '+UH_LBEG+'d'+dic.dic.name+UH_LEND;
+        entry:=entry+' '+UH_LBEG+'pwc'+dic.Str(dic.TDictFrequency)+UH_LEND;
+      entry:=entry+' '+UH_LBEG+'d'+dic.dic.name+UH_LEND;
 
      //Calculate sorting order
       sort:=0; //the bigger the worse (will apear later in list)
@@ -1028,7 +1032,7 @@ begin
       //if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then sort:=10000+popclas*10;
       if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
       if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
-      if dic.Str(dic.TDictPhonetic)[3]>='A' then inc(sort,1000);
+      if IsKanaCharKatakana(dic.Str(dic.TDictPhonetic), 1) then inc(sort,1000);
       sort:=sort+dic.dic.priority*20000;
       if (fSettings.CheckBox59.Checked) then
       begin
@@ -1045,7 +1049,7 @@ begin
       if sort<0 then sort:=0;
 
       if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then
-        s2:=copy(s2,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(s2,3,length(s2)-2);
+        entry:=copy(entry,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(entry,3,length(entry)-2);
 
       sorts:=dic.Str(dic.TDictIndex);
       while length(sorts)<6 do
@@ -1060,7 +1064,7 @@ begin
         sorts:='0'+sorts;
       sorts:=sorts+UserIndex+Format('%.2d',[slen]);
       // if sdef<>'F'then sorts:=sorts+'I'else sorts:=sorts+'F';
-      if (pos('-v'+UH_LEND,s2)>0) then
+      if (pos('-v'+UH_LEND,entry)>0) then
         sorts:=sorts+'I'
       else
         sorts:=sorts+'F';
@@ -1072,36 +1076,34 @@ begin
       statpref:='';
       if (fSettings.CheckBox11.Checked) and (UserScore>-1) then
         statpref:='!'+inttostr(UserScore);
-      ssig:=dic.Str(dic.TDictPhonetic)+'x'+dic.Str(dic.TDictKanji);
-      if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,s2)<>0) then
+      if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,entry)<>0) then
         scur:=sorts+statpref+dic.Str(dic.TDictPhonetic)
-          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}'
+          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+entry+'}'
       else
         scur:=sorts+statpref+CheckKnownKanji(ChinTo(dic.Str(dic.TDictKanji)))
-          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+s2+'}';
+          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+entry+'}';
 
-      if presentl.IndexOf(ssig)<>-1 then
+     //result signature (reading x kanji)
+      ssig:=dic.Str(dic.TDictPhonetic)+'x'+dic.Str(dic.TDictKanji);
+     //if we already have that result, only upgrade it (lower it's sorting order, add translations)
+      existingIdx := presentl.IndexOf(ssig);
+      if existingIdx>=0 then
       begin
-        scomp:=sl[presindl.IndexOf(ssig)];
-        if pos(copy(s2,3,length(s2)-2),scomp)=0 then
-        begin
-          if copy(scomp,1,5)>copy(sorts,1,5) then
-          begin
-            delete(scomp,1,pos(' {',scomp));
-            delete(scomp,1,1);
-            if (length(scomp)>0) and (scomp[1]=ALTCH_EXCL) then delete(scomp,1,2);
-            if (length(scomp)>0) and (scomp[1]=ALTCH_TILDE) then delete(scomp,1,2);
-            delete(scur,length(scur),1);
-            scur:=scur+' / '+scomp;
-            sl[presindl.IndexOf(ssig)]:=scur;
-          end else
-          begin
-            delete(scomp,length(scomp),1);
-            if (length(s2)>0) and (s2[1]=ALTCH_TILDE) then delete(s2,1,2);
-            scomp:=scomp+' / '+s2+'}';
-            sl[presindl.IndexOf(ssig)]:=scomp;
-          end;
+        scomp:=sl[existingIdx];
+        //lower sorting order
+        if copy(scomp,1,5)>copy(sorts,1,5) then
+          scomp := copy(sorts,1,5) + copy(scomp,6,Length(scomp)-5);
+        //add user index if missing
+        if copy(scomp,6,6)='000000' then
+          scomp := copy(scomp,1,5) + copy(scur,6,6) + copy(scomp,12,Length(scomp)-11);
+        //add tl
+        if pos(copy(entry,3,length(entry)-2),scomp)=0 then begin
+         //for now we add everything to the end, ignoring what result had higher score
+          delete(scomp,length(scomp),1); //delete '}'
+          if (length(entry)>0) and (entry[1]=ALTCH_TILDE) then delete(entry,1,2);
+          scomp:=scomp+' / '+entry+'}';
         end;
+        sl[existingIdx]:=scomp;
       end else
       begin
         if CAnnot<>nil then
@@ -1133,7 +1135,6 @@ begin
 
     if a<>stEn then dic.Next else wif:=dic.ReadIndex;
   end;
-
 end;
 
 procedure TDicSearchRequest.SortResults(sl: TStringList);

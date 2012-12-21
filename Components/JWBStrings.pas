@@ -238,6 +238,7 @@ function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{
 function EvalChar(const char:FString):integer;
 {$ENDIF}
 function IsHalfWidthChar(c:FChar): boolean;
+function IsKanaCharKatakana(c:FString; i:integer): boolean;
 
 implementation
 
@@ -857,6 +858,17 @@ begin
   Result:=(c[1]='0') and (c[2]='0');
  {$ELSE}
   Result := (Word(c) and $FF00 = 0);
+ {$ENDIF}
+end;
+
+{ True if a specified kana character is katakana. Doesn't check if it is kana to begin with. }
+function IsKanaCharKatakana(c:FString; i:integer): boolean;
+begin
+ {$IFNDEF UNICODE}
+  Result := (Length(c)>=i) and ((ord(c[i]) and $00F0)>$A0);
+ {$ELSE}
+  i := (i-1)*4+3;
+  Result := (Length(c)>i) and (c[i]>='A');
  {$ENDIF}
 end;
 
