@@ -7,6 +7,11 @@ uses
   StdCtrls, Buttons, ExtCtrls;
 
 type
+  TImportDictFlag = (
+    ifAddFrequencyInfo
+  );
+  TImportDictFlags = set of TImportDictFlag;
+
   TfDictImport = class(TForm)
     Label1: TLabel;
     Label2: TLabel;
@@ -42,7 +47,7 @@ type
     procedure WriteDictPackage(tempDir: string; diclang:char);
 
   public
-    procedure ImportDictionary(diclang:char);
+    procedure ImportDictionary(diclang:char; flags: TImportDictFlags);
 
   end;
 
@@ -219,15 +224,20 @@ end;
 
 procedure TfDictImport.BitBtn1Click(Sender: TObject);
 var diclang:char;
+  flags: TImportDictFlags;
 begin
   case RadioGroup2.ItemIndex of
     0:diclang:='j';
     1:diclang:='c';
   end;
-  ImportDictionary(diclang);
+
+  flags := [];
+  if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
+
+  ImportDictionary(diclang, flags);
 end;
 
-procedure TfDictImport.ImportDictionary(diclang:char);
+procedure TfDictImport.ImportDictionary(diclang:char; flags: TImportDictFlags);
 const
  //Edict format markers
   UH_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -307,7 +317,7 @@ begin
   freql:=TStringList.Create;
   linecount:=0;
 
-  if cbAddFrequencyInfo.Checked and not FileExists('wordfreq_ck.uni') then
+  if (ifAddFrequencyInfo in flags) and not FileExists('wordfreq_ck.uni') then
   begin
     Application.MessageBox(
       pchar(_l('#00915^eCannot find WORDFREQ_CK.UNI file.')),
@@ -317,7 +327,7 @@ begin
   end;
 
   try
-    if cbAddFrequencyInfo.Checked then
+    if ifAddFrequencyInfo in flags then
     begin
       prog.SetMessage(_l('#00917^eCreating frequency chart...'));
       Conv_Open('wordfreq_ck.uni',1);
@@ -542,7 +552,7 @@ begin
                         if prior=0 then prior:=99;
                       end;
                     end;}
-                    if cbAddFrequencyInfo.Checked then
+                    if ifAddFrequencyInfo in flags then
                     begin
                       freqi:=freql.IndexOf(kanji);
                       if freqi<>-1 then prior:=integer(freql.Objects[freqi]);

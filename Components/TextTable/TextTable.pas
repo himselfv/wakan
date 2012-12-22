@@ -494,9 +494,11 @@ begin
         end;
       end;
       FreeMem(strubuf);
-      if j>(reccount*varfields+reccount*5+bufsize) then raise Exception.Create('Table "'+filename+'" is corrupt.');
+      if j>(reccount*varfields+reccount*5+bufsize) then
+        raise Exception.Create('Table "'+filename+'" is corrupt.');
       dec(datasize,i);
-      if datasize<>0 then raise Exception.Create('Table "'+filename+'" is corrupt.');
+      if datasize<>0 then
+        raise Exception.Create('Table "'+filename+'" is corrupt.');
     end;
     proctim:=proctim+(now-stim2);
     stim2:=now;
@@ -576,10 +578,7 @@ var t:textfile;
 begin
   if not loaded then load;
   if offline then
-  begin
-    showmessage('Cannot write OFFLINE table!');
-    exit;
-  end;
+    raise Exception.Create('Cannot save to "'+filename+'": cannot write offline table.');
   assignfile(t,filename+'.info');
   rewrite(t);
   writeln(t,'$TEXTTABLE');
@@ -1272,10 +1271,7 @@ var i,j:integer;
 begin
   if not loaded then load;
   if offline then
-  begin
-    showmessage('Cannot edit OFFLINE table!');
-    exit;
-  end;
+    raise Exception.Create('Cannot edit offline table');
   willinsert:=false;
   for i:=0 to High(values) do
   begin
@@ -1654,7 +1650,8 @@ begin
     if cur<Table.RecCount then
     begin
       tcur:=Table.TransOrder(cur,curorder);
-      if tcur>=Table.RecCount then showmessage('index problem!');
+      if tcur>=Table.RecCount then
+        raise Exception.Create('Index problem');
       if filter='' then
         stop:=not Table.IsDeleted(tcur)
       else
