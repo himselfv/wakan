@@ -867,7 +867,7 @@ begin
  {$IFDEF UNICODE}
   Result := (Ord(c)>=Ord('0')) and (Ord(c)<=Ord('9'));
  {$ELSE}
-  Result := (char>='0030') and (char<='0039');
+  Result := (c>='0030') and (c<='0039');
  {$ENDIF}
 end;
 

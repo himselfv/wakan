@@ -1369,7 +1369,7 @@ begin
   colarr.add('3Editor_HintSelected=00FFFF,^eHint selected background');
   colarr.add('3Editor_HintText=000000,^eHint text');
   colarr.add('3Editor_AozoraTag=C0C0C0,^eAozora Ruby <tag>');
-  colarr.add('3Editor_AozoraComment=C0C0C),^eAozora Ruby ［comment］');
+  colarr.add('3Editor_AozoraComment=C0C0C0,^eAozora Ruby ［comment］');
   colarr.add('3Editor_AozoraRuby=C0C0C0,^eAozora Ruby 《ruby》');
   colarr.add('4Popup_Back=A0FFFF,^eBackground');
   colarr.add('4Popup_Lines=000000,^eLines');
