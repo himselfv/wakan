@@ -127,6 +127,9 @@ function max(a, b: integer): integer; inline;
 
 { Files }
 
+var
+  AppFolder: string = '';
+
 function GetModuleFilenameStr(hModule: HMODULE = 0): string;
 function GetFileVersionInfoStr(Filename: string): string;
 function GetTempPathStr: string;

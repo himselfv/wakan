@@ -605,15 +605,6 @@ function GetCharPropType(idx:integer;fld:integer):string;
 function GetCharDet(i,j:integer):string;
 function FindCharPropType(charPropId: string): integer;
 
-
-var
-  WakanVer: string = ''; //taken from resources on load
-
-const
-  CurStructVer=2;
-  CurDictVer=7;
-  CurDicVer=4;
-
 function _l(const id:string):string; //shouldn't inline because it's for cases when JWBUnit is not in Uses!
 
 implementation
@@ -4470,9 +4461,6 @@ initialization
   rdcnt:=0;
   inproc:=false;
   popcreated:=false;
-  WakanVer := GetFileVersionInfoStr(GetModuleFilenameStr(0))
-    {$IFDEF UNICODE}+' unicode'{$ENDIF};
-
   chardetl:=TStringList.Create;
   CharPropTypes:=TStringList.Create;
 

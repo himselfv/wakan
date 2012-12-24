@@ -5,6 +5,18 @@ interface
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
   JWBStrings, JWBUtils;
 
+{ Misc }
+
+var
+  AppFilename: string = '';
+  AppFolder: string = ''; //path to program, set on load
+  WakanVer: string = ''; //taken from resources on load
+
+const
+  CurStructVer=2;
+  CurDictVer=7;
+  CurDicVer=4;
+
 
 { Romaji conversions }
 
@@ -1951,8 +1963,15 @@ begin
 end;
 
 
-var i:integer;
+var
+  i:integer;
+
 initialization
+  AppFilename := GetModuleFilenameStr(0);
+  AppFolder := ExtractFilePath(AppFilename);
+  WakanVer := GetFileVersionInfoStr(AppFilename)
+    {$IFDEF UNICODE}+' unicode'{$ENDIF};
+
   CurPBox:=nil;
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
   GridFontSize:=14;

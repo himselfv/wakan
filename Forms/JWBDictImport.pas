@@ -7,8 +7,11 @@ uses
   StdCtrls, Buttons, ExtCtrls;
 
 type
+  TFileList = array of string;
+
   TImportDictFlag = (
-    ifAddFrequencyInfo
+    ifAddFrequencyInfo,
+    ifSilent            //don't display any UI
   );
   TImportDictFlags = set of TImportDictFlag;
 
@@ -45,9 +48,10 @@ type
     entries:integer;
     procedure CreateDictTables(diclang:char);
     procedure WriteDictPackage(tempDir: string; diclang:char);
+    procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
 
   public
-    procedure ImportDictionary(diclang:char; flags: TImportDictFlags);
+    function ImportDictionary(files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 
   end;
 
@@ -223,27 +227,48 @@ begin
 end;
 
 procedure TfDictImport.BitBtn1Click(Sender: TObject);
-var diclang:char;
+var i: integer;
+  files: TFileList;
+  diclang:char;
   flags: TImportDictFlags;
 begin
+  SetLength(files, ListBox1.Items.Count);
+  for i := 0 to ListBox1.Items.Count - 1 do
+    files[i] := ListBox1.Items[i];
+
   case RadioGroup2.ItemIndex of
     0:diclang:='j';
     1:diclang:='c';
+  else diclang:='j';
   end;
 
   flags := [];
   if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
+  if paramstr(1)='makedic' then flags := flags + [ifSilent];
 
-  ImportDictionary(diclang, flags);
+
+  if ImportDictionary(files, diclang, flags) then
+  begin
+    close;
+    if paramstr(1)<>'makedic' then
+      Application.MessageBox(
+        pchar(_l('#00093^eDictionary was built.')),
+        pchar(_l('#00094^eSuccess')),
+        MB_ICONINFORMATION or MB_OK);
+  end;
 end;
 
-procedure TfDictImport.ImportDictionary(diclang:char; flags: TImportDictFlags);
+{
+ImportDictionary()
+Builds Wakan package from one or more dictionaries.
+Returns true if the package was successfully built, false if aborted.
+}
+function TfDictImport.ImportDictionary(files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 const
  //Edict format markers
   UH_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
   UH_TAB = {$IFDEF UNICODE}#$0009{$ELSE}'0009'{$ENDIF};
-var phase:integer;
-    fi:integer;
+var fi:integer;
     fname:string;
     prog:TSMPromptForm;
     s:string;
@@ -251,8 +276,6 @@ var phase:integer;
     fb:file;
     abort:boolean;
     cd:string;
-    lpi:PROCESS_INFORMATION;
-    si:STARTUPINFO;
     buf:array[0..3999] of byte;
     bufc:integer;
     bufp:integer;
@@ -307,6 +330,7 @@ var phase:integer;
   end;
 
 begin
+  Result := false;
   prog:=SMProgressDlg(_l('#00071^eDictionary import'),
     'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',100);
   abort:=false;
@@ -373,260 +397,264 @@ begin
       MB_ICONERROR or MB_OK);
   end;
 
+
   assignfile(romap,'roma_problems.txt');
   rewrite(romap);
-  for phase:=0 to 1 do
+
+ //TODO: Move all temporary stuff to temporary folder (another one, not the package one)
+
+ { Phase 0 }
+  lineno:=0;
+  cnt:=0;
+  wordidx.Sorted:=true;
+  charidx.Sorted:=true;
+  for fi:=0 to Length(files)-1 do if not abort then
   begin
-    lineno:=0;
-    cnt:=0;
-    wordidx.Sorted:=true;
-    charidx.Sorted:=true;
-    if phase>0 then assignfile(fo,'DICT_IMP'+inttostr(phase)+'.TMP');
-    if phase>0 then rewrite(fo);
-    case phase of
-      1:begin
-          writeln(fo,'>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
-        end;
-    end;
-    for fi:=0 to ListBox1.Items.Count-1 do if not abort then
+    fname:='DICT_'+inttostr(fi)+'.TMP';
+    mes:=_l('#00085^eConverting '); //used later too
+    prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
+
+    fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(files[fi]);
+    if ifSilent in flags then begin
+     //Choose default encoding
+      fDictCoding.RadioGroup1.ItemIndex:=1+RadioGroup2.ItemIndex;
+    end else
     begin
-      fname:='DICT_'+inttostr(fi)+'.TMP';
-      case phase of
-        0:mes:=_l('#00085^eConverting ');
-        1:mes:=_l('#00086^eReading && parsing ');
-      end;
-      prog.SetMessage(mes+ListBox1.Items[fi]+'...');
-      if phase=0 then
+     //Ask user
+      fDictCoding.ShowModal;
+      if not fDictCoding.succeeded then abort:=true;
+    end;
+
+    if not abort then
+    begin
+      if fDictCoding.RadioGroup1.ItemIndex=0 then
+        CopyFile(pchar(files[fi]),pchar(fname),false)
+      else
       begin
-        fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ListBox1.Items[fi];
-        if paramstr(1)<>'makedic'then fDictCoding.ShowModal;
-        if (not fDictCoding.succeeded) and (paramstr(1)<>'makedic') then abort:=true else
-        begin
-          if paramstr(1)='makedic'then fDictCoding.RadioGroup1.ItemIndex:=1+RadioGroup2.ItemIndex;
-          if fDictCoding.RadioGroup1.ItemIndex=0 then CopyFile(pchar(ListBox1.Items[fi]),pchar(fname),false) else
-          begin
-            case fDictCoding.RadioGroup1.ItemIndex of
-              1:cd:='JapaneseAutoDetect';
-              2:cd:='ChineseAutoDetect';
-              3:cd:='KoreanAutoDetect';
-            end;
-            si.dwFlags:=STARTF_USESHOWWINDOW;
-            si.wShowWindow:=SW_HIDE;
-            if CreateProcess(nil,pchar('UNICONV.EXE '+cd+' "'+ListBox1.Items[fi]+'" UCS2 '+fname),nil,nil,false,0,nil,nil,si,lpi) then
-            begin
-              WaitForSingleObject(lpi.hProcess,300000);
-//              sleep(10000);
-            end;
-          end;
-          if not FileExists(fname) then
-          begin
-            Application.MessageBox(
-              pchar(_l('^eFile conversion failed ('+ListBox1.Items[fi]+').')),
-              pchar(_l('#00020^eError')),
-              MB_ICONERROR or MB_OK);
-            abort:=true;
-          end;
+        case fDictCoding.RadioGroup1.ItemIndex of
+          1:cd:='JapaneseAutoDetect';
+          2:cd:='ChineseAutoDetect';
+          3:cd:='KoreanAutoDetect';
         end;
-        assignfile(buff,fname);
-        reset(buff,1);
-        feof:=false;
-        while not feof do
+        try
+          RunUniConv(files[fi], fname, cd);
+        except
+         //For now. TODO: Add 'while converting blah blah...' and re-raise
+          abort := true; //It's important that we set this flag here, because the file might exist, but be incomplete.
+        end;
+      end;
+      if abort or not FileExists(fname) then
+      begin
+        Application.MessageBox(
+          pchar(_l('^eFile conversion failed ('+files[fi]+').')),
+          pchar(_l('#00020^eError')),
+          MB_ICONERROR or MB_OK);
+        abort:=true;
+      end;
+    end;
+
+   //Count number of lines in the converted file
+    assignfile(buff,fname);
+    reset(buff,1);
+    feof:=false;
+    while not feof do
+    begin
+      blockread(buff,buf,4000,bufc);
+      if bufc<4000 then feof:=true;
+      for i:=0 to (bufc div 2)-1 do
+        if PWideChar(@buf[i*2])^=#$000A then
+          inc(linecount);
+    end;
+    closefile(buff);
+  end;
+
+ { Phase 1 }
+  lineno:=0;
+  cnt:=0;
+  wordidx.Sorted:=true;
+  charidx.Sorted:=true;
+  assignfile(fo,'DICT_IMP1.TMP');
+  rewrite(fo);
+  writeln(fo,'>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
+  for fi:=0 to Length(files)-1 do if not abort then
+  begin
+    fname:='DICT_'+inttostr(fi)+'.TMP';
+    mes:=_l('#00086^eReading && parsing ');
+    prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
+
+    assignfile(buff,fname);
+    reset(buff,1);
+    bufc:=0;
+    bufp:=0;
+    cnt2:=0;
+    blockread(buff,buf,2);
+    if (buf[0]<>255) or (buf[1]<>254) then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00088^eUnsupported file encoding ('+files[fi]+').')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
+      abort:=true;
+    end else
+    begin
+      feof:=false;
+      lreat:=false;
+      while (bufp<bufc) or (not feof) do
+      begin
+        lreat:=false;
+        kanji:='';
+        phon:='';
+        writ:='';
+        ppp:=0;
+        while not lreat do
         begin
-          blockread(buff,buf,4000,bufc);
-          if bufc<4000 then feof:=true;
-          for i:=0 to (bufc div 2)-1 do
+          if (bufp>=bufc) and (not feof) then
           begin
-            bl:=buf[i*2];
-            bh:=buf[i*2+1];
+            blockread(buff,buf,4000,bufc);
+            if bufc<4000 then feof:=true;
+            bufp:=0;
+          end;
+          if bufp>=bufc then lreat:=true else
+          begin
+            bl:=buf[bufp];
+            bh:=buf[bufp+1];
+            inc(bufp,2);
             uni:=format('%4.4X',[bh*256+bl]);
-            if uni='000A'then inc(linecount);
+            if bh>0 then asc:=' 'else asc:=chr(bl);
+            if uni='000A'then lreat:=true;
+            if (uni<>'000A') and (uni<>'000D') then
+            begin
+              if ppp=0 then
+              begin
+                if uni='0020'then ppp:=1 else kanji:=kanji+uni;
+              end else if ppp=1 then
+              begin
+                if uni='005B'then ppp:=2 else ppp:=3;
+              end else if ppp=2 then
+              begin
+                if uni='002F'then ppp:=3 else if (uni<>'005D') and (uni<>'0020') then phon:=phon+uni;
+              end else writ:=writ+asc;
+            end;
           end;
         end;
-        closefile(buff);
-      end;
-      if phase>0 then
-      begin
-        assignfile(buff,fname);
-        reset(buff,1);
-        bufc:=0;
-        bufp:=0;
-        cnt2:=0;
-        blockread(buff,buf,2);
-        if (buf[0]<>255) or (buf[1]<>254) then
+        if (linecount>0) and (lineno mod 100=0) then prog.SetProgress(round(lineno/linecount*100));
+        inc(lineno);
+        if (length(writ)>0) and (writ[length(writ)]='/') then delete(writ,length(writ),1);
+        if cnt mod 100=0 then prog.SetMessage(mes+ExtractFilename(files[fi])+' ('+inttostr(cnt)+')...');
+        if phon='' then phon:=kanji;
+        inc(cnt);
+        if (pos('1FFF',kanji)=0) and (pos('0023',kanji)=0) then
         begin
-          Application.MessageBox(
-            pchar(_l('#00088^eUnsupported file coding ('+ListBox1.Items[fi]+').')),
-            pchar(_l('#00020^eError')),
-            MB_ICONERROR or MB_OK);
-          abort:=true;
-        end else
-        begin
-          feof:=false;
-          lreat:=false;
-          while (bufp<bufc) or (not feof) do
+          pphon:=phon;
+          if diclang='c'then
           begin
-            lreat:=false;
-            kanji:='';
-            phon:='';
-            writ:='';
-            ppp:=0;
-            while not lreat do
+            repl(phon,' ','');
+            if phon<>kanji then phon:=RomajiToKana(HexToUnicode(phon),1,false,diclang);
+          end;
+          s4:=KanaToRomaji(phon,1,diclang);
+          if pos('?',s4)>0 then
+          begin
+            writeln(romap,writ);
+            writeln(romap,s4);
+            writeln(romap,string(HexToUnicode(pphon)));
+          end;
+          //Application.MessageBox(pchar(_l('#00089^eCannot romanize following line:')+#13+#13+s2+#13+s4),
+          //  pchar(_l('#00090^eWarning')),MB_ICONWARNING or MB_OK);
+          repl(s4,'?','');
+          if s4='' then s4:='XXX';
+          s3:=ConvertEdictEntry(writ,s2);
+          repl(s3,';',',');
+          //if length(s3)<3 then showmessage(s3+#13+writ);
+          prior:=0;
+          {if diclang='j'then
+          begin
+            TKanaKanji.SetOrder('Kana_Ind');
+            if TKanaKanji.Locate('Kana',phon,false) then
             begin
-              if (bufp>=bufc) and (not feof) then
+              skk:=TKanaKanji.Str(TKanaKanji.Field('Kanji'))+'0000';
+              skkj:=1;
+              while skk<>'' do
               begin
-                blockread(buff,buf,4000,bufc);
-                if bufc<4000 then feof:=true;
-                bufp:=0;
-              end;
-              if bufp>=bufc then lreat:=true else
-              begin
-                bl:=buf[bufp];
-                bh:=buf[bufp+1];
-                inc(bufp,2);
-                uni:=format('%4.4X',[bh*256+bl]);
-                if bh>0 then asc:=' 'else asc:=chr(bl);
-                if uni='000A'then lreat:=true;
-                if (uni<>'000A') and (uni<>'000D') then
+                for skki:=1 to length(skk) div 4 do if copy(skk,skki*4-3,4)='0000'then
                 begin
-                  if ppp=0 then
+                  skk2:=copy(skk,1,skki*4-4);
+                  delete(skk,1,skki*4);
+                  if (skk2=kanji) and (prior=0) then prior:=skkj;
+                  inc(skkj);
+                  break;
+                end;
+              end;
+              if prior=0 then prior:=99;
+            end;
+          end;}
+          if ifAddFrequencyInfo in flags then
+          begin
+            freqi:=freql.IndexOf(kanji);
+            if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
+          end;
+          if s4<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s3+';'+phon+';'+kanji+';'+s4+';'+s2+';'+inttostr(prior));
+          s:=kanji;
+          hexacnt:=format('%8.8X',[cnt]);;
+          if CheckBox2.Checked then
+          begin
+            while s<>'' do
+            begin
+              s2:=copy(s,1,4);
+              delete(s,1,4);
+              if TChar.Locate('Unicode',s2,false) then EnsortIndex(charidx,charidx2,s2,hexacnt);
+            end;
+          end;
+          s:=writ;
+          if CheckBox1.Checked then
+          begin
+            while s<>'' do
+            begin
+              s2:=split(s,'/');
+              if s2='' then
+              begin
+                s2:=s;
+                s:='';
+              end;
+              if s2<>'' then
+              begin
+                s2:=lowercase(s2);
+                while s2<>'' do
+                begin
+                  while (length(s2)>0) and (s2[1]='(') do
                   begin
-                    if uni='0020'then ppp:=1 else kanji:=kanji+uni;
-                  end else if ppp=1 then
+                    if pos(')',s2)>0 then delete(s2,1,pos(')',s2))
+                    else s2:='';
+                    while (length(s2)>0) and (s2[1]=' ') do delete(s2,1,1);
+                  end;
+                  s3:=split(s2,' ');
+                  if s3='' then
                   begin
-                    if uni='005B'then ppp:=2 else ppp:=3;
-                  end else if ppp=2 then
+                    s3:=s2;
+                    s2:='';
+                  end;
+                  repl(s2,';',',');
+                  if ignorel.IndexOf(s3)=-1 then
                   begin
-                    if uni='002F'then ppp:=3 else if (uni<>'005D') and (uni<>'0020') then phon:=phon+uni;
-                  end else writ:=writ+asc;
+                    if length(s3)>4 then s3:=copy(s3,1,4);
+                    if (length(s3)>0) and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-') and
+                      (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then EnsortIndex(wordidx,wordidx2,s3,hexacnt);
+                  end;
                 end;
               end;
             end;
-            if (linecount>0) and (lineno mod 100=0) then prog.SetProgress(round(lineno/linecount*100));
-            inc(lineno);
-            if (length(writ)>0) and (writ[length(writ)]='/') then delete(writ,length(writ),1);
-            if cnt mod 100=0 then prog.SetMessage(mes+ListBox1.Items[fi]+' ('+inttostr(cnt)+')...');
-            if phon='' then phon:=kanji;
-            inc(cnt);
-            if (pos('1FFF',kanji)=0) and (pos('0023',kanji)=0) then
-              case phase of
-                1:begin
-                    pphon:=phon;
-                    if diclang='c'then
-                    begin
-                      repl(phon,' ','');
-                      if phon<>kanji then phon:=RomajiToKana(HexToUnicode(phon),1,false,diclang);
-                    end;
-                    s4:=KanaToRomaji(phon,1,diclang);
-                    if pos('?',s4)>0 then
-                    begin
-                      writeln(romap,writ);
-                      writeln(romap,s4);
-                      writeln(romap,string(HexToUnicode(pphon)));
-                    end;
-//                      Application.MessageBox(pchar(_l('#00089^eCannot romanize following line:')+#13+#13+s2+#13+s4),
-//                       pchar(_l('#00090^eWarning')),MB_ICONWARNING or MB_OK);
-                    repl(s4,'?','');
-                    if s4='' then s4:='XXX';
-                    s3:=ConvertEdictEntry(writ,s2);
-                    repl(s3,';',',');
-//                    if length(s3)<3 then showmessage(s3+#13+writ);
-                    prior:=0;
-{                    if diclang='j'then
-                    begin
-                      TKanaKanji.SetOrder('Kana_Ind');
-                      if TKanaKanji.Locate('Kana',phon,false) then
-                      begin
-                        skk:=TKanaKanji.Str(TKanaKanji.Field('Kanji'))+'0000';
-                        skkj:=1;
-                        while skk<>'' do
-                        begin
-                          for skki:=1 to length(skk) div 4 do if copy(skk,skki*4-3,4)='0000'then
-                          begin
-                            skk2:=copy(skk,1,skki*4-4);
-                            delete(skk,1,skki*4);
-                            if (skk2=kanji) and (prior=0) then prior:=skkj;
-                            inc(skkj);
-                            break;
-                          end;
-                        end;
-                        if prior=0 then prior:=99;
-                      end;
-                    end;}
-                    if ifAddFrequencyInfo in flags then
-                    begin
-                      freqi:=freql.IndexOf(kanji);
-                      if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
-                    end;
-                    if s4<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s3+';'+phon+';'+kanji+';'+s4+';'+s2+';'+inttostr(prior));
-                    s:=kanji;
-                    hexacnt:=format('%8.8X',[cnt]);;
-                    if CheckBox2.Checked then
-                    begin
-                      while s<>'' do
-                      begin
-                        s2:=copy(s,1,4);
-                        delete(s,1,4);
-                        if TChar.Locate('Unicode',s2,false) then EnsortIndex(charidx,charidx2,s2,hexacnt);
-                      end;
-                    end;
-                    s:=writ;
-                    if CheckBox1.Checked then
-                    begin
-                      while s<>'' do
-                      begin
-                        s2:=split(s,'/');
-                        if s2='' then
-                        begin
-                          s2:=s;
-                          s:='';
-                        end;
-                        if s2<>'' then
-                        begin
-                          s2:=lowercase(s2);
-                          while s2<>'' do
-                          begin
-                            while (length(s2)>0) and (s2[1]='(') do
-                            begin
-                              if pos(')',s2)>0 then delete(s2,1,pos(')',s2))
-                              else s2:='';
-                              while (length(s2)>0) and (s2[1]=' ') do delete(s2,1,1);
-                            end;
-                            s3:=split(s2,' ');
-                            if s3='' then
-                            begin
-                              s3:=s2;
-                              s2:='';
-                            end;
-                            repl(s2,';',',');
-                            if ignorel.IndexOf(s3)=-1 then
-                            begin
-                              if length(s3)>4 then s3:=copy(s3,1,4);
-                              if (length(s3)>0) and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-') and
-                                (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then EnsortIndex(wordidx,wordidx2,s3,hexacnt);
-                            end;
-                          end;
-                        end;
-                      end;
-                    end;
-                  end;
-                2:begin
-                  end;
-                3:begin
-                  end;
-              end;
           end;
-        end;
-        closefile(buff);
-        entries:=cnt;
+        end; //of the bigass IF block
       end;
     end;
-    if phase>0 then writeln(fo,'.');
-    if phase>0 then closefile(fo);
-    if phase>0 then
-    begin
-    end;
+    closefile(buff);
+    entries:=cnt;
   end;
+  writeln(fo,'.');
+  closefile(fo);
+
   closefile(romap);
+
+
 
   if not abort then
   begin
@@ -703,22 +731,48 @@ begin
   wordidx2.Free;
   charidx2.Free;
   freql.Free;
-  for fi:=0 to ListBox1.Items.Count-1 do
+  for fi:=0 to Length(files)-1 do
   begin
     fname:='DICT_'+inttostr(fi)+'.TMP';
     DeleteFile(fname);
   end;
-  for phase:=1 to 3 do DeleteFile('DICT_IMP'+inttostr(phase)+'.TMP');
+  for fi:=1 to 3 do
+    DeleteFile('DICT_IMP'+inttostr(fi)+'.TMP');
   prog.Free;
-  if not abort then
-  begin
-    close;
-    if paramstr(1)<>'makedic' then
-      Application.MessageBox(
-        pchar(_l('#00093^eDictionary was built.')),
-        pchar(_l('#00094^eSuccess')),
-        MB_ICONINFORMATION or MB_OK);
-  end;
+
+  Result := not abort;
+end;
+
+
+{
+Executes UNICONV.exe to convert srcFile to outpFile.
+srcFile is assumed to be in srcEnc encoding (see UCONV docs). outpFile is in UCS2.
+Raise exceptions on any errors.
+}
+procedure TfDictImport.RunUniConv(srcFile, outpFile: string; srcEnc: string);
+var lpi:PROCESS_INFORMATION;
+  si:STARTUPINFO;
+  fail: boolean;
+  err: integer;
+begin
+  FillChar(lpi, sizeof(lpi), 0);
+  FillChar(si, sizeof(si), 0);
+  si.dwFlags:=STARTF_USESHOWWINDOW;
+  si.wShowWindow:=SW_HIDE;
+  if not CreateProcess(nil,pchar(AppFolder+'\UNICONV.EXE '+srcEnc+' "'+srcFile+'" UCS2 '+outpFile),nil,nil,false,0,nil,nil,si,lpi) then
+    RaiseLastOSError();
+
+  fail := (WaitForSingleObject(lpi.hProcess,30000)<>WAIT_OBJECT_0);
+  if fail then err := GetLastError() else err := 0; //shut up delphi
+
+ { We don't try to terminate the process in case of failure for two reasons:
+   1. It might be impossible on Windows 7 or XP with stricter security.
+   2. It's better to leave it be, for user to see what's the problem. }
+
+  CloseHandle(lpi.hProcess);
+  CloseHandle(lpi.hThread);
+  if fail then
+    RaiseLastOsError(err);
 end;
 
 end.
