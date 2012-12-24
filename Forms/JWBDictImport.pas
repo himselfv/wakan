@@ -281,10 +281,12 @@ var fi:integer;
     bufp:integer;
     buff:file;
     cnt:integer;
-    kanji,phon,writ:string;
+    kanji:FString;
+    phon:FString;
+    writ:AnsiString;
     feof:boolean;
     lreat:boolean;
-    uni,asc:string;
+    asc:string;
     ppp:integer;
     mes,s2,s3,s4:string;
     bl,bh:byte;
@@ -308,6 +310,8 @@ var fi:integer;
 
     tempDir: string;
     fc: FChar;
+    uc: WideChar;
+    ac: AnsiChar;
 
   procedure PutToBuf(b1,b2,b3,b4:byte);
   begin
@@ -377,12 +381,12 @@ begin
           comment:=false;
           nownum:=false;
         end else
-        if not comment and (s=UH_TAB) then
+        if not comment and (fc=UH_TAB) then
           nownum:=true
         else
         if not comment then if nownum then
         begin
-          if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(s);
+          if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(fc);
         end else
           addkan:=addkan+fc;
         fc:=Conv_ReadChar;
@@ -404,8 +408,6 @@ begin
  //TODO: Move all temporary stuff to temporary folder (another one, not the package one)
 
  { Phase 0 }
-  lineno:=0;
-  cnt:=0;
   wordidx.Sorted:=true;
   charidx.Sorted:=true;
   for fi:=0 to Length(files)-1 do if not abort then
@@ -516,25 +518,19 @@ begin
           end;
           if bufp>=bufc then lreat:=true else
           begin
-            bl:=buf[bufp];
-            bh:=buf[bufp+1];
+            uc:=PWideChar(@buf[bufp])^;
             inc(bufp,2);
-            uni:=format('%4.4X',[bh*256+bl]);
-            if bh>0 then asc:=' 'else asc:=chr(bl);
-            if uni='000A'then lreat:=true;
-            if (uni<>'000A') and (uni<>'000D') then
-            begin
-              if ppp=0 then
-              begin
-                if uni='0020'then ppp:=1 else kanji:=kanji+uni;
-              end else if ppp=1 then
-              begin
-                if uni='005B'then ppp:=2 else ppp:=3;
-              end else if ppp=2 then
-              begin
-                if uni='002F'then ppp:=3 else if (uni<>'005D') and (uni<>'0020') then phon:=phon+uni;
-              end else writ:=writ+asc;
-            end;
+            if Ord(uc)>255 then ac:=' ' else ac:=AnsiChar(uc);
+            if uc=#$000A then lreat:=true;
+            if (uc<>#$000A) and (uc<>#$000D) then
+              case ppp of
+                0: if uc=#$0020 then ppp:=1 else kanji:=kanji+fstr(uc);
+                1: if uc=#$005B then ppp:=2 else ppp:=3;
+                2: if uc=#$002F then ppp:=3 else
+                     if (uc<>#$005D) and (uc<>#$0020) then phon:=phon+fstr(uc);
+              else
+                writ:=writ+ac;
+              end;
           end;
         end;
         if (linecount>0) and (lineno mod 100=0) then prog.SetProgress(round(lineno/linecount*100));
@@ -592,7 +588,7 @@ begin
             freqi:=freql.IndexOf(kanji);
             if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
           end;
-          if s4<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s3+';'+phon+';'+kanji+';'+s4+';'+s2+';'+inttostr(prior));
+          if s4<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s3+';'+fstrtohex(phon)+';'+fstrtohex(kanji)+';'+s4+';'+s2+';'+inttostr(prior));
           s:=kanji;
           hexacnt:=format('%8.8X',[cnt]);;
           if CheckBox2.Checked then
