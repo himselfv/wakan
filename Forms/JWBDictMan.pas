@@ -47,6 +47,9 @@ type
     procedure Button2Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
+  public
+    procedure ReloadCheckStates;
+    procedure CarefulRefreshDicts;
   end;
 
 var
@@ -57,6 +60,55 @@ implementation
 uses JWBMenu, JWBDictImport, JWBDicSearch;
 
 {$R *.DFM}
+
+type
+  TDicCheckState = record
+    name: string;
+    state: boolean;
+  end;
+
+{
+Reloads dictionary list while preserving user changes to it.
+}
+procedure TfDictMan.CarefulRefreshDicts;
+var dicStates: array of TDicCheckState;
+  dic: TJaletDic;
+  i,j: integer;
+begin
+ //Save states
+  SetLength(dicStates, CheckListBox1.Items.Count);
+  for i:=0 to CheckListBox1.Items.Count-1 do
+  begin
+    dic:=dicts.Objects[i] as TJaletDic;
+    dicStates[i].name := dic.name;
+    dicStates[i].state := CheckListBox1.Checked[i];
+  end;
+
+  fMenu.RescanDicts();
+  ReloadCheckStates(); //for newly loaded dictionaries for which we have no saved state
+
+ //Restore states
+  for i := 0 to Length(dicStates) - 1 do
+    for j :=0 to CheckListBox1.Items.Count-1 do
+      if CheckListBox1.Items[j]=dicStates[i].name then begin
+        CheckListBox1.Checked[j] := dicStates[i].state;
+        break; //of j-loop
+      end;
+end;
+
+{
+Updates dictionary check states according to current (permanent) user preferences
+}
+procedure TfDictMan.ReloadCheckStates;
+var dic:TJaletDic;
+    i:integer;
+begin
+  for i:=0 to CheckListBox1.Items.Count-1 do
+  begin
+    dic:=dicts.Objects[i] as TJaletDic;
+    CheckListBox1.Checked[i]:=pos(','+dic.name,NotUsedDicts)=0;
+  end;
+end;
 
 procedure TfDictMan.CheckListBox1Click(Sender: TObject);
 var dic:TJaletDic;
@@ -82,14 +134,8 @@ begin
 end;
 
 procedure TfDictMan.FormShow(Sender: TObject);
-var dic:TJaletDic;
-    i:integer;
 begin
-  for i:=0 to CheckListBox1.Items.Count-1 do
-  begin
-    dic:=dicts.Objects[i] as TJaletDic;
-    CheckListBox1.Checked[i]:=pos(','+dic.name,NotUsedDicts)=0;
-  end;
+  ReloadCheckStates();
   CheckListBox1Click(self);
 end;
 
@@ -107,12 +153,13 @@ end;
 
 procedure TfDictMan.Button1Click(Sender: TObject);
 begin
-  fMenu.RescanDicts;
+  CarefulRefreshDicts;
 end;
 
 procedure TfDictMan.Button2Click(Sender: TObject);
 begin
-  fDictImport.ShowModal;
+  if IsPositiveResult(fDictImport.ShowModal) then
+    CarefulRefreshDicts;
 end;
 
 procedure TfDictMan.BitBtn1Click(Sender: TObject);

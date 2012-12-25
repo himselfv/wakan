@@ -242,7 +242,7 @@ end;
 
 procedure TfDictImport.BitBtn2Click(Sender: TObject);
 begin
-  Close;
+  ModalResult := mrCancel;
 end;
 
 procedure TfDictImport.CreateDictTables(dicName: string; diclang:char);
@@ -297,6 +297,7 @@ begin
   writeln(f,inttostr(entries));
   writeln(f,edit5.text);
   closefile(f);
+  PKGWriteForm.PKGWriteCmd('NotShow');
   PKGWriteForm.PKGWriteCmd('PKGFileName '+dicName+'.dic');
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name '+edit2.text);
@@ -345,7 +346,7 @@ begin
 
   if ImportDictionary(edit1.text, files, diclang, flags) then
   begin
-    close;
+    ModalResult := mrOk;
     if paramstr(1)<>'makedic' then
       Application.MessageBox(
         pchar(_l('#00093^eDictionary was built.')),
@@ -410,7 +411,7 @@ var fi:integer;
 
 begin
   Result := false;
-  prog:=SMProgressDlg(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
+  prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
   prog.Width := 500; //we're going to have long file names
   prog.Appear;
   wordidx := TIndexBuilder.Create;
