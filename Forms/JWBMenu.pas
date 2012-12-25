@@ -618,7 +618,7 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
-  JWBCategories, JWBAnnotations;
+  JWBCategories, JWBAnnotations, JWBIO;
 
 {$R *.DFM}
 
@@ -2291,45 +2291,45 @@ begin
 end;
 
 procedure TfMenu.ExportUserData(filename:string);
-var t:textfile;
-    i:integer;
-    w:widechar;
+var t:TCustomFileWriter;
+  i:integer;
+  w:widechar;
 begin
   if not FlushUserData then exit;
-  assignfile(t,filename);
-  rewrite(t);
-  writeln(t,'$User');
+  //User data is stored in Ansi, because compability.
+  t := TAnsiFileWriter.Rewrite(filename);
+  t.Writeln('$User');
   TUser.ExportToText(t,'Index_Ind');
-  writeln(t,'$UserIdx');
+  t.Writeln('$UserIdx');
   TUserIdx.ExportToText(t,'Kanji_Ind');
-  writeln(t,'$UserCat');
+  t.Writeln('$UserCat');
   TUserCat.ExportToText(t,'Index_Ind');
-  writeln(t,'$UserSheet');
+  t.Writeln('$UserSheet');
   TUserSheet.ExportToText(t,'Sheet_Ind');
-  writeln(t,'$KnownKanji');
-  writeln(t,'>Unicode');
+  t.Writeln('$KnownKanji');
+  t.Writeln('>Unicode');
   for i:=1 to 65536 do
   begin
     w:=widechar(i);
     if IsKnown(KnownLearned,{$IFDEF UNICODE}w{$ELSE}UnicodeToHex(w){$ENDIF}) then
-      writeln(t,'+'+UnicodeToHex(w));
+      t.Writeln('+'+UnicodeToHex(w));
   end;
-  writeln(t,'.');
-  closefile(t);
+  t.Writeln('.');
+  t.Free;
 end;
 
 procedure TfMenu.ImportUserData(filename:string);
-var t:textfile;
-    s:string;
+var t:TCustomFileReader;
+  s:string;
 begin
   DeleteFile('wakan.usr');
   LoadUserData;
   Screen.Cursor:=crHourGlass;
-  assignfile(t,filename);
-  reset(t);
-  while not eof(t) do
+ //User data is stored in Ansi, because compability.
+  t := TAnsiFileReader.Create(filename);
+  while not t.Eof() do
   begin
-    readln(t,s);
+    s := t.ReadLn();
     if s[1]='$'then
     begin
       if s='$User'then TUser.ImportFromText(t,nil,'');
@@ -2338,18 +2338,18 @@ begin
       if s='$UserSheet'then TUserSheet.ImportFromText(t,nil,'');
       if s='$KnownKanji'then
       begin
-        readln(t,s);
-        readln(t,s);
+        t.ReadLn();
+        s := t.ReadLn();
         while s[1]<>'.'do
         begin
           delete(s,1,1);
           SetKnown(KnownLearned,s,true);
-          readln(t,s);
+          s := t.ReadLn();
         end;
       end;
     end;
   end;
-  closefile(t);
+  t.Free;
   ChangeUserData;
   SaveUserData;
   MaxUserIndex := FindMaxUserIndex();

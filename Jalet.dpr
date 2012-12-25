@@ -11,6 +11,7 @@ uses
   ScaleMM2 in 'Components\ScaleMM\ScaleMM2.pas',
   Forms,
   JWBStrings in 'Components\JWBStrings.pas',
+  JWBIO in 'Components\JWBIO.pas',
   PackageCommon in 'Components\Package\PackageCommon.pas',
   TextTable in 'Components\TextTable\TextTable.pas',
   MemSource in 'Components\Package\MemSource.pas',

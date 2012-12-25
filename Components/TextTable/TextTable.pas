@@ -1,7 +1,7 @@
 unit TextTable;
 
 interface
-uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows,JWBStrings;
+uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows,JWBStrings,JWBIO;
 
 {
 Unicode status:
@@ -120,12 +120,14 @@ type
     property RecordCount:integer read reccount;
     function NewCursor: TTextTableCursor;
 
-    procedure ExportToText(var t:textfile;ord:string);
-    procedure ImportFromText(var t:textfile;smf:TSMPromptForm;mess:string);
     procedure Reindex;
     procedure Load;
     function CheckIndex:boolean;
     property NoCommitting:boolean read nocommit write nocommit;
+
+  public //Import/export
+    procedure ExportToText(t:TCustomFileWriter;ord:string);
+    procedure ImportFromText(t:TCustomFileReader;smf:TSMPromptForm;mess:string);
 
   public
     function AddRecord(values:array of string): integer;
@@ -1534,7 +1536,26 @@ begin
   result:=true;
 end;
 
-procedure TTextTable.ExportToText(var t:textfile;ord:string);
+procedure LogAlloc(s:string;len:integer);
+//var t:textfile;
+begin
+{  assignfile(t,'alloc.log');
+  append(t);
+  inc(totalalloc,len);
+  writeln(t,s,' - '+inttostr(len div 1024),' > ',inttostr(totalalloc div 1024));
+  closefile(t);}
+end;
+
+function TTextTable.HasIndex(const index:string):boolean;
+begin
+  Result := orders.IndexOf(index)>=0;
+end;
+
+
+{ Import/export }
+{ This will only work properly on Ansi }
+
+procedure TTextTable.ExportToText(t:TCustomFileWriter;ord:string);
 var i,j:integer;
     s,s2:string;
     ordn:integer;
@@ -1544,7 +1565,7 @@ begin
   for i:=0 to fieldlist.Count-1 do s:=s+';'+fieldlist[i];
   ordn:=orders.IndexOf(ord);
   s[1]:='>';
-  writeln(t,s);
+  t.Writeln(s);
   for i:=0 to reccount-1 do
   begin
     s:='';
@@ -1555,12 +1576,12 @@ begin
       s:=s+';'+s2;
     end;
     s[1]:='+';
-    writeln(t,s);
+    t.Writeln(s);
   end;
-  writeln(t,'.');
+  t.Writeln('.');
 end;
 
-procedure TTextTable.ImportFromText(var t:textfile;smf:TSMPromptForm;mess:string);
+procedure TTextTable.ImportFromText(t:TCustomFileReader;smf:TSMPromptForm;mess:string);
 var s:string;
     i,j:integer;
     fld:TStringList;
@@ -1569,7 +1590,7 @@ var s:string;
     cnt:integer;
 begin
   nocommit:=true;
-  readln(t,s);
+  s := t.ReadLn();
   i:=0;
   system.delete(s,1,1);
   fld:=TStringList.Create;
@@ -1581,8 +1602,8 @@ begin
     fld.Add(s2);
     inc(i);
   end;
-  readln(t,s);
   cnt:=0;
+  s := t.ReadLn();
   while s[1]<>'.' do
   begin
     inc(cnt);
@@ -1600,7 +1621,7 @@ begin
       inc(i);
     end;
     Insert(a);
-    readln(t,s);
+    s := t.ReadLn();
   end;
   fld.Free;
   nocommit:=false;
@@ -1608,22 +1629,6 @@ begin
   Reindex;
   if smf<>nil then smf.SetMessage(mess+'...');
 end;
-
-procedure LogAlloc(s:string;len:integer);
-//var t:textfile;
-begin
-{  assignfile(t,'alloc.log');
-  append(t);
-  inc(totalalloc,len);
-  writeln(t,s,' - '+inttostr(len div 1024),' > ',inttostr(totalalloc div 1024));
-  closefile(t);}
-end;
-
-function TTextTable.HasIndex(const index:string):boolean;
-begin
-  Result := orders.IndexOf(index)>=0;
-end;
-
 
 
 

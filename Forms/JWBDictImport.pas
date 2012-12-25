@@ -87,7 +87,7 @@ var
 implementation
 
 uses JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBDicSearch, JWBStrings;
+  JWBDicSearch, JWBStrings, JWBIO;
 
 {$R *.DFM}
 
@@ -368,7 +368,9 @@ const
 var fi:integer;
     fname:string;
     s:string;
-    fo:textfile;
+    fin:TFileReader;
+    fout:TFileWriter;
+    fuin: TUnicodeFileReader;
     fb:file;
     cd:string;
     buf:array[0..3999] of byte;
@@ -483,26 +485,19 @@ begin
         raise Exception.CreateFmt(_l('File conversion failed (%s)'), [files[fi]]);
 
      //Count number of lines in the converted file and add to total
-      assignfile(buff,fname);
-      reset(buff,1);
-      feof:=false;
-      while not feof do
-      begin
-        blockread(buff,buf,4000,bufc);
-        if bufc<4000 then feof:=true;
-        for i:=0 to (bufc div 2)-1 do
-          if PWideChar(@buf[i*2])^=#$000A then
-            inc(linecount);
-      end;
-      closefile(buff);
+      fuin := TUnicodeFileReader.Create(fname);
+      while fuin.ReadWideChar(uc) do
+        if uc=#$000A then
+          Inc(linecount);
+      FreeAndNil(fuin);
     end;
 
    { Phase 1 }
     lineno:=0;
     cnt:=0;
-    assignfile(fo,tempDir+'\DICT_IMP1.TMP');
-    rewrite(fo);
-    writeln(fo,'>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
+   //On Ansi we're writing and reading from Ansi file, on Unicode from Unicode
+    fout := TFileWriter.Rewrite(tempDir+'\DICT_IMP1.TMP');
+    fout.WriteLn('>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
     for fi:=0 to Length(files)-1 do
     begin
       fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
@@ -595,7 +590,7 @@ begin
         end;
 
        //Write out
-        if s_roma<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s_entry+';'+fstrtohex(phon)+';'+fstrtohex(kanji)+';'+s_roma+';'+s_mark+';'+inttostr(prior));
+        if s_roma<>'' then fout.WriteLn('+'+inttostr(cnt)+';'+s_entry+';'+phon+';'+kanji+';'+s_roma+';'+s_mark+';'+inttostr(prior));
 
        //Indexes
         s:=kanji;
@@ -638,8 +633,8 @@ begin
       closefile(buff);
       entries:=cnt;
     end; //for every file
-    writeln(fo,'.');
-    closefile(fo);
+    fout.Writeln('.');
+    FreeAndNil(fout);
 
     closefile(romap);
 
@@ -653,10 +648,10 @@ begin
     if not dic.loaded then
       raise Exception.Create('Cannot load the target dictionary');
     dic.Demand;
-    assignfile(fo,tempDir+'\DICT_IMP1.TMP');
-    reset(fo);
-    dic.TDict.ImportFromText(fo,prog,_l('#00091^eBuilding dictionary table'));
-    closefile(fo);
+
+    fin := TFileReader.Create(tempDir+'\DICT_IMP1.TMP');
+    dic.TDict.ImportFromText(fin,prog,_l('#00091^eBuilding dictionary table'));
+    fin.Free;
 
     DeleteDirectory(tempDir);
 
