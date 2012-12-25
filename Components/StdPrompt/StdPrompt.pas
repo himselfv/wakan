@@ -53,6 +53,16 @@ type
   TTaskWindowList = pointer; //not defined on older compilers
  {$IFEND}
 
+ {
+  Vertical layout:
+    [72-icon] 16 left-border 8 (label) 8 right-border 16
+  Horizontal layout:
+    16 top-border 8 (label) 8 [progress-bar 12] bottom-border 4 [8 buttons] 12
+
+  []: optional
+  (): stretch
+ }
+
   TSMPromptForm = class(TForm)
     Sign1Label: TLabel;
     Sign2Label: TLabel;
@@ -280,6 +290,93 @@ begin
   Application.ModalFinished;
 end;
 
+{
+  Vertical layout:
+    [72-icon] 16 left-border 8 (label) 8 right-border 16
+  Horizontal layout:
+    16 top-border 8 (label) [progress-bar 11] bottom-border [16 buttons] 16
+}
+
+procedure TSMPromptForm.FormResize(Sender: TObject);
+var frameh: integer;
+begin
+  //Frame bevel
+  FrameBevel.Width:=ClientWidth-FrameBevel.Left-16;
+  frameh:=ClientHeight-FrameBevel.Top-16;
+  if VisibleButtonCount>0 then
+    frameh:=frameh-8-OKButton.Height;
+  FrameBevel.Height := frameh;
+
+  FButtonYPos := FrameBevel.Top+FrameBevel.Height+12;
+
+  //Progress bar - may be invisible
+  ProgressBar.Left:=MessageEdit.Left;
+  ProgressBar.Top:=FrameBevel.Top+FrameBevel.Height-12-ProgressBar.Height;
+  ProgressBar.Width:=FrameBevel.Width-16;
+
+  //Reposition buttons
+  SetVisibleButtons(FVisibleButtons);
+end;
+
+procedure TSMPromptForm.SetVisibleButtons(buttons: TMsgDlgButtons);
+const
+  SZ_MINBTNSPACE = 4; //we can't leave less than this space between buttons
+var btnlim: integer;   //total space available for buttons
+  btnspace: integer; //space between buttons -- grows when there's too much of available space
+  btnx: integer; //current button x
+  btn: TBitBtn;
+  vi:TMsgDlgBtn;
+begin
+  FVisibleButtons := buttons;
+
+  //Calculate button count
+  FVisibleButtonCount:=0;
+  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
+    if vi in buttons then inc(FVisibleButtonCount);
+
+  //Calculate button space and total width
+  btnlim:=FrameBevel.Width+12;
+  btnspace:=(btnlim-(VisibleButtonCount*OKButton.Width)) div (VisibleButtonCount+1);
+  if btnspace<SZ_MINBTNSPACE then btnspace := SZ_MINBTNSPACE;
+  FTotalButtonWidth:=VisibleButtonCount*(OKButton.Width+btnspace)+btnspace;
+
+  //Reposition buttons
+  btnx := (FrameBevel.Left-6)+(btnlim - TotalButtonWidth) div 2 + btnspace; //can be negative
+  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
+  begin
+    case vi of
+      mbOK:btn:=OKButton;
+      mbCancel:btn:=CancelButton;
+      mbYes:btn:=YesButton;
+      mbNo:btn:=NoButton;
+      mbAll:btn:=AllButton;
+      mbHelp:btn:=HelpButton;
+      mbAbort:btn:=AbortButton;
+      mbRetry:btn:=RetryButton;
+      mbIgnore:btn:=IgnoreButton;
+      mbNoToAll:btn:=NoToAllButton;
+      mbYesToAll:btn:=YesToAllButton;
+    else
+      btn := nil; //crash and burn
+    end;
+    if btn<>nil then
+      if not (vi in FVisibleButtons) then
+        btn.Visible:=false
+      else
+      begin
+        btn.Visible:=true;
+        btn.Left:=btnx; //minus 3 because they have icons... they look unbalanced when centered properly
+        btn.Caption:=SMButtonCaps[vi];
+        btn.Top:=ButtonYPos;
+        btn.TabOrder:=integer(vi);
+        Inc(btnx, btnspace+btn.Width);
+      end;
+  end;
+
+  //Somehow Help button is the pariah...
+  HelpButton.Visible:=false;
+end;
+
 
 procedure TSMPromptForm.SetMessage(s:string);
 begin
@@ -423,83 +520,6 @@ end;
 
 
 
-procedure TSMPromptForm.FormResize(Sender: TObject);
-begin
-  //Frame bevel
-  FrameBevel.Width:=ClientWidth-FrameBevel.Left-16;
-  FrameBevel.Height:=ClientHeight-FrameBevel.Top-32-OKButton.Height;
-  FButtonYPos := FrameBevel.Top+FrameBevel.Height+16;
-
-  //Progress bar - may be invisible
-  ProgressBar.Left:=MessageEdit.Left;
-  ProgressBar.Top:=FrameBevel.Top+FrameBevel.Height-24;
-  ProgressBar.Width:=FrameBevel.Width-16;
-
-  //Reposition buttons
-  SetVisibleButtons(FVisibleButtons);
-end;
-
-procedure TSMPromptForm.SetVisibleButtons(buttons: TMsgDlgButtons);
-const
-  SZ_MINBTNSPACE = 4; //we can't leave less than this space between buttons
-var btnlim: integer;   //total space available for buttons
-  btnspace: integer; //space between buttons -- grows when there's too much of available space
-  btnx: integer; //current button x
-  btn: TBitBtn;
-  vi:TMsgDlgBtn;
-begin
-  FVisibleButtons := buttons;
-
-  //Calculate button count
-  FVisibleButtonCount:=0;
-  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
-    if vi in buttons then inc(FVisibleButtonCount);
-
-  //Calculate button space and total width
-  btnlim:=FrameBevel.Width+12;
-  btnspace:=(btnlim-(VisibleButtonCount*OKButton.Width)) div (VisibleButtonCount+1);
-  if btnspace<SZ_MINBTNSPACE then btnspace := SZ_MINBTNSPACE;
-  FTotalButtonWidth:=VisibleButtonCount*(OKButton.Width+btnspace)+btnspace;
-
-  //Reposition buttons
-  btnx := (FrameBevel.Left-6)+(btnlim - TotalButtonWidth) div 2 + btnspace; //can be negative
-  for vi:=Low(TMsgDlgBtn) to High(TMsgDlgBtn) do
-  begin
-    case vi of
-      mbOK:btn:=OKButton;
-      mbCancel:btn:=CancelButton;
-      mbYes:btn:=YesButton;
-      mbNo:btn:=NoButton;
-      mbAll:btn:=AllButton;
-      mbHelp:btn:=HelpButton;
-      mbAbort:btn:=AbortButton;
-      mbRetry:btn:=RetryButton;
-      mbIgnore:btn:=IgnoreButton;
-      mbNoToAll:btn:=NoToAllButton;
-      mbYesToAll:btn:=YesToAllButton;
-    else
-      btn := nil; //crash and burn
-    end;
-    if btn<>nil then
-      if not (vi in FVisibleButtons) then
-        btn.Visible:=false
-      else
-      begin
-        btn.Visible:=true;
-        btn.Left:=btnx; //minus 3 because they have icons... they look unbalanced when centered properly
-        btn.Caption:=SMButtonCaps[vi];
-        btn.Top:=ButtonYPos;
-        btn.TabOrder:=integer(vi);
-        Inc(btnx, btnspace+btn.Width);
-      end;
-  end;
-
-  //Somehow Help button is the pariah...
-  HelpButton.Visible:=false;  
-end;
-
-
-
 procedure SMSetButtonCaption(button:TMsgDlgBtn;cap:string);
 begin
   SMButtonCaps[button]:=cap;
@@ -528,12 +548,14 @@ begin
   frm.MessageEdit.Caption:=mess;
 
   //Adjust width and height to the size of the content
-  formw := frm.FrameBevel.Left+(frm.MessageEdit.Width+16)+16;
-  formh := frm.FrameBevel.Top+(frm.MessageEdit.Height+16)+(24+frm.OKButton.Height);
-  if hasprogress then formh := formh+32;
+  formw := frm.FrameBevel.Left+(8+frm.MessageEdit.Width+8)+16;
+  formh := frm.FrameBevel.Top+(8+frm.MessageEdit.Height+8)+16;
+  if hasprogress then formh := formh+frm.ProgressBar.Height+12;
 
   //Calculate buttons size
   frm.VisibleButtons := buttons;
+  if frm.VisibleButtonCount > 0 then
+    formh := formh + 8 + frm.OKButton.Height;
 
   //Adjust sizes some more
   if (formh<120) and (sign<>'') then formh:=120;
@@ -541,7 +563,6 @@ begin
   if (formw<330) and (frm.VisibleButtonCount>0) then formw:=330;
   if formw<minsizex then formw:=minsizex;
   if formw<frm.TotalButtonWidth then formw := frm.TotalButtonWidth;
-  if frm.VisibleButtonCount<=0 then formh := formh - frm.OKButton.Height - 12; //no button line
 
   //Apply form size
   cli := frm.GetClientRect;
