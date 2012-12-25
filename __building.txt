@@ -20,3 +20,11 @@ Note the list of cases when the inlining is not done.
 http://www.micro-isv.asia/2008/10/needless-string-checks-with-ensureunicodestring/
 They shouldn't be needed, and even if by some mistake we put Ansi chars into UnicodeString, we better crash and fix that instead of hiding the bug.
 Enabling this option also effectively disables the "const s:string" optimizations since functions will get refcount management frames for strings anyway.
+
+
+DEPENDENCIES
+
+1. UNICONV.exe - required for dictionary import.
+http://ringtail.its.monash.edu.au/pub/nihongo/uniconv.zip
+http://ringtail.its.monash.edu.au/pub/nihongo/uniconv.txt
+Also see: http://www.autohotkey.com/board/topic/9831-uniconv-convert-unicode-cmd/
