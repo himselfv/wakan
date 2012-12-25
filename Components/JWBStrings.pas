@@ -16,6 +16,9 @@ type
   PUnicodeString = PWideString;
 {$IFEND}
 
+{ One day we're going to enable typechecks so that you can't mix strings and FStrings
+ without proper conversion }
+//{$DEFINE STRICT_FSTRING}
 
 { Wakan uses a special Ansi string format, where each unicode symbol is kept
  as a 4 character (four-char) hex code.
@@ -27,16 +30,19 @@ type
  //Wired to WideChar and not Char because who knows,
  //we might want to compile on Ansi with UNICODE set!
   FChar = WideChar;
-  PFChar = PWideChar;
-  FString = UnicodeString;
+  PFChar = {$IFDEF STRICT_FSTRING}type{$ENDIF} PWideChar;
+  FString = {$IFDEF STRICT_FSTRING}type{$ENDIF} UnicodeString;
  {$ELSE}
   FChar = AnsiString; //because one 4-character takes 4 AnsiChars
-  PFChar = PAnsiChar;
-  FString = AnsiString;
+  PFChar = {$IFDEF STRICT_FSTRING}type{$ENDIF} PAnsiChar;
+  FString = {$IFDEF STRICT_FSTRING}type{$ENDIF} AnsiString;
   //Useful for looking into FChars
   FCharData = array[1..4] of AnsiChar;
   PFCharData = ^FCharData;
  {$ENDIF}
+
+ { Hex FChars on both Ansi and Unicode. Used to read/write data from formats which store it as hex }
+  FHex = {$IFDEF STRICT_FSTRING}type{$ENDIF} string;
 
 
 const
@@ -177,8 +183,8 @@ function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;
 function fgetchl(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
-function hextofstr(const s: string): FString; {$IFDEF INLINE}inline;{$ENDIF}
-function fstrtohex(const s: FString): string; {$IFDEF INLINE}inline;{$ENDIF}
+function hextofstr(const s: FHex): FString; {$IFDEF INLINE}inline;{$ENDIF}
+function fstrtohex(const s: FString): FHex; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -210,6 +216,7 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 function remexcl(s:string):string;
 function strip_fl(s:string):string;
 function repl(var s:string;sub,repl:string):string;
+function cutto(var s:string;c:char):string;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
 function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
@@ -448,7 +455,7 @@ end;
 function fstr(const s: UnicodeString): FString;
 begin
  {$IFDEF UNICODE}
-  Result := s;
+  Result := FString(s);
  {$ELSE}
   Result := UnicodeToHex(s);
  {$ENDIF}
@@ -459,7 +466,7 @@ end;
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
 begin
  {$IFDEF UNICODE}
-  Result := s;
+  Result := UnicodeString(s);
  {$ELSE}
   Result := HexToUnicode(s);
  {$ENDIF}
@@ -467,23 +474,23 @@ end;
 
 //Converts Hex to FString. On Ansi builds does nothing!
 //Call when you want to parse Ansi Hex data (ex. from file) to FString
-function hextofstr(const s: string): FString;
+function hextofstr(const s: FHex): FString;
 begin
  {$IFDEF UNICODE}
   Result := HexToUnicode(s);
  {$ELSE}
-  Result := s;
+  Result := FHex(s);
  {$ENDIF}
 end;
 
 //Converts FString to Hex. On Ansi builds does nothing
 //Call when you want to store FString as Ansi Hex data (ex. in file of such format)
-function fstrtohex(const s: FString): string;
+function fstrtohex(const s: FString): FHex;
 begin
  {$IFDEF UNICODE}
   Result := UnicodeToHex(s);
  {$ELSE}
-  Result := s;
+  Result := FString(s);
  {$ENDIF}
 end;
 
@@ -775,6 +782,19 @@ begin
   while pos(sub,s)>0 do
     s:=copy(s,1,pos(sub,s)-1)+repl+copy(s,pos(sub,s)+length(sub),length(s)-pos(sub,s)+1-length(sub));
   result:=s;
+end;
+
+{ Returns part of the string to the first occurence of "c", and cuts that part,
+ up to and including "c" }
+function cutto(var s:string;c:char):string;
+begin
+  if pos(c,s)=0 then
+  begin
+    result:='';
+    exit;
+  end;
+  result:=copy(s,1,pos(c,s)-1);
+  delete(s,1,pos(c,s));
 end;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean;

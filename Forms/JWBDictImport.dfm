@@ -270,7 +270,7 @@ object fDictImport: TfDictImport
       '#00082^eMandarin chinese')
     TabOrder = 11
   end
-  object CheckBox1: TCheckBox
+  object cbAddWordIndex: TCheckBox
     Left = 8
     Top = 440
     Width = 513
@@ -280,7 +280,7 @@ object fDictImport: TfDictImport
     State = cbChecked
     TabOrder = 12
   end
-  object CheckBox2: TCheckBox
+  object cbAddCharacterIndex: TCheckBox
     Left = 8
     Top = 464
     Width = 513

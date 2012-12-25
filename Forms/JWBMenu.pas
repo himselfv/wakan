@@ -500,7 +500,6 @@ var
   TUserIdx,
   TUserSheet,
   TUserCat,
-  TKanaKanji,
   TUserPrior:TTextTable;
   //Field indexes
   TCharIndex,TCharChinese,TCharType,TCharUnicode,
@@ -953,7 +952,6 @@ begin
     fSplash.ProgressBar1.Position:=3;
     fSplash.ProgressBar1.Update;
     TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
-    //TKanaKanji:=TTextTable.Create(ps,'KanaKanji',true);
     if (fSettings.CheckBox64.Checked) and (fSettings.CheckBox65.Checked) then RebuildAnnotations;
     if (fSettings.CheckBox64.Checked) then LoadAnnotations;
     //showmessage(TChar.GetField(0,3));
@@ -1143,11 +1141,11 @@ begin
     readln(t,s);
     fDictImport.Edit5.Text:=s;
     readln(t,s);
-    if s='Y'then fDictImport.CheckBox1.Checked:=true else fDictImport.CheckBox1.Checked:=false;
+    fDictImport.cbAddWordIndex.Checked := (s='Y');
     readln(t,s);
-    if s='Y'then fDictImport.CheckBox2.Checked:=true else fDictImport.CheckBox2.Checked:=false;
+    fDictImport.cbAddCharacterIndex.Checked := (s='Y');
     readln(t,s);
-    if s='Y'then fDictImport.cbAddFrequencyInfo.Checked:=true else fDictImport.cbAddFrequencyInfo.Checked:=false;
+    fDictImport.cbAddFrequencyInfo.Checked := (s='Y');
     while not eof(t) do
     begin
       readln(t,s);

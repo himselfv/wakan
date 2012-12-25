@@ -217,6 +217,8 @@ type
 procedure LogAlloc(s:string;len:integer);
 procedure ShowAllocStats;
 
+function BoolToStr(b: boolean): string;
+
 implementation
 
 var dataalloc,structalloc,indexalloc:integer;
@@ -231,7 +233,7 @@ end;
 
 function OffsetPtr(source: pointer; ofs: integer): PByte; inline;
 begin
-  Result := PByte(integer(source)+ofs); 
+  Result := PByte(integer(source)+ofs);
 end;
 
 procedure MoveOfs(source,dest:pointer;ofssource,ofsdest:integer;size:integer);
@@ -242,6 +244,12 @@ begin
   dp:=dest;
   dp:=PByte(integer(dp)+ofsdest);
   move(sp^,dp^,size);
+end;
+
+//That's how TextTable stores bools
+function BoolToStr(b:boolean): string;
+begin
+  if b then Result:='T' else Result:='F';
 end;
 
 constructor TTextTable.Create(source:TPackageSource;filename:string;rawread,offline:boolean);

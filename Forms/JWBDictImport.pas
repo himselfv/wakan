@@ -4,14 +4,16 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls;
+  StdCtrls, Buttons, ExtCtrls, StdPrompt;
 
 type
   TFileList = array of string;
 
   TImportDictFlag = (
+    ifAddWordIndex,       //Checkbox1
+    ifAddCharacterIndex,  //Checkbox2
     ifAddFrequencyInfo,
-    ifSilent            //don't display any UI
+    ifSilent              //don't display any UI
   );
   TImportDictFlags = set of TImportDictFlag;
 
@@ -35,8 +37,8 @@ type
     Button2: TButton;
     OpenDialog1: TOpenDialog;
     RadioGroup2: TRadioGroup;
-    CheckBox1: TCheckBox;
-    CheckBox2: TCheckBox;
+    cbAddWordIndex: TCheckBox;
+    cbAddCharacterIndex: TCheckBox;
     cbAddFrequencyInfo: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -46,12 +48,16 @@ type
 
   protected
     entries:integer;
-    procedure CreateDictTables(diclang:char);
-    procedure WriteDictPackage(tempDir: string; diclang:char);
+    procedure CreateDictTables(dicName: string; diclang:char);
+    procedure WriteDictPackage(dicName: string; tempDir: string; diclang:char);
     procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
 
+  protected
+    prog: TSMPromptForm;
+    function CreateFrequencyList: TStringList;
+
   public
-    function ImportDictionary(files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
+    function ImportDictionary(dicName: string; files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 
   end;
 
@@ -60,7 +66,7 @@ var
 
 implementation
 
-uses JWBDictCoding, StdPrompt, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
+uses JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
   JWBDicSearch, JWBStrings;
 
 {$R *.DFM}
@@ -104,30 +110,7 @@ begin
   Close;
 end;
 
-function split(var s:string;c:char):string;
-begin
-  if pos(c,s)=0 then
-  begin
-    result:='';
-    exit;
-  end;
-  result:=copy(s,1,pos(c,s)-1);
-  delete(s,1,pos(c,s));
-end;
-
-function repl(var s:string;sub,repl:string):string;
-begin
-  while pos(sub,s)>0 do
-    s:=copy(s,1,pos(sub,s)-1)+repl+copy(s,pos(sub,s)+length(sub),length(s)-pos(sub,s)+1-length(sub));
-  result:=s;
-end;
-
-function booltostr(b:boolean):String;
-begin
-  if b then result:='T'else result:='F';
-end;
-
-procedure TfDictImport.CreateDictTables(diclang:char);
+procedure TfDictImport.CreateDictTables(dicName: string; diclang:char);
 var tempDir: string;
   t:textfile;
 begin
@@ -159,11 +142,11 @@ begin
   writeln(t,'<Kanji');
   writeln(t,'$CREATE');
   closefile(t);
-  WriteDictPackage(tempDir, diclang);
+  WriteDictPackage(dicName, tempDir, diclang);
   DeleteDirectory(tempDir);
 end;
 
-procedure TfDictImport.WriteDictPackage(tempDir: string; diclang:char);
+procedure TfDictImport.WriteDictPackage(dicName: string; tempDir: string; diclang:char);
 var f:textfile;
 begin
   assignfile(f,tempDir+'\dict.ver');
@@ -179,7 +162,7 @@ begin
   writeln(f,inttostr(entries));
   writeln(f,edit5.text);
   closefile(f);
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+edit1.text+'.dic');
+  PKGWriteForm.PKGWriteCmd('PKGFileName '+dicName+'.dic');
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name '+edit2.text);
   PKGWriteForm.PKGWriteCmd('TitleName '+edit2.text+' Dictionary');
@@ -243,11 +226,13 @@ begin
   end;
 
   flags := [];
+  if cbAddWordIndex.Checked then flags := flags + [ifAddWordIndex];
+  if cbAddCharacterIndex.Checked then flags := flags + [ifAddCharacterIndex];
   if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
   if paramstr(1)='makedic' then flags := flags + [ifSilent];
 
 
-  if ImportDictionary(files, diclang, flags) then
+  if ImportDictionary(edit1.text, files, diclang, flags) then
   begin
     close;
     if paramstr(1)<>'makedic' then
@@ -263,18 +248,16 @@ ImportDictionary()
 Builds Wakan package from one or more dictionaries.
 Returns true if the package was successfully built, false if aborted.
 }
-function TfDictImport.ImportDictionary(files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
+function TfDictImport.ImportDictionary(dicName: string; files: TFileList;
+  diclang:char; flags: TImportDictFlags): boolean;
 const
- //Edict format markers
-  UH_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
-  UH_TAB = {$IFDEF UNICODE}#$0009{$ELSE}'0009'{$ENDIF};
+ //Format markers
+  UH_EDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
 var fi:integer;
     fname:string;
-    prog:TSMPromptForm;
     s:string;
     fo:textfile;
     fb:file;
-    abort:boolean;
     cd:string;
     buf:array[0..3999] of byte;
     bufc:integer;
@@ -288,7 +271,11 @@ var fi:integer;
     lreat:boolean;
     asc:string;
     ppp:integer;
-    mes,s2,s3,s4:string;
+    mes:string;
+    s2,s3:string;
+    s_roma:string; //romaji
+    s_entry:string; //edict entry (converted)
+    s_mark:string; //edict markers returned by ConvertEdictEntry()
     bl,bh:byte;
     beg:boolean;
     cnt2:integer;
@@ -305,14 +292,13 @@ var fi:integer;
     freql:TStringList;
     freqf:file;
     freqi:integer;
-    newline,nownum,comment:boolean;
-    addkan,addnum:string;
 
     tempDir: string;
     fc: FChar;
     uc: WideChar;
     ac: AnsiChar;
 
+ //TODO: Rewrite
   procedure PutToBuf(b1,b2,b3,b4:byte);
   begin
     buf[bufp]:=b1;
@@ -326,6 +312,7 @@ var fi:integer;
     end;
   end;
 
+ //TODO: Rewrite
   procedure PutToBufL(l:integer);
   var b:array[0..3] of byte;
   begin
@@ -335,100 +322,54 @@ var fi:integer;
 
 begin
   Result := false;
-  prog:=SMProgressDlg(_l('#00071^eDictionary import'),
-    'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',100);
-  abort:=false;
+  prog:=SMProgressDlg(_l('#00071^eDictionary import'),'',100);
   wordidx:=TStringList.Create;
   charidx:=TStringList.Create;
   wordidx2:=TStringList.Create;
   charidx2:=TStringList.Create;
-  freql:=TStringList.Create;
+  freql := nil;
   linecount:=0;
-
-  if (ifAddFrequencyInfo in flags) and not FileExists('wordfreq_ck.uni') then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00915^eCannot find WORDFREQ_CK.UNI file.')),
-      pchar(_l('#00916^eError')),
-      MB_ICONERROR or MB_OK);
-    exit;
-  end;
-
   try
+
+   //Create frequency list
     if ifAddFrequencyInfo in flags then
-    begin
+    try
+      if not FileExists('wordfreq_ck.uni') then
+        raise Exception.Create(_l('#00915^eCannot find WORDFREQ_CK.UNI file.'));
       prog.SetMessage(_l('#00917^eCreating frequency chart...'));
-      Conv_Open('wordfreq_ck.uni',1);
-      fc:=Conv_ReadChar;
-      newline:=true;
-      nownum:=false;
-      addkan:='';
-      addnum:='';
-      comment:=false;
-      while fc<>CONV_NOCHAR do
-      begin
-        if (newline) and (fc=UH_COMMENT) then comment:=true;
-        newline:=false;
-        if fc=UH_LF then
-        begin
-          if not comment and (addkan<>'') and (addnum<>'') then
-          begin
-            freql.AddObject(addkan,TObject(strtoint(addnum)));
-          end;
-          addkan:='';
-          addnum:='';
-          newline:=true;
-          comment:=false;
-          nownum:=false;
-        end else
-        if not comment and (fc=UH_TAB) then
-          nownum:=true
-        else
-        if not comment then if nownum then
-        begin
-          if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(fc);
-        end else
-          addkan:=addkan+fc;
-        fc:=Conv_ReadChar;
+      freql := CreateFrequencyList;
+    except
+      on E: Exception do begin
+        E.Message := 'Frequency list creation failed: '+E.Message;
+        raise;
       end;
     end;
-    freql.Sorted:=true;
-    freql.Sort;
-  except
-    Application.MessageBox(
-      pchar('Frequency list creation failed. Exception:'+(ExceptObject as Exception).Message),
-      'Error',
-      MB_ICONERROR or MB_OK);
-  end;
 
 
-  assignfile(romap,'roma_problems.txt');
-  rewrite(romap);
+    assignfile(romap,'roma_problems.txt');
+    rewrite(romap);
 
- //TODO: Move all temporary stuff to temporary folder (another one, not the package one)
+   //TODO: Move all temporary stuff to temporary folder (another one, not the package one)
 
- { Phase 0 }
-  wordidx.Sorted:=true;
-  charidx.Sorted:=true;
-  for fi:=0 to Length(files)-1 do if not abort then
-  begin
-    fname:='DICT_'+inttostr(fi)+'.TMP';
-    mes:=_l('#00085^eConverting '); //used later too
-    prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
-
-    fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(files[fi]);
-    if ifSilent in flags then begin
-     //Choose default encoding
-      fDictCoding.RadioGroup1.ItemIndex:=1+RadioGroup2.ItemIndex;
-    end else
+   { Phase 0 }
+    for fi:=0 to Length(files)-1 do
     begin
-     //Ask user
-      fDictCoding.ShowModal;
-      if not fDictCoding.succeeded then abort:=true;
-    end;
+      fname:='DICT_'+inttostr(fi)+'.TMP';
+      mes:=_l('#00085^eConverting '); //used later too
+      prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
 
-    if not abort then
-    begin
+      fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(files[fi]);
+      if ifSilent in flags then begin
+       //Choose default encoding
+        fDictCoding.RadioGroup1.ItemIndex:=1+RadioGroup2.ItemIndex;
+      end else
+      begin
+       //Ask user
+        fDictCoding.ShowModal;
+        if not fDictCoding.succeeded then
+          raise EAbort.Create('File conversion aborted ('+files[fi]+').');
+      end;
+
       if fDictCoding.RadioGroup1.ItemIndex=0 then
         CopyFile(pchar(files[fi]),pchar(fname),false)
       else
@@ -441,67 +382,57 @@ begin
         try
           RunUniConv(files[fi], fname, cd);
         except
-         //For now. TODO: Add 'while converting blah blah...' and re-raise
-          abort := true; //It's important that we set this flag here, because the file might exist, but be incomplete.
+          on E: Exception do begin
+            E.Message := _l('While converting ')+files[fi]+': '+E.Message;
+            raise;
+          end;
         end;
       end;
-      if abort or not FileExists(fname) then
-      begin
-        Application.MessageBox(
-          pchar(_l('^eFile conversion failed ('+files[fi]+').')),
-          pchar(_l('#00020^eError')),
-          MB_ICONERROR or MB_OK);
-        abort:=true;
-      end;
-    end;
 
-   //Count number of lines in the converted file
-    assignfile(buff,fname);
-    reset(buff,1);
-    feof:=false;
-    while not feof do
-    begin
-      blockread(buff,buf,4000,bufc);
-      if bufc<4000 then feof:=true;
-      for i:=0 to (bufc div 2)-1 do
-        if PWideChar(@buf[i*2])^=#$000A then
-          inc(linecount);
-    end;
-    closefile(buff);
-  end;
+      if not FileExists(fname) then
+        raise Exception.CreateFmt(_l('File conversion failed (%s)'), [files[fi]]);
 
- { Phase 1 }
-  lineno:=0;
-  cnt:=0;
-  wordidx.Sorted:=true;
-  charidx.Sorted:=true;
-  assignfile(fo,'DICT_IMP1.TMP');
-  rewrite(fo);
-  writeln(fo,'>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
-  for fi:=0 to Length(files)-1 do if not abort then
-  begin
-    fname:='DICT_'+inttostr(fi)+'.TMP';
-    mes:=_l('#00086^eReading && parsing ');
-    prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
-
-    assignfile(buff,fname);
-    reset(buff,1);
-    bufc:=0;
-    bufp:=0;
-    cnt2:=0;
-    blockread(buff,buf,2);
-    if (buf[0]<>255) or (buf[1]<>254) then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00088^eUnsupported file encoding ('+files[fi]+').')),
-        pchar(_l('#00020^eError')),
-        MB_ICONERROR or MB_OK);
-      abort:=true;
-    end else
-    begin
+     //Count number of lines in the converted file and add to total
+      assignfile(buff,fname);
+      reset(buff,1);
       feof:=false;
-      lreat:=false;
-      while (bufp<bufc) or (not feof) do
+      while not feof do
+      begin
+        blockread(buff,buf,4000,bufc);
+        if bufc<4000 then feof:=true;
+        for i:=0 to (bufc div 2)-1 do
+          if PWideChar(@buf[i*2])^=#$000A then
+            inc(linecount);
+      end;
+      closefile(buff);
+    end;
+
+   { Phase 1 }
+    lineno:=0;
+    cnt:=0;
+    wordidx.Sorted:=true;
+    charidx.Sorted:=true;
+    assignfile(fo,'DICT_IMP1.TMP');
+    rewrite(fo);
+    writeln(fo,'>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
+    for fi:=0 to Length(files)-1 do
+    begin
+      fname:='DICT_'+inttostr(fi)+'.TMP';
+      mes:=_l('#00086^eReading && parsing ');
+      prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
+
+      assignfile(buff,fname);
+      reset(buff,1);
+      bufc:=0;
+      bufp:=0;
+      cnt2:=0;
+      blockread(buff,buf,2);
+      if (buf[0]<>255) or (buf[1]<>254) then
+        raise Exception.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
+
+      //Read another line
+      feof:=false;
+      while (not feof) or (bufp<bufc) do
       begin
         lreat:=false;
         kanji:='';
@@ -533,133 +464,119 @@ begin
               end;
           end;
         end;
-        if (linecount>0) and (lineno mod 100=0) then prog.SetProgress(round(lineno/linecount*100));
-        inc(lineno);
-        if (length(writ)>0) and (writ[length(writ)]='/') then delete(writ,length(writ),1);
-        if cnt mod 100=0 then prog.SetMessage(mes+ExtractFilename(files[fi])+' ('+inttostr(cnt)+')...');
+        if (length(writ)>0) and (writ[length(writ)]='/') then
+          delete(writ,length(writ),1);
         if phon='' then phon:=kanji;
+
+        if (linecount>0) and (lineno mod 100=0) then
+          prog.SetProgress(round(lineno/linecount*100));
+        inc(lineno);
+
         inc(cnt);
-        if (pos('1FFF',kanji)=0) and (pos('0023',kanji)=0) then
+        if (pos({$IFDEF UNICODE}#$1FFF{$ELSE}'1FFF'{$ENDIF},kanji)<>0)
+        or (pos(UH_EDICT_COMMENT,kanji)<>0) then
+          continue;
+
+        //Generate romaji
+        pphon:=phon;
+        if diclang='c'then
         begin
-          pphon:=phon;
-          if diclang='c'then
+          repl(phon,' ','');
+          if phon<>kanji then phon:=RomajiToKana(fstrtouni(phon),1,false,diclang);
+        end;
+        s_roma:=KanaToRomaji(phon,1,diclang);
+        if pos('?',s_roma)>0 then
+        begin
+         //roma_problems
+          writeln(romap,writ);
+          writeln(romap,s_roma);
+          writeln(romap,string(fstrtouni(pphon))); //Data loss! But whatever.
+        end;
+        repl(s_roma,'?','');
+        if s_roma='' then s_roma:='XXX';
+
+        s_entry:=ConvertEdictEntry(string(writ),s_mark);
+        repl(s_entry,';',',');
+
+       //Priority
+        prior:=0;
+        if ifAddFrequencyInfo in flags then
+        begin
+          freqi:=freql.IndexOf(kanji);
+          if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
+        end;
+
+       //Write out
+        if s_roma<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s_entry+';'+fstrtohex(phon)+';'+fstrtohex(kanji)+';'+s_roma+';'+s_mark+';'+inttostr(prior));
+
+       //Indexes
+        s:=kanji;
+        hexacnt:=format('%8.8X',[cnt]);;
+        if ifAddCharacterIndex in flags then
+          while s<>'' do
           begin
-            repl(phon,' ','');
-            if phon<>kanji then phon:=RomajiToKana(HexToUnicode(phon),1,false,diclang);
-          end;
-          s4:=KanaToRomaji(phon,1,diclang);
-          if pos('?',s4)>0 then
+            fc:=fgetch(s,1);
+            fdelete(s,1,1);
+            if TChar.Locate('Unicode',fstrtohex(fc),false) then
+              EnsortIndex(charidx,charidx2,fstrtohex(fc),hexacnt); //TODO: Do we need fstrtohex here? Remove if we make EnsortIndex work with Unicode strings
+          end; //of AddCharacterIndex while clause
+
+        s:=string(writ);
+        if ifAddWordIndex in flags then
+          while s<>'' do
           begin
-            writeln(romap,writ);
-            writeln(romap,s4);
-            writeln(romap,string(HexToUnicode(pphon)));
-          end;
-          //Application.MessageBox(pchar(_l('#00089^eCannot romanize following line:')+#13+#13+s2+#13+s4),
-          //  pchar(_l('#00090^eWarning')),MB_ICONWARNING or MB_OK);
-          repl(s4,'?','');
-          if s4='' then s4:='XXX';
-          s3:=ConvertEdictEntry(writ,s2);
-          repl(s3,';',',');
-          //if length(s3)<3 then showmessage(s3+#13+writ);
-          prior:=0;
-          {if diclang='j'then
-          begin
-            TKanaKanji.SetOrder('Kana_Ind');
-            if TKanaKanji.Locate('Kana',phon,false) then
+            s2:=cutto(s,'/');
+            if s2='' then
             begin
-              skk:=TKanaKanji.Str(TKanaKanji.Field('Kanji'))+'0000';
-              skkj:=1;
-              while skk<>'' do
-              begin
-                for skki:=1 to length(skk) div 4 do if copy(skk,skki*4-3,4)='0000'then
-                begin
-                  skk2:=copy(skk,1,skki*4-4);
-                  delete(skk,1,skki*4);
-                  if (skk2=kanji) and (prior=0) then prior:=skkj;
-                  inc(skkj);
-                  break;
-                end;
-              end;
-              if prior=0 then prior:=99;
+              s2:=s;
+              s:='';
             end;
-          end;}
-          if ifAddFrequencyInfo in flags then
-          begin
-            freqi:=freql.IndexOf(kanji);
-            if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
-          end;
-          if s4<>'' then writeln(fo,'+'+inttostr(cnt)+';'+s3+';'+fstrtohex(phon)+';'+fstrtohex(kanji)+';'+s4+';'+s2+';'+inttostr(prior));
-          s:=kanji;
-          hexacnt:=format('%8.8X',[cnt]);;
-          if CheckBox2.Checked then
-          begin
-            while s<>'' do
+            if s2='' then continue;
+
+            s2:=lowercase(s2);
+            while s2<>'' do
             begin
-              s2:=copy(s,1,4);
-              delete(s,1,4);
-              if TChar.Locate('Unicode',s2,false) then EnsortIndex(charidx,charidx2,s2,hexacnt);
-            end;
-          end;
-          s:=writ;
-          if CheckBox1.Checked then
-          begin
-            while s<>'' do
-            begin
-              s2:=split(s,'/');
-              if s2='' then
+              while (length(s2)>0) and (s2[1]='(') do
               begin
-                s2:=s;
-                s:='';
+                if pos(')',s2)>0 then delete(s2,1,pos(')',s2))
+                else s2:='';
+                while (length(s2)>0) and (s2[1]=' ') do delete(s2,1,1);
               end;
-              if s2<>'' then
+              s3:=cutto(s2,' ');
+              if s3='' then
               begin
-                s2:=lowercase(s2);
-                while s2<>'' do
-                begin
-                  while (length(s2)>0) and (s2[1]='(') do
-                  begin
-                    if pos(')',s2)>0 then delete(s2,1,pos(')',s2))
-                    else s2:='';
-                    while (length(s2)>0) and (s2[1]=' ') do delete(s2,1,1);
-                  end;
-                  s3:=split(s2,' ');
-                  if s3='' then
-                  begin
-                    s3:=s2;
-                    s2:='';
-                  end;
-                  repl(s2,';',',');
-                  if ignorel.IndexOf(s3)=-1 then
-                  begin
-                    if length(s3)>4 then s3:=copy(s3,1,4);
-                    if (length(s3)>0) and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-') and
-                      (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then EnsortIndex(wordidx,wordidx2,s3,hexacnt);
-                  end;
-                end;
+                s3:=s2;
+                s2:='';
+              end;
+              repl(s2,';',',');
+              if ignorel.IndexOf(s3)=-1 then
+              begin
+                if length(s3)>4 then s3:=copy(s3,1,4);
+                if (length(s3)>0) and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-') and
+                  (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then EnsortIndex(wordidx,wordidx2,s3,hexacnt);
               end;
             end;
-          end;
-        end; //of the bigass IF block
-      end;
-    end;
-    closefile(buff);
-    entries:=cnt;
-  end;
-  writeln(fo,'.');
-  closefile(fo);
+          end; //of AddWordIndex while clause
 
-  closefile(romap);
+      end; //for every character in the file
+
+      closefile(buff);
+      entries:=cnt;
+    end; //for every file
+    writeln(fo,'.');
+    closefile(fo);
+
+    closefile(romap);
 
 
-
-  if not abort then
-  begin
-    CreateDictTables(diclang);
+    CreateDictTables(dicName, diclang);
     dic:=TJaletDic.Create;
-    dic.FillInfo(edit1.text+'.dic');
-    if not dic.tested then abort:=true;
-    if not abort then dic.Load;
-    if not dic.loaded then abort:=true;
+    dic.FillInfo(dicName+'.dic');
+    if not dic.tested then
+      raise Exception.Create('Cannot load the newly created dictionary.');
+    dic.Load;
+    if not dic.loaded then
+      raise Exception.Create('Cannot load the target dictionary');
     dic.Demand;
     assignfile(fo,'DICT_IMP1.TMP');
     reset(fo);
@@ -677,6 +594,7 @@ begin
     for i:=0 to charidx.Count-1 do charidx[i]:=charidx[i]+'    '+charidx2[i];
     wordidx.CustomSort(CustomSortCompare);
     charidx.CustomSort(CustomSortCompare);
+
     prog.SetMessage(_l('^eWriting character index...'));
     assignfile(fb,tempDir+'\CharIdx.bin');
     bufp:=0;
@@ -696,6 +614,7 @@ begin
     end;
     blockwrite(fb,buf,bufp);
     closefile(fb);
+
     prog.SetMessage(_l('^eWriting word index...'));
     assignfile(fb,tempDir+'\WordIdx.bin');
     bufp:=0;
@@ -707,7 +626,7 @@ begin
       PutToBuf(ord(wordidx[i][1]),ord(wordidx[i][2]),ord(wordidx[i][3]),ord(wordidx[i][4]));
       PutToBufL(j);
       inc(j,(length(wordidx[i]) div 8)-1);
-//      if length(wordidx[i])>4000 then showmessage('Consider "'+copy(wordidx[i],1,4)+'"');
+      //if length(wordidx[i])>4000 then showmessage('Consider "'+copy(wordidx[i],1,4)+'"');
     end;
     for i:=0 to wordidx.Count-1 do for j:=1 to (length(wordidx[i]) div 8)-1 do
     begin
@@ -716,29 +635,84 @@ begin
     end;
     blockwrite(fb,buf,bufp);
     closefile(fb);
+
     dic.TDict.WriteTable(tempDir+'\Dict',true);
     dic.Free;
 
-    WriteDictPackage(tempDir, diclang);
+    WriteDictPackage(dicName, tempDir, diclang);
     DeleteDirectory(tempDir);
-  end;
-  wordidx.Free;
-  charidx.Free;
-  wordidx2.Free;
-  charidx2.Free;
-  freql.Free;
-  for fi:=0 to Length(files)-1 do
-  begin
-    fname:='DICT_'+inttostr(fi)+'.TMP';
-    DeleteFile(fname);
-  end;
-  for fi:=1 to 3 do
-    DeleteFile('DICT_IMP'+inttostr(fi)+'.TMP');
-  prog.Free;
 
-  Result := not abort;
+    for fi:=0 to Length(files)-1 do
+    begin
+      fname:='DICT_'+inttostr(fi)+'.TMP';
+      DeleteFile(fname);
+    end;
+
+    for fi:=1 to 3 do
+      DeleteFile('DICT_IMP'+inttostr(fi)+'.TMP');
+
+  finally
+    wordidx.Free;
+    charidx.Free;
+    wordidx2.Free;
+    charidx2.Free;
+    freql.Free;
+    prog.Free;
+  end;
+
+  Result := true;
 end;
 
+
+{
+Creates and populates TStringList with frequency information taken from wordfreq_ck.uni.
+}
+function TfDictImport.CreateFrequencyList: TStringList;
+const
+ //Format markers
+  UH_FREQ_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
+  UH_TAB = {$IFDEF UNICODE}#$0009{$ELSE}'0009'{$ENDIF};
+var fc: FChar;
+  newline,nownum,comment:boolean;
+  addkan,addnum:string;
+begin
+  Result:=TStringList.Create;
+  Conv_Open('wordfreq_ck.uni',1);
+  fc:=Conv_ReadChar;
+  newline:=true;
+  nownum:=false;
+  addkan:='';
+  addnum:='';
+  comment:=false;
+  while fc<>CONV_NOCHAR do
+  begin
+    if (newline) and (fc=UH_FREQ_COMMENT) then comment:=true;
+    newline:=false;
+    if fc=UH_LF then
+    begin
+      if not comment and (addkan<>'') and (addnum<>'') then
+      begin
+        Result.AddObject(addkan,TObject(strtoint(addnum)));
+      end;
+      addkan:='';
+      addnum:='';
+      newline:=true;
+      comment:=false;
+      nownum:=false;
+    end else
+    if not comment and (fc=UH_TAB) then
+      nownum:=true
+    else
+    if not comment then if nownum then
+    begin
+      if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(fc);
+    end else
+      addkan:=addkan+fc;
+    fc:=Conv_ReadChar;
+  end;
+  Result.Sorted:=true;
+  Result.Sort;
+end;
 
 {
 Executes UNICONV.exe to convert srcFile to outpFile.
