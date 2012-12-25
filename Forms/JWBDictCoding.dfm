@@ -12,7 +12,7 @@ object fDictCoding: TfDictCoding
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   Scaled = False
   PixelsPerInch = 96
   TextHeight = 13
@@ -22,8 +22,7 @@ object fDictCoding: TfDictCoding
     Width = 305
     Height = 13
     AutoSize = False
-    Caption = 
-      '#00064^ePlease select language of the input EDICT file:'
+    Caption = '#00064^ePlease select language of the input EDICT file:'
   end
   object Label2: TLabel
     Left = 8
@@ -48,7 +47,7 @@ object fDictCoding: TfDictCoding
       '#00065^ePlease note:'#13#10'For encodings different than "Unicode 16-b' +
       'it" you need the UNICONV utility in the current directory.'#13#10'This' +
       ' utility can be downloaded from ftp.cc.monash.edu.au/pub/nihongo' +
-      '/uniconv.zip.'#13#10''
+      '/uniconv.zip.'#13#10
     WordWrap = True
   end
   object RadioGroup1: TRadioGroup

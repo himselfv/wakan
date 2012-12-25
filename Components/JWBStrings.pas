@@ -133,9 +133,6 @@ function max(a, b: integer): integer; inline;
 
 { Files }
 
-var
-  AppFolder: string = '';
-
 function GetModuleFilenameStr(hModule: HMODULE = 0): string;
 function GetFileVersionInfoStr(Filename: string): string;
 function GetTempPathStr: string;
@@ -216,7 +213,7 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 function remexcl(s:string):string;
 function strip_fl(s:string):string;
 function repl(var s:string;sub,repl:string):string;
-function cutto(var s:string;c:char):string;
+function strqpop(var s:string;c:char):string;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
 function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
@@ -784,17 +781,22 @@ begin
   result:=s;
 end;
 
-{ Returns part of the string to the first occurence of "c", and cuts that part,
- up to and including "c" }
-function cutto(var s:string;c:char):string;
+{ Returns part of the string from the start to the first occurence of "c",
+ and cuts that part, up to and including "c".
+ If no "c" is found, returns the remainder of the string. }
+function strqpop(var s:string;c:char):string;
+var i: integer;
 begin
-  if pos(c,s)=0 then
+  i := pos(c,s);
+  if i=0 then
   begin
-    result:='';
-    exit;
+    Result:=s;
+    s:='';
+  end else
+  begin
+    Result:=copy(s,1,i-1);
+    delete(s,1,i);
   end;
-  result:=copy(s,1,pos(c,s)-1);
-  delete(s,1,pos(c,s));
 end;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean;

@@ -1586,7 +1586,6 @@ begin
   while s[1]<>'.' do
   begin
     inc(cnt);
-    if cnt mod 100=0 then if smf<>nil then smf.SetMessage(mess+' ('+inttostr(cnt)+')...');
     system.delete(s,1,1);
     SetLength(a,fieldcount);
     for i:=0 to fieldcount-1 do a[i]:='0';
@@ -1605,9 +1604,9 @@ begin
   end;
   fld.Free;
   nocommit:=false;
-  if smf<>nil then smf.SetMessage(mess+' (index)...');
+  if smf<>nil then smf.SetMessage(mess+' (indexing)...');
   Reindex;
-  if smf<>nil then smf.SetMessage(mess+' (finish)...');
+  if smf<>nil then smf.SetMessage(mess+'...');
 end;
 
 procedure LogAlloc(s:string;len:integer);

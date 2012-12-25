@@ -12,7 +12,7 @@ object fDictImport: TfDictImport
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   Scaled = False
   OnShow = FormShow
   PixelsPerInch = 96

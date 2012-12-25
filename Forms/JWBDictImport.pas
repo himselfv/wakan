@@ -10,8 +10,8 @@ type
   TFileList = array of string;
 
   TImportDictFlag = (
-    ifAddWordIndex,       //Checkbox1
-    ifAddCharacterIndex,  //Checkbox2
+    ifAddWordIndex,       //add word index (words from translation, for reverse-lookups)
+    ifAddCharacterIndex,  //kanji index for all used kanjis
     ifAddFrequencyInfo,
     ifSilent              //don't display any UI
   );
@@ -61,6 +61,26 @@ type
 
   end;
 
+ {
+  Dictionary index builder. Instances are not reusable.
+  1. Create.
+  2. AddToIndex(Key, Article)
+  3. Pack.
+  4. Write and Destroy
+ }
+  TIndexBuilder = class
+  protected
+    sl_names: TStringList;
+    sl_values: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure AddToIndex(key: string; article: integer);
+    procedure Pack;
+    procedure Write(filename: string);
+
+  end;
+
 var
   fDictImport: TfDictImport;
 
@@ -70,6 +90,121 @@ uses JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
   JWBDicSearch, JWBStrings;
 
 {$R *.DFM}
+
+{
+Currently we keep data in two StringLists, one for names, another for article
+indices for a given name (8 bytes hex == integer each).
+}
+
+constructor TIndexBuilder.Create;
+begin
+  inherited;
+  sl_names := TStringList.Create;
+  sl_values := TStringList.Create;
+  sl_names.Sorted:=true;
+end;
+
+destructor TIndexBuilder.Destroy;
+begin
+  FreeAndNil(sl_values);
+  FreeAndNil(sl_names);
+  inherited;
+end;
+
+{ Key: Index key.
+Article: Article index to link to this key. }
+procedure TIndexBuilder.AddToIndex(key: string; article: integer);
+var i:integer;
+  s:string;
+  ind:string;
+begin
+ //Currently this only supports indexing by first 4 chars of the key (it's fine,
+ //since indexes are not ultimate by definition)
+  if length(key)>4 then SetLength(key, 4);
+
+ //Article IDs are stored as 8 byte hex blocks one after another
+  ind:=ByteToHex(@article, sizeof(article));
+
+  i:=sl_names.IndexOf(key);
+  if i<>-1 then s:=sl_values[i] else s:='';
+  if copy(s,length(s)-7,8)<>ind then
+  begin
+    s:=s+ind;
+    if i=-1 then
+    begin
+      i:=sl_names.Add(key);
+      sl_values.Insert(i,s);
+    end else
+      sl_values[i]:=s;
+  end;
+end;
+
+function CustomSortCompare(list:TStringList;index1,index2:integer):integer;
+begin
+  result:=CompareStr(uppercase(list[index1]),uppercase(list[index2]));
+end;
+
+{ Call to finalize index building and pack/sort the data. }
+procedure TIndexBuilder.Pack;
+var i: integer;
+begin
+  sl_names.Sorted:=false;
+  for i:=0 to sl_names.Count-1 do while length(sl_names[i])<4 do sl_names[i]:=sl_names[i]+' ';
+  for i:=0 to sl_names.Count-1 do sl_names[i]:=sl_names[i]+'    '+sl_values[i];
+  sl_values.Clear(); //free memory
+  sl_names.CustomSort(CustomSortCompare);
+end;
+
+procedure TIndexBuilder.Write(filename: string);
+var
+  fb: file;
+  buf: array[0..3999] of byte;
+  bufp: integer;
+  i, j: integer;
+
+  //TODO: Rewrite both these functions and perhaps change the method TIndexBuilder uses to keep sl_names at all
+  procedure PutToBuf(b1,b2,b3,b4:byte);
+  begin
+    buf[bufp]:=b1;
+    buf[bufp+1]:=b2;
+    buf[bufp+2]:=b3;
+    buf[bufp+3]:=b4;
+    inc(bufp,4);
+    if bufp=4000 then begin
+      blockwrite(fb,buf,4000);
+      bufp:=0;
+    end;
+  end;
+
+  procedure PutToBufL(l:integer);
+  var b:array[0..3] of byte;
+  begin
+    move(l,b,4);
+    PutToBuf(b[0],b[1],b[2],b[3]);
+  end;
+
+begin
+  assignfile(fb,filename);
+  bufp:=0;
+  rewrite(fb,1);
+  PutToBufL(sl_names.Count);
+  j:=0;
+  for i:=0 to sl_names.Count-1 do
+  begin
+    PutToBuf(ord(sl_names[i][1]),ord(sl_names[i][2]),ord(sl_names[i][3]),ord(sl_names[i][4]));
+    PutToBufL(j);
+    inc(j,(length(sl_names[i]) div 8)-1);
+  end;
+  for i:=0 to sl_names.Count-1 do
+    for j:=1 to (length(sl_names[i]) div 8)-1 do
+    begin
+      PutToBuf(strtoint('0x'+copy(sl_names[i],j*8+7,2)),strtoint('0x'+copy(sl_names[i],j*8+5,2)),
+               strtoint('0x'+copy(sl_names[i],j*8+3,2)),strtoint('0x'+copy(sl_names[i],j*8+1,2)));
+    end;
+  blockwrite(fb,buf,bufp);
+  closefile(fb);
+end;
+
 
 procedure TfDictImport.FormShow(Sender: TObject);
 begin
@@ -183,31 +318,8 @@ begin
   PKGWriteForm.PKGWriteCmd('Finish');
 end;
 
-procedure EnsortIndex(sl,sl2:TStringList;des,ind:string);
-var i:integer;
-    s:string;
-    f:boolean;
-begin
-  i:=sl.IndexOf(des);
-  s:='';
-  if i<>-1 then s:=sl2[i];
-  f:=false;
-  if copy(s,length(s)-7,8)=ind then f:=true;
-  if not f then
-  begin
-    s:=s+ind;
-    if i=-1 then
-    begin
-      i:=sl.Add(des);
-      sl2.Insert(i,s);
-    end else sl2[i]:=s;
-  end;
-end;
 
-function CustomSortCompare(list:TStringList;index1,index2:integer):integer;
-begin
-  result:=CompareStr(uppercase(list[index1]),uppercase(list[index2]));
-end;
+
 
 procedure TfDictImport.BitBtn1Click(Sender: TObject);
 var i: integer;
@@ -230,7 +342,6 @@ begin
   if cbAddCharacterIndex.Checked then flags := flags + [ifAddCharacterIndex];
   if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
   if paramstr(1)='makedic' then flags := flags + [ifSilent];
-
 
   if ImportDictionary(edit1.text, files, diclang, flags) then
   begin
@@ -285,8 +396,7 @@ var fi:integer;
     prior:integer;
     skk,skk2:string;
     skki,skkj:integer;
-    wordidx,charidx,wordidx2,charidx2:TStringList;
-    hexacnt:string;
+    wordidx,charidx:TIndexBuilder;
     linecount,lineno:integer;
     i,j:integer;
     freql:TStringList;
@@ -298,35 +408,13 @@ var fi:integer;
     uc: WideChar;
     ac: AnsiChar;
 
- //TODO: Rewrite
-  procedure PutToBuf(b1,b2,b3,b4:byte);
-  begin
-    buf[bufp]:=b1;
-    buf[bufp+1]:=b2;
-    buf[bufp+2]:=b3;
-    buf[bufp+3]:=b4;
-    inc(bufp,4);
-    if bufp=4000 then begin
-      blockwrite(fb,buf,4000);
-      bufp:=0;
-    end;
-  end;
-
- //TODO: Rewrite
-  procedure PutToBufL(l:integer);
-  var b:array[0..3] of byte;
-  begin
-    move(l,b,4);
-    PutToBuf(b[0],b[1],b[2],b[3]);
-  end;
-
 begin
   Result := false;
-  prog:=SMProgressDlg(_l('#00071^eDictionary import'),'',100);
-  wordidx:=TStringList.Create;
-  charidx:=TStringList.Create;
-  wordidx2:=TStringList.Create;
-  charidx2:=TStringList.Create;
+  prog:=SMProgressDlg(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
+  prog.Width := 500; //we're going to have long file names
+  prog.Appear;
+  wordidx := TIndexBuilder.Create;
+  charidx := TIndexBuilder.Create;
   freql := nil;
   linecount:=0;
   try
@@ -345,16 +433,17 @@ begin
       end;
     end;
 
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
 
-    assignfile(romap,'roma_problems.txt');
+
+    assignfile(romap,'roma_problems.txt'); //TODO: This one should go into UserDir when we have one
     rewrite(romap);
-
-   //TODO: Move all temporary stuff to temporary folder (another one, not the package one)
 
    { Phase 0 }
     for fi:=0 to Length(files)-1 do
     begin
-      fname:='DICT_'+inttostr(fi)+'.TMP';
+      fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
       mes:=_l('#00085^eConverting '); //used later too
       prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
 
@@ -410,14 +499,12 @@ begin
    { Phase 1 }
     lineno:=0;
     cnt:=0;
-    wordidx.Sorted:=true;
-    charidx.Sorted:=true;
-    assignfile(fo,'DICT_IMP1.TMP');
+    assignfile(fo,tempDir+'\DICT_IMP1.TMP');
     rewrite(fo);
     writeln(fo,'>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
     for fi:=0 to Length(files)-1 do
     begin
-      fname:='DICT_'+inttostr(fi)+'.TMP';
+      fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
       mes:=_l('#00086^eReading && parsing ');
       prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
 
@@ -473,7 +560,7 @@ begin
         inc(lineno);
 
         inc(cnt);
-        if (pos({$IFDEF UNICODE}#$1FFF{$ELSE}'1FFF'{$ENDIF},kanji)<>0)
+        if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},kanji)<>0)  //EDICT header line
         or (pos(UH_EDICT_COMMENT,kanji)<>0) then
           continue;
 
@@ -511,50 +598,37 @@ begin
 
        //Indexes
         s:=kanji;
-        hexacnt:=format('%8.8X',[cnt]);;
         if ifAddCharacterIndex in flags then
           while s<>'' do
           begin
             fc:=fgetch(s,1);
             fdelete(s,1,1);
             if TChar.Locate('Unicode',fstrtohex(fc),false) then
-              EnsortIndex(charidx,charidx2,fstrtohex(fc),hexacnt); //TODO: Do we need fstrtohex here? Remove if we make EnsortIndex work with Unicode strings
+              charidx.AddToIndex(fstrtohex(fc), cnt); //char index has to have fc in FHex -- that's the format
           end; //of AddCharacterIndex while clause
 
         s:=string(writ);
         if ifAddWordIndex in flags then
           while s<>'' do
           begin
-            s2:=cutto(s,'/');
-            if s2='' then
-            begin
-              s2:=s;
-              s:='';
-            end;
+           //Pop next translation alternative
+            s2:=lowercase(strqpop(s,'/'));
             if s2='' then continue;
-
-            s2:=lowercase(s2);
             while s2<>'' do
             begin
+             //Remove all the leading (flags) (and) (markers)
               while (length(s2)>0) and (s2[1]='(') do
               begin
-                if pos(')',s2)>0 then delete(s2,1,pos(')',s2))
-                else s2:='';
-                while (length(s2)>0) and (s2[1]=' ') do delete(s2,1,1);
+                strqpop(s2,')');
+                s2 := TrimLeft(s2);
               end;
-              s3:=cutto(s2,' ');
-              if s3='' then
-              begin
-                s3:=s2;
-                s2:='';
-              end;
+             //Pop next word until space
+              s3:=strqpop(s2,' ');
               repl(s2,';',',');
-              if ignorel.IndexOf(s3)=-1 then
-              begin
-                if length(s3)>4 then s3:=copy(s3,1,4);
-                if (length(s3)>0) and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-') and
-                  (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then EnsortIndex(wordidx,wordidx2,s3,hexacnt);
-              end;
+              if (ignorel.IndexOf(s3)=-1) and (s3<>'')
+              and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-')
+              and (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then
+                wordidx.AddToIndex(s3, cnt);
             end;
           end; //of AddWordIndex while clause
 
@@ -578,84 +652,39 @@ begin
     if not dic.loaded then
       raise Exception.Create('Cannot load the target dictionary');
     dic.Demand;
-    assignfile(fo,'DICT_IMP1.TMP');
+    assignfile(fo,tempDir+'\DICT_IMP1.TMP');
     reset(fo);
     dic.TDict.ImportFromText(fo,prog,_l('#00091^eBuilding dictionary table'));
     closefile(fo);
 
+    DeleteDirectory(tempDir);
+
+
+   //This time it's for our package
     tempDir := CreateRandomTempDirName();
     ForceDirectories(tempDir);
 
     prog.SetMessage(_l('#00092^eSorting indexes...'));
-    wordidx.Sorted:=false;
-    charidx.Sorted:=false;
-    for i:=0 to wordidx.Count-1 do while length(wordidx[i])<4 do wordidx[i]:=wordidx[i]+' ';
-    for i:=0 to wordidx.Count-1 do wordidx[i]:=wordidx[i]+'    '+wordidx2[i];
-    for i:=0 to charidx.Count-1 do charidx[i]:=charidx[i]+'    '+charidx2[i];
-    wordidx.CustomSort(CustomSortCompare);
-    charidx.CustomSort(CustomSortCompare);
+    charidx.Pack;
+    wordidx.Pack;
 
     prog.SetMessage(_l('^eWriting character index...'));
-    assignfile(fb,tempDir+'\CharIdx.bin');
-    bufp:=0;
-    rewrite(fb,1);
-    PutToBufL(charidx.Count);
-    j:=0;
-    for i:=0 to charidx.Count-1 do
-    begin
-      PutToBuf(ord(charidx[i][1]),ord(charidx[i][2]),ord(charidx[i][3]),ord(charidx[i][4]));
-      PutToBufL(j);
-      inc(j,(length(charidx[i]) div 8)-1);
-    end;
-    for i:=0 to charidx.Count-1 do for j:=1 to (length(charidx[i]) div 8)-1 do
-    begin
-      PutToBuf(strtoint('0x'+copy(charidx[i],j*8+7,2)),strtoint('0x'+copy(charidx[i],j*8+5,2)),
-               strtoint('0x'+copy(charidx[i],j*8+3,2)),strtoint('0x'+copy(charidx[i],j*8+1,2)));
-    end;
-    blockwrite(fb,buf,bufp);
-    closefile(fb);
+    charidx.Write(tempDir+'\CharIdx.bin');
 
     prog.SetMessage(_l('^eWriting word index...'));
-    assignfile(fb,tempDir+'\WordIdx.bin');
-    bufp:=0;
-    rewrite(fb,1);
-    PutToBufL(wordidx.Count);
-    j:=0;
-    for i:=0 to wordidx.Count-1 do
-    begin
-      PutToBuf(ord(wordidx[i][1]),ord(wordidx[i][2]),ord(wordidx[i][3]),ord(wordidx[i][4]));
-      PutToBufL(j);
-      inc(j,(length(wordidx[i]) div 8)-1);
-      //if length(wordidx[i])>4000 then showmessage('Consider "'+copy(wordidx[i],1,4)+'"');
-    end;
-    for i:=0 to wordidx.Count-1 do for j:=1 to (length(wordidx[i]) div 8)-1 do
-    begin
-      PutToBuf(strtoint('0x'+copy(wordidx[i],j*8+7,2)),strtoint('0x'+copy(wordidx[i],j*8+5,2)),
-               strtoint('0x'+copy(wordidx[i],j*8+3,2)),strtoint('0x'+copy(wordidx[i],j*8+1,2)));
-    end;
-    blockwrite(fb,buf,bufp);
-    closefile(fb);
+    wordidx.Write(tempDir+'\WordIdx.bin');
 
+    prog.SetMessage(_l('^eWriting dictionary table...'));
     dic.TDict.WriteTable(tempDir+'\Dict',true);
     dic.Free;
 
     WriteDictPackage(dicName, tempDir, diclang);
     DeleteDirectory(tempDir);
 
-    for fi:=0 to Length(files)-1 do
-    begin
-      fname:='DICT_'+inttostr(fi)+'.TMP';
-      DeleteFile(fname);
-    end;
-
-    for fi:=1 to 3 do
-      DeleteFile('DICT_IMP'+inttostr(fi)+'.TMP');
 
   finally
     wordidx.Free;
     charidx.Free;
-    wordidx2.Free;
-    charidx2.Free;
     freql.Free;
     prog.Free;
   end;
@@ -729,7 +758,7 @@ begin
   FillChar(si, sizeof(si), 0);
   si.dwFlags:=STARTF_USESHOWWINDOW;
   si.wShowWindow:=SW_HIDE;
-  if not CreateProcess(nil,pchar(AppFolder+'\UNICONV.EXE '+srcEnc+' "'+srcFile+'" UCS2 '+outpFile),nil,nil,false,0,nil,nil,si,lpi) then
+  if not CreateProcess(nil,pchar(AppFolder+'\UNICONV.EXE '+srcEnc+' "'+srcFile+'" UCS2 "'+outpFile+'"'),nil,nil,false,0,nil,nil,si,lpi) then
     RaiseLastOSError();
 
   fail := (WaitForSingleObject(lpi.hProcess,30000)<>WAIT_OBJECT_0);
