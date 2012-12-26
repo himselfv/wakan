@@ -13,9 +13,19 @@ type
     ifAddWordIndex,       //add word index (words from translation, for reverse-lookups)
     ifAddCharacterIndex,  //kanji index for all used kanjis
     ifAddFrequencyInfo,
-    ifSilent              //don't display any UI
+    ifSilent,             //don't display any UI
+    ifUnicode             //unicode format dictionary (bigger in size but supports other languages)
   );
   TImportDictFlags = set of TImportDictFlag;
+
+  TDictInfo = record
+    Name: string;
+    Description: string;
+    Copyright: string;
+    Version: string;
+    Priority: integer;
+  end;
+  PDictInfo = ^TDictInfo;
 
   TfDictImport = class(TForm)
     Label1: TLabel;
@@ -24,32 +34,32 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
-    Edit1: TEdit;
-    Edit2: TEdit;
-    ListBox1: TListBox;
-    Edit3: TEdit;
-    RadioGroup1: TRadioGroup;
-    Edit4: TEdit;
-    Edit5: TEdit;
-    BitBtn1: TBitBtn;
-    BitBtn2: TBitBtn;
-    Button1: TButton;
-    Button2: TButton;
-    OpenDialog1: TOpenDialog;
-    RadioGroup2: TRadioGroup;
+    edtDictFilename: TEdit;
+    edtDictName: TEdit;
+    lbFiles: TListBox;
+    edtVersion: TEdit;
+    rgPriority: TRadioGroup;
+    edtDescription: TEdit;
+    edtCopyright: TEdit;
+    btnBuild: TBitBtn;
+    btnCancel: TBitBtn;
+    btnAddFile: TButton;
+    btnRemoveFile: TButton;
+    AddFileDialog: TOpenDialog;
+    rgLanguage: TRadioGroup;
     cbAddWordIndex: TCheckBox;
     cbAddCharacterIndex: TCheckBox;
     cbAddFrequencyInfo: TCheckBox;
     procedure FormShow(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
-    procedure BitBtn2Click(Sender: TObject);
-    procedure BitBtn1Click(Sender: TObject);
+    procedure btnAddFileClick(Sender: TObject);
+    procedure btnRemoveFileClick(Sender: TObject);
+    procedure btnCancelClick(Sender: TObject);
+    procedure btnBuildClick(Sender: TObject);
 
   protected
-    entries:integer;
-    procedure CreateDictTables(dicName: string; diclang:char);
-    procedure WriteDictPackage(dicName: string; tempDir: string; diclang:char);
+    procedure CreateDictTables(dicFilename: string; info: TDictInfo; diclang:char; entries: integer);
+    procedure WriteDictPackage(dicFilename: string; tempDir: string; info: TDictInfo;
+      diclang:char; entries:integer);
     procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
 
   protected
@@ -57,7 +67,7 @@ type
     function CreateFrequencyList: TStringList;
 
   public
-    function ImportDictionary(dicName: string; files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
+    function ImportDictionary(dicFilename: string; info: TDictInfo; files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 
   end;
 
@@ -208,44 +218,45 @@ end;
 
 procedure TfDictImport.FormShow(Sender: TObject);
 begin
-  edit1.text:='noname';
-  edit2.text:='NONAME';
-  listbox1.items.clear;
-  button2.enabled:=false;
-  bitbtn1.enabled:=false;
-  edit3.text:='N/A';
-  RadioGroup1.ItemIndex:=0;
-  edit4.text:='';
-  edit5.text:='';
+  edtDictFilename.text:='noname';
+  edtDictName.text:='NONAME';
+  lbFiles.items.clear;
+  btnRemoveFile.enabled:=false;
+  btnBuild.enabled:=false;
+  edtVersion.text:='N/A';
+  rgPriority.ItemIndex:=0;
+  edtDescription.text:='';
+  edtCopyright.text:='';
 end;
 
-procedure TfDictImport.Button1Click(Sender: TObject);
+procedure TfDictImport.btnAddFileClick(Sender: TObject);
 begin
-  if Opendialog1.execute then
+  if AddFileDialog.execute then
   begin
-    ListBox1.Items.Add(OpenDialog1.FileName);
-    button2.enabled:=true;
-    bitbtn1.enabled:=true;
-    if ListBox1.ItemIndex=-1 then ListBox1.ItemIndex:=0;
+    lbFiles.Items.Add(AddFileDialog.FileName);
+    btnRemoveFile.enabled:=true;
+    btnBuild.enabled:=true;
+    if lbFiles.ItemIndex=-1 then lbFiles.ItemIndex:=0;
   end;
 end;
 
-procedure TfDictImport.Button2Click(Sender: TObject);
+procedure TfDictImport.btnRemoveFileClick(Sender: TObject);
 begin
-  ListBox1.Items.Delete(ListBox1.ItemIndex);
-  if ListBox1.Items.Count>0 then ListBox1.ItemIndex:=0 else
+  lbFiles.Items.Delete(lbFiles.ItemIndex);
+  if lbFiles.Items.Count>0 then lbFiles.ItemIndex:=0 else
   begin
-    Button2.Enabled:=false;
-    bitbtn1.enabled:=false;
+    btnRemoveFile.Enabled:=false;
+    btnBuild.enabled:=false;
   end;
 end;
 
-procedure TfDictImport.BitBtn2Click(Sender: TObject);
+procedure TfDictImport.btnCancelClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
 end;
 
-procedure TfDictImport.CreateDictTables(dicName: string; diclang:char);
+procedure TfDictImport.CreateDictTables(dicFilename: string; info: TDictInfo;
+  diclang:char; entries: integer);
 var tempDir: string;
   t:textfile;
 begin
@@ -277,11 +288,12 @@ begin
   writeln(t,'<Kanji');
   writeln(t,'$CREATE');
   closefile(t);
-  WriteDictPackage(dicName, tempDir, diclang);
+  WriteDictPackage(dicFilename, tempDir, info, diclang, entries);
   DeleteDirectory(tempDir);
 end;
 
-procedure TfDictImport.WriteDictPackage(dicName: string; tempDir: string; diclang:char);
+procedure TfDictImport.WriteDictPackage(dicFilename: string; tempDir: string;
+  info: TDictInfo; diclang:char; entries:integer);
 var f:textfile;
 begin
   assignfile(f,tempDir+'\dict.ver');
@@ -289,21 +301,21 @@ begin
   writeln(f,'DICT');
   writeln(f,'4');
   writeln(f,inttostr(trunc(now)));
-  writeln(f,edit3.text);
-  writeln(f,edit2.text);
+  writeln(f,info.Version);
+  writeln(f,info.Name);
   writeln(f,diclang);
-  writeln(f,edit4.text);
-  writeln(f,inttostr(radiogroup1.itemindex));
+  writeln(f,info.Description);
+  writeln(f,IntToStr(info.Priority));
   writeln(f,inttostr(entries));
-  writeln(f,edit5.text);
+  writeln(f,info.Copyright);
   closefile(f);
   PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+dicName+'.dic');
+  PKGWriteForm.PKGWriteCmd('PKGFileName '+dicFilename);
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name '+edit2.text);
-  PKGWriteForm.PKGWriteCmd('TitleName '+edit2.text+' Dictionary');
+  PKGWriteForm.PKGWriteCmd('Name '+info.Name);
+  PKGWriteForm.PKGWriteCmd('TitleName '+info.Name+' Dictionary');
   PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName '+edit5.text);
+  PKGWriteForm.PKGWriteCmd('CopyrightName '+info.Copyright);
   PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
   PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
   PKGWriteForm.PKGWriteCmd('VersionName 1.0');
@@ -322,17 +334,18 @@ end;
 
 
 
-procedure TfDictImport.BitBtn1Click(Sender: TObject);
+procedure TfDictImport.btnBuildClick(Sender: TObject);
 var i: integer;
   files: TFileList;
   diclang:char;
   flags: TImportDictFlags;
+  info: TDictInfo;
 begin
-  SetLength(files, ListBox1.Items.Count);
-  for i := 0 to ListBox1.Items.Count - 1 do
-    files[i] := ListBox1.Items[i];
+  SetLength(files, lbFiles.Items.Count);
+  for i := 0 to lbFiles.Items.Count - 1 do
+    files[i] := lbFiles.Items[i];
 
-  case RadioGroup2.ItemIndex of
+  case rgLanguage.ItemIndex of
     0:diclang:='j';
     1:diclang:='c';
   else diclang:='j';
@@ -344,7 +357,14 @@ begin
   if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
   if paramstr(1)='makedic' then flags := flags + [ifSilent];
 
-  if ImportDictionary(edit1.text, files, diclang, flags) then
+  info.name := edtDictName.text;
+  if info.name='' then info.name := ExtractFilename(edtDictFilename.text);
+  info.version := edtVersion.Text;
+  info.description := edtDescription.text;
+  info.copyright := edtCopyright.text;
+  info.priority := rgPriority.itemindex;
+
+  if ImportDictionary(edtDictFilename.text, info, files, diclang, flags) then
   begin
     ModalResult := mrOk;
     if paramstr(1)<>'makedic' then
@@ -360,8 +380,8 @@ ImportDictionary()
 Builds Wakan package from one or more dictionaries.
 Returns true if the package was successfully built, false if aborted.
 }
-function TfDictImport.ImportDictionary(dicName: string; files: TFileList;
-  diclang:char; flags: TImportDictFlags): boolean;
+function TfDictImport.ImportDictionary(dicFilename: string; info: TDictInfo;
+  files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 const
  //Format markers
   UH_EDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -374,6 +394,7 @@ var fi:integer;
     fb:file;
     cd:string;
     buf:array[0..3999] of byte;
+    abuf:array[0..1999+1] of AnsiChar; //2000 + one ansichar for #0000
     bufc:integer;
     bufp:integer;
     buff:file;
@@ -410,6 +431,16 @@ var fi:integer;
     fc: FChar;
     uc: WideChar;
     ac: AnsiChar;
+
+    { Converts block to ansi. Len is the length of buf in Wide characters.
+     abuf must be the same length in Ansi characters. }
+    procedure blockAnsi(buf: PWideChar; abuf: PAnsiChar; len: integer);
+    var usedDefaultChar: longbool;
+    begin
+      if (WideCharToMultiByte(CP_ACP, 0, buf, len, abuf, len, PAnsiChar(AnsiChar(' ')), @usedDefaultChar) <> len) then
+       //we need the translated characters to be exactly at the same places
+        raise Exception.Create('Not a direct 2->1 translation when converting UTF-16 to Ansi (wtf?)');
+    end;
 
 begin
   Result := false;
@@ -453,7 +484,11 @@ begin
       fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(files[fi]);
       if ifSilent in flags then begin
        //Choose default encoding
-        fDictCoding.RadioGroup1.ItemIndex:=1+RadioGroup2.ItemIndex;
+        case diclang of
+          'j': fDictCoding.RadioGroup1.ItemIndex:=1;
+          'c': fDictCoding.RadioGroup1.ItemIndex:=2;
+        else fDictCoding.RadioGroup1.ItemIndex:=0;
+        end;
       end else
       begin
        //Ask user
@@ -512,6 +547,7 @@ begin
       blockread(buff,buf,2);
       if (buf[0]<>255) or (buf[1]<>254) then
         raise Exception.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
+      blockansi(PWideChar(@buf[0]),@abuf[0],2000);
 
       //Read another line
       feof:=false;
@@ -529,12 +565,14 @@ begin
             blockread(buff,buf,4000,bufc);
             if bufc<4000 then feof:=true;
             bufp:=0;
+            blockansi(PWideChar(@buf[0]),@abuf[0],2000);
           end;
           if bufp>=bufc then lreat:=true else
           begin
             uc:=PWideChar(@buf[bufp])^;
             inc(bufp,2);
-            if Ord(uc)>255 then ac:=' ' else ac:=AnsiChar(uc);
+            ac := abuf[bufp div 2];
+//            if Ord(uc)>255 then ac:=' ' else ac:=AnsiChar(uc);
             if uc=#$000A then lreat:=true;
             if (uc<>#$000A) and (uc<>#$000D) then
               case ppp of
@@ -631,7 +669,6 @@ begin
       end; //for every character in the file
 
       closefile(buff);
-      entries:=cnt;
     end; //for every file
     fout.Writeln('.');
     FreeAndNil(fout);
@@ -639,9 +676,9 @@ begin
     closefile(romap);
 
 
-    CreateDictTables(dicName, diclang);
+    CreateDictTables(dicFilename, info, diclang, cnt);
     dic:=TJaletDic.Create;
-    dic.FillInfo(dicName+'.dic');
+    dic.FillInfo(dicFilename+'.dic');
     if not dic.tested then
       raise Exception.Create('Cannot load the newly created dictionary.');
     dic.Load;
@@ -674,7 +711,7 @@ begin
     dic.TDict.WriteTable(tempDir+'\Dict',true);
     dic.Free;
 
-    WriteDictPackage(dicName, tempDir, diclang);
+    WriteDictPackage(dicFilename, tempDir, info, diclang, cnt);
     DeleteDirectory(tempDir);
 
 
@@ -687,7 +724,6 @@ begin
 
   Result := true;
 end;
-
 
 {
 Creates and populates TStringList with frequency information taken from wordfreq_ck.uni.

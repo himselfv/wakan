@@ -618,7 +618,7 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
-  JWBCategories, JWBAnnotations, JWBIO;
+  JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine;
 
 {$R *.DFM}
 
@@ -758,425 +758,442 @@ begin
   screenModeWk:=false;
   if initdone then exit;
 
- //Load language or suggest to choose one
-  fLanguage.LoadRegistrySettings;
+  try
+    ParseCommandLine();
 
-  fLanguage.TranslateForm(fSplash);
-  fSplash.Label4.Caption:=WakanVer;
-  Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
-  if (Screen.Width<800) or (Screen.Height<600) then
-    if Application.MessageBox(
-      pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?')),
-      pchar(_l('#00020^eError')),
-      MB_YESNO or MB_ICONERROR)=idNo then
+   //Load language or suggest to choose one
+    fLanguage.LoadRegistrySettings;
+
+    fLanguage.TranslateForm(fSplash);
+    fSplash.Label4.Caption:=WakanVer;
+    Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
+    if (Screen.Width<800) or (Screen.Height<600) then
+      if Application.MessageBox(
+        pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?')),
+        pchar(_l('#00020^eError')),
+        MB_YESNO or MB_ICONERROR)=idNo then
+      begin
+        Application.Terminate;
+        exit;
+      end;
+    if (not FileExists('wakan.chr')) then
     begin
+      Application.MessageBox(
+        pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
+          +'This file is required for application to run.'#13
+          +'Please download this file from WAKAN website.'#13#13
+          +'Application will now be terminated.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
       Application.Terminate;
       exit;
     end;
-  if (not FileExists('wakan.chr')) then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
-        +'This file is required for application to run.'#13
-        +'Please download this file from WAKAN website.'#13#13
-        +'Application will now be terminated.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    Application.Terminate;
-    exit;
-  end;
-  if (not FileExists('wakan.cfg')) then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
-        +'This file contains important configuration parameters and is required'
-        +'for application to run.'#13#13'Application will now be terminated.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    Application.Terminate;
-    exit;
-  end;
-
-  sx:='';
-{  if ChooseFont([SHIFTJIS_CHARSET],'',s,'',true)='!'then sx:=sx+',Shift-JIS';
-  if ChooseFont([CHINESEBIG5_CHARSET],'',s,'',true)='!'then sx:=sx+',Big5';
-  if ChooseFont([GB2312_CHARSET],'',s,'',true)='!'then sx:=sx+',GB2312';
-  if sx<>'' then
-  begin
-    delete(sx,1,1);
-    Application.MessageBox(
-      pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13
-        +sx+#13#13
-        +'You must have at least one font of each of these sets on your computer '
-        +'to run this application.'#13#13
-        +'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13
-        +'These fonts are automatically installed when you install support for '
-        +'reading Japanese & Chinese language in windows.'#13#13
-        +'Please install required fonts and run this application again.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    Application.Terminate;
-    exit;
-  end; }
-  oldhandle:=0;
-  critsec:=false;
-  TranslateAll;
-  romasys:=1;
-  showroma:=false;
-  clip:='';
-
-  fSettings.LoadSettings({DelayUI=}true);
-
-  fSplash.Show;
-  fSplash.Update;
-
-  //Configuration file
-  try
-    assignfile(conft,'wakan.cfg');
-    reset(conft);
-    sect:=0;
-    defll.Clear;
-    suffixl.Clear;
-    partl.Clear;
-    romac.Clear;
-    roma_t.Clear;
-    SetLength(romasortl, 0);
-    while not eof(conft) do
+    if (not FileExists('wakan.cfg')) then
     begin
-      readln(conft,s);
-      if (length(s)>0) and (s[1]<>';') then
+      Application.MessageBox(
+        pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
+          +'This file contains important configuration parameters and is required'
+          +'for application to run.'#13#13'Application will now be terminated.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      Application.Terminate;
+      exit;
+    end;
+
+    sx:='';
+  {  if ChooseFont([SHIFTJIS_CHARSET],'',s,'',true)='!'then sx:=sx+',Shift-JIS';
+    if ChooseFont([CHINESEBIG5_CHARSET],'',s,'',true)='!'then sx:=sx+',Big5';
+    if ChooseFont([GB2312_CHARSET],'',s,'',true)='!'then sx:=sx+',GB2312';
+    if sx<>'' then
+    begin
+      delete(sx,1,1);
+      Application.MessageBox(
+        pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13
+          +sx+#13#13
+          +'You must have at least one font of each of these sets on your computer '
+          +'to run this application.'#13#13
+          +'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13
+          +'These fonts are automatically installed when you install support for '
+          +'reading Japanese & Chinese language in windows.'#13#13
+          +'Please install required fonts and run this application again.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      Application.Terminate;
+      exit;
+    end; }
+    oldhandle:=0;
+    critsec:=false;
+    TranslateAll;
+    romasys:=1;
+    showroma:=false;
+    clip:='';
+
+    fSettings.LoadSettings({DelayUI=}true);
+
+    fSplash.Show;
+    fSplash.Update;
+
+    //Configuration file
+    try
+      assignfile(conft,'wakan.cfg');
+      reset(conft);
+      sect:=0;
+      defll.Clear;
+      suffixl.Clear;
+      partl.Clear;
+      romac.Clear;
+      roma_t.Clear;
+      SetLength(romasortl, 0);
+      while not eof(conft) do
       begin
-        if s[1]='['then
+        readln(conft,s);
+        if (length(s)>0) and (s[1]<>';') then
         begin
-          delete(s,length(s),1);
-          delete(s,1,1);
-          if s='Particles'then sect:=1 else
-          if s='Deflection'then sect:=2 else
-          if s='Romaji'then sect:=3 else
-          if s='PinYin'then sect:=4 else
-          if s='CharInfo'then sect:=5 else
-          if s='RomajiSort'then sect:=6 else
-          if s='Suffixes'then sect:=7 else
-          if s='IgnoreWords'then sect:=8 else
-          if s='ReadingChart'then sect:=9 else
-          sect:=0;
-        end else
-        begin
-         //Some of the fields are in hex unicode, so we have to convert them
-          if sect=1 then partl.Add(hextofstr(s));
-          if sect=2 then defll.Add(s);
-          if sect=3 then roma_t.Add(s);
-          if sect=4 then splitadd(romac,s,4);
-          if sect=5 then CharPropTypes.Add(s);
-          if sect=6 then AddRomaSortRecord(s);
-          if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}
-          if sect=8 then ignorel.Add(s);
-          if sect=9 then readchl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{reading:fhex}
+          if s[1]='['then
+          begin
+            delete(s,length(s),1);
+            delete(s,1,1);
+            if s='Particles'then sect:=1 else
+            if s='Deflection'then sect:=2 else
+            if s='Romaji'then sect:=3 else
+            if s='PinYin'then sect:=4 else
+            if s='CharInfo'then sect:=5 else
+            if s='RomajiSort'then sect:=6 else
+            if s='Suffixes'then sect:=7 else
+            if s='IgnoreWords'then sect:=8 else
+            if s='ReadingChart'then sect:=9 else
+            sect:=0;
+          end else
+          begin
+           //Some of the fields are in hex unicode, so we have to convert them
+            if sect=1 then partl.Add(hextofstr(s));
+            if sect=2 then defll.Add(s);
+            if sect=3 then roma_t.Add(s);
+            if sect=4 then splitadd(romac,s,4);
+            if sect=5 then CharPropTypes.Add(s);
+            if sect=6 then AddRomaSortRecord(s);
+            if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}
+            if sect=8 then ignorel.Add(s);
+            if sect=9 then readchl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{reading:fhex}
+          end;
         end;
       end;
-    end;
-    closefile(conft);
-    suffixl.Sorted:=true;
-    suffixl.Sort;
-  except
-    Application.MessageBox(
-      pchar(_l('#00352^eCannot load main configuration file.'#13
-        +'File WAKAN.CFG is corrupted.'#13#13'Application will now exit.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    Application.Terminate;
-    exit;
-  end;
-
- //Force user to select fonts
-  while (pos('!',FontJapanese)>0) or (pos('!',FontJapaneseGrid)>0) or
-    (pos('!',FontChinese)>0) or (pos('!',FontChineseGrid)>0) or
-    (pos('!',FontChineseGB)>0) or (pos('!',FontChineseGridGB)>0) or
-    (pos('!',FontSmall)>0) or (pos('!',FontRadical)>0) or (pos('!',FontEnglish)>0) or (pos('!',FontPinYin)>0) or (pos('!',FontStrokeOrder)>0) do
-  begin
-    Application.MessageBox(
-      pchar(_l('#00353^eSome standard fonts were not found on your system.'#13
-        +'Please reselect all fonts in the following dialog. Missing fonts are '
-        +'preceded by !.'#13
-        +'Application cannot continue unless all fonts are selected.')),
-      pchar(_l('#00090^eWarning')),
-      MB_ICONWARNING or MB_OK);
-    fSettings.pcPages.ActivePage:=fSettings.tsFonts;
-    fSettings.ShowModal;
-  end;
-
- //Wakan.chr
-  try
-    ps:=TPackageSource.Create('wakan.chr',791564,978132,978123);
-    vi:=TStringList.Create;
-    ms:=ps['jalet.ver'].Lock;
-    vi.LoadFromStream(ms);
-    ps['jalet.ver'].Unlock;
-    ms:=ps['markers.lst'].Lock;
-    markersl.LoadFromStream(ms);
-    ps['markers.lst'].Unlock;
-
-    if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then
-      raise Exception.Create('Unknown DICT.VER header.');
-    if strtoint(vi[1])<CurDictVer then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00354^eWAKAN.CHR has old structure. Please download new '
-          +'version.'#13#13'Application will now exit.')),
-        pchar(_l('#00020^eError')),
-        MB_ICONERROR or MB_OK);
-      Application.Terminate;
-      exit;
-    end;
-    if strtoint(vi[1])>CurDictVer then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00355^eWAKAN.CHR has newer structure. Please download new '
-          +'WAKAN.EXE.'#13#13'Application will now exit.')),
-        pchar(_l('#00020^eError')),
-        MB_ICONERROR or MB_OK);
-      Application.Terminate;
-      exit;
-    end;
-    fStatistics.Label13.Caption:=datetostr(strtoint(vi[2]));
-    fStatistics.Label15.Caption:=vi[4];
-    fStatistics.Label16.Caption:=vi[5];
-    ChinesePresent:=vi[6]='CHINESE';
-    vi.Free;
-    fSplash.ProgressBar1.Position:=1;
-    fSplash.ProgressBar1.Update;
-    TChar:=TTextTable.Create(ps,'Char',true,false);
-    fSplash.ProgressBar1.Position:=2;
-    fSplash.ProgressBar1.Update;
-    TCharRead:=TTextTable.Create(ps,'CharRead',true,false);
-    fSplash.ProgressBar1.Position:=3;
-    fSplash.ProgressBar1.Update;
-    TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
-    if (fSettings.CheckBox64.Checked) and (fSettings.CheckBox65.Checked) then RebuildAnnotations;
-    if (fSettings.CheckBox64.Checked) then LoadAnnotations;
-    //showmessage(TChar.GetField(0,3));
-    //showmessage(TChar.GetField(1,3));
-    //showmessage(TChar.GetField(2,3));
-  except
-    Application.MessageBox(
-      pchar(_l('#00356^eCannot load main dictionary file.'#13
-        +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    Application.Terminate;
-    exit;
-  end;
-
- //Radical search
-  if (not FileExists('wakan.rad')) then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00357^eFile WAKAN.RAD was not found.'#13
-        +'Japanese advanced radicals search will be disabled.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    rainesearch:=nil;
-  end else
-  begin
-    try
-      ps:=TPackageSource.Create('wakan.rad',791564,978132,978123);
-      ms:=ps['search.bin'].Lock;
-      GetMem(rainesearch,ms.Size);
-      ms.Read(rainesearch^,ms.Size);
-      ps['search.bin'].Unlock;
-      ms:=ps['radicals.txt'].Lock;
-      raineradicals:=TStringList.Create;
-      raineradicals.LoadFromStream(ms);
-      ps['radicals.txt'].Unlock;
-      ps.Free;
+      closefile(conft);
+      suffixl.Sorted:=true;
+      suffixl.Sort;
     except
       Application.MessageBox(
-        pchar(_l('#00358^eCannot load Japanese radicals file.'#13
-          +'File WAKAN.RAD is corrupted.'#13#13'Application will now exit.')),
+        pchar(_l('#00352^eCannot load main configuration file.'#13
+          +'File WAKAN.CFG is corrupted.'#13#13'Application will now exit.')),
         pchar(_l('#00020^eError')),
         MB_OK or MB_ICONERROR);
       Application.Terminate;
       exit;
     end;
-  end;
 
- //Stroke-order display
-  if (not FileExists('wakan.sod')) then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13
-        +'Japanese stroke-order display will be disabled.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    sodir:=nil;
-    sobin:=nil;
-  end else
-  begin
+   //Force user to select fonts
+    while (pos('!',FontJapanese)>0) or (pos('!',FontJapaneseGrid)>0) or
+      (pos('!',FontChinese)>0) or (pos('!',FontChineseGrid)>0) or
+      (pos('!',FontChineseGB)>0) or (pos('!',FontChineseGridGB)>0) or
+      (pos('!',FontSmall)>0) or (pos('!',FontRadical)>0) or (pos('!',FontEnglish)>0) or (pos('!',FontPinYin)>0) or (pos('!',FontStrokeOrder)>0) do
+    begin
+      Application.MessageBox(
+        pchar(_l('#00353^eSome standard fonts were not found on your system.'#13
+          +'Please reselect all fonts in the following dialog. Missing fonts are '
+          +'preceded by !.'#13
+          +'Application cannot continue unless all fonts are selected.')),
+        pchar(_l('#00090^eWarning')),
+        MB_ICONWARNING or MB_OK);
+      fSettings.pcPages.ActivePage:=fSettings.tsFonts;
+      fSettings.ShowModal;
+    end;
+
+   //Wakan.chr
     try
-      ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
-      ms:=ps['strokes.bin'].Lock;
-      GetMem(sobin,ms.Size);
-      ms.Read(sobin^,ms.Size);
-      ps['strokes.bin'].Unlock;
-      ms:=ps['dir.txt'].Lock;
-      sodir:=TStringList.Create;
-      sodir.LoadFromStream(ms);
-      ps['dir.txt'].Unlock;
-      ps.Free;
+      ps:=TPackageSource.Create('wakan.chr',791564,978132,978123);
+      vi:=TStringList.Create;
+      ms:=ps['jalet.ver'].Lock;
+      vi.LoadFromStream(ms);
+      ps['jalet.ver'].Unlock;
+      ms:=ps['markers.lst'].Lock;
+      markersl.LoadFromStream(ms);
+      ps['markers.lst'].Unlock;
+
+      if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then
+        raise Exception.Create('Unknown DICT.VER header.');
+      if strtoint(vi[1])<CurDictVer then
+      begin
+        Application.MessageBox(
+          pchar(_l('#00354^eWAKAN.CHR has old structure. Please download new '
+            +'version.'#13#13'Application will now exit.')),
+          pchar(_l('#00020^eError')),
+          MB_ICONERROR or MB_OK);
+        Application.Terminate;
+        exit;
+      end;
+      if strtoint(vi[1])>CurDictVer then
+      begin
+        Application.MessageBox(
+          pchar(_l('#00355^eWAKAN.CHR has newer structure. Please download new '
+            +'WAKAN.EXE.'#13#13'Application will now exit.')),
+          pchar(_l('#00020^eError')),
+          MB_ICONERROR or MB_OK);
+        Application.Terminate;
+        exit;
+      end;
+      fStatistics.Label13.Caption:=datetostr(strtoint(vi[2]));
+      fStatistics.Label15.Caption:=vi[4];
+      fStatistics.Label16.Caption:=vi[5];
+      ChinesePresent:=vi[6]='CHINESE';
+      vi.Free;
+      fSplash.ProgressBar1.Position:=1;
+      fSplash.ProgressBar1.Update;
+      TChar:=TTextTable.Create(ps,'Char',true,false);
+      fSplash.ProgressBar1.Position:=2;
+      fSplash.ProgressBar1.Update;
+      TCharRead:=TTextTable.Create(ps,'CharRead',true,false);
+      fSplash.ProgressBar1.Position:=3;
+      fSplash.ProgressBar1.Update;
+      TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
+      if (fSettings.CheckBox64.Checked) and (fSettings.CheckBox65.Checked) then RebuildAnnotations;
+      if (fSettings.CheckBox64.Checked) then LoadAnnotations;
+      //showmessage(TChar.GetField(0,3));
+      //showmessage(TChar.GetField(1,3));
+      //showmessage(TChar.GetField(2,3));
     except
       Application.MessageBox(
-        pchar(_l('#00360^eCannot load Japanese stroke-order file.'#13
-          +'File WAKAN.SOD is corrupted.'#13#13'Application will now exit.')),
+        pchar(_l('#00356^eCannot load main dictionary file.'#13
+          +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.')),
         pchar(_l('#00020^eError')),
         MB_OK or MB_ICONERROR);
       Application.Terminate;
       exit;
     end;
-  end;
-  StrokeOrderPackage:=nil;
-{ This was the way to load stroke order package. Not anymore: }
-{
-  if FileExists('wakan.sod') then
-  try
-    StrokeOrderPackage:=TPackageSource.Create('wakan.sod',932147,513478,314798);
-  except
+
+   //Radical search
+    if (not FileExists('wakan.rad')) then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00357^eFile WAKAN.RAD was not found.'#13
+          +'Japanese advanced radicals search will be disabled.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      rainesearch:=nil;
+    end else
+    begin
+      try
+        ps:=TPackageSource.Create('wakan.rad',791564,978132,978123);
+        ms:=ps['search.bin'].Lock;
+        GetMem(rainesearch,ms.Size);
+        ms.Read(rainesearch^,ms.Size);
+        ps['search.bin'].Unlock;
+        ms:=ps['radicals.txt'].Lock;
+        raineradicals:=TStringList.Create;
+        raineradicals.LoadFromStream(ms);
+        ps['radicals.txt'].Unlock;
+        ps.Free;
+      except
+        Application.MessageBox(
+          pchar(_l('#00358^eCannot load Japanese radicals file.'#13
+            +'File WAKAN.RAD is corrupted.'#13#13'Application will now exit.')),
+          pchar(_l('#00020^eError')),
+          MB_OK or MB_ICONERROR);
+        Application.Terminate;
+        exit;
+      end;
+    end;
+
+   //Stroke-order display
+    if (not FileExists('wakan.sod')) then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13
+          +'Japanese stroke-order display will be disabled.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      sodir:=nil;
+      sobin:=nil;
+    end else
+    begin
+      try
+        ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
+        ms:=ps['strokes.bin'].Lock;
+        GetMem(sobin,ms.Size);
+        ms.Read(sobin^,ms.Size);
+        ps['strokes.bin'].Unlock;
+        ms:=ps['dir.txt'].Lock;
+        sodir:=TStringList.Create;
+        sodir.LoadFromStream(ms);
+        ps['dir.txt'].Unlock;
+        ps.Free;
+      except
+        Application.MessageBox(
+          pchar(_l('#00360^eCannot load Japanese stroke-order file.'#13
+            +'File WAKAN.SOD is corrupted.'#13#13'Application will now exit.')),
+          pchar(_l('#00020^eError')),
+          MB_OK or MB_ICONERROR);
+        Application.Terminate;
+        exit;
+      end;
+    end;
     StrokeOrderPackage:=nil;
-  end;
-  fKanji.btnStrokeOrder.Visible:=StrokeOrderPackage<>nil;
-}
+  { This was the way to load stroke order package. Not anymore: }
+  {
+    if FileExists('wakan.sod') then
+    try
+      StrokeOrderPackage:=TPackageSource.Create('wakan.sod',932147,513478,314798);
+    except
+      StrokeOrderPackage:=nil;
+    end;
+    fKanji.btnStrokeOrder.Visible:=StrokeOrderPackage<>nil;
+  }
 
- //User data
-  try
-    userdataloaded:=false;
-    LoadUserData;
-  except
-    if FileExists('WAKAN.USR') then Application.MessageBox(
-      pchar(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13
-        +'If you delete this file, it will be created anew.'#13#13'Application will now exit.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR)
-    else Application.MessageBox(
-      pchar(_l('#00362^eUnable to create user data file WAKAN.USR.'#13
-        +'Please run this program from a folder that is not read-only.'#13#13
-        +'Application will now exit.')),
-      pchar(_l('#00020^eError')),
-      MB_OK or MB_ICONERROR);
-    Application.Terminate;
-    exit;
-  end;
-  if Application.Terminated then exit;
+   //User data
+    try
+      userdataloaded:=false;
+      LoadUserData;
+    except
+      if FileExists('WAKAN.USR') then Application.MessageBox(
+        pchar(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13
+          +'If you delete this file, it will be created anew.'#13#13'Application will now exit.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR)
+      else Application.MessageBox(
+        pchar(_l('#00362^eUnable to create user data file WAKAN.USR.'#13
+          +'Please run this program from a folder that is not read-only.'#13#13
+          +'Application will now exit.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      Application.Terminate;
+      exit;
+    end;
+    if Application.Terminated then exit;
 
-  MaxUserIndex := FindMaxUserIndex();
-  MaxCategoryIndex := FindMaxCategoryIndex();
+    MaxUserIndex := FindMaxUserIndex();
+    MaxCategoryIndex := FindMaxCategoryIndex();
 
-  jromasys:=fSettings.RadioGroup1.ItemIndex+1;
-  jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
-  cromasys:=fSettings.RadioGroup6.ItemIndex+1;
-  cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
-//  Left:=0;
-//  Top:=0;
-  SetFormPos(fKanji);
-  SetFormPos(fWords);
-  SetFormPos(fUser);
-  XPResFix(fMenu);
-  XPResFix(fKanji);
-  XPResFix(fWords);
-  XPResFix(fUser);
-  XPResFix(fUserAdd);
-//  XPResFix(fKanjiSearch);
-  XPResFix(fKanjiCompounds);
-  XPResFix(fWordDetails);
-//  XPResFix(fExamples);
-  XPResFix(fTranslate);
-  XPResFix(fClipboard);
+    jromasys:=fSettings.RadioGroup1.ItemIndex+1;
+    jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
+    cromasys:=fSettings.RadioGroup6.ItemIndex+1;
+    cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
+  //  Left:=0;
+  //  Top:=0;
+    SetFormPos(fKanji);
+    SetFormPos(fWords);
+    SetFormPos(fUser);
+    XPResFix(fMenu);
+    XPResFix(fKanji);
+    XPResFix(fWords);
+    XPResFix(fUser);
+    XPResFix(fUserAdd);
+  //  XPResFix(fKanjiSearch);
+    XPResFix(fKanjiCompounds);
+    XPResFix(fWordDetails);
+  //  XPResFix(fExamples);
+    XPResFix(fTranslate);
+    XPResFix(fClipboard);
 
-  SwitchLanguage(curlang);
-  { SwitchLanguage will do this:
-  RefreshCategory;
-  RefreshKanjiCategory; }
+    SwitchLanguage(curlang);
+    { SwitchLanguage will do this:
+    RefreshCategory;
+    RefreshKanjiCategory; }
 
-  fSplash.Hide;
-{  if ((Screen.Width<1024) or (Screen.Height<768)) then
-  begin
-    fMenu.Constraints.MinHeight:=80;
-    fMenu.Constraints.MaxHeight:=80;
-    fMenu.Height:=80;
-    fMenu.Image1.Top:=0;
-  end;}
-  aBorders.Checked:=true;
-  proposedlayout:=0;
-  borderchange:=false;
-{ Old way of loading layout:
-  if (FileExists('wakan.lay')) and (setlayout=0) then ReadLayout('wakan.lay') else
-  begin
-    proposedlayout:=setlayout;
-    timer2.enabled:=true;
-  end;
-  StandardLayout(0,100); }
-  curdisplaymode:=0;
-  FormPlacement1.RestoreFormPlacement;
-
-  if paramstr(1)='makeexamples'then
-  begin
-    fExamples.BuildExamplesPackage;
-    exit;
-  end;
-
-  if paramstr(1)='makedic'then
-  begin
-    assignfile(t,paramstr(2));
-    reset(t);
-    readln(t,s);
-    fDictImport.Edit1.Text:=s;
-    readln(t,s);
-    fDictImport.Edit2.Text:=s;
-    readln(t,s);
-    fDictImport.Edit3.Text:=s;
-    readln(t,s);
-    if s='C'then fDictImport.RadioGroup2.ItemIndex:=1 else fDictImport.RadioGroup2.ItemIndex:=0;
-    readln(t,s);
-    fDictImport.RadioGroup1.ItemIndex:=strtoint(s);
-    readln(t,s);
-    fDictImport.Edit4.Text:=s;
-    readln(t,s);
-    fDictImport.Edit5.Text:=s;
-    readln(t,s);
-    fDictImport.cbAddWordIndex.Checked := (s='Y');
-    readln(t,s);
-    fDictImport.cbAddCharacterIndex.Checked := (s='Y');
-    readln(t,s);
-    fDictImport.cbAddFrequencyInfo.Checked := (s='Y');
-    while not eof(t) do
+    fSplash.Hide;
+  {  if ((Screen.Width<1024) or (Screen.Height<768)) then
     begin
+      fMenu.Constraints.MinHeight:=80;
+      fMenu.Constraints.MaxHeight:=80;
+      fMenu.Height:=80;
+      fMenu.Image1.Top:=0;
+    end;}
+    aBorders.Checked:=true;
+    proposedlayout:=0;
+    borderchange:=false;
+  { Old way of loading layout:
+    if (FileExists('wakan.lay')) and (setlayout=0) then ReadLayout('wakan.lay') else
+    begin
+      proposedlayout:=setlayout;
+      timer2.enabled:=true;
+    end;
+    StandardLayout(0,100); }
+    curdisplaymode:=0;
+    FormPlacement1.RestoreFormPlacement;
+
+    if Command='makeexamples'then
+    begin
+      fExamples.BuildExamplesPackage;
+      exit;
+    end else
+    if Command='makedic'then
+    begin
+      assignfile(t,paramstr(2));
+      reset(t);
       readln(t,s);
-      fDictImport.ListBox1.Items.Add(s);
+      fDictImport.edtDictFilename.Text:=s;
+      readln(t,s);
+      fDictImport.edtDictName.Text:=s;
+      readln(t,s);
+      fDictImport.edtVersion.Text:=s;
+      readln(t,s);
+      if s='C'then fDictImport.rgLanguage.ItemIndex:=1 else fDictImport.rgLanguage.ItemIndex:=0;
+      readln(t,s);
+      fDictImport.rgPriority.ItemIndex:=strtoint(s);
+      readln(t,s);
+      fDictImport.edtDescription.Text:=s;
+      readln(t,s);
+      fDictImport.edtCopyright.Text:=s;
+      readln(t,s);
+      fDictImport.cbAddWordIndex.Checked := (s='Y');
+      readln(t,s);
+      fDictImport.cbAddCharacterIndex.Checked := (s='Y');
+      readln(t,s);
+      fDictImport.cbAddFrequencyInfo.Checked := (s='Y');
+      while not eof(t) do
+      begin
+        readln(t,s);
+        fDictImport.lbFiles.Items.Add(s);
+      end;
+      fDictImport.btnBuildClick(self);
+      Application.Terminate;
+      exit;
     end;
-    fDictImport.BitBtn1Click(self);
-    Application.Terminate;
-    exit;
-  end;
 
-  fSettings.ApplyUISettings();
+    fSettings.ApplyUISettings();
 
-  screenTipShown:=false;
+    screenTipShown:=false;
 
- { Last opened file in Editor }
-  fTranslate.FileChanged := false;
-  if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
-  try
-    fTranslate.OpenFile(fTranslate.docfilename, fTranslate.doctp);
+   { Last opened file in Editor }
+    fTranslate.FileChanged := false;
+    if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
+    try
+      fTranslate.OpenFile(fTranslate.docfilename, fTranslate.doctp);
+    except
+      on E: Exception do begin
+       //Re-raise with additional comment
+        E.Message := 'Cannot autoload your last-used file: '+E.Message;
+        raise;
+      end;
+    end;
+
+   { Init clipboard viewer }
+    CbNextViewer := SetClipboardViewer(Self.Handle);
+
+    initdone:=true;
   except
+    on E: EBadUsage do begin
+      ShowUsage(E.Message);
+      Application.Terminate;
+    end;
     on E: Exception do begin
-     //Re-raise with additional comment
-      E.Message := 'Cannot autoload your last-used file: '+E.Message;
-      raise;
+      Application.MessageBox(
+        pchar(E.Classname+': '+E.Message),
+        pchar('Error'), //Do not translate! The translation might not even be loaded yet.
+        MB_ICONERROR or MB_OK
+      );
+     //It's better to exit right now than to continue uninitialized.
+      Application.Terminate;
     end;
   end;
-
- { Init clipboard viewer }
-  CbNextViewer := SetClipboardViewer(Self.Handle);
-
-  initdone:=true;
 
   Timer1.Enabled:=true;
   Timer1Timer(Sender);

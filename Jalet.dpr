@@ -63,7 +63,8 @@ uses
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
   JWBMedia in 'Forms\JWBMedia.pas' {fMedia},
-  JWBAnnotations in 'Components\JWBAnnotations.pas';
+  JWBAnnotations in 'Components\JWBAnnotations.pas',
+  JWBCommandLine in 'Components\JWBCommandLine.pas';
 
 {$R *.RES}
 

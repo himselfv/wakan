@@ -95,23 +95,21 @@ object fDictImport: TfDictImport
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Edit1: TEdit
+  object edtDictFilename: TEdit
     Left = 208
     Top = 8
     Width = 209
     Height = 21
     TabOrder = 0
-    Text = 'Edit1'
   end
-  object Edit2: TEdit
+  object edtDictName: TEdit
     Left = 128
     Top = 32
     Width = 289
     Height = 21
     TabOrder = 1
-    Text = 'Edit1'
   end
-  object ListBox1: TListBox
+  object lbFiles: TListBox
     Left = 8
     Top = 72
     Width = 409
@@ -119,7 +117,7 @@ object fDictImport: TfDictImport
     ItemHeight = 13
     TabOrder = 2
   end
-  object Edit3: TEdit
+  object edtVersion: TEdit
     Left = 136
     Top = 288
     Width = 281
@@ -127,7 +125,7 @@ object fDictImport: TfDictImport
     TabOrder = 3
     Text = 'Edit1'
   end
-  object RadioGroup1: TRadioGroup
+  object rgPriority: TRadioGroup
     Left = 8
     Top = 344
     Width = 409
@@ -143,7 +141,7 @@ object fDictImport: TfDictImport
       '4')
     TabOrder = 4
   end
-  object Edit4: TEdit
+  object edtDescription: TEdit
     Left = 136
     Top = 392
     Width = 393
@@ -151,7 +149,7 @@ object fDictImport: TfDictImport
     TabOrder = 5
     Text = 'Edit1'
   end
-  object Edit5: TEdit
+  object edtCopyright: TEdit
     Left = 136
     Top = 416
     Width = 393
@@ -159,7 +157,7 @@ object fDictImport: TfDictImport
     TabOrder = 6
     Text = 'Edit1'
   end
-  object BitBtn1: TBitBtn
+  object btnBuild: TBitBtn
     Left = 88
     Top = 512
     Width = 113
@@ -191,9 +189,9 @@ object fDictImport: TfDictImport
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 7
-    OnClick = BitBtn1Click
+    OnClick = btnBuildClick
   end
-  object BitBtn2: TBitBtn
+  object btnCancel: TBitBtn
     Left = 344
     Top = 512
     Width = 105
@@ -225,9 +223,9 @@ object fDictImport: TfDictImport
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 8
-    OnClick = BitBtn2Click
+    OnClick = btnCancelClick
   end
-  object Button1: TButton
+  object btnAddFile: TButton
     Left = 424
     Top = 72
     Width = 105
@@ -240,9 +238,9 @@ object fDictImport: TfDictImport
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 9
-    OnClick = Button1Click
+    OnClick = btnAddFileClick
   end
-  object Button2: TButton
+  object btnRemoveFile: TButton
     Left = 424
     Top = 104
     Width = 105
@@ -255,9 +253,9 @@ object fDictImport: TfDictImport
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 10
-    OnClick = Button2Click
+    OnClick = btnRemoveFileClick
   end
-  object RadioGroup2: TRadioGroup
+  object rgLanguage: TRadioGroup
     Left = 8
     Top = 304
     Width = 409
@@ -302,9 +300,9 @@ object fDictImport: TfDictImport
       'NI)'
     TabOrder = 14
   end
-  object OpenDialog1: TOpenDialog
+  object AddFileDialog: TOpenDialog
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 424
+    Left = 456
     Top = 144
   end
 end
