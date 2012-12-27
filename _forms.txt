@@ -1,7 +1,0 @@
-
-Forms that are fine (contain their functionality):
-  JWBTranslation
-
-Forms that do nothing (only have controls and redirect events to MainForm):
-  JWBClipboard
-  JWBHint
