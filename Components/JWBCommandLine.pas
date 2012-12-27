@@ -22,6 +22,9 @@ var
     Copyright: string;
     Language: char;
     UnicodeDic: boolean;
+    AddWordIndex: boolean;
+    AddCharacterIndex: boolean;
+    AddFrequencyInfo: boolean;
   end;
 
 procedure ParseCommandLine();
@@ -45,7 +48,8 @@ begin
     +'* makeexamples'#13
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
-      +'[/language <j|c>] [/unicode]';
+      +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
+      +'[/addfrequencyinfo]';
 
   if errmsg<>'' then
     s := errmsg + #13#13 + s;
@@ -124,6 +128,15 @@ begin
         if s='/unicode' then begin
           MakeDicParams.UnicodeDic := true;
         end else
+        if s='/addwordindex' then begin
+          MakeDicParams.AddWordIndex := true;
+        end else
+        if s='/addcharacterindex' then begin
+          MakeDicParams.AddCharacterIndex := true;
+        end else
+        if s='/addfrequencyinfo' then begin
+          MakeDicParams.AddFrequencyInfo := true;
+        end else
           BadUsage('Invalid option: '+s);
 
       end else
@@ -146,6 +159,9 @@ begin
         MakeDicParams.Filename := Paramstr(i);
         MakeDicParams.Name := ChangeFileExt(ExtractFileName(MakeDicParams.Filename), '');
         MakeDicParams.Language := 'j';
+        MakeDicParams.AddWordIndex := true;
+        MakeDicParams.AddCharacterIndex := true;
+       //but no frequency info because it requires additional file which is missing by default
       end else
       if Command='makeexamples' then begin
        //Nothing to initialize

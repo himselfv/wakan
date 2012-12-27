@@ -365,7 +365,8 @@ end;
 
 function CreateRandomTempDirName: string;
 begin
-  Result := GetTempPathStr() + '\' + CreateGuidStr();
+ //Let's be nice and mark all our temp folders with "wakan_", so that they're identifiable
+  Result := GetTempPathStr() + '\wakan_' + CreateGuidStr();
 end;
 
 

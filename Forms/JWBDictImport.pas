@@ -295,7 +295,10 @@ end;
 procedure TfDictImport.WriteDictPackage(dicFilename: string; tempDir: string;
   info: TDictInfo; diclang:char; entries:integer);
 var f:textfile;
+  path:string;
 begin
+  path := ExtractFilePath(dicFilename);
+  if path<>'' then ForceDirectories(path);
   assignfile(f,tempDir+'\dict.ver');
   rewrite(f);
   writeln(f,'DICT');
@@ -435,9 +438,10 @@ var fi:integer;
     { Converts block to ansi. Len is the length of buf in Wide characters.
      abuf must be the same length in Ansi characters. }
     procedure blockAnsi(buf: PWideChar; abuf: PAnsiChar; len: integer);
+    const defaultChar: AnsiChar = ' ';
     var usedDefaultChar: longbool;
     begin
-      if (WideCharToMultiByte(CP_ACP, 0, buf, len, abuf, len, PAnsiChar(AnsiChar(' ')), @usedDefaultChar) <> len) then
+      if (WideCharToMultiByte(CP_ACP, 0, buf, len, abuf, len, @defaultChar, @usedDefaultChar) <> len) then
        //we need the translated characters to be exactly at the same places
         raise Exception.Create('Not a direct 2->1 translation when converting UTF-16 to Ansi (wtf?)');
     end;
@@ -469,7 +473,6 @@ begin
 
     tempDir := CreateRandomTempDirName();
     ForceDirectories(tempDir);
-
 
     assignfile(romap,'roma_problems.txt'); //TODO: This one should go into UserDir when we have one
     rewrite(romap);
@@ -547,7 +550,6 @@ begin
       blockread(buff,buf,2);
       if (buf[0]<>255) or (buf[1]<>254) then
         raise Exception.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
-      blockansi(PWideChar(@buf[0]),@abuf[0],2000);
 
       //Read another line
       feof:=false;
@@ -570,8 +572,8 @@ begin
           if bufp>=bufc then lreat:=true else
           begin
             uc:=PWideChar(@buf[bufp])^;
-            inc(bufp,2);
             ac := abuf[bufp div 2];
+            inc(bufp,2);
 //            if Ord(uc)>255 then ac:=' ' else ac:=AnsiChar(uc);
             if uc=#$000A then lreat:=true;
             if (uc<>#$000A) and (uc<>#$000D) then
@@ -674,11 +676,12 @@ begin
     FreeAndNil(fout);
 
     closefile(romap);
-
+    prog.Invalidate;
+    prog.Repaint;
 
     CreateDictTables(dicFilename, info, diclang, cnt);
     dic:=TJaletDic.Create;
-    dic.FillInfo(dicFilename+'.dic');
+    dic.FillInfo(dicFilename);
     if not dic.tested then
       raise Exception.Create('Cannot load the newly created dictionary.');
     dic.Load;
@@ -713,7 +716,6 @@ begin
 
     WriteDictPackage(dicFilename, tempDir, info, diclang, cnt);
     DeleteDirectory(tempDir);
-
 
   finally
     wordidx.Free;

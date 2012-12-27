@@ -748,6 +748,7 @@ var ps:TPackageSource;
   conft:textfile;
   sect:integer;
   t:textfile;
+  i:integer;
 begin
   lastautosave:=now;
   screenTipImmediate:=false;
@@ -915,9 +916,6 @@ begin
       ms:=ps['jalet.ver'].Lock;
       vi.LoadFromStream(ms);
       ps['jalet.ver'].Unlock;
-      ms:=ps['markers.lst'].Lock;
-      markersl.LoadFromStream(ms);
-      ps['markers.lst'].Unlock;
 
       if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then
         raise Exception.Create('Unknown DICT.VER header.');
@@ -1126,33 +1124,21 @@ begin
     end else
     if Command='makedic'then
     begin
-      assignfile(t,paramstr(2));
-      reset(t);
-      readln(t,s);
-      fDictImport.edtDictFilename.Text:=s;
-      readln(t,s);
-      fDictImport.edtDictName.Text:=s;
-      readln(t,s);
-      fDictImport.edtVersion.Text:=s;
-      readln(t,s);
-      if s='C'then fDictImport.rgLanguage.ItemIndex:=1 else fDictImport.rgLanguage.ItemIndex:=0;
-      readln(t,s);
-      fDictImport.rgPriority.ItemIndex:=strtoint(s);
-      readln(t,s);
-      fDictImport.edtDescription.Text:=s;
-      readln(t,s);
-      fDictImport.edtCopyright.Text:=s;
-      readln(t,s);
-      fDictImport.cbAddWordIndex.Checked := (s='Y');
-      readln(t,s);
-      fDictImport.cbAddCharacterIndex.Checked := (s='Y');
-      readln(t,s);
-      fDictImport.cbAddFrequencyInfo.Checked := (s='Y');
-      while not eof(t) do
-      begin
-        readln(t,s);
-        fDictImport.lbFiles.Items.Add(s);
-      end;
+      fDictImport.edtDictFilename.Text:=MakeDicParams.Filename ;
+      fDictImport.edtDictName.Text:=MakeDicParams.Name;
+      fDictImport.edtVersion.Text:=MakeDicParams.Version;
+      if MakeDicParams.Language='C' then
+        fDictImport.rgLanguage.ItemIndex:=1
+      else
+        fDictImport.rgLanguage.ItemIndex:=0;
+      fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
+      fDictImport.edtDescription.Text:=MakeDicParams.Description;
+      fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
+      fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
+      fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
+      fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
+      for i := 0 to Length(MakeDicParams.Files) - 1 do
+        fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
       fDictImport.btnBuildClick(self);
       Application.Terminate;
       exit;
@@ -1186,7 +1172,7 @@ begin
     end;
     on E: Exception do begin
       Application.MessageBox(
-        pchar(E.Classname+': '+E.Message),
+        pchar(E.Classname+': '+E.Message + ' while loading wakan'),
         pchar('Error'), //Do not translate! The translation might not even be loaded yet.
         MB_ICONERROR or MB_OK
       );
