@@ -819,7 +819,7 @@ type
 const
   EdictMarkers: array[0..113] of TEdictMarker = (
    //Part of Speech Marking
-    (m: 'adj-i'; id: 67),
+    (m: 'adj-i'; id: 67; ab: 'g'),
     (m: 'adj-na'; id: 13; ab: 'gna-adj'),
     (m: 'adj-no'; id: 14; ab: 'gno-adj'),
     (m: 'adj-pn'; id: 15; ab: 'gpren-adj'),

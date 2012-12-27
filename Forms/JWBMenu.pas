@@ -747,7 +747,6 @@ var ps:TPackageSource;
   ms:TMemoryStream;
   conft:textfile;
   sect:integer;
-  t:textfile;
   i:integer;
 begin
   lastautosave:=now;
@@ -1137,6 +1136,7 @@ begin
       fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
       fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
       fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
+      fDictImport.Silent := true;
       for i := 0 to Length(MakeDicParams.Files) - 1 do
         fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
       fDictImport.btnBuildClick(self);

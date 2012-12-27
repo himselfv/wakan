@@ -56,6 +56,9 @@ type
     procedure btnCancelClick(Sender: TObject);
     procedure btnBuildClick(Sender: TObject);
 
+  public
+    Silent: boolean;
+
   protected
     procedure CreateDictTables(dicFilename: string; info: TDictInfo; diclang:char; entries: integer);
     procedure WriteDictPackage(dicFilename: string; tempDir: string; info: TDictInfo;
@@ -67,7 +70,8 @@ type
     function CreateFrequencyList: TStringList;
 
   public
-    function ImportDictionary(dicFilename: string; info: TDictInfo; files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
+    function ImportDictionary(dicFilename: string; info: TDictInfo;
+      files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 
   end;
 
@@ -96,7 +100,7 @@ var
 
 implementation
 
-uses JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
+uses StrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
   JWBDicSearch, JWBStrings, JWBIO;
 
 {$R *.DFM}
@@ -334,15 +338,13 @@ begin
   PKGWriteForm.PKGWriteCmd('Finish');
 end;
 
-
-
-
 procedure TfDictImport.btnBuildClick(Sender: TObject);
 var i: integer;
   files: TFileList;
   diclang:char;
   flags: TImportDictFlags;
   info: TDictInfo;
+  fname: string;
 begin
   SetLength(files, lbFiles.Items.Count);
   for i := 0 to lbFiles.Items.Count - 1 do
@@ -358,7 +360,12 @@ begin
   if cbAddWordIndex.Checked then flags := flags + [ifAddWordIndex];
   if cbAddCharacterIndex.Checked then flags := flags + [ifAddCharacterIndex];
   if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
-  if paramstr(1)='makedic' then flags := flags + [ifSilent];
+  if Silent then flags := flags + [ifSilent];
+
+
+  fname := edtDictFilename.text;
+  if not EndsStr('.dic', LowerCase(fname, loUserLocale)) then
+    fname := fname + '.dic';
 
   info.name := edtDictName.text;
   if info.name='' then info.name := ExtractFilename(edtDictFilename.text);
@@ -367,10 +374,10 @@ begin
   info.copyright := edtCopyright.text;
   info.priority := rgPriority.itemindex;
 
-  if ImportDictionary(edtDictFilename.text, info, files, diclang, flags) then
+  if ImportDictionary(fname, info, files, diclang, flags) then
   begin
     ModalResult := mrOk;
-    if paramstr(1)<>'makedic' then
+    if not Silent then
       Application.MessageBox(
         pchar(_l('#00093^eDictionary was built.')),
         pchar(_l('#00094^eSuccess')),
