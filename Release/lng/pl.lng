@@ -995,8 +995,8 @@
 00912>Ani kategoriê ani status nauki
 00913>Anuluj
 #VERS>1.65
-00914>Zbuduj z informacj¹ o czêstoœci (wymaga WORDFREQ_CK.UNI)
-00915>Nie mo¿na odnaleŸæ pliku WORDFREQ_CK.UNI.
+00914>Zbuduj z informacj¹ o czêstoœci (wymaga WORDFREQ_CK)
+00915>Nie mo¿na odnaleŸæ pliku WORDFREQ_CK.
 00916>B³¹d
 00917>Tworzenie schematu czêstoœci...
 00918>£aduj ca³y s³ownik do pamiêci (szybsze dzia³anie)

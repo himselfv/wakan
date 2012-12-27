@@ -995,8 +995,8 @@
 00912>Weder Kategorie noch Lernstatus
 00913>Abbrechen
 #VERS>1.65
-00914>Erstellen anhand von Frequenzinformationen (benötigt WORDFREQ_CK.UNI)
-00915>Kann Datei WORDFREQ_CK.UNI nicht finden.
+00914>Erstellen anhand von Frequenzinformationen (benötigt WORDFREQ_CK)
+00915>Kann Datei WORDFREQ_CK nicht finden.
 00916>Fehler
 00917>Erstelle Frequenztabelle...
 00918>Lade komplettes Wörterbuch in den Speicher (viel schneller)

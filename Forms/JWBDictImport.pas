@@ -460,8 +460,6 @@ begin
    //Create frequency list
     if ifAddFrequencyInfo in flags then
     try
-      if not FileExists('wordfreq_ck.uni') then
-        raise Exception.Create(_l('#00915^eCannot find WORDFREQ_CK.UNI file.'));
       prog.SetMessage(_l('#00917^eCreating frequency chart...'));
       freql := CreateFrequencyList;
     except
@@ -639,7 +637,7 @@ begin
           begin
             fc:=fgetch(s,1);
             fdelete(s,1,1);
-            if TChar.Locate('Unicode',fstrtohex(fc),false) then
+            if TChar.Locate('Unicode',fc,false) then
               charidx.AddToIndex(fstrtohex(fc), cnt); //char index has to have fc in FHex -- that's the format
           end; //of AddCharacterIndex while clause
 
@@ -728,7 +726,7 @@ begin
 end;
 
 {
-Creates and populates TStringList with frequency information taken from wordfreq_ck.uni.
+Creates and populates TStringList with frequency information taken from wordfreq_ck
 }
 function TfDictImport.CreateFrequencyList: TStringList;
 const
@@ -738,9 +736,22 @@ const
 var fc: FChar;
   newline,nownum,comment:boolean;
   addkan,addnum:string;
+  tp: byte;
 begin
   Result:=TStringList.Create;
-  Conv_Open('wordfreq_ck.uni',1);
+  if FileExists('wordfreq_ck.uni') then
+    Conv_Open('wordfreq_ck.uni', FILETYPE_UNICODE)
+  else
+  if FileExists('wordfreq_ck.euc') then
+    Conv_Open('wordfreq_ck.euc', FILETYPE_EUC)
+  else
+  if FileExists('wordfreq_ck') then begin
+   //best guess
+    tp := Conv_DetectType('wordfreq_ck');
+    Conv_Open('wordfreq_ck', tp);
+  end else
+    raise Exception.Create(_l('#00915^eCannot find WORDFREQ_CK file.'));
+
   fc:=Conv_ReadChar;
   newline:=true;
   nownum:=false;

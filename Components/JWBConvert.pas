@@ -7,6 +7,23 @@ const
  //Returned by Conv_ReadChar when no char can be read
   CONV_NOCHAR:FChar = {$IFDEF UNICODE}#$FFFF{$ELSE}''{$ENDIF};
 
+const
+ //Conversion types
+  FILETYPE_UNKNOWN=0;
+  FILETYPE_UNICODE=1;
+  FILETYPE_UNICODER=2;
+  FILETYPE_UTF8=3;
+  FILETYPE_JIS=4;
+  FILETYPE_OLD=5;
+  FILETYPE_NEC=6;
+  FILETYPE_SJS=7;
+  FILETYPE_EUC=8;
+  FILETYPE_GB=9;
+  FILETYPE_BIG5=10;
+  FILETYPE_EUCORSJIS=99;
+  FILETYPE_ASCII=98;
+  FILETYPE_WTT=255;
+
 function Conv_DetectType(filename:string):byte;
 procedure Conv_Open(filename:string; tp:byte);
 function Conv_Read:FString; //reads one char as string
@@ -30,20 +47,6 @@ const IS_EUC=1;
       IS_MARU=5;
       IS_NIGORI=6;
       IS_JIS=7;
-      FILETYPE_UNKNOWN=0;
-      FILETYPE_UNICODE=1;
-      FILETYPE_UNICODER=2;
-      FILETYPE_UTF8=3;
-      FILETYPE_JIS=4;
-      FILETYPE_OLD=5;
-      FILETYPE_NEC=6;
-      FILETYPE_SJS=7;
-      FILETYPE_EUC=8;
-      FILETYPE_GB=9;
-      FILETYPE_BIG5=10;
-      FILETYPE_EUCORSJIS=99;
-      FILETYPE_ASCII=98;
-      FILETYPE_WTT=255;
       JIS_NL=10;          // New Line char.
       JIS_CR=13;         // Carrage Return.
       JIS_ESC=27;          // Escape.

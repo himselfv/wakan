@@ -995,8 +995,8 @@
 00912>Neither category nor learned state
 00913>Cancel
 #VERS>1.65
-00914>Build with frequency information (requires WORDFREQ_CK.UNI)
-00915>Cannot find WORDFREQ_CK.UNI file.
+00914>Build with frequency information (requires WORDFREQ_CK)
+00915>Cannot find WORDFREQ_CK file.
 00916>Error
 00917>Creating frequency chart...
 00918>Load entire dictionary into memory (much faster)

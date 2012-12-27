@@ -991,8 +991,8 @@
 00912>Ani kategorii ani stav nauèení
 00913>Zrušit
 #VERS>1.65
-00914>Vytváøet slovník s informací o frekvenci slov (vyžaduje WORDFREQ_CK.UNI)
-00915>Nemohu najít soubor WORDFREQ_CK.UNI
+00914>Vytváøet slovník s informací o frekvenci slov (vyžaduje WORDFREQ_CK)
+00915>Nemohu najít soubor WORDFREQ_CK
 00916>Chyba
 00917>Vytváøím tabulku frekvence...
 00918>Nahrát celý slovník do pamìti (mnohem rychlejší)

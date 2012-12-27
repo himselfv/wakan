@@ -995,8 +995,8 @@
 00912>Aucune categorie ni statut appris
 00913>Annuler
 #VERS>1.65
-00914>Monté avec information de fréquence (exige WORDFREQ_CK.UNI)
-00915>Ne trouve pas le fichier WORDFREQ_CK.UNI.
+00914>Monté avec information de fréquence (exige WORDFREQ_CK)
+00915>Ne trouve pas le fichier WORDFREQ_CK.
 00916>Erreur
 00917>Création du tableau de fréquence...
 00918>Charger l'ensemble du dico en mémoire (beaucoup plus rapide)

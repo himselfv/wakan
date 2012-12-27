@@ -295,9 +295,7 @@ object fDictImport: TfDictImport
     Top = 488
     Width = 513
     Height = 17
-    Caption = 
-      '#00914^eBuild with frequency information (requires WORDFREQ_CK.U' +
-      'NI)'
+    Caption = '#00914^eBuild with frequency information (requires WORDFREQ_CK)'
     TabOrder = 14
   end
   object AddFileDialog: TOpenDialog

@@ -28,3 +28,8 @@ DEPENDENCIES
 http://ringtail.its.monash.edu.au/pub/nihongo/uniconv.zip
 http://ringtail.its.monash.edu.au/pub/nihongo/uniconv.txt
 Also see: http://www.autohotkey.com/board/topic/9831-uniconv-convert-unicode-cmd/
+
+2. WORDFREQ_CK - required for adding frequency information to dictionaries
+http://ftp.monash.edu.au/pub/nihongo/00INDEX.html
+http://ftp.monash.edu.au/pub/nihongo/wordfreq_ck.gz
+Also see: http://code.google.com/p/wakan/issues/detail?id=66
