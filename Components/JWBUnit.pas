@@ -909,7 +909,7 @@ const
     (m: 'hum'; id: 55; ab: 's'),
     (m: 'ik'; id: 56; ab: 'sirreg-kana'),
     (m: 'iK'; id: 57; ab: 'sirreg-kanji'),
-    (m: 'id'; id: 24; ab: 'gidiom),
+    (m: 'id'; id: 24; ab: 'gidiom'),
     (m: 'io'; id: 58; ab: 'sirreg-okurigana'),
     (m: 'm-sl'; id: 7; ab: '1manga-slang'),
     (m: 'male'; id: 6; ab: '1'),
