@@ -1,0 +1,3 @@
+Stuff that has to be done regularly to keep Wakan up to date:
+- Import new EDICT/ENAMDICT files
+- Update EDICT marker list in JWBUnit.pas (see http://www.csse.monash.edu.au/~jwb/edict_doc.html and http://www.csse.monash.edu.au/~jwb/edict_doc_old.html for older markers)
