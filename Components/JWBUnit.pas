@@ -35,14 +35,13 @@ function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):FString
 
 
 { EDict processing }
-
-var
-  markersl: TStringList;
+{ See implementation for Markers table }
 
 function ConvertEdictEntry(s:string;var mark:string):string;
 function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
 function DropEdictMarkers(s:string):string;
+
 
 { WordGrid }
 
@@ -802,12 +801,157 @@ end;
 
 { EDict processing }
 
+{ Marker IDs are stored in dictionaries so we have to keep absolute backward
+ compability.
+ Do not change marker IDs.
+ Do not deleted markers (even deprecated ones).
+ Only add marker IDs after the last one.
+ New marker IDs have no effect on previously compiled dictionaries. }
+
+type
+  TEdictMarker = record
+    m: string;
+    id: integer;
+    ab: string; //type + expanded name. If name is the same as m, it's not specified
+    { Supported types: 1, g, s }
+  end;
+
+const
+  EdictMarkers: array[0..113] of TEdictMarker = (
+   //Part of Speech Marking
+    (m: 'adj-i'; id: 67),
+    (m: 'adj-na'; id: 13; ab: 'gna-adj'),
+    (m: 'adj-no'; id: 14; ab: 'gno-adj'),
+    (m: 'adj-pn'; id: 15; ab: 'gpren-adj'),
+    (m: 'adj-s'; id: 16; ab: 'gspec-adj'), //deprecated
+    (m: 'adj-t'; id: 17; ab: 'gtaru-adj'),
+    (m: 'adj-f'; id: 68; ab: 'g'),
+    (m: 'adj'; id: 11; ab: 'g'),
+    (m: 'adv'; id: 12; ab: 'g'),
+    (m: 'adv-n'; id: 69; ab: 'g'),
+    (m: 'adv-to'; id: 70; ab: 'g'),
+    (m: 'aux'; id: 18; ab: 'g'),
+    (m: 'aux-v'; id: 19; ab: 'g'),
+    (m: 'aux-adj'; id: 71; ab: 'g'),
+    (m: 'conj'; id: 20; ab: 'g'),
+    (m: 'ctr'; id: 72; ab: 'g'),
+    (m: 'exp'; id: 21; ab: 'gexpr'),
+    (m: 'int'; id: 25; ab: 'g'),
+    (m: 'iv'; id: 73; ab: 'g'),
+    (m: 'n'; id: 26; ab: 'g'),
+    (m: 'n-adv'; id: 27; ab: 'g'),
+    (m: 'n-pref'; id: 74; ab: 'g'),
+    (m: 'n-suf'; id: 29; ab: 'g'),
+    (m: 'n-t'; id: 28; ab: 'g'),
+    (m: 'neg'; id: 30; ab: 'g'), //deprecated
+    (m: 'neg-v'; id: 31; ab: 'gneg-verb'), //deprecated
+    (m: 'num'; id: 75; ab: 'g'),
+    (m: 'pn'; id: 76; ab: 'g'),
+    (m: 'pref'; id: 32; ab: 'g'),
+    (m: 'prt'; id: 77; ab: 'g'),
+    (m: 'suf'; id: 33; ab: 'g'),
+    (m: 'v1'; id: 34; ab: 'gru-v'),
+    (m: 'v2a-s'; id: 78; ab: 'g'),
+    (m: 'v4h'; id: 79; ab: 'g'),
+    (m: 'v4r'; id: 80; ab: 'g'),
+    (m: 'v5'; id: 35; ab: 'gu-v'),
+    (m: 'v5aru'; id: 47; ab: 'garu-v'),
+    (m: 'v5b'; id: 42; ab: 'gu-v'),
+    (m: 'v5g'; id: 38; ab: 'gu-v'),
+    (m: 'v5k'; id: 37; ab: 'gu-v'),
+    (m: 'v5k-s'; id: 45; ab: 'gIku-v'),
+    (m: 'v5m'; id: 43; ab: 'gu-v'),
+    (m: 'v5n'; id: 41; ab: 'gu-v'),
+    (m: 'v5r'; id: 44; ab: 'gu-v'),
+    (m: 'v5r-i'; id: 81; ab: 'g'),
+    (m: 'v5s'; id: 39; ab: 'gu-v'),
+    (m: 'v5t'; id: 40; ab: 'gu-v'),
+    (m: 'v5u'; id: 36; ab: 'gu-v'),
+    (m: 'v5u-s'; id: 82; ab: 'g'),
+    (m: 'v5uru'; id: 48; ab: 'guru-v'),
+    (m: 'v5z'; id: 46; ab: 'gzuru-v'),
+    (m: 'vz'; id: 83; ab: 'g'),
+    (m: 'vi'; id: 49; ab: 'gintrans-verb'),
+    (m: 'vk'; id: 52; ab: 'gkuru-v'),
+    (m: 'vn'; id: 84; ab: 'g'),
+    (m: 'vs'; id: 50; ab: 'gp-suru'),
+    (m: 'vs-c'; id: 85; ab: 'g'),
+    (m: 'vs-i'; id: 86; ab: 'g'),
+    (m: 'vs-s'; id: 51; ab: 'gsuru-v'),
+    (m: 'vt'; id: 53; ab: 'gtrans-verb'),
+
+   //Field of Application
+    (m: 'Buddh'; id: 87),
+    (m: 'MA'; id: 5; ab: '1martial-arts'),
+    (m: 'comp'; id: 88),
+    (m: 'food'; id: 89),
+    (m: 'geom'; id: 90),
+    (m: 'gram'; id: 23; ab: 'g'),
+    (m: 'ling'; id: 91),
+    (m: 'math'; id: 92),
+    (m: 'mil'; id: 93),
+    (m: 'physics'; id: 94),
+
+   //Miscellaneous Markings
+    (m: 'X'; id: 9; ab: '1rude'),
+    (m: 'abbr'; id: 1; ab: '1'),
+    (m: 'arch'; id: 2; ab: '1archaic'),
+    (m: 'ateji'; id: 95; ab: '1'),
+    (m: 'chn'; id: 96; ab: '1child'),
+    (m: 'col'; id: 10; ab: '1'),
+    (m: 'derog'; id: 97; ab: '1'),
+    (m: 'eK'; id: 98),
+    (m: 'ek'; id: 99),
+    (m: 'fam'; id: 3; ab: '1familiar'),
+    (m: 'fem'; id: 4; ab: '1female'),
+    (m: 'gikun'; id: 22; ab: 'g'),
+    (m: 'hon'; id: 54; ab: 'shonor'),
+    (m: 'hum'; id: 55; ab: 's'),
+    (m: 'ik'; id: 56; ab: 'sirreg-kana'),
+    (m: 'iK'; id: 57; ab: 'sirreg-kanji'),
+    (m: 'id'; id: 24; ab: 'gidiom),
+    (m: 'io'; id: 58; ab: 'sirreg-okurigana'),
+    (m: 'm-sl'; id: 7; ab: '1manga-slang'),
+    (m: 'male'; id: 6; ab: '1'),
+    (m: 'male-sl'; id: 100; ab: '1'),
+    (m: 'oK'; id: 62; ab: 'soutdated-kanji'),
+    (m: 'obs'; id: 59; ab: 'sobsolete'),
+    (m: 'obsc'; id: 60; ab: 'sobscure'),
+    (m: 'ok'; id: 61; ab: 'soutdated-kana'),
+    (m: 'on-mim'; id: 101),
+    (m: 'poet'; id: 102; ab: '1'),
+    (m: 'pol'; id: 63; ab: 'spolite'),
+    (m: 'rare'; id: 103; ab: 's'),
+    (m: 'sens'; id: 104; ab: '1'),
+    (m: 'sl'; id: 105; ab: '1slang'),
+    (m: 'uK'; id: 65; ab: 'skanji'),
+    (m: 'uk'; id: 64; ab: 'skana'),
+    (m: 'vulg'; id: 8; ab: '1vulgar'),
+
+   //Word Priority Marking
+    (m: 'P'; id: 66; ab: 'spop'),
+
+   //Regional Words
+    (m: 'kyb'; id: 106),
+    (m: 'osb'; id: 107),
+    (m: 'ksb'; id: 108),
+    (m: 'ktb'; id: 109),
+    (m: 'tsb'; id: 110),
+    (m: 'thb'; id: 111),
+    (m: 'tsug'; id: 112),
+    (m: 'kyu'; id: 113),
+    (m: 'rkb'; id: 114)
+  );
+
+  LastMarkerID = 114;
+
+
 function ConvertEdictEntry(s:string;var mark:string):string;
 var postm,post2m:string;
     s2:string;
     inmarker:boolean;
     curm,marker:string;
-    i:integer;
+    i,j:integer;
     markerd:boolean;
     oldm:string;
     mm:byte;
@@ -839,72 +983,13 @@ begin
         delete(marker,1,length(curm));
         if (length(marker)>0) and (marker[1]=',') then delete(marker,1,1);
         markerd:=true;
-        if curm='abbr'then mm:=1 else
-        if curm='arch'then mm:=2 else
-        if curm='fam'then mm:=3 else
-        if curm='fem'then mm:=4 else
-        if curm='MA'then mm:=5 else
-        if curm='male'then mm:=6 else
-        if curm='m-sl'then mm:=7 else
-        if curm='vulg'then mm:=8 else
-        if curm='X'then mm:=9 else
-        if curm='col'then mm:=10 else
-        if curm='adj'then mm:=11 else
-        if curm='adv'then mm:=12 else
-        if curm='adj-na'then mm:=13 else
-        if curm='adj-no'then mm:=14 else
-        if curm='adj-pn'then mm:=15 else
-        if curm='adj-s'then mm:=16 else
-        if curm='adj-t'then mm:=17 else
-        if curm='aux'then mm:=18 else
-        if curm='aux-v'then mm:=19 else
-        if curm='conj'then mm:=20 else
-        if curm='exp'then mm:=21 else
-        if curm='gikun'then mm:=22 else
-        if curm='gram'then mm:=23 else
-        if curm='id'then mm:=24 else
-        if curm='int'then mm:=25 else
-        if curm='n'then mm:=26 else
-        if curm='n-adv'then mm:=27 else
-        if curm='n-t'then mm:=28 else
-        if curm='n-suf'then mm:=29 else
-        if curm='neg'then mm:=30 else
-        if curm='neg-v'then mm:=31 else
-        if curm='pref'then mm:=32 else
-        if curm='suf'then mm:=33 else
-        if curm='v1'then mm:=34 else
-        if curm='v5'then mm:=35 else
-        if curm='v5u'then mm:=36 else
-        if curm='v5k'then mm:=37 else
-        if curm='v5g'then mm:=38 else
-        if curm='v5s'then mm:=39 else
-        if curm='v5t'then mm:=40 else
-        if curm='v5n'then mm:=41 else
-        if curm='v5b'then mm:=42 else
-        if curm='v5m'then mm:=43 else
-        if curm='v5r'then mm:=44 else
-        if curm='v5k-s'then mm:=45 else
-        if curm='v5z'then mm:=46 else
-        if curm='v5aru'then mm:=47 else
-        if curm='v5uru'then mm:=48 else
-        if curm='vi'then mm:=49 else
-        if curm='vs'then mm:=50 else
-        if curm='vs-s'then mm:=51 else
-        if curm='vk'then mm:=52 else
-        if curm='vt'then mm:=53 else
-        if curm='hon'then mm:=54 else
-        if curm='hum'then mm:=55 else
-        if curm='ik'then mm:=56 else
-        if curm='iK'then mm:=57 else
-        if curm='io'then mm:=58 else
-        if curm='obs'then mm:=59 else
-        if curm='obsc'then mm:=60 else
-        if curm='ok'then mm:=61 else
-        if curm='oK'then mm:=62 else
-        if curm='pol'then mm:=63 else
-        if curm='uk'then mm:=64 else
-        if curm='uK'then mm:=65 else
-        if curm='P'then mm:=66 else
+        mm:=255;
+        for j := 0 to Length(EdictMarkers) - 1 do
+          if EdictMarkers[j].m=curm then begin
+            mm := EdictMarkers[j].id;
+            break;
+          end;
+        if mm=255 then
         begin
           if (oldm='1') or (oldm='2') or (oldm='3') then insection:=true;
           s2:=s2+'('+oldm+')'; mm:=0; markerd:=false;
@@ -923,192 +1008,27 @@ begin
 end;
 
 function GetMarkEdict(mark:char):string;
+var i: integer;
 begin
-  result:='';
-  case mark of
-    #33:result:='abbr';
-    #34:result:='arch';
-    #35:result:='fam';
-    #36:result:='fem';
-    #37:result:='MA';
-    #38:result:='male';
-    #39:result:='m-sl';
-    #40:result:='vulg';
-    #41:result:='X';
-    #42:result:='col';
-    #43:result:='adj';
-    #44:result:='adv';
-    #45:result:='adj-na';
-    #46:result:='adj-no';
-    #47:result:='adj-pn';
-    #48:result:='adj-s';
-    #49:result:='adj-t';
-    #50:result:='aux';
-    #51:result:='aux-v';
-    #52:result:='conj';
-    #53:result:='exp';
-    #54:result:='gikun';
-    #55:result:='gram';
-    #56:result:='id';
-    #57:result:='int';
-    #58:result:='n';
-    #59:result:='n-adv';
-    #60:result:='n-t';
-    #61:result:='n-suf';
-    #62:result:='neg';
-    #63:result:='neg-v';
-    #64:result:='pref';
-    #65:result:='suf';
-    #66:result:='v1';
-    #67:result:='v5';
-    #68:result:='v5u';
-    #69:result:='v5k';
-    #70:result:='v5g';
-    #71:result:='v5s';
-    #72:result:='v5t';
-    #73:result:='v5n';
-    #74:result:='v5b';
-    #75:result:='v5m';
-    #76:result:='v5r';
-    #77:result:='v5k-s';
-    #78:result:='v5z';
-    #79:result:='v5aru';
-    #80:result:='v5uru';
-    #81:result:='vi';
-    #82:result:='vs';
-    #83:result:='vs-s';
-    #84:result:='vk';
-    #85:result:='vt';
-    #86:result:='hon';
-    #87:result:='hum';
-    #88:result:='ik';
-    #89:result:='iK';
-    #90:result:='io';
-    #91:result:='obs';
-    #92:result:='obsc';
-    #93:result:='ok';
-    #94:result:='oK';
-    #95:result:='pol';
-    #96:result:='uk';
-    #97:result:='uK';
-    #98:result:='P';
-  end;
-end;
-
-function GetMarkDescription(edictmark:String):string;
-var i:integer;
-    s:String;
-begin
-  for i:=0 to markersl.Count-1 do
-  begin
-    if (pos(edictmark+' ',markersl[i])=1) or
-       (pos(edictmark+#9,markersl[i])=1) then
-    begin
-      s:=markersl[i];
-      delete(s,1,length(edictmark));
-      s:=trim(s);
-      result:=s;
-      exit;
+  Result := '';
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].id=ord(mark)-32 then begin
+      Result := EdictMarkers[i].m;
+      break;
     end;
-  end;
-  result:='';
-end;
-
-procedure WriteMarkTable;
-var t:textfile;
-    i:char;
-    s:string;
-begin
-  assignfile(t,'marks.html');
-  rewrite(t);
-  writeln(t,'<table>');
-  for i:=#33 to #98 do
-  begin
-    writeln(t,'  <tr>');
-    s:=GetMarkAbbr(i);
-    writeln(t,'    <td>'+copy(s,2,length(s)-1)+'</td>');
-    writeln(t,'    <td>'+s[1]+'</td>');
-    s:=GetMarkEdict(i);
-    writeln(t,'    <td>'+s+'</td>');
-    writeln(t,'    <td>'+GetMarkDescription(s)+'</td>');
-    writeln(t,'  </tr>');
-  end;
-  closefile(t);
 end;
 
 function GetMarkAbbr(mark:char):string;
-var mr:string;
+var i: integer;
 begin
-  mr:='1?';
-  case mark of
-    #33:mr:='1abbr';
-    #34:mr:='1archaic';
-    #35:mr:='1familiar';
-    #36:mr:='1female';
-    #37:mr:='1martial-arts';
-    #38:mr:='1male';
-    #39:mr:='1manga-slang';
-    #40:mr:='1vulgar';
-    #41:mr:='1rude';
-    #42:mr:='1col';
-    #43:mr:='gadj';
-    #44:mr:='gadv';
-    #45:mr:='gna-adj';
-    #46:mr:='gno-adj';
-    #47:mr:='gpren-adj';
-    #48:mr:='gspec-adj';
-    #49:mr:='gtaru-adj';
-    #50:mr:='gaux';
-    #51:mr:='gaux-v';
-    #52:mr:='gconj';
-    #53:mr:='gexpr';
-    #54:mr:='ggikun';
-    #55:mr:='ggram';
-    #56:mr:='gid';
-    #57:mr:='gint';
-    #58:mr:='gn';
-    #59:mr:='gn-adv';
-    #60:mr:='gn-temp';
-    #61:mr:='gn-suf';
-    #62:mr:='gneg';
-    #63:mr:='gneg-verb';
-    #64:mr:='gpref';
-    #65:mr:='gsuf';
-    #66:mr:='gru-v';
-    #67:mr:='gu-v';
-    #68:mr:='gu-v';
-    #69:mr:='gu-v';
-    #70:mr:='gu-v';
-    #71:mr:='gu-v';
-    #72:mr:='gu-v';
-    #73:mr:='gu-v';
-    #74:mr:='gu-v';
-    #75:mr:='gu-v';
-    #76:mr:='gu-v';
-    #77:mr:='gIku-v';
-    #78:mr:='gzuru-v';
-    #79:mr:='garu-v';
-    #80:mr:='guru-v';
-    #81:mr:='gintrans-verb';
-    #82:mr:='gp-suru';
-    #83:mr:='gsuru-v';
-    #84:mr:='gkuru-v';
-    #85:mr:='gtrans-verb';
-    #86:mr:='shonor';
-    #87:mr:='shum';
-    #88:mr:='sirreg-kana';
-    #89:mr:='sirreg-kanji';
-    #90:mr:='sirreg-okurigana';
-    #91:mr:='sobsolete';
-    #92:mr:='sobscure';
-    #93:mr:='soutdated-kana';
-    #94:mr:='soutdated-kanji';
-    #95:mr:='spolite';
-    #96:mr:='skana';
-    #97:mr:='skanji';
-    #98:mr:='spop';
-  end;
-  result:=mr;
+  Result := '1?';
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].id=ord(mark)-32 then begin
+      Result := EdictMarkers[i].ab;
+      if Result='' then Result := 's'+EdictMarkers[i].m else
+      if Length(Result)=1 {only type} then Result := Result + EdictMarkers[i].m;
+      break;
+    end;
 end;
 
 function EnrichDictEntry(s,mark:string):string;
@@ -1976,10 +1896,5 @@ initialization
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
   GridFontSize:=14;
   STB_Canvas:=nil;
-
-  markersl:=TStringList.Create;
-
-finalization
-  markersl.Free;
 
 end.
