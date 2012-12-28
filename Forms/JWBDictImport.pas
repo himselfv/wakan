@@ -747,7 +747,7 @@ var fc: FChar;
 begin
   Result:=TStringList.Create;
   if FileExists('wordfreq_ck.uni') then
-    Conv_Open('wordfreq_ck.uni', FILETYPE_UNICODE)
+    Conv_Open('wordfreq_ck.uni', FILETYPE_UTF16LE)
   else
   if FileExists('wordfreq_ck.euc') then
     Conv_Open('wordfreq_ck.euc', FILETYPE_EUC)

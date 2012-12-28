@@ -12,6 +12,10 @@ procedure ShowUsage(errmsg: string = '');
 var
   Command: string;
 
+  OpenParams: record
+    Filename: string;
+  end;
+
   MakeDicParams: record
     Filename: string;
     Name: string;
@@ -45,6 +49,7 @@ begin
 
   s := 'Usage: '+ExtractFilename(Paramstr(0))+' <command> [/options option params]'#13
     +'Supported commands:'#13
+    +'* open <filename>'#13
     +'* makeexamples'#13
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
@@ -81,6 +86,11 @@ begin
      //Currently none.
 
      //Command-related options
+      if Command='makeexamples' then begin
+       //No options
+        BadUsage('Invalid option: '+s);
+
+      end else
       if Command='makedic' then begin
         if s='/name' then begin
           Inc(i);
@@ -140,11 +150,7 @@ begin
           BadUsage('Invalid option: '+s);
 
       end else
-      if Command='makeexamples' then begin
-       //No options
-        BadUsage('Invalid option: '+s);
 
-      end else
         BadUsage('Invalid option: '+s);
 
     end else
@@ -152,10 +158,13 @@ begin
     if Command='' then begin
       Command := s;
 
+      if Command='makeexamples' then begin
+       //Nothing to initialize
+      end else
       if Command='makedic' then begin
         FillChar(MakeDicParams, sizeof(MakeDicParams), 0);
         Inc(i);
-        if i>ParamCount() then BadUsage('makedic requires dictionary file name');
+        if i>ParamCount() then BadUsage('"makedic" requires dictionary file name');
         MakeDicParams.Filename := Paramstr(i);
         MakeDicParams.Name := ChangeFileExt(ExtractFileName(MakeDicParams.Filename), '');
         MakeDicParams.Language := 'j';
@@ -163,13 +172,21 @@ begin
         MakeDicParams.AddCharacterIndex := true;
        //but no frequency info because it requires additional file which is missing by default
       end else
-      if Command='makeexamples' then begin
-       //Nothing to initialize
+      if Command='open' then begin
+        FillChar(OpenParams, sizeof(OpenParams), 0);
+        Inc(i);
+        if i>ParamCount() then BadUsage('"open" requires file name');
+        OpenParams.Filename := ParamStr(i);
       end else
-        BadUsage('Invalid command: '+s);
+      if FileExists(s) then begin
+        FillChar(OpenParams, sizeof(OpenParams), 0);
+        Command := 'open';
+        OpenParams.Filename := s;
+      end else
+        BadUsage('Invalid command or file: "'+s+'"');
 
     end else
-      BadUsage('Invalid param: '+s);
+      BadUsage('Invalid param: "'+s+'"');
 
     Inc(i);
   end;

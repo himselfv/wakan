@@ -10,8 +10,8 @@ const
 const
  //Conversion types
   FILETYPE_UNKNOWN=0;
-  FILETYPE_UNICODE=1;
-  FILETYPE_UNICODER=2;
+  FILETYPE_UTF16LE=1;
+  FILETYPE_UTF16BE=2;
   FILETYPE_UTF8=3;
   FILETYPE_JIS=4;
   FILETYPE_OLD=5;
@@ -25,6 +25,7 @@ const
   FILETYPE_WTT=255;
 
 function Conv_DetectType(filename:string):byte;
+function Conv_DetectTypeEx(filename:string; out tp:byte): boolean;
 procedure Conv_Open(filename:string; tp:byte);
 function Conv_Read:FString; //reads one char as string
 function Conv_ReadChar:FChar; //reads one char as char
@@ -249,57 +250,79 @@ begin
   if (b1=-1) or (b2=-1) then result:=-1 else result:=b2*256+b1;
 end;
 
-function _detftype:byte;
+//Detects file encoding. Returns true if it's truly detected (i.e. through BOM),
+//or false if guessed.
+function _detftype(out tp:byte): boolean;
 var i,b,j:integer;
     eucsjis:boolean;
     asciionly:boolean;
 begin
   _rewind;
-  result:=0;
+  tp:=0;
+  Result := false;
   i:=_freadw;
-  if i=$feff then result:=FILETYPE_UNICODE;
-  if i=$fffe then result:=FILETYPE_UNICODER;
-  if i=$f1ff then result:=FILETYPE_WTT;
-  if result=0 then
-  begin
-    result:=FILETYPE_UNICODE;
-    eucsjis:=true;
-    while (i<>-1) and (result=FILETYPE_UNICODE) do
-    begin
-      if Unicode2JIS(i)=0 then result:=0;
-      if (i and $8080)<>$8080 then eucsjis:=false;
-      i:=_freadw;
-    end;
-    if eucsjis then result:=0;
+
+  if i=$feff then begin
+    tp:=FILETYPE_UTF16LE;
+    Result:=true;
+    exit;
   end;
-  if result=0 then
+  if i=$fffe then begin
+    tp:=FILETYPE_UTF16BE;
+    Result:=true;
+    exit;
+  end;
+  if i=$f1ff then begin
+    tp:=FILETYPE_WTT;
+    Result:=true;
+    exit;
+  end;
+
+ //UTF-8 BOM: 0xEF, 0xBB, 0xBF
+  if (i=$BBEF) and (_fread() = $BF) then begin
+    tp:=FILETYPE_UTF8;
+    Result:=true;
+    exit;
+  end;
+
+  tp:=FILETYPE_UTF16LE;
+  eucsjis:=true;
+  while (i<>-1) and (tp=FILETYPE_UTF16LE) do
+  begin
+    if Unicode2JIS(i)=0 then tp:=0;
+    if (i and $8080)<>$8080 then eucsjis:=false;
+    i:=_freadw;
+  end;
+  if eucsjis then tp:=0;
+
+  if tp=0 then
   begin
     _rewind;
     asciionly:=true;
     i:=_fread;
-    result:=FILETYPE_UTF8;
-    while (i<>-1) and (result=FILETYPE_UTF8) do
+    tp:=FILETYPE_UTF8;
+    while (i<>-1) and (tp=FILETYPE_UTF8) do
     begin
       b:=0;
       if (i and UTF8_MASK1)=UTF8_VALUE1 then b:=0 else
       if (i and UTF8_MASK2)=UTF8_VALUE2 then b:=1 else
       if (i and UTF8_MASK3)=UTF8_VALUE3 then b:=2 else
-      if (i and UTF8_MASK4)=UTF8_VALUE4 then b:=3 else result:=0;
+      if (i and UTF8_MASK4)=UTF8_VALUE4 then b:=3 else tp:=0;
       if b>0 then asciionly:=false;
       for j:=0 to b-1 do
       begin
         i:=_fread;
-        if not ((i and $c0)=$80) then result:=0;
+        if not ((i and $c0)=$80) then tp:=0;
       end;
       i:=_fread;
     end;
-    if asciionly then result:=0;
+    if asciionly then tp:=0;
   end;
-  if result=0 then
+  if tp=0 then
   begin
     _rewind;
-    result:=FILETYPE_ASCII;
-    while (result=FILETYPE_ASCII) or (result=FILETYPE_EUCORSJIS) do
+    tp:=FILETYPE_ASCII;
+    while (tp=FILETYPE_ASCII) or (tp=FILETYPE_EUCORSJIS) do
     begin
       i:=_fread;
       if i=-1 then break;
@@ -309,45 +332,45 @@ begin
         if i=ord('$') then
         begin
           i:=_fread;
-          if i=ord('B') then result:=FILETYPE_JIS;
-          if i=ord('@') then result:=FILETYPE_OLD;
-        end else if i=ord('K') then result:=FILETYPE_NEC;
+          if i=ord('B') then tp:=FILETYPE_JIS;
+          if i=ord('@') then tp:=FILETYPE_OLD;
+        end else if i=ord('K') then tp:=FILETYPE_NEC;
       end else if i=JIS_SS2 then
       begin
         i:=_fread;
-        if (i>=161) and (i<=223) then result:=FILETYPE_EUCORSJIS
-        else if (i<>127) and (i>=64) and (i<=252) then result:=FILETYPE_SJS;
-      end else if (i>=129) and (i<=159) then result:=FILETYPE_SJS
+        if (i>=161) and (i<=223) then tp:=FILETYPE_EUCORSJIS
+        else if (i<>127) and (i>=64) and (i<=252) then tp:=FILETYPE_SJS;
+      end else if (i>=129) and (i<=159) then tp:=FILETYPE_SJS
       else if (i>=161) and (i<=223) then
       begin
         i:=_fread;
-        if (i>=240) and (i<=254) then result:=FILETYPE_EUC
-        else if (i>=161) and (i<=223) then result:=FILETYPE_EUCORSJIS
+        if (i>=240) and (i<=254) then tp:=FILETYPE_EUC
+        else if (i>=161) and (i<=223) then tp:=FILETYPE_EUCORSJIS
         else if (i>=224) and (i<=239) then
         begin
-          result:=FILETYPE_EUCORSJIS;
-          while ((i>=64) and (result=FILETYPE_EUCORSJIS)) do
+          tp:=FILETYPE_EUCORSJIS;
+          while ((i>=64) and (tp=FILETYPE_EUCORSJIS)) do
           begin
             if i>=129 then
             begin
-              if (i<=141) or ((i>=143) and (i<=159)) then result:=FILETYPE_SJS else
-              if (i>=253) and (i<=254) then result:=FILETYPE_EUC;
+              if (i<=141) or ((i>=143) and (i<=159)) then tp:=FILETYPE_SJS else
+              if (i>=253) and (i<=254) then tp:=FILETYPE_EUC;
             end;
             i:=_fread;
             if i=-1 then break;
           end;
-        end else if i<=159 then result:=FILETYPE_SJS;
-      end else if (i>=240) and (i<=254) then result:=FILETYPE_EUC
+        end else if i<=159 then tp:=FILETYPE_SJS;
+      end else if (i>=240) and (i<=254) then tp:=FILETYPE_EUC
       else if (i>=224) and (i<=239) then
       begin
         i:=_fread;
-        if ((i>=64) and (i<=126)) or ((i>=128) and (i<=160)) then result:=FILETYPE_SJS
-        else if (i>=253) and (i<=254) then result:=FILETYPE_EUC
-        else if (i>=161) and (i<=252) then result:=FILETYPE_EUCORSJIS;
+        if ((i>=64) and (i<=126)) or ((i>=128) and (i<=160)) then tp:=FILETYPE_SJS
+        else if (i>=253) and (i<=254) then tp:=FILETYPE_EUC
+        else if (i>=161) and (i<=252) then tp:=FILETYPE_EUCORSJIS;
       end;
     end;
   end;
-  if result=FILETYPE_EUCORSJIS then result:=FILETYPE_SJS;
+  if tp=FILETYPE_EUCORSJIS then tp:=FILETYPE_SJS;
 end;
 
 function _input(tp:byte):integer;
@@ -369,8 +392,8 @@ begin
                       end;
                       result:=i; exit;
                     end;
-      FILETYPE_UNICODER:begin i:=256*i+_fread; result:=i; exit; end;
-      FILETYPE_UNICODE: begin i:=256*_fread+i; result:=i; exit; end;
+      FILETYPE_UTF16BE:begin i:=256*i+_fread; result:=i; exit; end;
+      FILETYPE_UTF16LE: begin i:=256*_fread+i; result:=i; exit; end;
       FILETYPE_ASCII: begin result:=i; exit; end;
       FILETYPE_EUC: begin if _is(i,IS_EUC) then result:=JIS2Unicode((i*256+_fread) and $7f7f) else result:=i; exit; end;
       FILETYPE_SJS: if _is(i,IS_SJIS1) then
@@ -449,8 +472,8 @@ begin
     FILETYPE_UTF8:if (w and UTF8_WRITE1)=0 then _fwrite(w mod 256) else
                   if (w and UTF8_WRITE2)=0 then begin _fwrite(UTF8_VALUE2 or (w shr 6)); _fwrite(UTF8_VALUEC or (w and $3f)); end else
                   begin _fwrite(UTF8_VALUE3 or (w shr 12)); _fwrite(UTF8_VALUEC or ((w shr 6) and $3f)); _fwrite(UTF8_VALUEC or (w and $3f)); end;
-    FILETYPE_UNICODE:begin _fwrite(w mod 256); _fwrite(w div 256); end;
-    FILETYPE_UNICODER:begin _fwrite(w div 256); _fwrite(w mod 256); end;
+    FILETYPE_UTF16LE:begin _fwrite(w mod 256); _fwrite(w div 256); end;
+    FILETYPE_UTF16BE:begin _fwrite(w div 256); _fwrite(w mod 256); end;
     FILETYPE_EUC:begin w:=Unicode2JIS(w);
                    if _is(w,IS_JIS) then
                    begin
@@ -504,7 +527,17 @@ begin
   assignfile(f,filename);
   reset(f,1);
   _rewind;
-  result:=_detftype;
+  _detftype(result);
+  closefile(f);
+end;
+
+//Makes a guess about file encoding, and returns true if it's a sure thing (i.e. there's BOM).
+function Conv_DetectTypeEx(filename:string; out tp:byte): boolean;
+begin
+  assignfile(f,filename);
+  reset(f,1);
+  _rewind;
+  Result:=_detftype(tp);
   closefile(f);
 end;
 
@@ -513,7 +546,7 @@ begin
   assignfile(f,filename);
   reset(f,1);
   _rewind;
-  if (tp=FILETYPE_UNICODE) or (tp=FILETYPE_UNICODER) then begin _fread; _fread; end;
+  if (tp=FILETYPE_UTF16LE) or (tp=FILETYPE_UTF16BE) then begin _fread; _fread; end;
   ftp:=tp;
 end;
 
@@ -546,8 +579,8 @@ begin
   assignfile(f,filename);
   rewrite(f,1);
   _rewind;
-  if tp=FILETYPE_UNICODE then begin _fwrite(255); _fwrite(254); end;
-  if tp=FILETYPE_UNICODER then begin _fwrite(254); _fwrite(255); end;
+  if tp=FILETYPE_UTF16LE then begin _fwrite(255); _fwrite(254); end;
+  if tp=FILETYPE_UTF16BE then begin _fwrite(254); _fwrite(255); end;
   ftp:=tp;
 end;
 
@@ -585,7 +618,7 @@ end;
 procedure Conv_Rewind;
 begin
   _rewind;
-  if (ftp=FILETYPE_UNICODE) or (ftp=FILETYPE_UNICODER) then begin _fread; _fread; end;
+  if (ftp=FILETYPE_UTF16LE) or (ftp=FILETYPE_UTF16BE) then begin _fread; _fread; end;
 end;
 
 procedure Conv_Flush;
@@ -611,20 +644,20 @@ begin
     fFileType.rgType.Items.Add('GB2312');
     fFileType.rgType.Items.Add('Unicode (UCS2) reversed bytes');
     case def of
-      FILETYPE_UNICODE: fFileType.rgType.ItemIndex:=0;
+      FILETYPE_UTF16LE: fFileType.rgType.ItemIndex:=0;
       FILETYPE_UTF8: fFileType.rgType.ItemIndex:=1;
       FILETYPE_BIG5: fFileType.rgType.ItemIndex:=2;
       FILETYPE_GB: fFileType.rgType.ItemIndex:=3;
-      FILETYPE_UNICODER: fFileType.rgType.ItemIndex:=4;
+      FILETYPE_UTF16BE: fFileType.rgType.ItemIndex:=4;
       else fFileType.rgType.ItemIndex:=0;
     end;
     if fFileType.ShowModal=mrOK then
     case fFileType.rgType.ItemIndex of
-      0: result:=FILETYPE_UNICODE;
+      0: result:=FILETYPE_UTF16LE;
       1: result:=FILETYPE_UTF8;
       2: result:=FILETYPE_BIG5;
       3: result:=FILETYPE_GB;
-      4: result:=FILETYPE_UNICODER;
+      4: result:=FILETYPE_UTF16BE;
     end else result:=0;
   end else
   begin
@@ -638,26 +671,26 @@ begin
     fFileType.rgType.Items.Add('EUC');
     fFileType.rgType.Items.Add('Unicode (UCS2) reversed bytes');
     case def of
-      FILETYPE_UNICODE: fFileType.rgType.ItemIndex:=0;
+      FILETYPE_UTF16LE: fFileType.rgType.ItemIndex:=0;
       FILETYPE_UTF8: fFileType.rgType.ItemIndex:=1;
       FILETYPE_SJS: fFileType.rgType.ItemIndex:=2;
       FILETYPE_JIS: fFileType.rgType.ItemIndex:=3;
       FILETYPE_OLD: fFileType.rgType.ItemIndex:=4;
       FILETYPE_NEC: fFileType.rgType.ItemIndex:=5;
       FILETYPE_EUC: fFileType.rgType.ItemIndex:=6;
-      FILETYPE_UNICODER: fFileType.rgType.ItemIndex:=7;
+      FILETYPE_UTF16BE: fFileType.rgType.ItemIndex:=7;
       else fFileType.rgType.ItemIndex:=0;
     end;
     if fFileType.ShowModal=mrOK then
     case fFileType.rgType.ItemIndex of
-      0: result:=FILETYPE_UNICODE;
+      0: result:=FILETYPE_UTF16LE;
       1: result:=FILETYPE_UTF8;
       2: result:=FILETYPE_SJS;
       3: result:=FILETYPE_JIS;
       4: result:=FILETYPE_OLD;
       5: result:=FILETYPE_NEC;
       6: result:=FILETYPE_EUC;
-      7: result:=FILETYPE_UNICODER;
+      7: result:=FILETYPE_UTF16BE;
     end;
   end;
 end;

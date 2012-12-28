@@ -277,6 +277,7 @@ type
     procedure LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
     procedure SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
   public //File open/save
+    procedure OpenAnyFile(filename:string);
     procedure OpenFile(filename:string;tp:byte);
     procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
     function SaveAs: boolean;
@@ -471,6 +472,19 @@ procedure TfTranslate.FormResize(Sender: TObject);
 begin
   linl.Clear;
   Invalidate;
+end;
+
+{ Opens a file by guessing format/encoding or asking user for it }
+procedure TfTranslate.OpenAnyFile(filename:string);
+var tp:byte;
+begin
+  if not FileExists(filename) then
+    raise Exception.Create('File not found: "'+filename+'"');
+  if not Conv_DetectTypeEx(filename, tp) then begin
+    tp:=Conv_ChooseType(curlang='c', tp);
+    if tp=0 then exit;
+  end;
+  OpenFile(filename, tp);
 end;
 
 //TODO: Convert to Unicode
@@ -1164,15 +1178,10 @@ begin
 end;
 
 procedure TfTranslate.Button3Click(Sender: TObject);
-var tp:byte;
 begin
   if not CommitFile then exit;
   if OpenTextDialog.Execute then
-  begin
-    tp:=Conv_ChooseType(curlang='c',Conv_DetectType(OpenTextDialog.FileName));
-    if tp=0 then exit;
-    OpenFile(OpenTextDialog.Filename, tp);
-  end;
+    OpenAnyFile(OpenTextDialog.Filename);
 end;
 
 procedure TfTranslate.Button5Click(Sender: TObject);

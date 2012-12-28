@@ -1148,8 +1148,19 @@ begin
 
     screenTipShown:=false;
 
-   { Last opened file in Editor }
+   { Init clipboard viewer }
+    CbNextViewer := SetClipboardViewer(Self.Handle);
+
+   { Open file in the editor }
     fTranslate.FileChanged := false;
+   //Explicitly specified file
+    if Command='open' then begin
+      fTranslate.OpenAnyFile(OpenParams.Filename);
+     //Press "Editor" programmatically
+      tab3.Down := true;
+      TabControl1Change(tab3);
+    end else
+   //Last opened file in Editor
     if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
     try
       fTranslate.OpenFile(fTranslate.docfilename, fTranslate.doctp);
@@ -1160,9 +1171,6 @@ begin
         raise;
       end;
     end;
-
-   { Init clipboard viewer }
-    CbNextViewer := SetClipboardViewer(Self.Handle);
 
     initdone:=true;
   except
