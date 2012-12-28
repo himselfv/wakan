@@ -168,6 +168,7 @@ object fKanji: TfKanji
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
+      Visible = False
       OnClick = btnStrokeOrderClick
     end
     object DrawGrid1: TDrawGrid

@@ -10,9 +10,20 @@ III. Build Jalet.dpr.
 If you want to pack executable, you'll need something like UPX.exe which is not included here.
 
 IV. Run Wakan to generate:
-  wakan.usr -- user package
+  wakan.usr -- empty user package
   wakan.sod -- stroke order package built from strokes.csv (included)
   wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)
+
+V. Pack these files into a distribution:
+  jalet.exe -> wakan.exe
+  wakan.cfg
+  wakan.sod
+  wakan.rad
+  wakan.chr
+  any dictionaries
+  lng\*.*
+  possibly: UNICONV.exe + related files
+  possibly: wordfreq_ck for frequency generation
 
 
 OPTIMIZATION

@@ -66,6 +66,11 @@ type
     procedure SetCharCompounds;
     procedure SelRadical;
     function GetKanji(cx,cy:integer):string;
+
+  protected
+    procedure ReadFilter(flt:TStringList;tx:string;typ1,typ2:integer;partial,space,number,takedot:boolean);
+    procedure ReadRaineFilter(fltradical:TStringList;const tx:string);
+
   end;
 
 var
@@ -163,11 +168,6 @@ begin
   result:=otx;
 end;
 
-//---------------------------------------
-//filter kanji and show them in the grid
-//---------------------------------------
-procedure TfKanji.DoIt;
-
 //split value string into string list. values are separated by comma or ;
 //if numeric, values can have format n1-n2 (e.g. 3-5 is expanded into 3,4,5)
 procedure MakeList(tx:string;number:boolean;sl:TStringList);
@@ -209,13 +209,7 @@ begin
   if sl.Count=0 then sl.Add('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
 end;
 
-function InRange(tx,fld:string;number:boolean;sl:TStringList):boolean;
-begin
-  MakeList(tx,number,sl);
-  result:=sl.IndexOf(uppercase(fld))>-1;
-end;
-
-procedure ReadFilter(flt:TStringList;tx:string;typ1,typ2:integer;partial,space,number,takedot:boolean);
+procedure TfKanji.ReadFilter(flt:TStringList;tx:string;typ1,typ2:integer;partial,space,number,takedot:boolean);
 var s:string;
     sl:TStringList;
     s2:string;
@@ -236,7 +230,7 @@ begin
     begin
   //    showmessage('FOund '+TCharRead.Str(TCharReadReading)+' '+TCharRead.Str(TCharReadType));
       if (TCharRead.Int(TCharReadType)=typ1) or (TCharRead.Int(TCharReadType)=typ2) then
-      if (not takedot) or (s=uppercase(s2)) or ((dot>0) and (uppercase(s2)=copy(s,1,dot-1))) then      
+      if (not takedot) or (s=uppercase(s2)) or ((dot>0) and (uppercase(s2)=copy(s,1,dot-1))) then
 //        if flt.IndexOf(TCharRead.Str(TCharReadKanji))=-1 then
 //        begin
          flt.Add(TCharRead.Str(TCharReadKanji));
@@ -248,6 +242,54 @@ begin
   end;
   flt.Sort;
   flt.Sorted:=true;
+end;
+
+procedure TfKanji.ReadRaineFilter(fltradical:TStringList;const tx:string);
+var sltemp:TStringList;
+  s1,s2:string;
+  rrfrom,rrlen:integer;
+  rrus:boolean;
+  p:PByte;
+  i:integer;
+begin
+ //TODO: Convert to unicode
+  sltemp:=TStringList.Create;
+  sltemp.Sorted:=true;
+  fltradical.Sorted:=true;
+  s1:=tx;
+  rrus:=false;
+  while s1<>'' do
+  begin
+    s2:=strqpop(s1,';');
+    rrlen:=strtoint(copy(raineradicals[strtoint(s2)-1],9,4));
+    rrfrom:=strtoint(copy(raineradicals[strtoint(s2)-1],14,5));
+    p:=rainesearch;
+    p:=p+rrfrom*2;
+    for i:=1 to rrlen do
+    begin
+      s2:=UnicodeToHex(PWideChar(p)^);
+      p:=p+2;
+      if not rrus or (sltemp.IndexOf(s2)<>-1) then fltradical.Add(s2);
+    end;
+    if s1<>'' then
+    begin
+      sltemp.Assign(fltradical);
+      fltradical.Clear;
+      rrus:=true;
+    end;
+  end;
+  sltemp.Free;
+end;
+
+//---------------------------------------
+//filter kanji and show them in the grid
+//---------------------------------------
+procedure TfKanji.DoIt;
+
+function InRange(tx,fld:string;number:boolean;sl:TStringList):boolean;
+begin
+  MakeList(tx,number,sl);
+  result:=sl.IndexOf(uppercase(fld))>-1;
 end;
 
 var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
@@ -262,8 +304,6 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     sl4,sl10:TStringList;
     fltradical,fltskip,fltother:TStringList;
     sltemp:TStringList;
-    rrfrom,rrlen:integer;
-    rrus:boolean;
     p:pchar;
     w:word;
     onecheck:boolean;
@@ -293,47 +333,11 @@ begin
   if fKanjiSearch.SpeedButton5.Down then ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.Edit6.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
   if fKanjiSearch.SpeedButton5.Down then ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.Edit6.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
   if fKanjiSearch.SpeedButton14.Down then ReadFilter(fltskip,fKanjiSearch.Edit4.Text,22,0,true,false,false,false);
-  if fKanjiSearch.SpeedButton6.Down then if not raineradsearch then
-    ReadFilter(fltradical,fKanjiSearch.Edit2.Text,10,0,false,false,true,false)
-  else
-  begin
-   //TODO: Convert to unicode
-    sltemp:=TStringList.Create;
-    fltradical.Sorted:=true;
-    sltemp.Sorted:=true;
-    s1:=fKanjiSearch.Edit2.Text;
-    rrus:=false;
-    while s1<>'' do
-    begin
-      if pos(';',s1)>0 then
-      begin
-        s2:=copy(s1,1,pos(';',s1)-1);
-        delete(s1,1,pos(';',s1));
-      end else
-      begin
-        s2:=s1;
-        s1:='';
-      end;
-      rrlen:=strtoint(copy(raineradicals[strtoint(s2)-1],9,4));
-      rrfrom:=strtoint(copy(raineradicals[strtoint(s2)-1],14,5));
-      p:=rainesearch;
-      p:=p+rrfrom*2;
-      for i:=1 to rrlen do
-      begin
-        move(p^,w,2);
-        s2:=UnicodeToHex(widechar(w));
-        p:=p+2;
-        if not rrus or (sltemp.IndexOf(s2)<>-1) then fltradical.Add(s2);
-      end;
-      if s1<>'' then
-      begin
-        sltemp.Assign(fltradical);
-        fltradical.Clear;
-        rrus:=true;
-      end;
-    end;
-    sltemp.Free;
-  end;
+  if fKanjiSearch.SpeedButton6.Down then
+    if not raineradsearch then
+      ReadFilter(fltradical,fKanjiSearch.Edit2.Text,10,0,false,false,true,false)
+    else
+      ReadRaineFilter(fltradical, fKanjiSearch.Edit2.Text);
   if fKanjiSearch.SpeedButton22.Down then
   begin
     if fKanjiSearch.ComboBox1.ItemIndex=0 then fltother.Add(fKanjiSearch.Edit8.Text) else
@@ -1104,8 +1108,7 @@ begin
 end;
 
 procedure TfKanji.SaveChars;
-var f:file;
-    i:integer;
+var i:integer;
 begin
   if SaveDialog1.Execute then
   begin
