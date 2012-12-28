@@ -1046,10 +1046,21 @@
 00956>Сортировать полные составы частотой
 00957>Чекать/отчекать все категории
 ;
-; Маркеры
-; Part of Speech Marking
+;
+; EDICT markers.
+;
+; Wakan displays EDICT markers in color and expands some into meaningful strings
+; Format: mark-[marker]=[category][name]
+; Supported categories: 1,g,s
+; See http://www.csse.monash.edu.au/~jwb/edict_doc.html for the list of all markers
+;
+; If only a category is specified, then marker itself will be used as name.
+; If no translation is provided, default english name will be used.
+;
+;
+;Part of Speech Marking
 mark-adj-i=gприлаг
-mark-adj-na=g
+mark-adj-na=gсущ-прилаг
 mark-adj-no=g
 mark-adj-pn=g
 mark-adj-t=gприлаг
@@ -1105,7 +1116,8 @@ mark-vs-c=gглаг
 mark-vs-i=gглаг
 mark-vs-s=gглаг
 mark-vt=gперех-глаг
-; Field of Application
+;
+;Field of Application
 mark-Buddh=будд
 mark-MA=боев-исск
 mark-comp=комп
@@ -1116,7 +1128,8 @@ mark-ling=линг
 mark-math=матем
 mark-mil=воен
 mark-physics=физика
-; Misc
+;
+;Miscellaneous Markings
 mark-X=1груб
 mark-abbr=1сокр
 mark-arch=1устар
@@ -1149,9 +1162,11 @@ mark-sl=1жарг
 mark-uK=sкандзи
 mark-uk=sкана
 mark-vulg=1вульг
-; Word Priority
+;
+;Word Priority Marking
 mark-P=sпоп
-; Regional Words
+;
+;Regional Words
 mark-kyb=sдиал-киото
 mark-osb=sдиал-осака
 mark-ksb=sдиал-кансай

@@ -1042,3 +1042,139 @@
 00955>Print vocabulary compounds
 00956>Sort full compounds by frequency
 00957>Check / uncheck all categories
+;
+;
+; EDICT markers.
+;
+; Wakan displays EDICT markers in color and expands some into meaningful strings
+; Format: mark-[marker]=[category][name]
+; Supported categories: 1,g,s
+; See http://www.csse.monash.edu.au/~jwb/edict_doc.html for the list of all markers
+;
+; If only a category is specified, then marker itself will be used as name.
+; If no translation is provided, default english name will be used.
+;
+;
+;Part of Speech Marking
+mark-adj-i=g
+mark-adj-na=gna-adj
+mark-adj-no=gno-adj
+mark-adj-pn=gpren-adj
+mark-adj-s=gspec-adj
+mark-adj-t=gtaru-adj
+mark-adj-f=g
+mark-adj=g
+mark-adv=g
+mark-adv-n=g
+mark-adv-to=g
+mark-aux=g
+mark-aux-v=g
+mark-aux-adj=g
+mark-conj=g
+mark-ctr=g
+mark-exp=gexpr
+mark-int=g
+mark-iv=g
+mark-n=g
+mark-n-adv=g
+mark-n-pref=g
+mark-n-suf=g
+mark-n-t=g
+mark-neg=g
+mark-neg-v=gneg-verb
+mark-num=g
+mark-pn=g
+mark-pref=g
+mark-prt=g
+mark-suf=g
+mark-v1=gru-v
+mark-v2a-s=g
+mark-v4h=g
+mark-v4r=g
+mark-v5=gu-v
+mark-v5aru=garu-v
+mark-v5b=gu-v
+mark-v5g=gu-v
+mark-v5k=gu-v
+mark-v5k-s=gIku-v
+mark-v5m=gu-v
+mark-v5n=gu-v
+mark-v5r=gu-v
+mark-v5r-i=g
+mark-v5s=gu-v
+mark-v5t=gu-v
+mark-v5u=gu-v
+mark-v5u-s=g
+mark-v5uru=guru-v
+mark-v5z=gzuru-v
+mark-vz=g
+mark-vi=gintrans-verb
+mark-vk=gkuru-v
+mark-vn=g
+mark-vs=gp-suru
+mark-vs-c=g
+mark-vs-i=g
+mark-vs-s=gsuru-v
+mark-vt=gtrans-verb
+;
+;Field of Application
+mark-Buddh=
+mark-MA=1martial-arts
+mark-comp=
+mark-food=
+mark-geom=
+mark-gram=g
+mark-ling=
+mark-math=
+mark-mil=
+mark-physics=
+;
+;Miscellaneous Markings
+mark-X=1rude
+mark-abbr=1
+mark-arch=1archaic
+mark-ateji=1
+mark-chn=1child
+mark-col=1
+mark-derog=1
+mark-eK=
+mark-ek=
+mark-fam=1familiar
+mark-fem=1female
+mark-gikun=g
+mark-hon=shonor
+mark-hum=s
+mark-ik=sirreg-kana
+mark-iK=sirreg-kanji
+mark-id=gidiom
+mark-io=sirreg-okurigana
+mark-m-sl=1manga-slang
+mark-male=1
+mark-male-sl=1
+mark-oK=soutdated-kanji
+mark-obs=sobsolete
+mark-obsc=sobscure
+mark-ok=soutdated-kana
+mark-on-mim=
+mark-poet=1
+mark-pol=spolite
+mark-rare=s
+mark-sens=1
+mark-sl=1slang
+mark-uK=skanji
+mark-uk=skana
+mark-vulg=1vulgar
+;
+;Word Priority Marking
+mark-P=spop
+;
+;Regional Words
+mark-kyb=
+mark-osb=
+mark-ksb=
+mark-ktb=
+mark-tsb=
+mark-thb=
+mark-tsug=
+mark-kyu=
+mark-rkb=
