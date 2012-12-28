@@ -128,11 +128,10 @@ begin
       ftp:=Conv_DetectType(sr.name);
       if ftp=0 then ftp:=98;
       Conv_Open(sr.name,ftp);
-      ch:=Conv_ReadChar;
       if Uppercase(sr.name)='_USER.ANO' then dd:='1' else dd:='0';
       moded:=false;
       curd:=''; curt:='';
-      while ch<>CONV_NOCHAR do
+      while Conv_ReadChar(ch) do
       begin
         if ch=UH_LF then
         begin
@@ -147,7 +146,7 @@ begin
           else
           if ch<>UH_CR then
             if moded then curd:=curd+ch else curt:=curt+ch;
-        ch:=Conv_ReadChar;
+        Conv_ReadChar(ch);
       end;
       Conv_Close;
     until FindNext(sr)<>0;

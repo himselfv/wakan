@@ -99,9 +99,6 @@ object fRadical: TfRadical
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -120,6 +117,9 @@ object fRadical: TfRadical
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 1
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 600
@@ -133,10 +133,10 @@ object fRadical: TfRadical
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
+    Kind = bkCancel
     ParentFont = False
     TabOrder = 2
     OnClick = BitBtn2Click
-    Kind = bkCancel
   end
   object CheckBox1: TCheckBox
     Left = 256
@@ -185,15 +185,5 @@ object fRadical: TfRadical
       '#00396^eClassical radicals')
     TabOrder = 6
     OnClick = RadioGroup1Click
-  end
-  object Button1: TButton
-    Left = 8
-    Top = 8
-    Width = 75
-    Height = 25
-    Caption = 'Button1'
-    TabOrder = 7
-    Visible = False
-    OnClick = Button1Click
   end
 end

@@ -4,10 +4,6 @@ interface
 uses JWBStrings;
 
 const
- //Returned by Conv_ReadChar when no char can be read
-  CONV_NOCHAR:FChar = {$IFDEF UNICODE}#$FFFF{$ELSE}''{$ENDIF};
-
-const
  //Conversion types
   FILETYPE_UNKNOWN=0;
   FILETYPE_UTF16LE=1;
@@ -27,8 +23,10 @@ const
 function Conv_DetectType(filename:string):byte;
 function Conv_DetectTypeEx(filename:string; out tp:byte): boolean;
 procedure Conv_Open(filename:string; tp:byte);
-function Conv_Read:FString; //reads one char as string
-function Conv_ReadChar:FChar; //reads one char as char
+function Conv_EOF:boolean;
+function Conv_Read:FString; //reads one char as FString
+function Conv_ReadChar(out ch:FChar): boolean; //reads one char as FChar
+function Conv_ReadLn:FString;
 procedure Conv_Create(filename:string; tp:byte);
 procedure Conv_Write(s:FString);
 procedure Conv_WriteChar(s:FChar);
@@ -88,6 +86,7 @@ end;
 
 function JIS2Unicode(w:word):word;
 begin
+  result:=0;//default case
   case w of
     $0000..$007e:result:=w; // ascii
     $0080..$00ff:result:=Table_ExtASCII[w-128];
@@ -111,7 +110,6 @@ begin
     $2121..$217e:result:=Table_Misc[w-$2121];
     $2221..$227e:result:=Table_Misc[w-$2221+94];
     $2821..$2840:result:=Table_Misc[w-$2821+94+94];
-    else result:=0;
   end;  
 end;
 
@@ -205,6 +203,9 @@ begin
   begin
     result:=$ffff;
     inc:=4;
+  end else begin
+    Result:=b1; //because we don't know what else to do
+    inc:=1;
   end;
 end;
 
@@ -218,6 +219,7 @@ begin
     IS_MARU:result:=(b>=202) and (b<=206);
     IS_NIGORI:result:=((b>=182) and (b<=196)) or ((b>=202) and (b<=206)) or (b=179);
     IS_JIS:result:=(b and $7f00)>0;
+  else result:=false;
   end;
 end;
 
@@ -228,6 +230,7 @@ begin
   seek(f,0);
 end;
 
+//Returns -1 if no char is available. It's fine because we return integer.
 function _fread:integer;
 begin
   if bufpos>buflen then
@@ -283,6 +286,9 @@ begin
     tp:=FILETYPE_UTF8;
     Result:=true;
     exit;
+  end else begin
+    _rewind;
+    i := _freadw;
   end;
 
   tp:=FILETYPE_UTF16LE;
@@ -373,61 +379,97 @@ begin
   if tp=FILETYPE_EUCORSJIS then tp:=FILETYPE_SJS;
 end;
 
+//Returns -1 if no char is available. It's fine because we return integer.
 function _input(tp:byte):integer;
-var i,i2:integer;
+var i,i2,i3,i4:integer;
 begin
+  Result := -1;
   while true do
   begin
     i:=_fread;
-    if i=-1 then begin result:=-1; exit; end;
+    if i<0 then exit;
+
     case tp of
-      FILETYPE_UTF8:begin
-                      if (i and UTF8_MASK2)=UTF8_VALUE2 then
-                        i:=((i and $1f) shl 6) or (_fread and $3f)
-                      else if (i and UTF8_MASK3)=UTF8_VALUE3 then
-                        i:=((i and $0f) shl 12) or ((_fread and $3f) shl 6) or (_fread and $3f)
-                      else if (i and UTF8_MASK4)=UTF8_VALUE4 then
-                      begin
-                        i:=0; _fread; _fread; _fread;
-                      end;
-                      result:=i; exit;
-                    end;
-      FILETYPE_UTF16BE:begin i:=256*i+_fread; result:=i; exit; end;
-      FILETYPE_UTF16LE: begin i:=256*_fread+i; result:=i; exit; end;
+      FILETYPE_UTF8: begin
+        if (i and UTF8_MASK2)=UTF8_VALUE2 then begin
+          i2:=_fread; if i2<0 then exit;
+          Result:=((i and $1f) shl 6) or (i2 and $3f);
+        end else
+        if (i and UTF8_MASK3)=UTF8_VALUE3 then begin
+          i2:=_fread; i3:=_fread; if (i2<0) or (i3<0) then exit;
+          Result:=((i and $0f) shl 12) or ((i2 and $3f) shl 6) or (i3 and $3f)
+        end else
+        if (i and UTF8_MASK4)=UTF8_VALUE4 then
+        begin
+          _fread; _fread; _fread;
+          Result:=0;
+        end else
+          Result:=0;
+        exit;
+      end;
+      FILETYPE_UTF16BE: begin i2:=_fread; if i2<0 then exit; result:=256*i+i2; exit; end;
+      FILETYPE_UTF16LE: begin i2:=_fread; if i2<0 then exit; result:=256*i2+i; exit; end;
       FILETYPE_ASCII: begin result:=i; exit; end;
-      FILETYPE_EUC: begin if _is(i,IS_EUC) then result:=JIS2Unicode((i*256+_fread) and $7f7f) else result:=i; exit; end;
-      FILETYPE_SJS: if _is(i,IS_SJIS1) then
-                    begin
-                      i2:=_fread;
-                      if _is(i2,IS_SJIS2) then result:=JIS2Unicode(SJIS2JIS(i*256+i2)) else result:=JIS2Unicode(i*256+i2); exit;
-                    end else begin result:=i; exit; end;
-      FILETYPE_JIS, FILETYPE_OLD, FILETYPE_NEC: if i=JIS_ESC then
-                                                begin
-                                                  i2:=_fread;
-                                                  if (i2=ord('$')) or (i2=ord('(')) then _fread;
-                                                  if (i2=ord('K')) or (i2=ord('$')) then inp_intwobyte:=true else inp_intwobyte:=false;
-                                                end else if (i=JIS_NL) or (i=JIS_CR) then
-                                                begin
-                                                  inp_intwobyte:=false;
-                                                  result:=i; exit;
-                                                end else
-                                                begin
-                                                  if inp_intwobyte then result:=JIS2Unicode(i*256+_fread) else result:=i;
-                                                  exit;
-                                                end;
-      FILETYPE_GB: begin if (i>=$a1) and (i<=$fe) then
-                   begin
-                     i2:=_fread;
-                     if (i2>=$a1) and (i2<=$fe) then result:=Table_GB[(i-$a0)*96+(i2-$a0)] else result:=i*256+i2;
-                   end else result:=i; exit; end;
-      FILETYPE_BIG5: begin if (i>=$a1) and (i<=$fe) then
-                     begin
-                       i2:=_fread;
-                       if (i2>=$40) and (i2<=$7f) then result:=Table_Big5[(i-$a0)*160+(i2-$40)]
-                       else if (i2>=$a1) and (i2<=$fe) then result:=Table_Big5[(i-$a0)*160+(i2-$a0)] else result:=i*256+i2;
-                     end else result:=i; exit; end;
-     end;
-  end;
+      FILETYPE_EUC: begin
+        if _is(i,IS_EUC) then begin
+          i2:=_fread; if i2<0 then exit;
+          result:=JIS2Unicode((i*256+i2) and $7f7f);
+        end else
+          result:=i;
+        exit;
+      end;
+      FILETYPE_SJS:
+      begin
+        if _is(i,IS_SJIS1) then
+        begin
+          i2:=_fread; if i2<0 then exit;
+          if _is(i2,IS_SJIS2) then result:=JIS2Unicode(SJIS2JIS(i*256+i2)) else result:=JIS2Unicode(i*256+i2);
+        end else
+          Result:=i;
+        exit;
+      end;
+      FILETYPE_JIS, FILETYPE_OLD, FILETYPE_NEC:
+        if i=JIS_ESC then
+        begin
+          i2:=_fread; if i2<0 then exit;
+          if (i2=ord('$')) or (i2=ord('(')) then _fread;
+          if (i2=ord('K')) or (i2=ord('$')) then inp_intwobyte:=true else inp_intwobyte:=false;
+         //Do not exit, continue to next char
+        end else begin
+          if (i=JIS_NL) or (i=JIS_CR) then
+          begin
+            inp_intwobyte:=false;
+            result:=i;
+          end else begin
+            i2:=_fread; if i2<0 then exit;
+            if inp_intwobyte then result:=JIS2Unicode(i*256+i2) else result:=i;
+          end;
+          exit;
+        end;
+      FILETYPE_GB:
+      begin
+        if (i>=$a1) and (i<=$fe) then
+        begin
+          i2:=_fread; if i2<0 then exit;
+          if (i2>=$a1) and (i2<=$fe) then result:=Table_GB[(i-$a0)*96+(i2-$a0)] else result:=i*256+i2;
+        end else
+          result:=i;
+        exit;
+      end;
+      FILETYPE_BIG5:
+      begin
+        if (i>=$a1) and (i<=$fe) then
+        begin
+          i2:=_fread; if i2<0 then exit;
+          if (i2>=$40) and (i2<=$7f) then result:=Table_Big5[(i-$a0)*160+(i2-$40)]
+          else if (i2>=$a1) and (i2<=$fe) then result:=Table_Big5[(i-$a0)*160+(i2-$a0)] else result:=i*256+i2;
+        end else
+          result:=i;
+        exit;
+      end;
+
+    end; //of case(tp)
+  end; //of while true
 end;
 
 procedure _fwrite(b:byte);
@@ -550,6 +592,12 @@ begin
   ftp:=tp;
 end;
 
+//Since Conv_ReadChar might legitimately return FFFF, check this before deciding file's over.
+function Conv_EOF:boolean;
+begin
+  Result := eof(f) and (bufpos >= buflen);
+end;
+
 //Reads one char as FString or returns empty string
 function Conv_Read:FString;
 var i:integer;
@@ -562,16 +610,27 @@ begin
  {$ENDIF}
 end;
 
-//Reads one char as char or returns:
-//  Unicode: #$FFFF
-//  Non-unicode: empty string
-function Conv_ReadChar:FChar;
+//Reads one char as char or returns false
+function Conv_ReadChar(out ch:FChar): boolean;
+var i: integer;
 begin
  {$IFDEF UNICODE}
-  Result := WideChar(_input(ftp));
+  i := _input(ftp);
+  if i<0 then Result := false else ch := WideChar(i);
  {$ELSE}
-  Result := Conv_Read();
+  i := _input(ftp);
+  if i<0 then Result := false else ch := Format('%4.4x',[i]);
  {$ENDIF}
+end;
+
+function Conv_ReadLn:FString;
+var c: FChar;
+begin
+  Result := '';
+  while Conv_ReadChar(c) and (c<>UH_LF) do begin
+    if c<>UH_CR then
+      Result := Result + c;
+  end;
 end;
 
 procedure Conv_Create(filename:string; tp:byte);
@@ -618,7 +677,18 @@ end;
 procedure Conv_Rewind;
 begin
   _rewind;
-  if (ftp=FILETYPE_UTF16LE) or (ftp=FILETYPE_UTF16BE) then begin _fread; _fread; end;
+ //Skip BOM if present
+  case ftp of
+    FILETYPE_UTF16LE:
+      if (_fread<>$ff) or (_fread<>$fe) then
+        _rewind;
+    FILETYPE_UTF16BE:
+      if (_fread<>$fe) or (_fread<>$ff) then
+        _rewind;
+    FILETYPE_UTF8:
+      if (_fread<>$ef) or (_fread<>$bb) or (_fread<>$bf) then
+        _rewind;
+  end;
 end;
 
 procedure Conv_Flush;

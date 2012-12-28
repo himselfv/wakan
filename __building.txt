@@ -11,8 +11,8 @@ If you want to pack executable, you'll need something like UPX.exe which is not 
 
 IV. Run Wakan to generate:
   wakan.usr -- user package
-  wakan.sod -- stroke order package built from strokes.csv
-
+  wakan.sod -- stroke order package built from strokes.csv (included)
+  wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)
 
 
 OPTIMIZATION
@@ -40,3 +40,7 @@ Also see: http://www.autohotkey.com/board/topic/9831-uniconv-convert-unicode-cmd
 http://ftp.monash.edu.au/pub/nihongo/00INDEX.html
 http://ftp.monash.edu.au/pub/nihongo/wordfreq_ck.gz
 Also see: http://code.google.com/p/wakan/issues/detail?id=66
+
+3. RADKFILE/RADKFILE2 - required for raine radicals search
+http://www.csse.monash.edu.au/~jwb/kradinf.html
+Download and place these into Wakan release folder.

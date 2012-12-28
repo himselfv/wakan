@@ -967,8 +967,36 @@ begin
       exit;
     end;
 
+   { Radical search }
+
+   //Stroke-order rebuilding -- before complaining about missing sod
+    if Command='makerad' then
+    begin
+     //If no filename is set, assume defaults
+      if Length(MakeRadParams.Files)<=0 then begin
+        if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
+        if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2');
+        if Length(MakeRadParams.Files)<=0 then
+          raise Exception.Create(_l('No RADKFILE/RADKFILE2 files are found in the application directory. '
+            +'Either place these files there or explicitly specify which files to use to MAKERAD.'));
+      end;
+
+      fRadical.BuildRadicalPackage(MakeRadParams.Files);
+      Application.Terminate;
+      exit;
+    end;
+
+   //Auto-rebuild
+    if not FileExists('wakan.rad') then begin
+      SetLength(MakeRadParams.Files,0);
+      if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
+      if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2');
+      if Length(MakeRadParams.Files)>0 then //else just continue and fail later
+        fRadical.BuildRadicalPackage(MakeRadParams.Files);
+    end;
+
    //Radical search
-    if (not FileExists('wakan.rad')) then
+    if not FileExists('wakan.rad') then
     begin
       Application.MessageBox(
         pchar(_l('#00357^eFile WAKAN.RAD was not found.'#13
@@ -1186,7 +1214,7 @@ begin
     end;
     on E: Exception do begin
       Application.MessageBox(
-        pchar(E.Classname+': '+E.Message + ' while loading wakan'),
+        pchar('Cannot load Wakan. '+E.Classname+':s '#13+E.Message),
         pchar('Error'), //Do not translate! The translation might not even be loaded yet.
         MB_ICONERROR or MB_OK
       );

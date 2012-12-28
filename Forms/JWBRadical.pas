@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, ExtCtrls, RXCtrls, Buttons, StdCtrls;
+  Grids, ExtCtrls, RXCtrls, Buttons, StdCtrls, JWBStrings;
 
 type           
   TfRadical = class(TForm)
@@ -19,7 +19,6 @@ type
     CheckBox3: TCheckBox;
     RadioGroup1: TRadioGroup;
     Label2: TLabel;
-    Button1: TButton;
     procedure FormShow(Sender: TObject);
     procedure DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
@@ -39,11 +38,30 @@ type
     procedure DrawGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure RadioGroup1Click(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
   public
     procedure ShowIt;
     procedure DoSearch;
     function GetKanji(x,y:integer):string;
+
+  public
+    procedure BuildRadicalPackage(sourceFiles: array of string);
+  end;
+
+ { Builds radical index from multiple files }
+  TRadicalIndexBuilder = class
+  protected
+    radicals: array of record
+      rad_char: FChar;
+      strokeCount: integer; //stroke count
+      chars: FString;
+    end;
+    function AddRadical(rad_char: WideChar): integer;
+    function FindRadical(rad_char: WideChar): integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure ParseRadKFile(filename: string);
+    procedure Save(path: string);
   end;
 
 var
@@ -54,8 +72,8 @@ var
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBSettings, JWBKanjiSearch,
-  PKGWrite, JWBCategories;
+uses JWBMenu, JWBUnit, JWBKanji, JWBSettings, JWBKanjiSearch,
+  PKGWrite, JWBCategories, JWBConvert, JWBIO;
 
 var sel:array[1..300] of boolean;
 
@@ -379,27 +397,199 @@ begin
   ShowIt;
 end;
 
-procedure TfRadical.Button1Click(Sender: TObject);
+
+{ Radical index builder }
+
+constructor TRadicalIndexBuilder.Create;
 begin
-  PKGWriteForm.PKGWriteCmd('PKGFileName wakan.rad');
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name Japanese Radicals');
-  PKGWriteForm.PKGWriteCmd('TitleName Japanese advanced radical search');
-  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Michael Raine, Jim Breen');
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-  PKGWriteForm.PKGWriteCmd('Include raine');
-  PKGWriteForm.PKGWriteCmd('Finish');
+  inherited Create;
+end;
+
+destructor TRadicalIndexBuilder.Destroy;
+begin
+  inherited Destroy;
+end;
+
+function TRadicalIndexBuilder.AddRadical(rad_char: WideChar): integer;
+begin
+  Result := Length(radicals);
+  SetLength(radicals, Result+1);
+  radicals[Result].rad_char := rad_char;
+  radicals[Result].strokeCount := 0;
+  radicals[Result].chars := '';
+end;
+
+function TRadicalIndexBuilder.FindRadical(rad_char: WideChar): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(radicals) - 1 do
+    if radicals[i].rad_char=rad_char then begin
+      Result := i;
+      break;
+    end;
+end;
+
+procedure TRadicalIndexBuilder.ParseRadKFile(filename: string);
+const
+  UH_RK_COMMENT: FChar = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
+  UH_RK_RAD: FChar = {$IFDEF UNICODE}'$'{$ELSE}'0024'{$ENDIF};
+var
+  ln: FString;
+  lineno: integer;
+  ch: FChar;
+  ach: AnsiChar;
+  i: integer;
+
+  rad_idx: integer; //index to active radical record
+  rad_char: FChar;
+  rad_scnt: integer; //stroke count
+
+begin
+ { radicals.txt format:
+    4E00-01-0762-00000
+    FF5C-01-0632-00762
+    char-type-len-from }
+ { search.bin format:
+     simply UTF16-LE characters one after another }
+
+  rad_idx := -1;
+
+  lineno := 0;
+  Conv_Open(filename, FILETYPE_EUC); //RADKFILEs are in EUC
+  while not Conv_EOF() do begin
+    ln := Conv_ReadLn();
+    Inc(lineno);
+    if flength(ln)<=0 then continue;
+
+    ch := fgetch(ln,1);
+    if ch=UH_RK_COMMENT then
+      continue;
+    if ch=UH_RK_RAD then begin
+      i := 2;
+     //Skip spaces
+      while (i<=flength(ln)) and (fgetch(ln,i)=UH_SPACE) do
+        Inc(i);
+      if i>flength(ln) then
+        raise Exception.Create('Bad RADKFILE: missing glyph char @ line '+IntToStr(lineno));
+     //Read char
+      rad_char := fgetch(ln, i);
+      Inc(i);
+     //Skip spaces
+      while (i<=flength(ln)) and (fgetch(ln,i)=UH_SPACE) do
+        Inc(i);
+      if i>flength(ln) then
+        raise Exception.Create('Bad RADKFILE: missing stroke count @ line '+IntToStr(lineno));
+     //Read int
+      rad_scnt := 0;
+      while (i<=flength(ln)) and (fgetch(ln,i)<>UH_SPACE) do begin
+        if not ftoansi(fgetch(ln, i), ach)
+        or not (ord(ach)>=ord('0'))
+        or not (ord(ach)<=ord('9')) then
+          raise Exception.Create('Bad RADKFILE: invalid stroke count @ line '+IntToStr(lineno));
+        rad_scnt := rad_scnt * 10 + (Ord(ach)-Ord('0'));
+        Inc(i);
+      end;
+     //There could be jis code/image file name after this, but we're...
+     //Done with this line
+      rad_idx := FindRadical(rad_char);
+      if rad_idx<0 then begin
+        rad_idx := AddRadical(rad_char);
+        radicals[rad_idx].strokeCount := rad_scnt;
+      end;
+      continue;
+    end;
+
+   //Character line
+    if rad_idx<0 then //we must have a rad_idx by this point
+      raise Exception.Create('Bad RADKFILE: character data before any radical identification @ line '+IntToStr(lineno));
+    radicals[rad_idx].chars := radicals[rad_idx].chars + ln;
+
+   //we make no attempt to find duplicate kanjis since it's not in our use case.
+   //RADKFILE/RADKFILE2 cover non-overlapping sets of kanjis
+
+  end;
+  Conv_Close();
+end;
+
+{ Saves search.bin and radicals.txt to the target dir }
+procedure TRadicalIndexBuilder.Save(path: string);
+var
+  sl_radicals: TStringList;
+  f_searchbin: TUnicodeFileWriter;
+  pos: integer;
+  i, j: integer;
+  chars_w: UnicodeString;
+begin
+  sl_radicals := TStringList.Create;
+  f_searchbin := TUnicodeFileWriter.Rewrite(path+'\search.bin');
+  try
+    pos := 0;
+    for i := 0 to Length(radicals) - 1 do begin
+      sl_radicals.Add(
+        fstrtohex(radicals[i].rad_char)+'-'+
+        Format('%2.2d-%4.4d-%5.5d', [radicals[i].strokeCount, flength(radicals[i].chars), pos])
+      );
+      chars_w := fstrtouni(radicals[i].chars);
+      for j := 1 to length(chars_w) do
+        f_searchbin.WriteWideChar(chars_w[i]);
+      Inc(pos, length(chars_w));
+    end;
+    sl_radicals.SaveToFile(path+'\radicals.txt');
+    f_searchbin.Flush();
+  finally
+    f_searchbin.Free;
+    sl_radicals.Free;
+  end;
+end;
+
+{ Rebuilds wakan.rad from RADKFILE }
+procedure TfRadical.BuildRadicalPackage(sourceFiles: array of string);
+var tempDir: string;
+  radIndex: TRadicalIndexBuilder;
+  i: integer;
+begin
+  radIndex := TRadicalIndexBuilder.Create;
+  for i := 0 to Length(sourceFiles) - 1 do
+  try
+    radIndex.ParseRadKFile(sourceFiles[i])
+  except
+    on E: Exception do begin
+      E.Message := 'While importing "'+sourceFiles[i]+'": '+E.Message;
+      raise;
+    end;
+  end;
+
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+  try
+    radIndex.Save(tempDir);
+    FreeAndNil(radIndex);
+
+    PKGWriteForm.PKGWriteCmd('PKGFileName wakan.rad');
+    PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
+    PKGWriteForm.PKGWriteCmd('Name Japanese Radicals');
+    PKGWriteForm.PKGWriteCmd('TitleName Japanese advanced radical search');
+    PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
+    PKGWriteForm.PKGWriteCmd('CopyrightName (C) Michael Raine, Jim Breen');
+    PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
+    PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
+    PKGWriteForm.PKGWriteCmd('VersionName 1.0');
+    PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
+    PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
+    PKGWriteForm.PKGWriteCmd('WriteHeader');
+    PKGWriteForm.PKGWriteCmd('TemporaryLoad');
+    PKGWriteForm.PKGWriteCmd('CryptMode 0');
+    PKGWriteForm.PKGWriteCmd('CRCMode 0');
+    PKGWriteForm.PKGWriteCmd('PackMode 0');
+    PKGWriteForm.PKGWriteCmd('CryptCode 978123');
+    PKGWriteForm.PKGWriteCmd('Include '+tempDir);
+    PKGWriteForm.PKGWriteCmd('Finish');
+
+  finally
+    radIndex.Free;
+    DeleteDirectory(tempDir);
+  end;
 end;
 
 end.

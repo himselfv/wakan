@@ -1,7 +1,7 @@
 unit JWBCommandLine;
 
 interface
-uses SysUtils;
+uses SysUtils, JWBStrings;
 
 type
   EBadUsage = class(Exception);
@@ -12,6 +12,8 @@ procedure ShowUsage(errmsg: string = '');
 var
   Command: string;
 
+ { Each block of params is only valid (initialized) if that command is in Command }
+
   OpenParams: record
     Filename: string;
   end;
@@ -19,7 +21,7 @@ var
   MakeDicParams: record
     Filename: string;
     Name: string;
-    Files: array of string;
+    Files: TFilenameList;
     Priority: integer;
     Version: string;
     Description: string;
@@ -29,6 +31,10 @@ var
     AddWordIndex: boolean;
     AddCharacterIndex: boolean;
     AddFrequencyInfo: boolean;
+  end;
+
+  MakeRadParams: record
+    Files: TFilenameList;
   end;
 
 procedure ParseCommandLine();
@@ -52,6 +58,7 @@ begin
     +'* open <filename>'#13
     +'* makeexamples'#13
     +'* makesod'#13
+    +'* makerad [RADKFILE_filename] [...]'#13
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
@@ -80,7 +87,7 @@ begin
     s := ParamStr(i);
     if Length(s)<=0 then continue;
 
-   //options
+   //Options
     if s[1]='/' then begin
 
      //Common options
@@ -93,6 +100,11 @@ begin
 
       end else
       if Command='makesod' then begin
+       //No options
+        BadUsage('Invalid option: '+s);
+
+      end else
+      if Command='makerad' then begin
        //No options
         BadUsage('Invalid option: '+s);
 
@@ -138,8 +150,7 @@ begin
           if i>ParamCount() then BadUsage('/include requires file name');
           s := ParamStr(i);
           if s='' then BadUsage('invalid /include file name');
-          SetLength(MakeDicParams.Files, Length(MakeDicParams.Files)+1);
-          MakeDicParams.Files[Length(MakeDicParams.Files)-1] := s;
+          AddFilename(MakeDicParams.Files, s);
         end else
         if s='/unicode' then begin
           MakeDicParams.UnicodeDic := true;
@@ -156,10 +167,9 @@ begin
           BadUsage('Invalid option: '+s);
 
       end else
-
         BadUsage('Invalid option: '+s);
-
     end else
+
    //Command
     if Command='' then begin
       Command := s;
@@ -169,6 +179,11 @@ begin
       end else
       if Command='makesod' then begin
        //Nothing to initialize
+      end else
+      if Command='makerad' then begin
+        FillChar(MakeRadParams, sizeof(MakeRadParams), 0);
+       //Filenames are expected in the following params.
+       //If none are specified, that's fine too (see this command handling).
       end else
       if Command='makedic' then begin
         FillChar(MakeDicParams, sizeof(MakeDicParams), 0);
@@ -195,12 +210,21 @@ begin
         BadUsage('Invalid command or file: "'+s+'"');
 
     end else
-      BadUsage('Invalid param: "'+s+'"');
+
+   //Non-command non-option params (filename list etc)
+    begin
+      if Command='makerad' then begin
+        AddFilename(MakeRadParams.Files, ParamStr(i));
+
+      end else
+        BadUsage('Invalid param: "'+s+'"');
+
+    end;
 
     Inc(i);
-  end;
+  end; //of ParamStr enumeration
 
- //Check that everything is initialized properly
+ //Check that post-parsing conditions are met (non-conflicting options etc)
   if Command='makedic' then begin
     if Length(MakeDicParams.Files)<0 then
       BadUsage('makedic requires at least one input file');

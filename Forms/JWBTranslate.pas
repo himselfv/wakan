@@ -892,8 +892,7 @@ begin
   sp.Clear;
 
   Conv_Open(filename,tp);
-  c := Conv_ReadChar;
-  while c<>CONV_NOCHAR do
+  while Conv_ReadChar(c) do
   begin
    //Default properties for this character
     cp.Reset;
@@ -912,8 +911,6 @@ begin
       s:=s+c;
       sp.AddChar(cp);
     end;
-
-    c := Conv_ReadChar;
   end;
   Conv_Close;
   if s<>'' then

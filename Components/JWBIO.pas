@@ -66,12 +66,12 @@ type
     f: file;
     buf: array[0..4095] of byte;
     bpos: integer;
-    procedure FlushBlock;
   public
     constructor Rewrite(AFilename: string);
     destructor Destroy; override;
     procedure Writeln(const s: string); override;
     procedure WriteWideChar(const w: WideChar);
+    procedure Flush;
   end;
 
  {$IFDEF UNICODE}
@@ -204,7 +204,7 @@ end;
 
 destructor TUnicodeFileWriter.Destroy;
 begin
-  FlushBlock;
+  Flush();
   closefile(f);
   inherited;
 end;
@@ -212,7 +212,7 @@ end;
 procedure TUnicodeFileWriter.WriteWideChar(const w: WideChar);
 begin
   if bpos>=sizeof(buf) then
-    FlushBlock;
+    Flush();
   PWideChar(@buf[bpos])^ := w;
   Inc(bpos, 2);
 end;
@@ -226,7 +226,7 @@ begin
   WriteWideChar(#$000A);
 end;
 
-procedure TUnicodeFileWriter.FlushBlock;
+procedure TUnicodeFileWriter.Flush;
 begin
   if bpos>0 then
     BlockWrite(f, buf, bpos);

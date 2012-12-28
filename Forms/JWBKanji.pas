@@ -293,8 +293,11 @@ begin
   if fKanjiSearch.SpeedButton5.Down then ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.Edit6.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
   if fKanjiSearch.SpeedButton5.Down then ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.Edit6.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
   if fKanjiSearch.SpeedButton14.Down then ReadFilter(fltskip,fKanjiSearch.Edit4.Text,22,0,true,false,false,false);
-  if fKanjiSearch.SpeedButton6.Down then if not raineradsearch then ReadFilter(fltradical,fKanjiSearch.Edit2.Text,10,0,false,false,true,false) else
+  if fKanjiSearch.SpeedButton6.Down then if not raineradsearch then
+    ReadFilter(fltradical,fKanjiSearch.Edit2.Text,10,0,false,false,true,false)
+  else
   begin
+   //TODO: Convert to unicode
     sltemp:=TStringList.Create;
     fltradical.Sorted:=true;
     sltemp.Sorted:=true;

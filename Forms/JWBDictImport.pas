@@ -759,13 +759,12 @@ begin
   end else
     raise Exception.Create(_l('#00915^eCannot find WORDFREQ_CK file.'));
 
-  fc:=Conv_ReadChar;
   newline:=true;
   nownum:=false;
   addkan:='';
   addnum:='';
   comment:=false;
-  while fc<>CONV_NOCHAR do
+  while Conv_ReadChar(fc) do
   begin
     if (newline) and (fc=UH_FREQ_COMMENT) then comment:=true;
     newline:=false;
@@ -789,7 +788,6 @@ begin
       if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(fc);
     end else
       addkan:=addkan+fc;
-    fc:=Conv_ReadChar;
   end;
   Result.Sorted:=true;
   Result.Sort;

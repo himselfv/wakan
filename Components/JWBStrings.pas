@@ -189,6 +189,8 @@ function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
 
+function ftoansi(c: FChar; out ac: AnsiChar): boolean;
+
 
 { General purpose string functions }
 
@@ -221,6 +223,16 @@ function IsLocaseLatin(ch: AnsiChar): boolean; overload; inline;
 function IsLocaseLatin(ch: WideChar): boolean; overload; inline;
 function LoCase(ch: AnsiChar): AnsiChar; overload; inline; //Delphi has UpCase but not LoCase for chars
 function LoCase(Ch: WideChar): WideChar; overload; inline;
+
+
+{ Filename list }
+
+type
+  TFilenameList = array of string;
+
+procedure AddFilename(var list: TFilenameList; filename: string);
+function MakeFilenameList(filenames: array of string): TFilenameList;
+
 
 
 
@@ -508,6 +520,20 @@ begin
   Result := cnt<=0;
 end;                                        
 {$ENDIF}
+
+{ Converts FChar to AnsiChar, returns false if it was impossible.
+ Only for simple transformations, else use WideCharToMultiByte(fstrtouni(s)) }
+function ftoansi(c: FChar; out ac: AnsiChar): boolean;
+begin
+ {$IFDEF UNICODE}
+  Result := (ord(c)<256);
+  if Result then ac := AnsiChar(c);
+ {$ELSE}
+  Result := (Length(c)=4) and (c[1]='0') and (c[2]='0');
+  if Result then
+    ac := (HexCharCode(c[3]) shl 4) + HexCharCode(c[4]);
+ {$ENDIF}
+end;
 
 
 {
@@ -834,6 +860,24 @@ begin
     'A'..'Z':
       Result := WideChar(Word(Ch) or $0020);
   end;
+end;
+
+
+{ Filename list }
+
+procedure AddFilename(var list: TFilenameList; filename: string);
+begin
+  SetLength(list, Length(list)+1);
+  List[Length(list)-1] := filename;
+end;
+
+function MakeFilenameList(filenames: array of string): TFilenameList;
+var i,l: integer;
+begin
+  SetLength(Result, Length(filenames));
+  l := Low(filenames);
+  for i := l to High(filenames) do
+    Result[i-l] := filenames[i];
 end;
 
 
