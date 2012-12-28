@@ -55,3 +55,11 @@ Also see: http://code.google.com/p/wakan/issues/detail?id=66
 3. RADKFILE/RADKFILE2 - required for raine radicals search
 http://www.csse.monash.edu.au/~jwb/kradinf.html
 Download and place these into Wakan release folder.
+
+
+MAINTENANCE
+
+Stuff that has to be done regularly to keep Wakan up to date:
+- Import new EDICT/ENAMDICT files
+- Update EDICT marker list in JWBUnit.pas (see http://www.csse.monash.edu.au/~jwb/edict_doc.html and http://www.csse.monash.edu.au/~jwb/edict_doc_old.html for older markers)
+- Update wakan.rad with new RADKFILEs (see dependencies)
