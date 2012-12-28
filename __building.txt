@@ -1,6 +1,6 @@
 NOTES ON BUILDING WAKAN.
 
-I. You'll need non-unicode Delphi (at most Delphi 2007).
+I. For Ansi builds you'll need non-unicode Delphi (at most Delphi 2007).
 Install everything as per Components\readme.txt.
 
 II. Copy wakan.chr, *.dic from live wakan installation.
@@ -8,6 +8,11 @@ II. Copy wakan.chr, *.dic from live wakan installation.
 III. Build Jalet.dpr.
 
 If you want to pack executable, you'll need something like UPX.exe which is not included here.
+
+IV. Run Wakan to generate:
+  wakan.usr -- user package
+  wakan.sod -- stroke order package built from strokes.csv
+
 
 
 OPTIMIZATION

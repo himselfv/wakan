@@ -1000,8 +1000,23 @@ begin
       end;
     end;
 
+   { Stroke order display }
+
+   //Stroke-order rebuilding -- before complaining about missing sod
+    if Command='makesod' then
+    begin
+      fWords.BuildStrokeOrderPackage('STROKES.CSV');
+      Application.Terminate;
+      exit;
+    end;
+
+   //Auto-rebuild
+    if not FileExists('wakan.sod')
+    and FileExists('STROKES.CSV') then
+      fWords.BuildStrokeOrderPackage('STROKES.CSV');
+
    //Stroke-order display
-    if (not FileExists('wakan.sod')) then
+    if not FileExists('wakan.sod') then
     begin
       Application.MessageBox(
         pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13
@@ -1034,16 +1049,6 @@ begin
       end;
     end;
     StrokeOrderPackage:=nil;
-  { This was the way to load stroke order package. Not anymore: }
-  {
-    if FileExists('wakan.sod') then
-    try
-      StrokeOrderPackage:=TPackageSource.Create('wakan.sod',932147,513478,314798);
-    except
-      StrokeOrderPackage:=nil;
-    end;
-    fKanji.btnStrokeOrder.Visible:=StrokeOrderPackage<>nil;
-  }
 
    //User data
     try
@@ -1119,6 +1124,7 @@ begin
     if Command='makeexamples'then
     begin
       fExamples.BuildExamplesPackage;
+      Application.Terminate;
       exit;
     end else
     if Command='makedic'then

@@ -51,6 +51,7 @@ begin
     +'Supported commands:'#13
     +'* open <filename>'#13
     +'* makeexamples'#13
+    +'* makesod'#13
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
@@ -87,6 +88,11 @@ begin
 
      //Command-related options
       if Command='makeexamples' then begin
+       //No options
+        BadUsage('Invalid option: '+s);
+
+      end else
+      if Command='makesod' then begin
        //No options
         BadUsage('Invalid option: '+s);
 
@@ -159,6 +165,9 @@ begin
       Command := s;
 
       if Command='makeexamples' then begin
+       //Nothing to initialize
+      end else
+      if Command='makesod' then begin
        //Nothing to initialize
       end else
       if Command='makedic' then begin

@@ -102,7 +102,7 @@ type
     procedure UpdateWordListStats;
     procedure SetGroupStatus(st:integer);
     procedure SearchWord(wordind:integer);
-    procedure RebuildStrokeOrderPackage;
+    procedure BuildStrokeOrderPackage(sourceCsv: string);
 
   end;
 
@@ -2362,9 +2362,8 @@ begin
     end;
 end;
 
-//TODO: Remove.
-{ Not used. A remnant of the old way to display stroke order, through GIFS. }
-procedure TfWords.RebuildStrokeOrderPackage;
+{ Rebuilds wakan.sod from strokes.csv. Mostly used by a devs, but users can do this too. }
+procedure TfWords.BuildStrokeOrderPackage(sourceCsv: string);
 var
   tempDir: string;
   sl,sl2:TStringList;
@@ -2375,7 +2374,7 @@ var
   b:byte;
 begin
   sl:=TStringList.Create;
-  assignfile(t,'STROKES.CSV');
+  assignfile(t,sourceCsv);
   System.reset(t);
   while not eof(t) do
   begin
