@@ -249,7 +249,7 @@ var sltemp:TStringList;
   s1,s2:string;
   rrfrom,rrlen:integer;
   rrus:boolean;
-  p:PByte;
+  p:PWideChar;
   i:integer;
 begin
  //TODO: Convert to unicode
@@ -263,12 +263,11 @@ begin
     s2:=strqpop(s1,';');
     rrlen:=strtoint(copy(raineradicals[strtoint(s2)-1],9,4));
     rrfrom:=strtoint(copy(raineradicals[strtoint(s2)-1],14,5));
-    p:=rainesearch;
-    p:=p+rrfrom*2;
+    p:=PWideChar(integer(rainesearch)+rrfrom*sizeof(WideChar));
     for i:=1 to rrlen do
     begin
-      s2:=UnicodeToHex(PWideChar(p)^);
-      p:=p+2;
+      s2:=UnicodeToHex(p^);
+      p:=p+1;
       if not rrus or (sltemp.IndexOf(s2)<>-1) then fltradical.Add(s2);
     end;
     if s1<>'' then

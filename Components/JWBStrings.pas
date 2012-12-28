@@ -531,7 +531,7 @@ begin
  {$ELSE}
   Result := (Length(c)=4) and (c[1]='0') and (c[2]='0');
   if Result then
-    ac := (HexCharCode(c[3]) shl 4) + HexCharCode(c[4]);
+    ac := Chr((HexCharCode(c[3]) shl 4) + HexCharCode(c[4]));
  {$ENDIF}
 end;
 

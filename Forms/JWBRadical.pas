@@ -442,7 +442,7 @@ var
   i: integer;
 
   rad_idx: integer; //index to active radical record
-  rad_char: FChar;
+  rad_char: WideChar;
   rad_scnt: integer; //stroke count
 
 begin
@@ -473,7 +473,7 @@ begin
       if i>flength(ln) then
         raise Exception.Create('Bad RADKFILE: missing glyph char @ line '+IntToStr(lineno));
      //Read char
-      rad_char := fgetch(ln, i);
+      rad_char := fstrtouni(fgetch(ln, i))[1];
       Inc(i);
      //Skip spaces
       while (i<=flength(ln)) and (fgetch(ln,i)=UH_SPACE) do
