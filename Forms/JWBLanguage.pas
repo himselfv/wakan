@@ -45,9 +45,12 @@ type
     procedure LoadRegistrySettings; //when loading app
     procedure SaveRegistrySettings; //save changes
 
+  protected
+    procedure LocalizeEdictMarkers();
   public
     procedure LoadLanguage(fname:string); //and use for translation
     function TranslateString(id:string):string;
+    function GetTlVar(id:string):string;
     procedure TranslateForm(f:TForm);
 
   end;
@@ -58,6 +61,7 @@ var
   TransDir: string; //path to translations
   curTransFile: string; //filename of active translation (without path)
   curTrans: TStringList; //active translation data
+  curTransVars: TStringList;
   curTransInfo: TLanguageFileInfo;
   curGUILanguage: string; //same as curTransFile, only without an extension
     //used for stuff like wakan_LNG.chm
@@ -65,7 +69,7 @@ var
 
 
 implementation
-uses JWBStrings;
+uses JWBStrings, JWBUnit;
 
 {$R *.DFM}
 
@@ -102,10 +106,10 @@ type
   TLoadLanguageFlags = set of TLoadLanguageFlag;
 
 procedure LoadLanguageFile(fname: string; flags: TLoadLanguageFlags;
-  out info: TLanguageFileInfo; data: TStringList);
+  out info: TLanguageFileInfo; data: TStringList; varData: TStringList = nil);
 var t: TStringList; //temporary storage for .lng file contents
   i, j: integer;
-  s, pref: string;
+  s, pref, tmp: string;
 begin
   pref:='';
   if data<>nil then
@@ -124,14 +128,15 @@ begin
 
     for j := 0 to t.Count - 1 do begin
       s := t[j];
+      tmp:=copy(s,1,6);
      { if it's a service field, read it }
-      if copy(s,1,6)='#LANG>' then
+      if tmp='#LANG>' then
         info.lName:=copy(s,7,length(s)-6)
       else
-      if copy(s,1,6)='#AUTH>' then
+      if tmp='#AUTH>' then
         info.lAuthor:=copy(s,7,length(s)-6)
       else
-      if copy(s,1,6)='#VERS>' then
+      if tmp='#VERS>' then
         info.lVersion:=copy(s,7,length(s)-6)
       else
      { if we've been asked to read only info, skip the rest }
@@ -139,7 +144,12 @@ begin
         continue
       else
      { else it's 00016>some string }
-      if (length(s)>0) and (s[1]<>';') then
+      if length(s)<=0 then continue
+      else
+      if s[1]=';' then continue //comment
+      else
+      if (ord(s[1])>=ord('0')) and (ord(s[1])<=ord('9')) then begin
+       { first char is a digit => 00042>text style line }
         if s[6]='+' then
           pref := pref+copy(s,7,length(s)-6)+#13
         else
@@ -150,6 +160,13 @@ begin
           if i>0 then data.add(copy(s,1,6)+pref+copy(s,7,length(s)-6));
           pref:='';
         end;
+      end else
+      begin
+      // first char is a letter => id=value style line --- copy as is
+        if varData<>nil then
+          varData.Add(s)
+      end;
+
     end;
   finally
     t.Free;
@@ -229,7 +246,8 @@ begin
 
   curTransFile := fname;
   curGUILanguage := ChangeFileExt(lowercase(fname), '');
-  LoadLanguageFile(fullfname, [], curTransInfo, curTrans)
+  LoadLanguageFile(fullfname, [], curTransInfo, curTrans, curTransVars);
+  LocalizeEdictMarkers();
 end;
 
 procedure TfLanguage.lbLanguagesClick(Sender: TObject);
@@ -331,6 +349,16 @@ begin
   end;
 end;
 
+function TfLanguage.GetTlVar(id:string):string;
+var i: integer;
+begin
+  i := curTransVars.IndexOfName(id);
+  if i<0 then
+    Result := ''
+  else
+    Result := curTransVars.ValueFromIndex[i];
+end;
+
 function IsStringProperty(PropInfo: PPropInfo): Boolean;
 var aPropInfo:TPropInfo;
     ppType:PPTypeInfo;
@@ -409,11 +437,19 @@ begin
   end;
 end;
 
+procedure TfLanguage.LocalizeEdictMarkers();
+var i: integer;
+begin
+  for i := 0 to Length(EdictMarkers) - 1 do
+    EdictMarkers[i].abl := GetTlVar('mark-'+EdictMarkers[i].m);
+end;
+
 
 initialization
   TransDir := ExtractFilePath(GetModuleFilenameStr(0));
   curTransFile := '';
   curTrans := TStringList.Create;
+  curTransVars := TStringList.Create;
   FillChar(curTransInfo, SizeOf(curTransInfo), 00);
   curGUILanguage := '';
 
