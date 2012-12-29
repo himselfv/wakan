@@ -1606,10 +1606,10 @@ procedure TfMenu.RefreshKanjiCategory;
 begin
   ReloadKanjiCategories();
   PasteKanjiCategoriesTo(fKanjiDetails.ComboBox1.Items);
-  PasteKanjiCategoriesTo(fKanjiSearch.ListBox1.Items);
+  PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
   fKanjiDetails.ComboBox1.ItemIndex:=0;
-  fKanjiSearch.ListBox1.ItemIndex:=0;
-  fKanjiSearch.ListBox1Click(Self); //react to changes
+  fKanjiSearch.lbCategories.ItemIndex:=0;
+  fKanjiSearch.lbCategoriesClick(Self); //react to changes
 end;
 
 function GetFormLayout(form:TForm):string;
@@ -3260,49 +3260,49 @@ end;
 procedure TfMenu.aKanjiAllExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
-  fKanjiSearch.SpeedButton18Click(Sender);
+  fKanjiSearch.sbClearFiltersClick(Sender);
 end;
 
 procedure TfMenu.aKanjiLearnedExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
   fKanjiSearch.SpeedButton1.Down:=not fKanjiSearch.SpeedButton1.Down;
-  fKanjiSearch.SpeedButton4Click(Sender);
+  fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiCommonExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
   fKanjiSearch.SpeedButton2.Down:=not fKanjiSearch.SpeedButton2.Down;
-  fKanjiSearch.SpeedButton4Click(Sender);
+  fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiClipboardExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
   fKanjiSearch.SpeedButton3.Down:=not fKanjiSearch.SpeedButton3.Down;
-  fKanjiSearch.SpeedButton4Click(Sender);
+  fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiPinYinExecute(Sender: TObject);
 begin
   if (not fKanji.Visible) then aKanjiExecute(Sender);
   if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
-  fKanjiSearch.Edit1.SetFocus;
+  fKanjiSearch.edtPinYin.SetFocus;
 end;
 
 procedure TfMenu.aKanjiYomiExecute(Sender: TObject);
 begin
   if (not fKanji.Visible) then aKanjiExecute(Sender);
   if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
-  fKanjiSearch.Edit6.SetFocus;
+  fKanjiSearch.edtYomi.SetFocus;
 end;
 
 procedure TfMenu.aKanjiRadicalExecute(Sender: TObject);
 begin
   if (not fKanji.Visible) then aKanjiExecute(Sender);
   if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
-  fKanjiSearch.SpeedButton8Click(Sender);
+  fKanjiSearch.sbListRadicalsClick(Sender);
 end;
 
 procedure TfMenu.aKanjiAddClipboardExecute(Sender: TObject);
@@ -3386,7 +3386,7 @@ end;
 procedure TfMenu.aKanjiMeaningExecute(Sender: TObject);
 begin
   if not fKanjiSearch.Visible then aKanjiSearchExecute(Sender);
-  fKanjiSearch.Edit3.SetFocus;
+  fKanjiSearch.edtDefinition.SetFocus;
 end;
 
 procedure TfMenu.aEditorWindowExecute(Sender: TObject);

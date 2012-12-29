@@ -669,9 +669,9 @@ begin
   if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
   fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
 
-  fKanjiSearch.RadioGroup1.ItemIndex:=setsort;
+  fKanjiSearch.rgSortBy.ItemIndex:=setsort;
   kanji_othersearch:=setothersearch;
-  fKanjiSearch.ComboBox1.ItemIndex:=-1;
+  fKanjiSearch.cbOtherType.ItemIndex:=-1;
   if dictmodeset=1 then fUser.SpeedButton2.Down:=true else fUser.SpeedButton1.Down:=true;
   if setusercompounds then fKanjiCompounds.SpeedButton8.Down:=true else fKanjiCompounds.SpeedButton9.Down:=true;
 end;
@@ -808,8 +808,8 @@ begin
   reg.WriteString('Dict','NotGroup5Dicts',NotGroupDicts[5]);
   reg.WriteString('Dict','OfflineDicts',OfflineDicts);
   reg.WriteString('Dict','CurLanguage',curlang);
-  reg.WriteInteger('Characters','Sort',fKanjiSearch.RadioGroup1.ItemIndex);
-  reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.ComboBox1.ItemIndex);
+  reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
+  reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.SpeedButton8.Down);
   reg.WriteBool('Dict','Meaning',dictmodeset=1);
   reg.WriteInteger('Dict','SearchBeg',dictbeginset);

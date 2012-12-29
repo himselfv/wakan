@@ -34,7 +34,7 @@ type
     RxLabel10: TRxLabel;
     RxLabel35: TRxLabel;
     RxLabel38: TRxLabel;
-    Label9: TLabel;
+    Label9: TLabel;    
     SpeedButton21: TSpeedButton;
     RxLabel39: TRxLabel;
     ScrollBox1: TScrollBox;

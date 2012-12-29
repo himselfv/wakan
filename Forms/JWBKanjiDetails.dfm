@@ -403,6 +403,7 @@ object fKanjiDetails: TfKanjiDetails
     Width = 127
     Height = 21
     Style = csDropDownList
+    ItemHeight = 0
     TabOrder = 3
     OnChange = ComboBox1Change
   end

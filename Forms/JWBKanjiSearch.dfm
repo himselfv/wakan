@@ -14,6 +14,7 @@ object fKanjiSearch: TfKanjiSearch
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  OnShow = FormShow
   DesignSize = (
     618
     209)
@@ -27,6 +28,7 @@ object fKanjiSearch: TfKanjiSearch
     Align = alClient
     Anchors = [akTop, akRight]
     Shape = bsFrame
+    ExplicitLeft = 1
   end
   object Shape1: TShape
     Left = 66
@@ -36,7 +38,7 @@ object fKanjiSearch: TfKanjiSearch
     Anchors = [akLeft, akTop, akRight]
     Brush.Color = clBtnFace
   end
-  object SpeedButton4: TSpeedButton
+  object sbPinYin: TSpeedButton
     Left = 8
     Top = 8
     Width = 57
@@ -51,9 +53,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton5: TSpeedButton
+  object sbYomi: TSpeedButton
     Left = 8
     Top = 32
     Width = 57
@@ -68,9 +70,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton6: TSpeedButton
+  object sbRadicals: TSpeedButton
     Left = 8
     Top = 104
     Width = 58
@@ -85,9 +87,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton7: TSpeedButton
+  object sbDefinition: TSpeedButton
     Left = 8
     Top = 56
     Width = 57
@@ -102,7 +104,7 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
   object Bevel2: TBevel
     Left = 310
@@ -112,7 +114,7 @@ object fKanjiSearch: TfKanjiSearch
     Anchors = [akTop, akRight]
     Shape = bsLeftLine
   end
-  object SpeedButton14: TSpeedButton
+  object sbSKIP: TSpeedButton
     Left = 8
     Top = 128
     Width = 57
@@ -127,9 +129,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton18: TSpeedButton
+  object sbClearFilters: TSpeedButton
     Left = 480
     Top = 178
     Width = 131
@@ -144,7 +146,7 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton18Click
+    OnClick = sbClearFiltersClick
   end
   object SpeedButton2: TSpeedButton
     Left = 480
@@ -162,7 +164,7 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
   object SpeedButton3: TSpeedButton
     Left = 480
@@ -180,9 +182,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton12: TSpeedButton
+  object sbStrokeCount: TSpeedButton
     Left = 8
     Top = 80
     Width = 57
@@ -199,9 +201,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton22: TSpeedButton
+  object sbOther: TSpeedButton
     Left = 8
     Top = 176
     Width = 57
@@ -216,9 +218,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton24: TSpeedButton
+  object sbJouyou: TSpeedButton
     Left = 8
     Top = 152
     Width = 57
@@ -233,9 +235,9 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton4Click
+    OnClick = sbPinYinClick
   end
-  object SpeedButton8: TSpeedButton
+  object sbListRadicals: TSpeedButton
     Left = 241
     Top = 104
     Width = 63
@@ -250,7 +252,7 @@ object fKanjiSearch: TfKanjiSearch
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    OnClick = SpeedButton8Click
+    OnClick = sbListRadicalsClick
   end
   object SpeedButton9: TSpeedButton
     Left = 243
@@ -332,7 +334,7 @@ object fKanjiSearch: TfKanjiSearch
     Anchors = [akTop, akRight]
     Shape = bsLeftLine
   end
-  object PaintBox1: TPaintBox
+  object pbRadicals: TPaintBox
     Left = 67
     Top = 104
     Width = 173
@@ -340,7 +342,7 @@ object fKanjiSearch: TfKanjiSearch
     Anchors = [akLeft, akTop, akRight]
     Color = clBtnFace
     ParentColor = False
-    OnPaint = PaintBox1Paint
+    OnPaint = pbRadicalsPaint
   end
   object SpeedButton19: TSpeedButton
     Left = 397
@@ -442,80 +444,80 @@ object fKanjiSearch: TfKanjiSearch
     ShowHint = True
     OnClick = SpeedButton1Click
   end
-  object Edit1: TEdit
+  object edtPinYin: TEdit
     Left = 64
     Top = 8
     Width = 240
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 0
-    OnChange = Edit1Change
+    OnChange = edtPinYinChange
   end
-  object Edit2: TEdit
-    Left = 484
-    Top = 144
+  object edtRadicals: TEdit
+    Left = 64
+    Top = 103
     Width = 54
     Height = 21
     Anchors = [akTop, akRight]
     TabOrder = 4
     Visible = False
-    OnChange = Edit2Change
+    OnChange = edtRadicalsChange
   end
-  object Edit3: TEdit
+  object edtDefinition: TEdit
     Left = 64
     Top = 56
     Width = 240
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 2
-    OnChange = Edit3Change
+    OnChange = edtDefinitionChange
   end
-  object Edit4: TEdit
+  object edtSkip: TEdit
     Left = 65
     Top = 128
     Width = 239
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 5
-    OnChange = Edit4Change
+    OnChange = edtSkipChange
   end
-  object Edit6: TEdit
+  object edtYomi: TEdit
     Left = 64
     Top = 32
     Width = 240
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 1
-    OnChange = Edit6Change
+    OnChange = edtYomiChange
   end
-  object Edit7: TEdit
-    Left = 65
+  object edtStrokeCount: TEdit
+    Left = 64
     Top = 80
     Width = 160
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 3
-    OnChange = Edit7Change
+    OnChange = edtStrokeCountChange
   end
-  object Edit8: TEdit
+  object edtOther: TEdit
     Left = 64
     Top = 176
     Width = 91
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 7
-    OnChange = Edit8Change
+    OnChange = edtOtherChange
   end
-  object Edit9: TEdit
+  object edtJouyou: TEdit
     Left = 65
     Top = 152
     Width = 160
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     TabOrder = 6
-    OnChange = Edit9Change
+    OnChange = edtJouyouChange
   end
-  object RadioGroup1: TRadioGroup
+  object rgSortBy: TRadioGroup
     Left = 481
     Top = 8
     Width = 129
@@ -538,32 +540,33 @@ object fKanjiSearch: TfKanjiSearch
       '#00149^eRandom')
     ParentFont = False
     TabOrder = 9
-    OnClick = RadioGroup1Click
+    OnClick = rgSortByClick
   end
-  object ComboBox1: TComboBox
+  object cbOtherType: TComboBox
     Left = 155
     Top = 176
     Width = 149
     Height = 21
     Style = csDropDownList
     Anchors = [akTop, akRight]
+    ItemHeight = 13
     TabOrder = 8
-    OnChange = ComboBox1Change
+    OnChange = cbOtherTypeChange
   end
-  object ListBox1: TCheckListBox
+  object lbCategories: TCheckListBox
     Left = 318
     Top = 9
     Width = 148
     Height = 144
-    OnClickCheck = ListBox1ClickCheck
+    OnClickCheck = lbCategoriesClickCheck
     Anchors = [akTop, akRight]
     ItemHeight = 13
     TabOrder = 10
-    OnClick = ListBox1Click
-    OnDblClick = ListBox1DblClick
-    OnDrawItem = ListBox1DrawItem
+    OnClick = lbCategoriesClick
+    OnDblClick = lbCategoriesDblClick
+    OnDrawItem = lbCategoriesDrawItem
   end
-  object RadioGroup2: TRadioGroup
+  object rgOrAnd: TRadioGroup
     Left = 318
     Top = 157
     Width = 53
@@ -574,9 +577,9 @@ object fKanjiSearch: TfKanjiSearch
       'OR'
       'AND')
     TabOrder = 11
-    OnClick = RadioGroup2Click
+    OnClick = rgOrAndClick
   end
-  object CheckBox1: TCheckBox
+  object cbNot: TCheckBox
     Left = 376
     Top = 183
     Width = 81
@@ -584,6 +587,6 @@ object fKanjiSearch: TfKanjiSearch
     Anchors = [akTop, akRight]
     Caption = 'NOT'
     TabOrder = 12
-    OnClick = RadioGroup2Click
+    OnClick = rgOrAndClick
   end
 end

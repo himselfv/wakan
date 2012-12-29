@@ -571,7 +571,7 @@ end;
 function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):string;
 var sr,s2,s3,fn:string;
   kata:integer;
-  l,i,j:integer;
+  l,i:integer;
 begin
   if lang='j'then
   begin
@@ -946,8 +946,7 @@ end;
 { EDict processing }
 
 function ConvertEdictEntry(s:string;var mark:string):string;
-var postm,post2m:string;
-    s2:string;
+var s2:string;
     inmarker:boolean;
     curm,marker:string;
     i,j:integer;
@@ -961,6 +960,7 @@ begin
   markerd:=false;
   mark:='';
   insection:=false;
+  inmarker:=false;
   for i:=1 to length(s) do
   begin
     if s[i]='/'then
@@ -1365,7 +1365,6 @@ begin
 end;
 
 function Col(col:string):TColor;
-var i:integer;
 begin
   result:=colsval[colsarr.IndexOf(col)];
 end;

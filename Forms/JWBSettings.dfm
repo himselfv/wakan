@@ -523,6 +523,7 @@ object fSettings: TfSettings
         Width = 233
         Height = 21
         Style = csDropDownList
+        ItemHeight = 13
         TabOrder = 2
         Items.Strings = (
           'Bushu'
@@ -2085,6 +2086,7 @@ object fSettings: TfSettings
         Width = 313
         Height = 21
         Style = csDropDownList
+        ItemHeight = 13
         TabOrder = 4
         OnChange = ComboBox2Change
         Items.Strings = (
@@ -2363,9 +2365,9 @@ object fSettings: TfSettings
       Width = 130
       Height = 25
       Anchors = [akRight, akBottom]
-      Kind = bkOK
       TabOrder = 1
       OnClick = btnOkClick
+      Kind = bkOK
     end
   end
   object OpenDialog2: TOpenDialog

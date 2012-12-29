@@ -38,13 +38,25 @@ type
     procedure DrawGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure RadioGroup1Click(Sender: TObject);
-  public
+
+  protected
     procedure ShowIt;
-    procedure DoSearch;
+    procedure FillNormalRadicals;
+    procedure FillRaineRadicals;
+
+  protected
+    FSelectedRadicals: string;
+    FOnSelectionChanged: TNotifyEvent;
+    procedure SetSelectedRadicals(Value: string);
+    procedure SelectionChanged;
+  public
     function GetKanji(x,y:integer):string;
+    property SelectedRadicals: string read FSelectedRadicals write SetSelectedRadicals;
+    property OnSelectionChanged: TNotifyEvent read FOnSelectionChanged write FOnSelectionChanged;
 
   public
     procedure BuildRadicalPackage(sourceFiles: array of string);
+
   end;
 
  { Builds radical index from multiple files }
@@ -79,11 +91,43 @@ var sel:array[1..300] of boolean;
 
 {$R *.DFM}
 
+procedure TfRadical.FormCreate(Sender: TObject);
+begin
+  rl:=TStringList.Create;
+  rli:=TStringList.Create;
+  rlc:=TStringList.Create;
+  rld:=TStringList.Create;
+end;
+
+procedure TfRadical.FormDestroy(Sender: TObject);
+begin
+  rl.Free;
+  rlc.Free;
+  rld.Free;
+  rli.Free;
+end;
+
+procedure TfRadical.FormShow(Sender: TObject);
+begin
+  ShowIt;
+end;
+
+procedure TfRadical.FormResize(Sender: TObject);
+{var cwx,cwy:integer;}
+begin
+{  cwx:=(Width-211-20) div 21;
+  cwy:=round(50/36*cwx);
+  DrawGrid1.Width:=cwx*21+20;
+  DrawGrid1.Height:=cwy*11+10;
+  DrawGrid1.DefaultColWidth:=cwx;
+  DrawGrid1.DefaultRowHeight:=cwy;
+  Shape6.Width:=cwx*21+22;
+  Shape6.Height:=cwy*11+12;}
+  ShowIt;
+end;
+
 procedure TfRadical.ShowIt;
-var i,j:integer;
-    knw:boolean;
-    jap:integer;
-    s:string;
+var i:integer;
 begin
   if (curlang='c') or (rainesearch=nil) then
   begin
@@ -102,63 +146,11 @@ begin
   rlc.Clear;
   rld.Clear;
   TRadicals.First;
-  j:=0;
   if RadioGroup1.ItemIndex=1 then
-  begin
-    while not TRadicals.EOF do
-    begin
-      if (TRadicals.Int(TRadicalsStrokeCount)>j) and (TRadicals.Int(TRadicalsVariant)=1) then
-      begin
-        j:=TRadicals.Int(TRadicalsStrokeCount);
-        rl.Add(inttostr(j));
-        rlc.Add('0');
-        rli.Add('0');
-      end;
-      if (CheckBox1.Checked) or (TRadicals.Int(TRadicalsVariant)=1) then
-      begin
-        rl.Add(TRadicals.Str(TRadicalsUnicode));
-        if (TRadicals.Int(TRadicalsVariant)=1) then
-        begin
-          knw:=IsKnown(KnownLearned,TRadicals.Fch(TRadicalsUnicode));
-          jap:=TRadicals.Int(TRadicalsJapaneseCount);
-        end;
-        if (CheckBox2.Checked) and (knw) then rlc.Add('0999') else
-        begin
-          if CheckBox3.Checked then
-            case jap of
-              0:rlc.Add('0000');
-              1:rlc.Add('0005');
-              2:rlc.Add('0020');
-            end else rlc.Add('0020');
-        end;
-        rli.Add(TRadicals.Str(TRadicalsNumber));
-      end;
-      TRadicals.Next;
-    end;
-  end else
-  begin
-    for i:=0 to raineradicals.Count-1 do
-    begin
-      s:=raineradicals[i];
-      if strtoint(copy(s,6,2))<>j then
-      begin
-        j:=strtoint(copy(s,6,2));
-        rl.Add(inttostr(j));
-        rlc.Add('0');
-        rli.Add('0');
-      end;
-      rl.Add(copy(s,1,4));
-      if (CheckBox2.Checked) and (IsKnown(KnownLearned,fgetch(s,1))) then rlc.Add('0999') else
-        if CheckBox3.Checked then
-        begin
-          if strtoint(copy(s,9,4))>100 then rlc.Add('0020')
-          else if strtoint(copy(s,9,4))>20 then rlc.Add('0005') else
-          rlc.Add('0000');
-        end else rlc.Add('0020');
-      rli.Add(inttostr(i+1));
-    end;
-  end;
-//  TChar.SetFilter('');
+    FillNormalRadicals()
+  else
+    FillRaineRadicals();
+
   for i:=40 downto 20 do
   begin
     DrawGrid1.DefaultColWidth:=i;
@@ -175,14 +167,72 @@ begin
   DrawGrid1.Invalidate;
 end;
 
-procedure TfRadical.FormShow(Sender: TObject);
+procedure TfRadical.FillNormalRadicals;
+var j: integer;
+  knw:boolean;
+  jap:integer;
 begin
-//  Width:=Screen.Width;
-//  Height:=Screen.Height;
-//  Left:=0;
-//  Top:=0;
-  ShowIt;
+  j:=0;
+  while not TRadicals.EOF do
+  begin
+    if (TRadicals.Int(TRadicalsStrokeCount)>j) and (TRadicals.Int(TRadicalsVariant)=1) then
+    begin
+      j:=TRadicals.Int(TRadicalsStrokeCount);
+      rl.Add(inttostr(j));
+      rlc.Add('0');
+      rli.Add('0');
+    end;
+    if (CheckBox1.Checked) or (TRadicals.Int(TRadicalsVariant)=1) then
+    begin
+      rl.Add(TRadicals.Str(TRadicalsUnicode));
+      if (TRadicals.Int(TRadicalsVariant)=1) then
+      begin
+        knw:=IsKnown(KnownLearned,TRadicals.Fch(TRadicalsUnicode));
+        jap:=TRadicals.Int(TRadicalsJapaneseCount);
+      end;
+      if (CheckBox2.Checked) and (knw) then rlc.Add('0999') else
+      begin
+        if CheckBox3.Checked then
+          case jap of
+            0:rlc.Add('0000');
+            1:rlc.Add('0005');
+            2:rlc.Add('0020');
+          end else rlc.Add('0020');
+      end;
+      rli.Add(TRadicals.Str(TRadicalsNumber));
+    end;
+    TRadicals.Next;
+  end;
 end;
+
+procedure TfRadical.FillRaineRadicals;
+var i,j: integer;
+  s:string;
+begin
+  j:=0;
+  for i:=0 to raineradicals.Count-1 do
+  begin
+    s:=raineradicals[i];
+    if strtoint(copy(s,6,2))<>j then
+    begin
+      j:=strtoint(copy(s,6,2));
+      rl.Add(inttostr(j));
+      rlc.Add('0');
+      rli.Add('0');
+    end;
+    rl.Add(copy(s,1,4));
+    if (CheckBox2.Checked) and (IsKnown(KnownLearned,fgetch(s,1))) then rlc.Add('0999') else
+      if CheckBox3.Checked then
+      begin
+        if strtoint(copy(s,9,4))>100 then rlc.Add('0020')
+        else if strtoint(copy(s,9,4))>20 then rlc.Add('0005') else
+        rlc.Add('0000');
+      end else rlc.Add('0020');
+    rli.Add(inttostr(i+1));
+  end;
+end;
+
+
 
 procedure TfRadical.DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
@@ -245,7 +295,6 @@ end;
 procedure TfRadical.DrawGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 var p:integer;
-    radf:integer;
 begin
   Screen.Cursor:=crHourGlass;
   p:=ARow*DrawGrid1.ColCount+ACol;
@@ -271,52 +320,44 @@ begin
   DrawGrid1.Invalidate;
 end;
 
-procedure TfRadical.BitBtn2Click(Sender: TObject);
+
+{ Call to set current radical selection before presenting the form to user }
+procedure TfRadical.SetSelectedRadicals(Value: string);
 begin
-  Close;
+  FSelectedRadicals := Value;
+  if Visible then ShowIt;
 end;
 
-procedure TfRadical.DoSearch;
-var s:string;
-    i:integer;
+{ Called when radical selection is changed as a result of user actions }
+procedure TfRadical.SelectionChanged;
+var i:integer;
 begin
-  s:='';
-  curradsearch:='';
+  FSelectedRadicals:='';
   raineradsearch:=RadioGroup1.ItemIndex=0;
   for i:=1 to 300 do if sel[i] then
   begin
     if RadioGroup1.ItemIndex=1 then
     begin
       TRadicals.Locate('Number',inttostr(i),true);
-      curradsearch:=curradsearch+TRadicals.Str(TRadicalsUnicode);
-    end else curradsearch:=curradsearch+copy(raineradicals[i-1],1,4);
-    if s='' then s:=inttostr(i) else s:=s+';'+inttostr(i);
+      FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicalsUnicode);
+    end else
+      FSelectedRadicals:=FSelectedRadicals+copy(raineradicals[i-1],1,4);
   end;
-  fKanjiSearch.Edit2.Text:=s;
-  fKanjiSearch.PaintBox1.Invalidate;
-//  fKanjiSearch.SpeedButton6.Down:=true;
-//  fKanji.DoIt;
+  if Assigned(FOnSelectionChanged) then
+    FOnSelectionChanged(Self);
 end;
 
 procedure TfRadical.BitBtn1Click(Sender: TObject);
 begin
-  DoSearch;
-  Close;
+  ModalResult := mrOk;
 end;
 
-procedure TfRadical.FormResize(Sender: TObject);
-var cwx,cwy:integer;
+procedure TfRadical.BitBtn2Click(Sender: TObject);
 begin
-{  cwx:=(Width-211-20) div 21;
-  cwy:=round(50/36*cwx);
-  DrawGrid1.Width:=cwx*21+20;
-  DrawGrid1.Height:=cwy*11+10;
-  DrawGrid1.DefaultColWidth:=cwx;
-  DrawGrid1.DefaultRowHeight:=cwy;
-  Shape6.Width:=cwx*21+22;
-  Shape6.Height:=cwy*11+12;}
-  ShowIt;
+  ModalResult := mrCancel;
 end;
+
+
 
 procedure TfRadical.DrawGrid1KeyPress(Sender: TObject; var Key: Char);
 var c: FChar;
@@ -343,7 +384,7 @@ begin
     i:=strtoint(selindex);
     if i>0 then sel[i]:=not sel[i];
     DrawGrid1.Invalidate;
-    DoSearch;
+    SelectionChanged();
   end;
 end;
 
@@ -355,23 +396,6 @@ end;
 procedure TfRadical.CheckBox2Click(Sender: TObject);
 begin
   ShowIt;
-end;
-
-procedure TfRadical.FormCreate(Sender: TObject);
-var i:integer;
-begin
-  rl:=TStringList.Create;
-  rli:=TStringList.Create;
-  rlc:=TStringList.Create;
-  rld:=TStringList.Create;
-end;
-
-procedure TfRadical.FormDestroy(Sender: TObject);
-begin
-  rl.Free;
-  rlc.Free;
-  rld.Free;
-  rli.Free;
 end;
 
 procedure TfRadical.DrawGrid1MouseMove(Sender: TObject; Shift: TShiftState;

@@ -58,7 +58,6 @@ type
   public
     procedure KanjiSearch_SpeedButton20Click(Sender: TObject);
     procedure KanjiCompounds_CheckBox1Click(Sender: TObject);
-    function OffsetRange(tx:string;min,max:integer):string;
     procedure DoIt;
     procedure DoItTimer;
     procedure SaveChars;
@@ -99,22 +98,12 @@ var ki:TStringList;
 {$R *.DFM}
 
 procedure TfKanji.FormShow(Sender: TObject);
-var i:integer;
-    bk:integer;
 begin
-  bk:=fKanjiSearch.ComboBox1.ItemIndex;
-  if bk=-1 then bk:=kanji_othersearch;
-  fKanjiSearch.ComboBox1.Items.Clear;
-  fKanjiSearch.ComboBox1.Items.Add('Unicode');
-  for i:=0 to CharPropTypes.Count-1 do
-    if strtoint(GetCharPropType(i,0))>20 then
-      fKanjiSearch.ComboBox1.Items.Add(_l('^e'+GetCharPropType(i,4)));
-  fKanjiSearch.ComboBox1.ItemIndex:=0;
-  if bk<fKanjiSearch.ComboBox1.Items.Count-1 then fKanjiSearch.ComboBox1.ItemIndex:=bk;
-//  fMenu.ShowForm(SpeedButton5,fMenu.aKanjiSearch,fKanjiSearch);
+  fKanjiSearch.ReloadOtherTypes;
+//  fMenu.ShowForm(sbYomi,fMenu.aKanjiSearch,fKanjiSearch);
 //  fMenu.ShowForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
 //  fMenu.ShowForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
-//  fMenu.ShowForm(SpeedButton4,nil,fStrokeOrder);
+//  fMenu.ShowForm(sbPinYin,nil,fStrokeOrder);
   fMenu.aKanji.Checked:=true;
 //  fKanjiSearch.SpeedButton20.Enabled:=ChinesePresent;
   chin:=false;
@@ -127,49 +116,14 @@ end;
 procedure TfKanji.FormHide(Sender: TObject);
 begin
   fMenu.aKanji.Checked:=false;
-//  fMenu.HideForm(SpeedButton5,fMenu.aKanjiSearch,fKanjiSearch);
+//  fMenu.HideForm(sbYomi,fMenu.aKanjiSearch,fKanjiSearch);
 //  fMenu.HideForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
 //  fMenu.HideForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
-//  fMenu.HideForm(SpeedButton4,nil,fStrokeOrder);
-end;
-
-function TfKanji.OffsetRange(tx:string;min,max:integer):string;
-var curtx,txleft,otx:string;
-    nn1,nn2:integer;
-begin
-  txleft:=tx;
-  otx:='';
-  while txleft<>'' do
-  begin
-    curtx:='';
-    while (length(txleft)>0) and (txleft[1]<>';') and (txleft[1]<>',') do
-    begin
-      curtx:=curtx+txleft[1];
-      delete(txleft,1,1);
-    end;
-    if (length(txleft)>0) and ((txleft[1]=';') or (txleft[1]=',')) then delete(txleft,1,1);
-    nn1:=0;
-    nn2:=0;
-    if pos('-',curtx)=0 then begin try nn1:=strtoint(curtx); nn2:=strtoint(curtx); except end; end
-    else
-      begin
-        try
-          nn1:=strtoint(copy(curtx,1,pos('-',curtx)-1));
-          delete(curtx,1,pos('-',curtx));
-          nn2:=strtoint(curtx);
-        except end;
-      end;
-    nn1:=nn1+min; nn2:=nn2+max;
-    if nn1<0 then nn1:=0; if nn2<0 then nn2:=0;
-    if nn1>nn2 then nn1:=nn2;
-    if nn1=nn2 then if otx='' then otx:=inttostr(nn1) else otx:=otx+';'+inttostr(nn1);
-    if nn1<>nn2 then if otx='' then otx:=inttostr(nn1)+'-'+inttostr(nn2) else otx:=otx+';'+inttostr(nn1)+'-'+inttostr(nn2);
-  end;
-  result:=otx;
+//  fMenu.HideForm(sbPinYin,nil,fStrokeOrder);
 end;
 
 //split value string into string list. values are separated by comma or ;
-//if numeric, values can have format n1-n2 (e.g. 3-5 is expanded into 3,4,5)
+//if numeric, values can have format n1-n2 (edtPinYin.g. 3-5 is expanded into 3,4,5)
 procedure MakeList(tx:string;number:boolean;sl:TStringList);
 var fnd:boolean;
     curtx,txleft:string;
@@ -210,7 +164,7 @@ begin
 end;
 
 procedure TfKanji.ReadFilter(flt:TStringList;tx:string;typ1,typ2:integer;partial,space,number,takedot:boolean);
-var s:string;
+var sbJouyou:string;
     sl:TStringList;
     s2:string;
     i:integer;
@@ -224,19 +178,19 @@ begin
     TCharRead.SetOrder('Reading_Ind');
     TCharRead.Locate('Reading',s2,false);
     if takedot then dot:=TCharRead.Int(TCharReadReadDot);
-    s:=uppercase(TCharRead.Str(TCharReadReading));
-    while (not TCharRead.EOF) and ((s=uppercase(s2)) or ((partial and not space) and (pos(uppercase(s2),s)=1)) or
-          ((partial and space) and (pos(uppercase(s2)+' ',s)=1))) do
+    sbJouyou:=uppercase(TCharRead.Str(TCharReadReading));
+    while (not TCharRead.EOF) and ((sbJouyou=uppercase(s2)) or ((partial and not space) and (pos(uppercase(s2),sbJouyou)=1)) or
+          ((partial and space) and (pos(uppercase(s2)+' ',sbJouyou)=1))) do
     begin
   //    showmessage('FOund '+TCharRead.Str(TCharReadReading)+' '+TCharRead.Str(TCharReadType));
       if (TCharRead.Int(TCharReadType)=typ1) or (TCharRead.Int(TCharReadType)=typ2) then
-      if (not takedot) or (s=uppercase(s2)) or ((dot>0) and (uppercase(s2)=copy(s,1,dot-1))) then
+      if (not takedot) or (sbJouyou=uppercase(s2)) or ((dot>0) and (uppercase(s2)=copy(sbJouyou,1,dot-1))) then
 //        if flt.IndexOf(TCharRead.Str(TCharReadKanji))=-1 then
 //        begin
          flt.Add(TCharRead.Str(TCharReadKanji));
 //         end;
       TCharRead.Next;
-      s:=uppercase(TCharRead.Str(TCharReadReading));
+      sbJouyou:=uppercase(TCharRead.Str(TCharReadReading));
       if takedot then dot:=TCharRead.Int(TCharReadReadDot);
     end;
   end;
@@ -296,7 +250,7 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     radf:integer;
     i,j,k,grs:integer;
     s1,s2,s3:string;
-    s:string;
+    sbJouyou:string;
     x:integer;
     mr:TGridRect;
     b:boolean;
@@ -328,45 +282,45 @@ begin
     for i:=0 to length(clip) div 4-1 do
       if clip[i*4+1]>='4'then if fltclip.IndexOf(uppercase(copy(clip,i*4+1,4)))=-1 then
         fltclip.Add(uppercase(copy(clip,i*4+1,4)));
-  if fKanjiSearch.SpeedButton4.Down then ReadFilter(fltpinyin,fKanjiSearch.edit1.text,2,8,true,false,false,false);
-  if fKanjiSearch.SpeedButton5.Down then ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.Edit6.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-  if fKanjiSearch.SpeedButton5.Down then ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.Edit6.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-  if fKanjiSearch.SpeedButton14.Down then ReadFilter(fltskip,fKanjiSearch.Edit4.Text,22,0,true,false,false,false);
-  if fKanjiSearch.SpeedButton6.Down then
+  if fKanjiSearch.sbPinYin.Down then ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,2,8,true,false,false,false);
+  if fKanjiSearch.sbYomi.Down then ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+  if fKanjiSearch.sbYomi.Down then ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,true,'j'),4,5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+  if fKanjiSearch.sbSKIP.Down then ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,0,true,false,false,false);
+  if fKanjiSearch.sbRadicals.Down then
     if not raineradsearch then
-      ReadFilter(fltradical,fKanjiSearch.Edit2.Text,10,0,false,false,true,false)
+      ReadFilter(fltradical,fKanjiSearch.edtRadicals.Text,10,0,false,false,true,false)
     else
-      ReadRaineFilter(fltradical, fKanjiSearch.Edit2.Text);
-  if fKanjiSearch.SpeedButton22.Down then
+      ReadRaineFilter(fltradical, fKanjiSearch.edtRadicals.Text);
+  if fKanjiSearch.sbOther.Down then
   begin
-    if fKanjiSearch.ComboBox1.ItemIndex=0 then fltother.Add(fKanjiSearch.Edit8.Text) else
+    if fKanjiSearch.cbOtherType.ItemIndex=0 then fltother.Add(fKanjiSearch.edtOther.Text) else
     j:=0;
     for i:=0 to CharPropTypes.Count-1 do
       if strtoint(GetCharPropType(i,0))>20 then
       begin
         inc(j);
-        if j=fKanjiSearch.ComboBox1.ItemIndex then
-          ReadFilter(fltother,fKanjiSearch.Edit8.Text,strtoint(GetCharPropType(i,0)),
+        if j=fKanjiSearch.cbOtherType.ItemIndex then
+          ReadFilter(fltother,fKanjiSearch.edtOther.Text,strtoint(GetCharPropType(i,0)),
             0,false,false,GetCharPropType(i,3)='N',false);
       end;
   end;
-  if fKanjiSearch.SpeedButton7.Down then if chin then
-    ReadFilter(fltmean,fKanjiSearch.edit3.text,7,0,true,true,false,false) else
-    ReadFilter(fltmean,fKanjiSearch.edit3.text,3,0,true,true,false,false);
+  if fKanjiSearch.sbDefinition.Down then if chin then
+    ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,7,0,true,true,false,false) else
+    ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,3,0,true,true,false,false);
   case fSettings.RadioGroup3.ItemIndex of
     0: grs:=30;
     1: grs:=45;
     2: grs:=60;
   end;
   if not chin then
-    case fKanjiSearch.RadioGroup1.ItemIndex of
+    case fKanjiSearch.rgSortBy.ItemIndex of
       0,4:TChar.SetOrder('JpUnicode_Ind');
       1:TChar.SetOrder('JpStrokeCount_Ind');
       2:TChar.SetOrder('JpFrequency_Ind');
       3:TChar.SetOrder('JpUnicode_Ind');
     end;
   if chin then
-    case fKanjiSearch.RadioGroup1.ItemIndex of
+    case fKanjiSearch.rgSortBy.ItemIndex of
       0,4:TChar.SetOrder('ChUnicode_Ind');
       1:TChar.SetOrder('ChStrokeCount_Ind');
       2:TChar.SetOrder('ChFrequency_Ind');
@@ -374,7 +328,7 @@ begin
     end;
   ki.Clear;
   radf:=fSettings.ComboBox1.ItemIndex+12;
-  clipsort:=(fKanjiSearch.SpeedButton3.Down) and (fKanjiSearch.RadioGroup1.ItemIndex=4);
+  clipsort:=(fKanjiSearch.SpeedButton3.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
   clipind:=0;
 //  if not clipsort then fltclip.Sort;
   while ((not clipsort) and ((not TChar.EOF) and ((chin) or (TChar.Int(TCharChinese)=0)))) or
@@ -387,22 +341,22 @@ begin
     if accept and (fKanjiSearch.SpeedButton2.Down) and chin and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
     if accept and (fKanjiSearch.SpeedButton2.Down) and not chin and (TChar.Int(TCharJouyouGrade)>=10) then accept:=false;
     if accept and (not clipsort) and (fKanjiSearch.SpeedButton3.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TCharUnicode)))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton4.Down) and (fltpinyin.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton5.Down) and (fltyomi.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton7.Down) and (fltmean.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton14.Down) and (fltskip.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton6.Down) and (not raineradsearch) and (fltradical.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton6.Down) and (raineradsearch) and (fltradical.IndexOf(TChar.Str(TCharUnicode))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton22.Down) and (fKanjiSearch.ComboBox1.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TCharUnicode))=-1) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton22.Down) and (fKanjiSearch.ComboBox1.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-//    if accept and (fKanjiSearch.SpeedButton22.Down) and (fKanjiSearch.SpeedButton25.Down) and not InRange(fKanjiSearch.Edit8.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
-//    if accept and (fKanjiSearch.SpeedButton22.Down) and (fKanjiSearch.SpeedButton26.Down) and not InRange(fKanjiSearch.Edit8.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
-//    if accept and (fKanjiSearch.SpeedButton22.Down) and (fKanjiSearch.SpeedButton27.Down) and not InRange(fKanjiSearch.Edit8.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
-    if chin and accept and (fKanjiSearch.SpeedButton12.Down) and not InRange(fKanjiSearch.Edit7.Text,TChar.Str(TCharStrokeCount),true,sl4) then accept:=false;
-    if (not chin) and accept and (fKanjiSearch.SpeedButton12.Down) and not InRange(fKanjiSearch.Edit7.Text,TChar.Str(TCharJpStrokeCount),true,sl4) then accept:=false;
-    if accept and (fKanjiSearch.SpeedButton14.Down) then
+    if accept and (fKanjiSearch.sbPinYin.Down) and (fltpinyin.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbYomi.Down) and (fltyomi.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbDefinition.Down) and (fltmean.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbSKIP.Down) and (fltskip.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbRadicals.Down) and (not raineradsearch) and (fltradical.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbRadicals.Down) and (raineradsearch) and (fltradical.IndexOf(TChar.Str(TCharUnicode))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TCharUnicode))=-1) then accept:=false;
+    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+//    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton25.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
+//    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton26.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
+//    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton27.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
+    if chin and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharStrokeCount),true,sl4) then accept:=false;
+    if (not chin) and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharJpStrokeCount),true,sl4) then accept:=false;
+    if accept and (fKanjiSearch.sbSKIP.Down) then
     begin
-      s1:=fKanjiSearch.Edit4.Text;
+      s1:=fKanjiSearch.edtSKIP.Text;
       s2:='0';
       s3:='0';
       if pos('-',s1)>0 then
@@ -423,22 +377,22 @@ begin
     end;
     if accept then
     begin
-      if fKanjiSearch.RadioGroup2.ItemIndex=0 then accept:=false;
+      if fKanjiSearch.rgOrAnd.ItemIndex=0 then accept:=false;
       onecheck:=false;
-      for k:=0 to fKanjiSearch.ListBox1.Items.Count-1 do
-        if fKanjiSearch.ListBox1.Checked[k] then
+      for k:=0 to fKanjiSearch.lbCategories.Items.Count-1 do
+        if fKanjiSearch.lbCategories.Checked[k] then
       begin
         onecheck:=true;
-        if IsKnown(GetSelCatIdx(fKanjiSearch.ListBox1), TChar.FCh(TCharUnicode)) then
+        if IsKnown(GetSelCatIdx(fKanjiSearch.lbCategories), TChar.FCh(TCharUnicode)) then
         begin
-          if fKanjiSearch.RadioGroup2.ItemIndex=0 then accept:=true;
+          if fKanjiSearch.rgOrAnd.ItemIndex=0 then accept:=true;
         end else
         begin
-          if fKanjiSearch.RadioGroup2.ItemIndex=1 then accept:=false;
+          if fKanjiSearch.rgOrAnd.ItemIndex=1 then accept:=false;
         end;
       end;
       if not onecheck then accept:=true;
-      if fKanjiSearch.CheckBox1.Checked and onecheck then accept:=not accept;
+      if fKanjiSearch.cbNot.Checked and onecheck then accept:=not accept;
     end;
         
 {    if accept and (fKanjiSearch.SpeedButton16.Down) then
@@ -447,22 +401,22 @@ begin
       if pos('.',s1)>0 then delete(s1,pos('.',s1),1);
       if accept then accept:=InRange(s1,TChar.Str(TCharFourCornerCode),false,sl9);
     end;
-}    if accept and (fKanjiSearch.SpeedButton24.Down) and not InRange(fKanjiSearch.Edit9.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
+}    if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
     if accept then
     begin
       if not chin then
       begin
-        if TChar.Int(TCharJouyouGrade)<9 then s:='C'else
-        if TChar.Int(TCharJouyouGrade)<10 then s:='N'else
-        s:='U';
+        if TChar.Int(TCharJouyouGrade)<9 then sbJouyou:='C'else
+        if TChar.Int(TCharJouyouGrade)<10 then sbJouyou:='N'else
+        sbJouyou:='U';
       end else
-//        if TChar.Str(TCharType)[1]='A'then s:='A'else
-//        if TChar.Str(TCharType)[1]='J'then s:='J'else
-        if TChar.Int(TCharChFrequency)<=5 then s:='C'else s:='U';
-      if ((not chin) and (fKanjiSearch.RadioGroup1.ItemIndex=3)) or
-         ((chin) and (fKanjiSearch.RadioGroup1.ItemIndex=3)) then
-        ki.Insert(random(ki.Count),s+TChar.Str(TCharUnicode)) else
-          ki.Add(s+TChar.Str(TCharUnicode));
+//        if TChar.Str(TCharType)[1]='A'then sbJouyou:='A'else
+//        if TChar.Str(TCharType)[1]='J'then sbJouyou:='J'else
+        if TChar.Int(TCharChFrequency)<=5 then sbJouyou:='C'else sbJouyou:='U';
+      if ((not chin) and (fKanjiSearch.rgSortBy.ItemIndex=3)) or
+         ((chin) and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
+        ki.Insert(random(ki.Count),sbJouyou+TChar.Str(TCharUnicode)) else
+          ki.Add(sbJouyou+TChar.Str(TCharUnicode));
     end;
     if clipsort then inc(clipind) else TChar.Next;
   end;
@@ -476,12 +430,12 @@ begin
   sl4.Free;
   sl10.Free;
   if chin then
-    s:=_l('#00129^eFound') else s:=_l('#00130^eFound');
-  if (chin) and (fSettings.RadioGroup5.ItemIndex=0) then s:=s+_l('#00131^e traditional');
-  if (chin) and (fSettings.RadioGroup5.ItemIndex=1) then s:=s+_l('#00132^e simplified');
-  if chin then s:=s+_l('#00133^e characters') else s:=s+' Kanji';
-  s:=s+' ('+inttostr(ki.Count)+_l(')');
-  RxLabel15.Caption:=s;
+    sbJouyou:=_l('#00129^eFound') else sbJouyou:=_l('#00130^eFound');
+  if (chin) and (fSettings.RadioGroup5.ItemIndex=0) then sbJouyou:=sbJouyou+_l('#00131^e traditional');
+  if (chin) and (fSettings.RadioGroup5.ItemIndex=1) then sbJouyou:=sbJouyou+_l('#00132^e simplified');
+  if chin then sbJouyou:=sbJouyou+_l('#00133^e characters') else sbJouyou:=sbJouyou+' Kanji';
+  sbJouyou:=sbJouyou+' ('+inttostr(ki.Count)+_l(')');
+  RxLabel15.Caption:=sbJouyou;
   DrawGrid1.ColCount:=(DrawGrid1.Width-32) div grs;
   x:=DrawGrid1.ColCount;
   if ki.Count=0 then DrawGrid1.RowCount:=1 else
@@ -608,23 +562,23 @@ end;
 procedure TfKanji.KanjiSearch_SpeedButton20Click(Sender: TObject);
 begin
   chin:=curlang='c';
-  fKanjiSearch.RadioGroup1.Items.Clear;
+  fKanjiSearch.rgSortBy.Items.Clear;
   if chin then
   begin
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00146^eRadical'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00147^eStroke count'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00148^eFrequency'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00149^eRandom'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00877^eUnsorted'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
   end else
   begin
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00146^eRadical'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00147^eStroke count'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00148^eFrequency'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00149^eRandom'));
-    fKanjiSearch.RadioGroup1.Items.Add(_l('#00877^eUnsorted'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
+    fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
   end;
-  fKanjiSearch.RadioGroup1.ItemIndex:=0;
+  fKanjiSearch.rgSortBy.ItemIndex:=0;
   DoIt;
 end;
 
@@ -768,7 +722,7 @@ procedure TfKanji.DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
 var w:widechar;
   kix:FString;
   kig:string;
-  s:string;
+  sbJouyou:string;
 begin
   if (ARow*DrawGrid1.ColCOunt+ACol>=ki.Count) then
   begin
@@ -804,9 +758,9 @@ begin
   if fSettings.CheckBox69.Checked and HaveAnnotations then
   begin
     Annot.SeekK(TChar.Str(TCharUnicode),'');
-    s:=Annot.GetOne('c');
-    if s<>'' then try
-      DrawGrid1.Canvas.Font.Color:=strtoint('0x'+copy(s,5,2)+copy(s,3,2)+copy(s,1,2));
+    sbJouyou:=Annot.GetOne('c');
+    if sbJouyou<>'' then try
+      DrawGrid1.Canvas.Font.Color:=strtoint('0x'+copy(sbJouyou,5,2)+copy(sbJouyou,3,2)+copy(sbJouyou,1,2));
     except end;
   end;
   DrawGrid1.Canvas.FillRect(Rect);
@@ -937,19 +891,19 @@ procedure TfKanji.btnReadingChartClick(Sender: TObject);
 var di:integer;
     chars:array[1..7] of string;
     i,j,k,l,m:integer;
-    s,s2:string;
+    sbJouyou,s2:string;
     wd:integer;
     o:string;
     add:TStringList;
 procedure wrid;
-var s:TCharacterLineProps;
+var sbJouyou:TCharacterLineProps;
     x:integer;
 begin
   fTranslate.doc.Add(o);
-  s.AddChars(flength(o));
+  sbJouyou.AddChars(flength(o));
   for x:=1 to flength(o) do
-    s.chars[x-1].SetChar('-', 9, 0, 1);
-  fTranslate.doctr.AddLine(s);
+    sbJouyou.chars[x-1].SetChar('-', 9, 0, 1);
+  fTranslate.doctr.AddLine(sbJouyou);
   o:='';
 end;
 begin
@@ -961,12 +915,12 @@ begin
   o:=UH_SPACE+UH_SPACE+UH_SPACE;
   for i:=0 to readchl.Count-1 do
   begin
-    s:=readchl[i];
-    if s[1]='e'then
+    sbJouyou:=readchl[i];
+    if sbJouyou[1]='e'then
     begin
-      delete(s,1,1);
-      if s='' then s:=UH_SPACE;
-      o:=o+s;
+      delete(sbJouyou,1,1);
+      if sbJouyou='' then sbJouyou:=UH_SPACE;
+      o:=o+sbJouyou;
       for j:=1 to wd do o:=o+UH_SPACE;
     end;
   end;
@@ -974,12 +928,12 @@ begin
   wrid;
   for i:=0 to readchl.Count-1 do
   begin
-    s:=readchl[i];
-    if s[1]='b'then
+    sbJouyou:=readchl[i];
+    if sbJouyou[1]='b'then
     begin
-      delete(s,1,1);
-      o:=o+s+UH_SPACE;
-      if length(s)<=4 then o:=o+UH_SPACE;
+      delete(sbJouyou,1,1);
+      o:=o+sbJouyou+UH_SPACE;
+      if length(sbJouyou)<=4 then o:=o+UH_SPACE;
       k:=0;
       for j:=0 to readchl.Count-1 do
       begin
@@ -992,7 +946,7 @@ begin
           TCharRead.First;
           while not TCharRead.EOF do
           begin
-            if (TCharRead.Int(TCharReadType)=4) and (TCharRead.Str(TCharReadReading)=s+s2) and (TCharRead.Int(TCharReadPosition)=1) then
+            if (TCharRead.Int(TCharReadType)=4) and (TCharRead.Str(TCharReadReading)=sbJouyou+s2) and (TCharRead.Int(TCharReadPosition)=1) then
             begin
               TChar.Locate('Index',TCharRead.Str(TCharReadKanji),true);
               if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then begin
@@ -1002,7 +956,7 @@ begin
             end;
             TCharRead.Next;
           end;
-//          showmessage(KanaToRomaji(s+s2,1,'j')+' : '+chars[k]);
+//          showmessage(KanaToRomaji(sbJouyou+s2,1,'j')+' : '+chars[k]);
         end;
       end;
       l:=0;
@@ -1039,7 +993,7 @@ end;
 procedure TfKanji.Button3Click(Sender: TObject);
 var i:integer;
     t,t2:textfile;
-    s,s2:string;
+    sbJouyou,s2:string;
 begin
   i:=7;
   assignfile(t,'ren.bat');
@@ -1048,13 +1002,13 @@ begin
   begin
     assignfile(t2,inttostr(i)+'.mdw');
     reset(t2);
-    readln(t2,s);
-    readln(t2,s);
-    delete(s,1,length(s)-4);
+    readln(t2,sbJouyou);
+    readln(t2,sbJouyou);
+    delete(sbJouyou,1,length(sbJouyou)-4);
     readln(t2,s2);
     delete(s2,1,5);
     closefile(t2);
-    writeln(t,'COPY "'+s2+'" so'+s+'.gif');
+    writeln(t,'COPY "'+s2+'" so'+sbJouyou+'.gif');
     inc(i);
   end;
   closefile(t);
@@ -1062,9 +1016,9 @@ end;
 
 procedure TfKanji.SelRadical;
 begin
-  fKanjiSearch.Edit2.Text:=JWBKanjiDetails.curradno;
+  fKanjiSearch.edtRadicals.Text:=JWBKanjiDetails.curradno;
   curradsearch:=JWBKanjiDetails.curradical;
-  fKanjiSearch.PaintBox1.Invalidate;
+  fKanjiSearch.pbRadicals.Invalidate;
   fKanji.DoIt;
 end;
 
