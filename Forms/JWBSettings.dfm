@@ -2199,6 +2199,17 @@ object fSettings: TfSettings
         Caption = '#00979^eAdjust character priorities based on editor usage'
         TabOrder = 6
       end
+      object rgReleaseCursorMode: TRadioGroup
+        Left = 8
+        Top = 288
+        Width = 457
+        Height = 66
+        Caption = '#00982^eHow to behave in insert mode'
+        Items.Strings = (
+          '#00983^eDo not let the cursor out until you choose a suggestion'
+          '#00984^eAuto-cancel insert if you move the cursor out')
+        TabOrder = 7
+      end
     end
     object tsAnnotations: TTabSheet
       Caption = '#00967^eAnnotations'

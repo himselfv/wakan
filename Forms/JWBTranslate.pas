@@ -225,6 +225,8 @@ type
     procedure PasteOp;
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
+    function HalfUnitsToTextPos(x,y: integer):integer;
+    function GetClosestCursorPos(x,y:integer):TCursorPos;
   public
     procedure CalcMouseCoords(x,y:integer;var rx,ry:integer);
 
@@ -247,7 +249,8 @@ type
     rview: TSourcePos; //logical coordinates of a start of a first visible graphical line
     rcur: TSourcePos; //cursor position in logical coordinates
     cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
-    lastxsiz,lastycnt,printl:integer;
+    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
+    lastycnt,printl:integer;
     //Actual cursor position --- differs from (curx,cury) if we're at the end of the text
     function CursorScreenX:integer;
     function CursorScreenY:integer;
@@ -260,7 +263,8 @@ type
     procedure ResolveInsert(final:boolean);
     procedure InsertCharacter(c:char);
     procedure ClearInsBlock;
-    procedure AbortInsert;
+    procedure CloseInsert;
+    function TryReleaseCursorFromInsert: boolean;
   public
    //Unfortunately some stuff is used from elswehere
     ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
@@ -1567,12 +1571,11 @@ end;
 procedure TfTranslate.EditorPaintBoxMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
+  if not TryReleaseCursorFromInsert() then
+    exit; //cannot move cursor!
   leaveline:=true;
   shiftpressed:=false;
-  AbortInsert();
-  cur.x:=x div (lastxsiz);
-  cur.y:=y div (lastxsiz*lastycnt)+view;
-  cur.x:=WidthToPos(cur.x,cur.y);
+  cur:=GetClosestCursorPos(X,Y);
   mustrepaint:=true;
   ShowText(true);
 end;
@@ -1580,10 +1583,10 @@ end;
 procedure TfTranslate.EditorPaintBoxMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
+  if not TryReleaseCursorFromInsert() then
+    exit; //cannot move cursor!
   if ssLeft in Shift then begin;
-    cur.x:=(x+lastxsiz div 2) div (lastxsiz);
-    cur.y:=y div (lastxsiz*lastycnt)+view;
-    cur.x:=WidthToPos(cur.x,cur.y);
+    cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
     if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
     lastmm.x:=cur.x;
     lastmm.y:=cur.y;
@@ -1814,7 +1817,8 @@ end;
 
 procedure TfTranslate.SelectAll;
 begin
-  AbortInsert();
+  if not TryReleaseCursorFromInsert() then
+    exit; //cannot move cursor!
   dragstart := SourcePos(0, 0);
   cur := CursorPos(linl[linl.Count-1].len, linl.Count-1);
   shiftpressed:=true;
@@ -2557,13 +2561,37 @@ end;
 
 { Called when the insert is not finalized, but we really have to end it now.
  Either cancels it or finalizes it if it was already confirmed. }
-procedure TfTranslate.AbortInsert;
+procedure TfTranslate.CloseInsert;
 begin
   if not insconfirmed then begin
     resolvebuffer:=false; //cancel suggestion
     if insertbuffer<>'' then ResolveInsert(true);
   end;
   ClearInsBlock;
+end;
+
+{ Called when we are about to do an operation which requires us to not be in insert mode.
+ Returns true if the insert mode was aborted, or false if according to user preferences this is impossible. }
+function TfTranslate.TryReleaseCursorFromInsert: boolean;
+begin
+  if insertbuffer='' then begin //not in insert mode
+    Result := true;
+    exit;
+  end;
+
+  if insconfirmed then begin //insert confirmed -- can relatively safely close insert
+    CloseInsert();
+    Result := true;
+    exit;
+  end;
+
+  if fSettings.rgReleaseCursorMode.ItemIndex=0 then begin //disallow
+    Result := false;
+    exit;
+  end;
+
+  CloseInsert();
+  Result := true;
 end;
 
 procedure TfTranslate.DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
@@ -3173,7 +3201,8 @@ var s: string;
   end;
 
 begin
-  AbortInsert();
+  if not TryReleaseCursorFromInsert() then
+    exit; //cannot do!
 
   if fSettings.cbLoadAozoraRuby.Checked then
     AnnotMode := amRuby
@@ -3429,6 +3458,12 @@ begin
   end;
 end;
 
+{ Wakan has "half-width" and "full-width" symbols, and therefore position
+ in the string (POS) and the number of "graphical half-units" (WIDTH) are
+ not the same.
+ These functions convert between these two things! They are unrelated to
+ pixel widths. }
+
 function TfTranslate.PosToWidth(x,y:integer):integer;
 var i,cx,cy:integer;
 begin
@@ -3448,7 +3483,7 @@ begin
 end;
 
 function TfTranslate.WidthToPos(x,y:integer):integer;
-var i,jx,cx,cy:integer;
+var i,jx,cx,cy,clen:integer;
 begin
   if (x<0) or (y<0) or (y>=linl.Count) then
   begin
@@ -3457,9 +3492,11 @@ begin
   end;
   cx:=linl[y].xs;
   cy:=linl[y].ys;
+  clen:=linl[y].len;
   jx:=0;
   for i:=0 to x-1 do
   begin
+    if clen<=0 then break;
     if IsHalfWidth(cx,cy) then inc(jx) else inc(jx,2);
     if jx>=x then
     begin
@@ -3467,8 +3504,52 @@ begin
       exit;
     end;
     inc(cx);
+    dec(clen);
   end;
   result:=0;
+end;
+
+{ Similar, but error handling is clearly defined. If there's no char at the position,
+ closest text position is returned. }
+function TfTranslate.HalfUnitsToTextPos(x,y:integer):integer;
+var i,jx,cx,cy,clen:integer;
+begin
+  Assert((y>=0) and (y<linl.Count));
+  if x<0 then x:=0;
+
+  cx:=linl[y].xs;
+  cy:=linl[y].ys;
+  clen:=linl[y].len;
+
+  jx:=0;
+  for i:=0 to x-1 do
+  begin
+    if clen<=0 then break;
+    if IsHalfWidth(cx,cy) then inc(jx) else inc(jx,2);
+    if jx>=x then
+    begin
+      if jx=x then result:=i+1 else result:=i;
+      exit;
+    end;
+    inc(cx);
+    dec(clen);
+  end;
+  result:=cx;
+end;
+
+{ Returns closest text position to the given screen point.
+ Makes sure what you get is a legal text point, not some negative or over-the-end value. }
+function TfTranslate.GetClosestCursorPos(x,y:integer): TCursorPos;
+begin
+  if y<0 then y:=0;
+  if x<0 then x:=0;
+  Result.x := x div lastxsiz;
+  Result.y := y div (lastxsiz*lastycnt)+view;
+  if Result.y>=linl.Count then
+    Result.y:=linl.Count-1;
+  Assert(Result.y>=0); //we must have at least one line
+  Result.x := HalfUnitsToTextPos(Result.x, Result.y);
+  Assert(Result.x>=0);
 end;
 
 

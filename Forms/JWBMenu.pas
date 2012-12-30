@@ -2635,7 +2635,6 @@ begin
       Screen.Cursor:=crDefault;
     end;
     fSettings.btnOkClick(self);
-//    if curqlayout=0 then WriteLayout('wakan.lay'); //old way of saving layout
     fTranslate.Close;
     fUser.Close;
     fWords.Close;

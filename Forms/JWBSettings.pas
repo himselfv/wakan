@@ -256,6 +256,7 @@ type
     btnOk: TBitBtn;
     Label54: TLabel;
     cbAdjustCharPriorities: TCheckBox;
+    rgReleaseCursorMode: TRadioGroup;
     procedure RadioGroup1Click(Sender: TObject);
     procedure Button6Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -523,6 +524,7 @@ begin
   cbAozoraTagsInColor.Checked:=reg.readBool('Editor','AozoraTagsInColor', true);
   cbSaveAnnotationsToRuby.Checked:=reg.readBool('Editor','SaveAnnotationsToRuby', false);
   cbAdjustCharPriorities.Checked:=reg.readBool('Editor','AdjustCharPriorities', true);
+  rgReleaseCursorMode.ItemIndex := reg.ReadInteger('Editor','ReleaseCursorMode',0);
   if CheckBox61.Checked then
   begin
     fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
@@ -735,6 +737,7 @@ begin
   reg.WriteBool('Editor','AozoraTagsInColor',cbAozoraTagsInColor.Checked);
   reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
   reg.WriteBool('Editor','AdjustCharPriorities',cbAdjustCharPriorities.Checked);
+  reg.WriteInteger('Editor','ReleaseCursorMode',rgReleaseCursorMode.ItemIndex);
   reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
   reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));

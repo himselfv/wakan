@@ -1067,6 +1067,9 @@
 00979>Adjust character priorities based on editor usage
 00980>Apply
 00981>Cancel
+00982>How to behave in insert mode
+00983>Do not let the cursor out until you choose a suggestion
+00984>Auto-cancel insert if you move the cursor out
 ;
 ;
 ; EDICT markers.
