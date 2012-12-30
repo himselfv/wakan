@@ -608,8 +608,8 @@ begin
   Edit26.Text:=reg.ReadString('ScreenTrans','SizeFactor','12');
   Edit27.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
-  SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
-  fMenu.screenModeWk:=SpeedButton2.Down;
+  fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
+  fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
   setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
   setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
   fMenu.aEditorReading.Checked:=fTranslate.sbDisplayReading.Down;
