@@ -61,6 +61,38 @@ uses JWBMenu, JWBDictImport, JWBDicSearch;
 
 {$R *.DFM}
 
+procedure TfDictMan.FormShow(Sender: TObject);
+begin
+  ReloadCheckStates();
+  CheckListBox1Click(self);
+end;
+
+procedure TfDictMan.FormClose(Sender: TObject; var Action: TCloseAction);
+var i:integer;
+    dic:TJaletDic;
+begin
+  for i:=0 to CheckListBox1.Items.Count-1 do
+  begin
+    dic:=dicts.Objects[i] as TJaletDic;
+    if dic.loaded<>CheckListBox1.Checked[i] then
+      if CheckListBox1.Checked[i] then dic.Load else dic.Unload;
+  end;
+end;
+
+procedure TfDictMan.BitBtn1Click(Sender: TObject);
+var i:integer;
+    s:string;
+begin
+  for i:=0 to CheckListBox1.Items.Count-1 do
+  begin
+    s:=CheckListBox1.Items[i];
+    if (CheckListBox1.Checked[i]) and (pos(','+s,NotUsedDicts)>0) then
+      delete(NotUsedDicts,pos(','+s,NotUsedDicts),length(s)+1);
+    if (not CheckListBox1.Checked[i]) and (pos(','+s,NotUsedDicts)=0) then
+      NotUsedDicts:=NotUsedDicts+','+s;
+  end;
+end;
+
 type
   TDicCheckState = record
     name: string;
@@ -133,24 +165,6 @@ begin
   CheckBox1.Checked:=pos(','+dic.name,OfflineDicts)=0;
 end;
 
-procedure TfDictMan.FormShow(Sender: TObject);
-begin
-  ReloadCheckStates();
-  CheckListBox1Click(self);
-end;
-
-procedure TfDictMan.FormClose(Sender: TObject; var Action: TCloseAction);
-var i:integer;
-    dic:TJaletDic;
-begin
-  for i:=0 to CheckListBox1.Items.Count-1 do
-  begin
-    dic:=dicts.Objects[i] as TJaletDic;
-    if dic.loaded<>CheckListBox1.Checked[i] then
-      if CheckListBox1.Checked[i] then dic.Load else dic.Unload;
-  end;
-end;
-
 procedure TfDictMan.Button1Click(Sender: TObject);
 begin
   CarefulRefreshDicts;
@@ -160,20 +174,6 @@ procedure TfDictMan.Button2Click(Sender: TObject);
 begin
   if IsPositiveResult(fDictImport.ShowModal) then
     CarefulRefreshDicts;
-end;
-
-procedure TfDictMan.BitBtn1Click(Sender: TObject);
-var i:integer;
-    s:string;
-begin
-  for i:=0 to CheckListBox1.Items.Count-1 do
-  begin
-    s:=CheckListBox1.Items[i];
-    if (CheckListBox1.Checked[i]) and (pos(','+s,NotUsedDicts)>0) then
-      delete(NotUsedDicts,pos(','+s,NotUsedDicts),length(s)+1);
-    if (not CheckListBox1.Checked[i]) and (pos(','+s,NotUsedDicts)=0) then
-      NotUsedDicts:=NotUsedDicts+','+s;
-  end;
 end;
 
 procedure TfDictMan.SpeedButton1Click(Sender: TObject);
