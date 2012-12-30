@@ -40,6 +40,7 @@ type
     SpeedButton4: TSpeedButton;
     SpeedButton5: TSpeedButton;
     CheckBox1: TCheckBox;
+    BitBtn2: TBitBtn;
     procedure CheckListBox1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -65,12 +66,14 @@ procedure TfDictMan.FormShow(Sender: TObject);
 begin
   ReloadCheckStates();
   CheckListBox1Click(self);
+  ModalResult := mrNone;
 end;
 
 procedure TfDictMan.FormClose(Sender: TObject; var Action: TCloseAction);
 var i:integer;
     dic:TJaletDic;
 begin
+  if not IsPositiveResult(ModalResult) then exit; //don't save on cancel
   for i:=0 to CheckListBox1.Items.Count-1 do
   begin
     dic:=dicts.Objects[i] as TJaletDic;
