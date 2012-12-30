@@ -2320,9 +2320,7 @@ object fSettings: TfSettings
       Width = 130
       Height = 25
       Anchors = [akRight, akBottom]
-      DoubleBuffered = True
       Kind = bkOK
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOkClick
     end

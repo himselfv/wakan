@@ -93,7 +93,6 @@ object fRadical: TfRadical
     Anchors = [akLeft, akBottom]
     Caption = '#00390^eSet filter'
     Default = True
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -117,7 +116,6 @@ object fRadical: TfRadical
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
-    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 1
     OnClick = BitBtn1Click
@@ -129,14 +127,12 @@ object fRadical: TfRadical
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '#00170^eClose'
-    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     Kind = bkCancel
-    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 2
     OnClick = BitBtn2Click
