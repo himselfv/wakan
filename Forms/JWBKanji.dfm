@@ -53,23 +53,6 @@ object fKanji: TfKanji
       Anchors = [akLeft, akTop, akRight, akBottom]
       ExplicitHeight = 282
     end
-    object Label18: TLabel
-      Left = 413
-      Top = 174
-      Width = 5
-      Height = 13
-      Alignment = taRightJustify
-      Anchors = []
-      Caption = '-'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-      Transparent = True
-      ExplicitTop = 173
-    end
     object Label24: TLabel
       Left = 15
       Top = 40

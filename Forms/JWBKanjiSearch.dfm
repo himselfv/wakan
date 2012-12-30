@@ -14,6 +14,7 @@ object fKanjiSearch: TfKanjiSearch
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  OnCreate = FormCreate
   OnShow = FormShow
   DesignSize = (
     618
@@ -46,7 +47,7 @@ object fKanjiSearch: TfKanjiSearch
     Hint = '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)'
     AllowAllUp = True
     GroupIndex = 10
-    Caption = '&PinYin'
+    Caption = '#00964^e&PinYin'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -63,7 +64,7 @@ object fKanjiSearch: TfKanjiSearch
     Hint = '#00176^eFilter by japanese reading (Ctrl-Y)'
     AllowAllUp = True
     GroupIndex = 11
-    Caption = 'Yomi'
+    Caption = '#00965^eYomi'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -122,7 +123,7 @@ object fKanjiSearch: TfKanjiSearch
     Hint = '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
     AllowAllUp = True
     GroupIndex = 16
-    Caption = 'SKIP'
+    Caption = '#00962^eSKIP'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -228,7 +229,7 @@ object fKanjiSearch: TfKanjiSearch
     Hint = '#00194^eFilter by Jouyou grade (Japanese school grade)'
     AllowAllUp = True
     GroupIndex = 18
-    Caption = 'Jouyou'
+    Caption = '#00963^eJouyou'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -549,7 +550,6 @@ object fKanjiSearch: TfKanjiSearch
     Height = 21
     Style = csDropDownList
     Anchors = [akTop, akRight]
-    ItemHeight = 13
     TabOrder = 8
     OnChange = cbOtherTypeChange
   end

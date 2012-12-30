@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, CheckLst;
+  StdCtrls, ExtCtrls, Buttons, CheckLst, JWBStrings, JWBRadical;
 
 type
   TfKanjiSearch = class(TForm)
@@ -84,12 +84,15 @@ type
     procedure rgOrAndClick(Sender: TObject);
     procedure lbCategoriesDblClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 
   protected
     procedure RadicalSelectionChanged(Sender: TObject);
     function OffsetRange(tx:string;min,max:integer):string;
 
   public
+    curRadSearchType: TRadSearchType;
+    curRadSearch:string;
     procedure ReloadOtherTypes;
 
   end;
@@ -99,10 +102,16 @@ var
 
 implementation
 
-uses JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBRadical, JWBNewCategory,
+uses JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBNewCategory,
   JWBKanjiDetails, JWBCategories;
 
 {$R *.DFM}
+
+procedure TfKanjiSearch.FormCreate(Sender: TObject);
+begin
+  curRadSearchType:=stRaine;
+  curRadSearch:='';
+end;
 
 procedure TfKanjiSearch.FormShow(Sender: TObject);
 begin
@@ -211,24 +220,36 @@ end;
 
 procedure TfKanjiSearch.RadicalSelectionChanged(Sender: TObject);
 begin
-  curradsearch := fRadical.SelectedRadicals;
-  edtRadicals.Text := fRadical.SelectedRadicals;
+  curRadSearchType := fRadical.SearchType;
+  curRadSearch := fRadical.SelectedRadicals;
+  edtRadicals.Text := fRadical.SelectedIndexes;
  //edtRadicals.OnChange will trigger filter update
   pbRadicals.Invalidate;
 end;
 
 procedure TfKanjiSearch.sbListRadicalsClick(Sender: TObject);
-var _radsearch: string;
+var
+  _radsearchtype: TRadSearchType;
+  _radsearch: FString;
+  _radindexes: string;
 begin
-  _radsearch := curradsearch; //save current search, it'll be broken by RadicalSelectionChanged
-  fRadical.SelectedRadicals := curradsearch;
+ //save current search, it'll be broken by RadicalSelectionChanged
+  _radSearchType := curRadSearchType;
+  _radsearch := curRadSearch;
+  _radindexes := edtRadicals.Text;
+ //bring up selection window
+  fRadical.SetSelectedRadicals(curRadSearchType, curRadSearch);
   fRadical.OnSelectionChanged := Self.RadicalSelectionChanged;
-  if IsPositiveResult(fRadical.ShowModal) then
+  if IsPositiveResult(fRadical.ShowModal) then begin
+    _radsearchtype := fRadical.SearchType;
     _radsearch := fRadical.SelectedRadicals;
+    _radindexes := fRadical.SelectedIndexes;
+  end;
   fRadical.OnSelectionChanged := nil;
  //apply new search, or re-apply old search
-  curradsearch := _radsearch;
-  edtRadicals.Text := _radsearch;
+  curRadSearchType := _radsearchtype;
+  curRadSearch := _radsearch;
+  edtRadicals.Text := _radindexes;
  //edtRadicals.OnChange will trigger filter update
   pbRadicals.Invalidate;
 end;

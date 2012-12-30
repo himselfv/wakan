@@ -222,7 +222,9 @@ function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
 function IsLocaseLatin(ch: AnsiChar): boolean; overload; inline;
 function IsLocaseLatin(ch: WideChar): boolean; overload; inline;
 function LoCase(ch: AnsiChar): AnsiChar; overload; inline; //Delphi has UpCase but not LoCase for chars
-function LoCase(Ch: WideChar): WideChar; overload; inline;
+function LoCase(ch: WideChar): WideChar; overload; inline;
+function IsDigit(ch: AnsiChar): boolean; overload; inline;
+function IsDigit(ch: WideChar): boolean; overload; inline;
 
 
 { Filename list }
@@ -860,6 +862,16 @@ begin
     'A'..'Z':
       Result := WideChar(Word(Ch) or $0020);
   end;
+end;
+
+function IsDigit(ch: AnsiChar): boolean;
+begin
+  Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
+end;
+
+function IsDigit(ch: WideChar): boolean;
+begin
+  Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
 end;
 
 

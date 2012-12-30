@@ -255,7 +255,8 @@ var
 
 { Translation }
 
-function _l(const id:string):string;
+function _l(const id:string):string; overload;
+function _l(const id:string; args: array of const):string; overload;
 
 implementation
 uses StrUtils, JWBMenu, JWBSettings, JWBLanguage;
@@ -1879,6 +1880,11 @@ end;
 function _l(const id:string):string;
 begin
   result:=fLanguage.TranslateString(id);
+end;
+
+function _l(const id:string; args: array of const):string;
+begin
+  Result := Format(fLanguage.TranslateString(id), args);
 end;
 
 

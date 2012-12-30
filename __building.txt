@@ -54,7 +54,7 @@ Also see: http://code.google.com/p/wakan/issues/detail?id=66
 
 3. RADKFILE/RADKFILE2 - required for raine radicals search
 http://www.csse.monash.edu.au/~jwb/kradinf.html
-Download and place these into Wakan release folder.
+Download and place RADKFILE into Wakan release folder. You can import RADKFILE2 manually, but it's not yet supported.
 
 
 MAINTENANCE

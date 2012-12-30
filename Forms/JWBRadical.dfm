@@ -63,7 +63,7 @@ object fRadical: TfRadical
       '#00389^eParts of characters filter method: Select all parts that' +
       ' occur in character'#13#10
   end
-  object DrawGrid1: TDrawGrid
+  object DrawGrid: TDrawGrid
     Left = 8
     Top = 69
     Width = 753
@@ -79,12 +79,11 @@ object fRadical: TfRadical
     FixedRows = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goThumbTracking]
     TabOrder = 0
-    OnDblClick = DrawGrid1DblClick
-    OnDrawCell = DrawGrid1DrawCell
-    OnKeyPress = DrawGrid1KeyPress
-    OnMouseMove = DrawGrid1MouseMove
-    OnMouseUp = DrawGrid1MouseUp
-    OnSelectCell = DrawGrid1SelectCell
+    OnDblClick = DrawGridDblClick
+    OnDrawCell = DrawGridDrawCell
+    OnKeyPress = DrawGridKeyPress
+    OnMouseMove = DrawGridMouseMove
+    OnSelectCell = DrawGridSelectCell
   end
   object BitBtn1: TBitBtn
     Left = 8
@@ -94,14 +93,12 @@ object fRadical: TfRadical
     Anchors = [akLeft, akBottom]
     Caption = '#00390^eSet filter'
     Default = True
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -120,6 +117,10 @@ object fRadical: TfRadical
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 1
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 600
@@ -128,29 +129,31 @@ object fRadical: TfRadical
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '#00170^eClose'
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
+    Kind = bkCancel
+    ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 2
     OnClick = BitBtn2Click
-    Kind = bkCancel
   end
-  object CheckBox1: TCheckBox
+  object cbDisplayVariants: TCheckBox
     Left = 256
     Top = 494
-    Width = 121
+    Width = 138
     Height = 17
     Anchors = [akLeft, akBottom]
     Caption = '#00391^eDisplay variants'
     Checked = True
     State = cbChecked
     TabOrder = 3
-    OnClick = CheckBox2Click
+    OnClick = cbLearnedInBlueClick
   end
-  object CheckBox2: TCheckBox
+  object cbLearnedInBlue: TCheckBox
     Left = 400
     Top = 494
     Width = 193
@@ -158,21 +161,21 @@ object fRadical: TfRadical
     Anchors = [akLeft, akBottom]
     Caption = '#00392^eDisplay learned radicals in blue'
     TabOrder = 4
-    OnClick = CheckBox2Click
+    OnClick = cbLearnedInBlueClick
   end
-  object CheckBox3: TCheckBox
+  object cbUncommonInGray: TCheckBox
     Left = 400
     Top = 510
-    Width = 185
+    Width = 194
     Height = 17
     Anchors = [akLeft, akBottom]
     Caption = '#00393^eDisplay uncommon radicals gray'
     Checked = True
     State = cbChecked
     TabOrder = 5
-    OnClick = CheckBox2Click
+    OnClick = cbLearnedInBlueClick
   end
-  object RadioGroup1: TRadioGroup
+  object rgSearchMethod: TRadioGroup
     Left = 360
     Top = 8
     Width = 401
@@ -184,6 +187,6 @@ object fRadical: TfRadical
       '#00395^eParts of characters'
       '#00396^eClassical radicals')
     TabOrder = 6
-    OnClick = RadioGroup1Click
+    OnClick = rgSearchMethodClick
   end
 end

@@ -24,21 +24,16 @@ object fSettings: TfSettings
     Top = 0
     Width = 484
     Height = 451
-    ActivePage = tsTextTranslator
+    ActivePage = tsEditor
     Align = alClient
     MultiLine = True
     Style = tsButtons
     TabOrder = 0
     OnChange = pcPagesChange
-    ExplicitHeight = 524
     object tsGeneral: TTabSheet
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label41: TLabel
         Left = 16
         Top = 224
@@ -169,10 +164,6 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -476,10 +467,6 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -523,7 +510,6 @@ object fSettings: TfSettings
         Width = 233
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 2
         Items.Strings = (
           'Bushu'
@@ -563,10 +549,6 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -671,10 +653,6 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1067,10 +1045,6 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1177,10 +1151,6 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1381,10 +1351,6 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label48: TLabel
         Left = 224
         Top = 176
@@ -1505,10 +1471,6 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 514
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
@@ -1517,7 +1479,6 @@ object fSettings: TfSettings
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitHeight = 514
         object Label25: TLabel
           Left = 12
           Top = 250
@@ -1739,10 +1700,6 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       DesignSize = (
         476
         441)
@@ -1825,7 +1782,6 @@ object fSettings: TfSettings
         Caption = '#00534^eAdd...'
         TabOrder = 1
         OnClick = Button7Click
-        ExplicitTop = 341
       end
       object Button8: TButton
         Left = 180
@@ -1836,7 +1792,6 @@ object fSettings: TfSettings
         Caption = '#00535^eChange...'
         TabOrder = 2
         OnClick = Button8Click
-        ExplicitTop = 341
       end
       object Button9: TButton
         Left = 350
@@ -1847,7 +1802,6 @@ object fSettings: TfSettings
         Caption = '#00536^eDelete'
         TabOrder = 3
         OnClick = Button9Click
-        ExplicitTop = 341
       end
       object Button10: TButton
         Left = 296
@@ -1863,10 +1817,6 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -2017,10 +1967,6 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       DesignSize = (
         476
         441)
@@ -2058,7 +2004,6 @@ object fSettings: TfSettings
         Caption = '#00553^eChange'
         TabOrder = 1
         OnClick = Button12Click
-        ExplicitTop = 334
       end
       object Button14: TButton
         Left = 344
@@ -2069,7 +2014,6 @@ object fSettings: TfSettings
         Caption = '#00554^eRevert to default'
         TabOrder = 2
         OnClick = Button14Click
-        ExplicitTop = 334
       end
       object Button15: TButton
         Left = 336
@@ -2086,7 +2030,6 @@ object fSettings: TfSettings
         Width = 313
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 4
         OnChange = ComboBox2Change
         Items.Strings = (
@@ -2138,19 +2081,15 @@ object fSettings: TfSettings
       end
     end
     object tsEditor: TTabSheet
-      Caption = '^eEditor'
+      Caption = '#00966^eEditor'
       ImageIndex = 12
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
-        Width = 77
+        Width = 134
         Height = 13
-        Caption = 'Aozora Ruby:'
+        Caption = '#00972^eAozora Ruby:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -2158,12 +2097,12 @@ object fSettings: TfSettings
         Font.Style = [fsBold]
         ParentFont = False
       end
-      object lblSaving: TLabel
+      object lblSavingAndLoading: TLabel
         Left = 8
         Top = 13
-        Width = 114
+        Width = 171
         Height = 13
-        Caption = 'Saving and loading:'
+        Caption = '#00968^eSaving and loading:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -2174,25 +2113,25 @@ object fSettings: TfSettings
       object lblSaveAnnotationsToRubyDesc: TLabel
         Left = 16
         Top = 218
-        Width = 315
+        Width = 352
         Height = 13
         Caption = 
-          '^eIf not, you'#39'll have the option of choosing that when you save ' +
-          'file.'
+          '#00977^eIf not, you'#39'll have the option of choosing that when you' +
+          ' save file.'
       end
       object lblAozoraTagsInColor: TLabel
         Left = 16
         Top = 174
-        Width = 174
+        Width = 211
         Height = 13
-        Caption = '^eYou can set colors on Colors page'
+        Caption = '#00975^eYou can set colors on Colors page'
       end
       object CheckBox60: TCheckBox
         Left = 8
         Top = 32
         Width = 457
         Height = 17
-        Caption = '^eAuto-save file on exit'
+        Caption = '#00969^eAuto-save file on exit'
         TabOrder = 0
       end
       object CheckBox61: TCheckBox
@@ -2200,7 +2139,7 @@ object fSettings: TfSettings
         Top = 56
         Width = 457
         Height = 17
-        Caption = '^eAuto-load last opened file on start'
+        Caption = '#00970^eAuto-load last opened file on start'
         TabOrder = 1
       end
       object cbNoSaveChangesWarning: TCheckBox
@@ -2209,8 +2148,8 @@ object fSettings: TfSettings
         Width = 457
         Height = 17
         Caption = 
-          '^eDo not ask to save changes on exit (WARNING: Use at your own r' +
-          'isk)'
+          '#00971^eDo not ask to save changes on exit (WARNING: Use at your' +
+          ' own risk)'
         TabOrder = 2
       end
       object cbLoadAozoraRuby: TCheckBox
@@ -2218,7 +2157,7 @@ object fSettings: TfSettings
         Top = 128
         Width = 457
         Height = 17
-        Caption = '^eShow Aozora-Ruby as annotations (requires text reload)'
+        Caption = '#00973^eShow Aozora-Ruby as annotations (requires text reload)'
         TabOrder = 3
       end
       object cbAozoraTagsInColor: TCheckBox
@@ -2226,7 +2165,7 @@ object fSettings: TfSettings
         Top = 151
         Width = 457
         Height = 17
-        Caption = '^eShow Aozora-Ruby tags in color'
+        Caption = '#00974^eShow Aozora-Ruby tags in color'
         TabOrder = 4
       end
       object cbSaveAnnotationsToRuby: TCheckBox
@@ -2234,18 +2173,14 @@ object fSettings: TfSettings
         Top = 195
         Width = 457
         Height = 17
-        Caption = '^eSave annotations as Aozora-Ruby tags by default'
+        Caption = '#00976^eSave annotations as Aozora-Ruby tags by default'
         TabOrder = 5
       end
     end
     object tsAnnotations: TTabSheet
-      Caption = '^eAnnotations'
+      Caption = '#00967^eAnnotations'
       ImageIndex = 13
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 428
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2339,7 +2274,6 @@ object fSettings: TfSettings
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 524
     DesignSize = (
       661
       41)
@@ -2365,24 +2299,26 @@ object fSettings: TfSettings
       Width = 130
       Height = 25
       Anchors = [akRight, akBottom]
+      DoubleBuffered = True
+      Kind = bkOK
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOkClick
-      Kind = bkOK
     end
   end
   object OpenDialog2: TOpenDialog
     DefaultExt = '.wbk'
     Filter = 'WaKan User Data Backup|*.wbk'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 200
-    Top = 112
+    Left = 528
+    Top = 304
   end
   object SaveDialog2: TSaveDialog
     DefaultExt = '.wbk'
     Filter = 'WaKan User Data Bakup|*.wbk'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 272
-    Top = 112
+    Left = 600
+    Top = 304
   end
   object ColorDialog1: TColorDialog
     Left = 148

@@ -1042,6 +1042,27 @@
 00955>Print vocabulary compounds
 00956>Sort full compounds by frequency
 00957>Check / uncheck all categories
+#VERS>1.80
+00958>Found traditional characters (%d):
+00959>Found simplified characters (%d):
+00960>Found characters (%d):
+00961>Found kanji (%d):
+00962>SKIP
+00963>Jouyou
+00964>PinYin
+00965>Yomi
+00966>Editor
+00967>Annotations
+00968>Saving and loading:
+00969>Auto-save file on exit
+00970>Auto-load last opened file on start
+00971>Do not ask to save changes on exit (WARNING: Use at your own risk)
+00972>Aozora Ruby:
+00973>Show Aozora-Ruby as annotations (requires text reload)
+00974>Show Aozora-Ruby tags in color
+00975>You can set colors on Colors page
+00976>Save annotations as Aozora-Ruby tags by default
+00977>If not, you'll have the option of choosing that when you save file.
 ;
 ;
 ; EDICT markers.

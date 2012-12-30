@@ -220,7 +220,7 @@ type
     cbLoadAozoraRuby: TCheckBox;
     lblAozoraRuby: TLabel;
     cbAozoraTagsInColor: TCheckBox;
-    lblSaving: TLabel;
+    lblSavingAndLoading: TLabel;
     cbSaveAnnotationsToRuby: TCheckBox;
     lblSaveAnnotationsToRubyDesc: TLabel;
     lblAozoraTagsInColor: TLabel;

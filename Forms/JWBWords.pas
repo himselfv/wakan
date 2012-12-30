@@ -2420,6 +2420,7 @@ begin
   sl2.SaveToFile(tempDir+'\dir.txt');
   sl.Free;
   sl2.Free;
+  PKGWriteForm.PKGWriteCmd('NotShow');
   PKGWriteForm.PKGWriteCmd('PKGFileName wakan.sod');
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name Stroke order');

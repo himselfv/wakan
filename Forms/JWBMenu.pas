@@ -492,30 +492,61 @@ var
   CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
   dicts:TStringList;
 
-  //Tables
-  TChar,
-  TCharRead,
-  TRadicals,
-  TUser,
-  TUserIdx,
-  TUserSheet,
-  TUserCat,
-  TUserPrior:TTextTable;
-  //Field indexes
-  TCharIndex,TCharChinese,TCharType,TCharUnicode,
-  TCharStrokeCount,TCharJpStrokeCount,TCharJpFrequency,TCharChFrequency,
-  TCharJouyouGrade,
+ { Tables and fields }
+
+  TChar: TTextTable;
+  TCharIndex,
+  TCharChinese,
+  TCharType,
+  TCharUnicode,
+  TCharStrokeCount,
+  TCharJpStrokeCount,
+  TCharJpFrequency,
+  TCharChFrequency,
+  TCharJouyouGrade: integer;
+
+  TCharRead: TTextTable;
   TCharReadKanji,
   TCharReadType,
-  TCharReadReading, //stored as 4-char hex AnsiString
+  TCharReadReading, { WARNING! This field here is dangerous.
+    Some properties store normal AnsiStrings here, other 4-char hex AnsiStrings,
+    i.e. no auto-conversion to unicode is possible.
+    When reading from, or searching by this field, you have to check it's property type:
+       type := CCharRead.Int(TCharReadType);
+       propType := GetCharPropType(type,3);
+    And then recode data:
+       R: TRadicals.Number field value, possibly int or 'int' (int in quotes)
+       U,P: 4char hex
+       other: AnsiString
+   }
   TCharReadIndex,
-  TCharReadReadDot,TCharReadPosition,
-  TRadicalsNumber,TRadicalsVariant,TRadicalsUnicode,
-  TRadicalsStrokeCount,TRadicalsUnicodeCount,TRadicalsBushuCount,
-  TRadicalsJapaneseCount,TRadicalsKangXiCount,
-  TUserEnglish,TUserPhonetic,TUserPhoneticSort,TUserKanji,TUserAdded,
-  TUserPrinted,TUserLearned,TUserMastered,TUserNoPrinted,TUserScore,TUserMaxScore,
+  TCharReadReadDot,
+  TCharReadPosition: integer;
 
+  TRadicals: TTextTable;
+  TRadicalsNumber,
+  TRadicalsVariant,
+  TRadicalsUnicode,
+  TRadicalsStrokeCount,
+  TRadicalsUnicodeCount,
+  TRadicalsBushuCount,
+  TRadicalsJapaneseCount,
+  TRadicalsKangXiCount: integer;
+
+  TUser: TTextTable;
+  TUserEnglish,
+  TUserPhonetic,
+  TUserPhoneticSort,
+  TUserKanji,
+  TUserAdded,
+  TUserPrinted,
+  TUserLearned,
+  TUserMastered,
+  TUserNoPrinted,
+  TUserScore,
+  TUserMaxScore: integer;
+
+  TUserIdx: TTextTable;
   TUserIdxWord,
   TUserIdxKanji,
   TUserIdxBegin,
@@ -523,17 +554,20 @@ var
   TUserIndex: integer;
   MaxUserIndex:integer;
 
+  TUserSheet: TTextTable;
   TUserSheetWord,
   TUserSheetNumber,
-  TUserSheetPos:integer;
+  TUserSheetPos: integer;
 
+  TUserCat: TTextTable;
   TUserCatIndex,
   TUserCatName, //string, prefix~Category name. See commens in JWBCategories
   TUserCatType, //TCatType, see comments in JWBCategories
   TUserCatCreated: integer; //string, datetime of creation
   MaxCategoryIndex: integer;
 
-  TUserConvertKanji,TUserConvertCount:integer;
+  TUserPrior: TTextTable;
+
   clip:FString;
   cliptrans:TCharacterLineProps;
   NotUsedDicts:string;
@@ -975,10 +1009,10 @@ begin
      //If no filename is set, assume defaults
       if Length(MakeRadParams.Files)<=0 then begin
         if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
-        if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2');
+       // if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2'); //not ready for this, it has chars in EUC we can't handle
         if Length(MakeRadParams.Files)<=0 then
-          raise Exception.Create(_l('No RADKFILE/RADKFILE2 files are found in the application directory. '
-            +'Either place these files there or explicitly specify which files to use to MAKERAD.'));
+          raise Exception.Create(_l('No RADKFILE is found in the application directory. '
+            +'Either put this file there or explicitly specify which files to use to MAKERAD.'));
       end;
 
       fRadical.BuildRadicalPackage(MakeRadParams.Files);
@@ -990,7 +1024,7 @@ begin
     if not FileExists('wakan.rad') then begin
       SetLength(MakeRadParams.Files,0);
       if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
-      if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2');
+     // if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2'); //see above
       if Length(MakeRadParams.Files)>0 then //else just continue and fail later
         fRadical.BuildRadicalPackage(MakeRadParams.Files);
     end;
@@ -4331,7 +4365,7 @@ begin
   end else
   begin
     gc:=intmoGrid.MouseCoord(intmocx,intmocy);
-    if (intmoGrid<>fKanji.DrawGrid1) and (intmoGrid<>fRadical.DrawGrid1) then
+    if (intmoGrid<>fKanji.DrawGrid1) and (intmoGrid<>fRadical.DrawGrid) then
     begin
       if (gc.x>=0) and (gc.x<2) and (gc.y>0) then
       begin
