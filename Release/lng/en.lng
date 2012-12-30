@@ -1063,6 +1063,8 @@
 00975>You can set colors on Colors page
 00976>Save annotations as Aozora-Ruby tags by default
 00977>If not, you'll have the option of choosing that when you save file.
+00978>Misc:
+00979>Adjust character priorities based on editor usage
 ;
 ;
 ; EDICT markers.

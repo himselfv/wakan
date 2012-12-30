@@ -2126,6 +2126,19 @@ object fSettings: TfSettings
         Height = 13
         Caption = '#00975^eYou can set colors on Colors page'
       end
+      object Label54: TLabel
+        Left = 8
+        Top = 245
+        Width = 88
+        Height = 13
+        Caption = '#00978^eMisc:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
       object CheckBox60: TCheckBox
         Left = 8
         Top = 32
@@ -2175,6 +2188,14 @@ object fSettings: TfSettings
         Height = 17
         Caption = '#00976^eSave annotations as Aozora-Ruby tags by default'
         TabOrder = 5
+      end
+      object cbAdjustCharPriorities: TCheckBox
+        Left = 8
+        Top = 264
+        Width = 457
+        Height = 17
+        Caption = '#00979^eAdjust character priorities based on editor usage'
+        TabOrder = 6
       end
     end
     object tsAnnotations: TTabSheet

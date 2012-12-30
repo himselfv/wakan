@@ -2541,7 +2541,7 @@ end;
 
 procedure TfTranslate.ClearInsBlock;
 begin
-  if priorkanji<>'' then
+  if (priorkanji<>'') and fSettings.cbAdjustCharPriorities.Checked then
   begin
     if TUserPrior.Locate('Kanji',priorkanji,false) then
       TUserPrior.Edit([TUserPrior.Field('Count')],[inttostr(TUserPrior.Int(TUserPrior.Field('Count'))+1)])
