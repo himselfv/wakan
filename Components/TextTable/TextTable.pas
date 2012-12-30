@@ -900,7 +900,7 @@ begin
     //TODO: Test for non-unicode
      pb := OffsetPtr(data, ofs);
      pc := PChar(value);
-     for i := 0 to sz div 2 - 1 do begin
+     for i := 0 to sz - 1 do begin
        pb^ := HexCharCode(pc^) shl 4;
        Inc(pc);
        pb^ := pb^ + HexCharCode(pc^);
@@ -1607,6 +1607,7 @@ begin
   while s[1]<>'.' do
   begin
     inc(cnt);
+    if cnt=1 then begin end;
     system.delete(s,1,1);
     SetLength(a,fieldcount);
     for i:=0 to fieldcount-1 do a[i]:='0';
