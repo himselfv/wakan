@@ -214,7 +214,6 @@ type
 
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:string):integer; overload;
-    procedure InsertCharacter(c:char);
     procedure DrawCursor(blink:boolean);
     procedure DrawBlock(Canvas: TCanvas);
     procedure CheckTransCont(x,y:integer);
@@ -222,7 +221,6 @@ type
     procedure JoinLine(y:integer);
     procedure DeleteCharacter(x,y:integer);
     procedure RefreshLines;
-    procedure ClearInsBlock;
     procedure BlockOp(docopy,dodelete:boolean);
     procedure PasteOp;
     function PosToWidth(x,y:integer):integer;
@@ -260,6 +258,9 @@ type
     resolvebuffer:boolean; //set to true before doing ResolveInsert to replace kana with kanji suggestion, false to keep input intact
     procedure DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
     procedure ResolveInsert(final:boolean);
+    procedure InsertCharacter(c:char);
+    procedure ClearInsBlock;
+    procedure AbortInsert;
   public
    //Unfortunately some stuff is used from elswehere
     ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
@@ -1567,10 +1568,8 @@ procedure TfTranslate.EditorPaintBoxMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   leaveline:=true;
-  resolvebuffer:=false;
   shiftpressed:=false;
-  if insertbuffer<>'' then ResolveInsert(true);
-  ClearInsBlock;
+  AbortInsert();
   cur.x:=x div (lastxsiz);
   cur.y:=y div (lastxsiz*lastycnt)+view;
   cur.x:=WidthToPos(cur.x,cur.y);
@@ -1815,9 +1814,7 @@ end;
 
 procedure TfTranslate.SelectAll;
 begin
- //Finalize insert before selecting all
-  resolvebuffer := false; //cancel suggestion
-  ResolveInsert(true);
+  AbortInsert();
   dragstart := SourcePos(0, 0);
   cur := CursorPos(linl[linl.Count-1].len, linl.Count-1);
   shiftpressed:=true;
@@ -2542,6 +2539,33 @@ begin
 end;
 
 
+procedure TfTranslate.ClearInsBlock;
+begin
+  if priorkanji<>'' then
+  begin
+    if TUserPrior.Locate('Kanji',priorkanji,false) then
+      TUserPrior.Edit([TUserPrior.Field('Count')],[inttostr(TUserPrior.Int(TUserPrior.Field('Count'))+1)])
+    else
+      TUserPrior.Insert([priorkanji,'1']);
+    priorkanji:='';
+    fMenu.ChangeUserData;
+  end;
+  ins := SourcePos(-1,-1);
+  inslen:=0;
+  insertbuffer:='';
+end;
+
+{ Called when the insert is not finalized, but we really have to end it now.
+ Either cancels it or finalizes it if it was already confirmed. }
+procedure TfTranslate.AbortInsert;
+begin
+  if not insconfirmed then begin
+    resolvebuffer:=false; //cancel suggestion
+    if insertbuffer<>'' then ResolveInsert(true);
+  end;
+  ClearInsBlock;
+end;
+
 procedure TfTranslate.DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
 var i:integer;
   s: string;
@@ -2669,12 +2693,14 @@ begin
   immmode:=sbAsciiMode.down;
   if (c=' ') and (insertbuffer<>'') then
   begin
+   //Accept suggestion
     resolvebuffer:=sbKanjiMode.down;
     ResolveInsert(true);
     if sbKanjiMode.down then exit;
   end;
   if (c=#13) and (insertbuffer<>'') then
   begin
+   //Reject suggestion
     resolvebuffer:=false;
     ResolveInsert(true);
     if sbKanjiMode.down then exit;
@@ -3121,22 +3147,6 @@ begin
   end;
 end;
 
-
-procedure TfTranslate.ClearInsBlock;
-begin
-  if priorkanji<>'' then
-  begin
-    if TUserPrior.Locate('Kanji',priorkanji,false) then
-      TUserPrior.Edit([TUserPrior.Field('Count')],[inttostr(TUserPrior.Int(TUserPrior.Field('Count'))+1)]) else
-      TUserPrior.Insert([priorkanji,'1']);
-    priorkanji:='';
-    fMenu.ChangeUserData;
-  end;
-  ins := SourcePos(-1,-1);
-  inslen:=0;
-  insertbuffer:='';
-end;
-
 procedure TfTranslate.PasteOp;
 var s: string;
   sp: TCharacterLineProps;
@@ -3163,9 +3173,7 @@ var s: string;
   end;
 
 begin
-  resolvebuffer:=false;
-  if insertbuffer<>'' then ResolveInsert(true);
-  ClearInsBlock;
+  AbortInsert();
 
   if fSettings.cbLoadAozoraRuby.Checked then
     AnnotMode := amRuby
