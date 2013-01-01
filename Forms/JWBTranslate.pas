@@ -322,7 +322,7 @@ implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
   JWBSettings, JWBPrint, JWBConvert, StdPrompt, JWBUnit,
-  JWBCategories, ComCtrls;
+  JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers;
 
 {$R *.DFM}
 

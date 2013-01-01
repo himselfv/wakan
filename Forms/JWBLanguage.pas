@@ -69,7 +69,7 @@ var
 
 
 implementation
-uses JWBStrings, JWBUnit;
+uses JWBStrings, JWBEdictMarkers;
 
 {$R *.DFM}
 

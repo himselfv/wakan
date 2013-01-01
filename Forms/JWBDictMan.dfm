@@ -311,7 +311,6 @@ object fDictMan: TfDictMan
     ItemHeight = 13
     TabOrder = 0
     OnClick = CheckListBox1Click
-    ExplicitHeight = 369
   end
   object Button1: TButton
     Left = 8
@@ -353,15 +352,12 @@ object fDictMan: TfDictMan
     Anchors = [akRight, akBottom]
     Caption = '#00980^eApply'
     Default = True
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ModalResult = 1
-    ParentFont = False
-    TabOrder = 3
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -379,7 +375,12 @@ object fDictMan: TfDictMan
       3338F38F000033333333333333A223333333333333338F830000333333333333
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
+    ModalResult = 1
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 3
+    OnClick = BitBtn1Click
     ExplicitLeft = 302
     ExplicitTop = 399
   end
@@ -400,14 +401,12 @@ object fDictMan: TfDictMan
     Anchors = [akRight, akBottom]
     Cancel = True
     Caption = '#00981^eCancel'
+    DoubleBuffered = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ModalResult = 2
-    ParentFont = False
-    TabOrder = 5
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -425,7 +424,11 @@ object fDictMan: TfDictMan
       38F338F300003333333333333919333333388333338FFF830000333333333333
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
+    ModalResult = 2
     NumGlyphs = 2
+    ParentDoubleBuffered = False
+    ParentFont = False
+    TabOrder = 5
     ExplicitLeft = 437
     ExplicitTop = 399
   end

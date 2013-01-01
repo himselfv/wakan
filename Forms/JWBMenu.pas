@@ -8,7 +8,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
-  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings, JWBUtils;
+  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings, JWBUtils,
+  StdPrompt, JWBDic;
 
 type
   TfMenu = class(TForm)
@@ -434,6 +435,13 @@ type
 //    procedure LoadLayout(filename:string);
 //    procedure SaveFixedLayout(filename:string);
 
+  protected
+    DicLoadPrompt: TSMPromptForm;
+    procedure DicLoadStart(Sender: TObject);
+    procedure DicLoadEnd(Sender: TObject);
+    procedure DicLoadException(Sender: TObject; E: Exception);
+  public
+    function NewDict(dicname: string): TJaletDic;
 
   protected
     FUserDataChanged:boolean;
@@ -586,7 +594,6 @@ var
     roma: FString;
     order: string; //although it's integer insidee
   end;
-  ignorel: TStringList; //words to ignore when indexing dictionaries
   readchl: TStringList; //list of readings to include to the reading chart
 
   userdataloaded:boolean;
@@ -642,7 +649,7 @@ function _l(const id:string):string; //shouldn't inline because it's for cases w
 
 implementation
 
-uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
+uses JWBKanji, JWBUnit, JWBRadical,
   JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
   JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBClipboard, JWBKanjiCompounds,
@@ -652,7 +659,8 @@ uses JWBKanji, StdPrompt, JWBUnit, JWBRadical,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
-  JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine;
+  JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
+  JWBEdictMarkers;
 
 {$R *.DFM}
 
@@ -711,7 +719,6 @@ begin
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;
-  ignorel:=TStringList.Create;
   readchl:=TStringList.Create;
   dicts:=TStringList.Create;
 
@@ -731,7 +738,6 @@ begin
   defll.Free; //+
   suffixl.Free; //+
   partl.Free; //+
-  ignorel.Free; //+
   readchl.Free; //+
   dicts.Free; //+
 end;
@@ -1364,8 +1370,7 @@ begin
   fDictMan.CheckListBox1.Items.Clear;
   if FindFirst('*.dic',faAnyFile,sr)=0 then
   repeat
-    dic:=TJaletDic.Create;
-    dic.FillInfo(sr.name);
+    dic := NewDict(sr.name);
     if dic.tested then
     begin
       if Uppercase(dic.pname)='JALET.DIC'then
@@ -1402,6 +1407,49 @@ begin
           MB_ICONWARNING or MB_OK);
   end else
     fDictMan.CheckListBox1.ItemIndex:=0;
+end;
+
+{
+Creates a new standardly configured dictionary object from a specified file.
+Applies all default settings such as Offline/LoadOnDemand per dict settings.
+}
+function TfMenu.NewDict(dicname: string): TJaletDic;
+begin
+  Result:=TJaletDic.Create;
+  Result.OnLoadStart := DicLoadStart;
+  Result.OnLoadEnd := DicLoadEnd;
+  Result.OnLoadException := DicLoadException;
+  Result.LoadOnDemand := fSettings.CheckBox49.Checked;
+  Result.Offline := pos(','+dicname,OfflineDicts)<>0;
+  try
+    Result.FillInfo(dicname);
+  except
+    Application.MessageBox(
+      pchar(_l('#00321^eCannot register dictionary ')+dicname+#13#13+(ExceptObject as Exception).Message),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
+  end;
+end;
+
+procedure TfMenu.DicLoadStart(Sender: TObject);
+begin
+  DicLoadPrompt.Free; //just in case
+  DicLoadPrompt := SMMessageDlg(
+    _l('#00323^eDictionary loading'),
+    _l('#00324^eLoading dictionary ')+TJaletDic(Sender).name+'...');
+end;
+
+procedure TfMenu.DicLoadEnd(Sender: TObject);
+begin
+  FreeAndNil(DicLoadPrompt);
+end;
+
+procedure TfMenu.DicLoadException(Sender: TObject; E: Exception);
+begin
+  Application.MessageBox(
+    pchar(_l('#00325^eCannot load dictionary ')+TJaletDic(Sender).name+#13#13+E.Message),
+    pchar(_l('#00020^eError')),
+    MB_ICONERROR or MB_OK);
 end;
 
 procedure TfMenu.SwitchLanguage(lanchar:char);

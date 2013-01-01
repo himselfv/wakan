@@ -101,7 +101,7 @@ var
 implementation
 
 uses StrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBDicSearch, JWBStrings, JWBIO;
+  JWBStrings, JWBIO, JWBDic, JWBDicSearch, JWBEdictMarkers;
 
 {$R *.DFM}
 
@@ -685,8 +685,7 @@ begin
     prog.Repaint;
 
     CreateDictTables(dicFilename, info, diclang, cnt);
-    dic:=TJaletDic.Create;
-    dic.FillInfo(dicFilename);
+    dic := fMenu.NewDict(dicFilename);
     if not dic.tested then
       raise Exception.Create('Cannot load the newly created dictionary.');
     dic.Load;

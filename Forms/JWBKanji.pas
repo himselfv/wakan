@@ -85,7 +85,7 @@ uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
   JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils, JWBCategories,
-  JWBAnnotations, TextTable;
+  JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers;
 
 var ki:TStringList;
     calfonts:TStringList;

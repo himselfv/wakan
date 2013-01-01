@@ -64,7 +64,9 @@ uses
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
   JWBMedia in 'Forms\JWBMedia.pas' {fMedia},
   JWBAnnotations in 'Components\JWBAnnotations.pas',
-  JWBCommandLine in 'Components\JWBCommandLine.pas';
+  JWBCommandLine in 'Components\JWBCommandLine.pas',
+  JWBDic in 'Components\JWBDic.pas',
+  JWBEdictMarkers in 'Components\JWBEdictMarkers.pas';
 
 {$R *.RES}
 
