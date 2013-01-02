@@ -126,11 +126,119 @@ type
 
   EDictionaryException = class(Exception);
 
+const
+  GROUP_NOTUSED = -1;
+  GROUP_OFFLINE = 0;
+
+type
+  TDictionaryList = class(TList)
+  protected
+    function Get(Index: Integer): TJaletDic; reintroduce;
+    procedure Put(Index: Integer; Item: TJaletDic); reintroduce;
+  public
+    Priority: TStringList;
+    NotUsedDicts:string;
+    NotGroupDicts:array[1..5] of string;
+    OfflineDicts:string;
+    constructor Create;
+    destructor Destroy; override;
+    function FindIndex(AName: string): integer;
+    function Find(AName: string): TJaletDic;
+    procedure PutInGroup(dic: TJaletDic; group: TDictGroup; inGroup: boolean); overload; inline;
+    procedure PutInGroup(dicname: string; group: TDictGroup; inGroup: boolean); overload;
+    function IsInGroup(dic: TJaletDic; group: TDictGroup): boolean; overload; inline;
+    function IsInGroup(dicname: string; group: TDictGroup): boolean; overload;
+    property Items[Index: Integer]: TJaletDic read Get write Put; default;
+  end;
+
 var
   ignorel: TStringList; //words to ignore when indexing dictionaries
 
 implementation
 uses Forms;
+
+{
+Dictionary list
+}
+
+constructor TDictionaryList.Create;
+begin
+  inherited;
+  Priority := TStringList.Create;
+end;
+
+destructor TDictionaryList.Destroy;
+begin
+  FreeAndNil(Priority);
+  inherited;
+end;
+
+function TDictionaryList.Get(Index: Integer): TJaletDic;
+begin
+  Result := TJaletDic(inherited Get(Index));
+end;
+
+procedure TDictionaryList.Put(Index: Integer; Item: TJaletDic);
+begin
+  inherited Put(Index, Item);
+end;
+
+function TDictionaryList.IsInGroup(dic: TJaletDic; group: TDictGroup): boolean;
+begin
+  Result := IsInGroup(dic.name,group);
+end;
+
+function TDictionaryList.IsInGroup(dicname: string; group: TDictGroup): boolean;
+begin
+  case group of
+    GROUP_NOTUSED: Result := pos(','+dicname,NotUsedDicts)<>0;
+    GROUP_OFFLINE: Result := pos(','+dicname,OfflineDicts)<>0;
+  else
+    Result := pos(','+dicname,NotGroupDicts[group])=0;
+  end;
+end;
+
+procedure TDictionaryList.PutInGroup(dic: TJaletDic; group: TDictGroup; inGroup: boolean);
+begin
+  PutInGroup(dic.name, group, inGroup);
+end;
+
+procedure AddToList(const name: string; var list: string; add: boolean);
+begin
+  if add then begin
+    if pos(','+name,list)=0 then list:=list+','+name;
+  end else begin
+    if pos(','+name,list)>0 then delete(list,pos(','+name,list),length(name)+1);
+  end;
+end;
+
+procedure TDictionaryList.PutInGroup(dicname: string; group: TDictGroup; inGroup: boolean);
+begin
+  case group of
+    GROUP_NOTUSED: AddToList(dicname, NotUsedDicts, inGroup);
+    GROUP_OFFLINE: AddToList(dicname, OfflineDicts, inGroup);
+  else
+    AddToList(dicname, NotGroupDicts[group], not inGroup);
+  end;
+end;
+
+function TDictionaryList.FindIndex(AName: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Self.Count - 1 do
+    if Items[i].name=AName then begin
+      Result := i;
+      break;
+    end;
+end;
+
+function TDictionaryList.Find(AName: string): TJaletDic;
+var i: integer;
+begin
+  i := FindIndex(AName);
+  if i<0 then Result := nil else Result := Items[i];
+end;
 
 {
 Dictionary

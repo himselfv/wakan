@@ -9,10 +9,12 @@ uses
 type
   TfDictMan = class(TForm)
     Label1: TLabel;
-    CheckListBox1: TCheckListBox;
+    cbDicts: TCheckListBox;
     Button1: TButton;
     Button2: TButton;
-    Bevel1: TBevel;
+    btnOk: TBitBtn;
+    btnCancel: TBitBtn;
+    Panel1: TPanel;
     Label2: TLabel;
     Label3: TLabel;
     Label5: TLabel;
@@ -27,7 +29,6 @@ type
     Label13: TLabel;
     Label14: TLabel;
     Label15: TLabel;
-    BitBtn1: TBitBtn;
     Label16: TLabel;
     Label17: TLabel;
     Label18: TLabel;
@@ -40,17 +41,25 @@ type
     SpeedButton4: TSpeedButton;
     SpeedButton5: TSpeedButton;
     CheckBox1: TCheckBox;
-    BitBtn2: TBitBtn;
-    procedure CheckListBox1Click(Sender: TObject);
+    btnMoveUp: TBitBtn;
+    btnMoveDown: TBitBtn;
+    procedure cbDictsClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
-    procedure BitBtn1Click(Sender: TObject);
+    procedure btnOkClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
+    procedure btnMoveUpClick(Sender: TObject);
+    procedure btnMoveDownClick(Sender: TObject);
+
+  protected
+    procedure UpdateUpDownButtons;
   public
-    procedure ReloadCheckStates;
+    procedure ReloadDicts;
     procedure CarefulRefreshDicts;
+
+
   end;
 
 var
@@ -64,8 +73,8 @@ uses JWBMenu, JWBDictImport, JWBDic, JWBDicSearch;
 
 procedure TfDictMan.FormShow(Sender: TObject);
 begin
-  ReloadCheckStates();
-  CheckListBox1Click(self);
+  ReloadDicts();
+  cbDictsClick(self);
   ModalResult := mrNone;
 end;
 
@@ -74,27 +83,50 @@ var i:integer;
     dic:TJaletDic;
 begin
   if not IsPositiveResult(ModalResult) then exit; //don't save on cancel
-  for i:=0 to CheckListBox1.Items.Count-1 do
+
+  dicts.Priority.Clear;
+  for i:=0 to cbDicts.Items.Count-1 do
   begin
-    dic:=dicts.Objects[i] as TJaletDic;
-    if dic.loaded<>CheckListBox1.Checked[i] then
-      if CheckListBox1.Checked[i] then dic.Load else dic.Unload;
+    dicts.Priority.Add(cbDicts.Items[i]);
+    dic:=dicts.Find(cbDicts.Items[i]);
+    if dic.loaded<>cbDicts.Checked[i] then
+      if cbDicts.Checked[i] then dic.Load else dic.Unload;
   end;
 end;
 
-procedure TfDictMan.BitBtn1Click(Sender: TObject);
+procedure TfDictMan.btnOkClick(Sender: TObject);
 var i:integer;
-    s:string;
 begin
-  for i:=0 to CheckListBox1.Items.Count-1 do
-  begin
-    s:=CheckListBox1.Items[i];
-    if (CheckListBox1.Checked[i]) and (pos(','+s,NotUsedDicts)>0) then
-      delete(NotUsedDicts,pos(','+s,NotUsedDicts),length(s)+1);
-    if (not CheckListBox1.Checked[i]) and (pos(','+s,NotUsedDicts)=0) then
-      NotUsedDicts:=NotUsedDicts+','+s;
-  end;
+  for i:=0 to cbDicts.Items.Count-1 do
+    dicts.PutInGroup(cbDicts.Items[i],GROUP_NOTUSED,not cbDicts.Checked[i]);
 end;
+
+procedure TfDictMan.ReloadDicts;
+var i: integer;
+  dic: TJaletDic;
+begin
+  cbDicts.Clear;
+ //First we load priority dicts
+  for i := 0 to dicts.Priority.Count - 1 do begin
+    dic := dicts.Find(dicts.Priority[i]);
+    if dic=nil then continue;
+    cbDicts.Items.AddObject(dic.name, dic);
+  end;
+ //Then the rest of them
+  for i := 0 to dicts.Count - 1 do begin
+    dic := dicts[i];
+    if cbDicts.Items.IndexOfObject(dic)>=0 then continue; //already added
+    cbDicts.Items.AddObject(dic.name, dic);
+  end;
+ //Finally, checkbox states
+  for i := 0 to cbDicts.Count - 1 do
+    cbDicts.Checked[i]:= not dicts.IsInGroup(cbDicts.Items[i],GROUP_NOTUSED);
+  cbDicts.ItemIndex:=0
+end;
+
+{
+Reloads dictionary list while preserving user changes to it.
+}
 
 type
   TDicCheckState = record
@@ -102,70 +134,54 @@ type
     state: boolean;
   end;
 
-{
-Reloads dictionary list while preserving user changes to it.
-}
 procedure TfDictMan.CarefulRefreshDicts;
 var dicStates: array of TDicCheckState;
   dic: TJaletDic;
   i,j: integer;
 begin
  //Save states
-  SetLength(dicStates, CheckListBox1.Items.Count);
-  for i:=0 to CheckListBox1.Items.Count-1 do
+  SetLength(dicStates, cbDicts.Items.Count);
+  for i:=0 to cbDicts.Items.Count-1 do
   begin
-    dic:=dicts.Objects[i] as TJaletDic;
+    dic:=dicts[i];
     dicStates[i].name := dic.name;
-    dicStates[i].state := CheckListBox1.Checked[i];
+    dicStates[i].state := cbDicts.Checked[i];
   end;
 
   fMenu.RescanDicts();
-  ReloadCheckStates(); //for newly loaded dictionaries for which we have no saved state
+  ReloadDicts(); //might introduce new dictionaries
 
- //Restore states
+ //Restore states for known dictionaries
   for i := 0 to Length(dicStates) - 1 do
-    for j :=0 to CheckListBox1.Items.Count-1 do
-      if CheckListBox1.Items[j]=dicStates[i].name then begin
-        CheckListBox1.Checked[j] := dicStates[i].state;
+    for j :=0 to cbDicts.Items.Count-1 do
+      if cbDicts.Items[j]=dicStates[i].name then begin
+        cbDicts.Checked[j] := dicStates[i].state;
         break; //of j-loop
       end;
 end;
 
-{
-Updates dictionary check states according to current (permanent) user preferences
-}
-procedure TfDictMan.ReloadCheckStates;
-var dic:TJaletDic;
-    i:integer;
-begin
-  for i:=0 to CheckListBox1.Items.Count-1 do
-  begin
-    dic:=dicts.Objects[i] as TJaletDic;
-    CheckListBox1.Checked[i]:=pos(','+dic.name,NotUsedDicts)=0;
-  end;
-end;
-
-procedure TfDictMan.CheckListBox1Click(Sender: TObject);
+procedure TfDictMan.cbDictsClick(Sender: TObject);
 var dic:TJaletDic;
 begin
-  if CheckListBox1.ItemIndex=-1 then exit;
-  dic:=dicts.Objects[CheckListBox1.ItemIndex] as TJaletDic;
+  UpdateUpDownButtons;
+  if cbDicts.ItemIndex=-1 then exit;
+  dic:=dicts[cbDicts.ItemIndex];
   label4.Caption:=dic.name;
   label10.caption:=dic.pname;
   label11.caption:=dic.version;
-  if dic.entries=-1 then label12.caption:='N/A'else label12.caption:=inttostr(dic.entries);
+  if dic.entries=-1 then label12.caption:='N/A' else label12.caption:=inttostr(dic.entries);
   label13.caption:=datetostr(dic.builddate);
   label14.caption:=inttostr(dic.priority);
   label15.caption:=dic.description;
   label17.caption:=dic.copyright;
   if dic.wordidx<>nil then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
   if dic.charidx<>nil then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
-  SpeedButton1.Down:=pos(','+dic.name,NotGroupDicts[1])=0;
-  SpeedButton2.Down:=pos(','+dic.name,NotGroupDicts[2])=0;
-  SpeedButton3.Down:=pos(','+dic.name,NotGroupDicts[3])=0;
-  SpeedButton4.Down:=pos(','+dic.name,NotGroupDicts[4])=0;
-  SpeedButton5.Down:=pos(','+dic.name,NotGroupDicts[5])=0;
-  CheckBox1.Checked:=pos(','+dic.name,OfflineDicts)=0;
+  SpeedButton1.Down:=dicts.IsInGroup(dic, 1);
+  SpeedButton2.Down:=dicts.IsInGroup(dic, 2);
+  SpeedButton3.Down:=dicts.IsInGroup(dic, 3);
+  SpeedButton4.Down:=dicts.IsInGroup(dic, 4);
+  SpeedButton5.Down:=dicts.IsInGroup(dic, 5);
+  CheckBox1.Checked:=not dicts.IsInGroup(dic, GROUP_OFFLINE);
 end;
 
 procedure TfDictMan.Button1Click(Sender: TObject);
@@ -182,31 +198,31 @@ end;
 procedure TfDictMan.SpeedButton1Click(Sender: TObject);
 var s:string;
 begin
-  s:=CheckListBox1.Items[CheckListBox1.ItemIndex];
-  if (SpeedButton1.Down) and (pos(','+s,NotGroupDicts[1])>0) then
-    delete(NotGroupDicts[1],pos(','+s,NotGroupDicts[1]),length(s)+1);
-  if (not SpeedButton1.Down) and (pos(','+s,NotGroupDicts[1])=0) then
-    NotGroupDicts[1]:=NotGroupDicts[1]+','+s;
-  if (SpeedButton2.Down) and (pos(','+s,NotGroupDicts[2])>0) then
-    delete(NotGroupDicts[2],pos(','+s,NotGroupDicts[2]),length(s)+1);
-  if (not SpeedButton2.Down) and (pos(','+s,NotGroupDicts[2])=0) then
-    NotGroupDicts[2]:=NotGroupDicts[2]+','+s;
-  if (SpeedButton3.Down) and (pos(','+s,NotGroupDicts[3])>0) then
-    delete(NotGroupDicts[3],pos(','+s,NotGroupDicts[3]),length(s)+1);
-  if (not SpeedButton3.Down) and (pos(','+s,NotGroupDicts[3])=0) then
-    NotGroupDicts[3]:=NotGroupDicts[3]+','+s;
-  if (SpeedButton4.Down) and (pos(','+s,NotGroupDicts[4])>0) then
-    delete(NotGroupDicts[4],pos(','+s,NotGroupDicts[4]),length(s)+1);
-  if (not SpeedButton4.Down) and (pos(','+s,NotGroupDicts[4])=0) then
-    NotGroupDicts[4]:=NotGroupDicts[4]+','+s;
-  if (SpeedButton5.Down) and (pos(','+s,NotGroupDicts[5])>0) then
-    delete(NotGroupDicts[5],pos(','+s,NotGroupDicts[5]),length(s)+1);
-  if (not SpeedButton5.Down) and (pos(','+s,NotGroupDicts[5])=0) then
-    NotGroupDicts[5]:=NotGroupDicts[5]+','+s;
-  if (CheckBox1.Checked) and (pos(','+s,OfflineDicts)>0) then
-    delete(OfflineDicts,pos(','+s,OfflineDicts),length(s)+1);
-  if (not CheckBox1.Checked) and (pos(','+s,OfflineDicts)=0) then
-    OfflineDicts:=OfflineDicts+','+s;
+  s:=cbDicts.Items[cbDicts.ItemIndex];
+  dicts.PutInGroup(s,1,SpeedButton1.Down);
+  dicts.PutInGroup(s,2,SpeedButton2.Down);
+  dicts.PutInGroup(s,3,SpeedButton3.Down);
+  dicts.PutInGroup(s,4,SpeedButton4.Down);
+  dicts.PutInGroup(s,5,SpeedButton5.Down);
+  dicts.PutInGroup(s,GROUP_OFFLINE,CheckBox1.Checked);
+end;
+
+procedure TfDictMan.UpdateUpDownButtons;
+begin
+  btnMoveUp.Enabled := (cbDicts.ItemIndex>0);
+  btnMoveDown.Enabled := (cbDicts.ItemIndex>=0) and (cbDicts.ItemIndex<cbDicts.Count);
+end;
+
+procedure TfDictMan.btnMoveUpClick(Sender: TObject);
+begin
+  cbDicts.Items.Exchange(cbDicts.ItemIndex, cbDicts.ItemIndex-1);
+  UpdateUpDownButtons;
+end;
+
+procedure TfDictMan.btnMoveDownClick(Sender: TObject);
+begin
+  cbDicts.Items.Exchange(cbDicts.ItemIndex, cbDicts.ItemIndex+1);
+  UpdateUpDownButtons;
 end;
 
 end.

@@ -29,6 +29,12 @@ type
   then it contains raw english. Happy debugging. }
   SatanString = string;
 
+ { Cursor + some cached info about the dictionary }
+  TDicCursor2 = class(TDicCursor)
+  public
+    PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
+  end;
+
  { Dictionary search class. Reusable.
   Create, fill params, Prepare(), then do multiple Search()es. }
   TDicSearchRequest = class
@@ -48,7 +54,7 @@ type
     procedure Prepare; //Call after changing settings
 
   protected
-    dics: array of TDicCursor; //empty field => dic was not loaded, skip
+    dics: array of TDicCursor2; //empty field => dic was not loaded, skip
     //Cached cursors and seeks for User tables
     CUser: TTextTableCursor;
     stUserKanji: TSeekObject;
@@ -72,7 +78,7 @@ type
     se: TCandidateLookupList; //Lookup candidates -- see comments where this type is declared
     presentl:TStringList;
     p4reading:boolean;
-    procedure TestLookupCandidate(dic: TDicCursor; lc: PCandidateLookup; wt: integer;
+    procedure TestLookupCandidate(dic: TDicCursor2; lc: PCandidateLookup; wt: integer;
       sl: TStringList);
 
   protected
@@ -362,15 +368,20 @@ begin
   SetLength(dics, dicts.Count);
   for di:=0 to dicts.Count-1 do begin
     dics[di] := nil;
-    if not (dicts.Objects[di] as TJaletDic).loaded then continue;
-
-    dic:=dicts.Objects[di] as TJaletDic;
-    if pos(','+dic.name,NotGroupDicts[dictgroup])<>0 then
-      continue; //dic excluded from this dictgroup
+    dic:=dicts[di];
+    if not dic.loaded or not dicts.IsInGroup(dic,dictgroup) then
+      continue;
 
     dic.Demand;
-    dics[di] := TDicCursor.Create(dic);
+    dics[di] := TDicCursor2.Create(dic);
     dics[di].dic := dic;
+
+   //Calculate priority class. Lowest priority gets 20000, highest gets 0
+    dics[di].PriorityClass := dicts.Priority.IndexOf(dic.name);
+    if dics[di].PriorityClass<0 then
+      dics[di].PriorityClass := 20000
+    else
+      dics[di].PriorityClass := Trunc(20000*(dics[di].PriorityClass/dicts.Priority.Count));
   end; //of dict enum
 
   //Create cached table cursors
@@ -515,7 +526,7 @@ begin
        ((sdef='N') and (pos('gna-adj',s2)>0)));
 end;
 
-procedure TDicSearchRequest.TestLookupCandidate(dic: TDicCursor; lc: PCandidateLookup;
+procedure TDicSearchRequest.TestLookupCandidate(dic: TDicCursor2; lc: PCandidateLookup;
   wt: integer; sl: TStringList);
 var
   i, ii: integer;
@@ -679,6 +690,7 @@ begin
       if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
       if IsKanaCharKatakana(dic.Str(dic.TDictPhonetic), 1) then inc(sort,1000);
       sort:=sort+dic.dic.priority*20000;
+      sort:=sort+dic.PriorityClass;
       if (fSettings.CheckBox59.Checked) then
       begin
         if dic.TDictFrequency>-1 then

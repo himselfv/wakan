@@ -3313,16 +3313,8 @@ begin
   begin
     i := doctr[cy].chars[cx].docdic;
     dnam := docdic[i];
-    dic:=nil;
-    try
-      for i:=0 to dicts.Count-1 do
-      begin
-        if (dicts.Objects[i] as TJaletDic).loaded then
-          if (dicts.Objects[i] as TJaletDic).name=dnam then
-            dic:=dicts.Objects[i] as TJaletDic;
-      end;
-    except showmessage('Invalid Dict'); end;
-    if dic<>nil then
+    dic:=dicts.Find(dnam);
+    if (dic<>nil) and (dic.loaded) then
     begin
       s := IntToStr(doctr[cy].chars[cx].dicidx);
       while length(s)<6 do s := '0'+s;

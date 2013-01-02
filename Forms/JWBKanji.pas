@@ -648,10 +648,10 @@ begin
     if (curlang='j') and (fKanjiCompounds.CheckBox3.Checked) then
     begin
       for i:=0 to dicts.Count-1 do
-        if ((dicts.Objects[i] as TJaletDic).loaded) and (pos(','+(dicts.Objects[i] as TJaletDic).name,NotGroupDicts[4])=0)
-          and ((dicts.Objects[i] as TJaletDic).TDictFrequency<>-1) then
+        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4)
+          and (dicts[i].TDictFrequency<>-1) then
       begin
-        dic:=dicts.Objects[i] as TJaletDic;
+        dic:=dicts[i];
         dic.Demand;
         dic.FindIndexString(false,kj);
         k:=0;
@@ -683,9 +683,10 @@ begin
       end;}
     end else
     begin
-      for i:=0 to dicts.Count-1 do if ((dicts.Objects[i] as TJaletDic).loaded) and (pos(','+(dicts.Objects[i] as TJaletDic).name,NotGroupDicts[4])=0) then
+      for i:=0 to dicts.Count-1 do
+        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) then
       begin
-        dic:=dicts.Objects[i] as TJaletDic;
+        dic:=dicts[i];
         dic.Demand;
         dic.FindIndexString(false,kj);
         k:=0;

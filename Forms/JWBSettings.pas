@@ -393,7 +393,7 @@ begin
   Label49.Visible:=paramstr(1)='debug';
   Edit15Change(sender);
   Edit20Change(sender);
-  Edit19.Text:=NotUsedDicts;
+  Edit19.Text:=dicts.NotUsedDicts;
   ResetDetList;
   ComboBox2.ItemIndex:=0;
   ClearKanjiCardCache;
@@ -441,6 +441,7 @@ end;
 
 procedure TfSettings.LoadRegistrySettings(reg: TRegIniFile);
 var s: string;
+  i: integer;
 begin
   CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
   CheckBox65.Checked:=reg.ReadBool('Annotate','Rebuild',true);
@@ -551,13 +552,20 @@ begin
   Edit13.Text:=inttostr(reg.ReadInteger('KanjiCards','NoCompoundsV',6));
   Edit35.Text:=inttostr(reg.ReadInteger('KanjiCards','NoFullCompounds',4));
   Edit14.Text:=reg.ReadString('KanjiCards','Font','MingLiU');
-  NotUsedDicts:=reg.ReadString('Dict','NotUsedDicts','');
-  NotGroupDicts[1]:=reg.ReadString('Dict','NotGroup1Dicts','');
-  NotGroupDicts[2]:=reg.ReadString('Dict','NotGroup2Dicts','');
-  NotGroupDicts[3]:=reg.ReadString('Dict','NotGroup3Dicts','');
-  NotGroupDicts[4]:=reg.ReadString('Dict','NotGroup4Dicts','');
-  NotGroupDicts[5]:=reg.ReadString('Dict','NotGroup5Dicts','');
-  OfflineDicts:=reg.ReadString('Dict','OfflineDicts','');
+  dicts.NotUsedDicts:=reg.ReadString('Dict','NotUsedDicts','');
+  dicts.NotGroupDicts[1]:=reg.ReadString('Dict','NotGroup1Dicts','');
+  dicts.NotGroupDicts[2]:=reg.ReadString('Dict','NotGroup2Dicts','');
+  dicts.NotGroupDicts[3]:=reg.ReadString('Dict','NotGroup3Dicts','');
+  dicts.NotGroupDicts[4]:=reg.ReadString('Dict','NotGroup4Dicts','');
+  dicts.NotGroupDicts[5]:=reg.ReadString('Dict','NotGroup5Dicts','');
+  dicts.OfflineDicts:=reg.ReadString('Dict','OfflineDicts','');
+  reg.ReadSectionValues('DictPriority', dicts.Priority);
+  dicts.Priority.Sort;
+ //Cut index part
+  for i := 0 to dicts.Priority.Count - 1 do begin
+    s := dicts.Priority.ValueFromIndex[i];
+    if s<>'' then dicts.Priority[i] := s;
+  end;
   CheckBox18.Checked:=reg.ReadBool('KanjiCards','PrintCompounds',true);
   CheckBox19.Checked:=reg.ReadBool('KanjiCards','PrintRadical',true);
   CheckBox20.Checked:=reg.ReadBool('KanjiCards','PrintAlternate',true);
@@ -683,6 +691,7 @@ end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TRegIniFile);
 var setwindows:integer;
+  i: integer;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
@@ -807,14 +816,16 @@ begin
   reg.WriteInteger('Layout','QLayout',curqlayout);
   reg.WriteString('Translate','MeaningLines',Edit17.text);
   reg.WriteString('Translate','PrintLines',Edit18.text);
-  reg.WriteString('Dict','NotUsedDicts',NotUsedDicts);
-  reg.WriteString('Dict','NotGroup1Dicts',NotGroupDicts[1]);
-  reg.WriteString('Dict','NotGroup2Dicts',NotGroupDicts[2]);
-  reg.WriteString('Dict','NotGroup3Dicts',NotGroupDicts[3]);
-  reg.WriteString('Dict','NotGroup4Dicts',NotGroupDicts[4]);
-  reg.WriteString('Dict','NotGroup5Dicts',NotGroupDicts[5]);
-  reg.WriteString('Dict','OfflineDicts',OfflineDicts);
+  reg.WriteString('Dict','NotUsedDicts',dicts.NotUsedDicts);
+  reg.WriteString('Dict','NotGroup1Dicts',dicts.NotGroupDicts[1]);
+  reg.WriteString('Dict','NotGroup2Dicts',dicts.NotGroupDicts[2]);
+  reg.WriteString('Dict','NotGroup3Dicts',dicts.NotGroupDicts[3]);
+  reg.WriteString('Dict','NotGroup4Dicts',dicts.NotGroupDicts[4]);
+  reg.WriteString('Dict','NotGroup5Dicts',dicts.NotGroupDicts[5]);
+  reg.WriteString('Dict','OfflineDicts',dicts.OfflineDicts);
   reg.WriteString('Dict','CurLanguage',curlang);
+  for i := 0 to dicts.Priority.Count - 1 do
+    reg.WriteString('DictPriority', IntToStr(i), dicts.Priority[i]);
   reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
   reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.SpeedButton8.Down);

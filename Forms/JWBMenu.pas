@@ -498,7 +498,9 @@ var
   romasys,jromasys,cromasys:integer;
   showroma,jshowroma,cshowroma:boolean;
   CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
-  dicts:TStringList;
+
+ { Dictionaries }
+  dicts: TDictionaryList; //Active dictionary list
 
  { Tables and fields }
 
@@ -578,9 +580,6 @@ var
 
   clip:FString;
   cliptrans:TCharacterLineProps;
-  NotUsedDicts:string;
-  NotGroupDicts:array[1..5] of string;
-  OfflineDicts:string;
   oldhandle:THandle;
   critsec:boolean;
   globheight:integer;
@@ -718,7 +717,7 @@ begin
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;
   readchl:=TStringList.Create;
-  dicts:=TStringList.Create;
+  dicts:=TDictionaryList.Create;
 
   curlang:='j';
   intmopaint:=nil;
@@ -1195,7 +1194,7 @@ begin
     end else
     if Command='makedic'then
     begin
-      fDictImport.edtDictFilename.Text:=MakeDicParams.Filename ;
+      fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
       fDictImport.edtDictName.Text:=MakeDicParams.Name;
       fDictImport.edtVersion.Text:=MakeDicParams.Version;
       if MakeDicParams.Language='C' then
@@ -1353,9 +1352,9 @@ var i:integer;
 begin
   for i:=0 to dicts.Count-1 do
   begin
-    if (dicts.Objects[i] as TJaletDic).loaded then
-      (dicts.Objects[i] as TJaletDIc).unload;
-    (dicts.Objects[i] as TJaletDic).Free;
+    if dicts[i].loaded then
+      dicts[i].unload;
+    dicts[i].Free;
   end;
   dicts.Clear;
 end;
@@ -1365,7 +1364,6 @@ var sr:TSearchRec;
     dic:TJaletDic;
 begin
   ClearDicts;
-  fDictMan.CheckListBox1.Items.Clear;
   if FindFirst('*.dic',faAnyFile,sr)=0 then
   repeat
     dic := NewDict(sr.name);
@@ -1376,20 +1374,17 @@ begin
           pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
           pchar(_l('#00090^eWarning')),
           MB_ICONWARNING or MB_OK);
-      if (curlang=dic.language) then
+      if curlang=dic.language then
       begin
-        dicts.AddObject(dic.language+dic.name,dic);
-        fDictMan.CheckListBox1.Items.Add(dic.name);
-        if (pos(','+dic.name,NotUsedDicts)=0) then
-        begin
-          if (paramstr(1)<>'makedic') and (paramstr(1)<>'makeexamples') then dic.Load;
-          fDictMan.CheckListBox1.Checked[fDictMan.CheckListBox1.Items.Count-1]:=true;
-        end;
+        dicts.Add(dic);
+        if not dicts.IsInGroup(dic,GROUP_NOTUSED) then
+          dic.Load;
       end;
     end else dic.Free;
   until FindNext(sr)<>0;
   FindClose(sr);
-  if (dicts.Count=0) and (paramstr(1)<>'makedic') and (paramstr(1)<>'makeexamples') then
+
+  if dicts.Count=0 then
   begin
     if curlang='j'then
       Application.MessageBox(
@@ -1403,8 +1398,7 @@ begin
           +'Please download some chinese .DIC files from WAKAN website.')),
           pchar(_l('#00090^eWarning')),
           MB_ICONWARNING or MB_OK);
-  end else
-    fDictMan.CheckListBox1.ItemIndex:=0;
+  end;
 end;
 
 {
@@ -1418,7 +1412,7 @@ begin
   Result.OnLoadEnd := DicLoadEnd;
   Result.OnLoadException := DicLoadException;
   Result.LoadOnDemand := fSettings.CheckBox49.Checked;
-  Result.Offline := pos(','+dicname,OfflineDicts)<>0;
+  Result.Offline := dicts.IsInGroup(dicname,GROUP_OFFLINE);
   try
     Result.FillInfo(dicname);
   except
@@ -2582,7 +2576,7 @@ begin
   writeln(t2,'; Each entry consists of four lines:');
   writeln(t2,'; Written (Unicode in hex), Phonetic (Unicode in hex), English (raw text), Category (raw text)');
   writeln(t2,'');
-  dic:=(dicts.Objects[0]) as TJaletDic;
+  dic:=dicts[0];
   dic.Demand;
   while not eof(t) do
   begin

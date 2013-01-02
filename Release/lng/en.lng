@@ -1070,6 +1070,7 @@
 00982>How to behave in insert mode
 00983>Do not let the cursor out until you choose a suggestion
 00984>Auto-cancel insert if you move the cursor out
+00985>Copyright:
 ;
 ;
 ; EDICT markers.
