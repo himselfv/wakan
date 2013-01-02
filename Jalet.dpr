@@ -66,7 +66,8 @@ uses
   JWBAnnotations in 'Components\JWBAnnotations.pas',
   JWBCommandLine in 'Components\JWBCommandLine.pas',
   JWBDic in 'Components\JWBDic.pas',
-  JWBEdictMarkers in 'Components\JWBEdictMarkers.pas';
+  JWBEdictMarkers in 'Components\JWBEdictMarkers.pas',
+  JWBBalancedTree in 'Components\JWBBalancedTree.pas';
 
 {$R *.RES}
 

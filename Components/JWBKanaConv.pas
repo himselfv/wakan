@@ -1,16 +1,29 @@
 unit JWBKanaConv;
 {
 Converts kana to romaji and back according to a set of rules.
+This is a VERY hot codepath when translating in Wakan. Therefore we use
+balanced binary trees and do everything in a very optimal way.
 }
 
+//If defined, use btrees for Kana lookups. Else iterate through all the list.
+{$DEFINE BTREES}
+
 interface
-uses Classes, JWBStrings;
+uses Classes, JWBStrings, JWBBalancedTree;
 
 {
 Romaji translation table.
 For more info see wakan.cfg.
 }
 type
+ {$IFNDEF UNICODE}
+  //Points to at least two FChars (8 bytes)
+  PFCharPtr = PAnsiChar;
+ {$ELSE}
+  //These point to two UNICODE chars (4 bytes)
+  PFCharPtr = PWideChar;
+ {$ENDIF}
+
   TRomajiTranslationRule = record
    { Hiragana and katakana: FStrings. Hex is already upcased! Do not upcase. }
     hiragana: string;
@@ -18,31 +31,47 @@ type
     japanese: string;
     english: string;
     czech: string;
-   //These pointers always point to somewhere.
-   //If hiragana or katakana strings are nil, they're pointing to const strings of '000000000'
-   //So there's no need to check for nil; they're also guaranteed to have at least two 4-chars available
-   //(for real strings which are one 4-char in length, they have #00 as next 4-char's first symbol,
-   // so it won't match to anything)
-   {$IFNDEF UNICODE}
-    hiragana_ptr: PAnsiChar;
-    katakana_ptr: PAnsiChar;
-   {$ELSE}
-   //These point to two UNICODE chars (4 bytes)
-    hiragana_ptr: PWideChar;
-    katakana_ptr: PWideChar;
-   {$ENDIF}
+   { These pointers always point to somewhere.
+    If hiragana or katakana strings are nil, they're pointing to const strings of '000000000'
+    So there's no need to check for nil; they're also guaranteed to have at least two 4-chars available
+    (for real strings which are one 4-char in length, they have #00 as next 4-char's first symbol,
+    so it won't match to anything) }
+    hiragana_ptr: PFCharPtr;
+    katakana_ptr: PFCharPtr;
   end;
   PRomajiTranslationRule = ^TRomajiTranslationRule;
 
+  TRomajiRuleNode = class(TBinTreeItem)
+  protected
+    FTextPtr: PFCharPtr; //same as hiragana_ptr, katakana_ptr above
+    FRule: PRomajiTranslationRule;
+  public
+    constructor Create(const ATextPtr: PFCharPtr; ARule: PRomajiTranslationRule);
+    function Compare(a:TBinTreeItem):Integer; override;
+    procedure Copy(ToA:TBinTreeItem); override;
+    procedure List; override;
+  end;
+  TRomajiRuleNode1 = class(TRomajiRuleNode) //1-char comparison
+    function CompareData(const a):Integer; override;
+  end;
+  TRomajiRuleNode2 = class(TRomajiRuleNode) //2-char comparison
+    function CompareData(const a):Integer; override;
+  end;
+
   TRomajiTranslationTable = class
   protected
-    FList: array of TRomajiTranslationRule;
+    FList: array of PRomajiTranslationRule;
     FListUsed: integer;
+    FOneCharTree: TBinTree;
+    FTwoCharTree: TBinTree;
     procedure Grow(ARequiredFreeLen: integer);
     function GetItemPtr(Index: integer): PRomajiTranslationRule;{$IFDEF INLINE} inline;{$ENDIF}
     function MakeNewItem: PRomajiTranslationRule;
     procedure SetupRule(r: PRomajiTranslationRule);
+    procedure AddToIndex(r: PRomajiTranslationRule);
   public
+    constructor Create;
+    destructor Destroy; override;
     procedure Add(const r: TRomajiTranslationRule); overload;
     procedure Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string); overload;
     procedure Add(const s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
@@ -75,6 +104,7 @@ type
     property Items[Index: integer]: PRomajiReplacementRule read GetItemPtr; default;
   end;
 
+ { Instantiate and call this. }
   TRomajiTranslator = class
   protected
     FTrans: TRomajiTranslationTable;
@@ -94,18 +124,92 @@ type
 implementation
 uses SysUtils;
 
+{ TRomajiRuleNode }
+
+constructor TRomajiRuleNode.Create(const ATextPtr: PFCharPtr; ARule: PRomajiTranslationRule);
+begin
+  inherited Create;
+  Self.FTextPtr := ATextPtr;
+  Self.FRule := ARule;
+end;
+
+{ Returns a pointer to an integer p+#c counting from 0
+ This is pretty fast when inlined, basically the same as typing that inplace, so use without fear.
+ You can even put c==0 and the code will be almost eliminated at compilation time. Delphi is smart! }
+function IntgOff(p: pointer; c: integer): PInteger; inline;
+begin
+  Result := PInteger(integer(p)+c*4);
+end;
+
+function TRomajiRuleNode1.CompareData(const a):Integer;
+begin
+ {$IFDEF UNICODE}
+  Result := PWord(a)^ - PWord(FTextPtr)^;
+ {$ELSE}
+  Result := PInteger(a)^ - PInteger(FTextPtr)^;
+ {$ENDIF}
+end;
+
+//TRomajiRuleNode expects PFChar (i.e. pointer to an FString data) with at least
+//two FChars in it.
+function TRomajiRuleNode2.CompareData(const a):Integer;
+begin
+ {$IFDEF UNICODE}
+ //Compare two characters at once
+  Result := PInteger(a)^-PInteger(FTextPtr)^;
+ {$ELSE}
+ { Both this node and the text we compare it against MUST have two full FChars.
+  If they don't, there would be sorting problems as random data will be in the
+  highest bytes of these integers.
+  But then again, we don't add non-2char nodes to this tree, and we don't
+  call a search on it if we don't have two characters. }
+  Result := PInt64(a)^-PInt64(FTextPtr)^;
+ {$ENDIF}
+end;
+
+function TRomajiRuleNode.Compare(a:TBinTreeItem):Integer;
+begin
+  Result := CompareData(TRomajiRuleNode(a).FTextPtr);
+end;
+
+procedure TRomajiRuleNode.Copy(ToA:TBinTreeItem);
+begin
+  Self.FRule := TRomajiRuleNode(ToA).FRule;
+end;
+
+procedure TRomajiRuleNode.List;
+begin
+ //Nothing
+end;
+
 { TRomajiTranslationTable }
+
+constructor TRomajiTranslationTable.Create;
+begin
+  inherited;
+  FOneCharTree := TBinTree.Create;
+  FTwoCharTree := TBinTree.Create;
+end;
+
+destructor TRomajiTranslationTable.Destroy;
+begin
+  Clear();
+  FreeAndNil(FTwoCharTree);
+  FreeAndNil(FOneCharTree);
+  inherited;
+end;
 
 function TRomajiTranslationTable.GetItemPtr(Index: integer): PRomajiTranslationRule;
 begin
-  Result := @FList[Index]; //valid until next list growth
+  Result := FList[Index]; //valid until next list growth
 end;
 
 function TRomajiTranslationTable.MakeNewItem: PRomajiTranslationRule;
 begin
  //Thread unsafe
   Grow(1);
-  Result := @FList[FListUsed];
+  New(Result);
+  FList[FListUsed] := Result;
   Inc(FListUsed);
 end;
 
@@ -145,10 +249,27 @@ begin
   if r.katakana_ptr=nil then r.katakana_ptr := pointer(UNICODE_ZERO_CODE);
 end;
 
-procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule);
+procedure TRomajiTranslationTable.AddToIndex(r: PRomajiTranslationRule);
 begin
-  SetupRule(@r);
-  MakeNewItem^ := r;
+  case flength(r.hiragana) of
+    1: FOneCharTree.Add(TRomajiRuleNode1.Create(r.hiragana_ptr, r));
+    2: FTwoCharTree.Add(TRomajiRuleNode2.Create(r.hiragana_ptr, r));
+  //0 needs not to be indexed and 3 and above are not supported
+  //We can support 3 if push comes to shove... so far no need.
+  end;
+  case flength(r.katakana) of
+    1: FOneCharTree.Add(TRomajiRuleNode1.Create(r.katakana_ptr, r));
+    2: FTwoCharTree.Add(TRomajiRuleNode2.Create(r.katakana_ptr, r));
+  end;
+end;
+
+procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule);
+var pr: PRomajiTranslationRule;
+begin
+  pr := MakeNewItem;
+  pr^ := r;
+  SetupRule(pr);
+  AddToIndex(pr);
 end;
 
 //Hiragana and katakana must be in decoded format (unicode on UFCHAR builds)
@@ -188,9 +309,14 @@ begin
 end;
 
 procedure TRomajiTranslationTable.Clear;
+var i: integer;
 begin
+  for i := 0 to FListUsed - 1 do
+    Dispose(FList[i]);
   SetLength(FList, 0);
   FListUsed := 0;
+  FOneCharTree.Clear;
+  FTwoCharTree.Clear;
 end;
 
 
@@ -370,37 +496,24 @@ This function here is a major bottleneck when translating,
 so we're going to try and implement it reallly fast.
 }
 
-//Try to compare strings as integers, without any string routines
-{$DEFINE INTEGER_HELL}
-
-{$IFDEF INTEGER_HELL}
-//Returns a pointer to an integer p+#c counting from 0
-//This is pretty fast when inlined, basically the same as typing that inplace, so use without fear.
-//You can even put c==0 and the code will be almost eliminated at compilation time. Delphi is smart!
-function IntgOff(p: pointer; c: integer): PInteger; inline;
-begin
-  Result := PInteger(integer(p)+c*4);
-end;
-{$ENDIF}
-
 //ps must have at least one 4-char symbol in it
 function TRomajiTranslator.SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
-{$IFDEF UNICODE}{$POINTERMATH ON}{$ENDIF}
-var i:integer;
-  r: PRomajiTranslationRule;
+var
  {$IFNDEF UNICODE}
   pe: PFChar;
+ {$ENDIF}
+ {$IFDEF BTREES}
+  bn: TBinTreeItem;
+ {$ELSE}
+  i:integer;
+  r: PRomajiTranslationRule;
  {$ENDIF}
 begin
  {$IFDEF UNICODE}
   if ps^=UH_HYPHEN then begin
     Inc(ps);
  {$ELSE}
- {$IFDEF INTEGER_HELL}
   if pinteger(ps)^=pinteger(@UH_HYPHEN)^ then begin
- {$ELSE}
-  if FcharCmp(ps, UH_HYPHEN, 1) then begin
- {$ENDIF}
     Inc(ps, 4);
  {$ENDIF}
     Result := '-';
@@ -411,16 +524,57 @@ begin
   if ps^=UH_LOWLINE then begin
     Inc(ps);
  {$ELSE}
- {$IFDEF INTEGER_HELL}
   if pinteger(ps)^=pinteger(@UH_LOWLINE)^ then begin
- {$ELSE}
-  if FcharCmp(ps, UH_LOWLINE, 1) then begin
- {$ENDIF}
     Inc(ps, 4);
  {$ENDIF}
     Result := '_';
     exit;
   end;
+
+{$IFDEF BTREES}
+ //first try 2 FChars
+ //but we have to test that we have at least that much
+ {$IFDEF UNICODE}
+  if (ps^<>#00) and ((ps+1)^<>#00) then begin
+ {$ELSE}
+  pe := ps;
+  Inc(pe, 4); //first symbol must be there
+  if EatOneFChar(pe) then begin
+ {$ENDIF}
+    bn := FTrans.FTwoCharTree.SearchData(ps);
+    if bn<>nil then begin
+      case romatype of
+        2: Result := TRomajiRuleNode(bn).FRule.english;
+        3: Result := TRomajiRuleNode(bn).FRule.czech;
+      else
+        Result := TRomajiRuleNode(bn).FRule.japanese;
+      end;
+     {$IFDEF UNICODE}
+      Inc(ps, 2);
+     {$ELSE}
+      ps := pe;
+     {$ENDIF}
+      exit;
+    end;
+  end;
+
+ //this time 1 FChar only
+  bn := FTrans.FOneCharTree.SearchData(ps);
+  if bn<>nil then begin
+    case romatype of
+      2: Result := TRomajiRuleNode(bn).FRule.english;
+      3: Result := TRomajiRuleNode(bn).FRule.czech;
+    else
+      Result := TRomajiRuleNode(bn).FRule.japanese;
+    end;
+   {$IFDEF UNICODE}
+    Inc(ps);
+   {$ELSE}
+    Inc(ps, 4);
+   {$ENDIF}
+    exit;
+  end;
+{$ELSE}
 
  //first try 2 FChars
  //but we have to test that we have at least that much
@@ -437,13 +591,7 @@ begin
      //Compare two characters at once (see note below)
       if (PInteger(ps)^=PInteger(r.hiragana_ptr)^)
       or (PInteger(ps)^=PInteger(r.katakana_ptr)^) then begin
-     {
-     //Safer and slower version:
-      if ((ps^=r.hiragana_ptr^) and ((ps+1)^=(r.hiragana_ptr+1)^))
-      or ((ps^=r.katakana_ptr^) and ((ps+1)^=(r.katakana_ptr+1)^)) then
-     }
      {$ELSE}
-     {$IFDEF INTEGER_HELL}
       {
       Note on integer comparison optimization:
       We're not checking if roma_t[i].hiragana has one or two 4-chars.
@@ -455,10 +603,6 @@ begin
       and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^))
       or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
       and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)) then begin
-     {$ELSE}
-      if FcharCmp(ps, r.hiragana_ptr, 2)
-      or FcharCmp(ps, r.katakana_ptr, 2) then begin
-     {$ENDIF}
      {$ENDIF}
         case romatype of
           2: Result := r.english;
@@ -482,13 +626,8 @@ begin
    {$IFDEF UNICODE}
     if (ps^=r.hiragana_ptr^) or (ps^=r.katakana_ptr^) then begin
    {$ELSE}
-   {$IFDEF INTEGER_HELL}
     if (pinteger(ps)^=pinteger(r.hiragana_ptr)^)
     or (pinteger(ps)^=pinteger(r.katakana_ptr)^) then begin
-   {$ELSE}
-    if FcharCmp(ps, r.hiragana_ptr, 1)
-    or FcharCmp(ps, r.katakana_ptr, 1) then begin
-   {$ENDIF}
    {$ENDIF}
       case romatype of
         2: Result := r.english;
@@ -504,6 +643,8 @@ begin
       exit;
     end;
   end;
+
+{$ENDIF}
 
  //Latin symbol
  {$IFDEF UNICODE}
@@ -524,7 +665,6 @@ begin
   Inc(ps, 4);
  {$ENDIF}
   Result := '?';
-{$IFDEF UNICODE}{$POINTERMATH OFF}{$ENDIF}
 end;
 
 function TRomajiTranslator.KanaToRomaji(const s:FString;romatype:integer):string;
