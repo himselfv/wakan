@@ -1421,7 +1421,6 @@ var x: integer;
   a:integer;
   s:string;
   wt:integer;
-
 begin
   x:=x_bg;
   while x<=x_en do
@@ -1637,12 +1636,7 @@ begin
     if i=block.fromy then bg:=block.fromx;
     if i=block.toy then en:=block.tox;
     for j:=bg to en do
-      with doctr[i].chars[j] do begin
-        wordstate := '-';
-        learnstate := 9;
-        dicidx := 0;
-        docdic := 1;
-      end;
+      doctr[i].chars[j].Reset();
   end;
   mustrepaint:=true;
   ShowText(true);

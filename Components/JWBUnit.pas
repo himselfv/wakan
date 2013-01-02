@@ -3,7 +3,7 @@
 
 interface
 uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
-  JWBStrings, JWBUtils;
+  JWBStrings, JWBUtils, JWBKanaConv;
 
 { Misc }
 
@@ -22,15 +22,15 @@ const
 var
  { Romaji translation table. Populated on load.
   See comments where class is defined. }
-  roma_t: TRomajiTranslationTable;
+  roma_t: TRomajiTranslator;
 
  { Chinese version, not upcased. Someone upgrade this one too... }
   romac: TStringList;
 
 function ConvertPinYin(s:string):FString;
 function DeconvertPinYin(s:FString):string;
-function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
-function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):FString;
+function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
+function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
 
 
 { WordGrid }
@@ -165,418 +165,30 @@ begin
   if posout>0 then result:=lowercase(s2) else result:=s2;
 end;
 
-
-{
-KanaToRomaji().
-This function here is a major bottleneck when translating,
-so we're going to try and implement it reallly fast.
-}
-
-//Try to compare strings as integers, without any string routines
-{$DEFINE INTEGER_HELL}
-
-{$IFDEF INTEGER_HELL}
-//Returns a pointer to an integer p+#c counting from 0
-//This is pretty fast when inlined, basically the same as typing that inplace, so use without fear.
-//You can even put c==0 and the code will be almost eliminated at compilation time. Delphi is smart!
-function IntgOff(p: pointer; c: integer): PInteger; inline;
-begin
-  Result := PInteger(integer(p)+c*4);
-end;
-{$ENDIF}
-
-//ps must have at least one 4-char symbol in it
-function SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
-{$IFDEF UNICODE}{$POINTERMATH ON}{$ENDIF}
-var i:integer;
-  r: PRomajiTranslationRule;
- {$IFNDEF UNICODE}
-  pe: PFChar;
- {$ENDIF}
-begin
- {$IFDEF UNICODE}
-  if ps^=UH_HYPHEN then begin
-    Inc(ps);
- {$ELSE}
- {$IFDEF INTEGER_HELL}
-  if pinteger(ps)^=pinteger(@UH_HYPHEN)^ then begin
- {$ELSE}
-  if FcharCmp(ps, UH_HYPHEN, 1) then begin
- {$ENDIF}
-    Inc(ps, 4);
- {$ENDIF}
-    Result := '-';
-    exit;
-  end;
-
- {$IFDEF UNICODE}
-  if ps^=UH_LOWLINE then begin
-    Inc(ps);
- {$ELSE}
- {$IFDEF INTEGER_HELL}
-  if pinteger(ps)^=pinteger(@UH_LOWLINE)^ then begin
- {$ELSE}
-  if FcharCmp(ps, UH_LOWLINE, 1) then begin
- {$ENDIF}
-    Inc(ps, 4);
- {$ENDIF}
-    Result := '_';
-    exit;
-  end;
-
- //first try 2 FChars
- //but we have to test that we have at least that much
- {$IFDEF UNICODE}
-  if (ps^<>#00) and ((ps+1)^<>#00) then begin
- {$ELSE}
-  pe := ps;
-  Inc(pe, 4); //first symbol must be there
-  if EatOneFChar(pe) then begin
- {$ENDIF}
-    for i := 0 to roma_t.Count - 1 do begin
-      r := roma_t[i];
-     {$IFDEF UNICODE}
-     //Compare two characters at once (see note below)
-      if (PInteger(ps)^=PInteger(r.hiragana_ptr)^)
-      or (PInteger(ps)^=PInteger(r.katakana_ptr)^) then begin
-     {
-     //Safer and slower version:
-      if ((ps^=r.hiragana_ptr^) and ((ps+1)^=(r.hiragana_ptr+1)^))
-      or ((ps^=r.katakana_ptr^) and ((ps+1)^=(r.katakana_ptr+1)^)) then
-     }
-     {$ELSE}
-     {$IFDEF INTEGER_HELL}
-      {
-      Note on integer comparison optimization:
-      We're not checking if roma_t[i].hiragana has one or two 4-chars.
-      It's okay. If it has one, then roma_t[i].hiragana[5]==#00, and it wouldn't match
-      to any 4-char hex combination.
-      It also won't AV because the memory's dword aligned and hiragana[5] is accessible already.
-      }
-      if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-      and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^))
-      or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
-      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)) then begin
-     {$ELSE}
-      if FcharCmp(ps, r.hiragana_ptr, 2)
-      or FcharCmp(ps, r.katakana_ptr, 2) then begin
-     {$ENDIF}
-     {$ENDIF}
-        case romatype of
-          2: Result := r.english;
-          3: Result := r.czech;
-        else
-          Result := r.japanese;
-        end;
-       {$IFDEF UNICODE}
-        Inc(ps, 2);
-       {$ELSE}
-        ps := pe;
-       {$ENDIF}
-        exit;
-      end;
-    end;
-  end;
-
- //this time 1 FChar only
-  for i := 0 to roma_t.Count - 1 do begin
-    r := roma_t[i];
-   {$IFDEF UNICODE}
-    if (ps^=r.hiragana_ptr^) or (ps^=r.katakana_ptr^) then begin
-   {$ELSE}
-   {$IFDEF INTEGER_HELL}
-    if (pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-    or (pinteger(ps)^=pinteger(r.katakana_ptr)^) then begin
-   {$ELSE}
-    if FcharCmp(ps, r.hiragana_ptr, 1)
-    or FcharCmp(ps, r.katakana_ptr, 1) then begin
-   {$ENDIF}
-   {$ENDIF}
-      case romatype of
-        2: Result := r.english;
-        3: Result := r.czech;
-      else
-        Result := r.japanese;
-      end;
-     {$IFDEF UNICODE}
-      Inc(ps);
-     {$ELSE}
-      Inc(ps, 4);
-     {$ENDIF}
-      exit;
-    end;
-  end;
-
- //Latin symbol
- {$IFDEF UNICODE}
-  if PWord(ps)^ and $FF00 = 0 then begin
-    Result := ps^;
-    Inc(ps);
- {$ELSE}
-  if (ps^='0') and (PChar(integer(ps)+1)^='0') then begin
-    Result := HexToUnicode(ps, 4);
-    Inc(ps, 4);
- {$ENDIF}
-    exit;
-  end;
-
- {$IFDEF UNICODE}
-  Inc(ps);
- {$ELSE}
-  Inc(ps, 4);
- {$ENDIF}
-  Result := '?';
-{$IFDEF UNICODE}{$POINTERMATH OFF}{$ENDIF}
-end;
-
-function KanaToRomaji(s:FString;romatype:integer;lang:char):string;
-var fn:string;
-  s2:string;
- {$IFDEF UNICODE}
-  ps: PWideChar;
- {$ELSE}
-  ps, pn: PAnsiChar;
- {$ENDIF}
+function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
 begin
   if lang='j'then
   begin
-    if Length(s)<=0 then begin
-      Result := '';
-      exit;
-    end;
-    s := Uppercase(s);
-    s2 := '';
-   {$IFDEF UNICODE}
-    ps := PWideChar(s);
-   {$ELSE}
-    ps := PAnsiChar(s);
-   {$ENDIF}
-
-   {$IFDEF UNICODE}
-    while ps^<>#00 do begin
-   {$ELSE}
-    pn := ps;
-    while EatOneFChar(pn) do begin
-   {$ENDIF}
-      fn := SingleKanaToRomaji(ps, romatype); //also eats one or two symbols
-      if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///WTF?!!
-      s2:=s2+fn;
-     {$IFNDEF UNICODE}
-      pn := ps; //because ps might have advanced further
-     {$ENDIF}
-    end;
-
-   {THIS HERE doesn't make much of a difference for speed}
-    repl(s2,'a-','aa');
-    repl(s2,'i-','ii');
-    repl(s2,'u-','uu');
-    repl(s2,'e-','ee');
-    repl(s2,'o-','oo');
-    if romatype>2 then repl(s2,'ou','oo');
-    if romatype>2 then repl(s2,'ei','ee');
-    repl(s2,'Dk','kk');
-    repl(s2,'Dg','gg');
-    repl(s2,'Ds','ss');
-    repl(s2,'Dz','zz');
-    repl(s2,'Dt','tt');
-    repl(s2,'Dd','dd');
-    repl(s2,'Dn','nn');
-    repl(s2,'Dh','hh');
-    repl(s2,'Db','bb');
-    repl(s2,'Dp','pp');
-    repl(s2,'Dm','mm');
-    repl(s2,'Dr','rr');
-    repl(s2,'Dy','yy');
-    repl(s2,'Dw','ww');
-    repl(s2,'Dj','jj');
-    repl(s2,'Dљ','љљ');
-    repl(s2,'Dи','ии');
-    repl(s2,'Df','ff');
-    repl(s2,'Dc','cc');
-    repl(s2,'''','');
-    if romatype>1 then repl(s2,'nb','mb');
-    if romatype>1 then repl(s2,'np','mp');
-    if romatype>1 then repl(s2,'nm','mm');
-    if romatype=3 then
-    begin
-      repl(s2,'aa','б');
-      repl(s2,'ii','н');
-      repl(s2,'uu','ъ');
-      repl(s2,'oo','у');
-      repl(s2,'ee','й');
-    end;
-  {/THIS HERE}
-    if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
-    result:=s2;
-  end;
+    Result := roma_t.KanaToRomaji(s,romatype);
+  end else
   if lang='c'then
   begin
     result:=ResolveCrom(s,0,romatype,false);
   end;
 end;
 
-function RomajiToKana(s:string;romatype:integer;clean:boolean;lang:char):string;
-var sr,s2,s3,fn:string;
-  kata:integer;
-  l,i:integer;
+function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):string;
+var s_rep: string;
 begin
   if lang='j'then
   begin
-    s2:=s;
-    if romatype>1 then repl(s2,'mb','nb');
-    if romatype>1 then repl(s2,'mp','np');
-    if romatype>1 then repl(s2,'mm','nm');
-    repl(s2,'+','x');
-    repl(s2,'kk','Dk');
-    repl(s2,'gg','Dg');
-    repl(s2,'ss','Ds');
-    repl(s2,'zz','Dz');
-    repl(s2,'tt','Dt');
-    repl(s2,'dd','Dd');
-  //  repl(s2,'nn','Dn');
-    repl(s2,'hh','Dh');
-    repl(s2,'bb','Db');
-    repl(s2,'pp','Dp');
-    repl(s2,'mm','Dm');
-    repl(s2,'rr','Dr');
-    repl(s2,'yy','Dy');
-    repl(s2,'ww','Dw');
-    repl(s2,'jj','Dj');
-    repl(s2,'љљ','Dљ');
-    repl(s2,'ии','Dи');
-    repl(s2,'ff','Df');
-    repl(s2,'cc','Dc');
-    if romatype=3 then
-    begin
-      repl(s2,'б','aa');
-      repl(s2,'н','ii');
-      repl(s2,'у','oo');
-      repl(s2,'ъ','uu');
-      repl(s2,'щ','uu');
-      repl(s2,'й','ee');
-    end;
-    kata:=0;
-    s3:='';
-  //  if romatype>1 then repl(s2,'oo','ou');
-  //  if romatype>1 then repl(s2,'ee','ei');
-    if (length(s2)>0) and (s2[1]<>'Q') then
-    begin
-      if (s2[1]='K') then
-      begin
-        repl(s2,'aa','a-');
-        repl(s2,'ii','i-');
-        repl(s2,'uu','u-');
-        repl(s2,'ee','e-');
-        repl(s2,'oo','o-');
-        repl(s2,'yaA','ya-');
-        repl(s2,'yuU','yu-');
-        repl(s2,'yoO','yo-');
-      end;
-    end;
-    while length(s2)>0 do
-    begin
-      fn:='';
-     {$IFDEF UNICODE}
-      if s2[1]='_'then fn:='_';
-      if s2[1]='-'then fn:='-';
-     {$ELSE}
-      if s2[1]='_'then fn:=UnicodeToHex('_');
-      if s2[1]='-'then fn:=UnicodeToHex('-');
-     {$ENDIF}
-      for i:=0 to roma_t.Count-1 do
-      begin
-        case romatype of
-          2: sr := roma_t[i].english;
-          3: sr := roma_t[i].czech;
-        else
-          sr := roma_t[i].japanese;
-        end;
-        if pos(sr,s2)=1 then
-        begin
-          l:=length(sr);
-          if kata=0 then
-            fn := roma_t[i].hiragana
-          else
-            fn := roma_t[i].katakana;
-          break;
-        end else
-        if (romatype>0) and (pos(roma_t[i].english,s2)=1) then
-        begin
-          l:=length(roma_t[i].japanese);
-          if kata=0 then
-            fn := roma_t[i].hiragana
-          else
-            fn := roma_t[i].katakana;
-          break;
-        end;
-      end;
-
-     //If we haven't found the match, try other romaji types
-      if fn='' then
-      for i:=0 to roma_t.Count-1 do
-        if pos(roma_t[i].japanese,s2)=1 then
-        begin
-          l:=length(roma_t[i].japanese);
-          if kata=0 then
-            fn := roma_t[i].hiragana
-          else
-            fn := roma_t[i].katakana;
-          break;
-        end else
-        if pos(roma_t[i].english,s2)=1 then
-        begin
-          l:=length(roma_t[i].english);
-          if kata=0 then
-            fn := roma_t[i].hiragana
-          else
-            fn := roma_t[i].katakana;
-          break;
-        end else
-        if pos(roma_t[i].czech,s2)=1 then
-        begin
-          l:=length(roma_t[i].czech);
-          if kata=0 then
-            fn := roma_t[i].hiragana
-          else
-            fn := roma_t[i].katakana;
-          break;
-        end;
-
-      if fn='' then
-      begin
-        if not clean then
-          if s2[1]<>'''' then
-           //Latin letter (supposedly)
-           {$IFDEF UNICODE}
-            fn := s2[1]
-           {$ELSE}
-            fn:=Format('00%2.2X',[ord(s2[1])])
-           {$ENDIF}
-          else
-            fn:='';
-        l:=1;
-      end;
-      if s2[1]='H'then
-      begin
-        kata:=0;
-        l:=1;
-        fn:='';
-      end;
-      if (s2[1]='K') or (s2[1]='Q') then
-      begin
-        kata:=1;
-        l:=1;
-        fn:='';
-      end;
-      delete(s2,1,l);
-      s3:=s3+fn;
-    end;
-    result:=s3;
-  end;
+    Result := roma_t.RomajiToKana(s,romatype,clean);
+  end else
   if lang='c'then
   begin
-    repl(s,'v','u:');
-    result:=ResolveCrom(s,romatype,0,clean);
+    s_rep := s;
+    repl(s_rep,'v','u:');
+    result:=ResolveCrom(s_rep,romatype,0,clean);
   end;
 end;
 
@@ -1605,5 +1217,13 @@ initialization
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
   GridFontSize:=14;
   STB_Canvas:=nil;
+
+  roma_t:=TRomajiTranslator.Create;
+  romac:=TStringList.Create;
+
+finalization
+  romac.Free;
+  roma_t.Free;
+
 
 end.

@@ -224,7 +224,6 @@ function BoolToStr(b: boolean): string;
 implementation
 
 var dataalloc,structalloc,indexalloc:integer;
-    tottim,datatim,othtim,proctim:double;
     statlist:TStringList;
 
 procedure ShowAllocStats;
@@ -281,7 +280,6 @@ var ms:TMemoryStream;
     tcreate:boolean;
     bufsize:integer;
     w:word;
-    stim,stim2:TDateTime;
     strubuf:pointer;
     struptr: PAnsiChar;
     precounted:boolean;
@@ -297,7 +295,6 @@ begin
   filename:=load_filename;
   rawread:=load_rawread;
 //  rawread:=false;
-  stim:=now;
   tablename:=filename;
   statlist.Add(source.FileName+'->'+filename);
   nocommit:=false;
@@ -372,7 +369,6 @@ begin
   if source<>nil then mf.Unlock;
   if not tcreate then
   begin
-    stim2:=now;
     bufsize:=AllocDataBuffer; if not prebuffer then bufsize:=0;
     mf:=source[filename+'.data'];
     if mf=nil then raise Exception.Create('TextTable: Important file missing.');
@@ -405,8 +401,6 @@ begin
     statlist.Add('  Records: '+inttostr(reccount));
     statlist.Add('  Indexes: '+inttostr(orders.Count));
     statlist.Add('  Data size: '+inttostr((mf.Size+bufsize) div 1000)+'k');
-    datatim:=datatim+(now-stim2);
-    stim2:=now;
     mf:=source[filename+'.index'];
     if mf=nil then raise Exception.Create('TextTable: Important file missing.');
     if not rawread then
@@ -472,8 +466,6 @@ begin
       j:=0;
       k:=0;
       vk:=0;
-      othtim:=othtim+(now-stim2);
-      stim2:=now;
       while i<datasize do
       begin
         case fs[k+1] of
@@ -510,8 +502,6 @@ begin
       if datasize<>0 then
         raise Exception.Create('Table "'+filename+'" is corrupt.');
     end;
-    proctim:=proctim+(now-stim2);
-    stim2:=now;
   end else
   begin
     reccount:=0;
@@ -538,11 +528,6 @@ begin
     seekbuilddesc[i].fields := ParseSeekDescription(seekbuild[i]);
   end;
 
-  tottim:=tottim+(now-stim);
-{  if filename='Words' then showmessage(filename+#13#13+'Tot:'+formatdatetime('hh:nn:ss.zzz',tottim)+#13+
-                              'Data:'+formatdatetime('hh:nn:ss.zzz',datatim)+#13+
-                              'Oth:'+formatdatetime('hh:nn:ss.zzz',othtim)+#13+
-                              'Proc:'+formatdatetime('hh:nn:ss.zzz',proctim)+#13);}
   loaded:=true;
   for i:=0 to fieldcount-1 do
   begin
@@ -582,8 +567,7 @@ var t:textfile;
     bufdatapos,bufstructpos,buforderpos:integer;
     c:char;
     l:integer;
-    w,wn:word;
-    strubuf:pointer;
+    w:word;
     mypos:integer;
 begin
   if not loaded then load;
@@ -1209,7 +1193,6 @@ var totsize:integer;
     c:char;
     b:byte;
     a:array of byte;
-    w:word;
     k:integer;
 begin
   if not loaded then load;
@@ -1243,7 +1226,6 @@ begin
   b:=0;
   moveofs(@b,struct,0,reccount*(varfields+5),1);
   moveofs(@datalen,struct,0,reccount*(varfields+5)+1,4);
-  w:=0;
   k:=0;
   for i:=0 to fieldcount-1 do
   begin
@@ -1591,7 +1573,6 @@ var s:string;
 begin
   nocommit:=true;
   s := t.ReadLn();
-  i:=0;
   system.delete(s,1,1);
   fld:=TStringList.Create;
   while s<>'' do
@@ -1600,7 +1581,6 @@ begin
     if pos(';',s)>0 then s2:=copy(s,1,pos(';',s)-1) else s2:=s;
     system.delete(s,1,length(s2));
     fld.Add(s2);
-    inc(i);
   end;
   cnt:=0;
   s := t.ReadLn();
@@ -1658,7 +1638,6 @@ var stop:boolean;
 begin
   if not Table.Loaded then Table.Load;
   repeat
-    stop:=false;
     inc(cur);
     if cur<Table.RecCount then
     begin
@@ -1797,10 +1776,6 @@ initialization
   dataalloc:=0;
   structalloc:=0;
   indexalloc:=0;
-  tottim:=0;
-  datatim:=0;
-  othtim:=0;
-  proctim:=0;
   statlist:=TStringList.Create;
 
 finalization

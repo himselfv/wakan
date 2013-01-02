@@ -714,8 +714,6 @@ begin
   TCharRead := nil;
   TRadicals := nil;
 
-  romac:=TStringList.Create;
-  roma_t:=TRomajiTranslationTable.Create;
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
   partl:=TStringList.Create;
@@ -733,8 +731,7 @@ begin
   TCharRead.Free;
   TRadicals.Free;
   FreeKnownLists;
-  romac.Free; //+
-  roma_t.Free; //+
+
   defll.Free; //+
   suffixl.Free; //+
   partl.Free; //+
@@ -895,7 +892,6 @@ begin
             delete(s,1,1);
             if s='Particles'then sect:=1 else
             if s='Deflection'then sect:=2 else
-            if s='Romaji'then sect:=3 else
             if s='PinYin'then sect:=4 else
             if s='CharInfo'then sect:=5 else
             if s='RomajiSort'then sect:=6 else
@@ -908,7 +904,6 @@ begin
            //Some of the fields are in hex unicode, so we have to convert them
             if sect=1 then partl.Add(hextofstr(s));
             if sect=2 then defll.Add(s);
-            if sect=3 then roma_t.Add(s);
             if sect=4 then splitadd(romac,s,4);
             if sect=5 then CharPropTypes.Add(s);
             if sect=6 then AddRomaSortRecord(s);
@@ -930,6 +925,9 @@ begin
       Application.Terminate;
       exit;
     end;
+
+   //It'll only read sections which it understands
+    roma_t.LoadFromFile('wakan.cfg');
 
    //Force user to select fonts
     while (pos('!',FontJapanese)>0) or (pos('!',FontJapaneseGrid)>0) or

@@ -83,6 +83,22 @@ type
 
   end;
 
+{
+Search results are encoded into strings:
+  [fixed-length header] article contents
+
+Where [fixed-length header] is, in bytes:
+  5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname)
+And article contents MUST contain "dDicname" too because Wakan relies on it.
+
+If several results are really similar, Wakan merges those into one. Header then
+contains the best of everything (lowest sort score, first availabe userindex etc)
+and article is a merger of all articles.
+
+Article which information (dicindex+dicname) went to the header MUST go first
+in this merger.
+}
+
 //Compability
 procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
   full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
@@ -725,10 +741,11 @@ begin
           scomp := copy(sorts,1,5) + copy(scomp,6,Length(scomp)-5);
         //add user index if missing
         if copy(scomp,6,6)='000000' then
-          scomp := copy(scomp,1,5) + copy(scur,6,12) + copy(scomp,18,Length(scomp)-17);
+          scomp := copy(scomp,1,5) + copy(scur,6,6) + copy(scomp,12,Length(scomp)-11);
         //add tl
         if pos(copy(entry,3,length(entry)-2),scomp)=0 then begin
          //for now we add everything to the end, ignoring what result had higher score
+         //if we ever care about that, we also have to replace DicName and WordIndex in the header
           delete(scomp,length(scomp),1); //delete '}'
           if (length(entry)>0) and (entry[1]=ALTCH_TILDE) then delete(entry,1,2);
           scomp:=scomp+' / '+entry+'}';
