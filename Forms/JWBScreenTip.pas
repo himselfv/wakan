@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons;
+  ExtCtrls, Buttons,JWBDicSearch;
 
 type
   TfScreenTip = class(TForm)
@@ -19,7 +19,7 @@ type
   public
     screenTipText:string;
     screenTipWt:integer;
-    screenTipList:TStringList;
+    screenTipList:TSearchResults;
     screenTipWords:integer;
     screenTipWidth:integer;
     screenTipButton:integer;
@@ -44,7 +44,7 @@ uses JWBStrings, JWBUnit, JWBKanjiCard, JWBMenu, JWBSettings;
 
 procedure TfScreenTip.FormCreate(Sender: TObject);
 begin
-  screenTipList:=TStringList.Create;
+  screenTipList:=TSearchResults.Create;
 end;
 
 procedure TfScreenTip.FormDestroy(Sender: TObject);
@@ -70,7 +70,7 @@ begin
 end;
 
 procedure TfScreenTip.PaintScreenTip;
-var sl:TStringList;
+var sl:TSearchResults;
     maxwords:integer;
     ss:string;
     ch,kch:integer;
@@ -117,8 +117,7 @@ begin
   if curlang='c'then FontJpCh:=FontChinese else FontJpCh:=FontJapanese;
   for i:=0 to maxwords-1 do
   begin
-    ss:=sl[i];
-    delete(ss,1,30);
+    ss:=sl[i].ArticlesToString;
     rect.left:=sep+1;
     rect.right:=fScreenTip.Width-sep-2;
     rect.top:=sep+ch*i+1+tpp;

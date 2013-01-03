@@ -101,7 +101,7 @@ type
     As a rule,
       ul[i]==copy(dicl[i],6,25).
       dicsl[i]=copy(dicl[i],31,length(dicsl[i])-30). }
-    dicrl:TStringList;
+    dicrl:TSearchResults;
    { Search with current settings, populate the results }
     procedure Look();
    { Initialize a TDicSearchRequest to search like Look() would.
@@ -294,7 +294,7 @@ begin
     try
       for i:=0 to dicrl.Count - 1 do
         if req.full or (i<StringGrid1.VisibleRowCount) then
-          tmp.Add(copy(dicrl[i],31,length(dicrl[i])-30));
+          tmp.Add(dicrl[i].ArticlesToString);
       FillWordGrid(StringGrid1,tmp,false,false);
     finally
       FreeAndNil(tmp);
@@ -535,10 +535,10 @@ begin
         end;
       end;
     end;
-    if copy(dicrl[curword-1],6,6)<>'000000'then
+    if dicrl[curword-1].userIndex<>0 then
     begin
       SpeedButton19.Enabled:=true;
-      TUser.Locate('Index',copy(dicrl[curword-1],6,6),true);
+      TUser.Locate('Index',dicrl[curword-1].UserIndexToString,true);
       fWordCategory.Label11.Caption:=DateForm(TUser.Str(TUserAdded));
       fWordCategory.Label12.Caption:=DateForm(TUser.Str(TUserLearned));
       fWordCategory.Label13.Caption:=DateForm(TUser.Str(TUserMastered));
@@ -547,7 +547,7 @@ begin
       fWordCategory.RxLabel9.Caption:=StateStr(TUser.Int(TUserScore));
       sl:=TStringList.Create;
       sl.Clear;
-      ListWordCategories(strtoint(copy(dicrl[curword-1],6,6)),sl);
+      ListWordCategories(dicrl[curword-1].UserIndex,sl);
       s:='';
       for i:=0 to sl.Count-1 do if s='' then s:=sl[i] else s:=s+', '+sl[i];
       fWordCategory.Label55.Caption:=s;
@@ -666,7 +666,7 @@ end;
 
 procedure TfUser.FormCreate(Sender: TObject);
 begin
-  dicrl:=TStringList.Create;
+  dicrl:=TSearchResults.Create;
 end;
 
 procedure TfUser.FormDestroy(Sender: TObject);
@@ -850,8 +850,8 @@ end;
 procedure TfUser.SpeedButton19Click(Sender: TObject);
 begin
   fMenu.aMode5Execute(sender);
-  if copy(dicrl[curword-1],6,6)<>'000000' then
-    fWords.SearchWord(strtoint(copy(dicrl[curword-1],6,6)));
+  if dicrl[curword-1].userIndex<>0 then
+    fWords.SearchWord(dicrl[curword-1].userIndex);
 end;
 
 

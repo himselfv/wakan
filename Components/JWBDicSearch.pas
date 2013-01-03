@@ -6,7 +6,7 @@ Has a lot of dark legacy in code form.
 
 interface
 uses SysUtils, Classes, JWBStrings, JWBUtils, TextTable, MemSource, StdPrompt,
-  JWBAnnotations, JWBDic;
+  JWBDic;
 
 type
  { How to match words (exact, match left, right or anywhere) }
@@ -33,6 +33,48 @@ type
   TDicCursor2 = class(TDicCursor)
   public
     PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
+  end;
+
+  TSearchResult = record
+    score: integer; //lower is better
+    userindex: integer; //0 means not in a user dict
+    userscore: integer;
+    dicindex: integer;  //only one dictionary reference is supported for the result
+    dicname: string;
+    slen: integer; //wtf
+    sdef: char; //match class -- see TCandidateLookup.verbType
+    kanji: string;
+    kana: string;
+    entry: string;
+    procedure Reset;
+    function ScoreToString: string;
+    function UserIndexToString: string;
+    function DicIndexToString: string;
+    function ArticlesToString: string;
+    function ToString: string;
+  end;
+  PSearchResult = ^TSearchResult;
+
+  TSearchResults = class;
+  TSearchResultsCompare = function(List: TSearchResults; Index1, Index2: Integer): Integer;
+
+  TSearchResults = class
+  protected
+    FList: array of PSearchResult;
+    FListUsed: integer;
+    procedure Grow(ARequiredFreeLen: integer);
+    function GetItemPtr(Index: integer): PSearchResult;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure ExchangeItems(I,J: integer);
+    procedure QuickSort(L, R: Integer; SCompare: TSearchResultsCompare);
+  public
+    destructor Destroy; override;
+    procedure Clear;
+    function AddResult: PSearchResult;
+    function Add(const sr: TSearchResult): integer;
+    procedure CustomSort(SCompare: TSearchResultsCompare);
+    procedure Sort();
+    property Count: integer read FListUsed;
+    property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
 
  { Dictionary search class. Reusable.
@@ -62,9 +104,8 @@ type
     CUserPrior: TTextTableCursor;
     stUserPriorKanji: TSeekObject;
     fldUserPriorCount: integer;
-    CAnnot: TAnnotationCursor;
   public
-    procedure Search(search:SatanString; wt: integer; sl: TStringList);
+    procedure Search(search:SatanString; wt: integer; sl: TSearchResults);
 
   public //Output
     WasFull: boolean;
@@ -79,13 +120,13 @@ type
     presentl:TStringList;
     p4reading:boolean;
     procedure TestLookupCandidate(dic: TDicCursor2; lc: PCandidateLookup; wt: integer;
-      sl: TStringList);
+      sl: TSearchResults);
 
   protected
     a3kana:boolean;   //a==3 and only kana in string
     a4limitkana:boolean; //a in [4,5]
     procedure DicInitialLookup(dic: TDicCursor; wt: integer; sxxr: string; sxx: string);
-    procedure SortResults(sl: TStringList);
+    procedure FinalizeResults(sl: TSearchResults);
 
   end;
 
@@ -105,9 +146,44 @@ Article which information (dicindex+dicname) went to the header MUST go first
 in this merger.
 }
 
+{
+I don't know where to put this so I'm placing it here.
+This is the code that attaches annotations for every search result.
+It clearly doesn't belong here in dictionary search unit. It should be moved
+to wherever the results are handled.
+
+In TDicSearchRequest:
+
+    CAnnot: TAnnotationCursor;
+
+In TDicSearchRequest.Prepare:
+  if HaveAnnotations() then
+    CAnnot := TAnnotationCursor.Create(TAnnots)
+  else
+    CAnnot := nil;
+
+On preparing another result:
+
+        if CAnnot<>nil then
+        begin
+          CAnnot.SeekK(dic.Str(dic.TDictKanji),dic.Str(dic.TDictPhonetic));
+          s2:=CAnnot.GetAll('t',', ');
+          if CAnnot.GetOne('c')<>'' then s2:=UH_SETCOLOR+CAnnot.GetOne('c')+s2;
+          ii:=pos('{'+statpref,scur.entry)+length(statpref)+1;
+          if scur[ii]=ALTCH_EXCL then inc(ii,2);
+          if scur[ii]=ALTCH_TILDE then inc(ii,2);
+          if scur[ii]=ALTCH_EXCL then inc(ii,2);
+          if s2<>'' then
+            scur:=copy(scur,1,ii-1)+
+              s2+' >> '+
+              copy(scur,ii,length(scur)-ii+1);
+        end;
+}
+
+
 //Compability
 procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
-  full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
+  full:boolean;wt,maxwords:integer;sl:TSearchResults;dictgroup:integer;var wasfull:boolean);
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
 
@@ -133,6 +209,180 @@ begin
     end;
 end;
 
+
+{
+Search Results
+}
+
+destructor TSearchResults.Destroy;
+begin
+  Clear;
+  inherited;
+end;
+
+//Reserves enough memory to store at least ARequiredFreeLen additional items to list.
+procedure TSearchResults.Grow(ARequiredFreeLen: integer);
+const MIN_GROW_LEN = 20;
+begin
+  if Length(FList)-FListUsed>=ARequiredFreeLen then exit; //already have the space
+ //else we don't grow in less than a chunk
+  if ARequiredFreeLen < MIN_GROW_LEN then
+    ARequiredFreeLen := MIN_GROW_LEN;
+  SetLength(FList, Length(FList)+ARequiredFreeLen);
+end;
+
+function TSearchResults.GetItemPtr(Index: integer): PSearchResult;{$IFDEF INLINE} inline;{$ENDIF}
+begin
+  Result := FList[Index];
+end;
+
+function TSearchResults.AddResult: PSearchResult;
+begin
+ //Thread unsafe
+  Grow(1);
+  New(Result);
+  FList[FListUsed] := Result;
+  Inc(FListUsed);
+end;
+
+function TSearchResults.Add(const sr: TSearchResult): integer;
+begin
+  AddResult^ := sr;
+  Result := FListUsed-1;
+end;
+
+procedure TSearchResults.Clear;
+var i: integer;
+begin
+  for i := 0 to FListUsed - 1 do
+    Dispose(FList[i]);
+  SetLength(FList, 0);
+  FListUsed := 0;
+end;
+
+procedure TSearchResults.ExchangeItems(I,J: integer);
+var tmp: PSearchResult;
+begin
+  tmp := FList[I];
+  FList[I] := FList[J];
+  FList[J] := tmp;
+end;
+
+procedure TSearchResults.QuickSort(L, R: Integer; SCompare: TSearchResultsCompare);
+var
+  I, J, P: Integer;
+begin
+  repeat
+    I := L;
+    J := R;
+    P := (L + R) shr 1;
+    repeat
+      while SCompare(Self, I, P) < 0 do Inc(I);
+      while SCompare(Self, J, P) > 0 do Dec(J);
+      if I <= J then
+      begin
+        if I <> J then
+          ExchangeItems(I, J);
+        if P = I then
+          P := J
+        else if P = J then
+          P := I;
+        Inc(I);
+        Dec(J);
+      end;
+    until I > J;
+    if L < J then QuickSort(L, J, SCompare);
+    L := I;
+  until I >= R;
+end;
+
+procedure TSearchResults.CustomSort(SCompare: TSearchResultsCompare);
+begin
+  QuickSort(0, Count-1, SCompare);
+end;
+
+function DefaultSearchResultCompare(List: TSearchResults; Index1, Index2: Integer): Integer;
+var pi, pj: PSearchResult;
+begin
+  pi := List.FList[Index1];
+  pj := List.FList[Index2];
+  Result := (pi^.score-pj^.score);
+end;
+
+procedure TSearchResults.Sort();
+begin
+  CustomSort(@DefaultSearchResultCompare);
+end;
+
+procedure TSearchResult.Reset;
+begin
+  score := 0;
+  userIndex := 0;
+  userScore := -1;
+  dicindex := 0;
+  dicname := '';
+  slen := 0;
+  sdef := 'F'; //maybe something else?
+  kanji := '';
+  kana := '';
+  entry := '';
+end;
+
+{ Converts a SearchResult into an old-style ResultString }
+{ 5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname) }
+function TSearchResult.ToString: string;
+begin
+  Result := ScoreToString + UserIndexToString + DicIndexToString
+    + Format('%.2d',[slen]) + sdef;
+
+  Result:=Result+dicname;
+  if Length(Result)>30 then //dicname too long
+    SetLength(Result,30);
+  while length(Result)<30 do
+    Result:=Result+' ';
+
+  Result := Result+ArticlesToString;
+end;
+
+function TSearchResult.ScoreToString: string;
+var sc: integer;
+begin
+ //5 char integer: Score
+  sc := score;
+  if sc>99999 then sc:=99999;
+  if sc<0 then sc:=0;
+  Result := IntToStr(sc);
+  while Length(Result)<5 do
+    Result := '0' + Result;
+end;
+
+function TSearchResult.UserIndexToString: string;
+begin
+ //6 char integer: UserIndex
+  Result := IntToStr(self.userindex);
+  if Length(Result)>6 then Result := '000000';
+  while Length(Result)<6 do
+    Result:='0'+Result;
+end;
+
+function TSearchResult.DicIndexToString: string;
+begin
+ //6 char integer: DicIndex
+  Result := IntToStr(self.dicindex);
+  if Length(Result)>6 then Result := '000000';
+  while Length(Result)<6 do
+    Result:='0'+Result;
+end;
+
+function TSearchResult.ArticlesToString: string;
+var statpref: string;
+begin
+  if UserScore>=0 then
+    statpref:='!'+inttostr(UserScore)
+  else
+    statpref:='';
+  Result := statpref + kanji + ' [' + statpref + kana + '] {' + entry + '}';
+end;
 
 
 {
@@ -309,7 +559,7 @@ DicSearch()
 Don't use if you're doing a lot of searches, use TDicSearchRequest instead.
 }
 procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
-  full:boolean;wt,maxwords:integer;sl:TStringList;dictgroup:integer;var wasfull:boolean);
+  full:boolean;wt,maxwords:integer;sl:TSearchResults;dictgroup:integer;var wasfull:boolean);
 var req: TDicSearchRequest;
 begin
   req := TDicSearchRequest.Create;
@@ -391,10 +641,6 @@ begin
   CUserPrior := TTextTableCursor.Create(TUserPrior);
   stUserPriorKanji := TUserPrior.GetSeekObject('Kanji');
   fldUserPriorCount := TUserPrior.Field('Count');
-  if HaveAnnotations() then
-    CAnnot := TAnnotationCursor.Create(TAnnots)
-  else
-    CAnnot := nil;
 end;
 
 {
@@ -415,10 +661,8 @@ Note:
 - Except for mode=2, then "search" must be raw english
 }
 
-procedure TDicSearchRequest.Search(search:SatanString; wt: integer; sl:TStringList);
-var i:integer;
-    di:integer;
-    _s:string;
+procedure TDicSearchRequest.Search(search:SatanString; wt: integer; sl:TSearchResults);
+var i,di:integer;
 begin
   if search='' then exit;
   mess := nil;
@@ -435,11 +679,14 @@ begin
     stEditorInsert,
     stEditorAuto: begin
       p4reading:=wt=-1;
-      if wt=-1 then if partl.IndexOf(search)>-1 then begin
-        _s := ChinFrom(search);
-        sl.Add('000000000000000000'+inttostr(flength(search))+'P          '
-          +_s+' ['+_s+'] {'+KanaToRomaji(search,1,'j')+' particle}');
-      end;
+      if wt=-1 then if partl.IndexOf(search)>-1 then
+        with sl.AddResult^ do begin
+          Reset();
+          sdef := 'P';
+          kana := ChinFrom(search);
+          kanji := kana;
+          entry := KanaToRomaji(search,1,'j')+' particle';
+        end;
     end;
   end;
 
@@ -464,7 +711,7 @@ begin
 
   end; //of dict enum
 
-  SortResults(sl);
+  FinalizeResults(sl);
 
   mess.Free;
 end;
@@ -527,7 +774,7 @@ begin
 end;
 
 procedure TDicSearchRequest.TestLookupCandidate(dic: TDicCursor2; lc: PCandidateLookup;
-  wt: integer; sl: TStringList);
+  wt: integer; sl: TSearchResults);
 var
   i, ii: integer;
 
@@ -544,13 +791,14 @@ var
   ts:string;
   popclas:integer;
   UserScore:integer;
-  UserIndex:string;
+  UserIndex:integer;
   sort:integer;
   freq:integer;
   sorts:string;
   statpref:string;
   ssig:string; //translation signature (reading x kanji) to merge duplicates
-  scomp,scur:string;
+  scomp:PSearchResult;
+  scur:TSearchResult;
 
   existingIdx: integer;
 
@@ -563,7 +811,7 @@ var
       if dic.Str(dic.TDictPhonetic)=CUser.Str(TUserPhonetic) then
       begin
         UserScore:=CUser.Int(TUserScore);
-        UserIndex:=CUser.Str(TUserIndex);
+        UserIndex:=CUser.Int(TUserIndex);
       end;
       CUser.Next;
     end;
@@ -664,7 +912,7 @@ begin
       //CUser.SetOrder('Kanji_Ind');
 
       UserScore:=-1;
-      UserIndex:='';
+      UserIndex:=0;
       if pos(UH_LBEG+'skana'+UH_LEND,entry)>0 then
         TryGetUserScore(dic.Str(dic.TDictPhonetic));
       TryGetUserScore(dic.Str(dic.TDictKanji));
@@ -702,43 +950,32 @@ begin
         end;
         sort:=sort+10000-freq;
       end;
-      if sort>99999 then sort:=99999;
-      if sort<0 then sort:=0;
 
       if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then
         entry:=copy(entry,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(entry,3,length(entry)-2);
 
-      sorts:=dic.Str(dic.TDictIndex);
-      while length(sorts)<6 do
-        sorts:='0'+sorts;
-      while length(UserIndex)<6 do
-        UserIndex:='0'+UserIndex;
-      UserIndex:=UserIndex+sorts;
-      sorts:=inttostr(sort);
-      if length(sorts)>5 then
-        sorts:='99999';
-      while length(sorts)<5 do
-        sorts:='0'+sorts;
-      sorts:=sorts+UserIndex+Format('%.2d',[slen]);
-      // if sdef<>'F'then sorts:=sorts+'I'else sorts:=sorts+'F';
+     //Fill in current result
+      scur.Reset;
+      scur.score := sort;
+      scur.userindex := UserIndex;
+      if fSettings.CheckBox11.Checked then
+        scur.userscore := UserScore
+      else
+        scur.userscore := -1;
+      scur.dicindex := dic.Int(dic.TDictIndex);
+      scur.dicname := dic.dic.name;
+      scur.slen := slen;
+     // if sdef<>'F'then scur.sdef:='I' else scur.sdef:='F';
       if (pos('-v'+UH_LEND,entry)>0) then
-        sorts:=sorts+'I'
+        scur.sdef:='I'
       else
-        sorts:=sorts+'F';
-      // 5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname)
-      sorts:=sorts+dic.dic.name;
-      while length(sorts)<30 do
-        sorts:=sorts+' ';
-
-      statpref:='';
-      if (fSettings.CheckBox11.Checked) and (UserScore>-1) then
-        statpref:='!'+inttostr(UserScore);
+        scur.sdef:='F';
+      scur.kana := dic.Str(dic.TDictPhonetic);
       if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,entry)<>0) then
-        scur:=sorts+statpref+dic.Str(dic.TDictPhonetic)
-          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+entry+'}'
+        scur.kanji := scur.kana
       else
-        scur:=sorts+statpref+CheckKnownKanji(ChinTo(dic.Str(dic.TDictKanji)))
-          +' ['+statpref+dic.Str(dic.TDictPhonetic)+'] {'+statpref+entry+'}';
+        scur.kanji := CheckKnownKanji(ChinTo(dic.Str(dic.TDictKanji)));
+      scur.entry := entry;
 
      //result signature (reading x kanji)
       ssig:=dic.Str(dic.TDictPhonetic)+'x'+dic.Str(dic.TDictKanji);
@@ -747,38 +984,25 @@ begin
       if existingIdx>=0 then
       begin
         existingIdx := integer(presentl.Objects[existingIdx]); //presentl is sorted, real indexes are kept this way
+       //Update existing one
         scomp:=sl[existingIdx];
         //lower sorting order
-        if copy(scomp,1,5)>copy(sorts,1,5) then
-          scomp := copy(sorts,1,5) + copy(scomp,6,Length(scomp)-5);
+        if scomp.score > scur.score then
+          scomp.score := scur.score;
         //add user index if missing
-        if copy(scomp,6,6)='000000' then
-          scomp := copy(scomp,1,5) + copy(scur,6,6) + copy(scomp,12,Length(scomp)-11);
+        if scomp.userindex < 0 then begin
+          scomp.userindex := scur.userindex;
+          scomp.userscore := scur.userscore;
+        end;
         //add tl
-        if pos(copy(entry,3,length(entry)-2),scomp)=0 then begin
+        if pos(copy(entry,3,length(entry)-2),scomp.entry)=0 then begin
          //for now we add everything to the end, ignoring what result had higher score
          //if we ever care about that, we also have to replace DicName and WordIndex in the header
-          delete(scomp,length(scomp),1); //delete '}'
           if (length(entry)>0) and (entry[1]=ALTCH_TILDE) then delete(entry,1,2);
-          scomp:=scomp+' / '+entry+'}';
+          scomp.entry:=scomp.entry+' / '+entry;
         end;
-        sl[existingIdx]:=scomp;
       end else
       begin
-        if CAnnot<>nil then
-        begin
-          CAnnot.SeekK(dic.Str(dic.TDictKanji),dic.Str(dic.TDictPhonetic));
-          s2:=CAnnot.GetAll('t',', ');
-          if CAnnot.GetOne('c')<>'' then s2:=UH_SETCOLOR+CAnnot.GetOne('c')+s2;
-          ii:=pos('{'+statpref,scur)+length(statpref)+1;
-          if scur[ii]=ALTCH_EXCL then inc(ii,2);
-          if scur[ii]=ALTCH_TILDE then inc(ii,2);
-          if scur[ii]=ALTCH_EXCL then inc(ii,2);
-          if s2<>'' then
-            scur:=copy(scur,1,ii-1)+
-              s2+' >> '+
-              copy(scur,ii,length(scur)-ii+1);
-        end;
         existingIdx := sl.Add(scur);
         presentl.AddObject(ssig, TObject(existingIdx));
       end;
@@ -795,36 +1019,36 @@ begin
   end;
 end;
 
-procedure TDicSearchRequest.SortResults(sl: TStringList);
+procedure TDicSearchRequest.FinalizeResults(sl: TSearchResults);
 var i: integer;
-  scomp, scur:string;
+  scomp: PSearchResult;
+  ex_pos: integer;
   s2: string;
   sl2: TStringList;
   sl2i: integer;
 begin
   if sl.Count<=1 then exit; //apparently that's the most common case when translating
+
   sl.Sort;
+
+ //Add user entries to the beginning
   for i:=0 to sl.Count-1 do
-    if copy(sl[i],6,6)<>'000000'then
+    if sl[i].userindex<>0 then
     begin
-      CUser.Locate(@stUserIndex,inttostr(strtoint(copy(sl[i],6,6))),true);
+      CUser.Locate(@stUserIndex,IntToStr(sl[i].userindex),true);
       scomp:=sl[i];
-      scur:=sl[i];
-      delete(scomp,1,pos(' {',scomp));
-      delete(scomp,1,1);
-      if (length(scomp)>0) and (scomp[1]=ALTCH_EXCL) then delete(scomp,1,2);
-      if (length(scomp)>0) and (scomp[1]=ALTCH_TILDE) then delete(scomp,1,2);
-      scur:=copy(scur,1,length(sl[i])-length(scomp));
       s2:=CUser.Str(TUserEnglish);
-      if pos(s2,scomp)>0 then
-        scomp:=copy(scomp,1,pos(s2,scomp)-1)+copy(scomp,pos(s2,scomp)+length(s2),length(scomp)-length(s2)-pos(s2,scomp)+1)
-      else
-        scomp:=' // '+scomp;
+      ex_pos := pos(s2,scomp.entry);
+     //If there's already this article in the list, cut it
+      if ex_pos>0 then
+        scomp.entry := copy(scomp.entry,1,ex_pos-1) + copy(scomp.entry,ex_pos+Length(s2),length(scomp.entry)-length(s2)-ex_pos+1);
+
       sl2:=TStringList.Create;
       ListWordCategories(CUser.Int(TUserIndex),sl2);
       for sl2i:=0 to sl2.Count-1 do s2:=s2+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
       sl2.Free;
-      sl[i]:=scur+s2+scomp;
+
+      scomp.entry := s2+' // '+scomp.entry;
     end;
 end;
 

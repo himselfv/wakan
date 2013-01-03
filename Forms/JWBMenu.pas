@@ -3936,10 +3936,9 @@ begin
   maxslen:=0;
   for i:=0 to maxwords-1 do
   begin
-    ss:=fScreenTip.screenTipList[i];
-    slen:=strtoint(copy(ss,18,2));
+    slen:=fScreenTip.screenTipList[i].slen;
     if slen>maxslen then maxslen:=slen;
-    delete(ss,1,30);
+    ss:=fScreenTip.screenTipList[i].ArticlesToString;
     SplitWord(ss,s1,s2,s3,s4);
     rect.left:=0;
     rect.right:=Screen.Width;

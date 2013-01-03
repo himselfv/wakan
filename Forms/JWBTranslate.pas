@@ -50,7 +50,7 @@ uses
 {$DEFINE MTHREAD_SUPPORT}
 
 //Display a window showing how much time Auto-TL took
-//{$DEFINE TLSPEEDREPORT}
+{$DEFINE TLSPEEDREPORT}
 
 type
  { Character position in source text. }
@@ -294,7 +294,7 @@ type
     function CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
    {$ENDIF}
     procedure AutoTranslateLine(y: integer; x_bg, x_en: integer;
-      req: TDicSearchRequest; dicsl: TStringList);
+      req: TDicSearchRequest; dicsl: TSearchResults);
   public
     procedure AutoTranslate();
     procedure SetTranslation();
@@ -304,7 +304,7 @@ type
   TTranslationThread = class(TThread)
   protected
     req: TDicSearchRequest;
-    dicsl: TStringList;
+    dicsl: TSearchResults;
     blockfromy: integer;
     blocktoy: integer;
     blockfromx: integer;
@@ -1232,7 +1232,7 @@ begin
   req.dic_ignorekana := true;
   req.Prepare;
 
-  dicsl := TStringList.Create;
+  dicsl := TSearchResults.Create;
   try
     i := blockfromy;
     while (not Terminated) and (i<=blocktoy) do begin
@@ -1281,7 +1281,7 @@ var j:integer;
   sp: TSMPromptForm;
   startTime: cardinal;
   req: TDicSearchRequest;
-  dicsl: TStringList;
+  dicsl: TSearchResults;
 
   donework: integer;
   totalwork: integer;
@@ -1316,7 +1316,7 @@ begin
  //Don't show the progress window at all unless the operation is taking a long time.
   sp := nil;
   req := nil;
-  dicsl := TStringList.Create;
+  dicsl := TSearchResults.Create;
   startTime := GetTickCount;
   try
 
@@ -1416,7 +1416,7 @@ begin
 end;
 
 procedure TfTranslate.AutoTranslateLine(y: integer; x_bg, x_en: integer;
-  req: TDicSearchRequest; dicsl: TStringList);
+  req: TDicSearchRequest; dicsl: TSearchResults);
 var x: integer;
   a:integer;
   s:string;
@@ -1440,7 +1440,7 @@ begin
       dicsl.Clear;
       s:=GetDocWord(x,y,wt,{stopuser=}true);
       req.Search(s, wt, dicsl);
-      if dicsl.Count>0 then s:=dicsl[0] else s:='';
+      if dicsl.Count>0 then s:=dicsl[0].ToString else s:='';
       a:=SetWordTrans(x,y,[tfScanParticle],s);
       if a=0 then a:=1;
       inc(x,a);
@@ -2917,7 +2917,7 @@ begin
     if i=-1 then
       word := ''
     else
-      word := dicrl[i];
+      word := dicrl[i].ToString;
   end;
   Result := SetWordTrans(x,y,flags,word);
 end;
