@@ -1138,12 +1138,12 @@ begin
       while not TUser.EOF do
       begin
         TUserSheet.SetOrder('Word_Ind');
-        TUserSheet.Locate('Word',inttostr(TUser.Int(TUserIndex)),true);
+        TUserSheet.Locate('Word',TUser.Int(TUserIndex));
         gfound:=false; gmore:=false; lfound:=false;
         word:=TUser.Int(TUserIndex);
         while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
         begin
-          TUserCat.Locate('Index',TUserSheet.Str(TUserSheetNumber),true);
+          TUserCat.Locate('Index',TUserSheet.TrueInt(TUserSheetNumber));
           if chr(TUserCat.Int(TUserCatType))='L'then lfound:=true;
           if chr(TUserCat.Int(TUserCatType))='G'then if gfound then gmore:=true;
           if chr(TUserCat.Int(TUserCatType))='G'then gfound:=true;

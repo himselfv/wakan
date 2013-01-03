@@ -35,6 +35,18 @@ type
     PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
   end;
 
+  {
+   If DicIndex/DicName are set, article contents MUST contain "dDicname" too
+   because Wakan relies on it. (I'll fix that later)
+
+   If several results are really similar, Wakan merges those into one. Header then
+   contains the best of everything (lowest sort score, first availabe userindex etc)
+   and article is a merger of all articles.
+
+   Article which information (dicindex+dicname) went to the header MUST go first
+   in this merger.
+  }
+
   TSearchResult = record
     score: integer; //lower is better
     userindex: integer; //0 means not in a user dict
@@ -47,11 +59,7 @@ type
     kana: string;
     entry: string;
     procedure Reset;
-    function ScoreToString: string;
-    function UserIndexToString: string;
-    function DicIndexToString: string;
     function ArticlesToString: string;
-    function ToString: string;
   end;
   PSearchResult = ^TSearchResult;
 
@@ -129,22 +137,6 @@ type
     procedure FinalizeResults(sl: TSearchResults);
 
   end;
-
-{
-Search results are encoded into strings:
-  [fixed-length header] article contents
-
-Where [fixed-length header] is, in bytes:
-  5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname)
-And article contents MUST contain "dDicname" too because Wakan relies on it.
-
-If several results are really similar, Wakan merges those into one. Header then
-contains the best of everything (lowest sort score, first availabe userindex etc)
-and article is a merger of all articles.
-
-Article which information (dicindex+dicname) went to the header MUST go first
-in this merger.
-}
 
 {
 I don't know where to put this so I'm placing it here.
@@ -326,52 +318,6 @@ begin
   kanji := '';
   kana := '';
   entry := '';
-end;
-
-{ Converts a SearchResult into an old-style ResultString }
-{ 5 (Sort), 6 (Userindex), 6 (Dicindex), 2 (slen), 1 (sdef), 10 (dicname) }
-function TSearchResult.ToString: string;
-begin
-  Result := ScoreToString + UserIndexToString + DicIndexToString
-    + Format('%.2d',[slen]) + sdef;
-
-  Result:=Result+dicname;
-  if Length(Result)>30 then //dicname too long
-    SetLength(Result,30);
-  while length(Result)<30 do
-    Result:=Result+' ';
-
-  Result := Result+ArticlesToString;
-end;
-
-function TSearchResult.ScoreToString: string;
-var sc: integer;
-begin
- //5 char integer: Score
-  sc := score;
-  if sc>99999 then sc:=99999;
-  if sc<0 then sc:=0;
-  Result := IntToStr(sc);
-  while Length(Result)<5 do
-    Result := '0' + Result;
-end;
-
-function TSearchResult.UserIndexToString: string;
-begin
- //6 char integer: UserIndex
-  Result := IntToStr(self.userindex);
-  if Length(Result)>6 then Result := '000000';
-  while Length(Result)<6 do
-    Result:='0'+Result;
-end;
-
-function TSearchResult.DicIndexToString: string;
-begin
- //6 char integer: DicIndex
-  Result := IntToStr(self.dicindex);
-  if Length(Result)>6 then Result := '000000';
-  while Length(Result)<6 do
-    Result:='0'+Result;
 end;
 
 function TSearchResult.ArticlesToString: string;
@@ -726,9 +672,9 @@ begin
   stJp:
     case MatchType of
       mtMatchAnywhere: begin end; //nothing
-      mtMatchRight: dic.Locate(dic.stSortReverse,sxxr,false);
+      mtMatchRight: dic.Locate(dic.stSortReverse,sxxr);
     else
-      dic.Locate(dic.stSort,sxxr,false);
+      dic.Locate(dic.stSort,sxxr);
     end;
   stEn:
     dic.FindIndexString(true,lowercase(sxx));
@@ -736,26 +682,26 @@ begin
     if a3kana then
       case MatchType of
         mtMatchAnywhere: begin end;
-        mtMatchRight: dic.Locate(dic.stSortReverse,sxxr,false);
+        mtMatchRight: dic.Locate(dic.stSortReverse,sxxr);
       else
-        dic.Locate(dic.stSort,sxxr,false);
+        dic.Locate(dic.stSort,sxxr);
       end
     else
       case MatchType of
         mtMatchAnywhere: begin end;
-        mtMatchRight: dic.Locate(dic.stKanjiReverse,sxx,false);
+        mtMatchRight: dic.Locate(dic.stKanjiReverse,sxx);
       else
-        dic.Locate(dic.stKanji,sxx,false);
+        dic.Locate(dic.stKanji,sxx);
       end;
   stEditorInsert,
   stEditorAuto:
     if a4limitkana then begin
       dic.SetOrder('Phonetic_Ind');
-      dic.Locate(dic.stSort,sxxr,false);
+      dic.Locate(dic.stSort,sxxr);
     end else
     begin
       dic.SetOrder('Kanji_Ind');
-      dic.Locate(dic.stKanji,sxx,false);
+      dic.Locate(dic.stKanji,sxx);
     end;
   end;
 end;
@@ -805,7 +751,7 @@ var
  //Used several times with different kanji_vals
   procedure TryGetUserScore(kanji_val: string);
   begin
-    CUser.Locate(@stUserKanji,kanji_val,false);
+    CUser.Locate(@stUserKanji,kanji_val);
     while (not CUser.EOF) and (kanji_val=CUser.Str(TUserKanji)) do
     begin
       if dic.Str(dic.TDictPhonetic)=CUser.Str(TUserPhonetic) then
@@ -880,7 +826,7 @@ begin
   begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
-    if a=stEn then dic.Locate(dic.stIndex,inttostr(wif),true);
+    if a=stEn then dic.Locate(dic.stIndex,wif);
     //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.Str(dic.TDictEnglish));
     if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
@@ -906,7 +852,7 @@ begin
       //  else
       //    inc(popclas,dic.Int(dic.Field('Priority'))*10);
       if (a in [stEditorInsert, stEditorAuto]) and (p4reading)
-      and CUserPrior.Locate(@stUserPriorKanji,dic.Str(dic.TDictKanji),false) then
+      and CUserPrior.Locate(@stUserPriorKanji,dic.Str(dic.TDictKanji)) then
         dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
 
       //CUser.SetOrder('Kanji_Ind');
@@ -1035,7 +981,7 @@ begin
   for i:=0 to sl.Count-1 do
     if sl[i].userindex<>0 then
     begin
-      CUser.Locate(@stUserIndex,IntToStr(sl[i].userindex),true);
+      CUser.Locate(@stUserIndex,sl[i].userindex);
       scomp:=sl[i];
       s2:=CUser.Str(TUserEnglish);
       ex_pos := pos(s2,scomp.entry);

@@ -193,7 +193,7 @@ begin
     begin
       s_fltval:=uppercase(sl[i]); //Locate is case-insensitive anyway
       CCharRead.SetOrder('Reading_Ind');
-      CCharRead.Locate('Reading',s_fltval,false);
+      CCharRead.Locate('Reading',s_fltval);
       s_val:=uppercase(CCharRead.Str(TCharReadReading));
       while (not CCharRead.EOF) and (
         (s_val=s_fltval)
@@ -365,7 +365,7 @@ begin
         ((clipsort) and (clipind<fltclip.Count)) do
   begin
     accept:=true;
-    if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind],false);
+    if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
     if accept and chin and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TCharType)='S') then accept:=false;
     if accept and chin and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TCharType)='T') then accept:=false;
     if accept and (fKanjiSearch.SpeedButton2.Down) and chin and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
@@ -509,7 +509,6 @@ var lh,lc:integer;
     ncv,nch:integer;
     ch:double;
     numh:integer;
-    chi:integer;
 begin
   GetPrintLine(width,height,width,height,strtoint(fSettings.Edit11.Text),lh,lc);
   ncv:=strtoint(fSettings.edit13.text);
@@ -517,7 +516,6 @@ begin
   if fSettings.CheckBox44.Checked then inc(ncv,2);
   if fSettings.CheckBox62.Checked then inc(ncv,1+strtoint(fSettings.Edit35.Text));
   ch:=lh/ncv;
-  chi:=trunc(ch);
   nch:=strtoint(fSettings.edit13.text);
   if (fSettings.CheckBox19.Checked) or (fSettings.CheckBox20.Checked) then inc(nch,(strtoint(fSettings.Edit13.Text) div 2)+1);
   if fSettings.CheckBox18.Checked then nch:=nch+1+strtoint(fSettings.edit12.text);
@@ -533,8 +531,6 @@ var lh,lc:integer;
     numh,i:integer;
     u:string;
     x,xp,y,yp:integer;
-    chi:integer;
-    rel:integer;
 begin
   GetPrintLine(origwidth,origheight,origwidth,origheight,strtoint(fSettings.Edit11.Text),lh,lc);
 //  lh:=round(0.98*lh);
@@ -543,7 +539,6 @@ begin
   if fSettings.CheckBox44.Checked then inc(ncv,2);
   if fSettings.CheckBox62.Checked then inc(ncv,1+strtoint(fSettings.Edit35.Text));
   ch:=lh/ncv;
-  chi:=trunc(ch);
   nch:=strtoint(fSettings.edit13.text);
   if (fSettings.CheckBox19.Checked) or (fSettings.CheckBox20.Checked) then inc(nch,(strtoint(fSettings.Edit13.Text) div 2)+1);
   if fSettings.CheckBox18.Checked then nch:=nch+1+strtoint(fSettings.edit12.text);
@@ -658,7 +653,7 @@ begin
         j:=dic.ReadIndex;
         while (j>0) do
         begin
-          dic.TDict.Locate('Index',inttostr(j),true);
+          dic.TDict.Locate('Index',j);
           inc(k);
           if pos(kj,dic.TDict.Str(dic.TDictKanji))=0 then
             showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.TDict.Str(dic.TDictEnglish));
@@ -693,7 +688,7 @@ begin
         j:=dic.ReadIndex;
         while (j>0) do
         begin
-          dic.TDict.Locate('Index',inttostr(j),true);
+          dic.TDict.Locate('Index',j);
           inc(k);
           if pos(kj,dic.TDict.Str(dic.TDictKanji))=0 then
             showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.TDict.Str(dic.TDictEnglish));
@@ -711,7 +706,7 @@ begin
   end else if (fKanjiCompounds.SpeedButton8.Down) then
   begin
     TUserIdx.SetOrder('Kanji_Ind');
-    TUserIdx.Locate('Kanji',kj,false);
+    TUserIdx.Locate('Kanji',kj);
     while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=kj) do
     begin
       if (not fKanjiCompounds.CheckBox1.Checked) or (TUserIdx.Bool(TUserIdxBegin)) then
@@ -720,7 +715,7 @@ begin
         ListWordCategories(TUserIdx.Int(TUserIdxWord),sl2);
         pass:=false;
         for l:=0 to sl2.Count-1 do if (pos(curlang+'~',sl2[l])=1) or (length(sl2[l])<2) or (copy(sl2[l],2,1)<>'~') then pass:=true;
-        if (pass) and (TUser.Locate('Index',TUserIdx.Str(TUserIdxWord),true)) then
+        if (pass) and (TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord))) then
         begin
           stp:=TUser.Str(TUserScore);
           sl.Add(TUser.Str(TUserKanji)+#9+'!'+stp+CheckKnownKanji(ChinTo(TUser.Str(TUserKanji)))+' ['+'!'+stp+TUser.Str(TUserPhonetic)+'] {'+'!'+stp+TUser.Str(TUserEnglish)+'}');
@@ -784,7 +779,7 @@ begin
   if (not fSettings.CheckBox3.Checked) and not (gdSelected in State) then
   begin
     DrawGrid1.Canvas.Brush.Color:=Col('Kanji_Back');
-    TChar.Locate('Unicode',kix,false);
+    TChar.Locate('Unicode',kix);
     kig:=ki[DrawGrid1.ColCount*ARow+Acol];
     if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then kig:='K';
     case kig[1] of
@@ -818,7 +813,7 @@ begin
   TextOutW(DrawGrid1.Canvas.Handle,Rect.Left+5,Rect.Top+4,@w,1);
   if fSettings.CheckBox1.Checked then
   begin
-    TChar.Locate('Unicode',kix,false);
+    TChar.Locate('Unicode',kix);
     DrawGrid1.Canvas.Font.Name:=FontEnglish;
     DrawGrid1.Canvas.Font.Height:=8+4*fSettings.RadioGroup3.ItemIndex;
     DrawGrid1.Canvas.Font.Color:=clWindowText;
@@ -987,7 +982,7 @@ begin
           begin
             if (TCharRead.Int(TCharReadType)=4) and (TCharRead.Str(TCharReadReading)=sbJouyou+s2) and (TCharRead.Int(TCharReadPosition)=1) then
             begin
-              TChar.Locate('Index',TCharRead.Str(TCharReadKanji),true);
+              TChar.Locate('Index',TCharRead.TrueInt(TCharReadKanji));
               if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then begin
                 chars[k]:=chars[k]+TChar.Str(TCharUnicode);
                 add.Add(TCharRead.Str(TCharReadKanji));
@@ -1019,7 +1014,7 @@ begin
   begin
     if (TCharRead.Int(TCharReadType)=4) and (add.IndexOf(TCharRead.Str(TCharReadKanji))=-1) and (TCharRead.Int(TCharReadPosition)=1) then
     begin
-      TChar.Locate('Index',TCharRead.Str(TCharReadKanji),true);
+      TChar.Locate('Index',TCharRead.TrueInt(TCharReadKanji));
       if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then o:=o+TChar.Str(TCharUnicode)+TCharRead.Str(TCharReadReading);
     end;
     TCharRead.Next;

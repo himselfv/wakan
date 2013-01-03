@@ -188,15 +188,15 @@ begin
     for i:=0 to fUserFilters.ListBox1.Items.Count-1 do if fUserFilters.ListBox1.Checked[i] then
     begin
       cats:=fUserFilters.ListBox1.Items[i];
-      TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[i],false);
+      TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[i]);
       a:=TUserCat.Int(TUserCatIndex);
       TUserSheet.SetOrder('Sheet_Ind');
-      TUserSheet.Locate('Number',inttostr(a),true);
+      TUserSheet.Locate('Number',a);
       j:=0;
       while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=a) do
       begin
         inc(j);
-        TUser.Locate('Index',TUserSheet.Str(TUserSheetWord),true);
+        TUser.Locate('Index',TUserSheet.Int(TUserSheetWord));
         if not (((not fUserFilters.CheckBox1.Checked) and (TUser.Int(TUserScore)=1)) or
                 ((not fUserFilters.CheckBox8.Checked) and (TUser.Int(TUserScore)=2)) or
                 ((not fUserFilters.CheckBox9.Checked) and (TUser.Int(TUserScore)=3)) or
@@ -290,7 +290,7 @@ function TfWords.FindUserWord(kanji,phonetic: FString): integer;
 begin
   Result:=-1;
   TUser.SetOrder('Kanji_Ind');
-  TUser.Locate('Kanji',kanji,false);
+  TUser.Locate('Kanji',kanji);
   while (not TUser.EOF) and (TUser.Str(TUserKanji)=kanji) do
   begin
     if (TUser.Str(TUserPhonetic)=phonetic) then begin
@@ -356,7 +356,7 @@ begin
   catord:=1;
 
   TUserSheet.SetOrder('Sheet_Ind');
-  TUserSheet.Locate('Number',inttostr(cat),true);
+  TUserSheet.Locate('Number',cat);
   while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=cat) do
   begin
     if TUserSheet.Int(TUserSheetPos)>=catord then catord:=TUserSheet.Int(TUserSheetPos)+1;
@@ -386,7 +386,7 @@ begin
     begin
       s2:=copy(s,1,4);
       delete(s,1,4);
-      if TChar.Locate('Unicode',s2,false) then
+      if TChar.Locate('Unicode',s2) then
       begin
         if beg then bs:='T'else bs:='F';
         TUserIdx.Insert([inttostr(MaxUserIndex),TChar.Str(TCharUnicode),bs]);
@@ -479,14 +479,14 @@ begin
       for i:=0 to wl.Count-1 do
       begin
         ListWordCategories(strtoint(wl[i]),sl);
-        TUser.Locate('Index',wl[i],true);
+        TUser.Locate('Index',strtoint(wl[i]));
         for j:=0 to fUserFilters.ListBox1.Items.Count-1 do
           if (fUserFilters.ListBox1.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[j])<>-1) then
         begin
           writeln(t,TUser.Str(TUserKanji));
           writeln(t,TUser.Str(TUserPhonetic));
           writeln(t,TUser.Str(TUserEnglish));
-          TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[j],false);
+          TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[j]);
           writeln(t,chr(TUserCat.Int(TUserCatType))+TUserCat.Str(TUserCatName));
         end;
       end;
@@ -517,7 +517,7 @@ begin
       for i:=0 to wl.Count-1 do
       begin
         ListWordCategories(strtoint(wl[i]),sl);
-        TUser.Locate('Index',wl[i],true);
+        TUser.Locate('Index',strtoint(wl[i]));
         for j:=0 to fUserFilters.ListBox1.Items.Count-1 do
           if (fUserFilters.ListBox1.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[j])<>-1) then
         begin
@@ -624,7 +624,7 @@ var t:textfile;
     TUserSheet.SetOrder('Word_Ind');
     if not insertword then
     begin
-      TUserSheet.Locate('Word',inttostr(wordidx),true);
+      TUserSheet.Locate('Word',wordidx);
       while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=wordidx) do
       begin
         if TUserSheet.Int(TUserSheetNumber)=cat then
@@ -665,7 +665,7 @@ var t:textfile;
       begin
         s2:=copy(s,1,4);
         delete(s,1,4);
-        if TChar.Locate('Unicode',s2,false) then
+        if TChar.Locate('Unicode',s2) then
         begin
           if beg then bs:='T'else bs:='F';
           awf_insuseridx.Add(inttostr(MaxUserIndex));
@@ -1021,7 +1021,7 @@ begin
   begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
     RemoveWordFromCategory(lastwordind, fUserDetails.ListBox2.Items[fUserDetails.ListBox2.ItemIndex]);
   end;
   fMenu.ChangeUserData;
@@ -1070,7 +1070,7 @@ begin
     if ((pagenum-1)*pr*c+i+j*pr)<wl.Count then
     begin
       wn:=strtoint(wl[(pagenum-1)*pr*c+i+j*pr]);
-      TUser.Locate('Index',inttostr(wn),true);
+      TUser.Locate('Index',wn);
       tm:=UnicodeToHex(strip_fl(TUser.Str(TUserEnglish)));
       tk:=TUser.Str(TUserPhonetic);
       tr:=UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang));
@@ -1205,7 +1205,7 @@ begin
   begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
     AddWord(
       TUser.Str(TUserKanji),
       TUser.Str(TUserPhonetic),
@@ -1232,14 +1232,14 @@ begin
     bi:=strtoint(wl[StringGrid1.Row]);
   end;
   TUserSheet.SetOrder('Sheet_Ind');
-  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
+  TUserSheet.Locate('Number',StrToInt(wlc[StringGrid1.Row-1]));
   while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
   begin
     if TUserSheet.Int(TUserSheetWord)=ai then ap:=TUserSheet.Int(TUserSheetPos);
     if TUserSheet.Int(TUserSheetWord)=bi then bp:=TUserSheet.Int(TUserSheetPos);
     TUserSheet.Next;
   end;
-  TUserSheet.Locate('Number',wlc[StringGrid1.Row-1],true);
+  TUserSheet.Locate('Number',StrToInt(wlc[StringGrid1.Row-1]));
   while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
   begin
     if TUserSheet.Int(TUserSheetPos)=ap then TUserSheet.Edit([TUserSheetPos],[inttostr(bp)]) else
@@ -1302,7 +1302,7 @@ begin
   begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
     TUserIdx.First;
     while not TUserIdx.EOF do
     begin
@@ -1400,7 +1400,7 @@ begin
   begin
     KanjiKnown := IsKnown(KnownLearned,TChar.Fch(TCharUnicode));
     JouyouGrade := TChar.Int(TCharJouyouGrade);
-    InUserIdx := TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode),false);
+    InUserIdx := TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode));
     if KanjiKnown then inc(i);
     if KanjiKnown and (JouyouGrade>=9) then inc(j);
     if (not KanjiKnown) and (JouyouGrade<9) then inc(k);
@@ -1410,7 +1410,7 @@ begin
     if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(n);
     if KanjiKnown then
     begin
-      TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),13)),true);
+      TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),13));
       if TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode) then inc(q);
     end;
     TChar.Next;
@@ -1459,12 +1459,12 @@ begin
     csl:=TStringList.Create;
     for i:=0 to wl.Count-1 do
     begin
-      TUser.Locate('Index',wl[i],true);
+      TUser.Locate('Index',strtoint(wl[i]));
       s:=TUser.Str(TUserKanji);
       for j:=1 to length(s) div 4 do
       begin
         s2:=copy(s,((j-1)*4)+1,4);
-        if TChar.Locate('Unicode',s2,false) then
+        if TChar.Locate('Unicode',s2) then
         if not IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
         begin
           v:=trunc(ln(TChar.Int(TCharStrokeCount))*5000);
@@ -1473,8 +1473,8 @@ begin
           v:=v+20000;
           if TChar.Int(TCharJpFrequency)<65535 then
             v:=v+TChar.Int(TCharJpFrequency)*3 else v:=v+7000;
-          TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),12)),true);
-          TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode),false);
+          TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),12));
+          TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode));
           if (TRadicals.Str(TRadicalsUnicode)<>s2) and (not IsKnown(KnownLearned,TChar.Fch(TCharUnicode))) then inc(v,8000);
           if TRadicals.Str(TRadicalsUnicode)=s2 then dec(v,3000);
           vb:=v;
@@ -1534,7 +1534,7 @@ var catname:string;
   cattype: char;
 begin
   if fUserFilters.ListBox1.ItemIndex=-1 then exit;
-  TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex],false);
+  TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex]);
   catname := StripCatName(TUserCat.Str(TUserCatName));
   cattype := chr(TUserCat.Int(TUserCatType));
   if fNewCategory.EditCategory(catname, cattype) then begin
@@ -1589,7 +1589,7 @@ var lname:string;
 begin
   lname:=formatdatetime('yyyy/mm/dd',now);
   i:=1;
-  while TUserCat.Locate('Name',lname+' ('+inttostr(i)+')',false) do inc(i);
+  while TUserCat.Locate('Name',lname+' ('+inttostr(i)+')') do inc(i);
   lname:=lname+' ('+inttostr(i)+')';
   fWordList.Edit1.Text:=lname;
   fWordList.ShowModal;
@@ -1846,7 +1846,7 @@ begin
       best:=100001;
       for j:=0 to il.Count-1 do
       begin
-        TUser.Locate('Index',il[j],true);
+        TUser.Locate('Index',strtoint(il[j]));
         if TUser.Int(TUserScore)<=1 then ca[1]:=-200 else ca[1]:=600;
         ca[1]:=ca[1]-DateOld(TUser.Str(TUserLearned),200)-DateOld(TUser.Str(TUserMastered),200);
         ca[2]:=800-DateOld(TUser.Str(TUserAdded),500)*3;
@@ -1882,7 +1882,7 @@ begin
       begin
         sl.Add(inttostr(bestw));
         il.Delete(il.IndexOf(inttostr(bestw)));
-        TUser.Locate('Index',inttostr(bestw),true);
+        TUser.Locate('Index',bestw);
         if TUser.Int(TUserScore)=3 then inc(masc);
         if TUser.Int(TUserScore)=0 then inc(proc);
         for k:=1 to 4 do
@@ -1937,7 +1937,7 @@ begin
   i:=0; j:=0; k:=0; l:=0; m:=0; n:=0;
   for o:=0 to ll.Count-1 do
   begin
-    TUser.Locate('Index',ll[o],true);
+    TUser.Locate('Index',strtoint(ll[o]));
     if TUser.Int(TUserScore)=0 then inc(i);
     if TUser.Int(TUserScore)>=2 then inc(j);
     if TUser.Int(TUserScore)=3 then inc(k);
@@ -1975,7 +1975,7 @@ var i:integer;
     s:string;
     sl:TStringList;
 begin
-  TUser.Locate('Index',ll[twi],true);
+  TUser.Locate('Index',strtoint(ll[twi]));
   twkanji:=CheckKnownKanji(TUser.Str(TUserKanji));
   twphonetic:=TUser.Str(TUserPhonetic);
   twmeaning:=strip_fl(TUser.Str(TUserEnglish));
@@ -2151,7 +2151,7 @@ begin
   Screen.Cursor:=crHourGlass;
   for i:=0 to ll.Count-1 do
   begin
-    TUser.Locate('Index',ll[i],true);
+    TUser.Locate('Index',strtoint(ll[i]));
     n:=StateNew(TUser.Int(TUserScore),strtoint(ltl[i]));
     ms:=n;
     if TUser.Int(TUserMaxScore)>ms then ms:=TUser.Int(TUserMaxScore);
@@ -2174,7 +2174,7 @@ begin
   wl.Clear;
   for i:=0 to ll.Count-1 do
   begin
-    TUser.Locate('Index',ll[i],true);
+    TUser.Locate('Index',strtoint(ll[i]));
     if (fWordList.RadioGroup10.ItemIndex=0) or
        ((fWordList.RadioGroup10.ItemIndex=1) and (TUser.Int(TUserScore)<3)) or
        (TUser.Int(TUserScore)<2) then
@@ -2194,7 +2194,7 @@ begin
   TUserCat.Insert([inttostr(MaxCategoryIndex),fWordList.Edit1.Text,inttostr(ord('W')),FormatDateTime('yyyymmdd',now)]);
   for i:=0 to ll.Count-1 do
   begin
-    TUser.Locate('Index',ll[i],true);
+    TUser.Locate('Index',strtoint(ll[i]));
     if (fWordList.RadioGroup10.ItemIndex=0) or
        ((fWordList.RadioGroup10.ItemIndex=1) and (TUser.Int(TUserScore)<3)) or
        (TUser.Int(TUserScore)<2) then
@@ -2213,7 +2213,7 @@ var i,j:integer;
 begin
   for i:=0 to ll.Count-1 do
   begin
-    TUser.Locate('Index',ll[i],true);
+    TUser.Locate('Index',strtoint(ll[i]));
     j:=TUser.Int(TUserNoPrinted);
     TUser.Edit([TUserNoPrinted,TUserPrinted],[inttostr(j+1),FormatDateTime('yyyymmdd',now)]);
   end;
@@ -2479,7 +2479,7 @@ begin
   cl:=TStringList.Create;
   s:=wl[StringGrid1.Row-1];
   lastwordind:=strtoint(s);
-  if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+  if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
   curkanji:=TUser.Str(TUserKanji);
   curphonetic:=TUser.Str(TUserPhonetic);
   fExamples.SetExamples(curkanji);
@@ -2532,7 +2532,7 @@ begin
   begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',s,true) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
     if TUser.Int(TUserMaxScore)>st then ms:=TUser.Int(TUserMaxScore) else ms:=st;
     TUser.Edit([TUserScore,TUserMaxScore],[inttostr(st),inttostr(ms)]);
   end;

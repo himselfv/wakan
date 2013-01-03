@@ -544,36 +544,36 @@ var
   TRadicalsKangXiCount: integer;
 
   TUser: TTextTable;
-  TUserEnglish,
-  TUserPhonetic,
-  TUserPhoneticSort,
-  TUserKanji,
-  TUserAdded,
-  TUserPrinted,
-  TUserLearned,
-  TUserMastered,
-  TUserNoPrinted,
-  TUserScore,
-  TUserMaxScore: integer;
-
-  TUserIdx: TTextTable;
-  TUserIdxWord,
-  TUserIdxKanji,
-  TUserIdxBegin,
-  TUserIdxIndex,
-  TUserIndex: integer;
+  TUserIndex, //i
+  TUserEnglish, //s
+  TUserPhonetic, //x
+  TUserPhoneticSort, //s
+  TUserKanji, //x
+  TUserAdded, //s
+  TUserPrinted, //s
+  TUserLearned, //s
+  TUserMastered, //s
+  TUserNoPrinted, //i
+  TUserScore, //b
+  TUserMaxScore: integer; //b
   MaxUserIndex:integer;
 
+  TUserIdx: TTextTable;
+  TUserIdxWord, //i
+  TUserIdxKanji, //x
+  TUserIdxBegin, //l
+  TUserIdxIndex: integer;
+
   TUserSheet: TTextTable;
-  TUserSheetWord,
-  TUserSheetNumber,
-  TUserSheetPos: integer;
+  TUserSheetWord, //i
+  TUserSheetNumber, //w
+  TUserSheetPos: integer; //w
 
   TUserCat: TTextTable;
-  TUserCatIndex,
-  TUserCatName, //string, prefix~Category name. See commens in JWBCategories
-  TUserCatType, //TCatType, see comments in JWBCategories
-  TUserCatCreated: integer; //string, datetime of creation
+  TUserCatIndex,  //i
+  TUserCatName, //s, prefix~Category name. See commens in JWBCategories
+  TUserCatType, //b, TCatType, see comments in JWBCategories
+  TUserCatCreated: integer; //s, datetime of creation
   MaxCategoryIndex: integer;
 
   TUserPrior: TTextTable;
@@ -1334,7 +1334,7 @@ end;
 function TfMenu.GetCharValue(index,vt:integer):string;
 begin
   TCharRead.SetOrder('');
-  if TCharRead.Locate('Kanji',inttostr(index),true) then
+  if TCharRead.Locate('Kanji',index) then
   while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=index) do
   begin
     if TCharRead.Int(TCharReadType)=vt then
@@ -2596,7 +2596,7 @@ begin
       if phon='' then phon:=kanj;
       if pos('FF08',phon)>0 then phon:=kanj;
       dic.TDict.SetOrder('Kanji_Ind');
-      if dic.TDict.Locate('Kanji',kanj,false) then
+      if dic.TDict.Locate('Kanji',kanj) then
       begin
         en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
         while (dic.TDict.Str(dic.TDictPhonetic)<>phon) and (dic.TDict.Str(dic.TDictKanji)=kanj) do
@@ -2613,7 +2613,7 @@ begin
       end else
       begin
         dic.TDict.SetOrder('Phonetic_Ind');
-        if dic.TDict.Locate('Sort',KanaToRomaji(phon,1,'j'),false) then
+        if dic.TDict.Locate('Sort',KanaToRomaji(phon,1,'j')) then
         begin
           en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
           writeln(t2,dic.TDict.Str(dic.TDictPhonetic));
@@ -4550,7 +4550,7 @@ begin
   TUserIdx.First;
   while not TUserIdx.EOF do
   begin
-    if not TUser.Locate('Index',TUserIdx.Str(TUserIdxWord),true) then
+    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
       TUserIdx.Delete;
     TUserIdx.Next;
   end;

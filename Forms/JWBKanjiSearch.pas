@@ -389,7 +389,7 @@ begin
     pchar(_l('#00573^eWarning')),
     MB_ICONWARNING or MB_YESNO)=idYes then
   begin
-    TUserCat.Locate('Name','k~'+lbCategories.Items[lbCategories.ItemIndex],false);
+    TUserCat.Locate('Name','k~'+lbCategories.Items[lbCategories.ItemIndex]);
     TUserCat.Delete;
     fMenu.RefreshKanjiCategory;
     fMenu.ChangeUserData;
@@ -400,7 +400,7 @@ procedure TfKanjiSearch.SpeedButton20Click(Sender: TObject);
 var catname: string;
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  TUserCat.Locate('Name','k~'+fKanjiDetails.ComboBox1.Items[lbCategories.ItemIndex],false);
+  TUserCat.Locate('Name','k~'+fKanjiDetails.ComboBox1.Items[lbCategories.ItemIndex]);
   catname := StripCatName(TUserCat.Str(TUserCatName));
   if fNewCategory.EditCategory(catname) then begin
     TUserCat.Edit([TUserCatName],['k~'+catname]);

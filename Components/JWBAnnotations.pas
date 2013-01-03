@@ -231,7 +231,7 @@ begin
   for i:=0 to High(des) do
   begin
     SetOrder('Tag_Ind');
-    Locate('Tag',des[i],false);
+    Locate('Tag',des[i]);
     while (not EOF) and (Str(fldAnnotsTag)=des[i]) do
     begin
       if curAnnot<>'' then curAnnot:=curAnnot+',';

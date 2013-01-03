@@ -499,11 +499,11 @@ begin
     begin
       s2:=fcopy(s,1,1);
       fdelete(s,1,1);
-      if TChar.Locate('Unicode',s2,false) then
+      if TChar.Locate('Unicode',s2) then
       begin
         inc(ki);
         radf:=fSettings.ComboBox1.ItemIndex+12;
-        if TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)),true) then
+        if TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)) then
         begin
           curkanjid:=curkanjid+s2+TRadicals.Str(TRadicalsUnicode);
           if TChar.Bool(TCharChinese) then curkanjid:=curkanjid+'J'else
@@ -512,7 +512,7 @@ begin
             if TChar.Int(TCharJouyouGrade)<10 then curkanjid:=curkanjid+'N'else
             curkanjid:=curkanjid+'U';
           TCharRead.SetOrder('');
-          TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
+          TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
           s3:='';
           while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
           begin
@@ -538,7 +538,7 @@ begin
     if dicrl[curword-1].userIndex<>0 then
     begin
       SpeedButton19.Enabled:=true;
-      TUser.Locate('Index',dicrl[curword-1].UserIndexToString,true);
+      TUser.Locate('Index',dicrl[curword-1].userIndex);
       fWordCategory.Label11.Caption:=DateForm(TUser.Str(TUserAdded));
       fWordCategory.Label12.Caption:=DateForm(TUser.Str(TUserLearned));
       fWordCategory.Label13.Caption:=DateForm(TUser.Str(TUserMastered));

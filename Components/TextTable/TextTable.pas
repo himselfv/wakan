@@ -136,14 +136,18 @@ type
       const values:array of string; JustInserted:boolean=false);
     procedure Commit(RecNo:integer; JustInserted: boolean = false);
 
-  public //Field reading
+  protected //Field reading
+    function GetDataOffset(rec:integer;field:integer):integer;
+  public
     function GetFieldSize(recno,field:integer):byte;
     function GetField(rec:integer;field:integer):string;
     procedure SetField(rec:integer;field:integer;const value:string);
+    function GetIntField(rec:integer;field:integer;out value:integer):boolean;
 
   public
     function GetSeekObject(seek: string): TSeekObject;
-    function LocateRecord(seek: PSeekObject; value:string; number:boolean; out idx: integer):boolean;
+    function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
+    function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
 
  {$IFDEF CURSOR_IN_TABLE}
   protected
@@ -159,11 +163,14 @@ type
     procedure Insert(values:array of string);
     procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
     procedure Edit(const fields:array of byte;const values:array of string);
-    function Locate(seek: PSeekObject; const value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(seek,value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek: PSeekObject; const value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(const seek,value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek:PSeekObject; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(const seek:string; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
   public
     function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
     function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
+    function TrueInt(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
     function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
    {$IFDEF UNICODE}
     function Fch(field:integer):WideChar; {$IFDEF INLINE}inline;{$ENDIF}
@@ -200,12 +207,16 @@ type
     procedure Edit(const fields:array of byte; const values:array of string);
 
   public
-    function Locate(seek: PSeekObject; const value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(seek,value:string; number:boolean):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek:PSeekObject; const value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(const seek,value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek:PSeekObject; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(const seek:string; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+
 
   public
     function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
     function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
+    function TrueInt(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
     function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
    {$IFDEF UNICODE}
     function Fch(field:integer):WideChar; {$IFDEF INLINE}inline;{$ENDIF}
@@ -691,6 +702,14 @@ begin
     Result := OffsetPtr(struct, recno*(varfields+5)+(ord(c)-ord('a'))+5)^;
 end;
 
+function TTextTable.GetDataOffset(rec:integer;field:integer):integer;
+var i,ii:integer;
+begin
+  ii:=rec*5+varfields*rec;
+  Result:=PInteger(OffsetPtr(struct, ii+1))^;
+  for i:=0 to field-1 do Result:=Result+GetFieldSize(rec,i);
+end;
+
 //Swaps bytes in every word
 //sz is the number of bytes
 procedure SwapBytes(pb: PByte; sz: integer); inline;
@@ -715,8 +734,7 @@ function TTextTable.GetField(rec:integer;field:integer):string;
 {$IFNDEF UNICODE}
 const HexChars: AnsiString = '0123456789ABCDEF';
 {$ENDIF}
-var i,ii:integer;
-  ofs:integer;
+var ofs:integer;
   sz:byte;
   tp:char; //field type. Char because FieldTypes is string.
   b:byte;
@@ -733,9 +751,7 @@ begin
   if not loaded then load;
   if rec>=reccount then
     raise Exception.Create('Read beyond!');
-  ii:=rec*5+varfields*rec;
-  ofs:=PInteger(OffsetPtr(struct, ii+1))^;
-  for i:=0 to field-1 do ofs:=ofs+GetFieldSize(rec,i);
+  ofs:=GetDataOffset(rec,field);
   tp:=fieldtypes[field+1];
   sz:=GetFieldSize(rec,field);
   case tp of
@@ -815,6 +831,53 @@ begin
      end;
     {$ENDIF}
    end;
+  end;
+end;
+
+//If the field is numeric, reads it without conversions,
+//else does the usual "read string + StrToInt" routine.
+function TTextTable.GetIntField(rec:integer;field:integer;out value: integer):boolean;
+var tp: char;
+  ofs: integer;
+  b: byte;
+  w: word;
+  l: integer;
+  s: string;
+begin
+  tp:=fieldtypes[field+1];
+  case tp of
+  'b': begin
+     ofs:=GetDataOffset(rec,field);
+     if offline then
+       source.ReadRawData(b,datafpos+ofs,1)
+     else
+       b := OffsetPtr(data, ofs)^;
+     value:=b;
+     Result:=true;
+   end;
+  'w':begin
+     ofs:=GetDataOffset(rec,field);
+     if offline then
+       source.ReadRawData(w,datafpos+ofs,2)
+     else
+       w := PWord(OffsetPtr(data, ofs))^;
+     value:=w;
+     Result:=true;
+   end;
+  'i':begin
+     ofs:=GetDataOffset(rec,field);
+     if offline then
+       source.ReadRawData(l,datafpos+ofs,4)
+     else
+       l := PInteger(OffsetPtr(data, ofs))^;
+     value:=l;
+     Result:=true;
+   end;
+  else
+    s := GetField(rec,field);
+    if (length(s)>0) and (s[length(s)]='''') then system.delete(s,length(s),1);
+    if (length(s)>0) and (s[1]='''') then system.delete(s,1,1);
+    Result := TryStrToInt(s, value);
   end;
 end;
 
@@ -912,6 +975,11 @@ end;
 function TTextTable.Int(field:integer):integer;
 begin
   Result := _intcur.Int(field);
+end;
+
+function TTextTable.TrueInt(field:integer):integer;
+begin
+  Result := _intcur.TrueInt(field);
 end;
 
 function TTextTable.Bool(field:integer):boolean;
@@ -1064,14 +1132,12 @@ end;
  or false and record index for record just after where the match would have occured.
  To convert seek index to record index call TransOrder(idx, seek.ind_i) }
 
-function TTextTable.LocateRecord(seek: PSeekObject; value:string; number:boolean; out idx: integer):boolean;
+function TTextTable.LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean;
 var sn:integer;       //seek table number
   fn:integer;         //field number
   reverse:boolean;
   l,r,c:integer;
   s:string;
-  i_val: integer;    //integer value for "value", when number==true
-  i_s: integer;      //integer value for "s", when number==true
   RecNo: integer;
 begin
   if not loaded then load;
@@ -1084,13 +1150,8 @@ begin
   if (sn<-1) or (fn<0) then
     exit;
 
-  if number then begin
-    if not TryStrToInt(value, i_val) then
-      exit;
-  end else begin
-    if reverse then value:=ReverseString(value);
-    value := uppercase(value);
-  end;
+  if reverse then value:=ReverseString(value);
+  value := uppercase(value);
 
   idx := RecCount+1; //if there are no records this'll be used
 
@@ -1102,20 +1163,60 @@ begin
     s:=GetField(TransOrder(c,sn),fn);
     if reverse then
       s:=ReverseString(s);
-    if number then
+    if rawindex then
+      if value<=uppercase(s) then r:=c else l:=c+1
+    else
+      if AnsiCompareStr(value,uppercase(s))<=0 then r:=c else l:=c+1;
+    if l>=r then
     begin
-      if (length(s)>0) and (s[length(s)]='''') then system.delete(s,length(s),1);
-      if (length(s)>0) and (s[1]='''') then system.delete(s,1,1);
-      if not TryStrToInt(s, i_s) then
-        r := c
-      else
-        if i_val<=i_s then r:=c else l:=c+1;
-    end else begin
-      if rawindex then
-        if value<=uppercase(s) then r:=c else l:=c+1
-      else
-        if AnsiCompareStr(value,uppercase(s))<=0 then r:=c else l:=c+1;
+      idx:=l;
+      RecNo:=TransOrder(idx,sn);
+      while (idx<reccount) and IsDeleted(RecNo) do
+      begin
+        inc(idx);
+        RecNo:=TransOrder(idx,sn);
+      end;
+      Result := idx<reccount;
+      if Result then begin
+        s:=GetField(RecNo,fn);
+        Result := (value=uppercase(s));
+      end;
+      exit;
     end;
+  until false;
+end;
+
+{ Same but for numbers. May at times be faster (if the field is actually numberic in the DB and not string) }
+function TTextTable.LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean;
+var sn:integer;       //seek table number
+  fn:integer;         //field number
+  l,r,c:integer;
+  i_s: integer;      //integer value for "s", when number==true
+  RecNo: integer;
+begin
+  if not loaded then load;
+  sn := seek.ind_i;
+  fn := seek.fld_i;
+ //"reverse" is ignored for numeric lookups
+
+  idx := -1;
+  Result := false;
+  if (sn<-1) or (fn<0) then
+    exit;
+
+  idx := RecCount+1; //if there are no records this'll be used
+
+ //Initiate binary search
+  l:=0;
+  r:=reccount-1;
+  if l<=r then repeat
+    c:=((r-l) div 2)+l;
+
+    if not GetIntField(TransOrder(c,sn),fn,i_s) then
+      r := c
+    else
+      if value<=i_s then r:=c else l:=c+1;
+
     if l>=r then
     begin
       idx:=l;
@@ -1125,17 +1226,7 @@ begin
         inc(idx);
         RecNo:=TransOrder(idx,sn);
       end;
-      if idx<reccount then
-        s:=GetField(TransOrder(idx,sn),fn);
-      Result := (idx<reccount);
-      if Result then
-        if number then begin
-          if (not TryStrToInt(s, i_s)) or (i_val<>i_s) then
-            Result := false;
-        end else begin
-          if value<>uppercase(s) then
-            Result := false;
-        end;
+      Result := (idx<reccount) and GetIntField(RecNo,fn,i_s) and (value=i_s);
       exit;
     end;
   until false;
@@ -1143,15 +1234,25 @@ end;
 
 {$IFDEF CURSOR_IN_TABLE}
 //Faster version, by seek object
-function TTextTable.Locate(seek: PSeekObject; const value:string; number:boolean):boolean;
+function TTextTable.Locate(seek: PSeekObject; const value:string):boolean;
 begin
-  Result := _intcur.Locate(seek, value, number);
+  Result := _intcur.Locate(seek, value);
 end;
 
 //Slower version, specifying seek by a string name
-function TTextTable.Locate(seek,value:string;number:boolean):boolean;
+function TTextTable.Locate(const seek,value:string):boolean;
 begin
-  Result := _intcur.Locate(seek,value,number);
+  Result := _intcur.Locate(seek,value);
+end;
+
+function TTextTable.Locate(seek:PSeekObject; const value:integer):boolean;
+begin
+  Result := _intcur.Locate(seek, value);
+end;
+
+function TTextTable.Locate(const seek:string; const value:integer):boolean;
+begin
+  Result := _intcur.Locate(seek,value);
 end;
 {$ENDIF}
 
@@ -1697,18 +1798,18 @@ end;
 
 
 //Slower version, specifying seek by a string name
-function TTextTableCursor.Locate(seek,value:string; number:boolean):boolean;
+function TTextTableCursor.Locate(const seek,value:string):boolean;
 var so: TSeekObject;
 begin
   so := Table.GetSeekObject(seek);
-  Result := Locate(@so, value, number);
+  Result := Locate(@so, value);
 end;
 
 //Faster version, by seek object
-function TTextTableCursor.Locate(seek: PSeekObject; const value:string; number:boolean):boolean;
+function TTextTableCursor.Locate(seek: PSeekObject; const value:string):boolean;
 var idx: integer;
 begin
-  Result := Table.LocateRecord(seek, value, number, idx);
+  Result := Table.LocateRecord(seek, value, idx);
   cur := idx;
   if (idx>=0) and (idx<Table.RecordCount) then
     tcur := Table.TransOrder(idx, seek.ind_i)
@@ -1716,6 +1817,23 @@ begin
     tcur := Table.RecordCount; //-1 is not detected as EOF
 end;
 
+function TTextTableCursor.Locate(const seek:string; const value:integer):boolean;
+var so: TSeekObject;
+begin
+  so := Table.GetSeekObject(seek);
+  Result := Locate(@so, value);
+end;
+
+function TTextTableCursor.Locate(seek:PSeekObject; const value:integer):boolean;
+var idx: integer;
+begin
+  Result := Table.LocateRecord(seek, value, idx);
+  cur := idx;
+  if (idx>=0) and (idx<Table.RecordCount) then
+    tcur := Table.TransOrder(idx, seek.ind_i)
+  else
+    tcur := Table.RecordCount; //-1 is not detected as EOF
+end;
 
 
 function TTextTableCursor.Str(field:integer):string;
@@ -1725,8 +1843,14 @@ end;
 
 function TTextTableCursor.Int(field:integer):integer;
 begin
-  if not TryStrToInt(Table.GetField(tcur,field), Result) then
+  if not Table.GetIntField(tcur,field,Result) then
     Result := 0;
+end;
+
+function TTextTableCursor.TrueInt(field:integer):integer;
+begin
+  if not Table.GetIntField(tcur,field,Result) then
+    raise Exception.Create('Cannot convert this to integer: '+Table.GetField(tcur,field));
 end;
 
 function TTextTableCursor.Bool(field:integer):boolean;

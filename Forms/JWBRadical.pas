@@ -538,7 +538,7 @@ begin
     if rgSearchMethod.ItemIndex=1 then
     begin
       TRadicals.First;
-      TRadicals.Locate('Number',inttostr(i),true);
+      TRadicals.Locate('Number',i);
       FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicalsUnicode);
     end else
       FSelectedRadicals:=FSelectedRadicals+hextofstr(copy(raineradicals[i-1],1,4));
@@ -554,7 +554,7 @@ var c: FChar;
 begin
   if (key='l') and (selradical<>'') then
   begin
-    TChar.Locate('Unicode',selradical,false);
+    TChar.Locate('Unicode',selradical);
     c:=TChar.Fch(TCharUnicode);
     SetKnown(KnownLearned,c,not IsKnown(KnownLearned,c));
     if not cbLearnedInBlue.Checked then begin

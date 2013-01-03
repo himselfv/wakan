@@ -376,7 +376,7 @@ begin
 
   CChar := TChar.NewCursor;
   try
-    if not CChar.Locate('Unicode',kix,false) then exit;
+    if not CChar.Locate('Unicode',kix) then exit;
     Screen.Cursor:=crHourGlass;
     curkanji:=CChar.FCh(TCharUnicode);
     curindex:=CChar.Int(TCharIndex);
@@ -467,7 +467,7 @@ begin
     Label2.Caption:=curradno;
     if i=255 then curradical:='' else
     begin
-      if TRadicals.Locate('Number',inttostr(i),true) then
+      if TRadicals.Locate('Number',i) then
         curradical:=TRadicals.Str(TRadicalsUnicode) else curradical:='';
     end;
   {  if chin then
@@ -543,7 +543,7 @@ begin
   CCharRead := TCharRead.NewCursor;
   try
     CCharRead.SetOrder('');
-    CCharRead.Locate('Kanji',CChar.Str(TCharIndex),true);
+    CCharRead.Locate('Kanji',CChar.TrueInt(TCharIndex));
     while (not CCharRead.EOF) and (CCharRead.Int(TCharReadKanji)=CChar.Int(TCharIndex)) do
     begin
      //Readings are stored as STRINGS which contain HEX.
@@ -630,7 +630,7 @@ begin
         100:s:=curkanji;
         else begin
           CCharRead.SetOrder('');
-          CCharRead.Locate('Kanji',CChar.Str(TCharIndex),true);
+          CCharRead.Locate('Kanji',CChar.TrueInt(TCharIndex));
           while (not CCharRead.EOF) and (CCharRead.Int(TCharReadKanji)=CChar.Int(TCharIndex)) do
           begin
             if CCharRead.Int(TCharReadType)=k then
@@ -642,7 +642,7 @@ begin
                 s2:=CCharRead.Str(TCharReadReading);
                 if (length(s2)>0) and (s2[1]='''') then delete(s2,1,1);
                 if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
-                TRadicals.Locate('Number',s2,true);
+                TRadicals.Locate('Number',strtoint(s2));
                 s:=s+TRadicals.Str(TRadicalsUnicode);
               end else
              { 'U' and 'P' have reading in 'a'-type hex }

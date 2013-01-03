@@ -84,7 +84,7 @@ end;
 function NeedCategory(category: string; cattype: char; silent: boolean): integer;
 var catname: string;
 begin
-  if TUserCat.Locate('Name',category,false) then Result:=TUserCat.Int(TUserCatIndex) else
+  if TUserCat.Locate('Name',category) then Result:=TUserCat.Int(TUserCatIndex) else
   begin
     if cattype='?' then
     begin
@@ -95,7 +95,7 @@ begin
       end;
       category:=curlang+'~'+catname;
     end;
-    if TUserCat.Locate('Name',category,false) then Result:=TUserCat.Int(TUserCatIndex) else
+    if TUserCat.Locate('Name',category) then Result:=TUserCat.Int(TUserCatIndex) else
     begin
       Inc(MaxCategoryIndex);
       TUserCat.Insert([inttostr(MaxCategoryIndex),category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);

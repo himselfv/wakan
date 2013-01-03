@@ -213,7 +213,7 @@ type
     procedure CalcBlockFromTo(backtrack:boolean);
 
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
-    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:string):integer; overload;
+    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
     procedure DrawCursor(blink:boolean);
     procedure DrawBlock(Canvas: TCanvas);
     procedure CheckTransCont(x,y:integer);
@@ -1420,6 +1420,7 @@ procedure TfTranslate.AutoTranslateLine(y: integer; x_bg, x_en: integer;
 var x: integer;
   a:integer;
   s:string;
+  word:PSearchResult;
   wt:integer;
 begin
   x:=x_bg;
@@ -1440,8 +1441,8 @@ begin
       dicsl.Clear;
       s:=GetDocWord(x,y,wt,{stopuser=}true);
       req.Search(s, wt, dicsl);
-      if dicsl.Count>0 then s:=dicsl[0].ToString else s:='';
-      a:=SetWordTrans(x,y,[tfScanParticle],s);
+      if dicsl.Count>0 then word:=dicsl[0] else word:=nil;
+      a:=SetWordTrans(x,y,[tfScanParticle],word);
       if a=0 then a:=1;
       inc(x,a);
     end;
@@ -2541,7 +2542,7 @@ procedure TfTranslate.ClearInsBlock;
 begin
   if (priorkanji<>'') and fSettings.cbAdjustCharPriorities.Checked then
   begin
-    if TUserPrior.Locate('Kanji',priorkanji,false) then
+    if TUserPrior.Locate('Kanji',priorkanji) then
       TUserPrior.Edit([TUserPrior.Field('Count')],[inttostr(TUserPrior.Int(TUserPrior.Field('Count'))+1)])
     else
       TUserPrior.Insert([priorkanji,'1']);
@@ -2902,7 +2903,7 @@ end;
  or to the first result if gridfirst==true }
 function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer;
 var i: integer;
-  word: string;
+  word: PSearchResult;
 begin
   with fUser do
   begin
@@ -2914,10 +2915,10 @@ begin
       else
         i:=StringGrid1.Row-1;
     if dicrl.Count=0 then i:=-1;
-    if i=-1 then
-      word := ''
+    if i<0 then
+      word := nil
     else
-      word := dicrl[i].ToString;
+      word := dicrl[i];
   end;
   Result := SetWordTrans(x,y,flags,word);
 end;
@@ -2927,7 +2928,7 @@ Set word translation to the specified article.
 word:
   a string specifying dictionary + article index, in fUser.dicrl list format
 }
-function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:string):integer;
+function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
 var wordpart:char;
     i:integer;
     rlen:integer;
@@ -2954,7 +2955,7 @@ begin
   rlen:=flength(dw);
   globdict:=0;
 
-  if word='' then
+  if word=nil then
   begin
     wordpart:='-';
     worddict:=0;
@@ -2962,9 +2963,9 @@ begin
     if wt=1 then rlen:=1;
   end else
   begin
-    wordpart:=word[20];
-    worddict:=StrToint(copy(word,12,6));
-    s:=copy(word,31,length(word)-30);
+    wordpart:=word.sdef;
+    worddict:=word.dicindex;
+    s:=word.ArticlesToString;
     globdict:=0;
     if (pos(UH_LBEG+'d',s)>0) then
     begin
@@ -2977,11 +2978,11 @@ begin
         globdict:=docdic.Count-1;
       end;
     end;
-    if copy(word,6,6)='000000'then
+    if word.userindex=0 then
       learnstate:=9
     else
     begin
-      TUser.Locate('Index',copy(word,6,6),true);
+      TUser.Locate('Index',word.userindex);
       learnstate_s:=TUser.Str(TUserScore);
       if learnstate_s='' then
         learnstate:=9
@@ -2992,7 +2993,7 @@ begin
         learnstate := 9;
     end;
 
-    rlen:=strtoint(copy(word,18,2));
+    rlen:=word.slen;
   end;
  //This subroutine ^^^:
  //local --- s, i, globdict_s, learnstate_s
@@ -3316,10 +3317,8 @@ begin
     dic:=dicts.Find(dnam);
     if (dic<>nil) and (dic.loaded) then
     begin
-      s := IntToStr(doctr[cy].chars[cx].dicidx);
-      while length(s)<6 do s := '0'+s;
       dic.Demand;
-      dic.TDict.Locate('Index',s,true);
+      dic.TDict.Locate('Index',doctr[cy].chars[cx].dicidx);
       if dic.TDictMarkers<>-1 then meaning:=dic.TDict.Str(dic.TDictEnglish) else
         meaning:=ConvertEdictEntry(dic.TDict.Str(dic.TDictEnglish),markers);
       reading:=dic.TDict.Str(dic.TDictPhonetic);
@@ -3328,10 +3327,10 @@ begin
   end else
   if doctr[cy].chars[cx].wordstate='?'then
   begin
-    if TChar.Locate('Unicode',GetDoc(cx,cy),false) then
+    if TChar.Locate('Unicode',GetDoc(cx,cy)) then
     begin
       TCharRead.SetOrder('');
-      TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
+      TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
       while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
       begin
         s:=TCharRead.Str(TCharReadReading);

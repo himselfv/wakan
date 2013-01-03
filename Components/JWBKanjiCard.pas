@@ -46,7 +46,7 @@ begin
   if alt or rad then inc(nch,(sizvert div 2)+1);
   if comp then nch:=nch+1+sizhor;
   sl:=TStringList.Create;
-  TChar.Locate('Unicode',u,false);
+  TChar.Locate('Unicode',u);
   DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),u,calfont);
   if stcount then
     if curlang<>'j'then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TCharStrokeCount)),FontEnglish);
@@ -67,7 +67,7 @@ begin
 
   {alternate}
   radf:=fSettings.ComboBox1.ItemIndex+12;
-  TRadicals.Locate('Number',inttostr(fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)),true);
+  TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf));
   if alt then
     DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
 
@@ -85,10 +85,10 @@ begin
   if comp then
   begin
     TUserIdx.SetOrder('Kanji_Ind');
-    TUserIdx.Locate('Kanji',u,false);
+    TUserIdx.Locate('Kanji',u);
     while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=u) do
     begin
-      TUser.Locate('Index',TUserIdx.Str(TUserIdxWord),true);
+      TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord));
       if flength(TUser.Str(TUserKanji))<10 then
 //      if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
         if TUserIdx.Bool(TUserIdxBegin) then
@@ -134,7 +134,7 @@ begin
         j:=dic.ReadIndex;
         while (j>0) do
         begin
-          dic.TDict.Locate('Index',inttostr(j),true);
+          dic.TDict.Locate('Index',j);
           if dic.TDictMarkers<>-1 then mark:=dic.TDict.Str(dic.TDictMarkers) else mark:='';
           freq:='0000000';
           if (dic.TDictFrequency<>-1) and (sortfreq) then freq:=inttostr(9999999-dic.TDict.Int(dic.TDictFrequency));
@@ -193,7 +193,7 @@ begin
     ony:='';
     kuny:='';
     TCharRead.SetOrder('');
-    TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
+    TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
     while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
     begin
      //Unfortunately for us, TCharReadReading is stored as Hex text in Ansi chars,
@@ -268,7 +268,7 @@ begin
     end;
     defy:='';
     TCharRead.SetOrder('');
-    TCharRead.Locate('Kanji',TChar.Str(TCharIndex),true);
+    TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
     while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
     begin
       s:=TCharRead.Str(TCharReadReading);

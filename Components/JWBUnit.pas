@@ -724,13 +724,13 @@ begin
   begin
     s2:=copy(s,1,4);
     delete(s,1,4);
-    if (s2[1]>'3') and (TChar.Locate('Unicode',s2,false)) then
+    if (s2[1]>'3') and (TChar.Locate('Unicode',s2)) then
     begin
       cd:=fMenu.GetCharValue(TChar.Int(TCharIndex),43);
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;
-  TChar.Locate('Unicode',bk,false);
+  TChar.Locate('Unicode',bk);
 end;
 
 //TODO: Upgrade this function to Unicode
@@ -749,13 +749,13 @@ begin
   begin
     s2:=copy(s,1,4);
     delete(s,1,4);
-    if (s2[1]>'3') and (TChar.Locate('Unicode',s2,false)) then
+    if (s2[1]>'3') and (TChar.Locate('Unicode',s2)) then
     begin
       cd:=fMenu.GetCharValue(TChar.Int(TCharIndex),44);
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;
-  TChar.Locate('Unicode',bk,false);
+  TChar.Locate('Unicode',bk);
 end;
 
 procedure BeginDrawReg(p:TPaintBox);

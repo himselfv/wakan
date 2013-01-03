@@ -111,11 +111,11 @@ procedure ListWordCategories(word:integer;catlist:TStringList);
 var s:string;
 begin
   TUserSheet.SetOrder('Word_Ind');
-  TUserSheet.Locate('Word',inttostr(word),true);
+  TUserSheet.Locate('Word',word);
   catlist.Clear;
   while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
   begin
-    TUserCat.Locate('Index',TUserSheet.Str(TUserSheetNumber),true);
+    TUserCat.Locate('Index',TUserSheet.Int(TUserSheetNumber));
     s:=TUserCat.Str(TUserCatName);
     catlist.Add(s);
     TUserSheet.Next;
@@ -141,7 +141,7 @@ end;
 //Finds category and returns its index, or -1 if not found.
 function FindCategory(category:string): integer;
 begin
-  if TUserCat.Locate('Name',category,false) then
+  if TUserCat.Locate('Name',category) then
     Result := TUserCat.Int(TUserCatIndex)
   else
     Result := -1;
@@ -153,10 +153,10 @@ var s:string;
 begin
   Result := false;
   TUserSheet.SetOrder('Word_Ind');
-  TUserSheet.Locate('Word',inttostr(word),true);
+  TUserSheet.Locate('Word',word);
   while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
   begin
-    TUserCat.Locate('Index',TUserSheet.Str(TUserSheetNumber),true);
+    TUserCat.Locate('Index',TUserSheet.Int(TUserSheetNumber));
     s:=TUserCat.Str(TUserCatName);
     if catname=StripCatName(s) then begin
       TUserSheet.Delete;
@@ -171,7 +171,7 @@ end;
 function RemoveAllWordsFromCategory(category:string): boolean;
 begin
   Result := false;
-  TUserCat.Locate('Name',category,false);
+  TUserCat.Locate('Name',category);
   TUserSheet.First;
   while not TUserSheet.EOF do
   begin
@@ -229,7 +229,7 @@ begin
 
   RemoveAllWordsFromCategory(category);
 
-  TUserCat.Locate('Name',category,false);
+  TUserCat.Locate('Name',category);
   TUserCat.Delete;
   Result := true;
 
@@ -260,7 +260,7 @@ begin
   end;
 
   with TUserCat.NewCursor do try
-    Locate('Index',sidxCat,false);
+    Locate('Index',sidxCat);
     Delete;
   finally
     Free;
@@ -373,7 +373,7 @@ begin
       for kj:=0 to 7 do
         if (((b) shr kj) and 1)<>0 then
         begin
-          if TChar.Locate('Index',inttostr((i-1)*8+1+kj),true) then
+          if TChar.Locate('Index',(i-1)*8+1+kj) then
           begin
             SetKnown(listno,TChar.Str(TChar.Field('Unicode')),true);
           end;
