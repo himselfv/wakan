@@ -212,8 +212,8 @@ begin
   for i:=0 to sl_names.Count-1 do
     for j:=1 to (length(sl_names[i]) div 8)-1 do
     begin
-      PutToBuf(strtoint('0x'+copy(sl_names[i],j*8+7,2)),strtoint('0x'+copy(sl_names[i],j*8+5,2)),
-               strtoint('0x'+copy(sl_names[i],j*8+3,2)),strtoint('0x'+copy(sl_names[i],j*8+1,2)));
+      PutToBuf(strtoint('0x'+copy(sl_names[i],j*8+1,2)),strtoint('0x'+copy(sl_names[i],j*8+3,2)),
+               strtoint('0x'+copy(sl_names[i],j*8+5,2)),strtoint('0x'+copy(sl_names[i],j*8+7,2)));
     end;
   blockwrite(fb,buf,bufp);
   closefile(fb);

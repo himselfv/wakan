@@ -9,32 +9,6 @@ uses SysUtils, Classes, JWBStrings, JWBUtils, TextTable, MemSource, StdPrompt,
   JWBDic;
 
 type
- { How to match words (exact, match left, right or anywhere) }
-  TMatchType = (
-    mtExactMatch,
-    mtMatchLeft,
-    mtMatchRight,
-    mtMatchAnywhere);
-
- { Translation type }
-  TSearchType = (
-    stJp,           //jp->en
-    stEn,           //en->jp
-    stClipboard,    //clipboard translation
-    stEditorInsert, //editor input translation
-    stEditorAuto    //text translation (no UI)
-  );
-
- { SatanString is a string which is FString except for when you search for English,
-  then it contains raw english. Happy debugging. }
-  SatanString = string;
-
- { Cursor + some cached info about the dictionary }
-  TDicCursor2 = class(TDicCursor)
-  public
-    PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
-  end;
-
   {
    If DicIndex/DicName are set, article contents MUST contain "dDicname" too
    because Wakan relies on it. (I'll fix that later)
@@ -85,6 +59,49 @@ type
     property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
 
+
+ { How to match words (exact, match left, right or anywhere) }
+  TMatchType = (
+    mtExactMatch,
+    mtMatchLeft,
+    mtMatchRight,
+    mtMatchAnywhere);
+
+ { Translation type }
+  TSearchType = (
+    stJp,           //jp->en
+    stEn,           //en->jp
+    stClipboard,    //clipboard translation
+    stEditorInsert, //editor input translation
+    stEditorAuto    //text translation (no UI)
+  );
+
+ { SatanString is a string which is FString except for when you search for English,
+  then it contains raw english. Happy debugging. }
+  SatanString = string;
+
+ { Internal lookup state of the dictionary cursor }
+  TDicLookupType = (ltNone,ltKanji,ltRomaji,ltMeaning);
+
+ { Cursor + some cached info about the dictionary }
+  TDicCursor2 = class(TDicCursor)
+  public
+    PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
+
+  protected
+    FLookupType: TDicLookupType;
+    FMatchType: TMatchType;
+    FValue: string; //can be FString
+    function NextMeaningMatch: boolean;
+    function NextAnywhereMatch: boolean;
+  public
+    procedure LookupKanji(MatchType: TMatchType; const val: FString);
+    procedure LookupRomaji(MatchType: TMatchType; const val: string);
+    procedure LookupMeaning(MatchType: TMatchType; const val: FString);
+    function HaveMatch: boolean;
+    function NextMatch: boolean;
+  end;
+
  { Dictionary search class. Reusable.
   Create, fill params, Prepare(), then do multiple Search()es. }
   TDicSearchRequest = class
@@ -133,7 +150,7 @@ type
   protected
     a3kana:boolean;   //a==3 and only kana in string
     a4limitkana:boolean; //a in [4,5]
-    procedure DicInitialLookup(dic: TDicCursor; wt: integer; sxxr: string; sxx: string);
+    procedure DicInitialLookup(dic: TDicCursor2; wt: integer; sxxr: string; sxx: FString);
     procedure FinalizeResults(sl: TSearchResults);
 
   end;
@@ -182,24 +199,6 @@ procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;must
 implementation
 uses Forms, Windows, JWBMenu, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
   JWBCategories, JWBEdictMarkers;
-
-
-
-{
-Utility functions
-}
-
-function CompareUnicode(sub,str:FString):boolean;
-var i:integer;
-begin
-  result:=false;
-  for i:=0 to flength(str)-flength(sub) do
-    if fcopy(str,i+1,flength(sub))=sub then
-    begin
-      result:=true;
-      exit;
-    end;
-end;
 
 
 {
@@ -332,6 +331,164 @@ end;
 
 
 {
+Dictionary cursor
+}
+{ Tries to find entry by kanji }
+procedure TDicCursor2.LookupKanji(MatchType: TMatchType; const val: FString);
+begin
+  FLookupType := ltKanji;
+  FMatchType := MatchType;
+  FValue := val;
+  if MatchType<>mtMatchRight then
+    SetOrder('Kanji_Ind')
+  else
+    SetOrder('<Kanji_Ind');
+  case MatchType of
+    mtMatchAnywhere: begin
+      First;
+      NextAnywhereMatch;
+    end;
+    mtMatchRight: Locate(stKanjiReverse,val);
+  else //Left and Exact
+    Locate(stKanji,val);
+  end;
+end;
+
+procedure TDicCursor2.LookupRomaji(MatchType: TMatchType; const val: string);
+begin
+  FLookupType := ltRomaji;
+  FMatchType := MatchType;
+  FValue := val;
+  if MatchType<>mtMatchRight then
+    SetOrder('Phonetic_Ind')
+  else
+    SetOrder('<Phonetic_Ind');
+  case MatchType of
+    mtMatchAnywhere: begin
+      First;
+      NextAnywhereMatch;
+    end;
+    mtMatchRight: Locate(stSortReverse,val);
+  else //Left and Exact
+    Locate(stSort,val);
+  end
+end;
+
+procedure TDicCursor2.LookupMeaning(MatchType: TMatchType; const val: FString);
+begin
+  FLookupType := ltMeaning;
+  FMatchType := MatchType;
+  if not (FMatchType in [mtExactMatch, mtMatchLeft]) then
+    FMatchType := MatchType; //other match types are not supported
+  FValue := lowercase(val);
+  FindIndexString(true,FValue);
+ //This mode requires auto-NextMatch at the start
+  NextMatch();
+ //Which may also terminate the search instantly if there are no matches -- see NextMatch()
+end;
+
+function TDicCursor2.HaveMatch: boolean;
+var i_pos: integer;
+  s_val: string;
+begin
+  if FLookupType in [ltKanji,ltRomaji] then
+    if Self.EOF then begin
+      Result := false;
+      exit;
+    end;
+
+  case FLookupType of
+    ltKanji:
+      case FMatchType of
+        mtMatchLeft: Result := pos(FValue,Str(TDictKanji))=1;
+        mtMatchRight: begin
+          s_val := Str(TDictKanji);
+          i_pos := pos(FValue, s_val);
+          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue));
+        end;
+        mtExactMatch: Result := FValue=Str(TDictKanji);
+      else //anywhere
+        Result := pos(FValue,Str(TDictKanji))>0;
+      end;
+
+    ltRomaji:
+      case FMatchType of
+        mtMatchLeft: Result := pos(FValue,Str(TDictSort))=1;
+        mtMatchRight: begin
+          s_val := Str(TDictSort);
+          i_pos := pos(FValue, s_val);
+          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue)+1);
+        end;
+        mtExactMatch: Result := FValue=Str(TDictSort);
+      else //anywhere
+        Result := pos(FValue,Str(TDictSort))>0;
+      end;
+
+    ltMeaning:
+      Result := true; //we always have a match in Meaning -- see NextMatch()
+  else
+    Result := false; //not looking for anything
+  end;
+end;
+
+function TDicCursor2.NextMatch: boolean;
+begin
+  case FLookupType of
+    ltNone: Result := false;
+    ltMeaning: begin
+      Result := NextMeaningMatch;
+      if not Result then
+        FLookupType := ltNone; //lookup is over
+    end
+  else
+    if (FLookupType in [ltKanji,ltRomaji]) and (FMatchType=mtMatchAnywhere) then
+      Result := NextAnywhereMatch
+    else begin
+      self.Next;
+      Result := HaveMatch;
+    end;
+  end;
+end;
+
+function TDicCursor2.NextMeaningMatch: boolean;
+var wif: integer;
+  ts: string;
+begin
+  wif:=ReadIndex;
+  while wif<>0 do begin
+    Locate(stIndex,wif);
+   { Word index only works on first 4 bytes of the word, so we have to manually check after it. }
+    ts:=lowercase(Str(dic.TDictEnglish))+' ';
+    case FMatchType of
+      mtMatchLeft: if pos(FValue,ts)>0 then break;
+      mtExactMatch: begin
+        ts := ts + ' ';
+       //TODO: support other word breaks in addition to ' ' and ','
+        if (pos(lowercase(FValue)+' ',ts)>0) or (pos(lowercase(FValue)+',',ts)>0) then break;
+      end;
+    end;
+    wif:=ReadIndex;
+  end;
+  Result := (wif<>0);
+end;
+
+function TDicCursor2.NextAnywhereMatch: boolean;
+begin
+ { mtAnywhere searches can't use any index, so we scan through all the records -- very slow }
+  if EOF then begin
+    Result := false;
+    exit;
+  end;
+
+  repeat
+    Next;
+  until EOF or HaveMatch;
+  Result := not EOF;
+end;
+
+
+
+{
 Deflection and lookup lists
 }
 
@@ -399,6 +556,7 @@ begin
   end;
   if curlang='c'then
   begin
+   //TODO: Convert to unicode
     sl.Add(prior, ws, 'F', w);
     if pos('?',KanaToRomaji(w,romasys,'c'))>0 then exit;
     repeat
@@ -666,43 +824,22 @@ resourcestring
   sDicSearchTitle='#00932^eDic.search';
   sDicSearchText='#00933^ePlease wait. Searching dictionary...';
 
-procedure TDicSearchRequest.DicInitialLookup(dic: TDicCursor; wt: integer; sxxr: string; sxx: string);
+procedure TDicSearchRequest.DicInitialLookup(dic: TDicCursor2; wt: integer; sxxr: string; sxx: string);
 begin
   case a of
-  stJp:
-    case MatchType of
-      mtMatchAnywhere: begin end; //nothing
-      mtMatchRight: dic.Locate(dic.stSortReverse,sxxr);
-    else
-      dic.Locate(dic.stSort,sxxr);
-    end;
-  stEn:
-    dic.FindIndexString(true,lowercase(sxx));
+  stJp: dic.LookupRomaji(MatchType,sxxr);
+  stEn: dic.LookupMeaning(MatchType,sxx);
   stClipboard:
     if a3kana then
-      case MatchType of
-        mtMatchAnywhere: begin end;
-        mtMatchRight: dic.Locate(dic.stSortReverse,sxxr);
-      else
-        dic.Locate(dic.stSort,sxxr);
-      end
+      dic.LookupRomaji(MatchType,sxxr)
     else
-      case MatchType of
-        mtMatchAnywhere: begin end;
-        mtMatchRight: dic.Locate(dic.stKanjiReverse,sxx);
-      else
-        dic.Locate(dic.stKanji,sxx);
-      end;
+      dic.LookupKanji(MatchType,sxx);
   stEditorInsert,
   stEditorAuto:
-    if a4limitkana then begin
-      dic.SetOrder('Phonetic_Ind');
-      dic.Locate(dic.stSort,sxxr);
-    end else
-    begin
-      dic.SetOrder('Kanji_Ind');
-      dic.Locate(dic.stKanji,sxx);
-    end;
+    if a4limitkana then
+      dic.LookupRomaji(mtExactMatch,sxxr)
+    else
+      dic.LookupKanji(mtExactMatch,sxx);
   end;
 end;
 
@@ -730,7 +867,6 @@ var
   sdef:char;    //==lc.verbType
   slen:integer; //==lc.len
 
-  wif:integer;
   entry:string; //translation entry text
   s2:string;
   converted, markers:string;
@@ -803,31 +939,11 @@ begin
   end;
 
   DicInitialLookup(dic, wt, sxxr, sxx);
-
   i:=0;
-  if a=stEn then wif:=dic.ReadIndex;
 
-  while
-    ((a=stEn) or (not dic.EOF)) and
-    (((a=stJp) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.Str(dic.TDictSort))=1)) or
-    ((a=stJp) and (MatchType=mtMatchRight) and (pos(sxxr,dic.Str(dic.TDictSort))>0)) or
-    ((a=stJp) and (sxxr=dic.Str(dic.TDictSort))) or
-    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchLeft) and (pos(sxxr,dic.Str(dic.TDictSort))=1)) or
-    ((a=stClipboard) and (a3kana) and (MatchType=mtMatchRight) and (pos(sxxr,dic.Str(dic.TDictSort))>0)) or
-    ((a=stClipboard) and (a3kana) and (sxxr=dic.Str(dic.TDictSort))) or
-    ((a=stEn) and (wif<>0)) or
-    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchLeft) and (pos(sxx,dic.Str(dic.TDictKanji))=1)) or
-    ((a=stClipboard) and (not a3kana) and (MatchType=mtMatchRight) and (pos(sxx,dic.Str(dic.TDictKanji))>0)) or
-    ((a=stClipboard) and (not a3kana) and (sxx=dic.Str(dic.TDictKanji))) or
-    ((a in [stEditorInsert, stEditorAuto]) and (not a4limitkana) and (sxx=dic.Str(dic.TDictKanji))) or
-    ((a in [stEditorInsert, stEditorAuto]) and (a4limitkana) and (sxxr=dic.Str(dic.TDictSort))) or
-    (((a=stJp) or (a=stClipboard)) and (MatchType=mtMatchAnywhere)))
-  do
-  begin
+  while dic.HaveMatch do begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
-    if a=stEn then dic.Locate(dic.stIndex,wif);
-    //if a=stEn then showmessage(Format('%4.4X',[wif])+'-'+dic.Str(dic.TDictEnglish));
     if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
     if dic.TDictMarkers<>-1 then
       entry:=entry+EnrichDictEntry(dic.Str(dic.TDictEnglish),dic.Str(dic.TDictMarkers))
@@ -835,13 +951,8 @@ begin
       converted := ConvertEdictEntry(dic.Str(dic.TDictEnglish), markers);
       entry:=entry+EnrichDictEntry(converted, markers);
     end;
-    if a=stEn then ts:=lowercase(dic.Str(dic.TDictEnglish)+' ');
     if IsAppropriateVerbType(sdef, entry) then
-    if (a<>stEn) or ((MatchType=mtMatchLeft) and (pos(lowercase(sxx),ts)>0)) or
-    (((pos(lowercase(sxx)+' ',ts)>0) or (pos(lowercase(sxx)+',',ts)>0) or (lowercase(sxx)=ts))) then
     if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
-    if (MatchType<>mtMatchAnywhere) or (CompareUnicode(sxx,dic.Str(dic.TDictPhonetic)))
-    or ((a=stClipboard) and (CompareUnicode(sxx,dic.Str(dic.TDictKanji)))) then
     begin
 
      //Calculate popularity class
@@ -961,7 +1072,7 @@ begin
       break;
     end;
 
-    if a<>stEn then dic.Next else wif:=dic.ReadIndex;
+    dic.NextMatch;
   end;
 end;
 

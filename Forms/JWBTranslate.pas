@@ -1575,7 +1575,8 @@ begin
     exit; //cannot move cursor!
   leaveline:=true;
   shiftpressed:=false;
-  cur:=GetClosestCursorPos(X,Y);
+  if linl.Count>0 then //else lines are to be recalculated and we can't do much
+    cur:=GetClosestCursorPos(X,Y);
   mustrepaint:=true;
   ShowText(true);
 end;
@@ -1586,10 +1587,12 @@ begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot move cursor!
   if ssLeft in Shift then begin;
-    cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
-    if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
-    lastmm.x:=cur.x;
-    lastmm.y:=cur.y;
+    if linl.Count>0 then begin
+      cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
+      if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
+      lastmm.x:=cur.x;
+      lastmm.y:=cur.y;
+    end;
     shiftpressed:=true;
     ShowText(false);
   end;
@@ -3522,8 +3525,12 @@ begin
   result:=cx;
 end;
 
-{ Returns closest text position to the given screen point.
- Makes sure what you get is a legal text point, not some negative or over-the-end value. }
+{
+ Returns closest text position to the given screen point.
+ Makes sure what you get is a legal text point, not some negative or over-the-end value.
+ NOTE:
+  - Do not call if linl is cleared (linl.Count=0)
+}
 function TfTranslate.GetClosestCursorPos(x,y:integer): TCursorPos;
 begin
   if y<0 then y:=0;
