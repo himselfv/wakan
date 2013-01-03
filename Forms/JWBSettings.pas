@@ -432,9 +432,6 @@ begin
     reg.Free;
   end;
 
-  if pointer(chardetl[9])=nil then
-    raise Exception.Create('What the hell.');
-
   chardetl.SaveToFile('WAKAN.CDT');
   WriteColors;
 end;
