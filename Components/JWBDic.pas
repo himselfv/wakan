@@ -27,7 +27,22 @@ type
     FOnLoadStart: TNotifyEvent;
     FOnLoadEnd: TNotifyEvent;
     FOnLoadException: TNotifyExceptionEvent;
-  public
+
+  public //Extracted from package on FillInfo
+    builddate:TDateTime;
+    version:string;
+    dicver:integer;
+    name:string;
+    description:string;
+    language:char;
+    priority:integer;
+    entries:integer;
+    copyright:string;
+    tested:boolean;
+    hasWordIndex:boolean;
+    hasCharIndex:boolean;
+
+  public //Fields, populated on load
     TDict:TTextTable;
     TDictIndex,
     TDictEnglish,
@@ -36,21 +51,14 @@ type
     TDictSort,
     TDictMarkers,
     TDictFrequency:integer;
+
+  public
     charidx,wordidx:pointer;
     charno,wordno:integer;
     charfsiz,wordfsiz:integer;
     package:TPackageSource;
     loaded:boolean;
     pname:string;
-    version:string;
-    dicver:integer;
-    priority:integer;
-    builddate:TDateTime;
-    name,description:string;
-    language:char;
-    tested:boolean;
-    entries:integer;
-    copyright:string;
     demandloaded:boolean;
     vocmode:integer;
    {$IFDEF DIC_CURSOR_IN_TABLE}
@@ -59,7 +67,6 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure FillInfo(packagefile:string); virtual;
-//    procedure Build(edictfile,packagefile:string); virtual;
     procedure Load; virtual;
     procedure Unload; virtual;
     procedure Demand;
@@ -270,59 +277,47 @@ begin
   vs:=TStringList.Create;
   ps:=TPackageSource.Create(pname,791564,978132,978123);
   try
-    if ps.GetFileList.IndexOf('dict.ver')<>-1 then
+    if ps.GetFileList.IndexOf('dict.ver')<0 then
+      raise EDictionaryException.Create('Unknown file structure');
+
+    vs.LoadFromStream(ps.Files['dict.ver'].Lock);
+    ps.Files['dict.ver'].Unlock;
+    if vs[0]<>'DICT' then
+      raise EDictionaryException.Create('Invalid DIC header')
+    else
     begin
-      vs.LoadFromStream(ps.Files['dict.ver'].Lock);
-      ps.Files['dict.ver'].Unlock;
-      if vs[0]<>'DICT' then
-        raise EDictionaryException.Create('Invalid DIC header')
+      dicver:=strtoint(vs[1]);
+      if dicver>CurDicVer then
+        raise EDictionaryException.Create('Unsupported DIC version')
+      else
+      if (dicver<CurDicVer) and ((CurDicVer<>4) or (dicver<>3)) then
+        raise EDictionaryException.Create('Outdated DIC structure - please download new DIC file')
+      else
+      if (dicver<CurDicVer) then
+        raise EDictionaryException.Create('DIC indexes corrupted - bug in '
+          +'1.47 DIC, you have to download this DIC anew (for 1.50+), I''m '
+          +'sorry for inconvenience')
       else
       begin
-        dicver:=strtoint(vs[1]);
-        if dicver>CurDicVer then
-          raise EDictionaryException.Create('Unsupported DIC version')
-        else
-        if (dicver<CurDicVer) and ((CurDicVer<>4) or (dicver<>3)) then
-          raise EDictionaryException.Create('Outdated DIC structure - please download new DIC file')
-        else
-        if (dicver<CurDicVer) then
-          raise EDictionaryException.Create('DIC indexes corrupted - bug in '
-            +'1.47 DIC, you have to download this DIC anew (for 1.50+), I''m '
-            +'sorry for inconvenience')
-        else
-        begin
-          builddate:=strtoint(vs[2]);
-          version:=vs[3];
-          name:=vs[4];
-          language:=vs[5][1];
-          description:=vs[6];
-          priority:=strtoint(vs[7]);
-          entries:=strtoint(vs[8]);
-          copyright:=vs[9];
-          tested:=true;
-        end;
+        builddate:=strtoint(vs[2]);
+        version:=vs[3];
+        name:=vs[4];
+        language:=vs[5][1];
+        description:=vs[6];
+        priority:=strtoint(vs[7]);
+        entries:=strtoint(vs[8]);
+        copyright:=vs[9];
+        tested:=true;
       end;
-    end else
-      raise EDictionaryException.Create('Unknown file structure');
+    end;
+
+    hasWordIndex := ps.GetFileList.IndexOf('WordIdx.bin')>=0;
+    hasCharIndex := ps.GetFileList.IndexOf('CharIdx.bin')>=0;
   finally
     ps.Free;
     vs.Free;
   end;
 end;
-
-{
-procedure TJaletDic.Build(edictfile,packagefile:string);
-var err:string;
-begin
-  pname:=packagefile;
-  err:='Building not supported yet.';
-  if err<>'' then
-    Application.MessageBox(
-      pchar(_l('#00322^eCannot build dictionary ')+pname+#13#13+err),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
-end;
-}
 
 procedure TJaletDic.Load;
 begin

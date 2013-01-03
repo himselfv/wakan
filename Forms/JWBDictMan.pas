@@ -165,7 +165,7 @@ var dic:TJaletDic;
 begin
   UpdateUpDownButtons;
   if cbDicts.ItemIndex=-1 then exit;
-  dic:=dicts[cbDicts.ItemIndex];
+  dic:=dicts.Find(cbDicts.Items[cbDicts.ItemIndex]);
   label4.Caption:=dic.name;
   label10.caption:=dic.pname;
   label11.caption:=dic.version;
@@ -174,8 +174,8 @@ begin
   label14.caption:=inttostr(dic.priority);
   label15.caption:=dic.description;
   label17.caption:=dic.copyright;
-  if dic.wordidx<>nil then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
-  if dic.charidx<>nil then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
+  if dic.hasWordIndex then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
+  if dic.hasCharIndex then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
   SpeedButton1.Down:=dicts.IsInGroup(dic, 1);
   SpeedButton2.Down:=dicts.IsInGroup(dic, 2);
   SpeedButton3.Down:=dicts.IsInGroup(dic, 3);
