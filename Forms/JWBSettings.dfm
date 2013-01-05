@@ -2295,7 +2295,6 @@ object fSettings: TfSettings
       Cancel = True
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -2315,7 +2314,6 @@ object fSettings: TfSettings
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOkClick
     end

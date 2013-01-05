@@ -106,19 +106,47 @@ begin
   result:=s;
 end;
 
+threadvar
+ { This is not very nice, but will do as a fix }
+  CTUserSheet: TTextTableCursor;
+  CTUserCat: TTextTableCursor;
+
+function GetUserSheet: TTextTableCursor;
+begin
+  Result:=CTUserSheet;
+  if Result=nil then begin
+    Result := TTextTableCursor.Create(TUserSheet);
+    CTUserSheet := Result;
+  end;
+end;
+
+function GetUserCat: TTextTableCursor;
+begin
+  Result:=CTUserCat;
+  if Result=nil then begin
+    Result := TTextTableCursor.Create(TUserCat);
+    CTUserCat := Result;
+  end;
+end;
+
 //Populates TStringList with full names of all categories that contain this word.
 procedure ListWordCategories(word:integer;catlist:TStringList);
 var s:string;
+  CUserSheet: TTextTableCursor;
+  CUserCat: TTextTableCursor;
 begin
-  TUserSheet.SetOrder('Word_Ind');
-  TUserSheet.Locate('Word',word);
+  CUserSheet := GetUserSheet;
+  CUserCat := GetUserCat;
+
+  CUserSheet.SetOrder('Word_Ind');
+  CUserSheet.Locate('Word',word);
   catlist.Clear;
-  while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
+  while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetWord)=word) do
   begin
-    TUserCat.Locate('Index',TUserSheet.Int(TUserSheetNumber));
-    s:=TUserCat.Str(TUserCatName);
+    CUserCat.Locate('Index',CUserSheet.Int(TUserSheetNumber));
+    s:=CUserCat.Str(TUserCatName);
     catlist.Add(s);
-    TUserSheet.Next;
+    CUserSheet.Next;
   end;
 end;
 
@@ -126,10 +154,13 @@ end;
 function CheckEnabledCategories(catlist: TStringList): boolean;
 var i, ind: integer;
   s: string;
+  CUserCat: TTextTableCursor;
 begin
+  CUserCat := GetUserCat;
   Result := false;
   for i := 0 to catlist.Count - 1 do begin
-    s:=TUserCat.Str(TUserCatName);
+    CUserCat.Locate('Index', StrToInt(catlist[i]));
+    s:=CUserCat.Str(TUserCatName);
     ind:=fUserFilters.ListBox1.Items.IndexOf(StripCatName(s));
     if (ind<>-1) and (fUserFilters.ListBox1.Checked[i]) and (GetCatPrefix(s)=curlang) then begin
       Result:=true;
@@ -140,9 +171,11 @@ end;
 
 //Finds category and returns its index, or -1 if not found.
 function FindCategory(category:string): integer;
+var CUserCat: TTextTableCursor;
 begin
-  if TUserCat.Locate('Name',category) then
-    Result := TUserCat.Int(TUserCatIndex)
+  CUserCat := GetUserCat;
+  if CUserCat.Locate('Name',category) then
+    Result := CUserCat.Int(TUserCatIndex)
   else
     Result := -1;
 end;

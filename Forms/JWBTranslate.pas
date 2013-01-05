@@ -50,7 +50,7 @@ uses
 {$DEFINE MTHREAD_SUPPORT}
 
 //Display a window showing how much time Auto-TL took
-{$DEFINE TLSPEEDREPORT}
+//{$DEFINE TLSPEEDREPORT}
 
 type
  { Character position in source text. }
@@ -1311,6 +1311,11 @@ begin
  {$IFDEF MTHREAD_SUPPORT}
   useThreads := fSettings.cbMultithreadedTranslation.Checked;
   threadsCreated := false;
+  for j := 0 to dicts.Count - 1 do
+    if dicts[j].Offline then begin
+      useThreads := false; //offline dictionaries don't support multithreaded access, so no.
+      break;
+    end;
  {$ENDIF}
 
  //Don't show the progress window at all unless the operation is taking a long time.
@@ -1378,6 +1383,10 @@ begin
      {$IFDEF MTHREAD_SUPPORT}
       if useThreads and not threadsCreated and (GetTickCount-startTime > 200) then begin
         threadsCreated := true; //skip this block afterwards
+       //Load all dictionaries because on-demand loading might mess up multithreading
+        for j := 0 to dicts.Count - 1 do
+          if dicts[j].loaded then dicts[j].Demand;
+
         threads := CreateTranslationThreads(block.fromy,block.toy,y);
         //recalculate total work
         totalwork := (block.toy-y+1)+donework;
