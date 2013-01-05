@@ -153,6 +153,9 @@ end;
 //TRomajiRuleNode expects PFChar (i.e. pointer to an FString data) with at least
 //two FChars in it.
 function TRomajiRuleNode2.CompareData(const a):Integer;
+{$IFNDEF UNICODE}
+var cmp: Int64;
+{$ENDIF}
 begin
  {$IFDEF UNICODE}
  //Compare two characters at once
@@ -163,7 +166,15 @@ begin
   highest bytes of these integers.
   But then again, we don't add non-2char nodes to this tree, and we don't
   call a search on it if we don't have two characters. }
-  Result := PInt64(a)^-PInt64(FTextPtr)^;
+  cmp := PInt64(a)^-PInt64(FTextPtr)^;
+ //Int64 wouldn't fit in Result:integer, we would get invalid results
+  if cmp<0 then
+    Result := -1
+  else
+  if cmp>0 then
+    Result := 1
+  else
+    Result := 0;
  {$ENDIF}
 end;
 
