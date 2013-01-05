@@ -222,7 +222,7 @@ begin
   SetLength(FList, Length(FList)+ARequiredFreeLen);
 end;
 
-function TSearchResults.GetItemPtr(Index: integer): PSearchResult;{$IFDEF INLINE} inline;{$ENDIF}
+function TSearchResults.GetItemPtr(Index: integer): PSearchResult;
 begin
   Result := FList[Index];
 end;
@@ -326,7 +326,7 @@ begin
     statpref:='!'+inttostr(UserScore)
   else
     statpref:='';
-  Result := statpref + kanji + ' [' + statpref + kana + '] {' + entry + '}';
+  Result := statpref + kanji + ' [' + statpref + kana + '] {' + statpref + entry + '}';
 end;
 
 
@@ -1099,6 +1099,10 @@ begin
      //If there's already this article in the list, cut it
       if ex_pos>0 then
         scomp.entry := copy(scomp.entry,1,ex_pos-1) + copy(scomp.entry,ex_pos+Length(s2),length(scomp.entry)-length(s2)-ex_pos+1);
+
+     //Delete ~F/~I word type since it would be ignored by painting anyway as it stands
+     //And it would be visible.
+      if (length(scomp.entry)>0) and (scomp.entry[1]=ALTCH_TILDE) then delete(scomp.entry,1,2);
 
       sl2:=TStringList.Create;
       ListWordCategories(CUser.Int(TUserIndex),sl2);

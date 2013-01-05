@@ -82,7 +82,7 @@ const
   ALTCH_EXCL:Char = '!';
   ALTCH_SHARP:Char = '#';
   ALTCH_AT:Char = '@';
-  ALTCH_TILDE:Char = '~'; //followed by 'I' and means 'italic'
+  ALTCH_TILDE:Char = '~'; //followed by 1 character word type (F, I)
   UH_SETCOLOR:Char = '%'; //followed by 6 character hex color
   UH_LBEG:Char ='<'; //begin flag text (ex.: <dEDICT> <gram> <suf>)
   UH_LEND:Char = '>'; //end flag text
