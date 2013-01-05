@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBUtils, JWBDicSearch;
+  JWBUtils, JWBDic, JWBDicSearch;
 
 type
   TfUser = class(TForm)

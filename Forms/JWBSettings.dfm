@@ -24,7 +24,7 @@ object fSettings: TfSettings
     Top = 0
     Width = 484
     Height = 451
-    ActivePage = tsEditor
+    ActivePage = tsDatabaseMaintenance
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -510,7 +510,6 @@ object fSettings: TfSettings
         Width = 233
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 2
         Items.Strings = (
           'Bushu'
@@ -1352,20 +1351,6 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
-      object Label48: TLabel
-        Left = 224
-        Top = 176
-        Width = 105
-        Height = 13
-        Caption = 'Filename (without ext):'
-      end
-      object Label49: TLabel
-        Left = 336
-        Top = 176
-        Width = 114
-        Height = 13
-        Caption = 'Category (with group id):'
-      end
       object Button2: TButton
         Left = 16
         Top = 376
@@ -1441,31 +1426,6 @@ object fSettings: TfSettings
         ParentFont = False
         TabOrder = 4
         OnClick = Button11Click
-      end
-      object Button13: TButton
-        Left = 16
-        Top = 176
-        Width = 201
-        Height = 25
-        Caption = 'Import .UNI (Unicode 16-bit) as .WKL'
-        TabOrder = 5
-        OnClick = Button13Click
-      end
-      object Edit30: TEdit
-        Left = 336
-        Top = 192
-        Width = 121
-        Height = 21
-        TabOrder = 6
-        Text = 'LJLPT 4'
-      end
-      object Edit31: TEdit
-        Left = 224
-        Top = 192
-        Width = 105
-        Height = 21
-        TabOrder = 7
-        Text = 'JLPT4'
       end
     end
     object tsTextTranslator: TTabSheet
@@ -2031,7 +1991,6 @@ object fSettings: TfSettings
         Width = 313
         Height = 21
         Style = csDropDownList
-        ItemHeight = 13
         TabOrder = 4
         OnChange = ComboBox2Change
         Items.Strings = (
@@ -2336,9 +2295,7 @@ object fSettings: TfSettings
       Cancel = True
       Caption = 'OK'
       Default = True
-      ModalResult = 1
-      TabOrder = 1
-      OnClick = btnOkClick
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -2356,7 +2313,11 @@ object fSettings: TfSettings
         3338F38F000033333333333333A223333333333333338F830000333333333333
         333A333333333333333338330000333333333333333333333333333333333333
         0000}
+      ModalResult = 1
       NumGlyphs = 2
+      ParentDoubleBuffered = False
+      TabOrder = 1
+      OnClick = btnOkClick
     end
   end
   object OpenDialog2: TOpenDialog

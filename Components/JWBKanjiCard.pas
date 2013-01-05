@@ -31,7 +31,7 @@ var ony,kuny,defy:string;
     FontJpChGrid:string;
     FontJpEnGrid:string;
     adddot:integer;
-    dic:TJaletDic;
+    dic:TDicIndexCursor;
     mark,freq:string;
     rt: integer; //TCharRead.Int(TCharReadType)
 begin
@@ -125,24 +125,24 @@ begin
     if kcchind.IndexOf(u)=-1 then
     begin
       for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4)
-          and (dicts[i].TDictFrequency<>-1) then
+        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
       begin
-        dic:=dicts[i];
-        dic.Demand;
-        dic.FindIndexString(false,u);
-        j:=dic.ReadIndex;
-        while (j>0) do
-        begin
-          dic.TDict.Locate('Index',j);
-          if dic.TDictMarkers<>-1 then mark:=dic.TDict.Str(dic.TDictMarkers) else mark:='';
-          freq:='0000000';
-          if (dic.TDictFrequency<>-1) and (sortfreq) then freq:=inttostr(9999999-dic.TDict.Int(dic.TDictFrequency));
-          while length(freq)<7 do freq:='0'+freq;
-          if pos(UH_LBEG+'spop'+UH_LEND,EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark))=0 then freq[1]:='a';
-          if freq<>'9999999'then
-          sl.Add(freq+#9+ChinTo(dic.TDict.Str(dic.TDictKanji))+' ['+dic.TDict.Str(dic.TDictPhonetic)+'] {'+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark)+'}{');
-          j:=dic.ReadIndex;
+        dic:=TDicIndexCursor.Create(dicts[i]);
+        try
+          dic.Find(false,u);
+          while dic.Next do
+          begin
+            mark:=dic.GetArticleMarkers;
+            freq:='0000000';
+            if dic.dic.SupportsFrequency and sortfreq then
+              freq:=inttostr(9999999-dic.GetFrequency);
+            while length(freq)<7 do freq:='0'+freq;
+            if pos(UH_LBEG+'spop'+UH_LEND,EnrichDictEntry(dic.GetArticleBody,mark))=0 then freq[1]:='a';
+            if freq<>'9999999'then
+            sl.Add(freq+#9+ChinTo(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
+          end;
+        finally
+          FreeAndNil(dic);
         end;
       end;
       sl.Sort;

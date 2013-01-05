@@ -266,32 +266,51 @@ var tempDir: string;
 begin
   tempDir := CreateRandomTempDirName();
   ForceDirectories(tempDir);
-  assignfile(t,tempDir+'\dict.info');
+
+  assignfile(t,tempDir+'\Dict.info');
   rewrite(t);
   writeln(t,'$TEXTTABLE');
   writeln(t,'$PREBUFFER');
   writeln(t,'$RAWINDEX');
   writeln(t,'$FIELDS');
   writeln(t,'iIndex');
-  writeln(t,'sEnglish');
   writeln(t,'xPhonetic');
   writeln(t,'xKanji');
   writeln(t,'sSort');
-  writeln(t,'sMarkers');
   writeln(t,'iFrequency');
+  writeln(t,'iArticle');
   writeln(t,'$ORDERS');
   writeln(t,'Phonetic_Ind');
   writeln(t,'Kanji_Ind');
   writeln(t,'<Phonetic_Ind');
   writeln(t,'<Kanji_Ind');
+  writeln(t,'Article');
   writeln(t,'$SEEKS');
   writeln(t,'Index');
   writeln(t,'Sort');
   writeln(t,'Kanji');
   writeln(t,'<Sort');
   writeln(t,'<Kanji');
+  writeln(t,'Article');
   writeln(t,'$CREATE');
   closefile(t);
+
+  assignfile(t,tempDir+'\Entries.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PREBUFFER');
+  writeln(t,'$RAWINDEX');
+  writeln(t,'$FIELDS');
+  writeln(t,'iIndex');
+  writeln(t,'xEntry');
+  writeln(t,'sMarkers');
+  writeln(t,'$ORDERS');
+  writeln(t,'$SEEKS');
+  writeln(t,'Index');
+  writeln(t,'$CREATE');
+  closefile(t);
+
+
   WriteDictPackage(dicFilename, tempDir, info, diclang, entries);
   DeleteDirectory(tempDir);
 end;
@@ -306,7 +325,7 @@ begin
   assignfile(f,tempDir+'\dict.ver');
   rewrite(f);
   writeln(f,'DICT');
-  writeln(f,'4');
+  writeln(f,'5');
   writeln(f,inttostr(trunc(now)));
   writeln(f,info.Version);
   writeln(f,info.Name);
@@ -479,6 +498,15 @@ begin
     tempDir := CreateRandomTempDirName();
     ForceDirectories(tempDir);
 
+    CreateDictTables(tempDir+'\DICT.TMP', info, diclang, cnt);
+    dic := fMenu.NewDict(tempDir+'\DICT.TMP');
+    if not dic.tested then
+      raise Exception.Create('Cannot load the newly created dictionary.');
+    dic.Load;
+    if not dic.loaded then
+      raise Exception.Create('Cannot load the target dictionary');
+    dic.Demand;
+
     assignfile(romap,'roma_problems.txt'); //TODO: This one should go into UserDir when we have one
     rewrite(romap);
 
@@ -539,8 +567,6 @@ begin
     lineno:=0;
     cnt:=0;
    //On Ansi we're writing and reading from Ansi file, on Unicode from Unicode
-    fout := TFileWriter.Rewrite(tempDir+'\DICT_IMP1.TMP');
-    fout.WriteLn('>Index;English;Phonetic;Kanji;Sort;Markers;Frequency');
     for fi:=0 to Length(files)-1 do
     begin
       fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
@@ -635,7 +661,10 @@ begin
         end;
 
        //Write out
-        if s_roma<>'' then fout.WriteLn('+'+inttostr(cnt)+';'+s_entry+';'+phon+';'+kanji+';'+s_roma+';'+s_mark+';'+inttostr(prior));
+        if s_roma<>'' then begin
+          dic.TTDict.Insert([inttostr(cnt), phon, kanji, s_roma, inttostr(prior)]);
+          dic.TTEntries.Insert([inttostr(cnt), s_entry, s_mark]);
+        end;
 
        //Indexes
         s:=kanji;
@@ -684,18 +713,6 @@ begin
     prog.Invalidate;
     prog.Repaint;
 
-    CreateDictTables(dicFilename, info, diclang, cnt);
-    dic := fMenu.NewDict(dicFilename);
-    if not dic.tested then
-      raise Exception.Create('Cannot load the newly created dictionary.');
-    dic.Load;
-    if not dic.loaded then
-      raise Exception.Create('Cannot load the target dictionary');
-    dic.Demand;
-
-    fin := TFileReader.Create(tempDir+'\DICT_IMP1.TMP');
-    dic.TDict.ImportFromText(fin,prog,_l('#00091^eBuilding dictionary table'));
-    fin.Free;
 
     DeleteDirectory(tempDir);
 
@@ -715,7 +732,8 @@ begin
     wordidx.Write(tempDir+'\WordIdx.bin');
 
     prog.SetMessage(_l('^eWriting dictionary table...'));
-    dic.TDict.WriteTable(tempDir+'\Dict',true);
+    dic.TTDict.WriteTable(tempDir+'\Dict',true);
+    dic.TTEntries.WriteTable(tempDir+'\Entries',true);
     dic.Free;
 
     WriteDictPackage(dicFilename, tempDir, info, diclang, cnt);

@@ -3319,14 +3319,16 @@ begin
     dnam := docdic[i];
     dic:=dicts.Find(dnam);
     if (dic<>nil) and (dic.loaded) then
-    begin
-      dic.Demand;
-      dic.TDict.Locate('Index',doctr[cy].chars[cx].dicidx);
-      if dic.TDictMarkers<>-1 then meaning:=dic.TDict.Str(dic.TDictEnglish) else
-        meaning:=ConvertEdictEntry(dic.TDict.Str(dic.TDictEnglish),markers);
-      reading:=dic.TDict.Str(dic.TDictPhonetic);
-      kanji:=dic.TDict.Str(dic.TDictKanji);
-    end;
+      with dic.GetRecord(doctr[cy].chars[cx].dicidx) do try
+        if dic.SupportsMarkers then
+          meaning:=GetArticleBody
+        else
+          meaning:=ConvertEdictEntry(GetArticleBody,markers);
+        reading:=GetPhonetic;
+        kanji:=GetKanji;
+      finally
+        Free;
+      end;
   end else
   if doctr[cy].chars[cx].wordstate='?'then
   begin

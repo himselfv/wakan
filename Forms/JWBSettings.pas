@@ -179,11 +179,6 @@ type
     Edit29: TEdit;
     Label47: TLabel;
     CheckBox55: TCheckBox;
-    Button13: TButton;
-    Edit30: TEdit;
-    Edit31: TEdit;
-    Label48: TLabel;
-    Label49: TLabel;
     Label50: TLabel;
     Edit32: TEdit;
     SpeedButton13: TSpeedButton;
@@ -298,7 +293,6 @@ type
     procedure CheckBox3Click(Sender: TObject);
     procedure cbNoColorsClick(Sender: TObject);
     procedure CheckBox9Click(Sender: TObject);
-    procedure Button13Click(Sender: TObject);
     procedure SpeedButton13Click(Sender: TObject);
     procedure SpeedButton14Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
@@ -386,11 +380,6 @@ begin
   so whatever, we'll do this on show just to be safe: }
   SelectActiveContentItem();
 
-  Button13.Visible:=paramstr(1)='debug';
-  Edit30.Visible:=paramstr(1)='debug';
-  Edit31.Visible:=paramstr(1)='debug';
-  Label48.Visible:=paramstr(1)='debug';
-  Label49.Visible:=paramstr(1)='debug';
   Edit15Change(sender);
   Edit20Change(sender);
   Edit19.Text:=dicts.NotUsedDicts;
@@ -1496,11 +1485,6 @@ end;
 procedure TfSettings.CheckBox9Click(Sender: TObject);
 begin
   if fSettings.Visible then ComboBox2Change(sender);
-end;
-
-procedure TfSettings.Button13Click(Sender: TObject);
-begin
-  fMenu.Button3Click(Sender);
 end;
 
 procedure TfSettings.SpeedButton13Click(Sender: TObject);

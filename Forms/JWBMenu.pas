@@ -243,7 +243,6 @@ type
     N00929eChangelanguage1: TMenuItem;
     aChangeLanguage: TAction;
     FormPlacement1: TFormPlacement;
-    procedure Button3Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
@@ -2552,92 +2551,6 @@ begin
   if s<>'' then writeln(t,s);
   closefile(f);
   closefile(t);
-end;
-
-procedure TfMenu.Button3Click(Sender: TObject);
-var t,t2,t3:textfile;
-    s:string;
-    kanj,phon:string;
-    dic:TJaletDic;
-    recn:integer;
-    en:string;
-begin
-  ConvUniToMixUni(fSettings.edit31.text+'.uni',fSettings.edit31.text+'.cnv',recn);
-  assignfile(t,fSettings.edit31.text+'.cnv');
-  reset(t);
-  assignfile(t2,fSettings.Edit31.text+'.wkl');
-  rewrite(t2);
-  assignfile(t3,'convert.err');
-  rewrite(t3);
-  writeln(t2,'WaKan Word List 1');
-  writeln(t2,'');
-  writeln(t2,'; created by WaKan - Japanese & Chinese Learning Tool (C) Filip Kabrt 2002-2003');
-  writeln(t2,'; This file lists words that were exported from user vocabulary.');
-  writeln(t2,'; Each entry consists of four lines:');
-  writeln(t2,'; Written (Unicode in hex), Phonetic (Unicode in hex), English (raw text), Category (raw text)');
-  writeln(t2,'');
-  dic:=dicts[0];
-  dic.Demand;
-  while not eof(t) do
-  begin
-    readln(t,s);
-    if pos('<',s)>0 then
-    begin
-      delete(s,1,pos('<',s));
-      kanj:=copy(s,1,pos('>',s)-1);
-      delete(s,1,pos('>',s));
-      phon:='';
-      if pos('<',s)>0 then
-      begin
-        delete(s,1,pos('<',s));
-        phon:=copy(s,1,pos('>',s)-1);
-        delete(s,1,pos('>',s));
-      end;
-      if phon='' then phon:=kanj;
-      if pos('FF08',phon)>0 then phon:=kanj;
-      dic.TDict.SetOrder('Kanji_Ind');
-      if dic.TDict.Locate('Kanji',kanj) then
-      begin
-        en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
-        while (dic.TDict.Str(dic.TDictPhonetic)<>phon) and (dic.TDict.Str(dic.TDictKanji)=kanj) do
-          dic.TDict.Next;
-        if dic.TDict.Str(dic.TDictPhonetic)<>phon then
-        begin
-          writeln(t3,'Phonetic problem:'+KanaToRomaji(phon,1,'j'));
-        end else en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
-        writeln(t2,kanj);
-        writeln(t2,phon);
-        writeln(t2,en);
-        writeln(t2,fSettings.edit30.text);
-        dic.TDict.Next;
-      end else
-      begin
-        dic.TDict.SetOrder('Phonetic_Ind');
-        if dic.TDict.Locate('Sort',KanaToRomaji(phon,1,'j')) then
-        begin
-          en:=EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),dic.TDict.Str(dic.TDictMarkers));
-          writeln(t2,dic.TDict.Str(dic.TDictPhonetic));
-          writeln(t2,dic.TDict.Str(dic.TDictPhonetic));
-          dic.TDict.Next;
-          if dic.TDict.Str(dic.TDictPhonetic)=phon then
-            writeln(t3,'Duplicate phon:'+KanaToRomaji(phon,1,'j'));
-          writeln(t2,en);
-          writeln(t2,fSettings.edit30.text);
-        end else if pos('?',KanaToRomaji(phon,1,'j'))=0 then
-        begin
-          writeln(t3,'Not found:'+KanaToRomaji(phon,1,'j')+'   -'+phon);
-          writeln(t2,kanj);
-          writeln(t2,phon);
-          writeln(t2,'?');
-          writeln(t2,fSettings.edit30.text);
-        end;
-      end;
-    end;
-  end;
-  closefile(t);
-  closefile(t2);
-  closefile(t3);
-  winexec('notepad.exe convert.err',SW_SHOW);
 end;
 
 procedure TfMenu.RadioGroup1Click(Sender: TObject);

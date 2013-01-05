@@ -627,7 +627,7 @@ procedure TfKanji.SetCharCompounds;
 var sl,sl2:TStringList;
     pass:boolean;
     i,j,k,l:integer;
-    dic:TJaletDic;
+    dic:TDicIndexCursor;
     freq,mark:string;
     stp:string;
     kj:string;
@@ -643,30 +643,30 @@ begin
     if (curlang='j') and (fKanjiCompounds.CheckBox3.Checked) then
     begin
       for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4)
-          and (dicts[i].TDictFrequency<>-1) then
+        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
       begin
-        dic:=dicts[i];
-        dic.Demand;
-        dic.FindIndexString(false,kj);
-        k:=0;
-        j:=dic.ReadIndex;
-        while (j>0) do
-        begin
-          dic.TDict.Locate('Index',j);
-          inc(k);
-          if pos(kj,dic.TDict.Str(dic.TDictKanji))=0 then
-            showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.TDict.Str(dic.TDictEnglish));
-          if (not fKanjiCompounds.CheckBox1.Checked) or (pos(kj,dic.TDict.Str(dic.TDictKanji))=1) then
+        dic:=TDicIndexCursor.Create(dicts[i]);
+        try
+          dic.Find(false,kj);
+          k:=0;
+          while dic.Next do
           begin
-            if dic.TDictMarkers<>-1 then mark:=dic.TDict.Str(dic.TDictMarkers) else mark:='';
-            freq:=inttostr(9999999-dic.TDict.Int(dic.TDictFrequency));
-            while length(freq)<7 do freq:='0'+freq;
-            if freq<>'9999999'then
-            if ((not fKanjiCompounds.CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark))>0)) then
-              sl.Add(freq+#9+CheckKnownKanji(ChinTo(dic.TDict.Str(dic.TDictKanji)))+' ['+dic.TDict.Str(dic.TDictPhonetic)+'] {'+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark)+'}{');
+            inc(k);
+            if pos(kj,dic.GetKanji)=0 then
+              showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.GetArticleBody);
+            if (not fKanjiCompounds.CheckBox1.Checked) or (pos(kj,dic.GetKanji)=1) then
+            begin
+              mark := dic.GetArticleMarkers;
+              freq:=inttostr(9999999-dic.GetFrequency);
+              while length(freq)<7 do freq:='0'+freq;
+              if freq<>'9999999'then
+              if ((not fKanjiCompounds.CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.GetArticleBody,mark))>0)) then
+                sl.Add(freq+#9+CheckKnownKanji(ChinTo(dic.GetKanji))+' ['+dic.GetPhonetic+'] {'
+                  +EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
+            end;
           end;
-          j:=dic.ReadIndex;
+        finally
+          FreeAndNil(dic);
         end;
       end;
 {        sl.Sort;
@@ -681,24 +681,25 @@ begin
       for i:=0 to dicts.Count-1 do
         if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) then
       begin
-        dic:=dicts[i];
-        dic.Demand;
-        dic.FindIndexString(false,kj);
-        k:=0;
-        j:=dic.ReadIndex;
-        while (j>0) do
-        begin
-          dic.TDict.Locate('Index',j);
-          inc(k);
-          if pos(kj,dic.TDict.Str(dic.TDictKanji))=0 then
-            showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.TDict.Str(dic.TDictEnglish));
-          if (not fKanjiCompounds.CheckBox1.Checked) or (pos(kj,dic.TDict.Str(dic.TDictKanji))=1) then
+        dic:=TDicIndexCursor.Create(dicts[i]);
+        try
+          dic.Find(false,kj);
+          k:=0;
+          while dic.Next do
           begin
-            if dic.TDictMarkers<>-1 then mark:=dic.TDict.Str(dic.TDictMarkers) else mark:='';
-            if ((not fKanjiCompounds.CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark))>0)) then
-              sl.Add(dic.TDict.Str(dic.TDictKanji)+#9+CheckKnownKanji(ChinTo(dic.TDict.Str(dic.TDictKanji)))+' ['+dic.TDict.Str(dic.TDictPhonetic)+'] {'+EnrichDictEntry(dic.TDict.Str(dic.TDictEnglish),mark)+'}{');
+            inc(k);
+            if pos(kj,dic.GetKanji)=0 then
+              showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.GetArticleBody);
+            if (not fKanjiCompounds.CheckBox1.Checked) or (pos(kj,dic.GetKanji)=1) then
+            begin
+              mark := dic.GetArticleMarkers;
+              if ((not fKanjiCompounds.CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.GetArticleBody,mark))>0)) then
+                sl.Add(dic.GetKanji+#9+CheckKnownKanji(ChinTo(dic.GetKanji))+' ['+dic.GetPhonetic+'] {'
+                  +EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
+            end;
           end;
-          j:=dic.ReadIndex;
+        finally
+          FreeAndNil(dic);
         end;
       end;
     end;

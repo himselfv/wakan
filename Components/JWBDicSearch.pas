@@ -59,14 +59,6 @@ type
     property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
 
-
- { How to match words (exact, match left, right or anywhere) }
-  TMatchType = (
-    mtExactMatch,
-    mtMatchLeft,
-    mtMatchRight,
-    mtMatchAnywhere);
-
  { Translation type }
   TSearchType = (
     stJp,           //jp->en
@@ -80,26 +72,9 @@ type
   then it contains raw english. Happy debugging. }
   SatanString = string;
 
- { Internal lookup state of the dictionary cursor }
-  TDicLookupType = (ltNone,ltKanji,ltRomaji,ltMeaning);
-
- { Cursor + some cached info about the dictionary }
-  TDicCursor2 = class(TDicCursor)
-  public
+  TDicSetup = record
+    cursor: TDicLookupCursor;
     PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
-
-  protected
-    FLookupType: TDicLookupType;
-    FMatchType: TMatchType;
-    FValue: string; //can be FString
-    function NextMeaningMatch: boolean;
-    function NextAnywhereMatch: boolean;
-  public
-    procedure LookupKanji(MatchType: TMatchType; const val: FString);
-    procedure LookupRomaji(MatchType: TMatchType; const val: string);
-    procedure LookupMeaning(MatchType: TMatchType; const val: FString);
-    function HaveMatch: boolean;
-    function NextMatch: boolean;
   end;
 
  { Dictionary search class. Reusable.
@@ -121,7 +96,7 @@ type
     procedure Prepare; //Call after changing settings
 
   protected
-    dics: array of TDicCursor2; //empty field => dic was not loaded, skip
+    dics: array of TDicSetup; //empty field => dic was not loaded, skip
     //Cached cursors and seeks for User tables
     CUser: TTextTableCursor;
     stUserKanji: TSeekObject;
@@ -144,13 +119,12 @@ type
     se: TCandidateLookupList; //Lookup candidates -- see comments where this type is declared
     presentl:TStringList;
     p4reading:boolean;
-    procedure TestLookupCandidate(dic: TDicCursor2; lc: PCandidateLookup; wt: integer;
+    procedure TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup; wt: integer;
       sl: TSearchResults);
 
   protected
     a3kana:boolean;   //a==3 and only kana in string
     a4limitkana:boolean; //a in [4,5]
-    procedure DicInitialLookup(dic: TDicCursor2; wt: integer; sxxr: string; sxx: FString);
     procedure FinalizeResults(sl: TSearchResults);
 
   end;
@@ -328,164 +302,6 @@ begin
     statpref:='';
   Result := statpref + kanji + ' [' + statpref + kana + '] {' + statpref + entry + '}';
 end;
-
-
-{
-Dictionary cursor
-}
-{ Tries to find entry by kanji }
-procedure TDicCursor2.LookupKanji(MatchType: TMatchType; const val: FString);
-begin
-  FLookupType := ltKanji;
-  FMatchType := MatchType;
-  FValue := val;
-  if MatchType<>mtMatchRight then
-    SetOrder('Kanji_Ind')
-  else
-    SetOrder('<Kanji_Ind');
-  case MatchType of
-    mtMatchAnywhere: begin
-      First;
-      NextAnywhereMatch;
-    end;
-    mtMatchRight: Locate(stKanjiReverse,val);
-  else //Left and Exact
-    Locate(stKanji,val);
-  end;
-end;
-
-procedure TDicCursor2.LookupRomaji(MatchType: TMatchType; const val: string);
-begin
-  FLookupType := ltRomaji;
-  FMatchType := MatchType;
-  FValue := val;
-  if MatchType<>mtMatchRight then
-    SetOrder('Phonetic_Ind')
-  else
-    SetOrder('<Phonetic_Ind');
-  case MatchType of
-    mtMatchAnywhere: begin
-      First;
-      NextAnywhereMatch;
-    end;
-    mtMatchRight: Locate(stSortReverse,val);
-  else //Left and Exact
-    Locate(stSort,val);
-  end
-end;
-
-procedure TDicCursor2.LookupMeaning(MatchType: TMatchType; const val: FString);
-begin
-  FLookupType := ltMeaning;
-  FMatchType := MatchType;
-  if not (FMatchType in [mtExactMatch, mtMatchLeft]) then
-    FMatchType := MatchType; //other match types are not supported
-  FValue := lowercase(val);
-  FindIndexString(true,FValue);
- //This mode requires auto-NextMatch at the start
-  NextMatch();
- //Which may also terminate the search instantly if there are no matches -- see NextMatch()
-end;
-
-function TDicCursor2.HaveMatch: boolean;
-var i_pos: integer;
-  s_val: string;
-begin
-  if FLookupType in [ltKanji,ltRomaji] then
-    if Self.EOF then begin
-      Result := false;
-      exit;
-    end;
-
-  case FLookupType of
-    ltKanji:
-      case FMatchType of
-        mtMatchLeft: Result := pos(FValue,Str(TDictKanji))=1;
-        mtMatchRight: begin
-          s_val := Str(TDictKanji);
-          i_pos := pos(FValue, s_val);
-          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue));
-        end;
-        mtExactMatch: Result := FValue=Str(TDictKanji);
-      else //anywhere
-        Result := pos(FValue,Str(TDictKanji))>0;
-      end;
-
-    ltRomaji:
-      case FMatchType of
-        mtMatchLeft: Result := pos(FValue,Str(TDictSort))=1;
-        mtMatchRight: begin
-          s_val := Str(TDictSort);
-          i_pos := pos(FValue, s_val);
-          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue)+1);
-        end;
-        mtExactMatch: Result := FValue=Str(TDictSort);
-      else //anywhere
-        Result := pos(FValue,Str(TDictSort))>0;
-      end;
-
-    ltMeaning:
-      Result := true; //we always have a match in Meaning -- see NextMatch()
-  else
-    Result := false; //not looking for anything
-  end;
-end;
-
-function TDicCursor2.NextMatch: boolean;
-begin
-  case FLookupType of
-    ltNone: Result := false;
-    ltMeaning: begin
-      Result := NextMeaningMatch;
-      if not Result then
-        FLookupType := ltNone; //lookup is over
-    end
-  else
-    if (FLookupType in [ltKanji,ltRomaji]) and (FMatchType=mtMatchAnywhere) then
-      Result := NextAnywhereMatch
-    else begin
-      self.Next;
-      Result := HaveMatch;
-    end;
-  end;
-end;
-
-function TDicCursor2.NextMeaningMatch: boolean;
-var wif: integer;
-  ts: string;
-begin
-  wif:=ReadIndex;
-  while wif<>0 do begin
-    Locate(stIndex,wif);
-   { Word index only works on first 4 bytes of the word, so we have to manually check after it. }
-    ts:=lowercase(Str(dic.TDictEnglish))+' ';
-    case FMatchType of
-      mtMatchLeft: if pos(FValue,ts)>0 then break;
-      mtExactMatch: begin
-        ts := ts + ' ';
-       //TODO: support other word breaks in addition to ' ' and ','
-        if (pos(lowercase(FValue)+' ',ts)>0) or (pos(lowercase(FValue)+',',ts)>0) then break;
-      end;
-    end;
-    wif:=ReadIndex;
-  end;
-  Result := (wif<>0);
-end;
-
-function TDicCursor2.NextAnywhereMatch: boolean;
-begin
- { mtAnywhere searches can't use any index, so we scan through all the records -- very slow }
-  if EOF then begin
-    Result := false;
-    exit;
-  end;
-
-  repeat
-    Next;
-  until EOF or HaveMatch;
-  Result := not EOF;
-end;
-
 
 
 {
@@ -700,7 +516,7 @@ var di: integer;
 begin
   //Destroy cursors
   for di := 0 to Length(dics) - 1 do
-    FreeAndNil(dics[di]);
+    FreeAndNil(dics[di].cursor);
   se.Destroy;
   presentl.Destroy;
   inherited;
@@ -709,33 +525,34 @@ end;
 procedure TDicSearchRequest.Prepare;
 var di: integer;
   dic: TJaletDic;
+  prior: integer;
 begin
   if maxwords<10 then maxwords:=10;
 
   //Destroy existing cursors
   for di := 0 to Length(dics) - 1 do
-    FreeAndNil(dics[di]);
+    FreeAndNil(dics[di].cursor);
   FreeAndNil(CUser);
   FreeAndNil(CUserPrior);
 
   //Create dictionary cursors
   SetLength(dics, dicts.Count);
   for di:=0 to dicts.Count-1 do begin
-    dics[di] := nil;
+    dics[di].cursor := nil;
     dic:=dicts[di];
     if not dic.loaded or not dicts.IsInGroup(dic,dictgroup) then
       continue;
 
     dic.Demand;
-    dics[di] := TDicCursor2.Create(dic);
-    dics[di].dic := dic;
+    dics[di].cursor := dic.NewLookup(MatchType);
 
    //Calculate priority class. Lowest priority gets 20000, highest gets 0
-    dics[di].PriorityClass := dicts.Priority.IndexOf(dic.name);
-    if dics[di].PriorityClass<0 then
-      dics[di].PriorityClass := 20000
+    prior := dicts.Priority.IndexOf(dic.name);
+    if prior<0 then
+      prior := 20000
     else
-      dics[di].PriorityClass := Trunc(20000*(dics[di].PriorityClass/dicts.Priority.Count));
+      prior := Trunc(20000*(prior/dicts.Priority.Count));
+    dics[di].PriorityClass := prior;
   end; //of dict enum
 
   //Create cached table cursors
@@ -798,21 +615,9 @@ begin
  //but it does exactly what it did in old Wakan. Whatever that is.  
   if full or (fUser.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then
   for di:=0 to Length(dics)-1 do begin
-    if dics[di]=nil then continue;
-
-    case a of
-      stJp:
-        if MatchType=mtMatchRight then dics[di].SetOrder('<Phonetic_Ind') else dics[di].SetOrder('Phonetic_Ind');
-      stClipboard:
-        if MatchType=mtMatchRight then dics[di].SetOrder('<Kanji_Ind') else dics[di].SetOrder('Kanji_Ind');
-      stEditorInsert,
-      stEditorAuto:
-        dics[di].SetOrder('Kanji_Ind');
-    end;
-
+    if dics[di].cursor=nil then continue;
     for i:=0 to se.Count-1 do
       TestLookupCandidate(dics[di], se[i], wt, sl);
-
   end; //of dict enum
 
   FinalizeResults(sl);
@@ -823,25 +628,6 @@ end;
 resourcestring
   sDicSearchTitle='#00932^eDic.search';
   sDicSearchText='#00933^ePlease wait. Searching dictionary...';
-
-procedure TDicSearchRequest.DicInitialLookup(dic: TDicCursor2; wt: integer; sxxr: string; sxx: string);
-begin
-  case a of
-  stJp: dic.LookupRomaji(MatchType,sxxr);
-  stEn: dic.LookupMeaning(MatchType,sxx);
-  stClipboard:
-    if a3kana then
-      dic.LookupRomaji(MatchType,sxxr)
-    else
-      dic.LookupKanji(MatchType,sxx);
-  stEditorInsert,
-  stEditorAuto:
-    if a4limitkana then
-      dic.LookupRomaji(mtExactMatch,sxxr)
-    else
-      dic.LookupKanji(mtExactMatch,sxx);
-  end;
-end;
 
 function IsAppropriateVerbType(sdef: string; s2: string): boolean;
 begin
@@ -856,9 +642,10 @@ begin
        ((sdef='N') and (pos('gna-adj',s2)>0)));
 end;
 
-procedure TDicSearchRequest.TestLookupCandidate(dic: TDicCursor2; lc: PCandidateLookup;
+procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
   wt: integer; sl: TSearchResults);
 var
+  dic: TDicLookupCursor;
   i, ii: integer;
 
   sxx: string;  //==lc.str
@@ -890,7 +677,7 @@ var
     CUser.Locate(@stUserKanji,kanji_val);
     while (not CUser.EOF) and (kanji_val=CUser.Str(TUserKanji)) do
     begin
-      if dic.Str(dic.TDictPhonetic)=CUser.Str(TUserPhonetic) then
+      if dic.GetPhonetic=CUser.Str(TUserPhonetic) then
       begin
         UserScore:=CUser.Int(TUserScore);
         UserIndex:=CUser.Int(TUserIndex);
@@ -900,11 +687,7 @@ var
   end;
 
 begin
-  if (a in [stJp, stClipboard]) and (MatchType=mtMatchAnywhere) then begin
-    dic.SetOrder('Index_Ind');
-    dic.First;
-  end;
-
+  dic := ds.cursor;
   sxx:=lc.str;
   if sxx='' then exit;
   sp:=lc.priority;
@@ -926,29 +709,39 @@ begin
  //Makes sense only if we're sure our word is all kana.
   a4limitkana:=(a in [stEditorInsert, stEditorAuto]) and (p4reading or (wt=2));
 
+ //Initial lookup
  { KanaToRomaji is VERY expensive so let's only call it when really needed }
   case a of
-    stJp:
+    stJp: begin
       sxxr:=KanaToRomaji(sxx,1,curlang);
+      dic.LookupRomaji(sxxr);
+    end;
+    stEn: dic.LookupMeaning(sxx);
     stClipboard:
-      if a3kana then sxxr:=KanaToRomaji(sxx,1,curlang); //only with a3kana
+      if a3kana then begin
+        sxxr:=KanaToRomaji(sxx,1,curlang);
+        dic.LookupRomaji(sxxr)
+      end else
+        dic.LookupKanji(sxx);
     stEditorInsert,
     stEditorAuto:
-      if a4limitkana then
+      if a4limitkana then begin
         sxxr:=KanaToRomaji(sxx,1,curlang);
+        dic.LookupRomaji(sxxr);
+      end else
+        dic.LookupKanji(sxx);
   end;
 
-  DicInitialLookup(dic, wt, sxxr, sxx);
   i:=0;
 
   while dic.HaveMatch do begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
     if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
-    if dic.TDictMarkers<>-1 then
-      entry:=entry+EnrichDictEntry(dic.Str(dic.TDictEnglish),dic.Str(dic.TDictMarkers))
+    if dic.dic.SupportsMarkers then
+      entry:=entry+EnrichDictEntry(dic.GetArticleBody,dic.GetArticleMarkers)
     else begin
-      converted := ConvertEdictEntry(dic.Str(dic.TDictEnglish), markers);
+      converted := ConvertEdictEntry(dic.GetArticleBody, markers);
       entry:=entry+EnrichDictEntry(converted, markers);
     end;
     if IsAppropriateVerbType(sdef, entry) then
@@ -963,7 +756,7 @@ begin
       //  else
       //    inc(popclas,dic.Int(dic.Field('Priority'))*10);
       if (a in [stEditorInsert, stEditorAuto]) and (p4reading)
-      and CUserPrior.Locate(@stUserPriorKanji,dic.Str(dic.TDictKanji)) then
+      and CUserPrior.Locate(@stUserPriorKanji,dic.GetKanji) then
         dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
 
       //CUser.SetOrder('Kanji_Ind');
@@ -971,36 +764,36 @@ begin
       UserScore:=-1;
       UserIndex:=0;
       if pos(UH_LBEG+'skana'+UH_LEND,entry)>0 then
-        TryGetUserScore(dic.Str(dic.TDictPhonetic));
-      TryGetUserScore(dic.Str(dic.TDictKanji));
-      if (UserScore=-1) and (dic.Str(dic.TDictKanji)<>ChinTo(dic.Str(dic.TDictKanji))) then
-        TryGetUserScore(ChinTo(dic.Str(dic.TDictKanji)));
+        TryGetUserScore(dic.GetPhonetic);
+      TryGetUserScore(dic.GetKanji);
+      if (UserScore=-1) and (dic.GetKanji<>ChinTo(dic.GetKanji)) then
+        TryGetUserScore(ChinTo(dic.GetKanji));
 
-      if (fSettings.CheckBox58.Checked) and (dic.TDictFrequency>-1) and (dic.Int(dic.TDictFrequency)>0) then
-        entry:=entry+' '+UH_LBEG+'pwc'+dic.Str(dic.TDictFrequency)+UH_LEND;
+      if (fSettings.CheckBox58.Checked) and (dic.GetFrequency>-1) and (dic.GetFrequency>0) then
+        entry:=entry+' '+UH_LBEG+'pwc'+IntToStr(dic.GetFrequency)+UH_LEND;
       entry:=entry+' '+UH_LBEG+'d'+dic.dic.name+UH_LEND;
 
      //Calculate sorting order
       sort:=0; //the bigger the worse (will apear later in list)
       if a=stEn then
       begin
-        if (pos(trim(uppercase(sxx)),trim(uppercase(dic.Str(dic.TDictEnglish))))=1) then sort:=10000 else sort:=11000;
+        if pos(trim(uppercase(sxx)),trim(uppercase(dic.GetArticleBody)))=1 then sort:=10000 else sort:=11000;
         sort:=sort+popclas*100;
       end;
-      if a=stJp then sort:=(10000*(9-min(sp,9)))+length(dic.Str(dic.TDictPhonetic))*1000+popclas*10;
+      if a=stJp then sort:=(10000*(9-min(sp,9)))+length(dic.GetPhonetic)*1000+popclas*10;
       if a in [stClipboard, stEditorInsert, stEditorAuto] then sort:=(10000*(9-min(sp,9)))+popclas*10;
       sort:=sort+10000;
       //if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then sort:=10000+popclas*10;
       if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
       if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
-      if IsKanaCharKatakana(dic.Str(dic.TDictPhonetic), 1) then inc(sort,1000);
+      if IsKanaCharKatakana(dic.GetPhonetic, 1) then inc(sort,1000);
       sort:=sort+dic.dic.priority*20000;
-      sort:=sort+dic.PriorityClass;
+      sort:=sort+ds.PriorityClass;
       if (fSettings.CheckBox59.Checked) then
       begin
-        if dic.TDictFrequency>-1 then
+        if dic.GetFrequency>-1 then
         begin
-          freq:=dic.Int(dic.TDictFrequency);
+          freq:=dic.GetFrequency;
           if freq>=500000 then freq:=10000 else
           if freq>=10000 then freq:=2000+(freq-10000) div 100 else
           if freq>=1000 then freq:=1000+(freq-1000) div 10;
@@ -1019,7 +812,7 @@ begin
         scur.userscore := UserScore
       else
         scur.userscore := -1;
-      scur.dicindex := dic.Int(dic.TDictIndex);
+      scur.dicindex := dic.GetIndex;
       scur.dicname := dic.dic.name;
       scur.slen := slen;
      // if sdef<>'F'then scur.sdef:='I' else scur.sdef:='F';
@@ -1027,15 +820,15 @@ begin
         scur.sdef:='I'
       else
         scur.sdef:='F';
-      scur.kana := dic.Str(dic.TDictPhonetic);
+      scur.kana := dic.GetPhonetic;
       if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,entry)<>0) then
         scur.kanji := scur.kana
       else
-        scur.kanji := CheckKnownKanji(ChinTo(dic.Str(dic.TDictKanji)));
+        scur.kanji := CheckKnownKanji(ChinTo(dic.GetKanji));
       scur.entry := entry;
 
      //result signature (reading x kanji)
-      ssig:=dic.Str(dic.TDictPhonetic)+'x'+dic.Str(dic.TDictKanji);
+      ssig:=dic.GetPhonetic+'x'+dic.GetKanji;
      //if we already have that result, only upgrade it (lower it's sorting order, add translations)
       existingIdx := presentl.IndexOf(ssig);
       if existingIdx>=0 then

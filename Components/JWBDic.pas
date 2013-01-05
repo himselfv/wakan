@@ -1,22 +1,43 @@
 unit JWBDic;
 
 interface
-uses SysUtils, Classes, MemSource, TextTable;
+uses SysUtils, Classes, MemSource, TextTable, JWBStrings;
 
 //See comments to TextTable.CURSOR_IN_TABLE
 {$DEFINE DIC_CURSOR_IN_TABLE}
 
-const
-  CurDicVer=4;
+type
+  TDicVersion = integer;
+ {
+  Two versions are currently supported.
+  v4:
+    one table
+    no multilingual support
+    EDICT1 compatible
+
+  v5:
+    two tables, (kanji-kana) and (entries)
+    multilingual support
+    EDICT2 compatible
+ }
 
 type
- { Dictionary group. Presently 5 are supported:
+ { Dictionary group. 5 are supported at this time:
     1..3 - user dictionary groups
     4 - use for compounds
     5 - use for popup/editor }
   TDictGroup = integer;
 
   TDicCursor = class;
+  TDicIndexReader = class;
+  TDicLookupCursor = class;
+
+ { How to match words (exact, match left, right or anywhere) }
+  TMatchType = (
+    mtExactMatch,
+    mtMatchLeft,
+    mtMatchRight,
+    mtMatchAnywhere);
 
   TNotifyExceptionEvent = procedure(Sender: TObject; E: Exception) of object;
 
@@ -42,15 +63,49 @@ type
     hasWordIndex:boolean;
     hasCharIndex:boolean;
 
-  public //Fields, populated on load
+  protected //Fields, populated on load
     TDict:TTextTable;
-    TDictIndex,
-    TDictEnglish,
-    TDictKanji,
-    TDictPhonetic,
-    TDictSort,
-    TDictMarkers,
-    TDictFrequency:integer;
+    TDictIndex, //i
+    TDictEnglish, //s in v4, missing in v5
+    TDictKanji, //x
+    TDictPhonetic, //x
+    TDictSort, //s
+    TDictMarkers, //s in v4, missing in v5
+    TDictFrequency, //i
+    TDictArticle //i on v5, missing on v4
+      :integer;
+
+    TEntries:TTextTable;
+    TEntriesIndex,  //i in v5
+    TEntriesEntry,  //x in v5
+    TEntriesMarkers //s in v5
+      :integer;
+
+   { To speed up access to certain seek tables we're going to keep pre-calculated
+    references here. }
+    FstSort: TSeekObject;
+    FstSortReverse: TSeekObject;
+    FstKanji: TSeekObject;
+    FstKanjiReverse: TSeekObject;
+    FstIndex: TSeekObject;
+    FstEntriesIndex: TSeekObject;
+   { In case you need a seek table not specified here, you can get it from
+    TDict.GetSeekObject('seek name') }
+    procedure SetupSeekObjects;
+  public
+    function SupportsFrequency: boolean;
+    function SupportsMarkers: boolean;
+    property TTDict:TTextTable read TDict; //don't access unless you're doing something low-level!
+    property TTEntries:TTextTable read TEntries; 
+
+  public
+   { Public pointers. Pass these to Locate and have no care in life. }
+    stSort: PSeekObject;
+    stSortReverse: PSeekObject;
+    stKanji: PSeekObject;
+    stKanjiReverse: PSeekObject;
+    stIndex: PSeekObject;
+    stEntriesIndex: PSeekObject;    
 
   public
     charidx,wordidx:pointer;
@@ -62,7 +117,7 @@ type
     demandloaded:boolean;
     vocmode:integer;
    {$IFDEF DIC_CURSOR_IN_TABLE}
-    _intcur: TDicCursor;
+    _intcur: TDicIndexReader;
    {$ENDIF}
     constructor Create;
     destructor Destroy; override;
@@ -76,60 +131,116 @@ type
     procedure FindIndexString(word:boolean;locator:string); {$IFDEF INLINE}inline;{$ENDIF}
     function ReadIndex:integer; {$IFDEF INLINE}inline;{$ENDIF}
    {$ENDIF}
+    function NewCursor: TDicCursor;
+    function NewLookup(AMatchType: TMatchType): TDicLookupCursor;
+    function GetRecord(Index: integer): TDicCursor;
     property Offline: boolean read FOffline write FOffline;
     property LoadOnDemand: boolean read FLoadOnDemand write FLoadOnDemand; //if set, load the dictionary only on demand
     property OnLoadStart: TNotifyEvent read FOnLoadStart write FOnLoadStart;
     property OnLoadEnd: TNotifyEvent read FOnLoadEnd write FOnLoadEnd;
     property OnLoadException: TNotifyExceptionEvent read FOnLoadException write FOnLoadException;
 
-  protected
-   { To speed up access to certain seek tables we're going to keep pre-calculated
-    references here. }
-    FstSort: TSeekObject;
-    FstSortReverse: TSeekObject;
-    FstKanji: TSeekObject;
-    FstKanjiReverse: TSeekObject;
-    FstIndex: TSeekObject;
-   { In case you need a seek table not specified here, you can get it from
-    TDict.GetSeekObject('seek name') }
-    procedure SetupSeekObjects;
-  public
-   { Public pointers. Pass these to Locate and have no care in life. }
-    stSort: PSeekObject;
-    stSortReverse: PSeekObject;
-    stKanji: PSeekObject;
-    stKanjiReverse: PSeekObject;
-    stIndex: PSeekObject;
-
   end;
 
-  TDicCursor = class(TTextTableCursor)
+  TDicCursor = class
   public
     dic: TJaletDic;
+
+  protected    
    { Copied from TJaletDic on Create() for code readability }
+    CDict: TTextTableCursor;
     TDictIndex,
     TDictEnglish,
     TDictKanji,
     TDictPhonetic,
     TDictSort,
     TDictMarkers,
-    TDictFrequency:integer;
+    TDictFrequency,
+    TDictArticle
+      :integer;
+
+    CEntries: TTextTableCursor;
+    TEntriesIndex,  //i in v5
+    TEntriesEntry,  //x in v5
+    TEntriesMarkers //s in v5
+      :integer;
+
     stSort: PSeekObject;
     stSortReverse: PSeekObject;
     stKanji: PSeekObject;
     stKanjiReverse: PSeekObject;
     stIndex: PSeekObject;
-    constructor Create(ADic: TJaletDic);
+    stEntriesIndex: PSeekObject;
 
+  public
+    constructor Create(ADic: TJaletDic);
+    procedure SeekIndex(Value: integer);
+    function GetIndex: integer;
+    function GetKanji: FString;
+    function GetPhonetic: FString;
+    function GetSort: string;
+    function GetFrequency: integer;
+    function GetArticle: integer;
+    function GetArticleBody: FString;
+    function GetArticleMarkers: string;
+
+  end;
+
+ { JaletDic cursor -- independent from basic cursor functionality }
+  TDicIndexReader = class
   protected
-   { JaletDic cursor -- independent from basic cursor functionality }
+    dic: TJaletDic;
     indexword:boolean;
     indexfrom,indexto:integer;
   public
+    constructor Create(ADic: TJaletDic);
     procedure FindIndexString(word:boolean;locator:string);
     function ReadIndex:integer;
-
   end;
+
+  TDicIndexCursor = class(TDicCursor)
+  protected
+    FReader: TDicIndexReader;
+  public
+    constructor Create(ADic: TJaletDic);
+    destructor Destroy; override;
+    procedure Find(word:boolean;locator:string);
+    function Next: boolean;
+  end;
+
+  TDicLookupCursor = class(TDicCursor)
+  public
+    procedure LookupKanji(const val: FString); virtual; abstract;
+    procedure LookupRomaji(const val: string); virtual; abstract;
+    procedure LookupMeaning(const val: FString); virtual; abstract;
+    function HaveMatch: boolean; virtual; abstract;
+    procedure NextMatch; virtual; abstract;
+  end;
+
+ { Internal lookup state of the dictionary cursor }
+  TDicLookupType = (ltNone,ltKanji,ltRomaji,ltMeaning);
+  
+ { Cursor + some cached info about the dictionary }
+  TDicLookupCursorV4 = class(TDicLookupCursor)
+  protected
+    FIndexReader: TDicIndexReader;
+    FLookupType: TDicLookupType;
+    FMatchType: TMatchType;
+    FValue: string; //can be FString
+    function NextMeaningMatch: boolean;
+    function NextAnywhereMatch: boolean;
+  public
+    constructor Create(ADic: TJaletDic; AMatchType: TMatchType);
+    destructor Destroy; override;
+    procedure LookupKanji(const val: FString); override;
+    procedure LookupRomaji(const val: string); override;
+    procedure LookupMeaning(const val: FString); override;
+    function HaveMatch: boolean; override;
+    procedure NextMatch; override;
+  end;
+
+  TDicLookupCursorV5 = TDicLookupCursorV4; //TODO!
+  
 
   EDictionaryException = class(Exception);
 
@@ -283,33 +394,23 @@ begin
     vs.LoadFromStream(ps.Files['dict.ver'].Lock);
     ps.Files['dict.ver'].Unlock;
     if vs[0]<>'DICT' then
-      raise EDictionaryException.Create('Invalid DIC header')
-    else
-    begin
-      dicver:=strtoint(vs[1]);
-      if dicver>CurDicVer then
-        raise EDictionaryException.Create('Unsupported DIC version')
-      else
-      if (dicver<CurDicVer) and ((CurDicVer<>4) or (dicver<>3)) then
-        raise EDictionaryException.Create('Outdated DIC structure - please download new DIC file')
-      else
-      if (dicver<CurDicVer) then
-        raise EDictionaryException.Create('DIC indexes corrupted - bug in '
-          +'1.47 DIC, you have to download this DIC anew (for 1.50+), I''m '
-          +'sorry for inconvenience')
-      else
-      begin
-        builddate:=strtoint(vs[2]);
-        version:=vs[3];
-        name:=vs[4];
-        language:=vs[5][1];
-        description:=vs[6];
-        priority:=strtoint(vs[7]);
-        entries:=strtoint(vs[8]);
-        copyright:=vs[9];
-        tested:=true;
-      end;
-    end;
+      raise EDictionaryException.Create('Invalid DIC header');
+
+    dicver:=strtoint(vs[1]);
+    if dicver>5 then
+      raise EDictionaryException.Create('Unsupported DIC version');
+    if dicver<4 then
+      raise EDictionaryException.Create('Outdated DIC structure - please download new DIC file');
+
+    builddate:=strtoint(vs[2]);
+    version:=vs[3];
+    name:=vs[4];
+    language:=vs[5][1];
+    description:=vs[6];
+    priority:=strtoint(vs[7]);
+    entries:=strtoint(vs[8]);
+    copyright:=vs[9];
+    tested:=true;
 
     hasWordIndex := ps.GetFileList.IndexOf('WordIdx.bin')>=0;
     hasCharIndex := ps.GetFileList.IndexOf('CharIdx.bin')>=0;
@@ -335,17 +436,39 @@ begin
     FOnLoadStart(Self);
   try
     package:=TPackageSource.Create(pname,791564,978132,978123);
+    
     TDict:=TTextTable.Create(package,'Dict',true,Self.Offline);
     TDictIndex:=TDict.Field('Index');
-    TDictEnglish:=TDict.Field('English');
+    if dicver=4 then
+      TDictEnglish:=TDict.Field('English')
+    else
+      TDictEnglish:=-1;
     TDictKanji:=TDict.Field('Kanji');
     TDictPhonetic:=TDict.Field('Phonetic');
-    TDictEnglish:=TDict.Field('English');
     TDictSort:=TDict.Field('Sort');
-    TDictMarkers:=TDict.Field('Markers');
+    if dicver=4 then
+      TDictMarkers:=TDict.Field('Markers')
+    else
+      TDictMarkers:=-1;
+    if dicver=5 then
+      TDictArticle:=TDict.Field('Article')
+    else
+      TDictArticle:=-1;
     TDictFrequency:=TDict.Field('Frequency');
+
+    if dicver=5 then begin
+      TEntries:=TTextTable.Create(package,'Entries',true,Self.Offline);
+      TEntriesIndex:=TEntries.Field('Index');
+      TEntriesEntry:=TEntries.Field('Entry');
+      TEntriesMarkers:=TEntries.Field('Markers');
+    end else begin
+      TEntries:=nil;
+      TEntriesIndex:=-1;
+      TEntriesEntry:=-1;
+      TEntriesMarkers:=-1;
+    end;
+    
     WordIdx:=nil;
-    CharIdx:=nil;
     mf:=package['WordIdx.bin'];
     if mf<>nil then
     begin
@@ -354,6 +477,8 @@ begin
       package.ReadRawData(WordIdx^,integer(mf.Position)+4,mf.Size-4);
       wordfsiz:=(mf.Size div 4)-1;
     end;
+
+    CharIdx:=nil;
     mf:=package['CharIdx.bin'];
     if mf<>nil then
     begin
@@ -362,6 +487,7 @@ begin
       package.ReadRawData(CharIdx^,integer(mf.Position)+4,mf.Size-4);
       charfsiz:=(mf.Size div 4)-1;
     end;
+    
     SetupSeekObjects;
   except
     on E: Exception do begin
@@ -371,7 +497,7 @@ begin
     end;
   end;
  {$IFDEF DIC_CURSOR_IN_TABLE}
-  _intcur:=TDicCursor.Create(Self);
+  _intcur:=TDicIndexReader.Create(Self);
  {$ENDIF}
   demandloaded:=true;
   if Assigned(FOnLoadEnd) then
@@ -395,12 +521,30 @@ begin
   FstKanji := TDict.GetSeekObject('Kanji');
   FstKanjiReverse := TDict.GetSeekObject('<Kanji');
   FstIndex := TDict.GetSeekObject('Index');
+  if dicver=5 then
+    FstEntriesIndex := TEntries.GetSeekObject('Index')
+  else
+    FstEntriesIndex.ind_i := -1;
 
   stSort := @FstSort;
   stSortReverse := @FstSortReverse;
   stKanji := @FstKanji;
   stKanjiReverse := @FstKanjiReverse;
   stIndex := @FstIndex;
+  if dicver=5 then
+    stEntriesIndex := @FstEntriesIndex
+  else
+    stEntriesIndex := nil;
+end;
+
+function TJaletDic.SupportsFrequency: boolean;
+begin
+  Result := TDictFrequency<>-1;
+end;
+
+function TJaletDic.SupportsMarkers: boolean;
+begin
+  Result := TDictMarkers<>-1; //older dicts apparently can't into markers
 end;
 
 function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
@@ -433,14 +577,39 @@ begin
 end;
 {$ENDIF}
 
+function TJaletDic.NewCursor: TDicCursor;
+begin
+  Self.Demand;
+  Result := TDicCursor.Create(Self);
+end;
+
+function TJaletDic.NewLookup(AMatchType: TMatchType): TDicLookupCursor;
+begin
+  Self.Demand;
+  case dicver of
+    4: Result := TDicLookupCursorV4.Create(Self, AMatchType);
+    5: Result := TDicLookupCursorV5.Create(Self, AMatchType);
+  else
+    raise Exception.Create('Invalid dictionary version');
+  end;
+end;
+
+function TJaletDic.GetRecord(Index: integer): TDicCursor;
+begin
+  Result := NewCursor;
+  Result.SeekIndex(Index);
+end;
+
 
 {
 Cursor
 }
 constructor TDicCursor.Create(ADic: TJaletDic);
 begin
-  inherited Create(ADic.TDict);
+  inherited Create();
   self.dic := ADic;
+
+  self.CDict := TTextTableCursor.Create(dic.TDict);
   self.TDictIndex := ADic.TDictIndex;
   self.TDictEnglish := ADic.TDictEnglish;
   self.TDictKanji := ADic.TDictKanji;
@@ -448,14 +617,135 @@ begin
   self.TDictSort := ADic.TDictSort;
   self.TDictMarkers := ADic.TDictMarkers;
   self.TDictFrequency := ADic.TDictFrequency;
+  self.TDictArticle := ADic.TDictArticle;
+
+  if dic.dicver=5 then
+    self.CEntries := TTextTableCursor.Create(dic.TEntries)
+  else
+    self.CEntries := nil;
+  self.TEntriesIndex := ADic.TEntriesIndex;
+  self.TEntriesEntry := ADic.TEntriesEntry;
+  self.TEntriesMarkers := ADic.TEntriesMarkers;
+  
   self.stSort := ADic.stSort;
   self.stSortReverse := ADic.stSortReverse;
   self.stKanji := ADic.stKanji;
   self.stKanjiReverse := ADic.stKanjiReverse;
   self.stIndex := ADic.stIndex;
+  self.stEntriesIndex := ADic.stEntriesIndex;
 end;
 
-procedure TDicCursor.FindIndexString(word:boolean;locator:string);
+procedure TDicCursor.SeekIndex(Value: integer);
+begin
+  CDict.Locate(stIndex, Value);
+end;
+
+{ Returns unique index for current kanji-kana entry }
+function TDicCursor.GetIndex: integer;
+begin
+  Result := CDict.Int(TDictIndex);
+end;
+
+function TDicCursor.GetKanji: FString;
+begin
+  Result := CDict.Str(TDictKanji);
+end;
+
+{ Returns kana }
+function TDicCursor.GetPhonetic: FString;
+begin
+  Result := CDict.Str(TDictPhonetic);
+end;
+
+{ Returns romaji }
+function TDicCursor.GetSort: string;
+begin
+  Result := CDict.Str(TDictSort);
+end;
+
+function TDicCursor.GetFrequency: integer;
+begin
+  if dic.TDictFrequency<>-1 then
+    Result := CDict.Int(TDictFrequency)
+  else
+    Result := 1;
+end;
+
+{ Returns article index for current kanji-kana entry. }
+function TDicCursor.GetArticle: integer;
+begin
+  case dic.dicver of
+    4: Result := GetIndex;
+    5: Result := CDict.Int(TDictArticle);
+  else
+    raise Exception.Create('Invalid dictionary version.');  
+  end;
+end;
+
+function TDicCursor.GetArticleBody: FString;
+var art: integer;
+  entrycnt: integer;
+  ent: FString;
+begin
+  case dic.dicver of
+    4: Result := fstr(CDict.Str(TDictEnglish));
+    5: begin
+      Result := '';
+      art := GetArticle;
+      entrycnt := 0;
+      CEntries.Locate(stEntriesIndex, art);
+      while (not CEntries.EOF) and (CEntries.Int(TEntriesIndex)=art) do begin
+        ent := CEntries.Str(TEntriesEntry);
+        if Result='' then
+          Result := ent
+        else
+        if entrycnt=1 then
+         //convert to multi-entry article
+          Result := fstr('(1) ')+Result+fstr('; (2) ')+ent
+        else
+          Result := Result + fstr('; ('+IntToStr(entrycnt+1)+') ')+ent;
+        Inc(entrycnt);
+        CEntries.Next;
+      end;
+    end;
+  else
+     raise Exception.Create('Invalid dictionary version.');  
+  end;
+end;
+
+function TDicCursor.GetArticleMarkers: string;
+var art: integer;
+begin
+  case dic.dicver of
+    4:
+      if TDictMarkers<>-1 then 
+        Result := fstr(CDict.Str(TDictMarkers))
+      else
+        Result := '';
+    5: begin
+      Result := '';
+      art := GetArticle;
+      CEntries.Locate(stEntriesIndex, art);
+      while (not CEntries.EOF) and (CEntries.Int(TEntriesIndex)=art) do begin
+        Result := Result + CEntries.Str(TEntriesMarkers); //lump together as on old version. This is not correct though...
+        CEntries.Next;
+      end;
+    end;
+  else
+     raise Exception.Create('Invalid dictionary version.');  
+  end;
+end;
+
+
+{ Index Cursor }
+
+constructor TDicIndexReader.Create(ADic: TJaletDic);
+begin
+  inherited Create;
+  dic := ADic;
+end;
+
+procedure TDicIndexReader.FindIndexString(word:boolean;locator:string);
 var l,r,m,max:integer;
     s,s2:string;
 begin
@@ -492,7 +782,7 @@ begin
   end;
 end;
 
-function TDicCursor.ReadIndex:integer;
+function TDicIndexReader.ReadIndex:integer;
 begin
   if (indexfrom=0) or (indexfrom>=indexto) then
   begin
@@ -502,6 +792,200 @@ begin
   result:=dic.ReadIndexInfo(indexword,indexfrom);
   inc(indexfrom);
 end;
+
+constructor TDicIndexCursor.Create(ADic: TJaletDic);
+begin
+  inherited Create(ADic);
+  FReader := TDicIndexReader.Create(ADic);
+end;
+
+destructor TDicIndexCursor.Destroy;
+begin
+  FreeAndNil(FReader);
+  inherited;
+end;
+
+procedure TDicIndexCursor.Find(word:boolean;locator:string);
+begin
+  FReader.FindIndexString(word,locator);
+end;
+
+function TDicIndexCursor.Next: boolean;
+var wif: integer;
+begin
+  wif := FReader.ReadIndex;
+  Result := (wif<>0);
+  if Result then
+    Self.SeekIndex(wif);
+end;
+
+
+{
+Lookup cursor.
+These let you browse through a set of results.
+}
+
+constructor TDicLookupCursorV4.Create(ADic: TJaletDic; AMatchType: TMatchType);
+begin
+  inherited Create(ADic);
+  FMatchType := AMatchType;
+  FIndexReader := TDicIndexReader.Create(ADic);
+end;
+
+destructor TDicLookupCursorV4.Destroy;
+begin
+  FreeAndNil(CDict);
+  FreeAndNil(FIndexReader);
+  inherited Destroy;
+end;
+
+procedure TDicLookupCursorV4.LookupKanji(const val: FString);
+begin
+  FLookupType := ltKanji;
+  FValue := val;  
+  case FMatchType of
+    mtMatchRight: begin
+      CDict.SetOrder('<Kanji_Ind');
+      CDict.Locate(stKanjiReverse,val);
+    end;
+    mtMatchAnywhere: begin
+      CDict.SetOrder('Index_Ind');
+      CDict.First;
+      NextAnywhereMatch;
+    end;
+  else //left and exact
+    CDict.SetOrder('Kanji_Ind');
+    CDict.Locate(stKanji,val);
+  end;
+end;
+
+procedure TDicLookupCursorV4.LookupRomaji(const val: string);
+begin
+  FLookupType := ltRomaji;
+  FValue := val;  
+  case FMatchType of
+    mtMatchRight: begin
+      CDict.SetOrder('<Phonetic_Ind');
+      CDict.Locate(stSortReverse,val);
+    end;
+    mtMatchAnywhere: begin
+      CDict.SetOrder('Index_Ind');
+      CDict.First;
+      NextAnywhereMatch;
+    end;
+  else //left and exact
+    CDict.SetOrder('Phonetic_Ind');
+    CDict.Locate(stSort,val);
+  end;
+end;
+
+procedure TDicLookupCursorV4.LookupMeaning(const val: FString);
+begin
+  FLookupType := ltMeaning;
+  FValue := lowercase(val);
+  if not (FMatchType in [mtExactMatch, mtMatchLeft]) then
+    FMatchType := mtMatchLeft; //other match types are not supported
+  FIndexReader.FindIndexString(true,FValue);
+ //This mode requires auto-NextMatch at the start
+  NextMatch();
+ //Which may also terminate the search instantly if there are no matches -- see NextMatch()
+end;
+
+function TDicLookupCursorV4.HaveMatch: boolean;
+var i_pos: integer;
+  s_val: string;
+begin
+  if FLookupType in [ltKanji,ltRomaji] then
+    if CDict.EOF then begin
+      Result := false;
+      exit;
+    end;
+
+  case FLookupType of
+    ltKanji:
+      case FMatchType of
+        mtMatchLeft: Result := pos(FValue,CDict.Str(TDictKanji))=1;
+        mtMatchRight: begin
+          s_val := CDict.Str(TDictKanji);
+          i_pos := pos(FValue, s_val);
+          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue));
+        end;
+        mtExactMatch: Result := FValue=CDict.Str(TDictKanji);
+      else //anywhere
+        Result := pos(FValue,CDict.Str(TDictKanji))>0;
+      end;
+
+    ltRomaji:
+      case FMatchType of
+        mtMatchLeft: Result := pos(FValue,CDict.Str(TDictSort))=1;
+        mtMatchRight: begin
+          s_val := CDict.Str(TDictSort);
+          i_pos := pos(FValue, s_val);
+          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue)+1);
+        end;
+        mtExactMatch: Result := FValue=CDict.Str(TDictSort);
+      else //anywhere
+        Result := pos(FValue,CDict.Str(TDictSort))>0;
+      end;
+
+    ltMeaning:
+      Result := true; //we always have a match in Meaning -- see NextMatch()
+  else
+    Result := false; //not looking for anything
+  end;
+end;
+
+procedure TDicLookupCursorV4.NextMatch;
+begin
+  case FLookupType of
+    ltMeaning: begin
+      if not NextMeaningMatch then
+        FLookupType := ltNone; //lookup is over
+    end
+  else
+    if (FLookupType in [ltKanji,ltRomaji]) and (FMatchType=mtMatchAnywhere) then
+      NextAnywhereMatch
+    else
+      CDict.Next;
+  end;
+end;
+
+function TDicLookupCursorV4.NextMeaningMatch: boolean;
+var wif: integer;
+  ts: string;
+begin
+  wif:=FIndexReader.ReadIndex;
+  while wif<>0 do begin
+    CDict.Locate(stIndex,wif);
+   { Word index only works on first 4 bytes of the word, so we have to manually check after it. }
+    ts:=lowercase(CDict.Str(dic.TDictEnglish))+' ';
+    case FMatchType of
+      mtMatchLeft: if pos(FValue,ts)>0 then break;
+      mtExactMatch: begin
+        ts := ts + ' ';
+       //TODO: support other word breaks in addition to ' ' and ','
+        if (pos(lowercase(FValue)+' ',ts)>0) or (pos(lowercase(FValue)+',',ts)>0) then break;
+      end;
+    end;
+    wif:=FIndexReader.ReadIndex;
+  end;
+  Result := (wif<>0);
+end;
+
+function TDicLookupCursorV4.NextAnywhereMatch: boolean;
+begin
+ { mtAnywhere searches can't use any index, so we scan through all the records -- very slow }
+  if EOF then begin
+    Result := false;
+    exit;
+  end;
+
+  repeat
+    CDict.Next;
+  until CDict.EOF or HaveMatch;
+  Result := not EOF;
+end;
+
 
 initialization
   ignorel:=TStringList.Create;
