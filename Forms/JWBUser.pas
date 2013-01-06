@@ -5,9 +5,15 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBUtils, JWBDic, JWBDicSearch;
+  JWBStrings, JWBUtils, JWBDic, JWBDicSearch;
 
 type
+  TKanjiEntry = record
+    tp: char; //J, K, C, N, U -- see below in ShowWord()
+    char: FChar; //character itself
+    rad: FChar; //its radical
+  end;
+
   TfUser = class(TForm)
     Panel1: TPanel;
     SpeedButton1: TSpeedButton;
@@ -79,10 +85,8 @@ type
     procedure FormDestroy(Sender: TObject);
 
   public
-    procedure WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
-
-  public
-    curkanji,curphonetic,curmeaning,curkanjid:string;
+    curkanji,curphonetic,curmeaning:string;
+    curkanjid: array of TKanjiEntry; //kanji entries for current word
     procedure ShowWord;
     procedure ShowHint;
     procedure HideHint;
@@ -115,7 +119,7 @@ var
 
 implementation
 
-uses JWBStrings, JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
+uses JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
   JWBCategories, JWBAnnotations;
@@ -228,13 +232,9 @@ begin
 
   if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then req.full:=true;
 
-  if a=stEditorInsert then begin //ignore some UI settings in these modes
+  if a in [stEditorInsert,stEditorAuto] then begin //ignore some UI settings in these modes
     req.dictgroup := 5;
-    req.MatchType := mtExactMatch
-  end else
-  if a=stEditorAuto then begin
-    req.dictgroup := 5;
-    req.MatchType := mtMatchLeft;
+    req.MatchType := mtExactMatch;
   end;
 
   req.dic_ignorekana := false; //by default, but this can be overriden
@@ -438,8 +438,9 @@ var ki:integer;
     radf:integer;
     sl:TStringList;
     i:integer;
+  rad:FString;
 begin
-  curkanjid:='00000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
+  SetLength(curkanjid,0);
   curphonetic:='';
   curkanji:='';
   curmeaning:='';
@@ -494,7 +495,7 @@ begin
     fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary');
     ki:=0;
     s:=remexcl(curkanji);
-    curkanjid:='';
+    SetLength(curkanjid,0);
     while flength(s)>0 do
     begin
       s2:=fcopy(s,1,1);
@@ -505,12 +506,29 @@ begin
         radf:=fSettings.ComboBox1.ItemIndex+12;
         if TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)) then
         begin
-          curkanjid:=curkanjid+s2+TRadicals.Str(TRadicalsUnicode);
-          if TChar.Bool(TCharChinese) then curkanjid:=curkanjid+'J'else
-            if IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then curkanjid:=curkanjid+'K'else
-            if TChar.Int(TCharJouyouGrade)<9 then curkanjid:=curkanjid+'C'else
-            if TChar.Int(TCharJouyouGrade)<10 then curkanjid:=curkanjid+'N'else
-            curkanjid:=curkanjid+'U';
+          rad := TRadicals.Str(TRadicalsUnicode);
+          SetLength(curkanjid, Length(curkanjid)+1);
+          if flength(s2)>0 then
+            curkanjid[Length(curkanjid)-1].char := fgetch(s2, 1)
+          else
+            curkanjid[Length(curkanjid)-1].char := UH_NOCHAR;
+          if flength(rad)>0 then
+            curkanjid[Length(curkanjid)-1].rad := fgetch(rad, 1)
+          else
+            curkanjid[Length(curkanjid)-1].rad := UH_NOCHAR;
+          if TChar.Bool(TCharChinese) then
+            curkanjid[Length(curkanjid)-1].tp := 'J'
+          else
+          if IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
+            curkanjid[Length(curkanjid)-1].tp := 'K'
+          else
+          if TChar.Int(TCharJouyouGrade)<9 then
+            curkanjid[Length(curkanjid)-1].tp := 'C'
+          else
+          if TChar.Int(TCharJouyouGrade)<10 then
+            curkanjid[Length(curkanjid)-1].tp := 'N'
+          else
+            curkanjid[Length(curkanjid)-1].tp := 'U';
           TCharRead.SetOrder('');
           TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
           s3:='';
@@ -590,25 +608,6 @@ procedure TfUser.WordDetails_PaintBox5Paint(Sender: TObject);
 begin
   fWordDetails.PaintBox5.Canvas.Brush.Color:=clWindow;
   DrawUnicode(fWordDetails.PaintBox5.Canvas,1,1,22,UnicodeToHex(curmeaning),FontEnglish);
-end;
-
-//Paints fWordKanji.PaintBoxK1...PaintBoxK9 contents.
-//KN: 1..9
-procedure TfUser.WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
-begin
-  Assert((KN>=1) and (KN<=9));
-  if length(curkanjid)<9*KN then exit;
-  BeginDrawReg(pb);
-  pb.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(pb.Canvas,44,4,16,copy(curkanjid,9*KN-4,4),FontJapaneseGrid);
-  case curkanjid[9*KN] of
-    'K':pb.Canvas.Font.Color:=Col('Kanji_Learned');
-    'C':pb.Canvas.Font.Color:=Col('Kanji_Common');
-    'U':pb.Canvas.Font.Color:=Col('Kanji_Rare');
-    'N':pb.Canvas.Font.Color:=Col('Kanji_Names');
-  end;
-  DrawUnicode(pb.Canvas,4,2,36,copy(curkanjid,9*KN-8,4),FontJapaneseGrid);
-  EndDrawReg;
 end;
 
 procedure TfUser.SpeedButton1Click(Sender: TObject);
@@ -808,7 +807,8 @@ end;
 procedure TfUser.DetailsForKanji(n:integer);
 begin
   if CharDetDocked then exit;
-  fKanjiDetails.SetCharDetails(copy(curkanjid,(n-1)*9+1,4));
+  if n<=Length(curkanjid) then
+    fKanjiDetails.SetCharDetails(curkanjid[n-1].char);
   if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
 end;
 

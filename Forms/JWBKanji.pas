@@ -61,7 +61,6 @@ type
     procedure DoItTimer;
     procedure SaveChars;
     procedure RefreshDetails;
-    procedure SetCharCompounds;
     procedure SelRadical;
     function GetKanji(cx,cy:integer):string;
 
@@ -623,121 +622,9 @@ begin
   DrawGrid1SelectCell(sender,sel.left,sel.top,b);
 end;
 
-procedure TfKanji.SetCharCompounds;
-var sl,sl2:TStringList;
-    pass:boolean;
-    i,j,k,l:integer;
-    dic:TDicIndexCursor;
-    freq,mark:string;
-    stp:string;
-    kj:string;
-begin
-  if not fKanjiCompounds.Visible then exit;
-  fKanjiCompounds.StringGrid1.Visible:=false;
-  fKanjiCompounds.CheckBox3.Enabled:=(not fKanjiCompounds.SpeedButton8.Down) and (curlang='j');
-  kj:=ChinFrom(TChar.Str(TCharUnicode));
-  sl:=TStringList.Create;
-  sl2:=TStringList.Create;
-  if fKanjiCompounds.SpeedButton9.Down then
-  begin
-    if (curlang='j') and (fKanjiCompounds.CheckBox3.Checked) then
-    begin
-      for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
-      begin
-        dic:=TDicIndexCursor.Create(dicts[i]);
-        try
-          dic.Find(false,kj);
-          k:=0;
-          while dic.Next do
-          begin
-            inc(k);
-            if pos(kj,dic.GetKanji)=0 then
-              showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.GetArticleBody);
-            if (not fKanjiCompounds.CheckBox1.Checked) or (pos(kj,dic.GetKanji)=1) then
-            begin
-              mark := dic.GetArticleMarkers;
-              freq:=inttostr(9999999-dic.GetFrequency);
-              while length(freq)<7 do freq:='0'+freq;
-              if freq<>'9999999'then
-              if ((not fKanjiCompounds.CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.GetArticleBody,mark))>0)) then
-                sl.Add(freq+#9+CheckKnownKanji(ChinTo(dic.GetKanji))+' ['+dic.GetPhonetic+'] {'
-                  +EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
-            end;
-          end;
-        finally
-          FreeAndNil(dic);
-        end;
-      end;
-{        sl.Sort;
-      for i:=0 to sl.Count-1 do
-      begin
-        kj:=sl[i];
-        delete(kj,1,7);
-        sl[i]:=kj;
-      end;}
-    end else
-    begin
-      for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) then
-      begin
-        dic:=TDicIndexCursor.Create(dicts[i]);
-        try
-          dic.Find(false,kj);
-          k:=0;
-          while dic.Next do
-          begin
-            inc(k);
-            if pos(kj,dic.GetKanji)=0 then
-              showmessage('Dictionary has corrupted index: '+TChar.Str(TCharUnicode)+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.GetArticleBody);
-            if (not fKanjiCompounds.CheckBox1.Checked) or (pos(kj,dic.GetKanji)=1) then
-            begin
-              mark := dic.GetArticleMarkers;
-              if ((not fKanjiCompounds.CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.GetArticleBody,mark))>0)) then
-                sl.Add(dic.GetKanji+#9+CheckKnownKanji(ChinTo(dic.GetKanji))+' ['+dic.GetPhonetic+'] {'
-                  +EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
-            end;
-          end;
-        finally
-          FreeAndNil(dic);
-        end;
-      end;
-    end;
-    sl.Sort;
-  end else if (fKanjiCompounds.SpeedButton8.Down) then
-  begin
-    TUserIdx.SetOrder('Kanji_Ind');
-    TUserIdx.Locate('Kanji',kj);
-    while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=kj) do
-    begin
-      if (not fKanjiCompounds.CheckBox1.Checked) or (TUserIdx.Bool(TUserIdxBegin)) then
-      begin
-        sl2.Clear;
-        ListWordCategories(TUserIdx.Int(TUserIdxWord),sl2);
-        pass:=false;
-        for l:=0 to sl2.Count-1 do if (pos(curlang+'~',sl2[l])=1) or (length(sl2[l])<2) or (copy(sl2[l],2,1)<>'~') then pass:=true;
-        if (pass) and (TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord))) then
-        begin
-          stp:=TUser.Str(TUserScore);
-          sl.Add(TUser.Str(TUserKanji)+#9+'!'+stp+CheckKnownKanji(ChinTo(TUser.Str(TUserKanji)))+' ['+'!'+stp+TUser.Str(TUserPhonetic)+'] {'+'!'+stp+TUser.Str(TUserEnglish)+'}');
-        end;
-      end;
-      TUserIdx.Next;
-    end;
-  end;
-  sl.Sort;
-  if (fKanjiCompounds.SpeedButton9.Down) and (fKanjiCompounds.CheckBox3.Checked) and (strtoint(fSettings.Edit34.Text)<>0) then
-    while sl.Count>strtoint(fSettings.Edit34.Text) do sl.Delete(strtoint(fSettings.Edit34.Text));
-  for i:=0 to sl.Count-1 do
-    sl[i]:=copy(sl[i],pos(#9,sl[i])+1,length(sl[i])-pos(#9,sl[i]));
-  FillWordGrid(fKanjiCompounds.StringGrid1,sl,false,false);
-  sl.Free;
-  sl2.Free;
-end;
-
 procedure TfKanji.DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
   var CanSelect: Boolean);
-var kix:string;
+var kix:FString;
 begin
   if DrawGrid1.ColCount*ARow+Acol>=ki.Count then
   begin
@@ -749,7 +636,8 @@ begin
   delete(kix,1,1);
   fKanjiDetails.SetCharDetails(kix);
   AnnotShowMedia(kix,'');
-  if fKanjiCompounds.Visible then SetCharCompounds;
+  if flength(kix)>0 then //should always be
+    fKanjiCompounds.SetCharCompounds(fgetch(kix, 1));
 end;
 
 procedure TfKanji.DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;

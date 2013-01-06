@@ -14,6 +14,7 @@ object fKanjiCompounds: TfKanjiCompounds
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  OnCreate = FormCreate
   OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
