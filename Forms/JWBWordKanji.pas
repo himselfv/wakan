@@ -46,6 +46,8 @@ type
     procedure PaintBoxK1Click(Sender: TObject);
     procedure PaintBoxK1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+  protected
+    procedure WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
 
   end;
 
@@ -54,7 +56,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu;
+uses JWBUnit, JWBUser, JWBMenu;
 
 {$R *.DFM}
 
@@ -76,7 +78,26 @@ end;
 
 procedure TfWordKanji.PaintBoxK1Paint(Sender: TObject);
 begin
-  fUser.WordKanji_PaintBoxKNPaint(TPaintBox(Sender), TPaintBox(Sender).Tag);
+  WordKanji_PaintBoxKNPaint(TPaintBox(Sender), TPaintBox(Sender).Tag);
+end;
+
+//Paints fWordKanji.PaintBoxK1...PaintBoxK9 contents.
+//KN: 1..9
+procedure TfWordKanji.WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
+begin
+  Assert((KN>=1) and (KN<=9));
+  if length(fUser.curkanjid)<KN then exit;
+  BeginDrawReg(pb);
+  pb.Canvas.Brush.Color:=Col('Kanji_Back');
+  DrawUnicode(pb.Canvas,44,4,16,fUser.curkanjid[KN-1].rad,FontJapaneseGrid);
+  case fUser.curkanjid[KN-1].tp of
+    'K':pb.Canvas.Font.Color:=Col('Kanji_Learned');
+    'C':pb.Canvas.Font.Color:=Col('Kanji_Common');
+    'U':pb.Canvas.Font.Color:=Col('Kanji_Rare');
+    'N':pb.Canvas.Font.Color:=Col('Kanji_Names');
+  end;
+  DrawUnicode(pb.Canvas,4,2,36,fUser.curkanjid[KN-1].char,FontJapaneseGrid);
+  EndDrawReg;
 end;
 
 procedure TfWordKanji.PaintBoxK1MouseMove(Sender: TObject;
