@@ -93,7 +93,7 @@ type
 
   TWordIndexBuilder = class(TIndexBuilder)
   public
-    procedure AddToIndex(const str: FString; article: integer);
+    procedure AddToIndex(const str: UnicodeString; article: integer);
   end;
 
 implementation
@@ -271,7 +271,8 @@ end;
 
 function TIndexBuilder.Find(const entry: int64; var Index: Integer): Boolean;
 var
-  L, H, I, C: Integer;
+  L, H, I: Integer;
+  C: Int64;
 begin
   Result := False;
   L := 0;
@@ -367,10 +368,10 @@ begin
   closefile(fb);
 end;
 
-procedure TWordIndexBuilder.AddToIndex(const str: FString; article: integer);
+procedure TWordIndexBuilder.AddToIndex(const str: UnicodeString; article: integer);
 var tmp: UnicodeString;
 begin
-  tmp := fstrtouni(str);
+  tmp := str;
   MakeFixedLen(tmp, 4, ' ');
   inherited AddToIndex(PInt64(@tmp[1])^, article);
 end;

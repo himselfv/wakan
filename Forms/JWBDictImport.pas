@@ -564,9 +564,9 @@ begin
               s3:=strqpop(s2,' ');
               repl(s2,';',',');
               if (ignorel.IndexOf(s3)=-1) and (s3<>'')
-              and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-')
-              and (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then
-                wordidx.AddToIndex(fstr(s3), cnt);
+              and (s3[1]>#$0040) //it's all punctuation and digits before
+              then
+                wordidx.AddToIndex(s3, cnt);
             end;
           end; //of AddWordIndex while clause
 
