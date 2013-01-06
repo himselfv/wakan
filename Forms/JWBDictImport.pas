@@ -82,11 +82,9 @@ var
 implementation
 
 uses StrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBStrings, JWBIO, JWBDic, JWBDicSearch, JWBEdictMarkers;
+  JWBStrings, JWBIO, JWBDic, JWBDicSearch, JWBEdictMarkers, JWBIndex;
 
 {$R *.DFM}
-
-
 
 procedure TfDictImport.FormShow(Sender: TObject);
 begin
@@ -285,9 +283,7 @@ const
 var fi:integer;
     fname:string;
     s:string;
-    fin:TFileReader;
-    fout:TFileWriter;
-    fuin: TUnicodeFileReader;
+    fuin:TUnicodeFileReader;
     fb:file;
     cd:string;
     buf:array[0..3999] of byte;
@@ -308,6 +304,7 @@ var fi:integer;
     s_roma:string; //romaji
     s_entry:string; //edict entry (converted)
     s_mark:string; //edict markers returned by ConvertEdictEntry()
+    s_uni:UnicodeString;
     bl,bh:byte;
     beg:boolean;
     cnt2:integer;
@@ -317,14 +314,15 @@ var fi:integer;
     prior:integer;
     skk,skk2:string;
     skki,skkj:integer;
-    wordidx,charidx:TIndexBuilder;
+    wordidx:TWordIndexBuilder;
+    charidx:TIndexBuilder;
     linecount,lineno:integer;
     i,j:integer;
     freql:TStringList;
     freqf:file;
     freqi:integer;
 
-    tempDir: string;
+    tempDir, tempDir2: string;
     fc: FChar;
     uc: WideChar;
     ac: AnsiChar;
@@ -345,7 +343,7 @@ begin
   prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
   prog.Width := 500; //we're going to have long file names
   prog.Appear;
-  wordidx := TIndexBuilder.Create;
+  wordidx := TWordIndexBuilder.Create;
   charidx := TIndexBuilder.Create;
   freql := nil;
   linecount:=0;
@@ -374,6 +372,8 @@ begin
     if not dic.loaded then
       raise Exception.Create('Cannot load the target dictionary');
     dic.Demand;
+    dic.TTDict.NoCommitting := true;
+    dic.TTEntries.NoCommitting := true;
 
     assignfile(romap,'roma_problems.txt'); //TODO: This one should go into UserDir when we have one
     rewrite(romap);
@@ -530,19 +530,19 @@ begin
 
        //Write out
         if s_roma<>'' then begin
-          dic.TTDict.Insert([inttostr(cnt), phon, kanji, s_roma, inttostr(prior)]);
-          dic.TTEntries.Insert([inttostr(cnt), s_entry, s_mark]);
+          dic.TTDict.AddRecord([inttostr(cnt), phon, kanji, s_roma, inttostr(prior), inttostr(cnt)]);
+          dic.TTEntries.AddRecord([inttostr(cnt), s_entry, s_mark]);
         end;
 
        //Indexes
-        s:=kanji;
+        s_uni:=kanji;
         if ifAddCharacterIndex in flags then
-          while s<>'' do
+          while s_uni<>'' do
           begin
-            fc:=fgetch(s,1);
-            fdelete(s,1,1);
-            if TChar.Locate('Unicode',fc) then
-              charidx.AddToIndex(fc, cnt);
+            uc:=s_uni[1];
+            delete(s_uni,1,1);
+            if EvalChar(uc)=EC_IDG_CHAR then
+              charidx.AddToIndex(word(uc), cnt);
           end; //of AddCharacterIndex while clause
 
         s:=string(writ);
@@ -566,7 +566,7 @@ begin
               if (ignorel.IndexOf(s3)=-1) and (s3<>'')
               and (s3[1]<>' ') and (s3[1]<>'"') and (s3[1]<>'-')
               and (s3[1]<>'.') and ((s3[1]<'0') or (s3[1]>'9')) then
-                wordidx.AddToIndex(s3, cnt);
+                wordidx.AddToIndex(fstr(s3), cnt);
             end;
           end; //of AddWordIndex while clause
 
@@ -574,38 +574,37 @@ begin
 
       closefile(buff);
     end; //for every file
-    fout.Writeln('.');
-    FreeAndNil(fout);
 
     closefile(romap);
     prog.Invalidate;
     prog.Repaint;
 
-
-    DeleteDirectory(tempDir);
+    prog.SetMessage(_l('^eRebuilding index...'));
+    dic.TTDict.NoCommitting := false;
+    dic.TTDict.Reindex;
+    dic.TTEntries.NoCommitting := true;
+    dic.TTEntries.Reindex;
 
 
    //This time it's for our package
-    tempDir := CreateRandomTempDirName();
-    ForceDirectories(tempDir);
-
-    prog.SetMessage(_l('#00092^eSorting indexes...'));
-    charidx.Pack;
-    wordidx.Pack;
+    tempDir2 := CreateRandomTempDirName();
+    ForceDirectories(tempDir2);
 
     prog.SetMessage(_l('^eWriting character index...'));
-    charidx.Write(tempDir+'\CharIdx.bin');
+    charidx.Write(tempDir2+'\CharIdx.bin');
 
     prog.SetMessage(_l('^eWriting word index...'));
-    wordidx.Write(tempDir+'\WordIdx.bin');
+    wordidx.Write(tempDir2+'\WordIdx.bin');
 
     prog.SetMessage(_l('^eWriting dictionary table...'));
-    dic.TTDict.WriteTable(tempDir+'\Dict',true);
-    dic.TTEntries.WriteTable(tempDir+'\Entries',true);
+    dic.TTDict.WriteTable(tempDir2+'\Dict',true);
+    dic.TTEntries.WriteTable(tempDir2+'\Entries',true);
     dic.Free;
 
-    WriteDictPackage(dicFilename, tempDir, info, diclang, cnt);
-    DeleteDirectory(tempDir);
+    DeleteDirectory(tempDir); //empty dictionary
+
+    WriteDictPackage(dicFilename, tempDir2, info, diclang, cnt);
+    DeleteDirectory(tempDir2);
 
   finally
     wordidx.Free;

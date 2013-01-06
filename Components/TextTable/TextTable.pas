@@ -1306,25 +1306,24 @@ begin
     Inc(totsize, GetFieldValueSize(fieldbuild[i][1], values[i]));
   if databuffer<totsize then
   begin
-    GetMem(p,datalen+AllocDataBuffer);
+    databuffer:=Trunc(datalen*0.4)+AllocDataBuffer; //incremental growth
+    GetMem(p,datalen+databuffer);
     move(data^,p^,datalen);
     freemem(data);
-    databuffer:=AllocDataBuffer;
     data:=p;
   end;
   dec(databuffer,totsize);
   if structbuffer<varfields+5 then
   begin
-    GetMem(p,reccount*varfields+reccount*5+AllocStructBuffer);
-    move(struct^,p^,reccount*varfields+reccount*5);
+    structbuffer:=Trunc((reccount*varfields+reccount*5)*0.4)+AllocStructBuffer;
+    GetMem(p,(reccount*varfields+reccount*5)+structbuffer);
+    move(struct^,p^,(reccount*varfields+reccount*5));
     freemem(struct);
-    structbuffer:=AllocStructBuffer;
     struct:=p;
   end;
   dec(structbuffer,5+varfields);
-  b:=0;
-  moveofs(@b,struct,0,reccount*(varfields+5),1);
-  moveofs(@datalen,struct,0,reccount*(varfields+5)+1,4);
+  PByte(integer(struct)+reccount*(varfields+5))^ := 0;
+  PInteger(integer(struct)+reccount*(varfields+5)+1)^ := datalen;
   k:=0;
   for i:=0 to fieldcount-1 do
   begin

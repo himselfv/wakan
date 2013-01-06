@@ -1,0 +1,24 @@
+;Dictionary V4 format -- kept for reference
+$TEXTTABLE
+$PREBUFFER
+$RAWINDEX
+$FIELDS
+iIndex
+sEnglish
+xPhonetic
+xKanji
+sSort
+sMarkers
+iFrequency
+$ORDERS
+Phonetic_Ind
+Kanji_Ind
+<Phonetic_Ind
+<Kanji_Ind
+$SEEKS
+Index
+Sort
+Kanji
+<Sort
+<Kanji
+$CREATE

@@ -655,7 +655,6 @@ var
   slen:integer; //==lc.len
 
   entry:string; //translation entry text
-  s2:string;
   converted, markers:string;
   ts:string;
   popclas:integer;

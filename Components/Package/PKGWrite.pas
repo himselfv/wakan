@@ -708,7 +708,7 @@ begin
       writeln(tmpt,'Labyrinth Package File');
       writeln(tmpt,'');
       writeln(tmpt,'Title:           ',titlename);
-      writeln(tmpt,'Filename:        ',pkgfilename);
+      writeln(tmpt,'Filename:        ',ExtractFilename(pkgfilename));
       writeln(tmpt,'Format:          ',formatname);
       writeln(tmpt,'Company:         ',companyname);
       writeln(tmpt,'Copyright:       ',copyrightname);

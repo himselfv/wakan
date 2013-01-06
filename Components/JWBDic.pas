@@ -1,7 +1,7 @@
 unit JWBDic;
 
 interface
-uses SysUtils, Classes, MemSource, TextTable, JWBStrings;
+uses SysUtils, Classes, MemSource, TextTable, JWBStrings, JWBIndex;
 
 //See comments to TextTable.CURSOR_IN_TABLE
 {$DEFINE DIC_CURSOR_IN_TABLE}
@@ -122,9 +122,8 @@ type
      char: first two bytes are that WideChar, rest is unused
      word: first 4 wide characters of meaning
    }
-    charidx,wordidx:pointer;
-    charno,wordno:integer;
-    charfsiz,wordfsiz:integer;
+    charidx: TIndex;
+    wordidx: TIndex;
 
   public
     package:TPackageSource;
@@ -141,9 +140,6 @@ type
     procedure Load; virtual;
     procedure Unload; virtual;
     procedure Demand;
-    function ReadIndexEntryV4(t:TIndexType;loc:integer):AnsiString;
-    function ReadIndexEntryV5(t:TIndexType;loc:integer):int64;
-    function ReadIndexInfo(t:TIndexType;loc:integer):integer;
    {$IFDEF DIC_CURSOR_IN_TABLE}
     procedure FindIndexString(t:TIndexType;const locator:UnicodeString); {$IFDEF INLINE}inline;{$ENDIF}
     function ReadIndex:integer; {$IFDEF INLINE}inline;{$ENDIF}
@@ -206,8 +202,8 @@ type
  { JaletDic cursor -- independent from basic cursor functionality }
   TDicIndexReader = class
   protected
-    dic: TJaletDic;
-    indextype:TIndexType;
+    dic:TJaletDic;
+    idx:TIndex;
     indexfrom,indexto:integer;
     procedure FindIndexStringV4(t:TIndexType;const locator:UnicodeString);
     procedure FindIndexStringV5(t:TIndexType;const locator:UnicodeString);
@@ -487,26 +483,28 @@ begin
       TEntriesMarkers:=-1;
     end;
     
-    WordIdx:=nil;
     mf:=package['WordIdx.bin'];
-    if mf<>nil then
-    begin
-      GetMem(WordIdx,mf.Size-4);
-      package.ReadRawData(WordNo,integer(mf.Position),4);
-      package.ReadRawData(WordIdx^,integer(mf.Position)+4,mf.Size-4);
-      wordfsiz:=(mf.Size div 4)-1;
+    if mf=nil then
+      WordIdx := nil
+    else begin
+      if dicver=5 then
+        WordIdx := TIndexV5.Create(mf.Lock)
+      else
+        WordIdx := TIndexV4.Create(mf.Lock);
+      mf.Unlock;
     end;
 
-    CharIdx:=nil;
     mf:=package['CharIdx.bin'];
-    if mf<>nil then
-    begin
-      GetMem(CharIdx,mf.Size-4);
-      package.ReadRawData(CharNo,integer(mf.Position),4);
-      package.ReadRawData(CharIdx^,integer(mf.Position)+4,mf.Size-4);
-      charfsiz:=(mf.Size div 4)-1;
+    if mf=nil then
+      CharIdx := nil
+    else begin
+      if dicver=5 then
+        CharIdx := TIndexV5.Create(mf.Lock)
+      else
+        CharIdx := TIndexV4.Create(mf.Lock);
+      mf.Unlock;
     end;
-    
+
     SetupSeekObjects;
   except
     on E: Exception do begin
@@ -528,8 +526,8 @@ begin
   if not demandloaded then exit;
   TDict.Free;
   package.Free;
-  if WordIdx<>nil then FreeMem(WordIdx);
-  if CharIdx<>nil then FreeMem(CharIdx);
+  FreeAndNil(WordIdx);
+  FreeAndNil(CharIdx);
   loaded:=false;
 end;
 
@@ -563,35 +561,8 @@ end;
 
 function TJaletDic.SupportsMarkers: boolean;
 begin
-  Result := TDictMarkers<>-1; //older dicts apparently can't into markers
-end;
-
-//4 bytes compared as AnsiString on v4
-function TJaletDic.ReadIndexEntryV4(t:TIndexType;loc:integer):AnsiString;
-var p:PAnsiChar;
-begin
-  SetLength(Result, 4);
-  if t=itWord then p:=wordidx else p:=charidx;
-  move(PAnsiChar(p+loc*4)^,Result[1],4);
-end;
-
-//8 bytes compared as int64 in v5
-function TJaletDic.ReadIndexEntryV5(t:TIndexType;loc:integer):int64;
-var p: PByte;
-begin
-  if t=itWord then p:=wordidx else p:=charidx;
-  if dicver=5 then
-    Result := PInt64(integer(p)+loc*8)^
-  else
-    Result := PInteger(integer(p)+loc*4)^;
-end;
-
-function TJaletDic.ReadIndexInfo(t:TIndexType;loc:integer):integer;
-begin
-  if t=itWord then
-    Result := PInteger(integer(wordidx)+loc*4)^
-  else
-    Result := PInteger(integer(charidx)+loc*4)^;
+  Result := (TDictMarkers<>-1) //older dicts apparently can't into markers
+    or (dicver=5); //all v5 dicts can into markers :)
 end;
 
 {$IFDEF DIC_CURSOR_IN_TABLE}
@@ -775,78 +746,42 @@ begin
 end;
 
 procedure TDicIndexReader.FindIndexStringV4(t:TIndexType;const locator:UnicodeString);
-var l,r,m,max:integer;
-  a_str: AnsiString;
-  val: AnsiString;
+var m: integer;
 begin
   if t=itChar then begin
-    a_str := AnsiString(UnicodeToHex(PWideChar(locator),1));
+    idx := dic.CharIdx;
+    m := idx.FindEntry(UnicodeToHex(PWideChar(locator),1));
   end else
   begin //4 AnsiChars
-    a_str := AnsiString(locator); //This calls WideCharToMultiByte so a good conversion
-    MakeFixedLen(a_str, 4, ' ');
+    idx := dic.WordIdx;
+    m := idx.FindEntry(locator);
   end;
 
-  l:=0;
-  if t=itWord then max:=dic.wordno-1 else max:=dic.charno-1;
-  r:=max;
-  m:=l;
-  while l<=r do
-  begin
-    m:=l+(r-l) div 2;
-    val:=dic.ReadIndexEntryV4(t,m*2);
-    if val=a_str then break;
-    if val<a_str then l:=m+1 else r:=m-1;
-  end;
-  if l>r then
+  if m<0 then
     indexfrom:=0
   else
-  begin
-    indexfrom:=dic.ReadIndexInfo(t,m*2+1)+(max+1)*2;
-    if m<max then
-      indexto:=dic.ReadIndexInfo(t,m*2+3)+(max+1)*2
-    else
-      if t=itWord then indexto:=dic.wordfsiz else indexto:=dic.charfsiz;
-    indextype:=t;
-  end;
+    idx.ReadIndexEntryFromTo(m,indexfrom,indexto);
 end;
 
 procedure TDicIndexReader.FindIndexStringV5(t:TIndexType;const locator:UnicodeString);
-var l,r,m,max:integer;
+var idx: TIndex;
+  m: integer;
   u_str: UnicodeString;
-  loc_val: int64;
-  val: int64;
 begin
+  u_str := locator;
   if t=itChar then begin
-    loc_val := PWord(locator)^ //1 char
+    idx := dic.CharIdx;
+    MakeFixedLen(u_str, 4, #00);
   end else begin
-    u_str := locator;
+    idx := dic.WordIdx;
     MakeFixedLen(u_str, 4, ' ');
-    loc_val := PInt64(u_str)^;
   end;
+  m := idx.FindEntry(u_str);
 
-  l:=0;
-  if t=itWord then max:=dic.wordno-1 else max:=dic.charno-1;
-  r:=max;
-  m:=l;
-  while l<=r do
-  begin
-    m:=l+(r-l) div 2;
-    val:=dic.ReadIndexEntryV5(t,m*2);
-    if val=loc_val then break;
-    if val<loc_val then l:=m+1 else r:=m-1;
-  end;
-  if l>r then
-    indexfrom:=0 //not found
+  if m<0 then
+    indexfrom:=0
   else
-  begin
-    indexfrom:=dic.ReadIndexInfo(t,m*2+1)+(max+1)*2;
-    if m<max then
-      indexto:=dic.ReadIndexInfo(t,m*2+3)+(max+1)*2
-    else
-      if t=itWord then indexto:=dic.wordfsiz else indexto:=dic.charfsiz;
-    indextype:=t;
-  end;
+    idx.ReadIndexEntryFromTo(m,indexfrom,indexto);
 end;
 
 { Always convert to Wide chars before calling this function. }
@@ -865,7 +800,7 @@ begin
     result:=0;
     exit;
   end;
-  result:=dic.ReadIndexInfo(indextype,indexfrom);
+  result:=idx.ReadIndexInfo(indexfrom);
   inc(indexfrom);
 end;
 
