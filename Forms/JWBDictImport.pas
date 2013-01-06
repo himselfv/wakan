@@ -674,7 +674,7 @@ begin
             fc:=fgetch(s,1);
             fdelete(s,1,1);
             if TChar.Locate('Unicode',fc) then
-              charidx.AddToIndex(fstrtohex(fc), cnt); //char index has to have fc in FHex -- that's the format
+              charidx.AddToIndex(fc, cnt);
           end; //of AddCharacterIndex while clause
 
         s:=string(writ);

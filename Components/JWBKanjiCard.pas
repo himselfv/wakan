@@ -34,6 +34,7 @@ var ony,kuny,defy:string;
     dic:TDicIndexCursor;
     mark,freq:string;
     rt: integer; //TCharRead.Int(TCharReadType)
+  tmp:string;
 begin
   if curlang='j'then fontjpch:=FontJapanese else fontjpch:=FontChinese;
   if curlang='j'then fontjpchgrid:=FontJapaneseGrid else fontjpchgrid:=FontChineseGrid;
@@ -129,7 +130,7 @@ begin
       begin
         dic:=TDicIndexCursor.Create(dicts[i]);
         try
-          dic.Find(false,u);
+          dic.Find(itChar,fstrtouni(u));
           while dic.Next do
           begin
             mark:=dic.GetArticleMarkers;
@@ -137,9 +138,10 @@ begin
             if dic.dic.SupportsFrequency and sortfreq then
               freq:=inttostr(9999999-dic.GetFrequency);
             while length(freq)<7 do freq:='0'+freq;
-            if pos(UH_LBEG+'spop'+UH_LEND,EnrichDictEntry(dic.GetArticleBody,mark))=0 then freq[1]:='a';
+            tmp := EnrichDictEntry(dic.GetArticleBody,mark);
+            if pos(UH_LBEG+'spop'+UH_LEND,tmp)=0 then freq[1]:='a';
             if freq<>'9999999'then
-            sl.Add(freq+#9+ChinTo(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
+            sl.Add(freq+#9+ChinTo(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+tmp+'}{');
           end;
         finally
           FreeAndNil(dic);

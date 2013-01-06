@@ -646,7 +646,7 @@ procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLoo
   wt: integer; sl: TSearchResults);
 var
   dic: TDicLookupCursor;
-  i, ii: integer;
+  i: integer;
 
   sxx: string;  //==lc.str
   sxxr: string; //same in romaji

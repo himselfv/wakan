@@ -1262,10 +1262,8 @@ begin
 end;
 
 function TTextTable.IsDeleted(rec:integer):boolean;
-var b:boolean;
 begin
-  moveofs(struct,@b,rec*(varfields+5),0,1);
-  result:=b;
+  Result := PBoolean(integer(struct)+rec*(varfields+5))^;
 end;
 
 function GetFieldValueSize(ftype: char; const fval: string): integer;

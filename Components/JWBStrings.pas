@@ -226,6 +226,9 @@ function LoCase(ch: WideChar): WideChar; overload; inline;
 function IsDigit(ch: AnsiChar): boolean; overload; inline;
 function IsDigit(ch: WideChar): boolean; overload; inline;
 
+procedure MakeFixedLen(var s: AnsiString; len: integer; pad_ch: AnsiChar); overload; inline;
+procedure MakeFixedLen(var s: UnicodeString; len: integer; pad_ch: WideChar); overload; inline;
+
 
 { Filename list }
 
@@ -872,6 +875,29 @@ end;
 function IsDigit(ch: WideChar): boolean;
 begin
   Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
+end;
+
+{ Makes the string fixed length -- cuts if it's too long or pads if it's too short }
+procedure MakeFixedLen(var s: AnsiString; len: integer; pad_ch: AnsiChar);
+var old_len: integer;
+begin
+  old_len := length(s);
+  if old_len<>len then SetLength(s,len);
+  while old_len<len do begin
+    s[old_len+1] := pad_ch;
+    Inc(old_len);
+  end;
+end;
+
+procedure MakeFixedLen(var s: UnicodeString; len: integer; pad_ch: WideChar);
+var old_len: integer;
+begin
+  old_len := length(s);
+  if old_len<>len then SetLength(s,len);
+  while old_len<len do begin
+    s[old_len+1] := pad_ch;
+    Inc(old_len);
+  end;
 end;
 
 

@@ -893,11 +893,7 @@ begin
   c.Font.Height:=fs;
 //    c.Font.Style:=[];
   chn:=DrawTone(c,x,y,fs,ch,false);
- {$IFDEF UNICODE}
-  w := chn;
- {$ELSE}
-  w := HexToUnicode(chn);
- {$ENDIF}
+  w := fstrtouni(chn);
   if chn<>ch then
   begin
     c.Font.Name:=FontRadical;

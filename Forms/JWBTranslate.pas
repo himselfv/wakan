@@ -50,7 +50,7 @@ uses
 {$DEFINE MTHREAD_SUPPORT}
 
 //Display a window showing how much time Auto-TL took
-//{$DEFINE TLSPEEDREPORT}
+{$DEFINE TLSPEEDREPORT}
 
 type
  { Character position in source text. }

@@ -39,6 +39,11 @@ type
     mtMatchRight,
     mtMatchAnywhere);
 
+  TIndexType = (
+    itWord,
+    itChar
+  );
+
   TNotifyExceptionEvent = procedure(Sender: TObject; E: Exception) of object;
 
   TJaletDic = class
@@ -107,10 +112,21 @@ type
     stIndex: PSeekObject;
     stEntriesIndex: PSeekObject;    
 
-  public
+  protected
+   {
+   Word and character indexes.
+   On v4 both are indexed by 4-byte sequences,
+     char: 4-byte FChar of that char
+     word: first 4 ansi characters of english meaning
+   On v5 both are indexed by 8-byte sequences,
+     char: first two bytes are that WideChar, rest is unused
+     word: first 4 wide characters of meaning
+   }
     charidx,wordidx:pointer;
     charno,wordno:integer;
     charfsiz,wordfsiz:integer;
+
+  public
     package:TPackageSource;
     loaded:boolean;
     pname:string;
@@ -125,10 +141,11 @@ type
     procedure Load; virtual;
     procedure Unload; virtual;
     procedure Demand;
-    function ReadIndexString(word:boolean;loc:integer):string;
-    function ReadIndexInfo(word:boolean;loc:integer):integer;
+    function ReadIndexEntryV4(t:TIndexType;loc:integer):AnsiString;
+    function ReadIndexEntryV5(t:TIndexType;loc:integer):int64;
+    function ReadIndexInfo(t:TIndexType;loc:integer):integer;
    {$IFDEF DIC_CURSOR_IN_TABLE}
-    procedure FindIndexString(word:boolean;locator:string); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure FindIndexString(t:TIndexType;const locator:UnicodeString); {$IFDEF INLINE}inline;{$ENDIF}
     function ReadIndex:integer; {$IFDEF INLINE}inline;{$ENDIF}
    {$ENDIF}
     function NewCursor: TDicCursor;
@@ -190,11 +207,13 @@ type
   TDicIndexReader = class
   protected
     dic: TJaletDic;
-    indexword:boolean;
+    indextype:TIndexType;
     indexfrom,indexto:integer;
+    procedure FindIndexStringV4(t:TIndexType;const locator:UnicodeString);
+    procedure FindIndexStringV5(t:TIndexType;const locator:UnicodeString);
   public
     constructor Create(ADic: TJaletDic);
-    procedure FindIndexString(word:boolean;locator:string);
+    procedure FindIndexString(t:TIndexType;const locator:UnicodeString);
     function ReadIndex:integer;
   end;
 
@@ -204,7 +223,7 @@ type
   public
     constructor Create(ADic: TJaletDic);
     destructor Destroy; override;
-    procedure Find(word:boolean;locator:string);
+    procedure Find(t:TIndexType;const locator:UnicodeString);
     function Next: boolean;
   end;
 
@@ -547,28 +566,38 @@ begin
   Result := TDictMarkers<>-1; //older dicts apparently can't into markers
 end;
 
-function TJaletDic.ReadIndexInfo(word:boolean;loc:integer):integer;
+//4 bytes compared as AnsiString on v4
+function TJaletDic.ReadIndexEntryV4(t:TIndexType;loc:integer):AnsiString;
+var p:PAnsiChar;
 begin
-  if word then
+  SetLength(Result, 4);
+  if t=itWord then p:=wordidx else p:=charidx;
+  move(PAnsiChar(p+loc*4)^,Result[1],4);
+end;
+
+//8 bytes compared as int64 in v5
+function TJaletDic.ReadIndexEntryV5(t:TIndexType;loc:integer):int64;
+var p: PByte;
+begin
+  if t=itWord then p:=wordidx else p:=charidx;
+  if dicver=5 then
+    Result := PInt64(integer(p)+loc*8)^
+  else
+    Result := PInteger(integer(p)+loc*4)^;
+end;
+
+function TJaletDic.ReadIndexInfo(t:TIndexType;loc:integer):integer;
+begin
+  if t=itWord then
     Result := PInteger(integer(wordidx)+loc*4)^
   else
     Result := PInteger(integer(charidx)+loc*4)^;
 end;
 
-function TJaletDic.ReadIndexString(word:boolean;loc:integer):string;
-var l:array[0..3] of AnsiChar;
-  p:PAnsiChar;
-begin
-  if word then p:=wordidx else p:=charidx;
-  p:=p+loc*4;
-  move(p^,l,4);
-  result:=l;
-end;
-
 {$IFDEF DIC_CURSOR_IN_TABLE}
-procedure TJaletDic.FindIndexString(word:boolean;locator:string);
+procedure TJaletDic.FindIndexString(t:TIndexType;const locator:UnicodeString);
 begin
-  _intcur.FindIndexString(word,locator);
+  _intcur.FindIndexString(t,locator);
 end;
 
 function TJaletDic.ReadIndex:integer;
@@ -719,7 +748,7 @@ begin
   case dic.dicver of
     4:
       if TDictMarkers<>-1 then 
-        Result := fstr(CDict.Str(TDictMarkers))
+        Result := CDict.Str(TDictMarkers)
       else
         Result := '';
     5: begin
@@ -745,41 +774,88 @@ begin
   dic := ADic;
 end;
 
-procedure TDicIndexReader.FindIndexString(word:boolean;locator:string);
+procedure TDicIndexReader.FindIndexStringV4(t:TIndexType;const locator:UnicodeString);
 var l,r,m,max:integer;
-    s,s2:string;
+  a_str: AnsiString;
+  val: AnsiString;
 begin
-  l:=0;
-  if word then max:=dic.wordno-1 else max:=dic.charno-1;
-  r:=max;
-  s:=locator;
-  s2:='';
-  while (pos(' ',s)>0) and (s2='') do
-  begin
-    s2:=System.copy(s,1,pos(' ',s)-1);
-    System.delete(s,1,pos(' ',s));
-    if ignorel.IndexOf(s2)<>-1 then s2:='';
+  if t=itChar then begin
+    a_str := AnsiString(UnicodeToHex(PWideChar(locator),1));
+  end else
+  begin //4 AnsiChars
+    a_str := AnsiString(locator); //This calls WideCharToMultiByte so a good conversion
+    MakeFixedLen(a_str, 4, ' ');
   end;
-  if s2='' then s2:=s;
-  locator:=s;
-  if length(locator)>4 then locator:=copy(locator,1,4);
-  while length(locator)<4 do locator:=locator+' ';
+
+  l:=0;
+  if t=itWord then max:=dic.wordno-1 else max:=dic.charno-1;
+  r:=max;
+  m:=l;
   while l<=r do
   begin
     m:=l+(r-l) div 2;
-    s2:=dic.ReadIndexString(word,m*2);
-    if s2=locator then break;
-    if s2<locator then l:=m+1 else r:=m-1;
+    val:=dic.ReadIndexEntryV4(t,m*2);
+    if val=a_str then break;
+    if val<a_str then l:=m+1 else r:=m-1;
   end;
-  if l>r then indexfrom:=0 else
+  if l>r then
+    indexfrom:=0
+  else
   begin
-    indexfrom:=dic.ReadIndexInfo(word,m*2+1)+(max+1)*2;
+    indexfrom:=dic.ReadIndexInfo(t,m*2+1)+(max+1)*2;
     if m<max then
-      indexto:=dic.ReadIndexInfo(word,m*2+3)+(max+1)*2
+      indexto:=dic.ReadIndexInfo(t,m*2+3)+(max+1)*2
     else
-      if word then indexto:=dic.wordfsiz else indexto:=dic.charfsiz;
-    indexword:=word;
+      if t=itWord then indexto:=dic.wordfsiz else indexto:=dic.charfsiz;
+    indextype:=t;
   end;
+end;
+
+procedure TDicIndexReader.FindIndexStringV5(t:TIndexType;const locator:UnicodeString);
+var l,r,m,max:integer;
+  u_str: UnicodeString;
+  loc_val: int64;
+  val: int64;
+begin
+  if t=itChar then begin
+    loc_val := PWord(locator)^ //1 char
+  end else begin
+    u_str := locator;
+    MakeFixedLen(u_str, 4, ' ');
+    loc_val := PInt64(u_str)^;
+  end;
+
+  l:=0;
+  if t=itWord then max:=dic.wordno-1 else max:=dic.charno-1;
+  r:=max;
+  m:=l;
+  while l<=r do
+  begin
+    m:=l+(r-l) div 2;
+    val:=dic.ReadIndexEntryV5(t,m*2);
+    if val=loc_val then break;
+    if val<loc_val then l:=m+1 else r:=m-1;
+  end;
+  if l>r then
+    indexfrom:=0 //not found
+  else
+  begin
+    indexfrom:=dic.ReadIndexInfo(t,m*2+1)+(max+1)*2;
+    if m<max then
+      indexto:=dic.ReadIndexInfo(t,m*2+3)+(max+1)*2
+    else
+      if t=itWord then indexto:=dic.wordfsiz else indexto:=dic.charfsiz;
+    indextype:=t;
+  end;
+end;
+
+{ Always convert to Wide chars before calling this function. }
+procedure TDicIndexReader.FindIndexString(t:TIndexType;const locator:UnicodeString);
+begin
+  if dic.dicver=5 then
+    FindIndexStringV5(t,locator)
+  else
+    FindIndexStringV4(t,locator);
 end;
 
 function TDicIndexReader.ReadIndex:integer;
@@ -789,7 +865,7 @@ begin
     result:=0;
     exit;
   end;
-  result:=dic.ReadIndexInfo(indexword,indexfrom);
+  result:=dic.ReadIndexInfo(indextype,indexfrom);
   inc(indexfrom);
 end;
 
@@ -805,9 +881,9 @@ begin
   inherited;
 end;
 
-procedure TDicIndexCursor.Find(word:boolean;locator:string);
+procedure TDicIndexCursor.Find(t:TIndexType;const locator:UnicodeString);
 begin
-  FReader.FindIndexString(word,locator);
+  FReader.FindIndexString(t,locator);
 end;
 
 function TDicIndexCursor.Next: boolean;
@@ -885,7 +961,7 @@ begin
   FValue := lowercase(val);
   if not (FMatchType in [mtExactMatch, mtMatchLeft]) then
     FMatchType := mtMatchLeft; //other match types are not supported
-  FIndexReader.FindIndexString(true,FValue);
+  FIndexReader.FindIndexString(itWord,fstrtouni(FValue));
  //This mode requires auto-NextMatch at the start
   NextMatch();
  //Which may also terminate the search instantly if there are no matches -- see NextMatch()
