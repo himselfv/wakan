@@ -152,7 +152,10 @@ const
 
   MarkPop: char = Chr(66+32);
 
+function FindMark(m:string):byte; //returns marker ID or 0
 function ConvertEdictEntry(s:string;var mark:string):string;
+function FConvertEdictEntry(s:FString;var mark:string):FString; deprecated
+function ConvertMarkers(const s:string; out unrecog:string):string;
 function GetMarkEdict(mark:char):string;
 function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
@@ -162,13 +165,24 @@ function MarkersToStr(const s:string; out pop: boolean):string;
 implementation
 uses SysUtils, StrUtils;
 
+function FindMark(m:string):byte;
+var i: integer;
+begin
+  Result := 0;
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].m=m then begin
+      Result := EdictMarkers[i].id;
+      break;
+    end;
+end;
+
 { EDict processing }
 
 function ConvertEdictEntry(s:string;var mark:string):string;
 var s2:string;
     inmarker:boolean;
     curm,marker:string;
-    i,j:integer;
+    i:integer;
     markerd:boolean;
     oldm:string;
     mm:byte;
@@ -201,13 +215,8 @@ begin
         delete(marker,1,length(curm));
         if (length(marker)>0) and (marker[1]=',') then delete(marker,1,1);
         markerd:=true;
-        mm:=255;
-        for j := 0 to Length(EdictMarkers) - 1 do
-          if EdictMarkers[j].m=curm then begin
-            mm := EdictMarkers[j].id;
-            break;
-          end;
-        if mm=255 then
+        mm:=FindMark(curm);
+        if mm=0 then
         begin
           if (oldm='1') or (oldm='2') or (oldm='3') then insection:=true;
           s2:=s2+'('+oldm+')'; mm:=0; markerd:=false;
@@ -223,6 +232,43 @@ begin
   if copy(s2,length(s2)-1,2)=', 'then delete(s2,length(s2)-1,2);
   s2:=trim(s2);
   result:=s2;
+end;
+
+{
+We are too lazy to implement a proper FString version for ConvertEdictEntry,
+especiall since it's only used in two cases now:
+  1. When importing chinese dictionaries on Ansi
+  2. When working with VERY OLD dictionaries which have no separate markers field.
+In the second case, the articles are without exception stored in Ansi,
+and in the first case we just don't have a multilingual chinese dic support yet.
+}
+function FConvertEdictEntry(s:FString;var mark:string):FString;
+begin
+  Result := fstr(ConvertEdictEntry(AnsiString(fstrtouni(s)),mark))
+end;
+
+{ Accepts marker list in the form "mark1,mark2,mark3". Converts it to Wakan
+ marker list format.
+ Returns those markers which weren't recognized (to be added back to the string) }
+function ConvertMarkers(const s:string; out unrecog:string):string;
+var tmp, m: string;
+  mi: byte;
+begin
+  Result := '';
+  unrecog := '';
+  tmp := s;
+  m := strqpop(tmp,',');
+  while m<>'' do begin
+    mi := FindMark(m);
+    if mi<>0 then
+      Result := Result + Chr(32+mi)
+    else
+      if unrecog<>'' then
+        unrecog := unrecog + ',' + m
+      else
+        unrecog := m;
+    m := strqpop(tmp,',');
+  end;
 end;
 
 function GetMarkEdict(mark:char):string;

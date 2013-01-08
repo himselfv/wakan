@@ -124,9 +124,9 @@ end;
 
 procedure TIndex.ReadIndexEntryFromTo(loc:integer;out indexfrom,indexto:integer);
 begin
-  indexfrom:=FHeaderLen+PInteger(integer(FData)+loc*FTotalEntrySz+4)^;
+  indexfrom:=FHeaderLen+PInteger(integer(FData)+loc*FTotalEntrySz+FEntryLen*4)^;
   if loc<FEntryCount then
-    indexto:=FHeaderLen+PInteger(integer(FData)+(loc+1)*FTotalEntrySz+4)^
+    indexto:=FHeaderLen+PInteger(integer(FData)+(loc+1)*FTotalEntrySz+FEntryLen*4)^
   else
     indexto:=FPosCount;
 end;

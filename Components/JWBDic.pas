@@ -75,7 +75,7 @@ type
     TDictKanji, //x
     TDictPhonetic, //x
     TDictSort, //s
-    TDictMarkers, //s in v4, missing in v5
+    TDictMarkers, //s
     TDictFrequency, //i
     TDictArticle //i on v5, missing on v4
       :integer;
@@ -461,10 +461,7 @@ begin
     TDictKanji:=TDict.Field('Kanji');
     TDictPhonetic:=TDict.Field('Phonetic');
     TDictSort:=TDict.Field('Sort');
-    if dicver=4 then
-      TDictMarkers:=TDict.Field('Markers')
-    else
-      TDictMarkers:=-1;
+    TDictMarkers:=TDict.Field('Markers');
     if dicver=5 then
       TDictArticle:=TDict.Field('Article')
     else
@@ -723,11 +720,12 @@ begin
       else
         Result := '';
     5: begin
-      Result := '';
+     //lump everything together as in old version. This is not correct though...
+      Result := CDict.Str(TDictMarkers); //kana-kanji markers
       art := GetArticle;
-      CEntries.Locate(stEntriesIndex, art);
+      CEntries.Locate(stEntriesIndex, art); //every entry's markers
       while (not CEntries.EOF) and (CEntries.Int(TEntriesIndex)=art) do begin
-        Result := Result + CEntries.Str(TEntriesMarkers); //lump together as on old version. This is not correct though...
+        Result := Result + CEntries.Str(TEntriesMarkers);
         CEntries.Next;
       end;
     end;
@@ -764,8 +762,7 @@ begin
 end;
 
 procedure TDicIndexReader.FindIndexStringV5(t:TIndexType;const locator:UnicodeString);
-var idx: TIndex;
-  m: integer;
+var m: integer;
   u_str: UnicodeString;
 begin
   u_str := locator;

@@ -656,7 +656,6 @@ var
 
   entry:string; //translation entry text
   converted, markers:string;
-  ts:string;
   popclas:integer;
   UserScore:integer;
   UserIndex:integer;

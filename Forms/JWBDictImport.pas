@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, StdPrompt;
+  StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBIO, JWBDic, JWBIndex, JWBEdictReader;
 
 type
   TFileList = array of string;
@@ -26,6 +26,8 @@ type
     Priority: integer;
   end;
   PDictInfo = ^TDictInfo;
+
+  TEdictRoma = array[0..MaxKana-1] of string;
 
   TfDictImport = class(TForm)
     Label1: TLabel;
@@ -65,9 +67,21 @@ type
       diclang:char; entries:integer);
     procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
 
-  protected
+  protected //Dictionary building
+    dic:TJaletDic;
+    linecount,lineno:integer;
     prog: TSMPromptForm;
+    roma_prob: TUnicodeFileWriter;
+    freql:TStringList; //frequency list, if used
+    wordidx:TWordIndexBuilder;
+    charidx:TIndexBuilder;
+    had_problems: boolean;
+    LastDictEntry: integer;
+    LastArticle: integer;
     function CreateFrequencyList: TStringList;
+    procedure AddArticle(ed: PEdictArticle; roma: TEdictRoma);
+    procedure ImportCEdict(fuin: TUnicodeFileReader);
+    procedure ImportEdict(fuin: TUnicodeFileReader);
 
   public
     function ImportDictionary(dicFilename: string; info: TDictInfo;
@@ -81,8 +95,8 @@ var
 
 implementation
 
-uses StrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBStrings, JWBIO, JWBDic, JWBDicSearch, JWBEdictMarkers, JWBIndex;
+uses StrUtils, WideStrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
+  JWBStrings, JWBDicSearch, JWBEdictMarkers;
 
 {$R *.DFM}
 
@@ -143,6 +157,7 @@ begin
   writeln(t,'xPhonetic');
   writeln(t,'xKanji');
   writeln(t,'sSort');
+  writeln(t,'sMarkers');
   writeln(t,'iFrequency');
   writeln(t,'iArticle');
   writeln(t,'$ORDERS');
@@ -175,7 +190,6 @@ begin
   writeln(t,'Index');
   writeln(t,'$CREATE');
   closefile(t);
-
 
   WriteDictPackage(dicFilename, tempDir, info, diclang, entries);
   DeleteDirectory(tempDir);
@@ -270,6 +284,277 @@ begin
   end;
 end;
 
+const
+  UH_EDICT_SEMICOL = {$IFDEF UNICODE}';'{$ELSE}'003B'{$ENDIF};
+  UH_EDICT_COMMA = {$IFDEF UNICODE}','{$ELSE}'002C'{$ENDIF};
+  UH_EDICT_ALTERN = {$IFDEF UNICODE}'/'{$ELSE}'002F'{$ENDIF};
+
+{
+Adds an article to the dictionary we're building.
+Also adds it to all indixes.
+}
+procedure TfDictImport.AddArticle(ed: PEdictArticle; roma: TEdictRoma);
+var freqi: integer;
+  prior: array[0..MaxKanji-1] of string; //strings because we need to convert to string when adding anyway
+  i, j, k: integer;
+  s_art: string;
+  kanji_found: boolean;
+  u_str, u_part, u_word: UnicodeString;
+  uc: WideChar;
+  add_mark: string;
+begin
+  Inc(LastArticle);
+  s_art := IntToStr(LastArticle);
+
+ //Additional markers to every entry
+  if ed.pop then
+    add_mark := MarkPop
+  else
+    add_mark := '';
+
+ //Priority
+  for i := 0 to ed.kanji_used - 1 do
+    prior[i] := '0';
+  if freql<>nil then
+    for i := 0 to ed.kanji_used - 1 do begin
+      freqi:=freql.IndexOf(ed.kanji[i].kanji);
+      if freqi<>-1 then
+        prior[i]:=IntToStr(integer(freql.Objects[freqi]));
+    end;
+
+ //Write out kanji-kana entries
+  for i := 0 to ed.kana_used - 1 do
+    if ed.kana[i].kanji_used=0 then begin
+     //kana matches any kanji
+      for j := 0 to ed.kanji_used - 1 do begin
+        Inc(LastDictEntry);
+        dic.TTDict.AddRecord([IntToStr(LastDictEntry), ed.kana[i].kana,
+          ed.kanji[j].kanji, roma[i], add_mark+ed.kanji[j].markers+ed.kana[i].markers,
+          prior[j], s_art]);
+      end;
+    end else begin
+     //kana matches only selected kanjis
+      for j := 0 to ed.kana[i].kanji_used - 1 do begin
+        kanji_found := false;
+        for k := 0 to ed.kanji_used - 1 do
+          if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
+            Inc(LastDictEntry);
+            dic.TTDict.AddRecord([IntToStr(LastDictEntry), ed.kana[i].kana,
+              ed.kanji[k].kanji, roma[i], add_mark+ed.kanji[k].markers+ed.kana[i].markers,
+              prior[k], s_art]);
+            kanji_found := true;
+            break;
+          end;
+        if not kanji_found then begin
+          roma_prob.WritelnUnicode(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
+          had_problems := true;
+        end;
+      end;
+    end;
+
+ //Write out meanings
+  for i := 0 to ed.meanings_used - 1 do
+    dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, ed.meanings[i].markers]);
+
+ //Update indexes
+  if charidx<>nil then
+    for i := 0 to ed.kanji_used - 1 do begin
+      u_str:=fstrtouni(ed.kanji[i].kanji);
+      while u_str<>'' do
+      begin
+        uc:=u_str[1];
+        delete(u_str,1,1);
+        if EvalChar(uc)=EC_IDG_CHAR then
+          charidx.AddToIndex(word(uc), LastArticle);
+      end;
+    end; //of AddCharacterIndex for clause
+
+  if wordidx<>nil then
+    for i := 0 to ed.meanings_used - 1 do begin
+      u_str:=fstrtouni(ed.meanings[i].text);
+      while u_str<>'' do
+      begin
+       //Pop next translation alternative
+        u_part:=ULowerCase(ustrqpop(u_str,'/'));
+        if u_part='' then continue;
+        while u_part<>'' do
+        begin
+         //Remove all the leading (flags) (and) (markers)
+          while (length(u_part)>0) and (u_part[1]='(') do
+          begin
+            ustrqpop(u_part,')');
+            u_part := UTrimLeft(u_part);
+          end;
+         //Pop next word until space
+          u_word:=ustrqpop(u_part,' ');
+          urepl(u_part,';',',');
+          if (ignorel.IndexOf(u_word)=-1) and (u_word<>'')
+          and (fgetch(u_word, 1)>{$IFDEF UNICODE}#$0040{$ELSE}'0040'{$ENDIF}) //it's all punctuation and digits before
+          then
+            wordidx.AddToIndex(u_word, LastArticle);
+        end;
+      end;
+    end; //of AddWordIndex for clause
+end;
+
+{
+CEDICT is in a similar but different format so its importing have been left
+more or less as it were.
+Now's the magic!
+This should also work for EDICT1. So you can use EDICT1 to test this routine.
+}
+procedure TfDictImport.ImportCEdict(fuin: TUnicodeFileReader);
+const
+ //Format markers
+  UH_CEDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
+var
+  uc:WideChar;
+
+  ppp:integer;
+  kanji:FString;
+  phon:FString;
+  pphon:FString;
+  writ:FString;
+  s_roma: string;
+  s_entry: FString;
+  s_mark: FString;
+
+  ed: TEdictArticle;
+  roma: TEdictRoma;
+
+begin
+
+  //Read another line
+  while not fuin.Eof do
+  begin
+    kanji:='';
+    phon:='';
+    writ:='';
+    ppp:=0;
+
+    while fuin.ReadWideChar(uc) and (uc<>#$000A) do
+      if (uc<>#$000A) and (uc<>#$000D) then
+        case ppp of
+          0: if uc=#$0020 then ppp:=1 else kanji:=kanji+fstr(uc);
+          1: if uc=#$005B then ppp:=2 else ppp:=3;
+          2: if uc=#$002F then ppp:=3 else
+               if (uc<>#$005D) and (uc<>#$0020) then phon:=phon+fstr(uc);
+        else
+          writ:=writ+fstr(uc);
+        end;
+    if (flength(writ)>0) and (fgetch(writ, flength(writ))=UH_EDICT_ALTERN) then
+      fdelete(writ,length(writ),1);
+    if phon='' then phon:=kanji;
+
+    if (linecount>0) and (lineno mod 100=0) then
+      prog.SetProgress(round(lineno/linecount*100));
+    inc(lineno);
+
+    if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},kanji)<>0)  //EDICT header line -- CEDICT shouldn't have it but whatever
+    or (pos(UH_CEDICT_COMMENT,kanji)<>0) then
+      continue;
+
+    //Generate romaji
+    pphon:=phon;
+    if dic.language='c'then
+    begin
+      repl(phon,' ','');
+      if phon<>kanji then phon:=RomajiToKana(fstrtouni(phon),1,false,dic.language);
+    end;
+    s_roma:=KanaToRomaji(phon,1,dic.language);
+    if pos('?',s_roma)>0 then
+    begin
+      roma_prob.WritelnUnicode(s_roma);
+      roma_prob.WritelnUnicode(fstrtouni(pphon));
+      had_problems := true;
+    end;
+    repl(s_roma,'?','');
+    if s_roma='' then s_roma:='XXX';
+
+    s_entry:=FConvertEdictEntry(writ,s_mark);
+    repl(s_entry,UH_EDICT_SEMICOL,UH_EDICT_COMMA);
+
+    ed.Reset;
+    ed.ref := '';
+    ed.AddKanji;
+    ed.kanji[0].kanji := kanji;
+    ed.AddKana;
+    ed.kana[0].kana := phon;
+    ed.AddMeaning;
+    ed.meanings[0].markers := s_mark;
+    ed.meanings[0].text := s_entry;
+    roma[0] := s_roma;
+
+    AddArticle(@ed, roma);
+  end; //for every character in the file
+end;
+
+procedure TfDictImport.ImportEdict(fuin: TUnicodeFileReader);
+var
+  ustr: string;
+  ed: TEdictArticle;
+  roma: TEdictRoma;
+  i: integer;
+  mark_left: string;
+begin
+  //Read another line
+  while fuin.ReadLn(ustr) do begin
+
+    if (linecount>0) and (lineno mod 100=0) then
+      prog.SetProgress(round(lineno/linecount*100));
+    inc(lineno);
+
+    if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},ustr)<>0) then //EDICT header line
+      continue;
+
+    ParseEdict2Line(ustr, @ed);
+
+    //Convert markers
+    for i := 0 to ed.kanji_used - 1 do begin
+      ed.kanji[i].markers := ConvertMarkers(ed.kanji[i].markers, mark_left);
+     //With kanji and kana there's nothing we can do with unrecognized markers
+    end;
+    for i := 0 to ed.kana_used - 1 do begin
+      ed.kana[i].markers := ConvertMarkers(ed.kana[i].markers, mark_left);
+     //With kanji and kana there's nothing we can do with unrecognized markers
+    end;
+    for i := 0 to ed.meanings_used - 1 do begin
+      ed.meanings[i].markers := ConvertMarkers(ed.meanings[i].markers, mark_left);
+      if mark_left<>'' then //put them back into the text, but to the end of it
+        ed.meanings[i].text := ed.meanings[i].text + fstr(' ('+mark_left+')');
+    end;
+
+   //Sometimes we only have kana and the it's written as kanji
+    if ed.kana_used=0 then begin
+      ed.kana_used := ed.kanji_used;
+      for i := 0 to ed.kanji_used - 1 do begin
+        ed.kana[i].Reset;
+        ed.kana[i].kana := ed.kanji[i].kanji;
+      end;
+    end;
+
+    //Generate romaji
+    for i := 0 to ed.kana_used - 1 do begin
+      roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
+      if pos('?',roma[i])>0 then
+      begin
+       //roma_problems
+        roma_prob.WritelnUnicode(roma[i]);
+        roma_prob.WritelnUnicode(fstrtouni(ed.kana[i].kana));
+        had_problems := true;
+      end;
+      repl(roma[i],'?','');
+      if roma[i]='' then roma[i]:='XXX';
+    end;
+
+    //Convert entries
+    for i := 0 to ed.meanings_used - 1 do
+      repl(ed.meanings[i].text,UH_EDICT_SEMICOL,UH_EDICT_COMMA);
+
+    AddArticle(@ed, roma);
+  end; //for every line
+end;
+
 {
 ImportDictionary()
 Builds Wakan package from one or more dictionaries.
@@ -277,77 +562,33 @@ Returns true if the package was successfully built, false if aborted.
 }
 function TfDictImport.ImportDictionary(dicFilename: string; info: TDictInfo;
   files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
-const
- //Format markers
-  UH_EDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
-var fi:integer;
-    fname:string;
-    s:string;
-    fuin:TUnicodeFileReader;
-    fb:file;
-    cd:string;
-    buf:array[0..3999] of byte;
-    abuf:array[0..1999+1] of AnsiChar; //2000 + one ansichar for #0000
-    bufc:integer;
-    bufp:integer;
-    buff:file;
-    cnt:integer;
-    kanji:FString;
-    phon:FString;
-    writ:AnsiString;
-    feof:boolean;
-    lreat:boolean;
-    asc:string;
-    ppp:integer;
-    mes:string;
-    s2,s3:string;
-    s_roma:string; //romaji
-    s_entry:string; //edict entry (converted)
-    s_mark:string; //edict markers returned by ConvertEdictEntry()
-    s_uni:UnicodeString;
-    bl,bh:byte;
-    beg:boolean;
-    cnt2:integer;
-    dic:TJaletDic;
-    romap:textfile;
-    pphon:string;
-    prior:integer;
-    skk,skk2:string;
-    skki,skkj:integer;
-    wordidx:TWordIndexBuilder;
-    charidx:TIndexBuilder;
-    linecount,lineno:integer;
-    i,j:integer;
-    freql:TStringList;
-    freqf:file;
-    freqi:integer;
-
-    tempDir, tempDir2: string;
-    fc: FChar;
-    uc: WideChar;
-    ac: AnsiChar;
-
-    { Converts block to ansi. Len is the length of buf in Wide characters.
-     abuf must be the same length in Ansi characters. }
-    procedure blockAnsi(buf: PWideChar; abuf: PAnsiChar; len: integer);
-    const defaultChar: AnsiChar = ' ';
-    var usedDefaultChar: longbool;
-    begin
-      if (WideCharToMultiByte(CP_ACP, 0, buf, len, abuf, len, @defaultChar, @usedDefaultChar) <> len) then
-       //we need the translated characters to be exactly at the same places
-        raise Exception.Create('Not a direct 2->1 translation when converting UTF-16 to Ansi (wtf?)');
-    end;
+var
+  tempDir, tempDir2: string;
+  fi:integer;
+  fname:string;
+  mes:string;
+  cd:string; //stores chosen encoding when converting
+  fuin:TUnicodeFileReader;
+  uc: WideChar;
 
 begin
-  Result := false;
   prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
   prog.Width := 500; //we're going to have long file names
   prog.Appear;
-  wordidx := TWordIndexBuilder.Create;
-  charidx := TIndexBuilder.Create;
+  wordidx := nil;
+  charidx := nil;
   freql := nil;
+  had_problems := false;
   linecount:=0;
+  LastArticle := 0;
+  LastDictEntry := 0;
   try
+
+   //Create indexes
+    if ifAddCharacterIndex in flags then
+      charidx := TIndexBuilder.Create;
+    if ifAddWordIndex in flags then
+      wordidx := TWordIndexBuilder.Create;
 
    //Create frequency list
     if ifAddFrequencyInfo in flags then
@@ -361,10 +602,11 @@ begin
       end;
     end;
 
+   { Create temporary dir and dictionary tables }
     tempDir := CreateRandomTempDirName();
     ForceDirectories(tempDir);
 
-    CreateDictTables(tempDir+'\DICT.TMP', info, diclang, cnt);
+    CreateDictTables(tempDir+'\DICT.TMP', info, diclang, 0);
     dic := fMenu.NewDict(tempDir+'\DICT.TMP');
     if not dic.tested then
       raise Exception.Create('Cannot load the newly created dictionary.');
@@ -375,10 +617,7 @@ begin
     dic.TTDict.NoCommitting := true;
     dic.TTEntries.NoCommitting := true;
 
-    assignfile(romap,'roma_problems.txt'); //TODO: This one should go into UserDir when we have one
-    rewrite(romap);
-
-   { Phase 0 }
+   { Convert all dictionaries to UTF16-LE }
     for fi:=0 to Length(files)-1 do
     begin
       fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
@@ -431,151 +670,33 @@ begin
       FreeAndNil(fuin);
     end;
 
-   { Phase 1 }
+
+   { Import }
+    roma_prob := TUnicodeFileWriter.Rewrite('roma_problems.txt'); //TODO: This one should go into UserDir when we have one
+    roma_prob.WriteWideChar(#$FEFF); //BOM
+
     lineno:=0;
-    cnt:=0;
-   //On Ansi we're writing and reading from Ansi file, on Unicode from Unicode
     for fi:=0 to Length(files)-1 do
     begin
-      fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
       mes:=_l('#00086^eReading && parsing ');
       prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
 
-      assignfile(buff,fname);
-      reset(buff,1);
-      bufc:=0;
-      bufp:=0;
-      cnt2:=0;
-      blockread(buff,buf,2);
-      if (buf[0]<>255) or (buf[1]<>254) then
-        raise Exception.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
+      fuin := TUnicodeFileReader.Create(tempDir+'\DICT_'+inttostr(fi)+'.TMP');
+      try
+        if not fuin.ReadWideChar(uc) or (uc<>#$FEFF) then
+          raise Exception.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
 
-      //Read another line
-      feof:=false;
-      while (not feof) or (bufp<bufc) do
-      begin
-        lreat:=false;
-        kanji:='';
-        phon:='';
-        writ:='';
-        ppp:=0;
-        while not lreat do
-        begin
-          if (bufp>=bufc) and (not feof) then
-          begin
-            blockread(buff,buf,4000,bufc);
-            if bufc<4000 then feof:=true;
-            bufp:=0;
-            blockansi(PWideChar(@buf[0]),@abuf[0],2000);
-          end;
-          if bufp>=bufc then lreat:=true else
-          begin
-            uc:=PWideChar(@buf[bufp])^;
-            ac := abuf[bufp div 2];
-            inc(bufp,2);
-//            if Ord(uc)>255 then ac:=' ' else ac:=AnsiChar(uc);
-            if uc=#$000A then lreat:=true;
-            if (uc<>#$000A) and (uc<>#$000D) then
-              case ppp of
-                0: if uc=#$0020 then ppp:=1 else kanji:=kanji+fstr(uc);
-                1: if uc=#$005B then ppp:=2 else ppp:=3;
-                2: if uc=#$002F then ppp:=3 else
-                     if (uc<>#$005D) and (uc<>#$0020) then phon:=phon+fstr(uc);
-              else
-                writ:=writ+ac;
-              end;
-          end;
-        end;
-        if (length(writ)>0) and (writ[length(writ)]='/') then
-          delete(writ,length(writ),1);
-        if phon='' then phon:=kanji;
+        if diclang='c' then
+          ImportCEdict(fuin)
+        else
+          ImportEdict(fuin);
 
-        if (linecount>0) and (lineno mod 100=0) then
-          prog.SetProgress(round(lineno/linecount*100));
-        inc(lineno);
-
-        inc(cnt);
-        if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},kanji)<>0)  //EDICT header line
-        or (pos(UH_EDICT_COMMENT,kanji)<>0) then
-          continue;
-
-        //Generate romaji
-        pphon:=phon;
-        if diclang='c'then
-        begin
-          repl(phon,' ','');
-          if phon<>kanji then phon:=RomajiToKana(fstrtouni(phon),1,false,diclang);
-        end;
-        s_roma:=KanaToRomaji(phon,1,diclang);
-        if pos('?',s_roma)>0 then
-        begin
-         //roma_problems
-          writeln(romap,writ);
-          writeln(romap,s_roma);
-          writeln(romap,string(fstrtouni(pphon))); //Data loss! But whatever.
-        end;
-        repl(s_roma,'?','');
-        if s_roma='' then s_roma:='XXX';
-
-        s_entry:=ConvertEdictEntry(string(writ),s_mark);
-        repl(s_entry,';',',');
-
-       //Priority
-        prior:=0;
-        if ifAddFrequencyInfo in flags then
-        begin
-          freqi:=freql.IndexOf(kanji);
-          if freqi<>-1 then prior:=integer(freql.Objects[freqi]);
-        end;
-
-       //Write out
-        if s_roma<>'' then begin
-          dic.TTDict.AddRecord([inttostr(cnt), phon, kanji, s_roma, inttostr(prior), inttostr(cnt)]);
-          dic.TTEntries.AddRecord([inttostr(cnt), s_entry, s_mark]);
-        end;
-
-       //Indexes
-        s_uni:=kanji;
-        if ifAddCharacterIndex in flags then
-          while s_uni<>'' do
-          begin
-            uc:=s_uni[1];
-            delete(s_uni,1,1);
-            if EvalChar(uc)=EC_IDG_CHAR then
-              charidx.AddToIndex(word(uc), cnt);
-          end; //of AddCharacterIndex while clause
-
-        s:=string(writ);
-        if ifAddWordIndex in flags then
-          while s<>'' do
-          begin
-           //Pop next translation alternative
-            s2:=lowercase(strqpop(s,'/'));
-            if s2='' then continue;
-            while s2<>'' do
-            begin
-             //Remove all the leading (flags) (and) (markers)
-              while (length(s2)>0) and (s2[1]='(') do
-              begin
-                strqpop(s2,')');
-                s2 := TrimLeft(s2);
-              end;
-             //Pop next word until space
-              s3:=strqpop(s2,' ');
-              repl(s2,';',',');
-              if (ignorel.IndexOf(s3)=-1) and (s3<>'')
-              and (s3[1]>#$0040) //it's all punctuation and digits before
-              then
-                wordidx.AddToIndex(s3, cnt);
-            end;
-          end; //of AddWordIndex while clause
-
-      end; //for every character in the file
-
-      closefile(buff);
+      finally
+        FreeAndNil(fuin);
+      end;
     end; //for every file
 
-    closefile(romap);
+    FreeAndNil(roma_prob);
     prog.Invalidate;
     prog.Repaint;
 
@@ -585,16 +706,19 @@ begin
     dic.TTEntries.NoCommitting := true;
     dic.TTEntries.Reindex;
 
-
    //This time it's for our package
     tempDir2 := CreateRandomTempDirName();
     ForceDirectories(tempDir2);
 
-    prog.SetMessage(_l('^eWriting character index...'));
-    charidx.Write(tempDir2+'\CharIdx.bin');
+    if charidx<>nil then begin
+      prog.SetMessage(_l('^eWriting character index...'));
+      charidx.Write(tempDir2+'\CharIdx.bin');
+    end;
 
-    prog.SetMessage(_l('^eWriting word index...'));
-    wordidx.Write(tempDir2+'\WordIdx.bin');
+    if wordidx<>nil then begin
+      prog.SetMessage(_l('^eWriting word index...'));
+      wordidx.Write(tempDir2+'\WordIdx.bin');
+    end;
 
     prog.SetMessage(_l('^eWriting dictionary table...'));
     dic.TTDict.WriteTable(tempDir2+'\Dict',true);
@@ -603,15 +727,20 @@ begin
 
     DeleteDirectory(tempDir); //empty dictionary
 
-    WriteDictPackage(dicFilename, tempDir2, info, diclang, cnt);
+    WriteDictPackage(dicFilename, tempDir2, info, diclang, LastArticle);
     DeleteDirectory(tempDir2);
 
   finally
-    wordidx.Free;
-    charidx.Free;
-    freql.Free;
-    prog.Free;
+    FreeAndNil(wordidx);
+    FreeAndNil(charidx);
+    FreeAndNil(freql);
+    FreeAndNil(prog);
   end;
+
+  if had_problems then
+    Application.MessageBox('There were some problems during the conversion. '
+      +'Please study the roma_problems.txt found in the application directory.',
+      'Had problems', MB_ICONEXCLAMATION);
 
   Result := true;
 end;

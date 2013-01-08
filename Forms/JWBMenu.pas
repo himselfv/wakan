@@ -906,7 +906,7 @@ begin
             if sect=5 then CharPropTypes.Add(s);
             if sect=6 then AddRomaSortRecord(s);
             if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}
-            if sect=8 then ignorel.Add(s);
+            if sect=8 then ignorel.Add(fstr(s));
             if sect=9 then readchl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{reading:fhex}
           end;
         end;

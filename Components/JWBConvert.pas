@@ -381,7 +381,7 @@ end;
 
 //Returns -1 if no char is available. It's fine because we return integer.
 function _input(tp:byte):integer;
-var i,i2,i3,i4:integer;
+var i,i2,i3:integer;
 begin
   Result := -1;
   while true do
@@ -616,10 +616,12 @@ var i: integer;
 begin
  {$IFDEF UNICODE}
   i := _input(ftp);
-  if i<0 then Result := false else ch := WideChar(i);
+  Result := (i>=0);
+  if Result then ch := WideChar(i);
  {$ELSE}
   i := _input(ftp);
-  if i<0 then Result := false else ch := Format('%4.4x',[i]);
+  Result := (i>=0);
+  if Result then ch := Format('%4.4x',[i]);
  {$ENDIF}
 end;
 

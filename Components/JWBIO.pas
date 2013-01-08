@@ -71,6 +71,7 @@ type
     destructor Destroy; override;
     procedure Writeln(const s: string); override;
     procedure WriteWideChar(const w: WideChar);
+    procedure WritelnUnicode(const s: UnicodeString);
     procedure Flush;
   end;
 
@@ -218,10 +219,15 @@ begin
 end;
 
 procedure TUnicodeFileWriter.Writeln(const s: string);
+begin
+  WritelnUnicode(UnicodeString(s));
+end;
+
+procedure TUnicodeFileWriter.WritelnUnicode(const s: UnicodeString);
 var i: integer;
 begin
   for i := 1 to Length(s) do
-    WriteWideChar(WideChar(s[i]));
+    WriteWideChar(s[i]);
   WriteWideChar(#$000D);
   WriteWideChar(#$000A);
 end;

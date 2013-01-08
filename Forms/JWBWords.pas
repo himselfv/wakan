@@ -1336,7 +1336,6 @@ end;
 procedure TfWords.DoStatistic;
 var i,j,k,l,m,n,o,p,q:integer;
   t:textfile;
-  a:pointer;
   KanjiKnown: boolean;
   JouyouGrade: integer;
   InUserIdx: boolean;
@@ -1434,7 +1433,6 @@ begin
     writeln(t,'known_radicals = '+inttostr(q));
     closefile(t);
   end;
-  i:=0;
   Screen.Cursor:=crDefault;
   fStatistics.ShowModal;
 end;

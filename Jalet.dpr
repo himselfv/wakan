@@ -68,7 +68,9 @@ uses
   JWBDic in 'Components\JWBDic.pas',
   JWBEdictMarkers in 'Components\JWBEdictMarkers.pas',
   JWBBalancedTree in 'Components\JWBBalancedTree.pas',
-  JWBIndex in 'Components\JWBIndex.pas';
+  JWBKanaConv in 'Components\JWBKanaConv.pas',
+  JWBIndex in 'Components\JWBIndex.pas',
+  JWBEdictReader in 'Components\JWBEdictReader.pas';
 
 {$R *.RES}
 

@@ -41,6 +41,8 @@ type
   PFCharData = ^FCharData;
  {$ENDIF}
 
+  PFString = ^FString;
+
  { Hex FChars on both Ansi and Unicode. Used to read/write data from formats which store it as hex }
   FHex = {$IFDEF STRICT_FSTRING}type{$ENDIF} string;
 
@@ -178,7 +180,8 @@ function fcopy(const s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fgetchl(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
-function fstr(const s: UnicodeString): FString; {$IFDEF INLINE}inline;{$ENDIF}
+function fstr(const s: AnsiString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
+function fstr(const s: UnicodeString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
 function hextofstr(const s: FHex): FString; {$IFDEF INLINE}inline;{$ENDIF}
 function fstrtohex(const s: FString): FHex; {$IFDEF INLINE}inline;{$ENDIF}
@@ -190,6 +193,17 @@ function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF
 {$ENDIF}
 
 function ftoansi(c: FChar; out ac: AnsiChar): boolean;
+
+{
+Unicode versions of some function which are unavailable/inefficient on Ansi builds.
+On Unicode builds all resolve to default Unicode equivalents.
+}
+function upos(const substr, str: UnicodeString):integer; {$IFDEF UNICODE}inline;{$ENDIF}
+function UTrim(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
+function UTrimLeft(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
+function UTrimRight(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
+function ULowerCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
+function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 
 
 { General purpose string functions }
@@ -214,8 +228,11 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 
 function remexcl(s:string):string;
 function strip_fl(s:string):string;
-function repl(var s:string;sub,repl:string):string;
-function strqpop(var s:string;c:char):string;
+function repl(var s:string;sub,rep:string):string;
+function urepl(var s:string;sub,rep:string):string;
+function strqpop(var s:string;c:char):string; overload;
+function strqpop(var s:string;const cs:string):string; overload;
+function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString; overload;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
 function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
@@ -266,6 +283,7 @@ function IsLatinDigit(c:FChar):boolean;
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
 
 implementation
+uses WideStrUtils;
 
 { Math }
 
@@ -464,6 +482,11 @@ begin
 {$ENDIF}
 end;
 
+function fstr(const s: AnsiString): FString;
+begin
+  Result := fstr(UnicodeString(s));
+end;
+
 //Converts raw (unicode) data to FString. On unicode does nothing!
 //Only Unicode input is accepted because Ansi MUST be converted to Unicode.
 //We can't do AnsiToHex, that would leave us with 2-byte and not 4-byte symbols.
@@ -539,6 +562,112 @@ begin
     ac := Chr((HexCharCode(c[3]) shl 4) + HexCharCode(c[4]));
  {$ENDIF}
 end;
+
+
+{
+Unicode equivalents of common functions, missing on Ansi
+}
+
+{ Unicode version of pos() -- resolves to whatever is best on the platform }
+function upos(const substr, str: UnicodeString):integer;
+{$IFDEF UNICODE}
+begin
+  Result := pos(substr,str);
+end;
+{$ELSE}
+var pw: PWideChar;
+begin
+  if str='' then begin
+    Result := 0;
+    exit;
+  end;
+  pw := WStrPos(str,substr); //this one has reverse argument order!
+  Result := (integer(pw)-integer(str)) div 2 - 1;
+end;
+{$ENDIF}
+
+function UTrim(const S: UnicodeString): UnicodeString;
+{$IFDEF UNICODE}
+begin
+  Result := Trim(S);
+end;
+{$ELSE}
+var
+  I, L: Integer;
+begin
+  L := Length(S);
+  I := 1;
+  while (I <= L) and (S[I] <= ' ') do Inc(I);
+  if I > L then Result := '' else
+  begin
+    while S[L] <= ' ' do Dec(L);
+    if (I>1) or (L<Length(S)) then
+      Result := Copy(S, I, L - I + 1)
+    else
+      Result := S;
+  end;
+end;
+{$ENDIF}
+
+
+function UTrimLeft(const S: UnicodeString): UnicodeString;
+{$IFDEF UNICODE}
+begin
+  Result := TrimLeft(S);
+end;
+{$ELSE}
+var
+  I, L: Integer;
+begin
+  L := Length(S);
+  I := 1;
+  while (I <= L) and (S[I] <= ' ') do Inc(I);
+  if I>1 then
+    Result := Copy(S, I, Maxint)
+  else
+    Result := S;
+end;
+{$ENDIF}
+
+function UTrimRight(const S: UnicodeString): UnicodeString;
+{$IFDEF UNICODE}
+begin
+  Result := TrimRight(S);
+end;
+{$ELSE}
+var
+  I: Integer;
+begin
+  I := Length(S);
+  while (I > 0) and (S[I] <= ' ') do Dec(I);
+  if I<Length(S) then
+    Result := Copy(S, 1, I)
+  else
+    Result := S;
+end;
+{$ENDIF}
+
+function ULowerCase(const S: UnicodeString): UnicodeString;
+{$IFDEF UNICODE}
+begin
+  Result := lowercase(S);
+end;
+{$ELSE}
+begin
+  Result := WideLowerCase(S);
+end;
+{$ENDIF}
+
+function UUpperCase(const S: UnicodeString): UnicodeString;
+{$IFDEF UNICODE}
+begin
+  Result := uppercase(S);
+end;
+{$ELSE}
+begin
+  Result := WideUpperCase(S);
+end;
+{$ENDIF}
 
 
 {
@@ -782,7 +911,6 @@ begin
     sl.Add(sa[i]);
 end;
 
-
 function remexcl(s:string):string;
 begin
   if (length(s)>1) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
@@ -806,12 +934,33 @@ begin
   result:=trim(s);
 end;
 
-function repl(var s:string;sub,repl:string):string;
+function repl(var s:string;sub,rep:string):string;
+var i_pos: integer;
 begin
-  while pos(sub,s)>0 do
-    s:=copy(s,1,pos(sub,s)-1)+repl+copy(s,pos(sub,s)+length(sub),length(s)-pos(sub,s)+1-length(sub));
+  i_pos := pos(sub,s);
+  while i_pos>0 do begin
+    s:=copy(s,1,i_pos-1)+rep+copy(s,i_pos+length(sub),length(s)-i_pos+1-length(sub));
+    i_pos := pos(sub,s);
+  end;
   result:=s;
 end;
+
+function urepl(var s:string;sub,rep:string):string;
+{$IFDEF UNICODE}
+begin
+  Result := repl(s,sub,rep);
+end;
+{$ELSE}
+var i_pos: integer;
+begin
+  i_pos := upos(sub,s);
+  while i_pos>0 do begin
+    s:=copy(s,1,i_pos-1)+rep+copy(s,i_pos+length(sub),length(s)-i_pos+1-length(sub));
+    i_pos := upos(sub,s);
+  end;
+  result:=s;
+end;
+{$ENDIF}
 
 { Returns part of the string from the start to the first occurence of "c",
  and cuts that part, up to and including "c".
@@ -830,6 +979,43 @@ begin
     delete(s,1,i);
   end;
 end;
+
+function strqpop(var s:string;const cs:string):string; overload;
+var i: integer;
+begin
+  i := pos(cs,s);
+  if i=0 then
+  begin
+    Result:=s;
+    s:='';
+  end else
+  begin
+    Result:=copy(s,1,i-1);
+    delete(s,1,i+Length(cs)-1);
+  end;
+end;
+
+//Inefficient, so use strqpop where available
+function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString;
+{$IFDEF UNICODE}
+begin
+  Result := strqpop(s,c);
+end;
+{$ELSE}
+var i: integer;
+begin
+  i := upos(c,s);
+  if i=0 then
+  begin
+    Result:=s;
+    s:='';
+  end else
+  begin
+    Result:=copy(s,1,i-1);
+    delete(s,1,i);
+  end;
+end;
+{$ENDIF}
 
 function IsUpcaseLatin(ch: AnsiChar): boolean;
 begin
