@@ -1168,7 +1168,7 @@ end;
 { True if a specified kana character is katakana. Doesn't check if it is kana to begin with. }
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
 begin
- {$IFNDEF UNICODE}
+ {$IFDEF UNICODE}
   Result := (Length(c)>=i) and ((ord(c[i]) and $00F0)>$A0);
  {$ELSE}
   i := (i-1)*4+3;

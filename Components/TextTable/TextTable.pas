@@ -535,7 +535,10 @@ begin
   SetLength(seekbuilddesc, seekbuild.Count);
   for i := 0 to seekbuild.Count - 1 do begin
    //First seekbuild is sometimes '0' and we don't actually seek by it
-    if (i=0) and (seekbuild[0]='0') then continue;
+    if (i=0) and (seekbuild[0]='0') then begin
+      SetLength(seekbuilddesc[i].fields, 0);
+      continue;
+    end;
     seekbuilddesc[i].fields := ParseSeekDescription(seekbuild[i]);
   end;
 

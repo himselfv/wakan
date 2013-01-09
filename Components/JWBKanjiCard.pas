@@ -128,7 +128,7 @@ begin
       for i:=0 to dicts.Count-1 do
         if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
       begin
-        dic:=TDicIndexCursor.Create(dicts[i]);
+        dic:=TDicIndexCursor.Create(dicts[i],ctEntryIndex);
         try
           dic.Find(itChar,fstrtouni(u));
           while dic.Next do

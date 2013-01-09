@@ -150,7 +150,7 @@ const
 
   LastMarkerID = 114;
 
-  MarkPop: char = Chr(66+32);
+  MarkPop: char = Chr(32+66);
 
 function FindMark(m:string):byte; //returns marker ID or 0
 function ConvertEdictEntry(s:string;var mark:string):string;
@@ -161,6 +161,8 @@ function GetMarkAbbr(mark:char):string;
 function EnrichDictEntry(s,mark:string):string;
 function DropEdictMarkers(s:string):string;
 function MarkersToStr(const s:string; out pop: boolean):string;
+
+function TestMarkers(const mark, test:string): boolean;
 
 implementation
 uses SysUtils, StrUtils;
@@ -342,7 +344,7 @@ begin
       Inc(lcnt, i-lst+1);
       lst := -1;
     end else
-    if (lst>=0) then begin
+    if lst>=0 then begin
      //skip char
     end else
       Result[i+lcnt] := s[i];
@@ -361,6 +363,20 @@ begin
       Result := Result + ',' + GetMarkEdict(s[i]);
   end;
   delete(Result,1,1);
+end;
+
+{ Returns true if mark contains at least one of the characters from test.
+ Characters are specified by ids, without 32+ addition. }
+function TestMarkers(const mark, test:string): boolean;
+var i,j: integer;
+begin
+  Result := false;
+  for i := 1 to Length(mark) do
+    for j := 1 to Length(test) do
+      if ord(mark[i])=32+ord(test[j]) then begin
+        Result := true;
+        break;
+      end;
 end;
 
 

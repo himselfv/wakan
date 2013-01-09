@@ -457,22 +457,6 @@ begin
 end;
 
 
-//Returns the base popularity class for a record (the lower the better)
-function GetPopClass(s2: string): integer;
-begin
-  Result := 40;
-  if (fSettings.CheckBox5.Checked) and (pos(UH_LBEG+'gn',s2)>0) then dec(Result,5);
-  if (fSettings.CheckBox5.Checked) and (pos('-v'+UH_LEND,s2)>0) then dec(Result,5);
-  if (fSettings.CheckBox5.Checked) and (pos(UH_LBEG+'g',s2)=0) then dec(Result,5);
-  if (fSettings.CheckBox6.Checked) and (pos(UH_LBEG+'shonor'+UH_LEND,s2)>0) then dec(Result,1);
-  if (fSettings.CheckBox6.Checked) and (pos(UH_LBEG+'shum'+UH_LEND,s2)>0) then dec(Result,2);
-  if (fSettings.CheckBox6.Checked) and (pos(UH_LBEG+'spolite'+UH_LEND,s2)>0) then dec(Result,3);
-  if pos(UH_LBEG+'sobsolete'+UH_LEND,s2)>0 then inc(Result,20);
-  if pos(UH_LBEG+'sobscure'+UH_LEND,s2)>0 then inc(Result,20);
-  if (fSettings.CheckBox7.Checked) and (pos(UH_LBEG+'spop'+UH_LEND,s2)>0) then dec(Result,150);
-end;
-
-
 
 {
 DicSearch()
@@ -631,15 +615,43 @@ resourcestring
 
 function IsAppropriateVerbType(sdef: string; s2: string): boolean;
 begin
-  Result :=
-       ((sdef='F') or
-       ((sdef='2') and (pos(UH_LBEG+'gru-v'+UH_LEND,s2)>0)) or
-       ((sdef='S') and (pos(UH_LBEG+'gsuru-v'+UH_LEND,s2)>0)) or
-       ((sdef='K') and (pos(UH_LBEG+'gkuru-v'+UH_LEND,s2)>0)) or
-       ((sdef='I') and (pos(UH_LBEG+'gIku-v'+UH_LEND,s2)>0)) or
-       ((sdef='1') and (pos('-v'+UH_LEND,s2)>0) and (pos(UH_LBEG+'gru-v'+UH_LEND,s2)=0)) or
-       ((sdef='A') and (pos('adj'+UH_LEND,s2)>0) and (pos(UH_LBEG+'gna-adj'+UH_LEND,s2)=0)) or
-       ((sdef='N') and (pos('gna-adj',s2)>0)));
+  case sdef[1] of
+   'F': Result := true;
+   '2': Result := TestMarkers(s2,#34);
+   'S': Result := TestMarkers(s2,#51);
+   'K': Result := TestMarkers(s2,#52);
+   'I': Result := TestMarkers(s2,#45);
+   '1': Result := TestMarkers(s2,#78#79#80#35#47#42#38#37#45#43#41#44#81#39#40#36
+          +#$82#48#46#83#49#52#84#50#85#86#51#53);
+   'A': Result := TestMarkers(s2,#11#14#15#16#17#67#68);
+   'N': Result := TestMarkers(s2,#13);
+  else
+    Result := false;
+  end;
+end;
+
+
+//Returns the base popularity class for a record (the lower the better)
+function GetPopClass(s2: string): integer;
+begin
+  Result := 40;
+  if fSettings.CheckBox5.Checked then begin
+    if TestMarkers(s2,#13#14#26#27#28#29#30#31#74) then dec(Result,5);
+    if TestMarkers(s2,#34#78#79#80#35#47#42#38#37#45#43#41#44#81#39#40#36
+        +#$82#48#46#83#49#52#84#50#85#86#51#53) then dec(Result,5);
+  end;
+  if fSettings.CheckBox6.Checked then begin
+    if TestMarkers(s2,#54) then dec(Result,1); //honor
+    if TestMarkers(s2,#55) then dec(Result,2); //humor
+    if TestMarkers(s2,#63) then dec(Result,3); //humble
+  end;
+  if TestMarkers(s2,#59) then inc(Result,20); //obsolete
+  if TestMarkers(s2,#60) then inc(Result,20); //obscure
+  if TestMarkers(s2,#61) then inc(Result,20); //outd-kanji
+  if TestMarkers(s2,#62) then inc(Result,20); //outd-kana
+  if TestMarkers(s2,#103) then inc(Result,20); //rare
+
+  if fSettings.CheckBox7.Checked and TestMarkers(s2,#66) then dec(Result,150); //pop
 end;
 
 procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
@@ -655,7 +667,8 @@ var
   slen:integer; //==lc.len
 
   entry:string; //translation entry text
-  converted, markers:string;
+  converted:string;
+  markers,kmarkers:string;
   popclas:integer;
   UserScore:integer;
   UserIndex:integer;
@@ -736,18 +749,21 @@ begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
     if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
-    if dic.dic.SupportsMarkers then
-      entry:=entry+EnrichDictEntry(dic.GetArticleBody,dic.GetArticleMarkers)
-    else begin
+    if dic.dic.SupportsMarkers then begin
+      markers := dic.GetArticleMarkers;
+      kmarkers := dic.GetKanjiKanaMarkers;
+      entry:=entry+EnrichDictEntry(dic.GetArticleBody,markers);
+    end else begin
       converted := ConvertEdictEntry(dic.GetArticleBody, markers);
       entry:=entry+EnrichDictEntry(converted, markers);
+      kmarkers:='';
     end;
-    if IsAppropriateVerbType(sdef, entry) then
+    if IsAppropriateVerbType(sdef, markers) then
     if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
     begin
 
      //Calculate popularity class
-      popclas := GetPopClass(entry);
+      popclas := GetPopClass(markers)+GetPopClass(kmarkers);
       //if ((a=1) or ((a=4) and (p4reading))) and (dic.Field('Priority')<>-1) then
       //  if dic.Int(dic.Field('Priority'))>9 then
       //    inc(popclas,90)

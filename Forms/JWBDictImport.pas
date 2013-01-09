@@ -153,7 +153,6 @@ begin
   writeln(t,'$PREBUFFER');
   writeln(t,'$RAWINDEX');
   writeln(t,'$FIELDS');
-  writeln(t,'iIndex');
   writeln(t,'xPhonetic');
   writeln(t,'xKanji');
   writeln(t,'sSort');
@@ -167,7 +166,7 @@ begin
   writeln(t,'<Kanji_Ind');
   writeln(t,'Article');
   writeln(t,'$SEEKS');
-  writeln(t,'Index');
+  writeln(t,'0');
   writeln(t,'Sort');
   writeln(t,'Kanji');
   writeln(t,'<Sort');
@@ -302,62 +301,12 @@ var freqi: integer;
   u_str, u_part, u_word: UnicodeString;
   uc: WideChar;
   add_mark: string;
-begin
-  Inc(LastArticle);
-  s_art := IntToStr(LastArticle);
+  rec: integer;
 
- //Additional markers to every entry
-  if ed.pop then
-    add_mark := MarkPop
-  else
-    add_mark := '';
-
- //Priority
-  for i := 0 to ed.kanji_used - 1 do
-    prior[i] := '0';
-  if freql<>nil then
-    for i := 0 to ed.kanji_used - 1 do begin
-      freqi:=freql.IndexOf(ed.kanji[i].kanji);
-      if freqi<>-1 then
-        prior[i]:=IntToStr(integer(freql.Objects[freqi]));
-    end;
-
- //Write out kanji-kana entries
-  for i := 0 to ed.kana_used - 1 do
-    if ed.kana[i].kanji_used=0 then begin
-     //kana matches any kanji
-      for j := 0 to ed.kanji_used - 1 do begin
-        Inc(LastDictEntry);
-        dic.TTDict.AddRecord([IntToStr(LastDictEntry), ed.kana[i].kana,
-          ed.kanji[j].kanji, roma[i], add_mark+ed.kanji[j].markers+ed.kana[i].markers,
-          prior[j], s_art]);
-      end;
-    end else begin
-     //kana matches only selected kanjis
-      for j := 0 to ed.kana[i].kanji_used - 1 do begin
-        kanji_found := false;
-        for k := 0 to ed.kanji_used - 1 do
-          if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
-            Inc(LastDictEntry);
-            dic.TTDict.AddRecord([IntToStr(LastDictEntry), ed.kana[i].kana,
-              ed.kanji[k].kanji, roma[i], add_mark+ed.kanji[k].markers+ed.kana[i].markers,
-              prior[k], s_art]);
-            kanji_found := true;
-            break;
-          end;
-        if not kanji_found then begin
-          roma_prob.WritelnUnicode(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
-          had_problems := true;
-        end;
-      end;
-    end;
-
- //Write out meanings
-  for i := 0 to ed.meanings_used - 1 do
-    dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, ed.meanings[i].markers]);
-
- //Update indexes
-  if charidx<>nil then
+ //Adds given dict record to a character index for a given character
+  procedure IndexChars(rec:integer;kanji:UnicodeString);
+  var i: integer;
+  begin
     for i := 0 to ed.kanji_used - 1 do begin
       u_str:=fstrtouni(ed.kanji[i].kanji);
       while u_str<>'' do
@@ -368,8 +317,12 @@ begin
           charidx.AddToIndex(word(uc), LastArticle);
       end;
     end; //of AddCharacterIndex for clause
+  end;
 
-  if wordidx<>nil then
+ //Adds given entry record to a word index for a given string of words
+  procedure IndexWords(rec:integer;meaning:UnicodeString);
+  var i: integer;
+  begin
     for i := 0 to ed.meanings_used - 1 do begin
       u_str:=fstrtouni(ed.meanings[i].text);
       while u_str<>'' do
@@ -395,6 +348,65 @@ begin
         end;
       end;
     end; //of AddWordIndex for clause
+  end;
+
+begin
+  Inc(LastArticle);
+  s_art := IntToStr(LastArticle);
+
+ //Additional markers to every entry
+  if ed.pop then
+    add_mark := MarkPop
+  else
+    add_mark := '';
+
+ //Priority
+  for i := 0 to ed.kanji_used - 1 do
+    prior[i] := '0';
+  if freql<>nil then
+    for i := 0 to ed.kanji_used - 1 do begin
+      freqi:=freql.IndexOf(ed.kanji[i].kanji);
+      if freqi<>-1 then
+        prior[i]:=IntToStr(integer(freql.Objects[freqi]));
+    end;
+
+ //Write out kanji-kana entries
+  for i := 0 to ed.kana_used - 1 do
+    if ed.kana[i].kanji_used=0 then begin
+     //kana matches any kanji
+      for j := 0 to ed.kanji_used - 1 do begin
+        rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, roma[i],
+          add_mark+ed.kanji[j].markers+ed.kana[i].markers, prior[j], s_art]);
+        if charidx<>nil then
+          IndexChars(rec, ed.kanji[i].kanji);
+      end;
+    end else begin
+     //kana matches only selected kanjis
+      for j := 0 to ed.kana[i].kanji_used - 1 do begin
+        kanji_found := false;
+        for k := 0 to ed.kanji_used - 1 do
+          if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
+            rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[k].kanji, roma[i],
+              add_mark+ed.kanji[k].markers+ed.kana[i].markers, prior[k], s_art]);
+            if charidx<>nil then
+              IndexChars(rec, ed.kanji[i].kanji);
+            kanji_found := true;
+            break;
+          end;
+        if not kanji_found then begin
+          roma_prob.WritelnUnicode(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
+          had_problems := true;
+        end;
+      end;
+    end;
+
+ //Write out meanings
+  for i := 0 to ed.meanings_used - 1 do begin
+    rec := dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, ed.meanings[i].markers]);
+    if wordidx<>nil then
+      IndexWords(rec, ed.meanings[i].text);
+  end;
+
 end;
 
 {

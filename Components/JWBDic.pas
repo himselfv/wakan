@@ -70,7 +70,7 @@ type
 
   protected //Fields, populated on load
     TDict:TTextTable;
-    TDictIndex, //i
+    TDictIndex, //i in v4, missing in v5
     TDictEnglish, //s in v4, missing in v5
     TDictKanji, //x
     TDictPhonetic, //x
@@ -93,6 +93,7 @@ type
     FstKanji: TSeekObject;
     FstKanjiReverse: TSeekObject;
     FstIndex: TSeekObject;
+    FstDictArticle: TSeekObject;
     FstEntriesIndex: TSeekObject;
    { In case you need a seek table not specified here, you can get it from
     TDict.GetSeekObject('seek name') }
@@ -110,7 +111,8 @@ type
     stKanji: PSeekObject;
     stKanjiReverse: PSeekObject;
     stIndex: PSeekObject;
-    stEntriesIndex: PSeekObject;    
+    stDictArticle: PSeekObject;
+    stEntriesIndex: PSeekObject;
 
   protected
    {
@@ -159,7 +161,7 @@ type
   public
     dic: TJaletDic;
 
-  protected    
+  protected
    { Copied from TJaletDic on Create() for code readability }
     CDict: TTextTableCursor;
     TDictIndex,
@@ -183,16 +185,19 @@ type
     stKanji: PSeekObject;
     stKanjiReverse: PSeekObject;
     stIndex: PSeekObject;
+    stDictArticle: PSeekObject;
     stEntriesIndex: PSeekObject;
 
   public
     constructor Create(ADic: TJaletDic);
     procedure SeekIndex(Value: integer);
+    procedure SeekEntry(Value: integer);
     function GetIndex: integer;
     function GetKanji: FString;
     function GetPhonetic: FString;
     function GetSort: string;
     function GetFrequency: integer;
+    function GetKanjiKanaMarkers: string;
     function GetArticle: integer;
     function GetArticleBody: FString;
     function GetArticleMarkers: string;
@@ -213,11 +218,17 @@ type
     function ReadIndex:integer;
   end;
 
+  TDicIndexCursorType = (
+    ctDictIndex,  //index stores TDict references
+    ctEntryIndex  //index stores TEntry references
+  );
+
   TDicIndexCursor = class(TDicCursor)
   protected
+    FType: TDicIndexCursorType;
     FReader: TDicIndexReader;
   public
-    constructor Create(ADic: TJaletDic);
+    constructor Create(ADic: TJaletDic; AType: TDicIndexCursorType);
     destructor Destroy; override;
     procedure Find(t:TIndexType;const locator:UnicodeString);
     function Next: boolean;
@@ -534,21 +545,29 @@ begin
   FstSortReverse := TDict.GetSeekObject('<Sort');
   FstKanji := TDict.GetSeekObject('Kanji');
   FstKanjiReverse := TDict.GetSeekObject('<Kanji');
-  FstIndex := TDict.GetSeekObject('Index');
-  if dicver=5 then
-    FstEntriesIndex := TEntries.GetSeekObject('Index')
-  else
+  if dicver=5 then begin
+    FstIndex.ind_i := -1;
+    FstDictArticle := TDict.GetSeekObject('Article');
+    FstEntriesIndex := TEntries.GetSeekObject('Index');
+  end else begin
+    FstIndex := TDict.GetSeekObject('Index');
+    FstDictArticle.ind_i := -1;
     FstEntriesIndex.ind_i := -1;
+  end;
 
   stSort := @FstSort;
   stSortReverse := @FstSortReverse;
   stKanji := @FstKanji;
   stKanjiReverse := @FstKanjiReverse;
-  stIndex := @FstIndex;
-  if dicver=5 then
-    stEntriesIndex := @FstEntriesIndex
-  else
+  if dicver=5 then begin
+    stIndex := nil;
+    stDictArticle := @FstDictArticle;
+    stEntriesIndex := @FstEntriesIndex;
+  end else begin
+    stIndex := @FstIndex;
+    stDictArticle := nil;
     stEntriesIndex := nil;
+  end;
 end;
 
 function TJaletDic.SupportsFrequency: boolean;
@@ -629,18 +648,34 @@ begin
   self.stKanji := ADic.stKanji;
   self.stKanjiReverse := ADic.stKanjiReverse;
   self.stIndex := ADic.stIndex;
+  self.stDictArticle := ADic.stDictArticle;
   self.stEntriesIndex := ADic.stEntriesIndex;
 end;
 
 procedure TDicCursor.SeekIndex(Value: integer);
 begin
-  CDict.Locate(stIndex, Value);
+  if dic.dicver=5 then
+    CDict.tcur := Value
+  else
+    CDict.Locate(stIndex, Value);
+end;
+
+procedure TDicCursor.SeekEntry(Value: integer);
+begin
+  if dic.dicver=5 then begin
+    CEntries.tcur := Value;
+    CDict.Locate(stDictArticle, CEntries.Int(TEntriesIndex));
+  end else
+    CDict.Locate(stIndex, Value); //on older dicts they're the same
 end;
 
 { Returns unique index for current kanji-kana entry }
 function TDicCursor.GetIndex: integer;
 begin
-  Result := CDict.Int(TDictIndex);
+  if dic.dicver=5 then
+    Result := CDict.tcur
+  else
+    Result := CDict.Int(TDictIndex);
 end;
 
 function TDicCursor.GetKanji: FString;
@@ -710,12 +745,20 @@ begin
   end;
 end;
 
+function TDicCursor.GetKanjiKanaMarkers: string;
+begin
+  case dic.dicver of
+    4: Result := ''; //everything goes under entry markers
+    5: Result := CDict.Str(TDictMarkers);
+  end;
+end;
+
 function TDicCursor.GetArticleMarkers: string;
 var art: integer;
 begin
   case dic.dicver of
     4:
-      if TDictMarkers<>-1 then 
+      if TDictMarkers<>-1 then
         Result := CDict.Str(TDictMarkers)
       else
         Result := '';
@@ -801,9 +844,10 @@ begin
   inc(indexfrom);
 end;
 
-constructor TDicIndexCursor.Create(ADic: TJaletDic);
+constructor TDicIndexCursor.Create(ADic: TJaletDic; AType: TDicIndexCursorType);
 begin
   inherited Create(ADic);
+  FType := AType;
   FReader := TDicIndexReader.Create(ADic);
 end;
 
@@ -824,7 +868,10 @@ begin
   wif := FReader.ReadIndex;
   Result := (wif<>0);
   if Result then
-    Self.SeekIndex(wif);
+    if FType=ctDictIndex then
+      Self.SeekIndex(wif)
+    else
+      Self.SeekEntry(wif);
 end;
 
 
@@ -964,7 +1011,7 @@ var wif: integer;
 begin
   wif:=FIndexReader.ReadIndex;
   while wif<>0 do begin
-    CDict.Locate(stIndex,wif);
+    self.SeekEntry(wif);
    { Word index only works on first 4 bytes of the word, so we have to manually check after it. }
     ts:=lowercase(CDict.Str(dic.TDictEnglish))+' ';
     case FMatchType of
