@@ -280,7 +280,11 @@ type
     procedure NextMatch; override;
   end;
 
-  TDicLookupCursorV5 = TDicLookupCursorV4; //TODO!
+ { V4 is mostly compatible, thanks to TDicCursor abstracting stuff away.
+  This is for any fixes }
+  TDicLookupCursorV5 = class(TDicLookupCursorV4)
+
+  end;
   
 
   EDictionaryException = class(Exception);
@@ -905,9 +909,9 @@ end;
 
 function TDicIndexReader.ReadIndex:integer;
 begin
-  if (indexfrom=0) or (indexfrom>=indexto) then
+  if (indexfrom<=0) or (indexfrom>=indexto) then
   begin
-    result:=0;
+    result:=-1;
     exit;
   end;
   result:=idx.ReadIndexInfo(indexfrom);
@@ -939,7 +943,7 @@ function TDicIndexCursor.Next: boolean;
 var wif: integer;
 begin
   wif := FReader.ReadIndex;
-  Result := (wif<>0);
+  Result := (wif>=0);
   if Result then
     if FType=ctDictIndex then
       Self.SeekIndex(wif)
@@ -1083,10 +1087,10 @@ var wif: integer;
   ts: string;
 begin
   wif:=FIndexReader.ReadIndex;
-  while wif<>0 do begin
+  while wif>=0 do begin
     self.SeekEntry(wif);
    { Word index only works on first 4 bytes of the word, so we have to manually check after it. }
-    ts:=lowercase(CDict.Str(dic.TDictEnglish))+' ';
+    ts:=lowercase(Self.GetArticleBody)+' ';
     case FMatchType of
       mtMatchLeft: if pos(FValue,ts)>0 then break;
       mtExactMatch: begin
@@ -1097,7 +1101,7 @@ begin
     end;
     wif:=FIndexReader.ReadIndex;
   end;
-  Result := (wif<>0);
+  Result := (wif>=0);
 end;
 
 function TDicLookupCursorV4.NextAnywhereMatch: boolean;
