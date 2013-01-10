@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBIO, JWBDic, JWBIndex, JWBEdictReader;
+  StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBIO, JWBDic, JWBIndex,
+  JWBEdictMarkers, JWBEdictReader;
 
 type
   TFileList = array of string;
@@ -27,7 +28,15 @@ type
   end;
   PDictInfo = ^TDictInfo;
 
-  TEdictRoma = array[0..MaxKana-1] of string;
+  TPrepArticle = record
+    ed: TEdictArticle;
+    roma: array[0..MaxKana-1] of string;
+   //Packed markers have to go into their own fields to avoid Ansi<->Unicode conversions
+    kanji_mark: array[0..MaxKanji-1] of TMarkers;
+    kana_mark: array[0..MaxKana-1] of TMarkers;
+    m_mark: array[0..MaxMeaning-1] of TMarkers;
+  end;
+  PPrepArticle = ^TPrepArticle;
 
   TfDictImport = class(TForm)
     Label1: TLabel;
@@ -79,7 +88,7 @@ type
     LastDictEntry: integer;
     LastArticle: integer;
     function CreateFrequencyList: TStringList;
-    procedure AddArticle(ed: PEdictArticle; roma: TEdictRoma);
+    procedure AddArticle(const art: PPrepArticle);
     procedure ImportCEdict(fuin: TUnicodeFileReader);
     procedure ImportEdict(fuin: TUnicodeFileReader);
 
@@ -96,7 +105,7 @@ var
 implementation
 
 uses StrUtils, WideStrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBStrings, JWBDicSearch, JWBEdictMarkers;
+  JWBStrings, JWBDicSearch;
 
 {$R *.DFM}
 
@@ -292,15 +301,16 @@ const
 Adds an article to the dictionary we're building.
 Also adds it to all indixes.
 }
-procedure TfDictImport.AddArticle(ed: PEdictArticle; roma: TEdictRoma);
-var freqi: integer;
+procedure TfDictImport.AddArticle(const art:PPrepArticle);
+var ed: PEdictArticle;
+  freqi: integer;
   prior: array[0..MaxKanji-1] of string; //strings because we need to convert to string when adding anyway
   i, j, k: integer;
   s_art: string;
   kanji_found: boolean;
   u_str, u_part, u_word: UnicodeString;
   uc: WideChar;
-  add_mark: string;
+  add_mark: TMarkers;
   rec: integer;
 
  //Adds given dict record to a character index for a given character
@@ -347,6 +357,7 @@ var freqi: integer;
 begin
   Inc(LastArticle);
   s_art := IntToStr(LastArticle);
+  ed := @art.ed;
 
  //Priority
   for i := 0 to ed.kanji_used - 1 do
@@ -363,8 +374,12 @@ begin
     if ed.kana[i].kanji_used=0 then begin
      //kana matches any kanji
       for j := 0 to ed.kanji_used - 1 do begin
-        rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, roma[i],
-          ed.kanji[j].markers+ed.kana[i].markers, prior[j], s_art]);
+        rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, art.roma[i],
+          string(art.kanji_mark[j]+art.kana_mark[i]), prior[j], s_art]);
+       { Markers are converted to (Unicode)String in the previous line. This can potentially
+        lead to marker corruption since markers include illegal Ansi characters.
+        So we set markers again, directly as Ansi (exactly as they are stored) }
+        dic.TTDict.SetAnsiField(rec,3,art.kanji_mark[j]+art.kana_mark[i]);
         if charidx<>nil then
           IndexChars(rec, ed.kanji[j].kanji);
       end;
@@ -374,8 +389,9 @@ begin
         kanji_found := false;
         for k := 0 to ed.kanji_used - 1 do
           if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
-            rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[k].kanji, roma[i],
-              ed.kanji[k].markers+ed.kana[i].markers, prior[k], s_art]);
+            rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[k].kanji, art.roma[i],
+              string(art.kanji_mark[k]+art.kana_mark[i]), prior[k], s_art]);
+            dic.TTDict.SetAnsiField(rec,3,art.kanji_mark[k]+art.kana_mark[i]); //see above
             if charidx<>nil then
               IndexChars(rec, ed.kanji[k].kanji);
             kanji_found := true;
@@ -396,7 +412,8 @@ begin
 
  //Write out meanings
   for i := 0 to ed.meanings_used - 1 do begin
-    rec := dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, add_mark+ed.meanings[i].markers]);
+    rec := dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, string(add_mark+art.m_mark[i])]);
+    dic.TTEntries.SetAnsiField(rec,2,add_mark+art.m_mark[i]); //see above
     if wordidx<>nil then
       IndexWords(rec, ed.meanings[i].text);
   end;
@@ -423,10 +440,9 @@ var
   writ:FString;
   s_roma: string;
   s_entry: FString;
-  s_mark: FString;
+  s_mark: TMarkers;
 
-  ed: TEdictArticle;
-  roma: TEdictRoma;
+  prep: TPrepArticle;
 
 begin
 
@@ -480,29 +496,32 @@ begin
     s_entry:=FConvertEdictEntry(writ,s_mark);
     repl(s_entry,UH_EDICT_SEMICOL,UH_EDICT_COMMA);
 
-    ed.Reset;
-    ed.ref := '';
-    ed.AddKanji;
-    ed.kanji[0].kanji := kanji;
-    ed.AddKana;
-    ed.kana[0].kana := phon;
-    ed.AddMeaning;
-    ed.meanings[0].markers := s_mark;
-    ed.meanings[0].text := s_entry;
-    roma[0] := s_roma;
+    prep.ed.Reset;
+    prep.ed.ref := '';
+    prep.ed.AddKanji;
+    prep.ed.kanji[0].kanji := kanji;
+    prep.ed.AddKana;
+    prep.ed.kana[0].kana := phon;
+    prep.ed.AddMeaning;
+    prep.ed.meanings[0].text := s_entry;
+    prep.roma[0] := s_roma;
+    prep.kanji_mark[0] := '';
+    prep.kana_mark[0] := '';
+    prep.m_mark[0] := s_mark;
 
-    AddArticle(@ed, roma);
+    AddArticle(@prep);
   end; //for every character in the file
 end;
 
 procedure TfDictImport.ImportEdict(fuin: TUnicodeFileReader);
 var
   ustr: string;
-  ed: TEdictArticle;
-  roma: TEdictRoma;
+  prep: TPrepArticle;
   i: integer;
   mark_left: string;
+  ed: PEdictArticle;
 begin
+  ed := @prep.ed;
   //Read another line
   while fuin.ReadLn(ustr) do begin
 
@@ -513,22 +532,7 @@ begin
     if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},ustr)<>0) then //EDICT header line
       continue;
 
-    ParseEdict2Line(ustr, @ed);
-
-    //Convert markers
-    for i := 0 to ed.kanji_used - 1 do begin
-      ed.kanji[i].markers := ConvertMarkers(ed.kanji[i].markers, mark_left);
-     //With kanji and kana there's nothing we can do with unrecognized markers
-    end;
-    for i := 0 to ed.kana_used - 1 do begin
-      ed.kana[i].markers := ConvertMarkers(ed.kana[i].markers, mark_left);
-     //With kanji and kana there's nothing we can do with unrecognized markers
-    end;
-    for i := 0 to ed.meanings_used - 1 do begin
-      ed.meanings[i].markers := ConvertMarkers(ed.meanings[i].markers, mark_left);
-      if mark_left<>'' then //put them back into the text, but to the end of it
-        ed.meanings[i].text := ed.meanings[i].text + fstr(' ('+mark_left+')');
-    end;
+    ParseEdict2Line(ustr, @prep.ed);
 
    //Sometimes we only have kana and the it's written as kanji
     if ed.kana_used=0 then begin
@@ -539,25 +543,40 @@ begin
       end;
     end;
 
+    //Convert markers
+    for i := 0 to ed.kanji_used - 1 do begin
+      prep.kanji_mark[i] := ConvertMarkers(ed.kanji[i].markers, mark_left);
+     //With kanji and kana there's nothing we can do with unrecognized markers
+    end;
+    for i := 0 to ed.kana_used - 1 do begin
+      prep.kana_mark[i] := ConvertMarkers(ed.kana[i].markers, mark_left);
+     //With kanji and kana there's nothing we can do with unrecognized markers
+    end;
+    for i := 0 to ed.meanings_used - 1 do begin
+      prep.m_mark[i] := ConvertMarkers(ed.meanings[i].markers, mark_left);
+      if mark_left<>'' then //put them back into the text, but to the end of it
+        ed.meanings[i].text := ed.meanings[i].text + fstr(' ('+mark_left+')');
+    end;
+
     //Generate romaji
     for i := 0 to ed.kana_used - 1 do begin
-      roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
-      if pos('?',roma[i])>0 then
+      prep.roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
+      if pos('?',prep.roma[i])>0 then
       begin
        //roma_problems
-        roma_prob.WritelnUnicode(roma[i]);
+        roma_prob.WritelnUnicode(prep.roma[i]);
         roma_prob.WritelnUnicode(fstrtouni(ed.kana[i].kana));
         had_problems := true;
       end;
-      repl(roma[i],'?','');
-      if roma[i]='' then roma[i]:='XXX';
+      repl(prep.roma[i],'?','');
+      if prep.roma[i]='' then prep.roma[i]:='XXX';
     end;
 
     //Convert entries
     for i := 0 to ed.meanings_used - 1 do
       repl(ed.meanings[i].text,UH_EDICT_SEMICOL,UH_EDICT_COMMA);
 
-    AddArticle(@ed, roma);
+    AddArticle(@prep);
   end; //for every line
 end;
 

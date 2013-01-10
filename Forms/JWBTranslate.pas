@@ -3317,7 +3317,8 @@ procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var readi
 var dnam:string;
     dic:TJaletDic;
     i:integer;
-    markers,defy,s:string;
+    defy,s:string;
+  markers: TMarkers;
 begin
   meaning:='';
   reading:='';

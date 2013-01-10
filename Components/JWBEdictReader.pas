@@ -32,7 +32,7 @@ Sequence '/(' can occur legitimately:
 }
 
 interface
-uses SysUtils, JWBStrings, JWBIO;
+uses SysUtils, JWBStrings, JWBIO, JWBEdictMarkers;
 
 {
 We're using UnicodeStrings throughout this module. They resolve to slow WideStrings
@@ -93,7 +93,6 @@ type
 procedure ParseEdict2Line(const s:UnicodeString; ed: PEdictArticle);
 
 implementation
-uses JWBEdictMarkers;
 
 procedure TKanjiEntry.Reset;
 begin
@@ -276,7 +275,7 @@ begin
         ed.pop := true;
       end else
      //recognized EDICT marker
-      if FindMark(UTrim(curmark))>0 then begin
+      if FindMark(UTrim(curmark))<>#00 then begin
         if curmarkers<>'' then
           curmarkers := curmarkers + ',' + UTrim(curmark)
         else

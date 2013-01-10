@@ -1,7 +1,8 @@
 unit JWBDic;
 
 interface
-uses SysUtils, Classes, MemSource, TextTable, JWBStrings, JWBIndex;
+uses SysUtils, Classes, MemSource, TextTable, JWBStrings, JWBIndex,
+  JWBEdictMarkers;
 
 //See comments to TextTable.CURSOR_IN_TABLE
 {$DEFINE DIC_CURSOR_IN_TABLE}
@@ -159,7 +160,7 @@ type
 
   TEntry = record
     text: FString;
-    markers: string;
+    markers: TMarkers;
   end;
   PEntry = ^TEntry;
 
@@ -167,7 +168,7 @@ type
     items: array of TEntry;
     function ToString: FString;
     function ToEnrichedString: FString;
-    function MergeMarkers: string;
+    function MergeMarkers: TMarkers;
   end;
   PEntries = ^TEntries;
 
@@ -211,10 +212,10 @@ type
     function GetPhonetic: FString;
     function GetSort: string;
     function GetFrequency: integer;
-    function GetKanjiKanaMarkers: string;
+    function GetKanjiKanaMarkers: TMarkers;
     function GetArticle: integer;
     function GetArticleBody: FString; deprecated;
-    function GetArticleMarkers: string; deprecated;
+    function GetArticleMarkers: TMarkers; deprecated;
     function GetEntries: TEntries;
 
   end;
@@ -318,7 +319,7 @@ var
   ignorel: TStringList; //words to ignore when indexing dictionaries
 
 implementation
-uses Forms, JWBEdictMarkers;
+uses Forms;
 
 {
 Dictionary list
@@ -723,11 +724,11 @@ begin
 end;
 
 { Returns markers for current kanji-kana entry }
-function TDicCursor.GetKanjiKanaMarkers: string;
+function TDicCursor.GetKanjiKanaMarkers: TMarkers;
 begin
   case dic.dicver of
     4: Result := ''; //everything goes under entry markers
-    5: Result := CDict.Str(TDictMarkers);
+    5: Result := CDict.AnsiStr(TDictMarkers);
   end;
 end;
 
@@ -749,23 +750,23 @@ begin
 end;
 
 { Returns merged markers for kanji-kana and all entries; deprecated }
-function TDicCursor.GetArticleMarkers: string;
+function TDicCursor.GetArticleMarkers: TMarkers;
 var art: integer;
 begin
   case dic.dicver of
     4:
       if TDictMarkers<>-1 then
-        Result := CDict.Str(TDictMarkers)
+        Result := CDict.AnsiStr(TDictMarkers)
       else begin
         FConvertEdictEntry(GetArticleBody(), Result);
       end;
     5: begin
      //lump everything together as in old version. This is not correct though...
-      Result := CDict.Str(TDictMarkers); //kana-kanji markers
+      Result := CDict.AnsiStr(TDictMarkers); //kana-kanji markers
       art := GetArticle;
       CEntries.Locate(stEntriesIndex, art); //every entry's markers
       while (not CEntries.EOF) and (CEntries.Int(TEntriesIndex)=art) do begin
-        Result := Result + CEntries.Str(TEntriesMarkers);
+        Result := Result + CEntries.AnsiStr(TEntriesMarkers);
         CEntries.Next;
       end;
     end;
@@ -777,14 +778,13 @@ end;
 { Returns all article entries with markers }
 function TDicCursor.GetEntries: TEntries;
 var art: integer;
-  markers: string;
 begin
   case dic.dicver of
     4: begin
       SetLength(Result.items, 1);
       if TDictMarkers<>-1 then begin
         Result.items[0].text := fstr(CDict.Str(TDictEnglish));
-        Result.items[0].markers := CDict.Str(TDictMarkers);
+        Result.items[0].markers := CDict.AnsiStr(TDictMarkers);
       end else begin
         Result.items[0].text := FConvertEdictEntry(fstr(CDict.Str(TDictEnglish)), Result.items[0].markers);
       end;
@@ -797,7 +797,7 @@ begin
         SetLength(Result.items, Length(Result.items)+1);
         with Result.items[Length(Result.items)-1] do begin
           text := CEntries.Str(TEntriesEntry);
-          markers := CEntries.Str(TEntriesMarkers);
+          markers := CEntries.AnsiStr(TEntriesMarkers);
         end;
         CEntries.Next;
       end;
@@ -843,7 +843,7 @@ begin
   end;
 end;
 
-function TEntries.MergeMarkers: string;
+function TEntries.MergeMarkers: TMarkers;
 var i: integer;
 begin
   Result := '';

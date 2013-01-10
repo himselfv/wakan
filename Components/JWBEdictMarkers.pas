@@ -12,9 +12,17 @@ uses JWBStrings;
  New marker IDs have no effect on previously compiled dictionaries. }
 
 type
-  TEdictMarker = record
+ { There's a reason we declare markers as AnsiString.
+  Marker codes include invalid chars which would eventually be lost if allowed
+  to be converted between Ansi and Unicode. (Such as #129 'derog').
+  And since markers are stored in dictionaries as Ansi since long ago,
+  we try to keep that exact format when reading. }
+  TMarkers = AnsiString;
+  TMarker = AnsiChar;
+
+  TEdictMarkerDef = record
     m: string;
-    id: integer;
+    id: TMarker;
     ab: string; //type + expanded name. If name is the same as m, it's not specified
     { Supported types: 1, g, s }
     abl: string; { localized type + expanded name.
@@ -22,155 +30,171 @@ type
   end;
 
 const
-  EdictMarkers: array[0..113] of TEdictMarker = (
+  EdictMarkers: array[0..113] of TEdictMarkerDef = (
    //Part of Speech Marking
-    (m: 'adj-i'; id: 67; ab: 'g'),
-    (m: 'adj-na'; id: 13; ab: 'gna-adj'),
-    (m: 'adj-no'; id: 14; ab: 'gno-adj'),
-    (m: 'adj-pn'; id: 15; ab: 'gpren-adj'),
-    (m: 'adj-s'; id: 16; ab: 'gspec-adj'), //deprecated
-    (m: 'adj-t'; id: 17; ab: 'gtaru-adj'),
-    (m: 'adj-f'; id: 68; ab: 'g'),
-    (m: 'adj'; id: 11; ab: 'g'),
-    (m: 'adv'; id: 12; ab: 'g'),
-    (m: 'adv-n'; id: 69; ab: 'g'),
-    (m: 'adv-to'; id: 70; ab: 'g'),
-    (m: 'aux'; id: 18; ab: 'g'),
-    (m: 'aux-v'; id: 19; ab: 'g'),
-    (m: 'aux-adj'; id: 71; ab: 'g'),
-    (m: 'conj'; id: 20; ab: 'g'),
-    (m: 'ctr'; id: 72; ab: 'g'),
-    (m: 'exp'; id: 21; ab: 'gexpr'),
-    (m: 'int'; id: 25; ab: 'g'),
-    (m: 'iv'; id: 73; ab: 'g'),
-    (m: 'n'; id: 26; ab: 'g'),
-    (m: 'n-adv'; id: 27; ab: 'g'),
-    (m: 'n-pref'; id: 74; ab: 'g'),
-    (m: 'n-suf'; id: 29; ab: 'g'),
-    (m: 'n-t'; id: 28; ab: 'g'),
-    (m: 'neg'; id: 30; ab: 'g'), //deprecated
-    (m: 'neg-v'; id: 31; ab: 'gneg-verb'), //deprecated
-    (m: 'num'; id: 75; ab: 'g'),
-    (m: 'pn'; id: 76; ab: 'g'),
-    (m: 'pref'; id: 32; ab: 'g'),
-    (m: 'prt'; id: 77; ab: 'g'),
-    (m: 'suf'; id: 33; ab: 'g'),
-    (m: 'v1'; id: 34; ab: 'gru-v'),
-    (m: 'v2a-s'; id: 78; ab: 'g'),
-    (m: 'v4h'; id: 79; ab: 'g'),
-    (m: 'v4r'; id: 80; ab: 'g'),
-    (m: 'v5'; id: 35; ab: 'gu-v'),
-    (m: 'v5aru'; id: 47; ab: 'garu-v'),
-    (m: 'v5b'; id: 42; ab: 'gu-v'),
-    (m: 'v5g'; id: 38; ab: 'gu-v'),
-    (m: 'v5k'; id: 37; ab: 'gu-v'),
-    (m: 'v5k-s'; id: 45; ab: 'gIku-v'),
-    (m: 'v5m'; id: 43; ab: 'gu-v'),
-    (m: 'v5n'; id: 41; ab: 'gu-v'),
-    (m: 'v5r'; id: 44; ab: 'gu-v'),
-    (m: 'v5r-i'; id: 81; ab: 'g'),
-    (m: 'v5s'; id: 39; ab: 'gu-v'),
-    (m: 'v5t'; id: 40; ab: 'gu-v'),
-    (m: 'v5u'; id: 36; ab: 'gu-v'),
-    (m: 'v5u-s'; id: 82; ab: 'g'),
-    (m: 'v5uru'; id: 48; ab: 'guru-v'),
-    (m: 'v5z'; id: 46; ab: 'gzuru-v'),
-    (m: 'vz'; id: 83; ab: 'g'),
-    (m: 'vi'; id: 49; ab: 'gintrans-verb'),
-    (m: 'vk'; id: 52; ab: 'gkuru-v'),
-    (m: 'vn'; id: 84; ab: 'g'),
-    (m: 'vs'; id: 50; ab: 'gp-suru'),
-    (m: 'vs-c'; id: 85; ab: 'g'),
-    (m: 'vs-i'; id: 86; ab: 'g'),
-    (m: 'vs-s'; id: 51; ab: 'gsuru-v'),
-    (m: 'vt'; id: 53; ab: 'gtrans-verb'),
+    (m: 'adj-i'; id: #99; ab: 'g'),
+    (m: 'adj-na'; id: #45; ab: 'gna-adj'),
+    (m: 'adj-no'; id: #46; ab: 'gno-adj'),
+    (m: 'adj-pn'; id: #47; ab: 'gpren-adj'),
+    (m: 'adj-s'; id: #48; ab: 'gspec-adj'), //deprecated
+    (m: 'adj-t'; id: #49; ab: 'gtaru-adj'),
+    (m: 'adj-f'; id: #100; ab: 'g'),
+    (m: 'adj'; id: #43; ab: 'g'),
+    (m: 'adv'; id: #44; ab: 'g'),
+    (m: 'adv-n'; id: #101; ab: 'g'),
+    (m: 'adv-to'; id: #102; ab: 'g'),
+    (m: 'aux'; id: #50; ab: 'g'),
+    (m: 'aux-v'; id: #51; ab: 'g'),
+    (m: 'aux-adj'; id: #103; ab: 'g'),
+    (m: 'conj'; id: #52; ab: 'g'),
+    (m: 'ctr'; id: #104; ab: 'g'),
+    (m: 'exp'; id: #53; ab: 'gexpr'),
+    (m: 'int'; id: #57; ab: 'g'),
+    (m: 'iv'; id: #105; ab: 'g'),
+    (m: 'n'; id: #58; ab: 'g'),
+    (m: 'n-adv'; id: #59; ab: 'g'),
+    (m: 'n-pref'; id: #106; ab: 'g'),
+    (m: 'n-suf'; id: #61; ab: 'g'),
+    (m: 'n-t'; id: #60; ab: 'g'),
+    (m: 'neg'; id: #62; ab: 'g'), //deprecated
+    (m: 'neg-v'; id: #63; ab: 'gneg-verb'), //deprecated
+    (m: 'num'; id: #107; ab: 'g'),
+    (m: 'pn'; id: #108; ab: 'g'),
+    (m: 'pref'; id: #64; ab: 'g'),
+    (m: 'prt'; id: #109; ab: 'g'),
+    (m: 'suf'; id: #65; ab: 'g'),
+    (m: 'v1'; id: #66; ab: 'gru-v'),
+    (m: 'v2a-s'; id: #110; ab: 'g'),
+    (m: 'v4h'; id: #111; ab: 'g'),
+    (m: 'v4r'; id: #112; ab: 'g'),
+    (m: 'v5'; id: #67; ab: 'gu-v'),
+    (m: 'v5aru'; id: #79; ab: 'garu-v'),
+    (m: 'v5b'; id: #74; ab: 'gu-v'),
+    (m: 'v5g'; id: #70; ab: 'gu-v'),
+    (m: 'v5k'; id: #69; ab: 'gu-v'),
+    (m: 'v5k-s'; id: #77; ab: 'gIku-v'),
+    (m: 'v5m'; id: #75; ab: 'gu-v'),
+    (m: 'v5n'; id: #73; ab: 'gu-v'),
+    (m: 'v5r'; id: #76; ab: 'gu-v'),
+    (m: 'v5r-i'; id: #113; ab: 'g'),
+    (m: 'v5s'; id: #71; ab: 'gu-v'),
+    (m: 'v5t'; id: #72; ab: 'gu-v'),
+    (m: 'v5u'; id: #68; ab: 'gu-v'),
+    (m: 'v5u-s'; id: #114; ab: 'g'),
+    (m: 'v5uru'; id: #80; ab: 'guru-v'),
+    (m: 'v5z'; id: #78; ab: 'gzuru-v'),
+    (m: 'vz'; id: #115; ab: 'g'),
+    (m: 'vi'; id: #81; ab: 'gintrans-verb'),
+    (m: 'vk'; id: #84; ab: 'gkuru-v'),
+    (m: 'vn'; id: #116; ab: 'g'),
+    (m: 'vs'; id: #82; ab: 'gp-suru'),
+    (m: 'vs-c'; id: #117; ab: 'g'),
+    (m: 'vs-i'; id: #118; ab: 'g'),
+    (m: 'vs-s'; id: #83; ab: 'gsuru-v'),
+    (m: 'vt'; id: #85; ab: 'gtrans-verb'),
 
    //Field of Application
-    (m: 'Buddh'; id: 87),
-    (m: 'MA'; id: 5; ab: '1martial-arts'),
-    (m: 'comp'; id: 88),
-    (m: 'food'; id: 89),
-    (m: 'geom'; id: 90),
-    (m: 'gram'; id: 23; ab: 'g'),
-    (m: 'ling'; id: 91),
-    (m: 'math'; id: 92),
-    (m: 'mil'; id: 93),
-    (m: 'physics'; id: 94),
+    (m: 'Buddh'; id: #119),
+    (m: 'MA'; id: #37; ab: '1martial-arts'),
+    (m: 'comp'; id: #120),
+    (m: 'food'; id: #121),
+    (m: 'geom'; id: #122),
+    (m: 'gram'; id: #55; ab: 'g'),
+    (m: 'ling'; id: #123),
+    (m: 'math'; id: #124),
+    (m: 'mil'; id: #125),
+    (m: 'physics'; id: #126),
 
    //Miscellaneous Markings
-    (m: 'X'; id: 9; ab: '1rude'),
-    (m: 'abbr'; id: 1; ab: '1'),
-    (m: 'arch'; id: 2; ab: '1archaic'),
-    (m: 'ateji'; id: 95; ab: '1'),
-    (m: 'chn'; id: 96; ab: '1child'),
-    (m: 'col'; id: 10; ab: '1'),
-    (m: 'derog'; id: 97; ab: '1'),
-    (m: 'eK'; id: 98),
-    (m: 'ek'; id: 99),
-    (m: 'fam'; id: 3; ab: '1familiar'),
-    (m: 'fem'; id: 4; ab: '1female'),
-    (m: 'gikun'; id: 22; ab: 'g'),
-    (m: 'hon'; id: 54; ab: 'shonor'),
-    (m: 'hum'; id: 55; ab: 's'),
-    (m: 'ik'; id: 56; ab: 'sirreg-kana'),
-    (m: 'iK'; id: 57; ab: 'sirreg-kanji'),
-    (m: 'id'; id: 24; ab: 'gidiom'),
-    (m: 'io'; id: 58; ab: 'sirreg-okurigana'),
-    (m: 'm-sl'; id: 7; ab: '1manga-slang'),
-    (m: 'male'; id: 6; ab: '1'),
-    (m: 'male-sl'; id: 100; ab: '1'),
-    (m: 'oK'; id: 62; ab: 'soutdated-kanji'),
-    (m: 'obs'; id: 59; ab: 'sobsolete'),
-    (m: 'obsc'; id: 60; ab: 'sobscure'),
-    (m: 'ok'; id: 61; ab: 'soutdated-kana'),
-    (m: 'on-mim'; id: 101),
-    (m: 'poet'; id: 102; ab: '1'),
-    (m: 'pol'; id: 63; ab: 'spolite'),
-    (m: 'rare'; id: 103; ab: 's'),
-    (m: 'sens'; id: 104; ab: '1'),
-    (m: 'sl'; id: 105; ab: '1slang'),
-    (m: 'uK'; id: 65; ab: 'skanji'),
-    (m: 'uk'; id: 64; ab: 'skana'),
-    (m: 'vulg'; id: 8; ab: '1vulgar'),
+    (m: 'X'; id: #41; ab: '1rude'),
+    (m: 'abbr'; id: #33; ab: '1'),
+    (m: 'arch'; id: #34; ab: '1archaic'),
+    (m: 'ateji'; id: #127; ab: '1'),
+    (m: 'chn'; id: #128; ab: '1child'),
+    (m: 'col'; id: #42; ab: '1'),
+    (m: 'derog'; id: #129; ab: '1'),
+    (m: 'eK'; id: #130),
+    (m: 'ek'; id: #131),
+    (m: 'fam'; id: #35; ab: '1familiar'),
+    (m: 'fem'; id: #36; ab: '1female'),
+    (m: 'gikun'; id: #54; ab: 'g'),
+    (m: 'hon'; id: #86; ab: 'shonor'),
+    (m: 'hum'; id: #87; ab: 's'),
+    (m: 'ik'; id: #88; ab: 'sirreg-kana'),
+    (m: 'iK'; id: #89; ab: 'sirreg-kanji'),
+    (m: 'id'; id: #56; ab: 'gidiom'),
+    (m: 'io'; id: #90; ab: 'sirreg-okurigana'),
+    (m: 'm-sl'; id: #39; ab: '1manga-slang'),
+    (m: 'male'; id: #38; ab: '1'),
+    (m: 'male-sl'; id: #132; ab: '1'),
+    (m: 'oK'; id: #94; ab: 'soutdated-kanji'),
+    (m: 'obs'; id: #91; ab: 'sobsolete'),
+    (m: 'obsc'; id: #92; ab: 'sobscure'),
+    (m: 'ok'; id: #93; ab: 'soutdated-kana'),
+    (m: 'on-mim'; id: #133),
+    (m: 'poet'; id: #134; ab: '1'),
+    (m: 'pol'; id: #95; ab: 'spolite'),
+    (m: 'rare'; id: #135; ab: 's'),
+    (m: 'sens'; id: #136; ab: '1'),
+    (m: 'sl'; id: #137; ab: '1slang'),
+    (m: 'uK'; id: #97; ab: 'skanji'),
+    (m: 'uk'; id: #96; ab: 'skana'),
+    (m: 'vulg'; id: #40; ab: '1vulgar'),
 
    //Word Priority Marking
-    (m: 'P'; id: 66; ab: 'spop'),
+    (m: 'P'; id: #98; ab: 'spop'),
 
    //Regional Words
-    (m: 'kyb'; id: 106),
-    (m: 'osb'; id: 107),
-    (m: 'ksb'; id: 108),
-    (m: 'ktb'; id: 109),
-    (m: 'tsb'; id: 110),
-    (m: 'thb'; id: 111),
-    (m: 'tsug'; id: 112),
-    (m: 'kyu'; id: 113),
-    (m: 'rkb'; id: 114)
+    (m: 'kyb'; id: #138),
+    (m: 'osb'; id: #139),
+    (m: 'ksb'; id: #140),
+    (m: 'ktb'; id: #141),
+    (m: 'tsb'; id: #142),
+    (m: 'thb'; id: #143),
+    (m: 'tsug'; id: #144),
+    (m: 'kyu'; id: #145),
+    (m: 'rkb'; id: #146)
   );
 
-  LastMarkerID = 114;
+  LastMarkerID = #146;
+ { There's also an empty ID space #01..#32 }
 
-  MarkPop: char = Chr(32+66);
+  MarkPop: TMarker = #98;
 
-function FindMark(m:string):byte; //returns marker ID or 0
-function ConvertEdictEntry(s:string;var mark:string):string;
-function FConvertEdictEntry(s:FString;var mark:string):FString; deprecated
-function ConvertMarkers(const s:string; out unrecog:string):string;
-function GetMarkEdict(mark:char):string;
-function GetMarkAbbr(mark:char):string;
-function EnrichDictEntry(s,mark:string):string;
-function DropEdictMarkers(s:string):string;
-function MarkersToStr(const s:string; out pop: boolean):string;
+{ Only for debug -- tests that there are no ID duplicates. }
+procedure TestMarkersIntegrity;
 
-function TestMarkers(const mark, test:string): boolean;
+function FindMark(m:string):TMarker; //returns marker ID or 0
+function TestMarkers(const mark,test:TMarkers): boolean;
+function GetMarkEdict(mark:TMarker):string;
+function GetMarkAbbr(mark:TMarker):string;
+function ConvertMarkers(const s:string; out unrecog:string):TMarkers;
+function MarkersToStr(const s:TMarkers; out pop: boolean):string;
+
+function ConvertEdictEntry(const s:string;var mark:TMarkers):string;
+function FConvertEdictEntry(const s:FString;var mark:TMarkers):FString; deprecated
+function EnrichDictEntry(const s:string;const mark:TMarkers):string;
+function DropEdictMarkers(const s:string):string;
 
 implementation
 uses SysUtils, StrUtils;
 
-function FindMark(m:string):byte;
+procedure TestMarkersIntegrity;
+var i, j: integer;
+begin
+  for i := 0 to Length(EdictMarkers) - 1 do begin
+    if EdictMarkers[i].id=#00 then
+      raise Exception.Create('TestMarkersIntegrity: Markers with zero ID detected('+EdictMarkers[i].m+')');
+    for j := 0 to Length(EdictMarkers) - 1 do
+      if (i<>j) and (EdictMarkers[i].id=EdictMarkers[j].id) then
+        raise Exception.Create('TestMarkersIntegrity: Duplicate marker IDs detected ('+EdictMarkers[i].m+', '+EdictMarkers[j].m+')');
+  end;
+end;
+
+function FindMark(m:string):TMarker;
 var i: integer;
 begin
-  Result := 0;
+  Result := #00;
   for i := 0 to Length(EdictMarkers) - 1 do
     if EdictMarkers[i].m=m then begin
       Result := EdictMarkers[i].id;
@@ -178,16 +202,94 @@ begin
     end;
 end;
 
+{ Returns true if mark contains at least one of the characters from test. }
+function TestMarkers(const mark, test:TMarkers): boolean;
+var i,j: integer;
+begin
+  Result := false;
+  for i := 1 to Length(mark) do
+    for j := 1 to Length(test) do
+      if mark[i]=test[j] then begin
+        Result := true;
+        break;
+      end;
+end;
+
+function GetMarkEdict(mark:TMarker):string;
+var i: integer;
+begin
+  Result := '';
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].id=mark then begin
+      Result := EdictMarkers[i].m;
+      break;
+    end;
+end;
+
+function GetMarkAbbr(mark:TMarker):string;
+var i: integer;
+begin
+  Result := '1?';
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].id=mark then begin
+      Result := EdictMarkers[i].abl;
+      if Result='' then Result := EdictMarkers[i].ab;
+      if Result='' then Result := 's'+EdictMarkers[i].m else
+      if Length(Result)=1 {only type} then Result := Result + EdictMarkers[i].m;
+      break;
+    end;
+end;
+
+{ Accepts marker list in the form "mark1,mark2,mark3". Converts it to Wakan
+ marker list format.
+ Returns those markers which weren't recognized (to be added back to the string) }
+function ConvertMarkers(const s:string; out unrecog:string):TMarkers;
+var tmp, m: string;
+  mi: TMarker;
+begin
+  Result := '';
+  unrecog := '';
+  tmp := s;
+  m := strqpop(tmp,',');
+  while m<>'' do begin
+    mi := FindMark(m);
+    if mi<>#00 then
+      Result := Result + mi
+    else
+      if unrecog<>'' then
+        unrecog := unrecog + ',' + m
+      else
+        unrecog := m;
+    m := strqpop(tmp,',');
+  end;
+end;
+
+{ Converts a Wakan dictionary markers field to EDICT markers string  }
+function MarkersToStr(const s:TMarkers; out pop: boolean):string;
+var i: integer;
+begin
+  pop := false;
+  Result := '';
+  for i := 1 to Length(s) do begin
+    if s[i]=MarkPop then
+      pop := true
+    else
+      Result := Result + ',' + GetMarkEdict(s[i]);
+  end;
+  delete(Result,1,1);
+end;
+
+
 { EDict processing }
 
-function ConvertEdictEntry(s:string;var mark:string):string;
+function ConvertEdictEntry(const s:string;var mark:TMarkers):string;
 var s2:string;
     inmarker:boolean;
     curm,marker:string;
     i:integer;
     markerd:boolean;
     oldm:string;
-    mm:byte;
+    mm:TMarker;
     insection:boolean;
 begin
   s2:='';
@@ -218,14 +320,14 @@ begin
         if (length(marker)>0) and (marker[1]=',') then delete(marker,1,1);
         markerd:=true;
         mm:=FindMark(curm);
-        if mm=0 then
+        if mm=#00 then
         begin
           if (oldm='1') or (oldm='2') or (oldm='3') then insection:=true;
-          s2:=s2+'('+oldm+')'; mm:=0; markerd:=false;
+          s2:=s2+'('+oldm+')'; mm:=#00; markerd:=false;
           marker:='';
         end;
-        if insection then mm:=0;
-        if mm<>0 then mark:=mark+chr(mm+32);
+        if insection then mm:=#00;
+        if mm<>#00 then mark:=mark+mm;
       end;
       marker:='';
       inmarker:=false;
@@ -244,61 +346,12 @@ especiall since it's only used in two cases now:
 In the second case, the articles are without exception stored in Ansi,
 and in the first case we just don't have a multilingual chinese dic support yet.
 }
-function FConvertEdictEntry(s:FString;var mark:string):FString;
+function FConvertEdictEntry(const s:FString;var mark:TMarkers):FString;
 begin
-  Result := fstr(ConvertEdictEntry(AnsiString(fstrtouni(s)),mark))
+  Result := fstr(ConvertEdictEntry(string(fstrtouni(s)),mark))
 end;
 
-{ Accepts marker list in the form "mark1,mark2,mark3". Converts it to Wakan
- marker list format.
- Returns those markers which weren't recognized (to be added back to the string) }
-function ConvertMarkers(const s:string; out unrecog:string):string;
-var tmp, m: string;
-  mi: byte;
-begin
-  Result := '';
-  unrecog := '';
-  tmp := s;
-  m := strqpop(tmp,',');
-  while m<>'' do begin
-    mi := FindMark(m);
-    if mi<>0 then
-      Result := Result + Chr(32+mi)
-    else
-      if unrecog<>'' then
-        unrecog := unrecog + ',' + m
-      else
-        unrecog := m;
-    m := strqpop(tmp,',');
-  end;
-end;
-
-function GetMarkEdict(mark:char):string;
-var i: integer;
-begin
-  Result := '';
-  for i := 0 to Length(EdictMarkers) - 1 do
-    if EdictMarkers[i].id=ord(mark)-32 then begin
-      Result := EdictMarkers[i].m;
-      break;
-    end;
-end;
-
-function GetMarkAbbr(mark:char):string;
-var i: integer;
-begin
-  Result := '1?';
-  for i := 0 to Length(EdictMarkers) - 1 do
-    if EdictMarkers[i].id=ord(mark)-32 then begin
-      Result := EdictMarkers[i].abl;
-      if Result='' then Result := EdictMarkers[i].ab;
-      if Result='' then Result := 's'+EdictMarkers[i].m else
-      if Length(Result)=1 {only type} then Result := Result + EdictMarkers[i].m;
-      break;
-    end;
-end;
-
-function EnrichDictEntry(s,mark:string):string;
+function EnrichDictEntry(const s:string;const mark:TMarkers):string;
 var s2:string;
     i:integer;
     s3:string;
@@ -316,7 +369,7 @@ begin
   result:=marg+mar1+s2+mars;
 end;
 
-function DropEdictMarkers(s:string):string;
+function DropEdictMarkers(const s:string):string;
 var lst, lcnt: integer;
   i: integer;
 begin
@@ -350,34 +403,10 @@ begin
       Result[i+lcnt] := s[i];
 end;
 
-{ Converts a Wakan dictionary markers field to EDICT markers string  }
-function MarkersToStr(const s:string; out pop: boolean):string;
-var i: integer;
-begin
-  pop := false;
-  Result := '';
-  for i := 1 to Length(s) do begin
-    if s[i]=MarkPop then
-      pop := true
-    else
-      Result := Result + ',' + GetMarkEdict(s[i]);
-  end;
-  delete(Result,1,1);
-end;
 
-{ Returns true if mark contains at least one of the characters from test.
- Characters are specified by ids, without 32+ addition. }
-function TestMarkers(const mark, test:string): boolean;
-var i,j: integer;
-begin
-  Result := false;
-  for i := 1 to Length(mark) do
-    for j := 1 to Length(test) do
-      if ord(mark[i])=32+ord(test[j]) then begin
-        Result := true;
-        break;
-      end;
-end;
-
+initialization
+{$IFDEF DEBUG}
+  TestMarkersIntegrity;
+{$ENDIF}
 
 end.

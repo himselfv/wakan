@@ -32,7 +32,8 @@ var ony,kuny,defy:string;
     FontJpEnGrid:string;
     adddot:integer;
     dic:TDicIndexCursor;
-    mark,freq:string;
+    freq:string;
+    mark:TMarkers;
     rt: integer; //TCharRead.Int(TCharReadType)
   tmp:string;
 begin

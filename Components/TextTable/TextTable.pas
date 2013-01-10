@@ -159,8 +159,10 @@ type
   public
     function GetFieldSize(recno,field:integer):byte;
     function GetField(rec:integer;field:integer):string;
-    procedure SetField(rec:integer;field:integer;const value:string);
     function GetIntField(rec:integer;field:integer;out value:integer):boolean;
+    function GetAnsiField(rec:integer;field:integer):AnsiString;
+    procedure SetField(rec:integer;field:integer;const value:string);
+    procedure SetAnsiField(rec:integer;field:integer;const value:AnsiString);
 
   public
     function GetSeekObject(seek: string): TSeekObject;
@@ -233,6 +235,7 @@ type
 
   public
     function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+    function AnsiStr(field:integer):AnsiString; {$IFDEF INLINE}inline;{$ENDIF}
     function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
     function TrueInt(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
     function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -346,7 +349,10 @@ begin
     if mf=nil then raise Exception.Create('TextTable: Important file missing.');
     ms:=mf.Lock;
     sl.LoadFromStream(ms);
-  end else sl.LoadFromFile(filename+'.info');
+  end else begin
+    mf:=nil; //die if you touch this
+    sl.LoadFromFile(filename+'.info');
+  end;
   tcreate:=false;
   c:=' ';
   prebuffer:=false;
@@ -903,11 +909,36 @@ begin
   end;
 end;
 
+{ Useful when you don't want the Unicode->Ansi conversion to interfere, such as for RawByteStrings }
+function TTextTable.GetAnsiField(rec:integer;field:integer):AnsiString;
+var ofs:integer;
+  sz:byte;
+  tp:char; //field type. Char because FieldTypes is string.
+begin
+  if not loaded then load;
+  if rec>=reccount then
+    raise Exception.Create('Read beyond!');
+  ofs:=GetDataOffset(rec,field);
+  tp:=fieldtypes[field+1];
+  sz:=GetFieldSize(rec,field);
+  case tp of
+  //AnsiString.
+  's':begin
+     SetLength(Result, sz);
+     if offline then
+       source.ReadRawData(PAnsiChar(Result)^,datafpos+ofs,sz)
+     else
+       move(OffsetPtr(data, ofs)^, PAnsiChar(Result)^, sz);
+   end;
+  else
+    raise Exception.Create('Unsupported field type in GetAnsiField');
+  end;
+end;
+
 //Setting fields is not supported for offline dictionaries.
 //It's only used for user data anyway, which is never offline.
 procedure TTextTable.SetField(rec:integer;field:integer;const value:string);
-var i,ii:integer;
-  ofs:integer;
+var ofs:integer;
   sz:byte;
   tp:char;
   b:byte;
@@ -985,6 +1016,29 @@ begin
    end;
   end;
 end;
+
+{ See comments for GetAnsiField }
+procedure TTextTable.SetAnsiField(rec:integer;field:integer;const value:AnsiString);
+var ofs:integer;
+  sz:byte;
+  tp:char;
+begin
+  if rec>=reccount then
+    raise Exception.Create('Write beyond!');
+  ofs:=GetDataOffset(rec,field);
+  tp:=fieldtypes[field+1];
+  sz:=GetFieldSize(rec,field);
+
+  case tp of
+  's': begin
+     if sz>0 then
+       move(PAnsiChar(value)^, OffsetPtr(data, ofs)^, sz);
+   end;
+  else
+    raise Exception.Create('Unsupported field type in SetAnsiField');
+  end;
+end;
+
 
 {$IFDEF CURSOR_IN_TABLE}
 function TTextTable.Str(field:integer):string;
@@ -1868,6 +1922,11 @@ end;
 function TTextTableCursor.Str(field:integer):string;
 begin
   Result:=Table.GetField(tcur,field);
+end;
+
+function TTextTableCursor.AnsiStr(field:integer):AnsiString;
+begin
+  Result:=Table.GetAnsiField(tcur,field);
 end;
 
 function TTextTableCursor.Int(field:integer):integer;

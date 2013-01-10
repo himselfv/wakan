@@ -613,45 +613,44 @@ resourcestring
   sDicSearchTitle='#00932^eDic.search';
   sDicSearchText='#00933^ePlease wait. Searching dictionary...';
 
-function IsAppropriateVerbType(sdef: string; s2: string): boolean;
+function IsAppropriateVerbType(const sdef: string; const mk:TMarkers): boolean;
 begin
   case sdef[1] of
    'F': Result := true;
-   '2': Result := TestMarkers(s2,#34);
-   'S': Result := TestMarkers(s2,#51);
-   'K': Result := TestMarkers(s2,#52);
-   'I': Result := TestMarkers(s2,#45);
-   '1': Result := TestMarkers(s2,#78#79#80#35#47#42#38#37#45#43#41#44#81#39#40#36
-          +#$82#48#46#83#49#52#84#50#85#86#51#53);
-   'A': Result := TestMarkers(s2,#11#14#15#16#17#67#68);
-   'N': Result := TestMarkers(s2,#13);
+   '2': Result := TestMarkers(mk,#66);
+   'S': Result := TestMarkers(mk,#83);
+   'K': Result := TestMarkers(mk,#84);
+   'I': Result := TestMarkers(mk,#77);
+   '1': Result := TestMarkers(mk,#67#68#69#70#71#72#73#74#75#76#77#78#79#80#81#82#83#84#85
+          +#110#111#112#113#114#115#116#117#118);
+   'A': Result := TestMarkers(mk,#43#46#47#48#49#99#100);
+   'N': Result := TestMarkers(mk,#45);
   else
     Result := false;
   end;
 end;
 
-
 //Returns the base popularity class for a record (the lower the better)
-function GetPopClass(s2: string): integer;
+function GetPopClass(const mk:TMarkers): integer;
 begin
   Result := 40;
   if fSettings.CheckBox5.Checked then begin
-    if TestMarkers(s2,#13#14#26#27#28#29#30#31#74) then dec(Result,5);
-    if TestMarkers(s2,#34#78#79#80#35#47#42#38#37#45#43#41#44#81#39#40#36
-        +#$82#48#46#83#49#52#84#50#85#86#51#53) then dec(Result,5);
+    if TestMarkers(mk,#46#46#58#59#60#61#62#63#106) then dec(Result,5);
+    if TestMarkers(mk,#66#67#68#69#70#71#72#73#74#75#76#77#78#79#80#81#82#83#84#85
+          +#110#111#112#113#114#115#116#117#118) then dec(Result,5);
   end;
   if fSettings.CheckBox6.Checked then begin
-    if TestMarkers(s2,#54) then dec(Result,1); //honor
-    if TestMarkers(s2,#55) then dec(Result,2); //humor
-    if TestMarkers(s2,#63) then dec(Result,3); //humble
+    if TestMarkers(mk,#86) then dec(Result,1); //honor
+    if TestMarkers(mk,#87) then dec(Result,2); //humor
+    if TestMarkers(mk,#88) then dec(Result,3); //humble
   end;
-  if TestMarkers(s2,#59) then inc(Result,20); //obsolete
-  if TestMarkers(s2,#60) then inc(Result,20); //obscure
-  if TestMarkers(s2,#61) then inc(Result,20); //outd-kanji
-  if TestMarkers(s2,#62) then inc(Result,20); //outd-kana
-  if TestMarkers(s2,#103) then inc(Result,20); //rare
+  if TestMarkers(mk,#91) then inc(Result,20); //obsolete
+  if TestMarkers(mk,#92) then inc(Result,20); //obscure
+  if TestMarkers(mk,#93) then inc(Result,20); //outd-kanji
+  if TestMarkers(mk,#94) then inc(Result,20); //outd-kana
+  if TestMarkers(mk,#135) then inc(Result,20); //rare
 
-  if fSettings.CheckBox7.Checked and TestMarkers(s2,#66) then dec(Result,150); //pop
+  if fSettings.CheckBox7.Checked and TestMarkers(mk,MarkPop) then dec(Result,150); //pop
 end;
 
 procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
@@ -669,7 +668,7 @@ var
   raw_entries: TEntries;
   entry:string; //translation entry text
   converted:string;
-  markers,kmarkers:string;
+  markers,kmarkers:TMarkers;
   popclas:integer;
   UserScore:integer;
   UserIndex:integer;

@@ -1120,7 +1120,7 @@ begin
   if (ch>=$FE30) and (ch<=$FE4F) then result:=EC_IDG_PUNCTUATION else
   if (ch>=$FF00) and (ch<=$FF5F) then result:=EC_LATIN_FW else
   if (ch>=$FF60) and (ch<=$FF9F) then result:=EC_KATAKANA_HW else
-  if (ch>=$0000) and (ch<=$007F) then result:=EC_LATIN_HW else
+  if {(ch>=$0000) and} (ch<=$007F) then result:=EC_LATIN_HW else //first part always true
   result:=EC_UNKNOWN;
 end;
 

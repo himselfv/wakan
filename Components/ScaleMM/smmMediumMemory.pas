@@ -1457,8 +1457,6 @@ procedure TMediumThreadManager.ReleaseAllFreeMem;
 var
   pheaderremainder: PMediumHeaderExt;
   block, nextblock: PMediumBlockMemory;
-  mem: PMediumHeader;
-  freedmem: PMediumHeaderExt;
 begin
   block := Self.FFirstBlock;
   while block <> nil do

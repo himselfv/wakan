@@ -82,7 +82,8 @@ var sl,sl2:TStringList;
     pass:boolean;
     i,j,k,l:integer;
     dic:TDicIndexCursor;
-    freq,mark:string;
+    freq:string;
+    mark:TMarkers;
     stp:string;
     kj:string;
 begin
