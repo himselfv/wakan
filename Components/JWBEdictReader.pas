@@ -26,6 +26,12 @@ Separate (P) markers for article and readings:
   /(adj-i) (uk) (See 有り得る・ありうる) impossible/unlikely/improbable/(P)
   /EntL2109610X/
 
+Markers can be applied both to "only this entry" and to "all entries starting
+with this":
+  いい事[いいこと] /(exp,n) (1) good thing/nice thing
+    /(2) (usu. as ～をいいことに(して)) good excuse/good grounds/good opportunity
+    /(int) (3) (fem) interjection used to impress an idea or to urge a response/EntL2583070/
+
 Sequence '/(' can occur legitimately:
   /(expression of) effort
 
