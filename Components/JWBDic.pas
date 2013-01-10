@@ -157,6 +157,20 @@ type
 
   end;
 
+  TEntry = record
+    text: FString;
+    markers: string;
+  end;
+  PEntry = ^TEntry;
+
+  TEntries = record
+    items: array of TEntry;
+    function ToString: FString;
+    function ToEnrichedString: FString;
+    function MergeMarkers: string;
+  end;
+  PEntries = ^TEntries;
+
   TDicCursor = class
   public
     dic: TJaletDic;
@@ -199,8 +213,9 @@ type
     function GetFrequency: integer;
     function GetKanjiKanaMarkers: string;
     function GetArticle: integer;
-    function GetArticleBody: FString;
-    function GetArticleMarkers: string;
+    function GetArticleBody: FString; deprecated;
+    function GetArticleMarkers: string; deprecated;
+    function GetEntries: TEntries;
 
   end;
 
@@ -228,7 +243,7 @@ type
     FType: TDicIndexCursorType;
     FReader: TDicIndexReader;
   public
-    constructor Create(ADic: TJaletDic; AType: TDicIndexCursorType);
+    constructor Create(ADic: TJaletDic);
     destructor Destroy; override;
     procedure Find(t:TIndexType;const locator:UnicodeString);
     function Next: boolean;
@@ -299,7 +314,7 @@ var
   ignorel: TStringList; //words to ignore when indexing dictionaries
 
 implementation
-uses Forms;
+uses Forms, JWBEdictMarkers;
 
 {
 Dictionary list
@@ -703,6 +718,15 @@ begin
     Result := 1;
 end;
 
+{ Returns markers for current kanji-kana entry }
+function TDicCursor.GetKanjiKanaMarkers: string;
+begin
+  case dic.dicver of
+    4: Result := ''; //everything goes under entry markers
+    5: Result := CDict.Str(TDictMarkers);
+  end;
+end;
+
 { Returns article index for current kanji-kana entry. }
 function TDicCursor.GetArticle: integer;
 begin
@@ -714,45 +738,13 @@ begin
   end;
 end;
 
+{ Returns merged article body; deprecated }
 function TDicCursor.GetArticleBody: FString;
-var art: integer;
-  entrycnt: integer;
-  ent: FString;
 begin
-  case dic.dicver of
-    4: Result := fstr(CDict.Str(TDictEnglish));
-    5: begin
-      Result := '';
-      art := GetArticle;
-      entrycnt := 0;
-      CEntries.Locate(stEntriesIndex, art);
-      while (not CEntries.EOF) and (CEntries.Int(TEntriesIndex)=art) do begin
-        ent := CEntries.Str(TEntriesEntry);
-        if Result='' then
-          Result := ent
-        else
-        if entrycnt=1 then
-         //convert to multi-entry article
-          Result := fstr('(1) ')+Result+fstr('; (2) ')+ent
-        else
-          Result := Result + fstr('; ('+IntToStr(entrycnt+1)+') ')+ent;
-        Inc(entrycnt);
-        CEntries.Next;
-      end;
-    end;
-  else
-     raise Exception.Create('Invalid dictionary version.');  
-  end;
+  Result := GetEntries.ToString;
 end;
 
-function TDicCursor.GetKanjiKanaMarkers: string;
-begin
-  case dic.dicver of
-    4: Result := ''; //everything goes under entry markers
-    5: Result := CDict.Str(TDictMarkers);
-  end;
-end;
-
+{ Returns merged markers for kanji-kana and all entries; deprecated }
 function TDicCursor.GetArticleMarkers: string;
 var art: integer;
 begin
@@ -760,8 +752,9 @@ begin
     4:
       if TDictMarkers<>-1 then
         Result := CDict.Str(TDictMarkers)
-      else
-        Result := '';
+      else begin
+        FConvertEdictEntry(GetArticleBody(), Result);
+      end;
     5: begin
      //lump everything together as in old version. This is not correct though...
       Result := CDict.Str(TDictMarkers); //kana-kanji markers
@@ -775,6 +768,83 @@ begin
   else
      raise Exception.Create('Invalid dictionary version.');  
   end;
+end;
+
+{ Returns all article entries with markers }
+function TDicCursor.GetEntries: TEntries;
+var art: integer;
+  markers: string;
+begin
+  case dic.dicver of
+    4: begin
+      SetLength(Result.items, 1);
+      if TDictMarkers<>-1 then begin
+        Result.items[0].text := fstr(CDict.Str(TDictEnglish));
+        Result.items[0].markers := CDict.Str(TDictMarkers);
+      end else begin
+        Result.items[0].text := FConvertEdictEntry(fstr(CDict.Str(TDictEnglish)), Result.items[0].markers);
+      end;
+    end;
+    5: begin
+      SetLength(Result.items, 0);
+      art := GetArticle;
+      CEntries.Locate(stEntriesIndex, art); //every entry's markers
+      while (not CEntries.EOF) and (CEntries.Int(TEntriesIndex)=art) do begin
+        SetLength(Result.items, Length(Result.items)+1);
+        with Result.items[Length(Result.items)-1] do begin
+          text := CEntries.Str(TEntriesEntry);
+          markers := CEntries.Str(TEntriesMarkers);
+        end;
+        CEntries.Next;
+      end;
+    end;
+  else
+     raise Exception.Create('Invalid dictionary version.');
+  end;
+end;
+
+function TEntries.ToString: FString;
+var i: integer;
+  ent: FString;
+begin
+  Result := '';
+  for i := 0 to Length(items) - 1 do begin
+    ent := items[i].text;
+    if Result='' then
+      Result := ent
+    else
+    if i=1 then
+     //convert to multi-entry article
+      Result := fstr('(1) ')+Result+fstr('; (2) ')+ent
+    else
+      Result := Result+fstr('; ('+IntToStr(i+1)+') ')+ent;
+  end;
+end;
+
+function TEntries.ToEnrichedString: FString;
+var i: integer;
+  ent: FString;
+begin
+  Result := '';
+  for i := 0 to Length(items) - 1 do begin
+    ent := EnrichDictEntry(items[i].text, items[i].markers);
+    if Result='' then
+      Result := ent
+    else
+    if i=1 then
+     //convert to multi-entry article
+      Result := fstr('(1) ')+Result+fstr('; (2) ')+ent
+    else
+      Result := Result+fstr('; ('+IntToStr(i+1)+') ')+ent;
+  end;
+end;
+
+function TEntries.MergeMarkers: string;
+var i: integer;
+begin
+  Result := '';
+  for i := 0 to Length(items) - 1 do
+    Result := Result + items[i].markers;
 end;
 
 
@@ -844,10 +914,9 @@ begin
   inc(indexfrom);
 end;
 
-constructor TDicIndexCursor.Create(ADic: TJaletDic; AType: TDicIndexCursorType);
+constructor TDicIndexCursor.Create(ADic: TJaletDic);
 begin
   inherited Create(ADic);
-  FType := AType;
   FReader := TDicIndexReader.Create(ADic);
 end;
 
@@ -859,6 +928,10 @@ end;
 
 procedure TDicIndexCursor.Find(t:TIndexType;const locator:UnicodeString);
 begin
+  case t of
+    itWord: FType:=ctEntryIndex;
+    itChar: FType:=ctDictIndex;
+  end;
   FReader.FindIndexString(t,locator);
 end;
 

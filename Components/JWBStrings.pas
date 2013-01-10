@@ -272,11 +272,11 @@ const //Character types for EvalChar
   EC_KATAKANA_HW      = 8; // half-width katakana
 
 
-{$IFDEF UNICODE}
 function EvalChar(char:WideChar):integer; overload; {$IFDEF INLINE}inline;{$ENDIF}
+{$IFDEF UNICODE}
 function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{$ENDIF}
 {$ELSE}
-function EvalChar(const char:FString):integer;
+function EvalChar(const char:FString):integer; overload;
 {$ENDIF}
 function IsHalfWidthChar(c:FChar): boolean;
 function IsLatinDigit(c:FChar):boolean;
@@ -1107,7 +1107,6 @@ end;
 
 { Character processing }
 
-{$IFDEF UNICODE}
 function EvalChar(char:WideChar):integer;
 var ch: Word absolute char;
 begin
@@ -1125,6 +1124,7 @@ begin
   result:=EC_UNKNOWN;
 end;
 
+{$IFDEF UNICODE}
 function EvalChar(const char:FString):integer;
 begin
   Result := EvalChar(WideChar(PWideChar(char)^));

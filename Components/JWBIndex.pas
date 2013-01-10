@@ -325,7 +325,7 @@ var
   procedure PutToBuf(pb:PByte;sz:integer);
   begin
     if Length(buf)-bufp<sz then begin
-      blockwrite(fb,buf,4000);
+      blockwrite(fb,buf,bufp);
       bufp:=0;
     end;
     move(pb^,buf[bufp],sz);

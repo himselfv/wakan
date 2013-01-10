@@ -29,9 +29,9 @@ Otherwise the data is read from the disk on demand.
  of a cursor code inside of a TTextTable. }
 
 const
-  AllocDataBuffer=65536;
-  AllocOrderBuffer=1024;
-  AllocStructBuffer=1024;
+  AllocDataBufferSz=65536;
+  AllocOrderBufferSz=1024;
+  AllocStructBufferSz=1024;
 
 type
  //Seek table reference to speed up Locate()
@@ -61,6 +61,7 @@ type
   TTextTableCursor = class;
 
   TTextTable=class
+
     fieldlist:TStringList;
    { Seek table names.
     The point of seek table is to keep records sorted in a particular order.
@@ -71,8 +72,7 @@ type
     Loaded from the table file, used to rebuild indexes if needed.
     First field name ("field1") becomes seek table name }
     seekbuild:TStringList;
-   { Seek table descriptions, parsed. }
-    seekbuilddesc:TSeekDescriptions;
+    seekbuilddesc:TSeekDescriptions; //Seek table descriptions, parsed.
     fieldbuild:TStringList;
    { Orders are the same as seekbuilds, only they have different names
      and there's 1 less of them:
@@ -82,18 +82,15 @@ type
         ...etc
      Don't ask me why it's like that. }
     orders:TStringList;
-    data,struct,index:pointer;
+
     fieldtypes:string;
     fieldsizes:string;
-    varfields:integer;
+    varfields:integer; //number of variable-length fields in a record
     fieldcount:byte;
     reccount:integer;
     rawindex:boolean;
-    databuffer,structbuffer:integer;
     prebuffer:boolean;
-    datalen:integer;
     numberdeleted:integer;
-    nocommit:boolean;
     tablename:string;
     load_source:TPackageSource;
     load_filename:string;
@@ -111,6 +108,26 @@ type
     function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
     function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
     function SortRecByStr(r:integer; fld:string):string; deprecated;
+
+  protected
+   {
+    Data: Table data. Raw data, indexed by struct.
+    Struct: Record headers.
+      Each headers is of size (5+varfields):
+        Deleted: boolean, 1 byte
+        DataOffset: integer, 4 byte
+        For every variable-length field: DataSize: 1 byte
+    Index: sorting orders
+      array [0..IndexCount-1] x [0..RecCount-1] of RecordNo: integer;
+   }
+    data,struct,index:pointer;
+    databuffer,structbuffer:integer; //free memory available in data and struct ptrs
+    datalen:integer; //data length (used)
+   //Buffer expansion
+    procedure ReserveData(const sz: integer);
+    procedure ReserveStruct(const sz: integer);
+
+
   public
     constructor Create(source:TPackageSource;filename:string;rawread,offline:boolean);
     destructor Destroy; override;
@@ -119,22 +136,23 @@ type
     procedure WriteTable(const filename:string;nodelete:boolean);
     property RecordCount:integer read reccount;
     function NewCursor: TTextTableCursor;
-
     procedure Reindex;
     procedure Load;
     function CheckIndex:boolean;
-    property NoCommitting:boolean read nocommit write nocommit;
 
   public //Import/export
     procedure ExportToText(t:TCustomFileWriter;ord:string);
     procedure ImportFromText(t:TCustomFileReader;smf:TSMPromptForm;mess:string);
 
+  protected
+    nocommit:boolean; //do not update indexes on Add/Edit/Delete. You'll have to Reindex later.
   public
     function AddRecord(values:array of string): integer;
     procedure DeleteRecord(RecNo: integer);
     procedure EditRecord(RecNo: integer; const fields:array of byte;
       const values:array of string; JustInserted:boolean=false);
     procedure Commit(RecNo:integer; JustInserted: boolean = false);
+    property NoCommitting:boolean read nocommit write nocommit;
 
   protected //Field reading
     function GetDataOffset(rec:integer;field:integer):integer;
@@ -380,7 +398,7 @@ begin
   if source<>nil then mf.Unlock;
   if not tcreate then
   begin
-    bufsize:=AllocDataBuffer; if not prebuffer then bufsize:=0;
+    bufsize:=AllocDataBufferSz; if not prebuffer then bufsize:=0;
     mf:=source[filename+'.data'];
     if mf=nil then raise Exception.Create('TextTable: Important file missing.');
     if not rawread then
@@ -430,7 +448,7 @@ begin
     totalloc:=totalloc+mf.Size;
     mf:=source[filename+'.struct'];
     if mf=nil then raise Exception.Create('TextTable: Important file missing.');
-    bufsize:=AllocStructBuffer; if not prebuffer then bufsize:=0;
+    bufsize:=AllocStructBufferSz; if not prebuffer then bufsize:=0;
     structbuffer:=bufsize;
     if not rawread then
     begin
@@ -458,7 +476,8 @@ begin
     structalloc:=structalloc+(mf.Size+bufsize) div 1024;
     if not precounted then
       statlist.Add('  Structure size: '+inttostr((mf.Size+bufsize+reccount*5) div 1000)+'k')
-      else statlist.Add('  Structure size: '+inttostr((mf.Size+bufsize) div 1000)+'k');
+    else
+      statlist.Add('  Structure size: '+inttostr((mf.Size+bufsize) div 1000)+'k');
     totalloc:=totalloc+mf.Size+bufsize;
     statlist.Add('  Total size: '+inttostr(totalloc div 1000)+'k');
     if not precounted and offline then showmessage('OFFLINE table must be PRECOUNTED!');
@@ -516,11 +535,11 @@ begin
   end else
   begin
     reccount:=0;
-    bufsize:=AllocDataBuffer; if not prebuffer then bufsize:=0;
+    bufsize:=AllocDataBufferSz; if not prebuffer then bufsize:=0;
     databuffer:=bufsize;
     GetMem(data,bufsize);
     GetMem(index,0);
-    bufsize:=AllocStructBuffer; if not prebuffer then bufsize:=0;
+    bufsize:=AllocStructBufferSz; if not prebuffer then bufsize:=0;
     structbuffer:=bufsize;
     GetMem(struct,bufsize);
     datalen:=0;
@@ -904,9 +923,7 @@ var i,ii:integer;
 begin
   if rec>=reccount then
     raise Exception.Create('Write beyond!');
-  ii:=rec*5+varfields*rec;
-  ofs:=PInteger(OffsetPtr(struct, ii+1))^;
-  for i:=0 to field-1 do ofs:=ofs+GetFieldSize(rec,i);
+  ofs:=GetDataOffset(rec,field);
   tp:=fieldtypes[field+1];
   sz:=GetFieldSize(rec,field);
 
@@ -1287,11 +1304,37 @@ begin
   end;
 end;
 
+{ Ensures that there's at least sz free bytes available in data buffer }
+procedure TTextTable.ReserveData(const sz: integer);
+var p:pointer;
+begin
+  if databuffer>=sz then exit;
+  databuffer:=Trunc(datalen*0.4)+AllocDataBufferSz; //incremental growth
+  if sz>=databuffer then //still not enough
+    databuffer := sz*2;
+  GetMem(p,datalen+databuffer);
+  move(data^,p^,datalen);
+  freemem(data);
+  data:=p;
+end;
+
+procedure TTextTable.ReserveStruct(const sz: integer);
+var p:pointer;
+begin
+  if structbuffer>=sz then exit;
+  structbuffer:=Trunc((reccount*varfields+reccount*5)*0.4)+AllocStructBufferSz;
+  if sz>=structbuffer then //still not enough
+    structbuffer := sz*2;
+  GetMem(p,(reccount*varfields+reccount*5)+structbuffer);
+  move(struct^,p^,(reccount*varfields+reccount*5));
+  freemem(struct);
+  struct:=p;
+end;
+
 { Appends record to the table, returns its RecNo }
 function TTextTable.AddRecord(values:array of string): integer;
 var totsize:integer;
     i:integer;
-    p:pointer;
     c:char;
     b:byte;
     a:array of byte;
@@ -1307,23 +1350,9 @@ begin
       values[i]:=copy(values[i],1,250);
   for i:=0 to fieldcount-1 do
     Inc(totsize, GetFieldValueSize(fieldbuild[i][1], values[i]));
-  if databuffer<totsize then
-  begin
-    databuffer:=Trunc(datalen*0.4)+AllocDataBuffer; //incremental growth
-    GetMem(p,datalen+databuffer);
-    move(data^,p^,datalen);
-    freemem(data);
-    data:=p;
-  end;
+  ReserveData(totsize);
   dec(databuffer,totsize);
-  if structbuffer<varfields+5 then
-  begin
-    structbuffer:=Trunc((reccount*varfields+reccount*5)*0.4)+AllocStructBuffer;
-    GetMem(p,(reccount*varfields+reccount*5)+structbuffer);
-    move(struct^,p^,(reccount*varfields+reccount*5));
-    freemem(struct);
-    struct:=p;
-  end;
+  ReserveStruct(5+varfields);
   dec(structbuffer,5+varfields);
   PByte(integer(struct)+reccount*(varfields+5))^ := 0;
   PInteger(integer(struct)+reccount*(varfields+5)+1)^ := datalen;
@@ -1341,9 +1370,9 @@ begin
   end;
   SetLength(a,fieldcount);
   for i:=0 to fieldcount-1 do a[i]:=i;
+  Result := reccount;
   inc(reccount);
-  Result := reccount-1;
-  EditRecord(RecordCount-1, a, values, {JustInserted=}true);
+  EditRecord(Result, a, values, {JustInserted=}true);
 end;
 
 procedure TTextTable.DeleteRecord(RecNo: integer);

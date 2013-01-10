@@ -666,6 +666,7 @@ var
   sdef:char;    //==lc.verbType
   slen:integer; //==lc.len
 
+  raw_entries: TEntries;
   entry:string; //translation entry text
   converted:string;
   markers,kmarkers:string;
@@ -749,15 +750,12 @@ begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
     if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
-    if dic.dic.SupportsMarkers then begin
-      markers := dic.GetArticleMarkers;
-      kmarkers := dic.GetKanjiKanaMarkers;
-      entry:=entry+EnrichDictEntry(dic.GetArticleBody,markers);
-    end else begin
-      converted := ConvertEdictEntry(dic.GetArticleBody, markers);
-      entry:=entry+EnrichDictEntry(converted, markers);
-      kmarkers:='';
-    end;
+
+    raw_entries:=dic.GetEntries;
+    markers:=raw_entries.MergeMarkers;
+    kmarkers:=dic.GetKanjiKanaMarkers;
+    entry:=entry+raw_entries.ToEnrichedString;
+
     if IsAppropriateVerbType(sdef, markers) then
     if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
     begin

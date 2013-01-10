@@ -304,61 +304,49 @@ var freqi: integer;
   rec: integer;
 
  //Adds given dict record to a character index for a given character
-  procedure IndexChars(rec:integer;kanji:UnicodeString);
-  var i: integer;
+  procedure IndexChars(rec:integer;const kanji:UnicodeString);
   begin
-    for i := 0 to ed.kanji_used - 1 do begin
-      u_str:=fstrtouni(ed.kanji[i].kanji);
-      while u_str<>'' do
-      begin
-        uc:=u_str[1];
-        delete(u_str,1,1);
-        if EvalChar(uc)=EC_IDG_CHAR then
-          charidx.AddToIndex(word(uc), LastArticle);
-      end;
-    end; //of AddCharacterIndex for clause
+    u_str:=kanji;
+    while u_str<>'' do
+    begin
+      uc:=u_str[1];
+      delete(u_str,1,1);
+      if EvalChar(uc)=EC_IDG_CHAR then
+        charidx.AddToIndex(word(uc), rec);
+    end;
   end;
 
  //Adds given entry record to a word index for a given string of words
-  procedure IndexWords(rec:integer;meaning:UnicodeString);
-  var i: integer;
+  procedure IndexWords(rec:integer;const meaning:UnicodeString);
   begin
-    for i := 0 to ed.meanings_used - 1 do begin
-      u_str:=fstrtouni(ed.meanings[i].text);
-      while u_str<>'' do
+    u_str:=meaning;
+    while u_str<>'' do
+    begin
+     //Pop next translation alternative
+      u_part:=ULowerCase(ustrqpop(u_str,'/'));
+      if u_part='' then continue;
+      while u_part<>'' do
       begin
-       //Pop next translation alternative
-        u_part:=ULowerCase(ustrqpop(u_str,'/'));
-        if u_part='' then continue;
-        while u_part<>'' do
+       //Remove all the leading (flags) (and) (markers)
+        while (length(u_part)>0) and (u_part[1]='(') do
         begin
-         //Remove all the leading (flags) (and) (markers)
-          while (length(u_part)>0) and (u_part[1]='(') do
-          begin
-            ustrqpop(u_part,')');
-            u_part := UTrimLeft(u_part);
-          end;
-         //Pop next word until space
-          u_word:=ustrqpop(u_part,' ');
-          urepl(u_part,';',',');
-          if (ignorel.IndexOf(u_word)=-1) and (u_word<>'')
-          and (fgetch(u_word, 1)>{$IFDEF UNICODE}#$0040{$ELSE}'0040'{$ENDIF}) //it's all punctuation and digits before
-          then
-            wordidx.AddToIndex(u_word, LastArticle);
+          ustrqpop(u_part,')');
+          u_part := UTrimLeft(u_part);
         end;
+       //Pop next word until space
+        u_word:=ustrqpop(u_part,' ');
+        urepl(u_part,';',',');
+        if (ignorel.IndexOf(u_word)=-1) and (u_word<>'')
+        and (fgetch(u_word, 1)>{$IFDEF UNICODE}#$0040{$ELSE}'0040'{$ENDIF}) //it's all punctuation and digits before
+        then
+          wordidx.AddToIndex(u_word, rec);
       end;
-    end; //of AddWordIndex for clause
+    end;
   end;
 
 begin
   Inc(LastArticle);
   s_art := IntToStr(LastArticle);
-
- //Additional markers to every entry
-  if ed.pop then
-    add_mark := MarkPop
-  else
-    add_mark := '';
 
  //Priority
   for i := 0 to ed.kanji_used - 1 do
@@ -376,9 +364,9 @@ begin
      //kana matches any kanji
       for j := 0 to ed.kanji_used - 1 do begin
         rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, roma[i],
-          add_mark+ed.kanji[j].markers+ed.kana[i].markers, prior[j], s_art]);
+          ed.kanji[j].markers+ed.kana[i].markers, prior[j], s_art]);
         if charidx<>nil then
-          IndexChars(rec, ed.kanji[i].kanji);
+          IndexChars(rec, ed.kanji[j].kanji);
       end;
     end else begin
      //kana matches only selected kanjis
@@ -387,9 +375,9 @@ begin
         for k := 0 to ed.kanji_used - 1 do
           if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
             rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[k].kanji, roma[i],
-              add_mark+ed.kanji[k].markers+ed.kana[i].markers, prior[k], s_art]);
+              ed.kanji[k].markers+ed.kana[i].markers, prior[k], s_art]);
             if charidx<>nil then
-              IndexChars(rec, ed.kanji[i].kanji);
+              IndexChars(rec, ed.kanji[k].kanji);
             kanji_found := true;
             break;
           end;
@@ -400,9 +388,15 @@ begin
       end;
     end;
 
+ //Additional markers to every entry
+  if ed.pop then
+    add_mark := MarkPop
+  else
+    add_mark := '';
+
  //Write out meanings
   for i := 0 to ed.meanings_used - 1 do begin
-    rec := dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, ed.meanings[i].markers]);
+    rec := dic.TTEntries.AddRecord([s_art, ed.meanings[i].text, add_mark+ed.meanings[i].markers]);
     if wordidx<>nil then
       IndexWords(rec, ed.meanings[i].text);
   end;

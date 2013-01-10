@@ -100,7 +100,7 @@ begin
       for i:=0 to dicts.Count-1 do
         if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
       begin
-        dic:=TDicIndexCursor.Create(dicts[i], ctEntryIndex);
+        dic:=TDicIndexCursor.Create(dicts[i]);
         try
           dic.Find(itChar,fstrtouni(kj));
           k:=0;
@@ -136,7 +136,7 @@ begin
       for i:=0 to dicts.Count-1 do
         if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) then
       begin
-        dic:=TDicIndexCursor.Create(dicts[i], ctEntryIndex);
+        dic:=TDicIndexCursor.Create(dicts[i]);
         try
           dic.Find(itChar,fstrtouni(kj));
           k:=0;
