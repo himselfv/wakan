@@ -20,78 +20,86 @@ type
   TMarkers = AnsiString;
   TMarker = AnsiChar;
 
+  TEdictMarkerFlag = (
+    mfPos   //it's important to distinguish POS markers from non-POS markers:
+      //they are handled differently (see JWBEdictReader.pas)
+  );
+  TEdictMarkerFlags = set of TEdictMarkerFlag;
+
   TEdictMarkerDef = record
     m: string;
     id: TMarker;
+    f: TEdictMarkerFlags;
     ab: string; //type + expanded name. If name is the same as m, it's not specified
     { Supported types: 1, g, s }
     abl: string; { localized type + expanded name.
      Loaded each time application language changes. Can be empty, ab is used then }
   end;
+  PEdictMarkerDef = ^TEdictMarkerDef;
 
 const
   EdictMarkers: array[0..113] of TEdictMarkerDef = (
    //Part of Speech Marking
-    (m: 'adj-i'; id: #99; ab: 'g'),
-    (m: 'adj-na'; id: #45; ab: 'gna-adj'),
-    (m: 'adj-no'; id: #46; ab: 'gno-adj'),
-    (m: 'adj-pn'; id: #47; ab: 'gpren-adj'),
-    (m: 'adj-s'; id: #48; ab: 'gspec-adj'), //deprecated
-    (m: 'adj-t'; id: #49; ab: 'gtaru-adj'),
-    (m: 'adj-f'; id: #100; ab: 'g'),
-    (m: 'adj'; id: #43; ab: 'g'),
-    (m: 'adv'; id: #44; ab: 'g'),
-    (m: 'adv-n'; id: #101; ab: 'g'),
-    (m: 'adv-to'; id: #102; ab: 'g'),
-    (m: 'aux'; id: #50; ab: 'g'),
-    (m: 'aux-v'; id: #51; ab: 'g'),
-    (m: 'aux-adj'; id: #103; ab: 'g'),
-    (m: 'conj'; id: #52; ab: 'g'),
-    (m: 'ctr'; id: #104; ab: 'g'),
-    (m: 'exp'; id: #53; ab: 'gexpr'),
-    (m: 'int'; id: #57; ab: 'g'),
-    (m: 'iv'; id: #105; ab: 'g'),
-    (m: 'n'; id: #58; ab: 'g'),
-    (m: 'n-adv'; id: #59; ab: 'g'),
-    (m: 'n-pref'; id: #106; ab: 'g'),
-    (m: 'n-suf'; id: #61; ab: 'g'),
-    (m: 'n-t'; id: #60; ab: 'g'),
-    (m: 'neg'; id: #62; ab: 'g'), //deprecated
-    (m: 'neg-v'; id: #63; ab: 'gneg-verb'), //deprecated
-    (m: 'num'; id: #107; ab: 'g'),
-    (m: 'pn'; id: #108; ab: 'g'),
-    (m: 'pref'; id: #64; ab: 'g'),
-    (m: 'prt'; id: #109; ab: 'g'),
-    (m: 'suf'; id: #65; ab: 'g'),
-    (m: 'v1'; id: #66; ab: 'gru-v'),
-    (m: 'v2a-s'; id: #110; ab: 'g'),
-    (m: 'v4h'; id: #111; ab: 'g'),
-    (m: 'v4r'; id: #112; ab: 'g'),
-    (m: 'v5'; id: #67; ab: 'gu-v'),
-    (m: 'v5aru'; id: #79; ab: 'garu-v'),
-    (m: 'v5b'; id: #74; ab: 'gu-v'),
-    (m: 'v5g'; id: #70; ab: 'gu-v'),
-    (m: 'v5k'; id: #69; ab: 'gu-v'),
-    (m: 'v5k-s'; id: #77; ab: 'gIku-v'),
-    (m: 'v5m'; id: #75; ab: 'gu-v'),
-    (m: 'v5n'; id: #73; ab: 'gu-v'),
-    (m: 'v5r'; id: #76; ab: 'gu-v'),
-    (m: 'v5r-i'; id: #113; ab: 'g'),
-    (m: 'v5s'; id: #71; ab: 'gu-v'),
-    (m: 'v5t'; id: #72; ab: 'gu-v'),
-    (m: 'v5u'; id: #68; ab: 'gu-v'),
-    (m: 'v5u-s'; id: #114; ab: 'g'),
-    (m: 'v5uru'; id: #80; ab: 'guru-v'),
-    (m: 'v5z'; id: #78; ab: 'gzuru-v'),
-    (m: 'vz'; id: #115; ab: 'g'),
-    (m: 'vi'; id: #81; ab: 'gintrans-verb'),
-    (m: 'vk'; id: #84; ab: 'gkuru-v'),
-    (m: 'vn'; id: #116; ab: 'g'),
-    (m: 'vs'; id: #82; ab: 'gp-suru'),
-    (m: 'vs-c'; id: #117; ab: 'g'),
-    (m: 'vs-i'; id: #118; ab: 'g'),
-    (m: 'vs-s'; id: #83; ab: 'gsuru-v'),
-    (m: 'vt'; id: #85; ab: 'gtrans-verb'),
+    (m: 'adj-i'; id: #99; f: [mfPos]; ab: 'g';),
+    (m: 'adj-na'; id: #45; f: [mfPos]; ab: 'gna-adj'),
+    (m: 'adj-no'; id: #46; f: [mfPos]; ab: 'gno-adj'),
+    (m: 'adj-pn'; id: #47; f: [mfPos]; ab: 'gpren-adj'),
+    (m: 'adj-s'; id: #48; f: [mfPos]; ab: 'gspec-adj'), //deprecated
+    (m: 'adj-t'; id: #49; f: [mfPos]; ab: 'gtaru-adj'),
+    (m: 'adj-f'; id: #100; f: [mfPos]; ab: 'g'),
+    (m: 'adj'; id: #43; f: [mfPos]; ab: 'g'),
+    (m: 'adv'; id: #44; f: [mfPos]; ab: 'g'),
+    (m: 'adv-n'; id: #101; f: [mfPos]; ab: 'g'),
+    (m: 'adv-to'; id: #102; f: [mfPos]; ab: 'g'),
+    (m: 'aux'; id: #50; f: [mfPos]; ab: 'g'),
+    (m: 'aux-v'; id: #51; f: [mfPos]; ab: 'g'),
+    (m: 'aux-adj'; id: #103; f: [mfPos]; ab: 'g'),
+    (m: 'conj'; id: #52; f: [mfPos]; ab: 'g'),
+    (m: 'ctr'; id: #104; f: [mfPos]; ab: 'g'),
+    (m: 'exp'; id: #53; f: [mfPos]; ab: 'gexpr'),
+    (m: 'int'; id: #57; f: [mfPos]; ab: 'g'),
+    (m: 'iv'; id: #105; f: [mfPos]; ab: 'g'),
+    (m: 'n'; id: #58; f: [mfPos]; ab: 'g'),
+    (m: 'n-adv'; id: #59; f: [mfPos]; ab: 'g'),
+    (m: 'n-pref'; id: #106; f: [mfPos]; ab: 'g'),
+    (m: 'n-suf'; id: #61; f: [mfPos]; ab: 'g'),
+    (m: 'n-t'; id: #60; f: [mfPos]; ab: 'g'),
+    (m: 'neg'; id: #62; f: [mfPos]; ab: 'g'), //deprecated
+    (m: 'neg-v'; id: #63; f: [mfPos]; ab: 'gneg-verb'), //deprecated
+    (m: 'num'; id: #107; f: [mfPos]; ab: 'g'),
+    (m: 'pn'; id: #108; f: [mfPos]; ab: 'g'),
+    (m: 'pref'; id: #64; f: [mfPos]; ab: 'g'),
+    (m: 'prt'; id: #109; f: [mfPos]; ab: 'g'),
+    (m: 'suf'; id: #65; f: [mfPos]; ab: 'g'),
+    (m: 'v1'; id: #66; f: [mfPos]; ab: 'gru-v'),
+    (m: 'v2a-s'; id: #110; f: [mfPos]; ab: 'g'),
+    (m: 'v4h'; id: #111; f: [mfPos]; ab: 'g'),
+    (m: 'v4r'; id: #112; f: [mfPos]; ab: 'g'),
+    (m: 'v5'; id: #67; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5aru'; id: #79; f: [mfPos]; ab: 'garu-v'),
+    (m: 'v5b'; id: #74; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5g'; id: #70; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5k'; id: #69; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5k-s'; id: #77; f: [mfPos]; ab: 'gIku-v'),
+    (m: 'v5m'; id: #75; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5n'; id: #73; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5r'; id: #76; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5r-i'; id: #113; f: [mfPos]; ab: 'g'),
+    (m: 'v5s'; id: #71; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5t'; id: #72; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5u'; id: #68; f: [mfPos]; ab: 'gu-v'),
+    (m: 'v5u-s'; id: #114; f: [mfPos]; ab: 'g'),
+    (m: 'v5uru'; id: #80; f: [mfPos]; ab: 'guru-v'),
+    (m: 'v5z'; id: #78; f: [mfPos]; ab: 'gzuru-v'),
+    (m: 'vz'; id: #115; f: [mfPos]; ab: 'g'),
+    (m: 'vi'; id: #81; f: [mfPos]; ab: 'gintrans-verb'),
+    (m: 'vk'; id: #84; f: [mfPos]; ab: 'gkuru-v'),
+    (m: 'vn'; id: #116; f: [mfPos]; ab: 'g'),
+    (m: 'vs'; id: #82; f: [mfPos]; ab: 'gp-suru'),
+    (m: 'vs-c'; id: #117; f: [mfPos]; ab: 'g'),
+    (m: 'vs-i'; id: #118; f: [mfPos]; ab: 'g'),
+    (m: 'vs-s'; id: #83; f: [mfPos]; ab: 'gsuru-v'),
+    (m: 'vt'; id: #85; f: [mfPos]; ab: 'gtrans-verb'),
 
    //Field of Application
     (m: 'Buddh'; id: #119),
@@ -164,6 +172,7 @@ const
 { Only for debug -- tests that there are no ID duplicates. }
 procedure TestMarkersIntegrity;
 
+function FindMarkDef(m:string):PEdictMarkerDef; //returns marker definition or nil
 function FindMark(m:string):TMarker; //returns marker ID or 0
 function TestMarkers(const mark,test:TMarkers): boolean;
 function GetMarkEdict(mark:TMarker):string;
@@ -189,6 +198,17 @@ begin
       if (i<>j) and (EdictMarkers[i].id=EdictMarkers[j].id) then
         raise Exception.Create('TestMarkersIntegrity: Duplicate marker IDs detected ('+EdictMarkers[i].m+', '+EdictMarkers[j].m+')');
   end;
+end;
+
+function FindMarkDef(m:string):PEdictMarkerDef;
+var i: integer;
+begin
+  Result := nil;
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].m=m then begin
+      Result := @EdictMarkers[i];
+      break;
+    end;
 end;
 
 function FindMark(m:string):TMarker;
