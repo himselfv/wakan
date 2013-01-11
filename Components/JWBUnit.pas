@@ -80,6 +80,7 @@ function ChinTo(s:string):string;
 function ChinFrom(s:string):string;
 
 procedure DeleteDirectory(dir:string);
+procedure Backup(const filename: string);
 
 
 var
@@ -1186,6 +1187,20 @@ begin
   until FindNext(sRec) <> 0;
   FindClose(sRec);
   Windows.RemoveDirectory(PChar(dir));
+end;
+
+{ Universal backup function. Backups everything to the directory designated for backups. }
+procedure Backup(const filename: string);
+begin
+ //For now works as it did in previous Wakan versions.
+ //Has to be reworked to put backups into user folder.
+  {$I-}
+  mkdir('backup');
+  {$I+}
+  ioresult;
+ //dir\wakan.usr --> wakan-20130111.usr
+  CopyFile(PChar(filename),pchar('backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
+    +FormatDateTime('yyyymmdd',now)+ExtractFileExt(filename)),false);
 end;
 
 

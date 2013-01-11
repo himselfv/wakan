@@ -73,7 +73,6 @@ type
     property MemoryLimit:longint read fMemoryLimit write SetMemoryLimit;
     property MemoryCeiling:longint read fMemoryCeiling write SetMemoryCeiling;
     property MemoryUsed:longint read fMemoryUsed;
-    property FileList:TStringList read GetFileList;
     property Tree:TStringList read fTree;
   end;
   TMemorySourceClass=class of TMemorySource;
@@ -216,7 +215,7 @@ var pt:string;
 begin
   pt:=path;
   if (length(pt)<>0) and (pt[length(pt)]<>'\') then pt:=pt+'\';
-  SL:=Source.FileList;
+  SL:=Source.GetFileList;
   SL.Sort;
   for i:=0 to SL.Count-1 do if Source[SL[i]]=self then fn:=SL[i];
   fns:=fn; if fns[length(fns)]='\' then delete(fns,length(fns),1);

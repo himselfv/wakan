@@ -658,7 +658,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
-  JWBEdictMarkers;
+  JWBEdictMarkers, JWBAutoImport;
 
 {$R *.DFM}
 
@@ -896,6 +896,7 @@ begin
             if s='Suffixes'then sect:=7 else
             if s='IgnoreWords'then sect:=8 else
             if s='ReadingChart'then sect:=9 else
+            if s='KnownDictSources' then sect:=10 else
             sect:=0;
           end else
           begin
@@ -908,6 +909,7 @@ begin
             if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}
             if sect=8 then ignorel.Add(fstr(s));
             if sect=9 then readchl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{reading:fhex}
+            if sect=10 then KnownDictSources.Add(s);
           end;
         end;
       end;
@@ -959,6 +961,8 @@ begin
       Application.Terminate;
       exit;
     end;
+
+    AutoImportDicts();
 
    //Force user to select fonts
     while (pos('!',FontJapanese)>0) or (pos('!',FontJapaneseGrid)>0) or
@@ -1197,6 +1201,7 @@ begin
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
+    RescanDicts;
     RefreshCategory;
     RefreshKanjiCategory; }
 
@@ -1365,7 +1370,7 @@ begin
   dicts.Clear;
 end;
 
-procedure TfMenu.RescanDicts;
+procedure TfMenu.RescanDicts();
 var sr:TSearchRec;
     dic:TJaletDic;
 begin
@@ -1380,6 +1385,8 @@ begin
           pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
           pchar(_l('#00090^eWarning')),
           MB_ICONWARNING or MB_OK);
+      if not initdone then //we're still loading
+        AutoUpgrade(dic);
       if curlang=dic.language then
       begin
         dicts.Add(dic);
@@ -2075,11 +2082,7 @@ begin
   TUserPrior.WriteTable(tempDir+'\UserPrior',false);
   WriteUserPackage(tempDir);
   DeleteDirectory(tempDir);
-  {$I-}
-  mkdir('backup');
-  {$I+}
-  ioresult;
-  CopyFile('wakan.usr',pchar('backup\'+FormatDateTime('yyyymmdd',now)+'.usr'),false);
+  Backup('wakan.usr');
   Screen.Cursor:=crDefault;
   UserDataChanged:=false;
 end;

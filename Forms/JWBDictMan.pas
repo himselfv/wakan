@@ -110,6 +110,7 @@ begin
   for i := 0 to dicts.Priority.Count - 1 do begin
     dic := dicts.Find(dicts.Priority[i]);
     if dic=nil then continue;
+    if cbDicts.Items.IndexOfObject(dic)>=0 then continue; //safety for duplicates in priorities
     cbDicts.Items.AddObject(dic.name, dic);
   end;
  //Then the rest of them

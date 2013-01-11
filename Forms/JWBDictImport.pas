@@ -4,18 +4,20 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBIO, JWBDic, JWBIndex,
+  StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBStrings, JWBIO, JWBDic, JWBIndex,
   JWBEdictMarkers, JWBEdictReader;
 
 type
-  TFileList = array of string;
+  TImportDictFormat = (
+    ifEdict, //both EDICT1 and EDICT2
+    ifCEdict
+  );
 
   TImportDictFlag = (
     ifAddWordIndex,       //add word index (words from translation, for reverse-lookups)
     ifAddCharacterIndex,  //kanji index for all used kanjis
     ifAddFrequencyInfo,
-    ifSilent,             //don't display any UI
-    ifUnicode             //unicode format dictionary (bigger in size but supports other languages)
+    ifSilent              //don't display any UI
   );
   TImportDictFlags = set of TImportDictFlag;
 
@@ -61,6 +63,7 @@ type
 
   public
     Silent: boolean;
+    destructor Destroy; override;
 
   protected
     procedure CreateDictTables(dicFilename: string; info: TDictInfo; diclang:char; entries: integer);
@@ -68,7 +71,9 @@ type
       diclang:char; entries:integer);
     procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
 
-  protected //Dictionary building
+  private //Dictionary building
+    cfreql:TStringList; //cached frequency list, call CreateFrequencyList
+  protected
     dic:TJaletDic;
     linecount,lineno:integer;
     prog: TSMPromptForm;
@@ -79,25 +84,27 @@ type
     had_problems: boolean;
     LastDictEntry: integer;
     LastArticle: integer;
-    function CreateFrequencyList: TStringList;
+    function GetFrequencyList: TStringList;
     procedure AddArticle(const ed: PEdictArticle; const roma: TEdictRoma);
     procedure ImportCEdict(fuin: TUnicodeFileReader);
     procedure ImportEdict(fuin: TUnicodeFileReader);
 
   public
+    function SupportsFrequencyList: boolean;
     function ImportDictionary(dicFilename: string; info: TDictInfo;
       files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
 
   end;
 
-
 var
   fDictImport: TfDictImport;
+
+function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 
 implementation
 
 uses StrUtils, WideStrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBStrings, JWBDicSearch;
+  JWBDicSearch;
 
 {$R *.DFM}
 
@@ -112,6 +119,12 @@ begin
   rgPriority.ItemIndex:=0;
   edtDescription.text:='';
   edtCopyright.text:='';
+end;
+
+destructor TfDictImport.Destroy;
+begin
+  FreeAndNil(cfreql);
+  inherited;
 end;
 
 procedure TfDictImport.btnAddFileClick(Sender: TObject);
@@ -204,6 +217,7 @@ var f:textfile;
 begin
   path := ExtractFilePath(dicFilename);
   if path<>'' then ForceDirectories(path);
+
   assignfile(f,tempDir+'\dict.ver');
   rewrite(f);
   writeln(f,'DICT');
@@ -217,6 +231,7 @@ begin
   writeln(f,inttostr(entries));
   writeln(f,info.Copyright);
   closefile(f);
+
   PKGWriteForm.PKGWriteCmd('NotShow');
   PKGWriteForm.PKGWriteCmd('PKGFileName '+dicFilename);
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
@@ -565,6 +580,52 @@ begin
   end; //for every line
 end;
 
+function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
+var h: THandle;
+  ft: TFileTime;
+  st: TSystemTime;
+begin
+  h := CreateFile(PChar(filename), GENERIC_READ, FILE_SHARE_READ or FILE_SHARE_WRITE,
+    nil, OPEN_EXISTING, 0, 0);
+  if h=INVALID_HANDLE_VALUE then begin
+    Result := false;
+    exit;
+  end;
+  try
+    if not GetFileTime(h,nil,nil,@ft) then begin
+      Result := false;
+      exit;
+    end;
+  finally
+    CloseHandle(h);
+  end;
+
+  FileTimeToSystemTime(ft,st);
+  dt := SystemTimeToDatetime(st); //TODO: We want UTC!
+  Result := true;
+end;
+
+{ Compiles "sources.lst" -- a file listing dictionary sources and their last write times }
+procedure WriteSources(const fname: string; const files:TFileList);
+var fwr:TUnicodeFileWriter;
+  fi: integer;
+  dt: TDatetime;
+begin
+  fwr := TUnicodeFileWriter.Rewrite(fname);
+  try
+    fwr.WriteWideChar(#$FEFF); //BOM
+    for fi:=0 to Length(files)-1 do begin
+      if not GetLastWriteTime(files[fi],dt) then
+        dt := 0; //unknown -- will be skipped, unless it becomes known later
+      fwr.WritelnUnicode(ExtractFilename(files[fi])+','
+        +DatetimeToStr(dt, DictFormatSettings));
+    end;
+  finally
+    FreeAndNil(fwr);
+  end;
+end;
+
+
 {
 ImportDictionary()
 Builds Wakan package from one or more dictionaries.
@@ -583,6 +644,8 @@ var
 
 begin
   prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
+  if not self.Visible then //auto mode
+    prog.Position := poScreenCenter;
   prog.Width := 500; //we're going to have long file names
   prog.Appear;
   wordidx := nil;
@@ -604,7 +667,7 @@ begin
     if ifAddFrequencyInfo in flags then
     try
       prog.SetMessage(_l('#00917^eCreating frequency chart...'));
-      freql := CreateFrequencyList;
+      freql := GetFrequencyList;
     except
       on E: Exception do begin
         E.Message := 'Frequency list creation failed: '+E.Message;
@@ -633,6 +696,9 @@ begin
       fname:=tempDir+'\DICT_'+inttostr(fi)+'.TMP';
       mes:=_l('#00085^eConverting '); //used later too
       prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
+
+      if not FileExists(files[fi]) then
+        raise Exception.CreateFmt(_l('File not found: %s'), [files[fi]]);
 
       fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(files[fi]);
       if ifSilent in flags then begin
@@ -737,14 +803,15 @@ begin
 
     DeleteDirectory(tempDir); //empty dictionary
 
+    WriteSources(tempDir2+'\sources.lst',files);
     WriteDictPackage(dicFilename, tempDir2, info, diclang, LastArticle);
     DeleteDirectory(tempDir2);
 
   finally
     FreeAndNil(wordidx);
     FreeAndNil(charidx);
-    FreeAndNil(freql);
     FreeAndNil(prog);
+    freql := nil;
   end;
 
   if had_problems then
@@ -756,9 +823,21 @@ begin
 end;
 
 {
-Creates and populates TStringList with frequency information taken from wordfreq_ck
+Returns true if importer things it could load WORDFREQ_CK and add frequency info,
+if asked to.
 }
-function TfDictImport.CreateFrequencyList: TStringList;
+function TfDictImport.SupportsFrequencyList: boolean;
+begin
+  Result:= FileExists('wordfreq_ck.uni')
+    or FileExists('wordfreq_ck.euc')
+    or FileExists('wordfreq_ck');
+end;
+
+{
+Creates and populates TStringList with frequency information taken from wordfreq_ck.
+Caches it and returns. Do not destroy it.
+}
+function TfDictImport.GetFrequencyList: TStringList;
 const
  //Format markers
   UH_FREQ_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -768,6 +847,11 @@ var fc: FChar;
   addkan,addnum:string;
   tp: byte;
 begin
+  if cfreql<>nil then begin
+    Result := cfreql;
+    exit;
+  end;
+
   Result:=TStringList.Create;
   if FileExists('wordfreq_ck.uni') then
     Conv_Open('wordfreq_ck.uni', FILETYPE_UTF16LE)
@@ -814,6 +898,7 @@ begin
   end;
   Result.Sorted:=true;
   Result.Sort;
+  cfreql := Result;
 end;
 
 {

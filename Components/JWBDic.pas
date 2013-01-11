@@ -65,9 +65,10 @@ type
     priority:integer;
     entries:integer;
     copyright:string;
-    tested:boolean;
     hasWordIndex:boolean;
     hasCharIndex:boolean;
+    sources:TStringList; //nil if lacks this info
+    tested:boolean; //this information has been loaded
 
   protected //Fields, populated on load
     TDict:TTextTable;
@@ -139,7 +140,8 @@ type
    {$ENDIF}
     constructor Create;
     destructor Destroy; override;
-    procedure FillInfo(packagefile:string); virtual;
+    procedure FillInfo(const packagefile:string); overload;
+    procedure FillInfo(ps:TPackageSource); overload;
     procedure Load; virtual;
     procedure Unload; virtual;
     procedure Demand;
@@ -284,7 +286,6 @@ type
  { V4 is mostly compatible, thanks to TDicCursor abstracting stuff away.
   This is for any fixes }
   TDicLookupCursorV5 = class(TDicLookupCursorV4)
-
   end;
   
 
@@ -317,6 +318,7 @@ type
 
 var
   ignorel: TStringList; //words to ignore when indexing dictionaries
+  DictFormatSettings: TFormatSettings; //to use in locate-neutral information
 
 implementation
 uses Forms;
@@ -413,6 +415,7 @@ begin
   _intcur := nil;
   //We don't create cursor here because the table needs to be already loaded for that
  {$ENDIF}
+  sources:=nil;
   tested:=false;
   loaded:=false;
 end;
@@ -420,19 +423,33 @@ end;
 destructor TJaletDic.Destroy;
 begin
   if loaded then Unload;
+  FreeAndNil(sources);
  {$IFDEF DIC_CURSOR_IN_TABLE}
   FreeAndNil(_intcur);
  {$ENDIF}
 end;
 
-procedure TJaletDic.FillInfo(packagefile:string);
+{ JaletDic cannot be loaded without calling this function at least once,
+ because it sets pname.
+ But just in case, we auto-FillInfo on load too, if it was not yet filled. }
+procedure TJaletDic.FillInfo(const packagefile:string);
 var ps:TPackageSource;
-  vs:TStringList;
+begin
+  pname:=packagefile;
+  ps:=TPackageSource.Create(pname,791564,978132,978123);
+  try
+    FillInfo(ps);
+  finally
+    ps.Free;
+  end;
+end;
+
+procedure TJaletDic.FillInfo(ps:TPackageSource);
+var vs:TStringList;
+  mf:TMemoryFile;
 begin
   tested:=false;
-  pname:=packagefile;
   vs:=TStringList.Create;
-  ps:=TPackageSource.Create(pname,791564,978132,978123);
   try
     if ps.GetFileList.IndexOf('dict.ver')<0 then
       raise EDictionaryException.Create('Unknown file structure');
@@ -456,12 +473,21 @@ begin
     priority:=strtoint(vs[7]);
     entries:=strtoint(vs[8]);
     copyright:=vs[9];
-    tested:=true;
+
+    mf := ps['sources.lst'];
+    if mf=nil then
+      FreeAndNil(sources) //if it was created in earlier FillInfo
+    else begin
+      sources := TStringList.Create;
+      sources.LoadFromStream(mf.Lock);
+      mf.Unlock;
+    end;
 
     hasWordIndex := ps.GetFileList.IndexOf('WordIdx.bin')>=0;
     hasCharIndex := ps.GetFileList.IndexOf('CharIdx.bin')>=0;
+
+    tested:=true;
   finally
-    ps.Free;
     vs.Free;
   end;
 end;
@@ -482,7 +508,8 @@ begin
     FOnLoadStart(Self);
   try
     package:=TPackageSource.Create(pname,791564,978132,978123);
-    
+    if not tested then FillInfo(package); //although this shouldn't happen
+    if not tested then raise Exception.Create('Cannot load dictionary info for "'+pname+'"');
     TDict:=TTextTable.Create(package,'Dict',true,Self.Offline);
     TDictIndex:=TDict.Field('Index');
     if dicver=4 then
@@ -1121,6 +1148,7 @@ end;
 
 initialization
   ignorel:=TStringList.Create;
+  GetLocaleFormatSettings($0409, DictFormatSettings); //use EN-US for locale neutral data
 
 finalization
   ignorel.Free;
