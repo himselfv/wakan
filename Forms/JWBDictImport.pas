@@ -153,6 +153,7 @@ begin
   writeln(t,'$TEXTTABLE');
   writeln(t,'$PREBUFFER');
   writeln(t,'$RAWINDEX');
+  writeln(t,'$WORDFSIZE');
   writeln(t,'$FIELDS');
   writeln(t,'xPhonetic');
   writeln(t,'xKanji');
@@ -181,6 +182,7 @@ begin
   writeln(t,'$TEXTTABLE');
   writeln(t,'$PREBUFFER');
   writeln(t,'$RAWINDEX');
+  writeln(t,'$WORDFSIZE');
   writeln(t,'$FIELDS');
   writeln(t,'iIndex');
   writeln(t,'xEntry');

@@ -61,8 +61,29 @@ type
   TTextTableCursor = class;
 
   TTextTable=class
+   { Set on Create(), used on Load() }
+    load_source:TPackageSource;
+    load_filename:string;
+    load_rawread:boolean;
+    loaded:boolean;
 
-    fieldlist:TStringList;
+   { Table package }
+    source:TPackageSource;
+    offline:boolean;
+    tablename:string;
+
+   { Table settings -- loaded from table configuration }
+    rawindex:boolean;
+    prebuffer:boolean;
+    wordfsize:boolean; //Table stores variable field sizes in Words, not Bytes
+
+   { Fields }
+    fieldlist:TStringList; //field names
+    fieldtypes:string; //field types
+    fieldsizes:string; //see Load()/GetFieldSize()
+    fieldcount:byte;
+    fieldbuild:TStringList; //type+field names (iIndex, sName)
+
    { Seek table names.
     The point of seek table is to keep records sorted in a particular order.
     The way it's done now, you just have to KNOW what order was that,
@@ -73,7 +94,6 @@ type
     First field name ("field1") becomes seek table name }
     seekbuild:TStringList;
     seekbuilddesc:TSeekDescriptions; //Seek table descriptions, parsed.
-    fieldbuild:TStringList;
    { Orders are the same as seekbuilds, only they have different names
      and there's 1 less of them:
                   == seekbuild[0]
@@ -83,22 +103,9 @@ type
      Don't ask me why it's like that. }
     orders:TStringList;
 
-    fieldtypes:string;
-    fieldsizes:string;
-    varfields:integer; //number of variable-length fields in a record
-    fieldcount:byte;
     reccount:integer;
-    rawindex:boolean;
-    prebuffer:boolean;
     numberdeleted:integer;
-    tablename:string;
-    load_source:TPackageSource;
-    load_filename:string;
-    load_rawread:boolean;
-    loaded:boolean;
-    offline:boolean;
     datafpos:integer;
-    source:TPackageSource;
     function FilterPass(rec:integer;fil:string):boolean;
     function TransOrder(rec,order:integer):integer; inline;
     function IsDeleted(rec:integer):boolean;
@@ -113,7 +120,7 @@ type
    {
     Data: Table data. Raw data, indexed by struct.
     Struct: Record headers.
-      Each headers is of size (5+varfields):
+      Each headers is of size (5+#_of_variable_fields):
         Deleted: boolean, 1 byte
         DataOffset: integer, 4 byte
         For every variable-length field: DataSize: 1 byte
@@ -123,6 +130,7 @@ type
     data,struct,index:pointer;
     databuffer,structbuffer:integer; //free memory available in data and struct ptrs
     datalen:integer; //data length (used)
+    struct_recsz:integer; //struct record size
    //Buffer expansion
     procedure ReserveData(const sz: integer);
     procedure ReserveStruct(const sz: integer);
@@ -157,7 +165,7 @@ type
   protected //Field reading
     function GetDataOffset(rec:integer;field:integer):integer;
   public
-    function GetFieldSize(recno,field:integer):byte;
+    function GetFieldSize(recno,field:integer):word;
     function GetField(rec:integer;field:integer):string;
     function GetIntField(rec:integer;field:integer;out value:integer):boolean;
     function GetAnsiField(rec:integer;field:integer):AnsiString;
@@ -315,13 +323,14 @@ var ms:TMemoryStream;
     strubuf:pointer;
     struptr: PAnsiChar;
     precounted:boolean;
-    ww:array[0..255] of byte;
+    ww:array[0..511] of byte;
     fs:string;
     filename:string;
     rawread:boolean;
     t:textfile;
     cn:integer;
     totalloc:integer;
+  varfields_sz:integer; //size of variable-length fields part in a struct record
 begin
   source:=load_source;
   filename:=load_filename;
@@ -357,6 +366,7 @@ begin
   c:=' ';
   prebuffer:=false;
   precounted:=false;
+  wordfsize:=false;
   for i:=0 to sl.Count-1 do
   begin
     if sl[i]='$FIELDS' then c:='f';
@@ -366,6 +376,7 @@ begin
     if sl[i]='$PRECOUNTED' then precounted:=true;
     if sl[i]='$CREATE' then tcreate:=true;
     if sl[i]='$RAWINDEX' then rawindex:=true;
+    if sl[i]='$WORDFSIZE' then wordfsize:=true;
     if (length(sl[i])>0) and (sl[i][1]<>'$') then
     case c of
       'f':fieldlist.Add(sl[i]);
@@ -377,13 +388,17 @@ begin
   fieldcount:=fieldlist.Count;
   fieldtypes:='';
   for i:=0 to fieldcount-1 do fieldtypes:=fieldtypes+fieldlist[i][1];
-  varfields:=0;
+
+  varfields_sz:=0;
   fieldsizes:='';
   for i:=0 to fieldcount-1 do
   begin
     if (fieldtypes[i+1]='s') or (fieldtypes[i+1]='x') then begin
-      fieldsizes:=fieldsizes+chr(ord('a')+varfields);
-      inc(varfields);
+      fieldsizes:=fieldsizes+chr(ord('a')+varfields_sz);
+      if wordfsize then
+        inc(varfields_sz,2)
+      else
+        inc(varfields_sz,1);
     end else case fieldtypes[i+1] of
       'b':fieldsizes:=fieldsizes+'1';
       'w':fieldsizes:=fieldsizes+'2';
@@ -391,6 +406,8 @@ begin
       'l':fieldsizes:=fieldsizes+'1';
     end;
   end;
+  struct_recsz := 5+varfields_sz;
+
   for i:=0 to seeks.Count-1 do
   begin
    //Add to seekbuild
@@ -494,7 +511,7 @@ begin
       strubuf:=struct;
       struptr:=strubuf;
       struct:=nil;
-      GetMem(struct,reccount*5+varfields*reccount+bufsize);
+      GetMem(struct,reccount*struct_recsz+bufsize);
       fs:='';
       for i:=0 to fieldcount-1 do fs:=fs+fieldlist[i][1];
       i:=0;
@@ -510,11 +527,15 @@ begin
           'i':b:=4;
           'l':b:=1;
           'x','s':begin
-                    b:=ord(struptr^);
-                    inc(struptr);
-                    ww[vk]:=b;
-                    inc(vk);
-                  end;
+            b:=ord(struptr^);
+            inc(struptr);
+            ww[vk]:=b;
+            if wordfsize then begin
+              ww[vk+1]:=0;
+              inc(vk,2);
+            end else
+              inc(vk,1);
+          end;
         end;
         inc(w,b);
         inc(k);
@@ -524,15 +545,15 @@ begin
           b:=0;
           moveofs(@b,struct,0,j,1);
           moveofs(@i,struct,0,j+1,4);
-          moveofs(@ww,struct,0,j+5,varfields);
-          inc(j,5+varfields);
+          moveofs(@ww,struct,0,j+5,varfields_sz);
+          inc(j,struct_recsz);
           inc(i,w);
           w:=0;
           vk:=0;
         end;
       end;
       FreeMem(strubuf);
-      if j>(reccount*varfields+reccount*5+bufsize) then
+      if j>reccount*struct_recsz+bufsize then
         raise Exception.Create('Table "'+filename+'" is corrupt.');
       dec(datasize,i);
       if datasize<>0 then
@@ -618,6 +639,7 @@ begin
   if prebuffer then writeln(t,'$PREBUFFER');
   writeln(t,'$PRECOUNTED');
   if rawindex then writeln(t,'$RAWINDEX');
+  if wordfsize then writeln(t,'$WORDFSIZE');
   writeln(t,'$FIELDS');
   for i:=0 to fieldbuild.Count-1 do writeln(t,fieldbuild[i]);
   writeln(t,'$ORDERS');
@@ -639,7 +661,7 @@ begin
     i:=recordcount;
     blockwrite(f1,i,4);
     blockwrite(f1,data^,datalen);
-    blockwrite(f2,struct^,reccount*varfields+reccount*5);
+    blockwrite(f2,struct^,reccount*struct_recsz);
     closefile(f1);
     closefile(f2);
     assignfile(f1,filename+'.index');
@@ -654,7 +676,7 @@ begin
     mypos:=0;
     for i:=0 to recordcount-1 do
     begin
-      moveofs(struct,@b,i*(varfields+5),0,1);
+      moveofs(struct,@b,i*struct_recsz,0,1);
       if b=1 then il.Add('DEAD') else
       begin
         wfbuf(f2,bufstruct,bufstructpos,64000,@b,0,1);
@@ -662,7 +684,7 @@ begin
         il.Add(inttostr(j));
         inc(j);
         w:=0;
-        moveofs(struct,@l,i*(varfields+5)+1,0,4);
+        moveofs(struct,@l,i*struct_recsz+1,0,4);
         for k:=0 to fieldcount-1 do
         begin
           b:=GetFieldSize(i,k);
@@ -720,20 +742,23 @@ end;
 GetFieldSize()
 Heavily used function. Should be very optimized.
 }
-function TTextTable.GetFieldSize(recno,field:integer):byte;
+function TTextTable.GetFieldSize(recno,field:integer):word;
 var c:char;
 begin
   c:=fieldsizes[field+1];
   if (c>='1') and (c<='9') then
     Result := ord(c)-ord('0')
   else
-    Result := OffsetPtr(struct, recno*(varfields+5)+(ord(c)-ord('a'))+5)^;
+    if wordfsize then
+      Result := PWord(OffsetPtr(struct, recno*struct_recsz+(ord(c)-ord('a'))+5))^
+    else
+      Result := OffsetPtr(struct, recno*struct_recsz+(ord(c)-ord('a'))+5)^;
 end;
 
 function TTextTable.GetDataOffset(rec:integer;field:integer):integer;
 var i,ii:integer;
 begin
-  ii:=rec*5+varfields*rec;
+  ii:=rec*struct_recsz;
   Result:=PInteger(OffsetPtr(struct, ii+1))^;
   for i:=0 to field-1 do Result:=Result+GetFieldSize(rec,i);
 end;
@@ -763,7 +788,7 @@ function TTextTable.GetField(rec:integer;field:integer):string;
 const HexChars: AnsiString = '0123456789ABCDEF';
 {$ENDIF}
 var ofs:integer;
-  sz:byte;
+  sz:word;
   tp:char; //field type. Char because FieldTypes is string.
   b:byte;
   w:word;
@@ -912,7 +937,7 @@ end;
 { Useful when you don't want the Unicode->Ansi conversion to interfere, such as for RawByteStrings }
 function TTextTable.GetAnsiField(rec:integer;field:integer):AnsiString;
 var ofs:integer;
-  sz:byte;
+  sz:word;
   tp:char; //field type. Char because FieldTypes is string.
 begin
   if not loaded then load;
@@ -939,7 +964,7 @@ end;
 //It's only used for user data anyway, which is never offline.
 procedure TTextTable.SetField(rec:integer;field:integer;const value:string);
 var ofs:integer;
-  sz:byte;
+  sz:word;
   tp:char;
   b:byte;
   w:word;
@@ -1020,7 +1045,7 @@ end;
 { See comments for GetAnsiField }
 procedure TTextTable.SetAnsiField(rec:integer;field:integer;const value:AnsiString);
 var ofs:integer;
-  sz:byte;
+  sz:word;
   tp:char;
 begin
   if rec>=reccount then
@@ -1337,7 +1362,7 @@ end;
 
 function TTextTable.IsDeleted(rec:integer):boolean;
 begin
-  Result := PBoolean(integer(struct)+rec*(varfields+5))^;
+  Result := PBoolean(integer(struct)+rec*struct_recsz)^;
 end;
 
 function GetFieldValueSize(ftype: char; const fval: string): integer;
@@ -1376,11 +1401,11 @@ procedure TTextTable.ReserveStruct(const sz: integer);
 var p:pointer;
 begin
   if structbuffer>=sz then exit;
-  structbuffer:=Trunc((reccount*varfields+reccount*5)*0.4)+AllocStructBufferSz;
+  structbuffer:=Trunc((reccount*struct_recsz)*0.4)+AllocStructBufferSz;
   if sz>=structbuffer then //still not enough
     structbuffer := sz*2;
-  GetMem(p,(reccount*varfields+reccount*5)+structbuffer);
-  move(struct^,p^,(reccount*varfields+reccount*5));
+  GetMem(p,(reccount*struct_recsz)+structbuffer);
+  move(struct^,p^,reccount*struct_recsz);
   freemem(struct);
   struct:=p;
 end;
@@ -1390,38 +1415,44 @@ function TTextTable.AddRecord(values:array of string): integer;
 var totsize:integer;
     i:integer;
     c:char;
-    b:byte;
     a:array of byte;
     k:integer;
+  fsz:word; //field size
 begin
   if not loaded then load;
   if offline then
     raise Exception.Create('Cannot insert into offline table.');
-  totsize:=0;
   if High(values)+1<>fieldcount then raise Exception.Create('Invalid values array count (TTextTable.Insert).');
-  for i:=0 to fieldcount-1 do
-    if length(values[i])>250 then
-      values[i]:=copy(values[i],1,250);
-  for i:=0 to fieldcount-1 do
-    Inc(totsize, GetFieldValueSize(fieldbuild[i][1], values[i]));
-  ReserveData(totsize);
-  dec(databuffer,totsize);
-  ReserveStruct(5+varfields);
-  dec(structbuffer,5+varfields);
-  PByte(integer(struct)+reccount*(varfields+5))^ := 0;
-  PInteger(integer(struct)+reccount*(varfields+5)+1)^ := datalen;
+
+ { Fill record header, allocate memory then call Edit() to copy data }
+  ReserveStruct(struct_recsz);
+  dec(structbuffer,struct_recsz);
+  PByte(integer(struct)+reccount*struct_recsz)^ := 0;
+  PInteger(integer(struct)+reccount*struct_recsz+1)^ := datalen;
+  totsize:=0;
   k:=0;
   for i:=0 to fieldcount-1 do
   begin
     c:=fieldbuild[i][1];
-    b := GetFieldValueSize(c, values[i]);
-    if (c='x') or (c='s') then
-    begin
-      moveofs(@b,struct,0,reccount*(varfields+5)+5+k,1);
-      inc(k);
+    fsz:=GetFieldValueSize(c, values[i]);
+    if (c='x') or (c='s') then begin
+      if wordfsize then begin
+        if fsz>65530 then fsz := 65530; { Only this much bytes will be stored }
+        PWord(integer(struct)+reccount*struct_recsz+5+k)^ := fsz;
+        inc(k,2);
+      end else begin
+        if fsz>250 then fsz := 250;
+        PByte(integer(struct)+reccount*struct_recsz+5+k)^ := fsz;
+        inc(k,1);
+      end;
     end;
-    inc(datalen,b);
+    Inc(totsize,fsz);
+    Inc(datalen,fsz); //although we still havent allocated this space
   end;
+
+  ReserveData(totsize);
+  dec(databuffer,totsize);
+
   SetLength(a,fieldcount);
   for i:=0 to fieldcount-1 do a[i]:=i;
   Result := reccount;
@@ -1432,7 +1463,7 @@ end;
 procedure TTextTable.DeleteRecord(RecNo: integer);
 begin
   if not loaded then load;
-  PBoolean(integer(struct)+RecNo*(varfields+5))^ := true;
+  PBoolean(integer(struct)+RecNo*struct_recsz)^ := true;
   inc(numberdeleted);
 end;
 

@@ -927,6 +927,39 @@ begin
    //It'll only read sections which it understands
     roma_t.LoadFromFile('wakan.cfg');
 
+   { At this point we have loaded basic settings and functionality.
+    Package enhancements are going to be loaded now. }
+
+   { Import now before these packages are loaded }
+    if Command='makeexamples'then
+    begin
+      fExamples.BuildExamplesPackage;
+      Application.Terminate;
+      exit;
+    end else
+    if Command='makedic'then
+    begin
+      fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
+      fDictImport.edtDictName.Text:=MakeDicParams.Name;
+      fDictImport.edtVersion.Text:=MakeDicParams.Version;
+      if MakeDicParams.Language='C' then
+        fDictImport.rgLanguage.ItemIndex:=1
+      else
+        fDictImport.rgLanguage.ItemIndex:=0;
+      fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
+      fDictImport.edtDescription.Text:=MakeDicParams.Description;
+      fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
+      fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
+      fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
+      fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
+      fDictImport.Silent := true;
+      for i := 0 to Length(MakeDicParams.Files) - 1 do
+        fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
+      fDictImport.btnBuildClick(self);
+      Application.Terminate;
+      exit;
+    end;
+
    //Force user to select fonts
     while (pos('!',FontJapanese)>0) or (pos('!',FontJapaneseGrid)>0) or
       (pos('!',FontChinese)>0) or (pos('!',FontChineseGrid)>0) or
@@ -1003,6 +1036,7 @@ begin
       exit;
     end;
 
+
    { Radical search }
 
    //Stroke-order rebuilding -- before complaining about missing sod
@@ -1064,6 +1098,7 @@ begin
       end;
     end;
 
+
    { Stroke order display }
 
    //Stroke-order rebuilding -- before complaining about missing sod
@@ -1114,7 +1149,8 @@ begin
     end;
     StrokeOrderPackage:=nil;
 
-   //User data
+
+   { User data }
     try
       userdataloaded:=false;
       LoadUserData;
@@ -1184,35 +1220,6 @@ begin
     StandardLayout(0,100); }
     curdisplaymode:=0;
     FormPlacement1.RestoreFormPlacement;
-
-    if Command='makeexamples'then
-    begin
-      fExamples.BuildExamplesPackage;
-      Application.Terminate;
-      exit;
-    end else
-    if Command='makedic'then
-    begin
-      fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
-      fDictImport.edtDictName.Text:=MakeDicParams.Name;
-      fDictImport.edtVersion.Text:=MakeDicParams.Version;
-      if MakeDicParams.Language='C' then
-        fDictImport.rgLanguage.ItemIndex:=1
-      else
-        fDictImport.rgLanguage.ItemIndex:=0;
-      fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
-      fDictImport.edtDescription.Text:=MakeDicParams.Description;
-      fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
-      fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
-      fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
-      fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
-      fDictImport.Silent := true;
-      for i := 0 to Length(MakeDicParams.Files) - 1 do
-        fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
-      fDictImport.btnBuildClick(self);
-      Application.Terminate;
-      exit;
-    end;
 
     fSettings.ApplyUISettings();
 
