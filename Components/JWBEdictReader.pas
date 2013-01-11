@@ -189,7 +189,7 @@ var
   cursense: PSenseEntry;
   nextsense: TSenseEntry; //current part of the sense, still not commited
   curmark: UnicodeString; //current marker word, to be tested
-  inmarker: boolean;
+  inmarker: integer;
   markdef: PEdictMarkerDef;
   markch: WideChar; //if inmarker, this holds the marker opening braket type -- only for senses
   markopen: boolean; //if set, some of the markers weren't found and we added a marker braket back to curtext -- have to close it
@@ -235,7 +235,7 @@ begin
   curkanakanji := nil;
   cursense := nil;
   nextsense.Reset;
-  inmarker := false;
+  inmarker := 0;
   markopen := false;
   markch := #00;
   commpos := '';
@@ -243,8 +243,8 @@ begin
   i := 1;
   while i<=Length(s) do begin
     ch := s[i];
-    if (eh=EH_KANJI) and (ch='(') then inmarker := true else
-    if (eh=EH_KANJI) and inmarker and ((ch=',') or (ch=')')) then begin
+    if (eh=EH_KANJI) and (ch='(') then Inc(inmarker) else
+    if (eh=EH_KANJI) and (inmarker=1) and ((ch=',') or (ch=')')) then begin //only on first level of depth
       markdef := FindMarkDef(UTrim(curmark));
      //recognized EDICT marker
       if markdef<>nil then
@@ -252,10 +252,11 @@ begin
      //there's nothing we can do if it's unrecognized -- have to just drop it
       curmark := '';
       if ch=')' then
-        inmarker := false;
+        Dec(inmarker);
     end else
-    if (eh=EH_KANJI) and inmarker then curmark := curmark + ch else
-    if (eh=EH_KANJI) and inmarker and ((ch=';')or(ch='[')or(ch='/')) then //safety
+    if (eh=EH_KANJI) and (inmarker>1) and (ch=')') then Dec(inmarker) else
+    if (eh=EH_KANJI) and (inmarker>0) then curmark := curmark + ch else
+    if (eh=EH_KANJI) and (inmarker>0) and ((ch=';')or(ch='[')or(ch='/')) then //safety
       raise EEdictParsingException.Create('Invalid characters in kanji markers')
     else
     if (eh=EH_KANJI) and (ch=';') then curkanji := ed.AddKanji else
@@ -263,23 +264,24 @@ begin
     if (eh=EH_KANJI) and (ch='/') then begin eh := EH_SENSE; cursense := ed.AddSense; end else
     if (eh=EH_KANJI) then curkanji.kanji := curkanji.kanji + ch else
     if (eh=EH_KANA) and (ch='(') then begin
-      if EvalChar(s[i+1])=EC_IDG_CHAR then begin
+      if (inmarker<=0) and (EvalChar(s[i+1])=EC_IDG_CHAR) then begin
         eh := EH_KANAKANJI;
         curkanakanji := curkana.AddKanji;
       end else
-        inmarker := true;
+        Inc(inmarker);
     end else
-    if (eh=EH_KANA) and inmarker and ((ch=',') or (ch=')')) then begin
+    if (eh=EH_KANA) and (inmarker=1) and ((ch=',') or (ch=')')) then begin //only on first level of depth
       markdef := FindMarkDef(UTrim(curmark));
      //recognized EDICT marker
       if markdef<>nil then
         curkana.markers := curkana.markers + markdef.id;
       curmark := '';
       if ch=')' then
-        inmarker := false;
+        Dec(inmarker);
     end else
-    if (eh=EH_KANA) and inmarker then curmark := curmark + ch else
-    if (eh=EH_KANJI) and inmarker and ((ch=';')or(ch=']')) then //safety
+    if (eh=EH_KANA) and (inmarker>1) and (ch=')') then Dec(inmarker) else
+    if (eh=EH_KANA) and (inmarker>0) then curmark := curmark + ch else
+    if (eh=EH_KANJI) and (inmarker>0) and ((ch=';')or(ch=']')) then //safety
       raise EEdictParsingException.Create('Invalid characters in kanji markers')
     else
     if (eh=EH_KANA) and (ch=';') then curkana := ed.AddKana else
@@ -299,8 +301,15 @@ begin
     if (eh=EH_SENSE) and (ch='/') then begin
       CommitNextSense();
     end else
-    if (eh=EH_SENSE) and ((ch='(')or(ch='{')) then begin inmarker := true; markch:=ch; markopen:=false; curmark:=''; end else
-    if (eh=EH_SENSE) and inmarker and ((ch=',')or(ch=')')or(ch='}')) then begin
+    if (eh=EH_SENSE) and ((ch='(')or(ch='{')) then begin
+      Inc(inmarker);
+      if (inmarker=1) then begin
+        markch:=ch;
+        markopen:=false;
+        curmark:='';
+      end;
+    end else
+    if (eh=EH_SENSE) and (inmarker=1) and ((ch=',')or(ch=')')or(ch='}')) then begin //only on first level
      //New entry
       if IsNumeric(curmark) then
         if curmark='1' then
@@ -337,10 +346,11 @@ begin
             '(': nextsense.text := nextsense.text + ')';
             '{': nextsense.text := nextsense.text + '}';
           end;
-        inmarker := false;
+        Dec(inmarker);
       end;
     end else
-    if (eh=EH_SENSE) and inmarker then curmark := curmark + ch else
+    if (eh=EH_SENSE) and (inmarker>1) and ((ch=')')or(ch='}')) then Dec(inmarker) else
+    if (eh=EH_SENSE) and (inmarker>0) then curmark := curmark + ch else
     if (eh=EH_SENSE) then nextsense.text := nextsense.text + ch;
 
     Inc(i);
