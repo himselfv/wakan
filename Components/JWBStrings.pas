@@ -223,13 +223,14 @@ type
   TStringArray = array of string;
 
 procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
-function SplitStr(s: string; cnt: integer): TStringArray;
+function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
 
 function remexcl(s:string):string;
 function strip_fl(s:string):string;
-function repl(var s:string;sub,rep:string):string;
-function urepl(var s:string;sub,rep:string):string;
+function repl(var s:string;const sub,rep:string):string;
+function urepl(var s:string;const sub,rep:string):string;
+function replc(const s:string;const sub,rep:string):string;
 function strqpop(var s:string;c:char):string; overload;
 function strqpop(var s:string;const cs:string):string; overload;
 function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString; overload;
@@ -251,6 +252,7 @@ procedure MakeFixedLen(var s: UnicodeString; len: integer; pad_ch: WideChar); ov
 
 type
   TFilenameList = array of string;
+  TFileList = TFilenameList;
 
 procedure AddFilename(var list: TFilenameList; filename: string);
 function MakeFilenameList(filenames: array of string): TFilenameList;
@@ -884,17 +886,17 @@ begin
 end;
 
 //Same but doesn't add it anywhere
-function SplitStr(s: string; cnt: integer): TStringArray;
+function SplitStr(s: string; cnt: integer; ch:char): TStringArray;
 var i:integer;
 begin
   SetLength(Result, cnt);
   i:=0;
   while i<cnt do
   begin
-    if pos(',',s)>0 then
+    if pos(ch,s)>0 then
     begin
-      Result[i] := copy(s,1,pos(',',s)-1);
-      delete(s,1,pos(',',s));
+      Result[i] := copy(s,1,pos(ch,s)-1);
+      delete(s,1,pos(ch,s));
     end else
     begin
       Result[i] := s;
@@ -934,7 +936,7 @@ begin
   result:=trim(s);
 end;
 
-function repl(var s:string;sub,rep:string):string;
+function repl(var s:string;const sub,rep:string):string;
 var i_pos: integer;
 begin
   i_pos := pos(sub,s);
@@ -945,7 +947,7 @@ begin
   result:=s;
 end;
 
-function urepl(var s:string;sub,rep:string):string;
+function urepl(var s:string;const sub,rep:string):string;
 {$IFDEF UNICODE}
 begin
   Result := repl(s,sub,rep);
@@ -961,6 +963,12 @@ begin
   result:=s;
 end;
 {$ENDIF}
+
+function replc(const s:string;const sub,rep:string):string;
+begin
+  Result := s;
+  repl(Result,sub,rep);
+end;
 
 { Returns part of the string from the start to the first occurence of "c",
  and cuts that part, up to and including "c".

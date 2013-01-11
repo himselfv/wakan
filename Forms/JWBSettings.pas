@@ -427,7 +427,6 @@ end;
 
 procedure TfSettings.LoadRegistrySettings(reg: TRegIniFile);
 var s: string;
-  i: integer;
 begin
   CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
   CheckBox65.Checked:=reg.ReadBool('Annotate','Rebuild',true);
@@ -545,13 +544,7 @@ begin
   dicts.NotGroupDicts[4]:=reg.ReadString('Dict','NotGroup4Dicts','');
   dicts.NotGroupDicts[5]:=reg.ReadString('Dict','NotGroup5Dicts','');
   dicts.OfflineDicts:=reg.ReadString('Dict','OfflineDicts','');
-  reg.ReadSectionValues('DictPriority', dicts.Priority);
-  dicts.Priority.Sort;
- //Cut index part
-  for i := 0 to dicts.Priority.Count - 1 do begin
-    s := dicts.Priority.ValueFromIndex[i];
-    if s<>'' then dicts.Priority[i] := s;
-  end;
+  dicts.Priority.Text := replc(reg.ReadString('Dict','Priority',''),',',#13#10);
   CheckBox18.Checked:=reg.ReadBool('KanjiCards','PrintCompounds',true);
   CheckBox19.Checked:=reg.ReadBool('KanjiCards','PrintRadical',true);
   CheckBox20.Checked:=reg.ReadBool('KanjiCards','PrintAlternate',true);
@@ -677,7 +670,6 @@ end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TRegIniFile);
 var setwindows:integer;
-  i: integer;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
@@ -810,8 +802,11 @@ begin
   reg.WriteString('Dict','NotGroup5Dicts',dicts.NotGroupDicts[5]);
   reg.WriteString('Dict','OfflineDicts',dicts.OfflineDicts);
   reg.WriteString('Dict','CurLanguage',curlang);
+  reg.WriteString('Dict','Priority',replc(dicts.Priority.Text,#13#10,','));
+{
   for i := 0 to dicts.Priority.Count - 1 do
     reg.WriteString('DictPriority', IntToStr(i), dicts.Priority[i]);
+}
   reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
   reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.SpeedButton8.Down);
