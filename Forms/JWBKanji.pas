@@ -280,6 +280,39 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     onecheck:boolean;
     clipsort:boolean;
     clipind:integer;
+
+  categories: array of integer; //of checked category indexes
+
+  procedure CopyCategories; //they're UNIMAGINABLY slow if used as is
+  var i: integer;
+  begin
+    SetLength(categories, 0);
+    for i:=0 to fKanjiSearch.lbCategories.Items.Count-1 do
+      if fKanjiSearch.lbCategories.Checked[k] then
+    begin
+      SetLength(categories, Length(categories)+1);
+      categories[Length(categories)-1] := GetCatIdx(fKanjiSearch.lbCategories, i);
+    end;
+  end;
+
+  function CheckCategories: boolean;
+  var i: integer;
+  begin
+    if Length(categories)<=0 then begin
+      Result := true;
+      exit;
+    end;
+
+    Result := (fKanjiSearch.rgOrAnd.ItemIndex=0); //default result: true if ANDs, false if ORs
+    for i := 0 to Length(categories) - 1 do
+      if IsKnown(categories[i], TChar.FCh(TCharUnicode)) then begin
+        if fKanjiSearch.rgOrAnd.ItemIndex=0 then begin Result:=true; break; end;
+      end else begin
+        if fKanjiSearch.rgOrAnd.ItemIndex=1 then Result:=false;
+      end;
+    if fKanjiSearch.cbNot.Checked then Result:=not Result;
+  end;
+
 begin
   if not Visible then exit;
   DrawGrid1.Hide;
@@ -296,6 +329,7 @@ begin
   fltother:=TStringList.Create;
   sl4:=TStringList.Create;
   sl10:=TStringList.Create;
+  CopyCategories;
   if fKanjiSearch.SpeedButton3.Down then
     for i:=0 to length(clip) div 4-1 do
       if clip[i*4+1]>='4'then if fltclip.IndexOf(uppercase(copy(clip,i*4+1,4)))=-1 then
@@ -408,25 +442,8 @@ begin
 //      if accept then accept:=InRange(s3,TChar.Str(TCharSKIP3),false,sl8);
     end;
     if accept then
-    begin
-      if fKanjiSearch.rgOrAnd.ItemIndex=0 then accept:=false;
-      onecheck:=false;
-      for k:=0 to fKanjiSearch.lbCategories.Items.Count-1 do
-        if fKanjiSearch.lbCategories.Checked[k] then
-      begin
-        onecheck:=true;
-        if IsKnown(GetSelCatIdx(fKanjiSearch.lbCategories), TChar.FCh(TCharUnicode)) then
-        begin
-          if fKanjiSearch.rgOrAnd.ItemIndex=0 then accept:=true;
-        end else
-        begin
-          if fKanjiSearch.rgOrAnd.ItemIndex=1 then accept:=false;
-        end;
-      end;
-      if not onecheck then accept:=true;
-      if fKanjiSearch.cbNot.Checked and onecheck then accept:=not accept;
-    end;
-        
+      accept := CheckCategories;
+
 {    if accept and (fKanjiSearch.SpeedButton16.Down) then
     begin
       s1:=fKanjiSearch.Edit5.Text;
