@@ -8,17 +8,17 @@ uses
 
 type
   TfKanjiCompounds = class(TForm)
-    SpeedButton8: TSpeedButton;
-    SpeedButton9: TSpeedButton;
+    sbShowVocab: TSpeedButton;
+    sbShowDict: TSpeedButton;
     Shape7: TShape;
     Label25: TLabel;
-    CheckBox1: TCheckBox;
+    cbLeftMatchOnly: TCheckBox;
     StringGrid1: TStringGrid;
     Bevel1: TBevel;
-    CheckBox2: TCheckBox;
+    cbPopularOnly: TCheckBox;
     SpeedButton23: TSpeedButton;
     SpeedButton17: TSpeedButton;
-    CheckBox3: TCheckBox;
+    cbSortByFrequency: TCheckBox;
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure SpeedButton11Click(Sender: TObject);
@@ -80,93 +80,70 @@ end;
 procedure TfKanjiCompounds.SetCharCompounds(ch:FChar);
 var sl,sl2:TStringList;
     pass:boolean;
-    i,j,k,l:integer;
+    i,k,l:integer;
     dic:TDicIndexCursor;
     freq:string;
-    mark:TMarkers;
     stp:string;
     kj:string;
+  usefreq: boolean;
+  kmark:TMarkers;
+  ent:TEntries;
 begin
   FCurChar := ch;
   if not Self.Visible then exit;
   StringGrid1.Visible:=false;
-  CheckBox3.Enabled:=(not SpeedButton8.Down) and (curlang='j');
+  cbSortByFrequency.Enabled:=(not sbShowVocab.Down) and (curlang='j');
   kj:=ChinFrom(ch);
   sl:=TStringList.Create;
   sl2:=TStringList.Create;
-  if SpeedButton9.Down then
+  if sbShowDict.Down then
   begin
-    if (curlang='j') and (CheckBox3.Checked) then
+    usefreq := (curlang='j') and (cbSortByFrequency.Checked);
+
+    for i:=0 to dicts.Count-1 do
+      if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4)
+      and ((not usefreq) or dicts[i].SupportsFrequency) then
     begin
-      for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
-      begin
-        dic:=TDicIndexCursor.Create(dicts[i]);
-        try
-          dic.Find(itChar,fstrtouni(kj));
-          k:=0;
-          while dic.Next do
+      dic:=TDicIndexCursor.Create(dicts[i]);
+      try
+        dic.Find(itChar,fstrtouni(kj));
+        k:=0;
+        while dic.Next do
+        begin
+          inc(k);
+          if pos(kj,dic.GetKanji)=0 then
+            showmessage('Dictionary has corrupted index: '+kj+'-'+inttostr(k)+'-'+dic.GetArticleBody);
+          if (not cbLeftMatchOnly.Checked) or (pos(kj,dic.GetKanji)=1) then
           begin
-            inc(k);
-            if pos(kj,dic.GetKanji)=0 then
-              showmessage('Dictionary has corrupted index: '+kj+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.GetArticleBody);
-            if (not CheckBox1.Checked) or (pos(kj,dic.GetKanji)=1) then
-            begin
-              mark := dic.GetArticleMarkers;
+            kmark := dic.GetKanjiKanaMarkers;
+            ent := dic.GetEntries;
+            if usefreq then begin
               freq:=inttostr(9999999-dic.GetFrequency);
               while length(freq)<7 do freq:='0'+freq;
-              if freq<>'9999999'then
-              if ((not CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.GetArticleBody,mark))>0)) then
-                sl.Add(freq+#9+CheckKnownKanji(ChinTo(dic.GetKanji))+' ['+dic.GetPhonetic+'] {'
-                  +EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
-            end;
+            end else
+              freq := dic.GetKanji; //sort alphabetically
+            if (not usefreq) or (freq<>'9999999') then
+              if ((not cbPopularOnly.Checked)
+              or TestMarkers(kmark, MarkPop)
+              or TestMarkers(ent.MergeMarkers, MarkPop)) then
+                sl.Add(freq+#9
+                  +CheckKnownKanji(ChinTo(dic.GetKanji))
+                  +' ['+dic.GetPhonetic+']'
+                  +' {'+ent.ToEnrichedString+'}');
           end;
-        finally
-          FreeAndNil(dic);
         end;
-      end;
-{        sl.Sort;
-      for i:=0 to sl.Count-1 do
-      begin
-        kj:=sl[i];
-        delete(kj,1,7);
-        sl[i]:=kj;
-      end;}
-    end else
-    begin
-      for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) then
-      begin
-        dic:=TDicIndexCursor.Create(dicts[i]);
-        try
-          dic.Find(itChar,fstrtouni(kj));
-          k:=0;
-          while dic.Next do
-          begin
-            inc(k);
-            if pos(kj,dic.GetKanji)=0 then
-              showmessage('Dictionary has corrupted index: '+kj+'-'+inttostr(k)+'-'+Format('%4.4X',[j])+'-'+dic.GetArticleBody);
-            if (not CheckBox1.Checked) or (pos(kj,dic.GetKanji)=1) then
-            begin
-              mark := dic.GetArticleMarkers;
-              if ((not CheckBox2.Checked) or (pos('<spop>',EnrichDictEntry(dic.GetArticleBody,mark))>0)) then
-                sl.Add(dic.GetKanji+#9+CheckKnownKanji(ChinTo(dic.GetKanji))+' ['+dic.GetPhonetic+'] {'
-                  +EnrichDictEntry(dic.GetArticleBody,mark)+'}{');
-            end;
-          end;
-        finally
-          FreeAndNil(dic);
-        end;
+      finally
+        FreeAndNil(dic);
       end;
     end;
     sl.Sort;
-  end else if SpeedButton8.Down then
+  end else if sbShowVocab.Down then
   begin
     TUserIdx.SetOrder('Kanji_Ind');
     TUserIdx.Locate('Kanji',kj);
     while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=kj) do
     begin
-      if (not CheckBox1.Checked) or (TUserIdx.Bool(TUserIdxBegin)) then
+      if (not cbLeftMatchOnly.Checked) or (TUserIdx.Bool(TUserIdxBegin)) then
       begin
         sl2.Clear;
         ListWordCategories(TUserIdx.Int(TUserIdxWord),sl2);
@@ -175,14 +152,17 @@ begin
         if (pass) and (TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord))) then
         begin
           stp:=TUser.Str(TUserScore);
-          sl.Add(TUser.Str(TUserKanji)+#9+'!'+stp+CheckKnownKanji(ChinTo(TUser.Str(TUserKanji)))+' ['+'!'+stp+TUser.Str(TUserPhonetic)+'] {'+'!'+stp+TUser.Str(TUserEnglish)+'}');
+          sl.Add(TUser.Str(TUserKanji)+#9
+            +ALTCH_EXCL+stp+CheckKnownKanji(ChinTo(TUser.Str(TUserKanji)))
+            +' ['+ALTCH_EXCL+stp+TUser.Str(TUserPhonetic)+']'
+            +' {'+ALTCH_EXCL+stp+FixVocabEntry(TUser.Str(TUserEnglish))+'}');
         end;
       end;
       TUserIdx.Next;
     end;
   end;
   sl.Sort;
-  if SpeedButton9.Down and CheckBox3.Checked and (strtoint(fSettings.Edit34.Text)<>0) then
+  if sbShowDict.Down and cbSortByFrequency.Checked and (strtoint(fSettings.Edit34.Text)<>0) then
     while sl.Count>strtoint(fSettings.Edit34.Text) do sl.Delete(strtoint(fSettings.Edit34.Text));
   for i:=0 to sl.Count-1 do
     sl[i]:=copy(sl[i],pos(#9,sl[i])+1,length(sl[i])-pos(#9,sl[i]));

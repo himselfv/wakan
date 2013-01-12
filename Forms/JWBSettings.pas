@@ -443,9 +443,9 @@ begin
   RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
   RadioGroup6.ItemIndex:=reg.ReadInteger('Romanization','ChineseSystem',0);
   RadioGroup7.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
-  fKanjiCompounds.CheckBox1.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);
-  fKanjiCompounds.CheckBox2.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
-  fKanjiCompounds.CheckBox3.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
+  fKanjiCompounds.cbLeftMatchOnly.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);
+  fKanjiCompounds.cbPopularOnly.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
+  fKanjiCompounds.cbSortByFrequency.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
   RadioGroup5.ItemIndex:=reg.ReadInteger('Characters','Chinese',0);
   RadioGroup3.ItemIndex:=reg.ReadInteger('Characters','GridSize',1);
   ComboBox1.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
@@ -665,7 +665,7 @@ begin
   kanji_othersearch:=setothersearch;
   fKanjiSearch.cbOtherType.ItemIndex:=-1;
   if dictmodeset=1 then fUser.SpeedButton2.Down:=true else fUser.SpeedButton1.Down:=true;
-  if setusercompounds then fKanjiCompounds.SpeedButton8.Down:=true else fKanjiCompounds.SpeedButton9.Down:=true;
+  if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TRegIniFile);
@@ -687,9 +687,9 @@ begin
   reg.WriteBool('Characters','StrokeOrderGridFont',CheckBox51.Checked);
   reg.WriteBool('Characters','NoShowColors',CheckBox3.Checked);
   reg.WriteBool('Characters','YomiOkurigana',CheckBox57.Checked);
-  reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.CheckBox1.Checked);
-  reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.CheckBox2.Checked);
-  reg.WriteBool('Characters','CompoundsFreq',fKanjiCompounds.CheckBox3.Checked);
+  reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.cbLeftMatchOnly.Checked);
+  reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.cbPopularOnly.Checked);
+  reg.WriteBool('Characters','CompoundsFreq',fKanjiCompounds.cbSortByFrequency.Checked);
   reg.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
   reg.WriteString('Fonts','Japanese',FontJapanese);
   reg.WriteString('Fonts','Small',FontSmall);
@@ -809,7 +809,7 @@ begin
 }
   reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
   reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
-  reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.SpeedButton8.Down);
+  reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.sbShowVocab.Down);
   reg.WriteBool('Dict','Meaning',dictmodeset=1);
   reg.WriteInteger('Dict','SearchBeg',dictbeginset);
   reg.WriteBool('Translate','ShowHint',CheckBox2.Checked);

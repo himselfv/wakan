@@ -30,7 +30,7 @@ object fKanjiCompounds: TfKanjiCompounds
     Align = alClient
     Shape = bsFrame
   end
-  object SpeedButton8: TSpeedButton
+  object sbShowVocab: TSpeedButton
     Left = 208
     Top = 153
     Width = 60
@@ -48,7 +48,7 @@ object fKanjiCompounds: TfKanjiCompounds
     ParentFont = False
     OnClick = SpeedButton11Click
   end
-  object SpeedButton9: TSpeedButton
+  object sbShowDict: TSpeedButton
     Left = 152
     Top = 153
     Width = 54
@@ -142,7 +142,7 @@ object fKanjiCompounds: TfKanjiCompounds
     ShowHint = True
     OnClick = SpeedButton17Click
   end
-  object CheckBox1: TCheckBox
+  object cbLeftMatchOnly: TCheckBox
     Left = 9
     Top = 154
     Width = 89
@@ -177,7 +177,7 @@ object fKanjiCompounds: TfKanjiCompounds
       138
       353)
   end
-  object CheckBox2: TCheckBox
+  object cbPopularOnly: TCheckBox
     Left = 62
     Top = 154
     Width = 39
@@ -189,7 +189,7 @@ object fKanjiCompounds: TfKanjiCompounds
     TabOrder = 2
     OnClick = SpeedButton11Click
   end
-  object CheckBox3: TCheckBox
+  object cbSortByFrequency: TCheckBox
     Left = 105
     Top = 154
     Width = 39

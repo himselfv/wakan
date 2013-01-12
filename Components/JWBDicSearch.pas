@@ -297,7 +297,7 @@ function TSearchResult.ArticlesToString: string;
 var statpref: string;
 begin
   if UserScore>=0 then
-    statpref:='!'+inttostr(UserScore)
+    statpref:=ALTCH_EXCL+inttostr(UserScore)
   else
     statpref:='';
   Result := statpref + kanji + ' [' + statpref + kana + '] {' + statpref + entry + '}';
@@ -808,7 +808,8 @@ begin
           if freq>=500000 then freq:=10000 else
           if freq>=10000 then freq:=2000+(freq-10000) div 100 else
           if freq>=1000 then freq:=1000+(freq-1000) div 10;
-        end;
+        end else
+          freq:=0;
         sort:=sort+10000-freq;
       end;
 
@@ -900,9 +901,12 @@ begin
       scomp:=sl[i];
       s2:=CUser.Str(TUserEnglish);
       ex_pos := pos(s2,scomp.entry);
+
      //If there's already this article in the list, cut it
       if ex_pos>0 then
         scomp.entry := copy(scomp.entry,1,ex_pos-1) + copy(scomp.entry,ex_pos+Length(s2),length(scomp.entry)-length(s2)-ex_pos+1);
+
+      s2:=FixVocabEntry(s2);
 
      //Delete ~F/~I word type since it would be ignored by painting anyway as it stands
      //And it would be visible.

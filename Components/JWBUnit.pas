@@ -79,6 +79,9 @@ procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
 function ChinTo(s:string):string;
 function ChinFrom(s:string):string;
 
+{ Upgrades vocabulary entry -- see implementation comments }
+function FixVocabEntry(const s:string):string;
+
 procedure DeleteDirectory(dir:string);
 procedure Backup(const filename: string);
 
@@ -758,6 +761,22 @@ begin
   end;
   TChar.Locate('Unicode',bk);
 end;
+
+
+{
+Vocabulary entries are stored in severely deprecated format.
+They have to be upgraded before working with them.
+}
+function FixVocabEntry(const s: string): string;
+begin
+  Result := s;
+ {$IFDEF UNICODE}
+ //User dictionaries often have inline markers in old format (<gvn>)
+  repl(Result,'<',UH_LBEG);
+  repl(Result,'>',UH_LEND);
+ {$ENDIF}
+end;
+
 
 procedure BeginDrawReg(p:TPaintBox);
 var i:integer;

@@ -331,6 +331,7 @@ constructor TDictionaryList.Create;
 begin
   inherited;
   Priority := TStringList.Create;
+  Priority.CaseSensitive := false;
 end;
 
 destructor TDictionaryList.Destroy;
@@ -357,24 +358,26 @@ end;
 function TDictionaryList.IsInGroup(dicname: string; group: TDictGroup): boolean;
 begin
   case group of
-    GROUP_NOTUSED: Result := pos(','+dicname,NotUsedDicts)<>0;
-    GROUP_OFFLINE: Result := pos(','+dicname,OfflineDicts)<>0;
+    GROUP_NOTUSED: Result := pos(','+lowercase(dicname),NotUsedDicts)<>0;
+    GROUP_OFFLINE: Result := pos(','+lowercase(dicname),OfflineDicts)<>0;
   else
-    Result := pos(','+dicname,NotGroupDicts[group])=0;
+    Result := pos(','+lowercase(dicname),NotGroupDicts[group])=0;
   end;
 end;
 
 procedure TDictionaryList.PutInGroup(dic: TJaletDic; group: TDictGroup; inGroup: boolean);
 begin
-  PutInGroup(dic.name, group, inGroup);
+  PutInGroup(lowercase(dic.name), group, inGroup);
 end;
 
 procedure AddToList(const name: string; var list: string; add: boolean);
+var l_name: string;
 begin
+  l_name := lowercase(name);
   if add then begin
-    if pos(','+name,list)=0 then list:=list+','+name;
+    if pos(','+l_name,list)=0 then list:=list+','+l_name;
   end else begin
-    if pos(','+name,list)>0 then delete(list,pos(','+name,list),length(name)+1);
+    if pos(','+l_name,list)>0 then delete(list,pos(','+l_name,list),length(l_name)+1);
   end;
 end;
 
