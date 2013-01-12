@@ -1,5 +1,10 @@
 unit JWBAutoImport;
-{ Covers EDICT auto import and auto upgrade }
+{
+Covers EDICT auto import and auto upgrade.
+Call:
+  1. AutoImportDicts -- to automatically import or upgrade any of the known dictionaries.
+  2. AutoUpgrade(dic) -- to upgrade the rest of the dictionaries.
+}
 
 interface
 uses JWBStrings, JWBConvert, JWBDic, JWBDictImport;

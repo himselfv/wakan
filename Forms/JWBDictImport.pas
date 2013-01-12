@@ -8,11 +8,6 @@ uses
   JWBEdictMarkers, JWBEdictReader;
 
 type
-  TImportDictFormat = (
-    ifEdict, //both EDICT1 and EDICT2
-    ifCEdict
-  );
-
   TImportDictFlag = (
     ifAddWordIndex,       //add word index (words from translation, for reverse-lookups)
     ifAddCharacterIndex,  //kanji index for all used kanjis
@@ -71,13 +66,15 @@ type
       diclang:char; entries:integer);
     procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
 
-  private //Dictionary building
-    cfreql:TStringList; //cached frequency list, call CreateFrequencyList
-  protected
+  private
+   //Shared between ImportDictionary calls
+    cfreql:TStringList; //cached frequency list, call GetFrequencyList
+    roma_prob: TUnicodeFileWriter; //error log
+
+  protected //Dictionary building
     dic:TJaletDic;
     linecount,lineno:integer;
     prog: TSMPromptForm;
-    roma_prob: TUnicodeFileWriter;
     freql:TStringList; //frequency list, if used
     wordidx:TWordIndexBuilder;
     charidx:TIndexBuilder;
@@ -123,6 +120,7 @@ end;
 
 destructor TfDictImport.Destroy;
 begin
+  FreeAndNil(roma_prob);
   FreeAndNil(cfreql);
   inherited;
 end;
@@ -748,8 +746,10 @@ begin
 
 
    { Import }
-    roma_prob := TUnicodeFileWriter.Rewrite('roma_problems.txt'); //TODO: This one should go into UserDir when we have one
-    roma_prob.WriteWideChar(#$FEFF); //BOM
+    if roma_prob=nil then begin
+      roma_prob := TUnicodeFileWriter.Rewrite('roma_problems.txt'); //TODO: This one should go into UserDir when we have one
+      roma_prob.WriteWideChar(#$FEFF); //BOM
+    end;
 
     lineno:=0;
     for fi:=0 to Length(files)-1 do
@@ -772,7 +772,7 @@ begin
       end;
     end; //for every file
 
-    FreeAndNil(roma_prob);
+    roma_prob.Flush; //just in case someone goes looking at it straight away
     prog.Invalidate;
     prog.Repaint;
 
