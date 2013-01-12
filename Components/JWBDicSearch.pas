@@ -591,6 +591,7 @@ begin
           kana := ChinFrom(search);
           kanji := kana;
           entry := KanaToRomaji(search,1,'j')+' particle';
+          slen := Length(kanji);
         end;
     end;
   end;

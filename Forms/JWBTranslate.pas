@@ -3038,9 +3038,9 @@ begin
     dw:=GetDocWord(x+rlen,y,wt,false);
     if wt<>2 then dw:='';
   end;
-  if flength(dw)>4 then dw:=fcopy(dw,1,4); //yes 4 in unicode
+  if flength(dw)>4 then dw:=fcopy(dw,1,4); //yes 4 in unicode. Cut overly long tails
   for i:=flength(dw) downto 1 do
-    if EvalChar(fgetch(dw,i))=1 then fdelete(dw,i,length(dw)-i+1);
+    if EvalChar(fgetch(dw,i))=EC_IDG_CHAR then fdelete(dw,i,length(dw)-i+1); //cut kanji since it clearly belongs to next word
   result:=rlen;
   if (tfScanParticle in flags) and (wordstate<>'-') and (partl.IndexOf(dw)>-1) then
   begin
