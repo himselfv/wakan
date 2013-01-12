@@ -81,6 +81,7 @@ function ChinFrom(s:string):string;
 
 { Upgrades vocabulary entry -- see implementation comments }
 function FixVocabEntry(const s:string):string;
+function UnfixVocabEntry(const s:string):string;
 
 procedure DeleteDirectory(dir:string);
 procedure Backup(const filename: string);
@@ -774,6 +775,16 @@ begin
  //User dictionaries often have inline markers in old format (<gvn>)
   repl(Result,'<',UH_LBEG);
   repl(Result,'>',UH_LEND);
+ {$ENDIF}
+end;
+
+{ Reverts some fixes when storing the string back into vocabulary }
+function UnfixVocabEntry(const s:string):string;
+begin
+  Result := s;
+ {$IFDEF UNICODE}
+  repl(Result,UH_LBEG,'<');
+  repl(Result,UH_LEND,'>');
  {$ENDIF}
 end;
 
