@@ -485,7 +485,7 @@ begin
   begin
     curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
     curkanji:=remexcl(copy(StringGrid1.Cells[1,curword],2,length(StringGrid1.Cells[1,curword])-1));
-    curmeaning:=strip_fl(remexcl(StringGrid1.Cells[2,curword]));
+    curmeaning:=remmark(remexcl(StringGrid1.Cells[2,curword]));
     fExamples.SetExamples(curkanji);
     s:=remexcl(StringGrid1.Cells[2,curword]);
     if pos(' >> ',s)>0 then delete(s,1,pos(' >> ',s)+3);
@@ -782,7 +782,7 @@ begin
     rect.left:=2;
     rect.right:=fHint.PaintBox1.Width-4;
     rect.bottom:=fs*2;
-    fHint.PaintBox1.Canvas.TextRect(rect,2,fs+2,strip_fl(remexcl(StringGrid1.Cells[2,curword])));
+    fHint.PaintBox1.Canvas.TextRect(rect,2,fs+2,remmark(remexcl(StringGrid1.Cells[2,curword])));
   end;
 end;
 

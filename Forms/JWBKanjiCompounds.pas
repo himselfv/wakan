@@ -204,7 +204,7 @@ procedure TfKanjiCompounds.StringGrid1SelectCell(Sender: TObject; ACol,
 begin
   curcphonetic:=remexcl(copy(StringGrid1.Cells[0,ARow],2,length(StringGrid1.Cells[0,ARow])-1));
   curckanji:=remexcl(copy(StringGrid1.Cells[1,ARow],2,length(StringGrid1.Cells[1,ARow])-1));
-  curcmeaning:=strip_fl(remexcl(StringGrid1.Cells[2,ARow]));
+  curcmeaning:=remmark(remexcl(StringGrid1.Cells[2,ARow]));
   fDicAdd.Edit3.Text:=remexcl(StringGrid1.Cells[2,ARow]);
 end;
 

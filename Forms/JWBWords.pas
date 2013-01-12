@@ -137,6 +137,39 @@ var sl:TStringList;
     all:boolean;
     a:integer;
     cats:string;
+
+  procedure AddVocabWord(CategoryOrder:boolean);
+  var cat_str: string;
+    i: integer;
+  begin
+   //Skip word if it's filtered out
+    if ((not fUserFilters.CheckBox1.Checked) and (TUser.Int(TUserScore)=1))
+    or ((not fUserFilters.CheckBox8.Checked) and (TUser.Int(TUserScore)=2))
+    or ((not fUserFilters.CheckBox9.Checked) and (TUser.Int(TUserScore)=3))
+    or ((not fUserFilters.CheckBox11.Checked) and (TUser.Int(TUserScore)=0)) then exit;
+
+    stp:=TUser.Str(TUserScore);
+    if not CategoryOrder then begin
+      ListWordCategories(TUser.Int(TUserIndex),cl);
+      if not CheckEnabledCategories(cl) then exit;
+      cat_str:='';
+      for i:=0 to cl.Count-1 do cat_str:=cat_str+', '+StripCatName(cl[i]);
+      if length(cat_str)>0 then delete(cat_str,1,2);
+    end else
+      cat_str := cats+' #'+inttostr(j); //sic! not a markup element, just a visual one
+
+    AddWordGrid(StringGrid1,
+      ALTCH_EXCL+stp+CheckKnownKanji(TUser.Str(TUserKanji)),
+      ALTCH_EXCL+stp+TUser.Str(TUserPhonetic),
+      ALTCH_EXCL+stp+FixVocabEntry(TUser.Str(TUserEnglish)),
+      ALTCH_EXCL+stp+cat_str);
+
+    wl.Add(TUser.Str(TUserIndex));
+    if CategoryOrder then
+      wlc.Add(inttostr(a));
+    if TUser.Int(TUserIndex)=lastwordind then sw:=wl.Count;
+  end;
+
 begin
   if not fWords.Visible then exit;
   wl.Clear;
@@ -145,8 +178,9 @@ begin
   cl:=TStringList.Create;
   sl:=TStringList.Create;
   InitWordGrid(StringGrid1,true,false);
-  if fUserFilters.RadioGroup2.ItemIndex>0 then
-  begin
+
+  if fUserFilters.RadioGroup2.ItemIndex>0 then begin
+
     case fUserFilters.RadioGroup2.ItemIndex of
       1:TUser.SetOrder('Phonetic_Ind');
       2:TUser.SetOrder('Kanji_Ind');
@@ -155,36 +189,13 @@ begin
       5:TUser.SetOrder('Score_Ind');
     end;
     TUser.First;
-    while not TUser.EOF do
-    begin
-      if not (((not fUserFilters.CheckBox1.Checked) and (TUser.Int(TUserScore)=1)) or
-              ((not fUserFilters.CheckBox8.Checked) and (TUser.Int(TUserScore)=2)) or
-              ((not fUserFilters.CheckBox9.Checked) and (TUser.Int(TUserScore)=3)) or
-              ((not fUserFilters.CheckBox11.Checked) and (TUser.Int(TUserScore)=0))) then
-      begin
-        stp:=TUser.Str(TUserScore);
-        ListWordCategories(TUser.Int(TUserIndex),cl);
-        all:=CheckEnabledCategories(cl);
-//        for i:=0 to fUserFilters.ListBox1.Items.Count-1 do
-//          if (fUserFilters.ListBox1.Checked[i]) and (cl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[i])<>-1) then all:=true;
-        if all then
-        begin
-          cls:='';
-          for i:=0 to cl.Count-1 do cls:=cls+', '+StripCatName(cl[i]);
-          if length(cls)>0 then delete(cls,1,2);
-          AddWordGrid(StringGrid1,
-            ALTCH_EXCL+stp+CheckKnownKanji(TUser.Str(TUserKanji)),
-            ALTCH_EXCL+stp+TUser.Str(TUserPhonetic),
-            ALTCH_EXCL+stp+TUser.Str(TUserEnglish),
-            ALTCH_EXCL+stp+cls);
-          wl.Add(TUser.Str(TUserIndex));
-          if TUser.Int(TUserIndex)=lastwordind then sw:=wl.Count;
-        end;
-      end;
+    while not TUser.EOF do begin
+      AddVocabWord({CategoryOrder=}false);
       TUser.Next;
     end;
+
   end else
-  begin
+
     for i:=0 to fUserFilters.ListBox1.Items.Count-1 do if fUserFilters.ListBox1.Checked[i] then
     begin
       cats:=fUserFilters.ListBox1.Items[i];
@@ -193,30 +204,14 @@ begin
       TUserSheet.SetOrder('Sheet_Ind');
       TUserSheet.Locate('Number',a);
       j:=0;
-      while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=a) do
-      begin
+      while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=a) do begin
         inc(j);
         TUser.Locate('Index',TUserSheet.Int(TUserSheetWord));
-        if not (((not fUserFilters.CheckBox1.Checked) and (TUser.Int(TUserScore)=1)) or
-                ((not fUserFilters.CheckBox8.Checked) and (TUser.Int(TUserScore)=2)) or
-                ((not fUserFilters.CheckBox9.Checked) and (TUser.Int(TUserScore)=3)) or
-                ((not fUserFilters.CheckBox11.Checked) and (TUser.Int(TUserScore)=0))) then
-        begin
-          stp:=TUser.Str(TUserScore);
-//          AddWordGrid(StringGrid1,ALTCH_EXCL+'14E00','4E00','al','al');
-          AddWordGrid(StringGrid1,
-            ALTCH_EXCL+stp+CheckKnownKanji(TUser.Str(TUserKanji)),
-            ALTCH_EXCL+stp+TUser.Str(TUserPhonetic),
-            ALTCH_EXCL+stp+TUser.Str(TUserEnglish),
-            ALTCH_EXCL+stp+cats+' '+ALTCH_SHARP+inttostr(j));
-          wl.Add(TUser.Str(TUserIndex));
-          wlc.Add(inttostr(a));
-          if TUser.Int(TUserIndex)=lastwordind then sw:=wl.Count;
-        end;
+        AddVocabWord({CategoryOrder=}true);
         TUserSheet.Next;
       end;
     end;
-  end;
+
   FinishWordGrid(StringGrid1);
   Reset;
   if (sw=0) and (warningifnotfound) then
@@ -499,6 +494,7 @@ begin
       Screen.Cursor:=crHourGlass;
       Conv_Create(SaveDialog1.FileName,Conv_ChooseType(curlang='c',0));
       if fWordsExpChoose.ShowModal=mrCancel then exit;
+     //TODO: This accepts FString and not hex on unicode!
       Conv_Write(UnicodeToHex(#9' Wakan Word List')+'000D000A');
       Conv_Write(UnicodeToHex(#9'')+'000D000A');
       Conv_Write(UnicodeToHex(#9' created by WaKan - Japanese & Chinese Learning Tool (C) Filip Kabrt 2002-2004')+'000D000A');
@@ -1071,7 +1067,7 @@ begin
     begin
       wn:=strtoint(wl[(pagenum-1)*pr*c+i+j*pr]);
       TUser.Locate('Index',wn);
-      tm:=UnicodeToHex(strip_fl(TUser.Str(TUserEnglish)));
+      tm:=UnicodeToHex(remmark(TUser.Str(TUserEnglish)));
       tk:=TUser.Str(TUserPhonetic);
       tr:=UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang));
       if showroma then
@@ -1976,7 +1972,7 @@ begin
   TUser.Locate('Index',strtoint(ll[twi]));
   twkanji:=CheckKnownKanji(TUser.Str(TUserKanji));
   twphonetic:=TUser.Str(TUserPhonetic);
-  twmeaning:=strip_fl(TUser.Str(TUserEnglish));
+  twmeaning:=remmark(TUser.Str(TUserEnglish));
   fWordList.Gauge1.MaxValue:=ll.Count;
   fWordList.Gauge1.Progress:=twi;
   fWordList.Label38.Caption:=DateForm(TUser.Str(TUserAdded));

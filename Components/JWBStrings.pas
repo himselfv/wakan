@@ -82,8 +82,8 @@ const
 
  { All used by DrawWordInfo }
   ALTCH_EXCL:Char = '!';
-  ALTCH_SHARP:Char = '#';
-  ALTCH_AT:Char = '@';
+  UH_DRAWWORD_KANA:Char = '#'; //can only be first character in the string. Means that this field is Kana.
+  UH_DRAWWORD_KANJI:Char = '@'; //same, kanji
   ALTCH_TILDE:Char = '~'; //followed by 1 character word type (F, I)
   UH_SETCOLOR:Char = '%'; //followed by 6 character hex color
   UH_LBEG:Char ='<'; //begin flag text (ex.: <dEDICT> <gram> <suf>)
@@ -115,8 +115,8 @@ const
   UH_UNKNOWN_KANJI:Char = #$E001;
 
   ALTCH_EXCL:Char = #$E002;
-  ALTCH_SHARP:Char = #$E003;
-  ALTCH_AT:Char = #$E004;
+  UH_DRAWWORD_KANA = #$E003;
+  UH_DRAWWORD_KANJI = #$E004;
   ALTCH_TILDE:Char = #$E005;
   UH_SETCOLOR:Char = #$E006;
   UH_LBEG:Char = #$E008;
@@ -226,8 +226,8 @@ procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
 function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
 
-function remexcl(s:string):string;
-function strip_fl(s:string):string;
+function remexcl(const s:string):string;
+function remmark(s:string):string;
 function repl(var s:string;const sub,rep:string):string;
 function urepl(var s:string;const sub,rep:string):string;
 function replc(const s:string;const sub,rep:string):string;
@@ -913,17 +913,47 @@ begin
     sl.Add(sa[i]);
 end;
 
-function remexcl(s:string):string;
+{ Removes all Wakan marks (unknown kanji, field type, word type etc) from the string }
+function remexcl(const s:string):string;
 begin
+{
+ I have three versions of this code and they all look different!
+
   if (length(s)>1) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
   if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
   if (length(s)>1) and (s[2]=UH_UNKNOWN_KANJI) then delete(s,2,1);
   if (length(s)>1) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
   if (length(s)>1) and (s[1]=ALTCH_TILDE) then delete(s,1,2);
   result:=s;
+
+  if (length(s1)>0) and (s1[1]=ALTCH_EXCL) then delete(s1,1,2);
+  if (length(s2)>0) and (s2[1]=ALTCH_EXCL) then delete(s2,1,2);
+  if (length(s1)>0) and (s1[1]=UH_UNKNOWN_KANJI) then delete(s1,1,1);
+  if (length(s2)>0) and (s2[1]=UH_UNKNOWN_KANJI) then delete(s2,1,1);
+
+  if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
+  if (length(s)>2) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
+  if (length(s)>1) and (s[1]=UH_DRAWWORD_KANA) then delete(s,1,1);
+  if (length(s)>1) and (s[1]=UH_DRAWWORD_KANJI) then delete(s,1,1);
+  if (length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
+
+ This is just crazy. I'm going to write something reasonable now and pray it works.
+}
+
+ { All marks are at the beginning of the string }
+  Result := s;
+  while Length(Result)>0 do begin
+    if Result[1]=ALTCH_EXCL then delete(Result,1,2) else
+    if Result[1]=UH_DRAWWORD_KANA then delete(Result,1,1) else
+    if Result[1]=UH_DRAWWORD_KANJI then delete(Result,1,1) else
+    if Result[1]=UH_UNKNOWN_KANJI then delete(Result,1,1) else
+    if Result[1]=ALTCH_TILDE then delete(Result,1,2) else
+      break;
+  end;
 end;
 
-function strip_fl(s:string):string;
+{ Removes all internal Wakan markers (<dEDICT> <gabbr> etc) from the string }
+function remmark(s:string):string;
 var beg, en: integer;
 begin
   beg := pos(UH_LBEG,s);

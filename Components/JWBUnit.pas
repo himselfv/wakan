@@ -444,8 +444,8 @@ end;
 
 procedure AddWordGrid(var grid:TStringGrid;sp1,sp2,sp4,sp3:string);
 begin
-  grid.Cells[0,wgcur]:=ALTCH_SHARP+sp2;
-  grid.Cells[1,wgcur]:=ALTCH_AT+sp1;
+  grid.Cells[0,wgcur]:=UH_DRAWWORD_KANA+sp2;
+  grid.Cells[1,wgcur]:=UH_DRAWWORD_KANJI+sp1;
   grid.Cells[2,wgcur]:=sp4;
   if sp3<>'' then grid.Cells[3,wgcur]:=sp3;
   inc(wgcur);
@@ -970,7 +970,7 @@ begin
   end;
   if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
   if (length(s)>2) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
-  if (length(s)>0) and (Colx=0) and (s[1]=ALTCH_SHARP) then
+  if (length(s)>0) and (Colx=0) and (s[1]=UH_DRAWWORD_KANA) then
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
@@ -979,7 +979,7 @@ begin
 //    DrawUnicode(Grid.Canvas,Rect.Left+2,Rect.Top+2,12,s,FontSmall);
     DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,romasys,curlang);
   end else
-  if (length(s)>0) and (s[1]=ALTCH_AT) then
+  if (length(s)>0) and (s[1]=UH_DRAWWORD_KANJI) then
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
@@ -1121,17 +1121,17 @@ begin
     s2:=ConvertPinYin(s2);
     sx1:=s1;
     s1:=s1+UH_SPACE+s2;
-    DrawWordInfo(Canvas,rect,false,false,0,ALTCH_AT+s1,false,false,ch-3,boldfont);
+    DrawWordInfo(Canvas,rect,false,false,0,UH_DRAWWORD_KANJI+s1,false,false,ch-3,boldfont);
     rect.left:=rect.left+flength(sx1)*ch+ch+(flength(s2) div 2)*ch;
   end else
   begin
-    DrawWordInfo(Canvas,rect,false,false,0,ALTCH_AT+s1,false,false,ch-3,boldfont);
+    DrawWordInfo(Canvas,rect,false,false,0,UH_DRAWWORD_KANJI+s1,false,false,ch-3,boldfont);
     rect.left:=rect.left+flength(remexcl(s1))*ch;
   end;
   if (s2<>s1) and (curlang='j') then
   begin
     if s2[1]=ALTCH_EXCL then s2:=ALTCH_EXCL+s1[2]+UH_UNKNOWN_KANJI+copy(s2,3,length(s2)-2) else s2:=UH_UNKNOWN_KANJI+s2;
-    DrawWordInfo(Canvas,rect,false,false,1,ALTCH_AT+s2,false,false,ch-3,boldfont);
+    DrawWordInfo(Canvas,rect,false,false,1,UH_DRAWWORD_KANJI+s2,false,false,ch-3,boldfont);
     rect.left:=rect.left+flength(remexcl(s2))*ch;
   end;
   DrawWordInfo(Canvas,rect,false,false,2,s3,false,false,ch-3,boldfont);

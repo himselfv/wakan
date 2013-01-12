@@ -900,14 +900,12 @@ begin
     begin
       CUser.Locate(@stUserIndex,sl[i].userindex);
       scomp:=sl[i];
-      s2:=CUser.Str(TUserEnglish);
+      s2:=FixVocabEntry(CUser.Str(TUserEnglish));
       ex_pos := pos(s2,scomp.entry);
 
      //If there's already this article in the list, cut it
       if ex_pos>0 then
         scomp.entry := copy(scomp.entry,1,ex_pos-1) + copy(scomp.entry,ex_pos+Length(s2),length(scomp.entry)-length(s2)-ex_pos+1);
-
-      s2:=FixVocabEntry(s2);
 
      //Delete ~F/~I word type since it would be ignored by painting anyway as it stands
      //And it would be visible.
@@ -918,7 +916,7 @@ begin
       for sl2i:=0 to sl2.Count-1 do s2:=s2+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
       sl2.Free;
 
-      scomp.entry := s2+' // '+scomp.entry;
+      scomp.entry := s2+' / '+scomp.entry;
     end;
 end;
 
