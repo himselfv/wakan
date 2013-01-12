@@ -27,7 +27,7 @@ type
   //L - "Lesson"
   //G - "Group"
   //T - "Temporary"
-  //W - WordList?
+  //W - "WordList"
 
 function GetCatPrefix(s:string):TCatPrefix;
 function StripCatName(s:string):string;
@@ -161,8 +161,8 @@ begin
   for i := 0 to catlist.Count - 1 do begin
     CUserCat.Locate('Index', StrToInt(catlist[i]));
     s:=CUserCat.Str(TUserCatName);
-    ind:=fUserFilters.ListBox1.Items.IndexOf(StripCatName(s));
-    if (ind<>-1) and (fUserFilters.ListBox1.Checked[i]) and (GetCatPrefix(s)=curlang) then begin
+    ind:=fUserFilters.lbCategories.Items.IndexOf(StripCatName(s));
+    if (ind<>-1) and (fUserFilters.lbCategories.Checked[i]) and (GetCatPrefix(s)=curlang) then begin
       Result:=true;
       break; //no point in scanning further
     end;

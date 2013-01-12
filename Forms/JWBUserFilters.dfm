@@ -27,7 +27,7 @@ object fUserFilters: TfUserFilters
     Align = alClient
     Shape = bsFrame
   end
-  object SpeedButton1: TSpeedButton
+  object btnCatToggleAll: TSpeedButton
     Left = 115
     Top = 463
     Width = 23
@@ -50,9 +50,9 @@ object fUserFilters: TfUserFilters
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton1Click
+    OnClick = btnCatToggleAllClick
   end
-  object SpeedButton2: TSpeedButton
+  object btnCatEdit: TSpeedButton
     Left = 138
     Top = 463
     Width = 23
@@ -75,9 +75,9 @@ object fUserFilters: TfUserFilters
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton2Click
+    OnClick = btnCatEditClick
   end
-  object SpeedButton3: TSpeedButton
+  object btnCatDelete: TSpeedButton
     Left = 161
     Top = 463
     Width = 23
@@ -100,20 +100,22 @@ object fUserFilters: TfUserFilters
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton3Click
+    OnClick = btnCatDeleteClick
   end
   object Label1: TLabel
     Left = 8
     Top = 214
-    Width = 102
+    Width = 176
     Height = 13
+    Anchors = [akLeft, akTop, akRight]
     Caption = '#00705^eCategories:'
   end
-  object RadioGroup2: TRadioGroup
+  object rgSort: TRadioGroup
     Left = 7
     Top = 104
     Width = 177
     Height = 105
+    Anchors = [akLeft, akTop, akRight]
     Caption = '#00197^eSort by'
     ItemIndex = 0
     Items.Strings = (
@@ -124,65 +126,73 @@ object fUserFilters: TfUserFilters
       '#00710^eAdded date'
       '#00711^eStatus')
     TabOrder = 0
-    OnClick = CheckBox1Click
+    OnClick = cbFilterUnlearnedClick
   end
-  object GroupBox1: TGroupBox
+  object gbFilter: TGroupBox
     Left = 7
     Top = 8
     Width = 177
     Height = 89
+    Anchors = [akLeft, akTop, akRight]
     Caption = '#00712^eFilter'
     TabOrder = 1
-    object CheckBox1: TCheckBox
+    DesignSize = (
+      177
+      89)
+    object cbFilterUnlearned: TCheckBox
       Left = 8
       Top = 16
-      Width = 97
+      Width = 166
       Height = 17
       Hint = '#00713^eDisplay unlearned words'
+      Anchors = [akLeft, akTop, akRight]
       Caption = '#00639^eUnlearned'
       Checked = True
       State = cbChecked
       TabOrder = 0
-      OnClick = CheckBox1Click
+      OnClick = cbFilterUnlearnedClick
     end
-    object CheckBox8: TCheckBox
+    object cbFilterLearned: TCheckBox
       Left = 8
       Top = 32
-      Width = 97
+      Width = 166
       Height = 17
       Hint = '#00714^eDisplay learned words'
+      Anchors = [akLeft, akTop, akRight]
       Caption = '#00640^eLearned'
       Checked = True
       State = cbChecked
       TabOrder = 1
-      OnClick = CheckBox1Click
+      OnClick = cbFilterUnlearnedClick
     end
-    object CheckBox9: TCheckBox
+    object cbFilterMastered: TCheckBox
       Left = 8
       Top = 48
-      Width = 145
+      Width = 166
       Height = 17
       Hint = '#00715^eDisplay mastered words'
+      Anchors = [akLeft, akTop, akRight]
       Caption = '#00641^eMastered'
       Checked = True
       State = cbChecked
       TabOrder = 2
-      OnClick = CheckBox1Click
+      OnClick = cbFilterUnlearnedClick
     end
-    object CheckBox11: TCheckBox
+    object cbFilterProblematic: TCheckBox
       Left = 8
       Top = 64
-      Width = 113
+      Width = 166
       Height = 17
       Hint = '#00716^eDisplay problematic words'
+      Anchors = [akLeft, akTop, akRight]
       Caption = '#00638^eProblematic'
       Checked = True
       State = cbChecked
       TabOrder = 3
-      OnClick = CheckBox1Click
+      OnClick = cbFilterUnlearnedClick
     end
   end
-  object TabSet1: TTabSet
+  object tabCatList: TTabSet
     Left = 7
     Top = 463
     Width = 108
@@ -202,9 +212,9 @@ object fUserFilters: TfUserFilters
       'T'
       'W')
     TabIndex = 1
-    OnChange = TabSet1Change
+    OnChange = tabCatListChange
   end
-  object ListBox1: TCheckListBox
+  object lbCategories: TCheckListBox
     Left = 7
     Top = 231
     Width = 176
@@ -212,7 +222,7 @@ object fUserFilters: TfUserFilters
     Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 13
     TabOrder = 3
-    OnClick = ListBox1Click
-    OnDblClick = ListBox1DblClick
+    OnClick = lbCategoriesClick
+    OnDblClick = lbCategoriesDblClick
   end
 end

@@ -37,27 +37,20 @@ type
     procedure UserAdd_Button1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
-    procedure UserDetails_Edit4Change(Sender: TObject);
     procedure Button9Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Button10Click(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
-    procedure UserDetails_Button3Click(Sender: TObject);
-    procedure UserDetails_PaintBox1Paint(Sender: TObject);
-    procedure UserDetails_PaintBox6Paint(Sender: TObject);
     procedure UserDetails_Button13Click(Sender: TObject);
     procedure Button14Click(Sender: TObject);
     procedure Button11Click(Sender: TObject);
     procedure Button12Click(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
-    procedure UserDetails_ComboBox2Change(Sender: TObject);
     procedure Button15Click(Sender: TObject);
     procedure Button18Click(Sender: TObject);
     procedure StringGrid1KeyPress(Sender: TObject; var Key: Char);
-    procedure UserCategory_SpeedButton2Click(Sender: TObject);
-    procedure UserCategory_SpeedButton3Click(Sender: TObject);
     procedure Button19Click(sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
@@ -104,6 +97,10 @@ type
     procedure SearchWord(wordind:integer);
     procedure BuildStrokeOrderPackage(sourceCsv: string);
 
+  public
+    curphonetic:string;
+    curkanji:string;
+
   end;
 
 var
@@ -118,7 +115,6 @@ uses JWBMenu, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
 
 var wl,wlc:TStringList;
     ll,ltl:TStringList;
-    curphonetic,curkanji:string;
     lastwordind:integer;
     twi:integer;
     twchg:array[0..3,0..3] of integer;
@@ -141,10 +137,10 @@ var sl:TStringList;
     i: integer;
   begin
    //Skip word if it's filtered out
-    if ((not fUserFilters.CheckBox1.Checked) and (TUser.Int(TUserScore)=1))
-    or ((not fUserFilters.CheckBox8.Checked) and (TUser.Int(TUserScore)=2))
-    or ((not fUserFilters.CheckBox9.Checked) and (TUser.Int(TUserScore)=3))
-    or ((not fUserFilters.CheckBox11.Checked) and (TUser.Int(TUserScore)=0)) then exit;
+    if ((not fUserFilters.cbFilterUnlearned.Checked) and (TUser.Int(TUserScore)=1))
+    or ((not fUserFilters.cbFilterLearned.Checked) and (TUser.Int(TUserScore)=2))
+    or ((not fUserFilters.cbFilterMastered.Checked) and (TUser.Int(TUserScore)=3))
+    or ((not fUserFilters.cbFilterProblematic.Checked) and (TUser.Int(TUserScore)=0)) then exit;
 
     stp:=TUser.Str(TUserScore);
     if not CategoryOrder then begin
@@ -177,9 +173,9 @@ begin
   sl:=TStringList.Create;
   InitWordGrid(StringGrid1,true,false);
 
-  if fUserFilters.RadioGroup2.ItemIndex>0 then begin
+  if fUserFilters.rgSort.ItemIndex>0 then begin
 
-    case fUserFilters.RadioGroup2.ItemIndex of
+    case fUserFilters.rgSort.ItemIndex of
       1:TUser.SetOrder('Phonetic_Ind');
       2:TUser.SetOrder('Kanji_Ind');
       3:TUser.SetOrder('English_Ind');
@@ -194,10 +190,10 @@ begin
 
   end else
 
-    for i:=0 to fUserFilters.ListBox1.Items.Count-1 do if fUserFilters.ListBox1.Checked[i] then
+    for i:=0 to fUserFilters.lbCategories.Items.Count-1 do if fUserFilters.lbCategories.Checked[i] then
     begin
-      cats:=fUserFilters.ListBox1.Items[i];
-      TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[i]);
+      cats:=fUserFilters.lbCategories.Items[i];
+      TUserCat.Locate('Name',curlang+'~'+fUserFilters.lbCategories.Items[i]);
       a:=TUserCat.Int(TUserCatIndex);
       TUserSheet.SetOrder('Sheet_Ind');
       TUserSheet.Locate('Number',a);
@@ -432,13 +428,6 @@ begin
   ShowIt(false);
 end;
 
-procedure TfWords.UserDetails_Edit4Change(Sender: TObject);
-begin
-  fUserDetails.Button3.Default:=true;
-  fUserDetails.Button4.Default:=false;
-  fUserDetails.btnDelete.Default:=false;
-end;
-
 procedure TfWords.Button9Click(Sender: TObject);
 var t:textfile;
     i,j:integer;
@@ -473,13 +462,13 @@ begin
       begin
         ListWordCategories(strtoint(wl[i]),sl);
         TUser.Locate('Index',strtoint(wl[i]));
-        for j:=0 to fUserFilters.ListBox1.Items.Count-1 do
-          if (fUserFilters.ListBox1.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[j])<>-1) then
+        for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
+          if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
         begin
           writeln(t,TUser.Str(TUserKanji));
           writeln(t,TUser.Str(TUserPhonetic));
           writeln(t,TUser.Str(TUserEnglish));
-          TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[j]);
+          TUserCat.Locate('Name',curlang+'~'+fUserFilters.lbCategories.Items[j]);
           writeln(t,chr(TUserCat.Int(TUserCatType))+TUserCat.Str(TUserCatName));
         end;
       end;
@@ -512,8 +501,8 @@ begin
       begin
         ListWordCategories(strtoint(wl[i]),sl);
         TUser.Locate('Index',strtoint(wl[i]));
-        for j:=0 to fUserFilters.ListBox1.Items.Count-1 do
-          if (fUserFilters.ListBox1.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.ListBox1.Items[j])<>-1) then
+        for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
+          if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
         begin
           Conv_Write(TUser.Str(TUserKanji));
           Conv_Write(UnicodeToHex(#9));
@@ -525,7 +514,7 @@ begin
           if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
           begin
             Conv_Write(UnicodeToHex(#9));
-            Conv_Write(UnicodeToHex(fUserFilters.ListBox1.Items[j]));
+            Conv_Write(UnicodeToHex(fUserFilters.lbCategories.Items[j]));
             if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
             begin
               Conv_Write(UnicodeToHex(#9));
@@ -952,53 +941,13 @@ procedure TfWords.Reset;
 begin
   curphonetic:='';
   curkanji:='';
-  fUserDetails.RxLabel3.Caption:='-';
-  fUserDetails.Edit4.Text:='';
-  fUserDetails.Edit4.ReadOnly:=true;
-  fUserDetails.Button3.Enabled:=false;
-  fUserDetails.Button4.Enabled:=false;
-  fUserDetails.Button13.Enabled:=false;
-  fUserDetails.ComboBox2.Enabled:=false;
-  fUserDetails.ListBox2.Enabled:=false;
-  fUserDetails.ListBox2.Items.Clear;
-  fUserDetails.Label15.Caption:='-';
-  fUserDetails.Label16.Caption:='-';
-  fUserDetails.Label17.Caption:='-';
-  fUserDetails.Label18.Caption:='-';
-  fUserDetails.SetWordControlsEnabled(false);
-  fUserDetails.btnMoveUpInCategory.Visible:=fUserFilters.RadioGroup2.ItemIndex=0;
-  fUserDetails.btnMoveDownInCategory.Visible:=fUserFilters.RadioGroup2.ItemIndex=0;
-  fUserDetails.btnMoveUpInCategory.Enabled:=false;
-  fUserDetails.btnMoveDownInCategory.Enabled:=false;
-  fUserDetails.PaintBox1.Invalidate;
-  fUserDetails.PaintBox6.Invalidate;
+  fUserDetails.Reset;
 end;
 
 procedure TfWords.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
   CanSelect:=true;
-end;
-
-procedure TfWords.UserDetails_Button3Click(Sender: TObject);
-begin
-  TUser.Edit([TUserEnglish],[fUserDetails.Edit4.Text]);
-  fMenu.ChangeUserData;
-  ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_PaintBox1Paint(Sender: TObject);
-begin
-  fUserDetails.PaintBox1.Canvas.Brush.Color:=clWindow;
-  DrawKana(fUserDetails.PaintBox1.Canvas,1,1,22,curphonetic,FontJapanese,showroma,romasys,curlang);
-end;
-
-procedure TfWords.UserDetails_PaintBox6Paint(Sender: TObject);
-begin
-  fUserDetails.PaintBox6.Canvas.Brush.Color:=clWindow;
-  BeginDrawReg(fUserDetails.paintBox6);
-  DrawUnicode(fUserDetails.PaintBox6.Canvas,1,1,22,curkanji,FontJapanese);
-  EndDrawReg;
 end;
 
 procedure TfWords.UserDetails_Button13Click(Sender: TObject);
@@ -1016,7 +965,7 @@ begin
     s:=wl[i-1];
     lastwordind:=strtoint(s);
     if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
-    RemoveWordFromCategory(lastwordind, fUserDetails.ListBox2.Items[fUserDetails.ListBox2.ItemIndex]);
+    RemoveWordFromCategory(lastwordind, fUserDetails.lbCategories.Items[fUserDetails.lbCategories.ItemIndex]);
   end;
   fMenu.ChangeUserData;
   ShowIt(false);
@@ -1150,13 +1099,6 @@ end;
 procedure TfWords.ListBox1Click(Sender: TObject);
 begin
   ShowIt(false);
-end;
-
-procedure TfWords.UserDetails_ComboBox2Change(Sender: TObject);
-begin
-  fUserDetails.Button3.Default:=false;
-  fUserDetails.Button4.Default:=true;
-  fUserDetails.btnDelete.Default:=false;
 end;
 
 { Word learning states:
@@ -1516,33 +1458,9 @@ begin
   if (Upcase(key)='U') and (fUserDetails.btnSetUnlearned.Enabled) then SetWordsLearnState(1);
   if (Upcase(key)='L') and (fUserDetails.btnSetLearned.Enabled) then SetWordsLearnState(2);
   if (Upcase(key)='M') and (fUserDetails.btnSetMastered.Enabled) then SetWordsLearnState(3);
-  if (Upcase(key)='A') and (fUserDetails.Button4.Enabled) then AddWordsToCategory(fUserDetails.ComboBox2.text);
+  if (Upcase(key)='A') and (fUserDetails.btnAddToCategory.Enabled) then AddWordsToCategory(fUserDetails.cbAddCategory.text);
   if (key=',') and (fUserDetails.btnMoveUpInCategory.Enabled) and (fUserDetails.btnMoveUpInCategory.Visible) then MoveWordsInCategory(mdUp);
   if (key='.') and (fUserDetails.btnMoveDownInCategory.Enabled) and (fUserDetails.btnMoveDownInCategory.Visible) then MoveWordsInCategory(mdDown);
-end;
-
-procedure TfWords.UserCategory_SpeedButton2Click(Sender: TObject);
-var catname:string;
-  cattype: char;
-begin
-  if fUserFilters.ListBox1.ItemIndex=-1 then exit;
-  TUserCat.Locate('Name',curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex]);
-  catname := StripCatName(TUserCat.Str(TUserCatName));
-  cattype := chr(TUserCat.Int(TUserCatType));
-  if fNewCategory.EditCategory(catname, cattype) then begin
-    TUserCat.Edit([TUserCatName,TUserCatType],[curlang+'~'+catname,inttostr(ord(cattype))]);
-    fMenu.RefreshCategory;
-    fMenu.ChangeUserData;
-  end;
-end;
-
-procedure TfWords.UserCategory_SpeedButton3Click(Sender: TObject);
-begin
-  if fUserFilters.ListBox1.ItemIndex=-1 then exit;
-  DeleteCategoryUI(curlang+'~'+fUserFilters.ListBox1.Items[fUserFilters.ListBox1.ItemIndex]);
-  fMenu.RefreshCategory;
-  fMenu.RebuildUserIndex;
-  fMenu.ChangeUserData;
 end;
 
 function DateOld(s:string;threshold:integer):integer;
@@ -2193,9 +2111,10 @@ begin
       TUserSheet.Insert([ll[i],inttostr(MaxCategoryIndex),inttostr(i)]);
   end;
   fMenu.RefreshCategory;
-  fUserFilters.TabSet1.TabIndex:=3;
-  fUserFilters.TabSet1Change(self,3,fnd);
-  for i:=0 to fUserFilters.ListBOx1.Items.COunt-1 do fUserFilters.ListBox1.Checked[i]:=fUserFilters.ListBox1.Items[i]=fWordList.Edit1.Text;
+  fUserFilters.tabCatList.TabIndex:=3;
+  fUserFilters.tabCatListChange(self,3,fnd);
+  for i:=0 to fUserFilters.lbCategories.Items.COunt-1 do
+    fUserFilters.lbCategories.Checked[i]:=fUserFilters.lbCategories.Items[i]=fWordList.Edit1.Text;
   fMenu.ChangeUserData;
   ShowIt(false);
 end;
@@ -2442,73 +2361,32 @@ begin
 end;
 
 procedure TfWords.StringGrid1Click(Sender: TObject);
-var s:string;
-    cl:TStringList;
-    i,j:integer;
+var i:integer;
 begin
   if StringGrid1.Selection.Bottom-StringGrid1.Selection.Top>0 then
   begin
     Reset;
-    curkanji:=UnicodeToHex(_l('#00928^e<multiple words>'));
-    fUserDetails.ListBox2.Items.Clear;
-    cl:=TStringList.Create;
-    for j:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
-    begin
-      s:=wl[j-1];
-      ListWordCategories(strtoint(s),cl);
-      for i:=0 to cl.Count-1 do if fUserDetails.ListBox2.Items.IndexOf(copy(cl[i],3,length(cl[i])-2))=-1 then fUserDetails.ListBOx2.Items.Add(copy(cl[i],3,length(cl[i])-2));
-    end;
-    if cl.Count>1 then fUserDetails.Button13.Enabled:=true;
-    cl.Free;
-    fUserDetails.SetWordControlsEnabled(true);
-    fUserDetails.Button4.Enabled:=true;
-    fUserDetails.ComboBox2.Enabled:=true;
-    fUserDetails.ListBox2.Enabled:=true;
+    curkanji:=fstr(_l('#00928^e<multiple words>'));
+    fUserDetails.ClearCategories;
+    for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
+      fUserDetails.AddWordCategories(strtoint(wl[i-1]));
+    fUserDetails.SetMultipleWords;
     exit;
   end;
 //  Reset;
-  fUserDetails.ListBox2.Items.Clear;
-  cl:=TStringList.Create;
-  s:=wl[StringGrid1.Row-1];
-  lastwordind:=strtoint(s);
+  lastwordind:=strtoint(wl[StringGrid1.Row-1]);
   if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
   curkanji:=TUser.Str(TUserKanji);
   curphonetic:=TUser.Str(TUserPhonetic);
   fExamples.SetExamples(curkanji);
-  case TUser.Int(TUserScore) of
-    0:fUserDetails.RxLabel3.Caption:=_l('#00638^eProblematic');
-    1:fUserDetails.RxLabel3.Caption:=_l('#00639^eUnlearned');
-    2:fUserDetails.RxLabel3.Caption:=_l('#00640^eLearned');
-    3:fUserDetails.RxLabel3.Caption:=_l('#00641^eMastered');
-  end;
-  fUserDetails.Edit4.Text:=TUser.Str(TUserEnglish);
-  fUserDetails.Edit4.ReadOnly:=false;
-  fUserDetails.Button3.Enabled:=true;
-  fUserDetails.Button4.Enabled:=true;
-  fUserDetails.Label15.Caption:=DateForm(TUser.Str(TUserAdded));
-  fUserDetails.Label16.Caption:=DateForm(TUser.Str(TUserLearned));
-  fUserDetails.Label17.Caption:=DateForm(TUser.Str(TUserMastered));
-  fUserDetails.Label18.Caption:=DateForm(TUser.Str(TUserPrinted));
-  if fUserDetails.Label18.Caption<>'-'then fUserDetails.Label18.Caption:=fUserDetails.Label18.Caption+' ('+TUser.Str(TUserNoPrinted)+'x)';
-  fUserDetails.SetWordControlsEnabled(true);
-  fUserDetails.ComboBox2.Enabled:=true;
-  fUserDetails.ListBox2.Enabled:=true;
-  fUserDetails.PaintBox1.Invalidate;
-  fUserDetails.PaintBox6.Invalidate;
-  fUserDetails.btnDelete.Default:=true;
-  fUserDetails.Button3.Default:=false;
-  fUserDetails.Button4.Default:=false;
-  if fUserFilters.RadioGroup2.ItemIndex=0 then
+  fUserDetails.ClearCategories;
+  fUserDetails.AddWordCategories(lastwordind);
+  fUserDetails.SetSingleWord;
+  if fUserFilters.rgSort.ItemIndex=0 then
   begin
     fUserDetails.btnMoveUpInCategory.Enabled:=(StringGrid1.Row>1) and (wlc[StringGrid1.Row-2]=wlc[StringGrid1.Row-1]);
     fUserDetails.btnMoveDownInCategory.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
   end;
-  ListWordCategories(strtoint(s),cl);
-  for i:=0 to cl.Count-1 do fUserDetails.ListBOx2.Items.Add(copy(cl[i],3,length(cl[i])-2));
-  if cl.Count>1 then
-  fUserDetails.Button13.Enabled:=true;
-  fUserDetails.ListBox2.ItemIndex:=0;
-  cl.Free;
   AnnotShowMedia(curkanji,curphonetic);
 end;
 

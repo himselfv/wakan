@@ -1668,8 +1668,8 @@ var b:boolean;
 begin
   fDicAdd.ComboBox1.Items.Clear;
   fUserAdd.ComboBox1.Items.Clear;
-  fUserDetails.ComboBox2.Items.Clear;
-  fUserFilters.TabSet1Change(fMenu,fUserFilters.TabSet1.TabIndex,b);
+  fUserDetails.cbAddCategory.Items.Clear;
+  fUserFilters.tabCatListChange(fMenu,fUserFilters.tabCatList.TabIndex,b);
 
   TUserCat.First;
   while not TUserCat.EOF do
@@ -1685,7 +1685,7 @@ begin
     begin
       fDicAdd.ComboBox1.Items.Add(s);
       fUserAdd.ComboBox1.Items.Add(s);
-      fUserDetails.ComboBox2.Items.Add(s);
+      fUserDetails.cbAddCategory.Items.Add(s);
     end;
     TUserCat.Next;
   end;

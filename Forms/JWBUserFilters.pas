@@ -8,28 +8,28 @@ uses
 
 type
   TfUserFilters = class(TForm)
-    RadioGroup2: TRadioGroup;
-    GroupBox1: TGroupBox;
-    CheckBox1: TCheckBox;
-    CheckBox8: TCheckBox;
-    CheckBox9: TCheckBox;
-    CheckBox11: TCheckBox;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    TabSet1: TTabSet;
-    ListBox1: TCheckListBox;
+    rgSort: TRadioGroup;
+    gbFilter: TGroupBox;
+    cbFilterUnlearned: TCheckBox;
+    cbFilterLearned: TCheckBox;
+    cbFilterMastered: TCheckBox;
+    cbFilterProblematic: TCheckBox;
+    btnCatToggleAll: TSpeedButton;
+    btnCatEdit: TSpeedButton;
+    btnCatDelete: TSpeedButton;
+    tabCatList: TTabSet;
+    lbCategories: TCheckListBox;
     Label1: TLabel;
     Bevel1: TBevel;
-    procedure CheckBox1Click(Sender: TObject);
+    procedure cbFilterUnlearnedClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure ListBox1Click(Sender: TObject);
-    procedure ListBox1DblClick(Sender: TObject);
-    procedure TabSet1Change(Sender: TObject; NewTab: Integer;
+    procedure lbCategoriesClick(Sender: TObject);
+    procedure lbCategoriesDblClick(Sender: TObject);
+    procedure tabCatListChange(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
+    procedure btnCatToggleAllClick(Sender: TObject);
+    procedure btnCatEditClick(Sender: TObject);
+    procedure btnCatDeleteClick(Sender: TObject);
   end;
 
 var
@@ -37,11 +37,11 @@ var
 
 implementation
 
-uses JWBWords, JWBMenu, JWBCategories, JWBUnit;
+uses JWBWords, JWBMenu, JWBCategories, JWBUnit, JWBNewCategory;
 
 {$R *.DFM}
 
-procedure TfUserFilters.CheckBox1Click(Sender: TObject);
+procedure TfUserFilters.cbFilterUnlearnedClick(Sender: TObject);
 begin
   fWords.ShowIt(false);
 end;
@@ -53,69 +53,83 @@ begin
   fMenu.aUserSettings.Checked:=false;
 end;
 
-procedure TfUserFilters.ListBox1Click(Sender: TObject);
+procedure TfUserFilters.lbCategoriesClick(Sender: TObject);
 begin
   fWords.ShowIt(false);
 end;
 
-procedure TfUserFilters.ListBox1DblClick(Sender: TObject);
+procedure TfUserFilters.lbCategoriesDblClick(Sender: TObject);
 var i:integer;
 begin
-  if ListBox1.ItemIndex<>-1 then ListBox1.Checked[ListBox1.ItemIndex]:=not
-    ListBox1.Checked[ListBox1.ItemIndex];
+  if lbCategories.ItemIndex<>-1 then lbCategories.Checked[lbCategories.ItemIndex]:=not
+    lbCategories.Checked[lbCategories.ItemIndex];
   exit;
-  if ListBox1.ItemIndex<>-1 then
+  if lbCategories.ItemIndex<>-1 then
   begin
-    for i:=0 to ListBox1.Items.Count-1 do
-      ListBox1.Checked[i]:=i=ListBox1.ItemIndex;
+    for i:=0 to lbCategories.Items.Count-1 do
+      lbCategories.Checked[i]:=i=lbCategories.ItemIndex;
     fWords.ShowIt(false);
   end;
 end;
 
-procedure TfUserFilters.TabSet1Change(Sender: TObject; NewTab: Integer;
+procedure TfUserFilters.tabCatListChange(Sender: TObject; NewTab: Integer;
   var AllowChange: Boolean);
 var i:integer;
     lc:char;
     s:string;
 begin
-  ListBox1.Items.Clear;
+  lbCategories.Items.Clear;
   TUserCat.SetOrder('Name_Ind');
   TUserCat.First;
   while not TUserCat.EOF do
   begin
-    if chr(TUserCat.Int(TUserCatType))=TabSet1.Tabs[NewTab] then
+    if chr(TUserCat.Int(TUserCatType))=tabCatList.Tabs[NewTab] then
     begin
       lc:='j';
       s:=TUserCat.Str(TUserCatName);
       if (length(s)>1) and (s[2]='~') then lc:=s[1];
       if lc=curlang then
-        ListBox1.Items.Add(StripCatName(TUserCat.Str(TUserCatName)));
+        lbCategories.Items.Add(StripCatName(TUserCat.Str(TUserCatName)));
     end;
     TUserCat.Next;
   end;
-  for i:=0 to ListBox1.Items.Count-1 do ListBox1.Checked[i]:=true;
-  ListBox1.ItemIndex:=0;
+  for i:=0 to lbCategories.Items.Count-1 do lbCategories.Checked[i]:=true;
+  lbCategories.ItemIndex:=0;
   fWords.ShowIt(false);
 end;
 
-procedure TfUserFilters.SpeedButton1Click(Sender: TObject);
+procedure TfUserFilters.btnCatToggleAllClick(Sender: TObject);
 var i:integer;
     allchecked:boolean;
 begin
   allchecked:=true;
-  for i:=0 to ListBox1.Items.Count-1 do if not ListBox1.Checked[i] then allchecked:=false;
-  for i:=0 to ListBox1.Items.Count-1 do ListBox1.Checked[i]:=not allchecked;
+  for i:=0 to lbCategories.Items.Count-1 do if not lbCategories.Checked[i] then allchecked:=false;
+  for i:=0 to lbCategories.Items.Count-1 do lbCategories.Checked[i]:=not allchecked;
   fWords.ShowIt(false);
 end;
 
-procedure TfUserFilters.SpeedButton2Click(Sender: TObject);
+procedure TfUserFilters.btnCatEditClick(Sender: TObject);
+var catname:string;
+  cattype: char;
 begin
-  fWords.UserCategory_SpeedButton2Click(sender);
+  if lbCategories.ItemIndex=-1 then exit;
+  TUserCat.Locate('Name',curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
+  catname := StripCatName(TUserCat.Str(TUserCatName));
+  cattype := chr(TUserCat.Int(TUserCatType));
+  if fNewCategory.EditCategory(catname, cattype) then begin
+    TUserCat.Edit([TUserCatName,TUserCatType],[curlang+'~'+catname,inttostr(ord(cattype))]);
+    fMenu.RefreshCategory;
+    fMenu.ChangeUserData;
+  end;
 end;
 
-procedure TfUserFilters.SpeedButton3Click(Sender: TObject);
+procedure TfUserFilters.btnCatDeleteClick(Sender: TObject);
 begin
-  fWords.UserCategory_SpeedButton3Click(sender);
+  if lbCategories.ItemIndex=-1 then exit;
+  DeleteCategoryUI(curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
+  fMenu.RefreshCategory;
+  fMenu.RebuildUserIndex;
+  fMenu.ChangeUserData;
 end;
 
 end.

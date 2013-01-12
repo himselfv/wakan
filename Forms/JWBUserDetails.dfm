@@ -3,8 +3,8 @@ object fUserDetails: TfUserDetails
   Top = 305
   BorderStyle = bsNone
   Caption = '#00692^eVocabulary word details'
-  ClientHeight = 219
-  ClientWidth = 752
+  ClientHeight = 188
+  ClientWidth = 1060
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,18 +14,21 @@ object fUserDetails: TfUserDetails
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  OnDestroy = FormDestroy
   DesignSize = (
-    752
-    219)
+    1060
+    188)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel
     Left = 0
     Top = 0
-    Width = 752
-    Height = 219
+    Width = 1060
+    Height = 188
     Align = alClient
     Shape = bsFrame
+    ExplicitWidth = 752
+    ExplicitHeight = 219
   end
   object Label5: TLabel
     Left = 8
@@ -44,29 +47,28 @@ object fUserDetails: TfUserDetails
   object Shape2: TShape
     Left = 8
     Top = 25
-    Width = 281
+    Width = 249
     Height = 29
     Brush.Color = clWindow
   end
-  object PaintBox1: TPaintBox
+  object pbPhonetic: TPaintBox
     Left = 9
     Top = 26
-    Width = 279
+    Width = 248
     Height = 27
     Color = clBtnFace
     ParentColor = False
-    OnPaint = PaintBox1Paint
+    OnPaint = pbPhoneticPaint
   end
   object Shape5: TShape
-    Left = 298
+    Left = 269
     Top = 25
     Width = 248
     Height = 29
-    Anchors = [akLeft, akTop, akRight]
     Brush.Color = clWindow
   end
   object Label6: TLabel
-    Left = 298
+    Left = 269
     Top = 9
     Width = 86
     Height = 13
@@ -79,46 +81,15 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     Transparent = True
   end
-  object PaintBox6: TPaintBox
-    Left = 299
+  object pbKanji: TPaintBox
+    Left = 270
     Top = 26
     Width = 246
     Height = 27
-    Anchors = [akLeft, akTop, akRight]
     Color = clBtnFace
     ParentColor = False
-    OnMouseMove = PaintBox6MouseMove
-    OnPaint = PaintBox6Paint
-  end
-  object RxLabel3: TRxLabel
-    Left = 554
-    Top = 25
-    Width = 75
-    Height = 18
-    Caption = 'Learned'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Verdana'
-    Font.Style = [fsBold]
-    Anchors = [akTop, akRight]
-    ParentFont = False
-    Transparent = True
-  end
-  object Label8: TLabel
-    Left = 554
-    Top = 9
-    Width = 82
-    Height = 13
-    Anchors = [akTop, akRight]
-    Caption = '#00693^eStatus:'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    Transparent = True
+    OnMouseMove = pbKanjiMouseMove
+    OnPaint = pbKanjiPaint
   end
   object Label9: TLabel
     Left = 8
@@ -135,8 +106,8 @@ object fUserDetails: TfUserDetails
     Transparent = True
   end
   object Label11: TLabel
-    Left = 8
-    Top = 113
+    Left = 839
+    Top = 24
     Width = 89
     Height = 13
     Caption = '#00694^eCreated:'
@@ -149,8 +120,8 @@ object fUserDetails: TfUserDetails
     Transparent = True
   end
   object Label12: TLabel
-    Left = 336
-    Top = 113
+    Left = 839
+    Top = 82
     Width = 108
     Height = 13
     Caption = '#00695^eLearning list:'
@@ -163,8 +134,8 @@ object fUserDetails: TfUserDetails
     Transparent = True
   end
   object Label13: TLabel
-    Left = 112
-    Top = 113
+    Left = 839
+    Top = 44
     Width = 91
     Height = 13
     Caption = '#00696^eLearned:'
@@ -177,8 +148,8 @@ object fUserDetails: TfUserDetails
     Transparent = True
   end
   object Label14: TLabel
-    Left = 200
-    Top = 113
+    Left = 839
+    Top = 63
     Width = 96
     Height = 13
     Caption = '#00697^eMastered:'
@@ -190,9 +161,9 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     Transparent = True
   end
-  object Label15: TLabel
-    Left = 8
-    Top = 137
+  object lblDateCreated: TLabel
+    Left = 929
+    Top = 22
     Width = 48
     Height = 16
     Caption = 'Label15'
@@ -204,9 +175,9 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     Transparent = True
   end
-  object Label16: TLabel
-    Left = 112
-    Top = 137
+  object lblDateLearned: TLabel
+    Left = 929
+    Top = 42
     Width = 48
     Height = 16
     Caption = 'Label15'
@@ -218,9 +189,9 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     Transparent = True
   end
-  object Label17: TLabel
-    Left = 200
-    Top = 137
+  object lblDateMastered: TLabel
+    Left = 929
+    Top = 61
     Width = 48
     Height = 16
     Caption = 'Label15'
@@ -232,9 +203,9 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     Transparent = True
   end
-  object Label18: TLabel
-    Left = 336
-    Top = 137
+  object lblTimesPrinted: TLabel
+    Left = 929
+    Top = 80
     Width = 48
     Height = 16
     Caption = 'Label15'
@@ -247,10 +218,10 @@ object fUserDetails: TfUserDetails
     Transparent = True
   end
   object btnMoveUpInCategory: TSpeedButton
-    Left = 697
-    Top = 26
-    Width = 23
-    Height = 23
+    Left = 999
+    Top = 8
+    Width = 53
+    Height = 34
     Hint = '#00698^eMove up in the category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
@@ -270,12 +241,13 @@ object fUserDetails: TfUserDetails
     ParentShowHint = False
     ShowHint = True
     OnClick = btnMoveUpInCategoryClick
+    ExplicitLeft = 832
   end
   object btnMoveDownInCategory: TSpeedButton
-    Left = 721
-    Top = 26
-    Width = 23
-    Height = 23
+    Left = 999
+    Top = 56
+    Width = 53
+    Height = 34
     Hint = '#00699^eMove down in the category'
     Anchors = [akTop, akRight]
     Glyph.Data = {
@@ -295,14 +267,15 @@ object fUserDetails: TfUserDetails
     ParentShowHint = False
     ShowHint = True
     OnClick = btnMoveDownInCategoryClick
+    ExplicitLeft = 832
   end
   object btnDelete: TButton
-    Left = 669
-    Top = 7
-    Width = 75
-    Height = 17
+    Left = 999
+    Top = 146
+    Width = 53
+    Height = 34
     Hint = '#00700^eDelete this word'
-    Anchors = [akTop, akRight]
+    Anchors = [akRight, akBottom]
     Caption = '#00701^eDelete'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -312,43 +285,118 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     TabOrder = 0
     OnClick = btnDeleteClick
+    ExplicitLeft = 779
+    ExplicitTop = 178
   end
-  object Edit4: TEdit
-    Left = 8
-    Top = 81
-    Width = 393
-    Height = 21
-    TabOrder = 1
-    Text = 'Edit4'
-    OnChange = Edit4Change
-  end
-  object Button3: TButton
-    Left = 401
-    Top = 80
+  object btnSaveMeaning: TButton
+    Left = 441
+    Top = 157
     Width = 75
     Height = 23
     Caption = '#00553^eChange'
+    Enabled = False
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 2
-    OnClick = Button3Click
+    TabOrder = 1
+    OnClick = btnSaveMeaningClick
   end
-  object GroupBox2: TGroupBox
-    Left = 8
-    Top = 161
-    Width = 473
-    Height = 50
-    Caption = '#00702^eSet as'
+  object GroupBox3: TGroupBox
+    Left = 655
+    Top = 8
+    Width = 170
+    Height = 169
+    Caption = '#00634^eCategories'
     Color = clBtnFace
     ParentColor = False
-    TabOrder = 3
-    object btnSetProblematic: TButton
+    TabOrder = 2
+    DesignSize = (
+      170
+      169)
+    object cbAddCategory: TComboBox
+      Left = 9
+      Top = 20
+      Width = 96
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 0
+      OnChange = cbAddCategoryChange
+      ExplicitWidth = 182
+    end
+    object btnAddToCategory: TButton
+      Left = 105
+      Top = 20
+      Width = 57
+      Height = 22
+      Anchors = [akTop, akRight]
+      Caption = '#00078^eAdd'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 1
+      OnClick = btnAddToCategoryClick
+      ExplicitLeft = 191
+    end
+    object lbCategories: TListBox
       Left = 8
+      Top = 48
+      Width = 154
+      Height = 96
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      ItemHeight = 13
+      TabOrder = 2
+      ExplicitWidth = 240
+      ExplicitHeight = 75
+    end
+    object btnRemoveFromCategory: TButton
+      Left = 105
+      Top = 145
+      Width = 57
+      Height = 18
+      Anchors = [akRight, akBottom]
+      Caption = '#00079^eRemove'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 3
+      OnClick = btnRemoveFromCategoryClick
+      ExplicitLeft = 191
+      ExplicitTop = 122
+    end
+  end
+  object GroupBox1: TGroupBox
+    Left = 522
+    Top = 8
+    Width = 127
+    Height = 169
+    Caption = '#00693^eStatus:'
+    TabOrder = 3
+    object lblLearnState: TRxLabel
+      Left = 9
       Top = 16
+      Width = 75
+      Height = 18
+      Caption = 'Learned'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Verdana'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+    end
+    object btnSetProblematic: TButton
+      Left = 9
+      Top = 42
       Width = 113
       Height = 25
       Caption = '#00638^eProblematic'
@@ -362,9 +410,10 @@ object fUserDetails: TfUserDetails
       OnClick = btnSetProblematicClick
     end
     object btnSetUnlearned: TButton
-      Left = 128
-      Top = 16
-      Width = 106
+      Tag = 1
+      Left = 9
+      Top = 73
+      Width = 113
       Height = 25
       Caption = '#00639^eUnlearned'
       Font.Charset = DEFAULT_CHARSET
@@ -374,12 +423,13 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 1
-      OnClick = btnSetUnlearnedClick
+      OnClick = btnSetProblematicClick
     end
     object btnSetLearned: TButton
-      Left = 240
-      Top = 16
-      Width = 107
+      Tag = 2
+      Left = 9
+      Top = 104
+      Width = 113
       Height = 25
       Caption = '#00640^eLearned'
       Font.Charset = DEFAULT_CHARSET
@@ -389,11 +439,12 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 2
-      OnClick = btnSetLearnedClick
+      OnClick = btnSetProblematicClick
     end
     object btnSetMastered: TButton
-      Left = 352
-      Top = 16
+      Tag = 3
+      Left = 9
+      Top = 135
       Width = 113
       Height = 25
       Caption = '#00703^eMastered'
@@ -404,71 +455,25 @@ object fUserDetails: TfUserDetails
       Font.Style = []
       ParentFont = False
       TabOrder = 3
-      OnClick = btnSetMasteredClick
+      OnClick = btnSetProblematicClick
     end
   end
-  object GroupBox3: TGroupBox
-    Left = 488
-    Top = 65
-    Width = 256
-    Height = 146
-    Anchors = [akLeft, akTop, akRight]
-    Caption = '#00634^eCategories'
-    Color = clBtnFace
-    ParentColor = False
+  object edtMeaning: TMemo
+    Left = 8
+    Top = 84
+    Width = 508
+    Height = 68
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    Lines.Strings = (
+      'edtMeaning')
+    ParentFont = False
     TabOrder = 4
-    DesignSize = (
-      256
-      146)
-    object ComboBox2: TComboBox
-      Left = 9
-      Top = 20
-      Width = 182
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 0
-      OnChange = ComboBox2Change
-    end
-    object Button4: TButton
-      Left = 191
-      Top = 20
-      Width = 57
-      Height = 22
-      Anchors = [akRight, akBottom]
-      Caption = '#00078^eAdd'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 1
-      OnClick = Button4Click
-    end
-    object ListBox2: TListBox
-      Left = 8
-      Top = 48
-      Width = 240
-      Height = 75
-      Anchors = [akLeft, akTop, akRight]
-      ItemHeight = 13
-      TabOrder = 2
-    end
-    object Button13: TButton
-      Left = 191
-      Top = 122
-      Width = 57
-      Height = 18
-      Anchors = [akRight, akBottom]
-      Caption = '#00079^eRemove'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 3
-      OnClick = Button13Click
-    end
+    WantReturns = False
+    OnChange = edtMeaningChange
+    OnKeyPress = edtMeaningKeyPress
   end
 end
