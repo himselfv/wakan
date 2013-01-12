@@ -27,11 +27,10 @@ object fPrint: TfPrint
     BevelInner = bvLowered
     BorderWidth = 2
     TabOrder = 0
-    ExplicitWidth = 686
     DesignSize = (
       678
       38)
-    object SpeedButton1: TSpeedButton
+    object btnGotoFirst: TSpeedButton
       Left = 8
       Top = 8
       Width = 23
@@ -53,9 +52,9 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton1Click
+      OnClick = btnGotoFirstClick
     end
-    object SpeedButton2: TSpeedButton
+    object btnGotoPrev: TSpeedButton
       Left = 32
       Top = 8
       Width = 23
@@ -77,9 +76,9 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton2Click
+      OnClick = btnGotoPrevClick
     end
-    object SpeedButton3: TSpeedButton
+    object btnGotoNext: TSpeedButton
       Left = 56
       Top = 8
       Width = 23
@@ -101,9 +100,9 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton3Click
+      OnClick = btnGotoNextClick
     end
-    object SpeedButton4: TSpeedButton
+    object btnGotoLast: TSpeedButton
       Left = 80
       Top = 8
       Width = 23
@@ -125,9 +124,9 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton4Click
+      OnClick = btnGotoLastClick
     end
-    object SpeedButton5: TSpeedButton
+    object btnPrintConfigure: TSpeedButton
       Left = 564
       Top = 8
       Width = 25
@@ -150,10 +149,10 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton5Click
+      OnClick = btnPrintConfigureClick
       ExplicitLeft = 572
     end
-    object SpeedButton6: TSpeedButton
+    object btnPrint: TSpeedButton
       Left = 622
       Top = 8
       Width = 23
@@ -176,10 +175,10 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton6Click
+      OnClick = btnPrintClick
       ExplicitLeft = 630
     end
-    object SpeedButton7: TSpeedButton
+    object btnZoomIn: TSpeedButton
       Left = 112
       Top = 8
       Width = 23
@@ -201,9 +200,9 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton7Click
+      OnClick = btnZoomInClick
     end
-    object SpeedButton8: TSpeedButton
+    object btnZoomFit: TSpeedButton
       Left = 136
       Top = 8
       Width = 23
@@ -228,9 +227,9 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton8Click
+      OnClick = btnZoomFitClick
     end
-    object SpeedButton9: TSpeedButton
+    object btnZoomOut: TSpeedButton
       Left = 160
       Top = 8
       Width = 23
@@ -252,7 +251,7 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton9Click
+      OnClick = btnZoomOutClick
     end
     object Shape1: TShape
       Left = 192
@@ -282,7 +281,7 @@ object fPrint: TfPrint
       Transparent = True
       ExplicitWidth = 363
     end
-    object SpeedButton10: TSpeedButton
+    object btnPageSettings: TSpeedButton
       Left = 590
       Top = 8
       Width = 23
@@ -305,10 +304,10 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton10Click
+      OnClick = btnPageSettingsClick
       ExplicitLeft = 598
     end
-    object SpeedButton11: TSpeedButton
+    object btnPrintToFile: TSpeedButton
       Left = 646
       Top = 8
       Width = 23
@@ -331,7 +330,7 @@ object fPrint: TfPrint
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton11Click
+      OnClick = btnPrintToFileClick
       ExplicitLeft = 654
     end
   end
@@ -345,14 +344,12 @@ object fPrint: TfPrint
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 1
-    ExplicitWidth = 686
-    ExplicitHeight = 405
-    object PaintBox1: TPaintBox
+    object pbPrintPreview: TPaintBox
       Left = 152
       Top = 24
       Width = 105
       Height = 105
-      OnPaint = PaintBox1Paint
+      OnPaint = pbPrintPreviewPaint
     end
   end
   object PrinterSetupDialog1: TPrinterSetupDialog

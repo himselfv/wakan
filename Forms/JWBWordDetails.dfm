@@ -67,7 +67,7 @@ object fWordDetails: TfWordDetails
     ParentColor = False
     OnPaint = PaintBox2Paint
   end
-  object SpeedButton23: TSpeedButton
+  object btnAddToClipboard: TSpeedButton
     Left = 425
     Top = 38
     Width = 24
@@ -90,7 +90,7 @@ object fWordDetails: TfWordDetails
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton23Click
+    OnClick = btnAddToClipboardClick
   end
   object Shape5: TShape
     Left = 7

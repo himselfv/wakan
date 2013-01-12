@@ -268,7 +268,7 @@ object fUser: TfUser
       ParentFont = False
       OnClick = SpeedButton10Click
     end
-    object SpeedButton23: TSpeedButton
+    object btnCopyToClipboard: TSpeedButton
       Left = 617
       Top = 185
       Width = 80
@@ -292,7 +292,7 @@ object fUser: TfUser
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton23Click
+      OnClick = btnCopyToClipboardClick
       ExplicitTop = 187
     end
     object Label1: TLabel

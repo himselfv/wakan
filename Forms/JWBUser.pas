@@ -29,7 +29,7 @@ type
     SpeedButton10: TSpeedButton;
     SpeedButton11: TSpeedButton;
     SpeedButton12: TSpeedButton;
-    SpeedButton23: TSpeedButton;
+    btnCopyToClipboard: TSpeedButton;
     Edit1: TEdit;
     StringGrid1: TStringGrid;
     BitBtn1: TBitBtn;
@@ -56,9 +56,7 @@ type
       var CanSelect: Boolean);
     procedure WordDetails_PaintBox1Paint(Sender: TObject);
     procedure WordDetails_PaintBox2Paint(Sender: TObject);
-    procedure WordDetails_SpeedButton23Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure WordDetails_PaintBox5Paint(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton8Click(Sender: TObject);
@@ -67,7 +65,7 @@ type
     procedure SpeedButton7Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure SpeedButton23Click(Sender: TObject);
+    procedure btnCopyToClipboardClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -401,22 +399,16 @@ end;
 
 procedure TfUser.WordDetails_PaintBox1Paint(Sender: TObject);
 begin
-  fDicAdd.PaintBox1.Canvas.Brush.Color:=clWindow;
+  TPaintBox(Sender).Canvas.Brush.Color:=clWindow;
   if showroma then
-    DrawUnicode(fDicAdd.PaintBox1.Canvas,1,1,22,ConvertPinYin(KanaToRomaji(curphonetic,romasys,curlang)),FontEnglish) else
-  DrawUnicode(fDicAdd.PaintBox1.Canvas,1,1,22,curphonetic,FontJapanese);
+    DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,ConvertPinYin(KanaToRomaji(curphonetic,romasys,curlang)),FontEnglish) else
+  DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curphonetic,FontJapanese);
 end;
 
 procedure TfUser.WordDetails_PaintBox2Paint(Sender: TObject);
 begin
-  fDicAdd.PaintBox2.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(fDicAdd.PaintBox2.Canvas,1,1,22,curkanji,FontJapanese);
-end;
-
-procedure TfUser.WordDetails_SpeedButton23Click(Sender: TObject);
-begin
-  clip:=clip+curkanji;
-  fMenu.ChangeClipboard;
+  TPaintBox(Sender).Canvas.Brush.Color:=clWindow;
+  DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curkanji,FontJapanese);
 end;
 
 procedure TfUser.FormShow(Sender: TObject);
@@ -446,7 +438,7 @@ begin
   curmeaning:='';
   fDicAdd.Edit3.Text:='';
   SpeedButton17.Enabled:=false;
-  SpeedButton23.Enabled:=false;
+  btnCopyToClipboard.Enabled:=false;
   SpeedButton19.Enabled:=false;
   fWordCategory.RxLabel9.Caption:='-';
   fWordCategory.Label55.Caption:='-';
@@ -491,7 +483,7 @@ begin
     if pos(' >> ',s)>0 then delete(s,1,pos(' >> ',s)+3);
     fDicAdd.Edit3.Text:=s;
     SpeedButton17.Enabled:=true;
-    SpeedButton23.Enabled:=true;
+    btnCopyToClipboard.Enabled:=true;
     fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary');
     ki:=0;
     s:=remexcl(curkanji);
@@ -604,12 +596,6 @@ begin
   AnnotShowMedia(curkanji,curphonetic);
 end;
 
-procedure TfUser.WordDetails_PaintBox5Paint(Sender: TObject);
-begin
-  fWordDetails.PaintBox5.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(fWordDetails.PaintBox5.Canvas,1,1,22,UnicodeToHex(curmeaning),FontEnglish);
-end;
-
 procedure TfUser.SpeedButton1Click(Sender: TObject);
 begin
   UpdateLookMode;
@@ -658,9 +644,10 @@ begin
   fMenu.aDict.Checked:=false;
 end;
 
-procedure TfUser.SpeedButton23Click(Sender: TObject);
+procedure TfUser.btnCopyToClipboardClick(Sender: TObject);
 begin
-  WordDetails_SpeedButton23Click(sender);
+  clip:=clip+curkanji;
+  fMenu.ChangeClipboard;
 end;
 
 procedure TfUser.FormCreate(Sender: TObject);

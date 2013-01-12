@@ -24,7 +24,7 @@ object fSettings: TfSettings
     Top = 0
     Width = 484
     Height = 451
-    ActivePage = tsDatabaseMaintenance
+    ActivePage = tsWordListPrinting
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -159,6 +159,14 @@ object fSettings: TfSettings
         Height = 17
         Caption = '^eDisplay message when word is added to vocabulary'
         TabOrder = 11
+      end
+      object cbShowSplashscreen: TCheckBox
+        Left = 16
+        Top = 383
+        Width = 417
+        Height = 17
+        Caption = '#00986^eShow splashscreen when program starts'
+        TabOrder = 12
       end
     end
     object tsRomanization: TTabSheet
@@ -1098,7 +1106,7 @@ object fSettings: TfSettings
           Height = 13
           Caption = '#00472^eUser settings:'
         end
-        object ListBox1: TListBox
+        object lbWordPrintFormat: TListBox
           Left = 16
           Top = 24
           Width = 401
@@ -1127,7 +1135,7 @@ object fSettings: TfSettings
             '#00487^eUser settings')
           ParentFont = False
           TabOrder = 0
-          OnClick = ListBox1Click
+          OnClick = lbWordPrintFormatClick
         end
         object Edit16: TEdit
           Left = 144
@@ -2270,7 +2278,7 @@ object fSettings: TfSettings
     DesignSize = (
       661
       41)
-    object Button6: TButton
+    object btnChangeLanguage: TButton
       Left = 12
       Top = 12
       Width = 177
@@ -2284,7 +2292,7 @@ object fSettings: TfSettings
       Font.Style = []
       ParentFont = False
       TabOrder = 0
-      OnClick = Button6Click
+      OnClick = btnChangeLanguageClick
     end
     object btnOk: TBitBtn
       Left = 520

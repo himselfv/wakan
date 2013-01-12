@@ -235,7 +235,6 @@ type
     aDictMiddle: TAction;
     eSearchsubstringcHledatpodetzec1: TMenuItem;
     N23: TMenuItem;
-    N24: TMenuItem;
     N25: TMenuItem;
     N2: TMenuItem;
     eSavecharacterstofilecUloitznakydosouboru1: TMenuItem;
@@ -243,6 +242,10 @@ type
     N00929eChangelanguage1: TMenuItem;
     aChangeLanguage: TAction;
     FormPlacement1: TFormPlacement;
+    aFullscreenMode: TAction;
+    FullscreenMode1: TMenuItem;
+    N26: TMenuItem;
+    N27: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
@@ -380,6 +383,7 @@ type
       Sender: TObject);
     procedure aDictMiddleExecute(Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
+    procedure aFullscreenModeExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -396,12 +400,8 @@ type
     ptrFileMap:pointer;
 
     procedure XPResFix(form:TForm);
-    procedure Clipboard_PaintBox3Paint(Sender: TObject);
-    procedure Clipboard_Timer1Timer(Sender: TObject);
-    procedure Clipboard_SpeedButton7Click(Sender: TObject);
     procedure TranslateAll;
     procedure SetFormPos(form:TForm);
-    procedure ChangeClipboard;
     procedure WriteUserPackage(dir:string);
     procedure SaveUserData;
     procedure LoadUserData;
@@ -467,13 +467,18 @@ type
     procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
     procedure IntTipGridOver(sg:TDrawGrid;x,y:integer;leftDown:boolean);
 
-  protected //Clipboard viewer
+  protected //Clipboard
    { SetClipboardViewer is supported starting with Windows 2000,
     so if there's a need we can implement dynamic linking and fall back to polling -
     it's kept as a safety measure anyway since CB chains are prone to breaking }
     CbNextViewer: HWND;
     procedure WmChangeCbChain(var Msg: TMessage); message WM_CHANGECBCHAIN;
     procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
+  public
+    procedure Clipboard_Paint;
+    procedure Clipboard_Update;
+    procedure Clipboard_Clear;
+    procedure ChangeClipboard;
 
   end;
 
@@ -650,7 +655,7 @@ implementation
 uses JWBKanji, JWBUnit, JWBRadical,
   JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
   JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
-  JWBWordList, JWBBitmap, JWBClipboard, JWBKanjiCompounds,
+  JWBWordList, JWBBitmap, JWBKanjiCompounds,
   JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters,
   JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
@@ -865,8 +870,10 @@ begin
 
     fSettings.LoadSettings({DelayUI=}true);
 
-    fSplash.Show;
-    fSplash.Update;
+    if fSettings.cbShowSplashscreen.Checked then begin
+      fSplash.Show;
+      fSplash.Update;
+    end;
 
     //Configuration file
     try
@@ -1197,7 +1204,6 @@ begin
     XPResFix(fWordDetails);
   //  XPResFix(fExamples);
     XPResFix(fTranslate);
-    XPResFix(fClipboard);
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
@@ -1643,7 +1649,6 @@ begin
   fLanguage.TranslateForm(fWordCategory);
   fLanguage.TranslateForm(fWordKanji);
   fLanguage.TranslateForm(fTranslate);
-//  fLanguage.TranslateForm(fClipboard);
   fLanguage.TranslateForm(fLayout);
   fLanguage.TranslateForm(fMedia);
   fLanguage.TranslateForm(fStrokeOrder);
@@ -1822,7 +1827,6 @@ begin
   fUser.Hide;
   fKanji.Hide;
   fWords.Hide;
-//  fClipboard.Hide;
   SetFormLayout(fMenu,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fKanji,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fWords,s,bsSizeToolWin,so,sd); readln(t,s);
@@ -1838,7 +1842,6 @@ begin
 //  SetFormLayout(fWordCategory,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fWordKanji,s,bsToolWindow,so,sd); readln(t,s);
   SetFormLayout(fTranslate,s,bsSizeToolWin,so,sd); readln(t,s);
-//  SetFormLayout(fClipboard,s,bsSizeToolWin,so,sd); readln(t,s);
   SetFormLayout(fStrokeOrder,s,bsToolWindow,so,sd); readln(t,s);
   if StrokeOrderPackage=nil then fStrokeOrder.Tag:=0;
   if fKanji.tag=1 then fKanji.Show;
@@ -1846,7 +1849,6 @@ begin
   if fWords.tag=1 then fWords.Show;
   if fKanjiDetails.tag=1 then fKanjiDetails.Show;
   if fTranslate.tag=1 then fTranslate.Show;
-//  if fClipboard.tag=1 then fClipboard.Show;
   closefile(t);
 end;
 
@@ -1921,7 +1923,6 @@ begin
   fTranslate.Hide;
   fKanjiDetails.Hide;
   DockExpress(nil,false);
-//  fClipboard.Hide;
   if (lay>0) and (aBorders.Checked) then
   begin
     aBorders.Checked:=false;
@@ -1935,7 +1936,6 @@ begin
   if fMenu.BorderStyle=bsNone then sx:='40'else sx:='74';
   res;
   sfl(fMenu,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
-//  sfl(fClipboard,'VISIBLE,Y,TOP,=,'+inttostr(fMenu.Height)+',=,'+inttostr(fMenu.width)+',r,0,SET');
   so1:=so; sd1:=sd;
 {  case lay of
     0:begin
@@ -2053,7 +2053,6 @@ begin
   fUser.FormResize(fMenu);
   fKanji.ManualDock(Panel3);
   fKanji.Align:=alClient;
-//  if fClipboard.tag=1 then fClipboard.Show;
 end;
 
 procedure TfMenu.SaveUserData;
@@ -2629,19 +2628,19 @@ end;
 
 procedure TfMenu.WmDrawClipboard(var Msg: TMessage);
 begin
-  Clipboard_Timer1Timer(Timer1);
+  Clipboard_Update;
   if CbNextViewer<>0 then
     SendMessage(CbNextViewer, Msg.Msg, Msg.wParam, Msg.lParam); //call next viewer
 end;
 
-procedure TfMenu.Clipboard_PaintBox3Paint(Sender: TObject);
+procedure TfMenu.Clipboard_Paint;
 begin
   PaintBox3.Canvas.Brush.Color:=clWindow;
   PaintBox3.Canvas.Font.Color:=clWindowText;
   DrawUnicode(PaintBox3.Canvas,1,1,22,copy(clip,1,200),FontRadical);
 end;
 
-procedure TfMenu.Clipboard_Timer1Timer(Sender: TObject);
+procedure TfMenu.Clipboard_Update;
 var i:integer;
   h:boolean;
   newclip:FString;
@@ -2682,7 +2681,7 @@ begin
   critsec:=false;
 end;
 
-procedure TfMenu.Clipboard_SpeedButton7Click(Sender: TObject);
+procedure TfMenu.Clipboard_Clear;
 begin
   clip:='';
   ChangeClipboard;
@@ -2817,7 +2816,6 @@ begin
 //  SetBorder(fWordCategory,bsToolWindow);
 //  SetBorder(fWordKanji,bsToolWindow);
   SetBorder(fTranslate,bsSizeToolWin);
-//  SetBorder(fClipboard,bsSizeToolWin);
   SetBorder(fStrokeOrder,bsToolWindow);
 //  if aBorders.Checked then SpeedButton16.Down:=true;
 //  if aBorders.Checked then DockExpress(nil,true);
@@ -2829,7 +2827,7 @@ procedure TfMenu.Timer1Timer(Sender: TObject);
 begin
 //  SpeedButton9Click(self);
 //  timer1.enabled:=false;
-  Clipboard_Timer1Timer(sender);
+  Clipboard_Update;
 end;
 
 procedure TfMenu.SpeedButton11Click(Sender: TObject);
@@ -2898,12 +2896,12 @@ end;
 
 procedure TfMenu.PaintBox3Paint(Sender: TObject);
 begin
-  Clipboard_PaintBox3Paint(sender);
+  Clipboard_Paint;
 end;
 
 procedure TfMenu.SpeedButton22Click(Sender: TObject);
 begin
-  Clipboard_SpeedButton7Click(sender);
+  Clipboard_Clear;
 end;
 
 procedure TfMenu.aSaveUserExecute(Sender: TObject);
@@ -2924,6 +2922,37 @@ end;
 procedure TfMenu.aExitExecute(Sender: TObject);
 begin
   Close;
+end;
+
+//switch between resizable window with borders and menu
+//and fullscreen borderless, menuless mode
+procedure TfMenu.aFullscreenModeExecute(Sender: TObject);
+{$J+} //writeable constants on
+const
+  rect: TRect = (Left:0; Top:0; Right:0; Bottom:0);
+  ws : TWindowState = wsNormal;
+{$J-} //writeable constants off
+var
+  r : TRect;
+begin
+  if BorderStyle <> bsNone then
+  begin
+    ws := WindowState;
+    rect := BoundsRect;
+		fmenu.Menu := nil;	//hide menu
+    BorderStyle := bsNone;
+    r := Screen.MonitorFromWindow(Handle).BoundsRect;
+    SetBounds(r.Left, r.Top, r.Right-r.Left, r.Bottom-r.Top) ;
+  end
+  else
+  begin
+  	fmenu.Menu := fmenu.MainMenu1; //show menu
+    BorderStyle := bsSizeable;
+    if ws = wsMaximized then
+      WindowState := wsMaximized
+    else
+      SetBounds(rect.Left, rect.Top, rect.Right-rect.Left, rect.Bottom-rect.Top) ;
+  end;
 end;
 
 procedure TfMenu.aKanjiExecute(Sender: TObject);
@@ -3042,7 +3071,7 @@ begin
   if fUser.Visible then
     fUser.SpeedButton17Click(Sender) else
   if fKanjiCompounds.Visible then
-    fKanjiCompounds.SpeedButton17Click(Sender) else
+    fKanjiCompounds.sbInsertIntoVocabClick(Sender) else
 end;
 
 procedure TfMenu.aUserSettingsExecute(Sender: TObject);
@@ -3346,7 +3375,7 @@ end;
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
-  fUser.SpeedButton23Click(Sender);
+  fUser.btnCopyToClipboardClick(Sender);
 end;
 
 procedure TfMenu.aDictExactExecute(Sender: TObject);
@@ -4484,7 +4513,6 @@ begin
   dictbeginset:=3;
   fUser.SpeedButton1Click(Sender);
 end;
-
 
 initialization
   tim:=0;

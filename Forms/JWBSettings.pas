@@ -54,7 +54,7 @@ type
     CheckBox16: TCheckBox;
     CheckBox17: TCheckBox;
     GroupBox4: TGroupBox;
-    ListBox1: TListBox;
+    lbWordPrintFormat: TListBox;
     Label11: TLabel;
     Edit10: TEdit;
     tsCharacterCardPrinting: TTabSheet;
@@ -247,13 +247,14 @@ type
     cbMultithreadedTranslation: TCheckBox;
     lbContents: TListBox;
     pnlButtons: TPanel;
-    Button6: TButton;
+    btnChangeLanguage: TButton;
     btnOk: TBitBtn;
     Label54: TLabel;
     cbAdjustCharPriorities: TCheckBox;
     rgReleaseCursorMode: TRadioGroup;
+    cbShowSplashscreen: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
-    procedure Button6Click(Sender: TObject);
+    procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton4Click(Sender: TObject);
     procedure SpeedButton5Click(Sender: TObject);
@@ -272,7 +273,7 @@ type
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
-    procedure ListBox1Click(Sender: TObject);
+    procedure lbWordPrintFormatClick(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure PaintBox2Paint(Sender: TObject);
     procedure Edit20Change(Sender: TObject);
@@ -438,6 +439,7 @@ begin
   CheckBox70.Checked:=reg.ReadBool('Vocabulary','DisplayMessage',true);
   CheckBox54.Checked:=reg.ReadBool('Vocabulary','AutoSaveTimer',true);
   CheckBox55.Checked:=reg.ReadBool('Vocabulary','MakeBackups',true);
+  cbShowSplashscreen.Checked := reg.ReadBool('Vocabulary','ShowSplashscreen',true);
   Edit29.Text:=inttostr(reg.ReadInteger('Vocabulary','AutoSavePeriod',10));
   RadioGroup1.ItemIndex:=reg.ReadInteger('Romanization','System',1);
   RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
@@ -525,7 +527,7 @@ begin
   if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
   Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
   GridFontSize:=strtoint(Edit25.text);
-  ListBox1.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
+  lbWordPrintFormat.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
   CheckBox14.Checked:=reg.ReadBool('WordSheet','InsideLines',true);
   CheckBox15.Checked:=reg.ReadBool('WordSheet','OutsideLines',true);
   CheckBox16.Checked:=reg.ReadBool('WordSheet','VaryColors',true);
@@ -624,7 +626,7 @@ begin
   CheckBox13.Checked:=reg.ReadBool('Translate','HintMeaning',true);
   s:=reg.ReadString('Dict','CurLanguage','j');
   if Length(s)>1 then curlang:=s[1] else curlang:='j';
-  ListBox1Click(self);
+  lbWordPrintFormatClick(self);
   FontJapanese:=Edit2.Text;
   FontJapaneseGrid:=Edit1.Text;
   FontChinese:=Edit7.Text;
@@ -682,6 +684,7 @@ begin
   reg.WriteBool('Vocabulary','AutoSaveTimer',CheckBox54.Checked);
   reg.WriteBool('Vocabulary','MakeBackups',CheckBox55.Checked);
   reg.WriteInteger('Vocabulary','AutoSavePeriod',strtoint(edit29.text));
+  reg.WriteBool('Vocabulary','ShowSplashscreen',cbShowSplashscreen.Checked);
   reg.WriteInteger('Romanization','System',RadioGroup1.ItemIndex);
   reg.WriteInteger('Romanization','ShowKana',RadioGroup2.ItemIndex);
   reg.WriteInteger('Romanization','ChineseSystem',RadioGroup6.ItemIndex);
@@ -738,7 +741,7 @@ begin
   reg.WriteInteger('Dict','ExMode',exmode);
   reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
   reg.WriteBool('Dict','MultiLineGrid',CheckBox53.Checked);
-  reg.WriteInteger('WordSheet','Columns',ListBox1.ItemIndex);
+  reg.WriteInteger('WordSheet','Columns',lbWordPrintFormat.ItemIndex);
   reg.WriteBool('WordSheet','InsideLines',CheckBox14.Checked);
   reg.WriteBool('WordSheet','OutsideLines',CheckBox15.Checked);
   reg.WriteBool('WordSheet','VaryColors',CheckBox16.Checked);
@@ -884,7 +887,7 @@ begin
   end;
 end;
 
-procedure TfSettings.Button6Click(Sender: TObject);
+procedure TfSettings.btnChangeLanguageClick(Sender: TObject);
 begin
   fLanguage.ShowModal;
 end;
@@ -1082,11 +1085,11 @@ begin
   end;
 end;
 
-procedure TfSettings.ListBox1Click(Sender: TObject);
+procedure TfSettings.lbWordPrintFormatClick(Sender: TObject);
 begin
   Edit16.Enabled:=false;
   Edit16.Color:=clBtnFace;
-  case ListBox1.ItemIndex of
+  case lbWordPrintFormat.ItemIndex of
     0:Edit16.Text:='p1--m1--';
     1:Edit16.Text:='w1--m1--';
     2:Edit16.Text:='p1w1m1--';

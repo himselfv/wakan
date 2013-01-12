@@ -13,35 +13,35 @@ type
 
   TfPrint = class(TForm)
     Panel1: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton7: TSpeedButton;
-    SpeedButton8: TSpeedButton;
-    SpeedButton9: TSpeedButton;
+    btnGotoFirst: TSpeedButton;
+    btnGotoPrev: TSpeedButton;
+    btnGotoNext: TSpeedButton;
+    btnGotoLast: TSpeedButton;
+    btnPrintConfigure: TSpeedButton;
+    btnPrint: TSpeedButton;
+    btnZoomIn: TSpeedButton;
+    btnZoomFit: TSpeedButton;
+    btnZoomOut: TSpeedButton;
     Shape1: TShape;
     Label1: TLabel;
     ScrollBox1: TScrollBox;
-    PaintBox1: TPaintBox;
+    pbPrintPreview: TPaintBox;
     PrinterSetupDialog1: TPrinterSetupDialog;
-    SpeedButton10: TSpeedButton;
-    SpeedButton11: TSpeedButton;
-    procedure PaintBox1Paint(Sender: TObject);
+    btnPageSettings: TSpeedButton;
+    btnPrintToFile: TSpeedButton;
+    procedure pbPrintPreviewPaint(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
-    procedure SpeedButton7Click(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
-    procedure SpeedButton5Click(Sender: TObject);
-    procedure SpeedButton6Click(Sender: TObject);
-    procedure SpeedButton10Click(Sender: TObject);
-    procedure SpeedButton11Click(Sender: TObject);
+    procedure btnGotoFirstClick(Sender: TObject);
+    procedure btnGotoPrevClick(Sender: TObject);
+    procedure btnGotoNextClick(Sender: TObject);
+    procedure btnGotoLastClick(Sender: TObject);
+    procedure btnZoomInClick(Sender: TObject);
+    procedure btnZoomOutClick(Sender: TObject);
+    procedure btnZoomFitClick(Sender: TObject);
+    procedure btnPrintConfigureClick(Sender: TObject);
+    procedure btnPrintClick(Sender: TObject);
+    procedure btnPageSettingsClick(Sender: TObject);
+    procedure btnPrintToFileClick(Sender: TObject);
   public
     GetPageNum:TPrintGetPageNum;
     DrawPage:TPrintDrawPage;
@@ -91,11 +91,11 @@ end;
 
 procedure TfPrint.Prepare;
 begin
-  PageNum:=GetPageNum(PaintBox1.Canvas, Printer_PageWidth, Printer_PageHeight, UserData);
+  PageNum:=GetPageNum(pbPrintPreview.Canvas, Printer_PageWidth, Printer_PageHeight, UserData);
   PageRatio:=Printer_PageHeight/Printer_PageWidth;
   CurPage:=1;
   ZoomWidth:=ClientWidth-50;
-  SpeedButton8.Down:=true;
+  btnZoomFit.Down:=true;
   PreviewPage;
 end;
 
@@ -104,32 +104,32 @@ var w,h:integer;
 begin
   ScrollBox1.HorzScrollBar.Position:=0;
   ScrollBox1.VertScrollBar.Position:=0;
-  if SpeedButton8.Down then ZoomWidth:=ClientWidth-50;
-  SpeedButton1.Enabled:=CurPage<>1;
-  SpeedButton2.Enabled:=CurPage>1;
-  SpeedButton3.Enabled:=CurPage<PageNum;
-  SpeedButton4.Enabled:=CurPage<>PageNum;
-  SpeedButton9.Enabled:=ZoomWidth>100;
-  SpeedButton8.Enabled:=true;
+  if btnZoomFit.Down then ZoomWidth:=ClientWidth-50;
+  btnGotoFirst.Enabled:=CurPage<>1;
+  btnGotoPrev.Enabled:=CurPage>1;
+  btnGotoNext.Enabled:=CurPage<PageNum;
+  btnGotoLast.Enabled:=CurPage<>PageNum;
+  btnZoomOut.Enabled:=ZoomWidth>100;
+  btnZoomFit.Enabled:=true;
   Label1.Caption:=Description+' ('+inttostr(CurPage)+'/'+inttostr(PageNum)+')';
   w:=ZoomWidth-6;
   h:=round(w*PageRatio);
-  PaintBox1.Left:=10;
-  if w<ClientWidth-42 then PaintBox1.Left:=10+(ClientWidth-42-w) div 2;
-  PaintBox1.Top:=10;
-  PaintBox1.Width:=w;
-  PaintBox1.Height:=h;
+  pbPrintPreview.Left:=10;
+  if w<ClientWidth-42 then pbPrintPreview.Left:=10+(ClientWidth-42-w) div 2;
+  pbPrintPreview.Top:=10;
+  pbPrintPreview.Width:=w;
+  pbPrintPreview.Height:=h;
   ScrollBox1.HorzScrollBar.Range:=w+20;
   ScrollBox1.VertScrollBar.Range:=h+20;
-  PaintBox1.Invalidate;
+  pbPrintPreview.Invalidate;
 end;
 
-procedure TfPrint.PaintBox1Paint(Sender: TObject);
+procedure TfPrint.pbPrintPreviewPaint(Sender: TObject);
 begin
-  PaintBox1.Canvas.Pen.Color:=clBlack;
-  PaintBox1.Canvas.Brush.Color:=clWhite;
-  PaintBox1.Canvas.Rectangle(0,0,PaintBox1.Width-1,PaintBox1.Height-1);
-  DrawPage(PaintBox1.Canvas,CurPage,PaintBox1.Width,PaintBox1.Height,Printer_PageWidth,Printer_PageHeight,UserData);
+  pbPrintPreview.Canvas.Pen.Color:=clBlack;
+  pbPrintPreview.Canvas.Brush.Color:=clWhite;
+  pbPrintPreview.Canvas.Rectangle(0,0,pbPrintPreview.Width-1,pbPrintPreview.Height-1);
+  DrawPage(pbPrintPreview.Canvas,CurPage,pbPrintPreview.Width,pbPrintPreview.Height,Printer_PageWidth,Printer_PageHeight,UserData);
 end;
 
 procedure TfPrint.FormResize(Sender: TObject);
@@ -137,57 +137,57 @@ begin
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton1Click(Sender: TObject);
+procedure TfPrint.btnGotoFirstClick(Sender: TObject);
 begin
   CurPage:=1;
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton2Click(Sender: TObject);
+procedure TfPrint.btnGotoPrevClick(Sender: TObject);
 begin
   dec(CurPage);
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton3Click(Sender: TObject);
+procedure TfPrint.btnGotoNextClick(Sender: TObject);
 begin
   inc(CurPage);
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton4Click(Sender: TObject);
+procedure TfPrint.btnGotoLastClick(Sender: TObject);
 begin
   CurPage:=PageNum;
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton7Click(Sender: TObject);
+procedure TfPrint.btnZoomInClick(Sender: TObject);
 begin
   inc(ZoomWidth,100);
-  SpeedButton8.Down:=false;
+  btnZoomFit.Down:=false;
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton9Click(Sender: TObject);
+procedure TfPrint.btnZoomOutClick(Sender: TObject);
 begin
   dec(ZoomWidth,100);
-  SpeedButton8.Down:=false;
+  btnZoomFit.Down:=false;
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton8Click(Sender: TObject);
+procedure TfPrint.btnZoomFitClick(Sender: TObject);
 begin
   ZoomWidth:=ClientWidth-50;
   PreviewPage;
 end;
 
-procedure TfPrint.SpeedButton5Click(Sender: TObject);
+procedure TfPrint.btnPrintConfigureClick(Sender: TObject);
 begin
   PrintConfigure(UserData);
   Prepare;
 end;
 
-procedure TfPrint.SpeedButton6Click(Sender: TObject);
+procedure TfPrint.btnPrintClick(Sender: TObject);
 var i:integer;
 begin
   try
@@ -205,29 +205,29 @@ begin
     if i>1 then Printer.NewPage;
     Printer.Canvas.Pen.Color:=clWhite;
     Printer.Canvas.Brush.Color:=clWhite;
-    Printer.Canvas.Rectangle(0,0,PaintBox1.Width-1,PaintBox1.Height-1);
+    Printer.Canvas.Rectangle(0,0,pbPrintPreview.Width-1,pbPrintPreview.Height-1);
     Printer.Canvas.Pen.Color:=clBlack;
     DrawPage(Printer.Canvas,i,Printer.PageWidth,Printer.PageHeight,Printer.PageWidth,Printer.PageHeight,UserData);
   end;
   Printer.EndDoc;
 end;
 
-procedure TfPrint.SpeedButton10Click(Sender: TObject);
+procedure TfPrint.btnPageSettingsClick(Sender: TObject);
 begin
   PrinterSetupDialog1.Execute;
   Prepare;
 end;
 
 procedure GetPrintLine(width,height,origwidth,origheight,nolines:integer;var lineheight,linecount:integer);
-var a,b:double;
+var a,btnGotoLast:double;
 begin
   a:=origwidth*origheight;
-  b:=sqrt(a);
-  linecount:=trunc(nolines/b*origheight);
+  btnGotoLast:=sqrt(a);
+  linecount:=trunc(nolines/btnGotoLast*origheight);
   lineheight:=height div linecount;
 end;
 
-procedure TfPrint.SpeedButton11Click(Sender: TObject);
+procedure TfPrint.btnPrintToFileClick(Sender: TObject);
 var bmp:TBitmap;
     i:integer;
     pn:integer;

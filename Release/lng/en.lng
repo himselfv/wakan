@@ -1071,6 +1071,8 @@
 00983>Do not let the cursor out until you choose a suggestion
 00984>Auto-cancel insert if you move the cursor out
 00985>Copyright:
+00986>Show splashscreen when program starts
+00987>Fullscreen Mode
 ;
 ;
 ; EDICT markers.

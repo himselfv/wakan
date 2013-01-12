@@ -132,20 +132,30 @@ type
     BlinkCursorTimer: TTimer;
     OpenTextDialog: TOpenDialog;
     SaveTextDialog: TSaveDialog;
-    SaveAnnotationDialog: TSaveDialog;
-    procedure Button2Click(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
-    procedure Button5Click(Sender: TObject);
-    procedure Button6Click(Sender: TObject);
-    procedure Button9Click(Sender: TObject);
-    procedure CheckBox1Click(Sender: TObject);
-    procedure ListBox1KeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormHide(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormActivate(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
+    procedure FormMouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
     procedure EditorPaintBoxClick(Sender: TObject);
     procedure EditorPaintBoxMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure EditorPaintBoxPaint(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure EditorScrollBarChange(Sender: TObject);
+    procedure EditorPaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure EditorPaintBoxDblClick(Sender: TObject);
+    procedure ListBox1Enter(Sender: TObject);
+    procedure ListBox1Exit(Sender: TObject);
+    procedure ListBox1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure ListBox1KeyPress(Sender: TObject; var Key: Char);
     procedure sbDisplayReadingClick(Sender: TObject);
     procedure sbDisplayMeaningClick(Sender: TObject);
@@ -157,35 +167,18 @@ type
     procedure sbFileSaveClick(Sender: TObject);
     procedure sbFileNewClick(Sender: TObject);
     procedure sbClipCutClick(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure sbClipCopyClick(Sender: TObject);
     procedure sbClipPasteClick(Sender: TObject);
     procedure sbKanjiModeClick(Sender: TObject);
     procedure sbKanaModeClick(Sender: TObject);
     procedure sbAsciiModeClick(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
     procedure sbSmallFontClick(Sender: TObject);
     procedure sbLargeFontClick(Sender: TObject);
     procedure sbMiddleFontClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormHide(Sender: TObject);
-    procedure EditorScrollBarChange(Sender: TObject);
-    procedure FormDeactivate(Sender: TObject);
-    procedure EditorPaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
-    procedure EditorPaintBoxDblClick(Sender: TObject);
-    procedure FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
-      MousePos: TPoint; var Handled: Boolean);
-    procedure FormMouseWheelDown(Sender: TObject; Shift: TShiftState;
-      MousePos: TPoint; var Handled: Boolean);
     procedure sbDockKanjiDetailsClick(Sender: TObject);
     procedure sbDockDictionaryClick(Sender: TObject);
-    procedure ListBox1Enter(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure ListBox1Exit(Sender: TObject);
     procedure sbUseTlColorsClick(Sender: TObject);
     procedure BlinkCursorTimerTimer(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
 
   public
     CopyShort, CutShort, PasteShort, AllShort:TShortCut;
@@ -205,7 +198,7 @@ type
       ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
   public
     mustrepaint:boolean;
-    procedure RepaintText;
+    procedure RepaintText(dolook:boolean=false);
     procedure ShowText(dolook:boolean);
 
   protected //Unsorted
@@ -282,6 +275,7 @@ type
     procedure LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
     procedure SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
   public //File open/save
+    procedure ClearEditor;
     procedure OpenAnyFile(filename:string);
     procedure OpenFile(filename:string;tp:byte);
     procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
@@ -477,6 +471,32 @@ procedure TfTranslate.FormResize(Sender: TObject);
 begin
   linl.Clear;
   Invalidate;
+end;
+
+procedure TfTranslate.FormActivate(Sender: TObject);
+begin
+  ListBox1.SetFocus;
+end;
+
+procedure TfTranslate.FormDeactivate(Sender: TObject);
+begin
+  if fHint.Visible then fUser.HideHint;
+end;
+
+
+procedure TfTranslate.ClearEditor;
+begin
+  doc.Clear;
+  doctr.Clear;
+  docdic.Clear;
+  linl.Clear;
+  cur := CursorPos(0, 0);
+  view:=0;
+  lblFilename.Caption:=_l('#00678^e<UNNAMED>');
+  docfilename:='';
+  mustrepaint:=true;
+  ShowText(true);
+  FFileChanged := false;
 end;
 
 { Opens a file by guessing format/encoding or asking user for it }
@@ -1164,41 +1184,6 @@ begin
   Result := true;
 end;
 
-procedure TfTranslate.Button2Click(Sender: TObject);
-begin
-  if not CommitFile then exit;
-  doc.Clear;
-  doctr.Clear;
-  docdic.Clear;
-  linl.Clear;
-  cur := CursorPos(0, 0);
-  view:=0;
-  lblFilename.Caption:=_l('#00678^e<UNNAMED>');
-  docfilename:='';
-  mustrepaint:=true;
-  ShowText(true);
-end;
-
-procedure TfTranslate.Button3Click(Sender: TObject);
-begin
-  if not CommitFile then exit;
-  if OpenTextDialog.Execute then
-    OpenAnyFile(OpenTextDialog.Filename);
-end;
-
-procedure TfTranslate.Button5Click(Sender: TObject);
-begin
-  if docfilename<>'' then
-    SaveToFile(docfilename,doctp,SaveAnnotMode)
-  else
-    SaveAs;
-end;
-
-procedure TfTranslate.Button6Click(Sender: TObject);
-begin
-  Button2Click(Sender);
-end;
-
 constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer);
 begin
  {$IF CompilerVersion<21}
@@ -1468,22 +1453,20 @@ begin
     AutoTranslate();
 end;
 
-procedure PrintConfigure(userdata:pointer);
+procedure TfTranslate.ListBox1Enter(Sender: TObject);
 begin
-  fSettings.pcPages.ActivePage:=fSettings.tsTextTranslator;
-  fSettings.ShowModal;
+  fMenu.aEditorCopy.ShortCut:=CopyShort;
+  fMenu.aEditorCut.ShortCut:=CutShort;
+  fMenu.aEditorPaste.ShortCut:=PasteShort;
+  fMenu.aEditorSelectAll.ShortCut:=AllShort;
 end;
 
-procedure TfTranslate.Button9Click(Sender: TObject);
+procedure TfTranslate.ListBox1Exit(Sender: TObject);
 begin
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
-end;
-
-
-procedure TfTranslate.CheckBox1Click(Sender: TObject);
-begin
-  mustrepaint:=true;
-  ShowText(true);
+  fMenu.aEditorCopy.ShortCut:=0;
+  fMenu.aEditorCut.ShortCut:=0;
+  fMenu.aEditorPaste.ShortCut:=0;
+  fMenu.aEditorSelectAll.ShortCut:=0;
 end;
 
 procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
@@ -1572,6 +1555,11 @@ begin
   end;
 end;
 
+procedure TfTranslate.ListBox1KeyPress(Sender: TObject; var Key: Char);
+begin
+  InsertCharacter(key);
+end;
+
 procedure TfTranslate.EditorPaintBoxClick(Sender: TObject);
 begin
   ListBox1.SetFocus;
@@ -1620,21 +1608,16 @@ begin
   MakeEditorBitmap;
 end;
 
-procedure TfTranslate.ListBox1KeyPress(Sender: TObject; var Key: Char);
-begin
-  InsertCharacter(key);
-end;
-
 procedure TfTranslate.sbDisplayReadingClick(Sender: TObject);
 begin
   fMenu.aEditorReading.Checked:=sbDisplayReading.Down;
-  Self.CheckBox1Click(Sender);
+  RepaintText(true);
 end;
 
 procedure TfTranslate.sbDisplayMeaningClick(Sender: TObject);
 begin
   fMenu.aEditorMeaning.Checked:=sbDisplayMeaning.Down;
-  Self.CheckBox1Click(Sender);
+  RepaintText(true);
 end;
 
 procedure TfTranslate.sbClearTranslationClick(Sender: TObject);
@@ -1665,24 +1648,36 @@ begin
   Self.SetTranslation();
 end;
 
+procedure PrintConfigure(userdata:pointer);
+begin
+  fSettings.pcPages.ActivePage:=fSettings.tsTextTranslator;
+  fSettings.ShowModal;
+end;
+
 procedure TfTranslate.sbPrintClick(Sender: TObject);
 begin
-  Self.Button9Click(Sender);
+  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
 end;
 
 procedure TfTranslate.sbFileOpenClick(Sender: TObject);
 begin
-  Self.Button3Click(Sender);
+  if not CommitFile then exit;
+  if OpenTextDialog.Execute then
+    OpenAnyFile(OpenTextDialog.Filename);
 end;
 
 procedure TfTranslate.sbFileSaveClick(Sender: TObject);
 begin
-  Self.Button5Click(Sender);
+  if docfilename<>'' then
+    SaveToFile(docfilename,doctp,SaveAnnotMode)
+  else
+    SaveAs;
 end;
 
 procedure TfTranslate.sbFileNewClick(Sender: TObject);
 begin
-  Self.Button2Click(Sender);
+  if not CommitFile then exit;
+  ClearEditor;
 end;
 
 procedure TfTranslate.sbClipCutClick(Sender: TObject);
@@ -1724,18 +1719,13 @@ begin
   fMenu.aEditorKanjiMode.Checked:=false;
 end;
 
-procedure TfTranslate.FormActivate(Sender: TObject);
-begin
-  ListBox1.SetFocus;
-end;
-
 procedure TfTranslate.sbSmallFontClick(Sender: TObject);
 begin
   fMenu.aEditorSmallFont.Checked:=true;
   fMenu.aEditorLargeFont.Checked:=false;
   fMenu.aEditorMedFont.Checked:=false;
   RefreshLines;
-  //Self.CheckBox1Click(Sender);
+  //RepaintText(true)
 end;
 
 procedure TfTranslate.sbLargeFontClick(Sender: TObject);
@@ -1744,7 +1734,7 @@ begin
   fMenu.aEditorLargeFont.Checked:=true;
   fMenu.aEditorMedFont.Checked:=false;
   RefreshLines;
-  //Self.CheckBox1Click(Sender);
+  //RepaintText(true)
 end;
 
 procedure TfTranslate.sbMiddleFontClick(Sender: TObject);
@@ -1753,7 +1743,7 @@ begin
   fMenu.aEditorLargeFont.Checked:=false;
   fMenu.aEditorMedFont.Checked:=true;
   RefreshLines;
-  //Self.CheckBox1Click(Sender);
+  //RepaintText(true)
 end;
 
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
@@ -1765,11 +1755,6 @@ begin
     rview.y:=linl[view].ys;
   end;
   MakeEditorBitmap;
-end;
-
-procedure TfTranslate.FormDeactivate(Sender: TObject);
-begin
-  if fHint.Visible then fUser.HideHint;
 end;
 
 procedure TfTranslate.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
@@ -1794,22 +1779,6 @@ end;
 procedure TfTranslate.sbDockDictionaryClick(Sender: TObject);
 begin
   fMenu.TabControl1Change(sender);
-end;
-
-procedure TfTranslate.ListBox1Enter(Sender: TObject);
-begin
-  fMenu.aEditorCopy.ShortCut:=CopyShort;
-  fMenu.aEditorCut.ShortCut:=CutShort;
-  fMenu.aEditorPaste.ShortCut:=PasteShort;
-  fMenu.aEditorSelectAll.ShortCut:=AllShort;
-end;
-
-procedure TfTranslate.ListBox1Exit(Sender: TObject);
-begin
-  fMenu.aEditorCopy.ShortCut:=0;
-  fMenu.aEditorCut.ShortCut:=0;
-  fMenu.aEditorPaste.ShortCut:=0;
-  fMenu.aEditorSelectAll.ShortCut:=0;
 end;
 
 procedure TfTranslate.sbUseTlColorsClick(Sender: TObject);
@@ -3164,10 +3133,10 @@ begin
   oldblock := block;
 end;
 
-procedure TfTranslate.RepaintText;
+procedure TfTranslate.RepaintText(dolook:boolean=false);
 begin
   mustrepaint:=true;
-  ShowText(false);
+  ShowText(dolook);
 end;
 
 procedure TfTranslate.SetCurPos(x,y:integer);

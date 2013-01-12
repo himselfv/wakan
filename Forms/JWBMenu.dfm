@@ -1008,6 +1008,11 @@ object fMenu: TfMenu
       Caption = '#00929^eChange language...'
       OnExecute = aChangeLanguageExecute
     end
+    object aFullscreenMode: TAction
+      Caption = '#00987^eFullscreen Mode'
+      ShortCut = 122
+      OnExecute = aFullscreenModeExecute
+    end
   end
   object MainMenu1: TMainMenu
     Left = 216
@@ -1025,6 +1030,22 @@ object fMenu: TfMenu
       end
       object eStatisticscStatistika1: TMenuItem
         Action = aStatistics
+      end
+      object N26: TMenuItem
+        Caption = '-'
+      end
+      object eDictionarymanagercManaerslovnk1: TMenuItem
+        Action = aSettingsDict
+      end
+      object N27: TMenuItem
+        Caption = '-'
+      end
+      object eSettingscNastaven2: TMenuItem
+        Action = aSettings
+        Caption = '#00940^eOptions...'
+      end
+      object N00929eChangelanguage1: TMenuItem
+        Action = aChangeLanguage
       end
       object N15: TMenuItem
         Caption = '-'
@@ -1065,18 +1086,8 @@ object fMenu: TfMenu
       object N25: TMenuItem
         Caption = '-'
       end
-      object eDictionarymanagercManaerslovnk1: TMenuItem
-        Action = aSettingsDict
-      end
-      object N24: TMenuItem
-        Caption = '-'
-      end
-      object eSettingscNastaven2: TMenuItem
-        Action = aSettings
-        Caption = '#00940^eOptions...'
-      end
-      object N00929eChangelanguage1: TMenuItem
-        Action = aChangeLanguage
+      object FullscreenMode1: TMenuItem
+        Action = aFullscreenMode
       end
     end
     object eCharacterscZnaky1: TMenuItem

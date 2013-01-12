@@ -791,11 +791,4 @@ object fTranslate: TfTranslate
     Left = 103
     Top = 44
   end
-  object SaveAnnotationDialog: TSaveDialog
-    DefaultExt = '.txt'
-    Filter = 'UTF-8 annotation file (*.txt)|*.txt'
-    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 175
-    Top = 44
-  end
 end

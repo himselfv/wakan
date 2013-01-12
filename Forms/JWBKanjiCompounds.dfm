@@ -90,7 +90,7 @@ object fKanjiCompounds: TfKanjiCompounds
     ParentFont = False
     Transparent = True
   end
-  object SpeedButton23: TSpeedButton
+  object sbCopyToClipboard: TSpeedButton
     Left = 380
     Top = 149
     Width = 80
@@ -114,9 +114,9 @@ object fKanjiCompounds: TfKanjiCompounds
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton23Click
+    OnClick = sbCopyToClipboardClick
   end
-  object SpeedButton17: TSpeedButton
+  object sbInsertIntoVocab: TSpeedButton
     Left = 282
     Top = 149
     Width = 94
@@ -140,7 +140,7 @@ object fKanjiCompounds: TfKanjiCompounds
     NumGlyphs = 2
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton17Click
+    OnClick = sbInsertIntoVocabClick
   end
   object cbLeftMatchOnly: TCheckBox
     Left = 9

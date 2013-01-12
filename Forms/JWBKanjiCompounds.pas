@@ -16,8 +16,8 @@ type
     StringGrid1: TStringGrid;
     Bevel1: TBevel;
     cbPopularOnly: TCheckBox;
-    SpeedButton23: TSpeedButton;
-    SpeedButton17: TSpeedButton;
+    sbCopyToClipboard: TSpeedButton;
+    sbInsertIntoVocab: TSpeedButton;
     cbSortByFrequency: TCheckBox;
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
@@ -32,8 +32,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
-    procedure SpeedButton23Click(Sender: TObject);
-    procedure SpeedButton17Click(Sender: TObject);
+    procedure sbCopyToClipboardClick(Sender: TObject);
+    procedure sbInsertIntoVocabClick(Sender: TObject);
     procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
@@ -208,13 +208,13 @@ begin
   fDicAdd.Edit3.Text:=remexcl(StringGrid1.Cells[2,ARow]);
 end;
 
-procedure TfKanjiCompounds.SpeedButton23Click(Sender: TObject);
+procedure TfKanjiCompounds.sbCopyToClipboardClick(Sender: TObject);
 begin
   clip:=clip+curckanji;
   fMenu.ChangeClipboard;
 end;
 
-procedure TfKanjiCompounds.SpeedButton17Click(Sender: TObject);
+procedure TfKanjiCompounds.sbInsertIntoVocabClick(Sender: TObject);
 begin
   fUser.curkanji:=curckanji;
   fUser.curphonetic:=curcphonetic;

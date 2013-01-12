@@ -130,11 +130,9 @@ procedure TfWords.ShowIt(warningifnotfound:boolean);
 var sl:TStringList;
     stp:string;
     cl:TStringList;
-    cls:string;
     i,j:integer;
     sw:integer;
     s:string;
-    all:boolean;
     a:integer;
     cats:string;
 

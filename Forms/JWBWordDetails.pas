@@ -12,14 +12,14 @@ type
     PaintBox1: TPaintBox;
     Shape3: TShape;
     PaintBox2: TPaintBox;
-    SpeedButton23: TSpeedButton;
+    btnAddToClipboard: TSpeedButton;
     Shape5: TShape;
     PaintBox5: TPaintBox;
     Bevel1: TBevel;
     procedure PaintBox1Paint(Sender: TObject);
     procedure PaintBox2Paint(Sender: TObject);
     procedure PaintBox5Paint(Sender: TObject);
-    procedure SpeedButton23Click(Sender: TObject);
+    procedure btnAddToClipboardClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   end;
 
@@ -28,7 +28,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu;
+uses JWBUser, JWBMenu, JWBStrings, JWBUnit;
 
 {$R *.DFM}
 
@@ -44,12 +44,13 @@ end;
 
 procedure TfWordDetails.PaintBox5Paint(Sender: TObject);
 begin
-  fUser.WordDetails_PaintBox5Paint(sender);
+  PaintBox5.Canvas.Brush.Color:=clWindow;
+  DrawUnicode(PaintBox5.Canvas,1,1,22,fstr(fUser.curmeaning),FontEnglish);
 end;
 
-procedure TfWordDetails.SpeedButton23Click(Sender: TObject);
+procedure TfWordDetails.btnAddToClipboardClick(Sender: TObject);
 begin
-  fUser.WordDetails_SpeedButton23Click(sender);
+  fUser.btnCopyToClipboardClick(Sender);
 end;
 
 procedure TfWordDetails.FormClose(Sender: TObject;

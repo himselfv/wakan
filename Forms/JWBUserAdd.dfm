@@ -142,27 +142,26 @@ object fUserAdd: TfUserAdd
     Width = 371
     Height = 21
     Anchors = [akTop, akRight]
-    ItemHeight = 0
     TabOrder = 2
   end
-  object BitBtn1: TBitBtn
+  object btnOk: TBitBtn
     Left = 400
     Top = 195
     Width = 129
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '#00062^eAdd to vocabulary'
-    TabOrder = 3
     Kind = bkOK
+    TabOrder = 3
   end
-  object BitBtn2: TBitBtn
+  object btnCancel: TBitBtn
     Left = 537
     Top = 194
     Width = 129
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '#00050^eCancel'
-    TabOrder = 4
     Kind = bkCancel
+    TabOrder = 4
   end
 end

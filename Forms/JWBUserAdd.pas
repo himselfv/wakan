@@ -19,8 +19,8 @@ type
     Edit1: TEdit;
     Edit3: TEdit;
     ComboBox1: TComboBox;
-    BitBtn1: TBitBtn;
-    BitBtn2: TBitBtn;
+    btnOk: TBitBtn;
+    btnCancel: TBitBtn;
     procedure Edit1Change(Sender: TObject);
     procedure PaintBox3Paint(Sender: TObject);
     procedure PaintBox2Paint(Sender: TObject);
