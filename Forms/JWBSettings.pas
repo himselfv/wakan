@@ -640,6 +640,7 @@ end;
 
 procedure TfSettings.ApplyUISettings;
 begin
+ //Hide
   fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
   fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
   fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
@@ -650,6 +651,12 @@ begin
   displaymode:=setlayout;
   CharDetNowDocked:=false;
   if (setwindows and 128<>128) and (CharDetDocked) then fMenu.aKanjiDetails.Checked:=true;
+
+ //Before fKanji->OnShow => first possible Compounds reload
+  if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
+  if Assigned(fKanjiCompounds.sbShowVocab.OnClick) then
+    fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
+
   fMenu.ChangeDisplay;
   if setwindows and 1<>1 then fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
   if setwindows and 2<>2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
@@ -665,7 +672,6 @@ begin
   kanji_othersearch:=setothersearch;
   fKanjiSearch.cbOtherType.ItemIndex:=-1;
   if dictmodeset=1 then fUser.SpeedButton2.Down:=true else fUser.SpeedButton1.Down:=true;
-  if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TRegIniFile);
