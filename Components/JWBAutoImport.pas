@@ -65,6 +65,11 @@ procedure AutoFixFilenames(var list: TFilenameList);
 implementation
 uses SysUtils, Classes, Forms, Windows, MemSource, JWBUnit, JWBCommandLine;
 
+const
+  sAutoImport='#00988^eAuto-import';
+  sAutoImportError='#00989^eAuto-import error';
+  sCannotUpdateCantBeLoaded='#00990^eCannot update the dictionary "%s" because it cannot be loaded: %s';
+
 var
  //Don't check the same dictionary twice
   AutoUpdateChecked: TFilenameList;
@@ -189,8 +194,8 @@ begin
     except
       on E: EDictionaryException do begin
         Application.MessageBox(
-          PChar('Cannot update the dictionary "'+targetFname+'" because it cannot be loaded: '+E.Message),
-          PChar('Auto-import error'),
+          PChar(_l(sCannotUpdateCantBeLoaded,[targetFname, E.Message])),
+          PChar(_l(sAutoImportError)),
           MB_ICONERROR+MB_OK);
         exit;
       end;
@@ -200,12 +205,15 @@ begin
     or (dic.sources.Count<>1) then begin
      //Impossible to determine which sources went into the dictionary.
      //Replace.
-      qmsg := 'Wakan wants to update your dictionary '+targetFname+' '
-        +'with the newest data from '+item.Filename+'. '
-        +'If '+targetFname+' was imported manually, any additional data will be lost.'#13
+      qmsg := _l(
+        '#00991^e'
+        +'Wakan wants to update your dictionary %0:s with the newest data from %1:s. '
+        +'If %0:s was imported manually, any additional data will be lost.'#13
         +'Do you want to continue?'#13#13
-        +'If you want to keep '+targetFname+' as it is, choose "No", close Wakan '
-        +'and give '+targetFname+' some other name.';
+        +'If you want to keep %0:s as it is, choose "No", close Wakan '
+        +'and give %0:s some other name.',
+        [targetFname, item.Filename]
+      );
     end
     else begin
       if dic.language=item.Language then
@@ -220,12 +228,15 @@ begin
         end;
 
      //No references
-      qmsg := 'Wakan wants to update your dictionary '+targetFname+' '
-        +'with the newest data from '+item.Filename+', '
-        +'but it appears that '+targetFname+' was built from some other sources.'#13
+      qmsg := _l(
+        '#00992^e'
+        +'Wakan wants to update your dictionary %0:s with the newest data from %1:s, '
+        +'but it appears that %0:s was compiled from some other sources.'#13
         +'Do you want to replace it? It''s current contents will be lost.'#13#13
-        +'If you want to keep '+targetFname+' as it is, choose "No", close Wakan '
-        +'and give '+targetFname+' some other name.';
+        +'If you want to keep %0:s as it is, choose "No", close Wakan '
+        +'and give %0:s some other name.',
+        [targetFname, item.Filename]
+      );
     end;
 
     FreeAndNil(dic);
@@ -233,7 +244,7 @@ begin
    //File exists but decided to replace
     if Application.MessageBox(
       PChar(qmsg),
-      PChar('Auto-import'),
+      PChar(_l(sAutoImport)),
       MB_ICONQUESTION+MB_YESNO)<>ID_YES
     then
       exit;
@@ -331,15 +342,22 @@ begin
    //on this function for auto-update, and by convention we notify user about
    //any import problems with known dictionaries (they're important).
     Application.MessageBox(
-      PChar('Wakan wants to rebuild your dictionary '+dic.pname+' because '
-        +'these source files have changed:'#13
-        +FilenameListToString(needUpdate, #13)+#13#13
-        +'Unfortunately, this cannot be done because some of the source files '
-        +'which went into '+dic.pname+' cannot be found:'#13
-        +FilenameListToString(missing, #13)+#13#13
-        +'Please locate all of these files and place into Wakan folder next '
-        +'time before you run Wakan.'),
-      PChar('Auto-import error'),
+      PChar(
+        _l(
+          '#00993^e'
+          +'Wakan wants to rebuild your dictionary %0:s because these source '
+          +'files have changed:'#13
+          +'%1:s'#13#13
+          +'Unfortunately, this cannot be done because some of the source files '
+          +'which went into %0:s cannot be found:'#13
+          +'%2:s'#13#13
+          +'Please locate all of these files and place into Wakan folder next '
+          +'time before you run Wakan.',
+          [dic.pname,
+           FilenameListToString(needUpdate, #13),
+           FilenameListToString(missing, #13)]
+        )),
+      PChar(_l(sAutoImportError)),
       MB_ICONERROR+MB_OK);
     exit;
   end;
@@ -390,15 +408,15 @@ begin
     except
       on E: EMemorySourceError do begin
         Application.MessageBox(
-          PChar('Cannot update the dictionary "'+list[i]+'" because it cannot be loaded: '+E.Message),
-          PChar('Auto-import error'),
+          PChar(_l(sCannotUpdateCantBeLoaded, [list[i], E.Message])),
+          PChar(_l(sAutoImportError)),
           MB_ICONERROR+MB_OK);
         exit;
       end;
       on E: EDictionaryException do begin
         Application.MessageBox(
-          PChar('Cannot update the dictionary "'+list[i]+'" because it cannot be loaded: '+E.Message),
-          PChar('Auto-import error'),
+          PChar(_l(sCannotUpdateCantBeLoaded, [list[i], E.Message])),
+          PChar(_l(sAutoImportError)),
           MB_ICONERROR+MB_OK);
         exit;
       end;
@@ -424,11 +442,13 @@ begin
 
   if Length(missingFiles)>0 then
     Application.MessageBox(
-      PChar('Some dictionaries you specified weren''t found:'#13
-        +FilenameListToString(missingFiles, #13)+#13#13
-        +'These dictionaries will not be updated.'
-      ),
-      PChar('Auto-import error'),
+      PChar(_l('#00994^e'
+        +'Some dictionaries you specified weren''t found:'#13
+        +'%0:s'+#13#13
+        +'These dictionaries will not be updated.',
+        [FilenameListToString(missingFiles, #13)]
+      )),
+      PChar(_l('#00989^eAuto-import error')),
       MB_ICONERROR+MB_OK
     );
 end;

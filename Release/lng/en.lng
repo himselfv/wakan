@@ -1073,6 +1073,29 @@
 00985>Copyright:
 00986>Show splashscreen when program starts
 00987>Fullscreen Mode
+00988>Auto-import
+00989>Auto-import error
+00990+Cannot update the dictionary "%s" because it cannot be loaded:
+00990>%s
+00991+Wakan wants to update your dictionary %0:s with the newest data from %1:s. If %0:s was imported manually, any additional data will be lost.
+00991+Do you want to continue?
+00991+
+00991>If you want to keep %0:s as it is, choose "No", close Wakan and give %0:s some other name.
+00992+Wakan wants to update your dictionary %0:s with the newest data from %1:s, but it appears that %0:s was compiled from some other sources.
+00992+Do you want to replace it? It's current contents will be lost.
+00992+
+00992>If you want to keep %0:s as it is, choose "No", close Wakan and give %0:s some other name.
+00993+Wakan wants to rebuild your dictionary %0:s because these source files have changed:
+00993+%1:s
+00993+
+00993+Unfortunately, this cannot be done because some of the source files which went into %0:s cannot be found:
+00993+%2:s
+00993+
+00993>Please locate all of these files and place into Wakan folder next time before you run Wakan.
+00994+Some dictionaries you specified weren't found:
+00994+%0:s
+00994+
+00994>These dictionaries will not be updated.
 ;
 ;
 ; EDICT markers.
