@@ -255,8 +255,10 @@ type
   TFilenameList = array of string;
   TFileList = TFilenameList;
 
-procedure AddFilename(var list: TFilenameList; filename: string);
-function MakeFilenameList(filenames: array of string): TFilenameList;
+procedure AddFilename(var list: TFilenameList; const filename: string);
+function MakeFilenameList(const filenames: array of string): TFilenameList;
+function IsFileInList(const filename: string; const list: TFilenameList): boolean;
+function FilenameListToString(const list: TFilenameList; const sep: string = ', '): string;
 
 
 
@@ -1136,19 +1138,45 @@ end;
 
 { Filename list }
 
-procedure AddFilename(var list: TFilenameList; filename: string);
+procedure AddFilename(var list: TFilenameList; const filename: string);
 begin
   SetLength(list, Length(list)+1);
-  List[Length(list)-1] := filename;
+  List[Length(list)-1] := lowercase(filename);
 end;
 
-function MakeFilenameList(filenames: array of string): TFilenameList;
+function MakeFilenameList(const filenames: array of string): TFilenameList;
 var i,l: integer;
 begin
   SetLength(Result, Length(filenames));
   l := Low(filenames);
   for i := l to High(filenames) do
     Result[i-l] := filenames[i];
+end;
+
+function IsFileInList(const filename: string;const list: TFilenameList): boolean;
+var l_filename: string;
+  i: integer;
+begin
+  Result := false;
+  l_filename := lowercase(filename);
+  for i := 0 to Length(list)-1 do
+    if lowercase(list[i])=l_filename then begin
+      Result := true;
+      break;
+    end;
+end;
+
+function FilenameListToString(const list: TFilenameList; const sep: string = ', '): string;
+var i: integer;
+begin
+  if Length(list)<=0 then begin
+    Result := '';
+    exit;
+  end;
+
+  Result := list[0];
+  for i := 1 to Length(list) - 1 do
+    Result := Result + sep + list[i];
 end;
 
 

@@ -1205,11 +1205,26 @@ begin
   //  XPResFix(fExamples);
     XPResFix(fTranslate);
 
+   //Prepare for SwitchLanguage->RescanDicts->AutoUpdate(dic)
+    if Command='updatedics' then begin
+     //Fix filenames now, or they won't match and force updates in AutoUpdate
+      AutoFixFilenames(UpdateDicsParams.Files);
+      JWBAutoImport.ForceUpdates := true;
+      JWBAutoImport.ForceUpdateList := UpdateDicsParams.Files;
+    end;
+
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
     RescanDicts;
     RefreshCategory;
     RefreshKanjiCategory; }
+
+    if Command='updatedics' then begin
+      if Length(UpdateDicsParams.Files)>0 then
+        JWBAutoImport.AutoUpdateFiles(UpdateDicsParams.Files);
+      Application.Terminate;
+      exit; //so this can be run in batch mode
+    end;
 
     fSplash.Hide;
   {  if ((Screen.Width<1024) or (Screen.Height<768)) then
@@ -1268,7 +1283,7 @@ begin
     end;
     on E: Exception do begin
       Application.MessageBox(
-        pchar('Cannot load Wakan. '+E.Classname+':s '#13+E.Message),
+        pchar('Cannot load Wakan. '+E.Classname+': '#13+E.Message),
         pchar('Error'), //Do not translate! The translation might not even be loaded yet.
         MB_ICONERROR or MB_OK
       );
@@ -1392,7 +1407,7 @@ begin
           pchar(_l('#00090^eWarning')),
           MB_ICONWARNING or MB_OK);
       if not initdone then //we're still loading
-        AutoUpgrade(dic);
+        AutoUpdate(dic);
       if curlang=dic.language then
       begin
         dicts.Add(dic);

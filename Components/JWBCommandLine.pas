@@ -37,6 +37,17 @@ var
     Files: TFilenameList;
   end;
 
+ {
+  Instructs Wakan to update dictionaries even if it sees no need to.
+  If files are specified, only those are updated. Extension is appended
+  automatically, when needed. Files from other directories can be specified,
+  source files are looked there then.
+  Update is forceful, and if something breaks Wakan will not silently ignore that.
+ }
+  UpdateDicsParams: record
+    Files: TFilenameList;
+  end;
+
 procedure ParseCommandLine();
 
 implementation
@@ -62,7 +73,8 @@ begin
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
-      +'[/addfrequencyinfo]';
+      +'[/addfrequencyinfo]'#13
+    +'* updatedics [dicname dicname ...]';
 
   if errmsg<>'' then
     s := errmsg + #13#13 + s;
@@ -196,6 +208,11 @@ begin
         MakeDicParams.AddCharacterIndex := true;
        //but no frequency info because it requires additional file which is missing by default
       end else
+      if Command='updatedics' then begin
+        FillChar(UpdateDicsParams, sizeof(UpdateDicsParams), 0);
+       //Filenames are expected in the following params.
+       //If none are specified, update ALL dics
+      end else
       if Command='open' then begin
         FillChar(OpenParams, sizeof(OpenParams), 0);
         Inc(i);
@@ -215,6 +232,10 @@ begin
     begin
       if Command='makerad' then begin
         AddFilename(MakeRadParams.Files, ParamStr(i));
+
+      end else
+      if Command='updatedics' then begin
+        AddFilename(UpdateDicsParams.Files, ParamStr(i));
 
       end else
         BadUsage('Invalid param: "'+s+'"');

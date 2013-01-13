@@ -501,7 +501,8 @@ begin
     if s_roma='' then s_roma:='XXX';
 
     s_entry:=FConvertEdictEntry(writ,s_mark);
-    repl(s_entry,UH_EDICT_SEMICOL,UH_EDICT_COMMA);
+    repl(s_entry,UH_EDICT_SEMICOL,UH_EDICT_COMMA); //replace ; with ,
+    repl(s_entry,UH_EDICT_ALTERN,UH_EDICT_SEMICOL); //replace / with ;
 
     ed.Reset;
     ed.ref := '';
@@ -565,8 +566,10 @@ begin
       end;
 
       //Convert entries
-      for i := 0 to ed.senses_used - 1 do
-        repl(ed.senses[i].text,UH_EDICT_SEMICOL,UH_EDICT_COMMA);
+      for i := 0 to ed.senses_used - 1 do begin
+        repl(ed.senses[i].text,UH_EDICT_SEMICOL,UH_EDICT_COMMA); //replace ; with ,
+        repl(ed.senses[i].text,UH_EDICT_ALTERN,UH_EDICT_SEMICOL); //replace / with ;
+      end;
 
       AddArticle(@ed, roma);
 

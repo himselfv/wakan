@@ -517,9 +517,8 @@ end;
 
 destructor TPackageSource.Destroy;
 begin
-  try
+  if TFileRec(PackageF).Mode<>fmClosed then
     closefile(PackageF);
-  except end;
   inherited Destroy;
 end;
 
