@@ -14,12 +14,12 @@ type
     PaintBox2: TPaintBox;
     Label6: TLabel;
     Label4: TLabel;
-    Edit3: TEdit;
     ComboBox1: TComboBox;
     Label1: TLabel;
     Label2: TLabel;
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
+    edtMeaning: TMemo;
     procedure PaintBox1Paint(Sender: TObject);
     procedure PaintBox2Paint(Sender: TObject);
   end;

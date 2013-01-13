@@ -205,7 +205,7 @@ begin
   curcphonetic:=remexcl(copy(StringGrid1.Cells[0,ARow],2,length(StringGrid1.Cells[0,ARow])-1));
   curckanji:=remexcl(copy(StringGrid1.Cells[1,ARow],2,length(StringGrid1.Cells[1,ARow])-1));
   curcmeaning:=remmark(remexcl(StringGrid1.Cells[2,ARow]));
-  fDicAdd.Edit3.Text:=remexcl(StringGrid1.Cells[2,ARow]);
+  fDicAdd.edtMeaning.Text:=UnfixVocabEntry(remexcl(StringGrid1.Cells[2,ARow]));
 end;
 
 procedure TfKanjiCompounds.sbCopyToClipboardClick(Sender: TObject);
@@ -220,7 +220,7 @@ begin
   fUser.curphonetic:=curcphonetic;
   if fDicAdd.ShowModal=mrOK then
   begin
-    if not fWords.AddWord(curckanji,curcphonetic,fDicAdd.edit3.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
+    if not fWords.AddWord(curckanji,curcphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
   end;
 end;
 

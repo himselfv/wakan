@@ -436,7 +436,7 @@ begin
   curphonetic:='';
   curkanji:='';
   curmeaning:='';
-  fDicAdd.Edit3.Text:='';
+  fDicAdd.edtMeaning.Text:='';
   SpeedButton17.Enabled:=false;
   btnCopyToClipboard.Enabled:=false;
   SpeedButton19.Enabled:=false;
@@ -481,7 +481,7 @@ begin
     fExamples.SetExamples(curkanji);
     s:=remexcl(StringGrid1.Cells[2,curword]);
     if pos(' >> ',s)>0 then delete(s,1,pos(' >> ',s)+3);
-    fDicAdd.Edit3.Text:=s;
+    fDicAdd.edtMeaning.Text:=UnfixVocabEntry(s); //replace markup symbols with user readable
     SpeedButton17.Enabled:=true;
     btnCopyToClipboard.Enabled:=true;
     fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary');
@@ -803,7 +803,7 @@ procedure TfUser.SpeedButton17Click(Sender: TObject);
 begin
   if fDicAdd.ShowModal=mrOK then
   begin
-    if not fWords.AddWord(curkanji,curphonetic,fDicAdd.edit3.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
+    if not fWords.AddWord(curkanji,curphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
     Look();
     if Edit1.Enabled then Edit1.SetFocus;
   end;
