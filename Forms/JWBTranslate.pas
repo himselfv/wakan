@@ -49,8 +49,12 @@ uses
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
 
-//Display a window showing how much time Auto-TL took
-{$DEFINE TLSPEEDREPORT}
+{$IFDEF DEBUG} //don't do in release versions
+
+  //Display a window showing how much time Auto-TL took
+  {$DEFINE TLSPEEDREPORT}
+
+{$ENDIF}
 
 type
  { Character position in source text. }

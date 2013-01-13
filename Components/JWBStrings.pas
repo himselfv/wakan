@@ -188,9 +188,9 @@ function fstrtohex(const s: FString): FHex; {$IFDEF INLINE}inline;{$ENDIF}
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+{$ENDIF}
 function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
-{$ENDIF}
 
 function ftoansi(c: FChar; out ac: AnsiChar): boolean;
 
@@ -208,6 +208,7 @@ function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inli
 
 { General purpose string functions }
 
+function IsHexChar(wc: WideChar): boolean;
 function HexCharCode(c:AnsiChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
@@ -706,6 +707,13 @@ begin
   Result := true;
 end;
 
+function IsHexChar(wc: WideChar): boolean;
+begin
+  Result := ((wc>='a') and (wc<='f'))
+    or ((wc>='A') and (wc<='F'))
+    or ((wc>='0') and (wc<='9'));
+end;
+
 //Returns a value in range 0..15 for a given hex character, or throws an exception
 function HexCharCode(c:AnsiChar): byte;
 begin
@@ -780,6 +788,7 @@ begin
     Inc(cc, HexCharCodeW(ps^));
     Result := Result + WideChar(cc);
     ps := pn;
+    Dec(maxlen,4);
   end;
 end;
 

@@ -994,7 +994,7 @@ begin
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
-    if (s[1]=UH_UNKNOWN_KANJI) then
+    if (Length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then
     begin
       if (fSettings.CheckBox10.Checked) then Canvas.Font.COlor:=Col('Dict_UnknownChar') else Canvas.Font.Color:=Col('Dict_Text');
       delete(s,1,1);
