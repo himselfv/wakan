@@ -230,7 +230,7 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 function remexcl(const s:string):string;
 function remmark(s:string):string;
 function repl(var s:string;const sub,rep:string):string;
-function urepl(var s:string;const sub,rep:string):string;
+function urepl(var s:UnicodeString;const sub,rep:UnicodeString):string;
 function replc(const s:string;const sub,rep:string):string;
 function strqpop(var s:string;c:char):string; overload;
 function strqpop(var s:string;const cs:string):string; overload;
@@ -586,7 +586,7 @@ begin
     Result := 0;
     exit;
   end;
-  pw := WStrPos(str,substr); //this one has reverse argument order!
+  pw := WStrPos(PWideChar(str),PWideChar(substr)); //this one has reverse argument order!
   Result := (integer(pw)-integer(str)) div 2 - 1;
 end;
 {$ENDIF}
@@ -988,7 +988,7 @@ begin
   result:=s;
 end;
 
-function urepl(var s:string;const sub,rep:string):string;
+function urepl(var s:UnicodeString;const sub,rep:UnicodeString):string;
 {$IFDEF UNICODE}
 begin
   Result := repl(s,sub,rep);

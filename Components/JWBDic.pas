@@ -915,10 +915,10 @@ begin
   u_str := locator;
   if t=itChar then begin
     idx := dic.CharIdx;
-    MakeFixedLen(u_str, 4, #00);
+    MakeFixedLen(u_str, 4, WideChar(#00));
   end else begin
     idx := dic.WordIdx;
-    MakeFixedLen(u_str, 4, ' ');
+    MakeFixedLen(u_str, 4, WideChar(' '));
   end;
   m := idx.FindEntry(u_str);
 

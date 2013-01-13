@@ -93,6 +93,8 @@ type
 
   end;
 
+  EDictImportException = class(Exception);
+
 var
   fDictImport: TfDictImport;
 
@@ -340,18 +342,18 @@ var freqi: integer;
     while u_str<>'' do
     begin
      //Pop next translation alternative
-      u_part:=ULowerCase(ustrqpop(u_str,'/'));
+      u_part:=ULowerCase(ustrqpop(u_str,WideChar('/')));
       if u_part='' then continue;
       while u_part<>'' do
       begin
        //Remove all the leading (flags) (and) (markers)
         while (length(u_part)>0) and (u_part[1]='(') do
         begin
-          ustrqpop(u_part,')');
+          ustrqpop(u_part,WideChar(')'));
           u_part := UTrimLeft(u_part);
         end;
        //Pop next word until space
-        u_word:=ustrqpop(u_part,' ');
+        u_word:=ustrqpop(u_part,WideChar(' '));
         urepl(u_part,';',',');
         if (ignorel.IndexOf(u_word)=-1) and (u_word<>'')
         and (fgetch(u_word, 1)>{$IFDEF UNICODE}#$0040{$ELSE}'0040'{$ENDIF}) //it's all punctuation and digits before
@@ -501,8 +503,8 @@ begin
     if s_roma='' then s_roma:='XXX';
 
     s_entry:=FConvertEdictEntry(writ,s_mark);
-    repl(s_entry,UH_EDICT_SEMICOL,UH_EDICT_COMMA); //replace ; with ,
-    repl(s_entry,UH_EDICT_ALTERN,UH_EDICT_SEMICOL); //replace / with ;
+    repl(s_entry,UH_EDICT_SEMICOL,','); //replace ; with ,
+    repl(s_entry,UH_EDICT_ALTERN,'; '); //replace / with ;
 
     ed.Reset;
     ed.ref := '';
@@ -567,8 +569,8 @@ begin
 
       //Convert entries
       for i := 0 to ed.senses_used - 1 do begin
-        repl(ed.senses[i].text,UH_EDICT_SEMICOL,UH_EDICT_COMMA); //replace ; with ,
-        repl(ed.senses[i].text,UH_EDICT_ALTERN,UH_EDICT_SEMICOL); //replace / with ;
+        urepl(ed.senses[i].text,UH_EDICT_SEMICOL,','); //replace ; with ,
+        urepl(ed.senses[i].text,UH_EDICT_ALTERN,'; '); //replace / with ;
       end;
 
       AddArticle(@ed, roma);
@@ -670,7 +672,7 @@ begin
       prog.SetMessage(_l('#00917^eCreating frequency chart...'));
       freql := GetFrequencyList;
     except
-      on E: Exception do begin
+      on E: EDictImportException do begin
         E.Message := 'Frequency list creation failed: '+E.Message;
         raise;
       end;
@@ -683,10 +685,10 @@ begin
     CreateDictTables(tempDir+'\DICT.TMP', info, diclang, 0);
     dic := fMenu.NewDict(tempDir+'\DICT.TMP');
     if not dic.tested then
-      raise Exception.Create('Cannot load the newly created dictionary.');
+      raise EDictImportException.Create('Cannot load the newly created dictionary.');
     dic.Load;
     if not dic.loaded then
-      raise Exception.Create('Cannot load the target dictionary');
+      raise EDictImportException.Create('Cannot load the target dictionary');
     dic.Demand;
     dic.TTDict.NoCommitting := true;
     dic.TTEntries.NoCommitting := true;
@@ -699,7 +701,7 @@ begin
       prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
 
       if not FileExists(files[fi]) then
-        raise Exception.CreateFmt(_l('File not found: %s'), [files[fi]]);
+        raise EDictImportException.CreateFmt(_l('File not found: %s'), [files[fi]]);
 
       fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(files[fi]);
       if ifSilent in flags then begin
@@ -729,7 +731,7 @@ begin
         try
           RunUniConv(files[fi], fname, cd);
         except
-          on E: Exception do begin
+          on E: EDictImportException do begin
             E.Message := _l('While converting ')+files[fi]+': '+E.Message;
             raise;
           end;
@@ -737,7 +739,7 @@ begin
       end;
 
       if not FileExists(fname) then
-        raise Exception.CreateFmt(_l('File conversion failed (%s)'), [files[fi]]);
+        raise EDictImportException.CreateFmt(_l('File conversion failed (%s)'), [files[fi]]);
 
      //Count number of lines in the converted file and add to total
       fuin := TUnicodeFileReader.Create(fname);
@@ -763,7 +765,7 @@ begin
       fuin := TUnicodeFileReader.Create(tempDir+'\DICT_'+inttostr(fi)+'.TMP');
       try
         if not fuin.ReadWideChar(uc) or (uc<>#$FEFF) then
-          raise Exception.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
+          raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
 
         if diclang='c' then
           ImportCEdict(fuin)
@@ -867,7 +869,7 @@ begin
     tp := Conv_DetectType('wordfreq_ck');
     Conv_Open('wordfreq_ck', tp);
   end else
-    raise Exception.Create(_l('#00915^eCannot find WORDFREQ_CK file.'));
+    raise EDictImportException.Create(_l('#00915^eCannot find WORDFREQ_CK file.'));
 
   newline:=true;
   nownum:=false;
@@ -915,6 +917,9 @@ var lpi:PROCESS_INFORMATION;
   fail: boolean;
   err: integer;
 begin
+  if not FileExists(AppFolder+'\UNICONV.exe') then
+    raise EDictImportException.Create(_l('#00070^eUNICONV.EXE was not found. It is required for encoding conversion.'));
+
   FillChar(lpi, sizeof(lpi), 0);
   FillChar(si, sizeof(si), 0);
   si.dwFlags:=STARTF_USESHOWWINDOW;

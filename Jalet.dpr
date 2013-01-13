@@ -8,7 +8,7 @@ Disable ScaleMM2 when tracking a memory bug (default memory mgr is better at rep
 }
 
 uses
-//  ScaleMM2 in 'Components\ScaleMM\ScaleMM2.pas',
+  ScaleMM2 in 'Components\ScaleMM\ScaleMM2.pas',
   Forms,
   JWBStrings in 'Components\JWBStrings.pas',
   JWBIO in 'Components\JWBIO.pas',

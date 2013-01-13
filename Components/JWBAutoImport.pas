@@ -62,13 +62,13 @@ It's sometimes important to fix these filenames ahead of time.
 }
 procedure AutoFixFilenames(var list: TFilenameList);
 
-implementation
-uses SysUtils, Classes, Forms, Windows, MemSource, JWBUnit, JWBCommandLine;
-
 const
   sAutoImport='#00988^eAuto-import';
   sAutoImportError='#00989^eAuto-import error';
   sCannotUpdateCantBeLoaded='#00990^eCannot update the dictionary "%s" because it cannot be loaded: %s';
+
+implementation
+uses SysUtils, Classes, Forms, Windows, MemSource, JWBUnit, JWBCommandLine;
 
 var
  //Don't check the same dictionary twice
@@ -273,8 +273,16 @@ end;
 procedure AutoImportDicts;
 var i: integer;
 begin
-  for i := 0 to KnownDictSources.Count - 1 do
+  for i := 0 to KnownDictSources.Count - 1 do try
     TryAutoImportItem(@KnownDictSources.items[i]);
+  except
+    on E: EDictImportException do begin
+      Application.MessageBox(
+        PChar(E.Message),
+        PChar(_l(sAutoImport)),
+        MB_ICONERROR+MB_OK);
+    end;
+  end;
 end;
 
 { Automatically update the dictionary if all source files are present and

@@ -372,7 +372,7 @@ procedure TWordIndexBuilder.AddToIndex(const str: UnicodeString; article: intege
 var tmp: UnicodeString;
 begin
   tmp := str;
-  MakeFixedLen(tmp, 4, ' ');
+  MakeFixedLen(tmp, 4, WideChar(' '));
   inherited AddToIndex(PInt64(@tmp[1])^, article);
 end;
 

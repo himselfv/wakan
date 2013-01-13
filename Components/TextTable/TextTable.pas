@@ -973,6 +973,7 @@ var ofs:integer;
   ansi_s: AnsiString;
   value_c: UnicodeString;
  {$ELSE}
+  i: integer;
   pb: PByte;
   pc: PChar;
  {$ENDIF}
@@ -1230,7 +1231,6 @@ end;
  Returns true and record index in seek table if there are matches,
  or false and record index for record just after where the match would have occured.
  To convert seek index to record index call TransOrder(idx, seek.ind_i) }
-
 function TTextTable.LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean;
 var sn:integer;       //seek table number
   fn:integer;         //field number
@@ -1703,7 +1703,7 @@ begin
     if rawindex then
       sl.CustomSort(CustomSortCompare)
     else
-      sl.Sort;
+      sl.Sort; //uses AnsiCompareStr too
     for j:=0 to reccount-1 do
       PInteger(integer(index)+i*reccount*4+j*4)^ := integer(sl.Objects[j]);
   end;
