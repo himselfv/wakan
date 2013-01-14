@@ -70,7 +70,8 @@ uses
   JWBKanaConv in 'Components\JWBKanaConv.pas',
   JWBIndex in 'Components\JWBIndex.pas',
   JWBEdictReader in 'Components\JWBEdictReader.pas',
-  JWBAutoImport in 'Components\JWBAutoImport.pas';
+  JWBAutoImport in 'Components\JWBAutoImport.pas',
+  JWBDownloader in 'Components\JWBDownloader.pas';
 
 {$R *.RES}
 

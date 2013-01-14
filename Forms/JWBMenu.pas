@@ -663,7 +663,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
-  JWBEdictMarkers, JWBAutoImport;
+  JWBEdictMarkers, JWBAutoImport, JWBDownloader;
 
 {$R *.DFM}
 
@@ -788,6 +788,7 @@ var ps:TPackageSource;
   conft:textfile;
   sect:integer;
   i:integer;
+  tempDir: string;
 begin
   lastautosave:=now;
   screenTipImmediate:=false;
@@ -874,6 +875,12 @@ begin
       fSplash.Show;
       fSplash.Update;
     end;
+
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
+
+    //Just a test
+    //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
 
     //Configuration file
     try
