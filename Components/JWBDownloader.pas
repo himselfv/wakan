@@ -5,6 +5,12 @@ uses SysUtils, StdPrompt;
 
 //TODO: Use JWBIO
 //TODO: Check resulting header and determine if the download is needed before proceeding
+ //If-Modified-Since
+ //304 Not Modified
+ //May be not supported, so we have to check for "last-modified" in the header anyway
+ //It may be missing, then we have no choice but to import.
+ //Because of all of the above, we are to check for new versions in only about 4 days.
+ //Even if the server supports If-Modified-Since, no point in overloading it with requests.
 //TODO: Resume downloading
 
 type
@@ -65,7 +71,8 @@ begin
     AssignFile(f, FileName);
     Rewrite(f,1);
     repeat
-      InternetReadFile(hURL, @Buffer, SizeOf(Buffer), BufferLen);
+      if not InternetReadFile(hURL, @Buffer, SizeOf(Buffer), BufferLen) then
+        RaiseLastOsError();
       BlockWrite(f, Buffer, BufferLen);
       Inc(TotalLength, BufferLen);
       prog.SetProgress(integer(TotalLength));
