@@ -265,9 +265,13 @@ begin
   if FileExists(targetFname) then
     Backup(targetFname);
 
-  fDictImport.ImportDictionary(targetFname, info, files, item.Language, flags);
-  AddFilename(AutoUpdateChecked, targetFname);
-  AddFilename(AutoUpdateImported, targetFname);
+  try
+    fDictImport.ImportDictionary(targetFname, info, files, item.Language, flags);
+    AddFilename(AutoUpdateChecked, targetFname);
+    AddFilename(AutoUpdateImported, targetFname);
+  except
+    on E: EAbort do begin end; //do nothing, but the dictionary is not imported
+  end;
 end;
 
 procedure AutoImportDicts;
@@ -392,8 +396,12 @@ begin
     dic.Unload;
   Backup(fname);
 
-  fDictImport.ImportDictionary(fname, info, files, lang, flags);
-  AddFilename(AutoUpdateImported, fname);
+  try
+    fDictImport.ImportDictionary(fname, info, files, lang, flags);
+    AddFilename(AutoUpdateImported, fname);
+  except
+    on E: EAbort do begin end; //do nothing, but the dictionary is not updated
+  end;
 
  //Load it again (I pray that it works...)
   if wasloaded then begin

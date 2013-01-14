@@ -46,7 +46,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, ComCtrls;
+  StdCtrls, ExtCtrls, Buttons, ComCtrls, ComObj, ShlObj;
 
 type
  {$IF CompilerVersion<21}
@@ -93,13 +93,30 @@ type
     procedure YesToAllButtonClick(Sender: TObject);
     procedure NoToAllButtonClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormHide(Sender: TObject);
 
   protected //Progress bar
     updateProgressEvery: integer;
     lastUpdateProgress: integer;
+    FProgressPaused: boolean;
+    FProgressError: boolean;
+    procedure UpdateProgressBarState;
   public
     procedure SetMaxProgress(maxprogr:integer);
     procedure SetProgress(i:integer); {$IFDEF INLINE}inline;{$ENDIF} //Set progress and repaint if needed
+    procedure SetProgressPaused(Value: boolean); //call these when the operation is paused/in error
+    procedure SetProgressError(Value: boolean);
+
+  protected //Task bar progress indication!
+    TaskbarList: ITaskbarList;
+    TaskbarList2: ITaskbarList2;
+    TaskbarList3: ITaskbarList3;
+    TaskbarList4: ITaskbarList4;
+    FProgressHandle: HWND;
+    procedure SetupTaskbar;
+    procedure ReleaseTaskbar;
+    procedure UpdateTaskbarProgress;
 
   { This form can be displayed as "Modal non-execution-stealing". This is useful
    for displaying the responsive progress bar.
@@ -131,17 +148,17 @@ type
   protected
     CurRes:TMsgDlgBtn; //Why do we have this when there's ModalResult?..
   public
-    procedure SetMessage(s:string);
-    // changes the message of the dialog, but DOES NOT resize the dialog
-    // to fit the new message size
-    procedure Appear;
-    // shows the dialog
-    procedure AppearModal;
-    // shows the dialog in modal mode (but doesn't steal the execution like ShowModal does. Call ProcessModalMessages please.)
-    procedure Refresh;
-    // repaints the dialog
-    procedure ProcessMessages;
-    // processes messages from the queue so that the system doesn't think we're stuck.
+    procedure SetMessage(s:string); // changes the message of the dialog, but DOES NOT resize the dialog to fit the new message size
+    procedure Appear; // shows the dialog
+    procedure AppearModal; // shows the dialog in modal mode (but doesn't steal the execution like ShowModal does. Call ProcessModalMessages please.)
+    procedure Refresh; // repaints the dialog
+    procedure ProcessMessages; // processes messages from the queue so that the system doesn't think we're stuck.
+
+  protected //Message handling
+    g_wmTBC: UINT;
+  public
+    procedure Dispatch(var Message); override;
+
   end;
 
 type TPromptType=(InfoStyle,WarningStyle,SuccessStyle,AskStyle,ErrorStyle);
@@ -235,6 +252,80 @@ destructor TSMPromptForm.Destroy;
 begin
   ReleaseModal();
   inherited;
+end;
+
+procedure TSMPromptForm.FormShow(Sender: TObject);
+begin
+  SetupTaskbar;
+end;
+
+procedure TSMPromptForm.FormHide(Sender: TObject);
+begin
+  ReleaseTaskbar;
+end;
+
+procedure TSMPromptForm.Dispatch(var Message);
+begin
+  inherited Dispatch(Message);
+end;
+
+procedure TSMPromptForm.SetupTaskbar;
+var hr: HRESULT;
+begin
+  if CheckWin32Version(6, 1) then
+  begin
+    TaskbarList := CreateComObject(CLSID_TaskbarList) as ITaskbarList;
+    TaskbarList.HrInit;
+    Supports(TaskbarList, IID_ITaskbarList2, TaskbarList2);
+    Supports(TaskbarList, IID_ITaskbarList3, TaskbarList3);
+    Supports(TaskbarList, IID_ITaskbarList4, TaskbarList4);
+
+    FProgressHandle := Application.Handle;
+
+    hr := TaskbarList.AddTab(self.Handle);
+    if FAILED(hr) then begin
+      raise Exception.Create('Error Message');
+    end;
+
+   //Apply current progress state
+    UpdateTaskbarProgress;
+  end
+  else
+  begin
+    TaskbarList := nil;
+    TaskbarList2 := nil;
+    TaskbarList3 := nil;
+    TaskbarList4 := nil;
+  end
+end;
+
+procedure TSMPromptForm.ReleaseTaskbar;
+begin
+  if TaskbarList3<>nil then
+    TaskbarList3.SetProgressState(FProgressHandle, TBPF_NOPROGRESS);
+  TaskbarList := nil;
+  TaskbarList2 := nil;
+  TaskbarList3 := nil;
+  TaskbarList4 := nil;
+end;
+
+procedure TSMPromptForm.UpdateTaskbarProgress;
+begin
+  if TaskbarList3 = nil then exit;
+  if self.ProgressBar.Visible then begin
+    if FProgressError then
+      TaskbarList3.SetProgressState(FProgressHandle, TBPF_ERROR)
+    else
+    if FProgressPaused then
+      TaskbarList3.SetProgressState(FProgressHandle, TBPF_PAUSED)
+    else
+    if ProgressBar.Max>0 then begin
+      TaskbarList3.SetProgressState(FProgressHandle, TBPF_NORMAL);
+      TaskbarList3.SetProgressValue(FProgressHandle, ProgressBar.Position, ProgressBar.Max);
+    end else
+      TaskbarList3.SetProgressState(FProgressHandle, TBPF_INDETERMINATE);
+  end else
+    TaskbarList3.SetProgressState(FProgressHandle, TBPF_NOPROGRESS);
 end;
 
 //Makes this form Modal, but doesn't steal the execution like ShowModal does.
@@ -429,7 +520,40 @@ begin
   ProgressBar.Invalidate;
   ProgressBar.Update;
   lastUpdateProgress := i;
+  UpdateProgressBarState();
+  UpdateTaskbarProgress();
 end;
+
+procedure TSMPromptForm.UpdateProgressBarState;
+begin
+  if ProgressBar.Max>0 then
+    ProgressBar.Style := pbstNormal
+  else
+    Progressbar.Style := pbstMarquee;
+
+  if FProgressError then
+    ProgressBar.State := pbsError
+  else
+  if FProgressPaused then
+    ProgressBar.State := pbsPaused
+  else
+    ProgressBar.State := pbsNormal;
+end;
+
+procedure TSMPromptForm.SetProgressPaused(Value: boolean);
+begin
+  FProgressPaused := Value;
+  UpdateProgressBarState();
+  UpdateTaskbarProgress();
+end;
+
+procedure TSMPromptForm.SetProgressError(Value: boolean);
+begin
+  FProgressError := Value;
+  UpdateProgressBarState();
+  UpdateTaskbarProgress();
+end;
+
 
 procedure TSMPromptForm.ProcessMessages;
 var tm: cardinal;

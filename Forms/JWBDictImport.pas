@@ -85,6 +85,7 @@ type
     procedure AddArticle(const ed: PEdictArticle; const roma: TEdictRoma);
     procedure ImportCEdict(fuin: TUnicodeFileReader);
     procedure ImportEdict(fuin: TUnicodeFileReader);
+    procedure SetProgress(perc: integer);
 
   public
     function SupportsFrequencyList: boolean;
@@ -151,6 +152,25 @@ end;
 procedure TfDictImport.btnCancelClick(Sender: TObject);
 begin
   ModalResult := mrCancel;
+end;
+
+procedure TfDictImport.SetProgress(perc: Integer);
+begin
+  prog.SetProgress(perc);
+  prog.ProcessMessages;
+  if prog.ModalResult=mrCancel then begin
+    prog.SetProgressPaused(true);
+    if Application.MessageBox(
+      PChar(_l('^eThe dictionary has not been yet completely imported. Do you '
+        +'really want to abort the operation?')), //TODO: Localize
+      PChar(_l('^eConfirm abort')), //TODO: Localize
+      MB_ICONQUESTION+MB_YESNO
+    )=idYes then
+      raise EAbort.Create('Aborted by user'); //no need to localize
+    prog.ModalResult := 0;
+    prog.SetProgressPaused(false);
+    prog.Show; //ModalResult hides it
+  end;
 end;
 
 procedure TfDictImport.CreateDictTables(dicFilename: string; info: TDictInfo;
@@ -478,7 +498,7 @@ begin
     if phon='' then phon:=kanji;
 
     if (linecount>0) and (lineno mod 100=0) then
-      prog.SetProgress(round(lineno/linecount*100));
+      SetProgress(round(lineno/linecount*100));
     inc(lineno);
 
     if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},kanji)<>0)  //EDICT header line -- CEDICT shouldn't have it but whatever
@@ -535,7 +555,7 @@ begin
     Inc(loclineno);
 
     if (linecount>0) and (lineno mod 100=0) then
-      prog.SetProgress(round(lineno/linecount*100));
+      SetProgress(round(lineno/linecount*100));
     inc(lineno);
 
     if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},ustr)<>0) then //EDICT header line
@@ -646,19 +666,23 @@ var
   uc: WideChar;
 
 begin
-  prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100);
+  prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100,{CanCancel=}true);
   if not self.Visible then //auto mode
     prog.Position := poScreenCenter;
   prog.Width := 500; //we're going to have long file names
-  prog.Appear;
+  prog.AppearModal;
   wordidx := nil;
   charidx := nil;
   freql := nil;
   had_problems := false;
+  dic := nil;
+  tempDir := '';
+  tempDir2 := '';
   linecount:=0;
   LastArticle := 0;
   LastDictEntry := 0;
   try
+    prog.SetMaxProgress(0); //indeterminate state
 
    //Create indexes
     if ifAddCharacterIndex in flags then
@@ -756,6 +780,7 @@ begin
       roma_prob.WriteWideChar(#$FEFF); //BOM
     end;
 
+    prog.SetMaxProgress(100); //progress bar
     lineno:=0;
     for fi:=0 to Length(files)-1 do
     begin
@@ -780,6 +805,7 @@ begin
     roma_prob.Flush; //just in case someone goes looking at it straight away
     prog.Invalidate;
     prog.Repaint;
+    prog.ProcessMessages;
 
     prog.SetMessage(_l('^eRebuilding index...'));
     dic.TTDict.NoCommitting := false;
@@ -804,15 +830,22 @@ begin
     prog.SetMessage(_l('^eWriting dictionary table...'));
     dic.TTDict.WriteTable(tempDir2+'\Dict',true);
     dic.TTEntries.WriteTable(tempDir2+'\Entries',true);
-    dic.Free;
+    FreeAndNil(dic);
 
     DeleteDirectory(tempDir); //empty dictionary
+    tempDir := '';
 
     WriteSources(tempDir2+'\sources.lst',files);
     WriteDictPackage(dicFilename, tempDir2, info, diclang, LastArticle);
     DeleteDirectory(tempDir2);
+    tempDir2 := '';
 
   finally
+    if tempDir<>'' then
+      DeleteDirectory(tempDir);
+    if tempDir2<>'' then
+      DeleteDirectory(tempDir);
+    FreeAndNil(dic);
     FreeAndNil(wordidx);
     FreeAndNil(charidx);
     FreeAndNil(prog);

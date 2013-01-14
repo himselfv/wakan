@@ -1351,10 +1351,11 @@ begin
         sp.ProcessMessages;
         if sp.ModalResult=mrCancel then begin
           sp.Hide;
+          sp.SetProgressPaused(true); //although not important when hidden
           if Application.MessageBox(
             PChar(_l('^eThe text has only been partially translated. Do you '
-              +'really want to abort the operation?')),
-            PChar(_l('^eConfirm abort')),
+              +'really want to abort the operation?')),  //TODO: Localize
+            PChar(_l('^eConfirm abort')), //TODO: Localize
             MB_ICONQUESTION+MB_YESNO
           )=idYes then
           begin
@@ -1365,6 +1366,7 @@ begin
             break; //and restore+repaint
           end;
           sp.ModalResult := 0;
+          sp.SetProgressPaused(false);
           sp.Show;
         end;
       end;

@@ -14,7 +14,9 @@ object SMPromptForm: TSMPromptForm
   Font.Style = []
   OldCreateOrder = True
   Position = poOwnerFormCenter
+  OnHide = FormHide
   OnResize = FormResize
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Sign2Label: TLabel
