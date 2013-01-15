@@ -71,7 +71,8 @@ uses
   JWBIndex in 'Components\JWBIndex.pas',
   JWBEdictReader in 'Components\JWBEdictReader.pas',
   JWBAutoImport in 'Components\JWBAutoImport.pas',
-  JWBDownloader in 'Components\JWBDownloader.pas';
+  JWBDownloader in 'Components\JWBDownloader.pas',
+  JWBDownloadSources in 'JWBDownloadSources.pas';
 
 {$R *.RES}
 
@@ -117,7 +118,6 @@ begin
   Application.CreateForm(TfFileType, fFileType);
   Application.CreateForm(TfWordsExpChoose, fWordsExpChoose);
   Application.CreateForm(TfMedia, fMedia);
-
   fMenu.InitializeWakan;
   Application.Run;
 end.

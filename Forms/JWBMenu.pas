@@ -665,7 +665,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
-  JWBEdictMarkers, JWBAutoImport, JWBDownloader;
+  JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources;
 
 {$R *.DFM}
 
@@ -791,6 +791,7 @@ var ps:TPackageSource;
   sect:integer;
   i:integer;
   tempDir: string;
+  LastModified: TDatetime;
 begin
   lastautosave:=now;
   screenTipImmediate:=false;
@@ -878,12 +879,6 @@ begin
       fSplash.Update;
     end;
 
-    tempDir := CreateRandomTempDirName();
-    ForceDirectories(tempDir);
-
-    //Just a test
-    //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
-
     //Configuration file
     try
       assignfile(conft,'wakan.cfg');
@@ -945,8 +940,22 @@ begin
    //It'll only read sections which it understands
     roma_t.LoadFromFile('wakan.cfg');
 
+    DownloadSources.LoadFromFile('Dependencies.cfg');
+
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
+
+   {
+    //Just a test
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
+    //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
+    DownloadFileIfModified('http://ftp.monash.edu.au/pub/nihongo/edicthdr.txt', tempDir+'\edicthdr.txt',
+      now, LastModified);
+   }
+
+   //Download dependencies!
+    VerifyDependency('WORDFREQ_CK', 'WORDFREQ_CK');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
