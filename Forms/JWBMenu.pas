@@ -387,7 +387,9 @@ type
 
   private
     initdone:boolean;
-    { Private declarations }
+  public
+    procedure InitializeWakan;
+
   public
     ResFixVal:integer;
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
@@ -780,7 +782,7 @@ begin
   end;
 end;
 
-procedure TfMenu.FormShow(Sender: TObject);
+procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
   s,sx:string;
   vi:TStringList;
@@ -1300,9 +1302,14 @@ begin
   end;
 
   Timer1.Enabled:=true;
-  Timer1Timer(Sender);
+  Timer1Timer(Timer1);
 
  { Done. }
+end;
+
+procedure TfMenu.FormShow(Sender: TObject);
+begin
+//  InitializeWakan;
 end;
 
 procedure TfMenu.WriteUserPackage(dir:string);

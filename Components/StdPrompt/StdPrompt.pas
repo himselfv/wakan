@@ -484,6 +484,8 @@ end;
 
 procedure TSMPromptForm.Appear;
 begin
+  if not Application.MainForm.Visible then
+    Self.Position := poScreenCenter;
   LastProcessMessages := GetTickCount - PROCESS_MESSAGES_EVERY_MSEC;
   Show;
   Refresh;
@@ -491,6 +493,8 @@ end;
 
 procedure TSMPromptForm.AppearModal;
 begin
+  if not Application.MainForm.Visible then
+    Self.Position := poScreenCenter;
   LastProcessMessages := GetTickCount - PROCESS_MESSAGES_EVERY_MSEC;
   EnterModal;
   Show;

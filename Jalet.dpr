@@ -117,5 +117,7 @@ begin
   Application.CreateForm(TfFileType, fFileType);
   Application.CreateForm(TfWordsExpChoose, fWordsExpChoose);
   Application.CreateForm(TfMedia, fMedia);
+
+  fMenu.InitializeWakan;
   Application.Run;
 end.
