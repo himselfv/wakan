@@ -72,7 +72,8 @@ uses
   JWBEdictReader in 'Components\JWBEdictReader.pas',
   JWBAutoImport in 'Components\JWBAutoImport.pas',
   JWBDownloader in 'Components\JWBDownloader.pas',
-  JWBDownloadSources in 'JWBDownloadSources.pas';
+  JWBDownloadSources in 'Components\JWBDownloadSources.pas',
+  SevenZipUtils in 'Components\SevenZipUtils.pas';
 
 {$R *.RES}
 

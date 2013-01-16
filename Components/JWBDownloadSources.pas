@@ -9,7 +9,7 @@ type
   TDownloadSource = record
     name: string; //must be lowercase
     url: string;
-    url_unpack: string;
+    url_unpack: string; //lowercase
     procedure Reset;
   end;
   PDownloadSource = ^TDownloadSource;
@@ -42,7 +42,8 @@ function DownloadDependency(const depname: string): boolean;
 function VerifyDependency(const filename, depname: string): boolean;
 
 implementation
-uses SysUtils, Classes, StrUtils, JWBDownloader;
+uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloader,
+  SevenZip, SevenZipUtils, StdPrompt, JWBUnit;
 
 procedure TDownloadSource.Reset;
 begin
@@ -153,6 +154,11 @@ end;
 
 function DownloadDependency(const depname: string): boolean;
 var dep: PDownloadSource;
+  tempDir: string;
+  zip: TSevenZipArchive;
+  zname: string;
+  i: integer;
+  prog: TSMPromptForm;
 begin
   dep := DownloadSources.FindByName(depname);
   if dep=nil then begin
@@ -160,10 +166,54 @@ begin
     exit;
   end;
 
- //TODO: Wrong! Wrong! Download to tempdir, in any case.
- //Also, unpack if needed.
- //Also, return false if URL not accessible
-  DownloadFile(dep.url, depname);
+  prog:=SMProgressDlgCreate(_l('^eDownload'),'',100,{CanCancel=}true);
+  if not Application.MainForm.Visible then
+    prog.Position := poScreenCenter;
+  prog.AppearModal;
+  try
+
+    tempDir := CreateRandomTempDirName();
+    ForceDirectories(tempDir);
+
+   //Also, return false if URL not accessible
+    DownloadFile(dep.url, tempDir+'\'+depname, prog);
+
+    zip := nil;
+    if dep.url_unpack='zip' then
+      zip := TSevenZipArchive.Create(CLSID_CFormatZip, tempDir+'\'+depname)
+    else
+    if dep.url_unpack='7z' then
+      zip := TSevenZipArchive.Create(CLSID_CFormat7z, tempDir+'\'+depname)
+    else
+    if dep.url_unpack='rar' then
+      zip := TSevenZipArchive.Create(CLSID_CFormatRar, tempDir+'\'+depname)
+    else
+    if dep.url_unpack='tar' then
+      zip := TSevenZipArchive.Create(CLSID_CFormatTar, tempDir+'\'+depname)
+    else
+      CopyFile(PChar(tempDir+'\'+depname), PChar(ExtractFilename(dep.url)), false); //TODO: ExtractFilename is often meaningless for URLs ('dir/?get=hashcode') -- we have to get file name from HTTP headers
+
+    prog.SetMessage('Extracting...');
+    if zip<>nil then
+      for i := 0 to zip.NumberOfItems - 1 do begin
+        if zip.BoolProperty(i, kpidIsDir) then continue;
+        with zip.ExtractFile(i) do try
+          zname := zip.StrProperty(i, kpidPath);
+          if zname='' then continue; //wtf?
+          if ExtractFilePath(zname)<>'' then continue; //at least don't extract them to the root!
+          zname := ExtractFileName(zname); //only file name
+           //although in our case there's nothing EXCEPT the file name anyway, but that's now
+
+          SaveToFile(zname);
+        finally
+          Free;
+        end;
+      end;
+
+  finally
+    FreeAndNil(prog);
+  end;
+
   Result := true;
 end;
 

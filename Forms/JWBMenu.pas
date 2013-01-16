@@ -956,6 +956,7 @@ begin
 
    //Download dependencies!
     VerifyDependency('WORDFREQ_CK', 'WORDFREQ_CK');
+    VerifyDependency('UNICONV.exe', 'UNICONV');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then

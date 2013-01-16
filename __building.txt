@@ -2,6 +2,7 @@ NOTES ON BUILDING WAKAN.
 
 I. For Ansi builds you'll need non-unicode Delphi (at most Delphi 2007).
 Install everything as per Components\readme.txt.
+Install JEDI.
 
 II. Copy wakan.chr, *.dic from live wakan installation.
 
@@ -55,6 +56,8 @@ Also see: http://code.google.com/p/wakan/issues/detail?id=66
 3. RADKFILE/RADKFILE2 - required for raine radicals search
 http://www.csse.monash.edu.au/~jwb/kradinf.html
 Download and place RADKFILE into Wakan release folder. You can import RADKFILE2 manually, but it's not yet supported.
+
+4. 7z.dll -- 7zip library
 
 
 MAINTENANCE

@@ -16,7 +16,7 @@ uses SysUtils, StdPrompt;
 type
   EDownloadException = class(Exception);
 
-procedure DownloadFile(const fileURL, FileName: string);
+procedure DownloadFile(const fileURL, FileName: string; prog: TSMPromptForm=nil);
 function DownloadFileIfModified(const fileURL, FileName: string;
   since: TDatetime; out LastModified: TDatetime): boolean;
 
@@ -104,7 +104,7 @@ begin
     Result := -1;
 end;
 
-procedure FetchContents(hURL: HInternet; const Filename: string; prog: TSMPromptForm);
+procedure FetchContents(hURL: HInternet; const Filename: string; prog: TSMPromptForm=nil);
 const BufferSize = 4096;
 var f: File;
   ContentLength: int64;
@@ -113,10 +113,11 @@ var f: File;
   BufferLen: DWORD;
 begin
   ContentLength := GetContentLength(hURL);
-  if (ContentLength<=0) or (ContentLength>=MaxInt) then
-    prog.SetMaxProgress(0) //just display progress animation
-  else
-    prog.SetMaxProgress(integer(ContentLength));
+  if prog<>nil then
+    if (ContentLength<=0) or (ContentLength>=MaxInt) then
+      prog.SetMaxProgress(0) //just display progress animation
+    else
+      prog.SetMaxProgress(integer(ContentLength));
 
   TotalLength := 0;
   AssignFile(f, FileName);
@@ -126,24 +127,23 @@ begin
       RaiseLastOsError();
     BlockWrite(f, Buffer, BufferLen);
     Inc(TotalLength, BufferLen);
-    prog.SetProgress(integer(TotalLength));
-    prog.ProcessMessages;
+    if prog<>nil then begin
+      prog.SetProgress(integer(TotalLength));
+      prog.ProcessMessages;
+    end;
   until BufferLen = 0;
   CloseFile(f);
 end;
 
-procedure DownloadFile(const fileURL, FileName: string);
+procedure DownloadFile(const fileURL, FileName: string; prog: TSMPromptForm);
 var hSession, hURL: HInternet;
   sAppName: string;
-  prog: TSMPromptForm;
 begin
   hSession := nil;
   hURL := nil;
-  prog:=SMProgressDlgCreate(_l('^eDownload'),_l('^eDownloading %s...', [ExtractFilename(Filename)]),100,{CanCancel=}true);
-  if not Application.MainForm.Visible then
-    prog.Position := poScreenCenter;
-  prog.AppearModal;
   try
+    if prog<>nil then
+      prog.SetMessage(_l('^eDownloading %s...', [ExtractFilename(Filename)]));
     sAppName := ExtractFileName(Application.ExeName);
     hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
     if hSession=nil then RaiseLastOsError();
@@ -156,7 +156,6 @@ begin
       InternetCloseHandle(hURL);
     if hSession<>nil then
       InternetCloseHandle(hSession);
-    FreeAndNil(prog);
   end;
 end;
 
