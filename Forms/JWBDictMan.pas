@@ -211,7 +211,7 @@ end;
 procedure TfDictMan.UpdateUpDownButtons;
 begin
   btnMoveUp.Enabled := (cbDicts.ItemIndex>0);
-  btnMoveDown.Enabled := (cbDicts.ItemIndex>=0) and (cbDicts.ItemIndex<cbDicts.Count);
+  btnMoveDown.Enabled := (cbDicts.ItemIndex>=0) and (cbDicts.ItemIndex<cbDicts.Count-1);
 end;
 
 procedure TfDictMan.btnMoveUpClick(Sender: TObject);
