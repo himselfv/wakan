@@ -21,8 +21,11 @@ type
   TMarker = AnsiChar;
 
   TEdictMarkerFlag = (
-    mfPos   //it's important to distinguish POS markers from non-POS markers:
+    mfPos,   //it's important to distinguish POS markers from non-POS markers:
       //they are handled differently (see JWBEdictReader.pas)
+      //other marker types are not so important, but they are kept separately by JMDic
+    mfField, //field of application
+    mfDial   //dialect
   );
   TEdictMarkerFlags = set of TEdictMarkerFlag;
 
@@ -102,16 +105,16 @@ const
     (m: 'vt'; id: #85; f: [mfPos]; ab: 'gtrans-verb'),
 
    //Field of Application
-    (m: 'Buddh'; id: #119),
-    (m: 'MA'; id: #37; ab: '1martial-arts'),
-    (m: 'comp'; id: #120),
-    (m: 'food'; id: #121),
-    (m: 'geom'; id: #122),
-    (m: 'gram'; id: #55; ab: 'g'),
-    (m: 'ling'; id: #123),
-    (m: 'math'; id: #124),
-    (m: 'mil'; id: #125),
-    (m: 'physics'; id: #126),
+    (m: 'Buddh'; id: #119; f: [mfField]),
+    (m: 'MA'; id: #37; f: [mfField]; ab: '1martial-arts'),
+    (m: 'comp'; id: #120; f: [mfField]),
+    (m: 'food'; id: #121; f: [mfField]),
+    (m: 'geom'; id: #122; f: [mfField]),
+    (m: 'gram'; id: #55; f: [mfField]; ab: 'g'),
+    (m: 'ling'; id: #123; f: [mfField]),
+    (m: 'math'; id: #124; f: [mfField]),
+    (m: 'mil'; id: #125; f: [mfField]),
+    (m: 'physics'; id: #126; f: [mfField]),
 
    //Miscellaneous Markings
     (m: 'X'; id: #41; ab: '1rude'),
@@ -153,15 +156,15 @@ const
     (m: 'P'; id: #98; ab: 'spop'),
 
    //Regional Words
-    (m: 'kyb'; id: #138),
-    (m: 'osb'; id: #139),
-    (m: 'ksb'; id: #140),
-    (m: 'ktb'; id: #141),
-    (m: 'tsb'; id: #142),
-    (m: 'thb'; id: #143),
-    (m: 'tsug'; id: #144),
-    (m: 'kyu'; id: #145),
-    (m: 'rkb'; id: #146)
+    (m: 'kyb'; id: #138; f: [mfDial]),
+    (m: 'osb'; id: #139; f: [mfDial]),
+    (m: 'ksb'; id: #140; f: [mfDial]),
+    (m: 'ktb'; id: #141; f: [mfDial]),
+    (m: 'tsb'; id: #142; f: [mfDial]),
+    (m: 'thb'; id: #143; f: [mfDial]),
+    (m: 'tsug'; id: #144; f: [mfDial]),
+    (m: 'kyu'; id: #145; f: [mfDial]),
+    (m: 'rkb'; id: #146; f: [mfDial])
   );
 
   LastMarkerID = #146;
@@ -169,16 +172,28 @@ const
 
   MarkPop: TMarker = #98;
 
+type
+  TMarkersByType = record
+    pop: boolean;
+    m_pos: string;
+    m_field: string;
+    m_dial: string;
+    m_misc: string;
+  end;
+  PMarkersByType = ^TMarkersByType;
+
 { Only for debug -- tests that there are no ID duplicates. }
 procedure TestMarkersIntegrity;
 
 function FindMarkDef(m:string):PEdictMarkerDef; //returns marker definition or nil
 function FindMark(m:string):TMarker; //returns marker ID or 0
 function TestMarkers(const mark,test:TMarkers): boolean;
+function GetMarkDef(mark:TMarker):PEdictMarkerDef;
 function GetMarkEdict(mark:TMarker):string;
 function GetMarkAbbr(mark:TMarker):string;
 function ConvertMarkers(const s:string; out unrecog:string):TMarkers;
 function MarkersToStr(const s:TMarkers; out pop: boolean):string;
+function MarkersToStrEx(const s:TMarkers):TMarkersByType;
 
 function ConvertEdictEntry(const s:string;var mark:TMarkers):string;
 function FConvertEdictEntry(const s:FString;var mark:TMarkers):FString; deprecated
@@ -233,6 +248,17 @@ begin
         Result := true;
         break;
       end;
+end;
+
+function GetMarkDef(mark:TMarker):PEdictMarkerDef;
+var i: integer;
+begin
+  Result := nil;
+  for i := 0 to Length(EdictMarkers) - 1 do
+    if EdictMarkers[i].id=mark then begin
+      Result := @EdictMarkers[i];
+      break;
+    end;
 end;
 
 function GetMarkEdict(mark:TMarker):string;
@@ -297,6 +323,37 @@ begin
       Result := Result + ',' + GetMarkEdict(s[i]);
   end;
   delete(Result,1,1);
+end;
+
+function MarkersToStrEx(const s:TMarkers):TMarkersByType;
+var i: integer;
+  def: PEdictMarkerDef;
+begin
+  Result.pop := false;
+  Result.m_pos := '';
+  Result.m_field := '';
+  Result.m_dial := '';
+  Result.m_misc := '';
+  for i := 1 to Length(s) do
+    if s[i]=MarkPop then
+      Result.pop := true
+    else begin
+      def := GetMarkDef(s[i]);
+      if mfPos in def.f then
+        Result.m_pos := Result.m_pos + ',' + def.m
+      else
+      if mfField in def.f then
+        Result.m_field := Result.m_field + ',' + def.m
+      else
+      if mfDial in def.f then
+        Result.m_dial := Result.m_dial + ',' + def.m
+      else
+        Result.m_misc := Result.m_misc + ',' + def.m
+    end;
+  delete(Result.m_pos,1,1);
+  delete(Result.m_field,1,1);
+  delete(Result.m_dial,1,1);
+  delete(Result.m_misc,1,1);
 end;
 
 
