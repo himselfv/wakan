@@ -124,16 +124,16 @@ end;
 
 procedure TIndex.ReadIndexEntryFromTo(loc:integer;out indexfrom,indexto:integer);
 begin
-  indexfrom:=FHeaderLen+PInteger(integer(FData)+loc*FTotalEntrySz+FEntryLen*4)^;
+  indexfrom:=FHeaderLen+PInteger(IntPtr(FData)+loc*FTotalEntrySz+FEntryLen*4)^;
   if loc<FEntryCount then
-    indexto:=FHeaderLen+PInteger(integer(FData)+(loc+1)*FTotalEntrySz+FEntryLen*4)^
+    indexto:=FHeaderLen+PInteger(IntPtr(FData)+(loc+1)*FTotalEntrySz+FEntryLen*4)^
   else
     indexto:=FPosCount;
 end;
 
 function TIndex.ReadIndexInfo(loc:integer):integer;
 begin
-  Result := PInteger(integer(FData)+loc*4)^
+  Result := PInteger(IntPtr(FData)+loc*4)^
 end;
 
 //4 bytes compared as AnsiString on v4
@@ -145,7 +145,7 @@ end;
 function TIndexV4.ReadIndexEntry(loc:integer):AnsiString;
 begin
   SetLength(Result, 4);
-  move(PAnsiChar(integer(FData)+loc*8)^,Result[1],4);
+  move(PAnsiChar(IntPtr(FData)+loc*8)^,Result[1],4);
 end;
 
 function TIndexV4.FindEntry(const locator:UnicodeString):integer;
@@ -178,7 +178,7 @@ end;
 
 function TIndexV5.ReadIndexEntry(loc:integer):int64;
 begin
-  Result := PInt64(integer(FData)+loc*12)^
+  Result := PInt64(IntPtr(FData)+loc*12)^
 end;
 
 function TIndexV5.FindEntry(const locator:UnicodeString):integer;

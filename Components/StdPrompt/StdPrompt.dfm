@@ -257,6 +257,7 @@ object SMPromptForm: TSMPromptForm
     Height = 25
     Caption = 'mbHelp'
     Kind = bkHelp
+    NumGlyphs = 2
     TabOrder = 6
     OnClick = HelpButtonClick
   end

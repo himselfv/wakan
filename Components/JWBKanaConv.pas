@@ -138,7 +138,7 @@ end;
  You can even put c==0 and the code will be almost eliminated at compilation time. Delphi is smart! }
 function IntgOff(p: pointer; c: integer): PInteger; inline;
 begin
-  Result := PInteger(integer(p)+c*4);
+  Result := PInteger(IntPtr(p)+c*4);
 end;
 
 function TRomajiRuleNode1.CompareData(const a):Integer;
@@ -663,7 +663,7 @@ begin
     Result := ps^;
     Inc(ps);
  {$ELSE}
-  if (ps^='0') and (PChar(integer(ps)+1)^='0') then begin
+  if (ps^='0') and (PChar(IntPtr(ps)+1)^='0') then begin
     Result := HexToUnicode(ps, 4);
     Inc(ps, 4);
  {$ENDIF}

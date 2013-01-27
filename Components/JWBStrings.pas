@@ -587,7 +587,7 @@ begin
     exit;
   end;
   pw := WStrPos(PWideChar(str),PWideChar(substr)); //this one has reverse argument order!
-  Result := (integer(pw)-integer(str)) div 2 - 1;
+  Result := (IntPtr(pw)-IntPtr(str)) div 2 - 1;
 end;
 {$ENDIF}
 

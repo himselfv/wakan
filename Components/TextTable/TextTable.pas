@@ -274,16 +274,16 @@ end;
 
 function OffsetPtr(source: pointer; ofs: integer): PByte; inline;
 begin
-  Result := PByte(integer(source)+ofs);
+  Result := PByte(IntPtr(source)+ofs);
 end;
 
 procedure MoveOfs(source,dest:pointer;ofssource,ofsdest:integer;size:integer);
 var sp,dp:pbyte;
 begin
   sp:=source;
-  sp:=PByte(integer(sp)+ofssource); //older Delphi versions can't add pointers
+  sp:=PByte(IntPtr(sp)+ofssource); //older Delphi versions can't add pointers
   dp:=dest;
-  dp:=PByte(integer(dp)+ofsdest);
+  dp:=PByte(IntPtr(dp)+ofsdest);
   move(sp^,dp^,size);
 end;
 
@@ -441,7 +441,7 @@ begin
       datalen:=mf.Size-4;
       datasize:=mf.Size;
       source.ReadRawData(data^,integer(mf.Position),4);
-      datafpos:=integer(mf.Position)+4;
+      datafpos:=IntPtr(mf.Position)+4;
       moveofs(data,@reccount,0,0,4);
       if not offline then
       begin
@@ -1362,7 +1362,7 @@ end;
 
 function TTextTable.IsDeleted(rec:integer):boolean;
 begin
-  Result := PBoolean(integer(struct)+rec*struct_recsz)^;
+  Result := PBoolean(IntPtr(struct)+rec*struct_recsz)^;
 end;
 
 function GetFieldValueSize(ftype: char; const fval: string): integer;
@@ -1427,8 +1427,8 @@ begin
  { Fill record header, allocate memory then call Edit() to copy data }
   ReserveStruct(struct_recsz);
   dec(structbuffer,struct_recsz);
-  PByte(integer(struct)+reccount*struct_recsz)^ := 0;
-  PInteger(integer(struct)+reccount*struct_recsz+1)^ := datalen;
+  PByte(IntPtr(struct)+reccount*struct_recsz)^ := 0;
+  PInteger(IntPtr(struct)+reccount*struct_recsz+1)^ := datalen;
   totsize:=0;
   k:=0;
   for i:=0 to fieldcount-1 do
@@ -1438,11 +1438,11 @@ begin
     if (c='x') or (c='s') then begin
       if wordfsize then begin
         if fsz>65530 then fsz := 65530; { Only this much bytes will be stored }
-        PWord(integer(struct)+reccount*struct_recsz+5+k)^ := fsz;
+        PWord(IntPtr(struct)+reccount*struct_recsz+5+k)^ := fsz;
         inc(k,2);
       end else begin
         if fsz>250 then fsz := 250;
-        PByte(integer(struct)+reccount*struct_recsz+5+k)^ := fsz;
+        PByte(IntPtr(struct)+reccount*struct_recsz+5+k)^ := fsz;
         inc(k,1);
       end;
     end;
@@ -1463,7 +1463,7 @@ end;
 procedure TTextTable.DeleteRecord(RecNo: integer);
 begin
   if not loaded then load;
-  PBoolean(integer(struct)+RecNo*struct_recsz)^ := true;
+  PBoolean(IntPtr(struct)+RecNo*struct_recsz)^ := true;
   inc(numberdeleted);
 end;
 
@@ -1705,7 +1705,7 @@ begin
     else
       sl.Sort; //uses AnsiCompareStr too
     for j:=0 to reccount-1 do
-      PInteger(integer(index)+i*reccount*4+j*4)^ := integer(sl.Objects[j]);
+      PInteger(IntPtr(index)+i*reccount*4+j*4)^ := integer(sl.Objects[j]); //there's really only integer stored, even on 64bit platforms
   end;
   sl.Free;
 end;
