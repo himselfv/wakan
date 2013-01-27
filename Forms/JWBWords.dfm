@@ -157,7 +157,7 @@ object fWords: TfWords
         ColCount = 4
         DefaultRowHeight = 16
         FixedCols = 0
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goRowSelect, goThumbTracking]
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
         TabOrder = 0
         OnClick = StringGrid1Click
         OnDrawCell = StringGrid1DrawCell
