@@ -7,6 +7,17 @@
 interface
 uses SysUtils, Classes, Windows;
 
+{$IF NOT Defined(IntPtr)}
+type
+ {$IF Defined(WIN64)}
+  IntPtr = int64;
+ {$ELSEIF Defined(WIN32)}
+  IntPtr = integer;
+ {$ELSE}
+  {$MESSAGE Error 'Cannot declare IntPtr for this target platform'}
+ {$IFEND}
+{$IFEND}
+
 {$IF CompilerVersion < 21}
 type
 { For cases when we need a HARD unicode string ("unicode on any versions"):
