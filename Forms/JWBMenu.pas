@@ -952,11 +952,11 @@ begin
     //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
     DownloadFileIfModified('http://ftp.monash.edu.au/pub/nihongo/edicthdr.txt', tempDir+'\edicthdr.txt',
       now, LastModified);
-   }
 
    //Download dependencies!
     VerifyDependency('WORDFREQ_CK', 'WORDFREQ_CK');
     VerifyDependency('UNICONV.exe', 'UNICONV');
+   }
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
@@ -3712,9 +3712,8 @@ begin
         fKanji.Align:=alClient;
         fKanji.Show;
         tab1.Down:=true;
-        try
-        fKanji.DrawGrid1.SetFocus;
-        except end;
+        if fKanji.DrawGrid1.CanFocus then
+          fKanji.DrawGrid1.SetFocus;
         aMode1.Checked:=true;
       end;
     2:begin
