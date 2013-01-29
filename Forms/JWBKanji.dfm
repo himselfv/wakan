@@ -169,7 +169,6 @@ object fKanji: TfKanji
       FixedRows = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goThumbTracking]
       TabOrder = 0
-      Visible = False
       OnDblClick = DrawGrid1DblClick
       OnDrawCell = DrawGrid1DrawCell
       OnKeyPress = DrawGrid1KeyPress
