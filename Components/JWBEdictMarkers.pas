@@ -40,6 +40,7 @@ type
   end;
   PEdictMarkerDef = ^TEdictMarkerDef;
 
+{$J+}
 const
   EdictMarkers: array[0..113] of TEdictMarkerDef = (
    //Part of Speech Marking
