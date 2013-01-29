@@ -34,7 +34,7 @@ object fUser: TfUser
     DesignSize = (
       704
       214)
-    object SpeedButton1: TSpeedButton
+    object btnLookupJtoE: TSpeedButton
       Left = 11
       Top = 4
       Width = 110
@@ -50,9 +50,9 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
-    object SpeedButton2: TSpeedButton
+    object btnLookupEtoJ: TSpeedButton
       Left = 123
       Top = 4
       Width = 107
@@ -67,9 +67,9 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
-    object SpeedButton3: TSpeedButton
+    object btnLookupClip: TSpeedButton
       Left = 232
       Top = 4
       Width = 73
@@ -84,7 +84,7 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
     object Shape11: TShape
       Left = 10
@@ -320,7 +320,7 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
     object SpeedButton13: TSpeedButton
       Left = 438
@@ -339,7 +339,7 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
     object SpeedButton14: TSpeedButton
       Left = 478
@@ -356,7 +356,7 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
     object SpeedButton15: TSpeedButton
       Left = 504
@@ -372,7 +372,7 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
     object SpeedButton16: TSpeedButton
       Left = 530
@@ -388,7 +388,7 @@ object fUser: TfUser
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton1Click
+      OnClick = btnLookupJtoEClick
     end
     object Label2: TLabel
       Left = 604

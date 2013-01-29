@@ -1096,6 +1096,12 @@
 00994+%0:s
 00994+
 00994>These dictionaries will not be updated.
+00995>Save column widths
+00996>Column width changes in dictionary and vocabulary will be preserved on program restart
+00997>Reset
+00998>Save kanji search params
+00999>Kanji search params will be preserved on program restart
+01000>Reset
 ;
 ;
 ; EDICT markers.

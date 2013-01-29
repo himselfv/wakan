@@ -24,7 +24,7 @@ object fSettings: TfSettings
     Top = 0
     Width = 484
     Height = 451
-    ActivePage = tsWordListPrinting
+    ActivePage = tsGeneral
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -34,139 +34,191 @@ object fSettings: TfSettings
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
-      object Label41: TLabel
-        Left = 16
-        Top = 224
-        Width = 206
-        Height = 13
-        Caption = '#00399^eDictionary entries grid font height:'
-      end
-      object Label47: TLabel
-        Left = 288
-        Top = 336
-        Width = 85
-        Height = 13
-        Caption = '#00400^eminutes'
-      end
-      object CheckBox26: TCheckBox
-        Left = 16
-        Top = 128
-        Width = 401
-        Height = 17
-        Hint = 
-          '#00401^eSaves statistical information to disk, filename is gener' +
-          'ated by date so you can check your progress'
-        Caption = '#00402^eSave statistics to disk (folder STAT)'
+      object sbGeneral: TScrollBox
+        Left = 0
+        Top = 0
+        Width = 476
+        Height = 441
+        Align = alClient
+        BorderStyle = bsNone
         TabOrder = 0
-      end
-      object CheckBox10: TCheckBox
-        Left = 16
-        Top = 152
-        Width = 433
-        Height = 17
-        Hint = '#00403^eShows words with non-learned kanji in different color'
-        Caption = '#00404^eDifferentiate words with non-learned characters'
-        TabOrder = 1
-      end
-      object CheckBox11: TCheckBox
-        Left = 16
-        Top = 200
-        Width = 433
-        Height = 17
-        Hint = 
-          '#00405^eColors: green - mastered, yellow - learned, cyan - unlea' +
-          'rned, red - problematic'
-        Caption = '#00406^eShow word learned-status by different background color'
-        TabOrder = 2
-      end
-      object CheckBox46: TCheckBox
-        Left = 16
-        Top = 312
-        Width = 433
-        Height = 17
-        Hint = 
-          '#00405^eColors: green - mastered, yellow - learned, cyan - unlea' +
-          'rned, red - problematic'
-        Caption = '#00407^eAuto-save user data on exit'
-        TabOrder = 3
-      end
-      object Edit25: TEdit
-        Left = 232
-        Top = 224
-        Width = 121
-        Height = 21
-        TabOrder = 4
-        Text = 'Edit25'
-      end
-      object CheckBox49: TCheckBox
-        Left = 16
-        Top = 248
-        Width = 417
-        Height = 17
-        Caption = '#00408^eLoad dictionaries on demand'
-        TabOrder = 5
-      end
-      object CheckBox53: TCheckBox
-        Left = 16
-        Top = 272
-        Width = 353
-        Height = 17
-        Caption = '#00409^eMulti-line word grids'
-        TabOrder = 6
-      end
-      object CheckBox54: TCheckBox
-        Left = 16
-        Top = 336
-        Width = 193
-        Height = 17
-        Caption = '#00410^eAuto-save user database every '
-        TabOrder = 7
-      end
-      object Edit29: TEdit
-        Left = 216
-        Top = 336
-        Width = 65
-        Height = 21
-        TabOrder = 8
-        Text = 'Edit29'
-      end
-      object CheckBox55: TCheckBox
-        Left = 16
-        Top = 360
-        Width = 417
-        Height = 17
-        Caption = '#00411^eMake backup of user file into BACKUP folder every day'
-        TabOrder = 9
-      end
-      object RadioGroup5: TRadioGroup
-        Left = 16
-        Top = 12
-        Width = 353
-        Height = 85
-        Hint = '#00432^eSelects what chinese characters are displayed'
-        Caption = '#00883^eChinese character mode && character conversion'
-        ItemIndex = 0
-        Items.Strings = (
-          '#00434^eTraditional (Big5) only'
-          '#00435^eSimplified (GB2312) only'
-          '#00436^eAll characters (Unicode)')
-        TabOrder = 10
-      end
-      object CheckBox70: TCheckBox
-        Left = 16
-        Top = 104
-        Width = 417
-        Height = 17
-        Caption = '^eDisplay message when word is added to vocabulary'
-        TabOrder = 11
-      end
-      object cbShowSplashscreen: TCheckBox
-        Left = 16
-        Top = 383
-        Width = 417
-        Height = 17
-        Caption = '#00986^eShow splashscreen when program starts'
-        TabOrder = 12
+        DesignSize = (
+          459
+          441)
+        object Label41: TLabel
+          Left = 16
+          Top = 224
+          Width = 206
+          Height = 13
+          Caption = '#00399^eDictionary entries grid font height:'
+        end
+        object Label47: TLabel
+          Left = 288
+          Top = 336
+          Width = 85
+          Height = 13
+          Caption = '#00400^eminutes'
+        end
+        object cbSaveSearchParams: TCheckBox
+          Left = 16
+          Top = 453
+          Width = 417
+          Height = 17
+          Hint = '#00999^eKanji search params will be preserved on program restart'
+          Caption = '#00998^eSave kanji search params'
+          TabOrder = 16
+        end
+        object CheckBox26: TCheckBox
+          Left = 16
+          Top = 128
+          Width = 401
+          Height = 17
+          Hint = 
+            '#00401^eSaves statistical information to disk, filename is gener' +
+            'ated by date so you can check your progress'
+          Caption = '#00402^eSave statistics to disk (folder STAT)'
+          TabOrder = 0
+        end
+        object CheckBox10: TCheckBox
+          Left = 16
+          Top = 152
+          Width = 433
+          Height = 17
+          Hint = '#00403^eShows words with non-learned kanji in different color'
+          Caption = '#00404^eDifferentiate words with non-learned characters'
+          TabOrder = 1
+        end
+        object CheckBox11: TCheckBox
+          Left = 16
+          Top = 200
+          Width = 433
+          Height = 17
+          Hint = 
+            '#00405^eColors: green - mastered, yellow - learned, cyan - unlea' +
+            'rned, red - problematic'
+          Caption = '#00406^eShow word learned-status by different background color'
+          TabOrder = 2
+        end
+        object CheckBox46: TCheckBox
+          Left = 16
+          Top = 312
+          Width = 433
+          Height = 17
+          Hint = 
+            '#00405^eColors: green - mastered, yellow - learned, cyan - unlea' +
+            'rned, red - problematic'
+          Caption = '#00407^eAuto-save user data on exit'
+          TabOrder = 3
+        end
+        object Edit25: TEdit
+          Left = 232
+          Top = 224
+          Width = 121
+          Height = 21
+          TabOrder = 4
+          Text = 'Edit25'
+        end
+        object CheckBox49: TCheckBox
+          Left = 16
+          Top = 248
+          Width = 417
+          Height = 17
+          Caption = '#00408^eLoad dictionaries on demand'
+          TabOrder = 5
+        end
+        object CheckBox53: TCheckBox
+          Left = 16
+          Top = 272
+          Width = 353
+          Height = 17
+          Caption = '#00409^eMulti-line word grids'
+          TabOrder = 6
+        end
+        object CheckBox54: TCheckBox
+          Left = 16
+          Top = 336
+          Width = 193
+          Height = 17
+          Caption = '#00410^eAuto-save user database every '
+          TabOrder = 7
+        end
+        object Edit29: TEdit
+          Left = 216
+          Top = 336
+          Width = 65
+          Height = 21
+          TabOrder = 8
+          Text = 'Edit29'
+        end
+        object CheckBox55: TCheckBox
+          Left = 16
+          Top = 360
+          Width = 417
+          Height = 17
+          Caption = '#00411^eMake backup of user file into BACKUP folder every day'
+          TabOrder = 9
+        end
+        object RadioGroup5: TRadioGroup
+          Left = 16
+          Top = 12
+          Width = 353
+          Height = 85
+          Hint = '#00432^eSelects what chinese characters are displayed'
+          Caption = '#00883^eChinese character mode && character conversion'
+          ItemIndex = 0
+          Items.Strings = (
+            '#00434^eTraditional (Big5) only'
+            '#00435^eSimplified (GB2312) only'
+            '#00436^eAll characters (Unicode)')
+          TabOrder = 10
+        end
+        object CheckBox70: TCheckBox
+          Left = 16
+          Top = 104
+          Width = 417
+          Height = 17
+          Caption = '^eDisplay message when word is added to vocabulary'
+          TabOrder = 11
+        end
+        object cbShowSplashscreen: TCheckBox
+          Left = 16
+          Top = 383
+          Width = 417
+          Height = 17
+          Caption = '#00986^eShow splashscreen when program starts'
+          TabOrder = 12
+        end
+        object cbSaveColumnWidths: TCheckBox
+          Left = 16
+          Top = 426
+          Width = 417
+          Height = 17
+          Hint = 
+            '#00996^eColumn width changes in dictionary and vocabulary will b' +
+            'e preserved on program restart'
+          Caption = '#00995^eSave column widths'
+          TabOrder = 13
+        end
+        object btnResetColumnWidths: TButton
+          Left = 352
+          Top = 422
+          Width = 104
+          Height = 25
+          Anchors = [akTop, akRight]
+          Caption = '#00997^eReset'
+          TabOrder = 14
+          OnClick = btnResetColumnWidthsClick
+        end
+        object btnResetSearchParams: TButton
+          Left = 352
+          Top = 449
+          Width = 104
+          Height = 25
+          Anchors = [akTop, akRight]
+          Caption = '#01000^eReset'
+          TabOrder = 15
+          OnClick = btnResetSearchParamsClick
+        end
       end
     end
     object tsRomanization: TTabSheet

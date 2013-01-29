@@ -198,7 +198,7 @@ object fMenu: TfMenu
       ShowHint = True
       OnClick = TabControl1Change
     end
-    object SpeedButton13: TSpeedButton
+    object btnJapaneseMode: TSpeedButton
       Left = 388
       Top = 2
       Width = 42
@@ -288,7 +288,7 @@ object fMenu: TfMenu
         172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172E
         D3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED317
         2ED3172ED3172ED31E33C95A36B4}
-      OnClick = SpeedButton13Click
+      OnClick = btnJapaneseModeClick
     end
     object Bevel3: TBevel
       Left = 341
@@ -297,7 +297,7 @@ object fMenu: TfMenu
       Height = 32
       Shape = bsLeftLine
     end
-    object SpeedButton14: TSpeedButton
+    object btnChineseMode: TSpeedButton
       Left = 346
       Top = 2
       Width = 42
@@ -381,7 +381,7 @@ object fMenu: TfMenu
         EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEF
         EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEF
         EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE3E3E317}
-      OnClick = SpeedButton14Click
+      OnClick = btnChineseModeClick
     end
     object Bevel4: TBevel
       Left = 274

@@ -459,9 +459,11 @@ end;
 
 procedure TfTranslate.FormHide(Sender: TObject);
 begin
-  if dictmodeset=0 then fUser.SpeedButton1.Down:=true;
-  if dictmodeset=1 then fUser.SpeedButton2.Down:=true;
-  if dictmodeset=2 then fUser.SpeedButton3.Down:=true;
+  case dictmodeset of
+    0: fUser.btnLookupJtoE.Down:=true;
+    1: fUser.btnLookupEtoJ.Down:=true;
+    2: fUser.btnLookupClip.Down:=true;
+  end;
 //  fUser.Look(false);
 end;
 
@@ -1315,9 +1317,9 @@ begin
   try
 
    //Setup everything for translation
-    fUser.SpeedButton1.Down:=false;
-    fUser.SpeedButton2.Down:=false;
-    fUser.SpeedButton3.Down:=false;
+    fUser.btnLookupJtoE.Down:=false;
+    fUser.btnLookupEtoJ.Down:=false;
+    fUser.btnLookupClip.Down:=false;
     fUser.SetupSearchRequest(stEditorAuto, req);
     req.dic_ignorekana := true;
     req.Prepare;
@@ -1890,9 +1892,9 @@ begin
     dragstart.x:=rcur.x;
     dragstart.y:=rcur.y;
   end;
-  fUser.SpeedButton1.Down:=false;
-  fUser.SpeedButton2.Down:=false;
-  fUser.SpeedButton3.Down:=false;
+  fUser.btnLookupJtoE.Down:=false;
+  fUser.btnLookupEtoJ.Down:=false;
+  fUser.btnLookupClip.Down:=false;
   if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then fUser.Look() else
   if dolook then begin
     s:=GetDocWord(rcur.x,rcur.y,wt,false);

@@ -17,9 +17,9 @@ type
     tab1: TSpeedButton;
     tab5: TSpeedButton;
     tab2: TSpeedButton;
-    SpeedButton13: TSpeedButton;
+    btnJapaneseMode: TSpeedButton;
     Bevel3: TBevel;
-    SpeedButton14: TSpeedButton;
+    btnChineseMode: TSpeedButton;
     Bevel4: TBevel;
     SpeedButton22: TSpeedButton;
     Bevel5: TBevel;
@@ -265,8 +265,8 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure SpeedButton11Click(Sender: TObject);
     procedure SpeedButton12Click(Sender: TObject);
-    procedure SpeedButton14Click(Sender: TObject);
-    procedure SpeedButton13Click(Sender: TObject);
+    procedure btnChineseModeClick(Sender: TObject);
+    procedure btnJapaneseModeClick(Sender: TObject);
     procedure Image1Click(Sender: TObject);
     procedure SpeedButton15Click(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
@@ -1509,25 +1509,25 @@ begin
   begin
     romasys:=fSettings.RadioGroup1.ItemIndex+1;
     showroma:=fSettings.RadioGroup2.ItemIndex=1;
-    SpeedButton14.Down:=true;
+    btnJapaneseMode.Down:=true;
     aJapanese.Checked:=true;
     aChinese.Checked:=false;
-    fUser.SpeedButton1.Caption:=_l('#00329^eJapanese ->English');
-    fUser.SpeedButton2.Caption:=_l('#00330^eEnglish -> Japanese');
+    fUser.btnLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
+    fUser.btnLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
   end else
   begin
     romasys:=fSettings.RadioGroup6.ItemIndex+1;
     showroma:=fSettings.RadioGroup7.ItemIndex=1;
-    SpeedButton13.Down:=true;
+    btnChineseMode.Down:=true;
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
-    fUser.SpeedButton1.Caption:=_l('#00331^eChinese ->English');
-    fUser.SpeedButton2.Caption:=_l('#00332^eEnglish -> Chinese');
+    fUser.btnLookupJtoE.Caption:=_l('#00331^eChinese ->English');
+    fUser.btnLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
   end;
   RescanDicts;
   fKanji.KanjiSearch_SpeedButton20Click(self);
 //  fUser.SpeedButton4.Enabled:=lanchar='j';
-  if (not fUser.SpeedButton3.Enabled) and (fUser.SpeedButton3.Down) then fUser.SpeedButton1.Down:=true;
+  if (not fUser.btnLookupClip.Enabled) and (fUser.btnLookupClip.Down) then fUser.btnLookupJtoE.Down:=true;
   fExamples.ReloadExamples;
   fUser.Look();
   RefreshCategory;
@@ -2715,7 +2715,7 @@ begin
     PaintBox3.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
     if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
-    if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look();
+    if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
   end;
   critsec:=false;
 end;
@@ -2758,7 +2758,7 @@ begin
   fUserAdd.PaintBox2.Invalidate;
 
   if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
-  if (fUser.Visible) and (fUser.SpeedButton3.Down) then fUser.Look();
+  if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
 end;
 
 procedure TfMenu.ArtLabel1Click(Sender: TObject);
@@ -2879,12 +2879,12 @@ begin
   Close;
 end;
 
-procedure TfMenu.SpeedButton14Click(Sender: TObject);
+procedure TfMenu.btnChineseModeClick(Sender: TObject);
 begin
   SwitchLanguage('j');
 end;
 
-procedure TfMenu.SpeedButton13Click(Sender: TObject);
+procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
 begin
   SwitchLanguage('c');
 end;
@@ -2925,7 +2925,7 @@ end;
 
 procedure TfMenu.Action1Execute(Sender: TObject);
 begin
-  fUser.SpeedButton2.Down:=true;
+  fUser.btnLookupEtoJ.Down:=true;
 end;
 
 procedure TfMenu.SpeedButton16Click(Sender: TObject);
@@ -3204,13 +3204,12 @@ end;
 
 procedure TfMenu.aJapaneseExecute(Sender: TObject);
 begin
-  SpeedButton14Click(Sender);
+  btnJapaneseModeClick(Sender);
 end;
-
 
 procedure TfMenu.aChineseExecute(Sender: TObject);
 begin
-  SpeedButton13Click(Sender);
+  btnChineseModeClick(Sender);
 end;
 
 procedure TfMenu.aEditorNewExecute(Sender: TObject);
@@ -3390,25 +3389,25 @@ end;
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
-  fUser.SpeedButton1.Down:=true;
+  fUser.btnLookupJtoE.Down:=true;
 //  fUser.Edit1.Text:='';
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictEnglishExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
-  fUser.SpeedButton2.Down:=true;
+  fUser.btnLookupEtoJ.Down:=true;
 //  fUser.Edit1.Text:='';
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictClipboardExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
-  fUser.SpeedButton3.Down:=true;
+  fUser.btnLookupClip.Down:=true;
 //  fUser.Edit1.Text:='';
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
@@ -3422,7 +3421,7 @@ begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton10.Down:=true;
   dictbeginset:=0;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictBeginningExecute(Sender: TObject);
@@ -3430,7 +3429,7 @@ begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton11.Down:=true;
   dictbeginset:=1;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictEndExecute(Sender: TObject);
@@ -3438,7 +3437,7 @@ begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton12.Down:=true;
   dictbeginset:=2;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aKanjiWindowExecute(Sender: TObject);
@@ -4449,35 +4448,35 @@ procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton4.Down:=not fUser.SpeedButton4.Down;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAutoExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton13.Down:=not fUser.SpeedButton13.Down;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup1Execute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton14.Down:=true;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup2Execute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton15.Down:=true;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup3Execute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton16.Down:=true;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictVoc1Execute(Sender: TObject);
@@ -4549,7 +4548,7 @@ begin
   if not fUser.Visible then aDictExecute(Sender);
   fUser.SpeedButton18.Down:=true;
   dictbeginset:=3;
-  fUser.SpeedButton1Click(Sender);
+  fUser.btnLookupJtoEClick(Sender);
 end;
 
 initialization

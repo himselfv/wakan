@@ -16,9 +16,9 @@ type
 
   TfUser = class(TForm)
     Panel1: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
+    btnLookupJtoE: TSpeedButton;
+    btnLookupEtoJ: TSpeedButton;
+    btnLookupClip: TSpeedButton;
     Shape11: TShape;
     Label16: TLabel;
     SpeedButton5: TSpeedButton;
@@ -57,7 +57,7 @@ type
     procedure WordDetails_PaintBox1Paint(Sender: TObject);
     procedure WordDetails_PaintBox2Paint(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
+    procedure btnLookupJtoEClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton8Click(Sender: TObject);
     procedure SpeedButton5Click(Sender: TObject);
@@ -132,14 +132,14 @@ var curword:integer;
 procedure TfUser.UpdateLookMode;
 var a: integer;
 begin
-  if SpeedButton1.Down then a:=1 else
-    if SpeedButton2.Down then a:=2 else
-    if SpeedButton3.Down then a:=3 else a:=4;
+  if btnLookupJtoE.Down then a:=1 else
+    if btnLookupEtoJ.Down then a:=2 else
+    if btnLookupClip.Down then a:=3 else a:=4;
 
-  if SpeedButton1.Down then dictmodeset:=0;
-  if SpeedButton2.Down then dictmodeset:=1;
-  if SpeedButton3.Down then dictmodeset:=2;
-  if not((SpeedButton1.Down) or (SpeedButton2.Down)) then
+  if btnLookupJtoE.Down then dictmodeset:=0;
+  if btnLookupEtoJ.Down then dictmodeset:=1;
+  if btnLookupClip.Down then dictmodeset:=2;
+  if not((btnLookupJtoE.Down) or (btnLookupEtoJ.Down)) then
   begin
     Edit1.enabled:=false;
     Edit1.Color:=clMenu;
@@ -329,13 +329,13 @@ procedure TfUser.Look();
 var a: TSearchType;
   req: TDicSearchRequest;
 begin
-  if SpeedButton1.Down then
+  if btnLookupJtoE.Down then
     a:=stJp
   else
-  if SpeedButton2.Down then
+  if btnLookupEtoJ.Down then
     a:=stEn
   else
-  if SpeedButton3.Down then
+  if btnLookupClip.Down then
     a:=stClipboard
   else
     a:=stEditorInsert;
@@ -531,7 +531,7 @@ begin
   AnnotShowMedia(curkanji,curphonetic);
 end;
 
-procedure TfUser.SpeedButton1Click(Sender: TObject);
+procedure TfUser.btnLookupJtoEClick(Sender: TObject);
 begin
   UpdateLookMode;
   Look();
