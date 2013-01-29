@@ -15,13 +15,9 @@ type
   PKanjiBox = ^TKanjiBox;
 
   TfWordKanji = class(TForm)
-    BoxShape1: TShape;
     Label2: TLabel;
     Label3: TLabel;
-    PaintBoxK1: TPaintBox;
-    Label8: TLabel;
     Bevel1: TBevel;
-    Shape1: TShape;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure PaintBoxK1Paint(Sender: TObject);
     procedure PaintBoxK1MouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -39,7 +35,7 @@ type
 
   public
     procedure Clear;
-    procedure AddBox(const kanji: string);
+    procedure AddBox(const meaning: string);
     procedure InvalidateBoxes;
 
   end;
@@ -76,7 +72,7 @@ begin
   SetLength(FBoxes, 0);
 end;
 
-procedure TfWordKanji.AddBox(const kanji: string);
+procedure TfWordKanji.AddBox(const meaning: string);
 var idx: integer;
   box: PKanjiBox;
 begin
@@ -89,27 +85,32 @@ begin
   box.sh.Width := 202;
   box.sh.Left := 8;
   box.sh.Top := 26 + 48*idx;
-  box.sh.Tag := idx;
+  box.sh.Tag := idx+1;
+  box.sh.Parent := Self;
 
   box.pb := TPaintBox.Create(Self);
   box.pb.Height := 41;
   box.pb.Width := 89;
   box.pb.Left := 9;
   box.pb.Top := box.sh.Top + 1;
-  box.pb.Tag := idx;
+  box.pb.Tag := idx+1;
   box.pb.OnClick := PaintBoxK1Click;
   box.pb.OnMouseMove := PaintBoxK1MouseMove;
   box.pb.OnMouseUp := PaintBoxK1MouseUp;
   box.pb.OnPaint := PaintBoxK1Paint;
+  box.pb.Parent := Self;
 
   box.lbl := TLabel.Create(Self);
   box.lbl.AutoSize := false;
-  box.lbl.Caption := '';
+  box.lbl.Caption := meaning;
   box.lbl.Height := 41;
-  box.lbl.Width := 89;
-  box.lbl.Left := 121;
+  box.lbl.Width := 125;
+  box.lbl.Left := 85;
   box.lbl.Top := box.sh.Top + 2;
+  box.lbl.Tag := idx+1;
   box.lbl.Transparent := true;
+  box.lbl.WordWrap := true;
+  box.lbl.Parent := Self;
 end;
 
 procedure TfWordKanji.InvalidateBoxes;

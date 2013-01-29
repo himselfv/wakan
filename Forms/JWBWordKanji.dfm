@@ -25,12 +25,6 @@ object fWordKanji: TfWordKanji
     Align = alClient
     Shape = bsFrame
   end
-  object BoxShape1: TShape
-    Left = 8
-    Top = 26
-    Width = 202
-    Height = 43
-  end
   object Label2: TLabel
     Left = 6
     Top = 6
@@ -46,8 +40,8 @@ object fWordKanji: TfWordKanji
     Transparent = True
   end
   object Label3: TLabel
-    Left = 117
-    Top = 7
+    Left = 85
+    Top = 6
     Width = 93
     Height = 13
     Caption = '#00691^eMeaning:'
@@ -58,32 +52,5 @@ object fWordKanji: TfWordKanji
     Font.Style = []
     ParentFont = False
     Transparent = True
-  end
-  object PaintBoxK1: TPaintBox
-    Tag = 1
-    Left = 9
-    Top = 27
-    Width = 89
-    Height = 41
-    OnClick = PaintBoxK1Click
-    OnMouseMove = PaintBoxK1MouseMove
-    OnMouseUp = PaintBoxK1MouseUp
-    OnPaint = PaintBoxK1Paint
-  end
-  object Label8: TLabel
-    Left = 121
-    Top = 28
-    Width = 89
-    Height = 41
-    AutoSize = False
-    Caption = 'Label8'
-    Transparent = True
-    WordWrap = True
-  end
-  object Shape1: TShape
-    Left = 8
-    Top = 74
-    Width = 202
-    Height = 43
   end
 end
