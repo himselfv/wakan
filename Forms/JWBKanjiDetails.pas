@@ -23,14 +23,14 @@ type
   THellspawnStringList = TStringList;
 
   TfKanjiDetails = class(TForm)
-    Shape2: TShape;
     Label1: TLabel;
     RxLabel21: TRxLabel;
-    Shape8: TShape;
-    PaintBox1: TPaintBox;
-    PaintBox2: TPaintBox;
-    Shape10: TShape;
-    PaintBox4: TPaintBox;
+    ShapeKanji: TShape;
+    ShapeRadical: TShape;
+    ShapeSimplified: TShape;
+    pbKanji: TPaintBox;
+    pbRadical: TPaintBox;
+    pbSimplified: TPaintBox;
     RxLabel10: TRxLabel;
     RxLabel35: TRxLabel;
     RxLabel38: TRxLabel;
@@ -38,9 +38,9 @@ type
     SpeedButton21: TSpeedButton;
     RxLabel39: TRxLabel;
     ScrollBox1: TScrollBox;
-    PaintBox3: TPaintBox;
+    pbKanjiInfo: TPaintBox;
     Shape1: TShape;
-    Button1: TButton;
+    btnClose: TButton;
     FormPlacement1: TFormPlacement;
     ProUrlLabel1: TUrlLabel;
     ProUrlLabel2: TUrlLabel;
@@ -48,45 +48,45 @@ type
     ProUrlLabel4: TUrlLabel;
     ProUrlLabel5: TUrlLabel;
     Label2: TLabel;
-    Button2: TButton;
+    btnDock: TButton;
     SpeedButton1: TSpeedButton;
     ComboBox1: TComboBox;
     RxLabel1: TRxLabel;
     Label3: TLabel;
-    procedure PaintBox1Paint(Sender: TObject);
-    procedure PaintBox2Paint(Sender: TObject);
-    procedure PaintBox4Paint(Sender: TObject);
+    procedure pbKanjiPaint(Sender: TObject);
+    procedure pbRadicalPaint(Sender: TObject);
+    procedure pbSimplifiedPaint(Sender: TObject);
     procedure SpeedButton21Click(Sender: TObject);
     procedure SpeedButton28Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton23Click(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
-    procedure PaintBox3Paint(Sender: TObject);
+    procedure pbKanjiInfoPaint(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure PaintBox2DblClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure pbRadicalDblClick(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
-    procedure Button1KeyPress(Sender: TObject; var Key: Char);
-    procedure Button2Click(Sender: TObject);
-    procedure PaintBox2MouseMove(Sender: TObject; Shift: TShiftState; X,
+    procedure btnCloseKeyPress(Sender: TObject; var Key: Char);
+    procedure btnDockClick(Sender: TObject);
+    procedure pbRadicalMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
+    procedure pbKanjiInfoMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure PaintBox4MouseMove(Sender: TObject; Shift: TShiftState; X,
+    procedure pbSimplifiedMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure PaintBox2MouseDown(Sender: TObject; Button: TMouseButton;
+    procedure pbRadicalMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure PaintBox4MouseDown(Sender: TObject; Button: TMouseButton;
+    procedure pbSimplifiedMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure PaintBox3MouseDown(Sender: TObject; Button: TMouseButton;
+    procedure pbKanjiInfoMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ComboBox1Change(Sender: TObject);
-    procedure PaintBox2MouseUp(Sender: TObject; Button: TMouseButton;
+    procedure pbRadicalMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure PaintBox4MouseUp(Sender: TObject; Button: TMouseButton;
+    procedure pbSimplifiedMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
+    procedure pbKanjiInfoMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -148,7 +148,25 @@ begin
   if not CharDetDocked then FormPlacement1.SaveFormPlacement;
 end;
 
-procedure TfKanjiDetails.PaintBox1Paint(Sender: TObject);
+procedure TfKanjiDetails.FormShow(Sender: TObject);
+begin
+  if Visible then fMenu.aKanjiDetails.Checked:=true;
+  if CharDetDocked then
+    btnDock.Caption:=_l('#00172^eUndock')
+  else
+    btnDock.Caption:=_l('#00173^eDock');
+  btnDock.Enabled:=CharDetDocked or (curdisplaymode=1) or (curdisplaymode=3) or
+    (curdisplaymode=4);
+  btnClose.Default:=not CharDetDocked;
+end;
+
+procedure TfKanjiDetails.FormHide(Sender: TObject);
+begin
+  fKanji.btnKanjiDetails.Down:=false;
+  fMenu.aKanjiDetails.Checked:=false;
+end;
+
+procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);
 var f:string;
 begin
   if chin then
@@ -157,31 +175,31 @@ begin
     1:f:=FontChineseGB;
     2:f:=FontRadical;
   end else f:=FontJapanese;
-  if (fKanjiDetails.SpeedButton1.Down) then
+  if (SpeedButton1.Down) then
     if chin then f:=FontChinese else f:=FontStrokeOrder;
-  fKanjiDetails.PaintBox1.Canvas.Brush.Color:=clWindow;
-  fKanjiDetails.PaintBox1.Canvas.Font.Style:=[];
-  DrawUnicode(fKanjiDetails.PaintBox1.Canvas,1,1,137,JWBKanji.curkanji,f);
-  if fKanjiDetails.SpeedButton1.Down then DrawStrokeOrder(fKanjiDetails.PaintBox1.Canvas,1,1,137,137,curkanji,12,clBlue);
+  pbKanji.Canvas.Brush.Color:=clWindow;
+  pbKanji.Canvas.Font.Style:=[];
+  DrawUnicode(pbKanji.Canvas,1,1,137,JWBKanji.curkanji,f);
+  if SpeedButton1.Down then DrawStrokeOrder(pbKanji.Canvas,1,1,137,137,curkanji,12,clBlue);
 end;
 
-procedure TfKanjiDetails.PaintBox2Paint(Sender: TObject);
+procedure TfKanjiDetails.pbRadicalPaint(Sender: TObject);
 var f:string;
 begin
   f:=FontRadical;
-  fKanjiDetails.PaintBox2.Canvas.Brush.Color:=clWindow;
-  fKanjiDetails.PaintBox2.Canvas.Font.Style:=[];
-  BeginDrawReg(fKanjiDetails.PaintBox2);
-  DrawUnicode(fKanjiDetails.PaintBox2.Canvas,1,1,48,curradical,f);
+  pbRadical.Canvas.Brush.Color:=clWindow;
+  pbRadical.Canvas.Font.Style:=[];
+  BeginDrawReg(pbRadical);
+  DrawUnicode(pbRadical.Canvas,1,1,48,curradical,f);
   EndDrawReg;
 end;
 
-procedure TfKanjiDetails.PaintBox4Paint(Sender: TObject);
+procedure TfKanjiDetails.pbSimplifiedPaint(Sender: TObject);
 begin
-  fKanjiDetails.PaintBox4.Canvas.Brush.Color:=clWindow;
-  fKanjiDetails.PaintBox4.Canvas.Font.Style:=[];
-  BeginDrawReg(fKanjiDetails.PaintBox4);
-  DrawUnicode(fKanjiDetails.PaintBox4.Canvas,1,1,48,cursimple,FontRadical);
+  pbSimplified.Canvas.Brush.Color:=clWindow;
+  pbSimplified.Canvas.Font.Style:=[];
+  BeginDrawReg(pbSimplified);
+  DrawUnicode(pbSimplified.Canvas,1,1,48,cursimple,FontRadical);
   EndDrawReg;
 end;
 
@@ -190,11 +208,11 @@ procedure TfKanjiDetails.SpeedButton21Click(Sender: TObject);
 var catIndex: integer;
 begin
   if curkanji<>'' then begin
-    catIndex := GetSelCatIdx(fKanjiDetails.ComboBox1);
+    catIndex := GetSelCatIdx(ComboBox1);
     SetKnown(catIndex, curkanji, not IsKnown(catIndex,curkanji));
   end;
   fMenu.ChangeUserData;
-  fKanjiDetails.SetCharDetails(curkanji);
+  SetCharDetails(curkanji);
 end;
 
 procedure TfKanjiDetails.SpeedButton28Click(Sender: TObject);
@@ -212,38 +230,22 @@ end;
 
 procedure TfKanjiDetails.SpeedButton1Click(Sender: TObject);
 begin
-  PaintBox1.Invalidate;
+  pbKanji.Invalidate;
 end;
 
-procedure TfKanjiDetails.PaintBox3Paint(Sender: TObject);
+procedure TfKanjiDetails.pbKanjiInfoPaint(Sender: TObject);
 begin
-  BeginDrawReg(PaintBox3);
-  InfoPaint(PaintBox3.Canvas,PaintBox3.Width,false);
+  BeginDrawReg(pbKanjiInfo);
+  InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,false);
   EndDrawReg;
 end;
 
-procedure TfKanjiDetails.FormShow(Sender: TObject);
-begin
-  if Visible then fMenu.aKanjiDetails.Checked:=true;
-  if CharDetDocked then Button2.Caption:=_l('#00172^eUndock') else
-    Button2.Caption:=_l('#00173^eDock');
-  Button2.Enabled:=CharDetDocked or (curdisplaymode=1) or (curdisplaymode=3) or
-    (curdisplaymode=4);
-  Button1.Default:=not CharDetDocked;
-end;
-
-procedure TfKanjiDetails.FormHide(Sender: TObject);
-begin
-  fKanji.btnKanjiDetails.Down:=false;
-  fMenu.aKanjiDetails.Checked:=false;
-end;
-
-procedure TfKanjiDetails.PaintBox2DblClick(Sender: TObject);
+procedure TfKanjiDetails.pbRadicalDblClick(Sender: TObject);
 begin
   fKanji.SelRadical;
 end;
 
-procedure TfKanjiDetails.Button1Click(Sender: TObject);
+procedure TfKanjiDetails.btnCloseClick(Sender: TObject);
 begin
   if CharDetDocked then fMenu.aKanjiDetails.Execute else Close;
 end;
@@ -253,12 +255,12 @@ begin
   if key=#27 then CLose;
 end;
 
-procedure TfKanjiDetails.Button1KeyPress(Sender: TObject; var Key: Char);
+procedure TfKanjiDetails.btnCloseKeyPress(Sender: TObject; var Key: Char);
 begin
   if key=#27 then CLose;
 end;
 
-procedure TfKanjiDetails.Button2Click(Sender: TObject);
+procedure TfKanjiDetails.btnDockClick(Sender: TObject);
 begin
   if CharDetDocked then
   begin
@@ -275,37 +277,37 @@ begin
   end;
 end;
 
-procedure TfKanjiDetails.PaintBox2MouseMove(Sender: TObject;
+procedure TfKanjiDetails.pbRadicalMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(PaintBox2,x,y,ssLeft in Shift);
+  fMenu.IntTipPaintOver(pbRadical,x,y,ssLeft in Shift);
 end;
 
-procedure TfKanjiDetails.PaintBox3MouseMove(Sender: TObject;
+procedure TfKanjiDetails.pbKanjiInfoMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(PaintBox3,x,y,ssLeft in Shift);
+  fMenu.IntTipPaintOver(pbKanjiInfo,x,y,ssLeft in Shift);
 end;
 
-procedure TfKanjiDetails.PaintBox4MouseMove(Sender: TObject;
+procedure TfKanjiDetails.pbSimplifiedMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(PaintBox4,x,y,ssLeft in Shift);
+  fMenu.IntTipPaintOver(pbSimplified,x,y,ssLeft in Shift);
 end;
 
-procedure TfKanjiDetails.PaintBox2MouseDown(Sender: TObject;
+procedure TfKanjiDetails.pbRadicalMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
-procedure TfKanjiDetails.PaintBox4MouseDown(Sender: TObject;
+procedure TfKanjiDetails.pbSimplifiedMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
-procedure TfKanjiDetails.PaintBox3MouseDown(Sender: TObject;
+procedure TfKanjiDetails.pbKanjiInfoMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
@@ -316,19 +318,19 @@ begin
   fKanji.RefreshDetails;
 end;
 
-procedure TfKanjiDetails.PaintBox2MouseUp(Sender: TObject;
+procedure TfKanjiDetails.pbRadicalMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
 end;
 
-procedure TfKanjiDetails.PaintBox4MouseUp(Sender: TObject;
+procedure TfKanjiDetails.pbSimplifiedMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
 end;
 
-procedure TfKanjiDetails.PaintBox3MouseUp(Sender: TObject;
+procedure TfKanjiDetails.pbKanjiInfoMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
@@ -365,12 +367,12 @@ begin
   curkanji:=UH_NOCHAR;
   curradical:='';
   cursimple:='';
-  PaintBox1.Invalidate;
-  PaintBox2.Invalidate;
-  PaintBox3.Invalidate;
+  pbKanji.Invalidate;
+  pbRadical.Invalidate;
+  pbKanjiInfo.Invalidate;
   RxLabel35.Hide;
-  PaintBox4.Hide;
-  Shape10.Hide;
+  pbSimplified.Hide;
+  ShapeSimplified.Hide;
   Label1.Caption:='-';
   kix:=unicode;
 
@@ -442,8 +444,8 @@ begin
       cursimple:=hextofstr(charval);
       RxLabel35.Caption:=_l('#00135^eSimplified:');
       RxLabel35.Show;
-      PaintBox4.Show;
-      Shape10.Show;
+      pbSimplified.Show;
+      ShapeSimplified.Show;
     end else begin
       charval := fMenu.GetCharValue(CChar.Int(TCharIndex),44);
       if charval<>'' then
@@ -451,14 +453,14 @@ begin
         cursimple:=hextofstr(charval);
         RxLabel35.Caption:=_l('#00136^eTraditional:');
         RxLabel35.Show;
-        PaintBox4.Show;
-        Shape10.Show;
+        pbSimplified.Show;
+        ShapeSimplified.Show;
       end else
       begin
         cursimple:='';
         RxLabel35.Hide;
-        PaintBox4.Hide;
-        Shape10.Hide;
+        pbSimplified.Hide;
+        ShapeSimplified.Hide;
       end;
     end;
 
@@ -526,8 +528,8 @@ begin
   end;
 
  { Repaint }
-  h:=InfoPaint(PaintBox3.Canvas,PaintBox3.Width,true);
-  PaintBox3.Height:=h;
+  h:=InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,true);
+  pbKanjiInfo.Height:=h;
   Screen.Cursor:=crDefault;
 end;
 

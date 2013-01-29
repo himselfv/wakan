@@ -30,14 +30,14 @@ type
     edtJouyou: TEdit;
     sbListRadicals: TSpeedButton;
     Bevel1: TBevel;
-    SpeedButton9: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    SpeedButton11: TSpeedButton;
-    SpeedButton13: TSpeedButton;
-    SpeedButton15: TSpeedButton;
-    SpeedButton17: TSpeedButton;
-    SpeedButton21: TSpeedButton;
-    SpeedButton23: TSpeedButton;
+    sbStrokeCountMinus: TSpeedButton;
+    sbStrokeCountPlus: TSpeedButton;
+    sbStrokeCountExpand: TSpeedButton;
+    sbStrokeCountShrink: TSpeedButton;
+    sbJouyouMinus: TSpeedButton;
+    sbJouyouPlus: TSpeedButton;
+    sbJouyouExpand: TSpeedButton;
+    sbJouyouShrink: TSpeedButton;
     rgSortBy: TRadioGroup;
     Bevel3: TBevel;
     cbOtherType: TComboBox;
@@ -63,14 +63,14 @@ type
     procedure SpeedButton19Click(Sender: TObject);
     procedure sbListRadicalsClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SpeedButton10Click(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton11Click(Sender: TObject);
-    procedure SpeedButton13Click(Sender: TObject);
-    procedure SpeedButton17Click(Sender: TObject);
-    procedure SpeedButton15Click(Sender: TObject);
-    procedure SpeedButton21Click(Sender: TObject);
-    procedure SpeedButton23Click(Sender: TObject);
+    procedure sbStrokeCountPlusClick(Sender: TObject);
+    procedure sbStrokeCountMinusClick(Sender: TObject);
+    procedure sbStrokeCountExpandClick(Sender: TObject);
+    procedure sbStrokeCountShrinkClick(Sender: TObject);
+    procedure sbJouyouPlusClick(Sender: TObject);
+    procedure sbJouyouMinusClick(Sender: TObject);
+    procedure sbJouyouExpandClick(Sender: TObject);
+    procedure sbJouyouShrinkClick(Sender: TObject);
     procedure rgSortByClick(Sender: TObject);
     procedure cbOtherTypeChange(Sender: TObject);
     procedure pbRadicalsPaint(Sender: TObject);
@@ -292,42 +292,42 @@ begin
   result:=otx;
 end;
 
-procedure TfKanjiSearch.SpeedButton10Click(Sender: TObject);
+procedure TfKanjiSearch.sbStrokeCountPlusClick(Sender: TObject);
 begin
   edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,1,1);
 end;
 
-procedure TfKanjiSearch.SpeedButton9Click(Sender: TObject);
+procedure TfKanjiSearch.sbStrokeCountMinusClick(Sender: TObject);
 begin
   edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,-1,-1);
 end;
 
-procedure TfKanjiSearch.SpeedButton11Click(Sender: TObject);
+procedure TfKanjiSearch.sbStrokeCountExpandClick(Sender: TObject);
 begin
   edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,-1,1);
 end;
 
-procedure TfKanjiSearch.SpeedButton13Click(Sender: TObject);
+procedure TfKanjiSearch.sbStrokeCountShrinkClick(Sender: TObject);
 begin
   edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,1,-1);
 end;
 
-procedure TfKanjiSearch.SpeedButton17Click(Sender: TObject);
+procedure TfKanjiSearch.sbJouyouPlusClick(Sender: TObject);
 begin
   edtJouyou.text:=OffsetRange(edtJouyou.text,1,1);
 end;
 
-procedure TfKanjiSearch.SpeedButton15Click(Sender: TObject);
+procedure TfKanjiSearch.sbJouyouMinusClick(Sender: TObject);
 begin
   edtJouyou.text:=OffsetRange(edtJouyou.text,-1,-1);
 end;
 
-procedure TfKanjiSearch.SpeedButton21Click(Sender: TObject);
+procedure TfKanjiSearch.sbJouyouExpandClick(Sender: TObject);
 begin
   edtJouyou.text:=OffsetRange(edtJouyou.text,-1,1);
 end;
 
-procedure TfKanjiSearch.SpeedButton23Click(Sender: TObject);
+procedure TfKanjiSearch.sbJouyouShrinkClick(Sender: TObject);
 begin
   edtJouyou.text:=OffsetRange(edtJouyou.text,1,-1);
 end;

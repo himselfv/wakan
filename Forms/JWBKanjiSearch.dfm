@@ -255,77 +255,77 @@ object fKanjiSearch: TfKanjiSearch
     ParentFont = False
     OnClick = sbListRadicalsClick
   end
-  object SpeedButton9: TSpeedButton
+  object sbStrokeCountMinus: TSpeedButton
     Left = 243
     Top = 80
     Width = 17
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '-'
-    OnClick = SpeedButton9Click
+    OnClick = sbStrokeCountMinusClick
   end
-  object SpeedButton10: TSpeedButton
+  object sbStrokeCountPlus: TSpeedButton
     Left = 226
     Top = 80
     Width = 17
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '+'
-    OnClick = SpeedButton10Click
+    OnClick = sbStrokeCountPlusClick
   end
-  object SpeedButton11: TSpeedButton
+  object sbStrokeCountExpand: TSpeedButton
     Left = 260
     Top = 80
     Width = 22
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '-/+'
-    OnClick = SpeedButton11Click
+    OnClick = sbStrokeCountExpandClick
   end
-  object SpeedButton13: TSpeedButton
+  object sbStrokeCountShrink: TSpeedButton
     Left = 282
     Top = 80
     Width = 22
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '+/-'
-    OnClick = SpeedButton13Click
+    OnClick = sbStrokeCountShrinkClick
   end
-  object SpeedButton15: TSpeedButton
+  object sbJouyouMinus: TSpeedButton
     Left = 243
     Top = 152
     Width = 17
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '-'
-    OnClick = SpeedButton15Click
+    OnClick = sbJouyouMinusClick
   end
-  object SpeedButton17: TSpeedButton
+  object sbJouyouPlus: TSpeedButton
     Left = 226
     Top = 152
     Width = 17
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '+'
-    OnClick = SpeedButton17Click
+    OnClick = sbJouyouPlusClick
   end
-  object SpeedButton21: TSpeedButton
+  object sbJouyouExpand: TSpeedButton
     Left = 260
     Top = 152
     Width = 22
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '-/+'
-    OnClick = SpeedButton21Click
+    OnClick = sbJouyouExpandClick
   end
-  object SpeedButton23: TSpeedButton
+  object sbJouyouShrink: TSpeedButton
     Left = 282
     Top = 152
     Width = 22
     Height = 22
     Anchors = [akTop, akRight]
     Caption = '+/-'
-    OnClick = SpeedButton23Click
+    OnClick = sbJouyouShrinkClick
   end
   object Bevel3: TBevel
     Left = 473

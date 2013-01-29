@@ -34,7 +34,7 @@ object fKanjiDetails: TfKanjiDetails
     Height = 162
     Anchors = [akLeft, akTop, akRight, akBottom]
   end
-  object Shape2: TShape
+  object ShapeKanji: TShape
     Left = 6
     Top = 8
     Width = 153
@@ -72,51 +72,51 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Visible = False
   end
-  object Shape8: TShape
+  object ShapeRadical: TShape
     Left = 166
     Top = 24
     Width = 65
     Height = 65
     Brush.Color = clWindow
   end
-  object PaintBox1: TPaintBox
+  object pbKanji: TPaintBox
     Left = 14
     Top = 16
     Width = 137
     Height = 137
     Color = clBtnFace
     ParentColor = False
-    OnPaint = PaintBox1Paint
+    OnPaint = pbKanjiPaint
   end
-  object PaintBox2: TPaintBox
+  object pbRadical: TPaintBox
     Left = 174
     Top = 32
     Width = 49
     Height = 49
     Color = clBtnFace
     ParentColor = False
-    OnDblClick = PaintBox2DblClick
-    OnMouseDown = PaintBox2MouseDown
-    OnMouseMove = PaintBox2MouseMove
-    OnMouseUp = PaintBox2MouseUp
-    OnPaint = PaintBox2Paint
+    OnDblClick = pbRadicalDblClick
+    OnMouseDown = pbRadicalMouseDown
+    OnMouseMove = pbRadicalMouseMove
+    OnMouseUp = pbRadicalMouseUp
+    OnPaint = pbRadicalPaint
   end
-  object Shape10: TShape
+  object ShapeSimplified: TShape
     Left = 254
     Top = 24
     Width = 65
     Height = 65
     Brush.Color = clWindow
   end
-  object PaintBox4: TPaintBox
+  object pbSimplified: TPaintBox
     Left = 262
     Top = 32
     Width = 49
     Height = 49
-    OnMouseDown = PaintBox4MouseDown
-    OnMouseMove = PaintBox4MouseMove
-    OnMouseUp = PaintBox4MouseUp
-    OnPaint = PaintBox4Paint
+    OnMouseDown = pbSimplifiedMouseDown
+    OnMouseMove = pbSimplifiedMouseMove
+    OnMouseUp = pbSimplifiedMouseUp
+    OnPaint = pbSimplifiedPaint
   end
   object RxLabel10: TRxLabel
     Left = 166
@@ -363,18 +363,18 @@ object fKanjiDetails: TfKanjiDetails
     Anchors = [akLeft, akTop, akRight, akBottom]
     BorderStyle = bsNone
     TabOrder = 0
-    object PaintBox3: TPaintBox
+    object pbKanjiInfo: TPaintBox
       Left = 0
       Top = -250
       Width = 295
       Height = 800
-      OnMouseDown = PaintBox3MouseDown
-      OnMouseMove = PaintBox3MouseMove
-      OnMouseUp = PaintBox3MouseUp
-      OnPaint = PaintBox3Paint
+      OnMouseDown = pbKanjiInfoMouseDown
+      OnMouseMove = pbKanjiInfoMouseMove
+      OnMouseUp = pbKanjiInfoMouseUp
+      OnPaint = pbKanjiInfoPaint
     end
   end
-  object Button1: TButton
+  object btnClose: TButton
     Left = 6
     Top = 390
     Width = 225
@@ -383,10 +383,10 @@ object fKanjiDetails: TfKanjiDetails
     Caption = '#00170^eClose'
     Default = True
     TabOrder = 1
-    OnClick = Button1Click
-    OnKeyPress = Button1KeyPress
+    OnClick = btnCloseClick
+    OnKeyPress = btnCloseKeyPress
   end
-  object Button2: TButton
+  object btnDock: TButton
     Left = 237
     Top = 390
     Width = 75
@@ -395,7 +395,7 @@ object fKanjiDetails: TfKanjiDetails
     Anchors = [akRight, akBottom]
     Caption = 'DOCK'
     TabOrder = 2
-    OnClick = Button2Click
+    OnClick = btnDockClick
   end
   object ComboBox1: TComboBox
     Left = 168

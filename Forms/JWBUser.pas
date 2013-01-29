@@ -425,8 +425,7 @@ end;
 
 
 procedure TfUser.ShowWord;
-var ki:integer;
-    s,s2,s3:string;
+var s,s2,s3:string;
     radf:integer;
     sl:TStringList;
     i:integer;
@@ -446,33 +445,7 @@ begin
   fWordCategory.Label12.Caption:='-';
   fWordCategory.Label13.Caption:='-';
   fWordCategory.Label14.Caption:='-';
-  fWordKanji.Label8.Caption:='';
-  fWordKanji.Label9.Caption:='';
-  fWordKanji.Label10.Caption:='';
-  fWordKanji.Label1.Caption:='';
-  fWordKanji.Label4.Caption:='';
-  fWordKanji.Label5.Caption:='';
-  fWordKanji.Label6.Caption:='';
-  fWordKanji.Label7.Caption:='';
-  fWordKanji.Label11.Caption:='';
-  fWordKanji.Shape4.Visible:=false;
-  fWordKanji.Shape6.Visible:=false;
-  fWordKanji.Shape8.Visible:=false;
-  fWordKanji.Shape3.Visible:=false;
-  fWordKanji.Shape2.Visible:=false;
-  fWordKanji.Shape1.Visible:=false;
-  fWordKanji.Shape9.Visible:=false;
-  fWordKanji.Shape7.Visible:=false;
-  fWordKanji.Shape5.Visible:=false;
-  fWordKanji.PaintBoxK1.Visible:=false;
-  fWordKanji.PaintBoxK2.Visible:=false;
-  fWordKanji.PaintBoxK3.Visible:=false;
-  fWordKanji.PaintBoxK4.Visible:=false;
-  fWordKanji.PaintBoxK5.Visible:=false;
-  fWordKanji.PaintBoxK6.Visible:=false;
-  fWordKanji.PaintBoxK7.Visible:=false;
-  fWordKanji.PaintBoxK8.Visible:=false;
-  fWordKanji.PaintBoxK9.Visible:=false;
+  fWordKanji.Clear;
   if curword<>0 then
   begin
     curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
@@ -485,7 +458,6 @@ begin
     SpeedButton17.Enabled:=true;
     btnCopyToClipboard.Enabled:=true;
     fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary');
-    ki:=0;
     s:=remexcl(curkanji);
     SetLength(curkanjid,0);
     while flength(s)>0 do
@@ -494,7 +466,6 @@ begin
       fdelete(s,1,1);
       if TChar.Locate('Unicode',s2) then
       begin
-        inc(ki);
         radf:=fSettings.ComboBox1.ItemIndex+12;
         if TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)) then
         begin
@@ -531,17 +502,7 @@ begin
             TCharRead.Next;
           end;
           delete(s3,1,2);
-          case ki of
-            1:fWordKanji.Label8.Caption:=s3;
-            2:fWordKanji.Label9.Caption:=s3;
-            3:fWordKanji.Label10.Caption:=s3;
-            4:fWordKanji.Label1.Caption:=s3;
-            5:fWordKanji.Label4.Caption:=s3;
-            6:fWordKanji.Label5.Caption:=s3;
-            7:fWordKanji.Label6.Caption:=s3;
-            8:fWordKanji.Label7.Caption:=s3;
-            9:fWordKanji.Label11.Caption:=s3;
-          end;
+          fWordKanji.AddBox(s3);
         end;
       end;
     end;
@@ -562,37 +523,11 @@ begin
       for i:=0 to sl.Count-1 do if s='' then s:=sl[i] else s:=s+', '+sl[i];
       fWordCategory.Label55.Caption:=s;
     end;
-    if ki<1 then fWordKanji.Shape4.Visible:=false else fWordKanji.Shape4.Visible:=true;
-    if ki<2 then fWordKanji.Shape6.Visible:=false else fWordKanji.Shape6.Visible:=true;
-    if ki<3 then fWordKanji.Shape8.Visible:=false else fWordKanji.Shape8.Visible:=true;
-    if ki<4 then fWordKanji.Shape3.Visible:=false else fWordKanji.Shape3.Visible:=true;
-    if ki<5 then fWordKanji.Shape2.Visible:=false else fWordKanji.Shape2.Visible:=true;
-    if ki<6 then fWordKanji.Shape1.Visible:=false else fWordKanji.Shape1.Visible:=true;
-    if ki<7 then fWordKanji.Shape9.Visible:=false else fWordKanji.Shape9.Visible:=true;
-    if ki<8 then fWordKanji.Shape7.Visible:=false else fWordKanji.Shape7.Visible:=true;
-    if ki<9 then fWordKanji.Shape5.Visible:=false else fWordKanji.Shape5.Visible:=true;
-    if ki<1 then fWordKanji.PaintBoxK1.Visible:=false else fWordKanji.PaintBoxK1.Visible:=true;
-    if ki<2 then fWordKanji.PaintBoxK2.Visible:=false else fWordKanji.PaintBoxK2.Visible:=true;
-    if ki<3 then fWordKanji.PaintBoxK3.Visible:=false else fWordKanji.PaintBoxK3.Visible:=true;
-    if ki<4 then fWordKanji.PaintBoxK4.Visible:=false else fWordKanji.PaintBoxK4.Visible:=true;
-    if ki<5 then fWordKanji.PaintBoxK5.Visible:=false else fWordKanji.PaintBoxK5.Visible:=true;
-    if ki<6 then fWordKanji.PaintBoxK6.Visible:=false else fWordKanji.PaintBoxK6.Visible:=true;
-    if ki<7 then fWordKanji.PaintBoxK7.Visible:=false else fWordKanji.PaintBoxK7.Visible:=true;
-    if ki<8 then fWordKanji.PaintBoxK8.Visible:=false else fWordKanji.PaintBoxK8.Visible:=true;
-    if ki<9 then fWordKanji.PaintBoxK9.Visible:=false else fWordKanji.PaintBoxK9.Visible:=true;
   end else fExamples.SetExamples('');
   fWordDetails.PaintBox1.Invalidate;
   fWordDetails.PaintBox2.Invalidate;
   fWordDetails.PaintBox5.Invalidate;
-  fWordKanji.PaintBoxK1.Invalidate;
-  fWordKanji.PaintBoxK2.Invalidate;
-  fWordKanji.PaintBoxK3.Invalidate;
-  fWordKanji.PaintBoxK4.Invalidate;
-  fWordKanji.PaintBoxK5.Invalidate;
-  fWordKanji.PaintBoxK6.Invalidate;
-  fWordKanji.PaintBoxK7.Invalidate;
-  fWordKanji.PaintBoxK8.Invalidate;
-  fWordKanji.PaintBoxK9.Invalidate;
+  fWordKanji.InvalidateBoxes;
   AnnotShowMedia(curkanji,curphonetic);
 end;
 

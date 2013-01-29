@@ -7,37 +7,21 @@ uses
   ExtCtrls, StdCtrls, Buttons;
 
 type
+  TKanjiBox = record
+    lbl: TLabel;
+    sh: TShape;
+    pb: TPaintBox;
+  end;
+  PKanjiBox = ^TKanjiBox;
+
   TfWordKanji = class(TForm)
-    Shape8: TShape;
-    Shape6: TShape;
-    Shape4: TShape;
+    BoxShape1: TShape;
     Label2: TLabel;
     Label3: TLabel;
     PaintBoxK1: TPaintBox;
-    PaintBoxK2: TPaintBox;
-    PaintBoxK3: TPaintBox;
     Label8: TLabel;
-    Label9: TLabel;
-    Label10: TLabel;
     Bevel1: TBevel;
     Shape1: TShape;
-    Shape2: TShape;
-    Shape3: TShape;
-    PaintBoxK4: TPaintBox;
-    PaintBoxK5: TPaintBox;
-    PaintBoxK6: TPaintBox;
-    Label1: TLabel;
-    Label4: TLabel;
-    Label5: TLabel;
-    Shape5: TShape;
-    Shape7: TShape;
-    Shape9: TShape;
-    PaintBoxK7: TPaintBox;
-    PaintBoxK8: TPaintBox;
-    PaintBoxK9: TPaintBox;
-    Label6: TLabel;
-    Label7: TLabel;
-    Label11: TLabel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure PaintBoxK1Paint(Sender: TObject);
     procedure PaintBoxK1MouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -45,8 +29,18 @@ type
     procedure PaintBoxK1Click(Sender: TObject);
     procedure PaintBoxK1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure FormDestroy(Sender: TObject);
+
   protected
     procedure WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
+
+  protected
+    FBoxes: array of TKanjiBox;
+
+  public
+    procedure Clear;
+    procedure AddBox(const kanji: string);
+    procedure InvalidateBoxes;
 
   end;
 
@@ -59,10 +53,70 @@ uses JWBUnit, JWBUser, JWBMenu;
 
 {$R *.DFM}
 
+procedure TfWordKanji.FormDestroy(Sender: TObject);
+begin
+  Clear;
+end;
+
 procedure TfWordKanji.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   fUser.SpeedButton6.Down:=false;
   fMenu.aDictKanji.Checked:=false;
+end;
+
+//Hides all kanji boxes
+procedure TfWordKanji.Clear;
+var i: integer;
+begin
+  for i := Length(FBoxes) - 1 downto 0 do begin
+    FreeAndNil(FBoxes[i].lbl);
+    FreeAndNil(FBoxes[i].sh);
+    FreeAndNil(FBoxes[i].pb);
+  end;
+  SetLength(FBoxes, 0);
+end;
+
+procedure TfWordKanji.AddBox(const kanji: string);
+var idx: integer;
+  box: PKanjiBox;
+begin
+  idx := Length(FBoxes);
+  SetLength(FBoxes, idx+1);
+  box := @FBoxes[idx];
+
+  box.sh := TShape.Create(Self);
+  box.sh.Height := 43;
+  box.sh.Width := 202;
+  box.sh.Left := 8;
+  box.sh.Top := 26 + 48*idx;
+  box.sh.Tag := idx;
+
+  box.pb := TPaintBox.Create(Self);
+  box.pb.Height := 41;
+  box.pb.Width := 89;
+  box.pb.Left := 9;
+  box.pb.Top := box.sh.Top + 1;
+  box.pb.Tag := idx;
+  box.pb.OnClick := PaintBoxK1Click;
+  box.pb.OnMouseMove := PaintBoxK1MouseMove;
+  box.pb.OnMouseUp := PaintBoxK1MouseUp;
+  box.pb.OnPaint := PaintBoxK1Paint;
+
+  box.lbl := TLabel.Create(Self);
+  box.lbl.AutoSize := false;
+  box.lbl.Caption := '';
+  box.lbl.Height := 41;
+  box.lbl.Width := 89;
+  box.lbl.Left := 121;
+  box.lbl.Top := box.sh.Top + 2;
+  box.lbl.Transparent := true;
+end;
+
+procedure TfWordKanji.InvalidateBoxes;
+var i: integer;
+begin
+  for i := 0 to Length(FBoxes) - 1 do
+    FBoxes[i].pb.Invalidate;
 end;
 
 procedure TfWordKanji.PaintBoxK1Click(Sender: TObject);
