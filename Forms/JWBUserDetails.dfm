@@ -285,8 +285,6 @@ object fUserDetails: TfUserDetails
     ParentFont = False
     TabOrder = 0
     OnClick = btnDeleteClick
-    ExplicitLeft = 779
-    ExplicitTop = 178
   end
   object btnSaveMeaning: TButton
     Left = 441
@@ -324,7 +322,6 @@ object fUserDetails: TfUserDetails
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 0
       OnChange = cbAddCategoryChange
-      ExplicitWidth = 182
     end
     object btnAddToCategory: TButton
       Left = 105
@@ -341,7 +338,6 @@ object fUserDetails: TfUserDetails
       ParentFont = False
       TabOrder = 1
       OnClick = btnAddToCategoryClick
-      ExplicitLeft = 191
     end
     object lbCategories: TListBox
       Left = 8
@@ -351,8 +347,6 @@ object fUserDetails: TfUserDetails
       Anchors = [akLeft, akTop, akRight, akBottom]
       ItemHeight = 13
       TabOrder = 2
-      ExplicitWidth = 240
-      ExplicitHeight = 75
     end
     object btnRemoveFromCategory: TButton
       Left = 105
@@ -369,8 +363,6 @@ object fUserDetails: TfUserDetails
       ParentFont = False
       TabOrder = 3
       OnClick = btnRemoveFromCategoryClick
-      ExplicitLeft = 191
-      ExplicitTop = 122
     end
   end
   object GroupBox1: TGroupBox

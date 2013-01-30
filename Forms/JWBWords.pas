@@ -43,7 +43,6 @@ type
     procedure Button10Click(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
-    procedure UserDetails_Button13Click(Sender: TObject);
     procedure Button14Click(Sender: TObject);
     procedure Button11Click(Sender: TObject);
     procedure Button12Click(Sender: TObject);
@@ -70,6 +69,7 @@ type
     procedure SetWordsLearnState(ls: integer);
     procedure AddWordsToCategory(category: string);
     procedure MoveWordsInCategory(moveDir: TMoveDirection);
+    procedure RemoveWordsFromCategory();
     procedure DeleteWords();
 
   protected
@@ -93,11 +93,11 @@ type
     procedure PrintWordList;
     procedure SaveWordList;
     procedure UpdateWordListStats;
-    procedure SetGroupStatus(st:integer);
     procedure SearchWord(wordind:integer);
     procedure BuildStrokeOrderPackage(sourceCsv: string);
 
   public
+    curword:integer; //selected word ID, or -1 if not selected/multiple selected
     curphonetic:string;
     curkanji:string;
 
@@ -105,6 +105,10 @@ type
 
 var
   fWords: TfWords;
+
+const
+  eWordNotLocated='INTERNAL ERROR. WORD NOT LOCATED'; //wakan likes this string
+
 
 implementation
 
@@ -950,9 +954,8 @@ begin
   CanSelect:=true;
 end;
 
-procedure TfWords.UserDetails_Button13Click(Sender: TObject);
+procedure TfWords.RemoveWordsFromCategory;
 var i:integer;
-  s:string;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
     if Application.MessageBox(
@@ -962,9 +965,8 @@ begin
       MB_ICONWARNING or MB_YESNO)=idNo then exit;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
-    s:=wl[i-1];
-    lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    lastwordind:=strtoint(wl[i-1]);
+    if not TUser.Locate('Index',lastwordind) then raise Exception.Create(eWordNotLocated);
     RemoveWordFromCategory(lastwordind, fUserDetails.lbCategories.Items[fUserDetails.lbCategories.ItemIndex]);
   end;
   fMenu.ChangeUserData;
@@ -1106,22 +1108,32 @@ end;
     1 - unlearned
     2 - learned
     3 - mastered }
-procedure TfWords.SetWordsLearnState(ls: integer);
+procedure SetWordLearnState(WordId: integer; LearnState: integer);
 var max_ls: integer;
 begin
-  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
-  begin
-    SetGroupStatus(ls);
-    exit;
-  end;
+  if not TUser.Locate('Index',wordId) then raise Exception.Create(eWordNotLocated);
   max_ls := TUser.Int(TUserMaxScore);
-  if ls>max_ls then max_ls:=ls;
-  case ls of
-    2: TUser.Edit([TUserScore,TUserMaxScore,TUserLearned],[inttostr(ls),inttostr(max_ls),FormatDateTime('yyyymmdd',now)]);
-    3: TUser.Edit([TUserScore,TUserMaxScore,TUserMastered],[inttostr(ls),inttostr(max_ls),FormatDateTime('yyyymmdd',now)]);
+  if LearnState>max_ls then max_ls:=LearnState;
+  case LearnState of
+    2: TUser.Edit([TUserScore,TUserMaxScore,TUserLearned],[inttostr(LearnState),inttostr(max_ls),FormatDateTime('yyyymmdd',now)]);
+    3: TUser.Edit([TUserScore,TUserMaxScore,TUserMastered],[inttostr(LearnState),inttostr(max_ls),FormatDateTime('yyyymmdd',now)]);
   else
-    TUser.Edit([TUserScore,TUserMaxScore],[inttostr(ls),inttostr(max_ls)]);
+    TUser.Edit([TUserScore,TUserMaxScore],[inttostr(LearnState),inttostr(max_ls)]);
   end;
+end;
+
+procedure TfWords.SetWordsLearnState(ls: integer);
+var i: integer;
+begin
+  if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
+    if Application.MessageBox(
+      pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?')),
+      pchar(_l('#00926^eWarning')),
+      MB_ICONWARNING or MB_YESNO)=idNo then exit;
+
+  for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
+    setWordLearnState({WordId=}strtoint(wl[i-1]), {LearnState=}ls);
+
   StringGrid1Click(self);
   fMenu.UserDataChanged := true;
   ShowIt(false);
@@ -1129,7 +1141,6 @@ end;
 
 procedure TfWords.AddWordsToCategory(category: string);
 var i:integer;
-    s:string;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
     if Application.MessageBox(
@@ -1139,9 +1150,8 @@ begin
       MB_ICONWARNING or MB_YESNO)=idNo then exit;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
-    s:=wl[i-1];
-    lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    lastwordind:=strtoint(wl[i-1]);
+    if not TUser.Locate('Index',lastwordind) then raise Exception.Create(eWordNotLocated);
     AddWord(
       TUser.Str(TUserKanji),
       TUser.Str(TUserPhonetic),
@@ -1218,7 +1228,6 @@ end;
 
 procedure TfWords.DeleteWords();
 var i:integer;
-    s:string;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
   begin
@@ -1236,9 +1245,8 @@ begin
   end;
   for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
   begin
-    s:=wl[i-1];
-    lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+    lastwordind:=strtoint(wl[i-1]);
+    if not TUser.Locate('Index',lastwordind) then raise Exception.Create(eWordNotLocated);
     TUserIdx.First;
     while not TUserIdx.EOF do
     begin
@@ -2366,6 +2374,7 @@ begin
   if StringGrid1.Selection.Bottom-StringGrid1.Selection.Top>0 then
   begin
     Reset;
+    curword:=-1;
     curkanji:=fstr(_l('#00928^e<multiple words>'));
     fUserDetails.ClearCategories;
     for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
@@ -2375,7 +2384,8 @@ begin
   end;
 //  Reset;
   lastwordind:=strtoint(wl[StringGrid1.Row-1]);
-  if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
+  if not TUser.Locate('Index',lastwordind) then raise Exception.Create(eWordNotLocated);
+  curword:=lastwordind;
   curkanji:=TUser.Str(TUserKanji);
   curphonetic:=TUser.Str(TUserPhonetic);
   fExamples.SetExamples(curkanji);
@@ -2388,27 +2398,6 @@ begin
     fUserDetails.btnMoveDownInCategory.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
   end;
   AnnotShowMedia(curkanji,curphonetic);
-end;
-
-procedure TfWords.SetGroupStatus(st: integer);
-var i,ms:integer;
-    s:string;
-begin
-  if Application.MessageBox(
-    pchar(_l('#00927^eThis operation will affect multiple words.'#13#13'Do you want to continue?')),
-    pchar(_l('#00926^eWarning')),
-    MB_ICONWARNING or MB_YESNO)=idNo then exit;
-  for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
-  begin
-    s:=wl[i-1];
-    lastwordind:=strtoint(s);
-    if not TUser.Locate('Index',lastwordind) then showmessage('INTERNAL ERROR. WORD NOT LOCATED');
-    if TUser.Int(TUserMaxScore)>st then ms:=TUser.Int(TUserMaxScore) else ms:=st;
-    TUser.Edit([TUserScore,TUserMaxScore],[inttostr(st),inttostr(ms)]);
-  end;
-  StringGrid1Click(self);
-  fMenu.ChangeUserData;
-  ShowIt(false);
 end;
 
 procedure TfWords.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;

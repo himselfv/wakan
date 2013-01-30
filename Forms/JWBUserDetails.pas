@@ -211,7 +211,7 @@ end;
 
 procedure TfUserDetails.btnRemoveFromCategoryClick(Sender: TObject);
 begin
-  fWords.UserDetails_Button13Click(sender);
+  fWords.RemoveWordsFromCategory();
 end;
 
 procedure TfUserDetails.btnDeleteClick(Sender: TObject);
@@ -231,7 +231,7 @@ end;
 
 procedure TfUserDetails.btnSaveMeaningClick(Sender: TObject);
 begin
- //TODO: Bad! Bad!
+  if not TUser.Locate('Index',fWords.curword) then raise Exception.Create(eWordNotLocated);
   TUser.Edit([TUserEnglish],[edtMeaning.Text]);
   fMenu.ChangeUserData;
   fWords.ShowIt(false);
