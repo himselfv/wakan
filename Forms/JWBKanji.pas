@@ -54,6 +54,13 @@ type
     procedure DrawGrid1DblClick(Sender: TObject);
     procedure DrawGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure DrawGrid1MouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure DrawGrid1KeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+
+  protected
+    procedure ReactToKanjiSelection;
   public
     procedure KanjiSearch_SpeedButton20Click(Sender: TObject);
     procedure KanjiCompounds_CheckBox1Click(Sender: TObject);
@@ -519,6 +526,7 @@ begin
       DrawGrid1.Hide;
   end;
   DrawGrid1.Selection:=mr;
+  ReactToKanjiSelection;
   if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then DrawGrid1.TopRow:=mr.Top-1 else
   DrawGrid1.TopRow:=0;
   curkanji:=UH_NOCHAR;
@@ -646,22 +654,43 @@ begin
   DrawGrid1SelectCell(sender,sel.left,sel.top,b);
 end;
 
-procedure TfKanji.DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
-  var CanSelect: Boolean);
+//Called when a kanji selection changes
+//TODO: Someone has to call this when the selection is changed programmatically,
+//such as at load
+procedure TfKanji.ReactToKanjiSelection;
 var kix:FString;
 begin
-  if DrawGrid1.ColCount*ARow+Acol>=ki.Count then
-  begin
-    CanSelect:=false;
-    exit;
-  end;
-  CanSelect:=true;
-  kix:=ki[DrawGrid1.ColCount*ARow+Acol];
-  delete(kix,1,1);
-  fKanjiDetails.SetCharDetails(kix);
-  AnnotShowMedia(kix,'');
-  if flength(kix)>0 then //should always be
+  if (DrawGrid1.Selection.Right>DrawGrid1.Selection.Left)
+  or (DrawGrid1.Selection.Bottom>DrawGrid1.Selection.Top) then begin
+    kix:=''; //multiple selected
+    fKanjiDetails.Clear;
+//    fKanjiCompounds.Clear;//TODO
+  end else begin
+    kix:=ki[DrawGrid1.ColCount*DrawGrid1.Selection.Top+DrawGrid1.Selection.Left];
+    delete(kix,1,1);
+    fKanjiDetails.SetCharDetails(kix);
+    AnnotShowMedia(kix,'');
     fKanjiCompounds.SetCharCompounds(fgetch(kix, 1));
+  end;
+end;
+
+procedure TfKanji.DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
+  var CanSelect: Boolean);
+begin
+ //Some cells are off limits
+  Canselect := not (DrawGrid1.ColCount*ARow+ACol>=ki.Count);
+end;
+
+procedure TfKanji.DrawGrid1MouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  ReactToKanjiSelection;
+end;
+
+procedure TfKanji.DrawGrid1KeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  ReactToKanjiSelection;
 end;
 
 procedure TfKanji.DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -965,7 +994,7 @@ procedure TfKanji.SelRadical;
 begin
   fKanjiSearch.curRadSearchType:=stClassic;
   fKanjiSearch.curRadSearch:=JWBKanjiDetails.curradical;
-  fKanjiSearch.edtRadicals.Text:=JWBKanjiDetails.curradno;
+  fKanjiSearch.edtRadicals.Text:=IntToStr(JWBKanjiDetails.curradno);
   fKanjiSearch.pbRadicals.Invalidate;
   fKanji.DoIt;
 end;
@@ -994,7 +1023,7 @@ end;
 
 function TfKanji.GetKanji(cx,cy:integer):string;
 begin
-  if (cy*DrawGrid1.ColCOunt+cx>=ki.Count) or (cx<0) or (cy<0) then
+  if (cy*DrawGrid1.ColCount+cx>=ki.Count) or (cx<0) or (cy<0) then
   begin
     result:='';
     exit;

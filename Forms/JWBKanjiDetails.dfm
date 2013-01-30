@@ -41,7 +41,7 @@ object fKanjiDetails: TfKanjiDetails
     Height = 153
     Brush.Color = clWindow
   end
-  object Label1: TLabel
+  object lblMeaning: TLabel
     Left = 166
     Top = 94
     Width = 151
@@ -161,7 +161,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Visible = False
   end
-  object Label9: TLabel
+  object lblStrokeCount: TLabel
     Left = 111
     Top = 165
     Width = 5
@@ -176,7 +176,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object SpeedButton21: TSpeedButton
+  object sbAddToGroup: TSpeedButton
     Left = 295
     Top = 161
     Width = 24
@@ -188,7 +188,7 @@ object fKanjiDetails: TfKanjiDetails
     Font.Name = 'Courier New'
     Font.Style = [fsBold]
     ParentFont = False
-    OnClick = SpeedButton21Click
+    OnClick = sbAddToGroupClick
   end
   object RxLabel39: TRxLabel
     Left = 5
@@ -295,7 +295,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentShowHint = False
     ShowHint = True
   end
-  object Label2: TLabel
+  object lblRadicalNo: TLabel
     Left = 225
     Top = 75
     Width = 3
@@ -312,7 +312,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object SpeedButton1: TSpeedButton
+  object sbStrokeOrder: TSpeedButton
     Left = 121
     Top = 163
     Width = 38
@@ -323,7 +323,7 @@ object fKanjiDetails: TfKanjiDetails
     Caption = '#00169^eOrder'
     ParentShowHint = False
     ShowHint = True
-    OnClick = SpeedButton1Click
+    OnClick = sbStrokeOrderClick
   end
   object RxLabel1: TRxLabel
     Left = 5
@@ -339,7 +339,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object Label3: TLabel
+  object lblCategories: TLabel
     Left = 93
     Top = 181
     Width = 19
@@ -397,14 +397,14 @@ object fKanjiDetails: TfKanjiDetails
     TabOrder = 2
     OnClick = btnDockClick
   end
-  object ComboBox1: TComboBox
+  object cbGroups: TComboBox
     Left = 168
     Top = 161
     Width = 127
     Height = 21
     Style = csDropDownList
     TabOrder = 3
-    OnChange = ComboBox1Change
+    OnChange = cbGroupsChange
   end
   object FormPlacement1: TFormPlacement
     Active = False

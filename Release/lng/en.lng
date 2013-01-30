@@ -1102,6 +1102,7 @@
 00998>Save kanji search params
 00999>Kanji search params will be preserved on program restart
 01000>Reset
+01001>Multiple kanji selected
 ;
 ;
 ; EDICT markers.

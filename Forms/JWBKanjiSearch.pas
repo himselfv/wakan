@@ -400,7 +400,7 @@ procedure TfKanjiSearch.SpeedButton20Click(Sender: TObject);
 var catname: string;
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  TUserCat.Locate('Name','k~'+fKanjiDetails.ComboBox1.Items[lbCategories.ItemIndex]);
+  TUserCat.Locate('Name','k~'+fKanjiDetails.cbGroups.Items[lbCategories.ItemIndex]);
   catname := StripCatName(TUserCat.Str(TUserCatName));
   if fNewCategory.EditCategory(catname) then begin
     TUserCat.Edit([TUserCatName],['k~'+catname]);

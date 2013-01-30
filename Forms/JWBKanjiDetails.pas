@@ -23,7 +23,7 @@ type
   THellspawnStringList = TStringList;
 
   TfKanjiDetails = class(TForm)
-    Label1: TLabel;
+    lblMeaning: TLabel;
     RxLabel21: TRxLabel;
     ShapeKanji: TShape;
     ShapeRadical: TShape;
@@ -34,8 +34,8 @@ type
     RxLabel10: TRxLabel;
     RxLabel35: TRxLabel;
     RxLabel38: TRxLabel;
-    Label9: TLabel;    
-    SpeedButton21: TSpeedButton;
+    lblStrokeCount: TLabel;
+    sbAddToGroup: TSpeedButton;
     RxLabel39: TRxLabel;
     ScrollBox1: TScrollBox;
     pbKanjiInfo: TPaintBox;
@@ -47,20 +47,20 @@ type
     ProUrlLabel3: TUrlLabel;
     ProUrlLabel4: TUrlLabel;
     ProUrlLabel5: TUrlLabel;
-    Label2: TLabel;
+    lblRadicalNo: TLabel;
     btnDock: TButton;
-    SpeedButton1: TSpeedButton;
-    ComboBox1: TComboBox;
+    sbStrokeOrder: TSpeedButton;
+    cbGroups: TComboBox;
     RxLabel1: TRxLabel;
-    Label3: TLabel;
+    lblCategories: TLabel;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
-    procedure SpeedButton21Click(Sender: TObject);
+    procedure sbAddToGroupClick(Sender: TObject);
     procedure SpeedButton28Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton23Click(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
+    procedure sbStrokeOrderClick(Sender: TObject);
     procedure pbKanjiInfoPaint(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -81,7 +81,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure pbKanjiInfoMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure ComboBox1Change(Sender: TObject);
+    procedure cbGroupsChange(Sender: TObject);
     procedure pbRadicalMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure pbSimplifiedMouseUp(Sender: TObject; Button: TMouseButton;
@@ -97,6 +97,7 @@ type
     procedure ReloadReadings(CChar: TTextTableCursor; out read: TCharReadings);
     procedure PopulateKval(CChar: TTextTableCursor; const read: TCharReadings);
   public
+    procedure Clear;
     procedure SetCharDetails(unicode: FString);
     procedure Reload;
 
@@ -115,7 +116,7 @@ type
 var
   fKanjiDetails: TfKanjiDetails;
 
-  curradno: string;
+  curradno: integer;
   curradical: string;
 
 implementation
@@ -170,17 +171,18 @@ procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);
 var f:string;
 begin
   if chin then
-  case fSettings.RadioGroup5.ItemIndex of
-    0:f:=FontChinese;
-    1:f:=FontChineseGB;
-    2:f:=FontRadical;
-  end else f:=FontJapanese;
-  if (SpeedButton1.Down) then
+    case fSettings.RadioGroup5.ItemIndex of
+      0:f:=FontChinese;
+      1:f:=FontChineseGB;
+      2:f:=FontRadical;
+    end
+  else f:=FontJapanese;
+  if sbStrokeOrder.Down then
     if chin then f:=FontChinese else f:=FontStrokeOrder;
   pbKanji.Canvas.Brush.Color:=clWindow;
   pbKanji.Canvas.Font.Style:=[];
-  DrawUnicode(pbKanji.Canvas,1,1,137,JWBKanji.curkanji,f);
-  if SpeedButton1.Down then DrawStrokeOrder(pbKanji.Canvas,1,1,137,137,curkanji,12,clBlue);
+  DrawUnicode(pbKanji.Canvas,1,1,137,curChar,f);
+  if sbStrokeOrder.Down then DrawStrokeOrder(pbKanji.Canvas,1,1,137,137,curChar,12,clBlue);
 end;
 
 procedure TfKanjiDetails.pbRadicalPaint(Sender: TObject);
@@ -204,31 +206,32 @@ begin
 end;
 
 
-procedure TfKanjiDetails.SpeedButton21Click(Sender: TObject);
+procedure TfKanjiDetails.sbAddToGroupClick(Sender: TObject);
 var catIndex: integer;
 begin
-  if curkanji<>'' then begin
-    catIndex := GetSelCatIdx(ComboBox1);
-    SetKnown(catIndex, curkanji, not IsKnown(catIndex,curkanji));
+  if curChar<>UH_NOCHAR then begin
+    catIndex := GetSelCatIdx(cbGroups);
+    SetKnown(catIndex, curChar, not IsKnown(catIndex,curChar));
   end;
   fMenu.ChangeUserData;
-  SetCharDetails(curkanji);
+  SetCharDetails(curChar); //reload
 end;
 
 procedure TfKanjiDetails.SpeedButton28Click(Sender: TObject);
 var s:string;
 begin
-  s:='StrokeOrder\'+curkanji+'.gif';
+  if curChar=UH_NOCHAR then exit;
+  s:='StrokeOrder\'+FStrToHex(curChar)+'.gif';
   ShellExecute(handle,nil,pchar(s),nil,nil,SW_SHOW);
 end;
 
 procedure TfKanjiDetails.SpeedButton23Click(Sender: TObject);
 begin
-  clip:=clip+curkanji;
+  clip:=clip+curChar;
   fMenu.ChangeClipboard;
 end;
 
-procedure TfKanjiDetails.SpeedButton1Click(Sender: TObject);
+procedure TfKanjiDetails.sbStrokeOrderClick(Sender: TObject);
 begin
   pbKanji.Invalidate;
 end;
@@ -313,7 +316,7 @@ begin
   if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
-procedure TfKanjiDetails.ComboBox1Change(Sender: TObject);
+procedure TfKanjiDetails.cbGroupsChange(Sender: TObject);
 begin
   fKanji.RefreshDetails;
 end;
@@ -341,15 +344,23 @@ begin
   SetCharDetails(curChar);
 end;
 
+procedure TfKanjiDetails.Clear;
+begin
+  SetCharDetails('');
+end;
+
+{
+"unicode" can be nil which means "Clear the form".
+It can also be an unsupported character, then don't show any info except for char itself.
+}
 procedure TfKanjiDetails.SetCharDetails(unicode:FString);
 var s: string;
   radf:integer;
   i:integer;
-  kix:FString;
   kig:string;
   mf:TMemoryFile;
   ms:TMemoryStream;
-  ld:boolean;
+//  ld:boolean;
   h:integer;
   cv:string;
   scat:string;
@@ -373,39 +384,57 @@ begin
   RxLabel35.Hide;
   pbSimplified.Hide;
   ShapeSimplified.Hide;
-  Label1.Caption:='-';
-  kix:=unicode;
+  lblMeaning.Caption:='-';
 
   CChar := TChar.NewCursor;
   try
-    if not CChar.Locate('Unicode',kix) then exit;
     Screen.Cursor:=crHourGlass;
-    curkanji:=CChar.FCh(TCharUnicode);
-    curindex:=CChar.Int(TCharIndex);
-    ld:=false;
-    cv:=fMenu.GetCharValue(curindex,51);
+    if (unicode='') or not CChar.Locate('Unicode',unicode) then begin
+     //unicode <> '' but not found in the char db -- valid caseS
+      curindex:=-1;
+      curkanji:=UH_NOCHAR;
+    end else begin
+      curindex:=CChar.Int(TCharIndex);
+      curkanji:=CChar.FCh(TCharUnicode); //I'm not sure why we're doing that, "unicode" should be the same?
+    end;
 
     { Url labels }
-    ProURLLabel1.Enabled:=cv<>'';
-    ProURLLabel1.URL:='http://www.zhongwen.com/cgi-bin/zipux2.cgi?b5=%'+copy(cv,1,2)+'%'+copy(cv,3,2);
-    ProURLLabel2.Enabled:=CChar.Int(TCharChinese)=0;
-    ProURLLabel2.URL:='http://www.csse.monash.edu.au/cgi-bin/cgiwrap/jwb/wwwjdic?1MKU'+lowercase(curKanji);
-    ProURLLabel3.Enabled:=true;
-    ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(curKanji);
-    cv:=fMenu.GetCharValue(curindex,54);
-    ProURLLabel4.Enabled:=(cv<>'')
-      and TryStrToInt(copy(cv,1,2), cv_i1)
-      and TryStrToInt(copy(cv,3,2), cv_i2);
-    if ProURLLabel4.Enabled then
-      ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
-    cv:=fMenu.GetCharValue(curindex,57);
-    ProURLLabel5.Enabled:=cv<>'';
-    ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
+    if curindex<0 then begin
+      ProURLLabel1.Enabled := false;
+      ProURLLabel1.URL := '';
+      ProURLLabel2.Enabled := false;
+      ProURLLabel2.URL := '';
+      ProURLLabel3.Enabled := false;
+      ProURLLabel3.URL := '';
+      ProURLLabel4.Enabled := false;
+      ProURLLabel4.URL := '';
+      ProURLLabel5.Enabled := false;
+      ProURLLabel5.URL := '';
+    end else begin
+      cv:=fMenu.GetCharValue(curindex,51);
+      ProURLLabel1.Enabled:=cv<>'';
+      ProURLLabel1.URL:='http://www.zhongwen.com/cgi-bin/zipux2.cgi?b5=%'+copy(cv,1,2)+'%'+copy(cv,3,2);
+      ProURLLabel2.Enabled:=CChar.Int(TCharChinese)=0;
+      ProURLLabel2.URL:='http://www.csse.monash.edu.au/cgi-bin/cgiwrap/jwb/wwwjdic?1MKU'+lowercase(FStrToHex(curChar));
+      ProURLLabel3.Enabled:=true;
+      ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(FStrToHex(curChar));
+      cv:=fMenu.GetCharValue(curindex,54);
+      ProURLLabel4.Enabled:=(cv<>'')
+        and TryStrToInt(copy(cv,1,2), cv_i1)
+        and TryStrToInt(copy(cv,3,2), cv_i2);
+      if ProURLLabel4.Enabled then
+        ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
+      cv:=fMenu.GetCharValue(curindex,57);
+      ProURLLabel5.Enabled:=cv<>'';
+      ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
+    end;
 
    { Stroke order }
    //TODO: Remove.
    { Not used. A remnant of the old way to display stroke order, through GIFS.
     fMenu.StrokeOrderPackage is always nil }
+    {
+    ld:=false;
     fStrokeOrder.TrackBar1.Max:=0;
     if (fMenu.StrokeOrderPackage<>nil) and (fMenu.GetCharValueInt(CChar.Int(TCharIndex),101)<65535) then
     begin
@@ -436,44 +465,48 @@ begin
     end;
     fStrokeOrder.RxGIFAnimator1.Visible:=ld;
     fStrokeOrder.Label1.Visible:=not ld;
-    radf:=fSettings.ComboBox1.ItemIndex+12;
+    }
 
-    charval := fMenu.GetCharValue(CChar.Int(TCharIndex),43);
+    if curindex<0 then
+      charval := ''
+    else begin
+      charval := fMenu.GetCharValue(CChar.Int(TCharIndex),43);
+      if charval<>'' then
+        RxLabel35.Caption:=_l('#00135^eSimplified:')
+      else begin
+        charval := fMenu.GetCharValue(CChar.Int(TCharIndex),44);
+        if charval<>'' then
+          RxLabel35.Caption:=_l('#00136^eTraditional:');
+      end;
+    end;
     if charval<>'' then
     begin
       cursimple:=hextofstr(charval);
-      RxLabel35.Caption:=_l('#00135^eSimplified:');
       RxLabel35.Show;
       pbSimplified.Show;
       ShapeSimplified.Show;
     end else begin
-      charval := fMenu.GetCharValue(CChar.Int(TCharIndex),44);
-      if charval<>'' then
-      begin
-        cursimple:=hextofstr(charval);
-        RxLabel35.Caption:=_l('#00136^eTraditional:');
-        RxLabel35.Show;
-        pbSimplified.Show;
-        ShapeSimplified.Show;
-      end else
-      begin
-        cursimple:='';
-        RxLabel35.Hide;
-        pbSimplified.Hide;
-        ShapeSimplified.Hide;
-      end;
+      cursimple:='';
+      RxLabel35.Hide;
+      pbSimplified.Hide;
+      ShapeSimplified.Hide;
     end;
 
-    i:=fMenu.GetCharValueRad(CChar.Int(TCharIndex),radf);
-    curradno:=inttostr(i);
-    Label2.Caption:=curradno;
-    if i=255 then curradical:='' else
+    if curindex<0 then
+      curradno := 255
+    else
+      curradno:=fMenu.GetCharValueRad(CChar.Int(TCharIndex),
+        fSettings.ComboBox1.ItemIndex+12 {Chosen radical to use});
+
+    lblRadicalNo.Caption:=IntToStr(curradno);
+    if curradno=255 then curradical:='' else
     begin
-      if TRadicals.Locate('Number',i) then
+      if TRadicals.Locate('Number',curradno) then
         curradical:=TRadicals.Str(TRadicalsUnicode) else curradical:='';
     end;
   {  if chin then
-      RxLabel21.Caption:=_l('#00137^eChar #')+inttostr(DrawGrid1.ColCount*Arow+Acol+1) else
+      RxLabel21.Caption:=_l('#00137^eChar #')+inttostr(DrawGrid1.ColCount*Arow+Acol+1)
+    else
       RxLabel21.Caption:='Kanji #'+inttostr(DrawGrid1.ColCount*Arow+Acol+1);}
     if not chin then
     begin
@@ -482,24 +515,27 @@ begin
       kig:='U';
     end else
       if CChar.Int(TCharChFrequency)<=5 then kig:='C'else kig:='U';
-    if IsKnown(KnownLearned,kix) then kig:='K';
-    if not IsKnown(GetSelCatIdx(Combobox1),kix) then
-      SpeedButton21.Caption:='+'
+    if IsKnown(KnownLearned,unicode) then kig:='K';
+    if not IsKnown(GetSelCatIdx(cbGroups),unicode) then
+      sbAddToGroup.Caption:='+'
     else
-      SpeedButton21.Caption:='-';
-    if chin then if CChar.Int(TCharStrokeCount)<255 then Label9.Caption:=CChar.Str(TCharStrokeCount) else Label9.Caption:='-';
-    if not chin then if CChar.Int(TCharJpStrokeCount)<255 then Label9.Caption:=CChar.Str(TCharJpStrokeCount) else Label9.Caption:='-';
+      sbAddToGroup.Caption:='-';
+    if chin then begin
+      if CChar.Int(TCharStrokeCount)<255 then lblStrokeCount.Caption:=CChar.Str(TCharStrokeCount) else lblStrokeCount.Caption:='-';
+    end else begin
+      if CChar.Int(TCharJpStrokeCount)<255 then lblStrokeCount.Caption:=CChar.Str(TCharJpStrokeCount) else lblStrokeCount.Caption:='-';
+    end;
     scat:='';
     for i:=0 to Length(KanjiCats)-1 do
     begin
-      if IsKnown(KanjiCats[i].idx,kix) then
+      if IsKnown(KanjiCats[i].idx,unicode) then
         if scat='' then
           scat:=KanjiCats[i].name
         else
           scat:=scat+', '+KanjiCats[i].name;
     end;
     if scat='' then scat:='-';
-    Label3.Caption:=scat;
+    lblCategories.Caption:=scat;
     case kig[1] of
       'K':RxLabel38.Font.Color:=Col('Kanji_Learned');
       'C':RxLabel38.Font.Color:=Col('Kanji_Common');
@@ -515,21 +551,28 @@ begin
       'J':RxLabel38.Caption:=_l('#00145^eJapanese only');
     end;
 
-    ReloadReadings(CChar, read);
+    if curindex<0 then
+      lblMeaning.Caption := _l('#01001^eMultiple kanji selected')
+    else begin
+      ReloadReadings(CChar, read);
+      if chin then
+        lblMeaning.Caption:=read.chiny
+      else
+        lblMeaning.Caption:=read.engy;
+      PopulateKVal(CChar, read);
+    end;
 
-    if chin then
-      Label1.Caption:=read.chiny
-    else
-      Label1.Caption:=read.engy;
-
-    PopulateKVal(CChar, read);
   finally
     FreeAndNil(CChar);
   end;
 
  { Repaint }
-  h:=InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,true);
-  pbKanjiInfo.Height:=h;
+  if curindex>0 then begin
+    h:=InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,true);
+    pbKanjiInfo.Height:=h;
+  end else begin
+    pbKanjiInfo.Height:=0;
+  end;
   Screen.Cursor:=crDefault;
 end;
 
@@ -629,7 +672,7 @@ begin
         6:s:=fstr(read.nany);
         7:s:=read.chiny;
         8:s:=LowerCase(read.cany);
-        100:s:=curkanji;
+        100:s:=curChar;
         else begin
           CCharRead.SetOrder('');
           CCharRead.Locate('Kanji',CChar.TrueInt(TCharIndex));
