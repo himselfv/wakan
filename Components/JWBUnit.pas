@@ -16,6 +16,8 @@ const
   CurStructVer=2;
   CurDictVer=7;
 
+const
+  WakanRegKey = 'Software\Labyrinth\Wakan';
 
 { Romaji conversions }
 
@@ -632,7 +634,7 @@ begin
   colarr.add('4Popup_Card=FFFFFF,^eCharacter card');
   colarr.add('4Popup_Text=000000,^eText on the caracter card');
   colval:=TStringList.Create;
-  reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
+  reg:=TRegIniFile.Create(WakanRegKey);
   colsarr:=TStringList.Create;
   for i:=0 to colarr.Count-1 do
   begin
@@ -699,7 +701,7 @@ var i:integer;
     s:string;
     s2:string;
 begin
-  reg:=TRegIniFile.Create('Software\Labyrinth\Wakan');
+  reg:=TRegIniFile.Create(WakanRegKey);
   for i:=0 to colarr.Count-1 do
   begin
     s:=colarr[i];
