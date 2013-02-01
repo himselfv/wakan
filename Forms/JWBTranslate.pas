@@ -88,6 +88,8 @@ type
     amKana,
       //do not load ruby
       //save as text with generated kana instead of kanji
+    amKanjiKana,
+      //same, but also include original words
     amRuby
       //load ruby
       //save generated kana as aozora-ruby
@@ -973,13 +975,25 @@ var i,j,k: integer;
   end;
 
   procedure FinalizeRuby();
+  var word: string;
   begin
     if AnnotMode=amKana then begin
       if reading<>'' then
         reading:=UH_SPACE+reading
       else
        //Don't have a reading, write a char (maybe we didn't want it expanded)
-        reading:=GetDoc(j,i);
+        reading:=UH_SPACE+GetDoc(j,i);
+      outp(reading);
+    end else
+    if AnnotMode=amKanjiKana then begin
+      word := GetDoc(j,i);
+      if word<>'' then
+        word := UH_SPACE+word;
+      if reading<>'' then
+        reading:=word+UH_SPACE+reading
+      else
+       //Don't have a reading, write a char (without space)
+        reading:=word;
       outp(reading);
     end else
     if (AnnotMode=amRuby) or explicitRuby then begin
@@ -1017,7 +1031,7 @@ begin
          //and we continue through to the "no inReading" case where we might start a new chain
         end else begin
          //Inside of annotated chain
-          if not (AnnotMode in [amKana]) then
+          if not (AnnotMode in [amKana, amKanjiKana]) then
             Conv_WriteChar(GetDoc(j,i));
          //in amKana we skip chars to be replaced
           continue; //handled this char
@@ -1034,7 +1048,7 @@ begin
         end;
 
        //Implicit ruby load (if explicit is not loaded -- checked by inReading)
-        if (AnnotMode in [amKana, amRuby]) and not inReading then begin
+        if (AnnotMode in [amKana, amKanjiKana, amRuby]) and not inReading then begin
           GetTextWordInfo(j,i,meaning,reading,kanji);
           inReading := (reading<>'');
           explicitRuby := false;
@@ -1065,7 +1079,7 @@ begin
         end;
 
        //Ruby break -- if we have some kind of reading
-        if (AnnotMode<>amKana) and inReading then begin //We don't write ruby in kana mode at all
+        if (not (AnnotMode in [amKana, amKanjiKana])) and inReading then begin //We don't write ruby in kana mode at all
           rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
           if rubyTextBreak=btAuto then
             if j<=0 then
@@ -1079,7 +1093,7 @@ begin
             Conv_WriteChar(UH_AORUBY_TEXTBREAK);
         end;
 
-        if ((AnnotMode<>amKana) or (reading=''))
+        if ((not (AnnotMode in [amKana, amKanjiKana])) or (reading=''))
         //placeholders are virtual
         and (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER) then
           Conv_WriteChar(GetDoc(j,i));

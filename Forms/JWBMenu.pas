@@ -212,7 +212,7 @@ type
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     eSavekanatranscriptcUloitpepisdokany1: TMenuItem;
-    SaveDialog1: TSaveDialog;
+    SaveAsKanaDialog: TSaveDialog;
     aDictInflect: TAction;
     aDictAuto: TAction;
     aDictGroup1: TAction;
@@ -4439,9 +4439,12 @@ begin
     pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
     pchar(_l('#00364^eNotice')),
     MB_ICONINFORMATION or MB_OK);
-  if SaveDialog1.Execute then
-    fTranslate.SaveToFile(SaveDialog1.FileName,Conv_ChooseType(false,0),amKana);
-    //This will not save amKana as FileAnnotMode choice. That is correct.
+  if SaveAsKanaDialog.Execute then
+    case SaveAsKanaDialog.FilterIndex of
+      1: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKana);
+      2: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKanjiKana);
+      //This will not save amKana as FileAnnotMode choice. That is correct.
+    end;
 end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);

@@ -1405,9 +1405,9 @@ object fMenu: TfMenu
     Left = 504
     Top = 57
   end
-  object SaveDialog1: TSaveDialog
+  object SaveAsKanaDialog: TSaveDialog
     DefaultExt = '.txt'
-    Filter = 'UTF-8 kana file (*.txt)|*.txt'
+    Filter = 'Kana only (*.txt)|*.txt|Kanji/kana mixed (*.txt)|*.txt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Left = 279
     Top = 12
