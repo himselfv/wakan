@@ -332,14 +332,14 @@ type
     procedure ApplyUISettings;
     procedure SaveSettings;
 
+  public
+    function GetTranslationFile: string;
+    procedure SetTranslationFile(const Value: string);
 
   end;
 
 var
   fSettings: TfSettings;
-
-const
-  WakanRegKey = 'Software\Labyrinth\Wakan';
 
 implementation
 
@@ -959,6 +959,28 @@ begin
     reg.DeleteKey('KanjiSearch','Jouyou');
     reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
     reg.DeleteKey('KanjiSearch','Other');
+  finally
+    reg.Free;
+  end;
+end;
+
+function TfSettings.GetTranslationFile: string;
+var reg:TRegIniFile;
+begin
+  reg := TRegIniFile.Create(WakanRegKey);
+  try
+    Result := reg.ReadString('Language','LNGFile','');
+  finally
+    reg.Free;
+  end;
+end;
+
+procedure TfSettings.SetTranslationFile(const Value: string);
+var reg:TRegIniFile;
+begin
+  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    reg.WriteString('Language', 'LNGFile', curTransFile);
   finally
     reg.Free;
   end;

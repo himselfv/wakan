@@ -69,7 +69,7 @@ var
 
 
 implementation
-uses JWBStrings, JWBEdictMarkers;
+uses JWBStrings, JWBEdictMarkers, JWBSettings;
 
 {$R *.DFM}
 
@@ -261,14 +261,8 @@ Reads registry settings and loads appropriate language.
 If it's not configured, asks the user to choose one.
 }
 procedure TfLanguage.LoadRegistrySettings;
-var reg:TRegIniFile;
 begin
-  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
-  try
-    curTransFile := reg.ReadString('Language','LNGFile','');
-  finally
-    reg.Free;
-  end;
+  curTransFile := fSettings.GetTranslationFile;
   if curTransFile='' then begin
     Self.ShowModal;
     if curTransFile<>'' then //user cancelled
@@ -279,14 +273,8 @@ begin
 end;
 
 procedure TfLanguage.SaveRegistrySettings;
-var reg:TRegIniFile;
 begin
-  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
-  try
-    reg.WriteString('Language', 'LNGFile', curTransFile);
-  finally
-    reg.Free;
-  end;
+  fSettings.SetTranslationFile(curTransFile);
 end;
 
 {
