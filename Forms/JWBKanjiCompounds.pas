@@ -40,6 +40,7 @@ type
   protected
     FCurChar: FChar;
   public
+    procedure Clear;
     procedure SetCharCompounds(ch:FChar);
   end;
 
@@ -75,6 +76,20 @@ end;
 procedure TfKanjiCompounds.FormResize(Sender: TObject);
 begin
   StringGrid1.ColWidths[2]:=StringGrid1.Width-StringGrid1.ColWidths[1]-StringGrid1.ColWidths[0]-24;
+end;
+
+procedure TfKanjiCompounds.Clear;
+var sl: TStringList;
+begin
+  FCurChar := UH_NOCHAR;
+ //Clear StringGrid the way wakan handles it.
+ //We can simply hide it (thats what FillWordGrid will do), but let's play nice
+  sl := TStringList.Create;
+  try
+    FillWordGrid(StringGrid1,sl,false,false);
+  finally
+    FreeAndNil(sl);
+  end;
 end;
 
 procedure TfKanjiCompounds.SetCharCompounds(ch:FChar);

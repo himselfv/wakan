@@ -67,7 +67,6 @@ type
     procedure DoIt;
     procedure DoItTimer;
     procedure SaveChars;
-    procedure RefreshDetails;
     procedure SelRadical;
     function GetKanji(cx,cy:integer):string;
 
@@ -527,8 +526,10 @@ begin
   end;
   DrawGrid1.Selection:=mr;
   ReactToKanjiSelection;
-  if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then DrawGrid1.TopRow:=mr.Top-1 else
-  DrawGrid1.TopRow:=0;
+  if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then
+    DrawGrid1.TopRow:=mr.Top-1
+  else
+    DrawGrid1.TopRow:=0;
   curkanji:=UH_NOCHAR;
   DrawGrid1SelectCell(self,mr.Left,mr.Top,b);
   Screen.Cursor:=crDefault;
@@ -658,19 +659,24 @@ end;
 //TODO: Someone has to call this when the selection is changed programmatically,
 //such as at load
 procedure TfKanji.ReactToKanjiSelection;
-var kix:FString;
+var sel: TGridRect;
+  i, j: integer;
+  chars,char:FString;
 begin
-  if (DrawGrid1.Selection.Right>DrawGrid1.Selection.Left)
-  or (DrawGrid1.Selection.Bottom>DrawGrid1.Selection.Top) then begin
-    kix:=''; //multiple selected
-    fKanjiDetails.Clear;
-//    fKanjiCompounds.Clear;//TODO
-  end else begin
-    kix:=ki[DrawGrid1.ColCount*DrawGrid1.Selection.Top+DrawGrid1.Selection.Left];
-    delete(kix,1,1);
-    fKanjiDetails.SetCharDetails(kix);
-    AnnotShowMedia(kix,'');
-    fKanjiCompounds.SetCharCompounds(fgetch(kix, 1));
+  chars := '';
+  sel := DrawGrid1.Selection;
+  for i := sel.Top to sel.Bottom do
+    for j := sel.Left to sel.Right do begin
+      char := ki[DrawGrid1.ColCount*i+j];
+      chars := chars + copy(char,2,Length(char)-1); //delete first char
+    end;
+  fKanjiDetails.SetCharDetails(chars);
+
+  if (sel.Bottom>sel.Top) or (sel.Right>sel.Left) then begin //multiple
+    fKanjiCompounds.Clear;
+  end else begin //single char
+    AnnotShowMedia(chars,'');
+    fKanjiCompounds.SetCharCompounds(fgetch(chars, 1));
   end;
 end;
 
@@ -1030,11 +1036,6 @@ begin
   end;
   result:=ki[DrawGrid1.ColCount*cy+cx];
   delete(result,1,1);
-end;
-
-procedure TfKanji.RefreshDetails;
-begin
-  fKanjiDetails.SetCharDetails(curkanji);
 end;
 
 procedure TfKanji.SaveChars;

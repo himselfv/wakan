@@ -1736,9 +1736,9 @@ end;
 procedure TfMenu.RefreshKanjiCategory;
 begin
   ReloadKanjiCategories();
-  PasteKanjiCategoriesTo(fKanjiDetails.cbGroups.Items);
+  PasteKanjiCategoriesTo(fKanjiDetails.cbCategories.Items);
   PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
-  fKanjiDetails.cbGroups.ItemIndex:=0;
+  fKanjiDetails.cbCategories.ItemIndex:=0;
   fKanjiSearch.lbCategories.ItemIndex:=0;
   fKanjiSearch.lbCategoriesClick(Self); //react to changes
 end;
@@ -2450,7 +2450,7 @@ begin
   //Refresh everything
   RefreshCategory;
   RefreshKanjiCategory;
-  fKanjiDetails.Reload;
+  fKanjiDetails.RefreshDetails;
 
   Screen.Cursor:=crDefault;
   UserDataLoaded:=true;
@@ -3377,13 +3377,13 @@ end;
 procedure TfMenu.aKanjiSetLearnedExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
-  fKanjiDetails.sbAddToGroupClick(Sender);
+  fKanjiDetails.btnAddToCategoryClick(Sender);
 end;
 
 procedure TfMenu.aKanjiFullDetailsExecute(Sender: TObject);
 begin
   if not fKanjiDetails.Visible then aKanjiDetailsExecute(Sender);
-  fKanjiDetails.sbStrokeOrderClick(Sender);
+  fKanjiDetails.btnStrokeOrderClick(Sender);
 end;
 
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);

@@ -76,6 +76,8 @@ procedure LoadKnownList(listno:integer;stream:TStream);
 procedure MergeKnownList(idxListNo, idxIntoListNo: integer);
 
 function IsKnown(listno:integer;const char:FChar):boolean; overload;
+function IsAnyKnown(listno:integer;const chars:FString):boolean;
+function IsAllKnown(listno:integer;const chars:FString):boolean;
 procedure SetKnown(listno:integer;const char:FChar;known:boolean); overload;
 function FirstUnknownKanjiIndex(const kanji:FString):integer;
 function CheckKnownKanji(const kanji:FString): FString;
@@ -458,6 +460,28 @@ begin
     exit;
   end;
   result:=(((TByteArray(KnownList[listno]^)[ki]) shr kj) and 1)<>0;
+end;
+
+function IsAnyKnown(listno:integer;const chars:FString):boolean;
+var i: integer;
+begin
+  Result := false;
+  for i := 1 to flength(chars) do
+    if IsKnown(listno, fgetch(chars,i)) then begin
+      Result := true;
+      exit;
+    end;
+end;
+
+function IsAllKnown(listno:integer;const chars:FString):boolean;
+var i: integer;
+begin
+  Result := true;
+  for i := 1 to flength(chars) do
+    if not IsKnown(listno, fgetch(chars,i)) then begin
+      Result := false;
+      exit;
+    end;
 end;
 
 procedure SetKnown(listno:integer;const char:FChar;known:boolean);

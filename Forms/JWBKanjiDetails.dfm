@@ -176,7 +176,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object sbAddToGroup: TSpeedButton
+  object btnAddToCategory: TSpeedButton
     Left = 295
     Top = 161
     Width = 24
@@ -188,7 +188,7 @@ object fKanjiDetails: TfKanjiDetails
     Font.Name = 'Courier New'
     Font.Style = [fsBold]
     ParentFont = False
-    OnClick = sbAddToGroupClick
+    OnClick = btnAddToCategoryClick
   end
   object RxLabel39: TRxLabel
     Left = 5
@@ -312,7 +312,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object sbStrokeOrder: TSpeedButton
+  object btnStrokeOrder: TSpeedButton
     Left = 121
     Top = 163
     Width = 38
@@ -323,7 +323,7 @@ object fKanjiDetails: TfKanjiDetails
     Caption = '#00169^eOrder'
     ParentShowHint = False
     ShowHint = True
-    OnClick = sbStrokeOrderClick
+    OnClick = btnStrokeOrderClick
   end
   object RxLabel1: TRxLabel
     Left = 5
@@ -397,14 +397,14 @@ object fKanjiDetails: TfKanjiDetails
     TabOrder = 2
     OnClick = btnDockClick
   end
-  object cbGroups: TComboBox
+  object cbCategories: TComboBox
     Left = 168
     Top = 161
     Width = 127
     Height = 21
     Style = csDropDownList
     TabOrder = 3
-    OnChange = cbGroupsChange
+    OnChange = cbCategoriesChange
   end
   object FormPlacement1: TFormPlacement
     Active = False
