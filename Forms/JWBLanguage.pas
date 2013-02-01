@@ -69,7 +69,7 @@ var
 
 
 implementation
-uses JWBStrings, JWBEdictMarkers, JWBSettings;
+uses JWBStrings, JWBEdictMarkers;
 
 {$R *.DFM}
 
@@ -261,8 +261,14 @@ Reads registry settings and loads appropriate language.
 If it's not configured, asks the user to choose one.
 }
 procedure TfLanguage.LoadRegistrySettings;
+var reg:TRegIniFile;
 begin
-  curTransFile := fSettings.GetLanguageFile;
+  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    curTransFile := reg.ReadString('Language','LNGFile','');
+  finally
+    reg.Free;
+  end;
   if curTransFile='' then begin
     Self.ShowModal;
     if curTransFile<>'' then //user cancelled
@@ -273,8 +279,14 @@ begin
 end;
 
 procedure TfLanguage.SaveRegistrySettings;
+var reg:TRegIniFile;
 begin
-  fSettings.SetLanguageFile(curTransFile);
+  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
+  try
+    reg.WriteString('Language', 'LNGFile', curTransFile);
+  finally
+    reg.Free;
+  end;
 end;
 
 {
@@ -407,13 +419,6 @@ var j,k:integer;
     mi.Caption:=TranslateString(mi.Caption);
   end;
 
-  procedure _treenode(node: TTreeNode);
-  var i:integer;
-  begin
-    for i:=0 to node.Count-1 do _treenode(node.Item[i]);
-    node.Text := TranslateString(node.Text);
-  end;
-
 begin
   _set(f,'Caption');
   for j:=0 to f.ComponentCount-1 do
@@ -425,11 +430,10 @@ begin
     _setlist(a,'Lines');
     _setlist(a,'Items');
     if a is TMenu then
-      for k:=0 to TMenu(a).Items.Count-1 do
-        _menuitem(TMenu(a).Items[k]);
-    if a is TCustomTreeView then
-      for k := 0 to TTreeView(a).Items.Count - 1 do
-        _treenode(TTreeView(a).Items[k]);
+    begin
+      for k:=0 to (a as TMenu).Items.Count-1 do
+        _menuitem((a as TMenu).Items[k]);
+    end;
   end;
 end;
 

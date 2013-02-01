@@ -4,57 +4,25 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, registry, JvExComCtrls,
-  JvPageListTreeView, JvPageList, JvExControls;
+  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, registry;
 
 type
   TfSettings = class(TForm)
-    OpenDialog2: TOpenDialog;
-    SaveDialog2: TSaveDialog;
-    ColorDialog1: TColorDialog;
-    pnlButtons: TPanel;
-    btnChangeLanguage: TButton;
-    btnOk: TBitBtn;
-    lbContents: TJvSettingsTreeView;
-    pcPages: TJvPageList;
-    tsGeneral: TJvStandardPage;
-    sbGeneral: TScrollBox;
-    Label41: TLabel;
-    Label47: TLabel;
-    cbSaveSearchParams: TCheckBox;
-    CheckBox26: TCheckBox;
-    CheckBox10: TCheckBox;
-    CheckBox11: TCheckBox;
-    CheckBox46: TCheckBox;
-    Edit25: TEdit;
-    CheckBox49: TCheckBox;
-    CheckBox53: TCheckBox;
-    CheckBox54: TCheckBox;
-    Edit29: TEdit;
-    CheckBox55: TCheckBox;
-    RadioGroup5: TRadioGroup;
-    CheckBox70: TCheckBox;
-    cbShowSplashscreen: TCheckBox;
-    cbSaveColumnWidths: TCheckBox;
-    btnResetColumnWidths: TButton;
-    btnResetSearchParams: TButton;
-    tsFonts: TJvStandardPage;
-    Label4: TLabel;
-    SpeedButton4: TSpeedButton;
-    Label5: TLabel;
-    SpeedButton5: TSpeedButton;
-    Label51: TLabel;
-    SpeedButton14: TSpeedButton;
+    pcPages: TPageControl;
+    tsRomanization: TTabSheet;
+    tsCharacterList: TTabSheet;
+    RadioGroup3: TRadioGroup;
+    CheckBox1: TCheckBox;
+    tsFonts: TTabSheet;
     GroupBox1: TGroupBox;
     Label1: TLabel;
+    Edit1: TEdit;
     SpeedButton1: TSpeedButton;
     Label2: TLabel;
-    SpeedButton2: TSpeedButton;
-    Label50: TLabel;
-    SpeedButton13: TSpeedButton;
-    Edit1: TEdit;
     Edit2: TEdit;
-    Edit32: TEdit;
+    SpeedButton2: TSpeedButton;
+    Label4: TLabel;
+    SpeedButton4: TSpeedButton;
     Edit4: TEdit;
     GroupBox2: TGroupBox;
     Label6: TLabel;
@@ -63,31 +31,65 @@ type
     SpeedButton7: TSpeedButton;
     Label8: TLabel;
     SpeedButton8: TSpeedButton;
-    Label3: TLabel;
-    SpeedButton3: TSpeedButton;
-    Label9: TLabel;
-    SpeedButton9: TSpeedButton;
-    Label10: TLabel;
     Edit6: TEdit;
     Edit7: TEdit;
     Edit8: TEdit;
+    Label3: TLabel;
+    SpeedButton3: TSpeedButton;
     Edit3: TEdit;
+    Label9: TLabel;
+    SpeedButton9: TSpeedButton;
     Edit9: TEdit;
-    Button5: TButton;
-    Edit5: TEdit;
-    Edit33: TEdit;
-    tsColors: TJvStandardPage;
-    ComboBox2: TComboBox;
-    Button15: TButton;
-    CheckBox3: TCheckBox;
-    CheckBox9: TCheckBox;
-    cbNoColors: TCheckBox;
-    Label42: TLabel;
-    Shape2: TShape;
-    ListBox3: TListBox;
-    Button14: TButton;
-    Button12: TButton;
-    tsRomanization: TJvStandardPage;
+    Label10: TLabel;
+    tsDictionary: TTabSheet;
+    GroupBox3: TGroupBox;
+    CheckBox4: TCheckBox;
+    CheckBox5: TCheckBox;
+    CheckBox6: TCheckBox;
+    CheckBox7: TCheckBox;
+    CheckBox8: TCheckBox;
+    tsWordListPrinting: TTabSheet;
+    CheckBox14: TCheckBox;
+    CheckBox15: TCheckBox;
+    CheckBox16: TCheckBox;
+    CheckBox17: TCheckBox;
+    GroupBox4: TGroupBox;
+    lbWordPrintFormat: TListBox;
+    Label11: TLabel;
+    Edit10: TEdit;
+    tsCharacterCardPrinting: TTabSheet;
+    Label12: TLabel;
+    Edit11: TEdit;
+    Label13: TLabel;
+    Edit12: TEdit;
+    Label14: TLabel;
+    Edit13: TEdit;
+    CheckBox18: TCheckBox;
+    CheckBox19: TCheckBox;
+    CheckBox20: TCheckBox;
+    CheckBox21: TCheckBox;
+    CheckBox22: TCheckBox;
+    CheckBox23: TCheckBox;
+    Label15: TLabel;
+    Edit14: TEdit;
+    SpeedButton10: TSpeedButton;
+    CheckBox24: TCheckBox;
+    CheckBox25: TCheckBox;
+    tsDatabaseMaintenance: TTabSheet;
+    Button2: TButton;
+    Button1: TButton;
+    OpenDialog2: TOpenDialog;
+    SaveDialog2: TSaveDialog;
+    Button3: TButton;
+    tsGeneral: TTabSheet;
+    Label23: TLabel;
+    Edit16: TEdit;
+    tsTextTranslator: TTabSheet;
+    CheckBox44: TCheckBox;
+    CheckBox45: TCheckBox;
+    Button4: TButton;
+    Label26: TLabel;
+    Edit19: TEdit;
     GroupBox6: TGroupBox;
     Shape1: TShape;
     Label16: TLabel;
@@ -116,39 +118,93 @@ type
     RadioGroup6: TRadioGroup;
     RadioGroup7: TRadioGroup;
     Edit20: TEdit;
-    tsCharacterList: TJvStandardPage;
-    CheckBox51: TCheckBox;
-    ComboBox1: TComboBox;
-    Edit34: TEdit;
-    CheckBox57: TCheckBox;
-    Label52: TLabel;
-    Label35: TLabel;
-    CheckBox1: TCheckBox;
-    RadioGroup3: TRadioGroup;
-    tsCharacterDetails: TJvStandardPage;
+    Button5: TButton;
+    tsCharacterDetails: TTabSheet;
     Label34: TLabel;
-    SpeedButton11: TSpeedButton;
-    SpeedButton12: TSpeedButton;
     ListBox2: TListBox;
     Button7: TButton;
     Button8: TButton;
     Button9: TButton;
+    Label35: TLabel;
+    ComboBox1: TComboBox;
     Button10: TButton;
-    tsEditor: TJvStandardPage;
-    cbAozoraTagsInColor: TCheckBox;
-    cbLoadAozoraRuby: TCheckBox;
-    cbNoSaveChangesWarning: TCheckBox;
-    rgReleaseCursorMode: TRadioGroup;
-    cbAdjustCharPriorities: TCheckBox;
-    cbSaveAnnotationsToRuby: TCheckBox;
-    CheckBox61: TCheckBox;
-    lblSaveAnnotationsToRubyDesc: TLabel;
-    lblSavingAndLoading: TLabel;
-    lblAozoraRuby: TLabel;
+    SpeedButton11: TSpeedButton;
+    SpeedButton12: TSpeedButton;
+    tsPopupTool: TTabSheet;
+    CheckBox28: TCheckBox;
+    CheckBox47: TCheckBox;
+    CheckBox48: TCheckBox;
+    Label36: TLabel;
+    Edit21: TEdit;
+    Label37: TLabel;
+    Label38: TLabel;
+    Edit22: TEdit;
+    Label39: TLabel;
+    Edit23: TEdit;
+    Label40: TLabel;
+    Edit24: TEdit;
+    Button11: TButton;
+    CheckBox12: TCheckBox;
+    CheckBox50: TCheckBox;
+    tsColors: TTabSheet;
+    ListBox3: TListBox;
+    Shape2: TShape;
+    Button12: TButton;
+    Button14: TButton;
+    Button15: TButton;
+    Label42: TLabel;
+    ComboBox2: TComboBox;
+    CheckBox3: TCheckBox;
+    cbNoColors: TCheckBox;
+    CheckBox9: TCheckBox;
+    ColorDialog1: TColorDialog;
+    CheckBox51: TCheckBox;
+    CheckBox52: TCheckBox;
+    Label43: TLabel;
+    Edit26: TEdit;
+    Label44: TLabel;
+    Label45: TLabel;
+    Label46: TLabel;
+    Edit27: TEdit;
+    Edit28: TEdit;
+    Label50: TLabel;
+    Edit32: TEdit;
+    SpeedButton13: TSpeedButton;
+    CheckBox57: TCheckBox;
+    Label5: TLabel;
+    SpeedButton5: TSpeedButton;
+    Edit5: TEdit;
+    Label51: TLabel;
+    SpeedButton14: TSpeedButton;
+    Edit33: TEdit;
+    CheckBox58: TCheckBox;
+    CheckBox59: TCheckBox;
+    Edit34: TEdit;
+    Label52: TLabel;
+    tsEditor: TTabSheet;
     CheckBox60: TCheckBox;
-    Label54: TLabel;
+    CheckBox61: TCheckBox;
+    Label53: TLabel;
+    CheckBox62: TCheckBox;
+    CheckBox63: TCheckBox;
+    Edit35: TEdit;
+    tsAnnotations: TTabSheet;
+    CheckBox64: TCheckBox;
+    CheckBox65: TCheckBox;
+    CheckBox66: TCheckBox;
+    CheckBox67: TCheckBox;
+    CheckBox68: TCheckBox;
+    CheckBox69: TCheckBox;
+    Bevel1: TBevel;
+    Button16: TButton;
+    cbNoSaveChangesWarning: TCheckBox;
+    cbLoadAozoraRuby: TCheckBox;
+    lblAozoraRuby: TLabel;
+    cbAozoraTagsInColor: TCheckBox;
+    lblSavingAndLoading: TLabel;
+    cbSaveAnnotationsToRuby: TCheckBox;
+    lblSaveAnnotationsToRubyDesc: TLabel;
     lblAozoraTagsInColor: TLabel;
-    tsTextTranslator: TJvStandardPage;
     sbTextTranslator: TScrollBox;
     Label25: TLabel;
     GroupBox5: TGroupBox;
@@ -175,91 +231,33 @@ type
     CheckBox56: TCheckBox;
     cbTranslateNoLongTextWarning: TCheckBox;
     cbMultithreadedTranslation: TCheckBox;
-    tsPopupTool: TJvStandardPage;
-    Edit21: TEdit;
-    Edit22: TEdit;
-    CheckBox47: TCheckBox;
-    CheckBox48: TCheckBox;
-    Edit23: TEdit;
-    Edit27: TEdit;
-    Edit28: TEdit;
-    Edit24: TEdit;
-    Edit26: TEdit;
-    CheckBox28: TCheckBox;
-    Label38: TLabel;
-    Label39: TLabel;
-    Label36: TLabel;
-    Label37: TLabel;
-    Label40: TLabel;
-    Label45: TLabel;
-    Label46: TLabel;
-    Label43: TLabel;
-    Label44: TLabel;
-    tsDictionary: TJvStandardPage;
-    CheckBox12: TCheckBox;
-    CheckBox50: TCheckBox;
-    CheckBox58: TCheckBox;
-    Edit19: TEdit;
-    Label26: TLabel;
-    GroupBox3: TGroupBox;
-    CheckBox4: TCheckBox;
-    CheckBox5: TCheckBox;
-    CheckBox6: TCheckBox;
-    CheckBox7: TCheckBox;
-    CheckBox59: TCheckBox;
-    CheckBox8: TCheckBox;
-    tsWordListPrinting: TJvStandardPage;
-    CheckBox17: TCheckBox;
-    GroupBox4: TGroupBox;
-    Label23: TLabel;
-    lbWordPrintFormat: TListBox;
-    Edit16: TEdit;
-    Edit10: TEdit;
-    CheckBox16: TCheckBox;
-    Label11: TLabel;
-    CheckBox14: TCheckBox;
-    CheckBox15: TCheckBox;
-    tsCharacterCardPrinting: TJvStandardPage;
-    Edit14: TEdit;
-    CheckBox24: TCheckBox;
-    CheckBox25: TCheckBox;
-    CheckBox21: TCheckBox;
-    CheckBox22: TCheckBox;
-    CheckBox23: TCheckBox;
-    CheckBox62: TCheckBox;
-    CheckBox63: TCheckBox;
-    Edit35: TEdit;
-    CheckBox44: TCheckBox;
-    CheckBox45: TCheckBox;
-    CheckBox52: TCheckBox;
-    Label15: TLabel;
-    SpeedButton10: TSpeedButton;
-    Label53: TLabel;
-    Label12: TLabel;
-    Label13: TLabel;
-    Label14: TLabel;
-    CheckBox18: TCheckBox;
-    CheckBox19: TCheckBox;
-    CheckBox20: TCheckBox;
-    Edit11: TEdit;
-    Edit12: TEdit;
-    Edit13: TEdit;
-    tsDatabaseMaintenance: TJvStandardPage;
-    Button4: TButton;
-    Button11: TButton;
-    Button3: TButton;
-    Button2: TButton;
-    Button1: TButton;
-    tsAnnotations: TJvStandardPage;
-    CheckBox68: TCheckBox;
-    CheckBox67: TCheckBox;
-    Button16: TButton;
-    CheckBox69: TCheckBox;
-    CheckBox64: TCheckBox;
-    Bevel1: TBevel;
-    CheckBox66: TCheckBox;
-    CheckBox65: TCheckBox;
-    Splitter1: TSplitter;
+    lbContents: TListBox;
+    pnlButtons: TPanel;
+    btnChangeLanguage: TButton;
+    btnOk: TBitBtn;
+    Label54: TLabel;
+    cbAdjustCharPriorities: TCheckBox;
+    rgReleaseCursorMode: TRadioGroup;
+    sbGeneral: TScrollBox;
+    Label41: TLabel;
+    Label47: TLabel;
+    CheckBox26: TCheckBox;
+    CheckBox10: TCheckBox;
+    CheckBox11: TCheckBox;
+    CheckBox46: TCheckBox;
+    Edit25: TEdit;
+    CheckBox49: TCheckBox;
+    CheckBox53: TCheckBox;
+    CheckBox54: TCheckBox;
+    Edit29: TEdit;
+    CheckBox55: TCheckBox;
+    RadioGroup5: TRadioGroup;
+    CheckBox70: TCheckBox;
+    cbShowSplashscreen: TCheckBox;
+    cbSaveColumnWidths: TCheckBox;
+    btnResetColumnWidths: TButton;
+    btnResetSearchParams: TButton;
+    cbSaveSearchParams: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -309,18 +307,14 @@ type
     procedure lbContentsClick(Sender: TObject);
     procedure btnResetColumnWidthsClick(Sender: TObject);
     procedure btnResetSearchParamsClick(Sender: TObject);
-    procedure lbContentsCollapsing(Sender: TObject; Node: TTreeNode;
-      var AllowCollapse: Boolean);
   public
     function CheckFontBool(s:string):boolean;
     function AutoDetectFonts:boolean;
     procedure ResetDetList;
 
-  {
   protected
     procedure BuildContents;
     procedure SelectActiveContentItem;
-  }
 
   private
    { When doing LoadSettings with DelayUI=true, we load some settings into
@@ -338,14 +332,14 @@ type
     procedure ApplyUISettings;
     procedure SaveSettings;
 
-  public
-    function GetLanguageFile: string;
-    procedure SetLanguageFile(Value: string);
 
   end;
 
 var
   fSettings: TfSettings;
+
+const
+  WakanRegKey = 'Software\Labyrinth\Wakan';
 
 implementation
 
@@ -363,11 +357,9 @@ function ReturnStdFont(curfont:string;japanese:boolean):string; forward;
 
 procedure TfSettings.FormCreate(Sender: TObject);
 begin
-  lbContents.FullExpand;
-//  BuildContents;
+  BuildContents;
 end;
 
-{
 //Populates contents list from available pages
 procedure TfSettings.BuildContents;
 var i: integer;
@@ -392,13 +384,12 @@ begin
   if not found then
     lbContents.ItemIndex := -1; //deselect
 end;
-}
 
 procedure TfSettings.FormShow(Sender: TObject);
 begin
  { pcPages.OnChange is not triggered when ActivePage is loaded initially from FormSettings,
   so whatever, we'll do this on show just to be safe: }
-//  SelectActiveContentItem();
+  SelectActiveContentItem();
 
   Edit15Change(sender);
   Edit20Change(sender);
@@ -973,28 +964,6 @@ begin
   end;
 end;
 
-function TfSettings.GetLanguageFile: string;
-var reg:TRegIniFile;
-begin
-  reg := TRegIniFile.Create(WakanRegKey);
-  try
-    Result := reg.ReadString('Language','LNGFile','');
-  finally
-    reg.Free;
-  end;
-end;
-
-procedure TfSettings.SetLanguageFile(Value: string);
-var reg:TRegIniFile;
-begin
-  reg := TRegIniFile.Create(WakanRegKey);
-  try
-    reg.WriteString('Language', 'LNGFile', Value);
-  finally
-    reg.Free;
-  end;
-end;
-
 function checkfont(s:string):string;
 begin
   if Screen.Fonts.IndexOf(s)=-1 then result:='!'+s else result:=s;
@@ -1157,22 +1126,14 @@ end;
 
 procedure TfSettings.lbContentsClick(Sender: TObject);
 begin
-{
   if lbContents.ItemIndex >= 0 then
     pcPages.ActivePage := TTabSheet(lbContents.Items.Objects[lbContents.ItemIndex]);
     //will trigger pointless SelectActiveContentItem(), but whatever
-}
-end;
-
-procedure TfSettings.lbContentsCollapsing(Sender: TObject; Node: TTreeNode;
-  var AllowCollapse: Boolean);
-begin
-  AllowCollapse := false;
 end;
 
 procedure TfSettings.pcPagesChange(Sender: TObject);
 begin
-///  SelectActiveContentItem();
+  SelectActiveContentItem();
 end;
 
 procedure TfSettings.Edit15Change(Sender: TObject);
