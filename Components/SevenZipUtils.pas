@@ -4,7 +4,7 @@ unit SevenZipUtils;
 *)
 
 interface
-uses SysUtils, Classes, Windows, ActiveX, JclBase, SevenZip, UniStrUtils;
+uses SysUtils, Classes, Windows, ActiveX, JclBase, SevenZip;
 
 type
   ESevenZipException = class(Exception);
@@ -52,12 +52,12 @@ type
   protected
     FArchive: IInArchive;
   public
-    constructor Create(ClsID: TGUID; Filename: UniString); overload;
+    constructor Create(ClsID: TGUID; Filename: UnicodeString); overload;
     constructor Create(ClsID: TGUID; Stream: TStream); overload;
     destructor Destroy; override;
     function NumberOfItems: cardinal;
     function BoolProperty(Index, PropID: cardinal): boolean;
-    function StrProperty(Index, PropID: cardinal): UniString;
+    function StrProperty(Index, PropID: cardinal): UnicodeString;
     function ExtractFile(Index: cardinal): TMemoryStream;
 
   end;
@@ -208,7 +208,7 @@ end;
 
 
 
-constructor TSevenZipArchive.Create(ClsID: TGUID; Filename: UniString);
+constructor TSevenZipArchive.Create(ClsID: TGUID; Filename: UnicodeString);
 var hr: HRESULT;
   g_IID: TGUID;
   InStream: IInStream;
@@ -288,7 +288,7 @@ begin
   PropVariantClear(@val);
 end;
 
-function TSevenZipArchive.StrProperty(Index, PropID: cardinal): UniString;
+function TSevenZipArchive.StrProperty(Index, PropID: cardinal): UnicodeString;
 var hr: HRESULT;
   val: PROPVARIANT;
   tmp: integer;
