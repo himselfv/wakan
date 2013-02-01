@@ -58,6 +58,10 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure DrawGrid1KeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure DrawGrid1KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure DrawGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState;
+      MousePos: TPoint; var Handled: Boolean);
 
   protected
     procedure ReactToKanjiSelection;
@@ -658,6 +662,8 @@ begin
   sel := DrawGrid1.Selection;
   for i := sel.Top to sel.Bottom do
     for j := sel.Left to sel.Right do begin
+      if DrawGrid1.ColCount*i+j>=ki.Count then //selection can cover unused cells
+        continue;
       char := ki[DrawGrid1.ColCount*i+j];
       chars := chars + copy(char,2,Length(char)-1); //delete first char
     end;
@@ -680,6 +686,12 @@ end;
 
 procedure TfKanji.DrawGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
+begin
+  ReactToKanjiSelection;
+end;
+
+procedure TfKanji.DrawGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState;
+  MousePos: TPoint; var Handled: Boolean);
 begin
   ReactToKanjiSelection;
 end;
@@ -779,23 +791,32 @@ begin
   showmessage(_l('#00150^eFeature not implemented yet.'));
 end;
 
+procedure TfKanji.DrawGrid1KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+var sel: TGridRect;
+begin
+  if (Key=Ord('A')) and (ssCtrl in Shift) then begin
+    sel.Left := 0;
+    sel.Top := 0;
+    sel.Right := DrawGrid1.ColCount-1;
+    sel.Bottom := DrawGrid1.RowCount-1;
+    DrawGrid1.Selection := sel;
+  end;
+end;
+
 procedure TfKanji.DrawGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
-  if key=' 'then
-  begin
+  if key=' ' then begin
     clip:=clip+curkanji;
     fMenu.ChangeClipboard;
   end;
-  if key=#13 then
-  begin
+  if key=Chr(VK_RETURN) then
     if not fMenu.aKanjiDetails.Checked then
       fMenu.aKanjiDetails.Execute
     else
       if fKanjiDetails.Visible then
         fKanjiDetails.SetFocus;
-  end;
-  if key=#8 then
-  begin
+  if key=Chr(VK_BACK) then begin
     if length(clip)>0 then delete(clip,length(clip)-3,4);
     fMenu.ChangeClipboard;
   end;

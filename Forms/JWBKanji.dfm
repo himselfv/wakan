@@ -171,11 +171,14 @@ object fKanji: TfKanji
       TabOrder = 0
       OnDblClick = DrawGrid1DblClick
       OnDrawCell = DrawGrid1DrawCell
+      OnKeyDown = DrawGrid1KeyDown
       OnKeyPress = DrawGrid1KeyPress
       OnKeyUp = DrawGrid1KeyUp
       OnMouseDown = DrawGrid1MouseDown
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
+      OnMouseWheelDown = DrawGrid1MouseWheelDown
+      OnMouseWheelUp = DrawGrid1MouseWheelDown
       OnSelectCell = DrawGrid1SelectCell
     end
     object btnPrintCards: TButton
