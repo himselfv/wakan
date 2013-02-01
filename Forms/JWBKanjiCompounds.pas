@@ -41,6 +41,7 @@ type
     FCurChar: FChar;
   public
     procedure Clear;
+    procedure Refresh;
     procedure SetCharCompounds(ch:FChar);
   end;
 
@@ -90,6 +91,11 @@ begin
   finally
     FreeAndNil(sl);
   end;
+end;
+
+procedure TfKanjiCompounds.Refresh;
+begin
+  SetCharCompounds(FCurChar);
 end;
 
 procedure TfKanjiCompounds.SetCharCompounds(ch:FChar);
@@ -194,7 +200,7 @@ end;
 
 procedure TfKanjiCompounds.SpeedButton11Click(Sender: TObject);
 begin
-  fKanji.KanjiCompounds_CheckBox1Click(sender);
+  Self.Refresh;
 end;
 
 procedure TfKanjiCompounds.StringGrid1DblClick(Sender: TObject);

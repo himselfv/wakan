@@ -63,7 +63,6 @@ type
     procedure ReactToKanjiSelection;
   public
     procedure KanjiSearch_SpeedButton20Click(Sender: TObject);
-    procedure KanjiCompounds_CheckBox1Click(Sender: TObject);
     procedure DoIt;
     procedure DoItTimer;
     procedure SaveChars;
@@ -645,14 +644,6 @@ begin
   end;
   fKanjiSearch.rgSortBy.ItemIndex:=0;
   DoIt;
-end;
-
-procedure TfKanji.KanjiCompounds_CheckBox1Click(Sender: TObject);
-var sel:TGridRect;
-    b:boolean;
-begin
-  sel:=DrawGrid1.Selection;
-  DrawGrid1SelectCell(sender,sel.left,sel.top,b);
 end;
 
 //Called when a kanji selection changes
