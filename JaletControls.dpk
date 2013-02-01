@@ -1,4 +1,4 @@
-package UrlLabelD2010;
+package JaletControls;
 
 {$R *.res}
 {$ALIGN 8}
@@ -29,6 +29,7 @@ requires
   vcl;
 
 contains
-  UrlLabel in 'UrlLabel.pas';
+  FreeSelectionGrid in 'Controls\FreeSelectionGrid.pas',
+  UrlLabel in 'Controls\UrlLabel.pas';
 
 end.

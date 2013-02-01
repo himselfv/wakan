@@ -681,7 +681,7 @@ procedure TfKanji.DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
   var CanSelect: Boolean);
 begin
  //Some cells are off limits
-  Canselect := not (DrawGrid1.ColCount*ARow+ACol>=ki.Count);
+  CanSelect := not (DrawGrid1.ColCount*ARow+ACol>=ki.Count);
 end;
 
 procedure TfKanji.DrawGrid1MouseUp(Sender: TObject; Button: TMouseButton;
@@ -709,7 +709,7 @@ var w:widechar;
   kig:string;
   sbJouyou:string;
 begin
-  if (ARow*DrawGrid1.ColCOunt+ACol>=ki.Count) then
+  if (ARow*DrawGrid1.ColCount+ACol>=ki.Count) then
   begin
     DrawGrid1.Canvas.Pen.Color:=clWindow;
     DrawGrid1.Canvas.Brush.Color:=clWindow;

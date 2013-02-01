@@ -459,15 +459,15 @@ type
     //What. Are. These.
     //And why are there two of them?
     intorgPaint:TPaintBox;
-    intorgGrid:TDrawGrid;
+    intorgGrid:TCustomDrawGrid;
     intorgcx,intorgcy,intorgsx,intorgsy:integer;
     intmoPaint:TPaintBox;
-    intmoGrid:TDrawGrid;
+    intmoGrid:TCustomDrawGrid;
     intmocx,intmocy,intmosx,intmosy:integer;
     procedure CalculateCurString;
   public
     procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
-    procedure IntTipGridOver(sg:TDrawGrid;x,y:integer;leftDown:boolean);
+    procedure IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
 
   protected //Clipboard
    { SetClipboardViewer is supported starting with Windows 2000,
@@ -4340,7 +4340,7 @@ begin
   CalculateCurString;
 end;
 
-procedure TfMenu.IntTipGridOver(sg:TDrawGrid;x,y:integer;leftDown:boolean);
+procedure TfMenu.IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
 begin
   if leftDown and ((intorgGrid<>sg) or (intorgPaint<>nil)) then
   begin
