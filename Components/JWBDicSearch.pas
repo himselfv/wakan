@@ -295,12 +295,17 @@ end;
 
 function TSearchResult.ArticlesToString: string;
 var statpref: string;
+  tmp: string;
 begin
   if UserScore>=0 then
     statpref:=ALTCH_EXCL+inttostr(UserScore)
   else
     statpref:='';
-  Result := statpref + kanji + ' [' + statpref + kana + '] {' + statpref + entry + '}';
+ //wakan uses {} as special chars, unfortunately
+  tmp := entry;
+  repl(tmp, '{', '(');
+  repl(tmp, '}', ')');
+  Result := statpref + kanji + ' [' + statpref + kana + '] {' + statpref + tmp + '}';
 end;
 
 

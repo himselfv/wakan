@@ -461,6 +461,8 @@ begin
   end;
 end;
 
+//Splits translation record in old Wakan format into parts:
+//  kanji [kana] {translation} rest
 procedure SplitWord(s:FString; var sp1,sp2,sp4,sp3:FString);
 begin
   sp2:='';
