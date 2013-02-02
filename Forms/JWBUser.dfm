@@ -18,7 +18,6 @@ object fUser: TfUser
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnHide = FormHide
-  OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -495,7 +494,7 @@ object fUser: TfUser
       OnChange = Edit1Change
       OnClick = Edit1Click
     end
-    object StringGrid1: TStringGrid
+    object StringGrid1: TWakanWordGrid
       Left = 11
       Top = 65
       Width = 685
@@ -506,6 +505,7 @@ object fUser: TfUser
       DefaultRowHeight = 16
       FixedCols = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+      PopupMenu = PopupMenu1
       TabOrder = 1
       OnDblClick = StringGrid1DblClick
       OnDrawCell = StringGrid1DrawCell
@@ -516,7 +516,7 @@ object fUser: TfUser
       ColWidths = (
         131
         128
-        575)
+        402)
     end
     object BitBtn1: TBitBtn
       Left = 626
@@ -529,6 +529,7 @@ object fUser: TfUser
       Anchors = [akTop, akRight]
       Caption = '#00669^eSearch'
       Default = True
+      DoubleBuffered = True
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -548,6 +549,7 @@ object fUser: TfUser
         33333337FFFFFF7FF3333333000000000333333777777777F33333330000000B
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       ParentFont = False
       TabOrder = 2
       OnClick = BitBtn1Click
@@ -570,5 +572,14 @@ object fUser: TfUser
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 2
+  end
+  object PopupMenu1: TPopupMenu
+    OnPopup = PopupMenu1Popup
+    Left = 32
+    Top = 48
+    object miResetColumns: TMenuItem
+      Caption = '#01002^eReset columns'
+      OnClick = miResetColumnsClick
+    end
   end
 end

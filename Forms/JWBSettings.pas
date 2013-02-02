@@ -255,8 +255,6 @@ type
     CheckBox70: TCheckBox;
     cbShowSplashscreen: TCheckBox;
     cbSaveColumnWidths: TCheckBox;
-    btnResetColumnWidths: TButton;
-    btnResetSearchParams: TButton;
     cbSaveSearchParams: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
@@ -305,8 +303,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
     procedure lbContentsClick(Sender: TObject);
-    procedure btnResetColumnWidthsClick(Sender: TObject);
-    procedure btnResetSearchParamsClick(Sender: TObject);
   public
     function CheckFontBool(s:string):boolean;
     function AutoDetectFonts:boolean;
@@ -336,6 +332,9 @@ type
     function GetTranslationFile: string;
     procedure SetTranslationFile(const Value: string);
 
+  public //Column widths
+
+
   end;
 
 var
@@ -346,7 +345,7 @@ implementation
 uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords;
+  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid;
 
 var colorfrom:integer;
 
@@ -652,31 +651,38 @@ begin
   cbSaveColumnWidths.Checked:=reg.ReadBool('General','SaveColumnWidths',true);
   cbSaveSearchParams.Checked:=reg.ReadBool('General','SaveSearchParams',false);
 
-  //Column widths
-  fWords.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',110);
-  fWords.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','UserCol2',138);
-  fWords.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',306);
-  fWords.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',159);
+ //Column widths
+  fWords.SetDefaultColumnWidths;
+  fUser.SetDefaultColumnWidths;
+  fKanjiCompounds.SetDefaultColumnWidths;
+  if cbSaveColumnWidths.Checked then begin
+    fWords.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',fWords.StringGrid1.ColWidths[0]);
+    fWords.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','UserCol2',fWords.StringGrid1.ColWidths[1]);
+    fWords.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',fWords.StringGrid1.ColWidths[2]);
+    fWords.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',fWords.StringGrid1.ColWidths[3]);
 
-  fUser.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',131);
-  fUser.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',128);
-  fUser.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',575);
+    fUser.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fUser.StringGrid1.ColWidths[0]);
+    fUser.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fUser.StringGrid1.ColWidths[1]);
+    fUser.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fUser.StringGrid1.ColWidths[2]);
 
-  fKanjiCompounds.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',110);
-  fKanjiCompounds.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',138);
-  fKanjiCompounds.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','KanjiCompCol3',353);
+    fKanjiCompounds.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
+    fKanjiCompounds.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
+    fKanjiCompounds.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid1.ColWidths[2]);
+  end;
 
   //Search params
-	fKanjiSearch.SpeedButton2.Down :=reg.ReadBool('KanjiSearch','Common',false);
-	fKanjiSearch.edtPinYin.Text :=reg.ReadString('KanjiSearch','PinYin','');
-	fKanjiSearch.edtYomi.Text :=reg.ReadString('KanjiSearch','Yomi','');
-	fKanjiSearch.edtDefinition.Text :=reg.ReadString('KanjiSearch','Definition','');
-	fKanjiSearch.edtStrokeCount.Text := reg.ReadString('KanjiSearch','Strokes','');
-  //TODO: Radicals
-	fKanjiSearch.edtSKIP.Text :=reg.ReadString('KanjiSearch','SKIP','');
-	fKanjiSearch.edtJouyou.Text :=reg.ReadString('KanjiSearch','Jouyou','');
-	fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
-	fKanjiSearch.edtOther.text :=reg.ReadString('KanjiSearch','Other','')
+  if cbSaveSearchParams.Checked then begin
+    fKanjiSearch.SpeedButton2.Down :=reg.ReadBool('KanjiSearch','Common',false);
+    fKanjiSearch.edtPinYin.Text :=reg.ReadString('KanjiSearch','PinYin','');
+    fKanjiSearch.edtYomi.Text :=reg.ReadString('KanjiSearch','Yomi','');
+    fKanjiSearch.edtDefinition.Text :=reg.ReadString('KanjiSearch','Definition','');
+    fKanjiSearch.edtStrokeCount.Text := reg.ReadString('KanjiSearch','Strokes','');
+    //TODO: Radicals
+    fKanjiSearch.edtSKIP.Text :=reg.ReadString('KanjiSearch','SKIP','');
+    fKanjiSearch.edtJouyou.Text :=reg.ReadString('KanjiSearch','Jouyou','');
+    fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
+    fKanjiSearch.edtOther.text :=reg.ReadString('KanjiSearch','Other','');
+  end; //else they're empty by default
 end;
 
 procedure TfSettings.ApplyUISettings;
@@ -889,7 +895,6 @@ begin
   if fKanjiDetails.Visible then inc(setwindows,128);
   reg.WriteInteger('Layout','SecondaryWindows',setwindows);
 
-
   reg.WriteBool('General','SaveColumnWidths',cbSaveColumnWidths.Checked);
   reg.WriteBool('General','SaveSearchParams',cbSaveSearchParams.Checked);
 
@@ -919,48 +924,6 @@ begin
     reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text);
     reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
     reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text);
-  end;
-end;
-
-procedure TfSettings.btnResetColumnWidthsClick(Sender: TObject);
-var reg: TRegIniFile;
-begin
-  reg:=TRegIniFile.Create(WakanRegKey);
-  try
-    reg.DeleteKey('Grids','UserCol1');
-    reg.DeleteKey('Grids','UserCol2');
-    reg.DeleteKey('Grids','UserCol3');
-    reg.DeleteKey('Grids','UserCol4');
-
-    reg.DeleteKey('Grids','DictCol1');
-    reg.DeleteKey('Grids','DictCol2');
-    reg.DeleteKey('Grids','DictCol3');
-
-    reg.DeleteKey('Grids','KanjiCompCol1');
-    reg.DeleteKey('Grids','KanjiCompCol2');
-    reg.DeleteKey('Grids','KanjiCompCol3');
-  finally
-    reg.Free;
-  end;
-end;
-
-procedure TfSettings.btnResetSearchParamsClick(Sender: TObject);
-var reg: TRegIniFile;
-begin
-  reg:=TRegIniFile.Create(WakanRegKey);
-  try
-    reg.DeleteKey('KanjiSearch','Common');
-    reg.DeleteKey('KanjiSearch','PinYin');
-    reg.DeleteKey('KanjiSearch','Yomi');
-    reg.DeleteKey('KanjiSearch','Definition');
-    reg.DeleteKey('KanjiSearch','Strokes');
-    //TODO: Radicals
-    reg.DeleteKey('KanjiSearch','SKIP');
-    reg.DeleteKey('KanjiSearch','Jouyou');
-    reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
-    reg.DeleteKey('KanjiSearch','Other');
-  finally
-    reg.Free;
   end;
 end;
 

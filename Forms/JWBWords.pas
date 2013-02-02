@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings;
+  StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings, Menus,
+  WakanWordGrid;
 
 type
   TMoveDirection = (mdUp, mdDown);
@@ -21,7 +22,7 @@ type
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     SpeedButton4: TSpeedButton;
-    StringGrid1: TStringGrid;
+    StringGrid1: TWakanGrid;
     Button9: TButton;
     Button10: TButton;
     Button15: TButton;
@@ -30,6 +31,8 @@ type
     Panel4: TPanel;
     Panel5: TPanel;
     Button2: TButton;
+    PopupMenu1: TPopupMenu;
+    miResetColumns: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
@@ -54,7 +57,6 @@ type
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton4Click(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure StringGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -64,6 +66,13 @@ type
     procedure StringGrid1Click(Sender: TObject);
     procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure PopupMenu1Popup(Sender: TObject);
+    procedure miResetColumnsClick(Sender: TObject);
+    procedure StringGrid1ControlResize(Sender: TObject);
+
+  public
+    procedure SetDefaultColumnWidths;
+    procedure AutoSizeColumns;
 
   public
     procedure SetWordsLearnState(ls: integer);
@@ -125,6 +134,73 @@ var wl,wlc:TStringList;
     lastwordadded:boolean;
 
 {$R *.DFM}
+
+procedure TfWords.FormCreate(Sender: TObject);
+begin
+  wl:=TStringList.Create;
+  wlc:=TStringList.Create;
+  ll:=TStringList.Create;
+  ltl:=TStringList.Create;
+  lastwordind:=0;
+end;
+
+procedure TfWords.FormDestroy(Sender: TObject);
+begin
+  wl.Free;
+  wlc.Free;
+  ll.Free;
+  ltl.Free;
+end;
+
+procedure TfWords.FormShow(Sender: TObject);
+begin
+  fMenu.ShowForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
+  fMenu.ShowForm(SpeedButton1,fMenu.aUserExamples,fExamples);
+  fMenu.ShowForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
+  fMenu.aUser.Checked:=true;
+  ShowIt(false);
+end;
+
+procedure TfWords.FormHide(Sender: TObject);
+begin
+//  fMenu.HideForm(SpeedButton1,fMenu.aUserAdd,fUserAdd);
+//  fMenu.HideForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
+//  fMenu.HideForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
+  fMenu.aUser.Checked:=false;
+end;
+
+procedure TfWords.SetDefaultColumnWidths;
+begin
+  StringGrid1.ColWidths[0]:=110;
+  StringGrid1.ColWidths[1]:=138;
+  StringGrid1.ColWidths[2]:=306;
+  StringGrid1.ColWidths[3]:=159;
+  AutoSizeColumns;
+end;
+
+procedure TfWords.AutoSizeColumns;
+begin
+  StringGrid1.ColWidths[2]:=StringGrid1.Width-StringGrid1.ColWidths[1]-StringGrid1.ColWidths[3]-StringGrid1.ColWidths[0]-20;
+end;
+
+procedure TfWords.StringGrid1ControlResize(Sender: TObject);
+begin
+  AutoSizeColumns;
+end;
+
+procedure TfWords.PopupMenu1Popup(Sender: TObject);
+var p: TPoint;
+  ACol, ARow: integer;
+begin
+  p := StringGrid1.ScreenToClient(Mouse.CursorPos);
+  StringGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
+  miResetColumns.Visible := (ARow=0); //click on header
+end;
+
+procedure TfWords.miResetColumnsClick(Sender: TObject);
+begin
+  SetDefaultColumnWidths;
+end;
 
 procedure TfWords.ShowIt(warningifnotfound:boolean);
 var sl:TStringList;
@@ -228,15 +304,6 @@ begin
   Button18.Enabled:=StringGrid1.Visible;
   Button19.Enabled:=StringGrid1.Visible;
   if StringGrid1.Visible then StringGrid1.SetFocus;
-end;
-
-procedure TfWords.FormShow(Sender: TObject);
-begin
-  fMenu.ShowForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
-  fMenu.ShowForm(SpeedButton1,fMenu.aUserExamples,fExamples);
-  fMenu.ShowForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
-  fMenu.aUser.Checked:=true;
-  ShowIt(false);
 end;
 
 procedure TfWords.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -539,23 +606,6 @@ begin
       Screen.Cursor:=crDefault;
     end;
   end;
-end;
-
-procedure TfWords.FormCreate(Sender: TObject);
-begin
-  wl:=TStringList.Create;
-  wlc:=TStringList.Create;
-  ll:=TStringList.Create;
-  ltl:=TStringList.Create;
-  lastwordind:=0;
-end;
-
-procedure TfWords.FormDestroy(Sender: TObject);
-begin
-  wl.Free;
-  wlc.Free;
-  ll.Free;
-  ltl.Free;
 end;
 
 //TODO: Convert this function to unicode
@@ -2243,25 +2293,11 @@ end;
 procedure TfWords.SpeedButton2Click(Sender: TObject);
 begin
   fMenu.ToggleForm(fUserFilters,SpeedButton2,fMenu.aUserSettings);
-  FormResize(sender);
 end;
 
 procedure TfWords.SpeedButton4Click(Sender: TObject);
 begin
   fMenu.ToggleForm(fUserDetails,SpeedButton4,fMenu.aUserDetails);
-end;
-
-procedure TfWords.FormResize(Sender: TObject);
-begin
-  StringGrid1.ColWidths[2]:=StringGrid1.Width-StringGrid1.ColWidths[1]-StringGrid1.ColWidths[3]-StringGrid1.ColWidths[0]-20;
-end;
-
-procedure TfWords.FormHide(Sender: TObject);
-begin
-//  fMenu.HideForm(SpeedButton1,fMenu.aUserAdd,fUserAdd);
-//  fMenu.HideForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
-//  fMenu.HideForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
-  fMenu.aUser.Checked:=false;
 end;
 
 procedure TfWords.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;

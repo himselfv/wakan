@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, StdCtrls, ExtCtrls, Buttons, JWBStrings;
+  Grids, StdCtrls, ExtCtrls, Buttons, JWBStrings, WakanWordGrid, Menus;
 
 type
   TfKanjiCompounds = class(TForm)
@@ -13,17 +13,18 @@ type
     Shape7: TShape;
     Label25: TLabel;
     cbLeftMatchOnly: TCheckBox;
-    StringGrid1: TStringGrid;
+    StringGrid1: TWakanWordGrid;
     Bevel1: TBevel;
     cbPopularOnly: TCheckBox;
     sbCopyToClipboard: TSpeedButton;
     sbInsertIntoVocab: TSpeedButton;
     cbSortByFrequency: TCheckBox;
+    PopupMenu1: TPopupMenu;
+    miResetColumns: TMenuItem;
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure SpeedButton11Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DblClick(Sender: TObject);
     procedure StringGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -37,6 +38,10 @@ type
     procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
+    procedure PopupMenu1Popup(Sender: TObject);
+    procedure miResetColumnsClick(Sender: TObject);
+  public
+    procedure SetDefaultColumnWidths;
   protected
     FCurChar: FChar;
   public
@@ -74,9 +79,26 @@ begin
   SetCharCompounds(FCurChar);
 end;
 
-procedure TfKanjiCompounds.FormResize(Sender: TObject);
+procedure TfKanjiCompounds.SetDefaultColumnWidths;
 begin
-  StringGrid1.ColWidths[2]:=StringGrid1.Width-StringGrid1.ColWidths[1]-StringGrid1.ColWidths[0]-24;
+  StringGrid1.ColWidths[0]:=110;
+  StringGrid1.ColWidths[1]:=138;
+  StringGrid1.ColWidths[2]:=353;
+  StringGrid1.AutoSizeColumns;
+end;
+
+procedure TfKanjiCompounds.PopupMenu1Popup(Sender: TObject);
+var p: TPoint;
+  ACol, ARow: integer;
+begin
+  p := StringGrid1.ScreenToClient(Mouse.CursorPos);
+  StringGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
+  miResetColumns.Visible := (ARow=0); //click on header
+end;
+
+procedure TfKanjiCompounds.miResetColumnsClick(Sender: TObject);
+begin
+  SetDefaultColumnWidths;
 end;
 
 procedure TfKanjiCompounds.Clear;

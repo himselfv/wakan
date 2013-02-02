@@ -15,7 +15,6 @@ object fKanjiCompounds: TfKanjiCompounds
   Scaled = False
   OnClose = FormClose
   OnCreate = FormCreate
-  OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
     468
@@ -154,7 +153,7 @@ object fKanjiCompounds: TfKanjiCompounds
     TabOrder = 0
     OnClick = SpeedButton11Click
   end
-  object StringGrid1: TStringGrid
+  object StringGrid1: TWakanWordGrid
     Left = 9
     Top = 10
     Width = 449
@@ -165,6 +164,7 @@ object fKanjiCompounds: TfKanjiCompounds
     DefaultRowHeight = 16
     FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+    PopupMenu = PopupMenu1
     TabOrder = 1
     OnDblClick = StringGrid1DblClick
     OnDrawCell = StringGrid1DrawCell
@@ -175,7 +175,7 @@ object fKanjiCompounds: TfKanjiCompounds
     ColWidths = (
       110
       138
-      353)
+      177)
   end
   object cbPopularOnly: TCheckBox
     Left = 62
@@ -200,5 +200,14 @@ object fKanjiCompounds: TfKanjiCompounds
     ShowHint = True
     TabOrder = 3
     OnClick = SpeedButton11Click
+  end
+  object PopupMenu1: TPopupMenu
+    OnPopup = PopupMenu1Popup
+    Left = 24
+    Top = 24
+    object miResetColumns: TMenuItem
+      Caption = '#01002^eReset columns'
+      OnClick = miResetColumnsClick
+    end
   end
 end

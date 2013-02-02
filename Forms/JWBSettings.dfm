@@ -3,7 +3,7 @@ object fSettings: TfSettings
   Top = 131
   BorderStyle = bsDialog
   Caption = '#00397^eSettings'
-  ClientHeight = 492
+  ClientHeight = 501
   ClientWidth = 661
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -23,28 +23,28 @@ object fSettings: TfSettings
     Left = 177
     Top = 0
     Width = 484
-    Height = 451
+    Height = 460
     ActivePage = tsGeneral
     Align = alClient
     MultiLine = True
     Style = tsButtons
     TabOrder = 0
     OnChange = pcPagesChange
+    ExplicitHeight = 451
     object tsGeneral: TTabSheet
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
+      ExplicitHeight = 441
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
         Width = 476
-        Height = 441
+        Height = 450
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        DesignSize = (
-          459
-          441)
+        ExplicitHeight = 441
         object Label41: TLabel
           Left = 16
           Top = 224
@@ -61,12 +61,12 @@ object fSettings: TfSettings
         end
         object cbSaveSearchParams: TCheckBox
           Left = 16
-          Top = 453
+          Top = 430
           Width = 417
           Height = 17
           Hint = '#00999^eKanji search params will be preserved on program restart'
           Caption = '#00998^eSave kanji search params'
-          TabOrder = 16
+          TabOrder = 14
         end
         object CheckBox26: TCheckBox
           Left = 16
@@ -190,7 +190,7 @@ object fSettings: TfSettings
         end
         object cbSaveColumnWidths: TCheckBox
           Left = 16
-          Top = 426
+          Top = 407
           Width = 417
           Height = 17
           Hint = 
@@ -199,31 +199,12 @@ object fSettings: TfSettings
           Caption = '#00995^eSave column widths'
           TabOrder = 13
         end
-        object btnResetColumnWidths: TButton
-          Left = 352
-          Top = 422
-          Width = 104
-          Height = 25
-          Anchors = [akTop, akRight]
-          Caption = '#00997^eReset'
-          TabOrder = 14
-          OnClick = btnResetColumnWidthsClick
-        end
-        object btnResetSearchParams: TButton
-          Left = 352
-          Top = 449
-          Width = 104
-          Height = 25
-          Anchors = [akTop, akRight]
-          Caption = '#01000^eReset'
-          TabOrder = 15
-          OnClick = btnResetSearchParamsClick
-        end
       end
     end
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
+      ExplicitHeight = 441
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -527,6 +508,7 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
+      ExplicitHeight = 441
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -609,6 +591,7 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
+      ExplicitHeight = 441
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -713,6 +696,7 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
+      ExplicitHeight = 441
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1105,6 +1089,7 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
+      ExplicitHeight = 441
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1211,6 +1196,7 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
+      ExplicitHeight = 441
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1411,6 +1397,7 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
+      ExplicitHeight = 441
       object Button2: TButton
         Left = 16
         Top = 376
@@ -1492,14 +1479,16 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
+      ExplicitHeight = 441
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
         Width = 476
-        Height = 441
+        Height = 450
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
+        ExplicitHeight = 441
         object Label25: TLabel
           Left = 12
           Top = 250
@@ -1721,9 +1710,10 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
+      ExplicitHeight = 441
       DesignSize = (
         476
-        441)
+        450)
       object Label34: TLabel
         Left = 8
         Top = 8
@@ -1788,41 +1778,45 @@ object fSettings: TfSettings
         Left = 8
         Top = 24
         Width = 443
-        Height = 323
+        Height = 332
         Anchors = [akLeft, akTop, akRight, akBottom]
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox2Click
+        ExplicitHeight = 323
       end
       object Button7: TButton
         Left = 8
-        Top = 354
+        Top = 363
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = '#00534^eAdd...'
         TabOrder = 1
         OnClick = Button7Click
+        ExplicitTop = 354
       end
       object Button8: TButton
         Left = 180
-        Top = 354
+        Top = 363
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = '#00535^eChange...'
         TabOrder = 2
         OnClick = Button8Click
+        ExplicitTop = 354
       end
       object Button9: TButton
         Left = 350
-        Top = 354
+        Top = 363
         Width = 97
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = '#00536^eDelete'
         TabOrder = 3
         OnClick = Button9Click
+        ExplicitTop = 354
       end
       object Button10: TButton
         Left = 296
@@ -1838,6 +1832,7 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
+      ExplicitHeight = 441
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -1988,12 +1983,13 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
+      ExplicitHeight = 441
       DesignSize = (
         476
-        441)
+        450)
       object Shape2: TShape
         Left = 8
-        Top = 347
+        Top = 356
         Width = 105
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -2010,31 +2006,34 @@ object fSettings: TfSettings
         Left = 8
         Top = 72
         Width = 457
-        Height = 272
+        Height = 281
         Anchors = [akLeft, akTop, akBottom]
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox3Click
+        ExplicitHeight = 272
       end
       object Button12: TButton
         Left = 120
-        Top = 347
+        Top = 356
         Width = 217
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = '#00553^eChange'
         TabOrder = 1
         OnClick = Button12Click
+        ExplicitTop = 347
       end
       object Button14: TButton
         Left = 344
-        Top = 347
+        Top = 356
         Width = 121
         Height = 25
         Anchors = [akLeft, akBottom]
         Caption = '#00554^eRevert to default'
         TabOrder = 2
         OnClick = Button14Click
+        ExplicitTop = 347
       end
       object Button15: TButton
         Left = 336
@@ -2105,6 +2104,7 @@ object fSettings: TfSettings
       Caption = '#00966^eEditor'
       ImageIndex = 12
       TabVisible = False
+      ExplicitHeight = 441
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2234,6 +2234,7 @@ object fSettings: TfSettings
       Caption = '#00967^eAnnotations'
       ImageIndex = 13
       TabVisible = False
+      ExplicitHeight = 441
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2313,20 +2314,22 @@ object fSettings: TfSettings
     Left = 0
     Top = 0
     Width = 177
-    Height = 451
+    Height = 460
     Align = alLeft
     ItemHeight = 13
     TabOrder = 1
     OnClick = lbContentsClick
+    ExplicitHeight = 451
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 451
+    Top = 460
     Width = 661
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 451
     DesignSize = (
       661
       41)
@@ -2355,6 +2358,7 @@ object fSettings: TfSettings
       Cancel = True
       Caption = 'OK'
       Default = True
+      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -2374,6 +2378,7 @@ object fSettings: TfSettings
         0000}
       ModalResult = 1
       NumGlyphs = 2
+      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOkClick
     end

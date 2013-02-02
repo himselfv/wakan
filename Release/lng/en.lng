@@ -1103,6 +1103,7 @@
 00999>Kanji search params will be preserved on program restart
 01000>Reset
 01001>Multiple kanji selected
+01002>Reset columns
 ;
 ;
 ; EDICT markers.

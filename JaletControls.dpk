@@ -30,6 +30,7 @@ requires
 
 contains
   FreeSelectionGrid in 'Controls\FreeSelectionGrid.pas',
-  UrlLabel in 'Controls\UrlLabel.pas';
+  UrlLabel in 'Controls\UrlLabel.pas',
+  WakanWordGrid in 'Controls\WakanWordGrid.pas';
 
 end.

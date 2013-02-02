@@ -17,7 +17,6 @@ object fWords: TfWords
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnHide = FormHide
-  OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -147,7 +146,7 @@ object fWords: TfWords
         ShowHint = True
         OnClick = SpeedButton4Click
       end
-      object StringGrid1: TStringGrid
+      object StringGrid1: TWakanGrid
         Left = 11
         Top = 27
         Width = 754
@@ -158,6 +157,7 @@ object fWords: TfWords
         DefaultRowHeight = 16
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+        PopupMenu = PopupMenu1
         TabOrder = 0
         OnClick = StringGrid1Click
         OnDrawCell = StringGrid1DrawCell
@@ -166,6 +166,7 @@ object fWords: TfWords
         OnMouseMove = StringGrid1MouseMove
         OnMouseUp = StringGrid1MouseUp
         OnSelectCell = StringGrid1SelectCell
+        OnControlResize = StringGrid1ControlResize
         ColWidths = (
           110
           138
@@ -311,5 +312,14 @@ object fWords: TfWords
     Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Left = 664
     Top = 40
+  end
+  object PopupMenu1: TPopupMenu
+    OnPopup = PopupMenu1Popup
+    Left = 32
+    Top = 48
+    object miResetColumns: TMenuItem
+      Caption = '#01002^eReset columns'
+      OnClick = miResetColumnsClick
+    end
   end
 end

@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBStrings, JWBUtils, JWBDic, JWBDicSearch;
+  JWBStrings, JWBUtils, JWBDic, JWBDicSearch, Menus, WakanWordGrid;
 
 type
   TKanjiEntry = record
@@ -31,7 +31,7 @@ type
     SpeedButton12: TSpeedButton;
     btnCopyToClipboard: TSpeedButton;
     Edit1: TEdit;
-    StringGrid1: TStringGrid;
+    StringGrid1: TWakanWordGrid;
     BitBtn1: TBitBtn;
     Panel2: TPanel;
     Panel3: TPanel;
@@ -46,9 +46,9 @@ type
     Label3: TLabel;
     SpeedButton18: TSpeedButton;
     SpeedButton19: TSpeedButton;
+    PopupMenu1: TPopupMenu;
+    miResetColumns: TMenuItem;
     procedure Edit1Change(Sender: TObject);
-    procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
-      Rect: TRect; State: TGridDrawState);
     procedure Edit2Change(Sender: TObject);
     procedure Edit2Click(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
@@ -67,7 +67,6 @@ type
     procedure FormHide(Sender: TObject);
     procedure btnCopyToClipboardClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure StringGrid1DblClick(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
@@ -81,6 +80,13 @@ type
     procedure SpeedButton10Click(Sender: TObject);
     procedure SpeedButton19Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure miResetColumnsClick(Sender: TObject);
+    procedure PopupMenu1Popup(Sender: TObject);
+    procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+      Rect: TRect; State: TGridDrawState);
+
+  public
+    procedure SetDefaultColumnWidths;
 
   public
     curkanji,curphonetic,curmeaning:string;
@@ -127,6 +133,66 @@ var curword:integer;
     donotsetbegset:boolean;
 
 {$R *.DFM}
+
+procedure TfUser.FormCreate(Sender: TObject);
+begin
+  dicrl:=TSearchResults.Create;
+end;
+
+procedure TfUser.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(dicrl);
+end;
+
+procedure TfUser.FormActivate(Sender: TObject);
+begin
+//  if SpeedButton4.Down then SpeedButton1.Down:=true;
+//  SpeedButton1Click(sender);
+end;
+
+procedure TfUser.FormShow(Sender: TObject);
+begin
+//  fMenu.ShowForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
+//  fMenu.ShowForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
+//  fMenu.ShowForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
+//  fMenu.ShowForm(SpeedButton9,fMenu.aDictAdd,fExamples);
+//  fMenu.ShowForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
+  fMenu.aDict.Checked:=true;
+  if Edit1.Enabled then Edit1.SetFocus;
+  Look();
+end;
+
+procedure TfUser.FormHide(Sender: TObject);
+begin
+//  fMenu.HideForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
+//  fMenu.HideForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
+//  fMenu.HideForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
+//  fMenu.HideForm(SpeedButton9,fMenu.aDictAdd,fExamples);
+//  fMenu.HideForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
+  fMenu.aDict.Checked:=false;
+end;
+
+procedure TfUser.SetDefaultColumnWidths;
+begin
+  StringGrid1.ColWidths[0]:=131;
+  StringGrid1.ColWidths[1]:=128;
+  StringGrid1.ColWidths[2]:=575;
+  StringGrid1.AutoSizeColumns;
+end;
+
+procedure TfUser.PopupMenu1Popup(Sender: TObject);
+var p: TPoint;
+  ACol, ARow: integer;
+begin
+  p := StringGrid1.ScreenToClient(Mouse.CursorPos);
+  StringGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
+  miResetColumns.Visible := (ARow=0); //click on header
+end;
+
+procedure TfUser.miResetColumnsClick(Sender: TObject);
+begin
+  SetDefaultColumnWidths;
+end;
 
 //Called when any of the configuration buttons are pressed
 procedure TfUser.UpdateLookMode;
@@ -369,12 +435,6 @@ begin
   Look();
 end;
 
-procedure TfUser.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
-  Rect: TRect; State: TGridDrawState);
-begin
-  DrawWordCell(StringGrid1,ACol,ARow,Rect,State);
-end;
-
 procedure TfUser.Edit2Change(Sender: TObject);
 begin
   Look();
@@ -410,19 +470,6 @@ begin
   TPaintBox(Sender).Canvas.Brush.Color:=clWindow;
   DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curkanji,FontJapanese);
 end;
-
-procedure TfUser.FormShow(Sender: TObject);
-begin
-//  fMenu.ShowForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
-//  fMenu.ShowForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
-//  fMenu.ShowForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
-//  fMenu.ShowForm(SpeedButton9,fMenu.aDictAdd,fExamples);
-//  fMenu.ShowForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
-  fMenu.aDict.Checked:=true;
-  if Edit1.Enabled then Edit1.SetFocus;
-  Look();
-end;
-
 
 procedure TfUser.ShowWord;
 var s,s2,s3:string;
@@ -569,41 +616,10 @@ begin
   fMenu.ToggleForm(fExamples,SpeedButton9,fMenu.aDictAdd);
 end;
 
-procedure TfUser.FormHide(Sender: TObject);
-begin
-//  fMenu.HideForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
-//  fMenu.HideForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
-//  fMenu.HideForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
-//  fMenu.HideForm(SpeedButton9,fMenu.aDictAdd,fExamples);
-//  fMenu.HideForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
-  fMenu.aDict.Checked:=false;
-end;
-
 procedure TfUser.btnCopyToClipboardClick(Sender: TObject);
 begin
   clip:=clip+curkanji;
   fMenu.ChangeClipboard;
-end;
-
-procedure TfUser.FormCreate(Sender: TObject);
-begin
-  dicrl:=TSearchResults.Create;
-end;
-
-procedure TfUser.FormDestroy(Sender: TObject);
-begin
-  FreeAndNil(dicrl);
-end;
-
-procedure TfUser.FormResize(Sender: TObject);
-begin
-  StringGrid1.ColWidths[2]:=StringGrid1.Width-StringGrid1.ColWidths[1]-StringGrid1.ColWidths[0]-20;
-end;
-
-procedure TfUser.FormActivate(Sender: TObject);
-begin
-//  if SpeedButton4.Down then SpeedButton1.Down:=true;
-//  SpeedButton1Click(sender);
 end;
 
 procedure TfUser.ShowHint;
@@ -713,7 +729,11 @@ begin
   if SpeedButton17.Enabled then SpeedButton17Click(sender);
 end;
 
-
+procedure TfUser.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+  Rect: TRect; State: TGridDrawState);
+begin
+  DrawWordCell(TStringGrid(Sender),ACol,ARow,Rect,State);
+end;
 
 procedure TfUser.CheckBox1Click(Sender: TObject);
 begin
