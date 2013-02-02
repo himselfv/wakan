@@ -343,7 +343,7 @@ var
 implementation
 
 uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
-  JWBKanjiSearch, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
+  JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid;
 
@@ -677,7 +677,9 @@ begin
     fKanjiSearch.edtYomi.Text :=reg.ReadString('KanjiSearch','Yomi','');
     fKanjiSearch.edtDefinition.Text :=reg.ReadString('KanjiSearch','Definition','');
     fKanjiSearch.edtStrokeCount.Text := reg.ReadString('KanjiSearch','Strokes','');
-    //TODO: Radicals
+    fKanjiSearch.curRadSearchType := TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
+    fKanjiSearch.curRadSearch := reg.ReadString('KanjiSearch','RadSearch','');
+    fKanjiSearch.edtRadicals.Text := reg.ReadString('KanjiSearch','RadIndexes','');
     fKanjiSearch.edtSKIP.Text :=reg.ReadString('KanjiSearch','SKIP','');
     fKanjiSearch.edtJouyou.Text :=reg.ReadString('KanjiSearch','Jouyou','');
     fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
@@ -919,7 +921,9 @@ begin
     reg.WriteString('KanjiSearch','Yomi',fKanjiSearch.edtYomi.Text);
     reg.WriteString('KanjiSearch','Definition',fKanjiSearch.edtDefinition.Text);
     reg.WriteString('KanjiSearch','Strokes',fKanjiSearch.edtStrokeCount.Text);
-    //TODO: Radicals
+    reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
+    reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadSearch);
+    reg.WriteString('KanjiSearch','RadIndexes',fKanjiSearch.edtRadicals.Text);
     reg.WriteString('KanjiSearch','SKIP',fKanjiSearch.edtSKIP.Text);
     reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text);
     reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);

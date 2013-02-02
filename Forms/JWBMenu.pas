@@ -2087,9 +2087,6 @@ begin
   aQuick5.Checked:=lay=4;
   aQuick6.Checked:=lay=5;
   curqlayout:=lay;
-  fKanjiCompounds.FormResize(fMenu);
-  fWords.FormResize(fMenu);
-  fUser.FormResize(fMenu);
   fKanji.ManualDock(Panel3);
   fKanji.Align:=alClient;
 end;
