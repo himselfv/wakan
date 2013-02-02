@@ -39,7 +39,7 @@ function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):F
 { WordGrid }
 
 procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
-procedure AddWordGrid(var grid:TStringGrid;sp1,sp2,sp4,sp3:string);
+procedure AddWordGrid(grid:TStringGrid;sp1,sp2,sp4,sp3:string);
 procedure FinishWordGrid(grid:TStringGrid);
 
 
@@ -446,7 +446,7 @@ begin
   wgcur:=1;
 end;
 
-procedure AddWordGrid(var grid:TStringGrid;sp1,sp2,sp4,sp3:string);
+procedure AddWordGrid(grid:TStringGrid;sp1,sp2,sp4,sp3:string);
 begin
   grid.Cells[0,wgcur]:=UH_DRAWWORD_KANA+sp2;
   grid.Cells[1,wgcur]:=UH_DRAWWORD_KANJI+sp1;
