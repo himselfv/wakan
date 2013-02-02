@@ -669,7 +669,7 @@ begin
     end;
   fKanjiDetails.SetCharDetails(chars);
 
-  if (sel.Bottom>sel.Top) or (sel.Right>sel.Left) then begin //multiple
+  if (sel.Bottom>sel.Top) or (sel.Right>sel.Left) or (chars='') then begin //multiple or none
     fKanjiCompounds.Clear;
   end else begin //single char
     AnnotShowMedia(chars,'');
