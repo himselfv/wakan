@@ -166,7 +166,7 @@ object fWords: TfWords
         OnMouseMove = StringGrid1MouseMove
         OnMouseUp = StringGrid1MouseUp
         OnSelectCell = StringGrid1SelectCell
-        OnControlResize = StringGrid1ControlResize
+        OnControlWidthResize = StringGrid1ControlResize
         ColWidths = (
           110
           138
