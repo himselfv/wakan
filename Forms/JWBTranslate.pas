@@ -1001,10 +1001,8 @@ var i,j,k: integer;
     end else
     if AnnotMode=amKanjiKana then begin
       word := kanji;
-      if word<>'' then
-        word := UH_SPACE+word;
       if reading<>'' then
-        reading:=word+UH_SPACE+reading
+        reading:=word+UH_SPACE+reading+UH_SPACE
       else
        //Don't have a reading, write a char (without space)
         reading:=word;
