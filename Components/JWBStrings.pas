@@ -1243,9 +1243,6 @@ begin
   Result := 0;
   for i := 1 to flength(chars) do
     Result := Result or (1 shl EvalChar(fgetch(chars,i)));
-
-
-
 end;
 
 function IsHalfWidthChar(c:FChar):boolean;
