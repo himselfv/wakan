@@ -257,9 +257,9 @@ type
     procedure SelectAll;
 
   protected //Insert buffer
-    insertbuffer:string;
+    insertbuffer:string; //collects keypresses
     resolvebuffer:boolean; //set to true before doing ResolveInsert to replace kana with kanji suggestion, false to keep input intact
-    procedure DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
+    procedure DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
     procedure ResolveInsert(final:boolean);
     procedure InsertCharacter(c:char);
     procedure ClearInsBlock;
@@ -270,7 +270,7 @@ type
     ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
     inslen: integer;
     buffertype:char;
-    function GetInsertKana(display:boolean):string;
+    function GetInsertKana(display:boolean):FString;
 
   protected //Ruby stuff
     procedure CollapseRuby(var s: FString; var sp: TCharacterLineProps);
@@ -2624,9 +2624,9 @@ begin
   Result := true;
 end;
 
-procedure TfTranslate.DisplayInsert(convins:string;transins:TCharacterPropArray;leaveinserted:boolean);
+procedure TfTranslate.DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
 var i:integer;
-  s: string;
+  s: FString;
   lp: PCharacterLineProps;
 begin
   if ins.x=-1 then
@@ -2713,20 +2713,26 @@ begin
   end;
 end;
 
-function TfTranslate.GetInsertKana(display:boolean):string;
+function TfTranslate.GetInsertKana(display:boolean):FString;
 begin
   if curlang='j'then
   begin
-    if buffertype='H'then
-      result:=RomajiToKana('H'+lowercase(insertbuffer),romasys,false,curlang) else
+    if buffertype='H' then
+      Result:=RomajiToKana('H'+lowercase(insertbuffer),romasys,false,curlang)
+    else
     if buffertype='K'then
-      result:=RomajiToKana('K'+lowercase(insertbuffer),romasys,false,curlang) else
-    result:=UnicodeToHex(insertbuffer);
+      Result:=RomajiToKana('K'+lowercase(insertbuffer),romasys,false,curlang)
+    else
+      Result:=fstr(insertbuffer); //latin
   end else
   begin
-    if display then result:=UnicodeToHex(insertbuffer) else
-    if buffertype='H'then result:=RomajiToKana(lowercase(insertbuffer),romasys,false,curlang) else
-    result:=UnicodeToHex(insertbuffer);
+    if display then
+      Result:=fstr(insertbuffer)
+    else
+    if buffertype='H' then
+      Result:=RomajiToKana(lowercase(insertbuffer),romasys,false,curlang)
+    else
+      Result:=fstr(insertbuffer);
   end;
 end;
 

@@ -744,7 +744,7 @@ begin
   dicts.Free; //+
 end;
 
-procedure AddRomaSortRecord(s: string);
+procedure AddRomaSortRecord(const s: string);
 var parts: TStringArray;
   i: integer;
 begin
@@ -757,6 +757,17 @@ begin
     romasortl[i].order := parts[1]
   else
     romasortl[i].order := '';
+end;
+
+procedure AddPinYinRecord(const s: string);
+var parts: TStringArray;
+begin
+  parts := SplitStr(s,4);
+  parts[0] := hextofstr(parts[0]);
+  parts[1] := uppercase(parts[1]);
+  parts[2] := uppercase(parts[2]);
+  parts[3] := uppercase(parts[3]);
+  StrListAdd(romac, parts);
 end;
 
 //Used in several places when loading
@@ -914,7 +925,7 @@ begin
            //Some of the fields are in hex unicode, so we have to convert them
             if sect=1 then partl.Add(hextofstr(s));
             if sect=2 then defll.Add(s);
-            if sect=4 then splitadd(romac,s,4);
+            if sect=4 then AddPinYinRecord(s);
             if sect=5 then CharPropTypes.Add(s);
             if sect=6 then AddRomaSortRecord(s);
             if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}

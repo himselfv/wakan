@@ -30,8 +30,8 @@ var
  { Chinese version, not upcased. Someone upgrade this one too... }
   romac: TStringList;
 
-function ConvertPinYin(s:string):FString;
-function DeconvertPinYin(s:FString):string;
+function ConvertPinYin(const str:string):FString;
+function DeconvertPinYin(const str:FString):string;
 function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
 function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
 
@@ -79,8 +79,8 @@ function StateStr(i:integer):string;
 function DateForm(s:string):string;
 procedure WritelnMixUni(var f:file;s:string);
 procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
-function ChinTo(s:string):string;
-function ChinFrom(s:string):string;
+function ChinTo(s:FString):FString;
+function ChinFrom(s:FString):FString;
 
 { Upgrades vocabulary entry -- see implementation comments }
 function FixVocabEntry(const s:string):string;
@@ -113,13 +113,40 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses StrUtils, JWBMenu, JWBSettings, JWBLanguage;
+uses StrUtils, JWBMenu, JWBSettings, JWBLanguage, TextTable;
 
 
 { Romaji conversions }
 
-//TODO: Upgrade to Unicode
-function ResolveCrom(s:string;posin,posout:integer;clean:boolean):string;
+type
+  EvilString = string; //contains FString if we convert uni->pinyin, string otherwise
+
+//Index of romac entry for this item or -1
+//Text must be uppercased
+//TODO: For now only checks for partial matches, as required by the only usage.
+function FindRomaC(const find: EvilString; roma_type: integer): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i:=0 to (romac.count div 4)-1 do
+    if pos(find,romac[i*4+roma_type])=1 then begin
+      Result := i;
+      break;
+    end;
+end;
+
+//TODO: Test Unicode conversion
+{
+Converts chinese string between:
+  0 - bopomofo (fstring)
+  1 - pinyin
+  2 - wade-giles
+  3 - yale
+TypeIn: conversion source
+TypeOut: conversion target type
+Clean: ignore unknown characters instead of adding '?'
+}
+function ResolveCrom(s:EvilString;typein,typeout:integer;clean:boolean):EvilString;
 var s2:string;
   cr:string;
   cl:integer;
@@ -129,48 +156,68 @@ begin
   s2:='';
   while s<>'' do
   begin
+    //Find longest match for character sequence starting at this point
     cl:=0;
     for i:=0 to (romac.count div 4)-1 do
     begin
-      if pos(uppercase(romac[i*4+posin]),s)=1 then
+      if pos(uppercase(romac[i*4+typein]),s)=1 then
       begin
-        if length(romac[i*4+posin])>cl then
+        if length(romac[i*4+typein])>cl then
         begin
-          cl:=length(romac[i*4+posin]);
-          cr:=romac[i*4+posout];
+          cl:=length(romac[i*4+typein]);
+          cr:=romac[i*4+typeout];
         end;
       end;
     end;
+
     if cl>0 then s2:=s2+cr else
       if s[1]='-'then s2:=s2+UnicodeToHex('-') else
       if s[1]='_'then s2:=s2+UnicodeToHex('_') else
       if pos(UnicodeToHex('-'),s)=1 then s2:=s2+'-'else
       if pos(UnicodeToHex('_'),s)=1 then s2:=s2+'_'else
       if not clean then
+     {$IFDEF UNICODE}
+        s2 := s2 + '?'; //in unicode both strings are in native form
+     {$ELSE}
       begin
-        if posout>0 then s2:=s2+'?'else s2:=s2+'003F';
+        if typeout>0 then s2:=s2+'?'else s2:=s2+'003F';
       end;
-    if cl>0 then delete(s,1,cl) else if posin>0 then delete(s,1,1) else delete(s,1,4);
-    if posin=0 then
+     {$ENDIF}
+    if cl>0 then delete(s,1,cl) else
+      if typein>0 then delete(s,1,1) else fdelete(s,1,1);
+
+   //Next goes god knows what
+   //But it has been dully ported into unicode lol
+
+    if typein=0 then
     begin
+     {$IFNDEF UNICODE}
       if (length(s)>3) and (pos('F03',s)=1) and (s[4]>='0') and (s[4]<='5') then
       begin
         s2:=s2+s[4];
         delete(s,1,4);
       end else s2:=s2+'0';
+     {$ELSE}
+      if (length(s)>0) and (Ord(s[1]) and $FFF0 = $F030) and (Ord(s[1]) and $000F in [0..5]) then
+      begin
+        s2:=s2+Chr($30 + Ord(s[1]) and $000F); //to digit
+        delete(s,1,1);
+      end;
+     {$ENDIF}
     end else
     begin
       if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
       begin
-        if posout>0 then s2:=s2+s[1] else s2:=s2+'F03'+s[1];
+        if typeout>0 then s2:=s2+s[1] else
+          s2:=s2+{$IFNDEF UNICODE}'F03'+s[1]{$ELSE}Chr($F030+Ord(s[1])-$30){$ENDIF};
         delete(s,1,1);
       end else
       begin
-        if posout>0 then s2:=s2+'0'else s2:=s2+'F030';
+        if typeout>0 then s2:=s2+'0' else s2:=s2+{$IFNDEF UNICODE}'F030'{$ELSE}#$F030{$ENDIF};
       end;
     end;
   end;
-  if posout>0 then result:=lowercase(s2) else result:=s2;
+  if typeout>0 then result:=lowercase(s2) else result:=s2;
 end;
 
 function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
@@ -185,7 +232,7 @@ begin
   end;
 end;
 
-function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):string;
+function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
 var s_rep: string;
 begin
   if lang='j'then
@@ -200,24 +247,19 @@ begin
   end;
 end;
 
-//TODO: Convert to Unicode
-//Make the function build the string in unicode and conver to hex at exit, if non-unicode
-//Doesn't work!
-function ConvertPinYin(s:string):FString;
-{$IFDEF UNICODE}
-const UH_DUMMY_CHAR:FChar = #$F8F0; //used in place of a char when it's unknown or whatever
-{$ELSE}
-const UH_DUMMY_CHAR:FChar = 'XXXX';
-{$ENDIF}
-var li:integer;
-  ali:string;
-  cnv:string;
-  cnv2: FString;
+//TODO: Test unicode conversion
+function ConvertPinYin(const str:string):FString;
+const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; //used in place of a char when it's unknown or whatever
+ //does not go out of this function
+var cnv:string;
+  li:integer;
+  ali:FString;
+  cnv2:FString;
   cc:char;
   i:integer;
   iscomma:boolean;
 begin
-  cnv:=lowercase(s);
+  cnv:=lowercase(str);
   cnv2:='';
   li:=0;
   ali:='';
@@ -230,47 +272,47 @@ begin
     if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
     begin
       cc:=cnv[li];
-      ali:=copy(cnv2,length(cnv2)-i-li,i-li-1);
-      delete(cnv2,length(cnv2)-i-li-1,i-li);
+      ali:=fcopy(cnv2,length(cnv2)-i-li,i-li-1);
+      fdelete(cnv2,length(cnv2)-i-li-1,i-li);
       if iscomma and (cc='u') then cc:='w';
       case cnv[i] of
         '2':case cc of
-              'a':cnv2:=cnv2+#$00E1;
-              'e':cnv2:=cnv2+#$00E9;
-              'i':cnv2:=cnv2+#$00ED;
-              'o':cnv2:=cnv2+#$00F3;
-              'u':cnv2:=cnv2+#$00FA;
-              'w':cnv2:=cnv2+#$01D8;
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$00E1{$ELSE}'00E1'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$00E9{$ELSE}'00E9'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$00ED{$ELSE}'00ED'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$00F3{$ELSE}'00F3'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$00FA{$ELSE}'00FA'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01D8{$ELSE}'01D8'{$ENDIF};
             end;
         '4':case cc of
-              'a':cnv2:=cnv2+#$00E0;
-              'e':cnv2:=cnv2+#$00E8;
-              'i':cnv2:=cnv2+#$00EC;
-              'o':cnv2:=cnv2+#$00F2;
-              'u':cnv2:=cnv2+#$00F9;
-              'w':cnv2:=cnv2+#$01DC;
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$00E0{$ELSE}'00E0'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$00E8{$ELSE}'00E8'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$00EC{$ELSE}'00EC'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$00F2{$ELSE}'00F2'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$00F9{$ELSE}'00F9'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01DC{$ELSE}'01DC'{$ENDIF};
             end;
         '1':case cc of
-              'a':cnv2:=cnv2+#$0101;
-              'e':cnv2:=cnv2+#$0113;
-              'i':cnv2:=cnv2+#$012B;
-              'o':cnv2:=cnv2+#$014D;
-              'u':cnv2:=cnv2+#$016B;
-              'w':cnv2:=cnv2+#$01D6;
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$0101{$ELSE}'0101'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$0113{$ELSE}'0113'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$012B{$ELSE}'012B'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$014D{$ELSE}'014D'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$016B{$ELSE}'016B'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01D6{$ELSE}'01D6'{$ENDIF};
             end;
         '3':case cc of
-              'a':cnv2:=cnv2+#$01CE;
-              'e':cnv2:=cnv2+#$011B;
-              'i':cnv2:=cnv2+#$01D0;
-              'o':cnv2:=cnv2+#$01D2;
-              'u':cnv2:=cnv2+#$01D4;
-              'w':cnv2:=cnv2+#$01DA;
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$01CE{$ELSE}'01CE'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$011B{$ELSE}'011B'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$01D0{$ELSE}'01D0'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$01D2{$ELSE}'01D2'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$01D4{$ELSE}'01D4'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01DA{$ELSE}'01DA'{$ENDIF};
             end;
       end;
       li:=0;
       if (cnv[i]='0') or (cnv[i]='5') then
         if cc='w'then
-          cnv2:=cnv2+#$00FC
+          cnv2:=cnv2+{$IFDEF UNICODE}#$00FC{$ELSE}'00FC'{$ENDIF}
         else
           cnv2:=cnv2+cc;
       cnv2:=cnv2+ali;
@@ -285,98 +327,104 @@ begin
   end;
 
   //Remove dummy chars
-  while pos(UH_DUMMY_CHAR,cnv2)>0 do
-    delete(cnv2,pos(UH_DUMMY_CHAR,cnv2),1);
- {$IFDEF UNICODE}
+  i := fpos(UH_DUMMY_CHAR,cnv2);
+  while i>0 do begin
+    fdelete(cnv2,i,1);
+    i := fpos(UH_DUMMY_CHAR,cnv2);
+  end;
   Result := cnv2;
- {$ELSE}
-  Result := UnicodeToHex(cnv2);
- {$ENDIF}
 end;
 
-//TODO: Convert to Unicode
-function DeconvertPinYin(s:FString):string;
-var nch:string;
-    cnv,cnv2:string;
+//TODO: Test Unicode conversion
+//Due to the high number of char constants this function is implemented only in Unicode,
+//and on exit we convert to FString if needed.
+//This is slower, but FStrings are deprecated anyway.
+function DeconvertPinYin(const str:FString):string;
+var cnv:UnicodeString;
+  curs:UnicodeString; //although by logic it ought to be a Char...
+  nch:string;
+    cnv2:string;
     i,j:integer;
-    curs,curcc:string;
+    curcc:string;
     curp,curpx:char;
     mustbegin,mustnotbegin,befmustnotbegin,befbefmustnotbegin:boolean;
     number:boolean;
     putcomma,fnd:boolean;
     cc:char;
 begin
-  cnv:=s;
+  cnv:=fstrtouni(str);
+
   putcomma:=false;
   cnv2:='';
-  for i:=0 to (length(cnv) div 4)-1 do
+  for i:=1 to length(cnv) do
   begin
-    curs:=copy(cnv,i*4+1,4);
-    if putcomma and (curs<>UnicodeToHex('e')) then begin curs:=UnicodeToHex(':')+curs; putcomma:=false; end;
-    if curs='01D6'then begin putcomma:=true; curs:='016B'; end;
-    if curs='01D8'then begin putcomma:=true; curs:='00FA'; end;
-    if curs='01DA'then begin putcomma:=true; curs:='01D4'; end;
-    if curs='01DC'then begin putcomma:=true; curs:='00F9'; end;
-    if curs='00FC'then begin putcomma:=true; curs:='0075'; end;
-    if curs='2026'then curs:=UnicodeToHex('_');
+    curs:=cnv[i];
+    if putcomma and (curs<>'e') then begin curs:=':'+curs; putcomma:=false; end;
+    if curs=#$01D6 then begin putcomma:=true; curs:=#$016B; end;
+    if curs=#$01D8 then begin putcomma:=true; curs:=#$00FA; end;
+    if curs=#$01DA then begin putcomma:=true; curs:=#$01D4; end;
+    if curs=#$01DC then begin putcomma:=true; curs:=#$00F9; end;
+    if curs=#$00FC then begin putcomma:=true; curs:=#$0075; end;
+    if curs=#$2026 then curs:='_';
     cnv2:=cnv2+curs;
   end;
-  if putcomma then cnv2:=cnv2+UnicodeToHex(':');
+  if putcomma then cnv2:=cnv2+':';
   cnv:=cnv2;
   cnv2:='';
-  curp:='0';
+
   mustbegin:=true;
   mustnotbegin:=false;
   befmustnotbegin:=false;
   number:=false;
-  for i:=0 to (length(cnv) div 4)-1 do
+  for i:=1 to length(cnv) do
   begin
-    curs:=copy(cnv,i*4+1,4);
-    cc:=char((HexToUnicode(curs))[1]);
-    if (cc>='0') and (cc<='9') then number:=true;
+    curs:=cnv[i];
+    cc:=curs[1];
+    if (cc>='0') and (cc<='9') then number:=true; //WTF? Maybe we should test that ALL chars are digits, not ANY?
   end;
   if number then
   begin
-    result:=HexToUnicode(s);
+    result:=fstrtouni(str);
     exit;
   end;
+
+  curp:='0';
   cc:=' ';
   curcc:='';
-  for i:=0 to (length(cnv) div 4)-1 do
+  for i:=1 to length(cnv) do
   begin
-    curs:=copy(cnv,i*4+1,4);
+    curs:=cnv[i];
     curpx:='0';
-    if (curs[1]='0') and (curs[2]='0') and (curs[3]<'8') then cc:=upcase(char((HexToUnicode(curs))[1]))
-    else if curs='00E1'then begin cc:='A'; curpx:='2'; end
-    else if curs='00E9'then begin cc:='E'; curpx:='2'; end
-    else if curs='00ED'then begin cc:='I'; curpx:='2'; end
-    else if curs='00F3'then begin cc:='O'; curpx:='2'; end
-    else if curs='00FA'then begin cc:='U'; curpx:='2'; end
-    else if curs='00E0'then begin cc:='A'; curpx:='4'; end
-    else if curs='00E8'then begin cc:='E'; curpx:='4'; end
-    else if curs='00EC'then begin cc:='I'; curpx:='4'; end
-    else if curs='00F2'then begin cc:='O'; curpx:='4'; end
-    else if curs='00F9'then begin cc:='U'; curpx:='4'; end
-    else if curs='0101'then begin cc:='A'; curpx:='1'; end
-    else if curs='0113'then begin cc:='E'; curpx:='1'; end
-    else if curs='012B'then begin cc:='I'; curpx:='1'; end
-    else if curs='014D'then begin cc:='O'; curpx:='1'; end
-    else if curs='016B'then begin cc:='U'; curpx:='1'; end
-    else if curs='0103'then begin cc:='A'; curpx:='3'; end
-    else if curs='0115'then begin cc:='E'; curpx:='3'; end
-    else if curs='012D'then begin cc:='I'; curpx:='3'; end
-    else if curs='014F'then begin cc:='O'; curpx:='3'; end
-    else if curs='016D'then begin cc:='U'; curpx:='3'; end
-    else if curs='01CE'then begin cc:='A'; curpx:='3'; end
-    else if curs='011B'then begin cc:='E'; curpx:='3'; end
-    else if curs='01D0'then begin cc:='I'; curpx:='3'; end
-    else if curs='01D2'then begin cc:='O'; curpx:='3'; end
-    else if curs='01D4'then begin cc:='U'; curpx:='3'; end
+    if Ord(curs[1])<$0080 then cc:=upcase(curs[1])
+    else if curs=#$00E1 then begin cc:='A'; curpx:='2'; end
+    else if curs=#$00E9 then begin cc:='E'; curpx:='2'; end
+    else if curs=#$00ED then begin cc:='I'; curpx:='2'; end
+    else if curs=#$00F3 then begin cc:='O'; curpx:='2'; end
+    else if curs=#$00FA then begin cc:='U'; curpx:='2'; end
+    else if curs=#$00E0 then begin cc:='A'; curpx:='4'; end
+    else if curs=#$00E8 then begin cc:='E'; curpx:='4'; end
+    else if curs=#$00EC then begin cc:='I'; curpx:='4'; end
+    else if curs=#$00F2 then begin cc:='O'; curpx:='4'; end
+    else if curs=#$00F9 then begin cc:='U'; curpx:='4'; end
+    else if curs=#$0101 then begin cc:='A'; curpx:='1'; end
+    else if curs=#$0113 then begin cc:='E'; curpx:='1'; end
+    else if curs=#$012B then begin cc:='I'; curpx:='1'; end
+    else if curs=#$014D then begin cc:='O'; curpx:='1'; end
+    else if curs=#$016B then begin cc:='U'; curpx:='1'; end
+    else if curs=#$0103 then begin cc:='A'; curpx:='3'; end
+    else if curs=#$0115 then begin cc:='E'; curpx:='3'; end
+    else if curs=#$012D then begin cc:='I'; curpx:='3'; end
+    else if curs=#$014F then begin cc:='O'; curpx:='3'; end
+    else if curs=#$016D then begin cc:='U'; curpx:='3'; end
+    else if curs=#$01CE then begin cc:='A'; curpx:='3'; end
+    else if curs=#$011B then begin cc:='E'; curpx:='3'; end
+    else if curs=#$01D0 then begin cc:='I'; curpx:='3'; end
+    else if curs=#$01D2 then begin cc:='O'; curpx:='3'; end
+    else if curs=#$01D4 then begin cc:='U'; curpx:='3'; end
     else cc:='?';
     if (((cc>='A') and (cc<='Z')) or (cc=':')) and (cc<>'''') then curcc:=curcc+cc;
-    fnd:=false;
-    for j:=0 to (romac.count div 4)-1 do
-      if pos(lowercase(curcc),lowercase(romac[j*4+1]))=1 then fnd:=true;
+
+    fnd:=FindRomaC(uppercase(curcc),1)>=0;
     if ((cc<'A') or (cc>'Z')) and (cc<>':') then
     begin
       if curcc<>'' then cnv2:=cnv2+lowercase(curcc)+curp;
@@ -716,12 +764,12 @@ begin
 end;
 
 
+//TODO: Test Unicode conversion for the following functions
 
-
-
-function ChinTo(s:string):string;
-var s2,cd:string;
-    bk:string;
+function ChinTo(s:FString):FString;
+var s2:FString;
+  cd:FString;
+  bk:FString;
 begin
   if (curlang='j') or (fSettings.RadioGroup5.ItemIndex<>1) then
   begin
@@ -732,9 +780,10 @@ begin
   result:='';
   while s<>'' do
   begin
-    s2:=copy(s,1,4);
-    delete(s,1,4);
-    if (s2[1]>'3') and (TChar.Locate('Unicode',s2)) then
+    s2:=fcopy(s,1,1);
+    fdelete(s,1,1);
+    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
+    and TChar.Locate('Unicode',s2) then
     begin
       cd:=fMenu.GetCharValue(TChar.Int(TCharIndex),43);
       if cd<>'' then result:=result+cd else result:=result+s2
@@ -743,10 +792,10 @@ begin
   TChar.Locate('Unicode',bk);
 end;
 
-//TODO: Upgrade this function to Unicode
-function ChinFrom(s:string):string;
-var s2,cd:string;
-    bk:string;
+function ChinFrom(s:FString):FString;
+var s2:FString;
+  cd:FString;
+  bk:FString;
 begin
   if (curlang='j') or (fSettings.RadioGroup5.ItemIndex=0) then
   begin
@@ -757,9 +806,10 @@ begin
   result:='';
   while s<>'' do
   begin
-    s2:=copy(s,1,4);
-    delete(s,1,4);
-    if (s2[1]>'3') and (TChar.Locate('Unicode',s2)) then
+    s2:=fcopy(s,1,1);
+    fdelete(s,1,1);
+    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
+    and TChar.Locate('Unicode',s2) then
     begin
       cd:=fMenu.GetCharValue(TChar.Int(TCharIndex),44);
       if cd<>'' then result:=result+cd else result:=result+s2

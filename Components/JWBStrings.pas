@@ -189,6 +189,7 @@ function flenfc(lenn:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
 function fcopy(const s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
 procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
+function fpos(const substr: FString; const str:FString):integer; {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fgetchl(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: AnsiString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
@@ -477,6 +478,11 @@ begin
 {$ELSE}
   delete(s, (Index-1)*4+1, Count*4);
 {$ENDIF}
+end;
+
+function fpos(const substr: FString; const str:FString):integer; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+  Result := pos(substr,str){$IFNDEF UNICODE}div 4{$ENDIF};
 end;
 
 //Returns a character from the string
