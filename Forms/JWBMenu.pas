@@ -17,9 +17,9 @@ type
     tab1: TSpeedButton;
     tab5: TSpeedButton;
     tab2: TSpeedButton;
-    btnJapaneseMode: TSpeedButton;
-    Bevel3: TBevel;
     btnChineseMode: TSpeedButton;
+    Bevel3: TBevel;
+    btnJapaneseMode: TSpeedButton;
     Bevel4: TBevel;
     SpeedButton22: TSpeedButton;
     Bevel5: TBevel;
@@ -265,8 +265,8 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure SpeedButton11Click(Sender: TObject);
     procedure SpeedButton12Click(Sender: TObject);
-    procedure btnChineseModeClick(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
+    procedure btnChineseModeClick(Sender: TObject);
     procedure Image1Click(Sender: TObject);
     procedure SpeedButton15Click(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
@@ -2876,12 +2876,12 @@ begin
   Close;
 end;
 
-procedure TfMenu.btnChineseModeClick(Sender: TObject);
+procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
 begin
   SwitchLanguage('j');
 end;
 
-procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
+procedure TfMenu.btnChineseModeClick(Sender: TObject);
 begin
   SwitchLanguage('c');
 end;

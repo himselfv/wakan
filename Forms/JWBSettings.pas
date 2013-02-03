@@ -634,7 +634,7 @@ begin
   CheckBox2.Checked:=reg.ReadBool('Translate','ShowHint',true);
   CheckBox13.Checked:=reg.ReadBool('Translate','HintMeaning',true);
   s:=reg.ReadString('Dict','CurLanguage','j');
-  if Length(s)>1 then curlang:=s[1] else curlang:='j';
+  if Length(s)>=1 then curlang:=s[1] else curlang:='j';
   lbWordPrintFormatClick(self);
   FontJapanese:=Edit2.Text;
   FontJapaneseGrid:=Edit1.Text;
