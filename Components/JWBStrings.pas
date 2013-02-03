@@ -294,6 +294,10 @@ function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{
 {$ELSE}
 function EvalChar(const char:FString):integer; overload;
 {$ENDIF}
+
+//Returns a set of (1 shl EC_*) flags indicating some chars are present in string
+function EvalChars(const chars:FString):integer;
+
 function IsHalfWidthChar(c:FChar): boolean;
 function IsLatinDigit(c:FChar):boolean;
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
@@ -1232,6 +1236,17 @@ begin
   result:=EC_UNKNOWN;
 end;
 {$ENDIF}
+
+function EvalChars(const chars:FString):integer;
+var i: integer;
+begin
+  Result := 0;
+  for i := 1 to flength(chars) do
+    Result := Result or (1 shl EvalChar(fgetch(chars,i)));
+
+
+
+end;
 
 function IsHalfWidthChar(c:FChar):boolean;
 begin

@@ -235,6 +235,7 @@ type
     doctr: TCharacterPropList; //character property list (translation, wordstate, etc)
     docdic: TStringList;
     function GetDoc(ax,ay:integer):FChar;
+    function GetDocChain(cx,cy:integer):FString;
     function IsHalfWidth(x,y:integer):boolean;
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
@@ -370,6 +371,19 @@ function TfTranslate.GetDoc(ax,ay:integer):FChar;
 begin
   if ay>=doc.Count then showmessage('Illegal doc access!');
   if ax>=flength(doc[ay]) then result:=UH_ZERO else result:=fgetch(doc[ay],ax+1);
+end;
+
+{ Returns the text of a single character chain:
+   [start type] < < < <
+Reads from (cx,cy) till chain end. }
+function TfTranslate.GetDocChain(cx,cy:integer):FString;
+begin
+  Result := fgetch(doc[cy],cx+1);
+  Inc(cx);
+  while (cx < flength(doc[cy])) and (doctr[cy].chars[cx].wordstate='<') do begin
+    Result := Result + fgetch(doc[cy],cx+1);
+    Inc(cx);
+  end;
 end;
 
 function TfTranslate.IsHalfWidth(x,y:integer):boolean;
@@ -986,7 +1000,7 @@ var i,j,k: integer;
       outp(reading);
     end else
     if AnnotMode=amKanjiKana then begin
-      word := GetDoc(j,i);
+      word := kanji;
       if word<>'' then
         word := UH_SPACE+word;
       if reading<>'' then
@@ -1042,6 +1056,7 @@ begin
        //Explicit ruby load, even if ruby's empty
         if cfExplicitRuby in doctr[i].chars[j].flags then begin
           reading := doctr[i].chars[j].ruby;
+          kanji := GetDocChain(j,i);
           inReading := true;
           explicitRuby := true;
           rootLen := -1;
@@ -1087,6 +1102,10 @@ begin
             else
               if EvalChar(GetDoc(j,i))=EvalChar(GetDoc(j-1,i)) then
                 rubyTextBreak := btBreak //break when there are two characters of the same type in a row
+              else
+              if EvalChars(kanji) and not (1 shl EC_IDG_CHAR) <> 0 then
+                rubyTextBreak := btBreak //break when there's something other than kanji in the line,
+                //such as 髪の毛 -- or ruby will be applied only to 毛
               else
                 rubyTextBreak := btSkip;
           if rubyTextBreak=btBreak then
@@ -3302,7 +3321,6 @@ begin
     FileChanged:=true;
   end;
 end;
-
 
 procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
 var dnam:string;
