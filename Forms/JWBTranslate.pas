@@ -1631,6 +1631,12 @@ procedure TfTranslate.EditorPaintBoxMouseMove(Sender: TObject;
 begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot move cursor!
+
+  //Sometimes we receive "ssLeft + MouseMove" when we double click something
+  //in another window and that window closes, leaving us in editor.
+  //This results in ugly unexpected text selection.
+  if Mouse.Capture<>Self.Handle then exit; //EditorPaintBox doesn't have it's own handle
+
   if ssLeft in Shift then begin;
     if linl.Count>0 then begin
       cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
