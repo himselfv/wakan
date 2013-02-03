@@ -386,6 +386,13 @@ var s: string;
   curindex: integer;
   CChar: TTextTableCursor;
 begin
+  //Only Kanji are allowed
+  for i := 1 to flength(chars) do
+    if EvalChar(chars[i])<>EC_IDG_CHAR then begin
+      chars := ''; //illegal chars => just clear this window
+      break;
+    end;
+
   curChars := chars;
   if flength(curChars)=1 then
     curSingleChar := fgetch(curChars,1)
@@ -584,7 +591,10 @@ begin
       'J':RxLabel38.Caption:=_l('#00145^eJapanese only');
     end;
 
-    if curindex<0 then
+    if flength(curChars)<1 then
+      lblMeaning.Caption := ''
+    else
+    if flength(curChars)>1 then
       lblMeaning.Caption := _l('#01001^eMultiple kanji selected')
     else begin
       ReloadReadings(CChar, read);
