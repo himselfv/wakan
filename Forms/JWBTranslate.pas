@@ -277,6 +277,8 @@ type
 
   protected //File opening/saving
     FFileChanged: boolean;
+    FFullTextTranslated: boolean; //applied full text translation at least once since loading
+     //this is needed for saving in Kana mode -- we don't show a reminder if it's obvious the text was translated
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
     procedure LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
@@ -289,6 +291,7 @@ type
     function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
+    property FullTextTranslated: boolean read FFullTextTranslated write FFullTextTranslated;
 
   protected
    {$IFDEF MTHREAD_SUPPORT}
@@ -430,6 +433,7 @@ begin
   docfilename:='';
   doctp:=0;
   FileChanged:=false;
+  FullTextTranslated:=false;
 
   view:=0;
   rview := SourcePos(-1, -1);
@@ -519,6 +523,7 @@ begin
   mustrepaint:=true;
   ShowText(true);
   FFileChanged := false;
+  FullTextTranslated := false;
 end;
 
 { Opens a file by guessing format/encoding or asking user for it }
@@ -685,6 +690,7 @@ begin
   ShowText(true);
   Screen.Cursor:=crDefault;
   FileChanged:=false;
+  FullTextTranslated:=false;
 end;
 
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
@@ -1435,6 +1441,9 @@ begin
     FreeAndNil(req);
     FreeAndNil(dicsl);
   end;
+
+  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
+    FullTextTranslated := true; //translated all text at least once
 
  {$IFDEF TLSPEEDREPORT}
   Application.MessageBox(

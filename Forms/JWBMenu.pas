@@ -4432,10 +4432,11 @@ procedure TfMenu.eSavekanatranscriptcUloitpepisdokany1Click(
   Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  Application.MessageBox(
-    pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
-    pchar(_l('#00364^eNotice')),
-    MB_ICONINFORMATION or MB_OK);
+  if not fTranslate.FullTextTranslated then
+    Application.MessageBox(
+      pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
+      pchar(_l('#00364^eNotice')),
+      MB_ICONINFORMATION or MB_OK);
   if SaveAsKanaDialog.Execute then
     case SaveAsKanaDialog.FilterIndex of
       1: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKana);
