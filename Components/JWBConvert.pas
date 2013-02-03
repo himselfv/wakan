@@ -404,7 +404,7 @@ begin
           _fread; _fread; _fread;
           Result:=0;
         end else
-          Result:=0;
+          Result:=i;
         exit;
       end;
       FILETYPE_UTF16BE: begin i2:=_fread; if i2<0 then exit; result:=256*i+i2; exit; end;
