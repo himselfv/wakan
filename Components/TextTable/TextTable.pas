@@ -1021,7 +1021,6 @@ begin
    end;
   'x': begin
     {$IFNDEF UNICODE}
-    //TODO: Test for non-unicode
      pb := OffsetPtr(data, ofs);
      pc := PChar(value);
      for i := 0 to sz - 1 do begin

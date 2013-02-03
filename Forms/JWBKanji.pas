@@ -651,8 +651,6 @@ begin
 end;
 
 //Called when a kanji selection changes
-//TODO: Someone has to call this when the selection is changed programmatically,
-//such as at load
 procedure TfKanji.ReactToKanjiSelection;
 var sel: TGridRect;
   i, j: integer;

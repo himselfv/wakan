@@ -1104,6 +1104,8 @@
 01000>Reset
 01001>Multiple kanji selected
 01002>Reset columns
+01003>The dictionary has not been yet completely imported. Do you really want to abort the operation?
+01004>Confirm abort
 ;
 ;
 ; EDICT markers.

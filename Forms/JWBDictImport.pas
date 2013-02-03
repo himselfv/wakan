@@ -161,9 +161,9 @@ begin
   if prog.ModalResult=mrCancel then begin
     prog.SetProgressPaused(true);
     if Application.MessageBox(
-      PChar(_l('^eThe dictionary has not been yet completely imported. Do you '
-        +'really want to abort the operation?')), //TODO: Localize
-      PChar(_l('^eConfirm abort')), //TODO: Localize
+      PChar(_l('#01003^eThe dictionary has not been yet completely imported. Do you '
+        +'really want to abort the operation?')),
+      PChar(_l('#01004^eConfirm abort')),
       MB_ICONQUESTION+MB_YESNO
     )=idYes then
       raise EAbort.Create('Aborted by user'); //no need to localize

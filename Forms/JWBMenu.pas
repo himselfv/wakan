@@ -4329,8 +4329,6 @@ begin
     intorgcx:=x; intorgcy:=y; intorgsx:=Mouse.CursorPos.x; intorgsy:=Mouse.CursorPos.y;
     intorgPaint:=p; intorgGrid:=nil;
   end;
-  //TODO: Why are we doing this through common vars? Does anyone else use these?
-  //  Maybe make them into params?
   intmocx:=x; intmocy:=y; intmosx:=Mouse.CursorPos.x; intmosy:=Mouse.CursorPos.y;
   intmopaint:=p;
   intmogrid:=nil;
