@@ -917,17 +917,46 @@ begin
 
   if cbSaveSearchParams.Checked then begin
     reg.WriteBool('KanjiSearch','Common',fKanjiSearch.SpeedButton2.down);
-    reg.WriteString('KanjiSearch','PinYin',fKanjiSearch.edtPinYin.Text);
-    reg.WriteString('KanjiSearch','Yomi',fKanjiSearch.edtYomi.Text);
-    reg.WriteString('KanjiSearch','Definition',fKanjiSearch.edtDefinition.Text);
-    reg.WriteString('KanjiSearch','Strokes',fKanjiSearch.edtStrokeCount.Text);
-    reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
-    reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadSearch);
-    reg.WriteString('KanjiSearch','RadIndexes',fKanjiSearch.edtRadicals.Text);
-    reg.WriteString('KanjiSearch','SKIP',fKanjiSearch.edtSKIP.Text);
-    reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text);
-    reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
-    reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text);
+    if fKanjiSearch.sbPinYin.Down then
+      reg.WriteString('KanjiSearch','PinYin',fKanjiSearch.edtPinYin.Text)
+    else
+      reg.DeleteKey('KanjiSearch','PinYin');
+    if fKanjiSearch.sbYomi.Down then
+      reg.WriteString('KanjiSearch','Yomi',fKanjiSearch.edtYomi.Text)
+    else
+      reg.DeleteKey('KanjiSearch','Yomi');
+    if fKanjiSearch.sbDefinition.Down then
+      reg.WriteString('KanjiSearch','Definition',fKanjiSearch.edtDefinition.Text)
+    else
+      reg.DeleteKey('KanjiSearch','Definition');
+    if fKanjiSearch.sbStrokeCount.Down then
+      reg.WriteString('KanjiSearch','Strokes',fKanjiSearch.edtStrokeCount.Text)
+    else
+      reg.DeleteKey('KanjiSearch','Strokes');
+    if fKanjiSearch.sbRadicals.Down then begin
+      reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
+      reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadSearch);
+      reg.WriteString('KanjiSearch','RadIndexes',fKanjiSearch.edtRadicals.Text);
+    end else begin
+      reg.DeleteKey('KanjiSearch','RadSearchType');
+      reg.DeleteKey('KanjiSearch','RadSearch');
+      reg.DeleteKey('KanjiSearch','RadIndexes');
+    end;
+    if fKanjiSearch.sbSKIP.Down then
+      reg.WriteString('KanjiSearch','SKIP',fKanjiSearch.edtSKIP.Text)
+    else
+      reg.DeleteKey('KanjiSearch','SKIP');
+    if fKanjiSearch.sbJouyou.Down then
+      reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text)
+    else
+      reg.DeleteKey('KanjiSearch','Jouyou');
+    if fKanjiSearch.sbOther.Down then begin
+      reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
+      reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text);
+    end else begin
+      reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
+      reg.DeleteKey('KanjiSearch','Other');
+    end;
   end;
 end;
 
