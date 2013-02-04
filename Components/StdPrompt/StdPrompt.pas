@@ -104,7 +104,7 @@ type
     procedure UpdateProgressBarState;
   public
     procedure SetMaxProgress(maxprogr:integer);
-    procedure SetProgress(i:integer); {$IFDEF INLINE}inline;{$ENDIF} //Set progress and repaint if needed
+    procedure SetProgress(i:integer); //Set progress and repaint if needed
     procedure SetProgressPaused(Value: boolean); //call these when the operation is paused/in error
     procedure SetProgressError(Value: boolean);
 

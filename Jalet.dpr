@@ -73,7 +73,8 @@ uses
   JWBAutoImport in 'Components\JWBAutoImport.pas',
   JWBDownloader in 'Components\JWBDownloader.pas',
   JWBDownloadSources in 'Components\JWBDownloadSources.pas',
-  SevenZipUtils in 'Components\SevenZipUtils.pas';
+  SevenZipUtils in 'Components\SevenZipUtils.pas',
+  JWBUserData in 'Components\JWBUserData.pas';
 
 {$R *.RES}
 

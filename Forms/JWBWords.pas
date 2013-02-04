@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings, Menus,
-  WakanWordGrid;
+  WakanWordGrid, StdPrompt;
 
 type
   TMoveDirection = (mdUp, mdDown);
@@ -36,10 +36,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
-    procedure UserAdd_PaintBox2Paint(Sender: TObject);
     procedure UserAdd_Button1Click(Sender: TObject);
-    procedure RadioGroup2Click(Sender: TObject);
-    procedure CheckBox1Click(Sender: TObject);
     procedure btnExportVocabClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -81,13 +78,11 @@ type
     procedure RemoveWordsFromCategory();
     procedure DeleteWords();
 
-  protected
-    function GetPhoneticSortStr(phonetic: FString): string;
-    function FindUserWord(kanji,phonetic: FString): integer;
-
   public
     procedure ExportVocabToWkl(const filename: string);
     procedure ExportVocabToCsv(const filename: string);
+    procedure ImportVocabFromWkl(const filename: string; out catw, addw: integer);
+    procedure ImportVocabFromCsv(const filename: string; out catw, addw: integer);
 
   public
     WordListCount:integer;
@@ -116,6 +111,23 @@ type
 
   end;
 
+ { I have no idea wat iz this or how does it word, but I moved it to a separate class }
+
+  TAddWordFast = class
+  protected
+    awf_lastcatname:string;
+    awf_lastcatindex:integer;
+    awf_catcount:array[0..65535] of integer;
+    awf_insuser:TStringList;
+    awf_insusersheet:TStringList;
+    awf_insuseridx:TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function AddWordFast(kanji,phonetic,english,category:string;cattype:char;status:integer):boolean;
+    procedure Commit(sp: TSMPromptForm);
+  end;
+
 var
   fWords: TfWords;
 
@@ -127,7 +139,7 @@ implementation
 
 uses JWBMenu, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
-  JWBUserFilters, StdPrompt, JWBExamples, JWBUser,
+  JWBUserFilters, JWBExamples, JWBUser, JWBUserData,
   JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite;
 
 var wl,wlc:TStringList;
@@ -316,55 +328,6 @@ begin
   DrawWordCell(StringGrid1,ACol,ARow,Rect,State);
 end;
 
-//Returns a string which will represent this phonetic in sorting.
-function TfWords.GetPhoneticSortStr(phonetic: FString): string;
-var s: FString;
-  s2: FChar;
-  a1,a2: string;
-  i, j: integer;
-begin
-  if curlang='j'then
-  begin
-    Result:='';
-    s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,true,'j');
-    for i:=0 to flength(s)-1 do
-    begin
-      s2:=fgetch(s,i+1);
-      a1:='';
-      a2:='';
-      for j:=0 to Length(romasortl)-1 do
-      begin
-        if romasortl[j].roma=s2 then a1:=romasortl[j].order;
-        if romasortl[j].roma=
-         {$IFNDEF UNICODE}
-          copy(s2,1,3)+chr(ord(s2[4])+1)
-         {$ELSE}
-          chr(ord(s2)+1)
-         {$ENDIF}
-        then a2:=romasortl[j].order;
-      end;
-      if a1='' then Result:=Result+a2 else Result:=Result+a1;
-    end;
-  end else
-    Result:=KanaToRomaji(phonetic,1,'c');
-end;
-
-//Locates user record for a given kanji+phonetic pair. Returns its TUserIndex or -1.
-function TfWords.FindUserWord(kanji,phonetic: FString): integer;
-begin
-  Result:=-1;
-  TUser.SetOrder('Kanji_Ind');
-  TUser.Locate('Kanji',kanji);
-  while (not TUser.EOF) and (TUser.Str(TUserKanji)=kanji) do
-  begin
-    if (TUser.Str(TUserPhonetic)=phonetic) then begin
-      Result:=TUser.Int(TUserIndex);
-      break;
-    end;
-    TUser.Next;
-  end;
-end;
-
 function TfWords.AddWord(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
 var s,s2:string;
     beg,insertword:boolean;
@@ -410,7 +373,7 @@ begin
     exit;
   end;
 
-  cat := NeedCategory(category, cattype, {silent=}false);
+  cat := NeedCategory(category, cattype, {silent=}nomessages);
   if cat<0 then //user cancelled
     exit;
 
@@ -441,7 +404,6 @@ begin
     inc(MaxUserIndex);
     wordidx:=MaxUserIndex;
     phonsort:=GetPhoneticSortStr(phonetic);
-//    showmessage(s+#13+KanaToRomaji(s,1)+#13+phonsort);
     TUser.Insert([inttostr(MaxUserIndex),english,phonetic,phonsort,
       kanji,FormatDateTime('yyyymmdd',now),'00000000','00000000','00000000','0',inttostr(status),inttostr(status)]);
     s:=kanji;
@@ -477,10 +439,139 @@ begin
   result:=true;
 end;
 
-procedure TfWords.UserAdd_PaintBox2Paint(Sender: TObject);
+constructor TAddWordFast.Create;
+var i: integer;
 begin
-  fUserAdd.PaintBox2.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(fUserAdd.PaintBox2.Canvas,1,1,22,clip,FontJapanese);
+  inherited;
+  awf_lastcatname:='';
+  awf_lastcatindex:=0;
+  for i:=0 to 65535 do awf_catcount[i]:=0;
+  TUserSheet.SetOrder('Sheet_Ind');
+  TUserSheet.First;
+  while not TUserSheet.EOF do
+  begin
+    if TUserSheet.Int(TUserSheetPos)>awf_catcount[TUserSheet.Int(TUserSheetNumber)] then
+      awf_catcount[TUserSheet.Int(TUserSheetNumber)]:=TUserSheet.Int(TUserSheetPos);
+    TUserSheet.Next;
+  end;
+
+  awf_insuser:=TStringList.Create;
+  awf_insusersheet:=TStringList.Create;
+  awf_insuseridx:=TStringList.Create;
+end;
+
+destructor TAddWordFast.Destroy;
+begin
+  awf_insuser.Free;
+  awf_insuseridx.Free;
+  awf_insusersheet.Free;
+  inherited;
+end;
+
+function TAddWordFast.AddWordFast(kanji,phonetic,english,category:string;cattype:char;status:integer):boolean;
+var s,s2:string;
+    beg,insertword:boolean;
+    bs:string;
+    cat,catord:integer;
+    wordidx:integer;
+    phonsort:string;
+begin
+  if (length(category)<2) or (category[2]<>'~') then category:=curlang+'~'+category;
+  result:=false;
+  if category=awf_lastcatname then
+    cat:=awf_lastcatindex
+  else
+  begin
+    cat := NeedCategory(category, cattype, {silent=}true);
+    if cat<0 then //user cancelled
+      raise EAbort.Create('User cancelled.'); //do not localize
+  end;
+
+  wordidx := FindUserWord(kanji, phonetic);
+  insertword := wordidx<0;
+
+  awf_lastcatname:=category;
+  awf_lastcatindex:=cat;
+  catord:=awf_catcount[cat]+1;
+  awf_catcount[cat]:=catord;
+
+  TUserSheet.SetOrder('Word_Ind');
+  if not insertword then
+  begin
+    TUserSheet.Locate('Word',wordidx);
+    while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=wordidx) do
+    begin
+      if TUserSheet.Int(TUserSheetNumber)=cat then
+      begin
+       //Already in vocab and in this category
+        lastwordadded:=insertword;
+        exit;
+      end;
+      TUserSheet.Next;
+    end;
+  end;
+
+  if insertword then
+  begin
+    inc(MaxUserIndex);
+    wordidx:=MaxUserIndex;
+    phonsort:=GetPhoneticSortStr(phonetic);
+    awf_insuser.Add(inttostr(MaxUserIndex));
+    awf_insuser.Add(english);
+    awf_insuser.Add(phonetic);
+    awf_insuser.Add(phonsort);
+    awf_insuser.Add(kanji);
+    awf_insuser.Add(FormatDateTime('yyyymmdd',now));
+    awf_insuser.Add('00000000');
+    awf_insuser.Add('00000000');
+    awf_insuser.Add('00000000');
+    awf_insuser.Add('0');
+    awf_insuser.Add(inttostr(status));
+    awf_insuser.Add(inttostr(status));
+    s:=kanji;
+    beg:=true;
+    while s<>'' do
+    begin
+      s2:=copy(s,1,4);
+      delete(s,1,4);
+      if TChar.Locate('Unicode',s2) then
+      begin
+        if beg then bs:='T'else bs:='F';
+        awf_insuseridx.Add(inttostr(MaxUserIndex));
+        awf_insuseridx.Add(TChar.Str(TCharUnicode));
+        awf_insuseridx.Add(bs);
+      end;
+      beg:=false;
+    end;
+  end;
+  awf_insusersheet.Add(inttostr(wordidx));
+  awf_insusersheet.Add(inttostr(cat));
+  awf_insusersheet.Add(inttostr(catord));
+  lastwordadded:=insertword;
+  result:=true;
+end;
+
+procedure TAddWordFast.Commit(sp: TSMPromptForm);
+var i: integer;
+begin
+  TUser.nocommitting:=true;
+  TUserSheet.nocommitting:=true;
+  TUserIdx.nocommitting:=true;
+  sp.SetMessage(_l('#00904^eBatch-adding words ')+'('+inttostr(awf_insuser.Count div 12)+')');
+  for i:=0 to (awf_insuser.Count div 12)-1 do
+    TUser.Insert([awf_insuser[i*12],awf_insuser[i*12+1],awf_insuser[i*12+2],awf_insuser[i*12+3],awf_insuser[i*12+4],awf_insuser[i*12+5],
+                  awf_insuser[i*12+6],awf_insuser[i*12+7],awf_insuser[i*12+8],awf_insuser[i*12+9],awf_insuser[i*12+10],awf_insuser[i*12+11]]);
+  sp.show;
+  sp.SetMessage(_l('#00905^eBatch-adding word categories ')+'('+inttostr(awf_insusersheet.Count div 3)+')');
+  for i:=0 to (awf_insusersheet.Count div 3)-1 do
+    TUserSheet.Insert([awf_insusersheet[i*3],awf_insusersheet[i*3+1],awf_insusersheet[i*3+2]]);
+  sp.show;
+  sp.SetMessage(_l('#00906^eBatch-adding character indexes ')+'('+inttostr(awf_insuseridx.Count div 3)+')');
+  for i:=0 to (awf_insuseridx.Count div 3)-1 do
+    TUserIdx.Insert([awf_insuseridx[i*3],awf_insuseridx[i*3+1],awf_insuseridx[i*3+2]]);
+  TUser.nocommitting:=false;
+  TUserSheet.nocommitting:=false;
+  TUserIdx.nocommitting:=false;
 end;
 
 procedure TfWords.UserAdd_Button1Click(Sender: TObject);
@@ -493,16 +584,6 @@ begin
   end;
 end;
 
-procedure TfWords.RadioGroup2Click(Sender: TObject);
-begin
-  ShowIt(false);
-end;
-
-procedure TfWords.CheckBox1Click(Sender: TObject);
-begin
-  ShowIt(false);
-end;
-
 procedure TfWords.btnExportVocabClick(Sender: TObject);
 begin
   if SaveDialog1.Execute then
@@ -512,7 +593,6 @@ begin
       ExportVocabToCsv(SaveDialog1.FileName);
 end;
 
-//TODO: Test Unicode conversion
 procedure TfWords.ExportVocabToWkl(const filename: string);
 var t:textfile;
     i,j:integer;
@@ -524,7 +604,7 @@ begin
     pchar(_l('#00900^eNotice')),
     MB_ICONWARNING or MB_OK);
   Screen.Cursor:=crHourGlass;
-  assignfile(t,SaveDialog1.FileName);
+  assignfile(t,filename);
   rewrite(t);
   writeln(t,'WaKan Word List 1');
   writeln(t,'');
@@ -554,21 +634,13 @@ begin
   Screen.Cursor:=crDefault;
 end;
 
-//TODO: Convert to Unicode
 procedure TfWords.ExportVocabToCsv(const filename: string);
 var t:textfile;
     i,j:integer;
     sl:TStringList;
-
-  function ReplSemi(s:string):string;
-  begin
-    while pos(';',s)>0 do s[pos(';',s)]:=',';
-    result:=s;
-  end;
-
 begin
   Screen.Cursor:=crHourGlass;
-  Conv_Create(SaveDialog1.FileName,Conv_ChooseType(curlang='c',0));
+  Conv_Create(filename,Conv_ChooseType(curlang='c',0));
   if fWordsExpChoose.ShowModal=mrCancel then exit;
   Conv_Write(fstr(#9' Wakan Word List'#13#10));
   Conv_Write(fstr(#9''#13#10));
@@ -593,28 +665,32 @@ begin
       if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
     begin
       Conv_Write(TUser.Str(TUserKanji));
-      Conv_Write(UnicodeToHex(#9));
-      if not showroma then Conv_Write(TUser.Str(TUserPhonetic)) else
-        if curlang='c'then Conv_Write(UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c'))) else
-                            Conv_Write(UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
-      Conv_Write(UnicodeToHex(#9));
-      Conv_Write(UnicodeToHex(ReplSemi(TUser.Str(TUserEnglish))));
+      Conv_Write(fstr(#9));
+      if not showroma then
+        Conv_Write(TUser.Str(TUserPhonetic))
+      else
+        if curlang='c'then
+          Conv_Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c')))
+        else
+          Conv_Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
+      Conv_Write(fstr(#9));
+      Conv_Write(fstr(replc(TUser.Str(TUserEnglish),';',',')));
       if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
       begin
-        Conv_Write(UnicodeToHex(#9));
-        Conv_Write(UnicodeToHex(fUserFilters.lbCategories.Items[j]));
+        Conv_Write(fstr(#9));
+        Conv_Write(fstr(fUserFilters.lbCategories.Items[j]));
         if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
         begin
-          Conv_Write(UnicodeToHex(#9));
+          Conv_Write(fstr(#9));
           case TUser.Int(TUserScore) of
-            0:Conv_Write(UnicodeToHex('P'));
-            1:Conv_Write(UnicodeToHex('U'));
-            2:Conv_Write(UnicodeToHex('L'));
-            3:Conv_Write(UnicodeToHex('M'));
+            0:Conv_Write(fstr('P'));
+            1:Conv_Write(fstr('U'));
+            2:Conv_Write(fstr('L'));
+            3:Conv_Write(fstr('M'));
           end;
         end;
       end;
-      Conv_Write('000D000A');
+      Conv_Write(fstr(#13#10));
     end;
   end;
   sl.Free;
@@ -623,387 +699,282 @@ begin
   Screen.Cursor:=crDefault;
 end;
 
-//TODO: Convert this function to unicode
+
 procedure TfWords.btnImportVocabClick(Sender: TObject);
-var t:textfile;
-    s,s2,s3,s4:string;
-    linc:integer;
-    sp:TSMPromptForm;
-    addw,catw:integer;
-    curwrit,curphon,curmean,curcat,curstat:string;
-    st:integer;
-    delimdetect:boolean;
-    delim:string;
-    justbeginning,ignoreline:boolean;
-    field:integer;
-    unknowncat:string;
-    awf_lastcatname:string;
-    awf_lastcatindex:integer;
-    awf_catcount:array[0..65535] of integer;
-    awf_insuser:TStringList;
-    awf_insusersheet:TStringList;
-    awf_insuseridx:TStringList;
-    abortprocess:boolean;
-  function AddWordFast(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
-  var s,s2:string;
-      beg,insertword:boolean;
-      bs:string;
-      cat,catord:integer;
-      wordidx:integer;
-      phonsort:string;
-  begin
-    if (length(category)<2) or (category[2]<>'~') then category:=curlang+'~'+category;
-    result:=false;
-    if category=awf_lastcatname then
-      cat:=awf_lastcatindex
-    else
-    begin
-      cat := NeedCategory(category, cattype, {silent=}true);
-      if cat<0 then begin //user cancelled
-        abortprocess:=true;
-        exit;
-      end;
-    end;
-
-    wordidx := FindUserWord(kanji, phonetic);
-    insertword := wordidx<0;
-
-    awf_lastcatname:=category;
-    awf_lastcatindex:=cat;
-    catord:=awf_catcount[cat]+1;
-    awf_catcount[cat]:=catord;
-
-    TUserSheet.SetOrder('Word_Ind');
-    if not insertword then
-    begin
-      TUserSheet.Locate('Word',wordidx);
-      while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=wordidx) do
-      begin
-        if TUserSheet.Int(TUserSheetNumber)=cat then
-        begin
-          lastwordadded:=insertword;
-          if not nomessages then
-            Application.MessageBox(
-              pchar(_l('#00843^eThis word is already in vocabulary and is in this category.')),
-              pchar(_l('#00020^eError')),
-              MB_ICONERROR or MB_OK);
-          exit;
-        end;
-        TUserSheet.Next;
-      end;
-    end;
-
-    if insertword then
-    begin
-      inc(MaxUserIndex);
-      wordidx:=MaxUserIndex;
-      phonsort:=GetPhoneticSortStr(phonetic);
-  //    showmessage(s+#13+KanaToRomaji(s,1)+#13+phonsort);
-      awf_insuser.Add(inttostr(MaxUserIndex));
-      awf_insuser.Add(english);
-      awf_insuser.Add(phonetic);
-      awf_insuser.Add(phonsort);
-      awf_insuser.Add(kanji);
-      awf_insuser.Add(FormatDateTime('yyyymmdd',now));
-      awf_insuser.Add('00000000');
-      awf_insuser.Add('00000000');
-      awf_insuser.Add('00000000');
-      awf_insuser.Add('0');
-      awf_insuser.Add(inttostr(status));
-      awf_insuser.Add(inttostr(status));
-      s:=kanji;
-      beg:=true;
-      while s<>'' do
-      begin
-        s2:=copy(s,1,4);
-        delete(s,1,4);
-        if TChar.Locate('Unicode',s2) then
-        begin
-          if beg then bs:='T'else bs:='F';
-          awf_insuseridx.Add(inttostr(MaxUserIndex));
-          awf_insuseridx.Add(TChar.Str(TCharUnicode));
-          awf_insuseridx.Add(bs);
-        end;
-        beg:=false;
-      end;
-    end;
-    awf_insusersheet.Add(inttostr(wordidx));
-    awf_insusersheet.Add(inttostr(cat));
-    awf_insusersheet.Add(inttostr(catord));
-    if not nomessages then if insertword then
-      Application.MessageBox(
-        pchar(_l('#00844^eNew word was successfully added into vocabulary.')),
-        pchar(_l('#00845^eSuccess')),
-        MB_ICONINFORMATION or MB_OK)
-    else
-      Application.MessageBox(
-        pchar(_l('#00846^eWord was added into new category.')),
-        pchar(_l('#00845^eSuccess')),
-        MB_ICONINFORMATION or MB_OK);
-    if not nomessages then ShowIt(false);
-    if not nomessages then fMenu.ChangeUserData;
-    lastwordadded:=insertword;
-    result:=true;
-  end;
-var i:integer;
+var addw,catw:integer;
 begin
-  if OpenDialog1.Execute then
-  begin
-    awf_lastcatname:='';
-    awf_lastcatindex:=0;
-    for i:=0 to 65535 do awf_catcount[i]:=0;
-    TUserSheet.SetOrder('Sheet_Ind');
-    TUserSheet.First;
-    while not TUserSheet.EOF do
-    begin
-      if TUserSheet.Int(TUserSheetPos)>awf_catcount[TUserSheet.Int(TUserSheetNumber)] then awf_catcount[TUserSheet.Int(TUserSheetNumber)]:=TUserSheet.Int(TUserSheetPos);
-      TUserSheet.Next;
-    end;
-    TUserSheet.First;
-    if pos('.WKL',uppercase(OpenDialog1.FileName))>0 then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00899^eWKL format is outdated. Import/export routine '
-          +'is maintained for compatibility only. Please use CSV format in the future.'#13)),
-        pchar(_l('#00900^eNotice')),
-        MB_ICONWARNING or MB_OK);
-      assignfile(t,OpenDialog1.Filename);
-      system.reset(t);
-      linc:=0;
-      while not eof(t) do
-      begin
-        readln(t,s);
-        inc(linc);
-      end;
-      catw:=0;
-      addw:=0;
-      closefile(t);
-      system.reset(t);
-      readln(t,s);
-      if pos('WaKan Word List',s)<>1 then
-      begin
-        Application.MessageBox(
-          pchar(_l('#00847^eThis is not a WaKan word list file.')),
-          pchar(_l('#00020^eError')),
-          MB_ICONERROR or MB_OK);
-        exit;
-      end;
-      if s<>'WaKan Word List 1'then
-      begin
-        Application.MessageBox(
-          pchar(_l('#00848^eThis WaKan word list file version is not supported.')),
-          pchar(_l('#00020^eError')),
-          MB_ICONERROR or MB_OK);
-        exit;
-      end;
-      sp:=SMProgressDlg(
-        _l('#00215^eVocabulary'),
-        _l('#00849^eImporting word list (000000 words imported - 000000 new words)...'),
-        linc);
-      Screen.Cursor:=crHourGlass;
-      linc:=0;
-      repeat
-        inc(linc);
-        readln(t,s);
-      until (length(s)>0) and (s[1]<>';');
-      while (not eof(t)) and (s<>'.') do
-      begin
-        readln(t,s2);
-        readln(t,s3);
-        readln(t,s4);
-        AddWord(s,s2,s3,copy(s4,2,length(s4)-1),s4[1],true,1);
-        inc(catw);
-        if lastwordadded then inc(addw);
-        if not eof(t) then readln(t,s);
-        inc(linc,4);
-        sp.show;
-        sp.SetMessage(_l('#00901^eImporting word list (')
-          +inttostr(catw)
-          +_l('#00902^e words imported - ')
-          +inttostr(addw)
-          +_l('#00903^e new words)...'));
-        sp.SetProgress(linc);
-      end;
-      Screen.Cursor:=crDefault;
-      closefile(t);
-      sp.Free;
-      fMenu.ChangeUserData;
-      ShowIt(false);
-      Application.MessageBox(
-        pchar(_l('^e'+inttostr(catw)+' words imported'#13
-          +inttostr(addw)+' new words')),
-        pchar(_l('#00851^eWord list imported')),
-        MB_ICONINFORMATION or MB_OK);
-    end else
-    begin
-      abortprocess:=false;
-      Conv_Open(OpenDialog1.FileName,Conv_ChooseType(curlang='c',Conv_DetectType(OpenDialog1.FileName)));
-      linc:=0;
-      repeat
-        s:=Conv_Read;
-        if s='000D'then inc(linc);
-      until s='';
-      Conv_Rewind;
-      curwrit:='';
-      curphon:='';
-      curmean:='';
-      curcat:='';
-      curstat:='';
-      justbeginning:=true;
-      ignoreline:=false;
-      field:=0;
-      unknowncat:='';
-      s2:='';
-      catw:=0;
-      addw:=0;
-      sp:=SMProgressDlg(
-        _l('#00215^eVocabulary'),
-        _l('#00849^eImporting word list (000000 words imported - 000000 new words)...'),
-        linc);
-      linc:=0;
-      Screen.Cursor:=crHourGlass;
-      s:=Conv_Read;
-      delim:=UnicodeToHex(';');
-      delimdetect:=true;
-      awf_insuser:=TStringList.Create;
-      awf_insusersheet:=TStringList.Create;
-      awf_insuseridx:=TStringList.Create;
-      repeat
-        if (delimdetect) and (copy(s,1,2)='00') and ((HexToUnicode(s)<'A') or (HexToUnicode(s)>'Z'))
-           and ((HexToUnicode(s)<'a') or (HexToUnicode(s)>'z')) and ((HexToUnicode(s)<'0') or (HexToUnicode(s)>'9')) and (s<>'0020') then
-        begin
-          delim:=s;
-          delimdetect:=false;
-        end;
-        if justbeginning and (s=delim) then ignoreline:=true;
-        justbeginning:=false;
-        if not ignoreline then
-        begin
-          if (s=delim) then
-          begin
-            inc(field);
-            case field of
-              1:curwrit:=s2;
-              2:curphon:=s2;
-              3:curmean:=HexToUnicode(s2);
-              4:curcat:=HexToUnicode(s2);
-              5:curstat:=HexToUnicode(s2);
-            end;
-            s2:='';
-          end else if s='000A'then
-          begin
-            inc(field);
-            case field of
-              1:curwrit:=s2;
-              2:curphon:=s2;
-              3:curmean:=HexToUnicode(s2);
-              4:curcat:=HexToUnicode(s2);
-              5:curstat:=HexToUnicode(s2);
-            end;
-            s2:='';
-            if (curwrit<>'') and (curphon<>'') then
-            begin
-              if (curphon[1]='0') or (copy(curphon,1,4)='2026') then
-                if curlang='c'then
-                begin
-                  s2:=DeconvertPinYin(curphon);
-//                  if pos(UnicodeToHex('?'),ConvertPinYin(KanaToRomaji(RomajiToKana(s2,1,false,'c'),1,'c')))<>0 then showmessage(curmean+#13+s2);
-//                  if curmean='other people'then showmessage(s2+#13+ConvertPinYin(s2));
-//                  if (pos('?',s2)=0) and (pos('r0',s2)=0) then
-//                    if ConvertPinYin(s2)<>curphon then showmessage('Mismatch: '+#13+curmean+#13+ConvertPinYin(s2)+#13+curphon+#13+s2);
-                  curphon:=RomajiToKana(DeconvertPinYin(curphon),1,true,'c')
-                end else curphon:=RomajiToKana(HexToUnicode(curphon),2,true,'j');
-              if curcat='' then curcat:=unknowncat;
-              if curcat='' then
-              begin
-                curcat:=InputBox(
-                  _l('#00894^eVocabulary category'),
-                  _l('#00895^eEnter category in which the new words will be added:'),
-                  'noname');
-                unknowncat:=curcat;
-              end;
-              if curstat='' then curstat:='U';
-              case uppercase(curstat)[1] of
-                'P':st:=0;
-                'U':st:=1;
-                'L':st:=2;
-                'M':st:=3;
-              end;
-              curcat:=trim(curcat);
-              AddWordFast(curwrit,curphon,curmean,curcat,'?',true,st);
-              if abortprocess then
-              begin
-                Screen.Cursor:=crDefault;
-                sp.Free;
-                exit;
-              end;
-              inc(catw);
-              if lastwordadded then inc(addw);
-            end;
-          end else if s<>'000D'then s2:=s2+s;
-        end;
-        if s='000A'then
-        begin
-          inc(linc);
-          field:=0;
-          s2:='';
-          justbeginning:=true;
-          ignoreline:=false;
-          if linc mod 10=0 then
-          begin
-            sp.show;
-            sp.SetMessage(
-              _l('#00901^eImporting word list (')
-              +inttostr(catw)
-              +_l('#00902^e words imported - ')
-              +inttostr(addw)
-              +_l('#00903^e new words)...'));
-            sp.SetProgress(linc);
-          end;
-        end;
-        s:=Conv_Read;
-      until s='';
-      Conv_Close;
-      TUser.nocommitting:=true;
-      TUserSheet.nocommitting:=true;
-      TUserIdx.nocommitting:=true;
-      sp.show;
-      sp.SetMessage(_l('#00904^eBatch-adding words ')+'('+inttostr(awf_insuser.Count div 12)+')');
-      for i:=0 to (awf_insuser.Count div 12)-1 do
-        TUser.Insert([awf_insuser[i*12],awf_insuser[i*12+1],awf_insuser[i*12+2],awf_insuser[i*12+3],awf_insuser[i*12+4],awf_insuser[i*12+5],
-                      awf_insuser[i*12+6],awf_insuser[i*12+7],awf_insuser[i*12+8],awf_insuser[i*12+9],awf_insuser[i*12+10],awf_insuser[i*12+11]]);
-      sp.show;
-      sp.SetMessage(_l('#00905^eBatch-adding word categories ')+'('+inttostr(awf_insusersheet.Count div 3)+')');
-      for i:=0 to (awf_insusersheet.Count div 3)-1 do
-        TUserSheet.Insert([awf_insusersheet[i*3],awf_insusersheet[i*3+1],awf_insusersheet[i*3+2]]);
-      sp.show;
-      sp.SetMessage(_l('#00906^eBatch-adding character indexes ')+'('+inttostr(awf_insuseridx.Count div 3)+')');
-      for i:=0 to (awf_insuseridx.Count div 3)-1 do
-        TUserIdx.Insert([awf_insuseridx[i*3],awf_insuseridx[i*3+1],awf_insuseridx[i*3+2]]);
-      TUser.nocommitting:=false;
-      TUserSheet.nocommitting:=false;
-      TUserIdx.nocommitting:=false;
-      awf_insuser.Free;
-      awf_insuseridx.Free;
-      awf_insusersheet.Free;
-      sp.show;
-      sp.SetMessage(_l('#00907^eRebuilding indexes'));
-      TUser.Reindex;
-      TUserSheet.Reindex;
-      TUserIdx.Reindex;
-      Screen.Cursor:=crDefault;
-      sp.Free;
-      fMenu.ChangeUserData;
-      ShowIt(false);
-      Application.MessageBox(
-        pchar(_l('^e'+inttostr(catw)+' words imported'#13+inttostr(addw)+' new words')),
-        pchar(_l('#00851^eWord list imported')),
-        MB_ICONINFORMATION or MB_OK);
-    end;
-  end;
+  if not OpenDialog1.Execute then
+    exit;
+
+  if pos('.WKL',uppercase(OpenDialog1.FileName))>0 then
+    ImportVocabFromWkl(OpenDialog1.FileName, catw, addw)
+  else
+    ImportVocabFromCsv(OpenDialog1.FileName, catw, addw);
+
   //We've been doing silent AddCategories, so refresh now
   fMenu.RefreshCategory;
   fMenu.ChangeUserData;
+  ShowIt(false);
+  Application.MessageBox(
+    pchar(_l('^e'+inttostr(catw)+' words imported'#13+inttostr(addw)+' new words')),
+    pchar(_l('#00851^eWord list imported')),
+    MB_ICONINFORMATION or MB_OK);
+end;
+
+procedure TfWords.ImportVocabFromWkl(const filename: string; out catw, addw: integer);
+var t:textfile;
+  sp:TSMPromptForm;
+  s,s2,s3,s4:string;
+  linc:integer;
+begin
+  Application.MessageBox(
+    pchar(_l('#00899^eWKL format is outdated. Import/export routine '
+      +'is maintained for compatibility only. Please use CSV format in the future.'#13)),
+    pchar(_l('#00900^eNotice')),
+    MB_ICONWARNING or MB_OK);
+
+  catw:=0;
+  addw:=0;
+
+  sp := nil;
+  try
+    assignfile(t,filename);
+    system.reset(t);
+    linc:=0;
+    while not eof(t) do
+    begin
+      readln(t,s);
+      inc(linc);
+    end;
+    closefile(t);
+
+    system.reset(t);
+    readln(t,s);
+    if pos('WaKan Word List',s)<>1 then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00847^eThis is not a WaKan word list file.')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
+      exit;
+    end;
+    if s<>'WaKan Word List 1'then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00848^eThis WaKan word list file version is not supported.')),
+        pchar(_l('#00020^eError')),
+        MB_ICONERROR or MB_OK);
+      exit;
+    end;
+
+    sp:=SMProgressDlg(
+      _l('#00215^eVocabulary'),
+      _l('#00849^eImporting word list (000000 words imported - 000000 new words)...'),
+      linc);
+    Screen.Cursor:=crHourGlass;
+
+    linc:=0;
+    repeat
+      inc(linc);
+      readln(t,s);
+    until (length(s)>0) and (s[1]<>';');
+
+    while (not eof(t)) and (s<>'.') do
+    begin
+      readln(t,s2);
+      readln(t,s3);
+      readln(t,s4);
+      AddWord(hextofstr(s),hextofstr(s2),s3,copy(s4,2,length(s4)-1),s4[1],true,1);
+      inc(catw);
+      if lastwordadded then inc(addw);
+      if not eof(t) then readln(t,s);
+      inc(linc,4);
+      sp.show;
+      sp.SetMessage(_l('#00901^eImporting word list (')
+        +inttostr(catw)
+        +_l('#00902^e words imported - ')
+        +inttostr(addw)
+        +_l('#00903^e new words)...'));
+      sp.SetProgress(linc);
+    end;
+  finally
+    if TTextRec(t).Mode<>fmClosed then
+      closefile(t);
+    Screen.Cursor:=crDefault;
+    sp.Free;
+  end;
+end;
+
+procedure TfWords.ImportVocabFromCsv(const filename: string; out catw, addw: integer);
+var awf: TAddWordFast;
+  sp:TSMPromptForm;
+  linc:integer;
+  curwrit,curphon,curmean,curcat,curstat:string;
+  delimdetect:boolean;
+  delim:string;
+  s,s2:string;
+  justbeginning,ignoreline:boolean;
+  field:integer;
+  unknowncat:string;
+  st:integer;
+
+  function IsPotentialDelimiter(const ch: WideChar): boolean;
+  begin
+    Result := (Ord(ch)<$00FF) //All non-ascii characters are NOT delimiters
+      and (ch<>' ') //Space is not a delimiter
+      and ((ch<'A') or (ch>'Z')) and ((ch<'a') or (ch>'z')) and ((ch<'0') or (ch>'9'));
+  end;
+
+  procedure FinalizeField;
+  begin
+    inc(field);
+    case field of
+      1:curwrit:=s2; //keen in fstring
+      2:curphon:=s2;
+      3:curmean:=fstrtouni(s2); //although it says "uni", contents is raw ansi
+      4:curcat:=fstrtouni(s2);
+      5:curstat:=fstrtouni(s2);
+    end;
+    s2:='';
+  end;
+
+begin
+  catw:=0;
+  addw:=0;
+
+  awf := nil;
+  sp := nil;
+  try
+    awf := TAddWordFast.Create;
+    Conv_Open(filename,Conv_ChooseType(curlang='c',Conv_DetectType(filename)));
+
+    linc:=0;
+    repeat
+      s:=Conv_Read;
+      if s=UH_CR then inc(linc);
+    until s='';
+
+    Conv_Rewind;
+
+    curwrit:='';
+    curphon:='';
+    curmean:='';
+    curcat:='';
+    curstat:='';
+    justbeginning:=true;
+    ignoreline:=false;
+    field:=0;
+    unknowncat:='';
+    s2:='';
+
+    sp:=SMProgressDlg(
+      _l('#00215^eVocabulary'),
+      _l('#00849^eImporting word list (000000 words imported - 000000 new words)...'),
+      linc);
+
+    linc:=0;
+    Screen.Cursor:=crHourGlass;
+    s:=Conv_Read;
+
+    delim:=fstr(';');
+    delimdetect:=true;
+
+    repeat
+      if delimdetect and IsPotentialDelimiter(fstrtouni(s)[1]) then
+      begin
+        delim:=s;
+        delimdetect:=false;
+      end;
+
+      if justbeginning and (s=delim) then ignoreline:=true;
+      justbeginning:=false;
+
+      if not ignoreline then
+      begin
+        if s=delim then
+          FinalizeField
+        else
+        if s=UH_LF then
+        begin
+          FinalizeField;
+          if (curwrit<>'') and (curphon<>'') then
+          begin
+           //I do not know WTF are both of these checks
+            if ({$IFNDEF UNICODE}curphon[1]='0'{$ELSE}Ord(curphon[1]) and $F000 = 0{$ENDIF})
+            or (fgetch(curphon,1)={$IFNDEF UNICODE}'2026'{$ELSE}#$2026{$ENDIF}) then
+              if curlang='c'then
+              begin
+                s2:=DeconvertPinYin(curphon);
+                curphon:=RomajiToKana(DeconvertPinYin(curphon),1,true,'c')
+              end else
+                curphon:=RomajiToKana(HexToUnicode(curphon),2,true,'j');
+            if curcat='' then curcat:=unknowncat;
+            if curcat='' then
+            begin
+              curcat:=InputBox(
+                _l('#00894^eVocabulary category'),
+                _l('#00895^eEnter category in which the new words will be added:'),
+                'noname');
+              unknowncat:=curcat;
+            end;
+            if curstat='' then curstat:='U';
+            case uppercase(curstat)[1] of
+              'P':st:=0;
+              'U':st:=1;
+              'L':st:=2;
+              'M':st:=3;
+            else
+              st:=1; //unlearned
+            end;
+            curcat:=trim(curcat);
+            awf.AddWordFast(curwrit,curphon,curmean,curcat,'?',st); //can raise EAbort
+            inc(catw);
+            if lastwordadded then inc(addw);
+          end;
+        end else
+        if s<>UH_CR then
+          s2:=s2+s;
+      end;
+
+      if s=UH_LF then
+      begin
+        inc(linc);
+        field:=0;
+        s2:='';
+        justbeginning:=true;
+        ignoreline:=false;
+        if linc mod 10=0 then
+        begin
+          sp.show;
+          sp.SetMessage(
+            _l('#00901^eImporting word list (')
+            +inttostr(catw)
+            +_l('#00902^e words imported - ')
+            +inttostr(addw)
+            +_l('#00903^e new words)...'));
+          sp.SetProgress(linc);
+        end;
+      end;
+
+      s:=Conv_Read;
+    until s='';
+    Conv_Close;
+
+    sp.show;
+    awf.Commit(sp);
+    FreeAndNil(awf);
+
+    sp.show;
+    sp.SetMessage(_l('#00907^eRebuilding indexes'));
+    TUser.Reindex;
+    TUserSheet.Reindex;
+    TUserIdx.Reindex;
+
+  finally
+    FreeAndNil(awf);
+    Screen.Cursor:=crDefault;
+    sp.Free;
+  end;
 end;
 
 procedure TfWords.Reset;

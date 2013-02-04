@@ -50,7 +50,8 @@ end;
 
 procedure TfUserAdd.PaintBox2Paint(Sender: TObject);
 begin
-  fWords.UserAdd_PaintBox2Paint(sender);
+  PaintBox2.Canvas.Brush.Color:=clWindow;
+  DrawUnicode(PaintBox2.Canvas,1,1,22,clip,FontJapanese);
 end;
 
 procedure TfUserAdd.Button1Click(Sender: TObject);

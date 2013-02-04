@@ -56,7 +56,7 @@ var
 implementation
 
 uses JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicAdd, JWBUser, JWBWords,
-  JWBSettings, JWBEdictMarkers, JWBCategories;
+  JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories;
 
 var curcphonetic,curckanji,curcmeaning:string;
 

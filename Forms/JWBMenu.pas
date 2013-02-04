@@ -549,41 +549,6 @@ var
   TRadicalsJapaneseCount,
   TRadicalsKangXiCount: integer;
 
-  TUser: TTextTable;
-  TUserIndex, //i
-  TUserEnglish, //s
-  TUserPhonetic, //x
-  TUserPhoneticSort, //s
-  TUserKanji, //x
-  TUserAdded, //s
-  TUserPrinted, //s
-  TUserLearned, //s
-  TUserMastered, //s
-  TUserNoPrinted, //i
-  TUserScore, //b
-  TUserMaxScore: integer; //b
-  MaxUserIndex:integer;
-
-  TUserIdx: TTextTable;
-  TUserIdxWord, //i
-  TUserIdxKanji, //x
-  TUserIdxBegin, //l
-  TUserIdxIndex: integer;
-
-  TUserSheet: TTextTable;
-  TUserSheetWord, //i
-  TUserSheetNumber, //w
-  TUserSheetPos: integer; //w
-
-  TUserCat: TTextTable;
-  TUserCatIndex,  //i
-  TUserCatName, //s, prefix~Category name. See commens in JWBCategories
-  TUserCatType, //b, TCatType, see comments in JWBCategories
-  TUserCatCreated: integer; //s, datetime of creation
-  MaxCategoryIndex: integer;
-
-  TUserPrior: TTextTable;
-
   clip:FString;
   cliptrans:TCharacterLineProps;
   oldhandle:THandle;
@@ -658,7 +623,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
   JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
-  JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters,
+  JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters, JWBUserData,
   JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
@@ -768,29 +733,6 @@ begin
   parts[2] := uppercase(parts[2]);
   parts[3] := uppercase(parts[3]);
   StrListAdd(romac, parts);
-end;
-
-//Used in several places when loading
-function FindMaxUserIndex(): integer;
-begin
-  Result:=0;
-  TUser.First;
-  while not TUser.EOF do
-  begin
-    if TUser.Int(TUserIndex)>Result then Result:=TUser.Int(TUserIndex);
-    TUser.Next;
-  end;
-end;
-
-function FindMaxCategoryIndex(): integer;
-begin
-  Result:=0;
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    if TUserCat.Int(TUserCatIndex)>Result then Result:=TUserCat.Int(TUserCatIndex);
-    TUserCat.Next;
-  end;
 end;
 
 procedure TfMenu.InitializeWakan;

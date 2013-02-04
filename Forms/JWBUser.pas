@@ -126,7 +126,7 @@ implementation
 uses JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
-  JWBCategories, JWBAnnotations;
+  JWBCategories, JWBAnnotations, JWBUserData;
 
 var curword:integer;
     hinthide:boolean;

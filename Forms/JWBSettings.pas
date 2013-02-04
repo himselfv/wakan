@@ -345,7 +345,8 @@ implementation
 uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid;
+  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
+  JWBUserData;
 
 var colorfrom:integer;
 

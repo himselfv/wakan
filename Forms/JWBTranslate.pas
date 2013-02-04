@@ -328,7 +328,8 @@ implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
   JWBSettings, JWBPrint, JWBConvert, StdPrompt, JWBUnit,
-  JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers;
+  JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers,
+  JWBUserData;
 
 {$R *.DFM}
 

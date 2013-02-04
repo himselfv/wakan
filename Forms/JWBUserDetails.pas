@@ -75,7 +75,7 @@ var
 
 implementation
 
-uses JWBWords, JWBMenu, JWBUnit, JWBUserFilters, JWBCategories;
+uses JWBWords, JWBMenu, JWBUnit, JWBUserData, JWBUserFilters, JWBCategories;
 
 {$R *.DFM}
 

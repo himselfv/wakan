@@ -13,7 +13,8 @@ procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
 procedure ClearKanjiCardCache;
 
 implementation
-uses JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu, JWBSettings;
+uses JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
+  JWBSettings, JWBUserData;
 
 procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
   stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;

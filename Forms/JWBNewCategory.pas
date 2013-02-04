@@ -30,7 +30,7 @@ var
 function NeedCategory(category: string; cattype: char; silent: boolean): integer;
 
 implementation
-uses JWBMenu, JWBCategories;
+uses JWBMenu, JWBUserData, JWBCategories;
 
 {$R *.DFM}
 

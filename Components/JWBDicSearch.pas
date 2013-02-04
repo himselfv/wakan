@@ -172,7 +172,7 @@ procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;must
 
 implementation
 uses Forms, Windows, JWBMenu, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
-  JWBCategories, JWBEdictMarkers;
+  JWBCategories, JWBEdictMarkers, JWBUserData;
 
 
 {

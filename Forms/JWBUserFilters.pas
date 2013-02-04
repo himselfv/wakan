@@ -37,7 +37,7 @@ var
 
 implementation
 
-uses JWBWords, JWBMenu, JWBCategories, JWBUnit, JWBNewCategory;
+uses JWBWords, JWBMenu, JWBUserData, JWBCategories, JWBUnit, JWBNewCategory;
 
 {$R *.DFM}
 

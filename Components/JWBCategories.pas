@@ -92,7 +92,7 @@ function FixDuplicateCategories(): boolean;
 
 
 implementation
-uses Forms, Windows, TextTable, JWBMenu, JWBUserFilters;
+uses Forms, Windows, TextTable, JWBMenu, JWBUserData, JWBUserFilters;
 
 function GetCatPrefix(s:string):char;
 begin

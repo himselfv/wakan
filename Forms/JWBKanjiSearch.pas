@@ -103,7 +103,7 @@ var
 implementation
 
 uses JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBNewCategory,
-  JWBKanjiDetails, JWBCategories;
+  JWBKanjiDetails, JWBUserData, JWBCategories;
 
 {$R *.DFM}
 
