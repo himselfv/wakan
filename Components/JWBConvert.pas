@@ -30,6 +30,7 @@ function Conv_ReadLn:FString;
 procedure Conv_Create(filename:string; tp:byte);
 procedure Conv_Write(s:FString);
 procedure Conv_WriteChar(s:FChar);
+function Conv_IsOpen: boolean;
 procedure Conv_Close;
 procedure Conv_Flush;
 function Conv_ChooseType(chinese:boolean; def:byte):byte;
@@ -696,6 +697,11 @@ end;
 procedure Conv_Flush;
 begin
   blockwrite(f,buf,bufpos-1);
+end;
+
+function Conv_IsOpen: boolean;
+begin
+  Result := TFileRec(f).Mode<>fmClosed;
 end;
 
 procedure Conv_Close;
