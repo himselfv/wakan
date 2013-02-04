@@ -23,8 +23,8 @@ type
     SpeedButton2: TSpeedButton;
     SpeedButton4: TSpeedButton;
     StringGrid1: TWakanGrid;
-    Button9: TButton;
-    Button10: TButton;
+    btnExportVocab: TButton;
+    btnImportVocab: TButton;
     Button15: TButton;
     Button18: TButton;
     Button19: TButton;
@@ -40,10 +40,10 @@ type
     procedure UserAdd_Button1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
     procedure CheckBox1Click(Sender: TObject);
-    procedure Button9Click(Sender: TObject);
+    procedure btnExportVocabClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure Button10Click(Sender: TObject);
+    procedure btnImportVocabClick(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure Button14Click(Sender: TObject);
@@ -84,6 +84,10 @@ type
   protected
     function GetPhoneticSortStr(phonetic: FString): string;
     function FindUserWord(kanji,phonetic: FString): integer;
+
+  public
+    procedure ExportVocabToWkl(const filename: string);
+    procedure ExportVocabToCsv(const filename: string);
 
   public
     WordListCount:integer;
@@ -499,117 +503,128 @@ begin
   ShowIt(false);
 end;
 
-procedure TfWords.Button9Click(Sender: TObject);
+procedure TfWords.btnExportVocabClick(Sender: TObject);
+begin
+  if SaveDialog1.Execute then
+    if pos('.WKL',uppercase(SaveDialog1.FileName))>0 then
+      ExportVocabToWkl(SaveDialog1.FileName)
+    else
+      ExportVocabToCsv(SaveDialog1.FileName);
+end;
+
+//TODO: Test Unicode conversion
+procedure TfWords.ExportVocabToWkl(const filename: string);
 var t:textfile;
     i,j:integer;
     sl:TStringList;
-function ReplSemi(s:string):string;
 begin
-  while pos(';',s)>0 do s[pos(';',s)]:=',';
-  result:=s;
-end;
-begin
-  if SaveDialog1.Execute then
+  Application.MessageBox(
+    pchar(_l('#00899^eWKL format is outdated. Import/export routine is '
+      +'maintained for compatibility only. Please use CSV format in the future.'#13)),
+    pchar(_l('#00900^eNotice')),
+    MB_ICONWARNING or MB_OK);
+  Screen.Cursor:=crHourGlass;
+  assignfile(t,SaveDialog1.FileName);
+  rewrite(t);
+  writeln(t,'WaKan Word List 1');
+  writeln(t,'');
+  writeln(t,'; created by '+WakanAppName+' '+WakanCopyright);
+  writeln(t,'; This file lists words that were exported from user vocabulary.');
+  writeln(t,'; Each entry consists of four lines:');
+  writeln(t,'; Written (Unicode in hex), Phonetic (Unicode in hex), English (raw text), Category (raw text)');
+  writeln(t,'');
+  sl:=TStringList.Create;
+  for i:=0 to wl.Count-1 do
   begin
-    if pos('.WKL',uppercase(SaveDialog1.FileName))>0 then
+    ListWordCategories(strtoint(wl[i]),sl);
+    TUser.Locate('Index',strtoint(wl[i]));
+    for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
+      if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
     begin
-      Application.MessageBox(
-        pchar(_l('#00899^eWKL format is outdated. Import/export routine is '
-          +'maintained for compatibility only. Please use CSV format in the future.'#13)),
-        pchar(_l('#00900^eNotice')),
-        MB_ICONWARNING or MB_OK);
-      Screen.Cursor:=crHourGlass;
-      assignfile(t,SaveDialog1.FileName);
-      rewrite(t);
-      writeln(t,'WaKan Word List 1');
-      writeln(t,'');
-      writeln(t,'; created by WaKan - Japanese & Chinese Learning Tool (C) Filip Kabrt 2002-2004');
-      writeln(t,'; This file lists words that were exported from user vocabulary.');
-      writeln(t,'; Each entry consists of four lines:');
-      writeln(t,'; Written (Unicode in hex), Phonetic (Unicode in hex), English (raw text), Category (raw text)');
-      writeln(t,'');
-      sl:=TStringList.Create;
-      for i:=0 to wl.Count-1 do
-      begin
-        ListWordCategories(strtoint(wl[i]),sl);
-        TUser.Locate('Index',strtoint(wl[i]));
-        for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
-          if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
-        begin
-          writeln(t,TUser.Str(TUserKanji));
-          writeln(t,TUser.Str(TUserPhonetic));
-          writeln(t,TUser.Str(TUserEnglish));
-          TUserCat.Locate('Name',curlang+'~'+fUserFilters.lbCategories.Items[j]);
-          writeln(t,chr(TUserCat.Int(TUserCatType))+TUserCat.Str(TUserCatName));
-        end;
-      end;
-      sl.Free;
-      writeln(t,'.');
-      closefile(t);
-      Screen.Cursor:=crDefault;
-    end else
-    begin
-      Screen.Cursor:=crHourGlass;
-      Conv_Create(SaveDialog1.FileName,Conv_ChooseType(curlang='c',0));
-      if fWordsExpChoose.ShowModal=mrCancel then exit;
-     //TODO: This accepts FString and not hex on unicode!
-      Conv_Write(UnicodeToHex(#9' Wakan Word List')+'000D000A');
-      Conv_Write(UnicodeToHex(#9'')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' created by WaKan - Japanese & Chinese Learning Tool (C) Filip Kabrt 2002-2004')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' This file lists words that were exported from user vocabulary.')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' Each entry consists of one line where the following values are separated by a delimiter:')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <written>;<phonetic>;<meaning>[;<category>[;<learned>]]')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <category> and <learned> fields are optional.')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <written> - How the word is written (in kanji/hanzi/kana)')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <phonetic> - How the word is pronounced (in kana/Hepburn romaji/BoPoMoFo/PinYin)')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <meaning> - English meaning of the word (cannot contain semicolons!)')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <category> - Name of the category to place the word into (if new, user is asked to specify type) (optional)')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' <learned> - Learned state of the word: "P" - problematic, "U" - unlearned, "L" - learned, "M" - mastered (optional)')+'000D000A');
-      Conv_Write(UnicodeToHex(#9' Delimiter is the first non-kanji character encountered.')+'000D000A');
-      Conv_Write(UnicodeToHex(#9'')+'000D000A');
-      sl:=TStringList.Create;
-      for i:=0 to wl.Count-1 do
-      begin
-        ListWordCategories(strtoint(wl[i]),sl);
-        TUser.Locate('Index',strtoint(wl[i]));
-        for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
-          if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
-        begin
-          Conv_Write(TUser.Str(TUserKanji));
-          Conv_Write(UnicodeToHex(#9));
-          if not showroma then Conv_Write(TUser.Str(TUserPhonetic)) else
-            if curlang='c'then Conv_Write(UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c'))) else
-                                Conv_Write(UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
-          Conv_Write(UnicodeToHex(#9));
-          Conv_Write(UnicodeToHex(ReplSemi(TUser.Str(TUserEnglish))));
-          if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
-          begin
-            Conv_Write(UnicodeToHex(#9));
-            Conv_Write(UnicodeToHex(fUserFilters.lbCategories.Items[j]));
-            if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
-            begin
-              Conv_Write(UnicodeToHex(#9));
-              case TUser.Int(TUserScore) of
-                0:Conv_Write(UnicodeToHex('P'));
-                1:Conv_Write(UnicodeToHex('U'));
-                2:Conv_Write(UnicodeToHex('L'));
-                3:Conv_Write(UnicodeToHex('M'));
-              end;
-            end;
-          end;
-          Conv_Write('000D000A');
-        end;
-      end;
-      sl.Free;
-      Conv_Flush;
-      Conv_Close;
-      Screen.Cursor:=crDefault;
+      writeln(t,fstrtohex(TUser.Str(TUserKanji)));
+      writeln(t,fstrtohex(TUser.Str(TUserPhonetic)));
+      writeln(t,TUser.Str(TUserEnglish));
+      TUserCat.Locate('Name',curlang+'~'+fUserFilters.lbCategories.Items[j]);
+      writeln(t,chr(TUserCat.Int(TUserCatType))+TUserCat.Str(TUserCatName));
     end;
   end;
+  sl.Free;
+  writeln(t,'.');
+  closefile(t);
+  Screen.Cursor:=crDefault;
+end;
+
+//TODO: Convert to Unicode
+procedure TfWords.ExportVocabToCsv(const filename: string);
+var t:textfile;
+    i,j:integer;
+    sl:TStringList;
+
+  function ReplSemi(s:string):string;
+  begin
+    while pos(';',s)>0 do s[pos(';',s)]:=',';
+    result:=s;
+  end;
+
+begin
+  Screen.Cursor:=crHourGlass;
+  Conv_Create(SaveDialog1.FileName,Conv_ChooseType(curlang='c',0));
+  if fWordsExpChoose.ShowModal=mrCancel then exit;
+  Conv_Write(fstr(#9' Wakan Word List'#13#10));
+  Conv_Write(fstr(#9''#13#10));
+  Conv_Write(fstr(#9' created by '+WakanAppName+' '+WakanCopyright+#13#10));
+  Conv_Write(fstr(#9' This file lists words that were exported from user vocabulary.'#13#10));
+  Conv_Write(fstr(#9' Each entry consists of one line where the following values are separated by a delimiter:'#13#10));
+  Conv_Write(fstr(#9' <written>;<phonetic>;<meaning>[;<category>[;<learned>]]'#13#10));
+  Conv_Write(fstr(#9' <category> and <learned> fields are optional.'#13#10));
+  Conv_Write(fstr(#9' <written> - How the word is written (in kanji/hanzi/kana)'#13#10));
+  Conv_Write(fstr(#9' <phonetic> - How the word is pronounced (in kana/Hepburn romaji/BoPoMoFo/PinYin)'#13#10));
+  Conv_Write(fstr(#9' <meaning> - English meaning of the word (cannot contain semicolons!)'#13#10));
+  Conv_Write(fstr(#9' <category> - Name of the category to place the word into (if new, user is asked to specify type) (optional)'#13#10));
+  Conv_Write(fstr(#9' <learned> - Learned state of the word: "P" - problematic, "U" - unlearned, "L" - learned, "M" - mastered (optional)'#13#10));
+  Conv_Write(fstr(#9' Delimiter is the first non-kanji character encountered.'#13#10));
+  Conv_Write(fstr(#9''#13#10));
+  sl:=TStringList.Create;
+  for i:=0 to wl.Count-1 do
+  begin
+    ListWordCategories(strtoint(wl[i]),sl);
+    TUser.Locate('Index',strtoint(wl[i]));
+    for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
+      if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
+    begin
+      Conv_Write(TUser.Str(TUserKanji));
+      Conv_Write(UnicodeToHex(#9));
+      if not showroma then Conv_Write(TUser.Str(TUserPhonetic)) else
+        if curlang='c'then Conv_Write(UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c'))) else
+                            Conv_Write(UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
+      Conv_Write(UnicodeToHex(#9));
+      Conv_Write(UnicodeToHex(ReplSemi(TUser.Str(TUserEnglish))));
+      if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
+      begin
+        Conv_Write(UnicodeToHex(#9));
+        Conv_Write(UnicodeToHex(fUserFilters.lbCategories.Items[j]));
+        if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
+        begin
+          Conv_Write(UnicodeToHex(#9));
+          case TUser.Int(TUserScore) of
+            0:Conv_Write(UnicodeToHex('P'));
+            1:Conv_Write(UnicodeToHex('U'));
+            2:Conv_Write(UnicodeToHex('L'));
+            3:Conv_Write(UnicodeToHex('M'));
+          end;
+        end;
+      end;
+      Conv_Write('000D000A');
+    end;
+  end;
+  sl.Free;
+  Conv_Flush;
+  Conv_Close;
+  Screen.Cursor:=crDefault;
 end;
 
 //TODO: Convert this function to unicode
-procedure TfWords.Button10Click(Sender: TObject);
+procedure TfWords.btnImportVocabClick(Sender: TObject);
 var t:textfile;
     s,s2,s3,s4:string;
     linc:integer;
@@ -2383,7 +2398,7 @@ begin
   PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
   PKGWriteForm.PKGWriteCmd('CopyrightName (C) Jim Breen, Yasuhito Tanaka');
   PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
+  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
   PKGWriteForm.PKGWriteCmd('VersionName 1.0');
   PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
   PKGWriteForm.PKGWriteCmd('FileSysCode 978132');

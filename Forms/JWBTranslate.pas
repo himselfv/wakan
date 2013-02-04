@@ -281,8 +281,10 @@ type
      //this is needed for saving in Kana mode -- we don't show a reminder if it's obvious the text was translated
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
-    procedure LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    procedure SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure LoadWakanText(const filename:string);
+    procedure SaveWakanText(const filename:string);
   public //File open/save
     procedure ClearEditor;
     procedure OpenAnyFile(filename:string);
@@ -370,6 +372,7 @@ var
   priorkanji:string;
   cursorblinked:boolean;
 
+//ax is 0-based
 function TfTranslate.GetDoc(ax,ay:integer):FChar;
 begin
   if ay>=doc.Count then showmessage('Illegal doc access!');
@@ -539,23 +542,8 @@ begin
   OpenFile(filename, tp);
 end;
 
-//TODO: Convert to Unicode
 procedure TfTranslate.OpenFile(filename:string;tp:byte);
-var s,s2:string;
-  s3: TCharacterLineProps;
-  i:integer;
-  w:word;
-  f:file;
-  reat:integer;
-  buf:array[0..16383] of word;
-  ws:array[0..31] of char;
-  wss:array[0..4091] of char;
-  wc:widechar;
-  jtt,dot:boolean;
-  l:integer;
-  ls:string;
-  dp:char;
-  LoadAnnotMode: TTextAnnotMode;
+var LoadAnnotMode: TTextAnnotMode;
 begin
   docfilename:=filename;
   doctp:=tp;
@@ -576,112 +564,11 @@ begin
   docdic.Clear;
   linl.Clear;
   Screen.Cursor:=crHourGlass;
-  jtt:=false;
-  if tp=255 then
-  begin
-    assignfile(f,docfilename);
-    reset(f,2);
-    blockread(f,w,1,reat);
-    if (reat<1) or (w<>$f1ff) then
-    begin
-      Application.MessageBox(pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.')),pchar(_l('#00020^eError')),MB_OK);
-      closefile(f);
-      exit;
-    end;
-    jtt:=true;
-  end;
-  dot:=true;
-  if jtt then
-  begin
-   //TODO: Convert this subblock to unicode
-    blockread(f,ws,16);
-    s:=ws;
-    if copy(s,1,22)<>'WaKan Translated Text>'then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.')),
-        pchar(_l('#00020^eError')),
-        MB_OK);
-      closefile(f);
-      exit;
-    end;
-    delete(s,1,22);
-    if copy(s,1,length(fStatistics.Label15.Caption))<>fStatistics.Label15.Caption then
-    begin
-      if Application.MessageBox(
-        pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. Translation cannot be loaded.'#13#13'Do you want to continue?')),
-        pchar(_l('#00090^eWarning')),
-        MB_YESNO or MB_ICONWARNING)=idNo then
-      begin
-        closefile(f);
-        exit;
-      end;
-      dot:=false;
-    end;
-    blockread(f,w,1);
-    if w<>3294 then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00681^eThis JTT file was created by old version of WaKan.'#13'It is not compatible with the current version.')),
-        pchar(_l('#00020^eError')),
-        MB_ICONERROR or MB_OK);
-      exit;
-    end;
-    blockread(f,w,1);
-    blockread(f,wss,w);
-    wss[w*2]:=#0;
-    s:=wss;
-    while (s<>'') and (s[1]<>'$') do
-    begin
-      s2:=copy(s,1,pos(',',s)-1);
-      delete(s,1,pos(',',s));
-      docdic.Add(s2);
-    end;
-  end;
-  s:='';
-  s3.Clear;
-  if jtt then
-  begin
-    while not eof(f) do
-    begin
-      blockread(f,buf,16384,reat);
-      if jtt then
-        for i:=0 to (reat div 4)-1 do
-        begin
-          dp:=chr(buf[i*4] mod 256);
-          if dp='$'then
-          begin
-            doc.Add(s);
-            doctr.AddLine(s3);
-            s:='';
-            s3.Clear;
-          end else
-          begin
-            wc:=widechar(buf[i*4+1]);
-            l:=(buf[i*4+2] mod 256)*65536+buf[i*4+3];
-            ls:=inttostr(l);
-            while length(ls)<6 do ls:='0'+ls;
-            s:=s+UnicodeToHex(wc);
-            if length(dp+inttostr(buf[i*4] div 256)+ls+chr(buf[i*4+2] div 256))<>9 then begin
-              showmessage('<<'+dp+'--'+inttostr(buf[i*4] div 256)+'--'+ls+'--'+chr(buf[i*4+2] div 256)+'>>');
-            end;
-            if not dot then
-              s3.AddChar('-', 9, 0, 1)
-            else
-             //last param is apparently stored as character (ex. '1', '2') and we need it as int
-              s3.AddChar(dp, buf[i*4] div 256, l, buf[i*4+2] div 256 - ord('0'));
-          end;
-        end;
-    end;
-    closefile(f);
-    if s<>'' then
-    begin
-      doc.Add(s);
-      doctr.AddLine(s3);
-    end;
-  end else
-   //Not jtt
-      LoadText(docfilename, tp, LoadAnnotMode);
+
+  if tp=FILETYPE_WTT then
+    LoadWakanText(docfilename)
+  else
+    LoadText(docfilename, tp, LoadAnnotMode);
 
   view:=0;
   cur.x:=0;
@@ -697,70 +584,12 @@ end;
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
 procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-var f:file;
-    i,j,bc:integer;
-    buf:array[0..16383] of word;
-    jtt:boolean;
-    sig:word;
-    s:string;
-    l:integer;
-    w:word;
-  cp: PCharacterProps;
 begin
   Screen.Cursor:=crHourGlass;
-  assignfile(f,filename);
-  rewrite(f,2);
-  jtt:=pos('.WTT',UpperCase(filename))>0;
-  if jtt then
-  begin
-   //TODO: Convert this subblock to unicode
-    sig:=$f1ff;
-    blockwrite(f,sig,1);
-    s:='WaKan Translated Text>'+fStatistics.Label15.Caption;
-    while length(s)<32 do s:=s+' ';
-    blockwrite(f,s[1],16);
-    s:='';
-    for i:=0 to docdic.Count-1 do s:=s+docdic[i]+',';
-    w:=3294;
-    blockwrite(f,w,1);
-    w:=(length(s)+1) div 2;
-    blockwrite(f,w,1);
-    s:=s+'$$$$';
-    blockwrite(f,s[1],w);
-    bc:=0;
-    for i:=0 to doc.Count-1 do
-    begin
-      for j:=0 to (length(doc[i]) div 4)-1 do
-      begin
-        cp := @doctr[i].chars[j];
-        buf[bc]:=ord(cp.wordstate)+cp.learnstate*256;
-        l:=cp.dicidx;
-        buf[bc+2]:=l div 65536+(Ord('0')+cp.docdic)*256; //apparently dic # is stored as a char ('1','2'...)
-        buf[bc+3]:=l mod 65536;
-        buf[bc+1]:=word(HexToUnicode(GetDoc(j,i))[1]);
-        inc(bc,4);
-        if bc=16384 then
-        begin
-          blockwrite(f,buf,bc);
-          bc:=0;
-        end;
-      end;
-      buf[bc]:=ord('$');
-      buf[bc+1]:=0;
-      buf[bc+2]:=0;
-      buf[bc+3]:=0;
-      inc(bc,4);
-      if bc=16384 then
-      begin
-        blockwrite(f,buf,bc);
-        bc:=0;
-      end;
-    end;
-    blockwrite(f,buf,bc);
-    closefile(f);
-  end else begin
+  if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
+    SaveWakanText(filename)
+  else
     SaveText(filename,tp,AnnotMode);
-  end;
   Screen.Cursor:=crDefault;
   FileChanged:=false;
 end;
@@ -922,7 +751,7 @@ begin
 end;
 
 //Loads classic text file in any encoding.
-procedure TfTranslate.LoadText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+procedure TfTranslate.LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
 var c: FChar;
   cp: TCharacterProps;
   s: FString; //current line text
@@ -978,7 +807,7 @@ Ruby saving strategy:
 //Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
 //and just write strings here.
 
-procedure TfTranslate.SaveText(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+procedure TfTranslate.SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
@@ -1133,6 +962,191 @@ begin
   Conv_Close;
 end;
 
+//TODO: Test Unicode conversion
+procedure TfTranslate.LoadWakanText(const filename:string);
+var s,s2:string;
+  s3: TCharacterLineProps;
+  i:integer;
+  w:word;
+  f:file;
+  reat:integer;
+  buf:array[0..16383] of word;
+  ws:array[0..31] of AnsiChar;
+  wss:array[0..4091] of AnsiChar;
+  wc:widechar;
+  dot:boolean;
+  l:integer;
+  ls:string;
+  dp:char;
+begin
+  assignfile(f,docfilename);
+  reset(f,2);
+  blockread(f,w,1,reat);
+  if (reat<1) or (w<>$f1ff) then
+  begin
+    Application.MessageBox(
+      pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.')),
+      pchar(_l('#00020^eError')),
+      MB_OK);
+    closefile(f);
+    exit;
+  end;
+
+  dot:=true;
+
+  blockread(f,ws,16);
+  s:=string(ws);
+  if copy(s,1,22)<>'WaKan Translated Text>'then
+  begin
+    Application.MessageBox(
+      pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.')),
+      pchar(_l('#00020^eError')),
+      MB_OK);
+    closefile(f);
+    exit;
+  end;
+  delete(s,1,22);
+
+  if copy(s,1,length(fStatistics.Label15.Caption))<>fStatistics.Label15.Caption then
+  begin
+    if Application.MessageBox(
+      pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. Translation cannot be loaded.'#13#13'Do you want to continue?')),
+      pchar(_l('#00090^eWarning')),
+      MB_YESNO or MB_ICONWARNING)=idNo then
+    begin
+      closefile(f);
+      exit;
+    end;
+    dot:=false;
+  end;
+
+  blockread(f,w,1);
+  if w<>3294 then
+  begin
+    Application.MessageBox(
+      pchar(_l('#00681^eThis JTT file was created by old version of WaKan.'#13'It is not compatible with the current version.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
+    exit;
+  end;
+
+  blockread(f,w,1);
+  blockread(f,wss,w);
+  wss[w*2]:=#0;
+  s:=string(wss);
+  while (s<>'') and (s[1]<>'$') do
+  begin
+    s2:=copy(s,1,pos(',',s)-1);
+    delete(s,1,pos(',',s));
+    docdic.Add(s2);
+  end;
+
+  s:='';
+  s3.Clear;
+
+  while not eof(f) do
+  begin
+    blockread(f,buf,16384,reat);
+    for i:=0 to (reat div 4)-1 do
+    begin
+      dp:=chr(buf[i*4] mod 256);
+      if dp='$'then
+      begin
+        doc.Add(s);
+        doctr.AddLine(s3);
+        s:='';
+        s3.Clear;
+      end else
+      begin
+        wc:=widechar(buf[i*4+1]);
+        l:=(buf[i*4+2] mod 256)*65536+buf[i*4+3];
+        ls:=inttostr(l);
+        while length(ls)<6 do ls:='0'+ls;
+        s:=s+fstr(wc);
+        if length(dp+inttostr(buf[i*4] div 256)+ls+chr(buf[i*4+2] div 256))<>9 then begin
+          showmessage('<<'+dp+'--'+inttostr(buf[i*4] div 256)+'--'+ls+'--'+chr(buf[i*4+2] div 256)+'>>');
+        end;
+        if not dot then
+          s3.AddChar('-', 9, 0, 1)
+        else
+         //last param is apparently stored as character (ex. '1', '2') and we need it as int
+          s3.AddChar(dp, buf[i*4] div 256, l, buf[i*4+2] div 256 - ord('0'));
+      end;
+    end;
+  end;
+
+  closefile(f);
+  if s<>'' then
+  begin
+    doc.Add(s);
+    doctr.AddLine(s3);
+  end;
+end;
+
+//TODO: Test Unicode conversion
+procedure TfTranslate.SaveWakanText(const filename:string);
+var f:file;
+  i,j,bc:integer;
+  buf:array[0..16383] of word;
+  sig:word;
+  s:AnsiString;
+  l:integer;
+  w:word;
+  cp: PCharacterProps;
+begin
+  assignfile(f,filename);
+  rewrite(f,2);
+
+  sig:=$f1ff;
+  blockwrite(f,sig,1);
+
+  s:=AnsiString('WaKan Translated Text>'+fStatistics.Label15.Caption);
+  while length(s)<32 do s:=s+' ';
+  blockwrite(f,s[1],16);
+
+  w:=3294;
+  blockwrite(f,w,1);
+
+  s:='';
+  for i:=0 to docdic.Count-1 do s:=s+AnsiString(docdic[i])+',';
+  w:=(length(s)+1) div 2;
+  blockwrite(f,w,1);
+  s:=s+'$$$$';
+  blockwrite(f,s[1],w);
+
+  bc:=0;
+  for i:=0 to doc.Count-1 do
+  begin
+    for j:= 0 to flength(doc[i])-1 do
+    begin
+      cp := @doctr[i].chars[j];
+      buf[bc]:=ord(cp.wordstate)+cp.learnstate*256;
+      l:=cp.dicidx;
+      buf[bc+2]:=l div 65536+(Ord('0')+cp.docdic)*256; //apparently dic # is stored as a char ('1','2'...)
+      buf[bc+3]:=l mod 65536;
+      buf[bc+1]:=word(fstrtouni(GetDoc(j,i))[1]);
+      inc(bc,4);
+      if bc=16384 then
+      begin
+        blockwrite(f,buf,bc);
+        bc:=0;
+      end;
+    end;
+    buf[bc]:=ord('$');
+    buf[bc+1]:=0;
+    buf[bc+2]:=0;
+    buf[bc+3]:=0;
+    inc(bc,4);
+    if bc=16384 then
+    begin
+      blockwrite(f,buf,bc);
+      bc:=0;
+    end;
+  end;
+  blockwrite(f,buf,bc);
+  closefile(f);
+end;
+
 //Returns false if user have cancelled the dialog
 function TfTranslate.SaveAs: boolean;
 var tp: byte;
@@ -1154,9 +1168,9 @@ begin
 
   //Choose encoding
   if pos('.WTT',uppercase(SaveTextDialog.FileName))=0 then
-    tp:=Conv_ChooseType(curlang='c',0)
+    tp:=FILETYPE_WTT
   else
-    tp:=0; //WTT doesn't need types
+    tp:=Conv_ChooseType(curlang='c',0);
 
   SaveToFile(SaveTextDialog.FileName,tp,SaveAnnotMode);
   docfilename:=SaveTextDialog.FileName;

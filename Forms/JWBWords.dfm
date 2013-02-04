@@ -173,7 +173,7 @@ object fWords: TfWords
           306
           159)
       end
-      object Button9: TButton
+      object btnExportVocab: TButton
         Left = 546
         Top = 5
         Width = 71
@@ -188,9 +188,9 @@ object fWords: TfWords
         Font.Style = []
         ParentFont = False
         TabOrder = 1
-        OnClick = Button9Click
+        OnClick = btnExportVocabClick
       end
-      object Button10: TButton
+      object btnImportVocab: TButton
         Left = 618
         Top = 5
         Width = 72
@@ -205,7 +205,7 @@ object fWords: TfWords
         Font.Style = []
         ParentFont = False
         TabOrder = 2
-        OnClick = Button10Click
+        OnClick = btnImportVocabClick
       end
       object Button15: TButton
         Left = 691
