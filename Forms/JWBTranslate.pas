@@ -2686,12 +2686,13 @@ begin
       priorkanji:=curkanji;
       s2:=GetInsertKana(false);
       s3:=curphonetic;
+      //Delete common ending
       while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
       begin
         fdelete(s,flength(s),1);
         fdelete(s3,flength(s3),1);
       end;
-      if (s='') and (curkanji[3]>='A') then //TODO: curkanji[3]? wtf?
+      if (s='') and ({$IFNDEF UNICODE}curkanji[3]>='A'{$ELSE}Ord(curkanji[1]) and $00F0 > $00A0{$ENDIF}) then //TODO: Only 3-rd symbol? WTF?
         s:=curkanji
       else
         s:=s+copy(s2,length(s3)+1,length(s2)-length(s3));
