@@ -123,13 +123,13 @@ type
 
 //Index of romac entry for this item or -1
 //Text must be uppercased
-//TODO: For now only checks for partial matches, as required by the only usage.
-function FindRomaC(const find: EvilString; roma_type: integer): integer;
+function FindRomaC(const find: EvilString; roma_type: integer; partial: boolean): integer;
 var i: integer;
 begin
   Result := -1;
   for i:=0 to (romac.count div 4)-1 do
-    if pos(find,romac[i*4+roma_type])=1 then begin
+    if (partial and (pos(find,romac[i*4+roma_type])=1))
+    or ((not partial) and (romac[i*4+roma_type]=find)) then begin
       Result := i;
       break;
     end;
@@ -186,8 +186,7 @@ begin
     if cl>0 then delete(s,1,cl) else
       if typein>0 then delete(s,1,1) else fdelete(s,1,1);
 
-   //Next goes god knows what
-   //But it has been dully ported into unicode lol
+   //Convert tone markers between Ansi and Unicode versions
 
     if typein=0 then
     begin
@@ -424,7 +423,7 @@ begin
     else cc:='?';
     if (((cc>='A') and (cc<='Z')) or (cc=':')) and (cc<>'''') then curcc:=curcc+cc;
 
-    fnd:=FindRomaC(uppercase(curcc),1)>=0;
+    fnd:=FindRomaC(uppercase(curcc),1,{Partial=}true)>=0;
     if ((cc<'A') or (cc>'Z')) and (cc<>':') then
     begin
       if curcc<>'' then cnv2:=cnv2+lowercase(curcc)+curp;
@@ -880,6 +879,7 @@ var i,l,r,m:integer;
 begin
   if sobin=nil then exit;
   l:=0;
+  m:=0;//not really used but shut up delphi
   r:=sodir.Count-1;
   while l<=r do
   begin
@@ -1011,7 +1011,6 @@ var x:integer;
     cursiv:boolean;
     w:integer;
     y:integer;
-    cnt:integer;
     sbef:string;
     fontcolor:TColor;
 begin
@@ -1079,7 +1078,6 @@ begin
     inmar:=false;
     x:=0;
     y:=0;
-    cnt:=0;
     sbef:='';
     while length(s)>0 do
     begin
@@ -1088,7 +1086,6 @@ begin
 //        showmessage(sbef);
 //      end;
       sbef:=s;
-      inc(cnt);
       if inmar then
         if pos(UH_LEND,s)>0 then curs:=copy(s,1,pos(UH_LEND,s)-1) else curs:=s;
       if not inmar then
@@ -1240,7 +1237,7 @@ begin
   begin
     oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
     STB_Canvas.Rectangle(STB_x1,STB_y1,STB_x2,STB_y2);
-    SetROP2(STB_Canvas.Handle,R2_NOT);
+    SetROP2(STB_Canvas.Handle,R2_NOT); //Maybe oldR2?!
   end;
 end;
 

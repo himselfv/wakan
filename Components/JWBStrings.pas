@@ -103,6 +103,13 @@ const
   UH_RUBY_PLACEHOLDER:FChar = 'E100'; //when ruby has nothing to be attached to,
     //but we still have to store it in the decoded form
 
+ {
+  In PinYin tone markers (1-5) follow every syllable
+  See http://en.wikipedia.org/wiki/PinYin#Tones
+  In Wakan Unicode they are encoded as F030+[0..5].
+ }
+  UH_PY_TONE = 'F300';
+
  {$ELSE}
   UH_NOCHAR:FChar = #$0000;
   UH_ZERO:FChar = #$0000;
@@ -134,6 +141,8 @@ const
   UH_LEND:Char = #$E007;
 
   UH_RUBY_PLACEHOLDER:FChar = #$E100;
+
+  UH_PY_TONE = #$F300;
  {$ENDIF}
 
 
@@ -405,10 +414,9 @@ begin
 end;
 
 function GetTempPathStr: String;
-var tempFolder: array[0..MAX_PATH] of Char;
+var tempFolder: array[0..MAX_PATH+1] of Char; //MAX_PATH+2 characters
 begin
- //TODO: Support more than MAX_PATH
-  GetTempPath(MAX_PATH, @tempFolder);
+  GetTempPath(MAX_PATH+1, @tempFolder); //supports at most maxpath+1 characters + null, per documentation
   result := tempFolder;
 end;
 

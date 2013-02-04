@@ -1106,6 +1106,8 @@
 01002>Reset columns
 01003>The dictionary has not been yet completely imported. Do you really want to abort the operation?
 01004>Confirm abort
+01005>The text has only been partially translated. Do you really want to abort the operation?
+01006>Confirm abort
 ;
 ;
 ; EDICT markers.

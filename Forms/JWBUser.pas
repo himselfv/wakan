@@ -325,8 +325,13 @@ begin
     stEn: begin s := Edit1.Text; wt := -1; end;
     stClipboard: begin
       s:='';
-      for i:=1 to length(clip) div 4 do
-        if copy(clip,i*4-3,2)='00'then break else s:=s+copy(clip,i*4-3,4); //TODO:!!
+      for i:=1 to flength(clip) do
+       {$IFDEF UNICODE}
+        if copy(fgetch(clip,i),1,2)='00' then break
+       {$ELSE}
+        if fgetch(clip,i)<=#$00FF then break
+       {$ENDIF}
+        else s:=s+fgetch(clip,i);
       wt := -1;
     end;
     stEditorInsert: begin //In "word insert" mode

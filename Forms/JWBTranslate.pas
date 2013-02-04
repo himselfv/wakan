@@ -1265,8 +1265,7 @@ begin
     i := blockfromy;
     while (not Terminated) and (i<=blocktoy) do begin
       bg:=0;
-      en:=flength(fTranslate.doc[i])-1; //TODO: receive doc/doctr in Create()
-
+      en:=flength(fTranslate.doc[i])-1;
       fTranslate.AutoTranslateLine(i, bg, en, req, dicsl);
       Inc(i);
     end;
@@ -1392,9 +1391,9 @@ begin
           sp.Hide;
           sp.SetProgressPaused(true); //although not important when hidden
           if Application.MessageBox(
-            PChar(_l('^eThe text has only been partially translated. Do you '
-              +'really want to abort the operation?')),  //TODO: Localize
-            PChar(_l('^eConfirm abort')), //TODO: Localize
+            PChar(_l('#01005^eThe text has only been partially translated. Do you '
+              +'really want to abort the operation?')),
+            PChar(_l('#01006^eConfirm abort')),
             MB_ICONQUESTION+MB_YESNO
           )=idYes then
           begin

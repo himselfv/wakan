@@ -377,28 +377,52 @@ begin
   end;
   if curlang='c'then
   begin
-   //TODO: Convert to unicode
+   //TODO: Test Unicode conversion
     sl.Add(prior, ws, 'F', w);
     if pos('?',KanaToRomaji(w,romasys,'c'))>0 then exit;
+   //For every lookup candidate check if there were "unknown" tone markers,
+   //and generate all possible resolutions for those.
     repeat
+     //At each pass we only support one "unknown" marker at most,
+     //but we make passes until there are no unresolved entries.
       pass:=true;
       i:=0;
       while i<sl.Count do
       begin
         ct := sl[i]^;
-        j := pos('F030',ct.str);
+        j := fpos({$IFNDEF UNICODE}'F030'{$ELSE}#$F030{$ENDIF},ct.str);
         if j>0 then begin
           pass:=false;
          //First version is modified in-place to avoid slow deletions
-          sl[i]^.str[j] := '1';
+         {$IFNDEF UNICODE}
+          sl[i]^.str[j*4+3] := '1';
+         {$ELSE}
+          sl[i]^.str[j] := #$F031;
+         {$ENDIF}
          //Next versions are made into copies
-          ct.str[j]:='2';
+         {$IFNDEF UNICODE}
+          ct.str[j*4+3]:='2';
+         {$ELSE}
+          ct.str[j] := #$F032;
+         {$ENDIF}
           sl.Add(ct);
-          ct.str[j]:='3';
+         {$IFNDEF UNICODE}
+          ct.str[j*4+3]:='3';
+         {$ELSE}
+          ct.str[j] := #$F033;
+         {$ENDIF}
           sl.Add(ct);
-          ct.str[j]:='4';
+         {$IFNDEF UNICODE}
+          ct.str[j*4+3]:='4';
+         {$ELSE}
+          ct.str[j] := #$F034;
+         {$ENDIF}
           sl.Add(ct);
-          ct.str[j]:='5';
+         {$IFNDEF UNICODE}
+          ct.str[j*4+3]:='5';
+         {$ELSE}
+          ct.str[j] := #$F035;
+         {$ENDIF}
           sl.Add(ct);
         end else inc(i);
       end;
