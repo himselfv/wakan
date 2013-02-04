@@ -17,6 +17,8 @@ const
   CurDictVer=7;
 
 const
+  WakanAppName = 'WaKan - Japanese & Chinese Learning Tool';
+  WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
 
 

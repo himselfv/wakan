@@ -785,7 +785,7 @@ begin
     PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
     PKGWriteForm.PKGWriteCmd('CopyrightName (C) Michael Raine, Jim Breen');
     PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-    PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
+    PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
     PKGWriteForm.PKGWriteCmd('VersionName 1.0');
     PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
     PKGWriteForm.PKGWriteCmd('FileSysCode 978132');

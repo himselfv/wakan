@@ -820,7 +820,6 @@ begin
     fLanguage.LoadRegistrySettings;
 
     fLanguage.TranslateForm(fSplash);
-    fSplash.Label4.Caption:=WakanVer;
     Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
     if (Screen.Width<800) or (Screen.Height<600) then
       if Application.MessageBox(
@@ -1347,10 +1346,9 @@ begin
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
   PKGWriteForm.PKGWriteCmd('TitleName WaKan User Data File');
-  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Filip Kábrt 2002');
+  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
   PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
+  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
   PKGWriteForm.PKGWriteCmd('VersionName 1.0');
   PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
   PKGWriteForm.PKGWriteCmd('FileSysCode 587135');

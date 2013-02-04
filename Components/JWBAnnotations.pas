@@ -39,10 +39,9 @@ begin
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name WaKan Compiled Annotations');
   PKGWriteForm.PKGWriteCmd('TitleName WaKan Compiled Annotations');
-  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Filip Kábrt 2005');
+  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
   PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by WaKan - Japanese & Chinese Learning Tool');
+  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
   PKGWriteForm.PKGWriteCmd('VersionName 1.0');
   PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
   PKGWriteForm.PKGWriteCmd('FileSysCode 587135');
