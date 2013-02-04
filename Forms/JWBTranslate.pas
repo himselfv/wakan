@@ -367,7 +367,6 @@ var
   lastmm:TCursorPos;
 
   insconfirmed:boolean;
-  leaveline:boolean;
   shiftpressed:boolean;
   cursorend:boolean;
   priorkanji:string;
@@ -1602,11 +1601,9 @@ begin
     if not ukn then
     begin
       ClearInsBlock;
-      leaveline:=true;
       if ssShift in Shift then shiftpressed:=true;
       if (bx<>cur.x) or (by<>cur.y) then ResolveInsert(true);
       if (bx<>cur.x) or (by<>cur.y) then ShowText(true);
-      leaveline:=false;
     end;
   end else
   with fUser do
@@ -1632,8 +1629,7 @@ procedure TfTranslate.EditorPaintBoxMouseDown(Sender: TObject;
 begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot move cursor!
-  leaveline:=true;
-  shiftpressed:=false;
+  shiftpressed:=(ssShift in Shift);
   if linl.Count>0 then //else lines are to be recalculated and we can't do much
     cur:=GetClosestCursorPos(X,Y);
   mustrepaint:=true;
@@ -1643,24 +1639,22 @@ end;
 procedure TfTranslate.EditorPaintBoxMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if not TryReleaseCursorFromInsert() then
-    exit; //cannot move cursor!
-
   //Sometimes we receive "ssLeft + MouseMove" when we double click something
   //in another window and that window closes, leaving us in editor.
   //This results in ugly unexpected text selection.
-  if Mouse.Capture<>Self.Handle then exit; //EditorPaintBox doesn't have it's own handle
-
-  if ssLeft in Shift then begin;
-    if linl.Count>0 then begin
-      cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
-      if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
-      lastmm.x:=cur.x;
-      lastmm.y:=cur.y;
+  if Mouse.Capture=Self.Handle then //EditorPaintBox doesn't have it's own handle
+    if ssLeft in Shift then begin;
+      if not TryReleaseCursorFromInsert() then
+        exit; //cannot move cursor!
+      if linl.Count>0 then begin
+        cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
+        if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
+        lastmm.x:=cur.x;
+        lastmm.y:=cur.y;
+      end;
+      shiftpressed:=true;
+      ShowText(false);
     end;
-    shiftpressed:=true;
-    ShowText(false);
-  end;
 
   fMenu.IntTipPaintOver(EditorPaintBox,x,y,false);
 end;
@@ -1966,7 +1960,7 @@ begin
     DrawCursor(false);
     DrawBlock(EditorPaintBox.Canvas);
   end;
-  if mustrepaint then oldblock.fromx:=-1;
+//  if mustrepaint then oldblock.fromx:=-1; //why did we need this here? It breaks setting new selection with mustrepaint==true
   mustrepaint:=false;
   shiftpressed:=false;
   if linl.Count-printl<=0 then
@@ -3607,7 +3601,6 @@ begin
   cursorblinked:=false;
   shiftpressed:=false;
   dragstart := SourcePos(-1, -1);
-  leaveline:=false;
   oldblock := Selection(-1, -1, -1, -1);
   insconfirmed:=false;
   cursorend:=false;
