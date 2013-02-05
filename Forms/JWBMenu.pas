@@ -1216,7 +1216,19 @@ begin
     end;
     StandardLayout(0,100); }
     curdisplaymode:=0;
+    if PortableMode then begin
+      FormPlacement1.UseRegistry := false;
+      FormPlacement1.IniFileName := AppFolder + '\wakan.ini';
+    end else begin
+      FormPlacement1.UseRegistry := true;
+      FormPlacement1.IniFileName := WakanRegKey;
+    end;
+    FormPlacement1.IniSection := 'MainPos';
     FormPlacement1.RestoreFormPlacement;
+    fKanjiDetails.FormPlacement1.UseRegistry := FormPlacement1.UseRegistry;
+    fKanjiDetails.FormPlacement1.IniFileName := FormPlacement1.IniFileName;
+    fKanjiDetails.FormPlacement1.IniSection := 'DetailPos';
+    fKanjiDetails.FormPlacement1.RestoreFormPlacement;
 
     fSettings.ApplyUISettings();
 
@@ -2986,7 +2998,8 @@ begin
     end else
     begin
       if curdisplaymode=1 then
-        CharDetDockedVis1:=not CharDetDockedVis1 else
+        CharDetDockedVis1:=not CharDetDockedVis1
+      else
         CharDetDockedVis2:=not CharDetDockedVis2;
       ChangeDisplay;
     end;
@@ -2995,7 +3008,6 @@ begin
   begin
     fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
     fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
-    fKanjiDetails.FormPlacement1.RestoreFormPlacement;
   end;
 end;
 

@@ -138,6 +138,7 @@ end;
 
 procedure TfKanjiDetails.FormDestroy(Sender: TObject);
 begin
+  if not CharDetDocked then FormPlacement1.SaveFormPlacement;
   kval.Free;
 end;
 
@@ -147,7 +148,6 @@ begin
   fKanji.btnKanjiDetails.Down:=false;
   fTranslate.sbDockKanjiDetails.Down:=false;
   fMenu.aKanjiDetails.Checked:=false;
-  if not CharDetDocked then FormPlacement1.SaveFormPlacement;
 end;
 
 procedure TfKanjiDetails.FormShow(Sender: TObject);
@@ -280,9 +280,10 @@ begin
     CharDetDocked:=false;
     fMenu.ChangeDisplay;
     fMenu.aKanjiDetails.Execute;
+    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
   end else
   begin
-    FormPlacement1.SaveFormPlacement;
+    FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
     CharDetDocked:=true;
     CharDetDockedVis1:=true;
     CharDetDockedVis2:=true;
