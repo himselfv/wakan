@@ -2,8 +2,8 @@ object fPortableMode: TfPortableMode
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'fPortableMode'
-  ClientHeight = 325
+  Caption = 'Select mode'
+  ClientHeight = 280
   ClientWidth = 371
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -15,17 +15,17 @@ object fPortableMode: TfPortableMode
   Position = poOwnerFormCenter
   DesignSize = (
     371
-    325)
+    280)
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
+  object lblQuestion: TLabel
     Left = 16
     Top = 16
     Width = 339
     Height = 42
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
-    Caption = 'Do you want this copy of Wakan to be portable?'
+    Caption = 'Do you want this copy of Wakan to be standalone?'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -35,26 +35,7 @@ object fPortableMode: TfPortableMode
     WordWrap = True
     ExplicitWidth = 329
   end
-  object Label2: TLabel
-    Left = 16
-    Top = 119
-    Width = 339
-    Height = 34
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = 
-      'Move Wakan from a computer to a computer - '#13#10'all settings are st' +
-      'ored in the application folder.'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    WordWrap = True
-    ExplicitWidth = 329
-  end
-  object Label3: TLabel
+  object lblPortableDescription: TLabel
     Left = 16
     Top = 215
     Width = 339
@@ -62,8 +43,8 @@ object fPortableMode: TfPortableMode
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 
-      'Install Wakan for all users of this computer.'#13#10'Each user keeps t' +
-      'heir own settings.'
+      'Move Wakan from a computer to a computer.'#13#10'All settings are stor' +
+      'ed in the application folder.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -71,11 +52,28 @@ object fPortableMode: TfPortableMode
     Font.Style = []
     ParentFont = False
     WordWrap = True
-    ExplicitWidth = 329
   end
-  object Button1: TButton
+  object lblStandaloneDescription: TLabel
     Left = 16
-    Top = 80
+    Top = 119
+    Width = 339
+    Height = 34
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
+    Caption = 
+      'Share Wakan with all users of this computer.'#13#10'Each user keeps th' +
+      'eir own settings.'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    WordWrap = True
+  end
+  object btnPortable: TButton
+    Left = 16
+    Top = 176
     Width = 193
     Height = 33
     Caption = 'Portable'
@@ -84,12 +82,13 @@ object fPortableMode: TfPortableMode
     Font.Height = -16
     Font.Name = 'Tahoma'
     Font.Style = []
+    ModalResult = 1001
     ParentFont = False
     TabOrder = 0
   end
-  object Button2: TButton
+  object btnStandalone: TButton
     Left = 16
-    Top = 176
+    Top = 80
     Width = 193
     Height = 33
     Caption = 'Standalone'
@@ -98,21 +97,8 @@ object fPortableMode: TfPortableMode
     Font.Height = -16
     Font.Name = 'Tahoma'
     Font.Style = []
+    ModalResult = 1000
     ParentFont = False
     TabOrder = 1
-  end
-  object Button3: TButton
-    Left = 16
-    Top = 272
-    Width = 105
-    Height = 25
-    Caption = 'Cancel'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 2
   end
 end

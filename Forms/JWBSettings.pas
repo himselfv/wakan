@@ -323,6 +323,7 @@ type
   protected
     procedure LoadRegistrySettings(reg: TCustomIniFile);
     procedure SaveRegistrySettings(reg: TCustomIniFile);
+    function InitializePortableMode(ini: TCustomIniFile; const oldmode: string): string;
   public
     procedure LoadSettings(DelayUI: boolean);
     procedure ApplyUISettings;
@@ -346,7 +347,7 @@ uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
-  JWBUserData;
+  JWBUserData, JWBPortableMode;
 
 var colorfrom:integer;
 
@@ -400,12 +401,7 @@ begin
   ComboBox2Change(sender);
 end;
 
-{
-Application mode selection strategy:
-1. "wakan.ini/install=" present => do as configured or die if not writeable etc
-2. "wakan.ini" missing => assume portable, unless in Program Files.
-  If in Program Files, assume standalone and suggest move.
-}
+//See comments in JWBPortableMode.pas about Wakan modes
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var ini: TCustomIniFile;
   s: string;
@@ -413,14 +409,8 @@ begin
   ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
   try
     s := LowerCase(ini.ReadString('General', 'Install', ''));
-    if s='' then begin
-     //Auto-choose mode
-     //CSIDL_PROGRAM_FILES
-     //Update ini file and update "s"
-      s := 'standalone';
-     //Move files to common dir, if found in app directory
-     //Save ini file, if changes were done
-    end;
+    if (s='') or (s='standalone-copy') then
+      s := LowerCase(InitializePortableMode(ini, s));
 
     if s='portable' then begin
       SetPortableMode;
@@ -446,6 +436,43 @@ begin
 
   if not DelayUI then
     ApplyUISettings();
+end;
+
+//Initializes wakan.ini and moves user files as needed.
+function TfSettings.InitializePortableMode(ini: TCustomIniFile; const oldmode: string): string;
+var port: boolean;
+begin
+ {
+  If there are no user files in the current folder, we ask a general question
+  ("Do you want it portable or standalone?")
+  Else a specific one ("Do you want to move your files or not?")
+ }
+ if oldmode='standalone-copy' then begin
+   port := false;
+   MoveFilesToAppData();
+ end else
+ if FileExists(AppFolder+'\wakan.usr') then begin
+   port := AskIfMoveFiles();
+   if not port then begin
+    //We cannot just copy SOME of the files. If we start this operation, we have
+    //to continue it even after restart.
+     ini.WriteString('General','Install','Standalone-Copy');
+     ini.UpdateFile;
+
+     MoveFilesToAppData();
+   end;
+ end else
+   port := AskIfPortableMode();
+
+ //Final selection
+  if port then
+    Result := 'Portable'
+  else
+    Result := 'Standalone';
+
+ //Update ini file
+  ini.WriteString('General','Install',Result);
+  ini.UpdateFile;
 end;
 
 procedure TfSettings.SaveSettings;

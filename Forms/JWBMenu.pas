@@ -1264,6 +1264,9 @@ begin
       ShowUsage(E.Message);
       Application.Terminate;
     end;
+    on E: EAbort do begin
+      Application.Terminate; //Silently
+    end;
     on E: Exception do begin
       Application.MessageBox(
         pchar('Cannot load Wakan. '+E.Classname+': '#13+E.Message),

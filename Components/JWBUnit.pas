@@ -26,6 +26,7 @@ const
 
 procedure SetStandaloneMode;
 procedure SetPortableMode;
+function GetAppDataFolder: string;
 
 
 { Romaji conversions }
@@ -126,15 +127,20 @@ uses StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
 
 { Portable/standalone }
 
+function GetAppDataFolder: string;
+begin
+  Result := GetSpecialFolderPath(CSIDL_APPDATA);
+ //There's also CSIDL_LOCAL_APPDATA which might do if CSIDL_APPDATA is somehow not available.
+ //But I don't think that can be the case!
+  Assert(Result<>''); //just in case
+  Result:=Result+'\Wakan';
+  ForceDirectories(Result);
+end;
+
 procedure SetStandaloneMode;
 begin
   PortableMode := false;
-  UserDataDir := GetSpecialFolderPath(CSIDL_APPDATA);
- //There's also CSIDL_LOCAL_APPDATA which might do if CSIDL_APPDATA is somehow not available.
- //But I don't think that can be the case!
-  Assert(UserDataDir<>''); //just in case
-  UserDataDir:=UserDataDir+'\Wakan';
-  ForceDirectories(UserDataDir);
+  UserDataDir := GetAppDataFolder;
 end;
 
 procedure SetPortableMode;
