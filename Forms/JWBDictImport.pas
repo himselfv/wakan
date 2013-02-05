@@ -775,7 +775,7 @@ begin
 
    { Import }
     if roma_prob=nil then begin
-      roma_prob := TUnicodeFileWriter.Rewrite('roma_problems.txt'); //TODO: This one should go into UserDir when we have one
+      roma_prob := TUnicodeFileWriter.Rewrite(UserDataDir+'\roma_problems.txt');
       roma_prob.WriteWideChar(#$FEFF); //BOM
     end;
 

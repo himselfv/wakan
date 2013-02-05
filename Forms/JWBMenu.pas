@@ -892,12 +892,12 @@ begin
    //It'll only read sections which it understands
     roma_t.LoadFromFile('wakan.cfg');
 
-    DownloadSources.LoadFromFile('Dependencies.cfg');
-
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
 
    {
+    DownloadSources.LoadFromFile('Dependencies.cfg');
+
     //Just a test
     tempDir := CreateRandomTempDirName();
     ForceDirectories(tempDir);
@@ -1137,7 +1137,7 @@ begin
       userdataloaded:=false;
       LoadUserData;
     except
-      if FileExists('WAKAN.USR') then Application.MessageBox(
+      if FileExists(UserDataDir+'\WAKAN.USR') then Application.MessageBox(
         pchar(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13
           +'If you delete this file, it will be created anew.'#13#13'Application will now exit.')),
         pchar(_l('#00020^eError')),
@@ -1284,7 +1284,7 @@ begin
   write(f,b);
   closefile(f);
   PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName wakan.usr');
+  PKGWriteForm.PKGWriteCmd('PKGFileName '+UserDataDir+'\wakan.usr');
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
   PKGWriteForm.PKGWriteCmd('TitleName WaKan User Data File');
@@ -2048,7 +2048,7 @@ var un,i:integer;
 begin
   if not UserDataChanged then exit;
 
-  CopyFile('wakan.usr','wakan.bak',false);
+  CopyFile(PChar(UserDataDir+'\wakan.usr'),PChar(UserDataDir+'\wakan.bak'),false);
   ReloadKanjiCategories(); //in case they weren't loaded which shouldn't happen
   Screen.Cursor:=crHourGlass;
   tempDir := CreateRandomTempDirName();
@@ -2068,7 +2068,7 @@ begin
   TUserPrior.WriteTable(tempDir+'\UserPrior',false);
   WriteUserPackage(tempDir);
   DeleteDirectory(tempDir);
-  Backup('wakan.usr');
+  Backup(UserDataDir+'\wakan.usr');
   Screen.Cursor:=crDefault;
   UserDataChanged:=false;
 end;
@@ -2098,10 +2098,9 @@ begin
     userdataloaded:=false;
   end;
 
-  if not FileExists('wakan.usr') then
+  if not FileExists(UserDataDir+'\wakan.usr') then
   begin
-    tempDir := CreateRandomTempDirName();
-    ForceDirectories(tempDir);
+    tempDir := CreateRandomTempDir();
     CreateKnownList(1,0);
     SaveKnownList(1,tempDir+'\knownchar.bin');
     assignfile(t,tempDir+'\User.info');
@@ -2216,7 +2215,7 @@ begin
     DeleteDirectory(tempDir);
   end;
 
-  ps:=TPackageSource.Create('wakan.usr',621030,587135,978312);
+  ps:=TPackageSource.Create(UserDataDir+'\wakan.usr',621030,587135,978312);
   ver:=0;
   TUser:=TTextTable.Create(ps,'User',false,false);
   TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
@@ -2362,9 +2361,14 @@ begin
     begin
       if ver<=0 then
       begin
-        ExportUserData('wakan_temp.jbk');
-        ImportUserData('wakan_temp.jbk');
-        DeleteFile('wakan_temp.jbk');
+        tempDir := CreateRandomTempDir();
+        try
+          ExportUserData(tempDir+'\wakan_temp.jbk');
+          ImportUserData(tempDir+'\wakan_temp.jbk');
+          DeleteFile(tempDir+'\wakan_temp.jbk');
+        finally
+          DeleteDirectory(tempDir);
+        end;
       end;
       if ver<=1 then
       begin
@@ -2436,7 +2440,7 @@ procedure TfMenu.ImportUserData(filename:string);
 var t:TCustomFileReader;
   s:string;
 begin
-  DeleteFile('wakan.usr');
+  DeleteFile(UserDataDir+'\wakan.usr');
   LoadUserData;
   Screen.Cursor:=crHourGlass;
  //User data is stored in Ansi, because compability.

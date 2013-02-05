@@ -407,18 +407,32 @@ var ini: TCustomIniFile;
 begin
   ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
   try
-    s := ini.ReadString('General', 'Install', '');
-    if LowerCase(s)<>'portable' then begin
+    s := LowerCase(ini.ReadString('General', 'Install', ''));
+    if s='' then begin
+     //Auto-choose mode
+     //Update ini file and update "s"
+      s := 'standalone';
+     //Move files to common dir, if found in app directory
+     //Save ini file, if changes were done
+    end;
+
+    if s='portable' then begin
+      SetPortableMode;
+    end else
+    if s='standalone' then begin
+      SetStandaloneMode;
       FreeAndNil(ini);
       ini := TRegistryIniFile.Create(WakanRegKey);
-    end;
+    end else
+      raise Exception.Create('Invalid installation mode configuration.');
+
     LoadRegistrySettings(ini);
   finally
     ini.Free;
   end;
 
-  if FileExists('WAKAN.CDT') then
-    chardetl.LoadFromFile('WAKAN.CDT')
+  if FileExists(UserDataDir+'\WAKAN.CDT') then
+    chardetl.LoadFromFile(UserDataDir+'\WAKAN.CDT')
   else
     Button10Click(Self);
 
@@ -431,20 +445,20 @@ end;
 procedure TfSettings.SaveSettings;
 var ini: TCustomIniFile;
 begin
-  ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
+  if PortableMode then begin
+    ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
+    ini.WriteString('General', 'Install', 'Portable');
+    TMemIniFile(ini).Encoding := TEncoding.UTF8; //write UTF8 only
+  end else
+    ini := TRegistryIniFile.Create(WakanRegKey);
   try
-    if LowerCase(ini.ReadString('General', 'Install', ''))<>'portable' then begin
-      FreeAndNil(ini);
-      ini := TRegistryIniFile.Create(WakanRegKey);
-    end else
-      TMemIniFile(ini).Encoding := TEncoding.UTF8; //write in UTF8 only
     SaveRegistrySettings(ini);
   finally
     ini.UpdateFile;
     ini.Free;
   end;
 
-  chardetl.SaveToFile('WAKAN.CDT');
+  chardetl.SaveToFile(UserDataDir+'\WAKAN.CDT');
   WriteColors;
 end;
 

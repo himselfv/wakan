@@ -21,6 +21,12 @@ const
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
 
+  UserDataDir: string = '';
+  PortableMode: boolean = false;
+
+procedure SetStandaloneMode;
+procedure SetPortableMode;
+
 
 { Romaji conversions }
 
@@ -115,8 +121,27 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses StrUtils, JWBMenu, JWBSettings, JWBLanguage, TextTable;
+uses StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
 
+
+{ Portable/standalone }
+
+procedure SetStandaloneMode;
+begin
+  PortableMode := false;
+  UserDataDir := GetSpecialFolderPath(CSIDL_APPDATA);
+ //There's also CSIDL_LOCAL_APPDATA which might do if CSIDL_APPDATA is somehow not available.
+ //But I don't think that can be the case!
+  Assert(UserDataDir<>''); //just in case
+  UserDataDir:=UserDataDir+'\Wakan';
+  ForceDirectories(UserDataDir);
+end;
+
+procedure SetPortableMode;
+begin
+  PortableMode := true;
+  UserDataDir := AppFolder;
+end;
 
 { Romaji conversions }
 
@@ -1279,11 +1304,11 @@ begin
  //For now works as it did in previous Wakan versions.
  //Has to be reworked to put backups into user folder.
   {$I-}
-  mkdir('backup');
+  mkdir(UserDataDir+'\backup');
   {$I+}
   ioresult;
  //dir\wakan.usr --> wakan-20130111.usr
-  CopyFile(PChar(filename),pchar('backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
+  CopyFile(PChar(filename),pchar(UserDataDir+'\backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
     +FormatDateTime('yyyymmdd',now)+ExtractFileExt(filename)),false);
 end;
 

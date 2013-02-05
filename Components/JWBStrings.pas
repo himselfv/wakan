@@ -160,7 +160,9 @@ function GetFileVersionInfoStr(Filename: string): string;
 function GetTempPathStr: string;
 function CreateGuidStr: string;
 function CreateRandomTempDirName: string;
+function CreateRandomTempDir: string;
 function AppFolder: string;
+function GetSpecialFolderPath(folderId: integer): string;
 
 
 { FChar string functions.
@@ -314,7 +316,7 @@ function IsLatinDigit(c:FChar):boolean;
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
 
 implementation
-uses WideStrUtils;
+uses WideStrUtils, ShlObj;
 
 { Math }
 
@@ -434,9 +436,28 @@ begin
   Result := GetTempPathStr() + '\wakan_' + CreateGuidStr();
 end;
 
+function CreateRandomTempDir: string;
+begin
+  Result := CreateRandomTempDirName();
+  ForceDirectories(Result);
+end;
+
 function AppFolder: string;
 begin
   Result := ExtractFilePath(GetModuleFilenameStr(0));
+end;
+
+function GetSpecialFolderPath(folderId: integer): string;
+const SHGFP_TYPE_CURRENT = 0;
+var hr: HRESULT;
+begin
+  SetLength(Result, MAX_PATH+1);
+  hr := SHGetFolderPath(0, folderId, 0, SHGFP_TYPE_CURRENT or CSIDL_FLAG_CREATE, @Result[1]);
+  if FAILED(hr) then
+    raise Exception.Create('Cannot obtain special folder path: error 0x'+IntToHex(hr,8));
+
+ //Truncate result
+  SetLength(Result, WStrLen(PWideChar(Result)));
 end;
 
 
