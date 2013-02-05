@@ -1,11 +1,13 @@
 unit JWBKanjiCard;
 
 interface
-uses SysUtils, Classes, Graphics, Windows;
+uses SysUtils, Classes, Graphics, Windows, JWBStrings;
 
 var
   kcchind,
   kcchcomp:TStringList;
+
+function DecodeCharReading(rt: integer; str: string; dotPosition: integer): FString;
 
 procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
   stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;
@@ -13,8 +15,57 @@ procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
 procedure ClearKanjiCardCache;
 
 implementation
-uses JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
+uses JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
   JWBSettings, JWBUserData;
+
+{ Readings are stored as STRINGS which for some reading-types contain HEX.
+So there's nothing we can do to avoid HexToUnicode conversion.
+
+For char property types which support this:
+- Decode to FString from explicit hex or encode from Ansi
+- Add dot at the specified position
+- Replace special markers such as +/i with full-width equivalents
+Call this function for everything you get from TCharReading, it won't hurt. }
+function DecodeCharReading(rt: integer; str: string; dotPosition: integer): FString;
+var adddot:integer;
+begin
+  if rt in [2, 8] then begin
+   //Chinese ony/kuny
+    Result := fstr(str);
+    exit;
+  end;
+
+  if (rt<=3) or (rt>=7) then begin
+   //Rest are Ansi strings
+    Result := fstr(str);
+    exit;
+  end;
+
+  Result:='';
+  adddot:=0;
+  if str[1]='+'then
+  begin
+    Result:={$IFNDEF UNICODE}'FF0B'{$ELSE}#$FF0B{$ENDIF};
+    delete(str,1,1);
+    adddot:=1;
+  end;
+  if str[1]='-'then
+  begin
+    Result:=Result+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF};
+    delete(str,1,1);
+    adddot:=1;
+  end;
+  if dotPosition>0 then
+  begin
+    Result:=Result+hextofstr(copy(str,1,dotPosition-1-adddot));
+    Result:=Result+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
+    delete(str,1,dotPosition-1-adddot);
+  end;
+  if str[length(str)]='-' then
+    Result:=Result+hextofstr(copy(str,1,length(str)-1))+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
+  else
+    Result:=Result+hextofstr(str);
+end;
 
 procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
   stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;
@@ -31,7 +82,6 @@ var ony,kuny,defy:string;
     fontjpch:string;
     FontJpChGrid:string;
     FontJpEnGrid:string;
-    adddot:integer;
     dic:TDicIndexCursor;
     freq:string;
     mark:TMarkers;
@@ -95,7 +145,8 @@ begin
       if flength(TUser.Str(TUserKanji))<10 then
 //      if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
         if TUserIdx.Bool(TUserIdxBegin) then
-          sl.Add('+'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji)) else
+          sl.Add('+'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji))
+        else
           sl.Add('-'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji));
       TUserIdx.Next;
     end;
@@ -111,7 +162,8 @@ begin
       end;
       if (p>=sl.Count) and (flength(s)>0) then fdelete(s,flength(s),1);
       if alt or rad then
-        DrawUnicode(canvas,trunc(x+((sizvert)*3*ch)/2+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid) else
+        DrawUnicode(canvas,trunc(x+((sizvert)*3*ch)/2+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid)
+      else
         DrawUnicode(canvas,trunc(x+(sizvert)*ch+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid);
     end;
     if (alt or rad) and (inlin) then
@@ -204,43 +256,13 @@ begin
      //and mixed with control characters, so there's nothing we can do to convert
      //it to unicode automatically on reading.
      //We'll have to do it when copying s->ws.
-      s := TCharRead.Str(TCharReadReading);
       rt := TCharRead.Int(TCharReadType);
-      if curlang='j'then
-       //Make some adjustments to the string (replace control chars with FChar equivalents)
-        if (rt>3) and (rt<7) then
-        begin
-          ws:='';
-          adddot:=0;
-          if s[1]='+'then
-          begin
-            ws:={$IFNDEF UNICODE}'FF0B'{$ELSE}#$FF0B{$ENDIF};
-            delete(s,1,1);
-            adddot:=1;
-          end;
-          if s[1]='-'then
-          begin
-            ws:=ws+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF};
-            delete(s,1,1);
-            adddot:=1;
-          end;
-          if TCharRead.Int(TCharReadReadDot)>0 then
-          begin
-            ws:=ws+hextofstr(copy(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot));
-            ws:=ws+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
-            delete(s,1,TCharRead.Int(TCharReadReadDot)-1-adddot);
-          end;
-          if s[length(s)]='-' then
-            ws:=ws+hextofstr(copy(s,1,length(s)-1))+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
-          else
-            ws:=ws+hextofstr(s);
-        end;
-      if curlang='c' then ws:=hextofstr(s);
+      ws := DecodeCharReading(rt,TCharRead.Str(TCharReadReading),TCharRead.Int(TCharReadReadDot));
       case rt of
-        2:if curlang='c'then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+fstr(', ')+ConvertPinYin(ws);
-        8:if curlang='c'then if kuny='' then kuny:=fstr(lowercase(ws)) else kuny:=kuny+fstr(', ')+fstr(lowercase(ws));
-        4:if curlang='j'then if flength(ony)+flength(ws)+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
-        5:if curlang='j'then if flength(kuny)+flength(ws)+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
+        2:if curlang='c' then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+fstr(', ')+ConvertPinYin(ws);
+        8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(ws)) else kuny:=kuny+fstr(', ')+fstr(lowercase(ws));
+        4:if curlang='j' then if flength(ony)+flength(ws)+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
+        5:if curlang='j' then if flength(kuny)+flength(ws)+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
       end;
       TCharRead.Next;
     end;

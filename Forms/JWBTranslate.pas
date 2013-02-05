@@ -2104,7 +2104,8 @@ begin
        (gd1=#$30A1) or (gd1=#$30A3) or (gd1=#$30A5) or (gd1=#$30A7) or (gd1=#$30A9) or
        (gd1=#$30E3) or (gd1=#$30E5) or (gd1=#$30E7) then gd:='';
    {$ENDIF}
-    if EvalChar(fgetch(gd,1))=3 then gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,true,'j');
+    if (flength(gd)>1) and (EvalChar(fgetch(gd,1))=EC_KATAKANA) then
+      gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,true,'j');
     reading:=gd;
   end;
  {$IFNDEF UNICODE}

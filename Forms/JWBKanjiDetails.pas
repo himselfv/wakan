@@ -10,7 +10,7 @@ uses
 type
   TCharReadings = record
     piny,engy,kory,cany,chiny:string;
-    ony,kuny,nany:widestring;
+    ony,kuny,nany:UnicodeString;
   end;
   PCharReadings = ^TCharReadings;
 
@@ -123,7 +123,7 @@ var
 implementation
 
 uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
-  JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories;
+  JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories, JWBKanjiCard;
 
 {$R *.DFM}
 
@@ -621,9 +621,8 @@ end;
 
 { Reloads various character readings from TCharRead table }
 procedure TfKanjiDetails.ReloadReadings(CChar: TTextTableCursor; out read: TCharReadings);
-var s: string;
-  ws:widestring;
-  adddot:integer;
+var rt: integer; //TCharRead.Int(TCharReadType)
+  ws:UnicodeString;
   CCharRead: TTextTableCursor;
 begin
   FillChar(read, sizeof(read), 00); //initializes all strings to ''
@@ -634,45 +633,17 @@ begin
     CCharRead.Locate('Kanji',CChar.TrueInt(TCharIndex));
     while (not CCharRead.EOF) and (CCharRead.Int(TCharReadKanji)=CChar.Int(TCharIndex)) do
     begin
-     //Readings are stored as STRINGS which contain HEX.
-     //So there's nothing we can do to avoid HexToUnicode conversion.
-      s:=CCharRead.Str(TCharReadReading);
-      if (CCharRead.Int(TCharReadType)>3) and (CCharRead.Int(TCharReadType)<7) then
-      begin
-        ws:='';
-        adddot:=0;
-        if s[1]='+'then
-        begin
-          ws:=#$FF0B;
-          delete(s,1,1);
-          adddot:=1;
-        end;
-        if s[1]='-'then
-        begin
-          ws:=ws+#$FF0D;
-          delete(s,1,1);
-          adddot:=1;
-        end;
-        if CCharRead.Int(TCharReadReadDot)>0 then
-        begin
-          ws:=ws+HexToUnicode(copy(s,1,CCharRead.Int(TCharReadReadDot)-1-adddot));
-          ws:=ws+#$FF0E;
-          delete(s,1,CCharRead.Int(TCharReadReadDot)-1-adddot);
-        end;
-        if s[length(s)]='-'then
-          ws:=ws+HexToUnicode(copy(s,1,length(s)-1))+#$FF0D
-        else
-          ws:=ws+HexToUnicode(s);
-      end;
-      case CCharRead.Int(TCharReadType) of
-        1:if read.kory='' then read.kory:=s else read.kory:=read.kory+', '+s;
-        2:if read.piny='' then read.piny:=s else read.piny:=read.piny+','+s;
+      rt:=CCharRead.Int(TCharReadType);
+      ws:=DecodeCharReading(rt,CCharRead.Str(TCharReadReading),CCharRead.Int(TCharReadReadDot));
+      case rt of
+        1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
+        2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
         4:if read.ony='' then read.ony:=ws else read.ony:=read.ony+#$FF0C+ws;
         5:if read.kuny='' then read.kuny:=ws else read.kuny:=read.kuny+#$FF0C+ws;
         6:if read.nany='' then read.nany:=ws else read.nany:=read.nany+#$FF0C+ws;
-        7:if read.chiny='' then read.chiny:=s else read.chiny:=read.chiny+', '+s;
-        3:if read.engy='' then read.engy:=s else read.engy:=read.engy+', '+s;
-        8:if read.cany='' then read.cany:=s else read.cany:=read.cany+', '+s;
+        7:if read.chiny='' then read.chiny:=fstrtouni(ws) else read.chiny:=read.chiny+', '+fstrtouni(ws);
+        3:if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
+        8:if read.cany='' then read.cany:=fstrtouni(ws) else read.cany:=read.cany+', '+fstrtouni(ws);
       end;
       CCharRead.Next;
     end;
