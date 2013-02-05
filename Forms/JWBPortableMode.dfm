@@ -1,8 +1,8 @@
-object Form1: TForm1
+object fPortableMode: TfPortableMode
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Form1'
+  Caption = 'fPortableMode'
   ClientHeight = 325
   ClientWidth = 371
   Color = clBtnFace
@@ -62,8 +62,8 @@ object Form1: TForm1
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 
-      'Install Wakan for all users of this computer.'#13#10'Each user keeps s' +
-      'eparate settings.'
+      'Install Wakan for all users of this computer.'#13#10'Each user keeps t' +
+      'heir own settings.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
