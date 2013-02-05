@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, registry;
+  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, IniFiles, registry;
 
 type
   TfSettings = class(TForm)
@@ -321,8 +321,8 @@ type
     setothersearch: integer;
     setusercompounds: boolean;
   protected
-    procedure LoadRegistrySettings(reg: TRegIniFile);
-    procedure SaveRegistrySettings(reg: TRegIniFile);
+    procedure LoadRegistrySettings(reg: TCustomIniFile);
+    procedure SaveRegistrySettings(reg: TCustomIniFile);
   public
     procedure LoadSettings(DelayUI: boolean);
     procedure ApplyUISettings;
@@ -402,13 +402,19 @@ end;
 
 
 procedure TfSettings.LoadSettings(DelayUI: boolean);
-var reg: TRegIniFile;
+var ini: TCustomIniFile;
+  s: string;
 begin
-  reg:=TRegIniFile.Create(WakanRegKey);
+  ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
   try
-    LoadRegistrySettings(reg);
+    s := ini.ReadString('General', 'Install', '');
+    if LowerCase(s)<>'portable' then begin
+      FreeAndNil(ini);
+      ini := TRegistryIniFile.Create(WakanRegKey);
+    end;
+    LoadRegistrySettings(ini);
   finally
-    reg.Free;
+    ini.Free;
   end;
 
   if FileExists('WAKAN.CDT') then
@@ -423,20 +429,26 @@ begin
 end;
 
 procedure TfSettings.SaveSettings;
-var reg: TRegIniFile;
+var ini: TCustomIniFile;
 begin
-  reg:=TRegIniFile.Create(WakanRegKey);
+  ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
   try
-    SaveRegistrySettings(reg);
+    if LowerCase(ini.ReadString('General', 'Install', ''))<>'portable' then begin
+      FreeAndNil(ini);
+      ini := TRegistryIniFile.Create(WakanRegKey);
+    end else
+      TMemIniFile(ini).Encoding := TEncoding.UTF8; //write in UTF8 only
+    SaveRegistrySettings(ini);
   finally
-    reg.Free;
+    ini.UpdateFile;
+    ini.Free;
   end;
 
   chardetl.SaveToFile('WAKAN.CDT');
   WriteColors;
 end;
 
-procedure TfSettings.LoadRegistrySettings(reg: TRegIniFile);
+procedure TfSettings.LoadRegistrySettings(reg: TCustomIniFile);
 var s: string;
 begin
   CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
@@ -724,7 +736,7 @@ begin
   if dictmodeset=1 then fUser.btnLookupEtoJ.Down:=true else fUser.btnLookupJtoE.Down:=true;
 end;
 
-procedure TfSettings.SaveRegistrySettings(reg: TRegIniFile);
+procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
 var setwindows:integer;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);

@@ -160,6 +160,7 @@ function GetFileVersionInfoStr(Filename: string): string;
 function GetTempPathStr: string;
 function CreateGuidStr: string;
 function CreateRandomTempDirName: string;
+function AppFolder: string;
 
 
 { FChar string functions.
@@ -431,6 +432,11 @@ function CreateRandomTempDirName: string;
 begin
  //Let's be nice and mark all our temp folders with "wakan_", so that they're identifiable
   Result := GetTempPathStr() + '\wakan_' + CreateGuidStr();
+end;
+
+function AppFolder: string;
+begin
+  Result := ExtractFilePath(GetModuleFilenameStr(0));
 end;
 
 
