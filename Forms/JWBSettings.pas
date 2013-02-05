@@ -400,7 +400,13 @@ begin
   ComboBox2Change(sender);
 end;
 
-
+{
+Application mode selection strategy:
+1. "wakan.ini/install=" present => do as configured or die if not writeable etc
+2. a. ProgramFiles/non-writeable => assume standalone
+   b. Else ask user and store preference in wakan.ini
+   If user files found in app directory, suggest move.
+}
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var ini: TCustomIniFile;
   s: string;
