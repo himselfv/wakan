@@ -403,9 +403,8 @@ end;
 {
 Application mode selection strategy:
 1. "wakan.ini/install=" present => do as configured or die if not writeable etc
-2. a. ProgramFiles/non-writeable => assume standalone
-   b. Else ask user and store preference in wakan.ini
-   If user files found in app directory, suggest move.
+2. "wakan.ini" missing => assume portable, unless in Program Files.
+  If in Program Files, assume standalone and suggest move.
 }
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var ini: TCustomIniFile;
@@ -416,6 +415,7 @@ begin
     s := LowerCase(ini.ReadString('General', 'Install', ''));
     if s='' then begin
      //Auto-choose mode
+     //CSIDL_PROGRAM_FILES
      //Update ini file and update "s"
       s := 'standalone';
      //Move files to common dir, if found in app directory
