@@ -246,6 +246,8 @@ type
     FullscreenMode1: TMenuItem;
     N26: TMenuItem;
     N27: TMenuItem;
+    aCategoryManager: TAction;
+    N14: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
@@ -384,6 +386,7 @@ type
     procedure aDictMiddleExecute(Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
     procedure aFullscreenModeExecute(Sender: TObject);
+    procedure aCategoryManagerExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -631,7 +634,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
-  JWBPortableMode;
+  JWBPortableMode, JWBCategoryMgr;
 
 {$R *.DFM}
 
@@ -4520,6 +4523,11 @@ begin
   fUser.SpeedButton18.Down:=true;
   dictbeginset:=3;
   fUser.btnLookupJtoEClick(Sender);
+end;
+
+procedure TfMenu.aCategoryManagerExecute(Sender: TObject);
+begin
+  fCategoryMgr.ShowModal;
 end;
 
 initialization

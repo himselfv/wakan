@@ -75,7 +75,8 @@ uses
   JWBDownloadSources in 'Components\JWBDownloadSources.pas',
   SevenZipUtils in 'Components\SevenZipUtils.pas',
   JWBUserData in 'Components\JWBUserData.pas',
-  JWBPortableMode in 'Forms\JWBPortableMode.pas' {fPortableMode};
+  JWBPortableMode in 'Forms\JWBPortableMode.pas' {fPortableMode},
+  JWBCategoryMgr in 'Forms\JWBCategoryMgr.pas' {fCategoryMgr};
 
 {$R *.RES}
 
@@ -122,6 +123,7 @@ begin
   Application.CreateForm(TfWordsExpChoose, fWordsExpChoose);
   Application.CreateForm(TfMedia, fMedia);
   Application.CreateForm(TfPortableMode, fPortableMode);
+  Application.CreateForm(TfCategoryMgr, fCategoryMgr);
   fMenu.InitializeWakan;
   Application.Run;
 end.

@@ -1013,6 +1013,10 @@ object fMenu: TfMenu
       ShortCut = 122
       OnExecute = aFullscreenModeExecute
     end
+    object aCategoryManager: TAction
+      Caption = 'Manage categories'
+      OnExecute = aCategoryManagerExecute
+    end
   end
   object MainMenu1: TMainMenu
     Left = 216
@@ -1370,6 +1374,9 @@ object fMenu: TfMenu
       end
       object eListgeneratorcGenertorseznamu1: TMenuItem
         Action = aUserGenerate
+      end
+      object N14: TMenuItem
+        Action = aCategoryManager
       end
     end
     object eHelpcNpovda1: TMenuItem
