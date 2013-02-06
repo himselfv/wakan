@@ -29,31 +29,167 @@ See also:
 interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls;
-
-//TODO: Localize this form
+  StdCtrls, Buttons, ExtCtrls, ComCtrls, IniFiles, JWBStrings;
 
 type
   TfPortableMode = class(TForm)
+    pcPages: TPageControl;
+    tsSelectMode: TTabSheet;
     lblQuestion: TLabel;
     lblPortableDescription: TLabel;
     lblStandaloneDescription: TLabel;
     btnPortable: TButton;
     btnStandalone: TButton;
+    btnCompatible: TButton;
+    lblCompatibleDescription: TLabel;
+    tsMoveFiles: TTabSheet;
+    lblMoveQuestion: TLabel;
+    Label1: TLabel;
+    lbFiles: TListBox;
+    Label2: TLabel;
+    btnMoveFiles: TButton;
+    btnIgnoreFiles: TButton;
+    procedure btnStandaloneClick(Sender: TObject);
+    procedure btnCompatibleClick(Sender: TObject);
+    procedure btnPortableClick(Sender: TObject);
+    procedure btnMoveFilesClick(Sender: TObject);
+    procedure btnIgnoreFilesClick(Sender: TObject);
+  protected
+    function BuildFileList: TFileList;
+  public
+    function Initialize(ini: TCustomIniFile): string;
+    function ContinueUpgrade(ini: TCustomIniFile): string;
   end;
 
 var
   fPortableMode: TfPortableMode;
 
-function AskIfPortableMode: boolean;
-function AskIfMoveFiles: boolean;
-
-procedure MoveFilesToAppData;
+const
+  MR_STANDALONE = 1001;
+  MR_UPGRADE = 1002;
+  MR_COMPATIBLE = 1003;
+  MR_PORTABLE = 1004;
 
 implementation
-uses JWBStrings, JWBUnit, StdPrompt;
+uses JWBUnit, StdPrompt;
 
 {$R *.DFM}
+
+procedure AddFile(var list: TFileList; const filename: string);
+begin
+  if FileExists(AppFolder+'\'+filename) then
+    JWBStrings.AddFilename(list, filename);
+end;
+
+procedure AddByMask(var list: TFileList; const path, mask: string; recursive: boolean);
+var sr: TSearchRec;
+  attr: integer;
+  res: integer;
+  path2: string;
+begin
+  attr := faAnyFile;
+  if not recursive then
+    attr := attr and not faDirectory;
+  path2 := path;
+  if (path2<>'') and (path2[Length(path2)]<>'\') then
+    path2 := path2 + '\'; //don't want duplicate slashes in AddFilename
+  res := FindFirst(AppFolder+'\'+path2+mask, attr, sr);
+  while res=0 do begin
+    if recursive and (sr.Attr and faDirectory <> 0) and (sr.Name<>'.') and (sr.Name<>'..') then
+      AddByMask(list, path2+sr.Name, mask, recursive)
+    else
+    if (sr.Attr and faDirectory = 0) then
+      JWBStrings.AddFilename(list, path2+sr.Name);
+    res := FindNext(sr);
+  end;
+  SysUtils.FindClose(sr);
+end;
+
+procedure AddDirectory(var list: TFileList; const dirname: string; recursive: boolean);
+begin
+  AddByMask(list, dirname, '*.*', recursive);
+end;
+
+function TfPortableMode.BuildFileList: TFileList;
+begin
+  AddFile(Result, 'wakan.usr');
+  AddFile(Result, 'wakan.bak');
+  AddFile(Result, 'wakan.cdt');
+  AddDirectory(Result, 'backup', true);
+  AddByMask(Result, '', '*.dic', false);
+  AddFile(Result, 'edict');
+  AddFile(Result, 'edict2');
+  AddFile(Result, 'cedict');
+end;
+
+procedure TfPortableMode.btnStandaloneClick(Sender: TObject);
+var files: TFileList;
+  i: integer;
+begin
+  files := BuildFileList;
+  if Length(files)<=0 then begin
+    ModalResult := MR_STANDALONE;
+    exit;
+  end;
+
+  lbFiles.Clear;
+  for i := 0 to Length(files) - 1 do
+    lbFiles.Items.Add(files[i]);
+  pcPages.ActivePage := tsMoveFiles;
+end;
+
+procedure TfPortableMode.btnCompatibleClick(Sender: TObject);
+begin
+  ModalResult := MR_COMPATIBLE;
+end;
+
+procedure TfPortableMode.btnPortableClick(Sender: TObject);
+begin
+  ModalResult := MR_PORTABLE;
+end;
+
+procedure TfPortableMode.btnIgnoreFilesClick(Sender: TObject);
+begin
+  ModalResult := MR_STANDALONE;
+end;
+
+procedure TfPortableMode.btnMoveFilesClick(Sender: TObject);
+begin
+  ModalResult := MR_UPGRADE;
+end;
+
+
+//Call if the portability mode is not configured.
+//We'll ask user and possibly copy some files.
+function TfPortableMode.Initialize(ini: TCustomIniFile): string;
+var mr: integer;
+begin
+  if not Application.MainForm.Visible then
+    Self.Position := poScreenCenter
+  else
+    Self.Position := poOwnerFormCenter;
+  Self.pcPages.ActivePage := tsSelectMode;
+  mr := Self.ShowModal;
+
+  if mr=MR_UPGRADE then begin
+    ini.WriteString('General','Install','Upgrade');
+    ini.UpdateFile;
+    ContinueUpgrade(ini);
+  end;
+
+ //Write the result
+  case mr of
+    MR_STANDALONE,
+    MR_UPGRADE: Result := 'standalone';
+    MR_COMPATIBLE: Result := 'compatible';
+    MR_PORTABLE: Result := 'portable';
+  else
+    raise EAbort.Create('Loading aborted');
+  end;
+
+  ini.WriteString('General','Install',Result);
+  ini.UpdateFile;
+end;
 
 function CopyProgress(
   TotalFileSize: int64;
@@ -68,7 +204,10 @@ function CopyProgress(
   ): dword; stdcall;
 var sp: TSMPromptForm absolute lpData;
 begin
-  if dwCallbackReason<>CALLBACK_CHUNK_FINISHED then exit;
+  if dwCallbackReason<>CALLBACK_CHUNK_FINISHED then begin
+    Result := PROGRESS_CONTINUE;
+    exit;
+  end;
   if not sp.Visible then begin
     sp.AppearModal;
     sp.SetMaxProgress(TotalFileSize);
@@ -79,9 +218,9 @@ begin
     sp.Hide;
     sp.SetProgressPaused(true); //although not important when hidden
     if Application.MessageBox(
-      PChar(_l('#01019^eNot all files have been moved. This operation will continue if you restart Wakan.'#13
+      PChar(_l('#01022^eNot all files have been moved. This operation will continue if you restart Wakan.'#13
         +'Do you want to abort the operation?')),
-      PChar(_l('#01020^eConfirm abort')),
+      PChar(_l('#01023^eConfirm abort')),
       MB_ICONQUESTION+MB_YESNO
     )=idYes then begin
       Result := PROGRESS_STOP; //Or PROGRESS_ABORT?
@@ -103,11 +242,12 @@ begin
   try
    //Bring up the progress window
     sp:=SMProgressDlgCreate(
-      _l('Move in progress'),
-      _l('Moving file %s...', [ExtractFilename(filename)]),
+      _l('#01024^eMove in progress'),
+      _l('#01025^eMoving file %s...', [ExtractFilename(filename)]),
       100, //for starters
       {canCancel=}true);
 
+    ForceDirectories(ExtractFilePath(GetAppDataFolder+'\'+filename)); //filename might contain subdirs
     if not MoveFileWithProgress(
       PChar(AppFolder+'\'+filename),
       PChar(GetAppDataFolder+'\'+filename),
@@ -120,69 +260,17 @@ begin
   end;
 end;
 
-//Asks the user to select a portability mode
-function AskIfPortableMode: boolean;
-var mr: TModalResult;
+//Call if an unfinished upgrade process is found ("Install=upgrade")
+function TfPortableMode.ContinueUpgrade(ini: TCustomIniFile): string;
+var files: TFileList;
+  i: integer;
 begin
-  if not Application.MainForm.Visible then
-    fPortableMode.Position := poScreenCenter
-  else
-    fPortableMode.Position := poOwnerFormCenter;
-
-  with fPortableMode do begin
-    lblQuestion.Caption := _l('#01009^eDo you want this copy of Wakan to be standalone?');
-    btnPortable.Caption := _l('#01010^ePortable');
-    lblPortableDescription.Caption := _l('#01011^eMove Wakan from a computer to a computer.'#13
-      +'All settings are stored in the application folder.');
-    btnStandalone.Caption := _l('#01012^eStandalone');
-    lblStandaloneDescription.Caption := _l('#01013^eShare Wakan with all users of this computer.'#13
-      +'Each user keeps their own settings.');
-  end;
-
-  mr := fPortableMode.ShowModal;
-  case mr of
-    1000: Result := false;
-    1001: Result := true;
-  else
-    raise EAbort.Create('Loading aborted');
-  end;
-end;
-
-//Asks the user if they want to move their files to AppData
-function AskIfMoveFiles: boolean;
-var mr: TModalResult;
-begin
-  if not Application.MainForm.Visible then
-    fPortableMode.Position := poScreenCenter
-  else
-    fPortableMode.Position := poOwnerFormCenter;
-
-  with fPortableMode do begin
-    lblQuestion.Caption := _l('#01014^eWakan wants to move your files to AppData.'#13'This is recommended.');
-    btnPortable.Caption := _l('#01015^eNope');
-    lblPortableDescription.Caption := _l('#01016^eLeave my files in the Program Files folder.'#13
-      +'I like to break the rules.');
-    btnStandalone.Caption := _l('#01017^eSure');
-    lblStandaloneDescription.Caption := _l('#01018^eMove my files where needed.'#13
-      +'Just keep them safe.');
-  end;
-
-  mr := fPortableMode.ShowModal;
-  case mr of
-    1000: Result := false;
-    1001: Result := true;
-  else
-    raise EAbort.Create('Loading aborted');
-  end;
-end;
-
-{ Call to move all the possible files to the app data.
- It's okay to call this function multiple times, even across restarts;
- in fact you MUST do this until it finishes properly. }
-procedure MoveFilesToAppData;
-begin
-  MoveToAppData('wakan.usr');
-  MoveToAppData('wakan.cdt');
+  files := BuildFileList;
+  for i := 0 to Length(files) - 1 do
+    MoveToAppData(files[i]);
+  Result := 'standalone';
+  ini.WriteString('General','Install',Result);
+  ini.UpdateFile;
 end;
 
 end.

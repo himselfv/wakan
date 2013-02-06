@@ -16,16 +16,19 @@ const
   CurStructVer=2;
   CurDictVer=7;
 
+type
+  TPortabilityMode = (pmStandalone, pmPortable, pmCompatible);
+
 const
   WakanAppName = 'WaKan - Japanese & Chinese Learning Tool';
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
 
   UserDataDir: string = '';
-  PortableMode: boolean = false;
+  DictionaryDir: string = '';
+  PortabilityMode: TPortabilityMode = pmCompatible;
 
-procedure SetStandaloneMode;
-procedure SetPortableMode;
+procedure SetPortabilityMode(AMode: TPortabilityMode);
 function GetAppDataFolder: string;
 
 
@@ -98,6 +101,8 @@ function UnfixVocabEntry(const s:string):string;
 procedure DeleteDirectory(dir:string);
 procedure Backup(const filename: string);
 
+procedure RegeditAtKey(const key: string);
+
 
 var
  //Fonts
@@ -137,17 +142,18 @@ begin
   ForceDirectories(Result);
 end;
 
-procedure SetStandaloneMode;
+procedure SetPortabilityMode(AMode: TPortabilityMode);
 begin
-  PortableMode := false;
-  UserDataDir := GetAppDataFolder;
+  PortabilityMode := AMode;
+  case AMode of
+    pmStandalone: UserDataDir := GetAppDataFolder;
+    pmPortable: UserDataDir := AppFolder;
+    pmCompatible: UserDataDir := AppFolder;
+  end;
+ //Dictionaries are always stored in application folder
+  DictionaryDir := AppFolder;
 end;
 
-procedure SetPortableMode;
-begin
-  PortableMode := true;
-  UserDataDir := AppFolder;
-end;
 
 { Romaji conversions }
 
@@ -1316,6 +1322,26 @@ begin
  //dir\wakan.usr --> wakan-20130111.usr
   CopyFile(PChar(filename),pchar(UserDataDir+'\backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
     +FormatDateTime('yyyymmdd',now)+ExtractFileExt(filename)),false);
+end;
+
+//Opens registry editor at the specific key
+procedure RegeditAtKey(const key: string);
+var reg: TRegistry;
+begin
+  reg := TRegistry.Create;
+  try
+    reg.RootKey := HKEY_CURRENT_USER;
+    reg.OpenKey('Software', true);
+    reg.OpenKey('Microsoft', true);
+    reg.OpenKey('Windows', true);
+    reg.OpenKey('CurrentVersion', true);
+    reg.OpenKey('Applets', true);
+    reg.OpenKey('Regedit', true);
+    reg.WriteString('Lastkey', key);
+    WinExec(PAnsiChar(AnsiString('regedit.exe')), SW_SHOW);
+  finally
+    FreeAndNil(reg);
+  end;
 end;
 
 

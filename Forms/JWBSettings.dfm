@@ -24,18 +24,16 @@ object fSettings: TfSettings
     Top = 0
     Width = 484
     Height = 460
-    ActivePage = tsGeneral
+    ActivePage = tsPortability
     Align = alClient
     MultiLine = True
     Style = tsButtons
     TabOrder = 0
     OnChange = pcPagesChange
-    ExplicitHeight = 451
     object tsGeneral: TTabSheet
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
-      ExplicitHeight = 441
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -44,7 +42,6 @@ object fSettings: TfSettings
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitHeight = 441
         object Label41: TLabel
           Left = 16
           Top = 224
@@ -204,7 +201,6 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
-      ExplicitHeight = 441
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -508,7 +504,6 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
-      ExplicitHeight = 441
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -591,7 +586,6 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
-      ExplicitHeight = 441
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -696,7 +690,6 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
-      ExplicitHeight = 441
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1089,7 +1082,6 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
-      ExplicitHeight = 441
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1196,7 +1188,6 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
-      ExplicitHeight = 441
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1397,7 +1388,6 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
-      ExplicitHeight = 441
       object Button2: TButton
         Left = 16
         Top = 376
@@ -1479,7 +1469,6 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
-      ExplicitHeight = 441
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
@@ -1488,7 +1477,6 @@ object fSettings: TfSettings
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitHeight = 441
         object Label25: TLabel
           Left = 12
           Top = 250
@@ -1710,7 +1698,6 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
-      ExplicitHeight = 441
       DesignSize = (
         476
         450)
@@ -1783,7 +1770,6 @@ object fSettings: TfSettings
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox2Click
-        ExplicitHeight = 323
       end
       object Button7: TButton
         Left = 8
@@ -1794,7 +1780,6 @@ object fSettings: TfSettings
         Caption = '#00534^eAdd...'
         TabOrder = 1
         OnClick = Button7Click
-        ExplicitTop = 354
       end
       object Button8: TButton
         Left = 180
@@ -1805,7 +1790,6 @@ object fSettings: TfSettings
         Caption = '#00535^eChange...'
         TabOrder = 2
         OnClick = Button8Click
-        ExplicitTop = 354
       end
       object Button9: TButton
         Left = 350
@@ -1816,7 +1800,6 @@ object fSettings: TfSettings
         Caption = '#00536^eDelete'
         TabOrder = 3
         OnClick = Button9Click
-        ExplicitTop = 354
       end
       object Button10: TButton
         Left = 296
@@ -1832,7 +1815,6 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
-      ExplicitHeight = 441
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -1983,7 +1965,6 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
-      ExplicitHeight = 441
       DesignSize = (
         476
         450)
@@ -2011,7 +1992,6 @@ object fSettings: TfSettings
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox3Click
-        ExplicitHeight = 272
       end
       object Button12: TButton
         Left = 120
@@ -2022,7 +2002,6 @@ object fSettings: TfSettings
         Caption = '#00553^eChange'
         TabOrder = 1
         OnClick = Button12Click
-        ExplicitTop = 347
       end
       object Button14: TButton
         Left = 344
@@ -2033,7 +2012,6 @@ object fSettings: TfSettings
         Caption = '#00554^eRevert to default'
         TabOrder = 2
         OnClick = Button14Click
-        ExplicitTop = 347
       end
       object Button15: TButton
         Left = 336
@@ -2104,7 +2082,6 @@ object fSettings: TfSettings
       Caption = '#00966^eEditor'
       ImageIndex = 12
       TabVisible = False
-      ExplicitHeight = 441
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2234,7 +2211,6 @@ object fSettings: TfSettings
       Caption = '#00967^eAnnotations'
       ImageIndex = 13
       TabVisible = False
-      ExplicitHeight = 441
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2309,6 +2285,130 @@ object fSettings: TfSettings
         OnClick = Button16Click
       end
     end
+    object tsPortability: TTabSheet
+      Caption = 'Portability'
+      ImageIndex = 14
+      TabVisible = False
+      object lblWakanMode: TLabel
+        Left = 16
+        Top = 16
+        Width = 198
+        Height = 13
+        Caption = 'Wakan is running in portable mode'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object Label49: TLabel
+        Left = 16
+        Top = 43
+        Width = 90
+        Height = 13
+        Caption = '#01029^eSettings:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label55: TLabel
+        Left = 16
+        Top = 62
+        Width = 107
+        Height = 13
+        Caption = '#01030^eDictionaries:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label56: TLabel
+        Left = 16
+        Top = 81
+        Width = 98
+        Height = 13
+        Caption = '#01031^eUser data:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblSettingsPath: TUrlLabel
+        Left = 120
+        Top = 43
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        OnClick = lblSettingsPathClick
+      end
+      object lblDictionariesPath: TUrlLabel
+        Left = 120
+        Top = 62
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblUserDataPath: TUrlLabel
+        Left = 120
+        Top = 81
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblUpgradeToStandalone: TLabel
+        Left = 16
+        Top = 107
+        Width = 453
+        Height = 26
+        Caption = 
+          '#01032^eYou can move all your data to Application Data folder an' +
+          'd make this copy standalone.'#13#10'This process is not reversible.'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object btnUpgradeToStandalone: TButton
+        Left = 136
+        Top = 147
+        Width = 177
+        Height = 25
+        Caption = '#01033^eUpgrade to standalone'
+        TabOrder = 0
+        OnClick = btnUpgradeToStandaloneClick
+      end
+    end
   end
   object lbContents: TListBox
     Left = 0
@@ -2319,7 +2419,6 @@ object fSettings: TfSettings
     ItemHeight = 13
     TabOrder = 1
     OnClick = lbContentsClick
-    ExplicitHeight = 451
   end
   object pnlButtons: TPanel
     Left = 0
@@ -2329,7 +2428,6 @@ object fSettings: TfSettings
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 451
     DesignSize = (
       661
       41)
@@ -2358,7 +2456,6 @@ object fSettings: TfSettings
       Cancel = True
       Caption = 'OK'
       Default = True
-      DoubleBuffered = True
       Glyph.Data = {
         DE010000424DDE01000000000000760000002800000024000000120000000100
         0400000000006801000000000000000000001000000000000000000000000000
@@ -2378,7 +2475,6 @@ object fSettings: TfSettings
         0000}
       ModalResult = 1
       NumGlyphs = 2
-      ParentDoubleBuffered = False
       TabOrder = 1
       OnClick = btnOkClick
     end

@@ -1110,6 +1110,37 @@
 01006>Confirm abort
 01007>Vocabulary export
 01008>Exporting vocabulary...
+01009>Select mode
+01010>How do you want Wakan to run?
+01011>Standalone
+01012>Store settings in registry and user data in roaming AppData folder
+01013>Compatible
+01014>Store settings in registry and all data in Wakan folder, like older versions did
+01015>Portable
+01016>Store all settings and user data in Wakan folder
+01017>Move files
+01018>Your Wakan folder already contains some user data.
+01019>Do you want to move these files to the AppData directory?
+01020>Move
+01021>Ignore
+01022+Not all files have been moved. This operation will continue if you restart Wakan.
+01022>Do you want to abort the operation?
+01023>Confirm abort
+01024>Move in progress
+01025>Moving file %s...
+01026>Wakan is running in standalone mode
+01027>Wakan is running in compatible mode
+01028>Wakan is running in portable mode
+01029>Settings:
+01030>Dictionaries:
+01031>User data:
+01032+You can move all your data to Application Data folder and make this copy standalone.
+01032>This process is not reversible.
+01033>Upgrade to standalone
+01034>Do you really want to move all your files to Application Data and convert this installation to standalone?
+01035>Confirmation
+01036>Wakan has to be restarted for the upgrade to be completed. The application will now exit.
+01037>Restart needed
 ;
 ;
 ; EDICT markers.

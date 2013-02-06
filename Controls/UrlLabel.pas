@@ -23,6 +23,7 @@ procedure TUrlLabel.Click;
 begin
   if URL<>'' then
     ShellExecute(0, PChar('open'), PChar(URL), nil, nil, SW_SHOW);
+  inherited;
 end;
 
 procedure Register;

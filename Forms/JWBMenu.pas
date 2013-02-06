@@ -1216,7 +1216,7 @@ begin
     end;
     StandardLayout(0,100); }
     curdisplaymode:=0;
-    if PortableMode then begin
+    if PortabilityMode=pmPortable then begin
       FormPlacement1.UseRegistry := false;
       FormPlacement1.IniFileName := AppFolder + '\wakan.ini';
     end else begin

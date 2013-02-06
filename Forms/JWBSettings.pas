@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, IniFiles, registry;
+  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel;
 
 type
   TfSettings = class(TForm)
@@ -256,6 +256,16 @@ type
     cbShowSplashscreen: TCheckBox;
     cbSaveColumnWidths: TCheckBox;
     cbSaveSearchParams: TCheckBox;
+    tsPortability: TTabSheet;
+    lblWakanMode: TLabel;
+    Label49: TLabel;
+    Label55: TLabel;
+    Label56: TLabel;
+    lblSettingsPath: TUrlLabel;
+    lblDictionariesPath: TUrlLabel;
+    lblUserDataPath: TUrlLabel;
+    btnUpgradeToStandalone: TButton;
+    lblUpgradeToStandalone: TLabel;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -303,6 +313,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
     procedure lbContentsClick(Sender: TObject);
+    procedure btnUpgradeToStandaloneClick(Sender: TObject);
+    procedure lblSettingsPathClick(Sender: TObject);
   public
     function CheckFontBool(s:string):boolean;
     function AutoDetectFonts:boolean;
@@ -323,18 +335,18 @@ type
   protected
     procedure LoadRegistrySettings(reg: TCustomIniFile);
     procedure SaveRegistrySettings(reg: TCustomIniFile);
-    function InitializePortableMode(ini: TCustomIniFile; const oldmode: string): string;
+    function OpenWakanIni: TCustomIniFile;
   public
     procedure LoadSettings(DelayUI: boolean);
     procedure ApplyUISettings;
     procedure SaveSettings;
 
+  protected
+    procedure UpdatePortabilityPage;
+
   public
     function GetTranslationFile: string;
     procedure SetTranslationFile(const Value: string);
-
-  public //Column widths
-
 
   end;
 
@@ -401,24 +413,44 @@ begin
   ComboBox2Change(sender);
 end;
 
+{ Try to access ini file through this function only.
+ There's one exception, TFormPlacement uses their own mechanics to access ini,
+ but it preserves the codepage and doesn't write anything in Unicode so it works. }
+function TfSettings.OpenWakanIni: TCustomIniFile;
+begin
+  Result := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
+  TMemIniFile(Result).Encoding := TEncoding.UTF8; //write UTF8 only
+end;
+
 //See comments in JWBPortableMode.pas about Wakan modes
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var ini: TCustomIniFile;
   s: string;
 begin
-  ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
+  ini := OpenWakanIni;
   try
     s := LowerCase(ini.ReadString('General', 'Install', ''));
-    if (s='') or (s='standalone-copy') then
-      s := LowerCase(InitializePortableMode(ini, s));
 
-    if s='portable' then begin
-      SetPortableMode;
-    end else
+    if s='' then
+      s := LowerCase(fPortableMode.Initialize(ini))
+    else
+    if s='upgrade' then
+     //We cannot just copy some of the files. If we start this operation,
+     //we have to continue it even after restart.
+      s := LowerCase(fPortableMode.ContinueUpgrade(ini));
+
     if s='standalone' then begin
-      SetStandaloneMode;
+      SetPortabilityMode(pmStandalone);
       FreeAndNil(ini);
       ini := TRegistryIniFile.Create(WakanRegKey);
+    end else
+    if s='compatible' then begin
+      SetPortabilityMode(pmCompatible);
+      FreeAndNil(ini);
+      ini := TRegistryIniFile.Create(WakanRegKey);
+    end else
+    if s='portable' then begin
+      SetPortabilityMode(pmPortable);
     end else
       raise Exception.Create('Invalid installation mode configuration.');
 
@@ -426,6 +458,8 @@ begin
   finally
     ini.Free;
   end;
+
+  UpdatePortabilityPage;
 
   if FileExists(UserDataDir+'\WAKAN.CDT') then
     chardetl.LoadFromFile(UserDataDir+'\WAKAN.CDT')
@@ -439,51 +473,18 @@ begin
 end;
 
 //Initializes wakan.ini and moves user files as needed.
-function TfSettings.InitializePortableMode(ini: TCustomIniFile; const oldmode: string): string;
-var port: boolean;
-begin
- {
-  If there are no user files in the current folder, we ask a general question
-  ("Do you want it portable or standalone?")
-  Else a specific one ("Do you want to move your files or not?")
- }
- if oldmode='standalone-copy' then begin
-   port := false;
-   MoveFilesToAppData();
- end else
- if FileExists(AppFolder+'\wakan.usr') then begin
-   port := AskIfMoveFiles();
-   if not port then begin
-    //We cannot just copy SOME of the files. If we start this operation, we have
-    //to continue it even after restart.
-     ini.WriteString('General','Install','Standalone-Copy');
-     ini.UpdateFile;
-
-     MoveFilesToAppData();
-   end;
- end else
-   port := AskIfPortableMode();
-
- //Final selection
-  if port then
-    Result := 'Portable'
-  else
-    Result := 'Standalone';
-
- //Update ini file
-  ini.WriteString('General','Install',Result);
-  ini.UpdateFile;
-end;
-
 procedure TfSettings.SaveSettings;
 var ini: TCustomIniFile;
 begin
-  if PortableMode then begin
-    ini := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
-    ini.WriteString('General', 'Install', 'Portable');
-    TMemIniFile(ini).Encoding := TEncoding.UTF8; //write UTF8 only
-  end else
+  case PortabilityMode of
+    pmPortable: begin
+      ini := OpenWakanIni;
+      ini.WriteString('General', 'Install', 'Portable');
+    end;
+  else
     ini := TRegistryIniFile.Create(WakanRegKey);
+  end;
+
   try
     SaveRegistrySettings(ini);
   finally
@@ -1699,6 +1700,67 @@ end;
 procedure TfSettings.Button16Click(Sender: TObject);
 begin
   winexec('notepad annotate.txt',SW_SHOW);
+end;
+
+procedure TfSettings.UpdatePortabilityPage;
+begin
+  case PortabilityMode of
+    pmStandalone: lblWakanMode.Caption := _l('#01026^eWakan is running in standalone mode');
+    pmCompatible: lblWakanMode.Caption := _l('#01027^eWakan is running in compatible mode');
+    pmPortable: lblWakanMode.Caption := _l('#01028^eWakan is running in portable mode');
+  else
+    lblWakanMode.Caption := '[error]';
+  end;
+
+  if PortabilityMode=pmPortable then begin
+    lblSettingsPath.Caption := AppFolder + 'wakan.ini';
+    lblSettingsPath.URL := 'file://'+replc(lblSettingsPath.Caption,'\','/');
+  end else begin
+    lblSettingsPath.Caption := 'HKEY_CURRENT_USER\'+WakanRegKey;
+    lblSettingsPath.URL := '';
+  end;
+
+  lblDictionariesPath.Caption := DictionaryDir;
+  lblDictionariesPath.URL := 'file://'+replc(DictionaryDir,'\','/');
+  lblUserDataPath.Caption := UserDataDir;
+  lblUserDataPath.URL := 'file://'+replc(UserDataDir,'\','/');
+
+  btnUpgradeToStandalone.Visible := PortabilityMode=pmCompatible;
+  lblUpgradeToStandalone.Visible := btnUpgradeToStandalone.Visible;
+end;
+
+procedure TfSettings.lblSettingsPathClick(Sender: TObject);
+begin
+  if PortabilityMode<>pmPortable then
+    RegeditAtKey(lblSettingsPath.Caption);
+end;
+
+procedure TfSettings.btnUpgradeToStandaloneClick(Sender: TObject);
+var ini: TCustomIniFile;
+begin
+  if PortabilityMode<>pmCompatible then exit;
+
+  if Application.MessageBox(
+    PChar(_l('#01034^eDo you really want to move all your files to Application Data and convert this installation to standalone?')),
+    PChar(_l('#01035^eConfirmation')),
+    MB_YESNO or MB_ICONQUESTION
+  ) <> ID_YES then exit;
+
+  ini := OpenWakanIni;
+  try
+    ini.WriteString('General','Install','Upgrade');
+    ini.UpdateFile;
+  finally
+    FreeAndNil(ini);
+  end;
+
+  //Localize
+  Application.MessageBox(
+    PChar(_l('#01036^eWakan has to be restarted for the upgrade to be completed. The application will now exit.')),
+    PChar(_l('#01037^eRestart needed')),
+    MB_OK
+  );
+  Application.Terminate;
 end;
 
 end.
