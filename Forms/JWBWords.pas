@@ -1847,7 +1847,7 @@ begin
         if TUser.Int(TUserScore)<=1 then ca[1]:=-200 else ca[1]:=600;
         ca[1]:=ca[1]-DateOld(TUser.Str(TUserLearned),200)-DateOld(TUser.Str(TUserMastered),200);
         ca[2]:=800-DateOld(TUser.Str(TUserAdded),500)*3;
-        if pos('<spop>',TUser.Str(TUserEnglish))>0 then ca[3]:=-500 else ca[3]:=0;
+        if pos('<spop>',TUser.Str(TUserEnglish))>0 then ca[3]:=-500 else ca[3]:=0; //TODO: Note <spop> -- to be fixed when we upgrade dict format
         ca[3]:=ca[3]-length(TUser.Str(TUserPhonetic))*10;
         if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))>=0 then ca[3]:=ca[3]+800;
         if ca[3]>900 then ca[3]:=900;

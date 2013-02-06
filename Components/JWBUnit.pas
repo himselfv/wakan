@@ -127,7 +127,7 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
+uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
 
 
 { Portable/standalone }
@@ -520,7 +520,7 @@ var wgcur:integer;
 
 procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
 begin
-  grid.Hide;
+  grid.Perform(WM_SETREDRAW, 0, 0);
   grid.DefaultRowHeight:=GridFontSize+2;
   grid.FixedRows:=1;
   grid.Cells[0,0]:=_l('#00939^ePhonetic');
@@ -543,10 +543,14 @@ end;
 
 procedure FinishWordGrid(grid:TStringGrid);
 begin
-  if wgcur=1 then grid.Hide else
-  begin
+  if wgcur=1 then
+    grid.Hide
+  else begin
     grid.RowCount:=wgcur;
-    grid.Show;
+    if not grid.Visible then
+      grid.Show;
+    grid.Perform(WM_SETREDRAW, 1, 0);
+    grid.Invalidate;
   end;
 end;
 
