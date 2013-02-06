@@ -630,7 +630,8 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
-  JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources;
+  JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
+  JWBPortableMode;
 
 {$R *.DFM}
 
@@ -1664,6 +1665,7 @@ begin
   fLanguage.TranslateForm(fDicAdd);
   fLanguage.TranslateForm(fFileType);
   fLanguage.TranslateForm(fWordsExpChoose);
+  fLanguage.TranslateForm(fPortableMode);
 end;
 
 procedure TfMenu.RefreshCategory;
