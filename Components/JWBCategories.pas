@@ -140,10 +140,14 @@ Notifications
 }
 var
   CategoryUpdateLock: integer;
+  CategoryChangesRecorded: integer;
 
 procedure CategoriesChanged;
 begin
-  if CategoryUpdateLock>0 then exit;
+  if CategoryUpdateLock>0 then begin
+    Inc(CategoryChangesRecorded);
+    exit;
+  end;
   fMenu.RefreshKanjiCategory;
   fMenu.RefreshCategory;
   fMenu.ChangeUserData;
@@ -152,13 +156,16 @@ end;
 procedure BeginCategoryUpdate;
 begin
   Inc(CategoryUpdateLock);
+  if CategoryUpdateLock=1 then
+    CategoryChangesRecorded := 0;
 end;
 
 procedure EndCategoryUpdate;
 begin
   Dec(CategoryUpdateLock);
   if CategoryUpdateLock=0 then
-    CategoriesChanged;
+    if CategoryChangesRecorded>0 then
+      CategoriesChanged;
 end;
 
 
@@ -549,6 +556,7 @@ var pref: TCatPrefix;
 begin
   TUserCat.Locate('Name',category);
   catname := StripCatName(TUserCat.Str(TUserCatName));
+  catname := _l('#01056^e%s - Copy', [catname]); //do not provoke duplicate names, suggest a different one
   catidx := TUserCat.Int(TUserCatIndex);
   fNewCategory.Caption:=_l('#01040^eDuplicate category');
   pref := GetCatPrefix(category);
@@ -556,7 +564,7 @@ begin
     cattype := 'K'; //kanji
     confirmed := fNewCategory.EditCategory(catname);
   end else begin
-    cattype := chr(TUserCat.Int(TUserCatType)); //by default the same
+    cattype := chr(TUserCat.Int(TUserCatType)); //by default same type
     confirmed := fNewCategory.EditCategory(catname, cattype);
   end;
   if not confirmed then begin

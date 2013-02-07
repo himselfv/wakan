@@ -15,6 +15,7 @@ object fCategoryMgr: TfCategoryMgr
   Position = poOwnerFormCenter
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnHide = FormHide
   OnShow = FormShow
   DesignSize = (
     479

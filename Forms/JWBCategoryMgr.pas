@@ -32,6 +32,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnMergeClick(Sender: TObject);
+    procedure FormHide(Sender: TObject);
   protected
     type TCategoryData = record
       idx: integer;
@@ -74,6 +75,14 @@ end;
 procedure TfCategoryMgr.FormShow(Sender: TObject);
 begin
   ReloadList;
+  if fsModal in FormState then
+    BeginCategoryUpdate; //do not update anyone else while in modal
+end;
+
+procedure TfCategoryMgr.FormHide(Sender: TObject);
+begin
+  if fsModal in FormState then
+    EndCategoryUpdate;
 end;
 
 procedure TfCategoryMgr.pcPagesChange(Sender: TObject);
