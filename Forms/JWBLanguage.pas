@@ -384,19 +384,12 @@ var j,k:integer;
   var ss:TStringList;
       i:integer;
   begin
-    if (a is TCustomListBox) or
-       (a is TCustomComboBox) or
-       (a is TCustomMemo) or
-       (a is TCustomRadioGroup)
-       then
+    PropInfo:=GetPropInfo(a.ClassInfo,prop);
+    if (PropInfo<>nil) then
     begin
-      PropInfo:=GetPropInfo(a.ClassInfo,prop);
-      if (PropInfo<>nil) then
-      begin
-        ss:=TStringList(GetOrdProp(a,PropInfo));
-        for i:=0 to ss.Count-1 do
-          ss[i]:=TranslateString(ss[i]);
-      end;
+      ss:=TStringList(GetOrdProp(a,PropInfo));
+      for i:=0 to ss.Count-1 do
+        ss[i]:=TranslateString(ss[i]);
     end;
   end;
 
@@ -415,13 +408,21 @@ begin
     _set(a,'Caption');
     _set(a,'Text');
     _set(a,'Hint');
-    _setlist(a,'Lines');
-    _setlist(a,'Items');
+    if (a is TCustomListBox) or
+       (a is TCustomComboBox) or
+       (a is TCustomMemo) or
+       (a is TCustomRadioGroup)
+    then begin
+      _setlist(a,'Lines');
+      _setlist(a,'Items');
+    end;
     if a is TMenu then
     begin
       for k:=0 to (a as TMenu).Items.Count-1 do
         _menuitem((a as TMenu).Items[k]);
     end;
+    if a is TTabControl then
+      _setlist(a,'Tabs');
   end;
 end;
 

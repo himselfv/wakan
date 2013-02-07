@@ -20,12 +20,11 @@ object fWordsExpChoose: TfWordsExpChoose
     Top = 8
     Width = 345
     Height = 73
-    Caption = 
-      '#00909^eChoose which information include'
+    Caption = '#00909^eChoose which information include'
     ItemIndex = 0
     Items.Strings = (
       '#00910^eCategory & learned state'
-      '#00911^eCategory only^cPouze kategorii'
+      '#00911^eCategory only'
       '#00912^eNeither category nor learned state')
     TabOrder = 0
   end
@@ -34,8 +33,8 @@ object fWordsExpChoose: TfWordsExpChoose
     Top = 88
     Width = 75
     Height = 25
-    TabOrder = 1
     Kind = bkOK
+    TabOrder = 1
   end
   object BitBtn2: TBitBtn
     Left = 240
@@ -43,7 +42,7 @@ object fWordsExpChoose: TfWordsExpChoose
     Width = 91
     Height = 25
     Caption = '#00913^eCancel'
-    TabOrder = 2
     Kind = bkCancel
+    TabOrder = 2
   end
 end

@@ -113,23 +113,13 @@ var catname:string;
   cattype: char;
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  TUserCat.Locate('Name',curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
-  catname := StripCatName(TUserCat.Str(TUserCatName));
-  cattype := chr(TUserCat.Int(TUserCatType));
-  if fNewCategory.EditCategory(catname, cattype) then begin
-    TUserCat.Edit([TUserCatName,TUserCatType],[curlang+'~'+catname,inttostr(ord(cattype))]);
-    fMenu.RefreshCategory;
-    fMenu.ChangeUserData;
-  end;
+  EditCategoryUI(curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
 end;
 
 procedure TfUserFilters.btnCatDeleteClick(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
   DeleteCategoryUI(curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
-  fMenu.RefreshCategory;
-  fMenu.RebuildUserIndex;
-  fMenu.ChangeUserData;
 end;
 
 end.

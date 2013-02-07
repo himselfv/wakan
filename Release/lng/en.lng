@@ -1141,6 +1141,24 @@
 01035>Confirmation
 01036>Wakan has to be restarted for the upgrade to be completed. The application will now exit.
 01037>Restart needed
+01038>New category
+01039>Edit category
+01040>Duplicate category
+01041>This category already exists.
+01042>Some word(s) are assigned only to this category. Do you want to remove them from vocabulary?
+01043>This is a protected category, it cannot be deleted.
+01044>Do you really want to merge %d categories into one "%s" category?
+01045>Confirm merge
+01046>Category manager
+01047>New
+01048>Edit
+01049>Delete
+01050>Duplicate
+01051>Merge
+01052>Close
+01053>Word list
+01054>Kanji
+01055>%s: %d items
 ;
 ;
 ; EDICT markers.

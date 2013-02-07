@@ -350,22 +350,8 @@ begin
 end;
 
 procedure TfKanjiSearch.SpeedButton1Click(Sender: TObject);
-var category:string;
 begin
-  fNewCategory.RadioGroup1.Enabled:=false;
-  fNewCategory.Edit1.Text:='';
-  if fNewCategory.ShowModal<>idOK then
-  begin
-    fNewCategory.RadioGroup1.Enabled:=true;
-    exit;
-  end;
-  fNewCategory.RadioGroup1.Enabled:=false;
-  category:='k~'+fNewCategory.Edit1.Text;
-  inc(MaxCategoryIndex);
-  TUserCat.Insert([inttostr(MaxCategoryIndex),category,inttostr(ord('K')),FormatDateTime('yyyymmdd',now)]);
-  CreateKnownList(MaxCategoryIndex,0);
-  fMenu.RefreshKanjiCategory;
-  fMenu.ChangeUserData;
+  NewKanjiCategoryUI();
 end;
 
 procedure TfKanjiSearch.lbCategoriesClick(Sender: TObject);
@@ -384,29 +370,13 @@ end;
 procedure TfKanjiSearch.SpeedButton25Click(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  if Application.MessageBox(
-    pchar(_l('#00882^eDo you really want to delete the category including all character links to it?')),
-    pchar(_l('#00573^eWarning')),
-    MB_ICONWARNING or MB_YESNO)=idYes then
-  begin
-    TUserCat.Locate('Name','k~'+lbCategories.Items[lbCategories.ItemIndex]);
-    TUserCat.Delete;
-    fMenu.RefreshKanjiCategory;
-    fMenu.ChangeUserData;
-  end;
+  DeleteCategoryUI('k~'+lbCategories.Items[lbCategories.ItemIndex]);
 end;
 
 procedure TfKanjiSearch.SpeedButton20Click(Sender: TObject);
-var catname: string;
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  TUserCat.Locate('Name','k~'+fKanjiDetails.cbCategories.Items[lbCategories.ItemIndex]);
-  catname := StripCatName(TUserCat.Str(TUserCatName));
-  if fNewCategory.EditCategory(catname) then begin
-    TUserCat.Edit([TUserCatName],['k~'+catname]);
-    fMenu.RefreshKanjiCategory;
-    fMenu.ChangeUserData;
-  end;
+  EditCategoryUI('k~'+fKanjiDetails.cbCategories.Items[lbCategories.ItemIndex]);
 end;
 
 procedure TfKanjiSearch.lbCategoriesDrawItem(Control: TWinControl;

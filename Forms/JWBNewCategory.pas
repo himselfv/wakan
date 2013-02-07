@@ -8,7 +8,6 @@ uses
 
 type
   TEditCategoryFlag = (
-    efAddCategory,  //we're adding and not editing
     efFixedName     //don't let user change the name
   );
   TEditCategoryFlags = set of TEditCategoryFlag;
@@ -27,19 +26,14 @@ type
 var
   fNewCategory: TfNewCategory;
 
-function NeedCategory(category: string; cattype: char; silent: boolean): integer;
-
 implementation
 uses JWBMenu, JWBUserData, JWBCategories;
 
 {$R *.DFM}
 
+//For kanji categories -- no type change allowed
 function TfNewCategory.EditCategory(var catname: string; flags: TEditCategoryFlags=[]): boolean;
 begin
-  if efAddCategory in flags then
-    Caption:=_l('^eNew category')
-  else
-    Caption:=_l('^eEdit category');
   Edit1.Text:=catname;
   Edit1.Enabled := not (efFixedName in flags);
   RadioGroup1.Enabled:=false;
@@ -49,12 +43,9 @@ begin
     catname := Edit1.Text;
 end;
 
+//For word categories -- type change allowed
 function TfNewCategory.EditCategory(var catname: string; var cattype: char; flags: TEditCategoryFlags=[]): boolean;
 begin
-  if efAddCategory in flags then
-    Caption:=_l('^eNew category')
-  else
-    Caption:=_l('^eEdit category');
   Edit1.Text:=catname;
   Edit1.Enabled := not (efFixedName in flags);
   RadioGroup1.Enabled:=true;
@@ -72,38 +63,6 @@ begin
       0:cattype:='L';
       1:cattype:='G';
       2:cattype:='T';
-    end;
-  end;
-end;
-
-//Finds a category by name, or creates a new one asking user for details.
-//Returns category id. If user cancels the operation, returns -1.
-//  category: category name
-//  cattype: category type
-//  silent: do not update user interface after adding. (Do it manually later!)
-function NeedCategory(category: string; cattype: char; silent: boolean): integer;
-var catname: string;
-begin
-  if TUserCat.Locate('Name',category) then Result:=TUserCat.Int(TUserCatIndex) else
-  begin
-    if cattype='?' then
-    begin
-      catname := StripCatName(category);
-      if not fNewCategory.EditCategory(catname, cattype, [efAddCategory]) then begin
-        Result := -1;
-        exit;
-      end;
-      category:=curlang+'~'+catname;
-    end;
-    if TUserCat.Locate('Name',category) then Result:=TUserCat.Int(TUserCatIndex) else
-    begin
-      Inc(MaxCategoryIndex);
-      TUserCat.Insert([inttostr(MaxCategoryIndex),category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
-      if not silent then begin
-        fMenu.RefreshCategory;
-        fMenu.ChangeUserData;
-      end;
-      Result:=MaxCategoryIndex;
     end;
   end;
 end;

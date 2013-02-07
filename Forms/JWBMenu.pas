@@ -1669,6 +1669,7 @@ begin
   fLanguage.TranslateForm(fFileType);
   fLanguage.TranslateForm(fWordsExpChoose);
   fLanguage.TranslateForm(fPortableMode);
+  fLanguage.TranslateForm(fCategoryMgr);
 end;
 
 procedure TfMenu.RefreshCategory;

@@ -2,7 +2,7 @@ object fCategoryMgr: TfCategoryMgr
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Category Manager'
+  Caption = '#01046^eCategory manager'
   ClientHeight = 354
   ClientWidth = 479
   Color = clBtnFace
@@ -13,6 +13,8 @@ object fCategoryMgr: TfCategoryMgr
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   DesignSize = (
     479
@@ -27,26 +29,25 @@ object fCategoryMgr: TfCategoryMgr
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     Tabs.Strings = (
-      'Lesson'
-      'Group'
-      'Temporary'
-      'Word list'
-      'Kanji')
+      '#00373^eLesson'
+      '#00374^eGroup'
+      '#00375^eTemporary'
+      '#01053^eWord list'
+      '#01054^eKanji')
     TabIndex = 0
     OnChange = pcPagesChange
-    ExplicitWidth = 439
     object lbList: TListBox
       Left = 4
       Top = 24
       Width = 455
       Height = 234
+      Style = lbOwnerDrawFixed
       Align = alClient
       ItemHeight = 13
+      MultiSelect = True
       TabOrder = 0
-      ExplicitLeft = 3
-      ExplicitTop = 30
-      ExplicitWidth = 421
-      ExplicitHeight = 214
+      OnClick = lbListClick
+      OnDrawItem = lbListDrawItem
     end
     object Panel1: TPanel
       Left = 4
@@ -56,14 +57,13 @@ object fCategoryMgr: TfCategoryMgr
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitTop = 248
-      ExplicitWidth = 421
-      object BitBtn1: TBitBtn
+      object btnNew: TBitBtn
         Left = 8
         Top = 6
         Width = 75
         Height = 25
-        Caption = 'New'
+        Hint = '#00881^eAdd category'
+        Caption = '#01047^eNew'
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000130B0000130B00001000000000000000000000000000
@@ -79,13 +79,15 @@ object fCategoryMgr: TfCategoryMgr
           3BB33773333773333773B333333B3333333B7333333733333337}
         NumGlyphs = 2
         TabOrder = 0
+        OnClick = btnNewClick
       end
-      object BitBtn2: TBitBtn
+      object btnDelete: TBitBtn
         Left = 170
         Top = 6
         Width = 75
         Height = 25
-        Caption = 'Delete'
+        Hint = '#00031^eDelete category'
+        Caption = '#01049^eDelete'
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000130B0000130B00001000000000000000000000000000
@@ -101,13 +103,14 @@ object fCategoryMgr: TfCategoryMgr
           3333333777333777333333333999993333333333377777333333}
         NumGlyphs = 2
         TabOrder = 1
+        OnClick = btnDeleteClick
       end
-      object BitBtn4: TBitBtn
+      object btnDuplicate: TBitBtn
         Left = 251
         Top = 6
         Width = 94
         Height = 25
-        Caption = 'Duplicate'
+        Caption = '#01050^eDuplicate'
         Glyph.Data = {
           36040000424D3604000000000000360000002800000010000000100000000100
           2000000000000004000000000000000000000000000000000000FF00FF00FF00
@@ -144,13 +147,14 @@ object fCategoryMgr: TfCategoryMgr
           FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00
           FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00FF00}
         TabOrder = 2
+        OnClick = btnDuplicateClick
       end
-      object BitBtn5: TBitBtn
+      object btnMerge: TBitBtn
         Left = 351
         Top = 6
         Width = 98
         Height = 25
-        Caption = 'Merge'
+        Caption = '#01051^eMerge'
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000130B0000130B00001000000000000000000000000000
@@ -166,13 +170,15 @@ object fCategoryMgr: TfCategoryMgr
           3333777777333333333333333333333333333333333333333333}
         NumGlyphs = 2
         TabOrder = 3
+        OnClick = btnMergeClick
       end
-      object BitBtn3: TBitBtn
+      object btnEdit: TBitBtn
         Left = 89
         Top = 6
         Width = 75
         Height = 25
-        Caption = 'Edit'
+        Hint = '#00030^eEdit category'
+        Caption = '#01048^eEdit'
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000120B0000120B00001000000000000000000000000000
@@ -188,6 +194,7 @@ object fCategoryMgr: TfCategoryMgr
           00333377737FFFFF773333303300000003333337337777777333}
         NumGlyphs = 2
         TabOrder = 4
+        OnClick = btnEditClick
       end
     end
   end
@@ -197,9 +204,8 @@ object fCategoryMgr: TfCategoryMgr
     Width = 105
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = 'Close'
+    Caption = '#01052^eClose'
+    ModalResult = 11
     TabOrder = 1
-    ExplicitLeft = 328
-    ExplicitTop = 303
   end
 end

@@ -373,7 +373,7 @@ begin
     exit;
   end;
 
-  cat := NeedCategory(category, cattype, {silent=}nomessages);
+  cat := NeedCategoryUI(category, cattype, {silent=}nomessages);
   if cat<0 then //user cancelled
     exit;
 
@@ -482,7 +482,7 @@ begin
     cat:=awf_lastcatindex
   else
   begin
-    cat := NeedCategory(category, cattype, {silent=}true);
+    cat := NeedCategoryUI(category, cattype, {silent=}true);
     if cat<0 then //user cancelled
       raise EAbort.Create('User cancelled.'); //do not localize
   end;
