@@ -208,10 +208,9 @@ type
   protected //Unsorted
     procedure HandleWheel(down:boolean);
     procedure CalcBlockFromTo(backtrack:boolean);
-
+    procedure DrawCursor(blink:boolean);
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
-    procedure DrawCursor(blink:boolean);
     procedure DrawBlock(Canvas: TCanvas);
     procedure CheckTransCont(x,y:integer);
     procedure SplitLine(x,y:integer);
@@ -380,7 +379,7 @@ var
   shiftpressed:boolean;
   cursorend:boolean;
   priorkanji:string;
-  cursorblinked:boolean;
+  cursorblinked:boolean; //cursor is currently in "hidden" blink state
 
 //ax is 0-based
 function TfTranslate.GetDoc(ax,ay:integer):FChar;
@@ -1532,6 +1531,7 @@ begin
   fMenu.aEditorCut.ShortCut:=CutShort;
   fMenu.aEditorPaste.ShortCut:=PasteShort;
   fMenu.aEditorSelectAll.ShortCut:=AllShort;
+  DrawCursor(true); //show cursor
 end;
 
 procedure TfTranslate.ListBox1Exit(Sender: TObject);
@@ -1540,6 +1540,7 @@ begin
   fMenu.aEditorCut.ShortCut:=0;
   fMenu.aEditorPaste.ShortCut:=0;
   fMenu.aEditorSelectAll.ShortCut:=0;
+  DrawCursor(false); //kill cursor
 end;
 
 procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
@@ -3105,12 +3106,14 @@ var tmp: TCursorPos;
 begin
   if not ListBox1.Focused then blink:=false;
   if cursorposcache=-1 then CalcCache(oldcur.x,oldcur.y);
-  if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-view);
+  if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-view); //invert=>erase
   tmp := CursorPos(CursorScreenX(), CursorScreenY());
   if (cursorposcache=-1) or (oldcur.x<>tmp.x) or (oldcur.y<>tmp.y) then CalcCache(tmp.x, tmp.y);
-  if OnScreen(tmp.x, tmp.y) and ((not blink) or (cursorblinked)) then DrawIt(tmp.x,tmp.y-view);
-  if blink then cursorblinked:=not cursorblinked;
-  if not blink then cursorblinked:=false;
+  if OnScreen(tmp.x, tmp.y) and blink and cursorblinked then DrawIt(tmp.x,tmp.y-view); //draw new
+  if blink then
+    cursorblinked:=not cursorblinked
+  else
+    cursorblinked:=true;
   oldcur := tmp;
 end;
 
