@@ -1503,10 +1503,10 @@ begin
           fnd:=true;
           a[i]:=values[j];
         end;
-      if not fnd then a[i]:=Str(i);
+      if not fnd then a[i]:=Self.GetField(RecNo,i);
     end;
-    Delete;
-    Insert(a);
+    DeleteRecord(RecNo);
+    AddRecord(a);
     exit;
   end;
   for i:=0 to High(values) do
