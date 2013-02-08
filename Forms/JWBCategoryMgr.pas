@@ -40,7 +40,7 @@ type
     end;
   protected
     FCatList: TList<TCategoryData>; //synchronized with lbList
-    function FocusedCategory: string;
+    function FocusedCategory: integer;
     function FindCategory(catidx: integer): integer;
     procedure TryFocusCategory(catidx: integer);
   public
@@ -155,12 +155,12 @@ begin
   btnMerge.Enabled := (lbList.SelCount>1); //we can merge with KnownLearned, merged category becomes KnownLearned then
 end;
 
-function TfCategoryMgr.FocusedCategory: string;
+function TfCategoryMgr.FocusedCategory: integer;
 begin
   if lbList.ItemIndex<0 then
-    Result := ''
+    Result := -1
   else
-    Result := FCatList[lbList.ItemIndex].category;
+    Result := FCatList[lbList.ItemIndex].idx;
 end;
 
 function TfCategoryMgr.FindCategory(catidx: integer): integer;
@@ -199,18 +199,20 @@ end;
 procedure TfCategoryMgr.btnEditClick(Sender: TObject);
 var catidx: integer;
 begin
-  if lbList.ItemIndex<0then exit;
-  catidx := FCatList[lbList.ItemIndex].idx;
-  if EditCategoryUI(FCatList[lbList.ItemIndex].category) then begin
+  catidx := FocusedCategory;
+  if catidx<0 then exit;
+  if EditCategoryUI(catidx) then begin
     ReloadList;
     TryFocusCategory(catidx); //might be impossible if it was moved
   end;
 end;
 
 procedure TfCategoryMgr.btnDeleteClick(Sender: TObject);
+var catidx: integer;
 begin
-  if lbList.ItemIndex<0then exit;
-  if DeleteCategoryUI(FocusedCategory) then
+  catidx := FocusedCategory;
+  if catidx<0 then exit;
+  if DeleteCategoryUI(catidx) then
     ReloadList;
 end;
 
@@ -237,8 +239,9 @@ end;
 procedure TfCategoryMgr.btnDuplicateClick(Sender: TObject);
 var catidx: integer;
 begin
-  if lbList.ItemIndex<0then exit;
-  catidx := DuplicateCategoryUI(FocusedCategory);
+  catidx := FocusedCategory;
+  if catidx<0 then exit;
+  catidx := DuplicateCategoryUI(catidx);
   if catidx>=0 then begin
     ReloadList;
     TryFocusCategory(catidx);

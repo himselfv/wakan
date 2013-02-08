@@ -54,14 +54,12 @@ procedure ListCategoryWords(cat:integer;list:TList<integer>); overload;
 procedure ListWordCategories(word:integer;list:TStringList); overload; deprecated;
 procedure ListWordCategories(word:integer;list:TList<integer>); overload;
 function CheckEnabledCategories(catlist: TStringList): boolean;
-function RemoveWordFromCategory(word:integer;cat:integer): boolean; overload;
-function RemoveWordFromCategory(word:integer;const category:string): boolean; overload; deprecated;
+function RemoveWordFromCategory(word:integer;cat:integer): boolean;
 function RemoveAllWordsFromCategory(cat:integer): boolean;
 procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
 procedure CopyCategory(idxCat: integer; idxIntoCat: integer);
 function GetWordCategoryItemCount(cat: integer): integer;
-function GetCategoryItemCount(cat:integer): integer; overload;
-function GetCategoryItemCount(const category: string): integer; overload; deprecated;
+function GetCategoryItemCount(cat:integer): integer;
 function DeleteUniqueCategoryWords(cat:integer;simulate:boolean): boolean;
 
 
@@ -69,10 +67,10 @@ function DeleteUniqueCategoryWords(cat:integer;simulate:boolean): boolean;
  Every function must call CategoriesChanged in the end, if it changed anything }
 
 function NewKanjiCategoryUI(): integer;
-function EditCategoryUI(const category: string): boolean;
-function DeleteCategoryUI(category: string): boolean;
+function EditCategoryUI(cat:integer): boolean;
+function DeleteCategoryUI(catidx:integer): boolean;
 function MergeCategoryUI(categories: TCatIndexList): integer;
-function DuplicateCategoryUI(const category: string): integer;
+function DuplicateCategoryUI(catidx:integer): integer;
 function NeedCategoryUI(category: string; cattype: char; silent: boolean): integer;
 
 
@@ -309,17 +307,6 @@ begin
   end;
 end;
 
-//Deprecated. There can be several categories with the same name.
-function RemoveWordFromCategory(word:integer;const category:string): boolean;
-var catidx: integer;
-begin
-  catidx := FindCategory(category);
-  if catidx<0 then
-    Result := false
-  else
-    Result := RemoveWordFromCategory(word,catidx);
-end;
-
 //Deletes all TUserSheet records linking to a category, effectively removing all words from it.
 //(But it also can be used AFTER some words have been deleted)
 function RemoveAllWordsFromCategory(cat:integer): boolean;
@@ -447,14 +434,6 @@ begin
     + GetKnownListItemCount(cat);
 end;
 
-function GetCategoryItemCount(const category: string): integer;
-begin
-  if not TUserCat.Locate('Name',category) then
-    Result := 0
-  else
-    Result := GetCategoryItemCount(TUserCat.Int(TUserCatIndex));
-end;
-
 { PART OF A CATEGORY DELETION PROCEDURE.
  Deletes all words which are included only in a specified category.
  Returns true if such words were found.
@@ -512,85 +491,103 @@ begin
   CategoriesChanged;
 end;
 
-function EditCategoryUI(const category: string): boolean;
-var catname: string;
+function EditCategoryUI(cat:integer): boolean;
+var CUserCat: TTextTableCursor;
+  category: string;
+  catname: string;
   cattype: char;
   pref: TCatPrefix;
 begin
-  if not TUserCat.Locate('Name',category) then
-    raise Exception.Create(eCannotLocateCat);
-  catname := StripCatName(TUserCat.Str(TUserCatName));
-  pref := GetCatPrefix(category);
-  fNewCategory.Caption:=_l('#01039^eEdit category');
-  if pref='k' then begin
-    Result := fNewCategory.EditCategory(catname);
-    if Result then
-      TUserCat.Edit([TUserCatName],['k~'+catname]);
-  end else begin
-    cattype := chr(TUserCat.Int(TUserCatType));
-    Result := fNewCategory.EditCategory(catname, cattype);
-    if Result then
-      TUserCat.Edit([TUserCatName,TUserCatType],[pref+'~'+catname,inttostr(ord(cattype))]);
+  Result := false;
+  CUserCat := TUserCat.NewCursor;
+  try
+    if not CUserCat.Locate('Index',cat) then
+      raise Exception.Create(eCannotLocateCat);
+    category := CUserCat.Str(TUserCatName);
+    catname := StripCatName(category);
+    pref := GetCatPrefix(category);
+    fNewCategory.Caption:=_l('#01039^eEdit category');
+    if pref='k' then begin
+      Result := fNewCategory.EditCategory(catname);
+      if Result then
+        CUserCat.Edit([TUserCatName],['k~'+catname]);
+    end else begin
+      cattype := chr(CUserCat.Int(TUserCatType));
+      Result := fNewCategory.EditCategory(catname, cattype);
+      if Result then
+        CUserCat.Edit([TUserCatName,TUserCatType],[pref+'~'+catname,inttostr(ord(cattype))]);
+    end;
+    if not Result then exit;
+  finally
+    FreeAndNil(CUserCat);
   end;
-  if not Result then exit;
 
   CategoriesChanged;
 end;
 
 //Deletes a category, handling all required user interaction.
 //Returns false if the operation has been cancelled.
-function DeleteCategoryUI(category: string): boolean;
-var pref: TCatPrefix;
+function DeleteCategoryUI(catidx:integer): boolean;
+var CUserCat: TTextTableCursor;
+  category: string;
+  pref: TCatPrefix;
   confmsg: string;
-  catidx: integer;
 begin
-  pref := GetCatPrefix(category);
-  if pref='k' then
-    confmsg := _l('#00882^eDo you really want to delete the category including all character links to it?')
-  else
-    confmsg := _l('#00857^eDo you really want to delete the category including all word links to it?');
-  if Application.MessageBox(
-    pchar(confmsg),
-    pchar(_l('#00573^eWarning')),
-    MB_ICONWARNING or MB_YESNO)<>idYes then
-  begin
-    Result := false;
-    exit;
-  end;
-
-  if not TUserCat.Locate('Name',category) then
-    raise Exception.Create(eCannotLocateCat);
-  catidx := TUserCat.Int(TUserCatIndex);
-
   if catidx=KnownLearned then
-    raise Exception.Create(_l('#01043^eThis is a protected category, it cannot be deleted.')); //but better just don't let user do this
+    raise Exception.Create(_l('#01043^eThis is a protected category, it cannot be deleted.'));
+    //but better just don't let user call us like this
 
-  if pref<>'k' then
-    if DeleteUniqueCategoryWords(catidx,{simulate=}true) then begin
-      if Application.MessageBox(
-        pchar(_l('#01042^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?')),
-        pchar(_l('#00885^eWarning')),
-        MB_ICONWARNING or MB_YESNO)=idNo then
-      begin
-        Application.MessageBox(
-          pchar(_l('#00886^eCategory was not deleted.')),
-          pchar(_l('#00887^eAborted')),
-          MB_ICONERROR or MB_OK);
-        Result := false;
-        exit;
-      end;
-      DeleteUniqueCategoryWords(catidx,{simulate=}false); //this time for real
+  Result := false;
+  CUserCat := TUserCat.NewCursor;
+  try
+    if not CUserCat.Locate('Index',catidx) then
+      raise Exception.Create(eCannotLocateCat);
+    category := CUserCat.Str(TUserCatName);
+
+    pref := GetCatPrefix(category);
+    if pref='k' then
+      confmsg := _l('#00882^eDo you really want to delete the category including all character links to it?')
+    else
+      confmsg := _l('#00857^eDo you really want to delete the category including all word links to it?');
+    if Application.MessageBox(
+      pchar(confmsg),
+      pchar(_l('#00573^eWarning')),
+      MB_ICONWARNING or MB_YESNO)<>idYes then
+    begin
+      Result := false;
+      exit;
     end;
 
-  RemoveAllWordsFromCategory(catidx);
+    if pref<>'k' then
+      if DeleteUniqueCategoryWords(catidx,{simulate=}true) then begin
+        if Application.MessageBox(
+          pchar(_l('#01042^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?')),
+          pchar(_l('#00885^eWarning')),
+          MB_ICONWARNING or MB_YESNO)=idNo then
+        begin
+          Application.MessageBox(
+            pchar(_l('#00886^eCategory was not deleted.')),
+            pchar(_l('#00887^eAborted')),
+            MB_ICONERROR or MB_OK);
+          Result := false;
+          exit;
+        end;
+        DeleteUniqueCategoryWords(catidx,{simulate=}false); //this time for real
+      end;
 
-  TUserCat.Delete;
-  FreeKnownList(catidx);
-  Result := true;
+    RemoveAllWordsFromCategory(catidx);
 
- //Rebuild indexes and refresh UI.
-  if pref<>'k' then
-    fMenu.RebuildUserIndex;
+    CUserCat.Delete;
+    FreeKnownList(catidx);
+    Result := true;
+
+   //Rebuild indexes and refresh UI.
+    if pref<>'k' then
+      fMenu.RebuildUserIndex;
+  finally
+    FreeAndNil(CUserCat);
+  end;
+
   CategoriesChanged;
 end;
 
@@ -648,44 +645,53 @@ end;
 
 { Creates a copy of the specified category with the same content.
  Returns index of the new category, or < 0 }
-function DuplicateCategoryUI(const category: string): integer;
-var pref: TCatPrefix;
+function DuplicateCategoryUI(catidx:integer): integer;
+var CUserCat: TTextTableCursor;
+  category: string;
+  pref: TCatPrefix;
   catname: string;
   cattype: char;
-  catidx: integer;
   confirmed: boolean;
 begin
-  TUserCat.Locate('Name',category);
-  catname := StripCatName(TUserCat.Str(TUserCatName));
-  catname := _l('#01056^e%s - Copy', [catname]); //do not provoke duplicate names, suggest a different one
-  catidx := TUserCat.Int(TUserCatIndex);
-  fNewCategory.Caption:=_l('#01040^eDuplicate category');
-  pref := GetCatPrefix(category);
-  if pref='k' then begin
-    cattype := 'K'; //kanji
-    confirmed := fNewCategory.EditCategory(catname);
-  end else begin
-    cattype := chr(TUserCat.Int(TUserCatType)); //by default same type
-    confirmed := fNewCategory.EditCategory(catname, cattype);
-  end;
-  if not confirmed then begin
-    Result := -1;
-    exit;
-  end;
+  Result := -1;
+  CUserCat := TUserCat.NewCursor;
+  try
+    if not CUserCat.Locate('Index',catidx) then
+      raise Exception.Create(eCannotLocateCat);
+    category := CUserCat.Str(TUserCatName);
 
- //Create category
-  inc(MaxCategoryIndex);
-  TUserCat.Insert([inttostr(MaxCategoryIndex),pref+'~'+catname, inttostr(ord(cattype)),
-    FormatDateTime('yyyymmdd',now)]);
-  if pref='k' then
-    CreateKnownList(MaxCategoryIndex,0);
-  Result := MaxCategoryIndex;
+    catname := StripCatName(category);
+    catname := _l('#01056^e%s - Copy', [catname]); //do not provoke duplicate names, suggest a different one
+    fNewCategory.Caption:=_l('#01040^eDuplicate category');
+    pref := GetCatPrefix(category);
+    if pref='k' then begin
+      cattype := 'K'; //kanji
+      confirmed := fNewCategory.EditCategory(catname);
+    end else begin
+      cattype := chr(CUserCat.Int(TUserCatType)); //by default same type
+      confirmed := fNewCategory.EditCategory(catname, cattype);
+    end;
+    if not confirmed then begin
+      Result := -1;
+      exit;
+    end;
 
- //Copy contents
-  if pref='k' then
-    CopyKnownList(catidx, MaxCategoryIndex)
-  else
-    CopyCategory(catidx, MaxCategoryIndex);
+   //Create category
+    inc(MaxCategoryIndex);
+    CUserCat.Insert([inttostr(MaxCategoryIndex),pref+'~'+catname,
+      inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
+    if pref='k' then
+      CreateKnownList(MaxCategoryIndex,0);
+    Result := MaxCategoryIndex;
+
+   //Copy contents
+    if pref='k' then
+      CopyKnownList(catidx, MaxCategoryIndex)
+    else
+      CopyCategory(catidx, MaxCategoryIndex);
+  finally
+    FreeAndNil(CUserCat);
+  end;
 
   CategoriesChanged;
 end;

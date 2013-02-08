@@ -109,17 +109,15 @@ begin
 end;
 
 procedure TfUserFilters.btnCatEditClick(Sender: TObject);
-var catname:string;
-  cattype: char;
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  EditCategoryUI(curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
+  EditCategoryUI(GetSelCatIdx(lbCategories));
 end;
 
 procedure TfUserFilters.btnCatDeleteClick(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  DeleteCategoryUI(curlang+'~'+lbCategories.Items[lbCategories.ItemIndex]);
+  DeleteCategoryUI(GetSelCatIdx(lbCategories));
 end;
 
 end.

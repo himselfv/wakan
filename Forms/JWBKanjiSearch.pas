@@ -370,13 +370,13 @@ end;
 procedure TfKanjiSearch.SpeedButton25Click(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  DeleteCategoryUI('k~'+lbCategories.Items[lbCategories.ItemIndex]);
+  DeleteCategoryUI(GetSelCatIdx(lbCategories));
 end;
 
 procedure TfKanjiSearch.SpeedButton20Click(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
-  EditCategoryUI('k~'+fKanjiDetails.cbCategories.Items[lbCategories.ItemIndex]);
+  EditCategoryUI(GetSelCatIdx(lbCategories));
 end;
 
 procedure TfKanjiSearch.lbCategoriesDrawItem(Control: TWinControl;
