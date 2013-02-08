@@ -3434,22 +3434,19 @@ end;
 procedure TfMenu.aEditorSmallFontExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.sbSmallFont.Down:=true;
-  fTranslate.sbSmallFontClick(sender);
-end;
-
-procedure TfMenu.aEditorLargeFontExecute(Sender: TObject);
-begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.sbLargeFont.Down:=true;
-  fTranslate.sbLargeFontClick(sender);
+  fTranslate.FontSize := FontSizeSmall;
 end;
 
 procedure TfMenu.aEditorMedFontExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
-  fTranslate.sbMiddleFont.Down:=true;
-  fTranslate.sbMiddleFontClick(sender);
+  fTranslate.FontSize := FontSizeMedium;
+end;
+
+procedure TfMenu.aEditorLargeFontExecute(Sender: TObject);
+begin
+  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.FontSize := FontSizeLarge;
 end;
 
 procedure TfMenu.Timer2Timer(Sender: TObject);

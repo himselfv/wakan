@@ -590,67 +590,6 @@ object fTranslate: TfTranslate
     Width = 161
     Height = 23
   end
-  object sbSmallFont: TSpeedButton
-    Left = 406
-    Top = 8
-    Width = 23
-    Height = 22
-    Hint = '#00941^eSmall font'
-    AllowAllUp = True
-    GroupIndex = 4
-    Caption = 'A'
-    Flat = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -9
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-    OnClick = sbSmallFontClick
-  end
-  object sbLargeFont: TSpeedButton
-    Left = 453
-    Top = 8
-    Width = 23
-    Height = 22
-    Hint = '#00942^eLarge font'
-    AllowAllUp = True
-    GroupIndex = 4
-    Caption = 'A'
-    Flat = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-    OnClick = sbLargeFontClick
-  end
-  object sbMiddleFont: TSpeedButton
-    Left = 430
-    Top = 8
-    Width = 23
-    Height = 22
-    Hint = '#00943^eMiddle font'
-    AllowAllUp = True
-    GroupIndex = 4
-    Down = True
-    Caption = 'A'
-    Flat = True
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -15
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-    OnClick = sbMiddleFontClick
-  end
   object lblControlsHint: TLabel
     Left = 128
     Top = 153
@@ -765,6 +704,28 @@ object fTranslate: TfTranslate
     PageSize = 0
     TabOrder = 1
     OnChange = EditorScrollBarChange
+  end
+  object cbFontSize: TComboBox
+    Left = 409
+    Top = 9
+    Width = 68
+    Height = 21
+    AutoComplete = False
+    TabOrder = 2
+    Text = '8'
+    OnChange = cbFontSizeChange
+    OnExit = cbFontSizeExit
+    OnKeyPress = cbFontSizeKeyPress
+    Items.Strings = (
+      '8'
+      '12'
+      '16'
+      '20'
+      '24'
+      '32'
+      '48'
+      '64'
+      '96')
   end
   object BlinkCursorTimer: TTimer
     Interval = 500

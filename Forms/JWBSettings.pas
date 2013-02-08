@@ -498,6 +498,7 @@ end;
 
 procedure TfSettings.LoadRegistrySettings(reg: TCustomIniFile);
 var s: string;
+  tmp_int: integer;
 begin
   CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
   CheckBox65.Checked:=reg.ReadBool('Annotate','Rebuild',true);
@@ -675,16 +676,15 @@ begin
   setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
   fMenu.aEditorReading.Checked:=fTranslate.sbDisplayReading.Down;
   fMenu.aEditorMeaning.Checked:=fTranslate.sbDisplayMeaning.Down;
-  case reg.ReadInteger('Translate','FontSize',2) of
-    0:fTranslate.sbSmallFont.Down:=true;
-    1:fTranslate.sbMiddleFont.Down:=true;
-    2:fTranslate.sbLargeFont.Down:=true;
-  end;
-  case reg.ReadInteger('Translate','FontSize',2) of
-    0:fMenu.aEditorSmallFont.Checked:=true;
-    1:fMenu.aEditorMedFont.Checked:=true;
-    2:fMenu.aEditorLargeFont.Checked:=true;
-  end;
+  tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
+  if tmp_int>0 then
+    fTranslate.FontSize := tmp_int
+  else
+    case reg.ReadInteger('Translate','FontSize',2) of
+      0:fTranslate.FontSize := FontSizeSmall;
+      1:fTranslate.FontSize := FontSizeMedium;
+      2:fTranslate.FontSize := FontSizeLarge;
+    end;
   Edit17.Text:=reg.ReadString('Translate','MeaningLines','2');
   Edit18.Text:=reg.ReadString('Translate','PrintLines','20');
   setsort:=reg.ReadInteger('Characters','Sort',0);
@@ -905,9 +905,16 @@ begin
   reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
   reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
   reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
-  if fTranslate.sbSmallFont.Down then reg.WriteInteger('Translate','FontSize',0);
-  if fTranslate.sbMiddleFont.Down then reg.WriteInteger('Translate','FontSize',1);
-  if fTranslate.sbLargeFont.Down then reg.WriteInteger('Translate','FontSize',2);
+  reg.WriteInteger('Translate','FontSizeInt',fTranslate.FontSize);
+  //These values are used only by Wakan previous version, but let's play nice
+  //and update those too to the best that we can.
+  if fTranslate.FontSize<=((FontSizeMedium+FontSizeSmall) div 2) then
+    reg.WriteInteger('Translate','FontSize',0)
+  else
+  if fTranslate.FontSize<=((FontSizeLarge+FontSizeMedium) div 2) then
+    reg.WriteInteger('Translate','FontSize',1)
+  else
+    reg.WriteInteger('Translate','FontSize',2);
   reg.WriteInteger('Layout','QLayout',curqlayout);
   reg.WriteString('Translate','MeaningLines',Edit17.text);
   reg.WriteString('Translate','PrintLines',Edit18.text);

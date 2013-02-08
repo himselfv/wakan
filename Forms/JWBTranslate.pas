@@ -128,9 +128,6 @@ type
     sbClipPaste: TSpeedButton;
     lblFilename: TLabel;
     Bevel3: TBevel;
-    sbSmallFont: TSpeedButton;
-    sbLargeFont: TSpeedButton;
-    sbMiddleFont: TSpeedButton;
     lblControlsHint: TLabel;
     sbDockDictionary: TSpeedButton;
     sbDockKanjiDetails: TSpeedButton;
@@ -138,6 +135,7 @@ type
     BlinkCursorTimer: TTimer;
     OpenTextDialog: TOpenDialog;
     SaveTextDialog: TSaveDialog;
+    cbFontSize: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -178,13 +176,13 @@ type
     procedure sbKanjiModeClick(Sender: TObject);
     procedure sbKanaModeClick(Sender: TObject);
     procedure sbAsciiModeClick(Sender: TObject);
-    procedure sbSmallFontClick(Sender: TObject);
-    procedure sbLargeFontClick(Sender: TObject);
-    procedure sbMiddleFontClick(Sender: TObject);
     procedure sbDockKanjiDetailsClick(Sender: TObject);
     procedure sbDockDictionaryClick(Sender: TObject);
     procedure sbUseTlColorsClick(Sender: TObject);
     procedure BlinkCursorTimerTimer(Sender: TObject);
+    procedure cbFontSizeChange(Sender: TObject);
+    procedure cbFontSizeExit(Sender: TObject);
+    procedure cbFontSizeKeyPress(Sender: TObject; var Key: Char);
 
   public
     CopyShort, CutShort, PasteShort, AllShort:TShortCut;
@@ -228,6 +226,13 @@ type
     function GetClosestCursorPos(x,y:integer):TCursorPos;
   public
     procedure CalcMouseCoords(x,y:integer;var rx,ry:integer);
+
+  protected
+    FFontSize: integer;
+    procedure SetFontSize(Value: integer);
+    procedure cbFontSizeGuessItem(Value: string);
+  public
+    property FontSize: integer read FFontSize write SetFontSize;
 
 
   public //Document
@@ -323,6 +328,11 @@ type
 
 var
   fTranslate: TfTranslate;
+
+const
+  FontSizeSmall = 8;
+  FontSizeMedium = 12;
+  FontSizeLarge = 16;
 
 implementation
 
@@ -450,6 +460,8 @@ begin
   lastycnt:=2;
   printl:=1;
   mustrepaint:=true;
+
+  FFontSize := FontSizeMedium;
 
   linl:=TGraphicalLineList.Create;
   plinl:=TGraphicalLineList.Create;
@@ -1781,33 +1793,6 @@ begin
   fMenu.aEditorKanjiMode.Checked:=false;
 end;
 
-procedure TfTranslate.sbSmallFontClick(Sender: TObject);
-begin
-  fMenu.aEditorSmallFont.Checked:=true;
-  fMenu.aEditorLargeFont.Checked:=false;
-  fMenu.aEditorMedFont.Checked:=false;
-  RefreshLines;
-  //RepaintText(true)
-end;
-
-procedure TfTranslate.sbLargeFontClick(Sender: TObject);
-begin
-  fMenu.aEditorSmallFont.Checked:=false;
-  fMenu.aEditorLargeFont.Checked:=true;
-  fMenu.aEditorMedFont.Checked:=false;
-  RefreshLines;
-  //RepaintText(true)
-end;
-
-procedure TfTranslate.sbMiddleFontClick(Sender: TObject);
-begin
-  fMenu.aEditorSmallFont.Checked:=false;
-  fMenu.aEditorLargeFont.Checked:=false;
-  fMenu.aEditorMedFont.Checked:=true;
-  RefreshLines;
-  //RepaintText(true)
-end;
-
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
 begin
   view:=EditorScrollBar.Position;
@@ -1974,7 +1959,6 @@ begin
   end;
   with fUser do
     if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
-  ListBox1.SetFocus;
 end;
 
 { Converts startdrag+cursor positions to block selection. }
@@ -2223,7 +2207,7 @@ begin
   if vert then screenw:=h else screenw:=w;
   if not printing then
   begin
-    if sbLargeFont.Down then rs:=16 else if sbMiddleFont.Down then rs:=10 else rs:=8;
+    rs := FontSize;
   end else
   begin
     if not TryStrToInt(fSettings.Edit18.Text, lineh) then
@@ -3494,6 +3478,57 @@ begin
     rx:=-1;
     exit;
   end;
+end;
+
+procedure TfTranslate.SetFontSize(Value: integer);
+begin
+  if FFontSize=Value then exit;
+  FFontSize := Value;
+  fMenu.aEditorSmallFont.Checked:=(FFontSize=FontSizeSmall);
+  fMenu.aEditorLargeFont.Checked:=(FFontSize=FontSizeMedium);
+  fMenu.aEditorMedFont.Checked:=(FFontSize=FontSizeLarge);
+  if cbFontSize.Text<>IntToStr(Value) then begin
+    cbFontSize.Text := IntToStr(Value);
+    cbFontSizeGuessItem(cbFontSize.Text);
+    cbFontSizeChange(cbFontSize);
+  end;
+  RefreshLines;
+end;
+
+//If there's an item in the listbox with the exact same text, select that item
+//instead of just setting text property (there's a difference: ItemIndex is set)
+//Does not call OnChange.
+procedure TfTranslate.cbFontSizeGuessItem(Value: string);
+var i: integer;
+begin
+  for i := 0 to cbFontSize.Items.Count - 1 do
+    if cbFontSize.Items[i]=Value then begin
+      cbFontSize.ItemIndex := i;
+      exit;
+    end;
+end;
+
+procedure TfTranslate.cbFontSizeChange(Sender: TObject);
+var tmp: integer;
+begin
+  if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then
+    SetFontSize(tmp);
+end;
+
+procedure TfTranslate.cbFontSizeExit(Sender: TObject);
+var tmp: integer;
+begin
+  if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then begin
+    SetFontSize(tmp);
+    cbFontSizeGuessItem(cbFontSize.Text);
+  end else
+    cbFontSize.Text := IntToStr(FontSize);
+end;
+
+procedure TfTranslate.cbFontSizeKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Ord(Key)=VK_RETURN then
+    ListBox1.SetFocus; //jump to editor
 end;
 
 { Wakan has "half-width" and "full-width" symbols, and therefore position
