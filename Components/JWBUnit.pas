@@ -543,15 +543,15 @@ end;
 
 procedure FinishWordGrid(grid:TStringGrid);
 begin
+  grid.Perform(WM_SETREDRAW, 1, 0);
   if wgcur=1 then
     grid.Hide
   else begin
     grid.RowCount:=wgcur;
     if not grid.Visible then
       grid.Show;
-    grid.Perform(WM_SETREDRAW, 1, 0);
-    grid.Invalidate;
   end;
+  grid.Invalidate;
 end;
 
 //Splits translation record in old Wakan format into parts:
