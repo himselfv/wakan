@@ -125,7 +125,7 @@ begin
 
       if not skip then begin
         lbList.AddItem(
-          _l('#01055^e%s: %d items', [catname, GetCategoryItemCount(cd.category)]),
+          _l('#01055^e%s: %d items', [catname, GetCategoryItemCount(cd.idx)]),
           TObject(cd.idx) //Important: same format PasteKanjiCategoriesTo() uses!
         );
         FCatList.Add(cd);

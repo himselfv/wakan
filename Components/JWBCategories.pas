@@ -10,10 +10,14 @@ Category names are in the form:
 Throughout this file as a convention:
   catname     means bare category name (ex. 'Animals')
   category    means full category id (ex. 'j~Animals')
+
+DO NOT USE CATEGORY NAME AS AN UNIQUE ID.
+All such API is deprecated or must be deprecated. There could be several
+categories with the same name.
 }
 
 interface
-uses SysUtils, Classes, StdCtrls, JWBStrings;
+uses SysUtils, Classes, StdCtrls, Generics.Collections, JWBStrings;
 
 type
   TCatPrefix = char;
@@ -32,35 +36,45 @@ type
 function GetCatPrefix(const s:string):TCatPrefix;
 function StripCatName(const s:string):string;
 
-{ Notifications }
+{ Notifications. }
 
 procedure CategoriesChanged;
 procedure BeginCategoryUpdate;
 procedure EndCategoryUpdate;
 
-{ Misc }
 
-function FindCategory(const category:string): integer;
-procedure ListWordCategories(word:integer;catlist:TStringList);
-function CheckEnabledCategories(catlist: TStringList): boolean;
-
-{ Category manipulations }
+{ Raw Category manipulations.
+ Linked KnownLists are kept consistent, but functions do not call CategoriesChanged. }
 
 type
   TCatIndexList = array of integer;
 
+function FindCategory(const category:string): integer;
+procedure ListCategoryWords(cat:integer;list:TList<integer>); overload;
+procedure ListWordCategories(word:integer;list:TStringList); overload; deprecated;
+procedure ListWordCategories(word:integer;list:TList<integer>); overload;
+function CheckEnabledCategories(catlist: TStringList): boolean;
+function RemoveWordFromCategory(word:integer;cat:integer): boolean; overload;
+function RemoveWordFromCategory(word:integer;const category:string): boolean; overload; deprecated;
+function RemoveAllWordsFromCategory(cat:integer): boolean;
+procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
+procedure CopyCategory(idxCat: integer; idxIntoCat: integer);
+function GetWordCategoryItemCount(cat: integer): integer;
+function GetCategoryItemCount(cat:integer): integer; overload;
+function GetCategoryItemCount(const category: string): integer; overload; deprecated;
+function DeleteUniqueCategoryWords(cat:integer;simulate:boolean): boolean;
+
+
+{ Category manipulations UI.
+ Every function must call CategoriesChanged in the end, if it changed anything }
+
 function NewKanjiCategoryUI(): integer;
 function EditCategoryUI(const category: string): boolean;
-function RemoveWordFromCategory(word:integer;const catname:string): boolean;
-function RemoveAllWordsFromCategory(const category:string): boolean;
 function DeleteCategoryUI(category: string): boolean;
-procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
 function MergeCategoryUI(categories: TCatIndexList): integer;
-procedure CopyCategory(idxCat: integer; idxIntoCat: integer);
 function DuplicateCategoryUI(const category: string): integer;
 function NeedCategoryUI(category: string; cattype: char; silent: boolean): integer;
-function GetWordCategoryItemCount(idxCat: integer): integer;
-function GetCategoryItemCount(const category: string): integer;
+
 
 { List of kanji categories (populated by mainform, used by others).
  It's okay to reload the list without reloading the controls which reference it,
@@ -74,8 +88,12 @@ var
   end;
 
 procedure ReloadKanjiCategories;
-{ Category string lists are used throughout the program }
-procedure PasteKanjiCategoriesTo(sl: TStrings);
+procedure PasteKanjiCategoriesTo(sl: TStrings); //Makes a Category-TStringList
+
+
+{ Category-TStringList and Category-TCombobox standard handling.
+ Add items with AddCatItem(), and then you can call GetCatIdx and other functions. }
+
 function GetSelCatIdx(ctl: TCustomListBox): integer; overload;
 function GetSelCatIdx(ctl: TCustomComboBox): integer; overload;
 function GetCatIdx(ctl: TCustomListBox; ItemIndex: integer): integer; overload;
@@ -83,7 +101,9 @@ function GetCatIdx(ctl: TCustomComboBox; ItemIndex: integer): integer; overload;
 function IsFocusedKnownLearned(ctl: TCustomListBox): boolean;
 function IsAnySelectedKnownLearned(ctl: TCustomListBox): boolean;
 
-{ Known lists }
+
+{ Known lists.
+ Some categories have kanji bit mask buffer linked to it. }
 
 var
   KnownLearned:integer; //index of "LEARNED" category (type 'Q'), set on load
@@ -107,6 +127,7 @@ function CheckKnownKanji(const kanji:FString): FString;
 function IsKnown(listno:integer;const char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
 procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
 {$ENDIF}
+
 
 { Bugfixes }
 
@@ -203,8 +224,22 @@ begin
     Result := -1;
 end;
 
+procedure ListCategoryWords(cat:integer;list:TList<integer>);
+var CUserSheet: TTextTableCursor;
+begin
+  CUserSheet := GetUserSheet;
+  CUserSheet.SetOrder('Sheet_Ind');
+  CUserSheet.Locate('Number',cat);
+  list.Clear;
+  while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetNumber)=cat) do
+  begin
+    list.Add(CUserSheet.Int(TUserSheetWord));
+    CUserSheet.Next;
+  end;
+end;
+
 //Populates TStringList with full names of all categories that contain this word.
-procedure ListWordCategories(word:integer;catlist:TStringList);
+procedure ListWordCategories(word:integer;list:TStringList);
 var s:string;
   CUserSheet: TTextTableCursor;
   CUserCat: TTextTableCursor;
@@ -214,12 +249,26 @@ begin
 
   CUserSheet.SetOrder('Word_Ind');
   CUserSheet.Locate('Word',word);
-  catlist.Clear;
+  list.Clear;
   while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetWord)=word) do
   begin
     CUserCat.Locate('Index',CUserSheet.Int(TUserSheetNumber));
     s:=CUserCat.Str(TUserCatName);
-    catlist.Add(s);
+    list.Add(s);
+    CUserSheet.Next;
+  end;
+end;
+
+procedure ListWordCategories(word:integer;list:TList<integer>);
+var CUserSheet: TTextTableCursor;
+begin
+  CUserSheet := GetUserSheet;
+  CUserSheet.SetOrder('Word_Ind');
+  CUserSheet.Locate('Word',word);
+  list.Clear;
+  while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetWord)=word) do
+  begin
+    list.Add(CUserSheet.Int(TUserSheetNumber));
     CUserSheet.Next;
   end;
 end;
@@ -243,6 +292,202 @@ begin
   end;
 end;
 
+
+//Removes a word from a category. Returns true if it was in there (false if it wasn't in that category).
+function RemoveWordFromCategory(word:integer;cat:integer): boolean;
+begin
+  Result := false;
+  TUserSheet.SetOrder('Word_Ind');
+  TUserSheet.Locate('Word',word);
+  while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
+  begin
+    if TUserSheet.Int(TUserSheetNumber)=cat then begin
+      TUserSheet.Delete;
+      Result := true;
+    end;
+    TUserSheet.Next;
+  end;
+end;
+
+//Deprecated. There can be several categories with the same name.
+function RemoveWordFromCategory(word:integer;const category:string): boolean;
+var catidx: integer;
+begin
+  catidx := FindCategory(category);
+  if catidx<0 then
+    Result := false
+  else
+    Result := RemoveWordFromCategory(word,catidx);
+end;
+
+//Deletes all TUserSheet records linking to a category, effectively removing all words from it.
+//(But it also can be used AFTER some words have been deleted)
+function RemoveAllWordsFromCategory(cat:integer): boolean;
+begin
+  Result := false;
+  TUserSheet.First;
+  while not TUserSheet.EOF do
+  begin
+    if TUserSheet.Int(TUserSheetNumber)=TUserCat.Int(TUserCatIndex) then begin
+      TUserSheet.Delete;
+      Result := true;
+    end;
+    TUserSheet.Next;
+  end;
+end;
+
+//Moves all the words from idxCats to idxIntoCat, and deletes idxCats
+procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
+var sidxIntoCat: string;
+  CUserSheet: TTextTableCursor;
+  NeedReindex: boolean;
+  i: integer;
+begin
+  sidxIntoCat := IntToStr(idxIntoCat);
+
+  TUserSheet.NoCommitting := true;
+  NeedReindex := false;
+  CUserSheet := TUserSheet.NewCursor;
+  try
+    CUserSheet.SetOrder('Sheet_Ind');
+    for i := Low(idxCats) to High(idxCats) do begin
+      CUserSheet.Locate('Number',idxCats[i]);
+      while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetNumber)=idxCats[i]) do begin
+        TUserSheet.SetField(CUserSheet.tcur, TUserSheetNumber, sidxIntoCat);
+        NeedReindex := true;
+        CUserSheet.Next;
+      end;
+    end;
+  finally
+    CUserSheet.Free;
+    TUserSheet.NoCommitting := false;
+    if NeedReindex then
+      TUserSheet.Reindex;
+  end;
+
+  with TUserCat.NewCursor do try
+    for i := Low(idxCats) to High(idxCats) do begin
+      if not Locate('Index',idxCats[i]) then
+        raise Exception.Create(eCannotLocateCat);
+      Delete;
+      MergeKnownList(idxCats[i], idxIntoCat);
+      if KnownLearned=idxCats[i] then KnownLearned:=idxIntoCat; //just in case
+    end;
+  finally
+    Free;
+  end;
+end;
+
+{ Helper function to build a list of word entries in a category.
+ This is not a duplicate of ListCategoryWords because we also need a "pos" here }
+type
+  TCatWordsArray = array of record
+    word: string;
+    pos: string;
+  end;
+
+function __GetCategoryWords(catidx: integer): TCatWordsArray;
+var CUserSheet: TTextTableCursor;
+begin
+  SetLength(Result,0);
+  CUserSheet := GetUserSheet;
+  CUserSheet.SetOrder('Sheet_Ind');
+  CUserSheet.Locate('Number',catidx);
+  while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetNumber)=catidx) do
+  begin
+    SetLength(Result, Length(Result)+1);
+    with Result[Length(Result)-1] do begin
+      word := CUserSheet.Str(TUserSheetWord);
+      pos := CUserSheet.Str(TUserSheetPos);
+    end;
+    CUserSheet.Next;
+  end;
+end;
+
+//Copies all category links from idxCat to idxIntoCat.
+//Doesn't care for the duplicates, so idxIntoCat better be empty or something.
+procedure CopyCategory(idxCat: integer; idxIntoCat: integer);
+var sidxIntoCat: string;
+  words: TCatWordsArray;
+  i: integer;
+begin
+  sidxIntoCat := IntToStr(idxIntoCat);
+  words := __GetCategoryWords(idxCat);
+  if Length(words)<=0 then exit; //skip pointless reindex
+  TUserSheet.NoCommitting := true;
+  try
+    for i := 0 to Length(words) - 1 do
+      TUserSheet.Insert([
+        words[i].word, //they have to be strings for Insert
+        sidxIntoCat,
+        words[i].pos
+      ]);
+  finally
+    TUserSheet.NoCommitting := false;
+    TUserSheet.Reindex;
+  end;
+end;
+
+function GetWordCategoryItemCount(cat: integer): integer;
+var cUserSheet: TTextTableCursor;
+begin
+  Result := 0;
+  CUserSheet := GetUserSheet;
+  CUserSheet.SetOrder('Sheet_Ind');
+  CUserSheet.Locate('Number',cat);
+  while (not cUserSheet.EOF) and (CUserSheet.Int(TUserSheetNumber)=cat) do begin
+    Inc(Result);
+    CUserSheet.Next;
+  end;
+end;
+
+function GetCategoryItemCount(cat:integer): integer;
+begin
+  Result := GetWordCategoryItemCount(cat)
+    + GetKnownListItemCount(cat);
+end;
+
+function GetCategoryItemCount(const category: string): integer;
+begin
+  if not TUserCat.Locate('Name',category) then
+    Result := 0
+  else
+    Result := GetCategoryItemCount(TUserCat.Int(TUserCatIndex));
+end;
+
+{ PART OF A CATEGORY DELETION PROCEDURE.
+ Deletes all words which are included only in a specified category.
+ Returns true if such words were found.
+ NOTE THAT links are not deleted, so the database is left in an inconsistent state. }
+{ Simulate: Do not actually delete words, just return true or false. }
+function DeleteUniqueCategoryWords(cat:integer;simulate:boolean): boolean;
+var CUser: TTextTableCursor;
+  words,sl: TList<integer>;
+  i: integer;
+begin
+  Result := false;
+  words:=TList<integer>.Create;
+  sl:=TList<integer>.Create;
+  CUser:=TUser.NewCursor;
+  try
+   { Big gain over enumerating all words, because for every word we skip
+    we spare us one pass over TUserSheet. }
+    ListCategoryWords(cat,words); //costs one pass over TUserSheet
+    for i := 0 to words.Count - 1 do begin
+      CUser.Locate('Index',words[i]);
+      ListWordCategories(CUser.Int(TUserIndex),sl);
+      if (sl.Count=1) and (sl[0]=cat) then begin
+        Result := true;
+        if simulate then exit; //It's enough to find one such item to return true
+        CUser.Delete;
+      end;
+    end;
+  finally
+    sl.Free;
+    words.Free;
+    CUser.Free;
+  end;
+end;
 
 
 { Lets user create a new kanji category.
@@ -292,50 +537,11 @@ begin
   CategoriesChanged;
 end;
 
-//Removes a word from a category. Returns true if it was in there (false if it wasn't in that category).
-function RemoveWordFromCategory(word:integer;const catname:string): boolean;
-var s:string;
-begin
-  Result := false;
-  TUserSheet.SetOrder('Word_Ind');
-  TUserSheet.Locate('Word',word);
-  while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetWord)=word) do
-  begin
-    TUserCat.Locate('Index',TUserSheet.Int(TUserSheetNumber));
-    s:=TUserCat.Str(TUserCatName);
-    if catname=StripCatName(s) then begin
-      TUserSheet.Delete;
-      Result := true;
-    end;
-    TUserSheet.Next;
-  end;
-end;
-
-//Deletes all TUserSheet records linking to a category, effectively removing all words from it.
-//(But it also can be used AFTER some words have been deleted)
-function RemoveAllWordsFromCategory(const category:string): boolean;
-begin
-  Result := false;
-  if not TUserCat.Locate('Name',category) then
-    raise Exception.Create(eCannotLocateCat);
-  TUserSheet.First;
-  while not TUserSheet.EOF do
-  begin
-    if TUserSheet.Int(TUserSheetNumber)=TUserCat.Int(TUserCatIndex) then begin
-      TUserSheet.Delete;
-      Result := true;
-    end;
-    TUserSheet.Next;
-  end;
-end;
-
 //Deletes a category, handling all required user interaction.
 //Returns false if the operation has been cancelled.
 function DeleteCategoryUI(category: string): boolean;
 var pref: TCatPrefix;
   confmsg: string;
-  confirmed:boolean;
-  sl:TStringList;
   catidx: integer;
 begin
   pref := GetCatPrefix(category);
@@ -359,38 +565,24 @@ begin
   if catidx=KnownLearned then
     raise Exception.Create(_l('#01043^eThis is a protected category, it cannot be deleted.')); //but better just don't let user do this
 
-  if pref<>'k' then begin
-    //Scan all user words and remove those which were only in this category
-    confirmed:=false;
-    sl:=TStringList.Create;
-    TUser.First;
-    while not TUser.EOF do
-    begin
-      ListWordCategories(TUser.Int(TUserIndex),sl);
-      if (sl.Count=1) and (sl[0]=category) then
+  if pref<>'k' then
+    if DeleteUniqueCategoryWords(catidx,{simulate=}true) then begin
+      if Application.MessageBox(
+        pchar(_l('#01042^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?')),
+        pchar(_l('#00885^eWarning')),
+        MB_ICONWARNING or MB_YESNO)=idNo then
       begin
-        if not confirmed then
-          if Application.MessageBox(
-            pchar(_l('#01042^eSome word(s) are assigned only to this category. Do you want to remove them from vocabulary?')),
-            pchar(_l('#00885^eWarning')),
-            MB_ICONWARNING or MB_YESNO)=idNo then
-          begin
-            Application.MessageBox(
-              pchar(_l('#00886^eCategory was not deleted.')),
-              pchar(_l('#00887^eAborted')),
-              MB_ICONERROR or MB_OK);
-            Result := false; //although we did delete some words! bummer!
-            exit;
-          end;
-        confirmed:=true;
-        TUser.Delete;
+        Application.MessageBox(
+          pchar(_l('#00886^eCategory was not deleted.')),
+          pchar(_l('#00887^eAborted')),
+          MB_ICONERROR or MB_OK);
+        Result := false;
+        exit;
       end;
-      TUser.Next;
+      DeleteUniqueCategoryWords(catidx,{simulate=}false); //this time for real
     end;
-    sl.Free;
-  end;
 
-  RemoveAllWordsFromCategory(category);
+  RemoveAllWordsFromCategory(catidx);
 
   TUserCat.Delete;
   FreeKnownList(catidx);
@@ -400,48 +592,6 @@ begin
   if pref<>'k' then
     fMenu.RebuildUserIndex;
   CategoriesChanged;
-end;
-
-//Moves all the words from idxCats to idxIntoCat, and deletes idxCats
-procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
-var sidxIntoCat: string;
-  CUserSheet: TTextTableCursor;
-  NeedReindex: boolean;
-  i: integer;
-begin
-  sidxIntoCat := IntToStr(idxIntoCat);
-
-  TUserSheet.NoCommitting := true;
-  NeedReindex := false;
-  CUserSheet := TUserSheet.NewCursor;
-  try
-    CUserSheet.SetOrder('Sheet_Ind');
-    for i := Low(idxCats) to High(idxCats) do begin
-      CUserSheet.Locate('Number',idxCats[i]);
-      while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetNumber)=idxCats[i]) do begin
-        TUserSheet.SetField(CUserSheet.tcur, TUserSheetNumber, sidxIntoCat);
-        NeedReindex := true;
-        CUserSheet.Next;
-      end;
-    end;
-  finally
-    CUserSheet.Free;
-    TUserSheet.NoCommitting := false;
-    if NeedReindex then
-      TUserSheet.Reindex;
-  end;
-
-  with TUserCat.NewCursor do try
-    for i := Low(idxCats) to High(idxCats) do begin
-      if not Locate('Index',idxCats[i]) then
-        raise Exception.Create(eCannotLocateCat);
-      Delete;
-      MergeKnownList(idxCats[i], idxIntoCat);
-      if KnownLearned=idxCats[i] then KnownLearned:=idxIntoCat; //just in case
-    end;
-  finally
-    Free;
-  end;
 end;
 
 function MergeCategoryUI(categories: TCatIndexList): integer;
@@ -494,55 +644,6 @@ begin
   end;
 
   CategoriesChanged;
-end;
-
-{ Helper function to build a list of word entries in a category }
-type
-  TCatWordsArray = array of record
-    word: string;
-    pos: string;
-  end;
-
-function __GetCategoryWords(catidx: integer): TCatWordsArray;
-var CUserSheet: TTextTableCursor;
-begin
-  SetLength(Result,0);
-  CUserSheet := GetUserSheet;
-  CUserSheet.SetOrder('Sheet_Ind');
-  CUserSheet.Locate('Number',catidx);
-  while (not CUserSheet.EOF) and (CUserSheet.Int(TUserSheetNumber)=catidx) do
-  begin
-    SetLength(Result, Length(Result)+1);
-    with Result[Length(Result)-1] do begin
-      word := CUserSheet.Str(TUserSheetWord);
-      pos := CUserSheet.Str(TUserSheetPos);
-    end;
-    CUserSheet.Next;
-  end;
-end;
-
-//Copies all category links from idxCat to idxIntoCat.
-//Doesn't care for the duplicates, so idxIntoCat better be empty or something.
-procedure CopyCategory(idxCat: integer; idxIntoCat: integer);
-var sidxIntoCat: string;
-  words: TCatWordsArray;
-  i: integer;
-begin
-  sidxIntoCat := IntToStr(idxIntoCat);
-  words := __GetCategoryWords(idxCat);
-  if Length(words)<=0 then exit; //skip pointless reindex
-  TUserSheet.NoCommitting := true;
-  try
-    for i := 0 to Length(words) - 1 do
-      TUserSheet.Insert([
-        words[i].word, //they have to be strings for Insert
-        sidxIntoCat,
-        words[i].pos
-      ]);
-  finally
-    TUserSheet.NoCommitting := false;
-    TUserSheet.Reindex;
-  end;
 end;
 
 { Creates a copy of the specified category with the same content.
@@ -629,32 +730,7 @@ begin
     CategoriesChanged;
 end;
 
-function GetWordCategoryItemCount(idxCat: integer): integer;
-var cUserSheet: TTextTableCursor;
-begin
-  Result := 0;
-  CUserSheet := GetUserSheet;
-  CUserSheet.SetOrder('Sheet_Ind');
-  CUserSheet.Locate('Number',idxCat);
-  while not cUserSheet.EOF do begin
-    if cUserSheet.Int(TUserSheetNumber)=idxCat then
-      Inc(Result);
-    cUserSheet.Next;
-  end;
-end;
 
-function GetCategoryItemCount(const category: string): integer;
-var pref: TCatPrefix;
-begin
-  pref := GetCatPrefix(category);
-  if not TUserCat.Locate('Name',category) then
-    Result := 0
-  else
-  if pref='k' then
-    Result := GetKnownListItemCount(TUserCat.Int(TUserCatIndex))
-  else
-    Result := GetWordCategoryItemCount(TUserCat.Int(TUserCatIndex));
-end;
 
 { KanjiCategories }
 
@@ -867,6 +943,7 @@ begin
   Result := 0;
   i := KnownListSize;
   pList := KnownList[listno];
+  if pList=nil then exit;
   while i>=sizeof(integer) do begin
     Result := Result + NumberOfBitsSet(pList^);
     Inc(pList); //inc in sizeof(Integer)s

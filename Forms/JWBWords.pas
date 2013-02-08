@@ -1046,7 +1046,7 @@ begin
   begin
     lastwordind:=strtoint(wl[i-1]);
     if not TUser.Locate('Index',lastwordind) then raise Exception.Create(eWordNotLocated);
-    RemoveWordFromCategory(lastwordind, fUserDetails.lbCategories.Items[fUserDetails.lbCategories.ItemIndex]);
+    RemoveWordFromCategory(lastwordind, curlang+'~'+fUserDetails.lbCategories.Items[fUserDetails.lbCategories.ItemIndex]);
   end;
   fMenu.ChangeUserData;
   ShowIt(false);
