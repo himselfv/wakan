@@ -208,9 +208,9 @@ type
   protected //Unsorted
     procedure HandleWheel(down:boolean);
     procedure CalcBlockFromTo(backtrack:boolean);
-    procedure DrawCursor(blink:boolean);
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
+    procedure DrawCursor(blink:boolean);
     procedure DrawBlock(Canvas: TCanvas);
     procedure CheckTransCont(x,y:integer);
     procedure SplitLine(x,y:integer);
