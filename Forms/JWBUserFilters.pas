@@ -30,6 +30,8 @@ type
     procedure btnCatToggleAllClick(Sender: TObject);
     procedure btnCatEditClick(Sender: TObject);
     procedure btnCatDeleteClick(Sender: TObject);
+  public
+    function CheckEnabledCategories(catlist: TStringList): boolean;
   end;
 
 var
@@ -89,7 +91,7 @@ begin
       s:=TUserCat.Str(TUserCatName);
       if (length(s)>1) and (s[2]='~') then lc:=s[1];
       if lc=curlang then
-        lbCategories.Items.Add(StripCatName(TUserCat.Str(TUserCatName)));
+        AddCatItem(lbCategories, StripCatName(TUserCat.Str(TUserCatName)), TUserCat.Int(TUserCatIndex));
     end;
     TUserCat.Next;
   end;
@@ -118,6 +120,20 @@ procedure TfUserFilters.btnCatDeleteClick(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
   DeleteCategoryUI(GetSelCatIdx(lbCategories));
+end;
+
+//Returns true, if at least one of those categories is enabled in fUserFilters.
+function TfUserFilters.CheckEnabledCategories(catlist: TStringList): boolean;
+var i, ind: integer;
+begin
+  Result := false;
+  for i := 0 to catlist.Count - 1 do begin
+    ind:=fUserFilters.lbCategories.Items.IndexOf(StripCatName(catlist[i]));
+    if (ind<>-1) and (fUserFilters.lbCategories.Checked[i]) and (GetCatPrefix(catlist[i])=curlang) then begin
+      Result:=true;
+      break; //no point in scanning further
+    end;
+  end;
 end;
 
 end.

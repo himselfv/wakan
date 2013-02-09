@@ -53,7 +53,6 @@ function FindCategory(const category:string): integer;
 procedure ListCategoryWords(cat:integer;list:TList<integer>); overload;
 procedure ListWordCategories(word:integer;list:TStringList); overload; deprecated;
 procedure ListWordCategories(word:integer;list:TList<integer>); overload;
-function CheckEnabledCategories(catlist: TStringList): boolean;
 function RemoveWordFromCategory(word:integer;cat:integer): boolean;
 function RemoveAllWordsFromCategory(cat:integer): boolean;
 procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
@@ -91,7 +90,8 @@ procedure PasteKanjiCategoriesTo(sl: TStrings); //Makes a Category-TStringList
 
 { Category-TStringList and Category-TCombobox standard handling.
  Add items with AddCatItem(), and then you can call GetCatIdx and other functions. }
-
+procedure AddCatItem(ctl: TCustomListBox; const title: string; idx: integer); overload;
+procedure AddCatItem(ctl: TCustomComboBox; const title: string; idx: integer); overload;
 function GetSelCatIdx(ctl: TCustomListBox): integer; overload;
 function GetSelCatIdx(ctl: TCustomComboBox): integer; overload;
 function GetCatIdx(ctl: TCustomListBox; ItemIndex: integer): integer; overload;
@@ -268,25 +268,6 @@ begin
   begin
     list.Add(CUserSheet.Int(TUserSheetNumber));
     CUserSheet.Next;
-  end;
-end;
-
-//Returns true, if at least one of those categories is enabled in fUserFilters.
-function CheckEnabledCategories(catlist: TStringList): boolean;
-var i, ind: integer;
-  s: string;
-  CUserCat: TTextTableCursor;
-begin
-  CUserCat := GetUserCat;
-  Result := false;
-  for i := 0 to catlist.Count - 1 do begin
-    CUserCat.Locate('Index', StrToInt(catlist[i]));
-    s:=CUserCat.Str(TUserCatName);
-    ind:=fUserFilters.lbCategories.Items.IndexOf(StripCatName(s));
-    if (ind<>-1) and (fUserFilters.lbCategories.Checked[i]) and (GetCatPrefix(s)=curlang) then begin
-      Result:=true;
-      break; //no point in scanning further
-    end;
   end;
 end;
 
@@ -776,6 +757,16 @@ begin
   sl.Clear;
   for i := 0 to Length(KanjiCats) - 1 do
     sl.AddObject(KanjiCats[i].name, TObject(KanjiCats[i].idx));
+end;
+
+procedure AddCatItem(ctl: TCustomListBox; const title: string; idx: integer);
+begin
+  ctl.Items.AddObject(title, TObject(idx));
+end;
+
+procedure AddCatItem(ctl: TCustomComboBox; const title: string; idx: integer);
+begin
+  ctl.Items.AddObject(title, TObject(idx));
 end;
 
 function GetSelCatIdx(ctl: TCustomListBox): integer;

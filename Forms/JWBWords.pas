@@ -227,6 +227,7 @@ var sl:TStringList;
     s:string;
     a:integer;
     cats:string;
+    tm: cardinal;
 
   procedure AddVocabWord(CategoryOrder:boolean);
   var cat_str: string;
@@ -241,14 +242,14 @@ var sl:TStringList;
     stp:=TUser.Str(TUserScore);
     if not CategoryOrder then begin
       ListWordCategories(TUser.Int(TUserIndex),cl);
-      if not CheckEnabledCategories(cl) then exit;
+      if not fUserFilters.CheckEnabledCategories(cl) then exit;
       cat_str:='';
       for i:=0 to cl.Count-1 do cat_str:=cat_str+', '+StripCatName(cl[i]);
       if length(cat_str)>0 then delete(cat_str,1,2);
     end else
       cat_str := cats+' #'+inttostr(j); //sic! not a markup element, just a visual one
 
-    AddWordGrid(StringGrid1,
+   AddWordGrid(StringGrid1,
       ALTCH_EXCL+stp+CheckKnownKanji(TUser.Str(TUserKanji)),
       ALTCH_EXCL+stp+TUser.Str(TUserPhonetic),
       ALTCH_EXCL+stp+FixVocabEntry(TUser.Str(TUserEnglish)),
@@ -269,6 +270,8 @@ begin
   sl:=TStringList.Create;
   InitWordGrid(StringGrid1,true,false);
 
+  tm := GetTickCount;
+
   if fUserFilters.rgSort.ItemIndex>0 then begin
 
     case fUserFilters.rgSort.ItemIndex of
@@ -286,12 +289,12 @@ begin
 
   end else
 
-    for i:=0 to fUserFilters.lbCategories.Items.Count-1 do if fUserFilters.lbCategories.Checked[i] then
+    for i:=0 to fUserFilters.lbCategories.Items.Count-1 do
+    if fUserFilters.lbCategories.Checked[i] then
     begin
       cats:=fUserFilters.lbCategories.Items[i];
-      TUserCat.Locate('Name',curlang+'~'+fUserFilters.lbCategories.Items[i]);
-      a:=TUserCat.Int(TUserCatIndex);
       TUserSheet.SetOrder('Sheet_Ind');
+      a := GetCatIdx(fUserFilters.lbCategories,i);
       TUserSheet.Locate('Number',a);
       j:=0;
       while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=a) do begin
@@ -301,6 +304,12 @@ begin
         TUserSheet.Next;
       end;
     end;
+
+  Application.MessageBox(
+    PChar(IntToStr(GetTickCount-tm)+' msec.'),
+    PChar('Completed in'),
+    MB_OK
+  );
 
   FinishWordGrid(StringGrid1);
   Reset;
