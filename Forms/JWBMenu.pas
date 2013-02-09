@@ -2245,7 +2245,8 @@ begin
   if ps['UserPrior.info']<>nil then
     TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false) else
   begin
-    assignfile(t,'UserPrior.info');
+    tempDir := CreateRandomTempDir();
+    assignfile(t,tempDir+'\UserPrior.info');
     rewrite(t);
     writeln(t,'$TEXTTABLE');
     writeln(t,'$PREBUFFER');
@@ -2261,8 +2262,8 @@ begin
     writeln(t,'Count');
     writeln(t,'$CREATE');
     closefile(t);
-    TUserPrior:=TTextTable.Create(nil,'UserPrior',false,false);
-    DeleteFile('UserPrior.info');
+    TUserPrior:=TTextTable.Create(nil,tempDir+'\UserPrior',false,false);
+    DeleteDirectory(tempDir);
   end;
   TCharIndex:=TChar.Field('Index');
   TCharChinese:=TChar.Field('Chinese');
