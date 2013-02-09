@@ -1,4 +1,4 @@
-unit JWBBalancedTree;
+unit BalancedTree;
 //
 //  Taken from Nicklaus Wirth :
 //    Algorithmen und Datenstrukturen ( in Pascal )

@@ -315,12 +315,12 @@ var sr:tsearchrec;
 function corr(s:string):string;
 var j:integer;
 begin
-  randseed:=FileSysCode+totfsize;
+  encseed:=FileSysCode+totfsize;
   result:='';
   for j:=1 to length(s) do
     case s[j] of
-      'A'..'Z':result:=result+chr(((26+(ord(s[j])-ord('A'))-random(26)) mod 26)+ord('A'));
-      'a'..'z':result:=result+chr(((26+(ord(s[j])-ord('a'))-random(26)) mod 26)+ord('a'));
+      'A'..'Z':result:=result+chr(((26+(ord(s[j])-ord('A'))-encmask(26)) mod 26)+ord('A'));
+      'a'..'z':result:=result+chr(((26+(ord(s[j])-ord('a'))-encmask(26)) mod 26)+ord('a'));
     else result:=result+s[j];
   end;
 end;
@@ -462,10 +462,10 @@ begin
     crch:=0;
     for i:=1 to sizeof(pkghf) do crch:=crch+pkghfarr[i];
     pkghf.headercrc:=crch;
-    randseed:=totfsize+headercode;
+    encseed:=totfsize+headercode;
     move(pkghf,pkghfarr,sizeof(pkghf));
     for i:=sizeof(pkghf) downto 1 do pkghfarr[i*2]:=pkghfarr[i];
-    for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor random(256);
+    for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor encmask(256);
     blockwrite(pkgf,b,1);
     blockwrite(pkgf,pkghfarr,sizeof(pkghfarr));
     totfsize:=totfsize+1+sizeof(pkghfarr);
@@ -477,7 +477,7 @@ begin
         reset(tmpf,1);
       end;
       testlen:=0;
-      randseed:=cryptcode+totfsize;
+      encseed:=cryptcode+totfsize;
       reat:=2000;
       while reat=2000 do
       begin
@@ -493,8 +493,8 @@ begin
           case cryptmode of
             0:begin end;
             1:begin
-                randseed:=cryptcode+random(1000);
-                for i:=1 to 2000 do buf[i]:=buf[i] xor random(256);
+                encseed:=cryptcode+encmask(1000);
+                for i:=1 to 2000 do buf[i]:=buf[i] xor encmask(256);
               end;
             2:for i:=1 to 2000 do buf[i]:=buf[i] xor ((cryptcode*i) mod 256);
             else pkgerr('Unknown crypt mode.',curcmd);
@@ -678,7 +678,7 @@ begin
       except
         closefile(tmpt); pkgerr('Unable to open crypt header file.',cmd); result:=false; exit; end;
       fillchar(pkghs,sizeof(pkghs),0);
-      // fix rnx:=random(16384);
+      // fix rnx:=encmask(16384);
       rnx:=0;
       pkghs.actualstart:=filesize(hdrf)+rnx*2;
       pkghs.pkgtag:=65279;
@@ -689,7 +689,7 @@ begin
       end;
       for i:=1 to rnx do
       begin
-        w:=random(65536);
+        w:=encmask(65536);
         blockwrite(pkgf,w,2);
       end;
       closefile(hdrf);
@@ -826,11 +826,11 @@ begin
       blockwrite(pkgf,pkgft,sizeof(pkgft)) else
     begin
       blockwrite(pkgf,pkghs,sizeof(pkghs));
-      //fix rnx:=random(16384);
+      //fix rnx:=encmask(16384);
       rnx:=0;
       for i:=1 to rnx do
       begin
-        w:=random(65536);
+        w:=encmask(65536);
         if w=65279 then w:=0;
         blockwrite(pkgf,w,2);
       end;
@@ -848,7 +848,7 @@ procedure TPKGWriteForm.FormCreate(Sender: TObject);
 begin
   filenamespecified:=false;
   notshow:=false;
-  randomize;
+//  randomize; //wasn't neeeded and even less needed now that this doesn't use random
 end;
 
 end.

@@ -43,6 +43,16 @@ type
 
 procedure CalculateHuffmanCode(var ha:PKGHuffArray);
 
+{ Encryption mask generation.
+ Originally, package format used standard random() to encrypt data. I don't know
+ how it managed to not be broken in 8 releases of Delphi.
+ I copied the algorithm here so that even if random changes, this stays the same. }
+
+var
+  EncSeed: Longint = 0;    { Base for encryption byte generator }
+
+function EncMask(const ARange: Integer): Integer;
+
 implementation
 
 procedure CalculateHuffmanCode(var ha:PKGHuffArray);
@@ -96,5 +106,39 @@ begin
     dec(actcnt);
   end;
 end;
+
+
+{ Encryption mask generation }
+
+//Previously "random()" by Borland/CodeGear/Embarcaderro.
+//Whatever you change, it must produce exactly the same values given the same seed.
+function EncMask(const ARange: Integer): Integer;
+{$IF DEFINED(CPU386)}
+asm
+{     ->EAX     Range   }
+{     <-EAX     Result  }
+        PUSH    EBX
+{$IFDEF PIC}
+        PUSH    EAX
+        CALL    GetGOT
+        MOV     EBX,EAX
+        POP     EAX
+        MOV     ECX,[EBX].OFFSET EncSeed
+        IMUL    EDX,[ECX],08088405H
+        INC     EDX
+        MOV     [ECX],EDX
+{$ELSE}
+        XOR     EBX, EBX
+        IMUL    EDX,[EBX].EncSeed,08088405H
+        INC     EDX
+        MOV     [EBX].EncSeed,EDX
+{$ENDIF}
+        MUL     EDX
+        MOV     EAX,EDX
+        POP     EBX
+end;
+{$ELSE}
+  {$MESSAGE ERROR 'Random(Int):Int unimplemented'}
+{$IFEND}
 
 end.

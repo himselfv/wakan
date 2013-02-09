@@ -262,7 +262,6 @@ type
     procedure tab2Click(Sender: TObject);
     procedure tab5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure SpeedButton11Click(Sender: TObject);
@@ -390,6 +389,7 @@ type
 
   private
     initdone:boolean;
+    procedure LoadWakanCfg(const filename: string);
   public
     procedure InitializeWakan;
 
@@ -741,11 +741,9 @@ end;
 
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
-  s,sx:string;
+  sx:string;
   vi:TStringList;
   ms:TMemoryStream;
-  conft:textfile;
-  sect:integer;
   i:integer;
   tempDir: string;
   LastModified: TDatetime;
@@ -837,52 +835,7 @@ begin
 
     //Configuration file
     try
-      assignfile(conft,'wakan.cfg');
-      reset(conft);
-      sect:=0;
-      defll.Clear;
-      suffixl.Clear;
-      partl.Clear;
-      romac.Clear;
-      roma_t.Clear;
-      SetLength(romasortl, 0);
-      while not eof(conft) do
-      begin
-        readln(conft,s);
-        if (length(s)>0) and (s[1]<>';') then
-        begin
-          if s[1]='['then
-          begin
-            delete(s,length(s),1);
-            delete(s,1,1);
-            if s='Particles'then sect:=1 else
-            if s='Deflection'then sect:=2 else
-            if s='PinYin'then sect:=4 else
-            if s='CharInfo'then sect:=5 else
-            if s='RomajiSort'then sect:=6 else
-            if s='Suffixes'then sect:=7 else
-            if s='IgnoreWords'then sect:=8 else
-            if s='ReadingChart'then sect:=9 else
-            if s='KnownDictSources' then sect:=10 else
-            sect:=0;
-          end else
-          begin
-           //Some of the fields are in hex unicode, so we have to convert them
-            if sect=1 then partl.Add(hextofstr(s));
-            if sect=2 then defll.Add(s);
-            if sect=4 then AddPinYinRecord(s);
-            if sect=5 then CharPropTypes.Add(s);
-            if sect=6 then AddRomaSortRecord(s);
-            if sect=7 then suffixl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{suffix:fhex}
-            if sect=8 then ignorel.Add(fstr(s));
-            if sect=9 then readchl.Add(copy(s,1,1)+hextofstr(copy(s,2,Length(s)-1))); //Format: {type:char}{reading:fhex}
-            if sect=10 then KnownDictSources.Add(s);
-          end;
-        end;
-      end;
-      closefile(conft);
-      suffixl.Sorted:=true;
-      suffixl.Sort;
+      LoadWakanCfg('wakan.cfg');
     except
       Application.MessageBox(
         pchar(_l('#00352^eCannot load main configuration file.'#13
@@ -1288,9 +1241,63 @@ begin
  { Done. }
 end;
 
-procedure TfMenu.FormShow(Sender: TObject);
+procedure TfMenu.LoadWakanCfg(const filename: string);
+var sl: TStringList;
+  i: integer;
+  ln: string;
+  sect:integer;
 begin
-//  InitializeWakan;
+  defll.Clear;
+  suffixl.Clear;
+  partl.Clear;
+  romac.Clear;
+  roma_t.Clear;
+  SetLength(romasortl, 0);
+
+  sl := TStringList.Create();
+  try
+    sl.LoadFromFile(filename);
+    sect:=0;
+    for i := 0 to sl.Count - 1 do begin
+      ln := sl[i];
+      if (length(ln)>0) and (ln[1]<>';') then
+      begin
+        if ln[1]='['then
+        begin
+          delete(ln,length(ln),1);
+          delete(ln,1,1);
+          if ln='Particles'then sect:=1 else
+          if ln='Deflection'then sect:=2 else
+          if ln='PinYin'then sect:=4 else
+          if ln='CharInfo'then sect:=5 else
+          if ln='RomajiSort'then sect:=6 else
+          if ln='Suffixes'then sect:=7 else
+          if ln='IgnoreWords'then sect:=8 else
+          if ln='ReadingChart'then sect:=9 else
+          if ln='KnownDictSources' then sect:=10 else
+          sect:=0;
+        end else
+        begin
+         //Some of the fields are in hex unicode, so we have to convert them
+          if sect=1 then partl.Add(hextofstr(ln));
+          if sect=2 then defll.Add(ln);
+          if sect=4 then AddPinYinRecord(ln);
+          if sect=5 then CharPropTypes.Add(ln);
+          if sect=6 then AddRomaSortRecord(ln);
+          if sect=7 then suffixl.Add(copy(ln,1,1)+hextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
+          if sect=8 then ignorel.Add(fstr(ln));
+          if sect=9 then readchl.Add(copy(ln,1,1)+hextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
+          if sect=10 then KnownDictSources.Add(ln);
+        end;
+      end;
+    end;
+
+  finally
+    FreeAndNil(sl);
+  end;
+
+  suffixl.Sorted:=true;
+  suffixl.Sort;
 end;
 
 procedure TfMenu.WriteUserPackage(dir:string);

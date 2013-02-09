@@ -9,7 +9,7 @@ balanced binary trees and do everything in a very optimal way.
 {$DEFINE BTREES}
 
 interface
-uses Classes, JWBStrings, JWBBalancedTree;
+uses Classes, JWBStrings, BalancedTree;
 
 {
 Romaji translation table.

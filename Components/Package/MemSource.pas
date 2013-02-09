@@ -12,22 +12,31 @@ const
   MemSource_copy='(C) LABYRINTH 1999-2001';
 
 type
+ { PackageSource hosts a number of MemoryFiles, which will Load data into themselves
+  through PackageSource on demand (and Unload automatically to free memory).
+  Before using TMemoryFile always call Lock: this loads it and binds in memory. }
+
   EMemorySourceError=class(Exception);
-  TMemoryLoadMode=(mlPermanentLoad, mlAutoLoad, mlDemandLoad, mlTemporaryLoad);
+  TMemoryLoadMode=(
+    mlPermanentLoad,    //Load automatically, unload when over Critical memory
+    mlAutoLoad,         //Load automatically, unload when over Recommended memory
+    mlDemandLoad,       //Load on demand and when less than Minimum memory, unload when over Recommended memory
+    mlTemporaryLoad     //Load only on demand, unload when over Minimum memory
+  );
   TMemorySource=class;
 
   TMemoryFile=class
   private
     fLoadMode:TMemoryLoadMode;
     fLoaded:boolean;
-    fLockCount:longint;
+    fLockCount:longint; //File cannot be unloaded when locked
     fSize:longint;
     fFileName:string;
     fParent:TMemoryFile;
   protected
     Source:TMemorySource;
     Locator:variant;
-    Stream:TMemoryStream;
+    Stream:TMemoryStream; //Populated when Loaded
     constructor Create( MSource:TMemorySource; MName:string; MSize:longint;
     const MLocator:variant; MLoadMode:TMemoryLoadMode; MParent:TMemoryFile );
     procedure Load;
@@ -53,7 +62,11 @@ type
   private
     fFiles:TStringList;
     fDirectories:TList;
-    fMemoryUsed,fMemoryFloor,fMemoryLimit,fMemoryCeiling:longint;
+    fMemoryUsed:longint;
+    fMemoryFloor,       //Minimum memory. Try to keep at least this much occupied.
+    fMemoryLimit,       //Recommended memory. Unload non-permanent files when over this.
+    fMemoryCeiling      //Critical memory. Unload everything when over this.
+      :longint;
     fTree:TStringList;
     function GetFile( const Name:string ):TMemoryFile;
     procedure Add( Name:string;BF:TMemoryFile );
@@ -79,7 +92,7 @@ type
 
   TPackageSource=class(TMemorySource)
   private
-    PackageF:file;
+    FSource:TStream;
     fCryptCode,fHeaderCode,fFileSysCode:longint;
     fFileName:string;
     fName:string;
@@ -88,7 +101,8 @@ type
     procedure Fill( MFile:TMemoryFile; Stream:TStream ); override;
   public
     procedure SetCryptCode( MCryptCode:longint );
-    constructor Create( PKGFileName:string; MHeaderCode,MFileSysCode,MCryptCode:longint );
+    constructor Create( ASource: TStream; MHeaderCode,MFileSysCode,MCryptCode:longint ); overload;
+    constructor Create( PKGFileName:string; MHeaderCode,MFileSysCode,MCryptCode:longint ); overload;
     destructor Destroy; override;
     property CryptCode:longint write SetCryptCode;
     property FileName:string read fFileName;
@@ -97,10 +111,17 @@ type
   end;
   TPackageSourceClass=class of TPackageSource;
 
+const
+  DefaultMemoryCeiling=MaxInt;
+   { Ceiling is for unloading important stuff, and with modern OS, it'll page out
+    data as needed by itself. So the best strategy is to never unload what's important. }
+  DefaultMemoryLimit=1024*1024; // 1 MB standard limit
+  DefaultMemoryFloor=0;
+
 procedure PKG_EnableCryptedHeader;
 
 implementation
-uses PackageCommon;
+uses PackageCommon, StreamUtils;
 
 var CryptedHeaderEnabled:boolean;
 
@@ -144,7 +165,7 @@ begin
   Source.Fill(self,Stream);
   Source.fMemoryUsed:=Source.fMemoryUsed+Size;
   fLoaded:=true;
-  if Source.MemoryUsed>Source.MemoryLimit then
+  if Source.MemoryUsed>Source.MemoryLimit then //unload something else
   begin
     //add temporary lock to prevent unloading
     fLockCount:=1;
@@ -195,7 +216,7 @@ function TMemoryFile.Lock:TMemoryStream;
 begin
   if not Loaded then Load;
   fLockCount:=fLockCount+1;
-  Stream.Seek(0,soFromBeginning);
+  Stream.Seek(0,soBeginning);
   result:=Stream;
 end;
 
@@ -242,9 +263,9 @@ end;
 constructor TMemorySource.Create;
 begin
   fMemoryUsed:=0;
-  fMemoryFloor:=0;
-  fMemoryCeiling:=1024*1024*32; // 32 MB standard ceiling
-  fMemoryLimit:=1024*1024; // 1 MB standard limit
+  fMemoryFloor:=DefaultMemoryFloor;
+  fMemoryCeiling:=DefaultMemoryCeiling;
+  fMemoryLimit:=DefaultMemoryLimit;
   fFiles:=TStringList.Create;
   fDirectories:=TList.Create;
   fTree:=TStringList.Create;
@@ -369,9 +390,14 @@ begin
       if LoadMode=mlTemporaryLoad then Refresh;
 end;
 
+
 //      **********   PACKAGE SOURCE   ***********
 
-constructor TPackageSource.Create( PKGFileName:string; MHeaderCode,MFileSysCode,MCryptCode:longint );
+{
+ASource can be OpenRead, we don't write anything to it.
+The ownership is transferred to us, don't do anything with ASource after this call.
+}
+constructor TPackageSource.Create( ASource:TStream; MHeaderCode,MFileSysCode,MCryptCode:longint );
 var ph:PKGHeader;
     pcs:PKGCryptStarter;
     pch:PKGCryptHeader;
@@ -390,52 +416,46 @@ var ph:PKGHeader;
     mf:TMemoryFile;
     s:string;
     cryptedheader:boolean;
-function corr(s:string):string;
-var j:integer;
-begin
-  randseed:=fFileSysCode+totfsize;
-  result:='';
-  for j:=1 to length(s) do
-    case s[j] of
-      'A'..'Z':result:=result+chr((((ord(s[j])-ord('A'))+random(26)) mod 26)+ord('A'));
-      'a'..'z':result:=result+chr((((ord(s[j])-ord('a'))+random(26)) mod 26)+ord('a'));
-    else result:=result+s[j];
+
+  function corr(s:string):string;
+  var j:integer;
+  begin
+    encseed:=fFileSysCode+totfsize;
+    result:='';
+    for j:=1 to length(s) do
+      case s[j] of
+        'A'..'Z':result:=result+chr((((ord(s[j])-ord('A'))+encmask(26)) mod 26)+ord('A'));
+        'a'..'z':result:=result+chr((((ord(s[j])-ord('a'))+encmask(26)) mod 26)+ord('a'));
+      else result:=result+s[j];
+    end;
   end;
-end;
+
 begin
   inherited Create;
   savecurs:=Screen.Cursor;
   Screen.Cursor:=crHourGlass;
   try
-  // open package file and read header
-  assignfile(PackageF,PKGFileName);
-  try
-    filemode:=0;
-    reset(PackageF,1);
-  except
-    raise EMemorySourceError.Create('Unable to open package file '+PKGFileName+'. Error: '+(ExceptObject as Exception).Message);
-  end;
-  blockread(PackageF,ph,sizeof(ph),reat);
+    FSource := ASource;
+  reat := FSource.Read(ph,sizeof(ph));
   if reat<sizeof(ph) then raise EMemorySourceError.Create('Package file is corrupt (#1).');
   if (ph.PKGTag[5]<>'.') and (CryptedHeaderEnabled) then
   begin
     cryptedheader:=true;
-    seek(PackageF,FileSize(PackageF)-sizeof(pcs));
-    blockread(PackageF,pcs,sizeof(pcs),reat);
+    FSource.Seek(sizeof(pcs),soEnd);
+    reat := FSource.Read(pcs,sizeof(pcs));
     if pcs.pkgtag<>65279 then raise EMemorySourceError.Create('Unrecognized package file format.');
-    seek(PackageF,pcs.ActualStart);
-    blockread(PackageF,pch,sizeof(pch),reat);
+    FSource.Seek(pcs.ActualStart,soBeginning);
+    reat := FSource.Read(pch,sizeof(pch));
     if reat<sizeof(pch) then raise EMemorySourceError.Create('Package file is corrupt (#1).');
     if (pch.PKGTag[0]<>'g') then raise EMemorySourceError.Create('Unrecognized package file format.');
     if (pch.PKGTag[1]<>'2') then raise EMemorySourceError.Create('Package file major version is not supported.');
     if (pch.PKGTag[2]<>'1') then raise EMemorySourceError.Create('Package file minor version is not supported.');
     fName:='Confidential';
-    fFileName:=PKGFileName;
     fMemoryLimit:=pch.MemoryLimit;
     fFileSysCode:=MFileSysCode;
     fCryptCode:=MCryptCode;
     fHeaderCode:=MHeaderCode;
-    seek(PackageF,filepos(PackageF)+pch.HeaderLength);
+    FSource.Seek(pch.HeaderLength,soCurrent);
   end else
   begin
     cryptedheader:=false;
@@ -444,28 +464,27 @@ begin
         raise EMemorySourceError.Create('Unrecognized package file format.');
     if (ph.PKGTag[4]<>'2') then raise EMemorySourceError.Create('Package file major version is not supported.');
     if (ph.PKGTag[6]<>'1') then raise EMemorySourceError.Create('Package file minor version is not supported.');
-    fName:=ph.PKGName;
-    fFileName:=PKGFileName;
+    fName:=string(ph.PKGName);
     fMemoryLimit:=ph.MemoryLimit;
     fFileSysCode:=MFileSysCode;
     fCryptCode:=MCryptCode;
     fHeaderCode:=MHeaderCode;
-    seek(PackageF,sizeof(ph)+ph.HeaderLength);
+    FSource.Seek(sizeof(ph)+ph.HeaderLength,soBeginning);
   end;
   // read file headers and register files
-  blockread(PackageF,b,1,reat);
+  reat := FSource.Read(b,1);
   if reat<1 then raise EMemorySourceError.Create('Package file is corrupt (#3).');
   if (b<>125) and (b<>233) then raise EMemorySourceError.Create('Package file is corrupt (#4).');
   totfsize:=123;
-  fActStart:=filepos(PackageF);
+  fActStart:=FSource.Position;
   while b=125 do
   begin
-    totfsize:=123-fActStart+filepos(PackageF);
-    loc:=filepos(PackageF);
-    blockread(PackageF,pkghfarr,sizeof(pkghfarr),reat);
+    totfsize:=123-fActStart+FSource.Position;
+    loc:=FSource.Position;
+    reat := FSource.Read(pkghfarr,sizeof(pkghfarr));
     if reat<sizeof(pkghfarr) then raise EMemorySourceError.Create('Package file is corrupt (#5).');
-    randseed:=totfsize+fHeaderCode;
-    for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor random(256);
+    encseed:=totfsize+fHeaderCode;
+    for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor encmask(256);
     for i:=1 to sizeof(pf) do
       pkghfarr[i]:=pkghfarr[i*2];
     crc:=0;
@@ -474,7 +493,6 @@ begin
     if (crc<>pf.HeaderCRC) then raise EMemorySourceError.Create('Package file is corrupt or incorrect header code.');
     if (pf.PKGtag[0]<>'P') or (pf.PKGtag[1]<>'K') or (pf.PKGtag[2]<>'G') or (pf.PKGtag[3]<>'F') then
       raise EMemorySourceError.Create('Package file is corrupt (#7).');
-    lm:=mlAutoLoad;;
     case pf.LoadMode of
       0:lm:=mlPermanentLoad;
       1:lm:=mlAutoLoad;
@@ -483,42 +501,64 @@ begin
       else raise EMemorySourceError.Create('Unsupported load mode in package file.');
     end;
     if fDirectories.Count<=pf.Directory then EMemorySourceError.Create('Package file is corrupt (#13).');
-    pf.FileName:=corr(pf.FileName); if pf.FileExt<>'*DIR*' then pf.FileExt:=corr(pf.FileExt);
-    if pf.FileExt='*DIR*' then s:=pf.FileName+'\' else s:=pf.FileName+'.'+pf.FileExt;
+    pf.FileName:=corr(string(pf.FileName)); if pf.FileExt<>'*DIR*' then pf.FileExt:=corr(string(pf.FileExt));
+    if pf.FileExt='*DIR*' then s:=string(pf.FileName)+'\' else s:=string(pf.FileName)+'.'+string(pf.FileExt);
     if pf.Directory=0 then
-      mf:=TMemoryFile.Create(self,s,pf.FileLength,loc,lm,nil) else
+      mf:=TMemoryFile.Create(self,s,pf.FileLength,loc,lm,nil)
+    else
       mf:=TMemoryFile.Create(self,s,pf.FileLength,loc,lm,fDirectories[pf.Directory-1]);
     if pf.FileExt='*DIR*' then fDirectories.Add(mf);
-    lng:=0;
     case pf.CRCMode of
       0:lng:=pf.PackedLength;
       1:lng:=pf.PackedLength+(((pf.PackedLength-1) div 2000)+1)*4;
       else raise EMemorySourceError.Create('Unsupported CRC mode in package file.');
     end;
     if pf.FileLength=0 then lng:=0;
-    seek(PackageF,loc+sizeof(pkghfarr)+lng);
-    blockread(PackageF,b,1,reat);
+    FSource.Seek(loc+sizeof(pkghfarr)+lng,soBeginning);
+    reat:=FSource.Read(b,1);
     if reat<1 then raise EMemorySourceError.Create('Package file is corrupt (#3).');
     if (b<>125) and (b<>233) then raise EMemorySourceError.Create('Package file is corrupt (#4).');
   end;
   if not cryptedheader then
   begin
-    blockread(PackageF,pft,sizeof(pft),reat);
+    reat := FSource.Read(pft,sizeof(pft));
     if reat<sizeof(pft) then raise EMemorySourceError.Create('Package file is corrupt (#8).');
     if pft<>'PKGEOF' then raise EMemorySourceError.Create('Package file is corrupt (#9).');
   end;
-  seek(PackageF,0);
+  FSource.Seek(0,soBeginning);
   RefreshAll;
   CreateTree;
   finally
-  Screen.Cursor:=savecurs;
+    Screen.Cursor:=savecurs;
   end;
+end;
+
+//{$DEFINE FULLMEM}
+
+constructor TPackageSource.Create( PKGFileName:string; MHeaderCode,MFileSysCode,MCryptCode:longint );
+var ASource: TStream;
+begin
+  try
+   {$IFDEF FULLMEM}
+    ASource := TMemoryStream.Create;
+    TMemoryStream(ASource).LoadFromFile(PKGFilename);
+   {$ELSE}
+    ASource:= TStreamReader.Create(
+      TFileStream.Create(PKGFilename,fmOpenRead),
+      true);
+    TStreamReader(ASource).ChunkSize := 1024*1024; //1Mb //too much?
+   {$ENDIF}
+  except
+    raise EMemorySourceError.Create('Unable to open package file '+PKGFileName+'. '
+      +'Error: '+(ExceptObject as Exception).Message);
+  end;
+  Create(ASource,MHeaderCode,MFileSysCode,MCryptCode);
+  fFileName:=PKGFileName;
 end;
 
 destructor TPackageSource.Destroy;
 begin
-  if TFileRec(PackageF).Mode<>fmClosed then
-    closefile(PackageF);
+  FreeAndNil(FSource);
   inherited Destroy;
 end;
 
@@ -545,30 +585,30 @@ begin
   if MFile=nil then exit;
   HuffReat:=false;
   HuffWrote:=0;
-  seek(PackageF,longint(MFile.Locator));
+  FSource.Seek(longint(MFile.Locator),soBeginning);
   totfsize:=MFile.Locator-fActStart+123;
-  blockread(PackageF,pkghfarr,sizeof(pkghfarr),reat);
+  reat:=FSource.Read(pkghfarr,sizeof(pkghfarr));
   if reat<sizeof(pkghfarr) then raise EMemorySourceError.Create('Package file is corrupt (#5).');
-  randseed:=totfsize+fHeaderCode;
-  for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor random(256);
+  encseed:=totfsize+fHeaderCode;
+  for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor encmask(256);
   for i:=1 to sizeof(pf) do
     pkghfarr[i]:=pkghfarr[i*2];
   move(pkghfarr,pf,sizeof(pf));
   actread:=0;
   totfsize:=totfsize+1+sizeof(pkghfarr);
-  randseed:=fCryptCode+totfsize;
+  encseed:=fCryptCode+totfsize;
   while actread<pf.PackedLength do
   begin
     curread:=pf.PackedLength-actread;
     if curread>2000 then curread:=2000;
-    blockread(PackageF,buf,curread,reat);
+    reat:=FSource.Read(buf,curread);
     if reat<curread then raise EMemorySourceError.Create('Package file is corrupt (#10).');
     case pf.CRCMode of
       0:begin end;
       1:begin
           crc:=0;
           for i:=1 to curread do crc:=(crc+(buf[i] xor i)) mod 12345678;
-          blockread(PackageF,testcrc,sizeof(testcrc),reat);
+          reat:=FSource.Read(testcrc,sizeof(testcrc));
           if reat<sizeof(testcrc) then raise EMemorySourceError.Create('Package file is corrupt (#11).');
           if testcrc<>crc then raise EMemorySourceError.Create('Package file is corrupt (#12).');
         end;
@@ -577,8 +617,8 @@ begin
     case pf.CryptMode of
       0:begin end;
       1:begin
-          randseed:=fCryptCode+random(1000);
-          for i:=1 to curread do buf[i]:=buf[i] xor random(256);
+          encseed:=fCryptCode+encmask(1000);
+          for i:=1 to curread do buf[i]:=buf[i] xor encmask(256);
         end;
       2:for i:=1 to curread do buf[i]:=buf[i] xor ((fCryptCode*i) mod 256);
       else raise EMemorySourceError.Create('Unsupported crypt mode.');
@@ -727,15 +767,15 @@ begin
     end;
     actread:=actread+curread;
   end;
-  blockread(PackageF,b,1,reat);
+  reat:=FSource.Read(b,1);
   if reat<1 then raise EMemorySourceError.Create('Package file is corrupt (#3).');
   if (b<>125) and (b<>233) then raise EMemorySourceError.Create('Package file is corrupt (#4).');
 end;
 
 procedure TPackageSource.ReadRawData(var x;position,length:integer);
 begin
-  seek(packagef,position+sizeof(pkgfile)*2);
-  blockread(packagef,x,length);
+  FSource.Seek(position+sizeof(pkgfile)*2,soBeginning);
+  FSource.Read(x,length);
 end;
 
 procedure TPackageSource.SetCryptCode( MCryptCode:longint );
