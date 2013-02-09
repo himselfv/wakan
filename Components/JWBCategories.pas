@@ -921,7 +921,7 @@ begin
   end;
 
  //Delete the list we merged
-  FreeMem(KnownList[idxListNo]);
+  FreeKnownList(idxListNo);
 end;
 
 //You are not meant to understand or maintain this code, just worship the gods that revealed it to mankind

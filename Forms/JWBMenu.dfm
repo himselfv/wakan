@@ -1013,7 +1013,7 @@ object fMenu: TfMenu
       OnExecute = aFullscreenModeExecute
     end
     object aCategoryManager: TAction
-      Caption = 'Manage categories'
+      Caption = '#01057^eManage categories'
       OnExecute = aCategoryManagerExecute
     end
   end
@@ -1373,6 +1373,9 @@ object fMenu: TfMenu
       end
       object eListgeneratorcGenertorseznamu1: TMenuItem
         Action = aUserGenerate
+      end
+      object N24: TMenuItem
+        Caption = '-'
       end
       object N14: TMenuItem
         Action = aCategoryManager

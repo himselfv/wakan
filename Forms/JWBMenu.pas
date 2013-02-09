@@ -248,6 +248,7 @@ type
     N27: TMenuItem;
     aCategoryManager: TAction;
     N14: TMenuItem;
+    N24: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);

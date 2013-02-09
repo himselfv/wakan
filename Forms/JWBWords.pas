@@ -227,7 +227,6 @@ var sl:TStringList;
     s:string;
     a:integer;
     cats:string;
-    tm: cardinal;
 
   procedure AddVocabWord(CategoryOrder:boolean);
   var cat_str: string;
@@ -270,8 +269,6 @@ begin
   sl:=TStringList.Create;
   InitWordGrid(StringGrid1,true,false);
 
-  tm := GetTickCount;
-
   if fUserFilters.rgSort.ItemIndex>0 then begin
 
     case fUserFilters.rgSort.ItemIndex of
@@ -304,12 +301,6 @@ begin
         TUserSheet.Next;
       end;
     end;
-
-  Application.MessageBox(
-    PChar(IntToStr(GetTickCount-tm)+' msec.'),
-    PChar('Completed in'),
-    MB_OK
-  );
 
   FinishWordGrid(StringGrid1);
   Reset;
