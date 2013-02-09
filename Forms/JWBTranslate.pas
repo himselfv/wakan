@@ -327,6 +327,7 @@ type
     procedure Execute; override;
   end;
 
+
 var
   fTranslate: TfTranslate;
 
@@ -857,7 +858,7 @@ var i,j,k: integer;
       outp(reading);
     end else
     if AnnotMode=amKanjiWithSpaces then begin
-      outp(kanji+UH_SPACE);
+      outp(UH_SPACE+kanji+UH_SPACE);
     end else
     if (AnnotMode=amRuby) or explicitRuby then begin
      //We don't check that reading is not empty, because if it was empty
@@ -944,7 +945,7 @@ begin
 
        //Ruby break -- if we have some kind of reading
         if inReading and (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces]) then begin
-          Conv_WriteChar(UH_SPACE);
+         //nothing
         end else
         if inReading and (AnnotMode in [amDefault, amRuby]) then begin
           rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
