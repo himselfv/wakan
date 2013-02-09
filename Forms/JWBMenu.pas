@@ -4421,6 +4421,7 @@ begin
     case SaveAsKanaDialog.FilterIndex of
       1: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKana);
       2: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKanjiKana);
+      3: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKanjiWithSpaces);
       //This will not save amKana as FileAnnotMode choice. That is correct.
     end;
 end;

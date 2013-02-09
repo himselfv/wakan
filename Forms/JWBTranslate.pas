@@ -90,6 +90,8 @@ type
       //save as text with generated kana instead of kanji
     amKanjiKana,
       //same, but also include original words
+    amKanjiWithSpaces,
+      //do not replace kanji, but insert spaces
     amRuby
       //load ruby
       //save generated kana as aozora-ruby
@@ -831,7 +833,7 @@ var i,j,k: integer;
   var i: integer;
   begin
     for i := 1 to flength(s) do
-      Conv_WriteChar(fgetch(reading,i));
+      Conv_WriteChar(fgetch(s,i));
   end;
 
   procedure FinalizeRuby();
@@ -853,6 +855,9 @@ var i,j,k: integer;
        //Don't have a reading, write a char (without space)
         reading:=word;
       outp(reading);
+    end else
+    if AnnotMode=amKanjiWithSpaces then begin
+      outp(kanji+UH_SPACE);
     end else
     if (AnnotMode=amRuby) or explicitRuby then begin
      //We don't check that reading is not empty, because if it was empty
@@ -889,7 +894,7 @@ begin
          //and we continue through to the "no inReading" case where we might start a new chain
         end else begin
          //Inside of annotated chain
-          if not (AnnotMode in [amKana, amKanjiKana]) then
+          if not (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces]) then
             Conv_WriteChar(GetDoc(j,i));
          //in amKana we skip chars to be replaced
           continue; //handled this char
@@ -907,7 +912,7 @@ begin
         end;
 
        //Implicit ruby load (if explicit is not loaded -- checked by inReading)
-        if (AnnotMode in [amKana, amKanjiKana, amRuby]) and not inReading then begin
+        if (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces, amRuby]) and not inReading then begin
           GetTextWordInfo(j,i,meaning,reading,kanji);
           inReading := (reading<>'');
           explicitRuby := false;
@@ -938,7 +943,10 @@ begin
         end;
 
        //Ruby break -- if we have some kind of reading
-        if (not (AnnotMode in [amKana, amKanjiKana])) and inReading then begin //We don't write ruby in kana mode at all
+        if inReading and (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces]) then begin
+          Conv_WriteChar(UH_SPACE);
+        end else
+        if inReading and (AnnotMode in [amDefault, amRuby]) then begin
           rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
           if rubyTextBreak=btAuto then
             if j<=0 then
@@ -956,7 +964,7 @@ begin
             Conv_WriteChar(UH_AORUBY_TEXTBREAK);
         end;
 
-        if ((not (AnnotMode in [amKana, amKanjiKana])) or (reading=''))
+        if ((not (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces])) or (reading=''))
         //placeholders are virtual
         and (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER) then
           Conv_WriteChar(GetDoc(j,i));
@@ -1178,7 +1186,7 @@ begin
   end;
 
   //Choose encoding
-  if pos('.WTT',uppercase(SaveTextDialog.FileName))=0 then
+  if pos('.WTT',uppercase(SaveTextDialog.FileName))>0 then
     tp:=FILETYPE_WTT
   else
     tp:=Conv_ChooseType(curlang='c',0);
