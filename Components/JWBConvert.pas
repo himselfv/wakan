@@ -1,7 +1,7 @@
 unit JWBConvert;
 
 interface
-uses JWBStrings;
+uses Classes, JWBStrings;
 
 const
  //Conversion types
@@ -19,6 +19,45 @@ const
   FILETYPE_EUCORSJIS=99;
   FILETYPE_ASCII=98;
   FILETYPE_WTT=255;
+
+type
+  TJwbConvert = class
+  protected
+    FStream: TStream;
+    FEOF: boolean;
+    ftp:byte;
+    buf:array[1..1024] of byte;
+    bufpos:integer;
+    buflen:integer;
+    inp_intwobyte:boolean;
+    function _fread:integer;
+    function _freadw:integer;
+    procedure _rewind;
+    function _detftype(out tp:byte): boolean;
+    function _input(tp:byte):integer;
+    procedure _fwrite(b:byte);
+    procedure _fputstart(tp:byte);
+    procedure _fputend(tp:byte);
+    procedure _output(tp:byte;w:word);
+  public
+    constructor Open(AStream: TStream; tp: byte); overload;
+    constructor Open(const filename: string; tp: byte); overload;
+    destructor Destroy; override;
+    function DetectType: byte;
+    function DetectTypeEx(out tp: byte): boolean;
+    procedure RewindAsType(tp: byte);
+    procedure RewriteAsType(tp: byte);
+    function EOF: boolean;
+    function Read: FString; //reads one char as FString
+    function ReadChar(out ch:FChar): boolean; //reads one char as FChar
+    function ReadLn: FString;
+    procedure Rewind;
+    constructor CreateNew(AStream: TStream; tp: byte); overload;
+    constructor CreateNew(const filename: string; tp: byte); overload;
+    procedure Write(s:FString);
+    procedure WriteChar(s:FChar);
+    procedure Flush;
+  end;
 
 function Conv_DetectType(filename:string):byte;
 function Conv_DetectTypeEx(filename:string; out tp:byte): boolean;
@@ -53,13 +92,6 @@ const IS_EUC=1;
       JIS_SS2=142;         // Half-width katakana marker.
 
 type TUTFArray=array[0..3] of byte;
-
-var f:file;
-    ftp:byte;
-    buf:array[1..1024] of byte;
-    bufpos:integer;
-    buflen:integer;
-    inp_intwobyte:boolean;
 
 function SJIS2JIS(w:word):word;
 var b1,b2,adjust, rowOffset, cellOffset:byte;
@@ -224,39 +256,92 @@ begin
   end;
 end;
 
-procedure _rewind;
+
+{ TJwbConvert }
+
+constructor TJwbConvert.Open(AStream: TStream; tp: byte);
 begin
-  bufpos:=1;
-  buflen:=0;
-  seek(f,0);
+  inherited Create;
+  FStream := AStream;
+  RewindAsType(tp);
+end;
+
+constructor TJwbConvert.Open(const filename: string; tp: byte);
+begin
+  Open(TFileStream.Create(filename, fmOpenRead), tp);
+end;
+
+constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte);
+begin
+  inherited Create;
+  FStream := AStream;
+  FEOF := true; //who cares?
+  RewriteAsType(tp);
+end;
+
+constructor TJwbConvert.CreateNew(const filename: string; tp: byte);
+begin
+  CreateNew(TFileStream.Create(filename,fmCreate), tp);
+end;
+
+destructor TJwbConvert.Destroy;
+begin
+  FreeAndNil(FStream);
+  inherited;
+end;
+
+//Call after determining stream type to start reading
+procedure TJwbConvert.RewindAsType(tp: byte);
+begin
+  _rewind;
+  if (tp=FILETYPE_UTF16LE) or (tp=FILETYPE_UTF16BE) then begin _fread; _fread; end;
+  ftp:=tp;
+end;
+
+//Call to restart the file in the specified encoding
+procedure TJwbConvert.RewriteAsType(tp: byte);
+begin
+  _rewind;
+  if tp=FILETYPE_UTF16LE then begin _fwrite(255); _fwrite(254); end;
+  if tp=FILETYPE_UTF16BE then begin _fwrite(254); _fwrite(255); end;
+  ftp:=tp;
 end;
 
 //Returns -1 if no char is available. It's fine because we return integer.
-function _fread:integer;
+function TJwbConvert._fread:integer;
 begin
   if bufpos>buflen then
   begin
-    if eof(f) then begin
-      result:=-1;
+    buflen := FStream.Read(buf,1024);
+    if buflen<=0 then begin
+      FEOF := true;
+      Result := -1;
       exit;
     end;
-    blockread(f,buf,1024,buflen);
     bufpos:=1;
   end;
   result:=buf[bufpos];
   inc(bufpos);
 end;
 
-function _freadw:integer;
+function TJwbConvert._freadw:integer;
 var b1,b2:integer;
 begin
   b1:=_fread; b2:=_fread;
   if (b1=-1) or (b2=-1) then result:=-1 else result:=b2*256+b1;
 end;
 
+procedure TJwbConvert._rewind;
+begin
+  FEOF := false;
+  bufpos:=1;
+  buflen:=0;
+  FStream.Seek(0,soFromBeginning);
+end;
+
 //Detects file encoding. Returns true if it's truly detected (i.e. through BOM),
 //or false if guessed.
-function _detftype(out tp:byte): boolean;
+function TJwbConvert._detftype(out tp:byte): boolean;
 var i,b,j:integer;
     eucsjis:boolean;
     asciionly:boolean;
@@ -381,7 +466,7 @@ begin
 end;
 
 //Returns -1 if no char is available. It's fine because we return integer.
-function _input(tp:byte):integer;
+function TJwbConvert._input(tp:byte):integer;
 var i,i2,i3:integer;
 begin
   Result := -1;
@@ -473,18 +558,18 @@ begin
   end; //of while true
 end;
 
-procedure _fwrite(b:byte);
+procedure TJwbConvert._fwrite(b:byte);
 begin
   if bufpos>buflen then
   begin
-    blockwrite(f,buf,bufpos-1);
+    FStream.Write(buf,bufpos-1);
     bufpos:=1;
   end;
   buf[bufpos]:=b;
   inc(bufpos);
 end;
 
-procedure _fputstart(tp:byte);
+procedure TJwbConvert._fputstart(tp:byte);
 begin
   if inp_intwobyte then exit;
   inp_intwobyte:=true;
@@ -496,7 +581,7 @@ begin
   end;
 end;
 
-procedure _fputend(tp:byte);
+procedure TJwbConvert._fputend(tp:byte);
 begin
   if not inp_intwobyte then exit;
   inp_intwobyte:=false;
@@ -508,7 +593,7 @@ begin
   end;
 end;
 
-procedure _output(tp:byte;w:word);
+procedure TJwbConvert._output(tp:byte;w:word);
 var i:integer;
 begin
   case tp of
@@ -565,42 +650,27 @@ begin
   end;
 end;
 
-function Conv_DetectType(filename:string):byte;
+function TJwbConvert.DetectType: byte;
 begin
-  assignfile(f,filename);
-  reset(f,1);
   _rewind;
   _detftype(result);
-  closefile(f);
 end;
 
 //Makes a guess about file encoding, and returns true if it's a sure thing (i.e. there's BOM).
-function Conv_DetectTypeEx(filename:string; out tp:byte): boolean;
+function TJwbConvert.DetectTypeEx(out tp: byte): boolean;
 begin
-  assignfile(f,filename);
-  reset(f,1);
   _rewind;
   Result:=_detftype(tp);
-  closefile(f);
-end;
-
-procedure Conv_Open(filename:string; tp:byte);
-begin
-  assignfile(f,filename);
-  reset(f,1);
-  _rewind;
-  if (tp=FILETYPE_UTF16LE) or (tp=FILETYPE_UTF16BE) then begin _fread; _fread; end;
-  ftp:=tp;
 end;
 
 //Since Conv_ReadChar might legitimately return FFFF, check this before deciding file's over.
-function Conv_EOF:boolean;
+function TJwbConvert.EOF: boolean;
 begin
-  Result := eof(f) and (bufpos >= buflen);
+  Result := FEOF;
 end;
 
 //Reads one char as FString or returns empty string
-function Conv_Read:FString;
+function TJwbConvert.Read: FString;
 var i:integer;
 begin
   i:=_input(ftp);
@@ -612,7 +682,7 @@ begin
 end;
 
 //Reads one char as char or returns false
-function Conv_ReadChar(out ch:FChar): boolean;
+function TJwbConvert.ReadChar(out ch:FChar): boolean;
 var i: integer;
 begin
  {$IFDEF UNICODE}
@@ -626,7 +696,7 @@ begin
  {$ENDIF}
 end;
 
-function Conv_ReadLn:FString;
+function TJwbConvert.ReadLn: FString;
 var c: FChar;
 begin
   Result := '';
@@ -636,17 +706,24 @@ begin
   end;
 end;
 
-procedure Conv_Create(filename:string; tp:byte);
+procedure TJwbConvert.Rewind;
 begin
-  assignfile(f,filename);
-  rewrite(f,1);
   _rewind;
-  if tp=FILETYPE_UTF16LE then begin _fwrite(255); _fwrite(254); end;
-  if tp=FILETYPE_UTF16BE then begin _fwrite(254); _fwrite(255); end;
-  ftp:=tp;
+ //Skip BOM if present
+  case ftp of
+    FILETYPE_UTF16LE:
+      if (_fread<>$ff) or (_fread<>$fe) then
+        _rewind;
+    FILETYPE_UTF16BE:
+      if (_fread<>$fe) or (_fread<>$ff) then
+        _rewind;
+    FILETYPE_UTF8:
+      if (_fread<>$ef) or (_fread<>$bb) or (_fread<>$bf) then
+        _rewind;
+  end;
 end;
 
-procedure Conv_Write(s:FString);
+procedure TJwbConvert.Write(s:FString);
 {$IFNDEF UNICODE}
 var s2:FString;
 {$ENDIF}
@@ -668,7 +745,7 @@ begin
   end;
 end;
 
-procedure Conv_WriteChar(s:FChar);
+procedure TJwbConvert.WriteChar(s:FChar);
 begin
  {$IFDEF UNICODE}
   _output(ftp, Word(s));
@@ -677,37 +754,95 @@ begin
  {$ENDIF}
 end;
 
-procedure Conv_Rewind;
+procedure TJwbConvert.Flush;
 begin
-  _rewind;
- //Skip BOM if present
-  case ftp of
-    FILETYPE_UTF16LE:
-      if (_fread<>$ff) or (_fread<>$fe) then
-        _rewind;
-    FILETYPE_UTF16BE:
-      if (_fread<>$fe) or (_fread<>$ff) then
-        _rewind;
-    FILETYPE_UTF8:
-      if (_fread<>$ef) or (_fread<>$bb) or (_fread<>$bf) then
-        _rewind;
+  FStream.Write(buf,bufpos-1)
+end;
+
+
+var
+  DefaultConvert: TJwbConvert;
+
+function Conv_DetectType(filename:string):byte;
+begin
+  DefaultConvert := TJwbConvert.Open(filename, FILETYPE_UNKNOWN);
+  try
+    Result := DefaultConvert.DetectType;
+  finally
+    FreeAndNil(DefaultConvert);
   end;
 end;
 
-procedure Conv_Flush;
+function Conv_DetectTypeEx(filename:string; out tp:byte): boolean;
 begin
-  blockwrite(f,buf,bufpos-1);
+  DefaultConvert := TJwbConvert.Open(filename, FILETYPE_UNKNOWN);
+  try
+    Result := DefaultConvert.DetectTypeEx(tp);
+  finally
+    FreeAndNil(DefaultConvert);
+  end;
+end;
+
+procedure Conv_Open(filename:string; tp:byte);
+begin
+  DefaultConvert := TJwbConvert.Open(filename, tp);
+end;
+
+function Conv_EOF:boolean;
+begin
+  Result := DefaultConvert.EOF;
+end;
+
+function Conv_Read:FString;
+begin
+  Result := DefaultConvert.Read;
+end;
+
+function Conv_ReadChar(out ch:FChar): boolean;
+begin
+  Result := DefaultConvert.ReadChar(ch);
+end;
+
+function Conv_ReadLn:FString;
+begin
+  Result := DefaultConvert.ReadLn;
+end;
+
+procedure Conv_Create(filename:string; tp:byte);
+begin
+  DefaultConvert := TJwbConvert.CreateNew(filename, tp);
+end;
+
+procedure Conv_Write(s:FString);
+begin
+  DefaultConvert.Write(s);
+end;
+
+procedure Conv_WriteChar(s:FChar);
+begin
+  DefaultConvert.WriteChar(s);
 end;
 
 function Conv_IsOpen: boolean;
 begin
-  Result := TFileRec(f).Mode<>fmClosed;
+  Result := DefaultConvert<>nil;
 end;
 
 procedure Conv_Close;
 begin
-  closefile(f);
+  FreeAndNil(DefaultConvert);
 end;
+
+procedure Conv_Flush;
+begin
+  DefaultConvert.Flush;
+end;
+
+procedure Conv_Rewind;
+begin
+  DefaultConvert.Rewind;
+end;
+
 
 function Conv_ChooseType(chinese:boolean; def:byte):byte;
 begin

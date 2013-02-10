@@ -635,7 +635,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
-  JWBPortableMode, JWBCategoryMgr;
+  JWBPortableMode, JWBCategoryMgr, StreamUtils;
 
 {$R *.DFM}
 
@@ -4418,11 +4418,34 @@ begin
       pchar(_l('#00364^eNotice')),
       MB_ICONINFORMATION or MB_OK);
   if SaveAsKanaDialog.Execute then
+   //TODO: Do not create everything at once. If the user cancels ChooseType,
+   //  TStreamWriter will remain undestroyed
     case SaveAsKanaDialog.FilterIndex of
-      1: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKana);
-      2: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKanjiKana);
-      3: fTranslate.SaveToFile(SaveAsKanaDialog.FileName,Conv_ChooseType(false,0),amKanjiWithSpaces);
-      //This will not save amKana as FileAnnotMode choice. That is correct.
+      1: fTranslate.SaveToFile('',0,amKana,
+        TKanaOnlyFormat.Create(
+          TJwbConvert.CreateNew(
+            TStreamWriter.Create(
+              TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
+              true
+            ),
+            Conv_ChooseType(false,0)
+          ),
+          true)
+        );
+      2: fTranslate.SaveToFile('',0,amKana,
+       TKanjiKanaFormat.Create(
+          TJwbConvert.CreateNew(
+            TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
+            Conv_ChooseType(false,0)
+          ))
+        );
+      3: fTranslate.SaveToFile('',0,amKana,
+       TKanjiOnlyFormat.Create(
+          TJwbConvert.CreateNew(
+            TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
+            Conv_ChooseType(false,0)
+          ))
+        );
     end;
 end;
 

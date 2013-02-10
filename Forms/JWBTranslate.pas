@@ -44,7 +44,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
-  JWBDicSearch;
+  JWBDicSearch, JWBConvert;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -88,10 +88,6 @@ type
     amKana,
       //do not load ruby
       //save as text with generated kana instead of kanji
-    amKanjiKana,
-      //same, but also include original words
-    amKanjiWithSpaces,
-      //do not replace kanji, but insert spaces
     amRuby
       //load ruby
       //save generated kana as aozora-ruby
@@ -105,6 +101,8 @@ type
 
   TTranslationThread = class;
   TTranslationThreads = array of TTranslationThread;
+
+  TTextSaveFormat = class;
 
   TfTranslate = class(TForm)
     Shape10: TShape;
@@ -288,14 +286,14 @@ type
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
     procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    procedure SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
     procedure LoadWakanText(const filename:string);
     procedure SaveWakanText(const filename:string);
   public //File open/save
     procedure ClearEditor;
     procedure OpenAnyFile(filename:string);
     procedure OpenFile(filename:string;tp:byte);
-    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
     function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
@@ -327,6 +325,39 @@ type
     procedure Execute; override;
   end;
 
+  TTextSaveFormat = class
+  protected
+    FStream: TJwbConvert;
+    LastChar: FChar;
+    AtSpace: boolean;
+    AtNewline: boolean;
+  public
+    constructor Create(AStream: TJwbConvert);
+    destructor Destroy; override;
+    procedure BeginDocument; virtual;
+    procedure AddChars(const s: FString); virtual;
+    procedure AddWord(const word,reading: FString; const meaning: string); virtual;
+    procedure EndDocument; virtual;
+  end;
+
+  TKanaOnlyFormat = class(TTextSaveFormat)
+  protected
+    FAddSpaces: boolean;
+  public
+    constructor Create(AStream: TJwbConvert; AAddSpaces: boolean);
+    procedure AddWord(const word,reading: FString; const meaning: string); override;
+  end;
+
+  TKanjiOnlyFormat = class(TTextSaveFormat)
+  public
+    procedure AddWord(const word,reading: FString; const meaning: string); override;
+  end;
+
+  TKanjiKanaFormat = class(TTextSaveFormat)
+  public
+    procedure AddWord(const word,reading: FString; const meaning: string); override;
+  end;
+
 
 var
   fTranslate: TfTranslate;
@@ -339,7 +370,7 @@ const
 implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
-  JWBSettings, JWBPrint, JWBConvert, StdPrompt, JWBUnit,
+  JWBSettings, JWBPrint, StdPrompt, JWBUnit,
   JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers,
   JWBUserData;
 
@@ -438,6 +469,73 @@ begin
 end;
 
 
+constructor TTextSaveFormat.Create(AStream: TJwbConvert);
+begin
+  inherited Create;
+  FStream := AStream;
+end;
+
+destructor TTextSaveFormat.Destroy;
+begin
+  FreeAndNil(FStream);
+  inherited;
+end;
+
+procedure TTextSaveFormat.BeginDocument;
+begin
+end;
+
+procedure TTextSaveFormat.EndDocument;
+begin
+end;
+
+procedure TTextSaveFormat.AddChars(const s: FString);
+var i: integer;
+begin
+  for i := 1 to flength(s) do begin
+    LastChar := fgetch(s,i);
+    FStream.Write(LastChar);
+    AtSpace := LastChar=UH_SPACE;
+    AtNewline := LastChar=UH_LF;
+  end;
+end;
+
+procedure TTextSaveFormat.AddWord(const word,reading: FString; const meaning: string);
+begin
+  AddChars(word);
+end;
+
+constructor TKanaOnlyFormat.Create(AStream: TJwbConvert;AAddSpaces:boolean);
+begin
+  inherited Create(AStream);
+  FAddSpaces := AAddSpaces;
+end;
+
+procedure TKanaOnlyFormat.AddWord(const word,reading: FString; const meaning: string);
+begin
+  if FAddSpaces and not (AtSpace or AtNewline) then
+    AddChars(UH_SPACE+reading+UH_SPACE)
+  else
+    AddChars(reading);
+end;
+
+procedure TKanjiOnlyFormat.AddWord(const word,reading: FString; const meaning: string);
+begin
+  if not (AtSpace or AtNewline) then
+    AddChars(UH_SPACE+word+UH_SPACE)
+  else
+    AddChars(word);
+end;
+
+procedure TKanjiKanaFormat.AddWord(const word,reading: FString; const meaning: string);
+begin
+  if not (AtSpace or AtNewline) then
+    AddChars(UH_SPACE);
+  if reading<>'' then
+    AddChars(word+UH_SPACE+reading+UH_SPACE)
+  else
+    AddChars(word); //without space if no reading
+end;
 
 procedure TfTranslate.FormCreate(Sender: TObject);
 begin
@@ -597,13 +695,16 @@ end;
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
-procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
 begin
   Screen.Cursor:=crHourGlass;
+  if format<>nil then
+    SaveText(filename,tp,AnnotMode,format)
+  else
   if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
     SaveWakanText(filename)
   else
-    SaveText(filename,tp,AnnotMode);
+    SaveText(filename,tp,AnnotMode,format);
   Screen.Cursor:=crDefault;
   FileChanged:=false;
 end;
@@ -821,7 +922,7 @@ Ruby saving strategy:
 //Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
 //and just write strings here.
 
-procedure TfTranslate.SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+procedure TfTranslate.SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
@@ -833,32 +934,18 @@ var i,j,k: integer;
   procedure outp(s: FString);
   var i: integer;
   begin
-    for i := 1 to flength(s) do
-      Conv_WriteChar(fgetch(s,i));
+    if format<>nil then
+      format.AddChars(s)
+    else
+      for i := 1 to flength(s) do
+        Conv_WriteChar(fgetch(s,i));
   end;
 
   procedure FinalizeRuby();
   var word: string;
   begin
-    if AnnotMode=amKana then begin
-      if reading<>'' then
-        reading:=UH_SPACE+reading
-      else
-       //Don't have a reading, write a char (maybe we didn't want it expanded)
-        reading:=UH_SPACE+GetDoc(j,i);
-      outp(reading);
-    end else
-    if AnnotMode=amKanjiKana then begin
-      word := kanji;
-      if reading<>'' then
-        reading:=word+UH_SPACE+reading+UH_SPACE
-      else
-       //Don't have a reading, write a char (without space)
-        reading:=word;
-      outp(reading);
-    end else
-    if AnnotMode=amKanjiWithSpaces then begin
-      outp(UH_SPACE+kanji+UH_SPACE);
+    if format<>nil then begin
+      format.AddWord(kanji,reading,meaning);
     end else
     if (AnnotMode=amRuby) or explicitRuby then begin
      //We don't check that reading is not empty, because if it was empty
@@ -878,7 +965,10 @@ begin
   rootLen := -1;
   explicitRuby := true;
 
-  Conv_Create(filename,tp);
+  if format<>nil then
+    format.BeginDocument
+  else
+    Conv_Create(filename,tp);
   for i:=0 to doc.Count-1 do
   begin
     for j:=0 to flength(doc[i])-1 do
@@ -895,8 +985,8 @@ begin
          //and we continue through to the "no inReading" case where we might start a new chain
         end else begin
          //Inside of annotated chain
-          if not (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces]) then
-            Conv_WriteChar(GetDoc(j,i));
+          if not (AnnotMode in [amKana]) then
+            outp(GetDoc(j,i));
          //in amKana we skip chars to be replaced
           continue; //handled this char
         end;
@@ -913,7 +1003,7 @@ begin
         end;
 
        //Implicit ruby load (if explicit is not loaded -- checked by inReading)
-        if (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces, amRuby]) and not inReading then begin
+        if (AnnotMode in [amKana, amRuby]) and not inReading then begin
           GetTextWordInfo(j,i,meaning,reading,kanji);
           inReading := (reading<>'');
           explicitRuby := false;
@@ -944,7 +1034,7 @@ begin
         end;
 
        //Ruby break -- if we have some kind of reading
-        if inReading and (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces]) then begin
+        if inReading and (AnnotMode in [amKana]) then begin
          //nothing
         end else
         if inReading and (AnnotMode in [amDefault, amRuby]) then begin
@@ -962,24 +1052,29 @@ begin
               else
                 rubyTextBreak := btSkip;
           if rubyTextBreak=btBreak then
-            Conv_WriteChar(UH_AORUBY_TEXTBREAK);
+            outp(UH_AORUBY_TEXTBREAK)
         end;
 
-        if ((not (AnnotMode in [amKana, amKanjiKana, amKanjiWithSpaces])) or (reading=''))
+        if ((not (AnnotMode in [amKana])) or (reading=''))
         //placeholders are virtual
         and (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER) then
-          Conv_WriteChar(GetDoc(j,i));
+          outp(GetDoc(j,i));
       end;
 
     end;
 
     if inReading then
       FinalizeRuby;
-    Conv_WriteChar(UH_CR);
-    Conv_Write(UH_LF);
+    outp(UH_CR+UH_LF);
   end;
-  Conv_Flush;
-  Conv_Close;
+
+  if format<>nil then begin
+    format.EndDocument;
+    FreeAndNil(format);
+  end else begin
+    Conv_Flush;
+    Conv_Close;
+  end;
 end;
 
 //TODO: Test Unicode conversion
