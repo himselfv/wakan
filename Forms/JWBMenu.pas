@@ -4430,18 +4430,14 @@ begin
     TStreamWriter.Create(
       TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
       true
-    ),
-    enctype
-  );
+    ), enctype);
   try
 
-   //TODO: Do not create everything at once. If the user cancels ChooseType,
-   //  TStreamWriter will remain undestroyed
     case SaveAsKanaDialog.FilterIndex of
-      1: fTranslate.SaveToFile('',0,amKana,TKanaOnlyFormat.Create(encode,true));
-      2: fTranslate.SaveToFile('',0,amKana,TKanjiKanaFormat.Create(encode));
-      3: fTranslate.SaveToFile('',0,amKana,TKanjiOnlyFormat.Create(encode));
-      4: fTranslate.SaveToFile('',0,amKana,THtmlFormat.Create(encode,[hoHtml5],'utf-8'));
+      1: fTranslate.SaveText(amRuby,TKanaOnlyFormat.Create(encode,true));
+      2: fTranslate.SaveText(amRuby,TKanjiKanaFormat.Create(encode));
+      3: fTranslate.SaveText(amRuby,TKanjiOnlyFormat.Create(encode));
+      4: fTranslate.SaveText(amRuby,THtmlFormat.Create(encode,[hoHtml5],'utf-8'));
     end;
     encode := nil;
 

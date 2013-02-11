@@ -85,9 +85,6 @@ type
     amDefault,
       //do not load ruby
       //save only those annotations which were loaded from ruby
-    amKana,
-      //do not load ruby
-      //save as text with generated kana instead of kanji
     amRuby
       //load ruby
       //save generated kana as aozora-ruby
@@ -286,14 +283,14 @@ type
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
     procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    procedure SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
     procedure LoadWakanText(const filename:string);
     procedure SaveWakanText(const filename:string);
   public //File open/save
     procedure ClearEditor;
     procedure OpenAnyFile(filename:string);
     procedure OpenFile(filename:string;tp:byte);
-    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
+    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat);
     function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
@@ -336,7 +333,8 @@ type
     destructor Destroy; override;
     procedure BeginDocument; virtual;
     procedure AddChars(const s: FString); virtual;
-    procedure AddWord(const word,reading: FString; const meaning: string); virtual;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); virtual;
     procedure EndDocument; virtual;
   end;
 
@@ -345,17 +343,20 @@ type
     FAddSpaces: boolean;
   public
     constructor Create(AStream: TJwbConvert; AAddSpaces: boolean);
-    procedure AddWord(const word,reading: FString; const meaning: string); override;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
   end;
 
   TKanjiOnlyFormat = class(TTextSaveFormat)
   public
-    procedure AddWord(const word,reading: FString; const meaning: string); override;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
   end;
 
   TKanjiKanaFormat = class(TTextSaveFormat)
   public
-    procedure AddWord(const word,reading: FString; const meaning: string); override;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
   end;
 
   THtmlFormatOption = (
@@ -373,9 +374,16 @@ type
     constructor Create(AStream: TJwbConvert; AOptions: THtmlFormatOptions; ACharset: string);
     procedure BeginDocument; override;
     procedure AddChars(const s: FString); override;
-    procedure AddWord(const word,reading: FString; const meaning: string); override;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
     procedure EndDocument; override;
     property Options: THtmlFormatOptions read FOptions write FOptions;
+  end;
+
+  TRubyTextFormat = class(TTextSaveFormat)
+  public
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
   end;
 
 
@@ -392,7 +400,7 @@ implementation
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
   JWBSettings, JWBPrint, StdPrompt, JWBUnit,
   JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers,
-  JWBUserData;
+  JWBUserData, StreamUtils;
 
 {$R *.DFM}
 
@@ -493,6 +501,9 @@ constructor TTextSaveFormat.Create(AStream: TJwbConvert);
 begin
   inherited Create;
   FStream := AStream;
+  AtSpace := false;
+  AtNewline := true;
+  LastChar := UH_NOCHAR;
 end;
 
 destructor TTextSaveFormat.Destroy;
@@ -520,7 +531,10 @@ begin
   end;
 end;
 
-procedure TTextSaveFormat.AddWord(const word,reading: FString; const meaning: string);
+{ Word cannot be empty because there's "no word". If it's empty, don't be smart
+ about it: print empty line. }
+procedure TTextSaveFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
 begin
   AddChars(word);
 end;
@@ -531,7 +545,8 @@ begin
   FAddSpaces := AAddSpaces;
 end;
 
-procedure TKanaOnlyFormat.AddWord(const word,reading: FString; const meaning: string);
+procedure TKanaOnlyFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
 begin
   if FAddSpaces and not (AtSpace or AtNewline) then
     AddChars(UH_SPACE+reading+UH_SPACE)
@@ -539,7 +554,8 @@ begin
     AddChars(reading);
 end;
 
-procedure TKanjiOnlyFormat.AddWord(const word,reading: FString; const meaning: string);
+procedure TKanjiOnlyFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
 begin
   if not (AtSpace or AtNewline) then
     AddChars(UH_SPACE+word+UH_SPACE)
@@ -547,7 +563,8 @@ begin
     AddChars(word);
 end;
 
-procedure TKanjiKanaFormat.AddWord(const word,reading: FString; const meaning: string);
+procedure TKanjiKanaFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
 begin
   if not (AtSpace or AtNewline) then
     AddChars(UH_SPACE);
@@ -627,21 +644,21 @@ begin
   FStream.Write(tmp);
 end;
 
-procedure THtmlFormat.AddWord(const word,reading: FString; const meaning: string);
+procedure THtmlFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
 begin
  { Up to two nested ruby brackets, as defined in
   http://www.w3.org/TR/html5/text-level-semantics.html#the-ruby-element }
-  if (word<>'') and (reading<>'') then begin
+  if reading<>'' then begin
     if meaning<>'' then
       outp('<ruby title="'+HTMLEncode3(meaning)+'">')
+    else
+      outp('<ruby>');
   end else
   if meaning<>'' then
     outp('<span title="'+HTMLEncode3(meaning)+'">');
 
-  if word<>'' then
-    FStream.Write(HTMLEncode3(word))
-  else
-    FStream.Write(HTMLEncode3(reading));
+  FStream.Write(HTMLEncode3(word));
 
   if (word<>'') and (reading<>'') then begin
     outp('<rt>');
@@ -656,6 +673,36 @@ procedure THtmlFormat.EndDocument;
 begin
   outpln('</p></body></html>');
 end;
+
+procedure TRubyTextFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
+begin
+  if rubyTextBreak=btAuto then
+    if AtNewline then
+      rubyTextBreak := btSkip //first char in a line
+    else
+    if flength(word)<1 then
+      rubyTextBreak := btBreak //empty base requires break
+    else
+    if EvalChar(fgetch(word,1))=EvalChar(LastChar) then
+      rubyTextBreak := btBreak //break when there are two characters of the same type in a row
+    else
+    if EvalChars(word) and not (1 shl EC_IDG_CHAR) <> 0 then
+      rubyTextBreak := btBreak //break when there's something other than kanji in the line,
+      //such as 髪の毛 -- or ruby will be applied only to 毛
+    else
+      rubyTextBreak := btSkip;
+  if rubyTextBreak=btBreak then
+    FStream.Write(UH_AORUBY_TEXTBREAK+word)
+  else
+    FStream.Write(word);
+
+ //We don't check that reading is not empty, because if it was empty
+ //we wouldn't have set inReading, except if it was explicit ruby,
+ //in which case we must write it even if empty.
+  FStream.Write(UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE);
+end;
+
 
 procedure TfTranslate.FormCreate(Sender: TObject);
 begin
@@ -815,20 +862,23 @@ end;
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
-procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
+procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+var encode: TJwbConvert;
 begin
   Screen.Cursor:=crHourGlass;
-  if format<>nil then
-    SaveText(filename,tp,AnnotMode,format)
-  else
   if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
     SaveWakanText(filename)
-  else
-    SaveText(filename,tp,AnnotMode,format);
+  else begin
+    encode := TJwbConvert.CreateNew(
+      TStreamWriter.Create(
+        TFileStream.Create(filename,fmCreate),
+        true
+      ), tp);
+    SaveText(AnnotMode,TRubyTextFormat.Create(encode));
+  end;
   Screen.Cursor:=crDefault;
   FileChanged:=false;
 end;
-
 
 //Receives a string of characters and their properties.
 //Parses all aozora-ruby sequences and converts them to annotations, removing from the line
@@ -1042,7 +1092,7 @@ Ruby saving strategy:
 //Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
 //and just write strings here.
 
-procedure TfTranslate.SaveText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode; format: TTextSaveFormat = nil);
+procedure TfTranslate.SaveText(AnnotMode:TTextAnnotMode;format: TTextSaveFormat);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
@@ -1052,28 +1102,16 @@ var i,j,k: integer;
   explicitRuby: boolean;
 
   procedure outp(s: FString);
-  var i: integer;
   begin
-    if format<>nil then
-      format.AddChars(s)
-    else
-      for i := 1 to flength(s) do
-        Conv_WriteChar(fgetch(s,i));
+    format.AddChars(s)
   end;
 
   procedure FinalizeRuby();
   begin
-    if format<>nil then begin
-      format.AddWord(kanji,reading,meaning);
-    end else
-    if (AnnotMode=amRuby) or explicitRuby then begin
-     //We don't check that reading is not empty, because if it was empty
-     //we wouldn't have set inReading, except if it was explicit ruby,
-     //in which case we must write it even if empty.
-      reading := UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE;
-      outp(reading);
-    end else
-      Conv_WriteChar(GetDoc(j,i));
+    if (AnnotMode=amRuby) or explicitRuby then
+      format.AddWord(kanji,reading,meaning,rubyTextBreak)
+    else
+      format.AddChars(kanji);
     inReading := false;
     reading := '';
     explicitRuby := false;
@@ -1084,10 +1122,7 @@ begin
   rootLen := -1;
   explicitRuby := true;
 
-  if format<>nil then
-    format.BeginDocument
-  else
-    Conv_Create(filename,tp);
+  format.BeginDocument;
   for i:=0 to doc.Count-1 do
   begin
     for j:=0 to flength(doc[i])-1 do
@@ -1103,26 +1138,25 @@ begin
           FinalizeRuby;
          //and we continue through to the "no inReading" case where we might start a new chain
         end else begin
-         //Inside of annotated chain
-          if not (AnnotMode in [amKana]) then
-            outp(GetDoc(j,i));
-         //in amKana we skip chars to be replaced
-          continue; //handled this char
+         //Inside of annotated chain -- skip the symbols.
+         //We got them into "kanji" from GetDocChain() or GetTextWordInfo() when we first encountered this chain.
         end;
-      end; //yep, no 'else'!
+      end; //yep, no 'else'
 
       if not inReading then begin
        //Explicit ruby load, even if ruby's empty
         if cfExplicitRuby in doctr[i].chars[j].flags then begin
           reading := doctr[i].chars[j].ruby;
           kanji := GetDocChain(j,i);
+          if kanji=UH_RUBY_PLACEHOLDER then //there can be only one placeholder
+            kanji:='';
           inReading := true;
           explicitRuby := true;
           rootLen := -1;
         end;
 
        //Implicit ruby load (if explicit is not loaded -- checked by inReading)
-        if (AnnotMode in [amKana, amRuby]) and not inReading then begin
+        if (AnnotMode=amRuby) and not inReading then begin
           GetTextWordInfo(j,i,meaning,reading,kanji);
           inReading := (reading<>'');
           explicitRuby := false;
@@ -1153,33 +1187,12 @@ begin
         end;
 
        //Ruby break -- if we have some kind of reading
-        if inReading and (AnnotMode in [amKana]) then begin
-         //nothing
-        end else
-        if inReading and (AnnotMode in [amDefault, amRuby]) then begin
+        if inReading then
           rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
-          if rubyTextBreak=btAuto then
-            if j<=0 then
-              rubyTextBreak := btSkip //first char in a line
-            else
-              if EvalChar(GetDoc(j,i))=EvalChar(GetDoc(j-1,i)) then
-                rubyTextBreak := btBreak //break when there are two characters of the same type in a row
-              else
-              if EvalChars(kanji) and not (1 shl EC_IDG_CHAR) <> 0 then
-                rubyTextBreak := btBreak //break when there's something other than kanji in the line,
-                //such as 髪の毛 -- or ruby will be applied only to 毛
-              else
-                rubyTextBreak := btSkip;
-          if rubyTextBreak=btBreak then
-            outp(UH_AORUBY_TEXTBREAK)
-        end;
-
-        if ((not (AnnotMode in [amKana])) or (reading=''))
-        //placeholders are virtual
-        and (GetDoc(j,i)<>UH_RUBY_PLACEHOLDER) then
-          outp(GetDoc(j,i));
       end;
 
+      if not inReading then
+        outp(GetDoc(j,i));
     end;
 
     if inReading then
@@ -1187,13 +1200,8 @@ begin
     outp(UH_CR+UH_LF);
   end;
 
-  if format<>nil then begin
-    format.EndDocument;
-    FreeAndNil(format);
-  end else begin
-    Conv_Flush;
-    Conv_Close;
-  end;
+  format.EndDocument;
+  FreeAndNil(format);
 end;
 
 //TODO: Test Unicode conversion
