@@ -1161,6 +1161,8 @@
 01055>%s: %d items
 01056>%s - Copy
 01057>Manage categories
+01058>Export as...
+01059>Copy as...
 ;
 ;
 ; EDICT markers.

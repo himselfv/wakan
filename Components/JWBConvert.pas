@@ -24,6 +24,7 @@ type
   TJwbConvert = class
   protected
     FStream: TStream;
+    FOwnsStream: boolean;
     FEOF: boolean;
     ftp:byte;
     buf:array[1..1024] of byte;
@@ -57,6 +58,7 @@ type
     procedure Write(s:FString);
     procedure WriteChar(s:FChar);
     procedure Flush;
+    property OwnsStream: boolean read FOwnsStream write FOwnsStream;
   end;
 
 function Conv_DetectType(filename:string):byte;
@@ -263,6 +265,7 @@ constructor TJwbConvert.Open(AStream: TStream; tp: byte);
 begin
   inherited Create;
   FStream := AStream;
+  FOwnsStream := true;
   RewindAsType(tp);
 end;
 
@@ -275,6 +278,7 @@ constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte);
 begin
   inherited Create;
   FStream := AStream;
+  FOwnsStream := true;
   FEOF := true; //who cares?
   RewriteAsType(tp);
 end;
@@ -286,7 +290,8 @@ end;
 
 destructor TJwbConvert.Destroy;
 begin
-  FreeAndNil(FStream);
+  if OwnsStream then
+    FreeAndNil(FStream);
   inherited;
 end;
 

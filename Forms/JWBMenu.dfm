@@ -764,6 +764,11 @@ object fMenu: TfMenu
       ShortCut = 16451
       OnExecute = aEditorCopyExecute
     end
+    object aEditorCopyAs: TAction
+      Caption = '#01059^eCopy as...'
+      ShortCut = 49219
+      OnExecute = aEditorCopyAsExecute
+    end
     object aEditorPaste: TAction
       Caption = '#00267^ePaste'
       ShortCut = 16470
@@ -1261,7 +1266,7 @@ object fMenu: TfMenu
         Action = aEditorSaveAs
       end
       object eSavekanatranscriptcUloitpepisdokany1: TMenuItem
-        Caption = '#00316^eSave kana transcript...'
+        Caption = '#01058^eExport as...'
         OnClick = eSavekanatranscriptcUloitpepisdokany1Click
       end
       object N17: TMenuItem

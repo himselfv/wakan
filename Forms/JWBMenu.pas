@@ -249,6 +249,7 @@ type
     aCategoryManager: TAction;
     N14: TMenuItem;
     N24: TMenuItem;
+    aEditorCopyAs: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
@@ -387,6 +388,7 @@ type
     procedure aChangeLanguageExecute(Sender: TObject);
     procedure aFullscreenModeExecute(Sender: TObject);
     procedure aCategoryManagerExecute(Sender: TObject);
+    procedure aEditorCopyAsExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -3230,6 +3232,13 @@ begin
   if not fTranslate.ListBox1.Focused then exit;
   if not fTranslate.Visible then aDictEditorExecute(Sender);
   fTranslate.sbClipCopyClick(sender);
+end;
+
+procedure TfMenu.aEditorCopyAsExecute(Sender: TObject);
+begin
+  if not fTranslate.ListBox1.Focused then exit;
+  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.CopyAs;
 end;
 
 procedure TfMenu.aEditorPasteExecute(Sender: TObject);

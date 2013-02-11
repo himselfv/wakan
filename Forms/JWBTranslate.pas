@@ -182,7 +182,10 @@ type
     procedure cbFontSizeKeyPress(Sender: TObject; var Key: Char);
 
   public
-    CopyShort, CutShort, PasteShort, AllShort:TShortCut;
+    CopyShort, CopyAsShort,
+    CutShort, PasteShort,
+    AllShort: TShortCut;
+    procedure CopyAs;
 
   public
     linl: TGraphicalLineList; //lines as they show on screen
@@ -214,6 +217,7 @@ type
     procedure JoinLine(y:integer);
     procedure DeleteCharacter(x,y:integer);
     procedure RefreshLines;
+    procedure CopySelection(format:TTextSaveFormat);
     procedure BlockOp(docopy,dodelete:boolean);
     procedure PasteOp;
     function PosToWidth(x,y:integer):integer;
@@ -290,7 +294,8 @@ type
     procedure OpenAnyFile(filename:string);
     procedure OpenFile(filename:string;tp:byte);
     procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat);
+    procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat;
+        lineFirst:integer=-1; lineLast:integer=-1; charFirst:integer=-1; charLast:integer=-1);
     function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
@@ -733,6 +738,7 @@ begin
   linl:=TGraphicalLineList.Create;
   plinl:=TGraphicalLineList.Create;
   CopyShort:=fMenu.aEditorCopy.ShortCut;
+  CopyAsShort:=fMenu.aEditorCopyAs.ShortCut;
   CutShort:=fMenu.aEditorCut.ShortCut;
   PasteShort:=fMenu.aEditorPaste.ShortCut;
   AllShort:=fMenu.aEditorSelectAll.ShortCut;
@@ -843,20 +849,25 @@ begin
   docdic.Clear;
   linl.Clear;
   Screen.Cursor:=crHourGlass;
+  try
 
-  if tp=FILETYPE_WTT then
-    LoadWakanText(docfilename)
-  else
-    LoadText(docfilename, tp, LoadAnnotMode);
+    view:=0;
+    cur.x:=0;
+    cur.y:=0;
+    mustrepaint:=true;
+    FileChanged:=false;
+    FullTextTranslated:=false;
 
-  view:=0;
-  cur.x:=0;
-  cur.y:=0;
-  mustrepaint:=true;
-  ShowText(true);
-  Screen.Cursor:=crDefault;
-  FileChanged:=false;
-  FullTextTranslated:=false;
+    if tp=FILETYPE_WTT then
+      LoadWakanText(docfilename)
+    else
+      LoadText(docfilename, tp, LoadAnnotMode);
+
+    ShowText(true);
+
+  finally
+    Screen.Cursor:=crDefault;
+  end;
 end;
 
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
@@ -1092,7 +1103,8 @@ Ruby saving strategy:
 //Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
 //and just write strings here.
 
-procedure TfTranslate.SaveText(AnnotMode:TTextAnnotMode;format: TTextSaveFormat);
+procedure TfTranslate.SaveText(AnnotMode:TTextAnnotMode;format: TTextSaveFormat;
+  lineFirst:integer=-1; lineLast:integer=-1; charFirst:integer=-1; charLast:integer=-1);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
@@ -1100,6 +1112,7 @@ var i,j,k: integer;
   rubyTextBreak: TRubyTextBreakType;
   rootLen: integer; //remaining length of the word's root, if calculated dynamically. <0 means ignore this check
   explicitRuby: boolean;
+  chFirst,chLast: integer;
 
   procedure outp(s: FString);
   begin
@@ -1122,10 +1135,23 @@ begin
   rootLen := -1;
   explicitRuby := true;
 
+  if lineFirst<0 then lineFirst := 0;
+  if lineLast<0 then lineLast := doc.Count-1;
+  if charFirst<0 then charFirst := 0;
+  if charLast<0 then charLast := flength(doc[lineLast])-1;
+
   format.BeginDocument;
-  for i:=0 to doc.Count-1 do
+  for i:=lineFirst to lineLast do
   begin
-    for j:=0 to flength(doc[i])-1 do
+    if i=lineFirst then
+      chFirst := charFirst
+    else
+      chFirst := 0;
+    if i=lineLast then
+      chLast := charLast
+    else
+      chLast := flength(doc[i])-1;
+    for j:= chFirst to chLast do
     begin
       if inReading then begin
         Dec(rootLen);
@@ -1759,6 +1785,7 @@ end;
 procedure TfTranslate.ListBox1Enter(Sender: TObject);
 begin
   fMenu.aEditorCopy.ShortCut:=CopyShort;
+  fMenu.aEditorCopyAs.ShortCut:=CopyAsShort;
   fMenu.aEditorCut.ShortCut:=CutShort;
   fMenu.aEditorPaste.ShortCut:=PasteShort;
   fMenu.aEditorSelectAll.ShortCut:=AllShort;
@@ -1768,6 +1795,7 @@ end;
 procedure TfTranslate.ListBox1Exit(Sender: TObject);
 begin
   fMenu.aEditorCopy.ShortCut:=0;
+  fMenu.aEditorCopyAs.ShortCut:=0;
   fMenu.aEditorCut.ShortCut:=0;
   fMenu.aEditorPaste.ShortCut:=0;
   fMenu.aEditorSelectAll.ShortCut:=0;
@@ -1994,6 +2022,22 @@ end;
 procedure TfTranslate.sbClipCopyClick(Sender: TObject);
 begin
   BlockOp(true,false);
+end;
+
+procedure TfTranslate.CopyAs;
+var ms: TMemoryStream;
+  encode: TJwbConvert;
+  str: UnicodeString;
+begin
+  ms := TMemoryStream.Create;
+  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF16LE);
+  encode.OwnsStream := false;
+  Self.CopySelection(TRubyTextFormat.Create(encode));
+  SetLength(str,ms.Size);
+  move(ms.Memory^, str[1], ms.Size);
+  FreeAndNil(ms);
+  clip := fstr(str);
+  fMenu.ChangeClipboard;
 end;
 
 procedure TfTranslate.sbClipPasteClick(Sender: TObject);
@@ -3503,6 +3547,13 @@ begin
   SetCurPos(l,y);
   FileChanged:=true;
   ShowText(true);
+end;
+
+procedure TfTranslate.CopySelection(format:TTextSaveFormat);
+begin
+  CalcBlockFromTo(false);
+  SaveText(amRuby,format,block.fromy,block.toy,block.fromx,block.tox);
+  format.EndDocument;
 end;
 
 procedure TfTranslate.BlockOp(docopy,dodelete:boolean);
