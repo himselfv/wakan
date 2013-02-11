@@ -4410,6 +4410,8 @@ end;
 
 procedure TfMenu.eSavekanatranscriptcUloitpepisdokany1Click(
   Sender: TObject);
+var encode: TJwbConvert;
+  enctype: integer;
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
   if not fTranslate.FullTextTranslated then
@@ -4417,36 +4419,35 @@ begin
       pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
       pchar(_l('#00364^eNotice')),
       MB_ICONINFORMATION or MB_OK);
-  if SaveAsKanaDialog.Execute then
+  if not SaveAsKanaDialog.Execute then exit;
+
+  case SaveAsKanaDialog.FilterIndex of
+    1,2,3: enctype := Conv_ChooseType(false,0);
+    4: enctype := FILETYPE_UTF8; //UTF8 only for HTML
+  end;
+
+  encode := TJwbConvert.CreateNew(
+    TStreamWriter.Create(
+      TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
+      true
+    ),
+    enctype
+  );
+  try
+
    //TODO: Do not create everything at once. If the user cancels ChooseType,
    //  TStreamWriter will remain undestroyed
     case SaveAsKanaDialog.FilterIndex of
-      1: fTranslate.SaveToFile('',0,amKana,
-        TKanaOnlyFormat.Create(
-          TJwbConvert.CreateNew(
-            TStreamWriter.Create(
-              TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
-              true
-            ),
-            Conv_ChooseType(false,0)
-          ),
-          true)
-        );
-      2: fTranslate.SaveToFile('',0,amKana,
-       TKanjiKanaFormat.Create(
-          TJwbConvert.CreateNew(
-            TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
-            Conv_ChooseType(false,0)
-          ))
-        );
-      3: fTranslate.SaveToFile('',0,amKana,
-       TKanjiOnlyFormat.Create(
-          TJwbConvert.CreateNew(
-            TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
-            Conv_ChooseType(false,0)
-          ))
-        );
+      1: fTranslate.SaveToFile('',0,amKana,TKanaOnlyFormat.Create(encode,true));
+      2: fTranslate.SaveToFile('',0,amKana,TKanjiKanaFormat.Create(encode));
+      3: fTranslate.SaveToFile('',0,amKana,TKanjiOnlyFormat.Create(encode));
+      4: fTranslate.SaveToFile('',0,amKana,THtmlFormat.Create(encode,[hoHtml5],'utf-8'));
     end;
+    encode := nil;
+
+  finally
+    FreeAndNil(encode);
+  end;
 end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);

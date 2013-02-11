@@ -358,6 +358,26 @@ type
     procedure AddWord(const word,reading: FString; const meaning: string); override;
   end;
 
+  THtmlFormatOption = (
+    hoHtml5      //use HTML5 freely, instead of only <ruby>
+  );
+  THtmlFormatOptions = set of THtmlFormatOption;
+
+  THtmlFormat = class(TTextSaveFormat)
+  protected
+    FOptions: THtmlFormatOptions;
+    FCharset: string;
+    procedure outpln(const s: string);
+    procedure outp(const s: string);
+  public
+    constructor Create(AStream: TJwbConvert; AOptions: THtmlFormatOptions; ACharset: string);
+    procedure BeginDocument; override;
+    procedure AddChars(const s: FString); override;
+    procedure AddWord(const word,reading: FString; const meaning: string); override;
+    procedure EndDocument; override;
+    property Options: THtmlFormatOptions read FOptions write FOptions;
+  end;
+
 
 var
   fTranslate: TfTranslate;
@@ -535,6 +555,106 @@ begin
     AddChars(word+UH_SPACE+reading+UH_SPACE)
   else
     AddChars(word); //without space if no reading
+end;
+
+constructor THtmlFormat.Create(AStream: TJwbConvert; AOptions: THtmlFormatOptions; ACharset: string);
+begin
+  inherited Create(AStream);
+  FOptions := AOptions;
+  FCharset := ACharset;
+end;
+
+procedure THtmlFormat.outpln(const s: string);
+begin
+  FStream.Write(fstr(s)+UH_CR+UH_LF);
+end;
+
+procedure THtmlFormat.outp(const s: string);
+begin
+  FStream.Write(fstr(s));
+end;
+
+procedure THtmlFormat.BeginDocument;
+begin
+  outpln('<!DOCTYPE html><html><head>');
+  if FCharset<>'' then
+    if hoHtml5 in Options then
+      outp('<meta charset="'+FCharset+'">')
+    else
+      outp('<meta http-equiv="Content-Type" content="text/html; charset='+FCharset+'">');
+  outpln('</head>');
+  outpln('<body>');
+  outp('<p>');
+end;
+
+{
+Fast HTMLEncode.
+See http://stackoverflow.com/questions/2968082/is-there-a-delphi-standard-function-for-escaping-html
+}
+function HTMLEncode3(const Data: string): string;
+var iPos, i: Integer;
+
+  procedure Encode(const AStr: String);
+  begin
+    Move(AStr[1], result[iPos], Length(AStr) * SizeOf(Char));
+    Inc(iPos, Length(AStr));
+  end;
+
+begin
+  SetLength(result, Length(Data) * 6);
+  iPos := 1;
+  for i := 1 to length(Data) do
+    case Data[i] of
+      '<': Encode('&lt;');
+      '>': Encode('&gt;');
+      '&': Encode('&amp;');
+      '"': Encode('&quot;');
+    else
+      result[iPos] := Data[i];
+      Inc(iPos);
+    end;
+  SetLength(result, iPos - 1);
+end;
+
+procedure THtmlFormat.AddChars(const s: FString);
+var tmp: FString;
+begin
+  tmp := HTMLEncode3(s);
+  repl(tmp,UH_CR+UH_LF,fstr('</p><p>'));
+  repl(tmp,UH_LF,fstr('</p><p>'));
+  repl(tmp,UH_CR,'');
+  repl(tmp,fstr('</p><p>'),fstr('</p>'#13#10'<p>')); //if we did that before, we'd be stuck in infinite replacements
+  FStream.Write(tmp);
+end;
+
+procedure THtmlFormat.AddWord(const word,reading: FString; const meaning: string);
+begin
+ { Up to two nested ruby brackets, as defined in
+  http://www.w3.org/TR/html5/text-level-semantics.html#the-ruby-element }
+  if (word<>'') and (reading<>'') then begin
+    if meaning<>'' then
+      outp('<ruby title="'+HTMLEncode3(meaning)+'">')
+  end else
+  if meaning<>'' then
+    outp('<span title="'+HTMLEncode3(meaning)+'">');
+
+  if word<>'' then
+    FStream.Write(HTMLEncode3(word))
+  else
+    FStream.Write(HTMLEncode3(reading));
+
+  if (word<>'') and (reading<>'') then begin
+    outp('<rt>');
+    FStream.Write(HTMLEncode3(reading));
+    outp('</ruby>');
+  end else
+  if meaning<>'' then
+    outp('</span>');
+end;
+
+procedure THtmlFormat.EndDocument;
+begin
+  outpln('</p></body></html>');
 end;
 
 procedure TfTranslate.FormCreate(Sender: TObject);
@@ -942,7 +1062,6 @@ var i,j,k: integer;
   end;
 
   procedure FinalizeRuby();
-  var word: string;
   begin
     if format<>nil then begin
       format.AddWord(kanji,reading,meaning);
