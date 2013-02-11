@@ -487,6 +487,7 @@ type
     procedure Clipboard_Update;
     procedure Clipboard_Clear;
     procedure ChangeClipboard;
+    procedure AddToClipboard(uFormat: UINT; text: RawByteString);
 
   end;
 
@@ -2743,6 +2744,27 @@ begin
 
   if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
   if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
+end;
+
+///TODO: Compile and test this
+procedure TfMenu.AddToClipboard(uFormat: UINT; text: RawByteString);
+var
+  DataHandle :  THandle;
+  ToPointer  :  Pointer;
+begin
+ //Copy data + final NULL
+  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE, Length(text)+1);
+  ToPointer := GlobalLock(DataHandle);
+  if pointer(text)<>nil then
+    Move(Pointer(text)^, ToPointer^, Length(text)+1)
+  else
+   //Just set the terminating null
+    PByte(ToPointer)^ := #00;
+  GlobalUnlock(DataHandle);
+
+  OpenClipboard(Handle);
+  SetClipboardData(uFormat, DataHandle);
+  CloseClipboard;
 end;
 
 procedure TfMenu.ArtLabel1Click(Sender: TObject);

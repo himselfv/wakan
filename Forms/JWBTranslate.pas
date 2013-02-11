@@ -186,6 +186,8 @@ type
     CutShort, PasteShort,
     AllShort: TShortCut;
     procedure CopyAs;
+    function CopyAsHtml: Utf8String;
+    function CopyAsRuby: UnicodeString;
 
   public
     linl: TGraphicalLineList; //lines as they show on screen
@@ -2030,19 +2032,35 @@ begin
   BlockOp(true,false);
 end;
 
-procedure TfTranslate.CopyAs;
+function TfTranslate.CopyAsHtml: Utf8String;
 var ms: TMemoryStream;
   encode: TJwbConvert;
-  str: UnicodeString;
+begin
+  ms := TMemoryStream.Create;
+  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF8);
+  encode.OwnsStream := false;
+  Self.CopySelection(THtmlFormat.Create(encode,[hoHtml5,hoClipFragment],'utf-8'));
+  SetLength(Result,ms.Size);
+  move(ms.Memory^, Result[1], ms.Size);
+  FreeAndNil(ms);
+end;
+
+function TfTranslate.CopyAsRuby: UnicodeString;
+var ms: TMemoryStream;
+  encode: TJwbConvert;
 begin
   ms := TMemoryStream.Create;
   encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF16LE);
   encode.OwnsStream := false;
   Self.CopySelection(TRubyTextFormat.Create(encode));
-  SetLength(str,ms.Size);
-  move(ms.Memory^, str[1], ms.Size);
+  SetLength(Result,ms.Size div 2 + 1);
+  move(ms.Memory^, Result[1], ms.Size);
   FreeAndNil(ms);
-  clip := fstr(str);
+end;
+
+procedure TfTranslate.CopyAs;
+begin
+  clip := fstr(UnicodeString(CopyAsHtml));
   fMenu.ChangeClipboard;
 end;
 
@@ -3559,7 +3577,6 @@ procedure TfTranslate.CopySelection(format:TTextSaveFormat);
 begin
   CalcBlockFromTo(false);
   SaveText(amRuby,format,block.fromy,block.toy,block.fromx,block.tox);
-  format.EndDocument;
 end;
 
 procedure TfTranslate.BlockOp(docopy,dodelete:boolean);
