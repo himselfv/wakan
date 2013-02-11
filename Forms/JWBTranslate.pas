@@ -365,7 +365,8 @@ type
   end;
 
   THtmlFormatOption = (
-    hoHtml5      //use HTML5 freely, instead of only <ruby>
+    hoHtml5,          //use HTML5 freely, instead of only <ruby>
+    hoClipFragment    //add <!-- start fragment --> <!-- end fragment --> marks to use as HTML clipboard format
   );
   THtmlFormatOptions = set of THtmlFormatOption;
 
@@ -606,6 +607,8 @@ begin
       outp('<meta http-equiv="Content-Type" content="text/html; charset='+FCharset+'">');
   outpln('</head>');
   outpln('<body>');
+  if hoClipFragment in Options then
+    outpln('<!--StartFragment -->');
   outp('<p>');
 end;
 
@@ -676,7 +679,10 @@ end;
 
 procedure THtmlFormat.EndDocument;
 begin
-  outpln('</p></body></html>');
+  outpln('</p>');
+  if hoClipFragment in Options then
+    outpln('<!--EndFragment -->');
+  outpln('</body></html>');
 end;
 
 procedure TRubyTextFormat.AddWord(const word,reading: FString; const meaning: string;
