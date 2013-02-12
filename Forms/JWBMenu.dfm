@@ -1423,7 +1423,8 @@ object fMenu: TfMenu
     DefaultExt = '.txt'
     Filter = 
       'Kana only (*.txt)|*.txt|Kanji/kana mixed (*.txt)|*.txt|Kanji wit' +
-      'h spaces (*.txt)|*.txt|HTML with ruby (*.html)|*.html'
+      'h spaces (*.txt)|*.txt|HTML with ruby (*.html)|*.html|OpenDocume' +
+      'nt Text (*.odt)|*.odt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
     Left = 279
     Top = 12

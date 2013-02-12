@@ -58,6 +58,8 @@ type
     procedure Write(s:FString);
     procedure WriteChar(s:FChar);
     procedure Flush;
+    property Tp: byte read ftp;
+    property Stream: TStream read FStream;
     property OwnsStream: boolean read FOwnsStream write FOwnsStream;
   end;
 

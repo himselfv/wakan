@@ -44,7 +44,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
-  JWBDicSearch, JWBConvert;
+  JWBDicSearch, JWBConvert, JclCompression;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -181,13 +181,21 @@ type
     procedure cbFontSizeExit(Sender: TObject);
     procedure cbFontSizeKeyPress(Sender: TObject; var Key: Char);
 
-  public
+  protected
     CopyShort, CopyAsShort,
     CutShort, PasteShort,
     AllShort: TShortCut;
+    CF_HTML: integer;
+    CF_ODT: integer;
+    function GenerateHtmlClipHeader(const lenHtml: integer;
+      const startFragment, endFragment: integer): UnicodeString;
+  public
     procedure CopyAs;
     function CopyAsHtml: Utf8String;
+    function CopyAsClipHtml: Utf8String;
     function CopyAsRuby: UnicodeString;
+    function CopyAsOpenDocumentTextContent: Utf8String;
+    function CopyAsOpenDocument: TMemoryStream;
 
   public
     linl: TGraphicalLineList; //lines as they show on screen
@@ -394,6 +402,41 @@ type
       rubyTextBreak: TRubyTextBreakType); override;
   end;
 
+  { This ONLY accepts UTF8 converters }
+  {$R 'odt.res' 'Assets\ODT\odt.rc'}
+  TOpenDocumentContentFormat = class(TTextSaveFormat)
+  protected
+    procedure outp(const s: string);
+  public
+    procedure BeginDocument; override;
+    procedure AddChars(const s: FString); override;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
+    procedure EndDocument; override;
+  end;
+
+  TOpenDocumentFormat = class(TTextSaveFormat)
+  protected
+    FStream: TStream;
+    FOwnsStream: boolean;
+    FContentMem: TMemoryStream;
+    FContentFormat: TOpenDocumentContentFormat;
+  public
+    constructor Create(AStream: TStream; AOwnsStream: boolean);
+    destructor Destroy; override;
+    procedure BeginDocument; override;
+    procedure AddChars(const s: FString); override;
+    procedure AddWord(const word,reading: FString; const meaning: string;
+      rubyTextBreak: TRubyTextBreakType); override;
+    procedure EndDocument; override;
+  end;
+
+
+const
+ //Markers used by THtmlFormat to indicate start and end of fragment meant for Clipboard
+ //See CF_HTML documentation.
+  HtmlStartFragment = '<!--StartFragment -->';
+  HtmlEndFragment = '<!--EndFragment -->';
 
 var
   fTranslate: TfTranslate;
@@ -610,7 +653,7 @@ begin
   outpln('</head>');
   outpln('<body>');
   if hoClipFragment in Options then
-    outpln('<!--StartFragment -->');
+    outpln(HtmlStartFragment);
   outp('<p>');
 end;
 
@@ -683,7 +726,7 @@ procedure THtmlFormat.EndDocument;
 begin
   outpln('</p>');
   if hoClipFragment in Options then
-    outpln('<!--EndFragment -->');
+    outpln(HtmlEndFragment);
   outpln('</body></html>');
 end;
 
@@ -714,6 +757,119 @@ begin
  //we wouldn't have set inReading, except if it was explicit ruby,
  //in which case we must write it even if empty.
   FStream.Write(UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE);
+end;
+
+
+procedure TOpenDocumentContentFormat.outp(const s: string);
+begin
+  FStream.Write(fstr(s));
+end;
+
+procedure TOpenDocumentContentFormat.BeginDocument;
+var res: TResourceStream;
+begin
+  if FStream.Tp<>FILETYPE_UTF8 then
+    raise Exception.Create('Open Document Text must be exported in Unicode'); //do not localize
+
+  res := TResourceStream.Create(hInstance,'ODT_CONTENT_START',RT_RCDATA);
+  try
+    FStream.Stream.CopyFrom(res,res.Size);
+  finally
+    FreeAndNil(res);
+  end;
+
+  outp('<text:p>');
+end;
+
+procedure TOpenDocumentContentFormat.AddChars(const s: FString);
+var tmp: FString;
+begin
+  tmp := HTMLEncode3(s);
+  repl(tmp,UH_CR+UH_LF,fstr('</text:p><text:p>'));
+  repl(tmp,UH_LF,fstr('</text:p><text:p>'));
+  repl(tmp,UH_CR,'');
+  repl(tmp,fstr('</text:p><text:p>'),fstr('</text:p>'#10'<text:p>')); //ODT MUST use LF-only linebreaks
+  FStream.Write(tmp);
+end;
+
+procedure TOpenDocumentContentFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
+begin
+  outp('<text:ruby><text:ruby-base>');
+  FStream.Write(word);
+  outp('</text:ruby-base><text:ruby-text>');
+  FStream.Write(reading);
+  outp('</text:ruby-text></text:ruby>');
+end;
+
+procedure TOpenDocumentContentFormat.EndDocument;
+var res: TResourceStream;
+begin
+  outp('</text:p>');
+  FStream.Flush;
+
+  res := TResourceStream.Create(hInstance,'ODT_CONTENT_END',RT_RCDATA);
+  try
+    FStream.Stream.CopyFrom(res,res.Size);
+  finally
+    FreeAndNil(res);
+  end;
+end;
+
+constructor TOpenDocumentFormat.Create(AStream: TStream; AOwnsStream: boolean);
+var FConvert: TJwbConvert;
+begin
+  inherited Create(nil);
+  FStream := AStream;
+  FOwnsStream := AOwnsStream;
+  FContentMem := TMemoryStream.Create;
+  FConvert := TJwbConvert.CreateNew(FContentMem,FILETYPE_UTF8);
+  FConvert.OwnsStream := false;
+  FContentFormat := TOpenDocumentContentFormat.Create(FConvert);
+end;
+
+destructor TOpenDocumentFormat.Destroy;
+begin
+  FreeAndNil(FContentFormat);
+  FreeAndNil(FContentMem);
+  if FOwnsStream then
+    FreeAndNil(FStream);
+  inherited;
+end;
+
+procedure TOpenDocumentFormat.BeginDocument;
+begin
+  FContentFormat.BeginDocument;
+end;
+
+procedure TOpenDocumentFormat.AddChars(const s: FString);
+begin
+  FContentFormat.AddChars(s);
+end;
+
+procedure TOpenDocumentFormat.AddWord(const word,reading: FString; const meaning: string;
+  rubyTextBreak: TRubyTextBreakType);
+begin
+  FContentFormat.AddWord(word,reading,meaning,rubyTextBreak);
+end;
+
+procedure TOpenDocumentFormat.EndDocument;
+var arc: TJclZipCompressArchive;
+begin
+  FContentFormat.EndDocument;
+
+ //Pack into archive
+  arc := TJclZipCompressArchive.Create(FStream);
+  try
+    arc.AddFile('META-INF\manifest.xml',TResourceStream.Create(hInstance,'ODT_MANIFEST',RT_RCDATA),{OwnsStream=}true);
+    arc.AddFile('mimetype',TResourceStream.Create(hInstance,'ODT_MIMETYPE',RT_RCDATA),{OwnsStream=}true);
+    arc.AddFile('styles.xml',TResourceStream.Create(hInstance,'ODT_STYLES',RT_RCDATA),{OwnsStream=}true);
+    FContentMem.Seek(0,soFromBeginning);
+    arc.AddFile('content.xml',FContentMem,{OwnsStream=}false);
+    arc.Compress;
+  finally
+    FreeAndNil(arc);
+  end;
 end;
 
 
@@ -754,6 +910,12 @@ begin
   fMenu.aEditorCut.ShortCut:=0;
   fMenu.aEditorPaste.ShortCut:=0;
   fMenu.aEditorSelectAll.ShortCut:=0;
+
+  CF_HTML := RegisterClipboardFormat(PChar('HTML Format'));
+  if CF_HTML=0 then RaiseLastOsError();
+
+  CF_ODT := RegisterClipboardFormat(PChar('Star Embed Source (XML)'));
+  if CF_ODT=0 then RaiseLastOsError();
 end;
 
 procedure TfTranslate.FormDestroy(Sender: TObject);
@@ -2032,19 +2194,7 @@ begin
   BlockOp(true,false);
 end;
 
-function TfTranslate.CopyAsHtml: Utf8String;
-var ms: TMemoryStream;
-  encode: TJwbConvert;
-begin
-  ms := TMemoryStream.Create;
-  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF8);
-  encode.OwnsStream := false;
-  Self.CopySelection(THtmlFormat.Create(encode,[hoHtml5,hoClipFragment],'utf-8'));
-  SetLength(Result,ms.Size);
-  move(ms.Memory^, Result[1], ms.Size);
-  FreeAndNil(ms);
-end;
-
+//Copies selection as a text with Aozora-Ruby
 function TfTranslate.CopyAsRuby: UnicodeString;
 var ms: TMemoryStream;
   encode: TJwbConvert;
@@ -2058,10 +2208,79 @@ begin
   FreeAndNil(ms);
 end;
 
-procedure TfTranslate.CopyAs;
+//Generates CF_HTML clipboard header for a text
+function TfTranslate.GenerateHtmlClipHeader(const lenHtml: integer;
+  const startFragment, endFragment: integer): UnicodeString;
+const
+ //The way we use it, header must produce fixed-length text no matter the input
+  headerForm = 'Version:0.9'#13#10
+    +'StartHTML:%.8d'#13#10
+    +'EndHTML:%.8d'#13#10
+    +'StartFragment:%.8d'#13#10
+    +'EndFragment:%.8d'#13#10;
+var lenHeader: integer;
 begin
-  clip := fstr(UnicodeString(CopyAsHtml));
-  fMenu.ChangeClipboard;
+  lenHeader := Length(Format(headerForm,[0,0,0,0]));
+  Result := Format(headerForm,[lenHeader, lenHeader+lenHtml,lenHeader+startFragment,lenHeader+endFragment]);
+end;
+
+//Copies selection as HTML, with <!--StartFragment --><!--EndFragment --> marks
+function TfTranslate.CopyAsHtml: Utf8String;
+var ms: TMemoryStream;
+  encode: TJwbConvert;
+begin
+  ms := TMemoryStream.Create;
+  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF8);
+  encode.OwnsStream := false;
+  Self.CopySelection(THtmlFormat.Create(encode,[hoHtml5,hoClipFragment],'utf-8'));
+  SetLength(Result,ms.Size);
+  move(ms.Memory^, Result[1], ms.Size);
+  FreeAndNil(ms);
+end;
+
+//Copies selection as HTML enhanced with a CF_HTML clipboard header
+function TfTranslate.CopyAsClipHtml: Utf8String;
+var startFragment, endFragment: integer;
+begin
+  Result := CopyAsHtml;
+  startFragment := pos(Utf8String(HtmlStartFragment),Result);
+  if startFragment <> 0 then startFragment := startFragment + Length(Utf8String(HtmlStartFragment)); //else keep it 0
+  endFragment := pos(Utf8String(HtmlEndFragment),Result);
+  if endFragment <= 0 then endFragment := Length(HtmlEndFragment);
+  Result := Utf8String(GenerateHtmlClipHeader(Length(Result), startFragment, endFragment))+Result;
+end;
+
+//Copies selection as OpenDocumentText, content file
+function TfTranslate.CopyAsOpenDocumentTextContent: Utf8String;
+var ms: TMemoryStream;
+  encode: TJwbConvert;
+begin
+  ms := TMemoryStream.Create;
+  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF8);
+  encode.OwnsStream := false;
+  Self.CopySelection(TOpenDocumentContentFormat.Create(encode));
+  SetLength(Result,ms.Size);
+  move(ms.Memory^, Result[1], ms.Size);
+  FreeAndNil(ms);
+end;
+
+function TfTranslate.CopyAsOpenDocument: TMemoryStream;
+begin
+  Result := TMemoryStream.Create;
+  Self.CopySelection(TOpenDocumentFormat.Create(Result,{OwnsStream=}false));
+end;
+
+procedure TfTranslate.CopyAs;
+var RubyText: UnicodeString;
+  Odt: TMemoryStream;
+begin
+  RubyText := CopyAsRuby;
+  fMenu.ClearClipboard;
+  clip := fstr(RubyText);
+  fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true);
+  fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
+  fMenu.AddToClipboard(CF_UNICODETEXT,RubyText);
+  fMenu.ClipboardChanged;
 end;
 
 procedure TfTranslate.sbClipPasteClick(Sender: TObject);

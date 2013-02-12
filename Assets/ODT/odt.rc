@@ -1,0 +1,9 @@
+/*
+Contains files which will go into OpenDocument Text when exporting.
+All files must be in UTF8 without BOM, LF line endings.
+*/
+ODT_STYLES RCDATA styles.xml
+ODT_MIMETYPE RCDATA mimetype
+ODT_MANIFEST RCDATA "META-INF\manifest.xml"
+ODT_CONTENT_START RCDATA "content-start.xml"
+ODT_CONTENT_END RCDATA "content-end.xml"

@@ -487,7 +487,12 @@ type
     procedure Clipboard_Update;
     procedure Clipboard_Clear;
     procedure ChangeClipboard;
-    procedure AddToClipboard(uFormat: UINT; text: RawByteString);
+    procedure ClearClipboard;
+    procedure AddToClipboard(uFormat: UINT; data: pointer; size: integer); overload;
+    procedure AddToClipboard(uFormat: UINT; text: RawByteString); overload;
+    procedure AddToClipboard(uFormat: UINT; text: UnicodeString); overload;
+    procedure AddToClipboard(uFormat: UINT; data: TMemoryStream; AOwnsStream: boolean = false); overload;
+    procedure ClipboardChanged;
 
   end;
 
@@ -2739,32 +2744,60 @@ begin
   EmptyClipboard;
   SetClipboardData(CF_UNICODETEXT, DataHandle);
   CloseClipboard;
-  PaintBox3.Invalidate;
-  fUserAdd.PaintBox2.Invalidate;
 
-  if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
-  if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
+  ClipboardChanged;
 end;
 
-///TODO: Compile and test this
-procedure TfMenu.AddToClipboard(uFormat: UINT; text: RawByteString);
+procedure TfMenu.ClearClipboard;
+begin
+  OpenClipboard(Handle);
+  EmptyClipboard;
+  CloseClipboard;
+end;
+
+procedure TfMenu.AddToClipboard(uFormat: UINT; data: pointer; size: integer);
 var
   DataHandle :  THandle;
   ToPointer  :  Pointer;
 begin
  //Copy data + final NULL
-  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE, Length(text)+1);
+  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE, size+2); //2 bytes even if size==0
   ToPointer := GlobalLock(DataHandle);
-  if pointer(text)<>nil then
-    Move(Pointer(text)^, ToPointer^, Length(text)+1)
+  if data<>nil then
+    Move(data^, ToPointer^, size)
   else
-   //Just set the terminating null
-    PByte(ToPointer)^ := #00;
+   //Just set the terminating nulls
+    PWord(ToPointer)^ := $0000;
   GlobalUnlock(DataHandle);
 
   OpenClipboard(Handle);
   SetClipboardData(uFormat, DataHandle);
   CloseClipboard;
+end;
+
+procedure TfMenu.AddToClipboard(uFormat: UINT; text: RawByteString);
+begin
+  AddToClipboard(uFormat, pointer(text), Length(text)+1); //string + term 0
+end;
+
+procedure TfMenu.AddToClipboard(uFormat: UINT; text: UnicodeString);
+begin
+  AddToClipboard(uFormat, pointer(text), Length(text)*2 + 2); //string + term 0
+end;
+
+procedure TfMenu.AddToClipboard(uFormat: UINT; data: TMemoryStream; AOwnsStream: boolean = false);
+begin
+  AddToClipboard(uFormat,data.Memory,data.Size);
+  if AOwnsStream then FreeAndNil(data);
+end;
+
+procedure TfMenu.ClipboardChanged;
+begin
+  PaintBox3.Invalidate;
+  fUserAdd.PaintBox2.Invalidate;
+
+  if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
+  if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
 end;
 
 procedure TfMenu.ArtLabel1Click(Sender: TObject);
@@ -4441,7 +4474,9 @@ end;
 
 procedure TfMenu.eSavekanatranscriptcUloitpepisdokany1Click(
   Sender: TObject);
-var encode: TJwbConvert;
+var
+  stream: TStream;
+  encode: TJwbConvert;
   enctype: integer;
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
@@ -4450,30 +4485,40 @@ begin
       pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
       pchar(_l('#00364^eNotice')),
       MB_ICONINFORMATION or MB_OK);
+  SaveAsKanaDialog.FileName := ExtractFilename(ChangeFileExt(fTranslate.docfilename,'')); //Default name's the same, without extension
   if not SaveAsKanaDialog.Execute then exit;
 
   case SaveAsKanaDialog.FilterIndex of
     1,2,3: enctype := Conv_ChooseType(false,0);
-    4: enctype := FILETYPE_UTF8; //UTF8 only for HTML
+    4,5: enctype := FILETYPE_UTF8; //UTF8 only for HTML, ODT
   end;
 
-  encode := TJwbConvert.CreateNew(
-    TStreamWriter.Create(
-      TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
-      true
-    ), enctype);
+  stream := nil;
+  encode := nil;
   try
 
+    stream := TStreamWriter.Create(
+      TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
+      true
+    );
+    if SaveAsKanaDialog.FilterIndex<>5 then begin
+      encode := TJwbConvert.CreateNew(stream, enctype);
+      stream := nil; //will auto-destroy
+    end else
+      encode := nil;
+
     case SaveAsKanaDialog.FilterIndex of
-      1: fTranslate.SaveText(amRuby,TKanaOnlyFormat.Create(encode,true));
+      1: fTranslate.SaveText(amRuby,TKanaOnlyFormat.Create(encode,{AddSpaces=}true));
       2: fTranslate.SaveText(amRuby,TKanjiKanaFormat.Create(encode));
       3: fTranslate.SaveText(amRuby,TKanjiOnlyFormat.Create(encode));
       4: fTranslate.SaveText(amRuby,THtmlFormat.Create(encode,[hoHtml5],'utf-8'));
+      5: fTranslate.SaveText(amRuby,TOpenDocumentFormat.Create(stream, {OwnsStream=}true));
     end;
     encode := nil;
 
   finally
     FreeAndNil(encode);
+    FreeAndNil(stream);
   end;
 end;
 
