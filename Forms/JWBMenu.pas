@@ -250,6 +250,8 @@ type
     N14: TMenuItem;
     N24: TMenuItem;
     aEditorCopyAs: TAction;
+    aPortraitMode: TAction;
+    PortraitMode1: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
@@ -389,6 +391,7 @@ type
     procedure aFullscreenModeExecute(Sender: TObject);
     procedure aCategoryManagerExecute(Sender: TObject);
     procedure aEditorCopyAsExecute(Sender: TObject);
+    procedure aPortraitModeExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -4632,6 +4635,27 @@ end;
 procedure TfMenu.aCategoryManagerExecute(Sender: TObject);
 begin
   fCategoryMgr.ShowModal;
+end;
+
+procedure TfMenu.aPortraitModeExecute(Sender: TObject);
+begin
+  if aPortraitMode.Checked then begin
+    Panel4.Align := alBottom;
+    fWords.Panel2.Align := alBottom;
+    fWords.Splitter1.Align := alBottom;
+    fWords.Splitter1.Top := fWords.Panel2.Top - 10;
+    fUser.Panel3.Align := alBottom;
+  end else begin
+    Panel4.Align := alRight;
+    fWords.Panel2.Align := alRight;
+    fWords.Splitter1.Align := alRight;
+    fWords.Splitter1.Left := fWords.Panel2.Left - 10;
+    fUser.Panel3.Align := alRight;
+  end;
+  fUserFilters.SetPortraitMode(aPortraitMode.Checked);
+  fWordKanji.SetPortraitMode(aPortraitMode.Checked);
+  ChangeDisplay;
+ //TODO
 end;
 
 initialization

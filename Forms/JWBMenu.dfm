@@ -6,8 +6,9 @@ object fMenu: TfMenu
   ClientHeight = 485
   ClientWidth = 694
   Color = clBtnFace
-  Constraints.MinHeight = 543
-  Constraints.MinWidth = 700
+  Constraints.MinHeight = 480
+  Constraints.MinWidth = 480
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -1021,6 +1022,11 @@ object fMenu: TfMenu
       Caption = '#01057^eManage categories'
       OnExecute = aCategoryManagerExecute
     end
+    object aPortraitMode: TAction
+      AutoCheck = True
+      Caption = 'Portrait Mode'
+      OnExecute = aPortraitModeExecute
+    end
   end
   object MainMenu1: TMainMenu
     Left = 216
@@ -1096,6 +1102,10 @@ object fMenu: TfMenu
       end
       object FullscreenMode1: TMenuItem
         Action = aFullscreenMode
+      end
+      object PortraitMode1: TMenuItem
+        Action = aPortraitMode
+        AutoCheck = True
       end
     end
     object eCharacterscZnaky1: TMenuItem

@@ -26,6 +26,7 @@ type
     procedure PaintBoxK1MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
+    procedure FormResize(Sender: TObject);
 
   protected
     procedure WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
@@ -37,6 +38,13 @@ type
     procedure Clear;
     procedure AddBox(const meaning: string);
     procedure InvalidateBoxes;
+
+  protected
+    FPortraitMode: boolean;
+    procedure AlignBox(idx: integer);
+  public
+    procedure UpdateAlignment;
+    procedure SetPortraitMode(Value: boolean);
 
   end;
 
@@ -83,16 +91,12 @@ begin
   box.sh := TShape.Create(Self);
   box.sh.Height := 43;
   box.sh.Width := 202;
-  box.sh.Left := 8;
-  box.sh.Top := 26 + 48*idx;
   box.sh.Tag := idx+1;
   box.sh.Parent := Self;
 
   box.pb := TPaintBox.Create(Self);
   box.pb.Height := 41;
   box.pb.Width := 89;
-  box.pb.Left := 9;
-  box.pb.Top := box.sh.Top + 1;
   box.pb.Tag := idx+1;
   box.pb.OnClick := PaintBoxK1Click;
   box.pb.OnMouseMove := PaintBoxK1MouseMove;
@@ -105,12 +109,12 @@ begin
   box.lbl.Caption := meaning;
   box.lbl.Height := 41;
   box.lbl.Width := 125;
-  box.lbl.Left := 85;
-  box.lbl.Top := box.sh.Top + 2;
   box.lbl.Tag := idx+1;
   box.lbl.Transparent := true;
   box.lbl.WordWrap := true;
   box.lbl.Parent := Self;
+
+  AlignBox(idx);
 end;
 
 procedure TfWordKanji.InvalidateBoxes;
@@ -159,6 +163,42 @@ procedure TfWordKanji.PaintBoxK1MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
+end;
+
+procedure TfWordKanji.SetPortraitMode(Value: boolean);
+begin
+  FPortraitMode := Value;
+  UpdateAlignment;
+end;
+
+procedure TfWordKanji.UpdateAlignment;
+var idx: integer;
+begin
+  for idx := 0 to Length(FBoxes) - 1 do
+    AlignBox(idx);
+end;
+
+procedure TfWordKanji.AlignBox(idx: integer);
+var box: PKanjiBox;
+begin
+  box := @FBoxes[idx];
+  if not FPortraitMode then begin
+    box.sh.Left := 8;
+    box.sh.Top := 26 + 48*idx;
+  end else begin
+    box.sh.Left := 8 + (202+8)*idx;
+    box.sh.Top := 26;
+  end;
+  box.pb.Left := box.sh.Left + 1;
+  box.pb.Top := box.sh.Top + 1;
+  box.lbl.Left := box.sh.Left + 77;
+  box.lbl.Top := box.sh.Top + 2;
+ //TODO: Wrap boxes row-by-row or column-by-column, depending on the alignment
+end;
+
+procedure TfWordKanji.FormResize(Sender: TObject);
+begin
+  UpdateAlignment(); //we might be able to pack more boxes into new column size
 end;
 
 end.

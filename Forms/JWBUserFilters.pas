@@ -14,13 +14,15 @@ type
     cbFilterLearned: TCheckBox;
     cbFilterMastered: TCheckBox;
     cbFilterProblematic: TCheckBox;
-    btnCatToggleAll: TSpeedButton;
-    btnCatEdit: TSpeedButton;
-    btnCatDelete: TSpeedButton;
-    tabCatList: TTabSet;
-    lbCategories: TCheckListBox;
-    Label1: TLabel;
     Bevel1: TBevel;
+    pnlCategories: TPanel;
+    pnlCategoryControls: TPanel;
+    Label1: TLabel;
+    lbCategories: TCheckListBox;
+    tabCatList: TTabSet;
+    btnCatDelete: TSpeedButton;
+    btnCatEdit: TSpeedButton;
+    btnCatToggleAll: TSpeedButton;
     procedure cbFilterUnlearnedClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure lbCategoriesClick(Sender: TObject);
@@ -30,8 +32,17 @@ type
     procedure btnCatToggleAllClick(Sender: TObject);
     procedure btnCatEditClick(Sender: TObject);
     procedure btnCatDeleteClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   public
     function CheckEnabledCategories(catlist: TStringList): boolean;
+
+  protected
+    FPortraitMode: boolean;
+  public
+    procedure UpdateAlignment;
+    procedure SetPortraitMode(Value: boolean);
+
+
   end;
 
 var
@@ -135,5 +146,70 @@ begin
     end;
   end;
 end;
+
+function GetMaxItemLength(cb: TCheckListBox): integer;
+var i: integer;
+begin
+  Result := 0;
+  for i := 0 to cb.Items.Count - 1 do
+    if Length(cb.Items[i])>Result then
+      Result := Length(cb.Items[i]);
+end;
+
+procedure TfUserFilters.SetPortraitMode(Value: boolean);
+begin
+  FPortraitMode := Value;
+ //One-time set default width/height (can be adjusted later)
+ //TODO: Perhaps remember these for both modes and restore when switching between them
+  if not FPortraitMode then
+    fUserFilters.ClientWidth := 192
+  else
+    fUserFilters.ClientHeight := 120;
+  UpdateAlignment;
+end;
+
+// Call on resize, on portrait mode change, on lbCategories font change
+//TODO: Call on resize, on lbCategories font change
+procedure TfUserFilters.UpdateAlignment;
+var maxItemWidth: integer;
+begin
+  if not FPortraitMode then begin
+    rgSort.Left := gbFilter.Left;
+    rgSort.Top := gbFilter.Top + gbFilter.Height + 7;
+    pnlCategories.Left := gbFilter.Left;
+    pnlCategories.Top := rgSort.Top + rgSort.Height + 5;
+    pnlCategories.Width := gbFilter.Width;
+    pnlCategories.Height := Self.ClientHeight - pnlCategories.Top - 6;
+    lbCategories.Columns := 0; //don't use columns //TODO: Perhaps use if the max item width allows?
+    gbFilter.Anchors := [akLeft,akTop,akRight];
+    rgSort.Anchors := [akLeft,akTop,akRight];
+    pnlCategories.Anchors := [akLeft,akTop,akRight,akBottom];
+  end else begin
+    gbFilter.Width := 177;
+    rgSort.Width := 177; //fixed width in horz mode
+    rgSort.Left := gbFilter.Left + gbFilter.Width + 8;
+    rgSort.Top := gbFilter.Top;
+    pnlCategories.Left := rgSort.Left + rgSort.Width + 8;
+    pnlCategories.Top := gbFilter.Top;
+    pnlCategories.Width := Self.ClientWidth - pnlCategories.Left - 8;
+    pnlCategories.Height := rgSort.Height;
+   //Some guessing as to what is max item width
+    maxItemWidth := GetMaxItemLength(lbCategories)*lbCategories.Font.Size;
+    if maxItemWidth=0 then maxItemWidth := 90;
+    if lbCategories.Width < maxItemWidth then
+      lbCategories.Columns := 0 //don't use columns
+    else
+      lbCategories.Columns := lbCategories.Width div maxItemWidth;
+    gbFilter.Anchors := [akLeft,akTop]; //no point in akBottom
+    rgSort.Anchors := [akLeft,akTop]; //no point in akBottom
+    pnlCategories.Anchors := [akLeft,akTop,akRight,akBottom];
+  end;
+end;
+
+procedure TfUserFilters.FormResize(Sender: TObject);
+begin
+  UpdateAlignment;
+end;
+
 
 end.

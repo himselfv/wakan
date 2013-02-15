@@ -20,6 +20,14 @@ object fWords: TfWords
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
+  object Splitter1: TSplitter
+    Left = 773
+    Top = 0
+    Height = 455
+    Align = alRight
+    ExplicitLeft = 768
+    ExplicitTop = -6
+  end
   object Panel2: TPanel
     Left = 776
     Top = 0
@@ -32,30 +40,33 @@ object fWords: TfWords
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 776
+    Width = 773
     Height = 455
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 776
     object Panel3: TPanel
       Left = 0
       Top = 0
-      Width = 776
+      Width = 773
       Height = 455
       Align = alClient
       BevelInner = bvRaised
       BevelOuter = bvLowered
       TabOrder = 0
+      ExplicitWidth = 776
       DesignSize = (
-        776
+        773
         455)
       object Shape7: TShape
         Left = 10
         Top = 26
-        Width = 756
+        Width = 753
         Height = 402
         Anchors = [akLeft, akTop, akRight, akBottom]
         Brush.Color = clWindow
+        ExplicitWidth = 756
       end
       object RxLabel1: TRxLabel
         Left = 8
@@ -149,7 +160,7 @@ object fWords: TfWords
       object StringGrid1: TWakanGrid
         Left = 11
         Top = 27
-        Width = 754
+        Width = 751
         Height = 400
         Anchors = [akLeft, akTop, akRight, akBottom]
         BorderStyle = bsNone
@@ -167,6 +178,7 @@ object fWords: TfWords
         OnMouseUp = StringGrid1MouseUp
         OnSelectCell = StringGrid1SelectCell
         OnControlWidthResize = StringGrid1ControlResize
+        ExplicitWidth = 754
         ColWidths = (
           110
           138
@@ -174,7 +186,7 @@ object fWords: TfWords
           159)
       end
       object btnExportVocab: TButton
-        Left = 546
+        Left = 543
         Top = 5
         Width = 71
         Height = 21
@@ -189,9 +201,10 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 1
         OnClick = btnExportVocabClick
+        ExplicitLeft = 546
       end
       object btnImportVocab: TButton
-        Left = 618
+        Left = 615
         Top = 5
         Width = 72
         Height = 21
@@ -206,9 +219,10 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 2
         OnClick = btnImportVocabClick
+        ExplicitLeft = 618
       end
       object Button15: TButton
-        Left = 691
+        Left = 688
         Top = 5
         Width = 75
         Height = 21
@@ -223,9 +237,10 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 3
         OnClick = Button15Click
+        ExplicitLeft = 691
       end
       object Button18: TButton
-        Left = 426
+        Left = 423
         Top = 5
         Width = 119
         Height = 21
@@ -242,9 +257,10 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 4
         OnClick = Button18Click
+        ExplicitLeft = 426
       end
       object Button19: TButton
-        Left = 315
+        Left = 312
         Top = 5
         Width = 111
         Height = 21
@@ -259,9 +275,10 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 5
         OnClick = Button19Click
+        ExplicitLeft = 315
       end
       object Button2: TButton
-        Left = 244
+        Left = 241
         Top = 5
         Width = 71
         Height = 21
@@ -276,25 +293,28 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 6
         OnClick = Button2Click
+        ExplicitLeft = 244
       end
     end
     object Panel4: TPanel
       Left = 0
       Top = 455
-      Width = 776
+      Width = 773
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 776
     end
     object Panel5: TPanel
       Left = 0
       Top = 455
-      Width = 776
+      Width = 773
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitWidth = 776
     end
   end
   object OpenDialog1: TOpenDialog

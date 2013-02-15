@@ -15,6 +15,7 @@ object fWordKanji: TfWordKanji
   Scaled = False
   OnClose = FormClose
   OnDestroy = FormDestroy
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel1: TBevel

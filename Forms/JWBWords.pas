@@ -33,6 +33,7 @@ type
     Button2: TButton;
     PopupMenu1: TPopupMenu;
     miResetColumns: TMenuItem;
+    Splitter1: TSplitter;
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
