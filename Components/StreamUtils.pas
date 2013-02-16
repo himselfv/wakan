@@ -127,6 +127,50 @@ type
 
   end;
 
+ { TStringStream
+  Stores or retrieves raw data from a string.
+  If you pass a string, it will be read/updated, else internal buffer is used. }
+
+ { Don't instantiate }
+  TCustomStringStream = class(TStream)
+  protected
+    FPtr: PByte;
+    FPos: integer; //in bytes
+    function RemainingSize: integer;
+  public
+    function Read(var Buffer; Count: Longint): Longint; override;
+    function Write(const Buffer; Count: Longint): Longint; override;
+    function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
+  end;
+
+ { Single-byte strings }
+  TAnsiStringStream = class(TCustomStringStream)
+  protected
+    FOwnBuffer: AnsiString;
+    FString: PAnsiString;
+    function GetString: AnsiString;
+    function GetSize: Int64; override;
+    procedure SetSize(NewSize: Longint); override;
+  public
+    constructor Create(AString: PAnsiString = nil);
+    property Data: AnsiString read GetString;
+  end;
+
+ { Double-byte strings }
+  TUnicodeStringStream = class(TCustomStringStream)
+  protected
+    FOwnBuffer: UnicodeString;
+    FString: PUnicodeString;
+    function GetString: UnicodeString;
+    function GetSize: Int64; override;
+    procedure SetSize(NewSize: Longint); override;
+  public
+    constructor Create(AString: PUnicodeString = nil);
+    property Data: UnicodeString read GetString;
+  end;
+
+  TStringStream = TUnicodeStringStream;
+
 
 implementation
 
@@ -624,6 +668,118 @@ end;
 function TStreamWriter.WriteBuf(buf: PByte; len: integer): integer;
 begin
   Result := Write(buf^, len);
+end;
+
+
+{
+TCustomStringStream
+}
+
+function TCustomStringStream.RemainingSize: integer;
+begin
+  Result := Self.Size-FPos;
+end;
+
+function TCustomStringStream.Read(var Buffer; Count: Longint): Longint;
+begin
+  if Count>RemainingSize then
+    Count := RemainingSize;
+  Move(PByte(IntPtr(FPtr)+FPos)^,Buffer,Count);
+  Inc(FPos,Count);
+  Result := Count;
+end;
+
+function TCustomStringStream.Write(const Buffer; Count: Longint): Longint;
+begin
+  if RemainingSize<Count then
+    SetSize(FPos+Count);
+  Move(Buffer,PByte(IntPtr(FPtr)+FPos)^,Count);
+  Inc(FPos,Count);
+  Result := Count;
+end;
+
+function TCustomStringStream.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
+begin
+  if Origin=soCurrent then begin
+    if Offset=0 then begin
+      Result := FPos;
+      exit;
+    end;
+    Result := FPos+Offset;
+  end else
+  if Origin=soEnd then begin
+    Result := GetSize-Offset;
+  end else
+    Result := Offset;
+
+  if Result<0 then
+    Result := 0
+  else
+  if Result>GetSize then
+    Result := GetSize;
+  FPos := Result;
+end;
+
+{
+TAnsiStringStream
+}
+
+constructor TAnsiStringStream.Create(AString: PAnsiString = nil);
+begin
+  inherited Create();
+  if AString=nil then
+    FString := @FOwnBuffer
+  else
+    FString := AString;
+  FPos := 0;
+  FPtr := pointer(FString^);
+end;
+
+function TAnsiStringStream.GetString: AnsiString;
+begin
+  Result := FString^;
+end;
+
+function TAnsiStringStream.GetSize: Int64;
+begin
+  Result := Length(FString^)*SizeOf(AnsiChar);
+end;
+
+procedure TAnsiStringStream.SetSize(NewSize: Longint);
+begin
+  SetLength(FString^, NewSize);
+  FPtr := pointer(FString^);
+end;
+
+{
+TUnicodeStringStream
+}
+
+constructor TUnicodeStringStream.Create(AString: PUnicodeString = nil);
+begin
+  inherited Create();
+  if AString=nil then
+    FString := @FOwnBuffer
+  else
+    FString := AString;
+  FPos := 0;
+  FPtr := pointer(FString^);
+end;
+
+function TUnicodeStringStream.GetString: UnicodeString;
+begin
+  Result := FString^;
+end;
+
+function TUnicodeStringStream.GetSize: Int64;
+begin
+  Result := Length(FString^)*SizeOf(WideChar);
+end;
+
+procedure TUnicodeStringStream.SetSize(NewSize: Longint);
+begin
+  SetLength(FString^, (NewSize div SizeOf(WideChar)) + 1);
+  FPtr := pointer(FString^);
 end;
 
 end.

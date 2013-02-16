@@ -71,7 +71,6 @@ type
   end;
   PCursorPos = ^TCursorPos;
 
- { Text selection in graphical lines. }
   TSelection = record
     fromy: integer;
     fromx: integer;
@@ -79,7 +78,9 @@ type
     tox: integer;
   end;
   PSelection = ^TSelection;
-
+  TLineSelection = TSelection; { Text selection in graphical lines. }
+  TTextSelection = TSelection; { Text selection in logical coordinates }
+  PTextSelection = ^TTextSelection;
 
   TTextAnnotMode = (
     amDefault,
@@ -227,7 +228,7 @@ type
     procedure JoinLine(y:integer);
     procedure DeleteCharacter(x,y:integer);
     procedure RefreshLines;
-    procedure CopySelection(format:TTextSaveFormat);
+    procedure CopySelection(format:TTextSaveFormat;stream:TStream);
     procedure BlockOp(docopy,dodelete:boolean);
     procedure PasteOp;
     function PosToWidth(x,y:integer):integer;
@@ -262,7 +263,7 @@ type
   public
     view:integer; //index of a first visible graphical line
     rview: TSourcePos; //logical coordinates of a start of a first visible graphical line
-    rcur: TSourcePos; //cursor position in logical coordinates
+    rcur: TSourcePos; //cursor position in logical coordinates (cursor is before this char)
     cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
     lastxsiz: integer; //size of one half-char in pixels, at the time of last render
     lastycnt,printl:integer;
@@ -305,7 +306,7 @@ type
     procedure OpenFile(filename:string;tp:byte);
     procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
     procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat;
-        lineFirst:integer=-1; lineLast:integer=-1; charFirst:integer=-1; charLast:integer=-1);
+      stream: TStream; block: PTextSelection = nil);
     function SaveAs: boolean;
     function CommitFile:boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
@@ -337,27 +338,47 @@ type
     procedure Execute; override;
   end;
 
+ {
+  This saves data or selection to file or to memory to be copied to clipboard.
+  Write your own formats if you wish.
+
+  Rules:
+    Default implementation saves simply text.
+
+    One encoding converter is created by default implementation, unless you
+    don't call inherited BeginDocument, in which case don't call inherited at all.
+
+    By the end of EndDocument all caches have to be flushed down to FStream.
+ }
+
   TTextSaveFormat = class
   protected
-    FStream: TJwbConvert;
+    FStream: TStream;
+    FOwnsStream: boolean;
+    FOutput: TJwbConvert;
+    FEncType: integer;
     LastChar: FChar;
     AtSpace: boolean;
     AtNewline: boolean;
+    procedure outpln(const s: string);
+    procedure outp(const s: string);
   public
-    constructor Create(AStream: TJwbConvert);
+    constructor Create(AEncType: integer);
     destructor Destroy; override;
     procedure BeginDocument; virtual;
     procedure AddChars(const s: FString); virtual;
     procedure AddWord(const word,reading: FString; const meaning: string;
       rubyTextBreak: TRubyTextBreakType); virtual;
     procedure EndDocument; virtual;
+    property Stream: TStream read FStream write FStream;
+    property OwnsStream: boolean read FOwnsStream write FOwnsStream;
   end;
 
   TKanaOnlyFormat = class(TTextSaveFormat)
   protected
     FAddSpaces: boolean;
   public
-    constructor Create(AStream: TJwbConvert; AAddSpaces: boolean);
+    constructor Create(AEncType: integer; AAddSpaces: boolean);
     procedure AddWord(const word,reading: FString; const meaning: string;
       rubyTextBreak: TRubyTextBreakType); override;
   end;
@@ -374,8 +395,8 @@ type
       rubyTextBreak: TRubyTextBreakType); override;
   end;
 
+ { UTF8 only for simplicity }
   THtmlFormatOption = (
-    hoHtml5,          //use HTML5 freely, instead of only <ruby>
     hoClipFragment    //add <!-- start fragment --> <!-- end fragment --> marks to use as HTML clipboard format
   );
   THtmlFormatOptions = set of THtmlFormatOption;
@@ -383,11 +404,8 @@ type
   THtmlFormat = class(TTextSaveFormat)
   protected
     FOptions: THtmlFormatOptions;
-    FCharset: string;
-    procedure outpln(const s: string);
-    procedure outp(const s: string);
   public
-    constructor Create(AStream: TJwbConvert; AOptions: THtmlFormatOptions; ACharset: string);
+    constructor Create(AOptions: THtmlFormatOptions);
     procedure BeginDocument; override;
     procedure AddChars(const s: FString); override;
     procedure AddWord(const word,reading: FString; const meaning: string;
@@ -402,12 +420,11 @@ type
       rubyTextBreak: TRubyTextBreakType); override;
   end;
 
-  { This ONLY accepts UTF8 converters }
+  { UTF8 only by format }
   {$R 'odt.res' 'Assets\ODT\odt.rc'}
   TOpenDocumentContentFormat = class(TTextSaveFormat)
-  protected
-    procedure outp(const s: string);
   public
+    constructor Create;
     procedure BeginDocument; override;
     procedure AddChars(const s: FString); override;
     procedure AddWord(const word,reading: FString; const meaning: string;
@@ -417,12 +434,10 @@ type
 
   TOpenDocumentFormat = class(TTextSaveFormat)
   protected
-    FStream: TStream;
-    FOwnsStream: boolean;
     FContentMem: TMemoryStream;
     FContentFormat: TOpenDocumentContentFormat;
   public
-    constructor Create(AStream: TStream; AOwnsStream: boolean);
+    constructor Create();
     destructor Destroy; override;
     procedure BeginDocument; override;
     procedure AddChars(const s: FString); override;
@@ -477,13 +492,13 @@ end;
 
 var
  //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
-  block: TSelection;
+  block: TTextSelection;
  //Selection block last time it was repainted (allows us to only repaint changed parts)
-  oldblock: TSelection;
+  oldblock: TTextSelection;
 
  //When selecting, the position where we started dragging mouse.
  //Selection block is generated from this on mouse-release.
-  dragstart: TSourcePos;
+  dragstart: TSourcePos; //cursor was before this char when drag started
 
  //Last character which the mouse was over
   lastmm:TCursorPos;
@@ -548,10 +563,10 @@ begin
 end;
 
 
-constructor TTextSaveFormat.Create(AStream: TJwbConvert);
+constructor TTextSaveFormat.Create(AEncType: integer);
 begin
   inherited Create;
-  FStream := AStream;
+  FEncType := AEncType;
   AtSpace := false;
   AtNewline := true;
   LastChar := UH_NOCHAR;
@@ -559,16 +574,31 @@ end;
 
 destructor TTextSaveFormat.Destroy;
 begin
-  FreeAndNil(FStream);
+  FreeAndNil(FOutput);
+  if FOwnsStream then
+    FreeAndNil(FStream);
   inherited;
+end;
+
+//Used to simplify writing strings as fstrings
+procedure TTextSaveFormat.outpln(const s: string);
+begin
+  FOutput.Write(fstr(s)+UH_CR+UH_LF);
+end;
+
+procedure TTextSaveFormat.outp(const s: string);
+begin
+  FOutput.Write(fstr(s));
 end;
 
 procedure TTextSaveFormat.BeginDocument;
 begin
+  FOutput := TJwbConvert.CreateNew(FStream,FEncType);
 end;
 
 procedure TTextSaveFormat.EndDocument;
 begin
+  FreeAndNil(FOutput);
 end;
 
 procedure TTextSaveFormat.AddChars(const s: FString);
@@ -576,7 +606,7 @@ var i: integer;
 begin
   for i := 1 to flength(s) do begin
     LastChar := fgetch(s,i);
-    FStream.Write(LastChar);
+    FOutput.Write(LastChar);
     AtSpace := LastChar=UH_SPACE;
     AtNewline := LastChar=UH_LF;
   end;
@@ -590,9 +620,9 @@ begin
   AddChars(word);
 end;
 
-constructor TKanaOnlyFormat.Create(AStream: TJwbConvert;AAddSpaces:boolean);
+constructor TKanaOnlyFormat.Create(AEncType:integer; AAddSpaces:boolean);
 begin
-  inherited Create(AStream);
+  inherited Create(AEncType);
   FAddSpaces := AAddSpaces;
 end;
 
@@ -625,31 +655,17 @@ begin
     AddChars(word); //without space if no reading
 end;
 
-constructor THtmlFormat.Create(AStream: TJwbConvert; AOptions: THtmlFormatOptions; ACharset: string);
+constructor THtmlFormat.Create(AOptions: THtmlFormatOptions);
 begin
-  inherited Create(AStream);
+  inherited Create(FILETYPE_UTF8);
   FOptions := AOptions;
-  FCharset := ACharset;
-end;
-
-procedure THtmlFormat.outpln(const s: string);
-begin
-  FStream.Write(fstr(s)+UH_CR+UH_LF);
-end;
-
-procedure THtmlFormat.outp(const s: string);
-begin
-  FStream.Write(fstr(s));
 end;
 
 procedure THtmlFormat.BeginDocument;
 begin
+  inherited BeginDocument;
   outpln('<!DOCTYPE html><html><head>');
-  if FCharset<>'' then
-    if hoHtml5 in Options then
-      outp('<meta charset="'+FCharset+'">')
-    else
-      outp('<meta http-equiv="Content-Type" content="text/html; charset='+FCharset+'">');
+  outp('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">');
   outpln('</head>');
   outpln('<body>');
   if hoClipFragment in Options then
@@ -694,7 +710,7 @@ begin
   repl(tmp,UH_LF,fstr('</p><p>'));
   repl(tmp,UH_CR,'');
   repl(tmp,fstr('</p><p>'),fstr('</p>'#13#10'<p>')); //if we did that before, we'd be stuck in infinite replacements
-  FStream.Write(tmp);
+  FOutput.Write(tmp);
 end;
 
 procedure THtmlFormat.AddWord(const word,reading: FString; const meaning: string;
@@ -711,11 +727,11 @@ begin
   if meaning<>'' then
     outp('<span title="'+HTMLEncode3(meaning)+'">');
 
-  FStream.Write(HTMLEncode3(word));
+  FOutput.Write(HTMLEncode3(word));
 
   if (word<>'') and (reading<>'') then begin
     outp('<rt>');
-    FStream.Write(HTMLEncode3(reading));
+    FOutput.Write(HTMLEncode3(reading));
     outp('</ruby>');
   end else
   if meaning<>'' then
@@ -728,6 +744,7 @@ begin
   if hoClipFragment in Options then
     outpln(HtmlEndFragment);
   outpln('</body></html>');
+  inherited EndDocument;
 end;
 
 procedure TRubyTextFormat.AddWord(const word,reading: FString; const meaning: string;
@@ -749,35 +766,32 @@ begin
     else
       rubyTextBreak := btSkip;
   if rubyTextBreak=btBreak then
-    FStream.Write(UH_AORUBY_TEXTBREAK+word)
+    FOutput.Write(UH_AORUBY_TEXTBREAK+word)
   else
-    FStream.Write(word);
+    FOutput.Write(word);
 
  //We don't check that reading is not empty, because if it was empty
  //we wouldn't have set inReading, except if it was explicit ruby,
  //in which case we must write it even if empty.
-  FStream.Write(UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE);
+  FOutput.Write(UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE);
 end;
 
-
-procedure TOpenDocumentContentFormat.outp(const s: string);
+constructor TOpenDocumentContentFormat.Create;
 begin
-  FStream.Write(fstr(s));
+  inherited Create(FILETYPE_UTF8);
 end;
 
 procedure TOpenDocumentContentFormat.BeginDocument;
 var res: TResourceStream;
 begin
-  if FStream.Tp<>FILETYPE_UTF8 then
-    raise Exception.Create('Open Document Text must be exported in Unicode'); //do not localize
-
   res := TResourceStream.Create(hInstance,'ODT_CONTENT_START',RT_RCDATA);
   try
-    FStream.Stream.CopyFrom(res,res.Size);
+    FStream.CopyFrom(res,res.Size);
   finally
     FreeAndNil(res);
   end;
 
+  inherited BeginDocument;
   outp('<text:p>');
 end;
 
@@ -789,16 +803,16 @@ begin
   repl(tmp,UH_LF,fstr('</text:p><text:p>'));
   repl(tmp,UH_CR,'');
   repl(tmp,fstr('</text:p><text:p>'),fstr('</text:p>'#10'<text:p>')); //ODT MUST use LF-only linebreaks
-  FStream.Write(tmp);
+  FOutput.Write(tmp);
 end;
 
 procedure TOpenDocumentContentFormat.AddWord(const word,reading: FString; const meaning: string;
   rubyTextBreak: TRubyTextBreakType);
 begin
   outp('<text:ruby><text:ruby-base>');
-  FStream.Write(word);
+  FOutput.Write(word);
   outp('</text:ruby-base><text:ruby-text>');
-  FStream.Write(reading);
+  FOutput.Write(reading);
   outp('</text:ruby-text></text:ruby>');
 end;
 
@@ -806,39 +820,35 @@ procedure TOpenDocumentContentFormat.EndDocument;
 var res: TResourceStream;
 begin
   outp('</text:p>');
-  FStream.Flush;
+  FOutput.Flush;
+  inherited EndDocument;
 
   res := TResourceStream.Create(hInstance,'ODT_CONTENT_END',RT_RCDATA);
   try
-    FStream.Stream.CopyFrom(res,res.Size);
+    FStream.CopyFrom(res,res.Size);
   finally
     FreeAndNil(res);
   end;
 end;
 
-constructor TOpenDocumentFormat.Create(AStream: TStream; AOwnsStream: boolean);
-var FConvert: TJwbConvert;
+constructor TOpenDocumentFormat.Create();
 begin
-  inherited Create(nil);
-  FStream := AStream;
-  FOwnsStream := AOwnsStream;
+  inherited Create(0); //inherited converted not used
   FContentMem := TMemoryStream.Create;
-  FConvert := TJwbConvert.CreateNew(FContentMem,FILETYPE_UTF8);
-  FConvert.OwnsStream := false;
-  FContentFormat := TOpenDocumentContentFormat.Create(FConvert);
+  FContentFormat := TOpenDocumentContentFormat.Create();
+  FContentFormat.Stream := FContentMem;
 end;
 
 destructor TOpenDocumentFormat.Destroy;
 begin
   FreeAndNil(FContentFormat);
   FreeAndNil(FContentMem);
-  if FOwnsStream then
-    FreeAndNil(FStream);
   inherited;
 end;
 
 procedure TOpenDocumentFormat.BeginDocument;
 begin
+ //no inherited
   FContentFormat.BeginDocument;
 end;
 
@@ -1044,18 +1054,22 @@ end;
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
 procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-var encode: TJwbConvert;
+var stream: TStream;
 begin
   Screen.Cursor:=crHourGlass;
   if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
     SaveWakanText(filename)
   else begin
-    encode := TJwbConvert.CreateNew(
-      TStreamWriter.Create(
-        TFileStream.Create(filename,fmCreate),
-        true
-      ), tp);
-    SaveText(AnnotMode,TRubyTextFormat.Create(encode));
+    stream := TStreamWriter.Create(TFileStream.Create(filename,fmCreate),true);
+    try
+      SaveText(
+        AnnotMode,
+        TRubyTextFormat.Create(tp),
+        stream
+      );
+    finally
+      FreeAndNil(stream);
+    end;
   end;
   Screen.Cursor:=crDefault;
   FileChanged:=false;
@@ -1273,8 +1287,8 @@ Ruby saving strategy:
 //Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
 //and just write strings here.
 
-procedure TfTranslate.SaveText(AnnotMode:TTextAnnotMode;format: TTextSaveFormat;
-  lineFirst:integer=-1; lineLast:integer=-1; charFirst:integer=-1; charLast:integer=-1);
+procedure TfTranslate.SaveText(AnnotMode:TTextAnnotMode; format:TTextSaveFormat;
+  stream: TStream; block: PTextSelection);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
@@ -1283,6 +1297,8 @@ var i,j,k: integer;
   rootLen: integer; //remaining length of the word's root, if calculated dynamically. <0 means ignore this check
   explicitRuby: boolean;
   chFirst,chLast: integer;
+
+  sel: TTextSelection;
 
   procedure outp(s: FString);
   begin
@@ -1305,23 +1321,32 @@ begin
   rootLen := -1;
   explicitRuby := true;
 
-  if lineFirst<0 then lineFirst := 0;
-  if lineLast<0 then lineLast := doc.Count-1;
-  if charFirst<0 then charFirst := 0;
-  if charLast<0 then charLast := flength(doc[lineLast])-1;
+  if block<>nil then begin
+    sel := block^;
+    if sel.fromy<0 then sel.fromy := 0;
+    if sel.toy<0 then sel.toy := doc.Count-1;
+    if sel.fromx<0 then sel.fromx := 0;
+    if sel.tox<0 then sel.tox := flength(doc[sel.toy]);
+  end else begin
+    sel.fromy := 0;
+    sel.fromx := 0;
+    sel.toy := doc.Count-1;
+    sel.tox := flength(doc[sel.toy]);
+  end;
 
+  format.Stream := stream;
   format.BeginDocument;
-  for i:=lineFirst to lineLast do
+  for i:=sel.fromy to sel.toy do
   begin
-    if i=lineFirst then
-      chFirst := charFirst
+    if i=sel.fromy then
+      chFirst := sel.fromx
     else
       chFirst := 0;
-    if i=lineLast then
-      chLast := charLast
+    if i=sel.toy then
+      chLast := sel.tox
     else
-      chLast := flength(doc[i])-1;
-    for j:= chFirst to chLast do
+      chLast := flength(doc[i]);
+    for j:= chFirst to chLast-1 do
     begin
       if inReading then begin
         Dec(rootLen);
@@ -2196,16 +2221,20 @@ end;
 
 //Copies selection as a text with Aozora-Ruby
 function TfTranslate.CopyAsRuby: UnicodeString;
-var ms: TMemoryStream;
-  encode: TJwbConvert;
+var stream: TStream;
 begin
-  ms := TMemoryStream.Create;
-  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF16LE);
-  encode.OwnsStream := false;
-  Self.CopySelection(TRubyTextFormat.Create(encode));
-  SetLength(Result,ms.Size div 2 + 1);
-  move(ms.Memory^, Result[1], ms.Size);
-  FreeAndNil(ms);
+  stream := TUnicodeStringStream.Create(@Result);
+  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE),stream);
+  FreeAndNil(stream);
+end;
+
+//Copies selection as HTML, with <!--StartFragment --><!--EndFragment --> marks
+function TfTranslate.CopyAsHtml: Utf8String;
+var stream: TStream;
+begin
+  stream := TAnsiStringStream.Create(@Result);
+  CopySelection(THtmlFormat.Create([hoClipFragment]),stream);
+  FreeAndNil(stream);
 end;
 
 //Generates CF_HTML clipboard header for a text
@@ -2224,20 +2253,6 @@ begin
   Result := Format(headerForm,[lenHeader, lenHeader+lenHtml,lenHeader+startFragment,lenHeader+endFragment]);
 end;
 
-//Copies selection as HTML, with <!--StartFragment --><!--EndFragment --> marks
-function TfTranslate.CopyAsHtml: Utf8String;
-var ms: TMemoryStream;
-  encode: TJwbConvert;
-begin
-  ms := TMemoryStream.Create;
-  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF8);
-  encode.OwnsStream := false;
-  Self.CopySelection(THtmlFormat.Create(encode,[hoHtml5,hoClipFragment],'utf-8'));
-  SetLength(Result,ms.Size);
-  move(ms.Memory^, Result[1], ms.Size);
-  FreeAndNil(ms);
-end;
-
 //Copies selection as HTML enhanced with a CF_HTML clipboard header
 function TfTranslate.CopyAsClipHtml: Utf8String;
 var startFragment, endFragment: integer;
@@ -2252,32 +2267,28 @@ end;
 
 //Copies selection as OpenDocumentText, content file
 function TfTranslate.CopyAsOpenDocumentTextContent: Utf8String;
-var ms: TMemoryStream;
-  encode: TJwbConvert;
+var stream: TStream;
 begin
-  ms := TMemoryStream.Create;
-  encode := TJwbConvert.CreateNew(ms, FILETYPE_UTF8);
-  encode.OwnsStream := false;
-  Self.CopySelection(TOpenDocumentContentFormat.Create(encode));
-  SetLength(Result,ms.Size);
-  move(ms.Memory^, Result[1], ms.Size);
-  FreeAndNil(ms);
+  stream := TAnsiStringStream.Create(@Result);
+  CopySelection(TOpenDocumentContentFormat.Create(),stream);
+  FreeAndNil(stream);
 end;
 
 function TfTranslate.CopyAsOpenDocument: TMemoryStream;
 begin
   Result := TMemoryStream.Create;
-  Self.CopySelection(TOpenDocumentFormat.Create(Result,{OwnsStream=}false));
+  Self.CopySelection(TOpenDocumentFormat.Create(),Result);
 end;
 
 procedure TfTranslate.CopyAs;
 var RubyText: UnicodeString;
-  Odt: TMemoryStream;
 begin
   RubyText := CopyAsRuby;
   fMenu.ClearClipboard;
   clip := fstr(RubyText);
-  fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true);
+ {$IFDEF DEBUG}
+  fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true); //No point since no one supports this...
+ {$ENDIF}
   fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
   fMenu.AddToClipboard(CF_UNICODETEXT,RubyText);
   fMenu.ClipboardChanged;
@@ -3651,7 +3662,7 @@ var rect:TRect;
     llen: integer;      //graphical line length
 
 
-  function InSelection(x, y: integer; const sel: TSelection): boolean;
+  function InSelection(x, y: integer; const sel: TTextSelection): boolean;
   begin
     Result := ((y>sel.fromy) or ((y=sel.fromy) and (x>=sel.fromx)))
       and ((y<sel.toy) or ((y=sel.toy) and (x<sel.tox)));
@@ -3792,10 +3803,10 @@ begin
   ShowText(true);
 end;
 
-procedure TfTranslate.CopySelection(format:TTextSaveFormat);
+procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream);
 begin
   CalcBlockFromTo(false);
-  SaveText(amRuby,format,block.fromy,block.toy,block.fromx,block.tox);
+  SaveText(amRuby,format,stream,@block);
 end;
 
 procedure TfTranslate.BlockOp(docopy,dodelete:boolean);

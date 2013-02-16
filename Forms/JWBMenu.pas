@@ -400,7 +400,7 @@ type
     procedure InitializeWakan;
 
   private //Docking
-    procedure DockProc(slave,host:TForm;panel:TPanel;dir:integer);
+    procedure DockProc(slave,host:TForm;panel:TPanel;dir:integer;dock:boolean);
     procedure FixConstraints(form:TForm;w,h:integer);
   public
     procedure DockExpress(form:TForm;dock:boolean);
@@ -2762,19 +2762,16 @@ begin
   CloseClipboard;
 end;
 
+//Does not add terminating null
 procedure TfMenu.AddToClipboard(uFormat: UINT; data: pointer; size: integer);
 var
   DataHandle :  THandle;
   ToPointer  :  Pointer;
 begin
- //Copy data + final NULL
-  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE, size+2); //2 bytes even if size==0
+  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE, size);
   ToPointer := GlobalLock(DataHandle);
-  if data<>nil then
-    Move(data^, ToPointer^, size)
-  else
-   //Just set the terminating nulls
-    PWord(ToPointer)^ := $0000;
+  if size>0 then
+    Move(data^, ToPointer^, size); //die if data is invalid
   GlobalUnlock(DataHandle);
 
   OpenClipboard(Handle);
@@ -3551,7 +3548,7 @@ begin
   if (form.Constraints.MaxWidth>0) then form.Constraints.MaxWidth:=form.Constraints.MaxWidth+w;
 end;
 
-procedure TfMenu.DockProc(slave,host:TForm;panel:TPanel;dir:integer);
+procedure TfMenu.DockProc(slave,host:TForm;panel:TPanel;dir:integer;dock:boolean);
 var adocked:boolean;
     vert:boolean;
     fixsiz,flomin:integer;
@@ -3612,13 +3609,13 @@ end;
 
 procedure TfMenu.DockExpress(form:TForm;dock:boolean);
 begin
-  if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji,fKanji.Panel3,1);
-  if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji,fKanji.Panel2,3);
-  if ((form=fExamples) or (form=nil)) and (curdisplaymode<>5) then DockProc(fExamples,fUser,fUser.Panel2,3);
-  if ((form=fExamples) or (form=nil)) and (curdisplaymode=5) then DockProc(fExamples,fWords,fWords.Panel5,3);
-  if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser,fUser.Panel3,2);
-  if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords,fWords.Panel2,2);
-  if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords,fWords.Panel4,3);
+  if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji,fKanji.Panel3,1,dock);
+  if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji,fKanji.Panel2,3,dock);
+  if ((form=fExamples) or (form=nil)) and (curdisplaymode<>5) then DockProc(fExamples,fUser,fUser.Panel2,3,dock);
+  if ((form=fExamples) or (form=nil)) and (curdisplaymode=5) then DockProc(fExamples,fWords,fWords.Panel5,3,dock);
+  if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser,fUser.Panel3,2,dock);
+  if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords,fWords.Panel2,2,dock);
+  if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords,fWords.Panel4,3,dock);
 end;
 
 { Only use this to undock forms from containers which don't need to be hidden,
@@ -4490,7 +4487,6 @@ procedure TfMenu.eSavekanatranscriptcUloitpepisdokany1Click(
   Sender: TObject);
 var
   stream: TStream;
-  encode: TJwbConvert;
   enctype: integer;
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
@@ -4508,30 +4504,21 @@ begin
   end;
 
   stream := nil;
-  encode := nil;
   try
-
     stream := TStreamWriter.Create(
       TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
       true
     );
-    if SaveAsKanaDialog.FilterIndex<>5 then begin
-      encode := TJwbConvert.CreateNew(stream, enctype);
-      stream := nil; //will auto-destroy
-    end else
-      encode := nil;
 
     case SaveAsKanaDialog.FilterIndex of
-      1: fTranslate.SaveText(amRuby,TKanaOnlyFormat.Create(encode,{AddSpaces=}true));
-      2: fTranslate.SaveText(amRuby,TKanjiKanaFormat.Create(encode));
-      3: fTranslate.SaveText(amRuby,TKanjiOnlyFormat.Create(encode));
-      4: fTranslate.SaveText(amRuby,THtmlFormat.Create(encode,[hoHtml5],'utf-8'));
-      5: fTranslate.SaveText(amRuby,TOpenDocumentFormat.Create(stream, {OwnsStream=}true));
+      1: fTranslate.SaveText(amRuby,TKanaOnlyFormat.Create(enctype,{AddSpaces=}true),stream);
+      2: fTranslate.SaveText(amRuby,TKanjiKanaFormat.Create(enctype),stream);
+      3: fTranslate.SaveText(amRuby,TKanjiOnlyFormat.Create(enctype),stream);
+      4: fTranslate.SaveText(amRuby,THtmlFormat.Create([]),stream);
+      5: fTranslate.SaveText(amRuby,TOpenDocumentFormat.Create(),stream);
     end;
-    encode := nil;
 
   finally
-    FreeAndNil(encode);
     FreeAndNil(stream);
   end;
 end;

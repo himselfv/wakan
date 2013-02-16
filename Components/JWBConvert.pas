@@ -41,7 +41,7 @@ type
     procedure _fputend(tp:byte);
     procedure _output(tp:byte;w:word);
   public
-    constructor Open(AStream: TStream; tp: byte); overload;
+    constructor Open(AStream: TStream; tp: byte; AOwnsStream: boolean = false); overload;
     constructor Open(const filename: string; tp: byte); overload;
     destructor Destroy; override;
     function DetectType: byte;
@@ -53,7 +53,7 @@ type
     function ReadChar(out ch:FChar): boolean; //reads one char as FChar
     function ReadLn: FString;
     procedure Rewind;
-    constructor CreateNew(AStream: TStream; tp: byte); overload;
+    constructor CreateNew(AStream: TStream; tp: byte; AOwnsStream: boolean = false); overload;
     constructor CreateNew(const filename: string; tp: byte); overload;
     procedure Write(s:FString);
     procedure WriteChar(s:FChar);
@@ -263,31 +263,31 @@ end;
 
 { TJwbConvert }
 
-constructor TJwbConvert.Open(AStream: TStream; tp: byte);
+constructor TJwbConvert.Open(AStream: TStream; tp: byte; AOwnsStream: boolean = false);
 begin
   inherited Create;
   FStream := AStream;
-  FOwnsStream := true;
+  FOwnsStream := AOwnsStream;
   RewindAsType(tp);
 end;
 
 constructor TJwbConvert.Open(const filename: string; tp: byte);
 begin
-  Open(TFileStream.Create(filename, fmOpenRead), tp);
+  Open(TFileStream.Create(filename, fmOpenRead), tp, true);
 end;
 
-constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte);
+constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte; AOwnsStream: boolean = false);
 begin
   inherited Create;
   FStream := AStream;
-  FOwnsStream := true;
+  FOwnsStream := AOwnsStream;
   FEOF := true; //who cares?
   RewriteAsType(tp);
 end;
 
 constructor TJwbConvert.CreateNew(const filename: string; tp: byte);
 begin
-  CreateNew(TFileStream.Create(filename,fmCreate), tp);
+  CreateNew(TFileStream.Create(filename,fmCreate), tp, true);
 end;
 
 destructor TJwbConvert.Destroy;
