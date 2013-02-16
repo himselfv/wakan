@@ -7,7 +7,7 @@ object fMenu: TfMenu
   ClientWidth = 694
   Color = clBtnFace
   Constraints.MinHeight = 480
-  Constraints.MinWidth = 480
+  Constraints.MinWidth = 600
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

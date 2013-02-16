@@ -21,19 +21,13 @@ object fKanjiDetails: TfKanjiDetails
   OnDestroy = FormDestroy
   OnHide = FormHide
   OnKeyPress = FormKeyPress
+  OnResize = FormResize
   OnShow = FormShow
   DesignSize = (
     321
     418)
   PixelsPerInch = 96
   TextHeight = 13
-  object Shape1: TShape
-    Left = 6
-    Top = 220
-    Width = 307
-    Height = 162
-    Anchors = [akLeft, akTop, akRight, akBottom]
-  end
   object ShapeKanji: TShape
     Left = 6
     Top = 8
@@ -204,97 +198,6 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object ProUrlLabel1: TUrlLabel
-    Left = 8
-    Top = 198
-    Width = 54
-    Height = 13
-    Cursor = crHandPoint
-    Hint = 
-      '#00163^ewww.zhongwen.com - Etymological information about the ch' +
-      'aracter'
-    Caption = 'ZhongWen'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlue
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsUnderline]
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
-  object ProUrlLabel2: TUrlLabel
-    Left = 79
-    Top = 198
-    Width = 56
-    Height = 13
-    Cursor = crHandPoint
-    Hint = 
-      '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
-      'C dictionary server'
-    Caption = 'WWWJDIC'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlue
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsUnderline]
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
-  object ProUrlLabel3: TUrlLabel
-    Left = 154
-    Top = 198
-    Width = 36
-    Height = 13
-    Cursor = crHandPoint
-    Hint = 
-      '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
-      'ter'
-    Caption = 'UniHan'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlue
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsUnderline]
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
-  object ProUrlLabel4: TUrlLabel
-    Left = 210
-    Top = 198
-    Width = 26
-    Height = 13
-    Cursor = crHandPoint
-    Hint = '#00166^ewww.ocrat.com - Animated stroke order'
-    Caption = 'Ocrat'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlue
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsUnderline]
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
-  object ProUrlLabel5: TUrlLabel
-    Left = 257
-    Top = 198
-    Width = 56
-    Height = 13
-    Cursor = crHandPoint
-    Hint = '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page'
-    Caption = 'KanjiProject'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clBlue
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsUnderline]
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-  end
   object lblRadicalNo: TLabel
     Left = 225
     Top = 75
@@ -353,49 +256,153 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object ScrollBox1: TScrollBox
+  object pnlSecondHalf: TPanel
     Left = 7
-    Top = 221
-    Width = 304
-    Height = 160
-    VertScrollBar.Position = 258
-    VertScrollBar.Tracking = True
+    Top = 198
+    Width = 305
+    Height = 212
     Anchors = [akLeft, akTop, akRight, akBottom]
-    BorderStyle = bsNone
-    TabOrder = 0
-    object pbKanjiInfo: TPaintBox
-      Left = 0
-      Top = -250
-      Width = 295
-      Height = 800
-      OnMouseDown = pbKanjiInfoMouseDown
-      OnMouseMove = pbKanjiInfoMouseMove
-      OnMouseUp = pbKanjiInfoMouseUp
-      OnPaint = pbKanjiInfoPaint
-    end
-  end
-  object btnClose: TButton
-    Left = 6
-    Top = 390
-    Width = 225
-    Height = 17
-    Anchors = [akLeft, akRight, akBottom]
-    Caption = '#00170^eClose'
-    Default = True
+    BevelOuter = bvNone
     TabOrder = 1
-    OnClick = btnCloseClick
-    OnKeyPress = btnCloseKeyPress
-  end
-  object btnDock: TButton
-    Left = 237
-    Top = 390
-    Width = 75
-    Height = 17
-    Hint = '#00171^eDocks / undocks this window into main window'
-    Anchors = [akRight, akBottom]
-    Caption = 'DOCK'
-    TabOrder = 2
-    OnClick = btnDockClick
+    DesignSize = (
+      305
+      212)
+    object ProUrlLabel1: TUrlLabel
+      Left = 1
+      Top = 0
+      Width = 54
+      Height = 13
+      Cursor = crHandPoint
+      Hint = 
+        '#00163^ewww.zhongwen.com - Etymological information about the ch' +
+        'aracter'
+      Caption = 'ZhongWen'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object ProUrlLabel2: TUrlLabel
+      Left = 72
+      Top = 0
+      Width = 56
+      Height = 13
+      Cursor = crHandPoint
+      Hint = 
+        '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
+        'C dictionary server'
+      Caption = 'WWWJDIC'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object ProUrlLabel3: TUrlLabel
+      Left = 147
+      Top = 0
+      Width = 36
+      Height = 13
+      Cursor = crHandPoint
+      Hint = 
+        '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
+        'ter'
+      Caption = 'UniHan'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object ProUrlLabel4: TUrlLabel
+      Left = 203
+      Top = 0
+      Width = 26
+      Height = 13
+      Cursor = crHandPoint
+      Hint = '#00166^ewww.ocrat.com - Animated stroke order'
+      Caption = 'Ocrat'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object ProUrlLabel5: TUrlLabel
+      Left = 250
+      Top = 0
+      Width = 56
+      Height = 13
+      Cursor = crHandPoint
+      Hint = '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page'
+      Caption = 'KanjiProject'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsUnderline]
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+    object btnClose: TButton
+      Left = -1
+      Top = 192
+      Width = 225
+      Height = 17
+      Anchors = [akLeft, akRight, akBottom]
+      Caption = '#00170^eClose'
+      Default = True
+      TabOrder = 0
+      OnClick = btnCloseClick
+      OnKeyPress = btnCloseKeyPress
+    end
+    object btnDock: TButton
+      Left = 230
+      Top = 192
+      Width = 75
+      Height = 17
+      Hint = '#00171^eDocks / undocks this window into main window'
+      Anchors = [akRight, akBottom]
+      Caption = 'DOCK'
+      TabOrder = 1
+      OnClick = btnDockClick
+    end
+    object ScrollBox1: TScrollBox
+      Left = 0
+      Top = 23
+      Width = 304
+      Height = 160
+      VertScrollBar.Position = 258
+      VertScrollBar.Tracking = True
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      BevelKind = bkFlat
+      BorderStyle = bsNone
+      TabOrder = 2
+      object pbKanjiInfo: TPaintBox
+        Left = 0
+        Top = -250
+        Width = 295
+        Height = 800
+        OnMouseDown = pbKanjiInfoMouseDown
+        OnMouseMove = pbKanjiInfoMouseMove
+        OnMouseUp = pbKanjiInfoMouseUp
+        OnPaint = pbKanjiInfoPaint
+      end
+    end
   end
   object cbCategories: TComboBox
     Left = 168
@@ -403,7 +410,7 @@ object fKanjiDetails: TfKanjiDetails
     Width = 127
     Height = 21
     Style = csDropDownList
-    TabOrder = 3
+    TabOrder = 0
     OnChange = cbCategoriesChange
   end
   object FormPlacement1: TFormPlacement

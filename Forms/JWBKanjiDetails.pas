@@ -37,22 +37,22 @@ type
     lblStrokeCount: TLabel;
     btnAddToCategory: TSpeedButton;
     RxLabel39: TRxLabel;
-    ScrollBox1: TScrollBox;
-    pbKanjiInfo: TPaintBox;
-    Shape1: TShape;
-    btnClose: TButton;
     FormPlacement1: TFormPlacement;
+    lblRadicalNo: TLabel;
+    btnStrokeOrder: TSpeedButton;
+    cbCategories: TComboBox;
+    RxLabel1: TRxLabel;
+    lblCategories: TLabel;
+    pnlSecondHalf: TPanel;
+    btnClose: TButton;
+    btnDock: TButton;
     ProUrlLabel1: TUrlLabel;
     ProUrlLabel2: TUrlLabel;
     ProUrlLabel3: TUrlLabel;
     ProUrlLabel4: TUrlLabel;
     ProUrlLabel5: TUrlLabel;
-    lblRadicalNo: TLabel;
-    btnDock: TButton;
-    btnStrokeOrder: TSpeedButton;
-    cbCategories: TComboBox;
-    RxLabel1: TRxLabel;
-    lblCategories: TLabel;
+    ScrollBox1: TScrollBox;
+    pbKanjiInfo: TPaintBox;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -90,6 +90,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormResize(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -112,6 +113,12 @@ type
     function FitText(canvas:TCanvas;tp:char;wrap:boolean;w,fh:integer;
       fname:string;var l:integer;var s:string):string;
 
+  protected
+    FPortraitMode: boolean;
+  public
+    procedure UpdateAlignment;
+    procedure SetPortraitMode(Value: boolean);
+
   end;
 
 var
@@ -123,7 +130,8 @@ var
 implementation
 
 uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
-  JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories, JWBKanjiCard;
+  JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories, JWBKanjiCard,
+  JWBUserFilters;
 
 {$R *.DFM}
 
@@ -915,6 +923,36 @@ begin
     s:='';
     l:=countwidth(tp,fh,stl);
   end;
+end;
+
+procedure TfKanjiDetails.SetPortraitMode(Value: boolean);
+begin
+  FPortraitMode := Value;
+ //One-time set default width/height (can be adjusted later)
+ //TODO: Perhaps remember these for both modes and restore when switching between them
+  if not FPortraitMode then
+    ClientWidth := 321
+  else
+    ClientHeight := 200;
+  UpdateAlignment;
+end;
+
+procedure TfKanjiDetails.UpdateAlignment;
+begin
+  if not FPortraitMode then begin
+    pnlSecondHalf.Top := RxLabel1.Top + RxLabel1.Height + 3;
+    pnlSecondHalf.Left := RxLabel1.Left + 2;
+  end else begin
+    pnlSecondHalf.Top := ShapeKanji.Top + 3;
+    pnlSecondHalf.Left := ShapeSimplified.Left + ShapeSimplified.Width + 9;
+  end;
+  pnlSecondHalf.Width := Self.ClientWidth - pnlSecondHalf.Left - 8;
+  pnlSecondHalf.Height := Self.ClientHeight - pnlSecondHalf.Top - 8;
+end;
+
+procedure TfKanjiDetails.FormResize(Sender: TObject);
+begin
+  UpdateAlignment();
 end;
 
 initialization

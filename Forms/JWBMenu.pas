@@ -399,6 +399,13 @@ type
   public
     procedure InitializeWakan;
 
+  private //Docking
+    procedure DockProc(slave,host:TForm;panel:TPanel;dir:integer);
+    procedure FixConstraints(form:TForm;w,h:integer);
+  public
+    procedure DockExpress(form:TForm;dock:boolean);
+    procedure FormUndock(form:TForm);
+
   public
     ResFixVal:integer;
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
@@ -430,13 +437,10 @@ type
     procedure RescanDicts;
     procedure ClearDicts;
     procedure SwitchLanguage(lanchar:char);
-    procedure DockExpress(form:TForm;dock:boolean);
-    procedure FixConstraints(form:TForm;w,h:integer);
     function GetCharValue(index,vt:integer):string;
     function GetCharValueInt(index,vt:integer):integer;
     function GetCharValueRad(index,vt:integer):integer;
     procedure ChangeDisplay;
-    procedure FormUndock(form:TForm);
     procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
     procedure HideScreenTip;
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
@@ -3536,6 +3540,9 @@ begin
   ToggleForm(fTranslate,nil,nil);
 end;
 
+//TODO: This function is not used anywhere.
+//  Supposedly it was meant to update MainForm constraints to mind docked forms,
+//  but if it's not used by later, delete it.
 procedure TfMenu.FixConstraints(form:TForm;w,h:integer);
 begin
   if (form.Constraints.MinHeight>0) then form.Constraints.MinHeight:=form.Constraints.MinHeight+h;
@@ -3544,8 +3551,7 @@ begin
   if (form.Constraints.MaxWidth>0) then form.Constraints.MaxWidth:=form.Constraints.MaxWidth+w;
 end;
 
-procedure TfMenu.DockExpress(form:TForm;dock:boolean);
-procedure DockProc(slave,host:TForm;panel:TPanel;dir:integer);
+procedure TfMenu.DockProc(slave,host:TForm;panel:TPanel;dir:integer);
 var adocked:boolean;
     vert:boolean;
     fixsiz,flomin:integer;
@@ -3603,6 +3609,8 @@ begin
   if sxh>0 then slave.Constraints.MaxHeight:=sxh+slave.Height-bch;         }
 //  if (dock) and (slave.tag=2) and (simulshow) then DockExpress(form,false);
 end;
+
+procedure TfMenu.DockExpress(form:TForm;dock:boolean);
 begin
   if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji,fKanji.Panel3,1);
   if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji,fKanji.Panel2,3);
@@ -3611,6 +3619,21 @@ begin
   if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser,fUser.Panel3,2);
   if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords,fWords.Panel2,2);
   if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords,fWords.Panel4,3);
+end;
+
+{ Only use this to undock forms from containers which don't need to be hidden,
+ such as modules from a main form. For dock panels use DockExpress(form,false).
+ One exception is fKanjiDetails (probably historically) }
+procedure TfMenu.FormUndock(form:TForm);
+var rect:TRect;
+begin
+  form.Hide;
+  rect.left:=0;
+  rect.top:=0;
+  rect.right:=form.width;
+  rect.bottom:=form.height;
+  form.ManualFloat(rect);
+  form.Align:=alNone;
 end;
 
 procedure TfMenu.Button1Click(Sender: TObject);
@@ -3679,18 +3702,6 @@ end;
 procedure TfMenu.tab4Click(Sender: TObject);
 begin
   ToggleForm(fKanjiDetails,nil,nil);
-end;
-
-procedure TfMenu.FormUndock(form:TForm);
-var rect:TRect;
-begin
-  form.Hide;
-  rect.left:=0;
-  rect.top:=0;
-  rect.right:=form.width;
-  rect.bottom:=form.height;
-  form.ManualFloat(rect);
-  form.Align:=alNone;
 end;
 
 procedure TfMenu.ChangeDisplay;
@@ -4654,6 +4665,7 @@ begin
   end;
   fUserFilters.SetPortraitMode(aPortraitMode.Checked);
   fWordKanji.SetPortraitMode(aPortraitMode.Checked);
+  fKanjiDetails.SetPortraitMode(aPortraitMode.Checked);
   ChangeDisplay;
  //TODO
 end;

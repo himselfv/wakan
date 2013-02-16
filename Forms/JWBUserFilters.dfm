@@ -41,8 +41,6 @@ object fUserFilters: TfUserFilters
       Height = 13
       Align = alTop
       Caption = '#00705^eCategories:'
-      ExplicitLeft = 0
-      ExplicitTop = 0
       ExplicitWidth = 102
     end
     object pnlCategoryControls: TPanel
@@ -53,9 +51,6 @@ object fUserFilters: TfUserFilters
       Align = alBottom
       BevelOuter = bvLowered
       TabOrder = 0
-      ExplicitLeft = 1
-      ExplicitTop = 250
-      ExplicitWidth = 175
       DesignSize = (
         177
         21)
@@ -156,7 +151,6 @@ object fUserFilters: TfUserFilters
           'W')
         TabIndex = 1
         OnChange = tabCatListChange
-        ExplicitWidth = 108
       end
     end
     object lbCategories: TCheckListBox
@@ -169,10 +163,6 @@ object fUserFilters: TfUserFilters
       TabOrder = 1
       OnClick = lbCategoriesClick
       OnDblClick = lbCategoriesDblClick
-      ExplicitLeft = 1
-      ExplicitTop = 40
-      ExplicitWidth = 176
-      ExplicitHeight = 232
     end
   end
   object rgSort: TRadioGroup

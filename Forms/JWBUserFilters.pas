@@ -39,9 +39,8 @@ type
   protected
     FPortraitMode: boolean;
   public
-    procedure UpdateAlignment;
     procedure SetPortraitMode(Value: boolean);
-
+    procedure UpdateAlignment;
 
   end;
 
@@ -162,9 +161,9 @@ begin
  //One-time set default width/height (can be adjusted later)
  //TODO: Perhaps remember these for both modes and restore when switching between them
   if not FPortraitMode then
-    fUserFilters.ClientWidth := 192
+    ClientWidth := 192
   else
-    fUserFilters.ClientHeight := 120;
+    ClientHeight := 120;
   UpdateAlignment;
 end;
 

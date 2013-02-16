@@ -43,8 +43,8 @@ type
     FPortraitMode: boolean;
     procedure AlignBox(idx: integer);
   public
-    procedure UpdateAlignment;
     procedure SetPortraitMode(Value: boolean);
+    procedure UpdateAlignment;
 
   end;
 
