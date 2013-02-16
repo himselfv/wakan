@@ -21,6 +21,8 @@ const
   FILETYPE_WTT=255;
 
 type
+ //NOTE: This uses buffer for reading but it's written in a way that buffer
+ // for writing doesn't work. So don't rely on it.
   TJwbConvert = class
   protected
     FStream: TStream;
@@ -567,7 +569,7 @@ end;
 
 procedure TJwbConvert._fwrite(b:byte);
 begin
-  if bufpos>buflen then
+  if (bufpos>buflen) and (bufpos>1) then
   begin
     FStream.Write(buf,bufpos-1);
     bufpos:=1;

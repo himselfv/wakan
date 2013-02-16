@@ -188,6 +188,7 @@ type
     AllShort: TShortCut;
     CF_HTML: integer;
     CF_ODT: integer;
+    CF_WAKAN: integer;
     function GenerateHtmlClipHeader(const lenHtml: integer;
       const startFragment, endFragment: integer): UnicodeString;
   public
@@ -197,6 +198,7 @@ type
     function CopyAsRuby: UnicodeString;
     function CopyAsOpenDocumentTextContent: Utf8String;
     function CopyAsOpenDocument: TMemoryStream;
+    function CopyAsWakanText: TMemoryStream;
 
   public
     linl: TGraphicalLineList; //lines as they show on screen
@@ -298,8 +300,10 @@ type
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
     procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    procedure LoadWakanText(const filename:string);
-    procedure SaveWakanText(const filename:string);
+    function LoadWakanText(stream: TStream; silent: boolean = false): boolean; overload;
+    procedure LoadWakanText(const filename:string); overload;
+    procedure SaveWakanText(stream: TStream; block: PTextSelection = nil); overload;
+    procedure SaveWakanText(const filename:string); overload;
   public //File open/save
     procedure ClearEditor;
     procedure OpenAnyFile(filename:string);
@@ -926,6 +930,10 @@ begin
 
   CF_ODT := RegisterClipboardFormat(PChar('Star Embed Source (XML)'));
   if CF_ODT=0 then RaiseLastOsError();
+
+  CF_WAKAN := RegisterClipboardFormat(PChar('Wakan Text'));
+  if CF_WAKAN=0 then RaiseLastOsError();
+
 end;
 
 procedure TfTranslate.FormDestroy(Sender: TObject);
@@ -1296,9 +1304,8 @@ var i,j,k: integer;
   rubyTextBreak: TRubyTextBreakType;
   rootLen: integer; //remaining length of the word's root, if calculated dynamically. <0 means ignore this check
   explicitRuby: boolean;
-  chFirst,chLast: integer;
-
   sel: TTextSelection;
+  chFirst,chLast: integer;
 
   procedure outp(s: FString);
   begin
@@ -1425,13 +1432,15 @@ begin
   FreeAndNil(format);
 end;
 
-//TODO: Test Unicode conversion
-procedure TfTranslate.LoadWakanText(const filename:string);
+//TODO: Load text into memory instead of directly into document?
+//TODO: Or allow to specify where to paste text instead of replacing the document?
+//TODO: Update current dictionary set with new dictionaries and update dict
+//  references in the loaded text for dictionaries which got other indexes.
+function TfTranslate.LoadWakanText(stream: TStream; silent: boolean): boolean;
 var s,s2:string;
   s3: TCharacterLineProps;
   i:integer;
   w:word;
-  f:file;
   reat:integer;
   buf:array[0..16383] of word;
   ws:array[0..31] of AnsiChar;
@@ -1442,59 +1451,40 @@ var s,s2:string;
   ls:string;
   dp:char;
 begin
-  assignfile(f,docfilename);
-  reset(f,2);
-  blockread(f,w,1,reat);
+  reat:=stream.Read(w,2);
   if (reat<1) or (w<>$f1ff) then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.')),
-      pchar(_l('#00020^eError')),
-      MB_OK);
-    closefile(f);
-    exit;
-  end;
+    raise Exception.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
 
   dot:=true;
 
-  blockread(f,ws,16);
+  stream.Read(ws,32);
   s:=string(ws);
   if copy(s,1,22)<>'WaKan Translated Text>'then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00679^eThis is not a valid UTF-8 or JTT file.')),
-      pchar(_l('#00020^eError')),
-      MB_OK);
-    closefile(f);
-    exit;
-  end;
+    raise Exception.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
   delete(s,1,22);
 
   if copy(s,1,length(fStatistics.Label15.Caption))<>fStatistics.Label15.Caption then
   begin
-    if Application.MessageBox(
-      pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. Translation cannot be loaded.'#13#13'Do you want to continue?')),
+    if silent
+    or (Application.MessageBox(
+      pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. '
+        +'Translation cannot be loaded.'#13#13'Do you want to continue?')),
       pchar(_l('#00090^eWarning')),
-      MB_YESNO or MB_ICONWARNING)=idNo then
+      MB_YESNO or MB_ICONWARNING)=idNo) then
     begin
-      closefile(f);
+      Result := false;
       exit;
     end;
     dot:=false;
   end;
 
-  blockread(f,w,1);
+  stream.Read(w,2);
   if w<>3294 then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00681^eThis JTT file was created by old version of WaKan.'#13'It is not compatible with the current version.')),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
-    exit;
-  end;
+    raise Exception.Create(_l('#00681^eThis JTT file was created by old version '
+      +'of WaKan.'#13'It is not compatible with the current version.'));
 
-  blockread(f,w,1);
-  blockread(f,wss,w);
+  stream.Read(w,2);
+  stream.Read(wss,w*2);
   wss[w*2]:=#0;
   s:=string(wss);
   while (s<>'') and (s[1]<>'$') do
@@ -1507,10 +1497,11 @@ begin
   s:='';
   s3.Clear;
 
-  while not eof(f) do
+  reat := stream.Read(buf,Length(buf)*SizeOf(word));
+  while reat>0 do
   begin
-    blockread(f,buf,16384,reat);
-    for i:=0 to (reat div 4)-1 do
+
+    for i:=0 to (reat div 8)-1 do
     begin
       dp:=chr(buf[i*4] mod 256);
       if dp='$'then
@@ -1536,51 +1527,86 @@ begin
           s3.AddChar(dp, buf[i*4] div 256, l, buf[i*4+2] div 256 - ord('0'));
       end;
     end;
+
+    reat := stream.Read(buf,Length(buf)*SizeOf(word));
   end;
 
-  closefile(f);
   if s<>'' then
   begin
     doc.Add(s);
     doctr.AddLine(s3);
   end;
+
+  Result := true;
 end;
 
-//TODO: Test Unicode conversion
-procedure TfTranslate.SaveWakanText(const filename:string);
-var f:file;
-  i,j,bc:integer;
+procedure TfTranslate.LoadWakanText(const filename:string);
+var ms: TStream;
+begin
+  ms := TStreamReader.Create(
+    TFileStream.Create(filename, fmOpenRead),
+    {OwnsStream=}true
+  );
+  try
+    LoadWakanText(ms);
+  finally
+    FreeAndNil(ms);
+  end;
+end;
+
+procedure TfTranslate.SaveWakanText(stream: TStream; block: PTextSelection = nil);
+var i,j,bc:integer;
   buf:array[0..16383] of word;
   sig:word;
   s:AnsiString;
   l:integer;
   w:word;
   cp: PCharacterProps;
+  sel: TTextSelection;
+  chFirst,chLast: integer;
 begin
-  assignfile(f,filename);
-  rewrite(f,2);
-
   sig:=$f1ff;
-  blockwrite(f,sig,1);
+  stream.Write(sig,2);
 
   s:=AnsiString('WaKan Translated Text>'+fStatistics.Label15.Caption);
   while length(s)<32 do s:=s+' ';
-  blockwrite(f,s[1],16);
+  stream.Write(s[1],32);
 
   w:=3294;
-  blockwrite(f,w,1);
+  stream.Write(w,2);
 
   s:='';
   for i:=0 to docdic.Count-1 do s:=s+AnsiString(docdic[i])+',';
   w:=(length(s)+1) div 2;
-  blockwrite(f,w,1);
+  stream.Write(w,2);
   s:=s+'$$$$';
-  blockwrite(f,s[1],w);
+  stream.Write(s[1],w*2);
+
+  if block<>nil then begin
+    sel := block^;
+    if sel.fromy<0 then sel.fromy := 0;
+    if sel.toy<0 then sel.toy := doc.Count-1;
+    if sel.fromx<0 then sel.fromx := 0;
+    if sel.tox<0 then sel.tox := flength(doc[sel.toy]);
+  end else begin
+    sel.fromy := 0;
+    sel.fromx := 0;
+    sel.toy := doc.Count-1;
+    sel.tox := flength(doc[sel.toy]);
+  end;
 
   bc:=0;
-  for i:=0 to doc.Count-1 do
+  for i:=sel.fromy to sel.toy do
   begin
-    for j:= 0 to flength(doc[i])-1 do
+    if i=sel.fromy then
+      chFirst := sel.fromx
+    else
+      chFirst := 0;
+    if i=sel.toy then
+      chLast := sel.tox
+    else
+      chLast := flength(doc[i]);
+    for j:= chFirst to chLast-1 do
     begin
       cp := @doctr[i].chars[j];
       buf[bc]:=ord(cp.wordstate)+cp.learnstate*256;
@@ -1591,7 +1617,7 @@ begin
       inc(bc,4);
       if bc=16384 then
       begin
-        blockwrite(f,buf,bc);
+        stream.Write(buf,bc*2);
         bc:=0;
       end;
     end;
@@ -1602,12 +1628,25 @@ begin
     inc(bc,4);
     if bc=16384 then
     begin
-      blockwrite(f,buf,bc);
+      stream.Write(buf,bc*2);
       bc:=0;
     end;
   end;
-  blockwrite(f,buf,bc);
-  closefile(f);
+  stream.Write(buf,bc*2);
+end;
+
+procedure TfTranslate.SaveWakanText(const filename:string);
+var ms: TStream;
+begin
+  ms := TStreamWriter.Create(
+    TFileStream.Create(filename, fmCreate),
+    {OwnsStream=}true
+  );
+  try
+    SaveWakanText(ms);
+  finally
+    FreeAndNil(ms);
+  end;
 end;
 
 //Returns false if user have cancelled the dialog
@@ -2280,12 +2319,20 @@ begin
   Self.CopySelection(TOpenDocumentFormat.Create(),Result);
 end;
 
+function TfTranslate.CopyAsWakanText: TMemoryStream;
+begin
+  Result := TMemoryStream.Create;
+  CalcBlockFromTo(false);
+  Self.SaveWakanText(Result,@block);
+end;
+
 procedure TfTranslate.CopyAs;
 var RubyText: UnicodeString;
 begin
   RubyText := CopyAsRuby;
   fMenu.ClearClipboard;
   clip := fstr(RubyText);
+  fMenu.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
  {$IFDEF DEBUG}
   fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true); //No point since no one supports this...
  {$ENDIF}
