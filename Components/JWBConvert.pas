@@ -21,6 +21,11 @@ const
   FILETYPE_WTT=255;
 
 type
+  TJwbCreateFlag = (
+    cfBom
+  );
+  TJwbCreateFlags = set of TJwbCreateFlag;
+
  //NOTE: This uses buffer for reading but it's written in a way that buffer
  // for writing doesn't work. So don't rely on it.
   TJwbConvert = class
@@ -55,7 +60,8 @@ type
     function ReadChar(out ch:FChar): boolean; //reads one char as FChar
     function ReadLn: FString;
     procedure Rewind;
-    constructor CreateNew(AStream: TStream; tp: byte; AOwnsStream: boolean = false); overload;
+    constructor CreateNew(AStream: TStream; tp: byte; AFlags: TJwbCreateFlags;
+      AOwnsStream: boolean = false); overload;
     constructor CreateNew(const filename: string; tp: byte); overload;
     procedure Write(s:FString);
     procedure WriteChar(s:FChar);
@@ -278,18 +284,24 @@ begin
   Open(TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite), tp, true);
 end;
 
-constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte; AOwnsStream: boolean = false);
+constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte; AFlags: TJwbCreateFlags;
+  AOwnsStream: boolean = false);
 begin
   inherited Create;
   FStream := AStream;
   FOwnsStream := AOwnsStream;
   FEOF := true; //who cares?
-  RewriteAsType(tp);
+  if cfBom in AFlags then
+    RewriteAsType(tp)
+  else begin
+    _rewind;
+    ftp := tp;
+  end;
 end;
 
 constructor TJwbConvert.CreateNew(const filename: string; tp: byte);
 begin
-  CreateNew(TFileStream.Create(filename,fmCreate), tp, true);
+  CreateNew(TFileStream.Create(filename,fmCreate), tp, [cfBom], true);
 end;
 
 destructor TJwbConvert.Destroy;

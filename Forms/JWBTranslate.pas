@@ -364,6 +364,7 @@ type
     FOwnsStream: boolean;
     FOutput: TJwbConvert;
     FEncType: integer;
+    FNoBOM: boolean;
     LastChar: FChar;
     AtSpace: boolean;
     AtNewline: boolean;
@@ -379,6 +380,7 @@ type
     procedure EndDocument; virtual;
     property Stream: TStream read FStream write FStream;
     property OwnsStream: boolean read FOwnsStream write FOwnsStream;
+    property NoBOM: boolean read FNoBOM write FNoBOM;
   end;
 
   TKanaOnlyFormat = class(TTextSaveFormat)
@@ -599,8 +601,11 @@ begin
 end;
 
 procedure TTextSaveFormat.BeginDocument;
+var AFlags: TJwbCreateFlags;
 begin
-  FOutput := TJwbConvert.CreateNew(FStream,FEncType);
+  AFlags := [];
+  if not FNoBOM then AFlags := AFlags + [cfBom];
+  FOutput := TJwbConvert.CreateNew(FStream,FEncType,AFlags);
 end;
 
 procedure TTextSaveFormat.EndDocument;
@@ -3947,8 +3952,7 @@ begin
 end;
 
 procedure TfTranslate.DeleteSelection;
-var i,j:integer;
-  bx,tx:integer;
+var i:integer;
 begin
   CalcBlockFromTo(false);
   SetCurPos(block.fromx,block.fromy);
