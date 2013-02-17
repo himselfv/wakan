@@ -806,7 +806,7 @@ procedure TfKanji.DrawGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
   if key=' ' then begin
     clip:=clip+curkanji;
-    fMenu.ChangeClipboard;
+    fMenu.SetClipboard;
   end;
   if key=Chr(VK_RETURN) then
     if not fMenu.aKanjiDetails.Checked then
@@ -816,7 +816,7 @@ begin
         fKanjiDetails.SetFocus;
   if key=Chr(VK_BACK) then begin
     if length(clip)>0 then delete(clip,length(clip)-3,4);
-    fMenu.ChangeClipboard;
+    fMenu.SetClipboard;
   end;
 end;
 
@@ -979,7 +979,7 @@ begin
   end;
   wrid;
   clip:=o;
-  fMenu.ChangeClipboard;
+  fMenu.SetClipboard;
 end;
 
 procedure TfKanji.Button3Click(Sender: TObject);

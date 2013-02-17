@@ -489,17 +489,27 @@ type
     CbNextViewer: HWND;
     procedure WmChangeCbChain(var Msg: TMessage); message WM_CHANGECBCHAIN;
     procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
-  public
+    procedure ClipboardChanged;
     procedure Clipboard_Paint;
-    procedure Clipboard_Update;
+    procedure Clipboard_Update; //update clip with UNICODETEXT from Clipboard
     procedure Clipboard_Clear;
-    procedure ChangeClipboard;
-    procedure ClearClipboard;
+  public
+   { 
+    How to use:
+      Reset
+      Add(...)
+      Add(...)
+      clip := '...'
+      Publish
+   }
+    procedure ResetClipboard;
     procedure AddToClipboard(uFormat: UINT; data: pointer; size: integer); overload;
     procedure AddToClipboard(uFormat: UINT; text: RawByteString); overload;
     procedure AddToClipboard(uFormat: UINT; text: UnicodeString); overload;
     procedure AddToClipboard(uFormat: UINT; data: TMemoryStream; AOwnsStream: boolean = false); overload;
-    procedure ClipboardChanged;
+    procedure PublishClipboard;
+    procedure SetClipboard; //to whatever is in clip
+    function GetClipboard(uFormat: UINT; out ms: TMemoryStream): boolean;
 
   end;
 
@@ -569,7 +579,6 @@ var
   TRadicalsKangXiCount: integer;
 
   clip:FString;
-  cliptrans:TCharacterLineProps;
   oldhandle:THandle;
   critsec:boolean;
   globheight:integer;
@@ -2708,7 +2717,6 @@ begin
   if newclip<>clip then
   begin
     clip := newclip;
-    cliptrans.Clear;
     PaintBox3.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
     if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
@@ -2720,46 +2728,25 @@ end;
 procedure TfMenu.Clipboard_Clear;
 begin
   clip:='';
-  ChangeClipboard;
+  ResetClipboard;
+  PublishClipboard;
 end;
 
-procedure TfMenu.ChangeClipboard;
-var
-  DataHandle :  THandle;
-  ToPointer  :  Pointer;
-  ws         :  UnicodeString;
+procedure TfMenu.SetClipboard;
 begin
- {$IFDEF UNICODE}
-  ws := clip;
- {$ELSE}
-  ws := HexToUnicode(clip);
- {$ENDIF}
-
- //Copy data + final NULL
-  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE,
-                            (Length(ws)+1)*SizeOf(WChar));
-
-  ToPointer   := GlobalLock(DataHandle);
-  if pointer(ws)<>nil then
-    Move(Pointer(ws)^, ToPointer^, (Length(ws)+1)*SizeOf(WChar))
-  else
-   //Just set the terminating null
-    PChar(ToPointer)^ := #00;
-  GlobalUnlock(DataHandle);
-
-  OpenClipboard(Handle);
-  EmptyClipboard;
-  SetClipboardData(CF_UNICODETEXT, DataHandle);
-  CloseClipboard;
-
-  ClipboardChanged;
+  ResetClipboard;
+  try
+    AddToClipboard(CF_UNICODETEXT, clip)
+  finally
+    PublishClipboard;
+  end;
 end;
 
-procedure TfMenu.ClearClipboard;
+//Open the clipboard and clear it
+procedure TfMenu.ResetClipboard;
 begin
   OpenClipboard(Handle);
   EmptyClipboard;
-  CloseClipboard;
 end;
 
 //Does not add terminating null
@@ -2773,10 +2760,7 @@ begin
   if size>0 then
     Move(data^, ToPointer^, size); //die if data is invalid
   GlobalUnlock(DataHandle);
-
-  OpenClipboard(Handle);
   SetClipboardData(uFormat, DataHandle);
-  CloseClipboard;
 end;
 
 procedure TfMenu.AddToClipboard(uFormat: UINT; text: RawByteString);
@@ -2795,6 +2779,12 @@ begin
   if AOwnsStream then FreeAndNil(data);
 end;
 
+procedure TfMenu.PublishClipboard;
+begin
+  CloseClipboard;
+  ClipboardChanged;
+end;
+
 procedure TfMenu.ClipboardChanged;
 begin
   PaintBox3.Invalidate;
@@ -2802,6 +2792,44 @@ begin
 
   if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
   if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
+end;
+
+//Retrieves a data for an HGLOBAL-containing clipboard format (most of them are)
+function TfMenu.GetClipboard(uFormat: UINT; out ms: TMemoryStream): boolean;
+var h: THandle;
+  pb: PByte;
+  sz: integer;
+  format: cardinal;
+begin
+  OpenClipboard(Handle);
+  try
+    format := 0;
+    repeat
+      format := EnumClipboardFormats(format);
+    until (format=0) or (format=uFormat);
+
+    if format=0 then begin
+      Result := false;
+      exit;
+    end;
+
+    h := GetClipboardData(uFormat);
+    if h=0 then RaiseLastOsError();
+
+    pb := GlobalLock(h);
+    if pb=nil then RaiseLastOsError();
+
+    sz := GlobalSize(h);
+    if sz>MaxWord then sz := MaxWord; //won't accept more
+    
+    ms := TMemoryStream.Create;
+    ms.Write(pb^,sz);
+    
+    GlobalUnlock(h);
+    Result := true;
+  finally
+    CloseClipboard();
+  end;
 end;
 
 procedure TfMenu.ArtLabel1Click(Sender: TObject);
@@ -4034,15 +4062,15 @@ begin
   case fScreenTip.screenTipButton of
     1:begin
         clip:=clip+fScreenTip.screenTipText;
-        ChangeClipboard;
+        SetClipboard;
       end;
     2:begin
         clip:=fScreenTip.screenTipText;
-        ChangeClipboard;
+        SetClipboard;
       end;
     3:begin
         clip:=fScreenTip.screenTipText;
-        ChangeClipboard;
+        SetClipboard;
         if not fRadical.Visible then aDictClipboard.Execute;
       end;
     4:begin
@@ -4355,7 +4383,7 @@ begin
   if paramstr(1)='debug'then
   begin
     clip:=s2;
-    ChangeClipboard;
+    SetClipboard;
   end;
   if s<>'' then
   begin

@@ -254,7 +254,7 @@ end;
 procedure TfKanjiCompounds.sbCopyToClipboardClick(Sender: TObject);
 begin
   clip:=clip+curckanji;
-  fMenu.ChangeClipboard;
+  fMenu.SetClipboard;
 end;
 
 procedure TfKanjiCompounds.sbInsertIntoVocabClick(Sender: TObject);

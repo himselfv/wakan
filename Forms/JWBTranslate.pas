@@ -192,7 +192,8 @@ type
     function GenerateHtmlClipHeader(const lenHtml: integer;
       const startFragment, endFragment: integer): UnicodeString;
   public
-    procedure CopyAs;
+    procedure CopyAs; //extended copy to clipboard
+    function CopyAsText: UnicodeString;
     function CopyAsHtml: Utf8String;
     function CopyAsClipHtml: Utf8String;
     function CopyAsRuby: UnicodeString;
@@ -230,9 +231,12 @@ type
     procedure JoinLine(y:integer);
     procedure DeleteCharacter(x,y:integer);
     procedure RefreshLines;
-    procedure CopySelection(format:TTextSaveFormat;stream:TStream);
-    procedure BlockOp(docopy,dodelete:boolean);
+    procedure CopySelection(format:TTextSaveFormat;stream:TStream;
+      AnnotMode:TTextAnnotMode=amRuby);
+    procedure DeleteSelection;
     procedure PasteOp;
+    procedure PasteText(const chars: FString; const props: TCharacterLineProps;
+      AnnotMode: TTextAnnotMode);
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
     function HalfUnitsToTextPos(x,y: integer):integer;
@@ -246,7 +250,6 @@ type
     procedure cbFontSizeGuessItem(Value: string);
   public
     property FontSize: integer read FFontSize write SetFontSize;
-
 
   public //Document
     doc: TStringList; //document lines
@@ -1425,12 +1428,16 @@ begin
 
     if inReading then
       FinalizeRuby;
-    outp(UH_CR+UH_LF);
+    if i<>sel.toy then
+      outp(UH_CR+UH_LF);
   end;
 
   format.EndDocument;
   FreeAndNil(format);
 end;
+
+type
+  EBadWakanTextFormat = class(Exception);
 
 //TODO: Load text into memory instead of directly into document?
 //TODO: Or allow to specify where to paste text instead of replacing the document?
@@ -1450,17 +1457,20 @@ var s,s2:string;
   l:integer;
   ls:string;
   dp:char;
+
+  chars: FString;
+  props: TCharacterLineProps;
 begin
   reat:=stream.Read(w,2);
   if (reat<1) or (w<>$f1ff) then
-    raise Exception.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
+    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
 
   dot:=true;
 
   stream.Read(ws,32);
   s:=string(ws);
   if copy(s,1,22)<>'WaKan Translated Text>'then
-    raise Exception.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
+    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
   delete(s,1,22);
 
   if copy(s,1,length(fStatistics.Label15.Caption))<>fStatistics.Label15.Caption then
@@ -1480,8 +1490,8 @@ begin
 
   stream.Read(w,2);
   if w<>3294 then
-    raise Exception.Create(_l('#00681^eThis JTT file was created by old version '
-      +'of WaKan.'#13'It is not compatible with the current version.'));
+    raise EBadWakanTextFormat.Create(_l('#00681^eThis JTT file was created by '
+      +'old version of WaKan.'#13'It is not compatible with the current version.'));
 
   stream.Read(w,2);
   stream.Read(wss,w*2);
@@ -1494,9 +1504,12 @@ begin
     docdic.Add(s2);
   end;
 
+ //We will build a text in these variables, then pass it to PasteText.
+  chars := '';
+  props.Clear;
+
   s:='';
   s3.Clear;
-
   reat := stream.Read(buf,Length(buf)*SizeOf(word));
   while reat>0 do
   begin
@@ -1506,8 +1519,10 @@ begin
       dp:=chr(buf[i*4] mod 256);
       if dp='$'then
       begin
-        doc.Add(s);
-        doctr.AddLine(s3);
+        chars := chars + s + UH_CR + UH_LF;
+        props.AddChars(s3);
+        props.AddChar('-', 9, 0, 1);
+        props.AddChar('-', 9, 0, 1);
         s:='';
         s3.Clear;
       end else
@@ -1533,10 +1548,11 @@ begin
 
   if s<>'' then
   begin
-    doc.Add(s);
-    doctr.AddLine(s3);
+    chars := chars + s;
+    props.AddChars(s3);
   end;
 
+  PasteText(chars,props,amDefault);
   Result := true;
 end;
 
@@ -1544,7 +1560,7 @@ procedure TfTranslate.LoadWakanText(const filename:string);
 var ms: TStream;
 begin
   ms := TStreamReader.Create(
-    TFileStream.Create(filename, fmOpenRead),
+    TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite),
     {OwnsStream=}true
   );
   try
@@ -1621,11 +1637,16 @@ begin
         bc:=0;
       end;
     end;
-    buf[bc]:=ord('$');
-    buf[bc+1]:=0;
-    buf[bc+2]:=0;
-    buf[bc+3]:=0;
-    inc(bc,4);
+
+    if i<>sel.toy then begin
+     //Newline
+      buf[bc]:=ord('$');
+      buf[bc+1]:=0;
+      buf[bc+2]:=0;
+      buf[bc+3]:=0;
+      inc(bc,4);
+    end;
+
     if bc=16384 then
     begin
       stream.Write(buf,bc*2);
@@ -2099,7 +2120,7 @@ begin
     begin
       ResolveInsert(true);
       if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
-        BlockOp(false,true)
+        DeleteSelection()
       else
         DeleteCharacter(rcur.x,rcur.y);
       RefreshLines;
@@ -2250,12 +2271,17 @@ end;
 
 procedure TfTranslate.sbClipCutClick(Sender: TObject);
 begin
-  BlockOp(true,true);
+  sbClipCopyClick(Sender);
+  DeleteSelection;
 end;
 
-procedure TfTranslate.sbClipCopyClick(Sender: TObject);
+//Copies selection as text with only those Ruby which were read from file
+function TfTranslate.CopyAsText: UnicodeString;
+var stream: TStream;
 begin
-  BlockOp(true,false);
+  stream := TUnicodeStringStream.Create(@Result);
+  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE),stream,amDefault);
+  FreeAndNil(stream);
 end;
 
 //Copies selection as a text with Aozora-Ruby
@@ -2326,19 +2352,42 @@ begin
   Self.SaveWakanText(Result,@block);
 end;
 
+{ Normal Ctrl-C -- only in a few basic formats.
+ For enhanced copy, use Ctrl+Alt+C / CopyAs() }
+procedure TfTranslate.sbClipCopyClick(Sender: TObject);
+var NormalText: UnicodeString;
+begin
+  NormalText := CopyAsText;
+  fMenu.ResetClipboard;
+  try
+    clip := fstr(NormalText);
+    fMenu.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
+    fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
+    fMenu.AddToClipboard(CF_UNICODETEXT,NormalText);
+  finally
+    fMenu.PublishClipboard;
+  end;
+end;
+
+{ Enhanced Ctrl-Alt-C -- all ruby + all supported formats.
+ In the future perhaps this will pop up a dialog asking to choose a format }
 procedure TfTranslate.CopyAs;
 var RubyText: UnicodeString;
 begin
   RubyText := CopyAsRuby;
-  fMenu.ClearClipboard;
-  clip := fstr(RubyText);
-  fMenu.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
- {$IFDEF DEBUG}
-  fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true); //No point since no one supports this...
- {$ENDIF}
-  fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
-  fMenu.AddToClipboard(CF_UNICODETEXT,RubyText);
-  fMenu.ClipboardChanged;
+  fMenu.ResetClipboard;
+  try
+    clip := fstr(RubyText);
+    fMenu.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
+   {$IFDEF DEBUG}
+   //No point since no one supports this... Even LibreOffice doesn't paste this.
+    fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true);
+   {$ENDIF}
+    fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
+    fMenu.AddToClipboard(CF_UNICODETEXT,RubyText);
+  finally
+    fMenu.PublishClipboard;
+  end;
 end;
 
 procedure TfTranslate.sbClipPasteClick(Sender: TObject);
@@ -3350,7 +3399,7 @@ begin
   end;
   if c=#13 then
   begin
-//    if blockfromx<>-1 then BlockOp(false,true);
+//    if blockfromx<>-1 then DeleteSelection();
     SplitLine(rcur.x,rcur.y);
     cur.x:=0;
     inc(cur.y);
@@ -3359,7 +3408,7 @@ begin
   end;
   if c=#8 then
   begin
-    if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then BlockOp(false,true) else
+    if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then DeleteSelection() else
     begin
       if cur.x>0 then dec(cur.x) else
         if rcur.x=0 then
@@ -3784,10 +3833,22 @@ begin
   end;
 end;
 
-procedure TfTranslate.PasteOp;
+procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream;
+  AnnotMode: TTextAnnotMode);
+begin
+  CalcBlockFromTo(false);
+  SaveText(AnnotMode,format,stream,@block);
+end;
+
+{ Receives a string contanining multiple lines of text separated by CRLF.
+ Splits into lines, inserts at the current position of the cursor.
+ Expands ruby, if AnnotMode dictates so.
+
+ Props may be omitted, in which case default props are used for all symbols }
+procedure TfTranslate.PasteText(const chars: FString; const props: TCharacterLineProps;
+  AnnotMode: TTextAnnotMode);
 var s: string;
   sp: TCharacterLineProps;
-  AnnotMode: TTextAnnotMode;
   y:integer;
   i:integer;
   l:integer;
@@ -3810,30 +3871,29 @@ var s: string;
   end;
 
 begin
-  if not TryReleaseCursorFromInsert() then
-    exit; //cannot do!
-
-  if fSettings.cbLoadAozoraRuby.Checked then
-    AnnotMode := amRuby
-  else
-    AnnotMode := amDefault;
-
   s := '';
   sp.Clear;
 
-  SplitLine(rcur.x,rcur.y);
+ { This function is sometimes used to load text, at which point there's not even
+  a single default line available and SplitLine would die. }
+  if rcur.y >= doc.Count then begin
+    doc.Add('');
+    doctr.AddNewLine;
+  end else
+    SplitLine(rcur.x,rcur.y);
+
   y:=rcur.y;
-  for i:=1 to flength(clip) do
+  for i:=1 to flength(chars) do
   begin
-    if fgetch(clip,i)=UH_LF then begin
+    if fgetch(chars,i)=UH_LF then begin
       FinalizeLine;
       InsertNewLine;
     end else
-    if fgetch(clip,i)<>UH_CR then
+    if fgetch(chars,i)<>UH_CR then
     begin
-      s:=s+fgetch(clip,i);
-      if cliptrans.charcount>i-1 then
-        sp.AddChar(cliptrans.chars[i-1])
+      s:=s+fgetch(chars,i);
+      if props.charcount>i-1 then
+        sp.AddChar(props.chars[i-1])
       else
         sp.AddChar('-', 9, 0, 1);
     end;
@@ -3847,77 +3907,76 @@ begin
   RefreshLines;
   SetCurPos(l,y);
   FileChanged:=true;
+end;
+
+procedure TfTranslate.PasteOp;
+var AnnotMode: TTextAnnotMode;
+  ms: TMemoryStream;
+  props: TCharacterLineProps;
+  Loaded: boolean;
+begin
+  if not TryReleaseCursorFromInsert() then
+    exit; //cannot do!
+
+  DeleteSelection; //selected text is replaced
+
+  if fSettings.cbLoadAozoraRuby.Checked then
+    AnnotMode := amRuby
+  else
+    AnnotMode := amDefault;
+
+  Loaded := false;
+  if fMenu.GetClipboard(CF_WAKAN, ms) then
+  try
+    ms.Seek(0,soFromBeginning);
+    try
+      Loaded := LoadWakanText(ms,{silent=}true);
+    except
+      on E: EBadWakanTextFormat do Loaded := false;
+    end;
+  finally
+    FreeAndNil(ms);
+  end;
+
+  if not Loaded then begin //default to bare text
+    props.Clear;
+    PasteText(clip,props,AnnotMode);
+  end;
+
   ShowText(true);
 end;
 
-procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream);
-begin
-  CalcBlockFromTo(false);
-  SaveText(amRuby,format,stream,@block);
-end;
-
-procedure TfTranslate.BlockOp(docopy,dodelete:boolean);
+procedure TfTranslate.DeleteSelection;
 var i,j:integer;
   bx,tx:integer;
-  newclip:string;
-  newcliptrans:TCharacterLineProps;
 begin
   CalcBlockFromTo(false);
-  if docopy then
+  SetCurPos(block.fromx,block.fromy);
+  if block.fromy=block.toy then
   begin
-    newclip := '';
-    newcliptrans.Clear;
-    for i:=block.fromy to block.toy do
-    begin
-      if i=block.fromy then bx:=block.fromx else bx:=0;
-      if i=block.toy then tx:=block.tox-1 else tx:=flength(doc[i])-1;
-      for j:=bx to tx do
-      begin
-        newclip:=newclip+GetDoc(j,i);
-        newcliptrans.AddChar(doctr[i].chars[j]);
-      end;
-      if i<>block.toy then begin
-        newclip:=newclip+UH_CR+UH_LF;
-        newcliptrans.AddChar('-', 9, 0, 1);
-        newcliptrans.AddChar('-', 9, 0, 1);
-      end;
-    end;
-    if newclip<>'' then
-    begin
-      clip:=newclip;
-      cliptrans:=newcliptrans;
-    end;
-    fMenu.ChangeClipboard;
-  end;
-  if dodelete then
+    doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
+      +fcopy(doc[block.fromy],block.tox+1,flength(doc[block.fromy])-block.tox);
+    doctr[block.fromy].DeleteChars(block.fromx, block.tox-block.fromx);
+  end else
   begin
-    SetCurPos(block.fromx,block.fromy);
-    if block.fromy=block.toy then
+    doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx);
+    doc[block.toy]:=fcopy(doc[block.toy],block.tox+1,flength(doc[block.toy])-block.tox);
+    if block.fromx < doctr[block.fromy].charcount then
+      doctr[block.fromy].DeleteChars(block.fromx);
+    if block.tox < doctr[block.toy].charcount then
+      doctr[block.toy].DeleteChars(0, block.tox)
+    else
+      if doctr[block.toy].charcount>0 then
+        doctr[block.toy].DeleteChars(0);
+    for i:=block.fromy+1 to block.toy-1 do
     begin
-      doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
-        +fcopy(doc[block.fromy],block.tox+1,flength(doc[block.fromy])-block.tox);
-      doctr[block.fromy].DeleteChars(block.fromx, block.tox-block.fromx);
-    end else
-    begin
-      doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx);
-      doc[block.toy]:=fcopy(doc[block.toy],block.tox+1,flength(doc[block.toy])-block.tox);
-      if block.fromx < doctr[block.fromy].charcount then
-        doctr[block.fromy].DeleteChars(block.fromx);
-      if block.tox < doctr[block.toy].charcount then
-        doctr[block.toy].DeleteChars(0, block.tox)
-      else
-        if doctr[block.toy].charcount>0 then
-          doctr[block.toy].DeleteChars(0);
-      for i:=block.fromy+1 to block.toy-1 do
-      begin
-        doc.Delete(block.fromy+1);
-        doctr.DeleteLine(block.fromy+1);
-      end;
-      JoinLine(block.fromy);
-      RefreshLines;
+      doc.Delete(block.fromy+1);
+      doctr.DeleteLine(block.fromy+1);
     end;
-    FileChanged:=true;
+    JoinLine(block.fromy);
+    RefreshLines;
   end;
+  FileChanged:=true;
 end;
 
 procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);

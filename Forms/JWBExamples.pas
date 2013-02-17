@@ -565,7 +565,7 @@ begin
         clip:=tmp_jap+UH_CR+UH_LF;
     end;
   end;
-  fMenu.ChangeClipboard;
+  fMenu.SetClipboard;
 end;
 
 procedure TfExamples.GotoExample(num:integer);

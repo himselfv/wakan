@@ -246,7 +246,7 @@ procedure TfKanjiDetails.SpeedButton23Click(Sender: TObject);
 begin
   if curSingleChar=UH_NOCHAR then exit;
   clip:=clip+curSingleChar;
-  fMenu.ChangeClipboard;
+  fMenu.SetClipboard;
 end;
 
 procedure TfKanjiDetails.btnStrokeOrderClick(Sender: TObject);

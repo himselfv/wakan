@@ -275,7 +275,7 @@ end;
 
 constructor TJwbConvert.Open(const filename: string; tp: byte);
 begin
-  Open(TFileStream.Create(filename, fmOpenRead), tp, true);
+  Open(TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite), tp, true);
 end;
 
 constructor TJwbConvert.CreateNew(AStream: TStream; tp: byte; AOwnsStream: boolean = false);
@@ -569,13 +569,7 @@ end;
 
 procedure TJwbConvert._fwrite(b:byte);
 begin
-  if (bufpos>buflen) and (bufpos>1) then
-  begin
-    FStream.Write(buf,bufpos-1);
-    bufpos:=1;
-  end;
-  buf[bufpos]:=b;
-  inc(bufpos);
+  FStream.Write(b,1);
 end;
 
 procedure TJwbConvert._fputstart(tp:byte);

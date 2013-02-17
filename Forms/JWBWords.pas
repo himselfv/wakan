@@ -1533,7 +1533,7 @@ begin
       end;
     end;
 //    s:='';
-    fMenu.ChangeClipboard;
+    fMenu.SetClipboard;
 //    for i:=0 to csl.Count-1 do
 //      if strtoint(copy(csl[i],1,5))<b+5000 then s:=s+copy(csl[i],1,5)+'-'+copy(csl[i],6,5)+'-'+copy(csl[i],11,4)+#13;
     csl.Free;

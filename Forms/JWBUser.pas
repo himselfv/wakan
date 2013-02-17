@@ -624,7 +624,7 @@ end;
 procedure TfUser.btnCopyToClipboardClick(Sender: TObject);
 begin
   clip:=clip+curkanji;
-  fMenu.ChangeClipboard;
+  fMenu.SetClipboard;
 end;
 
 procedure TfUser.ShowHint;

@@ -6,6 +6,7 @@ object fUserDetails: TfUserDetails
   ClientHeight = 188
   ClientWidth = 1060
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11

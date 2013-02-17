@@ -544,7 +544,7 @@ begin
     TMemoryStream(ASource).LoadFromFile(PKGFilename);
    {$ELSE}
     ASource:= TStreamReader.Create(
-      TFileStream.Create(PKGFilename,fmOpenRead),
+      TFileStream.Create(PKGFilename,fmOpenRead or fmShareDenyWrite),
       true);
     TStreamReader(ASource).ChunkSize := 1024*1024; //1Mb //too much?
    {$ENDIF}
