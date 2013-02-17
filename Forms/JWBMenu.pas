@@ -4465,7 +4465,10 @@ begin
   if intmoPaint=fTranslate.EditorPaintBox then
   begin
     fTranslate.CalcMouseCoords(intmocx,intmocy,rx,ry);
-    if ry<>-1 then s:=fTranslate.GetDocWord(rx,ry,wtt,false);
+    if (ry<>-1) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
+      s:=fTranslate.GetDocWord(rx,ry,wtt,false)
+    else
+      s:='';
   end else
   begin
     gc:=intmoGrid.MouseCoord(intmocx,intmocy);
@@ -4529,6 +4532,7 @@ begin
   case SaveAsKanaDialog.FilterIndex of
     1,2,3: enctype := Conv_ChooseType(false,0);
     4,5: enctype := FILETYPE_UTF8; //UTF8 only for HTML, ODT
+  else enctype := FILETYPE_UNKNOWN; //should not be used
   end;
 
   stream := nil;

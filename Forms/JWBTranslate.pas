@@ -2091,6 +2091,7 @@ procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
 procedure recalcy(oldy,newy:integer);
 begin
   cur.x:=WidthToPos(PosToWidth(cur.x,oldy),newy);
+  if cur.x<0 then cur.x := flength(doc[newy]); //it was other to the right
   cur.y:=newy;
 end;
 var bx,by:integer;
@@ -4227,6 +4228,11 @@ begin
   end;
 end;
 
+{
+y: line no
+x: number of half-width positions from the left
+If the position is outside of existing chars, returns -1.
+}
 function TfTranslate.WidthToPos(x,y:integer):integer;
 var i,jx,cx,cy,clen:integer;
 begin
@@ -4239,9 +4245,8 @@ begin
   cy:=linl[y].ys;
   clen:=linl[y].len;
   jx:=0;
-  for i:=0 to x-1 do
-  begin
-    if clen<=0 then break;
+  i:=0;
+  while clen>0 do begin
     if IsHalfWidth(cx,cy) then inc(jx) else inc(jx,2);
     if jx>=x then
     begin
@@ -4249,9 +4254,10 @@ begin
       exit;
     end;
     inc(cx);
+    inc(i);
     dec(clen);
   end;
-  result:=0;
+  Result:=-1;
 end;
 
 { Similar, but error handling is clearly defined. If there's no char at the position,
