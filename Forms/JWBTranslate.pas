@@ -1465,6 +1465,11 @@ var s,s2:string;
 
   chars: FString;
   props: TCharacterLineProps;
+
+  locdics: TStringList;
+  locdicidx: integer;
+  dicconv: array of integer; //maps local dictionaries to document dictionaries
+
 begin
   reat:=stream.Read(w,2);
   if (reat<1) or (w<>$f1ff) then
@@ -1498,15 +1503,27 @@ begin
     raise EBadWakanTextFormat.Create(_l('#00681^eThis JTT file was created by '
       +'old version of WaKan.'#13'It is not compatible with the current version.'));
 
-  stream.Read(w,2);
-  stream.Read(wss,w*2);
-  wss[w*2]:=#0;
-  s:=string(wss);
-  while (s<>'') and (s[1]<>'$') do
-  begin
-    s2:=copy(s,1,pos(',',s)-1);
-    delete(s,1,pos(',',s));
-    docdic.Add(s2);
+  locdics := TStringList.Create;
+  try
+   //Read local dictionaries
+    stream.Read(w,2);
+    stream.Read(wss,w*2);
+    wss[w*2]:=#0;
+    s:=string(wss);
+    while (s<>'') and (s[1]<>'$') do
+    begin
+      s2:=copy(s,1,pos(',',s)-1);
+      delete(s,1,pos(',',s));
+      locdics.Add(s2);
+    end;
+
+   //Create dictionary conversion table
+    SetLength(dicconv, locdics.Count);
+    for i := 0 to Length(dicconv) - 1 do
+      if not docdic.Find(locdics[i], dicconv[i]) then
+        dicconv[i] := docdic.Add(locdics[i]);
+  finally
+    FreeAndNil(locdics);
   end;
 
  //We will build a text in these variables, then pass it to PasteText.
@@ -1542,9 +1559,16 @@ begin
         end;
         if not dot then
           s3.AddChar('-', 9, 0, 1)
-        else
-         //last param is apparently stored as character (ex. '1', '2') and we need it as int
-          s3.AddChar(dp, buf[i*4] div 256, l, buf[i*4+2] div 256 - ord('0'));
+        else begin
+         //dic index is apparently stored as character (ex. '1', '2') and we need it as int
+          locdicidx := buf[i*4+2] div 256 - ord('0');
+         //convert to document indexes
+          if (locdicidx<0) or (locdicidx>Length(dicconv)) then
+            locdicidx := 0 //trust no one
+          else
+            locdicidx := dicconv[locdicidx];
+          s3.AddChar(dp, buf[i*4] div 256, l, locdicidx);
+        end;
       end;
     end;
 
