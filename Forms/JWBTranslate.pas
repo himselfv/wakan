@@ -2118,8 +2118,8 @@ begin
           cur.x:=0;
         end else dec(cur.x);
       cursorend:=false;
-    end
-    else if key=VK_LEFT then
+    end else
+    if key=VK_LEFT then
     begin
       dec(cur.x);
       if cur.x<0 then
@@ -2129,39 +2129,35 @@ begin
           cur.x:=linl[cur.y].len;
         end else inc(cur.x);
       cursorend:=false;
-    end
-    else if key=VK_UP then recalcy(cur.y,cur.y-1)
-    else if key=VK_DOWN then recalcy(cur.y,cur.y+1)
-    else if (key=VK_PRIOR) and (ssCtrl in Shift) then
-    begin
+    end else
+    if key=VK_UP then recalcy(cur.y,cur.y-1) else
+    if key=VK_DOWN then recalcy(cur.y,cur.y+1) else
+    if key=VK_PRIOR then recalcy(cur.y,cur.y-printl) else
+    if key=VK_NEXT then recalcy(cur.y,cur.y+printl) else
+    if (key=VK_HOME) and (ssCtrl in Shift) then begin
       cur.x:=0;
       cur.y:=0;
-    end
-    else if (key=VK_NEXT) and (ssCtrl in Shift) then
-    begin
+    end else
+    if (key=VK_END) and (ssCtrl in Shift) then begin
       cur.y:=linl.Count-1;
-      cur.x:=100;
-    end
-    else if key=VK_PRIOR then recalcy(cur.y,cur.y-printl)
-    else if key=VK_NEXT then recalcy(cur.y,cur.y+printl)
-    else if key=VK_HOME then
-    begin
+      cur.x:=linl[linl.Count-1].len;
+    end else
+    if key=VK_HOME then begin
       if (cursorend) and (cur.y>0) then dec(cur.y) else cur.x:=0;
       cursorend:=false;
-    end
-    else if key=VK_END then
-    begin
+    end else
+    if key=VK_END then begin
       if not cursorend then cur.x:=100;
-    end
-    else if key=VK_DELETE then
-    begin
+    end else
+    if key=VK_DELETE then begin
       ResolveInsert(true);
       if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
         DeleteSelection()
       else
         DeleteCharacter(rcur.x,rcur.y);
       RefreshLines;
-    end else ukn:=true;
+    end else
+      ukn:=true;
     if not ukn then
     begin
       ClearInsBlock;
