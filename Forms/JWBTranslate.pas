@@ -2088,12 +2088,19 @@ end;
 
 procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-procedure recalcy(oldy,newy:integer);
-begin
-  cur.x:=WidthToPos(PosToWidth(cur.x,oldy),newy);
-  if cur.x<0 then cur.x := flength(doc[newy]); //it was other to the right
-  cur.y:=newy;
-end;
+
+  //Moves the cursor to another line while keeping it at the same column
+  procedure recalcy(oldy,newy:integer);
+  begin
+    cur.y:=newy;
+    if (cur.y<0) or (cur.y>=linl.Count) then
+      cur.x:=-1
+    else begin
+      cur.x:=WidthToPos(PosToWidth(cur.x,oldy),newy);
+      if cur.x<0 then cur.x := linl[cur.y].len; //over to the right
+    end;
+  end;
+
 var bx,by:integer;
     ukn:boolean;
 begin
