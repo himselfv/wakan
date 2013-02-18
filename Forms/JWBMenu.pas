@@ -102,89 +102,89 @@ type
     aEditorLargeFont: TAction;
     aEditorMedFont: TAction;
     MainMenu1: TMainMenu;
-    fdfd1: TMenuItem;
+    miDatabase: TMenuItem;
     JapMode1: TMenuItem;
     ChinMode1: TMenuItem;
-    eSaveuserchangescUloituivatelskzmny1: TMenuItem;
-    eCanceluserchangescZruituivatelskzmny1: TMenuItem;
+    miSaveUserChanges: TMenuItem;
+    miCancelUserChanges: TMenuItem;
     N1: TMenuItem;
-    eStatisticscStatistika1: TMenuItem;
-    eSettingscNastaven2: TMenuItem;
-    eDictionarymanagercManaerslovnk1: TMenuItem;
+    miStatistics: TMenuItem;
+    miSettings: TMenuItem;
+    miDictionaryManager: TMenuItem;
     N15: TMenuItem;
-    eExitcUkonit1: TMenuItem;
-    eCharacterscZnaky1: TMenuItem;
+    miExit: TMenuItem;
+    miCharacters: TMenuItem;
     N5: TMenuItem;
-    eDisplayallcZobrazitvechny1: TMenuItem;
-    eLearnedonlycPouzenauen1: TMenuItem;
-    eCommononlycPouzebn1: TMenuItem;
-    eInclipboardonlycPouzeveschrnce1: TMenuItem;
+    miDisplayAll: TMenuItem;
+    miLearnedOnly: TMenuItem;
+    miCommonOnly: TMenuItem;
+    miInClipboardOnly: TMenuItem;
     N3: TMenuItem;
-    eSearchbyPinYincHledatpodlePinYin1: TMenuItem;
-    aSearchbyYomicHledatpodleYomi1: TMenuItem;
-    eSearchbymeaningcHledatpodlevznamu1: TMenuItem;
-    eSearchbyradicalcHledatpodleradiklu1: TMenuItem;
+    miSearchByPinYin: TMenuItem;
+    miSearchByYomi: TMenuItem;
+    miSearchByMeaning: TMenuItem;
+    miSearchByRadical: TMenuItem;
     N6: TMenuItem;
-    eAddtoclipboardcPidatdoschrnky1: TMenuItem;
-    eSetasunlearnedcNastavitjakonenauen1: TMenuItem;
-    ePrintcardscTiskkaret1: TMenuItem;
+    miAddToClipboard: TMenuItem;
+    miSetAsLearned: TMenuItem;
+    miPrintCards: TMenuItem;
     N13: TMenuItem;
-    eSearchcHledn1: TMenuItem;
-    eDetailscDetaily1: TMenuItem;
-    eCompoundscSloeniny1: TMenuItem;
+    miSearch: TMenuItem;
+    miDetails: TMenuItem;
+    miCompounds: TMenuItem;
     eDictionarycSlovnk1: TMenuItem;
-    eJapaneseChineseEnglishcJaponskynskyAnglicky1: TMenuItem;
-    eEnglishJapaneseChinesecAnglickyJaponskynsky1: TMenuItem;
-    eSearchbyclipboardcHledatpodleschrnky1: TMenuItem;
+    miSearchJapanese: TMenuItem;
+    miSearchEnglish: TMenuItem;
+    miSearchByClipboard: TMenuItem;
     N8: TMenuItem;
-    eSearchexactwordcHledatpesnslovo1: TMenuItem;
-    eSearchbeginningcHledatzatek1: TMenuItem;
-    eSearchendingcHledatkonec1: TMenuItem;
+    miSearchExactWord: TMenuItem;
+    miSearchBeginning: TMenuItem;
+    miSearchEnding: TMenuItem;
     N12: TMenuItem;
-    eAddtoclipboardcPidatdoschrnky2: TMenuItem;
+    miAddToClipboard2: TMenuItem;
     N16: TMenuItem;
-    eCharactersinwordcZnakyveslov1: TMenuItem;
-    eAddtovocabularycPidatdoslovek1: TMenuItem;
+    miCharactersInWord: TMenuItem;
+    miExamples: TMenuItem;
     Editor2: TMenuItem;
     N22: TMenuItem;
-    eNewcNov1: TMenuItem;
-    eOpencOtevt1: TMenuItem;
-    eSavecUloit1: TMenuItem;
-    eSaveascUloitjako1: TMenuItem;
+    miEditorNew: TMenuItem;
+    miEditorOpen: TMenuItem;
+    miEditorSave: TMenuItem;
+    miEditorSaveAs: TMenuItem;
     N17: TMenuItem;
-    eCutcVyjmout1: TMenuItem;
-    eCopycKoprovat1: TMenuItem;
-    ePastecVloit1: TMenuItem;
-    eSelectallcVybratve1: TMenuItem;
+    miEditorCut: TMenuItem;
+    miEditorCopy: TMenuItem;
+    miEditorPaste: TMenuItem;
+    miEditorSelectAll: TMenuItem;
     N18: TMenuItem;
-    eCharactermodecReimznak1: TMenuItem;
-    eKanamodecReimkany1: TMenuItem;
-    eASCIImodecReimASCII1: TMenuItem;
+    miCharacterMode: TMenuItem;
+    miKanaMode: TMenuItem;
+    miASCIIMode: TMenuItem;
     N19: TMenuItem;
-    eDisplayreadingcZobrazitten1: TMenuItem;
-    eDisplaymeaningcZobrazitzpis1: TMenuItem;
-    eFontsizecVelikostpsma1: TMenuItem;
-    eSmallcMal1: TMenuItem;
-    eMediumcStedn1: TMenuItem;
-    eLargecVelk1: TMenuItem;
+    miDisplayReading: TMenuItem;
+    miDisplayMeaning: TMenuItem;
+    miFontSize: TMenuItem;
+    miFontSizeSmall: TMenuItem;
+    miFontSizeMedium: TMenuItem;
+    miFontSizeLarge: TMenuItem;
     N20: TMenuItem;
-    eTranslationcPeklad1: TMenuItem;
-    eCleartranslationcSmazatpeklad1: TMenuItem;
-    eSettranslationcNastavitpeklad1: TMenuItem;
-    eAutofilltranslationcAutomatickydoplnitpeklad1: TMenuItem;
+    miTranslation: TMenuItem;
+    miClearTranslation: TMenuItem;
+    miSetTranslation: TMenuItem;
+    miAutoFillTranslation: TMenuItem;
     N21: TMenuItem;
-    ePrintcTisk1: TMenuItem;
-    eVocabularycSlovka1: TMenuItem;
-    eAddwordcPidatslovko1: TMenuItem;
-    eListsettingscNastavenseznamu1: TMenuItem;
-    eWorddetailscDetailyslovka1: TMenuItem;
+    miPrint: TMenuItem;
+    miVocabulary1: TMenuItem;
+    miAddWord: TMenuItem;
+    miListSettings: TMenuItem;
+    miWordDetails: TMenuItem;
     N7: TMenuItem;
-    ePrintlistcTiskseznamu1: TMenuItem;
-    eListgeneratorcGenertorseznamu1: TMenuItem;
-    eHelpcNpovda1: TMenuItem;
-    eHelpcontentscObsahnpovdy1: TMenuItem;
+    miPrintList: TMenuItem;
+    miListGenerator: TMenuItem;
+    miHelp: TMenuItem;
+    miHelpContents: TMenuItem;
     N11: TMenuItem;
-    eAboutcOprogramu1: TMenuItem;
+    miAbout: TMenuItem;
     Timer2: TTimer;
     Panel3: TPanel;
     Panel2: TPanel;
@@ -195,51 +195,50 @@ type
     aMode3: TAction;
     aMode4: TAction;
     aMode5: TAction;
-    eModecReim1: TMenuItem;
-    eCharacterlistcSeznamznak1: TMenuItem;
-    eDictionarycSlovnk2: TMenuItem;
-    eTexteditorcTextoveditor1: TMenuItem;
-    eVocabularycSlovka2: TMenuItem;
-    eCharacterlistcSeznamznak2: TMenuItem;
-    eDictionarycSlovnk3: TMenuItem;
+    miTools: TMenuItem;
+    miCharacterList: TMenuItem;
+    miDictionary: TMenuItem;
+    miTextEditor: TMenuItem;
+    miVocabulary: TMenuItem;
+    miCharacterList2: TMenuItem;
+    miDictionary2: TMenuItem;
     N4: TMenuItem;
-    eTexteditorcTextoveditor2: TMenuItem;
-    eVocabularycSlovka3: TMenuItem;
+    miTextEditor2: TMenuItem;
+    miVocabulary2: TMenuItem;
     N9: TMenuItem;
     Bevel1: TBevel;
     ScreenTimer: TTimer;
     Panel4: TPanel;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
-    eSavekanatranscriptcUloitpepisdokany1: TMenuItem;
-    SaveAsKanaDialog: TSaveDialog;
+    miEditorExportAs: TMenuItem;
     aDictInflect: TAction;
     aDictAuto: TAction;
     aDictGroup1: TAction;
     aDictGroup2: TAction;
     aDictGroup3: TAction;
-    eSearchinflectedwordscHledatinflektovanslova1: TMenuItem;
-    eAutosearchwhiletypingcAutomatickyhledatpipsan1: TMenuItem;
-    eUseddictionarygroupcPouitskupinaslovnk1: TMenuItem;
+    miSearchInflectedWords: TMenuItem;
+    miAutoSearchWhileTyping: TMenuItem;
+    miDictionaryGroup: TMenuItem;
     N10: TMenuItem;
-    eUsedictionariesingroup1cPouvatslovnkyzeskupiny11: TMenuItem;
-    eUsedictionariesingroup2cPouvatslovnkyzeskupiny21: TMenuItem;
-    eUsedictionariesingroup3cPouvatslovnkyzeskupiny31: TMenuItem;
+    miDictionaryGroup1: TMenuItem;
+    miDictionaryGroup2: TMenuItem;
+    miDictionaryGroup3: TMenuItem;
     aDictVoc1: TAction;
     aDictVoc2: TAction;
     aDictVoc3: TAction;
     aUserExamples: TAction;
-    Pklady1: TMenuItem;
+    miExamples2: TMenuItem;
     aEditorColors: TAction;
-    eUsecolorscPouvatbarvy1: TMenuItem;
+    miUseColors: TMenuItem;
     aDictMiddle: TAction;
-    eSearchsubstringcHledatpodetzec1: TMenuItem;
+    miSearchSubstring: TMenuItem;
     N23: TMenuItem;
     N25: TMenuItem;
     N2: TMenuItem;
-    eSavecharacterstofilecUloitznakydosouboru1: TMenuItem;
-    N00242eAddwordcPidatslovko1: TMenuItem;
-    N00929eChangelanguage1: TMenuItem;
+    miSaveCharactersToFile: TMenuItem;
+    miAddWordIntoVocabulary: TMenuItem;
+    miChangeLanguage: TMenuItem;
     aChangeLanguage: TAction;
     FormPlacement1: TFormPlacement;
     aFullscreenMode: TAction;
@@ -247,11 +246,12 @@ type
     N26: TMenuItem;
     N27: TMenuItem;
     aCategoryManager: TAction;
-    N14: TMenuItem;
+    miManageCategories: TMenuItem;
     N24: TMenuItem;
     aEditorCopyAs: TAction;
     aPortraitMode: TAction;
     PortraitMode1: TMenuItem;
+    aEditorExport: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure RadioGroup1Click(Sender: TObject);
     procedure RadioGroup2Click(Sender: TObject);
@@ -354,14 +354,13 @@ type
     procedure aEditorMedFontExecute(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
     procedure tab3Click(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure tab4Click(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
-    procedure eCharacterlistcSeznamznak1Click(Sender: TObject);
+{    procedure eCharacterlistcSeznamznak1Click(Sender: TObject);
     procedure eDictionarycSlovnk2Click(Sender: TObject);
-    procedure eTexteditorcTextoveditor1Click(Sender: TObject);
+    procedure eTexteditorcTextoveditor1Click(Sender: TObject);}
     procedure aMode1Execute(Sender: TObject);
     procedure aMode2Execute(Sender: TObject);
     procedure aMode3Execute(Sender: TObject);
@@ -371,7 +370,6 @@ type
     procedure ScreenTimerTimer(Sender: TObject);
     procedure PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure eSavekanatranscriptcUloitpepisdokany1Click(Sender: TObject);
     procedure aDictInflectExecute(Sender: TObject);
     procedure aDictAutoExecute(Sender: TObject);
     procedure aDictGroup1Execute(Sender: TObject);
@@ -384,7 +382,7 @@ type
     procedure aEditorColorsExecute(Sender: TObject);
     procedure PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure eSavecharacterstofilecUloitznakydosouboru1Click(
+    procedure miSaveCharactersToFileClick(
       Sender: TObject);
     procedure aDictMiddleExecute(Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
@@ -392,6 +390,7 @@ type
     procedure aCategoryManagerExecute(Sender: TObject);
     procedure aEditorCopyAsExecute(Sender: TObject);
     procedure aPortraitModeExecute(Sender: TObject);
+    procedure aEditorExportExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -407,7 +406,6 @@ type
     procedure FormUndock(form:TForm);
 
   public
-    ResFixVal:integer;
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
     screenTipShown:boolean;
 
@@ -417,7 +415,6 @@ type
     ctlFileMap:cardinal;
     ptrFileMap:pointer;
 
-    procedure XPResFix(form:TForm);
     procedure TranslateAll;
     procedure SetFormPos(form:TForm);
     procedure WriteUserPackage(dir:string);
@@ -431,8 +428,6 @@ type
     procedure ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
     procedure WriteLayout(filename:string);
     procedure ReadLayout(filename:string);
-    procedure ShowForm(button:TSpeedButton;action:TAction;form:TForm);
-    procedure HideForm(button:TSpeedButton;action:TAction;form:TForm);
     procedure StandardLayout(lay:integer;perc:integer);
     procedure RescanDicts;
     procedure ClearDicts;
@@ -464,6 +459,12 @@ type
     procedure ChangeUserData;
     property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
 
+  protected
+    proposedlayout:integer;
+    borderchange:boolean;
+  public
+    displaymode:integer; //will be applied on ChangeDisplay
+    curdisplaymode:integer; //last applied mode
 
   private //Text under mouse
     intcurString:string; { String under the mouse pointer right now.
@@ -596,12 +597,7 @@ var
 
   userdataloaded:boolean;
   curlang:char;
-  curqlayout:integer;
-  proposedlayout:integer;
-  borderchange:boolean;
-  displaymode:integer;
-  curdisplaymode:integer;
-  oldpt,begpt:TPoint;
+  oldpt:TPoint;
   tim:integer;
   rdcnt,bitcnt:integer;
   curtext:array[1..100] of TTextInfo;
@@ -1147,16 +1143,6 @@ begin
     SetFormPos(fKanji);
     SetFormPos(fWords);
     SetFormPos(fUser);
-    XPResFix(fMenu);
-    XPResFix(fKanji);
-    XPResFix(fWords);
-    XPResFix(fUser);
-    XPResFix(fUserAdd);
-  //  XPResFix(fKanjiSearch);
-    XPResFix(fKanjiCompounds);
-    XPResFix(fWordDetails);
-  //  XPResFix(fExamples);
-    XPResFix(fTranslate);
 
    //Prepare for SwitchLanguage->RescanDicts->AutoUpdate(dic)
     if Command='updatedics' then begin
@@ -1536,172 +1522,11 @@ begin
   RefreshKanjiCategory;
 end;
 
-procedure TfMenu.XPResFix(form:TForm);
-var sl:TStringList;
-    i:integer;
-    ct:TControl;
-    s:string;
-begin
-  exit;
-  if ResFixVal<>0 then
-  begin
-    if form.Constraints.MinHeight>0 then form.Constraints.MinHeight:=form.Constraints.MinHeight+ResFixVal;
-    if form.Constraints.MaxHeight>0 then form.Constraints.MaxHeight:=form.Constraints.MaxHeight+ResFixVal;
-    sl:=TStringList.Create;
-    for i:=0 to form.ComponentCount-1 do
-    begin
-      if form.Components[i] is TControl then
-      begin
-        ct:=form.Components[i] as TControl;
-        s:='';
-        if akTop in ct.Anchors then s:=s+'T';
-        if akBottom in ct.Anchors then s:=s+'B';
-        sl.Add(s);
-        ct.Anchors:=ct.Anchors+[akTop];
-        ct.Anchors:=ct.Anchors-[akBottom];
-      end else sl.Add('');
-    end;
-    form.height:=form.height+ResFixVal;
-    for i:=0 to form.ComponentCount-1 do
-    begin
-      if form.Components[i] is TControl then
-      begin
-        ct:=form.Components[i] as TControl;
-        if (sl[i]='') or (sl[i]='B') then
-          ct.Anchors:=ct.Anchors-[akTop];
-        if (sl[i]='B') or (sl[i]='TB') then
-          ct.Anchors:=ct.Anchors+[akBottom];
-      end;
-    end;
-  end;
-end;
-
-procedure TfMenu.ShowForm(button:TSpeedButton;action:TAction;form:TForm);
-begin
-  exit;
-  if borderchange then exit;
-  if aBorders.Checked then
-  begin
-    if form.tag=1 then
-    begin
-      form.show;
-      DockExpress(form,true);
-    end else
-    begin
-      form.Show;
-      DockExpress(form,true);
-      form.hide;
-    end;
-  end else if form.tag=1 then form.show else form.hide;
-  button.down:=form.visible;
-  if action<>nil then action.checked:=form.visible;
-end;
-
-procedure TfMenu.HideForm(button:TSpeedButton;action:TAction;form:TForm);
-begin
-  exit;
-  if borderchange then exit;
-  if (not aBorders.Checked) or (form=fKanjiDetails) then
-  begin
-    if form.visible then form.tag:=1 else form.tag:=0;
-    form.hide;
-  end;
-  button.down:=false;
-  if action<>nil then action.checked:=false;
-end;
-
-procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
-begin
-  if form=fKanji then
-  begin
-    displaymode:=1;
-    ChangeDisplay;
-    exit;
-  end;
-  if form=fUser then
-  begin
-    displaymode:=2;
-    ChangeDisplay;
-    exit;
-  end;
-  if form=fTranslate then
-  begin
-    displaymode:=3;
-    ChangeDisplay;
-    exit;
-  end;
-  if form=fWords then
-  begin
-    displaymode:=5;
-    ChangeDisplay;
-    exit;
-  end;
-  if (not aBorders.Checked) or (sb=nil) or (form=fKanjiDetails) then
-  begin
-    if form.visible then form.hide else form.show;
-    if form.visible then form.tag:=1 else form.tag:=0;
-  end else
-  begin
-    if action.checked then
-    begin
-      if form.visible then
-      begin
-        form.hide;
-        DockExpress(form,false);
-        form.tag:=0;
-      end;
-    end else
-    begin
-      if not form.visible then
-      begin
-        form.tag:=1;
-        DockExpress(form,true);
-        form.show;
-        form.tag:=2;
-      end;
-    end;
-  end;
-  if sb<>nil then sb.down:=form.visible;
-  if action<>nil then action.checked:=form.visible;
-end;
-
 procedure TfMenu.TranslateAll;
+var i: integer;
 begin
-  fLanguage.TranslateForm(self);
-  fLanguage.TranslateForm(fKanji);
-  fLanguage.TranslateForm(fRadical);
-  fLanguage.TranslateForm(fWords);
-  fLanguage.TranslateForm(fUser);
-  fLanguage.TranslateForm(fSettings);
-  fLanguage.TranslateForm(fSelectFont);
-  fLanguage.TranslateForm(fNewCategory);
-  fLanguage.TranslateForm(fPrint);
-  fLanguage.TranslateForm(fStatistics);
-  fLanguage.TranslateForm(fWordList);
-  fLanguage.TranslateForm(fBitmap);
-  fLanguage.TranslateForm(fUserAdd);
-  fLanguage.TranslateForm(fUserFilters);
-  fLanguage.TranslateForm(fUserDetails);
-  fLanguage.TranslateForm(fKanjiDetails);
-  fLanguage.TranslateForm(fKanjiSearch);
-  fLanguage.TranslateForm(fKanjiCompounds);
-  fLanguage.TranslateForm(fWordDetails);
-  fLanguage.TranslateForm(fExamples);
-  fLanguage.TranslateForm(fWordCategory);
-  fLanguage.TranslateForm(fWordKanji);
-  fLanguage.TranslateForm(fTranslate);
-  fLanguage.TranslateForm(fLayout);
-  fLanguage.TranslateForm(fMedia);
-  fLanguage.TranslateForm(fStrokeOrder);
-  fLanguage.TranslateForm(fDictMan);
-  fLanguage.TranslateForm(fDictImport);
-  fLanguage.TranslateForm(fDictCoding);
-  fLanguage.TranslateForm(fCharItem);
-  fLanguage.TranslateForm(fDicAdd);
-  fLanguage.TranslateForm(fFileType);
-  fLanguage.TranslateForm(fWordsExpChoose);
-  fLanguage.TranslateForm(fPortableMode);
-  fLanguage.TranslateForm(fCategoryMgr);
+  for i := 0 to Screen.FormCount - 1 do
+    fLanguage.TranslateForm(Screen.Forms[i]);
 end;
 
 procedure TfMenu.RefreshCategory;
@@ -2090,7 +1915,6 @@ begin
   aQuick4.Checked:=lay=3;
   aQuick5.Checked:=lay=4;
   aQuick6.Checked:=lay=5;
-  curqlayout:=lay;
   fKanji.ManualDock(Panel3);
   fKanji.Align:=alClient;
 end;
@@ -3314,6 +3138,12 @@ begin
   fTranslate.sbClipCutClick(sender);
 end;
 
+procedure TfMenu.aEditorExportExecute(Sender: TObject);
+begin
+  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.ExportAs;
+end;
+
 procedure TfMenu.aEditorCopyExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
@@ -3565,6 +3395,19 @@ begin
   ToggleForm(fTranslate,nil,nil);
 end;
 
+procedure TfMenu.tab4Click(Sender: TObject);
+begin
+  ToggleForm(fKanjiDetails,nil,nil);
+end;
+
+procedure TfMenu.FormResize(Sender: TObject);
+begin
+//  PaintBox3.Visible:=Width>815;
+//  Shape9.Visible:=Width>815;
+//  SpeedButton22.Visible:=Width>815;
+//  Bevel5.Visible:=Width>815;
+end;
+
 //TODO: This function is not used anywhere.
 //  Supposedly it was meant to update MainForm constraints to mind docked forms,
 //  but if it's not used by later, delete it.
@@ -3661,72 +3504,64 @@ begin
   form.Align:=alNone;
 end;
 
-procedure TfMenu.Button1Click(Sender: TObject);
-var t:textfile;
-    gb:array[0..96*96-1] of word;
-    big5:array[0..96*160-1] of word;
-    gbs,b5s:string;
-    i1,i2:integer;
-    s:string;
-begin
-  for i1:=0 to 96*96-1 do gb[i1]:=0;
-  for i1:=0 to 96*160-1 do big5[i1]:=0;
-  TChar.First;
-  while not TChar.EOF do
-  begin
-    b5s:=GetCharValue(TChar.Int(TCharIndex),51);
-    gbs:=GetCharValue(TChar.Int(TCharIndex),54);
-    if b5s<>'' then
-    begin
-      i1:=strtoint('0x'+copy(b5s,1,2))-160;
-      i2:=strtoint('0x'+copy(b5s,3,4));
-      if i2>$a0 then i2:=i2-160 else i2:=i2-64;
-      big5[i1*160+i2]:=strtoint('0x'+TChar.Str(TCharUnicode));
-    end;
-    if gbs<>'' then
-    begin
-      i1:=strtoint(copy(gbs,1,2));
-      i2:=strtoint(copy(gbs,3,4));
-      gb[i1*96+i2]:=strtoint('0x'+TChar.Str(TCharUnicode));
-    end;
-    TChar.Next;
-  end;
-  assignfile(t,'table.dat');
-  rewrite(t);
-  s:='  ';
-  for i1:=0 to 96*96-1 do
-  begin
-    s:=s+'$'+lowercase(Format('%4.4x',[gb[i1]]))+',';
-    if i1 mod 10=9 then begin writeln(t,s); s:='  '; end;
-  end;
-  writeln(t,s);
-  writeln(t,'');
-  s:='  ';
-  for i1:=0 to 96*160-1 do
-  begin
-    s:=s+'$'+lowercase(Format('%4.4x',[big5[i1]]))+',';
-    if i1 mod 10=9 then begin writeln(t,s); s:='  '; end;
-  end;
-  writeln(t,s);
-  closefile(t);
-end;
-
 procedure TfMenu.Button2Click(Sender: TObject);
 begin
   DockExpress(nil,false);
 end;
 
-procedure TfMenu.FormResize(Sender: TObject);
+procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
 begin
-//  PaintBox3.Visible:=Width>815;
-//  Shape9.Visible:=Width>815;
-//  SpeedButton22.Visible:=Width>815;
-//  Bevel5.Visible:=Width>815;
-end;
-
-procedure TfMenu.tab4Click(Sender: TObject);
-begin
-  ToggleForm(fKanjiDetails,nil,nil);
+  if form=fKanji then
+  begin
+    displaymode:=1;
+    ChangeDisplay;
+    exit;
+  end;
+  if form=fUser then
+  begin
+    displaymode:=2;
+    ChangeDisplay;
+    exit;
+  end;
+  if form=fTranslate then
+  begin
+    displaymode:=3;
+    ChangeDisplay;
+    exit;
+  end;
+  if form=fWords then
+  begin
+    displaymode:=5;
+    ChangeDisplay;
+    exit;
+  end;
+  if (not aBorders.Checked) or (sb=nil) or (form=fKanjiDetails) then
+  begin
+    if form.visible then form.hide else form.show;
+    if form.visible then form.tag:=1 else form.tag:=0;
+  end else
+  begin
+    if action.checked then
+    begin
+      if form.visible then
+      begin
+        form.hide;
+        DockExpress(form,false);
+        form.tag:=0;
+      end;
+    end else
+    begin
+      if not form.visible then
+      begin
+        form.tag:=1;
+        DockExpress(form,true);
+        form.show;
+        form.tag:=2;
+      end;
+    end;
+  end;
+  if sb<>nil then sb.down:=form.visible;
+  if action<>nil then action.checked:=form.visible;
 end;
 
 procedure TfMenu.ChangeDisplay;
@@ -3864,7 +3699,7 @@ begin
   ChangeDisplay;
 end;
 
-procedure TfMenu.eCharacterlistcSeznamznak1Click(Sender: TObject);
+{procedure TfMenu.eCharacterlistcSeznamznak1Click(Sender: TObject);
 begin
   displaymode:=1;
   ChangeDisplay;
@@ -3880,7 +3715,7 @@ procedure TfMenu.eTexteditorcTextoveditor1Click(Sender: TObject);
 begin
   displaymode:=3;
   ChangeDisplay;
-end;
+end;}
 
 procedure TfMenu.aMode1Execute(Sender: TObject);
 begin
@@ -4236,7 +4071,6 @@ begin
     begin
       s:=intcurString;
     end;
-    begpt:=pt;
     if flength(s)>=1 then evc:=EvalChar(fgetch(s,1));
   end;
   if (s='') and screenModeSc then
@@ -4259,7 +4093,6 @@ begin
     byte(ptrFileMap^):=0;
 {MCH    DestroyIPCQueue('texthook_data');
     DestroyIPCQueue('texthook_bit');}
-    begpt:=pt;
     s:='';
     s2:='';
     ftextpos:=0;
@@ -4514,47 +4347,6 @@ begin
   fMenu.IntTipPaintOver(PaintBox3,x,y,ssLeft in Shift);
 end;
 
-procedure TfMenu.eSavekanatranscriptcUloitpepisdokany1Click(
-  Sender: TObject);
-var
-  stream: TStream;
-  enctype: integer;
-begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
-  if not fTranslate.FullTextTranslated then
-    Application.MessageBox(
-      pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
-      pchar(_l('#00364^eNotice')),
-      MB_ICONINFORMATION or MB_OK);
-  SaveAsKanaDialog.FileName := ExtractFilename(ChangeFileExt(fTranslate.docfilename,'')); //Default name's the same, without extension
-  if not SaveAsKanaDialog.Execute then exit;
-
-  case SaveAsKanaDialog.FilterIndex of
-    1,2,3: enctype := Conv_ChooseType(false,0);
-    4,5: enctype := FILETYPE_UTF8; //UTF8 only for HTML, ODT
-  else enctype := FILETYPE_UNKNOWN; //should not be used
-  end;
-
-  stream := nil;
-  try
-    stream := TStreamWriter.Create(
-      TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
-      true
-    );
-
-    case SaveAsKanaDialog.FilterIndex of
-      1: fTranslate.SaveText(amRuby,TKanaOnlyFormat.Create(enctype,{AddSpaces=}true),stream);
-      2: fTranslate.SaveText(amRuby,TKanjiKanaFormat.Create(enctype),stream);
-      3: fTranslate.SaveText(amRuby,TKanjiOnlyFormat.Create(enctype),stream);
-      4: fTranslate.SaveText(amRuby,THtmlFormat.Create([]),stream);
-      5: fTranslate.SaveText(amRuby,TOpenDocumentFormat.Create(),stream);
-    end;
-
-  finally
-    FreeAndNil(stream);
-  end;
-end;
-
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
@@ -4648,7 +4440,7 @@ begin
   end;
 end;
 
-procedure TfMenu.eSavecharacterstofilecUloitznakydosouboru1Click(
+procedure TfMenu.miSaveCharactersToFileClick(
   Sender: TObject);
 begin
   fKanji.SaveChars;

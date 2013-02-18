@@ -105,10 +105,6 @@ var ki:TStringList;
 procedure TfKanji.FormShow(Sender: TObject);
 begin
   fKanjiSearch.ReloadOtherTypes;
-//  fMenu.ShowForm(sbYomi,fMenu.aKanjiSearch,fKanjiSearch);
-//  fMenu.ShowForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
-//  fMenu.ShowForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
-//  fMenu.ShowForm(sbPinYin,nil,fStrokeOrder);
   fMenu.aKanji.Checked:=true;
 //  fKanjiSearch.SpeedButton20.Enabled:=ChinesePresent;
   chin:=false;
@@ -121,10 +117,6 @@ end;
 procedure TfKanji.FormHide(Sender: TObject);
 begin
   fMenu.aKanji.Checked:=false;
-//  fMenu.HideForm(sbYomi,fMenu.aKanjiSearch,fKanjiSearch);
-//  fMenu.HideForm(SpeedButton2,fMenu.aKanjiDetails,fKanjiDetails);
-//  fMenu.HideForm(SpeedButton3,fMenu.aKanjiCompounds,fKanjiCompounds);
-//  fMenu.HideForm(sbPinYin,nil,fStrokeOrder);
 end;
 
 //split value string into string list. values are separated by comma or ;

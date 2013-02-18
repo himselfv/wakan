@@ -758,7 +758,7 @@ begin
   fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
 //  fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
   fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
-  displaymode:=setlayout;
+  fMenu.displaymode:=setlayout;
   CharDetNowDocked:=false;
   if (setwindows and 128<>128) and (CharDetDocked) then fMenu.aKanjiDetails.Checked:=true;
 
@@ -915,7 +915,6 @@ begin
     reg.WriteInteger('Translate','FontSize',1)
   else
     reg.WriteInteger('Translate','FontSize',2);
-  reg.WriteInteger('Layout','QLayout',curqlayout);
   reg.WriteString('Translate','MeaningLines',Edit17.text);
   reg.WriteString('Translate','PrintLines',Edit18.text);
   reg.WriteString('Dict','NotUsedDicts',dicts.NotUsedDicts);
@@ -938,7 +937,7 @@ begin
   reg.WriteInteger('Dict','SearchBeg',dictbeginset);
   reg.WriteBool('Translate','ShowHint',CheckBox2.Checked);
   reg.WriteBool('Translate','HintMeaning',CheckBox13.Checked);
-  reg.WriteInteger('Layout','DisplayLayout',curdisplaymode);
+  reg.WriteInteger('Layout','DisplayLayout',fMenu.curdisplaymode);
   reg.WriteBool('Layout','CharDetailsDocked',CharDetDocked);
   reg.WriteBool('Layout','CharDetailsVisible1',CharDetDockedVis1);
   reg.WriteBool('Layout','CharDetailsVisible2',CharDetDockedVis2);

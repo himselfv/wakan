@@ -165,8 +165,8 @@ begin
     btnDock.Caption:=_l('#00172^eUndock')
   else
     btnDock.Caption:=_l('#00173^eDock');
-  btnDock.Enabled:=CharDetDocked or (curdisplaymode=1) or (curdisplaymode=3) or
-    (curdisplaymode=4);
+  btnDock.Enabled:=CharDetDocked or (fMenu.curdisplaymode=1) or (fMenu.curdisplaymode=3) or
+    (fMenu.curdisplaymode=4);
   btnClose.Default:=not CharDetDocked;
 end;
 

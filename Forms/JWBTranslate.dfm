@@ -749,7 +749,17 @@ object fTranslate: TfTranslate
       'Text file (*.txt)|*.txt|Text file with kana readings as Aozora R' +
       'uby (*.txt)|*.txt|WaKan text with translations (*.wtt)|*.wtt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 103
+    Left = 111
+    Top = 44
+  end
+  object SaveAsKanaDialog: TSaveDialog
+    DefaultExt = '.txt'
+    Filter = 
+      'Kana only (*.txt)|*.txt|Kanji/kana mixed (*.txt)|*.txt|Kanji wit' +
+      'h spaces (*.txt)|*.txt|HTML with ruby (*.html)|*.html|OpenDocume' +
+      'nt Text (*.odt)|*.odt'
+    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
+    Left = 199
     Top = 44
   end
 end

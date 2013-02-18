@@ -171,18 +171,12 @@ end;
 
 procedure TfWords.FormShow(Sender: TObject);
 begin
-  fMenu.ShowForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
-  fMenu.ShowForm(SpeedButton1,fMenu.aUserExamples,fExamples);
-  fMenu.ShowForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
   fMenu.aUser.Checked:=true;
   ShowIt(false);
 end;
 
 procedure TfWords.FormHide(Sender: TObject);
 begin
-//  fMenu.HideForm(SpeedButton1,fMenu.aUserAdd,fUserAdd);
-//  fMenu.HideForm(SpeedButton2,fMenu.aUserSettings,fUserFilters);
-//  fMenu.HideForm(SpeedButton4,fMenu.aUserDetails,fUserDetails);
   fMenu.aUser.Checked:=false;
 end;
 

@@ -152,11 +152,6 @@ end;
 
 procedure TfUser.FormShow(Sender: TObject);
 begin
-//  fMenu.ShowForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
-//  fMenu.ShowForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
-//  fMenu.ShowForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
-//  fMenu.ShowForm(SpeedButton9,fMenu.aDictAdd,fExamples);
-//  fMenu.ShowForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
   fMenu.aDict.Checked:=true;
   if Edit1.Enabled then Edit1.SetFocus;
   Look();
@@ -164,11 +159,6 @@ end;
 
 procedure TfUser.FormHide(Sender: TObject);
 begin
-//  fMenu.HideForm(SpeedButton5,fMenu.aDictDetails,fWordDetails);
-//  fMenu.HideForm(SpeedButton6,fMenu.aDictKanji,fWordKanji);
-//  fMenu.HideForm(SpeedButton7,fMenu.aDictCategories,fWordCategory);
-//  fMenu.HideForm(SpeedButton9,fMenu.aDictAdd,fExamples);
-//  fMenu.HideForm(SpeedButton8,fMenu.aDictEditor,fTranslate);
   fMenu.aDict.Checked:=false;
 end;
 

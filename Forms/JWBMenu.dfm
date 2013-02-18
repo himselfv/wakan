@@ -1027,62 +1027,66 @@ object fMenu: TfMenu
       Caption = 'Portrait Mode'
       OnExecute = aPortraitModeExecute
     end
+    object aEditorExport: TAction
+      Caption = '#01058^eExport as...'
+      OnExecute = aEditorExportExecute
+    end
   end
   object MainMenu1: TMainMenu
     Left = 216
     Top = 48
-    object fdfd1: TMenuItem
+    object miDatabase: TMenuItem
       Caption = '#00310^e&Database'
-      object eSaveuserchangescUloituivatelskzmny1: TMenuItem
+      object miSaveUserChanges: TMenuItem
         Action = aSaveUser
       end
-      object eCanceluserchangescZruituivatelskzmny1: TMenuItem
+      object miCancelUserChanges: TMenuItem
         Action = aCancelUser
       end
       object N1: TMenuItem
         Caption = '-'
       end
-      object eStatisticscStatistika1: TMenuItem
+      object miStatistics: TMenuItem
         Action = aStatistics
       end
       object N26: TMenuItem
         Caption = '-'
       end
-      object eDictionarymanagercManaerslovnk1: TMenuItem
+      object miDictionaryManager: TMenuItem
         Action = aSettingsDict
       end
       object N27: TMenuItem
         Caption = '-'
       end
-      object eSettingscNastaven2: TMenuItem
+      object miSettings: TMenuItem
         Action = aSettings
         Caption = '#00940^eOptions...'
       end
-      object N00929eChangelanguage1: TMenuItem
+      object miChangeLanguage: TMenuItem
         Action = aChangeLanguage
       end
       object N15: TMenuItem
         Caption = '-'
       end
-      object eExitcUkonit1: TMenuItem
+      object miExit: TMenuItem
         Action = aExit
       end
     end
-    object eModecReim1: TMenuItem
+    object miTools: TMenuItem
       Caption = '#00311^e&Tools'
-      object eCharacterlistcSeznamznak1: TMenuItem
+      object miCharacterList: TMenuItem
         Action = aMode1
         RadioItem = True
       end
-      object eDictionarycSlovnk2: TMenuItem
+      object miDictionary: TMenuItem
         Action = aMode2
         RadioItem = True
       end
-      object eTexteditorcTextoveditor1: TMenuItem
+      object miTextEditor: TMenuItem
         Action = aMode3
         RadioItem = True
       end
-      object eVocabularycSlovka2: TMenuItem
+      object miVocabulary: TMenuItem
         Action = aMode5
         RadioItem = True
       end
@@ -1108,127 +1112,127 @@ object fMenu: TfMenu
         AutoCheck = True
       end
     end
-    object eCharacterscZnaky1: TMenuItem
+    object miCharacters: TMenuItem
       Caption = '#00312^e&Characters'
-      object eCharacterlistcSeznamznak2: TMenuItem
+      object miCharacterList2: TMenuItem
         Action = aMode1
       end
       object N5: TMenuItem
         Caption = '-'
       end
-      object eDisplayallcZobrazitvechny1: TMenuItem
+      object miDisplayAll: TMenuItem
         Action = aKanjiAll
       end
-      object eLearnedonlycPouzenauen1: TMenuItem
+      object miLearnedOnly: TMenuItem
         Action = aKanjiLearned
       end
-      object eCommononlycPouzebn1: TMenuItem
+      object miCommonOnly: TMenuItem
         Action = aKanjiCommon
       end
-      object eInclipboardonlycPouzeveschrnce1: TMenuItem
+      object miInClipboardOnly: TMenuItem
         Action = aKanjiClipboard
       end
       object N3: TMenuItem
         Caption = '-'
       end
-      object eSearchbyPinYincHledatpodlePinYin1: TMenuItem
+      object miSearchByPinYin: TMenuItem
         Action = aKanjiPinYin
       end
-      object aSearchbyYomicHledatpodleYomi1: TMenuItem
+      object miSearchByYomi: TMenuItem
         Action = aKanjiYomi
       end
-      object eSearchbymeaningcHledatpodlevznamu1: TMenuItem
+      object miSearchByMeaning: TMenuItem
         Action = aKanjiMeaning
       end
-      object eSearchbyradicalcHledatpodleradiklu1: TMenuItem
+      object miSearchByRadical: TMenuItem
         Action = aKanjiRadical
       end
       object N6: TMenuItem
         Caption = '-'
       end
-      object eAddtoclipboardcPidatdoschrnky1: TMenuItem
+      object miAddToClipboard: TMenuItem
         Action = aKanjiAddClipboard
       end
-      object eSetasunlearnedcNastavitjakonenauen1: TMenuItem
+      object miSetAsLearned: TMenuItem
         Action = aKanjiSetLearned
       end
-      object ePrintcardscTiskkaret1: TMenuItem
+      object miPrintCards: TMenuItem
         Action = aKanjiPrint
       end
       object N13: TMenuItem
         Caption = '-'
       end
-      object eSearchcHledn1: TMenuItem
+      object miSearch: TMenuItem
         Action = aKanjiSearch
       end
-      object eDetailscDetaily1: TMenuItem
+      object miDetails: TMenuItem
         Action = aKanjiDetails
       end
-      object eCompoundscSloeniny1: TMenuItem
+      object miCompounds: TMenuItem
         Action = aKanjiCompounds
       end
       object N2: TMenuItem
         Caption = '-'
       end
-      object eSavecharacterstofilecUloitznakydosouboru1: TMenuItem
+      object miSaveCharactersToFile: TMenuItem
         Caption = '#00944^eSave characters to file...'
-        OnClick = eSavecharacterstofilecUloitznakydosouboru1Click
+        OnClick = miSaveCharactersToFileClick
       end
     end
     object eDictionarycSlovnk1: TMenuItem
       Caption = '#00313^eD&ictionary'
-      object eDictionarycSlovnk3: TMenuItem
+      object miDictionary2: TMenuItem
         Action = aMode2
       end
       object N4: TMenuItem
         Caption = '-'
       end
-      object eJapaneseChineseEnglishcJaponskynskyAnglicky1: TMenuItem
+      object miSearchJapanese: TMenuItem
         Action = aDictJapanese
       end
-      object eEnglishJapaneseChinesecAnglickyJaponskynsky1: TMenuItem
+      object miSearchEnglish: TMenuItem
         Action = aDictEnglish
       end
-      object eSearchbyclipboardcHledatpodleschrnky1: TMenuItem
+      object miSearchByClipboard: TMenuItem
         Action = aDictClipboard
       end
       object N8: TMenuItem
         Caption = '-'
       end
-      object eSearchexactwordcHledatpesnslovo1: TMenuItem
+      object miSearchExactWord: TMenuItem
         Action = aDictExact
       end
-      object eSearchbeginningcHledatzatek1: TMenuItem
+      object miSearchBeginning: TMenuItem
         Action = aDictBeginning
       end
-      object eSearchendingcHledatkonec1: TMenuItem
+      object miSearchEnding: TMenuItem
         Action = aDictEnd
       end
-      object eSearchsubstringcHledatpodetzec1: TMenuItem
+      object miSearchSubstring: TMenuItem
         Action = aDictMiddle
       end
       object N12: TMenuItem
         Caption = '-'
       end
-      object eSearchinflectedwordscHledatinflektovanslova1: TMenuItem
+      object miSearchInflectedWords: TMenuItem
         Action = aDictInflect
       end
-      object eAutosearchwhiletypingcAutomatickyhledatpipsan1: TMenuItem
+      object miAutoSearchWhileTyping: TMenuItem
         Action = aDictAuto
       end
-      object eUseddictionarygroupcPouitskupinaslovnk1: TMenuItem
+      object miDictionaryGroup: TMenuItem
         Caption = '#00314^eUsed dictionary group'
-        object eUsedictionariesingroup1cPouvatslovnkyzeskupiny11: TMenuItem
+        object miDictionaryGroup1: TMenuItem
           Action = aDictGroup1
           Caption = '#00104^eGroup 1'
           RadioItem = True
         end
-        object eUsedictionariesingroup2cPouvatslovnkyzeskupiny21: TMenuItem
+        object miDictionaryGroup2: TMenuItem
           Action = aDictGroup2
           Caption = '#00106^eGroup 2'
           RadioItem = True
         end
-        object eUsedictionariesingroup3cPouvatslovnkyzeskupiny31: TMenuItem
+        object miDictionaryGroup3: TMenuItem
           Action = aDictGroup3
           Caption = '#00108^eGroup 3'
           RadioItem = True
@@ -1237,101 +1241,100 @@ object fMenu: TfMenu
       object N10: TMenuItem
         Caption = '-'
       end
-      object eAddtoclipboardcPidatdoschrnky2: TMenuItem
+      object miAddToClipboard2: TMenuItem
         Action = aDictAddClipboard
       end
-      object N00242eAddwordcPidatslovko1: TMenuItem
+      object miAddWordIntoVocabulary: TMenuItem
         Action = aUserAdd
         Caption = '^e&Add word into vocabulary'
       end
       object N16: TMenuItem
         Caption = '-'
       end
-      object eCharactersinwordcZnakyveslov1: TMenuItem
+      object miCharactersInWord: TMenuItem
         Action = aDictKanji
       end
-      object eAddtovocabularycPidatdoslovek1: TMenuItem
+      object miExamples: TMenuItem
         Action = aDictAdd
         Caption = '#00315^eExamples'
       end
     end
     object Editor2: TMenuItem
       Caption = '#00896^eEditor'
-      object eTexteditorcTextoveditor2: TMenuItem
+      object miTextEditor2: TMenuItem
         Action = aMode3
       end
       object N22: TMenuItem
         Caption = '-'
       end
-      object eNewcNov1: TMenuItem
+      object miEditorNew: TMenuItem
         Action = aEditorNew
       end
-      object eOpencOtevt1: TMenuItem
+      object miEditorOpen: TMenuItem
         Action = aEditorOpen
       end
-      object eSavecUloit1: TMenuItem
+      object miEditorSave: TMenuItem
         Action = aEditorSave
       end
-      object eSaveascUloitjako1: TMenuItem
+      object miEditorSaveAs: TMenuItem
         Action = aEditorSaveAs
       end
-      object eSavekanatranscriptcUloitpepisdokany1: TMenuItem
-        Caption = '#01058^eExport as...'
-        OnClick = eSavekanatranscriptcUloitpepisdokany1Click
+      object miEditorExportAs: TMenuItem
+        Action = aEditorExport
       end
       object N17: TMenuItem
         Caption = '-'
       end
-      object eCutcVyjmout1: TMenuItem
+      object miEditorCut: TMenuItem
         Action = aEditorCut
       end
-      object eCopycKoprovat1: TMenuItem
+      object miEditorCopy: TMenuItem
         Action = aEditorCopy
       end
-      object ePastecVloit1: TMenuItem
+      object miEditorPaste: TMenuItem
         Action = aEditorPaste
       end
-      object eSelectallcVybratve1: TMenuItem
+      object miEditorSelectAll: TMenuItem
         Action = aEditorSelectAll
       end
       object N18: TMenuItem
         Caption = '-'
       end
-      object eCharactermodecReimznak1: TMenuItem
+      object miCharacterMode: TMenuItem
         Action = aEditorKanjiMode
         RadioItem = True
       end
-      object eKanamodecReimkany1: TMenuItem
+      object miKanaMode: TMenuItem
         Action = aEditorKanaMode
         RadioItem = True
       end
-      object eASCIImodecReimASCII1: TMenuItem
+      object miASCIIMode: TMenuItem
         Action = aEditorASCIIMode
         RadioItem = True
       end
       object N19: TMenuItem
         Caption = '-'
       end
-      object eDisplayreadingcZobrazitten1: TMenuItem
+      object miDisplayReading: TMenuItem
         Action = aEditorReading
       end
-      object eDisplaymeaningcZobrazitzpis1: TMenuItem
+      object miDisplayMeaning: TMenuItem
         Action = aEditorMeaning
       end
-      object eUsecolorscPouvatbarvy1: TMenuItem
+      object miUseColors: TMenuItem
         Action = aEditorColors
       end
-      object eFontsizecVelikostpsma1: TMenuItem
+      object miFontSize: TMenuItem
         Caption = '#00051^eFont size'
-        object eSmallcMal1: TMenuItem
+        object miFontSizeSmall: TMenuItem
           Action = aEditorSmallFont
           RadioItem = True
         end
-        object eMediumcStedn1: TMenuItem
+        object miFontSizeMedium: TMenuItem
           Action = aEditorMedFont
           RadioItem = True
         end
-        object eLargecVelk1: TMenuItem
+        object miFontSizeLarge: TMenuItem
           Action = aEditorLargeFont
           RadioItem = True
         end
@@ -1339,72 +1342,72 @@ object fMenu: TfMenu
       object N20: TMenuItem
         Caption = '-'
       end
-      object eTranslationcPeklad1: TMenuItem
+      object miTranslation: TMenuItem
         Caption = '#00317^eTranslation'
-        object eCleartranslationcSmazatpeklad1: TMenuItem
+        object miClearTranslation: TMenuItem
           Action = aEditorClear
         end
-        object eSettranslationcNastavitpeklad1: TMenuItem
+        object miSetTranslation: TMenuItem
           Action = aEditorSet
         end
-        object eAutofilltranslationcAutomatickydoplnitpeklad1: TMenuItem
+        object miAutoFillTranslation: TMenuItem
           Action = aEditorFill
         end
       end
       object N21: TMenuItem
         Caption = '-'
       end
-      object ePrintcTisk1: TMenuItem
+      object miPrint: TMenuItem
         Action = aEditorPrint
       end
     end
-    object eVocabularycSlovka1: TMenuItem
+    object miVocabulary1: TMenuItem
       Caption = '#00318^e&Vocabulary'
-      object eVocabularycSlovka3: TMenuItem
+      object miVocabulary2: TMenuItem
         Action = aMode5
       end
       object N9: TMenuItem
         Caption = '-'
       end
-      object Pklady1: TMenuItem
+      object miExamples2: TMenuItem
         Action = aUserExamples
         Caption = '#00315^eExamples'
       end
-      object eListsettingscNastavenseznamu1: TMenuItem
+      object miListSettings: TMenuItem
         Action = aUserSettings
       end
-      object eWorddetailscDetailyslovka1: TMenuItem
+      object miWordDetails: TMenuItem
         Action = aUserDetails
       end
       object N7: TMenuItem
         Caption = '-'
       end
-      object eAddwordcPidatslovko1: TMenuItem
+      object miAddWord: TMenuItem
         Action = aUserAdd
         Caption = '#00319^e&Add word...'
       end
-      object ePrintlistcTiskseznamu1: TMenuItem
+      object miPrintList: TMenuItem
         Action = aUserPrint
       end
-      object eListgeneratorcGenertorseznamu1: TMenuItem
+      object miListGenerator: TMenuItem
         Action = aUserGenerate
       end
       object N24: TMenuItem
         Caption = '-'
       end
-      object N14: TMenuItem
+      object miManageCategories: TMenuItem
         Action = aCategoryManager
       end
     end
-    object eHelpcNpovda1: TMenuItem
+    object miHelp: TMenuItem
       Caption = '#00320^eHelp'
-      object eHelpcontentscObsahnpovdy1: TMenuItem
+      object miHelpContents: TMenuItem
         Action = aHelp
       end
       object N11: TMenuItem
         Caption = '-'
       end
-      object eAboutcOprogramu1: TMenuItem
+      object miAbout: TMenuItem
         Action = aAbout
       end
     end
@@ -1428,15 +1431,5 @@ object fMenu: TfMenu
     OnTimer = ScreenTimerTimer
     Left = 504
     Top = 57
-  end
-  object SaveAsKanaDialog: TSaveDialog
-    DefaultExt = '.txt'
-    Filter = 
-      'Kana only (*.txt)|*.txt|Kanji/kana mixed (*.txt)|*.txt|Kanji wit' +
-      'h spaces (*.txt)|*.txt|HTML with ruby (*.html)|*.html|OpenDocume' +
-      'nt Text (*.odt)|*.odt'
-    Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 279
-    Top = 12
   end
 end

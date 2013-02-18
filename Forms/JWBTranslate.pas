@@ -134,6 +134,7 @@ type
     OpenTextDialog: TOpenDialog;
     SaveTextDialog: TSaveDialog;
     cbFontSize: TComboBox;
+    SaveAsKanaDialog: TSaveDialog;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -316,6 +317,7 @@ type
       stream: TStream; block: PTextSelection = nil);
     function SaveAs: boolean;
     function CommitFile:boolean;
+    function ExportAs: boolean;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
     property FullTextTranslated: boolean read FFullTextTranslated write FFullTextTranslated;
 
@@ -1790,6 +1792,49 @@ begin
 
  //"Yes"
   filechanged:=false;
+  Result := true;
+end;
+
+function TfTranslate.ExportAs: boolean;
+var
+  stream: TStream;
+  enctype: integer;
+begin
+  if not Self.FullTextTranslated then
+    Application.MessageBox(
+      pchar(_l('#00369^eDo not forget to fill kana readings or use the auto-fill function before using this feature.')),
+      pchar(_l('#00364^eNotice')),
+      MB_ICONINFORMATION or MB_OK);
+  SaveAsKanaDialog.FileName := ExtractFilename(ChangeFileExt(docfilename,'')); //Default name's the same, without extension
+  if not SaveAsKanaDialog.Execute then begin
+    Result := false;
+    exit;
+  end;
+
+  case SaveAsKanaDialog.FilterIndex of
+    1,2,3: enctype := Conv_ChooseType(false,0);
+    4,5: enctype := FILETYPE_UTF8; //UTF8 only for HTML, ODT
+  else enctype := FILETYPE_UNKNOWN; //should not be used
+  end;
+
+  stream := nil;
+  try
+    stream := TStreamWriter.Create(
+      TFileStream.Create(SaveAsKanaDialog.FileName,fmCreate),
+      true
+    );
+
+    case SaveAsKanaDialog.FilterIndex of
+      1: SaveText(amRuby,TKanaOnlyFormat.Create(enctype,{AddSpaces=}true),stream);
+      2: SaveText(amRuby,TKanjiKanaFormat.Create(enctype),stream);
+      3: SaveText(amRuby,TKanjiOnlyFormat.Create(enctype),stream);
+      4: SaveText(amRuby,THtmlFormat.Create([]),stream);
+      5: SaveText(amRuby,TOpenDocumentFormat.Create(),stream);
+    end;
+  finally
+    FreeAndNil(stream);
+  end;
+
   Result := true;
 end;
 
