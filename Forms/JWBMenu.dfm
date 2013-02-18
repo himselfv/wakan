@@ -689,30 +689,6 @@ object fMenu: TfMenu
     object aLayout: TAction
       Caption = '#00250^eLayout &manager...'
     end
-    object aQuick1: TAction
-      Caption = '#00251^e&Windowed'
-      OnExecute = aQuick1Execute
-    end
-    object aQuick2: TAction
-      Caption = '#00252^e&Complete'
-      OnExecute = aQuick2Execute
-    end
-    object aQuick3: TAction
-      Caption = '#00253^e&Char. &search'
-      OnExecute = aQuick3Execute
-    end
-    object aQuick4: TAction
-      Caption = '#00254^e&Learning'
-      OnExecute = aQuick4Execute
-    end
-    object aQuick5: TAction
-      Caption = '#00255^e&Translation'
-      OnExecute = aQuick5Execute
-    end
-    object aQuick6: TAction
-      Caption = '&Editor'
-      OnExecute = aQuick6Execute
-    end
     object aBorders: TAction
       Caption = '#00256^eWindow &borders'
       OnExecute = aBordersExecute
@@ -1411,13 +1387,6 @@ object fMenu: TfMenu
         Action = aAbout
       end
     end
-  end
-  object Timer2: TTimer
-    Enabled = False
-    Interval = 100
-    OnTimer = Timer2Timer
-    Left = 32
-    Top = 40
   end
   object FormPlacement1: TFormPlacement
     Active = False

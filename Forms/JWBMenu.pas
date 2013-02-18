@@ -50,12 +50,6 @@ type
     aSettings: TAction;
     aSettingsDict: TAction;
     aLayout: TAction;
-    aQuick1: TAction;
-    aQuick2: TAction;
-    aQuick3: TAction;
-    aQuick4: TAction;
-    aQuick5: TAction;
-    aQuick6: TAction;
     aBorders: TAction;
     aHelp: TAction;
     aAbout: TAction;
@@ -185,7 +179,6 @@ type
     miHelpContents: TMenuItem;
     N11: TMenuItem;
     miAbout: TMenuItem;
-    Timer2: TTimer;
     Panel3: TPanel;
     Panel2: TPanel;
     Shape9: TShape;
@@ -275,7 +268,6 @@ type
     procedure Image1Click(Sender: TObject);
     procedure SpeedButton15Click(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
-    procedure SpeedButton16Click(Sender: TObject);
     procedure PaintBox3Paint(Sender: TObject);
     procedure SpeedButton22Click(Sender: TObject);
     procedure aSaveUserExecute(Sender: TObject);
@@ -301,12 +293,6 @@ type
     procedure aUserGenerateExecute(Sender: TObject);
     procedure aSettingsExecute(Sender: TObject);
     procedure aSettingsDictExecute(Sender: TObject);
-    procedure aQuick1Execute(Sender: TObject);
-    procedure aQuick2Execute(Sender: TObject);
-    procedure aQuick3Execute(Sender: TObject);
-    procedure aQuick4Execute(Sender: TObject);
-    procedure aQuick5Execute(Sender: TObject);
-    procedure aQuick6Execute(Sender: TObject);
     procedure aBordersExecute(Sender: TObject);
     procedure aHelpExecute(Sender: TObject);
     procedure aAboutExecute(Sender: TObject);
@@ -352,15 +338,11 @@ type
     procedure aEditorSmallFontExecute(Sender: TObject);
     procedure aEditorLargeFontExecute(Sender: TObject);
     procedure aEditorMedFontExecute(Sender: TObject);
-    procedure Timer2Timer(Sender: TObject);
     procedure tab3Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure tab4Click(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
-{    procedure eCharacterlistcSeznamznak1Click(Sender: TObject);
-    procedure eDictionarycSlovnk2Click(Sender: TObject);
-    procedure eTexteditorcTextoveditor1Click(Sender: TObject);}
     procedure aMode1Execute(Sender: TObject);
     procedure aMode2Execute(Sender: TObject);
     procedure aMode3Execute(Sender: TObject);
@@ -399,8 +381,7 @@ type
     procedure InitializeWakan;
 
   private //Docking
-    procedure DockProc(slave,host:TForm;panel:TPanel;dir:integer;dock:boolean);
-    procedure FixConstraints(form:TForm;w,h:integer);
+    procedure DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean);
   public
     procedure DockExpress(form:TForm;dock:boolean);
     procedure FormUndock(form:TForm);
@@ -416,19 +397,10 @@ type
     ptrFileMap:pointer;
 
     procedure TranslateAll;
-    procedure SetFormPos(form:TForm);
     procedure WriteUserPackage(dir:string);
-    procedure SaveUserData;
-    procedure LoadUserData;
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
-    procedure ExportUserData(filename:string);
-    procedure ImportUserData(filename:string);
-    function FlushUserData:boolean;
     procedure ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
-    procedure WriteLayout(filename:string);
-    procedure ReadLayout(filename:string);
-    procedure StandardLayout(lay:integer;perc:integer);
     procedure RescanDicts;
     procedure ClearDicts;
     procedure SwitchLanguage(lanchar:char);
@@ -440,9 +412,6 @@ type
     procedure HideScreenTip;
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
     procedure PopupImmediate(left:boolean);
-    procedure RebuildUserIndex;
-//    procedure LoadLayout(filename:string);
-//    procedure SaveFixedLayout(filename:string);
 
   protected
     DicLoadPrompt: TSMPromptForm;
@@ -455,12 +424,17 @@ type
   protected
     FUserDataChanged:boolean;
     procedure SetUserDataChanged(Value: boolean);
+    function FlushUserData:boolean;
   public
+    procedure SaveUserData;
+    procedure LoadUserData;
     procedure ChangeUserData;
+    procedure RebuildUserIndex;
+    procedure ExportUserData(filename:string);
+    procedure ImportUserData(filename:string);
     property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
 
   protected
-    proposedlayout:integer;
     borderchange:boolean;
   public
     displaymode:integer; //will be applied on ChangeDisplay
@@ -649,7 +623,7 @@ uses JWBKanji, JWBUnit, JWBRadical,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
   JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters, JWBUserData,
   JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
-  JWBWordCategory, JWBWordKanji, JWBTranslate, JWBLayout, JWBStrokeOrder,
+  JWBWordCategory, JWBWordKanji, JWBTranslate, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
@@ -1138,11 +1112,6 @@ begin
     jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
     cromasys:=fSettings.RadioGroup6.ItemIndex+1;
     cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
-  //  Left:=0;
-  //  Top:=0;
-    SetFormPos(fKanji);
-    SetFormPos(fWords);
-    SetFormPos(fUser);
 
    //Prepare for SwitchLanguage->RescanDicts->AutoUpdate(dic)
     if Command='updatedics' then begin
@@ -1174,15 +1143,7 @@ begin
       fMenu.Image1.Top:=0;
     end;}
     aBorders.Checked:=true;
-    proposedlayout:=0;
     borderchange:=false;
-  { Old way of loading layout:
-    if (FileExists('wakan.lay')) and (setlayout=0) then ReadLayout('wakan.lay') else
-    begin
-      proposedlayout:=setlayout;
-      timer2.enabled:=true;
-    end;
-    StandardLayout(0,100); }
     curdisplaymode:=0;
     if PortabilityMode=pmPortable then begin
       FormPlacement1.UseRegistry := false;
@@ -1514,7 +1475,6 @@ begin
   end;
   RescanDicts;
   fKanji.KanjiSearch_SpeedButton20Click(self);
-//  fUser.SpeedButton4.Enabled:=lanchar='j';
   if (not fUser.btnLookupClip.Enabled) and (fUser.btnLookupClip.Down) then fUser.btnLookupJtoE.Down:=true;
   fExamples.ReloadExamples;
   fUser.Look();
@@ -1570,353 +1530,6 @@ begin
   fKanjiDetails.cbCategories.ItemIndex:=0;
   fKanjiSearch.lbCategories.ItemIndex:=0;
   fKanjiSearch.lbCategoriesClick(Self); //react to changes
-end;
-
-function GetFormLayout(form:TForm):string;
-var s:string;
-begin
-  if form.visible then s:='VISIBLE'else if form=fKanjiDetails then s:='PARENT'else s:='HIDDEN';
-  if form.BorderStyle=bsNone then s:=s+',N'else s:=s+',Y';
-  if (form=fMenu) or (form=fKanji) or (form=fUser) or (form=fWords) or (form=fKanjiDetails) or (form=fStrokeOrder) or (form=fTranslate) then
-    s:=s+',ABSOLUTE,'else s:=s+',LEAVE,';
-  s:=s+inttostr(form.left)+','+inttostr(form.top)+','+inttostr(form.width)+','+inttostr(form.height);
-  result:=s;
-end;
-
-procedure SetFormLayout(form:TForm;s:string;fullborder:TFormBorderStyle;var screenorig:TPoint; var screendim:TPoint);
-var params:array[1..10] of string;
-    i:integer;
-    v:integer;
-    vf,vt:integer;
-    sf,sfw:boolean;
-begin
-  i:=1;
-  while pos(',',s)>0 do
-  begin
-    params[i]:=uppercase(copy(s,1,pos(',',s)-1));
-    delete(s,1,pos(',',s));
-    inc(i);
-  end;
-  params[i]:=uppercase(s);
-  if (params[1]='VISIBLE') or (params[1]='PARENT') then form.tag:=1 else form.tag:=0;
-//  if params[2]='N'then if form<>fMenu then form.borderStyle:=bsNone else form.borderStyle:=fullborder;
-//  if (form=fMenu) then if params[2]='N'then form.tag:=1 else form.tag:=0;
-  if uppercase(params[3])='LEAVE'then
-  begin end else
-  if uppercase(params[3])='ABSOLUTE'then
-  begin
-    form.left:=strtoint(params[4]);
-    form.top:=strtoint(params[5]);
-    sf:=((form.Constraints.minHeight=form.Constraints.MaxHeight) and
-      (form.Constraints.minHeight>0)) or (fullborder=bsToolWindow);
-    sfw:=((form.Constraints.minWidth=form.Constraints.MaxWidth) and
-      (form.Constraints.minWidth>0)) or (fullborder=bsToolWindow);
-    if not sfw then form.width:=strtoint(params[6]);
-    if not sf then form.height:=strtoint(params[7]);
-  end else if uppercase(params[3])='CENTER'then
-  begin
-    form.width:=strtoint(params[4]);
-    form.height:=strtoint(params[5]);
-    form.left:=screendim.x div 2-form.width div 2;
-    form.top:=screendim.y div 2-form.height div 2;
-  end else
-  begin
-    if (params[4]='%') and ((params[3]='TOP') or (params[3]='BOTTOM')) then v:=screendim.y*strtoint(params[5]) div 100 else
-    if (params[4]='%') and ((params[3]='LEFT') or (params[3]='RIGHT')) then v:=screendim.x*strtoint(params[5]) div 100 else
-    if (params[4]='.') and ((params[3]='TOP') or (params[3]='BOTTOM')) then v:=form.height else
-    if (params[4]='.') and ((params[3]='LEFT') or (params[3]='RIGHT')) then v:=form.width else
-      v:=strtoint(params[5]);
-    if (params[6]='%') and ((params[3]='TOP') or (params[3]='BOTTOM')) then vf:=screendim.x*strtoint(params[7]) div 100 else
-    if (params[6]='%') and ((params[3]='LEFT') or (params[3]='RIGHT')) then vf:=screendim.y*strtoint(params[7]) div 100 else
-      vf:=strtoint(params[7]);
-    if (params[8]='%') and ((params[3]='TOP') or (params[3]='BOTTOM')) then vt:=screendim.x*strtoint(params[9]) div 100 else
-    if (params[8]='%') and ((params[3]='LEFT') or (params[3]='RIGHT')) then vt:=screendim.y*strtoint(params[9]) div 100 else
-    if (params[8]='.') and ((params[3]='TOP') or (params[3]='BOTTOM')) then vt:=vf+form.width else
-    if (params[8]='.') and ((params[3]='LEFT') or (params[3]='RIGHT')) then vt:=vf+form.height else
-    if (params[8]='R') and ((params[3]='TOP') or (params[3]='BOTTOM')) then vt:=screendim.x else
-    if (params[8]='R') and ((params[3]='LEFT') or (params[3]='RIGHT')) then vt:=screendim.y else
-      vt:=strtoint(params[9]);
-    if (params[3]='TOP') or (params[3]='BOTTOM') then form.height:=v else form.width:=v;
-    if params[3]='TOP'then
-    begin
-      form.top:=screenorig.y;
-      if params[10]='SET'then
-      begin
-        screenorig.y:=screenorig.y+form.height;
-        screendim.y:=screendim.y-form.height;
-      end;
-      form.left:=vf+screenorig.x; form.width:=vt-vf;
-    end;
-    if params[3]='BOTTOM'then
-    begin
-      form.top:=screenorig.y+screendim.y-form.height;
-      if params[10]='SET'then screendim.y:=screendim.y-form.height;
-      form.left:=vf+screenorig.x; form.width:=vt-vf;
-    end;
-    if params[3]='LEFT'then
-    begin
-      form.left:=screenorig.x;
-      if params[10]='SET'then
-      begin
-        screenorig.x:=screenorig.x+form.width;
-        screendim.x:=screendim.x-form.width;
-      end;
-      form.top:=vf+screenorig.y; form.height:=vt-vf;
-    end;
-    if params[3]='RIGHT'then
-    begin
-      form.left:=screenorig.x+screendim.x-form.width;
-      if params[10]='SET'then screendim.x:=screendim.x-form.width;
-      form.top:=vf+screenorig.y; form.height:=vt-vf;
-    end;
-  end;
-end;
-
-procedure TfMenu.ReadLayout(filename:string);
-var t:textfile;
-  s:string;
-  so,sd:TPoint;
-begin
-  assignfile(t,filename);
-  reset(t);
-  readln(t,s);
-  if s<>'VERSION,6'then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00334^eCannot load layout. Outdated version.'#13#13
-        +'Settings standard layout instead.')),
-      pchar(_l('#00335^eLayout loading')),
-      MB_ICONINFORMATION or MB_OK);
-    closefile(t);
-    StandardLayout(0,100);
-    exit;
-  end;
-  readln(t,s);
-  fUser.Hide;
-  fKanji.Hide;
-  fWords.Hide;
-  SetFormLayout(fMenu,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fKanji,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fWords,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fUser,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fExamples,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fUserFilters,s,bsToolWindow,so,sd); readln(t,s);
-  SetFormLayout(fUserDetails,s,bsToolWindow,so,sd); readln(t,s);
-  SetFormLayout(fKanjiDetails,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fKanjiSearch,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fKanjiCompounds,s,bsSizeToolWin,so,sd); readln(t,s);
-//  SetFormLayout(fWordDetails,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fExamples,s,bsSizeToolWin,so,sd); readln(t,s);
-//  SetFormLayout(fWordCategory,s,bsToolWindow,so,sd); readln(t,s);
-  SetFormLayout(fWordKanji,s,bsToolWindow,so,sd); readln(t,s);
-  SetFormLayout(fTranslate,s,bsSizeToolWin,so,sd); readln(t,s);
-  SetFormLayout(fStrokeOrder,s,bsToolWindow,so,sd); readln(t,s);
-  if StrokeOrderPackage=nil then fStrokeOrder.Tag:=0;
-  if fKanji.tag=1 then fKanji.Show;
-  if fUser.tag=1 then fUser.Show;
-  if fWords.tag=1 then fWords.Show;
-  if fKanjiDetails.tag=1 then fKanjiDetails.Show;
-  if fTranslate.tag=1 then fTranslate.Show;
-  closefile(t);
-end;
-
-procedure TfMenu.WriteLayout(filename:string);
-var t:textfile;
-    s:string;
-    i:integer;
-begin
-  assignfile(t,filename);
-  rewrite(t);
-  writeln(t,'VERSION,7');
-  s:=GetFormLayout(fMenu); writeln(t,s);
-  s:=GetFormLayout(fKanji); writeln(t,s);
-  s:=GetFormLayout(fWords); writeln(t,s);
-  s:=GetFormLayout(fUser); writeln(t,s);
-  s:=GetFormLayout(fExamples); writeln(t,s);
-  s:=GetFormLayout(fUserFilters); writeln(t,s);
-  s:=GetFormLayout(fUserDetails); writeln(t,s);
-  s:=GetFormLayout(fKanjiDetails); writeln(t,s);
-  s:=GetFormLayout(fKanjiSearch); writeln(t,s);
-  s:=GetFormLayout(fKanjiCompounds); writeln(t,s);
-//  s:=GetFormLayout(fWordDetails); writeln(t,s);
-  s:=GetFormLayout(fExamples); writeln(t,s);
-//  s:=GetFormLayout(fWordCategory); writeln(t,s);
-  s:=GetFormLayout(fWordKanji); writeln(t,s);
-  s:=GetFormLayout(fTranslate); writeln(t,s);
-  s:=GetFormLayout(fStrokeOrder); writeln(t,s);
-  if not aBorders.Checked then writeln(t,'HIDEBORDERS') else writeln(t,'SHOWBORDERS');
-  for i:=0 to chardetl.Count-1 do writeln(t,chardetl[i]);
-  closefile(t);
-end;
-
-procedure TfMenu.StandardLayout(lay:integer;perc:integer);
-var so,sd,so1,sd1:TPoint;
-procedure sfl(form:TForm;s:string);
-begin
-  if (form=fUserFilters)
-  or (form=fWordCategory)
-  or (form=fWordKanji)
-  or (form=fUserDetails)
-  or (form=fKanjiCompounds) then
-    SetFormLayout(form,s,bsToolWindow,so,sd) else
-    SetFormLayout(form,s,bsSizeToolWin,so,sd);
-end;
-procedure res;
-begin
-  so.x:=0; so.y:=0;
-  sd.x:=Screen.Width;
-  sd.y:=(Screen.height-24)*perc div 100;
-end;
-procedure StdVocab;
-begin
-  sd:=sd1; so:=so1;
-  sfl(fUserFilters,'VISIBLE,Y,RIGHT,.,0,=,0,.,0,LEAVE');
-  sfl(fWords,'HIDDEN,Y,TOP,=,'+inttostr(fUserFilters.height)+',=,0,=,'+inttostr(sd.x-fUserFilters.width)+',SET');
-  sfl(fUserDetails,'VISIBLE,Y,TOP,.,0,=,0,.,0,LEAVE');
-  sfl(fUserAdd,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-end;
-var sx:string;
-begin
-  if ((Screen.Width<1024) or (Screen.Height<768)) and (lay>0) then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00336^eAdvanced layouts require at least 1024x768 resolution.')),
-      pchar(_l('#00337^eResolution too low')),
-      MB_ICONERROR or MB_OK);
-    exit;
-  end;
-  fUser.Hide;
-  fKanji.Hide;
-  fWords.Hide;
-  fTranslate.Hide;
-  fKanjiDetails.Hide;
-  DockExpress(nil,false);
-  if (lay>0) and (aBorders.Checked) then
-  begin
-    aBorders.Checked:=false;
-    SpeedButton9Click(self);
-  end;
-  if (lay=0) and (not aBorders.Checked) then
-  begin
-    aBorders.Checked:=true;
-    SpeedButton9Click(self);
-  end;
-  if fMenu.BorderStyle=bsNone then sx:='40'else sx:='74';
-  res;
-  sfl(fMenu,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
-  so1:=so; sd1:=sd;
-{  case lay of
-    0:begin
-        sfl(fKanjiDetails,'VISIBLE,Y,RIGHT,%,100,=,0,r,0,SET');
-        sfl(fKanji,'VISIBLE,Y,TOP,%,100,=,0,r,0,SET');
-        fKanjiCompounds.Tag:=0;
-        fKanjiSearch.Tag:=1;
-        sd:=sd1; so:=so1;
-        sfl(fUser,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
-        fWordKanji.Tag:=1;
-        fExamples.Tag:=0;
-        sfl(fTranslate,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
-        sfl(fWords,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
-        fUserFilters.Tag:=1;
-        fUserAdd.Tag:=0;
-        fUserDetails.Tag:=0;
-      end;
-    1:begin
-//        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-//        sfl(fWordCategory,'HIDDEN,Y,BOTTOM,.,0,=,'+inttostr(sd.x-fWordCategory.Width)+',r,0,LEAVE');
-        fKanjiDetails.Height:=350;
-        sfl(fUser,'VISIBLE,Y,BOTTOM,=,180,=,0,=,'+inttostr(sd.x-fWordKanji.Width)+',LEAVE');
-        sfl(fWordKanji,'VISIBLE,Y,BOTTOM,=,180,=,'+inttostr(sd.x-fWordKanji.Width)+',.,0,SET');
-        sfl(fExamples,'HIDDEN,Y,BOTTOM,.,0,=,0,r,0,LEAVE');
-        sfl(fTranslate,'VISIBLE,Y,BOTTOM,=,'+inttostr(sd.y-fKanjiDetails.Height)+',=,0,r,0,SET');
-        sfl(fStrokeOrder,'HIDDEN,Y,BOTTOM,.,0,=,0,.,0,LEAVE');
-        sfl(fKanjiDetails,'VISIBLE,Y,RIGHT,.,0,=,0,.,0,SET');
-        sfl(fKanji,'VISIBLE,Y,TOP,=,170,=,0,r,0,SET');
-        sfl(fKanjiSearch,'HIDDEN,Y,LEFT,.,0,=,0,.,0,LEAVE');
-        sfl(fKanjiCompounds,'VISIBLE,Y,TOP,%,100,=,0,r,0,SET');
-        StdVocab;
-      end;
-    2:begin
-        fKanjiDetails.Height:=350;
-        sfl(fKanji,'VISIBLE,Y,TOP,=,'+inttostr(sd.y-fKanjiDetails.height)+',=,0,r,0,SET');
-        sfl(fKanjiDetails,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
-        sfl(fKanjiCompounds,'VISIBLE,Y,TOP,=,'+inttostr(sd.y-fKanjiSearch.height)+',=,0,r,0,SET');
-        sfl(fKanjiSearch,'VISIBLE,Y,LEFT,%,100,=,0,.,0,SET');
-        sd:=sd1; so:=so1;
-//        sfl(fWordDetails,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
-        sfl(fUser,'HIDDEN,Y,TOP,=,'+inttostr(sd.y-180-fExamples.Height)+',=,0,r,0,SET');
-        sfl(fExamples,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
-//        sfl(fWordCategory,'HIDDEN,Y,BOTTOM,.,0,=,'+inttostr(sd.x-fWordCategory.Width)+',r,0,LEAVE');
-        sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,r,0,SET');
-        sfl(fTranslate,'HIDDEN,Y,BOTTOM,%,100,=,0,r,0,LEAVE');
-        StdVocab;
-      end;
-    3:begin
-        fKanjiDetails.Height:=300;
-        sfl(fTranslate,'HIDDEN,Y,BOTTOM,%,100,=,0,r,0,LEAVE');
-//        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-        sfl(fExamples,'VISIBLE,Y,TOP,.,0,=,0,r,0,SET');
-        sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,=,180,LEAVE');
-//        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
-        sfl(fUser,'VISIBLE,Y,TOP,=,180,=,0,=,'+inttostr(sd.x-fWordKanji.width)+',SET');
-        sfl(fKanji,'VISIBLE,Y,TOP,=,'+inttostr(sd.y-300)+',=,0,r,0,SET');
-        sfl(fKanjiDetails,'VISIBLE,Y,LEFT,.,0,=,0,.,0,SET');
-        sfl(fKanjiCompounds,'VISIBLE,Y,TOP,=,'+inttostr(sd.y-fKanjiSearch.height)+',=,0,r,0,SET');
-        sfl(fKanjiSearch,'VISIBLE,Y,LEFT,%,100,=,0,.,0,SET');
-        StdVocab;
-      end;
-    4:begin
-        fKanjiDetails.Height:=350;
-        sfl(fKanjiDetails,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,SET');
-        sfl(fKanji,'HIDDEN,Y,TOP,=,190,=,0,r,0,SET');
-        sfl(fKanjiCompounds,'VISIBLE,Y,TOP,=,'+inttostr(fKanjiDetails.height-190)+',=,0,r,0,SET');
-        sfl(fKanjiSearch,'HIDDEN,Y,LEFT,.,0,=,0,r,0,LEAVE');
-        sd:=sd1; so:=so1;
-//        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-        sfl(fWordKanji,'VISIBLE,Y,RIGHT,.,0,=,0,=,180,LEAVE');
-//        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
-        sfl(fUser,'VISIBLE,Y,TOP,=,180,=,0,=,'+inttostr(sd.x-fWordKanji.width)+',SET');
-        sfl(fExamples,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-        sfl(fTranslate,'HIDDEN,Y,TOP,%,100,=,0,r,0,LEAVE');
-        StdVocab;
-      end;
-    5:begin
-        sfl(fKanjiDetails,'VISIBLE,Y,RIGHT,.,0,=,0,=,300,LEAVE');
-        sfl(fKanji,'HIDDEN,Y,BOTTOM,=,190,=,0,r,0,SET');
-        sfl(fKanjiCompounds,'VISIBLE,Y,BOTTOM,=,'+inttostr(fKanjiDetails.height-190)+',=,0,r,0,SET');
-        sfl(fKanjiSearch,'HIDDEN,Y,LEFT,.,0,=,0,.,0,LEAVE');
-        sd:=sd1; so:=so1;
-        sfl(fWordKanji,'HIDDEN,Y,RIGHT,.,0,=,0,=,180,LEAVE');
-//        sfl(fWordCategory,'HIDDEN,Y,RIGHT,.,0,=,0,.,0,LEAVE');
-        sfl(fUser,'VISIBLE,Y,TOP,=,300,=,0,=,'+inttostr(sd.x-fKanjiDetails.width)+',SET');
-        sfl(fExamples,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-//        sfl(fWordDetails,'HIDDEN,Y,TOP,.,0,=,0,r,0,LEAVE');
-        sfl(fTranslate,'VISIBLE,Y,TOP,%,100,=,0,r,0,LEAVE');
-        StdVocab;
-      end;
-  end;
-}  if fKanji.tag=1 then fKanji.Show;
-  if fUser.tag=1 then fUser.Show;
-  if fWords.tag=1 then fWords.Show;
-  if fTranslate.tag=1 then fTranslate.Show;
-  if fKanjiDetails.tag=1 then fKanjiDetails.Show;
-{  if lay=0 then SpeedButton16.Down:=true;
-  if lay=1 then SpeedButton18.Down:=true;
-  if lay=2 then SpeedButton17.Down:=true;
-  if lay=3 then SpeedButton21.Down:=true;
-  if lay=4 then SpeedButton19.Down:=true;
-  if lay=5 then SpeedButton20.Down:=true;
-  if lay=5 then aEditorWindow.Execute;
-  if lay<3 then aKanjiWindow.Execute;
-  if (lay=3) or (lay=4) then aDictJapanese.Execute;}
-  aQuick1.Checked:=lay=0;
-  aQuick2.Checked:=lay=1;
-  aQuick3.Checked:=lay=2;
-  aQuick4.Checked:=lay=3;
-  aQuick5.Checked:=lay=4;
-  aQuick6.Checked:=lay=5;
-  fKanji.ManualDock(Panel3);
-  fKanji.Align:=alClient;
 end;
 
 procedure TfMenu.SaveUserData;
@@ -2377,14 +1990,15 @@ begin
   end;
 end;
 
-procedure TfMenu.SetFormPos(form:TForm);
+procedure TfMenu.RebuildUserIndex;
 begin
-{  form.Left:=0;
-  form.Width:=Width;
-  form.WindowState:=wsNormal;
-  form.Height:=globheight-48;
-  form.Top:=40;
-  form.Borderstyle:=bsNone;}
+  TUserIdx.First;
+  while not TUserIdx.EOF do
+  begin
+    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
+      TUserIdx.Delete;
+    TUserIdx.Next;
+  end;
 end;
 
 procedure ConvUniToMixUni(inpf,outf:string;var recn:integer);
@@ -2823,11 +2437,6 @@ begin
   fUser.btnLookupEtoJ.Down:=true;
 end;
 
-procedure TfMenu.SpeedButton16Click(Sender: TObject);
-begin
-  StandardLayout((sender as TComponent).tag-1,100);
-end;
-
 procedure TfMenu.PaintBox3Paint(Sender: TObject);
 begin
   Clipboard_Paint;
@@ -3049,36 +2658,6 @@ end;
 procedure TfMenu.aSettingsDictExecute(Sender: TObject);
 begin
   SpeedButton8Click(sender);
-end;
-
-procedure TfMenu.aQuick1Execute(Sender: TObject);
-begin
-  StandardLayout(0,100);
-end;
-
-procedure TfMenu.aQuick2Execute(Sender: TObject);
-begin
-  StandardLayout(1,100);
-end;
-
-procedure TfMenu.aQuick3Execute(Sender: TObject);
-begin
-  StandardLayout(2,100);
-end;
-
-procedure TfMenu.aQuick4Execute(Sender: TObject);
-begin
-  StandardLayout(3,100);
-end;
-
-procedure TfMenu.aQuick5Execute(Sender: TObject);
-begin
-  StandardLayout(4,100);
-end;
-
-procedure TfMenu.aQuick6Execute(Sender: TObject);
-begin
-  StandardLayout(5,100);
 end;
 
 procedure TfMenu.aBordersExecute(Sender: TObject);
@@ -3384,12 +2963,6 @@ begin
   fTranslate.FontSize := FontSizeLarge;
 end;
 
-procedure TfMenu.Timer2Timer(Sender: TObject);
-begin
-  timer2.enabled:=false;
-  StandardLayout(proposedlayout,100);
-end;
-
 procedure TfMenu.tab3Click(Sender: TObject);
 begin
   ToggleForm(fTranslate,nil,nil);
@@ -3408,85 +2981,75 @@ begin
 //  Bevel5.Visible:=Width>815;
 end;
 
-//TODO: This function is not used anywhere.
-//  Supposedly it was meant to update MainForm constraints to mind docked forms,
-//  but if it's not used by later, delete it.
-procedure TfMenu.FixConstraints(form:TForm;w,h:integer);
+(*
+procedure TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean);
 begin
-  if (form.Constraints.MinHeight>0) then form.Constraints.MinHeight:=form.Constraints.MinHeight+h;
-  if (form.Constraints.MinWidth>0) then form.Constraints.MinWidth:=form.Constraints.MinWidth+w;
-  if (form.Constraints.MaxHeight>0) then form.Constraints.MaxHeight:=form.Constraints.MaxHeight+h;
-  if (form.Constraints.MaxWidth>0) then form.Constraints.MaxWidth:=form.Constraints.MaxWidth+w;
-end;
+  if dock and (slave.HostDockSite=panel) then exit; //already docked there
+  if not dock and (slave.HostDockSite=nil) then exit;
 
-procedure TfMenu.DockProc(slave,host:TForm;panel:TPanel;dir:integer;dock:boolean);
+  if dock then begin
+    slave.ManualDock(panel);
+    if not panel.Visible then
+      panel.Visible := true;
+  end else
+    slave.ManualFloat(slave.ClientRect);
+end;
+*)
+
+procedure TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean);
 var adocked:boolean;
     vert:boolean;
     fixsiz,flomin:integer;
     rect:TRect;
-    bch,bcw:integer;
-{    smw,smh,sxw,sxh:integer;}
-{    clisiz:integer;
-    simulshow:boolean;}
 begin
-  adocked:=slave.tag>=2;
-{  simulshow:=slave.tag=0; }
+  adocked:=slave.HostDockSite<>nil;
   if adocked=dock then exit;
   vert:=(dir=1) or (dir=3);
-  bch:=slave.Height;
-  bcw:=slave.Width;
-  if vert then fixsiz:=slave.ClientHeight else fixsiz:=slave.ClientWidth;
-  if vert then flomin:=slave.ClientWidth else flomin:=slave.ClientHeight;
-{  if (vert) and (slave.Constraints.MaxWidth<>0) then showmessage('INTERNAL ERROR: Fixed Slave constraints!');
-  if (not vert) and (slave.Constraints.MinWidth<>0) then showmessage('INTERNAL ERROR: Fixed Slave constraints!');
-  if (dock) and (vert) then host.Constraints.MinHeight:=host.Constraints.MinHeight+fixsiz;
-  if (dock) and (not vert) then host.Constraints.MinWidth:=host.Constraints.MinWidth+fixsiz;
-  if (not dock) and (vert) then host.Constraints.MinHeight:=host.Constraints.MinHeight-fixsiz;
-  if (not dock) and (not vert) then host.Constraints.MinWidth:=host.Constraints.MinWidth-fixsiz;}
-  if (dock) then if (vert) then panel.height:=fixsiz else panel.width:=fixsiz;
-{  smw:=slave.Constraints.MinWidth;
-  smh:=slave.Constraints.MinHeight;
-  sxw:=slave.Constraints.MaxWidth;
-  sxh:=slave.Constraints.MaxHeight;}
-  if not vert then slave.Width:=panel.width else slave.Height:=panel.Height;
-  if dock then
-  begin
-    slave.Show;
-    slave.Hide;
+
+  if vert then begin
+    fixsiz:=slave.ClientHeight;
+    flomin:=slave.ClientWidth;
+    if dock then panel.height:=fixsiz;
+    slave.Height:=panel.Height;
+  end else begin
+    fixsiz:=slave.ClientWidth;
+    flomin:=slave.ClientHeight;
+    if dock then panel.width:=fixsiz;
+    slave.Width:=panel.width;
   end;
-{  slave.Constraints.MinWidth:=0;
-  slave.Constraints.MaxWidth:=0;
-  slave.Constraints.MinHeight:=0;
-  slave.Constraints.MaxHeight:=0;}
-  if dock then slave.ManualDock(panel);
-  slave.ClientHeight:=bch;
-  if (dock) then if (vert) then panel.height:=fixsiz else panel.width:=fixsiz;
+
+  if dock then
+    slave.ManualDock(panel);
+
+  if dock then if vert then panel.height:=fixsiz else panel.width:=fixsiz;
   if dock then slave.align:=alClient else slave.align:=alNone;
+
   rect.left:=0;
   rect.top:=0;
-  if vert then rect.right:=flomin else rect.right:=fixsiz;
-  if vert then rect.bottom:=fixsiz else rect.bottom:=flomin;
-  if not dock then slave.ManualFloat(rect);
-  if (not dock) then if (vert) then panel.height:=0 else panel.width:=0;
-  if dock then slave.tag:=2;
-  if not dock then slave.tag:=0;
-  if not dock then slave.hide;
-{  if smw>0 then slave.Constraints.MinWidth:=smw+slave.Width-bcw;
-  if smh>0 then slave.Constraints.MinHeight:=smh+slave.Height-bch;
-  if sxw>0 then slave.Constraints.MaxWidth:=sxw+slave.Width-bcw;
-  if sxh>0 then slave.Constraints.MaxHeight:=sxh+slave.Height-bch;         }
-//  if (dock) and (slave.tag=2) and (simulshow) then DockExpress(form,false);
+  if vert then begin
+    rect.right:=flomin;
+    rect.bottom:=fixsiz;
+  end else begin
+    rect.right:=fixsiz;
+    rect.bottom:=flomin;
+  end;
+
+  if not dock then begin
+    slave.ManualFloat(rect);
+    if vert then panel.height:=0 else panel.width:=0;
+    slave.Hide;
+  end;
 end;
 
 procedure TfMenu.DockExpress(form:TForm;dock:boolean);
 begin
-  if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji,fKanji.Panel3,1,dock);
-  if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji,fKanji.Panel2,3,dock);
-  if ((form=fExamples) or (form=nil)) and (curdisplaymode<>5) then DockProc(fExamples,fUser,fUser.Panel2,3,dock);
-  if ((form=fExamples) or (form=nil)) and (curdisplaymode=5) then DockProc(fExamples,fWords,fWords.Panel5,3,dock);
-  if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser,fUser.Panel3,2,dock);
-  if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords,fWords.Panel2,2,dock);
-  if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords,fWords.Panel4,3,dock);
+  if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji.Panel3,1,dock);
+  if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji.Panel2,3,dock);
+  if ((form=fExamples) or (form=nil)) and (curdisplaymode<>5) then DockProc(fExamples,fUser.Panel2,3,dock);
+  if ((form=fExamples) or (form=nil)) and (curdisplaymode=5) then DockProc(fExamples,fWords.Panel5,3,dock);
+  if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser.Panel3,2,dock);
+  if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords.Panel2,2,dock);
+  if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords.Panel4,3,dock);
 end;
 
 { Only use this to undock forms from containers which don't need to be hidden,
@@ -3538,7 +3101,6 @@ begin
   if (not aBorders.Checked) or (sb=nil) or (form=fKanjiDetails) then
   begin
     if form.visible then form.hide else form.show;
-    if form.visible then form.tag:=1 else form.tag:=0;
   end else
   begin
     if action.checked then
@@ -3547,16 +3109,13 @@ begin
       begin
         form.hide;
         DockExpress(form,false);
-        form.tag:=0;
       end;
     end else
     begin
       if not form.visible then
       begin
-        form.tag:=1;
         DockExpress(form,true);
         form.show;
-        form.tag:=2;
       end;
     end;
   end;
@@ -3618,7 +3177,6 @@ begin
   begin
     fExamples.hide;
     DockExpress(fExamples,false);
-    fExamples.tag:=0;
   end;
   case displaymode of
     1:begin
@@ -3682,10 +3240,8 @@ begin
   if (((curdisplaymode=2) or (displaymode=4)) and (aDictAdd.Checked)) or
      ((curdisplaymode=5) and (aUserExamples.Checked)) then
   begin
-    fExamples.tag:=1;
     DockExpress(fExamples,true);
     fExamples.show;
-    fExamples.tag:=2;
   end;
 end;
 
@@ -4427,17 +3983,6 @@ procedure TfMenu.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
-end;
-
-procedure TfMenu.RebuildUserIndex;
-begin
-  TUserIdx.First;
-  while not TUserIdx.EOF do
-  begin
-    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
-      TUserIdx.Delete;
-    TUserIdx.Next;
-  end;
 end;
 
 procedure TfMenu.miSaveCharactersToFileClick(

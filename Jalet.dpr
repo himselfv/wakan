@@ -48,7 +48,6 @@ uses
   JWBUserDetails in 'Forms\JWBUserDetails.pas' {fUserDetails},
   JWBUserAdd in 'Forms\JWBUserAdd.pas' {fUserAdd},
   JWBUserFilters in 'Forms\JWBUserFilters.pas' {fUserFilters},
-  JWBLayout in 'Forms\JWBLayout.pas' {fLayout},
   JWBStrokeOrder in 'Forms\JWBStrokeOrder.pas' {fStrokeOrder},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
   JWBDictImport in 'Forms\JWBDictImport.pas' {fDictImport},
@@ -107,7 +106,6 @@ begin
   Application.CreateForm(TfUserDetails, fUserDetails);
   Application.CreateForm(TfUserAdd, fUserAdd);
   Application.CreateForm(TfUserFilters, fUserFilters);
-  Application.CreateForm(TfLayout, fLayout);
   Application.CreateForm(TfStrokeOrder, fStrokeOrder);
   Application.CreateForm(TfDictMan, fDictMan);
   Application.CreateForm(TfDictImport, fDictImport);
