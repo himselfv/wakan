@@ -746,6 +746,12 @@ begin
     fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
     fKanjiSearch.edtOther.text :=reg.ReadString('KanjiSearch','Other','');
   end; //else they're empty by default
+
+
+ //Panel sizes
+  fUserFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
+  fUserFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
+ //TODO: Also save these
 end;
 
 procedure TfSettings.ApplyUISettings;

@@ -49,8 +49,6 @@ type
     aUserGenerate: TAction;
     aSettings: TAction;
     aSettingsDict: TAction;
-    aLayout: TAction;
-    aBorders: TAction;
     aHelp: TAction;
     aAbout: TAction;
     aJapanese: TAction;
@@ -217,9 +215,6 @@ type
     miDictionaryGroup1: TMenuItem;
     miDictionaryGroup2: TMenuItem;
     miDictionaryGroup3: TMenuItem;
-    aDictVoc1: TAction;
-    aDictVoc2: TAction;
-    aDictVoc3: TAction;
     aUserExamples: TAction;
     miExamples2: TMenuItem;
     aEditorColors: TAction;
@@ -259,7 +254,6 @@ type
     procedure tab2Click(Sender: TObject);
     procedure tab5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure SpeedButton11Click(Sender: TObject);
     procedure SpeedButton12Click(Sender: TObject);
@@ -293,7 +287,6 @@ type
     procedure aUserGenerateExecute(Sender: TObject);
     procedure aSettingsExecute(Sender: TObject);
     procedure aSettingsDictExecute(Sender: TObject);
-    procedure aBordersExecute(Sender: TObject);
     procedure aHelpExecute(Sender: TObject);
     procedure aAboutExecute(Sender: TObject);
     procedure aJapaneseExecute(Sender: TObject);
@@ -339,9 +332,7 @@ type
     procedure aEditorLargeFontExecute(Sender: TObject);
     procedure aEditorMedFontExecute(Sender: TObject);
     procedure tab3Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure tab4Click(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure aMode1Execute(Sender: TObject);
     procedure aMode2Execute(Sender: TObject);
@@ -357,9 +348,6 @@ type
     procedure aDictGroup1Execute(Sender: TObject);
     procedure aDictGroup2Execute(Sender: TObject);
     procedure aDictGroup3Execute(Sender: TObject);
-    procedure aDictVoc1Execute(Sender: TObject);
-    procedure aDictVoc2Execute(Sender: TObject);
-    procedure aDictVoc3Execute(Sender: TObject);
     procedure aUserExamplesExecute(Sender: TObject);
     procedure aEditorColorsExecute(Sender: TObject);
     procedure PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
@@ -381,9 +369,9 @@ type
     procedure InitializeWakan;
 
   private //Docking
-    procedure DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean);
+    function DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
   public
-    procedure DockExpress(form:TForm;dock:boolean);
+    function DockExpress(form:TForm;dock:boolean):boolean;
     procedure FormUndock(form:TForm);
 
   public
@@ -423,6 +411,7 @@ type
 
   protected
     FUserDataChanged:boolean;
+    LastAutoSave:TDatetime; //for UserData
     procedure SetUserDataChanged(Value: boolean);
     function FlushUserData:boolean;
   public
@@ -434,8 +423,6 @@ type
     procedure ImportUserData(filename:string);
     property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
 
-  protected
-    borderchange:boolean;
   public
     displaymode:integer; //will be applied on ChangeDisplay
     curdisplaymode:integer; //last applied mode
@@ -587,7 +574,6 @@ var
   raineradicals:TStringList;
   sodir:TStringList;
   sobin:pointer;
-  lastautosave:TDateTime;
   dictbeginset,dictmodeset:integer;
   kanji_othersearch:integer;
 
@@ -743,7 +729,7 @@ var ps:TPackageSource;
   tempDir: string;
   LastModified: TDatetime;
 begin
-  lastautosave:=now;
+  LastAutoSave := now;
   screenTipImmediate:=false;
   examstruct:=nil;
   examindex:=nil;
@@ -957,9 +943,6 @@ begin
       TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
       if (fSettings.CheckBox64.Checked) and (fSettings.CheckBox65.Checked) then RebuildAnnotations;
       if (fSettings.CheckBox64.Checked) then LoadAnnotations;
-      //showmessage(TChar.GetField(0,3));
-      //showmessage(TChar.GetField(1,3));
-      //showmessage(TChar.GetField(2,3));
     except
       Application.MessageBox(
         pchar(_l('#00356^eCannot load main dictionary file.'#13
@@ -1142,8 +1125,6 @@ begin
       fMenu.Height:=80;
       fMenu.Image1.Top:=0;
     end;}
-    aBorders.Checked:=true;
-    borderchange:=false;
     curdisplaymode:=0;
     if PortabilityMode=pmPortable then begin
       FormPlacement1.UseRegistry := false;
@@ -2203,12 +2184,14 @@ end;
 
 procedure TfMenu.AddToClipboard(uFormat: UINT; text: RawByteString);
 begin
-  AddToClipboard(uFormat, pointer(text), Length(text)+1); //string + term 0
+  if Length(text)>0 then
+    AddToClipboard(uFormat, pointer(text), Length(text)+1); //string + term 0
 end;
 
 procedure TfMenu.AddToClipboard(uFormat: UINT; text: UnicodeString);
 begin
-  AddToClipboard(uFormat, pointer(text), Length(text)*2 + 2); //string + term 0
+  if Length(text)>0 then
+    AddToClipboard(uFormat, pointer(text), Length(text)*2 + 2); //string + term 0
 end;
 
 procedure TfMenu.AddToClipboard(uFormat: UINT; data: TMemoryStream; AOwnsStream: boolean = false);
@@ -2307,74 +2290,8 @@ begin
   ToggleForm(fWords,nil,nil);
 end;
 
-procedure TfMenu.SpeedButton9Click(Sender: TObject);
-procedure SetBorder(form:Tform;bs:TFormBorderStyle);
-var bch,bcw,bw,bh,rw,rh:integer;
-    sf,sfw:boolean;
-    cx1,cx2,cy1,cy2:integer;
-begin
-  bch:=form.ClientHeight;
-  bcw:=form.ClientWidth;
-  bw:=form.Width;
-  bh:=form.Height;
-  cx1:=form.Constraints.minWidth;
-  cx2:=form.Constraints.MaxWidth;
-  cy1:=form.Constraints.minHeight;
-  cy2:=form.Constraints.maxHeight;
-  sf:=((form.Constraints.minHeight=form.Constraints.MaxHeight) and
-    (form.Constraints.minHeight>0)) or (bs=bsToolWindow);
-  sfw:=((form.Constraints.minWidth=form.Constraints.MaxWidth) and
-    (form.Constraints.minWidth>0)) or (bs=bsToolWindow);
-  form.Constraints.minWidth:=0;
-  form.Constraints.maxWidth:=0;
-  form.Constraints.minheight:=0;
-  form.Constraints.maxheight:=0;
-  if not aBorders.Checked then
-  begin
-    form.BorderStyle:=bsNone;
-  end else
-  begin
-    form.BorderStyle:=bs;
-  end;
-  if sf then form.ClientHeight:=bch;
-  if sfw then form.ClientWidth:=bcw;
-  rh:=form.Height-bh;
-  rw:=form.Width-bw;
-  if cx1>0 then form.Constraints.minWidth:=cx1+rw;
-  if cx2>0 then form.Constraints.maxWidth:=cx2+rw;
-  if cy1>0 then form.Constraints.minHeight:=cy1+rh;
-  if cy2>0 then form.Constraints.maxHeight:=cy2+rh;
-end;
-begin
-//  if not aBorders.Checked then DockExpress(nil,false);
-//  showmessage('bef');
-  borderchange:=true;
-  SetBorder(fMenu,bsSizeToolWin);
-  SetBorder(fKanji,bsSizeToolWin);
-  SetBorder(fWords,bsSizeToolWin);
-  SetBorder(fUser,bsSizeToolWin);
-//  SetBorder(fUserAdd,bsSizeToolWin);
-//  SetBorder(fUserFilters,bsToolWindow);
-//  SetBorder(fUserDetails,bsToolWindow);
-  SetBorder(fKanjiDetails,bsToolWindow);
-//  SetBorder(fKanjiSearch,bsSizeToolWin);
-//  SetBorder(fKanjiCompounds,bsSizeToolWin);
-//  SetBorder(fWordDetails,bsSizeToolWin);
-//  SetBorder(fExamples,bsSizeToolWin);
-//  SetBorder(fWordCategory,bsToolWindow);
-//  SetBorder(fWordKanji,bsToolWindow);
-  SetBorder(fTranslate,bsSizeToolWin);
-  SetBorder(fStrokeOrder,bsToolWindow);
-//  if aBorders.Checked then SpeedButton16.Down:=true;
-//  if aBorders.Checked then DockExpress(nil,true);
-//  showmessage('aft');
-  borderchange:=false;
-end;
-
 procedure TfMenu.Timer1Timer(Sender: TObject);
 begin
-//  SpeedButton9Click(self);
-//  timer1.enabled:=false;
   Clipboard_Update;
 end;
 
@@ -2546,7 +2463,7 @@ begin
   end;
   if not CharDetDocked then
   begin
-    fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+    ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
     fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
   end;
 end;
@@ -2658,12 +2575,6 @@ end;
 procedure TfMenu.aSettingsDictExecute(Sender: TObject);
 begin
   SpeedButton8Click(sender);
-end;
-
-procedure TfMenu.aBordersExecute(Sender: TObject);
-begin
-  aBorders.Checked:=not aBorders.Checked;
-  SpeedButton9Click(Sender);
 end;
 
 procedure TfMenu.aHelpExecute(Sender: TObject);
@@ -2968,11 +2879,6 @@ begin
   ToggleForm(fTranslate,nil,nil);
 end;
 
-procedure TfMenu.tab4Click(Sender: TObject);
-begin
-  ToggleForm(fKanjiDetails,nil,nil);
-end;
-
 procedure TfMenu.FormResize(Sender: TObject);
 begin
 //  PaintBox3.Visible:=Width>815;
@@ -2981,75 +2887,70 @@ begin
 //  Bevel5.Visible:=Width>815;
 end;
 
-(*
-procedure TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean);
+const
+  DOCK_TOP = 1;
+  DOCK_RIGHT = 2;
+  DOCK_BOTTOM = 3;
+  DOCK_LEFT = 4;
+
+//Returns true is was docked before
+function TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
+var vert:boolean;
+  rect:TRect;
 begin
-  if dock and (slave.HostDockSite=panel) then exit; //already docked there
-  if not dock and (slave.HostDockSite=nil) then exit;
+  Result := slave.HostDockSite<>nil;
+  if Result=dock then exit;
+  vert:=(dir=DOCK_TOP) or (dir=DOCK_BOTTOM);
 
   if dock then begin
+    if vert then
+      panel.Height := slave.Height
+    else
+      panel.Width := slave.Width;
     slave.ManualDock(panel);
-    if not panel.Visible then
-      panel.Visible := true;
-  end else
-    slave.ManualFloat(slave.ClientRect);
-end;
-*)
-
-procedure TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean);
-var adocked:boolean;
-    vert:boolean;
-    fixsiz,flomin:integer;
-    rect:TRect;
-begin
-  adocked:=slave.HostDockSite<>nil;
-  if adocked=dock then exit;
-  vert:=(dir=1) or (dir=3);
-
-  if vert then begin
-    fixsiz:=slave.ClientHeight;
-    flomin:=slave.ClientWidth;
-    if dock then panel.height:=fixsiz;
-    slave.Height:=panel.Height;
+    slave.Align:=alClient;
+    slave.Visible:=true;
+    slave.Realign;
   end else begin
-    fixsiz:=slave.ClientWidth;
-    flomin:=slave.ClientHeight;
-    if dock then panel.width:=fixsiz;
-    slave.Width:=panel.width;
-  end;
-
-  if dock then
-    slave.ManualDock(panel);
-
-  if dock then if vert then panel.height:=fixsiz else panel.width:=fixsiz;
-  if dock then slave.align:=alClient else slave.align:=alNone;
-
-  rect.left:=0;
-  rect.top:=0;
-  if vert then begin
-    rect.right:=flomin;
-    rect.bottom:=fixsiz;
-  end else begin
-    rect.right:=fixsiz;
-    rect.bottom:=flomin;
-  end;
-
-  if not dock then begin
+    rect.Left:=0;
+    rect.Top:=0;
+    rect.Right:=slave.UndockWidth; //non-docked width and height
+    rect.Bottom:=slave.UndockHeight; //only available when docked
+    slave.Align:=alNone;
     slave.ManualFloat(rect);
     if vert then panel.height:=0 else panel.width:=0;
     slave.Hide;
   end;
 end;
 
-procedure TfMenu.DockExpress(form:TForm;dock:boolean);
+function TfMenu.DockExpress(form:TForm;dock:boolean): boolean;
 begin
-  if (form=fKanjiSearch) or (form=nil) then DockProc(fKanjiSearch,fKanji.Panel3,1,dock);
-  if (form=fKanjiCompounds) or (form=nil) then DockProc(fKanjiCompounds,fKanji.Panel2,3,dock);
-  if ((form=fExamples) or (form=nil)) and (curdisplaymode<>5) then DockProc(fExamples,fUser.Panel2,3,dock);
-  if ((form=fExamples) or (form=nil)) and (curdisplaymode=5) then DockProc(fExamples,fWords.Panel5,3,dock);
-  if (form=fWordKanji) or (form=nil) then DockProc(fWordKanji,fUser.Panel3,2,dock);
-  if (form=fUserFilters) or (form=nil) then DockProc(fUserFilters,fWords.Panel2,2,dock);
-  if (form=fUserDetails) or (form=nil) then DockProc(fUserDetails,fWords.Panel4,3,dock);
+  Result := false;
+  if form=fKanjiSearch then
+    Result:=DockProc(fKanjiSearch,fKanji.pnlDockSearch,1,dock);
+  if form=fKanjiCompounds then begin
+    Result:=DockProc(fKanjiCompounds,fKanji.pnlDockCompounds,3,dock);
+    fKanji.splDockCompounds.Visible := dock;
+    fKanji.splDockCompounds.Top := fKanji.pnlDockCompounds.Top - 1;
+  end;
+  if (form=fExamples) and (curdisplaymode<>5) then Result:=DockProc(fExamples,fUser.Panel2,3,dock);
+  if (form=fExamples) and (curdisplaymode=5) then
+    Result:=DockProc(fExamples,fWords.pnlDockExamples,3,dock);
+  if form=fWordKanji then
+    if aPortraitMode.Checked then
+      Result:=DockProc(fWordKanji,fUser.Panel3,DOCK_BOTTOM,dock)
+    else
+      Result:=DockProc(fWordKanji,fUser.Panel3,DOCK_RIGHT,dock);
+  if form=fUserFilters then
+    if aPortraitMode.Checked then
+      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,DOCK_BOTTOM,dock)
+    else
+      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,DOCK_RIGHT,dock);
+  if form=fUserDetails then begin
+    Result:=DockProc(fUserDetails,fWords.pnlDockDetails,3,dock);
+    fWords.splDockDetails.Visible := dock;
+    fWords.splDockDetails.Top := fWords.pnlDockDetails.Top - 1;
+  end;
 end;
 
 { Only use this to undock forms from containers which don't need to be hidden,
@@ -3065,11 +2966,6 @@ begin
   rect.bottom:=form.height;
   form.ManualFloat(rect);
   form.Align:=alNone;
-end;
-
-procedure TfMenu.Button2Click(Sender: TObject);
-begin
-  DockExpress(nil,false);
 end;
 
 procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
@@ -3098,7 +2994,7 @@ begin
     ChangeDisplay;
     exit;
   end;
-  if (not aBorders.Checked) or (sb=nil) or (form=fKanjiDetails) then
+  if (sb=nil) or (form=fKanjiDetails) then
   begin
     if form.visible then form.hide else form.show;
   end else
@@ -3139,6 +3035,7 @@ begin
   CharDetNowDocked:=false;
   Panel2.Height:=0;
   Panel4.Width:=0;
+  Panel4.Height:=0;
   aMode1.Checked:=false;
   aMode2.Checked:=false;
   aMode3.Checked:=false;
@@ -3150,6 +3047,7 @@ begin
     begin
       if CharDetDockedVis1 then
       begin
+        Panel4.Height:=fKanjiDetails.Height;
         Panel4.Width:=fKanjiDetails.Width;
         fKanjiDetails.ManualDock(Panel4);
         fKanjiDetails.Align:=alClient;
@@ -3163,6 +3061,7 @@ begin
     begin
       if CharDetDockedVis2 then
       begin
+        Panel4.Height:=fKanjiDetails.Height;
         Panel4.Width:=fKanjiDetails.Width;
         fKanjiDetails.ManualDock(Panel4);
         fKanjiDetails.Align:=alClient;
@@ -3938,24 +3837,6 @@ begin
   fUser.btnLookupJtoEClick(Sender);
 end;
 
-procedure TfMenu.aDictVoc1Execute(Sender: TObject);
-begin
-{  if not fUser.Visible then aDictExecute(Sender);
-  fExamples.SpeedButton1.Down:=true;}
-end;
-
-procedure TfMenu.aDictVoc2Execute(Sender: TObject);
-begin
-{  if not fUser.Visible then aDictExecute(Sender);
-  fExamples.SpeedButton2.Down:=true;}
-end;
-
-procedure TfMenu.aDictVoc3Execute(Sender: TObject);
-begin
-{  if not fUser.Visible then aDictExecute(Sender);
-  fExamples.SpeedButton3.Down:=true;}
-end;
-
 procedure TfMenu.aUserExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
@@ -4005,25 +3886,38 @@ begin
 end;
 
 procedure TfMenu.aPortraitModeExecute(Sender: TObject);
+var
+  UserFiltersDocked: boolean;
+  WordKanjiDocked: boolean;
+  KanjiDetailsDocked: boolean;
 begin
+  UserFiltersDocked := DockExpress(fUserFilters,false);
+  WordKanjiDocked := DockExpress(fWordKanji,false);
+  KanjiDetailsDocked := CharDetNowDocked and DockExpress(fKanjiDetails,false);
+
   if aPortraitMode.Checked then begin
     Panel4.Align := alBottom;
-    fWords.Panel2.Align := alBottom;
-    fWords.Splitter1.Align := alBottom;
-    fWords.Splitter1.Top := fWords.Panel2.Top - 10;
+    fWords.pnlDockFilters.Align := alBottom;
+    fWords.splDockFilters.Align := alBottom;
+    fWords.splDockFilters.Top := fWords.pnlDockFilters.Top - 1;
     fUser.Panel3.Align := alBottom;
   end else begin
     Panel4.Align := alRight;
-    fWords.Panel2.Align := alRight;
-    fWords.Splitter1.Align := alRight;
-    fWords.Splitter1.Left := fWords.Panel2.Left - 10;
+    fWords.pnlDockFilters.Align := alRight;
+    fWords.splDockFilters.Align := alRight;
+    fWords.splDockFilters.Left := fWords.pnlDockFilters.Left - 1;
     fUser.Panel3.Align := alRight;
   end;
+
   fUserFilters.SetPortraitMode(aPortraitMode.Checked);
   fWordKanji.SetPortraitMode(aPortraitMode.Checked);
-  fKanjiDetails.SetPortraitMode(aPortraitMode.Checked);
-  ChangeDisplay;
- //TODO
+  if CharDetNowDocked then //else it's undocked and must remain in normal mode
+    fKanjiDetails.SetPortraitMode(aPortraitMode.Checked);
+
+  if UserFiltersDocked then DockExpress(fUserFilters,true);
+  if WordKanjiDocked then DockExpress(fWordKanji,true);
+  if KanjiDetailsDocked then DockExpress(fKanjiDetails,true);
+ //ChangeDisplay -- should not be needed
 end;
 
 initialization

@@ -3,7 +3,7 @@ object fWordKanji: TfWordKanji
   Top = 301
   BorderStyle = bsNone
   Caption = '#00650^eCharacters in word'
-  ClientHeight = 605
+  ClientHeight = 79
   ClientWidth = 220
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,9 +22,10 @@ object fWordKanji: TfWordKanji
     Left = 0
     Top = 0
     Width = 220
-    Height = 605
+    Height = 79
     Align = alClient
     Shape = bsFrame
+    ExplicitHeight = 605
   end
   object Label2: TLabel
     Left = 6

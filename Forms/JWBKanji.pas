@@ -22,11 +22,12 @@ type
     btnStrokeOrder: TSpeedButton;
     DrawGrid1: TDrawGrid;
     btnPrintCards: TButton;
-    Panel2: TPanel;
-    Panel3: TPanel;
+    pnlDockCompounds: TPanel;
+    pnlDockSearch: TPanel;
     btnReadingChart: TButton;
     SaveDialog1: TSaveDialog;
     UpdateTimer: TTimer;
+    splDockCompounds: TSplitter;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);

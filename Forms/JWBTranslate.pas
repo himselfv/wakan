@@ -299,6 +299,7 @@ type
 
   protected //File opening/saving
     FFileChanged: boolean;
+    LastAutoSave:TDateTime;
     FFullTextTranslated: boolean; //applied full text translation at least once since loading
      //this is needed for saving in Kana mode -- we don't show a reminder if it's obvious the text was translated
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
@@ -895,7 +896,6 @@ begin
     FreeAndNil(arc);
   end;
 end;
-
 
 procedure TfTranslate.FormCreate(Sender: TObject);
 begin

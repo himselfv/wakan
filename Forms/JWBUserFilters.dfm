@@ -49,18 +49,15 @@ object fUserFilters: TfUserFilters
       Width = 177
       Height = 21
       Align = alBottom
-      BevelOuter = bvLowered
+      BevelOuter = bvNone
       TabOrder = 0
-      DesignSize = (
-        177
-        21)
       object btnCatDelete: TSpeedButton
         Left = 154
-        Top = -1
+        Top = 0
         Width = 23
-        Height = 22
+        Height = 21
         Hint = '#00031^eDelete category'
-        Anchors = [akRight, akBottom]
+        Align = alRight
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000130B0000130B00001000000000000000000000000000
@@ -79,14 +76,16 @@ object fUserFilters: TfUserFilters
         ShowHint = True
         OnClick = btnCatDeleteClick
         ExplicitLeft = 152
+        ExplicitTop = -1
+        ExplicitHeight = 22
       end
       object btnCatEdit: TSpeedButton
-        Left = 132
-        Top = -1
+        Left = 131
+        Top = 0
         Width = 23
-        Height = 22
+        Height = 21
         Hint = '#00030^eEdit category'
-        Anchors = [akRight, akBottom]
+        Align = alRight
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000120B0000120B00001000000000000000000000000000
@@ -104,14 +103,17 @@ object fUserFilters: TfUserFilters
         ParentShowHint = False
         ShowHint = True
         OnClick = btnCatEditClick
+        ExplicitLeft = 132
+        ExplicitTop = -1
+        ExplicitHeight = 22
       end
       object btnCatToggleAll: TSpeedButton
-        Left = 111
-        Top = -1
+        Left = 108
+        Top = 0
         Width = 23
-        Height = 22
+        Height = 21
         Hint = '#00957^eCheck / uncheck all categories'
-        Anchors = [akRight, akBottom]
+        Align = alRight
         Glyph.Data = {
           76010000424D7601000000000000760000002800000020000000100000000100
           04000000000000010000120B0000120B00001000000000000000000000000000
@@ -129,16 +131,19 @@ object fUserFilters: TfUserFilters
         ParentShowHint = False
         ShowHint = True
         OnClick = btnCatToggleAllClick
+        ExplicitLeft = 111
+        ExplicitTop = -1
+        ExplicitHeight = 22
       end
       object tabCatList: TTabSet
         Left = 0
         Top = 0
-        Width = 110
+        Width = 108
         Height = 21
         Hint = 
           '#00032^eSelect list of categories (lessons / groups / temporary ' +
           '/ word lists)'
-        Anchors = [akLeft, akRight, akBottom]
+        Align = alClient
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -151,6 +156,7 @@ object fUserFilters: TfUserFilters
           'W')
         TabIndex = 1
         OnChange = tabCatListChange
+        ExplicitWidth = 110
       end
     end
     object lbCategories: TCheckListBox

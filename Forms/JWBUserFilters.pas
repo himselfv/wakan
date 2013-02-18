@@ -158,12 +158,6 @@ end;
 procedure TfUserFilters.SetPortraitMode(Value: boolean);
 begin
   FPortraitMode := Value;
- //One-time set default width/height (can be adjusted later)
- //TODO: Perhaps remember these for both modes and restore when switching between them
-  if not FPortraitMode then
-    ClientWidth := 192
-  else
-    ClientHeight := 120;
   UpdateAlignment;
 end;
 
@@ -189,9 +183,9 @@ begin
     rgSort.Left := gbFilter.Left + gbFilter.Width + 8;
     rgSort.Top := gbFilter.Top;
     pnlCategories.Left := rgSort.Left + rgSort.Width + 8;
-    pnlCategories.Top := gbFilter.Top;
+    pnlCategories.Top := gbFilter.Top-6;
     pnlCategories.Width := Self.ClientWidth - pnlCategories.Left - 8;
-    pnlCategories.Height := rgSort.Height;
+    pnlCategories.Height := rgSort.Height+6;
    //Some guessing as to what is max item width
     maxItemWidth := GetMaxItemLength(lbCategories)*lbCategories.Font.Size;
     if maxItemWidth=0 then maxItemWidth := 90;
@@ -208,6 +202,11 @@ end;
 procedure TfUserFilters.FormResize(Sender: TObject);
 begin
   UpdateAlignment;
+ //Remember width/height preferences in UndockWidth/Height
+  if FPortraitMode then
+    Self.UndockHeight := Self.Height
+  else
+    Self.UndockWidth := Self.Width;
 end;
 
 

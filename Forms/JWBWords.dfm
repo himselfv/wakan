@@ -20,15 +20,16 @@ object fWords: TfWords
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Splitter1: TSplitter
+  object splDockFilters: TSplitter
     Left = 773
     Top = 0
     Height = 455
     Align = alRight
+    AutoSnap = False
     ExplicitLeft = 768
     ExplicitTop = -6
   end
-  object Panel2: TPanel
+  object pnlDockFilters: TPanel
     Left = 776
     Top = 0
     Width = 0
@@ -45,28 +46,40 @@ object fWords: TfWords
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 776
+    object splDockDetails: TSplitter
+      Left = 0
+      Top = 452
+      Width = 773
+      Height = 3
+      Cursor = crVSplit
+      Align = alBottom
+      AutoSnap = False
+      ExplicitLeft = 770
+      ExplicitTop = 0
+      ExplicitWidth = 455
+    end
     object Panel3: TPanel
       Left = 0
       Top = 0
       Width = 773
-      Height = 455
+      Height = 452
       Align = alClient
       BevelInner = bvRaised
       BevelOuter = bvLowered
       TabOrder = 0
-      ExplicitWidth = 776
+      ExplicitHeight = 455
       DesignSize = (
         773
-        455)
+        452)
       object Shape7: TShape
         Left = 10
         Top = 26
         Width = 753
-        Height = 402
+        Height = 399
         Anchors = [akLeft, akTop, akRight, akBottom]
         Brush.Color = clWindow
         ExplicitWidth = 756
+        ExplicitHeight = 402
       end
       object RxLabel1: TRxLabel
         Left = 8
@@ -99,7 +112,7 @@ object fWords: TfWords
       end
       object SpeedButton1: TSpeedButton
         Left = 10
-        Top = 432
+        Top = 429
         Width = 138
         Height = 17
         Hint = '#00829^eAdd word'
@@ -116,10 +129,11 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton1Click
+        ExplicitTop = 432
       end
       object SpeedButton2: TSpeedButton
         Left = 154
-        Top = 432
+        Top = 429
         Width = 138
         Height = 17
         Hint = '#00830^eList settings'
@@ -136,10 +150,11 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton2Click
+        ExplicitTop = 432
       end
       object SpeedButton4: TSpeedButton
         Left = 298
-        Top = 432
+        Top = 429
         Width = 159
         Height = 17
         Hint = '#00832^eWord details'
@@ -156,12 +171,13 @@ object fWords: TfWords
         ParentShowHint = False
         ShowHint = True
         OnClick = SpeedButton4Click
+        ExplicitTop = 432
       end
       object StringGrid1: TWakanGrid
         Left = 11
         Top = 27
         Width = 751
-        Height = 400
+        Height = 397
         Anchors = [akLeft, akTop, akRight, akBottom]
         BorderStyle = bsNone
         ColCount = 4
@@ -178,7 +194,7 @@ object fWords: TfWords
         OnMouseUp = StringGrid1MouseUp
         OnSelectCell = StringGrid1SelectCell
         OnControlWidthResize = StringGrid1ControlResize
-        ExplicitWidth = 754
+        ExplicitHeight = 400
         ColWidths = (
           110
           138
@@ -201,7 +217,6 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 1
         OnClick = btnExportVocabClick
-        ExplicitLeft = 546
       end
       object btnImportVocab: TButton
         Left = 615
@@ -219,7 +234,6 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 2
         OnClick = btnImportVocabClick
-        ExplicitLeft = 618
       end
       object Button15: TButton
         Left = 688
@@ -237,7 +251,6 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 3
         OnClick = Button15Click
-        ExplicitLeft = 691
       end
       object Button18: TButton
         Left = 423
@@ -257,7 +270,6 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 4
         OnClick = Button18Click
-        ExplicitLeft = 426
       end
       object Button19: TButton
         Left = 312
@@ -275,7 +287,6 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 5
         OnClick = Button19Click
-        ExplicitLeft = 315
       end
       object Button2: TButton
         Left = 241
@@ -293,10 +304,9 @@ object fWords: TfWords
         ParentFont = False
         TabOrder = 6
         OnClick = Button2Click
-        ExplicitLeft = 244
       end
     end
-    object Panel4: TPanel
+    object pnlDockDetails: TPanel
       Left = 0
       Top = 455
       Width = 773
@@ -304,9 +314,8 @@ object fWords: TfWords
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitWidth = 776
     end
-    object Panel5: TPanel
+    object pnlDockExamples: TPanel
       Left = 0
       Top = 455
       Width = 773
@@ -314,7 +323,6 @@ object fWords: TfWords
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitWidth = 776
     end
   end
   object OpenDialog1: TOpenDialog

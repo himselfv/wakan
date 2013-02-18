@@ -147,6 +147,7 @@ object fKanjiCompounds: TfKanjiCompounds
     Width = 89
     Height = 17
     Hint = '#00156^eShow only compounds with beginning character'
+    Anchors = [akLeft, akBottom]
     Caption = '#00878^eBeg.'
     Checked = True
     State = cbChecked
@@ -183,6 +184,7 @@ object fKanjiCompounds: TfKanjiCompounds
     Width = 39
     Height = 17
     Hint = '#00158^eShow only compounds marked as popular'
+    Anchors = [akLeft, akBottom]
     Caption = '^ePop'
     ParentShowHint = False
     ShowHint = True
@@ -195,6 +197,7 @@ object fKanjiCompounds: TfKanjiCompounds
     Width = 39
     Height = 17
     Hint = '^eShow compounds sorted by frequency'
+    Anchors = [akLeft, akBottom]
     Caption = '^eFreq'
     ParentShowHint = False
     ShowHint = True

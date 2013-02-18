@@ -928,12 +928,6 @@ end;
 procedure TfKanjiDetails.SetPortraitMode(Value: boolean);
 begin
   FPortraitMode := Value;
- //One-time set default width/height (can be adjusted later)
- //TODO: Perhaps remember these for both modes and restore when switching between them
-  if not FPortraitMode then
-    ClientWidth := 321
-  else
-    ClientHeight := 200;
   UpdateAlignment;
 end;
 

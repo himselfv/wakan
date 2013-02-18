@@ -20,18 +20,30 @@ object fKanji: TfKanji
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
+  object splDockCompounds: TSplitter
+    Left = 0
+    Top = 345
+    Width = 630
+    Height = 3
+    Cursor = crVSplit
+    Align = alBottom
+    AutoSnap = False
+    Visible = False
+    ExplicitTop = 330
+  end
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 630
-    Height = 348
+    Height = 345
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
+    ExplicitHeight = 348
     DesignSize = (
       630
-      348)
+      345)
     object RxLabel15: TRxLabel
       Left = 8
       Top = 8
@@ -49,7 +61,7 @@ object fKanji: TfKanji
       Left = 7
       Top = 32
       Width = 618
-      Height = 284
+      Height = 281
       Anchors = [akLeft, akTop, akRight, akBottom]
       ExplicitHeight = 282
     end
@@ -57,7 +69,7 @@ object fKanji: TfKanji
       Left = 15
       Top = 40
       Width = 272
-      Height = 19
+      Height = 16
       Anchors = [akLeft, akTop, akRight, akBottom]
       Caption = '#00118^eNo characters were found.'
       Color = clBtnFace
@@ -69,10 +81,11 @@ object fKanji: TfKanji
       ParentColor = False
       ParentFont = False
       Transparent = True
+      ExplicitHeight = 19
     end
     object btnSearchSort: TSpeedButton
       Left = 8
-      Top = 323
+      Top = 320
       Width = 113
       Height = 17
       Hint = '#00119^eSearch & change sort order'
@@ -93,7 +106,7 @@ object fKanji: TfKanji
     end
     object btnKanjiDetails: TSpeedButton
       Left = 559
-      Top = 323
+      Top = 320
       Width = 65
       Height = 17
       Hint = '#00123^eDetails (Ctrl-D)'
@@ -114,7 +127,7 @@ object fKanji: TfKanji
     end
     object btnCompounds: TSpeedButton
       Left = 128
-      Top = 323
+      Top = 320
       Width = 81
       Height = 17
       Hint = '#00125^eCompounds'
@@ -158,7 +171,7 @@ object fKanji: TfKanji
       Left = 8
       Top = 33
       Width = 616
-      Height = 282
+      Height = 279
       Anchors = [akLeft, akTop, akRight, akBottom]
       BorderStyle = bsNone
       ColCount = 10
@@ -180,6 +193,7 @@ object fKanji: TfKanji
       OnMouseWheelDown = DrawGrid1MouseWheelDown
       OnMouseWheelUp = DrawGrid1MouseWheelDown
       OnSelectCell = DrawGrid1SelectCell
+      ExplicitHeight = 282
     end
     object btnPrintCards: TButton
       Left = 495
@@ -210,7 +224,7 @@ object fKanji: TfKanji
       OnClick = btnReadingChartClick
     end
   end
-  object Panel2: TPanel
+  object pnlDockCompounds: TPanel
     Left = 0
     Top = 348
     Width = 630
@@ -221,7 +235,7 @@ object fKanji: TfKanji
     DockSite = True
     TabOrder = 1
   end
-  object Panel3: TPanel
+  object pnlDockSearch: TPanel
     Left = 0
     Top = 0
     Width = 630

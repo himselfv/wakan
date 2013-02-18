@@ -686,13 +686,6 @@ object fMenu: TfMenu
       Caption = '#00249^e&Dictionary manager...'
       OnExecute = aSettingsDictExecute
     end
-    object aLayout: TAction
-      Caption = '#00250^eLayout &manager...'
-    end
-    object aBorders: TAction
-      Caption = '#00256^eWindow &borders'
-      OnExecute = aBordersExecute
-    end
     object aHelp: TAction
       Caption = '#00257^e&Help contents...'
       ShortCut = 112
@@ -961,17 +954,14 @@ object fMenu: TfMenu
     object aDictVoc1: TAction
       Caption = '#00306^eExamples panel'
       ShortCut = 16436
-      OnExecute = aDictVoc1Execute
     end
     object aDictVoc2: TAction
       Caption = '#00307^eVocabulary panel'
       ShortCut = 16437
-      OnExecute = aDictVoc2Execute
     end
     object aDictVoc3: TAction
       Caption = '#00308^eFilter panel'
       ShortCut = 16438
-      OnExecute = aDictVoc3Execute
     end
     object aUserExamples: TAction
       Caption = 'Examples'

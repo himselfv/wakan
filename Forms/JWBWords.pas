@@ -13,7 +13,7 @@ type
   TfWords = class(TForm)
     OpenDialog1: TOpenDialog;
     SaveDialog1: TSaveDialog;
-    Panel2: TPanel;
+    pnlDockFilters: TPanel;
     Panel1: TPanel;
     Panel3: TPanel;
     Shape7: TShape;
@@ -28,12 +28,13 @@ type
     Button15: TButton;
     Button18: TButton;
     Button19: TButton;
-    Panel4: TPanel;
-    Panel5: TPanel;
+    pnlDockDetails: TPanel;
+    pnlDockExamples: TPanel;
     Button2: TButton;
     PopupMenu1: TPopupMenu;
     miResetColumns: TMenuItem;
-    Splitter1: TSplitter;
+    splDockFilters: TSplitter;
+    splDockDetails: TSplitter;
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
