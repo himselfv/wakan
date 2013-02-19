@@ -205,6 +205,10 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -1730,6 +1734,10 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         476
         450)

@@ -657,9 +657,9 @@ begin
   fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
   fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
   fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
-  CharDetDocked:=reg.ReadBool('Layout','CharDetailsDocked',false);
-  CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
-  CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
+  fMenu.InitCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false));
+  fMenu.CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
+  fMenu.CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
   CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
   CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
   CheckBox48.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
@@ -762,11 +762,9 @@ begin
   fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
   fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
-//  fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
   fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
   fMenu.displaymode:=setlayout;
-  CharDetNowDocked:=false;
-  if (setwindows and 128<>128) and (CharDetDocked) then fMenu.aKanjiDetails.Checked:=true;
+  if (setwindows and 128<>128) and fMenu.CharDetDocked then fMenu.aKanjiDetails.Checked:=true;
 
  //Before fKanji->OnShow => first possible Compounds reload
   if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
@@ -781,7 +779,7 @@ begin
   if setwindows and 16=16 then fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
   if setwindows and 32<>32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   if setwindows and 64<>64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
-  if (setwindows and 128=128) and (not CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+  if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
   fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
 
   fKanjiSearch.rgSortBy.ItemIndex:=setsort;
@@ -944,9 +942,9 @@ begin
   reg.WriteBool('Translate','ShowHint',CheckBox2.Checked);
   reg.WriteBool('Translate','HintMeaning',CheckBox13.Checked);
   reg.WriteInteger('Layout','DisplayLayout',fMenu.curdisplaymode);
-  reg.WriteBool('Layout','CharDetailsDocked',CharDetDocked);
-  reg.WriteBool('Layout','CharDetailsVisible1',CharDetDockedVis1);
-  reg.WriteBool('Layout','CharDetailsVisible2',CharDetDockedVis2);
+  reg.WriteBool('Layout','CharDetailsDocked',fMenu.CharDetDocked);
+  reg.WriteBool('Layout','CharDetailsVisible1',fMenu.CharDetDockedVis1);
+  reg.WriteBool('Layout','CharDetailsVisible2',fMenu.CharDetDockedVis2);
   reg.WriteBool('ScreenTrans','Japanese',CheckBox28.Checked);
   reg.WriteBool('ScreenTrans','English',CheckBox47.Checked);
   reg.WriteBool('ScreenTrans','Kanji',CheckBox48.Checked);

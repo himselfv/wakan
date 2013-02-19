@@ -8,19 +8,19 @@ uses
 
 type
   TfKanjiCompounds = class(TForm)
+    PopupMenu1: TPopupMenu;
+    miResetColumns: TMenuItem;
+    MainPanel: TPanel;
     sbShowVocab: TSpeedButton;
     sbShowDict: TSpeedButton;
     Shape7: TShape;
     Label25: TLabel;
-    cbLeftMatchOnly: TCheckBox;
-    StringGrid1: TWakanWordGrid;
-    Bevel1: TBevel;
-    cbPopularOnly: TCheckBox;
     sbCopyToClipboard: TSpeedButton;
     sbInsertIntoVocab: TSpeedButton;
+    cbLeftMatchOnly: TCheckBox;
+    StringGrid1: TWakanWordGrid;
+    cbPopularOnly: TCheckBox;
     cbSortByFrequency: TCheckBox;
-    PopupMenu1: TPopupMenu;
-    miResetColumns: TMenuItem;
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure SpeedButton11Click(Sender: TObject);

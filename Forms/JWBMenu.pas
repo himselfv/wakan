@@ -241,8 +241,6 @@ type
     PortraitMode1: TMenuItem;
     aEditorExport: TAction;
     procedure FormDestroy(Sender: TObject);
-    procedure RadioGroup1Click(Sender: TObject);
-    procedure RadioGroup2Click(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton5Click(Sender: TObject);
@@ -370,9 +368,23 @@ type
 
   private //Docking
     function DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
+    procedure MainDock(form:TForm;panel:TPanel);
+    procedure MainUndock(form:TForm);
+  protected
+   { Kanji details can work in docked or free-floating mode.
+    If CharDetDocked is set, KanjiDetails is docked and will be shown/hidden by
+    ChangeDisplay, like other panels. }
+    FCharDetDocked: boolean;
+   { Mode switching }
+    procedure SetCharDetDocked(Value: boolean);
   public
+   { In docked mode, we remember whether to show KanjiDetails on page 3 and on
+    page 4 separately. }
+    CharDetDockedVis1,
+    CharDetDockedVis2:boolean;
     function DockExpress(form:TForm;dock:boolean):boolean;
-    procedure FormUndock(form:TForm);
+    procedure InitCharDetDocked(Value: boolean);
+    property CharDetDocked: boolean read FCharDetDocked write SetCharDetDocked;
 
   public
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
@@ -494,7 +506,6 @@ var
   fMenu: TfMenu;
   romasys,jromasys,cromasys:integer;
   showroma,jshowroma,cshowroma:boolean;
-  CharDetDocked,CharDetNowDocked,CharDetDockedVis1,CharDetDockedVis2:boolean;
 
  { Dictionaries }
   dicts: TDictionaryList; //Active dictionary list
@@ -1982,60 +1993,6 @@ begin
   end;
 end;
 
-procedure ConvUniToMixUni(inpf,outf:string;var recn:integer);
-var f:file of byte;
-    t:textfile;
-    bl,bh:byte;
-    s:string;
-    inuni:boolean;
-begin
-  recn:=0;
-  assignfile(f,inpf);
-  reset(f);
-  assignfile(t,outf);
-  rewrite(t);
-  s:='';
-  inuni:=false;
-  while not eof(f) do
-  begin
-    read(f,bl);
-    read(f,bh);
-    if (bh=0) and (bl=10) then
-    begin
-      if inuni then s:=s+'>';
-      writeln(t,s);
-      s:='';
-      inuni:=false;
-      inc(recn);
-    end;
-    if (bh=0) and (bl<>10) then
-    begin
-      if inuni then s:=s+'>';
-      inuni:=false;
-      s:=s+chr(bl);
-    end;
-    if (bh<>0) then
-    begin
-      if not inuni then s:=s+'<';
-      inuni:=true;
-      s:=s+Format('%2.2X%2.2X',[bh,bl]);
-    end;
-  end;
-  if s<>'' then writeln(t,s);
-  closefile(f);
-  closefile(t);
-end;
-
-procedure TfMenu.RadioGroup1Click(Sender: TObject);
-begin
-//  romasys:=RadioGroup1.ItemIndex+1;
-end;
-
-procedure TfMenu.RadioGroup2Click(Sender: TObject);
-begin
-//  showroma:=RadioGroup2.ItemIndex=1;
-end;
-
 procedure TfMenu.BitBtn1Click(Sender: TObject);
 begin
   Close;
@@ -2442,11 +2399,45 @@ begin
   ToggleForm(fKanjiSearch,fKanji.btnSearchSort,aKanjiSearch);
 end;
 
+{ Same as SetCharDetDocked, but called on loading }
+procedure TfMenu.InitCharDetDocked(Value: boolean);
+begin
+  FCharDetDocked := Value;
+  if Value then begin
+    fKanjiDetails.SetPortraitMode(fMenu.aPortraitMode.Checked);
+   //Do not ChangeDisplay since we're not yet completely initialized
+  end else begin
+    fKanjiDetails.SetPortraitMode(false); //always normal mode while free-floating
+  end;
+end;
+
+{ Changes the mode of KanjiDetails window: docked or free-floating }
+procedure TfMenu.SetCharDetDocked(Value: boolean);
+begin
+  if FCharDetDocked=Value then exit;
+  FCharDetDocked := Value;
+  if Value then begin
+    fKanjiDetails.FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
+    fKanjiDetails.SetPortraitMode(fMenu.aPortraitMode.Checked);
+    CharDetDockedVis1:=true;
+    CharDetDockedVis2:=true;
+    ChangeDisplay; //docks it and shows if on appropriate page
+  end else begin
+    DockExpress(fKanjiDetails,false); //hides and undocks it
+    fKanjiDetails.SetPortraitMode(false); //always normal mode while free-floating
+    fKanjiDetails.FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
+    aKanjiDetails.Execute; //shows it as free floating
+  end;
+  fKanjiDetails.FormShow(nil); //update button name
+end;
+
+{ Shows/hides KanjiDetails, whether it's in free-floating mode or not.
+ In docked mode this appropriately updates CharDetDockedVis*  }
 procedure TfMenu.aKanjiDetailsExecute(Sender: TObject);
 begin
   if CharDetDocked then
   begin
-    if (curdisplaymode=2) or (curdisplaymode=5) then
+    if curdisplaymode in [2,5] then
     begin
       fMenu.aKanjiDetails.Checked:=false;
       fKanji.btnKanjiDetails.Down:=false;
@@ -2463,7 +2454,10 @@ begin
   end;
   if not CharDetDocked then
   begin
-    ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+   //In free-floating mode just show or hide it
+    fKanjiDetails.Visible:=not fKanjiDetails.Visible;
+    fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+    fMenu.aKanjiDetails.Checked:=fKanjiDetails.Visible;
     fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
   end;
 end;
@@ -2893,7 +2887,13 @@ const
   DOCK_BOTTOM = 3;
   DOCK_LEFT = 4;
 
-//Returns true is was docked before
+{
+Docks the form to the panel and makes it visible, or
+Makes the form invisible and undocks it, restoring its permanent width and height.
+Returns true if the form was docked before the call.
+It is the responsibility of the form to adjust its permanent width and height
+while in the docked mode.
+}
 function TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
 var vert:boolean;
   rect:TRect;
@@ -2912,6 +2912,7 @@ begin
     slave.Visible:=true;
     slave.Realign;
   end else begin
+    slave.Hide;
     rect.Left:=0;
     rect.Top:=0;
     rect.Right:=slave.UndockWidth; //non-docked width and height
@@ -2919,13 +2920,27 @@ begin
     slave.Align:=alNone;
     slave.ManualFloat(rect);
     if vert then panel.height:=0 else panel.width:=0;
-    slave.Hide;
   end;
 end;
 
+{ Panel docker.
+ If given "dock", docks the form to its rightful place and shows it,
+ else hides it and undocks it.
+ Returns true if the form was docked before this call. }
 function TfMenu.DockExpress(form:TForm;dock:boolean): boolean;
 begin
   Result := false;
+  if form=fKanjiDetails then begin
+   //fKanjiDetails is only in portrait mode when docked
+    if dock then
+      fKanjiDetails.SetPortraitMode(aPortraitMode.Checked)
+    else
+      fKanjiDetails.SetPortraitMode(false);
+    if aPortraitMode.Checked then
+      Result:=DockProc(fKanjiDetails,Panel4,DOCK_BOTTOM,dock)
+    else
+      Result:=DockProc(fKanjiDetails,Panel4,DOCK_RIGHT,dock);
+  end;
   if form=fKanjiSearch then
     Result:=DockProc(fKanjiSearch,fKanji.pnlDockSearch,1,dock);
   if form=fKanjiCompounds then begin
@@ -2953,10 +2968,22 @@ begin
   end;
 end;
 
-{ Only use this to undock forms from containers which don't need to be hidden,
- such as modules from a main form. For dock panels use DockExpress(form,false).
- One exception is fKanjiDetails (probably historically) }
-procedure TfMenu.FormUndock(form:TForm);
+{ Only use this to dock and undock modules of a main form.
+ Modules are docked once, then sometimes hidden (form.Hide) and shown with MainDock(form,panel) again.
+ Some are redocked to other places at times. }
+procedure TfMenu.MainDock(form:TForm;panel:TPanel);
+begin
+  if form.HostDockSite<>panel then begin
+    form.Width:=panel.ClientWidth;
+    form.Height:=panel.ClientHeight;
+    form.ManualDock(panel);
+    form.Align:=alClient;
+  end;
+  form.Show;
+end;
+
+{ Modules are undocked at the end of the program. After undocking they remain hidden. }
+procedure TfMenu.MainUndock(form:TForm);
 var rect:TRect;
 begin
   form.Hide;
@@ -2968,7 +2995,9 @@ begin
   form.Align:=alNone;
 end;
 
+//Shows or hides a form. Some forms only shows.
 procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
+var NewState: boolean;
 begin
   if form=fKanji then
   begin
@@ -2994,35 +3023,27 @@ begin
     ChangeDisplay;
     exit;
   end;
-  if (sb=nil) or (form=fKanjiDetails) then
-  begin
-    if form.visible then form.hide else form.show;
-  end else
-  begin
-    if action.checked then
-    begin
-      if form.visible then
-      begin
-        form.hide;
-        DockExpress(form,false);
-      end;
-    end else
-    begin
-      if not form.visible then
-      begin
-        DockExpress(form,true);
-        form.show;
-      end;
-    end;
+
+  if form.Visible then begin
+    form.hide;
+    if form<>fKanjiDetails then
+      DockExpress(form,false);
+  end else begin
+    if form<>fKanjiDetails then
+      DockExpress(form,true);
+    form.show;
   end;
+
   if sb<>nil then sb.down:=form.visible;
   if action<>nil then action.checked:=form.visible;
 end;
 
+//React to page changes and update main form, showing or hiding various panels
 procedure TfMenu.ChangeDisplay;
 begin
+ //Hide active module
   case curdisplaymode of
-    1:FormUndock(fKanji);
+    1:fKanji.Hide;
     2:fUser.Hide;
     5:fWords.Hide;
     3:fTranslate.Hide;
@@ -3031,46 +3052,26 @@ begin
         fTranslate.Hide;
       end;
   end;
-  if CharDetNowDocked then FormUndock(fKanjiDetails);
-  CharDetNowDocked:=false;
   Panel2.Height:=0;
-  Panel4.Width:=0;
-  Panel4.Height:=0;
   aMode1.Checked:=false;
   aMode2.Checked:=false;
   aMode3.Checked:=false;
   aMode4.Checked:=false;
   aMode5.Checked:=false;
-  if CharDetDocked then
-  begin
-    if displaymode=1 then
-    begin
-      if CharDetDockedVis1 then
-      begin
-        Panel4.Height:=fKanjiDetails.Height;
-        Panel4.Width:=fKanjiDetails.Width;
-        fKanjiDetails.ManualDock(Panel4);
-        fKanjiDetails.Align:=alClient;
-        fKanjiDetails.Show;
-      end;
-      fKanji.btnKanjiDetails.Down:=CharDetDockedVis1;
-      aKanjiDetails.Checked:=CharDetDockedVis1;
-      CharDetNowDocked:=CharDetDockedVis1;
-    end;
-    if (displaymode=4) or (displaymode=3) then
-    begin
-      if CharDetDockedVis2 then
-      begin
-        Panel4.Height:=fKanjiDetails.Height;
-        Panel4.Width:=fKanjiDetails.Width;
-        fKanjiDetails.ManualDock(Panel4);
-        fKanjiDetails.Align:=alClient;
-        fKanjiDetails.Show;
-      end;
-      fTranslate.sbDockKanjiDetails.Down:=CharDetDockedVis2;
-      aKanjiDetails.Checked:=CharDetDockedVis2;
-      CharDetNowDocked:=CharDetDockedVis2;
-    end;
+ //If KanjiDetails is in docked mode, show or hide it as needed.
+ //When in free-floating mode it doesn't need our attention.
+  if CharDetDocked then begin
+    if (displaymode=1) and CharDetDockedVis1 then
+      DockExpress(fKanjiDetails,true)
+    else
+    if (displaymode in [3, 4]) and CharDetDockedVis2 then
+      DockExpress(fKanjiDetails,true)
+    else
+      DockExpress(fKanjiDetails,false);
+  end else begin
+   //Hide dock panel
+    Panel4.Width := 0;
+    Panel4.Height := 0;
   end;
   if fExamples.visible then
   begin
@@ -3079,59 +3080,35 @@ begin
   end;
   case displaymode of
     1:begin
-        fKanji.Width:=Panel3.ClientWidth;
-        fKanji.Height:=Panel3.ClientHeight;
-        fKanji.ManualDock(Panel3);
-        fKanji.Align:=alClient;
-        fKanji.Show;
+        MainDock(fKanji,Panel3);
         tab1.Down:=true;
         if fKanji.DrawGrid1.CanFocus then
           fKanji.DrawGrid1.SetFocus;
         aMode1.Checked:=true;
       end;
     2:begin
-        fUser.Width:=Panel3.ClientWidth;
-        fUser.Height:=Panel3.ClientHeight;
-        fUser.ManualDock(Panel3);
-        fUser.Align:=alClient;
-        fUser.Show;
+        MainDock(fUser,Panel3);
         tab2.Down:=true;
         aMode2.Checked:=true;
       end;
-    5:begin
-        fWords.Width:=Panel3.ClientWidth;
-        fWords.Height:=Panel3.ClientHeight;
-        fWords.ManualDock(Panel3);
-        fWords.Align:=alClient;
-        fWords.Show;
-        tab5.Down:=true;
-        aMode5.Checked:=true;
-      end;
     3:begin
-        fTranslate.Width:=Panel3.ClientWidth;
-        fTranslate.Height:=Panel3.ClientHeight;
-        fTranslate.ManualDock(Panel3);
-        fTranslate.Align:=alClient;
-        fTranslate.Show;
+        MainDock(fTranslate,Panel3);
         tab3.Down:=true;
         fTranslate.sbDockDictionary.Down:=false;
         aMode3.Checked:=true;
       end;
     4:begin
         Panel2.height:=250;
-        fUser.Width:=Panel2.ClientWidth;
-        fUser.Height:=Panel2.ClientHeight;
-        fUser.ManualDock(Panel2);
-        fUser.Align:=alClient;
-        fUser.Show;
-        fTranslate.ManualDock(Panel3);
-        fTranslate.Align:=alClient;
-        fTranslate.Show;
-        fTranslate.Width:=Panel3.ClientWidth;
-        fTranslate.Height:=Panel3.ClientHeight;
+        MainDock(fUser,Panel2);
+        MainDock(fTranslate,Panel3);
         tab3.Down:=true;
         fTranslate.sbDockDictionary.Down:=true;
         aMode3.Checked:=true;
+      end;
+    5:begin
+        MainDock(fWords,Panel3);
+        tab5.Down:=true;
+        aMode5.Checked:=true;
       end;
   end;
   curdisplaymode:=displaymode;
@@ -3153,24 +3130,6 @@ begin
   if tab5.Down then displaymode:=5;
   ChangeDisplay;
 end;
-
-{procedure TfMenu.eCharacterlistcSeznamznak1Click(Sender: TObject);
-begin
-  displaymode:=1;
-  ChangeDisplay;
-end;
-
-procedure TfMenu.eDictionarycSlovnk2Click(Sender: TObject);
-begin
-  displaymode:=2;
-  ChangeDisplay;
-end;
-
-procedure TfMenu.eTexteditorcTextoveditor1Click(Sender: TObject);
-begin
-  displaymode:=3;
-  ChangeDisplay;
-end;}
 
 procedure TfMenu.aMode1Execute(Sender: TObject);
 begin
@@ -3893,7 +3852,7 @@ var
 begin
   UserFiltersDocked := DockExpress(fUserFilters,false);
   WordKanjiDocked := DockExpress(fWordKanji,false);
-  KanjiDetailsDocked := CharDetNowDocked and DockExpress(fKanjiDetails,false);
+  KanjiDetailsDocked := CharDetDocked and DockExpress(fKanjiDetails,false);
 
   if aPortraitMode.Checked then begin
     Panel4.Align := alBottom;
@@ -3911,7 +3870,7 @@ begin
 
   fUserFilters.SetPortraitMode(aPortraitMode.Checked);
   fWordKanji.SetPortraitMode(aPortraitMode.Checked);
-  if CharDetNowDocked then //else it's undocked and must remain in normal mode
+  if KanjiDetailsDocked then //else it's undocked and must remain in normal mode
     fKanjiDetails.SetPortraitMode(aPortraitMode.Checked);
 
   if UserFiltersDocked then DockExpress(fUserFilters,true);

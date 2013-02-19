@@ -146,7 +146,7 @@ end;
 
 procedure TfKanjiDetails.FormDestroy(Sender: TObject);
 begin
-  if not CharDetDocked then FormPlacement1.SaveFormPlacement;
+  if not fMenu.CharDetDocked then FormPlacement1.SaveFormPlacement;
   kval.Free;
 end;
 
@@ -161,13 +161,12 @@ end;
 procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
   if Visible then fMenu.aKanjiDetails.Checked:=true;
-  if CharDetDocked then
+  if Self.HostDockSite<>nil then
     btnDock.Caption:=_l('#00172^eUndock')
   else
     btnDock.Caption:=_l('#00173^eDock');
-  btnDock.Enabled:=CharDetDocked or (fMenu.curdisplaymode=1) or (fMenu.curdisplaymode=3) or
-    (fMenu.curdisplaymode=4);
-  btnClose.Default:=not CharDetDocked;
+  btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
+  btnClose.Default:=not fMenu.CharDetDocked;
 end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
@@ -268,7 +267,7 @@ end;
 
 procedure TfKanjiDetails.btnCloseClick(Sender: TObject);
 begin
-  if CharDetDocked then fMenu.aKanjiDetails.Execute else Close;
+  if fMenu.CharDetDocked then fMenu.aKanjiDetails.Execute else Close;
 end;
 
 procedure TfKanjiDetails.FormKeyPress(Sender: TObject; var Key: Char);
@@ -283,20 +282,7 @@ end;
 
 procedure TfKanjiDetails.btnDockClick(Sender: TObject);
 begin
-  if CharDetDocked then
-  begin
-    CharDetDocked:=false;
-    fMenu.ChangeDisplay;
-    fMenu.aKanjiDetails.Execute;
-    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
-  end else
-  begin
-    FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
-    CharDetDocked:=true;
-    CharDetDockedVis1:=true;
-    CharDetDockedVis2:=true;
-    fMenu.ChangeDisplay;
-  end;
+  fMenu.CharDetDocked := not fMenu.CharDetDocked;
 end;
 
 procedure TfKanjiDetails.pbRadicalMouseMove(Sender: TObject;

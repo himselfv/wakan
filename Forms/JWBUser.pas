@@ -743,7 +743,7 @@ end;
 
 procedure TfUser.DetailsForKanji(n:integer);
 begin
-  if CharDetDocked then exit;
+  if fMenu.CharDetDocked then exit;
   if n<=Length(curkanjid) then
     fKanjiDetails.SetCharDetails(curkanjid[n-1].char);
   if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
