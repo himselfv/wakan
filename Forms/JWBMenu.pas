@@ -2948,7 +2948,8 @@ begin
     fKanji.splDockCompounds.Visible := dock;
     fKanji.splDockCompounds.Top := fKanji.pnlDockCompounds.Top - 1;
   end;
-  if (form=fExamples) and (curdisplaymode<>5) then Result:=DockProc(fExamples,fUser.Panel2,3,dock);
+  if (form=fExamples) and (curdisplaymode<>5) then
+    Result:=DockProc(fExamples,fUser.Panel2,3,dock);
   if (form=fExamples) and (curdisplaymode=5) then
     Result:=DockProc(fExamples,fWords.pnlDockExamples,3,dock);
   if form=fWordKanji then
@@ -2997,7 +2998,6 @@ end;
 
 //Shows or hides a form. Some forms only shows.
 procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
-var NewState: boolean;
 begin
   if form=fKanji then
   begin
@@ -3024,14 +3024,26 @@ begin
     exit;
   end;
 
-  if form.Visible then begin
-    form.hide;
-    if form<>fKanjiDetails then
-      DockExpress(form,false);
-  end else begin
-    if form<>fKanjiDetails then
-      DockExpress(form,true);
-    form.show;
+  if (sb=nil) or (form=fKanjiDetails) then
+  begin
+    if form.visible then form.hide else form.show;
+  end else
+  begin
+    if action.checked then
+    begin
+      if form.visible then
+      begin
+        form.hide;
+        DockExpress(form,false);
+      end;
+    end else
+    begin
+      if not form.visible then
+      begin
+        DockExpress(form,true);
+        form.show;
+      end;
+    end;
   end;
 
   if sb<>nil then sb.down:=form.visible;
