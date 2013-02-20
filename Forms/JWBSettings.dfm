@@ -2345,10 +2345,6 @@ object fSettings: TfSettings
       Caption = 'Portability'
       ImageIndex = 14
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 16
         Top = 16

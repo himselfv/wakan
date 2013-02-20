@@ -156,7 +156,6 @@ object fUserFilters: TfUserFilters
           'W')
         TabIndex = 1
         OnChange = tabCatListChange
-        ExplicitWidth = 110
       end
     end
     object lbCategories: TCheckListBox

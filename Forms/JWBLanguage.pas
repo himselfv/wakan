@@ -385,7 +385,7 @@ var j,k:integer;
       i:integer;
   begin
     PropInfo:=GetPropInfo(a.ClassInfo,prop);
-    if (PropInfo<>nil) then
+    if PropInfo<>nil then
     begin
       ss:=TStringList(GetOrdProp(a,PropInfo));
       for i:=0 to ss.Count-1 do

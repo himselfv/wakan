@@ -3,7 +3,7 @@ object fKanjiDetails: TfKanjiDetails
   Top = 140
   BorderStyle = bsSizeToolWin
   Caption = '#00159^eCharacter details'
-  ClientHeight = 418
+  ClientHeight = 427
   ClientWidth = 321
   Color = clBtnFace
   Constraints.MaxWidth = 337
@@ -25,7 +25,7 @@ object fKanjiDetails: TfKanjiDetails
   OnShow = FormShow
   DesignSize = (
     321
-    418)
+    427)
   PixelsPerInch = 96
   TextHeight = 13
   object ShapeKanji: TShape
@@ -260,13 +260,14 @@ object fKanjiDetails: TfKanjiDetails
     Left = 7
     Top = 198
     Width = 305
-    Height = 212
+    Height = 221
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitHeight = 216
     DesignSize = (
       305
-      212)
+      221)
     object ProUrlLabel1: TUrlLabel
       Left = 1
       Top = 0
@@ -360,7 +361,7 @@ object fKanjiDetails: TfKanjiDetails
     end
     object btnClose: TButton
       Left = -1
-      Top = 192
+      Top = 201
       Width = 225
       Height = 17
       Anchors = [akLeft, akRight, akBottom]
@@ -369,10 +370,11 @@ object fKanjiDetails: TfKanjiDetails
       TabOrder = 0
       OnClick = btnCloseClick
       OnKeyPress = btnCloseKeyPress
+      ExplicitTop = 196
     end
     object btnDock: TButton
       Left = 230
-      Top = 192
+      Top = 201
       Width = 75
       Height = 17
       Hint = '#00171^eDocks / undocks this window into main window'
@@ -380,18 +382,20 @@ object fKanjiDetails: TfKanjiDetails
       Caption = 'DOCK'
       TabOrder = 1
       OnClick = btnDockClick
+      ExplicitTop = 196
     end
     object ScrollBox1: TScrollBox
       Left = 0
       Top = 23
       Width = 304
-      Height = 160
+      Height = 172
       VertScrollBar.Position = 258
       VertScrollBar.Tracking = True
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelKind = bkFlat
       BorderStyle = bsNone
       TabOrder = 2
+      ExplicitHeight = 167
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = -250
@@ -416,6 +420,7 @@ object fKanjiDetails: TfKanjiDetails
   object FormPlacement1: TFormPlacement
     Active = False
     IniSection = '\Software\Labyrinth\Wakan\DetailPos'
+    Options = [fpPosition]
     UseRegistry = False
     Left = 96
     Top = 112

@@ -115,9 +115,13 @@ type
 
   protected
     FPortraitMode: boolean;
+    FDockedMode: boolean; //this window keeps different size settings for docked and undocked mode
   public
+    DockedWidth: integer; //store docked width/height settings while undocked
+    DockedHeight: integer;
     procedure UpdateAlignment;
     procedure SetPortraitMode(Value: boolean);
+    procedure SetDockedMode(Value: boolean; Loading: boolean);
 
   end;
 
@@ -161,10 +165,6 @@ end;
 procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
   if Visible then fMenu.aKanjiDetails.Checked:=true;
-  if Self.HostDockSite<>nil then
-    btnDock.Caption:=_l('#00172^eUndock')
-  else
-    btnDock.Caption:=_l('#00173^eDock');
   btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
   btnClose.Default:=not fMenu.CharDetDocked;
 end;
@@ -282,7 +282,7 @@ end;
 
 procedure TfKanjiDetails.btnDockClick(Sender: TObject);
 begin
-  fMenu.CharDetDocked := not fMenu.CharDetDocked;
+  fMenu.SetCharDetDocked(not fMenu.CharDetDocked, false);
 end;
 
 procedure TfKanjiDetails.pbRadicalMouseMove(Sender: TObject;
@@ -914,12 +914,13 @@ end;
 procedure TfKanjiDetails.SetPortraitMode(Value: boolean);
 begin
   FPortraitMode := Value;
-  UpdateAlignment;
+  if FDockedMode then
+    UpdateAlignment; //else it doesn't matter so don't bother
 end;
 
 procedure TfKanjiDetails.UpdateAlignment;
 begin
-  if not FPortraitMode then begin
+  if (not FDockedMode) or (not FPortraitMode) then begin //in free floating mode always not Portrait
     pnlSecondHalf.Top := RxLabel1.Top + RxLabel1.Height + 3;
     pnlSecondHalf.Left := RxLabel1.Left + 2;
   end else begin
@@ -933,6 +934,29 @@ end;
 procedure TfKanjiDetails.FormResize(Sender: TObject);
 begin
   UpdateAlignment();
+end;
+
+{ Configures the form to appear in either Docked or Floating mode
+ (does not actuall dock or undock it though) }
+procedure TfKanjiDetails.SetDockedMode(Value: boolean; Loading: boolean);
+begin
+  FDockedMode := Value;
+  if Value then begin
+    if not Loading then
+      FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
+    ClientWidth := DockedWidth;
+    ClientHeight := DockedHeight;
+    UpdateAlignment; //we align differently depending on DockedMode
+    btnDock.Caption:=_l('#00172^eUndock');
+  end else begin
+    if not Loading then begin
+      DockedWidth := ClientWidth;
+      DockedHeight := ClientHeight;
+    end;
+    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
+    UpdateAlignment;
+    btnDock.Caption:=_l('#00173^eDock');
+  end;
 end;
 
 initialization

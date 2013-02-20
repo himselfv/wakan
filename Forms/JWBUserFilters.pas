@@ -161,31 +161,38 @@ begin
   UpdateAlignment;
 end;
 
-// Call on resize, on portrait mode change, on lbCategories font change
-//TODO: Call on resize, on lbCategories font change
+{ Call on resize, on portrait mode change, on lbCategories font change
+ Try not to use anchors since they suck, but call explicit align functions like this one }
 procedure TfUserFilters.UpdateAlignment;
 var maxItemWidth: integer;
 begin
-  if not FPortraitMode then begin
+  if not FPortraitMode then
+    gbFilter.Width := ClientWidth - 15
+  else
+    gbFilter.Width := 177;
+
+  rgSort.Width := gbFilter.Width;
+  if (not FPortraitMode) or (ClientHeight > (gbFilter.Top + gbFilter.Height + 7) + rgSort.Height + 7) then begin
+   //Even in Portrait Mode, we try to stack these two modules when possible
     rgSort.Left := gbFilter.Left;
     rgSort.Top := gbFilter.Top + gbFilter.Height + 7;
+  end else begin
+    rgSort.Left := gbFilter.Left + gbFilter.Width + 8;
+    rgSort.Top := gbFilter.Top;
+  end;
+
+  if not FPortraitMode then begin
     pnlCategories.Left := gbFilter.Left;
     pnlCategories.Top := rgSort.Top + rgSort.Height + 5;
     pnlCategories.Width := gbFilter.Width;
     pnlCategories.Height := Self.ClientHeight - pnlCategories.Top - 6;
     lbCategories.Columns := 0; //don't use columns //TODO: Perhaps use if the max item width allows?
-    gbFilter.Anchors := [akLeft,akTop,akRight];
-    rgSort.Anchors := [akLeft,akTop,akRight];
-    pnlCategories.Anchors := [akLeft,akTop,akRight,akBottom];
   end else begin
-    gbFilter.Width := 177;
-    rgSort.Width := 177; //fixed width in horz mode
-    rgSort.Left := gbFilter.Left + gbFilter.Width + 8;
-    rgSort.Top := gbFilter.Top;
+   //Categories are aligned to the right of rgSort, stacked or not
     pnlCategories.Left := rgSort.Left + rgSort.Width + 8;
     pnlCategories.Top := gbFilter.Top-6;
-    pnlCategories.Width := Self.ClientWidth - pnlCategories.Left - 8;
-    pnlCategories.Height := rgSort.Height+6;
+    pnlCategories.Width := ClientWidth - pnlCategories.Left - 8;
+    pnlCategories.Height := ClientHeight - 15;
    //Some guessing as to what is max item width
     maxItemWidth := GetMaxItemLength(lbCategories)*lbCategories.Font.Size;
     if maxItemWidth=0 then maxItemWidth := 90;
@@ -193,9 +200,6 @@ begin
       lbCategories.Columns := 0 //don't use columns
     else
       lbCategories.Columns := lbCategories.Width div maxItemWidth;
-    gbFilter.Anchors := [akLeft,akTop]; //no point in akBottom
-    rgSort.Anchors := [akLeft,akTop]; //no point in akBottom
-    pnlCategories.Anchors := [akLeft,akTop,akRight,akBottom];
   end;
 end;
 

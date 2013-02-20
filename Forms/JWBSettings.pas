@@ -454,6 +454,22 @@ begin
     end else
       raise Exception.Create('Invalid installation mode configuration.');
 
+   //Configure various FormPlacement components throught the application
+   //-- but don't load placement just now.
+    if PortabilityMode=pmPortable then begin
+      fMenu.FormPlacement1.UseRegistry := false;
+      fMenu.FormPlacement1.IniFileName := AppFolder + '\wakan.ini';
+    end else begin
+      fMenu.FormPlacement1.UseRegistry := true;
+      fMenu.FormPlacement1.IniFileName := WakanRegKey;
+    end;
+    fMenu.FormPlacement1.IniSection := 'MainPos';
+    fKanjiDetails.FormPlacement1.UseRegistry := fMenu.FormPlacement1.UseRegistry;
+    fKanjiDetails.FormPlacement1.IniFileName := fMenu.FormPlacement1.IniFileName;
+    fKanjiDetails.FormPlacement1.IniSection := 'DetailPos';
+   //Placement must be configured before doing LoadRegistrySettings
+   //because applying some settings requires being able to load Placement
+
     LoadRegistrySettings(ini);
   finally
     ini.Free;
@@ -657,9 +673,6 @@ begin
   fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
   fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
   fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
-  fMenu.InitCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false));
-  fMenu.CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
-  fMenu.CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
   CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
   CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
   CheckBox48.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
@@ -672,8 +685,6 @@ begin
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
   fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
-  setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
-  setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
   fMenu.aEditorReading.Checked:=fTranslate.sbDisplayReading.Down;
   fMenu.aEditorMeaning.Checked:=fTranslate.sbDisplayMeaning.Down;
   tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
@@ -751,20 +762,30 @@ begin
  //Panel sizes
   fUserFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
   fUserFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
+  fKanjiDetails.DockedWidth := reg.ReadInteger('Layout','KanjiDetailsDockedWidth',190); //KanjiDetails has different sizes when undocked
+  fKanjiDetails.DockedHeight := reg.ReadInteger('Layout','KanjiDetailsDockedHeight',190);
  //TODO: Also save these
+
+  fMenu.SetCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false), true); //after KanjiDetails.DockedWidth/Height
+  fMenu.CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
+  fMenu.CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
+  setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
+  setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
 end;
 
 procedure TfSettings.ApplyUISettings;
 begin
- //Hide
-  fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
-  fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
-  fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
-  fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
-  fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
-  fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
+ //Hide everything, and most importantly, turn all actions off
+ //This will do no harm if the form is already hidden.
+  fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch,false);
+  fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds,false);
+  fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji,false);
+  fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
+  fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd,false);
+  fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails,false);
+  fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings,false);
+
   fMenu.displaymode:=setlayout;
-  if (setwindows and 128<>128) and fMenu.CharDetDocked then fMenu.aKanjiDetails.Checked:=true;
 
  //Before fKanji->OnShow => first possible Compounds reload
   if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
@@ -772,13 +793,13 @@ begin
     fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
 
   fMenu.ChangeDisplay;
-  if setwindows and 1<>1 then fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
-  if setwindows and 2<>2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
-  if setwindows and 4<>4 then fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
-  if setwindows and 8<>8 then fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
+  if setwindows and 1=1 then fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
+  if setwindows and 2=2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
+  if setwindows and 4=4 then fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
+  if setwindows and 8=8 then fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
   if setwindows and 16=16 then fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
-  if setwindows and 32<>32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
-  if setwindows and 64<>64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
+  if setwindows and 32=32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
+  if setwindows and 64=64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
   if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
   fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
 
@@ -1028,6 +1049,14 @@ begin
       reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
       reg.DeleteKey('KanjiSearch','Other');
     end;
+  end;
+
+  if fUserFilters.HostDockSite<>nil then begin
+    reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.UndockWidth);
+    reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.UndockHeight);
+  end else begin
+    reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.ClientWidth);
+    reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.ClientHeight);
   end;
 end;
 
