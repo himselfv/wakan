@@ -205,10 +205,6 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -512,10 +508,6 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -1102,10 +1094,6 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1734,10 +1722,6 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         476
         450)
@@ -2009,10 +1993,6 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         476
         450)

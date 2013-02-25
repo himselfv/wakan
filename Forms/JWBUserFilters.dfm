@@ -165,6 +165,9 @@ object fUserFilters: TfUserFilters
       Height = 230
       Align = alClient
       ItemHeight = 13
+      Items.Strings = (
+        '1'
+        '2')
       TabOrder = 1
       OnClick = lbCategoriesClick
       OnDblClick = lbCategoriesDblClick

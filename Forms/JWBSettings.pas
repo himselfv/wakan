@@ -1051,13 +1051,10 @@ begin
     end;
   end;
 
-  if fUserFilters.HostDockSite<>nil then begin
-    reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.UndockWidth);
-    reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.UndockHeight);
-  end else begin
-    reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.ClientWidth);
-    reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.ClientHeight);
-  end;
+ //These are updated with the actual docked width and height on resizes,
+ //while ClientWidth and ClientHeight might be invalid because the window's aligned to a full parent width or height
+  reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.UndockWidth);
+  reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.UndockHeight);
 end;
 
 function TfSettings.GetTranslationFile: string;

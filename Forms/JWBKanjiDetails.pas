@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, UrlLabel, JWBStrings,
-  TextTable;
+  TextTable, JWBDocking;
 
 type
   TCharReadings = record
@@ -114,14 +114,20 @@ type
       fname:string;var l:integer;var s:string):string;
 
   protected
-    FPortraitMode: boolean;
-    FDockedMode: boolean; //this window keeps different size settings for docked and undocked mode
+    FDockMode: TAlign; //this window keeps different size settings for docked and undocked mode
+    FDockedWidth: integer; //store docked width/height settings while undocked
+    FDockedHeight: integer;
+    function GetDockedWidth: integer;
+    function GetDockedHeight: integer;
+    procedure SetDockedWidth(Value: integer);
+    procedure SetDockedHeight(Value: integer);
+    procedure WMGetDockedW(var msg: TMessage); message WM_GETDOCKED_W;
+    procedure WMGetDockedH(var msg: TMessage); message WM_GETDOCKED_H;
   public
-    DockedWidth: integer; //store docked width/height settings while undocked
-    DockedHeight: integer;
     procedure UpdateAlignment;
-    procedure SetPortraitMode(Value: boolean);
-    procedure SetDockedMode(Value: boolean; Loading: boolean);
+    procedure SetDockMode(Value: TAlign; Loading: boolean);
+    property DockedWidth: integer read GetDockedWidth write SetDockedWidth;
+    property DockedHeight: integer read GetDockedHeight write SetDockedHeight;
 
   end;
 
@@ -530,7 +536,8 @@ begin
     if not btnAddToCategory.Enabled then
       btnAddToCategory.Caption := '+' //default will be +
     else
-    if not IsAllKnown(GetSelCatIdx(cbCategories),curChars) then
+    if (cbCategories.ItemIndex<0)
+    or not IsAllKnown(GetSelCatIdx(cbCategories),curChars) then
       btnAddToCategory.Caption:='+'
     else
       btnAddToCategory.Caption:='-';
@@ -911,16 +918,9 @@ begin
   end;
 end;
 
-procedure TfKanjiDetails.SetPortraitMode(Value: boolean);
-begin
-  FPortraitMode := Value;
-  if FDockedMode then
-    UpdateAlignment; //else it doesn't matter so don't bother
-end;
-
 procedure TfKanjiDetails.UpdateAlignment;
 begin
-  if (not FDockedMode) or (not FPortraitMode) then begin //in free floating mode always not Portrait
+  if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
     pnlSecondHalf.Top := RxLabel1.Top + RxLabel1.Height + 3;
     pnlSecondHalf.Left := RxLabel1.Left + 2;
   end else begin
@@ -933,28 +933,82 @@ end;
 
 procedure TfKanjiDetails.FormResize(Sender: TObject);
 begin
-  UpdateAlignment();
+//  UpdateAlignment();
 end;
 
-{ Configures the form to appear in either Docked or Floating mode
- (does not actuall dock or undock it though) }
-procedure TfKanjiDetails.SetDockedMode(Value: boolean; Loading: boolean);
+function TfKanjiDetails.GetDockedWidth: integer;
 begin
-  FDockedMode := Value;
-  if Value then begin
+  if FDockMode in [alLeft,alRight] then
+    Result := ClientWidth
+  else
+    Result := FDockedWidth;
+end;
+
+function TfKanjiDetails.GetDockedHeight: integer;
+begin
+  if FDockMode in [alTop,alBottom] then
+    Result := ClientHeight
+  else
+    Result := FDockedHeight;
+end;
+
+procedure TfKanjiDetails.SetDockedWidth(Value: integer);
+begin
+  FDockedWidth := Value;
+//It would be nice to support this, but it might break stuff:
+{  if FDockMode in [alLeft,alRight] then
+    if HostDockSite<>nil then
+      HostDockSite.Width := Value; }
+end;
+
+procedure TfKanjiDetails.SetDockedHeight(Value: integer);
+begin
+  FDockedHeight := Value;
+//See comment above.
+{  if FDockMode in [alTop,alBottom] then
+    if HostDockSite<>nil then
+      HostDockSite.Height := Value; }
+end;
+
+{ Docker calls these to get docked control sizes }
+procedure TfKanjiDetails.WMGetDockedW(var msg: TMessage);
+begin
+  msg.Result := FDockedWidth;
+end;
+
+procedure TfKanjiDetails.WMGetDockedH(var msg: TMessage);
+begin
+  msg.Result := FDockedHeight;
+end;
+
+{ Called before docking or after undocking.
+ Configures the form to appear in either Docked or Floating mode,
+ rearranging controls.
+ alClient is not allowed. }
+procedure TfKanjiDetails.SetDockMode(Value: TAlign; Loading: boolean);
+begin
+  FDockMode := Value;
+  if Value<>alNone then begin
     if not Loading then
       FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
-    ClientWidth := DockedWidth;
-    ClientHeight := DockedHeight;
-    UpdateAlignment; //we align differently depending on DockedMode
+   //Realign
+    ClientWidth := 1000;
+    ClientHeight := 1000;
+    UpdateAlignment;
+   //Docked sizes will be applied at docking
     btnDock.Caption:=_l('#00172^eUndock');
   end else begin
+   //Undock
     if not Loading then begin
+     //Save docked sizes
       DockedWidth := ClientWidth;
       DockedHeight := ClientHeight;
     end;
-    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
+   //Realign
+    ClientWidth := 1000;
+    ClientHeight := 1000;
     UpdateAlignment;
+    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
     btnDock.Caption:=_l('#00173^eDock');
   end;
 end;

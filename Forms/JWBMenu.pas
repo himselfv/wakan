@@ -501,6 +501,8 @@ type
     xofs,yofs:integer;
   end;
 
+
+
 var
   fMenu: TfMenu;
   romasys,jromasys,cromasys:integer;
@@ -613,7 +615,7 @@ function _l(const id:string):string; //shouldn't inline because it's for cases w
 
 implementation
 
-uses JWBKanji, JWBUnit, JWBRadical,
+uses JWBKanji, JWBUnit, JWBRadical, JWBDocking,
   JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
   JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
@@ -2382,7 +2384,10 @@ begin
   if (not Loading) and (FCharDetDocked=Value) then exit;
   FCharDetDocked := Value;
   if Value then begin
-    fKanjiDetails.SetDockedMode(true, Loading);
+    if aPortraitMode.Checked then
+      fKanjiDetails.SetDockMode(alBottom, Loading)
+    else
+      fKanjiDetails.SetDockMode(alRight, Loading);
     if not Loading then begin
       CharDetDockedVis1:=true;
       CharDetDockedVis2:=true;
@@ -2391,7 +2396,7 @@ begin
   end else begin
     if not Loading then
       DockExpress(fKanjiDetails,false); //hides and undocks it
-    fKanjiDetails.SetDockedMode(false, Loading);
+    fKanjiDetails.SetDockMode(alNone, Loading);
     if not Loading then
       aKanjiDetails.Execute; //shows it as free floating
   end;
@@ -2848,11 +2853,23 @@ begin
 //  Bevel5.Visible:=Width>815;
 end;
 
+{
+Docking guide.
+Every form has docked and undocked dimensions. Docked ones are stored in
+LRDockWidth/TBDockHeight.
+If these are not set, UndockWidth/UndockHeight is substituted by Delphi,
+then normal Width/Height.
+}
+
 const
   DOCK_TOP = 1;
   DOCK_RIGHT = 2;
   DOCK_BOTTOM = 3;
   DOCK_LEFT = 4;
+
+type
+  TSlaveHack = class(TForm)
+  end;
 
 {
 Docks the form to the panel and makes it visible, or
@@ -2864,20 +2881,35 @@ while in the docked mode.
 function TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
 var vert:boolean;
   rect:TRect;
+  sz: integer;
 begin
   Result := slave.HostDockSite<>nil;
   if Result=dock then exit;
   vert:=(dir=DOCK_TOP) or (dir=DOCK_BOTTOM);
 
   if dock then begin
-    if vert then
+    if vert then begin
+      sz := slave.Perform(WM_GETDOCKED_H,0,0);
+      if sz<=0 then sz := slave.ClientHeight;
+      panel.Height := sz;
+    end else begin
+      sz := slave.Perform(WM_GETDOCKED_W,0,0);
+      if sz<=0 then sz := slave.ClientWidth;
+      panel.Width := sz;
+    end;
+{    if vert then
       panel.Height := slave.Height
     else
-      panel.Width := slave.Width;
+      panel.Width := slave.Width;}
+    slave.Visible := false;
+//    if slave.HandleAllocated then
+//      TSlaveHack(slave).DestroyWindowHandle;
+//   ^ don't do or some forms will lose their state (such as TCheckListBox contents)
     slave.ManualDock(panel);
-    slave.Align:=alClient;
-    slave.Visible:=true;
-    slave.Realign;
+    slave.Width := 10000;
+    slave.Height := 10000;
+    slave.Visible := true; //UpdateExplicitBounds!
+    slave.Align := alClient;
   end else begin
     slave.Hide;
     rect.Left:=0;
@@ -2988,7 +3020,13 @@ begin
 
   if (sb=nil) or (form=fKanjiDetails) then
   begin
-    if state then form.show else form.hide;
+   //Initially this had no checks for "if visible/not visible", I added those to minimize
+   //pointless resizes and OnShows.
+   //If something breaks, keep this in mind.
+    if state then begin
+      if not form.visible then form.show;
+    end else
+      if form.visible then form.hide;
   end else
     if state then begin
       if not form.visible then
@@ -3848,7 +3886,11 @@ begin
 
   fUserFilters.SetPortraitMode(aPortraitMode.Checked);
   fWordKanji.SetPortraitMode(aPortraitMode.Checked);
-  fKanjiDetails.SetPortraitMode(aPortraitMode.Checked);
+  if KanjiDetailsDocked then
+    if aPortraitMode.Checked then
+      fKanjiDetails.SetDockMode(alBottom, false)
+    else
+      fKanjiDetails.SetDockMode(alRight, false);
 
   if UserFiltersDocked then DockExpress(fUserFilters,true);
   if WordKanjiDocked then DockExpress(fWordKanji,true);
