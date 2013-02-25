@@ -241,9 +241,9 @@ type
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
     function HalfUnitsToTextPos(x,y: integer):integer;
-    function GetClosestCursorPos(x,y:integer):TCursorPos;
   public
-    procedure CalcMouseCoords(x,y:integer;var rx,ry:integer);
+    function GetClosestCursorPos(x,y:integer):TCursorPos;
+    function GetExactLogicalPos(x,y:integer):TSourcePos;
 
   protected
     FFontSize: integer;
@@ -4181,26 +4181,6 @@ begin
   if (cursorend) and (cur.x=0) and (cur.y>0) then result:=cur.y-1 else result:=cur.y;
 end;
 
-procedure TfTranslate.CalcMouseCoords(x,y:integer;var rx,ry:integer);
-var cx,cy:integer;
-begin
-  rx:=-1;
-  ry:=-1;
-  cx:=x div (lastxsiz);
-  cy:=y div (lastxsiz*lastycnt)+view;
-  if cy<0 then cy:=0;
-  cx:=WidthToPos(cx,cy);
-  if cy>=linl.Count then exit;
-  ry:=linl[cy].ys;
-  rx:=cx+linl[cy].xs;
-  if (ry>=doc.Count) or (rx>=flength(doc[ry])) then
-  begin
-    ry:=-1;
-    rx:=-1;
-    exit;
-  end;
-end;
-
 procedure TfTranslate.SetFontSize(Value: integer);
 begin
   if FFontSize=Value then exit;
@@ -4337,10 +4317,10 @@ begin
 end;
 
 {
- Returns closest text position to the given screen point.
- Makes sure what you get is a legal text point, not some negative or over-the-end value.
- NOTE:
-  - Do not call if linl is cleared (linl.Count=0)
+Returns closest text position to the given screen point.
+Makes sure what you get is a legal text point, not some negative or over-the-end value.
+NOTE:
+- Do not call if linl is cleared (linl.Count=0)
 }
 function TfTranslate.GetClosestCursorPos(x,y:integer): TCursorPos;
 begin
@@ -4353,6 +4333,33 @@ begin
   Assert(Result.y>=0); //we must have at least one line
   Result.x := HalfUnitsToTextPos(Result.x, Result.y);
   Assert(Result.x>=0);
+end;
+
+{
+Returns exact logical coordinates of a character at a given screen point.
+If there's no character at that point, returns -1 as either of the coordinates.
+NOTE:
+- Do not call if linl is cleared (linl.Count=0)
+}
+function TfTranslate.GetExactLogicalPos(x,y:integer):TSourcePos;
+var cx,cy:integer;
+begin
+  Result.y:=-1;
+  Result.x:=-1;
+  cx:=x div (lastxsiz);
+  cy:=y div (lastxsiz*lastycnt)+view;
+  if cy<0 then cy:=0;
+  if cy>=linl.Count then exit;
+  cx:=WidthToPos(cx,cy);
+  if cx<0 then exit;
+  Result.y:=linl[cy].ys;
+  Result.x:=cx+linl[cy].xs;
+  if (Result.y>=doc.Count) or (Result.x>=flength(doc[Result.y])) then
+  begin
+    Result.y:=-1;
+    Result.x:=-1;
+    exit;
+  end;
 end;
 
 

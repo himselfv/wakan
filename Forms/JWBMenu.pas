@@ -3664,6 +3664,7 @@ var s,s2:string;
     rect:TRect;
     mox1,mox2:integer;
     mo:boolean;
+  rpos: TSourcePos;
 begin
   SetScreenTipBlock(0,0,0,0,nil);
   if (intmoPaint<>nil) and (intmoPaint<>fTranslate.EditorPaintBox) then
@@ -3687,7 +3688,8 @@ begin
   end else
   if intmoPaint=fTranslate.EditorPaintBox then
   begin
-    fTranslate.CalcMouseCoords(intmocx,intmocy,rx,ry);
+    rpos:=fTranslate.GetExactLogicalPos(intmocx,intmocy);
+    rx := rpos.x; ry := rpos.y;
     if (ry<>-1) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
       s:=fTranslate.GetDocWord(rx,ry,wtt,false)
     else
