@@ -742,8 +742,6 @@ var ps:TPackageSource;
   vi:TStringList;
   ms:TMemoryStream;
   i:integer;
-  tempDir: string;
-  LastModified: TDatetime;
 begin
   LastAutoSave := now;
   screenTipImmediate:=false;
@@ -849,20 +847,7 @@ begin
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
 
-   {
-    DownloadSources.LoadFromFile('Dependencies.cfg');
-
-    //Just a test
-    tempDir := CreateRandomTempDirName();
-    ForceDirectories(tempDir);
-    //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
-    DownloadFileIfModified('http://ftp.monash.edu.au/pub/nihongo/edicthdr.txt', tempDir+'\edicthdr.txt',
-      now, LastModified);
-
-   //Download dependencies!
-    VerifyDependency('WORDFREQ_CK', 'WORDFREQ_CK');
-    VerifyDependency('UNICONV.exe', 'UNICONV');
-   }
+   { DownloadTest(); }
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then

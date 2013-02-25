@@ -222,6 +222,24 @@ begin
   Result := FileExists(filename) or DownloadDependency(depname);
 end;
 
+procedure DownloadTest;
+var tempDir: string;
+  LastModified: TDatetime;
+begin
+  DownloadSources.LoadFromFile('Dependencies.cfg');
+
+  //Just a test
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+  //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
+  DownloadFileIfModified('http://ftp.monash.edu.au/pub/nihongo/edicthdr.txt', tempDir+'\edicthdr.txt',
+    now, LastModified);
+
+ //Download dependencies!
+  VerifyDependency('WORDFREQ_CK', 'WORDFREQ_CK');
+  VerifyDependency('UNICONV.exe', 'UNICONV');
+end;
+
 initialization
   DownloadSources := TDownloadSources.Create;
 
