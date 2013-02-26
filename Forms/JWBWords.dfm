@@ -6,6 +6,7 @@ object fWords: TfWords
   ClientHeight = 455
   ClientWidth = 776
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -277,6 +278,8 @@ object fWords: TfWords
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
+      DoubleBuffered = False
+      ParentDoubleBuffered = False
       TabOrder = 1
     end
     object pnlDockExamples: TPanel

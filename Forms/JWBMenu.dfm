@@ -8,7 +8,6 @@ object fMenu: TfMenu
   Color = clBtnFace
   Constraints.MinHeight = 480
   Constraints.MinWidth = 600
-  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -134,6 +133,7 @@ object fMenu: TfMenu
     Height = 33
     Align = alTop
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 0
     DesignSize = (
       694
@@ -553,6 +553,7 @@ object fMenu: TfMenu
     Height = 340
     Align = alClient
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 1
   end
   object Panel2: TPanel
@@ -562,7 +563,9 @@ object fMenu: TfMenu
     Height = 112
     Align = alBottom
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 2
+    ExplicitTop = 379
   end
   object Panel4: TPanel
     Left = 509
@@ -571,6 +574,7 @@ object fMenu: TfMenu
     Height = 340
     Align = alRight
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 3
   end
   object Timer1: TTimer
