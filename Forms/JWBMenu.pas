@@ -240,25 +240,23 @@ type
     aPortraitMode: TAction;
     PortraitMode1: TMenuItem;
     aEditorExport: TAction;
+    aVocabExport: TAction;
+    aVocabImport: TAction;
+    N14: TMenuItem;
+    N00934eExport1: TMenuItem;
+    aVocabImport1: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SpeedButton5Click(Sender: TObject);
-    procedure ArtLabel1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
     procedure tab1Click(Sender: TObject);
     procedure tab2Click(Sender: TObject);
     procedure tab5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
-    procedure SpeedButton11Click(Sender: TObject);
-    procedure SpeedButton12Click(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
-    procedure Image1Click(Sender: TObject);
-    procedure SpeedButton15Click(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
     procedure PaintBox3Paint(Sender: TObject);
     procedure SpeedButton22Click(Sender: TObject);
@@ -359,6 +357,8 @@ type
     procedure aEditorCopyAsExecute(Sender: TObject);
     procedure aPortraitModeExecute(Sender: TObject);
     procedure aEditorExportExecute(Sender: TObject);
+    procedure aVocabExportExecute(Sender: TObject);
+    procedure aVocabImportExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -367,7 +367,6 @@ type
     procedure InitializeWakan;
 
   private //Docking
-    function DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
     procedure MainDock(form:TForm;panel:TPanel);
     procedure MainUndock(form:TForm);
   protected
@@ -615,7 +614,7 @@ function _l(const id:string):string; //shouldn't inline because it's for cases w
 
 implementation
 
-uses JWBKanji, JWBUnit, JWBRadical, JWBDocking,
+uses JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
   JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
@@ -1276,8 +1275,6 @@ end;
 procedure TfMenu.SetUserDataChanged(Value: boolean);
 begin
   FUserDataChanged := Value;
-//  SpeedButton2.Enabled:=FUserDataChanged;
-//  SpeedButton7.Enabled:=FUserDataChanged;
   aSaveUser.Enabled:=FUserDataChanged;
   aCancelUser.Enabled:=FUserDataChanged;
 end;
@@ -1545,8 +1542,6 @@ var tempDir: string;
   CatType: char;
 begin
   UserDataChanged:=false;
-//  SpeedButton2.Enabled:=false;
-//  SpeedButton7.Enabled:=false;
   aSaveUser.Enabled:=false;
   aCancelUser.Enabled:=false;
   Screen.Cursor:=crHourGlass;
@@ -2004,16 +1999,6 @@ begin
   end;
 end;
 
-procedure TfMenu.SpeedButton5Click(Sender: TObject);
-begin
-  fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
-  fSettings.ShowModal;
-  if fKanji.Visible then fKanji.DoIt;
-  if fUser.Visible then fUser.Look();
-  if fWords.Visible then fWords.ShowIt(false);
-  if fTranslate.Visible then fTranslate.RepaintText;
-end;
-
 procedure TfMenu.WmChangeCbChain(var Msg: TMessage);
 begin
   if HWND(Msg.wParam)=CbNextViewer then begin
@@ -2189,13 +2174,6 @@ begin
   end;
 end;
 
-procedure TfMenu.ArtLabel1Click(Sender: TObject);
-begin
-  fSplash.ProgressBar1.Hide;
-  fSplash.BitBtn1.Show;
-  fSplash.ShowModal;
-end;
-
 procedure TfMenu.SpeedButton2Click(Sender: TObject);
 begin
   screenModeWk:=SpeedButton2.Down;
@@ -2204,11 +2182,6 @@ end;
 procedure TfMenu.SpeedButton7Click(Sender: TObject);
 begin
   LoadUserData;
-end;
-
-procedure TfMenu.SpeedButton8Click(Sender: TObject);
-begin
-  fDictMan.ShowModal;
 end;
 
 procedure TfMenu.tab1Click(Sender: TObject);
@@ -2231,16 +2204,6 @@ begin
   Clipboard_Update;
 end;
 
-procedure TfMenu.SpeedButton11Click(Sender: TObject);
-begin
-  fWords.DoStatistic;
-end;
-
-procedure TfMenu.SpeedButton12Click(Sender: TObject);
-begin
-  Close;
-end;
-
 procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
 begin
   SwitchLanguage('j');
@@ -2249,40 +2212,6 @@ end;
 procedure TfMenu.btnChineseModeClick(Sender: TObject);
 begin
   SwitchLanguage('c');
-end;
-
-procedure TfMenu.Image1Click(Sender: TObject);
-begin
-  fSplash.ProgressBar1.Hide;
-  fSplash.BitBtn1.Show;
-  fSplash.ShowModal;
-end;
-
-procedure TfMenu.SpeedButton15Click(Sender: TObject);
-begin
-  if FileExists('wakan_'+curGUILanguage+'.chm') then
-    ShellExecute(fMenu.handle,nil,pchar('wakan_'+curGUILanguage+'.chm'),nil,nil,SW_SHOW) else
-  if FileExists('wakan.chm') then
-    ShellExecute(fMenu.handle,nil,'wakan.chm',nil,nil,SW_SHOW) else
-  if FileExists('wakan_bld.chm') then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00363^eHelp file is under construction, the information may be inaccurate.')),
-      pchar(_l('#00364^eNotice')),
-      MB_ICONWARNING or MB_OK);
-    ShellExecute(fMenu.handle,nil,'wakan_bld.chm',nil,nil,SW_SHOW);
-  end else
-  if FileExists('wakan_en.chm') then
-    Application.MessageBox(
-      pchar(_l('#00365^eHelp file is out of date. Please download new help file '
-        +'from WaKan website: wakan.manga.cz.')),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK)
-  else
-    Application.MessageBox(
-      pchar(_l('#00366^eCannot find file WAKAN.CHM.')),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
 end;
 
 procedure TfMenu.Action1Execute(Sender: TObject);
@@ -2313,6 +2242,16 @@ end;
 procedure TfMenu.aStatisticsExecute(Sender: TObject);
 begin
   fWords.DoStatistic;
+end;
+
+procedure TfMenu.aVocabExportExecute(Sender: TObject);
+begin
+  fWords.ExportVocab;
+end;
+
+procedure TfMenu.aVocabImportExecute(Sender: TObject);
+begin
+  fWords.ImportVocab;
 end;
 
 procedure TfMenu.aExitExecute(Sender: TObject);
@@ -2530,7 +2469,12 @@ end;
 
 procedure TfMenu.aSettingsExecute(Sender: TObject);
 begin
-  SpeedButton5Click(Sender);
+  fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
+  fSettings.ShowModal;
+  if fKanji.Visible then fKanji.DoIt;
+  if fUser.Visible then fUser.Look();
+  if fWords.Visible then fWords.ShowIt(false);
+  if fTranslate.Visible then fTranslate.RepaintText;
 end;
 
 procedure TfMenu.aChangeLanguageExecute(Sender: TObject);
@@ -2540,17 +2484,41 @@ end;
 
 procedure TfMenu.aSettingsDictExecute(Sender: TObject);
 begin
-  SpeedButton8Click(sender);
+  fDictMan.ShowModal;
 end;
 
 procedure TfMenu.aHelpExecute(Sender: TObject);
 begin
-  SpeedButton15Click(Sender);
+  if FileExists('wakan_'+curGUILanguage+'.chm') then
+    ShellExecute(fMenu.handle,nil,pchar('wakan_'+curGUILanguage+'.chm'),nil,nil,SW_SHOW) else
+  if FileExists('wakan.chm') then
+    ShellExecute(fMenu.handle,nil,'wakan.chm',nil,nil,SW_SHOW) else
+  if FileExists('wakan_bld.chm') then
+  begin
+    Application.MessageBox(
+      pchar(_l('#00363^eHelp file is under construction, the information may be inaccurate.')),
+      pchar(_l('#00364^eNotice')),
+      MB_ICONWARNING or MB_OK);
+    ShellExecute(fMenu.handle,nil,'wakan_bld.chm',nil,nil,SW_SHOW);
+  end else
+  if FileExists('wakan_en.chm') then
+    Application.MessageBox(
+      pchar(_l('#00365^eHelp file is out of date. Please download new help file '
+        +'from WaKan website: wakan.manga.cz.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK)
+  else
+    Application.MessageBox(
+      pchar(_l('#00366^eCannot find file WAKAN.CHM.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
 end;
 
 procedure TfMenu.aAboutExecute(Sender: TObject);
 begin
-  Image1Click(Sender);
+  fSplash.ProgressBar1.Hide;
+  fSplash.BitBtn1.Show;
+  fSplash.ShowModal;
 end;
 
 procedure TfMenu.aJapaneseExecute(Sender: TObject);
@@ -2853,75 +2821,6 @@ begin
 //  Bevel5.Visible:=Width>815;
 end;
 
-{
-Docking guide.
-Every form has docked and undocked dimensions. Docked ones are stored in
-LRDockWidth/TBDockHeight.
-If these are not set, UndockWidth/UndockHeight is substituted by Delphi,
-then normal Width/Height.
-}
-
-const
-  DOCK_TOP = 1;
-  DOCK_RIGHT = 2;
-  DOCK_BOTTOM = 3;
-  DOCK_LEFT = 4;
-
-type
-  TSlaveHack = class(TForm)
-  end;
-
-{
-Docks the form to the panel and makes it visible, or
-Makes the form invisible and undocks it, restoring its permanent width and height.
-Returns true if the form was docked before the call.
-It is the responsibility of the form to adjust its permanent width and height
-while in the docked mode.
-}
-function TfMenu.DockProc(slave:TForm;panel:TPanel;dir:integer;dock:boolean): boolean;
-var vert:boolean;
-  rect:TRect;
-  sz: integer;
-begin
-  Result := slave.HostDockSite<>nil;
-  if Result=dock then exit;
-  vert:=(dir=DOCK_TOP) or (dir=DOCK_BOTTOM);
-
-  if dock then begin
-    if vert then begin
-      sz := slave.Perform(WM_GETDOCKED_H,0,0);
-      if sz<=0 then sz := slave.ClientHeight;
-      panel.Height := sz;
-    end else begin
-      sz := slave.Perform(WM_GETDOCKED_W,0,0);
-      if sz<=0 then sz := slave.ClientWidth;
-      panel.Width := sz;
-    end;
-{    if vert then
-      panel.Height := slave.Height
-    else
-      panel.Width := slave.Width;}
-    slave.Visible := false;
-//    if slave.HandleAllocated then
-//      TSlaveHack(slave).DestroyWindowHandle;
-//   ^ don't do or some forms will lose their state (such as TCheckListBox contents)
-    slave.ManualDock(panel);
-    slave.Width := 10000;
-    slave.Height := 10000;
-    slave.Visible := true; //UpdateExplicitBounds!
-    slave.Align := alClient;
-  end else begin
-    slave.Hide;
-    rect.Left:=0;
-    rect.Top:=0;
-    rect.Right:=slave.UndockWidth; //non-docked width and height
-    rect.Bottom:=slave.UndockHeight; //only available when docked
-    slave.Align:=alNone;
-    slave.ManualFloat(rect);
-    if vert then panel.height:=0 else panel.width:=0;
-  end;
-end;
-
 { Panel docker.
  If given "dock", docks the form to its rightful place and shows it,
  else hides it and undocks it.
@@ -2931,33 +2830,33 @@ begin
   Result := false;
   if form=fKanjiDetails then begin
     if aPortraitMode.Checked then
-      Result:=DockProc(fKanjiDetails,Panel4,DOCK_BOTTOM,dock)
+      Result:=DockProc(fKanjiDetails,Panel4,alBottom,dock)
     else
-      Result:=DockProc(fKanjiDetails,Panel4,DOCK_RIGHT,dock);
+      Result:=DockProc(fKanjiDetails,Panel4,alRight,dock);
   end;
   if form=fKanjiSearch then
-    Result:=DockProc(fKanjiSearch,fKanji.pnlDockSearch,1,dock);
+    Result:=DockProc(fKanjiSearch,fKanji.pnlDockSearch,alTop,dock);
   if form=fKanjiCompounds then begin
-    Result:=DockProc(fKanjiCompounds,fKanji.pnlDockCompounds,3,dock);
+    Result:=DockProc(fKanjiCompounds,fKanji.pnlDockCompounds,alBottom,dock);
     fKanji.splDockCompounds.Visible := dock;
     fKanji.splDockCompounds.Top := fKanji.pnlDockCompounds.Top - 1;
   end;
   if (form=fExamples) and (curdisplaymode<>5) then
-    Result:=DockProc(fExamples,fUser.Panel2,3,dock);
+    Result:=DockProc(fExamples,fUser.pnlDockExamples,alBottom,dock);
   if (form=fExamples) and (curdisplaymode=5) then
-    Result:=DockProc(fExamples,fWords.pnlDockExamples,3,dock);
+    Result:=DockProc(fExamples,fWords.pnlDockExamples,alBottom,dock);
   if form=fWordKanji then
     if aPortraitMode.Checked then
-      Result:=DockProc(fWordKanji,fUser.Panel3,DOCK_BOTTOM,dock)
+      Result:=DockProc(fWordKanji,fUser.Panel3,alBottom,dock)
     else
-      Result:=DockProc(fWordKanji,fUser.Panel3,DOCK_RIGHT,dock);
+      Result:=DockProc(fWordKanji,fUser.Panel3,alRight,dock);
   if form=fUserFilters then
     if aPortraitMode.Checked then
-      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,DOCK_BOTTOM,dock)
+      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,alBottom,dock)
     else
-      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,DOCK_RIGHT,dock);
+      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,alRight,dock);
   if form=fUserDetails then begin
-    Result:=DockProc(fUserDetails,fWords.pnlDockDetails,3,dock);
+    Result:=DockProc(fUserDetails,fWords.pnlDockDetails,alBottom,dock);
     fWords.splDockDetails.Visible := dock;
     fWords.splDockDetails.Top := fWords.pnlDockDetails.Top - 1;
   end;

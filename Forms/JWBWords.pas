@@ -23,8 +23,6 @@ type
     SpeedButton2: TSpeedButton;
     SpeedButton4: TSpeedButton;
     StringGrid1: TWakanGrid;
-    btnExportVocab: TButton;
-    btnImportVocab: TButton;
     Button15: TButton;
     Button18: TButton;
     Button19: TButton;
@@ -39,10 +37,8 @@ type
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure UserAdd_Button1Click(Sender: TObject);
-    procedure btnExportVocabClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure btnImportVocabClick(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure Button14Click(Sender: TObject);
@@ -81,8 +77,10 @@ type
     procedure DeleteWords();
 
   public
+    procedure ExportVocab;
     procedure ExportVocabToWkl(const filename: string);
     procedure ExportVocabToCsv(const filename: string);
+    procedure ImportVocab;
     procedure ImportVocabFromWkl(const filename: string; out catw, addw: integer);
     procedure ImportVocabFromCsv(const filename: string; out catw, addw: integer);
 
@@ -580,7 +578,7 @@ begin
   end;
 end;
 
-procedure TfWords.btnExportVocabClick(Sender: TObject);
+procedure TfWords.ExportVocab;
 begin
   if SaveDialog1.Execute then
     if pos('.WKL',uppercase(SaveDialog1.FileName))>0 then
@@ -738,8 +736,7 @@ begin
   end;
 end;
 
-
-procedure TfWords.btnImportVocabClick(Sender: TObject);
+procedure TfWords.ImportVocab;
 var addw,catw:integer;
 begin
   if not OpenDialog1.Execute then

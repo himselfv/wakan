@@ -35,7 +35,7 @@ object fExamples: TfExamples
       Top = 1
       Width = 313
       Height = 45
-      Anchors = [akLeft, akTop, akRight]
+      Anchors = [akLeft, akTop, akRight, akBottom]
       Brush.Color = clWindow
     end
     object Bevel2: TBevel
@@ -103,9 +103,13 @@ object fExamples: TfExamples
     object PaintBox: TPaintBox
       Left = 2
       Top = 2
-      Width = 311
-      Height = 43
-      Anchors = [akLeft, akTop, akRight]
+      Width = 310
+      Height = 45
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Anchors = [akLeft, akTop, akRight, akBottom]
       Color = clBtnFace
       ParentColor = False
       OnMouseDown = PaintBoxMouseDown

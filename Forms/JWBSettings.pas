@@ -332,6 +332,7 @@ type
     setsort: integer;
     setothersearch: integer;
     setusercompounds: boolean;
+    setPortraitMode: boolean;
   protected
     procedure LoadRegistrySettings(reg: TCustomIniFile);
     procedure SaveRegistrySettings(reg: TCustomIniFile);
@@ -758,13 +759,13 @@ begin
     fKanjiSearch.edtOther.text :=reg.ReadString('KanjiSearch','Other','');
   end; //else they're empty by default
 
+  setPortraitMode := reg.ReadBool('Layout','PortraitMode',false);
 
  //Panel sizes
   fUserFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
   fUserFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
-  fKanjiDetails.DockedWidth := reg.ReadInteger('Layout','KanjiDetailsDockedWidth',190); //KanjiDetails has different sizes when undocked
-  fKanjiDetails.DockedHeight := reg.ReadInteger('Layout','KanjiDetailsDockedHeight',190);
- //TODO: Also save these
+  fKanjiCompounds.ClientWidth := reg.ReadInteger('Layout','KanjiCompoundsWidth',468);
+  fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
 
   fMenu.SetCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false), true); //after KanjiDetails.DockedWidth/Height
   fMenu.CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
@@ -802,6 +803,9 @@ begin
   if setwindows and 64=64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
   if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
   fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
+
+  fMenu.aPortraitMode.Checked := not setPortraitMode;
+  fMenu.aPortraitMode.Execute;
 
   fKanjiSearch.rgSortBy.ItemIndex:=setsort;
   kanji_othersearch:=setothersearch;
@@ -1051,10 +1055,14 @@ begin
     end;
   end;
 
+  reg.WriteBool('Layout','PortraitMode',fMenu.aPortraitMode.Checked);
+
  //These are updated with the actual docked width and height on resizes,
  //while ClientWidth and ClientHeight might be invalid because the window's aligned to a full parent width or height
   reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.UndockWidth);
   reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.UndockHeight);
+  reg.WriteInteger('Layout','KanjiCompoundsWidth',fKanjiCompounds.UndockWidth);
+  reg.WriteInteger('Layout','KanjiCompoundsHeight',fKanjiCompounds.UndockHeight);
 end;
 
 function TfSettings.GetTranslationFile: string;

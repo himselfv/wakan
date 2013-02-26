@@ -650,31 +650,38 @@ object fMenu: TfMenu
       OnExecute = aDictEditorExecute
     end
     object aUser: TAction
+      Category = 'Vocabulary'
       Caption = '#00241^eVocabulary &list'
       OnExecute = aUserExecute
     end
     object aUserAdd: TAction
+      Category = 'Vocabulary'
       Caption = '#00242^e&Add word'
       ShortCut = 16459
       OnExecute = aUserAddExecute
     end
     object aUserSettings: TAction
+      Category = 'Vocabulary'
       Caption = '#00243^eList &settings'
       OnExecute = aUserSettingsExecute
     end
     object aUserCategory: TAction
+      Category = 'Vocabulary'
       Caption = '#00244^e&Category'
     end
     object aUserDetails: TAction
+      Category = 'Vocabulary'
       Caption = '#00245^e&Word details'
       OnExecute = aUserDetailsExecute
     end
     object aUserPrint: TAction
+      Category = 'Vocabulary'
       Caption = '#00246^e&Print list...'
       ShortCut = 16503
       OnExecute = aUserPrintExecute
     end
     object aUserGenerate: TAction
+      Category = 'Vocabulary'
       Caption = '#00247^e&List generator...'
       OnExecute = aUserGenerateExecute
     end
@@ -964,6 +971,7 @@ object fMenu: TfMenu
       ShortCut = 16438
     end
     object aUserExamples: TAction
+      Category = 'Vocabulary'
       Caption = 'Examples'
       OnExecute = aUserExamplesExecute
     end
@@ -996,6 +1004,18 @@ object fMenu: TfMenu
     object aEditorExport: TAction
       Caption = '#01058^eExport as...'
       OnExecute = aEditorExportExecute
+    end
+    object aVocabExport: TAction
+      Category = 'Vocabulary'
+      Caption = '#00934^eExport'
+      Hint = '#00833^eExport vocabulary'
+      OnExecute = aVocabExportExecute
+    end
+    object aVocabImport: TAction
+      Category = 'Vocabulary'
+      Caption = '#00935^eExport'
+      Hint = '#00834^eImport vocabulary'
+      OnExecute = aVocabImportExecute
     end
   end
   object MainMenu1: TMainMenu
@@ -1357,6 +1377,15 @@ object fMenu: TfMenu
       end
       object miListGenerator: TMenuItem
         Action = aUserGenerate
+      end
+      object N14: TMenuItem
+        Caption = '-'
+      end
+      object N00934eExport1: TMenuItem
+        Action = aVocabExport
+      end
+      object aVocabImport1: TMenuItem
+        Action = aVocabImport
       end
       object N24: TMenuItem
         Caption = '-'

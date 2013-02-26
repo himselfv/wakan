@@ -40,6 +40,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure PopupMenu1Popup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   public
     procedure SetDefaultColumnWidths;
   protected
@@ -271,6 +272,13 @@ procedure TfKanjiCompounds.StringGrid1MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
+end;
+
+procedure TfKanjiCompounds.FormResize(Sender: TObject);
+begin
+ //Remember width/height preferences in UndockWidth/Height
+  Self.UndockHeight := Self.Height;
+ //width is never changed since this has no non-portrait mode
 end;
 
 end.

@@ -6,6 +6,8 @@ object fKanjiCompounds: TfKanjiCompounds
   ClientHeight = 178
   ClientWidth = 468
   Color = clBtnFace
+  Constraints.MinHeight = 100
+  Constraints.MinWidth = 120
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -15,6 +17,7 @@ object fKanjiCompounds: TfKanjiCompounds
   Scaled = False
   OnClose = FormClose
   OnCreate = FormCreate
+  OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -27,10 +30,6 @@ object fKanjiCompounds: TfKanjiCompounds
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
-    ExplicitLeft = 96
-    ExplicitTop = 176
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     DesignSize = (
       468
       178)

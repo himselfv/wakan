@@ -33,7 +33,7 @@ type
     Edit1: TEdit;
     StringGrid1: TWakanWordGrid;
     BitBtn1: TBitBtn;
-    Panel2: TPanel;
+    pnlDockExamples: TPanel;
     Panel3: TPanel;
     Label1: TLabel;
     SpeedButton4: TSpeedButton;

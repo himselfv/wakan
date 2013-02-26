@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, UrlLabel, JWBStrings,
-  TextTable, JWBDocking;
+  TextTable, JWBForms;
 
 type
   TCharReadings = record
@@ -121,8 +121,9 @@ type
     function GetDockedHeight: integer;
     procedure SetDockedWidth(Value: integer);
     procedure SetDockedHeight(Value: integer);
-    procedure WMGetDockedW(var msg: TMessage); message WM_GETDOCKED_W;
-    procedure WMGetDockedH(var msg: TMessage); message WM_GETDOCKED_H;
+    procedure WMGetDockedW(var msg: TMessage); message WM_GET_DOCKED_W;
+    procedure WMGetDockedH(var msg: TMessage); message WM_GET_DOCKED_H;
+    procedure WMSaveDockedWH(var msg: TMessage); message WM_SAVE_DOCKED_WH;
   public
     procedure UpdateAlignment;
     procedure SetDockMode(Value: TAlign; Loading: boolean);
@@ -152,6 +153,8 @@ procedure TfKanjiDetails.FormCreate(Sender: TObject);
 begin
   kval:=TStringList.Create;
   cursimple:='';
+  DockedWidth:=321; //fixed docked size
+  DockedHeight:=220;
 end;
 
 procedure TfKanjiDetails.FormDestroy(Sender: TObject);
@@ -173,6 +176,7 @@ begin
   if Visible then fMenu.aKanjiDetails.Checked:=true;
   btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
   btnClose.Default:=not fMenu.CharDetDocked;
+  fKanji.btnKanjiDetails.Down:=true;
 end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
@@ -981,6 +985,15 @@ begin
   msg.Result := FDockedHeight;
 end;
 
+{ Docker calls this to save docked sizes before undocking }
+procedure TfKanjiDetails.WMSaveDockedWH(var msg: TMessage);
+begin
+  if FDockMode in [alLeft,alRight] then
+    FDockedWidth := ClientWidth;
+  if FDockMode in [alTop,alBottom] then
+    FDockedHeight := ClientHeight;
+end;
+
 { Called before docking or after undocking.
  Configures the form to appear in either Docked or Floating mode,
  rearranging controls.
@@ -988,26 +1001,26 @@ end;
 procedure TfKanjiDetails.SetDockMode(Value: TAlign; Loading: boolean);
 begin
   FDockMode := Value;
-  if Value<>alNone then begin
-    if not Loading then
+  if Value<>alNone then begin //before dock
+    if (not Loading) and (FDockMode=alNone) then
       FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
+   //Remove constraints
+    Constraints.MinWidth := 0;
+    Constraints.MaxWidth := 0;
    //Realign
     ClientWidth := 1000;
     ClientHeight := 1000;
     UpdateAlignment;
    //Docked sizes will be applied at docking
     btnDock.Caption:=_l('#00172^eUndock');
-  end else begin
-   //Undock
-    if not Loading then begin
-     //Save docked sizes
-      DockedWidth := ClientWidth;
-      DockedHeight := ClientHeight;
-    end;
+  end else begin //after undock
    //Realign
     ClientWidth := 1000;
     ClientHeight := 1000;
     UpdateAlignment;
+   //Add constraints when undocked
+    Constraints.MinWidth := 337;
+    Constraints.MaxWidth := 337;
     FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
     btnDock.Caption:=_l('#00173^eDock');
   end;

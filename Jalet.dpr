@@ -74,7 +74,7 @@ uses
   JWBUserData in 'Components\JWBUserData.pas',
   JWBPortableMode in 'Forms\JWBPortableMode.pas' {fPortableMode},
   JWBCategoryMgr in 'Forms\JWBCategoryMgr.pas' {fCategoryMgr},
-  JWBDocking in 'Components\JWBDocking.pas';
+  JWBForms in 'Components\JWBForms.pas';
 
 {$R *.RES}
 

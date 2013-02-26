@@ -40,7 +40,6 @@ object fKanji: TfKanji
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
-    ExplicitHeight = 348
     DesignSize = (
       630
       345)
@@ -69,7 +68,7 @@ object fKanji: TfKanji
       Left = 15
       Top = 40
       Width = 272
-      Height = 16
+      Height = 19
       Anchors = [akLeft, akTop, akRight, akBottom]
       Caption = '#00118^eNo characters were found.'
       Color = clBtnFace
@@ -81,7 +80,6 @@ object fKanji: TfKanji
       ParentColor = False
       ParentFont = False
       Transparent = True
-      ExplicitHeight = 19
     end
     object btnSearchSort: TSpeedButton
       Left = 8
@@ -193,7 +191,6 @@ object fKanji: TfKanji
       OnMouseWheelDown = DrawGrid1MouseWheelDown
       OnMouseWheelUp = DrawGrid1MouseWheelDown
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitHeight = 282
     end
     object btnPrintCards: TButton
       Left = 495

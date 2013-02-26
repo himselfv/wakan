@@ -30,7 +30,6 @@ object fUser: TfUser
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
-    ExplicitWidth = 701
     DesignSize = (
       704
       214)
@@ -494,7 +493,6 @@ object fUser: TfUser
       TabOrder = 0
       OnChange = Edit1Change
       OnClick = Edit1Click
-      ExplicitWidth = 613
     end
     object StringGrid1: TWakanWordGrid
       Left = 11
@@ -515,7 +513,6 @@ object fUser: TfUser
       OnMouseMove = StringGrid1MouseMove
       OnMouseUp = StringGrid1MouseUp
       OnSelectCell = StringGrid1SelectCell
-      ExplicitWidth = 682
       ColWidths = (
         131
         128
@@ -554,10 +551,9 @@ object fUser: TfUser
       ParentFont = False
       TabOrder = 2
       OnClick = BitBtn1Click
-      ExplicitLeft = 623
     end
   end
-  object Panel2: TPanel
+  object pnlDockExamples: TPanel
     Left = 0
     Top = 214
     Width = 704

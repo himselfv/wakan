@@ -6,8 +6,6 @@ object fKanjiDetails: TfKanjiDetails
   ClientHeight = 370
   ClientWidth = 321
   Color = clBtnFace
-  Constraints.MaxWidth = 337
-  Constraints.MinWidth = 337
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -243,7 +241,7 @@ object fKanjiDetails: TfKanjiDetails
   end
   object lblCategories: TLabel
     Left = 93
-    Top = 181
+    Top = 182
     Width = 19
     Height = 13
     Caption = 'cat'
@@ -263,7 +261,6 @@ object fKanjiDetails: TfKanjiDetails
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 91
     DesignSize = (
       305
       164)
@@ -374,7 +371,6 @@ object fKanjiDetails: TfKanjiDetails
       TabOrder = 0
       OnClick = btnCloseClick
       OnKeyPress = btnCloseKeyPress
-      ExplicitTop = 71
     end
     object btnDock: TButton
       Left = 230
@@ -386,7 +382,6 @@ object fKanjiDetails: TfKanjiDetails
       Caption = 'DOCK'
       TabOrder = 1
       OnClick = btnDockClick
-      ExplicitTop = 71
     end
     object ScrollBox1: TScrollBox
       Left = 0
@@ -399,7 +394,6 @@ object fKanjiDetails: TfKanjiDetails
       BevelKind = bkFlat
       BorderStyle = bsNone
       TabOrder = 2
-      ExplicitHeight = 42
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = -250

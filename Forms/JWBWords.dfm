@@ -67,7 +67,6 @@ object fWords: TfWords
       BevelInner = bvRaised
       BevelOuter = bvLowered
       TabOrder = 0
-      ExplicitHeight = 455
       DesignSize = (
         773
         452)
@@ -194,46 +193,11 @@ object fWords: TfWords
         OnMouseUp = StringGrid1MouseUp
         OnSelectCell = StringGrid1SelectCell
         OnControlWidthResize = StringGrid1ControlResize
-        ExplicitHeight = 400
         ColWidths = (
           110
           138
           306
           159)
-      end
-      object btnExportVocab: TButton
-        Left = 543
-        Top = 5
-        Width = 71
-        Height = 21
-        Hint = '#00833^eExport vocabulary'
-        Anchors = [akTop, akRight]
-        Caption = '#00934^eExport'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 1
-        OnClick = btnExportVocabClick
-      end
-      object btnImportVocab: TButton
-        Left = 615
-        Top = 5
-        Width = 72
-        Height = 21
-        Hint = '#00834^eImport vocabulary'
-        Anchors = [akTop, akRight]
-        Caption = '#00935^eImport'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 2
-        OnClick = btnImportVocabClick
       end
       object Button15: TButton
         Left = 688
@@ -249,11 +213,11 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 3
+        TabOrder = 1
         OnClick = Button15Click
       end
       object Button18: TButton
-        Left = 423
+        Left = 568
         Top = 5
         Width = 119
         Height = 21
@@ -268,11 +232,11 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 4
+        TabOrder = 2
         OnClick = Button18Click
       end
       object Button19: TButton
-        Left = 312
+        Left = 457
         Top = 5
         Width = 111
         Height = 21
@@ -285,11 +249,11 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 5
+        TabOrder = 3
         OnClick = Button19Click
       end
       object Button2: TButton
-        Left = 241
+        Left = 386
         Top = 5
         Width = 71
         Height = 21
@@ -302,7 +266,7 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 6
+        TabOrder = 4
         OnClick = Button2Click
       end
     end
