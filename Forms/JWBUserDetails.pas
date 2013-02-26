@@ -8,6 +8,13 @@ uses
 
 type
   TfUserDetails = class(TForm)
+    Panel3: TPanel;
+    btnMoveUpInCategory: TSpeedButton;
+    btnMoveDownInCategory: TSpeedButton;
+    btnDelete: TButton;
+    ScrollBox1: TScrollBox;
+    FlowPanel1: TFlowPanel;
+    pnlEntryContents: TPanel;
     Label5: TLabel;
     Shape2: TShape;
     pbPhonetic: TPaintBox;
@@ -15,31 +22,28 @@ type
     Label6: TLabel;
     pbKanji: TPaintBox;
     Label9: TLabel;
-    Label11: TLabel;
-    Label12: TLabel;
-    Label13: TLabel;
-    Label14: TLabel;
-    lblDateCreated: TLabel;
-    lblDateLearned: TLabel;
-    lblDateMastered: TLabel;
-    lblTimesPrinted: TLabel;
-    btnMoveUpInCategory: TSpeedButton;
-    btnMoveDownInCategory: TSpeedButton;
-    btnDelete: TButton;
     btnSaveMeaning: TButton;
-    GroupBox3: TGroupBox;
-    cbAddCategory: TComboBox;
-    btnAddToCategory: TButton;
-    lbCategories: TListBox;
-    btnRemoveFromCategory: TButton;
-    Bevel1: TBevel;
+    edtMeaning: TMemo;
     GroupBox1: TGroupBox;
     lblLearnState: TRxLabel;
     btnSetProblematic: TButton;
     btnSetUnlearned: TButton;
     btnSetLearned: TButton;
     btnSetMastered: TButton;
-    edtMeaning: TMemo;
+    GroupBox3: TGroupBox;
+    cbAddCategory: TComboBox;
+    btnAddToCategory: TButton;
+    lbCategories: TListBox;
+    btnRemoveFromCategory: TButton;
+    Panel2: TPanel;
+    Label11: TLabel;
+    lblDateCreated: TLabel;
+    Label13: TLabel;
+    lblDateLearned: TLabel;
+    Label14: TLabel;
+    lblDateMastered: TLabel;
+    Label12: TLabel;
+    lblTimesPrinted: TLabel;
     procedure pbPhoneticPaint(Sender: TObject);
     procedure pbKanjiPaint(Sender: TObject);
     procedure btnAddToCategoryClick(Sender: TObject);
@@ -56,6 +60,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure edtMeaningChange(Sender: TObject);
     procedure edtMeaningKeyPress(Sender: TObject; var Key: Char);
+    procedure FormResize(Sender: TObject);
+    procedure ScrollBox1Resize(Sender: TObject);
 
   protected
     cl:TStringList; //cached instance
@@ -267,6 +273,31 @@ begin
   fMenu.IntTipPaintOver(pbKanji,x,y,ssLeft in Shift);
 end;
 
+procedure TfUserDetails.FormResize(Sender: TObject);
+begin
+ { All controls fit and still some space - use it for content }
+  if ClientWidth>1065 then
+    pnlEntryContents.Width := 525 + (ClientWidth-1065)
+  else
+ { Normal mode }
+  if ClientWidth>615 then
+    pnlEntryContents.Width := 525
+  else
+ { If there's not enough place even just for contents, scale it down }
+    pnlEntryContents.Width := 525-(615-ClientWidth);
+
+ //Remember width/height preferences in UndockWidth/Height
+  Self.UndockHeight := Self.Height;
+end;
+
+procedure TfUserDetails.ScrollBox1Resize(Sender: TObject);
+begin
+ //Auto-size FlowPanel uses ExplicitWidth/Height as a base when reflowing items.
+ //We need it to reflow with current width though.
+  FlowPanel1.Width := FlowPanel1.Width; //Update explicit bounds
+  FlowPanel1.Height := 0; //Start with 0 and grow
+//  FlowPanel1.Realign;
+end;
 
 
 end.

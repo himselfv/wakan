@@ -764,7 +764,7 @@ begin
  //Panel sizes
   fUserFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
   fUserFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
-  fKanjiCompounds.ClientWidth := reg.ReadInteger('Layout','KanjiCompoundsWidth',468);
+  fUserDetails.ClientHeight := reg.ReadInteger('Layout','UserDetailsHeight',120);
   fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
 
   fMenu.SetCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false), true); //after KanjiDetails.DockedWidth/Height
@@ -1061,7 +1061,7 @@ begin
  //while ClientWidth and ClientHeight might be invalid because the window's aligned to a full parent width or height
   reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.UndockWidth);
   reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.UndockHeight);
-  reg.WriteInteger('Layout','KanjiCompoundsWidth',fKanjiCompounds.UndockWidth);
+  reg.WriteInteger('Layout','UserDetailsHeight',fUserDetails.UndockHeight);
   reg.WriteInteger('Layout','KanjiCompoundsHeight',fKanjiCompounds.UndockHeight);
 end;
 
