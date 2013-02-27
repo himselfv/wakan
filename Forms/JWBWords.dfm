@@ -37,6 +37,7 @@ object fWords: TfWords
     Height = 455
     Align = alRight
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 0
   end
   object Panel1: TPanel
@@ -46,6 +47,7 @@ object fWords: TfWords
     Height = 455
     Align = alClient
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 1
     object splDockDetails: TSplitter
       Left = 0
@@ -67,6 +69,7 @@ object fWords: TfWords
       Align = alClient
       BevelInner = bvRaised
       BevelOuter = bvLowered
+      FullRepaint = False
       TabOrder = 0
       DesignSize = (
         773
@@ -279,6 +282,7 @@ object fWords: TfWords
       Align = alBottom
       BevelOuter = bvNone
       DoubleBuffered = False
+      FullRepaint = False
       ParentDoubleBuffered = False
       TabOrder = 1
     end
@@ -289,6 +293,7 @@ object fWords: TfWords
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
+      FullRepaint = False
       TabOrder = 2
     end
   end

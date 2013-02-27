@@ -6,6 +6,7 @@ object fUser: TfUser
   ClientHeight = 214
   ClientWidth = 704
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -29,6 +30,7 @@ object fUser: TfUser
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    FullRepaint = False
     TabOrder = 0
     DesignSize = (
       704
@@ -294,16 +296,6 @@ object fUser: TfUser
       OnClick = btnCopyToClipboardClick
       ExplicitTop = 187
     end
-    object Label1: TLabel
-      Left = 8
-      Top = 209
-      Width = 32
-      Height = 13
-      Anchors = [akLeft, akBottom]
-      Caption = 'Label1'
-      Visible = False
-      ExplicitTop = 211
-    end
     object SpeedButton4: TSpeedButton
       Left = 414
       Top = 4
@@ -560,6 +552,7 @@ object fUser: TfUser
     Height = 0
     Align = alBottom
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 1
   end
   object Panel3: TPanel
@@ -569,6 +562,7 @@ object fUser: TfUser
     Height = 214
     Align = alRight
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 2
   end
   object PopupMenu1: TPopupMenu

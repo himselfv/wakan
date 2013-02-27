@@ -26,9 +26,8 @@ object fUserDetails: TfUserDetails
     Height = 184
     Align = alRight
     BevelOuter = bvNone
+    FullRepaint = False
     TabOrder = 0
-    ExplicitLeft = 992
-    ExplicitHeight = 382
     DesignSize = (
       68
       184)
@@ -96,7 +95,6 @@ object fUserDetails: TfUserDetails
       ParentFont = False
       TabOrder = 0
       OnClick = btnDeleteClick
-      ExplicitTop = 340
     end
   end
   object ScrollBox1: TScrollBox
@@ -112,7 +110,6 @@ object fUserDetails: TfUserDetails
     BorderStyle = bsNone
     TabOrder = 1
     OnResize = ScrollBox1Resize
-    ExplicitHeight = 192
     object FlowPanel1: TFlowPanel
       Left = 0
       Top = 0
@@ -121,6 +118,7 @@ object fUserDetails: TfUserDetails
       Align = alTop
       AutoSize = True
       BevelOuter = bvNone
+      FullRepaint = False
       TabOrder = 0
       object pnlEntryContents: TPanel
         Left = 0
@@ -128,6 +126,7 @@ object fUserDetails: TfUserDetails
         Width = 525
         Height = 180
         BevelOuter = bvNone
+        FullRepaint = False
         TabOrder = 0
         DesignSize = (
           525
@@ -401,6 +400,7 @@ object fUserDetails: TfUserDetails
         Height = 98
         Align = alLeft
         BevelOuter = bvNone
+        FullRepaint = False
         TabOrder = 3
         object Label11: TLabel
           Left = 6

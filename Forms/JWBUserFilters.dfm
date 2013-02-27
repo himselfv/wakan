@@ -6,6 +6,7 @@ object fUserFilters: TfUserFilters
   ClientHeight = 490
   ClientWidth = 192
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -32,6 +33,7 @@ object fUserFilters: TfUserFilters
     Height = 270
     BevelOuter = bvNone
     Caption = 'pnlCategories'
+    FullRepaint = False
     TabOrder = 2
     object Label1: TLabel
       AlignWithMargins = True
@@ -50,6 +52,7 @@ object fUserFilters: TfUserFilters
       Height = 21
       Align = alBottom
       BevelOuter = bvNone
+      FullRepaint = False
       TabOrder = 0
       object btnCatDelete: TSpeedButton
         Left = 154

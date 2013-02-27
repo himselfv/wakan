@@ -35,7 +35,6 @@ type
     BitBtn1: TBitBtn;
     pnlDockExamples: TPanel;
     Panel3: TPanel;
-    Label1: TLabel;
     SpeedButton4: TSpeedButton;
     SpeedButton13: TSpeedButton;
     SpeedButton14: TSpeedButton;
@@ -227,7 +226,6 @@ begin
     2:fUser.SpeedButton12.Down:=true;
     3:fUser.SpeedButton18.Down:=true;
   end;
-  Label1.Caption:='';
 
   if (not SpeedButton13.Down) or (SpeedButton18.Down) then
     BitBtn1.Caption:=_l('#00669^eSearch')

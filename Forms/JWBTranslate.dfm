@@ -6,6 +6,7 @@ object fTranslate: TfTranslate
   ClientHeight = 175
   ClientWidth = 801
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
