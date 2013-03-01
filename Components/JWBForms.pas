@@ -3,6 +3,11 @@ unit JWBForms;
 interface
 uses Types, Forms, Graphics, Controls, ExtCtrls, Messages;
 
+{$DEFINE ANCHORFAILFIX}
+{ If set: Use more visually pleasant and thorough solution to anchors breaking
+ on RecreateWnd(), which might just have consequences.
+ If clear: Use ugly but proven and safe solution with form blinking. }
+
 {
 Docking guide.
 Every form has docked and undocked dimensions. Undocked ones are saved on dock
@@ -20,12 +25,10 @@ const
   WM_SET_DOCK_MODE = WM_APP + 4; { Docker calls this before docking or after undocking. Use this chance to prepare the form by rearranging controls }
 
 function DockProc(slave:TForm;panel:TPanel;dir:TAlign;dock:boolean): boolean;
+procedure UndockedMakeVisible(slave:TForm);
 
 implementation
-
-type
-  TSlaveHack = class(TForm)
-  end;
+uses AnchorFailFix;
 
 {
 Dock the form and make it visible, or
@@ -66,9 +69,19 @@ begin
 //      TSlaveHack(slave).DestroyWindowHandle;
 //   ^ don't do or some forms will lose their state (such as TCheckListBox contents)
     slave.ManualDock(panel);
+   {$IFDEF ANCHORFAILFIX}
+    slave.SetCsLoading(true);
+    try
+   {$ELSE}
     slave.Width := 10000;
     slave.Height := 10000;
+   {$ENDIF}
     slave.Visible := true; //UpdateExplicitBounds!
+   {$IFDEF ANCHORFAILFIX}
+    finally
+      slave.SetCsLoading(false);
+    end;
+   {$ENDIF}
     slave.Align := alClient;
   end else begin
     slave.Perform(WM_SAVE_DOCKED_WH,0,0);
@@ -82,6 +95,30 @@ begin
     if vert then panel.height:=0 else panel.width:=0;
     slave.Perform(WM_SET_DOCK_MODE,integer(dir),0);
   end;
+end;
+
+{
+Undocked form is hidden by default.
+Call this to make it visible in a safe way which doesn't break form layout
+because of anchor layout bug.
+It's not compulsory, you may make it visible by yourself: see some of the handlers
+for WM_SET_DOCK_MODE.
+}
+procedure UndockedMakeVisible(slave:TForm);
+begin
+{$IFDEF ANCHORFAILFIX}
+  slave.SetCsLoading(true);
+  try
+ {$ELSE}
+  slave.Width := 10000;
+  slave.Height := 10000;
+ {$ENDIF}
+  slave.Visible := true;
+ {$IFDEF ANCHORFAILFIX}
+  finally
+    slave.SetCsLoading(false);
+  end;
+ {$ENDIF}
 end;
 
 end.

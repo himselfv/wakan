@@ -2366,7 +2366,13 @@ begin
   if not CharDetDocked then
   begin
    //In free-floating mode just show or hide it
-    fKanjiDetails.Visible:=not fKanjiDetails.Visible;
+    if fKanjiDetails.Visible then
+      fKanjiDetails.Visible := false
+    else
+     //We have to be careful if this form has just been undocked and it's window
+     //is not yet properly recreated on first show.
+     //This requires special treatment:
+      UndockedMakeVisible(fKanjiDetails);
     fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
     fMenu.aKanjiDetails.Checked:=fKanjiDetails.Visible;
     fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;

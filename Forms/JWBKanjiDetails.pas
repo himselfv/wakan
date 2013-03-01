@@ -1008,12 +1008,14 @@ begin
     Constraints.MinWidth := 0;
     Constraints.MaxWidth := 0;
    //Realign
+    Self.Hide; //it's okay, we're going to be hidden as part of docking anyway
     ClientWidth := 1000;
     ClientHeight := 1000;
     UpdateAlignment;
    //Docked sizes will be applied at docking
     btnDock.Caption:=_l('#00172^eUndock');
   end else begin //after undock
+   //The form is hidden.
    //Realign
     ClientWidth := 1000;
     ClientHeight := 1000;
