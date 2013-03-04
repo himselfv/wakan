@@ -2323,10 +2323,7 @@ begin
   if (not Loading) and (FCharDetDocked=Value) then exit;
   FCharDetDocked := Value;
   if Value then begin
-    if aPortraitMode.Checked then
-      fKanjiDetails.SetDockMode(alBottom, Loading)
-    else
-      fKanjiDetails.SetDockMode(alRight, Loading);
+    fKanjiDetails.SetDocked(Value,Loading);
     if not Loading then begin
       CharDetDockedVis1:=true;
       CharDetDockedVis2:=true;
@@ -2335,11 +2332,10 @@ begin
   end else begin
     if not Loading then
       DockExpress(fKanjiDetails,false); //hides and undocks it
-    fKanjiDetails.SetDockMode(alNone, Loading);
+    fKanjiDetails.SetDocked(false, Loading);
     if not Loading then
       aKanjiDetails.Execute; //shows it as free floating
   end;
-  fKanjiDetails.FormShow(nil); //update button name
 end;
 
 { Shows/hides KanjiDetails, whether it's in free-floating mode or not.
@@ -2350,10 +2346,9 @@ begin
   begin
     if curdisplaymode in [2,5] then
     begin
-      fMenu.aKanjiDetails.Checked:=false;
-      fKanji.btnKanjiDetails.Down:=false;
-      fTranslate.sbDockKanjiDetails.Down:=false;
+     //Make it undocked unvisible to hide dock panel
       SetCharDetDocked(false,false);
+     //This is probably wrong because SetCharDetDocked will call aKanjiDetails.Execute again
     end else
     begin
       if curdisplaymode=1 then
@@ -2373,10 +2368,10 @@ begin
      //is not yet properly recreated on first show.
      //This requires special treatment:
       UndockedMakeVisible(fKanjiDetails);
-    fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
-    fMenu.aKanjiDetails.Checked:=fKanjiDetails.Visible;
-    fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
   end;
+  fMenu.aKanjiDetails.Checked:=fKanjiDetails.Visible;
+  fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
 end;
 
 procedure TfMenu.aKanjiCompoundsExecute(Sender: TObject);
@@ -3789,19 +3784,16 @@ begin
     fUser.Panel3.Align := alRight;
   end;
 
-  fUserFilters.SetPortraitMode(aPortraitMode.Checked);
-  fWordKanji.SetPortraitMode(aPortraitMode.Checked);
-  if KanjiDetailsDocked then
-    if aPortraitMode.Checked then
-      fKanjiDetails.SetDockMode(alBottom, false)
-    else
-      fKanjiDetails.SetDockMode(alRight, false);
+ //New dock mode will be applied to forms on re-docking
+
+ //If CharDetDocked was false (logically Undocked), then KanjiDetailsDocked
+ //will be false too, and we won't even try to redock fKanjiDetails, which is right.
 
   if UserFiltersDocked then DockExpress(fUserFilters,true);
   if WordKanjiDocked then DockExpress(fWordKanji,true);
   if KanjiDetailsDocked then begin
     DockExpress(fKanjiDetails,true);
-    fKanjiDetails.UpdateAlignment;
+//    fKanjiDetails.UpdateAlignment; //TODO: Do we need this?
   end;
  //ChangeDisplay -- should not be needed
 end;

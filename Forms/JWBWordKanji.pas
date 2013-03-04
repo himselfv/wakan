@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, Buttons;
+  ExtCtrls, StdCtrls, Buttons, JWBForms;
 
 type
   TKanjiBox = record
@@ -40,10 +40,11 @@ type
     procedure InvalidateBoxes;
 
   protected
-    FPortraitMode: boolean;
+   //Undocked width and height are used as permanent storage for dock width/height
+   //Docker reads from those by default, and they are never changed.
+    FDockMode: TAlign;
+    procedure WMSetDockMode(var msg: TMessage); message WM_SET_DOCK_MODE;
     procedure AlignBox(idx: integer);
-  public
-    procedure SetPortraitMode(Value: boolean);
     procedure UpdateAlignment;
 
   end;
@@ -165,12 +166,6 @@ begin
   if mbLeft=Button then fMenu.PopupImmediate(true);
 end;
 
-procedure TfWordKanji.SetPortraitMode(Value: boolean);
-begin
-  FPortraitMode := Value;
-  UpdateAlignment;
-end;
-
 procedure TfWordKanji.UpdateAlignment;
 var idx: integer;
 begin
@@ -182,7 +177,7 @@ procedure TfWordKanji.AlignBox(idx: integer);
 var box: PKanjiBox;
 begin
   box := @FBoxes[idx];
-  if not FPortraitMode then begin
+  if FDockMode in [alLeft,alRight] then begin
     box.sh.Left := 8;
     box.sh.Top := 26 + 48*idx;
   end else begin
@@ -194,6 +189,13 @@ begin
   box.lbl.Left := box.sh.Left + 77;
   box.lbl.Top := box.sh.Top + 2;
  //TODO: Wrap boxes row-by-row or column-by-column, depending on the alignment
+end;
+
+procedure TfWordKanji.WMSetDockMode(var msg: TMessage);
+begin
+  if FDockMode=TAlign(msg.WParam) then exit;
+  FDockMode := TAlign(msg.WParam);
+  UpdateAlignment;
 end;
 
 procedure TfWordKanji.FormResize(Sender: TObject);

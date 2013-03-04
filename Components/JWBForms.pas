@@ -28,11 +28,40 @@ function DockProc(slave:TForm;panel:TPanel;dir:TAlign;dock:boolean): boolean;
 procedure UndockedMakeVisible(slave:TForm);
 
 implementation
-uses AnchorFailFix;
+uses Classes;
 
 {
-Dock the form and make it visible, or
-Hide and undock it, restore its permanent width and height.
+Many forms are built on Anchors, and those are broken. See:
+  http://stackoverflow.com/questions/15062571/workaround-for-anchors-being-broken-when-recreating-a-window
+Any time you recreate a window, controls which are less than 0 in size due to
+anchoring get messed up.
+Workaround 1. Disable UpdateAnchorRules() by setting csLoading while
+ recreating the window.
+Workaround 2. Make the window huge when showing it, so that all controls
+ fit, then resize it.
+}
+
+type
+  TComponentHack = class helper for TComponent
+  public
+    procedure SetCsLoading(Value: boolean);
+  end;
+
+procedure TComponentHack.SetCsLoading(Value: boolean);
+var i: integer;
+begin
+  if Value then
+    Self.FComponentState := Self.FComponentState + [csLoading]
+  else
+    Self.FComponentState := Self.FComponentState - [csLoading];
+  for i := 0 to Self.ComponentCount-1 do
+    if Self.Components[i] is TControl then
+      TControl(Self.Components[i]).SetCsLoading(Value);
+end;
+
+{
+- Dock the form and make it visible, or
+- Hide and undock it, restore its permanent width and height.
 Returns true if the form was docked before the call.
 }
 function DockProc(slave:TForm;panel:TPanel;dir:TAlign;dock:boolean): boolean;
@@ -43,15 +72,6 @@ begin
   Result := slave.HostDockSite<>nil;
   if Result=dock then exit;
   vert:=dir in [alTop,alBottom];
-
- {
-  Many forms are built on Anchors, and those are broken. See:
-    http://stackoverflow.com/questions/15062571/workaround-for-anchors-being-broken-when-recreating-a-window
-  Any time you recreate a window, controls which are less than 0 in size due to
-  anchoring get messed up.
-  The workaround is to make the window huge when showing it, so that all controls
-  fit, then resize it. This way internal "explicit control size" is preserved.
- }
 
   if dock then begin
     if vert then begin
@@ -93,7 +113,7 @@ begin
     slave.Align:=alNone;
     slave.ManualFloat(rect);
     if vert then panel.height:=0 else panel.width:=0;
-    slave.Perform(WM_SET_DOCK_MODE,integer(dir),0);
+    slave.Perform(WM_SET_DOCK_MODE,integer(alNone),0);
   end;
 end;
 
@@ -101,8 +121,8 @@ end;
 Undocked form is hidden by default.
 Call this to make it visible in a safe way which doesn't break form layout
 because of anchor layout bug.
-It's not compulsory, you may make it visible by yourself: see some of the handlers
-for WM_SET_DOCK_MODE.
+It's not compulsory, you may make it visible by yourself if you know what to
+watch out for.
 }
 procedure UndockedMakeVisible(slave:TForm);
 begin

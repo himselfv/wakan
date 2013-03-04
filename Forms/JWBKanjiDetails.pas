@@ -124,9 +124,10 @@ type
     procedure WMGetDockedW(var msg: TMessage); message WM_GET_DOCKED_W;
     procedure WMGetDockedH(var msg: TMessage); message WM_GET_DOCKED_H;
     procedure WMSaveDockedWH(var msg: TMessage); message WM_SAVE_DOCKED_WH;
+    procedure WMSetDockMode(var msg: TMessage); message WM_SET_DOCK_MODE;
   public
     procedure UpdateAlignment;
-    procedure SetDockMode(Value: TAlign; Loading: boolean);
+    procedure SetDocked(Value: boolean; Loading: boolean);
     property DockedWidth: integer read GetDockedWidth write SetDockedWidth;
     property DockedHeight: integer read GetDockedHeight write SetDockedHeight;
 
@@ -166,14 +167,17 @@ end;
 procedure TfKanjiDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
+  fMenu.aKanjiDetails.Checked:=false;
   fKanji.btnKanjiDetails.Down:=false;
   fTranslate.sbDockKanjiDetails.Down:=false;
-  fMenu.aKanjiDetails.Checked:=false;
 end;
 
 procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
-  if Visible then fMenu.aKanjiDetails.Checked:=true;
+//  if Visible then fMenu.aKanjiDetails.Checked:=true;
+  fMenu.aKanjiDetails.Checked:=Self.Visible;
+  fKanji.btnKanjiDetails.Down:=Self.Visible;
+  fTranslate.sbDockKanjiDetails.Down:=Self.Visible;
   btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
   btnClose.Default:=not fMenu.CharDetDocked;
   fKanji.btnKanjiDetails.Down:=true;
@@ -181,8 +185,9 @@ end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
 begin
-  fKanji.btnKanjiDetails.Down:=false;
   fMenu.aKanjiDetails.Checked:=false;
+  fKanji.btnKanjiDetails.Down:=false;
+  fTranslate.sbDockKanjiDetails.Down:=false;
 end;
 
 procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);
@@ -996,14 +1001,14 @@ end;
 
 { Called before docking or after undocking.
  Configures the form to appear in either Docked or Floating mode,
- rearranging controls.
- alClient is not allowed. }
-procedure TfKanjiDetails.SetDockMode(Value: TAlign; Loading: boolean);
+ rearranging controls. }
+procedure TfKanjiDetails.WMSetDockMode(var msg: TMessage);
+var Value: TAlign;
 begin
+  Value := TAlign(msg.WParam);
+  if FDockMode=Value then exit;
   FDockMode := Value;
   if Value<>alNone then begin //before dock
-    if (not Loading) and (FDockMode=alNone) then
-      FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
    //Remove constraints
     Constraints.MinWidth := 0;
     Constraints.MaxWidth := 0;
@@ -1023,8 +1028,22 @@ begin
    //Add constraints when undocked
     Constraints.MinWidth := 337;
     Constraints.MaxWidth := 337;
-    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
     btnDock.Caption:=_l('#00173^eDock');
+  end;
+end;
+
+{ In contrast to WMSetDockMode, this is called before and after a LOGICAL
+ dock mode change.
+ In other words, while fKanjiDetails is hidden on some pages and PRACTICALLY
+ undocked, logically it stays docked and needs not to restore it's undocked
+ position. }
+procedure TfKanjiDetails.SetDocked(Value: boolean; Loading: boolean);
+begin
+  if Value then begin //before dock
+    if not Loading then
+      FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
+  end else begin //after undock
+    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
   end;
 end;
 

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, CheckLst, Tabs, Buttons;
+  StdCtrls, ExtCtrls, CheckLst, Tabs, Buttons, JWBForms;
 
 type
   TfUserFilters = class(TForm)
@@ -37,9 +37,10 @@ type
     function CheckEnabledCategories(catlist: TStringList): boolean;
 
   protected
-    FPortraitMode: boolean;
-  public
-    procedure SetPortraitMode(Value: boolean);
+   //Undocked width and height are used as permanent storage for dock width/height
+   //Docker reads from those by default, and we update on Resize.
+    FDockMode: TAlign;
+    procedure WMSetDockMode(var msg: TMessage); message WM_SET_DOCK_MODE;
     procedure UpdateAlignment;
 
   end;
@@ -155,24 +156,17 @@ begin
       Result := Length(cb.Items[i]);
 end;
 
-procedure TfUserFilters.SetPortraitMode(Value: boolean);
-begin
-  FPortraitMode := Value;
-  UpdateAlignment;
-end;
-
-{ Call on resize, on portrait mode change, on lbCategories font change
- Try not to use anchors since they suck, but call explicit align functions like this one }
+{ Call on resize, on dock mode change, on lbCategories font change }
 procedure TfUserFilters.UpdateAlignment;
 var maxItemWidth: integer;
 begin
-  if not FPortraitMode then
+  if FDockMode in [alLeft,alRight] then
     gbFilter.Width := ClientWidth - 15
   else
     gbFilter.Width := 177;
 
   rgSort.Width := gbFilter.Width;
-  if (not FPortraitMode) or (ClientHeight > (gbFilter.Top + gbFilter.Height + 7) + rgSort.Height + 7) then begin
+  if (FDockMode in [alLeft,alRight]) or (ClientHeight > (gbFilter.Top + gbFilter.Height + 7) + rgSort.Height + 7) then begin
    //Even in Portrait Mode, we try to stack these two modules when possible
     rgSort.Left := gbFilter.Left;
     rgSort.Top := gbFilter.Top + gbFilter.Height + 7;
@@ -181,7 +175,7 @@ begin
     rgSort.Top := gbFilter.Top;
   end;
 
-  if not FPortraitMode then begin
+  if FDockMode in [alLeft,alRight] then begin
     pnlCategories.Left := gbFilter.Left;
     pnlCategories.Top := rgSort.Top + rgSort.Height + 5;
     pnlCategories.Width := gbFilter.Width;
@@ -203,14 +197,21 @@ begin
   end;
 end;
 
+procedure TfUserFilters.WMSetDockMode(var msg: TMessage);
+begin
+  if FDockMode=TAlign(msg.WParam) then exit;
+  FDockMode := TAlign(msg.WParam);
+  UpdateAlignment;
+end;
+
 procedure TfUserFilters.FormResize(Sender: TObject);
 begin
   UpdateAlignment;
  //Remember width/height preferences in UndockWidth/Height
-  if FPortraitMode then
-    Self.UndockHeight := Self.Height
-  else
-    Self.UndockWidth := Self.Width;
+  case FDockMode of
+    alLeft, alRight: Self.UndockWidth := Self.Width;
+    alTop, alBottom: Self.UndockHeight := Self.Height;
+  end;
 end;
 
 
