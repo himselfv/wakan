@@ -406,10 +406,6 @@ type
     function GetCharValueInt(index,vt:integer):integer;
     function GetCharValueRad(index,vt:integer):integer;
     procedure ChangeDisplay;
-    procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
-    procedure HideScreenTip;
-    procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
-    procedure PopupImmediate(left:boolean);
 
   protected
     DicLoadPrompt: TSMPromptForm;
@@ -443,16 +439,21 @@ type
       And CalculateCurString is only called from IntTipPaintOver/IntTipGridOver }
     //What. Are. These.
     //And why are there two of them?
-    intorgPaint:TPaintBox;
-    intorgGrid:TCustomDrawGrid;
-    intorgcx,intorgcy,intorgsx,intorgsy:integer;
-    intmoPaint:TPaintBox;
-    intmoGrid:TCustomDrawGrid;
-    intmocx,intmocy,intmosx,intmosy:integer;
+    intorg:TControl;
+    intorgcc:TPoint; //control coordinates
+    intorgsc:TPoint; //screen coordinates
+    intmo:TControl;
+    intmocc:TPoint;
+    intmosc:TPoint;
     procedure CalculateCurString;
   public
+    procedure InfTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
     procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
     procedure IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
+    procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
+    procedure HideScreenTip;
+    procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
+    procedure PopupImmediate(left:boolean);
 
   protected //Clipboard
    { SetClipboardViewer is supported starting with Windows 2000,
@@ -687,8 +688,7 @@ begin
   dicts:=TDictionaryList.Create;
 
   curlang:='j';
-  intmopaint:=nil;
-  intmogrid:=nil;
+  intmo:=nil;
 
  //Nothing is docked to these so initialized them to hidden
   Panel2.Width := 0;
@@ -3133,8 +3133,7 @@ var maxwords,maxwordss:integer;
     maxslen,slen:integer;
 begin
   SetScreenTipBlock(0,0,0,0,nil);
-  intorgPaint:=nil;
-  intorgGrid:=nil;
+  intorg:=nil;
   if ((wt=7) and (not fSettings.CheckBox47.Checked)) then exit;
   if ((wt<7) and (not fSettings.CheckBox28.Checked)) then exit;
   fScreenTip:=TfScreenTip.Create(nil);
@@ -3395,7 +3394,7 @@ begin
   s:='';
   if (screenModeWk) or (screenTipImmediate) then
   begin
-    if ((intmoPaint<>nil) or (intmoGrid<>nil)) and (pt.x=intmosx) and (pt.y=intmosy) then
+    if (intmo<>nil) and (pt.x=intmosc.x) and (pt.y=intmosc.y) then
     begin
       s:=intcurString;
     end;
@@ -3541,11 +3540,6 @@ begin
     if s<>'' then evc:=EvalChar(WideChar(ftext[0]));
   end;
   screenTipDebug:=s2;
-  if paramstr(1)='debug'then
-  begin
-    clip:=s2;
-    SetClipboard;
-  end;
   if s<>'' then
   begin
     if screenTipImmediate then
@@ -3559,7 +3553,6 @@ begin
   end;
 end;
 
-
 {
 IntTipPaintOver(), IntTipGridOver()
 Various controls from all over the program call these on mouse move,
@@ -3568,30 +3561,26 @@ This information is used only by ScreenTimerTimer (showing popup tip),
 so we could have calculated it there, but we'd need to figure out the class
 of control mouse is over.
 }
+procedure TfMenu.InfTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
+begin
+  if leftDown and (intorg<>c) then
+  begin
+    intorgcc.X:=x; intorgcc.Y:=Y; intorgsc:=Mouse.CursorPos;
+    intorg:=c;
+  end;
+  intmocc.X:=x; intmocc.Y:=y; intmosc:=Mouse.CursorPos;
+  intmo:=c;
+  CalculateCurString;
+end;
+
 procedure TfMenu.IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
 begin
-  if leftDown and ((intorgGrid<>nil) or (intorgPaint<>p)) then
-  begin
-    intorgcx:=x; intorgcy:=y; intorgsx:=Mouse.CursorPos.x; intorgsy:=Mouse.CursorPos.y;
-    intorgPaint:=p; intorgGrid:=nil;
-  end;
-  intmocx:=x; intmocy:=y; intmosx:=Mouse.CursorPos.x; intmosy:=Mouse.CursorPos.y;
-  intmopaint:=p;
-  intmogrid:=nil;
-  CalculateCurString;
+  InfTipControlOver(p,x,y,leftDown);
 end;
 
 procedure TfMenu.IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
 begin
-  if leftDown and ((intorgGrid<>sg) or (intorgPaint<>nil)) then
-  begin
-    intorgcx:=x; intorgcy:=y; intorgsx:=Mouse.CursorPos.x; intorgsy:=Mouse.CursorPos.y;
-    intorgPaint:=nil; intorgGrid:=sg;
-  end;
-  intmocx:=x; intmocy:=y; intmosx:=Mouse.CursorPos.x; intmosy:=Mouse.CursorPos.y;
-  intmopaint:=nil;
-  intmogrid:=sg;
-  CalculateCurString;
+  InfTipControlOver(sg,x,y,leftDown);
 end;
 
 procedure TfMenu.CalculateCurString;
@@ -3605,68 +3594,73 @@ var s,s2:string;
   rpos: TSourcePos;
 begin
   SetScreenTipBlock(0,0,0,0,nil);
-  if (intmoPaint<>nil) and (intmoPaint<>fTranslate.EditorPaintBox) then
+  if (intmo<>nil) and (intmo is TPaintBox) and (intmo<>fTranslate.EditorPaintBox) then
   begin
-    s:=FindDrawReg(intmoPaint,intmocx,intmocy,x1,y1,y2);
-    if (intorgPaint=intmoPaint) then
+    s:=FindDrawReg(TPaintBox(intmo),intmocc.x,intmocc.y,x1,y1,y2);
+    if (intorg=intmo) then
     begin
-      s2:=FindDrawReg(intorgPaint,intorgcx,intorgcy,x2,y1,y2);
+      s2:=FindDrawReg(TPaintBox(intorg),intorgcc.x,intorgcc.y,x2,y1,y2);
       if length(s2)>length(s) then
       begin
         s2:=s;
         x2:=x1;
-        s:=FindDrawReg(intorgPaint,intorgcx,intorgcy,x1,y1,y2);
+        s:=FindDrawReg(TPaintBox(intorg),intorgcc.x,intorgcc.y,x1,y1,y2);
       end;
       if copy(s,length(s)-length(s2)+1,length(s2))=s2 then
       begin
         s:=copy(s,1,length(s)-length(s2));
-        SetScreenTipBlock(x1,y1,x2,y2,intmoPaint.Canvas);
+        SetScreenTipBlock(x1,y1,x2,y2,TPaintBox(intmo).Canvas);
       end;
     end;
   end else
-  if intmoPaint=fTranslate.EditorPaintBox then
+  if intmo=fTranslate.EditorPaintBox then
   begin
-    rpos:=fTranslate.GetExactLogicalPos(intmocx,intmocy);
+    rpos:=fTranslate.GetExactLogicalPos(intmocc.x,intmocc.y);
     rx := rpos.x; ry := rpos.y;
     if (ry<>-1) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
       s:=fTranslate.GetDocWord(rx,ry,wtt,false)
     else
       s:='';
   end else
+  if (intmo<>nil) and (intmo is TCustomDrawGrid) then
   begin
-    gc:=intmoGrid.MouseCoord(intmocx,intmocy);
-    if (intmoGrid<>fKanji.DrawGrid1) and (intmoGrid<>fRadical.DrawGrid) then
+    gc:=TCustomDrawGrid(intmo).MouseCoord(intmocc.x,intmocc.y);
+    if (intmo<>fKanji.DrawGrid1) and (intmo<>fRadical.DrawGrid) then
     begin
       if (gc.x>=0) and (gc.x<2) and (gc.y>0) then
       begin
-        if intorgGrid=intmoGrid then
+        if intorg=intmo then
         begin
-          gc2:=intmoGrid.MouseCoord(intorgcx,intorgcy);
+          gc2:=TCustomDrawGrid(intmo).MouseCoord(intorgcc.x,intorgcc.y);
           mo:=(gc2.x=gc.x) and (gc2.y=gc.y);
         end else mo:=false;
-        s:=remexcl((TStringGrid(intmoGrid)).Cells[gc.x,gc.y]);
-        rect:=intmoGrid.CellRect(gc.x,gc.y);
-        if not mo then fdelete(s,1,((intmocx-rect.left-2) div GridFontSize));
+        s:=remexcl((TStringGrid(intmo)).Cells[gc.x,gc.y]);
+        rect:=TCustomDrawGrid(intmo).CellRect(gc.x,gc.y);
+        if not mo then fdelete(s,1,((intmocc.x-rect.left-2) div GridFontSize));
         if mo then
         begin
-          if intorgcx>intmocx then
+          if intorgcc.x>intmocc.x then
           begin
-            mox1:=intmocx;
-            mox2:=intorgcx;
+            mox1:=intmocc.x;
+            mox2:=intorgcc.x;
           end else
           begin
-            mox1:=intorgcx;
-            mox2:=intmocx;
+            mox1:=intorgcc.x;
+            mox2:=intmocc.x;
           end;
           mox1:=(mox1-rect.left-2) div GridFontSize;
           mox2:=(mox2-rect.left-2) div GridFontSize;
           s:=fcopy(s,mox1,(mox2-mox1));
-          SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,intmoGrid.Canvas);
+          SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,TCustomDrawGrid(intmo).Canvas);
         end;
       end;
-    end else if intmoGrid=fKanji.DrawGrid1 then
-      s:=fKanji.GetKanji(gc.x,gc.y) else s:=fRadical.GetKanji(gc.x,gc.y);
-  end;
+    end else
+    if intmo=fKanji.DrawGrid1 then
+      s:=fKanji.GetKanji(gc.x,gc.y)
+    else
+      s:=fRadical.GetKanji(gc.x,gc.y);
+  end else
+    s := ''; //invalid control in intmo
   intcurString:=s;
 end;
 

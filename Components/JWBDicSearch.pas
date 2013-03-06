@@ -394,35 +394,15 @@ begin
         if j>0 then begin
           pass:=false;
          //First version is modified in-place to avoid slow deletions
-         {$IFNDEF UNICODE}
-          sl[i]^.str[j*4+3] := '1';
-         {$ELSE}
-          sl[i]^.str[j] := #$F031;
-         {$ENDIF}
+         {$IFNDEF UNICODE}sl[i]^.str[j*4+3] := '1';{$ELSE}sl[i]^.str[j] := #$F031;{$ENDIF}
          //Next versions are made into copies
-         {$IFNDEF UNICODE}
-          ct.str[j*4+3]:='2';
-         {$ELSE}
-          ct.str[j] := #$F032;
-         {$ENDIF}
+         {$IFNDEF UNICODE}ct.str[j*4+3]:='2';{$ELSE}ct.str[j] := #$F032;{$ENDIF}
           sl.Add(ct);
-         {$IFNDEF UNICODE}
-          ct.str[j*4+3]:='3';
-         {$ELSE}
-          ct.str[j] := #$F033;
-         {$ENDIF}
+         {$IFNDEF UNICODE}ct.str[j*4+3]:='3';{$ELSE}ct.str[j] := #$F033;{$ENDIF}
           sl.Add(ct);
-         {$IFNDEF UNICODE}
-          ct.str[j*4+3]:='4';
-         {$ELSE}
-          ct.str[j] := #$F034;
-         {$ENDIF}
+         {$IFNDEF UNICODE}ct.str[j*4+3]:='4';{$ELSE}ct.str[j] := #$F034;{$ENDIF}
           sl.Add(ct);
-         {$IFNDEF UNICODE}
-          ct.str[j*4+3]:='5';
-         {$ELSE}
-          ct.str[j] := #$F035;
-         {$ENDIF}
+         {$IFNDEF UNICODE}ct.str[j*4+3]:='5';{$ELSE}ct.str[j] := #$F035;{$ENDIF}
           sl.Add(ct);
         end else inc(i);
       end;

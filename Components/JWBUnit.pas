@@ -53,12 +53,10 @@ function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):F
 procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
 procedure AddWordGrid(grid:TStringGrid;sp1,sp2,sp4,sp3:string);
 procedure FinishWordGrid(grid:TStringGrid);
+procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 
 
 { Colors }
-
-const
-  Color_Max=100;
 
 procedure InitColors;
 function GetColorString(i:integer):string;
@@ -80,7 +78,6 @@ procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:bool
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
-procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 procedure PaintScreenTipBlock;
 procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 
@@ -89,7 +86,6 @@ procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
-procedure WritelnMixUni(var f:file;s:string);
 procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
 function ChinTo(s:FString):FString;
 function ChinFrom(s:FString):FString;
@@ -229,29 +225,20 @@ begin
 
     if typein=0 then
     begin
-     {$IFNDEF UNICODE}
-      if (length(s)>3) and (pos('F03',s)=1) and (s[4]>='0') and (s[4]<='5') then
-      begin
-        s2:=s2+s[4];
-        delete(s,1,4);
-      end else s2:=s2+'0';
-     {$ELSE}
-      if (length(s)>0) and (Ord(s[1]) and $FFF0 = $F030) and (Ord(s[1]) and $000F in [0..5]) then
-      begin
-        s2:=s2+Chr($30 + Ord(s[1]) and $000F); //to digit
-        delete(s,1,1);
+      if fpygettone(s) in [0..5] then begin
+        s2 := s2 + Chr(Ord('0') + fpyextrtone(s)); //to digit
+                //also delete ^^
       end;
-     {$ENDIF}
     end else
     begin
       if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
       begin
         if typeout>0 then s2:=s2+s[1] else
-          s2:=s2+{$IFNDEF UNICODE}'F03'+s[1]{$ELSE}Chr($F030+Ord(s[1])-$30){$ENDIF};
+          s2:=s2+fpytone(Ord(s[1])-Ord('0')); //from digit
         delete(s,1,1);
       end else
       begin
-        if typeout>0 then s2:=s2+'0' else s2:=s2+{$IFNDEF UNICODE}'F030'{$ELSE}#$F030{$ENDIF};
+        if typeout>0 then s2:=s2+'0' else s2:=s2+UH_PY_TONE;
       end;
     end;
   end;
@@ -497,26 +484,7 @@ end;
 
 
 
-type TIntTextInfo=record
-        act:boolean;
-        p:TPaintBox;
-        x,y,fs:integer;
-        s:string;
-     end;
-
-const MAX_INTTEXTINFO = 4000;
-
 var wgcur:integer;
-    itt:array[1..MAX_INTTEXTINFO] of TIntTextInfo;
-    curpbox:TPaintBox;
-    colarr:TStringList;
-    colval:TStringList;
-    colsval:array[0..Color_Max] of TColor;
-    colsarr:TStringList;
-    STB_x1,STB_y1,STB_x2,STB_y2:integer;
-    STB_canvas:TCanvas;
-
-
 
 procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
 begin
@@ -624,50 +592,15 @@ begin
   result:=copy(s,7,2)+'.'+copy(s,5,2)+'.'+copy(s,1,4);
 end;
 
-procedure WritelnMixUni(var f:file;s:string);
-var bl,bh:byte;
-    inuni:boolean;
-    s2:string;
-begin
-  inuni:=false;
-  while length(s)>0 do
-  begin
-    if inuni and (s[1]='}') then
-    begin
-      inuni:=false;
-      delete(s,1,1);
-    end else if not inuni and (s[1]='{') then
-    begin
-      inuni:=true;
-      delete(s,1,1);
-    end else if inuni then
-    begin
-      s2:=copy(s,1,2);
-      delete(s,1,2);
-      bh:=strtoint('0x'+s2);
-      s2:=copy(s,1,2);
-      delete(s,1,2);
-      bl:=strtoint('0x'+s2);
-      blockwrite(f,bl,1);
-      blockwrite(f,bh,1);
-    end else
-    begin
-      bh:=0;
-      bl:=ord(s[1]);
-      delete(s,1,1);
-      blockwrite(f,bl,1);
-      blockwrite(f,bh,1);
-    end;
-  end;
-  bh:=0;
-  bl:=10;
-  blockwrite(f,bl,1);
-  blockwrite(f,bh,1);
-  bh:=0;
-  bl:=13;
-  blockwrite(f,bl,1);
-  blockwrite(f,bh,1);
-end;
+
+{ Color configuration }
+const
+  Color_Max=100;
+var
+  colarr:TStringList;
+  colval:TStringList;
+  colsval:array[0..Color_Max] of TColor;
+  colsarr:TStringList;
 
 procedure InitColors;
 var i:integer;
@@ -886,6 +819,26 @@ begin
 end;
 
 
+{
+Drawing registry.
+For some reason (to support text selection) Wakan keeps a list of all text lines
+it has drawn with the help of DrawUnicode.
+Each time a control is redrawn, all cells related to it are cleared;
+}
+
+type
+  TIntTextInfo=record
+    act:boolean;
+    p:TPaintBox;
+    x,y,fs:integer;
+    s:FString;
+  end;
+const
+  MAX_INTTEXTINFO = 4000;
+var
+  itt:array[1..MAX_INTTEXTINFO] of TIntTextInfo;
+  curpbox:TPaintBox;
+
 procedure BeginDrawReg(p:TPaintBox);
 var i:integer;
 begin
@@ -914,6 +867,22 @@ begin
       exit;
     end;
 end;
+
+procedure AddDrawReg(p:TPaintBox;x,y,fs:integer;const s:FString);
+var i: integer;
+begin
+  for i:=1 to MAX_INTTEXTINFO do
+    if not itt[i].act then begin
+      itt[i].act:=true;
+      itt[i].p:=p;
+      itt[i].x:=x;
+      itt[i].y:=y;
+      itt[i].fs:=fs;
+      itt[i].s:=s;
+      break;
+    end;
+end;
+
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 var i,l,r,m:integer;
@@ -962,67 +931,71 @@ begin
   canvas.Font.Style:=[];
 end;
 
-function DrawTone(c:TCanvas;x,y,fw:integer;s:FString;dodraw:boolean):string;
+{
+Extracts all chinese tone mark replacement symbols from the string
+and draws appropriate tone marks over their positions.
+Returns the string without the tone marks.
+DoDraw: if false, only delete the tone marks but don't draw them.
+}
+//TODO: Test Unicode conversion
+function DrawToneMarks(c:TCanvas;x,y,fs:integer;s:FString;dodraw:boolean):FString;
 var tb:integer;
-    s2,s3,s4:string;
-    sc:char;
     i:integer;
     tr:double;
-    w:pwidechar;
     oldtextflags:longint;
-    s5:string;
+    sc:byte;
+    w:UnicodeString;
 begin
-  s2:='';
+  Result:='';
   tb:=1;
   i:=0;
-  s5:='';
-  c.Font.Height:=fw;
-  while s<>'' do
-  begin
-    s4:=copy(s,1,4);
-    s3:=s4;
-    if pos('F03',s3)=1 then delete(s3,1,3) else s3:='XXXX';
-    if s3<>'' then sc:=s3[1] else sc:='?';
-    sc:=upcase(sc);
-    if (sc>='0') and (sc<='5') then
+  c.Font.Height:=fs;
+  while s<>'' do begin
+    sc := fpygettone(s);
+    if sc in [0..5] then
     begin
       tr:=(i-tb)/2+tb-1;
-      w:='';
       oldtextflags:=c.TextFlags;
       c.TextFlags:=0;
-      if dodraw then case sc of
-        '3':w:=pwidechar(HexToUnicode('02C7'));
-        '1':w:=pwidechar(HexToUnicode('02C9'));
-        '2':w:=pwidechar(HexToUnicode('02CA'));
-        '4':w:=pwidechar(HexToUnicode('02CB'));
+      if dodraw then begin
+        case sc of
+          3:w:=#$02C7;
+          1:w:=#$02C9;
+          2:w:=#$02CA;
+          4:w:=#$02CB;
+        else w:='';
+        end;
+        if w<>'' then
+          TextOutW(c.Handle,round(tr*fs),y,PWideChar(w),1);
       end;
-      s5:=s5+floattostrf(tr,ffNumber,7,2)+',';
-      if w<>'' then TextOutW(c.Handle,round(tr*fw),y,w,1);
       c.TextFlags:=oldtextflags;
       tb:=i+1;
     end else
     begin
-      s2:=s2+s4;
+      Result:=Result+fcopy(s,1,1); //not a recognized tone char -- just copy it
       inc(i);
     end;
-    delete(s,1,length(s4));
+    fdelete(s,1,1);
   end;
-//  showmessage(s5);
-  result:=s2;
 end;
 
+{
+x, y: Where to draw.
+fs: Font size
+ch: Text
+}
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
 var w:UnicodeString;
-  chn:string;
-  i:integer;
+  chn:FString;
 begin
   if ch='' then exit;
   SetBkMode(c.Handle,TRANSPARENT);
   c.Font.Name:=fontface;
   c.Font.Height:=fs;
-//    c.Font.Style:=[];
-  chn:=DrawTone(c,x,y,fs,ch,false);
+ //Retrieve markless text to draw
+  chn:=DrawToneMarks(c,x,y,fs,ch,false);
   w := fstrtouni(chn);
+ //If there are markers to be drawn, adjust font
   if chn<>ch then
   begin
     c.Font.Name:=FontRadical;
@@ -1030,18 +1003,10 @@ begin
     c.Font.Height:=fs;
     y:=y+fs div 4;
   end;
-  chn:=DrawTone(c,x,y-fs div 4,fs,ch,true);
-  if curpbox<>nil then for i:=1 to MAX_INTTEXTINFO do if not itt[i].act then
-  begin
-    itt[i].act:=true;
-    itt[i].p:=curpbox;
-    itt[i].x:=x;
-    itt[i].y:=y;
-    itt[i].fs:=fs;
-    itt[i].s:=chn;
-    break;
-  end;
+  if curpbox<>nil then
+    AddDrawReg(curpbox,x,y,fs,chn);
   TextOutW(c.Handle,x,y,PWideChar(w),flength(chn));
+  DrawToneMarks(c,x,y-fs div 4,fs,ch,true);
 end;
 
 
@@ -1273,6 +1238,11 @@ begin
 end;
 
 
+{ Screen tip block -- here it just means "text selection block" in any of DrawUnicode-powered controls }
+var
+  STB_x1,STB_y1,STB_x2,STB_y2:integer;
+  STB_canvas:TCanvas;
+
 procedure PaintScreenTipBlock;
 var oldR2:integer;
 begin
@@ -1294,6 +1264,7 @@ begin
   STB_canvas:=canvas;
   PaintScreenTipBlock;
 end;
+
 
 procedure DeleteDirectory(dir:string);
 var sRec: TSearchRec;

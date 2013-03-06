@@ -108,7 +108,7 @@ const
   See http://en.wikipedia.org/wiki/PinYin#Tones
   In Wakan Unicode they are encoded as F030+[0..5].
  }
-  UH_PY_TONE = 'F300';
+  UH_PY_TONE = 'F030';
 
  {$ELSE}
   UH_NOCHAR:FChar = #$0000;
@@ -142,7 +142,7 @@ const
 
   UH_RUBY_PLACEHOLDER:FChar = #$E100;
 
-  UH_PY_TONE = #$F300;
+  UH_PY_TONE = #$F030;
  {$ENDIF}
 
 
@@ -229,6 +229,11 @@ function UTrimRight(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inli
 function ULowerCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 
+{ PinYin tones }
+function fpytone(const i: byte): fchar; inline; //creates a character which encodes PinYin tone
+function fpygettone(const s: fstring): byte; inline; //returns 0-5 if the first character encodes tone, or 255
+function fpyextrtone(var s: fstring): byte; inline; //same, but deletes the tone from the string
+
 
 { General purpose string functions }
 
@@ -283,8 +288,6 @@ procedure AddFilename(var list: TFilenameList; const filename: string);
 function MakeFilenameList(const filenames: array of string): TFilenameList;
 function IsFileInList(const filename: string; const list: TFilenameList): boolean;
 function FilenameListToString(const list: TFilenameList; const sep: string = ', '): string;
-
-
 
 
 { Character processing }
@@ -729,6 +732,41 @@ begin
   Result := WideUpperCase(S);
 end;
 {$ENDIF}
+
+{
+PinYin tones -- see comment to UH_PY_TONE
+}
+
+//creates a character which encodes PinYin tone
+function fpytone(const i: byte): fchar;
+begin
+ {$IFDEF UNICODE}
+  Result := Chr(Ord(UH_PY_TONE)+i);
+ {$ELSE}
+  Result := 'F03'+Chr(Ord('0')+i);
+ {$ENDIF}
+end;
+
+//returns 0-5 if the first character encodes tone, or 255
+function fpygettone(const s: fstring): byte;
+begin
+ {$IFDEF UNICODE}
+  if (length(s)>=1) and (Ord(s[1]) and $FFF0 = $F030) then
+    Result := Ord(s[1]) and $000F
+ {$ELSE}
+  if (length(s)>=4) and (s[1]='F') and (s[2]='0') and (s[3]='3') then
+    Result := Ord(s[4]) - Ord('0')
+ {$ENDIF}
+  else
+    Result := 255;
+end;
+
+//same, but deletes the tone from the string
+function fpyextrtone(var s: fstring): byte;
+begin
+  Result := fpygettone(s);
+  if Result<255 then fdelete(s,1,1);
+end;
 
 
 {
