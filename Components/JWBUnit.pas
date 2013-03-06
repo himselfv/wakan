@@ -71,7 +71,7 @@ procedure SetColDefault(i:integer);
 
 procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
-function FindDrawReg(p:TPaintBox;x,y:integer;var cx,cy,cy2:integer):string;
+function FindDrawReg(p:TPaintBox;x,y:integer;out cx,cy,cy2:integer):FString;
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
@@ -823,7 +823,7 @@ end;
 Drawing registry.
 For some reason (to support text selection) Wakan keeps a list of all text lines
 it has drawn with the help of DrawUnicode.
-Each time a control is redrawn, all cells related to it are cleared;
+Each time a control is redrawn, all cells related to it are cleared.
 }
 
 type
@@ -833,6 +833,7 @@ type
     x,y,fs:integer;
     s:FString;
   end;
+
 const
   MAX_INTTEXTINFO = 4000;
 var
@@ -851,7 +852,8 @@ begin
   curpbox:=nil;
 end;
 
-function FindDrawReg(p:TPaintBox;x,y:integer;var cx,cy,cy2:integer):string;
+{ Retrieves a block of text drawn with DrawUnicode starting at the cursor position }
+function FindDrawReg(p:TPaintBox;x,y:integer;out cx,cy,cy2:integer):FString;
 var i,j:integer;
 begin
   result:='';
@@ -1256,6 +1258,9 @@ end;
 
 procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 begin
+  //No flicker please
+  if (STB_canvas=canvas) and (STB_x1=x1) and (STB_x2=x2) and (STB_y1=y1)
+    and (STB_y2=y2) then exit;
   PaintScreenTipBlock;
   STB_x1:=x1;
   STB_y1:=y1;

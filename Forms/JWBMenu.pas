@@ -447,7 +447,7 @@ type
     intmosc:TPoint;
     procedure CalculateCurString;
   public
-    procedure InfTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
+    procedure IntTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
     procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
     procedure IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
     procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
@@ -615,7 +615,7 @@ function _l(const id:string):string; //shouldn't inline because it's for cases w
 
 implementation
 
-uses JWBKanji, JWBUnit, JWBRadical, JWBForms,
+uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
   JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
@@ -3561,12 +3561,17 @@ This information is used only by ScreenTimerTimer (showing popup tip),
 so we could have calculated it there, but we'd need to figure out the class
 of control mouse is over.
 }
-procedure TfMenu.InfTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
+procedure TfMenu.IntTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
 begin
   if leftDown and (intorg<>c) then
   begin
+   //Remember "drag start" point and control
     intorgcc.X:=x; intorgcc.Y:=Y; intorgsc:=Mouse.CursorPos;
     intorg:=c;
+  end;
+  if not leftDown then begin
+   //Remove "drag start" point
+    intorg:=nil;
   end;
   intmocc.X:=x; intmocc.Y:=y; intmosc:=Mouse.CursorPos;
   intmo:=c;
@@ -3575,18 +3580,18 @@ end;
 
 procedure TfMenu.IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
 begin
-  InfTipControlOver(p,x,y,leftDown);
+  IntTipControlOver(p,x,y,leftDown);
 end;
 
 procedure TfMenu.IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
 begin
-  InfTipControlOver(sg,x,y,leftDown);
+  IntTipControlOver(sg,x,y,leftDown);
 end;
 
 procedure TfMenu.CalculateCurString;
-var s,s2:string;
+var s1,s2,s_tmp:string;
     rx,ry,wtt:integer;
-    x1,y1,x2,y2:integer;
+    x1,y1,x2,y2,x_tmp:integer;
     gc,gc2:TGridCoord;
     rect:TRect;
     mox1,mox2:integer;
@@ -3594,38 +3599,49 @@ var s,s2:string;
   rpos: TSourcePos;
 begin
   SetScreenTipBlock(0,0,0,0,nil);
-  if (intmo<>nil) and (intmo is TPaintBox) and (intmo<>fTranslate.EditorPaintBox) then
-  begin
-    s:=FindDrawReg(TPaintBox(intmo),intmocc.x,intmocc.y,x1,y1,y2);
-    if (intorg=intmo) then
-    begin
-      s2:=FindDrawReg(TPaintBox(intorg),intorgcc.x,intorgcc.y,x2,y1,y2);
-      if length(s2)>length(s) then
-      begin
-        s2:=s;
-        x2:=x1;
-        s:=FindDrawReg(TPaintBox(intorg),intorgcc.x,intorgcc.y,x1,y1,y2);
-      end;
-      if copy(s,length(s)-length(s2)+1,length(s2))=s2 then
-      begin
-        s:=copy(s,1,length(s)-length(s2));
-        SetScreenTipBlock(x1,y1,x2,y2,TPaintBox(intmo).Canvas);
-      end;
-    end;
-  end else
+
+  if intmo=nil then
+    s1 := ''
+  else
+
   if intmo=fTranslate.EditorPaintBox then
   begin
     rpos:=fTranslate.GetExactLogicalPos(intmocc.x,intmocc.y);
     rx := rpos.x; ry := rpos.y;
     if (ry<>-1) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
-      s:=fTranslate.GetDocWord(rx,ry,wtt,false)
+      s1:=fTranslate.GetDocWord(rx,ry,wtt,false)
     else
-      s:='';
+      s1:='';
   end else
-  if (intmo<>nil) and (intmo is TCustomDrawGrid) then
+
+  if intmo is TPaintBox then
+  begin
+    s1:=FindDrawReg(TPaintBox(intmo),intmocc.x,intmocc.y,x1,y1,y2);
+    if intorg=intmo then
+    begin
+      s2:=FindDrawReg(TPaintBox(intorg),intorgcc.x,intorgcc.y,x2,y1,y2);
+      if length(s2)>length(s1) then begin
+       //Swap s1 and s2
+        s_tmp:=s2; s2:=s1; s1:=s_tmp;
+        x_tmp:=x2; x2:=x1; x1:=x_tmp;
+      end;
+      if EndsStr(s2, s1) then
+      begin
+        s1:=copy(s1,1,length(s1)-length(s2));
+        SetScreenTipBlock(x1,y1,x2,y2,TPaintBox(intmo).Canvas);
+      end;
+    end;
+  end else
+
+  if intmo is TCustomDrawGrid then
   begin
     gc:=TCustomDrawGrid(intmo).MouseCoord(intmocc.x,intmocc.y);
-    if (intmo<>fKanji.DrawGrid1) and (intmo<>fRadical.DrawGrid) then
+    if intmo=fKanji.DrawGrid1 then
+      s1:=fKanji.GetKanji(gc.x,gc.y)
+    else
+    if intmo=fRadical.DrawGrid then
+      s1:=fRadical.GetKanji(gc.x,gc.y)
+    else
     begin
       if (gc.x>=0) and (gc.x<2) and (gc.y>0) then
       begin
@@ -3634,9 +3650,9 @@ begin
           gc2:=TCustomDrawGrid(intmo).MouseCoord(intorgcc.x,intorgcc.y);
           mo:=(gc2.x=gc.x) and (gc2.y=gc.y);
         end else mo:=false;
-        s:=remexcl((TStringGrid(intmo)).Cells[gc.x,gc.y]);
+        s1:=remexcl((TStringGrid(intmo)).Cells[gc.x,gc.y]);
         rect:=TCustomDrawGrid(intmo).CellRect(gc.x,gc.y);
-        if not mo then fdelete(s,1,((intmocc.x-rect.left-2) div GridFontSize));
+        if not mo then fdelete(s1,1,((intmocc.x-rect.left-2) div GridFontSize));
         if mo then
         begin
           if intorgcc.x>intmocc.x then
@@ -3648,20 +3664,18 @@ begin
             mox1:=intorgcc.x;
             mox2:=intmocc.x;
           end;
-          mox1:=(mox1-rect.left-2) div GridFontSize;
-          mox2:=(mox2-rect.left-2) div GridFontSize;
-          s:=fcopy(s,mox1,(mox2-mox1));
+          mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
+          mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
+          s1:=fcopy(s1,1+mox1,mox2-mox1);
+          if flength(s1)<mox2-mox1 then mox2:=mox1+flength(s1); //don't select over the end of text
           SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,TCustomDrawGrid(intmo).Canvas);
         end;
       end;
-    end else
-    if intmo=fKanji.DrawGrid1 then
-      s:=fKanji.GetKanji(gc.x,gc.y)
-    else
-      s:=fRadical.GetKanji(gc.x,gc.y);
+    end;
+
   end else
-    s := ''; //invalid control in intmo
-  intcurString:=s;
+    s1 := ''; //invalid control in intmo
+  intcurString:=s1;
 end;
 
 
