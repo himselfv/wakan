@@ -185,9 +185,11 @@ end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
 begin
-  fMenu.aKanjiDetails.Checked:=false;
-  fKanji.btnKanjiDetails.Down:=false;
-  fTranslate.sbDockKanjiDetails.Down:=false;
+  if not (csDestroying in ComponentState) then begin //forms might already cease to exist on destruction
+    fMenu.aKanjiDetails.Checked:=false;
+    fKanji.btnKanjiDetails.Down:=false;
+    fTranslate.sbDockKanjiDetails.Down:=false;
+  end;
 end;
 
 procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);

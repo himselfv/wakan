@@ -69,15 +69,27 @@ procedure SetColDefault(i:integer);
 
 { Painting }
 
+type
+  TFindDrawRegFlag = (
+    ffHalfCharRounding  //if more than half char is covered, return next char --
+      //like it's usually done with text selection.
+  );
+  TFindDrawRegFlags = set of TFindDrawRegFlag;
+
 procedure BeginDrawReg(p:TPaintBox);
 procedure EndDrawReg;
-function FindDrawReg(p:TPaintBox;x,y:integer;out cx,cy,cy2:integer):FString;
+function FindDrawReg(p:TPaintBox;x,y:integer;flags:TFindDrawRegFlags;out id,cx,cy,fs:integer):FString;
+function GetDrawReg(id:integer;out cx,cy,fs:integer):FString;
+
+function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
+
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+
 procedure PaintScreenTipBlock;
 procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
 
@@ -852,22 +864,41 @@ begin
   curpbox:=nil;
 end;
 
-{ Retrieves a block of text drawn with DrawUnicode starting at the cursor position }
-function FindDrawReg(p:TPaintBox;x,y:integer;out cx,cy,cy2:integer):FString;
+{ Retrieves a subblock of a block of text drawn with DrawUnicode.
+p,x,y: position to probe.
+Result: substring of a block of text under mouse starting at mouse position, inclusive.
+id: index of a draw call, if these are equal, it's the same line
+cx,cy: position of a first character of a returned subblock on a control.
+fs: character height for this string. Since DrawUnicode uses square fonts,
+ this is also character width.
+flags: see TFindDrawRegFlags description }
+function FindDrawReg(p:TPaintBox;x,y:integer;flags:TFindDrawRegFlags;out id,cx,cy,fs:integer):FString;
 var i,j:integer;
 begin
+  id:=-1;
   result:='';
   for i:=1 to MAX_INTTEXTINFO do if itt[i].p=p then
-    if (x>=itt[i].x) and (y>=itt[i].y) and (x<=itt[i].x+itt[i].fs*(length(itt[i].s) div 4)) and
-    (y<=itt[i].y+itt[i].fs) then
-    begin
-      j:=(x-itt[i].x) div itt[i].fs;
+    if  (y>=itt[i].y) and (y<=itt[i].y+itt[i].fs)
+    and (x>=itt[i].x) and (x<=itt[i].x+itt[i].fs*flength(itt[i].s)) then begin
+      if ffHalfCharRounding in flags then
+        j:=(x-itt[i].x+itt[i].fs div 2) div itt[i].fs
+      else
+        j:=(x-itt[i].x) div itt[i].fs;
+      id:=i;
       cy:=itt[i].y;
-      cy2:=itt[i].y+itt[i].fs;
+      fs:=itt[i].fs;
       cx:=itt[i].x+itt[i].fs*j;
-      result:=copy(itt[i].s,j*4+1,length(itt[i].s)-j*4);
-      exit;
+      result:=fcopy(itt[i].s,j+1,flength(itt[i].s)-j);
+      break;
     end;
+end;
+
+function GetDrawReg(id:integer;out cx,cy,fs:integer):FString;
+begin
+  cx:=itt[id].x;
+  cy:=itt[id].y;
+  fs:=itt[id].fs;
+  Result:=itt[id].s;
 end;
 
 procedure AddDrawReg(p:TPaintBox;x,y,fs:integer;const s:FString);
@@ -883,6 +914,55 @@ begin
       itt[i].s:=s;
       break;
     end;
+end;
+
+{ Updates ScreenTipBox and returns the substring of one of the strings drawn
+ with DrawUnicode, currently selected in PaintBox according to DragStart->CursorPos.
+p: PaintBox which currently receives mouse events (the one mouse is over,
+  or the one which captures it because of dragging)
+If DragStart equals CursorPos, assumes no selection. }
+function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
+var id1,id2:integer;
+  x1,x2,y1,fs,fs2,x_tmp:integer;
+  s2,s_tmp:string;
+begin
+  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fs);
+  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
+    Result := '';
+    SetScreenTipBlock(0,0,0,0,nil);
+  end else begin
+    s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
+    if id2<0 then begin //drag from dead point => no selection
+      Result := '';
+      SetScreenTipBlock(0,0,0,0,nil);
+      exit;
+    end;
+
+    if id1<>id2 then begin //mouse over different control/line
+     //Try again, with Y set to that of DragStart
+      CursorPos.Y := DragStart.Y;
+      Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fs);
+      if id1<>id2 then begin
+       //Just set the endpoint to the start or the end of the capturing line
+        if CursorPos.X>DragStart.X then begin
+          Result:=s2;
+          SetScreenTipBlock(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
+          exit;
+        end else begin
+          Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
+          //and continue with normal handling
+        end;
+      end;
+    end;
+
+    if length(s2)>length(Result) then begin
+     //Swap s1 and s2
+      s_tmp:=s2; s2:=Result; Result:=s_tmp;
+      x_tmp:=x2; x2:=x1; x1:=x_tmp;
+    end;
+    Result:=copy(Result,1,length(Result)-length(s2));
+    SetScreenTipBlock(x1,y1,x2,y1+fs,p.Canvas);
+  end;
 end;
 
 
@@ -1252,7 +1332,7 @@ begin
   begin
     oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
     STB_Canvas.Rectangle(STB_x1,STB_y1,STB_x2,STB_y2);
-    SetROP2(STB_Canvas.Handle,R2_NOT); //Maybe oldR2?!
+    SetROP2(STB_Canvas.Handle,oldR2);
   end;
 end;
 

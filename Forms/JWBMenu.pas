@@ -3588,21 +3588,20 @@ begin
   IntTipControlOver(sg,x,y,leftDown);
 end;
 
+//Updates text selection highlight and currently highlighted contents in intcurString
 procedure TfMenu.CalculateCurString;
-var s1,s2,s_tmp:string;
+var s1:string;
     rx,ry,wtt:integer;
-    x1,y1,x2,y2,x_tmp:integer;
     gc,gc2:TGridCoord;
     rect:TRect;
     mox1,mox2:integer;
     mo:boolean;
   rpos: TSourcePos;
 begin
-  SetScreenTipBlock(0,0,0,0,nil);
-
-  if intmo=nil then
-    s1 := ''
-  else
+  if intmo=nil then begin
+    s1 := '';
+    SetScreenTipBlock(0,0,0,0,nil);
+  end else
 
   if intmo=fTranslate.EditorPaintBox then
   begin
@@ -3612,29 +3611,24 @@ begin
       s1:=fTranslate.GetDocWord(rx,ry,wtt,false)
     else
       s1:='';
+    SetScreenTipBlock(0,0,0,0,nil);
   end else
 
   if intmo is TPaintBox then
   begin
-    s1:=FindDrawReg(TPaintBox(intmo),intmocc.x,intmocc.y,x1,y1,y2);
     if intorg=intmo then
-    begin
-      s2:=FindDrawReg(TPaintBox(intorg),intorgcc.x,intorgcc.y,x2,y1,y2);
-      if length(s2)>length(s1) then begin
-       //Swap s1 and s2
-        s_tmp:=s2; s2:=s1; s1:=s_tmp;
-        x_tmp:=x2; x2:=x1; x1:=x_tmp;
-      end;
-      if EndsStr(s2, s1) then
-      begin
-        s1:=copy(s1,1,length(s1)-length(s2));
-        SetScreenTipBlock(x1,y1,x2,y2,TPaintBox(intmo).Canvas);
-      end;
-    end;
+      s1:=PaintBoxUpdateSelection(TPaintBox(intmo),intorgcc,intmocc)
+    else
+    if intorg<>nil then begin //mouse captured by different control
+      intmocc:=intorg.ScreenToClient(intmo.ClientToScreen(intmocc)); //convert to capture control coordinate system
+      s1:=PaintBoxUpdateSelection(TPaintBox(intorg),intorgcc,intmocc)
+    end else //this control, no selection
+      s1:=PaintBoxUpdateSelection(TPaintBox(intmo),intmocc,intmocc);
   end else
 
   if intmo is TCustomDrawGrid then
   begin
+    SetScreenTipBlock(0,0,0,0,nil);
     gc:=TCustomDrawGrid(intmo).MouseCoord(intmocc.x,intmocc.y);
     if intmo=fKanji.DrawGrid1 then
       s1:=fKanji.GetKanji(gc.x,gc.y)
@@ -3664,6 +3658,7 @@ begin
             mox1:=intorgcc.x;
             mox2:=intmocc.x;
           end;
+          //calculate char count -- if half of the char is covered, it's covered
           mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
           mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
           s1:=fcopy(s1,1+mox1,mox2-mox1);
@@ -3673,8 +3668,10 @@ begin
       end;
     end;
 
-  end else
+  end else begin
     s1 := ''; //invalid control in intmo
+    SetScreenTipBlock(0,0,0,0,nil);
+  end;
   intcurString:=s1;
 end;
 
