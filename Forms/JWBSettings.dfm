@@ -24,7 +24,7 @@ object fSettings: TfSettings
     Top = 0
     Width = 484
     Height = 460
-    ActivePage = tsPortability
+    ActivePage = tsGeneral
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -34,10 +34,6 @@ object fSettings: TfSettings
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -135,7 +131,7 @@ object fSettings: TfSettings
           Caption = '#00409^eMulti-line word grids'
           TabOrder = 6
         end
-        object CheckBox54: TCheckBox
+        object cbAutosave: TCheckBox
           Left = 16
           Top = 336
           Width = 193
@@ -143,13 +139,13 @@ object fSettings: TfSettings
           Caption = '#00410^eAuto-save user database every '
           TabOrder = 7
         end
-        object Edit29: TEdit
+        object edtAutoSavePeriod: TEdit
           Left = 216
           Top = 336
           Width = 65
           Height = 21
           TabOrder = 8
-          Text = 'Edit29'
+          Text = 'edtAutoSavePeriod'
         end
         object CheckBox55: TCheckBox
           Left = 16
@@ -590,10 +586,6 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -698,10 +690,6 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1200,10 +1188,6 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1404,10 +1388,6 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Button2: TButton
         Left = 16
         Top = 376
@@ -1489,10 +1469,6 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
@@ -1839,10 +1815,6 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -2110,10 +2082,6 @@ object fSettings: TfSettings
       Caption = '#00966^eEditor'
       ImageIndex = 12
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2243,10 +2211,6 @@ object fSettings: TfSettings
       Caption = '#00967^eAnnotations'
       ImageIndex = 13
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Bevel1: TBevel
         Left = 8
         Top = 40

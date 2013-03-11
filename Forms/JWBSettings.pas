@@ -248,8 +248,8 @@ type
     Edit25: TEdit;
     CheckBox49: TCheckBox;
     CheckBox53: TCheckBox;
-    CheckBox54: TCheckBox;
-    Edit29: TEdit;
+    cbAutosave: TCheckBox;
+    edtAutoSavePeriod: TEdit;
     CheckBox55: TCheckBox;
     RadioGroup5: TRadioGroup;
     CheckBox70: TCheckBox;
@@ -341,6 +341,7 @@ type
     procedure LoadSettings(DelayUI: boolean);
     procedure ApplyUISettings;
     procedure SaveSettings;
+    procedure AcceptSettings;
 
   protected
     procedure UpdatePortabilityPage;
@@ -350,6 +351,10 @@ type
     procedure SetTranslationFile(const Value: string);
 
   end;
+
+const
+ //Values must be reasonable
+  DefaultAutoSavePeriod: integer = 10;
 
 var
   fSettings: TfSettings;
@@ -372,6 +377,7 @@ function ReturnStdFont(curfont:string;japanese:boolean):string; forward;
 procedure TfSettings.FormCreate(Sender: TObject);
 begin
   BuildContents;
+ //Default states for all controls will be set when loading data (even if we lack data)
 end;
 
 //Populates contents list from available pages
@@ -525,10 +531,10 @@ begin
   CheckBox69.Checked:=reg.ReadBool('Annotate','Colors',true);
   CheckBox46.Checked:=reg.ReadBool('Vocabulary','AutoSave',false);
   CheckBox70.Checked:=reg.ReadBool('Vocabulary','DisplayMessage',true);
-  CheckBox54.Checked:=reg.ReadBool('Vocabulary','AutoSaveTimer',true);
+  cbAutoSave.Checked:=reg.ReadBool('Vocabulary','AutoSaveTimer',true);
+  edtAutoSavePeriod.Text:=inttostr(reg.ReadInteger('Vocabulary','AutoSavePeriod',DefaultAutoSavePeriod));
   CheckBox55.Checked:=reg.ReadBool('Vocabulary','MakeBackups',true);
   cbShowSplashscreen.Checked := reg.ReadBool('Vocabulary','ShowSplashscreen',true);
-  Edit29.Text:=inttostr(reg.ReadInteger('Vocabulary','AutoSavePeriod',10));
   RadioGroup1.ItemIndex:=reg.ReadInteger('Romanization','System',1);
   RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
   RadioGroup6.ItemIndex:=reg.ReadInteger('Romanization','ChineseSystem',0);
@@ -818,9 +824,9 @@ var setwindows:integer;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
-  reg.WriteBool('Vocabulary','AutoSaveTimer',CheckBox54.Checked);
+  reg.WriteBool('Vocabulary','AutoSaveTimer',cbAutoSave.Checked);
+  reg.WriteInteger('Vocabulary','AutoSavePeriod',StrToIntDef(edtAutoSavePeriod.text,DefaultAutoSavePeriod));
   reg.WriteBool('Vocabulary','MakeBackups',CheckBox55.Checked);
-  reg.WriteInteger('Vocabulary','AutoSavePeriod',strtoint(edit29.text));
   reg.WriteBool('Vocabulary','ShowSplashscreen',cbShowSplashscreen.Checked);
   reg.WriteInteger('Romanization','System',RadioGroup1.ItemIndex);
   reg.WriteInteger('Romanization','ShowKana',RadioGroup2.ItemIndex);
@@ -1216,16 +1222,30 @@ begin
   Edit9.Text:=FontChineseGB;
 end;
 
-procedure TfSettings.btnOkClick(Sender: TObject);
-var i:integer;
+{
+Called when user clicks "OK" in the dialog.
+Use this chance to:
+ 1. Complain about invalid data in some fields.
+ 2. Auto-correct the data if you use it without checking somewhere (still a bad idea)
+ 3. Apply the new settings to the program, if needed.
+}
+procedure TfSettings.AcceptSettings;
+var tmp:integer;
 begin
+ //Verify control
   if edit11.text='0' then edit11.text:='1';
-  if not TryStrToInt(Edit10.Text, i) then Edit10.Text := '0';
-  if not TryStrToInt(Edit11.Text, i) then Edit11.Text := '0';
-  if not TryStrToInt(Edit12.Text, i) then Edit12.Text := '0';
-  if not TryStrToInt(Edit13.Text, i) then Edit13.Text := '0';
+  if not TryStrToInt(Edit10.Text, tmp) then Edit10.Text := '0';
+  if not TryStrToInt(Edit11.Text, tmp) then Edit11.Text := '0';
+  if not TryStrToInt(Edit12.Text, tmp) then Edit12.Text := '0';
+  if not TryStrToInt(Edit13.Text, tmp) then Edit13.Text := '0';
+  if not TryStrToInt(edtAutoSavePeriod.Text, tmp) then
+    edtAutoSavePeriod.Text := IntToStr(DefaultAutoSavePeriod);
   GridFontSize:=strtoint(Edit25.text);
+end;
 
+procedure TfSettings.btnOkClick(Sender: TObject);
+begin
+  AcceptSettings();
   SaveSettings();
 end;
 

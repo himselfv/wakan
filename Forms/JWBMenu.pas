@@ -417,9 +417,10 @@ type
 
   protected
     FUserDataChanged:boolean;
-    LastAutoSave:TDatetime; //for UserData
+    LastSaveTime:TDatetime; //for UserData
     procedure SetUserDataChanged(Value: boolean);
     function FlushUserData:boolean;
+    procedure AutosaveUserData; //check if it's time for autosave
   public
     procedure SaveUserData;
     procedure LoadUserData;
@@ -445,6 +446,7 @@ type
     intmo:TControl;
     intmocc:TPoint;
     intmosc:TPoint;
+    inproc:boolean; //set while we're doing popup handling -- TODO: Rename
     procedure CalculateCurString;
   public
     procedure IntTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
@@ -579,7 +581,6 @@ var
   ftextbeg:array[0..255] of integer;
   ftextend:array[0..255] of integer;
   ftextpos:integer;
-  inproc:boolean;
   popcreated:boolean;
   vocmode,exmode:integer;
   rainesearch:pointer;
@@ -689,6 +690,7 @@ begin
 
   curlang:='j';
   intmo:=nil;
+  inproc:=false;
 
  //Nothing is docked to these so initialized them to hidden
   Panel2.Width := 0;
@@ -744,7 +746,7 @@ var ps:TPackageSource;
   ms:TMemoryStream;
   i:integer;
 begin
-  LastAutoSave := now;
+  LastSaveTime := now;
   screenTipImmediate:=false;
   examstruct:=nil;
   examindex:=nil;
@@ -1529,6 +1531,7 @@ begin
   Backup(UserDataDir+'\wakan.usr');
   Screen.Cursor:=crDefault;
   UserDataChanged:=false;
+  LastSaveTime:=now;
 end;
 
 procedure TfMenu.LoadUserData;
@@ -1954,6 +1957,18 @@ begin
       idCancel:Result:=false;
     end;
   end;
+end;
+
+procedure TfMenu.AutosaveUserData; //check if it's time for autosave
+var curt: TDatetime;
+  AutoSavePeriod:integer;
+begin
+  if not fSettings.cbAutosave.Checked then exit;
+  curt:=now-LastSaveTime;
+  if not TryStrToInt(fSettings.edtAutoSavePeriod.Text, AutoSavePeriod) then
+    AutoSavePeriod := DefaultAutoSavePeriod;
+  if curt>1/24/60*AutoSavePeriod then
+    SaveUserData; //updates LastSaveTime
 end;
 
 procedure TfMenu.RebuildUserIndex;
@@ -3348,208 +3363,210 @@ var pt:TPoint;
     curt:TDateTime;
 begin
   if not initdone then exit;
-  curt:=now-lastautosave;
-  if curt>1/24/60*strtoint(fSettings.Edit29.Text) then
-  begin
-    lastautosave:=now;
-    SaveUserData;
-  end;
+  AutosaveUserData;
+
   if not screenModeWk and not screenModeSc and not screenTipImmediate and not popcreated then exit;
+
+  try
+    pt:=Mouse.CursorPos;
+  except
+   //Mouse.CursorPos can raise EOSError on some versions of Delphi,
+   //as underlying WINAPI GetCursorPos returns false if this is not the active desktop.
+    on E: EOSError do exit;
+  end;
+
   if inproc then exit;
   inproc:=true;
   try
-    pt:=Mouse.CursorPos;
-  except inproc:=false; exit; end;
-  try
-  if not TryStrToInt(fSettings.Edit21.Text, ttim) then ttim:=10;
-  if not TryStrToInt(fSettings.Edit22.Text, tleft) then tleft:=10;
-  if not TryStrToInt(fSettings.Edit23.Text, tright) then tright:=100;
+    if not TryStrToInt(fSettings.Edit21.Text, ttim) then ttim:=10;
+    if not TryStrToInt(fSettings.Edit22.Text, tleft) then tleft:=10;
+    if not TryStrToInt(fSettings.Edit23.Text, tright) then tright:=100;
 
-  if (popcreated) and (pt.x>=fScreenTip.Left-10) and
-     (pt.y>=fScreenTip.Top-10) and (pt.x<=fScreenTip.Left+fScreenTip.Width+10) and
-     (pt.y<=fScreenTip.Top+fScreenTip.Height+10) then
-  begin
-    inproc:=false;
-    exit;
-  end;
-  if ((pt.x<>oldpt.x) or (pt.y<>oldpt.y)) and (not screenTipImmediate) then
-  begin
-    if popcreated then
+    if (popcreated) and (pt.x>=fScreenTip.Left-10) and
+       (pt.y>=fScreenTip.Top-10) and (pt.x<=fScreenTip.Left+fScreenTip.Width+10) and
+       (pt.y<=fScreenTip.Top+fScreenTip.Height+10) then
     begin
-      fMenu.HideScreenTip;
-      popcreated:=false;
+      inproc:=false;
+      exit;
     end;
-    oldpt:=pt;
-    tim:=0;
-    inproc:=false;
-    exit;
-  end;
-//  Label1.Caption:=datetimetostr(now)+' <'+inttostr(tim)+'> '+inttostr(pt.x)+'-'+inttostr(pt.y);
-  if tim<>-1 then inc(tim);
-  if (tim<ttim) and (not screenTipImmediate) then begin
-    inproc:=false;
-    exit;
-  end;
-  ftextpos:=0;
-  s:='';
-  if (screenModeWk) or (screenTipImmediate) then
-  begin
-    if (intmo<>nil) and (pt.x=intmosc.x) and (pt.y=intmosc.y) then
+    if ((pt.x<>oldpt.x) or (pt.y<>oldpt.y)) and (not screenTipImmediate) then
     begin
-      s:=intcurString;
+      if popcreated then
+      begin
+        fMenu.HideScreenTip;
+        popcreated:=false;
+      end;
+      oldpt:=pt;
+      tim:=0;
+      inproc:=false;
+      exit;
     end;
-    if flength(s)>=1 then evc:=EvalChar(fgetch(s,1));
-  end;
-  if (s='') and screenModeSc then
-  begin
-    fInvalidator:=TfInvalidator.Create(nil);
-    fInvalidator.Width:=tleft+tright;
-    fInvalidator.Height:=1;
-    fInvalidator.Top:=pt.y;
-    fInvalidator.Left:=pt.x-tleft;
-    for i:=1 to 100 do curtext[i].slen:=0;
-    rdcnt:=0;
-    bitcnt:=0;
-{MCH    CreateIPCQueue('texthook_data',IPCCallback);
-    CreateIPCQueue('texthook_bit',BitCallback);}
-    byte(ptrFileMap^):=1;
-    SetWindowPos(fInvalidator.handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
-    fInvalidator.Hide;
-    fInvalidator.Free;
-    sleep(100);
-    byte(ptrFileMap^):=0;
-{MCH    DestroyIPCQueue('texthook_data');
-    DestroyIPCQueue('texthook_bit');}
-    s:='';
-    s2:='';
+  //  Label1.Caption:=datetimetostr(now)+' <'+inttostr(tim)+'> '+inttostr(pt.x)+'-'+inttostr(pt.y);
+    if tim<>-1 then inc(tim);
+    if (tim<ttim) and (not screenTipImmediate) then begin
+      inproc:=false;
+      exit;
+    end;
     ftextpos:=0;
-    if rdcnt>90 then rdcnt:=90;
-    if bitcnt>90 then bitcnt:=90;
-    // create debug
-    for i:=1 to rdcnt do
+    s:='';
+    if (screenModeWk) or (screenTipImmediate) then
     begin
-      ct:=curtext[i];
-      savedx[i]:=ct.x;
-      savedy[i]:=ct.y;
-      if (ct.dcinfo and (TA_TOP or TA_BOTTOM or TA_BASELINE))=TA_BOTTOM then ct.y:=ct.y-ct.h;
-      if (ct.dcinfo and (TA_TOP or TA_BOTTOM or TA_BASELINE))=TA_BASELINE then ct.y:=ct.y-ct.h;
-      if (ct.dcinfo and (TA_RIGHT or TA_LEFT or TA_CENTER))=TA_CENTER then ct.x:=ct.x-ct.w div 2;
-      if (ct.dcinfo and (TA_LEFT or TA_RIGHT or TA_CENTER))=TA_RIGHT then ct.x:=ct.x-ct.w;
-      curtext[i]:=ct;
-    end;
-    wnd:=WindowFromPoint(pt);
-    wt[0]:=AnsiChar(chr(Windows.GetWindowText(wnd,@(wt[1]),255)));
-    s2:=s2+fstr('Window name: '+wt)+UH_CR+UH_LF;
-    Windows.GetWindowRect(wnd,wr);
-    s2:=s2+fstr('Window rect: ['+inttostr(wr.Left)+':'+
-      inttostr(wr.Top)+']-['+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+']')+UH_CR+UH_LF;
-    Windows.GetClientRect(wnd,wr);
-    s2:=s2+fstr('Client area: '+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+'')+UH_CR+UH_LF;
-    s2:=s2+fstr('Cursor pos: '+inttostr(pt.x)+':'+inttostr(pt.y))+UH_CR+UH_LF;
-    s2:=s2+UH_CR+UH_LF+fstr('BitBlts:')+UH_CR+UH_LF;
-    for i:=1 to bitcnt do
-    begin
-      s2:=s2+fstr(inttostr(i)+'# Mod:');
-      for j:=1 to rdcnt do if curbit[i].srcdc=curtext[j].hdc then
+      if (intmo<>nil) and (pt.x=intmosc.x) and (pt.y=intmosc.y) then
       begin
-        s2:=s2+fstr(inttostr(j)+';');
-        curtext[j].hwnd:=curbit[i].hwnd;
-        curtext[j].x:=curtext[j].x+curbit[i].xofs;
-        curtext[j].y:=curtext[j].y+curbit[i].yofs;
-    //    s:=s+'T+'+inttostr(curbit[i].xofs)+'='+inttostr(curbit[i].yofs)+'+';
+        s:=intcurString;
       end;
-      s2:=s2+fstr(' Ofs:'+inttostr(curbit[i].xofs)+':'+inttostr(curbit[i].yofs))+UH_CR+UH_LF;
+      if flength(s)>=1 then evc:=EvalChar(fgetch(s,1));
     end;
-    s2:=s2+UH_CR+UH_LF+fstr('TextOuts:')+UH_CR+UH_LF;
-    for i:=1 to rdcnt do
+    if (s='') and screenModeSc then
     begin
-      lp.x:=curtext[i].x;
-      lp.y:=curtext[i].y;
-      Windows.GetWindowRect(wnd,wr);
-      lp.x:=lp.x+wr.Left;
-      lp.y:=lp.y+wr.Top;
-      s2:=s2+fstr(inttostr(i)+'# "');
-      for j:=0 to curtext[i].slen-1 do if curtext[i].str[j]>=32 then
-        s2:=s2+fstr(widechar(curtext[i].str[j]));
-      s2:=s2+fstr('"'+
-        ' Org:'+inttostr(savedx[i])+':'+inttostr(savedy[i])+
-        ' Align:'+inttostr(curtext[i].x)+':'+inttostr(curtext[i].y)+
-        ' Trans:'+inttostr(lp.x)+':'+inttostr(lp.y)+
-        ' Size:'+inttostr(curtext[i].w)+':'+inttostr(curtext[i].h)+' ');
-      if curtext[i].hwnd=wnd then s2:=s2+fstr('OK') else s2:=s2+fstr('BAD WND');
-      s2:=s2+UH_CR+UH_LF;
-    end;
-    for i:=1 to rdcnt do if (curtext[i].slen>0) and (curtext[i].hwnd=wnd) then
-    begin
-      wbg:=0;
-      lp.x:=curtext[i].x;
-      lp.y:=curtext[i].y;
-      Windows.GetWindowRect(wnd,wr);
-      lp.x:=lp.x+wr.Left;
-      lp.y:=lp.y+wr.Top;
-      if (lp.y<=pt.y) and (lp.x+curtext[i].w>=pt.x) and (lp.y+curtext[i].h>=pt.y) then
+      fInvalidator:=TfInvalidator.Create(nil);
+      fInvalidator.Width:=tleft+tright;
+      fInvalidator.Height:=1;
+      fInvalidator.Top:=pt.y;
+      fInvalidator.Left:=pt.x-tleft;
+      for i:=1 to 100 do curtext[i].slen:=0;
+      rdcnt:=0;
+      bitcnt:=0;
+  {MCH    CreateIPCQueue('texthook_data',IPCCallback);
+      CreateIPCQueue('texthook_bit',BitCallback);}
+      byte(ptrFileMap^):=1;
+      SetWindowPos(fInvalidator.handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
+      fInvalidator.Hide;
+      fInvalidator.Free;
+      sleep(100);
+      byte(ptrFileMap^):=0;
+  {MCH    DestroyIPCQueue('texthook_data');
+      DestroyIPCQueue('texthook_bit');}
+      s:='';
+      s2:='';
+      ftextpos:=0;
+      if rdcnt>90 then rdcnt:=90;
+      if bitcnt>90 then bitcnt:=90;
+      // create debug
+      for i:=1 to rdcnt do
       begin
-        cx:=lp.x;
-        wen:=-1;
-        for j:=0 to curtext[i].slen-1 do
+        ct:=curtext[i];
+        savedx[i]:=ct.x;
+        savedy[i]:=ct.y;
+        if (ct.dcinfo and (TA_TOP or TA_BOTTOM or TA_BASELINE))=TA_BOTTOM then ct.y:=ct.y-ct.h;
+        if (ct.dcinfo and (TA_TOP or TA_BOTTOM or TA_BASELINE))=TA_BASELINE then ct.y:=ct.y-ct.h;
+        if (ct.dcinfo and (TA_RIGHT or TA_LEFT or TA_CENTER))=TA_CENTER then ct.x:=ct.x-ct.w div 2;
+        if (ct.dcinfo and (TA_LEFT or TA_RIGHT or TA_CENTER))=TA_RIGHT then ct.x:=ct.x-ct.w;
+        curtext[i]:=ct;
+      end;
+      wnd:=WindowFromPoint(pt);
+      wt[0]:=AnsiChar(chr(Windows.GetWindowText(wnd,@(wt[1]),255)));
+      s2:=s2+fstr('Window name: '+wt)+UH_CR+UH_LF;
+      Windows.GetWindowRect(wnd,wr);
+      s2:=s2+fstr('Window rect: ['+inttostr(wr.Left)+':'+
+        inttostr(wr.Top)+']-['+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+']')+UH_CR+UH_LF;
+      Windows.GetClientRect(wnd,wr);
+      s2:=s2+fstr('Client area: '+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+'')+UH_CR+UH_LF;
+      s2:=s2+fstr('Cursor pos: '+inttostr(pt.x)+':'+inttostr(pt.y))+UH_CR+UH_LF;
+      s2:=s2+UH_CR+UH_LF+fstr('BitBlts:')+UH_CR+UH_LF;
+      for i:=1 to bitcnt do
+      begin
+        s2:=s2+fstr(inttostr(i)+'# Mod:');
+        for j:=1 to rdcnt do if curbit[i].srcdc=curtext[j].hdc then
         begin
-          gbg[j]:=cx;
-          gen[j]:=cx+curtext[i].len[j];
-  //        s2:=s2+chr(curtext[i].str[j] mod 256);
-          if wen=-1 then
-          begin
-            if (curtext[i].str[j]<ord('A')) or ((curtext[i].str[j]>ord('Z')) and
-                (curtext[i].str[j]<ord('a'))) or (curtext[i].str[j]>ord('z')) then
-                begin wbg:=j+1; wtp:=2; end else wtp:=1;
-          end;
-          if (cx+curtext[i].len[j]>pt.x) and (wen=-1) then
-          begin
-            if wbg>j then wbg:=j;
-            if wbg=-1 then wbg:=0;
-            wen:=wbg;
-            if wtp=1 then while (wen+1<curtext[i].slen) and
-              (((curtext[i].str[wen+1]>=ord('a')) and (curtext[i].str[wen+1]<=ord('z'))) or
-               ((curtext[i].str[wen+1]>=ord('A')) and (curtext[i].str[wen+1]<=ord('Z')))) do inc(wen);
-            if wtp=2 then wen:=wbg+10;
-            if wen>=curtext[i].slen then wen:=curtext[i].slen-1;
-          end;
-          cx:=cx+curtext[i].len[j];
+          s2:=s2+fstr(inttostr(j)+';');
+          curtext[j].hwnd:=curbit[i].hwnd;
+          curtext[j].x:=curtext[j].x+curbit[i].xofs;
+          curtext[j].y:=curtext[j].y+curbit[i].yofs;
+      //    s:=s+'T+'+inttostr(curbit[i].xofs)+'='+inttostr(curbit[i].yofs)+'+';
         end;
-        if wen<>-1 then for k:=wbg to wen do
-          wwadd(gbg[k],gen[k],curtext[i].str[k]);
-        if wtp=1 then wwadd(gen[wen],gen[wen],32);
+        s2:=s2+fstr(' Ofs:'+inttostr(curbit[i].xofs)+':'+inttostr(curbit[i].yofs))+UH_CR+UH_LF;
       end;
-    end;
-    cev:=0;
-    cx:=-100;
-    last:=0;
-    if (ftextpos>0) and (ftextbeg[0]<=pt.x+2) then
-    for i:=0 to ftextpos-1 do
-    begin
-      if cev=0 then cev:=EvalChar(WideChar(ftext[i]));
-      ev:=EvalChar(WideChar(ftext[i]));
-      if (cev=ev) or ((cev=1) and (ev=2)) then
+      s2:=s2+UH_CR+UH_LF+fstr('TextOuts:')+UH_CR+UH_LF;
+      for i:=1 to rdcnt do
       begin
-        if (ev<>0) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then
-          s:=s+fstr(widechar(ftext[i]))
-      end else break;
-      cx:=ftextbeg[i];
-      last:=ftext[i];
-      cev:=EvalChar(WideChar(ftext[i]));
+        lp.x:=curtext[i].x;
+        lp.y:=curtext[i].y;
+        Windows.GetWindowRect(wnd,wr);
+        lp.x:=lp.x+wr.Left;
+        lp.y:=lp.y+wr.Top;
+        s2:=s2+fstr(inttostr(i)+'# "');
+        for j:=0 to curtext[i].slen-1 do if curtext[i].str[j]>=32 then
+          s2:=s2+fstr(widechar(curtext[i].str[j]));
+        s2:=s2+fstr('"'+
+          ' Org:'+inttostr(savedx[i])+':'+inttostr(savedy[i])+
+          ' Align:'+inttostr(curtext[i].x)+':'+inttostr(curtext[i].y)+
+          ' Trans:'+inttostr(lp.x)+':'+inttostr(lp.y)+
+          ' Size:'+inttostr(curtext[i].w)+':'+inttostr(curtext[i].h)+' ');
+        if curtext[i].hwnd=wnd then s2:=s2+fstr('OK') else s2:=s2+fstr('BAD WND');
+        s2:=s2+UH_CR+UH_LF;
+      end;
+      for i:=1 to rdcnt do if (curtext[i].slen>0) and (curtext[i].hwnd=wnd) then
+      begin
+        wbg:=0;
+        lp.x:=curtext[i].x;
+        lp.y:=curtext[i].y;
+        Windows.GetWindowRect(wnd,wr);
+        lp.x:=lp.x+wr.Left;
+        lp.y:=lp.y+wr.Top;
+        if (lp.y<=pt.y) and (lp.x+curtext[i].w>=pt.x) and (lp.y+curtext[i].h>=pt.y) then
+        begin
+          cx:=lp.x;
+          wen:=-1;
+          for j:=0 to curtext[i].slen-1 do
+          begin
+            gbg[j]:=cx;
+            gen[j]:=cx+curtext[i].len[j];
+    //        s2:=s2+chr(curtext[i].str[j] mod 256);
+            if wen=-1 then
+            begin
+              if (curtext[i].str[j]<ord('A')) or ((curtext[i].str[j]>ord('Z')) and
+                  (curtext[i].str[j]<ord('a'))) or (curtext[i].str[j]>ord('z')) then
+                  begin wbg:=j+1; wtp:=2; end else wtp:=1;
+            end;
+            if (cx+curtext[i].len[j]>pt.x) and (wen=-1) then
+            begin
+              if wbg>j then wbg:=j;
+              if wbg=-1 then wbg:=0;
+              wen:=wbg;
+              if wtp=1 then while (wen+1<curtext[i].slen) and
+                (((curtext[i].str[wen+1]>=ord('a')) and (curtext[i].str[wen+1]<=ord('z'))) or
+                 ((curtext[i].str[wen+1]>=ord('A')) and (curtext[i].str[wen+1]<=ord('Z')))) do inc(wen);
+              if wtp=2 then wen:=wbg+10;
+              if wen>=curtext[i].slen then wen:=curtext[i].slen-1;
+            end;
+            cx:=cx+curtext[i].len[j];
+          end;
+          if wen<>-1 then for k:=wbg to wen do
+            wwadd(gbg[k],gen[k],curtext[i].str[k]);
+          if wtp=1 then wwadd(gen[wen],gen[wen],32);
+        end;
+      end;
+      cev:=0;
+      cx:=-100;
+      last:=0;
+      if (ftextpos>0) and (ftextbeg[0]<=pt.x+2) then
+      for i:=0 to ftextpos-1 do
+      begin
+        if cev=0 then cev:=EvalChar(WideChar(ftext[i]));
+        ev:=EvalChar(WideChar(ftext[i]));
+        if (cev=ev) or ((cev=1) and (ev=2)) then
+        begin
+          if (ev<>0) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then
+            s:=s+fstr(widechar(ftext[i]))
+        end else break;
+        cx:=ftextbeg[i];
+        last:=ftext[i];
+        cev:=EvalChar(WideChar(ftext[i]));
+      end;
+      if s<>'' then evc:=EvalChar(WideChar(ftext[0]));
     end;
-    if s<>'' then evc:=EvalChar(WideChar(ftext[0]));
-  end;
-  screenTipDebug:=s2;
-  if s<>'' then
-  begin
-    if screenTipImmediate then
-      fMenu.ShowScreenTip(pt.x-10,pt.y-10,s,evc,true) else
-      fMenu.ShowScreenTip(pt.x+10,pt.y+10,s,evc,false);
-    if screenTipShown then popcreated:=true;
-  end;
-  tim:=-1;
+    screenTipDebug:=s2;
+    if s<>'' then
+    begin
+      if screenTipImmediate then
+        fMenu.ShowScreenTip(pt.x-10,pt.y-10,s,evc,true) else
+        fMenu.ShowScreenTip(pt.x+10,pt.y+10,s,evc,false);
+      if screenTipShown then popcreated:=true;
+    end;
+    tim:=-1;
   finally
-  inproc:=false;
+    inproc:=false;
   end;
 end;
 
@@ -3806,7 +3823,6 @@ end;
 initialization
   tim:=0;
   rdcnt:=0;
-  inproc:=false;
   popcreated:=false;
   chardetl:=TStringList.Create;
   CharPropTypes:=TStringList.Create;
