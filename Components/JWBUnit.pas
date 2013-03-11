@@ -31,6 +31,12 @@ const
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 function GetAppDataFolder: string;
 
+type
+  TLogEvent = procedure(const msg: string) of object;
+
+procedure SetLogger(ALogger: TLogEvent);
+procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF}
+procedure Log(const msg: string; args: array of const); overload; {$IFNDEF DEBUG}inline;{$ENDIF}
 
 { Romaji conversions }
 
@@ -82,6 +88,7 @@ function FindDrawReg(p:TPaintBox;x,y:integer;flags:TFindDrawRegFlags;out id,cx,c
 function GetDrawReg(id:integer;out cx,cy,fs:integer):FString;
 
 function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
+function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
@@ -135,7 +142,8 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
+uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable,
+  Logger;
 
 
 { Portable/standalone }
@@ -162,6 +170,36 @@ begin
   DictionaryDir := AppFolder;
 end;
 
+
+{ Log }
+
+var
+  Logger: TLogEvent;
+
+procedure SetLogger(ALogger: TLogEvent);
+begin
+  Logger := ALogger;
+end;
+
+procedure Log(const msg: string);
+{$IFDEF DEBUG}
+var tmp: string;
+begin
+  if Assigned(Logger) then Logger(msg);
+  tmp:=msg+#13#10;
+  WriteFileWithBom('wakan.log', @tmp[1], Length(tmp)*SizeOf(char));
+end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
+
+procedure Log(const msg: string; args: array of const); overload;
+begin
+{$IFDEF DEBUG}
+  Log(Format(msg,args));
+{$ENDIF}
+end;
 
 { Romaji conversions }
 
@@ -926,45 +964,103 @@ var id1,id2:integer;
   x1,x2,y1,fs,fs2,x_tmp:integer;
   s2,s_tmp:string;
 begin
-  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fs);
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
+   //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
+    Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fs);
+    SetScreenTipBlock(0,0,0,0,nil);
+    exit;
+  end;
+
+  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fs);
+  s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
+  if id2<0 then begin //drag from dead point => no selection
     Result := '';
     SetScreenTipBlock(0,0,0,0,nil);
-  end else begin
-    s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
-    if id2<0 then begin //drag from dead point => no selection
-      Result := '';
-      SetScreenTipBlock(0,0,0,0,nil);
-      exit;
-    end;
+    exit;
+  end;
 
-    if id1<>id2 then begin //mouse over different control/line
-     //Try again, with Y set to that of DragStart
-      CursorPos.Y := DragStart.Y;
-      Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fs);
-      if id1<>id2 then begin
-       //Just set the endpoint to the start or the end of the capturing line
-        if CursorPos.X>DragStart.X then begin
-          Result:=s2;
-          SetScreenTipBlock(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
-          exit;
-        end else begin
-          Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
-          //and continue with normal handling
-        end;
+  if id1<>id2 then begin //mouse over different control/line
+   //Try again, with Y set to that of DragStart
+    CursorPos.Y := DragStart.Y;
+    Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fs);
+    if id1<>id2 then begin
+     //Just set the endpoint to the start or the end of the capturing line
+      if CursorPos.X>DragStart.X then begin
+        Result:=s2;
+        SetScreenTipBlock(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
+        exit;
+      end else begin
+        Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
+        //and continue with normal handling
       end;
     end;
-
-    if length(s2)>length(Result) then begin
-     //Swap s1 and s2
-      s_tmp:=s2; s2:=Result; Result:=s_tmp;
-      x_tmp:=x2; x2:=x1; x1:=x_tmp;
-    end;
-    Result:=copy(Result,1,length(Result)-length(s2));
-    SetScreenTipBlock(x1,y1,x2,y1+fs,p.Canvas);
   end;
+
+  if length(s2)>length(Result) then begin
+   //Swap s1 and s2
+    s_tmp:=s2; s2:=Result; Result:=s_tmp;
+    x_tmp:=x2; x2:=x1; x1:=x_tmp;
+  end;
+  Result:=copy(Result,1,length(Result)-length(s2));
+  SetScreenTipBlock(x1,y1,x2,y1+fs,p.Canvas);
 end;
 
+function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
+var gc,gc2:TGridCoord;
+    rect:TRect;
+    mox1,mox2:integer;
+begin
+  gc:=p.MouseCoord(DragStart.x,DragStart.y);
+
+  if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
+   //Drag from header or drag from no-cell
+    Result:='';
+    SetScreenTipBlock(0,0,0,0,nil);
+    exit;
+  end;
+
+  Result:=remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
+  rect:=p.CellRect(gc.x,gc.y);
+  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
+   //No drag, mouse over
+    fdelete(Result,1,((CursorPos.x-rect.left-2) div GridFontSize));
+    SetScreenTipBlock(0,0,0,0,nil);
+    exit;
+  end;
+
+  gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
+  if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin //mouse over different control/line
+   //Try again, with Y set to that of DragStart
+    CursorPos.Y := DragStart.Y;
+    gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
+    if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin
+     //Just set the endpoint to the start or the end of the capturing line
+      if CursorPos.X>DragStart.X then
+        CursorPos.X:=rect.Right
+      else
+        CursorPos.X:=rect.Left;
+     //and continue with normal handling
+    end;
+  end;
+
+ //Swap points so that mox2 is to the right
+  if DragStart.x>CursorPos.x then
+  begin
+    mox1:=CursorPos.x;
+    mox2:=DragStart.x;
+  end else
+  begin
+    mox1:=DragStart.x;
+    mox2:=CursorPos.x;
+  end;
+
+  //calculate char count -- if half of the char is covered, it's covered
+  mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
+  mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
+  Result:=fcopy(Result,1+mox1,mox2-mox1);
+  if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
+  SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,p.Canvas);
+end;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 var i,l,r,m:integer;
@@ -1295,6 +1391,7 @@ var s:string;
     gr:integer;
     rect2:TRect;
 begin
+  Log('DrawWordCell('+grid.Name+', '+IntToStr(ACol)+', '+IntToStr(ARow)+')');
   s:=Grid.Cells[ACol,ARow];
   rect2:=rect;
   rect2.bottom:=1000;
@@ -1305,6 +1402,7 @@ begin
   end;
   DrawWordInfo(Grid.Canvas, Rect, gdSelected in State, ARow=0, ACol, s, true, false, GridFontSize,true);
   PaintScreenTipBlock;
+  Log('DrawWordCell() out');
 end;
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
@@ -1328,6 +1426,7 @@ var
 procedure PaintScreenTipBlock;
 var oldR2:integer;
 begin
+  Log('PaintScreenTipBlock()');
   if STB_Canvas<>nil then
   begin
     oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
@@ -1341,6 +1440,7 @@ begin
   //No flicker please
   if (STB_canvas=canvas) and (STB_x1=x1) and (STB_x2=x2) and (STB_y1=y1)
     and (STB_y2=y2) then exit;
+  Log('SetScreenTipBlock(%d,%d,%d,%d) in', [x1,y1,x2,y2]);
   PaintScreenTipBlock;
   STB_x1:=x1;
   STB_y1:=y1;
@@ -1348,6 +1448,7 @@ begin
   STB_y2:=y2;
   STB_canvas:=canvas;
   PaintScreenTipBlock;
+  Log('SetScreenTipBlock() out');
 end;
 
 

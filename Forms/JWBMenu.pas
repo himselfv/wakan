@@ -3622,15 +3622,33 @@ var s1:string;
     mox1,mox2:integer;
     mo:boolean;
   rpos: TSourcePos;
+  MouseControl: TControl; //control which receives the mouse events
+  MousePos: TPoint; //mouse pos in that control coordinate system
 begin
-  if intmo=nil then begin
+ //It is important that we route mouse events to the control which captured mouse,
+ //else we'd get popup even when clicking in Text Editor, then dragging the mouse outside
+  if intorg=nil then begin
+   //mouse is free, hovering over intmo
+    MouseControl:=intmo;
+    MousePos:=intmocc;
+  end else begin
+   //mouse is captured by a different control
+    MouseControl:=intorg;
+    if intorg=intmo then
+      MousePos:=intmocc
+    else
+      MousePos:=MouseControl.ScreenToClient(intmo.ClientToScreen(intmocc)); //convert to capture control coordinate system
+  end;
+ //Now MouseControl can either be DragStart control, MouseOver control or nil.
+
+  if MouseControl=nil then begin
     s1 := '';
     SetScreenTipBlock(0,0,0,0,nil);
   end else
 
-  if intmo=fTranslate.EditorPaintBox then
+  if MouseControl=fTranslate.EditorPaintBox then
   begin
-    rpos:=fTranslate.GetExactLogicalPos(intmocc.x,intmocc.y);
+    rpos:=fTranslate.GetExactLogicalPos(MousePos.x,MousePos.y);
     rx := rpos.x; ry := rpos.y;
     if (ry<>-1) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
       s1:=fTranslate.GetDocWord(rx,ry,wtt,false)
@@ -3639,64 +3657,36 @@ begin
     SetScreenTipBlock(0,0,0,0,nil);
   end else
 
-  if intmo is TPaintBox then
+  if MouseControl is TPaintBox then
   begin
-    if intorg=intmo then
-      s1:=PaintBoxUpdateSelection(TPaintBox(intmo),intorgcc,intmocc)
-    else
-    if intorg<>nil then begin //mouse captured by different control
-      intmocc:=intorg.ScreenToClient(intmo.ClientToScreen(intmocc)); //convert to capture control coordinate system
-      s1:=PaintBoxUpdateSelection(TPaintBox(intorg),intorgcc,intmocc)
-    end else //this control, no selection
-      s1:=PaintBoxUpdateSelection(TPaintBox(intmo),intmocc,intmocc);
+    if intorg<>nil then //dragging
+      s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),intorgcc,MousePos)
+    else //just hovering
+      s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),MousePos,MousePos);
   end else
 
-  if intmo is TCustomDrawGrid then
+  if MouseControl is TCustomDrawGrid then
   begin
-    SetScreenTipBlock(0,0,0,0,nil);
-    gc:=TCustomDrawGrid(intmo).MouseCoord(intmocc.x,intmocc.y);
-    if intmo=fKanji.DrawGrid1 then
-      s1:=fKanji.GetKanji(gc.x,gc.y)
-    else
-    if intmo=fRadical.DrawGrid then
-      s1:=fRadical.GetKanji(gc.x,gc.y)
-    else
-    begin
-      if (gc.x>=0) and (gc.x<2) and (gc.y>0) then
-      begin
-        if intorg=intmo then
-        begin
-          gc2:=TCustomDrawGrid(intmo).MouseCoord(intorgcc.x,intorgcc.y);
-          mo:=(gc2.x=gc.x) and (gc2.y=gc.y);
-        end else mo:=false;
-        s1:=remexcl((TStringGrid(intmo)).Cells[gc.x,gc.y]);
-        rect:=TCustomDrawGrid(intmo).CellRect(gc.x,gc.y);
-        if not mo then fdelete(s1,1,((intmocc.x-rect.left-2) div GridFontSize));
-        if mo then
-        begin
-          if intorgcc.x>intmocc.x then
-          begin
-            mox1:=intmocc.x;
-            mox2:=intorgcc.x;
-          end else
-          begin
-            mox1:=intorgcc.x;
-            mox2:=intmocc.x;
-          end;
-          //calculate char count -- if half of the char is covered, it's covered
-          mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
-          mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
-          s1:=fcopy(s1,1+mox1,mox2-mox1);
-          if flength(s1)<mox2-mox1 then mox2:=mox1+flength(s1); //don't select over the end of text
-          SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,TCustomDrawGrid(intmo).Canvas);
-        end;
-      end;
-    end;
+    gc:=TCustomDrawGrid(MouseControl).MouseCoord(MousePos.x,MousePos.y);
+    if MouseControl=fKanji.DrawGrid1 then begin
+      s1:=fKanji.GetKanji(gc.x,gc.y);
+      SetScreenTipBlock(0,0,0,0,nil);
+    end else
+    if MouseControl=fRadical.DrawGrid then begin
+      s1:=fRadical.GetKanji(gc.x,gc.y);
+      SetScreenTipBlock(0,0,0,0,nil);
+    end else
+    if intorg<>nil then //dragging
+      s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),intorgcc,MousePos)
+    else //just hovering
+      s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),MousePos,MousePos);
+  end else
 
-  end else begin
+  begin
     s1 := ''; //invalid control in intmo
     SetScreenTipBlock(0,0,0,0,nil);
   end;
+
   intcurString:=s1;
 end;
 
