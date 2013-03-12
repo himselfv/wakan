@@ -149,7 +149,7 @@ object fKanjiSearch: TfKanjiSearch
     ParentFont = False
     OnClick = sbClearFiltersClick
   end
-  object SpeedButton2: TSpeedButton
+  object btnOnlyCommon: TSpeedButton
     Left = 480
     Top = 132
     Width = 131
@@ -167,7 +167,7 @@ object fKanjiSearch: TfKanjiSearch
     ParentFont = False
     OnClick = sbPinYinClick
   end
-  object SpeedButton3: TSpeedButton
+  object btnInClipboard: TSpeedButton
     Left = 480
     Top = 155
     Width = 131

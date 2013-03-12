@@ -751,14 +751,15 @@ begin
 
   //Search params
   if cbSaveSearchParams.Checked then begin
-    fKanjiSearch.SpeedButton2.Down :=reg.ReadBool('KanjiSearch','Common',false);
+    fKanjiSearch.btnOnlyCommon.Down :=reg.ReadBool('KanjiSearch','OnlyCommon',false);
+//    fKanjiSearch.btnInClipboard.Down :=reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
     fKanjiSearch.edtPinYin.Text :=reg.ReadString('KanjiSearch','PinYin','');
     fKanjiSearch.edtYomi.Text :=reg.ReadString('KanjiSearch','Yomi','');
     fKanjiSearch.edtDefinition.Text :=reg.ReadString('KanjiSearch','Definition','');
-    fKanjiSearch.edtStrokeCount.Text := reg.ReadString('KanjiSearch','Strokes','');
-    fKanjiSearch.curRadSearchType := TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
-    fKanjiSearch.curRadSearch := reg.ReadString('KanjiSearch','RadSearch','');
-    fKanjiSearch.edtRadicals.Text := reg.ReadString('KanjiSearch','RadIndexes','');
+    fKanjiSearch.edtStrokeCount.Text :=reg.ReadString('KanjiSearch','Strokes','');
+    fKanjiSearch.curRadSearchType :=TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
+    fKanjiSearch.curRadSearch :=reg.ReadString('KanjiSearch','RadSearch','');
+    fKanjiSearch.edtRadicals.Text :=reg.ReadString('KanjiSearch','RadIndexes','');
     fKanjiSearch.edtSKIP.Text :=reg.ReadString('KanjiSearch','SKIP','');
     fKanjiSearch.edtJouyou.Text :=reg.ReadString('KanjiSearch','Jouyou','');
     fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
@@ -1018,7 +1019,8 @@ begin
   end;
 
   if cbSaveSearchParams.Checked then begin
-    reg.WriteBool('KanjiSearch','Common',fKanjiSearch.SpeedButton2.down);
+    reg.WriteBool('KanjiSearch','OnlyCommon',fKanjiSearch.btnOnlyCommon.Down);
+//    reg.WriteBool('KanjiSearch','InClipboard',fKanjiSearch.btnInClipboard.Down); //do not save-restore this for now (by design)
     if fKanjiSearch.sbPinYin.Down then
       reg.WriteString('KanjiSearch','PinYin',fKanjiSearch.edtPinYin.Text)
     else

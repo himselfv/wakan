@@ -15,8 +15,8 @@ type
     Bevel2: TBevel;
     sbSKIP: TSpeedButton;
     sbClearFilters: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton3: TSpeedButton;
+    btnOnlyCommon: TSpeedButton;
+    btnInClipboard: TSpeedButton;
     sbStrokeCount: TSpeedButton;
     sbOther: TSpeedButton;
     sbJouyou: TSpeedButton;
@@ -153,8 +153,8 @@ begin
   sbDefinition.Down:=false;
   sbOther.Down:=false;
   SpeedButton1.Down:=false;
-  SpeedButton2.Down:=false;
-  SpeedButton3.Down:=false;
+  btnOnlyCommon.Down:=false;
+  btnInClipboard.Down:=false;
   sbStrokeCount.Down:=false;
   sbRadicals.Down:=false;
   sbSKIP.Down:=false;

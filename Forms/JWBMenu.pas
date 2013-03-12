@@ -2069,7 +2069,7 @@ begin
     clip := newclip;
     PaintBox3.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
-    if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
+    if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
     if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
   end;
   critsec:=false;
@@ -2142,7 +2142,7 @@ begin
   PaintBox3.Invalidate;
   fUserAdd.PaintBox2.Invalidate;
 
-  if (fKanji.Visible) and (fKanjiSearch.SpeedButton3.Down) then fKanji.DoIt;
+  if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
   if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
 end;
 
@@ -2679,14 +2679,14 @@ end;
 procedure TfMenu.aKanjiCommonExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
-  fKanjiSearch.SpeedButton2.Down:=not fKanjiSearch.SpeedButton2.Down;
+  fKanjiSearch.btnOnlyCommon.Down:=not fKanjiSearch.btnOnlyCommon.Down;
   fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiClipboardExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aKanjiExecute(Sender);
-  fKanjiSearch.SpeedButton3.Down:=not fKanjiSearch.SpeedButton3.Down;
+  fKanjiSearch.btnInClipboard.Down:=not fKanjiSearch.btnInClipboard.Down;
   fKanjiSearch.sbPinYinClick(Sender);
 end;
 

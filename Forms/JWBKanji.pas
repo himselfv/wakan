@@ -321,8 +321,8 @@ begin
   try
     Screen.Cursor:=crHourGlass;
     fMenu.aKanjiLearned.Checked:=fKanjiSearch.SpeedButton1.Down;
-    fMenu.aKanjiCommon.Checked:=fKanjiSearch.SpeedButton2.Down;
-    fMenu.aKanjiClipboard.Checked:=fKanjiSearch.SpeedButton3.Down;
+    fMenu.aKanjiCommon.Checked:=fKanjiSearch.btnOnlyCommon.Down;
+    fMenu.aKanjiClipboard.Checked:=fKanjiSearch.btnInClipboard.Down;
     fltclip:=TStringList.Create;
     fltpinyin:=TStringList.Create;
     fltyomi:=TStringList.Create;
@@ -333,7 +333,7 @@ begin
     sl4:=TStringList.Create;
     sl10:=TStringList.Create;
     CopyCategories;
-    if fKanjiSearch.SpeedButton3.Down then
+    if fKanjiSearch.btnInClipboard.Down then
       for i:=0 to length(clip) div 4-1 do
         if clip[i*4+1]>='4'then if fltclip.IndexOf(uppercase(copy(clip,i*4+1,4)))=-1 then
           fltclip.Add(uppercase(copy(clip,i*4+1,4)));
@@ -394,7 +394,7 @@ begin
       end;
     ki.Clear;
     radf:=fSettings.ComboBox1.ItemIndex+12;
-    clipsort:=(fKanjiSearch.SpeedButton3.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
+    clipsort:=(fKanjiSearch.btnInClipboard.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;
     while ((not clipsort) and ((not TChar.EOF) and ((chin) or (TChar.Int(TCharChinese)=0)))) or
@@ -404,9 +404,9 @@ begin
       if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
       if accept and chin and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TCharType)='S') then accept:=false;
       if accept and chin and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TCharType)='T') then accept:=false;
-      if accept and (fKanjiSearch.SpeedButton2.Down) and chin and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
-      if accept and (fKanjiSearch.SpeedButton2.Down) and not chin and (TChar.Int(TCharJouyouGrade)>=10) then accept:=false;
-      if accept and (not clipsort) and (fKanjiSearch.SpeedButton3.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TCharUnicode)))=-1) then accept:=false;
+      if accept and (fKanjiSearch.btnOnlyCommon.Down) and chin and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
+      if accept and (fKanjiSearch.btnOnlyCommon.Down) and not chin and (TChar.Int(TCharJouyouGrade)>=10) then accept:=false;
+      if accept and (not clipsort) and (fKanjiSearch.btnInClipboard.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TCharUnicode)))=-1) then accept:=false;
       if accept and (fKanjiSearch.sbPinYin.Down) and (fltpinyin.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
       if accept and (fKanjiSearch.sbYomi.Down) and (fltyomi.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
       if accept and (fKanjiSearch.sbDefinition.Down) and (fltmean.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
