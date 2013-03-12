@@ -35,8 +35,9 @@ type
   TLogEvent = procedure(const msg: string) of object;
 
 procedure SetLogger(ALogger: TLogEvent);
-procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF}
+procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF} //inline in debug so that it's completely eliminated
 procedure Log(const msg: string; args: array of const); overload; {$IFNDEF DEBUG}inline;{$ENDIF}
+procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IFNDEF DEBUG}inline;{$ENDIF}
 
 { Romaji conversions }
 
@@ -97,8 +98,8 @@ function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integ
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 
-procedure PaintScreenTipBlock;
-procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
+procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
+procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 
 
 { Rest }
@@ -200,6 +201,36 @@ begin
   Log(Format(msg,args));
 {$ENDIF}
 end;
+
+var
+  DumpId: integer = 0;
+
+//Outputs the image from the canvas to the file
+procedure DumpHdc(const h: HDC; const r: TRect; const pref: string);
+{$IFDEF DEBUG}
+var bmp: Graphics.TBitmap;
+  fname: string;
+begin
+  if (r.Right-r.Left<=0) or (r.Bottom-r.Top<=0) then exit;
+
+  bmp := Graphics.TBitmap.Create;
+  try
+    bmp.PixelFormat := pf32bit;
+    bmp.SetSize(r.Right-r.Left,r.Bottom-r.Top);
+    if not BitBlt(bmp.Canvas.Handle,0,0,r.Right-r.Left,r.Bottom-r.Top,h,r.Left,r.Top,SRCCOPY) then
+      RaiseLastOsError();
+    inc(DumpId);
+    fname := 'dump-'+IntToStr(GetTickCount)+'-'+IntToStr(DumpId)+'-'+pref+IntToHex(integer(h),8)+'.bmp';
+    bmp.SaveToFile(fname);
+    Log('Dumped: '+fname);
+  finally
+    FreeAndNil(bmp);
+  end;
+end;
+{$ELSE}
+begin
+end;
+{$ENDIF}
 
 { Romaji conversions }
 
@@ -871,7 +902,7 @@ end;
 
 {
 Drawing registry.
-For some reason (to support text selection) Wakan keeps a list of all text lines
+To support text selection, Wakan keeps a list of all text lines
 it has drawn with the help of DrawUnicode.
 Each time a control is redrawn, all cells related to it are cleared.
 }
@@ -967,7 +998,7 @@ begin
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
    //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
     Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fs);
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
@@ -975,7 +1006,7 @@ begin
   s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
   if id2<0 then begin //drag from dead point => no selection
     Result := '';
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
@@ -987,7 +1018,7 @@ begin
      //Just set the endpoint to the start or the end of the capturing line
       if CursorPos.X>DragStart.X then begin
         Result:=s2;
-        SetScreenTipBlock(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
+        SetSelectionHighlight(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
         exit;
       end else begin
         Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
@@ -1002,7 +1033,7 @@ begin
     x_tmp:=x2; x2:=x1; x1:=x_tmp;
   end;
   Result:=copy(Result,1,length(Result)-length(s2));
-  SetScreenTipBlock(x1,y1,x2,y1+fs,p.Canvas);
+  SetSelectionHighlight(x1,y1,x2,y1+fs,p.Canvas);
 end;
 
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
@@ -1015,7 +1046,7 @@ begin
   if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
    //Drag from header or drag from no-cell
     Result:='';
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
@@ -1024,7 +1055,7 @@ begin
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
    //No drag, mouse over
     fdelete(Result,1,((CursorPos.x-rect.left-2) div GridFontSize));
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
@@ -1059,7 +1090,7 @@ begin
   mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
   Result:=fcopy(Result,1+mox1,mox2-mox1);
   if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
-  SetScreenTipBlock(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,p.Canvas);
+  SetSelectionHighlight(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,p.Canvas);
 end;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
@@ -1391,7 +1422,6 @@ var s:string;
     gr:integer;
     rect2:TRect;
 begin
-  Log('DrawWordCell('+grid.Name+', '+IntToStr(ACol)+', '+IntToStr(ARow)+')');
   s:=Grid.Cells[ACol,ARow];
   rect2:=rect;
   rect2.bottom:=1000;
@@ -1401,8 +1431,7 @@ begin
     if grid.rowheights[arow]<>gr then begin grid.rowheights[arow]:=gr; exit; end;
   end;
   DrawWordInfo(Grid.Canvas, Rect, gdSelected in State, ARow=0, ACol, s, true, false, GridFontSize,true);
-  PaintScreenTipBlock;
-  Log('DrawWordCell() out');
+  PaintSelectionHighlight(Grid.Canvas,@rect);
 end;
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
@@ -1418,37 +1447,54 @@ begin
 end;
 
 
-{ Screen tip block -- here it just means "text selection block" in any of DrawUnicode-powered controls }
+{ Text selection highlight.
+ Remembers one block of pixels to be highlighted, in any control.
+ Used by DrawUnicode-powered controls for their custom selection mechanics. }
 var
-  STB_x1,STB_y1,STB_x2,STB_y2:integer;
   STB_canvas:TCanvas;
+  STB_x1,STB_y1,STB_x2,STB_y2:integer;
 
-procedure PaintScreenTipBlock;
-var oldR2:integer;
-begin
-  Log('PaintScreenTipBlock()');
-  if STB_Canvas<>nil then
-  begin
-    oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
-    STB_Canvas.Rectangle(STB_x1,STB_y1,STB_x2,STB_y2);
-    SetROP2(STB_Canvas.Handle,oldR2);
-  end;
-end;
-
-procedure SetScreenTipBlock(x1,y1,x2,y2:integer;canvas:TCanvas);
+{ Clears old one, and sets and paints new selection highlight. }
+procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 begin
   //No flicker please
   if (STB_canvas=canvas) and (STB_x1=x1) and (STB_x2=x2) and (STB_y1=y1)
     and (STB_y2=y2) then exit;
-  Log('SetScreenTipBlock(%d,%d,%d,%d) in', [x1,y1,x2,y2]);
-  PaintScreenTipBlock;
+  PaintSelectionHighlight;
   STB_x1:=x1;
   STB_y1:=y1;
   STB_x2:=x2;
   STB_y2:=y2;
   STB_canvas:=canvas;
-  PaintScreenTipBlock;
-  Log('SetScreenTipBlock() out');
+  PaintSelectionHighlight;
+end;
+
+{ Re-applies currently active selection highlight where it has to be applied.
+Pass valid Canvas and Rect so we do proper clipping, otherwise we'll flip
+highlight even on unrelated repaints (=> highlight state broken).
+Only pass wildcard when the highlight has to be redrawn outside of repaint handlers
+(such as when it changes). }
+procedure PaintSelectionHighlight(canv: TCanvas; in_rect: PRect);
+var oldR2:integer;
+  rgn: HRGN;
+begin
+  if STB_Canvas=nil then exit;
+  if canv<>nil then if canv<>STB_canvas then exit;
+  Log('PaintScreenTipBlock(%d,%d,%d,%d)',[STB_x1,STB_y1,STB_x2,STB_y2]);
+
+  oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
+  if in_rect<>nil then begin
+    rgn:=CreateRectRgn(0,0,0,0);
+    GetClipRgn(STB_Canvas.Handle,rgn);
+    IntersectClipRect(STB_Canvas.Handle,in_rect.Left,in_rect.Top,in_rect.Right,in_rect.Bottom);
+  end else
+    rgn := 0;
+  STB_Canvas.Rectangle(STB_x1,STB_y1,STB_x2,STB_y2);
+  if rgn<>0 then begin
+    SelectClipRgn(STB_Canvas.Handle,rgn);
+    DeleteObject(rgn); //copied into canvas, can delete
+  end;
+  SetROP2(STB_Canvas.Handle,oldR2);
 end;
 
 

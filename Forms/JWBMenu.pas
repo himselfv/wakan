@@ -3147,7 +3147,7 @@ var maxwords,maxwordss:integer;
     proposeds:string;
     maxslen,slen:integer;
 begin
-  SetScreenTipBlock(0,0,0,0,nil);
+  SetSelectionHighlight(0,0,0,0,nil);
   intorg:=nil;
   if ((wt=7) and (not fSettings.CheckBox47.Checked)) then exit;
   if ((wt<7) and (not fSettings.CheckBox28.Checked)) then exit;
@@ -3643,7 +3643,7 @@ begin
 
   if MouseControl=nil then begin
     s1 := '';
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
   end else
 
   if MouseControl=fTranslate.EditorPaintBox then
@@ -3654,7 +3654,7 @@ begin
       s1:=fTranslate.GetDocWord(rx,ry,wtt,false)
     else
       s1:='';
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
   end else
 
   if MouseControl is TPaintBox then
@@ -3670,11 +3670,11 @@ begin
     gc:=TCustomDrawGrid(MouseControl).MouseCoord(MousePos.x,MousePos.y);
     if MouseControl=fKanji.DrawGrid1 then begin
       s1:=fKanji.GetKanji(gc.x,gc.y);
-      SetScreenTipBlock(0,0,0,0,nil);
+      SetSelectionHighlight(0,0,0,0,nil);
     end else
     if MouseControl=fRadical.DrawGrid then begin
       s1:=fRadical.GetKanji(gc.x,gc.y);
-      SetScreenTipBlock(0,0,0,0,nil);
+      SetSelectionHighlight(0,0,0,0,nil);
     end else
     if intorg<>nil then //dragging
       s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),intorgcc,MousePos)
@@ -3684,7 +3684,7 @@ begin
 
   begin
     s1 := ''; //invalid control in intmo
-    SetScreenTipBlock(0,0,0,0,nil);
+    SetSelectionHighlight(0,0,0,0,nil);
   end;
 
   intcurString:=s1;
