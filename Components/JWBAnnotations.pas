@@ -32,10 +32,10 @@ procedure AnnotShowMedia(kanji,kana:string);
 implementation
 uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBConvert, JWBMenu;
 
-procedure WriteAnnotPackage(tempDir: string);
+procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 begin
   PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName annotate.pkg');
+  PKGWriteForm.PKGWriteCmd('PKGFileName '+pkg);
   PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
   PKGWriteForm.PKGWriteCmd('Name WaKan Compiled Annotations');
   PKGWriteForm.PKGWriteCmd('TitleName WaKan Compiled Annotations');
@@ -55,6 +55,8 @@ begin
   PKGWriteForm.PKGWriteCmd('Finish');
 end;
 
+{ Rebuilds the annotation package if it's missing, or if any of the *.ANO files
+have been changed. }
 //TODO: Convert to Unicode
 procedure RebuildAnnotations;
 const
@@ -62,13 +64,13 @@ const
   UH_SEP_SEMICOLON:FChar = {$IFDEF UNICODE}';'{$ELSE}'003B'{$ENDIF};
   UH_SEP_COLON:FChar = {$IFDEF UNICODE}':'{$ELSE}'003A'{$ENDIF};
 var
-  tempDir: string;
+  tempDir,tempPkgDir: string;
   t:textfile;
   chk,nchk:TStringList;
   ch:FChar;
   ss: string;
   sr:TSearchRec;
-  bld:boolean;
+  bld:boolean; //true if need to rebuild
   pd:TSMPromptForm;
   ps:TPackageSource;
   tt:TTextTable;
@@ -92,14 +94,19 @@ begin
   chk.Free;
   nchk.Free;
 
-  if not FileExists('ANNOTATE.PKG') then bld:=true;
-  if bld then
-  begin
-    pd:=SMMessageDlg(
-      _l('^eAnnotations'),
-      _l('^eRebuilding annotations...'));
+  if FileExists('ANNOTATE.PKG') and not bld then exit;
 
-    tempDir := CreateRandomTempDirName();
+  ps:=nil;
+  tt:=nil;
+  pd:=SMMessageDlg(
+    _l('^eAnnotations'),
+    _l('^eRebuilding annotations...'));
+  try
+    tempDir:=CreateRandomTempDirName(); //for package files
+    tempPkgDir:=CreateRandomTempDirName(); //another one for compiled package.
+        //We don't want to put it into Wakan folder until done.
+
+   //Create empty package first
     ForceDirectories(tempDir);
     assignfile(t,tempDir+'\Annot.info');
     rewrite(t);
@@ -116,10 +123,12 @@ begin
     writeln(t,'Tag');
     writeln(t,'$CREATE');
     closefile(t);
-    WriteAnnotPackage(tempDir);
+    ForceDirectories(tempPkgDir);
+    WriteAnnotPackage(tempDir,tempPkgDir+'\annotate.pkg');
     DeleteDirectory(tempDir);
 
-    ps:=TPackageSource.Create('annotate.pkg',621030,587135,453267);
+    //Populate with data
+    ps:=TPackageSource.Create(tempPkgDir+'\annotate.pkg',621030,587135,453267);
     tt:=TTextTable.Create(ps,'annot',false,false);
     tt.Nocommitting:=true;
     if FindFirst('*.ANO',faAnyFile,sr)=0 then
@@ -152,12 +161,23 @@ begin
     tt.Nocommitting:=false;
     tt.ReIndex;
 
+    //Write down
     ForceDirectories(tempDir);
     tt.WriteTable(tempDir+'\Annot',true);
-    WriteAnnotPackage(tempDir);
-    DeleteDirectory(tempDir);
 
+    //Release
+    FreeAndNil(tt);
+    FreeAndNil(ps); //so that they don't hold the package open
+
+    //And build into final form
+    WriteAnnotPackage(tempDir,'annotate.pkg');
+    DeleteDirectory(tempDir);
+    DeleteDirectory(tempPkgDir);
+
+  finally
     pd.Free;
+    FreeAndNil(tt);
+    FreeAndNil(ps);
   end;
 end;
 
@@ -191,6 +211,7 @@ procedure AnnotShowMedia(kanji, kana: string);
 var s:string;
     b:boolean;
 begin
+  if not HaveAnnotations then exit;
   Annot.SeekK(kanji,kana);
   fMedia.media.Clear;
   fMedia.TabSet1.Tabs.Clear;

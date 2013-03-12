@@ -664,7 +664,8 @@ begin
     try
       rewrite(pkgf,1);
     except
-      pkgerr('Unable to create file.',cmd); result:=false; exit; end;
+      pkgerr('Unable to create file.',cmd); result:=false; exit;
+    end;
     assignfile(tmpt,'header.tmp');
     try
       rewrite(tmpt);
@@ -750,7 +751,8 @@ begin
       pkghc.headerlength:=pkghc.headerlength+filesize(hdrf);
     if cryptheader='$' then
       blockwrite(pkgf,pkgh,sizeof(pkgh))
-      else blockwrite(pkgf,pkghc,sizeof(pkghc));
+    else
+      blockwrite(pkgf,pkghc,sizeof(pkghc));
     while not eof(tmpf) do
     begin
       blockread(tmpf,buf,sizeof(buf),reat);
