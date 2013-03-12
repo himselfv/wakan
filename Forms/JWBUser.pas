@@ -736,7 +736,7 @@ end;
 procedure TfUser.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipGridOver(StringGrid1,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
 procedure TfUser.DetailsForKanji(n:integer);
@@ -766,7 +766,7 @@ end;
 procedure TfUser.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfUser.SpeedButton10Click(Sender: TObject);

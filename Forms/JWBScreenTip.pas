@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons,JWBDicSearch;
+  ExtCtrls, Buttons, JWBStrings, JWBDicSearch;
 
 type
   TfScreenTip = class(TForm)
@@ -36,9 +36,12 @@ const
   PopupButtonWidth=23;
   PopupButtonSep=2;
 
+procedure ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
+procedure HideScreenTip;
+
 implementation
 
-uses JWBStrings, JWBUnit, JWBKanjiCard, JWBMenu, JWBSettings;
+uses JWBUnit, JWBKanjiCard, JWBDic, JWBMenu, JWBSettings;
 
 {$R *.DFM}
 
@@ -210,6 +213,112 @@ begin
     screenTipButton:=sb;
     DrawPopupButtons(screenTipButton);
   end;
+end;
+
+//Create screen tip form and show it
+procedure ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
+var maxwords,maxwordss:integer;
+    wasfull:boolean;
+    s1,s2:FString; //kinda fstring, has control chars
+    s3,s4:string;
+    ss:string;
+    ch,kch:integer;
+    rect:TRect;
+    kkch,kkcw:integer;
+    vsiz,hsiz,vfsiz,hfsiz:integer;
+    i:integer;
+    sep:integer;
+    tpp:integer;
+    optwidth,cw:integer;
+    proposeds:string;
+    maxslen,slen:integer;
+begin
+  if fScreenTip<>nil then HideScreenTip;
+  if ((wt=7) and (not fSettings.CheckBox47.Checked)) then exit;
+  if ((wt<7) and (not fSettings.CheckBox28.Checked)) then exit;
+  fScreenTip:=TfScreenTip.Create(nil);
+  maxwords:=strtoint(fSettings.Edit24.Text);
+  if maxwordss<10 then maxwordss:=10;
+  if wt=7 then
+  begin
+    //Apparently, word type 7 means "latin word", so we try to look for one
+    //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
+    DicSearch(fstrtouni(s),stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    if (fScreenTip.screenTipList.Count=0) then
+    begin
+      ss:=fstrtouni(s);
+     //What the hell are we doing here?! "If nothing matches, try deleting
+     //some letters, but only if those are 'ed' or 's'"?
+     //I think this calls for a proper english deflexion function.
+      if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
+        if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
+      DicSearch(ss,stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    end;
+  end;
+  if wt<7 then
+    DicSearch(s,stEditorInsert,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+  if maxwords>fScreenTip.screenTipList.Count then
+    maxwords:=fScreenTip.screenTipList.Count;
+  fScreenTip.screenTipWords:=maxwords;
+  tpp:=20;
+  ch:=GridFontSize+3;
+  kch:=strtoint(fSettings.Edit26.Text);
+  optwidth:=0;
+  proposeds:='';
+  maxslen:=0;
+  for i:=0 to maxwords-1 do
+  begin
+    slen:=fScreenTip.screenTipList[i].slen;
+    if slen>maxslen then maxslen:=slen;
+    ss:=fScreenTip.screenTipList[i].ArticlesToString;
+    SplitWord(ss,s1,s2,s3,s4);
+    rect.left:=0;
+    rect.right:=Screen.Width;
+    rect.top:=0;
+    rect.bottom:=100;
+    s1 := remexcl(s1);
+    s2 := remexcl(s2);
+    cw:=DrawWordInfo(fScreenTip.pb.Canvas,rect,false,false,2,s3,false,true,GridFontSize,true)+GridFontSize*(3+flength(s1+s2));
+    if cw>optwidth then optwidth:=cw;
+  end;
+  if maxslen>0 then proposeds:=fcopy(s,1,maxslen);
+  vsiz:=5;
+  hsiz:=20;
+  optwidth:=optwidth-5*kch;
+  optwidth:=optwidth div kch;
+  if optwidth<strtoint(fSettings.Edit27.Text) then optwidth:=strtoint(fSettings.Edit27.Text);
+  if optwidth>strtoint(fSettings.Edit28.Text) then optwidth:=strtoint(fSettings.Edit28.Text);
+  fScreenTip.ScreenTipWidth:=optwidth;
+  hsiz:=optwidth;
+  sep:=4;
+  vfsiz:=vsiz+5;
+  hfsiz:=hsiz+vsiz+4;
+  kkcw:=hfsiz*kch;
+  kkch:=vfsiz*kch;
+  fScreenTip.screenTipText:=s;
+  if proposeds<>'' then
+    fScreenTip.screenTipText:=proposeds;
+  fScreenTip.screenTipWt:=wt;
+  fScreenTip.Left:=x;
+  fScreenTip.Top:=y;
+  fScreenTip.Width:=kkcw+sep*2+1;
+  if (wt=1) and (fSettings.CheckBox48.Checked) then
+    fScreenTip.Height:=maxwords*ch+sep*3+kkch+tpp else fScreenTip.Height:=maxwords*ch+sep*2+1+tpp;
+  if not immediate then
+  begin
+    if y+fScreenTip.Height>Screen.Height then fScreenTip.Top:=y-20-fScreenTip.Height;
+    if x+fScreenTip.Width>Screen.Width then fScreenTip.Left:=Screen.Width-fScreenTip.Width;
+  end;
+  SetWindowPos(fScreenTip.handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
+  fScreenTip.screenTipButton:=0;
+  fScreenTip.PopupMouseMove(Mouse.CursorPos.x-fScreenTip.left,Mouse.CursorPos.y-fScreenTip.Top);
+end;
+
+procedure HideScreenTip;
+begin
+  fScreenTip.Hide;
+  fScreenTip.Free;
+  fScreenTip:=nil;
 end;
 
 end.

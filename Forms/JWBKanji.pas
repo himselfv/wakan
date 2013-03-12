@@ -1012,11 +1012,7 @@ procedure TfKanji.DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then
-  begin
-{    clip:=clip+curkanji;
-    fMenu.ChangeClipboard;}
     fMenu.PopupImmediate(false);
-  end;
 end;
 
 procedure TfKanji.DrawGrid1DblClick(Sender: TObject);
@@ -1027,7 +1023,7 @@ end;
 procedure TfKanji.DrawGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipGridOver(DrawGrid1,x,y,false);
+  fMenu.IntTipMouseMove(DrawGrid1,x,y,false);
 end;
 
 function TfKanji.GetKanji(cx,cy:integer):string;

@@ -305,19 +305,19 @@ end;
 procedure TfKanjiDetails.pbRadicalMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(pbRadical,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(pbRadical,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(pbKanjiInfo,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(pbKanjiInfo,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiDetails.pbSimplifiedMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(pbSimplified,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(pbSimplified,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiDetails.pbRadicalMouseDown(Sender: TObject;
@@ -346,19 +346,19 @@ end;
 procedure TfKanjiDetails.pbRadicalMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfKanjiDetails.pbSimplifiedMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfKanjiDetails.RefreshDetails;

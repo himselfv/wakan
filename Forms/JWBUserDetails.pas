@@ -270,7 +270,7 @@ end;
 procedure TfUserDetails.pbKanjiMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(pbKanji,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(pbKanji,x,y,ssLeft in Shift);
 end;
 
 procedure TfUserDetails.FormResize(Sender: TObject);

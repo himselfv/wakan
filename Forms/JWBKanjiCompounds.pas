@@ -234,7 +234,7 @@ end;
 procedure TfKanjiCompounds.StringGrid1MouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipGridOver(StringGrid1,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiCompounds.StringGrid1MouseDown(Sender: TObject;
@@ -271,7 +271,7 @@ end;
 procedure TfKanjiCompounds.StringGrid1MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfKanjiCompounds.FormResize(Sender: TObject);

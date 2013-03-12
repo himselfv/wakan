@@ -157,13 +157,13 @@ end;
 procedure TfWordKanji.PaintBoxK1MouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(TPaintBox(Sender),x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(TPaintBox(Sender),x,y,ssLeft in Shift);
 end;
 
 procedure TfWordKanji.PaintBoxK1MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfWordKanji.UpdateAlignment;

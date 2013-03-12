@@ -2325,7 +2325,7 @@ end;
 procedure TfWords.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipGridOver(StringGrid1,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
 procedure TfWords.Button2Click(Sender: TObject);
@@ -2461,7 +2461,7 @@ end;
 procedure TfWords.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 procedure TfWords.SearchWord(wordind: integer);

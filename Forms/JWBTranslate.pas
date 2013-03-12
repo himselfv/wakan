@@ -2261,7 +2261,7 @@ begin
       ShowText(false);
     end;
 
-  fMenu.IntTipPaintOver(EditorPaintBox,x,y,false);
+  fMenu.IntTipMouseMove(EditorPaintBox,x,y,false);
 end;
 
 procedure TfTranslate.EditorPaintBoxDblClick(Sender: TObject);

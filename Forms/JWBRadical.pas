@@ -587,7 +587,7 @@ end;
 procedure TfRadical.DrawGridMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipGridOver(DrawGrid,x,y,false);
+  fMenu.IntTipMouseMove(DrawGrid,x,y,false);
 end;
 
 function TfRadical.GetKanji(x,y:integer):string;

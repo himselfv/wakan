@@ -385,7 +385,6 @@ type
 
   public
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
-    screenTipShown:boolean;
 
     screenTipDebug:string;
     screenModeSc,screenModeWk:boolean;
@@ -434,28 +433,25 @@ type
     curdisplaymode:integer; //last applied mode
 
   private //Text under mouse
-    intcurString:string; { String under the mouse pointer right now.
-      Only CalculateCurString changes this member, and only ScreenTimerTimer uses it.
-      And CalculateCurString is only called from IntTipPaintOver/IntTipGridOver }
    //Drag start control+point when drag-selecting, else nil.
-    intorg:TControl;
-    intorgcc:TPoint; //control coordinates
-    intorgsc:TPoint; //screen coordinates
+    DragStartCtl:TControl;
+    DragStartPt:TPoint;
    //Last selection-enabled control mouse was sighted over
-    intmo:TControl;
-    intmocc:TPoint;
-    intmosc:TPoint;
+    HoverCtl:TControl;
+    HoverPt:TPoint;
+   //Currently selected string/String under the mouse pointer right now
+   //UpdateSelection changes this member
+    StringUnderMouse:string;
     HandlingPopup:boolean; //set while we're doing popup handling -- TODO: Do we really need this?
     LastMousePt:TPoint; //used to check whether the mouse stays still
     LastMouseMove:cardinal; //tick count
+    procedure AbortDrag;
     procedure UpdateSelection;
-    procedure HandlePopup(ShowImmediate: boolean=false);
+    procedure HandlePopup(ShowImmediate:boolean=false);
   public
-    procedure IntTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
-    procedure IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
-    procedure IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
-    procedure ShowScreenTip(x,y:integer;s:string;wt:integer;immediate:boolean);
-    procedure HideScreenTip;
+    procedure IntTipMouseMove(c:TControl;x,y:integer;leftDown:boolean);
+    procedure IntTipMouseDown(c:TControl;x,y:integer);
+    procedure IntTipMouseUp;
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
     procedure PopupImmediate(left:boolean);
 
@@ -689,7 +685,8 @@ begin
   dicts:=TDictionaryList.Create;
 
   curlang:='j';
-  intmo:=nil;
+  DragStartCtl:=nil;
+  HoverCtl:=nil;
   HandlingPopup:=false;
   LastMouseMove:=GetTickCount;
 
@@ -1132,8 +1129,6 @@ begin
     curdisplaymode:=0;
     FormPlacement1.RestoreFormPlacement;
     fSettings.ApplyUISettings();
-
-    screenTipShown:=false;
 
    { Init clipboard viewer }
     CbNextViewer := SetClipboardViewer(Self.Handle);
@@ -3130,106 +3125,7 @@ begin
   end;
 end;
 
-procedure TfMenu.ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
-var maxwords,maxwordss:integer;
-    wasfull:boolean;
-    s1,s2:FString; //kinda fstring, has control chars
-    s3,s4:string;
-    ss:string;
-    ch,kch:integer;
-    rect:TRect;
-    kkch,kkcw:integer;
-    vsiz,hsiz,vfsiz,hfsiz:integer;
-    i:integer;
-    sep:integer;
-    tpp:integer;
-    optwidth,cw:integer;
-    proposeds:string;
-    maxslen,slen:integer;
-begin
-  SetSelectionHighlight(0,0,0,0,nil);
-  intorg:=nil;
-  if ((wt=7) and (not fSettings.CheckBox47.Checked)) then exit;
-  if ((wt<7) and (not fSettings.CheckBox28.Checked)) then exit;
-  fScreenTip:=TfScreenTip.Create(nil);
-  screenTipShown:=true;
-  maxwords:=strtoint(fSettings.Edit24.Text);
-  if maxwordss<10 then maxwordss:=10;
-  if wt=7 then
-  begin
-    //Apparently, word type 7 means "latin word", so we try to look for one
-    //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
-    if (fScreenTip.screenTipList.Count=0) then
-    begin
-      ss:=fstrtouni(s);
-     //What the hell are we doing here?! "If nothing matches, try deleting
-     //some letters, but only if those are 'ed' or 's'"?
-     //I think this calls for a proper english deflexion function.
-      if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
-        if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
-    end;
-  end;
-  if wt<7 then
-    DicSearch(s,stEditorInsert,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
-  if maxwords>fScreenTip.screenTipList.Count then
-    maxwords:=fScreenTip.screenTipList.Count;
-  fScreenTip.screenTipWords:=maxwords;
-  tpp:=20;
-  ch:=GridFontSize+3;
-  kch:=strtoint(fSettings.Edit26.Text);
-  optwidth:=0;
-  proposeds:='';
-  maxslen:=0;
-  for i:=0 to maxwords-1 do
-  begin
-    slen:=fScreenTip.screenTipList[i].slen;
-    if slen>maxslen then maxslen:=slen;
-    ss:=fScreenTip.screenTipList[i].ArticlesToString;
-    SplitWord(ss,s1,s2,s3,s4);
-    rect.left:=0;
-    rect.right:=Screen.Width;
-    rect.top:=0;
-    rect.bottom:=100;
-    s1 := remexcl(s1);
-    s2 := remexcl(s2);
-    cw:=DrawWordInfo(fScreenTip.pb.Canvas,rect,false,false,2,s3,false,true,GridFontSize,true)+GridFontSize*(3+flength(s1+s2));
-    if cw>optwidth then optwidth:=cw;
-  end;
-  if maxslen>0 then proposeds:=fcopy(s,1,maxslen);
-  vsiz:=5;
-  hsiz:=20;
-  optwidth:=optwidth-5*kch;
-  optwidth:=optwidth div kch;
-  if optwidth<strtoint(fSettings.Edit27.Text) then optwidth:=strtoint(fSettings.Edit27.Text);
-  if optwidth>strtoint(fSettings.Edit28.Text) then optwidth:=strtoint(fSettings.Edit28.Text);
-  fScreenTip.ScreenTipWidth:=optwidth;
-  hsiz:=optwidth;
-  sep:=4;
-  vfsiz:=vsiz+5;
-  hfsiz:=hsiz+vsiz+4;
-  kkcw:=hfsiz*kch;
-  kkch:=vfsiz*kch;
-  fScreenTip.screenTipText:=s;
-  if proposeds<>'' then
-    fScreenTip.screenTipText:=proposeds;
-  fScreenTip.screenTipWt:=wt;
-  fScreenTip.Left:=x;
-  fScreenTip.Top:=y;
-  fScreenTip.Width:=kkcw+sep*2+1;
-  if (wt=1) and (fSettings.CheckBox48.Checked) then
-    fScreenTip.Height:=maxwords*ch+sep*3+kkch+tpp else fScreenTip.Height:=maxwords*ch+sep*2+1+tpp;
-  if not immediate then
-  begin
-    if y+fScreenTip.Height>Screen.Height then fScreenTip.Top:=y-20-fScreenTip.Height;
-    if x+fScreenTip.Width>Screen.Width then fScreenTip.Left:=Screen.Width-fScreenTip.Width;
-  end;
-  SetWindowPos(fScreenTip.handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
-  fScreenTip.screenTipButton:=0;
-  fScreenTip.PopupMouseMove(Mouse.CursorPos.x-fScreenTip.left,Mouse.CursorPos.y-fScreenTip.Top);
-end;
-
+//Called by ScreenTip to handle button clicking
 procedure TfMenu.PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
 begin
   if fRadical.Visible then exit;
@@ -3263,13 +3159,6 @@ begin
   HandlePopup({ShowImmediate=}true);
 end;
 
-procedure TfMenu.HideScreenTip;
-begin
-  fScreenTip.Hide;
-  fScreenTip.Free;
-  screenTipShown:=false;
-end;
-
 procedure IPCCallback(name: pchar; messageBuf : pointer; messageLen : dword;
                       answerBuf  : pointer; answerLen  : dword); stdcall;
 var mycnt:integer;
@@ -3301,7 +3190,7 @@ end;
 
 { Shows or hides or updates popup, reacting to mouse movements.
  Call on timer, or possibly OnMouseMove, or manually with ShowImmediate=true. }
-procedure TfMenu.HandlePopup(ShowImmediate: boolean);
+procedure TfMenu.HandlePopup(ShowImmediate:boolean);
   procedure wwadd(bg,en:integer;w:word);
   var b:integer;
       i,j:integer;
@@ -3368,6 +3257,7 @@ var pt:TPoint;
     rect:TRect;
     wtt:integer;
     curt:TDateTime;
+  intmosc:TPoint;
 begin
   if not screenModeWk and not screenModeSc and not ShowImmediate and not popcreated then exit;
 
@@ -3399,7 +3289,7 @@ begin
     begin
       if popcreated then
       begin
-        fMenu.HideScreenTip;
+        HideScreenTip;
         popcreated:=false;
       end;
       LastMousePt:=pt;
@@ -3408,7 +3298,7 @@ begin
     end;
 
    //Do not show popup if we're doing drag-selection
-    if (not ShowImmediate) and (not popcreated) and (intorg<>nil) then
+    if (not ShowImmediate) and (not popcreated) and (DragStartCtl<>nil) then
       exit;
 
    //Wait for popup delay
@@ -3417,11 +3307,13 @@ begin
 
     ftextpos:=0;
     s:='';
-    if (screenModeWk) or (ShowImmediate) then
+    if screenModeWk or ShowImmediate then
     begin
-      if (intmo<>nil) and (pt.x=intmosc.x) and (pt.y=intmosc.y) then
-      begin
-        s:=intcurString;
+     //Popup delay might expire while we're over some unrelated place
+      if HoverCtl<>nil then begin
+        intmosc:=HoverCtl.ClientToScreen(HoverPt);
+        if (pt.x=intmosc.x) and (pt.y=intmosc.y) then
+          s:=StringUnderMouse;
       end;
       if flength(s)>=1 then evc:=EvalChar(fgetch(s,1));
     end;
@@ -3567,10 +3459,13 @@ begin
     screenTipDebug:=s2;
     if s<>'' then
     begin
+      DragStartCtl:=nil; //TODO: Perhaps, move this to some common function?
+      SetSelectionHighlight(0,0,0,0,nil); //This too
       if ShowImmediate then
-        fMenu.ShowScreenTip(pt.x-10,pt.y-10,s,evc,true) else
-        fMenu.ShowScreenTip(pt.x+10,pt.y+10,s,evc,false);
-      if screenTipShown then popcreated:=true;
+        ShowScreenTip(pt.x-10,pt.y-10,s,evc,true)
+      else
+        ShowScreenTip(pt.x+10,pt.y+10,s,evc,false);
+      if fScreenTip<>nil then popcreated:=true;
     end;
   finally
     HandlingPopup:=false;
@@ -3578,66 +3473,72 @@ begin
 end;
 
 {
-IntTipPaintOver(), IntTipGridOver()
-Various controls from all over the program call these on mouse move,
-to determine which characters are under mouse cursor right now.
-This information is used only by HandlePopup (showing popup tip),
-so we could have calculated it there, but we'd need to figure out the class
-of control mouse is over.
-This also updates selection highlight rect.
+IntTip*()
+Various controls from all over the program call these on mouse events,
+to support text selection and hint popups.
+Minimal set you have to call from a control:
+ IntTipControlOver(...) on mouse move
+ IntTipMouseUp() on mouse up
+
+Your control also has to be supported by UpdateSelection (see comments there).
 }
-procedure TfMenu.IntTipControlOver(c:TControl;x,y:integer;leftDown:boolean);
+procedure TfMenu.IntTipMouseMove(c:TControl;x,y:integer;leftDown:boolean);
 begin
-  if leftDown and (intorg<>c) then
-  begin
-   //Remember "drag start" point and control
-    intorgcc.X:=x; intorgcc.Y:=Y; intorgsc:=Mouse.CursorPos;
-    intorg:=c;
+  if leftDown and (DragStartCtl<>c) then begin
+    if DragStartCtl<>nil then AbortDrag; //at old control
+    IntTipMouseDown(c,x,y); //auto-down
   end;
-  if not leftDown then begin
-   //Remove "drag start" point. Important - or we'll continue dragging
-    intorg:=nil;
-  end;
-  intmocc.X:=x; intmocc.Y:=y; intmosc:=Mouse.CursorPos;
-  intmo:=c;
+  if (not leftDown) and (DragStartCtl<>nil) then
+   //auto-up: some controls send MouseOver(leftDown=false) first, and we'd lose
+   //selected text if we just continued.
+    IntTipMouseUp;
+  HoverPt:=Point(x,y);
+  HoverCtl:=c;
   UpdateSelection;
 end;
 
-procedure TfMenu.IntTipPaintOver(p:TPaintBox;x,y:integer;leftDown:boolean);
+procedure TfMenu.IntTipMouseDown(c:TControl;x,y:integer);
 begin
-  IntTipControlOver(p,x,y,leftDown);
+ //Remember "drag start" point and control
+  DragStartPt:=Point(x,y);
+  DragStartCtl:=c;
 end;
 
-procedure TfMenu.IntTipGridOver(sg:TCustomDrawGrid;x,y:integer;leftDown:boolean);
+procedure TfMenu.IntTipMouseUp;
 begin
-  IntTipControlOver(sg,x,y,leftDown);
+ //Remove "drag start" point. Important - or we'll continue dragging
+  DragStartCtl:=nil;
+  fMenu.PopupImmediate(true);
+end;
+
+//Simply abort drag but show no popup
+procedure TfMenu.AbortDrag;
+begin
+  DragStartCtl:=nil;
 end;
 
 //Updates text selection highlight and currently highlighted contents in intcurString
 procedure TfMenu.UpdateSelection;
 var s1:string;
     rx,ry,wtt:integer;
-    gc,gc2:TGridCoord;
-    rect:TRect;
-    mox1,mox2:integer;
-    mo:boolean;
+    gc:TGridCoord;
   rpos: TSourcePos;
   MouseControl: TControl; //control which receives the mouse events
   MousePos: TPoint; //mouse pos in that control coordinate system
 begin
  //It is important that we route mouse events to the control which captured mouse,
  //else we'd get popup even when clicking in Text Editor, then dragging the mouse outside
-  if intorg=nil then begin
+  if DragStartCtl=nil then begin
    //mouse is free, hovering over intmo
-    MouseControl:=intmo;
-    MousePos:=intmocc;
+    MouseControl:=HoverCtl;
+    MousePos:=HoverPt;
   end else begin
    //mouse is captured by a different control
-    MouseControl:=intorg;
-    if intorg=intmo then
-      MousePos:=intmocc
+    MouseControl:=DragStartCtl;
+    if DragStartCtl=HoverCtl then
+      MousePos:=HoverPt
     else
-      MousePos:=MouseControl.ScreenToClient(intmo.ClientToScreen(intmocc)); //convert to capture control coordinate system
+      MousePos:=MouseControl.ScreenToClient(HoverCtl.ClientToScreen(HoverPt)); //convert to capture control coordinate system
   end;
  //Now MouseControl can either be DragStart control, MouseOver control or nil.
 
@@ -3659,8 +3560,8 @@ begin
 
   if MouseControl is TPaintBox then
   begin
-    if intorg<>nil then //dragging
-      s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),intorgcc,MousePos)
+    if DragStartCtl<>nil then //dragging
+      s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),DragStartPt,MousePos)
     else //just hovering
       s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),MousePos,MousePos);
   end else
@@ -3676,8 +3577,8 @@ begin
       s1:=fRadical.GetKanji(gc.x,gc.y);
       SetSelectionHighlight(0,0,0,0,nil);
     end else
-    if intorg<>nil then //dragging
-      s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),intorgcc,MousePos)
+    if DragStartCtl<>nil then //dragging
+      s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),DragStartPt,MousePos)
     else //just hovering
       s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),MousePos,MousePos);
   end else
@@ -3687,14 +3588,14 @@ begin
     SetSelectionHighlight(0,0,0,0,nil);
   end;
 
-  intcurString:=s1;
+  StringUnderMouse:=s1;
 end;
 
 
 procedure TfMenu.PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
-  fMenu.IntTipPaintOver(PaintBox3,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(PaintBox3,x,y,ssLeft in Shift);
 end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
@@ -3758,7 +3659,7 @@ end;
 procedure TfMenu.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then Self.IntTipMouseUp;
 end;
 
 procedure TfMenu.miSaveCharactersToFileClick(

@@ -31,13 +31,16 @@ const
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 function GetAppDataFolder: string;
 
-type
-  TLogEvent = procedure(const msg: string) of object;
 
-procedure SetLogger(ALogger: TLogEvent);
+{ Some logging tools.
+Define NOLOG to make sure that nothing in the application calls these. }
+//{$DEFINE NOLOG}
+{$IFNDEF NOLOG}
 procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF} //inline in debug so that it's completely eliminated
 procedure Log(const msg: string; args: array of const); overload; {$IFNDEF DEBUG}inline;{$ENDIF}
 procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IFNDEF DEBUG}inline;{$ENDIF}
+{$ENDIF}
+
 
 { Romaji conversions }
 
@@ -143,8 +146,7 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable,
-  Logger;
+uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
 
 
 { Portable/standalone }
@@ -173,20 +175,62 @@ end;
 
 
 { Log }
+{$IFNDEF NOLOG}
 
-var
-  Logger: TLogEvent;
+{$IFDEF DEBUG}
+const
+  BOM_UTF16BE: AnsiString = #254#255; //FE FF
+  BOM_UTF16LE: AnsiString = #255#254; //FF FE
+ //must be ansi or we'll get two unicode characters
 
-procedure SetLogger(ALogger: TLogEvent);
+function ForceFilePath(const Filename: string): boolean;
+var Path: string;
 begin
-  Logger := ALogger;
+  Path := ExtractFilePath(Filename);
+  Result := (Path='') {current dir always exists} or ForceDirectories(Path);
 end;
+
+{ Writes to UTF16BE, adding BOM to new file.
+ Better employ critical sections if you use it from multiple threads. }
+procedure WriteFileWithBom(const Filename: string; data: pointer; sz: cardinal);
+var HFile: THandle;
+  dwBytesWritten: cardinal;
+begin
+// if not ForceFilePath(Filename) then exit; --- do not waste time at first, try only if file/path is not found
+
+ //Try open or create a file
+  HFile := CreateFile(PChar(Filename), GENERIC_WRITE,
+    FILE_SHARE_READ, nil, OPEN_ALWAYS, 0, 0);
+
+ //The only problem we know how to solve is "path not found"
+  if HFile = INVALID_HANDLE_VALUE then begin
+    if GetLastError() <> ERROR_PATH_NOT_FOUND then exit;
+
+   //Create directories and try again
+    if not ForceFilePath(Filename) then exit;
+
+    HFile := CreateFile(PChar(Filename), GENERIC_WRITE,
+      FILE_SHARE_READ, nil, OPEN_ALWAYS, 0, 0);
+    if HFile = INVALID_HANDLE_VALUE then exit;
+  end;
+
+ //If the file was present, scroll to the end
+  if GetLastError() = ERROR_ALREADY_EXISTS then
+    SetFilePointer(HFile, 0, nil, FILE_END)
+  else //Write BOM
+    WriteFile(HFile, BOM_UTF16LE[1], Length(BOM_UTF16LE), dwBytesWritten, nil);
+ {Can be optimized: write BOM+first message at once. But the gain is too low.}
+
+ //Anyway write the data
+  WriteFile(HFile, data^, sz, dwBytesWritten, nil);
+  CloseHandle(HFile);
+end;
+{$ENDIF}
 
 procedure Log(const msg: string);
 {$IFDEF DEBUG}
 var tmp: string;
 begin
-  if Assigned(Logger) then Logger(msg);
   tmp:=msg+#13#10;
   WriteFileWithBom('wakan.log', @tmp[1], Length(tmp)*SizeOf(char));
 end;
@@ -205,7 +249,8 @@ end;
 var
   DumpId: integer = 0;
 
-//Outputs the image from the canvas to the file
+{ Outputs the contents of a canvas to a file.
+ Files are named sequentially and recorded in log so that you know which goes where. }
 procedure DumpHdc(const h: HDC; const r: TRect; const pref: string);
 {$IFDEF DEBUG}
 var bmp: Graphics.TBitmap;
@@ -231,6 +276,8 @@ end;
 begin
 end;
 {$ENDIF}
+
+{$ENDIF} //IFNDEF NOLOG
 
 { Romaji conversions }
 
@@ -985,114 +1032,6 @@ begin
     end;
 end;
 
-{ Updates ScreenTipBox and returns the substring of one of the strings drawn
- with DrawUnicode, currently selected in PaintBox according to DragStart->CursorPos.
-p: PaintBox which currently receives mouse events (the one mouse is over,
-  or the one which captures it because of dragging)
-If DragStart equals CursorPos, assumes no selection. }
-function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
-var id1,id2:integer;
-  x1,x2,y1,fs,fs2,x_tmp:integer;
-  s2,s_tmp:string;
-begin
-  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
-   //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
-    Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fs);
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fs);
-  s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
-  if id2<0 then begin //drag from dead point => no selection
-    Result := '';
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  if id1<>id2 then begin //mouse over different control/line
-   //Try again, with Y set to that of DragStart
-    CursorPos.Y := DragStart.Y;
-    Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fs);
-    if id1<>id2 then begin
-     //Just set the endpoint to the start or the end of the capturing line
-      if CursorPos.X>DragStart.X then begin
-        Result:=s2;
-        SetSelectionHighlight(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
-        exit;
-      end else begin
-        Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
-        //and continue with normal handling
-      end;
-    end;
-  end;
-
-  if length(s2)>length(Result) then begin
-   //Swap s1 and s2
-    s_tmp:=s2; s2:=Result; Result:=s_tmp;
-    x_tmp:=x2; x2:=x1; x1:=x_tmp;
-  end;
-  Result:=copy(Result,1,length(Result)-length(s2));
-  SetSelectionHighlight(x1,y1,x2,y1+fs,p.Canvas);
-end;
-
-function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
-var gc,gc2:TGridCoord;
-    rect:TRect;
-    mox1,mox2:integer;
-begin
-  gc:=p.MouseCoord(DragStart.x,DragStart.y);
-
-  if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
-   //Drag from header or drag from no-cell
-    Result:='';
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  Result:=remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
-  rect:=p.CellRect(gc.x,gc.y);
-  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
-   //No drag, mouse over
-    fdelete(Result,1,((CursorPos.x-rect.left-2) div GridFontSize));
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
-  if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin //mouse over different control/line
-   //Try again, with Y set to that of DragStart
-    CursorPos.Y := DragStart.Y;
-    gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
-    if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin
-     //Just set the endpoint to the start or the end of the capturing line
-      if CursorPos.X>DragStart.X then
-        CursorPos.X:=rect.Right
-      else
-        CursorPos.X:=rect.Left;
-     //and continue with normal handling
-    end;
-  end;
-
- //Swap points so that mox2 is to the right
-  if DragStart.x>CursorPos.x then
-  begin
-    mox1:=CursorPos.x;
-    mox2:=DragStart.x;
-  end else
-  begin
-    mox1:=DragStart.x;
-    mox2:=CursorPos.x;
-  end;
-
-  //calculate char count -- if half of the char is covered, it's covered
-  mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
-  mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
-  Result:=fcopy(Result,1+mox1,mox2-mox1);
-  if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
-  SetSelectionHighlight(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,p.Canvas);
-end;
-
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 var i,l,r,m:integer;
     xx,yy:byte;
@@ -1480,8 +1419,6 @@ var oldR2:integer;
 begin
   if STB_Canvas=nil then exit;
   if canv<>nil then if canv<>STB_canvas then exit;
-  Log('PaintScreenTipBlock(%d,%d,%d,%d)',[STB_x1,STB_y1,STB_x2,STB_y2]);
-
   oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
   if in_rect<>nil then begin
     rgn:=CreateRectRgn(0,0,0,0);
@@ -1497,6 +1434,121 @@ begin
   SetROP2(STB_Canvas.Handle,oldR2);
 end;
 
+
+{ DrawUnicode-powered text selection.
+ See comments to AddDrawReg/FindDrawReg, also see TfMenu.UpdateSelection.
+ Uses SelectionHighlight for highlighting blocks of pixels. }
+
+{ Updates ScreenTipBox and returns the substring of one of the strings drawn
+ with DrawUnicode, currently selected in PaintBox according to DragStart->CursorPos.
+p: PaintBox which currently receives mouse events (the one mouse is over,
+  or the one which captures it because of dragging)
+If DragStart equals CursorPos, assumes no selection. }
+function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
+var id1,id2:integer;
+  x1,x2,y1,fs,fs2,x_tmp:integer;
+  s2,s_tmp:string;
+begin
+  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
+   //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
+    Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fs);
+    SetSelectionHighlight(0,0,0,0,nil);
+    exit;
+  end;
+
+  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fs);
+  s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
+  if id2<0 then begin //drag from dead point => no selection
+    Result := '';
+    SetSelectionHighlight(0,0,0,0,nil);
+    exit;
+  end;
+
+  if id1<>id2 then begin //mouse over different control/line
+   //Try again, with Y set to that of DragStart
+    CursorPos.Y := DragStart.Y;
+    Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fs);
+    if id1<>id2 then begin
+     //Just set the endpoint to the start or the end of the capturing line
+      if CursorPos.X>DragStart.X then begin
+        Result:=s2;
+        SetSelectionHighlight(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
+        exit;
+      end else begin
+        Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
+        //and continue with normal handling
+      end;
+    end;
+  end;
+
+  if length(s2)>length(Result) then begin
+   //Swap s1 and s2
+    s_tmp:=s2; s2:=Result; Result:=s_tmp;
+    x_tmp:=x2; x2:=x1; x1:=x_tmp;
+  end;
+  Result:=copy(Result,1,length(Result)-length(s2));
+  SetSelectionHighlight(x1,y1,x2,y1+fs,p.Canvas);
+end;
+
+function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
+var gc,gc2:TGridCoord;
+    rect:TRect;
+    mox1,mox2:integer;
+begin
+  gc:=p.MouseCoord(DragStart.x,DragStart.y);
+
+  if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
+   //Drag from header or drag from no-cell
+    Result:='';
+    SetSelectionHighlight(0,0,0,0,nil);
+    exit;
+  end;
+
+  Result:=remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
+  rect:=p.CellRect(gc.x,gc.y);
+  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
+   //No drag, mouse over
+    fdelete(Result,1,((CursorPos.x-rect.left-2) div GridFontSize));
+    SetSelectionHighlight(0,0,0,0,nil);
+    exit;
+  end;
+
+  gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
+  if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin //mouse over different control/line
+   //Try again, with Y set to that of DragStart
+    CursorPos.Y := DragStart.Y;
+    gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
+    if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin
+     //Just set the endpoint to the start or the end of the capturing line
+      if CursorPos.X>DragStart.X then
+        CursorPos.X:=rect.Right
+      else
+        CursorPos.X:=rect.Left;
+     //and continue with normal handling
+    end;
+  end;
+
+ //Swap points so that mox2 is to the right
+  if DragStart.x>CursorPos.x then
+  begin
+    mox1:=CursorPos.x;
+    mox2:=DragStart.x;
+  end else
+  begin
+    mox1:=DragStart.x;
+    mox2:=CursorPos.x;
+  end;
+
+  //calculate char count -- if half of the char is covered, it's covered
+  mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
+  mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
+  Result:=fcopy(Result,1+mox1,mox2-mox1);
+  if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
+  SetSelectionHighlight(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,p.Canvas);
+end;
+
+
+{ Misc }
 
 procedure DeleteDirectory(dir:string);
 var sRec: TSearchRec;

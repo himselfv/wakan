@@ -121,7 +121,7 @@ end;
 procedure TfExamples.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipPaintOver(PaintBox,x,y,ssLeft in Shift);
+  fMenu.IntTipMouseMove(PaintBox,x,y,ssLeft in Shift);
 end;
 
 procedure TfExamples.btnPreviousClick(Sender: TObject);
@@ -165,7 +165,7 @@ end;
 procedure TfExamples.PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.PopupImmediate(true);
+  if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
 //There can be different example packages for japanese and chinese,
