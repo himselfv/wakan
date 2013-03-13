@@ -2001,7 +2001,7 @@ begin
 {MCH      UninjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
       Screen.Cursor:=crDefault;
     end;
-    fSettings.btnOkClick(self);
+    fSettings.SaveSettings;
     fTranslate.Close;
     fUser.Close;
     fWords.Close;

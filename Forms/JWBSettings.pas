@@ -729,7 +729,7 @@ begin
   FontStrokeOrder:=Edit32.Text;
 
   cbSaveColumnWidths.Checked:=reg.ReadBool('General','SaveColumnWidths',true);
-  cbSaveSearchParams.Checked:=reg.ReadBool('General','SaveSearchParams',false);
+  cbSaveSearchParams.Checked:=reg.ReadBool('General','SaveSearchParams',true);
 
  //Column widths
   fWords.SetDefaultColumnWidths;
