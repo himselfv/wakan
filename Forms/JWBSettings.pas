@@ -1235,7 +1235,6 @@ Use this chance to:
 procedure TfSettings.AcceptSettings;
 var tmp:integer;
 begin
-  raise Exception.Create('Error Message');
  //Verify control
   if edit11.text='0' then edit11.text:='1';
   if not TryStrToInt(Edit10.Text, tmp) then Edit10.Text := '0';
