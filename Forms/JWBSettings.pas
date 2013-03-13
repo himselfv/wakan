@@ -316,9 +316,12 @@ type
     procedure btnUpgradeToStandaloneClick(Sender: TObject);
     procedure lblSettingsPathClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+
   public
-    function CheckFontBool(s:string):boolean;
-    function AutoDetectFonts:boolean;
+    function AutoDetectFonts(Silent:boolean):boolean;
+    procedure CheckFontsPresent;
+
+  public
     procedure ResetDetList;
 
   protected
@@ -371,9 +374,6 @@ uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
 var colorfrom:integer;
 
 {$R *.DFM}
-
-function checkfont(s:string):string; forward;
-function ReturnStdFont(curfont:string;japanese:boolean):string; forward;
 
 procedure TfSettings.FormCreate(Sender: TObject);
 begin
@@ -550,40 +550,23 @@ begin
   CheckBox51.Checked:=reg.ReadBool('Characters','StrokeOrderGridFont',false);
   CheckBox3.Checked:=reg.ReadBool('Characters','NoShowColors',false);
   CheckBox57.Checked:=reg.ReadBool('Characters','YomiOkurigana',false);
-  if reg.ReadString('Fonts','FontSet','0')<>'1'then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00349^eYou are running WaKan for the first time.'#13
-        +'WaKan will now try to locate and set all the recommended fonts.'#13
-        +'You can restart this process by selecting "Select recommended fonts" '
-        +'in settings.')),
-      pchar(_l('#00350^eFont autodetection')),
-      MB_ICONINFORMATION or MB_OK);
-    if not AutoDetectFonts then
-    begin
-      if Application.MessageBox(
-        pchar(_l('#00351^eFont autodetection failed. Some characters may not be '
-          +'displayed correctly.'#13#13+'Do you want to continue?')),
-        pchar(_l('#00090^eWarning')),
-        MB_ICONERROR or MB_YESNO)=idNo then
-      begin
-        Application.Terminate;
-        exit;
-      end;
-    end;
-  end else
-  begin
-    Edit1.Text:=checkfont(reg.ReadString('Fonts','JapaneseGrid','MS Mincho'));
-    Edit2.Text:=checkfont(reg.ReadString('Fonts','Japanese','MS Mincho'));
-    Edit5.Text:=checkfont(reg.ReadString('Fonts','Small','MS Gothic'));
-    Edit6.Text:=checkfont(reg.ReadString('Fonts','ChineseGrid','MingLiU'));
-    Edit3.Text:=checkfont(reg.ReadString('Fonts','ChineseGridGB','SimSun'));
-    Edit7.Text:=checkfont(reg.ReadString('Fonts','Chinese','MingLiU'));
-    Edit9.Text:=checkfont(reg.ReadString('Fonts','ChineseGB','SimSun'));
-    Edit8.Text:=checkfont(reg.ReadString('Fonts','Radical','MingLiU'));
-    Edit4.Text:=checkfont(reg.ReadString('Fonts','English','Verdana'));
-    Edit32.Text:=checkfont(reg.ReadString('Fonts','StrokeOrder','MS Mincho'));
-    Edit33.Text:=checkfont(reg.ReadString('Fonts','PinYin','Arial'));
+  if reg.ReadString('Fonts','FontSet','0')<>'1' then
+    AutoDetectFonts({Silent=}true)
+  else begin
+   //There's some safety net for cases when font settings are added:
+   //although we don't run detection again (it'd reset other fonts), we choose
+   //a default font name for a new setting and later check if it's available.
+    Edit1.Text:=reg.ReadString('Fonts','JapaneseGrid','MS Mincho');
+    Edit2.Text:=reg.ReadString('Fonts','Japanese','MS Mincho');
+    Edit5.Text:=reg.ReadString('Fonts','Small','MS Gothic');
+    Edit6.Text:=reg.ReadString('Fonts','ChineseGrid','MingLiU');
+    Edit3.Text:=reg.ReadString('Fonts','ChineseGridGB','SimSun');
+    Edit7.Text:=reg.ReadString('Fonts','Chinese','MingLiU');
+    Edit9.Text:=reg.ReadString('Fonts','ChineseGB','SimSun');
+    Edit8.Text:=reg.ReadString('Fonts','Radical','MingLiU');
+    Edit4.Text:=reg.ReadString('Fonts','English','Verdana');
+    Edit32.Text:=reg.ReadString('Fonts','StrokeOrder','MS Mincho');
+    Edit33.Text:=reg.ReadString('Fonts','PinYin','Arial');
   end;
   CheckBox4.Checked:=reg.ReadBool('Dict','PreferUser',true);
   CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
@@ -1096,26 +1079,6 @@ begin
   end;
 end;
 
-function checkfont(s:string):string;
-begin
-  if Screen.Fonts.IndexOf(s)=-1 then result:='!'+s else result:=s;
-end;
-
-function ReturnStdFont(curfont:string;japanese:boolean):string;
-begin
-  if curfont[1]<>'!'then result:=curfont else
-  if (japanese) then
-  begin
-    if Screen.Fonts.IndexOf('MS Mincho')>-1 then result:='MS Mincho'else
-    if Screen.Fonts.IndexOf('MS Gothic')>-1 then result:='MS Gothic'else result:='!';
-  end else
-  if (not japanese) then
-  begin
-    if Screen.Fonts.IndexOf('MingLiU')>-1 then result:='MingLiU'else
-    if Screen.Fonts.IndexOf('SimSun')>-1 then result:='SimSun'else result:='!';
-  end;
-end;
-
 
 
 procedure TfSettings.RadioGroup1Click(Sender: TObject);
@@ -1465,45 +1428,107 @@ begin
   Label33.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,true,'c'),3,'c');
 end;
 
-function TfSettings.checkfontbool(s:string):boolean;
-begin
-  if Screen.Fonts.IndexOf(s)=-1 then result:=false else result:=true;
-end;
+{
+  sx:string;
+    sx:='';
+    if ChooseFont([SHIFTJIS_CHARSET],'',s,'',true)='!'then sx:=sx+',Shift-JIS';
+    if ChooseFont([CHINESEBIG5_CHARSET],'',s,'',true)='!'then sx:=sx+',Big5';
+    if ChooseFont([GB2312_CHARSET],'',s,'',true)='!'then sx:=sx+',GB2312';
+    if sx<>'' then
+    begin
+      delete(sx,1,1);
+      Application.MessageBox(
+        pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13
+          +sx+#13#13
+          +'You must have at least one font of each of these sets on your computer '
+          +'to run this application.'#13#13
+          +'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13
+          +'These fonts are automatically installed when you install support for '
+          +'reading Japanese & Chinese language in windows.'#13#13
+          +'Please install required fonts and run this application again.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      Application.Terminate;
+      exit;
+    end;
+}
 
-function TfSettings.AutoDetectFonts:boolean;
-var missingfonts:string;
-    substituted:boolean;
-function ReturnStdFont(curfont,substfont:string):string;
-begin
-  if checkfontbool(curfont) then
-  begin
-    result:=curfont;
-    exit;
-  end;
-  if pos(','+curfont,missingfonts)=0 then missingfonts:=missingfonts+','+curfont;
-  if checkfontbool(substfont) then
-  begin
-    result:=substfont;
-    exit;
-  end;
-  if pos(','+substfont,missingfonts)=0 then missingfonts:=missingfonts+','+substfont;
-  substituted:=false;
-  result:='Arial';
-end;
+//Silent: do not say anything in case of success
+function TfSettings.AutoDetectFonts(Silent:boolean):boolean;
 var s:string;
+  missingfonts:string;
+  substituted:boolean; //found substitutions for all missing fonts
+  FMincho,FGothic: string;
+  FMingLiu,FSimSun: string;
+
+  function _FindFont(const face: string; charset: integer): string;
+  begin
+    Result := FindFont(face,charset);
+    if (face<>'') and (Result='') then
+      missingfonts := missingfonts+','+face;
+  end;
+
 begin
+  missingfonts:='';
   substituted:=true;
-  fSettings.Edit1.Text:=ReturnStdFont('MS Mincho','MS Gothic');
-  fSettings.Edit2.Text:=ReturnStdFont('MS Mincho','MS Gothic');
-  fSettings.Edit5.Text:=ReturnStdFont('MS Gothic','MS Mincho');
-  fSettings.Edit6.Text:=ReturnStdFont('MingLiU','SimSun');
-  fSettings.Edit3.Text:=ReturnStdFont('SimSun','MingLiU');
-  fSettings.Edit7.Text:=ReturnStdFont('MingLiU','SimSun');
-  fSettings.Edit9.Text:=ReturnStdFont('SimSun','MingLiU');
-  fSettings.Edit8.Text:=ReturnStdFont('MingLiU','SimSun');
-  fSettings.Edit4.Text:=ReturnStdFont('Verdana','Tahoma');
-  fSettings.Edit32.Text:=ReturnStdFont('MS Mincho','MS Gothic');
-  fSettings.Edit33.Text:=ReturnStdFont('Arial','Arial');
+
+ { NOTE: Some asian fonts have two names, English one and localized one.
+  Since Windows 2000 both CreateFont and EnumFontFamilies understand both names,
+  although Delphi's Screen.Fonts will only list one. }
+
+  //Japanese fonts
+  FMincho:=_FindFont('MS Mincho',DEFAULT_CHARSET);
+  FGothic:=_FindFont('MS Gothic',DEFAULT_CHARSET);
+
+  //Substitutions
+  if (FMincho='') and (FGothic<>'') then
+    FMincho:=FGothic
+  else
+  if (FMincho<>'') and (FGothic='') then
+    FGothic:=FMincho
+  else
+  if (FMincho='') and (FGothic='') then begin
+    FMincho:=_FindFont('',SHIFTJIS_CHARSET); //any japanese
+    if FMincho='' then begin
+      substituted:=false; //no japanese at all
+      FMincho:='Arial';
+    end;
+    FGothic:=FMincho;
+  end;
+
+  //Chinese fonts
+  FMingLiu:=_FindFont('MingLiU',DEFAULT_CHARSET);
+  FSimSun:=_FindFont('SimSun',DEFAULT_CHARSET);
+
+  //Substitutions
+  if (FMingLiu='') and (FSimSun<>'') then
+    FMingLiu:=FSimSun
+  else
+  if (FMingLiu<>'') and (FSimSun='') then
+    FSimSun:=FMingLiu
+  else
+  if (FMingLiu='') and (FSimSun='') then begin //both missing
+    FMingLiu:=_FindFont('',CHINESEBIG5_CHARSET);
+    FSimSun:=_FindFont('',GB2312_CHARSET);
+    if (FMingLiu='') or (FSimSun='') then begin
+      substituted:=false;
+      if FMingLiu='' then FMingLiu:='Arial';
+      if FSimSun='' then FSimSun:='Arial';
+    end;
+  end;
+
+ //Use
+  fSettings.Edit1.Text:=FMincho;
+  fSettings.Edit2.Text:=FMincho;
+  fSettings.Edit5.Text:=FGothic;
+  fSettings.Edit6.Text:=FMingLiu;
+  fSettings.Edit3.Text:=FSimSun;
+  fSettings.Edit7.Text:=FMingLiu;
+  fSettings.Edit9.Text:=FSimSun;
+  fSettings.Edit8.Text:=FMingLiu;
+  fSettings.Edit4.Text:='Verdana';
+  fSettings.Edit32.Text:=FMincho;
+  fSettings.Edit33.Text:='Arial';
   FontJapanese:=fSettings.Edit1.Text;
   FontJapaneseGrid:=fSettings.Edit2.Text;
   FontChinese:=fSettings.Edit7.Text;
@@ -1544,17 +1569,60 @@ begin
         pchar(_l('#00582^eMissing fonts')),
         MB_ICONERROR or MB_OK);
   end else
-    Application.MessageBox(
-      pchar(_l('#00583^eCongratulations!'#13#13'All recommended fonts were '
-        +'located on your system and were installed.')),
-      pchar(_l('#00350^eFont autodetection')),
-      MB_ICONINFORMATION or MB_OK);
+    if not Silent then
+      Application.MessageBox(
+        pchar(_l('#00583^eCongratulations!'#13#13'All recommended fonts were '
+          +'located on your system and were installed.')),
+        pchar(_l('#00350^eFont autodetection')),
+        MB_ICONINFORMATION or MB_OK);
   result:=(missingfonts='') or (substituted);
 end;
 
 procedure TfSettings.Button5Click(Sender: TObject);
 begin
-  AutoDetectFonts;
+  AutoDetectFonts({Silent=}false);
+end;
+
+function CheckFont(const face:string):string;
+begin
+  if FindFont(face,DEFAULT_CHARSET)<>'' then Result:=face else Result:='!'+face;
+end;
+
+{ Checks that all fonts are configured correctly and present in the system.
+If not, opens the configuration dialog to let the user choose some new ones.
+Used at loading:
+1. As a part of auto-detection (fonts which weren't detected can be left blank to later ask the user)
+2. When new font setting is added to the app, the user will be asked on the next run to provide a font, if the default one is missing }
+procedure TfSettings.CheckFontsPresent;
+begin
+ //TODO: Missing fonts have to be preceded by !, as before,
+ // and so we have to recheck that every time, and font selection takes font names from Font* vars,
+ // so perhaps we really should restore everything as it was, in this relation.
+ //And this function have then to be renamed "MakeSureFontsArePresent" or something :)
+  while
+       (FindFont(FontJapanese,DEFAULT_CHARSET)='')
+    or (FindFont(FontJapaneseGrid,DEFAULT_CHARSET)='')
+    or (FindFont(FontChinese,DEFAULT_CHARSET)='')
+    or (FindFont(FontChineseGrid,DEFAULT_CHARSET)='')
+    or (FindFont(FontChineseGB,DEFAULT_CHARSET)='')
+    or (FindFont(FontChineseGridGB,DEFAULT_CHARSET)='')
+    or (FindFont(FontSmall,DEFAULT_CHARSET)='')
+    or (FindFont(FontRadical,DEFAULT_CHARSET)='')
+    or (FindFont(FontEnglish,DEFAULT_CHARSET)='')
+    or (FindFont(FontPinYin,DEFAULT_CHARSET)='')
+    or (FindFont(FontStrokeOrder,DEFAULT_CHARSET)='')
+  do
+  begin
+    Application.MessageBox(
+      pchar(_l('#00353^eSome standard fonts were not found on your system.'#13
+        +'Please reselect all fonts in the following dialog. Missing fonts are '
+        +'preceded by !.'#13
+        +'Application cannot continue unless all fonts are selected.')),
+      pchar(_l('#00090^eWarning')),
+      MB_ICONWARNING or MB_OK);
+    fSettings.pcPages.ActivePage:=fSettings.tsFonts;
+    fSettings.ShowModal;
+  end;
 end;
 
 procedure TfSettings.ResetDetList;

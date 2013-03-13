@@ -35,6 +35,10 @@ object fSettings: TfSettings
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -202,6 +206,10 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -505,6 +513,10 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -587,6 +599,10 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -691,6 +707,10 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1083,6 +1103,10 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1189,6 +1213,10 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1389,6 +1417,10 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Button2: TButton
         Left = 16
         Top = 376
@@ -1470,6 +1502,10 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
@@ -1699,6 +1735,10 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         476
         450)
@@ -1816,6 +1856,10 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -1966,6 +2010,10 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         476
         450)
@@ -2083,6 +2131,10 @@ object fSettings: TfSettings
       Caption = '#00966^eEditor'
       ImageIndex = 12
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2212,6 +2264,10 @@ object fSettings: TfSettings
       Caption = '#00967^eAnnotations'
       ImageIndex = 13
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2290,6 +2346,10 @@ object fSettings: TfSettings
       Caption = 'Portability'
       ImageIndex = 14
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 16
         Top = 16

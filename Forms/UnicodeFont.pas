@@ -47,13 +47,13 @@ const
 function ChooseFont(charsets:array of TFontCharset;teststring:FString;
   var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
 
+function FindFont(const face: string; charset: integer): string;
+function ListFonts(const face: string; charset: integer): TStringList;
+
 implementation
 uses JWBMenu, JWBUnit;
 
 {$R *.DFM}
-
-var
-  fontlist: TStringList;
 
 procedure TfSelectFont.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
@@ -84,58 +84,103 @@ begin
   DrawUnicode(PaintBox3.Canvas,1,1,48,teststring,selfont);
 end;
 
-function EnumProc(lpelf:pointer;lpnt:pointer;FontType:integer;lParam:integer):integer; stdcall;
-var p:^ENUMLOGFONTEX;
+function FindFont_Callback(lpelfe: PLogFont; lpntme: PTextMetric; FontType: dword;
+  param: LParam): integer; stdcall;
 begin
-  p:=lpelf;
-  fontlist.Add(AnsiString(p^.elfLogFont.lfFaceName)+#9+inttostr(p^.elfLogFont.lfCharset));
+  PString(param)^ := lpelfe.lfFaceName;
+  Result := 0;
+end;
+
+function FindFont(const face: string; charset: integer): string;
+var DC: HDC;
+  LFont: TLogFont;
+begin
+  Result := '';
+  DC := GetDC(0);
+  try
+    FillChar(LFont, SizeOf(LFont), 00);
+    LFont.lfCharSet := charset;
+    if face<>'' then
+      strplcopy(@LFont.lfFaceName[0], face, Length(LFont.lfFaceName)-1); //also copies null
+    EnumFontFamiliesEx(DC, LFont, @FindFont_Callback, LParam(@Result), 0);
+  finally
+    ReleaseDC(0, DC);
+  end;
+end;
+
+function ListFonts_Callback(lpelfe: PLogFont; lpntme: PTextMetric; FontType: dword;
+  param: LParam): integer; stdcall;
+begin
+ { Unfortunately, most of the times Unicode fonts report itself simply as "Unicode",
+  and Windows returns those with the default system charset, usually ANSI.
+  TODO: Use NEWTEXTMETRICEX(lpntme).ntmFontSig.fsUsb bit field to study font unicode coverage,
+    where available.
+    Older fonts wont have this, but they have Charset field filled. }
+  TStringList(param).AddObject(lpelfe.lfFaceName, TObject(lpelfe.lfCharSet));
+  Result := 1; //continue
+end;
+
+function ListFonts(const face: string; charset: integer): TStringList;
+var DC: HDC;
+  LFont: TLogFont;
+begin
+  Result := TStringList.Create;
+  DC := GetDC(0);
+  try
+    FillChar(LFont, SizeOf(LFont), 00);
+    LFont.lfCharSet := charset;
+    if face<>'' then
+      strplcopy(@LFont.lfFaceName[0], face, Length(LFont.lfFaceName)-1); //also copies null
+    EnumFontFamiliesEx(DC, LFont, @ListFonts_Callback, LParam(Result), DEFAULT_CHARSET);
+   { DEFAULT_CHARSET in this context is a wildcard to receive all charsets for all fonts. }
+  finally
+    ReleaseDC(0, DC);
+  end;
 end;
 
 function ChooseFont(charsets:array of TFontCharset;teststring:FString;
   var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
-var lf:LOGFONT;
-    i:integer;
-    curfont:string;
-    csets:string;
+var fonts: TStringList;
+  i:integer;
+  curfont:string;
+  csets:string;
     s:string;
     ci:integer;
     y:integer;
+
+ //If one font handles several character sets, it appears several times.
+ //So we store data and commit it when the font name changes.
+  procedure CommitFont;
+  begin
+    if length(csets)>0 then delete(csets,length(csets),1);
+    fSelectFont.StringGrid1.RowCount:=y+1;
+    fSelectFont.StringGrid1.Cells[0,y]:=curfont;
+    fSelectFont.StringGrid1.Cells[1,y]:=csets;
+    csets:='';
+    curfont:='';
+    inc(y);
+  end;
+
 begin
-  fillchar(lf,sizeof(lf),0);
-  fontlist:=TStringList.Create;
-{  for i:=0 to High(charsets) do
-  begin
-    lf.lfCharset:=charsets[i];
-    EnumFontFamiliesEx(fMenu.Canvas.Handle,lf,@EnumProc,0,0);
-  end;}
-  lf.lfCharset:=ANSI_CHARSET;
-//  EnumFontFamiliesEx(fMenu.Canvas.Handle,lf,@EnumProc,0,0);
-  for i:=0 to Screen.Fonts.Count-1 do
-    fontlist.Add(Screen.Fonts[i]+#9+inttostr(ANSI_CHARSET));
-  fontlist.Sort;
-  fSelectFont.StringGrid1.RowCount:=2;
-  fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name');
-  fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets');
-  curfont:='';
-  y:=1;
-  for i:=0 to fontlist.Count-1 do
-  begin
-    s:=fontlist[i];
-    if (length(s)>0) and (s[1]<>'@') then
+  fonts := ListFonts('',0);
+  try
+    fonts.Sort;
+
+    fSelectFont.StringGrid1.RowCount:=2;
+    fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name');
+    fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets');
+
+    curfont:='';
+    y:=0;
+    for i:=0 to fonts.Count-1 do
     begin
-      ci:=strtoint(copy(s,pos(#9,s)+1,length(s)-pos(#9,s)));
-      delete(s,pos(#9,s),length(s)-pos(#9,s)+1);
+      s:=fonts[i];
+      if (Length(s)<=0) or (s[1]='@') then continue;
       if (curfont<>s) and (curfont<>'') then
-      begin
-        if length(csets)>0 then delete(csets,length(csets),1);
-        fSelectFont.StringGrid1.Cells[0,y]:=curfont;
-        fSelectFont.StringGrid1.Cells[1,y]:=csets;
-        csets:='';
-        curfont:=s;
-        inc(y);
-        fSelectFont.StringGrid1.RowCount:=y+1;
-      end;
+        CommitFont;
       curfont:=s;
+
+      ci:=integer(fonts.Objects[i]);
       case ci of
         ANSI_CHARSET:csets:=csets+'ANSI,';
         ARABIC_CHARSET:csets:=csets+'Arabic,';
@@ -157,12 +202,17 @@ begin
         TURKISH_CHARSET:csets:=csets+'Turkish,';
       end;
     end;
+
+  finally
+    FreeAndNil(fonts);
   end;
+
+  if curfont<>'' then
+    CommitFont;
+
   fSelectFont.teststring:=teststring;
   fSelectFont.deffont:=defaultfont;
   fSelectFont.StringGrid1.RowCount:=y;
-  s:='';
-  fontlist.Free;
   if selectfirst then
   begin
     if y>1 then result:=curfont else result:='!';

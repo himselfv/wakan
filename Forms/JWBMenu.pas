@@ -739,7 +739,6 @@ end;
 
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
-  sx:string;
   vi:TStringList;
   ms:TMemoryStream;
   i:integer;
@@ -793,27 +792,6 @@ begin
       exit;
     end;
 
-    sx:='';
-  {  if ChooseFont([SHIFTJIS_CHARSET],'',s,'',true)='!'then sx:=sx+',Shift-JIS';
-    if ChooseFont([CHINESEBIG5_CHARSET],'',s,'',true)='!'then sx:=sx+',Big5';
-    if ChooseFont([GB2312_CHARSET],'',s,'',true)='!'then sx:=sx+',GB2312';
-    if sx<>'' then
-    begin
-      delete(sx,1,1);
-      Application.MessageBox(
-        pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13
-          +sx+#13#13
-          +'You must have at least one font of each of these sets on your computer '
-          +'to run this application.'#13#13
-          +'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13
-          +'These fonts are automatically installed when you install support for '
-          +'reading Japanese & Chinese language in windows.'#13#13
-          +'Please install required fonts and run this application again.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
-    end; }
     oldhandle:=0;
     critsec:=false;
     TranslateAll;
@@ -882,21 +860,7 @@ begin
     AutoImportDicts();
 
    //Force user to select fonts
-    while (pos('!',FontJapanese)>0) or (pos('!',FontJapaneseGrid)>0) or
-      (pos('!',FontChinese)>0) or (pos('!',FontChineseGrid)>0) or
-      (pos('!',FontChineseGB)>0) or (pos('!',FontChineseGridGB)>0) or
-      (pos('!',FontSmall)>0) or (pos('!',FontRadical)>0) or (pos('!',FontEnglish)>0) or (pos('!',FontPinYin)>0) or (pos('!',FontStrokeOrder)>0) do
-    begin
-      Application.MessageBox(
-        pchar(_l('#00353^eSome standard fonts were not found on your system.'#13
-          +'Please reselect all fonts in the following dialog. Missing fonts are '
-          +'preceded by !.'#13
-          +'Application cannot continue unless all fonts are selected.')),
-        pchar(_l('#00090^eWarning')),
-        MB_ICONWARNING or MB_OK);
-      fSettings.pcPages.ActivePage:=fSettings.tsFonts;
-      fSettings.ShowModal;
-    end;
+    fSettings.CheckFontsPresent;
 
    //Wakan.chr
     try
