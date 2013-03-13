@@ -116,10 +116,11 @@ begin
   AddFile(Result, 'wakan.bak');
   AddFile(Result, 'wakan.cdt');
   AddDirectory(Result, 'backup', true);
-  AddByMask(Result, '', '*.dic', false);
+//Do not move dictionaries, they are currently always in Wakan folder
+{  AddByMask(Result, '', '*.dic', false);
   AddFile(Result, 'edict');
   AddFile(Result, 'edict2');
-  AddFile(Result, 'cedict');
+  AddFile(Result, 'cedict'); }
 end;
 
 procedure TfPortableMode.btnStandaloneClick(Sender: TObject);
