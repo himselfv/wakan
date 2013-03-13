@@ -36,8 +36,6 @@ object fDictMan: TfDictMan
     Anchors = [akTop, akRight, akBottom]
     BevelOuter = bvLowered
     TabOrder = 5
-    ExplicitLeft = 239
-    ExplicitHeight = 365
     DesignSize = (
       352
       373)
@@ -325,7 +323,6 @@ object fDictMan: TfDictMan
       Caption = '#00918^eLoad entire dictionary into memory (much faster)'
       TabOrder = 0
       OnClick = SpeedButton1Click
-      ExplicitTop = 312
     end
   end
   object cbDicts: TCheckListBox
@@ -405,8 +402,6 @@ object fDictMan: TfDictMan
     ParentFont = False
     TabOrder = 3
     OnClick = btnOkClick
-    ExplicitLeft = 325
-    ExplicitTop = 395
   end
   object btnCancel: TBitBtn
     Left = 512
@@ -442,8 +437,6 @@ object fDictMan: TfDictMan
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 4
-    ExplicitLeft = 460
-    ExplicitTop = 395
   end
   object btnMoveUp: TBitBtn
     Left = 239

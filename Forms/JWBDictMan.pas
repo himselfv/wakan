@@ -54,7 +54,9 @@ type
     procedure btnMoveDownClick(Sender: TObject);
 
   protected
+    FLoadingData: boolean; //set when we are loading dict data -- do not handle checkbox changes etc
     procedure UpdateUpDownButtons;
+
   public
     procedure ReloadDicts;
     procedure CarefulRefreshDicts;
@@ -167,22 +169,27 @@ begin
   UpdateUpDownButtons;
   if cbDicts.ItemIndex=-1 then exit;
   dic:=dicts.Find(cbDicts.Items[cbDicts.ItemIndex]);
-  label4.Caption:=dic.name;
-  label10.caption:=dic.pname;
-  label11.caption:=dic.version;
-  if dic.entries=-1 then label12.caption:='N/A' else label12.caption:=inttostr(dic.entries);
-  label13.caption:=datetostr(dic.builddate);
-  label14.caption:=inttostr(dic.priority);
-  label15.caption:=dic.description;
-  label17.caption:=dic.copyright;
-  if dic.hasWordIndex then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
-  if dic.hasCharIndex then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
-  SpeedButton1.Down:=dicts.IsInGroup(dic, 1);
-  SpeedButton2.Down:=dicts.IsInGroup(dic, 2);
-  SpeedButton3.Down:=dicts.IsInGroup(dic, 3);
-  SpeedButton4.Down:=dicts.IsInGroup(dic, 4);
-  SpeedButton5.Down:=dicts.IsInGroup(dic, 5);
-  CheckBox1.Checked:=not dicts.IsInGroup(dic, GROUP_OFFLINE);
+  FLoadingData := true;
+  try
+    label4.Caption:=dic.name;
+    label10.caption:=dic.pname;
+    label11.caption:=dic.version;
+    if dic.entries=-1 then label12.caption:='N/A' else label12.caption:=inttostr(dic.entries);
+    label13.caption:=datetostr(dic.builddate);
+    label14.caption:=inttostr(dic.priority);
+    label15.caption:=dic.description;
+    label17.caption:=dic.copyright;
+    if dic.hasWordIndex then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
+    if dic.hasCharIndex then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
+    SpeedButton1.Down:=dicts.IsInGroup(dic, 1);
+    SpeedButton2.Down:=dicts.IsInGroup(dic, 2);
+    SpeedButton3.Down:=dicts.IsInGroup(dic, 3);
+    SpeedButton4.Down:=dicts.IsInGroup(dic, 4);
+    SpeedButton5.Down:=dicts.IsInGroup(dic, 5);
+    CheckBox1.Checked:=not dicts.IsInGroup(dic, GROUP_OFFLINE);
+  finally
+    FLoadingData := false;
+  end;
 end;
 
 procedure TfDictMan.Button1Click(Sender: TObject);
@@ -199,13 +206,14 @@ end;
 procedure TfDictMan.SpeedButton1Click(Sender: TObject);
 var s:string;
 begin
+  if FLoadingData then exit; //loading dict data, not a user action
   s:=cbDicts.Items[cbDicts.ItemIndex];
   dicts.PutInGroup(s,1,SpeedButton1.Down);
   dicts.PutInGroup(s,2,SpeedButton2.Down);
   dicts.PutInGroup(s,3,SpeedButton3.Down);
   dicts.PutInGroup(s,4,SpeedButton4.Down);
   dicts.PutInGroup(s,5,SpeedButton5.Down);
-  dicts.PutInGroup(s,GROUP_OFFLINE,CheckBox1.Checked);
+  dicts.PutInGroup(s,GROUP_OFFLINE,not CheckBox1.Checked);
 end;
 
 procedure TfDictMan.UpdateUpDownButtons;
