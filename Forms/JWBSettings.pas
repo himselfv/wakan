@@ -315,6 +315,7 @@ type
     procedure lbContentsClick(Sender: TObject);
     procedure btnUpgradeToStandaloneClick(Sender: TObject);
     procedure lblSettingsPathClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   public
     function CheckFontBool(s:string):boolean;
     function AutoDetectFonts:boolean;
@@ -1234,6 +1235,7 @@ Use this chance to:
 procedure TfSettings.AcceptSettings;
 var tmp:integer;
 begin
+  raise Exception.Create('Error Message');
  //Verify control
   if edit11.text='0' then edit11.text:='1';
   if not TryStrToInt(Edit10.Text, tmp) then Edit10.Text := '0';
@@ -1247,9 +1249,20 @@ end;
 
 procedure TfSettings.btnOkClick(Sender: TObject);
 begin
-  AcceptSettings();
+{
+ Currently the majority of the settings is changed on the fly,
+ so no matter which way the dialog is closed, it must run "OK" code.
+ (There's simply no "Cancel")
+ Therefore all handling is in FormClose (triggered by any closing of the form).
+}
+end;
+
+procedure TfSettings.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  AcceptSettings(); //this can raise exceptions on invalid data => dialog not closed
   SaveSettings();
 end;
+
 
 procedure TfSettings.SpeedButton10Click(Sender: TObject);
 var sup:string;
