@@ -674,6 +674,7 @@ constructor TDicCursor.Create(ADic: TJaletDic);
 begin
   inherited Create();
   self.dic := ADic;
+  self.dic.Demand; //can't delay this further or TTextTableCursor will get nil table
 
   self.CDict := TTextTableCursor.Create(dic.TDict);
   self.TDictIndex := ADic.TDictIndex;
