@@ -317,6 +317,8 @@ type
     procedure lblSettingsPathClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
 
+  protected
+    procedure UpdateFontNames;
   public
     function AutoDetectFonts(Silent:boolean):boolean;
     procedure CheckFontsPresent;
@@ -556,18 +558,19 @@ begin
    //There's some safety net for cases when font settings are added:
    //although we don't run detection again (it'd reset other fonts), we choose
    //a default font name for a new setting and later check if it's available.
-    Edit1.Text:=reg.ReadString('Fonts','JapaneseGrid','MS Mincho');
-    Edit2.Text:=reg.ReadString('Fonts','Japanese','MS Mincho');
-    Edit5.Text:=reg.ReadString('Fonts','Small','MS Gothic');
-    Edit6.Text:=reg.ReadString('Fonts','ChineseGrid','MingLiU');
-    Edit3.Text:=reg.ReadString('Fonts','ChineseGridGB','SimSun');
-    Edit7.Text:=reg.ReadString('Fonts','Chinese','MingLiU');
-    Edit9.Text:=reg.ReadString('Fonts','ChineseGB','SimSun');
-    Edit8.Text:=reg.ReadString('Fonts','Radical','MingLiU');
-    Edit4.Text:=reg.ReadString('Fonts','English','Verdana');
-    Edit32.Text:=reg.ReadString('Fonts','StrokeOrder','MS Mincho');
-    Edit33.Text:=reg.ReadString('Fonts','PinYin','Arial');
+    FontJapanese:=reg.ReadString('Fonts','Japanese','MS Mincho');
+    FontJapaneseGrid:=reg.ReadString('Fonts','JapaneseGrid','MS Mincho');
+    FontChinese:=reg.ReadString('Fonts','Chinese','MingLiU');
+    FontChineseGrid:=reg.ReadString('Fonts','ChineseGrid','MingLiU');
+    FontChineseGB:=reg.ReadString('Fonts','ChineseGB','SimSun');
+    FontChineseGridGB:=reg.ReadString('Fonts','ChineseGridGB','SimSun');
+    FontSmall:=reg.ReadString('Fonts','Small','MS Gothic');
+    FontRadical:=reg.ReadString('Fonts','Radical','MingLiU');
+    FontEnglish:=reg.ReadString('Fonts','English','Verdana');
+    FontStrokeOrder:=reg.ReadString('Fonts','StrokeOrder','MS Mincho');
+    FontPinYin:=reg.ReadString('Fonts','PinYin','Arial');
   end;
+  UpdateFontNames;
   CheckBox4.Checked:=reg.ReadBool('Dict','PreferUser',true);
   CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
   CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
@@ -699,17 +702,6 @@ begin
   s:=reg.ReadString('Dict','CurLanguage','j');
   if Length(s)>=1 then curlang:=s[1] else curlang:='j';
   lbWordPrintFormatClick(self);
-  FontJapanese:=Edit2.Text;
-  FontJapaneseGrid:=Edit1.Text;
-  FontChinese:=Edit7.Text;
-  FontChineseGrid:=Edit6.Text;
-  FontChineseGB:=Edit9.Text;
-  FontChineseGridGB:=Edit3.Text;
-  FontSmall:=Edit5.Text;
-  FontRadical:=Edit8.Text;
-  FontEnglish:=Edit4.Text;
-  FontPinYin:=Edit33.Text;
-  FontStrokeOrder:=Edit32.Text;
 
   cbSaveColumnWidths.Checked:=reg.ReadBool('General','SaveColumnWidths',true);
   cbSaveSearchParams.Checked:=reg.ReadBool('General','SaveSearchParams',true);
@@ -1518,28 +1510,19 @@ begin
   end;
 
  //Use
-  fSettings.Edit1.Text:=FMincho;
-  fSettings.Edit2.Text:=FMincho;
-  fSettings.Edit5.Text:=FGothic;
-  fSettings.Edit6.Text:=FMingLiu;
-  fSettings.Edit3.Text:=FSimSun;
-  fSettings.Edit7.Text:=FMingLiu;
-  fSettings.Edit9.Text:=FSimSun;
-  fSettings.Edit8.Text:=FMingLiu;
-  fSettings.Edit4.Text:='Verdana';
-  fSettings.Edit32.Text:=FMincho;
-  fSettings.Edit33.Text:='Arial';
-  FontJapanese:=fSettings.Edit1.Text;
-  FontJapaneseGrid:=fSettings.Edit2.Text;
-  FontChinese:=fSettings.Edit7.Text;
-  FontChineseGrid:=fSettings.Edit6.Text;
-  FontChineseGB:=fSettings.Edit9.Text;
-  FontChineseGridGB:=fSettings.Edit3.Text;
-  FontSmall:=fSettings.Edit5.Text;
-  FontRadical:=fSettings.Edit8.Text;
-  FontEnglish:=fSettings.Edit4.Text;
-  FontPinYin:=fSettings.Edit33.Text;
-  FontStrokeOrder:=fSettings.Edit32.Text;
+  FontJapanese:=FMincho;
+  FontJapaneseGrid:=FMincho;
+  FontChinese:=FMingLiu;
+  FontChineseGrid:=FMingLiu;
+  FontChineseGB:=FSimSun;
+  FontChineseGridGB:=FSimSun;
+  FontSmall:=FGothic;
+  FontRadical:=FMingLiu;
+  FontEnglish:='Verdana';
+  FontPinYin:='Arial';
+  FontStrokeOrder:=FMincho;
+  UpdateFontNames;
+
   if missingfonts<>'' then
   begin
     delete(missingfonts,1,1);
@@ -1583,9 +1566,13 @@ begin
   AutoDetectFonts({Silent=}false);
 end;
 
-function CheckFont(const face:string):string;
+function CheckFont(var face:string):boolean;
 begin
-  if FindFont(face,DEFAULT_CHARSET)<>'' then Result:=face else Result:='!'+face;
+  while (Length(face)>0) and (face[1]='!') do
+    delete(face,1,1);
+  Result := FindFont(face,DEFAULT_CHARSET)<>'';
+  if not Result then
+    face:='!'+face;
 end;
 
 { Checks that all fonts are configured correctly and present in the system.
@@ -1594,23 +1581,20 @@ Used at loading:
 1. As a part of auto-detection (fonts which weren't detected can be left blank to later ask the user)
 2. When new font setting is added to the app, the user will be asked on the next run to provide a font, if the default one is missing }
 procedure TfSettings.CheckFontsPresent;
+var OldPosition: TPosition;
 begin
- //TODO: Missing fonts have to be preceded by !, as before,
- // and so we have to recheck that every time, and font selection takes font names from Font* vars,
- // so perhaps we really should restore everything as it was, in this relation.
- //And this function have then to be renamed "MakeSureFontsArePresent" or something :)
   while
-       (FindFont(FontJapanese,DEFAULT_CHARSET)='')
-    or (FindFont(FontJapaneseGrid,DEFAULT_CHARSET)='')
-    or (FindFont(FontChinese,DEFAULT_CHARSET)='')
-    or (FindFont(FontChineseGrid,DEFAULT_CHARSET)='')
-    or (FindFont(FontChineseGB,DEFAULT_CHARSET)='')
-    or (FindFont(FontChineseGridGB,DEFAULT_CHARSET)='')
-    or (FindFont(FontSmall,DEFAULT_CHARSET)='')
-    or (FindFont(FontRadical,DEFAULT_CHARSET)='')
-    or (FindFont(FontEnglish,DEFAULT_CHARSET)='')
-    or (FindFont(FontPinYin,DEFAULT_CHARSET)='')
-    or (FindFont(FontStrokeOrder,DEFAULT_CHARSET)='')
+       not CheckFont(FontJapanese)
+    or not CheckFont(FontJapaneseGrid)
+    or not CheckFont(FontChinese)
+    or not CheckFont(FontChineseGrid)
+    or not CheckFont(FontChineseGB)
+    or not CheckFont(FontChineseGridGB)
+    or not CheckFont(FontSmall)
+    or not CheckFont(FontRadical)
+    or not CheckFont(FontEnglish)
+    or not CheckFont(FontPinYin)
+    or not CheckFont(FontStrokeOrder)
   do
   begin
     Application.MessageBox(
@@ -1620,9 +1604,29 @@ begin
         +'Application cannot continue unless all fonts are selected.')),
       pchar(_l('#00090^eWarning')),
       MB_ICONWARNING or MB_OK);
-    fSettings.pcPages.ActivePage:=fSettings.tsFonts;
-    fSettings.ShowModal;
+    OldPosition := Self.Position;
+    Self.Position := poScreenCenter;
+    Self.UpdateFontNames;
+    Self.pcPages.ActivePage:=fSettings.tsFonts;
+    Self.ShowModal;
+    Self.Position := OldPosition;
   end;
+end;
+
+//Updates font names on font selection page
+procedure TfSettings.UpdateFontNames;
+begin
+  Edit2.Text:=FontJapanese;
+  Edit1.Text:=FontJapaneseGrid;
+  Edit7.Text:=FontChinese;
+  Edit6.Text:=FontChineseGrid;
+  Edit9.Text:=FontChineseGB;
+  Edit3.Text:=FontChineseGridGB;
+  Edit5.Text:=FontSmall;
+  Edit8.Text:=FontRadical;
+  Edit4.Text:=FontEnglish;
+  Edit33.Text:=FontPinYin;
+  Edit32.Text:=FontStrokeOrder;
 end;
 
 procedure TfSettings.ResetDetList;
