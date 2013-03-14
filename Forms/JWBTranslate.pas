@@ -83,6 +83,9 @@ type
   PTextSelection = ^TTextSelection;
 
   TTextAnnotMode = (
+    amNone,
+      //do not load ruby
+      //do not save ruby
     amDefault,
       //do not load ruby
       //save only those annotations which were loaded from ruby
@@ -374,7 +377,7 @@ type
     procedure outpln(const s: string);
     procedure outp(const s: string);
   public
-    constructor Create(AEncType: integer);
+    constructor Create(AEncType: integer; ANoBOM: boolean=false);
     destructor Destroy; override;
     procedure BeginDocument; virtual;
     procedure AddChars(const s: FString); virtual;
@@ -575,10 +578,11 @@ begin
 end;
 
 
-constructor TTextSaveFormat.Create(AEncType: integer);
+constructor TTextSaveFormat.Create(AEncType: integer; ANoBOM: boolean);
 begin
   inherited Create;
   FEncType := AEncType;
+  FNoBOM := ANoBOM;
   AtSpace := false;
   AtNewline := true;
   LastChar := UH_NOCHAR;
@@ -674,6 +678,7 @@ constructor THtmlFormat.Create(AOptions: THtmlFormatOptions);
 begin
   inherited Create(FILETYPE_UTF8);
   FOptions := AOptions;
+  FNoBOM := true; //always no bom with html
 end;
 
 procedure THtmlFormat.BeginDocument;
@@ -1324,7 +1329,7 @@ var i,j,k: integer;
 
   procedure FinalizeRuby();
   begin
-    if (AnnotMode=amRuby) or explicitRuby then
+    if (AnnotMode=amRuby) or (explicitRuby and (AnnotMode<>amNone)) then
       format.AddWord(kanji,reading,meaning,rubyTextBreak)
     else
       format.AddChars(kanji);
@@ -2353,12 +2358,12 @@ begin
   DeleteSelection;
 end;
 
-//Copies selection as text with only those Ruby which were read from file
+//Copies selection as text without any Ruby
 function TfTranslate.CopyAsText: UnicodeString;
 var stream: TStream;
 begin
   stream := TUnicodeStringStream.Create(@Result);
-  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE),stream,amDefault);
+  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE,{NoBOM=}true),stream,amNone);
   FreeAndNil(stream);
 end;
 
@@ -2367,7 +2372,7 @@ function TfTranslate.CopyAsRuby: UnicodeString;
 var stream: TStream;
 begin
   stream := TUnicodeStringStream.Create(@Result);
-  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE),stream);
+  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE,{NoBOM=}true),stream);
   FreeAndNil(stream);
 end;
 
