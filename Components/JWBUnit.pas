@@ -37,7 +37,7 @@ Define NOLOG to make sure that nothing in the application calls these. }
 //{$DEFINE NOLOG}
 {$IFNDEF NOLOG}
 procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF} //inline in debug so that it's completely eliminated
-procedure Log(const msg: string; args: array of const); overload; {$IFNDEF DEBUG}inline;{$ENDIF}
+procedure Log(const msg: string; args: array of const); overload;
 procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IFNDEF DEBUG}inline;{$ENDIF}
 {$ENDIF}
 
