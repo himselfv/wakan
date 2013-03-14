@@ -84,14 +84,17 @@ type
 
   TTextAnnotMode = (
     amNone,
-      //do not load ruby
-      //do not save ruby
+      //do not parse ruby when loading
+      //do not parse ruby when pasting
+      //save without any ruby
     amDefault,
-      //do not load ruby
+      //do not parse ruby when loading
+      //parse ruby when pasting if configured to
       //save only those annotations which were loaded from ruby
     amRuby
-      //load ruby
-      //save generated kana as aozora-ruby
+      //parse ruby when loading
+      //parse ruby when pasting
+      //save all annotations as ruby
   );
 
   TSetWordTransFlag = (
@@ -1044,7 +1047,7 @@ begin
   if fSettings.cbLoadAozoraRuby.Checked then
     LoadAnnotMode := amRuby
   else
-    LoadAnnotMode := amDefault;
+    LoadAnnotMode := amNone;
 
   lblFilename.Caption:=uppercase(ExtractFilename(filename));
   doc.Clear;
@@ -1448,13 +1451,32 @@ begin
   FreeAndNil(format);
 end;
 
+{
+Wakan text format.
+- "WaKan Translated Text>"+[WAKAN.CHR version]+$3294
+- List of dictionaries used in file
+  2 bytes: string length in characters
+  2*length bytes: string data
+ String contains comma-separated dictionary names, first one has index 1:
+  EDICT,dictA,dictB
+ May contain terminating "$$$$".
+- Characters. Each takes 8 bytes:
+  1 byte learn-state
+  1 byte char-state
+  1 byte dictionary index in local list
+  3 bytes dictionary entry #
+  2 bytes char
+ A learn-state of "$" means newline character.
+
+Explicit ruby is currently stored expanded (as text). This is not the best solution,
+but otherwise we'd need to change the file format.
+}
+
 type
   EBadWakanTextFormat = class(Exception);
 
-//TODO: Load text into memory instead of directly into document?
-//TODO: Or allow to specify where to paste text instead of replacing the document?
-//TODO: Update current dictionary set with new dictionaries and update dict
-//  references in the loaded text for dictionaries which got other indexes.
+//Loads Wakan text from stream and merge-pastes it at the cursor position.
+//Used to load Wakan files and to paste Wakan clipboard cuts.
 function TfTranslate.LoadWakanText(stream: TStream; silent: boolean): boolean;
 var s,s2:string;
   s3: TCharacterLineProps;
@@ -1588,7 +1610,7 @@ begin
     props.AddChars(s3);
   end;
 
-  PasteText(chars,props,amDefault);
+  PasteText(chars,props,amNone); //paste as is, do not expand ruby
   Result := true;
 end;
 
@@ -3954,6 +3976,12 @@ var s: string;
   end;
 
 begin
+  if AnnotMode=amDefault then
+    if fSettings.cbLoadAozoraRuby.Checked then
+      AnnotMode := amRuby
+    else
+      AnnotMode := amNone;
+
   s := '';
   sp.Clear;
 
@@ -3993,8 +4021,7 @@ begin
 end;
 
 procedure TfTranslate.PasteOp;
-var AnnotMode: TTextAnnotMode;
-  ms: TMemoryStream;
+var ms: TMemoryStream;
   props: TCharacterLineProps;
   Loaded: boolean;
 begin
@@ -4002,11 +4029,6 @@ begin
     exit; //cannot do!
 
   DeleteSelection; //selected text is replaced
-
-  if fSettings.cbLoadAozoraRuby.Checked then
-    AnnotMode := amRuby
-  else
-    AnnotMode := amDefault;
 
   Loaded := false;
   if fMenu.GetClipboard(CF_WAKAN, ms) then
@@ -4023,7 +4045,7 @@ begin
 
   if not Loaded then begin //default to bare text
     props.Clear;
-    PasteText(clip,props,AnnotMode);
+    PasteText(clip,props,amDefault);
   end;
 
   ShowText(true);
