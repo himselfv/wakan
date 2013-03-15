@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel;
+  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel,
+  ImgList;
 
 type
   TfSettings = class(TForm)
@@ -231,7 +232,6 @@ type
     CheckBox56: TCheckBox;
     cbTranslateNoLongTextWarning: TCheckBox;
     cbMultithreadedTranslation: TCheckBox;
-    lbContents: TListBox;
     pnlButtons: TPanel;
     btnChangeLanguage: TButton;
     btnOk: TBitBtn;
@@ -266,6 +266,7 @@ type
     lblUserDataPath: TUrlLabel;
     btnUpgradeToStandalone: TButton;
     lblUpgradeToStandalone: TLabel;
+    tvContents: TTreeView;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -312,10 +313,12 @@ type
     procedure Button16Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
-    procedure lbContentsClick(Sender: TObject);
     procedure btnUpgradeToStandaloneClick(Sender: TObject);
     procedure lblSettingsPathClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
+      var AllowCollapse: Boolean);
+    procedure tvContentsClick(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -327,7 +330,7 @@ type
     procedure ResetDetList;
 
   protected
-    procedure BuildContents;
+    procedure InitContents;
     procedure SelectActiveContentItem;
 
   private
@@ -379,18 +382,18 @@ var colorfrom:integer;
 
 procedure TfSettings.FormCreate(Sender: TObject);
 begin
-  BuildContents;
+  InitContents;
  //Default states for all controls will be set when loading data (even if we lack data)
 end;
 
-//Populates contents list from available pages
-procedure TfSettings.BuildContents;
+procedure TfSettings.InitContents;
 var i: integer;
 begin
-  lbContents.Clear;
-  for i := 0 to pcPages.PageCount - 1 do
-    lbContents.AddItem(pcPages.Pages[i].Caption, pcPages.Pages[i]);
+  for i := 0 to tvContents.Items.Count - 1 do
+    tvContents.Items[i].Expand({Recurse=}true);
   SelectActiveContentItem;
+  tvContents.Width := tvContents.Width + 1;
+  tvContents.Width := tvContents.Width - 1;
 end;
 
 procedure TfSettings.SelectActiveContentItem;
@@ -398,14 +401,26 @@ var i: integer;
   found: boolean;
 begin
   found := false;
-  for i := 0 to lbContents.Items.Count - 1 do
-    if lbContents.Items.Objects[i] = pcPages.ActivePage then begin
+  for i := 0 to tvContents.Items.Count - 1 do
+    if tvContents.Items[i].StateIndex = pcPages.ActivePageIndex then begin
       found := true;
-      lbContents.ItemIndex := i;
+      tvContents.Selected := tvContents.Items[i];
       break;
     end;
   if not found then
-    lbContents.ItemIndex := -1; //deselect
+    tvContents.Selected := nil; //deselect
+end;
+
+procedure TfSettings.tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
+  var AllowCollapse: Boolean);
+begin
+  AllowCollapse := false;
+end;
+
+procedure TfSettings.tvContentsClick(Sender: TObject);
+begin
+  if (tvContents.Selected <> nil) and (tvContents.Selected.StateIndex>=0) then
+    pcPages.ActivePageIndex := tvContents.Selected.StateIndex;
 end;
 
 procedure TfSettings.FormShow(Sender: TObject);
@@ -1234,13 +1249,6 @@ procedure TfSettings.PaintBox3Paint(Sender: TObject);
 begin
   PaintBox3.Canvas.Brush.Color:=clBtnFace;
   DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,RadioGroup1.ItemIndex+1,false,'j'),FontSmall);
-end;
-
-procedure TfSettings.lbContentsClick(Sender: TObject);
-begin
-  if lbContents.ItemIndex >= 0 then
-    pcPages.ActivePage := TTabSheet(lbContents.Items.Objects[lbContents.ItemIndex]);
-    //will trigger pointless SelectActiveContentItem(), but whatever
 end;
 
 procedure TfSettings.pcPagesChange(Sender: TObject);

@@ -4,7 +4,7 @@ object fSettings: TfSettings
   BorderStyle = bsDialog
   Caption = '#00397^eSettings'
   ClientHeight = 501
-  ClientWidth = 661
+  ClientWidth = 668
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -23,30 +23,29 @@ object fSettings: TfSettings
   object pcPages: TPageControl
     Left = 177
     Top = 0
-    Width = 484
+    Width = 491
     Height = 460
-    ActivePage = tsGeneral
+    ActivePage = tsRomanization
     Align = alClient
     MultiLine = True
     Style = tsButtons
-    TabOrder = 0
+    TabOrder = 1
     OnChange = pcPagesChange
+    ExplicitWidth = 484
     object tsGeneral: TTabSheet
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
-        Width = 476
+        Width = 483
         Height = 450
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
+        ExplicitWidth = 476
         object Label41: TLabel
           Left = 16
           Top = 224
@@ -206,10 +205,7 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -513,10 +509,7 @@ object fSettings: TfSettings
       Caption = '#00298^eCharacter list'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Label35: TLabel
         Left = 16
         Top = 96
@@ -599,10 +592,7 @@ object fSettings: TfSettings
       Caption = '#00217^eDictionary'
       ImageIndex = 3
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Label26: TLabel
         Left = 16
         Top = 280
@@ -707,10 +697,7 @@ object fSettings: TfSettings
       Caption = '#00450^eFonts'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Label4: TLabel
         Left = 8
         Top = 367
@@ -1103,10 +1090,7 @@ object fSettings: TfSettings
       Caption = '#00465^eWord list printing'
       ImageIndex = 4
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Label11: TLabel
         Left = 16
         Top = 344
@@ -1213,10 +1197,7 @@ object fSettings: TfSettings
       Caption = '#00488^eCharacter cards printing'
       ImageIndex = 5
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Label12: TLabel
         Left = 8
         Top = 8
@@ -1417,10 +1398,7 @@ object fSettings: TfSettings
       Caption = '#00504^eDatabase maintenance'
       ImageIndex = 6
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Button2: TButton
         Left = 16
         Top = 376
@@ -1502,18 +1480,16 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
-        Width = 476
+        Width = 483
         Height = 450
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
+        ExplicitWidth = 476
         object Label25: TLabel
           Left = 12
           Top = 250
@@ -1735,12 +1711,9 @@ object fSettings: TfSettings
       Caption = '#00530^eCharacter details'
       ImageIndex = 9
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       DesignSize = (
-        476
+        483
         450)
       object Label34: TLabel
         Left = 8
@@ -1750,7 +1723,7 @@ object fSettings: TfSettings
         Caption = '#00531^eDisplayed items:'
       end
       object SpeedButton11: TSpeedButton
-        Left = 453
+        Left = 460
         Top = 98
         Width = 23
         Height = 79
@@ -1777,7 +1750,7 @@ object fSettings: TfSettings
         ExplicitLeft = 448
       end
       object SpeedButton12: TSpeedButton
-        Left = 453
+        Left = 460
         Top = 234
         Width = 23
         Height = 79
@@ -1805,12 +1778,13 @@ object fSettings: TfSettings
       object ListBox2: TListBox
         Left = 8
         Top = 24
-        Width = 443
+        Width = 450
         Height = 332
         Anchors = [akLeft, akTop, akRight, akBottom]
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox2Click
+        ExplicitWidth = 443
       end
       object Button7: TButton
         Left = 8
@@ -1856,10 +1830,7 @@ object fSettings: TfSettings
       Caption = '#00538^ePopup tool'
       ImageIndex = 10
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Label36: TLabel
         Left = 8
         Top = 80
@@ -2010,12 +1981,9 @@ object fSettings: TfSettings
       Caption = '#00551^eColors'
       ImageIndex = 11
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       DesignSize = (
-        476
+        483
         450)
       object Shape2: TShape
         Left = 8
@@ -2131,10 +2099,7 @@ object fSettings: TfSettings
       Caption = '#00966^eEditor'
       ImageIndex = 12
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object lblAozoraRuby: TLabel
         Left = 8
         Top = 109
@@ -2264,10 +2229,7 @@ object fSettings: TfSettings
       Caption = '#00967^eAnnotations'
       ImageIndex = 13
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object Bevel1: TBevel
         Left = 8
         Top = 40
@@ -2346,10 +2308,7 @@ object fSettings: TfSettings
       Caption = 'Portability'
       ImageIndex = 14
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
+      ExplicitWidth = 476
       object lblWakanMode: TLabel
         Left = 16
         Top = 16
@@ -2471,26 +2430,17 @@ object fSettings: TfSettings
       end
     end
   end
-  object lbContents: TListBox
-    Left = 0
-    Top = 0
-    Width = 177
-    Height = 460
-    Align = alLeft
-    ItemHeight = 13
-    TabOrder = 1
-    OnClick = lbContentsClick
-  end
   object pnlButtons: TPanel
     Left = 0
     Top = 460
-    Width = 661
+    Width = 668
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitWidth = 661
     DesignSize = (
-      661
+      668
       41)
     object btnChangeLanguage: TButton
       Left = 12
@@ -2509,7 +2459,7 @@ object fSettings: TfSettings
       OnClick = btnChangeLanguageClick
     end
     object btnOk: TBitBtn
-      Left = 520
+      Left = 527
       Top = 8
       Width = 130
       Height = 25
@@ -2538,7 +2488,65 @@ object fSettings: TfSettings
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOkClick
+      ExplicitLeft = 520
     end
+  end
+  object tvContents: TTreeView
+    Left = 0
+    Top = 0
+    Width = 177
+    Height = 460
+    Align = alLeft
+    HideSelection = False
+    Indent = 19
+    ParentShowHint = False
+    RowSelect = True
+    ShowHint = True
+    ShowLines = False
+    TabOrder = 0
+    OnClick = tvContentsClick
+    OnCollapsing = tvContentsCollapsing
+    Items.NodeData = {
+      03080000003C000000000000000000000000000000FFFFFFFF00000000000000
+      0004000000010F2300300030003300390038005E006500470065006E00650072
+      0061006C0046000000000000000000000001000000FFFFFFFF00000000000000
+      000000000001142300300030003400310032005E00650052006F006D0061006E
+      0069007A006100740069006F006E0038000000000000000000000004000000FF
+      FFFFFF000000000000000000000000010D2300300030003400350030005E0065
+      0046006F006E00740073003A00000000000000000000000B000000FFFFFFFF00
+      0000000000000000000000010E2300300030003500350031005E00650043006F
+      006C006F00720073004200000000000000000000000E000000FFFFFFFF000000
+      00000000000000000001122300300031003000360030005E0050006F00720074
+      006100620069006C006900740079004A000000000000000000000002000000FF
+      FFFFFF00000000000000000100000001162300300030003200390038005E0065
+      0043006800610072006100630074006500720020006C00690073007400500000
+      00000000000000000009000000FFFFFFFF000000000000000000000000011923
+      00300030003500330030005E0065004300680061007200610063007400650072
+      002000640065007400610069006C007300420000000000000000000000030000
+      00FFFFFFFF00000000000000000000000001122300300030003200310037005E
+      006500440069006300740069006F006E00610072007900420000000000000000
+      0000000A000000FFFFFFFF000000000000000000000000011223003000300035
+      00330038005E00650050006F00700075007000200074006F006F006C003A0000
+      0000000000000000000C000000FFFFFFFF000000000000000001000000010E23
+      00300030003900360036005E00650045006400690074006F0072004C00000000
+      0000000000000008000000FFFFFFFF0000000000000000000000000117230030
+      0030003300300030005E006500540065007800740020007400720061006E0073
+      006C00610074006F0072003C0000000000000000000000FFFFFFFFFFFFFFFF00
+      0000000000000002000000010F2300300031003000360031005E005300740075
+      006400790069006E00670052000000000000000000000005000000FFFFFFFF00
+      0000000000000000000000011A2300300030003400360035005E00650057006F
+      007200640020006C0069007300740020007000720069006E00740069006E0067
+      005E000000000000000000000006000000FFFFFFFF0000000000000000000000
+      0001202300300030003400380038005E00650043006800610072006100630074
+      006500720020006300610072006400730020007000720069006E00740069006E
+      0067004400000000000000000000000D000000FFFFFFFF000000000000000000
+      00000001132300300030003900360037005E00650041006E006E006F00740061
+      00740069006F006E00730056000000000000000000000007000000FFFFFFFF00
+      0000000000000000000000011C2300300030003500300034005E006500440061
+      0074006100620061007300650020006D00610069006E00740065006E0061006E
+      0063006500}
+    ExplicitLeft = 6
+    ExplicitTop = 6
   end
   object OpenDialog2: TOpenDialog
     DefaultExt = '.wbk'

@@ -393,6 +393,23 @@ var j,k:integer;
     end;
   end;
 
+  procedure _tlnode(a:TTreeNode);
+  var i: integer;
+  begin
+    a.Text:=TranslateString(a.Text);
+    for i := 0 to a.Count - 1 do
+      _tlnode(a.Item[i]);
+  end;
+
+  procedure _tlnodes(a:TTreeView);
+  var i: integer;
+  begin
+    a.Items.BeginUpdate;
+    for i := 0 to a.Items.Count - 1 do
+      _tlnode(a.Items[i]);
+    a.Items.EndUpdate; //this also triggers scrollbar readjustment! need this.
+  end;
+
   procedure _menuitem(mi:TMenuItem);
   var i:integer;
   begin
@@ -423,6 +440,8 @@ begin
     end;
     if a is TTabControl then
       _setlist(a,'Tabs');
+    if a is TCustomTreeView then
+      _tlnodes(TTreeView(a));
   end;
 end;
 
