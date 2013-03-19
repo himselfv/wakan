@@ -839,7 +839,7 @@ begin
       fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
       fDictImport.edtDictName.Text:=MakeDicParams.Name;
       fDictImport.edtVersion.Text:=MakeDicParams.Version;
-      if MakeDicParams.Language='C' then
+      if MakeDicParams.Language in ['C','c'] then
         fDictImport.rgLanguage.ItemIndex:=1
       else
         fDictImport.rgLanguage.ItemIndex:=0;
