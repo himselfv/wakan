@@ -83,7 +83,7 @@ type
     LastArticle: integer;
     function GetFrequencyList: TStringList;
     procedure AddArticle(const ed: PEdictArticle; const roma: TEdictRoma);
-    procedure ImportCEdict(fuin: TUnicodeFileReader);
+    procedure ImportCCEdict(fuin: TUnicodeFileReader);
     procedure ImportEdict(fuin: TUnicodeFileReader);
     procedure SetProgress(perc: integer);
 
@@ -447,97 +447,69 @@ begin
 
 end;
 
-{
-CEDICT is in a similar but different format so its importing have been left
-more or less as it were.
-Now's the magic!
-This should also work for EDICT1. So you can use EDICT1 to test this routine.
-}
-procedure TfDictImport.ImportCEdict(fuin: TUnicodeFileReader);
+{ This also works for CEDICTs and perhaps EDICT }
+procedure TfDictImport.ImportCCEdict(fuin: TUnicodeFileReader);
 const
  //Format markers
   UH_CEDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
 var
-  uc:WideChar;
-
-  ppp:integer;
-  kanji:FString;
-  phon:FString;
-  pphon:FString;
-  writ:FString;
-  s_roma: string;
-  s_entry: FString;
-  s_mark: TMarkers;
-
+  ustr: string;
+  i: integer;
   ed: TEdictArticle;
   roma: TEdictRoma;
-
+  loclineno: integer;
+  pphon: FString;
 begin
-
+  loclineno := 0;
   //Read another line
-  while not fuin.Eof do
-  begin
-    kanji:='';
-    phon:='';
-    writ:='';
-    ppp:=0;
-
-    while fuin.ReadWideChar(uc) and (uc<>#$000A) do
-      if (uc<>#$000A) and (uc<>#$000D) then
-        case ppp of
-          0: if uc=#$0020 then ppp:=1 else kanji:=kanji+fstr(uc);
-          1: if uc=#$005B then ppp:=2 else ppp:=3;
-          2: if uc=#$002F then ppp:=3 else
-               if (uc<>#$005D) and (uc<>#$0020) then phon:=phon+fstr(uc);
-        else
-          writ:=writ+fstr(uc);
-        end;
-    if (flength(writ)>0) and (fgetch(writ, flength(writ))=UH_EDICT_ALTERN) then
-      fdelete(writ,length(writ),1);
-    if phon='' then phon:=kanji;
+  while fuin.ReadLn(ustr) do begin
+    Inc(loclineno);
 
     if (linecount>0) and (lineno mod 100=0) then
       SetProgress(round(lineno/linecount*100));
     inc(lineno);
 
-    if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},kanji)<>0)  //EDICT header line -- CEDICT shouldn't have it but whatever
-    or (pos(UH_CEDICT_COMMENT,kanji)<>0) then
+    if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},ustr)<>0)  //EDICT header line -- CEDICT shouldn't have it but whatever
+    or (pos(UH_CEDICT_COMMENT,ustr)<>0) then
       continue;
 
-    //Generate romaji
-    pphon:=phon;
-    if dic.language='c'then
-    begin
-      repl(phon,' ','');
-      if phon<>kanji then phon:=RomajiToKana(fstrtouni(phon),1,false,dic.language);
+    try
+      ParseCCEdictLine(ustr, @ed);
+
+      //TODO: What if we don't have pinyin? Unlike EDICT, where this means
+      //  kana-only word, we can't fill both pinyin and kanji with the same text.
+      // (Although Wakan did that before)
+
+      //Generate romaji
+      for i := 0 to ed.kana_used - 1 do begin
+        pphon:=ed.kana[i].kana; //copy original pin yin before conversions
+        if dic.language='c'then
+          ed.kana[i].kana:=RomajiToKana(ed.kana[i].kana,1,false,dic.language);
+        roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
+        if pos('?',roma[i])>0 then
+        begin
+          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+roma[i]);
+          roma_prob.WritelnUnicode(pphon); //pphon = original ed.kana[i].kana
+          had_problems := true;
+        end;
+        repl(roma[i],'?','');
+        if roma[i]='' then roma[i]:='XXX';
+      end;
+
+      //Convert entries
+      for i := 0 to ed.senses_used - 1 do begin
+        urepl(ed.senses[i].text,UH_EDICT_SEMICOL,','); //replace ; with ,
+        urepl(ed.senses[i].text,UH_EDICT_ALTERN,'; '); //replace / with ;
+      end;
+
+      AddArticle(@ed, roma);
+
+    except
+      on E: EEdictParsingException do
+        roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+E.Message);
     end;
-    s_roma:=KanaToRomaji(phon,1,dic.language);
-    if pos('?',s_roma)>0 then
-    begin
-      roma_prob.WritelnUnicode(s_roma);
-      roma_prob.WritelnUnicode(fstrtouni(pphon));
-      had_problems := true;
-    end;
-    repl(s_roma,'?','');
-    if s_roma='' then s_roma:='XXX';
 
-    s_entry:=FConvertEdictEntry(writ,s_mark);
-    repl(s_entry,UH_EDICT_SEMICOL,','); //replace ; with ,
-    repl(s_entry,UH_EDICT_ALTERN,'; '); //replace / with ;
-
-    ed.Reset;
-    ed.ref := '';
-    ed.AddKanji;
-    ed.kanji[0].kanji := kanji;
-    ed.AddKana;
-    ed.kana[0].kana := phon;
-    ed.AddSense;
-    ed.senses[0].text := s_entry;
-    ed.senses[0].markers := s_mark;
-    roma[0] := s_roma;
-
-    AddArticle(@ed,roma);
-  end; //for every character in the file
+  end; //for every line
 end;
 
 procedure TfDictImport.ImportEdict(fuin: TUnicodeFileReader);
@@ -563,7 +535,7 @@ begin
     try
       ParseEdict2Line(ustr, @ed);
 
-     //Sometimes we only have kana and the it's written as kanji
+     //Sometimes we only have kana and then it's written as kanji
       if ed.kana_used=0 then begin
         ed.kana_used := ed.kanji_used;
         for i := 0 to ed.kanji_used - 1 do begin
@@ -579,7 +551,7 @@ begin
         begin
          //roma_problems
           roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+roma[i]);
-          roma_prob.WritelnUnicode(fstrtouni(ed.kana[i].kana));
+          roma_prob.WritelnUnicode(ed.kana[i].kana);
           had_problems := true;
         end;
         repl(roma[i],'?','');
@@ -792,7 +764,8 @@ begin
           raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
 
         if diclang='c' then
-          ImportCEdict(fuin)
+//          ImportCEdict(fuin)
+          ImportCCEdict(fuin)
         else
           ImportEdict(fuin);
 

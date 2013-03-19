@@ -1,41 +1,14 @@
 ﻿unit JWBEdictReader;
 {
-Reads EDICT format.
+Reads EDICT2 and CC-EDICT format.
+Both are multi-kanji, multi-kana, multi-sense articles in a general form:
+  kanji1 kanji2 [reading1 reading2] /sense1/sense2/
 
-Example of string:
-  いい加減(P);好い加減;好加減(io) [いいかげん]
-  /(adj-na) (1) (uk) irresponsible/perfunctory/careless
-  /(2) lukewarm/half-baked/halfhearted/vague
-  /(3) (See いい加減にする) reasonable/moderate (usu. in suggestions or orders)
-  /(adv) (4) considerably/quite/rather/pretty
-  /(P)
-  /EntL1277440X/
-
-Features of EDICT2 to watch out for:
-
-Multi-kanji, multi-reading, with specific pairings:
-  あっと言う間;あっという間;あっとゆう間
-  [あっというま(あっと言う間,あっという間); あっとゆうま(あっと言う間,あっとゆう間)]
-  /(exp) (See あっと言う間に) a blink of time/the time it takes to say "Ah!"
-  /EntL2208410/
-
-Common markers for some kanji/readings:
-Separate (P) markers for article and readings:
-(P) marker for article applies to all of its entries
-  あり得ない(P);有り得ない(P);有得ない [ありえない]
-  /(adj-i) (uk) (See 有り得る・ありうる) impossible/unlikely/improbable/(P)
-  /EntL2109610X/
-
-POS markers apply to "all senses starting with this one":
-Non-POS markers apply only to current sense:
-  いい事[いいこと] /(exp,n) (1) good thing/nice thing
-    /(2) (usu. as ～をいいことに(して)) good excuse/good grounds/good opportunity
-    /(int) (3) (fem) interjection used to impress an idea or to urge a response/EntL2583070/
-
-Sequence '/(' can occur legitimately:
-  /(expression of) effort
-
+See precise format description in comments below.
 }
+
+//NOTE: Both EDICT2 and CC-EDICT parsers misreplace / with ; in cases like AC/DC
+//  Nothing I can do about it.
 
 interface
 uses SysUtils, JWBStrings, JWBIO, JWBEdictMarkers;
@@ -43,9 +16,9 @@ uses SysUtils, JWBStrings, JWBIO, JWBEdictMarkers;
 {
 We're using UnicodeStrings throughout this module. They resolve to slow WideStrings
 on Ansi compilers, but:
-  - it's too inconvenient to bother messing with FStrings
-  - Ansi builds are being deprecated anyway
-  - importing dictionaries is rare operation
+ - it's too inconvenient to bother messing with FStrings
+ - Ansi builds are being deprecated anyway
+ - importing dictionaries is rare operation
 }
 
 const
@@ -94,10 +67,15 @@ type
     function AddKanji: PKanjiEntry;
     function AddKana: PKanaEntry;
     function AddSense: PSenseEntry;
+    procedure TrimEverything;
   end;
   PEdictArticle = ^TEdictArticle;
 
+//Parses EDICT2, EDICT
 procedure ParseEdict2Line(const s:UnicodeString; ed: PEdictArticle);
+
+//Parses CC-EDICT, various stages of CEDICT evolution
+procedure ParseCCEdictLine(const s:UnicodeString; ed: PEdictArticle);
 
 implementation
 
@@ -165,6 +143,20 @@ begin
   Result^.Reset;
 end;
 
+procedure TEdictArticle.TrimEverything;
+var i,j: integer;
+begin
+  for i := 0 to kanji_used - 1 do
+    kanji[i].kanji := UTrim(kanji[i].kanji);
+  for i := 0 to kana_used - 1 do begin
+    kana[i].kana := UTrim(kana[i].kana);
+    for j := 0 to kana[i].kanji_used - 1 do
+      kana[i].kanji[j] := UTrim(kana[i].kanji[j]);
+  end;
+  for i := 0 to senses_used - 1 do
+    senses[i].text := UTrim(senses[i].text);
+end;
+
 function IsNumeric(const s:UnicodeString): boolean;
 var i: integer;
 begin
@@ -175,6 +167,42 @@ begin
       exit;
     end;
 end;
+
+{
+EDICT2/EDICT:
+Example of string:
+  いい加減(P);好い加減;好加減(io) [いいかげん]
+  /(adj-na) (1) (uk) irresponsible/perfunctory/careless
+  /(2) lukewarm/half-baked/halfhearted/vague
+  /(3) (See いい加減にする) reasonable/moderate (usu. in suggestions or orders)
+  /(adv) (4) considerably/quite/rather/pretty
+  /(P)
+  /EntL1277440X/
+
+Features of EDICT2 to watch out for:
+
+Multi-kanji, multi-reading, with specific pairings:
+  あっと言う間;あっという間;あっとゆう間
+  [あっというま(あっと言う間,あっという間); あっとゆうま(あっと言う間,あっとゆう間)]
+  /(exp) (See あっと言う間に) a blink of time/the time it takes to say "Ah!"
+  /EntL2208410/
+
+Common markers for some kanji/readings:
+Separate (P) markers for article and readings:
+(P) marker for article applies to all of its entries
+  あり得ない(P);有り得ない(P);有得ない [ありえない]
+  /(adj-i) (uk) (See 有り得る・ありうる) impossible/unlikely/improbable/(P)
+  /EntL2109610X/
+
+POS markers apply to "all senses starting with this one":
+Non-POS markers apply only to current sense:
+  いい事[いいこと] /(exp,n) (1) good thing/nice thing
+    /(2) (usu. as ～をいいことに(して)) good excuse/good grounds/good opportunity
+    /(int) (3) (fem) interjection used to impress an idea or to urge a response/EntL2583070/
+
+Sequence '/(' can occur legitimately:
+  /(expression of) effort
+}
 
 procedure ParseEdict2Line(const s:UnicodeString; ed: PEdictArticle);
 const
@@ -195,8 +223,8 @@ var
   markopen: boolean; //if set, some of the markers weren't found and we added a marker braket back to curtext -- have to close it
   commpos: TMarkers; //common POS markers -- carried over from the previous sense
   eh: integer;
-  i,j: integer;
   ch: WideChar;
+  i: integer;
 
   procedure CommitNextSense;
   begin
@@ -359,15 +387,113 @@ begin
   if (eh=EH_SENSE) and (nextsense.text<>'') or (nextsense.markers<>'') or (nextsense.pos<>'') then //shouldnt happen
     CommitNextSense();
 
-  for i := 0 to ed.kanji_used - 1 do
-    ed.kanji[i].kanji := UTrim(ed.kanji[i].kanji);
-  for i := 0 to ed.kana_used - 1 do begin
-    ed.kana[i].kana := UTrim(ed.kana[i].kana);
-    for j := 0 to ed.kana[i].kanji_used - 1 do
-      ed.kana[i].kanji[j] := UTrim(ed.kana[i].kanji[j]);
+  ed.TrimEverything;
+end;
+
+{
+CCEDICT is in a similar but different format:
+
+Kanji versions are separated by space, not ';':
+  授計 授计 [shou4 ji4] /to confide a plan to sb/
+There are at most two of these (traditional and simplified).
+Kanji versions can be the same:
+  授予 授予 [shou4 yu3] /to award/to confer/
+
+There's at most one reading, but it contains spaces:
+  授受不親 授受不亲 [shou4 shou4 bu4 qin1]
+Reading is in pinyin, but can contain english letters (I've only seen capital ones):
+  AA制 AA制 [A A zhi4] /to split the bill/to go Dutch/
+Can contain commas or · dots when kanji contain those:
+  一日不見，如隔三秋 一日不见，如隔三秋 [yi1 ri4 bu4 jian4 , ru2 ge2 san1 qiu1]
+
+Markers are not supported.
+
+EDICT separates senses and glosses:
+  /(1) falter/waver/(2) flap
+CC-EDICT doesn't, unrelated and related senses are formatted the same:
+  /numerical range/interval/taxation band/
+  /tired/exhausted/wretched/
+
+Therefore we are either to show ALL glosses as separate senses:
+  (1) tired; (2) exhausted; (3) wretched
+Or to show them as a single sense:
+  numerical range; interval; taxation band
+Second one probably looks better.
+}
+procedure DeleteDuplicateKanji(ed: PEdictArticle); forward;
+procedure ParseCCEdictLine(const s:UnicodeString; ed: PEdictArticle);
+const
+  EH_KANJI = 1;
+  EH_KANA = 2;
+  EH_SENSE = 3;
+
+var
+  curkanji: PKanjiEntry;
+  curkana: PKanaEntry;
+  cursense: PSenseEntry;
+  eh: integer;
+  i: integer;
+  ch: WideChar;
+
+begin
+  ed.Reset;
+  eh := EH_KANJI;
+  curkanji := nil;
+  curkana := nil;
+  cursense := nil;
+
+  i := 1;
+  while i<=Length(s) do begin
+    ch := s[i];
+
+    if (eh=EH_KANJI) and (ch=' ') then curkanji := nil {kanji over, but perhaps there will be no another kanji} else
+    if (eh=EH_KANJI) and (ch='[') then begin eh := EH_KANA; curkana := ed.AddKana; end else
+    if (eh=EH_KANJI) and (ch='/') then begin eh := EH_SENSE; cursense := ed.AddSense; end else
+    if (eh=EH_KANJI) then begin
+      if curkanji=nil then curkanji := ed.AddKanji;
+      curkanji.kanji := curkanji.kanji + ch;
+    end else
+    if (eh=EH_KANA) and (ch=' ') then begin { do nothing, skip spaces } end else
+    if (eh=EH_KANA) and (ch=']') then begin eh := EH_SENSE; cursense := nil; end else
+    if (eh=EH_KANA) then curkana.kana := curkana.kana + ch else
+    if (eh=EH_SENSE) and (cursense=nil) and (ch='/') then cursense := ed.AddSense else //first time we encounter / we just start a sense
+    if (eh=EH_SENSE) and (cursense=nil) then begin { skip until sense start } end else
+    if (eh=EH_SENSE) then cursense.text := cursense.text + ch;
+
+    Inc(i);
   end;
-  for i := 0 to ed.senses_used - 1 do
-    ed.senses[i].text := UTrim(ed.senses[i].text);
+
+ //Senses usually end on /, so we replaced that with ;
+  if (cursense<>nil) and (Length(cursense.text)>0) and (cursense.text[Length(cursense.text)]='/') then
+    delete(cursense.text, Length(cursense.text), 1);
+
+  ed.TrimEverything;
+
+  //Simplified kanji could be the same as traditional, so kill off duplicates
+  DeleteDuplicateKanji(ed);
+end;
+
+//Removes duplicate kanji. Checks only the kanji itself and not markers or kana
+//attachments, so not valid for EDICT2.
+procedure DeleteDuplicateKanji(ed: PEdictArticle);
+var i,j: integer;
+  dupshift: integer; //how many cells to skip
+begin
+  dupshift := 0;
+  for i := 0 to ed.kanji_used - 1 do begin
+    j := 0;
+    while j+dupshift<i do begin
+      if SameStr(ed.kanji[i].kanji,ed.kanji[j].kanji) then
+        break;
+      Inc(j);
+    end;
+
+    if j+dupshift<i then //found match
+      Inc(dupshift) //skip this one too
+    else //valid cell, shift it to the left
+    if dupshift>0 then
+      ed.kanji[i-dupshift]:=ed.kanji[i];
+  end;
 end;
 
 end.
