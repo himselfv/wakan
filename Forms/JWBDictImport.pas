@@ -70,6 +70,9 @@ type
    //Shared between ImportDictionary calls
     cfreql:TStringList; //cached frequency list, call GetFrequencyList
     roma_prob: TUnicodeFileWriter; //error log
+    roma_prob_cnt: integer; //increased on every record error
+    ProblemRecords: integer; //# of records which weren't imported
+    ProblemDictionaries: string; //>5% of each wasn't imported
 
   protected //Dictionary building
     dic:TJaletDic;
@@ -78,13 +81,12 @@ type
     freql:TStringList; //frequency list, if used
     wordidx:TWordIndexBuilder;
     charidx:TIndexBuilder;
-    had_problems: boolean;
     LastDictEntry: integer;
     LastArticle: integer;
     function GetFrequencyList: TStringList;
     procedure AddArticle(const ed: PEdictArticle; const roma: TEdictRoma);
-    procedure ImportCCEdict(fuin: TUnicodeFileReader);
-    procedure ImportEdict(fuin: TUnicodeFileReader);
+    function ImportCCEdict(fuin: TUnicodeFileReader): integer;
+    function ImportEdict(fuin: TUnicodeFileReader): integer;
     procedure SetProgress(perc: integer);
 
   public
@@ -426,7 +428,7 @@ begin
           end;
         if not kanji_found then begin
           roma_prob.WritelnUnicode(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
-          had_problems := true;
+          Inc(roma_prob_cnt);
         end;
       end;
     end;
@@ -448,7 +450,7 @@ begin
 end;
 
 { This also works for CEDICTs and perhaps EDICT }
-procedure TfDictImport.ImportCCEdict(fuin: TUnicodeFileReader);
+function TfDictImport.ImportCCEdict(fuin: TUnicodeFileReader): integer;
 const
  //Format markers
   UH_CEDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -490,7 +492,7 @@ begin
         begin
           roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+roma[i]);
           roma_prob.WritelnUnicode(pphon); //pphon = original ed.kana[i].kana
-          had_problems := true;
+          Inc(roma_prob_cnt);
         end;
         repl(roma[i],'?','');
         if roma[i]='' then roma[i]:='XXX';
@@ -505,14 +507,18 @@ begin
       AddArticle(@ed, roma);
 
     except
-      on E: EEdictParsingException do
+      on E: EEdictParsingException do begin
         roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+E.Message);
+        Inc(roma_prob_cnt);
+      end;
     end;
 
   end; //for every line
+
+  Result := loclineno;
 end;
 
-procedure TfDictImport.ImportEdict(fuin: TUnicodeFileReader);
+function TfDictImport.ImportEdict(fuin: TUnicodeFileReader): integer;
 var
   ustr: string;
   i: integer;
@@ -552,7 +558,7 @@ begin
          //roma_problems
           roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+roma[i]);
           roma_prob.WritelnUnicode(ed.kana[i].kana);
-          had_problems := true;
+          Inc(roma_prob_cnt);
         end;
         repl(roma[i],'?','');
         if roma[i]='' then roma[i]:='XXX';
@@ -567,11 +573,15 @@ begin
       AddArticle(@ed, roma);
 
     except
-      on E: EEdictParsingException do
+      on E: EEdictParsingException do begin
         roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+E.Message);
+        Inc(roma_prob_cnt);
+      end;
     end;
 
   end; //for every line
+
+  Result := loclineno;
 end;
 
 function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
@@ -635,6 +645,7 @@ var
   cd:string; //stores chosen encoding when converting
   fuin:TUnicodeFileReader;
   uc: WideChar;
+  dicrecno: integer;
 
 begin
   prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100,{CanCancel=}true);
@@ -645,7 +656,8 @@ begin
   wordidx := nil;
   charidx := nil;
   freql := nil;
-  had_problems := false;
+  ProblemRecords := 0;
+  ProblemDictionaries := '';
   dic := nil;
   tempDir := '';
   tempDir2 := '';
@@ -763,11 +775,16 @@ begin
         if not fuin.ReadWideChar(uc) or (uc<>#$FEFF) then
           raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
 
+        roma_prob_cnt := 0;
+
         if diclang='c' then
-//          ImportCEdict(fuin)
-          ImportCCEdict(fuin)
+          dicrecno:=ImportCCEdict(fuin)
         else
-          ImportEdict(fuin);
+          dicrecno:=ImportEdict(fuin);
+
+        Inc(ProblemRecords,roma_prob_cnt);
+        if roma_prob_cnt>dicrecno/20 then //>5% errors
+          ProblemDictionaries := ProblemDictionaries + ','+ExtractFilename(files[fi]);
 
       finally
         FreeAndNil(fuin);
@@ -824,10 +841,23 @@ begin
     freql := nil;
   end;
 
-  if had_problems then
-    Application.MessageBox('There were some problems during the conversion. '
-      +'Please study the roma_problems.txt found in the application directory.',
-      'Had problems', MB_ICONEXCLAMATION);
+  if (ProblemDictionaries<>'') or (ProblemRecords > 300) then
+    Application.MessageBox(
+      PChar('There were some problems during the conversion. '
+      +IntToStr(ProblemRecords)+' records could not have been imported.'#13
+      +'Please study the roma_problems.txt found in the application directory.'),
+      'Had problems',
+      MB_ICONEXCLAMATION)
+  else
+  if (ProblemRecords > 0) then
+    Application.MessageBox(
+      PChar('The dictionary has been created but '+IntToStr(ProblemRecords)
+      +' records had some problems.'#13
+      +'This is not much so it''s probably fine, but if you want details, '
+      +'study the roma_problems.txt found in the application directory.'),
+      'Notice',
+      MB_ICONINFORMATION
+    );
 
   Result := true;
 end;
