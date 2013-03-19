@@ -400,7 +400,6 @@ begin
   end;
 end;
 
-//TODO: Test unicode conversion
 function ConvertPinYin(const str:string):FString;
 const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; //used in place of a char when it's unknown or whatever
  //does not go out of this function

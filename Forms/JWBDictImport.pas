@@ -449,7 +449,7 @@ begin
 
 end;
 
-{ This also works for CEDICTs and perhaps EDICT }
+{ This also works for older CEDICTs }
 function TfDictImport.ImportCCEdict(fuin: TUnicodeFileReader): integer;
 const
  //Format markers
@@ -478,20 +478,36 @@ begin
     try
       ParseCCEdictLine(ustr, @ed);
 
-      //TODO: What if we don't have pinyin? Unlike EDICT, where this means
-      //  kana-only word, we can't fill both pinyin and kanji with the same text.
-      // (Although Wakan did that before)
+     //Unlike with EDICT we can't just assume kanji contained pinyin and copy it to kana.
+     //For now I fail such records (haven't seen them once anyway).
+      if ed.kana_used<=0 then begin
+        roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': no reading.');
+        Inc(roma_prob_cnt);
+        continue;
+      end;
+
+      //Kill off some characters in both kanji and kana
+      for i := 0 to ed.kanji_used - 1 do begin
+        ed.kanji[i].kanji:=replc(ed.kanji[i].kanji,',','');
+        ed.kanji[i].kanji:=replc(ed.kanji[i].kanji,'·','');
+      end;
+      for i := 0 to ed.kana_used - 1 do begin
+        ed.kana[i].kana:=replc(ed.kana[i].kana,',','');
+        ed.kana[i].kana:=replc(ed.kana[i].kana,'·','');
+      end;
 
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
         pphon:=ed.kana[i].kana; //copy original pin yin before conversions
-        if dic.language='c'then
+        if dic.language='c' then
           ed.kana[i].kana:=RomajiToKana(ed.kana[i].kana,1,false,dic.language);
         roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
         if pos('?',roma[i])>0 then
         begin
-          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+roma[i]);
-          roma_prob.WritelnUnicode(pphon); //pphon = original ed.kana[i].kana
+          if dic.language='c' then
+            roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+pphon+' ('+ed.kana[i].kana+') ---> '+roma[i])
+          else
+            roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+pphon+' ---> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
         repl(roma[i],'?','');
