@@ -412,8 +412,8 @@ var cnv:string;
   i:integer;
   iscomma:boolean;
 begin
-  cnv:=lowercase(str);
-  cnv2:='';
+  cnv:=lowercase(str); //source string, not modified
+  cnv2:=''; //building output here
   li:=0;
   ali:='';
   iscomma:=false;
@@ -424,9 +424,9 @@ begin
       ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
     if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
     begin
-      cc:=cnv[li];
-      ali:=fcopy(cnv2,length(cnv2)-i-li,i-li-1);
-      fdelete(cnv2,length(cnv2)-i-li-1,i-li);
+      cc:=cnv[li]; //the character to be replaced
+      ali:=fcopy(cnv2,length(cnv2)-(i-li-1)+1,i-li-1); //copy the rest of the output
+      fdelete(cnv2,length(cnv2)-(i-li)+1,i-li); //delete char + rest from the output
       if iscomma and (cc='u') then cc:='w';
       case cnv[i] of
         '2':case cc of
