@@ -44,6 +44,18 @@ procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IF
 
 { Romaji conversions }
 
+type
+  TResolveFlag = (
+    rfKeepLatin,
+      //Leave latin letters and some punctuation intact.
+      //This is only reliable when doing Bopomofo->PinYin, not the reverse.
+    rfKeepPunctuation,
+      //Same
+    rfDeleteInvalidChars
+      //Delete invalid characters instead of replacing with '?'
+  );
+  TResolveFlags = set of TResolveFlag;
+
 var
  { Romaji translation table. Populated on load.
   See comments where class is defined. }
@@ -54,8 +66,8 @@ var
 
 function ConvertPinYin(const str:string):FString;
 function DeconvertPinYin(const str:FString):string;
-function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
-function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
+function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags=[rfKeepLatin,rfKeepPunctuation]):string;
+function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags=[rfDeleteInvalidChars]):FString;
 
 function IsAllowedPunctuation(c:WideChar): boolean;
 
@@ -342,18 +354,6 @@ TypeOut: conversion target type
 Clean: ignore unknown characters instead of adding '?'
 }
 
-type
-  TResolveFlag = (
-    rfKeepLatin,
-      //Leave latin letters and some punctuation intact.
-      //This is only reliable when doing Bopomofo->PinYin, not the reverse.
-    rfKeepPunctuation,
-      //Same
-    rfDeleteInvalidChars
-      //Delete invalid characters instead of replacing with '?'
-  );
-  TResolveFlags = set of TResolveFlag;
-
 function ResolveCrom(s:EvilString;typein,typeout:integer;flags:TResolveFlags):EvilString;
 var s2:string;
   cl:integer;
@@ -434,7 +434,7 @@ begin
   if typeout>0 then result:=lowercase(s2) else result:=s2;
 end;
 
-function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
+function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags):string;
 begin
   if lang='j'then
   begin
@@ -442,23 +442,24 @@ begin
   end else
   if lang='c'then
   begin
-    result:=ResolveCrom(s,0,romatype,[rfKeepLatin,rfKeepPunctuation]);
+    result:=ResolveCrom(s,0,romatype,flags);
   end;
 end;
 
-function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
+function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags):FString;
 var s_rep: string;
-  flags: TResolveFlags;
+  clean: boolean;
 begin
   if lang='j'then
   begin
+    clean := (rfDeleteInvalidChars in flags);
     Result := roma_t.RomajiToKana(s,romatype,clean);
   end else
   if lang='c'then
   begin
     s_rep := s;
     repl(s_rep,'v','u:');
-    if clean then flags := [rfKeepLatin,rfKeepPunctuation,rfDeleteInvalidChars] else flags := [];
+//    if clean then flags := [rfDeleteInvalidChars] else flags := [];
     result:=ResolveCrom(s_rep,romatype,0,flags);
   end;
 end;

@@ -1,4 +1,4 @@
-unit JWBDictImport;
+﻿unit JWBDictImport;
 
 interface
 
@@ -326,6 +326,7 @@ const
   UH_EDICT_SEMICOL = {$IFDEF UNICODE}';'{$ELSE}'003B'{$ENDIF};
   UH_EDICT_COMMA = {$IFDEF UNICODE}','{$ELSE}'002C'{$ENDIF};
   UH_EDICT_ALTERN = {$IFDEF UNICODE}'/'{$ELSE}'002F'{$ENDIF};
+  UH_EDICT_DOT = {$IFDEF UNICODE}'・'{$ELSE}'30FB'{$ENDIF};
 
 {
 Adds an article to the dictionary we're building.
@@ -575,6 +576,7 @@ var
   ed: TEdictArticle;
   roma: TEdictRoma;
   loclineno: integer;
+  tmp: UnicodeString;
 begin
   loclineno := 0;
   //Read another line
@@ -602,12 +604,14 @@ begin
 
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
-        roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
+       //Remove allowed punctuation from kana
+        tmp := ureplc(ed.kana[i].kana,UH_EDICT_DOT,'');
+       //Convert the rest
+        roma[i]:=KanaToRomaji(tmp,1,dic.language);
         if pos('?',roma[i])>0 then
         begin
          //roma_problems
-          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+roma[i]);
-          roma_prob.WritelnUnicode(ed.kana[i].kana);
+          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': 'ed.kana[i].kana+' -> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
         repl(roma[i],'?','');

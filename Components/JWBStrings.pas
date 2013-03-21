@@ -259,8 +259,9 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 function remexcl(const s:string):string;
 function remmark(s:string):string;
 function repl(var s:string;const sub,rep:string):string;
-function urepl(var s:UnicodeString;const sub,rep:UnicodeString):string;
+function urepl(var s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
 function replc(const s:string;const sub,rep:string):string;
+function ureplc(const s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
 function strqpop(var s:string;c:char):string; overload;
 function strqpop(var s:string;const cs:string):string; overload;
 function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString; overload;
@@ -1083,7 +1084,7 @@ begin
   result:=s;
 end;
 
-function urepl(var s:UnicodeString;const sub,rep:UnicodeString):string;
+function urepl(var s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
 {$IFDEF UNICODE}
 begin
   Result := repl(s,sub,rep);
@@ -1104,6 +1105,12 @@ function replc(const s:string;const sub,rep:string):string;
 begin
   Result := s;
   repl(Result,sub,rep);
+end;
+
+function ureplc(const s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
+begin
+  Result := s;
+  urepl(Result,sub,rep);
 end;
 
 { Returns part of the string from the start to the first occurence of "c",
