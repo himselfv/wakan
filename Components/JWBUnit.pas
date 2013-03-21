@@ -541,7 +541,6 @@ begin
   end;
 
   curp:='0';
-  cc:=' ';
   curcc:='';
   for i:=1 to length(cnv) do
   begin

@@ -449,6 +449,42 @@ begin
 
 end;
 
+//Decodes a string in form "D N A jian4 ding4" to local pinyin/bopomofo,
+//preserving latin characters.
+//Also allows for some punctuation.
+procedure DecodeRomajiCC(const s:string;lang:char;out PinYin:string;out Bopomofo:FString);
+var syl:string;
+  i: integer;
+
+  procedure Commit;
+  var tmp: string;
+  begin
+    if (length(syl)=1) and (
+      IsLatinLetter(syl[1])           //latin chars are allowed
+      or  (syl[1]='·') or (syl[1]=',') //these are allowed
+    ) then begin
+      Bopomofo := Bopomofo + syl[1];
+      PinYin := PinYin + syl[1];
+    end else begin
+      tmp := RomajiToKana(syl,1,false,lang);
+      Bopomofo := Bopomofo + tmp;
+      PinYin := PinYin + KanaToRomaji(tmp,1,lang); //this way we make sure no unsupported stuff gets into pinyin
+    end;
+  end;
+
+begin
+  PinYin := '';
+  Bopomofo := '';
+  syl := '';
+  for i := 1 to length(s) do
+    if s[i]=' ' then begin
+      Commit;
+      syl := '';
+    end else
+      syl := syl + s[i];
+  Commit;
+end;
+
 { This also works for older CEDICTs }
 function TfDictImport.ImportCCEdict(fuin: TUnicodeFileReader): integer;
 const
@@ -479,29 +515,26 @@ begin
       ParseCCEdictLine(ustr, @ed);
 
      //Unlike with EDICT we can't just assume kanji contained pinyin and copy it to kana.
-     //For now I fail such records (haven't seen them once anyway).
+     //For now I fail such records (haven't seen them in the wild anyway).
       if ed.kana_used<=0 then begin
         roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': no reading.');
         Inc(roma_prob_cnt);
         continue;
       end;
 
-      //Kill off some characters in both kanji and kana
-      for i := 0 to ed.kanji_used - 1 do begin
-        ed.kanji[i].kanji:=replc(ed.kanji[i].kanji,',','');
-        ed.kanji[i].kanji:=replc(ed.kanji[i].kanji,'·','');
-      end;
-      for i := 0 to ed.kana_used - 1 do begin
-        ed.kana[i].kana:=replc(ed.kana[i].kana,',','');
-        ed.kana[i].kana:=replc(ed.kana[i].kana,'·','');
-      end;
+     {
+      CC-EDICT has kana in form of "D N A jian4 ding4".
+      See http://code.google.com/p/wakan/issues/detail?id=121 for details on
+      how we convert it and why.
+     }
 
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
         pphon:=ed.kana[i].kana; //copy original pin yin before conversions
-        if dic.language='c' then
-          ed.kana[i].kana:=RomajiToKana(ed.kana[i].kana,1,false,dic.language);
-        roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
+        if dic.language='c' then begin
+          DecodeRomajiCC(pphon,dic.language,roma[i],ed.kana[i].kana);
+        end else
+          roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
         if pos('?',roma[i])>0 then
         begin
           if dic.language='c' then

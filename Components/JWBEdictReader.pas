@@ -453,7 +453,6 @@ begin
       if curkanji=nil then curkanji := ed.AddKanji;
       curkanji.kanji := curkanji.kanji + ch;
     end else
-    if (eh=EH_KANA) and (ch=' ') then begin { do nothing, skip spaces } end else
     if (eh=EH_KANA) and (ch=']') then begin eh := EH_SENSE; cursense := nil; end else
     if (eh=EH_KANA) then curkana.kana := curkana.kana + ch else
     if (eh=EH_SENSE) and (cursense=nil) and (ch='/') then cursense := ed.AddSense else //first time we encounter / we just start a sense
