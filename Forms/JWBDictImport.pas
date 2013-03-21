@@ -452,7 +452,7 @@ end;
 //Decodes a string in form "D N A jian4 ding4" to local pinyin/bopomofo,
 //preserving latin characters.
 //Also allows for some punctuation.
-procedure DecodeRomajiCC(const s:string;lang:char;out PinYin:string;out Bopomofo:FString);
+procedure DecodeRomajiCC(const s:UnicodeString;lang:char;out PinYin:string;out Bopomofo:FString);
 var syl:string;
   i: integer;
 
@@ -460,11 +460,12 @@ var syl:string;
   var tmp: string;
   begin
     if (length(syl)=1) and (
-      IsLatinLetter(syl[1])           //latin chars are allowed
-      or  (syl[1]='·') or (syl[1]=',') //these are allowed
+      IsLatinLetter(syl[1])        //latin chars are allowed
+      or IsAllowedPunctuation(syl[1]) //some punctuation is allowed
     ) then begin
       Bopomofo := Bopomofo + syl[1];
-      PinYin := PinYin + syl[1];
+      if IsLatinLetter(syl[1]) then //punctuation does not make it into pinyin
+        PinYin := PinYin + syl[1];
     end else begin
       tmp := RomajiToKana(syl,1,false,lang);
       Bopomofo := Bopomofo + tmp;
@@ -496,7 +497,7 @@ var
   ed: TEdictArticle;
   roma: TEdictRoma;
   loclineno: integer;
-  pphon: FString;
+  pphon: UnicodeString;
 begin
   loclineno := 0;
   //Read another line

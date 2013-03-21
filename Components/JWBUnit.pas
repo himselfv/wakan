@@ -57,6 +57,7 @@ function DeconvertPinYin(const str:FString):string;
 function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
 function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
 
+function IsAllowedPunctuation(c:WideChar): boolean;
 
 { WordGrid }
 
@@ -298,7 +299,38 @@ begin
     end;
 end;
 
-//TODO: Test Unicode conversion
+//Finds best roma_c match at the start of the string
+function FindRomaCBestMatch(const s: EvilString; roma_type: integer): integer;
+var i, cl: integer;
+begin
+  Result := -1;
+  cl := 0;
+  for i:=0 to (romac.count div 4)-1 do
+    if pos(romac[i*4+roma_type],s)=1 then
+      if length(romac[i*4+roma_type])>cl then
+      begin
+        cl:=length(romac[i*4+roma_type]);
+        Result:=i;
+      end;
+end;
+
+//True if c is a punctuation mark we allow in kanji and kana fields.
+function IsAllowedPunctuation(c:WideChar): boolean;
+begin
+  Result := (c='·') or (c=',');
+end;
+
+//When we need to store punctuation into pinyin, we have to make it ansi
+function ConvertPunctuation(c:WideChar): char;
+begin
+  case c of
+    '·': Result:='-';
+  else
+    Result := c;
+  end;
+end;
+
+
 {
 Converts chinese string between:
   0 - bopomofo (fstring)
@@ -309,66 +341,95 @@ TypeIn: conversion source
 TypeOut: conversion target type
 Clean: ignore unknown characters instead of adding '?'
 }
-function ResolveCrom(s:EvilString;typein,typeout:integer;clean:boolean):EvilString;
+
+type
+  TResolveFlag = (
+    rfKeepLatin,
+      //Leave latin letters and some punctuation intact.
+      //This is only reliable when doing Bopomofo->PinYin, not the reverse.
+    rfKeepPunctuation,
+      //Same
+    rfDeleteInvalidChars
+      //Delete invalid characters instead of replacing with '?'
+  );
+  TResolveFlags = set of TResolveFlag;
+
+function ResolveCrom(s:EvilString;typein,typeout:integer;flags:TResolveFlags):EvilString;
 var s2:string;
-  cr:string;
   cl:integer;
   i:integer;
+  ch:WideChar;
 begin
   s:=uppercase(s);
   s2:='';
   while s<>'' do
   begin
     //Find longest match for character sequence starting at this point
-    cl:=0;
-    for i:=0 to (romac.count div 4)-1 do
-    begin
-      if pos(uppercase(romac[i*4+typein]),s)=1 then
-      begin
-        if length(romac[i*4+typein])>cl then
-        begin
-          cl:=length(romac[i*4+typein]);
-          cr:=romac[i*4+typeout];
-        end;
-      end;
-    end;
+    i := FindRomaCBestMatch(s,typein);
+    if i>=0 then
+      cl := Length(romac[i*4+typein])
+    else
+      cl := 0;
+   { We'd like to try other romanization systemss if the specified one failed us,
+    but we cannot.
+    Most of the times, when there's no "correct" match, there would still be
+    *some* match (i.e. KE instead of KEI).
+    And we can't just "select best match from all the romanizations", that would
+    be dangerous. }
 
-    if cl>0 then s2:=s2+cr else
-      if s[1]='-'then s2:=s2+UnicodeToHex('-') else
-      if s[1]='_'then s2:=s2+UnicodeToHex('_') else
+    if i>=0 then begin
+      s2:=s2+romac[i*4+typeout];
+      delete(s,1,cl);
+
+     //with ansi pinyin, we only try to extract tone after a syllable match
+      if typein>0 then
+        if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
+        begin
+          if typeout>0 then
+            s2:=s2+s[1]
+          else
+            s2:=s2+fpytone(Ord(s[1])-Ord('0')); //from digit
+          delete(s,1,1);
+        end else
+        begin
+          if typeout>0 then s2:=s2+'0' else s2:=s2+UH_PY_TONE;
+        end;
+    end
+    else begin
+      if typein>0 then begin
+        ch:=s[1];
+        delete(s,1,1)
+      end else begin
+        ch:=fstrtouni(fgetch(s,1))[1];
+        fdelete(s,1,1);
+      end;
+
+      if (rfKeepLatin in flags) and IsLatinLetter(ch) then
+        s2:=s2+ch
+      else
+      if (rfKeepPunctuation in flags) and IsAllowedPunctuation(ch) then
+        s2:=s2+ConvertPunctuation(ch)
+      else
+  {
+    //I don't know what was this for, so I commented it out:
+      if s[1]='-' then s2:=s2+UnicodeToHex('-') else
+      if s[1]='_' then s2:=s2+UnicodeToHex('_') else
       if pos(UnicodeToHex('-'),s)=1 then s2:=s2+'-'else
       if pos(UnicodeToHex('_'),s)=1 then s2:=s2+'_'else
-      if not clean then
+  }
+      if not (rfDeleteInvalidChars in flags) then
      {$IFDEF UNICODE}
         s2 := s2 + '?'; //in unicode both strings are in native form
      {$ELSE}
-      begin
-        if typeout>0 then s2:=s2+'?'else s2:=s2+'003F';
-      end;
+        if typeout>0 then s2:=s2+'?' else s2:=s2+'003F';
      {$ENDIF}
-    if cl>0 then delete(s,1,cl) else
-      if typein>0 then delete(s,1,1) else fdelete(s,1,1);
+    end;
 
-   //Convert tone markers between Ansi and Unicode versions
-
+   //With bopomofo, we extract tones always, as they are in special characters
     if typein=0 then
-    begin
       if fpygettone(s) in [0..5] then begin
         s2 := s2 + Chr(Ord('0') + fpyextrtone(s)); //to digit
-                //also delete ^^
       end;
-    end else
-    begin
-      if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
-      begin
-        if typeout>0 then s2:=s2+s[1] else
-          s2:=s2+fpytone(Ord(s[1])-Ord('0')); //from digit
-        delete(s,1,1);
-      end else
-      begin
-        if typeout>0 then s2:=s2+'0' else s2:=s2+UH_PY_TONE;
-      end;
-    end;
   end;
   if typeout>0 then result:=lowercase(s2) else result:=s2;
 end;
@@ -381,12 +442,13 @@ begin
   end else
   if lang='c'then
   begin
-    result:=ResolveCrom(s,0,romatype,false);
+    result:=ResolveCrom(s,0,romatype,[rfKeepLatin,rfKeepPunctuation]);
   end;
 end;
 
 function RomajiToKana(const s:string;romatype:integer;clean:boolean;lang:char):FString;
 var s_rep: string;
+  flags: TResolveFlags;
 begin
   if lang='j'then
   begin
@@ -396,10 +458,17 @@ begin
   begin
     s_rep := s;
     repl(s_rep,'v','u:');
-    result:=ResolveCrom(s_rep,romatype,0,clean);
+    if clean then flags := [rfKeepLatin,rfKeepPunctuation,rfDeleteInvalidChars] else flags := [];
+    result:=ResolveCrom(s_rep,romatype,0,flags);
   end;
 end;
 
+{
+Converts raw database pinyin:
+  jing4 xiang3
+To enhanced unicode pinyin with marks:
+  ji'ng xia^ng (only merged)
+}
 function ConvertPinYin(const str:string):FString;
 const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; //used in place of a char when it's unknown or whatever
  //does not go out of this function
@@ -487,11 +556,14 @@ begin
   Result := cnv2;
 end;
 
+
+{
+Converts tonemark-enhanced pinyin back into ansi pinyin.
+Nobody use this. Currently it's only employed by ImportVocab.
+Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway.
+}
 //TODO: Test Unicode conversion
-//Due to the high number of char constants this function is implemented only in Unicode,
-//and on exit we convert to FString if needed.
-//This is slower, but FStrings are deprecated anyway.
-function DeconvertPinYin(const str:FString):string;
+function DeconvertPinYin(const str:FString):string; deprecated;
 var cnv:UnicodeString;
   curs:UnicodeString; //although by logic it ought to be a Char...
   nch:string;
