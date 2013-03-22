@@ -93,7 +93,7 @@ implementation
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
-  JWBDicSearch, JWBKanjiCard, JWBUnit, JWBUtils, JWBCategories,
+  JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBUtils, JWBCategories,
   JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers;
 
 var ki:TStringList;
@@ -343,10 +343,10 @@ begin
     end;
     if fKanjiSearch.sbYomi.Down then begin
      //ON and KUN
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,true,'j'),4,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,true,'j'),5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,true,'j'),4,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,true,'j'),5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
     end;
     if fKanjiSearch.sbSKIP.Down then
       ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,true,false,false,false); //SKIP

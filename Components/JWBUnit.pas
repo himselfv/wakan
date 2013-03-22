@@ -43,18 +43,35 @@ procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IF
 
 
 { Romaji conversions }
+{
+Katakana and romaji in dictionaries can contain latin letters and punctuation.
+In general, it is safe to mix latin letters with katakana/bopomofo, but not with
+romaji (i.e. is "ding" an english word or a pinyin syllable?)
+Dictionaries address this in different ways: EDICT stores in katakana,
+CCEDICT separates letters with spaces ("D N A jian4 ding4").
 
-type
-  TResolveFlag = (
-    rfKeepLatin,
-      //Leave latin letters and some punctuation intact.
-      //This is only reliable when doing Bopomofo->PinYin, not the reverse.
-    rfKeepPunctuation,
-      //Same
-    rfDeleteInvalidChars
-      //Delete invalid characters instead of replacing with '?'
-  );
-  TResolveFlags = set of TResolveFlag;
+Internally we support:
+- kana/bopomofo with latin letters + punctuation
+- clean romaji (can be converted back to kana)
+ Since clean romaji is still ANSI, we replace some punctuation with ANSI chars.
+- romaji signature ("DNAjian4ding4" -- cannot be converted back to anything)
+ Signature romaji is used for database lookups. It's stripped of punctuation,
+but keeps latin letters. This allows us to quickly find all possible matches
+instead of trying different interpretations of the input.
+If you just want to display romaji for the record, do KanaToRomaji(kana) instead.
+
+So,
+1. On import we fail on unknown characters, otherwise convert text to database
+ format per above:
+  - kanji + latin + punctuation
+  - kana + latin + punctuation
+  - romaji + latin
+2. On kanji/kana input we strip unknown characters, then do a lookup.
+3. On romaji input we strip unknown characters and punctuation, then do a lookup.
+4. On conversions from kana to romaji for display we only strip unknown characters.
+}
+
+//See JWBKanaConv.ResolveFlag
 
 var
  { Romaji translation table. Populated on load.
@@ -64,12 +81,20 @@ var
  { Chinese version, not upcased. Someone upgrade this one too... }
   romac: TStringList;
 
+function KanaToRomaji(const s:FString;romatype:integer;lang:char):string; overload; inline;
+function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags):string; overload;
+function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags):FString;
+
+//Packs and cleans any romaji (perhaps coming from user) to signature format:
+//no punctuation, no spaces, no unknown chars, lowercase.
+//This is NOT ALL that's required from signature in dict, but other conditions require
+//knowing the syllable composition and handled on import before calling this.
+function SignatureFrom(const s:string): string;
+
+
+//Pin3yin4<->pi'nyi^n
 function ConvertPinYin(const str:string):FString;
 function DeconvertPinYin(const str:FString):string;
-function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags=[rfKeepLatin,rfKeepPunctuation]):string;
-function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags=[rfDeleteInvalidChars]):FString;
-
-function IsAllowedPunctuation(c:WideChar): boolean;
 
 { WordGrid }
 
@@ -326,22 +351,6 @@ begin
       end;
 end;
 
-//True if c is a punctuation mark we allow in kanji and kana fields.
-function IsAllowedPunctuation(c:WideChar): boolean;
-begin
-  Result := (c='·') or (c=',');
-end;
-
-//When we need to store punctuation into pinyin, we have to make it ansi
-function ConvertPunctuation(c:WideChar): char;
-begin
-  case c of
-    '·': Result:='-';
-  else
-    Result := c;
-  end;
-end;
-
 
 {
 Converts chinese string between:
@@ -404,19 +413,13 @@ begin
         fdelete(s,1,1);
       end;
 
-      if (rfKeepLatin in flags) and IsLatinLetter(ch) then
+      if (rfConvertLatin in flags) and IsLatinLetter(ch) then
         s2:=s2+ch
       else
-      if (rfKeepPunctuation in flags) and IsAllowedPunctuation(ch) then
+      if (rfConvertPunctuation in flags) and IsAllowedPunctuation(ch) then
         s2:=s2+ConvertPunctuation(ch)
       else
-  {
-    //I don't know what was this for, so I commented it out:
-      if s[1]='-' then s2:=s2+UnicodeToHex('-') else
-      if s[1]='_' then s2:=s2+UnicodeToHex('_') else
-      if pos(UnicodeToHex('-'),s)=1 then s2:=s2+'-'else
-      if pos(UnicodeToHex('_'),s)=1 then s2:=s2+'_'else
-  }
+
       if not (rfDeleteInvalidChars in flags) then
      {$IFDEF UNICODE}
         s2 := s2 + '?'; //in unicode both strings are in native form
@@ -434,34 +437,58 @@ begin
   if typeout>0 then result:=lowercase(s2) else result:=s2;
 end;
 
+{ Converts kana to romaji in a default way, that is assuming the input is a
+ kana from database and the output is for user display.
+ Equivalent to older "KanaToRomaji(clean)". }
+function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
+begin
+  Result:=KanaToRomaji(s,romatype,lang,[rfConvertLatin,rfConvertPunctuation,rfDeleteInvalidChars])
+end;
+
+//Converts kana to romaji, per flags
 function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags):string;
 begin
   if lang='j'then
-  begin
-    Result := roma_t.KanaToRomaji(s,romatype);
-  end else
+    Result:=roma_t.KanaToRomaji(s,romatype,flags)
+  else
   if lang='c'then
-  begin
     result:=ResolveCrom(s,0,romatype,flags);
-  end;
 end;
 
+{ Converts romaji to kana. Romaji must be a clean-romaji, i.e. no latin letters,
+ no punctuation. Appropriate keep flags have no effect.
+ All in all, romaji-to-kana conversion ought to happen only on import, therefore
+ no flagless version. }
 function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags):FString;
 var s_rep: string;
-  clean: boolean;
 begin
   if lang='j'then
-  begin
-    clean := (rfDeleteInvalidChars in flags);
-    Result := roma_t.RomajiToKana(s,romatype,clean);
-  end else
+    Result := roma_t.RomajiToKana(s,romatype,flags)
+  else
   if lang='c'then
   begin
     s_rep := s;
     repl(s_rep,'v','u:');
-//    if clean then flags := [rfDeleteInvalidChars] else flags := [];
     result:=ResolveCrom(s_rep,romatype,0,flags);
   end;
+end;
+
+function SignatureFrom(const s:string): string;
+var i,j: integer;
+begin
+  Result:=lowercase(s);
+  i:=1;
+  j:=0;
+  while i+j<=length(Result) do
+    if not IsLatinLetter(Result[i+j]) then
+      Inc(j)
+    else begin
+      if j>0 then
+        Result[i]:=Result[i+j];
+      Inc(i);
+    end;
+  if j>0 then
+    SetLength(Result,length(Result)-j);
 end;
 
 {

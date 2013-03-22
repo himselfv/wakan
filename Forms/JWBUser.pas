@@ -289,6 +289,7 @@ begin
     req.MatchType := mtExactMatch;
   end;
 
+  req.AutoDeflex := SpeedButton4.Down;
   req.dic_ignorekana := false; //by default, but this can be overriden
 end;
 

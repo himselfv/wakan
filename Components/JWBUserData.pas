@@ -3,12 +3,18 @@ unit JWBUserData;
 interface
 uses TextTable, JWBStrings;
 
+{
+User dictionary is quite different from normal dictionaries.
+Even search is possible only by kana.
+}
+
 var
   TUser: TTextTable;
   TUserIndex, //i
   TUserEnglish, //s
   TUserPhonetic, //x
-  TUserPhoneticSort, //s
+  TUserPhoneticSort, //s -- that's not the same as dictionary's "sort", it
+    //contains the results of GetPhoneticSortStr which can be string-numeric
   TUserKanji, //x
   TUserAdded, //s
   TUserPrinted, //s
@@ -47,7 +53,7 @@ function FindUserWord(kanji,phonetic: FString): integer;
 function GetPhoneticSortStr(phonetic: FString): string;
 
 implementation
-uses JWBUnit, JWBMenu;
+uses JWBKanaConv, JWBUnit, JWBMenu;
 
 //Used in several places when loading
 function FindMaxUserIndex(): integer;
@@ -88,7 +94,8 @@ begin
   end;
 end;
 
-//Returns a string which will represent this phonetic in sorting.
+//Returns a string which will represent this phonetic in sorting in User dictionary.
+//Normal dictionaries don't use this.
 function GetPhoneticSortStr(phonetic: FString): string;
 var s: FString;
   s2: FChar;
@@ -97,11 +104,13 @@ var s: FString;
 begin
   if curlang='j'then
   begin
+   //Reconvert to some standard format and then use a preset table of
+   //katakana syllable weighs
     Result:='';
-    s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,true,'j');
-    for i:=0 to flength(s)-1 do
+    s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,'j',[rfDeleteInvalidChars]);
+    for i:=1 to flength(s) do
     begin
-      s2:=fgetch(s,i+1);
+      s2:=fgetch(s,i);
       a1:='';
       a2:='';
       for j:=0 to Length(romasortl)-1 do

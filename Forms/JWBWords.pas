@@ -137,7 +137,7 @@ const
 
 implementation
 
-uses JWBMenu, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
+uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
   JWBUserFilters, JWBExamples, JWBUser, JWBUserData,
   JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite;
@@ -570,7 +570,8 @@ end;
 
 procedure TfWords.UserAdd_Button1Click(Sender: TObject);
 begin
-  if AddWord(clip,RomajiToKana(fUserAdd.Edit1.Text,romasys,true,curlang),fUserAdd.Edit3.Text,fUserAdd.ComboBox1.Text,'?',false,1) then
+  if AddWord(clip,RomajiToKana(fUserAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
+    fUserAdd.Edit3.Text,fUserAdd.ComboBox1.Text,'?',false,1) then
   begin
     fUserAdd.Edit1.Text:='';
     fUserAdd.PaintBox3.Invalidate;
@@ -941,9 +942,9 @@ begin
               if curlang='c'then
               begin
                 s2:=DeconvertPinYin(curphon);
-                curphon:=RomajiToKana(DeconvertPinYin(curphon),1,true,'c')
+                curphon:=RomajiToKana(DeconvertPinYin(curphon),1,'c',[rfDeleteInvalidChars])
               end else
-                curphon:=RomajiToKana(HexToUnicode(curphon),2,true,'j');
+                curphon:=RomajiToKana(HexToUnicode(curphon),2,'j',[rfDeleteInvalidChars]);
             if curcat='' then curcat:=unknowncat;
             if curcat='' then
             begin
@@ -2331,7 +2332,8 @@ end;
 procedure TfWords.Button2Click(Sender: TObject);
 begin
   if fUserAdd.ShowModal=mrOK then
-    if AddWord(clip,RomajiToKana(fUserAdd.Edit1.Text,romasys,true,curlang),fUserAdd.Edit3.Text,fUserAdd.ComboBox1.Text,'?',false,1) then
+    if AddWord(clip,RomajiToKana(fUserAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
+      fUserAdd.Edit3.Text,fUserAdd.ComboBox1.Text,'?',false,1) then
     begin
       fUserAdd.Edit1.Text:='';
       fUserAdd.PaintBox3.Invalidate;

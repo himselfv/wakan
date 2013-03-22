@@ -185,7 +185,7 @@ type
     TDictEnglish,
     TDictKanji,
     TDictPhonetic,
-    TDictSort,
+    TDictSort, //actually it's not "sort" but "romaji signature"
     TDictMarkers,
     TDictFrequency,
     TDictArticle

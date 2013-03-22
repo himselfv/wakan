@@ -45,7 +45,7 @@ end;
 procedure TfUserAdd.PaintBox3Paint(Sender: TObject);
 begin
   PaintBox3.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana(Edit1.Text,romasys,false,curlang),FontSmall);
+  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana(Edit1.Text,romasys,curlang,[]),FontSmall);
 end;
 
 procedure TfUserAdd.PaintBox2Paint(Sender: TObject);

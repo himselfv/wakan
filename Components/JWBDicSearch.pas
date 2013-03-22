@@ -1,13 +1,117 @@
-unit JWBDicSearch;
+﻿unit JWBDicSearch;
 {
 Dictionary engine.
 Has a lot of dark legacy in code form.
 }
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBUtils, TextTable, MemSource, StdPrompt,
-  JWBDic;
+uses SysUtils, Classes, JWBStrings, TextTable, MemSource, StdPrompt, JWBDic;
 
+{
+Deflection parsing code and deflection list.
+For more info see wakan.cfg.
+}
+type
+  TDeflectionRule = record
+    vt: char;       {
+      Supported verb types:
+        1 for godan verbs
+        2 for ichidan verbs
+        K for kuru verb
+        I for Iku verb
+        A for adjective
+        N for noun
+    }
+    sufcat: char;   //suffix category
+    infl: string;   //inflected suffix
+    defl: string;   //deflected suffix
+  end;
+  PDeflectionRule = ^TDeflectionRule;
+  TDeflectionArray = array of TDeflectionRule;
+  TDeflectionList = class
+  protected
+    FList: TDeflectionArray;
+    FListUsed: integer;
+    procedure Grow(ARequiredFreeLen: integer);
+    function GetItemPtr(Index: integer): PDeflectionRule;{$IFDEF INLINE} inline;{$ENDIF}
+    function MakeNewItem: PDeflectionRule;
+  public
+    procedure Add(const r: TDeflectionRule); overload;
+    procedure Add(const s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Clear;
+    property Count: integer read FListUsed;
+    property Items[Index: integer]: PDeflectionRule read GetItemPtr; default;
+  end;
+
+function ParseDeflectionRule(const s: string): TDeflectionRule; inline;
+
+{
+Candidate lookup list for JWBUser's dictionary lookups.
+Not thread safe.
+
+Example:
+指示を飛ばされている turns into this list:
+1 1 指示を飛ばす
+1 1 指示を飛ばされつ
+1 1 指示を飛ぶ
+1 1 指示を飛ばさる
+1 2 指示を飛ばされる
+1 2 指示る
+9 F 指示を飛ばされている
+8 F 指示を飛ばされている
+7 F 指示を飛ばされてい
+6 F 指示を飛ばされて
+5 F 指示を飛ばされ
+4 F 指示を飛ばさ
+3 F 指示を飛ば
+2 F 指示を飛
+1 F 指示を
+0 F 指示
+0 F 指
+}
+type
+  TRomaType = (
+    rtNormal,   //default lookup type for this search type
+    rtRoma      //romaji signature
+  );
+  TCandidateLookup = record
+    priority: integer; {0..anything, 0 is the worst}
+    len: integer;  {
+      I'm not sure why we can't just take length(str),
+      but for now I will replicate how it was done in Wakan with strings }
+    verbType: char; {
+      Supported verb types:
+        Same as in TDeflectionRule +
+        F for whatever it stands for (probably "unknown")
+    }
+    roma: TRomaType;
+    str: string;
+  end;
+  PCandidateLookup = ^TCandidateLookup;
+  TCandidateLookupArray = array of TCandidateLookup;
+  TCandidateLookupList = class
+  protected
+    FList: TCandidateLookupArray;
+    FListUsed: integer;
+    procedure Grow(ARequiredFreeLen: integer);
+    function GetItemPtr(Index: integer): PCandidateLookup;{$IFDEF INLINE} inline;{$ENDIF}
+    function MakeNewItem: PCandidateLookup;
+  public
+    procedure Add(priority: integer; len: integer; verbType: char; roma: TRomaType;
+      const str: string); overload;
+    procedure Add(const ct: TCandidateLookup); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Delete(Index: integer);
+    procedure Clear;
+    function Find(len: integer; verbType: char; const str: string): integer;
+    property Count: integer read FListUsed;
+    property Items[Index: integer]: PCandidateLookup read GetItemPtr; default;
+  end;
+
+
+{
+Search result list.
+Populated by TDicSearchRequest.Search().
+}
 type
   {
    If DicIndex/DicName are set, article contents MUST contain "dDicname" too
@@ -59,6 +163,11 @@ type
     property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
 
+
+{
+Search itself.
+}
+type
  { Translation type }
   TSearchType = (
     stJp,           //jp->en
@@ -92,7 +201,8 @@ type
    { Find all matches instead of only most relevant ones (slower) }
     full: boolean;
     dictgroup: TDictGroup;
-    dic_ignorekana: boolean;
+    dic_ignorekana: boolean; //Do not include kana-only words in results. Half-baked.
+    AutoDeflex: boolean; //Search for inflected words/conjugated verbs
     procedure Prepare; //Call after changing settings
 
   protected
@@ -123,56 +233,166 @@ type
       sl: TSearchResults);
 
   protected
-    a3kana:boolean;   //a==3 and only kana in string
-    a4limitkana:boolean; //a in [4,5]
+    kanaonly:boolean; //request is kana only, so are all the lookup candidates
     procedure FinalizeResults(sl: TSearchResults);
 
   end;
-
-{
-I don't know where to put this so I'm placing it here.
-This is the code that attaches annotations for every search result.
-It clearly doesn't belong here in dictionary search unit. It should be moved
-to wherever the results are handled.
-
-In TDicSearchRequest:
-
-    CAnnot: TAnnotationCursor;
-
-In TDicSearchRequest.Prepare:
-  if HaveAnnotations() then
-    CAnnot := TAnnotationCursor.Create(TAnnots)
-  else
-    CAnnot := nil;
-
-On preparing another result:
-
-        if CAnnot<>nil then
-        begin
-          CAnnot.SeekK(dic.Str(dic.TDictKanji),dic.Str(dic.TDictPhonetic));
-          s2:=CAnnot.GetAll('t',', ');
-          if CAnnot.GetOne('c')<>'' then s2:=UH_SETCOLOR+CAnnot.GetOne('c')+s2;
-          ii:=pos('{'+statpref,scur.entry)+length(statpref)+1;
-          if scur[ii]=ALTCH_EXCL then inc(ii,2);
-          if scur[ii]=ALTCH_TILDE then inc(ii,2);
-          if scur[ii]=ALTCH_EXCL then inc(ii,2);
-          if s2<>'' then
-            scur:=copy(scur,1,ii-1)+
-              s2+' >> '+
-              copy(scur,ii,length(scur)-ii+1);
-        end;
-}
 
 
 //Compability
 procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
   full:boolean;wt,maxwords:integer;sl:TSearchResults;dictgroup:integer;var wasfull:boolean);
 
-procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
-
 implementation
-uses Forms, Windows, JWBMenu, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
+uses Forms, Windows, JWBMenu, JWBKanaConv, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
   JWBCategories, JWBEdictMarkers, JWBUserData;
+
+procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
+
+
+{
+Deflexion rules
+}
+
+//Parses deflection rule from string form into record
+//See comments in wakan.cfg for format details.
+function ParseDeflectionRule(const s: string): TDeflectionRule; {$IFDEF INLINE}inline;{$ENDIF}
+var i: integer;
+begin
+  Result.vt := s[1];
+  Result.sufcat := s[2];
+  i := pos('->', s);
+ {$IFDEF UNICODE}
+  Result.infl := copy(s,3,i-3);
+  if Result.infl<>'KKKK' then
+    Result.infl := HexToUnicode(Result.infl);
+  Result.defl := HexToUnicode(copy(s,i+2,Length(s)-(i+2)+1));
+ {$ELSE}
+  Result.infl := copy(s,3,i-3);
+  Result.defl := copy(s,i+2,Length(s)-(i+2)+1);
+ {$ENDIF}
+end;
+
+function TDeflectionList.GetItemPtr(Index: integer): PDeflectionRule;
+begin
+  Result := @FList[Index]; //valid until next list growth
+end;
+
+function TDeflectionList.MakeNewItem: PDeflectionRule;
+begin
+ //Thread unsafe
+  Grow(1);
+  Result := @FList[FListUsed];
+  Inc(FListUsed);
+end;
+
+//Reserves enough memory to store at least ARequiredFreeLen additional items to list.
+procedure TDeflectionList.Grow(ARequiredFreeLen: integer);
+const MIN_GROW_LEN = 20;
+begin
+  if Length(FList)-FListUsed>=ARequiredFreeLen then exit; //already have the space
+ //else we don't grow in less than a chunk
+  if ARequiredFreeLen < MIN_GROW_LEN then
+    ARequiredFreeLen := MIN_GROW_LEN;
+  SetLength(FList, Length(FList)+ARequiredFreeLen);
+end;
+
+procedure TDeflectionList.Add(const r: TDeflectionRule);
+begin
+  MakeNewItem^ := r;
+end;
+
+procedure TDeflectionList.Add(const s: string);
+begin
+  Add(ParseDeflectionRule(s));
+end;
+
+procedure TDeflectionList.Clear;
+begin
+  SetLength(FList, 0);
+  FListUsed := 0;
+end;
+
+
+{
+Candidate lookup list
+}
+
+function TCandidateLookupList.GetItemPtr(Index: integer): PCandidateLookup;
+begin
+  Result := @FList[Index]; //valid until next list growth
+end;
+
+function TCandidateLookupList.MakeNewItem: PCandidateLookup;
+begin
+ //Thread unsafe
+  Grow(1);
+  Result := @FList[FListUsed];
+  Inc(FListUsed);
+end;
+
+//Reserves enough memory to store at least ARequiredFreeLen additional items to list.
+procedure TCandidateLookupList.Grow(ARequiredFreeLen: integer);
+const MIN_GROW_LEN = 20;
+begin
+  if Length(FList)-FListUsed>=ARequiredFreeLen then exit; //already have the space
+ //else we don't grow in less than a chunk
+  if ARequiredFreeLen < MIN_GROW_LEN then
+    ARequiredFreeLen := MIN_GROW_LEN;
+  SetLength(FList, Length(FList)+ARequiredFreeLen);
+end;
+
+//str must be in decoded format (Unicode on UFCHAR builds)
+procedure TCandidateLookupList.Add(priority: integer; len: integer; verbType: char;
+  roma: TRomaType; const str: string);
+var item: PCandidateLookup;
+begin
+ //Only priorities >=0 are supported
+  if priority<0 then priority := 0;
+
+  item := MakeNewItem;
+  item.priority := priority;
+  item.len := len;
+  item.verbType := verbType;
+  item.roma := roma;
+  item.str := str;
+end;
+
+procedure TCandidateLookupList.Add(const ct: TCandidateLookup);
+begin
+  Add(ct.priority, ct.len, ct.verbType, ct.roma, ct.str);
+end;
+
+//Slow, so try to not use
+procedure TCandidateLookupList.Delete(Index: integer);
+begin
+ //Properly release the cell's data
+  Finalize(FList[Index]);
+ //Move everything up one cell
+  Move(FList[Index+1], FList[Index], (FListUsed-Index-1)*SizeOf(FList[0]));
+  Dec(FListUsed);
+ //Zero out last cell
+  FillChar(FList[FListUsed], SizeOf(FList[0]), 00); //so that we don't properly release last cell's data, it's been moved to previous cell
+end;
+
+procedure TCandidateLookupList.Clear;
+begin
+  SetLength(FList, 0);
+  FListUsed := 0;
+end;
+
+function TCandidateLookupList.Find(len: integer; verbType: char; const str: string): integer;
+var k: integer;
+begin
+  Result := -1;
+  for k:=0 to Self.Count-1 do
+    if (FList[k].len=len)
+    and (FList[k].verbType=verbType)
+    and (FList[k].str=str) then begin
+      Result := k;
+      break;
+    end;
+end;
 
 
 {
@@ -310,10 +530,11 @@ end;
 
 
 {
-Deflection and lookup lists
+Deflex()
+Generates a list of possible deflected versions of the word.
 }
 
-procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay,alwaysdeflect:boolean);
+procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean);
 var ws: integer; //length of w in symbols. Not sure if needed but let's keep it for a while
     i,j,k:integer;
     roma:string;
@@ -339,46 +560,47 @@ begin
         break;
     core:=fcopy(w,1,lastkanji);
     roma:=fcopy(w,lastkanji+1,flength(w)-lastkanji);
-    if (fUser.SpeedButton4.Down) or (alwaysdeflect) then
-      for i:=0 to defll.Count-1 do
-      begin
-        dr := defll[i];
+    for i:=0 to defll.Count-1 do
+    begin
+      dr := defll[i];
 
-        for j:=0 to flength(roma)-flength(dr.infl) do
-          if (fcopy(roma,j+1,flength(dr.infl))=dr.infl) or
-             ((dr.infl='KKKK') and (j=0) and (core<>'')) then
-          if ((dr.vt<>'K') and (dr.vt<>'I')) or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
-             or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
+      for j:=0 to flength(roma)-flength(dr.infl) do
+        if (fcopy(roma,j+1,flength(dr.infl))=dr.infl) or
+           ((dr.infl='KKKK') and (j=0) and (core<>'')) then
+        if ((dr.vt<>'K') and (dr.vt<>'I')) or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
+           or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
+        begin
+          if (flength(dr.defl)+j<=6) and (core+fcopy(roma,1,j)+dr.defl<>w) then
           begin
-            if (flength(dr.defl)+j<=6) and (core+fcopy(roma,1,j)+dr.defl<>w) then
+            //ws:=flength(core+fcopy(roma,1,j)+dr.infl);
+            //if dr.infl='KKKK'then ws:=flength(core);
+            //if ws<=flength(core) then ws:=flength(core)+1;
+            //if ws<=1 then ws:=2;
+            ws:=flength(w);
+            ad:=core+fcopy(roma,1,j)+dr.defl;
+            suf:=fcopy(roma,j+1+flength(dr.infl),flength(roma)-j-flength(dr.infl));
+            if sl.Find(ws, dr.vt, ad)>=0 then
+              continue; //already added
+            sufokay:=(suf='');
+            for k:=0 to suffixl.Count-1 do
+              if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
+                sufokay:=true;
+            if (sufokay or not mustSufokay) then
             begin
-//              ws:=flength(core+fcopy(roma,1,j)+dr.infl);
-//              if dr.infl='KKKK'then ws:=flength(core);
-//              if ws<=flength(core) then ws:=flength(core)+1;
-//              if ws<=1 then ws:=2;
-              ws:=flength(w);
-              ad:=core+fcopy(roma,1,j)+dr.defl;
-              suf:=fcopy(roma,j+1+flength(dr.infl),flength(roma)-j-flength(dr.infl));
-              if sl.Find(ws, dr.vt, ad)>=0 then
-                continue; //already added
-              sufokay:=(suf='');
-              for k:=0 to suffixl.Count-1 do
-                if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
-                  sufokay:=true;
-              if (sufokay or not mustSufokay) then
-              begin
-                if (sufokay) and (dr.infl<>'KKKK') then sl.Add(priordfl, ws, dr.vt, ad) else sl.Add(1, ws, dr.vt, ad);
-              end;
+              if (sufokay) and (dr.infl<>'KKKK') then
+                sl.Add(priordfl, ws, dr.vt, rtNormal, ad)
+              else
+                sl.Add(1, ws, dr.vt, rtNormal, ad);
             end;
           end;
-      end;
+        end;
+    end;
     ws:=flength(w);
-    sl.Add(prior, ws, 'F', w);
+    sl.Add(prior, ws, 'F', rtNormal, w);
   end;
   if curlang='c'then
   begin
-   //TODO: Test Unicode conversion
-    sl.Add(prior, ws, 'F', w);
+    sl.Add(prior, ws, 'F', rtNormal, w);
     if pos('?',KanaToRomaji(w,romasys,'c'))>0 then exit;
    //For every lookup candidate check if there were "unknown" tone markers,
    //and generate all possible resolutions for those.
@@ -420,29 +642,44 @@ var _s: string;
   i: integer;
   partfound:boolean;
   every:boolean;
+  tmpkana:string;
 begin
   case a of
     stJp:
-      if curlang='j'then
-        Deflex(RomajiToKana('H'+search,romasys,true,'j'),se,9,8,true,false)
-      else
-        Deflex(RomajiToKana(search,romasys,true,'c'),se,9,8,true,false);
+      if not AutoDeflex then begin
+        search := SignatureFrom(search);
+        se.Add(9,length(search),'F',rtRoma,search)
+      end else begin
+        if curlang='j'then
+          tmpkana:=RomajiToKana('H'+search,romasys,'j',[])
+        else
+          tmpkana:=RomajiToKana(search,romasys,'c',[]);
+        if pos('?',tmpkana)>0 then begin //not fully converted => add source roma first
+          search := SignatureFrom(search);
+          se.Add(9,length(search),'F',rtRoma,search);
+          repl(tmpkana,'?','');
+        end;
+        Deflex(tmpkana,se,9,8,true);
+      end;
     stEn:
-      se.Add(9, 1, 'F', search);
+      se.Add(9, 1, 'F', rtNormal, search);
     stClipboard:
-      Deflex(ChinFrom(search),se,9,8,true,false);
+      if AutoDeflex then
+        Deflex(ChinFrom(search),se,9,8,true)
+      else
+        se.Add(9,flength(search),'F',rtNormal,search);
     stEditorInsert,
     stEditorAuto:
       if wt<0 then
       begin
         _s:=ChinFrom(search);
-        Deflex(_s,se,9,8,false,true);
+        Deflex(_s,se,9,8,false); //ignores AutoDeflex
       end else
       begin
         if (wt=1) or (wt=2) then
         begin
           _s:=ChinFrom(search);
-          if wt=1 then Deflex(_s,se,9,8,false,true);
+          if wt=1 then Deflex(_s,se,9,8,false); //ignores AutoDeflex
           for i:=flength(_s) downto 1 do
           begin
             partfound:=false;
@@ -453,13 +690,13 @@ begin
               partfound:=true;
             //if ((i<flength(_s)) and every) or (wt=2) then
             if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=flength(_s)) or (partfound) then
-              se.Add(i, i, 'F', fcopy(_s,1,i));
+              se.Add(i, i, 'F', rtNormal, fcopy(_s,1,i));
           end;
         end;
         if (wt=3) then
         begin
           _s:=ChinFrom(search);
-          se.Add(9, fLength(_s), 'F', _s);
+          se.Add(9, fLength(_s), 'F', rtNormal, _s);
         end;
       end;
   end;
@@ -605,9 +842,33 @@ begin
     end;
   end;
 
- //I don't know WHY the following line is needed,
- //but it does exactly what it did in old Wakan. Whatever that is.  
-  if full or (fUser.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then
+ { kanaonly:
+  If this is set, we're going to convert kanji+kana to ??+romaji and search for that.
+  Makes sense only if we're sure our word is all kana, but gives us better kana
+  coverage (i.e. hiragana/katakana).
+  This is expected, for instance, when handling user input. While we store original
+  input as a roma lookup, deflexed lookups are in kana (deflexion happens in kana),
+  and without this flag we'd miss words like KATAKANA ROOT + hiragana verb ending.
+
+  Note that if lookup candidates could possibly differ in this regard, we'd have
+  to re-check for this property for every candidate. }
+  case a of
+    stClipboard: begin
+      kanaonly:=true;
+      for i:=1 to flength(search) do
+        if not (EvalChar(fgetch(search,i)) in [EC_HIRAGANA, EC_KATAKANA]) then begin
+          kanaonly := false;
+          break;
+        end;
+    end;
+    stEditorInsert,
+    stEditorAuto:
+      kanaonly := p4reading or (wt=2);
+  else
+    kanaonly := false;
+  end;
+
+  if full or (fUser.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then //TODO: Move this line out of here
   for di:=0 to Length(dics)-1 do begin
     if dics[di].cursor=nil then continue;
     for i:=0 to se.Count-1 do
@@ -716,37 +977,25 @@ begin
   slen:=lc.len;
 
   if a in [stJp,stEn] then slen:=1;
-  if a = stClipboard then begin
-    a3kana:=true;
-    for i:=1 to flength(sxx) do
-      if not (EvalChar(fgetch(sxx,i)) in [EC_HIRAGANA, EC_KATAKANA]) then begin
-        a3kana := false;
-        break;
-      end;
-  end;
-
- //stEditorInsert/stEditorAuto:
- //If this is set, we're going to convert kanji+kana to ??+romaji and search for that.
- //Makes sense only if we're sure our word is all kana.
-  a4limitkana:=(a in [stEditorInsert, stEditorAuto]) and (p4reading or (wt=2));
 
  //Initial lookup
  { KanaToRomaji is VERY expensive so let's only call it when really needed }
   case a of
     stJp: begin
-      sxxr:=KanaToRomaji(sxx,1,curlang);
+      if lc.roma=rtRoma then
+        sxxr:=sxx
+      else
+        sxxr:=KanaToRomaji(sxx,1,curlang);
       dic.LookupRomaji(sxxr);
     end;
     stEn: dic.LookupMeaning(sxx);
-    stClipboard:
-      if a3kana then begin
-        sxxr:=KanaToRomaji(sxx,1,curlang);
-        dic.LookupRomaji(sxxr)
-      end else
-        dic.LookupKanji(sxx);
+    stClipboard,
     stEditorInsert,
     stEditorAuto:
-      if a4limitkana then begin
+      if lc.roma=rtRoma then
+        dic.LookupRomaji(lc.str)
+      else
+      if kanaonly then begin
         sxxr:=KanaToRomaji(sxx,1,curlang);
         dic.LookupRomaji(sxxr);
       end else
@@ -766,7 +1015,8 @@ begin
     entry:=entry+raw_entries.ToEnrichedString;
 
     if IsAppropriateVerbType(sdef, markers) then
-    if (not dic_ignorekana) or (not a4limitkana) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
+    if (not dic_ignorekana) or (not (a in [stEditorInsert,stEditorAuto]))
+      or (not kanaonly) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
     begin
 
      //Calculate popularity class

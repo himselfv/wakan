@@ -482,7 +482,7 @@ const
 implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
-  JWBSettings, JWBPrint, StdPrompt, JWBUnit,
+  JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
   JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers,
   JWBUserData, StreamUtils;
 
@@ -2777,12 +2777,14 @@ begin
     ll.Add(0, 0, 0); //add one empty line
 end;
 
-
+//Performs some replacements to make the text more suitable for displaying
+//as a ruby reading in small characters.
+//(For instance, makes half-height-kana full-height-kana)
 procedure FixReading(gd0,gd1,gd2:FChar; var reading:FString);
 var gd: FString;
 begin
   if (EvalChar(gd1)=EC_KATAKANA) and not showroma then
-    reading := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,true,'j');
+    reading := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,'j',[rfDeleteInvalidChars]);
   if (EvalChar(gd1) in [EC_HIRAGANA, EC_KATAKANA]) and showroma then
   begin
     gd := '';
@@ -2820,7 +2822,7 @@ begin
        (gd1=#$30E3) or (gd1=#$30E5) or (gd1=#$30E7) then gd:='';
    {$ENDIF}
     if (flength(gd)>1) and (EvalChar(fgetch(gd,1))=EC_KATAKANA) then
-      gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,true,'j');
+      gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,'j',[rfDeleteInvalidChars]);
     reading:=gd;
   end;
  {$IFNDEF UNICODE}
@@ -3443,10 +3445,10 @@ begin
   if curlang='j'then
   begin
     if buffertype='H' then
-      Result:=RomajiToKana('H'+lowercase(insertbuffer),romasys,false,curlang)
+      Result:=RomajiToKana('H'+lowercase(insertbuffer),romasys,curlang,[])
     else
     if buffertype='K'then
-      Result:=RomajiToKana('K'+lowercase(insertbuffer),romasys,false,curlang)
+      Result:=RomajiToKana('K'+lowercase(insertbuffer),romasys,curlang,[])
     else
       Result:=fstr(insertbuffer); //latin
   end else
@@ -3455,7 +3457,7 @@ begin
       Result:=fstr(insertbuffer)
     else
     if buffertype='H' then
-      Result:=RomajiToKana(lowercase(insertbuffer),romasys,false,curlang)
+      Result:=RomajiToKana(lowercase(insertbuffer),romasys,curlang,[])
     else
       Result:=fstr(insertbuffer);
   end;

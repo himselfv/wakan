@@ -370,7 +370,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBUnit, JWBKanji, JWBTranslate,
+uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
@@ -1248,7 +1248,7 @@ end;
 procedure TfSettings.PaintBox3Paint(Sender: TObject);
 begin
   PaintBox3.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,RadioGroup1.ItemIndex+1,false,'j'),FontSmall);
+  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[]),FontSmall);
 end;
 
 procedure TfSettings.pcPagesChange(Sender: TObject);
@@ -1260,15 +1260,15 @@ procedure TfSettings.Edit15Change(Sender: TObject);
 begin
   PaintBox3.Invalidate;
   PaintBox1.Invalidate;
-  Label20.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,true,'j'),1,'j');
-  Label21.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,true,'j'),2,'j');
-  Label22.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,true,'j'),3,'j');
+  Label20.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[rfDeleteInvalidChars]),1,'j');
+  Label21.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[rfDeleteInvalidChars]),2,'j');
+  Label22.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[rfDeleteInvalidChars]),3,'j');
 end;
 
 procedure TfSettings.PaintBox1Paint(Sender: TObject);
 begin
   PaintBox1.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox1.Canvas,1,1,16,RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,false,'j'),FontSmall);
+  DrawUnicode(PaintBox1.Canvas,1,1,16,RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[]),FontSmall);
 end;
 
 procedure TfSettings.Button1Click(Sender: TObject);
@@ -1417,15 +1417,15 @@ end;
 procedure TfSettings.PaintBox2Paint(Sender: TObject);
 begin
   PaintBox2.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox2.Canvas,1,1,16,RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,false,'c'),FontSmall);
+  DrawUnicode(PaintBox2.Canvas,1,1,16,RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[]),FontSmall);
 end;
 
 procedure TfSettings.Edit20Change(Sender: TObject);
 begin
   PaintBox2.Invalidate;
-  Label31.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,true,'c'),1,'c');
-  Label32.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,true,'c'),2,'c');
-  Label33.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,true,'c'),3,'c');
+  Label31.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),1,'c');
+  Label32.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),2,'c');
+  Label33.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),3,'c');
 end;
 
 {

@@ -8,8 +8,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
-  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings, JWBUtils,
-  StdPrompt, JWBDic;
+  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings,
+  StdPrompt, JWBDic, JWBDicSearch;
 
 type
   TfMenu = class(TForm)
@@ -564,7 +564,7 @@ var
   defll: TDeflectionList; //verb deflections
   romasortl: array of record //romaji sort order
     roma: FString;
-    order: string; //although it's integer insidee
+    order: string; //although it's integer inside
   end;
   readchl: TStringList; //list of readings to include to the reading chart
 
@@ -621,7 +621,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBWordCategory, JWBWordKanji, JWBTranslate, JWBStrokeOrder,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
-  JWBWordsExpChoose, JWBMedia, JWBDicSearch, JWBKanjiCard,
+  JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
   JWBPortableMode, JWBCategoryMgr, StreamUtils;

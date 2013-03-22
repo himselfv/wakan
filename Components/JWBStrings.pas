@@ -216,7 +216,9 @@ function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$
 function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 
-function ftoansi(c: FChar; out ac: AnsiChar): boolean;
+function ftoansi(c: FChar; out ac: AnsiChar): boolean; overload;
+function ftoansi(c: FChar): AnsiChar; overload;
+function ftowide(c: FChar): WideChar; {$IFDEF INLINE}inline;{$ENDIF}
 
 {
 Unicode versions of some function which are unavailable/inefficient on Ansi builds.
@@ -316,6 +318,7 @@ function EvalChar(const char:FString):integer; overload;
 function EvalChars(const chars:FString):integer;
 
 function IsLatinLetter(c:WideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function IsHalfWidthChar(c:FChar): boolean;
 function IsLatinDigit(c:FChar):boolean;
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
@@ -627,6 +630,29 @@ begin
   if Result then
     ac := Chr((HexCharCode(c[3]) shl 4) + HexCharCode(c[4]));
  {$ENDIF}
+end;
+
+//Same but it's your problem if the input wasn't ansi
+function ftoansi(c: FChar): AnsiChar;
+begin
+{$IFDEF UNICODE}
+  Result := AnsiChar(c);
+{$ELSE}
+  Result := Chr((HexCharCode(c[3]) shl 4) + HexCharCode(c[4]));
+{$ENDIF}
+end;
+
+function ftowide(c: FChar): WideChar;
+begin
+{$IFDEF UNICODE}
+  Result := c;
+{$ELSE}
+  Result := WideChar(
+    (HexCharCode(c[1]) shl 12)
+    (HexCharCode(c[2]) shl 8)
+    (HexCharCode(c[3]) shl 4)
+    + HexCharCode(c[4]));
+{$ENDIF}
 end;
 
 
@@ -1335,6 +1361,15 @@ end;
 function IsLatinLetter(c:WideChar): boolean;
 begin
   Result := ((c>='a') and (c<='z')) or ((c>='A') and (c<='Z'));
+end;
+
+function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+begin
+{$IFDEF UNICODE}
+  Result := IsLatinLetter(c);
+{$ELSE}
+  Result := ((c>='0041') and (c<='005A')) or ((c>='0061') and (c<='007A'));
+{$ENDIF}
 end;
 
 function IsHalfWidthChar(c:FChar):boolean;

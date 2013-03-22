@@ -105,8 +105,8 @@ function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 
 implementation
 
-uses StrUtils, WideStrUtils, JWBDictCoding, JWBUnit, JWBMenu, PKGWrite, JWBConvert,
-  JWBDicSearch;
+uses StrUtils, WideStrUtils, JWBDictCoding, JWBKanaConv, JWBUnit, JWBMenu,
+  PKGWrite, JWBConvert, JWBDicSearch;
 
 {$R *.DFM}
 
@@ -326,7 +326,6 @@ const
   UH_EDICT_SEMICOL = {$IFDEF UNICODE}';'{$ELSE}'003B'{$ENDIF};
   UH_EDICT_COMMA = {$IFDEF UNICODE}','{$ELSE}'002C'{$ENDIF};
   UH_EDICT_ALTERN = {$IFDEF UNICODE}'/'{$ELSE}'002F'{$ENDIF};
-  UH_EDICT_DOT = {$IFDEF UNICODE}'・'{$ELSE}'30FB'{$ENDIF};
 
 {
 Adds an article to the dictionary we're building.
@@ -468,7 +467,7 @@ var syl:string;
       if IsLatinLetter(syl[1]) then //punctuation does not make it into pinyin
         PinYin := PinYin + syl[1];
     end else begin
-      tmp := RomajiToKana(syl,1,false,lang);
+      tmp := RomajiToKana(syl,1,lang,[]);
       Bopomofo := Bopomofo + tmp;
       PinYin := PinYin + KanaToRomaji(tmp,1,lang); //this way we make sure no unsupported stuff gets into pinyin
     end;
@@ -533,10 +532,8 @@ begin
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
         pphon:=ed.kana[i].kana; //copy original pin yin before conversions
-        if dic.language='c' then begin
-          DecodeRomajiCC(pphon,dic.language,roma[i],ed.kana[i].kana);
-        end else
-          roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language);
+        DecodeRomajiCC(pphon,dic.language,roma[i],ed.kana[i].kana);
+        roma[i]:=SignatureFrom(roma[i]); //lowercase + safety for invalid chars
         if pos('?',roma[i])>0 then
         begin
           if dic.language='c' then
@@ -604,17 +601,15 @@ begin
 
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
-       //Remove allowed punctuation from kana
-        tmp := ureplc(ed.kana[i].kana,UH_EDICT_DOT,'');
-       //Convert the rest
-        roma[i]:=KanaToRomaji(tmp,1,dic.language);
-        if pos('?',roma[i])>0 then
-        begin
-         //roma_problems
-          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': 'ed.kana[i].kana+' -> '+roma[i]);
+       //First check for completely invalid characters
+        roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language,[rfConvertLatin,rfConvertPunctuation]);
+        if pos('?',roma[i])>0 then begin
+          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
-        repl(roma[i],'?','');
+
+       //Now keep latin, clean the rest (punctuation+invalid)
+        roma[i]:=SignatureFrom(KanaToRomaji(ed.kana[i].kana,1,dic.language,[rfConvertLatin,rfDeleteInvalidChars]));
         if roma[i]='' then roma[i]:='XXX';
       end;
 

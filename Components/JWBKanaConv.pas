@@ -1,12 +1,9 @@
-unit JWBKanaConv;
+﻿unit JWBKanaConv;
 {
 Converts kana to romaji and back according to a set of rules.
 This is a VERY hot codepath when translating in Wakan. Therefore we use
 balanced binary trees and do everything in a very optimal way.
 }
-
-//If defined, use btrees for Kana lookups. Else iterate through all the list.
-{$DEFINE BTREES}
 
 interface
 uses Classes, JWBStrings, BalancedTree;
@@ -104,22 +101,37 @@ type
     property Items[Index: integer]: PRomajiReplacementRule read GetItemPtr; default;
   end;
 
+  TResolveFlag = (
+    rfConvertLatin,
+      //Convert latin letters to target notation instead of treating as invalid chars.
+      //This is only reliable when doing Bopomofo->PinYin, not the reverse.
+    rfConvertPunctuation,
+      //Convert some punctuation to target notation.
+    rfDeleteInvalidChars
+      //Delete invalid characters instead of replacing with '?'
+  );
+  TResolveFlags = set of TResolveFlag;
+
  { Instantiate and call this. }
   TRomajiTranslator = class
   protected
     FTrans: TRomajiTranslationTable;
     FReplKtr: TRomajiReplacementTable;
     FReplRtk: TRomajiReplacementTable;
-    function SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
+    function SingleKanaToRomaji(var ps: PFChar; romatype: integer; flags: TResolveFlags): string;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     procedure LoadFromFile(const filename: string);
     procedure LoadFromStrings(const sl: TStrings);
-    function KanaToRomaji(const s:FString;romatype:integer):string;
-    function RomajiToKana(const s:string;romatype:integer;clean:boolean):FString;
+    function KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
+    function RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
   end;
+
+function IsAllowedPunctuation(c:WideChar): boolean;
+function ConvertPunctuation(c:WideChar): char;
+function ConvertPunctuationF(c:FChar): char;
 
 implementation
 uses SysUtils;
@@ -508,17 +520,12 @@ so we're going to try and implement it reallly fast.
 }
 
 //ps must have at least one 4-char symbol in it
-function TRomajiTranslator.SingleKanaToRomaji(var ps: PFChar; romatype: integer): string;
+function TRomajiTranslator.SingleKanaToRomaji(var ps: PFChar; romatype: integer; flags: TResolveFlags): string;
 var
  {$IFNDEF UNICODE}
   pe: PFChar;
  {$ENDIF}
- {$IFDEF BTREES}
   bn: TBinTreeItem;
- {$ELSE}
-  i:integer;
-  r: PRomajiTranslationRule;
- {$ENDIF}
 begin
  {$IFDEF UNICODE}
   if ps^=UH_HYPHEN then begin
@@ -542,7 +549,6 @@ begin
     exit;
   end;
 
-{$IFDEF BTREES}
  //first try 2 FChars
  //but we have to test that we have at least that much
  {$IFDEF UNICODE}
@@ -585,79 +591,10 @@ begin
    {$ENDIF}
     exit;
   end;
-{$ELSE}
 
- //first try 2 FChars
- //but we have to test that we have at least that much
- {$IFDEF UNICODE}
-  if (ps^<>#00) and ((ps+1)^<>#00) then begin
- {$ELSE}
-  pe := ps;
-  Inc(pe, 4); //first symbol must be there
-  if EatOneFChar(pe) then begin
- {$ENDIF}
-    for i := 0 to FTrans.Count - 1 do begin
-      r := FTrans[i];
-     {$IFDEF UNICODE}
-     //Compare two characters at once (see note below)
-      if (PInteger(ps)^=PInteger(r.hiragana_ptr)^)
-      or (PInteger(ps)^=PInteger(r.katakana_ptr)^) then begin
-     {$ELSE}
-      {
-      Note on integer comparison optimization:
-      We're not checking if roma_t[i].hiragana has one or two 4-chars.
-      It's okay. If it has one, then roma_t[i].hiragana[5]==#00, and it wouldn't match
-      to any 4-char hex combination.
-      It also won't AV because the memory's dword aligned and hiragana[5] is accessible already.
-      }
-      if ((pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-      and (IntgOff(ps, 1)^=IntgOff(r.hiragana_ptr, 1)^))
-      or ((pinteger(ps)^=pinteger(r.katakana_ptr)^)
-      and (IntgOff(ps,1)^=IntgOff(r.katakana_ptr, 1)^)) then begin
-     {$ENDIF}
-        case romatype of
-          2: Result := r.english;
-          3: Result := r.czech;
-        else
-          Result := r.japanese;
-        end;
-       {$IFDEF UNICODE}
-        Inc(ps, 2);
-       {$ELSE}
-        ps := pe;
-       {$ENDIF}
-        exit;
-      end;
-    end;
-  end;
+(*
+  I think this is not right.
 
- //this time 1 FChar only
-  for i := 0 to FTrans.Count - 1 do begin
-    r := FTrans[i];
-   {$IFDEF UNICODE}
-    if (ps^=r.hiragana_ptr^) or (ps^=r.katakana_ptr^) then begin
-   {$ELSE}
-    if (pinteger(ps)^=pinteger(r.hiragana_ptr)^)
-    or (pinteger(ps)^=pinteger(r.katakana_ptr)^) then begin
-   {$ENDIF}
-      case romatype of
-        2: Result := r.english;
-        3: Result := r.czech;
-      else
-        Result := r.japanese;
-      end;
-     {$IFDEF UNICODE}
-      Inc(ps);
-     {$ELSE}
-      Inc(ps, 4);
-     {$ENDIF}
-      exit;
-    end;
-  end;
-
-{$ENDIF}
-
- //Latin symbol
  {$IFDEF UNICODE}
   if PWord(ps)^ and $FF00 = 0 then begin
     Result := ps^;
@@ -669,16 +606,28 @@ begin
  {$ENDIF}
     exit;
   end;
+*)
+
+ //Latin symbol
+  if IsLatinLetterF(ps^) and (rfConvertLatin in flags) then
+    Result := Char(ftoansi(ps^))
+  else
+  if IsAllowedPunctuation(ps^) and (rfConvertPunctuation in flags) then
+    Result := ConvertPunctuationF(ps^)
+  else
+  if rfDeleteInvalidChars in flags then
+    Result := ''
+  else
+    Result := '?';
 
  {$IFDEF UNICODE}
   Inc(ps);
  {$ELSE}
   Inc(ps, 4);
  {$ENDIF}
-  Result := '?';
 end;
 
-function TRomajiTranslator.KanaToRomaji(const s:FString;romatype:integer):string;
+function TRomajiTranslator.KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
 var upcased_s: FString;
   fn:string;
   s2:string;
@@ -709,8 +658,8 @@ begin
   pn := ps;
   while EatOneFChar(pn) do begin
  {$ENDIF}
-    fn := SingleKanaToRomaji(ps, romatype); //also eats one or two symbols
-    if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///WTF?!!
+    fn := SingleKanaToRomaji(ps, romatype, flags); //also eats one or two symbols
+    if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///TODO:WTF?!!
     s2:=s2+fn;
    {$IFNDEF UNICODE}
     pn := ps; //because ps might have advanced further
@@ -734,7 +683,7 @@ Also accepts strange first letter flags:
   K
   H
 }
-function TRomajiTranslator.RomajiToKana(const s:string;romatype:integer;clean:boolean):string;
+function TRomajiTranslator.RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):string;
 var sr,s2,s3,fn:string;
   kata:integer;
   l,i:integer;
@@ -830,7 +779,7 @@ begin
 
     if fn='' then
     begin
-      if not clean then
+      if not (rfDeleteInvalidChars in flags) then
         if s2[1]<>'''' then
          //Latin letter (supposedly)
          {$IFDEF UNICODE}
@@ -859,5 +808,36 @@ begin
   end;
   result:=s3;
 end;
+
+//True if c is a punctuation mark we allow in kanji and kana fields.
+function IsAllowedPunctuation(c:WideChar): boolean;
+begin
+  Result :=
+    (c='·') or (c=',') //in CCEDICT
+    or (c='・') or (c='、') or (c='〜'); //in EDICT2
+end;
+
+//When we need to store punctuation into pinyin, we have to make it ansi
+function ConvertPunctuation(c:WideChar): char;
+begin
+  case c of
+    '·': Result:='-';
+    '・': Result:='-';
+    '、': Result:=',';
+    '〜': Result:='~';
+  else
+    Result := c;
+  end;
+end;
+
+function ConvertPunctuationF(c:FChar): char;
+begin
+{$IFDEF UNICODE}
+  Result := ConvertPunctuation(c);
+{$ELSE}
+  Result := ConvertPunctuation(c);
+{$ENDIF}
+end;
+
 
 end.
