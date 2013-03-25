@@ -460,11 +460,11 @@ var syl:string;
   var tmp: string;
   begin
     if (length(syl)=1) and (
-      IsLatinLetter(syl[1])        //latin chars are allowed
+      IsLatinLetterW(syl[1])        //latin chars are allowed
       or IsAllowedPunctuation(syl[1]) //some punctuation is allowed
     ) then begin
       Bopomofo := Bopomofo + syl[1];
-      if IsLatinLetter(syl[1]) then //punctuation does not make it into pinyin
+      if IsLatinLetterW(syl[1]) then //punctuation does not make it into pinyin
         PinYin := PinYin + syl[1];
     end else begin
       tmp := RomajiToKana(syl,1,lang,[]);
@@ -981,7 +981,7 @@ begin
     else
     if not comment then if nownum then
     begin
-      if IsLatinDigit(fc) then addnum:=addnum+fstrtouni(fc);
+      if IsLatinDigitF(fc) then addnum:=addnum+fstrtouni(fc);
     end else
       addkan:=addkan+fc;
   end;

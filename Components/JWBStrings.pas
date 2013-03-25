@@ -317,10 +317,13 @@ function EvalChar(const char:FString):integer; overload;
 //Returns a set of (1 shl EC_*) flags indicating some chars are present in string
 function EvalChars(const chars:FString):integer;
 
-function IsLatinLetter(c:WideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+//Shit sucks. We have to have a ton of versions!
+function IsLatinLetter(c:char): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function IsLatinLetterW(c:WideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function IsHalfWidthChar(c:FChar): boolean;
-function IsLatinDigit(c:FChar):boolean;
+function IsLatinDigit(c:char):boolean;
+function IsLatinDigitF(c:FChar):boolean;
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
 
 implementation
@@ -1358,15 +1361,23 @@ begin
     Result := Result or (1 shl EvalChar(fgetch(chars,i)));
 end;
 
-function IsLatinLetter(c:WideChar): boolean;
+//Ansi/Default version
+function IsLatinLetter(c:char): boolean;
 begin
   Result := ((c>='a') and (c<='z')) or ((c>='A') and (c<='Z'));
 end;
 
+//Strict Wide
+function IsLatinLetterW(c:WideChar): boolean;
+begin
+  Result := ((c>='a') and (c<='z')) or ((c>='A') and (c<='Z'));
+end;
+
+//FChar
 function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 begin
 {$IFDEF UNICODE}
-  Result := IsLatinLetter(c);
+  Result := IsLatinLetterW(c);
 {$ELSE}
   Result := ((c>='0041') and (c<='005A')) or ((c>='0061') and (c<='007A'));
 {$ENDIF}
@@ -1381,7 +1392,12 @@ begin
  {$ENDIF}
 end;
 
-function IsLatinDigit(c:FChar):boolean;
+function IsLatinDigit(c:char):boolean;
+begin
+  Result := (Ord(c)>=Ord('0')) and (Ord(c)<=Ord('9'));
+end;
+
+function IsLatinDigitF(c:FChar):boolean;
 begin
  {$IFDEF UNICODE}
   Result := (Ord(c)>=Ord('0')) and (Ord(c)<=Ord('9'));

@@ -413,7 +413,7 @@ begin
         fdelete(s,1,1);
       end;
 
-      if (rfConvertLatin in flags) and IsLatinLetter(ch) then
+      if (rfConvertLatin in flags) and IsLatinLetterW(ch) then
         s2:=s2+ch
       else
       if (rfConvertPunctuation in flags) and IsAllowedPunctuation(ch) then
@@ -480,7 +480,8 @@ begin
   i:=1;
   j:=0;
   while i+j<=length(Result) do
-    if not IsLatinLetter(Result[i+j]) then
+    if not IsLatinLetter(Result[i+j])
+    and not IsLatinDigit(Result[i+j]) then
       Inc(j)
     else begin
       if j>0 then

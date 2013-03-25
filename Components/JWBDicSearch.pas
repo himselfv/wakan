@@ -547,8 +547,6 @@ var ws: integer; //length of w in symbols. Not sure if needed but let's keep it 
     dr: PDeflectionRule;
     ct: TCandidateLookup;
 begin
-  if prior>9 then prior:=9;
-  if priordfl>9 then priordfl:=9;
   ws:=flength(w);
   if curlang='j'then
   begin
@@ -647,6 +645,7 @@ begin
   case a of
     stJp:
       if not AutoDeflex then begin
+       //No autodeflex => exact roma lookup
         search := SignatureFrom(search);
         se.Add(9,length(search),'F',rtRoma,search)
       end else begin
@@ -654,12 +653,13 @@ begin
           tmpkana:=RomajiToKana('H'+search,romasys,'j',[])
         else
           tmpkana:=RomajiToKana(search,romasys,'c',[]);
-        if pos('?',tmpkana)>0 then begin //not fully converted => add source roma first
+        if pos('?',tmpkana)>0 then begin //not fully converted => add exact roma first
           search := SignatureFrom(search);
           se.Add(9,length(search),'F',rtRoma,search);
           repl(tmpkana,'?','');
-        end;
-        Deflex(tmpkana,se,9,8,true);
+          Deflex(tmpkana,se,6,5,true); //deflex with lower priority since this is probably wrong decoding of roma
+        end else
+          Deflex(tmpkana,se,9,8,true);
       end;
     stEn:
       se.Add(9, 1, 'F', rtNormal, search);

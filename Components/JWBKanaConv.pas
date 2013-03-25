@@ -593,6 +593,7 @@ begin
   end;
 
 (*
+  Converts all 00xx ansi characters.
   I think this is not right.
 
  {$IFDEF UNICODE}
