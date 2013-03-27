@@ -593,8 +593,6 @@ begin
           end;
         end;
     end;
-    ws:=flength(w);
-    sl.Add(prior, ws, 'F', rtNormal, w);
   end;
   if curlang='c'then
   begin
@@ -653,33 +651,39 @@ begin
           tmpkana:=RomajiToKana('H'+search,romasys,'j',[])
         else
           tmpkana:=RomajiToKana(search,romasys,'c',[]);
-        if pos('?',tmpkana)>0 then begin //not fully converted => add exact roma first
-          search := SignatureFrom(search);
-          se.Add(9,length(search),'F',rtRoma,search);
+       //add exact roma first
+        search := SignatureFrom(search);
+        se.Add(9,length(search),'F',rtRoma,search);
+        if pos('?',tmpkana)>0 then begin
+         //deflex with lower priority since this is probably wrong decoding of roma
           repl(tmpkana,'?','');
-          Deflex(tmpkana,se,6,5,true); //deflex with lower priority since this is probably wrong decoding of roma
+          Deflex(tmpkana,se,6,5,true);
         end else
           Deflex(tmpkana,se,9,8,true);
       end;
     stEn:
       se.Add(9, 1, 'F', rtNormal, search);
-    stClipboard:
+    stClipboard: begin
+      se.Add(9,flength(search),'F',rtNormal,search);
       if AutoDeflex then
-        Deflex(ChinFrom(search),se,9,8,true)
-      else
-        se.Add(9,flength(search),'F',rtNormal,search);
+        Deflex(ChinFrom(search),se,9,8,true);
+     end;
     stEditorInsert,
     stEditorAuto:
       if wt<0 then
       begin
         _s:=ChinFrom(search);
         Deflex(_s,se,9,8,false); //ignores AutoDeflex
+        se.Add(9, flength(_s), 'F', rtNormal, _s);
       end else
       begin
         if (wt=1) or (wt=2) then
         begin
           _s:=ChinFrom(search);
-          if wt=1 then Deflex(_s,se,9,8,false); //ignores AutoDeflex
+          if wt=1 then begin
+            Deflex(_s,se,9,8,false); //ignores AutoDeflex
+            se.Add(9, flength(_s), 'F', rtNormal, _s);
+          end;
           for i:=flength(_s) downto 1 do
           begin
             partfound:=false;
