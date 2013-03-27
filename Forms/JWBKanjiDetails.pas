@@ -143,7 +143,7 @@ implementation
 
 uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
   JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories, JWBKanjiCard,
-  JWBUserFilters;
+  JWBUserFilters, JWBKanaConv;
 
 {$R *.DFM}
 

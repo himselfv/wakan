@@ -726,17 +726,6 @@ begin
     romasortl[i].order := '';
 end;
 
-procedure AddPinYinRecord(const s: string);
-var parts: TStringArray;
-begin
-  parts := SplitStr(s,4);
-  parts[0] := hextofstr(parts[0]);
-  parts[1] := uppercase(parts[1]);
-  parts[2] := uppercase(parts[2]);
-  parts[3] := uppercase(parts[3]);
-  StrListAdd(romac, parts);
-end;
-
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
   vi:TStringList;
@@ -818,9 +807,6 @@ begin
       Application.Terminate;
       exit;
     end;
-
-   //It'll only read sections which it understands
-    roma_t.LoadFromFile('wakan.cfg');
 
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
@@ -1154,8 +1140,6 @@ begin
   defll.Clear;
   suffixl.Clear;
   partl.Clear;
-  romac.Clear;
-  roma_t.Clear;
   SetLength(romasortl, 0);
 
   sl := TStringList.Create();
@@ -1172,7 +1156,6 @@ begin
           delete(ln,1,1);
           if ln='Particles'then sect:=1 else
           if ln='Deflection'then sect:=2 else
-          if ln='PinYin'then sect:=4 else
           if ln='CharInfo'then sect:=5 else
           if ln='RomajiSort'then sect:=6 else
           if ln='Suffixes'then sect:=7 else
@@ -1185,7 +1168,6 @@ begin
          //Some of the fields are in hex unicode, so we have to convert them
           if sect=1 then partl.Add(hextofstr(ln));
           if sect=2 then defll.Add(ln);
-          if sect=4 then AddPinYinRecord(ln);
           if sect=5 then CharPropTypes.Add(ln);
           if sect=6 then AddRomaSortRecord(ln);
           if sect=7 then suffixl.Add(copy(ln,1,1)+hextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
@@ -1195,6 +1177,10 @@ begin
         end;
       end;
     end;
+
+   //It'll only read sections which it understands
+    roma_t.LoadFromStrings(sl);
+    romac.LoadFromStrings(sl);
 
   finally
     FreeAndNil(sl);

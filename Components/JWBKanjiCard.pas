@@ -16,7 +16,7 @@ procedure ClearKanjiCardCache;
 
 implementation
 uses JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
-  JWBSettings, JWBUserData;
+  JWBSettings, JWBUserData, JWBKanaConv;
 
 { Readings are stored as STRINGS which for some reading-types contain HEX.
 So there's nothing we can do to avoid HexToUnicode conversion.

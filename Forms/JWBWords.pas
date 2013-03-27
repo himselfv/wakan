@@ -941,8 +941,8 @@ begin
             or (fgetch(curphon,1)={$IFNDEF UNICODE}'2026'{$ELSE}#$2026{$ENDIF}) then
               if curlang='c'then
               begin
-                s2:=DeconvertPinYin(curphon);
-                curphon:=RomajiToKana(DeconvertPinYin(curphon),1,'c',[rfDeleteInvalidChars])
+                s2:=DeconvertPinYin(romac,curphon);
+                curphon:=RomajiToKana(DeconvertPinYin(romac,curphon),1,'c',[rfDeleteInvalidChars])
               end else
                 curphon:=RomajiToKana(HexToUnicode(curphon),2,'j',[rfDeleteInvalidChars]);
             if curcat='' then curcat:=unknowncat;

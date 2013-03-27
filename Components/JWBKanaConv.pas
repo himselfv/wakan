@@ -3,6 +3,11 @@
 Converts kana to romaji and back according to a set of rules.
 This is a VERY hot codepath when translating in Wakan. Therefore we use
 balanced binary trees and do everything in a very optimal way.
+
+TODO: Make both Romaji and Pinyin convertors support arbitrary format:
+  Kana,Any,Number,Of,Romaji
+TODO: Make Pinyin convertor use BTrees too.
+TODO: Make Romaji and Pinyin convertors descend from the same class.
 }
 
 interface
@@ -101,6 +106,24 @@ type
     property Items[Index: integer]: PRomajiReplacementRule read GetItemPtr; default;
   end;
 
+ {
+  Katakana and romaji in dictionaries can contain latin letters and punctuation.
+  In general, it is safe to mix latin letters with katakana/bopomofo, but not with
+  romaji (i.e. is "ding" an english word or a pinyin syllable?)
+  Dictionaries address this in different ways: EDICT stores in katakana,
+  CCEDICT separates letters with spaces ("D N A jian4 ding4").
+
+  Functions here can convert clean romaji/kana both ways, and latin+kana to romaji.
+  It is recommended that you use kana+latin as a source, and only convert to romaji
+  on presentation.
+
+  When user enters romaji, either require that to be clean or search in your db
+  for some "romaji signature" (same for ding-syllable and DING-latin).
+      Signature   Bopomofo    Translation
+      ding        [ding]      Chinese for "person who programs too much"
+      ding        DING        English for "ding"
+ }
+
   TResolveFlag = (
     rfConvertLatin,
       //Convert latin letters to target notation instead of treating as invalid chars.
@@ -129,9 +152,33 @@ type
     function RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
   end;
 
+  TPinYinTranslator = class
+  type
+    EvilString = string; //contains FString if we convert uni->pinyin, string otherwise
+  protected
+   { Chinese version, not upcased. Someone upgrade this one too... }
+    list: TStringList;
+    function FindRomaC(const find: EvilString; roma_type: integer; partial: boolean): integer;
+    function FindRomaCBestMatch(const s: EvilString; roma_type: integer): integer;
+    function ResolveCrom(s:EvilString;typein,typeout:integer;flags:TResolveFlags):EvilString;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Clear;
+    procedure LoadFromFile(const filename: string);
+    procedure LoadFromStrings(const sl: TStrings);
+    function KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
+    function RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
+  end;
+
 function IsAllowedPunctuation(c:WideChar): boolean;
 function ConvertPunctuation(c:WideChar): char;
 function ConvertPunctuationF(c:FChar): char;
+
+{ Pin3yin4<->pi'nyi^n
+ Works only for clean pinyin, for mixed-latin cases use KanaToRomaji(rfConvertPinyin) }
+function ConvertPinYin(const str:string):FString;
+function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 
 implementation
 uses SysUtils;
@@ -839,6 +886,430 @@ begin
   Result := ConvertPunctuation(c);
 {$ENDIF}
 end;
+
+
+{ Bopomofo/pinyin conversions }
+
+constructor TPinYinTranslator.Create;
+begin
+  inherited;
+  list := TStringList.Create;
+end;
+
+destructor TPinYinTranslator.Destroy;
+begin
+  FreeAndNil(list);
+  inherited;
+end;
+
+procedure TPinYinTranslator.Clear;
+begin
+  list.Clear;
+end;
+
+{
+Loads data from file.
+The file must contain [PinYin] section,
+and it can contain other sections, they'll be ignored.
+}
+
+procedure TPinYinTranslator.LoadFromFile(const filename: string);
+var sl: TStringList;
+begin
+  sl := TStringList.Create();
+  try
+    sl.LoadFromFile(filename);
+    LoadFromStrings(sl);
+  finally
+    FreeAndNil(sl);
+  end;
+end;
+
+procedure TPinYinTranslator.LoadFromStrings(const sl: TStrings);
+const //sections
+  LS_NONE = 0;
+  LS_TABLE = 1;
+var i: integer;
+  ln: string;
+  sect: integer;
+  pref: char;
+  parts: TStringArray;
+begin
+  Clear;
+  pref := #00;
+  sect := LS_NONE;
+  for i := 0 to sl.Count - 1 do begin
+    ln := Trim(sl[i]);
+    if (Length(ln)<=0) or (ln[1]='#') or (ln[1]=';') then
+      continue;
+
+    if ln='[PinYin]' then
+      sect := LS_TABLE
+    else
+    if (Length(ln)>=2) and (ln[1]='[') then
+     //Some unknown section, skip it
+      sect := LS_NONE
+    else
+    case sect of
+      LS_TABLE: begin
+        parts := SplitStr(ln,4);
+        parts[0] := hextofstr(parts[0]);
+        parts[1] := uppercase(parts[1]);
+        parts[2] := uppercase(parts[2]);
+        parts[3] := uppercase(parts[3]);
+        StrListAdd(list, parts);
+      end;
+    end;
+  end;
+end;
+
+//Index of romac entry for this item or -1
+//Text must be uppercased
+function TPinYinTranslator.FindRomaC(const find: EvilString; roma_type: integer; partial: boolean): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i:=0 to (list.count div 4)-1 do
+    if (partial and (pos(find,list[i*4+roma_type])=1))
+    or ((not partial) and (list[i*4+roma_type]=find)) then begin
+      Result := i;
+      break;
+    end;
+end;
+
+//Finds best roma_c match at the start of the string
+function TPinYinTranslator.FindRomaCBestMatch(const s: EvilString; roma_type: integer): integer;
+var i, cl: integer;
+begin
+  Result := -1;
+  cl := 0;
+  for i:=0 to (list.count div 4)-1 do
+    if pos(list[i*4+roma_type],s)=1 then
+      if length(list[i*4+roma_type])>cl then
+      begin
+        cl:=length(list[i*4+roma_type]);
+        Result:=i;
+      end;
+end;
+
+{
+Converts chinese string between:
+  0 - bopomofo (fstring)
+  1 - pinyin
+  2 - wade-giles
+  3 - yale
+TypeIn: conversion source
+TypeOut: conversion target type
+Clean: ignore unknown characters instead of adding '?'
+}
+
+function TPinYinTranslator.ResolveCrom(s:EvilString;typein,typeout:integer;flags:TResolveFlags):EvilString;
+var s2:string;
+  cl:integer;
+  i:integer;
+  ch:WideChar;
+begin
+  s:=uppercase(s);
+  s2:='';
+  while s<>'' do
+  begin
+    //Find longest match for character sequence starting at this point
+    i := FindRomaCBestMatch(s,typein);
+    if i>=0 then
+      cl := Length(list[i*4+typein])
+    else
+      cl := 0;
+   { We'd like to try other romanization systemss if the specified one failed us,
+    but we cannot.
+    Most of the times, when there's no "correct" match, there would still be
+    *some* match (i.e. KE instead of KEI).
+    And we can't just "select best match from all the romanizations", that would
+    be dangerous. }
+
+    if i>=0 then begin
+      s2:=s2+list[i*4+typeout];
+      delete(s,1,cl);
+
+     //with ansi pinyin, we only try to extract tone after a syllable match
+      if typein>0 then
+        if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
+        begin
+          if typeout>0 then
+            s2:=s2+s[1]
+          else
+            s2:=s2+fpytone(Ord(s[1])-Ord('0')); //from digit
+          delete(s,1,1);
+        end else
+        begin
+          if typeout>0 then s2:=s2+'0' else s2:=s2+UH_PY_TONE;
+        end;
+    end
+    else begin
+      if typein>0 then begin
+        ch:=s[1];
+        delete(s,1,1)
+      end else begin
+        ch:=fstrtouni(fgetch(s,1))[1];
+        fdelete(s,1,1);
+      end;
+
+      if (rfConvertLatin in flags) and IsLatinLetterW(ch) then
+        s2:=s2+ch
+      else
+      if (rfConvertPunctuation in flags) and IsAllowedPunctuation(ch) then
+        s2:=s2+ConvertPunctuation(ch)
+      else
+
+      if not (rfDeleteInvalidChars in flags) then
+     {$IFDEF UNICODE}
+        s2 := s2 + '?'; //in unicode both strings are in native form
+     {$ELSE}
+        if typeout>0 then s2:=s2+'?' else s2:=s2+'003F';
+     {$ENDIF}
+    end;
+
+   //With bopomofo, we extract tones always, as they are in special characters
+    if typein=0 then
+      if fpygettone(s) in [0..5] then begin
+        s2 := s2 + Chr(Ord('0') + fpyextrtone(s)); //to digit
+      end;
+  end;
+  if typeout>0 then result:=lowercase(s2) else result:=s2;
+end;
+
+function TPinYinTranslator.KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
+begin
+  Result:=ResolveCrom(s,0,romatype,flags);
+end;
+
+function TPinYinTranslator.RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
+var s_rep: string;
+begin
+  s_rep := s;
+  repl(s_rep,'v','u:');
+  Result:=ResolveCrom(s_rep,romatype,0,flags);
+end;
+
+
+
+{
+Converts raw database pinyin:
+  jing4 xiang3
+To enhanced unicode pinyin with marks:
+  ji'ng xia^ng (only merged)
+Only works for pure pinyin (no latin letters).
+}
+function ConvertPinYin(const str:string):FString;
+const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; //used in place of a char when it's unknown or whatever
+ //does not go out of this function
+var cnv:string;
+  li:integer;
+  ali:FString;
+  cnv2:FString;
+  cc:char;
+  i:integer;
+  iscomma:boolean;
+begin
+  cnv:=lowercase(str); //source string, not modified
+  cnv2:=''; //building output here
+  li:=0;
+  ali:='';
+  iscomma:=false;
+  for i:=1 to length(cnv) do
+  begin
+    if (li=0) and ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
+    if (li<i) and ((cnv[li]='i') or (cnv[li]='u') or (cnv[li]='ь')) and
+      ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
+    if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
+    begin
+      cc:=cnv[li]; //the character to be replaced
+      ali:=fcopy(cnv2,length(cnv2)-(i-li-1)+1,i-li-1); //copy the rest of the output
+      fdelete(cnv2,length(cnv2)-(i-li)+1,i-li); //delete char + rest from the output
+      if iscomma and (cc='u') then cc:='w';
+      case cnv[i] of
+        '2':case cc of
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$00E1{$ELSE}'00E1'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$00E9{$ELSE}'00E9'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$00ED{$ELSE}'00ED'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$00F3{$ELSE}'00F3'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$00FA{$ELSE}'00FA'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01D8{$ELSE}'01D8'{$ENDIF};
+            end;
+        '4':case cc of
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$00E0{$ELSE}'00E0'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$00E8{$ELSE}'00E8'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$00EC{$ELSE}'00EC'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$00F2{$ELSE}'00F2'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$00F9{$ELSE}'00F9'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01DC{$ELSE}'01DC'{$ENDIF};
+            end;
+        '1':case cc of
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$0101{$ELSE}'0101'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$0113{$ELSE}'0113'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$012B{$ELSE}'012B'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$014D{$ELSE}'014D'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$016B{$ELSE}'016B'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01D6{$ELSE}'01D6'{$ENDIF};
+            end;
+        '3':case cc of
+              'a':cnv2:=cnv2+{$IFDEF UNICODE}#$01CE{$ELSE}'01CE'{$ENDIF};
+              'e':cnv2:=cnv2+{$IFDEF UNICODE}#$011B{$ELSE}'011B'{$ENDIF};
+              'i':cnv2:=cnv2+{$IFDEF UNICODE}#$01D0{$ELSE}'01D0'{$ENDIF};
+              'o':cnv2:=cnv2+{$IFDEF UNICODE}#$01D2{$ELSE}'01D2'{$ENDIF};
+              'u':cnv2:=cnv2+{$IFDEF UNICODE}#$01D4{$ELSE}'01D4'{$ENDIF};
+              'w':cnv2:=cnv2+{$IFDEF UNICODE}#$01DA{$ELSE}'01DA'{$ENDIF};
+            end;
+      end;
+      li:=0;
+      if (cnv[i]='0') or (cnv[i]='5') then
+        if cc='w'then
+          cnv2:=cnv2+{$IFDEF UNICODE}#$00FC{$ELSE}'00FC'{$ENDIF}
+        else
+          cnv2:=cnv2+cc;
+      cnv2:=cnv2+ali;
+      iscomma:=false;
+    end else
+    if cnv[i]=':'then begin
+      cnv2:=cnv2+UH_DUMMY_CHAR;
+      iscomma:=true
+    end else
+    if (cnv[i]<'0') or (cnv[i]>'5') then
+      cnv2:=cnv2+cnv[i];
+  end;
+
+  //Remove dummy chars
+  i := fpos(UH_DUMMY_CHAR,cnv2);
+  while i>0 do begin
+    fdelete(cnv2,i,1);
+    i := fpos(UH_DUMMY_CHAR,cnv2);
+  end;
+  Result := cnv2;
+end;
+
+
+{
+Converts tonemark-enhanced pinyin back into ansi pinyin.
+Nobody use this. Currently it's only employed by ImportVocab.
+Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway.
+}
+//TODO: Test Unicode conversion
+function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string; deprecated;
+var cnv:UnicodeString;
+  curs:UnicodeString; //although by logic it ought to be a Char...
+  nch:string;
+    cnv2:string;
+    i,j:integer;
+    curcc:string;
+    curp,curpx:char;
+    mustbegin,mustnotbegin,befmustnotbegin,befbefmustnotbegin:boolean;
+    number:boolean;
+    putcomma,fnd:boolean;
+    cc:char;
+begin
+  cnv:=fstrtouni(str);
+
+  putcomma:=false;
+  cnv2:='';
+  for i:=1 to length(cnv) do
+  begin
+    curs:=cnv[i];
+    if putcomma and (curs<>'e') then begin curs:=':'+curs; putcomma:=false; end;
+    if curs=#$01D6 then begin putcomma:=true; curs:=#$016B; end;
+    if curs=#$01D8 then begin putcomma:=true; curs:=#$00FA; end;
+    if curs=#$01DA then begin putcomma:=true; curs:=#$01D4; end;
+    if curs=#$01DC then begin putcomma:=true; curs:=#$00F9; end;
+    if curs=#$00FC then begin putcomma:=true; curs:=#$0075; end;
+    if curs=#$2026 then curs:='_';
+    cnv2:=cnv2+curs;
+  end;
+  if putcomma then cnv2:=cnv2+':';
+  cnv:=cnv2;
+  cnv2:='';
+
+  mustbegin:=true;
+  mustnotbegin:=false;
+  befmustnotbegin:=false;
+  number:=false;
+  for i:=1 to length(cnv) do
+  begin
+    curs:=cnv[i];
+    cc:=curs[1];
+    if (cc>='0') and (cc<='9') then number:=true; //WTF? Maybe we should test that ALL chars are digits, not ANY?
+  end;
+  if number then
+  begin
+    result:=fstrtouni(str);
+    exit;
+  end;
+
+  curp:='0';
+  curcc:='';
+  for i:=1 to length(cnv) do
+  begin
+    curs:=cnv[i];
+    curpx:='0';
+    if Ord(curs[1])<$0080 then cc:=upcase(curs[1])
+    else if curs=#$00E1 then begin cc:='A'; curpx:='2'; end
+    else if curs=#$00E9 then begin cc:='E'; curpx:='2'; end
+    else if curs=#$00ED then begin cc:='I'; curpx:='2'; end
+    else if curs=#$00F3 then begin cc:='O'; curpx:='2'; end
+    else if curs=#$00FA then begin cc:='U'; curpx:='2'; end
+    else if curs=#$00E0 then begin cc:='A'; curpx:='4'; end
+    else if curs=#$00E8 then begin cc:='E'; curpx:='4'; end
+    else if curs=#$00EC then begin cc:='I'; curpx:='4'; end
+    else if curs=#$00F2 then begin cc:='O'; curpx:='4'; end
+    else if curs=#$00F9 then begin cc:='U'; curpx:='4'; end
+    else if curs=#$0101 then begin cc:='A'; curpx:='1'; end
+    else if curs=#$0113 then begin cc:='E'; curpx:='1'; end
+    else if curs=#$012B then begin cc:='I'; curpx:='1'; end
+    else if curs=#$014D then begin cc:='O'; curpx:='1'; end
+    else if curs=#$016B then begin cc:='U'; curpx:='1'; end
+    else if curs=#$0103 then begin cc:='A'; curpx:='3'; end
+    else if curs=#$0115 then begin cc:='E'; curpx:='3'; end
+    else if curs=#$012D then begin cc:='I'; curpx:='3'; end
+    else if curs=#$014F then begin cc:='O'; curpx:='3'; end
+    else if curs=#$016D then begin cc:='U'; curpx:='3'; end
+    else if curs=#$01CE then begin cc:='A'; curpx:='3'; end
+    else if curs=#$011B then begin cc:='E'; curpx:='3'; end
+    else if curs=#$01D0 then begin cc:='I'; curpx:='3'; end
+    else if curs=#$01D2 then begin cc:='O'; curpx:='3'; end
+    else if curs=#$01D4 then begin cc:='U'; curpx:='3'; end
+    else cc:='?';
+    if (((cc>='A') and (cc<='Z')) or (cc=':')) and (cc<>'''') then curcc:=curcc+cc;
+
+    fnd:=romac.FindRomaC(uppercase(curcc),1,{Partial=}true)>=0;
+    if ((cc<'A') or (cc>'Z')) and (cc<>':') then
+    begin
+      if curcc<>'' then cnv2:=cnv2+lowercase(curcc)+curp;
+      curcc:='';
+      cnv2:=cnv2+cc;
+      curp:='0';
+    end else
+    if ((not fnd) or ((curpx<>'0') and (curp<>'0'))) and
+       ((copy(curcc,length(curcc)-1,2)='GU') or
+        (copy(curcc,length(curcc)-1,2)='NU') or
+        (copy(curcc,length(curcc)-1,2)='NI') or
+        (copy(curcc,length(curcc)-1,2)='NO')) then
+    begin
+      cnv2:=cnv2+lowercase(copy(curcc,1,length(curcc)-2))+curp;
+      delete(curcc,1,length(curcc)-2);
+      curp:='0';
+    end else if (not fnd) or ((curpx<>'0') and (curp<>'0')) then
+    begin
+      cnv2:=cnv2+lowercase(copy(curcc,1,length(curcc)-1))+curp;
+      delete(curcc,1,length(curcc)-1);
+      curp:='0';
+    end else if (cc='?') or (cc='''') then
+    begin
+      cnv2:=cnv2+lowercase(curcc)+curp;
+      curcc:='';
+      curp:='0';
+    end;
+    if curpx<>'0'then curp:=curpx;
+  end;
+  result:=cnv2+lowercase(curcc)+curp;
+end;
+
 
 
 end.

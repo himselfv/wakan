@@ -455,8 +455,9 @@ procedure TfUser.WordDetails_PaintBox1Paint(Sender: TObject);
 begin
   TPaintBox(Sender).Canvas.Brush.Color:=clWindow;
   if showroma then
-    DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,ConvertPinYin(KanaToRomaji(curphonetic,romasys,curlang)),FontEnglish) else
-  DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curphonetic,FontJapanese);
+    DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,KanaToRomaji(curphonetic,romasys,curlang),FontEnglish)
+  else
+    DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curphonetic,FontJapanese);
 end;
 
 procedure TfUser.WordDetails_PaintBox2Paint(Sender: TObject);

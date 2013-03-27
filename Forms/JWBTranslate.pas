@@ -3166,10 +3166,7 @@ begin
           end;
       end;
       if showroma then
-        if curlang='c'then
-          reading:=ConvertPinYin(KanaToRomaji(reading,romasys,curlang))
-        else
-          reading:=fstr(KanaToRomaji(reading,romasys,curlang));
+        reading:=KanaToRomajiF(reading,romasys,curlang);
       if reading<>'' then kanaq:=kanaq+reading;
       cntx:=px;
 
