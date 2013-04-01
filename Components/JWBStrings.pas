@@ -216,6 +216,8 @@ function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$
 function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 
+function fch(const c: AnsiChar): FChar; overload; {$IFDEF INLINE}inline;{$ENDIF}
+function fch(const c: WideChar): FChar; overload; {$IFDEF INLINE}inline;{$ENDIF}
 function ftoansi(c: FChar; out ac: AnsiChar): boolean; overload;
 function ftoansi(c: FChar): AnsiChar; overload;
 function ftowide(c: FChar): WideChar; {$IFDEF INLINE}inline;{$ENDIF}
@@ -245,7 +247,7 @@ function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicodeW(ps:PWideChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicode(const s:string):UnicodeString; overload;
-function ByteToHex(pb:PByte;sz:integer):string;
+function BytesToHex(pb:PByte;sz:integer):string;
 function UnicodeToHex(pc:PWideChar; len: integer):string; overload;
 function UnicodeToHex(const s:UnicodeString):string; overload;
 function AnsiToHex(const s:AnsiString):string; {$IFDEF INLINE}inline;{$ENDIF}
@@ -621,6 +623,25 @@ begin
 end;                                        
 {$ENDIF}
 
+{ Converts one character to FChar }
+function fch(const c: AnsiChar): FChar;
+begin
+{$IFDEF UNICODE}
+  Result := FChar(c);
+{$ELSE}
+  Result := BytesToHex(@c, SizeOf(AnsiChar));
+{$ENDIF}
+end;
+
+function fch(const c: WideChar): FChar;
+begin
+{$IFDEF UNICODE}
+  Result := FChar(c);
+{$ELSE}
+  Result := UnicodeToHex(@c, SizeOf(WideChar));
+{$ENDIF}
+end;
+
 { Converts FChar to AnsiChar, returns false if it was impossible.
  Only for simple transformations, else use WideCharToMultiByte(fstrtouni(s)) }
 function ftoansi(c: FChar; out ac: AnsiChar): boolean;
@@ -931,7 +952,7 @@ begin
    {$ENDIF}
 end;
 
-function ByteToHex(pb:PByte;sz:integer):string;
+function BytesToHex(pb:PByte;sz:integer):string;
 const HexChars: string = '0123456789ABCDEF';
 var i:integer;
 begin
@@ -949,9 +970,9 @@ begin
 end;
 
 {
-This is NOT equiualent to ByteToHex(s, Length(s)*2).
+This is NOT equiualent to BytesToHex(s, Length(s)*2).
 We're translating text in CHARS which are two-byte. I.e.
-  ByteToHex:    01 02 03 04 05 06 07 08 09 10...
+  BytesToHex:   01 02 03 04 05 06 07 08 09 10...
   UnicodeToHex: 02 01 04 03 06 05 08 07 10 09...
 }
 function UnicodeToHex(pc:PWideChar; len: integer):string;
@@ -980,7 +1001,7 @@ end;
 
 function AnsiToHex(const s:AnsiString):string;
 begin
-  Result := ByteToHex(PByte(s), Length(s));
+  Result := BytesToHex(PByte(s), Length(s));
 end;
 
 function UnicodeToML(s:widestring):string;

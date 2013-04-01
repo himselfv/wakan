@@ -177,7 +177,7 @@ function ConvertPunctuationF(c:FChar): char;
 
 { pin4yin4<->pínín conversion
  Works only for pure pinyin, although tolerant for some punctuation and limited latin. }
-function ConvertPinYin(const str:string):FString;
+function ConvertPinYin(const str:AnsiString):FString;
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 
 implementation
@@ -932,11 +932,9 @@ const //sections
 var i: integer;
   ln: string;
   sect: integer;
-  pref: char;
   parts: TStringArray;
 begin
   Clear;
-  pref := #00;
   sect := LS_NONE;
   for i := 0 to sl.Count - 1 do begin
     ln := Trim(sl[i]);
@@ -1092,23 +1090,28 @@ end;
 
 
 
+function AnsiLowerCase(const s: AnsiString): AnsiString; inline;
+begin
+  Result := AnsiString(LowerCase(string(s))); //fuck delphi make up your mind about which arguments LowerCase accepts
+end;
+
 {
 Converts raw database pin4yin4 to enhanced unicode pínín with marks.
 Only works for pure pinyin (no latin letters).
 }
-function ConvertPinYin(const str:string):FString;
+function ConvertPinYin(const str:AnsiString):FString;
 const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF};
  { Used in place of a char, does not go out of this function }
-var cnv:string;
+var cnv:AnsiString;
   li:integer; //last suitable vowel
   li_dirty:boolean; //there were consonants after last suitable vowel. New vowel will replace it.
   ali:FString;
   cnv2:FString;
-  cc:char;
+  cc:AnsiChar;
   i:integer;
   iscomma:boolean;
 begin
-  cnv:=lowercase(str); //source string, not modified
+  cnv:=AnsiLowerCase(str); //source string
   cnv2:=''; //building output here
   li:=0;
   ali:='';
@@ -1181,7 +1184,7 @@ begin
         if cc='w'then
           cnv2:=cnv2+{$IFDEF UNICODE}#$00FC{$ELSE}'00FC'{$ENDIF}
         else
-          cnv2:=cnv2+cc;
+          cnv2:=cnv2+fch(cc);
       cnv2:=cnv2+ali;
       iscomma:=false;
     end else
@@ -1190,7 +1193,7 @@ begin
       iscomma:=true
     end else
     if (cnv[i]<'0') or (cnv[i]>'5') then
-      cnv2:=cnv2+cnv[i];
+      cnv2:=cnv2+fch(cnv[i]);
   end;
 
   //Remove dummy chars
@@ -1210,10 +1213,10 @@ Only works for pure pinyin (no latin letters).
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 { Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway.
  TODO: Test Unicode conversion }
-var cnv:UnicodeString;
-  curs:UnicodeString; //although by logic it ought to be a Char...
+var cnv:UnicodeString; //source string
+  curs:UnicodeString;
   nch:string;
-    cnv2:string;
+  cnv2:string; //building output here
     i,j:integer;
     curcc:string;
     curp,curpx:char;
@@ -1323,7 +1326,7 @@ begin
     end;
     if curpx<>'0'then curp:=curpx;
   end;
-  result:=cnv2+lowercase(curcc)+curp;
+  Result:=cnv2+lowercase(curcc)+curp;
 end;
 
 

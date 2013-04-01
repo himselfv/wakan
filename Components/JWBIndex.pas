@@ -302,7 +302,7 @@ var i:integer;
   ind:string;
 begin
  //Article IDs are stored as 8 byte hex blocks one after another
-  ind:=ByteToHex(@article, sizeof(article));
+  ind:=BytesToHex(@article, sizeof(article));
 
   if Find(key, i) then begin
     pe := FList[i];
