@@ -175,8 +175,8 @@ function IsAllowedPunctuation(c:WideChar): boolean;
 function ConvertPunctuation(c:WideChar): char;
 function ConvertPunctuationF(c:FChar): char;
 
-{ Pin3yin4<->pi'nyi^n
- Works only for clean pinyin, for mixed-latin cases use KanaToRomaji(rfConvertPinyin) }
+{ pin4yin4<->pínín conversion
+ Works only for pure pinyin, although tolerant for some punctuation and limited latin. }
 function ConvertPinYin(const str:string):FString;
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 
@@ -1093,16 +1093,12 @@ end;
 
 
 {
-Converts raw database pinyin:
-  jing4 xiang3
-To enhanced unicode pinyin with marks:
-  ji'ng xia^ng (only merged)
+Converts raw database pin4yin4 to enhanced unicode pínín with marks.
 Only works for pure pinyin (no latin letters).
 }
 function ConvertPinYin(const str:string):FString;
-const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; {
-  used in place of a char when it's unknown or whatever
-  does not go out of this function }
+const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF};
+ { Used in place of a char, does not go out of this function }
 var cnv:string;
   li:integer; //last suitable vowel
   li_dirty:boolean; //there were consonants after last suitable vowel. New vowel will replace it.
@@ -1208,12 +1204,12 @@ end;
 
 
 {
-Converts tonemark-enhanced pinyin back into ansi pinyin.
-Nobody use this. Currently it's only employed by ImportVocab.
-Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway.
+Converts tonemark-enhanced pínín back into ansi pin4yin4.
+Only works for pure pinyin (no latin letters).
 }
-//TODO: Test Unicode conversion
-function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string; deprecated;
+function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
+{ Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway.
+ TODO: Test Unicode conversion }
 var cnv:UnicodeString;
   curs:UnicodeString; //although by logic it ought to be a Char...
   nch:string;
