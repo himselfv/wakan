@@ -25,21 +25,16 @@ object fSettings: TfSettings
     Top = 0
     Width = 491
     Height = 460
-    ActivePage = tsRomanization
+    ActivePage = tsGeneral
     Align = alClient
     MultiLine = True
     Style = tsButtons
     TabOrder = 1
     OnChange = pcPagesChange
-    ExplicitWidth = 484
     object tsGeneral: TTabSheet
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 476
-      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -48,7 +43,6 @@ object fSettings: TfSettings
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitWidth = 476
         object Label41: TLabel
           Left = 16
           Top = 224
@@ -208,10 +202,6 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 476
-      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -2482,7 +2472,6 @@ object fSettings: TfSettings
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitWidth = 661
     DesignSize = (
       668
       41)
@@ -2532,7 +2521,6 @@ object fSettings: TfSettings
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOkClick
-      ExplicitLeft = 520
     end
   end
   object tvContents: TTreeView
@@ -2589,8 +2577,6 @@ object fSettings: TfSettings
       0000000000000000000000011C2300300030003500300034005E006500440061
       0074006100620061007300650020006D00610069006E00740065006E0061006E
       0063006500}
-    ExplicitLeft = 6
-    ExplicitTop = 6
   end
   object OpenDialog2: TOpenDialog
     DefaultExt = '.wbk'

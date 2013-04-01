@@ -177,7 +177,7 @@ function ConvertPunctuationF(c:FChar): char;
 
 { pin4yin4<->pínín conversion
  Works only for pure pinyin, although tolerant for some punctuation and limited latin. }
-function ConvertPinYin(const str:AnsiString):FString;
+function ConvertPinYin(const str:string):FString;
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 
 implementation
@@ -1089,25 +1089,19 @@ begin
 end;
 
 
-
-function AnsiLowerCase(const s: AnsiString): AnsiString; inline;
-begin
-  Result := AnsiString(LowerCase(string(s))); //fuck delphi make up your mind about which arguments LowerCase accepts
-end;
-
 {
 Converts raw database pin4yin4 to enhanced unicode pínín with marks.
 Only works for pure pinyin (no latin letters).
 }
-function ConvertPinYin(const str:AnsiString):FString;
+function ConvertPinYin(const str:string):FString;
 const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF};
  { Used in place of a char, does not go out of this function }
-var cnv:AnsiString;
+var cnv:string;
   li:integer; //last suitable vowel
   li_dirty:boolean; //there were consonants after last suitable vowel. New vowel will replace it.
   ali:FString;
   cnv2:FString;
-  cc:AnsiChar;
+  cc:char;
   i:integer;
   iscomma:boolean;
 begin

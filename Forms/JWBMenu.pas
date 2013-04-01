@@ -537,6 +537,11 @@ var
        R: TRadicals.Number field value, possibly int or 'int' (int in quotes)
        U,P: 4char hex
        other: AnsiString
+    TODO: Make a class which reads from these and auto-converts, i.e.
+      cursor.FS[]: FString
+      cursor.AS[]: AnsiString
+      cursor.US[]: UnicodeString
+      cursor.I[]: Integer
    }
   TCharReadIndex,
   TCharReadReadDot,

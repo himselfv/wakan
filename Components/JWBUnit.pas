@@ -84,11 +84,15 @@ function KanaToRomajiF(const s:FString;romatype:integer;lang:char):FString; over
 function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags):string; overload;
 function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags):FString;
 
-//Packs and cleans any romaji (perhaps coming from user) to signature format:
-//no punctuation, no spaces, no unknown chars, lowercase.
-//This is NOT ALL that's required from signature in dict, but other conditions require
-//knowing the syllable composition and handled on import before calling this.
+{ Packs and cleans any romaji (perhaps coming from user) to signature format:
+ no punctuation, no spaces, no unknown chars, lowercase.
+ This is NOT ALL that's required from signature in dict, but other conditions require
+ knowing the syllable composition and handled on import before calling this. }
 function SignatureFrom(const s:string): string;
+
+{ Converts characters to traditional or simplified variants, if configured to. }
+function ChinSimplified(s:FString):FString;
+function ChinTraditional(s:FString):FString;
 
 { WordGrid }
 
@@ -142,8 +146,6 @@ procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
 procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
-function ChinTo(s:FString):FString;
-function ChinFrom(s:FString):FString;
 
 { Upgrades vocabulary entry -- see implementation comments }
 function FixVocabEntry(const s:string):string;
@@ -372,6 +374,59 @@ begin
     end;
   if j>0 then
     SetLength(Result,length(Result)-j);
+end;
+
+
+function ChinSimplified(s:FString):FString;
+var s2:FString;
+  cd:FString;
+  bk:FString;
+begin
+  if (curlang='j') or (fSettings.RadioGroup5.ItemIndex<>1) then
+  begin
+    result:=s;
+    exit;
+  end;
+  bk:=TChar.Str(TCharUnicode);
+  result:='';
+  while s<>'' do
+  begin
+    s2:=fcopy(s,1,1);
+    fdelete(s,1,1);
+    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
+    and TChar.Locate('Unicode',s2) then
+    begin
+      cd:=hextofstr(fMenu.GetCharValue(TChar.Int(TCharIndex),43));
+      if cd<>'' then result:=result+cd else result:=result+s2
+    end else result:=result+s2;
+  end;
+  TChar.Locate('Unicode',bk);
+end;
+
+function ChinTraditional(s:FString):FString;
+var s2:FString;
+  cd:FString;
+  bk:FString;
+begin
+  if (curlang='j') or (fSettings.RadioGroup5.ItemIndex<>0) then
+  begin
+    result:=s;
+    exit;
+  end;
+  bk:=TChar.Str(TCharUnicode);
+  result:='';
+  while s<>'' do
+  begin
+    s2:=fcopy(s,1,1);
+    fdelete(s,1,1);
+    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
+    and TChar.Locate('Unicode',s2) then
+    begin
+      cd:=hextofstr(fMenu.GetCharValue(TChar.Int(TCharIndex),44));
+      if cd<>'' then result:=result+cd else result:=result+s2
+    end else result:=result+s2;
+  end;
+  TChar.Locate('Unicode',bk);
 end;
 
 
@@ -627,61 +682,6 @@ begin
     s2:=copy(s,1,pos(',',s));
     reg.WriteString('Colors',s,colval[i]);
   end;
-end;
-
-
-//TODO: Test Unicode conversion for the following functions
-
-function ChinTo(s:FString):FString;
-var s2:FString;
-  cd:FString;
-  bk:FString;
-begin
-  if (curlang='j') or (fSettings.RadioGroup5.ItemIndex<>1) then
-  begin
-    result:=s;
-    exit;
-  end;
-  bk:=TChar.Str(TCharUnicode);
-  result:='';
-  while s<>'' do
-  begin
-    s2:=fcopy(s,1,1);
-    fdelete(s,1,1);
-    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
-    and TChar.Locate('Unicode',s2) then
-    begin
-      cd:=fMenu.GetCharValue(TChar.Int(TCharIndex),43);
-      if cd<>'' then result:=result+cd else result:=result+s2
-    end else result:=result+s2;
-  end;
-  TChar.Locate('Unicode',bk);
-end;
-
-function ChinFrom(s:FString):FString;
-var s2:FString;
-  cd:FString;
-  bk:FString;
-begin
-  if (curlang='j') or (fSettings.RadioGroup5.ItemIndex=0) then
-  begin
-    result:=s;
-    exit;
-  end;
-  bk:=TChar.Str(TCharUnicode);
-  result:='';
-  while s<>'' do
-  begin
-    s2:=fcopy(s,1,1);
-    fdelete(s,1,1);
-    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
-    and TChar.Locate('Unicode',s2) then
-    begin
-      cd:=fMenu.GetCharValue(TChar.Int(TCharIndex),44);
-      if cd<>'' then result:=result+cd else result:=result+s2
-    end else result:=result+s2;
-  end;
-  TChar.Locate('Unicode',bk);
 end;
 
 

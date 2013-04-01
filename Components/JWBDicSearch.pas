@@ -666,20 +666,20 @@ begin
     stClipboard: begin
       se.Add(9,flength(search),'F',rtNormal,search);
       if AutoDeflex then
-        Deflex(ChinFrom(search),se,9,8,true);
+        Deflex(ChinTraditional(search),se,9,8,true);
      end;
     stEditorInsert,
     stEditorAuto:
       if wt<0 then
       begin
-        _s:=ChinFrom(search);
+        _s:=ChinTraditional(search);
         Deflex(_s,se,9,8,false); //ignores AutoDeflex
         se.Add(9, flength(_s), 'F', rtNormal, _s);
       end else
       begin
         if (wt=1) or (wt=2) then
         begin
-          _s:=ChinFrom(search);
+          _s:=ChinTraditional(search);
           if wt=1 then begin
             Deflex(_s,se,9,8,false); //ignores AutoDeflex
             se.Add(9, flength(_s), 'F', rtNormal, _s);
@@ -699,7 +699,7 @@ begin
         end;
         if (wt=3) then
         begin
-          _s:=ChinFrom(search);
+          _s:=ChinTraditional(search);
           se.Add(9, fLength(_s), 'F', rtNormal, _s);
         end;
       end;
@@ -838,7 +838,7 @@ begin
         with sl.AddResult^ do begin
           Reset();
           sdef := 'P';
-          kana := ChinFrom(search);
+          kana := ChinTraditional(search);
           kanji := kana;
           entry := KanaToRomaji(search,1,'j')+' particle';
           slen := Length(kanji);
@@ -1041,8 +1041,8 @@ begin
       if pos(UH_LBEG+'skana'+UH_LEND,entry)>0 then
         TryGetUserScore(dic.GetPhonetic);
       TryGetUserScore(dic.GetKanji);
-      if (UserScore=-1) and (dic.GetKanji<>ChinTo(dic.GetKanji)) then
-        TryGetUserScore(ChinTo(dic.GetKanji));
+      if (UserScore=-1) and (dic.GetKanji<>ChinSimplified(dic.GetKanji)) then
+        TryGetUserScore(ChinSimplified(dic.GetKanji));
 
       if (fSettings.CheckBox58.Checked) and (dic.GetFrequency>-1) and (dic.GetFrequency>0) then
         entry:=entry+' '+UH_LBEG+'pwc'+IntToStr(dic.GetFrequency)+UH_LEND;
@@ -1100,7 +1100,7 @@ begin
       if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,entry)<>0) then
         scur.kanji := scur.kana
       else
-        scur.kanji := CheckKnownKanji(ChinTo(dic.GetKanji));
+        scur.kanji := CheckKnownKanji(ChinSimplified(dic.GetKanji));
       scur.entry := entry;
 
      //result signature (reading x kanji)

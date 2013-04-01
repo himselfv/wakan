@@ -137,7 +137,7 @@ begin
   if not Self.Visible then exit;
   StringGrid1.Visible:=false;
   cbSortByFrequency.Enabled:=(not sbShowVocab.Down) and (curlang='j');
-  kj:=ChinFrom(ch);
+  kj:=ChinTraditional(ch);
   sl:=TStringList.Create;
   sl2:=TStringList.Create;
   if sbShowDict.Down then
@@ -171,7 +171,7 @@ begin
               or TestMarkers(kmark, MarkPop)
               or TestMarkers(ent.MergeMarkers, MarkPop)) then
                 sl.Add(freq+#9
-                  +CheckKnownKanji(ChinTo(dic.GetKanji))
+                  +CheckKnownKanji(ChinSimplified(dic.GetKanji))
                   +' ['+dic.GetPhonetic+']'
                   +' {'+ent.ToEnrichedString+'}');
           end;
@@ -197,7 +197,7 @@ begin
         begin
           stp:=TUser.Str(TUserScore);
           sl.Add(TUser.Str(TUserKanji)+#9
-            +ALTCH_EXCL+stp+CheckKnownKanji(ChinTo(TUser.Str(TUserKanji)))
+            +ALTCH_EXCL+stp+CheckKnownKanji(ChinSimplified(TUser.Str(TUserKanji)))
             +' ['+ALTCH_EXCL+stp+TUser.Str(TUserPhonetic)+']'
             +' {'+ALTCH_EXCL+stp+FixVocabEntry(TUser.Str(TUserEnglish))+'}');
         end;

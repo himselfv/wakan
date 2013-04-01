@@ -195,7 +195,7 @@ begin
             tmp := EnrichDictEntry(dic.GetArticleBody,mark);
             if pos(UH_LBEG+'spop'+UH_LEND,tmp)=0 then freq[1]:='a';
             if freq<>'9999999'then
-            sl.Add(freq+#9+ChinTo(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+tmp+'}{');
+            sl.Add(freq+#9+ChinSimplified(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+tmp+'}{');
           end;
         finally
           FreeAndNil(dic);
