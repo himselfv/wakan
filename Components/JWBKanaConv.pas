@@ -1100,10 +1100,12 @@ To enhanced unicode pinyin with marks:
 Only works for pure pinyin (no latin letters).
 }
 function ConvertPinYin(const str:string):FString;
-const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; //used in place of a char when it's unknown or whatever
- //does not go out of this function
+const UH_DUMMY_CHAR:FChar = {$IFNDEF UNICODE}'XXXX'{$ELSE}#$F8F0{$ENDIF}; {
+  used in place of a char when it's unknown or whatever
+  does not go out of this function }
 var cnv:string;
-  li:integer;
+  li:integer; //last suitable vowel
+  li_dirty:boolean; //there were consonants after last suitable vowel. New vowel will replace it.
   ali:FString;
   cnv2:FString;
   cc:char;
@@ -1115,11 +1117,29 @@ begin
   li:=0;
   ali:='';
   iscomma:=false;
+  li_dirty:=false;
   for i:=1 to length(cnv) do
   begin
-    if (li=0) and ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
-    if (li<i) and ((cnv[li]='i') or (cnv[li]='u') or (cnv[li]='ь')) and
-      ((cnv[i]='a') or (cnv[i]='e') or (cnv[i]='o') or (cnv[i]='u') or (cnv[i]='i')) then li:=i;
+    if li<=0 then begin
+     //No suitable vowel yet => use this one
+      if CharInSet(cnv[i], ['a', 'e', 'o', 'u', 'i']) then begin
+        li:=i;
+        li_dirty:=false;
+      end
+    end else //li > 0
+   //focus second vowel in some syllables
+    if CharInSet(cnv[li], ['i', 'u', 'ь']) and CharInSet(cnv[i], ['a', 'e', 'o', 'u', 'i']) then begin
+      li:=i;
+      li_dirty:=false;
+    end else
+   //relocate focus to new vowel in cases like "dnajianyang" (from dnA to jIan)
+    if li_dirty and CharInSet(cnv[i], ['a', 'e', 'o', 'u', 'i']) then begin
+      li:=i;
+      li_dirty:=false;
+    end else
+    if (not li_dirty) and (not CharInSet(cnv[i], ['a', 'e', 'o', 'u', 'i'])) then
+      li_dirty:=true;
+
     if (cnv[i]>='0') and (cnv[i]<='5') and (li>0) then
     begin
       cc:=cnv[li]; //the character to be replaced
