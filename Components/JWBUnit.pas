@@ -2,8 +2,8 @@
 { Common stuff for Wakan. }
 
 interface
-uses Graphics, Windows, SysUtils, Classes, Dialogs, Grids, Forms, ExtCtrls, Registry,
-  JWBStrings, JWBUtils, JWBKanaConv;
+uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
+  ExtCtrls, Registry, JWBStrings, JWBUtils, JWBKanaConv;
 
 { Misc }
 
@@ -122,20 +122,25 @@ type
   );
   TFindDrawRegFlags = set of TFindDrawRegFlag;
 
-procedure BeginDrawReg(p:TPaintBox);
+procedure BeginDrawReg(p:TControl);
 procedure EndDrawReg;
-function FindDrawReg(p:TPaintBox;x,y:integer;flags:TFindDrawRegFlags;out id,cx,cy,fs:integer):FString;
-function GetDrawReg(id:integer;out cx,cy,fs:integer):FString;
+function FindDrawReg(p:TControl;x,y:integer;flags:TFindDrawRegFlags;
+  out id,cx,cy: integer; out fontface: string; out fs:integer):FString;
+function GetDrawReg(id:integer; out cx,cy: integer; out fontface: string;
+  out fs:integer):FString;
 
 function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
-procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
-procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
+procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
+
+procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
+function ConvertKana(const ch: FString;romas:integer;showr:boolean;lang:char): FString; overload;
+function ConvertKana(const ch: FString): FString; overload;
 
 procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
 procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
@@ -711,7 +716,7 @@ end;
 
 
 {
-Drawing registry.
+Draw registry.
 To support text selection, Wakan keeps a list of all text lines
 it has drawn with the help of DrawUnicode.
 Each time a control is redrawn, all cells related to it are cleared.
@@ -720,8 +725,10 @@ Each time a control is redrawn, all cells related to it are cleared.
 type
   TIntTextInfo=record
     act:boolean;
-    p:TPaintBox;
-    x,y,fs:integer;
+    p:TControl;
+    x,y:integer;
+    fontface:string;
+    fs:integer;
     s:FString;
   end;
 
@@ -729,9 +736,9 @@ const
   MAX_INTTEXTINFO = 4000;
 var
   itt:array[1..MAX_INTTEXTINFO] of TIntTextInfo;
-  curpbox:TPaintBox;
+  curpbox:TControl;
 
-procedure BeginDrawReg(p:TPaintBox);
+procedure BeginDrawReg(p:TControl);
 var i:integer;
 begin
   for i:=1 to MAX_INTTEXTINFO do if itt[i].p=p then itt[i].act:=false;
@@ -751,7 +758,9 @@ cx,cy: position of a first character of a returned subblock on a control.
 fs: character height for this string. Since DrawUnicode uses square fonts,
  this is also character width.
 flags: see TFindDrawRegFlags description }
-function FindDrawReg(p:TPaintBox;x,y:integer;flags:TFindDrawRegFlags;out id,cx,cy,fs:integer):FString;
+//TODO: Use precalculated w/h or GetCharWidth to calculate position in actual characters
+function FindDrawReg(p:TControl;x,y:integer;flags:TFindDrawRegFlags;
+  out id,cx,cy:integer; out fontface: string;out fs:integer):FString;
 var i,j:integer;
 begin
   id:=-1;
@@ -767,20 +776,22 @@ begin
       cy:=itt[i].y;
       fs:=itt[i].fs;
       cx:=itt[i].x+itt[i].fs*j;
+      fontface:=itt[i].fontface;
       result:=fcopy(itt[i].s,j+1,flength(itt[i].s)-j);
       break;
     end;
 end;
 
-function GetDrawReg(id:integer;out cx,cy,fs:integer):FString;
+function GetDrawReg(id:integer; out cx,cy: integer; out fontface:string; out fs:integer):FString;
 begin
   cx:=itt[id].x;
   cy:=itt[id].y;
   fs:=itt[id].fs;
+  fontface:=itt[id].fontface;
   Result:=itt[id].s;
 end;
 
-procedure AddDrawReg(p:TPaintBox;x,y,fs:integer;const s:FString);
+procedure AddDrawReg(p:TControl;x,y:integer;const fontface: string;fs:integer;const s:FString);
 var i: integer;
 begin
   for i:=1 to MAX_INTTEXTINFO do
@@ -789,6 +800,7 @@ begin
       itt[i].p:=p;
       itt[i].x:=x;
       itt[i].y:=y;
+      itt[i].fontface:=fontface;
       itt[i].fs:=fs;
       itt[i].s:=s;
       break;
@@ -842,52 +854,81 @@ begin
   canvas.Font.Style:=[];
 end;
 
-{
-Extracts all chinese tone mark replacement symbols from the string
-and draws appropriate tone marks over their positions.
-Returns the string without the tone marks.
-DoDraw: if false, only delete the tone marks but don't draw them.
-}
-//TODO: Test Unicode conversion
-function DrawToneMarks(c:TCanvas;x,y,fs:integer;s:FString;dodraw:boolean):FString;
-var tb:integer;
-    i:integer;
-    tr:double;
-    oldtextflags:longint;
-    sc:byte;
-    w:UnicodeString;
+{ Returns the width of a string if drawn like specified.
+ Hint: pass a copy(str,start,end) to measure the width of only some characters. }
+function CalcStrWidth(c:TCanvas;fs:integer;const w:UnicodeString;const fontface:string): integer;
+var r:TRect;
 begin
-  Result:='';
-  tb:=1;
-  i:=0;
-  c.Font.Height:=fs;
-  while s<>'' do begin
-    sc := fpygettone(s);
-    if sc in [0..5] then
-    begin
-      tr:=(i-tb)/2+tb-1;
-      oldtextflags:=c.TextFlags;
-      c.TextFlags:=0;
-      if dodraw then begin
-        case sc of
-          3:w:=#$02C7;
-          1:w:=#$02C9;
-          2:w:=#$02CA;
-          4:w:=#$02CB;
-        else w:='';
-        end;
-        if w<>'' then
-          TextOutW(c.Handle,round(tr*fs),y,PWideChar(w),1);
-      end;
-      c.TextFlags:=oldtextflags;
-      tb:=i+1;
-    end else
-    begin
-      Result:=Result+fcopy(s,1,1); //not a recognized tone char -- just copy it
-      inc(i);
-    end;
-    fdelete(s,1,1);
+  if w='' then begin
+    Result := 0;
+    exit;
   end;
+  c.Font.Name:=fontface;
+  c.Font.Height:=fs;
+  r.Left := 0;
+  r.Top := 0;
+  r.Right := 0;
+  r.Bottom := 0;
+  if DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT or DT_NOCLIP)=0 then
+    Result := 0
+  else
+    Result := r.Right-r.Left;
+end;
+
+{ Returns the number of characters in the string which are selection-covered
+ when the mouse is in X pixels from the left edge of the text.
+ A less-than-half-covered character is considered not covered.
+  -1: mouse is over the left edge
+  n+1: mouse is over the right edge }
+function GetCoveredCharNo(c:TCanvas;fs:integer;const ch:FString;const fontface:string;x:integer): integer;
+var w: UnicodeString;
+  chwPrev, chwNext: integer;
+begin
+  if x<0 then begin
+    Result := -1;
+    exit;
+  end;
+
+  w := fstrtouni(ch);
+  if Length(w)<=0 then begin
+    Result := 1;
+    exit;
+  end;
+
+ { Measure chunks of 1..i chars. We could have measured only one char each turn,
+  but we'd be missing inter-character space. }
+  Result := 0;
+  chwPrev := 0;
+  chwNext := CalcStrWidth(c,fs,w[1],fontface); //get first char width
+  while x>chwNext do begin
+    Inc(Result);
+    if Result>=Length(w) then begin
+      Inc(Result);
+      exit;
+    end;
+    chwPrev := chwNext;
+    chwNext := CalcStrWidth(c,fs,copy(w,1,1+Result),fontface);
+  end;
+
+  if x>chwPrev+(chwNext-chwPrev) div 2 then
+    Inc(Result);
+
+  {
+  Result := 0;
+  chw := CalcStrWidth(c,fs,w[1],fontface); //get first char width
+  while x>chw do begin
+    Dec(x,chw);
+    Inc(Result);
+    if Result>=Length(w) then begin
+      Inc(Result);
+      exit;
+    end;
+    chw := CalcStrWidth(c,fs,w[1+Result],fontface);
+  end;
+
+  if x>(chw div 2) then
+    Inc(Result);
+  }
 end;
 
 {
@@ -895,29 +936,24 @@ x, y: Where to draw.
 fs: Font size
 ch: Text
 }
-procedure DrawUnicode(c:TCanvas;x,y,fs:integer;ch:FString;fontface:string);
+procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
 var w:UnicodeString;
-  chn:FString;
+  r: TRect;
 begin
   if ch='' then exit;
   SetBkMode(c.Handle,TRANSPARENT);
   c.Font.Name:=fontface;
   c.Font.Height:=fs;
- //Retrieve markless text to draw
-  chn:=DrawToneMarks(c,x,y,fs,ch,false);
-  w := fstrtouni(chn);
- //If there are markers to be drawn, adjust font
-  if chn<>ch then
-  begin
-    c.Font.Name:=FontRadical;
-    fs:=round(fs/8*7);
-    c.Font.Height:=fs;
-    y:=y+fs div 4;
-  end;
   if curpbox<>nil then
-    AddDrawReg(curpbox,x,y,fs,chn);
-  TextOutW(c.Handle,x,y,PWideChar(w),flength(chn));
-  DrawToneMarks(c,x,y-fs div 4,fs,ch,true);
+    AddDrawReg(curpbox,x,y,fontface,fs,ch);
+  w := fstrtouni(ch);
+//  TextOutW(c.Handle,x,y,PWideChar(w),length(w));
+  r.Left := x;
+  r.Top := y;
+  r.Right := x;
+  r.Bottom := y;
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP);
 end;
 
 
@@ -958,9 +994,6 @@ begin
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
-//    if showroma then
-//      Grid.Canvas.TextRect(Rect,Rect.Left+2,Rect.Top+2,KanaToRomaji(s,romasys,curlang)) else
-//    DrawUnicode(Grid.Canvas,Rect.Left+2,Rect.Top+2,12,s,FontSmall);
     DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,romasys,curlang);
   end else
   if (length(s)>0) and (s[1]=UH_DRAWWORD_KANJI) then
@@ -1135,6 +1168,20 @@ begin
   PaintSelectionHighlight(Grid.Canvas,@rect);
 end;
 
+{ Converts raw kana/bopomofo to romaji/kana for presentation }
+function ConvertKana(const ch: FString;romas:integer;showr:boolean;lang:char): FString;
+begin
+  if showr then
+    Result := KanaToRomajiF(ch,romas,lang)
+  else
+    Result := ConvertBopomofo(ch);
+end;
+
+function ConvertKana(const ch: FString): FString;
+begin
+  Result := ConvertKana(ch,romasys,showroma,curlang);
+end;
+
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
 var cnv2:string;
 begin
@@ -1143,7 +1190,8 @@ begin
   begin
     cnv2:=KanaToRomajiF(ch,romas,lang);
     DrawUnicode(c,x,y,fs+1,cnv2,FontPinYin);
-  end else DrawUnicode(c,x,y,fs,ch,fontface);
+  end else
+    DrawUnicode(c,x,y,fs,ConvertBopomofo(ch),fontface);
 end;
 
 
@@ -1209,16 +1257,17 @@ function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString
 var id1,id2:integer;
   x1,x2,y1,fs,fs2,x_tmp:integer;
   s2,s_tmp:string;
+  fontface,fontface2:string;
 begin
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
    //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
-    Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fs);
+    Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fontface,fs);
     SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
-  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fs);
-  s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fs2);
+  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
+  s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fontface2,fs2);
   if id2<0 then begin //drag from dead point => no selection
     Result := '';
     SetSelectionHighlight(0,0,0,0,nil);
@@ -1228,7 +1277,7 @@ begin
   if id1<>id2 then begin //mouse over different control/line
    //Try again, with Y set to that of DragStart
     CursorPos.Y := DragStart.Y;
-    Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fs);
+    Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
     if id1<>id2 then begin
      //Just set the endpoint to the start or the end of the capturing line
       if CursorPos.X>DragStart.X then begin
@@ -1236,7 +1285,7 @@ begin
         SetSelectionHighlight(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
         exit;
       end else begin
-        Result:=GetDrawReg(id2,x1,y1,fs); //get whole line
+        Result:=GetDrawReg(id2,x1,y1,fontface,fs); //get whole line
         //and continue with normal handling
       end;
     end;
@@ -1253,8 +1302,9 @@ end;
 
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
 var gc,gc2:TGridCoord;
-    rect:TRect;
-    mox1,mox2:integer;
+  rect:TRect;
+  mox1,mox2:integer;
+  text:FString;
 begin
   gc:=p.MouseCoord(DragStart.x,DragStart.y);
 
@@ -1265,7 +1315,10 @@ begin
     exit;
   end;
 
-  Result:=remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
+  //Convert raw kana to presentation format.
+  //This is dirty! We have to remember the presentation format which was used when drawing.
+  Result:=ConvertKana(remexcl(TStringGrid(p).Cells[gc.x,gc.y]));
+
   rect:=p.CellRect(gc.x,gc.y);
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
    //No drag, mouse over
@@ -1301,11 +1354,24 @@ begin
   end;
 
   //calculate char count -- if half of the char is covered, it's covered
-  mox1:=(mox1+(GridFontSize div 2)-rect.left-2) div GridFontSize;
-  mox2:=(mox2+(GridFontSize div 2)-rect.left-2) div GridFontSize;
-  Result:=fcopy(Result,1+mox1,mox2-mox1);
+  //TODO: We're using hardcoded FontSmall here -- BAD! We have to use "whatever font the cell was drawn with"
+  mox1 := GetCoveredCharNo(p.Canvas,GridFontsize,Result,FontSmall,mox1-rect.left-2);
+  mox2 := GetCoveredCharNo(p.Canvas,GridFontsize,Result,FontSmall,mox2-rect.left-2);
+  if mox1<0 then mox1 := 0;
+  if mox2<0 then mox2 := 0;
+  if mox1>flength(Result) then mox1 := flength(Result);
+  if mox2>flength(Result) then mox2 := flength(Result);
+
+  text:=Result;
+  Result:=fcopy(text,1+mox1,mox2-mox1);
   if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
-  SetSelectionHighlight(mox1*GridFontSize+rect.left+2,rect.top,mox2*GridFontSize+rect.left+2,rect.bottom,p.Canvas);
+
+  SetSelectionHighlight(
+    rect.Left+2+CalcStrWidth(p.Canvas,GridFontsize,copy(text,1,1+mox1-1),FontSmall), //TODO: Hardcoded FontSmall
+    rect.Top,
+    rect.Left+2+CalcStrWidth(p.Canvas,GridFontsize,copy(text,1,1+mox2-1),FontSmall),
+    rect.Bottom,
+    p.Canvas);
 end;
 
 

@@ -180,6 +180,11 @@ function ConvertPunctuationF(c:FChar): char;
 function ConvertPinYin(const str:string):FString;
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 
+{ FF0*-enhanced bopomofo <-> Tonemark-enhanced bopomofo
+ There could be parentless tone marks already in the string, so the result
+ is slightly less unambiguous. }
+function ConvertBopomofo(const str:FString):FString;
+
 implementation
 uses SysUtils;
 
@@ -1321,6 +1326,39 @@ begin
     if curpx<>'0'then curp:=curpx;
   end;
   Result:=cnv2+lowercase(curcc)+curp;
+end;
+
+
+function ConvertBopomofo(const str:FString):FString;
+var i, tone: integer;
+  ch: FChar;
+begin
+  Result := str;
+  i := 1;
+  while i<=flength(Result) do begin
+    ch := fgetch(Result, i);
+    tone := fpydetone(ch);
+    if (tone<0) or (tone>5) then begin
+     //not a tone or unrecognized tone code -- keep as is
+      Inc(i);
+      continue;
+    end;
+
+    if (tone=0) or (tone=1) then begin
+     //0 is tone unknown, 1 is not drawn in bopomofo
+      fdelete(Result, i, 1);
+      continue;
+    end;
+
+    case tone of
+      2:ch:=#$02CA;
+      3:ch:=#$02C7;
+      4:ch:=#$02CB;
+      5:ch:=#$02D9; //only in bopomofo!
+    end;
+    fputch(Result,i,ch);
+    Inc(i);
+  end;
 end;
 
 

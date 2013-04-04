@@ -204,6 +204,7 @@ procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;
 function fpos(const substr: FString; const str:FString):integer; {$IFDEF INLINE}inline;{$ENDIF}
 function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
 function fgetchl(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
+procedure fputch(var s: FString; Index: integer; const ch: FChar); {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: AnsiString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
 function fstr(const s: UnicodeString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
 function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
@@ -235,6 +236,7 @@ function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inli
 
 { PinYin tones }
 function fpytone(const i: byte): fchar; inline; //creates a character which encodes PinYin tone
+function fpydetone(const ch: fchar): byte; inline; //returns 0-5 if the character encodes tone, or 255
 function fpygettone(const s: fstring): byte; inline; //returns 0-5 if the first character encodes tone, or 255
 function fpyextrtone(var s: fstring): byte; inline; //same, but deletes the tone from the string
 
@@ -556,6 +558,18 @@ begin
 {$ENDIF}
 end;
 
+procedure fputch(var s: FString; Index: integer; const ch: FChar);
+begin
+{$IFDEF UNICODE}
+  s[index] := ch;
+{$ELSE}
+  s[4*(Index-1)+1] := ch[1];
+  s[4*(Index-1)+2] := ch[2];
+  s[4*(Index-1)+3] := ch[3];
+  s[4*(Index-1)+4] := ch[4];
+{$ENDIF}
+end;
+
 function fstr(const s: AnsiString): FString;
 begin
   Result := fstr(UnicodeString(s));
@@ -797,6 +811,20 @@ begin
  {$ELSE}
   Result := 'F03'+Chr(Ord('0')+i);
  {$ENDIF}
+end;
+
+//returns 0-5 if the character encodes tone, or 255
+function fpydetone(const ch: fchar): byte;
+begin
+ {$IFDEF UNICODE}
+  if Ord(ch) and $FFF0 = $F030 then
+    Result := Ord(ch) and $000F
+ {$ELSE}
+  if (ch[1]='F') and (ch[2]='0') and (ch[3]='3') then
+    Result := Ord(ch[4]) - Ord('0')
+ {$ENDIF}
+  else
+    Result := 255;
 end;
 
 //returns 0-5 if the first character encodes tone, or 255
