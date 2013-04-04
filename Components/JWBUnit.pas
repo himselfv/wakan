@@ -952,8 +952,10 @@ begin
   r.Top := y;
   r.Right := x;
   r.Bottom := y;
+{ If you wish to be slower and more verbose:
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
-  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP);
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP); }
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
 end;
 
 
