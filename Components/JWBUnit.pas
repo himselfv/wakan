@@ -122,12 +122,8 @@ type
   );
   TFindDrawRegFlags = set of TFindDrawRegFlag;
 
-procedure BeginDrawReg(p:TControl);
+procedure BeginDrawReg(p:TCanvas);
 procedure EndDrawReg;
-function FindDrawReg(p:TControl;x,y:integer;flags:TFindDrawRegFlags;
-  out id,cx,cy: integer; out fontface: string; out fs:integer):FString;
-function GetDrawReg(id:integer; out cx,cy: integer; out fontface: string;
-  out fs:integer):FString;
 
 function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
@@ -715,6 +711,11 @@ begin
 end;
 
 
+function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
+  const w:UnicodeString): integer; forward;
+function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
+  const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
+
 {
 Draw registry.
 To support text selection, Wakan keeps a list of all text lines
@@ -725,10 +726,10 @@ Each time a control is redrawn, all cells related to it are cleared.
 type
   TIntTextInfo=record
     act:boolean;
-    p:TControl;
-    x,y:integer;
+    p:TCanvas;
     fontface:string;
     fs:integer;
+    rect:TRect;
     s:FString;
   end;
 
@@ -736,9 +737,9 @@ const
   MAX_INTTEXTINFO = 4000;
 var
   itt:array[1..MAX_INTTEXTINFO] of TIntTextInfo;
-  curpbox:TControl;
+  curpbox:TCanvas;
 
-procedure BeginDrawReg(p:TControl);
+procedure BeginDrawReg(p:TCanvas);
 var i:integer;
 begin
   for i:=1 to MAX_INTTEXTINFO do if itt[i].p=p then itt[i].act:=false;
@@ -755,28 +756,29 @@ p,x,y: position to probe.
 Result: substring of a block of text under mouse starting at mouse position, inclusive.
 id: index of a draw call, if these are equal, it's the same line
 cx,cy: position of a first character of a returned subblock on a control.
-fs: character height for this string. Since DrawUnicode uses square fonts,
- this is also character width.
+fs: font size (character height) for this string.
 flags: see TFindDrawRegFlags description }
 //TODO: Use precalculated w/h or GetCharWidth to calculate position in actual characters
-function FindDrawReg(p:TControl;x,y:integer;flags:TFindDrawRegFlags;
+function FindDrawReg(p:TCanvas;x,y:integer;flags:TFindDrawRegFlags;
   out id,cx,cy:integer; out fontface: string;out fs:integer):FString;
 var i,j:integer;
 begin
   id:=-1;
   result:='';
-  for i:=1 to MAX_INTTEXTINFO do if itt[i].p=p then
-    if  (y>=itt[i].y) and (y<=itt[i].y+itt[i].fs)
-    and (x>=itt[i].x) and (x<=itt[i].x+itt[i].fs*flength(itt[i].s)) then begin
-      if ffHalfCharRounding in flags then
-        j:=(x-itt[i].x+itt[i].fs div 2) div itt[i].fs
-      else
-        j:=(x-itt[i].x) div itt[i].fs;
+  for i:=1 to MAX_INTTEXTINFO do
+    if (itt[i].p=p)
+    and (y>=itt[i].rect.Top) and (y<=itt[i].rect.Top+itt[i].fs)
+    and (x>=itt[i].rect.Left) and (x<=itt[i].rect.Right) then begin
       id:=i;
-      cy:=itt[i].y;
+      cy:=itt[i].rect.Top;
       fs:=itt[i].fs;
-      cx:=itt[i].x+itt[i].fs*j;
       fontface:=itt[i].fontface;
+
+      j:=GetCoveredCharNo(p,fontface,fs,itt[i].s,x-itt[i].rect.Left,
+        {halfCharRounding=}ffHalfCharRounding in flags);
+      if j<0 then continue; //should not happen
+      if j>flength(itt[i].s) then continue;
+      cx:=itt[i].rect.Left+CalcStrWidth(p,fontface,fs,copy(itt[i].s,1,j));
       result:=fcopy(itt[i].s,j+1,flength(itt[i].s)-j);
       break;
     end;
@@ -784,24 +786,23 @@ end;
 
 function GetDrawReg(id:integer; out cx,cy: integer; out fontface:string; out fs:integer):FString;
 begin
-  cx:=itt[id].x;
-  cy:=itt[id].y;
+  cx:=itt[id].rect.Left;
+  cy:=itt[id].rect.Top;
   fs:=itt[id].fs;
   fontface:=itt[id].fontface;
   Result:=itt[id].s;
 end;
 
-procedure AddDrawReg(p:TControl;x,y:integer;const fontface: string;fs:integer;const s:FString);
+procedure AddDrawReg(p:TCanvas;const fontface: string;fs:integer;const rect:TRect;const s:FString);
 var i: integer;
 begin
   for i:=1 to MAX_INTTEXTINFO do
     if not itt[i].act then begin
       itt[i].act:=true;
       itt[i].p:=p;
-      itt[i].x:=x;
-      itt[i].y:=y;
       itt[i].fontface:=fontface;
       itt[i].fs:=fs;
+      itt[i].rect:=rect;
       itt[i].s:=s;
       break;
     end;
@@ -856,7 +857,7 @@ end;
 
 { Returns the width of a string if drawn like specified.
  Hint: pass a copy(str,start,end) to measure the width of only some characters. }
-function CalcStrWidth(c:TCanvas;fs:integer;const w:UnicodeString;const fontface:string): integer;
+function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;const w:UnicodeString): integer;
 var r:TRect;
 begin
   if w='' then begin
@@ -880,7 +881,8 @@ end;
  A less-than-half-covered character is considered not covered.
   -1: mouse is over the left edge
   n+1: mouse is over the right edge }
-function GetCoveredCharNo(c:TCanvas;fs:integer;const ch:FString;const fontface:string;x:integer): integer;
+function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
+  const ch:FString;x:integer;halfCharRounding:boolean): integer;
 var w: UnicodeString;
   chwPrev, chwNext: integer;
 begin
@@ -899,7 +901,7 @@ begin
   but we'd be missing inter-character space. }
   Result := 0;
   chwPrev := 0;
-  chwNext := CalcStrWidth(c,fs,w[1],fontface); //get first char width
+  chwNext := CalcStrWidth(c,fontface,fs,w[1]); //get first char width
   while x>chwNext do begin
     Inc(Result);
     if Result>=Length(w) then begin
@@ -907,28 +909,11 @@ begin
       exit;
     end;
     chwPrev := chwNext;
-    chwNext := CalcStrWidth(c,fs,copy(w,1,1+Result),fontface);
+    chwNext := CalcStrWidth(c,fontface,fs,copy(w,1,1+Result));
   end;
 
-  if x>chwPrev+(chwNext-chwPrev) div 2 then
+  if (x>chwPrev+(chwNext-chwPrev) div 2) or not halfCharRounding then
     Inc(Result);
-
-  {
-  Result := 0;
-  chw := CalcStrWidth(c,fs,w[1],fontface); //get first char width
-  while x>chw do begin
-    Dec(x,chw);
-    Inc(Result);
-    if Result>=Length(w) then begin
-      Inc(Result);
-      exit;
-    end;
-    chw := CalcStrWidth(c,fs,w[1+Result],fontface);
-  end;
-
-  if x>(chw div 2) then
-    Inc(Result);
-  }
 end;
 
 {
@@ -944,18 +929,16 @@ begin
   SetBkMode(c.Handle,TRANSPARENT);
   c.Font.Name:=fontface;
   c.Font.Height:=fs;
-  if curpbox<>nil then
-    AddDrawReg(curpbox,x,y,fontface,fs,ch);
   w := fstrtouni(ch);
 //  TextOutW(c.Handle,x,y,PWideChar(w),length(w));
   r.Left := x;
   r.Top := y;
   r.Right := x;
   r.Bottom := y;
-{ If you wish to be slower and more verbose:
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
-  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP); }
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
+  if curpbox<>nil then
+    AddDrawReg(curpbox,fontface,fs,r,ch);
 end;
 
 
@@ -1263,13 +1246,13 @@ var id1,id2:integer;
 begin
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
    //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
-    Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[],id1,x1,y1,fontface,fs);
+    Result:=FindDrawReg(p.Canvas,CursorPos.x,CursorPos.y,[],id1,x1,y1,fontface,fs);
     SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
-  Result:=FindDrawReg(p,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
-  s2:=FindDrawReg(p,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fontface2,fs2);
+  Result:=FindDrawReg(p.Canvas,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
+  s2:=FindDrawReg(p.Canvas,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fontface2,fs2);
   if id2<0 then begin //drag from dead point => no selection
     Result := '';
     SetSelectionHighlight(0,0,0,0,nil);
@@ -1279,12 +1262,12 @@ begin
   if id1<>id2 then begin //mouse over different control/line
    //Try again, with Y set to that of DragStart
     CursorPos.Y := DragStart.Y;
-    Result:=FindDrawReg(p,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
+    Result:=FindDrawReg(p.Canvas,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
     if id1<>id2 then begin
      //Just set the endpoint to the start or the end of the capturing line
       if CursorPos.X>DragStart.X then begin
         Result:=s2;
-        SetSelectionHighlight(x2,y1,x2+flength(s2)*fs2,y1+fs2,p.Canvas);
+        SetSelectionHighlight(x2,y1,x2+CalcStrWidth(p.Canvas,fontface2,fs2,s2),y1+fs2,p.Canvas);
         exit;
       end else begin
         Result:=GetDrawReg(id2,x1,y1,fontface,fs); //get whole line
@@ -1357,8 +1340,8 @@ begin
 
   //calculate char count -- if half of the char is covered, it's covered
   //TODO: We're using hardcoded FontSmall here -- BAD! We have to use "whatever font the cell was drawn with"
-  mox1 := GetCoveredCharNo(p.Canvas,GridFontsize,Result,FontSmall,mox1-rect.left-2);
-  mox2 := GetCoveredCharNo(p.Canvas,GridFontsize,Result,FontSmall,mox2-rect.left-2);
+  mox1 := GetCoveredCharNo(p.Canvas,FontSmall,GridFontsize,Result,mox1-rect.left-2,true);
+  mox2 := GetCoveredCharNo(p.Canvas,FontSmall,GridFontsize,Result,mox2-rect.left-2,true);
   if mox1<0 then mox1 := 0;
   if mox2<0 then mox2 := 0;
   if mox1>flength(Result) then mox1 := flength(Result);
@@ -1369,9 +1352,9 @@ begin
   if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
 
   SetSelectionHighlight(
-    rect.Left+2+CalcStrWidth(p.Canvas,GridFontsize,copy(text,1,1+mox1-1),FontSmall), //TODO: Hardcoded FontSmall
+    rect.Left+2+CalcStrWidth(p.Canvas,FontSmall,GridFontsize,copy(text,1,1+mox1-1)), //TODO: Hardcoded FontSmall
     rect.Top,
-    rect.Left+2+CalcStrWidth(p.Canvas,GridFontsize,copy(text,1,1+mox2-1),FontSmall),
+    rect.Left+2+CalcStrWidth(p.Canvas,FontSmall,GridFontsize,copy(text,1,1+mox2-1)),
     rect.Bottom,
     p.Canvas);
 end;

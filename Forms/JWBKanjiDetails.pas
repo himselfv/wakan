@@ -218,7 +218,7 @@ begin
   f:=FontRadical;
   pbRadical.Canvas.Brush.Color:=clWindow;
   pbRadical.Canvas.Font.Style:=[];
-  BeginDrawReg(pbRadical);
+  BeginDrawReg(pbRadical.Canvas);
   DrawUnicode(pbRadical.Canvas,1,1,48,curradical,f);
   EndDrawReg;
 end;
@@ -227,7 +227,7 @@ procedure TfKanjiDetails.pbSimplifiedPaint(Sender: TObject);
 begin
   pbSimplified.Canvas.Brush.Color:=clWindow;
   pbSimplified.Canvas.Font.Style:=[];
-  BeginDrawReg(pbSimplified);
+  BeginDrawReg(pbSimplified.Canvas);
   DrawUnicode(pbSimplified.Canvas,1,1,48,cursimple,FontRadical);
   EndDrawReg;
 end;
@@ -272,7 +272,7 @@ end;
 
 procedure TfKanjiDetails.pbKanjiInfoPaint(Sender: TObject);
 begin
-  BeginDrawReg(pbKanjiInfo);
+  BeginDrawReg(pbKanjiInfo.Canvas);
   InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,false);
   EndDrawReg;
 end;

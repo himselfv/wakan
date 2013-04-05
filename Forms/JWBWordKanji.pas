@@ -141,7 +141,7 @@ procedure TfWordKanji.WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
 begin
   Assert((KN>=1) and (KN<=9));
   if length(fUser.curkanjid)<KN then exit;
-  BeginDrawReg(pb);
+  BeginDrawReg(pb.Canvas);
   pb.Canvas.Brush.Color:=Col('Kanji_Back');
   DrawUnicode(pb.Canvas,44,4,16,fUser.curkanjid[KN-1].rad,FontJapaneseGrid);
   case fUser.curkanjid[KN-1].tp of

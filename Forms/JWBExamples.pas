@@ -494,7 +494,7 @@ procedure TfExamples.PaintExample;
 begin
   PaintBox.Canvas.Brush.Color:=clWindow;
   PaintBox.Canvas.Font.Style:=[];
-  BeginDrawReg(PaintBox);
+  BeginDrawReg(PaintBox.Canvas);
   if btnDisplayTranslation.Down then DrawUnicode(PaintBox.Canvas,3,3,16,ex_jap,FontSmall);
   if btnUseSmallFont.Down then DrawUnicode(PaintBox.Canvas,3,15,16,ex_jap,FontSmall);
   if btnUseBigFont.Down then DrawUnicode(PaintBox.Canvas,3,5,24,ex_jap,FontJapanese);

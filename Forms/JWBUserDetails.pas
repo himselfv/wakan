@@ -198,7 +198,7 @@ end;
 procedure TfUserDetails.pbKanjiPaint(Sender: TObject);
 begin
   pbKanji.Canvas.Brush.Color:=clWindow;
-  BeginDrawReg(pbKanji);
+  BeginDrawReg(pbKanji.Canvas);
   DrawUnicode(pbKanji.Canvas,1,1,22,fWords.curkanji,FontJapanese);
   EndDrawReg;
 end;
