@@ -758,7 +758,6 @@ id: index of a draw call, if these are equal, it's the same line
 cx,cy: position of a first character of a returned subblock on a control.
 fs: font size (character height) for this string.
 flags: see TFindDrawRegFlags description }
-//TODO: Use precalculated w/h or GetCharWidth to calculate position in actual characters
 function FindDrawReg(p:TCanvas;x,y:integer;flags:TFindDrawRegFlags;
   out id,cx,cy:integer; out fontface: string;out fs:integer):FString;
 var i,j:integer;
