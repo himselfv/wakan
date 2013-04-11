@@ -246,7 +246,7 @@ type
       AnnotMode: TTextAnnotMode);
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
-    function HalfUnitsToTextPos(x,y: integer):integer;
+    function HalfUnitsToCursorPos(x,y: integer):integer;
   public
     function GetClosestCursorPos(x,y:integer):TCursorPos;
     function GetExactLogicalPos(x,y:integer):TSourcePos;
@@ -4296,7 +4296,8 @@ end;
 {
 y: line no
 x: number of half-width positions from the left
-If the position is outside of existing chars, returns -1.
+Returns: number of characters from the start of the line or -1 if the position is
+ outside of existing chars.
 }
 function TfTranslate.WidthToPos(x,y:integer):integer;
 var i,jx,cx,cy,clen:integer;
@@ -4325,9 +4326,14 @@ begin
   Result:=-1;
 end;
 
-{ Similar, but error handling is clearly defined. If there's no char at the position,
- closest text position is returned. }
-function TfTranslate.HalfUnitsToTextPos(x,y:integer):integer;
+{
+y: line no
+x: number of half-width positions from the left
+Returns: number of characters from the start of the line to the closes valid
+  TCursorPos.
+  (There's got to be at least one at every line)
+}
+function TfTranslate.HalfUnitsToCursorPos(x,y:integer):integer;
 var i,jx,cx,cy,clen:integer;
 begin
   Assert((y>=0) and (y<linl.Count));
@@ -4338,9 +4344,9 @@ begin
   clen:=linl[y].len;
 
   jx:=0;
-  for i:=0 to x-1 do
-  begin
-    if clen<=0 then break;
+  i:=0;
+  while i<x do begin //there can't be more characters than half-width positions
+    if clen<=0 then break; //no more text
     if IsHalfWidth(cx,cy) then inc(jx) else inc(jx,2);
     if jx>=x then
     begin
@@ -4349,12 +4355,13 @@ begin
     end;
     inc(cx);
     dec(clen);
+    Inc(i);
   end;
-  result:=cx;
+  Result:=i;
 end;
 
 {
-Returns closest text position to the given screen point.
+Returns closest cursor position to the given screen point.
 Makes sure what you get is a legal text point, not some negative or over-the-end value.
 NOTE:
 - Do not call if linl is cleared (linl.Count=0)
@@ -4368,7 +4375,7 @@ begin
   if Result.y>=linl.Count then
     Result.y:=linl.Count-1;
   Assert(Result.y>=0); //we must have at least one line
-  Result.x := HalfUnitsToTextPos(Result.x, Result.y);
+  Result.x := HalfUnitsToCursorPos(Result.x, Result.y);
   Assert(Result.x>=0);
 end;
 
