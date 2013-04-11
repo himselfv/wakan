@@ -110,15 +110,16 @@ type
   Katakana and romaji in dictionaries can contain latin letters and punctuation.
   In general, it is safe to mix latin letters with katakana/bopomofo, but not with
   romaji (i.e. is "ding" an english word or a pinyin syllable?)
-  Dictionaries address this in different ways: EDICT stores in katakana,
+
+  Dictionaries address this in different ways: EDICT stores latin as katakana,
   CCEDICT separates letters with spaces ("D N A jian4 ding4").
 
-  Functions here can convert clean romaji/kana both ways, and latin+kana to romaji.
-  It is recommended that you use kana+latin as a source, and only convert to romaji
-  on presentation.
+  Functions here can convert pure romaji/kana both ways, and latin+kana to romaji.
+  It is recommended that you use kana+latin as internal format, and only convert
+  to romaji on presentation.
 
-  When user enters romaji, either require that to be clean or search in your db
-  for some "romaji signature" (same for ding-syllable and DING-latin).
+  When user enters romaji, either require that to be pure or match it against
+  some "romaji signature" (same for ding-syllable and DING-latin).
       Signature   Bopomofo    Translation
       ding        [ding]      Chinese for "person who programs too much"
       ding        DING        English for "ding"
@@ -175,12 +176,39 @@ function IsAllowedPunctuation(c:WideChar): boolean;
 function ConvertPunctuation(c:WideChar): char;
 function ConvertPunctuationF(c:FChar): char;
 
+
+{
+In PinYin tone markers (1-5) follow every syllable.
+See http://en.wikipedia.org/wiki/PinYin#Tones
+
+There are 4 different ways to store these:
+1. pin3yin4. Raw pinyin. This is what people type on the keyboard.
+2. pínín. Pinyin for display.
+3. ㄆㄧㄣˇㄧ. Bopomofo text tones.
+4. ㄆㄧㄣ[F033]ㄧ. Bopomofo F03*-tones (see below).
+
+In all cases tones can be omitted, and books usually do omit them.
+
+#2 and #3 are weak: not all tones have markers and it's impossible to distinguish
+between "syllable with markerless tone" and "syllable with tone omitted".
+With #2 it's also a problem if pinyin is merged with valid latin text.
+}
+
+const
+ { Tone markers are encoded as F030+[0..5] }
+  UH_PY_TONE = {$IFDEF UNICODE}#$F030{$ELSE}'F030'{$ENDIF};
+
+function fpytone(const i: byte): fchar; inline; //creates a character which encodes PinYin tone
+function fpydetone(const ch: fchar): byte; inline; //returns 0-5 if the character encodes tone, or 255
+function fpygettone(const s: fstring): byte; inline; //returns 0-5 if the first character encodes tone, or 255
+function fpyextrtone(var s: fstring): byte; inline; //same, but deletes the tone from the string
+
 { pin4yin4<->pínín conversion
  Works only for pure pinyin, although tolerant for some punctuation and limited latin. }
 function ConvertPinYin(const str:string):FString;
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 
-{ FF0*-enhanced bopomofo <-> Tonemark-enhanced bopomofo
+{ FF0*-enhanced bopomofo -> Tonemark-enhanced bopomofo
  There could be parentless tone marks already in the string, so the result
  is slightly less unambiguous. }
 function ConvertBopomofo(const str:FString):FString;
@@ -1091,6 +1119,56 @@ begin
   s_rep := s;
   repl(s_rep,'v','u:');
   Result:=ResolveCrom(s_rep,romatype,0,flags);
+end;
+
+
+{
+PinYin tones -- see comment to UH_PY_TONE
+}
+
+//creates a character which encodes PinYin tone
+function fpytone(const i: byte): fchar;
+begin
+ {$IFDEF UNICODE}
+  Result := Chr(Ord(UH_PY_TONE)+i);
+ {$ELSE}
+  Result := 'F03'+Chr(Ord('0')+i);
+ {$ENDIF}
+end;
+
+//returns 0-5 if the character encodes tone, or 255
+function fpydetone(const ch: fchar): byte;
+begin
+ {$IFDEF UNICODE}
+  if Ord(ch) and $FFF0 = $F030 then
+    Result := Ord(ch) and $000F
+ {$ELSE}
+  if (ch[1]='F') and (ch[2]='0') and (ch[3]='3') then
+    Result := Ord(ch[4]) - Ord('0')
+ {$ENDIF}
+  else
+    Result := 255;
+end;
+
+//returns 0-5 if the first character encodes tone, or 255
+function fpygettone(const s: fstring): byte;
+begin
+ {$IFDEF UNICODE}
+  if (length(s)>=1) and (Ord(s[1]) and $FFF0 = $F030) then
+    Result := Ord(s[1]) and $000F
+ {$ELSE}
+  if (length(s)>=4) and (s[1]='F') and (s[2]='0') and (s[3]='3') then
+    Result := Ord(s[4]) - Ord('0')
+ {$ENDIF}
+  else
+    Result := 255;
+end;
+
+//same, but deletes the tone from the string
+function fpyextrtone(var s: fstring): byte;
+begin
+  Result := fpygettone(s);
+  if Result<255 then fdelete(s,1,1);
 end;
 
 

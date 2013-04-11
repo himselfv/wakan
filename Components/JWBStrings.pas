@@ -103,13 +103,6 @@ const
   UH_RUBY_PLACEHOLDER:FChar = 'E100'; //when ruby has nothing to be attached to,
     //but we still have to store it in the decoded form
 
- {
-  In PinYin tone markers (1-5) follow every syllable
-  See http://en.wikipedia.org/wiki/PinYin#Tones
-  In Wakan Unicode they are encoded as F030+[0..5].
- }
-  UH_PY_TONE = 'F030';
-
  {$ELSE}
   UH_NOCHAR:FChar = #$0000;
   UH_ZERO:FChar = #$0000;
@@ -141,8 +134,6 @@ const
   UH_LEND:Char = #$E007;
 
   UH_RUBY_PLACEHOLDER:FChar = #$E100;
-
-  UH_PY_TONE = #$F030;
  {$ENDIF}
 
 
@@ -233,13 +224,6 @@ function UTrimLeft(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inlin
 function UTrimRight(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 function ULowerCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
-
-{ PinYin tones }
-function fpytone(const i: byte): fchar; inline; //creates a character which encodes PinYin tone
-function fpydetone(const ch: fchar): byte; inline; //returns 0-5 if the character encodes tone, or 255
-function fpygettone(const s: fstring): byte; inline; //returns 0-5 if the first character encodes tone, or 255
-function fpyextrtone(var s: fstring): byte; inline; //same, but deletes the tone from the string
-
 
 { General purpose string functions }
 
@@ -798,55 +782,6 @@ begin
   Result := WideUpperCase(S);
 end;
 {$ENDIF}
-
-{
-PinYin tones -- see comment to UH_PY_TONE
-}
-
-//creates a character which encodes PinYin tone
-function fpytone(const i: byte): fchar;
-begin
- {$IFDEF UNICODE}
-  Result := Chr(Ord(UH_PY_TONE)+i);
- {$ELSE}
-  Result := 'F03'+Chr(Ord('0')+i);
- {$ENDIF}
-end;
-
-//returns 0-5 if the character encodes tone, or 255
-function fpydetone(const ch: fchar): byte;
-begin
- {$IFDEF UNICODE}
-  if Ord(ch) and $FFF0 = $F030 then
-    Result := Ord(ch) and $000F
- {$ELSE}
-  if (ch[1]='F') and (ch[2]='0') and (ch[3]='3') then
-    Result := Ord(ch[4]) - Ord('0')
- {$ENDIF}
-  else
-    Result := 255;
-end;
-
-//returns 0-5 if the first character encodes tone, or 255
-function fpygettone(const s: fstring): byte;
-begin
- {$IFDEF UNICODE}
-  if (length(s)>=1) and (Ord(s[1]) and $FFF0 = $F030) then
-    Result := Ord(s[1]) and $000F
- {$ELSE}
-  if (length(s)>=4) and (s[1]='F') and (s[2]='0') and (s[3]='3') then
-    Result := Ord(s[4]) - Ord('0')
- {$ENDIF}
-  else
-    Result := 255;
-end;
-
-//same, but deletes the tone from the string
-function fpyextrtone(var s: fstring): byte;
-begin
-  Result := fpygettone(s);
-  if Result<255 then fdelete(s,1,1);
-end;
 
 
 {

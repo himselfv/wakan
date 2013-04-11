@@ -3169,7 +3169,7 @@ begin
       if showroma then
         reading:=KanaToRomajiF(reading,romasys,curlang)
       else
-      reading:=ConvertBopomofo(reading);
+        reading:=ConvertBopomofo(reading); //pointless in roma
       if reading<>'' then kanaq:=kanaq+reading;
       cntx:=px;
 
@@ -4091,7 +4091,8 @@ begin
 end;
 
 { Returns kanji, reading and meaning for a text at a specified logical position.
- Reading may contain unconverted F03*-tones (in chinese parts of text). }
+ Reading may contain unconverted F03*-tones (in chinese parts of text),
+ but may contain bopomofo tones too (in hand-made annotations). }
 procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
 var dnam:string;
     dic:TJaletDic;
