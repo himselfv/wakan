@@ -3420,7 +3420,11 @@ begin
   begin
     if final then
     begin
-      s:=GetInsertKana(false);
+     { We're accepting input as kana, so we have no dictionary word to check against.
+      Therefore if the user didn't enter tones we don't know tones. In F03* notation
+      we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
+      just drops these. }
+      s:=ConvertBopomofo(GetInsertKana(false));
       SetLength(lp, flength(s));
       for i:=0 to flength(s)-1 do
         if i=0 then
@@ -3437,6 +3441,7 @@ begin
   end;
 end;
 
+//When returning chinese, tones are in F03* format (this is used for DB lookups)
 function TfTranslate.GetInsertKana(display:boolean):FString;
 begin
   if curlang='j'then
@@ -4082,6 +4087,7 @@ begin
   FileChanged:=true;
 end;
 
+{ Returns kanji, reading and meaning for a text at a specified logical position. }
 procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
 var dnam:string;
     dic:TJaletDic;
@@ -4103,7 +4109,7 @@ begin
           meaning:=GetArticleBody
         else
           meaning:=ConvertEdictEntry(GetArticleBody,markers);
-        reading:=GetPhonetic;
+        reading:=ConvertBopomofo(GetPhonetic); //dictionary stores it with F03*-style tones
         kanji:=GetKanji;
       finally
         Free;
