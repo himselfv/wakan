@@ -1404,6 +1404,7 @@ begin
        //Implicit ruby load (if explicit is not loaded -- checked by inReading)
         if (AnnotMode=amRuby) and not inReading then begin
           GetTextWordInfo(j,i,meaning,reading,kanji);
+          reading := ConvertBopomofo(reading); //dictionary stores it with F03*-style tones
           inReading := (reading<>'');
           explicitRuby := false;
           if inReading then begin
@@ -3166,7 +3167,9 @@ begin
           end;
       end;
       if showroma then
-        reading:=KanaToRomajiF(reading,romasys,curlang);
+        reading:=KanaToRomajiF(reading,romasys,curlang)
+      else
+      reading:=ConvertBopomofo(reading);
       if reading<>'' then kanaq:=kanaq+reading;
       cntx:=px;
 
@@ -4087,7 +4090,8 @@ begin
   FileChanged:=true;
 end;
 
-{ Returns kanji, reading and meaning for a text at a specified logical position. }
+{ Returns kanji, reading and meaning for a text at a specified logical position.
+ Reading may contain unconverted F03*-tones (in chinese parts of text). }
 procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
 var dnam:string;
     dic:TJaletDic;
@@ -4109,7 +4113,7 @@ begin
           meaning:=GetArticleBody
         else
           meaning:=ConvertEdictEntry(GetArticleBody,markers);
-        reading:=ConvertBopomofo(GetPhonetic); //dictionary stores it with F03*-style tones
+        reading:=GetPhonetic;
         kanji:=GetKanji;
       finally
         Free;
