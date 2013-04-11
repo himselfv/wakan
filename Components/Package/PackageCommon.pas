@@ -113,7 +113,7 @@ end;
 //Previously "random()" by Borland/CodeGear/Embarcaderro.
 //Whatever you change, it must produce exactly the same values given the same seed.
 function EncMask(const ARange: Integer): Integer;
-{$IF DEFINED(CPU386)}
+{$IF DEFINED(CPU386) }
 asm
 {     ->EAX     Range   }
 {     <-EAX     Result  }
@@ -138,7 +138,7 @@ asm
         POP     EBX
 end;
 {$ELSE}
-  {$MESSAGE ERROR 'Random(Int):Int unimplemented'}
+  {$MESSAGE ERROR 'EncMask: Implemented only on x86'}
 {$IFEND}
 
 end.
