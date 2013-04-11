@@ -3569,7 +3569,7 @@ begin
     if (immchar<>'') and (not immmode) then
       DisplayInsert(immchar,CharPropArray(DEFCPROPS),false)
     else
-      DisplayInsert(UnicodeToHex(c),CharPropArray(DEFCPROPS),false);
+      DisplayInsert(fstring(c),CharPropArray(DEFCPROPS),false);
     mustrepaint:=true;
     ShowText(true);
     exit;
