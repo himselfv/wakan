@@ -851,6 +851,7 @@ begin
     0: grs:=30;
     1: grs:=45;
     2: grs:=60;
+  else exit;
   end;
   if DrawGrid1.ColCount<>(DrawGrid1.ClientWidth-32) div grs then DoIt;
 end;

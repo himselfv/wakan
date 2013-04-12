@@ -25,7 +25,7 @@ object fSettings: TfSettings
     Top = 0
     Width = 491
     Height = 460
-    ActivePage = tsGeneral
+    ActivePage = tsTextTranslator
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -35,6 +35,10 @@ object fSettings: TfSettings
       Caption = '#00398^eGeneral'
       ImageIndex = 7
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -202,6 +206,10 @@ object fSettings: TfSettings
     object tsRomanization: TTabSheet
       Caption = '#00412^eRomanization'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 8
         Top = 8
@@ -507,7 +515,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Label35: TLabel
         Left = 16
@@ -593,7 +601,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Label26: TLabel
         Left = 16
@@ -701,7 +709,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Label4: TLabel
         Left = 8
@@ -1097,7 +1105,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Label11: TLabel
         Left = 16
@@ -1207,7 +1215,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Label12: TLabel
         Left = 8
@@ -1411,7 +1419,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Button2: TButton
         Left = 16
@@ -1494,10 +1502,6 @@ object fSettings: TfSettings
       Caption = '#00300^eText translator'
       ImageIndex = 8
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 476
-      ExplicitHeight = 0
       object sbTextTranslator: TScrollBox
         Left = 0
         Top = 0
@@ -1506,7 +1510,6 @@ object fSettings: TfSettings
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitWidth = 476
         object Label25: TLabel
           Left = 12
           Top = 250
@@ -1560,7 +1563,7 @@ object fSettings: TfSettings
             Caption = '#00515^ePrint vertically in columns'
             TabOrder = 3
           end
-          object Edit18: TEdit
+          object edtPrintLines: TEdit
             Left = 216
             Top = 72
             Width = 121
@@ -1603,7 +1606,7 @@ object fSettings: TfSettings
           Caption = '#00519^eDo not display reading of learned kanji'
           TabOrder = 4
         end
-        object CheckBox36: TCheckBox
+        object cbReadingKatakana: TCheckBox
           Left = 12
           Top = 106
           Width = 393
@@ -1631,7 +1634,7 @@ object fSettings: TfSettings
           State = cbChecked
           TabOrder = 7
         end
-        object Edit17: TEdit
+        object edtMeaningLines: TEdit
           Left = 228
           Top = 250
           Width = 121
@@ -1639,7 +1642,7 @@ object fSettings: TfSettings
           TabOrder = 8
           Text = '2'
         end
-        object CheckBox42: TCheckBox
+        object cbSpaceBetweenLines: TCheckBox
           Left = 12
           Top = 178
           Width = 225
@@ -1698,7 +1701,7 @@ object fSettings: TfSettings
           State = cbChecked
           TabOrder = 14
         end
-        object CheckBox56: TCheckBox
+        object cbReserveSpaceForReading: TCheckBox
           Left = 244
           Top = 178
           Width = 217
@@ -1730,7 +1733,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       DesignSize = (
         483
@@ -1851,7 +1854,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Label36: TLabel
         Left = 8
@@ -2005,7 +2008,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       DesignSize = (
         483
@@ -2126,7 +2129,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 8
@@ -2259,7 +2262,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object Bevel1: TBevel
         Left = 8
@@ -2341,7 +2344,7 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 476
+      ExplicitWidth = 0
       ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 16
