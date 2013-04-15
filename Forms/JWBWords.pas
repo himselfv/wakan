@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings, Menus,
-  WakanWordGrid, StdPrompt;
+  WakanWordGrid, StdPrompt, BlankPanel;
 
 type
   TMoveDirection = (mdUp, mdDown);
@@ -16,13 +16,10 @@ type
     pnlDockFilters: TPanel;
     Panel1: TPanel;
     Panel3: TPanel;
-    Shape7: TShape;
     RxLabel1: TRxLabel;
-    Label24: TLabel;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     SpeedButton4: TSpeedButton;
-    StringGrid1: TWakanGrid;
     Button15: TButton;
     Button18: TButton;
     Button19: TButton;
@@ -33,6 +30,8 @@ type
     miResetColumns: TMenuItem;
     splDockFilters: TSplitter;
     splDockDetails: TSplitter;
+    BlankPanel1: TBlankPanel;
+    StringGrid1: TWakanGrid;
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);

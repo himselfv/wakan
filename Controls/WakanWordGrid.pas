@@ -139,7 +139,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Samples', [TWakanWordGrid]);
+  RegisterComponents('Wakan', [TWakanWordGrid]);
 end;
 
 end.

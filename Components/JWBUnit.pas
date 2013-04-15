@@ -459,9 +459,14 @@ end;
 procedure FinishWordGrid(grid:TStringGrid);
 begin
   grid.Perform(WM_SETREDRAW, 1, 0);
-  if wgcur=1 then
+  if wgcur=1 then begin
+  { Careful! WM_SETREDRAW(1) causes control to become functionally visible
+   even with Visible set to false.
+   The only way to fix this for sure is to Show() and Hide() it again.
+   So try to avoid InitWordGrid/FinishWordGrid: if you have no items, just hide it. }
+    grid.Show;
     grid.Hide
-  else begin
+  end else begin
     grid.RowCount:=wgcur;
     if not grid.Visible then
       grid.Show;

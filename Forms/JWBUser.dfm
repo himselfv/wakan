@@ -86,31 +86,6 @@ object fUser: TfUser
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object Shape11: TShape
-      Left = 10
-      Top = 63
-      Width = 687
-      Height = 122
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Brush.Color = clWindow
-      ExplicitHeight = 124
-    end
-    object Label16: TLabel
-      Left = 30
-      Top = 90
-      Width = 240
-      Height = 19
-      Caption = '#00155^eNo words were found.'
-      Color = clBtnFace
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentColor = False
-      ParentFont = False
-      Transparent = True
-    end
     object SpeedButton5: TSpeedButton
       Left = 290
       Top = 193
@@ -485,30 +460,6 @@ object fUser: TfUser
       OnChange = Edit1Change
       OnClick = Edit1Click
     end
-    object StringGrid1: TWakanWordGrid
-      Left = 11
-      Top = 65
-      Width = 685
-      Height = 119
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      BorderStyle = bsNone
-      ColCount = 3
-      DefaultRowHeight = 16
-      FixedCols = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
-      PopupMenu = PopupMenu1
-      TabOrder = 1
-      OnDblClick = StringGrid1DblClick
-      OnDrawCell = StringGrid1DrawCell
-      OnMouseDown = StringGrid1MouseDown
-      OnMouseMove = StringGrid1MouseMove
-      OnMouseUp = StringGrid1MouseUp
-      OnSelectCell = StringGrid1SelectCell
-      ColWidths = (
-        131
-        128
-        402)
-    end
     object BitBtn1: TBitBtn
       Left = 626
       Top = 32
@@ -540,8 +491,47 @@ object fUser: TfUser
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
       ParentFont = False
-      TabOrder = 2
+      TabOrder = 1
       OnClick = BitBtn1Click
+    end
+    object BlankPanel: TBlankPanel
+      Left = 10
+      Top = 63
+      Width = 687
+      Height = 122
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      TextLeft = 20
+      TextTop = 27
+      Text = '#00155^eNo words were found.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+    end
+    object StringGrid1: TWakanWordGrid
+      Left = 11
+      Top = 64
+      Width = 685
+      Height = 119
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      BorderStyle = bsNone
+      ColCount = 3
+      DefaultRowHeight = 16
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+      PopupMenu = PopupMenu1
+      TabOrder = 3
+      OnDblClick = StringGrid1DblClick
+      OnDrawCell = StringGrid1DrawCell
+      OnMouseDown = StringGrid1MouseDown
+      OnMouseMove = StringGrid1MouseMove
+      OnMouseUp = StringGrid1MouseUp
+      OnSelectCell = StringGrid1SelectCell
+      ColWidths = (
+        131
+        128
+        402)
     end
   end
   object pnlDockExamples: TPanel

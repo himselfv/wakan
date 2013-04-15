@@ -73,16 +73,6 @@ object fWords: TfWords
       DesignSize = (
         773
         452)
-      object Shape7: TShape
-        Left = 10
-        Top = 26
-        Width = 753
-        Height = 399
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        Brush.Color = clWindow
-        ExplicitWidth = 756
-        ExplicitHeight = 402
-      end
       object RxLabel1: TRxLabel
         Left = 8
         Top = 5
@@ -95,22 +85,6 @@ object fWords: TfWords
         Font.Name = 'Verdana'
         Font.Style = [fsBold]
         ParentFont = False
-      end
-      object Label24: TLabel
-        Left = 24
-        Top = 42
-        Width = 240
-        Height = 19
-        Caption = '#00155^eNo words were found.'
-        Color = clBtnFace
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = [fsBold]
-        ParentColor = False
-        ParentFont = False
-        Transparent = True
       end
       object SpeedButton1: TSpeedButton
         Left = 10
@@ -175,33 +149,6 @@ object fWords: TfWords
         OnClick = SpeedButton4Click
         ExplicitTop = 432
       end
-      object StringGrid1: TWakanGrid
-        Left = 11
-        Top = 27
-        Width = 751
-        Height = 397
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        BorderStyle = bsNone
-        ColCount = 4
-        DefaultRowHeight = 16
-        FixedCols = 0
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
-        PopupMenu = PopupMenu1
-        TabOrder = 0
-        OnClick = StringGrid1Click
-        OnDrawCell = StringGrid1DrawCell
-        OnKeyPress = StringGrid1KeyPress
-        OnMouseDown = StringGrid1MouseDown
-        OnMouseMove = StringGrid1MouseMove
-        OnMouseUp = StringGrid1MouseUp
-        OnSelectCell = StringGrid1SelectCell
-        OnControlWidthResize = StringGrid1ControlResize
-        ColWidths = (
-          110
-          138
-          306
-          159)
-      end
       object Button15: TButton
         Left = 688
         Top = 5
@@ -216,7 +163,7 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 1
+        TabOrder = 0
         OnClick = Button15Click
       end
       object Button18: TButton
@@ -235,7 +182,7 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 2
+        TabOrder = 1
         OnClick = Button18Click
       end
       object Button19: TButton
@@ -252,7 +199,7 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 3
+        TabOrder = 2
         OnClick = Button19Click
       end
       object Button2: TButton
@@ -269,8 +216,50 @@ object fWords: TfWords
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        TabOrder = 4
+        TabOrder = 3
         OnClick = Button2Click
+      end
+      object BlankPanel1: TBlankPanel
+        Left = 10
+        Top = 26
+        Width = 753
+        Height = 399
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        TextLeft = 14
+        TextTop = 16
+        Text = '#00155^eNo words were found.'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -16
+        Font.Name = 'Arial'
+        Font.Style = [fsBold]
+      end
+      object StringGrid1: TWakanGrid
+        Left = 11
+        Top = 27
+        Width = 751
+        Height = 397
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        BorderStyle = bsNone
+        ColCount = 4
+        DefaultRowHeight = 16
+        FixedCols = 0
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+        PopupMenu = PopupMenu1
+        TabOrder = 5
+        OnClick = StringGrid1Click
+        OnDrawCell = StringGrid1DrawCell
+        OnKeyPress = StringGrid1KeyPress
+        OnMouseDown = StringGrid1MouseDown
+        OnMouseMove = StringGrid1MouseMove
+        OnMouseUp = StringGrid1MouseUp
+        OnSelectCell = StringGrid1SelectCell
+        OnControlWidthResize = StringGrid1ControlResize
+        ColWidths = (
+          110
+          138
+          306
+          159)
       end
     end
     object pnlDockDetails: TPanel

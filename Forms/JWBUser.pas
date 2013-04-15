@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBStrings, JWBUtils, JWBDic, JWBDicSearch, Menus, WakanWordGrid;
+  JWBStrings, JWBUtils, JWBDic, JWBDicSearch, Menus, WakanWordGrid, BlankPanel;
 
 type
   TKanjiEntry = record
@@ -19,8 +19,6 @@ type
     btnLookupJtoE: TSpeedButton;
     btnLookupEtoJ: TSpeedButton;
     btnLookupClip: TSpeedButton;
-    Shape11: TShape;
-    Label16: TLabel;
     SpeedButton5: TSpeedButton;
     SpeedButton6: TSpeedButton;
     SpeedButton7: TSpeedButton;
@@ -31,7 +29,6 @@ type
     SpeedButton12: TSpeedButton;
     btnCopyToClipboard: TSpeedButton;
     Edit1: TEdit;
-    StringGrid1: TWakanWordGrid;
     BitBtn1: TBitBtn;
     pnlDockExamples: TPanel;
     Panel3: TPanel;
@@ -47,6 +44,8 @@ type
     SpeedButton19: TSpeedButton;
     PopupMenu1: TPopupMenu;
     miResetColumns: TMenuItem;
+    BlankPanel: TBlankPanel;
+    StringGrid1: TWakanWordGrid;
     procedure Edit1Change(Sender: TObject);
     procedure Edit2Change(Sender: TObject);
     procedure Edit2Click(Sender: TObject);
@@ -408,7 +407,7 @@ begin
     BitBtn1.Visible:=true;
     Label2.Visible:=false;
     StringGrid1.Visible:=false;
-    Label16.Visible:=(edit1.text<>'') or (a=stEditorInsert);
+    BlankPanel.TextVisible:=(edit1.text<>'') or (a=stEditorInsert);
     curword:=0;
     ShowWord;
     exit;
