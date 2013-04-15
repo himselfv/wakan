@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsFonts
+    ActivePage = tsDatabaseMaintenance
     Align = alClient
     MultiLine = True
     Style = tsButtons
