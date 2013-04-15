@@ -357,11 +357,12 @@ end;
 
 function TDictionaryList.IsInGroup(dicname: string; group: TDictGroup): boolean;
 begin
+ //To properly match "dicname" in list, we check for commas around it
   case group of
-    GROUP_NOTUSED: Result := pos(','+lowercase(dicname),NotUsedDicts)<>0;
-    GROUP_OFFLINE: Result := pos(','+lowercase(dicname),OfflineDicts)<>0;
+    GROUP_NOTUSED: Result := pos(','+lowercase(dicname)+',',NotUsedDicts+',')<>0;
+    GROUP_OFFLINE: Result := pos(','+lowercase(dicname)+',',OfflineDicts+',')<>0;
   else
-    Result := pos(','+lowercase(dicname),NotGroupDicts[group])=0;
+    Result := pos(','+lowercase(dicname)+',',NotGroupDicts[group]+',')=0;
   end;
 end;
 
@@ -375,9 +376,9 @@ var l_name: string;
 begin
   l_name := lowercase(name);
   if add then begin
-    if pos(','+l_name,list)=0 then list:=list+','+l_name;
+    if pos(','+l_name+',',list+',')=0 then list:=list+','+l_name;
   end else begin
-    if pos(','+l_name,list)>0 then delete(list,pos(','+l_name,list),length(l_name)+1);
+    if pos(','+l_name+',',list+',')>0 then delete(list,pos(','+l_name+',',list+','),length(l_name)+1);
   end;
 end;
 
