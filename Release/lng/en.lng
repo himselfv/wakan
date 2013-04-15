@@ -1168,8 +1168,6 @@
 01062>Do not warn when translating large text blocks
 01063>Disable the "You are about to translate a large text block" warning
 01064>Multithreaded translation
-01065>Carry the reading over to the next line
-01066>If the reading doesn't fit on the current line, carry it over to the next line
 ;
 ;
 ; EDICT markers.

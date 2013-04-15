@@ -1696,17 +1696,6 @@ object fSettings: TfSettings
           Caption = '#01064^eMultithreaded translation'
           TabOrder = 17
         end
-        object cbReadingCarryOver: TCheckBox
-          Left = 10
-          Top = 433
-          Width = 377
-          Height = 17
-          Hint = 
-            '#01066^eIf the reading doesn'#39't fit on the current line, carry it' +
-            ' over to the next line'
-          Caption = '#01065^eCarry the reading over to the next line'
-          TabOrder = 18
-        end
       end
     end
     object tsCharacterDetails: TTabSheet

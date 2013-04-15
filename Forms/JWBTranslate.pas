@@ -3029,27 +3029,20 @@ begin
   Canvas.FillRect(rect);
 
   try
-    while (py<screenh) and ((cl<ll.Count) or (kanaq<>'')) do
+    while (py<screenh) and (cl<ll.Count) do
     begin
-      if cl<ll.Count then begin
-        cx:=ll[cl].xs;
-        cy:=ll[cl].ys;
-        wx:=cx+ll[cl].len;
-      end else begin
-        cx:=-1;cy:=-1;wx:=-1; //crash and burn if you access this
-      end;
-
-      if not fSettings.cbReadingCarryOver.Checked then
-        kanaq:=''; //reset reading on newline
+      cx:=ll[cl].xs;
+      cy:=ll[cl].ys;
+      wx:=cx+ll[cl].len;
 
       while (px<screenw) and (
-       ((cl<ll.Count) and (cx<wx) and (cx<flength(doc[cy])))
+       ((cx<wx) and (cx<flength(doc[cy])))
        or ((kanaq<>'') and PrintReading)
       ) do
       try
        { Note that we can get here even if cx is outside the legal characters for the string.
         This happens if we have some reading remainder in kanaq. Be careful. }
-        validChar := (cl<ll.Count) and (cx<wx) and (cx<flength(doc[cy]));
+        validChar := (cx<wx) and (cx<flength(doc[cy]));
 
         if validChar then begin
           wordstate:=doctr[cy].chars[cx].wordstate;
@@ -3335,6 +3328,9 @@ begin
       inRubyComment := false;
       inc(py,rs*linec);
       px:=0;
+      if cl<ll.Count then
+        if ll[cl].xs + ll[cl].len >= flength(doc[cy]) then
+          kanaq:=''; //reset reading on logical newline
       inc(cl);
     end;
   except
