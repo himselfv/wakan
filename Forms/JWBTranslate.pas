@@ -2869,7 +2869,8 @@ var
   learnstate:integer;
   kanjilearned:boolean;
 
-    cnty,cntx:integer;
+  cnty,cntx:integer;
+
     realx,realy,realx2,realy2:integer;
     we:integer;
     rect:TRect;
@@ -3028,305 +3029,310 @@ begin
   Canvas.FillRect(rect);
 
   try
-  while (py<screenh) and (cl<ll.Count) do
-  begin
-    cx:=ll[cl].xs;
-    cy:=ll[cl].ys;
-    wx:=cx+ll[cl].len;
-    kanaq:=''; //reset reading on newline
+    while (py<screenh) and (cl<ll.Count) do
+    begin
+      cx:=ll[cl].xs;
+      cy:=ll[cl].ys;
+      wx:=cx+ll[cl].len;
+      kanaq:=''; //reset reading on newline
 
-    while ((cx<wx) and (cx<flength(doc[cy]))) or ((kanaq<>'') and PrintReading) do
-    try
-     { Note that we can get here even if CX is outside the legal characters for the string.
-      This happens if we have some reading remainder in kanaq. Be careful. }
-      validChar := (cx<wx) and (cx<flength(doc[cy]));
+      while ((cx<wx) and (cx<flength(doc[cy]))) or ((kanaq<>'') and PrintReading) do
+      try
+       { Note that we can get here even if CX is outside the legal characters for the string.
+        This happens if we have some reading remainder in kanaq. Be careful. }
+        validChar := (cx<wx) and (cx<flength(doc[cy]));
 
-      if validChar then begin
-        wordstate:=doctr[cy].chars[cx].wordstate;
-        learnstate:=doctr[cy].chars[cx].learnstate;
+        if validChar then begin
+          wordstate:=doctr[cy].chars[cx].wordstate;
+          learnstate:=doctr[cy].chars[cx].learnstate;
 
-        GetTextWordInfo(cx,cy,meaning,reading,kanji);
-        if cfExplicitRuby in doctr[cy].chars[cx].flags then
-          reading := doctr[cy].chars[cx].ruby; //replacing GetTextWordInfo's reading
+          GetTextWordInfo(cx,cy,meaning,reading,kanji);
+          if cfExplicitRuby in doctr[cy].chars[cx].flags then
+            reading := doctr[cy].chars[cx].ruby; //replacing GetTextWordInfo's reading
 
-        kanjilearned:=(FirstUnknownKanjiIndex(kanji)<0);
-        worddict:=doctr[cy].chars[cx].dicidx;
-        aftertouch:=(cy=ins.y) and (cx>=ins.x) and (cx<ins.x+inslen);
-        if wordstate='<'then begin
-          worddict:=lastworddict;
-          wordstate:=lastwordstate;
-         //aftertouch is not carried over for valid chars
-        end;
-        lastwordstate:=wordstate;
-        lastworddict:=worddict;
-        lastaftertouch:=aftertouch;
-        if (upcase(wordstate)<>'F') and (upcase(wordstate)<>'D') then reading:='';
-
-        if fSettings.cbReadingKatakana.Checked then begin
-          if cx>0 then gd0 := GetDoc(cx-1,cy) else gd0 := UH_NOCHAR;
-          if cx<flength(doc[cy]) then gd2 := GetDoc(cx+1,cy) else gd2 := UH_NOCHAR;
-          FixReading(gd0,GetDoc(cx,cy),gd2,reading);
-        end;
-
-        if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_OPEN then
-          inRubyTag := true;
-        if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_OPEN then
-          inRubyComment := true;
-       //will check for closers after we draw current symbol as is (closers are still inside the tag)
-      end else begin
-        kanji := '';
-        reading := '';
-        meaning := '';
-        worddict := lastworddict;
-        wordstate := lastwordstate;
-        aftertouch := lastaftertouch;
-      end;
-     { Do not check on kanji<>'' to decide whether we draw char or not. It's set
-      only for dictionary-linked entries.
-      Check for individual parts before drawing those, and for validChar before drawing a char }
-
-      if fSettings.cbNoColors.Checked then begin
-        color:=clWindow;
-        fcolor:=clWindowText;
-      end else begin
-        color:=colBack;
-        fcolor:=colText;
-      end;
-      if printing then color:=clWhite;
-      if not fSettings.cbNoColors.Checked then begin
-        if printing and fSettings.cbNoPrintColors.Checked then
-          color:=$00FFFFFF
-        else
-        if fMenu.aEditorColors.Checked then begin
-          case upcase(wordstate) of
-            '-','X':color:=Col('Editor_Untranslated');
-            '?':color:=Col('Editor_NotFound');
-            'P':color:=Col('Editor_Particle');
-            'I':color:=Col('Editor_Untranslated');
-            'F':color:=Col('Editor_Translated');
-            'D':color:=Col('Editor_Translated');
-            'H':color:=Col('Editor_Translated');
-            'K':color:=Col('Editor_Translated');
+          kanjilearned:=(FirstUnknownKanjiIndex(kanji)<0);
+          worddict:=doctr[cy].chars[cx].dicidx;
+          aftertouch:=(cy=ins.y) and (cx>=ins.x) and (cx<ins.x+inslen);
+          if wordstate='<'then begin
+            worddict:=lastworddict;
+            wordstate:=lastwordstate;
+           //aftertouch is not carried over for valid chars
           end;
-        end else
-          color:=Col('Editor_Untranslated');
-        if inRubyTag then fcolor:=Col('Editor_AozoraTag');
-        if inRubyComment then fcolor:=Col('Editor_AozoraComment');
-      end;
-      invert:=false;
+          lastwordstate:=wordstate;
+          lastworddict:=worddict;
+          lastaftertouch:=aftertouch;
+          if (upcase(wordstate)<>'F') and (upcase(wordstate)<>'D') then reading:='';
 
-      boldness:=(upcase(wordstate)<>wordstate) and fSettings.cbUserBold.Checked;
-      if validChar then begin
-        if fSettings.cbNoMeaningLearned.Checked and (learnstate>1) and (learnstate<4) then meaning:='';
-        if printing and fSettings.cbNoPrintColors.Checked then
-        begin
-          //Nothing.
-        end else
-          if fMenu.aEditorColors.Checked then
-            case learnstate of
-              0: color:=Col('Editor_Problematic');
-              1: color:=Col('Editor_Unlearned');
-              2: color:=Col('Editor_Learned');
-              3: color:=Col('Editor_Mastered');
+          if fSettings.cbReadingKatakana.Checked then begin
+            if cx>0 then gd0 := GetDoc(cx-1,cy) else gd0 := UH_NOCHAR;
+            if cx<flength(doc[cy]) then gd2 := GetDoc(cx+1,cy) else gd2 := UH_NOCHAR;
+            FixReading(gd0,GetDoc(cx,cy),gd2,reading);
+          end;
+
+          if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_OPEN then
+            inRubyTag := true;
+          if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_OPEN then
+            inRubyComment := true;
+         //will check for closers after we draw current symbol as is (closers are still inside the tag)
+        end else begin
+          kanji := '';
+          reading := '';
+          meaning := '';
+          worddict := lastworddict;
+          wordstate := lastwordstate;
+          aftertouch := lastaftertouch;
+        end;
+       { Do not check on kanji<>'' to decide whether we draw char or not. It's set
+        only for dictionary-linked entries.
+        Check for individual parts before drawing those, and for validChar before drawing a char }
+
+        if fSettings.cbNoColors.Checked then begin
+          color:=clWindow;
+          fcolor:=clWindowText;
+        end else begin
+          color:=colBack;
+          fcolor:=colText;
+        end;
+        if printing then color:=clWhite;
+        if not fSettings.cbNoColors.Checked then begin
+          if printing and fSettings.cbNoPrintColors.Checked then
+            color:=$00FFFFFF
+          else
+          if fMenu.aEditorColors.Checked then begin
+            case upcase(wordstate) of
+              '-','X':color:=Col('Editor_Untranslated');
+              '?':color:=Col('Editor_NotFound');
+              'P':color:=Col('Editor_Particle');
+              'I':color:=Col('Editor_Untranslated');
+              'F':color:=Col('Editor_Translated');
+              'D':color:=Col('Editor_Translated');
+              'H':color:=Col('Editor_Translated');
+              'K':color:=Col('Editor_Translated');
             end;
-        if fSettings.cbNoReadingLearned.Checked and kanjilearned then reading:='';
-      end;
-
-      if printing then begin
-        Canvas.Brush.Color:=clWhite;
-        Canvas.Font.Color:=clBlack;
-      end else
-      if fSettings.cbNoColors.Checked then begin
-        Canvas.Brush.Color:=clWindow;
-        Canvas.Font.Color:=clWindowText;
-      end else begin
-        Canvas.Brush.Color:=colBack;
-        Canvas.Font.Color:=colText;
-      end;
-
-      //Print meaning
-      if PrintMeaning and (meaning<>'') then
-      begin
-        cnty:=py+rs*2;
-        we:=cx+1;
-        cntx:=px+rs*2;
-        while (we<wx) and (we<cx+6) and (doctr[cy].chars[we].dicidx=0) and (doctr[cy].chars[we].wordstate<>'?') do
-        begin
-          if IsHalfWidth(we,cy) and not Vertical then inc(cntx,rs) else inc(cntx,rs*2);
-          inc(we);
+          end else
+            color:=Col('Editor_Untranslated');
+          if inRubyTag then fcolor:=Col('Editor_AozoraTag');
+          if inRubyComment then fcolor:=Col('Editor_AozoraComment');
         end;
-        if PrintReading or ReserveSpaceForReading then cnty:=cnty+rs;
-        if Vertical then
-        begin
-          realx:=w-cnty-MeaningLines*rs;
-          realy:=px;
-          realx2:=w-cnty;
-          realy2:=cntx;
+        invert:=false;
+
+        boldness:=(upcase(wordstate)<>wordstate) and fSettings.cbUserBold.Checked;
+        if validChar then begin
+          if fSettings.cbNoMeaningLearned.Checked and (learnstate>1) and (learnstate<4) then meaning:='';
+          if printing and fSettings.cbNoPrintColors.Checked then
+          begin
+            //Nothing.
+          end else
+            if fMenu.aEditorColors.Checked then
+              case learnstate of
+                0: color:=Col('Editor_Problematic');
+                1: color:=Col('Editor_Unlearned');
+                2: color:=Col('Editor_Learned');
+                3: color:=Col('Editor_Mastered');
+              end;
+          if fSettings.cbNoReadingLearned.Checked and kanjilearned then reading:='';
+        end;
+
+        if printing then begin
+          Canvas.Brush.Color:=clWhite;
+          Canvas.Font.Color:=clBlack;
         end else
-        begin
-          realx:=px;
-          realy:=cnty;
-          realx2:=cntx;
-          realy2:=cnty+MeaningLines*rs;
+        if fSettings.cbNoColors.Checked then begin
+          Canvas.Brush.Color:=clWindow;
+          Canvas.Font.Color:=clWindowText;
+        end else begin
+          Canvas.Brush.Color:=colBack;
+          Canvas.Font.Color:=colText;
         end;
-        rect.left:=realx+l+2;
-        rect.right:=realx2+l-2;
-        rect.top:=realy+t;
-        rect.bottom:=realy2+t;
-        canvas.Font.Name:=FontEnglish;
-        if not fSettings.CheckBox27.Checked then
-          canvas.Font.Height:=rs else
-          canvas.Font.Height:=rs*2;
-        canvas.Font.Style:=[];
-        DrawText(canvas.Handle,pchar(meaning),length(meaning),rect,DT_WORDBREAK);
-       { Box border around meaning -- partial (top line is drawn char-by-char) }
-        if fSettings.cbDisplayLines.Checked then
+
+        //Print meaning
+        if PrintMeaning and (meaning<>'') then
+        begin
+          cnty:=py+rs*2; //base char height
+          if PrintReading or ReserveSpaceForReading then
+            cnty:=cnty+rs; //reading height
+          we:=cx+1;
+          cntx:=px+rs*2; //total width
+          while (we<wx) and (we<cx+6) and (doctr[cy].chars[we].dicidx=0) and (doctr[cy].chars[we].wordstate<>'?') do
+          begin
+            if IsHalfWidth(we,cy) and not Vertical then inc(cntx,rs) else inc(cntx,rs*2);
+            inc(we);
+          end;
           if Vertical then
           begin
-            canvas.MoveTo(realx2+l+1,realy+t);
-            canvas.LineTo(realx+l+1,realy+t);
-            canvas.LineTo(realx+l+1,realy2+t);
-            canvas.LineTo(realx2+l+1,realy2+t);
+            realx:=w-cnty-MeaningLines*rs;
+            realy:=px;
+            realx2:=w-cnty;
+            realy2:=cntx;
           end else
           begin
-            canvas.MoveTo(realx+l,realy+t-1);
-            canvas.LineTo(realx+l,realy2+t-1);
-            canvas.LineTo(realx2+l,realy2+t-1);
-            canvas.LineTo(realx2+l,realy+t-1);
+            realx:=px;
+            realy:=cnty;
+            realx2:=cntx;
+            realy2:=cnty+MeaningLines*rs;
           end;
-      end;
-
-      //Append reading to print later
-      if reading<>'' then begin
-        if showroma then
-          reading:=KanaToRomajiF(reading,romasys,curlang)
-        else
-          reading:=ConvertBopomofo(reading); //pointless in roma
-        kanaq:=kanaq+reading;
-      end;
-
-      cntx:=px;
-
-      if printing then
-        Canvas.Font.Color:=clBlack
-      else
-      if fSettings.cbNoColors.Checked then
-        Canvas.Font.Color:=clWindowText
-      else
-        Canvas.Font.Color:=colText;
-
-      if not fSettings.cbNoColors.Checked then
-      begin
-        if fSettings.CheckBox41.Checked and validChar and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
-          canvas.Font.Color:=Col('Editor_ASCII');
-        if wordstate='I'then
-          canvas.Font.Color:=Col('Editor_Active')
-        else
-        begin
-          canvas.Font.Color:=fcolor;
-          if aftertouch then
-            canvas.Font.Color:=Col('Editor_Aftertouch');
-          canvas.Brush.Color:=color;
-        end;
-      end;
-
-     { Print reading: 1 or 2 positions, 1 full-width or 2 half-width reading chars each }
-      if PrintReading then
-        for i:=1 to 2 do
-         //If this is validChar and it's half-width and we're in horizontal print, there's only one position
-          if (kanaq<>'') and ((i=1) or Vertical or not validChar or not IsHalfWidth(cx,cy)) then
-          begin
+          rect.left:=realx+l+2;
+          rect.right:=realx2+l-2;
+          rect.top:=realy+t;
+          rect.bottom:=realy2+t;
+          canvas.Font.Name:=FontEnglish;
+          if not fSettings.CheckBox27.Checked then
+            canvas.Font.Height:=rs else
+            canvas.Font.Height:=rs*2;
+          canvas.Font.Style:=[];
+          DrawText(canvas.Handle,pchar(meaning),length(meaning),rect,DT_WORDBREAK);
+         { Box border around meaning -- partial (top line is drawn char-by-char) }
+          if fSettings.cbDisplayLines.Checked then
             if Vertical then
             begin
-              realx:=w-py-rs-1;
-              realy:=cntx;
+              canvas.MoveTo(realx2+l+1,realy+t);
+              canvas.LineTo(realx+l+1,realy+t);
+              canvas.LineTo(realx+l+1,realy2+t);
+              canvas.LineTo(realx2+l+1,realy2+t);
             end else
             begin
-              realx:=cntx;
-              realy:=py+1;
+              canvas.MoveTo(realx+l,realy+t-1);
+              canvas.LineTo(realx+l,realy2+t-1);
+              canvas.LineTo(realx2+l,realy2+t-1);
+              canvas.LineTo(realx2+l,realy+t-1);
             end;
-            if showroma then
-            begin
-              if curlang='c'then
-                DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontChineseGrid)
-              else
-                DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
-              fdelete(kanaq,1,2);
-            end else
-            begin
-              if curlang='c'then
-                DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontChineseGrid)
-              else
-                DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
-              fdelete(kanaq,1,1);
-            end;
-            inc(cntx,rs);
-          end;
-
-     { Draw single char }
-      if validChar then begin
-        if boldness then canvas.Font.Style:=[fsBold] else canvas.Font.Style:=[];
-        if Vertical then
-        begin
-          realx:=w-py-rs*2;
-          if PrintReading or ReserveSpaceForReading then realx:=realx-rs;
-          realy:=px;
-        end else
-        begin
-          realx:=px;
-          realy:=py;
-          if PrintReading or ReserveSpaceForReading then realy:=realy+rs;
         end;
-        rect.Left:=realx+l;
-        rect.Right:=realx+l+rs*2;
-        if (not Vertical) and (IsHalfWidth(cx,cy)) then rect.Right:=realx+l+rs;
-        rect.Top:=realy+t;
-        rect.Bottom:=realy+t+rs*2;
-        canvas.FillRect(rect);
-        if curlang='c'then
-          DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
+
+        //Append reading to print later
+        if reading<>'' then begin
+          if showroma then
+            reading:=KanaToRomajiF(reading,romasys,curlang)
+          else
+            reading:=ConvertBopomofo(reading); //pointless in roma
+          kanaq:=kanaq+reading;
+        end;
+
+        cntx:=px;
+
+        if printing then
+          Canvas.Font.Color:=clBlack
         else
-          DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
-      end;
+        if fSettings.cbNoColors.Checked then
+          Canvas.Font.Color:=clWindowText
+        else
+          Canvas.Font.Color:=colText;
 
-     //we check for openers before rendering, and for closers here
-      if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
-        inRubyTag := false;
-      if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
-        inRubyComment := false;
-
-     { Box border for meaning -- last line.
-      This one is drawn char-by-char, so we check for worddict + valid
-      (meaning=='' from second char on). }
-      if PrintMeaning and validChar and (worddict<>0) and fSettings.cbDisplayLines.Checked then
-        if Vertical then
+        if not fSettings.cbNoColors.Checked then
         begin
-          canvas.MoveTo(realx+l,realy+t);
-          canvas.LineTo(realx+l,realy+t+rs*2);
-        end else
-        begin
-          canvas.MoveTo(realx+l,realy+t+rs*2);
-          canvas.LineTo(realx+l+rs*2,realy+t+rs*2);
+          if fSettings.CheckBox41.Checked and validChar and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
+            canvas.Font.Color:=Col('Editor_ASCII');
+          if wordstate='I'then
+            canvas.Font.Color:=Col('Editor_Active')
+          else
+          begin
+            canvas.Font.Color:=fcolor;
+            if aftertouch then
+              canvas.Font.Color:=Col('Editor_Aftertouch');
+            canvas.Brush.Color:=color;
+          end;
         end;
 
-      if (not Vertical) and (validChar and IsHalfWidth(cx,cy)) then inc(px,rs) else inc(px,rs*2);
-      inc(cx);
-    except
-      on E: Exception do begin
-        E.Message := 'Paint exception ('+inttostr(cx)+','+inttostr(cy)+'): '+E.Message;
-        raise;
-      end;
-    end;
+       { Print reading: 1 or 2 positions, 1 full-width or 2 half-width reading chars each }
+        if PrintReading then
+          for i:=1 to 2 do
+           //If this is validChar and it's half-width and we're in horizontal print, there's only one position
+            if (kanaq<>'') and ((i=1) or Vertical or not validChar or not IsHalfWidth(cx,cy)) then
+            begin
+              if Vertical then
+              begin
+                realx:=w-py-rs-1;
+                realy:=cntx;
+              end else
+              begin
+                realx:=cntx;
+                realy:=py+1;
+              end;
+              if showroma then
+              begin
+                if curlang='c'then
+                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontChineseGrid)
+                else
+                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
+                fdelete(kanaq,1,2);
+              end else
+              begin
+                if curlang='c'then
+                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontChineseGrid)
+                else
+                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
+                fdelete(kanaq,1,1);
+              end;
+              inc(cntx,rs);
+            end;
 
-   //Next line
-    inRubyTag := false;
-    inRubyComment := false;
-    inc(py,rs*linec);
-    px:=0;
-    inc(cl);
-  end;
+       { Draw single char }
+        if validChar then begin
+          if boldness then canvas.Font.Style:=[fsBold] else canvas.Font.Style:=[];
+          if Vertical then
+          begin
+            realx:=w-py-rs*2;
+            if PrintReading or ReserveSpaceForReading then realx:=realx-rs;
+            realy:=px;
+          end else
+          begin
+            realx:=px;
+            realy:=py;
+            if PrintReading or ReserveSpaceForReading then realy:=realy+rs;
+          end;
+          rect.Left:=realx+l;
+          rect.Right:=realx+l+rs*2;
+          if (not Vertical) and (IsHalfWidth(cx,cy)) then rect.Right:=realx+l+rs;
+          rect.Top:=realy+t;
+          rect.Bottom:=realy+t+rs*2;
+          canvas.FillRect(rect);
+          if curlang='c'then
+            DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
+          else
+            DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
+
+         { Box border for meaning => underline.
+          This one is drawn char-by-char, so we check for worddict + valid
+          (meaning=='' from second char on). }
+          if PrintMeaning and (worddict<>0) and fSettings.cbDisplayLines.Checked then
+            if Vertical then
+            begin
+              canvas.MoveTo(realx+l,realy+t);
+              canvas.LineTo(realx+l,realy+t+rs*2);
+            end else
+            begin
+              canvas.MoveTo(realx+l,realy+t+rs*2);
+              canvas.LineTo(realx+l+rs*2,realy+t+rs*2);
+            end;
+
+        end;
+
+       //we check for openers before rendering, and for closers here
+        if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
+          inRubyTag := false;
+        if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
+          inRubyComment := false;
+
+        if (not Vertical) and (validChar and IsHalfWidth(cx,cy)) then inc(px,rs) else inc(px,rs*2);
+        inc(cx);
+      except
+        on E: Exception do begin
+          E.Message := '('+inttostr(cx)+','+inttostr(cy)+'): '+E.Message;
+          raise;
+        end;
+      end;
+
+     //Next line
+      inRubyTag := false;
+      inRubyComment := false;
+      inc(py,rs*linec);
+      px:=0;
+      inc(cl);
+    end;
   except
-    showmessage('Paint exception: '+(ExceptObject as Exception).Message);
+    on E: Exception do begin
+      E.Message := 'Paint exception: '+E.Message;
+      raise;
+    end;
   end;
 end;
 
