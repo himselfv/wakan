@@ -298,13 +298,16 @@ const
 type
   TDictionaryList = class(TList)
   protected
+   //Lists in internal faster format
+    FNotUsedDicts:string;
+    FNotGroupDicts:array[1..5] of string;
+    FOfflineDicts:string;
     function Get(Index: Integer): TJaletDic; reintroduce;
     procedure Put(Index: Integer; Item: TJaletDic); reintroduce;
+    function GetDicts(Index: integer): string;
+    procedure SetDicts(Index: integer; const Value: string);
   public
     Priority: TStringList;
-    NotUsedDicts:string;
-    NotGroupDicts:array[1..5] of string;
-    OfflineDicts:string;
     constructor Create;
     destructor Destroy; override;
     function FindIndex(AName: string): integer;
@@ -314,6 +317,10 @@ type
     function IsInGroup(dic: TJaletDic; group: TDictGroup): boolean; overload; inline;
     function IsInGroup(dicname: string; group: TDictGroup): boolean; overload;
     property Items[Index: Integer]: TJaletDic read Get write Put; default;
+   //Lists in external compatible format of older Wakans -- do not use except when reading/saving settings
+    property NotGroupDicts[Index:integer]: string read GetDicts write SetDicts;
+    property NotUsedDicts:string index GROUP_NOTUSED read GetDicts write SetDicts;
+    property OfflineDicts:string index GROUP_OFFLINE read GetDicts write SetDicts;
   end;
 
 var
@@ -350,6 +357,40 @@ begin
   inherited Put(Index, Item);
 end;
 
+{ Proxy functions to get and set dictionary lists in old string format.
+ Internally we can keep them as optimized as we want.
+ Although currently we don't do much except add a comma in SetDicts. }
+function TDictionaryList.GetDicts(Index: integer): string;
+begin
+  case Index of
+    GROUP_NOTUSED: Result := FNotUsedDicts;
+    GROUP_OFFLINE: Result := FOfflineDicts;
+  else
+    Result := FNotGroupDicts[Index];
+  end;
+ //Delete final ',' for compability with older Wakans (this is to be saved to registry)
+  if (Length(Result)>0) and (Result[Length(Result)]=',') then
+    SetLength(Result,Length(Result)-1);
+end;
+
+procedure TDictionaryList.SetDicts(Index: integer; const Value: string);
+var val: string;
+begin
+  val := Value;
+ { By convention, each entry starts with ',' and the list must always end with ','
+  so that we can freely check against ',dictname,' }
+  if (Length(val)<=0) or (val[Length(val)]<>',') then
+    val := val+',';
+  if (Length(val)>0) and (val[1]<>',') then
+    val := ','+val;
+  case Index of
+    GROUP_NOTUSED: FNotUsedDicts := val;
+    GROUP_OFFLINE: FOfflineDicts := val;
+  else
+    FNotGroupDicts[Index] := val;
+  end;
+end;
+
 function TDictionaryList.IsInGroup(dic: TJaletDic; group: TDictGroup): boolean;
 begin
   Result := IsInGroup(dic.name,group);
@@ -359,10 +400,10 @@ function TDictionaryList.IsInGroup(dicname: string; group: TDictGroup): boolean;
 begin
  //To properly match "dicname" in list, we check for commas around it
   case group of
-    GROUP_NOTUSED: Result := pos(','+lowercase(dicname)+',',NotUsedDicts+',')<>0;
-    GROUP_OFFLINE: Result := pos(','+lowercase(dicname)+',',OfflineDicts+',')<>0;
+    GROUP_NOTUSED: Result := pos(','+lowercase(dicname)+',',FNotUsedDicts)<>0;
+    GROUP_OFFLINE: Result := pos(','+lowercase(dicname)+',',FOfflineDicts)<>0;
   else
-    Result := pos(','+lowercase(dicname)+',',NotGroupDicts[group]+',')=0;
+    Result := pos(','+lowercase(dicname)+',',FNotGroupDicts[group])=0;
   end;
 end;
 
@@ -376,19 +417,19 @@ var l_name: string;
 begin
   l_name := lowercase(name);
   if add then begin
-    if pos(','+l_name+',',list+',')=0 then list:=list+','+l_name;
+    if pos(','+l_name+',',list)=0 then list:=list+l_name+','; //list ends in comma
   end else begin
-    if pos(','+l_name+',',list+',')>0 then delete(list,pos(','+l_name+',',list+','),length(l_name)+1);
+    if pos(','+l_name+',',list)>0 then delete(list,pos(','+l_name+',',list)+1,length(l_name)+1); //list ends in comma
   end;
 end;
 
 procedure TDictionaryList.PutInGroup(dicname: string; group: TDictGroup; inGroup: boolean);
 begin
   case group of
-    GROUP_NOTUSED: AddToList(dicname, NotUsedDicts, inGroup);
-    GROUP_OFFLINE: AddToList(dicname, OfflineDicts, inGroup);
+    GROUP_NOTUSED: AddToList(dicname, FNotUsedDicts, inGroup);
+    GROUP_OFFLINE: AddToList(dicname, FOfflineDicts, inGroup);
   else
-    AddToList(dicname, NotGroupDicts[group], not inGroup);
+    AddToList(dicname, FNotGroupDicts[group], not inGroup);
   end;
 end;
 
