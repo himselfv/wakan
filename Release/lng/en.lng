@@ -1168,6 +1168,12 @@
 01062>Do not warn when translating large text blocks
 01063>Disable the "You are about to translate a large text block" warning
 01064>Multithreaded translation
+01065>Printing
+01066>Saving and loading
+01067>Aozora Ruby
+01068>Text translator:
+01069>Printing:
+01070>Editor:
 ;
 ;
 ; EDICT markers.

@@ -3,8 +3,8 @@ object fSettings: TfSettings
   Top = 131
   BorderStyle = bsDialog
   Caption = '#00397^eSettings'
-  ClientHeight = 501
-  ClientWidth = 668
+  ClientHeight = 476
+  ClientWidth = 660
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,45 +21,53 @@ object fSettings: TfSettings
   PixelsPerInch = 96
   TextHeight = 13
   object pcPages: TPageControl
-    Left = 177
+    Left = 187
     Top = 0
-    Width = 491
-    Height = 460
-    ActivePage = tsTextTranslator
+    Width = 473
+    Height = 435
+    Margins.Left = 9
+    Margins.Right = 0
+    Margins.Bottom = 0
+    ActivePage = tsFonts
     Align = alClient
     MultiLine = True
     Style = tsButtons
     TabOrder = 1
     OnChange = pcPagesChange
+    ExplicitLeft = 177
+    ExplicitWidth = 491
     object tsGeneral: TTabSheet
-      Caption = '#00398^eGeneral'
-      ImageIndex = 7
+      Caption = 'General'
       TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
-        Width = 483
-        Height = 450
+        Width = 465
+        Height = 425
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
+        ExplicitWidth = 483
+        ExplicitHeight = 450
         object Label41: TLabel
-          Left = 16
-          Top = 224
+          Left = 3
+          Top = 212
           Width = 206
           Height = 13
           Caption = '#00399^eDictionary entries grid font height:'
         end
         object Label47: TLabel
-          Left = 288
-          Top = 336
+          Left = 275
+          Top = 324
           Width = 85
           Height = 13
           Caption = '#00400^eminutes'
         end
         object cbSaveSearchParams: TCheckBox
-          Left = 16
-          Top = 430
+          Left = 3
+          Top = 418
           Width = 417
           Height = 17
           Hint = '#00999^eKanji search params will be preserved on program restart'
@@ -67,8 +75,8 @@ object fSettings: TfSettings
           TabOrder = 14
         end
         object CheckBox26: TCheckBox
-          Left = 16
-          Top = 128
+          Left = 3
+          Top = 116
           Width = 401
           Height = 17
           Hint = 
@@ -78,8 +86,8 @@ object fSettings: TfSettings
           TabOrder = 0
         end
         object CheckBox10: TCheckBox
-          Left = 16
-          Top = 152
+          Left = 3
+          Top = 140
           Width = 433
           Height = 17
           Hint = '#00403^eShows words with non-learned kanji in different color'
@@ -87,8 +95,8 @@ object fSettings: TfSettings
           TabOrder = 1
         end
         object CheckBox11: TCheckBox
-          Left = 16
-          Top = 200
+          Left = 3
+          Top = 188
           Width = 433
           Height = 17
           Hint = 
@@ -98,8 +106,8 @@ object fSettings: TfSettings
           TabOrder = 2
         end
         object CheckBox46: TCheckBox
-          Left = 16
-          Top = 312
+          Left = 3
+          Top = 300
           Width = 433
           Height = 17
           Hint = 
@@ -109,56 +117,56 @@ object fSettings: TfSettings
           TabOrder = 3
         end
         object Edit25: TEdit
-          Left = 232
-          Top = 224
+          Left = 219
+          Top = 212
           Width = 121
           Height = 21
           TabOrder = 4
           Text = 'Edit25'
         end
         object CheckBox49: TCheckBox
-          Left = 16
-          Top = 248
+          Left = 3
+          Top = 236
           Width = 417
           Height = 17
           Caption = '#00408^eLoad dictionaries on demand'
           TabOrder = 5
         end
         object CheckBox53: TCheckBox
-          Left = 16
-          Top = 272
+          Left = 3
+          Top = 260
           Width = 353
           Height = 17
           Caption = '#00409^eMulti-line word grids'
           TabOrder = 6
         end
         object cbAutosave: TCheckBox
-          Left = 16
-          Top = 336
+          Left = 3
+          Top = 324
           Width = 193
           Height = 17
           Caption = '#00410^eAuto-save user database every '
           TabOrder = 7
         end
         object edtAutoSavePeriod: TEdit
-          Left = 216
-          Top = 336
+          Left = 203
+          Top = 324
           Width = 65
           Height = 21
           TabOrder = 8
           Text = 'edtAutoSavePeriod'
         end
         object CheckBox55: TCheckBox
-          Left = 16
-          Top = 360
+          Left = 3
+          Top = 348
           Width = 417
           Height = 17
           Caption = '#00411^eMake backup of user file into BACKUP folder every day'
           TabOrder = 9
         end
         object RadioGroup5: TRadioGroup
-          Left = 16
-          Top = 12
+          Left = 3
+          Top = 0
           Width = 353
           Height = 85
           Hint = '#00432^eSelects what chinese characters are displayed'
@@ -171,24 +179,24 @@ object fSettings: TfSettings
           TabOrder = 10
         end
         object CheckBox70: TCheckBox
-          Left = 16
-          Top = 104
+          Left = 3
+          Top = 92
           Width = 417
           Height = 17
           Caption = '^eDisplay message when word is added to vocabulary'
           TabOrder = 11
         end
         object cbShowSplashscreen: TCheckBox
-          Left = 16
-          Top = 383
+          Left = 3
+          Top = 371
           Width = 417
           Height = 17
           Caption = '#00986^eShow splashscreen when program starts'
           TabOrder = 12
         end
         object cbSaveColumnWidths: TCheckBox
-          Left = 16
-          Top = 407
+          Left = 3
+          Top = 395
           Width = 417
           Height = 17
           Hint = 
@@ -200,11 +208,14 @@ object fSettings: TfSettings
       end
     end
     object tsRomanization: TTabSheet
-      Caption = '#00412^eRomanization'
+      Tag = 1
+      Caption = 'Romanization'
       TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
       object GroupBox6: TGroupBox
-        Left = 8
-        Top = 8
+        Left = 3
+        Top = 3
         Width = 457
         Height = 177
         Caption = '#00413^eRomanization of japanese'
@@ -361,8 +372,8 @@ object fSettings: TfSettings
         end
       end
       object GroupBox7: TGroupBox
-        Left = 8
-        Top = 192
+        Left = 3
+        Top = 187
         Width = 457
         Height = 161
         Caption = '#00426^eRomanization of chinese'
@@ -501,206 +512,22 @@ object fSettings: TfSettings
         end
       end
     end
-    object tsCharacterList: TTabSheet
-      Caption = '#00298^eCharacter list'
-      ImageIndex = 1
-      TabVisible = False
-      object Label35: TLabel
-        Left = 16
-        Top = 96
-        Width = 132
-        Height = 13
-        Caption = '#00427^eDisplayed radical:'
-      end
-      object Label52: TLabel
-        Left = 13
-        Top = 192
-        Width = 348
-        Height = 13
-        Caption = 
-          '#00920^eHow many most frequent compounds to display in "Freq" mo' +
-          'de:'
-      end
-      object RadioGroup3: TRadioGroup
-        Left = 16
-        Top = 12
-        Width = 401
-        Height = 77
-        Caption = '#00428^eCharacter size in grid'
-        ItemIndex = 0
-        Items.Strings = (
-          '#00429^eSmall'
-          '#00430^eMedium'
-          '#00431^eLarge')
-        TabOrder = 0
-      end
-      object CheckBox1: TCheckBox
-        Left = 16
-        Top = 144
-        Width = 305
-        Height = 17
-        Caption = '#00437^eShow stroke count in grid'
-        TabOrder = 1
-      end
-      object ComboBox1: TComboBox
-        Left = 16
-        Top = 112
-        Width = 233
-        Height = 21
-        Style = csDropDownList
-        TabOrder = 2
-        Items.Strings = (
-          'Bushu'
-          'Unicode'
-          '#00438^eJapanese'
-          'KanWa'
-          'KangXi'
-          '#00439^eKorean')
-      end
-      object CheckBox51: TCheckBox
-        Left = 8
-        Top = 384
-        Width = 433
-        Height = 17
-        Caption = '#00440^eUse grid font for displaying stroke order'
-        TabOrder = 3
-        Visible = False
-      end
-      object CheckBox57: TCheckBox
-        Left = 16
-        Top = 168
-        Width = 433
-        Height = 17
-        Caption = '#00891^eSearch by yomi can ignore okurigana'
-        TabOrder = 4
-      end
-      object Edit34: TEdit
-        Left = 336
-        Top = 192
-        Width = 121
-        Height = 21
-        TabOrder = 5
-        Text = '0'
-      end
-    end
-    object tsDictionary: TTabSheet
-      Caption = '#00217^eDictionary'
-      ImageIndex = 3
-      TabVisible = False
-      object Label26: TLabel
-        Left = 16
-        Top = 280
-        Width = 161
-        Height = 13
-        Caption = '#00441^eNot used dictionary files'
-        Visible = False
-      end
-      object GroupBox3: TGroupBox
-        Left = 16
-        Top = 16
-        Width = 441
-        Height = 137
-        Caption = '#00442^eSearch results order'
-        TabOrder = 0
-        object CheckBox4: TCheckBox
-          Left = 8
-          Top = 16
-          Width = 401
-          Height = 17
-          Caption = '#00443^ePrefer words in user dictionary'
-          TabOrder = 0
-        end
-        object CheckBox5: TCheckBox
-          Left = 8
-          Top = 40
-          Width = 401
-          Height = 17
-          Caption = '#00444^ePrefer nouns and verbs'
-          TabOrder = 1
-        end
-        object CheckBox6: TCheckBox
-          Left = 8
-          Top = 64
-          Width = 385
-          Height = 17
-          Caption = '#00445^ePrefer polite words'
-          TabOrder = 2
-        end
-        object CheckBox7: TCheckBox
-          Left = 8
-          Top = 88
-          Width = 377
-          Height = 17
-          Caption = '#00446^ePrefer popular words (marked by "pop")'
-          TabOrder = 3
-        end
-        object CheckBox59: TCheckBox
-          Left = 8
-          Top = 112
-          Width = 417
-          Height = 17
-          Caption = '#00921^eOrder by word frequency (where available)'
-          TabOrder = 4
-        end
-      end
-      object CheckBox8: TCheckBox
-        Left = 16
-        Top = 160
-        Width = 433
-        Height = 17
-        Caption = '#00447^eReplace kanji with kana for words marked "kana"'
-        TabOrder = 1
-      end
-      object Edit19: TEdit
-        Left = 16
-        Top = 296
-        Width = 441
-        Height = 21
-        Color = clBtnFace
-        ReadOnly = True
-        TabOrder = 2
-        Text = 'Edit19'
-        Visible = False
-      end
-      object CheckBox12: TCheckBox
-        Left = 16
-        Top = 184
-        Width = 433
-        Height = 17
-        Caption = '#00448^eDisplay only results that fit one page in "Auto" mode'
-        TabOrder = 3
-      end
-      object CheckBox50: TCheckBox
-        Left = 16
-        Top = 208
-        Width = 433
-        Height = 17
-        Caption = '#00449^eAuto-switch to Examples panel'
-        TabOrder = 4
-      end
-      object CheckBox58: TCheckBox
-        Left = 16
-        Top = 232
-        Width = 441
-        Height = 17
-        Caption = '#00922^eDisplay word count for each word'
-        TabOrder = 5
-      end
-    end
     object tsFonts: TTabSheet
-      Caption = '#00450^eFonts'
-      ImageIndex = 2
+      Tag = 2
+      Caption = 'Fonts'
       TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
       object Label4: TLabel
-        Left = 8
-        Top = 367
+        Left = 3
+        Top = 362
         Width = 107
         Height = 13
         Caption = '#00923^eEnglish font:'
       end
       object SpeedButton4: TSpeedButton
-        Left = 376
-        Top = 367
+        Left = 371
+        Top = 362
         Width = 73
         Height = 23
         Caption = '#00452^eChoose'
@@ -713,15 +540,15 @@ object fSettings: TfSettings
         OnClick = SpeedButton4Click
       end
       object Label5: TLabel
-        Left = 8
-        Top = 341
+        Left = 3
+        Top = 336
         Width = 134
         Height = 13
         Caption = '#00456^eFont for small text:'
       end
       object SpeedButton5: TSpeedButton
-        Left = 376
-        Top = 341
+        Left = 371
+        Top = 336
         Width = 73
         Height = 23
         Caption = '#00452^eChoose'
@@ -734,15 +561,15 @@ object fSettings: TfSettings
         OnClick = SpeedButton5Click
       end
       object Label51: TLabel
-        Left = 8
-        Top = 395
+        Left = 3
+        Top = 390
         Width = 179
         Height = 13
         Caption = '#00924^eRomanization && PinYin font:'
       end
       object SpeedButton14: TSpeedButton
-        Left = 376
-        Top = 393
+        Left = 371
+        Top = 388
         Width = 73
         Height = 23
         Caption = '#00452^eChoose'
@@ -755,8 +582,8 @@ object fSettings: TfSettings
         OnClick = SpeedButton14Click
       end
       object GroupBox1: TGroupBox
-        Left = 8
-        Top = 40
+        Left = 3
+        Top = 35
         Width = 457
         Height = 108
         Caption = '#00453^eJapanese fonts'
@@ -856,8 +683,8 @@ object fSettings: TfSettings
         end
       end
       object Edit4: TEdit
-        Left = 248
-        Top = 367
+        Left = 243
+        Top = 362
         Width = 129
         Height = 21
         Color = clBtnFace
@@ -866,8 +693,8 @@ object fSettings: TfSettings
         Text = 'Arial'
       end
       object GroupBox2: TGroupBox
-        Left = 8
-        Top = 153
+        Left = 3
+        Top = 148
         Width = 457
         Height = 178
         Caption = '#00457^eChinese fonts:'
@@ -1044,8 +871,8 @@ object fSettings: TfSettings
         end
       end
       object Button5: TButton
-        Left = 8
-        Top = 8
+        Left = 3
+        Top = 3
         Width = 457
         Height = 25
         Caption = '#00464^eSelect recommended fonts'
@@ -1059,8 +886,8 @@ object fSettings: TfSettings
         OnClick = Button5Click
       end
       object Edit5: TEdit
-        Left = 248
-        Top = 341
+        Left = 243
+        Top = 336
         Width = 129
         Height = 21
         Color = clBtnFace
@@ -1069,8 +896,8 @@ object fSettings: TfSettings
         Text = 'MS Gothic'
       end
       object Edit33: TEdit
-        Left = 248
-        Top = 393
+        Left = 243
+        Top = 388
         Width = 129
         Height = 21
         Color = clBtnFace
@@ -1079,52 +906,761 @@ object fSettings: TfSettings
         Text = 'Arial'
       end
     end
-    object tsWordListPrinting: TTabSheet
-      Caption = '#00465^eWord list printing'
-      ImageIndex = 4
+    object tsColors: TTabSheet
+      Tag = 3
+      Caption = 'Colors'
       TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      DesignSize = (
+        465
+        425)
+      object Shape2: TShape
+        Left = 3
+        Top = 326
+        Width = 105
+        Height = 25
+        Anchors = [akLeft, akBottom]
+      end
+      object Label42: TLabel
+        Left = 3
+        Top = 3
+        Width = 91
+        Height = 13
+        Caption = '#00552^eCategory'
+      end
+      object ListBox3: TListBox
+        Left = 3
+        Top = 67
+        Width = 457
+        Height = 256
+        Anchors = [akLeft, akTop, akBottom]
+        ItemHeight = 13
+        TabOrder = 0
+        OnClick = ListBox3Click
+      end
+      object Button12: TButton
+        Left = 115
+        Top = 326
+        Width = 217
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = '#00553^eChange'
+        TabOrder = 1
+        OnClick = Button12Click
+      end
+      object Button14: TButton
+        Left = 339
+        Top = 326
+        Width = 121
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = '#00554^eRevert to default'
+        TabOrder = 2
+        OnClick = Button14Click
+      end
+      object Button15: TButton
+        Left = 331
+        Top = 3
+        Width = 129
+        Height = 25
+        Caption = '#00555^eSet all to default'
+        TabOrder = 3
+        OnClick = Button15Click
+      end
+      object ComboBox2: TComboBox
+        Left = 3
+        Top = 19
+        Width = 313
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 4
+        OnChange = ComboBox2Change
+        Items.Strings = (
+          '#00298^eCharacter list'
+          '#00556^eWord grids'
+          '#00557^eWord markers'
+          '#00558^eEditor & translator'
+          '#00559^ePopup tool')
+      end
+      object CheckBox3: TCheckBox
+        Left = 8
+        Top = 49
+        Width = 457
+        Height = 17
+        Caption = 
+          '#00560^eDo not use colors in character list, use Windows default' +
+          ' colors instead'
+        Checked = True
+        State = cbChecked
+        TabOrder = 5
+        OnClick = CheckBox3Click
+      end
+      object cbNoColors: TCheckBox
+        Left = 8
+        Top = 49
+        Width = 457
+        Height = 17
+        Caption = 
+          '#00561^eDo not use colors in editor, use Windows default colors ' +
+          'instead'
+        Checked = True
+        State = cbChecked
+        TabOrder = 6
+        OnClick = cbNoColorsClick
+      end
+      object CheckBox9: TCheckBox
+        Left = 3
+        Top = 45
+        Width = 433
+        Height = 17
+        Hint = 
+          '#00562^eColors: black - common, grey - uncommon, blue - learned,' +
+          ' green - only in names'
+        Caption = 
+          '#00563^eDo not use colors in word grids, use Windows default col' +
+          'ors instead'
+        TabOrder = 7
+        OnClick = CheckBox9Click
+      end
+    end
+    object tsPortability: TTabSheet
+      Tag = 4
+      Caption = 'Portability'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      object lblWakanMode: TLabel
+        Left = 3
+        Top = 3
+        Width = 198
+        Height = 13
+        Caption = 'Wakan is running in portable mode'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object Label49: TLabel
+        Left = 3
+        Top = 30
+        Width = 90
+        Height = 13
+        Caption = '#01029^eSettings:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label55: TLabel
+        Left = 3
+        Top = 49
+        Width = 107
+        Height = 13
+        Caption = '#01030^eDictionaries:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label56: TLabel
+        Left = 3
+        Top = 68
+        Width = 98
+        Height = 13
+        Caption = '#01031^eUser data:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblSettingsPath: TUrlLabel
+        Left = 107
+        Top = 30
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        OnClick = lblSettingsPathClick
+      end
+      object lblDictionariesPath: TUrlLabel
+        Left = 107
+        Top = 49
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblUserDataPath: TUrlLabel
+        Left = 107
+        Top = 68
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object lblUpgradeToStandalone: TLabel
+        Left = 3
+        Top = 94
+        Width = 453
+        Height = 26
+        Caption = 
+          '#01032^eYou can move all your data to Application Data folder an' +
+          'd make this copy standalone.'#13#10'This process is not reversible.'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object btnUpgradeToStandalone: TButton
+        Left = 123
+        Top = 134
+        Width = 177
+        Height = 25
+        Caption = '#01033^eUpgrade to standalone'
+        TabOrder = 0
+        OnClick = btnUpgradeToStandaloneClick
+      end
+    end
+    object tsCharacterList: TTabSheet
+      Tag = 5
+      Caption = 'Character list'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      object Label35: TLabel
+        Left = 3
+        Top = 87
+        Width = 132
+        Height = 13
+        Caption = '#00427^eDisplayed radical:'
+      end
+      object Label52: TLabel
+        Left = 2
+        Top = 182
+        Width = 348
+        Height = 13
+        Caption = 
+          '#00920^eHow many most frequent compounds to display in "Freq" mo' +
+          'de:'
+      end
+      object RadioGroup3: TRadioGroup
+        Left = 3
+        Top = 3
+        Width = 401
+        Height = 77
+        Caption = '#00428^eCharacter size in grid'
+        ItemIndex = 0
+        Items.Strings = (
+          '#00429^eSmall'
+          '#00430^eMedium'
+          '#00431^eLarge')
+        TabOrder = 0
+      end
+      object CheckBox1: TCheckBox
+        Left = 3
+        Top = 135
+        Width = 305
+        Height = 17
+        Caption = '#00437^eShow stroke count in grid'
+        TabOrder = 1
+      end
+      object ComboBox1: TComboBox
+        Left = 3
+        Top = 103
+        Width = 233
+        Height = 21
+        Style = csDropDownList
+        TabOrder = 2
+        Items.Strings = (
+          'Bushu'
+          'Unicode'
+          '#00438^eJapanese'
+          'KanWa'
+          'KangXi'
+          '#00439^eKorean')
+      end
+      object CheckBox51: TCheckBox
+        Left = 3
+        Top = 384
+        Width = 433
+        Height = 17
+        Caption = '#00440^eUse grid font for displaying stroke order'
+        TabOrder = 3
+        Visible = False
+      end
+      object CheckBox57: TCheckBox
+        Left = 3
+        Top = 159
+        Width = 433
+        Height = 17
+        Caption = '#00891^eSearch by yomi can ignore okurigana'
+        TabOrder = 4
+      end
+      object Edit34: TEdit
+        Left = 323
+        Top = 183
+        Width = 121
+        Height = 21
+        TabOrder = 5
+        Text = '0'
+      end
+    end
+    object tsCharacterDetails: TTabSheet
+      Tag = 6
+      Caption = 'Character details'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      DesignSize = (
+        465
+        425)
+      object Label34: TLabel
+        Left = 2
+        Top = 9
+        Width = 125
+        Height = 13
+        Caption = '#00531^eDisplayed items:'
+      end
+      object SpeedButton11: TSpeedButton
+        Left = 436
+        Top = 99
+        Width = 23
+        Height = 79
+        Hint = '#00532^eMove up'
+        Anchors = [akTop, akRight]
+        Enabled = False
+        Glyph.Data = {
+          76010000424D7601000000000000760000002800000020000000100000000100
+          04000000000000010000120B0000120B00001000000000000000000000000000
+          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333000333
+          3333333333777F33333333333309033333333333337F7F333333333333090333
+          33333333337F7F33333333333309033333333333337F7F333333333333090333
+          33333333337F7F33333333333309033333333333FF7F7FFFF333333000090000
+          3333333777737777F333333099999990333333373F3333373333333309999903
+          333333337F33337F33333333099999033333333373F333733333333330999033
+          3333333337F337F3333333333099903333333333373F37333333333333090333
+          33333333337F7F33333333333309033333333333337373333333333333303333
+          333333333337F333333333333330333333333333333733333333}
+        NumGlyphs = 2
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = SpeedButton11Click
+        ExplicitLeft = 454
+      end
+      object SpeedButton12: TSpeedButton
+        Left = 436
+        Top = 235
+        Width = 23
+        Height = 79
+        Hint = '#00533^eMove down'
+        Anchors = [akTop, akRight]
+        Glyph.Data = {
+          76010000424D7601000000000000760000002800000020000000100000000100
+          04000000000000010000120B0000120B00001000000000000000000000000000
+          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333303333
+          333333333337F33333333333333033333333333333373F333333333333090333
+          33333333337F7F33333333333309033333333333337373F33333333330999033
+          3333333337F337F33333333330999033333333333733373F3333333309999903
+          333333337F33337F33333333099999033333333373333373F333333099999990
+          33333337FFFF3FF7F33333300009000033333337777F77773333333333090333
+          33333333337F7F33333333333309033333333333337F7F333333333333090333
+          33333333337F7F33333333333309033333333333337F7F333333333333090333
+          33333333337F7F33333333333300033333333333337773333333}
+        NumGlyphs = 2
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = SpeedButton12Click
+        ExplicitLeft = 454
+      end
+      object ListBox2: TListBox
+        Left = 2
+        Top = 25
+        Width = 432
+        Height = 307
+        Anchors = [akLeft, akTop, akRight, akBottom]
+        ItemHeight = 13
+        TabOrder = 0
+        OnClick = ListBox2Click
+        ExplicitWidth = 450
+      end
+      object Button7: TButton
+        Left = 2
+        Top = 339
+        Width = 113
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = '#00534^eAdd...'
+        TabOrder = 1
+        OnClick = Button7Click
+      end
+      object Button8: TButton
+        Left = 170
+        Top = 339
+        Width = 113
+        Height = 25
+        Anchors = [akLeft, akBottom]
+        Caption = '#00535^eChange...'
+        TabOrder = 2
+        OnClick = Button8Click
+      end
+      object Button9: TButton
+        Left = 337
+        Top = 339
+        Width = 97
+        Height = 25
+        Anchors = [akRight, akBottom]
+        Caption = '#00536^eDelete'
+        TabOrder = 3
+        OnClick = Button9Click
+      end
+      object Button10: TButton
+        Left = 284
+        Top = 3
+        Width = 150
+        Height = 22
+        Anchors = [akTop, akRight]
+        Caption = '#00537^eReset to default'
+        TabOrder = 4
+        OnClick = Button10Click
+      end
+    end
+    object tsDictionary: TTabSheet
+      Tag = 7
+      Caption = 'Dictionary'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      object Label26: TLabel
+        Left = 3
+        Top = 267
+        Width = 161
+        Height = 13
+        Caption = '#00441^eNot used dictionary files'
+        Visible = False
+      end
+      object GroupBox3: TGroupBox
+        Left = 3
+        Top = 3
+        Width = 441
+        Height = 137
+        Caption = '#00442^eSearch results order'
+        TabOrder = 0
+        object CheckBox4: TCheckBox
+          Left = 8
+          Top = 16
+          Width = 401
+          Height = 17
+          Caption = '#00443^ePrefer words in user dictionary'
+          TabOrder = 0
+        end
+        object CheckBox5: TCheckBox
+          Left = 8
+          Top = 40
+          Width = 401
+          Height = 17
+          Caption = '#00444^ePrefer nouns and verbs'
+          TabOrder = 1
+        end
+        object CheckBox6: TCheckBox
+          Left = 8
+          Top = 64
+          Width = 385
+          Height = 17
+          Caption = '#00445^ePrefer polite words'
+          TabOrder = 2
+        end
+        object CheckBox7: TCheckBox
+          Left = 8
+          Top = 88
+          Width = 377
+          Height = 17
+          Caption = '#00446^ePrefer popular words (marked by "pop")'
+          TabOrder = 3
+        end
+        object CheckBox59: TCheckBox
+          Left = 8
+          Top = 112
+          Width = 417
+          Height = 17
+          Caption = '#00921^eOrder by word frequency (where available)'
+          TabOrder = 4
+        end
+      end
+      object CheckBox8: TCheckBox
+        Left = 3
+        Top = 147
+        Width = 433
+        Height = 17
+        Caption = '#00447^eReplace kanji with kana for words marked "kana"'
+        TabOrder = 1
+      end
+      object Edit19: TEdit
+        Left = 3
+        Top = 283
+        Width = 441
+        Height = 21
+        Color = clBtnFace
+        ReadOnly = True
+        TabOrder = 2
+        Text = 'Edit19'
+        Visible = False
+      end
+      object CheckBox12: TCheckBox
+        Left = 3
+        Top = 171
+        Width = 433
+        Height = 17
+        Caption = '#00448^eDisplay only results that fit one page in "Auto" mode'
+        TabOrder = 3
+      end
+      object CheckBox50: TCheckBox
+        Left = 3
+        Top = 195
+        Width = 433
+        Height = 17
+        Caption = '#00449^eAuto-switch to Examples panel'
+        TabOrder = 4
+      end
+      object CheckBox58: TCheckBox
+        Left = 3
+        Top = 219
+        Width = 441
+        Height = 17
+        Caption = '#00922^eDisplay word count for each word'
+        TabOrder = 5
+      end
+    end
+    object tsPopupTool: TTabSheet
+      Tag = 8
+      Caption = 'Popup tool'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      object Label36: TLabel
+        Left = 3
+        Top = 75
+        Width = 159
+        Height = 13
+        Caption = '#00539^ePopup delay (x100 ms):'
+      end
+      object Label37: TLabel
+        Left = 3
+        Top = 107
+        Width = 164
+        Height = 13
+        Caption = '#00540^eText scan range (pixels):'
+      end
+      object Label38: TLabel
+        Left = 146
+        Top = 107
+        Width = 67
+        Height = 13
+        Caption = '#00541^eLeft'
+      end
+      object Label39: TLabel
+        Left = 307
+        Top = 107
+        Width = 74
+        Height = 13
+        Caption = '#00542^eRight'
+      end
+      object Label40: TLabel
+        Left = 3
+        Top = 139
+        Width = 207
+        Height = 13
+        Caption = '#00543^eMax. number of dictionary entries:'
+      end
+      object Label43: TLabel
+        Left = 3
+        Top = 171
+        Width = 173
+        Height = 13
+        Caption = '#00544^eCharacter card size factor:'
+      end
+      object Label44: TLabel
+        Left = 3
+        Top = 203
+        Width = 455
+        Height = 13
+        Caption = 
+          '#00545^eNumber of characters reserved for compounds on a card (a' +
+          'ffects overall popup width):'
+      end
+      object Label45: TLabel
+        Left = 99
+        Top = 219
+        Width = 93
+        Height = 13
+        Caption = '#00546^eMinimum:'
+      end
+      object Label46: TLabel
+        Left = 259
+        Top = 219
+        Width = 96
+        Height = 13
+        Caption = '#00547^eMaximum:'
+      end
+      object CheckBox28: TCheckBox
+        Left = 3
+        Top = 3
+        Width = 353
+        Height = 17
+        Caption = '#00548^eShow translation for japanese/chinese text'
+        TabOrder = 0
+      end
+      object CheckBox47: TCheckBox
+        Left = 3
+        Top = 27
+        Width = 353
+        Height = 17
+        Caption = '#00549^eShow translation for english text (only for screen)'
+        TabOrder = 1
+      end
+      object CheckBox48: TCheckBox
+        Left = 3
+        Top = 51
+        Width = 361
+        Height = 17
+        Caption = '#00550^eShow character details'
+        TabOrder = 2
+      end
+      object Edit21: TEdit
+        Left = 155
+        Top = 75
+        Width = 121
+        Height = 21
+        TabOrder = 3
+        Text = 'Edit21'
+      end
+      object Edit22: TEdit
+        Left = 219
+        Top = 107
+        Width = 81
+        Height = 21
+        TabOrder = 4
+        Text = 'Edit22'
+      end
+      object Edit23: TEdit
+        Left = 371
+        Top = 107
+        Width = 81
+        Height = 21
+        TabOrder = 5
+        Text = 'Edit23'
+      end
+      object Edit24: TEdit
+        Left = 219
+        Top = 139
+        Width = 121
+        Height = 21
+        TabOrder = 6
+        Text = 'Edit24'
+      end
+      object Edit26: TEdit
+        Left = 219
+        Top = 171
+        Width = 121
+        Height = 21
+        TabOrder = 7
+        Text = 'Edit26'
+      end
+      object Edit27: TEdit
+        Left = 187
+        Top = 219
+        Width = 65
+        Height = 21
+        TabOrder = 8
+        Text = 'Edit27'
+      end
+      object Edit28: TEdit
+        Left = 339
+        Top = 219
+        Width = 65
+        Height = 21
+        TabOrder = 9
+        Text = 'Edit28'
+      end
+    end
+    object tsWordListPrinting: TTabSheet
+      Tag = 9
+      Caption = 'Word list printing'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
       object Label11: TLabel
-        Left = 16
-        Top = 344
+        Left = 3
+        Top = 339
         Width = 202
         Height = 13
         Caption = '#00466^eNumber of lines on square page:'
       end
       object CheckBox14: TCheckBox
-        Left = 16
-        Top = 296
+        Left = 3
+        Top = 291
         Width = 241
         Height = 17
         Caption = '#00467^ePrint horizontal lines'
         TabOrder = 0
       end
       object CheckBox15: TCheckBox
-        Left = 224
-        Top = 296
+        Left = 211
+        Top = 291
         Width = 241
         Height = 17
         Caption = '#00468^ePrint vertical lines'
         TabOrder = 1
       end
       object CheckBox16: TCheckBox
-        Left = 16
-        Top = 320
+        Left = 3
+        Top = 315
         Width = 241
         Height = 17
         Caption = '#00469^eVary colors'
         TabOrder = 2
       end
       object CheckBox17: TCheckBox
-        Left = 224
-        Top = 320
+        Left = 211
+        Top = 315
         Width = 313
         Height = 17
         Caption = '#00470^eDo not print unlearned kanji'
         TabOrder = 3
       end
       object GroupBox4: TGroupBox
-        Left = 16
-        Top = 8
+        Left = 3
+        Top = 3
         Width = 433
         Height = 281
         Caption = '#00471^eColumns'
@@ -1177,8 +1713,8 @@ object fSettings: TfSettings
         end
       end
       object Edit10: TEdit
-        Left = 16
-        Top = 360
+        Left = 3
+        Top = 355
         Width = 161
         Height = 21
         TabOrder = 5
@@ -1186,40 +1722,42 @@ object fSettings: TfSettings
       end
     end
     object tsCharacterCardPrinting: TTabSheet
-      Caption = '#00488^eCharacter cards printing'
-      ImageIndex = 5
+      Tag = 10
+      Caption = 'Character cards printing'
       TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
       object Label12: TLabel
-        Left = 8
-        Top = 8
+        Left = 3
+        Top = 0
         Width = 267
         Height = 13
         Caption = '#00489^eVertical number of characters on square page:'
       end
       object Label13: TLabel
-        Left = 8
-        Top = 56
+        Left = 3
+        Top = 48
         Width = 281
         Height = 13
         Caption = '#00952^eSpace for vocabulary compounds (in characters):'
       end
       object Label14: TLabel
-        Left = 8
-        Top = 104
+        Left = 3
+        Top = 96
         Width = 250
         Height = 13
         Caption = '#00953^eVertical number of vocabulary compounds:'
       end
       object Label15: TLabel
-        Left = 8
-        Top = 152
+        Left = 3
+        Top = 144
         Width = 124
         Height = 13
         Caption = '#00492^eCalligraphy font:'
       end
       object SpeedButton10: TSpeedButton
-        Left = 136
-        Top = 168
+        Left = 131
+        Top = 160
         Width = 73
         Height = 23
         Caption = '#00452^eChoose'
@@ -1232,87 +1770,87 @@ object fSettings: TfSettings
         OnClick = SpeedButton10Click
       end
       object Label53: TLabel
-        Left = 208
-        Top = 104
+        Left = 203
+        Top = 96
         Width = 175
         Height = 13
         Caption = '#00951^eNumber of full compounds:'
       end
       object Edit11: TEdit
-        Left = 8
-        Top = 24
+        Left = 3
+        Top = 16
         Width = 121
         Height = 21
         TabOrder = 0
         Text = 'Edit11'
       end
       object Edit12: TEdit
-        Left = 8
-        Top = 72
+        Left = 3
+        Top = 64
         Width = 121
         Height = 21
         TabOrder = 1
         Text = 'Edit12'
       end
       object Edit13: TEdit
-        Left = 8
-        Top = 120
+        Left = 3
+        Top = 112
         Width = 121
         Height = 21
         TabOrder = 2
         Text = 'Edit13'
       end
       object CheckBox18: TCheckBox
-        Left = 8
-        Top = 200
+        Left = 3
+        Top = 192
         Width = 217
         Height = 17
         Caption = '#00493^ePrint vocabulary compounds'
         TabOrder = 3
       end
       object CheckBox19: TCheckBox
-        Left = 232
-        Top = 224
+        Left = 227
+        Top = 216
         Width = 209
         Height = 17
         Caption = '#00494^ePrint radical'
         TabOrder = 4
       end
       object CheckBox20: TCheckBox
-        Left = 232
-        Top = 248
+        Left = 227
+        Top = 240
         Width = 225
         Height = 17
         Caption = '#00495^ePrint alternate form'
         TabOrder = 5
       end
       object CheckBox21: TCheckBox
-        Left = 8
-        Top = 272
+        Left = 3
+        Top = 264
         Width = 257
         Height = 17
         Caption = '#00496^ePrint outer lines'
         TabOrder = 6
       end
       object CheckBox22: TCheckBox
-        Left = 8
-        Top = 224
+        Left = 3
+        Top = 216
         Width = 209
         Height = 17
         Caption = '#00497^ePrint readings'
         TabOrder = 7
       end
       object CheckBox23: TCheckBox
-        Left = 8
-        Top = 296
+        Left = 3
+        Top = 288
         Width = 225
         Height = 17
         Caption = '#00498^ePrint inner lines'
         TabOrder = 8
       end
       object Edit14: TEdit
-        Left = 8
-        Top = 168
+        Left = 3
+        Top = 160
         Width = 129
         Height = 21
         Color = clBtnFace
@@ -1321,918 +1859,94 @@ object fSettings: TfSettings
         Text = 'MingLiU'
       end
       object CheckBox24: TCheckBox
-        Left = 8
-        Top = 320
+        Left = 3
+        Top = 312
         Width = 241
         Height = 17
         Caption = '#00499^ePrint vertically (right to left)'
         TabOrder = 10
       end
       object CheckBox25: TCheckBox
-        Left = 8
-        Top = 344
+        Left = 3
+        Top = 336
         Width = 241
         Height = 17
         Caption = '#00500^eLeave space between columns'
         TabOrder = 11
       end
       object CheckBox44: TCheckBox
-        Left = 8
-        Top = 248
+        Left = 3
+        Top = 240
         Width = 217
         Height = 17
         Caption = '#00501^ePrint definition'
         TabOrder = 12
       end
       object CheckBox45: TCheckBox
-        Left = 232
-        Top = 272
+        Left = 227
+        Top = 264
         Width = 217
         Height = 17
         Caption = '#00502^ePrint stroke count'
         TabOrder = 13
       end
       object CheckBox52: TCheckBox
-        Left = 232
-        Top = 296
+        Left = 227
+        Top = 288
         Width = 225
         Height = 17
         Caption = '#00503^ePrint stroke order'
         TabOrder = 14
       end
       object CheckBox62: TCheckBox
-        Left = 232
-        Top = 200
+        Left = 227
+        Top = 192
         Width = 217
         Height = 17
         Caption = '#00954^ePrint full compounds'
         TabOrder = 15
       end
       object CheckBox63: TCheckBox
-        Left = 232
-        Top = 320
+        Left = 227
+        Top = 312
         Width = 217
         Height = 17
         Caption = '#00956^eSort compounds by frequency'
         TabOrder = 16
       end
       object Edit35: TEdit
-        Left = 208
-        Top = 120
+        Left = 203
+        Top = 112
         Width = 121
         Height = 21
         TabOrder = 17
         Text = 'Edit35'
       end
     end
-    object tsDatabaseMaintenance: TTabSheet
-      Caption = '#00504^eDatabase maintenance'
-      ImageIndex = 6
-      TabVisible = False
-      object Button2: TButton
-        Left = 16
-        Top = 376
-        Width = 441
-        Height = 25
-        Caption = '#00505^eCheck dictionary database indexes'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 0
-        Visible = False
-        OnClick = Button2Click
-      end
-      object Button1: TButton
-        Left = 16
-        Top = 8
-        Width = 441
-        Height = 25
-        Caption = '#00506^eExport user database into delimited text file'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 1
-        OnClick = Button1Click
-      end
-      object Button3: TButton
-        Left = 16
-        Top = 40
-        Width = 441
-        Height = 25
-        Caption = '#00507^eImport user database from delimited text file'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 2
-        OnClick = Button3Click
-      end
-      object Button4: TButton
-        Left = 16
-        Top = 88
-        Width = 441
-        Height = 25
-        Caption = '#00508^eCheck user dictionary categories'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 3
-        OnClick = Button4Click
-      end
-      object Button11: TButton
-        Left = 16
-        Top = 136
-        Width = 441
-        Height = 25
-        Caption = '#00509^eShow memory allocation stats'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 4
-        OnClick = Button11Click
-      end
-    end
-    object tsTextTranslator: TTabSheet
-      Caption = '#00300^eText translator'
-      ImageIndex = 8
-      TabVisible = False
-      object sbTextTranslator: TScrollBox
-        Left = 0
-        Top = 0
-        Width = 483
-        Height = 450
-        Align = alClient
-        BorderStyle = bsNone
-        TabOrder = 0
-        object Label25: TLabel
-          Left = 12
-          Top = 250
-          Width = 224
-          Height = 13
-          Caption = '#00510^eNumber of lines reserved to meaning:'
-        end
-        object GroupBox5: TGroupBox
-          Left = 12
-          Top = 274
-          Width = 449
-          Height = 105
-          Caption = '#00511^ePrinting'
-          TabOrder = 0
-          object Label24: TLabel
-            Left = 16
-            Top = 72
-            Width = 202
-            Height = 13
-            Caption = '#00512^eNumber of lines on square page:'
-          end
-          object cbPrintReading: TCheckBox
-            Left = 16
-            Top = 24
-            Width = 193
-            Height = 17
-            Caption = '#00272^eDisplay reading'
-            TabOrder = 0
-          end
-          object cbPrintMeaning: TCheckBox
-            Left = 232
-            Top = 24
-            Width = 209
-            Height = 17
-            Caption = '#00513^eDisplay meaning'
-            TabOrder = 1
-          end
-          object cbNoPrintColors: TCheckBox
-            Left = 16
-            Top = 48
-            Width = 265
-            Height = 17
-            Caption = '#00514^eDo not use colors'
-            TabOrder = 2
-          end
-          object cbVerticalPrint: TCheckBox
-            Left = 232
-            Top = 48
-            Width = 377
-            Height = 17
-            Caption = '#00515^ePrint vertically in columns'
-            TabOrder = 3
-          end
-          object edtPrintLines: TEdit
-            Left = 216
-            Top = 72
-            Width = 121
-            Height = 21
-            TabOrder = 4
-            Text = '20'
-          end
-        end
-        object cbDisplayLines: TCheckBox
-          Left = 12
-          Top = 34
-          Width = 401
-          Height = 17
-          Caption = '#00516^eDisplay lines'
-          Checked = True
-          State = cbChecked
-          TabOrder = 1
-        end
-        object cbNoMeaningLearned: TCheckBox
-          Left = 12
-          Top = 58
-          Width = 353
-          Height = 17
-          Caption = '#00517^eDo not display meaning in learned words'
-          TabOrder = 2
-        end
-        object cbNoSearchParticles: TCheckBox
-          Left = 12
-          Top = 130
-          Width = 353
-          Height = 17
-          Caption = '#00518^eDo not search for particles'
-          TabOrder = 3
-        end
-        object cbNoReadingLearned: TCheckBox
-          Left = 12
-          Top = 82
-          Width = 377
-          Height = 17
-          Caption = '#00519^eDo not display reading of learned kanji'
-          TabOrder = 4
-        end
-        object cbReadingKatakana: TCheckBox
-          Left = 12
-          Top = 106
-          Width = 393
-          Height = 17
-          Caption = '#00884^eDisplay transcript above kana'
-          Checked = True
-          State = cbChecked
-          TabOrder = 5
-        end
-        object cbNoTranslateHiragana: TCheckBox
-          Left = 12
-          Top = 154
-          Width = 377
-          Height = 17
-          Caption = '#00521^eDo not translate hiragana-only words'
-          TabOrder = 6
-        end
-        object cbUserBold: TCheckBox
-          Left = 12
-          Top = 202
-          Width = 401
-          Height = 17
-          Caption = '#00522^eDisplay words with user-defined translation in bold'
-          Checked = True
-          State = cbChecked
-          TabOrder = 7
-        end
-        object edtMeaningLines: TEdit
-          Left = 228
-          Top = 250
-          Width = 121
-          Height = 21
-          TabOrder = 8
-          Text = '2'
-        end
-        object cbSpaceBetweenLines: TCheckBox
-          Left = 12
-          Top = 178
-          Width = 225
-          Height = 17
-          Caption = '#00523^eLeave space between lines'
-          Checked = True
-          State = cbChecked
-          TabOrder = 9
-        end
-        object CheckBox43: TCheckBox
-          Left = 12
-          Top = 10
-          Width = 433
-          Height = 17
-          Caption = '#00524^eBreak lines only at word boundaries'
-          Checked = True
-          State = cbChecked
-          TabOrder = 10
-        end
-        object CheckBox27: TCheckBox
-          Left = 356
-          Top = 250
-          Width = 97
-          Height = 17
-          Caption = '#00525^eDouble size'
-          TabOrder = 11
-        end
-        object CheckBox41: TCheckBox
-          Left = 170
-          Top = 35
-          Width = 401
-          Height = 17
-          Caption = '#00526^eDisplay non-japanese chars in grey'
-          Checked = True
-          State = cbChecked
-          TabOrder = 12
-          Visible = False
-        end
-        object CheckBox2: TCheckBox
-          Left = 12
-          Top = 226
-          Width = 401
-          Height = 17
-          Caption = '#00527^eShow editor hint'
-          Checked = True
-          State = cbChecked
-          TabOrder = 13
-        end
-        object CheckBox13: TCheckBox
-          Left = 228
-          Top = 226
-          Width = 225
-          Height = 17
-          Caption = '#00528^eDisplay meaning on hint'
-          Checked = True
-          State = cbChecked
-          TabOrder = 14
-        end
-        object cbReserveSpaceForReading: TCheckBox
-          Left = 244
-          Top = 178
-          Width = 217
-          Height = 17
-          Caption = '#00529^eLeave space even when reading is off'
-          TabOrder = 15
-        end
-        object cbTranslateNoLongTextWarning: TCheckBox
-          Left = 10
-          Top = 388
-          Width = 457
-          Height = 17
-          Hint = 
-            '#01063^eDisable the "You are about to translate a large text blo' +
-            'ck" warning'
-          Caption = '#01062^eDo not warn when translating large text blocks'
-          TabOrder = 16
-        end
-        object cbMultithreadedTranslation: TCheckBox
-          Left = 10
-          Top = 410
-          Width = 457
-          Height = 17
-          Caption = '#01064^eMultithreaded translation'
-          TabOrder = 17
-        end
-      end
-    end
-    object tsCharacterDetails: TTabSheet
-      Caption = '#00530^eCharacter details'
-      ImageIndex = 9
-      TabVisible = False
-      DesignSize = (
-        483
-        450)
-      object Label34: TLabel
-        Left = 8
-        Top = 8
-        Width = 125
-        Height = 13
-        Caption = '#00531^eDisplayed items:'
-      end
-      object SpeedButton11: TSpeedButton
-        Left = 460
-        Top = 98
-        Width = 23
-        Height = 79
-        Hint = '#00532^eMove up'
-        Anchors = [akTop, akRight]
-        Enabled = False
-        Glyph.Data = {
-          76010000424D7601000000000000760000002800000020000000100000000100
-          04000000000000010000120B0000120B00001000000000000000000000000000
-          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333000333
-          3333333333777F33333333333309033333333333337F7F333333333333090333
-          33333333337F7F33333333333309033333333333337F7F333333333333090333
-          33333333337F7F33333333333309033333333333FF7F7FFFF333333000090000
-          3333333777737777F333333099999990333333373F3333373333333309999903
-          333333337F33337F33333333099999033333333373F333733333333330999033
-          3333333337F337F3333333333099903333333333373F37333333333333090333
-          33333333337F7F33333333333309033333333333337373333333333333303333
-          333333333337F333333333333330333333333333333733333333}
-        NumGlyphs = 2
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SpeedButton11Click
-        ExplicitLeft = 448
-      end
-      object SpeedButton12: TSpeedButton
-        Left = 460
-        Top = 234
-        Width = 23
-        Height = 79
-        Hint = '#00533^eMove down'
-        Anchors = [akTop, akRight]
-        Glyph.Data = {
-          76010000424D7601000000000000760000002800000020000000100000000100
-          04000000000000010000120B0000120B00001000000000000000000000000000
-          800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-          FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333303333
-          333333333337F33333333333333033333333333333373F333333333333090333
-          33333333337F7F33333333333309033333333333337373F33333333330999033
-          3333333337F337F33333333330999033333333333733373F3333333309999903
-          333333337F33337F33333333099999033333333373333373F333333099999990
-          33333337FFFF3FF7F33333300009000033333337777F77773333333333090333
-          33333333337F7F33333333333309033333333333337F7F333333333333090333
-          33333333337F7F33333333333309033333333333337F7F333333333333090333
-          33333333337F7F33333333333300033333333333337773333333}
-        NumGlyphs = 2
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SpeedButton12Click
-        ExplicitLeft = 448
-      end
-      object ListBox2: TListBox
-        Left = 8
-        Top = 24
-        Width = 450
-        Height = 332
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        ItemHeight = 13
-        TabOrder = 0
-        OnClick = ListBox2Click
-      end
-      object Button7: TButton
-        Left = 8
-        Top = 363
-        Width = 113
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        Caption = '#00534^eAdd...'
-        TabOrder = 1
-        OnClick = Button7Click
-      end
-      object Button8: TButton
-        Left = 180
-        Top = 363
-        Width = 113
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        Caption = '#00535^eChange...'
-        TabOrder = 2
-        OnClick = Button8Click
-      end
-      object Button9: TButton
-        Left = 350
-        Top = 363
-        Width = 97
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        Caption = '#00536^eDelete'
-        TabOrder = 3
-        OnClick = Button9Click
-      end
-      object Button10: TButton
-        Left = 296
-        Top = 1
-        Width = 150
-        Height = 22
-        Caption = '#00537^eReset to default'
-        TabOrder = 4
-        OnClick = Button10Click
-      end
-    end
-    object tsPopupTool: TTabSheet
-      Caption = '#00538^ePopup tool'
-      ImageIndex = 10
-      TabVisible = False
-      object Label36: TLabel
-        Left = 8
-        Top = 80
-        Width = 159
-        Height = 13
-        Caption = '#00539^ePopup delay (x100 ms):'
-      end
-      object Label37: TLabel
-        Left = 8
-        Top = 112
-        Width = 164
-        Height = 13
-        Caption = '#00540^eText scan range (pixels):'
-      end
-      object Label38: TLabel
-        Left = 160
-        Top = 112
-        Width = 67
-        Height = 13
-        Caption = '#00541^eLeft'
-      end
-      object Label39: TLabel
-        Left = 312
-        Top = 112
-        Width = 74
-        Height = 13
-        Caption = '#00542^eRight'
-      end
-      object Label40: TLabel
-        Left = 8
-        Top = 144
-        Width = 207
-        Height = 13
-        Caption = '#00543^eMax. number of dictionary entries:'
-      end
-      object Label43: TLabel
-        Left = 8
-        Top = 176
-        Width = 173
-        Height = 13
-        Caption = '#00544^eCharacter card size factor:'
-      end
-      object Label44: TLabel
-        Left = 8
-        Top = 208
-        Width = 455
-        Height = 13
-        Caption = 
-          '#00545^eNumber of characters reserved for compounds on a card (a' +
-          'ffects overall popup width):'
-      end
-      object Label45: TLabel
-        Left = 104
-        Top = 224
-        Width = 93
-        Height = 13
-        Caption = '#00546^eMinimum:'
-      end
-      object Label46: TLabel
-        Left = 264
-        Top = 224
-        Width = 96
-        Height = 13
-        Caption = '#00547^eMaximum:'
-      end
-      object CheckBox28: TCheckBox
-        Left = 8
-        Top = 8
-        Width = 353
-        Height = 17
-        Caption = '#00548^eShow translation for japanese/chinese text'
-        TabOrder = 0
-      end
-      object CheckBox47: TCheckBox
-        Left = 8
-        Top = 32
-        Width = 353
-        Height = 17
-        Caption = '#00549^eShow translation for english text (only for screen)'
-        TabOrder = 1
-      end
-      object CheckBox48: TCheckBox
-        Left = 8
-        Top = 56
-        Width = 361
-        Height = 17
-        Caption = '#00550^eShow character details'
-        TabOrder = 2
-      end
-      object Edit21: TEdit
-        Left = 160
-        Top = 80
-        Width = 121
-        Height = 21
-        TabOrder = 3
-        Text = 'Edit21'
-      end
-      object Edit22: TEdit
-        Left = 224
-        Top = 112
-        Width = 81
-        Height = 21
-        TabOrder = 4
-        Text = 'Edit22'
-      end
-      object Edit23: TEdit
-        Left = 376
-        Top = 112
-        Width = 81
-        Height = 21
-        TabOrder = 5
-        Text = 'Edit23'
-      end
-      object Edit24: TEdit
-        Left = 224
-        Top = 144
-        Width = 121
-        Height = 21
-        TabOrder = 6
-        Text = 'Edit24'
-      end
-      object Edit26: TEdit
-        Left = 224
-        Top = 176
-        Width = 121
-        Height = 21
-        TabOrder = 7
-        Text = 'Edit26'
-      end
-      object Edit27: TEdit
-        Left = 192
-        Top = 224
-        Width = 65
-        Height = 21
-        TabOrder = 8
-        Text = 'Edit27'
-      end
-      object Edit28: TEdit
-        Left = 344
-        Top = 224
-        Width = 65
-        Height = 21
-        TabOrder = 9
-        Text = 'Edit28'
-      end
-    end
-    object tsColors: TTabSheet
-      Caption = '#00551^eColors'
-      ImageIndex = 11
-      TabVisible = False
-      DesignSize = (
-        483
-        450)
-      object Shape2: TShape
-        Left = 8
-        Top = 356
-        Width = 105
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        ExplicitTop = 332
-      end
-      object Label42: TLabel
-        Left = 8
-        Top = 8
-        Width = 91
-        Height = 13
-        Caption = '#00552^eCategory'
-      end
-      object ListBox3: TListBox
-        Left = 8
-        Top = 72
-        Width = 457
-        Height = 281
-        Anchors = [akLeft, akTop, akBottom]
-        ItemHeight = 13
-        TabOrder = 0
-        OnClick = ListBox3Click
-      end
-      object Button12: TButton
-        Left = 120
-        Top = 356
-        Width = 217
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        Caption = '#00553^eChange'
-        TabOrder = 1
-        OnClick = Button12Click
-      end
-      object Button14: TButton
-        Left = 344
-        Top = 356
-        Width = 121
-        Height = 25
-        Anchors = [akLeft, akBottom]
-        Caption = '#00554^eRevert to default'
-        TabOrder = 2
-        OnClick = Button14Click
-      end
-      object Button15: TButton
-        Left = 336
-        Top = 8
-        Width = 129
-        Height = 25
-        Caption = '#00555^eSet all to default'
-        TabOrder = 3
-        OnClick = Button15Click
-      end
-      object ComboBox2: TComboBox
-        Left = 8
-        Top = 24
-        Width = 313
-        Height = 21
-        Style = csDropDownList
-        TabOrder = 4
-        OnChange = ComboBox2Change
-        Items.Strings = (
-          '#00298^eCharacter list'
-          '#00556^eWord grids'
-          '#00557^eWord markers'
-          '#00558^eEditor & translator'
-          '#00559^ePopup tool')
-      end
-      object CheckBox3: TCheckBox
-        Left = 8
-        Top = 49
-        Width = 457
-        Height = 17
-        Caption = 
-          '#00560^eDo not use colors in character list, use Windows default' +
-          ' colors instead'
-        Checked = True
-        State = cbChecked
-        TabOrder = 5
-        OnClick = CheckBox3Click
-      end
-      object cbNoColors: TCheckBox
-        Left = 8
-        Top = 49
-        Width = 457
-        Height = 17
-        Caption = 
-          '#00561^eDo not use colors in editor, use Windows default colors ' +
-          'instead'
-        Checked = True
-        State = cbChecked
-        TabOrder = 6
-        OnClick = cbNoColorsClick
-      end
-      object CheckBox9: TCheckBox
-        Left = 8
-        Top = 50
-        Width = 433
-        Height = 17
-        Hint = 
-          '#00562^eColors: black - common, grey - uncommon, blue - learned,' +
-          ' green - only in names'
-        Caption = 
-          '#00563^eDo not use colors in word grids, use Windows default col' +
-          'ors instead'
-        TabOrder = 7
-        OnClick = CheckBox9Click
-      end
-    end
-    object tsEditor: TTabSheet
-      Caption = '#00966^eEditor'
-      ImageIndex = 12
-      TabVisible = False
-      object lblAozoraRuby: TLabel
-        Left = 8
-        Top = 109
-        Width = 134
-        Height = 13
-        Caption = '#00972^eAozora Ruby:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object lblSavingAndLoading: TLabel
-        Left = 8
-        Top = 13
-        Width = 171
-        Height = 13
-        Caption = '#00968^eSaving and loading:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object lblSaveAnnotationsToRubyDesc: TLabel
-        Left = 16
-        Top = 218
-        Width = 352
-        Height = 13
-        Caption = 
-          '#00977^eIf not, you'#39'll have the option of choosing that when you' +
-          ' save file.'
-      end
-      object lblAozoraTagsInColor: TLabel
-        Left = 16
-        Top = 174
-        Width = 211
-        Height = 13
-        Caption = '#00975^eYou can set colors on Colors page'
-      end
-      object Label54: TLabel
-        Left = 8
-        Top = 245
-        Width = 88
-        Height = 13
-        Caption = '#00978^eMisc:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object CheckBox60: TCheckBox
-        Left = 8
-        Top = 32
-        Width = 457
-        Height = 17
-        Caption = '#00969^eAuto-save file on exit'
-        TabOrder = 0
-      end
-      object CheckBox61: TCheckBox
-        Left = 8
-        Top = 56
-        Width = 457
-        Height = 17
-        Caption = '#00970^eAuto-load last opened file on start'
-        TabOrder = 1
-      end
-      object cbNoSaveChangesWarning: TCheckBox
-        Left = 8
-        Top = 80
-        Width = 457
-        Height = 17
-        Caption = 
-          '#00971^eDo not ask to save changes on exit (WARNING: Use at your' +
-          ' own risk)'
-        TabOrder = 2
-      end
-      object cbLoadAozoraRuby: TCheckBox
-        Left = 8
-        Top = 128
-        Width = 457
-        Height = 17
-        Caption = '#00973^eShow Aozora-Ruby as annotations (requires text reload)'
-        TabOrder = 3
-      end
-      object cbAozoraTagsInColor: TCheckBox
-        Left = 8
-        Top = 151
-        Width = 457
-        Height = 17
-        Caption = '#00974^eShow Aozora-Ruby tags in color'
-        TabOrder = 4
-      end
-      object cbSaveAnnotationsToRuby: TCheckBox
-        Left = 8
-        Top = 195
-        Width = 457
-        Height = 17
-        Caption = '#00976^eSave annotations as Aozora-Ruby tags by default'
-        TabOrder = 5
-      end
-      object cbAdjustCharPriorities: TCheckBox
-        Left = 8
-        Top = 264
-        Width = 457
-        Height = 17
-        Caption = '#00979^eAdjust character priorities based on editor usage'
-        TabOrder = 6
-      end
-      object rgReleaseCursorMode: TRadioGroup
-        Left = 8
-        Top = 288
-        Width = 457
-        Height = 66
-        Caption = '#00982^eHow to behave in insert mode'
-        Items.Strings = (
-          '#00983^eDo not let the cursor out until you choose a suggestion'
-          '#00984^eAuto-cancel insert if you move the cursor out')
-        TabOrder = 7
-      end
-    end
     object tsAnnotations: TTabSheet
-      Caption = '#00967^eAnnotations'
-      ImageIndex = 13
+      Tag = 11
+      Caption = 'Annotations'
       TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
       object Bevel1: TBevel
-        Left = 8
-        Top = 40
+        Left = 0
+        Top = 27
         Width = 457
         Height = 17
         Shape = bsTopLine
       end
       object CheckBox64: TCheckBox
-        Left = 11
-        Top = 16
+        Left = 3
+        Top = 3
         Width = 302
         Height = 17
         Caption = '^eEnable annotations (ANNOTATE.PKG)'
         TabOrder = 0
       end
       object CheckBox65: TCheckBox
-        Left = 11
-        Top = 54
+        Left = 3
+        Top = 41
         Width = 294
         Height = 17
         Caption = 
@@ -2241,8 +1955,8 @@ object fSettings: TfSettings
         TabOrder = 1
       end
       object CheckBox66: TCheckBox
-        Left = 11
-        Top = 150
+        Left = 3
+        Top = 137
         Width = 326
         Height = 17
         Caption = '^eAllow annotations to play sound files'
@@ -2250,32 +1964,32 @@ object fSettings: TfSettings
         Visible = False
       end
       object CheckBox67: TCheckBox
-        Left = 11
-        Top = 78
+        Left = 3
+        Top = 65
         Width = 326
         Height = 17
         Caption = '^eAllow annotations to display pictures'
         TabOrder = 3
       end
       object CheckBox68: TCheckBox
-        Left = 11
-        Top = 102
+        Left = 3
+        Top = 89
         Width = 326
         Height = 17
         Caption = '^eAllow annotations to display web pages'
         TabOrder = 4
       end
       object CheckBox69: TCheckBox
-        Left = 11
-        Top = 126
+        Left = 3
+        Top = 113
         Width = 326
         Height = 17
         Caption = '^eAllow annotations to change foreground color'
         TabOrder = 5
       end
       object Button16: TButton
-        Left = 72
-        Top = 352
+        Left = 64
+        Top = 339
         Width = 337
         Height = 25
         Caption = '^eHelp for the annotation feature'
@@ -2289,16 +2003,115 @@ object fSettings: TfSettings
         OnClick = Button16Click
       end
     end
-    object tsPortability: TTabSheet
-      Caption = 'Portability'
-      ImageIndex = 14
+    object tsDatabaseMaintenance: TTabSheet
+      Tag = 12
+      Caption = 'Database maintenance'
       TabVisible = False
-      object lblWakanMode: TLabel
-        Left = 16
-        Top = 16
-        Width = 198
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      DesignSize = (
+        465
+        425)
+      object Button2: TButton
+        Left = 3
+        Top = 368
+        Width = 451
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Caption = '#00505^eCheck dictionary database indexes'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 0
+        Visible = False
+        OnClick = Button2Click
+        ExplicitWidth = 441
+      end
+      object Button1: TButton
+        Left = 3
+        Top = 0
+        Width = 451
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Caption = '#00506^eExport user database into delimited text file'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 1
+        OnClick = Button1Click
+        ExplicitWidth = 441
+      end
+      object Button3: TButton
+        Left = 3
+        Top = 32
+        Width = 451
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Caption = '#00507^eImport user database from delimited text file'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 2
+        OnClick = Button3Click
+        ExplicitWidth = 441
+      end
+      object Button4: TButton
+        Left = 3
+        Top = 80
+        Width = 451
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Caption = '#00508^eCheck user dictionary categories'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 3
+        OnClick = Button4Click
+        ExplicitWidth = 441
+      end
+      object Button11: TButton
+        Left = 3
+        Top = 128
+        Width = 451
+        Height = 25
+        Anchors = [akLeft, akTop, akRight]
+        Caption = '#00509^eShow memory allocation stats'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+        TabOrder = 4
+        OnClick = Button11Click
+        ExplicitWidth = 441
+      end
+    end
+    object tsEditor: TTabSheet
+      Tag = 13
+      Caption = 'Editor'
+      TabVisible = False
+      ExplicitLeft = 6
+      ExplicitTop = 4
+      ExplicitWidth = 483
+      object Label48: TLabel
+        Left = 3
+        Top = 3
+        Width = 95
         Height = 13
-        Caption = 'Wakan is running in portable mode'
+        Caption = '#01070^eEditor:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -2306,124 +2119,411 @@ object fSettings: TfSettings
         Font.Style = [fsBold]
         ParentFont = False
       end
-      object Label49: TLabel
-        Left = 16
-        Top = 43
-        Width = 90
+      object Label25: TLabel
+        Left = 4
+        Top = 183
+        Width = 224
         Height = 13
-        Caption = '#01029^eSettings:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
+        Caption = '#00510^eNumber of lines reserved to meaning:'
       end
-      object Label55: TLabel
-        Left = 16
-        Top = 62
-        Width = 107
+      object Label54: TLabel
+        Left = 3
+        Top = 277
+        Width = 88
         Height = 13
-        Caption = '#01030^eDictionaries:'
+        Caption = '#00978^eMisc:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'MS Sans Serif'
-        Font.Style = []
+        Font.Style = [fsBold]
         ParentFont = False
       end
-      object Label56: TLabel
-        Left = 16
-        Top = 81
-        Width = 98
-        Height = 13
-        Caption = '#01031^eUser data:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblSettingsPath: TUrlLabel
-        Left = 120
-        Top = 43
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        OnClick = lblSettingsPathClick
-      end
-      object lblDictionariesPath: TUrlLabel
-        Left = 120
-        Top = 62
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblUserDataPath: TUrlLabel
-        Left = 120
-        Top = 81
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblUpgradeToStandalone: TLabel
-        Left = 16
-        Top = 107
-        Width = 453
-        Height = 26
-        Caption = 
-          '#01032^eYou can move all your data to Application Data folder an' +
-          'd make this copy standalone.'#13#10'This process is not reversible.'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object btnUpgradeToStandalone: TButton
-        Left = 136
-        Top = 147
-        Width = 177
-        Height = 25
-        Caption = '#01033^eUpgrade to standalone'
+      object CheckBox43: TCheckBox
+        Left = 3
+        Top = 22
+        Width = 433
+        Height = 17
+        Caption = '#00524^eBreak lines only at word boundaries'
+        Checked = True
+        State = cbChecked
         TabOrder = 0
-        OnClick = btnUpgradeToStandaloneClick
+      end
+      object cbDisplayLines: TCheckBox
+        Left = 3
+        Top = 45
+        Width = 401
+        Height = 17
+        Caption = '#00516^eDisplay lines'
+        Checked = True
+        State = cbChecked
+        TabOrder = 1
+      end
+      object cbNoMeaningLearned: TCheckBox
+        Left = 3
+        Top = 68
+        Width = 353
+        Height = 17
+        Caption = '#00517^eDo not display meaning in learned words'
+        TabOrder = 2
+      end
+      object cbNoReadingLearned: TCheckBox
+        Left = 3
+        Top = 91
+        Width = 377
+        Height = 17
+        Caption = '#00519^eDo not display reading of learned kanji'
+        TabOrder = 3
+      end
+      object cbReadingKatakana: TCheckBox
+        Left = 3
+        Top = 114
+        Width = 393
+        Height = 17
+        Caption = '#00884^eDisplay transcript above kana'
+        Checked = True
+        State = cbChecked
+        TabOrder = 4
+      end
+      object CheckBox41: TCheckBox
+        Left = 3
+        Top = 239
+        Width = 401
+        Height = 17
+        Caption = '#00526^eDisplay non-japanese chars in grey'
+        Checked = True
+        State = cbChecked
+        TabOrder = 5
+        Visible = False
+      end
+      object cbSpaceBetweenLines: TCheckBox
+        Left = 3
+        Top = 137
+        Width = 225
+        Height = 17
+        Caption = '#00523^eLeave space between lines'
+        Checked = True
+        State = cbChecked
+        TabOrder = 6
+      end
+      object cbReserveSpaceForReading: TCheckBox
+        Left = 236
+        Top = 137
+        Width = 217
+        Height = 17
+        Caption = '#00529^eLeave space even when reading is off'
+        TabOrder = 7
+      end
+      object cbUserBold: TCheckBox
+        Left = 3
+        Top = 160
+        Width = 401
+        Height = 17
+        Caption = '#00522^eDisplay words with user-defined translation in bold'
+        Checked = True
+        State = cbChecked
+        TabOrder = 8
+      end
+      object edtMeaningLines: TEdit
+        Left = 220
+        Top = 183
+        Width = 121
+        Height = 21
+        TabOrder = 9
+        Text = '2'
+      end
+      object CheckBox27: TCheckBox
+        Left = 348
+        Top = 183
+        Width = 97
+        Height = 17
+        Caption = '#00525^eDouble size'
+        TabOrder = 10
+      end
+      object CheckBox13: TCheckBox
+        Left = 211
+        Top = 216
+        Width = 225
+        Height = 17
+        Caption = '#00528^eDisplay meaning on hint'
+        Checked = True
+        State = cbChecked
+        TabOrder = 11
+      end
+      object CheckBox2: TCheckBox
+        Left = 3
+        Top = 216
+        Width = 202
+        Height = 17
+        Caption = '#00527^eShow editor hint'
+        Checked = True
+        State = cbChecked
+        TabOrder = 12
+      end
+      object cbAdjustCharPriorities: TCheckBox
+        Left = 3
+        Top = 296
+        Width = 457
+        Height = 17
+        Caption = '#00979^eAdjust character priorities based on editor usage'
+        TabOrder = 13
+      end
+      object rgReleaseCursorMode: TRadioGroup
+        Left = 3
+        Top = 319
+        Width = 457
+        Height = 66
+        Caption = '#00982^eHow to behave in insert mode'
+        Items.Strings = (
+          '#00983^eDo not let the cursor out until you choose a suggestion'
+          '#00984^eAuto-cancel insert if you move the cursor out')
+        TabOrder = 14
+      end
+    end
+    object tsEditorSaving: TTabSheet
+      Tag = 14
+      Caption = 'Editor: Saving and loading:'
+      TabVisible = False
+      ExplicitLeft = 6
+      ExplicitTop = 4
+      ExplicitWidth = 483
+      object lblSavingAndLoading: TLabel
+        Left = 3
+        Top = 3
+        Width = 171
+        Height = 13
+        Caption = '#00968^eSaving and loading:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object CheckBox60: TCheckBox
+        Left = 3
+        Top = 22
+        Width = 457
+        Height = 17
+        Caption = '#00969^eAuto-save file on exit'
+        TabOrder = 0
+      end
+      object CheckBox61: TCheckBox
+        Left = 3
+        Top = 46
+        Width = 457
+        Height = 17
+        Caption = '#00970^eAuto-load last opened file on start'
+        TabOrder = 1
+      end
+      object cbNoSaveChangesWarning: TCheckBox
+        Left = 3
+        Top = 70
+        Width = 457
+        Height = 17
+        Caption = 
+          '#00971^eDo not ask to save changes on exit (WARNING: Use at your' +
+          ' own risk)'
+        TabOrder = 2
+      end
+    end
+    object tsEditorPrinting: TTabSheet
+      Tag = 15
+      Caption = 'Editor: Printing'
+      TabVisible = False
+      ExplicitTop = 27
+      ExplicitWidth = 483
+      ExplicitHeight = 429
+      object Label57: TLabel
+        Left = 3
+        Top = 3
+        Width = 105
+        Height = 13
+        Caption = '#01069^ePrinting:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object Label24: TLabel
+        Left = 3
+        Top = 73
+        Width = 202
+        Height = 13
+        Caption = '#00512^eNumber of lines on square page:'
+      end
+      object cbPrintReading: TCheckBox
+        Left = 3
+        Top = 22
+        Width = 210
+        Height = 17
+        Caption = '#00272^eDisplay reading'
+        TabOrder = 0
+      end
+      object cbPrintMeaning: TCheckBox
+        Left = 219
+        Top = 22
+        Width = 209
+        Height = 17
+        Caption = '#00513^eDisplay meaning'
+        TabOrder = 1
+      end
+      object cbVerticalPrint: TCheckBox
+        Left = 219
+        Top = 47
+        Width = 276
+        Height = 17
+        Caption = '#00515^ePrint vertically in columns'
+        TabOrder = 2
+      end
+      object cbNoPrintColors: TCheckBox
+        Left = 3
+        Top = 46
+        Width = 210
+        Height = 17
+        Caption = '#00514^eDo not use colors'
+        TabOrder = 3
+      end
+      object edtPrintLines: TEdit
+        Left = 203
+        Top = 70
+        Width = 121
+        Height = 21
+        TabOrder = 4
+        Text = '20'
+      end
+    end
+    object tsTextTranslator: TTabSheet
+      Tag = 16
+      Caption = 'Editor: Text translator'
+      TabVisible = False
+      ExplicitWidth = 483
+      ExplicitHeight = 450
+      object Label58: TLabel
+        Left = 3
+        Top = 3
+        Width = 144
+        Height = 13
+        Caption = '#01068^eText translator:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object cbNoSearchParticles: TCheckBox
+        Left = 3
+        Top = 22
+        Width = 353
+        Height = 17
+        Caption = '#00518^eDo not search for particles'
+        TabOrder = 0
+      end
+      object cbNoTranslateHiragana: TCheckBox
+        Left = 3
+        Top = 46
+        Width = 377
+        Height = 17
+        Caption = '#00521^eDo not translate hiragana-only words'
+        TabOrder = 1
+      end
+      object cbTranslateNoLongTextWarning: TCheckBox
+        Left = 3
+        Top = 69
+        Width = 457
+        Height = 17
+        Hint = 
+          '#01063^eDisable the "You are about to translate a large text blo' +
+          'ck" warning'
+        Caption = '#01062^eDo not warn when translating large text blocks'
+        TabOrder = 2
+      end
+      object cbMultithreadedTranslation: TCheckBox
+        Left = 3
+        Top = 91
+        Width = 457
+        Height = 17
+        Caption = '#01064^eMultithreaded translation'
+        TabOrder = 3
+      end
+    end
+    object tsEditorAozoraRuby: TTabSheet
+      Tag = 17
+      Caption = 'Editor: Aozora Ruby:'
+      TabVisible = False
+      ExplicitTop = 27
+      ExplicitWidth = 483
+      ExplicitHeight = 404
+      object lblAozoraRuby: TLabel
+        Left = 3
+        Top = 3
+        Width = 134
+        Height = 13
+        Caption = '#00972^eAozora Ruby:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object lblAozoraTagsInColor: TLabel
+        Left = 11
+        Top = 68
+        Width = 211
+        Height = 13
+        Caption = '#00975^eYou can set colors on Colors page'
+      end
+      object lblSaveAnnotationsToRubyDesc: TLabel
+        Left = 11
+        Top = 112
+        Width = 352
+        Height = 13
+        Caption = 
+          '#00977^eIf not, you'#39'll have the option of choosing that when you' +
+          ' save file.'
+      end
+      object cbLoadAozoraRuby: TCheckBox
+        Left = 3
+        Top = 22
+        Width = 457
+        Height = 17
+        Caption = '#00973^eShow Aozora-Ruby as annotations (requires text reload)'
+        TabOrder = 0
+      end
+      object cbAozoraTagsInColor: TCheckBox
+        Left = 3
+        Top = 45
+        Width = 457
+        Height = 17
+        Caption = '#00974^eShow Aozora-Ruby tags in color'
+        TabOrder = 1
+      end
+      object cbSaveAnnotationsToRuby: TCheckBox
+        Left = 3
+        Top = 89
+        Width = 457
+        Height = 17
+        Caption = '#00976^eSave annotations as Aozora-Ruby tags by default'
+        TabOrder = 2
       end
     end
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 460
-    Width = 668
+    Top = 435
+    Width = 660
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 460
+    ExplicitWidth = 668
     DesignSize = (
-      668
+      660
       41)
     object btnChangeLanguage: TButton
       Left = 12
@@ -2442,7 +2542,7 @@ object fSettings: TfSettings
       OnClick = btnChangeLanguageClick
     end
     object btnOk: TBitBtn
-      Left = 527
+      Left = 519
       Top = 8
       Width = 130
       Height = 25
@@ -2471,13 +2571,14 @@ object fSettings: TfSettings
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOkClick
+      ExplicitLeft = 527
     end
   end
   object tvContents: TTreeView
     Left = 0
     Top = 0
     Width = 177
-    Height = 460
+    Height = 435
     Align = alLeft
     HideSelection = False
     Indent = 19
@@ -2493,40 +2594,56 @@ object fSettings: TfSettings
       0004000000010F2300300030003300390038005E006500470065006E00650072
       0061006C0046000000000000000000000001000000FFFFFFFF00000000000000
       000000000001142300300030003400310032005E00650052006F006D0061006E
-      0069007A006100740069006F006E0038000000000000000000000004000000FF
+      0069007A006100740069006F006E0038000000000000000000000002000000FF
       FFFFFF000000000000000000000000010D2300300030003400350030005E0065
-      0046006F006E00740073003A00000000000000000000000B000000FFFFFFFF00
+      0046006F006E00740073003A000000000000000000000003000000FFFFFFFF00
       0000000000000000000000010E2300300030003500350031005E00650043006F
-      006C006F00720073004200000000000000000000000E000000FFFFFFFF000000
+      006C006F007200730042000000000000000000000004000000FFFFFFFF000000
       00000000000000000001122300300031003000360030005E0050006F00720074
-      006100620069006C006900740079004A000000000000000000000002000000FF
+      006100620069006C006900740079004A000000000000000000000005000000FF
       FFFFFF00000000000000000100000001162300300030003200390038005E0065
       0043006800610072006100630074006500720020006C00690073007400500000
-      00000000000000000009000000FFFFFFFF000000000000000000000000011923
+      00000000000000000006000000FFFFFFFF000000000000000000000000011923
       00300030003500330030005E0065004300680061007200610063007400650072
-      002000640065007400610069006C007300420000000000000000000000030000
+      002000640065007400610069006C007300420000000000000000000000070000
       00FFFFFFFF00000000000000000000000001122300300030003200310037005E
       006500440069006300740069006F006E00610072007900420000000000000000
-      0000000A000000FFFFFFFF000000000000000000000000011223003000300035
+      00000008000000FFFFFFFF000000000000000000000000011223003000300035
       00330038005E00650050006F00700075007000200074006F006F006C003A0000
-      0000000000000000000C000000FFFFFFFF000000000000000001000000010E23
-      00300030003900360036005E00650045006400690074006F0072004C00000000
-      0000000000000008000000FFFFFFFF0000000000000000000000000117230030
-      0030003300300030005E006500540065007800740020007400720061006E0073
-      006C00610074006F0072003C0000000000000000000000FFFFFFFFFFFFFFFF00
-      0000000000000002000000010F2300300031003000360031005E005300740075
-      006400790069006E00670052000000000000000000000005000000FFFFFFFF00
-      0000000000000000000000011A2300300030003400360035005E00650057006F
-      007200640020006C0069007300740020007000720069006E00740069006E0067
-      005E000000000000000000000006000000FFFFFFFF0000000000000000000000
-      0001202300300030003400380038005E00650043006800610072006100630074
-      006500720020006300610072006400730020007000720069006E00740069006E
-      0067004400000000000000000000000D000000FFFFFFFF000000000000000000
-      00000001132300300030003900360037005E00650041006E006E006F00740061
-      00740069006F006E00730056000000000000000000000007000000FFFFFFFF00
-      0000000000000000000000011C2300300030003500300034005E006500440061
-      0074006100620061007300650020006D00610069006E00740065006E0061006E
-      0063006500}
+      0000000000000000000D000000FFFFFFFF000000000000000004000000010E23
+      00300030003900360036005E00650045006400690074006F0072005400000000
+      000000000000000E000000FFFFFFFF000000000000000000000000011B230030
+      0031003000360036005E00650053006100760069006E006700200061006E0064
+      0020006C006F006100640069006E0067003A003E00000000000000000000000F
+      000000FFFFFFFF00000000000000000000000001102300300031003000360035
+      005E0065005000720069006E00740069006E0067004C00000000000000000000
+      0010000000FFFFFFFF0000000000000000000000000117230030003000330030
+      0030005E006500540065007800740020007400720061006E0073006C00610074
+      006F00720044000000000000000000000011000000FFFFFFFF00000000000000
+      000000000001132300300031003000360037005E00650041006F007A006F0072
+      006100200052007500620079003E0000000000000000000000FFFFFFFFFFFFFF
+      FF00000000000000000200000001102300300031003000360031005E00650053
+      00740075006400790069006E00670052000000000000000000000009000000FF
+      FFFFFF000000000000000000000000011A2300300030003400360035005E0065
+      0057006F007200640020006C0069007300740020007000720069006E00740069
+      006E0067005E00000000000000000000000A000000FFFFFFFF00000000000000
+      000000000001202300300030003400380038005E006500430068006100720061
+      00630074006500720020006300610072006400730020007000720069006E0074
+      0069006E0067004400000000000000000000000B000000FFFFFFFF0000000000
+      0000000000000001132300300030003900360037005E00650041006E006E006F
+      0074006100740069006F006E0073005600000000000000000000000C000000FF
+      FFFFFF000000000000000000000000011C2300300030003500300034005E0065
+      004400610074006100620061007300650020006D00610069006E00740065006E
+      0061006E0063006500}
+  end
+  object Spacer: TPanel
+    Left = 177
+    Top = 0
+    Width = 10
+    Height = 435
+    Align = alLeft
+    BevelOuter = bvNone
+    TabOrder = 3
   end
   object OpenDialog2: TOpenDialog
     DefaultExt = '.wbk'

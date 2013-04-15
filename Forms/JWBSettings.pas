@@ -183,8 +183,6 @@ type
     Edit34: TEdit;
     Label52: TLabel;
     tsEditor: TTabSheet;
-    CheckBox60: TCheckBox;
-    CheckBox61: TCheckBox;
     Label53: TLabel;
     CheckBox62: TCheckBox;
     CheckBox63: TCheckBox;
@@ -198,46 +196,9 @@ type
     CheckBox69: TCheckBox;
     Bevel1: TBevel;
     Button16: TButton;
-    cbNoSaveChangesWarning: TCheckBox;
-    cbLoadAozoraRuby: TCheckBox;
-    lblAozoraRuby: TLabel;
-    cbAozoraTagsInColor: TCheckBox;
-    lblSavingAndLoading: TLabel;
-    cbSaveAnnotationsToRuby: TCheckBox;
-    lblSaveAnnotationsToRubyDesc: TLabel;
-    lblAozoraTagsInColor: TLabel;
-    sbTextTranslator: TScrollBox;
-    Label25: TLabel;
-    GroupBox5: TGroupBox;
-    Label24: TLabel;
-    cbPrintReading: TCheckBox;
-    cbPrintMeaning: TCheckBox;
-    cbNoPrintColors: TCheckBox;
-    cbVerticalPrint: TCheckBox;
-    edtPrintLines: TEdit;
-    cbDisplayLines: TCheckBox;
-    cbNoMeaningLearned: TCheckBox;
-    cbNoSearchParticles: TCheckBox;
-    cbNoReadingLearned: TCheckBox;
-    cbReadingKatakana: TCheckBox;
-    cbNoTranslateHiragana: TCheckBox;
-    cbUserBold: TCheckBox;
-    edtMeaningLines: TEdit;
-    cbSpaceBetweenLines: TCheckBox;
-    CheckBox43: TCheckBox;
-    CheckBox27: TCheckBox;
-    CheckBox41: TCheckBox;
-    CheckBox2: TCheckBox;
-    CheckBox13: TCheckBox;
-    cbReserveSpaceForReading: TCheckBox;
-    cbTranslateNoLongTextWarning: TCheckBox;
-    cbMultithreadedTranslation: TCheckBox;
     pnlButtons: TPanel;
     btnChangeLanguage: TButton;
     btnOk: TBitBtn;
-    Label54: TLabel;
-    cbAdjustCharPriorities: TCheckBox;
-    rgReleaseCursorMode: TRadioGroup;
     sbGeneral: TScrollBox;
     Label41: TLabel;
     Label47: TLabel;
@@ -267,6 +228,50 @@ type
     btnUpgradeToStandalone: TButton;
     lblUpgradeToStandalone: TLabel;
     tvContents: TTreeView;
+    tsEditorPrinting: TTabSheet;
+    cbNoSearchParticles: TCheckBox;
+    cbNoTranslateHiragana: TCheckBox;
+    cbTranslateNoLongTextWarning: TCheckBox;
+    cbMultithreadedTranslation: TCheckBox;
+    tsEditorSaving: TTabSheet;
+    tsEditorAozoraRuby: TTabSheet;
+    lblAozoraRuby: TLabel;
+    cbLoadAozoraRuby: TCheckBox;
+    cbAozoraTagsInColor: TCheckBox;
+    lblAozoraTagsInColor: TLabel;
+    cbSaveAnnotationsToRuby: TCheckBox;
+    lblSaveAnnotationsToRubyDesc: TLabel;
+    lblSavingAndLoading: TLabel;
+    CheckBox60: TCheckBox;
+    CheckBox61: TCheckBox;
+    cbNoSaveChangesWarning: TCheckBox;
+    Label48: TLabel;
+    CheckBox43: TCheckBox;
+    cbDisplayLines: TCheckBox;
+    cbNoMeaningLearned: TCheckBox;
+    cbNoReadingLearned: TCheckBox;
+    cbReadingKatakana: TCheckBox;
+    CheckBox41: TCheckBox;
+    cbSpaceBetweenLines: TCheckBox;
+    cbReserveSpaceForReading: TCheckBox;
+    cbUserBold: TCheckBox;
+    Label25: TLabel;
+    edtMeaningLines: TEdit;
+    CheckBox27: TCheckBox;
+    CheckBox13: TCheckBox;
+    CheckBox2: TCheckBox;
+    Label54: TLabel;
+    cbAdjustCharPriorities: TCheckBox;
+    rgReleaseCursorMode: TRadioGroup;
+    Label57: TLabel;
+    cbPrintReading: TCheckBox;
+    cbPrintMeaning: TCheckBox;
+    cbVerticalPrint: TCheckBox;
+    cbNoPrintColors: TCheckBox;
+    Label24: TLabel;
+    edtPrintLines: TEdit;
+    Label58: TLabel;
+    Spacer: TPanel;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -402,7 +407,7 @@ var i: integer;
 begin
   found := false;
   for i := 0 to tvContents.Items.Count - 1 do
-    if tvContents.Items[i].StateIndex = pcPages.ActivePageIndex then begin
+    if tvContents.Items[i].StateIndex=pcPages.ActivePage.Tag then begin
       found := true;
       tvContents.Selected := tvContents.Items[i];
       break;
@@ -418,9 +423,14 @@ begin
 end;
 
 procedure TfSettings.tvContentsClick(Sender: TObject);
+var i: integer;
 begin
-  if (tvContents.Selected <> nil) and (tvContents.Selected.StateIndex>=0) then
-    pcPages.ActivePageIndex := tvContents.Selected.StateIndex;
+  if (tvContents.Selected = nil) or (tvContents.Selected.StateIndex<0) then exit;
+  for i := 0 to pcPages.PageCount - 1 do
+    if pcPages.Pages[i].Tag=tvContents.Selected.StateIndex then begin
+      pcPages.ActivePageIndex := i;
+      break;
+    end;
 end;
 
 procedure TfSettings.FormShow(Sender: TObject);
