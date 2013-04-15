@@ -267,6 +267,7 @@ type
     btnUpgradeToStandalone: TButton;
     lblUpgradeToStandalone: TLabel;
     tvContents: TTreeView;
+    cbReadingCarryOver: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -609,6 +610,7 @@ begin
   cbSaveAnnotationsToRuby.Checked:=reg.readBool('Editor','SaveAnnotationsToRuby', false);
   cbAdjustCharPriorities.Checked:=reg.readBool('Editor','AdjustCharPriorities', true);
   rgReleaseCursorMode.ItemIndex := reg.ReadInteger('Editor','ReleaseCursorMode',0);
+  cbReadingCarryOver.Checked := reg.ReadBool('Editor','ReadingCarryOver',false);
   if CheckBox61.Checked then
   begin
     fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
@@ -869,6 +871,7 @@ begin
   reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
   reg.WriteBool('Editor','AdjustCharPriorities',cbAdjustCharPriorities.Checked);
   reg.WriteInteger('Editor','ReleaseCursorMode',rgReleaseCursorMode.ItemIndex);
+  reg.WriteBool('Editor','ReadingCarryOver',cbReadingCarryOver.Checked);
   reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
   reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));

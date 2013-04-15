@@ -3029,21 +3029,27 @@ begin
   Canvas.FillRect(rect);
 
   try
-    while (py<screenh) and (cl<ll.Count) do
+    while (py<screenh) and ((cl<ll.Count) or (kanaq<>'')) do
     begin
-      cx:=ll[cl].xs;
-      cy:=ll[cl].ys;
-      wx:=cx+ll[cl].len;
-      kanaq:=''; //reset reading on newline
+      if cl<ll.Count then begin
+        cx:=ll[cl].xs;
+        cy:=ll[cl].ys;
+        wx:=cx+ll[cl].len;
+      end else begin
+        cx:=-1;cy:=-1;wx:=-1; //crash and burn if you access this
+      end;
+
+      if not fSettings.cbReadingCarryOver.Checked then
+        kanaq:=''; //reset reading on newline
 
       while (px<screenw) and (
-       ((cx<wx) and (cx<flength(doc[cy])))
+       ((cl<ll.Count) and (cx<wx) and (cx<flength(doc[cy])))
        or ((kanaq<>'') and PrintReading)
       ) do
       try
-       { Note that we can get here even if CX is outside the legal characters for the string.
+       { Note that we can get here even if cx is outside the legal characters for the string.
         This happens if we have some reading remainder in kanaq. Be careful. }
-        validChar := (cx<wx) and (cx<flength(doc[cy]));
+        validChar := (cl<ll.Count) and (cx<wx) and (cx<flength(doc[cy]));
 
         if validChar then begin
           wordstate:=doctr[cy].chars[cx].wordstate;
@@ -3149,7 +3155,7 @@ begin
         end;
 
         //Print meaning
-        if PrintMeaning and (meaning<>'') then
+        if PrintMeaning and (meaning<>'') and validChar then
         begin
           cnty:=py+rs*2; //base char height
           if PrintReading or ReserveSpaceForReading then
@@ -3210,8 +3216,6 @@ begin
           kanaq:=kanaq+reading;
         end;
 
-        cntx:=px;
-
         if printing then
           Canvas.Font.Color:=clBlack
         else
@@ -3236,7 +3240,8 @@ begin
         end;
 
        { Print reading: 1 or 2 positions, 1 full-width or 2 half-width reading chars each }
-        if PrintReading then
+        if PrintReading then begin
+          cntx:=px;
           for i:=1 to 2 do
            //If this is validChar and it's half-width and we're in horizontal print, there's only one position
             if (kanaq<>'') and ((i=1) or Vertical or not validChar or not IsHalfWidth(cx,cy)) then
@@ -3267,6 +3272,7 @@ begin
               end;
               inc(cntx,rs);
             end;
+        end;
 
        { Draw single char }
         if validChar then begin
@@ -3307,14 +3313,14 @@ begin
               canvas.LineTo(realx+l+rs*2,realy+t+rs*2);
             end;
 
+         //we check for openers before rendering, and for closers here
+          if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
+            inRubyTag := false;
+          if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
+            inRubyComment := false;
         end;
 
-       //we check for openers before rendering, and for closers here
-        if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
-          inRubyTag := false;
-        if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
-          inRubyComment := false;
-
+       //Increment position in any case, full-width by default
         if (not Vertical) and (validChar and IsHalfWidth(cx,cy)) then inc(px,rs) else inc(px,rs*2);
         inc(cx);
       except
