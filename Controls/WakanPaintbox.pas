@@ -6,16 +6,22 @@ uses
   SysUtils, Classes, Types, Messages, Graphics, Controls;
 
 type
+  TPaintEvent = procedure(Sender: TObject; Canvas: TCanvas) of object;
   TWakanPaintbox = class(TCustomControl)
   protected
-    FOnPaint: TNotifyEvent;
+    FOnPaint: TPaintEvent;
     procedure WMEraseBkgnd(var Message: TWmEraseBkgnd); message WM_ERASEBKGND;
     procedure Paint; override;
   public
     constructor Create(AOwner: TComponent); override;
   published
+    property Align;
+    property Anchors;
+    property Canvas;
     property Color default clNone;
-    property OnPaint: TNotifyEvent read FOnPaint write FOnPaint stored true;
+    property OnPaint: TPaintEvent read FOnPaint write FOnPaint stored true;
+    property OnClick;
+    property OnDblClick;
     property OnMouseMove;
     property OnMouseDown;
     property OnMouseUp;
@@ -52,7 +58,7 @@ begin
     Canvas.Rectangle(r.Left, r.Top, r.Right, r.Bottom);
   end;
   if Assigned(FOnPaint) then
-    FOnPaint(Self);
+    FOnPaint(Self, Canvas);
 end;
 
 

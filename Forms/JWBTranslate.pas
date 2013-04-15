@@ -44,7 +44,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
-  JWBDicSearch, JWBConvert, JclCompression;
+  JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -55,6 +55,8 @@ uses
   {$DEFINE TLSPEEDREPORT}
 
 {$ENDIF}
+
+{$DEFINE BUFFERED_REPAINT}
 
 type
  { Character position in source text. }
@@ -109,8 +111,6 @@ type
   TTextSaveFormat = class;
 
   TfTranslate = class(TForm)
-    Shape10: TShape;
-    EditorPaintBox: TPaintBox;
     ListBox1: TListBox;
     EditorScrollBar: TScrollBar;
     Bevel1: TBevel;
@@ -141,6 +141,7 @@ type
     SaveTextDialog: TSaveDialog;
     cbFontSize: TComboBox;
     SaveAsKanaDialog: TSaveDialog;
+    EditorPaintbox: TWakanPaintbox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -156,7 +157,7 @@ type
     procedure EditorPaintBoxClick(Sender: TObject);
     procedure EditorPaintBoxMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure EditorPaintBoxPaint(Sender: TObject);
+    procedure EditorPaintBoxPaint(Sender: TObject; Canvas: TCanvas);
     procedure EditorScrollBarChange(Sender: TObject);
     procedure EditorPaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
@@ -214,9 +215,11 @@ type
     doctp:byte;
 
   protected //Mostly repainting
+   {$IFDEF BUFFERED_REPAINT}
     EditorBitmap:TBitmap;
+   {$ENDIF}
+    function PaintBoxClientRect: TRect;
     procedure MakeEditorBitmap;
-    procedure PasteEditorBitmap;
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
@@ -232,7 +235,7 @@ type
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
     procedure DrawCursor(blink:boolean);
-    procedure DrawBlock(Canvas: TCanvas);
+    procedure DrawBlock(Canvas: TCanvas; ClientRect: TRect);
     procedure CheckTransCont(x,y:integer);
     procedure SplitLine(x,y:integer);
     procedure JoinLine(y:integer);
@@ -958,7 +961,9 @@ procedure TfTranslate.FormDestroy(Sender: TObject);
 begin
   linl.Free;
   plinl.Free;
+ {$IFDEF BUFFERED_REPAINT}
   EditorBitmap.Free;
+ {$ENDIF}
   doc.Free;
   doctr.Free;
   docdic.Free;
@@ -2298,9 +2303,30 @@ begin
     fMenu.aKanjiDetailsExecute(nil);
 end;
 
-procedure TfTranslate.EditorPaintBoxPaint(Sender: TObject);
+procedure TfTranslate.EditorPaintBoxPaint(Sender: TObject; Canvas: TCanvas);
+var r: TRect;
 begin
-  MakeEditorBitmap;
+  r := PaintBoxClientRect;
+{$IFDEF BUFFERED_REPAINT}
+  editorbitmap.Free;
+  editorbitmap:=TBitmap.Create;
+  editorbitmap.Width:=r.Right-r.Left;
+  editorbitmap.Height:=r.Bottom-r.Top;
+  RenderText(rview.x,rview.y,editorbitmap.Canvas,0,0,editorbitmap.Width,
+    editorbitmap.Height,linl,printl,lastxsiz,lastycnt,false,false);
+{$ELSE}
+  RenderText(rview.x,rview.y,EditorPaintbox.Canvas,r.Left,r.Top,r.Right-r.Left,
+    r.Bottom-r.Top,linl,printl,lastxsiz,lastycnt,false,false);
+{$ENDIF}
+  oldcur := CursorPos(-1, -1);
+  oldblock := Selection(-1, -1, -1, -1);
+{$IFDEF BUFFERED_REPAINT}
+  DrawBlock(EditorBitmap.Canvas,Rect(0,0,EditorBitmap.Width,EditorBitmap.Height));
+  EditorPaintbox.Canvas.Draw(r.Left,r.Top,EditorBitmap);
+{$ELSE}
+  DrawBlock(EditorPaintbox.Canvas,r);
+{$ENDIF}
+  DrawCursor(false);
 end;
 
 procedure TfTranslate.sbDisplayReadingClick(Sender: TObject);
@@ -2580,24 +2606,36 @@ begin
   ShowText(true);
 end;
 
-procedure TfTranslate.MakeEditorBitmap;
+function TfTranslate.PaintBoxClientRect: TRect;
 begin
-  editorbitmap.Free;
-  editorbitmap:=TBitmap.Create;
-  editorbitmap.Width:=EditorPaintBox.Width;
-  editorbitmap.Height:=EditorPaintBox.Height;
-  RenderText(rview.x,rview.y,editorbitmap.Canvas,2,2,EditorPaintBox.Width-4,
-    EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,false);
-  oldcur := CursorPos(-1, -1);
-  oldblock := Selection(-1, -1, -1, -1);
-  DrawBlock(EditorBitmap.Canvas);
-  PasteEditorBitmap;
-  DrawCursor(false);
+  Result := EditorPaintBox.ClientRect;
+  Result.Left := Result.Left + 2 {normal margin} + 1;
+  Result.Top := Result.Top + 2 {normal margin} + 1;
+  Result.Right := Result.Right - 2 {normal margin} - 18 {ScrollBar} - 1;
+  Result.Bottom := Result.Bottom - 2 {normal margin} - 1;
 end;
 
-procedure TfTranslate.PasteEditorBitmap;
+procedure TfTranslate.MakeEditorBitmap;
+{var r: TRect;}
 begin
-  EditorPaintBox.Canvas.Draw(0,0,EditorBitmap);
+  EditorPaintbox.Invalidate;
+{  editorbitmap.Free;
+  r := PaintBoxClientRect;
+  editorbitmap:=TBitmap.Create;
+  editorbitmap.Width:=r.Right-r.Left;
+  editorbitmap.Height:=r.Bottom-r.Top;
+  RenderText(rview.x,rview.y,editorbitmap.Canvas,0,0,editorbitmap.Width,
+    editorbitmap.Height,linl,printl,lastxsiz,lastycnt,false,false);
+  oldcur := CursorPos(-1, -1);
+  oldblock := Selection(-1, -1, -1, -1);
+  DrawBlock(EditorBitmap.Canvas,Rect(0,0,EditorBitmap.Width,EditorBitmap.Height));
+  EditorPaintbox.Canvas.Draw(r.Left,r.Top,EditorBitmap);
+  RenderText(rview.x,rview.y,EditorPaintbox.Canvas,r.Left,r.Top,r.Right-r.Left,
+    r.Bottom-r.Top,linl,printl,lastxsiz,lastycnt,false,false);
+  oldcur := CursorPos(-1, -1);
+  oldblock := Selection(-1, -1, -1, -1);
+  DrawBlock(EditorPaintbox.Canvas,r);
+  DrawCursor(false);}
 end;
 
 procedure TfTranslate.HandleWheel(down:boolean);
@@ -2617,11 +2655,14 @@ procedure TfTranslate.ShowText(dolook:boolean);
 var oldview:integer;
   s:string;
   wt:integer;
+  pbRect: TRect;
 begin
   if not Visible then exit;
   oldview:=view;
-  RenderText(-1,-1,EditorPaintBox.Canvas,0,0,EditorPaintBox.Width-4,
-    EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
+  pbRect:=PaintBoxClientRect;
+  RenderText(-1,-1,EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,
+    pbRect.Right-pbRect.Left,pbRect.Bottom-pbRect.Top,linl,printl,
+    lastxsiz,lastycnt,false,true);
   if linl.Count=0 then
   begin
     rcur := SourcePos(-1, -1);
@@ -2675,7 +2716,7 @@ begin
   if mustrepaint then MakeEditorBitmap else
   begin
     DrawCursor(false);
-    DrawBlock(EditorPaintBox.Canvas);
+    DrawBlock(EditorPaintBox.Canvas,pbRect);
   end;
 //  if mustrepaint then oldblock.fromx:=-1; //why did we need this here? It breaks setting new selection with mustrepaint==true
   mustrepaint:=false;
@@ -3401,6 +3442,7 @@ procedure TfTranslate.DisplayInsert(const convins:FString;transins:TCharacterPro
 var i:integer;
   s: FString;
   lp: PCharacterLineProps;
+  pbRect: TRect;
 begin
   if ins.x=-1 then
   begin
@@ -3421,8 +3463,10 @@ begin
   doc[ins.y]:=fcopy(doc[ins.y],1,ins.x)+convins+fcopy(doc[ins.y],ins.x+1,flength(doc[ins.y])-ins.x);
   doctr[ins.y].InsertChars(ins.x,transins);
   linl.Clear;
-  RenderText(cur.x,cur.y,EditorPaintBox.Canvas,0,0,EditorPaintBox.Width-4,
-    EditorPaintBox.Height-4,linl,printl,lastxsiz,lastycnt,false,true);
+  pbRect:=PaintBoxClientRect();
+  RenderText(cur.x,cur.y,EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,
+    pbRect.Right-pbRect.Left,pbRect.Bottom-pbRect.Top,linl,printl,
+    lastxsiz,lastycnt,false,true);
   SetCurPos(ins.x+inslen, ins.y);
   if not leaveinserted then
   begin
@@ -3864,6 +3908,7 @@ begin
 end;
 
 procedure TfTranslate.DrawCursor(blink:boolean);
+var pbRect: TRect;
 function OnScreen(x,y:integer):boolean;
 begin
   if (x<0) or (y<0) or (y>=linl.Count) or (x>linl[y].len) then
@@ -3880,14 +3925,15 @@ end;
 procedure DrawIt(x,y:integer);
 var rect:TRect;
 begin
-  rect.top:=y*lastxsiz*lastycnt+2;
-  rect.left:=cursorposcache*lastxsiz;
+  rect.top:=pbRect.Top+y*lastxsiz*lastycnt+2;
+  rect.left:=pbRect.Left+cursorposcache*lastxsiz;
   rect.bottom:=rect.top+lastxsiz*lastycnt-1;
   rect.right:=rect.left+2;
   InvertRect(EditorPaintBox.Canvas.Handle,rect);
 end;
 var tmp: TCursorPos;
 begin
+  pbRect:=PaintBoxClientRect;
   if not ListBox1.Focused then blink:=false;
   if cursorposcache=-1 then CalcCache(oldcur.x,oldcur.y);
   if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-view); //invert=>erase
@@ -3907,7 +3953,7 @@ This function can be used without buffering, so try to only draw where it's real
 Canvas:
   A canvas to draw on. Either edit control (when updating) or backbuffer.
 }
-procedure TfTranslate.DrawBlock(Canvas: TCanvas);
+procedure TfTranslate.DrawBlock(Canvas: TCanvas; ClientRect: TRect);
 var rect:TRect;
     i,js:integer;
     hw: boolean;
@@ -3927,8 +3973,8 @@ var rect:TRect;
  //where i is measured in lines and j in half-characters.
   procedure InvertColor(i, js: integer; halfwidth: boolean);
   begin
-    rect.top:=(i-view)*lastxsiz*lastycnt+2;
-    rect.left:=js*lastxsiz;
+    rect.top:=ClientRect.Top+(i-view)*lastxsiz*lastycnt+2;
+    rect.left:=ClientRect.Left+js*lastxsiz;
     rect.bottom:=rect.top+lastxsiz*lastycnt-1;
     if not halfwidth then
       rect.right:=rect.left+lastxsiz*2

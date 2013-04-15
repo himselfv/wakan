@@ -43,33 +43,6 @@ object fTranslate: TfTranslate
     Height = 27
     Shape = bsFrame
   end
-  object Shape10: TShape
-    Left = 8
-    Top = 39
-    Width = 785
-    Height = 104
-    Anchors = [akLeft, akTop, akRight, akBottom]
-  end
-  object EditorPaintBox: TPaintBox
-    Left = 9
-    Top = 40
-    Width = 764
-    Height = 102
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Color = clWhite
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    OnClick = EditorPaintBoxClick
-    OnDblClick = EditorPaintBoxDblClick
-    OnMouseDown = EditorPaintBoxMouseDown
-    OnMouseMove = EditorPaintBoxMouseMove
-    OnPaint = EditorPaintBoxPaint
-  end
   object sbFileOpen: TSpeedButton
     Left = 34
     Top = 8
@@ -680,6 +653,19 @@ object fTranslate: TfTranslate
     ParentShowHint = False
     ShowHint = True
     OnClick = sbUseTlColorsClick
+  end
+  object EditorPaintbox: TWakanPaintbox
+    Left = 8
+    Top = 39
+    Width = 785
+    Height = 104
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Color = clWhite
+    OnPaint = EditorPaintBoxPaint
+    OnClick = EditorPaintBoxClick
+    OnDblClick = EditorPaintBoxDblClick
+    OnMouseMove = EditorPaintBoxMouseMove
+    OnMouseDown = EditorPaintBoxMouseDown
   end
   object ListBox1: TListBox
     Left = 758
