@@ -3036,7 +3036,10 @@ begin
       wx:=cx+ll[cl].len;
       kanaq:=''; //reset reading on newline
 
-      while ((cx<wx) and (cx<flength(doc[cy]))) or ((kanaq<>'') and PrintReading) do
+      while (px<screenw) and (
+       ((cx<wx) and (cx<flength(doc[cy])))
+       or ((kanaq<>'') and PrintReading)
+      ) do
       try
        { Note that we can get here even if CX is outside the legal characters for the string.
         This happens if we have some reading remainder in kanaq. Be careful. }
