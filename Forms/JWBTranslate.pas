@@ -3324,13 +3324,15 @@ begin
       end;
 
      //Next line
-      inRubyTag := false;
-      inRubyComment := false;
       inc(py,rs*linec);
       px:=0;
       if cl<ll.Count then
-        if ll[cl].xs + ll[cl].len >= flength(doc[cy]) then
-          kanaq:=''; //reset reading on logical newline
+       //on logical newline (not just word wrap)
+        if ll[cl].xs + ll[cl].len >= flength(doc[cy]) then begin
+          kanaq:=''; //reset reading
+          inRubyTag := false; //reset ruby tag highlight
+          inRubyComment := false;
+        end;
       inc(cl);
     end;
   except
