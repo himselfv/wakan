@@ -3179,7 +3179,8 @@ begin
           rect.bottom:=realy2+t;
           canvas.Font.Name:=FontEnglish;
           if not fSettings.CheckBox27.Checked then
-            canvas.Font.Height:=rs else
+            canvas.Font.Height:=rs
+          else
             canvas.Font.Height:=rs*2;
           canvas.Font.Style:=[];
           DrawText(canvas.Handle,pchar(meaning),length(meaning),rect,DT_WORDBREAK);
@@ -3234,6 +3235,7 @@ begin
 
        { Print reading: 1 or 2 positions, 1 full-width or 2 half-width reading chars each }
         if PrintReading then begin
+          canvas.Font.Style:=[]; //not bold
           cntx:=px;
           for i:=1 to 2 do
            //If this is validChar and it's half-width and we're in horizontal print, there's only one position
