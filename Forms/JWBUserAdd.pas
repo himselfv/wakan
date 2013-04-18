@@ -4,16 +4,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons;
+  StdCtrls, ExtCtrls, Buttons, WakanPaintbox;
 
 type
   TfUserAdd = class(TForm)
     Label1: TLabel;
-    Shape9: TShape;
-    PaintBox3: TPaintBox;
     Label7: TLabel;
-    Shape3: TShape;
-    PaintBox2: TPaintBox;
     Label2: TLabel;
     Label4: TLabel;
     Edit1: TEdit;
@@ -21,9 +17,11 @@ type
     ComboBox1: TComboBox;
     btnOk: TBitBtn;
     btnCancel: TBitBtn;
+    Paintbox2: TWakanPaintbox;
+    PaintBox3: TWakanPaintbox;
     procedure Edit1Change(Sender: TObject);
-    procedure PaintBox3Paint(Sender: TObject);
-    procedure PaintBox2Paint(Sender: TObject);
+    procedure PaintBox3Paint(Sender: TObject; Canvas: TCanvas);
+    procedure PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
     procedure Button1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   end;
@@ -42,16 +40,16 @@ begin
   PaintBox3.Invalidate;
 end;
 
-procedure TfUserAdd.PaintBox3Paint(Sender: TObject);
+procedure TfUserAdd.PaintBox3Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  PaintBox3.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana(Edit1.Text,romasys,curlang,[]),FontSmall);
+  Canvas.Brush.Color:=clBtnFace;
+  DrawUnicode(Canvas,2,2,16,RomajiToKana(Edit1.Text,romasys,curlang,[]),FontSmall);
 end;
 
-procedure TfUserAdd.PaintBox2Paint(Sender: TObject);
+procedure TfUserAdd.PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  PaintBox2.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(PaintBox2.Canvas,1,1,22,clip,FontJapanese);
+  Canvas.Brush.Color:=clWindow;
+  DrawUnicode(Canvas,2,2,22,clip,FontJapanese);
 end;
 
 procedure TfUserAdd.Button1Click(Sender: TObject);

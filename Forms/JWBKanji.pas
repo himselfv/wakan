@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBStrings,
-  RXCtrls, Grids, DB, ShellAPI;
+  RXCtrls, Grids, DB, ShellAPI, WakanPaintbox;
 
 //{$DEFINE UPDATE_WITH_DELAY}
 // If set, DoItTimer() will really use timer and not just update instanteneously.
@@ -14,8 +14,6 @@ type
   TfKanji = class(TForm)
     Panel1: TPanel;
     RxLabel15: TRxLabel;
-    Shape6: TShape;
-    Label24: TLabel;
     btnSearchSort: TSpeedButton;
     btnKanjiDetails: TSpeedButton;
     btnCompounds: TSpeedButton;
@@ -28,6 +26,7 @@ type
     SaveDialog1: TSaveDialog;
     UpdateTimer: TTimer;
     splDockCompounds: TSplitter;
+    BlankPanel1: TBlankPanel;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);

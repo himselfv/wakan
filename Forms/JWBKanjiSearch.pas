@@ -4,52 +4,51 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, CheckLst, JWBStrings, JWBRadical;
+  StdCtrls, ExtCtrls, Buttons, CheckLst, JWBStrings, JWBRadical, WakanPaintbox;
 
 type
   TfKanjiSearch = class(TForm)
-    sbPinYin: TSpeedButton;
-    sbYomi: TSpeedButton;
-    sbRadicals: TSpeedButton;
-    sbDefinition: TSpeedButton;
+    Bevel: TPanel;
     Bevel2: TBevel;
-    sbSKIP: TSpeedButton;
-    sbClearFilters: TSpeedButton;
-    btnOnlyCommon: TSpeedButton;
+    Bevel3: TBevel;
     btnInClipboard: TSpeedButton;
-    sbStrokeCount: TSpeedButton;
-    sbOther: TSpeedButton;
-    sbJouyou: TSpeedButton;
+    btnOnlyCommon: TSpeedButton;
+    cbNot: TCheckBox;
+    cbOtherType: TComboBox;
+    edtDefinition: TEdit;
+    edtJouyou: TEdit;
+    edtOther: TEdit;
     edtPinYin: TEdit;
     edtRadicals: TEdit;
-    edtDefinition: TEdit;
     edtSkip: TEdit;
-    edtYomi: TEdit;
     edtStrokeCount: TEdit;
-    edtOther: TEdit;
-    edtJouyou: TEdit;
-    sbListRadicals: TSpeedButton;
-    Bevel1: TBevel;
-    sbStrokeCountMinus: TSpeedButton;
-    sbStrokeCountPlus: TSpeedButton;
-    sbStrokeCountExpand: TSpeedButton;
-    sbStrokeCountShrink: TSpeedButton;
+    edtYomi: TEdit;
+    lbCategories: TCheckListBox;
+    pbRadicals: TWakanPaintbox;
+    rgOrAnd: TRadioGroup;
+    rgSortBy: TRadioGroup;
+    sbClearFilters: TSpeedButton;
+    sbDefinition: TSpeedButton;
+    sbJouyou: TSpeedButton;
+    sbJouyouExpand: TSpeedButton;
     sbJouyouMinus: TSpeedButton;
     sbJouyouPlus: TSpeedButton;
-    sbJouyouExpand: TSpeedButton;
     sbJouyouShrink: TSpeedButton;
-    rgSortBy: TRadioGroup;
-    Bevel3: TBevel;
-    cbOtherType: TComboBox;
-    pbRadicals: TPaintBox;
-    Shape1: TShape;
-    lbCategories: TCheckListBox;
+    sbListRadicals: TSpeedButton;
+    sbOther: TSpeedButton;
+    sbPinYin: TSpeedButton;
+    sbRadicals: TSpeedButton;
+    sbSKIP: TSpeedButton;
+    sbStrokeCount: TSpeedButton;
+    sbStrokeCountExpand: TSpeedButton;
+    sbStrokeCountMinus: TSpeedButton;
+    sbStrokeCountPlus: TSpeedButton;
+    sbStrokeCountShrink: TSpeedButton;
+    sbYomi: TSpeedButton;
+    SpeedButton1: TSpeedButton;
     SpeedButton19: TSpeedButton;
     SpeedButton20: TSpeedButton;
     SpeedButton25: TSpeedButton;
-    SpeedButton1: TSpeedButton;
-    rgOrAnd: TRadioGroup;
-    cbNot: TCheckBox;
     procedure sbPinYinClick(Sender: TObject);
     procedure sbClearFiltersClick(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);
@@ -73,7 +72,7 @@ type
     procedure sbJouyouShrinkClick(Sender: TObject);
     procedure rgSortByClick(Sender: TObject);
     procedure cbOtherTypeChange(Sender: TObject);
-    procedure pbRadicalsPaint(Sender: TObject);
+    procedure pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
     procedure SpeedButton1Click(Sender: TObject);
     procedure lbCategoriesClick(Sender: TObject);
     procedure lbCategoriesClickCheck(Sender: TObject);
@@ -342,11 +341,11 @@ begin
   fKanji.DoItTimer;
 end;
 
-procedure TfKanjiSearch.pbRadicalsPaint(Sender: TObject);
+procedure TfKanjiSearch.pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
 begin
-  pbRadicals.Canvas.Brush.Color:=clBtnFace;
-  pbRadicals.Canvas.Font.Style:=[];
-  DrawUnicode(pbRadicals.Canvas,1,1,16,curradsearch,FontRadical);
+  Canvas.Brush.Color:=clBtnFace;
+  Canvas.Font.Style:=[];
+  DrawUnicode(Canvas,1,1,16,curradsearch,FontRadical);
 end;
 
 procedure TfKanjiSearch.SpeedButton1Click(Sender: TObject);

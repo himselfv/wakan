@@ -30,14 +30,6 @@ object fExamples: TfExamples
     DesignSize = (
       469
       49)
-    object Shape9: TShape
-      Left = 1
-      Top = 1
-      Width = 313
-      Height = 45
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Brush.Color = clWindow
-    end
     object Bevel2: TBevel
       Left = 426
       Top = 1
@@ -99,23 +91,6 @@ object fExamples: TfExamples
       Height = 13
       Anchors = [akTop, akRight]
       Caption = 'Label6'
-    end
-    object PaintBox: TPaintBox
-      Left = 2
-      Top = 2
-      Width = 310
-      Height = 45
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Color = clBtnFace
-      ParentColor = False
-      OnMouseDown = PaintBoxMouseDown
-      OnMouseMove = PaintBoxMouseMove
-      OnMouseUp = PaintBoxMouseUp
-      OnPaint = PaintBoxPaint
     end
     object btnGoToExample: TSpeedButton
       Left = 372
@@ -278,6 +253,19 @@ object fExamples: TfExamples
       ParentShowHint = False
       ShowHint = True
       OnClick = btnCopyToClipboardClick
+    end
+    object Paintbox: TWakanPaintbox
+      Left = 1
+      Top = 1
+      Width = 313
+      Height = 45
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Color = clWhite
+      DoubleBuffered = True
+      OnPaint = PaintBoxPaint
+      OnMouseMove = PaintBoxMouseMove
+      OnMouseDown = PaintBoxMouseDown
+      OnMouseUp = PaintBoxMouseUp
     end
   end
 end

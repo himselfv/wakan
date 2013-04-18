@@ -573,7 +573,6 @@ var
   ed: TEdictArticle;
   roma: TEdictRoma;
   loclineno: integer;
-  tmp: UnicodeString;
 begin
   loclineno := 0;
   //Read another line

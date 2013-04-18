@@ -4,14 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, Buttons;
+  ExtCtrls, StdCtrls, Buttons, WakanPaintbox;
 
 type
   TfDicAdd = class(TForm)
-    Shape2: TShape;
-    PaintBox1: TPaintBox;
-    Shape3: TShape;
-    PaintBox2: TPaintBox;
     Label6: TLabel;
     Label4: TLabel;
     ComboBox1: TComboBox;
@@ -20,8 +16,10 @@ type
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     edtMeaning: TMemo;
-    procedure PaintBox1Paint(Sender: TObject);
-    procedure PaintBox2Paint(Sender: TObject);
+    Paintbox1: TWakanPaintbox;
+    PaintBox2: TWakanPaintbox;
+    procedure Paintbox1Paint(Sender: TObject; Canvas: TCanvas);
+    procedure PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
   end;
 
 var
@@ -33,14 +31,14 @@ uses JWBUser;
 
 {$R *.DFM}
 
-procedure TfDicAdd.PaintBox1Paint(Sender: TObject);
+procedure TfDicAdd.Paintbox1Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  fUser.WordDetails_PaintBox1Paint(sender);
+  fUser.WordDetails_PaintBox1Paint(Sender, Canvas);
 end;
 
-procedure TfDicAdd.PaintBox2Paint(Sender: TObject);
+procedure TfDicAdd.PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  fUser.WordDetails_PaintBox2Paint(sender);
+  fUser.WordDetails_PaintBox2Paint(Sender, Canvas);
 end;
 
 end.

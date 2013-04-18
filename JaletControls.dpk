@@ -32,7 +32,6 @@ contains
   FreeSelectionGrid in 'Controls\FreeSelectionGrid.pas',
   UrlLabel in 'Controls\UrlLabel.pas',
   WakanWordGrid in 'Controls\WakanWordGrid.pas',
-  BlankPanel in 'Controls\BlankPanel.pas',
   WakanPaintbox in 'Controls\WakanPaintbox.pas';
 
 end.

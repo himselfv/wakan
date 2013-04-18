@@ -56,31 +56,6 @@ object fKanji: TfKanji
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object Shape6: TShape
-      Left = 7
-      Top = 32
-      Width = 618
-      Height = 281
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      ExplicitHeight = 282
-    end
-    object Label24: TLabel
-      Left = 15
-      Top = 40
-      Width = 272
-      Height = 19
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Caption = '#00118^eNo characters were found.'
-      Color = clBtnFace
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentColor = False
-      ParentFont = False
-      Transparent = True
-    end
     object btnSearchSort: TSpeedButton
       Left = 8
       Top = 320
@@ -164,6 +139,21 @@ object fKanji: TfKanji
       ShowHint = True
       Visible = False
       OnClick = btnStrokeOrderClick
+    end
+    object BlankPanel1: TBlankPanel
+      Left = 7
+      Top = 32
+      Width = 618
+      Height = 281
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      TextLeft = 8
+      TextTop = 8
+      Text = '#00118^eNo characters were found.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
     end
     object DrawGrid1: TDrawGrid
       Left = 8

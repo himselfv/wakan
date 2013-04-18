@@ -383,14 +383,7 @@ object fMenu: TfMenu
         EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE3E3E317}
       OnClick = btnJapaneseModeClick
     end
-    object Bevel4: TBevel
-      Left = 274
-      Top = 33
-      Width = 10
-      Height = 35
-      Shape = bsLeftLine
-    end
-    object SpeedButton22: TSpeedButton
+    object btnClipboardClear: TSpeedButton
       Left = 663
       Top = 4
       Width = 25
@@ -413,7 +406,7 @@ object fMenu: TfMenu
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton22Click
+      OnClick = btnClipboardClearClick
     end
     object Bevel5: TBevel
       Left = 433
@@ -441,26 +434,6 @@ object fMenu: TfMenu
       ParentShowHint = False
       ShowHint = True
       OnClick = TabControl1Change
-    end
-    object Shape9: TShape
-      Left = 495
-      Top = 4
-      Width = 166
-      Height = 26
-      Anchors = [akLeft, akTop, akRight]
-      Brush.Color = clWindow
-    end
-    object PaintBox3: TPaintBox
-      Left = 496
-      Top = 5
-      Width = 164
-      Height = 24
-      Anchors = [akLeft, akTop, akRight]
-      Color = clBtnFace
-      ParentColor = False
-      OnMouseMove = PaintBox3MouseMove
-      OnMouseUp = PaintBox3MouseUp
-      OnPaint = PaintBox3Paint
     end
     object Bevel1: TBevel
       Left = 491
@@ -544,6 +517,18 @@ object fMenu: TfMenu
         FF00FFFF000000FFFFFFFFFFFF00000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000FFFFFF}
       OnClick = SpeedButton2Click
+    end
+    object ClipboardPaintbox: TWakanPaintbox
+      Left = 495
+      Top = 4
+      Width = 166
+      Height = 26
+      Anchors = [akLeft, akTop, akRight]
+      Color = clWhite
+      DoubleBuffered = True
+      OnPaint = ClipboardPaintboxPaint
+      OnMouseMove = ClipboardPaintboxMouseMove
+      OnMouseUp = ClipboardPaintboxMouseUp
     end
   end
   object Panel3: TPanel

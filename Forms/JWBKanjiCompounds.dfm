@@ -68,31 +68,6 @@ object fKanjiCompounds: TfKanjiCompounds
       ParentFont = False
       OnClick = SpeedButton11Click
     end
-    object Shape7: TShape
-      Left = 8
-      Top = 9
-      Width = 451
-      Height = 140
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      Brush.Color = clWindow
-    end
-    object Label25: TLabel
-      Left = 127
-      Top = 20
-      Width = 240
-      Height = 19
-      Anchors = [akTop]
-      Caption = '#00155^eNo words were found.'
-      Color = clBtnFace
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-      ParentColor = False
-      ParentFont = False
-      Transparent = True
-    end
     object sbCopyToClipboard: TSpeedButton
       Left = 380
       Top = 149
@@ -144,6 +119,21 @@ object fKanjiCompounds: TfKanjiCompounds
       ParentShowHint = False
       ShowHint = True
       OnClick = sbInsertIntoVocabClick
+    end
+    object BlankPanel1: TBlankPanel
+      Left = 8
+      Top = 9
+      Width = 451
+      Height = 140
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      TextLeft = 119
+      TextTop = 11
+      Text = '#00155^eNo words were found.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
     end
     object cbLeftMatchOnly: TCheckBox
       Left = 9

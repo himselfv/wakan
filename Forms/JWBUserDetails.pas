@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, RXCtrls, ExtCtrls;
+  StdCtrls, Buttons, RXCtrls, ExtCtrls, WakanPaintbox;
 
 type
   TfUserDetails = class(TForm)
@@ -16,11 +16,7 @@ type
     FlowPanel1: TFlowPanel;
     pnlEntryContents: TPanel;
     Label5: TLabel;
-    Shape2: TShape;
-    pbPhonetic: TPaintBox;
-    Shape5: TShape;
     Label6: TLabel;
-    pbKanji: TPaintBox;
     Label9: TLabel;
     btnSaveMeaning: TButton;
     edtMeaning: TMemo;
@@ -44,8 +40,10 @@ type
     lblDateMastered: TLabel;
     Label12: TLabel;
     lblTimesPrinted: TLabel;
-    procedure pbPhoneticPaint(Sender: TObject);
-    procedure pbKanjiPaint(Sender: TObject);
+    pbPhonetic: TWakanPaintbox;
+    pbKanji: TWakanPaintbox;
+    procedure pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
+    procedure pbKanjiPaint(Sender: TObject; Canvas: TCanvas);
     procedure btnAddToCategoryClick(Sender: TObject);
     procedure btnSetProblematicClick(Sender: TObject);
     procedure btnRemoveFromCategoryClick(Sender: TObject);
@@ -189,17 +187,17 @@ begin
   btnSetMastered.Enabled:=Value;
 end;
 
-procedure TfUserDetails.pbPhoneticPaint(Sender: TObject);
+procedure TfUserDetails.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
 begin
-  Canvas.Brush.Color:=clWindow;
-  DrawKana(pbPhonetic.Canvas,1,1,22,fWords.curphonetic,FontJapanese,showroma,romasys,curlang);
+  Brush.Color:=clWindow;
+  DrawKana(Canvas,1,1,22,fWords.curphonetic,FontJapanese,showroma,romasys,curlang);
 end;
 
-procedure TfUserDetails.pbKanjiPaint(Sender: TObject);
+procedure TfUserDetails.pbKanjiPaint(Sender: TObject; Canvas: TCanvas);
 begin
   pbKanji.Canvas.Brush.Color:=clWindow;
-  BeginDrawReg(pbKanji.Canvas);
-  DrawUnicode(pbKanji.Canvas,1,1,22,fWords.curkanji,FontJapanese);
+  BeginDrawReg(Canvas);
+  DrawUnicode(Canvas,1,1,22,fWords.curkanji,FontJapanese);
   EndDrawReg;
 end;
 

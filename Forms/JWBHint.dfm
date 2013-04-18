@@ -15,22 +15,18 @@ object fHint: TfHint
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object Shape1: TShape
-    Left = 0
-    Top = 0
-    Width = 316
-    Height = 34
-    Align = alClient
-    Brush.Color = 15724527
-  end
-  object PaintBox1: TPaintBox
+  object PaintBox1: TWakanPaintbox
     Left = 0
     Top = 0
     Width = 316
     Height = 34
     Align = alClient
     Color = 15724527
-    ParentColor = False
+    DoubleBuffered = True
     OnPaint = PaintBox1Paint
+    ExplicitLeft = 88
+    ExplicitTop = 16
+    ExplicitWidth = 100
+    ExplicitHeight = 41
   end
 end

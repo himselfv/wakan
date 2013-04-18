@@ -56,8 +56,6 @@ uses
 
 {$ENDIF}
 
-{$DEFINE BUFFERED_REPAINT}
-
 type
  { Character position in source text. }
   TSourcePos = record
@@ -215,11 +213,8 @@ type
     doctp:byte;
 
   protected //Mostly repainting
-   {$IFDEF BUFFERED_REPAINT}
-    EditorBitmap:TBitmap;
-   {$ENDIF}
+    EditorBitmap: TBitmap;
     function PaintBoxClientRect: TRect;
-    procedure MakeEditorBitmap;
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
     procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
@@ -954,16 +949,13 @@ begin
 
   CF_WAKAN := RegisterClipboardFormat(PChar('Wakan Text'));
   if CF_WAKAN=0 then RaiseLastOsError();
-
 end;
 
 procedure TfTranslate.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(EditorBitmap);
   linl.Free;
   plinl.Free;
- {$IFDEF BUFFERED_REPAINT}
-  EditorBitmap.Free;
- {$ENDIF}
   doc.Free;
   doctr.Free;
   docdic.Free;
@@ -2280,7 +2272,7 @@ begin
   //Sometimes we receive "ssLeft + MouseMove" when we double click something
   //in another window and that window closes, leaving us in editor.
   //This results in ugly unexpected text selection.
-  if Mouse.Capture=Self.Handle then //EditorPaintBox doesn't have it's own handle
+  if Mouse.Capture=EditorPaintbox.Handle then
     if ssLeft in Shift then begin;
       if not TryReleaseCursorFromInsert() then
         exit; //cannot move cursor!
@@ -2307,25 +2299,23 @@ procedure TfTranslate.EditorPaintBoxPaint(Sender: TObject; Canvas: TCanvas);
 var r: TRect;
 begin
   r := PaintBoxClientRect;
-{$IFDEF BUFFERED_REPAINT}
-  editorbitmap.Free;
-  editorbitmap:=TBitmap.Create;
-  editorbitmap.Width:=r.Right-r.Left;
-  editorbitmap.Height:=r.Bottom-r.Top;
-  RenderText(rview.x,rview.y,editorbitmap.Canvas,0,0,editorbitmap.Width,
-    editorbitmap.Height,linl,printl,lastxsiz,lastycnt,false,false);
-{$ELSE}
-  RenderText(rview.x,rview.y,EditorPaintbox.Canvas,r.Left,r.Top,r.Right-r.Left,
-    r.Bottom-r.Top,linl,printl,lastxsiz,lastycnt,false,false);
-{$ENDIF}
+
+ { Create/update a backbuffer.
+  We do it this way even though the control is double-buffered by itself to stop
+  RenderText from drawing outside the clipping rectangle. }
+  if EditorBitmap=nil then begin
+    EditorBitmap := TBitmap.Create;
+    EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
+  end else
+  if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
+    EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
+
+  RenderText(rview.x,rview.y,EditorBitmap.Canvas,0,0,EditorBitmap.Width,EditorBitmap.Height,
+    linl,printl,lastxsiz,lastycnt,false,false);
+  Canvas.Draw(r.Left,r.Top,EditorBitmap);
   oldcur := CursorPos(-1, -1);
   oldblock := Selection(-1, -1, -1, -1);
-{$IFDEF BUFFERED_REPAINT}
-  DrawBlock(EditorBitmap.Canvas,Rect(0,0,EditorBitmap.Width,EditorBitmap.Height));
-  EditorPaintbox.Canvas.Draw(r.Left,r.Top,EditorBitmap);
-{$ELSE}
   DrawBlock(EditorPaintbox.Canvas,r);
-{$ENDIF}
   DrawCursor(false);
 end;
 
@@ -2559,7 +2549,7 @@ begin
     rview.x:=linl[view].xs;
     rview.y:=linl[view].ys;
   end;
-  MakeEditorBitmap;
+  EditorPaintbox.Invalidate;
 end;
 
 procedure TfTranslate.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
@@ -2609,33 +2599,10 @@ end;
 function TfTranslate.PaintBoxClientRect: TRect;
 begin
   Result := EditorPaintBox.ClientRect;
-  Result.Left := Result.Left + 2 {normal margin} + 1;
-  Result.Top := Result.Top + 2 {normal margin} + 1;
-  Result.Right := Result.Right - 2 {normal margin} - 18 {ScrollBar} - 1;
-  Result.Bottom := Result.Bottom - 2 {normal margin} - 1;
-end;
-
-procedure TfTranslate.MakeEditorBitmap;
-{var r: TRect;}
-begin
-  EditorPaintbox.Invalidate;
-{  editorbitmap.Free;
-  r := PaintBoxClientRect;
-  editorbitmap:=TBitmap.Create;
-  editorbitmap.Width:=r.Right-r.Left;
-  editorbitmap.Height:=r.Bottom-r.Top;
-  RenderText(rview.x,rview.y,editorbitmap.Canvas,0,0,editorbitmap.Width,
-    editorbitmap.Height,linl,printl,lastxsiz,lastycnt,false,false);
-  oldcur := CursorPos(-1, -1);
-  oldblock := Selection(-1, -1, -1, -1);
-  DrawBlock(EditorBitmap.Canvas,Rect(0,0,EditorBitmap.Width,EditorBitmap.Height));
-  EditorPaintbox.Canvas.Draw(r.Left,r.Top,EditorBitmap);
-  RenderText(rview.x,rview.y,EditorPaintbox.Canvas,r.Left,r.Top,r.Right-r.Left,
-    r.Bottom-r.Top,linl,printl,lastxsiz,lastycnt,false,false);
-  oldcur := CursorPos(-1, -1);
-  oldblock := Selection(-1, -1, -1, -1);
-  DrawBlock(EditorPaintbox.Canvas,r);
-  DrawCursor(false);}
+  Result.Left := Result.Left + 1 {normal margin} + 1;
+  Result.Top := Result.Top + 1 {normal margin} + 1;
+  Result.Right := Result.Right - 1 {normal margin} - 18 {ScrollBar} - 1;
+  Result.Bottom := Result.Bottom - 1 {normal margin} - 1;
 end;
 
 procedure TfTranslate.HandleWheel(down:boolean);
@@ -2648,7 +2615,7 @@ begin
   end else
     if view<0 then view:=0 else view:=EditorScrollBar.Max;
   EditorScrollBar.Position:=view;
-  MakeEditorBitmap;
+  EditorPaintbox.Invalidate;
 end;
 
 procedure TfTranslate.ShowText(dolook:boolean);
@@ -2713,8 +2680,9 @@ begin
     if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
   end;
   if oldview<>view then mustrepaint:=true;
-  if mustrepaint then MakeEditorBitmap else
-  begin
+  if mustrepaint then
+    EditorPaintbox.Invalidate
+  else begin
     DrawCursor(false);
     DrawBlock(EditorPaintBox.Canvas,pbRect);
   end;

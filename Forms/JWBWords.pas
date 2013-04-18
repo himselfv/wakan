@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings, Menus,
-  WakanWordGrid, StdPrompt, BlankPanel;
+  WakanWordGrid, StdPrompt, WakanPaintbox;
 
 type
   TMoveDirection = (mdUp, mdDown);

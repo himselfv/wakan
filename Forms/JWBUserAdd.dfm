@@ -34,22 +34,6 @@ object fUserAdd: TfUserAdd
     ParentFont = False
     Transparent = True
   end
-  object Shape9: TShape
-    Left = 8
-    Top = 48
-    Width = 658
-    Height = 20
-    Brush.Color = clBtnFace
-  end
-  object PaintBox3: TPaintBox
-    Left = 9
-    Top = 49
-    Width = 656
-    Height = 18
-    Color = clBtnFace
-    ParentColor = False
-    OnPaint = PaintBox3Paint
-  end
   object Label7: TLabel
     Left = 8
     Top = 80
@@ -62,24 +46,6 @@ object fUserAdd: TfUserAdd
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-  end
-  object Shape3: TShape
-    Left = 8
-    Top = 96
-    Width = 655
-    Height = 28
-    Anchors = [akLeft, akTop, akRight]
-    Brush.Color = clWindow
-  end
-  object PaintBox2: TPaintBox
-    Left = 9
-    Top = 97
-    Width = 653
-    Height = 26
-    Anchors = [akLeft, akTop, akRight]
-    Color = clBtnFace
-    ParentColor = False
-    OnPaint = PaintBox2Paint
   end
   object Label2: TLabel
     Left = 6
@@ -163,5 +129,25 @@ object fUserAdd: TfUserAdd
     Caption = '#00050^eCancel'
     Kind = bkCancel
     TabOrder = 4
+  end
+  object Paintbox2: TWakanPaintbox
+    Left = 8
+    Top = 96
+    Width = 655
+    Height = 28
+    Anchors = [akLeft, akTop, akRight]
+    Color = clWhite
+    DoubleBuffered = True
+    OnPaint = PaintBox2Paint
+  end
+  object PaintBox3: TWakanPaintbox
+    Left = 8
+    Top = 48
+    Width = 658
+    Height = 20
+    Anchors = [akLeft, akTop, akRight]
+    Color = clBtnFace
+    DoubleBuffered = True
+    OnPaint = PaintBox3Paint
   end
 end

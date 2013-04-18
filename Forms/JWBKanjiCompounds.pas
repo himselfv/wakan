@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, StdCtrls, ExtCtrls, Buttons, JWBStrings, WakanWordGrid, Menus;
+  Grids, StdCtrls, ExtCtrls, Buttons, JWBStrings, WakanWordGrid, Menus,
+  WakanPaintbox;
 
 type
   TfKanjiCompounds = class(TForm)
@@ -13,14 +14,13 @@ type
     MainPanel: TPanel;
     sbShowVocab: TSpeedButton;
     sbShowDict: TSpeedButton;
-    Shape7: TShape;
-    Label25: TLabel;
     sbCopyToClipboard: TSpeedButton;
     sbInsertIntoVocab: TSpeedButton;
     cbLeftMatchOnly: TCheckBox;
     StringGrid1: TWakanWordGrid;
     cbPopularOnly: TCheckBox;
     cbSortByFrequency: TCheckBox;
+    BlankPanel1: TBlankPanel;
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
     procedure SpeedButton11Click(Sender: TObject);

@@ -4,19 +4,18 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, Grids, JWBStrings;
+  StdCtrls, Buttons, ExtCtrls, Grids, JWBStrings, WakanPaintbox;
 
 type
   TfSelectFont = class(TForm)
     StringGrid1: TStringGrid;
-    Shape9: TShape;
-    PaintBox3: TPaintBox;
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
+    PaintBox3: TWakanPaintbox;
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
     procedure FormShow(Sender: TObject);
-    procedure PaintBox3Paint(Sender: TObject);
+    procedure PaintBox3Paint(Sender: TObject; Canvas: TCanvas);
   public
     teststring:FString;
     deffont,selfont:string;
@@ -75,13 +74,13 @@ begin
     end;  
 end;
 
-procedure TfSelectFont.PaintBox3Paint(Sender: TObject);
+procedure TfSelectFont.PaintBox3Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  PaintBox3.Canvas.Brush.Color:=clWindow;
-  PaintBox3.Canvas.Pen.Color:=clWindow;
-  PaintBox3.Canvas.Rectangle(0,0,PaintBox3.Width,PaintBox3.Height);
-  PaintBox3.Canvas.Pen.Color:=clWindowText;
-  DrawUnicode(PaintBox3.Canvas,1,1,48,teststring,selfont);
+  Canvas.Brush.Color:=clWindow;
+  Canvas.Pen.Color:=clWindow;
+  Canvas.Rectangle(0,0,PaintBox3.Width,PaintBox3.Height);
+  Canvas.Pen.Color:=clWindowText;
+  DrawUnicode(Canvas,1,1,48,teststring,selfont);
 end;
 
 function FindFont_Callback(lpelfe: PLogFont; lpntme: PTextMetric; FontType: dword;

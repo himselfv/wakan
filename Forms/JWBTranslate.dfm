@@ -661,6 +661,7 @@ object fTranslate: TfTranslate
     Height = 104
     Anchors = [akLeft, akTop, akRight, akBottom]
     Color = clWhite
+    DoubleBuffered = True
     OnPaint = EditorPaintBoxPaint
     OnClick = EditorPaintBoxClick
     OnDblClick = EditorPaintBoxDblClick

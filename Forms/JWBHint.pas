@@ -4,13 +4,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls;
+  ExtCtrls, WakanPaintbox;
 
 type
   TfHint = class(TForm)
-    Shape1: TShape;
-    PaintBox1: TPaintBox;
-    procedure PaintBox1Paint(Sender: TObject);
+    PaintBox1: TWakanPaintbox;
+    procedure PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
   end;
 
 var
@@ -22,7 +21,7 @@ uses JWBUser;
 
 {$R *.DFM}
 
-procedure TfHint.PaintBox1Paint(Sender: TObject);
+procedure TfHint.PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
 begin
   fUser.PaintHint;
 end;

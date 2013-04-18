@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBStrings, JWBUtils, JWBDic, JWBDicSearch, Menus, WakanWordGrid, BlankPanel;
+  JWBStrings, JWBUtils, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
+  WakanPaintbox;
 
 type
   TKanjiEntry = record
@@ -52,8 +53,8 @@ type
     procedure Edit1Click(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
-    procedure WordDetails_PaintBox1Paint(Sender: TObject);
-    procedure WordDetails_PaintBox2Paint(Sender: TObject);
+    procedure WordDetails_PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
+    procedure WordDetails_PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
     procedure FormShow(Sender: TObject);
     procedure btnLookupJtoEClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -450,19 +451,19 @@ begin
   if curword<=dicrl.Count then ShowWord;
 end;
 
-procedure TfUser.WordDetails_PaintBox1Paint(Sender: TObject);
+procedure TfUser.WordDetails_PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  TPaintBox(Sender).Canvas.Brush.Color:=clWindow;
+  Canvas.Brush.Color:=clWindow;
   if showroma then
-    DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,KanaToRomaji(curphonetic,romasys,curlang),FontEnglish)
+    DrawUnicode(Canvas,2,2,22,KanaToRomaji(curphonetic,romasys,curlang),FontEnglish)
   else
-    DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curphonetic,FontJapanese);
+    DrawUnicode(Canvas,2,2,22,curphonetic,FontJapanese);
 end;
 
-procedure TfUser.WordDetails_PaintBox2Paint(Sender: TObject);
+procedure TfUser.WordDetails_PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  TPaintBox(Sender).Canvas.Brush.Color:=clWindow;
-  DrawUnicode(TPaintBox(Sender).Canvas,1,1,22,curkanji,FontJapanese);
+  Canvas.Brush.Color:=clWindow;
+  DrawUnicode(Canvas,2,2,22,curkanji,FontJapanese);
 end;
 
 procedure TfUser.ShowWord;

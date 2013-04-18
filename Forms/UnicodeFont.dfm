@@ -20,24 +20,6 @@ object fSelectFont: TfSelectFont
     359)
   PixelsPerInch = 96
   TextHeight = 13
-  object Shape9: TShape
-    Left = 8
-    Top = 253
-    Width = 511
-    Height = 60
-    Anchors = [akLeft, akTop, akRight]
-    Brush.Color = clWindow
-  end
-  object PaintBox3: TPaintBox
-    Left = 9
-    Top = 254
-    Width = 509
-    Height = 58
-    Anchors = [akLeft, akTop, akRight]
-    Color = clBtnFace
-    ParentColor = False
-    OnPaint = PaintBox3Paint
-  end
   object StringGrid1: TStringGrid
     Left = 8
     Top = 8
@@ -68,5 +50,15 @@ object fSelectFont: TfSelectFont
     Height = 25
     Kind = bkCancel
     TabOrder = 2
+  end
+  object PaintBox3: TWakanPaintbox
+    Left = 8
+    Top = 253
+    Width = 511
+    Height = 60
+    Anchors = [akLeft, akTop, akRight]
+    Color = clWhite
+    DoubleBuffered = True
+    OnPaint = PaintBox3Paint
   end
 end

@@ -145,30 +145,6 @@ object fUserDetails: TfUserDetails
           ParentFont = False
           Transparent = True
         end
-        object Shape2: TShape
-          Left = 8
-          Top = 25
-          Width = 249
-          Height = 29
-          Brush.Color = clWindow
-        end
-        object pbPhonetic: TPaintBox
-          Left = 9
-          Top = 26
-          Width = 248
-          Height = 27
-          Color = clBtnFace
-          ParentColor = False
-          OnPaint = pbPhoneticPaint
-        end
-        object Shape5: TShape
-          Left = 269
-          Top = 25
-          Width = 248
-          Height = 29
-          Anchors = [akLeft, akTop, akRight]
-          Brush.Color = clWindow
-        end
         object Label6: TLabel
           Left = 269
           Top = 9
@@ -182,17 +158,6 @@ object fUserDetails: TfUserDetails
           Font.Style = []
           ParentFont = False
           Transparent = True
-        end
-        object pbKanji: TPaintBox
-          Left = 270
-          Top = 26
-          Width = 246
-          Height = 27
-          Anchors = [akLeft, akTop, akRight]
-          Color = clBtnFace
-          ParentColor = False
-          OnMouseMove = pbKanjiMouseMove
-          OnPaint = pbKanjiPaint
         end
         object Label9: TLabel
           Left = 8
@@ -243,6 +208,21 @@ object fUserDetails: TfUserDetails
           WantReturns = False
           OnChange = edtMeaningChange
           OnKeyPress = edtMeaningKeyPress
+        end
+        object pbPhonetic: TWakanPaintbox
+          Left = 8
+          Top = 25
+          Width = 249
+          Height = 29
+          Color = clWhite
+        end
+        object pbKanji: TWakanPaintbox
+          Left = 269
+          Top = 25
+          Width = 248
+          Height = 29
+          Color = clWhite
+          OnMouseMove = pbKanjiMouseMove
         end
       end
       object GroupBox1: TGroupBox

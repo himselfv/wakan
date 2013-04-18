@@ -9,7 +9,7 @@ uses
   StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
   ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox;
 
 type
   TfMenu = class(TForm)
@@ -20,8 +20,7 @@ type
     btnChineseMode: TSpeedButton;
     Bevel3: TBevel;
     btnJapaneseMode: TSpeedButton;
-    Bevel4: TBevel;
-    SpeedButton22: TSpeedButton;
+    btnClipboardClear: TSpeedButton;
     Bevel5: TBevel;
     tab3: TSpeedButton;
     Timer1: TTimer;
@@ -179,8 +178,6 @@ type
     miAbout: TMenuItem;
     Panel3: TPanel;
     Panel2: TPanel;
-    Shape9: TShape;
-    PaintBox3: TPaintBox;
     aMode1: TAction;
     aMode2: TAction;
     aMode3: TAction;
@@ -245,6 +242,7 @@ type
     N14: TMenuItem;
     N00934eExport1: TMenuItem;
     aVocabImport1: TMenuItem;
+    ClipboardPaintbox: TWakanPaintbox;
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -258,8 +256,7 @@ type
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
-    procedure PaintBox3Paint(Sender: TObject);
-    procedure SpeedButton22Click(Sender: TObject);
+    procedure btnClipboardClearClick(Sender: TObject);
     procedure aSaveUserExecute(Sender: TObject);
     procedure aCancelUserExecute(Sender: TObject);
     procedure aStatisticsExecute(Sender: TObject);
@@ -337,8 +334,6 @@ type
     procedure aMode5Execute(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure ScreenTimerTimer(Sender: TObject);
-    procedure PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
     procedure aDictInflectExecute(Sender: TObject);
     procedure aDictAutoExecute(Sender: TObject);
     procedure aDictGroup1Execute(Sender: TObject);
@@ -346,8 +341,6 @@ type
     procedure aDictGroup3Execute(Sender: TObject);
     procedure aUserExamplesExecute(Sender: TObject);
     procedure aEditorColorsExecute(Sender: TObject);
-    procedure PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure miSaveCharactersToFileClick(
       Sender: TObject);
     procedure aDictMiddleExecute(Sender: TObject);
@@ -359,6 +352,11 @@ type
     procedure aEditorExportExecute(Sender: TObject);
     procedure aVocabExportExecute(Sender: TObject);
     procedure aVocabImportExecute(Sender: TObject);
+    procedure ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
+    procedure ClipboardPaintboxMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure ClipboardPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
 
   private
     initdone:boolean;
@@ -463,7 +461,6 @@ type
     procedure WmChangeCbChain(var Msg: TMessage); message WM_CHANGECBCHAIN;
     procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
     procedure ClipboardChanged;
-    procedure Clipboard_Paint;
     procedure Clipboard_Update; //update clip with UNICODETEXT from Clipboard
     procedure Clipboard_Clear;
   public
@@ -1984,13 +1981,6 @@ begin
     SendMessage(CbNextViewer, Msg.Msg, Msg.wParam, Msg.lParam); //call next viewer
 end;
 
-procedure TfMenu.Clipboard_Paint;
-begin
-  PaintBox3.Canvas.Brush.Color:=clWindow;
-  PaintBox3.Canvas.Font.Color:=clWindowText;
-  DrawUnicode(PaintBox3.Canvas,1,1,22,copy(clip,1,200),FontRadical);
-end;
-
 procedure TfMenu.Clipboard_Update;
 var i:integer;
   h:boolean;
@@ -2023,7 +2013,7 @@ begin
   if newclip<>clip then
   begin
     clip := newclip;
-    PaintBox3.Invalidate;
+    ClipboardPaintbox.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
     if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
     if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
@@ -2095,7 +2085,7 @@ end;
 
 procedure TfMenu.ClipboardChanged;
 begin
-  PaintBox3.Invalidate;
+  ClipboardPaintbox.Invalidate;
   fUserAdd.PaintBox2.Invalidate;
 
   if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
@@ -2185,12 +2175,26 @@ begin
   fUser.btnLookupEtoJ.Down:=true;
 end;
 
-procedure TfMenu.PaintBox3Paint(Sender: TObject);
+procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
 begin
-  Clipboard_Paint;
+  Canvas.Brush.Color:=clWindow;
+  Canvas.Font.Color:=clWindowText;
+  DrawUnicode(Canvas,2,2,22,copy(clip,1,200),FontRadical);
 end;
 
-procedure TfMenu.SpeedButton22Click(Sender: TObject);
+procedure TfMenu.ClipboardPaintboxMouseMove(Sender: TObject; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  fMenu.IntTipMouseMove(ClipboardPaintbox,x,y,ssLeft in Shift);
+end;
+
+procedure TfMenu.ClipboardPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if mbLeft=Button then Self.IntTipMouseUp;
+end;
+
+procedure TfMenu.btnClipboardClearClick(Sender: TObject);
 begin
   Clipboard_Clear;
 end;
@@ -3547,13 +3551,6 @@ begin
   StringUnderMouse:=s1;
 end;
 
-
-procedure TfMenu.PaintBox3MouseMove(Sender: TObject; Shift: TShiftState; X,
-  Y: Integer);
-begin
-  fMenu.IntTipMouseMove(PaintBox3,x,y,ssLeft in Shift);
-end;
-
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
   if not fUser.Visible then aDictExecute(Sender);
@@ -3610,12 +3607,6 @@ end;
 function _l(const id:string):string;
 begin
   Result := JWBUnit._l(id);
-end;
-
-procedure TfMenu.PaintBox3MouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  if mbLeft=Button then Self.IntTipMouseUp;
 end;
 
 procedure TfMenu.miSaveCharactersToFileClick(

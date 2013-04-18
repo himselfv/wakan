@@ -7,7 +7,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, MemSource, JWBStrings;
+  StdCtrls, ExtCtrls, Buttons, MemSource, JWBStrings, WakanPaintbox;
 
 type
   TfExamples = class(TForm)
@@ -19,8 +19,6 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
-    PaintBox: TPaintBox;
-    Shape9: TShape;
     btnGoToExample: TSpeedButton;
     btnCopyAllToClipboard: TSpeedButton;
     btnRandomOrder: TSpeedButton;
@@ -30,17 +28,18 @@ type
     btnPrevious: TSpeedButton;
     btnNext: TSpeedButton;
     btnCopyToClipboard: TSpeedButton;
+    Paintbox: TWakanPaintbox;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGoToExampleClick(Sender: TObject);
-    procedure PaintBoxPaint(Sender: TObject);
-    procedure PaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
     procedure btnPreviousClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
     procedure btnDisplayTranslationClick(Sender: TObject);
     procedure btnRandomOrderClick(Sender: TObject);
     procedure btnCopyToClipboardClick(Sender: TObject);
     procedure btnCopyAllToClipboardClick(Sender: TObject);
+    procedure PaintboxPaint(Sender: TObject; Canvas: TCanvas);
+    procedure PaintBoxMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
     procedure PaintBoxMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
@@ -60,7 +59,6 @@ type
   public
     procedure SetExamples(kanji:string);
     procedure ShowExample;
-    procedure PaintExample;
     procedure MoveExample(right:boolean);
     procedure RandomExample;
     procedure ExampleClipboard(all:boolean);
@@ -113,17 +111,6 @@ begin
   except end;
 end;
 
-procedure TfExamples.PaintBoxPaint(Sender: TObject);
-begin
-  PaintExample;
-end;
-
-procedure TfExamples.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  fMenu.IntTipMouseMove(PaintBox,x,y,ssLeft in Shift);
-end;
-
 procedure TfExamples.btnPreviousClick(Sender: TObject);
 begin
   MoveExample(false);
@@ -156,10 +143,28 @@ begin
   ExampleClipboard(true);
 end;
 
+procedure TfExamples.PaintboxPaint(Sender: TObject; Canvas: TCanvas);
+begin
+  Canvas.Brush.Color:=clWindow;
+  Canvas.Font.Style:=[];
+  BeginDrawReg(Canvas); //I really hope this is no temporary canvss
+  if btnDisplayTranslation.Down then DrawUnicode(Canvas,4,4,16,ex_jap,FontSmall);
+  if btnUseSmallFont.Down then DrawUnicode(Canvas,4,16,16,ex_jap,FontSmall);
+  if btnUseBigFont.Down then DrawUnicode(Canvas,4,6,24,ex_jap,FontJapanese);
+  EndDrawReg;
+  if btnDisplayTranslation.Down then DrawUnicode(Canvas,4,23,16,fstr(ex_en),FontEnglish);
+end;
+
 procedure TfExamples.PaintBoxMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
+end;
+
+procedure TfExamples.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  fMenu.IntTipMouseMove(PaintBox,x,y,ssLeft in Shift);
 end;
 
 procedure TfExamples.PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
@@ -488,18 +493,6 @@ begin
   btnCopyToClipboard.Enabled:=(ex_indfirst>-1);
   btnCopyAllToClipboard.Enabled:=(ex_indfirst>-1);
   PaintBox.Invalidate;
-end;
-
-procedure TfExamples.PaintExample;
-begin
-  PaintBox.Canvas.Brush.Color:=clWindow;
-  PaintBox.Canvas.Font.Style:=[];
-  BeginDrawReg(PaintBox.Canvas);
-  if btnDisplayTranslation.Down then DrawUnicode(PaintBox.Canvas,3,3,16,ex_jap,FontSmall);
-  if btnUseSmallFont.Down then DrawUnicode(PaintBox.Canvas,3,15,16,ex_jap,FontSmall);
-  if btnUseBigFont.Down then DrawUnicode(PaintBox.Canvas,3,5,24,ex_jap,FontJapanese);
-  EndDrawReg;
-  if btnDisplayTranslation.Down then DrawUnicode(PaintBox.Canvas,3,22,16,fstr(ex_en),FontEnglish);
 end;
 
 procedure TfExamples.MoveExample(right:boolean);
