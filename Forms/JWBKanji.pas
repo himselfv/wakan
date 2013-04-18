@@ -514,10 +514,15 @@ begin
     TChar.SetOrder('ChUnicode_Ind');
   finally
     DrawGrid1.Perform(WM_SETREDRAW, 1, 0); //enable redraw
+   { WM_SETREDRAW(1) implicitly makes DrawGrid visible without telling Delphi,
+    so we'd have to do Show(); Hide(); to re-hide it.
+    But we'd still have problems because sometimes window is implicitly shown
+    again on load.
+    This approach works: }
     if ki.Count>0 then
-      DrawGrid1.Show
+      ShowWindow(DrawGrid1.Handle,1)
     else
-      DrawGrid1.Hide;
+      ShowWindow(DrawGrid1.Handle,0);
   end;
   DrawGrid1.Selection:=mr;
   ReactToKanjiSelection;
