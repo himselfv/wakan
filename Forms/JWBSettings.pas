@@ -379,11 +379,13 @@ uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
-  JWBUserData, JWBPortableMode;
+  JWBUserData, JWBPortableMode, ActnList;
 
 var colorfrom:integer;
 
 {$R *.DFM}
+
+{ Helpers }
 
 procedure TfSettings.FormCreate(Sender: TObject);
 begin
@@ -687,10 +689,12 @@ begin
   cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
   cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
-  fMenu.aEditorColors.Checked:=reg.ReadBool('Translate','TransColors',true);
-  fTranslate.sbUseTlColors.Down:=fMenu.aEditorColors.Checked;
   fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
   fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
+  fTranslate.sbUseTlColors.Down:=reg.ReadBool('Translate','TransColors',true);
+  fTranslate.sbDisplayReadingClick(fTranslate.sbDisplayReading);
+  fTranslate.sbDisplayMeaningClick(fTranslate.sbDisplayMeaning);
+  fTranslate.sbUseTlColorsClick(fTranslate.sbUseTlColors);
   fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
   CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
   CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
@@ -704,8 +708,6 @@ begin
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
   fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
-  fMenu.aEditorReading.Checked:=fTranslate.sbDisplayReading.Down;
-  fMenu.aEditorMeaning.Checked:=fTranslate.sbDisplayMeaning.Down;
   tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
   if tmp_int>0 then
     fTranslate.FontSize := tmp_int
@@ -932,8 +934,8 @@ begin
   reg.WriteBool('Translate','VerticalPrint',cbVerticalPrint.Checked);
   reg.WriteBool('Translate','Reading',fTranslate.sbDisplayReading.Down);
   reg.WriteBool('Translate','Meaning',fTranslate.sbDisplayMeaning.Down);
+  reg.WriteBool('Translate','TransColors',fTranslate.sbUseTlColors.Down);
   reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
-  reg.WriteBool('Translate','TransColors',fMenu.aEditorColors.Checked);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
   reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);

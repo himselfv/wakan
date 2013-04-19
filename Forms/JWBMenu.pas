@@ -65,6 +65,7 @@ type
     aEditorASCIIMode: TAction;
     aEditorReading: TAction;
     aEditorMeaning: TAction;
+    aEditorColors: TAction;
     aEditorClear: TAction;
     aEditorFill: TAction;
     aEditorSet: TAction;
@@ -214,7 +215,6 @@ type
     miDictionaryGroup3: TMenuItem;
     aUserExamples: TAction;
     miExamples2: TMenuItem;
-    aEditorColors: TAction;
     miUseColors: TMenuItem;
     aDictMiddle: TAction;
     miSearchSubstring: TMenuItem;
@@ -297,6 +297,7 @@ type
     procedure aEditorASCIIModeExecute(Sender: TObject);
     procedure aEditorReadingExecute(Sender: TObject);
     procedure aEditorMeaningExecute(Sender: TObject);
+    procedure aEditorColorsExecute(Sender: TObject);
     procedure aEditorClearExecute(Sender: TObject);
     procedure aEditorFillExecute(Sender: TObject);
     procedure aEditorSetExecute(Sender: TObject);
@@ -340,7 +341,6 @@ type
     procedure aDictGroup2Execute(Sender: TObject);
     procedure aDictGroup3Execute(Sender: TObject);
     procedure aUserExamplesExecute(Sender: TObject);
-    procedure aEditorColorsExecute(Sender: TObject);
     procedure miSaveCharactersToFileClick(
       Sender: TObject);
     procedure aDictMiddleExecute(Sender: TObject);
@@ -2567,24 +2567,31 @@ begin
   fTranslate.SelectAll;
 end;
 
+{ These simply switch to a page and click appropriate button.
+ All handling is done in the editor module. }
 procedure TfMenu.aEditorKanjiModeExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.sbKanjiMode.Down := true;
   fTranslate.sbKanjiModeClick(sender);
 end;
 
 procedure TfMenu.aEditorKanaModeExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.sbKanaMode.Down := true;
   fTranslate.sbKanaModeClick(sender);
 end;
 
 procedure TfMenu.aEditorASCIIModeExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.sbAsciiMode.Down := true;
   fTranslate.sbAsciiModeClick(sender);
 end;
 
+{ These simply switch to a page and click appropriate button.
+ All handling is done in the editor module. }
 procedure TfMenu.aEditorReadingExecute(Sender: TObject);
 begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
@@ -2597,6 +2604,13 @@ begin
   if not fTranslate.Visible then aDictEditorExecute(Sender);
   fTranslate.sbDisplayMeaning.Down:=not fTranslate.sbDisplayMeaning.Down;
   fTranslate.sbDisplayMeaningClick(sender);
+end;
+
+procedure TfMenu.aEditorColorsExecute(Sender: TObject);
+begin
+  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  fTranslate.sbUseTlColors.Down:=not fTranslate.sbUseTlColors.Down;
+  fTranslate.sbUseTlColorsClick(sender);
 end;
 
 procedure TfMenu.aEditorClearExecute(Sender: TObject);
@@ -3593,15 +3607,6 @@ begin
   if not fWords.Visible then ToggleForm(fWords,nil,nil);
   if aUserExamples.Checked<>pre then exit;
   ToggleForm(fExamples,fWords.SpeedButton1,aUserExamples);
-end;
-
-procedure TfMenu.aEditorColorsExecute(Sender: TObject);
-begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
-  aEditorColors.Checked:=not aEditorColors.Checked;
-  fTranslate.sbUseTlColors.Down:=aEditorColors.Checked;
-  fTranslate.mustrepaint:=true;
-  fTranslate.ShowText(true);
 end;
 
 function _l(const id:string):string;

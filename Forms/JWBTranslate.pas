@@ -44,7 +44,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
-  JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox;
+  JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox, WinSpeedButton,
+  ComCtrls, ToolWin, ImgList;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -112,34 +113,41 @@ type
     ListBox1: TListBox;
     EditorScrollBar: TScrollBar;
     Bevel1: TBevel;
-    sbFileOpen: TSpeedButton;
-    sbFileSave: TSpeedButton;
-    sbFileNew: TSpeedButton;
-    sbClipCut: TSpeedButton;
-    sbAsciiMode: TSpeedButton;
-    sbKanjiMode: TSpeedButton;
-    sbKanaMode: TSpeedButton;
-    sbDisplayReading: TSpeedButton;
-    sbDisplayMeaning: TSpeedButton;
-    sbClearTranslation: TSpeedButton;
-    sbAutoTranslate: TSpeedButton;
-    sbSetTranslation: TSpeedButton;
-    sbPrint: TSpeedButton;
-    Bevel2: TBevel;
-    sbClipCopy: TSpeedButton;
-    sbClipPaste: TSpeedButton;
     lblFilename: TLabel;
     Bevel3: TBevel;
     lblControlsHint: TLabel;
     sbDockDictionary: TSpeedButton;
     sbDockKanjiDetails: TSpeedButton;
-    sbUseTlColors: TSpeedButton;
     BlinkCursorTimer: TTimer;
     OpenTextDialog: TOpenDialog;
     SaveTextDialog: TSaveDialog;
-    cbFontSize: TComboBox;
     SaveAsKanaDialog: TSaveDialog;
     EditorPaintbox: TWakanPaintbox;
+    ImageList1: TImageList;
+    ToolBar1: TToolBar;
+    sbFileNew: TToolButton;
+    sbFileOpen: TToolButton;
+    sbFileSave: TToolButton;
+    ToolButton4: TToolButton;
+    sbClipCut: TToolButton;
+    sbClipCopy: TToolButton;
+    sbClipPaste: TToolButton;
+    ToolButton8: TToolButton;
+    sbKanjiMode: TToolButton;
+    sbKanaMode: TToolButton;
+    sbAsciiMode: TToolButton;
+    ToolButton12: TToolButton;
+    sbDisplayReading: TToolButton;
+    sbDisplayMeaning: TToolButton;
+    sbUseTlColors: TToolButton;
+    ToolButton16: TToolButton;
+    sbClearTranslation: TToolButton;
+    sbAutoTranslate: TToolButton;
+    sbSetTranslation: TToolButton;
+    ToolButton20: TToolButton;
+    cbFontSize: TComboBox;
+    ToolButton21: TToolButton;
+    sbPrint: TToolButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -481,7 +489,7 @@ implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
-  JWBCategories, ComCtrls, JWBDic, JWBEdictMarkers,
+  JWBCategories, JWBDic, JWBEdictMarkers,
   JWBUserData, StreamUtils;
 
 {$R *.DFM}
@@ -2319,8 +2327,32 @@ begin
   DrawCursor(false);
 end;
 
+{ These are auto-check grouped buttones so they handle Down/Undown automatically }
+procedure TfTranslate.sbKanjiModeClick(Sender: TObject);
+begin
+  fMenu.aEditorKanjiMode.Checked:=true;
+  fMenu.aEditorKanaMode.Checked:=false;
+  fMenu.aEditorASCIIMode.Checked:=false;
+end;
+
+procedure TfTranslate.sbKanaModeClick(Sender: TObject);
+begin
+  fMenu.aEditorKanaMode.Checked:=true;
+  fMenu.aEditorKanjiMode.Checked:=false;
+  fMenu.aEditorASCIIMode.Checked:=false;
+end;
+
+procedure TfTranslate.sbAsciiModeClick(Sender: TObject);
+begin
+  fMenu.aEditorASCIIMode.Checked:=true;
+  fMenu.aEditorKanaMode.Checked:=false;
+  fMenu.aEditorKanjiMode.Checked:=false;
+end;
+
+{ These are auto-check allow-all-up buttons so they handle Down/Undown automatically }
 procedure TfTranslate.sbDisplayReadingClick(Sender: TObject);
 begin
+ //Keeps fMenu.Actions in sync but doesn't call Execute
   fMenu.aEditorReading.Checked:=sbDisplayReading.Down;
   RepaintText(true);
 end;
@@ -2328,6 +2360,12 @@ end;
 procedure TfTranslate.sbDisplayMeaningClick(Sender: TObject);
 begin
   fMenu.aEditorMeaning.Checked:=sbDisplayMeaning.Down;
+  RepaintText(true);
+end;
+
+procedure TfTranslate.sbUseTlColorsClick(Sender: TObject);
+begin
+  fMenu.aEditorColors.Checked:=sbUseTlColors.Down;
   RepaintText(true);
 end;
 
@@ -2517,30 +2555,6 @@ begin
   PasteOp;
 end;
 
-procedure TfTranslate.sbKanjiModeClick(Sender: TObject);
-begin
-  sbKanjiMode.Down:=true;
-  fMenu.aEditorKanjiMode.Checked:=true;
-  fMenu.aEditorKanaMode.Checked:=false;
-  fMenu.aEditorASCIIMode.Checked:=false;
-end;
-
-procedure TfTranslate.sbKanaModeClick(Sender: TObject);
-begin
-  sbKanaMode.Down:=true;
-  fMenu.aEditorKanaMode.Checked:=true;
-  fMenu.aEditorKanjiMode.Checked:=false;
-  fMenu.aEditorASCIIMode.Checked:=false;
-end;
-
-procedure TfTranslate.sbAsciiModeClick(Sender: TObject);
-begin
-  sbAsciiMode.Down:=true;
-  fMenu.aEditorASCIIMode.Checked:=true;
-  fMenu.aEditorKanaMode.Checked:=false;
-  fMenu.aEditorKanjiMode.Checked:=false;
-end;
-
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
 begin
   view:=EditorScrollBar.Position;
@@ -2574,11 +2588,6 @@ end;
 procedure TfTranslate.sbDockDictionaryClick(Sender: TObject);
 begin
   fMenu.TabControl1Change(sender);
-end;
-
-procedure TfTranslate.sbUseTlColorsClick(Sender: TObject);
-begin
-  fMenu.aEditorCOlors.Execute;
 end;
 
 procedure TfTranslate.BlinkCursorTimerTimer(Sender: TObject);
