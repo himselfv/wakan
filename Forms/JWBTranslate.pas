@@ -2612,12 +2612,15 @@ end;
 { Shows hint window if configured to }
 procedure TfTranslate.ShowHint;
 var p: TPoint;
+  tmp: TCursorPos;
 begin
   if not fTranslate.sbKanjiMode.Down then
     HideHint;
+  tmp := CursorPos(CursorScreenX(), CursorScreenY());
+  tmp.x := PosToWidth(tmp.x, tmp.y);
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
-  p.x:=p.x+fTranslate.cursorposcache*fTranslate.lastxsiz;
-  p.y:=p.y+(fTranslate.cursorscreeny+1-fTranslate.view)*fTranslate.lastxsiz*fTranslate.lastycnt;
+  p.x:=p.x+tmp.x*fTranslate.lastxsiz;
+  p.y:=p.y+(tmp.y+1-fTranslate.view)*fTranslate.lastxsiz*fTranslate.lastycnt;
   fHint.ShowHint(p);
   ListBox1.SetFocus;
 end;
@@ -2712,8 +2715,7 @@ begin
   end;
   if oldview<>view then mustrepaint:=true;
   if mustrepaint then
-//    EditorPaintbox.Invalidate
-    EditorPaintbox.Repaint
+    EditorPaintbox.Repaint //not just Invalidate() because we want Paint be done now
   else begin
     DrawCursor(false);
     DrawBlock(EditorPaintBox.Canvas,pbRect);
