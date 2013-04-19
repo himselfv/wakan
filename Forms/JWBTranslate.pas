@@ -4293,8 +4293,8 @@ begin
   if FFontSize=Value then exit;
   FFontSize := Value;
   fMenu.aEditorSmallFont.Checked:=(FFontSize=FontSizeSmall);
-  fMenu.aEditorLargeFont.Checked:=(FFontSize=FontSizeMedium);
-  fMenu.aEditorMedFont.Checked:=(FFontSize=FontSizeLarge);
+  fMenu.aEditorMedFont.Checked:=(FFontSize=FontSizeMedium);
+  fMenu.aEditorLargeFont.Checked:=(FFontSize=FontSizeLarge);
   if cbFontSize.Text<>IntToStr(Value) then begin
     cbFontSize.Text := IntToStr(Value);
     cbFontSizeGuessItem(cbFontSize.Text);
