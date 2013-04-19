@@ -258,8 +258,8 @@ type
     Label25: TLabel;
     edtMeaningLines: TEdit;
     CheckBox27: TCheckBox;
-    CheckBox13: TCheckBox;
-    CheckBox2: TCheckBox;
+    cbHintMeaning: TCheckBox;
+    cbShowEditorHint: TCheckBox;
     Label54: TLabel;
     cbAdjustCharPriorities: TCheckBox;
     rgReleaseCursorMode: TRadioGroup;
@@ -724,8 +724,8 @@ begin
   setusercompounds:=reg.ReadBool('Characters','UserCompounds',false);
   if reg.ReadBool('Dict','Meaning',false) then dictmodeset:=1 else dictmodeset:=0;
   dictbeginset:=reg.ReadInteger('Dict','SearchBeg',0);
-  CheckBox2.Checked:=reg.ReadBool('Translate','ShowHint',true);
-  CheckBox13.Checked:=reg.ReadBool('Translate','HintMeaning',true);
+  cbShowEditorHint.Checked:=reg.ReadBool('Translate','ShowHint',true);
+  cbHintMeaning.Checked:=reg.ReadBool('Translate','HintMeaning',true);
   s:=reg.ReadString('Dict','CurLanguage','j');
   if Length(s)>=1 then curlang:=s[1] else curlang:='j';
   lbWordPrintFormatClick(self);
@@ -974,8 +974,8 @@ begin
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.sbShowVocab.Down);
   reg.WriteBool('Dict','Meaning',dictmodeset=1);
   reg.WriteInteger('Dict','SearchBeg',dictbeginset);
-  reg.WriteBool('Translate','ShowHint',CheckBox2.Checked);
-  reg.WriteBool('Translate','HintMeaning',CheckBox13.Checked);
+  reg.WriteBool('Translate','ShowHint',cbShowEditorHint.Checked);
+  reg.WriteBool('Translate','HintMeaning',cbHintMeaning.Checked);
   reg.WriteInteger('Layout','DisplayLayout',fMenu.curdisplaymode);
   reg.WriteBool('Layout','CharDetailsDocked',fMenu.CharDetDocked);
   reg.WriteBool('Layout','CharDetailsVisible1',fMenu.CharDetDockedVis1);

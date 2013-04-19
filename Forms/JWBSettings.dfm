@@ -34,8 +34,6 @@ object fSettings: TfSettings
     Style = tsButtons
     TabOrder = 1
     OnChange = pcPagesChange
-    ExplicitLeft = 177
-    ExplicitWidth = 491
     object tsGeneral: TTabSheet
       Caption = 'General'
       TabVisible = False
@@ -215,8 +213,8 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 483
-      ExplicitHeight = 450
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 3
         Top = 3
@@ -918,8 +916,8 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 483
-      ExplicitHeight = 450
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         465
         425)
@@ -1166,8 +1164,8 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 483
-      ExplicitHeight = 450
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label35: TLabel
         Left = 3
         Top = 87
@@ -1252,8 +1250,8 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 483
-      ExplicitHeight = 450
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         465
         425)
@@ -1636,8 +1634,8 @@ object fSettings: TfSettings
       TabVisible = False
       ExplicitLeft = 0
       ExplicitTop = 0
-      ExplicitWidth = 483
-      ExplicitHeight = 450
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label11: TLabel
         Left = 3
         Top = 339
@@ -2030,10 +2028,6 @@ object fSettings: TfSettings
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 483
-      ExplicitHeight = 450
       DesignSize = (
         465
         425)
@@ -2053,7 +2047,6 @@ object fSettings: TfSettings
         TabOrder = 0
         Visible = False
         OnClick = Button2Click
-        ExplicitWidth = 441
       end
       object Button1: TButton
         Left = 3
@@ -2070,7 +2063,6 @@ object fSettings: TfSettings
         ParentFont = False
         TabOrder = 1
         OnClick = Button1Click
-        ExplicitWidth = 441
       end
       object Button3: TButton
         Left = 3
@@ -2087,7 +2079,6 @@ object fSettings: TfSettings
         ParentFont = False
         TabOrder = 2
         OnClick = Button3Click
-        ExplicitWidth = 441
       end
       object Button4: TButton
         Left = 3
@@ -2104,7 +2095,6 @@ object fSettings: TfSettings
         ParentFont = False
         TabOrder = 3
         OnClick = Button4Click
-        ExplicitWidth = 441
       end
       object Button11: TButton
         Left = 3
@@ -2121,7 +2111,6 @@ object fSettings: TfSettings
         ParentFont = False
         TabOrder = 4
         OnClick = Button11Click
-        ExplicitWidth = 441
       end
     end
     object tsEditor: TTabSheet
@@ -2266,7 +2255,7 @@ object fSettings: TfSettings
         Caption = '#00525^eDouble size'
         TabOrder = 10
       end
-      object CheckBox13: TCheckBox
+      object cbHintMeaning: TCheckBox
         Left = 211
         Top = 216
         Width = 225
@@ -2276,7 +2265,7 @@ object fSettings: TfSettings
         State = cbChecked
         TabOrder = 11
       end
-      object CheckBox2: TCheckBox
+      object cbShowEditorHint: TCheckBox
         Left = 3
         Top = 216
         Width = 202
@@ -2551,8 +2540,6 @@ object fSettings: TfSettings
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 460
-    ExplicitWidth = 668
     DesignSize = (
       660
       41)
@@ -2602,7 +2589,6 @@ object fSettings: TfSettings
       NumGlyphs = 2
       TabOrder = 1
       OnClick = btnOkClick
-      ExplicitLeft = 527
     end
   end
   object tvContents: TTreeView

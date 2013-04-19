@@ -24,9 +24,5 @@ object fHint: TfHint
     Color = 15724527
     DoubleBuffered = True
     OnPaint = PaintBox1Paint
-    ExplicitLeft = 88
-    ExplicitTop = 16
-    ExplicitWidth = 100
-    ExplicitHeight = 41
   end
 end

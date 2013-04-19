@@ -91,16 +91,13 @@ type
     curkanji,curphonetic,curmeaning:string;
     curkanjid: array of TKanjiEntry; //kanji entries for current word
     procedure ShowWord;
-    procedure ShowHint;
-    procedure HideHint;
-    procedure PaintHint;
-
     procedure DetailsForKanji(n:integer);
 
   public
     procedure UpdateLookMode;
 
   protected
+    donotsetbegset:boolean;
     procedure Look_Run(req: TDicSearchRequest);
   public
    {
@@ -109,6 +106,8 @@ type
       ul[i]==copy(dicl[i],6,25).
       dicsl[i]=copy(dicl[i],31,length(dicsl[i])-30). }
     dicrl:TSearchResults;
+   { Currently selected word. Needed to synchronize other clients such as JWBHint }
+    curword:integer;
    { Search with current settings, populate the results }
     procedure Look();
    { Initialize a TDicSearchRequest to search like Look() would.
@@ -126,10 +125,6 @@ uses JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
   JWBCategories, JWBAnnotations, JWBUserData;
-
-var curword:integer;
-    hinthide:boolean;
-    donotsetbegset:boolean;
 
 {$R *.DFM}
 
@@ -615,108 +610,6 @@ procedure TfUser.btnCopyToClipboardClick(Sender: TObject);
 begin
   clip:=clip+curkanji;
   fMenu.SetClipboard;
-end;
-
-procedure TfUser.ShowHint;
-var l,t:integer;
-    p:TPoint;
-begin
-  if (not fSettings.CheckBox2.Checked) or (not fTranslate.sbKanjiMode.Down) then
-  begin
-    fHint.Hide;
-    exit;
-  end;
-  hinthide:=true;
-  p.x:=0;
-  p.y:=4;
-  p:=fTranslate.ClientToScreen(p);
-  l:=p.x+fTranslate.EditorPaintBox.Left+fTranslate.cursorposcache*fTranslate.lastxsiz;
-  t:=p.y+fTranslate.EditorPaintBox.Top+(fTranslate.cursorscreeny+1-fTranslate.view)
-    *fTranslate.lastxsiz*fTranslate.lastycnt;
-  if l+fHint.Width>Screen.Width then l:=Screen.Width-fHint.Width;
-  if t+44>p.y+fTranslate.Height then t:=p.y+fTranslate.EditorPaintBox.Top
-    +(fTranslate.Height-fTranslate.CLientHeight)
-    +fTranslate.cursorscreeny*fTranslate.lastxsiz*fTranslate.lastycnt-fHint.Height;
-  fHint.Left:=l;
-  fHint.Top:=t;
-  if fSettings.CheckBox13.Checked then fHint.Height:=44 else fHint.Height:=22;
-  fHint.Show;
-  fHint.Invalidate;
-  fTranslate.ListBox1.SetFocus;
-  hinthide:=false;
-end;
-
-procedure TfUser.HideHint;
-begin
-  if not hinthide then fHint.Hide;
-end;
-
-procedure TfUser.PaintHint;
-var kanjis:FString;
-  i:integer;
-  cw,cwl:integer;
-  curk:string;
-  fs,fsl:integer;
-  rect:TRect;
-begin
-  fHint.PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
-  cw:=-1;
-  kanjis:='';
-  for i:=1 to StringGrid1.RowCount-1 do
-  begin
-    if kanjis<>'' then kanjis:=kanjis+UH_IDG_SPACE;
-    curk:=remexcl(copy(StringGrid1.Cells[1,i],2,length(StringGrid1.Cells[1,i])-1));
-    if StringGrid1.Row=i then
-    begin
-      cw:=flength(kanjis);
-      cwl:=flength(curk);
-    end;
-    kanjis:=kanjis+curk;
-  end;
-  fs:=18;
-  fsl:=fHint.PaintBox1.Width div fs;
-  while flength(kanjis)>fsl do
-  begin
-    if cw>1 then
-    begin
-      while fcopy(kanjis,1,1)<>UH_IDG_SPACE do
-      begin
-        fdelete(kanjis,1,1);
-        dec(cw,1);
-      end;
-      fdelete(kanjis,1,1);
-      kanjis:=UH_ELLIPSIS+kanjis;
-    end else
-    begin
-      while fcopy(kanjis,flength(kanjis)-1,1)<>UH_IDG_SPACE do fdelete(kanjis,flength(kanjis)-1,1);
-      fdelete(kanjis,flength(kanjis)-1,1);
-      kanjis:=kanjis+UH_ELLIPSIS;
-    end;
-  end;
-//  fHint.PaintBox1.Canvas.Font.Style:=[];
-  fHint.PaintBox1.Canvas.Font.Color:=Col('Editor_HintText');
-  DrawUnicode(fHint.PaintBox1.Canvas,2,2,fs,fcopy(kanjis,1,cw),FontJapaneseGrid);
-//  fHint.PaintBox1.Canvas.Font.Style:=[fsBold];
-  fHint.PaintBox1.Canvas.Brush.Color:=Col('Editor_HintSelected');
-  rect.Left:=2+cw*fs;
-  rect.Top:=2;
-  rect.Bottom:=fs+2;
-  rect.Right:=2+cw*fs+cwl*fs;
-  fHint.PaintBox1.Canvas.FillRect(rect);
-  DrawUnicode(fHint.PaintBox1.Canvas,2+cw*fs,2,fs,fcopy(kanjis,cw+1,cwl),FontJapaneseGrid);
-//  fHint.PaintBox1.Canvas.Font.Style:=[];
-  fHint.PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
-  DrawUnicode(fHint.PaintBox1.Canvas,2+cw*fs+cwl*fs,2,fs,fcopy(kanjis,cw+cwl+1,flength(kanjis)-cwl-cw),FontJapaneseGrid);
-  if fSettings.CheckBox13.Checked then
-  begin
-    fHint.PaintBox1.Canvas.Font.Name:=FontEnglish;
-    fHint.PaintBox1.Canvas.Font.Height:=fs-4;
-    rect.top:=fs+2;
-    rect.left:=2;
-    rect.right:=fHint.PaintBox1.Width-4;
-    rect.bottom:=fs*2;
-    fHint.PaintBox1.Canvas.TextRect(rect,2,fs+2,remmark(remexcl(StringGrid1.Cells[2,curword])));
-  end;
 end;
 
 procedure TfUser.StringGrid1DblClick(Sender: TObject);

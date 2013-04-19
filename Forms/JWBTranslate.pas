@@ -288,6 +288,8 @@ type
     function CursorScreenX:integer;
     function CursorScreenY:integer;
     procedure SelectAll;
+    procedure ShowHint;
+    procedure HideHint;
 
   protected //Insert buffer
     insertbuffer:string; //collects keypresses
@@ -1004,7 +1006,7 @@ end;
 
 procedure TfTranslate.FormDeactivate(Sender: TObject);
 begin
-  if fHint.Visible then fUser.HideHint;
+  if fHint.Visible then HideHint;
 end;
 
 
@@ -2247,7 +2249,7 @@ begin
   begin
     if (key=VK_UP) and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
     if (key=VK_DOWN) and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
+    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
   end;
 end;
 
@@ -2607,6 +2609,24 @@ begin
   ShowText(true);
 end;
 
+{ Shows hint window if configured to }
+procedure TfTranslate.ShowHint;
+var p: TPoint;
+begin
+  if not fTranslate.sbKanjiMode.Down then
+    HideHint;
+  p:=EditorPaintbox.ClientToScreen(Point(0,4));
+  p.x:=p.x+fTranslate.cursorposcache*fTranslate.lastxsiz;
+  p.y:=p.y+(fTranslate.cursorscreeny+1-fTranslate.view)*fTranslate.lastxsiz*fTranslate.lastycnt;
+  fHint.ShowHint(p);
+  ListBox1.SetFocus;
+end;
+
+procedure TfTranslate.HideHint;
+begin
+  if fHint.Visible then fHint.Hide;
+end;
+
 function TfTranslate.PaintBoxClientRect: TRect;
 begin
   Result := EditorPaintBox.ClientRect;
@@ -2692,7 +2712,8 @@ begin
   end;
   if oldview<>view then mustrepaint:=true;
   if mustrepaint then
-    EditorPaintbox.Invalidate
+//    EditorPaintbox.Invalidate
+    EditorPaintbox.Repaint
   else begin
     DrawCursor(false);
     DrawBlock(EditorPaintBox.Canvas,pbRect);
@@ -2710,7 +2731,7 @@ begin
     EditorScrollBar.Enabled:=true;
   end;
   with fUser do
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
+    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
 { Converts startdrag+cursor positions to block selection. }
@@ -3548,14 +3569,14 @@ var chartype:char;
     immmode:boolean;
 begin
   if (c='[') or (c=']') then
-  with fUser do
-  begin
-    if (c='[') and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
-    if (c=']') and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
-    if insconfirmed then ResolveInsert(true);
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then ShowHint else HideHint;
-    exit;
-  end;
+    with fUser do
+    begin
+      if (c='[') and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
+      if (c=']') and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
+      if insconfirmed then ResolveInsert(true);
+      if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
+      exit;
+    end;
   if insconfirmed then ClearInsBlock;
   FileChanged:=true;
   immmode:=sbAsciiMode.down;
