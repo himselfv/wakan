@@ -110,20 +110,13 @@ type
   TTextSaveFormat = class;
 
   TfTranslate = class(TForm)
-    ListBox1: TListBox;
-    EditorScrollBar: TScrollBar;
-    Bevel1: TBevel;
-    lblFilename: TLabel;
-    Bevel3: TBevel;
+    Bevel: TPanel;
     lblControlsHint: TLabel;
     sbDockDictionary: TSpeedButton;
     sbDockKanjiDetails: TSpeedButton;
-    BlinkCursorTimer: TTimer;
-    OpenTextDialog: TOpenDialog;
-    SaveTextDialog: TSaveDialog;
-    SaveAsKanaDialog: TSaveDialog;
     EditorPaintbox: TWakanPaintbox;
-    ImageList1: TImageList;
+    ListBox1: TListBox;
+    EditorScrollBar: TScrollBar;
     ToolBar1: TToolBar;
     sbFileNew: TToolButton;
     sbFileOpen: TToolButton;
@@ -148,6 +141,12 @@ type
     cbFontSize: TComboBox;
     ToolButton21: TToolButton;
     sbPrint: TToolButton;
+    BlinkCursorTimer: TTimer;
+    OpenTextDialog: TOpenDialog;
+    SaveTextDialog: TSaveDialog;
+    SaveAsKanaDialog: TSaveDialog;
+    ImageList1: TImageList;
+    lblFilename: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);

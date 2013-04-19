@@ -133,7 +133,9 @@ object fMenu: TfMenu
     Height = 33
     Align = alTop
     BevelOuter = bvNone
+    DoubleBuffered = False
     FullRepaint = False
+    ParentDoubleBuffered = False
     TabOrder = 0
     DesignSize = (
       694

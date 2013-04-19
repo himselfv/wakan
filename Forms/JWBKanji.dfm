@@ -39,6 +39,7 @@ object fKanji: TfKanji
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    FullRepaint = False
     TabOrder = 0
     DesignSize = (
       630

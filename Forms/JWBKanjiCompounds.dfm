@@ -21,7 +21,7 @@ object fKanjiCompounds: TfKanjiCompounds
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object MainPanel: TPanel
+  object Bevel: TPanel
     Left = 0
     Top = 0
     Width = 468
@@ -29,6 +29,7 @@ object fKanjiCompounds: TfKanjiCompounds
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    FullRepaint = False
     TabOrder = 0
     DesignSize = (
       468

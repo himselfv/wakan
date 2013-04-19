@@ -23,321 +23,341 @@ object fTranslate: TfTranslate
   OnMouseWheelUp = FormMouseWheelUp
   OnResize = FormResize
   OnShow = FormShow
-  DesignSize = (
-    801
-    175)
   PixelsPerInch = 96
   TextHeight = 13
-  object Bevel1: TBevel
+  object Bevel: TPanel
     Left = 0
     Top = 0
     Width = 801
     Height = 175
     Align = alClient
-    Shape = bsFrame
-  end
-  object lblFilename: TLabel
-    Left = 547
-    Top = 13
-    Width = 134
-    Height = 13
-    Caption = '#00626^e<UNNAMED>'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-  end
-  object Bevel3: TBevel
-    Left = 544
-    Top = 8
-    Width = 161
-    Height = 23
-  end
-  object lblControlsHint: TLabel
-    Left = 128
-    Top = 153
-    Width = 552
-    Height = 13
-    Anchors = [akLeft, akRight, akBottom]
-    AutoSize = False
-    Caption = 
-      '#00627^eControls: SPACE - convert to kanji, ENTER - leave in kan' +
-      'a, [ - previous match, ] - next match'
-  end
-  object sbDockDictionary: TSpeedButton
-    Left = 8
-    Top = 150
-    Width = 113
-    Height = 17
-    Hint = '#00628^eShow dictionary tool as part of this window'
-    AllowAllUp = True
-    Anchors = [akLeft, akBottom]
-    GroupIndex = 222
-    Caption = '#00217^eDictionary'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-    OnClick = sbDockDictionaryClick
-  end
-  object sbDockKanjiDetails: TSpeedButton
-    Left = 684
-    Top = 150
-    Width = 108
-    Height = 17
-    Hint = '#00629^eShow character details (Ctrl-D)'
-    AllowAllUp = True
-    Anchors = [akRight, akBottom]
-    GroupIndex = 90
-    Caption = '#00630^eChar. details'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
-    OnClick = sbDockKanjiDetailsClick
-  end
-  object EditorPaintbox: TWakanPaintbox
-    Left = 8
-    Top = 39
-    Width = 785
-    Height = 104
-    Anchors = [akLeft, akTop, akRight, akBottom]
-    Color = clWhite
-    DoubleBuffered = True
-    OnPaint = EditorPaintBoxPaint
-    OnClick = EditorPaintBoxClick
-    OnDblClick = EditorPaintBoxDblClick
-    OnMouseMove = EditorPaintBoxMouseMove
-    OnMouseDown = EditorPaintBoxMouseDown
-  end
-  object ListBox1: TListBox
-    Left = 758
-    Top = 4
-    Width = 21
-    Height = 21
-    Anchors = [akTop, akRight]
-    ItemHeight = 13
+    BevelInner = bvRaised
+    BevelOuter = bvLowered
+    FullRepaint = False
     TabOrder = 0
-    OnEnter = ListBox1Enter
-    OnExit = ListBox1Exit
-    OnKeyDown = ListBox1KeyDown
-    OnKeyPress = ListBox1KeyPress
-  end
-  object EditorScrollBar: TScrollBar
-    Left = 775
-    Top = 41
-    Width = 16
-    Height = 100
-    Anchors = [akTop, akRight, akBottom]
-    Kind = sbVertical
-    PageSize = 0
-    TabOrder = 1
-    OnChange = EditorScrollBarChange
-  end
-  object ToolBar1: TToolBar
-    Left = 8
-    Top = 5
-    Width = 508
-    Height = 30
-    Align = alNone
-    AutoSize = True
-    BorderWidth = 1
-    ButtonWidth = 43
-    EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
-    Images = ImageList1
-    List = True
-    ShowCaptions = True
-    AllowTextButtons = True
-    TabOrder = 3
-    Wrapable = False
-    object sbFileNew: TToolButton
-      Left = 0
-      Top = 0
-      ImageIndex = 0
-      OnClick = sbFileNewClick
-    end
-    object sbFileOpen: TToolButton
-      Left = 24
-      Top = 0
-      ImageIndex = 1
-      OnClick = sbFileOpenClick
-    end
-    object sbFileSave: TToolButton
-      Left = 48
-      Top = 0
-      ImageIndex = 2
-      OnClick = sbFileSaveClick
-    end
-    object ToolButton4: TToolButton
-      Left = 72
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton4'
-      ImageIndex = 3
-      Style = tbsSeparator
-    end
-    object sbClipCut: TToolButton
-      Left = 80
-      Top = 0
-      ImageIndex = 3
-      OnClick = sbClipCutClick
-    end
-    object sbClipCopy: TToolButton
-      Left = 104
-      Top = 0
-      ImageIndex = 4
-      OnClick = sbClipCopyClick
-    end
-    object sbClipPaste: TToolButton
+    DesignSize = (
+      801
+      175)
+    object lblControlsHint: TLabel
       Left = 128
-      Top = 0
-      ImageIndex = 5
-      OnClick = sbClipPasteClick
+      Top = 153
+      Width = 552
+      Height = 13
+      Anchors = [akLeft, akRight, akBottom]
+      AutoSize = False
+      Caption = 
+        '#00627^eControls: SPACE - convert to kanji, ENTER - leave in kan' +
+        'a, [ - previous match, ] - next match'
     end
-    object ToolButton8: TToolButton
-      Left = 152
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton8'
-      ImageIndex = 6
-      Style = tbsSeparator
-    end
-    object sbKanjiMode: TToolButton
-      Left = 160
-      Top = 0
-      Down = True
-      Grouped = True
-      ImageIndex = 6
-      Style = tbsCheck
-      OnClick = sbKanjiModeClick
-    end
-    object sbKanaMode: TToolButton
-      Left = 184
-      Top = 0
-      Grouped = True
-      ImageIndex = 7
-      Style = tbsCheck
-      OnClick = sbKanaModeClick
-    end
-    object sbAsciiMode: TToolButton
-      Left = 208
-      Top = 0
-      Grouped = True
-      ImageIndex = 8
-      Style = tbsCheck
-      OnClick = sbAsciiModeClick
-    end
-    object ToolButton12: TToolButton
-      Left = 232
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton12'
-      ImageIndex = 9
-      Style = tbsSeparator
-    end
-    object sbDisplayReading: TToolButton
-      Left = 240
-      Top = 0
+    object sbDockDictionary: TSpeedButton
+      Left = 7
+      Top = 150
+      Width = 113
+      Height = 17
+      Hint = '#00628^eShow dictionary tool as part of this window'
       AllowAllUp = True
-      ImageIndex = 9
-      Style = tbsCheck
-      OnClick = sbDisplayReadingClick
+      Anchors = [akLeft, akBottom]
+      GroupIndex = 222
+      Caption = '#00217^eDictionary'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = sbDockDictionaryClick
     end
-    object sbDisplayMeaning: TToolButton
-      Left = 264
-      Top = 0
+    object sbDockKanjiDetails: TSpeedButton
+      Left = 684
+      Top = 150
+      Width = 108
+      Height = 17
+      Hint = '#00629^eShow character details (Ctrl-D)'
       AllowAllUp = True
-      ImageIndex = 10
-      Style = tbsCheck
-      OnClick = sbDisplayMeaningClick
+      Anchors = [akRight, akBottom]
+      GroupIndex = 90
+      Caption = '#00630^eChar. details'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = sbDockKanjiDetailsClick
     end
-    object sbUseTlColors: TToolButton
-      Left = 288
-      Top = 0
-      AllowAllUp = True
-      ImageIndex = 11
-      Style = tbsCheck
-      OnClick = sbUseTlColorsClick
+    object lblFilename: TPanel
+      Left = 522
+      Top = 6
+      Width = 243
+      Height = 28
+      Alignment = taLeftJustify
+      Anchors = [akLeft, akTop, akRight]
+      BevelOuter = bvLowered
+      BorderWidth = 4
+      Caption = '#00626^e<UNNAMED>'
+      FullRepaint = False
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      TabOrder = 4
     end
-    object ToolButton16: TToolButton
-      Left = 312
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton16'
-      ImageIndex = 12
-      Style = tbsSeparator
+    object EditorPaintbox: TWakanPaintbox
+      Left = 7
+      Top = 39
+      Width = 785
+      Height = 104
+      Anchors = [akLeft, akTop, akRight, akBottom]
+      Color = clWhite
+      DoubleBuffered = True
+      OnPaint = EditorPaintBoxPaint
+      OnClick = EditorPaintBoxClick
+      OnDblClick = EditorPaintBoxDblClick
+      OnMouseMove = EditorPaintBoxMouseMove
+      OnMouseDown = EditorPaintBoxMouseDown
     end
-    object sbClearTranslation: TToolButton
-      Left = 320
-      Top = 0
-      ImageIndex = 12
-      OnClick = sbClearTranslationClick
-    end
-    object sbAutoTranslate: TToolButton
-      Left = 344
-      Top = 0
-      ImageIndex = 13
-      OnClick = sbAutoTranslateClick
-    end
-    object sbSetTranslation: TToolButton
-      Left = 368
-      Top = 0
-      ImageIndex = 14
-      OnClick = sbSetTranslationClick
-    end
-    object ToolButton20: TToolButton
-      Left = 392
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton20'
-      ImageIndex = 15
-      Style = tbsSeparator
-    end
-    object cbFontSize: TComboBox
-      Left = 400
-      Top = 0
-      Width = 68
+    object ListBox1: TListBox
+      Left = 771
+      Top = 5
+      Width = 21
       Height = 21
-      AutoComplete = False
+      Hint = '#00623^ePrint (Ctrl-F7)'
+      Anchors = [akTop, akRight]
+      ItemHeight = 13
       TabOrder = 0
-      Text = '8'
-      OnChange = cbFontSizeChange
-      OnExit = cbFontSizeExit
-      OnKeyPress = cbFontSizeKeyPress
-      Items.Strings = (
-        '8'
-        '12'
-        '16'
-        '20'
-        '24'
-        '32'
-        '48'
-        '64'
-        '96')
+      OnEnter = ListBox1Enter
+      OnExit = ListBox1Exit
+      OnKeyDown = ListBox1KeyDown
+      OnKeyPress = ListBox1KeyPress
     end
-    object ToolButton21: TToolButton
-      Left = 468
-      Top = 0
-      Width = 8
-      Caption = 'ToolButton21'
-      ImageIndex = 16
-      Style = tbsSeparator
+    object EditorScrollBar: TScrollBar
+      Left = 775
+      Top = 41
+      Width = 16
+      Height = 100
+      Anchors = [akTop, akRight, akBottom]
+      Kind = sbVertical
+      PageSize = 0
+      TabOrder = 1
+      OnChange = EditorScrollBarChange
     end
-    object sbPrint: TToolButton
-      Left = 476
-      Top = 0
-      ImageIndex = 15
-      OnClick = sbPrintClick
+    object ToolBar1: TToolBar
+      Left = 8
+      Top = 5
+      Width = 508
+      Height = 30
+      Align = alNone
+      AutoSize = True
+      BorderWidth = 1
+      ButtonWidth = 43
+      EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
+      Images = ImageList1
+      List = True
+      ShowCaptions = True
+      AllowTextButtons = True
+      TabOrder = 2
+      Wrapable = False
+      object sbFileNew: TToolButton
+        Left = 0
+        Top = 0
+        Hint = '#00613^eNew (Ctrl-N)'
+        ImageIndex = 0
+        OnClick = sbFileNewClick
+      end
+      object sbFileOpen: TToolButton
+        Left = 24
+        Top = 0
+        Hint = '#00611^eOpen (Ctrl-O)'
+        ImageIndex = 1
+        OnClick = sbFileOpenClick
+      end
+      object sbFileSave: TToolButton
+        Left = 48
+        Top = 0
+        Hint = '#00612^eSave (Ctrl-S)'
+        ImageIndex = 2
+        OnClick = sbFileSaveClick
+      end
+      object ToolButton4: TToolButton
+        Left = 72
+        Top = 0
+        Width = 8
+        Caption = 'ToolButton4'
+        ImageIndex = 3
+        Style = tbsSeparator
+      end
+      object sbClipCut: TToolButton
+        Left = 80
+        Top = 0
+        Hint = '#00614^eCut (Ctrl-X)'
+        ImageIndex = 3
+        OnClick = sbClipCutClick
+      end
+      object sbClipCopy: TToolButton
+        Left = 104
+        Top = 0
+        Hint = '#00624^eCopy (Ctrl-C)'
+        ImageIndex = 4
+        OnClick = sbClipCopyClick
+      end
+      object sbClipPaste: TToolButton
+        Left = 128
+        Top = 0
+        Hint = '#00625^ePaste (Ctrl-V)'
+        ImageIndex = 5
+        OnClick = sbClipPasteClick
+      end
+      object ToolButton8: TToolButton
+        Left = 152
+        Top = 0
+        Width = 8
+        Caption = 'ToolButton8'
+        ImageIndex = 6
+        Style = tbsSeparator
+      end
+      object sbKanjiMode: TToolButton
+        Left = 160
+        Top = 0
+        Hint = '#00616^eCharacter mode (Ctrl-Q)'
+        Down = True
+        Grouped = True
+        ImageIndex = 6
+        Style = tbsCheck
+        OnClick = sbKanjiModeClick
+      end
+      object sbKanaMode: TToolButton
+        Left = 184
+        Top = 0
+        Hint = '#00617^eKana mode (Ctrl-W)'
+        Grouped = True
+        ImageIndex = 7
+        Style = tbsCheck
+        OnClick = sbKanaModeClick
+      end
+      object sbAsciiMode: TToolButton
+        Left = 208
+        Top = 0
+        Hint = '#00615^eASCII mode (Ctrl-P)'
+        Grouped = True
+        ImageIndex = 8
+        Style = tbsCheck
+        OnClick = sbAsciiModeClick
+      end
+      object ToolButton12: TToolButton
+        Left = 232
+        Top = 0
+        Width = 8
+        Caption = 'ToolButton12'
+        ImageIndex = 9
+        Style = tbsSeparator
+      end
+      object sbDisplayReading: TToolButton
+        Left = 240
+        Top = 0
+        Hint = '#00618^eDisplay reading (Ctrl-H)'
+        AllowAllUp = True
+        ImageIndex = 9
+        Style = tbsCheck
+        OnClick = sbDisplayReadingClick
+      end
+      object sbDisplayMeaning: TToolButton
+        Left = 264
+        Top = 0
+        Hint = '#00619^eDisplay meaning (Ctrl-J)'
+        AllowAllUp = True
+        ImageIndex = 10
+        Style = tbsCheck
+        OnClick = sbDisplayMeaningClick
+      end
+      object sbUseTlColors: TToolButton
+        Left = 288
+        Top = 0
+        Hint = '#00631^eShow translation state by colors'
+        AllowAllUp = True
+        ImageIndex = 11
+        Style = tbsCheck
+        OnClick = sbUseTlColorsClick
+      end
+      object ToolButton16: TToolButton
+        Left = 312
+        Top = 0
+        Width = 8
+        Caption = 'ToolButton16'
+        ImageIndex = 12
+        Style = tbsSeparator
+      end
+      object sbClearTranslation: TToolButton
+        Left = 320
+        Top = 0
+        Hint = '#00620^eClear translation (Ctrl-B)'
+        ImageIndex = 12
+        OnClick = sbClearTranslationClick
+      end
+      object sbAutoTranslate: TToolButton
+        Left = 344
+        Top = 0
+        Hint = '#00621^eAuto-fill translation (Ctrl-F)'
+        ImageIndex = 13
+        OnClick = sbAutoTranslateClick
+      end
+      object sbSetTranslation: TToolButton
+        Left = 368
+        Top = 0
+        Hint = '#00622^eSet translation (Ctrl-T)'
+        ImageIndex = 14
+        OnClick = sbSetTranslationClick
+      end
+      object ToolButton20: TToolButton
+        Left = 392
+        Top = 0
+        Width = 8
+        Caption = 'ToolButton20'
+        ImageIndex = 15
+        Style = tbsSeparator
+      end
+      object cbFontSize: TComboBox
+        Left = 400
+        Top = 0
+        Width = 68
+        Height = 21
+        AutoComplete = False
+        TabOrder = 0
+        Text = '8'
+        OnChange = cbFontSizeChange
+        OnExit = cbFontSizeExit
+        OnKeyPress = cbFontSizeKeyPress
+        Items.Strings = (
+          '8'
+          '12'
+          '16'
+          '20'
+          '24'
+          '32'
+          '48'
+          '64'
+          '96')
+      end
+      object ToolButton21: TToolButton
+        Left = 468
+        Top = 0
+        Width = 8
+        Caption = 'ToolButton21'
+        ImageIndex = 16
+        Style = tbsSeparator
+      end
+      object sbPrint: TToolButton
+        Left = 476
+        Top = 0
+        Hint = '#00623^ePrint (Ctrl-F7)'
+        ImageIndex = 15
+        OnClick = sbPrintClick
+      end
     end
   end
   object BlinkCursorTimer: TTimer
@@ -353,8 +373,8 @@ object fTranslate: TfTranslate
       'translations (*.wtt)|*.wtt|Any file (all supported formats) (*.*' +
       ')|*.*'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 599
-    Top = 100
+    Left = 39
+    Top = 60
   end
   object SaveTextDialog: TSaveDialog
     DefaultExt = '.txt'
@@ -362,8 +382,8 @@ object fTranslate: TfTranslate
       'Text file (*.txt)|*.txt|Text file with kana readings as Aozora R' +
       'uby (*.txt)|*.txt|WaKan text with translations (*.wtt)|*.wtt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 679
-    Top = 100
+    Left = 119
+    Top = 60
   end
   object SaveAsKanaDialog: TSaveDialog
     DefaultExt = '.txt'
@@ -372,8 +392,8 @@ object fTranslate: TfTranslate
       'h spaces (*.txt)|*.txt|HTML with ruby (*.html)|*.html|OpenDocume' +
       'nt Text (*.odt)|*.odt'
     Options = [ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 767
-    Top = 100
+    Left = 207
+    Top = 60
   end
   object ImageList1: TImageList
     Left = 544

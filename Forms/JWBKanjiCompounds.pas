@@ -11,7 +11,7 @@ type
   TfKanjiCompounds = class(TForm)
     PopupMenu1: TPopupMenu;
     miResetColumns: TMenuItem;
-    MainPanel: TPanel;
+    Bevel: TPanel;
     sbShowVocab: TSpeedButton;
     sbShowDict: TSpeedButton;
     sbCopyToClipboard: TSpeedButton;

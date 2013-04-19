@@ -26,11 +26,8 @@ object fKanjiSearch: TfKanjiSearch
     Align = alClient
     BevelInner = bvRaised
     BevelOuter = bvLowered
+    FullRepaint = False
     TabOrder = 0
-    ExplicitLeft = 64
-    ExplicitTop = 112
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     DesignSize = (
       618
       209)
@@ -541,6 +538,7 @@ object fKanjiSearch: TfKanjiSearch
       Top = 103
       Width = 175
       Height = 22
+      Anchors = [akLeft, akTop, akRight]
       Color = clBtnFace
       DoubleBuffered = True
       OnPaint = pbRadicalsPaint
