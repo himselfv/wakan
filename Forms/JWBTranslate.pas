@@ -2379,7 +2379,10 @@ begin
     bg:=0;
     en:=flength(doc[i])-1;
     if i=block.fromy then bg:=block.fromx;
-    if i=block.toy then en:=block.tox;
+    if i=block.toy then if block.tox<en then en:=block.tox;
+   { Remember, both beginning and ending can be after the last char,
+    so we had to check at least for en }
+
     for j:=bg to en do
       doctr[i].chars[j].Reset();
   end;
@@ -2729,8 +2732,10 @@ begin
   end;
   if backtrack then
   begin
-    while (block.fromx>=0) and (doctr[block.fromy].chars[block.fromx].wordstate='<') do dec(block.fromx);
-    while (block.tox+1<doctr[block.toy].charcount) and (doctr[block.toy].chars[block.tox+1].wordstate='<') do inc(block.tox);
+    if block.fromx<doctr[block.fromy].charcount then //it can be after the last char in the line
+      while (block.fromx>=0) and (doctr[block.fromy].chars[block.fromx].wordstate='<') do dec(block.fromx);
+    while (block.tox+1<doctr[block.toy].charcount)
+      and (doctr[block.toy].chars[block.tox+1].wordstate='<') do inc(block.tox);
   end;
 end;
 
