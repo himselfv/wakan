@@ -1048,7 +1048,8 @@ begin
       FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
   end else begin //after undock
     if Loading then begin
-      //if Loading and undocked, we won't get SetDockMode otherwise, and we have stuff to configure
+     //Issue 161: if Loading and undocked, we won't get SetDockMode otherwise, and we have stuff to configure
+     //This is hackish.
       Self.Hide;
       FDockMode := alCustom;
       Perform(WM_SET_DOCK_MODE, integer(alNone), 0);
