@@ -2341,7 +2341,6 @@ begin
   end;
   fMenu.aKanjiDetails.Checked:=fKanjiDetails.Visible;
   fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
-  fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
 end;
 
 procedure TfMenu.aKanjiCompoundsExecute(Sender: TObject);

@@ -812,7 +812,6 @@ begin
   if setwindows and 32=32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
   if setwindows and 64=64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
   if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
-  fTranslate.sbDockKanjiDetails.Down:=fKanji.btnKanjiDetails.Down;
 
   fMenu.aPortraitMode.Checked := not setPortraitMode;
   fMenu.aPortraitMode.Execute;
