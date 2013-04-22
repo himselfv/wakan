@@ -1014,6 +1014,7 @@ begin
    //Remove constraints
     Constraints.MinWidth := 0;
     Constraints.MaxWidth := 0;
+    Constraints.MinHeight := 0;
    //Realign
     Self.Hide; //it's okay, we're going to be hidden as part of docking anyway
     ClientWidth := 1000;
@@ -1030,6 +1031,7 @@ begin
    //Add constraints when undocked
     Constraints.MinWidth := 337;
     Constraints.MaxWidth := 337;
+    Constraints.MinHeight := 320;
     btnDock.Caption:=_l('#00173^eDock');
   end;
 end;
@@ -1045,6 +1047,12 @@ begin
     if not Loading then
       FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
   end else begin //after undock
+    if Loading then begin
+      //if Loading and undocked, we won't get SetDockMode otherwise, and we have stuff to configure
+      Self.Hide;
+      FDockMode := alCustom;
+      Perform(WM_SET_DOCK_MODE, integer(alNone), 0);
+    end;
     FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
   end;
 end;
