@@ -2823,59 +2823,49 @@ begin
     ll.Add(0, 0, 0); //add one empty line
 end;
 
-//Performs some replacements to make the text more suitable for displaying
-//as a ruby reading in small characters.
-//(For instance, makes half-height-kana full-height-kana)
-procedure FixReading(gd0,gd1,gd2:FChar; var reading:FString);
-var gd: FString;
+
+{ Returns simplified reading for this kana/bopomofo character.
+Depending on the settings it might be:
+  katakana -> hiragana
+  any kana -> romaji
+  nothing (active character is not kana or doesn't require reading)
+Usually the reading returned has to be added to reading drawing queue. }
+function GetKanaReading(const gd0,gd1,gd2:FChar): FString;
 begin
-  if (EvalChar(gd1)=EC_KATAKANA) and not showroma then
-    reading := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,'j',[rfDeleteInvalidChars]);
-  if (EvalChar(gd1) in [EC_HIRAGANA, EC_KATAKANA]) and showroma then
-  begin
-    gd := '';
-   {$IFNDEF UNICODE}
-    if (gd1='30C3') or (gd1='3063') then gd:='' else
-    if ((gd0='30C3') or (gd0='3063')) and
-       ((gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
-       (gd2='3083') or (gd2='3085') or (gd2='3087') or
-       (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
-       (gd2='30E3') or (gd2='30E5') or (gd2='30E7')) then gd:=gd0+gd1+gd2 else
-    if (gd0='30C3') or (gd0='3063') then gd:=gd0+gd1 else
-    if (gd2='3041') or (gd2='3043') or (gd2='3045') or (gd2='3047') or (gd2='3049') or
-       (gd2='3083') or (gd2='3085') or (gd2='3087') or
-       (gd2='30A1') or (gd2='30A3') or (gd2='30A5') or (gd2='30A7') or (gd2='30A9') or
-       (gd2='30E3') or (gd2='30E5') or (gd2='30E7') then gd:=gd1+gd2 else
-    if (gd1='3041') or (gd1='3043') or (gd1='3045') or (gd1='3047') or (gd1='3049') or
-       (gd1='3083') or (gd1='3085') or (gd1='3087') or
-       (gd1='30A1') or (gd1='30A3') or (gd1='30A5') or (gd1='30A7') or (gd1='30A9') or
-       (gd1='30E3') or (gd1='30E5') or (gd1='30E7') then gd:='';
-   {$ELSE}
-    if (gd1=#$30C3) or (gd1=#$3063) then gd:='' else
-    if ((gd0=#$30C3) or (gd0=#$3063)) and
-       ((gd2=#$3041) or (gd2=#$3043) or (gd2=#$3045) or (gd2=#$3047) or (gd2=#$3049) or
-       (gd2=#$3083) or (gd2=#$3085) or (gd2=#$3087) or
-       (gd2=#$30A1) or (gd2=#$30A3) or (gd2=#$30A5) or (gd2=#$30A7) or (gd2=#$30A9) or
-       (gd2=#$30E3) or (gd2=#$30E5) or (gd2=#$30E7)) then gd:=gd0+gd1+gd2 else
-    if (gd0=#$30C3) or (gd0=#$3063) then gd:=gd0+gd1 else
-    if (gd2=#$3041) or (gd2=#$3043) or (gd2=#$3045) or (gd2=#$3047) or (gd2=#$3049) or
-       (gd2=#$3083) or (gd2=#$3085) or (gd2=#$3087) or
-       (gd2=#$30A1) or (gd2=#$30A3) or (gd2=#$30A5) or (gd2=#$30A7) or (gd2=#$30A9) or
-       (gd2=#$30E3) or (gd2=#$30E5) or (gd2=#$30E7) then gd:=gd1+gd2 else
-    if (gd1=#$3041) or (gd1=#$3043) or (gd1=#$3045) or (gd1=#$3047) or (gd1=#$3049) or
-       (gd1=#$3083) or (gd1=#$3085) or (gd1=#$3087) or
-       (gd1=#$30A1) or (gd1=#$30A3) or (gd1=#$30A5) or (gd1=#$30A7) or (gd1=#$30A9) or
-       (gd1=#$30E3) or (gd1=#$30E5) or (gd1=#$30E7) then gd:='';
-   {$ENDIF}
-    if (flength(gd)>1) and (EvalChar(fgetch(gd,1))=EC_KATAKANA) then
-      gd:=RomajiToKana('H'+KanaToRomaji(gd,1,'j'),1,'j',[rfDeleteInvalidChars]);
-    reading:=gd;
+  if gd1={$IFDEF UNICODE}'ー'{$ELSE}'30FC'{$ENDIF} then begin
+    Result:=gd1;
+    exit;
   end;
- {$IFNDEF UNICODE}
-  if (gd1='30FC') then reading:='30FC';
- {$ELSE}
-  if (gd1=#$30FC) then reading:=#$30FC;
- {$ENDIF}
+
+  if not showroma and (EvalChar(gd1)=EC_KATAKANA) then
+   //To hiragana
+    Result := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,'j',[rfDeleteInvalidChars])
+  else
+  if showroma and (EvalChar(gd1) in [EC_HIRAGANA, EC_KATAKANA]) then begin
+    Result := '';
+    if IsSokuon(gd1) then
+      Result:=''
+    else
+    if IsSokuon(gd0) then begin
+      if IsSmallKanaVowel(gd2) then
+        Result:=gd0+gd1+gd2
+      else
+        Result:=gd0+gd1;
+    end else
+    if IsSmallKanaVowel(gd2) then
+      Result:=gd1+gd2
+    else
+    if IsSmallKanaVowel(gd1) then
+      Result:=''
+    else
+      Result := gd1; //by default
+
+    if (flength(Result)>1) and (EvalChars(Result) and (1 shl EC_KATAKANA) <> 0) then
+     //To hiragana
+      Result:=RomajiToKana('H'+KanaToRomaji(Result,1,'j'),1,'j',[rfDeleteInvalidChars]);
+  end
+  else
+    Result := '';
 end;
 
 {
@@ -3113,7 +3103,7 @@ begin
           if fSettings.cbReadingKatakana.Checked then begin
             if cx>0 then gd0 := GetDoc(cx-1,cy) else gd0 := UH_NOCHAR;
             if cx<flength(doc[cy]) then gd2 := GetDoc(cx+1,cy) else gd2 := UH_NOCHAR;
-            FixReading(gd0,GetDoc(cx,cy),gd2,reading);
+            reading := reading + GetKanaReading(gd0,GetDoc(cx,cy),gd2);
           end;
 
           if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_OPEN then

@@ -256,15 +256,6 @@ function strqpop(var s:string;c:char):string; overload;
 function strqpop(var s:string;const cs:string):string; overload;
 function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString; overload;
 
-function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
-function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
-function IsLocaseLatin(ch: AnsiChar): boolean; overload; inline;
-function IsLocaseLatin(ch: WideChar): boolean; overload; inline;
-function LoCase(ch: AnsiChar): AnsiChar; overload; inline; //Delphi has UpCase but not LoCase for chars
-function LoCase(ch: WideChar): WideChar; overload; inline;
-function IsDigit(ch: AnsiChar): boolean; overload; inline;
-function IsDigit(ch: WideChar): boolean; overload; inline;
-
 procedure MakeFixedLen(var s: AnsiString; len: integer; pad_ch: AnsiChar); overload; inline;
 procedure MakeFixedLen(var s: UnicodeString; len: integer; pad_ch: WideChar); overload; inline;
 
@@ -305,6 +296,15 @@ function EvalChar(const char:FString):integer; overload;
 //Returns a set of (1 shl EC_*) flags indicating some chars are present in string
 function EvalChars(const chars:FString):integer;
 
+function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
+function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
+function IsLocaseLatin(ch: AnsiChar): boolean; overload; inline;
+function IsLocaseLatin(ch: WideChar): boolean; overload; inline;
+function LoCase(ch: AnsiChar): AnsiChar; overload; inline; //Delphi has UpCase but not LoCase for chars
+function LoCase(ch: WideChar): WideChar; overload; inline;
+function IsDigit(ch: AnsiChar): boolean; overload; inline;
+function IsDigit(ch: WideChar): boolean; overload; inline;
+
 //Shit sucks. We have to have a ton of versions!
 function IsLatinLetter(c:char): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function IsLatinLetterW(c:WideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
@@ -312,7 +312,10 @@ function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
 function IsHalfWidthChar(c:FChar): boolean;
 function IsLatinDigit(c:char):boolean;
 function IsLatinDigitF(c:FChar):boolean;
+
 function IsKanaCharKatakana(c:FString; i:integer): boolean;
+function IsSokuon(const c: FChar): boolean; inline;
+function IsSmallKanaVowel(const c: FChar): boolean; inline;
 
 implementation
 uses WideStrUtils, ShlObj;
@@ -1181,52 +1184,6 @@ begin
 end;
 {$ENDIF}
 
-function IsUpcaseLatin(ch: AnsiChar): boolean;
-begin
-  Result := ch in ['A'..'Z'];
-end;
-
-function IsUpcaseLatin(ch: WideChar): boolean;
-begin
-  Result := (Word(ch) and $FF00 = 0) and (AnsiChar(ch) in ['A'..'Z']);
-end;
-
-function IsLocaseLatin(ch: AnsiChar): boolean;
-begin
-  Result := ch in ['a'..'z'];
-end;
-
-function IsLocaseLatin(ch: WideChar): boolean;
-begin
-  Result := (Word(ch) and $FF00 = 0) and (AnsiChar(ch) in ['a'..'z']);
-end;
-
-function LoCase(ch: AnsiChar): AnsiChar;
-begin
-  Result := Ch;
-  if Result in ['A'..'Z'] then
-    Inc(Result, Ord('a')-Ord('A'));
-end;
-
-function LoCase(Ch: WideChar): WideChar;
-begin
-  Result := Ch;
-  case Ch of
-    'A'..'Z':
-      Result := WideChar(Word(Ch) or $0020);
-  end;
-end;
-
-function IsDigit(ch: AnsiChar): boolean;
-begin
-  Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
-end;
-
-function IsDigit(ch: WideChar): boolean;
-begin
-  Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
-end;
-
 { Makes the string fixed length -- cuts if it's too long or pads if it's too short }
 procedure MakeFixedLen(var s: AnsiString; len: integer; pad_ch: AnsiChar);
 var old_len: integer;
@@ -1345,6 +1302,52 @@ begin
     Result := Result or (1 shl EvalChar(fgetch(chars,i)));
 end;
 
+function IsUpcaseLatin(ch: AnsiChar): boolean;
+begin
+  Result := ch in ['A'..'Z'];
+end;
+
+function IsUpcaseLatin(ch: WideChar): boolean;
+begin
+  Result := (Word(ch) and $FF00 = 0) and (AnsiChar(ch) in ['A'..'Z']);
+end;
+
+function IsLocaseLatin(ch: AnsiChar): boolean;
+begin
+  Result := ch in ['a'..'z'];
+end;
+
+function IsLocaseLatin(ch: WideChar): boolean;
+begin
+  Result := (Word(ch) and $FF00 = 0) and (AnsiChar(ch) in ['a'..'z']);
+end;
+
+function LoCase(ch: AnsiChar): AnsiChar;
+begin
+  Result := Ch;
+  if Result in ['A'..'Z'] then
+    Inc(Result, Ord('a')-Ord('A'));
+end;
+
+function LoCase(Ch: WideChar): WideChar;
+begin
+  Result := Ch;
+  case Ch of
+    'A'..'Z':
+      Result := WideChar(Word(Ch) or $0020);
+  end;
+end;
+
+function IsDigit(ch: AnsiChar): boolean;
+begin
+  Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
+end;
+
+function IsDigit(ch: WideChar): boolean;
+begin
+  Result := (Ord(ch)>=Ord('0')) and (Ord(ch)<=Ord('9'));
+end;
+
 //Ansi/Default version
 function IsLatinLetter(c:char): boolean;
 begin
@@ -1398,6 +1401,29 @@ begin
  {$ELSE}
   i := (i-1)*4+3;
   Result := (Length(c)>i) and (c[i]>='A');
+ {$ENDIF}
+end;
+
+//True if a char is a doubling character from any kana
+function IsSokuon(const c: FChar): boolean;
+begin
+ {$IFDEF UNICODE}
+  Result := (c='ッ') or (c='っ');
+ {$ELSE}
+  Result := (c='30C3') or (c='3063');
+ {$ENDIF}
+end;
+
+function IsSmallKanaVowel(const c: FChar): boolean;
+begin
+ {$IFDEF UNICODE}
+  Result :=
+       (c='ぁ') or (c='ぃ') or (c='ぅ') or (c='ぇ') or (c='ぉ') or (c='ゃ') or (c='ゅ') or (c='ょ')
+    or (c='ァ') or (c='ィ') or (c='ゥ') or (c='ェ') or (c='ォ') or (c='ャ') or (c='ュ') or (c='ョ');
+ {$ELSE}
+  Result :=
+       (c='3041') or (c='3043') or (c='3045') or (c='3047') or (c='3049') or (c='3083') or (c='3085') or (c='3087')
+    or (c='30A1') or (c='30A3') or (c='30A5') or (c='30A7') or (c='30A9') or (c='30E3') or (c='30E5') or (c='30E7');
  {$ENDIF}
 end;
 

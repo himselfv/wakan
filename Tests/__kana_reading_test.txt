@@ -1,0 +1,17 @@
+﻿Wakan can be configured to auto-annotate katakana with hiragana, and to display annotations in romaji instead of kana. These two options combine to form the following chart:
+1. Auto-annotate disabled.
+2. Auto-annotate + normal kana = annotate katakana only.
+3. Auto-annotate + romaji = annotate all kana with romaji.
+
+This is the test for auto-annotation feature. In normal kana mode the following should only display annotations for kanji and katakana.
+In romaji mode it should display annotations for every syllable, and annotations for combinations such as "った" and "っちゃ" should start over the actual character (skipping sokuon).
+
+そうぞうソウゾウ
+おもった
+おもっちゃ
+思った
+思っちゃ
+
+In romaji mode kana annotations for "su suru" should be shifted to the right to accomodate for long annotation for "kutsugae", not replace it.
+
+覆すする
