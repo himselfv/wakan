@@ -20,7 +20,7 @@ object fCharItem: TfCharItem
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 126
+    Width = 72
     Height = 13
     Caption = '#00034^eItem:'
   end
@@ -34,14 +34,14 @@ object fCharItem: TfCharItem
   object Label3: TLabel
     Left = 8
     Top = 32
-    Width = 146
+    Width = 105
     Height = 13
     Caption = '#00035^eDescription:'
   end
   object Label4: TLabel
     Left = 8
     Top = 48
-    Width = 125
+    Width = 86
     Height = 13
     Caption = '#00036^eSource:'
   end
@@ -58,7 +58,6 @@ object fCharItem: TfCharItem
     Width = 473
     Height = 21
     Style = csDropDownList
-    ItemHeight = 0
     TabOrder = 0
     OnChange = ComboBox1Change
   end
@@ -106,8 +105,7 @@ object fCharItem: TfCharItem
     Top = 152
     Width = 265
     Height = 17
-    Caption = 
-      '#00049^eDisplay even if information is missing'
+    Caption = '#00049^eDisplay even if information is missing'
     TabOrder = 4
   end
   object Edit1: TEdit
@@ -123,8 +121,8 @@ object fCharItem: TfCharItem
     Top = 264
     Width = 113
     Height = 25
-    TabOrder = 6
     Kind = bkOK
+    TabOrder = 6
   end
   object BitBtn2: TBitBtn
     Left = 424
@@ -132,8 +130,8 @@ object fCharItem: TfCharItem
     Width = 107
     Height = 25
     Caption = '#00050^eCancel'
-    TabOrder = 7
     Kind = bkCancel
+    TabOrder = 7
   end
   object RadioGroup4: TRadioGroup
     Left = 312

@@ -379,7 +379,7 @@ uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
-  JWBUserData, JWBPortableMode, ActnList;
+  JWBUserData, JWBPortableMode, JWBCharData, ActnList;
 
 var colorfrom:integer;
 

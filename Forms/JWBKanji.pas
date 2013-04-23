@@ -93,7 +93,7 @@ uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
   JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBUtils, JWBCategories,
-  JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers;
+  JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
 
 var ki:TStringList;
     calfonts:TStringList;

@@ -1,14 +1,30 @@
 unit JWBUserData;
-
-interface
-uses TextTable, JWBStrings;
-
 {
+WAKAN.USR hanlding.
+
 User dictionary is quite different from normal dictionaries.
 Even search is possible only by kana.
 }
 
+interface
+uses TextTable, JWBStrings, MemSource;
+
+const
+ {
+  Current WAKAN.USR format. Version history:
+    0  version information not found
+    1  ...
+    2  current format
+  Wakan was trying to do some silent upgrading from 1 to 2 but as I see it,
+  it was pretty pointless.
+  We might later do upgrades but let's try to do those on load (in-memory data
+  always in the latest format).
+ }
+  CurrentUserDataVersion=2;
+
 var
+  UserDataVersion: integer;
+
   TUser: TTextTable;
   TUserIndex, //i
   TUserEnglish, //s
@@ -45,6 +61,13 @@ var
 
   TUserPrior: TTextTable;
 
+procedure InitializeUserPackage(const package:string);
+function LoadUserPackage(const filename: string): TPackageSource;
+procedure SaveUserPackage(const tempDir: string; const filename: string);
+procedure FreeUserPackage;
+
+function UserDataAutoRepair(): boolean;
+
 function FindMaxUserIndex(): integer;
 function FindMaxCategoryIndex(): integer;
 
@@ -52,8 +75,275 @@ function FindUserWord(kanji,phonetic: FString): integer;
 
 function GetPhoneticSortStr(phonetic: FString): string;
 
+procedure RebuildUserIndex;
+
 implementation
-uses JWBKanaConv, JWBUnit, JWBMenu;
+uses SysUtils, JWBKanaConv, JWBUnit, JWBMenu, PKGWrite, JWBCategories, Classes;
+
+{ Packs WAKAN.USR data from directory Dir to package Package.
+ Do not use directly; there are functions to save and load user data packages. }
+procedure WriteUserPackage(const dir:string;const package:string);
+var f:file of byte;
+    b:byte;
+begin
+  assignfile(f,dir+'\struct.ver');
+  rewrite(f);
+  b:=CurrentUserDataVersion;
+  write(f,b);
+  closefile(f);
+  PKGWriteForm.PKGWriteCmd('NotShow');
+  PKGWriteForm.PKGWriteCmd('PKGFileName '+package);
+  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
+  PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
+  PKGWriteForm.PKGWriteCmd('TitleName WaKan User Data File');
+  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
+  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
+  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
+  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
+  PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
+  PKGWriteForm.PKGWriteCmd('FileSysCode 587135');
+  PKGWriteForm.PKGWriteCmd('WriteHeader');
+  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
+  PKGWriteForm.PKGWriteCmd('CryptMode 0');
+  PKGWriteForm.PKGWriteCmd('CRCMode 0');
+  PKGWriteForm.PKGWriteCmd('PackMode 0');
+  PKGWriteForm.PKGWriteCmd('CryptCode 978312');
+  PKGWriteForm.PKGWriteCmd('Include '+dir);
+  PKGWriteForm.PKGWriteCmd('Finish');
+end;
+
+{ Creates new empty WAKAN.USR in the specified file }
+procedure InitializeUserPackage(const package:string);
+var tempDir: string;
+  t:textfile;
+begin
+  tempDir := CreateRandomTempDir();
+  CreateKnownList(1,0);
+  SaveKnownList(1,tempDir+'\knownchar.bin');
+  assignfile(t,tempDir+'\User.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PREBUFFER');
+  writeln(t,'$FIELDS');
+  writeln(t,'iIndex');
+  writeln(t,'sEnglish');
+  writeln(t,'xPhonetic');
+  writeln(t,'sPhoneticSort');
+  writeln(t,'xKanji');
+  writeln(t,'sAdded');
+  writeln(t,'sPrinted');
+  writeln(t,'sLearned');
+  writeln(t,'sMastered');
+  writeln(t,'iNoPrinted');
+  writeln(t,'bScore');
+  writeln(t,'bMaxScore');
+  writeln(t,'$ORDERS');
+  writeln(t,'Index_Ind');
+  writeln(t,'Kanji_Ind');
+  writeln(t,'Phonetic_Ind');
+  writeln(t,'PhoneticSeek_Ind');
+  writeln(t,'English_Ind');
+  writeln(t,'Added_Ind');
+  writeln(t,'Printed_Ind');
+  writeln(t,'Score_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'0');
+  writeln(t,'Index');
+  writeln(t,'Kanji+PhoneticSort');
+  writeln(t,'PhoneticSort+Phonetic');
+  writeln(t,'Phonetic');
+  writeln(t,'English');
+  writeln(t,'Added+PhoneticSort');
+  writeln(t,'Printed+PhoneticSort');
+  writeln(t,'Score+PhoneticSort');
+  writeln(t,'$CREATE');
+  closefile(t);
+  assignfile(t,tempDir+'\UserIdx.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PREBUFFER');
+  writeln(t,'$FIELDS');
+  writeln(t,'iWord');
+  writeln(t,'xKanji');
+  writeln(t,'lBegin');
+  writeln(t,'$ORDERS');
+  writeln(t,'Kanji_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'0');
+  writeln(t,'Kanji');
+  writeln(t,'$CREATE');
+  closefile(t);
+  assignfile(t,tempDir+'\UserSheet.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PREBUFFER');
+  writeln(t,'$FIELDS');
+  writeln(t,'iWord');
+  writeln(t,'wNumber');
+  writeln(t,'wPos');
+  writeln(t,'$ORDERS');
+  writeln(t,'Word_Ind');
+  writeln(t,'Sheet_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'0');
+  writeln(t,'Word+Number+Pos');
+  writeln(t,'Number+Pos');
+  writeln(t,'$CREATE');
+  closefile(t);
+  assignfile(t,tempDir+'\UserCat.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PREBUFFER');
+  writeln(t,'$FIELDS');
+  writeln(t,'iIndex');
+  writeln(t,'sName');
+  writeln(t,'bType');
+  writeln(t,'sCreated');
+  writeln(t,'$ORDERS');
+  writeln(t,'Index_Ind');
+  writeln(t,'Type_Ind');
+  writeln(t,'Name_Ind');
+  writeln(t,'Created_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'0');
+  writeln(t,'Index');
+  writeln(t,'Type+Name');
+  writeln(t,'Name');
+  writeln(t,'Created+Name');
+  writeln(t,'$CREATE');
+  closefile(t);
+  assignfile(t,tempDir+'\UserPrior.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PREBUFFER');
+  writeln(t,'$FIELDS');
+  writeln(t,'xKanji');
+  writeln(t,'wCount');
+  writeln(t,'$ORDERS');
+  writeln(t,'Kanji_Ind');
+  writeln(t,'Count_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'0');
+  writeln(t,'Kanji');
+  writeln(t,'Count');
+  writeln(t,'$CREATE');
+  closefile(t);
+  WriteUserPackage(tempDir, package);
+  DeleteDirectory(tempDir);
+end;
+
+{ Load user data package from the specified file }
+function LoadUserPackage(const filename: string): TPackageSource;
+var ps:TPackageSource;
+  ms:TMemoryStream;
+  tempDir: string;
+  t:textfile;
+begin
+  ps:=TPackageSource.Create(filename,621030,587135,978312);
+  TUser:=TTextTable.Create(ps,'User',false,false);
+  TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
+  TUserSheet:=TTextTable.Create(ps,'UserSheet',false,false);
+  TUserCat:=TTextTable.Create(ps,'UserCat',false,false);
+  if ps['UserPrior.info']<>nil then
+    TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false)
+  else
+  begin
+    tempDir := CreateRandomTempDir();
+    assignfile(t,tempDir+'\UserPrior.info');
+    rewrite(t);
+    writeln(t,'$TEXTTABLE');
+    writeln(t,'$PREBUFFER');
+    writeln(t,'$FIELDS');
+    writeln(t,'xKanji');
+    writeln(t,'wCount');
+    writeln(t,'$ORDERS');
+    writeln(t,'Kanji_Ind');
+    writeln(t,'Count_Ind');
+    writeln(t,'$SEEKS');
+    writeln(t,'0');
+    writeln(t,'Kanji');
+    writeln(t,'Count');
+    writeln(t,'$CREATE');
+    closefile(t);
+    TUserPrior:=TTextTable.Create(nil,tempDir+'\UserPrior',false,false);
+    DeleteDirectory(tempDir);
+  end;
+  TUserIndex:=TUser.Field('Index');
+  TUserEnglish:=TUser.Field('English');
+  TUserPhonetic:=TUser.Field('Phonetic');
+  TUserPhoneticSort:=TUser.Field('PhoneticSort');
+  TUserKanji:=TUser.Field('Kanji');
+  TUserAdded:=TUser.Field('Added');
+  TUserPrinted:=TUser.Field('Printed');
+  TUserLearned:=TUser.Field('Learned');
+  TUserMastered:=TUser.Field('Mastered');
+  TUserNoPrinted:=TUser.Field('NoPrinted');
+  TUserScore:=TUser.Field('Score');
+  TUserMaxScore:=TUser.Field('MaxScore');
+  TUserIdxWord:=TUserIdx.Field('Word');
+  TUserIdxKanji:=TUserIdx.Field('Kanji');
+  TUserIdxBegin:=TUserIdx.Field('Begin');
+  TUserIdxIndex:=TUserIdx.Field('Index');
+  TUserSheetWord:=TUserSheet.Field('Word');
+  TUserSheetNumber:=TUserSheet.Field('Number');
+  TUserSheetPos:=TUserSheet.Field('Pos');
+  TUserCatIndex:=TUserCat.Field('Index');
+  TUserCatName:=TUserCat.Field('Name');
+  TUserCatType:=TUserCat.Field('Type');
+  TUserCatCreated:=TUserCat.Field('Created');
+
+  UserDataVersion := 0;
+  try
+    ms:=ps['struct.ver'].Lock;
+    ms.Read(UserDataVersion,1);
+    ps['struct.ver'].UnLock;
+  except end;
+
+  Result := ps;
+end;
+
+{ Saves currently loaded user data package to the specified directory and packs
+ all the content of that directory into the package. }
+procedure SaveUserPackage(const tempDir: string; const filename: string);
+begin
+  TUser.WriteTable(tempDir+'\User',false);
+  TUserIdx.WriteTable(tempDir+'\UserIdx',false);
+  TUserSheet.WriteTable(tempDir+'\UserSheet',false);
+  TUserCat.WriteTable(tempDir+'\UserCat',false);
+  TUserPrior.WriteTable(tempDir+'\UserPrior',false);
+  WriteUserPackage(tempDir, filename);
+end;
+
+{ Free currently loaded user data package }
+procedure FreeUserPackage;
+begin
+  FreeAndNil(TUser);
+  FreeAndNil(TUserIdx);
+  FreeAndNil(TUserSheet);
+  FreeAndNil(TUserCat);
+end;
+
+
+function UserDataAutoRepair(): boolean;
+begin
+  Result:=false;
+  if not TUser.CheckIndex then begin
+    TUser.Reindex;
+    Result:=true;
+  end;
+  if not TUserIdx.CheckIndex then begin
+    TUserIdx.Reindex;
+    Result:=true;
+  end;
+  if not TUserSheet.CheckIndex then begin
+    TUserSheet.Reindex;
+    Result:=true;
+  end;
+  if not TUserCat.CheckIndex then begin
+    TUserCat.Reindex;
+    Result:=true;
+  end;
+end;
 
 //Used in several places when loading
 function FindMaxUserIndex(): integer;
@@ -129,5 +419,23 @@ begin
   end else
     Result:=KanaToRomaji(phonetic,1,'c');
 end;
+
+procedure RebuildUserIndex;
+begin
+  TUserIdx.First;
+  while not TUserIdx.EOF do
+  begin
+    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
+      TUserIdx.Delete;
+    TUserIdx.Next;
+  end;
+end;
+
+initialization
+  UserDataVersion := 0;
+  TUser := nil;
+  TUserIdx := nil;
+  TUserSheet := nil;
+  TUserCat := nil;
 
 end.

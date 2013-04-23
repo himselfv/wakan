@@ -139,7 +139,8 @@ implementation
 uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBStatistics, JWBWordList, JWBUserDetails, JWBUserAdd,
   JWBUserFilters, JWBExamples, JWBUser, JWBUserData,
-  JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite;
+  JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
+  JWBCharData;
 
 var wl,wlc:TStringList;
     ll,ltl:TStringList;
@@ -1357,8 +1358,9 @@ var i,j,k,l,m,n,o,p,q:integer;
   InUserIdx: boolean;
 begin
   Screen.Cursor:=crHourGlass;
-  if ChinesePresent then
-    fStatistics.Label10.Caption:=_l('#00854^ePresent') else
+  if CharDataProps.ChinesePresent then
+    fStatistics.Label10.Caption:=_l('#00854^ePresent')
+  else
     fStatistics.Label10.Caption:=_l('#00855^eAbsent');
   TChar.First;
   i:=0;
@@ -1425,7 +1427,7 @@ begin
     if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(n);
     if KanjiKnown then
     begin
-      TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),13));
+      TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),13));
       if TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode) then inc(q);
     end;
     TChar.Next;
@@ -1487,7 +1489,7 @@ begin
           v:=v+20000;
           if TChar.Int(TCharJpFrequency)<65535 then
             v:=v+TChar.Int(TCharJpFrequency)*3 else v:=v+7000;
-          TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),12));
+          TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),12));
           TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode));
           if (TRadicals.Str(TRadicalsUnicode)<>s2) and (not IsKnown(KnownLearned,TChar.Fch(TCharUnicode))) then inc(v,8000);
           if TRadicals.Str(TRadicalsUnicode)=s2 then dec(v,3000);

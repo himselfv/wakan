@@ -23,9 +23,9 @@ type
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
-    Label13: TLabel;
-    Label15: TLabel;
-    Label16: TLabel;
+    lblDicBuildDate: TLabel;
+    lblKanjidicVersion: TLabel;
+    lblUnihanVersion: TLabel;
     Label17: TLabel;
     Label18: TLabel;
     Label19: TLabel;
@@ -55,17 +55,22 @@ type
     Label43: TLabel;
     Label44: TLabel;
     Label45: TLabel;
-  private
-    { Private declarations }
-  public
-    { Public declarations }
+    procedure FormShow(Sender: TObject);
   end;
 
 var
   fStatistics: TfStatistics;
 
 implementation
+uses JWBCharData;
 
 {$R *.DFM}
+
+procedure TfStatistics.FormShow(Sender: TObject);
+begin
+  lblDicBuildDate.Caption := CharDataProps.DicBuildDate;
+  lblKanjidicVersion.Caption := CharDataProps.KanjidicVersion;
+  lblUnihanVersion.Caption := CharDataProps.UnihanVersion;
+end;
 
 end.

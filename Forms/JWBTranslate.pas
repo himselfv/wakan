@@ -491,7 +491,7 @@ implementation
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
   JWBCategories, JWBDic, JWBEdictMarkers,
-  JWBUserData, StreamUtils;
+  JWBUserData, JWBCharData, StreamUtils;
 
 {$R *.DFM}
 
@@ -1519,7 +1519,7 @@ begin
     raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
   delete(s,1,22);
 
-  if copy(s,1,length(fStatistics.Label15.Caption))<>fStatistics.Label15.Caption then
+  if copy(s,1,length(CharDataProps.DicBuildDate))<>CharDataProps.DicBuildDate then
   begin
     if silent
     or (Application.MessageBox(
@@ -1649,7 +1649,7 @@ begin
   sig:=$f1ff;
   stream.Write(sig,2);
 
-  s:=AnsiString('WaKan Translated Text>'+fStatistics.Label15.Caption);
+  s:=AnsiString('WaKan Translated Text>'+CharDataProps.DicBuildDate);
   while length(s)<32 do s:=s+' ';
   stream.Write(s[1],32);
 

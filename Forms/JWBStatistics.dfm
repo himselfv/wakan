@@ -14,6 +14,7 @@ object fStatistics: TfStatistics
   OldCreateOrder = False
   Position = poScreenCenter
   Scaled = False
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object RxLabel16: TRxLabel
@@ -177,29 +178,29 @@ object fStatistics: TfStatistics
     Alignment = taRightJustify
     Caption = 'Label12'
   end
-  object Label13: TLabel
-    Left = 232
+  object lblDicBuildDate: TLabel
+    Left = 198
     Top = 64
-    Width = 38
+    Width = 72
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label13'
+    Caption = 'lblDicBuildDate'
   end
-  object Label15: TLabel
-    Left = 232
+  object lblKanjidicVersion: TLabel
+    Left = 188
     Top = 80
-    Width = 38
+    Width = 82
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label15'
+    Caption = 'lblKanjidicVersion'
   end
-  object Label16: TLabel
-    Left = 232
+  object lblUnihanVersion: TLabel
+    Left = 191
     Top = 96
-    Width = 38
+    Width = 79
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label16'
+    Caption = 'lblUnihanVersion'
   end
   object Label17: TLabel
     Left = 8

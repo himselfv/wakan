@@ -38,7 +38,7 @@ var
 
 implementation
 
-uses JWBMenu;
+uses JWBMenu, JWBCharData;
 
 {$R *.DFM}
 

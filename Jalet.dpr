@@ -3,6 +3,7 @@ program Jalet;
 Stuff you can define for the whole project:
   UNICODE -- defined by the compiler if the default string type is UnicodeString
   INLINE -- inline small functions (bad for debug, very good for speed)
+  CLEAN_DEINIT -- delete and destroy everything properly, otherwise we cheat to speed up unloading (who cares!)
 
 Disable ScaleMM2 when tracking a memory bug (default memory mgr is better at reporting those)
 }
@@ -74,7 +75,9 @@ uses
   JWBUserData in 'Components\JWBUserData.pas',
   JWBPortableMode in 'Forms\JWBPortableMode.pas' {fPortableMode},
   JWBCategoryMgr in 'Forms\JWBCategoryMgr.pas' {fCategoryMgr},
-  JWBForms in 'Components\JWBForms.pas';
+  JWBForms in 'Components\JWBForms.pas',
+  JWBCharData in 'Components\JWBCharData.pas',
+  JWBRaine in 'Components\JWBRaine.pas';
 
 {$R *.RES}
 

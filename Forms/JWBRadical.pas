@@ -119,9 +119,19 @@ type
 var
   fRadical: TfRadical;
 
+{ Raine radicals }
+
+var
+  rainesearch:pointer;
+  raineradicals:TStringList;
+
+procedure LoadRaineRadicals(const filename: string);
+procedure UnloadRaineRadicals;
+
 implementation
 
-uses JWBMenu, JWBUnit, JWBSettings, PKGWrite, JWBCategories, JWBConvert, JWBIO;
+uses JWBMenu, JWBUnit, JWBSettings, PKGWrite, JWBCategories, JWBConvert, JWBIO,
+  JWBCharData, MemSource;
 
 {$R *.DFM}
 
@@ -803,5 +813,36 @@ begin
     DeleteDirectory(tempDir);
   end;
 end;
+
+{ Raine load/unload }
+
+procedure LoadRaineRadicals(const filename: string);
+var ps:TPackageSource;
+  ms:TMemoryStream;
+begin
+  ps:=TPackageSource.Create(filename,791564,978132,978123);
+  try
+    ms:=ps['search.bin'].Lock;
+    GetMem(rainesearch,ms.Size);
+    ms.Read(rainesearch^,ms.Size);
+    ps['search.bin'].Unlock;
+    ms:=ps['radicals.txt'].Lock;
+    raineradicals:=TStringList.Create;
+    raineradicals.LoadFromStream(ms);
+    ps['radicals.txt'].Unlock;
+  finally
+    ps.Free;
+  end;
+end;
+
+procedure UnloadRaineRadicals;
+begin
+  FreeMem(rainesearch);
+  FreeAndNil(raineradicals);
+end;
+
+
+initialization
+  rainesearch:=nil;
 
 end.

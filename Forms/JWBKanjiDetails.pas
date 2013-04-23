@@ -143,7 +143,7 @@ implementation
 
 uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
   JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories, JWBKanjiCard,
-  JWBUserFilters, JWBKanaConv;
+  JWBUserFilters, JWBKanaConv, JWBCharData;
 
 {$R *.DFM}
 
@@ -447,71 +447,33 @@ begin
       ProURLLabel5.Enabled := false;
       ProURLLabel5.URL := '';
     end else begin
-      cv:=fMenu.GetCharValue(curindex,51);
+      cv:=GetCharValue(curindex,51);
       ProURLLabel1.Enabled:=cv<>'';
       ProURLLabel1.URL:='http://www.zhongwen.com/cgi-bin/zipux2.cgi?b5=%'+copy(cv,1,2)+'%'+copy(cv,3,2);
       ProURLLabel2.Enabled:=CChar.Int(TCharChinese)=0;
       ProURLLabel2.URL:='http://www.csse.monash.edu.au/cgi-bin/cgiwrap/jwb/wwwjdic?1MKU'+lowercase(FStrToHex(curSingleChar));
       ProURLLabel3.Enabled:=true;
       ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(FStrToHex(curSingleChar));
-      cv:=fMenu.GetCharValue(curindex,54);
+      cv:=GetCharValue(curindex,54);
       ProURLLabel4.Enabled:=(cv<>'')
         and TryStrToInt(copy(cv,1,2), cv_i1)
         and TryStrToInt(copy(cv,3,2), cv_i2);
       if ProURLLabel4.Enabled then
         ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
-      cv:=fMenu.GetCharValue(curindex,57);
+      cv:=GetCharValue(curindex,57);
       ProURLLabel5.Enabled:=cv<>'';
       ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
     end;
-
-   { Stroke order }
-   //TODO: Remove.
-   { Not used. A remnant of the old way to display stroke order, through GIFS.
-    fMenu.StrokeOrderPackage is always nil }
-    {
-    ld:=false;
-    fStrokeOrder.TrackBar1.Max:=0;
-    if (fMenu.StrokeOrderPackage<>nil) and (fMenu.GetCharValueInt(CChar.Int(TCharIndex),101)<65535) then
-    begin
-      try
-        s:=fMenu.GetCharValue(CChar.Int(TCharIndex),101);
-        while length(s)<4 do s:='0'+s;
-        mf:=fMenu.StrokeOrderPackage.Files['so'+s+'.gif'];
-        if mf<>nil then
-        begin
-          ms:=mf.Lock;
-          fStrokeOrder.RxGIFAnimator1.Image.LoadFromStream(ms);
-          ld:=true;
-          fStrokeOrder.strokenum:=0;
-          i:=0;
-          fStrokeOrder.RxGIFAnimator1.FrameIndex:=1;
-          while fStrokeOrder.RxGIFAnimator1.FrameIndex>i do
-          begin
-            inc(i);
-            fStrokeOrder.RxGIFAnimator1.FrameIndex:=i+1;
-          end;
-          fStrokeOrder.strokenum:=i;
-          fStrokeOrder.TrackBar1.Max:=i;
-          fStrokeOrder.TrackBar1.Position:=i;
-          fStrokeOrder.RxGIFAnimator1.FrameIndex:=i;
-        end;
-      except
-      end;
-    end;
-    fStrokeOrder.RxGIFAnimator1.Visible:=ld;
-    fStrokeOrder.Label1.Visible:=not ld;
-    }
 
     //Simplified form
     if curindex<0 then
       charval := ''
     else begin
-      charval := fMenu.GetCharValue(CChar.Int(TCharIndex),43);
+      charval := GetCharValue(CChar.Int(TCharIndex),43);
       if charval<>'' then
         RxLabel35.Caption:=_l('#00135^eSimplified:')
       else begin
-        charval := fMenu.GetCharValue(CChar.Int(TCharIndex),44);
+        charval := GetCharValue(CChar.Int(TCharIndex),44);
         if charval<>'' then
           RxLabel35.Caption:=_l('#00136^eTraditional:');
       end;
@@ -533,7 +495,7 @@ begin
     if curindex<0 then
       curradno := 255
     else
-      curradno:=fMenu.GetCharValueRad(CChar.Int(TCharIndex),
+      curradno:=GetCharValueRad(CChar.Int(TCharIndex),
         fSettings.ComboBox1.ItemIndex+12 {Chosen radical to use});
     lblRadicalNo.Caption:=IntToStr(curradno);
     if (curradno=255) or not TRadicals.Locate('Number',curradno) then

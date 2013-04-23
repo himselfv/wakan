@@ -12,10 +12,6 @@ var
   AppFolder: string = ''; //path to program, set on load
   WakanVer: string = ''; //taken from resources on load
 
-const
-  CurStructVer=2;
-  CurDictVer=7;
-
 type
   TPortabilityMode = (pmStandalone, pmPortable, pmCompatible);
 
@@ -181,7 +177,8 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable;
+uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable,
+  JWBCharData;
 
 
 { Portable/standalone }
@@ -398,7 +395,7 @@ begin
     if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
     and TChar.Locate('Unicode',s2) then
     begin
-      cd:=hextofstr(fMenu.GetCharValue(TChar.Int(TCharIndex),43));
+      cd:=hextofstr(GetCharValue(TChar.Int(TCharIndex),43));
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;
@@ -424,7 +421,7 @@ begin
     if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
     and TChar.Locate('Unicode',s2) then
     begin
-      cd:=hextofstr(fMenu.GetCharValue(TChar.Int(TCharIndex),44));
+      cd:=hextofstr(GetCharValue(TChar.Int(TCharIndex),44));
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;

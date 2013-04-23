@@ -390,7 +390,6 @@ type
     ptrFileMap:pointer;
 
     procedure TranslateAll;
-    procedure WriteUserPackage(dir:string);
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure ToggleForm(form:TForm;sb:TSpeedButton;action:TAction); overload;
@@ -398,9 +397,6 @@ type
     procedure RescanDicts;
     procedure ClearDicts;
     procedure SwitchLanguage(lanchar:char);
-    function GetCharValue(index,vt:integer):string;
-    function GetCharValueInt(index,vt:integer):integer;
-    function GetCharValueRad(index,vt:integer):integer;
     procedure ChangeDisplay;
 
   protected
@@ -421,7 +417,6 @@ type
     procedure SaveUserData;
     procedure LoadUserData;
     procedure ChangeUserData;
-    procedure RebuildUserIndex;
     procedure ExportUserData(filename:string);
     procedure ImportUserData(filename:string);
     property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
@@ -508,57 +503,10 @@ var
  { Dictionaries }
   dicts: TDictionaryList; //Active dictionary list
 
- { Tables and fields }
-
-  TChar: TTextTable;
-  TCharIndex,
-  TCharChinese,
-  TCharType,
-  TCharUnicode,
-  TCharStrokeCount,
-  TCharJpStrokeCount,
-  TCharJpFrequency,
-  TCharChFrequency,
-  TCharJouyouGrade: integer;
-
-  TCharRead: TTextTable;
-  TCharReadKanji,
-  TCharReadType,
-  TCharReadReading, { WARNING! This field here is dangerous.
-    Some properties store normal AnsiStrings here, other 4-char hex AnsiStrings,
-    i.e. no auto-conversion to unicode is possible.
-    When reading from, or searching by this field, you have to check it's property type:
-       type := CCharRead.Int(TCharReadType);
-       propType := GetCharPropType(type,3);
-    And then recode data:
-       R: TRadicals.Number field value, possibly int or 'int' (int in quotes)
-       U,P: 4char hex
-       other: AnsiString
-    TODO: Make a class which reads from these and auto-converts, i.e.
-      cursor.FS[]: FString
-      cursor.AS[]: AnsiString
-      cursor.US[]: UnicodeString
-      cursor.I[]: Integer
-   }
-  TCharReadIndex,
-  TCharReadReadDot,
-  TCharReadPosition: integer;
-
-  TRadicals: TTextTable;
-  TRadicalsNumber,
-  TRadicalsVariant,
-  TRadicalsUnicode,
-  TRadicalsStrokeCount,
-  TRadicalsUnicodeCount,
-  TRadicalsBushuCount,
-  TRadicalsJapaneseCount,
-  TRadicalsKangXiCount: integer;
-
   clip:FString;
   oldhandle:THandle;
   critsec:boolean;
   globheight:integer;
-  ChinesePresent:boolean;
 
  //Loaded from config file -- see comments in wakan.cfg
   partl: TStringList; //particles such as NO, NI, etc
@@ -581,34 +529,10 @@ var
   ftextpos:integer;
   popcreated:boolean;
   vocmode,exmode:integer;
-  rainesearch:pointer;
-  raineradicals:TStringList;
   sodir:TStringList;
   sobin:pointer;
   dictbeginset,dictmodeset:integer;
   kanji_othersearch:integer;
-
-var
-  CharPropTypes:TStringList; { All possible pieces of information to display in KanjiDetails info box. }
-  chardetl:TStringList; { User configuration for KanjiDetails info box. }
-
-{
-Character property information available:
-  0 - charPropId
-  1 - sourceType -- where did we get that info
-    'D': EDICT
-    'U': UNIHAN
-  2 - sourceField
-  3 - propType -- controls how data for this property is stored and handled
-    'U', 'P': stored as 'a'-type hex string, contains unicode
-    'R', 'N', 'T'
-  4 - english name
-  5 - czech name
-  6 - description (english)
-}
-function GetCharPropType(idx:integer;fld:integer):string;
-function GetCharDet(i,j:integer):string;
-function FindCharPropType(charPropId: string): integer;
 
 function _l(const id:string):string; //shouldn't inline because it's for cases when JWBUnit is not in Uses!
 
@@ -626,49 +550,9 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
-  JWBPortableMode, JWBCategoryMgr, StreamUtils;
+  JWBPortableMode, JWBCategoryMgr, JWBCharData, StreamUtils;
 
 {$R *.DFM}
-
-{ Pieces of information about Kanji }
-
-function GetCharPropType(idx:integer;fld:integer):string;
-var s:string;
-begin
-  s:=CharPropTypes[idx];
-  while fld>0 do
-  begin
-    delete(s,1,pos(',',s));
-    dec(fld);
-  end;
-  if fld<6 then delete(s,pos(',',s),length(s)-pos(',',s)+1);
-  result:=s;
-end;
-
-function GetCharDet(i,j:integer):string;
-var s:string;
-begin
-  s:=chardetl[i];
-  while j>0 do
-  begin
-    delete(s,1,pos(';',s));
-    dec(j);
-  end;
-  delete(s,pos(';',s),length(s)-pos(';',s)+1);
-  result:=s;
-end;
-
-//Returns chartypel index for a given char type, or -1
-function FindCharPropType(charPropId: string): integer;
-var i: integer;
-begin
-  Result := -1;
-  for i := 0 to CharPropTypes.Count - 1 do
-    if charPropId=GetCharPropType(i,0) then begin
-      Result := i;
-      break;
-    end;
-end;
 
 
 { TfMenu }
@@ -676,9 +560,6 @@ end;
 procedure TfMenu.FormCreate(Sender: TObject);
 begin
   initdone:=false;
-  TChar := nil; //will be created on FormShow
-  TCharRead := nil;
-  TRadicals := nil;
 
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
@@ -701,9 +582,7 @@ end;
 
 procedure TfMenu.FormDestroy(Sender: TObject);
 begin
-  TChar.Free;
-  TCharRead.Free;
-  TRadicals.Free;
+  FreeCharData;
   FreeKnownLists;
 
   defll.Free; //+
@@ -771,7 +650,7 @@ begin
       Application.Terminate;
       exit;
     end;
-    if (not FileExists('wakan.cfg')) then
+    if not FileExists('wakan.cfg') then
     begin
       Application.MessageBox(
         pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
@@ -853,64 +732,33 @@ begin
 
    //Wakan.chr
     try
-      ps:=TPackageSource.Create('wakan.chr',791564,978132,978123);
-      vi:=TStringList.Create;
-      ms:=ps['jalet.ver'].Lock;
-      vi.LoadFromStream(ms);
-      ps['jalet.ver'].Unlock;
-
-      if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then
-        raise Exception.Create('Unknown DICT.VER header.');
-      if strtoint(vi[1])<CurDictVer then
-      begin
-        Application.MessageBox(
-          pchar(_l('#00354^eWAKAN.CHR has old structure. Please download new '
-            +'version.'#13#13'Application will now exit.')),
-          pchar(_l('#00020^eError')),
-          MB_ICONERROR or MB_OK);
-        Application.Terminate;
-        exit;
-      end;
-      if strtoint(vi[1])>CurDictVer then
-      begin
-        Application.MessageBox(
-          pchar(_l('#00355^eWAKAN.CHR has newer structure. Please download new '
-            +'WAKAN.EXE.'#13#13'Application will now exit.')),
-          pchar(_l('#00020^eError')),
-          MB_ICONERROR or MB_OK);
-        Application.Terminate;
-        exit;
-      end;
-      fStatistics.Label13.Caption:=datetostr(strtoint(vi[2]));
-      fStatistics.Label15.Caption:=vi[4];
-      fStatistics.Label16.Caption:=vi[5];
-      ChinesePresent:=vi[6]='CHINESE';
-      vi.Free;
-      fSplash.ProgressBar1.Position:=1;
-      fSplash.ProgressBar1.Update;
-      TChar:=TTextTable.Create(ps,'Char',true,false);
-      fSplash.ProgressBar1.Position:=2;
-      fSplash.ProgressBar1.Update;
-      TCharRead:=TTextTable.Create(ps,'CharRead',true,false);
-      fSplash.ProgressBar1.Position:=3;
-      fSplash.ProgressBar1.Update;
-      TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
-      if (fSettings.CheckBox64.Checked) and (fSettings.CheckBox65.Checked) then RebuildAnnotations;
-      if (fSettings.CheckBox64.Checked) then LoadAnnotations;
+      LoadCharData('wakan.chr');
+      if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
+      if fSettings.CheckBox64.Checked then LoadAnnotations;
     except
-      Application.MessageBox(
-        pchar(_l('#00356^eCannot load main dictionary file.'#13
-          +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
+      on E: ECharDataException do begin
+        Application.MessageBox(
+          pchar(_l(E.Message)),
+          pchar(_l('#00020^eError')),
+          MB_OK or MB_ICONERROR);
+        Application.Terminate;
+        exit;
+      end;
+      on E: Exception do begin
+        Application.MessageBox(
+          pchar(_l('#00356^eCannot load main dictionary file.'#13
+            +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.')),
+          pchar(_l('#00020^eError')),
+          MB_OK or MB_ICONERROR);
+        Application.Terminate;
+        exit;
+      end;
     end;
 
 
    { Radical search }
 
-   //Stroke-order rebuilding -- before complaining about missing sod
+   //Raine radical rebuilding -- before complaining about missing rad
     if Command='makerad' then
     begin
      //If no filename is set, assume defaults
@@ -948,16 +796,7 @@ begin
     end else
     begin
       try
-        ps:=TPackageSource.Create('wakan.rad',791564,978132,978123);
-        ms:=ps['search.bin'].Lock;
-        GetMem(rainesearch,ms.Size);
-        ms.Read(rainesearch^,ms.Size);
-        ps['search.bin'].Unlock;
-        ms:=ps['radicals.txt'].Lock;
-        raineradicals:=TStringList.Create;
-        raineradicals.LoadFromStream(ms);
-        ps['radicals.txt'].Unlock;
-        ps.Free;
+        LoadRaineRadicals('WAKAN.RAD');
       except
         Application.MessageBox(
           pchar(_l('#00358^eCannot load Japanese radicals file.'#13
@@ -1192,36 +1031,6 @@ begin
   suffixl.Sort;
 end;
 
-procedure TfMenu.WriteUserPackage(dir:string);
-var f:file of byte;
-    b:byte;
-begin
-  assignfile(f,dir+'\struct.ver');
-  rewrite(f);
-  b:=CurStructVer;
-  write(f,b);
-  closefile(f);
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+UserDataDir+'\wakan.usr');
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
-  PKGWriteForm.PKGWriteCmd('TitleName WaKan User Data File');
-  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 587135');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978312');
-  PKGWriteForm.PKGWriteCmd('Include '+dir);
-  PKGWriteForm.PKGWriteCmd('Finish');
-end;
-
 procedure TfMenu.SetUserDataChanged(Value: boolean);
 begin
   FUserDataChanged := Value;
@@ -1234,41 +1043,6 @@ begin
   UserDataChanged:=true;
 end;
 
-
-function TfMenu.GetCharValueInt(index,vt:integer):integer;
-var s:string;
-begin
-  s:=GetCharValue(index,vt);
-  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-  if (s='') or not TryStrToInt(s, Result) then
-    Result:=65535;
-end;
-
-function TfMenu.GetCharValueRad(index,vt:integer):integer;
-var s:string;
-begin
-  s:=GetCharValue(index,vt);
-  if pos('.',s)>0 then delete(s,pos('.',s),length(s)-pos('.',s)+1);
-  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-  if (s='') or not TryStrToInt(s, Result) then
-    Result:=65535;
-end;
-
-function TfMenu.GetCharValue(index,vt:integer):string;
-begin
-  TCharRead.SetOrder('');
-  if TCharRead.Locate('Kanji',index) then
-  while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=index) do
-  begin
-    if TCharRead.Int(TCharReadType)=vt then
-    begin
-      result:=TCharRead.Str(TCharReadReading);
-      exit;
-    end;
-    TCharRead.Next;
-  end;
-  result:='';
-end;
 
 procedure TfMenu.ClearDicts;
 var i:integer;
@@ -1450,370 +1224,80 @@ begin
   fKanjiSearch.lbCategoriesClick(Self); //react to changes
 end;
 
-procedure TfMenu.SaveUserData;
-var un,i:integer;
-  tempDir: string;
-begin
-  if not UserDataChanged then exit;
-
-  CopyFile(PChar(UserDataDir+'\wakan.usr'),PChar(UserDataDir+'\wakan.bak'),false);
-  ReloadKanjiCategories(); //in case they weren't loaded which shouldn't happen
-  Screen.Cursor:=crHourGlass;
-  tempDir := CreateRandomTempDirName();
-  ForceDirectories(tempDir);
-  for i:=0 to Length(KanjiCats)-1 do
-  begin
-    un:=KanjiCats[i].idx;
-    if un=KnownLearned then
-      SaveKnownList(un,tempDir+'\knownchar.bin')
-    else
-      SaveKnownList(un,tempDir+'\char'+inttostr(un)+'.bin');
-  end;
-  TUser.WriteTable(tempDir+'\User',false);
-  TUserIdx.WriteTable(tempDir+'\UserIdx',false);
-  TUserSheet.WriteTable(tempDir+'\UserSheet',false);
-  TUserCat.WriteTable(tempDir+'\UserCat',false);
-  TUserPrior.WriteTable(tempDir+'\UserPrior',false);
-  WriteUserPackage(tempDir);
-  DeleteDirectory(tempDir);
-  Backup(UserDataDir+'\wakan.usr');
-  Screen.Cursor:=crDefault;
-  UserDataChanged:=false;
-  LastSaveTime:=now;
-end;
-
 procedure TfMenu.LoadUserData;
-var tempDir: string;
-  t:textfile;
-  ps:TPackageSource;
-  ms:TMemoryStream;
-  ver:integer;
-  CatIdx:integer;
-  CatName: string;
-  CatType: char;
+var ps:TPackageSource;
 begin
   UserDataChanged:=false;
   aSaveUser.Enabled:=false;
   aCancelUser.Enabled:=false;
   Screen.Cursor:=crHourGlass;
-  if userdataloaded then
-  begin
-    TUser.Free;
-    TUserIdx.Free;
-    TUserSheet.Free;
-    TUserCat.Free;
-    userdataloaded:=false;
-  end;
-
-  if not FileExists(UserDataDir+'\wakan.usr') then
-  begin
-    tempDir := CreateRandomTempDir();
-    CreateKnownList(1,0);
-    SaveKnownList(1,tempDir+'\knownchar.bin');
-    assignfile(t,tempDir+'\User.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'iIndex');
-    writeln(t,'sEnglish');
-    writeln(t,'xPhonetic');
-    writeln(t,'sPhoneticSort');
-    writeln(t,'xKanji');
-    writeln(t,'sAdded');
-    writeln(t,'sPrinted');
-    writeln(t,'sLearned');
-    writeln(t,'sMastered');
-    writeln(t,'iNoPrinted');
-    writeln(t,'bScore');
-    writeln(t,'bMaxScore');
-    writeln(t,'$ORDERS');
-    writeln(t,'Index_Ind');
-    writeln(t,'Kanji_Ind');
-    writeln(t,'Phonetic_Ind');
-    writeln(t,'PhoneticSeek_Ind');
-    writeln(t,'English_Ind');
-    writeln(t,'Added_Ind');
-    writeln(t,'Printed_Ind');
-    writeln(t,'Score_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Index');
-    writeln(t,'Kanji+PhoneticSort');
-    writeln(t,'PhoneticSort+Phonetic');
-    writeln(t,'Phonetic');
-    writeln(t,'English');
-    writeln(t,'Added+PhoneticSort');
-    writeln(t,'Printed+PhoneticSort');
-    writeln(t,'Score+PhoneticSort');
-    writeln(t,'$CREATE');
-    closefile(t);
-    assignfile(t,tempDir+'\UserIdx.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'iWord');
-    writeln(t,'xKanji');
-    writeln(t,'lBegin');
-    writeln(t,'$ORDERS');
-    writeln(t,'Kanji_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Kanji');
-    writeln(t,'$CREATE');
-    closefile(t);
-    assignfile(t,tempDir+'\UserSheet.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'iWord');
-    writeln(t,'wNumber');
-    writeln(t,'wPos');
-    writeln(t,'$ORDERS');
-    writeln(t,'Word_Ind');
-    writeln(t,'Sheet_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Word+Number+Pos');
-    writeln(t,'Number+Pos');
-    writeln(t,'$CREATE');
-    closefile(t);
-    assignfile(t,tempDir+'\UserCat.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'iIndex');
-    writeln(t,'sName');
-    writeln(t,'bType');
-    writeln(t,'sCreated');
-    writeln(t,'$ORDERS');
-    writeln(t,'Index_Ind');
-    writeln(t,'Type_Ind');
-    writeln(t,'Name_Ind');
-    writeln(t,'Created_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Index');
-    writeln(t,'Type+Name');
-    writeln(t,'Name');
-    writeln(t,'Created+Name');
-    writeln(t,'$CREATE');
-    closefile(t);
-    assignfile(t,tempDir+'\UserPrior.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'xKanji');
-    writeln(t,'wCount');
-    writeln(t,'$ORDERS');
-    writeln(t,'Kanji_Ind');
-    writeln(t,'Count_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Kanji');
-    writeln(t,'Count');
-    writeln(t,'$CREATE');
-    closefile(t);
-    WriteUserPackage(tempDir);
-    DeleteDirectory(tempDir);
-  end;
-
-  ps:=TPackageSource.Create(UserDataDir+'\wakan.usr',621030,587135,978312);
-  ver:=0;
-  TUser:=TTextTable.Create(ps,'User',false,false);
-  TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
-  TUserSheet:=TTextTable.Create(ps,'UserSheet',false,false);
-  TUserCat:=TTextTable.Create(ps,'UserCat',false,false);
-  if ps['UserPrior.info']<>nil then
-    TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false) else
-  begin
-    tempDir := CreateRandomTempDir();
-    assignfile(t,tempDir+'\UserPrior.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'xKanji');
-    writeln(t,'wCount');
-    writeln(t,'$ORDERS');
-    writeln(t,'Kanji_Ind');
-    writeln(t,'Count_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Kanji');
-    writeln(t,'Count');
-    writeln(t,'$CREATE');
-    closefile(t);
-    TUserPrior:=TTextTable.Create(nil,tempDir+'\UserPrior',false,false);
-    DeleteDirectory(tempDir);
-  end;
-  TCharIndex:=TChar.Field('Index');
-  TCharChinese:=TChar.Field('Chinese');
-  TCharType:=TChar.Field('Type');
-  TCharUnicode:=TChar.Field('Unicode');
-  TCharStrokeCount:=TChar.Field('StrokeCount');
-  TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
-  TCharJpFrequency:=TChar.Field('JpFrequency');
-  TCharChFrequency:=TChar.Field('ChFrequency');
-  TCharJouyouGrade:=TChar.Field('JouyouGrade');
-  TCharReadKanji:=TCharRead.Field('Kanji');
-  TCharReadType:=TCharRead.Field('Type');
-  TCharReadReading:=TCharRead.Field('Reading');
-  TCharReadIndex:=TCharRead.Field('Index');
-  TCharReadReadDot:=TCharRead.Field('ReadDot');
-  TCharReadPosition:=TCharRead.Field('Position');
-  TRadicalsNumber:=TRadicals.Field('Number');
-  TRadicalsVariant:=TRadicals.Field('Variant');
-  TRadicalsUnicode:=TRadicals.Field('Unicode');
-  TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
-  TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
-  TRadicalsBushuCount:=TRadicals.Field('BushuCount');
-  TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
-  TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
-  TUserIndex:=TUser.Field('Index');
-  TUserEnglish:=TUser.Field('English');
-  TUserPhonetic:=TUser.Field('Phonetic');
-  TUserPhoneticSort:=TUser.Field('PhoneticSort');
-  TUserKanji:=TUser.Field('Kanji');
-  TUserAdded:=TUser.Field('Added');
-  TUserPrinted:=TUser.Field('Printed');
-  TUserLearned:=TUser.Field('Learned');
-  TUserMastered:=TUser.Field('Mastered');
-  TUserNoPrinted:=TUser.Field('NoPrinted');
-  TUserScore:=TUser.Field('Score');
-  TUserMaxScore:=TUser.Field('MaxScore');
-  TUserIdxWord:=TUserIdx.Field('Word');
-  TUserIdxKanji:=TUserIdx.Field('Kanji');
-  TUserIdxBegin:=TUserIdx.Field('Begin');
-  TUserIdxIndex:=TUserIdx.Field('Index');
-  TUserSheetWord:=TUserSheet.Field('Word');
-  TUserSheetNumber:=TUserSheet.Field('Number');
-  TUserSheetPos:=TUserSheet.Field('Pos');
-  TUserCatIndex:=TUserCat.Field('Index');
-  TUserCatName:=TUserCat.Field('Name');
-  TUserCatType:=TUserCat.Field('Type');
-  TUserCatCreated:=TUserCat.Field('Created');
-
-  KnownLearned:=-1; //not found
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    CatIdx:=strtoint(TUserCat.Str(TUserCatIndex));
-    CatName:=TUserCat.Str(TUserCatName);
-    CatType:=chr(TUserCat.Int(TUserCatType));
-
-    if CatType='Q' then
-    begin
-     //First Q category is selected as LEARNED, rest are bugs and are ignored here.
-     //But we still load them, that'd do us no harm and simplify processing later.
-      if KnownLearned<0 then
-        KnownLearned:=CatIdx;
-      ms:=ps['knownchar.bin'].Lock;
-      CreateKnownList(CatIdx,0);
-      LoadKnownList(CatIdx,ms);
-      ps['knownchar.bin'].Unlock;
-    end else
-    if CatType='K' then
-    begin
-      ms:=ps['char'+inttostr(CatIdx)+'.bin'].Lock;
-      CreateKnownList(CatIdx,0);
-      LoadKnownList(CatIdx,ms);
-      ps['char'+inttostr(CatIdx)+'.bin'].Unlock;
-    end;
-
-    TUserCat.Next;
-  end;
-
-  if FixDuplicateCategories() then begin //have to do this after we (perhaps) found the KnownLearned
-    UserDataChanged := true;
-    Application.MessageBox(
-      PChar(_l('^eYour user data contained duplicate kanji/word groups. This is a result '
-      +'of a bug in older versions of Wakan.'#13
-      +'The data has been repaired and duplicates have been merged. Please check '
-      +'your user groups, save user data, and you should never see this message again.')),
-      PChar(_l('User data repaired')),
-      MB_ICONINFORMATION or MB_OK
-    );
-  end;
-
- //Add "LEARNED" category, if missing
-  if KnownLearned<0 then
-  begin
-    KnownLearned := FindMaxCategoryIndex()+1; //can't use CatIdx since we want MAX index, not the LAST one
-    TUserCat.Insert([IntToStr(KnownLearned), 'k~'+_l('LEARNED'), inttostr(ord('Q')), FormatDateTime('yyyymmdd',now)]);
-    ms:=ps['knownchar.bin'].Lock;
-    CreateKnownList(KnownLearned,0);
-    KnownLearned:=KnownLearned;
-    LoadKnownList(KnownLearned,ms);
-    ps['knownchar.bin'].Unlock;
-    UserDataChanged := true;
-  end;
-
   try
-    ms:=ps['struct.ver'].Lock;
-    ms.Read(ver,1);
-    ps['struct.ver'].UnLock;
-  except end;
-  ps.Free;
-  if ver<>CurStructVer then
-  begin
-    if Application.MessageBox(
-      pchar(_l('#00338^eFile WAKAN.USR has old structure.'#13'It must be converted.'#13
-        +'You should make backup before converting'#13#13'Do you want to convert it now?')),
-      pchar(_l('#00339^eOld structure')),
-      MB_YESNO or MB_ICONWARNING)=idYes then
-    begin
-      if ver<=0 then
-      begin
-        tempDir := CreateRandomTempDir();
-        try
-          ExportUserData(tempDir+'\wakan_temp.jbk');
-          ImportUserData(tempDir+'\wakan_temp.jbk');
-          DeleteFile(tempDir+'\wakan_temp.jbk');
-        finally
-          DeleteDirectory(tempDir);
-        end;
-      end;
-      if ver<=1 then
-      begin
-        RebuildUserIndex;
-        ChangeUserData;
-        SaveUserData;
-      end;
-    end else begin
-      Application.Terminate;
-      exit;
+    if userdataloaded then begin
+      FreeCategories;
+      FreeUserPackage;
+      userdataloaded:=false;
     end;
+
+    if not FileExists(UserDataDir+'\wakan.usr') then
+      InitializeUserPackage(UserDataDir+'\wakan.usr'); //create empty WAKAN.USR
+
+    ps := LoadUserPackage(UserDataDir+'\wakan.usr');
+    LoadCategories(ps); //build category list, find KnownLearned etc
+
+    if FixDuplicateCategories() then begin //have to do this after we (perhaps) found the KnownLearned
+      UserDataChanged := true;
+      Application.MessageBox(
+        PChar(_l('^eYour user data contained duplicate kanji/word groups. This is a result '
+        +'of a bug in older versions of Wakan.'#13
+        +'The data has been repaired and duplicates have been merged. Please check '
+        +'your user groups, save user data, and you should never see this message again.')),
+        PChar(_l('User data repaired')),
+        MB_ICONINFORMATION or MB_OK
+      );
+    end;
+
+   //Add "LEARNED" category, if missing
+    if KnownLearned<0 then begin
+      AddKnownLearnedCategory(ps);
+      UserDataChanged := true;
+    end;
+
+    ps.Free;
+
+    if UserDataAutoRepair() then //health test
+      UserDataChanged:=true; //or we'd be reindexing each load
+
+    UserDataLoaded:=true;
+  finally
+    Screen.Cursor:=crDefault;
   end;
 
-  if not TUser.CheckIndex then begin
-    TUser.Reindex;
-    UserDataChanged:=true; //or we'd be reindexing each load
-  end;
-  if not TUserIdx.CheckIndex then begin
-    TUserIdx.Reindex;
-    UserDataChanged:=true;
-  end;
-  if not TUserSheet.CheckIndex then begin
-    TUserSheet.Reindex;
-    UserDataChanged:=true;
-  end;
-  if not TUserCat.CheckIndex then begin
-    TUserCat.Reindex;
-    UserDataChanged:=true;
-  end;
-
-  //Refresh everything
+ //Refresh everything
   RefreshCategory;
   RefreshKanjiCategory;
   fKanjiDetails.RefreshDetails;
+end;
 
-  Screen.Cursor:=crDefault;
-  UserDataLoaded:=true;
+procedure TfMenu.SaveUserData;
+var tempDir: string;
+begin
+  if not UserDataChanged then exit;
+  Screen.Cursor:=crHourGlass;
+  try
+    CopyFile(PChar(UserDataDir+'\wakan.usr'),PChar(UserDataDir+'\wakan.bak'),false);
+    ReloadKanjiCategories(); //in case they weren't loaded which shouldn't happen
+
+    tempDir := CreateRandomTempDir();
+    SaveCategories(tempDir);
+    SaveUserPackage(tempDir,UserDataDir+'\wakan.usr');
+    DeleteDirectory(tempDir);
+    Backup(UserDataDir+'\wakan.usr');
+
+    UserDataChanged:=false;
+    LastSaveTime:=now;
+  finally
+    Screen.Cursor:=crDefault;
+  end;
 end;
 
 procedure TfMenu.ExportUserData(filename:string);
@@ -1917,17 +1401,6 @@ begin
     AutoSavePeriod := DefaultAutoSavePeriod;
   if curt>1/24/60*AutoSavePeriod then
     SaveUserData; //updates LastSaveTime
-end;
-
-procedure TfMenu.RebuildUserIndex;
-begin
-  TUserIdx.First;
-  while not TUserIdx.EOF do
-  begin
-    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
-      TUserIdx.Delete;
-    TUserIdx.Next;
-  end;
 end;
 
 procedure TfMenu.BitBtn1Click(Sender: TObject);
@@ -3673,8 +3146,6 @@ end;
 initialization
   rdcnt:=0;
   popcreated:=false;
-  chardetl:=TStringList.Create;
-  CharPropTypes:=TStringList.Create;
 
 finalization
 

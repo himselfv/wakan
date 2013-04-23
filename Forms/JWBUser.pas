@@ -123,7 +123,7 @@ implementation
 uses JWBUnit, JWBMenu, JWBWords, JWBSettings, JWBStatistics,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
-  JWBCategories, JWBAnnotations, JWBUserData;
+  JWBCategories, JWBAnnotations, JWBUserData, JWBCharData;
 
 {$R *.DFM}
 
@@ -508,7 +508,7 @@ begin
       if TChar.Locate('Unicode',s2) then
       begin
         radf:=fSettings.ComboBox1.ItemIndex+12;
-        if TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf)) then
+        if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf)) then
         begin
           rad := TRadicals.Str(TRadicalsUnicode);
           SetLength(curkanjid, Length(curkanjid)+1);

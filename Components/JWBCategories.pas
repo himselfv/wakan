@@ -17,7 +17,8 @@ categories with the same name.
 }
 
 interface
-uses SysUtils, Classes, StdCtrls, Generics.Collections, JWBStrings;
+uses SysUtils, Classes, StdCtrls, Generics.Collections, JWBStrings,
+  MemSource;
 
 type
   TCatPrefix = char;
@@ -106,6 +107,7 @@ function IsAnySelectedKnownLearned(ctl: TCustomListBox): boolean;
 var
   KnownLearned:integer; //index of "LEARNED" category (type 'Q'), set on load
 
+procedure InitKnownLists;
 procedure CreateKnownList(listno:integer;charnumber:integer);
 procedure CopyKnownList(listfrom, listto: integer);
 procedure FreeKnownList(listno: integer);
@@ -127,6 +129,15 @@ procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; {
 {$ENDIF}
 
 
+{ Loading }
+{ Call these after you've loaded the user data }
+
+procedure LoadCategories(ps:TPackageSource);
+procedure SaveCategories(const tempDir:string);
+procedure FreeCategories;
+
+procedure AddKnownLearnedCategory(ps:TPackageSource);
+
 { Bugfixes }
 
 function FixDuplicateCategories(): boolean;
@@ -134,7 +145,7 @@ function FixDuplicateCategories(): boolean;
 
 implementation
 uses Controls, Forms, Windows, TextTable, JWBMenu, JWBUserData, JWBUserFilters,
-  JWBNewCategory, JWBUnit;
+  JWBNewCategory, JWBUnit, JWBCharData;
 
 const
   eCannotLocateCat: string = 'Cannot locate category.'; //Do not localize
@@ -564,7 +575,7 @@ begin
 
    //Rebuild indexes and refresh UI.
     if pref<>'k' then
-      fMenu.RebuildUserIndex;
+      RebuildUserIndex;
   finally
     FreeAndNil(CUserCat);
   end;
@@ -811,6 +822,12 @@ end;
 var
   KnownList:array[1..20000] of pointer;
   KnownListSize:integer;
+
+procedure InitKnownLists;
+var i: integer;
+begin
+  for i:=1 to 20000 do KnownList[i]:=nil;
+end;
 
 procedure CheckListIndex(listno: integer); {$IFDEF INLINE}inline;{$ENDIF}
 begin
@@ -1073,6 +1090,82 @@ end;
 {$ENDIF}
 
 
+{ Loading }
+
+{ Call after loading User Data to update category list }
+procedure LoadCategories(ps:TPackageSource);
+var CatIdx:integer;
+  CatName: string;
+  CatType: char;
+  ms: TMemoryStream;
+begin
+  FreeCategories(); //safety
+  KnownLearned:=-1; //not found
+  TUserCat.First;
+  while not TUserCat.EOF do
+  begin
+    CatIdx:=strtoint(TUserCat.Str(TUserCatIndex));
+    CatName:=TUserCat.Str(TUserCatName);
+    CatType:=chr(TUserCat.Int(TUserCatType));
+
+    if CatType='Q' then
+    begin
+     //First Q category is selected as LEARNED, rest are bugs and are ignored here.
+     //But we still load them, that'd do us no harm and simplify processing later.
+      if KnownLearned<0 then
+        KnownLearned:=CatIdx;
+      ms:=ps['knownchar.bin'].Lock;
+      CreateKnownList(CatIdx,0);
+      LoadKnownList(CatIdx,ms);
+      ps['knownchar.bin'].Unlock;
+    end else
+    if CatType='K' then
+    begin
+      ms:=ps['char'+inttostr(CatIdx)+'.bin'].Lock;
+      CreateKnownList(CatIdx,0);
+      LoadKnownList(CatIdx,ms);
+      ps['char'+inttostr(CatIdx)+'.bin'].Unlock;
+    end;
+
+    TUserCat.Next;
+  end;
+end;
+
+procedure SaveCategories(const tempDir:string);
+var i: integer;
+  un: integer;
+begin
+  for i:=0 to Length(KanjiCats)-1 do
+  begin
+    un:=KanjiCats[i].idx;
+    if un=KnownLearned then
+      SaveKnownList(un,tempDir+'\knownchar.bin')
+    else
+      SaveKnownList(un,tempDir+'\char'+inttostr(un)+'.bin');
+  end;
+end;
+
+procedure FreeCategories;
+begin
+  FreeKnownLists;
+end;
+
+{ Adds KnownLearned category to WAKAN.USR if it was missing.
+ Tries to use knownchar.bin, when it's present. }
+procedure AddKnownLearnedCategory(ps:TPackageSource);
+var ms: TMemoryStream;
+begin
+  Assert(KnownLearned<0); //why are you adding it otherwise
+  KnownLearned := FindMaxCategoryIndex()+1; //can't use CatIdx since we want MAX index, not the LAST one
+  TUserCat.Insert([IntToStr(KnownLearned), 'k~'+_l('LEARNED'), inttostr(ord('Q')), FormatDateTime('yyyymmdd',now)]);
+  ms:=ps['knownchar.bin'].Lock;
+  CreateKnownList(KnownLearned,0);
+  KnownLearned:=KnownLearned;
+  LoadKnownList(KnownLearned,ms);
+  ps['knownchar.bin'].Unlock;
+end;
+
+
 { Bugfixes }
 
 { Some older wakan.usr's have duplicate categories, perhaps due to a bug in Wakan.
@@ -1183,10 +1276,10 @@ begin
 end;
 
 
-var i: integer;
-initialization
-  for i:=1 to 20000 do KnownList[i]:=nil;
 
-finalization
+
+
+initialization
+  InitKnownLists;
 
 end.

@@ -16,7 +16,7 @@ procedure ClearKanjiCardCache;
 
 implementation
 uses JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
-  JWBSettings, JWBUserData, JWBKanaConv;
+  JWBSettings, JWBUserData, JWBKanaConv, JWBCharData;
 
 { Readings are stored as STRINGS which for some reading-types contain HEX.
 So there's nothing we can do to avoid HexToUnicode conversion.
@@ -120,7 +120,7 @@ begin
 
   {alternate}
   radf:=fSettings.ComboBox1.ItemIndex+12;
-  TRadicals.Locate('Number',fMenu.GetCharValueRad(TChar.Int(TCharIndex),radf));
+  TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf));
   if alt then
     DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
 
