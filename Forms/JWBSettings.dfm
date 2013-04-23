@@ -132,7 +132,7 @@ object fSettings: TfSettings
           Caption = '#00408^eLoad dictionaries on demand'
           TabOrder = 5
         end
-        object CheckBox53: TCheckBox
+        object cbMultilineGrids: TCheckBox
           Left = 3
           Top = 260
           Width = 353

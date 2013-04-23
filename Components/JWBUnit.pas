@@ -266,7 +266,8 @@ procedure Log(const msg: string);
 {$IFDEF DEBUG}
 var tmp: string;
 begin
-  tmp:=msg+#13#10;
+//  OutputDebugString(PChar(msg));
+  tmp:=IntToStr(GetTickCount)+': '+msg+#13#10;
   WriteFileWithBom('wakan.log', @tmp[1], Length(tmp)*SizeOf(char));
 end;
 {$ELSE}
@@ -520,7 +521,7 @@ begin
     SplitWord(s,sp1,sp2,sp4,sp3);
     AddWordGrid(grid,sp1,sp2,sp4,sp3);
   end;
-  if fSettings.CheckBox53.Checked then
+  if fSettings.cbMultilineGrids.Checked then
     for i:=1 to grid.RowCount-1 do
       grid.RowHeights[i]:=(GridFontSize+2)*DrawWordInfo(grid.Canvas,grid.CellRect(2,i),false,false,2,grid.Cells[2,i],true,true,GridFontSize,true);
   FinishWordGrid(grid);
@@ -1150,7 +1151,7 @@ begin
   s:=Grid.Cells[ACol,ARow];
   rect2:=rect;
   rect2.bottom:=1000;
-  if (fSettings.CheckBox53.Checked) and (ACol=2) and (ARow>0) then
+  if fSettings.cbMultilineGrids.Checked and (ACol=2) and (ARow>0) then
   begin
     gr:=(2+GridFontSize)*DrawWordInfo(Grid.Canvas, Rect2, gdSelected in State, ARow=0, ACol, s, true, true, GridFontSize,true);
     if grid.rowheights[arow]<>gr then begin grid.rowheights[arow]:=gr; exit; end;
@@ -1192,21 +1193,35 @@ end;
  Used by DrawUnicode-powered controls for their custom selection mechanics. }
 var
   STB_canvas:TCanvas;
-  STB_x1,STB_y1,STB_x2,STB_y2:integer;
+  STB:TRect; //ScreenTipBlock
 
 { Clears old one, and sets and paints new selection highlight. }
 procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 begin
   //No flicker please
-  if (STB_canvas=canvas) and (STB_x1=x1) and (STB_x2=x2) and (STB_y1=y1)
-    and (STB_y2=y2) then exit;
+  if (STB_canvas=canvas) and (STB.Left=x1) and (STB.Right=x2) and (STB.Top=y1)
+    and (STB.Bottom=y2) then exit;
   PaintSelectionHighlight;
-  STB_x1:=x1;
-  STB_y1:=y1;
-  STB_x2:=x2;
-  STB_y2:=y2;
+  STB := Rect(x1,y1,x2,y2);
   STB_canvas:=canvas;
   PaintSelectionHighlight;
+end;
+
+//Clips the rectangle to make it fit in in_rect
+function ClipRect(const rgn: TRect; in_rect: PRect): TRect;
+begin
+  Result := rgn;
+ //For top/left prefer left/top...
+  if Result.Left>in_rect.Right then Result.Left:=in_rect.Right;
+  if Result.Left<in_rect.Left then Result.Left:=in_rect.Left;
+  if Result.Top>in_rect.Bottom then Result.Top:=in_rect.Bottom;
+  if Result.Top<in_rect.Top then Result.Top:=in_rect.Top;
+ //For right/bottom prefer right/bottom. This makes the region negative if
+ //in_rect is negative (this is desired)
+  if Result.Right>in_rect.Right then Result.Right:=in_rect.Right;
+  if Result.Right<in_rect.Left then Result.Right:=in_rect.Left;
+  if Result.Bottom>in_rect.Bottom then Result.Bottom:=in_rect.Bottom;
+  if Result.Bottom<in_rect.Top then Result.Bottom:=in_rect.Top;
 end;
 
 { Re-applies currently active selection highlight where it has to be applied.
@@ -1216,22 +1231,24 @@ Only pass wildcard when the highlight has to be redrawn outside of repaint handl
 (such as when it changes). }
 procedure PaintSelectionHighlight(canv: TCanvas; in_rect: PRect);
 var oldR2:integer;
-  rgn: HRGN;
+  rgn: TRect;
 begin
   if STB_Canvas=nil then exit;
   if canv<>nil then if canv<>STB_canvas then exit;
+  if in_rect=nil then
+    Log('PaintSelectionHighlight: nil',[])
+  else
+    Log('PaintSelectionHighlight: %d,%d -- %d,%d',[in_rect.Left, in_rect.Top, in_rect.Right, in_rect.Bottom]);
   oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
-  if in_rect<>nil then begin
-    rgn:=CreateRectRgn(0,0,0,0);
-    GetClipRgn(STB_Canvas.Handle,rgn);
-    IntersectClipRect(STB_Canvas.Handle,in_rect.Left,in_rect.Top,in_rect.Right,in_rect.Bottom);
-  end else
-    rgn := 0;
-  STB_Canvas.Rectangle(STB_x1,STB_y1,STB_x2,STB_y2);
-  if rgn<>0 then begin
-    SelectClipRgn(STB_Canvas.Handle,rgn);
-    DeleteObject(rgn); //copied into canvas, can delete
-  end;
+
+  if in_rect<>nil then
+   { We don't use Windows HREGIONS because they're slower and were causing weird
+    focus drawing problems with TStringGrid before. Better just do it this way }
+    rgn := ClipRect(STB,in_rect)
+  else
+    rgn := STB;
+
+  STB_Canvas.Rectangle(rgn.Left,rgn.Top,rgn.Right,rgn.Bottom);
   SetROP2(STB_Canvas.Handle,oldR2);
 end;
 

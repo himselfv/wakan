@@ -243,6 +243,7 @@ object fWords: TfWords
         BorderStyle = bsNone
         ColCount = 4
         DefaultRowHeight = 16
+        DefaultDrawing = False
         FixedCols = 0
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
         PopupMenu = PopupMenu1

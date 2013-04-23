@@ -518,6 +518,7 @@ object fUser: TfUser
       BorderStyle = bsNone
       ColCount = 3
       DefaultRowHeight = 16
+      DefaultDrawing = False
       FixedCols = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
       PopupMenu = PopupMenu1

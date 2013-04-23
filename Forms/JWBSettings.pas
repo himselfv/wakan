@@ -208,7 +208,7 @@ type
     CheckBox46: TCheckBox;
     Edit25: TEdit;
     CheckBox49: TCheckBox;
-    CheckBox53: TCheckBox;
+    cbMultilineGrids: TCheckBox;
     cbAutosave: TCheckBox;
     edtAutoSavePeriod: TEdit;
     CheckBox55: TCheckBox;
@@ -610,7 +610,7 @@ begin
   CheckBox12.Checked:=reg.ReadBool('Dict','AutoPage',true);
   CheckBox49.Checked:=reg.ReadBool('Dict','DemandLoad',true);
   CheckBox50.Checked:=reg.ReadBool('Dict','AutoExamples',true);
-  CheckBox53.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
+  cbMultilineGrids.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
   CheckBox58.Checked:=reg.ReadBool('Dict','ShowFreq',false);
   CheckBox59.Checked:=reg.ReadBool('Dict','OrderFreq',true);
   CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
@@ -886,7 +886,7 @@ begin
   reg.WriteInteger('Dict','VocMode',vocmode);
   reg.WriteInteger('Dict','ExMode',exmode);
   reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
-  reg.WriteBool('Dict','MultiLineGrid',CheckBox53.Checked);
+  reg.WriteBool('Dict','MultiLineGrid',cbMultilineGrids.Checked);
   reg.WriteInteger('WordSheet','Columns',lbWordPrintFormat.ItemIndex);
   reg.WriteBool('WordSheet','InsideLines',CheckBox14.Checked);
   reg.WriteBool('WordSheet','OutsideLines',CheckBox15.Checked);

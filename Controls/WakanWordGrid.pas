@@ -6,7 +6,7 @@ uses
 
 type
   TWakanGrid = class(TStringGrid)
-  protected
+  protected //Resizing and Auto-sizing
     FLastWidth: integer;
     FLastHeight: integer;
     FLastControlWidth: integer;
@@ -29,6 +29,12 @@ type
     property OnHeightResize: TNotifyEvent read FOnHeightResize write FOnHeightResize;
     property OnControlWidthResize: TNotifyEvent read FOnControlWidthResize write FOnControlWidthResize;
     property OnControlHeightResize: TNotifyEvent read FOnControlHeightResize write FOnControlHeightResize;
+
+  protected
+    procedure Paint; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+
   end;
 
   TWakanWordGrid = class(TWakanGrid)
@@ -41,6 +47,65 @@ type
 procedure Register;
 
 implementation
+uses Graphics;
+
+constructor TWakanGrid.Create(AOwner: TComponent);
+begin
+  inherited;
+ //Default values
+  DefaultDrawing := false; //We do all drawing in custom
+end;
+
+{ Delphi, stop sucking. Why did you need to make these important functions
+ private?
+ Why the painting mechanics for TCustomGrid is so unextensible? }
+type
+  TCustomGridHack = class helper for TCustomGrid
+  public
+    procedure __GridRectToScreenRect(GridRect: TGridRect;
+      var ScreenRect: TRect; IncludeLine: Boolean); inline;
+    function __GetSelection: TGridRect; inline;
+  end;
+
+procedure TCustomGridHack.__GridRectToScreenRect(GridRect: TGridRect;
+  var ScreenRect: TRect; IncludeLine: Boolean);
+begin
+  Self.GridRectToScreenRect(GridRect, ScreenRect, IncludeLine);
+end;
+
+function TCustomGridHack.__GetSelection: TGridRect;
+begin
+  Result := Self.GetSelection;
+end;
+
+procedure TWakanGrid.Paint;
+var FocRect, AFocRect: TRect;
+begin
+  inherited Paint;
+
+ { Disabling DefaultDrawing also disables focus painting.
+  We can't do it cell-by-cell if RowSelect is enabled, so we do it here. }
+  if not (csDesigning in ComponentState) and
+    (goRowSelect in Options) and (not DefaultDrawing) and Focused then
+  begin
+    __GridRectToScreenRect(__GetSelection, FocRect, False);
+    Canvas.Brush.Style := bsSolid;
+    if (FInternalDrawingStyle = gdsThemed) and (Win32MajorVersion >= 6) then
+      InflateRect(FocRect, -1, -1);
+    AFocRect := FocRect;
+    if not UseRightToLeftAlignment then
+      Canvas.DrawFocusRect(AFocRect)
+    else
+    begin
+      AFocRect := FocRect;
+      AFocRect.Left := FocRect.Right;
+      AFocRect.Right := FocRect.Left;
+      DrawFocusRect(Canvas.Handle, AFocRect);
+    end;
+  end;
+
+end;
+
 
 function TWakanGrid.ScrollBarVisible(Code: Word): Boolean;
 var Min, Max: Integer;

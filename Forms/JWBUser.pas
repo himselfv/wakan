@@ -441,6 +441,11 @@ end;
 procedure TfUser.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
+ { Careful not to enter an endless loop: ShowWord changes something in Grid
+  which triggers SelectCell which triggers ShowWord }
+ { SelectCell also gets called endlessly while you hold mouse down
+  due to a bug in TStringGrid if RowSelect is true }
+  if curword=ARow then exit;
   curword:=ARow;
   if curword<=dicrl.Count then ShowWord;
 end;
@@ -614,6 +619,25 @@ end;
 procedure TfUser.StringGrid1DblClick(Sender: TObject);
 begin
   if SpeedButton17.Enabled then SpeedButton17Click(sender);
+end;
+
+function GridStateToStr(const state: TGridDrawState): string;
+begin
+  Result := '';
+  if gdSelected in state then
+    Result := Result + ', gdSelected';
+  if gdFocused in state then
+    Result := Result + ', gdFocused';
+  if gdFixed in state then
+    Result := Result + ', gdFixed';
+  if gdRowSelected in state then
+    Result := Result + ', gdRowSelected';
+  if gdHotTrack in state then
+    Result := Result + ', gdHotTrack';
+  if gdPressed in state then
+    Result := Result + ', gdPressed';
+  if Length(Result)>0 then //cut forward ", "
+    Result := copy(Result, 3);
 end;
 
 procedure TfUser.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
