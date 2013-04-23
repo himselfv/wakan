@@ -934,18 +934,18 @@ begin
   c.Font.Name:=fontface;
   c.Font.Height:=fs;
   w := fstrtouni(ch);
-//  TextOutW(c.Handle,x,y,PWideChar(w),length(w));
   r.Left := x;
   r.Top := y;
   r.Right := x;
   r.Bottom := y;
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
+//  TextOutW(c.Handle,x,y,PWideChar(w),length(w));
   if curpbox<>nil then
     AddDrawReg(curpbox,fontface,fs,r,ch);
 end;
 
-
+//NOTE: If you update fonts here, update DrawGridUpdateSelection() too.
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean; fontsize:integer; boldfont:boolean):integer;
 var x:integer;
     inmar,resinmar:boolean;
@@ -964,7 +964,7 @@ begin
   Canvas.Font.Name:=FontEnglish;
   Canvas.Font.Style:=[];
   Canvas.Font.Size:=9;
-  if (fSettings.CheckBox11.Checked) and (not fSettings.CheckBox9.Checked) and (not titrow) then
+  if (fSettings.cbStatusColors.Checked) and (not fSettings.cbNoGridColors.Checked) and (not titrow) then
   begin
     c:=' ';
     if (length(s)>1) and (s[1]=ALTCH_EXCL) then c:=s[2];
@@ -995,13 +995,13 @@ begin
       delete(s,1,1);
     end
     else Canvas.Font.Color:=Col('Dict_Text');
-    if fSettings.CheckBox9.Checked then Canvas.Font.Color:=clWindowText;
+    if fSettings.cbNoGridColors.Checked then Canvas.Font.Color:=clWindowText;
     DrawUnicode(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall);
   end else if not titrow then
   begin
     cursiv:=false;
     FontColor:=Col('Dict_Text');
-    if fSettings.CheckBox9.Checked then FontColor:=clWindowText;
+    if fSettings.cbNoGridColors.Checked then FontColor:=clWindowText;
     if (length(s)>1) and (s[1]=ALTCH_TILDE) then
     begin
       if s[2]='I'then cursiv:=true;
@@ -1042,8 +1042,10 @@ begin
         begin
           c:=curs[1];
           delete(curs,1,1);
-          if fSettings.CheckBox9.Checked then Canvas.Font.Color:=FontColor;
-          if not fSettings.CheckBox9.Checked then case c of
+          if fSettings.cbNoGridColors.Checked then
+            Canvas.Font.Color:=FontColor
+          else
+          case c of
             '1':Canvas.Font.Color:=Col('Mark_Special');
             's':Canvas.Font.Color:=Col('Mark_Usage');
             'g':Canvas.Font.Color:=Col('Mark_Grammatical');
@@ -1171,6 +1173,7 @@ begin
   Result := ConvertKana(ch,romasys,showroma,curlang);
 end;
 
+//NOTE: If you update fonts here, update DrawGridUpdateSelection() too.
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
 var cnv2:string;
 begin
@@ -1289,11 +1292,14 @@ begin
   SetSelectionHighlight(x1,y1,x2,y1+fs,p.Canvas);
 end;
 
+//NOTE: Fonts here must match DrawWordInfo() and DrawKana() choices for each cell.
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
 var gc,gc2:TGridCoord;
   rect:TRect;
   mox1,mox2:integer;
   text:FString;
+  FontName:string;
+  FontSize:integer;
 begin
   gc:=p.MouseCoord(DragStart.x,DragStart.y);
 
@@ -1304,9 +1310,29 @@ begin
     exit;
   end;
 
-  //Convert raw kana to presentation format.
-  //This is dirty! We have to remember the presentation format which was used when drawing.
-  Result:=ConvertKana(remexcl(TStringGrid(p).Cells[gc.x,gc.y]));
+ //Select font name and actual text which was presented (differs from internal presentation sometimes)
+ //This is dirty! We have to remember text/font/size which were used for drawing.
+  case gc.x of
+    0: begin //kana/romaji
+      Result:=ConvertKana(remexcl(TStringGrid(p).Cells[gc.x,gc.y]));
+      if showroma then begin
+        FontName:=FontPinYin; //DrawKana draws all romaji with this one
+        FontSize:=GridFontSize+1;
+      end else begin
+        FontName:=FontSmall;
+        FontSize:=GridFontSize;
+      end;
+    end;
+    1: begin //kanji
+      Result := remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
+      FontName:=FontSmall;
+      FontSize:=GridFontSize;
+    end
+  else //not selectable
+    Result:='';
+    FontName:=FontEnglish;
+    FontSize:=GridFontSize;
+  end;
 
   rect:=p.CellRect(gc.x,gc.y);
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
@@ -1342,10 +1368,9 @@ begin
     mox2:=CursorPos.x;
   end;
 
-  //calculate char count -- if half of the char is covered, it's covered
-  //TODO: We're using hardcoded FontSmall here -- BAD! We have to use "whatever font the cell was drawn with"
-  mox1 := GetCoveredCharNo(p.Canvas,FontSmall,GridFontsize,Result,mox1-rect.left-2,true);
-  mox2 := GetCoveredCharNo(p.Canvas,FontSmall,GridFontsize,Result,mox2-rect.left-2,true);
+ //calculate char count -- if half of the char is covered, it's covered
+  mox1 := GetCoveredCharNo(p.Canvas,FontName,FontSize,Result,mox1-rect.left-2,true);
+  mox2 := GetCoveredCharNo(p.Canvas,FontName,FontSize,Result,mox2-rect.left-2,true);
   if mox1<0 then mox1 := 0;
   if mox2<0 then mox2 := 0;
   if mox1>flength(Result) then mox1 := flength(Result);
@@ -1356,9 +1381,9 @@ begin
   if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
 
   SetSelectionHighlight(
-    rect.Left+2+CalcStrWidth(p.Canvas,FontSmall,GridFontsize,copy(text,1,1+mox1-1)), //TODO: Hardcoded FontSmall
+    rect.Left+2+CalcStrWidth(p.Canvas,FontName,FontSize,copy(text,1,1+mox1-1)), //TODO: Hardcoded FontSmall
     rect.Top,
-    rect.Left+2+CalcStrWidth(p.Canvas,FontSmall,GridFontsize,copy(text,1,1+mox2-1)),
+    rect.Left+2+CalcStrWidth(p.Canvas,FontName,FontSize,copy(text,1,1+mox2-1)),
     rect.Bottom,
     p.Canvas);
 end;

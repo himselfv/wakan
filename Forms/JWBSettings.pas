@@ -156,8 +156,8 @@ type
     Label42: TLabel;
     ComboBox2: TComboBox;
     CheckBox3: TCheckBox;
-    cbNoColors: TCheckBox;
-    CheckBox9: TCheckBox;
+    cbNoEditorColors: TCheckBox;
+    cbNoGridColors: TCheckBox;
     ColorDialog1: TColorDialog;
     CheckBox51: TCheckBox;
     CheckBox52: TCheckBox;
@@ -204,7 +204,7 @@ type
     Label47: TLabel;
     CheckBox26: TCheckBox;
     CheckBox10: TCheckBox;
-    CheckBox11: TCheckBox;
+    cbStatusColors: TCheckBox;
     CheckBox46: TCheckBox;
     Edit25: TEdit;
     CheckBox49: TCheckBox;
@@ -604,9 +604,9 @@ begin
   CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
   fUser.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
   CheckBox8.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
-  CheckBox9.Checked:=reg.ReadBool('Dict','NoUseColors',false);
+  cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
-  CheckBox11.Checked:=reg.ReadBool('Dict','StatusColors',true);
+  cbStatusColors.Checked:=reg.ReadBool('Dict','StatusColors',true);
   CheckBox12.Checked:=reg.ReadBool('Dict','AutoPage',true);
   CheckBox49.Checked:=reg.ReadBool('Dict','DemandLoad',true);
   CheckBox50.Checked:=reg.ReadBool('Dict','AutoExamples',true);
@@ -678,7 +678,7 @@ begin
   cbReadingKatakana.Checked:=reg.ReadBool('Translate','ReadingKatakana',true);
   cbNoSearchParticles.Checked:=reg.ReadBool('Translate','NoSearchParticles',false);
   cbNoTranslateHiragana.Checked:=reg.ReadBool('Translate','NoTranslateHiragana',false);
-  cbNoColors.Checked:=reg.ReadBool('Translate','NoUseColors',false);
+  cbNoEditorColors.Checked:=reg.ReadBool('Translate','NoUseColors',false);
   cbUserBold.Checked:=reg.ReadBool('Translate','UserBold',true);
   cbSpaceBetweenLines.Checked:=reg.ReadBool('Translate','LeaveSpace',false);
   cbReserveSpaceForReading.Checked:=reg.ReadBool('Translate','LeaveSpaceAlways',true);
@@ -863,9 +863,9 @@ begin
   reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
   reg.WriteBool('Dict','QuickSearch',fUser.SpeedButton13.Down);
   reg.WriteBool('Dict','ReplaceKanji',CheckBox8.Checked);
-  reg.WriteBool('Dict','NoUseColors',CheckBox9.Checked);
+  reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
-  reg.WriteBool('Dict','StatusColors',CheckBox11.Checked);
+  reg.WriteBool('Dict','StatusColors',cbStatusColors.Checked);
   reg.WriteBool('Dict','AutoPage',CheckBox12.Checked);
   reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
   reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
@@ -922,7 +922,7 @@ begin
   reg.WriteBool('Translate','ReadingKatakana',cbReadingKatakana.Checked);
   reg.WriteBool('Translate','NoSearchParticles',cbNoSearchParticles.Checked);
   reg.WriteBool('Translate','NoTranslateHiragana',cbNoTranslateHiragana.Checked);
-  reg.WriteBool('Translate','NoUseColors',cbNoColors.Checked);
+  reg.WriteBool('Translate','NoUseColors',cbNoEditorColors.Checked);
   reg.WriteBool('Translate','UserBold',cbUserBold.Checked);
   reg.WriteBool('Translate','LeaveSpace',cbSpaceBetweenLines.Checked);
   reg.WriteBool('Translate','LeaveSpaceAlways',cbReserveSpaceForReading.Checked);
@@ -1789,13 +1789,13 @@ begin
   ListBox3.ItemIndex:=0;
   ListBox3Click(Sender);
   CheckBox3.Visible:=ComboBox2.ItemIndex=0;
-  CheckBox9.Visible:=(ComboBox2.ItemIndex=1) or (ComboBox2.ItemIndex=2);
-  cbNoColors.Visible:=ComboBox2.ItemIndex=3;
+  cbNoGridColors.Visible:=(ComboBox2.ItemIndex=1) or (ComboBox2.ItemIndex=2);
+  cbNoEditorColors.Visible:=ComboBox2.ItemIndex=3;
   case Combobox2.ItemIndex of
     0: v:=not CheckBox3.Checked;
-    1: v:=not CheckBox9.Checked;
-    2: v:=not CheckBox9.Checked;
-    3: v:=not cbNoColors.Checked;
+    1: v:=not cbNoGridColors.Checked;
+    2: v:=not cbNoGridColors.Checked;
+    3: v:=not cbNoEditorColors.Checked;
   else
     v := false;
   end;

@@ -3053,7 +3053,7 @@ begin
   if printing then
     Canvas.Brush.Color:=clWhite
   else
-  if fSettings.cbNoColors.Checked then
+  if fSettings.cbNoEditorColors.Checked then
     Canvas.Brush.Color:=clWindow
   else
     Canvas.Brush.Color:=colBack;
@@ -3123,7 +3123,7 @@ begin
         only for dictionary-linked entries.
         Check for individual parts before drawing those, and for validChar before drawing a char }
 
-        if fSettings.cbNoColors.Checked then begin
+        if fSettings.cbNoEditorColors.Checked then begin
           color:=clWindow;
           fcolor:=clWindowText;
         end else begin
@@ -3131,7 +3131,7 @@ begin
           fcolor:=colText;
         end;
         if printing then color:=clWhite;
-        if not fSettings.cbNoColors.Checked then begin
+        if not fSettings.cbNoEditorColors.Checked then begin
           if printing and fSettings.cbNoPrintColors.Checked then
             color:=$00FFFFFF
           else
@@ -3174,7 +3174,7 @@ begin
           Canvas.Brush.Color:=clWhite;
           Canvas.Font.Color:=clBlack;
         end else
-        if fSettings.cbNoColors.Checked then begin
+        if fSettings.cbNoEditorColors.Checked then begin
           Canvas.Brush.Color:=clWindow;
           Canvas.Font.Color:=clWindowText;
         end else begin
@@ -3248,12 +3248,12 @@ begin
         if printing then
           Canvas.Font.Color:=clBlack
         else
-        if fSettings.cbNoColors.Checked then
+        if fSettings.cbNoEditorColors.Checked then
           Canvas.Font.Color:=clWindowText
         else
           Canvas.Font.Color:=colText;
 
-        if not fSettings.cbNoColors.Checked then
+        if not fSettings.cbNoEditorColors.Checked then
         begin
           if fSettings.CheckBox41.Checked and validChar and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
             canvas.Font.Color:=Col('Editor_ASCII');

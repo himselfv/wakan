@@ -100,8 +100,7 @@ type
     donotsetbegset:boolean;
     procedure Look_Run(req: TDicSearchRequest);
   public
-   {
-    Some may reference "ul". That was a redundant string list before.
+   { Some may reference "ul". That was a redundant string list before.
     As a rule,
       ul[i]==copy(dicl[i],6,25).
       dicsl[i]=copy(dicl[i],31,length(dicsl[i])-30). }

@@ -1084,7 +1084,7 @@ begin
       scur.Reset;
       scur.score := sort;
       scur.userindex := UserIndex;
-      if fSettings.CheckBox11.Checked then
+      if fSettings.cbStatusColors.Checked then
         scur.userscore := UserScore
       else
         scur.userscore := -1;

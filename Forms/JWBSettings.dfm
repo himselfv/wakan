@@ -94,7 +94,7 @@ object fSettings: TfSettings
           Caption = '#00404^eDifferentiate words with non-learned characters'
           TabOrder = 1
         end
-        object CheckBox11: TCheckBox
+        object cbStatusColors: TCheckBox
           Left = 3
           Top = 188
           Width = 433
@@ -1002,7 +1002,7 @@ object fSettings: TfSettings
         TabOrder = 5
         OnClick = CheckBox3Click
       end
-      object cbNoColors: TCheckBox
+      object cbNoEditorColors: TCheckBox
         Left = 8
         Top = 49
         Width = 457
@@ -1015,7 +1015,7 @@ object fSettings: TfSettings
         TabOrder = 6
         OnClick = cbNoColorsClick
       end
-      object CheckBox9: TCheckBox
+      object cbNoGridColors: TCheckBox
         Left = 3
         Top = 45
         Width = 433
@@ -2028,10 +2028,6 @@ object fSettings: TfSettings
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         425)
