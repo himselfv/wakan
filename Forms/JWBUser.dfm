@@ -17,7 +17,6 @@ object fUser: TfUser
   OnActivate = FormActivate
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnHide = FormHide
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -149,28 +148,6 @@ object fUser: TfUser
       ShowHint = True
       Visible = False
       OnClick = SpeedButton7Click
-      ExplicitTop = 195
-    end
-    object SpeedButton8: TSpeedButton
-      Left = 305
-      Top = 193
-      Width = 117
-      Height = 17
-      Hint = '#00654^eEditor && translator  (Ctrl-Alt-E)'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 5
-      Caption = '#00655^eEditor / translator'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      Visible = False
-      OnClick = SpeedButton8Click
       ExplicitTop = 195
     end
     object SpeedButton9: TSpeedButton

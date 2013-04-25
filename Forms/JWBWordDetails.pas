@@ -37,7 +37,6 @@ end;
 procedure TfWordDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fUser.SpeedButton5.Down:=false;
   fMenu.aDictDetails.Checked:=false;
 end;
 

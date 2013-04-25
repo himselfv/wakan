@@ -590,13 +590,16 @@ object fMenu: TfMenu
       ShortCut = 32856
       OnExecute = aExitExecute
     end
-    object aKanji: TAction
+    object aDeprecatedKanji: TAction
+      Category = 'Modes'
       Caption = '#00229^eCharacter &list'
-      OnExecute = aKanjiExecute
+      Enabled = False
+      Visible = False
     end
-    object aKanjiSearch: TAction
+    object aKanjiSearch: TCheckAction
       Caption = '#00230^e&Search'
       OnExecute = aKanjiSearchExecute
+      OnChecked = aKanjiSearchChecked
     end
     object aKanjiSort: TAction
       Caption = '#00231^eS&ort'
@@ -606,43 +609,53 @@ object fMenu: TfMenu
       ShortCut = 16452
       OnExecute = aKanjiDetailsExecute
     end
-    object aKanjiCompounds: TAction
+    object aKanjiCompounds: TCheckAction
       Caption = '#00233^e&Compounds'
       OnExecute = aKanjiCompoundsExecute
+      OnChecked = aKanjiCompoundsChecked
     end
     object aKanjiPrint: TAction
       Caption = '#00234^e&Print cards...'
       ShortCut = 16501
       OnExecute = aKanjiPrintExecute
     end
-    object aDict: TAction
+    object aDeprecatedDict: TAction
+      Category = 'Modes'
       Caption = '#00235^e&Word dictionary'
-      OnExecute = aDictExecute
+      Enabled = False
+      Visible = False
     end
-    object aDictDetails: TAction
+    object aDictDetails: TCheckAction
       Caption = '#00236^e&Selected word'
       OnExecute = aDictDetailsExecute
+      OnChecked = aDictDetailsChecked
     end
-    object aDictKanji: TAction
+    object aDictKanji: TCheckAction
       Caption = '#00237^e&Characters in word'
       OnExecute = aDictKanjiExecute
+      OnChecked = aDictKanjiChecked
     end
-    object aDictCategories: TAction
+    object aDictCategories: TCheckAction
       Caption = '#00238^e&Information'
       OnExecute = aDictCategoriesExecute
+      OnChecked = aDictCategoriesChecked
     end
-    object aDictAdd: TAction
-      Caption = '#00239^e&Add to vocabulary'
-      OnExecute = aDictAddExecute
+    object aDictExamples: TCheckAction
+      Caption = '#00315^eExamples'
+      OnExecute = aDictExamplesExecute
+      OnChecked = aDictExamplesChecked
     end
-    object aDictEditor: TAction
+    object aDeprecatedDictEditor: TAction
+      Category = 'Modes'
       Caption = '#00240^e&Editor && translator'
-      OnExecute = aDictEditorExecute
+      Enabled = False
+      Visible = False
     end
-    object aUser: TAction
-      Category = 'Vocabulary'
+    object aDeprecatedUser: TAction
+      Category = 'Modes'
       Caption = '#00241^eVocabulary &list'
-      OnExecute = aUserExecute
+      Enabled = False
+      Visible = False
     end
     object aUserAdd: TAction
       Category = 'Vocabulary'
@@ -650,19 +663,21 @@ object fMenu: TfMenu
       ShortCut = 16459
       OnExecute = aUserAddExecute
     end
-    object aUserSettings: TAction
+    object aUserSettings: TCheckAction
       Category = 'Vocabulary'
       Caption = '#00243^eList &settings'
       OnExecute = aUserSettingsExecute
+      OnChecked = aUserSettingsChecked
     end
     object aUserCategory: TAction
       Category = 'Vocabulary'
       Caption = '#00244^e&Category'
     end
-    object aUserDetails: TAction
+    object aUserDetails: TCheckAction
       Category = 'Vocabulary'
       Caption = '#00245^e&Word details'
       OnExecute = aUserDetailsExecute
+      OnChecked = aUserDetailsChecked
     end
     object aUserPrint: TAction
       Category = 'Vocabulary'
@@ -901,29 +916,29 @@ object fMenu: TfMenu
       Caption = '#00053^eMedium'
       OnExecute = aEditorMedFontExecute
     end
-    object aMode1: TAction
+    object aModeKanji: TAction
+      Category = 'Modes'
       Caption = '#00298^eCharacter list'
       ShortCut = 16496
-      OnExecute = aMode1Execute
+      OnExecute = aModeKanjiExecute
     end
-    object aMode2: TAction
+    object aModeUser: TAction
+      Category = 'Modes'
       Caption = '#00217^eDictionary'
       ShortCut = 16497
-      OnExecute = aMode2Execute
+      OnExecute = aModeUserExecute
     end
-    object aMode3: TAction
+    object aModeEditor: TAction
+      Category = 'Modes'
       Caption = '#00299^eText editor'
       ShortCut = 16498
-      OnExecute = aMode3Execute
+      OnExecute = aModeEditorExecute
     end
-    object aMode4: TAction
-      Caption = '#00300^eText translator'
-      OnExecute = aMode4Execute
-    end
-    object aMode5: TAction
+    object aModeWords: TAction
+      Category = 'Modes'
       Caption = '#00215^eVocabulary'
       ShortCut = 16499
-      OnExecute = aMode5Execute
+      OnExecute = aModeWordsExecute
     end
     object aDictInflect: TAction
       Caption = '#00301^eSearch inflected words'
@@ -960,10 +975,11 @@ object fMenu: TfMenu
       Caption = '#00308^eFilter panel'
       ShortCut = 16438
     end
-    object aUserExamples: TAction
+    object aUserExamples: TCheckAction
       Category = 'Vocabulary'
       Caption = 'Examples'
       OnExecute = aUserExamplesExecute
+      OnChecked = aUserExamplesChecked
     end
     object aEditorColors: TAction
       Caption = '#00309^eUse colors'
@@ -1006,6 +1022,10 @@ object fMenu: TfMenu
       Caption = '#00935^eExport'
       Hint = '#00834^eImport vocabulary'
       OnExecute = aVocabImportExecute
+    end
+    object aStrokeOrder: TAction
+      Caption = 'Stroke order'
+      OnExecute = aStrokeOrderExecute
     end
   end
   object MainMenu1: TMainMenu
@@ -1051,19 +1071,19 @@ object fMenu: TfMenu
     object miTools: TMenuItem
       Caption = '#00311^e&Tools'
       object miCharacterList: TMenuItem
-        Action = aMode1
+        Action = aModeKanji
         RadioItem = True
       end
       object miDictionary: TMenuItem
-        Action = aMode2
+        Action = aModeUser
         RadioItem = True
       end
       object miTextEditor: TMenuItem
-        Action = aMode3
+        Action = aModeEditor
         RadioItem = True
       end
       object miVocabulary: TMenuItem
-        Action = aMode5
+        Action = aModeWords
         RadioItem = True
       end
       object N23: TMenuItem
@@ -1091,7 +1111,7 @@ object fMenu: TfMenu
     object miCharacters: TMenuItem
       Caption = '#00312^e&Characters'
       object miCharacterList2: TMenuItem
-        Action = aMode1
+        Action = aModeKanji
       end
       object N5: TMenuItem
         Caption = '-'
@@ -1158,7 +1178,7 @@ object fMenu: TfMenu
     object eDictionarycSlovnk1: TMenuItem
       Caption = '#00313^eD&ictionary'
       object miDictionary2: TMenuItem
-        Action = aMode2
+        Action = aModeUser
       end
       object N4: TMenuItem
         Caption = '-'
@@ -1231,14 +1251,13 @@ object fMenu: TfMenu
         Action = aDictKanji
       end
       object miExamples: TMenuItem
-        Action = aDictAdd
-        Caption = '#00315^eExamples'
+        Action = aDictExamples
       end
     end
     object Editor2: TMenuItem
       Caption = '#00896^eEditor'
       object miTextEditor2: TMenuItem
-        Action = aMode3
+        Action = aModeEditor
       end
       object N22: TMenuItem
         Caption = '-'
@@ -1340,7 +1359,7 @@ object fMenu: TfMenu
     object miVocabulary1: TMenuItem
       Caption = '#00318^e&Vocabulary'
       object miVocabulary2: TMenuItem
-        Action = aMode5
+        Action = aModeWords
       end
       object N9: TMenuItem
         Caption = '-'

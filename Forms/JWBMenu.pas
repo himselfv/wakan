@@ -9,7 +9,7 @@ uses
   StdCtrls, ComCtrls, RXCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
   ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
 
 type
   TfMenu = class(TForm)
@@ -29,21 +29,21 @@ type
     aCancelUser: TAction;
     aStatistics: TAction;
     aExit: TAction;
-    aKanji: TAction;
-    aKanjiSearch: TAction;
+    aDeprecatedKanji: TAction;
+    aKanjiSearch: TCheckAction;
     aKanjiDetails: TAction;
-    aKanjiCompounds: TAction;
+    aKanjiCompounds: TCheckAction;
     aKanjiPrint: TAction;
-    aDict: TAction;
-    aDictDetails: TAction;
-    aDictKanji: TAction;
-    aDictCategories: TAction;
-    aDictAdd: TAction;
-    aDictEditor: TAction;
-    aUser: TAction;
+    aDeprecatedDict: TAction;
+    aDictDetails: TCheckAction;
+    aDictKanji: TCheckAction;
+    aDictCategories: TCheckAction;
+    aDictExamples: TCheckAction;
+    aDeprecatedDictEditor: TAction;
+    aDeprecatedUser: TAction;
     aUserAdd: TAction;
-    aUserSettings: TAction;
-    aUserDetails: TAction;
+    aUserSettings: TCheckAction;
+    aUserDetails: TCheckAction;
     aUserPrint: TAction;
     aUserGenerate: TAction;
     aSettings: TAction;
@@ -179,11 +179,10 @@ type
     miAbout: TMenuItem;
     Panel3: TPanel;
     Panel2: TPanel;
-    aMode1: TAction;
-    aMode2: TAction;
-    aMode3: TAction;
-    aMode4: TAction;
-    aMode5: TAction;
+    aModeKanji: TAction;
+    aModeUser: TAction;
+    aModeEditor: TAction;
+    aModeWords: TAction;
     miTools: TMenuItem;
     miCharacterList: TMenuItem;
     miDictionary: TMenuItem;
@@ -213,7 +212,7 @@ type
     miDictionaryGroup1: TMenuItem;
     miDictionaryGroup2: TMenuItem;
     miDictionaryGroup3: TMenuItem;
-    aUserExamples: TAction;
+    aUserExamples: TCheckAction;
     miExamples2: TMenuItem;
     miUseColors: TMenuItem;
     aDictMiddle: TAction;
@@ -243,14 +242,12 @@ type
     N00934eExport1: TMenuItem;
     aVocabImport1: TMenuItem;
     ClipboardPaintbox: TWakanPaintbox;
+    aStrokeOrder: TAction;
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
-    procedure tab1Click(Sender: TObject);
-    procedure tab2Click(Sender: TObject);
-    procedure tab5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
@@ -261,9 +258,6 @@ type
     procedure aCancelUserExecute(Sender: TObject);
     procedure aStatisticsExecute(Sender: TObject);
     procedure aExitExecute(Sender: TObject);
-    procedure aKanjiExecute(Sender: TObject);
-    procedure aDictExecute(Sender: TObject);
-    procedure aUserExecute(Sender: TObject);
     procedure aKanjiSearchExecute(Sender: TObject);
     procedure aKanjiDetailsExecute(Sender: TObject);
     procedure aKanjiCompoundsExecute(Sender: TObject);
@@ -271,8 +265,7 @@ type
     procedure aDictDetailsExecute(Sender: TObject);
     procedure aDictKanjiExecute(Sender: TObject);
     procedure aDictCategoriesExecute(Sender: TObject);
-    procedure aDictAddExecute(Sender: TObject);
-    procedure aDictEditorExecute(Sender: TObject);
+    procedure aDictExamplesExecute(Sender: TObject);
     procedure aUserAddExecute(Sender: TObject);
     procedure aUserSettingsExecute(Sender: TObject);
     procedure aUserDetailsExecute(Sender: TObject);
@@ -325,14 +318,12 @@ type
     procedure aEditorSmallFontExecute(Sender: TObject);
     procedure aEditorLargeFontExecute(Sender: TObject);
     procedure aEditorMedFontExecute(Sender: TObject);
-    procedure tab3Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
-    procedure aMode1Execute(Sender: TObject);
-    procedure aMode2Execute(Sender: TObject);
-    procedure aMode3Execute(Sender: TObject);
-    procedure aMode4Execute(Sender: TObject);
-    procedure aMode5Execute(Sender: TObject);
+    procedure aModeKanjiExecute(Sender: TObject);
+    procedure aModeUserExecute(Sender: TObject);
+    procedure aModeEditorExecute(Sender: TObject);
+    procedure aModeWordsExecute(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure ScreenTimerTimer(Sender: TObject);
     procedure aDictInflectExecute(Sender: TObject);
@@ -357,6 +348,16 @@ type
       Y: Integer);
     procedure ClipboardPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure aStrokeOrderExecute(Sender: TObject);
+    procedure aKanjiSearchChecked(Sender: TObject);
+    procedure aKanjiCompoundsChecked(Sender: TObject);
+    procedure aDictDetailsChecked(Sender: TObject);
+    procedure aDictKanjiChecked(Sender: TObject);
+    procedure aDictCategoriesChecked(Sender: TObject);
+    procedure aDictExamplesChecked(Sender: TObject);
+    procedure aUserSettingsChecked(Sender: TObject);
+    procedure aUserDetailsChecked(Sender: TObject);
+    procedure aUserExamplesChecked(Sender: TObject);
 
   private
     initdone:boolean;
@@ -365,13 +366,12 @@ type
     procedure InitializeWakan;
 
   private //Docking
-    procedure MainDock(form:TForm;panel:TPanel);
-    procedure MainUndock(form:TForm);
-  protected
    { Kanji details can work in docked or free-floating mode.
     If CharDetDocked is set, KanjiDetails is docked and will be shown/hidden by
     ChangeDisplay, like other panels. }
     FCharDetDocked: boolean;
+    procedure MainDock(form:TForm;panel:TPanel);
+    procedure MainUndock(form:TForm);
   public
    { In docked mode, we remember whether to show KanjiDetails on page 3 and on
     page 4 separately. }
@@ -380,6 +380,25 @@ type
     function DockExpress(form:TForm;dock:boolean):boolean;
     procedure SetCharDetDocked(Value: boolean; Loading: boolean);
     property CharDetDocked: boolean read FCharDetDocked;
+
+ {
+  Every secondary form has an action, usually TCheckAction descendant.
+  OnExecute: switch to containing page, flip Checked
+  OnChecked: update all controls, dock/undock+hide the form
+
+  Some secondary forms may have several dock positions (ex.: fExamples),
+  in which case they need several actions. Each action handles one dock position.
+  Stuff that must be updated according to form's absolute visibility, should
+  be updated in Form's OnShow/OnHide.
+  Dock position-related stuff is updated in Action's OnChecked.
+ }
+  protected
+    procedure ToggleForm(form:TForm;state:boolean);
+    procedure ToggleExamples();
+  public
+    displaymode:integer; //will be applied on ChangeDisplay
+    curdisplaymode:integer; //last applied mode
+    procedure ChangeDisplay;
 
   public
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
@@ -392,12 +411,9 @@ type
     procedure TranslateAll;
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
-    procedure ToggleForm(form:TForm;sb:TSpeedButton;action:TAction); overload;
-    procedure ToggleForm(form:TForm;sb:TSpeedButton;action:TAction;state:boolean); overload;
     procedure RescanDicts;
     procedure ClearDicts;
     procedure SwitchLanguage(lanchar:char);
-    procedure ChangeDisplay;
 
   protected
     DicLoadPrompt: TSMPromptForm;
@@ -408,6 +424,7 @@ type
     function NewDict(dicname: string): TJaletDic;
 
   protected
+    UserDataLoaded:boolean;
     FUserDataChanged:boolean;
     LastSaveTime:TDatetime; //for UserData
     procedure SetUserDataChanged(Value: boolean);
@@ -420,10 +437,6 @@ type
     procedure ExportUserData(filename:string);
     procedure ImportUserData(filename:string);
     property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
-
-  public
-    displaymode:integer; //will be applied on ChangeDisplay
-    curdisplaymode:integer; //last applied mode
 
   private //Text under mouse
    //Drag start control+point when drag-selecting, else nil.
@@ -453,6 +466,7 @@ type
     so if there's a need we can implement dynamic linking and fall back to polling -
     it's kept as a safety measure anyway since CB chains are prone to breaking }
     CbNextViewer: HWND;
+    UpdatingClipboard:boolean;
     procedure WmChangeCbChain(var Msg: TMessage); message WM_CHANGECBCHAIN;
     procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
     procedure ClipboardChanged;
@@ -502,35 +516,34 @@ var
 
  { Dictionaries }
   dicts: TDictionaryList; //Active dictionary list
-
-  clip:FString;
   oldhandle:THandle;
-  critsec:boolean;
   globheight:integer;
+  clip:FString;
 
  //Loaded from config file -- see comments in wakan.cfg
   partl: TStringList; //particles such as NO, NI, etc
   suffixl: TStringList; //suffixes
   defll: TDeflectionList; //verb deflections
-  romasortl: array of record //romaji sort order
-    roma: FString;
-    order: string; //although it's integer inside
-  end;
+
   readchl: TStringList; //list of readings to include to the reading chart
 
-  userdataloaded:boolean;
   curlang:char;
+
+ { IPC stuff }
   rdcnt,bitcnt:integer;
   curtext:array[1..100] of TTextInfo;
   curbit:array[1..100] of TBitInfo;
+
   ftext:array[0..255] of word;
   ftextbeg:array[0..255] of integer;
   ftextend:array[0..255] of integer;
   ftextpos:integer;
   popcreated:boolean;
-  vocmode,exmode:integer;
+
+ { Stroke order }
   sodir:TStringList;
   sobin:pointer;
+
   dictbeginset,dictmodeset:integer;
   kanji_othersearch:integer;
 
@@ -592,24 +605,10 @@ begin
   dicts.Free; //+
 end;
 
-procedure AddRomaSortRecord(const s: string);
-var parts: TStringArray;
-  i: integer;
-begin
-  parts := SplitStr(s, 2);
-  if Length(parts)<=0 then exit;
-  i := Length(romasortl);
-  SetLength(romasortl, i+1);
-  romasortl[i].roma := hextofstr(parts[0]);
-  if Length(parts)>=2 then
-    romasortl[i].order := parts[1]
-  else
-    romasortl[i].order := '';
-end;
+
 
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
-  vi:TStringList;
   ms:TMemoryStream;
   i:integer;
 begin
@@ -663,7 +662,6 @@ begin
     end;
 
     oldhandle:=0;
-    critsec:=false;
     TranslateAll;
     romasys:=1;
     showroma:=false;
@@ -981,7 +979,7 @@ begin
   defll.Clear;
   suffixl.Clear;
   partl.Clear;
-  SetLength(romasortl, 0);
+  ClearRomaSortRecords;
 
   sl := TStringList.Create();
   try
@@ -1167,7 +1165,7 @@ begin
   end;
   RescanDicts;
   fKanji.KanjiSearch_SpeedButton20Click(self);
-  if (not fUser.btnLookupClip.Enabled) and (fUser.btnLookupClip.Down) then fUser.btnLookupJtoE.Down:=true;
+  if (not fUser.btnLookupClip.Enabled) and fUser.btnLookupClip.Down then fUser.btnLookupJtoE.Down:=true;
   fExamples.ReloadExamples;
   fUser.Look();
   RefreshCategory;
@@ -1418,9 +1416,6 @@ begin
   FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
   begin
-    if fExamples.btnDisplayTranslation.Down then exmode:=0;
-    if fExamples.btnUseBigFont.Down then exmode:=1;
-    if fExamples.btnUseSmallFont.Down then exmode:=2;
     if SpeedButton1.Down then
     begin
       Screen.Cursor:=crHourGlass;
@@ -1462,8 +1457,8 @@ var i:integer;
   textptr:PWideChar;
   s:widestring;
 begin
-  if critsec then exit;
-  critsec:=true;
+  if UpdatingClipboard then exit;
+  UpdatingClipboard:=true;
   try
     Clipboard.Open;
     h:=false;
@@ -1488,10 +1483,10 @@ begin
     clip := newclip;
     ClipboardPaintbox.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
-    if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
-    if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
+    if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt;
+    if fUser.Visible and fUser.btnLookupClip.Down then fUser.Look();
   end;
-  critsec:=false;
+  UpdatingClipboard:=false;
 end;
 
 procedure TfMenu.Clipboard_Clear;
@@ -1613,21 +1608,6 @@ begin
   LoadUserData;
 end;
 
-procedure TfMenu.tab1Click(Sender: TObject);
-begin
-  ToggleForm(fKanji,nil,nil);
-end;
-
-procedure TfMenu.tab2Click(Sender: TObject);
-begin
-  ToggleForm(fUser,nil,nil);
-end;
-
-procedure TfMenu.tab5Click(Sender: TObject);
-begin
-  ToggleForm(fWords,nil,nil);
-end;
-
 procedure TfMenu.Timer1Timer(Sender: TObject);
 begin
   Clipboard_Update;
@@ -1687,6 +1667,11 @@ begin
   fWords.DoStatistic;
 end;
 
+procedure TfMenu.aStrokeOrderExecute(Sender: TObject);
+begin
+  fKanjiDetails.btnStrokeOrder.Down := aStrokeOrder.Checked;
+end;
+
 procedure TfMenu.aVocabExportExecute(Sender: TObject);
 begin
   fWords.ExportVocab;
@@ -1733,31 +1718,19 @@ begin
   end;
 end;
 
-procedure TfMenu.aKanjiExecute(Sender: TObject);
-begin
-  displaymode:=1;
-  ChangeDisplay;
-end;
-
-procedure TfMenu.aDictExecute(Sender: TObject);
-begin
-  displaymode:=2;
-  ChangeDisplay;
-end;
-
-procedure TfMenu.aUserExecute(Sender: TObject);
-begin
-  displaymode:=5;
-  ChangeDisplay;
-end;
-
 procedure TfMenu.aKanjiSearchExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aKanjiSearch.Checked;
-  if not fKanji.Visible then ToggleForm(fKanji,nil,nil);
+  if not fKanji.Visible then aModeKanji.Execute;
   if aKanjiSearch.Checked<>pre then exit;
-  ToggleForm(fKanjiSearch,fKanji.btnSearchSort,aKanjiSearch);
+  aKanjiSearch.Checked := not aKanjiSearch.Checked;
+end;
+
+procedure TfMenu.aKanjiSearchChecked(Sender: TObject);
+begin
+  ToggleForm(fKanjiSearch, aKanjiSearch.Checked);
+  fKanji.btnSearchSort.Down := aKanjiSearch.Checked;
 end;
 
 { Changes the mode of KanjiDetails window: docked or free-floating }
@@ -1820,9 +1793,15 @@ procedure TfMenu.aKanjiCompoundsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aKanjiCompounds.Checked;
-  if not fKanji.Visible then ToggleForm(fKanji,nil,nil);
+  if not fKanji.Visible then aModeKanji.Execute;
   if aKanjiCompounds.Checked<>pre then exit;
-  ToggleForm(fKanjiCompounds,fKanji.btnCompounds,aKanjiCompounds);
+  aKanjiCompounds.Checked := not aKanjiCompounds.Checked;
+end;
+
+procedure TfMenu.aKanjiCompoundsChecked(Sender: TObject);
+begin
+  ToggleForm(fKanjiCompounds, aKanjiCompounds.Checked);
+  fKanji.btnCompounds.Down := aKanjiCompounds.Checked;
 end;
 
 procedure TfMenu.aKanjiPrintExecute(Sender: TObject);
@@ -1834,42 +1813,61 @@ procedure TfMenu.aDictDetailsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictDetails.Checked;
-  if not fUser.Visible then ToggleForm(fUser,nil,nil);
+  if not fUser.Visible then aModeUser.Execute;
   if aDictDetails.Checked<>pre then exit;
-  ToggleForm(fWordDetails,fUser.SpeedButton5,aDictDetails);
+  aDictDetails.Checked := not aDictDetails.Checked;
+end;
+
+procedure TfMenu.aDictDetailsChecked(Sender: TObject);
+begin
+  ToggleForm(fWordDetails, aDictDetails.Checked);
+  fUser.SpeedButton5.Down := aDictDetails.Checked;
 end;
 
 procedure TfMenu.aDictKanjiExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictKanji.Checked;
-  if not fUser.Visible then ToggleForm(fUser,nil,nil);
+  if not fUser.Visible then aModeUser.Execute;
   if aDictKanji.Checked<>pre then exit;
-  ToggleForm(fWordKanji,fUser.SpeedButton6,aDictKanji);
+  aDictKanji.Checked := not aDictKanji.Checked;
+end;
+
+procedure TfMenu.aDictKanjiChecked(Sender: TObject);
+begin
+  ToggleForm(fWordKanji, aDictKanji.Checked);
+  fUser.SpeedButton6.Down := aDictKanji.Checked;
 end;
 
 procedure TfMenu.aDictCategoriesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictCategories.Checked;
-  if not fUser.Visible then ToggleForm(fUser,nil,nil);
+  if not fUser.Visible then aModeUser.Execute;
   if aDictCategories.Checked<>pre then exit;
-  ToggleForm(fWordCategory,fUser.SpeedButton7,aDictCategories);
+  aDictCategories.Checked := not aDictCategories.Checked;
 end;
 
-procedure TfMenu.aDictAddExecute(Sender: TObject);
+procedure TfMenu.aDictCategoriesChecked(Sender: TObject);
+begin
+  ToggleForm(fWordCategory, aDictCategories.Checked);
+  fUser.SpeedButton7.Down := aDictCategories.Checked;
+end;
+
+procedure TfMenu.aDictExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
-  pre:=aDictAdd.Checked;
-  if not fUser.Visible then ToggleForm(fUser,nil,nil);
-  if aDictAdd.Checked<>pre then exit;
-  ToggleForm(fExamples,fUser.SpeedButton9,aDictAdd);
+  pre:=aDictExamples.Checked;
+  if not fUser.Visible then aModeUser.Execute;
+  if aDictExamples.Checked<>pre then exit;
+  aDictExamples.Checked := not aDictExamples.Checked;
 end;
 
-procedure TfMenu.aDictEditorExecute(Sender: TObject);
+procedure TfMenu.aDictExamplesChecked(Sender: TObject);
 begin
-  displaymode:=3;
-  ChangeDisplay;
+//  ToggleForm(fExamples, aDictExamples.Checked); //with Examples we need complex treatment
+  ToggleExamples();
+  fUser.SpeedButton9.Down := aDictExamples.Checked;
 end;
 
 procedure TfMenu.aUserAddExecute(Sender: TObject);
@@ -1886,18 +1884,30 @@ procedure TfMenu.aUserSettingsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserSettings.Checked;
-  if not fWords.Visible then ToggleForm(fWords,nil,nil);
+  if not fWords.Visible then aModeWords.Execute;
   if aUserSettings.Checked<>pre then exit;
-  ToggleForm(fUserFilters,fWords.SpeedButton2,aUserSettings);
+  aUserSettings.Checked := not aUserSettings.Checked;
+end;
+
+procedure TfMenu.aUserSettingsChecked(Sender: TObject);
+begin
+  ToggleForm(fUserFilters, aUserSettings.Checked);
+  fWords.SpeedButton2.Down := aUserSettings.Checked;
 end;
 
 procedure TfMenu.aUserDetailsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserDetails.Checked;
-  if not fWords.Visible then ToggleForm(fWords,nil,nil);
+  if not fWords.Visible then aModeWords.Execute;
   if aUserDetails.Checked<>pre then exit;
-  ToggleForm(fUserDetails,fWords.SpeedButton4,aUserDetails);
+  aUserDetails.Checked := not aUserDetails.Checked;
+end;
+
+procedure TfMenu.aUserDetailsChecked(Sender: TObject);
+begin
+  ToggleForm(fUserDetails, aUserDetails.Checked);
+  fWords.SpeedButton4.Down := aUserDetails.Checked;
 end;
 
 procedure TfMenu.aUserPrintExecute(Sender: TObject);
@@ -1976,66 +1986,66 @@ end;
 
 procedure TfMenu.aEditorNewExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbFileNewClick(sender);
 end;
 
 procedure TfMenu.aEditorOpenExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbFileOpenClick(sender);
 end;
 
 procedure TfMenu.aEditorSaveExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbFileSaveClick(sender);
 end;
 
 procedure TfMenu.aEditorSaveAsExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.SaveAs;
 end;
 
 procedure TfMenu.aEditorCutExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbClipCutClick(sender);
 end;
 
 procedure TfMenu.aEditorExportExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.ExportAs;
 end;
 
 procedure TfMenu.aEditorCopyExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbClipCopyClick(sender);
 end;
 
 procedure TfMenu.aEditorCopyAsExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.CopyAs;
 end;
 
 procedure TfMenu.aEditorPasteExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbClipPasteClick(sender);
 end;
 
 procedure TfMenu.aEditorSelectAllExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.SelectAll;
 end;
 
@@ -2043,21 +2053,21 @@ end;
  All handling is done in the editor module. }
 procedure TfMenu.aEditorKanjiModeExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbKanjiMode.Down := true;
   fTranslate.sbKanjiModeClick(sender);
 end;
 
 procedure TfMenu.aEditorKanaModeExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbKanaMode.Down := true;
   fTranslate.sbKanaModeClick(sender);
 end;
 
 procedure TfMenu.aEditorASCIIModeExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbAsciiMode.Down := true;
   fTranslate.sbAsciiModeClick(sender);
 end;
@@ -2066,106 +2076,106 @@ end;
  All handling is done in the editor module. }
 procedure TfMenu.aEditorReadingExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbDisplayReading.Down:=not fTranslate.sbDisplayReading.Down;
   fTranslate.sbDisplayReadingClick(sender);
 end;
 
 procedure TfMenu.aEditorMeaningExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbDisplayMeaning.Down:=not fTranslate.sbDisplayMeaning.Down;
   fTranslate.sbDisplayMeaningClick(sender);
 end;
 
 procedure TfMenu.aEditorColorsExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbUseTlColors.Down:=not fTranslate.sbUseTlColors.Down;
   fTranslate.sbUseTlColorsClick(sender);
 end;
 
 procedure TfMenu.aEditorClearExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbClearTranslationClick(sender);
 end;
 
 procedure TfMenu.aEditorFillExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbAutoTranslateClick(sender);
 end;
 
 procedure TfMenu.aEditorSetExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbSetTranslationClick(sender);
 end;
 
 procedure TfMenu.aEditorPrintExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbPrintClick(sender);
 end;
 
 procedure TfMenu.aKanjiAllExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanjiSearch.sbClearFiltersClick(Sender);
 end;
 
 procedure TfMenu.aKanjiLearnedExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanjiSearch.SpeedButton1.Down:=not fKanjiSearch.SpeedButton1.Down;
   fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiCommonExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanjiSearch.btnOnlyCommon.Down:=not fKanjiSearch.btnOnlyCommon.Down;
   fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiClipboardExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanjiSearch.btnInClipboard.Down:=not fKanjiSearch.btnInClipboard.Down;
   fKanjiSearch.sbPinYinClick(Sender);
 end;
 
 procedure TfMenu.aKanjiPinYinExecute(Sender: TObject);
 begin
-  if (not fKanji.Visible) then aKanjiExecute(Sender);
+  if (not fKanji.Visible) then aModeKanji.Execute;
   if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
   fKanjiSearch.edtPinYin.SetFocus;
 end;
 
 procedure TfMenu.aKanjiYomiExecute(Sender: TObject);
 begin
-  if (not fKanji.Visible) then aKanjiExecute(Sender);
+  if (not fKanji.Visible) then aModeKanji.Execute;
   if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
   fKanjiSearch.edtYomi.SetFocus;
 end;
 
 procedure TfMenu.aKanjiRadicalExecute(Sender: TObject);
 begin
-  if (not fKanji.Visible) then aKanjiExecute(Sender);
+  if (not fKanji.Visible) then aModeKanji.Execute;
   if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
   fKanjiSearch.sbListRadicalsClick(Sender);
 end;
 
 procedure TfMenu.aKanjiAddClipboardExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanjiDetails.SpeedButton23Click(Sender);
 end;
 
 procedure TfMenu.aKanjiSetLearnedExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanjiDetails.btnAddToCategoryClick(Sender);
 end;
 
@@ -2177,7 +2187,7 @@ end;
 
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.btnLookupJtoE.Down:=true;
 //  fUser.Edit1.Text:='';
   fUser.btnLookupJtoEClick(Sender);
@@ -2185,7 +2195,7 @@ end;
 
 procedure TfMenu.aDictEnglishExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.btnLookupEtoJ.Down:=true;
 //  fUser.Edit1.Text:='';
   fUser.btnLookupJtoEClick(Sender);
@@ -2193,7 +2203,7 @@ end;
 
 procedure TfMenu.aDictClipboardExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.btnLookupClip.Down:=true;
 //  fUser.Edit1.Text:='';
   fUser.btnLookupJtoEClick(Sender);
@@ -2201,13 +2211,13 @@ end;
 
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.btnCopyToClipboardClick(Sender);
 end;
 
 procedure TfMenu.aDictExactExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton10.Down:=true;
   dictbeginset:=0;
   fUser.btnLookupJtoEClick(Sender);
@@ -2215,7 +2225,7 @@ end;
 
 procedure TfMenu.aDictBeginningExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton11.Down:=true;
   dictbeginset:=1;
   fUser.btnLookupJtoEClick(Sender);
@@ -2223,7 +2233,7 @@ end;
 
 procedure TfMenu.aDictEndExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton12.Down:=true;
   dictbeginset:=2;
   fUser.btnLookupJtoEClick(Sender);
@@ -2231,7 +2241,7 @@ end;
 
 procedure TfMenu.aKanjiWindowExecute(Sender: TObject);
 begin
-  if not fKanji.Visible then aKanjiExecute(Sender);
+  if not fKanji.Visible then aModeKanji.Execute;
   fKanji.DrawGrid1.SetFocus;
 end;
 
@@ -2243,31 +2253,26 @@ end;
 
 procedure TfMenu.aEditorWindowExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.ListBox1.SetFocus;
 end;
 
 procedure TfMenu.aEditorSmallFontExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.FontSize := FontSizeSmall;
 end;
 
 procedure TfMenu.aEditorMedFontExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.FontSize := FontSizeMedium;
 end;
 
 procedure TfMenu.aEditorLargeFontExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aDictEditorExecute(Sender);
+  if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.FontSize := FontSizeLarge;
-end;
-
-procedure TfMenu.tab3Click(Sender: TObject);
-begin
-  ToggleForm(fTranslate,nil,nil);
 end;
 
 procedure TfMenu.FormResize(Sender: TObject);
@@ -2346,75 +2351,48 @@ begin
   form.Align:=alNone;
 end;
 
-//Shows or hides a form. Some forms only shows.
-procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction;state:boolean);
+{
+Shows/hides a simple secondary form.
+Simple secondary form is one which can either be:
+  - undocked and hidden
+  - docked and visible at a fixed position
+Forms which can be docked at several positions require special treatment
+which is given in ChangeDisplay.
+}
+procedure TfMenu.ToggleForm(form:TForm;state:boolean);
 begin
-  if form=fKanji then
-  begin
-    displaymode:=1;
-    ChangeDisplay;
-    exit;
-  end;
-  if form=fUser then
-  begin
-    displaymode:=2;
-    ChangeDisplay;
-    exit;
-  end;
-  if form=fTranslate then
-  begin
-    displaymode:=3;
-    ChangeDisplay;
-    exit;
-  end;
-  if form=fWords then
-  begin
-    displaymode:=5;
-    ChangeDisplay;
-    exit;
-  end;
-
-  if (sb=nil) or (form=fKanjiDetails) then
-  begin
-   //Initially this had no checks for "if visible/not visible", I added those to minimize
-   //pointless resizes and OnShows.
-   //If something breaks, keep this in mind.
+  if state <> form.Visible then
     if state then begin
-      if not form.visible then form.show;
-    end else
-      if form.visible then form.hide;
-  end else
-    if state then begin
-      if not form.visible then
-      begin
-        DockExpress(form,true);
-        form.show;
-      end;
+      DockExpress(form,true);
+      form.show;
     end else begin
-      if form.visible then
-      begin
-        form.hide;
-        DockExpress(form,false);
-      end;
+      form.hide;
+      DockExpress(form,false);
     end;
-
-  if sb<>nil then sb.down:=form.visible;
-  if action<>nil then action.checked:=form.visible;
 end;
 
-procedure TfMenu.ToggleForm(form:TForm;sb:TSpeedButton;action:TAction);
+{ Updates the visibility/docking of Examples form. }
+procedure TfMenu.ToggleExamples();
 begin
- //Special case -- that's how it was
-  if sb=nil then
-    ToggleForm(form,sb,action,not form.Visible)
-  else
-  if action<>nil then
-    ToggleForm(form,sb,action,not action.Checked)
-  else
-    ToggleForm(form,sb,action,not form.Visible);
+ //Undock from wherever it was
+  if fExamples.visible then
+    DockExpress(fExamples,false);
+ //Dock to wherever it belongs to
+  if ((displaymode in [2, 4]) and aDictExamples.Checked) or
+     ((displaymode=5) and aUserExamples.Checked) then
+    DockExpress(fExamples,true);
 end;
 
-//React to page changes and update main form, showing or hiding various panels
+{
+React to page changes and update main form, showing or hiding various panels.
+Reacts to:
+  displaymode
+Updates:
+  aMode*.Checked
+  tab*.Down
+Adjusts visibility/dock state of various forms which depend on active page
+(i.e. Examples)
+}
 procedure TfMenu.ChangeDisplay;
 begin
  //Hide active module
@@ -2429,11 +2407,10 @@ begin
       end;
   end;
   Panel2.Height:=0;
-  aMode1.Checked:=false;
-  aMode2.Checked:=false;
-  aMode3.Checked:=false;
-  aMode4.Checked:=false;
-  aMode5.Checked:=false;
+  aModeKanji.Checked:=false;
+  aModeUser.Checked:=false;
+  aModeEditor.Checked:=false;
+  aModeWords.Checked:=false;
  //If KanjiDetails is in docked mode, show or hide it as needed.
  //When in free-floating mode it doesn't need our attention.
   if CharDetDocked then begin
@@ -2457,18 +2434,18 @@ begin
         tab1.Down:=true;
         if fKanji.DrawGrid1.CanFocus then
           fKanji.DrawGrid1.SetFocus;
-        aMode1.Checked:=true;
+        aModeKanji.Checked:=true;
       end;
     2:begin
         MainDock(fUser,Panel3);
         tab2.Down:=true;
-        aMode2.Checked:=true;
+        aModeUser.Checked:=true;
       end;
     3:begin
         MainDock(fTranslate,Panel3);
         tab3.Down:=true;
         fTranslate.sbDockDictionary.Down:=false;
-        aMode3.Checked:=true;
+        aModeEditor.Checked:=true;
       end;
     4:begin
         Panel2.height:=250;
@@ -2476,19 +2453,17 @@ begin
         MainDock(fTranslate,Panel3);
         tab3.Down:=true;
         fTranslate.sbDockDictionary.Down:=true;
-        aMode3.Checked:=true;
+        aModeEditor.Checked:=true;
       end;
     5:begin
         MainDock(fWords,Panel3);
         tab5.Down:=true;
-        aMode5.Checked:=true;
+        aModeEditor.Checked:=true;
       end;
   end;
   curdisplaymode:=displaymode;
   fKanjiDetails.FormShow(fMenu);
-  if (((curdisplaymode=2) or (displaymode=4)) and (aDictAdd.Checked)) or
-     ((curdisplaymode=5) and (aUserExamples.Checked)) then
-    DockExpress(fExamples,true);
+  ToggleExamples();
 end;
 
 procedure TfMenu.TabControl1Change(Sender: TObject);
@@ -2501,31 +2476,28 @@ begin
   ChangeDisplay;
 end;
 
-procedure TfMenu.aMode1Execute(Sender: TObject);
+procedure TfMenu.aModeKanjiExecute(Sender: TObject);
 begin
   displaymode:=1;
   ChangeDisplay;
 end;
 
-procedure TfMenu.aMode2Execute(Sender: TObject);
+procedure TfMenu.aModeUserExecute(Sender: TObject);
 begin
   displaymode:=2;
   ChangeDisplay;
 end;
 
-procedure TfMenu.aMode3Execute(Sender: TObject);
+procedure TfMenu.aModeEditorExecute(Sender: TObject);
 begin
-  if fTranslate.sbDockDictionary.Down then displaymode:=4 else displaymode:=3;
+  if fTranslate.sbDockDictionary.Down then
+    displaymode:=4
+  else
+    displaymode:=3;
   ChangeDisplay;
 end;
 
-procedure TfMenu.aMode4Execute(Sender: TObject);
-begin
-  displaymode:=4;
-  ChangeDisplay;
-end;
-
-procedure TfMenu.aMode5Execute(Sender: TObject);
+procedure TfMenu.aModeWordsExecute(Sender: TObject);
 begin
   displaymode:=5;
   ChangeDisplay;
@@ -3039,35 +3011,35 @@ end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton4.Down:=not fUser.SpeedButton4.Down;
   fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAutoExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton13.Down:=not fUser.SpeedButton13.Down;
   fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup1Execute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton14.Down:=true;
   fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup2Execute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton15.Down:=true;
   fUser.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup3Execute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton16.Down:=true;
   fUser.btnLookupJtoEClick(Sender);
 end;
@@ -3076,9 +3048,16 @@ procedure TfMenu.aUserExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserExamples.Checked;
-  if not fWords.Visible then ToggleForm(fWords,nil,nil);
+  if not fWords.Visible then aModeWords.Execute;
   if aUserExamples.Checked<>pre then exit;
-  ToggleForm(fExamples,fWords.SpeedButton1,aUserExamples);
+  aUserExamples.Checked := not aUserExamples.Checked;
+end;
+
+procedure TfMenu.aUserExamplesChecked(Sender: TObject);
+begin
+//  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
+  ToggleExamples();
+  fWords.SpeedButton1.Down := aUserExamples.Checked;
 end;
 
 function _l(const id:string):string;
@@ -3094,7 +3073,7 @@ end;
 
 procedure TfMenu.aDictMiddleExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aDictExecute(Sender);
+  if not fUser.Visible then aModeUser.Execute;
   fUser.SpeedButton18.Down:=true;
   dictbeginset:=3;
   fUser.btnLookupJtoEClick(Sender);

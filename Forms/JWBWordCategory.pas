@@ -36,7 +36,6 @@ uses JWBUser, JWBMenu;
 procedure TfWordCategory.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fUser.SpeedButton7.Down:=false;
   fMenu.aDictCategories.Checked:=false;
 end;
 

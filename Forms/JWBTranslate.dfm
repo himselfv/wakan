@@ -14,7 +14,6 @@ object fTranslate: TfTranslate
   OldCreateOrder = False
   Scaled = False
   OnActivate = FormActivate
-  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnDeactivate = FormDeactivate

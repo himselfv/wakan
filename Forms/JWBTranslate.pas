@@ -151,7 +151,6 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormActivate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -985,12 +984,6 @@ begin
     2: fUser.btnLookupClip.Down:=true;
   end;
 //  fUser.Look(false);
-end;
-
-procedure TfTranslate.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  fUser.SpeedButton8.Down:=false;
-  fMenu.aDictEditor.Checked:=false;
 end;
 
 procedure TfTranslate.FormResize(Sender: TObject);

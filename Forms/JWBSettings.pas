@@ -552,6 +552,7 @@ end;
 procedure TfSettings.LoadRegistrySettings(reg: TCustomIniFile);
 var s: string;
   tmp_int: integer;
+  exmode:integer;
 begin
   CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
   CheckBox65.Checked:=reg.ReadBool('Annotate','Rebuild',true);
@@ -627,9 +628,8 @@ begin
     fTranslate.DocTp:=Reg.ReadInteger('Editor','DocType',0);
   end;
   fExamples.btnRandomOrder.Down:=reg.ReadBool('Dict','RandomExamples',false);
-  vocmode:=reg.ReadInteger('Dict','VocMode',0);
-  exmode:=reg.ReadInteger('Dict','ExMode',0);
   Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
+  exmode:=reg.ReadInteger('Dict','ExMode',0);
   if exmode=0 then fExamples.btnDisplayTranslation.Down:=true;
   if exmode=1 then fExamples.btnUseBigFont.Down:=true;
   if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
@@ -788,13 +788,13 @@ procedure TfSettings.ApplyUISettings;
 begin
  //Hide everything, and most importantly, turn all actions off
  //This will do no harm if the form is already hidden.
-  fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch,false);
-  fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds,false);
-  fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji,false);
-  fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
-  fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd,false);
-  fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails,false);
-  fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings,false);
+  fMenu.aKanjiSearch.Checked := false;
+  fMenu.aKanjiCompounds.Checked := false;
+  fMenu.aDictKanji.Checked := false;
+  fMenu.aUserExamples.Checked := false;
+  fMenu.aDictExamples.Checked := false;
+  fMenu.aUserDetails.Checked := false;
+  fMenu.aUserSettings.Checked := false;
 
   fMenu.displaymode:=setlayout;
 
@@ -804,14 +804,14 @@ begin
     fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
 
   fMenu.ChangeDisplay;
-  if setwindows and 1=1 then fMenu.ToggleForm(fKanjiSearch,fKanji.btnSearchSort,fMenu.aKanjiSearch);
-  if setwindows and 2=2 then fMenu.ToggleForm(fKanjiCompounds,fKanji.btnCompounds,fMenu.aKanjiCompounds);
-  if setwindows and 4=4 then fMenu.ToggleForm(fWordKanji,fUser.SpeedButton6,fMenu.aDictKanji);
-  if setwindows and 8=8 then fMenu.ToggleForm(fExamples,fUser.SpeedButton9,fMenu.aDictAdd);
-  if setwindows and 16=16 then fMenu.ToggleForm(fExamples,fWords.SpeedButton1,fMenu.aUserExamples);
-  if setwindows and 32=32 then fMenu.ToggleForm(fUserDetails,fWords.SpeedButton4,fMenu.aUserDetails);
-  if setwindows and 64=64 then fMenu.ToggleForm(fUserFilters,fWords.SpeedButton2,fMenu.aUserSettings);
-  if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.ToggleForm(fKanjiDetails,fKanji.btnKanjiDetails,fMenu.aKanjiDetails);
+  if setwindows and 1=1 then fMenu.aKanjiSearch.Checked := true;
+  if setwindows and 2=2 then fMenu.aKanjiCompounds.Checked := true;
+  if setwindows and 4=4 then fMenu.aDictKanji.Checked := true;
+  if setwindows and 8=8 then fMenu.aDictExamples.Checked := true;
+  if setwindows and 16=16 then fMenu.aUserExamples.Checked := true;
+  if setwindows and 32=32 then fMenu.aUserDetails.Checked := true;
+  if setwindows and 64=64 then fMenu.aUserSettings.Checked := true;
+  if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.aKanjiDetails.Checked := true;
 
   fMenu.aPortraitMode.Checked := not setPortraitMode;
   fMenu.aPortraitMode.Execute;
@@ -824,6 +824,7 @@ end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
 var setwindows:integer;
+  exmode:integer;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
@@ -883,7 +884,10 @@ begin
   reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
   reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
-  reg.WriteInteger('Dict','VocMode',vocmode);
+  if fExamples.btnDisplayTranslation.Down then exmode:=0 else
+  if fExamples.btnUseBigFont.Down then exmode:=1 else
+  if fExamples.btnUseSmallFont.Down then exmode:=2 else
+    exmode := 0;
   reg.WriteInteger('Dict','ExMode',exmode);
   reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
   reg.WriteBool('Dict','MultiLineGrid',cbMultilineGrids.Checked);
@@ -995,7 +999,7 @@ begin
   if fMenu.aKanjiSearch.Checked then inc(setwindows,1);
   if fMenu.aKanjiCompounds.Checked then inc(setwindows,2);
   if fMenu.aDictKanji.Checked then inc(setwindows,4);
-  if fMenu.aDictAdd.Checked then inc(setwindows,8);
+  if fMenu.aDictExamples.Checked then inc(setwindows,8);
   if fMenu.aUserExamples.Checked then inc(setwindows,16);
   if fMenu.aUserDetails.Checked then inc(setwindows,32);
   if fMenu.aUserSettings.Checked then inc(setwindows,64);

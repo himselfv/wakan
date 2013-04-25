@@ -33,6 +33,7 @@ contains
   UrlLabel in 'Controls\UrlLabel.pas',
   WakanWordGrid in 'Controls\WakanWordGrid.pas',
   WakanPaintbox in 'Controls\WakanPaintbox.pas',
-  WinSpeedButton in 'Controls\WinSpeedButton.pas';
+  WinSpeedButton in 'Controls\WinSpeedButton.pas',
+  CheckAction in 'Controls\CheckAction.pas';
 
 end.

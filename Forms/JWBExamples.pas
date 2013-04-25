@@ -96,8 +96,6 @@ end;
 
 procedure TfExamples.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  fUser.SpeedButton9.Down:=false;
-  fMenu.aDictAdd.Checked:=false;
 end;
 
 procedure TfExamples.btnGoToExampleClick(Sender: TObject);

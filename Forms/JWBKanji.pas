@@ -105,7 +105,6 @@ var ki:TStringList;
 procedure TfKanji.FormShow(Sender: TObject);
 begin
   fKanjiSearch.ReloadOtherTypes;
-  fMenu.aKanji.Checked:=true;
 //  fKanjiSearch.SpeedButton20.Enabled:=ChinesePresent;
   chin:=false;
   if curlang='c'then chin:=true;
@@ -116,7 +115,6 @@ end;
 
 procedure TfKanji.FormHide(Sender: TObject);
 begin
-  fMenu.aKanji.Checked:=false;
 end;
 
 //split value string into string list. values are separated by comma or ;
@@ -840,7 +838,7 @@ end;
 
 procedure TfKanji.btnStrokeOrderClick(Sender: TObject);
 begin
-  fMenu.ToggleForm(fStrokeOrder,btnStrokeOrder,nil);
+  fMenu.aStrokeOrder.Execute;
 end;
 
 procedure TfKanji.SpeedButton25Click(Sender: TObject);
@@ -862,7 +860,7 @@ end;
 
 procedure TfKanji.btnSearchSortClick(Sender: TObject);
 begin
-  fMenu.ToggleForm(fKanjiSearch,btnSearchSort,fMenu.aKanjiSearch);
+  fMenu.aKanjiSearch.Execute;
 end;
 
 procedure TfKanji.btnKanjiDetailsClick(Sender: TObject);
@@ -873,7 +871,7 @@ end;
 procedure TfKanji.btnCompoundsClick(Sender: TObject);
 var CanSelect:boolean;
 begin
-  fMenu.ToggleForm(fKanjiCompounds,btnCompounds,fMenu.aKanjiCompounds);
+  fMenu.aKanjiCompounds.Execute;
   DrawGrid1SelectCell(Sender, DrawGrid1.Col, DrawGrid1.Row, CanSelect);
 end;
 

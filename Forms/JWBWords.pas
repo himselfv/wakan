@@ -51,7 +51,6 @@ type
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton4Click(Sender: TObject);
-    procedure FormHide(Sender: TObject);
     procedure StringGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure Button2Click(Sender: TObject);
@@ -170,13 +169,7 @@ end;
 
 procedure TfWords.FormShow(Sender: TObject);
 begin
-  fMenu.aUser.Checked:=true;
   ShowIt(false);
-end;
-
-procedure TfWords.FormHide(Sender: TObject);
-begin
-  fMenu.aUser.Checked:=false;
 end;
 
 procedure TfWords.SetDefaultColumnWidths;
@@ -397,7 +390,7 @@ begin
   begin
     inc(MaxUserIndex);
     wordidx:=MaxUserIndex;
-    phonsort:=GetPhoneticSortStr(phonetic);
+    phonsort:=GetPhoneticSortStr(phonetic,curlang);
     TUser.Insert([inttostr(MaxUserIndex),english,phonetic,phonsort,
       kanji,FormatDateTime('yyyymmdd',now),'00000000','00000000','00000000','0',inttostr(status),inttostr(status)]);
     s:=kanji;
@@ -509,7 +502,7 @@ begin
   begin
     inc(MaxUserIndex);
     wordidx:=MaxUserIndex;
-    phonsort:=GetPhoneticSortStr(phonetic);
+    phonsort:=GetPhoneticSortStr(phonetic,curlang);
     awf_insuser.Add(inttostr(MaxUserIndex));
     awf_insuser.Add(english);
     awf_insuser.Add(phonetic);
@@ -2311,17 +2304,17 @@ end;
 
 procedure TfWords.SpeedButton1Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fExamples,SpeedButton1,fMenu.aUserExamples);
+  fMenu.aUserExamples.Execute;
 end;
 
 procedure TfWords.SpeedButton2Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fUserFilters,SpeedButton2,fMenu.aUserSettings);
+  fMenu.aUserSettings.Execute;
 end;
 
 procedure TfWords.SpeedButton4Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fUserDetails,SpeedButton4,fMenu.aUserDetails);
+  fMenu.aUserDetails.Execute;
 end;
 
 procedure TfWords.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;

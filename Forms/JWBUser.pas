@@ -23,7 +23,6 @@ type
     SpeedButton5: TSpeedButton;
     SpeedButton6: TSpeedButton;
     SpeedButton7: TSpeedButton;
-    SpeedButton8: TSpeedButton;
     SpeedButton9: TSpeedButton;
     SpeedButton10: TSpeedButton;
     SpeedButton11: TSpeedButton;
@@ -58,12 +57,10 @@ type
     procedure FormShow(Sender: TObject);
     procedure btnLookupJtoEClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
     procedure SpeedButton5Click(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
-    procedure FormHide(Sender: TObject);
     procedure btnCopyToClipboardClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormActivate(Sender: TObject);
@@ -145,14 +142,8 @@ end;
 
 procedure TfUser.FormShow(Sender: TObject);
 begin
-  fMenu.aDict.Checked:=true;
   if Edit1.Enabled then Edit1.SetFocus;
   Look();
-end;
-
-procedure TfUser.FormHide(Sender: TObject);
-begin
-  fMenu.aDict.Checked:=false;
 end;
 
 procedure TfUser.SetDefaultColumnWidths;
@@ -585,29 +576,24 @@ begin
   Look();
 end;
 
-procedure TfUser.SpeedButton8Click(Sender: TObject);
-begin
-  fMenu.ToggleForm(fTranslate,SpeedButton8,fMenu.aDictEditor);
-end;
-
 procedure TfUser.SpeedButton5Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fWordDetails,SpeedButton5,fMenu.aDictDetails);
+  fMenu.aDictDetails.Execute;
 end;
 
 procedure TfUser.SpeedButton6Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fWordKanji,SpeedButton6,fMenu.aDictKanji);
+  fMenu.aDictKanji.Execute;
 end;
 
 procedure TfUser.SpeedButton7Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fWordCategory,SpeedButton7,fMenu.aDictCategories);
+  fMenu.aDictCategories.Execute;
 end;
 
 procedure TfUser.SpeedButton9Click(Sender: TObject);
 begin
-  fMenu.ToggleForm(fExamples,SpeedButton9,fMenu.aDictAdd);
+  fMenu.aDictExamples.Execute;
 end;
 
 procedure TfUser.btnCopyToClipboardClick(Sender: TObject);
@@ -702,7 +688,7 @@ end;
 
 procedure TfUser.SpeedButton19Click(Sender: TObject);
 begin
-  fMenu.aMode5Execute(sender);
+  fMenu.aModeWordsExecute(sender);
   if dicrl[curword-1].userIndex<>0 then
     fWords.SearchWord(dicrl[curword-1].userIndex);
 end;

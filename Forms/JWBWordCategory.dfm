@@ -28,7 +28,7 @@ object fWordCategory: TfWordCategory
   object Label30: TLabel
     Left = 6
     Top = 8
-    Width = 142
+    Width = 98
     Height = 13
     Caption = '#00693^eStatus:'
     Font.Charset = DEFAULT_CHARSET
@@ -42,7 +42,7 @@ object fWordCategory: TfWordCategory
   object Label32: TLabel
     Left = 4
     Top = 56
-    Width = 186
+    Width = 106
     Height = 13
     Caption = '#00694^eCreated:'
     Font.Charset = DEFAULT_CHARSET
@@ -56,7 +56,7 @@ object fWordCategory: TfWordCategory
   object Label34: TLabel
     Left = 4
     Top = 101
-    Width = 239
+    Width = 131
     Height = 13
     Caption = '#00695^eLearning list:'
     Font.Charset = DEFAULT_CHARSET
@@ -70,7 +70,7 @@ object fWordCategory: TfWordCategory
   object Label36: TLabel
     Left = 4
     Top = 71
-    Width = 177
+    Width = 108
     Height = 13
     Caption = '#00696^eLearned:'
     Font.Charset = DEFAULT_CHARSET
@@ -84,7 +84,7 @@ object fWordCategory: TfWordCategory
   object Label37: TLabel
     Left = 4
     Top = 86
-    Width = 224
+    Width = 114
     Height = 13
     Caption = '#00697^eMastered:'
     Font.Charset = DEFAULT_CHARSET
@@ -98,7 +98,7 @@ object fWordCategory: TfWordCategory
   object Label54: TLabel
     Left = 5
     Top = 40
-    Width = 194
+    Width = 122
     Height = 13
     Caption = '#00733^eCategories:'
     Font.Charset = DEFAULT_CHARSET

@@ -134,7 +134,6 @@ type
     loaded:boolean;
     pname:string;
     demandloaded:boolean;
-    vocmode:integer;
    {$IFDEF DIC_CURSOR_IN_TABLE}
     _intcur: TDicIndexReader;
    {$ENDIF}

@@ -73,12 +73,25 @@ function FindMaxCategoryIndex(): integer;
 
 function FindUserWord(kanji,phonetic: FString): integer;
 
-function GetPhoneticSortStr(phonetic: FString): string;
-
 procedure RebuildUserIndex;
 
+
+{
+User dictionary word sort order.
+Required only when adding words to the dictionary, in which case:
+1. Populate romasortl.
+2. Call GetPhoneticSortStr(phonetic,lang) on phonetic for a given word to get
+  TUserPhoneticSort value.
+}
+
+procedure ClearRomaSortRecords;
+procedure AddRomaSortRecord(const s: string);
+
+function GetPhoneticSortStr(const phonetic: FString; const lang: char): string;
+
+
 implementation
-uses SysUtils, JWBKanaConv, JWBUnit, JWBMenu, PKGWrite, JWBCategories, Classes;
+uses SysUtils, JWBUnit, JWBKanaConv, PKGWrite, JWBCategories, Classes;
 
 { Packs WAKAN.USR data from directory Dir to package Package.
  Do not use directly; there are functions to save and load user data packages. }
@@ -323,7 +336,6 @@ begin
   FreeAndNil(TUserCat);
 end;
 
-
 function UserDataAutoRepair(): boolean;
 begin
   Result:=false;
@@ -384,18 +396,60 @@ begin
   end;
 end;
 
+procedure RebuildUserIndex;
+begin
+  TUserIdx.First;
+  while not TUserIdx.EOF do
+  begin
+    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
+      TUserIdx.Delete;
+    TUserIdx.Next;
+  end;
+end;
+
+
+{
+Phonetic sort order
+}
+
+var
+  romasortl: array of record //romaji sort order
+    roma: FString;
+    order: string; //although it's integer inside
+  end;
+
+procedure ClearRomaSortRecords;
+begin
+  SetLength(romasortl, 0);
+end;
+
+procedure AddRomaSortRecord(const s: string);
+var parts: TStringArray;
+  i: integer;
+begin
+  parts := SplitStr(s, 2);
+  if Length(parts)<=0 then exit;
+  i := Length(romasortl);
+  SetLength(romasortl, i+1);
+  romasortl[i].roma := hextofstr(parts[0]);
+  if Length(parts)>=2 then
+    romasortl[i].order := parts[1]
+  else
+    romasortl[i].order := '';
+end;
+
 //Returns a string which will represent this phonetic in sorting in User dictionary.
 //Normal dictionaries don't use this.
-function GetPhoneticSortStr(phonetic: FString): string;
+function GetPhoneticSortStr(const phonetic: FString;const lang: char): string;
 var s: FString;
   s2: FChar;
   a1,a2: string;
   i, j: integer;
 begin
-  if curlang='j'then
+  if lang='j'then
   begin
    //Reconvert to some standard format and then use a preset table of
-   //katakana syllable weighs
+   //katakana syllable weights
     Result:='';
     s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,'j',[rfDeleteInvalidChars]);
     for i:=1 to flength(s) do
@@ -420,16 +474,7 @@ begin
     Result:=KanaToRomaji(phonetic,1,'c');
 end;
 
-procedure RebuildUserIndex;
-begin
-  TUserIdx.First;
-  while not TUserIdx.EOF do
-  begin
-    if not TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord)) then
-      TUserIdx.Delete;
-    TUserIdx.Next;
-  end;
-end;
+
 
 initialization
   UserDataVersion := 0;
@@ -437,5 +482,6 @@ initialization
   TUserIdx := nil;
   TUserSheet := nil;
   TUserCat := nil;
+  ClearRomaSortRecords();
 
 end.
