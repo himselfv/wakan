@@ -214,28 +214,26 @@ type
     function CopyAsWakanText: TMemoryStream;
 
   public
-    linl: TGraphicalLineList; //lines as they show on screen
     docfilename:string;
     doctp:byte;
 
-  protected //Mostly repainting
-    EditorBitmap: TBitmap;
-    function PaintBoxClientRect: TRect;
-    procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
-      screenw: integer; vert: boolean);
-    procedure RenderText(canvas:TCanvas;l,t,w,h:integer;ll:TGraphicalLineList;
-      view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
+  protected //Document
+    procedure AdjustDocument;
   public
-    mustrepaint:boolean;
-    procedure RepaintText(dolook:boolean=false);
-    procedure ShowText(dolook:boolean);
+    doc: TStringList; //document lines
+    doctr: TCharacterPropList; //character property list (translation, wordstate, etc)
+    docdic: TStringList;
+    function GetDoc(ax,ay:integer):FChar;
+    function GetDocChain(cx,cy:integer):FString;
+    function IsHalfWidth(x,y:integer):boolean;
+    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
+    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
+    function EndOfDocument: TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+    function EndOfLine(const LogicalLineIndex: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
 
   protected //Unsorted
-    procedure CalcBlockFromTo(backtrack:boolean);
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
-    procedure DrawCursor(blink:boolean);
-    procedure DrawBlock(Canvas: TCanvas; ClientRect: TRect);
     procedure CheckTransCont(x,y:integer);
     procedure SplitLine(x,y:integer);
     procedure JoinLine(y:integer);
@@ -261,45 +259,80 @@ type
   public
     property FontSize: integer read FFontSize write SetFontSize;
 
-  public //Document
-    doc: TStringList; //document lines
-    doctr: TCharacterPropList; //character property list (translation, wordstate, etc)
-    docdic: TStringList;
-    function GetDoc(ax,ay:integer):FChar;
-    function GetDocChain(cx,cy:integer):FString;
-    function IsHalfWidth(x,y:integer):boolean;
-    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
-    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
+  protected //Mostly repainting
+    EditorBitmap: TBitmap;
+    function PaintBoxClientRect: TRect;
+    procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
+      screenw: integer; vert: boolean);
+    procedure RenderText(canvas:TCanvas;l,t,w,h:integer;ll:TGraphicalLineList;
+      view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
+    procedure ReflowText(force:boolean=false);
+  public
+    mustrepaint:boolean;
+    procedure RepaintText(dolook:boolean=false);
+    procedure ShowText(dolook:boolean);
 
   protected
-    FView:integer; //index of a first visible graphical line
-    oldcur: TCursorPos; //last cursor position, where it was drawn.
-    cur: TCursorPos; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
-    procedure SetCurPos(x,y:integer);
+    linl: TGraphicalLineList; //lines as they show on screen
+    FView: integer;
+    FRCur: TSourcePos;
+    cursorend: boolean; { Cursor is visually "at the end of the previous line",
+      although its actual position is at the start of the next graphical line.
+      This is expected in some situations during the editing. }
+    lastmm: TCursorPos; //Last character which felt mouse-click over itself.
+    dragstart: TSourcePos; {
+      When selecting, the position where we started dragging mouse (before this char).
+      Selection block is generated from this on mouse-release. }
+    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
+    lastycnt:integer;
+    printl:integer; //number of lines which fit on the screen last time
+    FCachedCursorPos:TCursorPos;
+    FCursorPosInvalid: boolean;
+    function GetCur: TCursorPos;
+    procedure SetCur(Value: TCursorPos);
+    procedure SetRCur(const Value: TSourcePos);
+    procedure InvalidateLines;
+    procedure InvalidateCursorPos;
+    function GetCursorScreenPos: TCursorPos;
     procedure HandleWheel(down:boolean);
     procedure SetView(Value: integer);
     function GetViewPos: TSourcePos;
     function GetScreenLineCount: integer;
-    procedure UpdateScrollbar;
+    procedure UpdateScrollbar; //to reflect lines.Count/View
   public
-    rcur: TSourcePos; //cursor position in logical coordinates (cursor is before this char)
-    cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
-    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
-    lastycnt:integer;
-    printl:integer; //number of lines which fit on the screen last time
-    //Actual cursor position --- differs from (curx,cury) if we're at the end of the text
-    function CursorScreenX:integer;
-    function CursorScreenY:integer;
-    procedure SelectAll;
-    procedure ShowHint;
-    procedure HideHint;
-    property View: integer read FView write SetView;
+    procedure CursorJumpToLine(const newy: integer);
+    property RCur: TSourcePos read FRCur write SetRCur; //cursor position in logical coordinates (cursor is before this char)
+    property Cur: TCursorPos read GetCur write SetCur; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
+    property CursorScreenPos: TCursorPos read GetCursorScreenPos; //visible cursor position -- differs sometimes -- see comments
+    property View: integer read FView write SetView; //index of a first visible graphical line
     property ViewPos: TSourcePos read GetViewPos; //logical coordinates of a start of a first visible graphical line
     property ScreenLineCount: integer read GetScreenLineCount; //number of fully visible graphical lines which fit on the screen
 
+  protected //DrawCursor-related stuff. No one else use this
+    oldcur: TCursorPos; //last cursor position, where it was drawn. Used by DrawCursor
+    cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
+    cursorblinked:boolean; //cursor is currently in "hidden" blink state
+  public
+    procedure DrawCursor(blink:boolean);
+
+  protected //Selection block
+    oldblock: TTextSelection; //Selection block last time it was repainted (allows us to only repaint changed parts)
+  public
+    block: TTextSelection; //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
+    procedure CalcBlockFromTo(backtrack:boolean);
+    procedure DrawBlock(Canvas: TCanvas; ClientRect: TRect);
+    procedure SelectAll;
+
+  public //Hint
+    procedure ShowHint;
+    procedure HideHint;
+
   protected //Insert buffer
+    insconfirmed:boolean;
+    priorkanji:string;
     insertbuffer:string; //collects keypresses
     resolvebuffer:boolean; //set to true before doing ResolveInsert to replace kana with kanji suggestion, false to keep input intact
+    shiftpressed:boolean;
     procedure DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
     procedure ResolveInsert(final:boolean);
     procedure InsertCharacter(c:char);
@@ -492,6 +525,10 @@ const
   FontSizeMedium = 12;
   FontSizeLarge = 16;
 
+function SourcePos(x,y: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+function CursorPos(x,y: integer): TCursorPos; {$IFDEF INLINE}inline;{$ENDIF}
+function Selection(fromx, fromy, tox, toy: integer): TSelection; {$IFDEF INLINE}inline;{$ENDIF}
+
 implementation
 
 uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
@@ -501,19 +538,19 @@ uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
 
 {$R *.DFM}
 
-function SourcePos(x,y: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+function SourcePos(x,y: integer): TSourcePos;
 begin
   Result.x := x;
   Result.y := y;
 end;
 
-function CursorPos(x,y: integer): TCursorPos; {$IFDEF INLINE}inline;{$ENDIF}
+function CursorPos(x,y: integer): TCursorPos;
 begin
   Result.x := x;
   Result.y := y;
 end;
 
-function Selection(fromx, fromy, tox, toy: integer): TSelection; {$IFDEF INLINE}inline;{$ENDIF}
+function Selection(fromx, fromy, tox, toy: integer): TSelection;
 begin
   Result.fromy := fromy;
   Result.fromx := fromx;
@@ -521,24 +558,17 @@ begin
   Result.toy := tox;
 end;
 
-var
- //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
-  block: TTextSelection;
- //Selection block last time it was repainted (allows us to only repaint changed parts)
-  oldblock: TTextSelection;
 
- //When selecting, the position where we started dragging mouse.
- //Selection block is generated from this on mouse-release.
-  dragstart: TSourcePos; //cursor was before this char when drag started
+{ Document }
 
- //Last character which the mouse was over
-  lastmm:TCursorPos;
-
-  insconfirmed:boolean;
-  shiftpressed:boolean;
-  cursorend:boolean;
-  priorkanji:string;
-  cursorblinked:boolean; //cursor is currently in "hidden" blink state
+//Makes sure there's at least one line in document, as required
+procedure TfTranslate.AdjustDocument;
+begin
+  if doc.Count=0 then begin
+    doc.Add('');
+    doctr.AddNewLine();
+  end;
+end;
 
 //ax is 0-based
 function TfTranslate.GetDoc(ax,ay:integer):FChar;
@@ -563,6 +593,21 @@ end;
 function TfTranslate.IsHalfWidth(x,y:integer):boolean;
 begin
   result:=IsHalfWidthChar(GetDoc(x,y));
+end;
+
+//Returns position just after the last character in the document
+function TfTranslate.EndOfDocument: TSourcePos;
+begin
+  AdjustDocument();
+  Result.y := doc.Count-1;
+  Result.x := flength(doc[Result.y]);
+end;
+
+function TfTranslate.EndOfLine(const LogicalLineIndex: integer): TSourcePos;
+begin
+ //Document must already be adjusted as they're using logical lines
+  Result.y := LogicalLineIndex;
+  Result.x := flength(doc[LogicalLineIndex]);
 end;
 
 
@@ -927,16 +972,24 @@ begin
   FullTextTranslated:=false;
 
   FView:=0;
-  cur := CursorPos(-1, -1);
-  oldcur := cur;
   rcur := SourcePos(-1, -1);
+  oldcur := CursorPos(-1, -1);
   ins := SourcePos(-1, -1);
   inslen:=0;
   cursorposcache:=-1;
+  cursorend:=false;
   lastxsiz:=16;
   lastycnt:=2;
   printl:=1;
   mustrepaint:=true;
+
+  priorkanji:='';
+  cursorblinked:=false;
+  shiftpressed:=false;
+  dragstart := SourcePos(-1, -1);
+  oldblock := Selection(-1, -1, -1, -1);
+  insconfirmed:=false;
+  lastmm := CursorPos(-1, -1);
 
   FFontSize := FontSizeMedium;
 
@@ -1060,8 +1113,7 @@ begin
   try
 
     FView:=0;
-    cur.x:=0;
-    cur.y:=0;
+    rcur:=SourcePos(0,0);
     mustrepaint:=true;
     FileChanged:=false;
     FullTextTranslated:=false;
@@ -2163,66 +2215,46 @@ end;
 
 procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-
-  //Moves the cursor to another line while keeping it at the same column
-  procedure recalcy(oldy,newy:integer);
-  begin
-    cur.y:=newy;
-    if (cur.y<0) or (cur.y>=linl.Count) then
-      cur.x:=-1
-    else begin
-      cur.x:=WidthToPos(PosToWidth(cur.x,oldy),newy);
-      if cur.x<0 then cur.x := linl[cur.y].len; //over to the right
-    end;
-  end;
-
-var bx,by:integer;
-    ukn:boolean;
+var oldCur: TCursorPos;
+  ukn:boolean;
+  tmp: TCursorPos;
 begin
-  bx:=cur.x; by:=cur.y;
+  oldCur:=GetCur;
+  tmp:=oldCur;
   if (ins.x=-1) or (insconfirmed) then
   begin
     ukn:=false;
     if key=VK_RIGHT then
     begin
-      inc(cur.x);
-      if cur.x>linl[cur.y].len then
-        if cur.y+1<linl.Count then
-        begin
-          inc(cur.y);
-          cur.x:=0;
-        end else dec(cur.x);
-      cursorend:=false;
+      if rcur.x<flength(doc[rcur.y]) then
+        rcur := SourcePos(rcur.x+1, rcur.y)
+      else
+      if rcur.y+1<doc.Count then
+        rcur := SourcePos(0, rcur.y+1);
+      CursorEnd := false;
     end else
     if key=VK_LEFT then
     begin
-      dec(cur.x);
-      if cur.x<0 then
-        if cur.y>0 then
-        begin
-          dec(cur.y);
-          cur.x:=linl[cur.y].len;
-        end else inc(cur.x);
-      cursorend:=false;
+      if rcur.x>0 then
+        rcur := SourcePos(rcur.x-1, rcur.y)
+      else
+      if rcur.y>0 then
+        rcur := EndOfLine(rcur.y-1);
+      CursorEnd := false;
     end else
-    if key=VK_UP then recalcy(cur.y,cur.y-1) else
-    if key=VK_DOWN then recalcy(cur.y,cur.y+1) else
-    if key=VK_PRIOR then recalcy(cur.y,cur.y-printl) else
-    if key=VK_NEXT then recalcy(cur.y,cur.y+printl) else
-    if (key=VK_HOME) and (ssCtrl in Shift) then begin
-      cur.x:=0;
-      cur.y:=0;
-    end else
-    if (key=VK_END) and (ssCtrl in Shift) then begin
-      cur.y:=linl.Count-1;
-      cur.x:=linl[linl.Count-1].len;
-    end else
+    if key=VK_UP then CursorJumpToLine(tmp.y-1) else
+    if key=VK_DOWN then CursorJumpToLine(tmp.y+1) else
+    if key=VK_PRIOR then CursorJumpToLine(tmp.y-ScreenLineCount) else
+    if key=VK_NEXT then CursorJumpToLine(tmp.y+ScreenLineCount) else
+    if (key=VK_HOME) and (ssCtrl in Shift) then rcur := SourcePos(0, 0) else
+    if (key=VK_END) and (ssCtrl in Shift) then rcur := Self.EndOfDocument else
     if key=VK_HOME then begin
-      if (cursorend) and (cur.y>0) then dec(cur.y) else cur.x:=0;
-      cursorend:=false;
+      tmp.x:=0;
+      SetCur(tmp);
     end else
     if key=VK_END then begin
-      if not cursorend then cur.x:=100;
+      tmp.x:=MaxWord; //I don't think more chars will fit on a graphical line
+      SetCur(tmp);
     end else
     if key=VK_DELETE then begin
       ResolveInsert(true);
@@ -2237,8 +2269,12 @@ begin
     begin
       ClearInsBlock;
       if ssShift in Shift then shiftpressed:=true;
-      if (bx<>cur.x) or (by<>cur.y) then ResolveInsert(true);
-      if (bx<>cur.x) or (by<>cur.y) then ShowText(true);
+      tmp := GetCur;
+      if (oldCur.x<>tmp.x) or (oldCur.y<>tmp.y) then begin
+       //We have moved somewhere else, finalize insert
+        ResolveInsert(true);
+        ShowText(true);
+      end;
     end;
   end else
   with fUser do
@@ -2320,7 +2356,7 @@ begin
   end else
   if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
     EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
-  RenderText(EditorBitmap.Canvas,0,0,EditorBitmap.Width,EditorBitmap.Height,
+  RenderText(EditorBitmap.Canvas, 0,0,EditorBitmap.Width,EditorBitmap.Height,
     linl,View,printl,lastxsiz,lastycnt,false,false);
   Canvas.Draw(r.Left,r.Top,EditorBitmap);
   oldcur := CursorPos(-1, -1);
@@ -2670,7 +2706,7 @@ var p: TPoint;
 begin
   if not fTranslate.sbKanjiMode.Down then
     HideHint;
-  tmp := CursorPos(CursorScreenX(), CursorScreenY());
+  tmp := CursorScreenPos;
   tmp.x := PosToWidth(tmp.x, tmp.y);
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
   p.x:=p.x+tmp.x*fTranslate.lastxsiz;
@@ -2699,12 +2735,11 @@ var oldview:integer;
   s:string;
   wt:integer;
   pbRect: TRect;
+  tmp: TCursorPos;
 begin
   if not Visible then exit;
   oldview:=view;
-  pbRect:=PaintBoxClientRect;
-  RenderText(EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,pbRect.Right-pbRect.Left,
-    pbRect.Bottom-pbRect.Top,linl,-1,printl, lastxsiz,lastycnt,false,true);
+  ReflowText();
   if linl.Count=0 then
   begin
     rcur := SourcePos(-1, -1);
@@ -2712,46 +2747,62 @@ begin
     EditorScrollBar.Enabled:=false;
     exit;
   end;
-  if cur.y<0 then cur.y:=0;
-  if cur.y>=linl.Count then
+
+  if FRCur.y<0 then FRCur.y:=0;
+  if rcur.y>=doc.Count then
+    rcur:=EndOfDocument;
+  if FRCur.x<0 then FRCur.x:=0;
+
+ //Invalid cursorend => fix
+  tmp := GetCur;
+//TODO: Do we really need this? What will happen if we just keep the invalid flag?
+{  if cursorend and (tmp.x=0) and (tmp.y>0) and (linl[tmp.y-1].ys<>linl[tmp.y].ys) then
   begin
-    cur.y:=linl.Count-1;
-    cur.x:=2555;
-  end;
-  if cur.x<0 then cur.x:=0;
-  if (cursorend) and (cur.x=0) and (cur.y>0) and (linl[cur.y-1].ys<>linl[cur.y].ys) then
-  begin
-    dec(cur.y);
-    cur.x:=linl[cur.y].len;
+    dec(tmp.y);
+    tmp.x:=linl[tmp.y].len;
     cursorend:=false;
-  end;
-  if cur.x>linl[cur.y].len then
-    if (cur.y+1<linl.Count) and (linl[cur.y].ys=linl[cur.y+1].ys) then
+    SetCur(tmp);
+  end;}
+
+ //Over the end of the line => fix
+//TODO: Do we really need this? Can we get over the end of the line?
+{  if tmp.x>linl[tmp.y].len then begin
+    if (tmp.y+1<linl.Count) and (linl[tmp.y].ys=linl[tmp.y+1].ys) then
     begin
-      cur.x:=0;
-      inc(cur.y);
+      tmp.x:=0;
+      inc(tmp.y);
       cursorend:=true;
     end else
-      cur.x:=linl[cur.y].len;
+      tmp.x:=linl[tmp.y].len;
+    SetCur(tmp);
+  end;}
+
+ //Fix view
   if view>cur.y then if cur.y>0 then view:=cur.y else view:=0;
   if view+printl-1<cur.y then view:=cur.y-printl+1;
   if view+printl-1>=linl.Count then view:=linl.Count-printl;
   if view<0 then view:=0;
   if view>=linl.Count then view:=0;
-  rcur := SourcePos(linl[cur.y].xs+cur.x, linl[cur.y].ys);
+
+ //Reset dragstart
   if not shiftpressed then
   begin
     dragstart.x:=rcur.x;
     dragstart.y:=rcur.y;
   end;
+
   fUser.btnLookupJtoE.Down:=false;
   fUser.btnLookupEtoJ.Down:=false;
   fUser.btnLookupClip.Down:=false;
-  if (dolook) and ((fUser.Visible) or (insertBuffer<>'')) then fUser.Look() else
-  if dolook then begin
-    s:=GetDocWord(rcur.x,rcur.y,wt,false);
-    if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
-  end;
+
+  if dolook then
+    if (fUser.Visible) or (insertBuffer<>'') then
+      fUser.Look()
+    else begin
+      s:=GetDocWord(rcur.x,rcur.y,wt,false);
+      if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
+    end;
+
   if oldview<>view then mustrepaint:=true;
   if mustrepaint then
     EditorPaintbox.Repaint //not just Invalidate() because we want Paint be done now
@@ -2759,7 +2810,7 @@ begin
     DrawCursor(false);
     DrawBlock(EditorPaintBox.Canvas,pbRect);
   end;
-//  if mustrepaint then oldblock.fromx:=-1; //why did we need this here? It breaks setting new selection with mustrepaint==true
+
   mustrepaint:=false;
   shiftpressed:=false;
   UpdateScrollbar;
@@ -2798,6 +2849,12 @@ and only re-process the parts which change.
 But for now we RecalculateGraphicalLines() every full render,
 and start with current position, not with the start of the document.
 }
+
+procedure TfTranslate.InvalidateLines;
+begin
+  linl.Clear;
+  InvalidateCursorPos;
+end;
 
 {
 RecalculateGraphicalLines()
@@ -3000,11 +3057,7 @@ var
   end;
 
 begin
-  if doc.Count=0 then
-  begin
-    doc.Add('');
-    doctr.AddNewLine();
-  end;
+  AdjustDocument();
 
  { Cache render settings }
   colback:=Col('Editor_Back');
@@ -3416,6 +3469,19 @@ begin
   end;
 end;
 
+{ Makes sure graphical lines and related variables are up to date.
+ Use force=true to force full reflow. }
+procedure TfTranslate.ReflowText(force:boolean);
+var pbRect: TRect;
+begin
+  if force then
+    linl.Clear;
+  pbRect:=PaintBoxClientRect;
+  RenderText(EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,pbRect.Right-pbRect.Left,
+    pbRect.Bottom-pbRect.Top,linl,-1,printl,lastxsiz,lastycnt,false,true);
+ //NOTE: We must always have at least one logical and graphical line after reflow (maybe empty)
+end;
+
 
 procedure TfTranslate.ClearInsBlock;
 begin
@@ -3472,7 +3538,6 @@ procedure TfTranslate.DisplayInsert(const convins:FString;transins:TCharacterPro
 var i:integer;
   s: FString;
   lp: PCharacterLineProps;
-  pbRect: TRect;
 begin
   if ins.x=-1 then
   begin
@@ -3492,15 +3557,10 @@ begin
   end;
   doc[ins.y]:=fcopy(doc[ins.y],1,ins.x)+convins+fcopy(doc[ins.y],ins.x+1,flength(doc[ins.y])-ins.x);
   doctr[ins.y].InsertChars(ins.x,transins);
-  linl.Clear;
-  pbRect:=PaintBoxClientRect();
-  RenderText(EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,pbRect.Right-pbRect.Left,
-    pbRect.Bottom-pbRect.Top,linl,-1,printl,lastxsiz,lastycnt,false,true);
-  SetCurPos(ins.x+inslen, ins.y);
+  ReflowText({force=}true);
+  rcur := SourcePos(ins.x+inslen, ins.y);
   if not leaveinserted then
-  begin
     insconfirmed:=true;
-  end;
 end;
 
 procedure TfTranslate.ResolveInsert(final:boolean);
@@ -3633,8 +3693,7 @@ begin
   begin
 //    if blockfromx<>-1 then DeleteSelection();
     SplitLine(rcur.x,rcur.y);
-    cur.x:=0;
-    inc(cur.y);
+    cur := CursorPos(0,cur.y+1);
     RefreshLines;
     exit;
   end;
@@ -3642,16 +3701,13 @@ begin
   begin
     if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then DeleteSelection() else
     begin
-      if cur.x>0 then dec(cur.x) else
+      if cur.x>0 then
+        Cur := CursorPos(Cur.x-1,Cur.y)
+      else
         if rcur.x=0 then
-        begin
-          dec(cur.y);
-          cur.x:=2550;
-        end else
-        begin
-          dec(cur.y);
-          cur.x:=linl[cur.y].len;
-        end;
+          cur := CursorPos(2550,cur.y-1)
+        else
+          cur := CursorPos(linl[cur.y-1].len, cur.y-1);
       ShowText(true);
       DeleteCharacter(rcur.x,rcur.y);
     end;
@@ -3966,7 +4022,7 @@ begin
   if not ListBox1.Focused then blink:=false;
   if cursorposcache=-1 then CalcCache(oldcur.x,oldcur.y);
   if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-View); //invert=>erase
-  tmp := CursorPos(CursorScreenX(), CursorScreenY());
+  tmp := CursorScreenPos;
   if (cursorposcache=-1) or (oldcur.x<>tmp.x) or (oldcur.y<>tmp.y) then CalcCache(tmp.x, tmp.y);
   if OnScreen(tmp.x, tmp.y) and blink and cursorblinked then DrawIt(tmp.x,tmp.y-View); //draw new
   if blink then
@@ -4055,18 +4111,6 @@ begin
   ShowText(dolook);
 end;
 
-procedure TfTranslate.SetCurPos(x,y:integer);
-var i:integer;
-begin
-  for i:=0 to linl.Count-1 do
-    if (linl[i].ys=y) and (linl[i].xs<=x) and (linl[i].xs+linl[i].len>=x) then
-  begin
-    cur.x:=x-linl[i].xs;
-    cur.y:=i;
-    break;
-  end;
-end;
-
 procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream;
   AnnotMode: TTextAnnotMode);
 begin
@@ -4145,7 +4189,7 @@ begin
   l:=flength(doc[y]);
   JoinLine(y);
   RefreshLines;
-  SetCurPos(l,y);
+  rcur:=SourcePos(l,y);
   FileChanged:=true;
 end;
 
@@ -4184,7 +4228,7 @@ procedure TfTranslate.DeleteSelection;
 var i:integer;
 begin
   CalcBlockFromTo(false);
-  SetCurPos(block.fromx,block.fromy);
+  rcur:=SourcePos(block.fromy,block.fromy);
   if block.fromy=block.toy then
   begin
     doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
@@ -4330,15 +4374,8 @@ begin
   until false;
 end;
 
-function TfTranslate.CursorScreenX:integer;
-begin
-  if (cursorend) and (cur.x=0) and (cur.y>0) then result:=linl[cur.y-1].len else result:=cur.x;
-end;
 
-function TfTranslate.CursorScreenY:integer;
-begin
-  if (cursorend) and (cur.x=0) and (cur.y>0) then result:=cur.y-1 else result:=cur.y;
-end;
+{ Font }
 
 procedure TfTranslate.SetFontSize(Value: integer);
 begin
@@ -4389,6 +4426,104 @@ procedure TfTranslate.cbFontSizeKeyPress(Sender: TObject; var Key: Char);
 begin
   if Ord(Key)=VK_RETURN then
     ListBox1.SetFocus; //jump to editor
+end;
+
+
+{ Cursor }
+
+procedure TfTranslate.InvalidateCursorPos;
+begin
+  FCursorPosInvalid:=true;
+end;
+
+{ Returns current graphical cursor position. }
+function TfTranslate.GetCur: TCursorPos;
+var i:integer;
+begin
+  if not FCursorPosInvalid then begin
+    Result := FCachedCursorPos;
+    exit;
+  end;
+
+  if linl.Count=0 then ReflowText;
+  for i:=0 to linl.Count-1 do
+    if (linl[i].ys=rcur.y) and (linl[i].xs<=rcur.x) and (linl[i].xs+linl[i].len>=rcur.x) then
+    begin
+      if (not CursorEnd) and (linl[i].xs+linl[i].len=rcur.x)
+        and (i<linl.Count-1) and (linl[i+1].ys=linl[i].ys) then continue; //exact match goes to the next line
+      Result.x:=rcur.x-linl[i].xs;
+      Result.y:=i;
+      exit;
+    end;
+
+ //No line found => return 0, 0
+  Result.y := 0;
+  Result.x := 0;
+
+  FCursorPosInvalid := false;
+
+ //TODO: If this is slow, we can cache TCursorPos and only recalculate it
+ //  when TSourcePos or linl changes.
+ //  For linl we may implement some kind of incremental change number.
+ // Or we may explicitly call RecalculateCursorPos when changing SourcePos
+ // and linl.
+
+ //TODO: Safety: In complicated cases (no exact matching line found) try to
+ // return the closest position (last one with y<=rcur.y and x<=rcur.x or the
+ // next one after that, or 0:0).
+end;
+
+{ Sets current graphical cursor position }
+procedure TfTranslate.SetCur(Value: TCursorPos);
+var newrcur: TSourcePos;
+begin
+ //We don't recalculate lines automatically: if they're setting Cur without Lines,
+ //they're doing something wrong.
+  Assert(linl.Count<>0, 'SetCur() without lines flow done');
+  newrcur.y := linl[Value.y].ys;
+  if Value.x>=linl[Value.y].len then begin
+    Value.x:=linl[Value.y].len; //x can't be > length
+    CursorEnd:=true;
+  end else
+    CursorEnd:=false;
+  newrcur.x := linl[Value.y].xs+Value.x;
+ //Some safety
+  if newrcur.x>flength(doc[newrcur.y]) then
+    newrcur.x:=flength(doc[newrcur.y]);
+  rcur := newrcur;
+end;
+
+{ Differs from GetCur in that there are special states
+ when the cursor is logically at one place but visually at another (see CursorEnd).
+ This function returns actual resulting visual position of the cursor. }
+function TfTranslate.GetCursorScreenPos: TCursorPos;
+begin
+  Result := cur;
+ //In CursorEnd mode we draw cursor at the end of the previous graphical line
+  if cursorend and (Result.x=0) and (Result.y>0) then begin
+    Result.y:=Result.y-1;
+    Result.x:=linl[Result.y].len;
+  end;
+end;
+
+{ Moves the cursor to another line while keeping it at the same column.
+ Remeber that there are half-width and full-width chars, and if we simply chose
+ the same char index on the new line, it'd be at a different column. }
+procedure TfTranslate.CursorJumpToLine(const newy: integer);
+var tmp: TCursorPos;
+begin
+  if (newy<0) or (newy>=linl.Count) then exit; //can't jump to these lines
+  tmp := GetCur;
+  tmp.x := WidthToPos(PosToWidth(cur.x,cur.y),newy);
+  tmp.y := newy;
+  if tmp.x<0 then tmp.x := linl[tmp.y].len; //over to the right
+  SetCur(tmp);
+end;
+
+procedure TfTranslate.SetRCur(const Value: TSourcePos);
+begin
+  FRCur := Value;
+  InvalidateCursorPos;
 end;
 
 { Wakan has "half-width" and "full-width" symbols, and therefore position
@@ -4527,22 +4662,5 @@ begin
     exit;
   end;
 end;
-
-
-
-procedure EditorInit;
-begin
-  priorkanji:='';
-  cursorblinked:=false;
-  shiftpressed:=false;
-  dragstart := SourcePos(-1, -1);
-  oldblock := Selection(-1, -1, -1, -1);
-  insconfirmed:=false;
-  cursorend:=false;
-  lastmm := CursorPos(-1, -1);
-end;
-
-initialization
-  EditorInit;
 
 end.
