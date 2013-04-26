@@ -223,15 +223,14 @@ type
     function PaintBoxClientRect: TRect;
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
-    procedure RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
-      ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
+    procedure RenderText(canvas:TCanvas;l,t,w,h:integer;ll:TGraphicalLineList;
+      view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
   public
     mustrepaint:boolean;
     procedure RepaintText(dolook:boolean=false);
     procedure ShowText(dolook:boolean);
 
   protected //Unsorted
-    procedure HandleWheel(down:boolean);
     procedure CalcBlockFromTo(backtrack:boolean);
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
@@ -273,22 +272,30 @@ type
     procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
 
   protected
+    FView:integer; //index of a first visible graphical line
     oldcur: TCursorPos; //last cursor position, where it was drawn.
     cur: TCursorPos; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     procedure SetCurPos(x,y:integer);
+    procedure HandleWheel(down:boolean);
+    procedure SetView(Value: integer);
+    function GetViewPos: TSourcePos;
+    function GetScreenLineCount: integer;
+    procedure UpdateScrollbar;
   public
-    view:integer; //index of a first visible graphical line
-    rview: TSourcePos; //logical coordinates of a start of a first visible graphical line
     rcur: TSourcePos; //cursor position in logical coordinates (cursor is before this char)
     cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
     lastxsiz: integer; //size of one half-char in pixels, at the time of last render
-    lastycnt,printl:integer;
+    lastycnt:integer;
+    printl:integer; //number of lines which fit on the screen last time
     //Actual cursor position --- differs from (curx,cury) if we're at the end of the text
     function CursorScreenX:integer;
     function CursorScreenY:integer;
     procedure SelectAll;
     procedure ShowHint;
     procedure HideHint;
+    property View: integer read FView write SetView;
+    property ViewPos: TSourcePos read GetViewPos; //logical coordinates of a start of a first visible graphical line
+    property ScreenLineCount: integer read GetScreenLineCount; //number of fully visible graphical lines which fit on the screen
 
   protected //Insert buffer
     insertbuffer:string; //collects keypresses
@@ -568,8 +575,8 @@ function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):inte
 var pl,xs,yc:integer;
 begin
   plinl.Clear;
-  fTranslate.RenderText(0,0,canvas,width div 50,height div 50,width-width div 25,
-    height-height div 25,plinl,pl,xs,yc,true,true);
+  fTranslate.RenderText(canvas,width div 50,height div 50,width-width div 25,
+    height-height div 25,plinl,0,pl,xs,yc,true,true);
   printpl:=pl;
   result:=((plinl.Count-1) div pl)+1;
   if result<1 then result:=1;
@@ -579,11 +586,8 @@ procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origh
 var pl,xs,yc:integer;
 begin
   if plinl.Count<=(pagenum-1)*printpl then exit;
-  fTranslate.RenderText(
-    plinl[(pagenum-1)*printpl].xs,
-    plinl[(pagenum-1)*printpl].ys,
-    canvas,width div 50,height div 50,width-width div 25,height-height div 25,
-    plinl,pl,xs,yc,true,false);
+  fTranslate.RenderText(canvas,width div 50,height div 50,width-width div 25,
+    height-height div 25,plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
 end;
 
 
@@ -922,8 +926,7 @@ begin
   FileChanged:=false;
   FullTextTranslated:=false;
 
-  view:=0;
-  rview := SourcePos(-1, -1);
+  FView:=0;
   cur := CursorPos(-1, -1);
   oldcur := cur;
   rcur := SourcePos(-1, -1);
@@ -1010,7 +1013,7 @@ begin
   docdic.Clear;
   linl.Clear;
   cur := CursorPos(0, 0);
-  view:=0;
+  FView:=0;
   lblFilename.Caption:=_l('#00678^e<UNNAMED>');
   docfilename:='';
   mustrepaint:=true;
@@ -1056,7 +1059,7 @@ begin
   Screen.Cursor:=crHourGlass;
   try
 
-    view:=0;
+    FView:=0;
     cur.x:=0;
     cur.y:=0;
     mustrepaint:=true;
@@ -2278,6 +2281,12 @@ begin
     if ssLeft in Shift then begin;
       if not TryReleaseCursorFromInsert() then
         exit; //cannot move cursor!
+     //Auto-scroll down or up on drag
+      if Y<0 then
+        HandleWheel({down=}false)
+      else
+      if Y>EditorPaintBox.Height then
+        HandleWheel({down=}true);
       if linl.Count>0 then begin
         cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
         if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
@@ -2311,9 +2320,8 @@ begin
   end else
   if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
     EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
-
-  RenderText(rview.x,rview.y,EditorBitmap.Canvas,0,0,EditorBitmap.Width,EditorBitmap.Height,
-    linl,printl,lastxsiz,lastycnt,false,false);
+  RenderText(EditorBitmap.Canvas,0,0,EditorBitmap.Width,EditorBitmap.Height,
+    linl,View,printl,lastxsiz,lastycnt,false,false);
   Canvas.Draw(r.Left,r.Top,EditorBitmap);
   oldcur := CursorPos(-1, -1);
   oldblock := Selection(-1, -1, -1, -1);
@@ -2554,13 +2562,66 @@ end;
 
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
 begin
-  view:=EditorScrollBar.Position;
-  if (view>=0) and (view<linl.Count) then
-  begin
-    rview.x:=linl[view].xs;
-    rview.y:=linl[view].ys;
-  end;
+  View:=EditorScrollBar.Position;
+end;
+
+procedure TfTranslate.HandleWheel(down:boolean);
+begin
+  if down then View := View+1 else View := View-1;
+end;
+
+{ Sets FView and updates dependent controls }
+procedure TfTranslate.SetView(Value: integer);
+begin
+  FView := Value;
+ //Basic rule: at least one line on the screen
+  if FView>linl.Count-1 then FView:=linl.Count-1;
+ //Stricter rule: at least one screen of text on the screen
+  if FView>linl.Count-ScreenLineCount then FView:=linl.Count-printl; //can make it < 0
+  if FView<0 then FView:=0;
+
+  UpdateScrollbar;
   EditorPaintbox.Invalidate;
+end;
+
+procedure TfTranslate.UpdateScrollbar;
+begin
+  if linl.Count-ScreenLineCount<=0 then begin
+    if EditorScrollBar.Enabled then
+      EditorScrollBar.Enabled := false;
+    exit;
+  end;
+  if not EditorScrollBar.Enabled then
+    EditorScrollBar.Enabled := true;
+  if EditorScrollBar.Min<>0 then
+    EditorScrollBar.Min := 0;
+  if EditorScrollBar.Max<>linl.Count-ScreenLineCount then
+    EditorScrollBar.Max := linl.Count-ScreenLineCount;
+  if EditorScrollBar.Position<>FView then
+    EditorScrollBar.Position:=FView;
+end;
+
+{ Returns logical position of the first visible character on the screen }
+function TfTranslate.GetViewPos: TSourcePos;
+begin
+  if FView<0 then
+    Result := SourcePos(0,0)
+  else
+  if FView>=linl.Count then begin
+    Result.x := linl[linl.Count-1].xs;
+    Result.y := linl[linl.Count-1].ys;
+  end else begin
+    Result.x := linl[FView].xs;
+    Result.y := linl[FView].ys;
+  end;
+end;
+
+{ Number of fully visible graphical lines which fit on the screen }
+function TfTranslate.GetScreenLineCount: integer;
+begin
+ //For now we use printl, although it can be not set
+ //TODO: Calculate this dynamically
+  Result := printl;
 end;
 
 procedure TfTranslate.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
@@ -2613,7 +2674,7 @@ begin
   tmp.x := PosToWidth(tmp.x, tmp.y);
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
   p.x:=p.x+tmp.x*fTranslate.lastxsiz;
-  p.y:=p.y+(tmp.y+1-fTranslate.view)*fTranslate.lastxsiz*fTranslate.lastycnt;
+  p.y:=p.y+(tmp.y+1-fTranslate.View)*fTranslate.lastxsiz*fTranslate.lastycnt;
   fHint.ShowHint(p);
   ListBox1.SetFocus;
 end;
@@ -2632,19 +2693,7 @@ begin
   Result.Bottom := Result.Bottom - 1 {normal margin} - 1;
 end;
 
-procedure TfTranslate.HandleWheel(down:boolean);
-begin
-  if not EditorScrollBar.Enabled then exit;
-  if down then inc(view) else dec(view);
-  if (view>=0) and (view<=EditorScrollBar.Max) then
-  begin
-    rview := SourcePos(linl[view].xs, linl[view].ys);
-  end else
-    if view<0 then view:=0 else view:=EditorScrollBar.Max;
-  EditorScrollBar.Position:=view;
-  EditorPaintbox.Invalidate;
-end;
-
+{ Also updates various controls such as ScrollBar, to match current state }
 procedure TfTranslate.ShowText(dolook:boolean);
 var oldview:integer;
   s:string;
@@ -2654,13 +2703,11 @@ begin
   if not Visible then exit;
   oldview:=view;
   pbRect:=PaintBoxClientRect;
-  RenderText(-1,-1,EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,
-    pbRect.Right-pbRect.Left,pbRect.Bottom-pbRect.Top,linl,printl,
-    lastxsiz,lastycnt,false,true);
+  RenderText(EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,pbRect.Right-pbRect.Left,
+    pbRect.Bottom-pbRect.Top,linl,-1,printl, lastxsiz,lastycnt,false,true);
   if linl.Count=0 then
   begin
     rcur := SourcePos(-1, -1);
-    rview := SourcePos(0, 0);
     EditorPaintBox.Invalidate;
     EditorScrollBar.Enabled:=false;
     exit;
@@ -2692,7 +2739,6 @@ begin
   if view<0 then view:=0;
   if view>=linl.Count then view:=0;
   rcur := SourcePos(linl[cur.y].xs+cur.x, linl[cur.y].ys);
-  rview := SourcePos(linl[view].xs, linl[view].ys);
   if not shiftpressed then
   begin
     dragstart.x:=rcur.x;
@@ -2716,15 +2762,7 @@ begin
 //  if mustrepaint then oldblock.fromx:=-1; //why did we need this here? It breaks setting new selection with mustrepaint==true
   mustrepaint:=false;
   shiftpressed:=false;
-  if linl.Count-printl<=0 then
-    EditorScrollBar.Enabled:=false
-  else
-  begin
-    EditorScrollBar.Min:=0;
-    EditorScrollBar.Max:=linl.Count-printl;
-    EditorScrollBar.Position:=view;
-    EditorScrollBar.Enabled:=true;
-  end;
+  UpdateScrollbar;
   with fUser do
     if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
@@ -2869,11 +2907,12 @@ l, t, w, h:
 ll:
   graphical line list (all lines for this control)
 printl (out):
-  total number of lines printed
+  total number of lines which fit on the screen
 }
-procedure TfTranslate.RenderText(x,y:integer;canvas:TCanvas;l,t,w,h:integer;
-  ll:TGraphicalLineList;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
+procedure TfTranslate.RenderText(canvas:TCanvas;l,t,w,h:integer; ll:TGraphicalLineList;
+  view:integer;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
 var
+  x,y:integer;
   colback, coltext:TColor; //standard colors for editor's text and background
   PrintReading,
   ReserveSpaceForReading,
@@ -3012,6 +3051,10 @@ begin
   xsiz:=rs;
   ycnt:=linec;
   if onlylinl then exit;
+
+  if view>ll.Count then exit; //nothing to draw
+  x := ll[view].xs;
+  y := ll[view].ys;
 
  //Find a graphical line which covers the starting point
   cl := -1;
@@ -3451,9 +3494,8 @@ begin
   doctr[ins.y].InsertChars(ins.x,transins);
   linl.Clear;
   pbRect:=PaintBoxClientRect();
-  RenderText(cur.x,cur.y,EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,
-    pbRect.Right-pbRect.Left,pbRect.Bottom-pbRect.Top,linl,printl,
-    lastxsiz,lastycnt,false,true);
+  RenderText(EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,pbRect.Right-pbRect.Left,
+    pbRect.Bottom-pbRect.Top,linl,-1,printl,lastxsiz,lastycnt,false,true);
   SetCurPos(ins.x+inslen, ins.y);
   if not leaveinserted then
   begin
@@ -3903,7 +3945,7 @@ begin
     result:=false;
     exit;
   end;
-  if (y<view) or (y>=view+printl) then result:=false else result:=true;
+  if (y<View) or (y>=View+printl) then result:=false else result:=true;
 end;
 procedure CalcCache(x,y:integer);
 begin
@@ -3923,10 +3965,10 @@ begin
   pbRect:=PaintBoxClientRect;
   if not ListBox1.Focused then blink:=false;
   if cursorposcache=-1 then CalcCache(oldcur.x,oldcur.y);
-  if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-view); //invert=>erase
+  if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-View); //invert=>erase
   tmp := CursorPos(CursorScreenX(), CursorScreenY());
   if (cursorposcache=-1) or (oldcur.x<>tmp.x) or (oldcur.y<>tmp.y) then CalcCache(tmp.x, tmp.y);
-  if OnScreen(tmp.x, tmp.y) and blink and cursorblinked then DrawIt(tmp.x,tmp.y-view); //draw new
+  if OnScreen(tmp.x, tmp.y) and blink and cursorblinked then DrawIt(tmp.x,tmp.y-View); //draw new
   if blink then
     cursorblinked:=not cursorblinked
   else
@@ -3960,7 +4002,7 @@ var rect:TRect;
  //where i is measured in lines and j in half-characters.
   procedure InvertColor(i, js: integer; halfwidth: boolean);
   begin
-    rect.top:=ClientRect.Top+(i-view)*lastxsiz*lastycnt+2;
+    rect.top:=ClientRect.Top+(i-View)*lastxsiz*lastycnt+2;
     rect.left:=ClientRect.Left+js*lastxsiz;
     rect.bottom:=rect.top+lastxsiz*lastycnt-1;
     if not halfwidth then
@@ -3981,7 +4023,7 @@ begin
   j: graphical character index
  }
  //For every visible graphical line
-  for i:=view to min(linl.Count-1, view+printl) do begin
+  for i:=View to min(linl.Count-1, View+printl) do begin
     xpos := linl[i].xs;
     ypos := linl[i].ys;
     llen := linl[i].len;
@@ -4451,7 +4493,7 @@ begin
   if y<0 then y:=0;
   if x<0 then x:=0;
   Result.x := x div lastxsiz;
-  Result.y := y div (lastxsiz*lastycnt)+view;
+  Result.y := y div (lastxsiz*lastycnt)+View;
   if Result.y>=linl.Count then
     Result.y:=linl.Count-1;
   Assert(Result.y>=0); //we must have at least one line

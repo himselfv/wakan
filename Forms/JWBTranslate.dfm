@@ -154,8 +154,7 @@ object fTranslate: TfTranslate
       Align = alNone
       AutoSize = True
       BorderWidth = 1
-      ButtonHeight = 7
-      ButtonWidth = 15
+      ButtonWidth = 43
       EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
       Images = ImageList1
       List = True
