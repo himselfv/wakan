@@ -651,15 +651,22 @@ begin
           tmpkana:=RomajiToKana('H'+search,romasys,'j',[])
         else
           tmpkana:=RomajiToKana(search,romasys,'c',[]);
-       //add exact roma first
+       //Add exact roma first
         search := SignatureFrom(search);
         se.Add(9,length(search),'F',rtRoma,search);
         if pos('?',tmpkana)>0 then begin
-         //deflex with lower priority since this is probably wrong decoding of roma
+         //Deflex with lower priority since this is probably wrong decoding of roma
           repl(tmpkana,'?','');
           Deflex(tmpkana,se,6,5,true);
         end else
           Deflex(tmpkana,se,9,8,true);
+       //in any case add non-deflexed kana translation,
+       //since the request could be in different romaji system (ex. mujun instead of mudjun)
+        if tmpkana<>'' then
+          if pos('?',tmpkana)>0 then
+            se.Add(6, flength(tmpkana), 'F', rtNormal, tmpkana)
+          else
+            se.Add(9, flength(tmpkana), 'F', rtNormal, tmpkana);
       end;
     stEn:
       se.Add(9, 1, 'F', rtNormal, search);
