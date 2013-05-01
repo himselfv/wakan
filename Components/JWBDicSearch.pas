@@ -942,15 +942,12 @@ var
 
   raw_entries: TEntries;
   entry:string; //translation entry text
-  converted:string;
   markers,kmarkers:TMarkers;
   popclas:integer;
   UserScore:integer;
   UserIndex:integer;
   sort:integer;
   freq:integer;
-  sorts:string;
-  statpref:string;
   ssig:string; //translation signature (reading x kanji) to merge duplicates
   scomp:PSearchResult;
   scur:TSearchResult;

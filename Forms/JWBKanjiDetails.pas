@@ -382,13 +382,8 @@ If there are multiple chars selected, only a limited set of operations is
 available.
 }
 procedure TfKanjiDetails.SetCharDetails(chars:FString);
-var s: string;
-  radf:integer;
-  i:integer;
+var i:integer;
   kig:string;
-  mf:TMemoryFile;
-  ms:TMemoryStream;
-//  ld:boolean;
   h:integer;
   cv:string;
   scat:string;

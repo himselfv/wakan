@@ -646,7 +646,6 @@ end;
 
 procedure TfWords.ExportVocabToCsv(const filename: string);
 var sp: TSMPromptForm;
-  t:textfile;
   i,j:integer;
   sl:TStringList;
 begin
