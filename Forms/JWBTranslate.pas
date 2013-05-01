@@ -3719,9 +3719,9 @@ begin
   end;
   if c=#13 then
   begin
-//    if blockfromx<>-1 then DeleteSelection();
+    if block.fromx<>-1 then DeleteSelection();
     SplitLine(rcur.x,rcur.y);
-    cur := CursorPos(0,cur.y+1);
+    rcur := SourcePos(0,rcur.y+1);
     RefreshLines;
     exit;
   end;
