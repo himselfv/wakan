@@ -4256,7 +4256,7 @@ procedure TfTranslate.DeleteSelection;
 var i:integer;
 begin
   CalcBlockFromTo(false);
-  rcur:=SourcePos(block.fromy,block.fromy);
+  rcur:=SourcePos(block.fromx,block.fromy);
   if block.fromy=block.toy then
   begin
     doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
