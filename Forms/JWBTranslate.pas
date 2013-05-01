@@ -264,7 +264,7 @@ type
     function PaintBoxClientRect: TRect;
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
-    procedure RenderText(canvas:TCanvas;l,t,w,h:integer;ll:TGraphicalLineList;
+    procedure RenderText(canvas:TCanvas;r:TRect;ll:TGraphicalLineList;
       view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     procedure ReflowText(force:boolean=false);
   public
@@ -510,7 +510,6 @@ type
     procedure EndDocument; override;
   end;
 
-
 const
  //Markers used by THtmlFormat to indicate start and end of fragment meant for Clipboard
  //See CF_HTML documentation.
@@ -528,6 +527,18 @@ const
 function SourcePos(x,y: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
 function CursorPos(x,y: integer): TCursorPos; {$IFDEF INLINE}inline;{$ENDIF}
 function Selection(fromx, fromy, tox, toy: integer): TSelection; {$IFDEF INLINE}inline;{$ENDIF}
+
+type
+  TRectHelper = record helper for TRect
+  protected
+    function GetWidth: integer;
+    function GetHeight: integer;
+  public
+    property Width: integer read GetWidth;
+    property Height: integer read GetHeight;
+  end;
+
+function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
 
@@ -556,6 +567,24 @@ begin
   Result.fromx := fromx;
   Result.toy := toy;
   Result.toy := tox;
+end;
+
+function TRectHelper.GetWidth: integer;
+begin
+  Result := Right-Left;
+end;
+
+function TRectHelper.GetHeight: integer;
+begin
+  Result := Bottom-Top;
+end;
+
+function RectWH(const Left,Top,Width,Height: integer): TRect;
+begin
+  Result.Left := Left;
+  Result.Top := Top;
+  Result.Right := Result.Left + Width;
+  Result.Bottom := Result.Top + Height;
 end;
 
 
@@ -620,8 +649,9 @@ function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):inte
 var pl,xs,yc:integer;
 begin
   plinl.Clear;
-  fTranslate.RenderText(canvas,width div 50,height div 50,width-width div 25,
-    height-height div 25,plinl,0,pl,xs,yc,true,true);
+  fTranslate.RenderText(Canvas,
+    RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
+    plinl,0,pl,xs,yc,true,true);
   printpl:=pl;
   result:=((plinl.Count-1) div pl)+1;
   if result<1 then result:=1;
@@ -631,8 +661,9 @@ procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origh
 var pl,xs,yc:integer;
 begin
   if plinl.Count<=(pagenum-1)*printpl then exit;
-  fTranslate.RenderText(canvas,width div 50,height div 50,width-width div 25,
-    height-height div 25,plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
+  fTranslate.RenderText(canvas,
+    RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
+    plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
 end;
 
 
@@ -2356,7 +2387,7 @@ begin
   end else
   if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
     EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
-  RenderText(EditorBitmap.Canvas, 0,0,EditorBitmap.Width,EditorBitmap.Height,
+  RenderText(EditorBitmap.Canvas,RectWH(0,0,EditorBitmap.Width,EditorBitmap.Height),
     linl,View,printl,lastxsiz,lastycnt,false,false);
   Canvas.Draw(r.Left,r.Top,EditorBitmap);
   oldcur := CursorPos(-1, -1);
@@ -2734,7 +2765,6 @@ procedure TfTranslate.ShowText(dolook:boolean);
 var oldview:integer;
   s:string;
   wt:integer;
-  pbRect: TRect;
   tmp: TCursorPos;
 begin
   if not Visible then exit;
@@ -2808,7 +2838,7 @@ begin
     EditorPaintbox.Repaint //not just Invalidate() because we want Paint be done now
   else begin
     DrawCursor(false);
-    DrawBlock(EditorPaintBox.Canvas,pbRect);
+    DrawBlock(EditorPaintBox.Canvas,PaintBoxClientRect);
   end;
 
   mustrepaint:=false;
@@ -2966,7 +2996,7 @@ ll:
 printl (out):
   total number of lines which fit on the screen
 }
-procedure TfTranslate.RenderText(canvas:TCanvas;l,t,w,h:integer; ll:TGraphicalLineList;
+procedure TfTranslate.RenderText(canvas:TCanvas; r:TRect; ll:TGraphicalLineList;
   view:integer;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
 var
   x,y:integer;
@@ -3075,11 +3105,11 @@ begin
     MeaningLines:=1;
   Vertical:=fSettings.cbVerticalPrint.Checked and printing;
   if Vertical then begin
-    screenh:=w;
-    screenw:=h;
+    screenh:=r.Width;
+    screenw:=r.Height;
   end else begin
-    screenh:=h;
-    screenw:=w;
+    screenh:=r.Height;
+    screenw:=r.Width;
   end;
 
  { Calculate number of basic "line units" in a line }
@@ -3146,10 +3176,10 @@ begin
     Canvas.Brush.Color:=clWindow
   else
     Canvas.Brush.Color:=colBack;
-  rect.Left:=l-2;
-  rect.Top:=t-2;
-  rect.Right:=l+w+4;
-  rect.Bottom:=t+h+4;
+  rect.Left:=r.Left-2;
+  rect.Top:=r.Top-2;
+  rect.Right:=r.Right+4;
+  rect.Bottom:=r.Bottom+4;
   Canvas.FillRect(rect);
 
   try
@@ -3286,9 +3316,9 @@ begin
           end;
           if Vertical then
           begin
-            realx:=w-cnty-MeaningLines*rs;
+            realx:=r.Width-cnty-MeaningLines*rs;
             realy:=px;
-            realx2:=w-cnty;
+            realx2:=r.Width-cnty;
             realy2:=cntx;
           end else
           begin
@@ -3297,10 +3327,10 @@ begin
             realx2:=cntx;
             realy2:=cnty+MeaningLines*rs;
           end;
-          rect.left:=realx+l+2;
-          rect.right:=realx2+l-2;
-          rect.top:=realy+t;
-          rect.bottom:=realy2+t;
+          rect.left:=realx+r.Left+2;
+          rect.right:=realx2+r.Left-2;
+          rect.top:=realy+r.Top;
+          rect.bottom:=realy2+r.Top;
           canvas.Font.Name:=FontEnglish;
           if not fSettings.CheckBox27.Checked then
             canvas.Font.Height:=rs
@@ -3312,16 +3342,16 @@ begin
           if fSettings.cbDisplayLines.Checked then
             if Vertical then
             begin
-              canvas.MoveTo(realx2+l+1,realy+t);
-              canvas.LineTo(realx+l+1,realy+t);
-              canvas.LineTo(realx+l+1,realy2+t);
-              canvas.LineTo(realx2+l+1,realy2+t);
+              canvas.MoveTo(realx2+r.Left+1,realy+r.Top);
+              canvas.LineTo(realx+r.Left+1,realy+r.Top);
+              canvas.LineTo(realx+r.Left+1,realy2+r.Top);
+              canvas.LineTo(realx2+r.Left+1,realy2+r.Top);
             end else
             begin
-              canvas.MoveTo(realx+l,realy+t-1);
-              canvas.LineTo(realx+l,realy2+t-1);
-              canvas.LineTo(realx2+l,realy2+t-1);
-              canvas.LineTo(realx2+l,realy+t-1);
+              canvas.MoveTo(realx+r.Left,realy+r.Top-1);
+              canvas.LineTo(realx+r.Left,realy2+r.Top-1);
+              canvas.LineTo(realx2+r.Left,realy2+r.Top-1);
+              canvas.LineTo(realx2+r.Left,realy+r.Top-1);
             end;
         end;
 
@@ -3367,7 +3397,7 @@ begin
             begin
               if Vertical then
               begin
-                realx:=w-py-rs-1;
+                realx:=r.Width-py-rs-1;
                 realy:=cntx;
               end else
               begin
@@ -3377,16 +3407,16 @@ begin
               if showroma then
               begin
                 if curlang='c'then
-                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontChineseGrid)
+                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,2),FontChineseGrid)
                 else
-                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
+                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
                 fdelete(kanaq,1,2);
               end else
               begin
                 if curlang='c'then
-                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontChineseGrid)
+                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,1),FontChineseGrid)
                 else
-                  DrawUnicode(canvas,realx+l,realy+t-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
+                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
                 fdelete(kanaq,1,1);
               end;
               inc(cntx,rs);
@@ -3398,7 +3428,7 @@ begin
           if boldness then canvas.Font.Style:=[fsBold] else canvas.Font.Style:=[];
           if Vertical then
           begin
-            realx:=w-py-rs*2;
+            realx:=r.Width-py-rs*2;
             if PrintReading or ReserveSpaceForReading then realx:=realx-rs;
             realy:=px;
           end else
@@ -3407,16 +3437,16 @@ begin
             realy:=py;
             if PrintReading or ReserveSpaceForReading then realy:=realy+rs;
           end;
-          rect.Left:=realx+l;
-          rect.Right:=realx+l+rs*2;
-          if (not Vertical) and (IsHalfWidth(cx,cy)) then rect.Right:=realx+l+rs;
-          rect.Top:=realy+t;
-          rect.Bottom:=realy+t+rs*2;
+          rect.Left:=realx+r.Left;
+          rect.Right:=realx+r.Left+rs*2;
+          if (not Vertical) and (IsHalfWidth(cx,cy)) then rect.Right:=realx+r.Left+rs;
+          rect.Top:=realy+r.Top;
+          rect.Bottom:=realy+r.Top+rs*2;
           canvas.FillRect(rect);
           if curlang='c'then
-            DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
+            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
           else
-            DrawUnicode(canvas,realx+l,realy+t,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
+            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
 
          { Box border for meaning => underline.
           This one is drawn char-by-char, so we check for worddict + valid
@@ -3424,12 +3454,12 @@ begin
           if PrintMeaning and (worddict<>0) and fSettings.cbDisplayLines.Checked then
             if Vertical then
             begin
-              canvas.MoveTo(realx+l,realy+t);
-              canvas.LineTo(realx+l,realy+t+rs*2);
+              canvas.MoveTo(realx+r.Left,realy+r.Top);
+              canvas.LineTo(realx+r.Left,realy+r.Top+rs*2);
             end else
             begin
-              canvas.MoveTo(realx+l,realy+t+rs*2);
-              canvas.LineTo(realx+l+rs*2,realy+t+rs*2);
+              canvas.MoveTo(realx+r.Left,realy+r.Top+rs*2);
+              canvas.LineTo(realx+r.Left+rs*2,realy+r.Top+rs*2);
             end;
 
          //we check for openers before rendering, and for closers here
@@ -3472,13 +3502,11 @@ end;
 { Makes sure graphical lines and related variables are up to date.
  Use force=true to force full reflow. }
 procedure TfTranslate.ReflowText(force:boolean);
-var pbRect: TRect;
 begin
   if force then
     linl.Clear;
-  pbRect:=PaintBoxClientRect;
-  RenderText(EditorPaintBox.Canvas,pbRect.Left,pbRect.Top,pbRect.Right-pbRect.Left,
-    pbRect.Bottom-pbRect.Top,linl,-1,printl,lastxsiz,lastycnt,false,true);
+  RenderText(EditorPaintBox.Canvas,PaintBoxClientRect,linl,-1,printl,
+    lastxsiz,lastycnt,false,true);
  //NOTE: We must always have at least one logical and graphical line after reflow (maybe empty)
 end;
 
@@ -4010,9 +4038,9 @@ end;
 procedure DrawIt(x,y:integer);
 var rect:TRect;
 begin
-  rect.top:=pbRect.Top+y*lastxsiz*lastycnt+2;
+  rect.top:=pbRect.Top+y*lastxsiz*lastycnt;
   rect.left:=pbRect.Left+cursorposcache*lastxsiz;
-  rect.bottom:=rect.top+lastxsiz*lastycnt-1;
+  rect.bottom:=rect.top+lastxsiz*lastycnt;
   rect.right:=rect.left+2;
   InvertRect(EditorPaintBox.Canvas.Handle,rect);
 end;
@@ -4058,9 +4086,9 @@ var rect:TRect;
  //where i is measured in lines and j in half-characters.
   procedure InvertColor(i, js: integer; halfwidth: boolean);
   begin
-    rect.top:=ClientRect.Top+(i-View)*lastxsiz*lastycnt+2;
+    rect.top:=ClientRect.Top+(i-View)*lastxsiz*lastycnt;
     rect.left:=ClientRect.Left+js*lastxsiz;
-    rect.bottom:=rect.top+lastxsiz*lastycnt-1;
+    rect.bottom:=rect.top+lastxsiz*lastycnt;
     if not halfwidth then
       rect.right:=rect.left+lastxsiz*2
     else
