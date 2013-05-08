@@ -1022,7 +1022,9 @@ begin
   insconfirmed:=false;
   lastmm := CursorPos(-1, -1);
 
-  FFontSize := FontSizeMedium;
+  FFontSize := 0;
+ //We need to update controls when we set FontSize, and if we set ItemIndex here,
+ //it'll get overwritten for some buggy VCL reason. So we use FormShow.
 
   linl:=TGraphicalLineList.Create;
   plinl:=TGraphicalLineList.Create;
@@ -1058,6 +1060,7 @@ end;
 
 procedure TfTranslate.FormShow(Sender: TObject);
 begin
+  if FFontSize<=0 then FontSize:=FontSizeMedium; //see FormCreate for explanation
   ShowText(true);
   ListBox1.ItemIndex:=0;
   ListBox1.SetFocus;
