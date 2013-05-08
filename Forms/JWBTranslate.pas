@@ -276,8 +276,8 @@ type
     linl: TGraphicalLineList; //lines as they show on screen
     FView: integer;
     FRCur: TSourcePos;
-    cursorend: boolean; { Cursor is visually "at the end of the previous line",
-      although its actual position is at the start of the next graphical line.
+    CursorEnd: boolean; { Cursor is visually "at the end of the previous line",
+      although its logical position is at the start of the next graphical line.
       This is expected in some situations during the editing. }
     lastmm: TCursorPos; //Last character which felt mouse-click over itself.
     dragstart: TSourcePos; {
@@ -2265,7 +2265,7 @@ begin
       else
       if rcur.y+1<doc.Count then
         rcur := SourcePos(0, rcur.y+1);
-      CursorEnd := false;
+      CursorEnd := false; //even if not changed rcur
     end else
     if key=VK_LEFT then
     begin
@@ -2274,7 +2274,7 @@ begin
       else
       if rcur.y>0 then
         rcur := EndOfLine(rcur.y-1);
-      CursorEnd := false;
+      CursorEnd := false; //even if not changed rcur
     end else
     if key=VK_UP then CursorJumpToLine(tmp.y-1) else
     if key=VK_DOWN then CursorJumpToLine(tmp.y+1) else
@@ -2788,27 +2788,6 @@ begin
 
  //Invalid cursorend => fix
   tmp := GetCur;
-//TODO: Do we really need this? What will happen if we just keep the invalid flag?
-{  if cursorend and (tmp.x=0) and (tmp.y>0) and (linl[tmp.y-1].ys<>linl[tmp.y].ys) then
-  begin
-    dec(tmp.y);
-    tmp.x:=linl[tmp.y].len;
-    cursorend:=false;
-    SetCur(tmp);
-  end;}
-
- //Over the end of the line => fix
-//TODO: Do we really need this? Can we get over the end of the line?
-{  if tmp.x>linl[tmp.y].len then begin
-    if (tmp.y+1<linl.Count) and (linl[tmp.y].ys=linl[tmp.y+1].ys) then
-    begin
-      tmp.x:=0;
-      inc(tmp.y);
-      cursorend:=true;
-    end else
-      tmp.x:=linl[tmp.y].len;
-    SetCur(tmp);
-  end;}
 
  //Fix view
   if view>cur.y then if cur.y>0 then view:=cur.y else view:=0;
@@ -3722,7 +3701,7 @@ begin
   end;
   if c=#13 then
   begin
-    if block.fromx<>-1 then DeleteSelection();
+    DeleteSelection(); //Updates block and verifies everything
     SplitLine(rcur.x,rcur.y);
     rcur := SourcePos(0,rcur.y+1);
     RefreshLines;
@@ -4507,6 +4486,7 @@ end;
 { Sets current graphical cursor position }
 procedure TfTranslate.SetCur(Value: TCursorPos);
 var newrcur: TSourcePos;
+  NewCursorEnd: boolean;
 begin
  //We don't recalculate lines automatically: if they're setting Cur without Lines,
  //they're doing something wrong.
@@ -4514,14 +4494,17 @@ begin
   newrcur.y := linl[Value.y].ys;
   if Value.x>=linl[Value.y].len then begin
     Value.x:=linl[Value.y].len; //x can't be > length
-    CursorEnd:=true;
+    NewCursorEnd:=true;
   end else
-    CursorEnd:=false;
+    NewCursorEnd:=false;
   newrcur.x := linl[Value.y].xs+Value.x;
- //Some safety
-  if newrcur.x>flength(doc[newrcur.y]) then
+ //Some safety + we don't want CursorEnd when we're at the end of *logical* line
+  if newrcur.x>=flength(doc[newrcur.y]) then begin
     newrcur.x:=flength(doc[newrcur.y]);
+    NewCursorEnd:=false;
+  end;
   rcur := newrcur;
+  CursorEnd := NewCursorEnd;
 end;
 
 { Differs from GetCur in that there are special states
@@ -4554,6 +4537,9 @@ end;
 procedure TfTranslate.SetRCur(const Value: TSourcePos);
 begin
   FRCur := Value;
+  CursorEnd := false;
+   //we can't know whether to put graphical cursor before or after the line wrap
+   //if you know, update CursorEnd after setting RCur
   InvalidateCursorPos;
 end;
 
