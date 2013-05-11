@@ -3853,6 +3853,7 @@ end;
 
 procedure TfTranslate.RefreshLines;
 begin
+  if linl=nil then exit; //still creating
   linl.Clear;
   mustrepaint:=true;
   ShowText(true);
