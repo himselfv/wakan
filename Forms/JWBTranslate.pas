@@ -83,6 +83,9 @@ type
   TTextSelection = TSelection; { Text selection in logical coordinates }
   PTextSelection = ^TTextSelection;
 
+  TPageMeasurements = record
+  end;
+
   TTextAnnotMode = (
     amNone,
       //do not parse ruby when loading
@@ -269,12 +272,11 @@ type
     procedure ReflowText(force:boolean=false);
   public
     mustrepaint:boolean;
-    procedure RepaintText(dolook:boolean=false);
+    procedure RepaintText;
     procedure ShowText(dolook:boolean);
 
   protected
     linl: TGraphicalLineList; //lines as they show on screen
-    FView: integer;
     FRCur: TSourcePos;
     CursorEnd: boolean; { Cursor is visually "at the end of the previous line",
       although its logical position is at the start of the next graphical line.
@@ -294,18 +296,27 @@ type
     procedure InvalidateLines;
     procedure InvalidateCursorPos;
     function GetCursorScreenPos: TCursorPos;
-    procedure HandleWheel(down:boolean);
-    procedure SetView(Value: integer);
-    function GetViewPos: TSourcePos;
-    function GetScreenLineCount: integer;
-    procedure UpdateScrollbar; //to reflect lines.Count/View
   public
     procedure CursorJumpToLine(const newy: integer);
     property RCur: TSourcePos read FRCur write SetRCur; //cursor position in logical coordinates (cursor is before this char)
     property Cur: TCursorPos read GetCur write SetCur; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     property CursorScreenPos: TCursorPos read GetCursorScreenPos; //visible cursor position -- differs sometimes -- see comments
-    property View: integer read FView write SetView; //index of a first visible graphical line
-    property ViewPos: TSourcePos read GetViewPos; //logical coordinates of a start of a first visible graphical line
+
+  protected
+    FViewPos: TSourcePos; //logical coordinates of a first visible graphical line anchor
+    FViewLineCached: integer; //index of a first visible graphical line -- cached
+    FUpdatingScrollbar: boolean;
+    function GetView: integer;
+    procedure SetView(Value: integer);
+    procedure SetViewPos(const Value: TSourcePos);
+    procedure UpdateViewLine;
+    procedure InvalidateViewLine;
+    function GetScreenLineCount: integer;
+    procedure HandleWheel(down:boolean);
+    procedure UpdateScrollbar; //to reflect lines.Count/View
+  public
+    property View: integer read GetView write SetView;
+    property ViewPos: TSourcePos read FViewPos write SetViewPos;
     property ScreenLineCount: integer read GetScreenLineCount; //number of fully visible graphical lines which fit on the screen
 
   protected //DrawCursor-related stuff. No one else use this
@@ -1002,7 +1013,7 @@ begin
   FileChanged:=false;
   FullTextTranslated:=false;
 
-  FView:=0;
+  ViewPos := SourcePos(0, 0);
   rcur := SourcePos(-1, -1);
   oldcur := CursorPos(-1, -1);
   ins := SourcePos(-1, -1);
@@ -1078,7 +1089,7 @@ end;
 
 procedure TfTranslate.FormResize(Sender: TObject);
 begin
-  linl.Clear;
+  InvalidateLines;
   Invalidate;
 end;
 
@@ -1098,9 +1109,9 @@ begin
   doc.Clear;
   doctr.Clear;
   docdic.Clear;
-  linl.Clear;
-  cur := CursorPos(0, 0);
-  FView:=0;
+  InvalidateLines;
+  rcur := SourcePos(0, 0);
+  ViewPos := SourcePos(0, 0);
   lblFilename.Caption:=_l('#00678^e<UNNAMED>');
   docfilename:='';
   mustrepaint:=true;
@@ -1142,11 +1153,11 @@ begin
   doc.Clear;
   doctr.Clear;
   docdic.Clear;
-  linl.Clear;
+  InvalidateLines;
   Screen.Cursor:=crHourGlass;
   try
 
-    FView:=0;
+    ViewPos:=SourcePos(0,0);
     rcur:=SourcePos(0,0);
     mustrepaint:=true;
     FileChanged:=false;
@@ -2390,6 +2401,7 @@ begin
   end else
   if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
     EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
+  ReflowText(); //because we need View
   RenderText(EditorBitmap.Canvas,RectWH(0,0,EditorBitmap.Width,EditorBitmap.Height),
     linl,View,printl,lastxsiz,lastycnt,false,false);
   Canvas.Draw(r.Left,r.Top,EditorBitmap);
@@ -2426,19 +2438,19 @@ procedure TfTranslate.sbDisplayReadingClick(Sender: TObject);
 begin
  //Keeps fMenu.Actions in sync but doesn't call Execute
   fMenu.aEditorReading.Checked:=sbDisplayReading.Down;
-  RepaintText(true);
+  RepaintText();
 end;
 
 procedure TfTranslate.sbDisplayMeaningClick(Sender: TObject);
 begin
   fMenu.aEditorMeaning.Checked:=sbDisplayMeaning.Down;
-  RepaintText(true);
+  RepaintText();
 end;
 
 procedure TfTranslate.sbUseTlColorsClick(Sender: TObject);
 begin
   fMenu.aEditorColors.Checked:=sbUseTlColors.Down;
-  RepaintText(true);
+  RepaintText();
 end;
 
 procedure TfTranslate.sbClearTranslationClick(Sender: TObject);
@@ -2630,9 +2642,83 @@ begin
   PasteOp;
 end;
 
+
+function TfTranslate.GetView: integer;
+begin
+  Assert(linl.Count>0, 'GetView() without lines flow done');
+  if FViewLineCached<0 then
+    UpdateViewLine;
+  Result := FViewLineCached;
+end;
+
+{ Sets ViewPos to a position which represents given View (line) value most closely }
+procedure TfTranslate.SetView(Value: integer);
+begin
+  Assert(linl.Count>0, 'SetView() without lines flow done');
+
+  if Value<0 then
+    ViewPos := SourcePos(0,0)
+  else
+  if Value>=linl.Count then
+    ViewPos := SourcePos(linl[linl.Count-1].xs, linl[linl.Count-1].ys)
+  else
+    ViewPos := SourcePos(linl[Value].xs, linl[Value].ys);
+end;
+
+procedure TfTranslate.InvalidateViewLine;
+begin
+  FViewLineCached := -1;
+end;
+
+{ Recalculates cached ViewLine and updates visual controls }
+procedure TfTranslate.UpdateViewLine;
+var i: integer;
+begin
+  Assert(linl.Count>0, 'UpdateViewLine() without lines flow done');
+
+  FViewLineCached := -1;
+  for i := 0 to linl.Count - 1 do
+   //Overshot
+    if (FViewPos.y<linl[i].ys)
+    or (
+     //Matching logical line
+      (FViewPos.y=linl[i].ys) and (
+       //On this graphical line or before it (overshot)
+        (FViewPos.x<linl[i].xs+linl[i].len)
+       //At the end of the logical line (special case because FViewPos.x == xs+len)
+        or (Length(doc[linl[i].ys])<=linl[i].xs+linl[i].len)
+      )
+    ) then begin
+      FViewLineCached := i;
+      break;
+    end;
+
+ //Basic rule: at least one line on the screen
+  if FViewLineCached>linl.Count-1 then FViewLineCached:=linl.Count-1;
+ //Stricter rule: at least one screen of text on the screen
+  if FViewLineCached>linl.Count-ScreenLineCount then FViewLineCached:=linl.Count-ScreenLineCount; //can make it < 0
+  if FViewLineCached<0 then FViewLineCached:=0;
+
+  UpdateScrollbar;
+end;
+
+procedure TfTranslate.SetViewPos(const Value: TSourcePos);
+begin
+  FViewPos := Value;
+{ Auto-normalize. Disabled until needed. Perhaps move to GetViewPos if doc[]
+ conditions can change.
+  if FViewPos.y>doc.Count-1 then FViewPos.y := doc.Count-1;
+  if FViewPos.y<0 then FViewPos.y := 0;
+  if FViewPos.x>doc[FViewPos.y]-1 then FViewPos.x := FViewPos.x-1;
+  if FViewPos.x<0 then FViewPos.x := 0; }
+  InvalidateViewLine;
+  EditorPaintbox.Invalidate;
+end;
+
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
 begin
-  View:=EditorScrollBar.Position;
+  if not FUpdatingScrollbar then //else we'd update View even when reacting to View changes
+    View:=EditorScrollBar.Position;
 end;
 
 procedure TfTranslate.HandleWheel(down:boolean);
@@ -2640,49 +2726,25 @@ begin
   if down then View := View+1 else View := View-1;
 end;
 
-{ Sets FView and updates dependent controls }
-procedure TfTranslate.SetView(Value: integer);
-begin
-  FView := Value;
- //Basic rule: at least one line on the screen
-  if FView>linl.Count-1 then FView:=linl.Count-1;
- //Stricter rule: at least one screen of text on the screen
-  if FView>linl.Count-ScreenLineCount then FView:=linl.Count-printl; //can make it < 0
-  if FView<0 then FView:=0;
-
-  UpdateScrollbar;
-  EditorPaintbox.Invalidate;
-end;
-
 procedure TfTranslate.UpdateScrollbar;
 begin
-  if linl.Count-ScreenLineCount<=0 then begin
-    if EditorScrollBar.Enabled then
-      EditorScrollBar.Enabled := false;
-    exit;
-  end;
-  if not EditorScrollBar.Enabled then
-    EditorScrollBar.Enabled := true;
-  if EditorScrollBar.Min<>0 then
-    EditorScrollBar.Min := 0;
-  if EditorScrollBar.Max<>linl.Count-ScreenLineCount then
-    EditorScrollBar.Max := linl.Count-ScreenLineCount;
-  if EditorScrollBar.Position<>FView then
-    EditorScrollBar.Position:=FView;
-end;
-
-{ Returns logical position of the first visible character on the screen }
-function TfTranslate.GetViewPos: TSourcePos;
-begin
-  if FView<0 then
-    Result := SourcePos(0,0)
-  else
-  if FView>=linl.Count then begin
-    Result.x := linl[linl.Count-1].xs;
-    Result.y := linl[linl.Count-1].ys;
-  end else begin
-    Result.x := linl[FView].xs;
-    Result.y := linl[FView].ys;
+  FUpdatingScrollbar := true;
+  try
+    if linl.Count-ScreenLineCount<=0 then begin
+      if EditorScrollBar.Enabled then
+        EditorScrollBar.Enabled := false;
+      exit;
+    end;
+    if not EditorScrollBar.Enabled then
+      EditorScrollBar.Enabled := true;
+    if EditorScrollBar.Min<>0 then
+      EditorScrollBar.Min := 0;
+    if EditorScrollBar.Max<>linl.Count-ScreenLineCount then
+      EditorScrollBar.Max := linl.Count-ScreenLineCount;
+    if EditorScrollBar.Position<>View then
+      EditorScrollBar.Position:=View;
+  finally
+    FUpdatingScrollbar := false;
   end;
 end;
 
@@ -2771,7 +2833,6 @@ var oldview:integer;
   tmp: TCursorPos;
 begin
   if not Visible then exit;
-  oldview:=view;
   ReflowText();
   if linl.Count=0 then
   begin
@@ -2790,6 +2851,7 @@ begin
   tmp := GetCur;
 
  //Fix view
+  oldview:=view;
   if view>cur.y then if cur.y>0 then view:=cur.y else view:=0;
   if view+printl-1<cur.y then view:=cur.y-printl+1;
   if view+printl-1>=linl.Count then view:=linl.Count-printl;
@@ -2808,7 +2870,7 @@ begin
   fUser.btnLookupClip.Down:=false;
 
   if dolook then
-    if (fUser.Visible) or (insertBuffer<>'') then
+    if fUser.Visible or (insertBuffer<>'') then
       fUser.Look()
     else begin
       s:=GetDocWord(rcur.x,rcur.y,wt,false);
@@ -2865,6 +2927,7 @@ and start with current position, not with the start of the document.
 procedure TfTranslate.InvalidateLines;
 begin
   linl.Clear;
+  InvalidateViewLine;
   InvalidateCursorPos;
 end;
 
@@ -3486,7 +3549,7 @@ end;
 procedure TfTranslate.ReflowText(force:boolean);
 begin
   if force then
-    linl.Clear;
+    InvalidateLines;
   RenderText(EditorPaintBox.Canvas,PaintBoxClientRect,linl,-1,printl,
     lastxsiz,lastycnt,false,true);
  //NOTE: We must always have at least one logical and graphical line after reflow (maybe empty)
@@ -3854,7 +3917,7 @@ end;
 procedure TfTranslate.RefreshLines;
 begin
   if linl=nil then exit; //still creating
-  linl.Clear;
+  InvalidateLines;
   mustrepaint:=true;
   ShowText(true);
 end;
@@ -4116,10 +4179,10 @@ begin
   oldblock := block;
 end;
 
-procedure TfTranslate.RepaintText(dolook:boolean=false);
+procedure TfTranslate.RepaintText;
 begin
   mustrepaint:=true;
-  ShowText(dolook);
+  ShowText(true);
 end;
 
 procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream;
