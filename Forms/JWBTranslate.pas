@@ -309,6 +309,9 @@ type
     function GetView: integer;
     procedure SetView(Value: integer);
     procedure SetViewPos(const Value: TSourcePos);
+    function NormalizeViewPos(const APos: TSourcePos): TSourcePos;
+    function NormalizeView: boolean;
+    function ScrollIntoView: boolean;
     procedure UpdateViewLine;
     procedure InvalidateViewLine;
     function GetScreenLineCount: integer;
@@ -2663,6 +2666,9 @@ begin
     ViewPos := SourcePos(linl[linl.Count-1].xs, linl[linl.Count-1].ys)
   else
     ViewPos := SourcePos(linl[Value].xs, linl[Value].ys);
+
+ { We normalize view when changing it (e.g. scrolling) }
+  NormalizeView;
 end;
 
 procedure TfTranslate.InvalidateViewLine;
@@ -2693,26 +2699,95 @@ begin
       break;
     end;
 
- //Basic rule: at least one line on the screen
+ { This method does not care about View normalization, or we'd have trouble
+  even determining View is not normalized.
+  Only basic safety applies here }
   if FViewLineCached>linl.Count-1 then FViewLineCached:=linl.Count-1;
- //Stricter rule: at least one screen of text on the screen
-  if FViewLineCached>linl.Count-ScreenLineCount then FViewLineCached:=linl.Count-ScreenLineCount; //can make it < 0
-  if FViewLineCached<0 then FViewLineCached:=0;
+  if FViewLineCached<0 then FViewLineCached := 0;
 
   UpdateScrollbar;
 end;
 
 procedure TfTranslate.SetViewPos(const Value: TSourcePos);
+var oldview: integer;
 begin
-  FViewPos := Value;
-{ Auto-normalize. Disabled until needed. Perhaps move to GetViewPos if doc[]
- conditions can change.
-  if FViewPos.y>doc.Count-1 then FViewPos.y := doc.Count-1;
-  if FViewPos.y<0 then FViewPos.y := 0;
-  if FViewPos.x>doc[FViewPos.y]-1 then FViewPos.x := FViewPos.x-1;
-  if FViewPos.x<0 then FViewPos.x := 0; }
+  oldview := 0;
+  if (linl<>nil) and (linl.Count>0) then
+    oldview := View; //try to save on repainting when not needed
+
+  FViewPos := NormalizeViewPos(Value); //Basic safety: set anchor only on valid chars.
   InvalidateViewLine;
-  EditorPaintbox.Invalidate;
+
+ { Sometimes we change ViewPos but the resulting View stays the same.
+  Let's try to save on repainting. }
+
+ { No lines => no choice but to reflow and repaint everything }
+  if ((linl=nil) or (linl.Count<=0))
+ { Have lines => calculate new View and check if it changed }
+  or (oldview<>View) then
+    EditorPaintbox.Invalidate; //this will also trigger GetView => UpdateScrollbar etc.
+end;
+
+{ Adjusts ViewPos so that it's placed on a legal point in a document }
+function TfTranslate.NormalizeViewPos(const APos: TSourcePos): TSourcePos;
+begin
+  Result := APos;
+  if doc=nil then begin
+    Result := SourcePos(0, 0);
+    exit;
+  end;
+
+  if Result.y>doc.Count-1 then Result.y := doc.Count-1;
+  if Result.y<0 then Result.y := 0;
+
+  if Result.y>=doc.Count then
+    Result.x := 0
+  else begin
+    if Result.x>flength(doc[Result.y])-1 then Result.x := flength(doc[Result.y])-1;
+    if Result.x<0 then Result.x := 0;
+  end;
+end;
+
+{ View anchor is normalized so that its position is valid (<= end of line)
+and we have at least one full screen of text.
+This happens on SetView() e.g. scroll, and on any changes (additions/deletions). }
+function TfTranslate.NormalizeView: boolean;
+var LCurView: integer;
+  LCurViewPos: TSourcePos;
+begin
+  Assert(linl.Count>0, 'NormalizeView() without lines flow done');
+  LCurView := View;
+
+ //Basic rule: at least one line on the screen
+  if LCurView>linl.Count-1 then LCurView:=linl.Count-1;
+ //Stricter rule: at least one screen of text on the screen
+  if LCurView>linl.Count-ScreenLineCount then LCurView:=linl.Count-ScreenLineCount; //can make it < 0
+  if LCurView<0 then LCurView:=0;
+
+  Result := View<>LCurView;
+  if Result then
+    View := LCurView //this also forces ViewPos re-assignment
+  else begin
+   //Just do ViewPos safety checks
+    LCurViewPos := NormalizeViewPos(FViewPos);
+    if (LCurViewPos.x<>FViewPos.x) or (LCurViewPos.y<>FViewPos.y) then begin
+      ViewPos := LCurViewPos;
+      Result := View<>LCurView; //if this resulted in view adjustment
+    end;
+  end;
+end;
+
+//Changes View so that cursor is visible
+function TfTranslate.ScrollIntoView: boolean;
+var LCurView: integer;
+begin
+  Assert(linl.Count>0, 'ScrollIntoView() without lines flow done');
+  LCurView := View;
+  if LCurView>cur.y then if cur.y>0 then LCurView:=cur.y else LCurView:=0;
+  if LCurView+printl-1<cur.y then LCurView:=cur.y-printl+1;
+  Result := View<>LCurView;
+  if Result then
+    View:=LCurView;
 end;
 
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
@@ -2827,8 +2902,7 @@ end;
 
 { Also updates various controls such as ScrollBar, to match current state }
 procedure TfTranslate.ShowText(dolook:boolean);
-var oldview:integer;
-  s:string;
+var s:string;
   wt:integer;
   tmp: TCursorPos;
 begin
@@ -2851,12 +2925,12 @@ begin
   tmp := GetCur;
 
  //Fix view
-  oldview:=view;
-  if view>cur.y then if cur.y>0 then view:=cur.y else view:=0;
-  if view+printl-1<cur.y then view:=cur.y-printl+1;
-  if view+printl-1>=linl.Count then view:=linl.Count-printl;
-  if view<0 then view:=0;
-  if view>=linl.Count then view:=0;
+  if ScrollIntoView then
+    mustrepaint := true;
+  { ScrollIntoView calls Invalidate which would trigger repaint anyway,
+   but if it says it did, we'll just repaint it right now. }
+  if NormalizeView then
+    mustrepaint := true;
 
  //Reset dragstart
   if not shiftpressed then
@@ -2877,7 +2951,6 @@ begin
       if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
     end;
 
-  if oldview<>view then mustrepaint:=true;
   if mustrepaint then
     EditorPaintbox.Repaint //not just Invalidate() because we want Paint be done now
   else begin
