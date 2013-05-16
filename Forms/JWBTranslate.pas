@@ -264,6 +264,7 @@ type
 
   protected //Mostly repainting
     EditorBitmap: TBitmap;
+    mustrepaint:boolean;
     function PaintBoxClientRect: TRect;
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
@@ -271,7 +272,6 @@ type
       view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     procedure ReflowText(force:boolean=false);
   public
-    mustrepaint:boolean;
     procedure RepaintText;
     procedure ShowText(dolook:boolean);
 
@@ -3811,13 +3811,13 @@ begin
       exit;
     end;
   if insconfirmed then ClearInsBlock;
-  FileChanged:=true;
   immmode:=sbAsciiMode.down;
   if (c=' ') and (insertbuffer<>'') then
   begin
    //Accept suggestion
     resolvebuffer:=sbKanjiMode.down;
     ResolveInsert(true);
+    FileChanged:=true;
     if sbKanjiMode.down then exit;
   end;
   if (c=#13) and (insertbuffer<>'') then
@@ -3825,12 +3825,14 @@ begin
    //Reject suggestion
     resolvebuffer:=false;
     ResolveInsert(true);
+    FileChanged:=true;
     if sbKanjiMode.down then exit;
   end;
   if (c=#8) and (insertbuffer<>'') then
   begin
     delete(insertbuffer,length(insertbuffer),1);
     DisplayInsert(GetInsertKana(true),nil,insertbuffer<>'');
+    FileChanged:=true;
     mustrepaint:=true;
     ShowText(true);
     exit;
@@ -3839,6 +3841,7 @@ begin
   begin
     DeleteSelection(); //Updates block and verifies everything
     SplitLine(rcur.x,rcur.y);
+    FileChanged:=true;
     rcur := SourcePos(0,rcur.y+1);
     RefreshLines;
     exit;
@@ -3860,6 +3863,7 @@ begin
       ShowText(true);
       DeleteCharacter(rcur.x,rcur.y);
     end;
+    FileChanged:=true;
     RefreshLines;
     exit;
   end;
@@ -3878,6 +3882,8 @@ begin
     '}':immchar:={$IFNDEF UNICODE}'3011'{$ELSE}#$3011{$ENDIF};
     ' ':immchar:={$IFNDEF UNICODE}'0020'{$ELSE}#$0020{$ENDIF};
   end;
+  if Ord(c)<=$0020 then //not a printable char
+    exit;
   if (AnsiUppercase(c)=c) and ((c<'0') or (c>'9')) then
   begin
     if curlang='c'then chartype:='-'else chartype:='K'
@@ -3895,13 +3901,15 @@ begin
       DisplayInsert(immchar,CharPropArray(DEFCPROPS),false)
     else
       DisplayInsert(fstring(c),CharPropArray(DEFCPROPS),false);
+    FileChanged:=true;
     mustrepaint:=true;
     ShowText(true);
     exit;
   end;
+  FileChanged:=true;
   if insertbuffer='' then
   begin
-    if chartype='0'then buffertype:='-'else buffertype:=chartype;
+    if chartype='0' then buffertype:='-' else buffertype:=chartype;
     insertbuffer:=c;
     insconfirmed:=false;
   end else
