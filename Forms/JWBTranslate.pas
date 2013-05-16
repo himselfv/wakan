@@ -4609,13 +4609,7 @@ begin
 
   FCursorPosInvalid := false;
 
- //TODO: If this is slow, we can cache TCursorPos and only recalculate it
- //  when TSourcePos or linl changes.
- //  For linl we may implement some kind of incremental change number.
- // Or we may explicitly call RecalculateCursorPos when changing SourcePos
- // and linl.
-
- //TODO: Safety: In complicated cases (no exact matching line found) try to
+ //TODO: Nicety: In complicated cases (no exact matching line found) try to
  // return the closest position (last one with y<=rcur.y and x<=rcur.x or the
  // next one after that, or 0:0).
 end;
