@@ -83,8 +83,7 @@ type
   TTextSelection = TSelection; { Text selection in logical coordinates }
   PTextSelection = ^TTextSelection;
 
-  TPageMeasurements = record
-  end;
+  TCaretState = (csHidden, csVisible, csBlink);
 
   TTextAnnotMode = (
     amNone,
@@ -318,16 +317,17 @@ type
     procedure HandleWheel(down:boolean);
     procedure UpdateScrollbar; //to reflect lines.Count/View
   public
+    function IsCursorOnScreen(const APos: TCursorPos): boolean;
     property View: integer read GetView write SetView;
     property ViewPos: TSourcePos read FViewPos write SetViewPos;
     property ScreenLineCount: integer read GetScreenLineCount; //number of fully visible graphical lines which fit on the screen
 
-  protected //DrawCursor-related stuff. No one else use this
-    oldcur: TCursorPos; //last cursor position, where it was drawn. Used by DrawCursor
-    cursorposcache:integer; //cursor X in pixels, from last DrawCursor. -1 means recalculate
-    cursorblinked:boolean; //cursor is currently in "hidden" blink state
+  protected //DrawCaret-related stuff. No one else use this
+    FLastCaretPos: TCursorPos; //last position where caret was drawn. Used by DrawCaret
+    FCaretPosCache:integer; //cursor X in pixels, from last DrawCaret. -1 means recalculate
+    FCaretVisible:boolean; //cursor is currently in "hidden" blink state
   public
-    procedure DrawCursor(blink:boolean);
+    procedure DrawCaret(AState: TCaretState);
 
   protected //Selection block
     oldblock: TTextSelection; //Selection block last time it was repainted (allows us to only repaint changed parts)
@@ -1018,18 +1018,19 @@ begin
 
   ViewPos := SourcePos(0, 0);
   rcur := SourcePos(-1, -1);
-  oldcur := CursorPos(-1, -1);
   ins := SourcePos(-1, -1);
   inslen:=0;
-  cursorposcache:=-1;
   cursorend:=false;
   lastxsiz:=16;
   lastycnt:=2;
   printl:=1;
   mustrepaint:=true;
 
+  FLastCaretPos := CursorPos(-1, -1);
+  FCaretPosCache:=-1;
+  FCaretVisible:=false;
+
   priorkanji:='';
-  cursorblinked:=false;
   shiftpressed:=false;
   dragstart := SourcePos(-1, -1);
   oldblock := Selection(-1, -1, -1, -1);
@@ -2248,7 +2249,7 @@ begin
   fMenu.aEditorCut.ShortCut:=CutShort;
   fMenu.aEditorPaste.ShortCut:=PasteShort;
   fMenu.aEditorSelectAll.ShortCut:=AllShort;
-  DrawCursor(true); //show cursor
+  DrawCaret(csVisible); //show cursor
 end;
 
 procedure TfTranslate.ListBox1Exit(Sender: TObject);
@@ -2258,7 +2259,7 @@ begin
   fMenu.aEditorCut.ShortCut:=0;
   fMenu.aEditorPaste.ShortCut:=0;
   fMenu.aEditorSelectAll.ShortCut:=0;
-  DrawCursor(false); //kill cursor
+  DrawCaret(csHidden); //kill cursor
 end;
 
 procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
@@ -2408,10 +2409,10 @@ begin
   RenderText(EditorBitmap.Canvas,RectWH(0,0,EditorBitmap.Width,EditorBitmap.Height),
     linl,View,printl,lastxsiz,lastycnt,false,false);
   Canvas.Draw(r.Left,r.Top,EditorBitmap);
-  oldcur := CursorPos(-1, -1);
   oldblock := Selection(-1, -1, -1, -1);
   DrawBlock(EditorPaintbox.Canvas,r);
-  DrawCursor(false);
+  FLastCaretPos := CursorPos(-1, -1);
+  DrawCaret(csHidden);
 end;
 
 { These are auto-check grouped buttones so they handle Down/Undown automatically }
@@ -2831,6 +2832,17 @@ begin
   Result := printl;
 end;
 
+function TfTranslate.IsCursorOnScreen(const APos: TCursorPos): boolean;
+begin
+  Assert(linl.Count>0, 'IsCursorOnScreen() without lines flow done');
+  if (APos.x<0) or (APos.y<0) or (APos.y>=linl.Count) or (APos.x>linl[APos.y].len) then
+  begin
+    result:=false;
+    exit;
+  end;
+  Result:= (APos.y>=View) and (APos.y<View+printl);
+end;
+
 procedure TfTranslate.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
   MousePos: TPoint; var Handled: Boolean);
 begin
@@ -2857,7 +2869,7 @@ end;
 
 procedure TfTranslate.BlinkCursorTimerTimer(Sender: TObject);
 begin
-  if Self.Visible then DrawCursor(true);
+  if Self.Visible then DrawCaret(csBlink);
 end;
 
 procedure TfTranslate.SelectAll;
@@ -2954,7 +2966,8 @@ begin
   if mustrepaint then
     EditorPaintbox.Repaint //not just Invalidate() because we want Paint be done now
   else begin
-    DrawCursor(false);
+    DrawCaret(csVisible); //this is often called as a result of keypress/click,
+     //and user wants to see the effect of their actions
     DrawBlock(EditorPaintBox.Canvas,PaintBoxClientRect);
   end;
 
@@ -4150,44 +4163,47 @@ begin
   end;
 end;
 
-procedure TfTranslate.DrawCursor(blink:boolean);
+{
+Paints/hides caret.
+AState:
+  csHidden: erase caret from the control
+  csVisible: show caret on the control
+  csBlink: change caret state
+}
+procedure TfTranslate.DrawCaret(AState: TCaretState);
 var pbRect: TRect;
-function OnScreen(x,y:integer):boolean;
-begin
-  if (x<0) or (y<0) or (y>=linl.Count) or (x>linl[y].len) then
+
+  procedure DrawIt(x,y:integer);
+  var rect:TRect;
   begin
-    result:=false;
-    exit;
+    rect.top:=pbRect.Top+y*lastxsiz*lastycnt;
+    rect.left:=pbRect.Left+FCaretPosCache*lastxsiz;
+    rect.bottom:=rect.top+lastxsiz*lastycnt;
+    rect.right:=rect.left+2;
+    InvertRect(EditorPaintBox.Canvas.Handle,rect);
   end;
-  if (y<View) or (y>=View+printl) then result:=false else result:=true;
-end;
-procedure CalcCache(x,y:integer);
-begin
-  cursorposcache:=PosToWidth(x,y);
-end;
-procedure DrawIt(x,y:integer);
-var rect:TRect;
-begin
-  rect.top:=pbRect.Top+y*lastxsiz*lastycnt;
-  rect.left:=pbRect.Left+cursorposcache*lastxsiz;
-  rect.bottom:=rect.top+lastxsiz*lastycnt;
-  rect.right:=rect.left+2;
-  InvertRect(EditorPaintBox.Canvas.Handle,rect);
-end;
+
 var tmp: TCursorPos;
 begin
   pbRect:=PaintBoxClientRect;
-  if not ListBox1.Focused then blink:=false;
-  if cursorposcache=-1 then CalcCache(oldcur.x,oldcur.y);
-  if (OnScreen(oldcur.x,oldcur.y)) and (not cursorblinked) then DrawIt(oldcur.x,oldcur.y-View); //invert=>erase
+  if not ListBox1.Focused then AState := csHidden;
+  if FCaretPosCache=-1 then
+    FCaretPosCache:=PosToWidth(FLastCaretPos.x,FLastCaretPos.y);
+  if IsCursorOnScreen(FLastCaretPos) and FCaretVisible then
+    DrawIt(FLastCaretPos.x,FLastCaretPos.y-View); //invert=>erase
   tmp := CursorScreenPos;
-  if (cursorposcache=-1) or (oldcur.x<>tmp.x) or (oldcur.y<>tmp.y) then CalcCache(tmp.x, tmp.y);
-  if OnScreen(tmp.x, tmp.y) and blink and cursorblinked then DrawIt(tmp.x,tmp.y-View); //draw new
-  if blink then
-    cursorblinked:=not cursorblinked
+  if (FCaretPosCache=-1) or (FLastCaretPos.x<>tmp.x) or (FLastCaretPos.y<>tmp.y) then
+    FCaretPosCache:=PosToWidth(tmp.x, tmp.y);
+  case AState of
+    csBlink: FCaretVisible:=not FCaretVisible;
+    csVisible: FCaretVisible:=true;
   else
-    cursorblinked:=true;
-  oldcur := tmp;
+    FCaretVisible:=false;
+  end;
+  if IsCursorOnScreen(tmp) and FCaretVisible then
+    DrawIt(tmp.x,tmp.y-View); //draw new
+
+  FLastCaretPos := tmp;
 end;
 
 {
