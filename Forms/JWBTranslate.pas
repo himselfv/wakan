@@ -1719,7 +1719,7 @@ begin
     props.AddChars(s3);
   end;
 
-  PasteText(chars,props,amNone); //paste as is, do not expand ruby
+  PasteText(chars,props,amRuby); //paste as is, do not expand ruby
   Result := true;
 end;
 
@@ -1747,9 +1747,63 @@ var i,j,bc:integer;
   cp: PCharacterProps;
   sel: TTextSelection;
   chFirst,chLast: integer;
+
+  inReading:boolean;
+  reading,kanji:FString;
+  rubyTextBreak: TRubyTextBreakType;
+
+  procedure PutBC(bc0, bc1, bc2, bc3: word);
+  begin
+    buf[bc+0]:=bc0;
+    buf[bc+1]:=bc1;
+    buf[bc+2]:=bc2;
+    buf[bc+3]:=bc3;
+    inc(bc,4);
+    if bc=16384 then
+    begin
+      stream.Write(buf,bc*2);
+      bc:=0;
+    end;
+  end;
+
+  procedure PutChars(const str: FString);
+  var i: integer;
+    tmp: UnicodeString;
+  begin
+    tmp := fstrtouni(str);
+    for i := 1 to flength(tmp) do
+      PutBC(
+        0,
+        word(tmp[i]),
+        0,
+        0
+      );
+  end;
+
+  procedure PutWord(const kanji, reading: FString; textBreak: TRubyTextBreakType);
+  begin
+    if textBreak<>btSkip then
+      PutChars(UH_AORUBY_TEXTBREAK);
+    PutChars(kanji);
+    PutChars(UH_AORUBY_OPEN);
+    PutChars(reading);
+    PutChars(UH_AORUBY_CLOSE);
+  end;
+
+  procedure FinalizeRuby();
+  begin
+    PutWord(kanji,reading,rubyTextBreak);
+    inReading := false;
+    reading := '';
+  end;
+
 begin
   sig:=$f1ff;
   stream.Write(sig,2);
+
+  inReading := false;
+  reading := '';
+  kanji := '';
 
   s:=AnsiString('WaKan Translated Text>'+CharDataProps.DicBuildDate);
   while length(s)<32 do s:=s+' ';
@@ -1791,34 +1845,57 @@ begin
       chLast := flength(doc[i]);
     for j:= chFirst to chLast-1 do
     begin
-      cp := @doctr[i].chars[j];
-      buf[bc]:=ord(cp.wordstate)+cp.learnstate*256;
-      l:=cp.dicidx;
-      buf[bc+2]:=l div 65536+(Ord('0')+cp.docdic)*256; //apparently dic # is stored as a char ('1','2'...)
-      buf[bc+3]:=l mod 65536;
-      buf[bc+1]:=word(fstrtouni(GetDoc(j,i))[1]);
-      inc(bc,4);
-      if bc=16384 then
-      begin
-        stream.Write(buf,bc*2);
-        bc:=0;
+     //NOTE: Similar to what happens in SaveText(). Perhaps one day we should
+     //  unify all saving functions. (Or made one the enhancement of another).
+
+      if inReading then begin
+       //End of word
+        if (doctr[i].chars[j].wordstate<>'<')
+       //End of word root. That's where we output ruby and continue with just printing kana
+        or not (cfRoot in doctr[i].chars[j].flags) then begin
+         //=> End of annotated chain
+          FinalizeRuby;
+         //and we continue through to the "no inReading" case where we might start a new chain
+        end else begin
+         //Inside of annotated chain -- skip the symbols.
+         //We got them into "kanji" from GetDocChain() or GetTextWordInfo() when we first encountered this chain.
+        end;
+      end; //yep, no 'else'
+
+      if not inReading then begin
+       //Explicit ruby load, even if ruby's empty
+        if cfExplicitRuby in doctr[i].chars[j].flags then begin
+          reading := doctr[i].chars[j].ruby;
+          kanji := GetDocChain(j,i);
+          if kanji=UH_RUBY_PLACEHOLDER then //there can be only one placeholder
+            kanji:='';
+          inReading := true;
+        end;
+
+       //Implicit ruby is preserved directly in this format -- leave for later
+
+       //Ruby break -- if we have some kind of reading
+        if inReading then
+          rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
       end;
+
+      if not inReading then begin
+        cp := @doctr[i].chars[j];
+        l:=cp.dicidx;
+        PutBC(
+          ord(cp.wordstate)+cp.learnstate*256,
+          word(fstrtouni(GetDoc(j,i))[1]),
+          l div 65536+(Ord('0')+cp.docdic)*256, //apparently dic # is stored as a char ('1','2'...)
+          l mod 65536
+        );
+      end;
+
     end;
 
-    if i<>sel.toy then begin
-     //Newline
-      buf[bc]:=ord('$');
-      buf[bc+1]:=0;
-      buf[bc+2]:=0;
-      buf[bc+3]:=0;
-      inc(bc,4);
-    end;
-
-    if bc=16384 then
-    begin
-      stream.Write(buf,bc*2);
-      bc:=0;
-    end;
+    if inReading then
+      FinalizeRuby;
+    if i<>sel.toy then
+      PutBC(ord('$'), 0, 0, 0);
   end;
   stream.Write(buf,bc*2);
 end;
@@ -1831,7 +1908,7 @@ begin
     {OwnsStream=}true
   );
   try
-    SaveWakanText(ms);
+    SaveWakanText(ms, nil);
   finally
     FreeAndNil(ms);
   end;
