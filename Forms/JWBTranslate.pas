@@ -3845,11 +3845,14 @@ begin
   end;
   if c=#8 then
   begin
-    if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then DeleteSelection() else
+    if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
+      DeleteSelection()
+    else
+    if (cur.x>0) or (cur.y>0) then
     begin
       if cur.x>0 then
         Cur := CursorPos(Cur.x-1,Cur.y)
-      else
+      else //cur.y>0
         if rcur.x=0 then
           cur := CursorPos(2550,cur.y-1)
         else
