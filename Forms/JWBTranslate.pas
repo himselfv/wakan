@@ -305,12 +305,14 @@ type
     FViewPos: TSourcePos; //logical coordinates of a first visible graphical line anchor
     FViewLineCached: integer; //index of a first visible graphical line -- cached
     FUpdatingScrollbar: boolean;
+    FNormalizeViewPlanned: boolean; //do NormalizeView on next occasion (i.e. repaint or GetView or something)
     function GetView: integer;
     procedure SetView(Value: integer);
     procedure SetViewPos(const Value: TSourcePos);
     function NormalizeViewPos(const APos: TSourcePos): TSourcePos;
     function NormalizeView: boolean;
     function ScrollIntoView: boolean;
+    procedure InvalidateNormalizeView;
     procedure UpdateViewLine;
     procedure InvalidateViewLine;
     function GetScreenLineCount: integer;
@@ -1095,6 +1097,9 @@ procedure TfTranslate.FormResize(Sender: TObject);
 begin
   InvalidateLines;
   Invalidate;
+ { NormalizeView needs Lines and we don't want to recalculate Lines now --
+  the editor might be invisible so why bother. }
+  InvalidateNormalizeView;
 end;
 
 procedure TfTranslate.FormActivate(Sender: TObject);
@@ -2406,6 +2411,8 @@ begin
   if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
     EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
   ReflowText(); //because we need View
+  if FNormalizeViewPlanned then
+    NormalizeView();
   RenderText(EditorBitmap.Canvas,RectWH(0,0,EditorBitmap.Width,EditorBitmap.Height),
     linl,View,printl,lastxsiz,lastycnt,false,false);
   Canvas.Draw(r.Left,r.Top,EditorBitmap);
@@ -2762,7 +2769,8 @@ begin
  //Basic rule: at least one line on the screen
   if LCurView>linl.Count-1 then LCurView:=linl.Count-1;
  //Stricter rule: at least one screen of text on the screen
-  if LCurView>linl.Count-ScreenLineCount then LCurView:=linl.Count-ScreenLineCount; //can make it < 0
+  if LCurView>linl.Count-ScreenLineCount then
+    LCurView:=linl.Count-ScreenLineCount; //can make it < 0
   if LCurView<0 then LCurView:=0;
 
   Result := View<>LCurView;
@@ -2776,6 +2784,8 @@ begin
       Result := View<>LCurView; //if this resulted in view adjustment
     end;
   end;
+
+  FNormalizeViewPlanned := false;
 end;
 
 //Changes View so that cursor is visible
@@ -2789,6 +2799,11 @@ begin
   Result := View<>LCurView;
   if Result then
     View:=LCurView;
+end;
+
+procedure TfTranslate.InvalidateNormalizeView;
+begin
+  FNormalizeViewPlanned := true;
 end;
 
 procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
