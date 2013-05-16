@@ -4112,8 +4112,6 @@ begin
       else
         learnstate := 9;
     end;
-
-    rlen:=word.slen;
   end;
  //This subroutine ^^^:
  //local --- s, i, globdict_s, learnstate_s
