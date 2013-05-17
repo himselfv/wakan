@@ -1701,8 +1701,10 @@ begin
          //dic index is apparently stored as character (ex. '1', '2') and we need it as int
           locdicidx := buf[i*4+2] div 256 - ord('0');
          //convert to document indexes
-          if (locdicidx<0) or (locdicidx>Length(dicconv)) then
+          if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
             locdicidx := 0 //trust no one
+            { this in fact might happen because Wakan by default sets dicidx to 1,
+             even if there's no dictionaries }
           else
             locdicidx := dicconv[locdicidx];
           s3.AddChar(dp, buf[i*4] div 256, l, locdicidx);
@@ -1742,7 +1744,6 @@ var i,j,bc:integer;
   buf:array[0..16383] of word;
   sig:word;
   s:AnsiString;
-  l:integer;
   w:word;
   cp: PCharacterProps;
   sel: TTextSelection;
@@ -1766,18 +1767,23 @@ var i,j,bc:integer;
     end;
   end;
 
+  procedure PutChar(const ch: WideChar; wordstate: char; learnstate: integer; docidx: integer; docdic: integer);
+  begin
+    PutBC(
+      ord(wordstate)+learnstate*256,
+      word(ch),
+      docidx div 65536+(Ord('0')+docdic)*256, //apparently dic # is stored as a char ('1','2'...)
+      docidx mod 65536
+    );
+  end;
+
   procedure PutChars(const str: FString);
   var i: integer;
     tmp: UnicodeString;
   begin
     tmp := fstrtouni(str);
     for i := 1 to flength(tmp) do
-      PutBC(
-        0,
-        word(tmp[i]),
-        0,
-        0
-      );
+      PutChar(tmp[i], '-', 9, 0, 1); //standard default char
   end;
 
   procedure PutWord(const kanji, reading: FString; textBreak: TRubyTextBreakType);
@@ -1881,13 +1887,8 @@ begin
 
       if not inReading then begin
         cp := @doctr[i].chars[j];
-        l:=cp.dicidx;
-        PutBC(
-          ord(cp.wordstate)+cp.learnstate*256,
-          word(fstrtouni(GetDoc(j,i))[1]),
-          l div 65536+(Ord('0')+cp.docdic)*256, //apparently dic # is stored as a char ('1','2'...)
-          l mod 65536
-        );
+        PutChar(fstrtouni(GetDoc(j,i))[1], cp.wordstate, cp.learnstate,
+          cp.dicidx, cp.docdic);
       end;
 
     end;
