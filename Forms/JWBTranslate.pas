@@ -32,11 +32,6 @@ CalcBlockFromTo() converts that to:
   blocktox        last line in selection
   blocktoy        last selected char
 All inclusive.
-
-Breaking changes
-==================
-- Graphical lines were previously declared one character longer than needed.
- This was WRONG and was fixed, but there could still be code which relied on that.
 }
 
 interface
@@ -45,7 +40,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBUtils, JWBStrings, JWBUser,
   JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox, WinSpeedButton,
-  ComCtrls, ToolWin, ImgList;
+  ComCtrls, ToolWin, ImgList, JWBWakanText;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -58,13 +53,6 @@ uses
 {$ENDIF}
 
 type
- { Character position in source text. }
-  TSourcePos = record
-    y: integer; //line, 0-based
-    x: integer  //char, 0-based
-  end;
-  PSourcePos = ^TSourcePos;
-
  { Cursor position in graphical lines }
   TCursorPos = record
     y: integer; //line, 0-based
@@ -80,25 +68,8 @@ type
   end;
   PSelection = ^TSelection;
   TLineSelection = TSelection; { Text selection in graphical lines. }
-  TTextSelection = TSelection; { Text selection in logical coordinates }
-  PTextSelection = ^TTextSelection;
 
   TCaretState = (csHidden, csVisible, csBlink);
-
-  TTextAnnotMode = (
-    amNone,
-      //do not parse ruby when loading
-      //do not parse ruby when pasting
-      //save without any ruby
-    amDefault,
-      //do not parse ruby when loading
-      //parse ruby when pasting if configured to
-      //save only those annotations which were loaded from ruby
-    amRuby
-      //parse ruby when loading
-      //parse ruby when pasting
-      //save all annotations as ruby
-  );
 
   TSetWordTransFlag = (
     tfScanParticle,
@@ -108,8 +79,6 @@ type
 
   TTranslationThread = class;
   TTranslationThreads = array of TTranslationThread;
-
-  TTextSaveFormat = class;
 
   TfTranslate = class(TForm)
     Bevel: TPanel;
@@ -215,31 +184,21 @@ type
     function CopyAsOpenDocument: TMemoryStream;
     function CopyAsWakanText: TMemoryStream;
 
+  protected
+    function Get_doctr(Index: integer): PCharacterLineProps;
   public
+    doc: TWakanText;
     docfilename:string;
     doctp:byte;
-
-  protected //Document
-    procedure AdjustDocument;
-  public
-    doc: TStringList; //document lines
-    doctr: TCharacterPropList; //character property list (translation, wordstate, etc)
-    docdic: TStringList;
-    function GetDoc(ax,ay:integer):FChar;
-    function GetDocChain(cx,cy:integer):FString;
-    function IsHalfWidth(x,y:integer):boolean;
-    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
-    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
-    function EndOfDocument: TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
-    function EndOfLine(const LogicalLineIndex: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+    property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
 
   protected //Unsorted
+    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
+    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
+    procedure DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
+      out kanji, reading: FString; out meaning: string);
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
-    procedure CheckTransCont(x,y:integer);
-    procedure SplitLine(x,y:integer);
-    procedure JoinLine(y:integer);
-    procedure DeleteCharacter(x,y:integer);
     procedure RefreshLines;
     procedure CopySelection(format:TTextSaveFormat;stream:TStream;
       AnnotMode:TTextAnnotMode=amRuby);
@@ -247,6 +206,7 @@ type
     procedure PasteOp;
     procedure PasteText(const chars: FString; const props: TCharacterLineProps;
       AnnotMode: TTextAnnotMode);
+    function IsHalfWidth(x,y:integer):boolean;
     function PosToWidth(x,y:integer):integer;
     function WidthToPos(x,y:integer):integer;
     function HalfUnitsToCursorPos(x,y: integer):integer;
@@ -362,9 +322,6 @@ type
     buffertype:char;
     function GetInsertKana(display:boolean):FString;
 
-  protected //Ruby stuff
-    procedure CollapseRuby(var s: FString; var sp: TCharacterLineProps);
-
   protected //File opening/saving
     FFileChanged: boolean;
     LastAutoSave:TDateTime;
@@ -372,18 +329,11 @@ type
      //this is needed for saving in Kana mode -- we don't show a reminder if it's obvious the text was translated
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
-    procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    function LoadWakanText(stream: TStream; silent: boolean = false): boolean; overload;
-    procedure LoadWakanText(const filename:string); overload;
-    procedure SaveWakanText(stream: TStream; block: PTextSelection = nil); overload;
-    procedure SaveWakanText(const filename:string); overload;
   public //File open/save
     procedure ClearEditor;
     procedure OpenAnyFile(filename:string);
     procedure OpenFile(filename:string;tp:byte);
     procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat;
-      stream: TStream; block: PTextSelection = nil);
     function SaveAs: boolean;
     function CommitFile:boolean;
     function ExportAs: boolean;
@@ -416,122 +366,6 @@ type
     procedure Execute; override;
   end;
 
- {
-  This saves data or selection to file or to memory to be copied to clipboard.
-  Write your own formats if you wish.
-
-  Rules:
-    Default implementation saves simply text.
-
-    One encoding converter is created by default implementation, unless you
-    don't call inherited BeginDocument, in which case don't call inherited at all.
-
-    By the end of EndDocument all caches have to be flushed down to FStream.
- }
-
-  TTextSaveFormat = class
-  protected
-    FStream: TStream;
-    FOwnsStream: boolean;
-    FOutput: TJwbConvert;
-    FEncType: integer;
-    FNoBOM: boolean;
-    LastChar: FChar;
-    AtSpace: boolean;
-    AtNewline: boolean;
-    procedure outpln(const s: string);
-    procedure outp(const s: string);
-  public
-    constructor Create(AEncType: integer; ANoBOM: boolean=false);
-    destructor Destroy; override;
-    procedure BeginDocument; virtual;
-    procedure AddChars(const s: FString); virtual;
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); virtual;
-    procedure EndDocument; virtual;
-    property Stream: TStream read FStream write FStream;
-    property OwnsStream: boolean read FOwnsStream write FOwnsStream;
-    property NoBOM: boolean read FNoBOM write FNoBOM;
-  end;
-
-  TKanaOnlyFormat = class(TTextSaveFormat)
-  protected
-    FAddSpaces: boolean;
-  public
-    constructor Create(AEncType: integer; AAddSpaces: boolean);
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-  end;
-
-  TKanjiOnlyFormat = class(TTextSaveFormat)
-  public
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-  end;
-
-  TKanjiKanaFormat = class(TTextSaveFormat)
-  public
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-  end;
-
- { UTF8 only for simplicity }
-  THtmlFormatOption = (
-    hoClipFragment    //add <!-- start fragment --> <!-- end fragment --> marks to use as HTML clipboard format
-  );
-  THtmlFormatOptions = set of THtmlFormatOption;
-
-  THtmlFormat = class(TTextSaveFormat)
-  protected
-    FOptions: THtmlFormatOptions;
-  public
-    constructor Create(AOptions: THtmlFormatOptions);
-    procedure BeginDocument; override;
-    procedure AddChars(const s: FString); override;
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-    procedure EndDocument; override;
-    property Options: THtmlFormatOptions read FOptions write FOptions;
-  end;
-
-  TRubyTextFormat = class(TTextSaveFormat)
-  public
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-  end;
-
-  { UTF8 only by format }
-  {$R 'odt.res' 'Assets\ODT\odt.rc'}
-  TOpenDocumentContentFormat = class(TTextSaveFormat)
-  public
-    constructor Create;
-    procedure BeginDocument; override;
-    procedure AddChars(const s: FString); override;
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-    procedure EndDocument; override;
-  end;
-
-  TOpenDocumentFormat = class(TTextSaveFormat)
-  protected
-    FContentMem: TMemoryStream;
-    FContentFormat: TOpenDocumentContentFormat;
-  public
-    constructor Create();
-    destructor Destroy; override;
-    procedure BeginDocument; override;
-    procedure AddChars(const s: FString); override;
-    procedure AddWord(const word,reading: FString; const meaning: string;
-      rubyTextBreak: TRubyTextBreakType); override;
-    procedure EndDocument; override;
-  end;
-
-const
- //Markers used by THtmlFormat to indicate start and end of fragment meant for Clipboard
- //See CF_HTML documentation.
-  HtmlStartFragment = '<!--StartFragment -->';
-  HtmlEndFragment = '<!--EndFragment -->';
-
 var
   fTranslate: TfTranslate;
 
@@ -540,9 +374,8 @@ const
   FontSizeMedium = 12;
   FontSizeLarge = 16;
 
-function SourcePos(x,y: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
 function CursorPos(x,y: integer): TCursorPos; {$IFDEF INLINE}inline;{$ENDIF}
-function Selection(fromx, fromy, tox, toy: integer): TSelection; {$IFDEF INLINE}inline;{$ENDIF}
+function Selection(fromx, fromy, tox, toy: integer): TTextSelection; {$IFDEF INLINE}inline;{$ENDIF}
 
 type
   TRectHelper = record helper for TRect
@@ -565,19 +398,13 @@ uses JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji, JWBStatistics,
 
 {$R *.DFM}
 
-function SourcePos(x,y: integer): TSourcePos;
-begin
-  Result.x := x;
-  Result.y := y;
-end;
-
 function CursorPos(x,y: integer): TCursorPos;
 begin
   Result.x := x;
   Result.y := y;
 end;
 
-function Selection(fromx, fromy, tox, toy: integer): TSelection;
+function Selection(fromx, fromy, tox, toy: integer): TTextSelection;
 begin
   Result.fromy := fromy;
   Result.fromx := fromx;
@@ -601,58 +428,6 @@ begin
   Result.Top := Top;
   Result.Right := Result.Left + Width;
   Result.Bottom := Result.Top + Height;
-end;
-
-
-{ Document }
-
-//Makes sure there's at least one line in document, as required
-procedure TfTranslate.AdjustDocument;
-begin
-  if doc.Count=0 then begin
-    doc.Add('');
-    doctr.AddNewLine();
-  end;
-end;
-
-//ax is 0-based
-function TfTranslate.GetDoc(ax,ay:integer):FChar;
-begin
-  if ay>=doc.Count then showmessage('Illegal doc access!');
-  if ax>=flength(doc[ay]) then result:=UH_ZERO else result:=fgetch(doc[ay],ax+1);
-end;
-
-{ Returns the text of a single character chain:
-   [start type] < < < <
-Reads from (cx,cy) till chain end. }
-function TfTranslate.GetDocChain(cx,cy:integer):FString;
-begin
-  Result := fgetch(doc[cy],cx+1);
-  Inc(cx);
-  while (cx < flength(doc[cy])) and (doctr[cy].chars[cx].wordstate='<') do begin
-    Result := Result + fgetch(doc[cy],cx+1);
-    Inc(cx);
-  end;
-end;
-
-function TfTranslate.IsHalfWidth(x,y:integer):boolean;
-begin
-  result:=IsHalfWidthChar(GetDoc(x,y));
-end;
-
-//Returns position just after the last character in the document
-function TfTranslate.EndOfDocument: TSourcePos;
-begin
-  AdjustDocument();
-  Result.y := doc.Count-1;
-  Result.x := flength(doc[Result.y]);
-end;
-
-function TfTranslate.EndOfLine(const LogicalLineIndex: integer): TSourcePos;
-begin
- //Document must already be adjusted as they're using logical lines
-  Result.y := LogicalLineIndex;
-  Result.x := flength(doc[LogicalLineIndex]);
 end;
 
 
@@ -682,336 +457,10 @@ begin
     plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
 end;
 
-
-constructor TTextSaveFormat.Create(AEncType: integer; ANoBOM: boolean);
-begin
-  inherited Create;
-  FEncType := AEncType;
-  FNoBOM := ANoBOM;
-  AtSpace := false;
-  AtNewline := true;
-  LastChar := UH_NOCHAR;
-end;
-
-destructor TTextSaveFormat.Destroy;
-begin
-  FreeAndNil(FOutput);
-  if FOwnsStream then
-    FreeAndNil(FStream);
-  inherited;
-end;
-
-//Used to simplify writing strings as fstrings
-procedure TTextSaveFormat.outpln(const s: string);
-begin
-  FOutput.Write(fstr(s)+UH_CR+UH_LF);
-end;
-
-procedure TTextSaveFormat.outp(const s: string);
-begin
-  FOutput.Write(fstr(s));
-end;
-
-procedure TTextSaveFormat.BeginDocument;
-var AFlags: TJwbCreateFlags;
-begin
-  AFlags := [];
-  if not FNoBOM then AFlags := AFlags + [cfBom];
-  FOutput := TJwbConvert.CreateNew(FStream,FEncType,AFlags);
-end;
-
-procedure TTextSaveFormat.EndDocument;
-begin
-  FreeAndNil(FOutput);
-end;
-
-procedure TTextSaveFormat.AddChars(const s: FString);
-var i: integer;
-begin
-  for i := 1 to flength(s) do begin
-    LastChar := fgetch(s,i);
-    FOutput.Write(LastChar);
-    AtSpace := LastChar=UH_SPACE;
-    AtNewline := LastChar=UH_LF;
-  end;
-end;
-
-{ Word cannot be empty because there's "no word". If it's empty, don't be smart
- about it: print empty line. }
-procedure TTextSaveFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  AddChars(word);
-end;
-
-constructor TKanaOnlyFormat.Create(AEncType:integer; AAddSpaces:boolean);
-begin
-  inherited Create(AEncType);
-  FAddSpaces := AAddSpaces;
-end;
-
-procedure TKanaOnlyFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  if FAddSpaces and not (AtSpace or AtNewline) then
-    AddChars(UH_SPACE+reading+UH_SPACE)
-  else
-    AddChars(reading);
-end;
-
-procedure TKanjiOnlyFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  if not (AtSpace or AtNewline) then
-    AddChars(UH_SPACE+word+UH_SPACE)
-  else
-    AddChars(word);
-end;
-
-procedure TKanjiKanaFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  if not (AtSpace or AtNewline) then
-    AddChars(UH_SPACE);
-  if reading<>'' then
-    AddChars(word+UH_SPACE+reading+UH_SPACE)
-  else
-    AddChars(word); //without space if no reading
-end;
-
-constructor THtmlFormat.Create(AOptions: THtmlFormatOptions);
-begin
-  inherited Create(FILETYPE_UTF8);
-  FOptions := AOptions;
-  FNoBOM := true; //always no bom with html
-end;
-
-procedure THtmlFormat.BeginDocument;
-begin
-  inherited BeginDocument;
-  outpln('<!DOCTYPE html><html><head>');
-  outp('<meta http-equiv="Content-Type" content="text/html; charset=utf-8">');
-  outpln('</head>');
-  outpln('<body>');
-  if hoClipFragment in Options then
-    outpln(HtmlStartFragment);
-  outp('<p>');
-end;
-
-{
-Fast HTMLEncode.
-See http://stackoverflow.com/questions/2968082/is-there-a-delphi-standard-function-for-escaping-html
-}
-function HTMLEncode3(const Data: string): string;
-var iPos, i: Integer;
-
-  procedure Encode(const AStr: String);
-  begin
-    Move(AStr[1], result[iPos], Length(AStr) * SizeOf(Char));
-    Inc(iPos, Length(AStr));
-  end;
-
-begin
-  SetLength(result, Length(Data) * 6);
-  iPos := 1;
-  for i := 1 to length(Data) do
-    case Data[i] of
-      '<': Encode('&lt;');
-      '>': Encode('&gt;');
-      '&': Encode('&amp;');
-      '"': Encode('&quot;');
-    else
-      result[iPos] := Data[i];
-      Inc(iPos);
-    end;
-  SetLength(result, iPos - 1);
-end;
-
-procedure THtmlFormat.AddChars(const s: FString);
-var tmp: FString;
-begin
-  tmp := HTMLEncode3(s);
-  repl(tmp,UH_CR+UH_LF,fstr('</p><p>'));
-  repl(tmp,UH_LF,fstr('</p><p>'));
-  repl(tmp,UH_CR,'');
-  repl(tmp,fstr('</p><p>'),fstr('</p>'#13#10'<p>')); //if we did that before, we'd be stuck in infinite replacements
-  FOutput.Write(tmp);
-end;
-
-procedure THtmlFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
- { Up to two nested ruby brackets, as defined in
-  http://www.w3.org/TR/html5/text-level-semantics.html#the-ruby-element }
-  if reading<>'' then begin
-    if meaning<>'' then
-      outp('<ruby title="'+HTMLEncode3(meaning)+'">')
-    else
-      outp('<ruby>');
-  end else
-  if meaning<>'' then
-    outp('<span title="'+HTMLEncode3(meaning)+'">');
-
-  FOutput.Write(HTMLEncode3(word));
-
-  if (word<>'') and (reading<>'') then begin
-    outp('<rt>');
-    FOutput.Write(HTMLEncode3(reading));
-    outp('</ruby>');
-  end else
-  if meaning<>'' then
-    outp('</span>');
-end;
-
-procedure THtmlFormat.EndDocument;
-begin
-  outpln('</p>');
-  if hoClipFragment in Options then
-    outpln(HtmlEndFragment);
-  outpln('</body></html>');
-  inherited EndDocument;
-end;
-
-procedure TRubyTextFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  if rubyTextBreak=btAuto then
-    if AtNewline then
-      rubyTextBreak := btSkip //first char in a line
-    else
-    if flength(word)<1 then
-      rubyTextBreak := btBreak //empty base requires break
-    else
-    if EvalChar(fgetch(word,1))=EvalChar(LastChar) then
-      rubyTextBreak := btBreak //break when there are two characters of the same type in a row
-    else
-    if EvalChars(word) and not (1 shl EC_IDG_CHAR) <> 0 then
-      rubyTextBreak := btBreak //break when there's something other than kanji in the line,
-      //such as 髪の毛 -- or ruby will be applied only to 毛
-    else
-      rubyTextBreak := btSkip;
-  if rubyTextBreak=btBreak then
-    FOutput.Write(UH_AORUBY_TEXTBREAK+word)
-  else
-    FOutput.Write(word);
-
- //We don't check that reading is not empty, because if it was empty
- //we wouldn't have set inReading, except if it was explicit ruby,
- //in which case we must write it even if empty.
-  FOutput.Write(UH_AORUBY_OPEN + reading + UH_AORUBY_CLOSE);
-end;
-
-constructor TOpenDocumentContentFormat.Create;
-begin
-  inherited Create(FILETYPE_UTF8);
-end;
-
-procedure TOpenDocumentContentFormat.BeginDocument;
-var res: TResourceStream;
-begin
-  res := TResourceStream.Create(hInstance,'ODT_CONTENT_START',RT_RCDATA);
-  try
-    FStream.CopyFrom(res,res.Size);
-  finally
-    FreeAndNil(res);
-  end;
-
-  inherited BeginDocument;
-  outp('<text:p>');
-end;
-
-procedure TOpenDocumentContentFormat.AddChars(const s: FString);
-var tmp: FString;
-begin
-  tmp := HTMLEncode3(s);
-  repl(tmp,UH_CR+UH_LF,fstr('</text:p><text:p>'));
-  repl(tmp,UH_LF,fstr('</text:p><text:p>'));
-  repl(tmp,UH_CR,'');
-  repl(tmp,fstr('</text:p><text:p>'),fstr('</text:p>'#10'<text:p>')); //ODT MUST use LF-only linebreaks
-  FOutput.Write(tmp);
-end;
-
-procedure TOpenDocumentContentFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  outp('<text:ruby><text:ruby-base>');
-  FOutput.Write(word);
-  outp('</text:ruby-base><text:ruby-text>');
-  FOutput.Write(reading);
-  outp('</text:ruby-text></text:ruby>');
-end;
-
-procedure TOpenDocumentContentFormat.EndDocument;
-var res: TResourceStream;
-begin
-  outp('</text:p>');
-  FOutput.Flush;
-  inherited EndDocument;
-
-  res := TResourceStream.Create(hInstance,'ODT_CONTENT_END',RT_RCDATA);
-  try
-    FStream.CopyFrom(res,res.Size);
-  finally
-    FreeAndNil(res);
-  end;
-end;
-
-constructor TOpenDocumentFormat.Create();
-begin
-  inherited Create(0); //inherited converted not used
-  FContentMem := TMemoryStream.Create;
-  FContentFormat := TOpenDocumentContentFormat.Create();
-  FContentFormat.Stream := FContentMem;
-end;
-
-destructor TOpenDocumentFormat.Destroy;
-begin
-  FreeAndNil(FContentFormat);
-  FreeAndNil(FContentMem);
-  inherited;
-end;
-
-procedure TOpenDocumentFormat.BeginDocument;
-begin
- //no inherited
-  FContentFormat.BeginDocument;
-end;
-
-procedure TOpenDocumentFormat.AddChars(const s: FString);
-begin
-  FContentFormat.AddChars(s);
-end;
-
-procedure TOpenDocumentFormat.AddWord(const word,reading: FString; const meaning: string;
-  rubyTextBreak: TRubyTextBreakType);
-begin
-  FContentFormat.AddWord(word,reading,meaning,rubyTextBreak);
-end;
-
-procedure TOpenDocumentFormat.EndDocument;
-var arc: TJclZipCompressArchive;
-begin
-  FContentFormat.EndDocument;
-
- //Pack into archive
-  arc := TJclZipCompressArchive.Create(FStream);
-  try
-    arc.AddFile('META-INF\manifest.xml',TResourceStream.Create(hInstance,'ODT_MANIFEST',RT_RCDATA),{OwnsStream=}true);
-    arc.AddFile('mimetype',TResourceStream.Create(hInstance,'ODT_MIMETYPE',RT_RCDATA),{OwnsStream=}true);
-    arc.AddFile('styles.xml',TResourceStream.Create(hInstance,'ODT_STYLES',RT_RCDATA),{OwnsStream=}true);
-    FContentMem.Seek(0,soFromBeginning);
-    arc.AddFile('content.xml',FContentMem,{OwnsStream=}false);
-    arc.Compress;
-  finally
-    FreeAndNil(arc);
-  end;
-end;
-
 procedure TfTranslate.FormCreate(Sender: TObject);
 begin
-  doc:=TStringList.Create;
-  doctr:=TCharacterPropList.Create;
-  docdic:=TStringList.Create;
+  doc:=TWakanText.Create;
+  doc.OnGetDictionaryEntry := DocGetDictionaryEntry;
 
   docfilename:='';
   doctp:=0;
@@ -1070,9 +519,7 @@ begin
   FreeAndNil(EditorBitmap);
   linl.Free;
   plinl.Free;
-  doc.Free;
-  doctr.Free;
-  docdic.Free;
+  FreeAndNil(doc);
 end;
 
 procedure TfTranslate.FormShow(Sender: TObject);
@@ -1116,8 +563,6 @@ end;
 procedure TfTranslate.ClearEditor;
 begin
   doc.Clear;
-  doctr.Clear;
-  docdic.Clear;
   InvalidateLines;
   rcur := SourcePos(0, 0);
   ViewPos := SourcePos(0, 0);
@@ -1160,8 +605,6 @@ begin
 
   lblFilename.Caption:=uppercase(ExtractFilename(filename));
   doc.Clear;
-  doctr.Clear;
-  docdic.Clear;
   InvalidateLines;
   Screen.Cursor:=crHourGlass;
   try
@@ -1173,9 +616,9 @@ begin
     FullTextTranslated:=false;
 
     if tp=FILETYPE_WTT then
-      LoadWakanText(docfilename)
+      doc.LoadWakanText(docfilename)
     else
-      LoadText(docfilename, tp, LoadAnnotMode);
+      doc.LoadText(docfilename, tp, LoadAnnotMode);
 
     ShowText(true);
 
@@ -1192,11 +635,11 @@ var stream: TStream;
 begin
   Screen.Cursor:=crHourGlass;
   if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
-    SaveWakanText(filename)
+    doc.SaveWakanText(filename)
   else begin
     stream := TStreamWriter.Create(TFileStream.Create(filename,fmCreate),true);
     try
-      SaveText(
+      doc.SaveText(
         AnnotMode,
         TRubyTextFormat.Create(tp),
         stream
@@ -1207,712 +650,6 @@ begin
   end;
   Screen.Cursor:=crDefault;
   FileChanged:=false;
-end;
-
-//Receives a string of characters and their properties.
-//Parses all aozora-ruby sequences and converts them to annotations, removing from the line
-//Has no particular adherrence to TfTranslate, we should probably move it someplace else.
-procedure TfTranslate.CollapseRuby(var s: FString; var sp: TCharacterLineProps);
-var
-  idx: integer; //current char index
-  c: FChar; //current char
-
-  explicitTextBreak: boolean;
-  idxLastTextBreak: integer; //index of last ruby text break (|) on the current line, or 0
-  idxRubyOpen: integer;
-  inRubyText: boolean;
-
- //WARNING! Indexing in sp starts with 0, in s with 1, remember that while reading.
-
-  { Tries to guess where's the start of the annotated word.
-   Receives:
-     idx -- index of an annotation open char -- 0..Length(s)
-   Returns: 1..idx-1
-   When given 0, returns 0 which means ruby was the first char on the line.
-   Rarely returns idx which means, all chars before are already ruby-fied. }
-  function GuessLastTextBreak(curidx: integer): integer;
-  begin
-   //Note: sp.chars is 0-indexes, curidx is 1-indexed
-    if curidx<=1 then begin //beginning of the string
-      Result := curidx;
-      exit;
-    end else
-    if (sp.chars[(curidx-1)-1].wordstate<>'-') then begin //char before is already annotated
-      Result := curidx;
-      exit;
-    end;
-    Dec(curidx); //ok we have a char just before, move to it and start comparing EvalChar
-    while (curidx>1) and (sp.chars[(curidx-1)-1].wordstate='-') do //char before is not yet annotated
-    begin
-     //Might do more guesswork in the future
-      if EvalChar(fgetch(s, curidx))<>EvalChar(fgetch(s, curidx-1)) then //and char before is of the same kind
-        break;
-      Dec(curidx); //go to char before
-    end;
-    Result := curidx;
-  end;
-
-  //Called to finalize currently open ruby
-  procedure FinalizeRuby;
-  begin
-    if idxLastTextBreak<=0 then begin
-     //this means ruby was the first char on the line, but we have to store it somehow
-     //on save we'll ignore UH_RUBY_PLACEHOLDERs and only write ruby
-      s := UH_RUBY_PLACEHOLDER + s;
-      with sp.InsertChar(0)^ do
-        Reset;
-      idxLastTextBreak := 1;
-      Inc(idx);
-      Inc(idxRubyOpen);
-    end else
-    if explicitTextBreak then begin
-     //Delete the char
-      s := fcopy(s, 1, idxLastTextBreak-1) + fcopy(s, idxLastTextBreak+1, flength(s)-idxLastTextBreak);
-      sp.DeleteChar(idxLastTextBreak-1);
-      Dec(idx);
-      Dec(idxRubyOpen);
-    end;
-    //Now idxLastTextBreak points to first character of an annotated word (or to <<AORUBY_OPEN)
-
-    Assert(idxRubyOpen>=idxLastTextBreak);
-    if idxRubyOpen=idxLastTextBreak then begin
-     //Again, empty annotated expression
-      s := fcopy(s, 1, idxLastTextBreak-1) + UH_RUBY_PLACEHOLDER + fcopy(s, idxLastTextBreak, flength(s)-idxLastTextBreak+1);
-      with sp.InsertChar(idxLastTextBreak-1)^ do
-        Reset; //init as default char
-      Inc(idx);
-      Inc(idxRubyOpen);
-    end;
-    //Now we have at least one character to be annotated
-
-    //Copy annotation itself to char props..
-    with sp.chars[idxLastTextBreak-1] do begin
-      wordstate := 'F';
-      ruby := fcopy(s, idxRubyOpen+1, idx-idxRubyOpen-1);
-      if explicitTextBreak then
-        rubyTextBreak := btBreak
-      else
-        rubyTextBreak := btSkip;
-      flags := flags + [cfExplicitRuby, cfRoot];
-    end;
-
-   //..and delete it
-    s := fcopy(s, 1, idxRubyOpen-1) + fcopy(s, idx+1, flength(s)-idx);
-    sp.DeleteChars(idxRubyOpen-1, idx-idxRubyOpen+1);
-    idx := idxRubyOpen-1;
-
-   //idx is now at the last char of the word to annotate
-   //first char is already marked, mark the rest as "word continuation"
-    Inc(idxLastTextBreak);
-    while idxLastTextBreak<=idx do begin
-      with sp.chars[idxLastTextBreak-1] do begin
-        wordstate := '<';
-        flags := flags + [cfRoot];
-      end;
-      Inc(idxLastTextBreak);
-    end;
-
-   //for now we don't try to guess the tail of the word
-
-   //reset everything
-    explicitTextBreak := false;
-    idxLastTextBreak := 0;
-    idxRubyOpen := 0;
-    inRubyText := false;
-  end;
-
-begin
-  explicitTextBreak := false;
-  idxLastTextBreak := 0;
-  idxRubyOpen := 0;
-  inRubyText := false;
-
-  idx := 1;
-  while idx<=flength(s) do begin
-    c := fgetch(s,idx);
-
-   //Inside of a ruby skip everything until close
-    if inRubyText then begin
-      if c=UH_AORUBY_CLOSE then
-        FinalizeRuby;
-    end else
-
-   //Ruby text break
-    if c=UH_AORUBY_TEXTBREAK then begin
-      explicitTextBreak := true;
-      idxLastTextBreak := idx;
-     { And continue like nothing had happened.
-      If we encounter another TEXTBREAK, that one will override this one,
-      and this one will appear like a normal char.
-      On the other hand, if we find <<ruby opener>> only then we'll go back and mark
-      everything from here to there as "annotated". }
-    end else
-
-   //Ruby opener
-    if c=UH_AORUBY_OPEN then
-    begin
-      if idxLastTextBreak<1 then
-        idxLastTextBreak := GuessLastTextBreak(idx);
-      idxRubyOpen := idx;
-      inRubyText := true;
-    end;
-
-   { Ruby comments and tags are not parsed here.
-    They are colored dynamically on render; see comments there. }
-
-    Inc(idx);
-  end;
-end;
-
-//Loads classic text file in any encoding.
-procedure TfTranslate.LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-var c: FChar;
-  cp: TCharacterProps;
-  s: FString; //current line text
-  sp: TCharacterLineProps; //current line props
-
-  //Called before we go to the next line,
-  //to save whatever needs saving and apply whatever needs applying.
-  procedure FinalizeLine;
-  begin
-    if AnnotMode=amRuby then
-      CollapseRuby(s, sp);
-    doc.Add(s);
-    doctr.AddLine(sp);
-    s:='';
-    sp.Clear;
-  end;
-
-begin
-  s := '';
-  sp.Clear;
-
-  Conv_Open(filename,tp);
-  while Conv_ReadChar(c) do
-  begin
-   //Default properties for this character
-    cp.Reset;
-    cp.SetChar('-', 9, 0, 1);
-    cp.rubyTextBreak := btAuto;
-    cp.ruby := '';
-    cp.flags := [];
-
-   //A linebreak breaks everything, even a ruby
-    if c=UH_CR then
-      FinalizeLine
-    else
-
-   //Normal symbol
-    if c<>UH_LF then begin
-      s:=s+c;
-      sp.AddChar(cp);
-    end;
-  end;
-  Conv_Close;
-  if s<>'' then
-    FinalizeLine();
-end;
-
-{
-Ruby saving strategy:
-- We always save "hard ruby" since if its present then we have loaded it from the file
-- As for soft ruby, we save that to the file according to user's choice.
-}
-//Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
-//and just write strings here.
-
-procedure TfTranslate.SaveText(AnnotMode:TTextAnnotMode; format:TTextSaveFormat;
-  stream: TStream; block: PTextSelection);
-var i,j,k: integer;
-  inReading:boolean;
-  meaning: string;
-  reading,kanji:FString;
-  rubyTextBreak: TRubyTextBreakType;
-  rootLen: integer; //remaining length of the word's root, if calculated dynamically. <0 means ignore this check
-  explicitRuby: boolean;
-  sel: TTextSelection;
-  chFirst,chLast: integer;
-
-  procedure outp(s: FString);
-  begin
-    format.AddChars(s)
-  end;
-
-  procedure FinalizeRuby();
-  begin
-    if (AnnotMode=amRuby) or (explicitRuby and (AnnotMode<>amNone)) then
-      format.AddWord(kanji,reading,meaning,rubyTextBreak)
-    else
-      format.AddChars(kanji);
-    inReading := false;
-    reading := '';
-    explicitRuby := false;
-  end;
-
-begin
-  inReading := false;
-  rootLen := -1;
-  explicitRuby := true;
-
-  if block<>nil then begin
-    sel := block^;
-    if sel.fromy<0 then sel.fromy := 0;
-    if sel.toy<0 then sel.toy := doc.Count-1;
-    if sel.fromx<0 then sel.fromx := 0;
-    if sel.tox<0 then sel.tox := flength(doc[sel.toy]);
-  end else begin
-    sel.fromy := 0;
-    sel.fromx := 0;
-    sel.toy := doc.Count-1;
-    sel.tox := flength(doc[sel.toy]);
-  end;
-
-  format.Stream := stream;
-  format.BeginDocument;
-  for i:=sel.fromy to sel.toy do
-  begin
-    if i=sel.fromy then
-      chFirst := sel.fromx
-    else
-      chFirst := 0;
-    if i=sel.toy then
-      chLast := sel.tox
-    else
-      chLast := flength(doc[i]);
-    for j:= chFirst to chLast-1 do
-    begin
-      if inReading then begin
-        Dec(rootLen);
-       //End of word
-        if (doctr[i].chars[j].wordstate<>'<')
-       //End of word root. That's where we output ruby and continue with just printing kana
-        or (explicitRuby and not (cfRoot in doctr[i].chars[j].flags))
-        or (rootLen=0) then begin
-         //=> End of annotated chain
-          FinalizeRuby;
-         //and we continue through to the "no inReading" case where we might start a new chain
-        end else begin
-         //Inside of annotated chain -- skip the symbols.
-         //We got them into "kanji" from GetDocChain() or GetTextWordInfo() when we first encountered this chain.
-        end;
-      end; //yep, no 'else'
-
-      if not inReading then begin
-       //Explicit ruby load, even if ruby's empty
-        if cfExplicitRuby in doctr[i].chars[j].flags then begin
-          reading := doctr[i].chars[j].ruby;
-          kanji := GetDocChain(j,i);
-          if kanji=UH_RUBY_PLACEHOLDER then //there can be only one placeholder
-            kanji:='';
-          inReading := true;
-          explicitRuby := true;
-          rootLen := -1;
-        end;
-
-       //Implicit ruby load (if explicit is not loaded -- checked by inReading)
-        if (AnnotMode=amRuby) and not inReading then begin
-          GetTextWordInfo(j,i,meaning,reading,kanji);
-          reading := ConvertBopomofo(reading); //dictionary stores it with F03*-style tones
-          inReading := (reading<>'');
-          explicitRuby := false;
-          if inReading then begin
-            rootLen := 0;
-           //Explicit ruby has it from file, but with implicit we have to find the word root
-            for k := j to min(j+flength(kanji), doctr[i].charcount) do
-              if fgetch(kanji, k-j+1)=GetDoc(k,i) then
-                Inc(rootLen)
-              else
-                break;
-            if (rootLen=0)
-           //we have found no match per kanji, let's try it the other way:
-           //assume the whole word is matched and check if there's anything special to the reading
-            and (reading<>fcopy(doc[i], j, j+flength(reading)))
-            and (AnnotMode=amRuby) //better annotate something than nothing
-              //in amKana it's the reverse: better replace nothing than too much
-            then
-              rootLen := -1; //annotate whole word
-
-           //In these cases we also hide reading during the rendering.
-           //I'm not yet sure what are these
-            if (upcase(doctr[i].chars[j].wordstate)<>'F') and (upcase(doctr[i].chars[j].wordstate)<>'D') then
-              rootLen := 0;
-            if rootLen=0 then
-              inReading := false;
-          end;
-        end;
-
-       //Ruby break -- if we have some kind of reading
-        if inReading then
-          rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
-      end;
-
-      if not inReading then
-        outp(GetDoc(j,i));
-    end;
-
-    if inReading then
-      FinalizeRuby;
-    if i<>sel.toy then
-      outp(UH_CR+UH_LF);
-  end;
-
-  format.EndDocument;
-  FreeAndNil(format);
-end;
-
-{
-Wakan text format.
-- "WaKan Translated Text>"+[WAKAN.CHR version]+$3294
-- List of dictionaries used in file
-  2 bytes: string length in characters
-  2*length bytes: string data
- String contains comma-separated dictionary names, first one has index 1:
-  EDICT,dictA,dictB
- May contain terminating "$$$$".
-- Characters. Each takes 8 bytes:
-  1 byte learn-state
-  1 byte char-state
-  1 byte dictionary index in local list
-  3 bytes dictionary entry #
-  2 bytes char
- A learn-state of "$" means newline character.
-
-Explicit ruby is currently stored expanded (as text). This is not the best solution,
-but otherwise we'd need to change the file format.
-}
-
-type
-  EBadWakanTextFormat = class(Exception);
-
-//Loads Wakan text from stream and merge-pastes it at the cursor position.
-//Used to load Wakan files and to paste Wakan clipboard cuts.
-function TfTranslate.LoadWakanText(stream: TStream; silent: boolean): boolean;
-var s,s2:string;
-  s3: TCharacterLineProps;
-  i:integer;
-  w:word;
-  reat:integer;
-  buf:array[0..16383] of word;
-  ws:array[0..31] of AnsiChar;
-  wss:array[0..4091] of AnsiChar;
-  wc:widechar;
-  dot:boolean;
-  l:integer;
-  ls:string;
-  dp:char;
-
-  chars: FString;
-  props: TCharacterLineProps;
-
-  locdics: TStringList;
-  locdicidx: integer;
-  dicconv: array of integer; //maps local dictionaries to document dictionaries
-
-begin
-  reat:=stream.Read(w,2);
-  if (reat<1) or (w<>$f1ff) then
-    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
-
-  dot:=true;
-
-  stream.Read(ws,32);
-  s:=string(ws);
-  if copy(s,1,22)<>'WaKan Translated Text>'then
-    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
-  delete(s,1,22);
-
-  if copy(s,1,length(CharDataProps.DicBuildDate))<>CharDataProps.DicBuildDate then
-  begin
-    if silent
-    or (Application.MessageBox(
-      pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. '
-        +'Translation cannot be loaded.'#13#13'Do you want to continue?')),
-      pchar(_l('#00090^eWarning')),
-      MB_YESNO or MB_ICONWARNING)=idNo) then
-    begin
-      Result := false;
-      exit;
-    end;
-    dot:=false;
-  end;
-
-  stream.Read(w,2);
-  if w<>3294 then
-    raise EBadWakanTextFormat.Create(_l('#00681^eThis JTT file was created by '
-      +'old version of WaKan.'#13'It is not compatible with the current version.'));
-
-  locdics := TStringList.Create;
-  try
-   //Read local dictionaries
-    stream.Read(w,2);
-    stream.Read(wss,w*2);
-    wss[w*2]:=#0;
-    s:=string(wss);
-    while (s<>'') and (s[1]<>'$') do
-    begin
-      s2:=copy(s,1,pos(',',s)-1);
-      delete(s,1,pos(',',s));
-      locdics.Add(s2);
-    end;
-
-   //Create dictionary conversion table
-    SetLength(dicconv, locdics.Count);
-    for i := 0 to Length(dicconv) - 1 do
-      if not docdic.Find(locdics[i], dicconv[i]) then
-        dicconv[i] := docdic.Add(locdics[i]);
-  finally
-    FreeAndNil(locdics);
-  end;
-
- //We will build a text in these variables, then pass it to PasteText.
-  chars := '';
-  props.Clear;
-
-  s:='';
-  s3.Clear;
-  reat := stream.Read(buf,Length(buf)*SizeOf(word));
-  while reat>0 do
-  begin
-
-    for i:=0 to (reat div 8)-1 do
-    begin
-      dp:=chr(buf[i*4] mod 256);
-      if dp='$'then
-      begin
-        chars := chars + s + UH_CR + UH_LF;
-        props.AddChars(s3);
-        props.AddChar('-', 9, 0, 1);
-        props.AddChar('-', 9, 0, 1);
-        s:='';
-        s3.Clear;
-      end else
-      begin
-        wc:=widechar(buf[i*4+1]);
-        l:=(buf[i*4+2] mod 256)*65536+buf[i*4+3];
-        ls:=inttostr(l);
-        while length(ls)<6 do ls:='0'+ls;
-        s:=s+fstr(wc);
-        if length(dp+inttostr(buf[i*4] div 256)+ls+chr(buf[i*4+2] div 256))<>9 then begin
-          showmessage('<<'+dp+'--'+inttostr(buf[i*4] div 256)+'--'+ls+'--'+chr(buf[i*4+2] div 256)+'>>');
-        end;
-        if not dot then
-          s3.AddChar('-', 9, 0, 1)
-        else begin
-         //dic index is apparently stored as character (ex. '1', '2') and we need it as int
-          locdicidx := buf[i*4+2] div 256 - ord('0');
-         //convert to document indexes
-          if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
-            locdicidx := 0 //trust no one
-            { this in fact might happen because Wakan by default sets dicidx to 1,
-             even if there's no dictionaries }
-          else
-            locdicidx := dicconv[locdicidx];
-          s3.AddChar(dp, buf[i*4] div 256, l, locdicidx);
-        end;
-      end;
-    end;
-
-    reat := stream.Read(buf,Length(buf)*SizeOf(word));
-  end;
-
-  if s<>'' then
-  begin
-    chars := chars + s;
-    props.AddChars(s3);
-  end;
-
-  PasteText(chars,props,amRuby); //paste as is, do not expand ruby
-  Result := true;
-end;
-
-procedure TfTranslate.LoadWakanText(const filename:string);
-var ms: TStream;
-begin
-  ms := TStreamReader.Create(
-    TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite),
-    {OwnsStream=}true
-  );
-  try
-    LoadWakanText(ms);
-  finally
-    FreeAndNil(ms);
-  end;
-end;
-
-procedure TfTranslate.SaveWakanText(stream: TStream; block: PTextSelection = nil);
-var i,j,bc:integer;
-  buf:array[0..16383] of word;
-  sig:word;
-  s:AnsiString;
-  w:word;
-  cp: PCharacterProps;
-  sel: TTextSelection;
-  chFirst,chLast: integer;
-
-  inReading:boolean;
-  reading,kanji:FString;
-  rubyTextBreak: TRubyTextBreakType;
-
-  procedure PutBC(bc0, bc1, bc2, bc3: word);
-  begin
-    buf[bc+0]:=bc0;
-    buf[bc+1]:=bc1;
-    buf[bc+2]:=bc2;
-    buf[bc+3]:=bc3;
-    inc(bc,4);
-    if bc=16384 then
-    begin
-      stream.Write(buf,bc*2);
-      bc:=0;
-    end;
-  end;
-
-  procedure PutChar(const ch: WideChar; wordstate: char; learnstate: integer; docidx: integer; docdic: integer);
-  begin
-    PutBC(
-      ord(wordstate)+learnstate*256,
-      word(ch),
-      docidx div 65536+(Ord('0')+docdic)*256, //apparently dic # is stored as a char ('1','2'...)
-      docidx mod 65536
-    );
-  end;
-
-  procedure PutChars(const str: FString);
-  var i: integer;
-    tmp: UnicodeString;
-  begin
-    tmp := fstrtouni(str);
-    for i := 1 to flength(tmp) do
-      PutChar(tmp[i], '-', 9, 0, 1); //standard default char
-  end;
-
-  procedure PutWord(const kanji, reading: FString; textBreak: TRubyTextBreakType);
-  begin
-    if textBreak<>btSkip then
-      PutChars(UH_AORUBY_TEXTBREAK);
-    PutChars(kanji);
-    PutChars(UH_AORUBY_OPEN);
-    PutChars(reading);
-    PutChars(UH_AORUBY_CLOSE);
-  end;
-
-  procedure FinalizeRuby();
-  begin
-    PutWord(kanji,reading,rubyTextBreak);
-    inReading := false;
-    reading := '';
-  end;
-
-begin
-  sig:=$f1ff;
-  stream.Write(sig,2);
-
-  inReading := false;
-  reading := '';
-  kanji := '';
-
-  s:=AnsiString('WaKan Translated Text>'+CharDataProps.DicBuildDate);
-  while length(s)<32 do s:=s+' ';
-  stream.Write(s[1],32);
-
-  w:=3294;
-  stream.Write(w,2);
-
-  s:='';
-  for i:=0 to docdic.Count-1 do s:=s+AnsiString(docdic[i])+',';
-  w:=(length(s)+1) div 2;
-  stream.Write(w,2);
-  s:=s+'$$$$';
-  stream.Write(s[1],w*2);
-
-  if block<>nil then begin
-    sel := block^;
-    if sel.fromy<0 then sel.fromy := 0;
-    if sel.toy<0 then sel.toy := doc.Count-1;
-    if sel.fromx<0 then sel.fromx := 0;
-    if sel.tox<0 then sel.tox := flength(doc[sel.toy]);
-  end else begin
-    sel.fromy := 0;
-    sel.fromx := 0;
-    sel.toy := doc.Count-1;
-    sel.tox := flength(doc[sel.toy]);
-  end;
-
-  bc:=0;
-  for i:=sel.fromy to sel.toy do
-  begin
-    if i=sel.fromy then
-      chFirst := sel.fromx
-    else
-      chFirst := 0;
-    if i=sel.toy then
-      chLast := sel.tox
-    else
-      chLast := flength(doc[i]);
-    for j:= chFirst to chLast-1 do
-    begin
-     //NOTE: Similar to what happens in SaveText(). Perhaps one day we should
-     //  unify all saving functions. (Or made one the enhancement of another).
-
-      if inReading then begin
-       //End of word
-        if (doctr[i].chars[j].wordstate<>'<')
-       //End of word root. That's where we output ruby and continue with just printing kana
-        or not (cfRoot in doctr[i].chars[j].flags) then begin
-         //=> End of annotated chain
-          FinalizeRuby;
-         //and we continue through to the "no inReading" case where we might start a new chain
-        end else begin
-         //Inside of annotated chain -- skip the symbols.
-         //We got them into "kanji" from GetDocChain() or GetTextWordInfo() when we first encountered this chain.
-        end;
-      end; //yep, no 'else'
-
-      if not inReading then begin
-       //Explicit ruby load, even if ruby's empty
-        if cfExplicitRuby in doctr[i].chars[j].flags then begin
-          reading := doctr[i].chars[j].ruby;
-          kanji := GetDocChain(j,i);
-          if kanji=UH_RUBY_PLACEHOLDER then //there can be only one placeholder
-            kanji:='';
-          inReading := true;
-        end;
-
-       //Implicit ruby is preserved directly in this format -- leave for later
-
-       //Ruby break -- if we have some kind of reading
-        if inReading then
-          rubyTextBreak := doctr[i].chars[j].rubyTextBreak;
-      end;
-
-      if not inReading then begin
-        cp := @doctr[i].chars[j];
-        PutChar(fstrtouni(GetDoc(j,i))[1], cp.wordstate, cp.learnstate,
-          cp.dicidx, cp.docdic);
-      end;
-
-    end;
-
-    if inReading then
-      FinalizeRuby;
-    if i<>sel.toy then
-      PutBC(ord('$'), 0, 0, 0);
-  end;
-  stream.Write(buf,bc*2);
-end;
-
-procedure TfTranslate.SaveWakanText(const filename:string);
-var ms: TStream;
-begin
-  ms := TStreamWriter.Create(
-    TFileStream.Create(filename, fmCreate),
-    {OwnsStream=}true
-  );
-  try
-    SaveWakanText(ms, nil);
-  finally
-    FreeAndNil(ms);
-  end;
 end;
 
 //Returns false if user have cancelled the dialog
@@ -2039,11 +776,11 @@ begin
     );
 
     case SaveAsKanaDialog.FilterIndex of
-      1: SaveText(amRuby,TKanaOnlyFormat.Create(enctype,{AddSpaces=}true),stream);
-      2: SaveText(amRuby,TKanjiKanaFormat.Create(enctype),stream);
-      3: SaveText(amRuby,TKanjiOnlyFormat.Create(enctype),stream);
-      4: SaveText(amRuby,THtmlFormat.Create([]),stream);
-      5: SaveText(amRuby,TOpenDocumentFormat.Create(),stream);
+      1: doc.SaveText(amRuby,TKanaOnlyFormat.Create(enctype,{AddSpaces=}true),stream);
+      2: doc.SaveText(amRuby,TKanjiKanaFormat.Create(enctype),stream);
+      3: doc.SaveText(amRuby,TKanjiOnlyFormat.Create(enctype),stream);
+      4: doc.SaveText(amRuby,THtmlFormat.Create([]),stream);
+      5: doc.SaveText(amRuby,TOpenDocumentFormat.Create(),stream);
     end;
   finally
     FreeAndNil(stream);
@@ -2090,7 +827,7 @@ begin
     i := blockfromy;
     while (not Terminated) and (i<=blocktoy) do begin
       bg:=0;
-      en:=flength(fTranslate.doc[i])-1;
+      en:=flength(fTranslate.doc.Lines[i])-1;
       fTranslate.AutoTranslateLine(i, bg, en, req, dicsl);
       Inc(i);
     end;
@@ -2154,8 +891,8 @@ begin
         MB_ICONWARNING or MB_YESNO)<>idYes then exit;
     block.fromx:=0;
     block.fromy:=0;
-    block.tox:=flength(doc[doc.Count-1])-1;
-    block.toy:=doc.Count-1;
+    block.tox:=flength(doc.Lines[doc.Lines.Count-1])-1;
+    block.toy:=doc.Lines.Count-1;
   end else
     CalcBlockFromTo(true);
   Screen.Cursor:=crHourGlass;
@@ -2192,7 +929,7 @@ begin
     while y<=block.toy do
     begin
       bg:=0;
-      en:=flength(doc[y])-1;
+      en:=flength(doc.Lines[y])-1;
       if y=block.fromy then bg:=block.fromx;
       if y=block.toy then en:=block.tox;
 
@@ -2358,10 +1095,10 @@ begin
     ukn:=false;
     if key=VK_RIGHT then
     begin
-      if rcur.x<flength(doc[rcur.y]) then
+      if rcur.x<flength(doc.Lines[rcur.y]) then
         rcur := SourcePos(rcur.x+1, rcur.y)
       else
-      if rcur.y+1<doc.Count then
+      if rcur.y+1<doc.Lines.Count then
         rcur := SourcePos(0, rcur.y+1);
       CursorEnd := false; //even if not changed rcur
     end else
@@ -2371,7 +1108,7 @@ begin
         rcur := SourcePos(rcur.x-1, rcur.y)
       else
       if rcur.y>0 then
-        rcur := EndOfLine(rcur.y-1);
+        rcur := doc.EndOfLine(rcur.y-1);
       CursorEnd := false; //even if not changed rcur
     end else
     if key=VK_UP then CursorJumpToLine(tmp.y-1) else
@@ -2379,7 +1116,7 @@ begin
     if key=VK_PRIOR then CursorJumpToLine(tmp.y-ScreenLineCount) else
     if key=VK_NEXT then CursorJumpToLine(tmp.y+ScreenLineCount) else
     if (key=VK_HOME) and (ssCtrl in Shift) then rcur := SourcePos(0, 0) else
-    if (key=VK_END) and (ssCtrl in Shift) then rcur := Self.EndOfDocument else
+    if (key=VK_END) and (ssCtrl in Shift) then rcur := doc.EndOfDocument else
     if key=VK_HOME then begin
       tmp.x:=0;
       SetCur(tmp);
@@ -2393,7 +1130,7 @@ begin
       if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
         DeleteSelection()
       else
-        DeleteCharacter(rcur.x,rcur.y);
+        doc.DeleteCharacter(rcur.x,rcur.y);
       RefreshLines;
     end else
       ukn:=true;
@@ -2550,7 +1287,7 @@ begin
   for i:=block.fromy to block.toy do
   begin
     bg:=0;
-    en:=flength(doc[i])-1;
+    en:=flength(doc.Lines[i])-1;
     if i=block.fromy then bg:=block.fromx;
     if i=block.toy then if block.tox<en then en:=block.tox;
    { Remember, both beginning and ending can be after the last char,
@@ -2685,7 +1422,7 @@ function TfTranslate.CopyAsWakanText: TMemoryStream;
 begin
   Result := TMemoryStream.Create;
   CalcBlockFromTo(false);
-  Self.SaveWakanText(Result,@block);
+  doc.SaveWakanText(Result,@block);
 end;
 
 { Normal Ctrl-C -- only in a few basic formats.
@@ -2778,7 +1515,7 @@ begin
        //On this graphical line or before it (overshot)
         (FViewPos.x<linl[i].xs+linl[i].len)
        //At the end of the logical line (special case because FViewPos.x == xs+len)
-        or (Length(doc[linl[i].ys])<=linl[i].xs+linl[i].len)
+        or (Length(doc.Lines[linl[i].ys])<=linl[i].xs+linl[i].len)
       )
     ) then begin
       FViewLineCached := i;
@@ -2823,13 +1560,13 @@ begin
     exit;
   end;
 
-  if Result.y>doc.Count-1 then Result.y := doc.Count-1;
+  if Result.y>doc.Lines.Count-1 then Result.y := doc.Lines.Count-1;
   if Result.y<0 then Result.y := 0;
 
-  if Result.y>=doc.Count then
+  if Result.y>=doc.Lines.Count then
     Result.x := 0
   else begin
-    if Result.x>flength(doc[Result.y])-1 then Result.x := flength(doc[Result.y])-1;
+    if Result.x>flength(doc.Lines[Result.y])-1 then Result.x := flength(doc.Lines[Result.y])-1;
     if Result.x<0 then Result.x := 0;
   end;
 end;
@@ -3022,8 +1759,8 @@ begin
   end;
 
   if FRCur.y<0 then FRCur.y:=0;
-  if rcur.y>=doc.Count then
-    rcur:=EndOfDocument;
+  if rcur.y>=doc.Lines.Count then
+    rcur:=doc.EndOfDocument;
   if FRCur.x<0 then FRCur.x:=0;
 
  //Invalid cursorend => fix
@@ -3125,9 +1862,9 @@ begin
   ll.Clear;
   cx:=0;
   cy:=0;
-  while cy<doc.Count do
+  while cy<doc.Lines.Count do
   begin
-    wx:=flength(doc[cy]);
+    wx:=flength(doc.Lines[cy]);
 
     px:=0;
     wxl:=cx;
@@ -3303,7 +2040,7 @@ var
   function IsInRubyTag(xp, yp: integer; tagOpenSymbol, tagCloseSymbol: FChar): boolean;
   var s: string;
   begin
-    s := doc[yp];
+    s := doc.Lines[yp];
     Dec(xp); //once, because the current symbol doesn't matter
     while (xp>0) and (fgetch(s, xp)<>tagOpenSymbol) and (fgetch(s, xp)<>tagCloseSymbol) do
       Dec(xp);
@@ -3311,7 +2048,7 @@ var
   end;
 
 begin
-  AdjustDocument();
+  doc.AdjustDocument();
 
  { Cache render settings }
   colback:=Col('Editor_Back');
@@ -3414,13 +2151,13 @@ begin
       wx:=cx+ll[cl].len;
 
       while (px<screenw) and (
-       ((cx<wx) and (cx<flength(doc[cy])))
+       ((cx<wx) and (cx<flength(doc.Lines[cy])))
        or ((kanaq<>'') and PrintReading)
       ) do
       try
        { Note that we can get here even if cx is outside the legal characters for the string.
         This happens if we have some reading remainder in kanaq. Be careful. }
-        validChar := (cx<wx) and (cx<flength(doc[cy]));
+        validChar := (cx<wx) and (cx<flength(doc.Lines[cy]));
 
         if validChar then begin
           wordstate:=doctr[cy].chars[cx].wordstate;
@@ -3444,14 +2181,14 @@ begin
           if (upcase(wordstate)<>'F') and (upcase(wordstate)<>'D') then reading:='';
 
           if fSettings.cbReadingKatakana.Checked then begin
-            if cx>0 then gd0 := GetDoc(cx-1,cy) else gd0 := UH_NOCHAR;
-            if cx<flength(doc[cy]) then gd2 := GetDoc(cx+1,cy) else gd2 := UH_NOCHAR;
-            reading := reading + GetKanaReading(gd0,GetDoc(cx,cy),gd2);
+            if cx>0 then gd0 := doc.GetDoc(cx-1,cy) else gd0 := UH_NOCHAR;
+            if cx<flength(doc.Lines[cy]) then gd2 := doc.GetDoc(cx+1,cy) else gd2 := UH_NOCHAR;
+            reading := reading + GetKanaReading(gd0,doc.GetDoc(cx,cy),gd2);
           end;
 
-          if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_OPEN then
+          if fgetchl(doc.Lines[cy], cx+1)=UH_AORUBY_TAG_OPEN then
             inRubyTag := true;
-          if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_OPEN then
+          if fgetchl(doc.Lines[cy], cx+1)=UH_AORUBY_COMM_OPEN then
             inRubyComment := true;
          //will check for closers after we draw current symbol as is (closers are still inside the tag)
         end else begin
@@ -3598,7 +2335,7 @@ begin
 
         if not fSettings.cbNoEditorColors.Checked then
         begin
-          if fSettings.CheckBox41.Checked and validChar and ((EvalChar(GetDoc(cx,cy))>4) or (EvalChar(GetDoc(cx,cy))=0)) then
+          if fSettings.CheckBox41.Checked and validChar and ((EvalChar(doc.GetDoc(cx,cy))>4) or (EvalChar(doc.GetDoc(cx,cy))=0)) then
             canvas.Font.Color:=Col('Editor_ASCII');
           if wordstate='I'then
             canvas.Font.Color:=Col('Editor_Active')
@@ -3668,9 +2405,9 @@ begin
           rect.Bottom:=realy+r.Top+rs*2;
           canvas.FillRect(rect);
           if curlang='c'then
-            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(GetDoc(cx,cy)),FontChineseGrid)
+            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(doc.GetDoc(cx,cy)),FontChineseGrid)
           else
-            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(GetDoc(cx,cy)),FontJapaneseGrid);
+            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(doc.GetDoc(cx,cy)),FontJapaneseGrid);
 
          { Box border for meaning => underline.
           This one is drawn char-by-char, so we check for worddict + valid
@@ -3687,9 +2424,9 @@ begin
             end;
 
          //we check for openers before rendering, and for closers here
-          if fgetchl(doc[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
+          if fgetchl(doc.Lines[cy], cx+1)=UH_AORUBY_TAG_CLOSE then
             inRubyTag := false;
-          if fgetchl(doc[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
+          if fgetchl(doc.Lines[cy], cx+1)=UH_AORUBY_COMM_CLOSE then
             inRubyComment := false;
         end;
 
@@ -3708,7 +2445,7 @@ begin
       px:=0;
       if cl<ll.Count then
        //on logical newline (not just word wrap)
-        if ll[cl].xs + ll[cl].len >= flength(doc[cy]) then begin
+        if ll[cl].xs + ll[cl].len >= flength(doc.Lines[cy]) then begin
           kanaq:=''; //reset reading
           inRubyTag := false; //reset ruby tag highlight
           inRubyComment := false;
@@ -3796,9 +2533,9 @@ begin
     ins:=rcur;
     inslen:=0;
   end;
-  s:=doc[ins.y];
+  s:=doc.Lines[ins.y];
   fdelete(s,ins.x+1,inslen);
-  doc[ins.y]:=s;
+  doc.Lines[ins.y]:=s;
   lp:=doctr[ins.y];
   lp.DeleteChars(ins.x,inslen);
   inslen:=flength(convins);
@@ -3807,7 +2544,7 @@ begin
     for i:=1 to flength(convins) do
       transins[i-1].SetChar('I', 9, 0, 1);
   end;
-  doc[ins.y]:=fcopy(doc[ins.y],1,ins.x)+convins+fcopy(doc[ins.y],ins.x+1,flength(doc[ins.y])-ins.x);
+  doc.Lines[ins.y]:=fcopy(doc.Lines[ins.y],1,ins.x)+convins+fcopy(doc.Lines[ins.y],ins.x+1,flength(doc.Lines[ins.y])-ins.x);
   doctr[ins.y].InsertChars(ins.x,transins);
   ReflowText({force=}true);
   rcur := SourcePos(ins.x+inslen, ins.y);
@@ -3946,7 +2683,7 @@ begin
   if c=#13 then
   begin
     DeleteSelection(); //Updates block and verifies everything
-    SplitLine(rcur.x,rcur.y);
+    doc.SplitLine(rcur.x,rcur.y);
     FileChanged:=true;
     rcur := SourcePos(0,rcur.y+1);
     RefreshLines;
@@ -3967,7 +2704,7 @@ begin
         else
           cur := CursorPos(linl[cur.y-1].len, cur.y-1);
       ShowText(true);
-      DeleteCharacter(rcur.x,rcur.y);
+      doc.DeleteCharacter(rcur);
     end;
     FileChanged:=true;
     RefreshLines;
@@ -4039,70 +2776,6 @@ begin
 //  Look(false);
 end;
 
-procedure TfTranslate.CheckTransCont(x,y:integer);
-var cp: PCharacterProps;
-begin
-  cp := @doctr[y].chars[x];
-  while cp.wordstate='<'do
-  begin
-    cp.SetChar('-', 9, 0, 1);
-    inc(x);
-    cp := @doctr[y].chars[x];
-  end;
-end;
-
-procedure TfTranslate.SplitLine(x,y:integer);
-var ins:string;
-  lp: TCharacterLineProps;
-begin
-  if flength(doc[y])<=x then
-  begin
-    if doc.Count-1=y then
-    begin
-      doc.Add('');
-      doctr.AddNewLine();
-    end else
-    begin
-      doc.Insert(y+1,'');
-      doctr.InsertNewLine(y+1);
-    end;
-  end else
-  begin
-    ins:=fcopy(doc[y],x+1,flength(doc[y])-x);
-    lp := doctr[y].CopySubstr(x,0);
-    if doc.Count-1=y then
-    begin
-      doc.Add(ins);
-      doctr.AddLine(lp);
-    end else
-    begin
-      doc.Insert(y+1,ins);
-      doctr.InsertLine(y+1,lp);
-    end;
-    doc[y]:=fcopy(doc[y],1,x);
-    doctr[y].DeleteChars(x);
-    CheckTransCont(0,y+1);
-  end;
-end;
-
-procedure TfTranslate.JoinLine(y:integer);
-begin
-  if y+1=doc.Count then exit;
-  doc[y]:=doc[y]+doc[y+1];
-  doctr[y].AddChars(doctr[y+1]^);
-  doc.delete(y+1);
-  doctr.DeleteLine(y+1);
-end;
-
-procedure TfTranslate.DeleteCharacter(x,y:integer);
-begin
-  if flength(doc[y])<=x then JoinLine(y) else
-  begin
-    doc[y]:=fcopy(doc[y],1,x)+fcopy(doc[y],x+2,flength(doc[y])-x-1);
-    doctr[y].DeleteChar(x);
-    CheckTransCont(x,y);
-  end;
-end;
 
 procedure TfTranslate.RefreshLines;
 begin
@@ -4159,11 +2832,11 @@ var wordpart:char;
 begin
   FileChanged:=true;
   if fSettings.cbNoSearchParticles.Checked then flags := flags - [tfScanParticle];
-  if (y=-1) or (y>=doctr.Count) or (x=-1) then begin
+  if (y=-1) or (y>=doc.Lines.Count) or (x=-1) then begin
     Result := 0;
     exit;
   end;
-  s2:=GetDoc(x,y);
+  s2:=doc.GetDoc(x,y);
   dw:=GetDocWord(x,y,wt,not (tfManuallyChosen in flags));
   rlen:=flength(dw);
   globdict:=0;
@@ -4184,11 +2857,11 @@ begin
     begin
       globdict_s:=copy(s,pos(UH_LBEG+'d',s)+2,length(s)-pos(UH_LBEG+'d',s)-1);
       globdict_s:=copy(globdict_s,1,pos(UH_LEND,globdict_s)-1);
-      globdict := docdic.IndexOf(globdict_s);
+      globdict := doc.docdic.IndexOf(globdict_s);
       if globdict<0 then
       begin
-        docdic.add(globdict_s);
-        globdict:=docdic.Count-1;
+        doc.docdic.add(globdict_s);
+        globdict:=doc.docdic.Count-1;
       end;
     end;
     if word.userindex=0 then
@@ -4228,11 +2901,11 @@ begin
   else
     doctr[y].chars[x].SetChar(wordstate, learnstate, worddict, globdict);
   for i:=2 to rlen do
-    if (x+i-1)<flength(doc[y]) then
+    if (x+i-1)<flength(doc.Lines[y]) then
       doctr[y].chars[x+i-1].SetChar('<', learnstate, 0, globdict);
 
   fdelete(dw,1,rlen);
-  if (wordstate='K') and (flength(doc[y])>x+rlen) then
+  if (wordstate='K') and (flength(doc.Lines[y])>x+rlen) then
   begin
     dw:=GetDocWord(x+rlen,y,wt,false);
     if wt<>2 then dw:='';
@@ -4380,39 +3053,12 @@ procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream;
   AnnotMode: TTextAnnotMode);
 begin
   CalcBlockFromTo(false);
-  SaveText(AnnotMode,format,stream,@block);
+  doc.SaveText(AnnotMode,format,stream,@block);
 end;
 
-{ Receives a string contanining multiple lines of text separated by CRLF.
- Splits into lines, inserts at the current position of the cursor.
- Expands ruby, if AnnotMode dictates so.
-
- Props may be omitted, in which case default props are used for all symbols }
 procedure TfTranslate.PasteText(const chars: FString; const props: TCharacterLineProps;
   AnnotMode: TTextAnnotMode);
-var s: string;
-  sp: TCharacterLineProps;
-  y:integer;
-  i:integer;
-  l:integer;
-
-  procedure FinalizeLine;
-  begin
-    if AnnotMode=amRuby then
-      CollapseRuby(s, sp);
-    doc[y] := doc[y] + s;
-    doctr[y].AddChars(sp);
-    s := '';
-    sp.Clear;
-  end;
-
-  procedure InsertNewLine;
-  begin
-    inc(y);
-    doc.Insert(y,'');
-    doctr.InsertNewLine(y);
-  end;
-
+var tmp: TSourcePos;
 begin
   if AnnotMode=amDefault then
     if fSettings.cbLoadAozoraRuby.Checked then
@@ -4420,41 +3066,9 @@ begin
     else
       AnnotMode := amNone;
 
-  s := '';
-  sp.Clear;
-
- { This function is sometimes used to load text, at which point there's not even
-  a single default line available and SplitLine would die. }
-  if rcur.y >= doc.Count then begin
-    doc.Add('');
-    doctr.AddNewLine;
-  end else
-    SplitLine(rcur.x,rcur.y);
-
-  y:=rcur.y;
-  for i:=1 to flength(chars) do
-  begin
-    if fgetch(chars,i)=UH_LF then begin
-      FinalizeLine;
-      InsertNewLine;
-    end else
-    if fgetch(chars,i)<>UH_CR then
-    begin
-      s:=s+fgetch(chars,i);
-      if props.charcount>i-1 then
-        sp.AddChar(props.chars[i-1])
-      else
-        sp.AddChar('-', 9, 0, 1);
-    end;
-  end;
-
-  if Length(s)>0 then
-    FinalizeLine;
-
-  l:=flength(doc[y]);
-  JoinLine(y);
+  doc.PasteText(rcur, chars, props, AnnotMode, @tmp);
+  rcur := tmp; //end of inserted text
   RefreshLines;
-  rcur:=SourcePos(l,y);
   FileChanged:=true;
 end;
 
@@ -4473,7 +3087,7 @@ begin
   try
     ms.Seek(0,soFromBeginning);
     try
-      Loaded := LoadWakanText(ms,{silent=}true);
+      Loaded := doc.LoadWakanText(ms,{silent=}true);
     except
       on E: EBadWakanTextFormat do Loaded := false;
     end;
@@ -4493,31 +3107,9 @@ procedure TfTranslate.DeleteSelection;
 var i:integer;
 begin
   CalcBlockFromTo(false);
-  rcur:=SourcePos(block.fromx,block.fromy);
-  if block.fromy=block.toy then
-  begin
-    doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
-      +fcopy(doc[block.fromy],block.tox+1,flength(doc[block.fromy])-block.tox);
-    doctr[block.fromy].DeleteChars(block.fromx, block.tox-block.fromx);
-  end else
-  begin
-    doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx);
-    doc[block.toy]:=fcopy(doc[block.toy],block.tox+1,flength(doc[block.toy])-block.tox);
-    if block.fromx < doctr[block.fromy].charcount then
-      doctr[block.fromy].DeleteChars(block.fromx);
-    if block.tox < doctr[block.toy].charcount then
-      doctr[block.toy].DeleteChars(0, block.tox)
-    else
-      if doctr[block.toy].charcount>0 then
-        doctr[block.toy].DeleteChars(0);
-    for i:=block.fromy+1 to block.toy-1 do
-    begin
-      doc.Delete(block.fromy+1);
-      doctr.DeleteLine(block.fromy+1);
-    end;
-    JoinLine(block.fromy);
+  doc.DeleteBlock(block);
+  if block.fromy<>block.toy then
     RefreshLines;
-  end;
   FileChanged:=true;
 end;
 
@@ -4553,7 +3145,7 @@ begin
   end else
   if doctr[cy].chars[cx].wordstate='?'then
   begin
-    if TChar.Locate('Unicode',GetDoc(cx,cy)) then
+    if TChar.Locate('Unicode',doc.GetDoc(cx,cy)) then
     begin
       TCharRead.SetOrder('');
       TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
@@ -4576,6 +3168,18 @@ begin
   end;
 end;
 
+function TfTranslate.DocGetDictEntry(Sender: TObject; const APos: TSourcePos;
+  var kanji, reading: FString; var meaning: string);
+begin
+  GetTextWordInfo(APos.x, APos.y, meaning, reading, kanji);
+  reading := ConvertBopomofo(reading); //dictionary stores it with F03*-style tones
+end;
+
+function TfTranslate.Get_doctr(Index: integer): PCharacterLineProps;
+begin
+  Result := doc.PropertyLines[Index];
+end;
+
 function TfTranslate.GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
 var wt2:integer;
     i:integer;
@@ -4584,7 +3188,7 @@ var wt2:integer;
     honor:boolean;
     stray:integer;
 begin
-  if (y=-1) or (y>doc.Count-1) or (x>flength(doc[y])-1) or (x=-1) then
+  if (y=-1) or (y>doc.Count-1) or (x>flength(doc.Lines[y])-1) or (x=-1) then
   begin
     wordtype:=0;
     result:='';
@@ -4790,6 +3394,11 @@ begin
    //we can't know whether to put graphical cursor before or after the line wrap
    //if you know, update CursorEnd after setting RCur
   InvalidateCursorPos;
+end;
+
+function TfTranslate.IsHalfWidth(x,y:integer):boolean;
+begin
+  result:=IsHalfWidthChar(doc.GetDoc(x,y));
 end;
 
 { Wakan has "half-width" and "full-width" symbols, and therefore position
