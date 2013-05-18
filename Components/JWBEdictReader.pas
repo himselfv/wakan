@@ -11,7 +11,7 @@ See precise format description in comments below.
 //  Nothing I can do about it.
 
 interface
-uses SysUtils, JWBStrings, JWBIO, JWBEdictMarkers;
+uses SysUtils, JWBStrings, JWBEdictMarkers;
 
 {
 We're using UnicodeStrings throughout this module. They resolve to slow WideStrings
