@@ -37,12 +37,12 @@ type
   PKanjiEntry = ^TKanjiEntry;
 
   TKanaEntry = record
-   kana: UnicodeString;
-   kanji: array[0..MaxKanji-1] of UnicodeString;
-   kanji_used: integer;
-   markers: TMarkers;
-   procedure Reset;
-   function AddKanji: PUnicodeString;
+    kana: UnicodeString;
+    kanji: array[0..MaxKanji-1] of UnicodeString;
+    kanji_used: integer;
+    markers: TMarkers;
+    procedure Reset;
+    function AddKanji: PUnicodeString;
   end;
   PKanaEntry = ^TKanaEntry;
 

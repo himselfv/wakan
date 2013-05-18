@@ -49,6 +49,8 @@ var
   TCharRead: TTextTable;
   TCharReadKanji,
   TCharReadType,
+   { S = AnsiString, U = Unicode (4 char hex), P = ? (4 char hex)
+     T = ?, R = TRadicals.Number field value, N = Number (?) }
   TCharReadReading, { WARNING! This field here is dangerous.
     Some properties store normal AnsiStrings here, other 4-char hex AnsiStrings,
     i.e. no auto-conversion to unicode is possible.
