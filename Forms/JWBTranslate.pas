@@ -256,7 +256,7 @@ type
     procedure InvalidateCursorPos;
     function GetCursorScreenPos: TCursorPos;
   public
-    procedure CursorJumpToLine(const newy: integer);
+    procedure CursorJumpToLine(newy: integer);
     property RCur: TSourcePos read FRCur write SetRCur; //cursor position in logical coordinates (cursor is before this char)
     property Cur: TCursorPos read GetCur write SetCur; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     property CursorScreenPos: TCursorPos read GetCursorScreenPos; //visible cursor position -- differs sometimes -- see comments
@@ -3372,14 +3372,19 @@ begin
   end;
 end;
 
-{ Moves the cursor to another line while keeping it at the same column.
+{ Moves the cursor to another graphical line while keeping it at the same column.
  Remeber that there are half-width and full-width chars, and if we simply chose
  the same char index on the new line, it'd be at a different column. }
-procedure TfTranslate.CursorJumpToLine(const newy: integer);
+procedure TfTranslate.CursorJumpToLine(newy: integer);
 var tmp: TCursorPos;
 begin
-  if (newy<0) or (newy>=linl.Count) then exit; //can't jump to these lines
+ { It's important that we jump at least how much we can.
+  PageDown/Up relies on this: CursorJumpToLine(curLine-OnePage) }
+  if newy>linl.Count-1 then newy:=linl.Count-1;
+  if newy<0 then newy:=0;
+
   tmp := GetCur;
+  if tmp.y=newy then exit; //no changes
   tmp.x := WidthToPos(PosToWidth(cur.x,cur.y),newy);
   tmp.y := newy;
   if tmp.x<0 then tmp.x := linl[tmp.y].len; //over to the right
