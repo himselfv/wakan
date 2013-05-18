@@ -14,7 +14,6 @@ type
     Timer1: TTimer;
     Label1: TLabel;
     TrackBar1: TTrackBar;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton1Click(Sender: TObject);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
@@ -34,12 +33,6 @@ implementation
 uses JWBKanji;
 
 {$R *.DFM}
-
-procedure TfStrokeOrder.FormClose(Sender: TObject;
-  var Action: TCloseAction);
-begin
-  fKanji.btnStrokeOrder.Down:=false;
-end;
 
 procedure TfStrokeOrder.SpeedButton1Click(Sender: TObject);
 begin

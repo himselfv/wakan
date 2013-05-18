@@ -120,27 +120,6 @@ object fKanji: TfKanji
       OnClick = btnCompoundsClick
       ExplicitTop = 321
     end
-    object btnStrokeOrder: TSpeedButton
-      Left = 461
-      Top = 7
-      Width = 25
-      Height = 17
-      Hint = '#00126^eShow stroke order'
-      AllowAllUp = True
-      Anchors = [akTop, akRight]
-      GroupIndex = 6
-      Caption = 'SO'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      Visible = False
-      OnClick = btnStrokeOrderClick
-    end
     object BlankPanel1: TBlankPanel
       Left = 7
       Top = 32
@@ -200,16 +179,6 @@ object fKanji: TfKanji
       TabOrder = 1
       TabStop = False
       OnClick = btnPrintCardsClick
-    end
-    object btnReadingChart: TButton
-      Left = 344
-      Top = 8
-      Width = 115
-      Height = 17
-      Caption = 'ReadingChart'
-      TabOrder = 2
-      Visible = False
-      OnClick = btnReadingChartClick
     end
   end
   object pnlDockCompounds: TPanel

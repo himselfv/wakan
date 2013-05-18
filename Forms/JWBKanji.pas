@@ -17,12 +17,10 @@ type
     btnSearchSort: TSpeedButton;
     btnKanjiDetails: TSpeedButton;
     btnCompounds: TSpeedButton;
-    btnStrokeOrder: TSpeedButton;
     DrawGrid1: TDrawGrid;
     btnPrintCards: TButton;
     pnlDockCompounds: TPanel;
     pnlDockSearch: TPanel;
-    btnReadingChart: TButton;
     SaveDialog1: TSaveDialog;
     UpdateTimer: TTimer;
     splDockCompounds: TSplitter;
@@ -41,13 +39,11 @@ type
     procedure DrawGrid1KeyPress(Sender: TObject; var Key: Char);
     procedure UpdateTimerTimer(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
-    procedure btnStrokeOrderClick(Sender: TObject);
     procedure SpeedButton25Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure btnSearchSortClick(Sender: TObject);
     procedure btnKanjiDetailsClick(Sender: TObject);
     procedure btnCompoundsClick(Sender: TObject);
-    procedure btnReadingChartClick(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -92,7 +88,7 @@ implementation
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
   JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
-  JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBUtils, JWBCategories,
+  JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBWakanText, JWBCategories,
   JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
 
 var ki:TStringList;
@@ -836,11 +832,6 @@ begin
   DrawGrid1.SetFocus;
 end;
 
-procedure TfKanji.btnStrokeOrderClick(Sender: TObject);
-begin
-  fMenu.aStrokeOrder.Execute;
-end;
-
 procedure TfKanji.SpeedButton25Click(Sender: TObject);
 begin
   DoIt;
@@ -873,109 +864,6 @@ var CanSelect:boolean;
 begin
   fMenu.aKanjiCompounds.Execute;
   DrawGrid1SelectCell(Sender, DrawGrid1.Col, DrawGrid1.Row, CanSelect);
-end;
-
-procedure TfKanji.btnReadingChartClick(Sender: TObject);
-var di:integer;
-    chars:array[1..7] of string;
-    i,j,k,l,m:integer;
-    sbJouyou,s2:string;
-    wd:integer;
-    o:string;
-    add:TStringList;
-procedure wrid;
-var sbJouyou:TCharacterLineProps;
-    x:integer;
-begin
-  fTranslate.doc.Add(o);
-  sbJouyou.AddChars(flength(o));
-  for x:=1 to flength(o) do
-    sbJouyou.chars[x-1].SetChar('-', 9, 0, 1);
-  fTranslate.doctr.AddLine(sbJouyou);
-  o:='';
-end;
-begin
-  fTranslate.doc.Clear;
-  fTranslate.doctr.Clear;
-  wd:=6;
-  o:='';
-  add:=TStringList.Create;
-  o:=UH_SPACE+UH_SPACE+UH_SPACE;
-  for i:=0 to readchl.Count-1 do
-  begin
-    sbJouyou:=readchl[i];
-    if sbJouyou[1]='e'then
-    begin
-      delete(sbJouyou,1,1);
-      if sbJouyou='' then sbJouyou:=UH_SPACE;
-      o:=o+sbJouyou;
-      for j:=1 to wd do o:=o+UH_SPACE;
-    end;
-  end;
-  wrid;
-  wrid;
-  for i:=0 to readchl.Count-1 do
-  begin
-    sbJouyou:=readchl[i];
-    if sbJouyou[1]='b'then
-    begin
-      delete(sbJouyou,1,1);
-      o:=o+sbJouyou+UH_SPACE;
-      if length(sbJouyou)<=4 then o:=o+UH_SPACE;
-      k:=0;
-      for j:=0 to readchl.Count-1 do
-      begin
-        s2:=readchl[j];
-        if s2[1]='e'then
-        begin
-          delete(s2,1,1);
-          inc(k);
-          chars[k]:='';
-          TCharRead.First;
-          while not TCharRead.EOF do
-          begin
-            if (TCharRead.Int(TCharReadType)=4) and (TCharRead.Str(TCharReadReading)=sbJouyou+s2) and (TCharRead.Int(TCharReadPosition)=1) then
-            begin
-              TChar.Locate('Index',TCharRead.TrueInt(TCharReadKanji));
-              if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then begin
-                chars[k]:=chars[k]+TChar.Str(TCharUnicode);
-                add.Add(TCharRead.Str(TCharReadKanji));
-              end;
-            end;
-            TCharRead.Next;
-          end;
-//          showmessage(KanaToRomaji(sbJouyou+s2,1,'j')+' : '+chars[k]);
-        end;
-      end;
-      l:=0;
-      for j:=1 to 7 do if length(chars[j]) div 4>l then l:=length(chars[j]) div 4;
-      l:=((l-1) div wd)+1;
-      for j:=1 to l do
-      begin
-        if j>1 then o:=o+UH_SPACE+UH_SPACE+UH_SPACE;
-        for k:=1 to 7 do
-        begin
-          for m:=1 to wd do if length(chars[k])<((j-1)*wd+m)*4 then o:=o+UH_SPACE else o:=o+copy(chars[k],((j-1)*wd+m-1)*4+1,4);
-          o:=o+UH_SPACE;
-        end;
-        wrid;
-      end;
-      wrid;
-    end;
-  end;
-  TCharRead.First;
-  while not TCharRead.EOF do
-  begin
-    if (TCharRead.Int(TCharReadType)=4) and (add.IndexOf(TCharRead.Str(TCharReadKanji))=-1) and (TCharRead.Int(TCharReadPosition)=1) then
-    begin
-      TChar.Locate('Index',TCharRead.TrueInt(TCharReadKanji));
-      if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then o:=o+TChar.Str(TCharUnicode)+TCharRead.Str(TCharReadReading);
-    end;
-    TCharRead.Next;
-  end;
-  wrid;
-  clip:=o;
-  fMenu.SetClipboard;
 end;
 
 procedure TfKanji.Button3Click(Sender: TObject);

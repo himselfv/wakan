@@ -563,7 +563,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
-  JWBPortableMode, JWBCategoryMgr, JWBCharData, StreamUtils;
+  JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils;
 
 {$R *.DFM}
 

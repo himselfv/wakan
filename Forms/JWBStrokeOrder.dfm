@@ -13,7 +13,6 @@ object fStrokeOrder: TfStrokeOrder
   Font.Style = []
   OldCreateOrder = False
   Scaled = False
-  OnClose = FormClose
   DesignSize = (
     274
     303)
@@ -22,7 +21,7 @@ object fStrokeOrder: TfStrokeOrder
   object Label1: TLabel
     Left = 72
     Top = 136
-    Width = 366
+    Width = 205
     Height = 18
     Caption = '#00609^eNot available'
     Font.Charset = DEFAULT_CHARSET

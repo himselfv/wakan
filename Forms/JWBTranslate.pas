@@ -193,7 +193,6 @@ type
     property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
 
   protected //Unsorted
-    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
     procedure DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
       out kanji, reading: FString; out meaning: string);
@@ -211,6 +210,7 @@ type
     function WidthToPos(x,y:integer):integer;
     function HalfUnitsToCursorPos(x,y: integer):integer;
   public
+    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     function GetClosestCursorPos(x,y:integer):TCursorPos;
     function GetExactLogicalPos(x,y:integer):TSourcePos;
 
@@ -3104,7 +3104,6 @@ begin
 end;
 
 procedure TfTranslate.DeleteSelection;
-var i:integer;
 begin
   CalcBlockFromTo(false);
   doc.DeleteBlock(block);
@@ -3129,7 +3128,7 @@ begin
   if doctr[cy].chars[cx].dicidx<>0 then
   begin
     i := doctr[cy].chars[cx].docdic;
-    dnam := docdic[i];
+    dnam := doc.docdic[i];
     dic:=dicts.Find(dnam);
     if (dic<>nil) and (dic.loaded) then
       with dic.GetRecord(doctr[cy].chars[cx].dicidx) do try
@@ -3168,8 +3167,8 @@ begin
   end;
 end;
 
-function TfTranslate.DocGetDictEntry(Sender: TObject; const APos: TSourcePos;
-  var kanji, reading: FString; var meaning: string);
+procedure TfTranslate.DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
+  out kanji, reading: FString; out meaning: string);
 begin
   GetTextWordInfo(APos.x, APos.y, meaning, reading, kanji);
   reading := ConvertBopomofo(reading); //dictionary stores it with F03*-style tones
@@ -3188,7 +3187,7 @@ var wt2:integer;
     honor:boolean;
     stray:integer;
 begin
-  if (y=-1) or (y>doc.Count-1) or (x>flength(doc.Lines[y])-1) or (x=-1) then
+  if (y=-1) or (y>doc.Lines.Count-1) or (x>flength(doc.Lines[y])-1) or (x=-1) then
   begin
     wordtype:=0;
     result:='';
@@ -3200,31 +3199,31 @@ begin
     wordtype:=1;
     for i:=1 to 4 do
     begin
-      result:=result+fgetch(doc[y],x+1);
+      result:=result+fgetch(doc.Lines[y],x+1);
       inc(x);
-      if x=flength(doc[y]) then exit;
+      if x=flength(doc.Lines[y]) then exit;
     end;
     exit;
   end;
-  tc:=fgetch(doc[y],x+1);
+  tc:=fgetch(doc.Lines[y],x+1);
   honor:=false;
   if (tc={$IFNDEF UNICODE}'304A'{$ELSE}#$304A{$ENDIF})
   or (tc={$IFNDEF UNICODE}'3054'{$ELSE}#$3054{$ENDIF}) then honor:=true;
-  if (honor) and (flength(doc[y])>x+2) and (EvalChar(fgetch(doc[y],x+2))<=2) then
-    wordtype:=EvalChar(fgetch(doc[y],x+2))
+  if (honor) and (flength(doc.Lines[y])>x+2) and (EvalChar(fgetch(doc.Lines[y],x+2))<=2) then
+    wordtype:=EvalChar(fgetch(doc.Lines[y],x+2))
   else
-    wordtype:=EvalChar(fgetch(doc[y],x+1));
+    wordtype:=EvalChar(fgetch(doc.Lines[y],x+1));
   if wordtype>4 then wordtype:=4;
   nmk:=false;
   stray:=0;
-  result:=fgetch(doc[y],x+1);
+  result:=fgetch(doc.Lines[y],x+1);
   repeat
     inc(x);
     if stopuser and IsLocaseLatin(doctr[y].chars[x].wordstate) then exit;
     wt2:=0;
-    if x<flength(doc[y]) then
+    if x<flength(doc.Lines[y]) then
     begin
-      wt2:=EvalChar(fgetch(doc[y],x+1));
+      wt2:=EvalChar(fgetch(doc.Lines[y],x+1));
       if wt2>4 then wt2:=4;
       if (wordtype=1) and (wt2=2) then begin
         nmk:=true;
@@ -3239,7 +3238,7 @@ begin
       if (wt2<>wordtype) and ((wordtype<>1) or (wt2<>2)) then exit;
     end;
     if wt2=0 then exit;
-    result:=result+fgetch(doc[y],x+1);
+    result:=result+fgetch(doc.Lines[y],x+1);
   until false;
 end;
 
@@ -3352,8 +3351,8 @@ begin
     NewCursorEnd:=false;
   newrcur.x := linl[Value.y].xs+Value.x;
  //Some safety + we don't want CursorEnd when we're at the end of *logical* line
-  if newrcur.x>=flength(doc[newrcur.y]) then begin
-    newrcur.x:=flength(doc[newrcur.y]);
+  if newrcur.x>=flength(doc.Lines[newrcur.y]) then begin
+    newrcur.x:=flength(doc.Lines[newrcur.y]);
     NewCursorEnd:=false;
   end;
   rcur := newrcur;
@@ -3530,7 +3529,7 @@ begin
   if cx<0 then exit;
   Result.y:=linl[cy].ys;
   Result.x:=cx+linl[cy].xs;
-  if (Result.y>=doc.Count) or (Result.x>=flength(doc[Result.y])) then
+  if (Result.y>=doc.Lines.Count) or (Result.x>=flength(doc.Lines[Result.y])) then
   begin
     Result.y:=-1;
     Result.x:=-1;

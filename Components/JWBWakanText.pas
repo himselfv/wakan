@@ -175,6 +175,7 @@ type
   protected //Editing
     procedure CheckTransCont(x,y:integer);
   public
+    procedure AddLine(const chars: FString; const props: PCharacterLineProps = nil);
     procedure SplitLine(x,y:integer);
     procedure JoinLine(y:integer);
     procedure DeleteCharacter(const APos: TSourcePos); overload; inline;
@@ -1718,6 +1719,21 @@ begin
     cp.SetChar('-', 9, 0, 1);
     inc(x);
     cp := @doctr[y].chars[x];
+  end;
+end;
+
+procedure TWakanText.AddLine(const chars: FString; const props: PCharacterLineProps);
+var _props: TCharacterLineProps;
+  i:integer;
+begin
+  Lines.Add(chars);
+  if props<>nil then
+    PropertyLines.AddLine(props^)
+  else begin
+    _props.AddChars(flength(chars));
+    for i := 1 to flength(chars) do
+      _props.chars[i-1].SetChar('-', 9, 0, 1);
+    PropertyLines.AddLine(_props);
   end;
 end;
 
