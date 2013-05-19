@@ -1027,6 +1027,12 @@ object fMenu: TfMenu
       Caption = 'Stroke order'
       OnExecute = aStrokeOrderExecute
     end
+    object aCharDataBrowser: TAction
+      Category = 'Debug'
+      Caption = 'Browse character DB...'
+      Visible = False
+      OnExecute = aCharDataBrowserExecute
+    end
   end
   object MainMenu1: TMainMenu
     Left = 216
@@ -1154,6 +1160,9 @@ object fMenu: TfMenu
       end
       object miPrintCards: TMenuItem
         Action = aKanjiPrint
+      end
+      object BrowsecharacterDB1: TMenuItem
+        Action = aCharDataBrowser
       end
       object N13: TMenuItem
         Caption = '-'

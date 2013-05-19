@@ -92,7 +92,7 @@ var
 Character property information available:
   0 - charPropId
   1 - sourceType -- where did we get that info
-    'D': EDICT
+    'D': KANJIDIC
     'U': UNIHAN
   2 - sourceField
   3 - propType -- controls how data for this property is stored and handled

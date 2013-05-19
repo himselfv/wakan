@@ -77,7 +77,9 @@ uses
   JWBCategoryMgr in 'Forms\JWBCategoryMgr.pas' {fCategoryMgr},
   JWBForms in 'Components\JWBForms.pas',
   JWBCharData in 'Components\JWBCharData.pas',
-  JWBWakanText in 'Components\JWBWakanText.pas';
+  JWBWakanText in 'Components\JWBWakanText.pas',
+  JWBKanjiDicReader in 'Components\JWBKanjiDicReader.pas',
+  JWBCharDataBrowser in 'Forms\JWBCharDataBrowser.pas' {fCharDataBrowser};
 
 {$R *.RES}
 
@@ -124,6 +126,7 @@ begin
   Application.CreateForm(TfMedia, fMedia);
   Application.CreateForm(TfPortableMode, fPortableMode);
   Application.CreateForm(TfCategoryMgr, fCategoryMgr);
+  Application.CreateForm(TfCharDataBrowser, fCharDataBrowser);
   fMenu.InitializeWakan;
   Application.Run;
 end.
