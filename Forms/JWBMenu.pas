@@ -567,7 +567,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
   JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils,
-  JWBCharDataBrowser;
+  JWBCharDataBrowser, JWBCharDataImport;
 
 {$R *.DFM}
 
@@ -729,6 +729,12 @@ begin
       for i := 0 to Length(MakeDicParams.Files) - 1 do
         fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
       fDictImport.btnBuildClick(self);
+      Application.Terminate;
+      exit;
+    end;
+    if Command='makechars' then begin
+     //For now we only can update kanjidic data
+      UpdateKanjidicData(MakeCharsParams.KanjidicFilename);
       Application.Terminate;
       exit;
     end;

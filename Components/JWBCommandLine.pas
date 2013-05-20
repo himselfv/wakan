@@ -48,6 +48,10 @@ var
     Files: TFilenameList;
   end;
 
+  MakeCharsParams: record
+    KanjidicFilename: string;
+  end;
+
 procedure ParseCommandLine();
 
 implementation
@@ -74,7 +78,8 @@ begin
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
       +'[/addfrequencyinfo]'#13
-    +'* updatedics [dicname dicname ...]';
+    +'* updatedics [dicname dicname ...]'#13
+    +'* makechars [/kanjidic <kanjidic-filename>]';
 
   if errmsg<>'' then
     s := errmsg + #13#13 + s;
@@ -179,8 +184,19 @@ begin
           BadUsage('Invalid option: '+s);
 
       end else
+      if Command='makechars' then begin
+        if s='/kanjidic' then begin
+          Inc(i);
+          if i>ParamCount() then BadUsage('/kanjidic requires file name');
+          MakeCharsParams.KanjidicFilename := ParamStr(i);
+        end else
+          BadUsage('Invalid option: '+s);
+
+      end else
         BadUsage('Invalid option: '+s);
+
     end else
+
 
    //Command
     if Command='' then begin
@@ -212,6 +228,9 @@ begin
         FillChar(UpdateDicsParams, sizeof(UpdateDicsParams), 0);
        //Filenames are expected in the following params.
        //If none are specified, update ALL dics
+      end else
+      if Command='makechars' then begin
+        FillChar(MakeCharsParams, sizeof(MakeCharsParams), 0);
       end else
       if Command='open' then begin
         FillChar(OpenParams, sizeof(OpenParams), 0);
@@ -249,6 +268,10 @@ begin
   if Command='makedic' then begin
     if Length(MakeDicParams.Files)<0 then
       BadUsage('makedic requires at least one input file');
+  end;
+  if Command='makechars' then begin
+    if MakeCharsParams.KanjidicFilename='' then
+      BadUsage('makechars requires /kanjidic filename');
   end;
 
 end;

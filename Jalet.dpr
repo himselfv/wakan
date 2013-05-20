@@ -79,7 +79,8 @@ uses
   JWBCharData in 'Components\JWBCharData.pas',
   JWBWakanText in 'Components\JWBWakanText.pas',
   JWBKanjiDicReader in 'Components\JWBKanjiDicReader.pas',
-  JWBCharDataBrowser in 'Forms\JWBCharDataBrowser.pas' {fCharDataBrowser};
+  JWBCharDataBrowser in 'Forms\JWBCharDataBrowser.pas' {fCharDataBrowser},
+  JWBCharDataImport in 'Forms\JWBCharDataImport.pas' {fCharDataImport};
 
 {$R *.RES}
 
@@ -127,6 +128,7 @@ begin
   Application.CreateForm(TfPortableMode, fPortableMode);
   Application.CreateForm(TfCategoryMgr, fCategoryMgr);
   Application.CreateForm(TfCharDataBrowser, fCharDataBrowser);
+  Application.CreateForm(TfCharDataImport, fCharDataImport);
   fMenu.InitializeWakan;
   Application.Run;
 end.
