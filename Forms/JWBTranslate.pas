@@ -3119,8 +3119,8 @@ procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var readi
 var dnam:string;
     dic:TJaletDic;
     i:integer;
-    defy,s:string;
   markers: TMarkers;
+  CCharProp: TCharPropertyCursor;
 begin
   meaning:='';
   reading:='';
@@ -3146,18 +3146,18 @@ begin
   begin
     if TChar.Locate('Unicode',doc.GetDoc(cx,cy)) then
     begin
-      TCharRead.SetOrder('');
-      TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
-      while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
-      begin
-        s:=TCharRead.Str(TCharReadReading);
-        if ((curlang='j') and (TCharRead.Int(TCharReadType)=3)) or ((curlang='c') and (TCharRead.Int(TCharReadType)=7)) then
-        begin
-          if defy='' then defy:=defy+s else defy:=defy+', '+s;
-        end;
-        TCharRead.Next;
+      CCharProp := TCharPropertyCursor.Create(TCharProp);
+      try
+        if curlang='j' then
+          meaning := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
+        else
+        if curlang='c' then
+          meaning := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
+        else
+          meaning := '';
+      finally
+        FreeAndNil(CCharProp);
       end;
-      meaning:=defy;
     end;
   end;
   while (reading<>'') and (kanji<>'') and (fgetch(reading,flength(reading))=fgetch(kanji,flength(kanji))) do

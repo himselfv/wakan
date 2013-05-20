@@ -457,11 +457,14 @@ begin
 end;
 
 procedure TfUser.ShowWord;
-var s,s2,s3:string;
+var s,s2:string;
+  meaning: FString;
+  meaning_u: FString;
     radf:integer;
     sl:TStringList;
     i:integer;
   rad:FString;
+  CCharProp: TCharPropertyCursor;
 begin
   SetLength(curkanjid,0);
   curphonetic:='';
@@ -524,17 +527,19 @@ begin
             curkanjid[Length(curkanjid)-1].tp := 'N'
           else
             curkanjid[Length(curkanjid)-1].tp := 'U';
-          TCharRead.SetOrder('');
-          TCharRead.Locate('Kanji',TChar.TrueInt(TCharIndex));
-          s3:='';
-          while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=TChar.Int(TCharIndex)) do
-          begin
-            if (curlang='j') and (TCharRead.Int(TCharReadType)=3) then s3:=s3+', '+TCharRead.Str(TCharReadReading);
-            if (curlang='c') and (TCharRead.Int(TCharReadType)=7) then s3:=s3+', '+TCharRead.Str(TCharReadReading);
-            TCharRead.Next;
+          CCharProp := TCharPropertyCursor.Create(TCharProp);
+          try
+            if curlang='j' then
+              meaning := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
+            else
+            if curlang='c' then
+              meaning := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
+            else
+              meaning := '';
+          finally
+            FreeAndNil(CCharProp);
           end;
-          delete(s3,1,2);
-          fWordKanji.AddBox(s3);
+          fWordKanji.AddBox(meaning);
         end;
       end;
     end;

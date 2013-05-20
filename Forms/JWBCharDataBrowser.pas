@@ -30,7 +30,7 @@ begin
 end;
 
 procedure TfCharDataBrowser.Reload;
-var CCharRead: TTextTableCursor;
+var CCharProp: TTextTableCursor;
   row: integer;
 begin
   Grid.ColCount := 6;
@@ -53,18 +53,18 @@ begin
   Grid.Cells[5, 0] := 'Position';
 
   row := 1;
-  CCharRead := TCharRead.NewCursor;
-  CCharRead.First;
-  while not CCharRead.EOF do begin
-    Grid.Cells[0, row] := CCharRead.Str(TCharReadKanji); //kanji
-    Grid.Cells[1, row] := CCharRead.Str(TCharReadType); //type
-    Grid.Cells[2, row] := CCharRead.Str(TCharReadReading); //reading (whatever we could read)
-    Grid.Cells[3, row] := CCharRead.Str(TCharReadIndex);
-    Grid.Cells[4, row] := CCharRead.Str(TCharReadReadDot);
-    Grid.Cells[5, row] := CCharRead.Str(TCharReadPosition);
+  CCharProp := TCharProp.NewCursor;
+  CCharProp.First;
+  while not CCharProp.EOF do begin
+    Grid.Cells[0, row] := CCharProp.Str(TCharPropKanji);
+    Grid.Cells[1, row] := CCharProp.Str(TCharPropTypeId);
+    Grid.Cells[2, row] := CCharProp.Str(TCharPropValue);
+    Grid.Cells[3, row] := CCharProp.Str(TCharPropIndex);
+    Grid.Cells[4, row] := CCharProp.Str(TCharPropReadDot);
+    Grid.Cells[5, row] := CCharProp.Str(TCharPropPosition);
     Inc(row);
     Grid.RowCount := 1+row;
-    CCharRead.Next;
+    CCharProp.Next;
   end;
 end;
 

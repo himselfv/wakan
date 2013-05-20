@@ -44,8 +44,7 @@ uses JWBMenu, JWBCharData;
 
 procedure TfCharItem.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  results:='';
-  results:=results+GetCharPropType(ComboBox1.ItemIndex,0)+';';
+  results:=IntToStr(PCharPropType(Combobox1.Items.Objects[Combobox1.ItemIndex]).id)+';';
   case RadioGroup1.ItemIndex of
     0:results:=results+'L;';
     1:results:=results+'C;';
@@ -88,9 +87,12 @@ var i:integer;
 begin
   if inputs='' then inputs:='0;L;L;B;Y;M;';
   ComboBox1.Items.Clear;
-  for i:=0 to CharPropTypes.Count-1 do
-    ComboBox1.Items.Add(_l('^e'+GetCharPropType(i,4)));
-  i := FindCharPropType(GetDet(0));
+  for i:=0 to Length(CharPropTypes)-1 do
+    ComboBox1.Items.AddObject(
+      _l('^e'+CharPropTypes[i].englishName),
+      TObject(@CharPropTypes[i])
+    );
+  i := FindCharPropTypeIndex(StrToInt(GetDet(0)));
   if i<0 then
     ComboBox1.ItemIndex:=0
   else
@@ -120,12 +122,14 @@ begin
 end;
 
 procedure TfCharItem.ComboBox1Change(Sender: TObject);
+var propType: PCharPropType;
 begin
-  Label2.Caption:=GetCharPropType(ComboBox1.ItemIndex,6);
-  if GetCharPropType(ComboBox1.ItemIndex,1)='D'then
-    Label5.Caption:='EDICT -> '+GetCharPropType(ComboBox1.ItemIndex,2)
+  propType := PCharPropType(Combobox1.Items.Objects[Combobox1.ItemIndex]);
+  Label2.Caption:=propType.description;
+  if propType.sourceType='D'then
+    Label5.Caption:='KANJIDIC -> '+propType.sourceField
   else
-    Label5.Caption:='UNIHAN -> '+GetCharPropType(ComboBox1.ItemIndex,2);
+    Label5.Caption:='UNIHAN -> '+propType.sourceField;
 end;
 
 end.

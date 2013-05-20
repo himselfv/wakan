@@ -1303,7 +1303,7 @@ end;
 procedure TfSettings.Button2Click(Sender: TObject);
 begin
   Screen.Cursor:=crHourglass;
-  if (TChar.CheckIndex) and (TCharRead.CheckIndex) and (TRadicals.CheckIndex) then
+  if (TChar.CheckIndex) and (TCharProp.CheckIndex) and (TRadicals.CheckIndex) then
     Application.MessageBox(
       pchar(_l('#00569^eIndexes are okay.')),
       pchar(_l('#00570^eIndex check')),
@@ -1653,20 +1653,21 @@ begin
 end;
 
 procedure TfSettings.ResetDetList;
-var i,j:integer;
-    ii:integer;
+var i:integer;
+  ii:integer;
+  propType: PCharPropType;
 begin
   ii:=ListBox2.ItemIndex;
   ListBox2.Items.Clear;
   for i:=0 to chardetl.Count-1 do
   begin
-    j := FindCharPropType(GetCharDet(i,0));
-    if j<0 then continue;
+    propType := FindCharPropType(StrToInt(GetCharDet(i,0)));
+    if propType=nil then continue;
 
     if GetCharDet(i,6)<>'' then
-      ListBox2.Items.Add(_l('^e'+GetCharPropType(j,4))+' ('+GetCharDet(i,6)+')')
+      ListBox2.Items.Add(_l('^e'+propType.englishName)+' ('+GetCharDet(i,6)+')')
     else
-      ListBox2.Items.Add(_l('^e'+GetCharPropType(j,4)));
+      ListBox2.Items.Add(_l('^e'+propType.englishName));
   end;
   Button8.Enabled:=ListBox2.Items.Count<>0;
   Button9.Enabled:=ListBox2.Items.Count<>0;

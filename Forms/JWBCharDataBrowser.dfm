@@ -26,7 +26,6 @@ object fCharDataBrowser: TfCharDataBrowser
     FixedCols = 0
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
     TabOrder = 0
-    ExplicitWidth = 702
   end
   object Panel1: TPanel
     Left = 0
@@ -36,7 +35,6 @@ object fCharDataBrowser: TfCharDataBrowser
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 527
     DesignSize = (
       576
       33)
@@ -49,7 +47,6 @@ object fCharDataBrowser: TfCharDataBrowser
       Caption = 'Close'
       ModalResult = 11
       TabOrder = 0
-      ExplicitLeft = 418
     end
   end
 end

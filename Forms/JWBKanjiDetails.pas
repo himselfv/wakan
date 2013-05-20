@@ -589,22 +589,22 @@ begin
   Screen.Cursor:=crDefault;
 end;
 
-{ Reloads various character readings from TCharRead table }
+{ Reloads various character readings from TCharProp table }
 procedure TfKanjiDetails.ReloadReadings(CChar: TTextTableCursor; out read: TCharReadings);
-var rt: integer; //TCharRead.Int(TCharReadType)
+var rt: integer; //TCharProp.Int(TCharPropType)
   ws:UnicodeString;
-  CCharRead: TTextTableCursor;
+  CCharProp: TTextTableCursor;
 begin
   FillChar(read, sizeof(read), 00); //initializes all strings to ''
 
-  CCharRead := TCharRead.NewCursor;
+  CCharProp := TCharProp.NewCursor;
   try
-    CCharRead.SetOrder('');
-    CCharRead.Locate('Kanji',CChar.TrueInt(TCharIndex));
-    while (not CCharRead.EOF) and (CCharRead.Int(TCharReadKanji)=CChar.Int(TCharIndex)) do
+    CCharProp.SetOrder('');
+    CCharProp.Locate('Kanji',CChar.TrueInt(TCharIndex));
+    while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=CChar.Int(TCharIndex)) do
     begin
-      rt:=CCharRead.Int(TCharReadType);
-      ws:=DecodeCharReading(rt,CCharRead.Str(TCharReadReading),CCharRead.Int(TCharReadReadDot));
+      rt:=CCharProp.Int(TCharPropTypeId);
+      ws:=DecodeCharReading(rt,CCharProp.Str(TCharPropValue),CCharProp.Int(TCharPropReadDot));
       case rt of
         1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
         2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
@@ -615,10 +615,10 @@ begin
         3:if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
         8:if read.cany='' then read.cany:=fstrtouni(ws) else read.cany:=read.cany+', '+fstrtouni(ws);
       end;
-      CCharRead.Next;
+      CCharProp.Next;
     end;
   finally
-    FreeAndNil(CCharRead);
+    FreeAndNil(CCharProp);
   end;
 end;
 
@@ -628,25 +628,24 @@ Repopulates KVal list which is used to draw various kanji information box
 }
 procedure TfKanjiDetails.PopulateKval(CChar: TTextTableCursor; const read: TCharReadings);
 var
-  s,s2: string;
+  s,s_part: string;
   i,j,k:integer;
-  charPropId: string;
-  propType: string;
-  CCharRead: TTextTableCursor;
+  propTypeId: integer;
+  propType: PCharPropType;
+  CCharProp: TCharPropertyCursor;
 begin
   kval.Clear;
 
-  CCharRead := TCharRead.NewCursor;
+  CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
     for i:=0 to chardetl.Count-1 do
     begin
-      charPropId := GetCharDet(i,0);
-      j := FindCharPropType(charPropId);
-      if j<0 then continue;
+      propTypeId := strtoint(GetCharDet(i,0));
+      propType := FindCharPropType(propTypeId);
+      if propType=nil then continue;
 
-      k:=strtoint(charPropId);
       s:='';
-      case k of
+      case propTypeId of
         0:s:='---';
         1:s:=LowerCase(read.kory);
         2:s:=ConvertPinYin(read.piny);
@@ -658,47 +657,22 @@ begin
         8:s:=LowerCase(read.cany);
         100:s:=curSingleChar;
         else begin
-          CCharRead.SetOrder('');
-          CCharRead.Locate('Kanji',CChar.TrueInt(TCharIndex));
-          while (not CCharRead.EOF) and (CCharRead.Int(TCharReadKanji)=CChar.Int(TCharIndex)) do
-          begin
-            if CCharRead.Int(TCharReadType)=k then
-            begin
-              propType := GetCharPropType(j,3);
-             { Different property types have data in different formats! }
-              if propType='R' then
-              begin
-                s2:=CCharRead.Str(TCharReadReading);
-                if (length(s2)>0) and (s2[1]='''') then delete(s2,1,1);
-                if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
-                TRadicals.Locate('Number',strtoint(s2));
-                s:=s+TRadicals.Str(TRadicalsUnicode);
-              end else
-             { 'U' and 'P' have reading in 'a'-type hex }
-              if (propType='U') or (propType='P') then
-              begin
-                if (propType<>'U') and (s<>'') then s:=s+', ';
-                s:=s+CCharRead.Dehex(TCharReadReading);
-              end else
-             { Rest is read as it is }
-              begin
-                s:=s+CCharRead.Str(TCharReadReading);
-              end;
-            end;
-            CCharRead.Next;
-          end;
+          if (propType.dataType='U') or (propType.dataType='P') then
+            s := CCharProp.GetCharValues(CChar.TrueInt(TCharIndex), propTypeId, '')
+          else
+            s := CCharProp.GetCharAnsiValues(CChar.TrueInt(TCharIndex), propTypeId, ', ');
         end;
       end;
 
       if GetCharDet(i,6)<>'' then
-        kval.Add(GetCharPropType(j,3)+';'+chardetl[i])
+        kval.Add(propType.dataType+';'+chardetl[i])
       else
-        kval.Add(GetCharPropType(j,3)+';'+chardetl[i]+_l('^e'+GetCharPropType(j,4)));
+        kval.Add(propType.dataType+';'+chardetl[i]+_l('^e'+propType.englishName));
       kval.Add(s);
 
     end; //of chardetl enum
   finally
-    FreeAndNil(CCharRead);
+    FreeAndNil(CCharProp);
   end;
 end;
 

@@ -46,30 +46,25 @@ var
   TCharChFrequency,
   TCharJouyouGrade: integer;
 
-  TCharRead: TTextTable;
-  TCharReadKanji,
-  TCharReadType,
-   { S = AnsiString, U = Unicode (4 char hex), P = ? (4 char hex)
-     T = ?, R = TRadicals.Number field value, N = Number (?) }
-  TCharReadReading, { WARNING! This field here is dangerous.
-    Some properties store normal AnsiStrings here, other 4-char hex AnsiStrings,
-    i.e. no auto-conversion to unicode is possible.
-    When reading from, or searching by this field, you have to check it's property type:
-       type := CCharRead.Int(TCharReadType);
-       propType := GetCharPropType(type,3);
-    And then recode data:
-       R: TRadicals.Number field value, possibly int or 'int' (int in quotes)
-       U,P: 4char hex
-       other: AnsiString
-    TODO: Make a class which reads from these and auto-converts, i.e.
-      cursor.FS[]: FString
-      cursor.AS[]: AnsiString
-      cursor.US[]: UnicodeString
-      cursor.I[]: Integer
+  TCharProp: TTextTable;
+  TCharPropKanji,
+  TCharPropTypeId,
+   { Property type ID in the Property Type offline table (from wakan.cfg).
+    Some property types can have several entries. }
+  TCharPropValue, {
+    Property value. WARNING! This field here is dangerous.
+    Database column format is AnsiString, but some properties store 4-char hex
+    unicode. Default auto-conversion therefore does not work.
+    When reading from, or searching by this field, you have to check its
+    property type:
+       type := CCharRead.Int(TCharPropTypeId);
+       dataType := FindCharPropType(type).dataType;
+    And then recode data (see TCharPropType.dataType field comments)
+    TCharPropertyCursor below has this implemented, just use Value().
    }
-  TCharReadIndex,
-  TCharReadReadDot,
-  TCharReadPosition: integer;
+  TCharPropIndex,
+  TCharPropReadDot,
+  TCharPropPosition: integer;
 
   TRadicals: TTextTable;
   TRadicalsNumber,
@@ -84,34 +79,98 @@ var
 procedure LoadCharData(const filename: string);
 procedure FreeCharData();
 
-var
-  CharPropTypes:TStringList; { All possible pieces of information to display in KanjiDetails info box. }
-  chardetl:TStringList; { User configuration for KanjiDetails info box -- stored in WAKAN.CDT }
 
 {
-Character property information available:
-  0 - charPropId
-  1 - sourceType -- where did we get that info
-    'D': KANJIDIC
-    'U': UNIHAN
-  2 - sourceField
-  3 - propType -- controls how data for this property is stored and handled
-    'U', 'P': stored as 'a'-type hex string, contains unicode
-    'R', 'N', 'T'
-  4 - english name
-  5 - czech name
-  6 - description (english)
+Character property type information.
 }
-function GetCharPropType(idx:integer;fld:integer):string;
-function GetCharDet(i,j:integer):string;
-function FindCharPropType(charPropId: string): integer;
+type
+  TCharPropType = record
+    id: integer;
+    sourceType: char;
+     { Where did we get that info
+        'D': KANJIDIC
+        'U': UNIHAN }
+    sourceField: string;
+    dataType: char;
+     { Controls how data for this property is stored and handled
+        'U', 'P': stored as 'a'-type hex string, contains unicode
+        'R': TRadicals.Number field value, possibly int or 'int' (int in quotes)
+        'N': 'Number' (?), AnsiString
+        'T': ?, AnsiString
+        'S': 'String', AnsiString }
+    englishName: string;
+    czechName: string;
+    description: string // in english
+  end;
+  PCharPropType = ^TCharPropType;
 
-function GetCharValueInt(index,vt:integer):integer;
-function GetCharValueRad(index,vt:integer):integer;
-function GetCharValue(index,vt:integer):string;
+var
+ { All possible pieces of information to store about Characters and to display
+  in KanjiDetails info box. }
+  CharPropTypes: array of TCharPropType;
+
+const
+ { Some predefined property type IDs. These cannot be changed at a later date,
+  only declared obsolete. }
+  ptJapaneseDefinition = 3;
+  ptChineseDefinition = 7; //usually taken from UNIHAN
+  ptJapaneseDefinitionUnicode = 121;
+
+procedure AddCharPropType(const str: string);
+function FindCharPropType(const propTypeId: integer): PCharPropType;
+function FindCharPropTypeIndex(const propTypeId: integer): integer;
+
+
+{
+Shortcuts for getting character property values
+}
+
+function GetCharValue(index,propType:integer):string;
+function GetCharValueInt(index,propType:integer):integer;
+function GetCharValueRad(index,propType:integer):integer;
+
+
+{
+User configuration for KanjiDetails info box -- stored in WAKAN.CDT
+}
+var
+  chardetl:TStringList;
+
+function GetCharDet(i,j:integer):string;
+
+function DecodeCharReading(rt: integer; str: string; dotPosition: integer): FString;
+
+{
+CharPropertyCursor
+}
+
+type
+  TCharPropertyCursor = class(TTextTableCursor)
+  protected
+    CRadicals: TTextTableCursor;
+  public
+    constructor Create(ATable: TTextTable);
+    destructor Destroy; override;
+    function PropType: PCharPropType;
+    function AnsiValue: AnsiString;
+    function Value: FString;
+
+  public
+   { Uses Cursor to enumerate over a certain character properties.
+    These break the current position. }
+    function GetCharAnsiValues(kanjiIndex,propType:integer; const sep: string=', '):string;
+    function GetCharValues(kanjiIndex,propType:integer; const sep: FString={$IFDEF UNICODE}', '{$ELSE}$002C$0020{$ENDIF}):FString;
+    function GetJapaneseDefinitions(kanjiIndex: integer; const sep: string=', '): FString;
+    function GetChineseDefinitions(kanjiIndex: integer; const sep: string=', '): FString;
+
+  end;
 
 implementation
 uses MemSource;
+
+{
+Database
+}
 
 procedure LoadCharData(const filename: string);
 var ps: TPackageSource;
@@ -147,8 +206,6 @@ begin
   end;
 
   TChar:=TTextTable.Create(ps,'Char',true,false);
-  TCharRead:=TTextTable.Create(ps,'CharRead',true,false);
-  TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
   TCharIndex:=TChar.Field('Index');
   TCharChinese:=TChar.Field('Chinese');
   TCharType:=TChar.Field('Type');
@@ -158,12 +215,16 @@ begin
   TCharJpFrequency:=TChar.Field('JpFrequency');
   TCharChFrequency:=TChar.Field('ChFrequency');
   TCharJouyouGrade:=TChar.Field('JouyouGrade');
-  TCharReadKanji:=TCharRead.Field('Kanji');
-  TCharReadType:=TCharRead.Field('Type');
-  TCharReadReading:=TCharRead.Field('Reading');
-  TCharReadIndex:=TCharRead.Field('Index');
-  TCharReadReadDot:=TCharRead.Field('ReadDot');
-  TCharReadPosition:=TCharRead.Field('Position');
+
+  TCharProp:=TTextTable.Create(ps,'CharRead',true,false); //sic. 'CharRead' for compat. reasons
+  TCharPropKanji:=TCharProp.Field('Kanji');
+  TCharPropTypeId:=TCharProp.Field('Type');
+  TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
+  TCharPropIndex:=TCharProp.Field('Index');
+  TCharPropReadDot:=TCharProp.Field('ReadDot');
+  TCharPropPosition:=TCharProp.Field('Position');
+
+  TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
   TRadicalsNumber:=TRadicals.Field('Number');
   TRadicalsVariant:=TRadicals.Field('Variant');
   TRadicalsUnicode:=TRadicals.Field('Unicode');
@@ -188,25 +249,107 @@ end;
 procedure FreeCharData();
 begin
   FreeAndNil(TChar);
-  FreeAndNil(TCharRead);
+  FreeAndNil(TCharProp);
   FreeAndNil(TRadicals);
   ClearCharDbProps();
 end;
 
-{ Pieces of information about Kanji }
 
-function GetCharPropType(idx:integer;fld:integer):string;
+{
+Pieces of information about Kanji
+}
+
+{ Adds a char property type info from parsing a wakan.cfg style string }
+procedure AddCharPropType(const str: string);
+var tmp: string;
+  parts: TStringArray;
+  pt: TCharPropType;
+begin
+  tmp := str;
+  parts := SplitStr(str, 7);
+  if Length(parts)<7 then
+    raise Exception.Create('AddCharPropType: invalid property type info line format');
+  if not TryStrToInt(parts[0], pt.id) then
+    raise Exception.Create('AddCharPropType: invalid integer ID: '+parts[0]);
+  if Length(parts[1])<>1 then
+    raise Exception.Create('AddCharPropType: invalid source: '+parts[1]);
+  pt.sourceType := parts[1][1];
+  pt.sourceField := parts[2];
+  if Length(parts[1])<>1 then
+    raise Exception.Create('AddCharPropType: invalid data type: '+parts[3]);
+  pt.dataType := parts[3][1];
+  pt.englishName := parts[4];
+  pt.czechName := parts[5];
+  pt.description := parts[6];
+  SetLength(CharPropTypes, Length(CharPropTypes)+1);
+  CharPropTypes[Length(CharPropTypes)-1] := pt;
+end;
+
+function FindCharPropType(const propTypeId: integer): PCharPropType;
+var i: integer;
+begin
+  Result := nil;
+  for i := 0 to Length(CharPropTypes) - 1 do
+    if propTypeId=CharPropTypes[i].id then begin
+      Result := @CharPropTypes[i];
+      break;
+    end;
+end;
+
+function FindCharPropTypeIndex(const propTypeId: integer): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(CharPropTypes) - 1 do
+    if propTypeId=CharPropTypes[i].id then begin
+      Result := i;
+      break;
+    end;
+end;
+
+{ Following functions are inherited and left as they are, although
+ they reimplement functionality and are bad. }
+
+{ NOTE: On Unicode properties this will return hex gibberish }
+function GetCharValue(index,propType:integer):string;
+begin
+  TCharProp.SetOrder('');
+  if TCharProp.Locate('Kanji',index) then
+  while (not TCharProp.EOF) and (TCharProp.Int(TCharPropKanji)=index) do
+  begin
+    if TCharProp.Int(TCharPropTypeId)=propType then
+    begin
+      result:=TCharProp.Str(TCharPropValue);
+      exit;
+    end;
+    TCharProp.Next;
+  end;
+  result:='';
+end;
+
+function GetCharValueInt(index,propType:integer):integer;
 var s:string;
 begin
-  s:=CharPropTypes[idx];
-  while fld>0 do
-  begin
-    delete(s,1,pos(',',s));
-    dec(fld);
-  end;
-  if fld<6 then delete(s,pos(',',s),length(s)-pos(',',s)+1);
-  result:=s;
+  s:=GetCharValue(index,propType);
+  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
+  if (s='') or not TryStrToInt(s, Result) then
+    Result:=65535;
 end;
+
+function GetCharValueRad(index,propType:integer):integer;
+var s:string;
+begin
+  s:=GetCharValue(index,propType);
+  if pos('.',s)>0 then delete(s,pos('.',s),length(s)-pos('.',s)+1);
+  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
+  if (s='') or not TryStrToInt(s, Result) then
+    Result:=65535;
+end;
+
+
+{
+User configuration for KanjiDetails info box
+}
 
 function GetCharDet(i,j:integer):string;
 var s:string;
@@ -221,65 +364,198 @@ begin
   result:=s;
 end;
 
-//Returns chartypel index for a given char type, or -1
-function FindCharPropType(charPropId: string): integer;
-var i: integer;
+
+{
+TCharPropertyCursor
+}
+
+constructor TCharPropertyCursor.Create(ATable: TTextTable);
 begin
-  Result := -1;
-  for i := 0 to CharPropTypes.Count - 1 do
-    if charPropId=GetCharPropType(i,0) then begin
-      Result := i;
-      break;
-    end;
+  inherited;
+  CRadicals := TRadicals.NewCursor;
 end;
 
-function GetCharValueInt(index,vt:integer):integer;
-var s:string;
+destructor TCharPropertyCursor.Destroy;
 begin
-  s:=GetCharValue(index,vt);
-  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-  if (s='') or not TryStrToInt(s, Result) then
-    Result:=65535;
+  FreeAndNil(CRadicals);
+  inherited;
 end;
 
-function GetCharValueRad(index,vt:integer):integer;
-var s:string;
+function TCharPropertyCursor.PropType: PCharPropType;
+var propTypeId: integer;
 begin
-  s:=GetCharValue(index,vt);
-  if pos('.',s)>0 then delete(s,pos('.',s),length(s)-pos('.',s)+1);
-  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-  if (s='') or not TryStrToInt(s, Result) then
-    Result:=65535;
+  propTypeId := Self.Int(TCharPropTypeId);
+  Result := FindCharPropType(propTypeid);
 end;
 
-function GetCharValue(index,vt:integer):string;
+function TCharPropertyCursor.AnsiValue: AnsiString;
+var propDataType: char;
+  s_ansi: AnsiString;
 begin
-  TCharRead.SetOrder('');
-  if TCharRead.Locate('Kanji',index) then
-  while (not TCharRead.EOF) and (TCharRead.Int(TCharReadKanji)=index) do
+  propDataType := Self.PropType.dataType;
+
+ { Different property types have data in different formats! }
+  if propDataType='R' then
   begin
-    if TCharRead.Int(TCharReadType)=vt then
-    begin
-      result:=TCharRead.Str(TCharReadReading);
-      exit;
-    end;
-    TCharRead.Next;
+    s_ansi:=Self.AnsiStr(TCharPropValue);
+    if (length(s_ansi)>0) and (s_ansi[1]='''') then System.delete(s_ansi,1,1);
+    if (length(s_ansi)>0) and (s_ansi[length(s_ansi)]='''') then System.delete(s_ansi,length(s_ansi),1);
+    CRadicals.Locate('Number',strtoint(string(s_ansi)));
+    Result := CRadicals.AnsiStr(TRadicalsUnicode);
+  end else
+ { 'U' and 'P' have reading in 'a'-type hex.
+  This is a problem though because logically they're Unicode strings and we want Ansi. }
+  if (propDataType='U') or (propDataType='P') then
+  begin
+    Result := AnsiString(Self.Dehex(TCharPropValue));
+  end else
+ { Rest is read as it is }
+  begin
+    Result := Self.AnsiStr(TCharPropValue);
   end;
-  result:='';
+end;
+
+function TCharPropertyCursor.Value: FString;
+var propDataType: char;
+  s_ansi: AnsiString;
+begin
+  propDataType := Self.PropType.dataType;
+
+ { Different property types have data in different formats! }
+  if propDataType='R' then
+  begin
+    s_ansi:=Self.AnsiStr(TCharPropValue);
+    if (length(s_ansi)>0) and (s_ansi[1]='''') then System.delete(s_ansi,1,1);
+    if (length(s_ansi)>0) and (s_ansi[length(s_ansi)]='''') then System.delete(s_ansi,length(s_ansi),1);
+    CRadicals.Locate('Number',strtoint(string(s_ansi)));
+    Result := CRadicals.Str(TRadicalsUnicode);
+  end else
+ { 'U' and 'P' have reading in 'a'-type hex }
+  if (propDataType='U') or (propDataType='P') then
+  begin
+    Result := Self.Dehex(TCharPropValue);
+  end else
+ { Rest is read as it is }
+  begin
+    Result := Self.Str(TCharPropValue);
+  end;
+end;
+
+//Works for AnsiString type properties
+function TCharPropertyCursor.GetCharAnsiValues(kanjiIndex, propType:integer; const sep: string):string;
+begin
+  Result := '';
+  Self.SetOrder('');
+  if Self.Locate('Kanji',kanjiIndex) then
+  while (not Self.EOF) and (Self.Int(TCharPropKanji)=kanjiIndex) do
+  begin
+    if Self.Int(TCharPropTypeId)=propType then
+    begin
+      if Result<>'' then
+        Result := Result + sep + Self.Str(TCharPropValue)
+      else
+        Result := Self.Str(TCharPropValue);
+    end;
+    Self.Next;
+  end;
+end;
+
+//Works for Unicode type properties
+function TCharPropertyCursor.GetCharValues(kanjiIndex, propType:integer; const sep: FString):FString;
+begin
+  Result := '';
+  Self.SetOrder('');
+  if Self.Locate('Kanji',kanjiIndex) then
+  while (not Self.EOF) and (Self.Int(TCharPropKanji)=kanjiIndex) do
+  begin
+    if Self.Int(TCharPropTypeId)=propType then
+    begin
+      if Result<>'' then
+        Result := Result + sep + Self.Dehex(TCharPropValue)
+      else
+        Result := Self.Dehex(TCharPropValue);
+    end;
+    Self.Next;
+  end;
+end;
+
+function TCharPropertyCursor.GetJapaneseDefinitions(kanjiIndex: integer; const sep: string): FString;
+var tmp: FString;
+begin
+  Result := fstr(GetCharAnsiValues(kanjiIndex, ptJapaneseDefinition, ', '));
+  tmp := GetCharValues(kanjiIndex, ptJapaneseDefinitionUnicode, fstr(', '));
+  if (Result<>'') and (tmp<>'') then
+    Result := Result + fstr(sep) + tmp;
+end;
+
+function TCharPropertyCursor.GetChineseDefinitions(kanjiIndex: integer; const sep: string): FString;
+begin
+  Result := fstr(GetCharAnsiValues(kanjiIndex, ptChineseDefinition, ', '));
+end;
+
+
+{ Following function is kinda deprecated and needs checks/rewrites.
+ Take comments with a grain of salt. }
+
+{ Readings are stored as STRINGS which for some reading-types contain HEX.
+So there's nothing we can do to avoid HexToUnicode conversion.
+
+For char property types which support this:
+- Decode to FString from explicit hex or encode from Ansi
+- Add dot at the specified position
+- Replace special markers such as +/i with full-width equivalents
+Call this function for everything you get from TCharProps, it won't hurt. }
+function DecodeCharReading(rt: integer; str: string; dotPosition: integer): FString;
+var adddot:integer;
+begin
+  if rt in [2, 8] then begin
+   //Chinese ony/kuny
+    Result := fstr(str);
+    exit;
+  end;
+
+  if (rt<=3) or (rt>=7) then begin
+   //Rest are Ansi strings
+    Result := fstr(str);
+    exit;
+  end;
+
+  Result:='';
+  adddot:=0;
+  if str[1]='+'then
+  begin
+    Result:={$IFNDEF UNICODE}'FF0B'{$ELSE}#$FF0B{$ENDIF};
+    delete(str,1,1);
+    adddot:=1;
+  end;
+  if str[1]='-'then
+  begin
+    Result:=Result+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF};
+    delete(str,1,1);
+    adddot:=1;
+  end;
+  if dotPosition>0 then
+  begin
+    Result:=Result+hextofstr(copy(str,1,dotPosition-1-adddot));
+    Result:=Result+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
+    delete(str,1,dotPosition-1-adddot);
+  end;
+  if str[length(str)]='-' then
+    Result:=Result+hextofstr(copy(str,1,length(str)-1))+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
+  else
+    Result:=Result+hextofstr(str);
 end;
 
 initialization
   TChar := nil;
-  TCharRead := nil;
+  TCharProp := nil;
   TRadicals := nil;
   ClearCharDbProps();
-  CharPropTypes:=TStringList.Create;
   chardetl:=TStringList.Create;
 
 finalization
  {$IFDEF CLEAN_DEINIT}
   FreeAndNil(chardetl);
-  FreeAndNil(CharPropTypes);
  {$ENDIF}
 
 end.

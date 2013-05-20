@@ -153,58 +153,61 @@ begin
 end;
 
 procedure TfKanji.ReadFilter(flt:TStringList;const tx:string;typ:integer;partial,space,number,takedot:boolean);
-var CCharRead: TTextTableCursor;
+var CCharProp: TTextTableCursor;
   sl:TStringList;
   s_fltval:string;
   s_val:string;
   i:integer;
   dot:integer;
-  propId: integer;
-  propType: string;
+  propType: PCharPropType;
 begin
   sl:=TStringList.Create;
-  CCharRead := TCharRead.NewCursor;
+  CCharProp := TCharProp.NewCursor;
   try
 
    //Convert filter value into a list of exact values to match
     MakeList(tx,number,sl);
-  
+
+   { We use a trick here. Database field type for PropValue column is always Ansi,
+    Unicode values are stored as 4-byte hex.
+    To do lookups we need to convert our query to this format, so if the property
+    type assumes unicode, we do UnicodeToHex. }
+
    {$IFDEF UNICODE}
    //Figure out this property's data format and convert values into it
-    propId := FindCharPropType(IntToStr(typ));
-    if propId<0 then raise Exception.Create('Property not found: '+IntToStr(typ));
-    propType := GetCharPropType(propId,3);
-    if (propType='P') or (propType='U') then begin
+    propType := FindCharPropType(typ);
+    if propType=nil then raise Exception.Create('Property type not found: '+IntToStr(typ));
+    if (propType.dataType='P') or (propType.dataType='U') then begin
       sl.Sorted := false; //don't really care if it's sorted
       for i := 0 to sl.Count - 1 do
         sl[i] := UnicodeToHex(sl[i]);
     end; //else it's AnsiString
    {$ELSE}
-    //On Ansi anything Unicode will already be in FChars
+    //On Ansi anything Unicode will already be internally in FChars
    {$ENDIF}
 
     for i:=0 to sl.Count-1 do
     begin
       s_fltval:=uppercase(sl[i]); //Locate is case-insensitive anyway
-      CCharRead.SetOrder('Reading_Ind');
-      CCharRead.Locate('Reading',s_fltval);
-      s_val:=uppercase(CCharRead.Str(TCharReadReading));
-      while (not CCharRead.EOF) and (
+      CCharProp.SetOrder('Reading_Ind');
+      CCharProp.Locate('Reading',s_fltval);
+      s_val:=uppercase(CCharProp.Str(TCharPropValue));
+      while (not CCharProp.EOF) and (
         (s_val=s_fltval)
         or ((partial and not space) and (pos(s_fltval,s_val)=1))
         or ((partial and space) and (pos(s_fltval+' ',s_val)=1))) do
       begin
-        if takedot then dot:=CCharRead.Int(TCharReadReadDot);
-        if CCharRead.Int(TCharReadType)=typ then
+        if takedot then dot:=CCharProp.Int(TCharPropReadDot);
+        if CCharProp.Int(TCharPropTypeId)=typ then
           if (not takedot) or (s_val=s_fltval) or ((dot>0) and (s_fltval=copy(s_val,dot-1))) then
-            flt.Add(CCharRead.Str(TCharReadKanji));
-        CCharRead.Next;
-        s_val:=uppercase(CCharRead.Str(TCharReadReading));
+            flt.Add(CCharProp.Str(TCharPropKanji));
+        CCharProp.Next;
+        s_val:=uppercase(CCharProp.Str(TCharPropValue));
       end;
     end;
 
   finally
-    FreeAndNil(CCharRead);
+    FreeAndNil(CCharProp);
     FreeAndNil(sl);
   end;
   flt.Sort;
@@ -354,12 +357,12 @@ begin
         fltother.Add(fKanjiSearch.edtOther.Text)
       else
         j:=0;
-      for i:=0 to CharPropTypes.Count-1 do
-        if strtoint(GetCharPropType(i,0))>20 then
+      for i:=0 to Length(CharPropTypes)-1 do
+        if CharPropTypes[i].id>20 then
         begin
           inc(j);
           if j=fKanjiSearch.cbOtherType.ItemIndex then
-            ReadFilter(fltother,fKanjiSearch.edtOther.Text,strtoint(GetCharPropType(i,0)),false,false,GetCharPropType(i,3)='N',false);
+            ReadFilter(fltother,fKanjiSearch.edtOther.Text,CharPropTypes[i].id,false,false,CharPropTypes[i].dataType='N',false);
         end;
     end;
     if fKanjiSearch.sbDefinition.Down then if chin then

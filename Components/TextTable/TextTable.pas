@@ -252,7 +252,7 @@ type
    {$ELSE}
     function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
    {$ENDIF}
-    function Dehex(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+    function Dehex(field:integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
 
   end;
 
@@ -2004,7 +2004,7 @@ end;
 For unicode strings stored as hex in 'a'-type strings.
 Returns contents in FString.
 }
-function TTextTableCursor.Dehex(field:integer):string;
+function TTextTableCursor.Dehex(field:integer):FString;
 begin
  {$IFDEF UNICODE}
   Result := HexToUnicode(Str(field));

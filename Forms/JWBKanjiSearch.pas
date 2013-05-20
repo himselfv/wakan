@@ -133,9 +133,9 @@ begin
   if bk=-1 then bk:=kanji_othersearch;
   fKanjiSearch.cbOtherType.Items.Clear;
   fKanjiSearch.cbOtherType.Items.Add('Unicode');
-  for i:=0 to CharPropTypes.Count-1 do
-    if strtoint(GetCharPropType(i,0))>20 then
-      fKanjiSearch.cbOtherType.Items.Add(_l('^e'+GetCharPropType(i,4)));
+  for i:=0 to Length(CharPropTypes)-1 do
+    if CharPropTypes[i].id>20 then
+      fKanjiSearch.cbOtherType.Items.Add(_l('^e'+CharPropTypes[i].englishName));
   fKanjiSearch.cbOtherType.ItemIndex:=0;
   if bk<fKanjiSearch.cbOtherType.Items.Count-1 then fKanjiSearch.cbOtherType.ItemIndex:=bk;
 end;
