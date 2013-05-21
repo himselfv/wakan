@@ -149,7 +149,7 @@ function FixVocabEntry(const s:string):string;
 function UnfixVocabEntry(const s:string):string;
 
 procedure DeleteDirectory(dir:string);
-procedure Backup(const filename: string);
+function Backup(const filename: string): string;
 
 procedure RegeditAtKey(const key: string);
 
@@ -1424,8 +1424,9 @@ begin
   Windows.RemoveDirectory(PChar(dir));
 end;
 
-{ Universal backup function. Backups everything to the directory designated for backups. }
-procedure Backup(const filename: string);
+{ Universal backup function. Backups everything to the directory designated for backups.
+ Returns filename of the backup or empty string on failure }
+function Backup(const filename: string): string;
 begin
  //For now works as it did in previous Wakan versions.
  //Has to be reworked to put backups into user folder.
@@ -1434,8 +1435,10 @@ begin
   {$I+}
   ioresult;
  //dir\wakan.usr --> wakan-20130111.usr
-  CopyFile(PChar(filename),pchar(UserDataDir+'\backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
-    +FormatDateTime('yyyymmdd',now)+ExtractFileExt(filename)),false);
+  Result := UserDataDir+'\backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
+    +FormatDateTime('yyyymmdd-hhnnss',now)+ExtractFileExt(filename);
+  if not CopyFile(PChar(filename),pchar(Result),false) then
+    Result := '';
 end;
 
 //Opens registry editor at the specific key

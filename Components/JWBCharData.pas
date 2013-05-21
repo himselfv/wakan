@@ -28,7 +28,8 @@ var
  { Database props -- populated on load }
   CharDataVersion: integer;
   CharDataProps: record
-    DicBuildDate: string;
+    DicBuildDateInt: integer; //original 'dic build date'
+    DicBuildDate: string; //string version
     KanjidicVersion: string;
     UnihanVersion: string;
     ChinesePresent:boolean;
@@ -77,6 +78,7 @@ var
   TRadicalsKangXiCount: integer;
 
 procedure LoadCharData(const filename: string);
+procedure SaveCharData(const filename: string);
 procedure FreeCharData();
 
 
@@ -166,7 +168,7 @@ type
   end;
 
 implementation
-uses MemSource;
+uses MemSource, PKGWrite, JWBUnit;
 
 {
 Database
@@ -180,60 +182,122 @@ begin
   FreeCharData; //just in case
 
   ps:=TPackageSource.Create(filename,791564,978132,978123);
+  try
+    vi:=TStringList.Create;
+    try
+      ms:=ps['jalet.ver'].Lock;
+      vi.LoadFromStream(ms);
+      ps['jalet.ver'].Unlock;
+
+      if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then
+        raise Exception.Create('Unknown DICT.VER header.');
+      CharDataVersion := strtoint(vi[1]);
+      if CharDataVersion<CurrentCharDataVersion then
+        raise ECharDataException.Create('#00354^eWAKAN.CHR has old structure. '
+          +'Please download new version.'#13#13'Application will now exit.')
+      else
+      if CharDataVersion<CurrentCharDataVersion then
+        raise ECharDataException.Create('#00355^eWAKAN.CHR has newer structure. '
+          +'Please download new WAKAN.EXE.'#13#13'Application will now exit.');
+
+      CharDataProps.DicBuildDateInt:=strtoint(vi[2]);
+      CharDataProps.DicBuildDate:=datetostr(CharDataProps.DicBuildDateInt);
+      CharDataProps.KanjidicVersion:=vi[4];
+      CharDataProps.UnihanVersion:=vi[5];
+      CharDataProps.ChinesePresent:=vi[6]='CHINESE';
+    finally
+      vi.Free;
+    end;
+
+    TChar:=TTextTable.Create(ps,'Char',true,false);
+    TCharIndex:=TChar.Field('Index');
+    TCharChinese:=TChar.Field('Chinese');
+    TCharType:=TChar.Field('Type');
+    TCharUnicode:=TChar.Field('Unicode');
+    TCharStrokeCount:=TChar.Field('StrokeCount');
+    TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
+    TCharJpFrequency:=TChar.Field('JpFrequency');
+    TCharChFrequency:=TChar.Field('ChFrequency');
+    TCharJouyouGrade:=TChar.Field('JouyouGrade');
+
+    TCharProp:=TTextTable.Create(ps,'CharRead',true,false); //sic. 'CharRead' for compat. reasons
+    TCharPropKanji:=TCharProp.Field('Kanji');
+    TCharPropTypeId:=TCharProp.Field('Type');
+    TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
+    TCharPropIndex:=TCharProp.Field('Index');
+    TCharPropReadDot:=TCharProp.Field('ReadDot');
+    TCharPropPosition:=TCharProp.Field('Position');
+
+    TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
+    TRadicalsNumber:=TRadicals.Field('Number');
+    TRadicalsVariant:=TRadicals.Field('Variant');
+    TRadicalsUnicode:=TRadicals.Field('Unicode');
+    TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
+    TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
+    TRadicalsBushuCount:=TRadicals.Field('BushuCount');
+    TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
+    TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
+  finally
+    FreeAndNil(ps);
+  end;
+end;
+
+{ Packs WAKAN.CHR data from directory Dir to package Package.
+ Do not use directly; there are functions to save and load user data packages. }
+procedure WriteCharPackage(const dir:string;const package:string);
+begin
+  PKGWriteForm.PKGWriteCmd('NotShow');
+  PKGWriteForm.PKGWriteCmd('PKGFileName '+package);
+  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
+  PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
+  PKGWriteForm.PKGWriteCmd('TitleName WaKan Character Dictionary');
+  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
+  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
+  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
+  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
+  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
+  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
+  PKGWriteForm.PKGWriteCmd('WriteHeader');
+  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
+  PKGWriteForm.PKGWriteCmd('CryptMode 0');
+  PKGWriteForm.PKGWriteCmd('CRCMode 0');
+  PKGWriteForm.PKGWriteCmd('PackMode 0');
+  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
+  PKGWriteForm.PKGWriteCmd('Include '+dir);
+  PKGWriteForm.PKGWriteCmd('Finish');
+end;
+
+//NOTE: This cannot at this time be used to create a new character database.
+//  It only works if we already have the data loaded. All the header info
+//  (dic version, build date) is preserved.
+procedure SaveCharData(const filename: string);
+var tempDir: string;
+  vi: TStringList;
+begin
+  tempDir := CreateRandomTempDir();
+
   vi:=TStringList.Create;
   try
-    ms:=ps['jalet.ver'].Lock;
-    vi.LoadFromStream(ms);
-    ps['jalet.ver'].Unlock;
-
-    if (vi[0]<>'JALET.DIC') and (vi[0]<>'JALET.CHR') then
-      raise Exception.Create('Unknown DICT.VER header.');
-    CharDataVersion := strtoint(vi[1]);
-    if CharDataVersion<CurrentCharDataVersion then
-      raise ECharDataException.Create('#00354^eWAKAN.CHR has old structure. '
-        +'Please download new version.'#13#13'Application will now exit.')
+    vi.Add('JALET.CHR');
+    vi.Add(IntToStr(CharDataVersion));
+    vi.Add(IntToStr(CharDataProps.DicBuildDateInt));
+    vi.Add('');
+    vi.Add(CharDataProps.KanjidicVersion);
+    vi.Add(CharDataProps.UnihanVersion);
+    if CharDataProps.ChinesePresent then
+      vi.Add('CHINESE')
     else
-    if CharDataVersion<CurrentCharDataVersion then
-      raise ECharDataException.Create('#00355^eWAKAN.CHR has newer structure. '
-        +'Please download new WAKAN.EXE.'#13#13'Application will now exit.');
-
-    CharDataProps.DicBuildDate:=datetostr(strtoint(vi[2]));
-    CharDataProps.KanjidicVersion:=vi[4];
-    CharDataProps.UnihanVersion:=vi[5];
-    CharDataProps.ChinesePresent:=vi[6]='CHINESE';
+      vi.Add('');
+    vi.SaveToFile(tempDir+'\jalet.ver');
   finally
     vi.Free;
   end;
 
-  TChar:=TTextTable.Create(ps,'Char',true,false);
-  TCharIndex:=TChar.Field('Index');
-  TCharChinese:=TChar.Field('Chinese');
-  TCharType:=TChar.Field('Type');
-  TCharUnicode:=TChar.Field('Unicode');
-  TCharStrokeCount:=TChar.Field('StrokeCount');
-  TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
-  TCharJpFrequency:=TChar.Field('JpFrequency');
-  TCharChFrequency:=TChar.Field('ChFrequency');
-  TCharJouyouGrade:=TChar.Field('JouyouGrade');
-
-  TCharProp:=TTextTable.Create(ps,'CharRead',true,false); //sic. 'CharRead' for compat. reasons
-  TCharPropKanji:=TCharProp.Field('Kanji');
-  TCharPropTypeId:=TCharProp.Field('Type');
-  TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
-  TCharPropIndex:=TCharProp.Field('Index');
-  TCharPropReadDot:=TCharProp.Field('ReadDot');
-  TCharPropPosition:=TCharProp.Field('Position');
-
-  TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
-  TRadicalsNumber:=TRadicals.Field('Number');
-  TRadicalsVariant:=TRadicals.Field('Variant');
-  TRadicalsUnicode:=TRadicals.Field('Unicode');
-  TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
-  TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
-  TRadicalsBushuCount:=TRadicals.Field('BushuCount');
-  TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
-  TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
-
+  TChar.WriteTable(tempDir+'\Char',false);
+  TCharProp.WriteTable(tempDir+'\CharRead',false);
+  TRadicals.WriteTable(tempDir+'\Radicals',false);
+  WriteCharPackage(tempDir, filename);
+  DeleteDirectory(tempDir)
 end;
 
 //Clears database properties after unloading, as a safety measure

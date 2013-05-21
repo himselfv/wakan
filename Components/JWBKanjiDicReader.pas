@@ -17,11 +17,11 @@ const
 
 { Some reasonable values. Increase if it's not enough one day }
 const
-  MaxValues = 5;
+  MaxValues = 12;
   MaxOns = 10;
-  MaxKuns = 10;
+  MaxKuns = 26;
   MaxReadingClasses = 3;
-  MaxFields = 30;
+  MaxFields = 40;
   MaxMeanings = 16;
 
 type
@@ -47,9 +47,9 @@ type
 
   TReadingClassEntry = record
     key: string;
-    ons: array[0..MaxOns] of UnicodeString;
+    ons: array[0..MaxOns-1] of UnicodeString;
     ons_used: integer;
-    kuns: array[0..MaxKuns] of UnicodeString;
+    kuns: array[0..MaxKuns-1] of UnicodeString;
     kuns_used: integer;
     procedure Reset;
     procedure AddOn(const value: UnicodeString);
@@ -64,7 +64,7 @@ type
    { Kanjidic supports several reading classes: T0 the default, T1 and T2.
     There's no _used because there's a fixed number of them. }
     readings: array[0..MaxReadingClasses-1] of TReadingClassEntry;
-    meanings: array[0..MaxMeanings] of UnicodeString; //we support multilingual kanjidics
+    meanings: array[0..MaxMeanings-1] of UnicodeString; //we support multilingual kanjidics
     meanings_used: integer;
     procedure Reset;
     procedure AddField(const key: string; const value: string);
@@ -96,7 +96,7 @@ procedure TFieldEntry.AddValue(const value: string);
 begin
   Inc(values_used);
   if values_used>Length(values) then
-    raise EKanjidicParsingException.Create('FieldEntry: Cannot add one more value');
+    raise EKanjidicParsingException.Create('FieldEntry: Cannot add one more value ('+IntToStr(values_used)+')');
   values[values_used-1] := value;
 end;
 
@@ -110,7 +110,7 @@ procedure TReadingClassEntry.AddOn(const value: UnicodeString);
 begin
   Inc(ons_used);
   if ons_used>Length(ons) then
-    raise EKanjidicParsingException.Create('ReadingClassEntry: Cannot add one more ON');
+    raise EKanjidicParsingException.Create('ReadingClassEntry: Cannot add one more ON ('+IntToStr(ons_used)+')');
   ons[ons_used-1] := value;
 end;
 
@@ -118,7 +118,7 @@ procedure TReadingClassEntry.AddKun(const value: UnicodeString);
 begin
   Inc(kuns_used);
   if kuns_used>Length(kuns) then
-    raise EKanjidicParsingException.Create('ReadingClassEntry: Cannot add one more KUN');
+    raise EKanjidicParsingException.Create('ReadingClassEntry: Cannot add one more KUN ('+IntToStr(kuns_used)+')');
   kuns[kuns_used-1] := value;
 end;
 
@@ -140,7 +140,7 @@ begin
   if field=nil then begin
     Inc(fields_used);
     if fields_used>Length(fields) then
-      raise EKanjidicParsingException.Create('KanjiDicEntry: Cannot add one more field');
+      raise EKanjidicParsingException.Create('KanjiDicEntry: Cannot add one more field ('+IntToStr(fields_used)+')');
     field := @fields[fields_used-1];
     field^.Reset;
     field^.key := AnsiLowerCase(key);
@@ -152,7 +152,7 @@ procedure TKanjidicEntry.AddMeaning(const value: UnicodeString);
 begin
   Inc(meanings_used);
   if meanings_used>Length(meanings) then
-    raise EKanjidicParsingException.Create('KanjiDicEntry: Cannot add one more meaning');
+    raise EKanjidicParsingException.Create('KanjiDicEntry: Cannot add one more meaning ('+IntToStr(meanings_used)+')');
   meanings[meanings_used-1] := value;
 end;
 
@@ -284,8 +284,17 @@ begin
     end else
    //Normal field
     begin
-     //Most field keys are 1-char, but these two arent:
-      if (Length(word)>=2) and (word[1]='M') and ((word[2]='N') or (word[2]='P')) then
+     //Most field keys are 1-char, but some arent:
+     //D* keys are two chars (there's a lot of second char versions and more plannet)
+      if (word[1]='D') and (Length(word)>=2) then
+        ed.AddField(word[1]+word[2], copy(word, 3, Length(word)-2))
+      else
+     //In addition to I keys there are IN
+      if (word[1]='I') and (Length(word)>=2) and (word[2]='N') then
+        ed.AddField(word[1]+word[2], copy(word, 3, Length(word)-2))
+      else
+     //MN and MP
+      if (word[1]='M') and (Length(word)>=2) and ((word[2]='N') or (word[2]='P')) then
         ed.AddField(word[1]+word[2], copy(word, 3, Length(word)-2))
       else
         ed.AddField(word[1], copy(word, 2, Length(word)-1));

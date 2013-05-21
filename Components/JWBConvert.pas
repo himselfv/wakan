@@ -668,7 +668,8 @@ end;
 function TJwbConvert.DetectType: byte;
 begin
   _rewind;
-  _detftype(result);
+  if not _detftype(result) then
+    Result := FILETYPE_UNKNOWN;
 end;
 
 //Makes a guess about file encoding, and returns true if it's a sure thing (i.e. there's BOM).
@@ -715,7 +716,7 @@ function TJwbConvert.ReadLn: FString;
 var c: FChar;
 begin
   Result := '';
-  while Conv_ReadChar(c) and (c<>UH_LF) do begin
+  while ReadChar(c) and (c<>UH_LF) do begin
     if c<>UH_CR then
       Result := Result + c;
   end;
@@ -765,7 +766,7 @@ begin
  {$IFDEF UNICODE}
   _output(ftp, Word(s));
  {$ELSE}
-  Conv_Write(s);
+  Write(s);
  {$ENDIF}
 end;
 

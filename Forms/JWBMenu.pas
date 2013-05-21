@@ -732,12 +732,6 @@ begin
       Application.Terminate;
       exit;
     end;
-    if Command='makechars' then begin
-     //For now we only can update kanjidic data
-      UpdateKanjidicData(MakeCharsParams.KanjidicFilename);
-      Application.Terminate;
-      exit;
-    end;
 
     AutoImportDicts();
 
@@ -769,6 +763,12 @@ begin
       end;
     end;
 
+    if Command='makechars' then begin
+     //For now we only can update kanjidic data
+      fCharDataImport.UpdateKanjidicData(MakeCharsParams.KanjidicFilename);
+      Application.Terminate;
+      exit;
+    end;
 
    { Radical search }
 
