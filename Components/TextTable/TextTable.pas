@@ -34,9 +34,9 @@ const
   AllocStructBufferSz=1024;
 
 type
- //Seek table reference to speed up Locate()
- //You retrieve it once, you use it instead of a textual name.
- //For common tables and common seeks, global references are kept.
+ { Seek table reference to speed up Locate()
+  Retrieve it once, use instead of a textual name.
+  For common tables and common seeks, global references are kept. }
   TSeekObject = record
     ind_i: integer; //seek table index
     fld_i: integer; //field index
@@ -44,6 +44,7 @@ type
   end;
   PSeekObject = ^TSeekObject;
 
+ { Seek table descriptions, parsed to this binary format on load. }
   TSeekFieldDescription = record
     index: integer; //field index
     reverse: boolean;
@@ -100,7 +101,9 @@ type
         orders[0] == seekbuild[1]
         orders[1] == seekbuild[2]
         ...etc
-     Don't ask me why it's like that. }
+     Don't ask me why it's like that.
+     If you need to expose seek[0] as an order, make it seek[1] by adding
+     seekbuild[0]=='0' before it.  }
     orders:TStringList;
 
     reccount:integer;
@@ -1391,7 +1394,8 @@ begin
   if sz>=databuffer then //still not enough
     databuffer := sz*2;
   GetMem(p,datalen+databuffer);
-  move(data^,p^,datalen);
+  if data<>nil then
+    move(data^,p^,datalen);
   freemem(data);
   data:=p;
 end;
@@ -1404,7 +1408,8 @@ begin
   if sz>=structbuffer then //still not enough
     structbuffer := sz*2;
   GetMem(p,(reccount*struct_recsz)+structbuffer);
-  move(struct^,p^,reccount*struct_recsz);
+  if struct<>nil then
+    move(struct^,p^,reccount*struct_recsz);
   freemem(struct);
   struct:=p;
 end;
@@ -1446,11 +1451,11 @@ begin
       end;
     end;
     Inc(totsize,fsz);
-    Inc(datalen,fsz); //although we still havent allocated this space
   end;
 
   ReserveData(totsize);
   dec(databuffer,totsize);
+  Inc(datalen,totsize);
 
   SetLength(a,fieldcount);
   for i:=0 to fieldcount-1 do a[i]:=i;

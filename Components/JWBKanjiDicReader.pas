@@ -55,6 +55,7 @@ type
     procedure AddOn(const value: UnicodeString);
     procedure AddKun(const value: UnicodeString);
   end;
+  PReadingClassEntry = ^TReadingClassEntry;
 
   TKanjidicEntry = record
     kanji: UnicodeString; //it may be wider than a char
@@ -246,6 +247,7 @@ var
   rclass: integer;
   pc: PWideChar;
   word: UnicodeString;
+  pref: string;
 
 begin
   ed.Reset;
@@ -262,6 +264,7 @@ begin
  //Rest is dynamic
   while ReadNextWord(pc, word) do begin
     if Length(word)<=0 then continue;
+    pref := '';
 
    //Meaning
     if word[1]='{' then begin
@@ -284,20 +287,34 @@ begin
     end else
    //Normal field
     begin
+      if word[1]='X' then begin
+       { Cross-references are normal fields with added X at the start:
+           N123 -> XN123
+         We remove X to parse keys uniformly, and then append it back.
+         Note that some keys (i.e. J) have different meanings with crossrefs }
+        delete(word,1,1);
+        pref := 'X';
+      end;
+
      //Most field keys are 1-char, but some arent:
      //D* keys are two chars (there's a lot of second char versions and more plannet)
       if (word[1]='D') and (Length(word)>=2) then
-        ed.AddField(word[1]+word[2], copy(word, 3, Length(word)-2))
+        ed.AddField(pref+word[1]+word[2], copy(word, 3, Length(word)-2))
       else
      //In addition to I keys there are IN
       if (word[1]='I') and (Length(word)>=2) and (word[2]='N') then
-        ed.AddField(word[1]+word[2], copy(word, 3, Length(word)-2))
+        ed.AddField(pref+word[1]+word[2], copy(word, 3, Length(word)-2))
       else
      //MN and MP
       if (word[1]='M') and (Length(word)>=2) and ((word[2]='N') or (word[2]='P')) then
-        ed.AddField(word[1]+word[2], copy(word, 3, Length(word)-2))
+        ed.AddField(pref+word[1]+word[2], copy(word, 3, Length(word)-2))
       else
-        ed.AddField(word[1], copy(word, 2, Length(word)-1));
+     //ZPP, ZSP, ZBP, ZRP
+      if (word[1]='Z') and (Length(word)>=3) and (word[3]='P')
+      and ((word[2]='P') or (word[2]='S') or (word[2]='B') or (word[2]='R')) then
+        ed.AddField(pref+word[1]+word[2]+word[3], copy(word, 4, Length(word)-3))
+      else
+        ed.AddField(pref+word[1], copy(word, 2, Length(word)-1));
     end;
   end;
 end;

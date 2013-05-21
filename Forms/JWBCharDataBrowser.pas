@@ -38,17 +38,17 @@ begin
   Grid.RowCount := 2;
   Grid.FixedRows := 1;
 
-  Grid.ColWidths[0] := 32; //kanji
-  Grid.ColWidths[1] := 64; //type
-  Grid.ColWidths[2] := 128; //data
-  Grid.ColWidths[3] := 32; //index
+  Grid.ColWidths[0] := 32; //index
+  Grid.ColWidths[1] := 32; //kanji
+  Grid.ColWidths[2] := 64; //type
+  Grid.ColWidths[3] := 128; //data
   Grid.ColWidths[4] := 32; //readdot
   Grid.ColWidths[5] := 32; //position
 
-  Grid.Cells[0, 0] := 'Kanji';
-  Grid.Cells[1, 0] := 'Type';
-  Grid.Cells[2, 0] := 'Data';
-  Grid.Cells[3, 0] := 'Index';
+  Grid.Cells[0, 0] := 'Index';
+  Grid.Cells[1, 0] := 'Kanji';
+  Grid.Cells[2, 0] := 'Type';
+  Grid.Cells[3, 0] := 'Data';
   Grid.Cells[4, 0] := 'Dot';
   Grid.Cells[5, 0] := 'Position';
 
@@ -56,16 +56,19 @@ begin
   CCharProp := TCharProp.NewCursor;
   CCharProp.First;
   while not CCharProp.EOF do begin
-    Grid.Cells[0, row] := CCharProp.Str(TCharPropKanji);
-    Grid.Cells[1, row] := CCharProp.Str(TCharPropTypeId);
-    Grid.Cells[2, row] := CCharProp.Str(TCharPropValue);
-    Grid.Cells[3, row] := CCharProp.Str(TCharPropIndex);
+    Grid.Cells[0, row] := CCharProp.Str(TCharPropIndex);
+    Grid.Cells[1, row] := CCharProp.Str(TCharPropKanji);
+    Grid.Cells[2, row] := CCharProp.Str(TCharPropTypeId);
+    Grid.Cells[3, row] := CCharProp.Str(TCharPropValue);
     Grid.Cells[4, row] := CCharProp.Str(TCharPropReadDot);
     Grid.Cells[5, row] := CCharProp.Str(TCharPropPosition);
     Inc(row);
-    Grid.RowCount := 1+row;
+    if Grid.RowCount<1+row then //required count
+      Grid.RowCount := 1+row+1000; //preallocate
     CCharProp.Next;
   end;
+
+  Grid.RowCount := 1+row;
 end;
 
 end.

@@ -1,0 +1,17 @@
+$TEXTTABLE
+$PRECOUNTED
+$RAWINDEX
+$FIELDS
+iIndex
+wKanji
+bType
+sReading
+bReadDot
+bPosition
+$ORDERS
+Reading_Ind
+Type_Ind
+$SEEKS
+Kanji
+Reading
+Type

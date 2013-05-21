@@ -9,8 +9,8 @@ uses
 
 type
   TCharReadings = record
-    piny,engy,kory,cany,chiny:string;
-    ony,kuny,nany:UnicodeString;
+    piny,kory,cany,chiny:string;
+    ony,kuny,nany,engy:UnicodeString;
   end;
   PCharReadings = ^TCharReadings;
 
@@ -593,18 +593,18 @@ end;
 procedure TfKanjiDetails.ReloadReadings(CChar: TTextTableCursor; out read: TCharReadings);
 var rt: integer; //TCharProp.Int(TCharPropType)
   ws:UnicodeString;
-  CCharProp: TTextTableCursor;
+  CCharProp: TCharPropertyCursor;
 begin
   FillChar(read, sizeof(read), 00); //initializes all strings to ''
 
-  CCharProp := TCharProp.NewCursor;
+  CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
     CCharProp.SetOrder('');
     CCharProp.Locate('Kanji',CChar.TrueInt(TCharIndex));
     while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=CChar.Int(TCharIndex)) do
     begin
       rt:=CCharProp.Int(TCharPropTypeId);
-      ws:=DecodeCharReading(rt,CCharProp.Str(TCharPropValue),CCharProp.Int(TCharPropReadDot));
+      ws:=CCharProp.DecoratedValue;
       case rt of
         1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
         2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
@@ -614,6 +614,8 @@ begin
         7:if read.chiny='' then read.chiny:=fstrtouni(ws) else read.chiny:=read.chiny+', '+fstrtouni(ws);
         3:if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
         8:if read.cany='' then read.cany:=fstrtouni(ws) else read.cany:=read.cany+', '+fstrtouni(ws);
+        ptJapaneseDefinitionUnicode:
+          if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
       end;
       CCharProp.Next;
     end;
@@ -628,8 +630,8 @@ Repopulates KVal list which is used to draw various kanji information box
 }
 procedure TfKanjiDetails.PopulateKval(CChar: TTextTableCursor; const read: TCharReadings);
 var
-  s,s_part: string;
-  i,j,k:integer;
+  s: string;
+  i:integer;
   propTypeId: integer;
   propType: PCharPropType;
   CCharProp: TCharPropertyCursor;

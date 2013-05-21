@@ -243,7 +243,8 @@ type
   TStringArray = array of string;
 
 procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
-function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray;
+function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray; overload;
+function SplitStr(s: string; ch: char=','): TStringArray; overload;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
 
 function remexcl(const s:string):string;
@@ -988,7 +989,8 @@ begin
 end;
 
 
-
+//If there's more than cnt separators, the rest of the string is added
+//to the last part
 procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
 var i:integer;
 begin
@@ -1026,6 +1028,24 @@ begin
       s:='';
     end;
     inc(i);
+  end;
+end;
+
+//Same but does not use fixed number of parts
+function SplitStr(s: string; ch: char=','): TStringArray;
+var i: integer;
+begin
+  SetLength(Result, 0);
+  i := pos(s, ch);
+  while i>0 do begin
+    SetLength(Result, Length(Result)+1);
+    Result[Length(Result)-1] := copy(s, 1, i-1);
+    delete(s, 1, i);
+    i := pos(s, ch);
+  end;
+  if s<>'' then begin
+    SetLength(Result, Length(Result)+1);
+    Result[Length(Result)-1] := s;
   end;
 end;
 

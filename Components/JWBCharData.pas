@@ -48,6 +48,7 @@ var
   TCharJouyouGrade: integer;
 
   TCharProp: TTextTable;
+  TCharPropIndex,     // absolute index through all the records. May be invalid, do not use
   TCharPropKanji,
   TCharPropTypeId,
    { Property type ID in the Property Type offline table (from wakan.cfg).
@@ -63,9 +64,9 @@ var
     And then recode data (see TCharPropType.dataType field comments)
     TCharPropertyCursor below has this implemented, just use Value().
    }
-  TCharPropIndex,
-  TCharPropReadDot,
-  TCharPropPosition: integer;
+  TCharPropReadDot,   // if there was a dot in the reading, this is it's position (the dot is removed)
+  TCharPropPosition   // orders the properties of the same type
+    : integer;
 
   TRadicals: TTextTable;
   TRadicalsNumber,
@@ -81,6 +82,9 @@ procedure LoadCharData(const filename: string);
 procedure SaveCharData(const filename: string);
 procedure FreeCharData();
 
+procedure InitializeCharPackage(const package:string);
+
+function WakanDatestamp(const dt: TDatetime): string;
 
 {
 Character property type information.
@@ -114,8 +118,15 @@ var
 const
  { Some predefined property type IDs. These cannot be changed at a later date,
   only declared obsolete. }
+  ptKoreanReading = 1;
+  ptMandarinReading = 2;
   ptJapaneseDefinition = 3;
+  ptOnReading = 4;
+  ptKunReading = 5;
+  ptNanoriReading = 6;
   ptChineseDefinition = 7; //usually taken from UNIHAN
+  ptCantoneseReading = 8;
+  ptRadicals = 10;
   ptJapaneseDefinitionUnicode = 121;
 
 procedure AddCharPropType(const str: string);
@@ -140,7 +151,6 @@ var
 
 function GetCharDet(i,j:integer):string;
 
-function DecodeCharReading(rt: integer; str: string; dotPosition: integer): FString;
 
 {
 CharPropertyCursor
@@ -156,6 +166,7 @@ type
     function PropType: PCharPropType;
     function AnsiValue: AnsiString;
     function Value: FString;
+    function DecoratedValue: FString;
 
   public
    { Uses Cursor to enumerate over a certain character properties.
@@ -221,10 +232,10 @@ begin
     TCharJouyouGrade:=TChar.Field('JouyouGrade');
 
     TCharProp:=TTextTable.Create(ps,'CharRead',true,false); //sic. 'CharRead' for compat. reasons
+    TCharPropIndex:=TCharProp.Field('Index');
     TCharPropKanji:=TCharProp.Field('Kanji');
     TCharPropTypeId:=TCharProp.Field('Type');
     TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
-    TCharPropIndex:=TCharProp.Field('Index');
     TCharPropReadDot:=TCharProp.Field('ReadDot');
     TCharPropPosition:=TCharProp.Field('Position');
 
@@ -265,6 +276,113 @@ begin
   PKGWriteForm.PKGWriteCmd('CryptCode 978123');
   PKGWriteForm.PKGWriteCmd('Include '+dir);
   PKGWriteForm.PKGWriteCmd('Finish');
+end;
+
+{ Creates new empty WAKAN.CHR in the specified file.
+ Still relies on CharDataProps for some header data, might want to remove this
+ in the future (init everything to the blank or something) }
+procedure InitializeCharPackage(const package:string);
+var tempDir: string;
+  t:textfile;
+  vi: TStringList;
+begin
+  tempDir := CreateRandomTempDir();
+
+  vi:=TStringList.Create;
+  try
+    vi.Add('JALET.CHR');
+    vi.Add(IntToStr(CurrentCharDataVersion));
+    vi.Add(IntToStr(CharDataProps.DicBuildDateInt));
+    vi.Add('');
+    vi.Add(CharDataProps.KanjidicVersion);
+    vi.Add(CharDataProps.UnihanVersion);
+    if CharDataProps.ChinesePresent then
+      vi.Add('CHINESE')
+    else
+      vi.Add('');
+    vi.SaveToFile(tempDir+'\jalet.ver');
+  finally
+    vi.Free;
+  end;
+
+  assignfile(t,tempDir+'\Char.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PRECOUNTED');
+  writeln(t,'$RAWINDEX');
+  writeln(t,'$FIELDS');
+  writeln(t,'iIndex');
+  writeln(t,'bChinese');
+  writeln(t,'sType');
+  writeln(t,'xUnicode');
+  writeln(t,'bStrokeCount');
+  writeln(t,'wJpFrequency');
+  writeln(t,'wChFrequency');
+  writeln(t,'bJouyouGrade');
+  writeln(t,'bJpStrokeCount');
+  writeln(t,'$ORDERS');
+  writeln(t,'ChFrequency_Ind');
+  writeln(t,'ChStrokeCount_Ind');
+  writeln(t,'ChUnicode_Ind');
+  writeln(t,'JpFrequency_Ind');
+  writeln(t,'JpStrokeCount_Ind');
+  writeln(t,'JpUnicode_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'Index');
+  writeln(t,'ChFrequency');
+  writeln(t,'StrokeCount');
+  writeln(t,'Unicode');
+  writeln(t,'JpFrequency');
+  writeln(t,'JpStrokeCount');
+  writeln(t,'$CREATE');
+  closefile(t);
+
+  assignfile(t,tempDir+'\CharRead.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PRECOUNTED');
+  writeln(t,'$RAWINDEX');
+  writeln(t,'$FIELDS');
+  writeln(t,'iIndex');
+  writeln(t,'wKanji');
+  writeln(t,'bType');
+  writeln(t,'sReading');
+  writeln(t,'bReadDot');
+  writeln(t,'bPosition');
+  writeln(t,'$ORDERS');
+  writeln(t,'Kanji');
+  writeln(t,'Reading_Ind');
+  writeln(t,'Type_Ind');
+  writeln(t,'$SEEKS');
+  writeln(t,'0');
+  writeln(t,'Kanji');
+  writeln(t,'Reading');
+  writeln(t,'Type');
+  writeln(t,'$CREATE');
+  closefile(t);
+
+  assignfile(t,tempDir+'\Radicals.info');
+  rewrite(t);
+  writeln(t,'$TEXTTABLE');
+  writeln(t,'$PRECOUNTED');
+  writeln(t,'$RAWINDEX');
+  writeln(t,'$FIELDS');
+  writeln(t,'bNumber');
+  writeln(t,'bVariant');
+  writeln(t,'xUnicode');
+  writeln(t,'bStrokeCount');
+  writeln(t,'wBushuCount');
+  writeln(t,'wUnicodeCount');
+  writeln(t,'wJapaneseCount');
+  writeln(t,'wKangXiCount');
+  writeln(t,'$ORDERS');
+  writeln(t,'$SEEKS');
+  writeln(t,'Number');
+  writeln(t,'$CREATE');
+  closefile(t);
+
+  WriteCharPackage(tempDir, package);
+  DeleteDirectory(tempDir);
 end;
 
 //NOTE: This cannot at this time be used to create a new character database.
@@ -316,6 +434,14 @@ begin
   FreeAndNil(TCharProp);
   FreeAndNil(TRadicals);
   ClearCharDbProps();
+end;
+
+//Formats datetime in a Wakan "version" format (14AUG05)
+function WakanDatestamp(const dt: TDatetime): string;
+var fs: TFormatSettings;
+begin
+  GetLocaleFormatSettings($0409, fs);
+  Result := AnsiUpperCase(FormatDatetime('ddmmmyy',dt,fs));
 end;
 
 
@@ -452,6 +578,7 @@ begin
   Result := FindCharPropType(propTypeid);
 end;
 
+{ See Value() + converts to Ansi (drops illegal symbols) }
 function TCharPropertyCursor.AnsiValue: AnsiString;
 var propDataType: char;
   s_ansi: AnsiString;
@@ -479,6 +606,9 @@ begin
   end;
 end;
 
+{ Property values are stored as AnsiStrings, as far as database is concerned.
+ This function auto-converts value depending on the property type:
+ - decodes to FString from explicit hex or encodes from Ansi }
 function TCharPropertyCursor.Value: FString;
 var propDataType: char;
   s_ansi: AnsiString;
@@ -503,6 +633,50 @@ begin
   begin
     Result := Self.Str(TCharPropValue);
   end;
+end;
+
+{
+Same as Value, and in addition:
+- Add dot at the specified position
+- Replace special markers such as +/i with full-width equivalents
+}
+function TCharPropertyCursor.DecoratedValue: FString;
+var propType: PCharPropType;
+  dotPosition: integer;
+  adddot:integer;
+  str: FString;
+begin
+  propType := Self.PropType;
+  Result := Value;
+  if not (rt in [4..6]) then exit; //Rest don't need special treatment
+
+
+  dotPosition := self.Int(TCharPropReadDot);
+
+  Result:='';
+  adddot:=0;
+  if fgetchl(str, 1)={$IFDEF UNICODE}#$002B{$ELSE}'002B'{$ENDIF} then
+  begin
+    Result:={$IFDEF UNICODE}#$FF0B{$ELSE}'FF0B'{$ENDIF};
+    fdelete(str,1,1);
+    adddot:=1;
+  end;
+  if fgetchl(str, 1)={$IFDEF UNICODE}#$002D{$ELSE}'002D'{$ENDIF} then
+  begin
+    Result:=Result+{$IFDEF UNICODE}#$FF0D{$ELSE}'FF0D'{$ENDIF};
+    fdelete(str,1,1);
+    adddot:=1;
+  end;
+  if dotPosition>0 then
+  begin
+    Result:=Result+hextofstr(copy(str,1,dotPosition-1-adddot));
+    Result:=Result+{$IFDEF UNICODE}#$FF0E{$ELSE}'FF0E'{$ENDIF};
+    fdelete(str,1,dotPosition-1-adddot);
+  end;
+  if fgetchl(str, 1)={$IFDEF UNICODE}#$002D{$ELSE}'002D'{$ENDIF} then
+    Result:=Result+hextofstr(copy(str,1,length(str)-1))+{$IFDEF UNICODE}#$FF0D{$ELSE}'FF0D'{$ENDIF}
+  else
+    Result:=Result+hextofstr(str);
 end;
 
 //Works for AnsiString type properties
@@ -557,58 +731,6 @@ begin
   Result := fstr(GetCharAnsiValues(kanjiIndex, ptChineseDefinition, ', '));
 end;
 
-
-{ Following function is kinda deprecated and needs checks/rewrites.
- Take comments with a grain of salt. }
-
-{ Readings are stored as STRINGS which for some reading-types contain HEX.
-So there's nothing we can do to avoid HexToUnicode conversion.
-
-For char property types which support this:
-- Decode to FString from explicit hex or encode from Ansi
-- Add dot at the specified position
-- Replace special markers such as +/i with full-width equivalents
-Call this function for everything you get from TCharProps, it won't hurt. }
-function DecodeCharReading(rt: integer; str: string; dotPosition: integer): FString;
-var adddot:integer;
-begin
-  if rt in [2, 8] then begin
-   //Chinese ony/kuny
-    Result := fstr(str);
-    exit;
-  end;
-
-  if (rt<=3) or (rt>=7) then begin
-   //Rest are Ansi strings
-    Result := fstr(str);
-    exit;
-  end;
-
-  Result:='';
-  adddot:=0;
-  if str[1]='+'then
-  begin
-    Result:={$IFNDEF UNICODE}'FF0B'{$ELSE}#$FF0B{$ENDIF};
-    delete(str,1,1);
-    adddot:=1;
-  end;
-  if str[1]='-'then
-  begin
-    Result:=Result+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF};
-    delete(str,1,1);
-    adddot:=1;
-  end;
-  if dotPosition>0 then
-  begin
-    Result:=Result+hextofstr(copy(str,1,dotPosition-1-adddot));
-    Result:=Result+{$IFNDEF UNICODE}'FF0E'{$ELSE}#$FF0E{$ENDIF};
-    delete(str,1,dotPosition-1-adddot);
-  end;
-  if str[length(str)]='-' then
-    Result:=Result+hextofstr(copy(str,1,length(str)-1))+{$IFNDEF UNICODE}'FF0D'{$ELSE}#$FF0D{$ENDIF}
-  else
-    Result:=Result+hextofstr(str);
-end;
 
 initialization
   TChar := nil;
