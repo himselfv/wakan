@@ -204,23 +204,28 @@ begin
     end;
     ony:='';
     kuny:='';
-    TCharProp.SetOrder('');
-    TCharProp.Locate('Kanji',TChar.TrueInt(TCharIndex));
-    while (not TCharProp.EOF) and (TCharProp.Int(TCharPropKanji)=TChar.Int(TCharIndex)) do
-    begin
-     //Unfortunately for us, TCharPropValue is stored as Hex text in Ansi chars,
-     //and mixed with control characters, so there's nothing we can do to convert
-     //it to unicode automatically on reading.
-     //We'll have to do it when copying s->ws.
-      rt := TCharProp.Int(TCharPropTypeId);
-      ws := DecodeCharReading(rt,TCharProp.Str(TCharPropValue),TCharProp.Int(TCharPropReadDot));
-      case rt of
-        2:if curlang='c' then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+fstr(', ')+ConvertPinYin(ws);
-        8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(ws)) else kuny:=kuny+fstr(', ')+fstr(lowercase(ws));
-        4:if curlang='j' then if flength(ony)+flength(ws)+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
-        5:if curlang='j' then if flength(kuny)+flength(ws)+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
+    CCharProp := TCharPropertyCursor.Create(TCharProp);
+    try
+      CCharProp.SetOrder('');
+      CCharProp.Locate('Kanji',TChar.TrueInt(TCharIndex));
+      while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=TChar.Int(TCharIndex)) do
+      begin
+       //Unfortunately for us, TCharPropValue is stored as Hex text in Ansi chars,
+       //and mixed with control characters, so there's nothing we can do to convert
+       //it to unicode automatically on reading.
+       //We'll have to do it when copying s->ws.
+        rt := TCharProp.Int(TCharPropTypeId);
+        ws := DecodeCharReading(rt,TCharProp.Str(TCharPropValue),TCharProp.Int(TCharPropReadDot));
+        case rt of
+          2:if curlang='c' then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+fstr(', ')+ConvertPinYin(ws);
+          8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(ws)) else kuny:=kuny+fstr(', ')+fstr(lowercase(ws));
+          4:if curlang='j' then if flength(ony)+flength(ws)+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
+          5:if curlang='j' then if flength(kuny)+flength(ws)+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
+        end;
+        TCharProp.Next;
       end;
-      TCharProp.Next;
+    finally
+      FreeAndNil(CCharProp);
     end;
     DrawUnicode(canvas,trunc(x+ch/2),trunc(y+sizvert*ch+ch/2),trunc(ch),ony,FontJpEnGrid);
     DrawUnicode(canvas,trunc(x+ch/2),trunc(y+sizvert*ch+ch/2+ch),trunc(ch),kuny,FontJpEnGrid);

@@ -648,8 +648,8 @@ var propType: PCharPropType;
 begin
   propType := Self.PropType;
   Result := Value;
-  if not (rt in [4..6]) then exit; //Rest don't need special treatment
-
+  if not (propType.id in [4..6]) then exit; //Rest don't need special treatment
+(*
 
   dotPosition := self.Int(TCharPropReadDot);
 
@@ -676,7 +676,7 @@ begin
   if fgetchl(str, 1)={$IFDEF UNICODE}#$002D{$ELSE}'002D'{$ENDIF} then
     Result:=Result+hextofstr(copy(str,1,length(str)-1))+{$IFDEF UNICODE}#$FF0D{$ELSE}'FF0D'{$ENDIF}
   else
-    Result:=Result+hextofstr(str);
+    Result:=Result+hextofstr(str);*)
 end;
 
 //Works for AnsiString type properties
