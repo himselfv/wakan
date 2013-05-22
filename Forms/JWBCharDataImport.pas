@@ -13,7 +13,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls;
+  Dialogs, StdCtrls, UrlLabel;
 
 type
   TfCharDataImport = class(TForm)
@@ -23,8 +23,13 @@ type
     Label2: TLabel;
     btnUpdate: TButton;
     OpenKanjidicDialog: TOpenDialog;
+    Label4: TLabel;
+    lblBackupPath: TUrlLabel;
+    Label3: TLabel;
+    btnCancel: TButton;
     procedure btnKanjidicBrowseClick(Sender: TObject);
     procedure btnUpdateClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   public
     procedure UpdateKanjidicData(const KanjidicFilename: string);
   end;
@@ -37,6 +42,12 @@ uses TextTable, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader,
   JWBConvert, JWBUnit;
 
 {$R *.dfm}
+
+procedure TfCharDataImport.FormShow(Sender: TObject);
+begin
+  lblBackupPath.Caption := BackupDir;
+  lblBackupPath.URL := 'file://'+replc(BackupDir,'\','/');
+end;
 
 procedure TfCharDataImport.btnKanjidicBrowseClick(Sender: TObject);
 begin

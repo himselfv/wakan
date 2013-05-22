@@ -273,6 +273,8 @@ type
     Label58: TLabel;
     Spacer: TPanel;
     btnImportKanjidic: TButton;
+    lblBackupPath: TUrlLabel;
+    Label59: TLabel;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -1889,7 +1891,7 @@ begin
   end;
 
   if PortabilityMode=pmPortable then begin
-    lblSettingsPath.Caption := AppFolder + 'wakan.ini';
+    lblSettingsPath.Caption := AppFolder + '\wakan.ini';
     lblSettingsPath.URL := 'file://'+replc(lblSettingsPath.Caption,'\','/');
   end else begin
     lblSettingsPath.Caption := 'HKEY_CURRENT_USER\'+WakanRegKey;
@@ -1900,6 +1902,8 @@ begin
   lblDictionariesPath.URL := 'file://'+replc(DictionaryDir,'\','/');
   lblUserDataPath.Caption := UserDataDir;
   lblUserDataPath.URL := 'file://'+replc(UserDataDir,'\','/');
+  lblBackupPath.Caption := BackupDir;
+  lblBackupPath.URL := 'file://'+replc(BackupDir,'\','/');
 
   btnUpgradeToStandalone.Visible := PortabilityMode=pmCompatible;
   lblUpgradeToStandalone.Visible := btnUpgradeToStandalone.Visible;

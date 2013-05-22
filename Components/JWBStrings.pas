@@ -447,7 +447,7 @@ end;
 
 function AppFolder: string;
 begin
-  Result := ExtractFilePath(GetModuleFilenameStr(0));
+  Result := ExtractFileDir(GetModuleFilenameStr(0));
 end;
 
 function GetSpecialFolderPath(folderId: integer): string;

@@ -9,7 +9,7 @@ uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
 
 var
   AppFilename: string = '';
-  AppFolder: string = ''; //path to program, set on load
+  AppFolder: string = ''; //path to program, set on load (no trail. slash)
   WakanVer: string = ''; //taken from resources on load
 
 type
@@ -20,6 +20,7 @@ const
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
 
+ //All paths have no trail. slashes
   UserDataDir: string = '';
   DictionaryDir: string = '';
   PortabilityMode: TPortabilityMode = pmCompatible;
@@ -149,6 +150,7 @@ function FixVocabEntry(const s:string):string;
 function UnfixVocabEntry(const s:string):string;
 
 procedure DeleteDirectory(dir:string);
+function BackupDir: string;
 function Backup(const filename: string): string;
 
 procedure RegeditAtKey(const key: string);
@@ -1431,14 +1433,19 @@ begin
  //For now works as it did in previous Wakan versions.
  //Has to be reworked to put backups into user folder.
   {$I-}
-  mkdir(UserDataDir+'\backup');
+  mkdir(BackupDir);
   {$I+}
   ioresult;
  //dir\wakan.usr --> wakan-20130111.usr
-  Result := UserDataDir+'\backup\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
+  Result := BackupDir+'\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
     +FormatDateTime('yyyymmdd-hhnnss',now)+ExtractFileExt(filename);
   if not CopyFile(PChar(filename),pchar(Result),false) then
     Result := '';
+end;
+
+function BackupDir: string;
+begin
+  Result := UserDataDir+'\backup';
 end;
 
 //Opens registry editor at the specific key
@@ -1478,7 +1485,7 @@ var
 
 initialization
   AppFilename := GetModuleFilenameStr(0);
-  AppFolder := ExtractFilePath(AppFilename);
+  AppFolder := ExtractFileDir(AppFilename);
   WakanVer := GetFileVersionInfoStr(AppFilename)
     {$IFDEF UNICODE}+' unicode'{$ENDIF};
 

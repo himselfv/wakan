@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsDatabaseMaintenance
+    ActivePage = tsPortability
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -1113,7 +1113,7 @@ object fSettings: TfSettings
       end
       object lblUpgradeToStandalone: TLabel
         Left = 3
-        Top = 94
+        Top = 118
         Width = 453
         Height = 26
         Caption = 
@@ -1126,9 +1126,36 @@ object fSettings: TfSettings
         Font.Style = []
         ParentFont = False
       end
+      object lblBackupPath: TUrlLabel
+        Left = 107
+        Top = 87
+        Width = 27
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '[path]'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object Label59: TLabel
+        Left = 3
+        Top = 87
+        Width = 94
+        Height = 13
+        Caption = '#01087^eBackups:'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
       object btnUpgradeToStandalone: TButton
         Left = 123
-        Top = 134
+        Top = 158
         Width = 177
         Height = 25
         Caption = '#01033^eUpgrade to standalone'

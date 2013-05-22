@@ -1187,6 +1187,10 @@
 01081>Browse
 01082>When you press UPDATE, your current kanji data will be replaced by the one read from the file.
 01083>Update
+01084>You can download original WAKAN.CHR from Wakan distribution to restore kanji data at any time.
+01085>A backup of your current WAKAN.CHR will also be made and placed in the following folder:
+01086>Cancel
+01087>Backups:
 ;
 ;
 ; EDICT markers.
