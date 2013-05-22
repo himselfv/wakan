@@ -604,15 +604,16 @@ begin
     while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=CChar.Int(TCharIndex)) do
     begin
       rt:=CCharProp.Int(TCharPropTypeId);
-      ws:=CCharProp.DecoratedValue;
+      if rt in[1,2,3,4,5,6,7,8,ptJapaneseDefinitionUnicode] then
+        ws:=CCharProp.Value;
       case rt of
         1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
         2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
+        3:if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
         4:if read.ony='' then read.ony:=ws else read.ony:=read.ony+#$FF0C+ws;
         5:if read.kuny='' then read.kuny:=ws else read.kuny:=read.kuny+#$FF0C+ws;
         6:if read.nany='' then read.nany:=ws else read.nany:=read.nany+#$FF0C+ws;
         7:if read.chiny='' then read.chiny:=fstrtouni(ws) else read.chiny:=read.chiny+', '+fstrtouni(ws);
-        3:if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
         8:if read.cany='' then read.cany:=fstrtouni(ws) else read.cany:=read.cany+', '+fstrtouni(ws);
         ptJapaneseDefinitionUnicode:
           if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
@@ -658,12 +659,8 @@ begin
         7:s:=read.chiny;
         8:s:=LowerCase(read.cany);
         100:s:=curSingleChar;
-        else begin
-          if (propType.dataType='U') or (propType.dataType='P') then
-            s := CCharProp.GetCharValues(CChar.TrueInt(TCharIndex), propTypeId, '')
-          else
-            s := CCharProp.GetCharAnsiValues(CChar.TrueInt(TCharIndex), propTypeId, ', ');
-        end;
+        else
+          s := CCharProp.GetCharValues(CChar.TrueInt(TCharIndex), propTypeId, '')
       end;
 
       if GetCharDet(i,6)<>'' then
@@ -797,7 +794,7 @@ procedure TfKanjiDetails.DrawSingleText(canvas:TCanvas;tp:char;l,t,r,fh:integer;
 var font:string;
 begin
   if chin then font:=FontRadical else font:=FontSmall;
-  if tp='P'then font:=FontEnglish;
+  if tp='P' then font:=FontEnglish;
   if (tp='U') or (tp='P') then DrawUnicode(canvas,l,t,fh-2,s,font) else
   if (tp='N') or (tp='T') then canvas.TextOut(r-canvas.TextExtent(s).cx,t,s) else
     canvas.TextOut(l,t,s);

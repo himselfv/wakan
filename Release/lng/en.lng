@@ -1174,6 +1174,19 @@
 01068>Text translator:
 01069>Printing:
 01070>Editor:
+01071>Confirm import
+01072>Character data in this copy of Wakan will be replaced with the new one provided here. Application will then restart and you will lose all the unsaved data. Do you want to continue?
+01073>Import completed
+01074>Character data has been imported. Application will now terminate.
+01075>File %s does not exist!
+01076>Character data import
+01077>Importing...
+01078>Reindexing...
+01079>Import character data
+01080>Specify the KANJIDIC file to use:
+01081>Browse
+01082>When you press UPDATE, your current kanji data will be replaced by the one read from the file.
+01083>Update
 ;
 ;
 ; EDICT markers.

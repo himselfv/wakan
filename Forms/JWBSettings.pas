@@ -272,6 +272,7 @@ type
     edtPrintLines: TEdit;
     Label58: TLabel;
     Spacer: TPanel;
+    btnImportKanjidic: TButton;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -324,6 +325,7 @@ type
     procedure tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
       var AllowCollapse: Boolean);
     procedure tvContentsClick(Sender: TObject);
+    procedure btnImportKanjidicClick(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -379,7 +381,7 @@ uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
-  JWBUserData, JWBPortableMode, JWBCharData, ActnList;
+  JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport;
 
 var colorfrom:integer;
 
@@ -1935,6 +1937,11 @@ begin
     MB_OK
   );
   Application.Terminate;
+end;
+
+procedure TfSettings.btnImportKanjidicClick(Sender: TObject);
+begin
+  fCharDataImport.ShowModal;
 end;
 
 end.

@@ -177,7 +177,7 @@ begin
    //Figure out this property's data format and convert values into it
     propType := FindCharPropType(typ);
     if propType=nil then raise Exception.Create('Property type not found: '+IntToStr(typ));
-    if (propType.dataType='P') or (propType.dataType='U') then begin
+    if propType.dataType='U' then begin
       sl.Sorted := false; //don't really care if it's sorted
       for i := 0 to sl.Count - 1 do
         sl[i] := UnicodeToHex(sl[i]);

@@ -49,8 +49,22 @@ procedure TfCharDataImport.btnUpdateClick(Sender: TObject);
 begin
  //Not really needed but let's check beforehand
   if not FileExists(edtKanjidicFile.Text) then
-    raise Exception.Create('File '+edtKanjidicFile.Text+' does not exist!');
+    raise Exception.CreateFmt(_l('#01075^eFile %s does not exist!'), [edtKanjidicFile.Text]);
+  if Application.MessageBox(
+    PChar(_l('#01072^Character data in this copy of Wakan will be replaced with '
+      +'the new one provided here. Application will then restart and you will '
+      +'lose all the unsaved data. Do you want to continue?')),
+    PChar(_l('#01071^eConfirm import')),
+    MB_YESNO or MB_ICONQUESTION)<>ID_YES then exit;
+
   UpdateKanjidicData(edtKanjidicFile.Text);
+  Application.MessageBox(
+    PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
+    PChar(_l('#01073^eImport completed')),
+    MB_OK or MB_ICONINFORMATION
+  );
+  Application.Terminate;
+  Close;
 end;
 
 //Returns a Wakan date stamp which represents file last modification time
@@ -153,7 +167,7 @@ procedure TCharPropBuilder.AddCharProp(propType: PCharPropType; Value: string;
   ReadDot: integer; Position: integer);
 begin
   Assert(FCharIdx>=0, 'CharPropEditor: No kanji selected for editing');
-  if (propType.dataType='U') or (propType.dataType='P') then
+  if (propType.dataType='U') then
     Value := UnicodeToHex(UnicodeString(Value));
   AddCharPropRaw(propType.id, AnsiString(Value), ReadDot, Position);
 end;
@@ -290,11 +304,15 @@ var prog: TSMPromptForm;
   end;
 
 begin
-  prog:=SMProgressDlgCreate(_l('^eCharacter data import'),_l('^eUpdating...'),0,{CanCancel=}true);
+  prog:=SMProgressDlgCreate(
+    _l('#01076^eCharacter data import'),
+    _l('#01077^eImporting...'),
+    0,{CanCancel=}true);
   try
     if not self.Visible then //auto mode
       prog.Position := poScreenCenter;
     prog.Show;
+    prog.Update;
 
    //Create new empty CharData package
     tempDir := CreateRandomTempDir();
@@ -353,7 +371,7 @@ begin
       try
         conv_type := fuin.DetectType;
         if conv_type=FILETYPE_UNKNOWN then
-          conv_type := FILETYPE_EUC; //kanjidic is by default EUC
+          conv_type := Conv_ChooseType({chinese=}false,FILETYPE_EUC); //kanjidic is by default EUC
         fuin.RewindAsType(conv_type);
         while not fuin.EOF do begin
           line := fuin.ReadLn;
@@ -413,7 +431,7 @@ begin
 
 
    //Reindex
-    prog.SetMessage(_l('^eReindexing...'));
+    prog.SetMessage(_l('#01078^eReindexing...'));
     TCharProp.NoCommitting := false;
     TCharProp.Reindex;
 

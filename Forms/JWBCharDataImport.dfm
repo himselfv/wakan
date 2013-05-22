@@ -2,7 +2,7 @@ object fCharDataImport: TfCharDataImport
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Import character data'
+  Caption = '#01079^eImport character data'
   ClientHeight = 167
   ClientWidth = 386
   Color = clBtnFace
@@ -12,6 +12,7 @@ object fCharDataImport: TfCharDataImport
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poOwnerFormCenter
   DesignSize = (
     386
     167)
@@ -20,9 +21,9 @@ object fCharDataImport: TfCharDataImport
   object Label1: TLabel
     Left = 14
     Top = 12
-    Width = 158
+    Width = 210
     Height = 13
-    Caption = 'Specify the KANJIDIC file to use:'
+    Caption = '#01080^eSpecify the KANJIDIC file to use:'
   end
   object Label2: TLabel
     Left = 14
@@ -32,8 +33,8 @@ object fCharDataImport: TfCharDataImport
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 
-      'When you press UPDATE, your current kanji data will be replaced ' +
-      'by the one read from the file.'
+      '#01082^eWhen you press UPDATE, your current kanji data will be r' +
+      'eplaced by the one read from the file.'
     WordWrap = True
   end
   object edtKanjidicFile: TEdit
@@ -51,7 +52,7 @@ object fCharDataImport: TfCharDataImport
     Width = 75
     Height = 25
     Anchors = [akTop, akRight]
-    Caption = 'Browse'
+    Caption = '#01081^eBrowse'
     TabOrder = 1
     OnClick = btnKanjidicBrowseClick
   end
@@ -60,7 +61,7 @@ object fCharDataImport: TfCharDataImport
     Top = 125
     Width = 98
     Height = 25
-    Caption = 'Update'
+    Caption = '#01083^eUpdate'
     TabOrder = 2
     OnClick = btnUpdateClick
   end

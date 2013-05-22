@@ -161,7 +161,7 @@ begin
       for j:=0 to nofullcomp-1 do if sl.Count>j then kcchcomp.Add(sl[j]) else kcchcomp.Add('');
       kcchind.Add(u);
     end;
-    p:=0;
+
     i:=kcchind.IndexOf(u);
     for j:=0 to nofullcomp-1 do
     begin
@@ -210,19 +210,19 @@ begin
       CCharProp.Locate('Kanji',TChar.TrueInt(TCharIndex));
       while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=TChar.Int(TCharIndex)) do
       begin
-       //Unfortunately for us, TCharPropValue is stored as Hex text in Ansi chars,
-       //and mixed with control characters, so there's nothing we can do to convert
-       //it to unicode automatically on reading.
-       //We'll have to do it when copying s->ws.
-        rt := TCharProp.Int(TCharPropTypeId);
-        ws := DecodeCharReading(rt,TCharProp.Str(TCharPropValue),TCharProp.Int(TCharPropReadDot));
+        rt := CCharProp.Int(TCharPropTypeId);
         case rt of
-          2:if curlang='c' then if ony='' then ony:=ConvertPinYin(ws) else ony:=ony+fstr(', ')+ConvertPinYin(ws);
-          8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(ws)) else kuny:=kuny+fstr(', ')+fstr(lowercase(ws));
-          4:if curlang='j' then if flength(ony)+flength(ws)+2<=nch then if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
-          5:if curlang='j' then if flength(kuny)+flength(ws)+2<=nch then if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
+          2:if curlang='c' then if ony='' then ony:=ConvertPinYin(string(CCharProp.RawValue)) else ony:=ony+fstr(', ')+ConvertPinYin(string(CCharProp.RawValue));
+          8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(string(CCharProp.RawValue))) else kuny:=kuny+fstr(', ')+fstr(lowercase(string(CCharProp.RawValue)));
+          4, 5: begin
+            ws := CCharProp.Value;
+            if (rt=4) and (curlang='j') and (flength(ony)+flength(ws)+2<=nch) then
+              if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
+            if (rt=5) and (curlang='j') and (flength(kuny)+flength(ws)+2<=nch) then
+              if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
+          end;
         end;
-        TCharProp.Next;
+        CCharProp.Next;
       end;
     finally
       FreeAndNil(CCharProp);
