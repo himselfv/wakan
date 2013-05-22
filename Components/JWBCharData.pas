@@ -687,12 +687,11 @@ begin
 end;
 
 function TCharPropertyCursor.GetJapaneseDefinitions(kanjiIndex: integer; const sep: string): FString;
-var tmp: FString;
 begin
-  Result := GetCharValues(kanjiIndex, ptJapaneseDefinition, ', ');
-  tmp := GetCharValues(kanjiIndex, ptJapaneseDefinitionUnicode, fstr(', '));
-  if (Result<>'') and (tmp<>'') then
-    Result := Result + fstr(sep) + tmp;
+ //Newer versions sometimes have both Unicode and non-Unicode fields for compability
+  Result := GetCharValues(kanjiIndex, ptJapaneseDefinitionUnicode, fstr(', '));
+  if Result='' then
+    Result := GetCharValues(kanjiIndex, ptJapaneseDefinition, ', ');
 end;
 
 function TCharPropertyCursor.GetChineseDefinitions(kanjiIndex: integer; const sep: string): FString;
