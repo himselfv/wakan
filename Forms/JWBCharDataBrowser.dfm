@@ -15,19 +15,6 @@ object fCharDataBrowser: TfCharDataBrowser
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object Grid: TStringGrid
-    Left = 0
-    Top = 0
-    Width = 576
-    Height = 304
-    Align = alClient
-    ColCount = 7
-    DefaultColWidth = 80
-    DefaultRowHeight = 20
-    FixedCols = 0
-    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
-    TabOrder = 0
-  end
   object Panel1: TPanel
     Left = 0
     Top = 304
@@ -35,7 +22,7 @@ object fCharDataBrowser: TfCharDataBrowser
     Height = 33
     Align = alBottom
     BevelOuter = bvNone
-    TabOrder = 1
+    TabOrder = 0
     DesignSize = (
       576
       33)
@@ -47,6 +34,33 @@ object fCharDataBrowser: TfCharDataBrowser
       Anchors = [akTop, akRight]
       Caption = 'Close'
       ModalResult = 11
+      TabOrder = 0
+    end
+  end
+  object tsTabs: TTabControl
+    Left = 0
+    Top = 0
+    Width = 576
+    Height = 304
+    Align = alClient
+    TabOrder = 1
+    Tabs.Strings = (
+      'Chars'
+      'Props'
+      'Radicals')
+    TabIndex = 0
+    OnChange = tsTabsChange
+    object Grid: TStringGrid
+      Left = 4
+      Top = 24
+      Width = 568
+      Height = 276
+      Align = alClient
+      ColCount = 7
+      DefaultColWidth = 80
+      DefaultRowHeight = 20
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
       TabOrder = 0
     end
   end

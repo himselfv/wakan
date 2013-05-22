@@ -40,6 +40,7 @@ var
   TCharIndex,
   TCharChinese,
   TCharType,
+   { 'A', 'N', 'T', 'S', 'J'? }
   TCharUnicode,
   TCharStrokeCount,
   TCharJpStrokeCount,

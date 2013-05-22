@@ -155,6 +155,7 @@ function Backup(const filename: string): string;
 
 procedure RegeditAtKey(const key: string);
 
+function perc(i,j:integer):string;
 
 var
  //Fonts
@@ -1466,6 +1467,14 @@ begin
   finally
     FreeAndNil(reg);
   end;
+end;
+
+function perc(i,j:integer):string;
+begin
+  if j>0 then
+    result:=inttostr(i)+' ('+inttostr(round(i/j*100))+'%)'
+  else
+    result:=inttostr(i)+' (?%)';
 end;
 
 

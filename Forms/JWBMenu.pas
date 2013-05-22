@@ -1680,7 +1680,7 @@ end;
 
 procedure TfMenu.aStatisticsExecute(Sender: TObject);
 begin
-  fWords.DoStatistic;
+  fStatistics.ShowModal;
 end;
 
 procedure TfMenu.aStrokeOrderExecute(Sender: TObject);
