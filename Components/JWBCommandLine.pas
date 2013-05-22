@@ -74,12 +74,12 @@ begin
     +'* makeexamples'#13
     +'* makesod'#13
     +'* makerad [RADKFILE_filename] [...]'#13
+    +'* makechars [/kanjidic <kanjidic-filename>]'
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
       +'[/addfrequencyinfo]'#13
-    +'* updatedics [dicname dicname ...]'#13
-    +'* makechars [/kanjidic <kanjidic-filename>]';
+    +'* updatedics [dicname dicname ...]';
 
   if errmsg<>'' then
     s := errmsg + #13#13 + s;
