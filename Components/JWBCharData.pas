@@ -37,16 +37,17 @@ var
 
  { Tables and fields }
   TChar: TTextTable;
-  TCharIndex,
-  TCharChinese,
+  TCharIndex,                 //char index
+  TCharChinese,               //1 if char is chinese-only, 0 if both japanese/chinese
   TCharType,
    { 'A', 'N', 'T', 'S', 'J'? }
-  TCharUnicode,
+  TCharUnicode,               //char itself
+ { Frequency, stroke count, grade info is 255 if unknown }
   TCharStrokeCount,
-  TCharJpStrokeCount,
-  TCharJpFrequency,
+  TCharJpStrokeCount,         //from kanjidic
+  TCharJpFrequency,           //from kanjidic
   TCharChFrequency,
-  TCharJouyouGrade: integer;
+  TCharJouyouGrade: integer;  //from kanjidic
 
   TCharProp: TTextTable;
   TCharPropIndex,

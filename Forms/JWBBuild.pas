@@ -704,6 +704,7 @@ begin
               if t2 then sp:='+'+sp;
               if pos('.',sp)>0 then
               begin
+              	//delete > and < around .
                 delete(sp,pos('.',sp)-1,1);
                 delete(sp,pos('.',sp)+1,1);
                 TKanjiReadReadDot.AsInteger:=pos('.',sp);
