@@ -91,6 +91,7 @@ type
     fFileName:string;
     fName:string;
     fActStart:longint;
+    fHeader:AnsiString;
   protected
     procedure Fill( MFile:TMemoryFile; Stream:TStream ); override;
   public
@@ -102,6 +103,7 @@ type
     property FileName:string read fFileName;
     property Name:string read fName;
     procedure ReadRawData(var x;position,length:integer);
+    property Header: AnsiString read fHeader;
   end;
   TPackageSourceClass=class of TPackageSource;
 
@@ -460,7 +462,9 @@ begin
     fFileSysCode:=MFileSysCode;
     fCryptCode:=MCryptCode;
     fHeaderCode:=MHeaderCode;
-    FSource.Seek(pch.HeaderLength,soCurrent);
+    SetLength(fHeader, pch.HeaderLength);
+//    FSource.Seek(pch.HeaderLength,soCurrent); //instead:
+    FSource.Read(fHeader[1], pch.HeaderLength);
   end else
   begin
     cryptedheader:=false;
@@ -474,7 +478,10 @@ begin
     fFileSysCode:=MFileSysCode;
     fCryptCode:=MCryptCode;
     fHeaderCode:=MHeaderCode;
-    FSource.Seek(sizeof(ph)+ph.HeaderLength,soBeginning);
+//    FSource.Seek(sizeof(ph)+ph.HeaderLength,soBeginning); //instead:
+    FSource.Seek(sizeof(ph),soBeginning);
+    SetLength(fHeader, ph.HeaderLength);
+    FSource.Read(fHeader[1], ph.HeaderLength);
   end;
   // read file headers and register files
   reat := FSource.Read(b,1);

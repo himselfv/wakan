@@ -206,6 +206,8 @@ var i: integer;
   files: TStringList;
 begin
   package := TPackageSource.Create(PackageFile, HeaderCode, FileSysCode, CryptCode);
+  writeln(package.Name);
+  writeln(package.Header);
   files := package.GetFileList;
   for i := 0 to files.Count - 1 do
     writeln(files[i]);
@@ -261,6 +263,7 @@ begin
     pack.FormatName := AnsiString(PackParams.Format);
     pack.CommentName := AnsiString(PackParams.Comment);
     pack.VersionName := AnsiString(PackParams.Version);
+    pack.Builder := 'jwbpkg';
     pack.HeaderCode := HeaderCode;
     pack.FilesysCode := FilesysCode;
     pack.WriteHeader;

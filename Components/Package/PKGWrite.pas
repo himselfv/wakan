@@ -37,6 +37,7 @@ type
     FCommentName,
     FVersionName,
     FFormatName: AnsiString;
+    FBuilder: AnsiString;
     FLoadMode: byte;
     FPackMode,
     FCryptMode,
@@ -92,6 +93,7 @@ type
     property CommentName: AnsiString read FCommentName write FCommentName;
     property VersionName: AnsiString read FVersionName write FVersionName;
     property FormatName: AnsiString read FFormatName write FFormatName;
+    property Builder: AnsiString read FBuilder write FBuilder;
     property HeaderCode: longint read FHeaderCode write FHeaderCode;
     property FilesysCode: longint read FFilesysCode write FFilesysCode;
     property CryptCode: longint read FCryptCode write FCryptCode;
@@ -253,6 +255,8 @@ begin
 
   if titlename<>'$' then
   begin
+    if FBuilder='' then
+      FBuilder:='PKG Builder (C) LABYRINTH 1999-2001';
     writeln(tmpt,'PKGBOF');
     writeln(tmpt,'Labyrinth Package File');
     writeln(tmpt,'');
@@ -264,7 +268,7 @@ begin
     writeln(tmpt,'Version:         ',versionname);
     writeln(tmpt,'Comments:        ',commentname);
     writeln(tmpt,'');
-    writeln(tmpt,'Builder: PKG Builder (C) LABYRINTH 1999-2001');
+    writeln(tmpt,'Builder: '+FBuilder);
     writeln(tmpt,'Package file technology (C) LABYRINTH 1999-2001');
     writeln(tmpt,'');
     writeln(tmpt,'If distributing this file, it must be distributed as it is');
