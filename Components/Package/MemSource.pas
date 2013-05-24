@@ -281,8 +281,9 @@ end;
 destructor TMemorySource.Destroy;
 var i:integer;
 begin
-  for i:=0 to fFiles.Count-1 do if fFiles.Objects[i]<>nil then
-    TMemoryFile(fFiles.Objects[i]).Free;
+  if fFiles<>nil then //descendants can fail even before calling TMemorySource.Create...
+    for i:=0 to fFiles.Count-1 do if fFiles.Objects[i]<>nil then
+      TMemoryFile(fFiles.Objects[i]).Free;
   fFiles.Free;
   fDirectories.Free;
   inherited Destroy;
