@@ -96,33 +96,40 @@ uses SysUtils, JWBUnit, JWBKanaConv, PKGWrite, JWBCategories, Classes;
 { Packs WAKAN.USR data from directory Dir to package Package.
  Do not use directly; there are functions to save and load user data packages. }
 procedure WriteUserPackage(const dir:string;const package:string);
-var f:file of byte;
-    b:byte;
+var pack: TPackageBuilder;
+  f:file of byte;
+  b:byte;
 begin
   assignfile(f,dir+'\struct.ver');
   rewrite(f);
   b:=CurrentUserDataVersion;
   write(f,b);
   closefile(f);
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+package);
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
-  PKGWriteForm.PKGWriteCmd('TitleName WaKan User Data File');
-  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 587135');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978312');
-  PKGWriteForm.PKGWriteCmd('Include '+dir);
-  PKGWriteForm.PKGWriteCmd('Finish');
+
+  pack := TPackageBuilder.Create;
+  try
+    pack.PackageFile := package;
+    pack.MemoryLimit := 100000000;
+    pack.Name := 'WaKan User Data';
+    pack.TitleName := 'WaKan User Data File';
+    pack.CopyrightName := WakanCopyright;
+    pack.FormatName := 'Pure Package File';
+    pack.CommentName := 'File is used by '+WakanAppName;
+    pack.VersionName := '1.0';
+    pack.HeaderCode := 621030;
+    pack.FilesysCode := 587135;
+    pack.WriteHeader;
+    pack.LoadMode := lmTemporaryLoad;
+    pack.CryptMode := 0;
+    pack.CrcMode := 0;
+    pack.PackMode := 0;
+    pack.CryptCode := 978312;
+    pack.Include(dir);
+    pack.Finish;
+  finally
+    FreeAndNil(pack);
+  end;
+
 end;
 
 { Creates new empty WAKAN.USR in the specified file }

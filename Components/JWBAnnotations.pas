@@ -33,26 +33,31 @@ implementation
 uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBConvert, JWBMenu;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
+var pack: TPackageBuilder;
 begin
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+pkg);
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name WaKan Compiled Annotations');
-  PKGWriteForm.PKGWriteCmd('TitleName WaKan Compiled Annotations');
-  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 621030');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 587135');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 453267');
-  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
-  PKGWriteForm.PKGWriteCmd('Finish');
+  pack := TPackageBuilder.Create;
+  try
+    pack.PackageFile := pkg;
+    pack.MemoryLimit := 100000000;
+    pack.Name := 'WaKan Compiled Annotations';
+    pack.TitleName := 'WaKan Compiled Annotations';
+    pack.CopyrightName := WakanCopyright;
+    pack.FormatName := 'Pure Package File';
+    pack.CommentName := 'File is used by '+WakanAppName;
+    pack.VersionName := '1.0';
+    pack.HeaderCode := 621030;
+    pack.FilesysCode := 587135;
+    pack.WriteHeader;
+    pack.LoadMode := lmTemporaryLoad;
+    pack.CryptMode := 0;
+    pack.CrcMode := 0;
+    pack.PackMode := 0;
+    pack.CryptCode := 453267;
+    pack.Include(tempDir);
+    pack.Finish;
+  finally
+    FreeAndNil(pack);
+  end;
 end;
 
 { Rebuilds the annotation package if it's missing, or if any of the *.ANO files

@@ -236,6 +236,7 @@ procedure TfDictImport.WriteDictPackage(dicFilename: string; tempDir: string;
   info: TDictInfo; diclang:char; entries:integer);
 var f:textfile;
   path:string;
+  pack: TPackageBuilder;
 begin
   path := ExtractFilePath(dicFilename);
   if path<>'' then ForceDirectories(path);
@@ -254,25 +255,30 @@ begin
   writeln(f,info.Copyright);
   closefile(f);
 
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+dicFilename);
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name '+info.Name);
-  PKGWriteForm.PKGWriteCmd('TitleName '+info.Name+' Dictionary');
-  PKGWriteForm.PKGWriteCmd('CopyrightName '+info.Copyright);
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
-  PKGWriteForm.PKGWriteCmd('Finish');
+  pack := TPackageBuilder.Create;
+  try
+    pack.PackageFile := dicFilename;
+    pack.MemoryLimit := 100000000;
+    pack.Name := info.Name;
+    pack.TitleName := info.Name+' Dictionary';
+    pack.CopyrightName := info.Copyright;
+    pack.FormatName := 'Pure Package File';
+    pack.CommentName := 'File is used by '+WakanAppName;
+    pack.VersionName := '1.0';
+    pack.HeaderCode := 791564;
+    pack.FilesysCode := 978132;
+    pack.WriteHeader;
+    pack.LoadMode := lmTemporaryLoad;
+    pack.CryptMode := 0;
+    pack.CrcMode := 0;
+    pack.PackMode := 0;
+    pack.CryptCode := 978123;
+    pack.Include(tempDir);
+    pack.Finish;
+  finally
+    FreeAndNil(pack);
+  end;
+
 end;
 
 procedure TfDictImport.btnBuildClick(Sender: TObject);

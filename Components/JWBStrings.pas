@@ -154,6 +154,7 @@ function CreateRandomTempDirName: string;
 function CreateRandomTempDir: string;
 function AppFolder: string;
 function GetSpecialFolderPath(folderId: integer): string;
+function ForceDirectories2(Dir: string): Boolean;
 
 
 { FChar string functions.
@@ -461,6 +462,27 @@ begin
 
  //Truncate result
   SetLength(Result, WStrLen(PWideChar(Result)));
+end;
+
+{ Same as ForceDirectories, only considers relative paths such as:
+    test/some/dir
+ ...okay instead of failing on them. }
+function ForceDirectories2(Dir: string): Boolean;
+begin
+  Result := True;
+  if Dir = '' then begin
+    Result := true;
+    exit;
+  end;
+  Dir := ExcludeTrailingPathDelimiter(Dir);
+{$IFDEF MSWINDOWS}
+  if (Length(Dir) < 3) or DirectoryExists(Dir)
+    or (ExtractFilePath(Dir) = Dir) then Exit; // avoid 'xyz:\' problem.
+{$ENDIF}
+{$IFDEF LINUX}
+  if (Dir = '') or DirectoryExists(Dir) then Exit;
+{$ENDIF}
+  Result := ForceDirectories2(ExtractFilePath(Dir)) and CreateDir(Dir);
 end;
 
 

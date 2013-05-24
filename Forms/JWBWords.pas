@@ -2225,6 +2225,7 @@ end;
 procedure TfWords.BuildStrokeOrderPackage(sourceCsv: string);
 var
   tempDir: string;
+  pack: TPackageBuilder;
   sl,sl2:TStringList;
   t:textfile;
   f:file of byte;
@@ -2279,26 +2280,32 @@ begin
   sl2.SaveToFile(tempDir+'\dir.txt');
   sl.Free;
   sl2.Free;
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName wakan.sod');
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name Stroke order');
-  PKGWriteForm.PKGWriteCmd('TitleName Japanese stroke order charts');
-  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Jim Breen, Yasuhito Tanaka');
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
-  PKGWriteForm.PKGWriteCmd('Finish');
+
+  pack := TPackageBuilder.Create;
+  try
+    pack.PackageFile := 'wakan.sod';
+    pack.MemoryLimit := 100000000;
+    pack.Name := 'Stroke order';
+    pack.TitleName := 'Japanese stroke order charts';
+    pack.CompanyName := 'LABYRINTH';
+    pack.CopyrightName := '(C) Jim Breen, Yasuhito Tanaka';
+    pack.FormatName := 'Pure Package File';
+    pack.CommentName := 'File is used by '+WakanAppName;
+    pack.VersionName := '1.0';
+    pack.HeaderCode := 791564;
+    pack.FilesysCode := 978132;
+    pack.WriteHeader;
+    pack.LoadMode := lmTemporaryLoad;
+    pack.CryptMode := 0;
+    pack.CrcMode := 0;
+    pack.PackMode := 0;
+    pack.CryptCode := 978123;
+    pack.Include(tempDir);
+    pack.Finish;
+  finally
+    FreeAndNil(pack);
+  end;
+
   DeleteDirectory(tempDir);
 end;
 

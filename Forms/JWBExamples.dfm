@@ -13,7 +13,6 @@ object fExamples: TfExamples
   Font.Style = []
   OldCreateOrder = False
   Scaled = False
-  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   PixelsPerInch = 96

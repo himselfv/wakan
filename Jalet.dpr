@@ -94,7 +94,6 @@ begin
   Application.CreateForm(TfUser, fUser);
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfSplash, fSplash);
-  Application.CreateForm(TPKGWriteForm, PKGWriteForm);
   Application.CreateForm(TfSelectFont, fSelectFont);
   Application.CreateForm(TfWords, fWords);
   Application.CreateForm(TfNewCategory, fNewCategory);

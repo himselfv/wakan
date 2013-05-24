@@ -6,30 +6,53 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, PackageCommon;
 
+const
+ //LoadMode
+  lmPermanentLoad = 0;
+  lmAutoLoad = 1;
+  lmDemandLoad = 2;
+  lmTemporaryLoad = 3;
+
 type
   TPKGWriteForm = class(TForm)
     Memo1: TMemo;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
-    procedure FormCreate(Sender: TObject);
+
+  end;
+
+  EPackageBuildException = class(Exception);
+
+  TLogMessageEvent = procedure(Sender: TObject; const msg: string) of object;
+
+  TPackageBuilder = class
   private
     pkgf:file;
     pkgfilename:string;
-    companyname,copyrightname,titlename,commentname,name,versionname,formatname:AnsiString;
-    loadmode,packmode,cryptmode,crcmode:byte;
-    memorylimit:longint;
-    filesyscode,headercode,cryptcode:longint;
-    headertextname:AnsiString;
+    FName,
+    FCompanyName,
+    FCopyrightName,
+    FTitleName,
+    FCommentName,
+    FVersionName,
+    FFormatName: AnsiString;
+    FLoadMode: byte;
+    FPackMode,
+    FCryptMode,
+    FCrcMode:byte;
+    FMemoryLimit:longint;
+    FHeaderCode,
+    FFilesysCode,
+    FCryptCode:longint;
     totfsize:longint;
     filenamespecified,fileopened:boolean;
     inclfname:AnsiString;
-    inclmask,inclrmask:AnsiString;
-    notshow:boolean;
-    cryptheader:AnsiString;
+    inclmask,inclrmask:string;
+    FCryptHeader:string; //if set, some cryptographic header is taken from this file //TODO: clarify
+    FHeaderTextName:string; //if set, some header data is taken from this file //TODO: clarify
     LastDirectory:longint;
     pkghs:PKGCryptStarter;
-    curcmd:string;
     HuffLeft:integer;
     Huff:PKGHuffArray;
     IntBuf:array[1..2048] of byte;
@@ -45,8 +68,42 @@ type
     function PrepareHuffman(var inf:file):longint;
     function ProcessHuffman(var inf:file;var buf;buflen:word;LZ77:boolean):integer;
 
+  protected
+    FOnLogMessage: TLogMessageEvent;
+    procedure SetPackageFile(const Value: string);
+    procedure Crash(const msg: string);
+
   public
-    function PKGWriteCmd(cmd:string):boolean;
+    constructor Create;
+    destructor Destroy; override;
+    procedure Log(const msg: string);
+    procedure WriteHeader;
+    procedure Include(dir: string);
+    procedure IncludeTree(dir: string);
+    procedure Finish;
+
+    property OnLogMessage: TLogMessageEvent read FOnLogMessage write FOnLogMessage;
+    property PackageFile: string read pkgfilename write SetPackageFile;
+    property MemoryLimit: longint read FMemoryLimit write FMemoryLimit;
+    property Name: AnsiString read FName write FName;
+    property CompanyName: AnsiString read FCompanyName write FCompanyName;
+    property CopyrightName: AnsiString read FCopyrightName write FCopyrightName;
+    property TitleName: AnsiString read FTitleName write FTitleName;
+    property CommentName: AnsiString read FCommentName write FCommentName;
+    property VersionName: AnsiString read FVersionName write FVersionName;
+    property FormatName: AnsiString read FFormatName write FFormatName;
+    property HeaderCode: longint read FHeaderCode write FHeaderCode;
+    property FilesysCode: longint read FFilesysCode write FFilesysCode;
+    property CryptCode: longint read FCryptCode write FCryptCode;
+    property LoadMode: byte read FLoadMode write FLoadMode;
+    property PackMode: byte read FPackMode write FPackMode;
+    property CryptMode: byte read FCryptMode write FCryptMode;
+    property CrcMode: byte read FCrcMode write FCrcMode;
+    property CryptHeader: string read FCryptHeader write FCryptHeader;
+    property HeaderTextName: string read FHeaderTextName write FHeaderTextName;
+    property IncludeFilename: AnsiString read inclfname write inclfname;
+    property IncludeMask: string read inclmask write inclmask;
+    property IncludeRecursiveMask: string read inclrmask write inclrmask;
 
   end;
 
@@ -57,21 +114,224 @@ implementation
 
 {$R *.DFM}
 
-procedure pkgerr(errs:string;cmd:string);
+constructor TPackageBuilder.Create;
 begin
-  filemode:=2;
-  MessageDlg('An error occured while building package file:'+#13+errs+#13+
-  'Command: '+cmd+#13+'Package file was not built.',mtError,[mbAbort],0);
-  if pkgwriteform.fileopened then
-  begin
-    closefile(pkgwriteform.pkgf);
-    erase(pkgwriteform.pkgf);
-    pkgwriteform.fileopened:=false;
-  end;
-  if pkgwriteform.visible then pkgwriteform.hide;
+  inherited;
+  filenamespecified:=false;
+  fileopened:=false;
+  name:='No';
+  companyname:='Unknown';
+  copyrightname:='Unknown';
+  titlename:='Unknown';
+  formatname:='Unknown';
+  versionname:='Unknown';
+  commentname:='None';
+  cryptheader:='$';
+  headertextname:='$';
+  inclfname:='';
+  memorylimit:=1024*1024;
+  loadmode:=lmPermanentLoad;
+  packmode:=0;
+  cryptmode:=0;
+  crcmode:=1;
+  cryptcode:=1;
+  lastdirectory:=0;
+  inclmask:='*.*';
+  inclrmask:='*.*';
 end;
 
-function TPKGWriteForm.PrepareHuffman(var inf:file):longint;
+destructor TPackageBuilder.Destroy;
+begin
+  if fileopened then begin
+    closefile(pkgf);
+    erase(pkgf);
+    fileopened:=false;
+  end;
+  inherited;
+end;
+
+procedure TPackageBuilder.Log(const msg: string);
+begin
+  if Assigned(FOnLogMessage) then
+    FOnLogMessage(Self, msg);
+end;
+
+procedure TPackageBuilder.Crash(const msg: string);
+begin
+  Log(msg);
+  raise EPackageBuildException.Create('msg');
+ { 'An error occured while building package file:'+#13+errs+#13+
+  'Command: '+cmd+#13+'Package file was not built.',mtError,[mbAbort],0); }
+end;
+
+procedure TPackageBuilder.SetPackageFile(const Value: string);
+begin
+  pkgfilename:=Value;
+  filenamespecified:=true;
+  Log('PKG File Name:'+pkgfilename)
+end;
+
+{
+var cmds,cmdp:string;
+    proc:boolean;
+    tmpt:textfile;
+}
+
+procedure TPackageBuilder.WriteHeader;
+var tmpt:textfile;
+  tmpf:file;
+  hdrf:file;
+  pkgh:pkgheader;
+  pkghc:pkgcryptheader;
+  rnx:word;
+  buf:array[1..2000] of byte;
+  reat:integer;
+  i:integer;
+  w:word;
+begin
+  if not filenamespecified then Crash('Filename was not specified.');
+  if fileopened then Crash('File is already open.');
+  if name='No' then Crash('Name was not specified.');
+
+  assignfile(pkgf,pkgfilename);
+  try
+    rewrite(pkgf,1);
+  except
+    on E: Exception do
+      Crash('Unable to create file: '+E.ClassName+': '+E.Message);
+  end;
+
+  assignfile(tmpt,'header.tmp');
+  try
+    rewrite(tmpt);
+  except
+    on E: Exception do
+      Crash('Unable to create temporary file: '+E.ClassName+': '+E.Message);
+  end;
+
+  if cryptheader<>'$' then
+  begin
+    assignfile(hdrf,cryptheader);
+    try
+      reset(hdrf,1);
+    except
+      on E: Exception do begin
+        closefile(tmpt);
+        Crash('Unable to open crypt header file: '+E.ClassName+': '+E.Message);
+      end;
+    end;
+    fillchar(pkghs,sizeof(pkghs),0);
+    // fix rnx:=encmask(16384);
+    rnx:=0;
+    pkghs.actualstart:=filesize(hdrf)+rnx*2;
+    pkghs.pkgtag:=65279;
+    while not eof(hdrf) do
+    begin
+      blockread(hdrf,buf,sizeof(buf),reat);
+      blockwrite(pkgf,buf,reat);
+    end;
+    for i:=1 to rnx do
+    begin
+      w:=encmask(65536);
+      blockwrite(pkgf,w,2);
+    end;
+    closefile(hdrf);
+  end;
+
+  if headertextname<>'$' then
+  begin
+    assignfile(hdrf,headertextname);
+    try
+      reset(hdrf,1);
+    except
+      on E: Exception do begin
+        closefile(tmpt);
+        Crash('Unable to open header text file: '+E.ClassName+': '+E.Message);
+      end;
+    end;
+  end;
+
+  if titlename<>'$' then
+  begin
+    writeln(tmpt,'PKGBOF');
+    writeln(tmpt,'Labyrinth Package File');
+    writeln(tmpt,'');
+    writeln(tmpt,'Title:           ',titlename);
+    writeln(tmpt,'Filename:        ',ExtractFilename(pkgfilename));
+    writeln(tmpt,'Format:          ',formatname);
+    writeln(tmpt,'Company:         ',companyname);
+    writeln(tmpt,'Copyright:       ',copyrightname);
+    writeln(tmpt,'Version:         ',versionname);
+    writeln(tmpt,'Comments:        ',commentname);
+    writeln(tmpt,'');
+    writeln(tmpt,'Builder: PKG Builder (C) LABYRINTH 1999-2001');
+    writeln(tmpt,'Package file technology (C) LABYRINTH 1999-2001');
+    writeln(tmpt,'');
+    writeln(tmpt,'If distributing this file, it must be distributed as it is');
+    writeln(tmpt,'without any modifications. Note that distributing this file may not');
+    writeln(tmpt,'be allowed by the creator of this file and will be lawfully punished.');
+    writeln(tmpt,'Ask the creator of this file whether you can distribute it.');
+    writeln(tmpt,'');
+    writeln(tmpt,'LABYRINTH is not responsible for any damage caused by misuse of this');
+    writeln(tmpt,'file and is not responsible for the contents.');
+    writeln(tmpt,'');
+    writeln(tmpt,'< end of header >');
+  end;
+
+  closefile(tmpt);
+
+  assignfile(tmpf,'header.tmp');
+  try
+    reset(tmpf,1);
+  except
+    on E: Exception do
+      Crash('Unable to open temporary file: '+E.ClassName+': '+E.Message);
+  end;
+  fileopened:=true;
+
+  fillchar(pkgh,sizeof(pkgh),0);
+  pkgh.pkgtag:='PKGv2.1>';
+  pkgh.pkgname:=name;
+  pkgh.headerlength:=filesize(tmpf);
+  pkgh.memorylimit:=memorylimit;
+  if headertextname<>'$' then
+    pkgh.headerlength:=pkgh.headerlength+filesize(hdrf);
+
+  fillchar(pkghc,sizeof(pkghc),0);
+  pkghc.pkgtag:='g21';
+  pkghc.headerlength:=filesize(tmpf);
+  pkghc.memorylimit:=memorylimit;
+  if headertextname<>'$' then
+    pkghc.headerlength:=pkghc.headerlength+filesize(hdrf);
+
+  if cryptheader='$' then
+    blockwrite(pkgf,pkgh,sizeof(pkgh))
+  else
+    blockwrite(pkgf,pkghc,sizeof(pkghc));
+
+  while not eof(tmpf) do
+  begin
+    blockread(tmpf,buf,sizeof(buf),reat);
+    blockwrite(pkgf,buf,reat);
+  end;
+  closefile(tmpf);
+
+  if headertextname<>'$' then
+  begin
+    while not eof(hdrf) do
+    begin
+      blockread(hdrf,buf,sizeof(buf),reat);
+      blockwrite(pkgf,buf,reat);
+    end;
+    closefile(hdrf);
+  end;
+
+  Log('PKG header was written.');
+  DeleteFile('header.tmp');
+  totfsize:=123;
+end;
+
+function TPackageBuilder.PrepareHuffman(var inf:file):longint;
 var buf:array[1..2000] of byte;
     i:integer;
     reat:integer;
@@ -103,7 +363,7 @@ begin
   RotBufSkip:=0;
 end;
 
-function TPKGWriteForm.ProcessHuffman(var inf:file;var buf;buflen:word;LZ77:boolean):integer;
+function TPackageBuilder.ProcessHuffman(var inf:file;var buf;buflen:word;LZ77:boolean):integer;
 var pos:word;
     bitbuf:byte;
     bitcnt:byte;
@@ -121,7 +381,7 @@ var pos:word;
     rdiff:integer;
     prep:integer;
 begin
-  if buflen<256*6+1 then pkgerr('Internal error#1.','');
+  if buflen<256*6+1 then Crash('Internal error#1.');
   pos:=0;
   while HuffLeft>0 do
   begin
@@ -245,7 +505,7 @@ begin
             begin
               if (Huff[Huff[go].parent].bit1=go) then BitStack[BitStackLen]:=true
               else if (Huff[Huff[go].parent].bit0=go) then BitStack[BitStackLen]:=false
-              else pkgerr('Internal error#2.','');
+              else Crash('Internal error#2.');
               inc(BitStackLen);
               inc(TempCount);
               go:=Huff[go].parent;
@@ -296,7 +556,7 @@ begin
   result:=pos;
 end;
 
-procedure TPKGWriteForm.IncludePath(path:string;mask:string;dirno:longint;recursive:boolean);
+procedure TPackageBuilder.IncludePath(path:string;mask:string;dirno:longint;recursive:boolean);
 var sr:tsearchrec;
     buf:array[1..2000] of byte;
     pkghf:pkgfile;
@@ -338,34 +598,35 @@ begin
       filemode:=0;
       reset(hdrf,1);
       except
-      Memo1.Lines.Add('Unable to open include file ('+sr.name+').'); ab:=true; end;
+        Log('Unable to open include file ('+sr.name+').'); ab:=true;
+      end;
       if not ab then
       begin
       filemode:=2;
       if pos('.',sr.name)>0 then
       begin
-        pkghf.FileName:=copy(sr.name,1,pos('.',sr.name)-1);
-        pkghf.FileExt:=copy(sr.name,pos('.',sr.name)+1,length(sr.name)-pos('.',sr.name));
+        pkghf.FileName:=ShortString(copy(sr.name,1,pos('.',sr.name)-1));
+        pkghf.FileExt:=ShortString(copy(sr.name,pos('.',sr.name)+1,length(sr.name)-pos('.',sr.name)));
       end else
       begin
-        pkghf.FileName:=sr.name;
+        pkghf.FileName:=ShortString(sr.name);
         pkghf.FileExt:='';
       end;
       if inclfname<>'' then pkghf.FileName:=inclfname;
       inclfname:='';
       end;
     end else begin
-      pkghf.FileName:=sr.name;
+      pkghf.FileName:=ShortString(sr.name);
       pkghf.FileExt:='*DIR*';
     end;
     ax:=true;
     for i:=1 to length(pkghf.Filename) do if pkghf.FileName[i] in ['a'..'z'] then ax:=false;
     if (ax) and (length(pkghf.FileName)<=8) then
     begin
-      pkghf.FileName:=LowerCase(pkghf.FileName);
+      pkghf.FileName:=ShortString(LowerCase(string(pkghf.FileName)));
       if pkghf.FileExt='*DIR*' then pkghf.FileName[1]:=Upcase(pkghf.FileName[1]);
     end;
-    if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=lowercase(pkghf.FileExt);
+    if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=ShortString(lowercase(string(pkghf.FileExt)));
     if not ab then
     begin
     pkghf.FileName:=corr(pkghf.FileName);
@@ -435,11 +696,11 @@ begin
           closefile(tmpf);
 //          closefile(logf);
         end;
-      else pkgerr('Unknown pack mode.',curcmd);
+      else Crash('Unknown pack mode.');
     end else pkghf.packedlength:=0;
     pkghf.packmode:=usedcoding;
     if (sr.attr and faDirectory=0) and (pkghf.filelength<>0) then
-    if not notshow then Memo1.Lines.Add('Including file '+sr.name+' ('+inttostr(round(pkghf.packedlength/pkghf.filelength*100))+'%)...');
+    Log('Including file '+sr.name+' ('+inttostr(round(pkghf.packedlength/pkghf.filelength*100))+'%)...');
     s:='   ';
     case usedcoding of
       0:s:=s+'Compression:NONE ';
@@ -455,7 +716,7 @@ begin
       0:s:=s+'Safety:NONE ';
       1:s:=s+'Safety:CRC ';
     end;
-    Memo1.Lines.Add(s);
+    Log(s);
     pkghf.directory:=dirno;
     pkghf.headercrc:=0;
     move(pkghf,pkghfarr,sizeof(pkghf));
@@ -485,7 +746,7 @@ begin
           0:blockread(hdrf,buf,2000,reat);
           1:reat:=ProcessHuffman(hdrf,buf,2000,false);
           2:blockread(tmpf,buf,2000,reat);
-          else pkgerr('Unknown pack mode.',curcmd);
+          else Crash('Unknown pack mode.');
         end;
         if reat>0 then
         begin
@@ -497,7 +758,7 @@ begin
                 for i:=1 to 2000 do buf[i]:=buf[i] xor encmask(256);
               end;
             2:for i:=1 to 2000 do buf[i]:=buf[i] xor ((cryptcode*i) mod 256);
-            else pkgerr('Unknown crypt mode.',curcmd);
+            else Crash('Unknown crypt mode.');
           end;
           blockwrite(pkgf,buf,reat);
           case crcmode of
@@ -508,15 +769,15 @@ begin
                 blockwrite(pkgf,crc,sizeof(crc));
                 totfsize:=totfsize+sizeof(crc);
               end;
-            else pkgerr('Unknown CRC mode.',curcmd);
+            else Crash('Unknown CRC mode.');
           end;
         end;
       end;
       totfsize:=totfsize+pkghf.packedlength;
 //      for i:=256 to 511 do if Huff[i].count>0 then pkgerr('Count err-'+inttostr(i)+'-'+inttostr(Huff[i].count),curcmd);
-      if testlen<>pkghf.packedlength then pkgerr('Internal error#3.'+inttostr(testlen)+'/'+inttostr(pkghf.packedlength),curcmd);
+      if testlen<>pkghf.packedlength then Crash('Internal error#3.'+inttostr(testlen)+'/'+inttostr(pkghf.packedlength));
       closefile(hdrf);
-      if not notshow then Memo1.Lines.Add('Included file '+sr.name+'.');
+      Log('Included file '+sr.name+'.');
       if usedcoding=2 then
       begin
         closefile(tmpf);
@@ -524,7 +785,7 @@ begin
       end;
     end else
     begin
-      Memo1.Lines.Add('Directory: '+sr.name+':');
+      Log('Directory: '+sr.name+':');
       inc(LastDirectory);
       IncludePath(path+sr.name+'\',inclrmask,LastDirectory,true);
     end;
@@ -534,323 +795,47 @@ begin
   findclose(sr);
 end;
 
-function TPKGWriteForm.PKGWriteCmd(cmd:string):boolean;
-var cmds,cmdp:string;
-    proc:boolean;
-    tmpf,hdrf:file;
-    i:integer;
-    reat:integer;
-    tmpt:textfile;
-    pkgh:pkgheader;
-    pkghc:pkgcryptheader;
-    pkgft:array[0..5] of AnsiChar;
-    b:byte;
-    buf:array[1..2000] of byte;
-    w:word;
-    rnx:word;
+procedure TPackageBuilder.Include(dir: string);
 begin
-  curcmd:=cmd;
-  cmdp:='';
-  cmds:=copy(cmd,1,pos(' ',cmd));
-  if cmds='' then cmds:=cmd else
-  begin
-    delete(cmds,length(cmds),1);
-    cmdp:=copy(cmd,pos(' ',cmd)+1,length(cmd)-pos(' ',cmd));
-  end;
-  proc:=false;
-  cmds:=UpperCase(cmds);
-  if cmds='PKGFILENAME' then
-  begin
-    if cmdp='' then begin pkgerr('PKGFileName needs a parameter.',cmd); result:=false; exit; end;
-    filenamespecified:=true;
-    fileopened:=false;
-    pkgfilename:=cmdp;
-    proc:=true;
-    companyname:='Unknown';
-    copyrightname:='Unknown';
-    name:='No';
-    titlename:='Unknown';
-    formatname:='Unknown';
-    versionname:='Unknown';
-    commentname:='None';
-    headertextname:='No';
-    cryptheader:='$';
-    inclfname:='';
-    memorylimit:=1024*1024;
-    if not notshow then Show;
-    if not notshow then Memo1.Lines.Clear;
-    if not notshow then Memo1.Lines.Add('PKG File Name:'+pkgfilename);
-    Invalidate;
-    Update;
-  end;
-  if cmds='CRYPTHEADER' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; cryptheader:=cmdp; end;
-  if cmds='COMPANYNAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; companyname:=cmdp; end;
-  if cmds='COPYRIGHTNAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; copyrightname:=cmdp; end;
-  if cmds='FORMATNAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; formatname:=cmdp; end;
-  if cmds='TITLENAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; titlename:=cmdp; end;
-  if cmds='VERSIONNAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; versionname:=cmdp; end;
-  if cmds='COMMENTNAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; commentname:=cmdp; end;
-  if cmds='NAME' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; name:=cmdp; end;
-  if cmds='HEADERTEXT' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; headertextname:=cmdp; end;
-  if cmds='MEMORYLIMIT' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; try memorylimit:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='FILESYSCODE' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; try filesyscode:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='HEADERCODE' then
-  begin if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-  proc:=true; try headercode:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='PACKMODE' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try packmode:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='CRYPTMODE' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try cryptmode:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='CRCMODE' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try crcmode:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='CRYPTCODE' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try cryptcode:=strtoint(cmdp);
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='PERMANENTLOAD' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try loadmode:=0;
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='AUTOLOAD' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try loadmode:=1;
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='DEMANDLOAD' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try loadmode:=2;
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='TEMPORARYLOAD' then
-  begin if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-  proc:=true; try loadmode:=3;
-  except pkgerr('Invalid number.',cmd); result:=false; exit; end; end;
-  if cmds='NOTSHOW' then begin proc:=true; notshow:=true; end;
-  if cmds='WRITEHEADER' then
-  begin
-    if not filenamespecified then begin pkgerr('Filename was not specified.',cmd); result:=false; exit; end;
-    if fileopened then begin pkgerr('File is already open.',cmd); result:=false; exit; end;
-    if name='No' then begin pkgerr('Name was not specified.',cmd); result:=false; exit; end;
-    assignfile(pkgf,pkgfilename);
-    try
-      rewrite(pkgf,1);
-    except
-      pkgerr('Unable to create file.',cmd); result:=false; exit;
-    end;
-    assignfile(tmpt,'header.tmp');
-    try
-      rewrite(tmpt);
-    except
-      pkgerr('Unable to create temporary file.',cmd); result:=false; exit; end;
-    if cryptheader<>'$' then
-    begin
-      assignfile(hdrf,cryptheader);
-      try
-        reset(hdrf,1);
-      except
-        closefile(tmpt); pkgerr('Unable to open crypt header file.',cmd); result:=false; exit; end;
-      fillchar(pkghs,sizeof(pkghs),0);
-      // fix rnx:=encmask(16384);
-      rnx:=0;
-      pkghs.actualstart:=filesize(hdrf)+rnx*2;
-      pkghs.pkgtag:=65279;
-      while not eof(hdrf) do
-      begin
-        blockread(hdrf,buf,sizeof(buf),reat);
-        blockwrite(pkgf,buf,reat);
-      end;
-      for i:=1 to rnx do
-      begin
-        w:=encmask(65536);
-        blockwrite(pkgf,w,2);
-      end;
-      closefile(hdrf);
-    end;
-    if headertextname<>'No' then
-    begin
-      assignfile(hdrf,headertextname);
-      try
-        reset(hdrf,1);
-      except
-        closefile(tmpt); pkgerr('Unable to open header text file.',cmd); result:=false; exit; end;
-    end;
-    if titlename<>'$' then
-    begin
-      writeln(tmpt,'PKGBOF');
-      writeln(tmpt,'Labyrinth Package File');
-      writeln(tmpt,'');
-      writeln(tmpt,'Title:           ',titlename);
-      writeln(tmpt,'Filename:        ',ExtractFilename(pkgfilename));
-      writeln(tmpt,'Format:          ',formatname);
-      writeln(tmpt,'Company:         ',companyname);
-      writeln(tmpt,'Copyright:       ',copyrightname);
-      writeln(tmpt,'Version:         ',versionname);
-      writeln(tmpt,'Comments:        ',commentname);
-      writeln(tmpt,'');
-      writeln(tmpt,'Builder: PKG Builder (C) LABYRINTH 1999-2001');
-      writeln(tmpt,'Package file technology (C) LABYRINTH 1999-2001');
-      writeln(tmpt,'');
-      writeln(tmpt,'If distributing this file, it must be distributed as it is');
-      writeln(tmpt,'without any modifications. Note that distributing this file may not');
-      writeln(tmpt,'be allowed by the creator of this file and will be lawfully punished.');
-      writeln(tmpt,'Ask the creator of this file whether you can distribute it.');
-      writeln(tmpt,'');
-      writeln(tmpt,'LABYRINTH is not responsible for any damage caused by misuse of this');
-      writeln(tmpt,'file and is not responsible for the contents.');
-      writeln(tmpt,'');
-      writeln(tmpt,'< end of header >');
-    end;
-    closefile(tmpt);
-    assignfile(tmpf,'header.tmp');
-    try
-      reset(tmpf,1);
-    except
-      pkgerr('Unable to open temporary file.',cmd); result:=false; exit; end;
-    fileopened:=true;
-    fillchar(pkgh,sizeof(pkgh),0);
-    pkgh.pkgtag:='PKGv2.1>';
-    pkgh.pkgname:=name;
-    pkgh.headerlength:=filesize(tmpf);
-    pkgh.memorylimit:=memorylimit;
-    if headertextname<>'No' then
-      pkgh.headerlength:=pkgh.headerlength+filesize(hdrf);
-    fillchar(pkghc,sizeof(pkghc),0);
-    pkghc.pkgtag:='g21';
-    pkghc.headerlength:=filesize(tmpf);
-    pkghc.memorylimit:=memorylimit;
-    if headertextname<>'No' then
-      pkghc.headerlength:=pkghc.headerlength+filesize(hdrf);
-    if cryptheader='$' then
-      blockwrite(pkgf,pkgh,sizeof(pkgh))
-    else
-      blockwrite(pkgf,pkghc,sizeof(pkghc));
-    while not eof(tmpf) do
-    begin
-      blockread(tmpf,buf,sizeof(buf),reat);
-      blockwrite(pkgf,buf,reat);
-    end;
-    closefile(tmpf);
-    if headertextname<>'No' then
-    begin
-      while not eof(hdrf) do
-      begin
-        blockread(hdrf,buf,sizeof(buf),reat);
-        blockwrite(pkgf,buf,reat);
-      end;
-      closefile(hdrf);
-    end;
-    if not notshow then Memo1.Lines.Add('PKG header was written.');
-    loadmode:=0;
-    packmode:=0;
-    cryptmode:=0;
-    crcmode:=1;
-    cryptcode:=1;
-    proc:=true;
-    totfsize:=123;
-    lastdirectory:=0;
-    inclmask:='*.*';
-    inclrmask:='*.*';
-    DeleteFile('header.tmp');
-  end;
-  if cmds='INCLUDEFILENAME' then
-  begin
-    if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-    if cmdp='' then begin pkgerr('IncludeFileName needs a parameter.',cmd); result:=false; exit; end;
-    inclfname:=cmdp;
-    proc:=true;
-  end;
-  if cmds='INCLUDEMASK' then
-  begin
-    if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-    if cmdp='' then begin pkgerr('IncludeMask needs a parameter.',cmd); result:=false; exit; end;
-    inclmask:=cmdp;
-    proc:=true;
-  end;
-  if cmds='INCLUDERECURSIVEMASK' then
-  begin
-    if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-    if cmdp='' then begin pkgerr('IncludeRecursiveMask needs a parameter.',cmd); result:=false; exit; end;
-    inclrmask:=cmdp;
-    proc:=true;
-  end;
-  if cmds='INCLUDE' then
-  begin
-    if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-    if cmdp='' then begin pkgerr('Include needs a parameter.',cmd); result:=false; exit; end;
-    if cmdp[length(cmdp)]<>'\' then cmdp:=cmdp+'\';
-    IncludePath(cmdp,inclmask,0,false);
-    proc:=true;
-  end;
-  if cmds='INCLUDETREE' then
-  begin
-    if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-    if cmdp='' then begin pkgerr('Include needs a parameter.',cmd); result:=false; exit; end;
-    if cmdp[length(cmdp)]<>'\' then cmdp:=cmdp+'\';
-    IncludePath(cmdp,inclmask,0,true);
-    proc:=true;
-  end;
-  if cmds='FINISH' then
-  begin
-    if not fileopened then begin pkgerr('File is not open.',cmd); result:=false; exit; end;
-    b:=233;
-    pkgft:='PKGEOF';
-    blockwrite(pkgf,b,1);
-    if cryptheader='$' then
-      blockwrite(pkgf,pkgft,sizeof(pkgft)) else
-    begin
-      blockwrite(pkgf,pkghs,sizeof(pkghs));
-      //fix rnx:=encmask(16384);
-      rnx:=0;
-      for i:=1 to rnx do
-      begin
-        w:=encmask(65536);
-        if w=65279 then w:=0;
-        blockwrite(pkgf,w,2);
-      end;
-    end;
-    closefile(pkgf);
-    if not notshow then memo1.lines.add('PKG file was written.');
-    if not notshow then hide;
-    proc:=true;
-  end;
-  if not proc then begin pkgerr('Unknown command.',cmd); result:=false; exit; end;
-  result:=true;
+  if dir='' then exit;
+  if dir[length(dir)]<>'\' then dir:=dir+'\';
+  IncludePath(dir,inclmask,0,false);
 end;
 
-procedure TPKGWriteForm.FormCreate(Sender: TObject);
+procedure TPackageBuilder.IncludeTree(dir: string);
 begin
-  filenamespecified:=false;
-  notshow:=false;
-//  randomize; //wasn't neeeded and even less needed now that this doesn't use random
+  if dir='' then exit;
+  if dir[length(dir)]<>'\' then dir:=dir+'\';
+  IncludePath(dir,inclmask,0,true);
+end;
+
+procedure TPackageBuilder.Finish;
+var pkgft:array[0..5] of AnsiChar;
+  b:byte;
+  rnx:word;
+  i:integer;
+  w:word;
+begin
+  if not fileopened then Crash('File is not open.');
+  b:=233;
+  pkgft:='PKGEOF';
+  blockwrite(pkgf,b,1);
+  if cryptheader='$' then
+    blockwrite(pkgf,pkgft,sizeof(pkgft)) else
+  begin
+    blockwrite(pkgf,pkghs,sizeof(pkghs));
+    //fix rnx:=encmask(16384);
+    rnx:=0;
+    for i:=1 to rnx do
+    begin
+      w:=encmask(65536);
+      if w=65279 then w:=0;
+      blockwrite(pkgf,w,2);
+    end;
+  end;
+  closefile(pkgf);
+  fileopened := false;
+  Log('PKG file was written.');
 end;
 
 end.

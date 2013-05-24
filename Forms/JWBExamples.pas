@@ -29,7 +29,6 @@ type
     btnNext: TSpeedButton;
     btnCopyToClipboard: TSpeedButton;
     Paintbox: TWakanPaintbox;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnGoToExampleClick(Sender: TObject);
     procedure btnPreviousClick(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
@@ -92,10 +91,6 @@ end;
 procedure TfExamples.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(randbank);
-end;
-
-procedure TfExamples.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
 end;
 
 procedure TfExamples.btnGoToExampleClick(Sender: TObject);
@@ -211,6 +206,7 @@ end;
 procedure TfExamples.BuildExamplesPackage;
 var
   tempDir: string;
+  pack: TPackageBuilder;
   f:file of byte;
   f2:file of word;
   f3:file of byte;
@@ -353,25 +349,32 @@ begin
   closefile(f3);
   closefile(f4);
   closefile(f);
-  PKGWriteForm.PKGWriteCmd('PKGFileName examples_j.pkg');
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name Examples');
-  PKGWriteForm.PKGWriteCmd('TitleName Japanese dictionary examples');
-  PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-  PKGWriteForm.PKGWriteCmd('CopyrightName (C) Gabriel SanRoman');
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-  PKGWriteForm.PKGWriteCmd('Include '+tempDir);
-  PKGWriteForm.PKGWriteCmd('Finish');
+
+  pack := TPackageBuilder.Create;
+  try
+    pack.PackageFile := 'examples_j.pkg';
+    pack.MemoryLimit := 100000000;
+    pack.Name := 'Examples';
+    pack.TitleName := 'Japanese dictionary examples';
+    pack.CompanyName := 'LABYRINTH';
+    pack.CopyrightName := '(C) Gabriel SanRoman';
+    pack.FormatName := 'Pure Package File';
+    pack.CommentName := 'File is used by '+WakanAppName;
+    pack.VersionName := '1.0';
+    pack.HeaderCode := 791564;
+    pack.FilesysCode := 978132;
+    pack.WriteHeader;
+    pack.LoadMode := lmTemporaryLoad;
+    pack.CryptMode := 0;
+    pack.CrcMode := 0;
+    pack.PackMode := 0;
+    pack.CryptCode := 978123;
+    pack.Include(tempDir);
+    pack.Finish;
+  finally
+    FreeAndNil(pack);
+  end;
+
   DeleteDirectory(tempDir);
 end;
 

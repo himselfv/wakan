@@ -4,13 +4,6 @@ interface
 
 uses SysUtils, Classes, Forms, Controls, Dialogs;
 
-const
-  MemSource_verMajor=2;
-  MemSource_verMinor=11;
-  MemSource_verBuild=1;
-  MemSource_date='25/02/2001';
-  MemSource_copy='(C) LABYRINTH 1999-2001';
-
 type
  { PackageSource hosts a number of MemoryFiles, which will Load data into themselves
   through PackageSource on demand (and Unload automatically to free memory).
@@ -50,6 +43,7 @@ type
   public
     function Lock:TMemoryStream;
     procedure Unlock;
+    procedure SaveToFile(const filename: string);
     procedure WriteToDisk(path:string);
     destructor Destroy; override;
     property Size:longint read fSize;
@@ -225,6 +219,17 @@ begin
   if fLockCount=0 then raise EMemorySourceError.Create('Cannot unlock already unlocked memory file.');
   fLockCount:=fLockCount-1;
   if fLockCount=0 then Refresh;
+end;
+
+procedure TMemoryFile.SaveToFile(const filename: string);
+var ms: TMemoryStream;
+begin
+  ms := Lock;
+  try
+    ms.SaveToFile(filename);
+  finally
+    Unlock;
+  end;
 end;
 
 procedure TMemoryFile.WriteToDisk(path:string);

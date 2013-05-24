@@ -768,6 +768,7 @@ end;
 procedure TfRadical.BuildRadicalPackage(sourceFiles: array of string);
 var tempDir: string;
   radIndex: TRadicalIndexBuilder;
+  pack: TPackageBuilder;
   i: integer;
 begin
   radIndex := TRadicalIndexBuilder.Create;
@@ -787,27 +788,30 @@ begin
     radIndex.Save(tempDir);
     FreeAndNil(radIndex);
 
-    PKGWriteForm.PKGWriteCmd('NotShow');
-    PKGWriteForm.PKGWriteCmd('PKGFileName wakan.rad');
-    PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-    PKGWriteForm.PKGWriteCmd('Name Japanese Radicals');
-    PKGWriteForm.PKGWriteCmd('TitleName Japanese advanced radical search');
-    PKGWriteForm.PKGWriteCmd('CompanyName LABYRINTH');
-    PKGWriteForm.PKGWriteCmd('CopyrightName (C) Michael Raine, Jim Breen');
-    PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-    PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-    PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-    PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
-    PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
-    PKGWriteForm.PKGWriteCmd('WriteHeader');
-    PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-    PKGWriteForm.PKGWriteCmd('CryptMode 0');
-    PKGWriteForm.PKGWriteCmd('CRCMode 0');
-    PKGWriteForm.PKGWriteCmd('PackMode 0');
-    PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-    PKGWriteForm.PKGWriteCmd('Include '+tempDir);
-    PKGWriteForm.PKGWriteCmd('Finish');
-
+    pack := TPackageBuilder.Create;
+    try
+      pack.PackageFile := 'wakan.rad';
+      pack.MemoryLimit := 100000000;
+      pack.Name := 'Japanese Radicals';
+      pack.TitleName := 'Japanese advanced radical search';
+      pack.CompanyName := 'LABYRINTH';
+      pack.CopyrightName := '(C) Michael Raine, Jim Breen';
+      pack.FormatName := 'Pure Package File';
+      pack.CommentName := 'File is used by '+WakanAppName;
+      pack.VersionName := '1.0';
+      pack.HeaderCode := 791564;
+      pack.FilesysCode := 978132;
+      pack.WriteHeader;
+      pack.LoadMode := lmTemporaryLoad;
+      pack.CryptMode := 0;
+      pack.CrcMode := 0;
+      pack.PackMode := 0;
+      pack.CryptCode := 978123;
+      pack.Include(tempDir);
+      pack.Finish;
+    finally
+      FreeAndNil(pack);
+    end;
   finally
     radIndex.Free;
     DeleteDirectory(tempDir);

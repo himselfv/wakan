@@ -38,14 +38,22 @@ var
  { Tables and fields }
   TChar: TTextTable;
   TCharIndex,                 //char index
-  TCharChinese,               //1 if char is chinese-only, 0 if both japanese/chinese
+  TCharChinese,               //1 if char is chinese-only (UNIHAN), 0 if both japanese/chinese (KANJIDIC+UNIHAN)
   TCharType,
-   { 'A', 'N', 'T', 'S', 'J'? }
+   { 'A', 'N', 'T', 'S', 'J'
+    Set according to whether the character has kBigFive/kGB0 assignments in UNIHAN:
+        jp/chin               'J'
+        jp/chin + kBigFive    'A'
+        jp/chin + kGB0        'A'
+        chin                  'N'
+        chin + kBigFive       'T'
+        chin + kGB0           'S'
+    }
   TCharUnicode,               //char itself
  { Frequency, stroke count, grade info is 255 if unknown }
   TCharStrokeCount,
   TCharJpStrokeCount,         //from kanjidic
-  TCharJpFrequency,           //from kanjidic
+  TCharJpFrequency,           //from kanjidic, 65535 if unknown
   TCharChFrequency,
   TCharJouyouGrade: integer;  //from kanjidic
 
@@ -262,26 +270,31 @@ end;
 { Packs WAKAN.CHR data from directory Dir to package Package.
  Do not use directly; there are functions to save and load user data packages. }
 procedure WriteCharPackage(const dir:string;const package:string);
+var pack: TPackageBuilder;
 begin
-  PKGWriteForm.PKGWriteCmd('NotShow');
-  PKGWriteForm.PKGWriteCmd('PKGFileName '+package);
-  PKGWriteForm.PKGWriteCmd('MemoryLimit 100000000');
-  PKGWriteForm.PKGWriteCmd('Name WaKan User Data');
-  PKGWriteForm.PKGWriteCmd('TitleName WaKan Character Dictionary');
-  PKGWriteForm.PKGWriteCmd('CopyrightName '+WakanCopyright);
-  PKGWriteForm.PKGWriteCmd('FormatName Pure Package File');
-  PKGWriteForm.PKGWriteCmd('CommentName File is used by '+WakanAppName);
-  PKGWriteForm.PKGWriteCmd('VersionName 1.0');
-  PKGWriteForm.PKGWriteCmd('HeaderCode 791564');
-  PKGWriteForm.PKGWriteCmd('FileSysCode 978132');
-  PKGWriteForm.PKGWriteCmd('WriteHeader');
-  PKGWriteForm.PKGWriteCmd('TemporaryLoad');
-  PKGWriteForm.PKGWriteCmd('CryptMode 0');
-  PKGWriteForm.PKGWriteCmd('CRCMode 0');
-  PKGWriteForm.PKGWriteCmd('PackMode 0');
-  PKGWriteForm.PKGWriteCmd('CryptCode 978123');
-  PKGWriteForm.PKGWriteCmd('Include '+dir);
-  PKGWriteForm.PKGWriteCmd('Finish');
+  pack := TPackageBuilder.Create;
+  try
+    pack.PackageFile := package;
+    pack.MemoryLimit := 100000000;
+    pack.Name := 'WaKan User Data';
+    pack.TitleName := 'WaKan Character Dictionary';
+    pack.CopyrightName := WakanCopyright;
+    pack.FormatName := 'Pure Package File';
+    pack.CommentName := 'File is used by '+WakanAppName;
+    pack.VersionName := '1.0';
+    pack.HeaderCode := 791564;
+    pack.FilesysCode := 978132;
+    pack.WriteHeader;
+    pack.LoadMode := lmTemporaryLoad;
+    pack.CryptMode := 0;
+    pack.CrcMode := 0;
+    pack.PackMode := 0;
+    pack.CryptCode := 978123;
+    pack.Include(dir);
+    pack.Finish;
+  finally
+    FreeAndNil(pack);
+  end;
 end;
 
 { Creates new empty WAKAN.CHR in the specified file.
