@@ -41,7 +41,7 @@ type
     property LoadMode:TMemoryLoadMode read fLoadMode write SetLoadMode;
     property Parent:TMemoryFile read fParent;
   public
-    function Lock:TMemoryStream;
+    function Lock:TMemoryStream; //do not destroy
     procedure Unlock;
     procedure SaveToFile(const filename: string);
     procedure WriteToDisk(path:string);

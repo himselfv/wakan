@@ -278,12 +278,9 @@ var prog: TSMPromptForm;
   CharIdx: integer;
   propType: PCharPropType;
   i: integer;
-  RecIndex: integer;
   pre_idx: integer;
 
-  OldChar: TTextTable;
   OldCharProp: TTextTable;
-  OldRadicals: TTextTable;
 
   CChar: TTextTableCursor;
   CCharProp: TCharPropertyCursor;
@@ -325,38 +322,13 @@ begin
     prog.Show;
     prog.Update;
 
-   //Create new empty CharData package
-    tempDir := CreateRandomTempDir();
-    InitializeCharPackage(tempDir+'\wakan.chr'); //copies current package header
-
-   //Preserve current CharData tables
-    OldChar := TChar;
+   //Preserve current CharData table and create a new one
     OldCharProp := TCharProp;
-    OldRadicals := TRadicals;
-    TChar := nil;
-    TCharProp := nil;
-    TRadicals := nil;
-
-   //Release whatever is not preserved
-    FreeCharData;
-
-   //Load empty CharData package
-    LoadCharData(tempDir+'\wakan.chr');
-    DeleteDirectory(tempDir); //it's in memory now
-
-   { All of this was needed just so we create an empty TCharProp table
-    according to the latest schema. }
-
-   //From the newly loaded empty package we only need one table, rest are dropped.
-    FreeAndNil(TChar);
-    FreeAndNil(TRadicals);
-    TChar := OldChar;
-    TRadicals := OldRadicals;
+    TCharProp := NewCharPropTable();
+    TCharProp.NoCommitting := true;
 
    //Populate new, up to date TCharProp with data from OldCharProp + kanjidic
    //OldCharProp might not have latest indexes
-    TCharProp.NoCommitting := true;
-
 
     CChar := TChar.NewCursor;
     CCharProp := TCharPropertyCursor.Create(OldCharProp);

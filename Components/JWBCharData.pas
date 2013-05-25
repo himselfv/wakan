@@ -96,6 +96,9 @@ procedure SaveCharData(const filename: string);
 procedure FreeCharData();
 
 procedure InitializeCharPackage(const package:string);
+function NewCharTable: TTextTable;
+function NewCharPropTable: TTextTable;
+function NewRadicalsTable: TTextTable;
 
 function WakanDatestamp(const dt: TDatetime): string;
 
@@ -302,7 +305,6 @@ end;
  in the future (init everything to the blank or something) }
 procedure InitializeCharPackage(const package:string);
 var tempDir: string;
-  t:textfile;
   vi: TStringList;
 begin
   tempDir := CreateRandomTempDir();
@@ -324,84 +326,102 @@ begin
     vi.Free;
   end;
 
-  assignfile(t,tempDir+'\Char.info');
-  rewrite(t);
-  writeln(t,'$TEXTTABLE');
-  writeln(t,'$PRECOUNTED');
-  writeln(t,'$RAWINDEX');
-  writeln(t,'$FIELDS');
-  writeln(t,'iIndex');
-  writeln(t,'bChinese');
-  writeln(t,'sType');
-  writeln(t,'xUnicode');
-  writeln(t,'bStrokeCount');
-  writeln(t,'wJpFrequency');
-  writeln(t,'wChFrequency');
-  writeln(t,'bJouyouGrade');
-  writeln(t,'bJpStrokeCount');
-  writeln(t,'$ORDERS');
-  writeln(t,'ChFrequency_Ind');
-  writeln(t,'ChStrokeCount_Ind');
-  writeln(t,'ChUnicode_Ind');
-  writeln(t,'JpFrequency_Ind');
-  writeln(t,'JpStrokeCount_Ind');
-  writeln(t,'JpUnicode_Ind');
-  writeln(t,'$SEEKS');
-  writeln(t,'Index');
-  writeln(t,'ChFrequency');
-  writeln(t,'StrokeCount');
-  writeln(t,'Unicode');
-  writeln(t,'JpFrequency');
-  writeln(t,'JpStrokeCount');
-  writeln(t,'$CREATE');
-  closefile(t);
+  with NewCharTable() do begin
+    WriteTable(tempDir+'\Char.info', false);
+    Free;
+  end;
 
-  assignfile(t,tempDir+'\CharRead.info');
-  rewrite(t);
-  writeln(t,'$TEXTTABLE');
-  writeln(t,'$PRECOUNTED');
-  writeln(t,'$RAWINDEX');
-  writeln(t,'$FIELDS');
-  writeln(t,'iIndex');
-  writeln(t,'wKanji');
-  writeln(t,'bType');
-  writeln(t,'sReading');
-  writeln(t,'bReadDot');
-  writeln(t,'bPosition');
-  writeln(t,'$ORDERS');
-  writeln(t,'Kanji');
-  writeln(t,'Reading_Ind');
-  writeln(t,'Type_Ind');
-  writeln(t,'$SEEKS');
-  writeln(t,'0');
-  writeln(t,'Kanji');
-  writeln(t,'Reading');
-  writeln(t,'Type');
-  writeln(t,'$CREATE');
-  closefile(t);
+  with NewCharPropTable() do begin
+    WriteTable(tempDir+'\CharRead.info', false);
+    Free;
+  end;
 
-  assignfile(t,tempDir+'\Radicals.info');
-  rewrite(t);
-  writeln(t,'$TEXTTABLE');
-  writeln(t,'$PRECOUNTED');
-  writeln(t,'$RAWINDEX');
-  writeln(t,'$FIELDS');
-  writeln(t,'bNumber');
-  writeln(t,'bVariant');
-  writeln(t,'xUnicode');
-  writeln(t,'bStrokeCount');
-  writeln(t,'wBushuCount');
-  writeln(t,'wUnicodeCount');
-  writeln(t,'wJapaneseCount');
-  writeln(t,'wKangXiCount');
-  writeln(t,'$ORDERS');
-  writeln(t,'$SEEKS');
-  writeln(t,'Number');
-  writeln(t,'$CREATE');
-  closefile(t);
+  with NewRadicalsTable() do begin
+    WriteTable(tempDir+'\Radicals.info', false);
+    Free;
+  end;
 
   WriteCharPackage(tempDir, package);
   DeleteDirectory(tempDir);
+end;
+
+function NewCharTable: TTextTable;
+begin
+  Result := TTextTable.Create([
+    '$TEXTTABLE',
+    '$PRECOUNTED',
+    '$RAWINDEX',
+    '$FIELDS',
+    'iIndex',
+    'bChinese',
+    'sType',
+    'xUnicode',
+    'bStrokeCount',
+    'wJpFrequency',
+    'wChFrequency',
+    'bJouyouGrade',
+    'bJpStrokeCount',
+    '$ORDERS',
+    'ChFrequency_Ind',
+    'ChStrokeCount_Ind',
+    'ChUnicode_Ind',
+    'JpFrequency_Ind',
+    'JpStrokeCount_Ind',
+    'JpUnicode_Ind',
+    '$SEEKS',
+    'Index',
+    'ChFrequency',
+    'StrokeCount',
+    'Unicode',
+    'JpFrequency',
+    'JpStrokeCount'
+  ]);
+end;
+
+function NewCharPropTable: TTextTable;
+begin
+  Result := TTextTable.Create([
+    '$TEXTTABLE',
+    '$PRECOUNTED',
+    '$RAWINDEX',
+    '$FIELDS',
+    'iIndex',
+    'wKanji',
+    'bType',
+    'sReading',
+    'bReadDot',
+    'bPosition',
+    '$ORDERS',
+    'Kanji',
+    'Reading_Ind',
+    'Type_Ind',
+    '$SEEKS',
+    '0',
+    'Kanji',
+    'Reading',
+    'Type'
+  ]);
+end;
+
+function NewRadicalsTable: TTextTable;
+begin
+  Result := TTextTable.Create([
+    '$TEXTTABLE',
+    '$PRECOUNTED',
+    '$RAWINDEX',
+    '$FIELDS',
+    'bNumber',
+    'bVariant',
+    'xUnicode',
+    'bStrokeCount',
+    'wBushuCount',
+    'wUnicodeCount',
+    'wJapaneseCount',
+    'wKangXiCount',
+    '$ORDERS',
+    '$SEEKS',
+    'Number'
+  ]);
 end;
 
 //NOTE: This cannot at this time be used to create a new character database.

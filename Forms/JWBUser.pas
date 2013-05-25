@@ -459,7 +459,6 @@ end;
 procedure TfUser.ShowWord;
 var s,s2:string;
   meaning: FString;
-  meaning_u: FString;
     radf:integer;
     sl:TStringList;
     i:integer;
