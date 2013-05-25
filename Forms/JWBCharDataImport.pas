@@ -7,15 +7,15 @@ Only full replacement of all relevant properties is supported (impossible to
 add translations while keeping existing ones at this point).
 }
 
-//TODO: Localize everything in the unit.
-
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, UrlLabel;
+  Dialogs, StdCtrls, UrlLabel, TextTable;
 
 type
+  TFlagList = array of boolean;
+
   TfCharDataImport = class(TForm)
     Label1: TLabel;
     edtKanjidicFile: TEdit;
@@ -30,15 +30,22 @@ type
     procedure btnKanjidicBrowseClick(Sender: TObject);
     procedure btnUpdateClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+  protected
+    procedure ImportKanjidic(const KanjidicFilename: string; out CharsCovered: TFlagList);
+    procedure ImportUnihan(const UnihanFolder: string; out CharsCovered: TFlagList);
+    procedure CopyProperties(OldCharProp: TTextTable; const KanjidicCovered: TFlagList;
+      const UnihanCovered: TFlagList);
+    function SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
   public
-    procedure UpdateKanjidicData(const KanjidicFilename: string);
+    procedure UpdateCharDb(ResetDb: boolean; const KanjidicFilename: string;
+      const UnihanFolder: string);
   end;
 
 var
   fCharDataImport: TfCharDataImport;
 
 implementation
-uses TextTable, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader,
+uses StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader,
   JWBConvert, JWBUnit;
 
 {$R *.dfm}
@@ -68,7 +75,7 @@ begin
     PChar(_l('#01071^eConfirm import')),
     MB_YESNO or MB_ICONQUESTION)<>ID_YES then exit;
 
-  UpdateKanjidicData(edtKanjidicFile.Text);
+  UpdateCharDb({ResetDB=}false, edtKanjidicFile.Text, {UNIHAN=}'');
   Application.MessageBox(
     PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
     PChar(_l('#01073^eImport completed')),
@@ -267,49 +274,22 @@ begin
   FCharIdx := -1;
 end;
 
-procedure TfCharDataImport.UpdateKanjidicData(const KanjidicFilename: string);
+{ Updates or recreates from the scratch WAKAN.CHR.
+ If any of KanjidicFilename, UnihanFolder is not specified, that part is skipped.
+ If ResetDb is set, existing information is discarded, otherwise preserved where
+ no new info is available. }
+procedure TfCharDataImport.UpdateCharDb(ResetDb: boolean;
+  const KanjidicFilename: string; const UnihanFolder: string);
 var prog: TSMPromptForm;
-  fuin: TJwbConvert;
-  conv_type: integer;
-  ed: TKanjidicEntry;
-  line: string;
   tempDir: string;
   backupFile: string;
-  CharIdx: integer;
-  propType: PCharPropType;
-  i: integer;
-  pre_idx: integer;
-
   OldCharProp: TTextTable;
 
-  CChar: TTextTableCursor;
-  CCharProp: TCharPropertyCursor;
-  CNewProp: TCharPropBuilder;
-
-  SCharPropKanji: TSeekObject;
-
-  CharsCovered: array of boolean;
-
-  { Copies non-KANJIDIC-related properties into new table }
-  procedure CopyProperties(CCharProp: TCharPropertyCursor; CNewProp: TCharPropBuilder;
-    CharIdx: integer);
-  var propType: PCharPropType;
-  begin
-    CCharProp.Locate(@SCharPropKanji, CharIdx);
-    while CCharProp.Int(TCharPropKanji)=CharIdx do begin
-      propType := CCharProp.PropType;
-     { Properties with id <= 10 are special ones and are crafted by hand,
-      others are more or less automated.  }
-      if ((propType.id>10) and (propType.sourceType<>'D'))
-      or ((propType.id<10) and not (propType.id in [ptKoreanReading, ptMandarinReading,
-        ptJapaneseDefinition, ptOnReading, ptKunReading, ptNanoriReading])) then
-      begin
-        CNewProp.AddCharPropRaw(propType.id, CCharProp.AnsiStr(TCharPropValue),
-          CCharProp.Int(TCharPropReadDot), CCharProp.Int(TCharPropPosition));
-      end;
-      CCharProp.Next;
-    end;
-  end;
+ { If we're updating DB, we need to port TChar and property entries which were
+  not covered by the KANJIDIC/UNIHAN provided.
+  So we keep track of which of original TChars were covered in which source. }
+  KanjidicCovered: TFlagList;
+  UnihanCovered: TFlagList;
 
 begin
   prog:=SMProgressDlgCreate(
@@ -322,101 +302,55 @@ begin
     prog.Show;
     prog.Update;
 
+   { STAGE I. Clear/reset everything }
+    prog.SetMessage(_l('^eClearing up...'));
+
    //Preserve current CharData table and create a new one
     OldCharProp := TCharProp;
     TCharProp := NewCharPropTable();
     TCharProp.NoCommitting := true;
 
-   //Populate new, up to date TCharProp with data from OldCharProp + kanjidic
-   //OldCharProp might not have latest indexes
+   //Kill OldCharProp if we don't need it -- why keep it?
+    if ResetDb then
+      FreeAndNil(OldCharProp);
 
-    CChar := TChar.NewCursor;
-    CCharProp := TCharPropertyCursor.Create(OldCharProp);
-    CNewProp := TCharPropBuilder.Create(TCharProp);
-    try
-     //Old CharProp table might not have 'Kanji' Order, in which case use default one,
-     //it was sufficient then.
-      if OldCharProp.orders.IndexOf('Kanji')>=0 then
-        CCharProp.SetOrder('Kanji')
-      else
-        CCharProp.SetOrder('');
-
-      SCharPropKanji := OldCharProp.GetSeekObject('Kanji');
-
-     //Mark all chars as not migrated
-      SetLength(CharsCovered, TChar.RecordCount);
-      for i := 0 to Length(CharsCovered) - 1 do
-        CharsCovered[i] := false;
-
-     //Parse KANJIDIC and add new properties
-      ed.Reset;
-      fuin := TJwbConvert.Open(KanjidicFilename, FILETYPE_UNKNOWN);
-      try
-        conv_type := fuin.DetectType;
-        if conv_type=FILETYPE_UNKNOWN then
-          conv_type := Conv_ChooseType({chinese=}false,FILETYPE_EUC); //kanjidic is by default EUC
-        fuin.RewindAsType(conv_type);
-        while not fuin.EOF do begin
-          line := fuin.ReadLn;
-          if line='' then continue;
-          if IsKanjidicComment(line) then continue;
-          ParseKanjidicLine(line, @ed);
-
-         //Find kanji
-          if not CChar.Locate('Unicode', ed.kanji) then
-            continue; //char not in db
-          CharsCovered[CChar.tcur] := true; //migrated
-
-          CharIdx := CChar.TrueInt(TCharIndex);
-          CNewProp.OpenKanji(CharIdx);
-
-         //For each character, first copy all properties which are to be preserved
-          CopyProperties(CCharProp, CNewProp, CharIdx);
-
-         //Add standard properties
-          CNewProp.AddProperties(FindCharPropType(ptKoreanReading), ed.GetField('W'));
-          CNewProp.AddProperties(FindCharPropType(ptMandarinReading), ed.GetField('Y'));
-          CNewProp.AddDefinitions(FindCharPropType(ptJapaneseDefinitionUnicode), @ed);
-          CNewProp.AddOns(FindCharPropType(ptOnReading), @ed.readings[0]);
-          CNewProp.AddKuns(FindCharPropType(ptKunReading), @ed.readings[0]);
-          pre_idx := CNewProp.AddOns(FindCharPropType(ptNanoriReading), @ed.readings[1]);
-          CNewProp.AddKuns(FindCharPropType(ptNanoriReading), @ed.readings[1], pre_idx);
-
-         //Add automated properties
-          for i := 0 to Length(CharPropTypes) - 1 do begin
-            propType := @CharPropTypes[i];
-            if propType.id<=10 then continue; //not automated
-            if propType.sourceType<>'D' then continue; //not from kanjidic
-            CNewProp.AddProperties(propType, PKanjidicEntry(@ed));
-          end;
-
-          CNewProp.CloseKanji;
-        end;
-      finally
-        FreeAndNil(fuin);
-      end;
-
-     //For all characters which weren't found in the kanjidic, migrate their data
-      for i := 0 to Length(CharsCovered) - 1 do
-        if not CharsCovered[i] then begin
-          CChar.tcur := i;
-          CharIdx := CChar.Int(TCharIndex);
-          CNewProp.OpenKanji(CharIdx);
-          CopyProperties(CCharProp, CNewProp, CharIdx);
-          CNewProp.CloseKanji;
-        end;
-
-    finally
-      FreeAndNil(CNewProp);
-      FreeAndNil(CCharProp);
-      FreeAndNil(CChar);
+   //Clear current Char table if needed
+    if ResetDb then begin
+      FreeAndNil(TChar);
+      TChar := NewCharTable();
     end;
+    TChar.NoCommitting := true;
 
+   { STAGE II. Import KANJIDIC }
+    prog.SetMessage(_l('^eImporting KANJIDIC...'));
+    if KanjidicFilename<>'' then
+      ImportKanjidic(KanjidicFilename, KanjidicCovered)
+    else
+      SetLength(KanjidicCovered, 0);
+    TChar.Reindex; //next stage will need to locate() in additions
+
+   { STAGE III. Import UNIHAN }
+    prog.SetMessage(_l('^eImporting UNIHAN...'));
+    if UnihanFolder<>'' then
+      ImportUnihan(UnihanFolder, UnihanCovered)
+    else
+      SetLength(UnihanCovered, 0);
+    TChar.Reindex;
+
+   { STAGE IV. Copy missing stuff from old tables }
+    prog.SetMessage(_l('^eCopying old data...'));
+    if not ResetDb then
+      CopyProperties(OldCharProp, KanjidicCovered, UnihanCovered);
+
+   { STAGE V. Sort, reindex and finalize }
+    prog.SetMessage(_l('#01078^eReindexing...'));
 
    //Reindex
-    prog.SetMessage(_l('#01078^eReindexing...'));
     TCharProp.NoCommitting := false;
     TCharProp.Reindex;
+
+   //Re-arrange TChar-wise
+    TCharProp := SortByTChar(TChar, TCharProp);
 
    //Free old char data
     FreeAndNil(OldCharProp);
@@ -443,6 +377,227 @@ begin
   finally
     FreeAndNil(prog);
   end;
+end;
+
+{ Imports all possible data from KANJIDIC source into current TChar/TCharProp }
+procedure TfCharDataImport.ImportKanjidic(const KanjidicFilename: string;
+  out CharsCovered: TFlagList);
+var CChar: TTextTableCursor;
+  CNewProp: TCharPropBuilder;
+  fuin: TJwbConvert;
+  conv_type: integer;
+  ed: TKanjidicEntry;
+  line: string;
+  CharIdx: integer;
+  OldCharCount: integer;
+  propType: PCharPropType;
+  pre_idx: integer;
+  i: integer;
+begin
+ { Preallocate CharsCovered and mark all existing chars as not yet covered }
+  SetLength(CharsCovered, TChar.RecordCount);
+  for i := 0 to Length(CharsCovered) - 1 do
+    CharsCovered[i] := false;
+
+ { Parse KANJIDIC and add new properties }
+  CChar := nil;
+  CNewProp := nil;
+  fuin := nil;
+  try
+    CChar := TChar.NewCursor;
+    CNewProp := TCharPropBuilder.Create(TCharProp);
+
+    ed.Reset;
+    fuin := TJwbConvert.Open(KanjidicFilename, FILETYPE_UNKNOWN);
+
+    conv_type := fuin.DetectType;
+    if conv_type=FILETYPE_UNKNOWN then
+      conv_type := Conv_ChooseType({chinese=}false,FILETYPE_EUC); //kanjidic is by default EUC
+    fuin.RewindAsType(conv_type);
+    while not fuin.EOF do begin
+      line := fuin.ReadLn;
+      if line='' then continue;
+      if IsKanjidicComment(line) then continue;
+      ParseKanjidicLine(line, @ed);
+
+     //Find kanji
+      if not CChar.Locate('Unicode', ed.kanji) then begin
+       //TODO: Insert new kanji
+       //TODO: Mind incremental index
+        continue;
+      end;
+      CharsCovered[CChar.tcur] := true; //migrated
+
+      CharIdx := CChar.TrueInt(TCharIndex);
+      CNewProp.OpenKanji(CharIdx);
+
+     //Add standard properties
+      CNewProp.AddProperties(FindCharPropType(ptKoreanReading), ed.GetField('W'));
+      CNewProp.AddProperties(FindCharPropType(ptMandarinReading), ed.GetField('Y'));
+      CNewProp.AddDefinitions(FindCharPropType(ptJapaneseDefinitionUnicode), @ed);
+      CNewProp.AddOns(FindCharPropType(ptOnReading), @ed.readings[0]);
+      CNewProp.AddKuns(FindCharPropType(ptKunReading), @ed.readings[0]);
+      pre_idx := CNewProp.AddOns(FindCharPropType(ptNanoriReading), @ed.readings[1]);
+      CNewProp.AddKuns(FindCharPropType(ptNanoriReading), @ed.readings[1], pre_idx);
+
+     //Add automated properties
+      for i := 0 to Length(CharPropTypes) - 1 do begin
+        propType := @CharPropTypes[i];
+        if propType.id<=10 then continue; //not automated
+        if propType.id=ptJapaneseDefinitionUnicode then continue; //not automated either
+        if propType.sourceType<>'D' then continue; //not from kanjidic
+        CNewProp.AddProperties(propType, PKanjidicEntry(@ed));
+      end;
+
+      CNewProp.CloseKanji;
+    end;
+
+  finally
+    FreeAndNil(fuin);
+    FreeAndNil(CNewProp);
+    FreeAndNil(CChar);
+  end;
+
+ { Expand CharsCovered to include newly added chars which WERE covered }
+  OldCharCount := Length(CharsCovered);
+  SetLength(CharsCovered,TChar.RecordCount);
+  for i := OldCharCount to Length(CharsCovered) - 1 do
+    CharsCovered[i] := true;
+end;
+
+procedure TfCharDataImport.ImportUnihan(const UnihanFolder: string; out CharsCovered: TFlagList);
+begin
+ //Currently not implemented
+  SetLength(CharsCovered, 0); //nothing is covered
+end;
+
+const
+  MainKanjidicPropTypes = [ptKoreanReading, ptMandarinReading,
+    ptJapaneseDefinition, ptOnReading, ptKunReading, ptNanoriReading];
+  MainUnihanPropTypes = [ptChineseDefinition, ptCantoneseReading, ptRadicals];
+
+{ For every char from TChar, checks which sources covered it in this update,
+ and copies old data for any sources which did not cover it this time. }
+procedure TfCharDataImport.CopyProperties(OldCharProp: TTextTable;
+  const KanjidicCovered: TFlagList; const UnihanCovered: TFlagList);
+var CChar: TTextTableCursor;
+  CCharProp: TCharPropertyCursor;
+  CNewProp: TCharPropBuilder;
+  SCharIndex: TSeekObject;
+  CharIdx: integer;
+  propType: PCharPropType;
+  src: char;
+  skip: boolean;
+begin
+  SCharIndex := TChar.GetSeekObject('Index');
+
+  CChar := nil;
+  CCharProp := nil;
+  CNewProp := nil;
+  try
+    CChar := TTextTableCursor.Create(TChar);
+    CCharProp := TCharPropertyCursor.Create(OldCharProp);
+    CNewProp := TCharPropBuilder.Create(TCharProp);
+
+    CCharProp.First;
+    while not CCharProp.EOF do begin
+      CharIdx := CCharProp.TrueInt(TCharPropKanji);
+      if not CChar.Locate(@SCharIndex, CharIdx) then
+        raise Exception.Create('Somehow TChar for a property wasn''t found.'
+          +'Perhaps you have a broken WAKAN.CHR? Rebuild from the scratch.');
+
+     { Properties with id <= 10 are special ones and are crafted by hand,
+      others are more or less automated. }
+      propType := CCharProp.PropType;
+      if propType.id>10 then
+        src := propType.sourceType
+      else
+      if propType.id in MainKanjidicPropTypes then
+        src := 'D'
+      else
+      if propType.id in MainUnihanPropTypes then
+        src := 'U'
+      else
+        src := '?'; //god knows what it is, really.
+
+      if src='D' then
+        skip := (CChar.tcur < Length(KanjidicCovered)) and KanjidicCovered[CChar.tcur]
+      else
+      if src='U' then
+        skip := (CChar.tcur < Length(UnihanCovered)) and UnihanCovered[CChar.tcur]
+      else
+        skip := false; //just copy the abomination
+
+      if not skip then begin
+        CNewProp.OpenKanji(CharIdx);
+        CNewProp.AddCharPropRaw(propType.id, CCharProp.AnsiStr(TCharPropValue),
+          CCharProp.Int(TCharPropReadDot), CCharProp.Int(TCharPropPosition));
+        CNewProp.CloseKanji;
+      end;
+
+      CCharProp.Next;
+    end;
+
+  finally
+    FreeAndNil(CNewProp);
+    FreeAndNil(CCharProp);
+    FreeAndNil(CChar);
+  end;
+end;
+
+{ Rebuilds TCharProp table so that records for a single character go in a batch.
+ This a hack but it's needed by older Wakans.
+ Returns new table (old one is freed) }
+function TfCharDataImport.SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
+var CChar: TTextTableCursor;
+  CCharProp: TTextTableCursor;
+  CharIdx: integer;
+  SCharPropKanji: TSeekObject;
+  Builder: TCharPropBuilder;
+begin
+  Result := NewCharPropTable();
+  Result.NoCommitting := true;
+
+  CChar := nil;
+  CCharProp := nil;
+  Builder := nil;
+  try
+    CChar := TTextTableCursor.Create(TChar);
+    CCharProp := TTextTableCursor.Create(TCharProp);
+    Builder := TCharPropBuilder.Create(Result);
+
+    CCharProp.SetOrder('Kanji');
+    SCharPropKanji := TCharProp.GetSeekObject('Kanji');
+
+    CChar.First;
+    while not CChar.EOF do begin
+      CharIdx := CChar.TrueInt(TCharIndex);
+      CCharProp.Locate(@SCharPropKanji, CharIdx);
+      Builder.OpenKanji(CharIdx);
+      while CCharProp.Int(TCharPropKanji)=CharIdx do begin
+        Builder.AddCharPropRaw(
+         CCharProp.TrueInt(TCharPropTypeId),
+         CCharProp.AnsiStr(TCharPropValue),
+         CCharProp.Int(TCharPropReadDot),
+         CCharProp.Int(TCharPropPosition)
+        );
+
+        CCharProp.Next;
+      end;
+      Builder.CloseKanji;
+
+      CChar.Next;
+    end;
+
+  finally
+    FreeAndNil(Builder);
+    FreeAndNil(CCharProp);
+    FreeAndNil(CChar);
+  end;
+
+  FreeAndNil(TCharProp);
+  Result.NoCommitting := false;
+  Result.Reindex;
 end;
 
 end.
