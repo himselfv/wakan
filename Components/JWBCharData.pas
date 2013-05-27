@@ -247,6 +247,7 @@ begin
     TCharJpFrequency:=TChar.Field('JpFrequency');
     TCharChFrequency:=TChar.Field('ChFrequency');
     TCharJouyouGrade:=TChar.Field('JouyouGrade');
+    TChar.IsAutoIncField[TCharIndex]:=true;
 
     TCharProp:=TTextTable.Create(ps,'CharRead',true,false); //sic. 'CharRead' for compat. reasons
     TCharPropIndex:=TCharProp.Field('Index');
@@ -255,6 +256,7 @@ begin
     TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
     TCharPropReadDot:=TCharProp.Field('ReadDot');
     TCharPropPosition:=TCharProp.Field('Position');
+    TCharProp.IsAutoIncField[TCharPropIndex]:=true;
 
     TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
     TRadicalsNumber:=TRadicals.Field('Number');
@@ -346,6 +348,7 @@ begin
 end;
 
 function NewCharTable: TTextTable;
+var TIndex: integer;
 begin
   Result := TTextTable.Create([
     '$TEXTTABLE',
@@ -376,9 +379,12 @@ begin
     'JpFrequency',
     'JpStrokeCount'
   ]);
+  TIndex := Result.GetFieldIndex('Index');
+  Result.IsAutoIncField[TIndex] := true;
 end;
 
 function NewCharPropTable: TTextTable;
+var TIndex: integer;
 begin
   Result := TTextTable.Create([
     '$TEXTTABLE',
@@ -401,6 +407,8 @@ begin
     'Reading',
     'Type'
   ]);
+  TIndex := Result.GetFieldIndex('Index');
+  Result.IsAutoIncField[TIndex] := true;
 end;
 
 function NewRadicalsTable: TTextTable;

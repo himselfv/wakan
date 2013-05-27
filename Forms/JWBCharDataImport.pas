@@ -127,7 +127,7 @@ type
   TCharPropBuilder = class
   protected
     FTable: TTextTable;
-    FRecIndex: integer;
+//    FRecIndex: integer;
     FCharIdx: integer;
   public
     constructor Create(ATable: TTextTable);
@@ -156,7 +156,7 @@ begin
   inherited Create();
   FTable := ATable;
   FCharIdx := -1;
-  FRecIndex := 0;
+///  FRecIndex := 0;
 end;
 
 destructor TCharPropBuilder.Destroy;
@@ -175,8 +175,8 @@ procedure TCharPropBuilder.AddCharPropRaw(TypeId: integer; Value: AnsiString; Re
   Position: integer);
 begin
   Assert(FCharIdx>=0, 'CharPropEditor: No kanji selected for editing');
-  Inc(FRecIndex);
-  FTable.AddRecord([IntToStr(FRecIndex), IntToStr(FCharIdx), IntToStr(TypeId),
+//  Inc(FRecIndex);
+  FTable.AddRecord(['0', IntToStr(FCharIdx), IntToStr(TypeId),
     string(Value), IntToStr(ReadDot), IntToStr(Position)]);
 end;
 

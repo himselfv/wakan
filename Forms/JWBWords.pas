@@ -108,7 +108,8 @@ type
 
   end;
 
- { I have no idea wat iz this or how does it word, but I moved it to a separate class }
+ { Delays reindexing of TUser, TUserSheet, TUserIdx.
+  Do not access any of those tables while this is in use. }
 
   TAddWordFast = class
   protected
@@ -122,7 +123,7 @@ type
     constructor Create;
     destructor Destroy; override;
     function AddWordFast(kanji,phonetic,english,category:string;cattype:char;status:integer):boolean;
-    procedure Commit(sp: TSMPromptForm);
+    procedure Commit();
   end;
 
 var
@@ -387,11 +388,11 @@ begin
 
   if insertword then
   begin
-    inc(MaxUserIndex);
-    wordidx:=MaxUserIndex;
     phonsort:=GetPhoneticSortStr(phonetic,curlang);
-    TUser.Insert([inttostr(MaxUserIndex),english,phonetic,phonsort,
-      kanji,FormatDateTime('yyyymmdd',now),'00000000','00000000','00000000','0',inttostr(status),inttostr(status)]);
+    TUser.Insert(['0',english,phonetic,phonsort,
+      kanji,FormatDateTime('yyyymmdd',now),'00000000','00000000','00000000','0',
+      inttostr(status),inttostr(status)]);
+    wordidx:=TUser.TrueInt(TUserIndex);
     s:=kanji;
     beg:=true;
     while s<>'' do
@@ -401,7 +402,7 @@ begin
       if TChar.Locate('Unicode',s2) then
       begin
         if beg then bs:='T'else bs:='F';
-        TUserIdx.Insert([inttostr(MaxUserIndex),TChar.Str(TCharUnicode),bs]);
+        TUserIdx.Insert([IntToStr(wordidx),TChar.Str(TCharUnicode),bs]);
       end;
       beg:=false;
     end;
@@ -431,6 +432,7 @@ begin
   inherited;
   awf_lastcatname:='';
   awf_lastcatindex:=0;
+
   for i:=0 to 65535 do awf_catcount[i]:=0;
   TUserSheet.SetOrder('Sheet_Ind');
   TUserSheet.First;
@@ -441,16 +443,17 @@ begin
     TUserSheet.Next;
   end;
 
-  awf_insuser:=TStringList.Create;
-  awf_insusersheet:=TStringList.Create;
-  awf_insuseridx:=TStringList.Create;
+  TUser.NoCommitting := true;
+  TUserSheet.NoCommitting := true;
+  TUserIdx.NoCommitting := true;
 end;
 
 destructor TAddWordFast.Destroy;
 begin
-  awf_insuser.Free;
-  awf_insuseridx.Free;
-  awf_insusersheet.Free;
+ //Just in case there was no Commit()
+  TUser.NoCommitting := false;
+  TUserSheet.NoCommitting := false;
+  TUserIdx.NoCommitting := false;
   inherited;
 end;
 
@@ -499,21 +502,12 @@ begin
 
   if insertword then
   begin
-    inc(MaxUserIndex);
-    wordidx:=MaxUserIndex;
+    TUser.Insert(['0', english, phonetic, phonsort, kanji,
+      FormatDateTime('yyyymmdd',now), '00000000', '00000000', '00000000',
+      '0', inttostr(status), inttostr(status)]);
+    wordidx:=TUser.TrueInt(TUserIndex);
     phonsort:=GetPhoneticSortStr(phonetic,curlang);
-    awf_insuser.Add(inttostr(MaxUserIndex));
-    awf_insuser.Add(english);
-    awf_insuser.Add(phonetic);
-    awf_insuser.Add(phonsort);
-    awf_insuser.Add(kanji);
-    awf_insuser.Add(FormatDateTime('yyyymmdd',now));
-    awf_insuser.Add('00000000');
-    awf_insuser.Add('00000000');
-    awf_insuser.Add('00000000');
-    awf_insuser.Add('0');
-    awf_insuser.Add(inttostr(status));
-    awf_insuser.Add(inttostr(status));
+
     s:=kanji;
     beg:=true;
     while s<>'' do
@@ -523,41 +517,26 @@ begin
       if TChar.Locate('Unicode',s2) then
       begin
         if beg then bs:='T'else bs:='F';
-        awf_insuseridx.Add(inttostr(MaxUserIndex));
-        awf_insuseridx.Add(TChar.Str(TCharUnicode));
-        awf_insuseridx.Add(bs);
+        TUserIdx.Insert([IntToStr(wordidx), TChar.Str(TCharUnicode), bs])
       end;
       beg:=false;
     end;
   end;
-  awf_insusersheet.Add(inttostr(wordidx));
-  awf_insusersheet.Add(inttostr(cat));
-  awf_insusersheet.Add(inttostr(catord));
+
+  TUserSheet.Insert([IntToStr(wordidx), IntToStr(cat), IntToStr(catord)]);
   lastwordadded:=insertword;
   result:=true;
 end;
 
-procedure TAddWordFast.Commit(sp: TSMPromptForm);
+procedure TAddWordFast.Commit();
 var i: integer;
 begin
-  TUser.nocommitting:=true;
-  TUserSheet.nocommitting:=true;
-  TUserIdx.nocommitting:=true;
-  sp.SetMessage(_l('#00904^eBatch-adding words ')+'('+inttostr(awf_insuser.Count div 12)+')');
-  for i:=0 to (awf_insuser.Count div 12)-1 do
-    TUser.Insert([awf_insuser[i*12],awf_insuser[i*12+1],awf_insuser[i*12+2],awf_insuser[i*12+3],awf_insuser[i*12+4],awf_insuser[i*12+5],
-                  awf_insuser[i*12+6],awf_insuser[i*12+7],awf_insuser[i*12+8],awf_insuser[i*12+9],awf_insuser[i*12+10],awf_insuser[i*12+11]]);
-  sp.show;
-  sp.SetMessage(_l('#00905^eBatch-adding word categories ')+'('+inttostr(awf_insusersheet.Count div 3)+')');
-  for i:=0 to (awf_insusersheet.Count div 3)-1 do
-    TUserSheet.Insert([awf_insusersheet[i*3],awf_insusersheet[i*3+1],awf_insusersheet[i*3+2]]);
-  sp.show;
-  sp.SetMessage(_l('#00906^eBatch-adding character indexes ')+'('+inttostr(awf_insuseridx.Count div 3)+')');
-  for i:=0 to (awf_insuseridx.Count div 3)-1 do
-    TUserIdx.Insert([awf_insuseridx[i*3],awf_insuseridx[i*3+1],awf_insuseridx[i*3+2]]);
   TUser.nocommitting:=false;
   TUserSheet.nocommitting:=false;
   TUserIdx.nocommitting:=false;
+  TUser.Reindex;
+  TUserSheet.Reindex;
+  TUserIdx.Reindex;
 end;
 
 procedure TfWords.UserAdd_Button1Click(Sender: TObject);
@@ -989,14 +968,9 @@ begin
     Conv_Close;
 
     sp.show;
-    awf.Commit(sp);
-    FreeAndNil(awf);
-
-    sp.show;
     sp.SetMessage(_l('#00907^eRebuilding indexes'));
-    TUser.Reindex;
-    TUserSheet.Reindex;
-    TUserIdx.Reindex;
+    awf.Commit();
+    FreeAndNil(awf);
 
   finally
     FreeAndNil(awf);
@@ -2059,17 +2033,18 @@ end;
 
 procedure TfWords.SaveWordList;
 var i:integer;
-    fnd:boolean;
+  fnd:boolean;
+  catidx:integer;
 begin
-  Inc(MaxCategoryIndex);
-  TUserCat.Insert([inttostr(MaxCategoryIndex),fWordList.Edit1.Text,inttostr(ord('W')),FormatDateTime('yyyymmdd',now)]);
+  TUserCat.Insert(['0',fWordList.Edit1.Text,inttostr(ord('W')),FormatDateTime('yyyymmdd',now)]);
+  catidx:=TUserCat.TrueInt(TUserCatIndex);
   for i:=0 to ll.Count-1 do
   begin
     TUser.Locate('Index',strtoint(ll[i]));
     if (fWordList.RadioGroup10.ItemIndex=0) or
        ((fWordList.RadioGroup10.ItemIndex=1) and (TUser.Int(TUserScore)<3)) or
        (TUser.Int(TUserScore)<2) then
-      TUserSheet.Insert([ll[i],inttostr(MaxCategoryIndex),inttostr(i)]);
+      TUserSheet.Insert([ll[i],IntToStr(catidx),inttostr(i)]);
   end;
   fMenu.RefreshCategory;
   fUserFilters.tabCatList.TabIndex:=3;

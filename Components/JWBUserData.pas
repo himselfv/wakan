@@ -39,7 +39,6 @@ var
   TUserNoPrinted, //i
   TUserScore, //b
   TUserMaxScore: integer; //b
-  MaxUserIndex:integer;
 
   TUserIdx: TTextTable;
   TUserIdxWord, //i
@@ -57,7 +56,6 @@ var
   TUserCatName, //s, prefix~Category name. See commens in JWBCategories
   TUserCatType, //b, TCatType, see comments in JWBCategories
   TUserCatCreated: integer; //s, datetime of creation
-  MaxCategoryIndex: integer;
 
   TUserPrior: TTextTable;
 
@@ -67,9 +65,6 @@ procedure SaveUserPackage(const tempDir: string; const filename: string);
 procedure FreeUserPackage;
 
 function UserDataAutoRepair(): boolean;
-
-function FindMaxUserIndex(): integer;
-function FindMaxCategoryIndex(): integer;
 
 function FindUserWord(kanji,phonetic: FString): integer;
 
@@ -256,38 +251,10 @@ end;
 function LoadUserPackage(const filename: string): TPackageSource;
 var ps:TPackageSource;
   ms:TMemoryStream;
-  tempDir: string;
-  t:textfile;
 begin
   ps:=TPackageSource.Create(filename,621030,587135,978312);
+
   TUser:=TTextTable.Create(ps,'User',false,false);
-  TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
-  TUserSheet:=TTextTable.Create(ps,'UserSheet',false,false);
-  TUserCat:=TTextTable.Create(ps,'UserCat',false,false);
-  if ps['UserPrior.info']<>nil then
-    TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false)
-  else
-  begin
-    tempDir := CreateRandomTempDir();
-    assignfile(t,tempDir+'\UserPrior.info');
-    rewrite(t);
-    writeln(t,'$TEXTTABLE');
-    writeln(t,'$PREBUFFER');
-    writeln(t,'$FIELDS');
-    writeln(t,'xKanji');
-    writeln(t,'wCount');
-    writeln(t,'$ORDERS');
-    writeln(t,'Kanji_Ind');
-    writeln(t,'Count_Ind');
-    writeln(t,'$SEEKS');
-    writeln(t,'0');
-    writeln(t,'Kanji');
-    writeln(t,'Count');
-    writeln(t,'$CREATE');
-    closefile(t);
-    TUserPrior:=TTextTable.Create(nil,tempDir+'\UserPrior',false,false);
-    DeleteDirectory(tempDir);
-  end;
   TUserIndex:=TUser.Field('Index');
   TUserEnglish:=TUser.Field('English');
   TUserPhonetic:=TUser.Field('Phonetic');
@@ -300,17 +267,43 @@ begin
   TUserNoPrinted:=TUser.Field('NoPrinted');
   TUserScore:=TUser.Field('Score');
   TUserMaxScore:=TUser.Field('MaxScore');
+  TUser.IsAutoIncField[TUserIndex] := true;
+
+  TUserIdx:=TTextTable.Create(ps,'UserIdx',false,false);
   TUserIdxWord:=TUserIdx.Field('Word');
   TUserIdxKanji:=TUserIdx.Field('Kanji');
   TUserIdxBegin:=TUserIdx.Field('Begin');
   TUserIdxIndex:=TUserIdx.Field('Index');
+
+  TUserSheet:=TTextTable.Create(ps,'UserSheet',false,false);
   TUserSheetWord:=TUserSheet.Field('Word');
   TUserSheetNumber:=TUserSheet.Field('Number');
   TUserSheetPos:=TUserSheet.Field('Pos');
+
+  TUserCat:=TTextTable.Create(ps,'UserCat',false,false);
   TUserCatIndex:=TUserCat.Field('Index');
   TUserCatName:=TUserCat.Field('Name');
   TUserCatType:=TUserCat.Field('Type');
   TUserCatCreated:=TUserCat.Field('Created');
+  TUserCat.IsAutoIncField[TUserCatIndex] := true;
+
+  if ps['UserPrior.info']<>nil then
+    TUserPrior:=TTextTable.Create(ps,'UserPrior',false,false)
+  else
+    TUserPrior:=TTextTable.Create([
+      '$TEXTTABLE',
+      '$PREBUFFER',
+      '$FIELDS',
+      'xKanji',
+      'wCount',
+      '$ORDERS',
+      'Kanji_Ind',
+      'Count_Ind',
+      '$SEEKS',
+      '0',
+      'Kanji',
+      'Count'
+    ]);
 
   UserDataVersion := 0;
   try
@@ -364,28 +357,6 @@ begin
   end;
 end;
 
-//Used in several places when loading
-function FindMaxUserIndex(): integer;
-begin
-  Result:=0;
-  TUser.First;
-  while not TUser.EOF do
-  begin
-    if TUser.Int(TUserIndex)>Result then Result:=TUser.Int(TUserIndex);
-    TUser.Next;
-  end;
-end;
-
-function FindMaxCategoryIndex(): integer;
-begin
-  Result:=0;
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    if TUserCat.Int(TUserCatIndex)>Result then Result:=TUserCat.Int(TUserCatIndex);
-    TUserCat.Next;
-  end;
-end;
 
 //Locates user record for a given kanji+phonetic pair. Returns its TUserIndex or -1.
 function FindUserWord(kanji,phonetic: FString): integer;

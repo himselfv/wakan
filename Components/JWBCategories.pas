@@ -474,11 +474,10 @@ begin
     exit;
   end;
 
-  Inc(MaxCategoryIndex);
-  TUserCat.Insert([inttostr(MaxCategoryIndex),'k~'+catname,inttostr(ord('K')),
+  TUserCat.Insert(['0','k~'+catname,inttostr(ord('K')),
     FormatDateTime('yyyymmdd',now)]);
-  CreateKnownList(MaxCategoryIndex,0);
-  Result := MaxCategoryIndex;
+  Result := TUserCat.TrueInt(TUserCatIndex);
+  CreateKnownList(Result,0);
 
   CategoriesChanged;
 end;
@@ -669,18 +668,17 @@ begin
     end;
 
    //Create category
-    inc(MaxCategoryIndex);
-    CUserCat.Insert([inttostr(MaxCategoryIndex),pref+'~'+catname,
+    CUserCat.Insert(['0',pref+'~'+catname,
       inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
+    Result := CUserCat.TrueInt(TUserCatIndex);
     if pref='k' then
-      CreateKnownList(MaxCategoryIndex,0);
-    Result := MaxCategoryIndex;
+      CreateKnownList(Result,0);
 
    //Copy contents
     if pref='k' then
-      CopyKnownList(catidx, MaxCategoryIndex)
+      CopyKnownList(catidx, Result)
     else
-      CopyCategory(catidx, MaxCategoryIndex);
+      CopyCategory(catidx, Result);
   finally
     FreeAndNil(CUserCat);
   end;
@@ -721,9 +719,8 @@ begin
   end;
 
  //Create new
-  Inc(MaxCategoryIndex);
-  TUserCat.Insert([inttostr(MaxCategoryIndex),category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
-  Result:=MaxCategoryIndex;
+  TUserCat.Insert(['0',category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
+  Result:=TUserCat.TrueInt(TUserCatIndex);
   if not silent then
     CategoriesChanged;
 end;
@@ -1156,11 +1153,10 @@ procedure AddKnownLearnedCategory(ps:TPackageSource);
 var ms: TMemoryStream;
 begin
   Assert(KnownLearned<0); //why are you adding it otherwise
-  KnownLearned := FindMaxCategoryIndex()+1; //can't use CatIdx since we want MAX index, not the LAST one
-  TUserCat.Insert([IntToStr(KnownLearned), 'k~'+_l('LEARNED'), inttostr(ord('Q')), FormatDateTime('yyyymmdd',now)]);
+  TUserCat.Insert(['0', 'k~'+_l('LEARNED'), inttostr(ord('Q')), FormatDateTime('yyyymmdd',now)]);
+  KnownLearned := TUserCat.TrueInt(TUserCatIndex);
   ms:=ps['knownchar.bin'].Lock;
   CreateKnownList(KnownLearned,0);
-  KnownLearned:=KnownLearned;
   LoadKnownList(KnownLearned,ms);
   ps['knownchar.bin'].Unlock;
 end;

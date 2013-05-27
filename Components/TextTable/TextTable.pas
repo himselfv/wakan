@@ -16,13 +16,6 @@ Unicode status:
  and FString from Unicode fields.
 }
 
-{
-TextTable relies heavily on in-memory structures.
-Table header is always kept in memory, and if TextTable.offline is true then
-the whole table is, too.
-Otherwise the data is read from the disk on demand. 
-}
-
 {$DEFINE CURSOR_IN_TABLE}
 { To navigate TTextTable you must use TTextTableCursor.
  However, old code used to call TTextTable.First/Next and so we keep a copy
@@ -44,7 +37,9 @@ type
   Retrieve it once, use instead of a textual name.
   For common tables and common seeks, global references are kept. }
   TSeekObject = record
-    ind_i: integer; //seek table index
+    ind_i: integer; //seek index
+     { Seek table number is one lower than seek index.
+      First seek is always the "default one". }
     fld_i: integer; //field index
     reverse: boolean;
   end;
@@ -60,10 +55,11 @@ type
   TSeekFieldDescriptions = array of TSeekFieldDescription;
 
   TSeekDescription = record
+    Name: string;
+    Declaration: string;
     fields: TSeekFieldDescriptions;
   end;
   PSeekDescription = ^TSeekDescription;
-  TSeekDescriptions = array of TSeekDescription;
 
   TFieldDescription = record
     Name: string;
@@ -91,6 +87,11 @@ type
      { Set if info-schema does not specify that the table structure is in new format.
       See comments to UpgradeToPrecounted() }
 
+   { Table settings -- loaded from table configuration }
+    rawindex:boolean;
+    prebuffer:boolean;
+    wordfsize:boolean; //Table stores variable field sizes in Words, not Bytes
+
    //Internal functions, call public ones instead
     constructor Create; overload;
     procedure LoadInfo(AInfo:TStream);
@@ -104,50 +105,7 @@ type
     constructor Create(AInfo:TStream); overload;
     constructor Create(AInfoLines:array of string); overload;
     destructor Destroy; override;
-
-  public
-   { Table settings -- loaded from table configuration }
-    rawindex:boolean;
-    prebuffer:boolean;
-    wordfsize:boolean; //Table stores variable field sizes in Words, not Bytes
-
-   { Fields }
-    fields: array of TFieldDescription;
-    varfields_sz:integer; //cached size of variable-length fields part in a struct record
-
-   { Seek table names.
-    The point of seek table is to keep records sorted in a particular order.
-    The way it's done now, you just have to KNOW what order was that,
-    if you're going to use the index. }
-    seeks:TStringList;
-   { Seek table descriptions in the form "field1+field2+field3".
-    Loaded from the table file, used to rebuild indexes if needed.
-    First field name ("field1") becomes seek table name }
-    seekbuild:TStringList;
-    seekbuilddesc:TSeekDescriptions; //Seek table descriptions, parsed.
-   { Orders are the same as seekbuilds, only they have different names
-     and there's 1 less of them:
-                  == seekbuild[0]
-        orders[0] == seekbuild[1]
-        orders[1] == seekbuild[2]
-        ...etc
-     Don't ask me why it's like that.
-     If you need to expose seek[0] as an order, make it seek[1] by adding
-     seekbuild[0]=='0' before it.  }
-    orders:TStringList;
-
-    reccount:integer;
-    numberdeleted:integer;
-    datafpos:integer;
-    function FilterPass(rec:integer;fil:string):boolean;
-    function TransOrder(rec,order:integer):integer; inline;
-    function IsDeleted(rec:integer):boolean;
-
-   //Record sorting
-    function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
-    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
-    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function SortRecByStr(r:integer; fld:string):string; deprecated;
+    procedure WriteTable(const filename:string;nodelete:boolean);
 
   protected
    {
@@ -164,28 +122,74 @@ type
     databuffer,structbuffer:integer; //free memory available in data and struct ptrs
     datalen:integer; //data length (used)
     struct_recsz:integer; //struct record size
+    datafpos:integer; //start of data in file, when using offline mode
    //Buffer expansion
     procedure ReserveData(const sz: integer);
     procedure ReserveStruct(const sz: integer);
 
-  public //Fields
+  protected
+   { Fields }
+    fields: array of TFieldDescription;
+    varfields_sz:integer; //cached size of variable-length fields part in a struct record
+
+    function GetIsAutoIncField(const fieldIdx: integer): boolean;
+    procedure SetIsAutoIncField(const fieldIdx: integer; const Value: boolean);
+    function GetAutoIncValue(const fieldIdx: integer): integer;
+    function FindMaxFieldValue(const fieldIdx: integer): integer;
+  public
     function GetFieldIndex(const field:string):integer;
     function Field(const field:string):integer; inline; //shortcut; use FieldIndex for clarity
+    property IsAutoIncField[const fieldIdx: integer]: boolean read GetIsAutoIncField
+      write SetIsAutoIncField;
+
+  protected
+   {
+    Index tables.
+    The point of an index table is to keep records sorted in a particular order.
+    This allows both for Seeking and Ordering of records.
+    Index table descriptions are loaded from $SEEKS section, they are in the
+    form "field1+field2+field3" -- see ParseSeekDescription()
+   }
+    seeks: array of TSeekDescription;
+
+   { Orders refer to the same data as seekbuilds, only they have different names
+    and there's 1 less of them:
+                 == seekbuild[0]
+       orders[0] == seekbuild[1]
+       orders[1] == seekbuild[2]
+       ...etc
+    Don't ask me why it's like that.
+    If you need to expose seek[0] as an order, make it seek[1] by adding
+    seekbuild[0]=='0' before it.
+    There's no way to restore index description just from an order, we need
+    to have matching $SEEKS entry. Therefore Order without matching Seek is
+    read-only. }
+    orders:TStringList;
+
+    function GetSeekIndex(const seek: string): integer;
+    function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+
+   //Record sorting
+    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
+    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function SortRecByStr(r:integer; fld:string):string; deprecated;
+    function TransOrder(rec,order:integer):integer; inline;
 
   public
+    function GetSeekObject(seek: string): TSeekObject;
+    function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
+    function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
     procedure Reindex;
     function CheckIndex:boolean;
     function HasIndex(const index:string):boolean;
-    procedure WriteTable(const filename:string;nodelete:boolean);
-    property RecordCount:integer read reccount;
-    function NewCursor: TTextTableCursor;
-
 
   public //Import/export
     procedure ExportToText(t:TCustomFileWriter;ord:string);
     procedure ImportFromText(t:TCustomFileReader;smf:TSMPromptForm;mess:string);
 
   protected
+    reccount:integer;
+    numberdeleted:integer;
     nocommit:boolean; //do not update indexes on Add/Edit/Delete. You'll have to Reindex later.
   public
     function AddRecord(values:array of string): integer;
@@ -194,6 +198,10 @@ type
       const AValues:array of string; JustInserted:boolean=false);
     procedure Commit(RecNo:integer; JustInserted: boolean = false);
     property NoCommitting:boolean read nocommit write nocommit;
+    function FilterPass(rec:integer;fil:string):boolean;
+    function IsDeleted(rec:integer):boolean;
+    function NewCursor: TTextTableCursor;
+    property RecordCount:integer read reccount;
 
   protected //Field reading
     function GetDataOffset(rec:integer;field:integer):integer;
@@ -204,11 +212,6 @@ type
     function GetAnsiField(rec:integer;field:integer):AnsiString;
     procedure SetField(rec:integer;field:integer;const value:string);
     procedure SetAnsiField(rec:integer;field:integer;const value:AnsiString);
-
-  public
-    function GetSeekObject(seek: string): TSeekObject;
-    function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
-    function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
 
  {$IFDEF CURSOR_IN_TABLE}
   protected
@@ -241,7 +244,6 @@ type
  {$ENDIF}
 
   end;
-  TDataCache=array[0..30,0..1] of word;
 
  { Implements navigation through TextTable records. }
   TTextTableCursor = class
@@ -272,7 +274,6 @@ type
     function Locate(const seek,value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
     function Locate(seek:PSeekObject; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
     function Locate(const seek:string; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-
 
   public
     function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
@@ -337,8 +338,7 @@ constructor TTextTable.Create;
 begin
   inherited Create;
   SetLength(fields, 0);
-  seeks:=TStringList.Create;
-  seekbuild:=TStringList.Create;
+  SetLength(seeks, 0);
   orders:=TStringList.Create;
   data:=TStringList.Create;
  {$IFDEF CURSOR_IN_TABLE}
@@ -481,33 +481,32 @@ begin
           fields[j].Size := 0;
         end;
       end;
+      's':begin
+       //Seek declaration
+        j := Length(seeks);
+        SetLength(seeks,j+1);
+        seeks[j].Name := sl[i];
+        if pos('+',seeks[j].Name)>0 then
+          system.delete(seeks[j].Name,pos('+',seeks[j].Name),MaxInt);
+        seeks[j].Declaration := sl[i];
+       { Will parse fields later when all schema is loaded -
+        at this point some fields may not yet be available }
+      end;
       'o':orders.Add(sl[i]);
-      's':seeks.Add(sl[i]);
     end;
   end;
   struct_recsz := 5+varfields_sz;
   sl.Free;
 
-  for i:=0 to seeks.Count-1 do
+ //Parse seek fields -- after schema has been loaded
+  for j:=0 to Length(seeks)-1 do
   begin
-   //Add to seekbuild
-    seekbuild.Add(seeks[i]);
-   //Will parse to seekbuilddesc later when all schema is loaded
-   //Add to seek
-    s_seek:=seeks[i];
-    if pos('+',seeks[i])>0 then system.delete(s_seek,pos('+',seeks[i]),length(seeks[i])-pos('+',seeks[i])+1);
-    seeks[i]:=s_seek;
-  end;
-
- //Parse seekbuilds -- after schema has been loaded
-  SetLength(seekbuilddesc, seekbuild.Count);
-  for i := 0 to seekbuild.Count - 1 do begin
    //First seekbuild is sometimes '0' and we don't actually seek by it
-    if (i=0) and (seekbuild[0]='0') then begin
-      SetLength(seekbuilddesc[i].fields, 0);
+    if (j=0) and (seeks[j].Declaration='0') then begin
+      SetLength(seeks[j].fields, 0);
       continue;
     end;
-    seekbuilddesc[i].fields := ParseSeekDescription(seekbuild[i]);
+    seeks[j].fields := ParseSeekDescription(seeks[j].Declaration);
   end;
 end;
 
@@ -770,7 +769,7 @@ begin
   writeln(t,'$ORDERS');
   for i:=0 to orders.Count-1 do writeln(t,orders[i]);
   writeln(t,'$SEEKS');
-  for i:=0 to seekbuild.Count-1 do writeln(t,seekbuild[i]);
+  for i:=0 to Length(seeks)-1 do writeln(t,seeks[i].Declaration);
   closefile(t);
   il:=TStringList.Create;
   j:=0;
@@ -847,9 +846,7 @@ end;
 
 destructor TTextTable.Destroy;
 begin
-  seeks.Free;
   orders.Free;
-  seekbuild.Free;
   freemem(data);
   freemem(index);
   freemem(struct);
@@ -1333,9 +1330,21 @@ begin
   for i:=length(s) downto 1 do result:=result+s[i];
 end;
 
+function TTextTable.GetSeekIndex(const seek: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(seeks) - 1 do
+    if SameText(seeks[i].Name, seek) then begin
+      Result := i;
+      break;
+    end;
+end;
+
 function TTextTable.GetSeekObject(seek: string): TSeekObject;
 begin
-  Result.ind_i:=seeks.IndexOf(seek)-1;
+  Result.ind_i:=GetSeekIndex(seek);
+  if Result.ind_i<0 then raise Exception.Create('Cannot find seek object "'+seek+'"');
   Result.reverse:=false;
   if (seek[1]='<') then
   begin
@@ -1358,7 +1367,8 @@ var sn:integer;       //seek table number
   s:string;
   RecNo: integer;
 begin
-  sn := seek.ind_i;
+ { Seek table number is one lower than seek index. First seek is always the "default one" }
+  sn := seek.ind_i-1;
   fn := seek.fld_i;
   reverse := seek.reverse;
 
@@ -1411,7 +1421,8 @@ var sn:integer;       //seek table number
   i_s: integer;      //integer value for "s", when number==true
   RecNo: integer;
 begin
-  sn := seek.ind_i;
+ { Seek table number is one lower than seek index. First seek is always the "default one" }
+  sn := seek.ind_i-1;
   fn := seek.fld_i;
  //"reverse" is ignored for numeric lookups
 
@@ -1472,20 +1483,87 @@ begin
 end;
 {$ENDIF}
 
-function TTextTable.Field(const field:string):integer;
-begin
-  Result := GetFieldIndex(field);
-end;
-
 function TTextTable.GetFieldIndex(const field:string):integer;
 var i: integer;
 begin
   Result := -1;
   for i := 0 to Length(fields) - 1 do
-    if fields[i].Name=field then begin
+    if SameText(fields[i].Name, field) then begin
       Result := i;
       break;
     end;
+end;
+
+function TTextTable.Field(const field:string):integer;
+begin
+  Result := GetFieldIndex(field);
+end;
+
+{ For integer fields, TTextTable can do Auto-Increments.
+ Enable it after table load:
+   table.IsAutoInc[fieldIdx] := true;
+ Set field to 0 to assign it automatically incremented value. }
+
+function TTextTable.GetIsAutoIncField(const fieldIdx: integer): boolean;
+begin
+  Result := (fields[fieldIdx].AutoInc>=0);
+end;
+
+{ Enables auto-increment on a field. }
+procedure TTextTable.SetIsAutoIncField(const fieldIdx: integer; const Value: boolean);
+begin
+  if Value then
+    fields[fieldIdx].AutoInc := 0 //Find max autoinc value next time it's needed
+  else
+    fields[fieldIdx].AutoInc := -1;
+end;
+
+{ Retrieves next available auto-increment value for a field. }
+function TTextTable.GetAutoIncValue(const fieldIdx: integer): integer;
+var oldval: integer;
+begin
+  repeat
+    oldval := fields[fieldIdx].AutoInc;
+    if oldval<0 then begin
+      Result := -1; //no auto-inc
+      exit;
+    end;
+
+    if oldval=0 then begin
+      Result:=FindMaxFieldValue(fieldIdx)+1;
+      if Result<0 then
+        Result:=0;
+     { With current implementation, we can't have AutoInc values < 0.
+      It's fine, it's our choice. }
+    end else
+      Result:=oldval;
+
+    if InterlockedCompareExchange(fields[fieldIdx].AutoInc, Result+1, oldval)=oldval then
+      break;
+   { Otherwise someone changed it while we were considering the change,
+    so we need to try again }
+  until false;
+end;
+
+function TTextTable.FindMaxFieldValue(const fieldIdx: integer): integer;
+var cursor: TTextTableCursor;
+  newval: integer;
+begin
+  cursor := TTextTableCursor.Create(Self);
+  try
+    cursor.First;
+    if cursor.EOF then
+      Result := 0
+    else
+      Result := cursor.TrueInt(fieldIdx);
+    while not cursor.EOF do begin
+      newval := cursor.TrueInt(fieldIdx);
+      if newval>Result then Result:=newval;
+      cursor.Next;
+    end;
+  finally
+    FreeAndNil(cursor);
+  end;
 end;
 
 function TTextTable.IsDeleted(rec:integer):boolean;
@@ -1543,11 +1621,12 @@ end;
 { Appends record to the table, returns its RecNo }
 function TTextTable.AddRecord(values:array of string): integer;
 var totsize:integer;
-    i:integer;
-    c:char;
-    a:array of byte;
-    k:integer;
+  i:integer;
+  c:char;
+  a:array of byte;
+  k:integer;
   fsz:word; //field size
+  autoval:integer;
 begin
   if offline then
     raise Exception.Create('Cannot insert into offline table.');
@@ -1564,6 +1643,14 @@ begin
   for i:=0 to Length(fields)-1 do
   begin
     c:=fields[i].DataType;
+
+   { Auto-increment fields }
+    if (fields[i].AutoInc>=0) and (values[i]='0') then begin
+      autoval := GetAutoIncValue(i);
+      if autoval>=0 then
+        values[i] := IntToStr(autoval);
+    end;
+
     fsz:=GetFieldValueSize(c, values[i]);
     if (c='x') or (c='s') then begin
       if wordfsize then begin
@@ -1723,7 +1810,7 @@ end;
 
 function TTextTable.SortRec(r:integer;seekIndex:integer):string;
 begin
-  Result := SortRec(r, seekbuilddesc[seekIndex].fields);
+  Result := SortRec(r, seeks[seekIndex].fields);
 end;
 
 { This is the functionality older SortRec had. I'm keeping it just in case
@@ -1839,7 +1926,7 @@ function TTextTable.CheckIndex:boolean;
 var i,j:integer;
     s1,s2:string;
 begin
-  for i:=0 to orders.Count-1 do if seekbuild.Count>i+1 then
+  for i:=0 to orders.Count-1 do if Length(seeks)>i+1 then
   begin
     s1:='';
     for j:=0 to reccount-1 do
@@ -2035,7 +2122,7 @@ begin
   Result := Table.LocateRecord(seek, value, idx);
   cur := idx;
   if (idx>=0) and (idx<Table.RecordCount) then
-    tcur := Table.TransOrder(idx, seek.ind_i)
+    tcur := Table.TransOrder(idx, seek.ind_i-1)
   else
     tcur := Table.RecordCount; //-1 is not detected as EOF
 end;
@@ -2053,7 +2140,7 @@ begin
   Result := Table.LocateRecord(seek, value, idx);
   cur := idx;
   if (idx>=0) and (idx<Table.RecordCount) then
-    tcur := Table.TransOrder(idx, seek.ind_i)
+    tcur := Table.TransOrder(idx, seek.ind_i-1)
   else
     tcur := Table.RecordCount; //-1 is not detected as EOF
 end;

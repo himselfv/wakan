@@ -896,9 +896,6 @@ begin
     end;
     if Application.Terminated then exit;
 
-    MaxUserIndex := FindMaxUserIndex();
-    MaxCategoryIndex := FindMaxCategoryIndex();
-
     jromasys:=fSettings.RadioGroup1.ItemIndex+1;
     jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
     cromasys:=fSettings.RadioGroup6.ItemIndex+1;
@@ -1377,8 +1374,6 @@ begin
   t.Free;
   ChangeUserData;
   SaveUserData;
-  MaxUserIndex := FindMaxUserIndex();
-  MaxCategoryIndex := FindMaxCategoryIndex();
   RefreshCategory;
   Screen.Cursor:=crDefault;
 end;
