@@ -112,6 +112,7 @@ object fTranslate: TfTranslate
       Top = 39
       Width = 785
       Height = 104
+      Cursor = crIBeam
       Anchors = [akLeft, akTop, akRight, akBottom]
       Color = clWhite
       DoubleBuffered = True
@@ -154,8 +155,7 @@ object fTranslate: TfTranslate
       Align = alNone
       AutoSize = True
       BorderWidth = 1
-      ButtonHeight = 7
-      ButtonWidth = 15
+      ButtonWidth = 43
       EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
       Images = ImageList1
       List = True
