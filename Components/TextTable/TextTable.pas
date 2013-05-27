@@ -74,6 +74,9 @@ type
   end;
   PFieldDescription = ^TFieldDescription;
 
+  TFieldList = array of TFieldDescription;
+  TSeekList = array of TSeekDescription;
+
   TTextTable=class
   protected
    { Table can be loaded/created in-memory or it can be disk-backed.
@@ -129,7 +132,7 @@ type
 
   protected
    { Fields }
-    fields: array of TFieldDescription;
+    FFields: TFieldList;
     varfields_sz:integer; //cached size of variable-length fields part in a struct record
 
     function GetIsAutoIncField(const fieldIdx: integer): boolean;
@@ -139,6 +142,7 @@ type
   public
     function GetFieldIndex(const field:string):integer;
     function Field(const field:string):integer; inline; //shortcut; use FieldIndex for clarity
+    property Fields: TFieldList read FFields;
     property IsAutoIncField[const fieldIdx: integer]: boolean read GetIsAutoIncField
       write SetIsAutoIncField;
 
@@ -150,7 +154,7 @@ type
     Index table descriptions are loaded from $SEEKS section, they are in the
     form "field1+field2+field3" -- see ParseSeekDescription()
    }
-    seeks: array of TSeekDescription;
+    FSeeks: TSeekList;
 
    { Orders refer to the same data as seekbuilds, only they have different names
     and there's 1 less of them:
@@ -164,7 +168,7 @@ type
     There's no way to restore index description just from an order, we need
     to have matching $SEEKS entry. Therefore Order without matching Seek is
     read-only. }
-    orders:TStringList;
+    FOrders:TStringList;
 
     function GetSeekIndex(const seek: string): integer;
     function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
@@ -173,15 +177,17 @@ type
     function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
     function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
     function SortRecByStr(r:integer; fld:string):string; deprecated;
-    function TransOrder(rec,order:integer):integer; inline;
 
   public
     function GetSeekObject(seek: string): TSeekObject;
     function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
     function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
+    function TransOrder(rec,order:integer):integer; inline;
     procedure Reindex;
     function CheckIndex:boolean;
     function HasIndex(const index:string):boolean;
+    property Seeks: TSeekList read FSeeks;
+    property Orders: TStringList read FOrders;
 
   public //Import/export
     procedure ExportToText(t:TCustomFileWriter;ord:string);
@@ -337,9 +343,9 @@ end;
 constructor TTextTable.Create;
 begin
   inherited Create;
-  SetLength(fields, 0);
-  SetLength(seeks, 0);
-  orders:=TStringList.Create;
+  SetLength(FFields, 0);
+  SetLength(FSeeks, 0);
+  FOrders:=TStringList.Create;
   data:=TStringList.Create;
  {$IFDEF CURSOR_IN_TABLE}
   _intcur := TTextTableCursor.Create(Self);
@@ -367,9 +373,7 @@ begin
     statlist.Add('->'+AFilename);
  {$ENDIF}
 
- { As an exception, when Source is not set, the file is assumed to be from
-  native FS and required to contain $CREATE schema.
-  Data files can not be loaded from native FS at this time. }
+ { When Source is not set, the file is assumed to be from native FS. }
   if Source<>nil then
   begin
     mf:=Source[AFilename+'.info'];
@@ -377,7 +381,7 @@ begin
     ms:=mf.Lock;
   end else begin
     mf:=nil;
-    ms:=TFileStream.Create(AFilename,fmOpenRead);
+    ms:=TFileStream.Create(AFilename+'.info',fmOpenRead);
   end;
 
   LoadInfo(ms);
@@ -432,7 +436,6 @@ end;
 procedure TTextTable.LoadInfo(AInfo:TStream);
 var sl:TStringList;
   section:char; //current section when parsing info
-  s_seek:string;
   i,j:integer;
 begin
   sl:=TStringList.Create;
@@ -458,37 +461,37 @@ begin
     case section of
       'f': begin
        //Field declaration
-        j := Length(fields);
-        SetLength(fields,j+1);
-        fields[j].DataType := sl[i][1];
-        fields[j].Name := copy(sl[i],2,MaxInt);
-        fields[j].AutoInc := -1; //disabled by default
-        case fields[j].DataType of
+        j := Length(FFields);
+        SetLength(FFields,j+1);
+        FFields[j].DataType := sl[i][1];
+        FFields[j].Name := copy(sl[i],2,MaxInt);
+        FFields[j].AutoInc := -1; //disabled by default
+        case FFields[j].DataType of
          //Dynamic size fields
           's', 'x': begin
-            fields[j].Size := (-1) + (-1)*varfields_sz;
+            FFields[j].Size := (-1) + (-1)*varfields_sz;
             if wordfsize then
               inc(varfields_sz,2)
             else
               inc(varfields_sz,1);
           end;
          //Static size fields
-          'b': fields[j].Size := 1;
-          'w': fields[j].Size := 2;
-          'i': fields[j].Size := 4;
-          'l': fields[j].Size := 1;
+          'b': FFields[j].Size := 1;
+          'w': FFields[j].Size := 2;
+          'i': FFields[j].Size := 4;
+          'l': FFields[j].Size := 1;
         else
-          fields[j].Size := 0;
+          FFields[j].Size := 0;
         end;
       end;
       's':begin
        //Seek declaration
-        j := Length(seeks);
-        SetLength(seeks,j+1);
-        seeks[j].Name := sl[i];
-        if pos('+',seeks[j].Name)>0 then
-          system.delete(seeks[j].Name,pos('+',seeks[j].Name),MaxInt);
-        seeks[j].Declaration := sl[i];
+        j := Length(FSeeks);
+        SetLength(FSeeks,j+1);
+        FSeeks[j].Name := sl[i];
+        if pos('+',FSeeks[j].Name)>0 then
+          system.delete(FSeeks[j].Name,pos('+',FSeeks[j].Name),MaxInt);
+        FSeeks[j].Declaration := sl[i];
        { Will parse fields later when all schema is loaded -
         at this point some fields may not yet be available }
       end;
@@ -534,7 +537,7 @@ end;
  Info-schema is required to be parsed by this point. When Offline==true, only
  loads parts of data. }
 procedure TTextTable.LoadData(const AFilename:string;ARawRead:boolean);
-var bufsize:integer;
+var bufsize,dsize:integer;
   mf:TMemoryFile;
   ms:TStream;
  {$IFDEF TTSTATS}
@@ -545,18 +548,34 @@ begin
     bufsize := AllocDataBufferSz
   else
     bufsize := 0;
-  mf:=source[AFilename+'.data'];
-  if mf=nil then raise Exception.Create('TextTable: Important file missing.');
+  if Source=nil then
+    ARawRead:=false; //can't have raw read from package without package
+
+  if Source<>nil then
+  begin
+    mf:=Source[AFilename+'.data'];
+    if mf=nil then raise Exception.Create('TextTable: Important file missing.');
+    if not ARawRead then
+      ms:=mf.Lock;
+  end else begin
+    mf:=nil;
+    ms:=TFileStream.Create(AFilename+'.data',fmOpenRead);
+  end;
+
   if not ARawread then
   begin
-    ms:=mf.Lock;
     databuffer:=bufsize;
     GetMem(data,ms.Size+bufsize);
     datalen:=ms.Size-4;
     ms.Read(data^,4);
     moveofs(data,@reccount,0,0,4);
     ms.Read(data^,datalen);
-    mf.Unlock;
+
+    if mf<>nil then begin
+      mf.Unlock;
+      ms := nil;
+    end else
+      FreeAndNil(ms);
   end else
   begin
     if offline then GetMem(data,4) else GetMem(data,mf.Size+bufsize);
@@ -569,56 +588,92 @@ begin
       source.ReadRawData(data^,integer(mf.Position)+4,datalen);
     end;
   end;
+
   {$IFDEF TTSTATS}
-  dataalloc:=dataalloc+(mf.Size+bufsize) div 1024;
+  dataalloc:=dataalloc+(datalen+bufsize) div 1024;
   statlist.Add('  Records: '+inttostr(reccount));
   statlist.Add('  Indexes: '+inttostr(orders.Count));
-  statlist.Add('  Data size: '+inttostr((mf.Size+bufsize) div 1000)+'k');
-  totalloc:=mf.Size+bufsize;
+  statlist.Add('  Data size: '+inttostr((datalen+bufsize) div 1000)+'k');
+  totalloc:=datalen+bufsize;
   {$ENDIF}
-  mf:=source[AFilename+'.index'];
-  if mf=nil then raise Exception.Create('TextTable: Important file missing.');
+
+  if Source<>nil then
+  begin
+    mf:=Source[AFilename+'.index'];
+    if mf=nil then raise Exception.Create('TextTable: Important file missing.');
+    if not ARawRead then
+      ms:=mf.Lock;
+  end else begin
+    mf:=nil;
+    ms:=TFileStream.Create(AFilename+'.index',fmOpenRead);
+  end;
+
   if not ARawread then
   begin
-    ms:=mf.Lock;
     GetMem(index,ms.Size);
     ms.Read(index^,ms.Size);
-    mf.Unlock;
+    dsize := ms.Size;
+
+    if mf<>nil then begin
+      mf.Unlock;
+      ms := nil;
+    end else
+      FreeAndNil(ms);
   end else
   begin
     GetMem(index,mf.Size);
     source.ReadRawData(index^,integer(mf.Position),mf.Size);
+    dsize := mf.Size;
   end;
+
   {$IFDEF TTSTATS}
-  indexalloc:=indexalloc+mf.Size div 1024;
-  statlist.Add('  Indexes size: '+inttostr(mf.Size div 1000)+'k');
-  totalloc:=totalloc+mf.Size;
+  indexalloc:=indexalloc+dsize div 1024;
+  statlist.Add('  Indexes size: '+inttostr(dsize div 1000)+'k');
+  totalloc:=totalloc+dsize;
   {$ENDIF}
-  mf:=source[AFilename+'.struct'];
-  if mf=nil then raise Exception.Create('TextTable: Important file missing.');
+
   if prebuffer then
     bufsize := AllocStructBufferSz
   else
     bufsize := 0;
   structbuffer:=bufsize;
+
+  if Source<>nil then
+  begin
+    mf:=Source[AFilename+'.struct'];
+    if mf=nil then raise Exception.Create('TextTable: Important file missing.');
+    if not ARawRead then
+      ms:=mf.Lock;
+  end else begin
+    mf:=nil;
+    ms:=TFileStream.Create(AFilename+'.struct',fmOpenRead);
+  end;
+
   if not ARawread then
   begin
-    ms:=mf.Lock;
     GetMem(struct,ms.Size+bufsize);
     ms.Read(struct^,ms.Size);
-    mf.Unlock;
+    dsize := ms.Size;
+
+    if mf<>nil then begin
+      mf.Unlock;
+      ms := nil;
+    end else
+      FreeAndNil(ms);
   end else
   begin
     GetMem(struct,mf.Size+bufsize);
     source.ReadRawData(struct^,integer(mf.Position),mf.Size);
+    dsize := mf.Size;
   end;
+
   {$IFDEF TTSTATS}
-  structalloc:=structalloc+(mf.Size+bufsize) div 1024;
+  structalloc:=structalloc+(dsize+bufsize) div 1024;
   if not precounted then
-    statlist.Add('  Structure size: '+inttostr((mf.Size+bufsize+reccount*5) div 1000)+'k')
+    statlist.Add('  Structure size: '+inttostr((dsize+bufsize+reccount*5) div 1000)+'k')
   else
-    statlist.Add('  Structure size: '+inttostr((mf.Size+bufsize) div 1000)+'k');
-  totalloc:=totalloc+mf.Size+bufsize;
+    statlist.Add('  Structure size: '+inttostr((dsize+bufsize) div 1000)+'k');
+  totalloc:=totalloc+dsize+bufsize;
   statlist.Add('  Total size: '+inttostr(totalloc div 1000)+'k');
   {$ENDIF}
 
@@ -846,7 +901,7 @@ end;
 
 destructor TTextTable.Destroy;
 begin
-  orders.Free;
+  FreeAndNil(FOrders);
   freemem(data);
   freemem(index);
   freemem(struct);

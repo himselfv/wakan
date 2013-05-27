@@ -4,7 +4,7 @@ Input/output
 }
 
 interface
-uses JWBStrings;
+uses SysUtils, Classes, Windows, JWBStrings;
 
 type
   TCustomFileReader = class
@@ -40,6 +40,26 @@ type
     function ReadWideChar(out w: WideChar): boolean;
   end;
 
+  TConsoleReader = class(TCustomFileReader)
+  protected
+    FEOF: boolean;
+  public
+    function ReadLn(var s: string): boolean; override;
+    function Eof: boolean; override;
+  end;
+
+  TUnicodeStreamReader = class(TCustomFileReader)
+  protected
+    FStream: TStream;
+    FOwnsStream: boolean;
+    FEOF: boolean;
+  public
+    constructor Create(AStream: TStream; AOwnsStream: boolean = false);
+    destructor Destroy; override;
+    function ReadLn(var s: string): boolean; override;
+    function Eof: boolean; override;
+  end;
+
  {$IFDEF UNICODE}
   TFileReader = TUnicodeFileReader;
  {$ELSE}
@@ -68,6 +88,31 @@ type
     bpos: integer;
   public
     constructor Rewrite(AFilename: string);
+    destructor Destroy; override;
+    procedure Writeln(const s: string); override;
+    procedure WriteWideChar(const w: WideChar);
+    procedure WritelnUnicode(const s: UnicodeString);
+    procedure Flush;
+  end;
+
+  TConsoleWriter = class(TCustomFileWriter)
+  public
+    procedure Writeln(const s: string); override;
+  end;
+
+  TConsoleUTF8Writer = class(TCustomFileWriter)
+  public
+    procedure Writeln(const s: string); override;
+  end;
+
+  TUnicodeStreamWriter = class(TCustomFileWriter)
+  protected
+    FStream: TStream;
+    FOwnsStream: boolean;
+    buf: array[0..4095] of byte;
+    bpos: integer;
+  public
+    constructor Create(AStream: TStream; AOwnsStream: boolean = false);
     destructor Destroy; override;
     procedure Writeln(const s: string); override;
     procedure WriteWideChar(const w: WideChar);
@@ -170,6 +215,48 @@ begin
   Result := true;
 end;
 
+function TConsoleReader.ReadLn(var s: string): boolean;
+begin
+  Result := not EOF;
+  System.Readln(s);
+end;
+
+function TConsoleReader.Eof: boolean;
+begin
+  Result := System.Eof(Input);
+end;
+
+constructor TUnicodeStreamReader.Create(AStream: TStream; AOwnsStream: boolean);
+begin
+  inherited Create();
+  FStream := AStream;
+  FOwnsStream := AOwnsStream;
+end;
+
+destructor TUnicodeStreamReader.Destroy;
+begin
+  if FOwnsStream then
+    FreeAndNil(FStream);
+  inherited;
+end;
+
+function TUnicodeStreamReader.ReadLn(var s: string): boolean;
+var c: WideChar;
+begin
+  s := '';
+  Result := not EOF;
+  while FStream.Read(c, SizeOf(c))=SizeOf(c) do begin
+    if c=#10 then exit;
+    s := s + c;
+  end;
+  FEOF := true;
+end;
+
+function TUnicodeStreamReader.Eof: boolean;
+begin
+  Result := FEOF;
+end;
+
 constructor TAnsiFileWriter.Append(AFilename: string);
 begin
   inherited Create();
@@ -236,6 +323,61 @@ procedure TUnicodeFileWriter.Flush;
 begin
   if bpos>0 then
     BlockWrite(f, buf, bpos);
+  bpos := 0;
+end;
+
+procedure TConsoleWriter.Writeln(const s: string);
+begin
+  System.writeln(s);
+end;
+
+procedure TConsoleUTF8Writer.Writeln(const s: string);
+begin
+  System.writeln(UTF8Encode(s));
+end;
+
+constructor TUnicodeStreamWriter.Create(AStream: TStream; AOwnsStream: boolean);
+begin
+  inherited Create();
+  FStream := AStream;
+  FOwnsStream := AOwnsStream;
+  bpos := 0;
+end;
+
+destructor TUnicodeStreamWriter.Destroy;
+begin
+  Flush();
+  if FOwnsStream then
+    FreeAndNil(FStream);
+  inherited;
+end;
+
+procedure TUnicodeStreamWriter.WriteWideChar(const w: WideChar);
+begin
+  if bpos>=sizeof(buf) then
+    Flush();
+  PWideChar(@buf[bpos])^ := w;
+  Inc(bpos, 2);
+end;
+
+procedure TUnicodeStreamWriter.Writeln(const s: string);
+begin
+  WritelnUnicode(UnicodeString(s));
+end;
+
+procedure TUnicodeStreamWriter.WritelnUnicode(const s: UnicodeString);
+var i: integer;
+begin
+  for i := 1 to Length(s) do
+    WriteWideChar(s[i]);
+  WriteWideChar(#$000D);
+  WriteWideChar(#$000A);
+end;
+
+procedure TUnicodeStreamWriter.Flush;
+begin
+  if bpos>0 then
+    FStream.Write(buf, bpos);
   bpos := 0;
 end;
 
