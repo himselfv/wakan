@@ -1,7 +1,7 @@
 unit TextTable;
 
 interface
-uses MemSource,Classes,SysUtils,Dialogs,StdPrompt,Windows,JWBStrings,JWBIO;
+uses MemSource,Classes,SysUtils,Dialogs,Windows,JWBStrings,JWBIO;
 
 {
 Unicode status:
@@ -191,7 +191,7 @@ type
 
   public //Import/export
     procedure ExportToText(t:TCustomFileWriter;ord:string);
-    procedure ImportFromText(t:TCustomFileReader;smf:TSMPromptForm;mess:string);
+    procedure ImportFromText(t:TCustomFileReader);
 
   protected
     reccount:integer;
@@ -2033,7 +2033,7 @@ begin
   t.Writeln('.');
 end;
 
-procedure TTextTable.ImportFromText(t:TCustomFileReader;smf:TSMPromptForm;mess:string);
+procedure TTextTable.ImportFromText(t:TCustomFileReader);
 var s:string;
     i,j:integer;
     fld:TStringList;
@@ -2076,9 +2076,7 @@ begin
   end;
   fld.Free;
   nocommit:=false;
-  if smf<>nil then smf.SetMessage(mess+' (indexing)...');
   Reindex;
-  if smf<>nil then smf.SetMessage(mess+'...');
 end;
 
 

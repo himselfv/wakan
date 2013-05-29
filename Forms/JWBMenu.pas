@@ -1354,10 +1354,10 @@ begin
     s := t.ReadLn();
     if s[1]='$'then
     begin
-      if s='$User'then TUser.ImportFromText(t,nil,'');
-      if s='$UserIdx'then TUserIdx.ImportFromText(t,nil,'');
-      if s='$UserCat'then TUserCat.ImportFromText(t,nil,'');
-      if s='$UserSheet'then TUserSheet.ImportFromText(t,nil,'');
+      if s='$User'then TUser.ImportFromText(t);
+      if s='$UserIdx'then TUserIdx.ImportFromText(t);
+      if s='$UserCat'then TUserCat.ImportFromText(t);
+      if s='$UserSheet'then TUserSheet.ImportFromText(t);
       if s='$KnownKanji'then
       begin
         t.ReadLn();

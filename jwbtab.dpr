@@ -202,7 +202,7 @@ var tt: TTextTable;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
   rea := TConsoleReader.Create();
-  tt.ImportFromText(rea, nil, '');
+  tt.ImportFromText(rea);
   FreeAndNil(rea);
   FreeAndNil(tt);
 end;
