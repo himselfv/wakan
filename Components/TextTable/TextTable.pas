@@ -31,6 +31,7 @@ const
   AllocStructBufferSz=1024;
 
 type
+  TTextTable = class;
   TTextTableCursor = class;
 
  { Seek table reference to speed up Locate()
@@ -75,7 +76,23 @@ type
   PFieldDescription = ^TFieldDescription;
 
   TFieldList = array of TFieldDescription;
-  TSeekList = array of TSeekDescription;
+  TSeekList = class
+  private
+    FTable: TTextTable;
+    FItems: array of TSeekDescription;
+    function GetItem(const Index: integer): PSeekDescription; inline;
+    function GetCount: integer; inline;
+    function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+  public
+    constructor Create(ATable: TTextTable);
+    destructor Destroy; override;
+    procedure Clear;
+    procedure Add(const AItem: TSeekDescription); overload;
+    procedure Add(const AFormula: string); overload;
+    function Find(const AName: string): integer;
+    property Items[const Index: integer]: PSeekDescription read GetItem; default;
+    property Count: integer read GetCount;
+  end;
 
   TTextTable=class
   protected
@@ -170,13 +187,9 @@ type
     read-only. }
     FOrders:TStringList;
 
-    function GetSeekIndex(const seek: string): integer;
-    function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
-
    //Record sorting
     function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
     function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function SortRecByStr(r:integer; fld:string):string; deprecated;
 
   public
     function GetSeekObject(seek: string): TSeekObject;
@@ -302,6 +315,10 @@ function BoolToStr(b: boolean): string;
 
 implementation
 
+resourcestring
+  eReadOnlyIndexes = 'This table is missing definitions for some of its indexes. '
+      +'Changes are impossible with such tables.';
+
 {$IFDEF TTSTATS}
 var
   dataalloc,structalloc,indexalloc:integer;
@@ -339,12 +356,111 @@ begin
   if b then Result:='T' else Result:='F';
 end;
 
+
+constructor TSeekList.Create(ATable: TTextTable);
+begin
+  inherited Create;
+  FTable := ATable;
+end;
+
+destructor TSeekList.Destroy;
+begin
+  inherited Destroy;
+end;
+
+procedure TSeekList.Clear;
+begin
+  SetLength(FItems, 0);
+end;
+
+procedure TSeekList.Add(const AItem: TSeekDescription);
+begin
+  SetLength(FItems, Length(FItems)+1);
+  FItems[Length(FItems)-1] := AItem;
+end;
+
+function TSeekList.ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+var i:integer;
+  fx:string;
+  reverse:boolean;
+  desc: PSeekFieldDescription;
+begin
+  SetLength(Result, 0);
+  while length(fld)>0 do
+  begin
+    if pos('+',fld)>0 then
+    begin
+      fx:=copy(fld,1,pos('+',fld)-1);
+      system.delete(fld,1,length(fx)+1);
+    end else
+    begin
+      fx:=fld;
+      fld:='';
+    end;
+    reverse:=false;
+    if fx[1]='<' then
+    begin
+      system.delete(fx,1,1);
+      reverse:=true;
+    end;
+    i:=FTable.GetFieldIndex(fx);
+    if i=-1 then raise Exception.Create('Unknown seek field '+fx+' (TTextTable.Commit).');
+
+    SetLength(Result, Length(Result)+1);
+    desc := @Result[Length(Result)-1];
+    desc.index := i;
+    desc.reverse := reverse;
+    desc.strdata := (FTable.Fields[i].DataType='s') or (FTable.Fields[i].DataType='x')
+  end;
+end;
+
+{ Parses seek formula taken from .info file and adds seek definition }
+procedure TSeekList.Add(const AFormula: string);
+var j: integer;
+begin
+ //Seek declaration
+  j := Length(FItems);
+  SetLength(FItems,j+1);
+  FItems[j].Name := AFormula;
+  if pos('+',FItems[j].Name)>0 then
+    system.delete(FItems[j].Name,pos('+',FItems[j].Name),MaxInt);
+  FItems[j].Declaration := AFormula;
+
+ //First seekbuild is sometimes '0' and we don't actually seek by it
+  if (j=0) and (FItems[j].Declaration='0') then begin
+    SetLength(FItems[j].fields, 0);
+    exit;
+  end;
+  FItems[j].fields := ParseSeekDescription(FItems[j].Declaration);
+end;
+
+function TSeekList.GetItem(const Index: integer): PSeekDescription;
+begin
+  Result := @FItems[index];
+end;
+
+function TSeekList.GetCount: integer;
+begin
+  Result := Length(FItems);
+end;
+
+function TSeekList.Find(const AName: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(FItems) - 1 do
+    if SameText(FItems[i].Name, AName) then begin
+      Result := i;
+      break;
+    end;
+end;
+
 //Basic Create() to be called by all customized versions
 constructor TTextTable.Create;
 begin
   inherited Create;
   SetLength(FFields, 0);
-  SetLength(FSeeks, 0);
+  FSeeks:=TSeekList.Create(Self);
   FOrders:=TStringList.Create;
   data:=TStringList.Create;
  {$IFDEF CURSOR_IN_TABLE}
@@ -437,10 +553,13 @@ procedure TTextTable.LoadInfo(AInfo:TStream);
 var sl:TStringList;
   section:char; //current section when parsing info
   i,j:integer;
+  tmpSeeks:TStringList;
 begin
   sl:=TStringList.Create;
   sl.LoadFromStream(AInfo);
   NeedCreateData:=false;
+
+  tmpSeeks := TStringList.Create;
 
   section:=' ';
   prebuffer:=false;
@@ -484,17 +603,9 @@ begin
           FFields[j].Size := 0;
         end;
       end;
-      's':begin
-       //Seek declaration
-        j := Length(FSeeks);
-        SetLength(FSeeks,j+1);
-        FSeeks[j].Name := sl[i];
-        if pos('+',FSeeks[j].Name)>0 then
-          system.delete(FSeeks[j].Name,pos('+',FSeeks[j].Name),MaxInt);
-        FSeeks[j].Declaration := sl[i];
+      's': tmpSeeks.Add(sl[i]);
        { Will parse fields later when all schema is loaded -
         at this point some fields may not yet be available }
-      end;
       'o':orders.Add(sl[i]);
     end;
   end;
@@ -502,15 +613,9 @@ begin
   sl.Free;
 
  //Parse seek fields -- after schema has been loaded
-  for j:=0 to Length(seeks)-1 do
-  begin
-   //First seekbuild is sometimes '0' and we don't actually seek by it
-    if (j=0) and (seeks[j].Declaration='0') then begin
-      SetLength(seeks[j].fields, 0);
-      continue;
-    end;
-    seeks[j].fields := ParseSeekDescription(seeks[j].Declaration);
-  end;
+  for i:=0 to tmpSeeks.Count-1 do
+    FSeeks.Add(tmpSeeks[i]);
+  FreeAndNil(tmpSeeks);
 end;
 
 { Initialized empty table indexes and data in memory.
@@ -824,7 +929,7 @@ begin
   writeln(t,'$ORDERS');
   for i:=0 to orders.Count-1 do writeln(t,orders[i]);
   writeln(t,'$SEEKS');
-  for i:=0 to Length(seeks)-1 do writeln(t,seeks[i].Declaration);
+  for i:=0 to Seeks.Count-1 do writeln(t,seeks[i].Declaration);
   closefile(t);
   il:=TStringList.Create;
   j:=0;
@@ -905,6 +1010,7 @@ begin
   freemem(data);
   freemem(index);
   freemem(struct);
+  FreeAndNil(FSeeks);
 end;
 
 function TTextTable.NewCursor: TTextTableCursor;
@@ -1385,20 +1491,9 @@ begin
   for i:=length(s) downto 1 do result:=result+s[i];
 end;
 
-function TTextTable.GetSeekIndex(const seek: string): integer;
-var i: integer;
-begin
-  Result := -1;
-  for i := 0 to Length(seeks) - 1 do
-    if SameText(seeks[i].Name, seek) then begin
-      Result := i;
-      break;
-    end;
-end;
-
 function TTextTable.GetSeekObject(seek: string): TSeekObject;
 begin
-  Result.ind_i:=GetSeekIndex(seek);
+  Result.ind_i:=Seeks.Find(seek);
   if Result.ind_i<0 then raise Exception.Create('Cannot find seek object "'+seek+'"');
   Result.reverse:=false;
   if (seek[1]='<') then
@@ -1802,43 +1897,6 @@ begin
 end;
 {$ENDIF}
 
-
-
-function TTextTable.ParseSeekDescription(fld:string): TSeekFieldDescriptions;
-var i:integer;
-  fx:string;
-  reverse:boolean;
-  desc: PSeekFieldDescription;
-begin
-  SetLength(Result, 0);
-  while length(fld)>0 do
-  begin
-    if pos('+',fld)>0 then
-    begin
-      fx:=copy(fld,1,pos('+',fld)-1);
-      system.delete(fld,1,length(fx)+1);
-    end else
-    begin
-      fx:=fld;
-      fld:='';
-    end;
-    reverse:=false;
-    if fx[1]='<' then
-    begin
-      system.delete(fx,1,1);
-      reverse:=true;
-    end;
-    i:=GetFieldIndex(fx);
-    if i=-1 then raise Exception.Create('Unknown seek field '+fx+' (TTextTable.Commit).');
-
-    SetLength(Result, Length(Result)+1);
-    desc := @Result[Length(Result)-1];
-    desc.index := i;
-    desc.reverse := reverse;
-    desc.strdata := (fields[i].DataType='s') or (fields[i].DataType='x')
-  end;
-end;
-
 function TTextTable.SortRec(r:integer;const fields:TSeekFieldDescriptions):string;
 var j, idx: integer;
   s3: string;
@@ -1868,16 +1926,6 @@ begin
   Result := SortRec(r, seeks[seekIndex].fields);
 end;
 
-{ This is the functionality older SortRec had. I'm keeping it just in case
- there really is a case when we SortRec by something other than the contents of
- a built-in index. }
-function TTextTable.SortRecByStr(r:integer; fld:string):string;
-var desc: TSeekFieldDescriptions;
-begin
-  desc := ParseSeekDescription(fld);
-  Result := SortRec(r, desc);
-end;
-
 procedure TTextTable.Commit(RecNo:integer; JustInserted: boolean);
 var p:pointer;
     i:integer;
@@ -1885,10 +1933,13 @@ var p:pointer;
     s:string;
     fnd:boolean;
 begin
+  if orders.Count>=seeks.Count then
+    raise Exception.Create(eReadOnlyIndexes);
   if justinserted then
   begin
     getmem(p,reccount*orders.Count*4);
-    for i:=0 to orders.Count-1 do moveofs(index,p,i*(reccount-1)*4,i*reccount*4,(reccount-1)*4);
+    for i:=0 to orders.Count-1 do
+      moveofs(index,p,i*(reccount-1)*4,i*reccount*4,(reccount-1)*4);
     freemem(index);
     index:=p;
   end else
@@ -1958,6 +2009,8 @@ var i,j:integer;
   sl:TStringList;
   p:pointer;
 begin
+  if orders.Count>=seeks.Count then
+    raise Exception.Create(eReadOnlyIndexes);
   getmem(p,reccount*orders.Count*4);
   freemem(index);
   index:=p;
@@ -1981,7 +2034,7 @@ function TTextTable.CheckIndex:boolean;
 var i,j:integer;
     s1,s2:string;
 begin
-  for i:=0 to orders.Count-1 do if Length(seeks)>i+1 then
+  for i:=0 to orders.Count-1 do if seeks.Count>i+1 then
   begin
     s1:='';
     for j:=0 to reccount-1 do

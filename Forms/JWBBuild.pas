@@ -605,10 +605,9 @@ begin
     TKanjiDic.Next;
   end;
   SaveTableAsText(TKanjiDic,'Index_Ind','ibsxbwwbb',
-    'Index;ChFrequency;StrokeCount;Unicode;JpFrequency;JpStrokeCount;;'
-    ,'ChFrequency_Ind;ChStrokeCount_Ind;ChUnicode_Ind;'+
-    'JpFrequency_Ind;JpStrokeCount_Ind;'+
-    'JpUnicode_Ind;','Index','Char',fltchinese);
+    'Index;ChFrequency;StrokeCount;Unicode;JpFrequency;JpStrokeCount;;',
+    'ChFrequency_Ind;ChStrokeCount_Ind;ChUnicode_Ind;JpFrequency_Ind;JpStrokeCount_Ind;JpUnicode_Ind;',
+    'Index','Char',fltchinese);
   pro.SetMessage('Building table CharRead...');
   pro.SetProgress(3);
   SaveTableAsText(TKanjiRead,'Main_Ind','iwbsbb','Kanji;Reading;Type;','Reading_Ind;Type_Ind;','Index','CharRead',fltchinese);
@@ -623,6 +622,106 @@ begin
   pro.Free;
   screen.cursor:=crDefault;
   if paramstr(1)<>'2'then Application.MessageBox('Data files were generated.','Data files generation',MB_ICONINFORMATION or MB_OK);
+end;
+
+procedure SaveTableAsText(table:TTable;primindex,datatypes,seeks,orders,indexfld:string;filename:string;fltchinese:boolean);
+var sl_olders,sl_seeks:TStringList;
+    i,j:integer;
+    s:string;
+    f_index:file of integer;
+    key:TStringList;
+    f_data:file;
+    f_struct:file of byte;
+    b:byte;
+    bx:boolean;
+    f_info:textfile;
+begin
+  assign(f_info,'build\'+filename+'.info');
+  rewrite(f_info);
+  writeln(f_info,'$TEXTTABLE');
+  writeln(f_info,'$RAWINDEX');
+  table.IndexName:=primindex;
+  writeln(f_info,'$FIELDS');
+  for i:=1 to table.Fields.Count-1 do
+    writeln(f_info,datatypes[i]+table.Fields[i].FieldName);
+  if fltchinese then
+  begin
+    if table.Name='TKanjiDic' then
+      table.Filter:='Index<'+inttostr(maxchinese)
+    else
+      table.Filter:='Kanji<'+inttostr(maxchinese);
+    table.Filtered:=true;
+  end;
+  table.First;
+  assign(f_data,'build\'+filename+'.data');
+  rewrite(f_data,1);
+  assign(f_struct,'build\'+filename+'.struct');
+  rewrite(f_struct);
+  key:=TStringList.Create;
+  i:=table.RecordCount;
+  j:=0;
+  blockwrite(f_data,i,4);
+  while not table.EOF do
+  begin
+    inc(j);
+    for i:=1 to table.Fields.Count-1 do
+    begin
+      WriteData(f_data,table.Fields[i].AsString,datatypes[i],b,bx);
+      if bx then write(f_struct,b);
+    end;
+    if indexfld='' then
+      key.Add(table.FieldByName('Key').AsString) else
+    begin
+      table.Edit;
+      table.FieldByName(indexfld).AsInteger:=j;
+      table.Post;
+    end;
+    table.Next;
+  end;
+  closefile(f_data);
+  closefile(f_struct);
+  sl_olders:=TStringList.Create;
+  sl_seeks:=TStringList.Create;
+  i:=0;
+  assign(f_index,'build\'+filename+'.index');
+  rewrite(f_index);
+  s:=copy(seeks,1,pos(';',seeks)-1);
+  delete(seeks,1,pos(';',seeks));
+  sl_seeks.Add(s);
+  while orders<>'' do
+  begin
+    s:=copy(orders,1,pos(';',orders)-1);
+    delete(orders,1,pos(';',orders));
+    sl_olders.Add(s);
+    table.IndexName:=s;
+    s:=copy(seeks,1,pos(';',seeks)-1);
+    delete(seeks,1,pos(';',seeks));
+    sl_seeks.Add(s);
+    table.First;
+    while not table.EOF do
+    begin
+      if indexfld='' then
+        j:=key.IndexOf(table.FieldByName('Key').AsString)
+      else
+        j:=table.FieldByName(indexfld).AsInteger-1;
+      write(f_index,j);
+      table.Next;
+    end;
+    inc(i);
+  end;
+  closefile(f_index);
+  writeln(f_info,'$ORDERS');
+  for i:=0 to sl_olders.Count-1 do writeln(f_info,sl_olders[i]);
+  writeln(f_info,'$SEEKS');
+  for i:=0 to sl_seeks.Count-1 do writeln(f_info,sl_seeks[i]);
+  closefile(f_info);
+  sl_olders.Free;
+  key.Free;
+  if fltchinese then
+  begin
+    table.Filter:='';
+    table.Filtered:=false;
+  end;
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);

@@ -49,7 +49,9 @@ var
   end;
 
   MakeCharsParams: record
+    ResetDb: boolean;
     KanjidicFilename: string;
+    UnihanFolder: string;
   end;
 
 procedure ParseCommandLine();
@@ -74,7 +76,7 @@ begin
     +'* makeexamples'#13
     +'* makesod'#13
     +'* makerad [RADKFILE_filename] [...]'#13
-    +'* makechars [/kanjidic <kanjidic-filename>]'
+    +'* makechars [/resetdb] [/kanjidic <kanjidic-filename>] [/unihan <unihan-folder>]'
     +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
@@ -185,10 +187,18 @@ begin
 
       end else
       if Command='makechars' then begin
+        if s='/resetdb' then begin
+          MakeCharsParams.ResetDb := true;
+        end else
         if s='/kanjidic' then begin
           Inc(i);
           if i>ParamCount() then BadUsage('/kanjidic requires file name');
           MakeCharsParams.KanjidicFilename := ParamStr(i);
+        end else
+        if s='/unihan' then begin
+          Inc(i);
+          if i>ParamCount() then BadUsage('/unihan requires folder path');
+          MakeCharsParams.UnihanFolder := ParamStr(i);
         end else
           BadUsage('Invalid option: '+s);
 

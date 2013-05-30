@@ -100,6 +100,8 @@ function NewCharTable: TTextTable;
 function NewCharPropTable: TTextTable;
 function NewRadicalsTable: TTextTable;
 
+procedure FixTCharJpUnicodeIndex(table: TTextTable);
+
 function WakanDatestamp(const dt: TDatetime): string;
 
 {
@@ -377,7 +379,8 @@ begin
     'StrokeCount',
     'Unicode',
     'JpFrequency',
-    'JpStrokeCount'
+    'JpStrokeCount',
+    'Chinese+Unicode'
   ]);
   TIndex := Result.GetFieldIndex('Index');
   Result.IsAutoIncField[TIndex] := true;
@@ -489,6 +492,20 @@ var fs: TFormatSettings;
 begin
   GetLocaleFormatSettings($0409, fs);
   Result := AnsiUpperCase(FormatDatetime('ddmmmyy',dt,fs));
+end;
+
+{ Older TChar tables don't have matching $SEEK defintion for JpUnicode_Ind $ORDER.
+ Definitions are required or you cannot add entries to the index. }
+procedure FixTCharJpUnicodeIndex(table: TTextTable);
+var ord_i: integer;
+begin
+  if not table.Orders.Find('JpUnicode_Ind', ord_i) then
+    raise Exception.Create('FixTCharJpUnicodeIndex(): JpUnicode_Ind order not found.');
+  if ord_i<table.seeks.Count-1 then exit; //has matching $SEEK
+  if ord_i<table.seeks.Count-2 then
+    raise Exception.Create('FixTCharJpUnicodeIndex(): Other index defintions missing!');
+   //We can amend for only one
+  table.Seeks.Add('Chinese+Unicode');
 end;
 
 

@@ -318,7 +318,11 @@ begin
     if ResetDb then begin
       FreeAndNil(TChar);
       TChar := NewCharTable();
-    end;
+    end else
+    { Fix older DBs where a seek formula was not defined for JpUnicode_Int order.
+     We won't be able to add records without this. }
+      FixTCharJpUnicodeIndex(TChar);
+
     TChar.NoCommitting := true;
 
    { STAGE II. Import KANJIDIC }
@@ -422,11 +426,20 @@ begin
 
      //Find kanji
       if not CChar.Locate('Unicode', ed.kanji) then begin
+        CChar.Insert([
+         '0', //Index
+         '0', //Not unicode-only
+         'J', //TODO: See chartype explanation in JWBCharData and set this accordingly
+         ed.kanji, //Unicode,
+         '255', //Stroke count,
+         '255', //Jp stroke count, TODO: take from KANJIDIC
+         '65535', //Jp frequence, TODO: take from KANJIDIC
+         '255', //Frequence
+         '0' //Jouyou grade, TODO: take from KANJIDIC
+        ]);
        //TODO: Insert new kanji
-       //TODO: Mind incremental index
-        continue;
-      end;
-      CharsCovered[CChar.tcur] := true; //migrated
+      end else
+        CharsCovered[CChar.tcur] := true; //migrated
 
       CharIdx := CChar.TrueInt(TCharIndex);
       CNewProp.OpenKanji(CharIdx);

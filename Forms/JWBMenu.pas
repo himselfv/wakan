@@ -765,8 +765,8 @@ begin
 
     if Command='makechars' then begin
      //For now we only can update kanjidic data
-      fCharDataImport.UpdateCharDb({Reset=}false, MakeCharsParams.KanjidicFilename,
-        {Unihan=}'');
+      fCharDataImport.UpdateCharDb({Reset=}MakeCharsParams.ResetDb, MakeCharsParams.KanjidicFilename,
+        MakeCharsParams.UnihanFolder);
       Application.Terminate;
       exit;
     end;
