@@ -136,7 +136,8 @@ type
         DataOffset: integer, 4 byte
         For every variable-length field: DataSize: 1 byte
     Index: sorting orders
-      array [0..IndexCount-1] x [0..RecCount-1] of RecordNo: integer;
+      array [0..IndexCount-1] x [0..IndexRecCount-1] of RecordNo: integer;
+    Note that IndexRecCount may be < than RecCount if not all records are commited.
    }
     data,struct,index:pointer;
     databuffer,structbuffer:integer; //free memory available in data and struct ptrs
@@ -208,6 +209,7 @@ type
 
   protected
     reccount:integer;
+    indexreccount: integer; //number of records in indexes (commited records)
     numberdeleted:integer;
     nocommit:boolean; //do not update indexes on Add/Edit/Delete. You'll have to Reindex later.
   public
@@ -623,6 +625,7 @@ end;
 procedure TTextTable.CreateData();
 begin
   reccount:=0;
+  indexreccount:=0;
   if prebuffer then
     databuffer := AllocDataBufferSz
   else
@@ -674,6 +677,7 @@ begin
     datalen:=ms.Size-4;
     ms.Read(data^,4);
     moveofs(data,@reccount,0,0,4);
+    indexreccount:=reccount;
     ms.Read(data^,datalen);
 
     if mf<>nil then begin
@@ -688,6 +692,7 @@ begin
     source.ReadRawData(data^,integer(mf.Position),4);
     datafpos:=IntPtr(mf.Position)+4;
     moveofs(data,@reccount,0,0,4);
+    indexreccount:=reccount;
     if not offline then
     begin
       source.ReadRawData(data^,integer(mf.Position)+4,datalen);
@@ -1448,7 +1453,10 @@ begin
   if order=-1 then
     Result:=rec
   else
-    Result:=PInteger(OffsetPtr(index, (order*reccount+rec)*4))^;
+  if rec>=IndexRecCount then
+    Result:=rec //not yet indexed record
+  else
+    Result:=PInteger(OffsetPtr(index, (order*indexreccount+rec)*4))^;
 end;
 
 {$IFDEF CURSOR_IN_TABLE}
@@ -1534,7 +1542,7 @@ begin
 
  //Initiate binary search
   l:=0;
-  r:=reccount-1;
+  r:=IndexRecCount-1;
   if l<=r then repeat
     c:=((r-l) div 2)+l;
     s:=GetField(TransOrder(c,sn),fn);
@@ -1548,12 +1556,12 @@ begin
     begin
       idx:=l;
       RecNo:=TransOrder(idx,sn);
-      while (idx<reccount) and IsDeleted(RecNo) do
+      while (idx<IndexRecCount) and IsDeleted(RecNo) do
       begin
         inc(idx);
         RecNo:=TransOrder(idx,sn);
       end;
-      Result := idx<reccount;
+      Result := idx<IndexRecCount;
       if Result then begin
         s:=GetField(RecNo,fn);
         Result := (value=uppercase(s));
@@ -1585,7 +1593,7 @@ begin
 
  //Initiate binary search
   l:=0;
-  r:=reccount-1;
+  r:=IndexRecCount-1;
   if l<=r then repeat
     c:=((r-l) div 2)+l;
 
@@ -1598,12 +1606,12 @@ begin
     begin
       idx:=l;
       RecNo:=TransOrder(idx,sn);
-      while (idx<reccount) and (IsDeleted(RecNo)) do
+      while (idx<IndexRecCount) and (IsDeleted(RecNo)) do
       begin
         inc(idx);
         RecNo:=TransOrder(idx,sn);
       end;
-      Result := (idx<reccount) and GetIntField(RecNo,fn,i_s) and (value=i_s);
+      Result := (idx<IndexRecCount) and GetIntField(RecNo,fn,i_s) and (value=i_s);
       exit;
     end;
   until false;
@@ -1935,32 +1943,33 @@ var p:pointer;
 begin
   if orders.Count>=seeks.Count then
     raise Exception.Create(eReadOnlyIndexes);
+  Inc(IndexRecCount); //commited++
   if justinserted then
   begin
-    getmem(p,reccount*orders.Count*4);
+    getmem(p,IndexRecCount*orders.Count*4);
     for i:=0 to orders.Count-1 do
-      moveofs(index,p,i*(reccount-1)*4,i*reccount*4,(reccount-1)*4);
+      moveofs(index,p,i*(IndexRecCount-1)*4,i*IndexRecCount*4,(IndexRecCount-1)*4);
     freemem(index);
     index:=p;
   end else
   begin
     for i:=0 to orders.Count-1 do
-      for j:=0 to reccount-1 do if TransOrder(j,i)=RecNo then
-        moveofs(index,index,i*reccount*4+j*4+4,i*reccount*4+j*4,(reccount-j-1)*4);
+      for j:=0 to IndexRecCount-1 do if TransOrder(j,i)=RecNo then
+        moveofs(index,index,i*IndexRecCount*4+j*4+4,i*IndexRecCount*4+j*4,(IndexRecCount-j-1)*4);
   end;
   k:=RecNo;
   for i:=0 to orders.Count-1 do
   begin
     s:=sortrec(RecNo,i+1);
     fnd:=false;
-    for j:=0 to reccount-2 do if AnsiCompareStr(sortrec(TransOrder(j,i),i+1),s)>=0 then
+    for j:=0 to IndexRecCount-2 do if AnsiCompareStr(sortrec(TransOrder(j,i),i+1),s)>=0 then
     begin
-      moveofs(index,index,i*reccount*4+j*4,i*reccount*4+j*4+4,(reccount-j-1)*4);
-      moveofs(@k,index,0,i*reccount*4+j*4,4);
+      moveofs(index,index,i*IndexRecCount*4+j*4,i*IndexRecCount*4+j*4+4,(IndexRecCount-j-1)*4);
+      moveofs(@k,index,0,i*IndexRecCount*4+j*4,4);
       fnd:=true;
       break;
     end;
-    if not fnd then moveofs(@k,index,0,i*reccount*4+(reccount-1)*4,4);
+    if not fnd then moveofs(@k,index,0,i*IndexRecCount*4+(IndexRecCount-1)*4,4);
   end;
 end;
 
@@ -1984,14 +1993,14 @@ begin
   for i:=0 to li.Count-1 do
   begin
     k:=strtoint(li[i]);
-    moveofs(@k,index,0,ino*reccount*4+a*4+i*4,4);
+    moveofs(@k,index,0,ino*IndexRecCount*4+a*4+i*4,4);
   end;
   k:=c;
-  moveofs(@k,index,0,ino*reccount*4+a*4+li.Count*4,4);
+  moveofs(@k,index,0,ino*IndexRecCount*4+a*4+li.Count*4,4);
   for i:=0 to ri.Count-1 do
   begin
     k:=strtoint(ri[i]);
-    moveofs(@k,index,0,ino*reccount*4+a*4+i*4+li.Count*4+4,4);
+    moveofs(@k,index,0,ino*IndexRecCount*4+a*4+i*4+li.Count*4+4,4);
   end;
   if li.Count>1 then SortIndex(ino,a,a+li.Count-1);
   if ri.Count>1 then SortIndex(ino,b-ri.Count+1,b);
@@ -2011,21 +2020,22 @@ var i,j:integer;
 begin
   if orders.Count>=seeks.Count then
     raise Exception.Create(eReadOnlyIndexes);
-  getmem(p,reccount*orders.Count*4);
+  IndexRecCount:=RecCount;
+  getmem(p,IndexRecCount*orders.Count*4);
   freemem(index);
   index:=p;
   sl:=TStringList.Create;
   for i:=0 to orders.Count-1 do
   begin
     sl.Clear;
-    for j:=0 to reccount-1 do
+    for j:=0 to IndexRecCount-1 do
       sl.AddObject(SortRec(j,i+1),pointer(j));
     if rawindex then
       sl.CustomSort(CustomSortCompare)
     else
       sl.Sort; //uses AnsiCompareStr too
-    for j:=0 to reccount-1 do
-      PInteger(IntPtr(index)+i*reccount*4+j*4)^ := integer(sl.Objects[j]); //there's really only integer stored, even on 64bit platforms
+    for j:=0 to IndexRecCount-1 do
+      PInteger(IntPtr(index)+i*IndexRecCount*4+j*4)^ := integer(sl.Objects[j]); //there's really only integer stored, even on 64bit platforms
   end;
   sl.Free;
 end;
@@ -2037,7 +2047,7 @@ begin
   for i:=0 to orders.Count-1 do if seeks.Count>i+1 then
   begin
     s1:='';
-    for j:=0 to reccount-1 do
+    for j:=0 to IndexRecCount-1 do
     begin
       s2:=sortrec(transorder(j,i),i+1);
       if ((not rawindex) and (AnsiCompareStr(s2,s1)<0)) or

@@ -7,6 +7,8 @@ Only full replacement of all relevant properties is supported (impossible to
 add translations while keeping existing ones at this point).
 }
 
+//TODO: Localize some messages
+
 interface
 
 uses
@@ -364,16 +366,20 @@ begin
     CharDataProps.KanjidicVersion := FileAgeStr(KanjidicFilename);
 
    //Save
-    backupFile := Backup(AppFolder+'\wakan.chr');
-    if backupFile='' then
-      raise Exception.Create('Cannot backup WAKAN.CHR, will not continue');
+    if FileExists(AppFolder+'\wakan.chr') then begin
+      backupFile := Backup(AppFolder+'\wakan.chr');
+      if backupFile='' then
+        raise Exception.Create('Cannot backup WAKAN.CHR, will not continue');
+    end else
+      backupFile := ''; //the only case we continue without backup
 
     tempDir := CreateRandomTempDir();
     SaveCharData(tempDir+'\wakan.chr');
-    if not DeleteFile(AppFolder+'\wakan.chr') then
+    if (backupFile<>'') and not DeleteFile(AppFolder+'\wakan.chr') then
       raise Exception.Create('Cannot replace current wakan.chr');
     if not MoveFile(PChar(tempDir+'\wakan.chr'), PChar(AppFolder+'\wakan.chr')) then begin
-      CopyFile(PChar(backupFile), PChar(AppFolder+'\wakan.chr'), true);
+      if backupFile<>'' then
+        CopyFile(PChar(backupFile), PChar(AppFolder+'\wakan.chr'), true);
       raise Exception.Create('Cannot move newly created wakan.chr. Old wakan.chr restored.');
     end;
     DeleteDirectory(tempDir);

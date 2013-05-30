@@ -647,29 +647,6 @@ begin
         Application.Terminate;
         exit;
       end;
-    if (not FileExists('wakan.chr')) then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
-          +'This file is required for application to run.'#13
-          +'Please download this file from WAKAN website.'#13#13
-          +'Application will now be terminated.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
-    end;
-    if not FileExists('wakan.cfg') then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
-          +'This file contains important configuration parameters and is required'
-          +'for application to run.'#13#13'Application will now be terminated.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
-    end;
 
     oldhandle:=0;
     TranslateAll;
@@ -684,7 +661,18 @@ begin
       fSplash.Update;
     end;
 
-    //Configuration file
+   //Configuration file
+    if not FileExists('wakan.cfg') then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
+          +'This file contains important configuration parameters and is required'
+          +'for application to run.'#13#13'Application will now be terminated.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      Application.Terminate;
+      exit;
+    end;
     try
       LoadWakanCfg('wakan.cfg');
     except
@@ -739,6 +727,22 @@ begin
     fSettings.CheckFontsPresent;
 
    //Wakan.chr
+    if not FileExists('wakan.chr')
+    and not ((Command='makechars') and MakeCharsParams.ResetDb) then
+    begin
+      Application.MessageBox(
+        pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
+          +'This file is required for application to run.'#13
+          +'Please download this file from WAKAN website.'#13#13
+          +'Application will now be terminated.')),
+        pchar(_l('#00020^eError')),
+        MB_OK or MB_ICONERROR);
+      Application.Terminate;
+      exit;
+    end;
+    if (Command='makechars') and MakeCharsParams.ResetDb and not FileExists('wakan.chr') then
+      raise Exception.Create('makechars: At this point we still can''t compile TRadicals table, '
+        +'therefore you need base WAKAN.CHR even with /resetdb.');
     try
       LoadCharData('wakan.chr');
       if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;

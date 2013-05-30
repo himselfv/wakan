@@ -734,7 +734,7 @@ begin
   end;
   if fSettings.CheckBox69.Checked and HaveAnnotations then
   begin
-    Annot.SeekK(TChar.Str(TCharUnicode),'');
+    Annot.SeekK(kix,'');
     sbJouyou:=Annot.GetOne('c');
     if sbJouyou<>'' then try
       DrawGrid1.Canvas.Font.Color:=strtoint('0x'+copy(sbJouyou,5,2)+copy(sbJouyou,3,2)+copy(sbJouyou,1,2));

@@ -44,7 +44,7 @@ end;
 var
   Command: string;
   TablePath: string; //common to many commands
-  IndexId: integer;
+  IndexName: string;
 
 procedure ParseCommandLine();
 var i: integer;
@@ -53,7 +53,7 @@ begin
  //Set to default
   Command := '';
   TablePath := '';
-  IndexId := -1;
+  IndexName := '';
 
  //No params at all => nothing to parse
   if ParamCount<1 then exit;
@@ -124,8 +124,8 @@ begin
 
       end else
       if Command='dump-index' then begin
-        if IndexId<0 then
-          IndexId := StrToInt(s)
+        if IndexName='' then
+          IndexName := s
 
         else
          //No options
@@ -142,8 +142,8 @@ begin
   if TablePath='' then
     BadUsage('Invalid table path.');
   if Command='dump-index' then
-    if IndexId<0 then
-      BadUsage('dump-index needs index id');
+    if IndexName='' then
+      BadUsage('dump-index needs index id or name');
 end;
 
 function DataTypeToStr(const dt: char): string;
@@ -166,18 +166,19 @@ var tt: TTextTable;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
   writeln('Table: '+TablePath);
+  writeln('Records: '+IntToStr(tt.RecordCount));
   writeln('');
   writeln('Fields:');
   for i := 0 to Length(tt.fields) - 1 do
     writeln('  '+tt.Fields[i].Name+': '+DataTypeToStr(tt.Fields[i].DataType) + ' ['+tt.Fields[i].DataType+']');
   writeln('');
   writeln('Seeks:');
-  for i := 0 to Length(tt.seeks) - 1 do
+  for i := 0 to tt.seeks.Count - 1 do
     writeln('  '+tt.Seeks[i].Name+': '+tt.Seeks[i].Declaration);
   writeln('');
   writeln('Orders:');
   for i := 0 to tt.Orders.Count - 1 do
-    if i<Length(tt.Seeks)-1 then
+    if i<tt.Seeks.Count-1 then
       writeln('  '+tt.Orders[i]+' -> '+tt.Seeks[i+1].Name)
     else
       writeln('  '+tt.Orders[i]);
@@ -209,11 +210,18 @@ end;
 
 procedure RunDumpIndex();
 var tt: TTextTable;
-  i: integer;
+  IndexId, i: integer;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
-  if IndexId>=tt.Orders.Count then
-    raise Exception.Create('No index with id='+IntToStr(IndexId));
+  if TryStrToInt(IndexName, IndexId) then begin
+    if IndexId>=tt.Orders.Count then
+      raise Exception.Create('No index with id='+IntToStr(IndexId));
+  end else
+  if not tt.Orders.Find(IndexName, IndexId) then begin
+    IndexId := tt.Seeks.Find(IndexName);
+    if IndexId<0 then
+      raise Exception.Create('Index not found: '+IndexName);
+  end;
   for i := 0 to tt.RecordCount - 1 do
     writeln(Format('%.8d = %.8d', [i, tt.TransOrder(i,IndexId)]));
   FreeAndNil(tt);
