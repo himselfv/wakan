@@ -403,6 +403,24 @@ var CChar: TTextTableCursor;
   propType: PCharPropType;
   pre_idx: integer;
   i: integer;
+  JpStrokeCount: integer;
+  JpFrequency: integer;
+  JouyouGrade: integer;
+
+  function Ed_GetIntField(const key: string; out value: integer): boolean;
+  var field: PFieldEntry;
+  begin
+    field := ed.GetField(key);
+    if (field=nil) or (field.values_used<1) then begin
+      Result := false;
+      exit;
+    end;
+   //There can be several entries (i.e. for stroke count less popular variants come
+   //after the main one), but we only take the first one.
+    value := StrToInt(field.values[0]); //crash and burn if not int
+    Result := true;
+  end;
+
 begin
  { Preallocate CharsCovered and mark all existing chars as not yet covered }
   SetLength(CharsCovered, TChar.RecordCount);
@@ -432,18 +450,23 @@ begin
 
      //Find kanji
       if not CChar.Locate('Unicode', ed.kanji) then begin
+        if not ed_GetIntField('S', JpStrokeCount) then
+          JpStrokeCount := 255;
+        if not ed_GetIntField('F', JpFrequency) then
+          JpFrequency := 65535;
+        if not ed_GetIntField('G', JouyouGrade) then
+          JouyouGrade := 255;
         CChar.Insert([
          '0', //Index
          '0', //Not unicode-only
-         'J', //TODO: See chartype explanation in JWBCharData and set this accordingly
+         'J', //See comments for TCharType. For now, 'J'. Unihan parsing might alter this.
          ed.kanji, //Unicode,
          '255', //Stroke count,
-         '255', //Jp stroke count, TODO: take from KANJIDIC
-         '65535', //Jp frequence, TODO: take from KANJIDIC
+         IntToStr(JpStrokeCount),
+         IntToStr(JpFrequency),
          '255', //Frequence
-         '0' //Jouyou grade, TODO: take from KANJIDIC
+         IntToStr(JouyouGrade)
         ]);
-       //TODO: Insert new kanji
       end else
         CharsCovered[CChar.tcur] := true; //migrated
 

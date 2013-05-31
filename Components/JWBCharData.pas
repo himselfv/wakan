@@ -50,12 +50,11 @@ var
         chin + kGB0           'S'
     }
   TCharUnicode,               //char itself
- { Frequency, stroke count, grade info is 255 if unknown }
-  TCharStrokeCount,
-  TCharJpStrokeCount,         //from kanjidic
+  TCharStrokeCount,           //255 if unknown
+  TCharJpStrokeCount,         //from kanjidic, 255 if unknown
   TCharJpFrequency,           //from kanjidic, 65535 if unknown
-  TCharChFrequency,
-  TCharJouyouGrade: integer;  //from kanjidic
+  TCharChFrequency,           //255 if unknown
+  TCharJouyouGrade: integer;  //from kanjidic, 255 if unknown
 
   TCharProp: TTextTable;
   TCharPropIndex,
