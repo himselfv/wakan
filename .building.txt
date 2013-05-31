@@ -16,7 +16,9 @@ IV. Run Wakan to generate:
   wakan.sod -- stroke order package built from strokes.csv (included)
   wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)
 
-V. Pack these files into a distribution:
+V. Import/update any dictionaries (EDICT2/CC-EDICT variations) into *.dic files.
+
+VI. Pack these files into a distribution:
   jalet.exe -> wakan.exe
   wakan.cfg
   wakan.sod
