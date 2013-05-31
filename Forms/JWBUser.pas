@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   rxPlacemnt, StdCtrls, ExtCtrls, ComCtrls, Grids, RXCtrls, Buttons,
-  JWBStrings, JWBUtils, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
+  JWBStrings, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
   WakanPaintbox;
 
 type

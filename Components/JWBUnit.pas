@@ -3,7 +3,7 @@
 
 interface
 uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
-  ExtCtrls, Registry, JWBStrings, JWBUtils, JWBKanaConv;
+  ExtCtrls, Registry, JWBStrings, JWBKanaConv;
 
 { Misc }
 
