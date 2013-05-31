@@ -87,6 +87,17 @@ procedure ParseKanjidicLine(const s: UnicodeString; ed: PKanjidicEntry);
 
 implementation
 
+resourcestring
+  eFieldEntryOverflow = 'FieldEntry: Cannot add one more value (%d)';
+  eReadingClassEntryOnOverflow = 'ReadingClassEntry: Cannot add one more ON (%d)';
+  eReadingClassEntryKunOverflow = 'ReadingClassEntry: Cannot add one more KUN (%d)';
+  eKanjidicEntryFieldsOverflow = 'KanjiDicEntry: Cannot add one more field (%d)';
+  eKanjidicEntryMeaningsOverflow = 'KanjiDicEntry: Cannot add one more meaning (%d)';
+  eNoKanjiFieldInRecord = 'No kanji field in record';
+  eNoJisFieldInRecord = 'No jis field in record';
+  eBrokenMeaningBrakets = 'Broken meaning brakets';
+  eUnsupportedReadingClass = 'Unsupported reading class: %s';
+
 procedure TFieldEntry.Reset;
 begin
   key := '';
@@ -97,7 +108,7 @@ procedure TFieldEntry.AddValue(const value: string);
 begin
   Inc(values_used);
   if values_used>Length(values) then
-    raise EKanjidicParsingException.Create('FieldEntry: Cannot add one more value ('+IntToStr(values_used)+')');
+    raise EKanjidicParsingException.CreateFmt(eFieldEntryOverflow, [values_used]);
   values[values_used-1] := value;
 end;
 
@@ -111,7 +122,7 @@ procedure TReadingClassEntry.AddOn(const value: UnicodeString);
 begin
   Inc(ons_used);
   if ons_used>Length(ons) then
-    raise EKanjidicParsingException.Create('ReadingClassEntry: Cannot add one more ON ('+IntToStr(ons_used)+')');
+    raise EKanjidicParsingException.CreateFmt(eReadingClassEntryOnOverflow, [ons_used]);
   ons[ons_used-1] := value;
 end;
 
@@ -119,7 +130,7 @@ procedure TReadingClassEntry.AddKun(const value: UnicodeString);
 begin
   Inc(kuns_used);
   if kuns_used>Length(kuns) then
-    raise EKanjidicParsingException.Create('ReadingClassEntry: Cannot add one more KUN ('+IntToStr(kuns_used)+')');
+    raise EKanjidicParsingException.CreateFmt(eReadingClassEntryKunOverflow, [kuns_used]);
   kuns[kuns_used-1] := value;
 end;
 
@@ -141,7 +152,7 @@ begin
   if field=nil then begin
     Inc(fields_used);
     if fields_used>Length(fields) then
-      raise EKanjidicParsingException.Create('KanjiDicEntry: Cannot add one more field ('+IntToStr(fields_used)+')');
+      raise EKanjidicParsingException.CreateFmt(eKanjidicEntryFieldsOverflow, [fields_used]);
     field := @fields[fields_used-1];
     field^.Reset;
     field^.key := AnsiLowerCase(key);
@@ -153,7 +164,7 @@ procedure TKanjidicEntry.AddMeaning(const value: UnicodeString);
 begin
   Inc(meanings_used);
   if meanings_used>Length(meanings) then
-    raise EKanjidicParsingException.Create('KanjiDicEntry: Cannot add one more meaning ('+IntToStr(meanings_used)+')');
+    raise EKanjidicParsingException.CreateFmt(eKanjidicEntryMeaningsOverflow, [meanings_used]);
   meanings[meanings_used-1] := value;
 end;
 
@@ -256,9 +267,9 @@ begin
   if pc=nil then exit;
 
   if not ReadNextWord(pc, ed.kanji) then
-    raise EKanjidicParsingException.Create('No kanji field in record');
+    raise EKanjidicParsingException.Create(eNoKanjiFieldInRecord);
   if not ReadNextWord(pc, word) then
-    raise EKanjidicParsingException.Create('No jis field in record');
+    raise EKanjidicParsingException.Create(eNoJisFieldInRecord);
   ed.jis := string(word);
 
  //Rest is dynamic
@@ -269,7 +280,7 @@ begin
    //Meaning
     if word[1]='{' then begin
       if word[Length(word)]<>'}' then
-        raise EKanjidicParsingException.Create('Broken meaning brakets');
+        raise EKanjidicParsingException.Create(eBrokenMeaningBrakets);
       ed.AddMeaning(copy(word, 2, Length(word)-2));
     end else
    //Readings
@@ -283,7 +294,7 @@ begin
     if (Length(word)=2) and (word[1]='T') and (word[2]>='0') and (word[2]<='9') then begin
       rclass := Ord(word[2])-Ord('0');
       if rclass>Length(ed.readings) then
-        raise EKanjidicParsingException.Create('Unsupported reading class: '+word);
+        raise EKanjidicParsingException.CreateFmt(eUnsupportedReadingClass, [word]);
     end else
    //Normal field
     begin

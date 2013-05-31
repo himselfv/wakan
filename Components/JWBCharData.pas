@@ -150,8 +150,9 @@ const
   ptJapaneseDefinitionUnicode = 121;
 
 procedure AddCharPropType(const str: string);
-function FindCharPropType(const propTypeId: integer): PCharPropType;
+function FindCharPropType(const propTypeId: integer): PCharPropType; overload;
 function FindCharPropTypeIndex(const propTypeId: integer): integer;
+function FindCharPropType(const ASource: char; const AField: string): PCharPropType; overload;
 
 
 {
@@ -556,6 +557,19 @@ begin
   for i := 0 to Length(CharPropTypes) - 1 do
     if propTypeId=CharPropTypes[i].id then begin
       Result := i;
+      break;
+    end;
+end;
+
+{ Locates property type which stores data from ASource:AField }
+function FindCharPropType(const ASource: char; const AField: string): PCharPropType;
+var i: integer;
+begin
+  Result := nil;
+  for i := 0 to Length(CharPropTypes) - 1 do
+    if (ASource=CharPropTypes[i].sourceType)
+    and (AField=CharPropTypes[i].sourceField) then begin
+      Result := @CharPropTypes[i];
       break;
     end;
 end;

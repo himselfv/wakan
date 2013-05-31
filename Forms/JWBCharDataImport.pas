@@ -34,9 +34,9 @@ type
     procedure FormShow(Sender: TObject);
   protected
     procedure ImportKanjidic(const KanjidicFilename: string; out CharsCovered: TFlagList);
-    procedure ImportUnihan(const UnihanFolder: string; out CharsCovered: TFlagList);
+    procedure ImportUnihan(const UnihanFolder: string);
     procedure CopyProperties(OldCharProp: TTextTable; const KanjidicCovered: TFlagList;
-      const UnihanCovered: TFlagList);
+      const UnihanPresent: boolean);
     function SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
   public
     procedure UpdateCharDb(ResetDb: boolean; const KanjidicFilename: string;
@@ -47,8 +47,8 @@ var
   fCharDataImport: TfCharDataImport;
 
 implementation
-uses StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader,
-  JWBConvert, JWBUnit;
+uses StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
+  JWBConvert, JWBIO, JWBUnit;
 
 {$R *.dfm}
 
@@ -288,10 +288,10 @@ var prog: TSMPromptForm;
   OldCharProp: TTextTable;
 
  { If we're updating DB, we need to port TChar and property entries which were
-  not covered by the KANJIDIC/UNIHAN provided.
-  So we keep track of which of original TChars were covered in which source. }
+  not covered by the KANJIDIC/UNIHAN provided. So we keep track of it. }
   KanjidicCovered: TFlagList;
-  UnihanCovered: TFlagList;
+ { Unihan is handled differently, it's either present or not. It can't cover
+  less than it covered on previous import. }
 
 begin
   prog:=SMProgressDlgCreate(
@@ -338,15 +338,13 @@ begin
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
     if UnihanFolder<>'' then
-      ImportUnihan(UnihanFolder, UnihanCovered)
-    else
-      SetLength(UnihanCovered, 0);
+      ImportUnihan(UnihanFolder);
     TChar.Reindex;
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));
     if not ResetDb then
-      CopyProperties(OldCharProp, KanjidicCovered, UnihanCovered);
+      CopyProperties(OldCharProp, KanjidicCovered, UnihanFolder<>'');
 
    { STAGE V. Sort, reindex and finalize }
     prog.SetMessage(_l('#01078^eReindexing...'));
@@ -441,6 +439,8 @@ begin
     conv_type := fuin.DetectType;
     if conv_type=FILETYPE_UNKNOWN then
       conv_type := Conv_ChooseType({chinese=}false,FILETYPE_EUC); //kanjidic is by default EUC
+    if conv_type=FILETYPE_UNKNOWN then
+      raise EAbort.Create('');
     fuin.RewindAsType(conv_type);
     while not fuin.EOF do begin
       line := fuin.ReadLn;
@@ -507,10 +507,133 @@ begin
     CharsCovered[i] := true;
 end;
 
-procedure TfCharDataImport.ImportUnihan(const UnihanFolder: string; out CharsCovered: TFlagList);
+procedure TfCharDataImport.ImportUnihan(const UnihanFolder: string);
+var CChar: TTextTableCursor;
+  CNewProp: TCharPropBuilder;
+  CharIdx: integer;
+  parts: TStringArray;
+
+  procedure NeedChar(const kanji: UnicodeString);
+  begin
+   //TODO: Problem problem problem! The chars added during this pass
+   // are not being located (they're not yet in indexes).
+   //Solution: Move away from DisableIndexes/Reindex scheme. Commits should not
+   // be disableable.
+   //I have to write a fast indexing scheme, binary tree with logarithm addition
+   //and fixed positions for all elements probably.
+   //Convert to this on load, convert from this on write (with traversal).
+
+    if CChar.Locate('Unicode', kanji) then
+      exit;
+
+    CChar.Insert([
+     '0', //Index
+     '1', //Unicode-only
+     'N', //See comments for TCharType
+     kanji, //Unicode,
+     '255', //Stroke count,
+     '255', //Jp stroke count
+     '65535', //Jp frequency
+     '255', //Frequency
+     '255' //Jouyou grade
+    ]);
+  end;
+
+  procedure ImportFile(const UnihanFile: string);
+  var ffile: TCustomFileReader;
+    line: string;
+    ed: TUnihanPropertyEntry;
+    propType: PCharPropType;
+    i: integer;
+    entry_no: integer;
+  begin
+    ffile := TAnsiFileReader.Create(UnihanFile);
+    try
+      while ffile.Readln(line) do begin
+        line := Trim(line);
+        if (line='') or IsUnihanComment(line) then continue;
+        ParseUnihanLine(line, @ed);
+
+        propType := FindCharPropType('U', ed.propType);
+        if ed.propType='kFrequency' then begin
+          NeedChar(ed.char);
+          CChar.Edit([TCharChFrequency],[IntToStr(StrToInt(ed.value))]);
+        end else
+        if ed.propType='kTotalStrokes' then begin
+          NeedChar(ed.char);
+          CChar.Edit([TCharStrokeCount],[IntToStr(StrToInt(ed.value))]);
+        end else
+        if ed.propType='kBigFive' then begin
+          NeedChar(ed.char);
+          if CChar.Str(TCharType)='N' then
+            CChar.Edit([TCharType],['T'])
+          else;
+            CChar.Edit([TCharType],['A']);
+        end else
+        if ed.propType='kGB0' then begin
+          NeedChar(ed.char);
+          if CChar.Str(TCharType)='N' then
+            CChar.Edit([TCharType],['S'])
+          else;
+            CChar.Edit([TCharType],['A']);
+        end else
+        if (ed.propType='kCantonese') or (ed.propType='kMandarin')
+        or (ed.propType='kDefinition') or (ed.propType='kKorean') then begin
+         //Split + add
+          Assert(propType<>nil); //should still have proptype
+          if ed.propType='kDefinition' then
+            parts := SplitStr(ed.value,',')
+          else
+            parts := SplitStr(ed.value,' '); //cantonese, mandarin and korean are space-separated
+          NeedChar(ed.char);
+          CharIdx := CChar.TrueInt(TCharIndex);
+          CNewProp.OpenKanji(CharIdx);
+          entry_no:=0; //we don't use 'i' because some parts[i] can be empty: Split('a  b') => ('a', '', 'b')
+          for i := 0 to Length(parts) - 1 do begin
+            parts[i] := Trim(parts[i]);
+            if parts[i]='' then continue;
+            CNewProp.AddCharProp(propType, ed.value, 0, entry_no);
+            Inc(entry_no);
+          end;
+          CNewProp.CloseKanji;
+        end else
+        if propType<>nil then begin
+         //Just add
+         //May other properties need splitting too?
+          NeedChar(ed.char);
+          CharIdx := CChar.TrueInt(TCharIndex);
+          CNewProp.OpenKanji(CharIdx);
+          CNewProp.AddCharProp(propType, ed.value, 0, 0);
+          CNewProp.CloseKanji;
+        end;
+
+      end;
+    finally
+      FreeAndNil(ffile);
+    end;
+  end;
+
 begin
- //Currently not implemented
-  SetLength(CharsCovered, 0); //nothing is covered
+ { Parse KANJIDIC and add new properties }
+  CChar := nil;
+  CNewProp := nil;
+  try
+    CChar := TChar.NewCursor;
+    CNewProp := TCharPropBuilder.Create(TCharProp);
+
+    ImportFile(UnihanFolder+'\Unihan_Readings.txt');
+    ImportFile(UnihanFolder+'\Unihan_RadicalStrokeCounts.txt');
+    ImportFile(UnihanFolder+'\Unihan_DictionaryLikeData.txt');
+    ImportFile(UnihanFolder+'\Unihan_Variants.txt');
+    ImportFile(UnihanFolder+'\Unihan_OtherMappings.txt');
+    ImportFile(UnihanFolder+'\Unihan_DictionaryIndices.txt');
+   //A more radical solution would be to import every .txt file in a folder...
+   //But that's risky. Who knows what else is there.
+
+  finally
+    FreeAndNil(CNewProp);
+    FreeAndNil(CChar);
+  end;
 end;
 
 const
@@ -521,7 +644,7 @@ const
 { For every char from TChar, checks which sources covered it in this update,
  and copies old data for any sources which did not cover it this time. }
 procedure TfCharDataImport.CopyProperties(OldCharProp: TTextTable;
-  const KanjidicCovered: TFlagList; const UnihanCovered: TFlagList);
+  const KanjidicCovered: TFlagList; const UnihanPresent: boolean);
 var CChar: TTextTableCursor;
   CCharProp: TCharPropertyCursor;
   CNewProp: TCharPropBuilder;
@@ -566,7 +689,7 @@ begin
         skip := (CChar.tcur < Length(KanjidicCovered)) and KanjidicCovered[CChar.tcur]
       else
       if src='U' then
-        skip := (CChar.tcur < Length(UnihanCovered)) and UnihanCovered[CChar.tcur]
+        skip := UnihanPresent
       else
         skip := false; //just copy the abomination
 
