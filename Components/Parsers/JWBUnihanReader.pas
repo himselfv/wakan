@@ -91,6 +91,7 @@ begin
   if val[1]<>'U' then
     raise EUnihanParsingException.Create(eNoCharHexCode);
 
+  ed.Reset;
   i_next := pos(#09, val);
   if i_next<0 then
     raise EUnihanParsingException.Create(eNoPropertyName);
