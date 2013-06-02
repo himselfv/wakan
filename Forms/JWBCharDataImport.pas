@@ -335,11 +335,18 @@ begin
       SetLength(KanjidicCovered, 0);
     TChar.Reindex; //next stage will need to locate() in additions
 
+    TChar.NoCommitting := false;
+   //We cannot do NoCommiting with UNIHAN since the same (newly-added) kanji
+   //will appear several times in it.
+   //First time we added, second time we need to locate it, which requires it
+   //to be indexed (or we'll add it again)
+
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
     if UnihanFolder<>'' then
       ImportUnihan(UnihanFolder);
-    TChar.Reindex;
+//    TChar.Reindex;
+//    TChar.NoCommitting := false;
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));

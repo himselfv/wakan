@@ -34,6 +34,22 @@ type
   TTextTable = class;
   TTextTableCursor = class;
 
+  TTextTableIndex = record
+    Data: pointer;
+    DataSize: integer;
+    RecCnt: integer;
+    procedure Reset;
+    procedure Free;
+    procedure NeedAtLeast(const sz: integer);
+    function Read(const pos: integer): integer; inline;
+    procedure Write(const pos: integer; const val: integer); inline;
+    procedure AddRecs(const ACount: integer); inline;
+    procedure ShiftLeft(const pos, len: integer; const shift: integer); inline;
+    procedure ShiftRight(const pos, len: integer; const shift: integer); inline;
+    function FindEntry(const val: integer): integer;
+  end;
+  PTextTableIndex = ^TTextTableIndex;
+
  { Seek table reference to speed up Locate()
   Retrieve it once, use instead of a textual name.
   For common tables and common seeks, global references are kept. }
@@ -139,7 +155,7 @@ type
       array [0..IndexCount-1] x [0..IndexRecCount-1] of RecordNo: integer;
     Note that IndexRecCount may be < than RecCount if not all records are commited.
    }
-    data,struct,index:pointer;
+    data,struct:pointer;
     databuffer,structbuffer:integer; //free memory available in data and struct ptrs
     datalen:integer; //data length (used)
     struct_recsz:integer; //struct record size
@@ -169,6 +185,10 @@ type
     Index tables.
     The point of an index table is to keep records sorted in a particular order.
     This allows both for Seeking and Ordering of records.
+   }
+    FIndexes: array of TTextTableIndex;
+
+   {
     Index table descriptions are loaded from $SEEKS section, they are in the
     form "field1+field2+field3" -- see ParseSeekDescription()
    }
@@ -188,9 +208,10 @@ type
     read-only. }
     FOrders:TStringList;
 
-   //Record sorting
+   //Generates a signature for a record in sort order (i.e. FIELD1_FIELD2_FIELD3)
     function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
     function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function TrueLocateRecord(order: integer; const sign:string; out pos: integer):boolean;
 
   public
     function GetSeekObject(seek: string): TSeekObject;
@@ -209,7 +230,6 @@ type
 
   protected
     reccount:integer;
-    indexreccount: integer; //number of records in indexes (commited records)
     numberdeleted:integer;
     nocommit:boolean; //do not update indexes on Add/Edit/Delete. You'll have to Reindex later.
   public
@@ -359,6 +379,75 @@ begin
 end;
 
 
+procedure TTextTableIndex.Reset;
+begin
+  Self.Data := nil;
+  Self.DataSize := 0;
+  Self.RecCnt := 0;
+end;
+
+procedure TTextTableIndex.Free;
+begin
+  FreeMem(Self.Data);
+  Self.DataSize := 0;
+  Self.RecCnt := 0;
+end;
+
+procedure TTextTableIndex.NeedAtLeast(const sz: integer);
+begin
+  if DataSize>=sz then exit;
+  DataSize := Trunc(DataSize*1.6)+10; //standard growth
+  if sz>DataSize then //not enough
+    DataSize := sz;
+  ReallocMem(Self.Data, Self.DataSize);
+end;
+
+function TTextTableIndex.Read(const pos: integer): integer;
+begin
+  Result := PInteger(OffsetPtr(Self.Data,pos*4))^;
+end;
+
+procedure TTextTableIndex.Write(const pos: integer; const val: integer);
+begin
+  PInteger(OffsetPtr(Self.Data,pos*4))^ := val;
+end;
+
+procedure TTextTableIndex.AddRecs(const ACount: integer);
+begin
+  RecCnt := RecCnt + ACount;
+  NeedAtLeast(RecCnt*4);
+end;
+
+procedure TTextTableIndex.ShiftLeft(const pos, len: integer; const shift: integer);
+begin
+  Move(
+    PByte(IntPtr(Self.Data)+pos*4)^,
+    PByte(IntPtr(Self.Data)+(pos-shift)*4)^,
+    len*4);
+end;
+
+procedure TTextTableIndex.ShiftRight(const pos, len: integer; const shift: integer);
+begin
+  Move(
+    PByte(IntPtr(Self.Data)+pos*4)^,
+    PByte(IntPtr(Self.Data)+(pos+shift)*4)^,
+    len*4);
+end;
+
+{ Locates first occurence of a record reference in an index.
+ Normally, it would be the only occurence. }
+function TTextTableIndex.FindEntry(const val: integer): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i:=0 to RecCnt-1 do
+    if Read(i)=val then begin
+      Result := i;
+      break;
+    end;
+end;
+
+
 constructor TSeekList.Create(ATable: TTextTable);
 begin
   inherited Create;
@@ -456,6 +545,7 @@ begin
       break;
     end;
 end;
+
 
 //Basic Create() to be called by all customized versions
 constructor TTextTable.Create;
@@ -623,15 +713,18 @@ end;
 { Initialized empty table indexes and data in memory.
  Only info-schema is required to be parsed by this point. }
 procedure TTextTable.CreateData();
+var IndexCount, i: integer;
 begin
   reccount:=0;
-  indexreccount:=0;
   if prebuffer then
     databuffer := AllocDataBufferSz
   else
     databuffer := 0;
   GetMem(data,databuffer);
-  GetMem(index,0);
+  IndexCount := Max(FOrders.Count, FSeeks.Count-1);
+  SetLength(FIndexes, IndexCount);
+  for i := 0 to IndexCount - 1 do
+    FIndexes[i].Reset;
   if prebuffer then
     structbuffer := AllocStructBufferSz
   else
@@ -648,6 +741,8 @@ procedure TTextTable.LoadData(const AFilename:string;ARawRead:boolean);
 var bufsize,dsize:integer;
   mf:TMemoryFile;
   ms:TStream;
+  index:pointer;
+  IndexCount,IndexSize,i:integer;
  {$IFDEF TTSTATS}
   totalloc:integer;
  {$ENDIF}
@@ -677,7 +772,6 @@ begin
     datalen:=ms.Size-4;
     ms.Read(data^,4);
     moveofs(data,@reccount,0,0,4);
-    indexreccount:=reccount;
     ms.Read(data^,datalen);
 
     if mf<>nil then begin
@@ -692,7 +786,6 @@ begin
     source.ReadRawData(data^,integer(mf.Position),4);
     datafpos:=IntPtr(mf.Position)+4;
     moveofs(data,@reccount,0,0,4);
-    indexreccount:=reccount;
     if not offline then
     begin
       source.ReadRawData(data^,integer(mf.Position)+4,datalen);
@@ -734,6 +827,23 @@ begin
     GetMem(index,mf.Size);
     source.ReadRawData(index^,integer(mf.Position),mf.Size);
     dsize := mf.Size;
+  end;
+
+ { Split indices }
+  try
+    IndexCount := Max(FOrders.Count, FSeeks.Count-1);
+    IndexSize := RecCount * 4;
+    if dsize<>IndexCount*IndexSize then
+      raise Exception.Create('Invalid index size');
+    SetLength(FIndexes, IndexCount);
+    for i := 0 to IndexCount - 1 do begin
+      FIndexes[i].Reset;
+      FIndexes[i].RecCnt := RecCount;
+      FIndexes[i].NeedAtLeast(IndexSize);
+      MoveOfs(index, FIndexes[i].Data, i*IndexSize, 0, IndexSize);
+    end;
+  finally
+    FreeMem(index);
   end;
 
   {$IFDEF TTSTATS}
@@ -955,7 +1065,8 @@ begin
     closefile(f2);
     assignfile(f1,filename+'.index');
     rewrite(f1,1);
-    blockwrite(f1,index^,orders.Count*reccount*4);
+    for i := 0 to Length(FIndexes) - 1 do
+      blockwrite(f1,FIndexes[i].Data^,FIndexes[i].RecCnt*4);
     closefile(f1);
   end else
   begin
@@ -1010,10 +1121,13 @@ begin
 end;
 
 destructor TTextTable.Destroy;
+var i: integer;
 begin
   FreeAndNil(FOrders);
   freemem(data);
-  freemem(index);
+  for i := 0 to Length(FIndexes) - 1 do
+    FIndexes[i].Free;
+  SetLength(FIndexes, 0);
   freemem(struct);
   FreeAndNil(FSeeks);
 end;
@@ -1453,10 +1567,10 @@ begin
   if order=-1 then
     Result:=rec
   else
-  if rec>=IndexRecCount then
+  if rec>=FIndexes[order].RecCnt then
     Result:=rec //not yet indexed record
   else
-    Result:=PInteger(OffsetPtr(index, (order*indexreccount+rec)*4))^;
+    Result:=FIndexes[order].Read(rec);
 end;
 
 {$IFDEF CURSOR_IN_TABLE}
@@ -1517,13 +1631,16 @@ end;
  Returns true and record index in seek table if there are matches,
  or false and record index for record just after where the match would have occured.
  To convert seek index to record index call TransOrder(idx, seek.ind_i) }
+{ NOTE that LocateRecord only uses values for first field in a formula.
+ For full formula location (required when changing index, for ex.) use TrueLocateRecord }
 function TTextTable.LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean;
 var sn:integer;       //seek table number
   fn:integer;         //field number
   reverse:boolean;
   l,r,c:integer;
   s:string;
-  RecNo: integer;
+  RecNo:integer;
+  IndexRecCount:integer;
 begin
  { Seek table number is one lower than seek index. First seek is always the "default one" }
   sn := seek.ind_i-1;
@@ -1539,6 +1656,11 @@ begin
   value := uppercase(value);
 
   idx := RecCount+1; //if there are no records this'll be used
+
+  if sn<0 then
+    IndexRecCount := RecCount
+  else
+    IndexRecCount := FIndexes[sn].RecCnt;
 
  //Initiate binary search
   l:=0;
@@ -1578,6 +1700,7 @@ var sn:integer;       //seek table number
   l,r,c:integer;
   i_s: integer;      //integer value for "s", when number==true
   RecNo: integer;
+  IndexRecCount: integer;
 begin
  { Seek table number is one lower than seek index. First seek is always the "default one" }
   sn := seek.ind_i-1;
@@ -1590,6 +1713,10 @@ begin
     exit;
 
   idx := RecCount+1; //if there are no records this'll be used
+  if sn<0 then
+    IndexRecCount := RecCount
+  else
+    IndexRecCount := FIndexes[sn].RecCnt;
 
  //Initiate binary search
   l:=0;
@@ -1612,6 +1739,35 @@ begin
         RecNo:=TransOrder(idx,sn);
       end;
       Result := (idx<IndexRecCount) and GetIntField(RecNo,fn,i_s) and (value=i_s);
+      exit;
+    end;
+  until false;
+end;
+
+function TTextTable.TrueLocateRecord(order: integer; const sign:string; out pos: integer):boolean;
+var idx: PTextTableIndex;
+  l,r,c:integer;
+  lastCmp: integer;
+begin
+  idx := @FIndexes[order];
+  pos := idx.RecCnt; //if there are no records this'll be used
+  Result := false;
+
+  l:=0;
+  r:=idx.RecCnt-1;
+  if l<=r then repeat
+    c:=((r-l) div 2)+l;
+
+    lastCmp:=AnsiCompareStr(sign, SortRec(TransOrder(c,order),order+1));
+    if lastCmp<=0 then
+      r:=c
+    else
+      l:=c+1;
+
+    if l>=r then
+    begin
+      pos:=l;
+      Result := (pos<idx.RecCnt) and (lastCmp=0);
       exit;
     end;
   until false;
@@ -1935,78 +2091,59 @@ begin
 end;
 
 procedure TTextTable.Commit(RecNo:integer; JustInserted: boolean);
-var p:pointer;
-    i:integer;
-    j,k:integer;
-    s:string;
-    fnd:boolean;
+var pos_prev, pos_next: integer;
+  idx: PTextTableIndex;
+  i: integer;
 begin
   if orders.Count>=seeks.Count then
     raise Exception.Create(eReadOnlyIndexes);
-  Inc(IndexRecCount); //commited++
-  if justinserted then
-  begin
-    getmem(p,IndexRecCount*orders.Count*4);
-    for i:=0 to orders.Count-1 do
-      moveofs(index,p,i*(IndexRecCount-1)*4,i*IndexRecCount*4,(IndexRecCount-1)*4);
-    freemem(index);
-    index:=p;
-  end else
-  begin
-    for i:=0 to orders.Count-1 do
-      for j:=0 to IndexRecCount-1 do if TransOrder(j,i)=RecNo then
-        moveofs(index,index,i*IndexRecCount*4+j*4+4,i*IndexRecCount*4+j*4,(IndexRecCount-j-1)*4);
-  end;
-  k:=RecNo;
-  for i:=0 to orders.Count-1 do
-  begin
-    s:=sortrec(RecNo,i+1);
-    fnd:=false;
-    for j:=0 to IndexRecCount-2 do if AnsiCompareStr(sortrec(TransOrder(j,i),i+1),s)>=0 then
-    begin
-      moveofs(index,index,i*IndexRecCount*4+j*4,i*IndexRecCount*4+j*4+4,(IndexRecCount-j-1)*4);
-      moveofs(@k,index,0,i*IndexRecCount*4+j*4,4);
-      fnd:=true;
-      break;
+  for i := 0 to Length(FIndexes) - 1 do begin
+    idx := @FIndexes[i];
+
+   { Locate existing record }
+    if JustInserted then
+      pos_prev := -1 //we're guaranteed it's not in index
+    else
+      pos_prev := idx.FindEntry(RecNo);
+
+   { Mark it for killing }
+    if pos_prev>=0 then begin
+     { This cell will be killed but for now we need something to make
+      TrueLocateRecord work. Duplicating a cell does not break the sorting.  }
+
+     { We cannot duplicate in this case, but thankfully, no index changes are
+      needed at all! }
+      if idx.RecCnt=1 then
+        continue;
+
+      if pos_prev>0 then
+        idx.Write(pos_prev,idx.Read(pos_prev-1))
+      else
+       //pos_prev=0 but other records exit -- see above RecCnt<>1
+        idx.Write(pos_prev,idx.Read(pos_prev+1));
     end;
-    if not fnd then moveofs(@k,index,0,i*IndexRecCount*4+(IndexRecCount-1)*4,4);
+
+   { Find where the record should be }
+    TrueLocateRecord(i, SortRec(RecNo,i+1), pos_next);
+
+    if pos_prev<0 then begin
+     { Entry was not found, either we're adding the record or editing not yet indexed
+      record with indexing enabled (invalid, but we'll tolerate it here) }
+      idx.AddRecs(1);
+      pos_prev:=idx.RecCnt-1;
+    end;
+
+   { Add entry }
+    if pos_prev=pos_next then begin
+     //do nothing
+    end else
+    if pos_prev<pos_next then
+      idx.ShiftLeft(pos_prev+1, pos_next-pos_prev, 1)
+    else
+      idx.ShiftRight(pos_next, pos_prev-pos_next, 1);
+    idx.Write(pos_next, RecNo);
   end;
 end;
-
-{procedure TTextTable.SortIndex(ino:integer;a,b:integer);
-var c:integer;
-    li,ri:TStringList;
-    i,k:integer;
-    sc,sa:string;
-begin
-  if a=b then exit;
-  // choose cue point
-  c:=a+(b-a) div 2;
-  sc:=SortRec(TransOrder(c,ino),seekbuild[ino+1]);
-  li:=TStringList.Create;
-  ri:=TStringList.Create;
-  for i:=a to b do
-  if i<>c then begin
-    sa:=SortRec(TransOrder(i,ino),seekbuild[ino+1]);
-    if sa>sc then ri.Add(inttostr(TransOrder(i,ino))) else li.Add(inttostr(TransOrder(i,ino)));
-  end;
-  for i:=0 to li.Count-1 do
-  begin
-    k:=strtoint(li[i]);
-    moveofs(@k,index,0,ino*IndexRecCount*4+a*4+i*4,4);
-  end;
-  k:=c;
-  moveofs(@k,index,0,ino*IndexRecCount*4+a*4+li.Count*4,4);
-  for i:=0 to ri.Count-1 do
-  begin
-    k:=strtoint(ri[i]);
-    moveofs(@k,index,0,ino*IndexRecCount*4+a*4+i*4+li.Count*4+4,4);
-  end;
-  if li.Count>1 then SortIndex(ino,a,a+li.Count-1);
-  if ri.Count>1 then SortIndex(ino,b-ri.Count+1,b);
-  li.Free;
-  ri.Free;
-end;}
 
 function CustomSortCompare(list:TStringList;index1,index2:integer):integer;
 begin
@@ -2016,37 +2153,41 @@ end;
 procedure TTextTable.Reindex;
 var i,j:integer;
   sl:TStringList;
-  p:pointer;
+  idx: PTextTableIndex;
 begin
   if orders.Count>=seeks.Count then
     raise Exception.Create(eReadOnlyIndexes);
-  IndexRecCount:=RecCount;
-  getmem(p,IndexRecCount*orders.Count*4);
-  freemem(index);
-  index:=p;
+  for i := 0 to Length(FIndexes) - 1 do begin
+    FIndexes[i].RecCnt := RecCount;
+    FIndexes[i].NeedAtLeast(RecCount*4);
+  end;
   sl:=TStringList.Create;
   for i:=0 to orders.Count-1 do
   begin
+    idx := @FIndexes[i];
     sl.Clear;
-    for j:=0 to IndexRecCount-1 do
+    for j:=0 to RecCount-1 do
       sl.AddObject(SortRec(j,i+1),pointer(j));
     if rawindex then
       sl.CustomSort(CustomSortCompare)
     else
       sl.Sort; //uses AnsiCompareStr too
-    for j:=0 to IndexRecCount-1 do
-      PInteger(IntPtr(index)+i*IndexRecCount*4+j*4)^ := integer(sl.Objects[j]); //there's really only integer stored, even on 64bit platforms
+    for j:=0 to RecCount-1 do
+      idx.Write(j, integer(sl.Objects[j])); //there's really only integer stored in TObject, even on 64bit platforms
   end;
   sl.Free;
 end;
 
+{ Checks only those indexes for which there's a $SEEK definition }
 function TTextTable.CheckIndex:boolean;
 var i,j:integer;
-    s1,s2:string;
+  s1,s2:string;
+  IndexRecCount: integer;
 begin
   for i:=0 to orders.Count-1 do if seeks.Count>i+1 then
   begin
     s1:='';
+    IndexRecCount := FIndexes[i].RecCnt;
     for j:=0 to IndexRecCount-1 do
     begin
       s2:=sortrec(transorder(j,i),i+1);

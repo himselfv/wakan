@@ -331,7 +331,7 @@ end;
 
 function max(a, b: integer): integer;
 begin
-  if a<b then Result := a else Result := b;
+  if a>b then Result := a else Result := b;
 end;
 
 
