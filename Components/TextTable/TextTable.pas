@@ -1747,7 +1747,8 @@ end;
 function TTextTable.TrueLocateRecord(order: integer; const sign:string; out pos: integer):boolean;
 var idx: PTextTableIndex;
   l,r,c:integer;
-  lastCmp: integer;
+  lastCmp:integer;
+  s:string;
 begin
   idx := @FIndexes[order];
   pos := idx.RecCnt; //if there are no records this'll be used
@@ -1758,7 +1759,16 @@ begin
   if l<=r then repeat
     c:=((r-l) div 2)+l;
 
-    lastCmp:=AnsiCompareStr(sign, SortRec(TransOrder(c,order),order+1));
+  {
+    s:=GetField(TransOrder(c,sn),fn);
+    if rawindex then
+      if value<=uppercase(s) then r:=c else l:=c+1
+    else
+      if AnsiCompareStr(value,uppercase(s))<=0 then r:=c else l:=c+1;
+  }
+
+    s:=SortRec(TransOrder(c,order),order+1);
+    lastCmp:=AnsiCompareStr(sign, s);
     if lastCmp<=0 then
       r:=c
     else

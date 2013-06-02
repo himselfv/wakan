@@ -276,6 +276,8 @@ begin
   FCharIdx := -1;
 end;
 
+//{$DEFINE UNIHAN_NOINDEX}
+
 { Updates or recreates from the scratch WAKAN.CHR.
  If any of KanjidicFilename, UnihanFolder is not specified, that part is skipped.
  If ResetDb is set, existing information is discarded, otherwise preserved where
@@ -333,20 +335,24 @@ begin
       ImportKanjidic(KanjidicFilename, KanjidicCovered)
     else
       SetLength(KanjidicCovered, 0);
+{$IFNDEF UNIHAN_NOINDEX}
     TChar.Reindex; //next stage will need to locate() in additions
-
     TChar.NoCommitting := false;
    //We cannot do NoCommiting with UNIHAN since the same (newly-added) kanji
    //will appear several times in it.
    //First time we added, second time we need to locate it, which requires it
    //to be indexed (or we'll add it again)
+{$ENDIF}
 
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
     if UnihanFolder<>'' then
       ImportUnihan(UnihanFolder);
-//    TChar.Reindex;
-//    TChar.NoCommitting := false;
+
+{$IFDEF UNIHAN_NOINDEX}
+    TChar.Reindex;
+    TChar.NoCommitting := false;
+{$ENDIF}
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));
@@ -529,6 +535,11 @@ var CChar: TTextTableCursor;
    //I have to write a fast indexing scheme, binary tree with logarithm addition
    //and fixed positions for all elements probably.
    //Convert to this on load, convert from this on write (with traversal).
+
+   //TODO: Simple optimization: If it's the same char as before, nothing needs to be done!
+   // (Unihan really stores chars mostly in batches, not between diff. files though)
+
+   //TODO: Replace 'Unicode' with ptr index reference
 
     if CChar.Locate('Unicode', kanji) then
       exit;
