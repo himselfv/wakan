@@ -84,8 +84,9 @@ end;
 
 { Do not pass empty or comment lines }
 procedure ParseUnihanLine(const s: UnicodeString; ed: PUnihanPropertyEntry);
-var i_next: integer;
+var i_next, j: integer;
   val, tmp: string;
+  uni_idx: integer;
 begin
   val := s;
   if val[1]<>'U' then
@@ -98,19 +99,22 @@ begin
   tmp := copy(val,3,i_next-3);
   if Length(tmp)<4 then
     raise EUnihanParsingException.CreateFmt(eInvalidCharHexCode, [tmp]);
-  while Length(tmp)>=4 do begin
-    if Length(tmp)<4 then
-      raise EUnihanParsingException.CreateFmt(eInvalidCharHexCode, [tmp]);
-    ed.char := ed.char + WideChar(Word(
-      HexCharCode(tmp[1]) shl 12
-      + HexCharCode(tmp[2]) shl 8
-      + HexCharCode(tmp[3]) shl 4
-      + HexCharCode(tmp[4]) shl 0
-    ));
-    delete(tmp,1,4);
+  uni_idx := 0;
+  if (Length(tmp)>6) or (Length(tmp)<=0) then
+    raise EUnihanParsingException.CreateFmt(eInvalidCharHexCode, [tmp]);
+  for j := 1 to Length(tmp) do
+    uni_idx := uni_idx shl 4 + HexCharCode(tmp[j]);
+  if uni_idx<=$FFFF then
+    ed.char := WideChar(Word(uni_idx))
+  else
+  if uni_idx>$10FFFF then
+    raise EUnihanParsingException.CreateFmt(eInvalidCharHexCode, [tmp])
+  else begin
+    uni_idx := uni_idx - $10000; //max $FFFFF remains
+    ed.char :=
+        WideChar(Word($D800+(uni_idx and $FFC00) shr 10)) //base + top ten bits = lead surrogate
+      + WideChar(Word($DC00+(uni_idx and $003FF))); //base + low ten bits = trail surrogate
   end;
-  if ed.char='' then
-    raise EUnihanParsingException.Create(eNoCharHexCode); //somehow
 
   val := copy(val, i_next+1, MaxInt);
   i_next := pos(#09, val);
