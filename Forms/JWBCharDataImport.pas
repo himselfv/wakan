@@ -276,8 +276,6 @@ begin
   FCharIdx := -1;
 end;
 
-//{$DEFINE UNIHAN_NOINDEX}
-
 { Updates or recreates from the scratch WAKAN.CHR.
  If any of KanjidicFilename, UnihanFolder is not specified, that part is skipped.
  If ResetDb is set, existing information is discarded, otherwise preserved where
@@ -327,32 +325,17 @@ begin
      We won't be able to add records without this. }
       FixTCharJpUnicodeIndex(TChar);
 
-    TChar.NoCommitting := true;
-
    { STAGE II. Import KANJIDIC }
     prog.SetMessage(_l('^eImporting KANJIDIC...'));
     if KanjidicFilename<>'' then
       ImportKanjidic(KanjidicFilename, KanjidicCovered)
     else
       SetLength(KanjidicCovered, 0);
-{$IFNDEF UNIHAN_NOINDEX}
-    TChar.Reindex; //next stage will need to locate() in additions
-    TChar.NoCommitting := false;
-   //We cannot do NoCommiting with UNIHAN since the same (newly-added) kanji
-   //will appear several times in it.
-   //First time we added, second time we need to locate it, which requires it
-   //to be indexed (or we'll add it again)
-{$ENDIF}
 
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
     if UnihanFolder<>'' then
       ImportUnihan(UnihanFolder);
-
-{$IFDEF UNIHAN_NOINDEX}
-    TChar.Reindex;
-    TChar.NoCommitting := false;
-{$ENDIF}
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));
@@ -571,6 +554,11 @@ var CChar: TTextTableCursor;
         line := Trim(line);
         if (line='') or IsUnihanComment(line) then continue;
         ParseUnihanLine(line, @ed);
+
+        if Length(ed.char)>1 then begin
+          line := '';
+          continue; //multibyte chars not supported
+        end;
 
         propType := FindCharPropType('U', ed.propType);
         if ed.propType='kFrequency' then begin

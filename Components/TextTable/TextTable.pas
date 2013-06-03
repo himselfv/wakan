@@ -208,12 +208,20 @@ type
     read-only. }
     FOrders:TStringList;
 
-   //Generates a signature for a record in sort order (i.e. FIELD1_FIELD2_FIELD3)
-    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
-    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
+   { Comparison functions. TextTable has two comparison modes:
+     - Field comparison (string or integer, used by LocateRecord)
+     - Signature comparison for a set of fields (used by TrueLocateRecord, CheckIndex, Reindex)
+     The way strings are compared depends on rawindex variable. }
+    function ttCompareStr(const s1, s2: string): integer; inline;
+    function ttCompareSign(const s1, s2: string): integer; inline;
+
     function TrueLocateRecord(order: integer; const sign:string; out pos: integer):boolean;
 
   public
+   //Generates a signature for a record in sort order (i.e. FIELD1_FIELD2_FIELD3)
+    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
+    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
+
     function GetSeekObject(seek: string): TSeekObject;
     function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
     function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
@@ -1670,10 +1678,10 @@ begin
     s:=GetField(TransOrder(c,sn),fn);
     if reverse then
       s:=ReverseString(s);
-    if rawindex then
-      if value<=uppercase(s) then r:=c else l:=c+1
+    if ttCompareStr(value,uppercase(s))<=0 then
+      r:=c
     else
-      if AnsiCompareStr(value,uppercase(s))<=0 then r:=c else l:=c+1;
+      l:=c+1;
     if l>=r then
     begin
       idx:=l;
@@ -1686,7 +1694,7 @@ begin
       Result := idx<IndexRecCount;
       if Result then begin
         s:=GetField(RecNo,fn);
-        Result := (value=uppercase(s));
+        Result:=(ttCompareStr(value,uppercase(s))=0);
       end;
       exit;
     end;
@@ -1759,16 +1767,8 @@ begin
   if l<=r then repeat
     c:=((r-l) div 2)+l;
 
-  {
-    s:=GetField(TransOrder(c,sn),fn);
-    if rawindex then
-      if value<=uppercase(s) then r:=c else l:=c+1
-    else
-      if AnsiCompareStr(value,uppercase(s))<=0 then r:=c else l:=c+1;
-  }
-
     s:=SortRec(TransOrder(c,order),order+1);
-    lastCmp:=AnsiCompareStr(sign, s);
+    lastCmp:=ttCompareSign(sign, s);
     if lastCmp<=0 then
       r:=c
     else
@@ -2071,6 +2071,11 @@ begin
 end;
 {$ENDIF}
 
+{ Generates a signature for a set of fields to user in search/sort.
+ Signature must be in such a format that it's sorted exactly like those fields
+ would be sorted as strings and integers (depending on their types).
+ To achieve this, fields are separated with #9 (assumed to not appear in text),
+ and integers are padded with zeroes (this gives us proper integer-like sorting). }
 function TTextTable.SortRec(r:integer;const fields:TSeekFieldDescriptions):string;
 var j, idx: integer;
   s3: string;
@@ -2098,6 +2103,25 @@ end;
 function TTextTable.SortRec(r:integer;seekIndex:integer):string;
 begin
   Result := SortRec(r, seeks[seekIndex].fields);
+end;
+
+{ String comparison for a single field }
+function TTextTable.ttCompareStr(const s1, s2: string): integer;
+begin
+  if rawindex then
+    Result := CompareStr(s1, s2)
+  else
+    Result := AnsiCompareStr(s1, s2);
+end;
+
+{ String comparison for a signature }
+function TTextTable.ttCompareSign(const s1, s2: string): integer;
+begin
+ { Same as for a field, at this time }
+  if rawindex then
+    Result := CompareStr(s1, s2)
+  else
+    Result := AnsiCompareStr(s1, s2);
 end;
 
 procedure TTextTable.Commit(RecNo:integer; JustInserted: boolean);
@@ -2155,14 +2179,23 @@ begin
   end;
 end;
 
-function CustomSortCompare(list:TStringList;index1,index2:integer):integer;
+{ A special TStringList to sort strings exactly how TextTable sorts those.
+ We probably should just move to our own BinarySort someday. }
+type
+  TIndexStringList = class(TStringList)
+  public
+    FTable: TTextTable;
+    function CompareStrings(const S1, S2: string): Integer; override;
+  end;
+
+function TIndexStringList.CompareStrings(const S1, S2: string): Integer;
 begin
-  result:=CompareStr(uppercase(list[index1]),uppercase(list[index2]));
+  Result := FTable.ttCompareSign(uppercase(S1),uppercase(S2));
 end;
 
 procedure TTextTable.Reindex;
 var i,j:integer;
-  sl:TStringList;
+  sl:TIndexStringList;
   idx: PTextTableIndex;
 begin
   if orders.Count>=seeks.Count then
@@ -2171,17 +2204,15 @@ begin
     FIndexes[i].RecCnt := RecCount;
     FIndexes[i].NeedAtLeast(RecCount*4);
   end;
-  sl:=TStringList.Create;
+  sl:=TIndexStringList.Create;
+  sl.FTable := Self;
   for i:=0 to orders.Count-1 do
   begin
     idx := @FIndexes[i];
     sl.Clear;
     for j:=0 to RecCount-1 do
       sl.AddObject(SortRec(j,i+1),pointer(j));
-    if rawindex then
-      sl.CustomSort(CustomSortCompare)
-    else
-      sl.Sort; //uses AnsiCompareStr too
+    sl.Sort;
     for j:=0 to RecCount-1 do
       idx.Write(j, integer(sl.Objects[j])); //there's really only integer stored in TObject, even on 64bit platforms
   end;
@@ -2201,8 +2232,7 @@ begin
     for j:=0 to IndexRecCount-1 do
     begin
       s2:=sortrec(transorder(j,i),i+1);
-      if ((not rawindex) and (AnsiCompareStr(s2,s1)<0)) or
-         ((rawindex) and (s2<s1)) then
+      if ttCompareSign(s1,s2)>0 then
       begin
         result:=false;
         exit;
