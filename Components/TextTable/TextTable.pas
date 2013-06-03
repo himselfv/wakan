@@ -189,24 +189,29 @@ type
     FIndexes: array of TTextTableIndex;
 
    {
-    Index table descriptions are loaded from $SEEKS section, they are in the
-    form "field1+field2+field3" -- see ParseSeekDescription()
+    Index table names and descriptions are loaded from $SEEKS section, they are
+    in the form "field1+field2+field3" -- see ParseSeekDescription()
+    First seek description is always for NO_INDEX, however it's named.
+      seeks[0] = NO_INDEX = DEFAULT_ORDER
+      seeks[1] = index[0]
+      seeks[2] = index[1]
+      etc.
+    You may use '0' as a $SEEK formula for seeks[0] if you don't need it.
    }
     FSeeks: TSeekList;
 
-   { Orders refer to the same data as seekbuilds, only they have different names
-    and there's 1 less of them:
-                 == seekbuild[0]
-       orders[0] == seekbuild[1]
-       orders[1] == seekbuild[2]
-       ...etc
-    Don't ask me why it's like that.
-    If you need to expose seek[0] as an order, make it seek[1] by adding
-    seekbuild[0]=='0' before it.
+   { Orders refer to the same index data, only they have different names:
+      orders[0] = index[0] == seeks[1]
+      orders[1] = index[1] == seeks[2]
+      etc.
     There's no way to restore index description just from an order, we need
     to have matching $SEEKS entry. Therefore Order without matching Seek is
     read-only. }
     FOrders:TStringList;
+
+   //Generates a signature for a record in sort order (i.e. FIELD1_FIELD2_FIELD3)
+    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
+    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
 
    { Comparison functions. TextTable has two comparison modes:
      - Field comparison (string or integer, used by LocateRecord)
@@ -218,10 +223,6 @@ type
     function TrueLocateRecord(order: integer; const sign:string; out pos: integer):boolean;
 
   public
-   //Generates a signature for a record in sort order (i.e. FIELD1_FIELD2_FIELD3)
-    function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
-    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
-
     function GetSeekObject(seek: string): TSeekObject;
     function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
     function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
@@ -1675,6 +1676,7 @@ begin
   r:=IndexRecCount-1;
   if l<=r then repeat
     c:=((r-l) div 2)+l;
+
     s:=GetField(TransOrder(c,sn),fn);
     if reverse then
       s:=ReverseString(s);
@@ -1682,8 +1684,16 @@ begin
       r:=c
     else
       l:=c+1;
+
     if l>=r then
     begin
+      if (l=r) and (l=IndexRecCount-1) then begin //the only case when R was never checked
+        s:=GetField(TransOrder(l,sn),fn);
+        if reverse then
+          s:=ReverseString(s);
+        if ttCompareStr(value,uppercase(s))>0 then
+          Inc(l);
+      end;
       idx:=l;
       RecNo:=TransOrder(idx,sn);
       while (idx<IndexRecCount) and IsDeleted(RecNo) do
@@ -1739,6 +1749,10 @@ begin
 
     if l>=r then
     begin
+      if (l=r) and (l=IndexRecCount-1) then begin //the only case when R was never checked
+        if GetIntField(TransOrder(l,sn),fn,i_s) and (value>i_s) then
+          Inc(l);
+      end;
       idx:=l;
       RecNo:=TransOrder(idx,sn);
       while (idx<IndexRecCount) and (IsDeleted(RecNo)) do
@@ -1756,7 +1770,6 @@ function TTextTable.TrueLocateRecord(order: integer; const sign:string; out pos:
 var idx: PTextTableIndex;
   l,r,c:integer;
   lastCmp:integer;
-  s:string;
 begin
   idx := @FIndexes[order];
   pos := idx.RecCnt; //if there are no records this'll be used
@@ -1767,8 +1780,7 @@ begin
   if l<=r then repeat
     c:=((r-l) div 2)+l;
 
-    s:=SortRec(TransOrder(c,order),order+1);
-    lastCmp:=ttCompareSign(sign, s);
+    lastCmp:=ttCompareSign(sign,SortRec(TransOrder(c,order),order+1));
     if lastCmp<=0 then
       r:=c
     else
@@ -1776,6 +1788,10 @@ begin
 
     if l>=r then
     begin
+      if (l=r) and (l=idx.RecCnt-1) then begin //the only case when R was never checked
+        lastCmp:=ttCompareSign(sign,SortRec(TransOrder(l,order),order+1));
+        if lastCmp>0 then Inc(l);
+      end;
       pos:=l;
       Result := (pos<idx.RecCnt) and (lastCmp=0);
       exit;

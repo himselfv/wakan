@@ -226,13 +226,34 @@ begin
   FreeAndNil(tt);
 end;
 
-procedure RunDumpIndex();
-var tt: TTextTable;
-  IndexId, i, RecId: integer;
+type
+  TTextTableEx = class(TTextTable)
+  public
+    procedure DumpIndex(wri: TCustomFileWriter; IndexId: integer; DumpSignatures: boolean);
+  end;
+
+procedure TTextTableEx.DumpIndex(wri: TCustomFileWriter; IndexId: integer; DumpSignatures: boolean);
+var i: integer;
+  RecId: integer;
   sign: string;
 begin
+  for i := 0 to Self.RecordCount - 1 do begin
+    RecId := Self.TransOrder(i,IndexId);
+    if DumpSignatures then begin
+      sign := Self.SortRec(RecId, IndexId+1);
+      wri.Writeln(Format('%.8d = %.8d = %s', [i, RecId, sign]));
+    end else
+      wri.Writeln(Format('%.8d = %.8d', [i, RecId]));
+  end;
+end;
+
+procedure RunDumpIndex();
+var tt: TTextTableEx;
+  wri: TConsoleUTF8Writer;
+  IndexId: integer;
+begin
   SetConsoleOutputCP(CP_UTF8);
-  tt := TTextTable.Create(nil, TablePath, true, false);
+  tt := TTextTableEx.Create(nil, TablePath, true, false);
   if TryStrToInt(IndexName, IndexId) then begin
     if IndexId>=tt.Orders.Count then
       raise Exception.Create('No index with id='+IntToStr(IndexId));
@@ -242,14 +263,10 @@ begin
     if IndexId<0 then
       raise Exception.Create('Index not found: '+IndexName);
   end;
-  for i := 0 to tt.RecordCount - 1 do begin
-    RecId := tt.TransOrder(i,IndexId);
-    if DumpIndexParams.DumpSignatures then begin
-      sign := tt.SortRec(RecId, IndexId+1);
-      writeln(Format('%.8d = %.8d = '+UTF8Encode(sign), [i, RecId]));
-    end else
-      writeln(Format('%.8d = %.8d', [i, RecId]));
-  end;
+
+  wri := TConsoleUTF8Writer.Create;
+  tt.DumpIndex(wri, IndexId, DumpIndexParams.DumpSignatures);
+  FreeAndNil(wri);
   FreeAndNil(tt);
 end;
 
