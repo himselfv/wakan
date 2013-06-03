@@ -31,7 +31,8 @@ begin
     +'  no command: display information'#13#10
     +'  export-text -- export to text file / console'#13#10
     +'  import-text -- import from text file / keyboard'#13#10
-    +'  dump-index <index-id> -- prints index contents';
+    +'  dump-index <index-id> [/signatures] -- prints index contents'#13#10
+    +'  check-index -- checks all indices'#13#10;
 
   if errmsg<>'' then
     s := errmsg + #13#10#13#10 + s;
@@ -45,6 +46,10 @@ var
   Command: string;
   TablePath: string; //common to many commands
   IndexName: string;
+
+  DumpIndexParams: record
+    DumpSignatures: boolean;
+  end;
 
 procedure ParseCommandLine();
 var i: integer;
@@ -62,7 +67,7 @@ begin
 
   i := 2;
   while i<=ParamCount() do begin
-    s := ParamStr(i);
+    s := AnsiLowerCase(ParamStr(i));
     if Length(s)<=0 then continue;
 
    //Options
@@ -84,6 +89,13 @@ begin
 
       end else
       if Command='dump-index' then begin
+        if s='/signatures' then
+          DumpIndexParams.DumpSignatures := true
+        else
+          BadUsage('Invalid option: '+s);
+
+      end else
+      if Command='check-index' then begin
        //No options
         BadUsage('Invalid option: '+s);
 
@@ -103,6 +115,9 @@ begin
        //Nothing to initialize
       end else
       if Command='dump-index' then begin
+        FillChar(DumpIndexParams, SizeOf(DumpIndexParams), 0);
+      end else
+      if Command='check-index' then begin
        //Nothing to initialize
       end else
         BadUsage('Invalid command or file: "'+s+'"');
@@ -117,7 +132,6 @@ begin
         BadUsage('Invalid param: '+s);
 
       end else
-     //Command-related options
       if Command='import-text' then begin
        //No options
         BadUsage('Invalid param: '+s);
@@ -126,10 +140,14 @@ begin
       if Command='dump-index' then begin
         if IndexName='' then
           IndexName := s
-
         else
          //No options
           BadUsage('Invalid param: '+s);
+
+      end else
+      if Command='check-index' then begin
+       //No options
+        BadUsage('Invalid param: '+s);
 
       end else
         BadUsage('Invalid param: "'+s+'"');
@@ -210,8 +228,10 @@ end;
 
 procedure RunDumpIndex();
 var tt: TTextTable;
-  IndexId, i: integer;
+  IndexId, i, RecId: integer;
+  sign: string;
 begin
+  SetConsoleOutputCP(CP_UTF8);
   tt := TTextTable.Create(nil, TablePath, true, false);
   if TryStrToInt(IndexName, IndexId) then begin
     if IndexId>=tt.Orders.Count then
@@ -222,8 +242,25 @@ begin
     if IndexId<0 then
       raise Exception.Create('Index not found: '+IndexName);
   end;
-  for i := 0 to tt.RecordCount - 1 do
-    writeln(Format('%.8d = %.8d', [i, tt.TransOrder(i,IndexId)]));
+  for i := 0 to tt.RecordCount - 1 do begin
+    RecId := tt.TransOrder(i,IndexId);
+    if DumpIndexParams.DumpSignatures then begin
+      sign := tt.SortRec(RecId, IndexId+1);
+      writeln(Format('%.8d = %.8d = '+UTF8Encode(sign), [i, RecId]));
+    end else
+      writeln(Format('%.8d = %.8d', [i, RecId]));
+  end;
+  FreeAndNil(tt);
+end;
+
+procedure RunCheckIndex();
+var tt: TTextTable;
+begin
+  tt := TTextTable.Create(nil, TablePath, true, false);
+  if tt.CheckIndex then
+    writeln('All indices OK.')
+  else
+    writeln('Invalid indices present.');
   FreeAndNil(tt);
 end;
 
@@ -245,6 +282,9 @@ begin
     else
     if Command='dump-index' then
       RunDumpIndex()
+    else
+    if Command='check-index' then
+      RunCheckIndex()
     else
       BadUsage('Invalid command: '+Command);
   except
