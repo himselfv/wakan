@@ -1,18 +1,9 @@
 COMPONENTS FOR WAKAN COMPILATION
 
-1. Install JVCL.
-2. Install JaletControls
-3. Add to the project's search path:
+1. Install JaletControls
+2. Add to the project's search path:
   Components
   Components\Package
   Components\TextTable
   Components\UrlLabel
   Components\ScaleMM
-
-INSTALLATION HOWTO
-1. MadExcept (http://madshi.net/madExceptDescription.htm). Has an installer.
-NOTE: Not required. Do not install.
-Required by some versions, but be sure to disable it's auto-insertion functionality (Tools-> Mad Except Configuration-> Adjust project uses clause).
-
-2. JaletControls.
-Build and install.

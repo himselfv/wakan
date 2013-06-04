@@ -134,8 +134,6 @@ begin
 end;
 
 
-
-
 procedure Register;
 begin
   RegisterComponents('Wakan', [TWakanPaintbox]);

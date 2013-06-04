@@ -25,6 +25,8 @@ type
     FClient: TCheckAction;
     procedure AssignClient(AClient: TObject); override;
     procedure SetChecked(Value: Boolean); override;
+  public
+    Checking: boolean;
   end;
 
   TCheckAction = class(TAction)
@@ -43,6 +45,7 @@ type
 procedure Register;
 
 implementation
+uses Actions;
 
 procedure TCheckActionLink.AssignClient(AClient: TObject);
 begin
@@ -56,6 +59,9 @@ begin
   if Assigned(FClient.FOnChecking) then
     FClient.FOnChecking(FClient);
  { We'll have to find some other point at which to call OnChecked() }
+  Checking := true;
+ { We'll do it in Change(), if Checking was set -- Change can be called for
+  other reasons }
 end;
 
 constructor TCheckAction.Create(AOwner: TComponent);
@@ -65,26 +71,15 @@ begin
   Self.RegisterChanges(SelfLink);
 end;
 
-type
-  TCustomActionHack = class helper for TCustomAction
-  protected
-    function GetChecking: boolean;
-  public
-    property Checking: boolean read GetChecking;
-  end;
-
-function TCustomActionHack.GetChecking: boolean;
-begin
-  Result := Self.FChecking;
-end;
-
 procedure TCheckAction.Change;
 begin
   inherited;
  { Change() is called on many occasions but we only need the call made from SetChecked().
   Let's hope this suffices as a test: }
-  if Checking then
+  if SelfLink.Checking then begin
     if Assigned(FOnChecked) then FOnChecked(Self);
+    SelfLink.Checking := false;
+  end;
 end;
 
 procedure Register;

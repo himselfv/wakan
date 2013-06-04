@@ -1058,12 +1058,12 @@ function SplitStr(s: string; ch: char=','): TStringArray;
 var i: integer;
 begin
   SetLength(Result, 0);
-  i := pos(s, ch);
+  i := pos(ch,s);
   while i>0 do begin
     SetLength(Result, Length(Result)+1);
     Result[Length(Result)-1] := copy(s, 1, i-1);
     delete(s, 1, i);
-    i := pos(s, ch);
+    i := pos(ch,s);
   end;
   if s<>'' then begin
     SetLength(Result, Length(Result)+1);

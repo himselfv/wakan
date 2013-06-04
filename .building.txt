@@ -2,7 +2,6 @@ NOTES ON BUILDING WAKAN.
 
 I. For Ansi builds you'll need non-unicode Delphi (at most Delphi 2007).
 Install everything as per Components\readme.txt.
-Install JEDI.
 Build and install JaletControls.
 
 II. Copy wakan.chr, *.dic from live wakan installation.
@@ -69,3 +68,8 @@ Stuff that has to be done regularly to keep Wakan up to date:
 - Import new EDICT/ENAMDICT files
 - Update EDICT marker list in JWBUnit.pas (see http://www.csse.monash.edu.au/~jwb/edict_doc.html and http://www.csse.monash.edu.au/~jwb/edict_doc_old.html for older markers)
 - Update wakan.rad with new RADKFILEs (see dependencies)
+
+
+ADDITIONAL STUFF
+1. MadExcept (http://madshi.net/madExceptDescription.htm). Has an installer.
+NOTE: Not required. Be sure to disable it's auto-insertion functionality (Tools-> Mad Except Configuration-> Adjust project uses clause).
