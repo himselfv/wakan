@@ -49,7 +49,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     WordWrap = True
   end
-  object RxLabel21: TRxLabel
+  object RxLabel21: TLabel
     Left = 6
     Top = 8
     Width = 46
@@ -109,7 +109,7 @@ object fKanjiDetails: TfKanjiDetails
     OnMouseUp = pbSimplifiedMouseUp
     OnPaint = pbSimplifiedPaint
   end
-  object RxLabel10: TRxLabel
+  object RxLabel10: TLabel
     Left = 166
     Top = 5
     Width = 107
@@ -123,7 +123,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object RxLabel35: TRxLabel
+  object RxLabel35: TLabel
     Left = 246
     Top = 5
     Width = 37
@@ -137,7 +137,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     Transparent = True
   end
-  object RxLabel38: TRxLabel
+  object RxLabel38: TLabel
     Left = 206
     Top = 8
     Width = 46
@@ -181,7 +181,7 @@ object fKanjiDetails: TfKanjiDetails
     ParentFont = False
     OnClick = btnAddToCategoryClick
   end
-  object RxLabel39: TRxLabel
+  object RxLabel39: TLabel
     Left = 5
     Top = 165
     Width = 137
@@ -225,7 +225,7 @@ object fKanjiDetails: TfKanjiDetails
     ShowHint = True
     OnClick = btnStrokeOrderClick
   end
-  object RxLabel1: TRxLabel
+  object RxLabel1: TLabel
     Left = 5
     Top = 182
     Width = 124
@@ -416,9 +416,7 @@ object fKanjiDetails: TfKanjiDetails
     OnChange = cbCategoriesChange
   end
   object FormPlacement1: TFormPlacement
-    Active = False
     IniSection = '\Software\Labyrinth\Wakan\DetailPos'
-    Options = [fpPosition]
     UseRegistry = False
     Left = 96
     Top = 112

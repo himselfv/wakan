@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, RXCtrls, ExtCtrls, WakanPaintbox;
+  StdCtrls, Buttons, ExtCtrls, WakanPaintbox;
 
 type
   TfUserDetails = class(TForm)
@@ -21,7 +21,7 @@ type
     btnSaveMeaning: TButton;
     edtMeaning: TMemo;
     GroupBox1: TGroupBox;
-    lblLearnState: TRxLabel;
+    lblLearnState: TLabel;
     btnSetProblematic: TButton;
     btnSetUnlearned: TButton;
     btnSetLearned: TButton;

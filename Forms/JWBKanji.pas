@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBStrings,
-  RXCtrls, Grids, DB, ShellAPI, WakanPaintbox;
+  Grids, DB, ShellAPI, WakanPaintbox;
 
 //{$DEFINE UPDATE_WITH_DELAY}
 // If set, DoItTimer() will really use timer and not just update instanteneously.
@@ -13,7 +13,7 @@ uses
 type
   TfKanji = class(TForm)
     Panel1: TPanel;
-    RxLabel15: TRxLabel;
+    RxLabel15: TLabel;
     btnSearchSort: TSpeedButton;
     btnKanjiDetails: TSpeedButton;
     btnCompounds: TSpeedButton;
@@ -87,7 +87,7 @@ implementation
 
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
-  JWBStrokeOrder, MemSource, JWBTranslate, JWBConvert, JWBWords,
+  MemSource, JWBTranslate, JWBConvert, JWBWords,
   JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBWakanText, JWBCategories,
   JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
 

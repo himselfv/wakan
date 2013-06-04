@@ -36,10 +36,10 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Intro'
-      object RxLabel3: TRxLabel
+      object RxLabel3: TLabel
         Left = 16
         Top = 4
-        Width = 254
+        Width = 172
         Height = 18
         Caption = '#00736^eWelcome'
         Font.Charset = DEFAULT_CHARSET
@@ -83,10 +83,10 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Method'
-      object RxLabel4: TRxLabel
+      object RxLabel4: TLabel
         Left = 16
         Top = 4
-        Width = 371
+        Width = 222
         Height = 18
         Caption = '#00738^eWord selection'
         Font.Charset = DEFAULT_CHARSET
@@ -99,17 +99,16 @@ object fWordList: TfWordList
       object Label15: TLabel
         Left = 16
         Top = 208
-        Width = 313
+        Width = 175
         Height = 13
         Caption = '#00739^eNumber of selected words:'
       end
       object Label22: TLabel
         Left = 16
         Top = 40
-        Width = 609
+        Width = 319
         Height = 13
-        Caption = 
-          '#00740^eNumber of words the list will be selected from:'
+        Caption = '#00740^eNumber of words the list will be selected from:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -146,8 +145,8 @@ object fWordList: TfWordList
         Caption = '#00744^eSelection method'
         ItemIndex = 0
         Items.Strings = (
-            '#00745^eSelect some words proper for learning'
-            '#00746^eSelect some words completely randomly'
+          '#00745^eSelect some words proper for learning'
+          '#00746^eSelect some words completely randomly'
           '#00747^eSelect all words')
         TabOrder = 1
         OnClick = RadioGroup2Click
@@ -185,10 +184,10 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Purpose'
-      object RxLabel5: TRxLabel
+      object RxLabel5: TLabel
         Left = 16
         Top = 4
-        Width = 393
+        Width = 238
         Height = 18
         Caption = '#00750^eSelection criteria'
         Font.Charset = DEFAULT_CHARSET
@@ -201,7 +200,7 @@ object fWordList: TfWordList
       object Label16: TLabel
         Left = 16
         Top = 40
-        Width = 773
+        Width = 439
         Height = 13
         Caption = 
           '#00751^eSelect which words do you prefer to be in the list and h' +
@@ -246,8 +245,7 @@ object fWordList: TfWordList
         Top = 192
         Width = 561
         Height = 57
-        Caption = 
-          '#00764^eWord complexity and popularity'
+        Caption = '#00764^eWord complexity and popularity'
         Columns = 3
         ItemIndex = 1
         Items.Strings = (
@@ -264,8 +262,7 @@ object fWordList: TfWordList
         Top = 256
         Width = 561
         Height = 57
-        Caption = 
-          '#00769^eFrequency of inclusions into learning list'
+        Caption = '#00769^eFrequency of inclusions into learning list'
         Columns = 3
         ItemIndex = 1
         Items.Strings = (
@@ -282,8 +279,7 @@ object fWordList: TfWordList
         Top = 320
         Width = 281
         Height = 17
-        Caption = 
-          '#00774^ePrefer problematic words'
+        Caption = '#00774^ePrefer problematic words'
         Checked = True
         State = cbChecked
         TabOrder = 4
@@ -293,8 +289,7 @@ object fWordList: TfWordList
         Top = 320
         Width = 273
         Height = 17
-        Caption = 
-          '#00775^eChoose only few mastered words'
+        Caption = '#00775^eChoose only few mastered words'
         Checked = True
         State = cbChecked
         TabOrder = 5
@@ -325,7 +320,7 @@ object fWordList: TfWordList
       object Label18: TLabel
         Left = 16
         Top = 72
-        Width = 279
+        Width = 145
         Height = 13
         Caption = '#00595^eLearned words:'
         Font.Charset = DEFAULT_CHARSET
@@ -338,7 +333,7 @@ object fWordList: TfWordList
       object Label19: TLabel
         Left = 16
         Top = 88
-        Width = 322
+        Width = 151
         Height = 13
         Caption = '#00596^eMastered words:'
         Font.Charset = DEFAULT_CHARSET
@@ -351,7 +346,7 @@ object fWordList: TfWordList
       object Label20: TLabel
         Left = 16
         Top = 104
-        Width = 328
+        Width = 165
         Height = 13
         Caption = '#00597^eProblematic words:'
         Font.Charset = DEFAULT_CHARSET
@@ -364,7 +359,7 @@ object fWordList: TfWordList
       object Label21: TLabel
         Left = 16
         Top = 136
-        Width = 385
+        Width = 214
         Height = 13
         Caption = '#00598^eNumber of katakana words:'
         Font.Charset = DEFAULT_CHARSET
@@ -409,7 +404,7 @@ object fWordList: TfWordList
       object Label33: TLabel
         Left = 16
         Top = 120
-        Width = 307
+        Width = 168
         Height = 13
         Caption = '#00602^eNon-popular words:'
         Font.Charset = DEFAULT_CHARSET
@@ -430,7 +425,7 @@ object fWordList: TfWordList
       object Label42: TLabel
         Left = 16
         Top = 152
-        Width = 389
+        Width = 207
         Height = 13
         Caption = '#00606^eWords with known writing:'
         Font.Charset = DEFAULT_CHARSET
@@ -448,10 +443,10 @@ object fWordList: TfWordList
         Alignment = taRightJustify
         Caption = 'Label29'
       end
-      object RxLabel6: TRxLabel
+      object RxLabel6: TLabel
         Left = 16
         Top = 4
-        Width = 391
+        Width = 203
         Height = 18
         Caption = '#00778^eList statistics'
         Font.Charset = DEFAULT_CHARSET
@@ -464,7 +459,7 @@ object fWordList: TfWordList
       object Label17: TLabel
         Left = 16
         Top = 48
-        Width = 714
+        Width = 354
         Height = 13
         Caption = 
           '#00779^eNew learning list was built. It contains these word char' +
@@ -506,9 +501,10 @@ object fWordList: TfWordList
         Caption = '#00781^eNext step'
         ItemIndex = 0
         Items.Strings = (
+          
             '#00782^eCheck whether you know each word in the newly generated ' +
             'list'
-            '#00783^eSkip learning test and proceed to printing list')
+          '#00783^eSkip learning test and proceed to printing list')
         TabOrder = 1
       end
     end
@@ -516,13 +512,12 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'EvalChoose'
-      object RxLabel7: TRxLabel
+      object RxLabel7: TLabel
         Left = 16
         Top = 4
-        Width = 588
+        Width = 282
         Height = 18
-        Caption = 
-          '#00784^eLearning test settings'
+        Caption = '#00784^eLearning test settings'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -546,9 +541,9 @@ object fWordList: TfWordList
           '#00789^eWritten && Meaning'
           '#00790^e50% phonetic, 50% written'
           '#00791^e66% phonetic, 33% written'
-            '#00792^e33% phonetic, 33% written, 33% meaning'
-            '#00793^e25% phonetic, 25% written, 50% meaning'
-            '#00794^e50% phonetic, 25% written, 25% meaning')
+          '#00792^e33% phonetic, 33% written, 33% meaning'
+          '#00793^e25% phonetic, 25% written, 50% meaning'
+          '#00794^e50% phonetic, 25% written, 25% meaning')
         TabOrder = 0
       end
       object CheckBox6: TCheckBox
@@ -556,8 +551,7 @@ object fWordList: TfWordList
         Top = 320
         Width = 545
         Height = 17
-        Caption = 
-          '#00876^eDisplay written only if all characters are learned'
+        Caption = '#00876^eDisplay written only if all characters are learned'
         TabOrder = 1
       end
     end
@@ -565,10 +559,13 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Evaluate'
-      object RxLabel8: TRxLabel
+      DesignSize = (
+        593
+        353)
+      object RxLabel8: TLabel
         Left = 16
         Top = 4
-        Width = 416
+        Width = 208
         Height = 18
         Caption = '#00795^eLearning test'
         Font.Charset = DEFAULT_CHARSET
@@ -588,7 +585,7 @@ object fWordList: TfWordList
       object Label24: TLabel
         Left = 24
         Top = 88
-        Width = 160
+        Width = 112
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00060^ePhonetic:'
@@ -629,7 +626,7 @@ object fWordList: TfWordList
       object Label25: TLabel
         Left = 24
         Top = 128
-        Width = 152
+        Width = 103
         Height = 13
         Anchors = [akRight, akBottom]
         Caption = '#00061^eWritten:'
@@ -651,25 +648,25 @@ object fWordList: TfWordList
         ParentColor = False
         OnPaint = PaintBox6Paint
       end
-      object RxLabel9: TRxLabel
+      object RxLabel9: TLabel
         Left = 438
         Top = 247
-        Width = 75
+        Width = 73
         Height = 18
+        Anchors = [akRight, akBottom]
         Caption = 'Learned'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
         Font.Name = 'Verdana'
         Font.Style = [fsBold]
-        Anchors = [akRight, akBottom]
         ParentFont = False
         Transparent = True
       end
       object Label30: TLabel
         Left = 438
         Top = 228
-        Width = 142
+        Width = 98
         Height = 13
         Anchors = [akRight, akBottom]
         Caption = '#00693^eStatus:'
@@ -684,7 +681,7 @@ object fWordList: TfWordList
       object Label31: TLabel
         Left = 24
         Top = 168
-        Width = 171
+        Width = 110
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00691^eMeaning:'
@@ -699,7 +696,7 @@ object fWordList: TfWordList
       object Label32: TLabel
         Left = 24
         Top = 228
-        Width = 182
+        Width = 106
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00694^eCreated:'
@@ -714,7 +711,7 @@ object fWordList: TfWordList
       object Label34: TLabel
         Left = 336
         Top = 228
-        Width = 236
+        Width = 131
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00695^eLearning list:'
@@ -729,7 +726,7 @@ object fWordList: TfWordList
       object Label36: TLabel
         Left = 128
         Top = 228
-        Width = 177
+        Width = 108
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00696^eLearned:'
@@ -744,7 +741,7 @@ object fWordList: TfWordList
       object Label37: TLabel
         Left = 224
         Top = 228
-        Width = 220
+        Width = 114
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00697^eMastered:'
@@ -837,7 +834,7 @@ object fWordList: TfWordList
       object Label54: TLabel
         Left = 24
         Top = 200
-        Width = 194
+        Width = 122
         Height = 13
         Anchors = [akLeft, akBottom]
         Caption = '#00733^eCategories:'
@@ -866,25 +863,28 @@ object fWordList: TfWordList
         Color = clBtnFace
         ParentColor = False
         TabOrder = 0
-        object RxLabel10: TRxLabel
+        DesignSize = (
+          553
+          73)
+        object RxLabel10: TLabel
           Left = 184
           Top = 48
-          Width = 55
+          Width = 53
           Height = 13
+          Anchors = [akRight, akBottom]
           Caption = 'Learned'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Verdana'
           Font.Style = [fsBold]
-          Anchors = [akRight, akBottom]
           ParentFont = False
           Transparent = True
         end
         object Label43: TLabel
           Left = 8
           Top = 24
-          Width = 223
+          Width = 122
           Height = 13
           Caption = '#00797^eTest result:'
           Font.Charset = DEFAULT_CHARSET
@@ -897,7 +897,7 @@ object fWordList: TfWordList
         object Label45: TLabel
           Left = 8
           Top = 48
-          Width = 341
+          Width = 200
           Height = 13
           Caption = '#00798^eState will be changed to:'
           Font.Charset = DEFAULT_CHARSET
@@ -907,33 +907,33 @@ object fWordList: TfWordList
           Font.Style = [fsBold]
           ParentFont = False
         end
-        object RxLabel11: TRxLabel
+        object RxLabel11: TLabel
           Left = 312
           Top = 48
-          Width = 55
+          Width = 53
           Height = 13
+          Anchors = [akRight, akBottom]
           Caption = 'Learned'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Verdana'
           Font.Style = [fsBold]
-          Anchors = [akRight, akBottom]
           ParentFont = False
           Transparent = True
         end
-        object RxLabel12: TRxLabel
+        object RxLabel12: TLabel
           Left = 432
           Top = 48
-          Width = 55
+          Width = 53
           Height = 13
+          Anchors = [akRight, akBottom]
           Caption = 'Learned'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
           Font.Name = 'Verdana'
           Font.Style = [fsBold]
-          Anchors = [akRight, akBottom]
           ParentFont = False
           Transparent = True
         end
@@ -1005,10 +1005,12 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'EvalResults'
-      object RxLabel1: TRxLabel
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object RxLabel1: TLabel
         Left = 16
         Top = 4
-        Width = 568
+        Width = 272
         Height = 18
         Caption = '#00803^eLearning test results'
         Font.Charset = DEFAULT_CHARSET
@@ -1021,7 +1023,7 @@ object fWordList: TfWordList
       object Label2: TLabel
         Left = 16
         Top = 48
-        Width = 209
+        Width = 124
         Height = 13
         Caption = '#00804^eNo change:'
         Font.Charset = DEFAULT_CHARSET
@@ -1034,7 +1036,7 @@ object fWordList: TfWordList
       object Label3: TLabel
         Left = 16
         Top = 80
-        Width = 361
+        Width = 193
         Height = 13
         Caption = '#00805^eLearned -> Problematic:'
         Font.Charset = DEFAULT_CHARSET
@@ -1047,10 +1049,9 @@ object fWordList: TfWordList
       object Label4: TLabel
         Left = 16
         Top = 96
-        Width = 404
+        Width = 199
         Height = 13
-        Caption = 
-          '#00806^eMastered -> Problematic:'
+        Caption = '#00806^eMastered -> Problematic:'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -11
@@ -1061,7 +1062,7 @@ object fWordList: TfWordList
       object Label5: TLabel
         Left = 16
         Top = 112
-        Width = 381
+        Width = 191
         Height = 13
         Caption = '#00807^eMastered -> Unlearned:'
         Font.Charset = DEFAULT_CHARSET
@@ -1074,7 +1075,7 @@ object fWordList: TfWordList
       object Label6: TLabel
         Left = 16
         Top = 136
-        Width = 387
+        Width = 205
         Height = 13
         Caption = '#00808^eProblematic -> Unlearned:'
         Font.Charset = DEFAULT_CHARSET
@@ -1087,7 +1088,7 @@ object fWordList: TfWordList
       object Label7: TLabel
         Left = 16
         Top = 152
-        Width = 361
+        Width = 193
         Height = 13
         Caption = '#00809^eProblematic -> Learned:'
         Font.Charset = DEFAULT_CHARSET
@@ -1100,7 +1101,7 @@ object fWordList: TfWordList
       object Label8: TLabel
         Left = 16
         Top = 168
-        Width = 338
+        Width = 185
         Height = 13
         Caption = '#00810^eUnlearned -> Learned:'
         Font.Charset = DEFAULT_CHARSET
@@ -1113,7 +1114,7 @@ object fWordList: TfWordList
       object Label9: TLabel
         Left = 16
         Top = 192
-        Width = 381
+        Width = 191
         Height = 13
         Caption = '#00811^eUnlearned -> Mastered:'
         Font.Charset = DEFAULT_CHARSET
@@ -1126,7 +1127,7 @@ object fWordList: TfWordList
       object Label10: TLabel
         Left = 16
         Top = 208
-        Width = 355
+        Width = 179
         Height = 13
         Caption = '#00812^eLearned -> Mastered:'
         Font.Charset = DEFAULT_CHARSET
@@ -1216,9 +1217,10 @@ object fWordList: TfWordList
         Caption = '#00813^eNext action'
         ItemIndex = 0
         Items.Strings = (
+          
             '#00814^eUpdate word states by test results and proceed to next p' +
             'hase'
-            '#00815^eForget test results and proceed to next phase')
+          '#00815^eForget test results and proceed to next phase')
         TabOrder = 0
       end
     end
@@ -1226,13 +1228,14 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Final'
-      object RxLabel2: TRxLabel
+      ExplicitWidth = 0
+      ExplicitHeight = 0
+      object RxLabel2: TLabel
         Left = 16
         Top = 4
-        Width = 656
+        Width = 321
         Height = 18
-        Caption = 
-          '#00816^eDisplay / print learning list'
+        Caption = '#00816^eDisplay / print learning list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -16
@@ -1243,7 +1246,7 @@ object fWordList: TfWordList
       object Label51: TLabel
         Left = 40
         Top = 200
-        Width = 216
+        Width = 123
         Height = 13
         Caption = '#00817^eCategory name:'
         Enabled = False
@@ -1253,8 +1256,7 @@ object fWordList: TfWordList
         Top = 232
         Width = 385
         Height = 17
-        Caption = 
-          '#00818^eUpdate learning list statistics of each word'
+        Caption = '#00818^eUpdate learning list statistics of each word'
         Checked = True
         State = cbChecked
         TabOrder = 0
@@ -1292,8 +1294,7 @@ object fWordList: TfWordList
         Top = 176
         Width = 489
         Height = 17
-        Caption = 
-          '#00824^eSave learning list as new category and display it'
+        Caption = '#00824^eSave learning list as new category and display it'
         TabOrder = 3
         OnClick = CheckBox5Click
       end
@@ -1320,9 +1321,6 @@ object fWordList: TfWordList
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -1341,6 +1339,9 @@ object fWordList: TfWordList
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 1
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 266
@@ -1354,9 +1355,6 @@ object fWordList: TfWordList
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 2
-    OnClick = BitBtn2Click
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -1371,6 +1369,9 @@ object fWordList: TfWordList
       3333333333773333333333333333333333333333333333333333333333333333
       3333333333333333333333333333333333333333333333333333}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 2
+    OnClick = BitBtn2Click
   end
   object BitBtn3: TBitBtn
     Left = 160
@@ -1383,9 +1384,6 @@ object fWordList: TfWordList
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 3
-    OnClick = BitBtn3Click
     Glyph.Data = {
       76010000424D7601000000000000760000002800000020000000100000000100
       04000000000000010000120B0000120B00001000000000000000000000000000
@@ -1400,6 +1398,9 @@ object fWordList: TfWordList
       3333333333333333333333333333333333333333333333333333333333333333
       3333333333333333333333333333333333333333333333333333}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 3
+    OnClick = BitBtn3Click
   end
   object BitBtn4: TBitBtn
     Left = 384
@@ -1412,9 +1413,6 @@ object fWordList: TfWordList
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 4
-    OnClick = BitBtn2Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -1433,5 +1431,8 @@ object fWordList: TfWordList
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 4
+    OnClick = BitBtn2Click
   end
 end

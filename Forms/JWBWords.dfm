@@ -72,10 +72,10 @@ object fWords: TfWords
       DesignSize = (
         773
         452)
-      object RxLabel1: TRxLabel
+      object RxLabel1: TLabel
         Left = 8
         Top = 5
-        Width = 185
+        Width = 183
         Height = 16
         Caption = '#00828^eVocabulary list'
         Font.Charset = DEFAULT_CHARSET

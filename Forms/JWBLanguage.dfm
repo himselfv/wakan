@@ -60,10 +60,10 @@ object fLanguage: TfLanguage
     Alignment = taRightJustify
     Caption = '[author]'
   end
-  object RxLabel1: TRxLabel
+  object RxLabel1: TLabel
     Left = 72
     Top = 8
-    Width = 91
+    Width = 89
     Height = 37
     Caption = 'wakan'
     Font.Charset = DEFAULT_CHARSET
@@ -73,10 +73,10 @@ object fLanguage: TfLanguage
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object RxLabel2: TRxLabel
+  object RxLabel2: TLabel
     Left = 32
     Top = 48
-    Width = 177
+    Width = 175
     Height = 13
     Caption = 'Tool for learning Japanese && Chinese'
   end
@@ -102,6 +102,7 @@ object fLanguage: TfLanguage
     Width = 75
     Height = 25
     Kind = bkOK
+    NumGlyphs = 2
     TabOrder = 1
   end
   object btnShowInfo: TButton

@@ -6,9 +6,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, RXCtrls, Db,
-  DBTables, ExtCtrls, Grids, TextTable, Buttons, {ThemeMgr,} MemSource, ShellApi,
-  ActnList, Menus, rxPlacemnt{MCH, madCodeHook}, JWBStrings,
+  StdCtrls, ComCtrls, Db,
+  DBTables, ExtCtrls, Grids, TextTable, Buttons, MemSource, ShellApi,
+  ActnList, Menus, FormPlacemnt, JWBStrings,
   StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
 
 type
@@ -560,7 +560,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
   JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters, JWBUserData,
   JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
-  JWBWordCategory, JWBWordKanji, JWBTranslate, JWBStrokeOrder,
+  JWBWordCategory, JWBWordKanji, JWBTranslate,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBKanjiCard,

@@ -4,15 +4,15 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons;
+  StdCtrls, ExtCtrls, Buttons;
 
 type
   TfStatistics = class(TForm)
     BitBtn1: TBitBtn;
-    RxLabel16: TRxLabel;
+    RxLabel16: TLabel;
     Bevel1: TBevel;
-    RxLabel1: TRxLabel;
-    RxLabel2: TRxLabel;
+    RxLabel1: TLabel;
+    RxLabel2: TLabel;
     Bevel2: TBevel;
     Label1: TLabel;
     Label3: TLabel;

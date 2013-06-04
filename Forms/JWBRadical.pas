@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, ExtCtrls, RXCtrls, Buttons, StdCtrls, JWBStrings;
+  Grids, ExtCtrls, Buttons, StdCtrls, JWBStrings;
 
 type
   TRadSearchType = (
@@ -27,7 +27,7 @@ type
 
   TfRadical = class(TForm)
     DrawGrid: TDrawGrid;
-    RxLabel17: TRxLabel;
+    RxLabel17: TLabel;
     Shape6: TShape;
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;

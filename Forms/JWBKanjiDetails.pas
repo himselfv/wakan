@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, StdCtrls, RXCtrls, rxPlacemnt, UrlLabel, JWBStrings,
+  ExtCtrls, Buttons, StdCtrls, FormPlacemnt, UrlLabel, JWBStrings,
   TextTable, JWBForms;
 
 type
@@ -24,24 +24,24 @@ type
 
   TfKanjiDetails = class(TForm)
     lblMeaning: TLabel;
-    RxLabel21: TRxLabel;
+    RxLabel21: TLabel;
     ShapeKanji: TShape;
     ShapeRadical: TShape;
     ShapeSimplified: TShape;
     pbKanji: TPaintBox;
     pbRadical: TPaintBox;
     pbSimplified: TPaintBox;
-    RxLabel10: TRxLabel;
-    RxLabel35: TRxLabel;
-    RxLabel38: TRxLabel;
+    RxLabel10: TLabel;
+    RxLabel35: TLabel;
+    RxLabel38: TLabel;
     lblStrokeCount: TLabel;
     btnAddToCategory: TSpeedButton;
-    RxLabel39: TRxLabel;
+    RxLabel39: TLabel;
     FormPlacement1: TFormPlacement;
     lblRadicalNo: TLabel;
     btnStrokeOrder: TSpeedButton;
     cbCategories: TComboBox;
-    RxLabel1: TRxLabel;
+    RxLabel1: TLabel;
     lblCategories: TLabel;
     pnlSecondHalf: TPanel;
     btnClose: TButton;
@@ -142,7 +142,7 @@ var
 implementation
 
 uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
-  JWBSettings, JWBStrokeOrder, JWBUnit, JWBCategories, JWBKanjiCard,
+  JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard,
   JWBUserFilters, JWBKanaConv, JWBCharData;
 
 {$R *.DFM}

@@ -44,10 +44,10 @@ object fKanji: TfKanji
     DesignSize = (
       630
       345)
-    object RxLabel15: TRxLabel
+    object RxLabel15: TLabel
       Left = 8
       Top = 8
-      Width = 77
+      Width = 75
       Height = 16
       Caption = 'RxLabel15'
       Font.Charset = DEFAULT_CHARSET

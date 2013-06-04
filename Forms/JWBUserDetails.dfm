@@ -232,10 +232,10 @@ object fUserDetails: TfUserDetails
         Height = 169
         Caption = '#00693^eStatus:'
         TabOrder = 1
-        object lblLearnState: TRxLabel
+        object lblLearnState: TLabel
           Left = 9
           Top = 16
-          Width = 75
+          Width = 73
           Height = 18
           Caption = 'Learned'
           Font.Charset = DEFAULT_CHARSET

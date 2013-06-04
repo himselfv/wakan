@@ -23,10 +23,10 @@ object fRadical: TfRadical
     536)
   PixelsPerInch = 96
   TextHeight = 13
-  object RxLabel17: TRxLabel
+  object RxLabel17: TLabel
     Left = 24
     Top = 24
-    Width = 186
+    Width = 184
     Height = 18
     Caption = '#00387^eRadical list'
     Font.Charset = DEFAULT_CHARSET
@@ -133,6 +133,7 @@ object fRadical: TfRadical
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     Kind = bkCancel
+    NumGlyphs = 2
     ParentFont = False
     TabOrder = 2
     OnClick = BitBtn2Click

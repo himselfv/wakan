@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, TypInfo, ComCtrls, Menus, ExtCtrls, Registry, RXCtrls;
+  StdCtrls, Buttons, TypInfo, ComCtrls, Menus, ExtCtrls, Registry;
 
 type
   TLanguageFileInfo = record
@@ -29,8 +29,8 @@ type
     lbLanguageAuthor: TLabel;
     bbOk: TBitBtn;
     btnShowInfo: TButton;
-    RxLabel1: TRxLabel;
-    RxLabel2: TRxLabel;
+    RxLabel1: TLabel;
+    RxLabel2: TLabel;
     Bevel1: TBevel;
     procedure btnShowInfoClick(Sender: TObject);
     procedure FormShow(Sender: TObject);

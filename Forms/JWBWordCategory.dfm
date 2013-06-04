@@ -109,10 +109,10 @@ object fWordCategory: TfWordCategory
     ParentFont = False
     Transparent = True
   end
-  object RxLabel9: TRxLabel
+  object RxLabel9: TLabel
     Left = 131
     Top = 7
-    Width = 61
+    Width = 59
     Height = 16
     Caption = 'Learned'
     Font.Charset = DEFAULT_CHARSET

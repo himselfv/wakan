@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, RXCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel,
+  StdCtrls, ExtCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel,
   ImgList;
 
 type
@@ -455,7 +455,7 @@ begin
 end;
 
 { Try to access ini file through this function only.
- There's one exception, TFormPlacement uses their own mechanics to access ini,
+ There's one exception, TJvFormPlacement uses their own mechanics to access ini,
  but it preserves the codepage and doesn't write anything in Unicode so it works. }
 function TfSettings.OpenWakanIni: TCustomIniFile;
 begin

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Grids, Buttons, RXCtrls, Tabs, CheckLst, JWBStrings, Menus,
+  StdCtrls, ExtCtrls, Grids, Buttons, Tabs, CheckLst, JWBStrings, Menus,
   WakanWordGrid, StdPrompt, WakanPaintbox;
 
 type
@@ -16,7 +16,7 @@ type
     pnlDockFilters: TPanel;
     Panel1: TPanel;
     Panel3: TPanel;
-    RxLabel1: TRxLabel;
+    RxLabel1: TLabel;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     SpeedButton4: TSpeedButton;

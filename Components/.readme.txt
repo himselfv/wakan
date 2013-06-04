@@ -1,6 +1,6 @@
 COMPONENTS FOR WAKAN COMPILATION
 
-1. Install RX controls
+1. Install JVCL.
 2. Install JaletControls
 3. Add to the project's search path:
   Components
@@ -9,16 +9,10 @@ COMPONENTS FOR WAKAN COMPILATION
   Components\UrlLabel
   Components\ScaleMM
 
-NOTE:
-1. You can install newer versions of common controls as per below. But don't come crying when it doesn't work.
-
 INSTALLATION HOWTO
 1. MadExcept (http://madshi.net/madExceptDescription.htm). Has an installer.
 NOTE: Not required. Do not install.
 Required by some versions, but be sure to disable it's auto-insertion functionality (Tools-> Mad Except Configuration-> Adjust project uses clause).
 
-2. RX Library (http://sourceforge.net/projects/rxlib/)
-The installation is pretty straightforward and documented in RxLib\Install_eng.txt
-
-3. JaletControls.
+2. JaletControls.
 Build and install.

@@ -38,7 +38,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, RXCtrls, ExtCtrls, Buttons, JWBStrings, JWBUser,
+  StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBUser,
   JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox, WinSpeedButton,
   ComCtrls, ToolWin, ImgList, JWBWakanText;
 

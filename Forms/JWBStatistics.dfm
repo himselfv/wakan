@@ -17,7 +17,7 @@ object fStatistics: TfStatistics
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object RxLabel16: TRxLabel
+  object RxLabel16: TLabel
     Left = 208
     Top = 8
     Width = 207
@@ -39,7 +39,7 @@ object fStatistics: TfStatistics
     Height = 9
     Shape = bsTopLine
   end
-  object RxLabel1: TRxLabel
+  object RxLabel1: TLabel
     Left = 64
     Top = 40
     Width = 395
@@ -54,7 +54,7 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object RxLabel2: TRxLabel
+  object RxLabel2: TLabel
     Left = 64
     Top = 128
     Width = 393

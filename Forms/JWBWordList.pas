@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ComCtrls, RXCtrls, StdCtrls, ExtCtrls, Buttons, Gauges;
+  ComCtrls, StdCtrls, ExtCtrls, Buttons, Gauges;
 
 type
   TfWordList = class(TForm)
@@ -12,17 +12,17 @@ type
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     BitBtn3: TBitBtn;
-    RxLabel3: TRxLabel;
+    RxLabel3: TLabel;
     Label1: TLabel;
     Label14: TLabel;
-    RxLabel4: TRxLabel;
+    RxLabel4: TLabel;
     RadioGroup1: TRadioGroup;
     RadioGroup2: TRadioGroup;
     Label15: TLabel;
     Edit3: TEdit;
     Button1: TButton;
     CheckBox1: TCheckBox;
-    RxLabel5: TRxLabel;
+    RxLabel5: TLabel;
     RadioGroup3: TRadioGroup;
     Label16: TLabel;
     RadioGroup4: TRadioGroup;
@@ -44,14 +44,14 @@ type
     Label35: TLabel;
     Label42: TLabel;
     Label44: TLabel;
-    RxLabel6: TRxLabel;
+    RxLabel6: TLabel;
     Label17: TLabel;
     Button4: TButton;
     CheckBox4: TCheckBox;
     RadioGroup7: TRadioGroup;
-    RxLabel7: TRxLabel;
+    RxLabel7: TLabel;
     RadioGroup8: TRadioGroup;
-    RxLabel8: TRxLabel;
+    RxLabel8: TLabel;
     Gauge1: TGauge;
     Label22: TLabel;
     Label23: TLabel;
@@ -61,7 +61,7 @@ type
     Shape5: TShape;
     Label25: TLabel;
     PaintBox6: TPaintBox;
-    RxLabel9: TRxLabel;
+    RxLabel9: TLabel;
     Label30: TLabel;
     Label31: TLabel;
     Label32: TLabel;
@@ -79,13 +79,13 @@ type
     Button10: TButton;
     Shape1: TShape;
     PaintBox2: TPaintBox;
-    RxLabel10: TRxLabel;
+    RxLabel10: TLabel;
     Label43: TLabel;
     Label45: TLabel;
-    RxLabel11: TRxLabel;
-    RxLabel12: TRxLabel;
+    RxLabel11: TLabel;
+    RxLabel12: TLabel;
     Bevel1: TBevel;
-    RxLabel1: TRxLabel;
+    RxLabel1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -104,7 +104,7 @@ type
     Label48: TLabel;
     Label49: TLabel;
     Label50: TLabel;
-    RxLabel2: TRxLabel;
+    RxLabel2: TLabel;
     RadioGroup10: TRadioGroup;
     Button5: TButton;
     CheckBox5: TCheckBox;

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  RXCtrls, StdCtrls, ExtCtrls;
+  StdCtrls, ExtCtrls;
 
 type
   TfWordCategory = class(TForm)
@@ -14,7 +14,7 @@ type
     Label36: TLabel;
     Label37: TLabel;
     Label54: TLabel;
-    RxLabel9: TRxLabel;
+    RxLabel9: TLabel;
     Label55: TLabel;
     Label11: TLabel;
     Label12: TLabel;
