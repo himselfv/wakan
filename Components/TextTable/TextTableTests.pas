@@ -97,6 +97,42 @@ type
     procedure AfterFill; override;
   end;
 
+ { Table with several indexes }
+  TMultiIndexCase = class(TTextTableCase)
+  protected
+   //Fields
+    fIntValue,
+    fAnsiValue,
+    fWideValue: integer;
+    soIntValue,
+    soAnsiValue,
+    soWideValue: TSeekObject;
+    function CreateTable: TTextTable; override;
+    procedure AttachFields;
+    procedure BeforeFill; virtual;
+    procedure AfterFill; virtual;
+  protected
+    maxIntVal: integer; //set
+    loChar, hiChar: WideChar; //set
+    IntValues: array of integer;
+    AnsiValues: array of integer;
+    WideValues: array of integer;
+    procedure InitValues;
+    function GetIntValue: integer;
+    function GetAnsiValue: AnsiString;
+    function GetWideValue: WideString;
+    procedure CheckIntValues;
+    procedure CheckAnsiValues;
+    procedure CheckWideValues;
+  public
+    procedure RandomFill(const count: integer);
+  published
+    procedure RandomFill10;
+    procedure RandomFill1k;
+    procedure RandomFill10k;
+    procedure RandomFill100k;
+  end;
+
 implementation
 uses SysUtils;
 
@@ -408,6 +444,227 @@ begin
   FTable.Reindex;
 end;
 
+function TMultiIndexCase.CreateTable: TTextTable;
+begin
+  Result := TTextTable.Create([
+    '$TEXTTABLE',
+    '$PRECOUNTED',
+    '$RAWINDEX',
+    '$FIELDS',
+    'iIntValue',
+    'sAnsiValue',
+    'xWideValue',
+    '$ORDERS',
+   //Orders go in different order just to catch index variable misplacements
+    'AnsiValue_Order',
+    'WideValue_Order',
+    'IntValue_Order',
+    '$SEEKS',
+    '0',
+    'AnsiValue',
+    'WideValue',
+    'IntValue'
+  ]);
+end;
+
+procedure TMultiIndexCase.AttachFields;
+begin
+  fIntValue := FTable.GetFieldIndex('IntValue');
+  Check(fIntValue>=0, 'Field `IntValue` not found.');
+  fAnsiValue := FTable.GetFieldIndex('AnsiValue');
+  Check(fAnsiValue>=0, 'Field `AnsiValue` not found.');
+  fWideValue := FTable.GetFieldIndex('WideValue');
+  Check(fWideValue>=0, 'Field `WideValue` not found.');
+
+  soIntValue := FTable.GetSeekObject('IntValue');
+  Check(soIntValue.ind_i<>-1, 'Seek object `IntValue` not found.');
+  soAnsiValue := FTable.GetSeekObject('AnsiValue');
+  Check(soAnsiValue.ind_i<>-1, 'Seek object `AnsiValue` not found.');
+  soWideValue := FTable.GetSeekObject('WideValue');
+  Check(soWideValue.ind_i<>-1, 'Seek object `WideValue` not found.');
+end;
+
+procedure TMultiIndexCase.BeforeFill;
+begin
+end;
+
+procedure TMultiIndexCase.AfterFill;
+begin
+end;
+
+procedure TMultiIndexCase.InitValues;
+var maxVal: integer;
+  i: integer;
+begin
+  SetLength(IntValues, maxIntVal);
+  for i := 0 to Length(IntValues) - 1 do
+    IntValues[i] := 0;
+
+  SetLength(AnsiValues,255);
+  for i := 0 to Length(AnsiValues) - 1 do
+    AnsiValues[i] := 0;
+
+  maxVal := Word(hiChar)-Word(loChar);
+  SetLength(WideValues, maxVal);
+  for i := 0 to Length(WideValues) - 1 do
+    WideValues[i] := 0;
+end;
+
+function TMultiIndexCase.GetIntValue: integer;
+begin
+  Result := random(maxIntVal);
+  Inc(IntValues[Result]);
+end;
+
+function TMultiIndexCase.GetAnsiValue: AnsiString;
+var tmp: integer;
+  ch: AnsiChar;
+begin
+ //We do not want symbols less than $0021 for various reasons
+  tmp := random(Length(AnsiValues)-$0021)+$0021;
+  ch := AnsiChar(Byte(tmp));
+  ch := Upcase(ch); //or we'll hit lower/upper case collisions
+  tmp := Byte(ch);
+  Inc(AnsiValues[tmp]);
+  Result := ch;
+end;
+
+function TMultiIndexCase.GetWideValue: WideString;
+var tmp: integer;
+begin
+  tmp := random(Length(WideValues));
+  Inc(WideValues[tmp]);
+  Result := WideChar(Word(loChar) + tmp);
+end;
+
+procedure TMultiIndexCase.CheckIntValues;
+var i, tmp, total: integer;
+begin
+  CTable.SetOrder('IntValue_Order');
+  total := 0;
+  for i := 0 to Length(IntValues) - 1 do
+    if IntValues[i]<=0 then
+      Check(not FTable.Locate(@soIntValue,i), 'Int: Located value which shouldn''t be in a table')
+    else begin
+      total := total + IntValues[i];
+      Check(CTable.Locate(@soIntValue,i), 'Int: Cannot locate value which should be in a table');
+      tmp := IntValues[i];
+      while tmp>0 do begin
+        Check(CTable.Int(fIntValue)=i, 'Int: Cannot locate another copy of value which should be in a table ('+IntToStr(tmp)+' remains)');
+        Dec(tmp);
+        CTable.Next;
+      end;
+      Check(CTable.EOF or (CTable.Int(fIntValue)<>i), 'Int: Located another copy of value where all should have been enumerated already.');
+    end;
+
+  Check(FTable.RecordCount=total,'Int: Number of records in the table differs from '
+    +'expected (generated '+IntToStr(total)+', found '+IntToStr(FTable.RecordCount)+')');
+end;
+
+procedure TMultiIndexCase.CheckAnsiValues;
+var i, tmp, total: integer;
+  val: string;
+  testRes: boolean;
+begin
+  CTable.SetOrder('AnsiValue_Order');
+  total := 0;
+  for i := 0 to Length(AnsiValues) - 1 do begin
+    val := string(AnsiChar(Byte(i)));
+    if AnsiValues[i]<=0 then begin
+      tmp := Byte(upcase(AnsiChar(i)));
+      if AnsiValues[tmp]=0 then //or we'd hit uppercase/lowercase collisions
+        testRes := FTable.Locate(@soAnsiValue,val)
+      else testRes := false; //can't check
+      Check(not testRes, 'Ansi: Located value which shouldn''t be in a table')
+    end else begin
+      total := total + AnsiValues[i];
+      testRes := CTable.Locate(@soAnsiValue,val);
+      Check(testRes, 'Ansi: Cannot locate value which should be in a table');
+      tmp := AnsiValues[i];
+      while tmp>0 do begin
+        Check(CTable.Str(fAnsiValue)=val, 'Ansi: Cannot locate another copy of value which should be in a table ('+IntToStr(tmp)+' remains)');
+        Dec(tmp);
+        CTable.Next;
+      end;
+      Check(CTable.EOF or (CTable.Str(fAnsiValue)<>val), 'Ansi: Located another copy of value where all should have been enumerated already.');
+    end;
+  end;
+
+  Check(FTable.RecordCount=total,'Ansi: Number of records in the table differs from '
+    +'expected (generated '+IntToStr(total)+', found '+IntToStr(FTable.RecordCount)+')');
+end;
+
+procedure TMultiIndexCase.CheckWideValues;
+var i, tmp, total: integer;
+  val: WideChar;
+begin
+  CTable.SetOrder('WideValue_Order');
+  total := 0;
+  for i := 0 to Length(WideValues) - 1 do begin
+    val := WideChar(Word(loChar)+i);
+    if WideValues[i]<=0 then
+      Check(not FTable.Locate(@soWideValue,val), 'Wide: Located value which shouldn''t be in a table')
+    else begin
+      total := total + WideValues[i];
+      Check(CTable.Locate(@soWideValue,val), 'Wide: Cannot locate value which should be in a table');
+      tmp := WideValues[i];
+      while tmp>0 do begin
+        Check(CTable.Str(fWideValue)=val, 'Wide: Cannot locate another copy of value which should be in a table ('+IntToStr(tmp)+' remains)');
+        Dec(tmp);
+        CTable.Next;
+      end;
+      Check(CTable.EOF or (CTable.Str(fWideValue)<>val), 'Wide: Located another copy of value where all should have been enumerated already.');
+    end;
+  end;
+
+  Check(FTable.RecordCount=total,'Wide: Number of records in the table differs from '
+    +'expected (generated '+IntToStr(total)+', found '+IntToStr(FTable.RecordCount)+')');
+end;
+
+procedure TMultiIndexCase.RandomFill(const count: integer);
+var i: integer;
+begin
+  AttachFields();
+
+  randomize;
+
+  maxIntVal := count div 10 + 2; //not less than 2
+  loChar := WideChar($4E00);
+  hiChar := WideChar($9FBF);
+  InitValues();
+
+  BeforeFill();
+
+  for i := 0 to count - 1 do
+    FTable.AddRecord([IntToStr(GetIntValue), string(GetAnsiValue), GetWideValue]);
+
+  AfterFill();
+
+  CheckIntValues();
+  CheckAnsiValues();
+  CheckWideValues();
+end;
+
+procedure TMultiIndexCase.RandomFill10;
+begin
+  RandomFill(10);
+end;
+
+procedure TMultiIndexCase.RandomFill1k;
+begin
+  RandomFill(1000);
+end;
+
+procedure TMultiIndexCase.RandomFill10k;
+begin
+  RandomFill(10000);
+end;
+
+procedure TMultiIndexCase.RandomFill100k;
+begin
+  RandomFill(100000);
+end;
+
 initialization
   RegisterTest(TIntIndexCase.Suite);
   RegisterTest(TRawIntIndexCase.Suite);
@@ -419,4 +676,5 @@ initialization
   RegisterTest(TRawUStringIndexCase.Suite);
   RegisterTest(TCommitUStringIndexCase.Suite);
   RegisterTest(TCommitRawUStringIndexCase.Suite);
+  RegisterTest(TMultiIndexCase.Suite);
 end.
