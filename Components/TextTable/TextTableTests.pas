@@ -109,8 +109,6 @@ type
     soWideValue: TSeekObject;
     function CreateTable: TTextTable; override;
     procedure AttachFields;
-    procedure BeforeFill; virtual;
-    procedure AfterFill; virtual;
   protected
     maxIntVal: integer; //set
     loChar, hiChar: WideChar; //set
@@ -118,12 +116,20 @@ type
     AnsiValues: array of integer;
     WideValues: array of integer;
     procedure InitValues;
-    function GetIntValue: integer;
-    function GetAnsiValue: AnsiString;
-    function GetWideValue: WideString;
+    function IntValue(const index: integer): integer;
+    function AnsiValue(const index: integer): AnsiString;
+    function WideValue(const index: integer): WideString;
+    function NewIntValue: integer;
+    function NewAnsiValue: AnsiString;
+    function NewWideValue: WideString;
     procedure CheckIntValues;
     procedure CheckAnsiValues;
     procedure CheckWideValues;
+  end;
+
+ { Records here are indexed with 3 different fields. They are generated randomly,
+  and then all indexes are checked to contain all generated values }
+  TFillMultiIndexCase = class(TMultiIndexCase)
   public
     procedure RandomFill(const count: integer);
   published
@@ -131,6 +137,18 @@ type
     procedure RandomFill1k;
     procedure RandomFill10k;
     procedure RandomFill100k;
+  end;
+
+ { Same but record fields are randomly edited after inserting.
+  If TFillMultiIndexCase fails, this will fail }
+  TEditMultiIndexCase = class(TMultiIndexCase)
+  public
+    procedure RandomFillEdit(const count: integer);
+  published
+    procedure RandomFillEdit10;
+    procedure RandomFillEdit1k;
+    procedure RandomFillEdit10k;
+    procedure RandomFillEdit100k;
   end;
 
 implementation
@@ -384,6 +402,8 @@ begin
 
   Check(FTable.RecordCount=total,'Number of records in the table differs from '
     +'expected (generated '+IntToStr(total)+', found '+IntToStr(FTable.RecordCount)+')');
+
+  Check(FTable.CheckIndex, 'CheckIndex() failed');
 end;
 
 procedure TUStringIndexCase.RandomFill10;
@@ -484,14 +504,6 @@ begin
   Check(soWideValue.ind_i<>-1, 'Seek object `WideValue` not found.');
 end;
 
-procedure TMultiIndexCase.BeforeFill;
-begin
-end;
-
-procedure TMultiIndexCase.AfterFill;
-begin
-end;
-
 procedure TMultiIndexCase.InitValues;
 var maxVal: integer;
   i: integer;
@@ -510,13 +522,13 @@ begin
     WideValues[i] := 0;
 end;
 
-function TMultiIndexCase.GetIntValue: integer;
+function TMultiIndexCase.NewIntValue: integer;
 begin
   Result := random(maxIntVal);
   Inc(IntValues[Result]);
 end;
 
-function TMultiIndexCase.GetAnsiValue: AnsiString;
+function TMultiIndexCase.NewAnsiValue: AnsiString;
 var tmp: integer;
   ch: AnsiChar;
 begin
@@ -529,12 +541,27 @@ begin
   Result := ch;
 end;
 
-function TMultiIndexCase.GetWideValue: WideString;
+function TMultiIndexCase.NewWideValue: WideString;
 var tmp: integer;
 begin
   tmp := random(Length(WideValues));
   Inc(WideValues[tmp]);
   Result := WideChar(Word(loChar) + tmp);
+end;
+
+function TMultiIndexCase.IntValue(const index: integer): integer;
+begin
+  Result := index; //trivial
+end;
+
+function TMultiIndexCase.AnsiValue(const index: integer): AnsiString;
+begin
+  Result := AnsiChar(Byte(index));
+end;
+
+function TMultiIndexCase.WideValue(const index: integer): WideString;
+begin
+  Result := WideChar(Word(loChar)+index);
 end;
 
 procedure TMultiIndexCase.CheckIntValues;
@@ -569,7 +596,7 @@ begin
   CTable.SetOrder('AnsiValue_Order');
   total := 0;
   for i := 0 to Length(AnsiValues) - 1 do begin
-    val := string(AnsiChar(Byte(i)));
+    val := string(AnsiValue(i));
     if AnsiValues[i]<=0 then begin
       tmp := Byte(upcase(AnsiChar(i)));
       if AnsiValues[tmp]=0 then //or we'd hit uppercase/lowercase collisions
@@ -596,12 +623,12 @@ end;
 
 procedure TMultiIndexCase.CheckWideValues;
 var i, tmp, total: integer;
-  val: WideChar;
+  val: WideString;
 begin
   CTable.SetOrder('WideValue_Order');
   total := 0;
   for i := 0 to Length(WideValues) - 1 do begin
-    val := WideChar(Word(loChar)+i);
+    val := WideValue(i);
     if WideValues[i]<=0 then
       Check(not FTable.Locate(@soWideValue,val), 'Wide: Located value which shouldn''t be in a table')
     else begin
@@ -621,7 +648,7 @@ begin
     +'expected (generated '+IntToStr(total)+', found '+IntToStr(FTable.RecordCount)+')');
 end;
 
-procedure TMultiIndexCase.RandomFill(const count: integer);
+procedure TFillMultiIndexCase.RandomFill(const count: integer);
 var i: integer;
 begin
   AttachFields();
@@ -633,37 +660,99 @@ begin
   hiChar := WideChar($9FBF);
   InitValues();
 
-  BeforeFill();
-
   for i := 0 to count - 1 do
-    FTable.AddRecord([IntToStr(GetIntValue), string(GetAnsiValue), GetWideValue]);
-
-  AfterFill();
+    FTable.AddRecord([IntToStr(NewIntValue), string(NewAnsiValue), NewWideValue]);
 
   CheckIntValues();
   CheckAnsiValues();
   CheckWideValues();
+  Check(FTable.CheckIndex, 'CheckIndex() failed');
 end;
 
-procedure TMultiIndexCase.RandomFill10;
+procedure TFillMultiIndexCase.RandomFill10;
 begin
   RandomFill(10);
 end;
 
-procedure TMultiIndexCase.RandomFill1k;
+procedure TFillMultiIndexCase.RandomFill1k;
 begin
   RandomFill(1000);
 end;
 
-procedure TMultiIndexCase.RandomFill10k;
+procedure TFillMultiIndexCase.RandomFill10k;
 begin
   RandomFill(10000);
 end;
 
-procedure TMultiIndexCase.RandomFill100k;
+procedure TFillMultiIndexCase.RandomFill100k;
 begin
   RandomFill(100000);
 end;
+
+procedure TEditMultiIndexCase.RandomFillEdit(const count: integer);
+var i: integer;
+begin
+  AttachFields();
+
+  randomize;
+
+  maxIntVal := count div 10 + 2; //not less than 2
+  loChar := WideChar($4E00);
+  hiChar := WideChar($9FBF);
+  InitValues();
+
+  for i := 0 to count - 1 do
+    FTable.AddRecord([IntToStr(NewIntValue), string(NewAnsiValue), NewWideValue]);
+
+  for i := 0 to Length(IntValues) - 1 do
+    if IntValues[i]>0 then begin
+      Dec(IntValues[i]);
+      Check(CTable.Locate(@soIntValue,i),'Int: cannot locate value which should be in a table.');
+      CTable.Edit([fIntValue],[IntToStr(NewIntValue)]);
+    end;
+
+{
+  for i := 0 to Length(AnsiValues) - 1 do
+    if AnsiValues[i]>0 then begin
+      Dec(AnsiValues[i]);
+      Check(CTable.Locate(@soAnsiValue,string(AnsiValue(i))),'Ansi: cannot locate value which should be in a table.');
+      CTable.Edit([fAnsiValue],[string(NewAnsiValue)]);
+    end;
+
+  for i := 0 to Length(WideValues) - 1 do
+    if WideValues[i]>0 then begin
+      Dec(WideValues[i]);
+      Check(CTable.Locate(@soWideValue,WideValue(i)),'Wide: cannot locate value which should be in a table.');
+      CTable.Edit([fWideValue],[NewWideValue]);
+    end;
+}
+
+  CheckIntValues();
+  CheckAnsiValues();
+  CheckWideValues();
+  Check(FTable.CheckIndex, 'CheckIndex() failed');
+end;
+
+procedure TEditMultiIndexCase.RandomFillEdit10;
+begin
+  RandomFillEdit(10);
+end;
+
+procedure TEditMultiIndexCase.RandomFillEdit1k;
+begin
+  RandomFillEdit(1000);
+end;
+
+procedure TEditMultiIndexCase.RandomFillEdit10k;
+begin
+  RandomFillEdit(10000);
+end;
+
+procedure TEditMultiIndexCase.RandomFillEdit100k;
+begin
+  RandomFillEdit(100000);
+end;
+
 
 initialization
   RegisterTest(TIntIndexCase.Suite);
@@ -676,5 +765,6 @@ initialization
   RegisterTest(TRawUStringIndexCase.Suite);
   RegisterTest(TCommitUStringIndexCase.Suite);
   RegisterTest(TCommitRawUStringIndexCase.Suite);
-  RegisterTest(TMultiIndexCase.Suite);
+  RegisterTest(TFillMultiIndexCase.Suite);
+  RegisterTest(TEditMultiIndexCase.Suite);
 end.

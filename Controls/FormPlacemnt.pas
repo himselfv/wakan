@@ -6,7 +6,7 @@ Simple form placement storage.
 interface
 
 uses
-  System.SysUtils, System.Classes, IniFiles, Registry;
+  SysUtils, Classes, IniFiles, Registry;
 
 type
   TFormPlacementOption = (foPosition);

@@ -45,7 +45,9 @@ type
 procedure Register;
 
 implementation
+{$IF CompilerVersion >= 22}
 uses Actions;
+{$IFEND}
 
 procedure TCheckActionLink.AssignClient(AClient: TObject);
 begin

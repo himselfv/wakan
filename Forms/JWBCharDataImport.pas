@@ -286,6 +286,7 @@ var prog: TSMPromptForm;
   tempDir: string;
   backupFile: string;
   OldCharProp: TTextTable;
+  i: integer;
 
  { If we're updating DB, we need to port TChar and property entries which were
   not covered by the KANJIDIC/UNIHAN provided. So we keep track of it. }
@@ -325,6 +326,8 @@ begin
      We won't be able to add records without this. }
       FixTCharJpUnicodeIndex(TChar);
 
+    Assert(TChar.CheckIndex,'TChar index broken before any import (?!)');
+
    { STAGE II. Import KANJIDIC }
     prog.SetMessage(_l('^eImporting KANJIDIC...'));
     if KanjidicFilename<>'' then
@@ -332,10 +335,16 @@ begin
     else
       SetLength(KanjidicCovered, 0);
 
+    for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count) do
+      Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing KANJIDIC');
+
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
     if UnihanFolder<>'' then
       ImportUnihan(UnihanFolder);
+
+    for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count) do
+      Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing UNIHAN');
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));

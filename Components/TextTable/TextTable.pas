@@ -228,7 +228,8 @@ type
     function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
     function TransOrder(rec,order:integer):integer; inline;
     procedure Reindex;
-    function CheckIndex:boolean;
+    function CheckIndex(const index: integer):boolean; overload;
+    function CheckIndex:boolean; overload;
     function HasIndex(const index:string):boolean;
     property Seeks: TSeekList read FSeeks;
     property Orders: TStringList read FOrders;
@@ -2166,6 +2167,10 @@ begin
       if idx.RecCnt=1 then
         continue;
 
+     { We copy the cell to the left, because if we duplicate the one to the
+      right then the new one will be first and will be returned on Locate().
+      If the   }
+
       if pos_prev>0 then
         idx.Write(pos_prev,idx.Read(pos_prev-1))
       else
@@ -2235,28 +2240,38 @@ begin
   sl.Free;
 end;
 
-{ Checks only those indexes for which there's a $SEEK definition }
-function TTextTable.CheckIndex:boolean;
-var i,j:integer;
+{ Checks the specified index. It needs to have a $SEEK definition }
+function TTextTable.CheckIndex(const index: integer):boolean;
+var j:integer;
   s1,s2:string;
   IndexRecCount: integer;
 begin
-  for i:=0 to orders.Count-1 do if seeks.Count>i+1 then
+  s1:='';
+  IndexRecCount := FIndexes[index].RecCnt;
+  for j:=0 to IndexRecCount-1 do
   begin
-    s1:='';
-    IndexRecCount := FIndexes[i].RecCnt;
-    for j:=0 to IndexRecCount-1 do
+    s2:=sortrec(transorder(j,index),index+1);
+    if ttCompareSign(s1,s2)>0 then
     begin
-      s2:=sortrec(transorder(j,i),i+1);
-      if ttCompareSign(s1,s2)>0 then
-      begin
-        result:=false;
+      Result:=false;
+      exit;
+    end;
+    s1:=s2;
+  end;
+  Result := true;
+end;
+
+{ Checks all those indexes for which there's a $SEEK definition }
+function TTextTable.CheckIndex:boolean;
+var i: integer;
+begin
+  for i:=0 to orders.Count-1 do
+    if seeks.Count>i+1 then
+      if not CheckIndex(i) then begin
+        Result := false;
         exit;
       end;
-      s1:=s2;
-    end;
-  end;
-  result:=true;
+  Result := true;
 end;
 
 function TTextTable.HasIndex(const index:string):boolean;
