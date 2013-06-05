@@ -139,7 +139,7 @@ uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBWordList, JWBUserDetails, JWBUserAdd,
   JWBUserFilters, JWBExamples, JWBUser, JWBUserData,
   JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
-  JWBCharData;
+  JWBCharData, TextTable;
 
 var wl,wlc:TStringList;
     ll,ltl:TStringList;

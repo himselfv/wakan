@@ -130,8 +130,8 @@ procedure UnloadRaineRadicals;
 
 implementation
 
-uses JWBMenu, JWBUnit, JWBSettings, PKGWrite, JWBCategories, JWBConvert, JWBIO,
-  JWBCharData, MemSource;
+uses TextTable, JWBMenu, JWBUnit, JWBSettings, PKGWrite, JWBCategories,
+  JWBConvert, JWBIO, JWBCharData, MemSource;
 
 {$R *.DFM}
 

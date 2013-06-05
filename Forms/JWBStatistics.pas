@@ -64,7 +64,7 @@ var
   fStatistics: TfStatistics;
 
 implementation
-uses JWBCharData, JWBUserData, JWBCategories, JWBSettings, JWBUnit;
+uses TextTable, JWBCharData, JWBUserData, JWBCategories, JWBSettings, JWBUnit;
 
 {$R *.DFM}
 

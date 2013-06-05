@@ -50,7 +50,8 @@ var
 
 implementation
 
-uses JWBWords, JWBMenu, JWBUserData, JWBCategories, JWBUnit, JWBNewCategory;
+uses TextTable, JWBWords, JWBMenu, JWBUserData, JWBCategories, JWBUnit,
+  JWBNewCategory;
 
 {$R *.DFM}
 
