@@ -470,11 +470,11 @@ begin
          '0', //Not unicode-only
          'J', //See comments for TCharType. For now, 'J'. Unihan parsing might alter this.
          ed.kanji, //Unicode,
-         '255', //Stroke count,
-         IntToStr(JpStrokeCount),
+         '255', //Stroke count (chinese),
          IntToStr(JpFrequency),
-         '255', //Frequence
-         IntToStr(JouyouGrade)
+         '255', //ChFrequence
+         IntToStr(JouyouGrade),
+         IntToStr(JpStrokeCount)
         ]);
       end else
         CharsCovered[CChar.tcur] := true; //migrated

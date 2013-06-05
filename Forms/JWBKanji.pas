@@ -448,23 +448,32 @@ begin
         s1:=fKanjiSearch.Edit5.Text;
         if pos('.',s1)>0 then delete(s1,pos('.',s1),1);
         if accept then accept:=InRange(s1,TChar.Str(TCharFourCornerCode),false,sl9);
-      end;
-  }    if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
+      end; }
+      if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
       if accept then
       begin
         if not chin then
         begin
-          if TChar.Int(TCharJouyouGrade)<9 then sbJouyou:='C'else
-          if TChar.Int(TCharJouyouGrade)<10 then sbJouyou:='N'else
-          sbJouyou:='U';
-        end else
+          if TChar.Int(TCharJouyouGrade)<9 then
+            sbJouyou:='C'
+          else
+          if TChar.Int(TCharJouyouGrade)<10 then
+            sbJouyou:='N'
+          else
+            sbJouyou:='U';
+        end else begin
   //        if TChar.Str(TCharType)[1]='A'then sbJouyou:='A'else
   //        if TChar.Str(TCharType)[1]='J'then sbJouyou:='J'else
-          if TChar.Int(TCharChFrequency)<=5 then sbJouyou:='C'else sbJouyou:='U';
-        if ((not chin) and (fKanjiSearch.rgSortBy.ItemIndex=3)) or
-           ((chin) and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
-          ki.Insert(random(ki.Count),sbJouyou+TChar.Str(TCharUnicode)) else
-            ki.Add(sbJouyou+TChar.Str(TCharUnicode));
+          if TChar.Int(TCharChFrequency)<=5 then
+            sbJouyou:='C'
+          else
+            sbJouyou:='U';
+        end;
+        if ((not chin) and (fKanjiSearch.rgSortBy.ItemIndex=3))
+        or ((chin) and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
+          ki.Insert(random(ki.Count),sbJouyou+TChar.Str(TCharUnicode))
+        else
+          ki.Add(sbJouyou+TChar.Str(TCharUnicode));
       end;
       if clipsort then inc(clipind) else TChar.Next;
     end;
