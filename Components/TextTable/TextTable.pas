@@ -242,6 +242,7 @@ type
     reccount:integer;
     numberdeleted:integer;
     nocommit:boolean; //do not update indexes on Add/Edit/Delete. You'll have to Reindex later.
+    function TestIdxPos(const order: integer; const pos: integer): boolean;
   public
     function AddRecord(values:array of string): integer;
     procedure DeleteRecord(RecNo: integer);
@@ -2141,6 +2142,41 @@ begin
     Result := AnsiCompareStr(s1, s2);
 end;
 
+{ Returns false if the index is broken at that point, otherwise true }
+function TTextTable.TestIdxPos(const order: integer; const pos: integer): boolean;
+var idx: PTextTableIndex;
+  sign, sign2: string;
+  RecNo, RecNo2: integer;
+begin
+  idx := @FIndexes[order];
+  RecNo := idx.Read(pos);
+  sign := SortRec(RecNo,order+1);
+  if pos>0 then begin
+    RecNo2 := idx.Read(pos-1);
+    sign2 := SortRec(RecNo2,order+1);
+    if ttCompareSign(sign2,sign)>0 then begin
+      Result := false;
+      exit;
+    end;
+  end;
+  if pos<idx.RecCnt-1 then begin
+    RecNo2 := idx.Read(pos+1);
+    sign2 := SortRec(RecNo2,order+1);
+    if ttCompareSign(sign,sign2)>0 then begin
+      Result := false;
+      exit;
+    end;
+  end;
+  Result:=true;
+end;
+
+{ Edit-Commit, as opposed to Insert-Commit, can be optimized with linear indexes.
+ Instead of 1. extracting the entry and 2. inserting at new location, we can
+ determine old and new location and move only the cells between them in one go.
+ Unfortunately there are complications (see below) so I have disabled the code
+ path, but the function is written so that it's possible. }
+{$DEFINE COMMIT_EXPENSIVE_MOVE}
+
 procedure TTextTable.Commit(RecNo:integer; JustInserted: boolean);
 var pos_prev, pos_next: integer;
   idx: PTextTableIndex;
@@ -2157,25 +2193,25 @@ begin
     else
       pos_prev := idx.FindEntry(RecNo);
 
-   { Mark it for killing }
     if pos_prev>=0 then begin
-     { This cell will be killed but for now we need something to make
-      TrueLocateRecord work. Duplicating a cell does not break the sorting.  }
-
-     { We cannot duplicate in this case, but thankfully, no index changes are
-      needed at all! }
-      if idx.RecCnt=1 then
+    {$IFDEF COMMIT_EXPENSIVE_MOVE}
+     //If it's still okay where it is, do nothing
+      if TestIdxPos(i, pos_prev) then
         continue;
-
-     { We copy the cell to the left, because if we duplicate the one to the
-      right then the new one will be first and will be returned on Locate().
-      If the   }
-
-      if pos_prev>0 then
-        idx.Write(pos_prev,idx.Read(pos_prev-1))
-      else
-       //pos_prev=0 but other records exit -- see above RecCnt<>1
-        idx.Write(pos_prev,idx.Read(pos_prev+1));
+      idx.ShiftLeft(pos_prev+1, idx.RecCnt-pos_prev-1, 1);
+      Dec(idx.RecCnt);
+      pos_prev:=-1; //assume there was none
+    {$ELSE}
+     {
+     We would like to remove old value from index without shifting cells,
+     just "zero it out", so that we can Locate() new position.
+     That's not so simple. We can't just zero it (record #0 may not belong
+     at this place in the index).
+     I tried copying value to the left/to the right but that was broken. Maybe
+     one day someone tries again and figures why.
+     For now I disabled the codepath.
+     }
+    {$ENDIF}
     end;
 
    { Find where the record should be }

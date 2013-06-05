@@ -335,16 +335,20 @@ begin
     else
       SetLength(KanjidicCovered, 0);
 
+   {$IFDEF DEBUG}
     for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count) do
       Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing KANJIDIC');
+   {$ENDIF}
 
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
     if UnihanFolder<>'' then
       ImportUnihan(UnihanFolder);
 
+   {$IFDEF DEBUG}
     for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count) do
       Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing UNIHAN');
+   {$ENDIF}
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));
@@ -517,23 +521,17 @@ var CChar: TTextTableCursor;
   CNewProp: TCharPropBuilder;
   CharIdx: integer;
   parts: TStringArray;
+  soUnicode: TSeekObject;
+  LastChar: UnicodeString;
 
   procedure NeedChar(const kanji: UnicodeString);
   begin
-   //TODO: Problem problem problem! The chars added during this pass
-   // are not being located (they're not yet in indexes).
-   //Solution: Move away from DisableIndexes/Reindex scheme. Commits should not
-   // be disableable.
-   //I have to write a fast indexing scheme, binary tree with logarithm addition
-   //and fixed positions for all elements probably.
-   //Convert to this on load, convert from this on write (with traversal).
-
-   //TODO: Simple optimization: If it's the same char as before, nothing needs to be done!
+   //Simple optimization: If it's the same char as before, nothing needs to be done!
    // (Unihan really stores chars mostly in batches, not between diff. files though)
+    if (LastChar<>'') and (LastChar=kanji) then
+      exit;
 
-   //TODO: Replace 'Unicode' with ptr index reference
-
-    if CChar.Locate('Unicode', kanji) then
+    if CChar.Locate(@soUnicode, kanji) then
       exit;
 
     CChar.Insert([
@@ -629,7 +627,9 @@ var CChar: TTextTableCursor;
   end;
 
 begin
- { Parse KANJIDIC and add new properties }
+  soUnicode := TChar.GetSeekObject('Unicode');
+  LastChar := '';
+
   CChar := nil;
   CNewProp := nil;
   try
