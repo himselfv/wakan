@@ -48,7 +48,7 @@ var
 
 implementation
 uses StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
-  JWBConvert, JWBIO, JWBUnit;
+  JWBConvert, JWBUnit;
 
 {$R *.dfm}
 
@@ -548,17 +548,18 @@ var CChar: TTextTableCursor;
   end;
 
   procedure ImportFile(const UnihanFile: string);
-  var ffile: TCustomFileReader;
+  var fuin: TJwbConvert;
     line: string;
     ed: TUnihanPropertyEntry;
     propType: PCharPropType;
     i: integer;
     entry_no: integer;
+    varpropvals: TVariantValues;
   begin
-    ffile := TAnsiFileReader.Create(UnihanFile);
+    fuin := TJwbConvert.Open(UnihanFile, FILETYPE_UTF8);
     try
-      while ffile.Readln(line) do begin
-        line := Trim(line);
+      while not fuin.Eof do begin
+        line := Trim(fuin.ReadLn);
         if (line='') or IsUnihanComment(line) then continue;
         ParseUnihanLine(line, @ed);
 
@@ -613,6 +614,18 @@ var CChar: TTextTableCursor;
         if propType<>nil then begin
          //Just add
          //May other properties need splitting too?
+
+          if (propType.sourceField='kCompatibilityVariant')
+          or (propType.sourceField='kSemanticVariant')
+          or (propType.sourceField='kSimplifiedVariant')
+          or (propType.sourceField='kTraditionalVariant')
+          or (propType.sourceField='kZVariant') then begin
+            ParseVariantProperty(ed.value, varpropvals);
+            ed.value := '';
+            for i := 0 to Length(varpropvals)-1 do
+              ed.value := ed.value + varpropvals[i].char;
+          end;
+
           NeedChar(ed.char);
           CharIdx := CChar.TrueInt(TCharIndex);
           CNewProp.OpenKanji(CharIdx);
@@ -622,7 +635,7 @@ var CChar: TTextTableCursor;
 
       end;
     finally
-      FreeAndNil(ffile);
+      FreeAndNil(fuin);
     end;
   end;
 
