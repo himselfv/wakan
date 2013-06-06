@@ -106,6 +106,7 @@ begin
 //  if fKanjiSearch.SpeedButton20.Down then chin:=true;
   DoIt;
   caltype:=0;
+  fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
 end;
 
 procedure TfKanji.FormHide(Sender: TObject);

@@ -176,7 +176,6 @@ procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
 //  if Visible then fMenu.aKanjiDetails.Checked:=true;
   fMenu.aKanjiDetails.Checked:=Self.Visible;
-  fKanji.btnKanjiDetails.Down:=Self.Visible;
   fTranslate.sbDockKanjiDetails.Down:=Self.Visible;
   btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
   btnClose.Default:=not fMenu.CharDetDocked;
