@@ -286,7 +286,7 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
   begin
     SetLength(categories, 0);
     for i:=0 to fKanjiSearch.lbCategories.Items.Count-1 do
-      if fKanjiSearch.lbCategories.Checked[k] then
+      if fKanjiSearch.lbCategories.Checked[i] then
     begin
       SetLength(categories, Length(categories)+1);
       categories[Length(categories)-1] := GetCatIdx(fKanjiSearch.lbCategories, i);
@@ -301,7 +301,8 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
       exit;
     end;
 
-    Result := (fKanjiSearch.rgOrAnd.ItemIndex=0); //default result: true if ANDs, false if ORs
+   { Filter mode: 0=OR, 1=AND }
+    Result := (fKanjiSearch.rgOrAnd.ItemIndex=1); //default result: true if ANDs, false if ORs
     for i := 0 to Length(categories) - 1 do
       if IsKnown(categories[i], TChar.FCh(TCharUnicode)) then begin
         if fKanjiSearch.rgOrAnd.ItemIndex=0 then begin Result:=true; break; end;
