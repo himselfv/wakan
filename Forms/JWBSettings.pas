@@ -380,9 +380,9 @@ var
 implementation
 
 uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
-  JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBUser, JWBCharItem, JWBWordKanji,
-  JWBExamples, JWBUserAdd, JWBUserDetails, JWBUserFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBWords, WakanWordGrid,
+  JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBWordKanji,
+  JWBExamples, JWBVocabAdd, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
+  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
   JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport;
 
 var colorfrom:integer;
@@ -607,7 +607,7 @@ begin
   CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
   CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
   CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
-  fUser.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
+  fWordLookup.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
   CheckBox8.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
   cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
@@ -673,7 +673,7 @@ begin
   CheckBox62.Checked:=reg.ReadBool('KanjiCards','PrintFullComp',true);
   CheckBox63.Checked:=reg.ReadBool('KanjiCards','SortFrequency',true);
   CheckBox26.Checked:=reg.ReadBool('Vocabulary','SaveStat',false);
-  fUser.SpeedButton4.Down:=reg.ReadBool('Dict','DeflexItalic',true);
+  fWordLookup.SpeedButton4.Down:=reg.ReadBool('Dict','DeflexItalic',true);
   CheckBox43.Checked:=reg.ReadBool('Translate','BreakLines',true);
   cbDisplayLines.Checked:=reg.ReadBool('Translate','DisplayLines',true);
   CheckBox41.Checked:=reg.ReadBool('Translate','DisplayNonJapanese',true);
@@ -739,7 +739,7 @@ begin
 
  //Column widths
   fWords.SetDefaultColumnWidths;
-  fUser.SetDefaultColumnWidths;
+  fWordLookup.SetDefaultColumnWidths;
   fKanjiCompounds.SetDefaultColumnWidths;
   if cbSaveColumnWidths.Checked then begin
     fWords.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',fWords.StringGrid1.ColWidths[0]);
@@ -747,9 +747,9 @@ begin
     fWords.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',fWords.StringGrid1.ColWidths[2]);
     fWords.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',fWords.StringGrid1.ColWidths[3]);
 
-    fUser.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fUser.StringGrid1.ColWidths[0]);
-    fUser.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fUser.StringGrid1.ColWidths[1]);
-    fUser.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fUser.StringGrid1.ColWidths[2]);
+    fWordLookup.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
+    fWordLookup.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
+    fWordLookup.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
 
     fKanjiCompounds.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
     fKanjiCompounds.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
@@ -823,7 +823,7 @@ begin
   fKanjiSearch.rgSortBy.ItemIndex:=setsort;
   kanji_othersearch:=setothersearch;
   fKanjiSearch.cbOtherType.ItemIndex:=-1;
-  if dictmodeset=1 then fUser.btnLookupEtoJ.Down:=true else fUser.btnLookupJtoE.Down:=true;
+  if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
@@ -866,7 +866,7 @@ begin
   reg.WriteBool('Dict','PreferNouns',CheckBox5.Checked);
   reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
   reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
-  reg.WriteBool('Dict','QuickSearch',fUser.SpeedButton13.Down);
+  reg.WriteBool('Dict','QuickSearch',fWordLookup.SpeedButton13.Down);
   reg.WriteBool('Dict','ReplaceKanji',CheckBox8.Checked);
   reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
@@ -921,7 +921,7 @@ begin
   reg.WriteBool('KanjiCards','PrintFullComp',CheckBox62.Checked);
   reg.WriteBool('KanjiCards','SortFrequency',CheckBox63.Checked);
   reg.WriteBool('Vocabulary','SaveStat',CheckBox26.Checked);
-  reg.WriteBool('Dict','DeflexItalic',fUser.SpeedButton4.Down);
+  reg.WriteBool('Dict','DeflexItalic',fWordLookup.SpeedButton4.Down);
   reg.WriteBool('Translate','BreakLines',CheckBox43.Checked);
   reg.WriteBool('Translate','DisplayLines',cbDisplayLines.Checked);
   reg.WriteBool('Translate','DisplayNonJapanese',CheckBox41.Checked);
@@ -1014,9 +1014,9 @@ begin
   reg.WriteBool('General','SaveSearchParams',cbSaveSearchParams.Checked);
 
   if cbSaveColumnWidths.Checked then begin
-    reg.WriteInteger('Grids','DictCol1',fUser.StringGrid1.ColWidths[0]);
-    reg.WriteInteger('Grids','DictCol2',fUser.StringGrid1.ColWidths[1]);
-    reg.WriteInteger('Grids','DictCol3',fUser.StringGrid1.ColWidths[2]);
+    reg.WriteInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
+    reg.WriteInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
+    reg.WriteInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
 
     reg.WriteInteger('Grids','UserCol1',fWords.StringGrid1.ColWidths[0]);
     reg.WriteInteger('Grids','UserCol2',fWords.StringGrid1.ColWidths[1]);

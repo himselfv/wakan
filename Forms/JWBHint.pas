@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, WakanPaintbox;
 
-{ Shows results from JWBUser.fUser dictionary lookup in another form,
+{ Shows results from JWBDict.fDict dictionary lookup in another form,
  suited for giving the user hints as they type. }
 
 type
@@ -24,7 +24,7 @@ var
   fHint: TfHint;
 
 implementation
-uses JWBStrings, JWBUnit, JWBUser, JWBSettings, Grids;
+uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids;
 
 {$R *.DFM}
 
@@ -71,7 +71,7 @@ var StringGrid1: TStringGrid;
   fs,fsl:integer;
   rect:TRect;
 begin
-  StringGrid1 := fUser.StringGrid1; //faster access
+  StringGrid1 := fWordLookup.StringGrid1; //faster access
 
   PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
   cw:=-1;
@@ -129,7 +129,7 @@ begin
     rect.left:=2;
     rect.right:=PaintBox1.Width-4;
     rect.bottom:=fs*2;
-    PaintBox1.Canvas.TextRect(rect,2,fs+2,remmark(remexcl(StringGrid1.Cells[2,fUser.curword])));
+    PaintBox1.Canvas.TextRect(rect,2,fs+2,remmark(remexcl(StringGrid1.Cells[2,fWordLookup.curword])));
   end;
 end;
 

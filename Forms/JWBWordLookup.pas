@@ -1,4 +1,4 @@
-﻿unit JWBUser;
+﻿unit JWBWordLookup;
 
 interface
 
@@ -15,7 +15,7 @@ type
     rad: FChar; //its radical
   end;
 
-  TfUser = class(TForm)
+  TfWordLookup = class(TForm)
     Panel1: TPanel;
     btnLookupJtoE: TSpeedButton;
     btnLookupEtoJ: TSpeedButton;
@@ -113,40 +113,40 @@ type
   end;
 
 var
-  fUser: TfUser;
+  fWordLookup: TfWordLookup;
 
 implementation
 
-uses TextTable, JWBUnit, JWBMenu, JWBWords, JWBSettings,
+uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
   JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
   JWBCategories, JWBAnnotations, JWBUserData, JWBCharData;
 
 {$R *.DFM}
 
-procedure TfUser.FormCreate(Sender: TObject);
+procedure TfWordLookup.FormCreate(Sender: TObject);
 begin
   dicrl:=TSearchResults.Create;
 end;
 
-procedure TfUser.FormDestroy(Sender: TObject);
+procedure TfWordLookup.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(dicrl);
 end;
 
-procedure TfUser.FormActivate(Sender: TObject);
+procedure TfWordLookup.FormActivate(Sender: TObject);
 begin
 //  if SpeedButton4.Down then SpeedButton1.Down:=true;
 //  SpeedButton1Click(sender);
 end;
 
-procedure TfUser.FormShow(Sender: TObject);
+procedure TfWordLookup.FormShow(Sender: TObject);
 begin
   if Edit1.Enabled then Edit1.SetFocus;
   Look();
 end;
 
-procedure TfUser.SetDefaultColumnWidths;
+procedure TfWordLookup.SetDefaultColumnWidths;
 begin
   StringGrid1.ColWidths[0]:=131;
   StringGrid1.ColWidths[1]:=128;
@@ -154,7 +154,7 @@ begin
   StringGrid1.AutoSizeColumns;
 end;
 
-procedure TfUser.PopupMenu1Popup(Sender: TObject);
+procedure TfWordLookup.PopupMenu1Popup(Sender: TObject);
 var p: TPoint;
   ACol, ARow: integer;
 begin
@@ -163,13 +163,13 @@ begin
   miResetColumns.Visible := (ARow=0); //click on header
 end;
 
-procedure TfUser.miResetColumnsClick(Sender: TObject);
+procedure TfWordLookup.miResetColumnsClick(Sender: TObject);
 begin
   SetDefaultColumnWidths;
 end;
 
 //Called when any of the configuration buttons are pressed
-procedure TfUser.UpdateLookMode;
+procedure TfWordLookup.UpdateLookMode;
 var a: integer;
 begin
   if btnLookupJtoE.Down then a:=1 else
@@ -206,10 +206,10 @@ begin
   SpeedButton12.Enabled:=true;
   SpeedButton18.Enabled:=true;
   case dictbeginset of
-    0:fUser.SpeedButton10.Down:=true;
-    1:fUser.SpeedButton11.Down:=true;
-    2:fUser.SpeedButton12.Down:=true;
-    3:fUser.SpeedButton18.Down:=true;
+    0:fWordLookup.SpeedButton10.Down:=true;
+    1:fWordLookup.SpeedButton11.Down:=true;
+    2:fWordLookup.SpeedButton12.Down:=true;
+    3:fWordLookup.SpeedButton18.Down:=true;
   end;
 
   if (not SpeedButton13.Down) or (SpeedButton18.Down) then
@@ -244,7 +244,7 @@ Creates a TDicSearchRequest, configured according to user settings and the type 
 This is called automatically when doing Look(), or manually on auto-translation.
 }
 
-procedure TfUser.SetupSearchRequest(a: TSearchType; out req: TDicSearchRequest);
+procedure TfWordLookup.SetupSearchRequest(a: TSearchType; out req: TDicSearchRequest);
 begin
   req := TDicSearchRequest.Create;
   req.a := a;
@@ -284,7 +284,7 @@ Called with a TDicSearchRequest initialized by SetupSearchRequest() to do a sear
 and populate the grid with the results
 Don't call directly.
 }
-procedure TfUser.Look_Run(req: TDicSearchRequest);
+procedure TfWordLookup.Look_Run(req: TDicSearchRequest);
 var wt:integer;
   i:integer;
   wasfull:boolean;
@@ -370,7 +370,7 @@ Look()
 Searches for currently entered word and populates the grid with results.
 Do not use for stEditorAuto-Translation, there's SetupSearchRequest()+Look_Run() for that.
 }
-procedure TfUser.Look();
+procedure TfWordLookup.Look();
 var a: TSearchType;
   req: TDicSearchRequest;
 begin
@@ -408,28 +408,28 @@ begin
   end;
 end;
 
-procedure TfUser.Edit1Change(Sender: TObject);
+procedure TfWordLookup.Edit1Change(Sender: TObject);
 begin
   BitBtn1.Enabled:=true;
   Look();
 end;
 
-procedure TfUser.Edit2Change(Sender: TObject);
+procedure TfWordLookup.Edit2Change(Sender: TObject);
 begin
   Look();
 end;
 
-procedure TfUser.Edit2Click(Sender: TObject);
+procedure TfWordLookup.Edit2Click(Sender: TObject);
 begin
   Look();
 end;
 
-procedure TfUser.Edit1Click(Sender: TObject);
+procedure TfWordLookup.Edit1Click(Sender: TObject);
 begin
   Look();
 end;
 
-procedure TfUser.StringGrid1SelectCell(Sender: TObject; ACol,
+procedure TfWordLookup.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
  { Careful not to enter an endless loop: ShowWord changes something in Grid
@@ -441,7 +441,7 @@ begin
   if curword<=dicrl.Count then ShowWord;
 end;
 
-procedure TfUser.WordDetails_PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
+procedure TfWordLookup.WordDetails_PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
   if showroma then
@@ -450,13 +450,13 @@ begin
     DrawUnicode(Canvas,2,2,22,curphonetic,FontJapanese);
 end;
 
-procedure TfUser.WordDetails_PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
+procedure TfWordLookup.WordDetails_PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
   DrawUnicode(Canvas,2,2,22,curkanji,FontJapanese);
 end;
 
-procedure TfUser.ShowWord;
+procedure TfWordLookup.ShowWord;
 var s,s2:string;
   meaning: FString;
     radf:integer;
@@ -567,46 +567,46 @@ begin
   AnnotShowMedia(curkanji,curphonetic);
 end;
 
-procedure TfUser.btnLookupJtoEClick(Sender: TObject);
+procedure TfWordLookup.btnLookupJtoEClick(Sender: TObject);
 begin
   UpdateLookMode;
   Look();
   if Edit1.Enabled then Edit1.SetFocus;
 end;
 
-procedure TfUser.BitBtn1Click(Sender: TObject);
+procedure TfWordLookup.BitBtn1Click(Sender: TObject);
 begin
   BitBtn1.Enabled:=false;
   Look();
 end;
 
-procedure TfUser.SpeedButton5Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton5Click(Sender: TObject);
 begin
   fMenu.aDictDetails.Execute;
 end;
 
-procedure TfUser.SpeedButton6Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton6Click(Sender: TObject);
 begin
   fMenu.aDictKanji.Execute;
 end;
 
-procedure TfUser.SpeedButton7Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton7Click(Sender: TObject);
 begin
   fMenu.aDictCategories.Execute;
 end;
 
-procedure TfUser.SpeedButton9Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton9Click(Sender: TObject);
 begin
   fMenu.aDictExamples.Execute;
 end;
 
-procedure TfUser.btnCopyToClipboardClick(Sender: TObject);
+procedure TfWordLookup.btnCopyToClipboardClick(Sender: TObject);
 begin
   clip:=clip+curkanji;
   fMenu.SetClipboard;
 end;
 
-procedure TfUser.StringGrid1DblClick(Sender: TObject);
+procedure TfWordLookup.StringGrid1DblClick(Sender: TObject);
 begin
   if SpeedButton17.Enabled then SpeedButton17Click(sender);
 end;
@@ -630,24 +630,24 @@ begin
     Result := copy(Result, 3);
 end;
 
-procedure TfUser.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+procedure TfWordLookup.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 begin
   DrawWordCell(TStringGrid(Sender),ACol,ARow,Rect,State);
 end;
 
-procedure TfUser.CheckBox1Click(Sender: TObject);
+procedure TfWordLookup.CheckBox1Click(Sender: TObject);
 begin
 //  Look(false);
 end;
 
-procedure TfUser.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
+procedure TfWordLookup.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
   fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
-procedure TfUser.DetailsForKanji(n:integer);
+procedure TfWordLookup.DetailsForKanji(n:integer);
 begin
   if fMenu.CharDetDocked then exit;
   if n<=Length(curkanjid) then
@@ -655,7 +655,7 @@ begin
   if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
 end;
 
-procedure TfUser.SpeedButton17Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton17Click(Sender: TObject);
 begin
   if fDicAdd.ShowModal=mrOK then
   begin
@@ -665,32 +665,32 @@ begin
   end;
 end;
 
-procedure TfUser.StringGrid1MouseDown(Sender: TObject;
+procedure TfWordLookup.StringGrid1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
-procedure TfUser.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
+procedure TfWordLookup.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
-procedure TfUser.SpeedButton10Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton10Click(Sender: TObject);
 begin
   if not donotsetbegset then
   begin
-    if fUser.SpeedButton10.Down then dictbeginset:=0;
-    if fUser.SpeedButton11.Down then dictbeginset:=1;
-    if fUser.SpeedButton12.Down then dictbeginset:=2;
-    if fUser.SpeedButton18.Down then dictbeginset:=3;
+    if fWordLookup.SpeedButton10.Down then dictbeginset:=0;
+    if fWordLookup.SpeedButton11.Down then dictbeginset:=1;
+    if fWordLookup.SpeedButton12.Down then dictbeginset:=2;
+    if fWordLookup.SpeedButton18.Down then dictbeginset:=3;
   end;
   Look();
   if Edit1.Enabled then Edit1.SetFocus;
 end;
 
-procedure TfUser.SpeedButton19Click(Sender: TObject);
+procedure TfWordLookup.SpeedButton19Click(Sender: TObject);
 begin
   fMenu.aModeWordsExecute(sender);
   if dicrl[curword-1].userIndex<>0 then

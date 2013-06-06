@@ -27,18 +27,18 @@ var
 
 implementation
 
-uses JWBUser;
+uses JWBWordLookup;
 
 {$R *.DFM}
 
 procedure TfDicAdd.Paintbox1Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  fUser.WordDetails_PaintBox1Paint(Sender, Canvas);
+  fWordLookup.WordDetails_PaintBox1Paint(Sender, Canvas);
 end;
 
 procedure TfDicAdd.PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  fUser.WordDetails_PaintBox2Paint(Sender, Canvas);
+  fWordLookup.WordDetails_PaintBox2Paint(Sender, Canvas);
 end;
 
 end.

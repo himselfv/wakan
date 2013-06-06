@@ -1426,8 +1426,8 @@ object fMenu: TfMenu
     end
   end
   object FormPlacement1: TFormPlacement
-    IniSection = '\Software\Labyrinth\WaKan\MainPos'
     UseRegistry = False
+    IniSection = '\Software\Labyrinth\WaKan\MainPos'
     Left = 328
     Top = 41
   end

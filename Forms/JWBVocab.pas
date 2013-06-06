@@ -1,4 +1,4 @@
-unit JWBWords;
+unit JWBVocab;
 
 interface
 
@@ -136,8 +136,8 @@ const
 implementation
 
 uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
-  JWBWordList, JWBUserDetails, JWBUserAdd,
-  JWBUserFilters, JWBExamples, JWBUser, JWBUserData,
+  JWBWordList, JWBVocabDetails, JWBVocabAdd,
+  JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
   JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
   JWBCharData, TextTable;
 
@@ -529,7 +529,6 @@ begin
 end;
 
 procedure TAddWordFast.Commit();
-var i: integer;
 begin
   TUser.nocommitting:=false;
   TUserSheet.nocommitting:=false;

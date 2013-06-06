@@ -1,4 +1,4 @@
-unit JWBUserAdd;
+unit JWBVocabAdd;
 
 interface
 
@@ -31,7 +31,7 @@ var
 
 implementation
 
-uses JWBWords, JWBStrings, JWBUnit, JWBMenu;
+uses JWBVocab, JWBStrings, JWBUnit, JWBMenu;
 
 {$R *.DFM}
 

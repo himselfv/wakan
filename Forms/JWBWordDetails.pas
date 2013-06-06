@@ -25,13 +25,13 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu, JWBStrings, JWBUnit;
+uses JWBWordLookup, JWBMenu, JWBStrings, JWBUnit;
 
 {$R *.DFM}
 
 procedure TfWordDetails.btnAddToClipboardClick(Sender: TObject);
 begin
-  fUser.btnCopyToClipboardClick(Sender);
+  fWordLookup.btnCopyToClipboardClick(Sender);
 end;
 
 procedure TfWordDetails.FormClose(Sender: TObject;
@@ -42,18 +42,18 @@ end;
 
 procedure TfWordDetails.Paintbox1Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  fUser.WordDetails_PaintBox1Paint(Sender, Canvas);
+  fWordLookup.WordDetails_PaintBox1Paint(Sender, Canvas);
 end;
 
 procedure TfWordDetails.Paintbox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
-  fUser.WordDetails_PaintBox2Paint(Sender, Canvas);
+  fWordLookup.WordDetails_PaintBox2Paint(Sender, Canvas);
 end;
 
 procedure TfWordDetails.Paintbox5Paint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
-  DrawUnicode(Canvas,2,2,22,fstr(fUser.curmeaning),FontEnglish);
+  DrawUnicode(Canvas,2,2,22,fstr(fWordLookup.curmeaning),FontEnglish);
 end;
 
 end.

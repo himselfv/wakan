@@ -29,7 +29,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu;
+uses JWBMenu;
 
 {$R *.DFM}
 

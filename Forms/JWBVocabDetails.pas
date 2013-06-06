@@ -1,4 +1,4 @@
-unit JWBUserDetails;
+unit JWBVocabDetails;
 
 interface
 
@@ -79,7 +79,7 @@ var
 
 implementation
 
-uses TextTable, JWBWords, JWBMenu, JWBUnit, JWBUserData, JWBUserFilters,
+uses TextTable, JWBVocab, JWBMenu, JWBUnit, JWBUserData, JWBVocabFilters,
   JWBCategories;
 
 {$R *.DFM}

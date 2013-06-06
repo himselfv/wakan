@@ -38,7 +38,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBUser,
+  StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBWordLookup,
   JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox, WinSpeedButton,
   ComCtrls, ToolWin, ImgList, JWBWakanText;
 
@@ -419,7 +419,7 @@ function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
 
-uses TextTable, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji,
+uses Types, TextTable, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
   JWBCategories, JWBDic, JWBEdictMarkers,
   JWBUserData, JWBCharData, StreamUtils;
@@ -635,9 +635,9 @@ end;
 procedure TfTranslate.FormHide(Sender: TObject);
 begin
   case dictmodeset of
-    0: fUser.btnLookupJtoE.Down:=true;
-    1: fUser.btnLookupEtoJ.Down:=true;
-    2: fUser.btnLookupClip.Down:=true;
+    0: fWordLookup.btnLookupJtoE.Down:=true;
+    1: fWordLookup.btnLookupEtoJ.Down:=true;
+    2: fWordLookup.btnLookupClip.Down:=true;
   end;
 //  fUser.Look(false);
 end;
@@ -920,7 +920,7 @@ procedure TTranslationThread.Execute;
 var bg, en: integer;
   i: integer;
 begin
-  fUser.SetupSearchRequest(stEditorAuto, req);
+  fWordLookup.SetupSearchRequest(stEditorAuto, req);
   req.dic_ignorekana := true;
   req.Prepare;
 
@@ -1017,10 +1017,10 @@ begin
   try
 
    //Setup everything for translation
-    fUser.btnLookupJtoE.Down:=false;
-    fUser.btnLookupEtoJ.Down:=false;
-    fUser.btnLookupClip.Down:=false;
-    fUser.SetupSearchRequest(stEditorAuto, req);
+    fWordLookup.btnLookupJtoE.Down:=false;
+    fWordLookup.btnLookupEtoJ.Down:=false;
+    fWordLookup.btnLookupClip.Down:=false;
+    fWordLookup.SetupSearchRequest(stEditorAuto, req);
     req.dic_ignorekana := true;
     req.Prepare;
 
@@ -1248,7 +1248,7 @@ begin
       end;
     end;
   end else
-  with fUser do
+  with fWordLookup do
   begin
     if (key=VK_UP) and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
     if (key=VK_DOWN) and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
@@ -1883,13 +1883,13 @@ begin
     dragstart.y:=rcur.y;
   end;
 
-  fUser.btnLookupJtoE.Down:=false;
-  fUser.btnLookupEtoJ.Down:=false;
-  fUser.btnLookupClip.Down:=false;
+  fWordLookup.btnLookupJtoE.Down:=false;
+  fWordLookup.btnLookupEtoJ.Down:=false;
+  fWordLookup.btnLookupClip.Down:=false;
 
   if dolook then
-    if fUser.Visible or (insertBuffer<>'') then
-      fUser.Look()
+    if fWordLookup.Visible or (insertBuffer<>'') then
+      fWordLookup.Look()
     else begin
       s:=GetDocWord(rcur.x,rcur.y,wt,false);
       if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
@@ -1906,7 +1906,7 @@ begin
   mustrepaint:=false;
   shiftpressed:=false;
   UpdateScrollbar;
-  with fUser do
+  with fWordLookup do
     if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
@@ -2662,7 +2662,7 @@ begin
   if (ins.x=-1) and (final) then exit;
   if (buffertype='H') and (resolvebuffer) then
   begin
-    with fUser do
+    with fWordLookup do
     if StringGrid1.Visible then
     begin
       s:=curkanji;
@@ -2747,7 +2747,7 @@ var chartype:char;
     immmode:boolean;
 begin
   if (c='[') or (c=']') then
-    with fUser do
+    with fWordLookup do
     begin
       if (c='[') and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
       if (c=']') and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
@@ -2893,7 +2893,7 @@ function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst
 var i: integer;
   word: PSearchResult;
 begin
-  with fUser do
+  with fWordLookup do
   begin
     if gridfirst then
       i:=0

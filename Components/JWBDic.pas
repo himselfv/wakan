@@ -1193,7 +1193,13 @@ end;
 
 initialization
   ignorel:=TStringList.Create;
-  GetLocaleFormatSettings($0409, DictFormatSettings); //use EN-US for locale neutral data
+ {$IF CompilerVersion>=22}
+ //use EN-US for locale neutral data
+  DictFormatSettings := TFormatSettings.Create('en-us');
+ {$ELSE}
+ //older compilers only have obsolete function
+  GetLocaleFormatSettings($0409, DictFormatSettings);
+ {$IFEND}
 
 finalization
   ignorel.Free;

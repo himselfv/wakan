@@ -52,7 +52,7 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel21: TLabel
     Left = 6
     Top = 8
-    Width = 46
+    Width = 44
     Height = 18
     Caption = 'Kanji'
     Font.Charset = DEFAULT_CHARSET
@@ -112,7 +112,7 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel10: TLabel
     Left = 166
     Top = 5
-    Width = 107
+    Width = 105
     Height = 13
     Caption = '#00160^eRadical:'
     Font.Charset = DEFAULT_CHARSET
@@ -126,7 +126,7 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel35: TLabel
     Left = 246
     Top = 5
-    Width = 37
+    Width = 35
     Height = 13
     Caption = 'Simpl:'
     Font.Charset = DEFAULT_CHARSET
@@ -138,9 +138,9 @@ object fKanjiDetails: TfKanjiDetails
     Transparent = True
   end
   object RxLabel38: TLabel
-    Left = 206
+    Left = 208
     Top = 8
-    Width = 46
+    Width = 44
     Height = 18
     Alignment = taRightJustify
     Caption = 'Kanji'
@@ -184,7 +184,7 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel39: TLabel
     Left = 5
     Top = 165
-    Width = 137
+    Width = 135
     Height = 13
     Caption = '#00162^eStroke count:'
     Font.Charset = DEFAULT_CHARSET
@@ -228,7 +228,7 @@ object fKanjiDetails: TfKanjiDetails
   object RxLabel1: TLabel
     Left = 5
     Top = 182
-    Width = 124
+    Width = 122
     Height = 13
     Caption = '#00879^eCategories:'
     Font.Charset = DEFAULT_CHARSET
@@ -416,8 +416,8 @@ object fKanjiDetails: TfKanjiDetails
     OnChange = cbCategoriesChange
   end
   object FormPlacement1: TFormPlacement
-    IniSection = '\Software\Labyrinth\Wakan\DetailPos'
     UseRegistry = False
+    IniSection = '\Software\Labyrinth\Wakan\DetailPos'
     Left = 96
     Top = 112
   end

@@ -1,4 +1,4 @@
-object fUser: TfUser
+object fWordLookup: TfWordLookup
   Left = 57
   Top = 137
   BorderStyle = bsSizeToolWin

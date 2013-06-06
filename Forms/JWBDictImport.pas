@@ -259,9 +259,9 @@ begin
   try
     pack.PackageFile := dicFilename;
     pack.MemoryLimit := 100000000;
-    pack.Name := info.Name;
-    pack.TitleName := info.Name+' Dictionary';
-    pack.CopyrightName := info.Copyright;
+    pack.Name := AnsiString(info.Name);
+    pack.TitleName := AnsiString(info.Name)+' Dictionary';
+    pack.CopyrightName := AnsiString(info.Copyright);
     pack.FormatName := 'Pure Package File';
     pack.CommentName := 'File is used by '+WakanAppName;
     pack.VersionName := '1.0';

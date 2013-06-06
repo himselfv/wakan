@@ -118,6 +118,7 @@ object fUserAdd: TfUserAdd
     Anchors = [akTop, akRight]
     Caption = '#00062^eAdd to vocabulary'
     Kind = bkOK
+    NumGlyphs = 2
     TabOrder = 3
   end
   object btnCancel: TBitBtn
@@ -128,6 +129,7 @@ object fUserAdd: TfUserAdd
     Anchors = [akTop, akRight]
     Caption = '#00050^eCancel'
     Kind = bkCancel
+    NumGlyphs = 2
     TabOrder = 4
   end
   object Paintbox2: TWakanPaintbox

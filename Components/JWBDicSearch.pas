@@ -244,8 +244,8 @@ procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
   full:boolean;wt,maxwords:integer;sl:TSearchResults;dictgroup:integer;var wasfull:boolean);
 
 implementation
-uses Forms, Windows, JWBMenu, JWBKanaConv, JWBUnit, JWBUser, JWBSettings, JWBWords, Math,
-  JWBCategories, JWBEdictMarkers, JWBUserData;
+uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSettings,
+  JWBVocab, JWBCategories, JWBEdictMarkers, JWBUserData;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
@@ -879,7 +879,7 @@ begin
     kanaonly := false;
   end;
 
-  if full or (fUser.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then //TODO: Move this line out of here
+  if full or (fWordLookup.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then //TODO: Move this line out of here
   for di:=0 to Length(dics)-1 do begin
     if dics[di].cursor=nil then continue;
     for i:=0 to se.Count-1 do

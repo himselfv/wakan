@@ -144,7 +144,7 @@ var
 
 implementation
 
-uses JWBStrings, JWBUnit, JWBSettings, JWBPrint, Printers, JWBWords, JWBMenu,
+uses JWBStrings, JWBUnit, JWBSettings, JWBPrint, Printers, JWBVocab, JWBMenu,
   JWBUserData;
 
 {$R *.DFM}

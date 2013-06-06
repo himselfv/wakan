@@ -54,7 +54,7 @@ var
 
 implementation
 
-uses JWBUnit, JWBUser, JWBMenu;
+uses JWBUnit, JWBWordLookup, JWBMenu;
 
 {$R *.DFM}
 
@@ -65,7 +65,7 @@ end;
 
 procedure TfWordKanji.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  fUser.SpeedButton6.Down:=false;
+  fWordLookup.SpeedButton6.Down:=false;
   fMenu.aDictKanji.Checked:=false;
 end;
 
@@ -127,7 +127,7 @@ end;
 
 procedure TfWordKanji.PaintBoxK1Click(Sender: TObject);
 begin
-  fUser.DetailsForKanji(TPaintBox(Sender).Tag);
+  fWordLookup.DetailsForKanji(TPaintBox(Sender).Tag);
 end;
 
 procedure TfWordKanji.PaintBoxK1Paint(Sender: TObject);
@@ -140,17 +140,17 @@ end;
 procedure TfWordKanji.WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
 begin
   Assert((KN>=1) and (KN<=9));
-  if length(fUser.curkanjid)<KN then exit;
+  if length(fWordLookup.curkanjid)<KN then exit;
   BeginDrawReg(pb.Canvas);
   pb.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(pb.Canvas,44,4,16,fUser.curkanjid[KN-1].rad,FontJapaneseGrid);
-  case fUser.curkanjid[KN-1].tp of
+  DrawUnicode(pb.Canvas,44,4,16,fWordLookup.curkanjid[KN-1].rad,FontJapaneseGrid);
+  case fWordLookup.curkanjid[KN-1].tp of
     'K':pb.Canvas.Font.Color:=Col('Kanji_Learned');
     'C':pb.Canvas.Font.Color:=Col('Kanji_Common');
     'U':pb.Canvas.Font.Color:=Col('Kanji_Rare');
     'N':pb.Canvas.Font.Color:=Col('Kanji_Names');
   end;
-  DrawUnicode(pb.Canvas,4,2,36,fUser.curkanjid[KN-1].char,FontJapaneseGrid);
+  DrawUnicode(pb.Canvas,4,2,36,fWordLookup.curkanjid[KN-1].char,FontJapaneseGrid);
   EndDrawReg;
 end;
 

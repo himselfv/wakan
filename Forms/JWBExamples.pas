@@ -79,7 +79,7 @@ var
 
 implementation
 
-uses JWBUser, JWBMenu, JWBSettings, JWBWords, JWBUnit, PKGWrite;
+uses JWBWordLookup, JWBMenu, JWBSettings, JWBVocab, JWBUnit, PKGWrite;
 
 {$R *.DFM}
 
@@ -122,8 +122,11 @@ end;
 procedure TfExamples.btnRandomOrderClick(Sender: TObject);
 var cansel:boolean;
 begin
-  if fUser.Visible then fUser.ShowWord else
-  if fWords.Visible then fWords.StringGrid1SelectCell(sender,fWords.StringGrid1.Col,fWords.StringGrid1.Row,cansel);
+  if fWordLookup.Visible then
+    fWordLookup.ShowWord
+  else
+  if fWords.Visible then
+    fWords.StringGrid1SelectCell(sender,fWords.StringGrid1.Col,fWords.StringGrid1.Row,cansel);
 end;
 
 procedure TfExamples.btnCopyToClipboardClick(Sender: TObject);

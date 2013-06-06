@@ -144,7 +144,7 @@ function FixDuplicateCategories(): boolean;
 
 
 implementation
-uses Controls, Forms, Windows, TextTable, JWBMenu, JWBUserData, JWBUserFilters,
+uses Controls, Forms, Windows, TextTable, JWBMenu, JWBUserData, JWBVocabFilters,
   JWBNewCategory, JWBUnit, JWBCharData;
 
 const

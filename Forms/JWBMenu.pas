@@ -9,7 +9,7 @@ uses
   StdCtrls, ComCtrls, Db,
   DBTables, ExtCtrls, Grids, TextTable, Buttons, MemSource, ShellApi,
   ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
 
 type
   TfMenu = class(TForm)
@@ -555,14 +555,14 @@ function _l(const id:string):string; //shouldn't inline because it's for cases w
 implementation
 
 uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
-  JWBSettings, JWBSplash, PKGWrite, JWBUser, UnicodeFont, registry, clipbrd,
-  JWBWords, JWBNewCategory, JWBPrint, JWBStatistics,
+  JWBSettings, JWBSplash, PKGWrite, JWBWordLookup, UnicodeFont, registry, clipbrd,
+  JWBVocab, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
-  JWBExamples, JWBUserDetails, JWBUserAdd, JWBUserFilters, JWBUserData,
+  JWBExamples, JWBVocabDetails, JWBVocabAdd, JWBVocabFilters, JWBUserData,
   JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
   JWBWordCategory, JWBWordKanji, JWBTranslate,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
-  JWBInvalidator, JWBDicAdd, JWBLanguage, JWBFileType, JWBConvert,
+  JWBInvalidator, JWBDicAdd, JWBLanguage, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
@@ -1169,8 +1169,8 @@ begin
     btnJapaneseMode.Down:=true;
     aJapanese.Checked:=true;
     aChinese.Checked:=false;
-    fUser.btnLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
-    fUser.btnLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
+    fWordLookup.btnLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
+    fWordLookup.btnLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
   end else
   begin
     romasys:=fSettings.RadioGroup6.ItemIndex+1;
@@ -1178,14 +1178,14 @@ begin
     btnChineseMode.Down:=true;
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
-    fUser.btnLookupJtoE.Caption:=_l('#00331^eChinese ->English');
-    fUser.btnLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
+    fWordLookup.btnLookupJtoE.Caption:=_l('#00331^eChinese ->English');
+    fWordLookup.btnLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
   end;
   RescanDicts;
   fKanji.KanjiSearch_SpeedButton20Click(self);
-  if (not fUser.btnLookupClip.Enabled) and fUser.btnLookupClip.Down then fUser.btnLookupJtoE.Down:=true;
+  if (not fWordLookup.btnLookupClip.Enabled) and fWordLookup.btnLookupClip.Down then fWordLookup.btnLookupJtoE.Down:=true;
   fExamples.ReloadExamples;
-  fUser.Look();
+  fWordLookup.Look();
   RefreshCategory;
   RefreshKanjiCategory;
 end;
@@ -1440,7 +1440,7 @@ begin
     end;
     fSettings.SaveSettings;
     fTranslate.Close;
-    fUser.Close;
+    fWordLookup.Close;
     fWords.Close;
     fKanji.Close;
   end;
@@ -1500,7 +1500,7 @@ begin
     ClipboardPaintbox.Invalidate;
     fUserAdd.PaintBox2.Invalidate;
     if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt;
-    if fUser.Visible and fUser.btnLookupClip.Down then fUser.Look();
+    if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
   end;
   UpdatingClipboard:=false;
 end;
@@ -1573,7 +1573,7 @@ begin
   fUserAdd.PaintBox2.Invalidate;
 
   if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
-  if (fUser.Visible) and (fUser.btnLookupClip.Down) then fUser.Look();
+  if (fWordLookup.Visible) and (fWordLookup.btnLookupClip.Down) then fWordLookup.Look();
 end;
 
 //Retrieves a data for an HGLOBAL-containing clipboard format (most of them are)
@@ -1641,7 +1641,7 @@ end;
 
 procedure TfMenu.Action1Execute(Sender: TObject);
 begin
-  fUser.btnLookupEtoJ.Down:=true;
+  fWordLookup.btnLookupEtoJ.Down:=true;
 end;
 
 procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
@@ -1829,7 +1829,7 @@ procedure TfMenu.aDictDetailsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictDetails.Checked;
-  if not fUser.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeUser.Execute;
   if aDictDetails.Checked<>pre then exit;
   aDictDetails.Checked := not aDictDetails.Checked;
 end;
@@ -1837,14 +1837,14 @@ end;
 procedure TfMenu.aDictDetailsChecked(Sender: TObject);
 begin
   ToggleForm(fWordDetails, aDictDetails.Checked);
-  fUser.SpeedButton5.Down := aDictDetails.Checked;
+  fWordLookup.SpeedButton5.Down := aDictDetails.Checked;
 end;
 
 procedure TfMenu.aDictKanjiExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictKanji.Checked;
-  if not fUser.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeUser.Execute;
   if aDictKanji.Checked<>pre then exit;
   aDictKanji.Checked := not aDictKanji.Checked;
 end;
@@ -1852,14 +1852,14 @@ end;
 procedure TfMenu.aDictKanjiChecked(Sender: TObject);
 begin
   ToggleForm(fWordKanji, aDictKanji.Checked);
-  fUser.SpeedButton6.Down := aDictKanji.Checked;
+  fWordLookup.SpeedButton6.Down := aDictKanji.Checked;
 end;
 
 procedure TfMenu.aDictCategoriesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictCategories.Checked;
-  if not fUser.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeUser.Execute;
   if aDictCategories.Checked<>pre then exit;
   aDictCategories.Checked := not aDictCategories.Checked;
 end;
@@ -1867,14 +1867,14 @@ end;
 procedure TfMenu.aDictCategoriesChecked(Sender: TObject);
 begin
   ToggleForm(fWordCategory, aDictCategories.Checked);
-  fUser.SpeedButton7.Down := aDictCategories.Checked;
+  fWordLookup.SpeedButton7.Down := aDictCategories.Checked;
 end;
 
 procedure TfMenu.aDictExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictExamples.Checked;
-  if not fUser.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeUser.Execute;
   if aDictExamples.Checked<>pre then exit;
   aDictExamples.Checked := not aDictExamples.Checked;
 end;
@@ -1883,15 +1883,15 @@ procedure TfMenu.aDictExamplesChecked(Sender: TObject);
 begin
 //  ToggleForm(fExamples, aDictExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
-  fUser.SpeedButton9.Down := aDictExamples.Checked;
+  fWordLookup.SpeedButton9.Down := aDictExamples.Checked;
 end;
 
 procedure TfMenu.aUserAddExecute(Sender: TObject);
 begin
   if fWords.Visible then
     fWords.Button2Click(Sender) else
-  if fUser.Visible then
-    fUser.SpeedButton17Click(Sender) else
+  if fWordLookup.Visible then
+    fWordLookup.SpeedButton17Click(Sender) else
   if fKanjiCompounds.Visible then
     fKanjiCompounds.sbInsertIntoVocabClick(Sender) else
 end;
@@ -1941,7 +1941,7 @@ begin
   fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
   fSettings.ShowModal;
   if fKanji.Visible then fKanji.DoIt;
-  if fUser.Visible then fUser.Look();
+  if fWordLookup.Visible then fWordLookup.Look();
   if fWords.Visible then fWords.ShowIt(false);
   if fTranslate.Visible then fTranslate.RepaintText;
 end;
@@ -2203,56 +2203,56 @@ end;
 
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.btnLookupJtoE.Down:=true;
-//  fUser.Edit1.Text:='';
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.btnLookupJtoE.Down:=true;
+//  fWordLookup.Edit1.Text:='';
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictEnglishExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.btnLookupEtoJ.Down:=true;
-//  fUser.Edit1.Text:='';
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.btnLookupEtoJ.Down:=true;
+//  fWordLookup.Edit1.Text:='';
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictClipboardExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.btnLookupClip.Down:=true;
-//  fUser.Edit1.Text:='';
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.btnLookupClip.Down:=true;
+//  fWordLookup.Edit1.Text:='';
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.btnCopyToClipboardClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.btnCopyToClipboardClick(Sender);
 end;
 
 procedure TfMenu.aDictExactExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton10.Down:=true;
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton10.Down:=true;
   dictbeginset:=0;
-  fUser.btnLookupJtoEClick(Sender);
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictBeginningExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton11.Down:=true;
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton11.Down:=true;
   dictbeginset:=1;
-  fUser.btnLookupJtoEClick(Sender);
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictEndExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton12.Down:=true;
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton12.Down:=true;
   dictbeginset:=2;
-  fUser.btnLookupJtoEClick(Sender);
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aKanjiWindowExecute(Sender: TObject);
@@ -2320,14 +2320,14 @@ begin
     fKanji.splDockCompounds.Top := fKanji.pnlDockCompounds.Top - 1;
   end;
   if (form=fExamples) and (curdisplaymode<>5) then
-    Result:=DockProc(fExamples,fUser.pnlDockExamples,alBottom,dock);
+    Result:=DockProc(fExamples,fWordLookup.pnlDockExamples,alBottom,dock);
   if (form=fExamples) and (curdisplaymode=5) then
     Result:=DockProc(fExamples,fWords.pnlDockExamples,alBottom,dock);
   if form=fWordKanji then
     if aPortraitMode.Checked then
-      Result:=DockProc(fWordKanji,fUser.Panel3,alBottom,dock)
+      Result:=DockProc(fWordKanji,fWordLookup.Panel3,alBottom,dock)
     else
-      Result:=DockProc(fWordKanji,fUser.Panel3,alRight,dock);
+      Result:=DockProc(fWordKanji,fWordLookup.Panel3,alRight,dock);
   if form=fUserFilters then
     if aPortraitMode.Checked then
       Result:=DockProc(fUserFilters,fWords.pnlDockFilters,alBottom,dock)
@@ -2414,11 +2414,11 @@ begin
  //Hide active module
   case curdisplaymode of
     1:fKanji.Hide;
-    2:fUser.Hide;
+    2:fWordLookup.Hide;
     5:fWords.Hide;
     3:fTranslate.Hide;
     4:begin
-        fUser.Hide;
+        fWordLookup.Hide;
         fTranslate.Hide;
       end;
   end;
@@ -2453,7 +2453,7 @@ begin
         aModeKanji.Checked:=true;
       end;
     2:begin
-        MainDock(fUser,Panel3);
+        MainDock(fWordLookup,Panel3);
         tab2.Down:=true;
         aModeUser.Checked:=true;
       end;
@@ -2465,7 +2465,7 @@ begin
       end;
     4:begin
         Panel2.height:=250;
-        MainDock(fUser,Panel2);
+        MainDock(fWordLookup,Panel2);
         MainDock(fTranslate,Panel3);
         tab3.Down:=true;
         fTranslate.sbDockDictionary.Down:=true;
@@ -3027,37 +3027,37 @@ end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton4.Down:=not fUser.SpeedButton4.Down;
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton4.Down:=not fWordLookup.SpeedButton4.Down;
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAutoExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton13.Down:=not fUser.SpeedButton13.Down;
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton13.Down:=not fWordLookup.SpeedButton13.Down;
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup1Execute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton14.Down:=true;
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton14.Down:=true;
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup2Execute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton15.Down:=true;
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton15.Down:=true;
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup3Execute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton16.Down:=true;
-  fUser.btnLookupJtoEClick(Sender);
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton16.Down:=true;
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aUserExamplesExecute(Sender: TObject);
@@ -3089,10 +3089,10 @@ end;
 
 procedure TfMenu.aDictMiddleExecute(Sender: TObject);
 begin
-  if not fUser.Visible then aModeUser.Execute;
-  fUser.SpeedButton18.Down:=true;
+  if not fWordLookup.Visible then aModeUser.Execute;
+  fWordLookup.SpeedButton18.Down:=true;
   dictbeginset:=3;
-  fUser.btnLookupJtoEClick(Sender);
+  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aCategoryManagerExecute(Sender: TObject);
@@ -3115,13 +3115,13 @@ begin
     fWords.pnlDockFilters.Align := alBottom;
     fWords.splDockFilters.Align := alBottom;
     fWords.splDockFilters.Top := fWords.pnlDockFilters.Top - 1;
-    fUser.Panel3.Align := alBottom;
+    fWordLookup.Panel3.Align := alBottom;
   end else begin
     Panel4.Align := alRight;
     fWords.pnlDockFilters.Align := alRight;
     fWords.splDockFilters.Align := alRight;
     fWords.splDockFilters.Left := fWords.pnlDockFilters.Left - 1;
-    fUser.Panel3.Align := alRight;
+    fWordLookup.Panel3.Align := alRight;
   end;
 
  //New dock mode will be applied to forms on re-docking

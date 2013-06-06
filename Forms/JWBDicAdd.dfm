@@ -91,6 +91,7 @@ object fDicAdd: TfDicAdd
     Anchors = [akRight, akBottom]
     Caption = '#00062^eAdd to vocabulary'
     Kind = bkOK
+    NumGlyphs = 2
     TabOrder = 1
   end
   object BitBtn2: TBitBtn
@@ -101,6 +102,7 @@ object fDicAdd: TfDicAdd
     Anchors = [akRight, akBottom]
     Caption = '#00050^eCancel'
     Kind = bkCancel
+    NumGlyphs = 2
     TabOrder = 2
   end
   object edtMeaning: TMemo

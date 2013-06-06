@@ -56,7 +56,7 @@ var
 
 implementation
 
-uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicAdd, JWBUser, JWBWords,
+uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicAdd, JWBWordLookup, JWBVocab,
   JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories;
 
 var curcphonetic,curckanji,curcmeaning:string;
@@ -260,8 +260,8 @@ end;
 
 procedure TfKanjiCompounds.sbInsertIntoVocabClick(Sender: TObject);
 begin
-  fUser.curkanji:=curckanji;
-  fUser.curphonetic:=curcphonetic;
+  fWordLookup.curkanji:=curckanji;
+  fWordLookup.curphonetic:=curcphonetic;
   if fDicAdd.ShowModal=mrOK then
   begin
     if not fWords.AddWord(curckanji,curcphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;

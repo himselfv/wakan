@@ -87,13 +87,12 @@ implementation
 
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
-  MemSource, JWBTranslate, JWBConvert, JWBWords,
+  MemSource, JWBTranslate, JWBConvert, JWBVocab,
   JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBWakanText, JWBCategories,
   JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
 
 var ki:TStringList;
     calfonts:TStringList;
-    radtype:string;
     caltype:integer;
 
 {$R *.DFM}

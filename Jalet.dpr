@@ -28,10 +28,14 @@ uses
   JWBMenu in 'Forms\JWBMenu.pas' {fMenu},
   JWBKanji in 'Forms\JWBKanji.pas' {fKanji},
   JWBRadical in 'Forms\JWBRadical.pas' {fRadical},
-  JWBUser in 'Forms\JWBUser.pas' {fUser},
+  JWBWordLookup in 'Forms\JWBWordLookup.pas' {fWordLookup},
   JWBSettings in 'Forms\JWBSettings.pas' {fSettings},
   JWBSplash in 'Forms\JWBSplash.pas' {fSplash},
-  JWBWords in 'Forms\JWBWords.pas' {fWords},
+  JWBVocab in 'Forms\JWBVocab.pas' {fWords},
+  JWBVocabDetails in 'Forms\JWBVocabDetails.pas' {fUserDetails},
+  JWBVocabAdd in 'Forms\JWBVocabAdd.pas' {fUserAdd},
+  JWBVocabFilters in 'Forms\JWBVocabFilters.pas' {fUserFilters},
+  JWBWordDetails in 'Forms\JWBWordDetails.pas' {fWordDetails},
   JWBNewCategory in 'Forms\JWBNewCategory.pas' {fNewCategory},
   JWBPrint in 'Forms\JWBPrint.pas' {fPrint},
   JWBStatistics in 'Forms\JWBStatistics.pas' {fStatistics},
@@ -41,13 +45,9 @@ uses
   JWBKanjiCompounds in 'Forms\JWBKanjiCompounds.pas' {fKanjiCompounds},
   JWBKanjiDetails in 'Forms\JWBKanjiDetails.pas' {fKanjiDetails},
   JWBTranslate in 'Forms\JWBTranslate.pas' {fTranslate},
-  JWBWordDetails in 'Forms\JWBWordDetails.pas' {fWordDetails},
   JWBWordKanji in 'Forms\JWBWordKanji.pas' {fWordKanji},
   JWBExamples in 'Forms\JWBExamples.pas' {fExamples},
   JWBWordCategory in 'Forms\JWBWordCategory.pas' {fWordCategory},
-  JWBUserDetails in 'Forms\JWBUserDetails.pas' {fUserDetails},
-  JWBUserAdd in 'Forms\JWBUserAdd.pas' {fUserAdd},
-  JWBUserFilters in 'Forms\JWBUserFilters.pas' {fUserFilters},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
   JWBDictImport in 'Forms\JWBDictImport.pas' {fDictImport},
   JWBDictCoding in 'Forms\JWBDictCoding.pas' {fDictCoding},
@@ -90,7 +90,7 @@ begin
   Application.CreateForm(TfMenu, fMenu);
   Application.CreateForm(TfKanji, fKanji);
   Application.CreateForm(TfRadical, fRadical);
-  Application.CreateForm(TfUser, fUser);
+  Application.CreateForm(TfWordLookup, fWordLookup);
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfSplash, fSplash);
   Application.CreateForm(TfSelectFont, fSelectFont);

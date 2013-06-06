@@ -490,7 +490,12 @@ end;
 function WakanDatestamp(const dt: TDatetime): string;
 var fs: TFormatSettings;
 begin
+ {$IF CompilerVersion>=22}
+  fs := TFormatSettings.Create('en-us');
+ {$ELSE}
+ //older compilers only have obsolete function
   GetLocaleFormatSettings($0409, fs);
+ {$IFEND}
   Result := AnsiUpperCase(FormatDatetime('ddmmmyy',dt,fs));
 end;
 
