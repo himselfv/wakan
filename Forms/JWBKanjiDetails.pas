@@ -128,6 +128,7 @@ type
   public
     procedure UpdateAlignment;
     procedure SetDocked(Value: boolean; Loading: boolean);
+    procedure UpdateVisible;
     property DockedWidth: integer read GetDockedWidth write SetDockedWidth;
     property DockedHeight: integer read GetDockedHeight write SetDockedHeight;
 
@@ -174,11 +175,7 @@ end;
 
 procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
-//  if Visible then fMenu.aKanjiDetails.Checked:=true;
-  fMenu.aKanjiDetails.Checked:=Self.Visible;
-  fTranslate.sbDockKanjiDetails.Down:=Self.Visible;
-  btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
-  btnClose.Default:=not fMenu.CharDetDocked;
+  UpdateVisible;
   fKanji.btnKanjiDetails.Down:=true;
 end;
 
@@ -189,6 +186,14 @@ begin
     fKanji.btnKanjiDetails.Down:=false;
     fTranslate.sbDockKanjiDetails.Down:=false;
   end;
+end;
+
+procedure TfKanjiDetails.UpdateVisible;
+begin
+  fMenu.aKanjiDetails.Checked:=Self.Visible;
+  fTranslate.sbDockKanjiDetails.Down:=Self.Visible;
+  btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
+  btnClose.Default:=not fMenu.CharDetDocked;
 end;
 
 procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);

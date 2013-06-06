@@ -604,10 +604,11 @@ object fMenu: TfMenu
     object aKanjiSort: TAction
       Caption = '#00231^eS&ort'
     end
-    object aKanjiDetails: TAction
+    object aKanjiDetails: TCheckAction
       Caption = '#00232^e&Details'
       ShortCut = 16452
       OnExecute = aKanjiDetailsExecute
+      OnChecked = aKanjiDetailsChecked
     end
     object aKanjiCompounds: TCheckAction
       Caption = '#00233^e&Compounds'

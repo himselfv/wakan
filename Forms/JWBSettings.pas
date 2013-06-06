@@ -792,6 +792,7 @@ procedure TfSettings.ApplyUISettings;
 begin
  //Hide everything, and most importantly, turn all actions off
  //This will do no harm if the form is already hidden.
+  fMenu.aKanjiDetails.Checked := false;
   fMenu.aKanjiSearch.Checked := false;
   fMenu.aKanjiCompounds.Checked := false;
   fMenu.aDictKanji.Checked := false;

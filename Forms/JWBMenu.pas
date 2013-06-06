@@ -31,7 +31,7 @@ type
     aExit: TAction;
     aDeprecatedKanji: TAction;
     aKanjiSearch: TCheckAction;
-    aKanjiDetails: TAction;
+    aKanjiDetails: TCheckAction;
     aKanjiCompounds: TCheckAction;
     aKanjiPrint: TAction;
     aDeprecatedDict: TAction;
@@ -361,6 +361,7 @@ type
     procedure aUserDetailsChecked(Sender: TObject);
     procedure aUserExamplesChecked(Sender: TObject);
     procedure aCharDataBrowserExecute(Sender: TObject);
+    procedure aKanjiDetailsChecked(Sender: TObject);
 
   private
     initdone:boolean;
@@ -1800,6 +1801,10 @@ begin
       UndockedMakeVisible(fKanjiDetails);
   end;
   fMenu.aKanjiDetails.Checked:=fKanjiDetails.Visible;
+end;
+
+procedure TfMenu.aKanjiDetailsChecked(Sender: TObject);
+begin
   fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
 end;
 
@@ -2476,7 +2481,7 @@ begin
       end;
   end;
   curdisplaymode:=displaymode;
-  fKanjiDetails.FormShow(fMenu);
+  fKanjiDetails.UpdateVisible();
   ToggleExamples();
 end;
 
