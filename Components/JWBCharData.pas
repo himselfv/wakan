@@ -125,7 +125,6 @@ type
         'T': ?, AnsiString
         'S': 'String', AnsiString }
     englishName: string;
-    czechName: string;
     description: string // in english
   end;
   PCharPropType = ^TCharPropType;
@@ -525,8 +524,8 @@ var tmp: string;
   pt: TCharPropType;
 begin
   tmp := str;
-  parts := SplitStr(str, 7);
-  if Length(parts)<7 then
+  parts := SplitStr(str, 6);
+  if Length(parts)<6 then
     raise Exception.Create('AddCharPropType: invalid property type info line format');
   if not TryStrToInt(parts[0], pt.id) then
     raise Exception.Create('AddCharPropType: invalid integer ID: '+parts[0]);
@@ -538,8 +537,7 @@ begin
     raise Exception.Create('AddCharPropType: invalid data type: '+parts[3]);
   pt.dataType := parts[3][1];
   pt.englishName := parts[4];
-  pt.czechName := parts[5];
-  pt.description := parts[6];
+  pt.description := parts[5];
   SetLength(CharPropTypes, Length(CharPropTypes)+1);
   CharPropTypes[Length(CharPropTypes)-1] := pt;
 end;
