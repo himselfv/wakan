@@ -140,8 +140,8 @@ var i, ind: integer;
 begin
   Result := false;
   for i := 0 to catlist.Count - 1 do begin
-    ind:=fVocabFilters.lbCategories.Items.IndexOf(StripCatName(catlist[i]));
-    if (ind<>-1) and (fVocabFilters.lbCategories.Checked[i]) and (GetCatPrefix(catlist[i])=curlang) then begin
+    ind:=lbCategories.Items.IndexOf(StripCatName(catlist[i]));
+    if (ind<>-1) and (lbCategories.Checked[ind]) and (GetCatPrefix(catlist[i])=curlang) then begin
       Result:=true;
       break; //no point in scanning further
     end;
