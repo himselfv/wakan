@@ -121,10 +121,13 @@ end;
 
 function FindKnownPackage(const filename: string): integer;
 var i: integer;
+  filename_only: string;
 begin
   Result := -1;
+  filename_only := ExtractFilename(filename);
   for i := 0 to Length(KnownPackages) - 1 do
-    if MatchesMask(filename, KnownPackages[i].mask) then begin
+    if MatchesMask(filename, KnownPackages[i].mask)
+    or MatchesMask(filename_only, KnownPackages[i].mask) then begin
       Result := i;
       break;
     end;

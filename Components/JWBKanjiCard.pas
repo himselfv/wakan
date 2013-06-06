@@ -37,6 +37,7 @@ var ony,kuny,defy,defyu:string;
   rt: integer; //TCharProp.Int(TCharPropType)
   tmp:string;
   CCharProp: TCharPropertyCursor;
+  rad_idx: integer;
 begin
   if curlang='j' then begin
     fontjpch:=FontJapanese;
@@ -75,10 +76,12 @@ begin
   end;
 
   {alternate}
-  radf:=fSettings.ComboBox1.ItemIndex+12;
-  TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf));
-  if alt then
-    DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
+  if alt then begin
+    radf:=fSettings.ComboBox1.ItemIndex+12;
+    rad_idx := GetCharValueRad(TChar.Int(TCharIndex),radf);
+    if TRadicals.Locate('Number',rad_idx) then
+      DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
+  end;
 
   {radical}
   if rad then

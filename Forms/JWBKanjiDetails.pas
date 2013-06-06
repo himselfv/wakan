@@ -10,7 +10,8 @@ uses
 type
   TCharReadings = record
     piny,kory,cany,chiny:string;
-    ony,kuny,nany,engy:UnicodeString;
+    ony,kuny,nany:UnicodeString;
+    def:UnicodeString;
   end;
   PCharReadings = ^TCharReadings;
 
@@ -575,7 +576,7 @@ begin
       if chin then
         lblMeaning.Caption:=read.chiny
       else
-        lblMeaning.Caption:=read.engy;
+        lblMeaning.Caption:=read.def;
       PopulateKVal(CChar, read);
     end;
 
@@ -598,11 +599,14 @@ procedure TfKanjiDetails.ReloadReadings(CChar: TTextTableCursor; out read: TChar
 var rt: integer; //TCharProp.Int(TCharPropType)
   ws:UnicodeString;
   CCharProp: TCharPropertyCursor;
+  def_a, def_u: UnicodeString;
 begin
   FillChar(read, sizeof(read), 00); //initializes all strings to ''
 
   CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
+    def_u := '';
+    def_a := '';
     CCharProp.SetOrder('');
     CCharProp.Locate('Kanji',CChar.TrueInt(TCharIndex));
     while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=CChar.Int(TCharIndex)) do
@@ -613,17 +617,21 @@ begin
       case rt of
         1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
         2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
-        3:if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
+        3:if def_a='' then def_a:=fstrtouni(ws) else def_a:=def_a+', '+fstrtouni(ws);
         4:if read.ony='' then read.ony:=ws else read.ony:=read.ony+#$FF0C+ws;
         5:if read.kuny='' then read.kuny:=ws else read.kuny:=read.kuny+#$FF0C+ws;
         6:if read.nany='' then read.nany:=ws else read.nany:=read.nany+#$FF0C+ws;
         7:if read.chiny='' then read.chiny:=fstrtouni(ws) else read.chiny:=read.chiny+', '+fstrtouni(ws);
         8:if read.cany='' then read.cany:=fstrtouni(ws) else read.cany:=read.cany+', '+fstrtouni(ws);
         ptJapaneseDefinitionUnicode:
-          if read.engy='' then read.engy:=fstrtouni(ws) else read.engy:=read.engy+', '+fstrtouni(ws);
+          if def_u='' then def_u:=fstrtouni(ws) else def_u:=def_u+', '+fstrtouni(ws);
       end;
       CCharProp.Next;
     end;
+    if def_u<>'' then
+      read.def := def_u
+    else
+      read.def := def_a;
   finally
     FreeAndNil(CCharProp);
   end;
@@ -656,7 +664,7 @@ begin
         0:s:='---';
         1:s:=LowerCase(read.kory);
         2:s:=ConvertPinYin(read.piny);
-        3:s:=read.engy;
+        3:s:=read.def;
         4:s:=fstr(read.ony);
         5:s:=fstr(read.kuny);
         6:s:=fstr(read.nany);
