@@ -215,6 +215,7 @@ object fVocabDetails: TfVocabDetails
           Width = 249
           Height = 29
           Color = clWhite
+          OnPaint = pbPhoneticPaint
         end
         object pbKanji: TWakanPaintbox
           Left = 269
@@ -222,6 +223,7 @@ object fVocabDetails: TfVocabDetails
           Width = 248
           Height = 29
           Color = clWhite
+          OnPaint = pbKanjiPaint
           OnMouseMove = pbKanjiMouseMove
         end
       end
