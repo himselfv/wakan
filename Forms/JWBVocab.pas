@@ -35,7 +35,6 @@ type
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
-    procedure UserAdd_Button1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
@@ -536,17 +535,6 @@ begin
   TUser.Reindex;
   TUserSheet.Reindex;
   TUserIdx.Reindex;
-end;
-
-procedure TfVocab.UserAdd_Button1Click(Sender: TObject);
-begin
-  if AddWord(clip,RomajiToKana(fVocabAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
-    fVocabAdd.Edit3.Text,fVocabAdd.ComboBox1.Text,'?',false,1) then
-  begin
-    fVocabAdd.Edit1.Text:='';
-    fVocabAdd.PaintBox3.Invalidate;
-    fVocabAdd.Edit3.Text:='';
-  end;
 end;
 
 procedure TfVocab.ExportVocab;
@@ -2185,14 +2173,7 @@ end;
 
 procedure TfVocab.Button2Click(Sender: TObject);
 begin
-  if fVocabAdd.ShowModal=mrOK then
-    if AddWord(clip,RomajiToKana(fVocabAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
-      fVocabAdd.Edit3.Text,fVocabAdd.ComboBox1.Text,'?',false,1) then
-    begin
-      fVocabAdd.Edit1.Text:='';
-      fVocabAdd.PaintBox3.Invalidate;
-      fVocabAdd.Edit3.Text:='';
-    end;
+  fVocabAdd.ModalAddWord();
 end;
 
 { Rebuilds wakan.sod from strokes.csv. Mostly used by a devs, but users can do this too. }

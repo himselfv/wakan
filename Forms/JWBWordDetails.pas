@@ -53,7 +53,7 @@ end;
 procedure TfWordDetails.Paintbox5Paint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
-  DrawUnicode(Canvas,2,2,22,fstr(fWordLookup.curmeaning),FontEnglish);
+  DrawUnicode(Canvas,2,2,22,fstr(remmark(fWordLookup.curmeaning)),FontEnglish);
 end;
 
 end.

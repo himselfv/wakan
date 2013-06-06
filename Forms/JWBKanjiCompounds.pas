@@ -56,8 +56,8 @@ var
 
 implementation
 
-uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicAdd, JWBWordLookup, JWBVocab,
-  JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories;
+uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBWordLookup, JWBVocab,
+  JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories, JWBVocabAdd;
 
 var curcphonetic,curckanji,curcmeaning:string;
 
@@ -248,8 +248,7 @@ procedure TfKanjiCompounds.StringGrid1SelectCell(Sender: TObject; ACol,
 begin
   curcphonetic:=remexcl(copy(StringGrid1.Cells[0,ARow],2,length(StringGrid1.Cells[0,ARow])-1));
   curckanji:=remexcl(copy(StringGrid1.Cells[1,ARow],2,length(StringGrid1.Cells[1,ARow])-1));
-  curcmeaning:=remmark(remexcl(StringGrid1.Cells[2,ARow]));
-  fDicAdd.edtMeaning.Text:=UnfixVocabEntry(remexcl(StringGrid1.Cells[2,ARow]));
+  curcmeaning:=remexcl(StringGrid1.Cells[2,ARow]);
 end;
 
 procedure TfKanjiCompounds.sbCopyToClipboardClick(Sender: TObject);
@@ -260,12 +259,7 @@ end;
 
 procedure TfKanjiCompounds.sbInsertIntoVocabClick(Sender: TObject);
 begin
-  fWordLookup.curkanji:=curckanji;
-  fWordLookup.curphonetic:=curcphonetic;
-  if fDicAdd.ShowModal=mrOK then
-  begin
-    if not fVocab.AddWord(curckanji,curcphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
-  end;
+  fVocabAdd.ModalAddFixed(curckanji, curcphonetic, fstr(UnfixVocabEntry(curcmeaning)));
 end;
 
 procedure TfKanjiCompounds.StringGrid1MouseUp(Sender: TObject;

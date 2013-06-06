@@ -562,7 +562,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBKanjiDetails, JWBKanjiSearch, JWBWordDetails,
   JWBWordCategory, JWBWordKanji, JWBTranslate,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
-  JWBInvalidator, JWBDicAdd, JWBLanguage, JWBConvert,
+  JWBInvalidator, JWBLanguage, JWBConvert,
   JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
@@ -1202,8 +1202,7 @@ var b:boolean;
     lc:char;
     s:string;
 begin
-  fDicAdd.ComboBox1.Items.Clear;
-  fVocabAdd.ComboBox1.Items.Clear;
+  fVocabAdd.cbCategories.Items.Clear;
   fVocabDetails.cbAddCategory.Items.Clear;
   fVocabFilters.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
 
@@ -1219,15 +1218,14 @@ begin
     s:=StripCatName(s);
     if lc=curlang then
     begin
-      fDicAdd.ComboBox1.Items.Add(s);
-      fVocabAdd.ComboBox1.Items.Add(s);
+      fVocabAdd.cbCategories.Items.Add(s);
       fVocabDetails.cbAddCategory.Items.Add(s);
     end;
     TUserCat.Next;
   end;
 
-  if fDicAdd.ComboBox1.Items.Count>0 then fDicAdd.ComboBox1.Text:=fDicAdd.ComboBox1.Items[0];
-  if fVocabAdd.ComboBox1.Items.Count>0 then fVocabAdd.ComboBox1.Text:=fVocabAdd.ComboBox1.Items[0];
+  if fVocabAdd.cbCategories.Items.Count>0 then
+    fVocabAdd.cbCategories.Text:=fVocabAdd.cbCategories.Items[0];
 end;
 
 procedure TfMenu.RefreshKanjiCategory;
@@ -1498,7 +1496,7 @@ begin
   begin
     clip := newclip;
     ClipboardPaintbox.Invalidate;
-    fVocabAdd.PaintBox2.Invalidate;
+    fVocabAdd.ClipText := clip;
     if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt;
     if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
   end;
@@ -1570,7 +1568,7 @@ end;
 procedure TfMenu.ClipboardChanged;
 begin
   ClipboardPaintbox.Invalidate;
-  fVocabAdd.PaintBox2.Invalidate;
+  fVocabAdd.ClipText := clip;
 
   if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
   if (fWordLookup.Visible) and (fWordLookup.btnLookupClip.Down) then fWordLookup.Look();

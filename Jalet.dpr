@@ -55,7 +55,6 @@ uses
   JWBCharItem in 'Forms\JWBCharItem.pas' {fCharItem},
   JWBScreenTip in 'Forms\JWBScreenTip.pas' {fScreenTip},
   JWBInvalidator in 'Forms\JWBInvalidator.pas' {fInvalidator},
-  JWBDicAdd in 'Forms\JWBDicAdd.pas' {fDicAdd},
   JWBLanguage in 'Forms\JWBLanguage.pas' {fLanguage},
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
@@ -117,7 +116,6 @@ begin
   Application.CreateForm(TfHint, fHint);
   Application.CreateForm(TfCharItem, fCharItem);
   Application.CreateForm(TfInvalidator, fInvalidator);
-  Application.CreateForm(TfDicAdd, fDicAdd);
   Application.CreateForm(TfLanguage, fLanguage);
   Application.CreateForm(TfFileType, fFileType);
   Application.CreateForm(TfWordsExpChoose, fWordsExpChoose);

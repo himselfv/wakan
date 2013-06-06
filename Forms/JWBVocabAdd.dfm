@@ -3,7 +3,7 @@ object fVocabAdd: TfVocabAdd
   Top = 259
   BorderStyle = bsDialog
   Caption = '#00057^eAdd into vocabulary'
-  ClientHeight = 225
+  ClientHeight = 268
   ClientWidth = 671
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,10 +17,10 @@ object fVocabAdd: TfVocabAdd
   OnClose = FormClose
   DesignSize = (
     671
-    225)
+    268)
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
+  object lblPhonetic: TLabel
     Left = 8
     Top = 8
     Width = 94
@@ -34,7 +34,7 @@ object fVocabAdd: TfVocabAdd
     ParentFont = False
     Transparent = True
   end
-  object Label7: TLabel
+  object lblWritten: TLabel
     Left = 8
     Top = 80
     Width = 161
@@ -47,12 +47,12 @@ object fVocabAdd: TfVocabAdd
     Font.Style = []
     ParentFont = False
   end
-  object Label2: TLabel
+  object lblCategory: TLabel
     Left = 6
-    Top = 181
+    Top = 224
     Width = 94
     Height = 13
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = '#00059^eCategory:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -60,8 +60,9 @@ object fVocabAdd: TfVocabAdd
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    ExplicitTop = 181
   end
-  object Label4: TLabel
+  object lblMeaning: TLabel
     Left = 8
     Top = 136
     Width = 93
@@ -74,11 +75,22 @@ object fVocabAdd: TfVocabAdd
     Font.Style = []
     ParentFont = False
   end
-  object Edit1: TEdit
+  object pbPhonetic: TWakanPaintbox
+    Left = 7
+    Top = 22
+    Width = 659
+    Height = 28
+    Anchors = [akLeft, akTop, akRight]
+    Color = clWhite
+    DoubleBuffered = True
+    OnPaint = pbPhoneticPaint
+  end
+  object edtPhonetic: TEdit
     Left = 8
     Top = 24
     Width = 657
     Height = 24
+    Anchors = [akLeft, akTop, akRight]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -86,53 +98,42 @@ object fVocabAdd: TfVocabAdd
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    OnChange = Edit1Change
+    OnChange = edtPhoneticChange
   end
-  object Edit3: TEdit
-    Left = 8
-    Top = 152
-    Width = 655
-    Height = 24
-    Anchors = [akLeft, akTop, akRight]
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    TabOrder = 1
-  end
-  object ComboBox1: TComboBox
+  object cbCategories: TComboBox
     Left = 6
-    Top = 197
+    Top = 240
     Width = 371
     Height = 21
-    Anchors = [akTop, akRight]
-    TabOrder = 2
+    Anchors = [akLeft, akRight, akBottom]
+    TabOrder = 1
+    ExplicitTop = 197
   end
   object btnOk: TBitBtn
     Left = 400
-    Top = 195
+    Top = 238
     Width = 129
     Height = 25
-    Anchors = [akTop, akRight]
+    Anchors = [akRight, akBottom]
     Caption = '#00062^eAdd to vocabulary'
     Kind = bkOK
     NumGlyphs = 2
-    TabOrder = 3
+    TabOrder = 2
+    ExplicitTop = 195
   end
   object btnCancel: TBitBtn
     Left = 537
-    Top = 194
+    Top = 237
     Width = 129
     Height = 25
-    Anchors = [akTop, akRight]
+    Anchors = [akRight, akBottom]
     Caption = '#00050^eCancel'
     Kind = bkCancel
     NumGlyphs = 2
-    TabOrder = 4
+    TabOrder = 3
+    ExplicitTop = 194
   end
-  object Paintbox2: TWakanPaintbox
+  object pbWritten: TWakanPaintbox
     Left = 8
     Top = 96
     Width = 655
@@ -140,9 +141,9 @@ object fVocabAdd: TfVocabAdd
     Anchors = [akLeft, akTop, akRight]
     Color = clWhite
     DoubleBuffered = True
-    OnPaint = PaintBox2Paint
+    OnPaint = pbWrittenPaint
   end
-  object PaintBox3: TWakanPaintbox
+  object pbPhoneticConv: TWakanPaintbox
     Left = 8
     Top = 48
     Width = 658
@@ -150,6 +151,21 @@ object fVocabAdd: TfVocabAdd
     Anchors = [akLeft, akTop, akRight]
     Color = clBtnFace
     DoubleBuffered = True
-    OnPaint = PaintBox3Paint
+    OnPaint = pbPhoneticConvPaint
+  end
+  object edtMeaning: TMemo
+    Left = 8
+    Top = 155
+    Width = 658
+    Height = 55
+    Anchors = [akLeft, akTop, akRight, akBottom]
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 7
+    WantReturns = False
   end
 end

@@ -381,7 +381,7 @@ implementation
 
 uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBWordKanji,
-  JWBExamples, JWBVocabAdd, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
+  JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
   JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport;
 

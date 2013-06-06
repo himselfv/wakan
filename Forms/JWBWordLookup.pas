@@ -119,7 +119,7 @@ implementation
 
 uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
   JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
-  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBDicAdd, Math,
+  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
   JWBCategories, JWBAnnotations, JWBUserData, JWBCharData;
 
 {$R *.DFM}
@@ -469,7 +469,6 @@ begin
   curphonetic:='';
   curkanji:='';
   curmeaning:='';
-  fDicAdd.edtMeaning.Text:='';
   SpeedButton17.Enabled:=false;
   btnCopyToClipboard.Enabled:=false;
   SpeedButton19.Enabled:=false;
@@ -484,11 +483,8 @@ begin
   begin
     curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
     curkanji:=remexcl(copy(StringGrid1.Cells[1,curword],2,length(StringGrid1.Cells[1,curword])-1));
-    curmeaning:=remmark(remexcl(StringGrid1.Cells[2,curword]));
+    curmeaning:=remexcl(StringGrid1.Cells[2,curword]);
     fExamples.SetExamples(curkanji);
-    s:=remexcl(StringGrid1.Cells[2,curword]);
-    if pos(' >> ',s)>0 then delete(s,1,pos(' >> ',s)+3);
-    fDicAdd.edtMeaning.Text:=UnfixVocabEntry(s); //replace markup symbols with user readable
     SpeedButton17.Enabled:=true;
     btnCopyToClipboard.Enabled:=true;
     fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary');
@@ -656,10 +652,12 @@ begin
 end;
 
 procedure TfWordLookup.SpeedButton17Click(Sender: TObject);
+var tmp: string;
 begin
-  if fDicAdd.ShowModal=mrOK then
-  begin
-    if not fVocab.AddWord(curkanji,curphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
+  tmp := curmeaning;
+  if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
+  tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
+  if IsPositiveResult(fVocabAdd.ModalAddFixed(curkanji,curphonetic,fstr(tmp))) then begin
     Look();
     if Edit1.Enabled then Edit1.SetFocus;
   end;
