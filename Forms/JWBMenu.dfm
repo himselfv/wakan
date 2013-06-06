@@ -1097,21 +1097,27 @@ object fMenu: TfMenu
       end
       object JapMode1: TMenuItem
         Action = aJapanese
+        GroupIndex = 1
         RadioItem = True
       end
       object ChinMode1: TMenuItem
         Action = aChinese
+        Checked = True
+        GroupIndex = 1
         RadioItem = True
       end
       object N25: TMenuItem
         Caption = '-'
+        GroupIndex = 1
       end
       object FullscreenMode1: TMenuItem
         Action = aFullscreenMode
+        GroupIndex = 1
       end
       object PortraitMode1: TMenuItem
         Action = aPortraitMode
         AutoCheck = True
+        GroupIndex = 1
       end
     end
     object miCharacters: TMenuItem
