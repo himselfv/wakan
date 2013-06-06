@@ -738,14 +738,14 @@ begin
   cbSaveSearchParams.Checked:=reg.ReadBool('General','SaveSearchParams',true);
 
  //Column widths
-  fWords.SetDefaultColumnWidths;
+  fVocab.SetDefaultColumnWidths;
   fWordLookup.SetDefaultColumnWidths;
   fKanjiCompounds.SetDefaultColumnWidths;
   if cbSaveColumnWidths.Checked then begin
-    fWords.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',fWords.StringGrid1.ColWidths[0]);
-    fWords.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','UserCol2',fWords.StringGrid1.ColWidths[1]);
-    fWords.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',fWords.StringGrid1.ColWidths[2]);
-    fWords.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',fWords.StringGrid1.ColWidths[3]);
+    fVocab.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',fVocab.StringGrid1.ColWidths[0]);
+    fVocab.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','UserCol2',fVocab.StringGrid1.ColWidths[1]);
+    fVocab.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',fVocab.StringGrid1.ColWidths[2]);
+    fVocab.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',fVocab.StringGrid1.ColWidths[3]);
 
     fWordLookup.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
     fWordLookup.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
@@ -776,9 +776,9 @@ begin
   setPortraitMode := reg.ReadBool('Layout','PortraitMode',false);
 
  //Panel sizes
-  fUserFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
-  fUserFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
-  fUserDetails.ClientHeight := reg.ReadInteger('Layout','UserDetailsHeight',120);
+  fVocabFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
+  fVocabFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
+  fVocabDetails.ClientHeight := reg.ReadInteger('Layout','UserDetailsHeight',120);
   fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
 
   fMenu.SetCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false), true); //after KanjiDetails.DockedWidth/Height
@@ -1018,10 +1018,10 @@ begin
     reg.WriteInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
     reg.WriteInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
 
-    reg.WriteInteger('Grids','UserCol1',fWords.StringGrid1.ColWidths[0]);
-    reg.WriteInteger('Grids','UserCol2',fWords.StringGrid1.ColWidths[1]);
-    reg.WriteInteger('Grids','UserCol3',fWords.StringGrid1.ColWidths[2]);
-    reg.WriteInteger('Grids','UserCol4',fWords.StringGrid1.ColWidths[3]);
+    reg.WriteInteger('Grids','UserCol1',fVocab.StringGrid1.ColWidths[0]);
+    reg.WriteInteger('Grids','UserCol2',fVocab.StringGrid1.ColWidths[1]);
+    reg.WriteInteger('Grids','UserCol3',fVocab.StringGrid1.ColWidths[2]);
+    reg.WriteInteger('Grids','UserCol4',fVocab.StringGrid1.ColWidths[3]);
 
     reg.WriteInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
     reg.WriteInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
@@ -1077,9 +1077,9 @@ begin
 
  //These are updated with the actual docked width and height on resizes,
  //while ClientWidth and ClientHeight might be invalid because the window's aligned to a full parent width or height
-  reg.WriteInteger('Layout','UserFiltersWidth',fUserFilters.UndockWidth);
-  reg.WriteInteger('Layout','UserFiltersHeight',fUserFilters.UndockHeight);
-  reg.WriteInteger('Layout','UserDetailsHeight',fUserDetails.UndockHeight);
+  reg.WriteInteger('Layout','UserFiltersWidth',fVocabFilters.UndockWidth);
+  reg.WriteInteger('Layout','UserFiltersHeight',fVocabFilters.UndockHeight);
+  reg.WriteInteger('Layout','UserDetailsHeight',fVocabDetails.UndockHeight);
   reg.WriteInteger('Layout','KanjiCompoundsHeight',fKanjiCompounds.UndockHeight);
 end;
 

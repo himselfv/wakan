@@ -659,7 +659,7 @@ procedure TfWordLookup.SpeedButton17Click(Sender: TObject);
 begin
   if fDicAdd.ShowModal=mrOK then
   begin
-    if not fWords.AddWord(curkanji,curphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
+    if not fVocab.AddWord(curkanji,curphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
     Look();
     if Edit1.Enabled then Edit1.SetFocus;
   end;
@@ -694,7 +694,7 @@ procedure TfWordLookup.SpeedButton19Click(Sender: TObject);
 begin
   fMenu.aModeWordsExecute(sender);
   if dicrl[curword-1].userIndex<>0 then
-    fWords.SearchWord(dicrl[curword-1].userIndex);
+    fVocab.SearchWord(dicrl[curword-1].userIndex);
 end;
 
 

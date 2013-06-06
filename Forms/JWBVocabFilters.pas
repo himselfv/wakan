@@ -7,7 +7,7 @@ uses
   StdCtrls, ExtCtrls, CheckLst, Tabs, Buttons, JWBForms;
 
 type
-  TfUserFilters = class(TForm)
+  TfVocabFilters = class(TForm)
     rgSort: TRadioGroup;
     gbFilter: TGroupBox;
     cbFilterUnlearned: TCheckBox;
@@ -46,7 +46,7 @@ type
   end;
 
 var
-  fUserFilters: TfUserFilters;
+  fVocabFilters: TfVocabFilters;
 
 implementation
 
@@ -55,24 +55,24 @@ uses TextTable, JWBVocab, JWBMenu, JWBUserData, JWBCategories, JWBUnit,
 
 {$R *.DFM}
 
-procedure TfUserFilters.cbFilterUnlearnedClick(Sender: TObject);
+procedure TfVocabFilters.cbFilterUnlearnedClick(Sender: TObject);
 begin
-  fWords.ShowIt(false);
+  fVocab.ShowIt(false);
 end;
 
-procedure TfUserFilters.FormClose(Sender: TObject;
+procedure TfVocabFilters.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fWords.SpeedButton2.Down:=false;
+  fVocab.SpeedButton2.Down:=false;
   fMenu.aUserSettings.Checked:=false;
 end;
 
-procedure TfUserFilters.lbCategoriesClick(Sender: TObject);
+procedure TfVocabFilters.lbCategoriesClick(Sender: TObject);
 begin
-  fWords.ShowIt(false);
+  fVocab.ShowIt(false);
 end;
 
-procedure TfUserFilters.lbCategoriesDblClick(Sender: TObject);
+procedure TfVocabFilters.lbCategoriesDblClick(Sender: TObject);
 var i:integer;
 begin
   if lbCategories.ItemIndex<>-1 then lbCategories.Checked[lbCategories.ItemIndex]:=not
@@ -82,11 +82,11 @@ begin
   begin
     for i:=0 to lbCategories.Items.Count-1 do
       lbCategories.Checked[i]:=i=lbCategories.ItemIndex;
-    fWords.ShowIt(false);
+    fVocab.ShowIt(false);
   end;
 end;
 
-procedure TfUserFilters.tabCatListChange(Sender: TObject; NewTab: Integer;
+procedure TfVocabFilters.tabCatListChange(Sender: TObject; NewTab: Integer;
   var AllowChange: Boolean);
 var i:integer;
     lc:char;
@@ -109,39 +109,39 @@ begin
   end;
   for i:=0 to lbCategories.Items.Count-1 do lbCategories.Checked[i]:=true;
   lbCategories.ItemIndex:=0;
-  fWords.ShowIt(false);
+  fVocab.ShowIt(false);
 end;
 
-procedure TfUserFilters.btnCatToggleAllClick(Sender: TObject);
+procedure TfVocabFilters.btnCatToggleAllClick(Sender: TObject);
 var i:integer;
     allchecked:boolean;
 begin
   allchecked:=true;
   for i:=0 to lbCategories.Items.Count-1 do if not lbCategories.Checked[i] then allchecked:=false;
   for i:=0 to lbCategories.Items.Count-1 do lbCategories.Checked[i]:=not allchecked;
-  fWords.ShowIt(false);
+  fVocab.ShowIt(false);
 end;
 
-procedure TfUserFilters.btnCatEditClick(Sender: TObject);
+procedure TfVocabFilters.btnCatEditClick(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
   EditCategoryUI(GetSelCatIdx(lbCategories));
 end;
 
-procedure TfUserFilters.btnCatDeleteClick(Sender: TObject);
+procedure TfVocabFilters.btnCatDeleteClick(Sender: TObject);
 begin
   if lbCategories.ItemIndex=-1 then exit;
   DeleteCategoryUI(GetSelCatIdx(lbCategories));
 end;
 
 //Returns true, if at least one of those categories is enabled in fUserFilters.
-function TfUserFilters.CheckEnabledCategories(catlist: TStringList): boolean;
+function TfVocabFilters.CheckEnabledCategories(catlist: TStringList): boolean;
 var i, ind: integer;
 begin
   Result := false;
   for i := 0 to catlist.Count - 1 do begin
-    ind:=fUserFilters.lbCategories.Items.IndexOf(StripCatName(catlist[i]));
-    if (ind<>-1) and (fUserFilters.lbCategories.Checked[i]) and (GetCatPrefix(catlist[i])=curlang) then begin
+    ind:=fVocabFilters.lbCategories.Items.IndexOf(StripCatName(catlist[i]));
+    if (ind<>-1) and (fVocabFilters.lbCategories.Checked[i]) and (GetCatPrefix(catlist[i])=curlang) then begin
       Result:=true;
       break; //no point in scanning further
     end;
@@ -158,7 +158,7 @@ begin
 end;
 
 { Call on resize, on dock mode change, on lbCategories font change }
-procedure TfUserFilters.UpdateAlignment;
+procedure TfVocabFilters.UpdateAlignment;
 var maxItemWidth: integer;
 begin
   if FDockMode in [alLeft,alRight] then
@@ -198,14 +198,14 @@ begin
   end;
 end;
 
-procedure TfUserFilters.WMSetDockMode(var msg: TMessage);
+procedure TfVocabFilters.WMSetDockMode(var msg: TMessage);
 begin
   if FDockMode=TAlign(msg.WParam) then exit;
   FDockMode := TAlign(msg.WParam);
   UpdateAlignment;
 end;
 
-procedure TfUserFilters.FormResize(Sender: TObject);
+procedure TfVocabFilters.FormResize(Sender: TObject);
 begin
   UpdateAlignment;
  //Remember width/height preferences in UndockWidth/Height

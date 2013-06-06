@@ -1,4 +1,4 @@
-object fUserFilters: TfUserFilters
+object fVocabFilters: TfVocabFilters
   Left = 562
   Top = 172
   BorderStyle = bsNone

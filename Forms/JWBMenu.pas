@@ -833,7 +833,7 @@ begin
    //Stroke-order rebuilding -- before complaining about missing sod
     if Command='makesod' then
     begin
-      fWords.BuildStrokeOrderPackage('STROKES.CSV');
+      fVocab.BuildStrokeOrderPackage('STROKES.CSV');
       Application.Terminate;
       exit;
     end;
@@ -841,7 +841,7 @@ begin
    //Auto-rebuild
     if not FileExists('wakan.sod')
     and FileExists('STROKES.CSV') then
-      fWords.BuildStrokeOrderPackage('STROKES.CSV');
+      fVocab.BuildStrokeOrderPackage('STROKES.CSV');
 
    //Stroke-order display
     if not FileExists('wakan.sod') then
@@ -1203,9 +1203,9 @@ var b:boolean;
     s:string;
 begin
   fDicAdd.ComboBox1.Items.Clear;
-  fUserAdd.ComboBox1.Items.Clear;
-  fUserDetails.cbAddCategory.Items.Clear;
-  fUserFilters.tabCatListChange(fMenu,fUserFilters.tabCatList.TabIndex,b);
+  fVocabAdd.ComboBox1.Items.Clear;
+  fVocabDetails.cbAddCategory.Items.Clear;
+  fVocabFilters.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
 
   TUserCat.First;
   while not TUserCat.EOF do
@@ -1220,14 +1220,14 @@ begin
     if lc=curlang then
     begin
       fDicAdd.ComboBox1.Items.Add(s);
-      fUserAdd.ComboBox1.Items.Add(s);
-      fUserDetails.cbAddCategory.Items.Add(s);
+      fVocabAdd.ComboBox1.Items.Add(s);
+      fVocabDetails.cbAddCategory.Items.Add(s);
     end;
     TUserCat.Next;
   end;
 
   if fDicAdd.ComboBox1.Items.Count>0 then fDicAdd.ComboBox1.Text:=fDicAdd.ComboBox1.Items[0];
-  if fUserAdd.ComboBox1.Items.Count>0 then fUserAdd.ComboBox1.Text:=fUserAdd.ComboBox1.Items[0];
+  if fVocabAdd.ComboBox1.Items.Count>0 then fVocabAdd.ComboBox1.Text:=fVocabAdd.ComboBox1.Items[0];
 end;
 
 procedure TfMenu.RefreshKanjiCategory;
@@ -1441,7 +1441,7 @@ begin
     fSettings.SaveSettings;
     fTranslate.Close;
     fWordLookup.Close;
-    fWords.Close;
+    fVocab.Close;
     fKanji.Close;
   end;
 end;
@@ -1498,7 +1498,7 @@ begin
   begin
     clip := newclip;
     ClipboardPaintbox.Invalidate;
-    fUserAdd.PaintBox2.Invalidate;
+    fVocabAdd.PaintBox2.Invalidate;
     if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt;
     if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
   end;
@@ -1570,7 +1570,7 @@ end;
 procedure TfMenu.ClipboardChanged;
 begin
   ClipboardPaintbox.Invalidate;
-  fUserAdd.PaintBox2.Invalidate;
+  fVocabAdd.PaintBox2.Invalidate;
 
   if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
   if (fWordLookup.Visible) and (fWordLookup.btnLookupClip.Down) then fWordLookup.Look();
@@ -1690,12 +1690,12 @@ end;
 
 procedure TfMenu.aVocabExportExecute(Sender: TObject);
 begin
-  fWords.ExportVocab;
+  fVocab.ExportVocab;
 end;
 
 procedure TfMenu.aVocabImportExecute(Sender: TObject);
 begin
-  fWords.ImportVocab;
+  fVocab.ImportVocab;
 end;
 
 procedure TfMenu.aExitExecute(Sender: TObject);
@@ -1888,8 +1888,8 @@ end;
 
 procedure TfMenu.aUserAddExecute(Sender: TObject);
 begin
-  if fWords.Visible then
-    fWords.Button2Click(Sender) else
+  if fVocab.Visible then
+    fVocab.Button2Click(Sender) else
   if fWordLookup.Visible then
     fWordLookup.SpeedButton17Click(Sender) else
   if fKanjiCompounds.Visible then
@@ -1900,40 +1900,40 @@ procedure TfMenu.aUserSettingsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserSettings.Checked;
-  if not fWords.Visible then aModeWords.Execute;
+  if not fVocab.Visible then aModeWords.Execute;
   if aUserSettings.Checked<>pre then exit;
   aUserSettings.Checked := not aUserSettings.Checked;
 end;
 
 procedure TfMenu.aUserSettingsChecked(Sender: TObject);
 begin
-  ToggleForm(fUserFilters, aUserSettings.Checked);
-  fWords.SpeedButton2.Down := aUserSettings.Checked;
+  ToggleForm(fVocabFilters, aUserSettings.Checked);
+  fVocab.SpeedButton2.Down := aUserSettings.Checked;
 end;
 
 procedure TfMenu.aUserDetailsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserDetails.Checked;
-  if not fWords.Visible then aModeWords.Execute;
+  if not fVocab.Visible then aModeWords.Execute;
   if aUserDetails.Checked<>pre then exit;
   aUserDetails.Checked := not aUserDetails.Checked;
 end;
 
 procedure TfMenu.aUserDetailsChecked(Sender: TObject);
 begin
-  ToggleForm(fUserDetails, aUserDetails.Checked);
-  fWords.SpeedButton4.Down := aUserDetails.Checked;
+  ToggleForm(fVocabDetails, aUserDetails.Checked);
+  fVocab.SpeedButton4.Down := aUserDetails.Checked;
 end;
 
 procedure TfMenu.aUserPrintExecute(Sender: TObject);
 begin
-  fWords.Button15Click(sender);
+  fVocab.Button15Click(sender);
 end;
 
 procedure TfMenu.aUserGenerateExecute(Sender: TObject);
 begin
-  fWords.Button19Click(sender);
+  fVocab.Button19Click(sender);
 end;
 
 procedure TfMenu.aSettingsExecute(Sender: TObject);
@@ -1942,7 +1942,7 @@ begin
   fSettings.ShowModal;
   if fKanji.Visible then fKanji.DoIt;
   if fWordLookup.Visible then fWordLookup.Look();
-  if fWords.Visible then fWords.ShowIt(false);
+  if fVocab.Visible then fVocab.ShowIt(false);
   if fTranslate.Visible then fTranslate.RepaintText;
 end;
 
@@ -2322,21 +2322,21 @@ begin
   if (form=fExamples) and (curdisplaymode<>5) then
     Result:=DockProc(fExamples,fWordLookup.pnlDockExamples,alBottom,dock);
   if (form=fExamples) and (curdisplaymode=5) then
-    Result:=DockProc(fExamples,fWords.pnlDockExamples,alBottom,dock);
+    Result:=DockProc(fExamples,fVocab.pnlDockExamples,alBottom,dock);
   if form=fWordKanji then
     if aPortraitMode.Checked then
       Result:=DockProc(fWordKanji,fWordLookup.Panel3,alBottom,dock)
     else
       Result:=DockProc(fWordKanji,fWordLookup.Panel3,alRight,dock);
-  if form=fUserFilters then
+  if form=fVocabFilters then
     if aPortraitMode.Checked then
-      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,alBottom,dock)
+      Result:=DockProc(fVocabFilters,fVocab.pnlDockFilters,alBottom,dock)
     else
-      Result:=DockProc(fUserFilters,fWords.pnlDockFilters,alRight,dock);
-  if form=fUserDetails then begin
-    Result:=DockProc(fUserDetails,fWords.pnlDockDetails,alBottom,dock);
-    fWords.splDockDetails.Visible := dock;
-    fWords.splDockDetails.Top := fWords.pnlDockDetails.Top - 1;
+      Result:=DockProc(fVocabFilters,fVocab.pnlDockFilters,alRight,dock);
+  if form=fVocabDetails then begin
+    Result:=DockProc(fVocabDetails,fVocab.pnlDockDetails,alBottom,dock);
+    fVocab.splDockDetails.Visible := dock;
+    fVocab.splDockDetails.Top := fVocab.pnlDockDetails.Top - 1;
   end;
 end;
 
@@ -2415,7 +2415,7 @@ begin
   case curdisplaymode of
     1:fKanji.Hide;
     2:fWordLookup.Hide;
-    5:fWords.Hide;
+    5:fVocab.Hide;
     3:fTranslate.Hide;
     4:begin
         fWordLookup.Hide;
@@ -2472,7 +2472,7 @@ begin
         aModeEditor.Checked:=true;
       end;
     5:begin
-        MainDock(fWords,Panel3);
+        MainDock(fVocab,Panel3);
         tab5.Down:=true;
         aModeEditor.Checked:=true;
       end;
@@ -3064,7 +3064,7 @@ procedure TfMenu.aUserExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserExamples.Checked;
-  if not fWords.Visible then aModeWords.Execute;
+  if not fVocab.Visible then aModeWords.Execute;
   if aUserExamples.Checked<>pre then exit;
   aUserExamples.Checked := not aUserExamples.Checked;
 end;
@@ -3073,7 +3073,7 @@ procedure TfMenu.aUserExamplesChecked(Sender: TObject);
 begin
 //  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
-  fWords.SpeedButton1.Down := aUserExamples.Checked;
+  fVocab.SpeedButton1.Down := aUserExamples.Checked;
 end;
 
 function _l(const id:string):string;
@@ -3106,21 +3106,21 @@ var
   WordKanjiDocked: boolean;
   KanjiDetailsDocked: boolean;
 begin
-  UserFiltersDocked := DockExpress(fUserFilters,false);
+  UserFiltersDocked := DockExpress(fVocabFilters,false);
   WordKanjiDocked := DockExpress(fWordKanji,false);
   KanjiDetailsDocked := CharDetDocked and DockExpress(fKanjiDetails,false);
 
   if aPortraitMode.Checked then begin
     Panel4.Align := alBottom;
-    fWords.pnlDockFilters.Align := alBottom;
-    fWords.splDockFilters.Align := alBottom;
-    fWords.splDockFilters.Top := fWords.pnlDockFilters.Top - 1;
+    fVocab.pnlDockFilters.Align := alBottom;
+    fVocab.splDockFilters.Align := alBottom;
+    fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
     fWordLookup.Panel3.Align := alBottom;
   end else begin
     Panel4.Align := alRight;
-    fWords.pnlDockFilters.Align := alRight;
-    fWords.splDockFilters.Align := alRight;
-    fWords.splDockFilters.Left := fWords.pnlDockFilters.Left - 1;
+    fVocab.pnlDockFilters.Align := alRight;
+    fVocab.splDockFilters.Align := alRight;
+    fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
     fWordLookup.Panel3.Align := alRight;
   end;
 
@@ -3129,7 +3129,7 @@ begin
  //If CharDetDocked was false (logically Undocked), then KanjiDetailsDocked
  //will be false too, and we won't even try to redock fKanjiDetails, which is right.
 
-  if UserFiltersDocked then DockExpress(fUserFilters,true);
+  if UserFiltersDocked then DockExpress(fVocabFilters,true);
   if WordKanjiDocked then DockExpress(fWordKanji,true);
   if KanjiDetailsDocked then begin
     DockExpress(fKanjiDetails,true);

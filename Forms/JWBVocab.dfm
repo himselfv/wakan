@@ -1,4 +1,4 @@
-object fWords: TfWords
+object fVocab: TfVocab
   Left = 374
   Top = 508
   BorderStyle = bsSizeToolWin

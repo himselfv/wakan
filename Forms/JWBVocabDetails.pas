@@ -7,7 +7,7 @@ uses
   StdCtrls, Buttons, ExtCtrls, WakanPaintbox;
 
 type
-  TfUserDetails = class(TForm)
+  TfVocabDetails = class(TForm)
     Panel3: TPanel;
     btnMoveUpInCategory: TSpeedButton;
     btnMoveDownInCategory: TSpeedButton;
@@ -75,7 +75,7 @@ type
   end;
 
 var
-  fUserDetails: TfUserDetails;
+  fVocabDetails: TfVocabDetails;
 
 implementation
 
@@ -84,12 +84,12 @@ uses TextTable, JWBVocab, JWBMenu, JWBUnit, JWBUserData, JWBVocabFilters,
 
 {$R *.DFM}
 
-procedure TfUserDetails.FormDestroy(Sender: TObject);
+procedure TfVocabDetails.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(cl);
 end;
 
-procedure TfUserDetails.Reset;
+procedure TfVocabDetails.Reset;
 begin
   lblLearnState.Caption:='-';
   edtMeaning.Text:='';
@@ -105,20 +105,20 @@ begin
   lblDateMastered.Caption:='-';
   lblTimesPrinted.Caption:='-';
   SetWordControlsEnabled(false);
-  btnMoveUpInCategory.Visible:=fUserFilters.rgSort.ItemIndex=0;
-  btnMoveDownInCategory.Visible:=fUserFilters.rgSort.ItemIndex=0;
+  btnMoveUpInCategory.Visible:=fVocabFilters.rgSort.ItemIndex=0;
+  btnMoveDownInCategory.Visible:=fVocabFilters.rgSort.ItemIndex=0;
   btnMoveUpInCategory.Enabled:=false;
   btnMoveDownInCategory.Enabled:=false;
   pbPhonetic.Invalidate;
   pbKanji.Invalidate;
 end;
 
-procedure TfUserDetails.ClearCategories;
+procedure TfVocabDetails.ClearCategories;
 begin
-  fUserDetails.lbCategories.Items.Clear;
+  fVocabDetails.lbCategories.Items.Clear;
 end;
 
-procedure TfUserDetails.AddWordCategories(id:integer);
+procedure TfVocabDetails.AddWordCategories(id:integer);
 var i: integer;
 begin
   if cl=nil then
@@ -128,12 +128,12 @@ begin
 
   ListWordCategories(id,cl);
   for i:=0 to cl.Count-1 do
-    if fUserDetails.lbCategories.Items.IndexOf(copy(cl[i],3,length(cl[i])-2))=-1 then
-      fUserDetails.lbCategories.Items.Add(copy(cl[i],3,length(cl[i])-2));
+    if fVocabDetails.lbCategories.Items.IndexOf(copy(cl[i],3,length(cl[i])-2))=-1 then
+      fVocabDetails.lbCategories.Items.Add(copy(cl[i],3,length(cl[i])-2));
 end;
 
 //Called when multiple words are selected in vocabulary list
-procedure TfUserDetails.SetMultipleWords;
+procedure TfVocabDetails.SetMultipleWords;
 begin
   SetWordControlsEnabled(true);
   btnAddToCategory.Enabled:=true;
@@ -147,7 +147,7 @@ begin
     btnRemoveFromCategory.Enabled:=false;
 end;
 
-procedure TfUserDetails.SetSingleWord;
+procedure TfVocabDetails.SetSingleWord;
 begin
   case TUser.Int(TUserScore) of
     0:lblLearnState.Caption:=_l('#00638^eProblematic');
@@ -179,7 +179,7 @@ begin
     btnRemoveFromCategory.Enabled:=false;
 end;
 
-procedure TfUserDetails.SetWordControlsEnabled(Value: boolean);
+procedure TfVocabDetails.SetWordControlsEnabled(Value: boolean);
 begin
   btnDelete.Enabled:=Value;
   btnSetProblematic.Enabled:=Value;
@@ -188,91 +188,91 @@ begin
   btnSetMastered.Enabled:=Value;
 end;
 
-procedure TfUserDetails.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
+procedure TfVocabDetails.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Brush.Color:=clWindow;
-  DrawKana(Canvas,1,1,22,fWords.curphonetic,FontJapanese,showroma,romasys,curlang);
+  DrawKana(Canvas,1,1,22,fVocab.curphonetic,FontJapanese,showroma,romasys,curlang);
 end;
 
-procedure TfUserDetails.pbKanjiPaint(Sender: TObject; Canvas: TCanvas);
+procedure TfVocabDetails.pbKanjiPaint(Sender: TObject; Canvas: TCanvas);
 begin
   pbKanji.Canvas.Brush.Color:=clWindow;
   BeginDrawReg(Canvas);
-  DrawUnicode(Canvas,1,1,22,fWords.curkanji,FontJapanese);
+  DrawUnicode(Canvas,1,1,22,fVocab.curkanji,FontJapanese);
   EndDrawReg;
 end;
 
-procedure TfUserDetails.btnAddToCategoryClick(Sender: TObject);
+procedure TfVocabDetails.btnAddToCategoryClick(Sender: TObject);
 begin
-  fWords.AddWordsToCategory(cbAddCategory.text);
+  fVocab.AddWordsToCategory(cbAddCategory.text);
   btnAddToCategory.Default := false;
 end;
 
 //SetProblematic/Unlearned/Learned/Mastered
-procedure TfUserDetails.btnSetProblematicClick(Sender: TObject);
+procedure TfVocabDetails.btnSetProblematicClick(Sender: TObject);
 begin
-  fWords.SetWordsLearnState(TControl(Sender).Tag);
+  fVocab.SetWordsLearnState(TControl(Sender).Tag);
 end;
 
-procedure TfUserDetails.btnRemoveFromCategoryClick(Sender: TObject);
+procedure TfVocabDetails.btnRemoveFromCategoryClick(Sender: TObject);
 begin
-  fWords.RemoveWordsFromCategory();
+  fVocab.RemoveWordsFromCategory();
 end;
 
-procedure TfUserDetails.btnDeleteClick(Sender: TObject);
+procedure TfVocabDetails.btnDeleteClick(Sender: TObject);
 begin
-  fWords.DeleteWords();
+  fVocab.DeleteWords();
 end;
 
-procedure TfUserDetails.btnMoveUpInCategoryClick(Sender: TObject);
+procedure TfVocabDetails.btnMoveUpInCategoryClick(Sender: TObject);
 begin
-  fWords.MoveWordsInCategory(mdUp);
+  fVocab.MoveWordsInCategory(mdUp);
 end;
 
-procedure TfUserDetails.btnMoveDownInCategoryClick(Sender: TObject);
+procedure TfVocabDetails.btnMoveDownInCategoryClick(Sender: TObject);
 begin
-  fWords.MoveWordsInCategory(mdDown);
+  fVocab.MoveWordsInCategory(mdDown);
 end;
 
-procedure TfUserDetails.btnSaveMeaningClick(Sender: TObject);
+procedure TfVocabDetails.btnSaveMeaningClick(Sender: TObject);
 begin
-  if not TUser.Locate('Index',fWords.curword) then raise Exception.Create(eWordNotLocated);
+  if not TUser.Locate('Index',fVocab.curword) then raise Exception.Create(eWordNotLocated);
   TUser.Edit([TUserEnglish],[edtMeaning.Text]);
   fMenu.ChangeUserData;
-  fWords.ShowIt(false);
+  fVocab.ShowIt(false);
 end;
 
-procedure TfUserDetails.cbAddCategoryChange(Sender: TObject);
+procedure TfVocabDetails.cbAddCategoryChange(Sender: TObject);
 begin
   btnAddToCategory.Default:=true;
 end;
 
-procedure TfUserDetails.edtMeaningChange(Sender: TObject);
+procedure TfVocabDetails.edtMeaningChange(Sender: TObject);
 begin
   btnSaveMeaning.Enabled := true;
   btnAddToCategory.Default:=false;
 end;
 
-procedure TfUserDetails.edtMeaningKeyPress(Sender: TObject; var Key: Char);
+procedure TfVocabDetails.edtMeaningKeyPress(Sender: TObject; var Key: Char);
 begin
   if (Ord(Key)=VK_RETURN) and btnSaveMeaning.Enabled then
     btnSaveMeaningClick(btnSaveMeaning);
 end;
 
-procedure TfUserDetails.FormClose(Sender: TObject;
+procedure TfVocabDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fWords.SpeedButton4.Down:=false;
+  fVocab.SpeedButton4.Down:=false;
   fMenu.aUserDetails.Checked:=false;
 end;
 
-procedure TfUserDetails.pbKanjiMouseMove(Sender: TObject;
+procedure TfVocabDetails.pbKanjiMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   fMenu.IntTipMouseMove(pbKanji,x,y,ssLeft in Shift);
 end;
 
-procedure TfUserDetails.FormResize(Sender: TObject);
+procedure TfVocabDetails.FormResize(Sender: TObject);
 begin
  { All controls fit and still some space - use it for content }
   if ClientWidth>1065 then
@@ -289,7 +289,7 @@ begin
   Self.UndockHeight := Self.Height;
 end;
 
-procedure TfUserDetails.ScrollBox1Resize(Sender: TObject);
+procedure TfVocabDetails.ScrollBox1Resize(Sender: TObject);
 begin
  //Auto-size FlowPanel uses ExplicitWidth/Height as a base when reflowing items.
  //We need it to reflow with current width though.

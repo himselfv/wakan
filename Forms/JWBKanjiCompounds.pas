@@ -264,7 +264,7 @@ begin
   fWordLookup.curphonetic:=curcphonetic;
   if fDicAdd.ShowModal=mrOK then
   begin
-    if not fWords.AddWord(curckanji,curcphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
+    if not fVocab.AddWord(curckanji,curcphonetic,fDicAdd.edtMeaning.text,fDicAdd.ComboBox1.Text,'?',false,1) then exit;
   end;
 end;
 

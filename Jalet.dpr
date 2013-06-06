@@ -31,10 +31,10 @@ uses
   JWBWordLookup in 'Forms\JWBWordLookup.pas' {fWordLookup},
   JWBSettings in 'Forms\JWBSettings.pas' {fSettings},
   JWBSplash in 'Forms\JWBSplash.pas' {fSplash},
-  JWBVocab in 'Forms\JWBVocab.pas' {fWords},
-  JWBVocabDetails in 'Forms\JWBVocabDetails.pas' {fUserDetails},
-  JWBVocabAdd in 'Forms\JWBVocabAdd.pas' {fUserAdd},
-  JWBVocabFilters in 'Forms\JWBVocabFilters.pas' {fUserFilters},
+  JWBVocab in 'Forms\JWBVocab.pas' {fVocab},
+  JWBVocabDetails in 'Forms\JWBVocabDetails.pas' {fVocabDetails},
+  JWBVocabAdd in 'Forms\JWBVocabAdd.pas' {fVocabAdd},
+  JWBVocabFilters in 'Forms\JWBVocabFilters.pas' {fVocabFilters},
   JWBWordDetails in 'Forms\JWBWordDetails.pas' {fWordDetails},
   JWBNewCategory in 'Forms\JWBNewCategory.pas' {fNewCategory},
   JWBPrint in 'Forms\JWBPrint.pas' {fPrint},
@@ -94,7 +94,7 @@ begin
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfSplash, fSplash);
   Application.CreateForm(TfSelectFont, fSelectFont);
-  Application.CreateForm(TfWords, fWords);
+  Application.CreateForm(TfVocab, fVocab);
   Application.CreateForm(TfNewCategory, fNewCategory);
   Application.CreateForm(TfPrint, fPrint);
   Application.CreateForm(TfStatistics, fStatistics);
@@ -108,9 +108,9 @@ begin
   Application.CreateForm(TfWordKanji, fWordKanji);
   Application.CreateForm(TfExamples, fExamples);
   Application.CreateForm(TfWordCategory, fWordCategory);
-  Application.CreateForm(TfUserDetails, fUserDetails);
-  Application.CreateForm(TfUserAdd, fUserAdd);
-  Application.CreateForm(TfUserFilters, fUserFilters);
+  Application.CreateForm(TfVocabDetails, fVocabDetails);
+  Application.CreateForm(TfVocabAdd, fVocabAdd);
+  Application.CreateForm(TfVocabFilters, fVocabFilters);
   Application.CreateForm(TfDictMan, fDictMan);
   Application.CreateForm(TfDictImport, fDictImport);
   Application.CreateForm(TfDictCoding, fDictCoding);

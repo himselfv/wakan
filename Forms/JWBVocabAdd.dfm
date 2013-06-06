@@ -1,4 +1,4 @@
-object fUserAdd: TfUserAdd
+object fVocabAdd: TfVocabAdd
   Left = 328
   Top = 259
   BorderStyle = bsDialog

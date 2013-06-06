@@ -7,7 +7,7 @@ uses
   StdCtrls, ExtCtrls, Buttons, WakanPaintbox;
 
 type
-  TfUserAdd = class(TForm)
+  TfVocabAdd = class(TForm)
     Label1: TLabel;
     Label7: TLabel;
     Label2: TLabel;
@@ -27,7 +27,7 @@ type
   end;
 
 var
-  fUserAdd: TfUserAdd;
+  fVocabAdd: TfVocabAdd;
 
 implementation
 
@@ -35,31 +35,31 @@ uses JWBVocab, JWBStrings, JWBUnit, JWBMenu;
 
 {$R *.DFM}
 
-procedure TfUserAdd.Edit1Change(Sender: TObject);
+procedure TfVocabAdd.Edit1Change(Sender: TObject);
 begin
   PaintBox3.Invalidate;
 end;
 
-procedure TfUserAdd.PaintBox3Paint(Sender: TObject; Canvas: TCanvas);
+procedure TfVocabAdd.PaintBox3Paint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clBtnFace;
   DrawUnicode(Canvas,2,2,16,RomajiToKana(Edit1.Text,romasys,curlang,[]),FontSmall);
 end;
 
-procedure TfUserAdd.PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
+procedure TfVocabAdd.PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
   DrawUnicode(Canvas,2,2,22,clip,FontJapanese);
 end;
 
-procedure TfUserAdd.Button1Click(Sender: TObject);
+procedure TfVocabAdd.Button1Click(Sender: TObject);
 begin
-  fWords.UserAdd_Button1Click(sender);
+  fVocab.UserAdd_Button1Click(sender);
 end;
 
-procedure TfUserAdd.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfVocabAdd.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  fWords.SpeedButton1.Down:=false;
+  fVocab.SpeedButton1.Down:=false;
   fMenu.aUserAdd.Checked:=false;
 end;
 

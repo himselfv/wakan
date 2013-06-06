@@ -10,7 +10,7 @@ uses
 type
   TMoveDirection = (mdUp, mdDown);
 
-  TfWords = class(TForm)
+  TfVocab = class(TForm)
     OpenDialog1: TOpenDialog;
     SaveDialog1: TSaveDialog;
     pnlDockFilters: TPanel;
@@ -127,7 +127,7 @@ type
   end;
 
 var
-  fWords: TfWords;
+  fVocab: TfVocab;
 
 const
   eWordNotLocated='INTERNAL ERROR. WORD NOT LOCATED'; //wakan likes this string
@@ -150,7 +150,7 @@ var wl,wlc:TStringList;
 
 {$R *.DFM}
 
-procedure TfWords.FormCreate(Sender: TObject);
+procedure TfVocab.FormCreate(Sender: TObject);
 begin
   wl:=TStringList.Create;
   wlc:=TStringList.Create;
@@ -159,7 +159,7 @@ begin
   lastwordind:=0;
 end;
 
-procedure TfWords.FormDestroy(Sender: TObject);
+procedure TfVocab.FormDestroy(Sender: TObject);
 begin
   wl.Free;
   wlc.Free;
@@ -167,12 +167,12 @@ begin
   ltl.Free;
 end;
 
-procedure TfWords.FormShow(Sender: TObject);
+procedure TfVocab.FormShow(Sender: TObject);
 begin
   ShowIt(false);
 end;
 
-procedure TfWords.SetDefaultColumnWidths;
+procedure TfVocab.SetDefaultColumnWidths;
 begin
   StringGrid1.ColWidths[0]:=110;
   StringGrid1.ColWidths[1]:=138;
@@ -181,17 +181,17 @@ begin
   AutoSizeColumns;
 end;
 
-procedure TfWords.AutoSizeColumns;
+procedure TfVocab.AutoSizeColumns;
 begin
   StringGrid1.ColWidths[2]:=StringGrid1.Width-StringGrid1.ColWidths[1]-StringGrid1.ColWidths[3]-StringGrid1.ColWidths[0]-20;
 end;
 
-procedure TfWords.StringGrid1ControlResize(Sender: TObject);
+procedure TfVocab.StringGrid1ControlResize(Sender: TObject);
 begin
   AutoSizeColumns;
 end;
 
-procedure TfWords.PopupMenu1Popup(Sender: TObject);
+procedure TfVocab.PopupMenu1Popup(Sender: TObject);
 var p: TPoint;
   ACol, ARow: integer;
 begin
@@ -200,12 +200,12 @@ begin
   miResetColumns.Visible := (ARow=0); //click on header
 end;
 
-procedure TfWords.miResetColumnsClick(Sender: TObject);
+procedure TfVocab.miResetColumnsClick(Sender: TObject);
 begin
   SetDefaultColumnWidths;
 end;
 
-procedure TfWords.ShowIt(warningifnotfound:boolean);
+procedure TfVocab.ShowIt(warningifnotfound:boolean);
 var sl:TStringList;
     stp:string;
     cl:TStringList;
@@ -220,15 +220,15 @@ var sl:TStringList;
     i: integer;
   begin
    //Skip word if it's filtered out
-    if ((not fUserFilters.cbFilterUnlearned.Checked) and (TUser.Int(TUserScore)=1))
-    or ((not fUserFilters.cbFilterLearned.Checked) and (TUser.Int(TUserScore)=2))
-    or ((not fUserFilters.cbFilterMastered.Checked) and (TUser.Int(TUserScore)=3))
-    or ((not fUserFilters.cbFilterProblematic.Checked) and (TUser.Int(TUserScore)=0)) then exit;
+    if ((not fVocabFilters.cbFilterUnlearned.Checked) and (TUser.Int(TUserScore)=1))
+    or ((not fVocabFilters.cbFilterLearned.Checked) and (TUser.Int(TUserScore)=2))
+    or ((not fVocabFilters.cbFilterMastered.Checked) and (TUser.Int(TUserScore)=3))
+    or ((not fVocabFilters.cbFilterProblematic.Checked) and (TUser.Int(TUserScore)=0)) then exit;
 
     stp:=TUser.Str(TUserScore);
     if not CategoryOrder then begin
       ListWordCategories(TUser.Int(TUserIndex),cl);
-      if not fUserFilters.CheckEnabledCategories(cl) then exit;
+      if not fVocabFilters.CheckEnabledCategories(cl) then exit;
       cat_str:='';
       for i:=0 to cl.Count-1 do cat_str:=cat_str+', '+StripCatName(cl[i]);
       if length(cat_str)>0 then delete(cat_str,1,2);
@@ -248,7 +248,7 @@ var sl:TStringList;
   end;
 
 begin
-  if not fWords.Visible then exit;
+  if not fVocab.Visible then exit;
   wl.Clear;
   wlc.Clear;
   sw:=0;
@@ -256,9 +256,9 @@ begin
   sl:=TStringList.Create;
   InitWordGrid(StringGrid1,true,false);
 
-  if fUserFilters.rgSort.ItemIndex>0 then begin
+  if fVocabFilters.rgSort.ItemIndex>0 then begin
 
-    case fUserFilters.rgSort.ItemIndex of
+    case fVocabFilters.rgSort.ItemIndex of
       1:TUser.SetOrder('Phonetic_Ind');
       2:TUser.SetOrder('Kanji_Ind');
       3:TUser.SetOrder('English_Ind');
@@ -273,12 +273,12 @@ begin
 
   end else
 
-    for i:=0 to fUserFilters.lbCategories.Items.Count-1 do
-    if fUserFilters.lbCategories.Checked[i] then
+    for i:=0 to fVocabFilters.lbCategories.Items.Count-1 do
+    if fVocabFilters.lbCategories.Checked[i] then
     begin
-      cats:=fUserFilters.lbCategories.Items[i];
+      cats:=fVocabFilters.lbCategories.Items[i];
       TUserSheet.SetOrder('Sheet_Ind');
-      a := GetCatIdx(fUserFilters.lbCategories,i);
+      a := GetCatIdx(fVocabFilters.lbCategories,i);
       TUserSheet.Locate('Number',a);
       j:=0;
       while (not TUserSheet.EOF) and (TUserSheet.Int(TUserSheetNumber)=a) do begin
@@ -309,13 +309,13 @@ begin
   if StringGrid1.Visible then StringGrid1.SetFocus;
 end;
 
-procedure TfWords.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
+procedure TfVocab.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
   Rect: TRect; State: TGridDrawState);
 begin
   DrawWordCell(StringGrid1,ACol,ARow,Rect,State);
 end;
 
-function TfWords.AddWord(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
+function TfVocab.AddWord(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
 var s,s2:string;
     beg,insertword:boolean;
     bs:string;
@@ -538,18 +538,18 @@ begin
   TUserIdx.Reindex;
 end;
 
-procedure TfWords.UserAdd_Button1Click(Sender: TObject);
+procedure TfVocab.UserAdd_Button1Click(Sender: TObject);
 begin
-  if AddWord(clip,RomajiToKana(fUserAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
-    fUserAdd.Edit3.Text,fUserAdd.ComboBox1.Text,'?',false,1) then
+  if AddWord(clip,RomajiToKana(fVocabAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
+    fVocabAdd.Edit3.Text,fVocabAdd.ComboBox1.Text,'?',false,1) then
   begin
-    fUserAdd.Edit1.Text:='';
-    fUserAdd.PaintBox3.Invalidate;
-    fUserAdd.Edit3.Text:='';
+    fVocabAdd.Edit1.Text:='';
+    fVocabAdd.PaintBox3.Invalidate;
+    fVocabAdd.Edit3.Text:='';
   end;
 end;
 
-procedure TfWords.ExportVocab;
+procedure TfVocab.ExportVocab;
 begin
   if SaveDialog1.Execute then
     if pos('.WKL',uppercase(SaveDialog1.FileName))>0 then
@@ -558,7 +558,7 @@ begin
       ExportVocabToCsv(SaveDialog1.FileName);
 end;
 
-procedure TfWords.ExportVocabToWkl(const filename: string);
+procedure TfVocab.ExportVocabToWkl(const filename: string);
 var sp: TSMPromptForm;
   t:textfile;
   i,j:integer;
@@ -595,13 +595,13 @@ begin
     begin
       ListWordCategories(strtoint(wl[i]),sl);
       TUser.Locate('Index',strtoint(wl[i]));
-      for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
-        if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
+      for j:=0 to fVocabFilters.lbCategories.Items.Count-1 do
+        if (fVocabFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fVocabFilters.lbCategories.Items[j])<>-1) then
       begin
         writeln(t,fstrtohex(TUser.Str(TUserKanji)));
         writeln(t,fstrtohex(TUser.Str(TUserPhonetic)));
         writeln(t,TUser.Str(TUserEnglish));
-        TUserCat.Locate('Name',curlang+'~'+fUserFilters.lbCategories.Items[j]);
+        TUserCat.Locate('Name',curlang+'~'+fVocabFilters.lbCategories.Items[j]);
         writeln(t,chr(TUserCat.Int(TUserCatType))+TUserCat.Str(TUserCatName));
       end;
 
@@ -621,7 +621,7 @@ begin
   end;
 end;
 
-procedure TfWords.ExportVocabToCsv(const filename: string);
+procedure TfVocab.ExportVocabToCsv(const filename: string);
 var sp: TSMPromptForm;
   i,j:integer;
   sl:TStringList;
@@ -658,8 +658,8 @@ begin
     begin
       ListWordCategories(strtoint(wl[i]),sl);
       TUser.Locate('Index',strtoint(wl[i]));
-      for j:=0 to fUserFilters.lbCategories.Items.Count-1 do
-        if (fUserFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fUserFilters.lbCategories.Items[j])<>-1) then
+      for j:=0 to fVocabFilters.lbCategories.Items.Count-1 do
+        if (fVocabFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fVocabFilters.lbCategories.Items[j])<>-1) then
       begin
         Conv_Write(TUser.Str(TUserKanji));
         Conv_Write(fstr(#9));
@@ -675,7 +675,7 @@ begin
         if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
         begin
           Conv_Write(fstr(#9));
-          Conv_Write(fstr(fUserFilters.lbCategories.Items[j]));
+          Conv_Write(fstr(fVocabFilters.lbCategories.Items[j]));
           if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
           begin
             Conv_Write(fstr(#9));
@@ -706,7 +706,7 @@ begin
   end;
 end;
 
-procedure TfWords.ImportVocab;
+procedure TfVocab.ImportVocab;
 var addw,catw:integer;
 begin
   if not OpenDialog1.Execute then
@@ -727,7 +727,7 @@ begin
     MB_ICONINFORMATION or MB_OK);
 end;
 
-procedure TfWords.ImportVocabFromWkl(const filename: string; out catw, addw: integer);
+procedure TfVocab.ImportVocabFromWkl(const filename: string; out catw, addw: integer);
 var t:textfile;
   sp:TSMPromptForm;
   s,s2,s3,s4:string;
@@ -811,7 +811,7 @@ begin
   end;
 end;
 
-procedure TfWords.ImportVocabFromCsv(const filename: string; out catw, addw: integer);
+procedure TfVocab.ImportVocabFromCsv(const filename: string; out catw, addw: integer);
 var awf: TAddWordFast;
   sp:TSMPromptForm;
   linc:integer;
@@ -978,20 +978,20 @@ begin
   end;
 end;
 
-procedure TfWords.Reset;
+procedure TfVocab.Reset;
 begin
   curphonetic:='';
   curkanji:='';
-  fUserDetails.Reset;
+  fVocabDetails.Reset;
 end;
 
-procedure TfWords.StringGrid1SelectCell(Sender: TObject; ACol,
+procedure TfVocab.StringGrid1SelectCell(Sender: TObject; ACol,
   ARow: Integer; var CanSelect: Boolean);
 begin
   CanSelect:=true;
 end;
 
-procedure TfWords.RemoveWordsFromCategory;
+procedure TfVocab.RemoveWordsFromCategory;
 var i:integer;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
@@ -1004,13 +1004,13 @@ begin
   begin
     lastwordind:=strtoint(wl[i-1]);
     if not TUser.Locate('Index',lastwordind) then raise Exception.Create(eWordNotLocated);
-    RemoveWordFromCategory(lastwordind, GetSelCatIdx(fUserDetails.lbCategories));
+    RemoveWordFromCategory(lastwordind, GetSelCatIdx(fVocabDetails.lbCategories));
   end;
   fMenu.ChangeUserData;
   ShowIt(false);
 end;
 
-procedure TfWords.Button14Click(Sender: TObject);
+procedure TfVocab.Button14Click(Sender: TObject);
 begin
   showmessage(_l('#00150^eFeature not implemented yet.'));
 end;
@@ -1118,14 +1118,14 @@ begin
   fSettings.ShowModal;
 end;
 
-procedure TfWords.Button11Click(Sender: TObject);
+procedure TfVocab.Button11Click(Sender: TObject);
 begin
   fMenu.SaveUserData;
 //  fMenu.SpeedButton2.Enabled:=false;
 //  fMenu.SpeedButton7.Enabled:=false;
 end;
 
-procedure TfWords.Button12Click(Sender: TObject);
+procedure TfVocab.Button12Click(Sender: TObject);
 begin
   TUser.Free;
   TUserIdx.Free;
@@ -1135,7 +1135,7 @@ begin
 //  fMenu.SpeedButton7.Enabled:=false;
 end;
 
-procedure TfWords.ListBox1Click(Sender: TObject);
+procedure TfVocab.ListBox1Click(Sender: TObject);
 begin
   ShowIt(false);
 end;
@@ -1159,7 +1159,7 @@ begin
   end;
 end;
 
-procedure TfWords.SetWordsLearnState(ls: integer);
+procedure TfVocab.SetWordsLearnState(ls: integer);
 var i: integer;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
@@ -1176,7 +1176,7 @@ begin
   ShowIt(false);
 end;
 
-procedure TfWords.AddWordsToCategory(category: string);
+procedure TfVocab.AddWordsToCategory(category: string);
 var i:integer;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
@@ -1201,7 +1201,7 @@ begin
   ShowIt(false);
 end;
 
-procedure TfWords.MoveWordsInCategory(moveDir: TMoveDirection);
+procedure TfVocab.MoveWordsInCategory(moveDir: TMoveDirection);
 var ai,bi:integer;
   ap,bp:integer;
   s:string;
@@ -1263,7 +1263,7 @@ begin
   fMenu.ChangeUserData;
 end;
 
-procedure TfWords.DeleteWords();
+procedure TfVocab.DeleteWords();
 var i:integer;
 begin
   if StringGrid1.Selection.Top<>StringGrid1.Selection.Bottom then
@@ -1302,12 +1302,12 @@ begin
   ShowIt(false);
 end;
 
-procedure TfWords.Button15Click(Sender: TObject);
+procedure TfVocab.Button15Click(Sender: TObject);
 begin
   fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00828^eVocabulary list'));
 end;
 
-procedure TfWords.Button18Click(Sender: TObject);
+procedure TfVocab.Button18Click(Sender: TObject);
 var csl:TStringList;
     i,j,k:integer;
     s,s2:string;
@@ -1386,15 +1386,15 @@ begin
   end;
 end;
 
-procedure TfWords.StringGrid1KeyPress(Sender: TObject; var Key: Char);
+procedure TfVocab.StringGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
-  if (Upcase(key)='P') and (fUserDetails.btnSetProblematic.Enabled) then SetWordsLearnState(0);
-  if (Upcase(key)='U') and (fUserDetails.btnSetUnlearned.Enabled) then SetWordsLearnState(1);
-  if (Upcase(key)='L') and (fUserDetails.btnSetLearned.Enabled) then SetWordsLearnState(2);
-  if (Upcase(key)='M') and (fUserDetails.btnSetMastered.Enabled) then SetWordsLearnState(3);
-  if (Upcase(key)='A') and (fUserDetails.btnAddToCategory.Enabled) then AddWordsToCategory(fUserDetails.cbAddCategory.text);
-  if (key=',') and (fUserDetails.btnMoveUpInCategory.Enabled) and (fUserDetails.btnMoveUpInCategory.Visible) then MoveWordsInCategory(mdUp);
-  if (key='.') and (fUserDetails.btnMoveDownInCategory.Enabled) and (fUserDetails.btnMoveDownInCategory.Visible) then MoveWordsInCategory(mdDown);
+  if (Upcase(key)='P') and (fVocabDetails.btnSetProblematic.Enabled) then SetWordsLearnState(0);
+  if (Upcase(key)='U') and (fVocabDetails.btnSetUnlearned.Enabled) then SetWordsLearnState(1);
+  if (Upcase(key)='L') and (fVocabDetails.btnSetLearned.Enabled) then SetWordsLearnState(2);
+  if (Upcase(key)='M') and (fVocabDetails.btnSetMastered.Enabled) then SetWordsLearnState(3);
+  if (Upcase(key)='A') and (fVocabDetails.btnAddToCategory.Enabled) then AddWordsToCategory(fVocabDetails.cbAddCategory.text);
+  if (key=',') and (fVocabDetails.btnMoveUpInCategory.Enabled) and (fVocabDetails.btnMoveUpInCategory.Visible) then MoveWordsInCategory(mdUp);
+  if (key='.') and (fVocabDetails.btnMoveDownInCategory.Enabled) and (fVocabDetails.btnMoveDownInCategory.Visible) then MoveWordsInCategory(mdDown);
 end;
 
 function DateOld(s:string;threshold:integer):integer;
@@ -1405,7 +1405,7 @@ begin
   if trunc(now-d)<threshold then result:=trunc(now-d) else result:=threshold;
 end;
 
-procedure TfWords.Button19Click(Sender: TObject);
+procedure TfVocab.Button19Click(Sender: TObject);
 var lname:string;
     i:integer;
 {    i,j,k:integer;
@@ -1601,7 +1601,7 @@ begin
   end;}
 end;
 
-procedure TfWords.BuildWordList;
+procedure TfVocab.BuildWordList;
 var il,sl:TStringList;
     i,j,k,l,m,n,o:integer;
     ca:array[1..4] of double;
@@ -1814,7 +1814,7 @@ begin
   result:=k;
 end;
 
-procedure TfWords.PrepareTestWord;
+procedure TfVocab.PrepareTestWord;
 var i:integer;
     s:string;
     sl:TStringList;
@@ -1932,7 +1932,7 @@ begin
   end;
 end;
 
-procedure TfWords.ShowTestWord;
+procedure TfVocab.ShowTestWord;
 begin
   fWordList.Label24.Visible:=true;
   fWordList.Label25.Visible:=true;
@@ -1966,7 +1966,7 @@ begin
   fWordList.Button10.Visible:=false;
 end;
 
-function TfWords.FinishTestWord(button:integer):boolean;
+function TfVocab.FinishTestWord(button:integer):boolean;
 begin
   ltl.Add(inttostr(button));
   inc(twchg[TUser.Int(TUserScore),StateNew(TUser.Int(TUserScore),button)]);
@@ -1988,7 +1988,7 @@ begin
   fWordList.Label50.Caption:=perc(twchg[2,3],ll.Count);
 end;
 
-procedure TfWords.SaveTestResults;
+procedure TfVocab.SaveTestResults;
 var i,n:integer;
     ms:integer;
 begin
@@ -2009,7 +2009,7 @@ begin
   fMenu.ChangeUserData;
 end;
 
-procedure TfWords.PrintWordList;
+procedure TfVocab.PrintWordList;
 var bk:TStringList;
     i:integer;
 begin
@@ -2030,7 +2030,7 @@ begin
   bk.Free;
 end;
 
-procedure TfWords.SaveWordList;
+procedure TfVocab.SaveWordList;
 var i:integer;
   fnd:boolean;
   catidx:integer;
@@ -2046,15 +2046,15 @@ begin
       TUserSheet.Insert([ll[i],IntToStr(catidx),inttostr(i)]);
   end;
   fMenu.RefreshCategory;
-  fUserFilters.tabCatList.TabIndex:=3;
-  fUserFilters.tabCatListChange(self,3,fnd);
-  for i:=0 to fUserFilters.lbCategories.Items.COunt-1 do
-    fUserFilters.lbCategories.Checked[i]:=fUserFilters.lbCategories.Items[i]=fWordList.Edit1.Text;
+  fVocabFilters.tabCatList.TabIndex:=3;
+  fVocabFilters.tabCatListChange(self,3,fnd);
+  for i:=0 to fVocabFilters.lbCategories.Items.COunt-1 do
+    fVocabFilters.lbCategories.Checked[i]:=fVocabFilters.lbCategories.Items[i]=fWordList.Edit1.Text;
   fMenu.ChangeUserData;
   ShowIt(false);
 end;
 
-procedure TfWords.UpdateWordListStats;
+procedure TfVocab.UpdateWordListStats;
 var i,j:integer;
 begin
   for i:=0 to ll.Count-1 do
@@ -2066,7 +2066,7 @@ begin
   fMenu.ChangeUserData;
 end;
 
-function TfWords.LLGoNext(page:integer):integer;
+function TfVocab.LLGoNext(page:integer):integer;
 var i,j:integer;
 begin
   result:=page;
@@ -2137,7 +2137,7 @@ begin
   end;
 end;
 
-function TfWords.LLGoPrev(page:integer):integer;
+function TfVocab.LLGoPrev(page:integer):integer;
 begin
   result:=page;
   case page of
@@ -2162,41 +2162,41 @@ begin
   end;
 end;
 
-procedure TfWords.SpeedButton1Click(Sender: TObject);
+procedure TfVocab.SpeedButton1Click(Sender: TObject);
 begin
   fMenu.aUserExamples.Execute;
 end;
 
-procedure TfWords.SpeedButton2Click(Sender: TObject);
+procedure TfVocab.SpeedButton2Click(Sender: TObject);
 begin
   fMenu.aUserSettings.Execute;
 end;
 
-procedure TfWords.SpeedButton4Click(Sender: TObject);
+procedure TfVocab.SpeedButton4Click(Sender: TObject);
 begin
   fMenu.aUserDetails.Execute;
 end;
 
-procedure TfWords.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
+procedure TfVocab.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
   fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
-procedure TfWords.Button2Click(Sender: TObject);
+procedure TfVocab.Button2Click(Sender: TObject);
 begin
-  if fUserAdd.ShowModal=mrOK then
-    if AddWord(clip,RomajiToKana(fUserAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
-      fUserAdd.Edit3.Text,fUserAdd.ComboBox1.Text,'?',false,1) then
+  if fVocabAdd.ShowModal=mrOK then
+    if AddWord(clip,RomajiToKana(fVocabAdd.Edit1.Text,romasys,curlang,[rfDeleteInvalidChars]),
+      fVocabAdd.Edit3.Text,fVocabAdd.ComboBox1.Text,'?',false,1) then
     begin
-      fUserAdd.Edit1.Text:='';
-      fUserAdd.PaintBox3.Invalidate;
-      fUserAdd.Edit3.Text:='';
+      fVocabAdd.Edit1.Text:='';
+      fVocabAdd.PaintBox3.Invalidate;
+      fVocabAdd.Edit3.Text:='';
     end;
 end;
 
 { Rebuilds wakan.sod from strokes.csv. Mostly used by a devs, but users can do this too. }
-procedure TfWords.BuildStrokeOrderPackage(sourceCsv: string);
+procedure TfVocab.BuildStrokeOrderPackage(sourceCsv: string);
 var
   tempDir: string;
   pack: TPackageBuilder;
@@ -2283,13 +2283,13 @@ begin
   DeleteDirectory(tempDir);
 end;
 
-procedure TfWords.StringGrid1MouseDown(Sender: TObject;
+procedure TfVocab.StringGrid1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then fMenu.PopupImmediate(true);
 end;
 
-procedure TfWords.StringGrid1Click(Sender: TObject);
+procedure TfVocab.StringGrid1Click(Sender: TObject);
 var i:integer;
 begin
   if StringGrid1.Selection.Bottom-StringGrid1.Selection.Top>0 then
@@ -2297,10 +2297,10 @@ begin
     Reset;
     curword:=-1;
     curkanji:=fstr(_l('#00928^e<multiple words>'));
-    fUserDetails.ClearCategories;
+    fVocabDetails.ClearCategories;
     for i:=StringGrid1.Selection.Top to StringGrid1.Selection.Bottom do
-      fUserDetails.AddWordCategories(strtoint(wl[i-1]));
-    fUserDetails.SetMultipleWords;
+      fVocabDetails.AddWordCategories(strtoint(wl[i-1]));
+    fVocabDetails.SetMultipleWords;
     exit;
   end;
 //  Reset;
@@ -2310,24 +2310,24 @@ begin
   curkanji:=TUser.Str(TUserKanji);
   curphonetic:=TUser.Str(TUserPhonetic);
   fExamples.SetExamples(curkanji);
-  fUserDetails.ClearCategories;
-  fUserDetails.AddWordCategories(lastwordind);
-  fUserDetails.SetSingleWord;
-  if fUserFilters.rgSort.ItemIndex=0 then
+  fVocabDetails.ClearCategories;
+  fVocabDetails.AddWordCategories(lastwordind);
+  fVocabDetails.SetSingleWord;
+  if fVocabFilters.rgSort.ItemIndex=0 then
   begin
-    fUserDetails.btnMoveUpInCategory.Enabled:=(StringGrid1.Row>1) and (wlc[StringGrid1.Row-2]=wlc[StringGrid1.Row-1]);
-    fUserDetails.btnMoveDownInCategory.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
+    fVocabDetails.btnMoveUpInCategory.Enabled:=(StringGrid1.Row>1) and (wlc[StringGrid1.Row-2]=wlc[StringGrid1.Row-1]);
+    fVocabDetails.btnMoveDownInCategory.Enabled:=(StringGrid1.Row<wlc.Count) and (wlc[StringGrid1.Row]=wlc[StringGrid1.Row-1]);
   end;
   AnnotShowMedia(curkanji,curphonetic);
 end;
 
-procedure TfWords.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
+procedure TfVocab.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.IntTipMouseUp;
 end;
 
-procedure TfWords.SearchWord(wordind: integer);
+procedure TfVocab.SearchWord(wordind: integer);
 begin
   lastwordind:=wordind;
   ShowIt(true);

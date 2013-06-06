@@ -1,4 +1,4 @@
-object fUserDetails: TfUserDetails
+object fVocabDetails: TfVocabDetails
   Left = 237
   Top = 305
   BorderStyle = bsNone

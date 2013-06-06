@@ -203,13 +203,13 @@ end;
 
 procedure TfWordList.BitBtn2Click(Sender: TObject);
 begin
-  step:=fWords.LLGoNext(step);
+  step:=fVocab.LLGoNext(step);
   if step<9 then Upd else Close;
 end;
 
 procedure TfWordList.BitBtn3Click(Sender: TObject);
 begin
-  step:=fWords.LLGoPrev(step);
+  step:=fVocab.LLGoPrev(step);
   Upd;
 end;
 
@@ -222,7 +222,7 @@ end;
 
 procedure TfWordList.RadioGroup1Click(Sender: TObject);
 begin
-  if RadioGroup1.ItemIndex=0 then Label23.Caption:=inttostr(fWords.WordListCount) else
+  if RadioGroup1.ItemIndex=0 then Label23.Caption:=inttostr(fVocab.WordListCount) else
     Label23.Caption:=inttostr(TUser.RecordCount);
 end;
 
@@ -233,7 +233,7 @@ begin
   i:=step;
   while i>0 do
   begin
-    j:=fWords.LLGoPrev(i);
+    j:=fVocab.LLGoPrev(i);
     if j=i then
     begin
       CanClose:=false;
@@ -252,26 +252,26 @@ end;
 
 procedure TfWordList.Button4Click(Sender: TObject);
 begin
-  fWords.BuildWordList;
+  fVocab.BuildWordList;
 end;
 
 procedure TfWordList.Button7Click(Sender: TObject);
 var res:boolean;
 begin
-  res:=fWords.FinishTestWord((sender as TButton).Tag);
+  res:=fVocab.FinishTestWord((sender as TButton).Tag);
   if not res then
   begin
-    step:=fWords.LLGoNext(step);
+    step:=fVocab.LLGoNext(step);
     Upd;
     exit;
   end;
-  fWords.PrepareTestWord;
+  fVocab.PrepareTestWord;
   Button10.SetFocus;
 end;
 
 procedure TfWordList.Button5Click(Sender: TObject);
 begin
-  fWords.PrintWordList;
+  fVocab.PrintWordList;
 end;
 
 procedure TfWordList.CheckBox5Click(Sender: TObject);
@@ -283,14 +283,14 @@ end;
 procedure TfWordList.PaintBox1Paint(Sender: TObject);
 begin
   PaintBox1.Canvas.Brush.Color:=clWindow;
-  DrawKana(PaintBox1.Canvas,1,1,22,fWords.twphonetic,FontJapanese,showroma,romasys,curlang);
+  DrawKana(PaintBox1.Canvas,1,1,22,fVocab.twphonetic,FontJapanese,showroma,romasys,curlang);
 end;
 
 procedure TfWordList.PaintBox6Paint(Sender: TObject);
 var x:string;
 begin
   PaintBox6.Canvas.Brush.Color:=clWindow;
-  x:=fWords.twkanji;
+  x:=fVocab.twkanji;
   PaintBox6.Canvas.Font.Color:=clWindowText;
   if x[1]=UH_UNKNOWN_KANJI then
   begin
@@ -303,12 +303,12 @@ end;
 procedure TfWordList.PaintBox2Paint(Sender: TObject);
 begin
   PaintBox2.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(PaintBox2.Canvas,1,1,22,UnicodeToHex(fWords.twmeaning),FontEnglish);
+  DrawUnicode(PaintBox2.Canvas,1,1,22,UnicodeToHex(fVocab.twmeaning),FontEnglish);
 end;
 
 procedure TfWordList.Button10Click(Sender: TObject);
 begin
-  fWords.ShowTestWord;
+  fVocab.ShowTestWord;
   Button7.SetFocus;
 end;
 

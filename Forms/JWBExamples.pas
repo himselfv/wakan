@@ -125,8 +125,8 @@ begin
   if fWordLookup.Visible then
     fWordLookup.ShowWord
   else
-  if fWords.Visible then
-    fWords.StringGrid1SelectCell(sender,fWords.StringGrid1.Col,fWords.StringGrid1.Row,cansel);
+  if fVocab.Visible then
+    fVocab.StringGrid1SelectCell(sender,fVocab.StringGrid1.Col,fVocab.StringGrid1.Row,cansel);
 end;
 
 procedure TfExamples.btnCopyToClipboardClick(Sender: TObject);
