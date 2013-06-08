@@ -169,30 +169,23 @@ end;
 procedure TfKanjiDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fMenu.aKanjiDetails.Checked:=false;
-  fKanji.btnKanjiDetails.Down:=false;
-  fTranslate.sbDockKanjiDetails.Down:=false;
+  UpdateVisible();
 end;
 
 procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
-  UpdateVisible;
-  fKanji.btnKanjiDetails.Down:=true;
+  UpdateVisible();
 end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
 begin
-  if not (csDestroying in ComponentState) then begin //forms might already cease to exist on destruction
-    fMenu.aKanjiDetails.Checked:=false;
-    fKanji.btnKanjiDetails.Down:=false;
-    fTranslate.sbDockKanjiDetails.Down:=false;
-  end;
+  if not (csDestroying in ComponentState) then //forms might already cease to exist on destruction
+    UpdateVisible();
 end;
 
 procedure TfKanjiDetails.UpdateVisible;
 begin
   fMenu.aKanjiDetails.Checked:=Self.Visible;
-  fTranslate.sbDockKanjiDetails.Down:=Self.Visible;
   btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
   btnClose.Default:=not fMenu.CharDetDocked;
 end;

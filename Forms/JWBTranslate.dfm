@@ -68,7 +68,7 @@ object fTranslate: TfTranslate
       ShowHint = True
       OnClick = sbDockDictionaryClick
     end
-    object sbDockKanjiDetails: TSpeedButton
+    object btnKanjiDetails: TSpeedButton
       Left = 684
       Top = 150
       Width = 108
@@ -86,7 +86,7 @@ object fTranslate: TfTranslate
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = sbDockKanjiDetailsClick
+      OnClick = btnKanjiDetailsClick
     end
     object lblFilename: TPanel
       Left = 522
@@ -155,8 +155,7 @@ object fTranslate: TfTranslate
       Align = alNone
       AutoSize = True
       BorderWidth = 1
-      ButtonHeight = 7
-      ButtonWidth = 15
+      ButtonWidth = 43
       EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
       Images = ImageList1
       List = True
@@ -400,7 +399,7 @@ object fTranslate: TfTranslate
     Left = 544
     Top = 48
     Bitmap = {
-      494C010110001500080010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101100015000C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

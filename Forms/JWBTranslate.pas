@@ -112,7 +112,7 @@ type
     Bevel: TPanel;
     lblControlsHint: TLabel;
     sbDockDictionary: TSpeedButton;
-    sbDockKanjiDetails: TSpeedButton;
+    btnKanjiDetails: TSpeedButton;
     EditorPaintbox: TWakanPaintbox;
     ListBox1: TListBox;
     EditorScrollBar: TScrollBar;
@@ -185,7 +185,7 @@ type
     procedure sbKanjiModeClick(Sender: TObject);
     procedure sbKanaModeClick(Sender: TObject);
     procedure sbAsciiModeClick(Sender: TObject);
-    procedure sbDockKanjiDetailsClick(Sender: TObject);
+    procedure btnKanjiDetailsClick(Sender: TObject);
     procedure sbDockDictionaryClick(Sender: TObject);
     procedure sbUseTlColorsClick(Sender: TObject);
     procedure BlinkCursorTimerTimer(Sender: TObject);
@@ -1789,7 +1789,7 @@ begin
   handled:=true;
 end;
 
-procedure TfTranslate.sbDockKanjiDetailsClick(Sender: TObject);
+procedure TfTranslate.btnKanjiDetailsClick(Sender: TObject);
 begin
   fMenu.aKanjiDetails.Execute;
 end;
@@ -3055,7 +3055,7 @@ begin
   if not ListBox1.Focused then AState := csHidden;
   if FCaretPosCache=-1 then
     FCaretPosCache:=PosToWidth(FLastCaretPos.x,FLastCaretPos.y);
-  if IsCursorOnScreen(FLastCaretPos) and FCaretVisible then
+  if FCaretVisible and IsCursorOnScreen(FLastCaretPos) then
     DrawIt(FLastCaretPos.x,FLastCaretPos.y-View); //invert=>erase
   tmp := CursorScreenPos;
   if (FCaretPosCache=-1) or (FLastCaretPos.x<>tmp.x) or (FLastCaretPos.y<>tmp.y) then
@@ -3066,7 +3066,7 @@ begin
   else
     FCaretVisible:=false;
   end;
-  if IsCursorOnScreen(tmp) and FCaretVisible then
+  if FCaretVisible and IsCursorOnScreen(tmp) then
     DrawIt(tmp.x,tmp.y-View); //draw new
 
   FLastCaretPos := tmp;

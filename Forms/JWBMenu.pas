@@ -1804,7 +1804,10 @@ end;
 
 procedure TfMenu.aKanjiDetailsChecked(Sender: TObject);
 begin
+ { Set both btn.Down without checking which form is visible:
+  if the form is invisible, the button is invisible too }
   fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  fTranslate.btnKanjiDetails.Down:=fKanjiDetails.Visible;
 end;
 
 procedure TfMenu.aKanjiCompoundsExecute(Sender: TObject);
