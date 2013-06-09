@@ -336,7 +336,7 @@ begin
       SetLength(KanjidicCovered, 0);
 
    {$IFDEF DEBUG}
-    for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count) do
+    for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count)-1 do
       Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing KANJIDIC');
    {$ENDIF}
 
@@ -346,7 +346,7 @@ begin
       ImportUnihan(UnihanFolder);
 
    {$IFDEF DEBUG}
-    for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count) do
+    for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count)-1 do
       Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing UNIHAN');
    {$ENDIF}
 
