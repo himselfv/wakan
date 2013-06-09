@@ -1327,3 +1327,74 @@ mark-thb=
 mark-tsug=
 mark-kyu=
 mark-rkb=
+;
+;
+; Character properties
+;
+; Format: cprop-<id>=<name>,<description>
+; See wakan.cfg for the list of all supported properties
+; If a property has several ids, use the lowest.
+;
+;
+cprop-0=Separator,Can be used to separate groups of items
+cprop-1=Korean reading,Romanized form of the Korean reading(s) of the character
+cprop-2=Mandarin reading,"Pinyin" of each character, i.e. the (Mandarin or Beijing) Chinese romanization
+cprop-3=Japanese definition,English definition for the character as used in Japan
+cprop-4=ON reading,Sino-japanese reading of the kanji
+cprop-5=KUN reading,Japanese reading of the kanji
+cprop-6=Nanori readings,Japanese "nanori" (name) readings of the kanji
+cprop-7=Chinese definition,English definition for the character as used in China
+cprop-8=Canton. reading,Romanized from of the Cantonese reading(s) of the character
+cprop-10=Radicals,List of all possible radicals of the character
+cprop-11=Stroke count,The total number of strokes in the character (including the radical)
+cprop-12=Bushu radical,Radical (Bushu) number used in the Nelson "New Japanese-English Character Dictionary"
+cprop-13=Unicode radical,A Unicode radical/stroke count for this character
+cprop-14=Japanese radical,A Japanese radical/stroke count for this character
+cprop-15=Morohashi radical,A Morohashi radical/stroke count for this character
+cprop-16=KangXi radical,A KangXi radical/stroke count for this character
+cprop-17=Korean radical,A Korean radical/stroke count for this character
+cprop-21=Cangjie,The cangjie input code for the character
+cprop-22=SKIP code,The SKIP pattern code developed by Jack Halpern
+cprop-23=FourCornerCode,the "Four Corner" code for that kanji developed by Wang Cheng
+cprop-24=Spahn & Hadamitzky,Code for The Kanji Dictionary (Tuttle 1996)
+cprop-25=S&H Kanji & Kana,Code for the Kanji & Kana book (Tuttle)
+cprop-26=DeRoo code,these are the codes developed by Father Joseph De Roo, and published in his book "2001 Kanji" (Bojinsha)
+cprop-31=Jap. frequency,The frequency-of-use ranking (from 1-most frequent to 2501-least frequent)
+cprop-32=Joyou grade,Jouyou grade level (8 indicates general use, 9 indicates Jinmeiyou characters - used in names)
+cprop-33=Chin. frequency,A rough fequency measurement for the character based on analysis of Chinese USENET postings
+cprop-34=HongKong grade,The grade in the Hong Kong school system by which a student is expected to know the character
+cprop-35=JLPT level,Level of JLPT exam at which student is required to know this character
+cprop-41=Compatibility variant,The compatibility decomposition for this ideograph
+cprop-42=Semantic variant,A semantic variant is an x- or y-variant with similar or identical meaning
+cprop-43=Simplified variant,Simplified Chinese variant for this character
+cprop-44=Traditional variant,Traditional Chinese variant(s) for this character
+cprop-45=Z-Variant,Known z-variants of this character
+cprop-51=BigFive,The Big Five mapping for this character in hex
+cprop-52=CCCII,The CCCII mapping for this character in hex
+cprop-53=EACC,The EACC mapping for this character in hex
+cprop-54=GB2312,The GB 2312-80 mapping for this character in ku/ten form
+cprop-55=GB12345,The GB 12345-90 mapping for this character in ku/ten form
+cprop-56=JIS 0213,The JIS X 0213-2000 mapping for this character in min,ku,ten form
+cprop-57=JIS 0208,The JIS X 0208-1990 mapping for this character in ku/ten form
+cprop-58=JIS 0212,The JIS X 0212-1990 mapping for this character in ku/ten form
+cprop-100=Unicode,Unicode index
+cprop-101=Halpern index,Index  number in the New Japanese-English Character Dictionary, edited by Jack Halpern
+cprop-102=Nelson index,Index number in the Modern Reader's Japanese-English Character Dictionary, edited by Andrew Nelson
+cprop-103=Haig index,Index number in The New Nelson Japanese-English Character Dictionary, edited by John Haig
+cprop-104=Morohashi index,Index of this character in the Dae Kanwa Ziten, aka Morohashi dictionary
+cprop-105=KangXi index,Position of this character in the KangXi dictionary
+cprop-106=HanYu index,The position of this character in the Hanyu Da Zidian (HDZ)
+cprop-107=Henshall index,The index number used in "A Guide To Remembering Japanese Characters" by Kenneth G. Henshall
+cprop-108=Gakken index,The index number in the Gakken Kanji Dictionary ("A New Dictionary of Kanji Usage")
+cprop-109=Heisig index,The index number used in "Remembering The Kanji" by James Heisig
+cprop-110=O'Neill index,The index number in "Japanese Names", by P.G. O'Neill
+cprop-111=Learners index,The index numbers used by Jack Halpern in his Kanji Learners Dictionary, published by Kodansha in 1999
+cprop-112=Essential index,The index numbers used in P.G. O'Neill's Essential Kanji (ISBN 0-8348-0222-8)
+cprop-113=Sakade index,The index numbers used in "A Guide To Reading and Writing Japanese" edited by Florence Sakade
+cprop-114=Tuttle index,The index numbers used in the Tuttle Kanji Cards, compiled by Alexander Kask
+cprop-115=Crowley index,The index numbers used in "The Kanji Way to Japanese Language Power" by Dale Crowley
+cprop-116=Nishiguchi&Kono index,The index numbers used in "Kanji in Context" by Nishiguchi and Kono
+cprop-117=JBP index,The index numbers used in "Japanese For Busy People" vols I-III, published by the AJLT. The codes are volume.chapter
+cprop-118=Kodansha index,The index numbers used in the "Kodansha Compact Kanji Guide"
+cprop-119=Cihai index,The position of this character in the Cihai dictionary
+cprop-120=Casey index,The phonetic index for the character from Ten Thousand Characters by G. Hugh Casey, S.J. Hong Kong: Kelley and Walsh, 1980

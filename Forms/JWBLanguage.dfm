@@ -101,8 +101,9 @@ object fLanguage: TfLanguage
     Top = 384
     Width = 75
     Height = 25
+    DoubleBuffered = True
     Kind = bkOK
-    NumGlyphs = 2
+    ParentDoubleBuffered = False
     TabOrder = 1
   end
   object btnShowInfo: TButton

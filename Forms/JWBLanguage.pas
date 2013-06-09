@@ -42,16 +42,18 @@ type
     finfo: array of TLanguageFileInfo;
 
   public
-    procedure LoadRegistrySettings; //when loading app
-    procedure SaveRegistrySettings; //save changes
+    procedure LoadPerSettings; //when loading app
+    procedure SaveSettings; //save changes
 
   protected
+    procedure TranslateForm(f:TForm);
     procedure LocalizeEdictMarkers();
   public
     procedure LoadLanguage(fname:string); //and use for translation
     function TranslateString(id:string):string;
     function GetTlVar(id:string):string;
-    procedure TranslateForm(f:TForm);
+    procedure TranslateAllForms();
+    procedure LocalizePropertyTypes();
 
   end;
 
@@ -69,7 +71,7 @@ var
 
 
 implementation
-uses JWBStrings, JWBEdictMarkers, JWBSettings;
+uses JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
 
 {$R *.DFM}
 
@@ -248,6 +250,7 @@ begin
   curGUILanguage := ChangeFileExt(lowercase(fname), '');
   LoadLanguageFile(fullfname, [], curTransInfo, curTrans, curTransVars);
   LocalizeEdictMarkers();
+  LocalizePropertyTypes();
 end;
 
 procedure TfLanguage.lbLanguagesClick(Sender: TObject);
@@ -260,7 +263,7 @@ end;
 Reads registry settings and loads appropriate language.
 If it's not configured, asks the user to choose one.
 }
-procedure TfLanguage.LoadRegistrySettings;
+procedure TfLanguage.LoadPerSettings;
 begin
   curTransFile := fSettings.GetTranslationFile;
   if curTransFile='' then begin
@@ -272,7 +275,7 @@ begin
     Self.LoadLanguage(curTransFile);
 end;
 
-procedure TfLanguage.SaveRegistrySettings;
+procedure TfLanguage.SaveSettings;
 begin
   fSettings.SetTranslationFile(curTransFile);
 end;
@@ -287,7 +290,7 @@ begin
  //Else save the choice and load language
   if lbLanguages.ItemIndex>=0 then begin
     curTransFile := fnames[lbLanguages.ItemIndex];
-    SaveRegistrySettings();
+    SaveSettings();
     LoadLanguage(curTransFile); //not really needed right now...
 
    //Currently there's no choice but to do this
@@ -445,11 +448,36 @@ begin
   end;
 end;
 
+procedure TfLanguage.TranslateAllForms();
+var i: integer;
+begin
+  for i := 0 to Screen.FormCount - 1 do
+    Self.TranslateForm(Screen.Forms[i]);
+end;
+
 procedure TfLanguage.LocalizeEdictMarkers();
 var i: integer;
 begin
   for i := 0 to Length(EdictMarkers) - 1 do
     EdictMarkers[i].abl := GetTlVar('mark-'+EdictMarkers[i].m);
+end;
+
+procedure TfLanguage.LocalizePropertyTypes();
+var i, i_pos: integer;
+  tmp: string;
+begin
+  for i := 0 to Length(CharPropTypes) - 1 do begin
+    tmp := GetTlVar('cprop-'+IntToStr(CharPropTypes[i].id));
+    if tmp='' then continue;
+    i_pos := pos(',',tmp);
+    if i_pos<=0 then begin
+      CharPropTypes[i].englishName := tmp;
+      CharPropTypes[i].description := '';
+    end else begin
+      CharPropTypes[i].englishName := copy(tmp,1,i_pos-1);
+      CharPropTypes[i].description := copy(tmp,i_pos+1,MaxInt);
+    end;
+  end;
 end;
 
 

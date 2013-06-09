@@ -411,7 +411,6 @@ type
     ctlFileMap:cardinal;
     ptrFileMap:pointer;
 
-    procedure TranslateAll;
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure RescanDicts;
@@ -519,7 +518,6 @@ var
 
  { Dictionaries }
   dicts: TDictionaryList; //Active dictionary list
-  oldhandle:THandle;
   globheight:integer;
   clip:FString;
 
@@ -634,9 +632,9 @@ begin
     ParseCommandLine();
 
    //Load language or suggest to choose one
-    fLanguage.LoadRegistrySettings;
+    fLanguage.LoadPerSettings;
+    fLanguage.TranslateAllForms;
 
-    fLanguage.TranslateForm(fSplash);
     Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
     if (Screen.Width<800) or (Screen.Height<600) then
       if Application.MessageBox(
@@ -648,8 +646,6 @@ begin
         exit;
       end;
 
-    oldhandle:=0;
-    TranslateAll;
     romasys:=1;
     showroma:=false;
     clip:='';
@@ -675,6 +671,7 @@ begin
     end;
     try
       LoadWakanCfg('wakan.cfg');
+      fLanguage.LocalizePropertyTypes();
     except
       Application.MessageBox(
         pchar(_l('#00352^eCannot load main configuration file.'#13
@@ -1190,13 +1187,6 @@ begin
   RefreshKanjiCategory;
 end;
 
-procedure TfMenu.TranslateAll;
-var i: integer;
-begin
-  for i := 0 to Screen.FormCount - 1 do
-    fLanguage.TranslateForm(Screen.Forms[i]);
-end;
-
 procedure TfMenu.RefreshCategory;
 var b:boolean;
     lc:char;
@@ -1486,7 +1476,6 @@ begin
 //      if length(s)>64000 then s:=_l('#00342^eToo much data.');
       newclip := fstr(s);
       GlobalUnlock(MyHandle);
-      oldhandle:=MyHandle;
     end;
     Clipboard.Close;
   except

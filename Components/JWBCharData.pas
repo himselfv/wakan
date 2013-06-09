@@ -109,6 +109,8 @@ Character property type information.
 type
   TCharPropType = record
     id: integer;
+    superceded_by: integer;
+    supercedes: integer;
     sourceType: char;
      { Where did we get that info
         'D': KANJIDIC
@@ -522,22 +524,49 @@ procedure AddCharPropType(const str: string);
 var tmp: string;
   parts: TStringArray;
   pt: TCharPropType;
+  idx: integer;
 begin
   tmp := str;
-  parts := SplitStr(str, 6);
-  if Length(parts)<6 then
+  parts := SplitStr(str, 7);
+  if Length(parts)<5 then
     raise Exception.Create('AddCharPropType: invalid property type info line format');
+
   if not TryStrToInt(parts[0], pt.id) then
     raise Exception.Create('AddCharPropType: invalid integer ID: '+parts[0]);
-  if Length(parts[1])<>1 then
+
+  if parts[1]='' then
+    pt.superceded_by := 0
+  else
+  if not TryStrToInt(parts[0], pt.superceded_by) then
+    raise Exception.Create('AddCharPropType: invalid integer superceded_by: '+parts[0]);
+
+  if pt.superceded_by>0 then begin
+   //For now we don't support multi-obsolete-superceding
+    idx := FindCharPropTypeIndex(pt.superceded_by);
+    if idx>=0 then
+      CharPropTypes[idx].supercedes := pt.id;
+  end;
+
+  for idx := 0 to Length(CharPropTypes) - 1 do
+    if CharPropTypes[idx].supercedes=pt.id then begin
+      pt.supercedes := CharPropTypes[idx].id;
+      break;
+    end;
+
+  if Length(parts[2])<>1 then
     raise Exception.Create('AddCharPropType: invalid source: '+parts[1]);
-  pt.sourceType := parts[1][1];
-  pt.sourceField := parts[2];
-  if Length(parts[1])<>1 then
-    raise Exception.Create('AddCharPropType: invalid data type: '+parts[3]);
-  pt.dataType := parts[3][1];
-  pt.englishName := parts[4];
-  pt.description := parts[5];
+  pt.sourceType := parts[2][1];
+  pt.sourceField := parts[3];
+
+  if Length(parts[4])<>1 then
+    raise Exception.Create('AddCharPropType: invalid data type: '+parts[4]);
+  pt.dataType := parts[4][1];
+
+  if Length(parts)>=6 then
+    pt.englishName := parts[5];
+  if Length(parts)>=7 then
+    pt.description := parts[6];
+
   SetLength(CharPropTypes, Length(CharPropTypes)+1);
   CharPropTypes[Length(CharPropTypes)-1] := pt;
 end;
