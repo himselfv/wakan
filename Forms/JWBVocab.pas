@@ -1295,6 +1295,7 @@ begin
   fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00828^eVocabulary list'));
 end;
 
+//TODO: Convert to Unicode.
 procedure TfVocab.Button18Click(Sender: TObject);
 var csl:TStringList;
     i,j,k:integer;
@@ -1329,10 +1330,15 @@ begin
           v:=v+20000;
           if TChar.Int(TCharJpFrequency)<65535 then
             v:=v+TChar.Int(TCharJpFrequency)*3 else v:=v+7000;
-          TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),12));
-          TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode));
-          if (TRadicals.Str(TRadicalsUnicode)<>s2) and (not IsKnown(KnownLearned,TChar.Fch(TCharUnicode))) then inc(v,8000);
-          if TRadicals.Str(TRadicalsUnicode)=s2 then dec(v,3000);
+         //If this char has a radical
+          if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),12))
+          and TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode)) then begin
+            if TRadicals.Str(TRadicalsUnicode)=s2 then
+              dec(v,3000) //if the char is the radical itself
+            else
+            if not IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
+              inc(v,8000); //if the radical is not learned
+          end;
           vb:=v;
           for k:=0 to csl.Count-1 do if copy(csl[k],11,4)=s2 then
           begin

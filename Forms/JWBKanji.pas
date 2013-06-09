@@ -44,7 +44,6 @@ type
     procedure btnSearchSortClick(Sender: TObject);
     procedure btnKanjiDetailsClick(Sender: TObject);
     procedure btnCompoundsClick(Sender: TObject);
-    procedure Button3Click(Sender: TObject);
     procedure DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure DrawGrid1DblClick(Sender: TObject);
@@ -66,7 +65,7 @@ type
     procedure DoIt;
     procedure DoItTimer;
     procedure SaveChars;
-    procedure SelRadical;
+    procedure FilterByRadical(const radno: integer);
     function GetKanji(cx,cy:integer):string;
 
   protected
@@ -879,35 +878,12 @@ begin
   DrawGrid1SelectCell(Sender, DrawGrid1.Col, DrawGrid1.Row, CanSelect);
 end;
 
-procedure TfKanji.Button3Click(Sender: TObject);
-var i:integer;
-    t,t2:textfile;
-    sbJouyou,s2:string;
+procedure TfKanji.FilterByRadical(const radno: integer);
 begin
-  i:=7;
-  assignfile(t,'ren.bat');
-  rewrite(t);
-  while fileexists(inttostr(i)+'.mdw') do
-  begin
-    assignfile(t2,inttostr(i)+'.mdw');
-    reset(t2);
-    readln(t2,sbJouyou);
-    readln(t2,sbJouyou);
-    delete(sbJouyou,1,length(sbJouyou)-4);
-    readln(t2,s2);
-    delete(s2,1,5);
-    closefile(t2);
-    writeln(t,'COPY "'+s2+'" so'+sbJouyou+'.gif');
-    inc(i);
-  end;
-  closefile(t);
-end;
-
-procedure TfKanji.SelRadical;
-begin
+  if radno=NoRadical then exit;
   fKanjiSearch.curRadSearchType:=stClassic;
-  fKanjiSearch.curRadSearch:=JWBKanjiDetails.curradical;
-  fKanjiSearch.edtRadicals.Text:=IntToStr(JWBKanjiDetails.curradno);
+  fKanjiSearch.curRadSearch:=RadicalUnicode(radno);
+  fKanjiSearch.edtRadicals.Text:=IntToStr(radno);
   fKanjiSearch.pbRadicals.Invalidate;
   fKanji.DoIt;
 end;

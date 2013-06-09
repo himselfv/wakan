@@ -277,7 +277,8 @@ end;
 
 procedure TfKanjiDetails.pbRadicalDblClick(Sender: TObject);
 begin
-  fKanji.SelRadical;
+  if curradno<>NoRadical then
+    fKanji.FilterByRadical(curradno);
 end;
 
 procedure TfKanjiDetails.btnCloseClick(Sender: TObject);
@@ -486,15 +487,17 @@ begin
 
     //Radical
     if curindex<0 then
-      curradno := 255
+      curradno:=NoRadical
     else
       curradno:=GetCharValueRad(CChar.Int(TCharIndex),
-        fSettings.ComboBox1.ItemIndex+12 {Chosen radical to use});
-    lblRadicalNo.Caption:=IntToStr(curradno);
-    if (curradno=255) or not TRadicals.Locate('Number',curradno) then
-      curradical:=''
-    else
-      curradical:=TRadicals.Str(TRadicalsUnicode);
+        fSettings.ComboBox1.ItemIndex+12 {Chosen radical type to use});
+    if curradno=NoRadical then begin
+      lblRadicalNo.Caption:=_l('#01088^eNone');
+      curradical := ''
+    end else begin
+      lblRadicalNo.Caption:=IntToStr(curradno);
+      curradical := RadicalUnicode(curradno);
+    end;
 
     //AddToCategory -- "add" if any of the chars is not in it
     btnAddToCategory.Enabled := flength(curChars)>0;

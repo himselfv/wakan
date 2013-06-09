@@ -160,10 +160,13 @@ function FindCharPropType(const ASource: char; const AField: string): PCharPropT
 Shortcuts for getting character property values
 }
 
+const
+  NoRadical = 65535;
+
 function GetCharValue(index,propType:integer):string;
-function GetCharValueInt(index,propType:integer):integer;
 function GetCharValueRad(index,propType:integer):integer;
 
+function RadicalUnicode(const radno: integer): FString;
 
 {
 User configuration for KanjiDetails info box -- stored in WAKAN.CDT
@@ -626,15 +629,7 @@ begin
   result:='';
 end;
 
-function GetCharValueInt(index,propType:integer):integer;
-var s:string;
-begin
-  s:=GetCharValue(index,propType);
-  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-  if (s='') or not TryStrToInt(s, Result) then
-    Result:=65535;
-end;
-
+{ May return NoRadical if the radical isn't defined. }
 function GetCharValueRad(index,propType:integer):integer;
 var s:string;
 begin
@@ -642,9 +637,22 @@ begin
   if pos('.',s)>0 then delete(s,pos('.',s),length(s)-pos('.',s)+1);
   if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
   if (s='') or not TryStrToInt(s, Result) then
-    Result:=65535;
+    Result:=NoRadical;
 end;
 
+function RadicalUnicode(const radno: integer): FString;
+var CRadical: TTextTableCursor;
+begin
+  CRadical := TRadicals.NewCursor;
+  try
+    if not CRadical.Locate('Number', radno) then
+      Result := ''
+    else
+      Result := CRadical.Str(TRadicalsUnicode);
+  finally
+    FreeAndNil(CRadical);
+  end;
+end;
 
 {
 User configuration for KanjiDetails info box

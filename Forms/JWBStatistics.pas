@@ -151,11 +151,11 @@ begin
     if InUserIdx then inc(l);
     if InUserIdx and (JouyouGrade>=9) then inc(m);
     if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(n);
-    if KanjiKnown then
-    begin
-      TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),13));
-      if TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode) then inc(q);
-    end;
+    if KanjiKnown
+      and TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),13))
+      and (TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode)) then
+        inc(q);
+
     TChar.Next;
   end;
   TChar.First;
