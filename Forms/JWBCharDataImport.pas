@@ -224,6 +224,7 @@ begin
   AddCharProp(FindCharPropType(TypeId), Value, ReadDot, Position);
 end;
 
+{ Allows passing nil as a second param in which case adds nothing }
 function TCharPropBuilder.AddProperties(propType: PCharPropType; field: PFieldEntry;
   pre_idx: integer=0): integer;
 var i: integer;
@@ -505,6 +506,8 @@ begin
       CNewProp.OpenKanji(CharIdx);
 
      //Add standard properties
+     { AddProperties allows passing Nil as a second param, so we don't check
+      if the optional fields are present }
       CNewProp.AddProperties(FindCharPropType(ptKoreanReading), ed.GetField('W'));
       CNewProp.AddProperties(FindCharPropType(ptMandarinReading), ed.GetField('Y'));
       CNewProp.AddDefinitions(FindCharPropType(ptJapaneseDefinitionUnicode), @ed);
@@ -512,6 +515,12 @@ begin
       CNewProp.AddKuns(FindCharPropType(ptKunReading), @ed.readings[0]);
       pre_idx := CNewProp.AddOns(FindCharPropType(ptNanoriReading), @ed.readings[1]);
       CNewProp.AddKuns(FindCharPropType(ptNanoriReading), @ed.readings[1], pre_idx);
+
+     { "Radicals" is a combination of Bushu radical and, if present, Classical radical
+      Bushu radical itself is imported again separately, but that is handled by
+      the normal routine. }
+      CNewProp.AddProperties(FindCharPropType(ptRadicals), ed.GetField('B'));
+      CNewProp.AddProperties(FindCharPropType(ptRadicals), ed.GetField('C'));
 
      //Add automated properties
       for i := 0 to Length(CharPropTypes) - 1 do begin
@@ -618,6 +627,9 @@ var CChar: TTextTableCursor;
          //Split + add
           Assert(propType<>nil); //should still have proptype
           if ed.propType='kDefinition' then
+           { Definitions are stored in a somewhat strange format of:
+                defAA; defAB; defAC, defBA; defBB, defC
+             Note that ; separates close meanings and , separates loosely related ones. }
             parts := SplitStr(ed.value,',')
           else
             parts := SplitStr(ed.value,' '); //cantonese, mandarin and korean are space-separated
@@ -628,7 +640,7 @@ var CChar: TTextTableCursor;
           for i := 0 to Length(parts) - 1 do begin
             parts[i] := Trim(parts[i]);
             if parts[i]='' then continue;
-            CNewProp.AddCharProp(propType, ed.value, 0, entry_no);
+            CNewProp.AddCharProp(propType, parts[i], 0, entry_no);
             Inc(entry_no);
           end;
           CNewProp.CloseKanji;
