@@ -18,9 +18,14 @@ uses
 type
   TFlagList = array of boolean;
 
+{ Updates or recreates from the scratch WAKAN.CHR.
+ If any of KanjidicFilename, UnihanFolder is not specified, that part is skipped.
+ If ResetDb is set, existing information is discarded, otherwise preserved where
+ no new info is available. }
+
   TfCharDataImport = class(TForm)
     Label1: TLabel;
-    edtKanjidicFile: TEdit;
+    edtKanjidicFilename: TEdit;
     btnKanjidicBrowse: TButton;
     Label2: TLabel;
     btnUpdate: TButton;
@@ -29,25 +34,35 @@ type
     lblBackupPath: TUrlLabel;
     Label3: TLabel;
     btnCancel: TButton;
+    cbResetDb: TCheckBox;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    edtUnihanFolder: TEdit;
+    btnUnihanBrowse: TButton;
     procedure btnKanjidicBrowseClick(Sender: TObject);
     procedure btnUpdateClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure btnUnihanBrowseClick(Sender: TObject);
+
   protected
     procedure ImportKanjidic(const KanjidicFilename: string; out CharsCovered: TFlagList);
     procedure ImportUnihan(const UnihanFolder: string);
     procedure CopyProperties(OldCharProp: TTextTable; const KanjidicCovered: TFlagList;
       const UnihanPresent: boolean);
     function SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
+
   public
-    procedure UpdateCharDb(ResetDb: boolean; const KanjidicFilename: string;
-      const UnihanFolder: string);
+    procedure Import;
+
   end;
+
 
 var
   fCharDataImport: TfCharDataImport;
 
 implementation
-uses StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
+uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
   JWBConvert, JWBUnit;
 
 {$R *.dfm}
@@ -62,14 +77,24 @@ procedure TfCharDataImport.btnKanjidicBrowseClick(Sender: TObject);
 begin
   with OpenKanjidicDialog do
     if Execute then
-      edtKanjidicFile.Text := Filename;
+      edtKanjidicFilename.Text := Filename;
+end;
+
+procedure TfCharDataImport.btnUnihanBrowseClick(Sender: TObject);
+var newDir: string;
+begin
+  if SelectDirectory(_l('#01090^eSelect UNIHAN directory:'), edtUnihanFolder.Text, newDir) then
+    edtUnihanFolder.Text := newDir;
 end;
 
 procedure TfCharDataImport.btnUpdateClick(Sender: TObject);
 begin
  //Not really needed but let's check beforehand
-  if not FileExists(edtKanjidicFile.Text) then
-    raise Exception.CreateFmt(_l('#01075^eFile %s does not exist!'), [edtKanjidicFile.Text]);
+  if (edtKanjidicFilename.Text<>'') and not FileExists(edtKanjidicFilename.Text) then
+    raise Exception.CreateFmt(_l('#01075^eFile %s does not exist!'), [edtKanjidicFilename.Text]);
+  if (edtUnihanFolder.Text<>'') and not DirectoryExists(edtUnihanFolder.Text) then
+    raise Exception.CreateFmt(_l('#01089^eFolder %s does not exist!'), [edtUnihanFolder.Text]);
+
   if Application.MessageBox(
     PChar(_l('#01072^Character data in this copy of Wakan will be replaced with '
       +'the new one provided here. Application will then restart and you will '
@@ -77,7 +102,8 @@ begin
     PChar(_l('#01071^eConfirm import')),
     MB_YESNO or MB_ICONQUESTION)<>ID_YES then exit;
 
-  UpdateCharDb({ResetDB=}false, edtKanjidicFile.Text, {UNIHAN=}'');
+  Self.Import;
+
   Application.MessageBox(
     PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
     PChar(_l('#01073^eImport completed')),
@@ -276,12 +302,7 @@ begin
   FCharIdx := -1;
 end;
 
-{ Updates or recreates from the scratch WAKAN.CHR.
- If any of KanjidicFilename, UnihanFolder is not specified, that part is skipped.
- If ResetDb is set, existing information is discarded, otherwise preserved where
- no new info is available. }
-procedure TfCharDataImport.UpdateCharDb(ResetDb: boolean;
-  const KanjidicFilename: string; const UnihanFolder: string);
+procedure TfCharDataImport.Import;
 var prog: TSMPromptForm;
   tempDir: string;
   backupFile: string;
@@ -314,11 +335,11 @@ begin
     TCharProp.NoCommitting := true;
 
    //Kill OldCharProp if we don't need it -- why keep it?
-    if ResetDb then
+    if cbResetDb.Checked then
       FreeAndNil(OldCharProp);
 
    //Clear current Char table if needed
-    if ResetDb then begin
+    if cbResetDb.Checked then begin
       FreeAndNil(TChar);
       TChar := NewCharTable();
     end else
@@ -330,8 +351,8 @@ begin
 
    { STAGE II. Import KANJIDIC }
     prog.SetMessage(_l('^eImporting KANJIDIC...'));
-    if KanjidicFilename<>'' then
-      ImportKanjidic(KanjidicFilename, KanjidicCovered)
+    if edtKanjidicFilename.Text<>'' then
+      ImportKanjidic(edtKanjidicFilename.Text, KanjidicCovered)
     else
       SetLength(KanjidicCovered, 0);
 
@@ -342,8 +363,8 @@ begin
 
    { STAGE III. Import UNIHAN }
     prog.SetMessage(_l('^eImporting UNIHAN...'));
-    if UnihanFolder<>'' then
-      ImportUnihan(UnihanFolder);
+    if edtUnihanFolder.Text<>'' then
+      ImportUnihan(edtUnihanFolder.Text);
 
    {$IFDEF DEBUG}
     for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count)-1 do
@@ -352,8 +373,8 @@ begin
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));
-    if not ResetDb then
-      CopyProperties(OldCharProp, KanjidicCovered, UnihanFolder<>'');
+    if not cbResetDb.Checked then
+      CopyProperties(OldCharProp, KanjidicCovered, edtUnihanFolder.Text<>'');
 
    { STAGE V. Sort, reindex and finalize }
     prog.SetMessage(_l('#01078^eReindexing...'));
@@ -370,7 +391,8 @@ begin
 
    //We can't exactly say what is this KANJIDIC's "version",
    //but we'll at least mark the file last write time.
-    CharDataProps.KanjidicVersion := FileAgeStr(KanjidicFilename);
+    if edtKanjidicFilename.Text<>'' then
+      CharDataProps.KanjidicVersion := FileAgeStr(edtKanjidicFilename.Text);
 
    //Save
     if FileExists(AppFolder+'\wakan.chr') then begin

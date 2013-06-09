@@ -1192,6 +1192,8 @@
 01086>Cancel
 01087>Backups:
 01088>None
+01089>Folder %s does not exist!
+01090>Select UNIHAN directory:
 ;
 ;
 ; EDICT markers.
