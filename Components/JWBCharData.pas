@@ -398,7 +398,7 @@ begin
     '$PRECOUNTED',
     '$RAWINDEX',
     '$FIELDS',
-    'iIndex',
+    'iIndex', //order of addition when rebuilding
     'wKanji',
     'bType',
     'sReading',
@@ -410,7 +410,11 @@ begin
     'Type_Ind',
     '$SEEKS',
     '0',
-    'Kanji',
+   { Older tables have Kanji $ORDER but no Kanji $SEEK definition.
+    They rely on records being stored in Kanji+Type+Index order internally.
+    Therefore TCharProp has to be rebuilt from scratch in the Kanji+Type+Index order
+    after making any changes to it. }
+    'Kanji+Type+Index',
     'Reading',
     'Type'
   ]);
@@ -615,6 +619,8 @@ end;
 { NOTE: On Unicode properties this will return hex gibberish }
 function GetCharValue(index,propType:integer):string;
 begin
+  if True then
+
   TCharProp.SetOrder('');
   if TCharProp.Locate('Kanji',index) then
   while (not TCharProp.EOF) and (TCharProp.Int(TCharPropKanji)=index) do

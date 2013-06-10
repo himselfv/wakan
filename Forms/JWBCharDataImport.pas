@@ -772,8 +772,8 @@ begin
   end;
 end;
 
-{ Rebuilds TCharProp table so that records for a single character go in a batch.
- This a hack but it's needed by older Wakans.
+{ Rebuilds TCharProp table so that records are stored in a specific order --S
+ Kanji+Type+Index -- see NewCharPropTable() comments.
  Returns new table (old one is freed) }
 function TfCharDataImport.SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
 var CChar: TTextTableCursor;

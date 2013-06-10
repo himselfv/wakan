@@ -226,6 +226,8 @@ type
 
   public
     function GetSeekObject(seek: string): TSeekObject;
+   { Even if the index is multi-field, LocateRecord() only seeks by first field.
+    This works, but you have to move Next() and check other fields manually }
     function LocateRecord(seek: PSeekObject; value:string; out idx: integer):boolean; overload;
     function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
     function TransOrder(rec,order:integer):integer; inline;
