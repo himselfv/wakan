@@ -89,7 +89,7 @@ begin
   ComboBox1.Items.Clear;
   for i:=0 to Length(CharPropTypes)-1 do
     ComboBox1.Items.AddObject(
-      _l('^e'+CharPropTypes[i].englishName),
+      CharPropTypes[i].englishName,
       TObject(@CharPropTypes[i])
     );
   i := FindCharPropTypeIndex(StrToInt(GetDet(0)));
