@@ -162,7 +162,8 @@ end;
 
 procedure TfKanjiDetails.FormDestroy(Sender: TObject);
 begin
-  if not fMenu.CharDetDocked then FormPlacement1.SaveFormPlacement;
+  if (not fMenu.CharDetDocked) and FormPlacement1.PlacementRestored then
+    FormPlacement1.SaveFormPlacement;
   kval.Free;
 end;
 
@@ -982,7 +983,7 @@ end;
 procedure TfKanjiDetails.SetDocked(Value: boolean; Loading: boolean);
 begin
   if Value then begin //before dock
-    if not Loading then
+    if (not Loading) and FormPlacement1.PlacementRestored then
       FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
   end else begin //after undock
     if Loading then begin

@@ -88,7 +88,7 @@ begin
 
   Application.MessageBox(
     PChar(s),
-    PChar(WakanVer),
+    PChar('WaKan '+WakanVer),
     flags or MB_OK
   );
 end;

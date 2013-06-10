@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
 
 type
   TfMenu = class(TForm)
@@ -1418,7 +1418,8 @@ begin
 
   if not FlushUserData then Action:=caNone;
   if not fTranslate.CommitFile then Action:=caNone;
-  FormPlacement1.SaveFormPlacement;
+  if FormPlacement1.PlacementRestored then
+    FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
   begin
     if SpeedButton1.Down then
