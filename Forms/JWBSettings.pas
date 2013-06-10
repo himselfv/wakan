@@ -12,7 +12,7 @@ type
     pcPages: TPageControl;
     tsRomanization: TTabSheet;
     tsCharacterList: TTabSheet;
-    RadioGroup3: TRadioGroup;
+    rgKanjiGridSize: TRadioGroup;
     CheckBox1: TCheckBox;
     tsFonts: TTabSheet;
     GroupBox1: TGroupBox;
@@ -578,7 +578,7 @@ begin
   fKanjiCompounds.cbPopularOnly.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
   fKanjiCompounds.cbSortByFrequency.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
   RadioGroup5.ItemIndex:=reg.ReadInteger('Characters','Chinese',0);
-  RadioGroup3.ItemIndex:=reg.ReadInteger('Characters','GridSize',1);
+  rgKanjiGridSize.ItemIndex:=reg.ReadInteger('Characters','GridSize',1);
   ComboBox1.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
   CheckBox1.Checked:=reg.ReadBool('Characters','ShowStrokes',false);
   CheckBox51.Checked:=reg.ReadBool('Characters','StrokeOrderGridFont',false);
@@ -842,7 +842,7 @@ begin
   reg.WriteInteger('Romanization','ChineseSystem',RadioGroup6.ItemIndex);
   reg.WriteInteger('Romanization','ShowBopomofo',RadioGroup7.ItemIndex);
   reg.WriteInteger('Characters','Chinese',RadioGroup5.ItemIndex);
-  reg.WriteInteger('Characters','GridSize',RadioGroup3.ItemIndex);
+  reg.WriteInteger('Characters','GridSize',rgKanjiGridSize.ItemIndex);
   reg.WriteInteger('Characters','RadicalType',ComboBox1.ItemIndex);
   reg.WriteBool('Characters','ShowStrokes',CheckBox1.Checked);
   reg.WriteBool('Characters','StrokeOrderGridFont',CheckBox51.Checked);

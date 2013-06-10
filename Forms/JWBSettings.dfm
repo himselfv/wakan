@@ -1032,10 +1032,6 @@ object fSettings: TfSettings
       Tag = 4
       Caption = 'Portability'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 3
         Top = 3
@@ -1207,7 +1203,7 @@ object fSettings: TfSettings
           '#00920^eHow many most frequent compounds to display in "Freq" mo' +
           'de:'
       end
-      object RadioGroup3: TRadioGroup
+      object rgKanjiGridSize: TRadioGroup
         Left = 3
         Top = 3
         Width = 401

@@ -60,6 +60,9 @@ type
 
   protected
     procedure ReactToKanjiSelection;
+    function GetCellSize: integer;
+    function GetExpectedColCount: integer;
+    function FocusCurKanji: boolean;
   public
     procedure KanjiSearch_SpeedButton20Click(Sender: TObject);
     procedure DoIt;
@@ -267,8 +270,6 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     s1,s2,s3:string;
     sbJouyou:string;
     x:integer;
-    mr:TGridRect;
-    b:boolean;
     sl4,sl10:TStringList;
     fltradical,fltskip,fltother:TStringList;
     sltemp:TStringList;
@@ -330,9 +331,9 @@ begin
     sl10:=TStringList.Create;
     CopyCategories;
     if fKanjiSearch.btnInClipboard.Down then
-      for i:=0 to length(clip) div 4-1 do
-        if clip[i*4+1]>='4'then if fltclip.IndexOf(uppercase(copy(clip,i*4+1,4)))=-1 then
-          fltclip.Add(uppercase(copy(clip,i*4+1,4)));
+      for i:=1 to flength(clip) do
+        if (Word(fgetch(clip,i)) >= $4000) and (fltclip.IndexOf(fgetch(clip,i))<0) then
+          fltclip.Add(fgetch(clip,i));
     if fKanjiSearch.sbPinYin.Down then begin
       ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,2,true,false,false,false); //Mandarin
       ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,8,true,false,false,false); //Canton
@@ -369,11 +370,7 @@ begin
       ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,7,true,true,false,false) //Chinese definition
     else
       ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,3,true,true,false,false); //Japanese definition
-    case fSettings.RadioGroup3.ItemIndex of
-      0: grs:=30;
-      1: grs:=45;
-      2: grs:=60;
-    end;
+    grs := GetCellSize();
     if not chin then
       case fKanjiSearch.rgSortBy.ItemIndex of
         0,4:TChar.SetOrder('JpUnicode_Ind');
@@ -498,7 +495,7 @@ begin
       sbJouyou:=_l('#00961^eFound kanji (%d):',[ki.Count]);
 
     RxLabel15.Caption:=sbJouyou;
-    DrawGrid1.ColCount:=(DrawGrid1.Width-32) div grs;
+    DrawGrid1.ColCount:=GetExpectedColCount();
     x:=DrawGrid1.ColCount;
     if ki.Count=0 then DrawGrid1.RowCount:=1 else
       DrawGrid1.RowCount:=((ki.Count-1) div x)+1;
@@ -506,18 +503,9 @@ begin
     DrawGrid1.DefaultColWidth:=grs;
     testkanji:='';
     for i:=0 to 14 do if i<ki.Count then testkanji:=testkanji+copy(ki[i],2,4);
-    mr.Left:=0;
-    mr.Right:=0;
-    mr.Bottom:=0;
-    mr.Top:=0;
-    for i:=0 to ki.Count-1 do if curkanji=copy(ki[i],2,4) then
-    begin
-      mr.Left:=i mod x;
-      mr.Top:=i div x;
-      mr.Right:=i mod x;
-      mr.Bottom:=i div x;
-    end;
     TChar.SetOrder('ChUnicode_Ind');
+    if not FocusCurKanji then //previous kanji not in list
+      curkanji:=UH_NOCHAR;
   finally
     DrawGrid1.Perform(WM_SETREDRAW, 1, 0); //enable redraw
    { WM_SETREDRAW(1) implicitly makes DrawGrid visible without telling Delphi,
@@ -530,16 +518,38 @@ begin
     else
       ShowWindow(DrawGrid1.Handle,0);
   end;
+
+  Screen.Cursor:=crDefault;
+  DrawGrid1.Invalidate;
+end;
+
+function TfKanji.FocusCurKanji: boolean;
+var mr:TGridRect;
+  i, cols: integer;
+  CanSelect: boolean;
+begin
+  Result := false;
+  mr.Left := 0;
+  mr.Top := 0;
+  mr.Right := 0;
+  mr.Bottom := 0;
+  cols := DrawGrid1.ColCount;
+  for i:=0 to ki.Count-1 do if curkanji=copy(ki[i],2,4) then
+  begin
+    mr.Left:=i mod cols;
+    mr.Top:=i div cols;
+    mr.Right:=i mod cols;
+    mr.Bottom:=i div cols;
+    Result:=true;
+  end;
   DrawGrid1.Selection:=mr;
   ReactToKanjiSelection;
   if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then
     DrawGrid1.TopRow:=mr.Top-1
   else
     DrawGrid1.TopRow:=0;
-  curkanji:=UH_NOCHAR;
-  DrawGrid1SelectCell(self,mr.Left,mr.Top,b);
-  Screen.Cursor:=crDefault;
-  DrawGrid1.Invalidate;
+  CanSelect := true;
+  DrawGrid1SelectCell(self,mr.Left,mr.Top,CanSelect);
 end;
 
 function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
@@ -756,7 +766,7 @@ begin
     1:DrawGrid1.Canvas.Font.Name:=FontChineseGridGB;
     2:DrawGrid1.Canvas.Font.Name:=FontRadical;
   end;
-  case fSettings.RadioGroup3.ItemIndex of
+  case fSettings.rgKanjiGridSize.ItemIndex of
     0:DrawGrid1.Canvas.Font.Height:=22;
     1:DrawGrid1.Canvas.Font.Height:=37;
     2:DrawGrid1.Canvas.Font.Height:=52;
@@ -767,7 +777,7 @@ begin
   begin
     TChar.Locate('Unicode',kix);
     DrawGrid1.Canvas.Font.Name:=FontEnglish;
-    DrawGrid1.Canvas.Font.Height:=8+4*fSettings.RadioGroup3.ItemIndex;
+    DrawGrid1.Canvas.Font.Height:=8+4*fSettings.rgKanjiGridSize.ItemIndex;
     DrawGrid1.Canvas.Font.Color:=clWindowText;
     if chin then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharStrokeCount));
     if not chin then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharJpStrokeCount));
@@ -849,16 +859,28 @@ begin
   DoIt;
 end;
 
-procedure TfKanji.FormResize(Sender: TObject);
+{ Returns cell width/height under current settings }
+function TfKanji.GetCellSize: integer;
+begin
+  case fSettings.rgKanjiGridSize.ItemIndex of
+    0: Result:=30;
+    1: Result:=45;
+    2: Result:=60;
+  else Result:=60;
+  end;
+end;
+
+{ Returns expected column count according to current cell size / width }
+function TfKanji.GetExpectedColCount: integer;
 var grs:integer;
 begin
-  case fSettings.RadioGroup3.ItemIndex of
-    0: grs:=30;
-    1: grs:=45;
-    2: grs:=60;
-  else exit;
-  end;
-  if DrawGrid1.ColCount<>(DrawGrid1.ClientWidth-32) div grs then DoIt;
+  grs := GetCellSize;
+  Result := (DrawGrid1.ClientWidth-24) div grs
+end;
+
+procedure TfKanji.FormResize(Sender: TObject);
+begin
+  if DrawGrid1.ColCount<>GetExpectedColCount then DoIt;
 end;
 
 procedure TfKanji.btnSearchSortClick(Sender: TObject);
