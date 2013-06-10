@@ -241,6 +241,7 @@ type
     function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
     function GetClosestCursorPos(x,y:integer):TCursorPos;
     function GetExactLogicalPos(x,y:integer):TSourcePos;
+    function TryGetExactLogicalPos(x,y: integer):TSourcePos;
 
   protected
     FFontSize: integer;
@@ -1569,7 +1570,6 @@ procedure TfTranslate.sbClipPasteClick(Sender: TObject);
 begin
   PasteOp;
 end;
-
 
 function TfTranslate.GetView: integer;
 begin
@@ -3642,6 +3642,15 @@ begin
     Result.x:=-1;
     exit;
   end;
+end;
+
+{ Same, but also returns -1 if linl is cleared }
+function TfTranslate.TryGetExactLogicalPos(x,y: integer):TSourcePos;
+begin
+  if linl.Count<=0 then
+    Result := SourcePos(0,-1)
+  else
+    Result := GetExactLogicalPos(x,y);
 end;
 
 end.

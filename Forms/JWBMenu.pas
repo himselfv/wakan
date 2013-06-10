@@ -2979,9 +2979,9 @@ begin
 
   if MouseControl=fTranslate.EditorPaintBox then
   begin
-    rpos:=fTranslate.GetExactLogicalPos(MousePos.x,MousePos.y);
+    rpos:=fTranslate.TryGetExactLogicalPos(MousePos.x,MousePos.y);
     rx := rpos.x; ry := rpos.y;
-    if (ry<>-1) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
+    if (ry>=0) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
       s1:=fTranslate.GetDocWord(rx,ry,wtt,false)
     else
       s1:='';
