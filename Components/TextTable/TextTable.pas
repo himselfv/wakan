@@ -147,10 +147,12 @@ type
    {
     Data: Table data. Raw data, indexed by struct.
     Struct: Record headers.
-      Each headers is of size (5+#_of_variable_fields):
+      Each headers is of size struct_recsz == 5+#_of_variable_fields*[1_or_2]:
         Deleted: boolean, 1 byte
         DataOffset: integer, 4 byte
-        For every variable-length field: DataSize: 1 byte
+        For every variable-length field:
+          DataSize: 1 byte OR
+          DataSize: 2 bytes IF wordfsize=true
     Index: sorting orders
       array [0..IndexCount-1] x [0..IndexRecCount-1] of RecordNo: integer;
     Note that IndexRecCount may be < than RecCount if not all records are commited.
@@ -1033,6 +1035,7 @@ var t:textfile;
     i,j,k:integer;
     il:TStringList;
     b:byte;
+    fsz:word;
     f1,f2:file;
     bufdata,bufstruct,buforder:pointer;
     bufdatapos,bufstructpos,buforderpos:integer;
@@ -1088,8 +1091,9 @@ begin
     for i:=0 to recordcount-1 do
     begin
       moveofs(struct,@b,i*struct_recsz,0,1);
-      if b=1 then il.Add('DEAD') else
-      begin
+      if b=1 then
+        il.Add('DEAD')
+      else begin
         wfbuf(f2,bufstruct,bufstructpos,64000,@b,0,1);
         wfbuf(f2,bufstruct,bufstructpos,64000,@mypos,0,4);
         il.Add(inttostr(j));
@@ -1098,13 +1102,16 @@ begin
         moveofs(struct,@l,i*struct_recsz+1,0,4);
         for k:=0 to Length(fields)-1 do
         begin
-          b:=GetFieldSize(i,k);
+          fsz:=GetFieldSize(i,k);
           c:=fields[k].DataType;
           if (c='x') or (c='s') then
-            wfbuf(f2,bufstruct,bufstructpos,64000,@b,0,1);
-          wfbuf(f1,bufdata,bufdatapos,64000,data,l+w,b);
-          w:=w+b;
-          mypos:=mypos+b;
+            if wordfsize then
+              wfbuf(f2,bufstruct,bufstructpos,64000,@fsz,0,2)
+            else
+              wfbuf(f2,bufstruct,bufstructpos,64000,@fsz,0,1);
+          wfbuf(f1,bufdata,bufdatapos,64000,data,l+w,fsz);
+          w:=w+fsz;
+          mypos:=mypos+fsz;
         end;
       end;
     end;
@@ -1112,6 +1119,7 @@ begin
     blockwrite(f2,bufstruct^,bufstructpos);
     closefile(f1);
     closefile(f2);
+
     assignfile(f1,filename+'.index');
     rewrite(f1,1);
     for i:=0 to orders.Count-1 do for j:=0 to recordcount-1 do
