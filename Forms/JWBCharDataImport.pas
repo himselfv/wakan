@@ -332,10 +332,11 @@ var prog: TSMPromptForm;
   less than it covered on previous import. }
 
   procedure ImportRadicals(const AFilename: string);
-  var re: TCustomFileReader;
+  var re: TUnicodeFileReader;
   begin
     re := TUnicodeFileReader.Create(AFilename);
     try
+      re.SkipBom;
       TRadicals.ImportFromText(re);
     finally
       FreeAndNil(re);

@@ -280,8 +280,9 @@ begin
       BadUsage('makedic requires at least one input file');
   end;
   if Command='makechars' then begin
-    if MakeCharsParams.KanjidicFilename='' then
-      BadUsage('makechars requires /kanjidic filename');
+    if (MakeCharsParams.KanjidicFilename='')
+    and (MakeCharsParams.UnihanFolder='') then
+      BadUsage('makechars requires /kanjidic filename or /unihan folder');
   end;
 
 end;

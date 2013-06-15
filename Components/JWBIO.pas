@@ -32,9 +32,11 @@ type
     bpos: integer;
     bsz: integer;
     procedure NewBlock;
+    function PeekChar(var w: WideChar): boolean;
   public
     constructor Create(AFilename: string);
     destructor Destroy; override;
+    procedure SkipBom;
     function Eof: boolean; override;
     function ReadLn(var s: string): boolean; override;
     function ReadWideChar(out w: WideChar): boolean;
@@ -174,6 +176,13 @@ begin
   inherited;
 end;
 
+procedure TUnicodeFileReader.SkipBom;
+var c: WideChar;
+begin
+  if PeekChar(c) and (c=#$FEFF) then
+    ReadWideChar(c);
+end;
+
 function TUnicodeFileReader.Eof: boolean;
 begin
   Result := feof and (bpos>=bsz);
@@ -184,6 +193,20 @@ begin
   BlockRead(f, buf, sizeof(buf), bsz);
   if bsz<sizeof(buf) then feof := true;
   bpos := 0;
+end;
+
+//Compare with ReadWideChar
+function TUnicodeFileReader.PeekChar(var w: WideChar): boolean;
+begin
+  Result := false;
+  if bpos>=bsz then begin
+    if feof then exit;
+    NewBlock;
+  end;
+  if bpos>bsz-2 then //don't have two bytes
+    exit;
+  w := PWideChar(@buf[bpos])^;
+  Result := true;
 end;
 
 function TUnicodeFileReader.ReadWideChar(out w: WideChar): boolean;

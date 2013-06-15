@@ -2395,22 +2395,41 @@ var s:string;
     cnt:integer;
 begin
   nocommit:=true;
-  s := t.ReadLn();
-  system.delete(s,1,1);
-  fld:=TStringList.Create;
-  while s<>'' do
-  begin
-    if s[1]=';' then system.delete(s,1,1);
-    if pos(';',s)>0 then s2:=copy(s,1,pos(';',s)-1) else s2:=s;
-    system.delete(s,1,length(s2));
-    fld.Add(s2);
+  fld:=TStringList.Create;  
+
+ //Header
+  while true do begin
+    s := Trim(t.ReadLn());
+    if s='' then continue;
+    if s[1]=';' then continue; //header comment
+    if s[1]='>' then begin
+     //Field definition
+      system.delete(s,1,1);
+      while s<>'' do
+      begin
+        if s[1]=';' then system.delete(s,1,1);
+        if pos(';',s)>0 then s2:=copy(s,1,pos(';',s)-1) else s2:=s;
+        system.delete(s,1,length(s2));
+        fld.Add(s2);
+      end;
+      break;
+    end else
+      raise Exception.Create('Invalid header line: "'+s+'"');
   end;
+  
+ //Check that all fields are present -- as a safety
+  for i := 0 to fld.Count - 1 do
+    if Self.GetFieldIndex(fld[i])<0 then
+      raise Exception.Create('Field not found: "'+fld[i]+'"');
+
+ //Import
   cnt:=0;
-  s := t.ReadLn();
-  while s[1]<>'.' do
-  begin
-    inc(cnt);
-    if cnt=1 then begin end;
+  while true do begin
+    s := Trim(t.ReadLn());  
+    if (s='') or (s='.') then break;
+    Inc(cnt);
+    if s[1]<>'+' then
+      raise Exception.Create('Value set starts with invalid symbol: "'+s+'"');
     system.delete(s,1,1);
     SetLength(a,Length(fields));
     for i:=0 to Length(fields)-1 do a[i]:='0';
@@ -2425,7 +2444,6 @@ begin
       inc(i);
     end;
     Insert(a);
-    s := t.ReadLn();
   end;
   fld.Free;
   nocommit:=false;

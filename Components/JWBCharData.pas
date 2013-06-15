@@ -804,7 +804,8 @@ begin
      //compat.: sometimes index is in quotes
       if (length(s_str)>0) and (s_str[1]='''') then System.delete(s_str,1,1);
       if (length(s_str)>0) and (s_str[length(s_str)]='''') then System.delete(s_str,length(s_str),1);
-      CRadicals.Locate('Number',strtoint(s_str));
+      if not CRadicals.Locate('Number',StrToInt(s_str)) then
+        raise Exception.Create('Invalid radical number value: '+s_str);
       Result := CRadicals.Str(TRadicalsUnicode);
     end else
 
