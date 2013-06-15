@@ -32,7 +32,7 @@ begin
     +'  export-text -- export to text file / console'#13#10
     +'  import-text -- import from text file / keyboard'#13#10
     +'  dump-index <index-id> [/signatures] -- prints index contents'#13#10
-    +'  check-index -- checks all indices'#13#10;
+    +'  check-index [index-id] -- checks all indices'#13#10;
 
   if errmsg<>'' then
     s := errmsg + #13#10#13#10 + s;
@@ -146,8 +146,11 @@ begin
 
       end else
       if Command='check-index' then begin
-       //No options
-        BadUsage('Invalid param: '+s);
+        if IndexName='' then
+          IndexName := s
+        else
+         //No options
+          BadUsage('Invalid param: '+s);
 
       end else
         BadUsage('Invalid param: "'+s+'"');
@@ -247,6 +250,19 @@ begin
   end;
 end;
 
+function IndexParamToId(tt: TTextTable; const param: string): integer;
+begin
+  if TryStrToInt(param, Result) then begin
+    if Result>=tt.Orders.Count then
+      raise Exception.Create('No index with id='+IntToStr(Result));
+  end else
+  if not tt.Orders.Find(param, Result) then begin
+    Result := tt.Seeks.Find(param);
+    if Result<0 then
+      raise Exception.Create('Index not found: '+param);
+  end;
+end;
+
 procedure RunDumpIndex();
 var tt: TTextTableEx;
   wri: TConsoleUTF8Writer;
@@ -254,16 +270,7 @@ var tt: TTextTableEx;
 begin
   SetConsoleOutputCP(CP_UTF8);
   tt := TTextTableEx.Create(nil, TablePath, true, false);
-  if TryStrToInt(IndexName, IndexId) then begin
-    if IndexId>=tt.Orders.Count then
-      raise Exception.Create('No index with id='+IntToStr(IndexId));
-  end else
-  if not tt.Orders.Find(IndexName, IndexId) then begin
-    IndexId := tt.Seeks.Find(IndexName);
-    if IndexId<0 then
-      raise Exception.Create('Index not found: '+IndexName);
-  end;
-
+  IndexId := IndexParamToId(tt,IndexName);
   wri := TConsoleUTF8Writer.Create;
   tt.DumpIndex(wri, IndexId, DumpIndexParams.DumpSignatures);
   FreeAndNil(wri);
@@ -272,12 +279,27 @@ end;
 
 procedure RunCheckIndex();
 var tt: TTextTable;
+  IndexId, BadId: integer;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
-  if tt.CheckIndex then
-    writeln('All indices OK.')
+  if IndexName<>'' then
+    IndexId := IndexParamToId(tt,IndexName)
   else
-    writeln('Invalid indices present.');
+    IndexId := -1;
+
+  if IndexId>0 then begin
+    if tt.CheckIndex(IndexId) then
+      writeln('Index OK.')
+    else
+      writeln('Index invalid.')
+  end else begin
+    BadId := tt.CheckIndices;
+    if BadId < 0 then
+      writeln('All indices OK.')
+    else
+      writeln('Invalid index '+IntToStr(BadId));
+  end;
+
   FreeAndNil(tt);
 end;
 

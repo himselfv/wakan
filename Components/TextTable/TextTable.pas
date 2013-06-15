@@ -98,13 +98,16 @@ type
     FItems: array of TSeekDescription;
     function GetItem(const Index: integer): PSeekDescription; inline;
     function GetCount: integer; inline;
-    function ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+    function ParseSeekDescription(const AFormula: string): TSeekDescription;
   public
     constructor Create(ATable: TTextTable);
     destructor Destroy; override;
     procedure Clear;
     procedure Add(const AItem: TSeekDescription); overload;
     procedure Add(const AFormula: string); overload;
+    procedure Delete(const AIndex: integer);
+    procedure Insert(const APos: integer; const AItem: TSeekDescription); overload;
+    procedure Insert(const APos: integer; const AFormula: string); overload;
     function Find(const AName: string): integer;
     property Items[const Index: integer]: PSeekDescription read GetItem; default;
     property Count: integer read GetCount;
@@ -232,8 +235,9 @@ type
     function LocateRecord(seek: PSeekObject; value:integer; out idx: integer):boolean; overload;
     function TransOrder(rec,order:integer):integer; inline;
     procedure Reindex;
-    function CheckIndex(const index: integer):boolean; overload;
-    function CheckIndex:boolean; overload;
+    function CheckIndex(const index: integer): boolean; overload;
+    function CheckIndices: integer; overload;
+    function CheckIndex: boolean; overload;
     function HasIndex(const index:string):boolean;
     property Seeks: TSeekList read FSeeks;
     property Orders: TStringList read FOrders;
@@ -485,13 +489,20 @@ begin
   FItems[Length(FItems)-1] := AItem;
 end;
 
-function TSeekList.ParseSeekDescription(fld:string): TSeekFieldDescriptions;
+function TSeekList.ParseSeekDescription(const AFormula: string): TSeekDescription;
 var i:integer;
   fx:string;
   reverse:boolean;
   desc: PSeekFieldDescription;
+  fld: string;
 begin
-  SetLength(Result, 0);
+  Result.Name := AFormula;
+  if pos('+',Result.Name)>0 then
+    system.delete(Result.Name,pos('+',Result.Name),MaxInt);
+  Result.Declaration := AFormula;
+
+  fld := AFormula;
+  SetLength(Result.fields, 0);
   while length(fld)>0 do
   begin
     if pos('+',fld)>0 then
@@ -512,8 +523,8 @@ begin
     i:=FTable.GetFieldIndex(fx);
     if i=-1 then raise Exception.Create('Unknown seek field '+fx+' (TTextTable.Commit).');
 
-    SetLength(Result, Length(Result)+1);
-    desc := @Result[Length(Result)-1];
+    SetLength(Result.fields, Length(Result.fields)+1);
+    desc := @Result.fields[Length(Result.fields)-1];
     desc.index := i;
     desc.reverse := reverse;
     desc.strdata := (FTable.Fields[i].DataType='s') or (FTable.Fields[i].DataType='x')
@@ -522,22 +533,38 @@ end;
 
 { Parses seek formula taken from .info file and adds seek definition }
 procedure TSeekList.Add(const AFormula: string);
-var j: integer;
+var item: TSeekDescription;
 begin
- //Seek declaration
-  j := Length(FItems);
-  SetLength(FItems,j+1);
-  FItems[j].Name := AFormula;
-  if pos('+',FItems[j].Name)>0 then
-    system.delete(FItems[j].Name,pos('+',FItems[j].Name),MaxInt);
-  FItems[j].Declaration := AFormula;
-
  //First seekbuild is sometimes '0' and we don't actually seek by it
-  if (j=0) and (FItems[j].Declaration='0') then begin
-    SetLength(FItems[j].fields, 0);
-    exit;
-  end;
-  FItems[j].fields := ParseSeekDescription(FItems[j].Declaration);
+  if (Self.Count=0) and (AFormula='0') then begin
+    item.Name := AFormula;
+    item.Declaration := AFormula;
+    SetLength(item.fields, 0);
+  end else
+    item := ParseSeekDescription(AFormula);
+  Add(item);
+end;
+
+procedure TSeekList.Delete(const AIndex: integer);
+begin
+  Move(FItems[AIndex+1], FItems[AIndex], SizeOf(FItems[AIndex])*(Length(FItems)-AIndex-1));
+  ZeroMemory(@FItems[Length(FItems)-1], SizeOf(FItems[AIndex]));
+  SetLength(FItems, Length(FItems)-1);
+end;
+
+procedure TSeekList.Insert(const APos: integer; const AItem: TSeekDescription);
+begin
+  SetLength(FItems, Length(FItems)+1);
+  Move(FItems[APos], FItems[APos+1], SizeOf(FItems[APos])*(Length(FItems)-APos-1));
+  ZeroMemory(@FItems[APos], SizeOf(FItems[APos]));
+  FItems[APos] := AItem;
+end;
+
+procedure TSeekList.Insert(const APos: integer; const AFormula: string);
+var item: TSeekDescription;
+begin
+  item := ParseSeekDescription(AFormula);
+  Insert(APos, item);
 end;
 
 function TSeekList.GetItem(const Index: integer): PSeekDescription;
@@ -2308,16 +2335,21 @@ begin
 end;
 
 { Checks all those indexes for which there's a $SEEK definition }
-function TTextTable.CheckIndex:boolean;
+function TTextTable.CheckIndices: integer;
 var i: integer;
 begin
+  Result := -1;
   for i:=0 to orders.Count-1 do
     if seeks.Count>i+1 then
       if not CheckIndex(i) then begin
-        Result := false;
+        Result := i;
         exit;
       end;
-  Result := true;
+end;
+
+function TTextTable.CheckIndex:boolean;
+begin
+  Result := CheckIndices<0;
 end;
 
 function TTextTable.HasIndex(const index:string):boolean;

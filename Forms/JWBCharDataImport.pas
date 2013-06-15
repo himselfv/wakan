@@ -63,7 +63,7 @@ var
 
 implementation
 uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
-  JWBConvert, JWBUnit;
+  JWBConvert, JWBUnit, JWBIO;
 
 {$R *.dfm}
 
@@ -102,15 +102,28 @@ begin
     PChar(_l('#01071^eConfirm import')),
     MB_YESNO or MB_ICONQUESTION)<>ID_YES then exit;
 
-  Self.Import;
+  if cbResetDb.Checked then begin
+    FreeAndNil(TChar);
+    FreeAndNil(TCharProp);
+   { Do not free radicals because most of the time, people importing from GUI
+    would not have radicals.txt }
+   // FreeAndNil(TRadicals);
+    ClearCharDbProps();
+  end;
 
-  Application.MessageBox(
-    PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
-    PChar(_l('#01073^eImport completed')),
-    MB_OK or MB_ICONINFORMATION
-  );
-  Application.Terminate;
-  Close;
+  try
+    Self.Import;
+    Application.MessageBox(
+      PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
+      PChar(_l('#01073^eImport completed')),
+      MB_OK or MB_ICONINFORMATION
+    );
+  finally
+   //Terminate anyway because TChar tables has been messed up with.
+   //If the import failed or was cancelled, old tables will be loaded next time.
+    Application.Terminate;
+    Close;
+  end;
 end;
 
 //Returns a Wakan date stamp which represents file last modification time
@@ -303,6 +316,8 @@ begin
   FCharIdx := -1;
 end;
 
+{ Imports all supported data from KANJIDIC/UNIHAN into wakan.chr.
+ If some of TChar/TCharProp/TRadicals tables are present, copies data from those. }
 procedure TfCharDataImport.Import;
 var prog: TSMPromptForm;
   tempDir: string;
@@ -316,6 +331,17 @@ var prog: TSMPromptForm;
  { Unihan is handled differently, it's either present or not. It can't cover
   less than it covered on previous import. }
 
+  procedure ImportRadicals(const AFilename: string);
+  var re: TCustomFileReader;
+  begin
+    re := TUnicodeFileReader.Create(AFilename);
+    try
+      TRadicals.ImportFromText(re);
+    finally
+      FreeAndNil(re);
+    end;
+  end;
+
 begin
   prog:=SMProgressDlgCreate(
     _l('#01076^eCharacter data import'),
@@ -328,27 +354,36 @@ begin
     prog.Update;
 
    { STAGE I. Clear/reset everything }
-    prog.SetMessage(_l('^eClearing up...'));
+    prog.SetMessage(_l('^eInitializing...'));
 
    //Preserve current CharData table and create a new one
     OldCharProp := TCharProp;
     TCharProp := NewCharPropTable();
     TCharProp.NoCommitting := true;
+    SetupCharPropTable();
 
-   //Kill OldCharProp if we don't need it -- why keep it?
-    if cbResetDb.Checked then
-      FreeAndNil(OldCharProp);
-
-   //Clear current Char table if needed
-    if cbResetDb.Checked then begin
-      FreeAndNil(TChar);
+   //Create TChar table if we don't have one
+    if TChar=nil then begin
       TChar := NewCharTable();
-    end else
+      SetupCharTable();
+    end else begin
     { Fix older DBs where a seek formula was not defined for JpUnicode_Int order.
      We won't be able to add records without this. }
       FixTCharJpUnicodeIndex(TChar);
+      FixTCharJpStrokeOrderIndex(TChar);
+    end;
 
+   //Create and import TRadicals table if we don't have one
+    if TRadicals=nil then begin
+      TRadicals := NewRadicalsTable();
+      SetupRadicalsTable();
+      prog.SetMessage(_l('^eImporting radicals...'));
+      ImportRadicals(AppFolder+'\radicals.txt');
+    end;
+
+   {$IFDEF DEBUG}
     Assert(TChar.CheckIndex,'TChar index broken before any import (?!)');
+   {$ENDIF}
 
    { STAGE II. Import KANJIDIC }
     prog.SetMessage(_l('^eImporting KANJIDIC...'));
@@ -374,7 +409,7 @@ begin
 
    { STAGE IV. Copy missing stuff from old tables }
     prog.SetMessage(_l('^eCopying old data...'));
-    if not cbResetDb.Checked then
+    if OldCharProp<>nil then
       CopyProperties(OldCharProp, KanjidicCovered, edtUnihanFolder.Text<>'');
 
    { STAGE V. Sort, reindex and finalize }
@@ -390,10 +425,15 @@ begin
    //Free old char data
     FreeAndNil(OldCharProp);
 
-   //We can't exactly say what is this KANJIDIC's "version",
-   //but we'll at least mark the file last write time.
+   { Update CharDataProps. See comments there about the relevance of fields }
+    CharDataVersion := CurrentCharDataVersion;
+    CharDataProps.DicBuildDate := Trunc(now); //todays' date
     if edtKanjidicFilename.Text<>'' then
       CharDataProps.KanjidicVersion := FileAgeStr(edtKanjidicFilename.Text);
+    if edtUnihanFolder.Text<>'' then begin
+      CharDataProps.UnihanVersion := FileAgeStr(edtUnihanFolder.Text+'\Unihan_Readings.txt');
+      CharDataProps.ChinesePresent := true;
+    end;
 
    //Save
     if FileExists(AppFolder+'\wakan.chr') then begin
@@ -419,7 +459,7 @@ begin
   end;
 end;
 
-{ Imports all possible data from KANJIDIC source into current TChar/TCharProp }
+{ Imports all possible data from KANJIDIC into TChar/TCharProp }
 procedure TfCharDataImport.ImportKanjidic(const KanjidicFilename: string;
   out CharsCovered: TFlagList);
 var CChar: TTextTableCursor;
@@ -772,7 +812,7 @@ begin
   end;
 end;
 
-{ Rebuilds TCharProp table so that records are stored in a specific order --S
+{ Rebuilds TCharProp table so that records are stored in a specific order --
  Kanji+Type+Index -- see NewCharPropTable() comments.
  Returns new table (old one is freed) }
 function TfCharDataImport.SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;

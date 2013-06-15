@@ -70,7 +70,7 @@ uses TextTable, JWBCharData, JWBUserData, JWBCategories, JWBSettings, JWBUnit;
 
 procedure TfStatistics.FormShow(Sender: TObject);
 begin
-  lblDicBuildDate.Caption := CharDataProps.DicBuildDate;
+  lblDicBuildDate.Caption := DateToStr(CharDataProps.DicBuildDate);
   lblKanjidicVersion.Caption := CharDataProps.KanjidicVersion;
   lblUnihanVersion.Caption := CharDataProps.UnihanVersion;
   DoStatistic;

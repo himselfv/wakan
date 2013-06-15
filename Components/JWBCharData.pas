@@ -28,11 +28,17 @@ var
  { Database props -- populated on load }
   CharDataVersion: integer;
   CharDataProps: record
-    DicBuildDateInt: integer; //original 'dic build date'
-    DicBuildDate: string; //string version
-    KanjidicVersion: string;
-    UnihanVersion: string;
-    ChinesePresent:boolean;
+   { None of these fields are really relevant:
+    1. Wakan.chr can be rebuilt/updated at any time.
+    2. The concept of "version date" does not apply to KANJIDIC anymore as there
+    could be different language versions with different update schedules.
+    3. Unihan is problematic too as it's several files instead of one, which one
+    we consider correct?
+    So version fields are purely decorative. Do not use for any checks. }
+    DicBuildDate: integer; //DateOf(TDatetime) when this dictionary was LAST updated
+    KanjidicVersion: string; //file write time of LAST kanjidic imported into wakan.chr
+    UnihanVersion: string;   //file write time of LAST unihan imported into wakan.chr
+    ChinesePresent:boolean;  //true if unihan was imported at least once
   end;
 
  { Tables and fields }
@@ -93,14 +99,27 @@ var
 procedure LoadCharData(const filename: string);
 procedure SaveCharData(const filename: string);
 procedure FreeCharData();
+procedure ClearCharDbProps; //when rebuilding
 
+{ Creates new empty wakan.chr in a specified file }
 procedure InitializeCharPackage(const package:string);
+
+{ Create empty tables of proper format }
 function NewCharTable: TTextTable;
 function NewCharPropTable: TTextTable;
 function NewRadicalsTable: TTextTable;
 
-procedure FixTCharJpUnicodeIndex(table: TTextTable);
+{ Initialize TChar* field numbers above with values from current tables.
+ Separate procedures because sometimes we build all of this in memory. }
+procedure SetupCharTable();
+procedure SetupCharPropTable();
+procedure SetupRadicalsTable();
 
+{ Fixes for old format pecularities -- see comments to functions  }
+procedure FixTCharJpUnicodeIndex(table: TTextTable);
+procedure FixTCharJpStrokeOrderIndex(table: TTextTable);
+
+{ Used for .wtt, .jtt header timestamps, for CharDataProps.*Version fields etc.  }
 function WakanDatestamp(const dt: TDatetime): string;
 
 {
@@ -109,7 +128,7 @@ Character property type information.
 type
   TCharPropType = record
     id: integer;
-    superceded_by: integer;
+    superceded_by: integer; //-1 if not obsolete
     supercedes: integer;
     sourceType: char;
      { Where did we get that info
@@ -127,7 +146,8 @@ type
         'T': ?, AnsiString
         'S': 'String', AnsiString }
     englishName: string;
-    description: string // in english
+    description: string; // in english
+    function Obsolete: boolean;
   end;
   PCharPropType = ^TCharPropType;
 
@@ -230,12 +250,11 @@ begin
         raise ECharDataException.Create('#00354^eWAKAN.CHR has old structure. '
           +'Please download new version.'#13#13'Application will now exit.')
       else
-      if CharDataVersion<CurrentCharDataVersion then
+      if CharDataVersion>CurrentCharDataVersion then
         raise ECharDataException.Create('#00355^eWAKAN.CHR has newer structure. '
           +'Please download new WAKAN.EXE.'#13#13'Application will now exit.');
 
-      CharDataProps.DicBuildDateInt:=strtoint(vi[2]);
-      CharDataProps.DicBuildDate:=datetostr(CharDataProps.DicBuildDateInt);
+      CharDataProps.DicBuildDate:=strtoint(vi[2]);
       CharDataProps.KanjidicVersion:=vi[4];
       CharDataProps.UnihanVersion:=vi[5];
       CharDataProps.ChinesePresent:=vi[6]='CHINESE';
@@ -244,38 +263,53 @@ begin
     end;
 
     TChar:=TTextTable.Create(ps,'Char',true,false);
-    TCharIndex:=TChar.Field('Index');
-    TCharChinese:=TChar.Field('Chinese');
-    TCharType:=TChar.Field('Type');
-    TCharUnicode:=TChar.Field('Unicode');
-    TCharStrokeCount:=TChar.Field('StrokeCount');
-    TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
-    TCharJpFrequency:=TChar.Field('JpFrequency');
-    TCharChFrequency:=TChar.Field('ChFrequency');
-    TCharJouyouGrade:=TChar.Field('JouyouGrade');
-    TChar.IsAutoIncField[TCharIndex]:=true;
+    SetupCharTable();
 
     TCharProp:=TTextTable.Create(ps,'CharRead',true,false); //sic. 'CharRead' for compat. reasons
-    TCharPropIndex:=TCharProp.Field('Index');
-    TCharPropKanji:=TCharProp.Field('Kanji');
-    TCharPropTypeId:=TCharProp.Field('Type');
-    TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
-    TCharPropReadDot:=TCharProp.Field('ReadDot');
-    TCharPropPosition:=TCharProp.Field('Position');
-    TCharProp.IsAutoIncField[TCharPropIndex]:=true;
+    SetupCharPropTable();
 
     TRadicals:=TTextTable.Create(ps,'Radicals',true,false);
-    TRadicalsNumber:=TRadicals.Field('Number');
-    TRadicalsVariant:=TRadicals.Field('Variant');
-    TRadicalsUnicode:=TRadicals.Field('Unicode');
-    TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
-    TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
-    TRadicalsBushuCount:=TRadicals.Field('BushuCount');
-    TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
-    TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
+    SetupRadicalsTable();
   finally
     FreeAndNil(ps);
   end;
+end;
+
+procedure SetupCharTable;
+begin
+  TCharIndex:=TChar.Field('Index');
+  TCharChinese:=TChar.Field('Chinese');
+  TCharType:=TChar.Field('Type');
+  TCharUnicode:=TChar.Field('Unicode');
+  TCharStrokeCount:=TChar.Field('StrokeCount');
+  TCharJpStrokeCount:=TChar.Field('JpStrokeCount');
+  TCharJpFrequency:=TChar.Field('JpFrequency');
+  TCharChFrequency:=TChar.Field('ChFrequency');
+  TCharJouyouGrade:=TChar.Field('JouyouGrade');
+  TChar.IsAutoIncField[TCharIndex]:=true;
+end;
+
+procedure SetupCharPropTable;
+begin
+  TCharPropIndex:=TCharProp.Field('Index');
+  TCharPropKanji:=TCharProp.Field('Kanji');
+  TCharPropTypeId:=TCharProp.Field('Type');
+  TCharPropValue:=TCharProp.Field('Reading'); //sic. 'Reading'
+  TCharPropReadDot:=TCharProp.Field('ReadDot');
+  TCharPropPosition:=TCharProp.Field('Position');
+  TCharProp.IsAutoIncField[TCharPropIndex]:=true;
+end;
+
+procedure SetupRadicalsTable;
+begin
+  TRadicalsNumber:=TRadicals.Field('Number');
+  TRadicalsVariant:=TRadicals.Field('Variant');
+  TRadicalsUnicode:=TRadicals.Field('Unicode');
+  TRadicalsStrokeCount:=TRadicals.Field('StrokeCount');
+  TRadicalsUnicodeCount:=TRadicals.Field('UnicodeCount');
+  TRadicalsBushuCount:=TRadicals.Field('BushuCount');
+  TRadicalsJapaneseCount:=TRadicals.Field('JapaneseCount');
+  TRadicalsKangXiCount:=TRadicals.Field('KangXiCount');
 end;
 
 { Packs WAKAN.CHR data from directory Dir to package Package.
@@ -321,7 +355,7 @@ begin
   try
     vi.Add('JALET.CHR');
     vi.Add(IntToStr(CurrentCharDataVersion));
-    vi.Add(IntToStr(CharDataProps.DicBuildDateInt));
+    vi.Add(IntToStr(CharDataProps.DicBuildDate));
     vi.Add('');
     vi.Add(CharDataProps.KanjidicVersion);
     vi.Add(CharDataProps.UnihanVersion);
@@ -383,7 +417,7 @@ begin
     'StrokeCount',
     'Unicode',
     'JpFrequency',
-    'JpStrokeCount',
+    'Chinese+JpStrokeCount',
     'Chinese+Unicode'
   ]);
   TIndex := Result.GetFieldIndex('Index');
@@ -456,7 +490,7 @@ begin
   try
     vi.Add('JALET.CHR');
     vi.Add(IntToStr(CharDataVersion));
-    vi.Add(IntToStr(CharDataProps.DicBuildDateInt));
+    vi.Add(IntToStr(CharDataProps.DicBuildDate));
     vi.Add('');
     vi.Add(CharDataProps.KanjidicVersion);
     vi.Add(CharDataProps.UnihanVersion);
@@ -480,7 +514,7 @@ end;
 procedure ClearCharDbProps;
 begin
   CharDataVersion := 0;
-  CharDataProps.DicBuildDate := '';
+  CharDataProps.DicBuildDate := 0;
   CharDataProps.KanjidicVersion := '';
   CharDataProps.UnihanVersion := '';
   CharDataProps.ChinesePresent := false;
@@ -494,18 +528,6 @@ begin
   ClearCharDbProps();
 end;
 
-//Formats datetime in a Wakan "version" format (14AUG05)
-function WakanDatestamp(const dt: TDatetime): string;
-var fs: TFormatSettings;
-begin
- {$IF CompilerVersion>=22}
-  fs := TFormatSettings.Create('en-us');
- {$ELSE}
- //older compilers only have obsolete function
-  GetLocaleFormatSettings($0409, fs);
- {$IFEND}
-  Result := AnsiUpperCase(FormatDatetime('ddmmmyy',dt,fs));
-end;
 
 { Older TChar tables don't have matching $SEEK defintion for JpUnicode_Ind $ORDER.
  Definitions are required or you cannot add entries to the index. }
@@ -521,10 +543,56 @@ begin
   table.Seeks.Add('Chinese+Unicode');
 end;
 
+{ Older TChar tables have a bug in JpStrokeCount $SEEK definition: it is defined
+ simply as 'JpStrokeCount' but in fact built as 'Chinese+JpStrokeCount':
+    JapaneseChar       01
+    JapaneseChar       04
+    ...
+    JapaneseChar       33
+    ChineseOnlyChar    00
+    ChineseOnlyChar    00
+ All chinese-only characters have JpStrokeCount of 0 but go AFTER the japanese ones.
+
+ This ordering is crucial so that you can SetOrder('JpStrokeCount') and just
+ enumerate from First() to Last() and chinese characters will be at the end.
+
+ But the definition has to be corrected, because simply 'JpStrokeCount' gives
+ you different order where Chinese-only characters go first. }
+procedure FixTCharJpStrokeOrderIndex(table: TTextTable);
+var ord_i: integer;
+begin
+  if not table.Orders.Find('JpStrokeCount_Ind', ord_i) then
+    raise Exception.Create('FixTCharJpStrokeOrderIndex(): JpStrokeCount_Ind order not found.');
+  if ord_i>table.Seeks.Count-2 then
+    raise Exception.Create('FixTCharJpStrokeOrderIndex(): Seek definition not found');
+  table.Seeks.Delete(ord_i+1);
+  table.Seeks.Insert(ord_i+1,'Chinese+JpStrokeCount');
+end;
+
+
+//Formats datetime in a Wakan "version" format (14AUG05)
+function WakanDatestamp(const dt: TDatetime): string;
+var fs: TFormatSettings;
+begin
+ {$IF CompilerVersion>=22}
+  fs := TFormatSettings.Create('en-us');
+ {$ELSE}
+ //older compilers only have obsolete function
+  GetLocaleFormatSettings($0409, fs);
+ {$IFEND}
+  Result := AnsiUpperCase(FormatDatetime('ddmmmyy',dt,fs));
+end;
+
+
 
 {
 Pieces of information about Kanji
 }
+
+function TCharPropType.Obsolete: boolean;
+begin
+  Result := (superceded_by >= 0);
+end;
 
 { Adds a char property type info from parsing a wakan.cfg style string }
 procedure AddCharPropType(const str: string);
@@ -542,20 +610,21 @@ begin
     raise Exception.Create('AddCharPropType: invalid integer ID: '+parts[0]);
 
   if parts[1]='' then
-    pt.superceded_by := 0
+    pt.superceded_by := -1
   else
-  if not TryStrToInt(parts[0], pt.superceded_by) then
+  if not TryStrToInt(parts[1], pt.superceded_by) then
     raise Exception.Create('AddCharPropType: invalid integer superceded_by: '+parts[0]);
 
-  if pt.superceded_by>0 then begin
+  if pt.superceded_by>0 then begin //0 is no man's land, The Separator
    //For now we don't support multi-obsolete-superceding
     idx := FindCharPropTypeIndex(pt.superceded_by);
     if idx>=0 then
       CharPropTypes[idx].supercedes := pt.id;
   end;
 
+  pt.supercedes := -1;
   for idx := 0 to Length(CharPropTypes) - 1 do
-    if CharPropTypes[idx].supercedes=pt.id then begin
+    if CharPropTypes[idx].superceded_by=pt.id then begin
       pt.supercedes := CharPropTypes[idx].id;
       break;
     end;
@@ -606,7 +675,8 @@ var i: integer;
 begin
   Result := nil;
   for i := 0 to Length(CharPropTypes) - 1 do
-    if (ASource=CharPropTypes[i].sourceType)
+    if not CharPropTypes[i].Obsolete
+    and (ASource=CharPropTypes[i].sourceType)
     and (AField=CharPropTypes[i].sourceField) then begin
       Result := @CharPropTypes[i];
       break;

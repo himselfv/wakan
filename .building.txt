@@ -4,13 +4,15 @@ I. For Ansi builds you'll need non-unicode Delphi (at most Delphi 2007).
 Install everything as per Components\readme.txt.
 Build and install JaletControls.
 
-II. Copy wakan.chr, *.dic from live wakan installation.
+II. Copy wakan.chr from live wakan installation.
+OR  Copy kanjidic file, Unihan folder from appropriate sources (google it).
 
 III. Build Jalet.dpr.
 
 If you want to pack executable, you'll need something like UPX.exe which is not included here.
 
 IV. Run Wakan to generate:
+  wakan.chr (if not present) -- character database
   wakan.usr -- empty user package
   wakan.sod -- stroke order package built from strokes.csv (included)
   wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)

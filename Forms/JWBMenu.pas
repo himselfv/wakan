@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
 
 type
   TfMenu = class(TForm)
@@ -687,6 +687,7 @@ begin
 
    { DownloadTest(); }
 
+
    { Import now before these packages are loaded }
     if Command='makeexamples'then
     begin
@@ -723,9 +724,34 @@ begin
    //Force user to select fonts
     fSettings.CheckFontsPresent;
 
-   //Wakan.chr
-    if not FileExists('wakan.chr')
-    and not ((Command='makechars') and MakeCharsParams.ResetDb) then
+   { Wakan.chr }
+
+    if (Command='makechars') and MakeCharsParams.ResetDb then begin
+     { Do not load wakan.chr, we don't need it }
+      TChar := nil;
+      TCharProp := nil;
+      TRadicals := nil;
+    end else
+    if FileExists('wakan.chr') then begin
+      try
+        LoadCharData('wakan.chr');
+      except
+        on E: ECharDataException do
+          raise;
+        on E: Exception do begin
+          E.Message := E.Message + #13 +
+            _l('#00356^eCannot load main dictionary file.'#13
+              +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.');
+          raise;
+        end;
+      end;
+    end else
+    if Command='makechars' then begin
+     { Let the import routine handle what exists and whatnot }
+    end else
+    if FileExists('KANJIDIC') and DirectoryExists('Unihan') and FileExists('radicals.txt') then begin
+     { We can try autoimport }
+    end else
     begin
       Application.MessageBox(
         pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
@@ -737,41 +763,35 @@ begin
       Application.Terminate;
       exit;
     end;
-    if (Command='makechars') and MakeCharsParams.ResetDb and not FileExists('wakan.chr') then
-      raise Exception.Create('makechars: At this point we still can''t compile TRadicals table, '
-        +'therefore you need base WAKAN.CHR even with /resetdb.');
-    try
-      LoadCharData('wakan.chr');
-      if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
-      if fSettings.CheckBox64.Checked then LoadAnnotations;
-    except
-      on E: ECharDataException do begin
-        Application.MessageBox(
-          pchar(_l(E.Message)),
-          pchar(_l('#00020^eError')),
-          MB_OK or MB_ICONERROR);
-        Application.Terminate;
-        exit;
+
+   //Console/auto-import
+    if (Command='makechars') or (TChar=nil) then begin
+      if (TChar=nil) or MakeCharsParams.ResetDb then begin
+        FreeAndNil(TChar);
+        FreeAndNil(TCharProp);
+        FreeAndNil(TRadicals);
+        ClearCharDbProps();
       end;
-      on E: Exception do begin
-        Application.MessageBox(
-          pchar(_l('#00356^eCannot load main dictionary file.'#13
-            +'File WAKAN.CHR is corrupted.'#13#13'Application will now exit.')),
-          pchar(_l('#00020^eError')),
-          MB_OK or MB_ICONERROR);
-        Application.Terminate;
-        exit;
+      if Command='makechars' then begin
+        fCharDataImport.cbResetDb.Checked := MakeCharsParams.ResetDb;
+        fCharDataImport.edtKanjidicFilename.Text := MakeCharsParams.KanjidicFilename;
+        fCharDataImport.edtUnihanFolder.Text := MakeCharsParams.UnihanFolder;
+      end else begin
+        fCharDataImport.cbResetDb.Checked := true;
+        fCharDataImport.edtKanjidicFilename.Text := 'KANJIDIC';
+        fCharDataImport.edtUnihanFolder.Text := 'Unihan';
       end;
+      fCharDataImport.Import;
+      if Command='makechars' then //if that was autoimport, continue
+        Application.Terminate;
     end;
 
-    if Command='makechars' then begin
-      fCharDataImport.cbResetDb.Checked := MakeCharsParams.ResetDb;
-      fCharDataImport.edtKanjidicFilename.Text := MakeCharsParams.KanjidicFilename;
-      fCharDataImport.edtUnihanFolder.Text := MakeCharsParams.UnihanFolder;
-      fCharDataImport.Import;
-      Application.Terminate;
-      exit;
-    end;
+
+   { Annotations }
+
+    if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
+    if fSettings.CheckBox64.Checked then LoadAnnotations;
+
 
    { Radical search }
 
@@ -966,13 +986,12 @@ begin
       ShowUsage(E.Message);
       Application.Terminate;
     end;
-    on E: EAbort do begin
+    on E: EAbort do
       Application.Terminate; //Silently
-    end;
     on E: Exception do begin
       Application.MessageBox(
-        pchar('Cannot load Wakan. '+E.Classname+': '#13+E.Message),
-        pchar('Error'), //Do not translate! The translation might not even be loaded yet.
+        pchar(E.Message+' ('+E.Classname+')'),
+        pchar('Cannot load Wakan.'), //Do not translate! The translation might not even be loaded yet.
         MB_ICONERROR or MB_OK
       );
      //It's better to exit right now than to continue uninitialized.

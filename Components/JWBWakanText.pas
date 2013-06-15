@@ -1386,7 +1386,6 @@ var s,s2:string;
   ws:array[0..31] of AnsiChar;
   wss:array[0..4091] of AnsiChar;
   wc:widechar;
-  dot:boolean;
   l:integer;
   ls:string;
   dp:char;
@@ -1403,28 +1402,11 @@ begin
   if (reat<1) or (w<>$f1ff) then
     raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
 
-  dot:=true;
-
   stream.Read(ws,32);
   s:=string(ws);
   if copy(s,1,22)<>'WaKan Translated Text>'then
     raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
   delete(s,1,22);
-
-  if copy(s,1,length(CharDataProps.DicBuildDate))<>CharDataProps.DicBuildDate then
-  begin
-    if silent
-    or (Application.MessageBox(
-      pchar(_l('#00680^eThis JTT file was made using different WAKAN.CHR version. '
-        +'Translation cannot be loaded.'#13#13'Do you want to continue?')),
-      pchar(_l('#00090^eWarning')),
-      MB_YESNO or MB_ICONWARNING)=idNo) then
-    begin
-      Result := false;
-      exit;
-    end;
-    dot:=false;
-  end;
 
   stream.Read(w,2);
   if w<>3294 then
@@ -1486,20 +1468,17 @@ begin
           Application.MessageBox(PChar('<<'+dp+'--'+inttostr(buf[i*4] div 256)+'--'+ls+'--'+chr(buf[i*4+2] div 256)+'>>'),
             PChar(''));
         end;
-        if not dot then
-          s3.AddChar('-', 9, 0, 1)
-        else begin
-         //dic index is apparently stored as character (ex. '1', '2') and we need it as int
-          locdicidx := buf[i*4+2] div 256 - ord('0');
-         //convert to document indexes
-          if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
-            locdicidx := 0 //trust no one
-            { this in fact might happen because Wakan by default sets dicidx to 1,
-             even if there's no dictionaries }
-          else
-            locdicidx := dicconv[locdicidx];
-          s3.AddChar(dp, buf[i*4] div 256, l, locdicidx);
-        end;
+
+       //dic index is apparently stored as character (ex. '1', '2') and we need it as int
+        locdicidx := buf[i*4+2] div 256 - ord('0');
+       //convert to document indexes
+        if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
+          locdicidx := 0 //trust no one
+          { this in fact might happen because Wakan by default sets dicidx to 1,
+           even if there's no dictionaries }
+        else
+          locdicidx := dicconv[locdicidx];
+        s3.AddChar(dp, buf[i*4] div 256, l, locdicidx);
       end;
     end;
 
@@ -1602,7 +1581,7 @@ begin
   reading := '';
   kanji := '';
 
-  s:=AnsiString('WaKan Translated Text>'+CharDataProps.DicBuildDate);
+  s:=AnsiString('WaKan Translated Text>'+WakanDatestamp(CharDataProps.DicBuildDate));
   while length(s)<32 do s:=s+' ';
   stream.Write(s[1],32);
 
