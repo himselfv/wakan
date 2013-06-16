@@ -50,6 +50,9 @@ type
 
 procedure ParseVariantProperty(const s: UnicodeString; out variants: TVariantValues);
 
+function RadicalOf(const radval: string): string;
+function StrokeCountOf(const radval: string): string;
+
 implementation
 
 resourcestring
@@ -194,6 +197,36 @@ begin
     variants[Length(variants)-1].sources := copy(new_v.sources);
     i_sp := pos(' ', tmp);
   end;
+end;
+
+{
+Radicals are stored in radical['][.stroke_count]['] format, where
+stroke_count is the number of strokes not counting the radical.
+' is used to indicated that "the character uses a standard simplification"
+}
+
+function RadicalOf(const radval: string): string;
+var i: integer;
+begin
+  i := pos('.', radval);
+  if i<=0 then
+    Result := radval
+  else
+    Result := copy(radval,1,i-1);
+  if (Length(Result)>0) and (Result[Length(Result)]='''') then
+    SetLength(Result, Length(Result)-1);
+end;
+
+function StrokeCountOf(const radval: string): string;
+var i: integer;
+begin
+  i := pos('.', radval);
+  if i<=0 then
+    Result := ''
+  else
+    Result := copy(radval,i+1,MaxInt);
+  if (Length(Result)>0) and (Result[Length(Result)]='''') then
+    SetLength(Result, Length(Result)-1);
 end;
 
 end.

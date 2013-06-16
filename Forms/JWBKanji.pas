@@ -373,17 +373,15 @@ begin
     grs := GetCellSize();
     if not chin then
       case fKanjiSearch.rgSortBy.ItemIndex of
-        0,4:TChar.SetOrder('JpUnicode_Ind');
+        0,3,4:TChar.SetOrder('JpUnicode_Ind');
         1:TChar.SetOrder('JpStrokeCount_Ind');
         2:TChar.SetOrder('JpFrequency_Ind');
-        3:TChar.SetOrder('JpUnicode_Ind');
       end;
     if chin then
       case fKanjiSearch.rgSortBy.ItemIndex of
-        0,4:TChar.SetOrder('ChUnicode_Ind');
+        0,3,4:TChar.SetOrder('ChUnicode_Ind');
         1:TChar.SetOrder('ChStrokeCount_Ind');
         2:TChar.SetOrder('ChFrequency_Ind');
-        3:TChar.SetOrder('ChUnicode_Ind');
       end;
     ki.Clear;
     radf:=fSettings.ComboBox1.ItemIndex+12;

@@ -557,12 +557,6 @@ begin
       pre_idx := CNewProp.AddOns(FindCharPropType(ptNanoriReading), @ed.readings[1]);
       CNewProp.AddKuns(FindCharPropType(ptNanoriReading), @ed.readings[1], pre_idx);
 
-     { "Radicals" is a combination of Bushu radical and, if present, Classical radical
-      Bushu radical itself is imported again separately, but that is handled by
-      the normal routine. }
-      CNewProp.AddProperties(FindCharPropType(ptRadicals), ed.GetField('B'));
-      CNewProp.AddProperties(FindCharPropType(ptRadicals), ed.GetField('C'));
-
      //Add automated properties
       for i := 0 to Length(CharPropTypes) - 1 do begin
         propType := @CharPropTypes[i];
@@ -690,6 +684,7 @@ var CChar: TTextTableCursor;
          //Just add
          //May other properties need splitting too?
 
+         //Variant properties need reparsing
           if (propType.sourceField='kCompatibilityVariant')
           or (propType.sourceField='kSemanticVariant')
           or (propType.sourceField='kSimplifiedVariant')
@@ -724,8 +719,8 @@ begin
     CChar := TChar.NewCursor;
     CNewProp := TCharPropBuilder.Create(TCharProp);
 
-    ImportFile(UnihanFolder+'\Unihan_Readings.txt');
     ImportFile(UnihanFolder+'\Unihan_RadicalStrokeCounts.txt');
+    ImportFile(UnihanFolder+'\Unihan_Readings.txt');
     ImportFile(UnihanFolder+'\Unihan_DictionaryLikeData.txt');
     ImportFile(UnihanFolder+'\Unihan_Variants.txt');
     ImportFile(UnihanFolder+'\Unihan_OtherMappings.txt');
@@ -742,7 +737,7 @@ end;
 const
   MainKanjidicPropTypes = [ptKoreanReading, ptMandarinReading,
     ptJapaneseDefinition, ptOnReading, ptKunReading, ptNanoriReading];
-  MainUnihanPropTypes = [ptChineseDefinition, ptCantoneseReading, ptRadicals];
+  MainUnihanPropTypes = [ptChineseDefinition, ptCantoneseReading];
 
 { For every char from TChar, checks which sources covered it in this update,
  and copies old data for any sources which did not cover it this time. }

@@ -167,26 +167,29 @@ const
   ptNanoriReading = 6;
   ptChineseDefinition = 7; //usually taken from UNIHAN
   ptCantoneseReading = 8;
-  ptRadicals = 10;
+  ptRadicals = 10; //virtual property
+
+  ptBushuRadical = 12;
+  ptRSUnicode = 13;
+  ptRSJapanese = 14;
+  ptRSKanWa = 15;
+  ptRSKangXi = 16;
+  ptRSKorean = 17;
+
   ptJapaneseDefinitionUnicode = 121;
+  ptChineseDefinitionUnicode = 122;
+  ptClassicalRadical = 123;
+
+ { ptRadicals internally has a special treatment and so we keep the list of all
+  properties which go into it }
+  ptRadicalsComposition = [ptBushuRadical,ptRSUnicode,ptRSJapanese,ptRSKanWa,
+    ptRSKangXi,ptRSKorean];
 
 procedure AddCharPropType(const str: string);
 function FindCharPropType(const propTypeId: integer): PCharPropType; overload;
 function FindCharPropTypeIndex(const propTypeId: integer): integer;
 function FindCharPropType(const ASource: char; const AField: string): PCharPropType; overload;
 
-
-{
-Shortcuts for getting character property values
-}
-
-const
-  NoRadical = 65535;
-
-function GetCharValue(index,propType:integer):string;
-function GetCharValueRad(index,propType:integer):integer;
-
-function RadicalUnicode(const radno: integer): FString;
 
 {
 User configuration for KanjiDetails info box -- stored in WAKAN.CDT
@@ -201,6 +204,9 @@ function GetCharDet(i,j:integer):string;
 CharPropertyCursor
 }
 
+const
+  NoRadical = 65535;
+
 type
   TCharPropertyCursor = class(TTextTableCursor)
   protected
@@ -208,18 +214,32 @@ type
   public
     constructor Create(ATable: TTextTable);
     destructor Destroy; override;
+    function Locate(kanjiIndex,propType: integer): boolean; overload;
     function PropType: PCharPropType;
     function RawValue: string;
     function Value: FString;
+    function AsRadicalNumber: integer;
+    function AsRadicalCharOnly: FString;
 
   public
    { Uses Cursor to enumerate over a certain character properties.
     These break the current position. }
-    function GetCharValues(kanjiIndex,propType:integer; const sep: FString={$IFDEF UNICODE}', '{$ELSE}$002C$0020{$ENDIF}):FString;
+    function GetCharValues(kanjiIndex,propType: integer; const sep: FString={$IFDEF UNICODE}', '{$ELSE}$002C$0020{$ENDIF}):FString;
     function GetJapaneseDefinitions(kanjiIndex: integer; const sep: string=', '): FString;
     function GetChineseDefinitions(kanjiIndex: integer; const sep: string=', '): FString;
 
   end;
+
+
+{
+Shortcuts for getting character property values
+}
+
+function GetCharValue(index,propType:integer):string;
+function GetCharValueRad(index,propType:integer):integer;
+
+function RadicalUnicode(const radno: integer): FString;
+
 
 implementation
 uses MemSource, PKGWrite, JWBUnit;
@@ -683,52 +703,6 @@ begin
     end;
 end;
 
-{ Following functions are inherited and left as they are, although
- they reimplement functionality and are bad. }
-
-{ NOTE: On Unicode properties this will return hex gibberish }
-function GetCharValue(index,propType:integer):string;
-begin
-  if True then
-
-  TCharProp.SetOrder('');
-  if TCharProp.Locate('Kanji',index) then
-  while (not TCharProp.EOF) and (TCharProp.Int(TCharPropKanji)=index) do
-  begin
-    if TCharProp.Int(TCharPropTypeId)=propType then
-    begin
-      result:=TCharProp.Str(TCharPropValue);
-      exit;
-    end;
-    TCharProp.Next;
-  end;
-  result:='';
-end;
-
-{ May return NoRadical if the radical isn't defined. }
-function GetCharValueRad(index,propType:integer):integer;
-var s:string;
-begin
-  s:=GetCharValue(index,propType);
-  if pos('.',s)>0 then delete(s,pos('.',s),length(s)-pos('.',s)+1);
-  if (length(s)<>0) and (s[length(s)]='''') then delete(s,length(s),1);
-  if (s='') or not TryStrToInt(s, Result) then
-    Result:=NoRadical;
-end;
-
-function RadicalUnicode(const radno: integer): FString;
-var CRadical: TTextTableCursor;
-begin
-  CRadical := TRadicals.NewCursor;
-  try
-    if not CRadical.Locate('Number', radno) then
-      Result := ''
-    else
-      Result := CRadical.Str(TRadicalsUnicode);
-  finally
-    FreeAndNil(CRadical);
-  end;
-end;
 
 {
 User configuration for KanjiDetails info box
@@ -764,6 +738,26 @@ begin
   inherited;
 end;
 
+{ Locates first entry of a property for a given kanji.
+ Note that there's no telling how properties are ordered so Next() property
+ may not be of the same type. }
+function TCharPropertyCursor.Locate(kanjiIndex,propType: integer): boolean;
+begin
+  Result := false;
+  Self.SetOrder('');
+  if not Self.Locate('Kanji',kanjiIndex) then
+    exit;
+  while (not Self.EOF) and (Self.Int(TCharPropKanji)=kanjiIndex) do
+  begin
+    if Self.Int(TCharPropTypeId)=propType then
+    begin
+      Result := true;
+      break;
+    end;
+    Self.Next;
+  end;
+end;
+
 function TCharPropertyCursor.PropType: PCharPropType;
 var propTypeId: integer;
 begin
@@ -796,21 +790,9 @@ begin
   if propDataType='R' then
   begin
 
-   { ptRadicals contains TRadicals index and Wakan expects us to auto-resolve it.
-    If anyone needs raw value here (and not from RawValue), maybe it's better
-    to just make a new function, RadicalValue. }
-    if propType.id=ptRadicals then begin
-      s_str:=Self.Str(TCharPropValue); //should be ansi string
-     //compat.: sometimes index is in quotes
-      if (length(s_str)>0) and (s_str[1]='''') then System.delete(s_str,1,1);
-      if (length(s_str)>0) and (s_str[length(s_str)]='''') then System.delete(s_str,length(s_str),1);
-      if not CRadicals.Locate('Number',StrToInt(s_str)) then
-        raise Exception.Create('Invalid radical number value: '+s_str);
-      Result := CRadicals.Str(TRadicalsUnicode);
-    end else
-
-     { Other R-type properties contain random text }
-      Result := Self.Str(TCharPropValue);
+   { R-type properties contain radical index - maybe in extended Unihan format.
+    Nothing to parse here. }
+    Result := Self.Str(TCharPropValue);
 
   end else
  { 'U' has reading in 'a'-type hex }
@@ -857,20 +839,63 @@ begin
 
 end;
 
-//Returns a list of all property values for the given character and property tipe
+{ Returns the value of current property as if it was a radical index.
+ In case of extended indexes (radical.stroke_count) returns only the radical. }
+function TCharPropertyCursor.AsRadicalNumber: integer;
+var propType: PCharPropType;
+  s_str: string;
+  i: integer;
+begin
+  propType := Self.PropType;
+  if propType.dataType<>'R' then
+    raise Exception.Create('AsRadical(): not a radical property');
+  s_str := Self.RawValue; //should be ansi string
+
+ { Parse extended radical format -- see JWBUnihanImport }
+  i := pos('.',s_str);
+  if i>0 then System.Delete(s_str,i,MaxInt);
+  if (length(s_str)>0) and (s_str[length(s_str)]='''') then System.Delete(s_str,length(s_str),1);
+  if (s_str='') or not TryStrToInt(s_str, Result) then
+    raise Exception.Create('AsRadical: invalid radical data ('+Self.RawValue+')');
+end;
+
+{ Returns the value of current property as if it was a radical index.
+ In case of extended indexes (radical.stroke_count) returns only the radical. }
+function TCharPropertyCursor.AsRadicalCharOnly: FString;
+var i: integer;
+begin
+  i := AsRadicalNumber;
+  if not CRadicals.Locate('Number',i) then
+    raise Exception.Create('Invalid radical number value: '+IntToStr(i));
+  Result := CRadicals.Str(TRadicalsUnicode);
+end;
+
+
+{ Returns a list of all property values for the given character and property type.
+ This is the preferred function to return "property value for a type" }
 function TCharPropertyCursor.GetCharValues(kanjiIndex, propType:integer; const sep: FString):FString;
+var Match: boolean;
+  curval: FString;
 begin
   Result := '';
   Self.SetOrder('');
   if Self.Locate('Kanji',kanjiIndex) then
   while (not Self.EOF) and (Self.Int(TCharPropKanji)=kanjiIndex) do
   begin
-    if Self.Int(TCharPropTypeId)=propType then
-    begin
-      if Result<>'' then
-        Result := Result + sep + Self.Value
+    if propType=ptRadicals then
+      Match := Self.Int(TCharPropTypeId) in ptRadicalsComposition
+    else
+      Match := Self.Int(TCharPropTypeId)=propType;
+    if Match then begin
+      if propType=ptRadicals then
+        curval := Self.AsRadicalCharOnly
       else
-        Result := Self.Value;
+        curval := Self.Value;
+      if (propType<>ptRadicals) or (pos(curval,Result)<=0) then
+        if Result<>'' then
+          Result := Result + sep + curval
+        else
+          Result := curval;
     end;
     Self.Next;
   end;
@@ -887,6 +912,54 @@ end;
 function TCharPropertyCursor.GetChineseDefinitions(kanjiIndex: integer; const sep: string): FString;
 begin
   Result := GetCharValues(kanjiIndex, ptChineseDefinition, ', ');
+end;
+
+
+{ Following functions are kept for backward compability and simplicity,
+ but if you do a lot of these, using a separate cursor is preferred. }
+
+function GetCharValue(index,propType:integer):string;
+var CCharProp: TCharPropertyCursor;
+begin
+  CCharProp := TCharPropertyCursor.Create(TCharProp);
+  try
+    if CCharProp.Locate(index,propType) then
+      Result := CCharProp.RawValue
+    else
+      Result := '';
+  finally
+    FreeAndNil(CCharProp);
+  end;
+end;
+
+{ May return NoRadical if the radical isn't defined. }
+function GetCharValueRad(index,propType:integer):integer;
+var CCharProp: TCharPropertyCursor;
+begin
+  CCharProp := TCharPropertyCursor.Create(TCharProp);
+  try
+    if CCharProp.Locate(index,propType) then
+      Result := CCharProp.AsRadicalNumber
+    else
+      Result := NoRadical;
+  finally
+    FreeAndNil(CCharProp);
+  end;
+end;
+
+{ Returns radical character by it's common radical number }
+function RadicalUnicode(const radno: integer): FString;
+var CRadical: TTextTableCursor;
+begin
+  CRadical := TRadicals.NewCursor;
+  try
+    if not CRadical.Locate('Number', radno) then
+      Result := ''
+    else
+      Result := CRadical.Str(TRadicalsUnicode);
+  finally
+    FreeAndNil(CRadical);
+  end;
 end;
 
 
