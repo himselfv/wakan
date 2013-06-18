@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
 
 type
   TfMenu = class(TForm)
@@ -628,6 +628,8 @@ begin
   screenModeWk:=false;
   if initdone then exit;
 
+  Self.Enabled := false; //or MainForm will receive shortcuts and crash
+
   try
     ParseCommandLine();
 
@@ -998,6 +1000,8 @@ begin
       Application.Terminate;
     end;
   end;
+
+  Self.Enabled := true;
 
   Timer1.Enabled:=true;
   Timer1Timer(Timer1);
