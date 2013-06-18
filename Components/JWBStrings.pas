@@ -240,6 +240,8 @@ function UnicodeToHex(const s:UnicodeString):string; overload;
 function AnsiToHex(const s:AnsiString):string; {$IFDEF INLINE}inline;{$ENDIF}
 function UnicodeToML(s:widestring):string;
 
+function Utf16ToUnicodeIndex(const c: WideChar): integer; inline;
+
 type
   TStringArray = array of string;
 
@@ -1008,6 +1010,12 @@ begin
     s2:=s2+s3;
   end;
   result:=s2;
+end;
+
+//For now WideChar-only. Someday we should account for multi-word characters too.
+function Utf16ToUnicodeIndex(const c: WideChar): integer;
+begin
+  Result := Word(c);
 end;
 
 

@@ -127,6 +127,7 @@ function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):F
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
+procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
 function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
@@ -921,6 +922,7 @@ begin
     Inc(Result);
 end;
 
+
 {
 x, y: Where to draw.
 fs: Font size
@@ -939,11 +941,39 @@ begin
   r.Top := y;
   r.Right := x;
   r.Bottom := y;
+ //We need the rect for AddDrawReg and CALCRECT does not draw
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
-//  TextOutW(c.Handle,x,y,PWideChar(w),length(w));
   if curpbox<>nil then
     AddDrawReg(curpbox,fontface,fs,r,ch);
+end;
+
+{ Same but also handles the case where there's no glyph for the char on the system }
+procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
+var w: UnicodeString;
+  w_ind: word;
+  ws: string;
+begin
+  if ch='' then exit;
+  SetBkMode(c.Handle,TRANSPARENT);
+ { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
+  w := fstrtouni(ch);
+  c.Font.Name:=fontface;
+  c.Font.Height:=fs;
+  if GetGlyphIndices(c.Handle,PChar(w),1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
+    RaiseLastOsError();
+  if w_ind<>$FFFF then begin
+    DrawText(c.Handle,PWideChar(w),length(w),rect,DT_LEFT or DT_TOP or DT_CALCRECT);
+    DrawText(c.Handle,PWideChar(w),length(w),rect,DT_LEFT or DT_TOP or DT_NOCLIP);
+    if curpbox<>nil then
+      AddDrawReg(curpbox,fontface,fs,rect,ch);
+  end else begin
+   //Draw unicode index instead
+    ws := IntToHex(Utf16ToUnicodeIndex(fgetch(ch,1)),4);
+    c.Font.Name:=FontEnglish;
+    c.Font.Height:=Trunc(fs*0.44);
+    DrawText(c.Handle,PChar(ws),Length(ws),rect,DT_CENTER or DT_SINGLELINE or DT_VCENTER);
+  end;
 end;
 
 //NOTE: If you update fonts here, update DrawGridUpdateSelection() too.

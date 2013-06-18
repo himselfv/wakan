@@ -717,6 +717,9 @@ var w:widechar;
   kix:FString;
   kig:string;
   sbJouyou:string;
+  w_ind: word;
+  ws: string;
+  r_copy: TRect;
 begin
   if (ARow*DrawGrid1.ColCount+ACol>=ki.Count) then
   begin
@@ -770,7 +773,25 @@ begin
     2:DrawGrid1.Canvas.Font.Height:=52;
   end;
   DrawGrid1.Canvas.Font.Style:=[];
-  TextOutW(DrawGrid1.Canvas.Handle,Rect.Left+5,Rect.Top+4,@w,1);
+
+ { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
+  if GetGlyphIndices(DrawGrid1.Canvas.Handle,@w,1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
+    RaiseLastOsError();
+  if w_ind<>$FFFF then
+    TextOutW(DrawGrid1.Canvas.Handle,Rect.Left+5,Rect.Top+4,@w,1)
+  else begin
+   //Draw unicode index instaed
+    ws := IntToHex(Utf16ToUnicodeIndex(w),4);
+    DrawGrid1.Canvas.Font.Name:=FontEnglish;
+    case fSettings.rgKanjiGridSize.ItemIndex of
+      0:DrawGrid1.Canvas.Font.Height:=10;
+      1:DrawGrid1.Canvas.Font.Height:=14;
+      2:DrawGrid1.Canvas.Font.Height:=22;
+    end;
+    r_copy:=Rect;
+    DrawText(DrawGrid1.Canvas.Handle,PChar(ws),Length(ws),r_copy,DT_CENTER or DT_SINGLELINE or DT_VCENTER);
+  end;
+
   if fSettings.CheckBox1.Checked then
   begin
     TChar.Locate('Unicode',kix);
