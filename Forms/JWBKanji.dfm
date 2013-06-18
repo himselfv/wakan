@@ -150,6 +150,7 @@ object fKanji: TfKanji
       FixedRows = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goThumbTracking]
       TabOrder = 0
+      OnClick = DrawGrid1Click
       OnDblClick = DrawGrid1DblClick
       OnDrawCell = DrawGrid1DrawCell
       OnKeyDown = DrawGrid1KeyDown
@@ -158,8 +159,6 @@ object fKanji: TfKanji
       OnMouseDown = DrawGrid1MouseDown
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
-      OnMouseWheelDown = DrawGrid1MouseWheelDown
-      OnMouseWheelUp = DrawGrid1MouseWheelDown
       OnSelectCell = DrawGrid1SelectCell
     end
     object btnPrintCards: TButton

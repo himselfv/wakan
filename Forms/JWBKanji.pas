@@ -55,12 +55,12 @@ type
       Shift: TShiftState);
     procedure DrawGrid1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
-    procedure DrawGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState;
-      MousePos: TPoint; var Handled: Boolean);
+    procedure DrawGrid1Click(Sender: TObject);
 
   protected
     procedure ReactToKanjiSelection;
     function GetCellSize: integer;
+    function GetCellFontSize: integer;
     function GetExpectedColCount: integer;
     function FocusCurKanji: boolean;
   public
@@ -699,9 +699,13 @@ begin
   ReactToKanjiSelection;
 end;
 
-procedure TfKanji.DrawGrid1MouseWheelDown(Sender: TObject; Shift: TShiftState;
-  MousePos: TPoint; var Handled: Boolean);
+procedure TfKanji.DrawGrid1Click(Sender: TObject);
 begin
+ { We need to react to kanji selection change on mouse wheel,
+  but MouseWheelDown/Up happen before the selection is updated.
+  Click() seems to happen at any time focus changes so we do it here,
+  but if this fails us we'll switch to reacting from SelectCell() I guess and
+  manually constructing actual selection (because it's not saved yet there too) }
   ReactToKanjiSelection;
 end;
 
@@ -717,9 +721,11 @@ var w:widechar;
   kix:FString;
   kig:string;
   sbJouyou:string;
-  w_ind: word;
-  ws: string;
+{  w_ind: word;
+  ws: string;} //TODO: delete
   r_copy: TRect;
+  fontface: string;
+  fontsize: integer;
 begin
   if (ARow*DrawGrid1.ColCount+ACol>=ki.Count) then
   begin
@@ -761,20 +767,25 @@ begin
     except end;
   end;
   DrawGrid1.Canvas.FillRect(Rect);
-  if not chin then DrawGrid1.Canvas.Font.Name:=FontJapaneseGrid else
+  if not chin then
+    fontface:=FontJapaneseGrid
+  else
   case fSettings.RadioGroup5.ItemIndex of
-    0:DrawGrid1.Canvas.Font.Name:=FontChineseGrid;
-    1:DrawGrid1.Canvas.Font.Name:=FontChineseGridGB;
-    2:DrawGrid1.Canvas.Font.Name:=FontRadical;
+    0:fontface:=FontChineseGrid;
+    1:fontface:=FontChineseGridGB;
+    2:fontface:=FontRadical;
+  else fontface:=FontChineseGrid;
   end;
-  case fSettings.rgKanjiGridSize.ItemIndex of
-    0:DrawGrid1.Canvas.Font.Height:=22;
-    1:DrawGrid1.Canvas.Font.Height:=37;
-    2:DrawGrid1.Canvas.Font.Height:=52;
-  end;
+  fontsize := GetCellFontSize();
   DrawGrid1.Canvas.Font.Style:=[];
 
  { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
+  r_copy := rect;
+  r_copy.Left := r_copy.Left + 5;
+  r_copy.Top := r_copy.Top + 4;
+  DrawUnicodeChar(DrawGrid1.Canvas, r_copy, fontsize, w, fontface);
+
+ {
   if GetGlyphIndices(DrawGrid1.Canvas.Handle,@w,1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
     RaiseLastOsError();
   if w_ind<>$FFFF then
@@ -791,6 +802,7 @@ begin
     r_copy:=Rect;
     DrawText(DrawGrid1.Canvas.Handle,PChar(ws),Length(ws),r_copy,DT_CENTER or DT_SINGLELINE or DT_VCENTER);
   end;
+ }
 
   if fSettings.CheckBox1.Checked then
   begin
@@ -888,6 +900,17 @@ begin
   else Result:=60;
   end;
 end;
+
+function TfKanji.GetCellFontSize: integer;
+begin
+  case fSettings.rgKanjiGridSize.ItemIndex of
+    0:Result:=22;
+    1:Result:=37;
+    2:Result:=52;
+  else Result:=52;
+  end;
+end;
+
 
 { Returns expected column count according to current cell size / width }
 function TfKanji.GetExpectedColCount: integer;
