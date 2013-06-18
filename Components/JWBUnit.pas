@@ -948,7 +948,7 @@ begin
     AddDrawReg(curpbox,fontface,fs,r,ch);
 end;
 
-{ Same but also handles the case where there's no glyph for the char on the system }
+{ Similar but also handles the case where there's no glyph for the char in the font }
 procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
 var w: UnicodeString;
   w_ind: word;
