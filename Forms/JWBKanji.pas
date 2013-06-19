@@ -11,6 +11,9 @@ uses
 // If set, DoItTimer() will really use timer and not just update instanteneously.
 
 type
+  TReadFilterFlag = (rfPartial, rfSpace, rfNumber, rfTakedot);
+  TReadFilterFlags = set of TReadFilterFlag;
+
   TfKanji = class(TForm)
     Panel1: TPanel;
     RxLabel15: TLabel;
@@ -72,7 +75,7 @@ type
     function GetKanji(cx,cy:integer):string;
 
   protected
-    procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;partial,space,number,takedot:boolean);
+    procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
     procedure ReadRaineFilter(fltradical:TStringList;const tx:string);
 
   end;
@@ -154,7 +157,7 @@ begin
   if sl.Count=0 then sl.Add('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
 end;
 
-procedure TfKanji.ReadFilter(flt:TStringList;const tx:string;typ:integer;partial,space,number,takedot:boolean);
+procedure TfKanji.ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
 var CCharProp: TTextTableCursor;
   sl:TStringList;
   s_fltval:string;
@@ -168,7 +171,7 @@ begin
   try
 
    //Convert filter value into a list of exact values to match
-    MakeList(tx,number,sl);
+    MakeList(tx,rfNumber in flags,sl);
 
    { We use a trick here. Database field type for PropValue column is always Ansi,
     Unicode values are stored as 4-byte hex.
@@ -196,12 +199,12 @@ begin
       s_val:=uppercase(CCharProp.Str(TCharPropValue));
       while (not CCharProp.EOF) and (
         (s_val=s_fltval)
-        or ((partial and not space) and (pos(s_fltval,s_val)=1))
-        or ((partial and space) and (pos(s_fltval+' ',s_val)=1))) do
+        or (((rfPartial in flags) and not (rfSpace in flags)) and (pos(s_fltval,s_val)=1))
+        or (((rfPartial in flags) and (rfSpace in flags)) and (pos(s_fltval+' ',s_val)=1))) do
       begin
-        if takedot then dot:=CCharProp.Int(TCharPropReadDot);
+        if rfTakedot in flags then dot:=CCharProp.Int(TCharPropReadDot);
         if CCharProp.Int(TCharPropTypeId)=typ then
-          if (not takedot) or (s_val=s_fltval) or ((dot>0) and (s_fltval=copy(s_val,dot-1))) then
+          if (not (rfTakedot in flags)) or (s_val=s_fltval) or ((dot>0) and (s_fltval=copy(s_val,dot-1))) then
             flt.Add(CCharProp.Str(TCharPropKanji));
         CCharProp.Next;
         s_val:=uppercase(CCharProp.Str(TCharPropValue));
@@ -280,6 +283,7 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     clipind:integer;
 
   categories: array of integer; //of checked category indexes
+  flags: TReadFilterFlags;
 
   procedure CopyCategories; //they're UNIMAGINABLY slow if used as is
   var i: integer;
@@ -335,21 +339,25 @@ begin
         if (Word(fgetch(clip,i)) >= $4000) and (fltclip.IndexOf(fgetch(clip,i))<0) then
           fltclip.Add(fgetch(clip,i));
     if fKanjiSearch.sbPinYin.Down then begin
-      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,2,true,false,false,false); //Mandarin
-      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,8,true,false,false,false); //Canton
+      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,2,[rfPartial]); //Mandarin
+      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,8,[rfPartial]); //Canton
     end;
     if fKanjiSearch.sbYomi.Down then begin
      //ON and KUN
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,fSettings.CheckBox57.Checked,false,false,fSettings.CheckBox57.Checked);
+      if fSettings.cbYomiIgnoreOkurigana.Checked then
+        flags := [rfPartial, rfTakedot]
+      else
+        flags := [];
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,flags);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,flags);
+      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,flags);
+      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,flags);
     end;
     if fKanjiSearch.sbSKIP.Down then
-      ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,true,false,false,false); //SKIP
+      ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,[rfPartial]); //SKIP
     if fKanjiSearch.sbRadicals.Down then
       case fKanjiSearch.curRadSearchType of
-        stClassic: ReadFilter(fltradical,fKanjiSearch.edtRadicals.Text,10,false,false,true,false); //Radicals
+        stClassic: ReadFilter(fltradical,fKanjiSearch.edtRadicals.Text,fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
         stRaine: ReadRaineFilter(fltradical,fKanjiSearch.edtRadicals.Text);
       end;
     if fKanjiSearch.sbOther.Down then
@@ -362,14 +370,19 @@ begin
         if CharPropTypes[i].id>20 then
         begin
           inc(j);
-          if j=fKanjiSearch.cbOtherType.ItemIndex then
-            ReadFilter(fltother,fKanjiSearch.edtOther.Text,CharPropTypes[i].id,false,false,CharPropTypes[i].dataType='N',false);
+          if j=fKanjiSearch.cbOtherType.ItemIndex then begin
+            if CharPropTypes[i].dataType='N' then
+              flags := [rfNumber]
+            else
+              flags := [];
+            ReadFilter(fltother,fKanjiSearch.edtOther.Text,CharPropTypes[i].id,flags);
+          end;
         end;
     end;
     if fKanjiSearch.sbDefinition.Down then if chin then
-      ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,7,true,true,false,false) //Chinese definition
+      ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,7,[rfPartial,rfSpace]) //Chinese definition
     else
-      ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,3,true,true,false,false); //Japanese definition
+      ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,3,[rfPartial,rfSpace]); //Japanese definition
     grs := GetCellSize();
     if not chin then
       case fKanjiSearch.rgSortBy.ItemIndex of
@@ -384,7 +397,7 @@ begin
         2:TChar.SetOrder('ChFrequency_Ind');
       end;
     ki.Clear;
-    radf:=fSettings.ComboBox1.ItemIndex+12;
+    radf:=fSettings.GetPreferredRadicalType();
     clipsort:=(fKanjiSearch.btnInClipboard.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;

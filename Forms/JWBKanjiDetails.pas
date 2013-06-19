@@ -490,8 +490,7 @@ begin
     if curindex<0 then
       curradno:=NoRadical
     else
-      curradno:=GetCharValueRad(CChar.Int(TCharIndex),
-        fSettings.ComboBox1.ItemIndex+12 {Chosen radical type to use});
+      curradno:=GetCharValueRad(CChar.Int(TCharIndex), fSettings.GetPreferredRadicalType());
     if curradno=NoRadical then begin
       lblRadicalNo.Caption:=_l('#01088^eNone');
       curradical := ''

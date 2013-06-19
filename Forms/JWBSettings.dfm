@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsPortability
+    ActivePage = tsCharacterList
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -1032,6 +1032,10 @@ object fSettings: TfSettings
       Tag = 4
       Caption = 'Portability'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 3
         Top = 3
@@ -1183,10 +1187,6 @@ object fSettings: TfSettings
       Tag = 5
       Caption = 'Character list'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label35: TLabel
         Left = 3
         Top = 87
@@ -1224,7 +1224,7 @@ object fSettings: TfSettings
         Caption = '#00437^eShow stroke count in grid'
         TabOrder = 1
       end
-      object ComboBox1: TComboBox
+      object cbRadicalType: TComboBox
         Left = 3
         Top = 103
         Width = 233
@@ -1248,7 +1248,7 @@ object fSettings: TfSettings
         TabOrder = 3
         Visible = False
       end
-      object CheckBox57: TCheckBox
+      object cbYomiIgnoreOkurigana: TCheckBox
         Left = 3
         Top = 159
         Width = 433

@@ -496,7 +496,7 @@ begin
       fdelete(s,1,1);
       if TChar.Locate('Unicode',s2) then
       begin
-        radf:=fSettings.ComboBox1.ItemIndex+12;
+        radf:=fSettings.GetPreferredRadicalType();
         if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf)) then
         begin
           rad := TRadicals.Str(TRadicalsUnicode);

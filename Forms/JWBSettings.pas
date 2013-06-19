@@ -127,7 +127,7 @@ type
     Button8: TButton;
     Button9: TButton;
     Label35: TLabel;
-    ComboBox1: TComboBox;
+    cbRadicalType: TComboBox;
     Button10: TButton;
     SpeedButton11: TSpeedButton;
     SpeedButton12: TSpeedButton;
@@ -171,7 +171,7 @@ type
     Label50: TLabel;
     Edit32: TEdit;
     SpeedButton13: TSpeedButton;
-    CheckBox57: TCheckBox;
+    cbYomiIgnoreOkurigana: TCheckBox;
     Label5: TLabel;
     SpeedButton5: TSpeedButton;
     Edit5: TEdit;
@@ -341,6 +341,7 @@ type
   protected
     procedure InitContents;
     procedure SelectActiveContentItem;
+    procedure UpdatePortabilityPage;
 
   private
    { When doing LoadSettings with DelayUI=true, we load some settings into
@@ -361,12 +362,12 @@ type
     procedure SaveSettings;
     procedure AcceptSettings;
 
-  protected
-    procedure UpdatePortabilityPage;
-
   public
     function GetTranslationFile: string;
     procedure SetTranslationFile(const Value: string);
+
+  public
+    function GetPreferredRadicalType: integer;
 
   end;
 
@@ -579,11 +580,11 @@ begin
   fKanjiCompounds.cbSortByFrequency.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
   RadioGroup5.ItemIndex:=reg.ReadInteger('Characters','Chinese',0);
   rgKanjiGridSize.ItemIndex:=reg.ReadInteger('Characters','GridSize',1);
-  ComboBox1.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
+  cbRadicalType.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
   CheckBox1.Checked:=reg.ReadBool('Characters','ShowStrokes',false);
   CheckBox51.Checked:=reg.ReadBool('Characters','StrokeOrderGridFont',false);
   CheckBox3.Checked:=reg.ReadBool('Characters','NoShowColors',false);
-  CheckBox57.Checked:=reg.ReadBool('Characters','YomiOkurigana',false);
+  cbYomiIgnoreOkurigana.Checked:=reg.ReadBool('Characters','YomiOkurigana',false);
   if reg.ReadString('Fonts','FontSet','0')<>'1' then
     AutoDetectFonts({Silent=}true)
   else begin
@@ -843,11 +844,11 @@ begin
   reg.WriteInteger('Romanization','ShowBopomofo',RadioGroup7.ItemIndex);
   reg.WriteInteger('Characters','Chinese',RadioGroup5.ItemIndex);
   reg.WriteInteger('Characters','GridSize',rgKanjiGridSize.ItemIndex);
-  reg.WriteInteger('Characters','RadicalType',ComboBox1.ItemIndex);
+  reg.WriteInteger('Characters','RadicalType',cbRadicalType.ItemIndex);
   reg.WriteBool('Characters','ShowStrokes',CheckBox1.Checked);
   reg.WriteBool('Characters','StrokeOrderGridFont',CheckBox51.Checked);
   reg.WriteBool('Characters','NoShowColors',CheckBox3.Checked);
-  reg.WriteBool('Characters','YomiOkurigana',CheckBox57.Checked);
+  reg.WriteBool('Characters','YomiOkurigana',cbYomiIgnoreOkurigana.Checked);
   reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.cbLeftMatchOnly.Checked);
   reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.cbPopularOnly.Checked);
   reg.WriteBool('Characters','CompoundsFreq',fKanjiCompounds.cbSortByFrequency.Checked);
@@ -1947,6 +1948,12 @@ end;
 procedure TfSettings.btnImportKanjidicClick(Sender: TObject);
 begin
   fCharDataImport.ShowModal;
+end;
+
+//Returns the type ID of the chosen preferred radical type
+function TfSettings.GetPreferredRadicalType: integer;
+begin
+  Result := cbRadicalType.ItemIndex+12;
 end;
 
 end.

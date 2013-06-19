@@ -77,7 +77,7 @@ begin
 
   {alternate}
   if alt then begin
-    radf:=fSettings.ComboBox1.ItemIndex+12;
+    radf:=fSettings.GetPreferredRadicalType;
     rad_idx := GetCharValueRad(TChar.Int(TCharIndex),radf);
     if TRadicals.Locate('Number',rad_idx) then
       DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
