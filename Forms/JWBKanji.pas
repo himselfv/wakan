@@ -381,6 +381,9 @@ begin
     end;
     if fKanjiSearch.sbSKIP.Down then
       ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,[rfPartial]); //SKIP
+   { Raine filters multi-selection with AND (only the characters with all the chosen parts are shown),
+    Classical with OR (characters which match at least one radical are shown).
+    This is because a character has only one Classical Radical so AND is pointless. }
     if fKanjiSearch.sbRadicals.Down then
       case fKanjiSearch.curRadSearchType of
         stClassic: ReadFilter(fltradical,fKanjiSearch.edtRadicals.Text,fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
