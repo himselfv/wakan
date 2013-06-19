@@ -29,7 +29,7 @@ begin
     +''#13#10
     +'Supported commands:'#13#10
     +'  no command: display information'#13#10
-    +'  export-text -- export to text file / console'#13#10
+    +'  export-text|dump -- export to text file / console'#13#10
     +'  import-text -- import from text file / keyboard'#13#10
     +'  dump-index <index-id> [/signatures] -- prints index contents'#13#10
     +'  check-index [index-id] -- checks all indices'#13#10;
@@ -69,6 +69,10 @@ begin
   while i<=ParamCount() do begin
     s := AnsiLowerCase(ParamStr(i));
     if Length(s)<=0 then continue;
+
+   //Aliases
+    if Command='dump' then
+      Command := 'export-text';
 
    //Options
     if s[1]='/' then begin
