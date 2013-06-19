@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
 
 type
   TfMenu = class(TForm)
