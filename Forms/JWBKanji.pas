@@ -165,6 +165,7 @@ var CCharProp: TTextTableCursor;
   i:integer;
   dot:integer;
   propType: PCharPropType;
+  match: boolean;
 begin
   sl:=TStringList.Create;
   CCharProp := TCharProp.NewCursor;
@@ -196,18 +197,43 @@ begin
       s_fltval:=uppercase(sl[i]); //Locate is case-insensitive anyway
       CCharProp.SetOrder('Reading_Ind');
       CCharProp.Locate('Reading',s_fltval);
-      s_val:=uppercase(CCharProp.Str(TCharPropValue));
-      while (not CCharProp.EOF) and (
-        (s_val=s_fltval)
-        or (((rfPartial in flags) and not (rfSpace in flags)) and (pos(s_fltval,s_val)=1))
-        or (((rfPartial in flags) and (rfSpace in flags)) and (pos(s_fltval+' ',s_val)=1))) do
+      while not CCharProp.EOF do
       begin
-        if rfTakedot in flags then dot:=CCharProp.Int(TCharPropReadDot);
-        if CCharProp.Int(TCharPropTypeId)=typ then
-          if (not (rfTakedot in flags)) or (s_val=s_fltval) or ((dot>0) and (s_fltval=copy(s_val,dot-1))) then
+        s_val:=uppercase(CCharProp.Str(TCharPropValue));
+        if s_val<>s_fltval then
+          if not (rfPartial in flags) then
+            break
+          else
+          if (rfSpace in flags) and (pos(s_fltval+' ',s_val)<>1) then
+            break
+          else
+          if pos(s_fltval,s_val)<>1 then
+            break;
+
+        match := (CCharProp.Int(TCharPropTypeId)=typ);
+        case propType.dataType of
+          'R': begin //Radical format: radical['][.stroke_count]
+            match := match and (
+                 (pos(s_fltval+'.',s_val)=1)
+              or (pos(s_fltval+'.',s_val)=1)
+              or (s_fltval=s_val)
+            );
+          end;
+        else
+          if rfTakedot in flags then
+            dot:=CCharProp.Int(TCharPropReadDot)
+          else
+            dot:=0;
+          match := match and (
+              not (rfTakedot in flags)
+              or (s_val=s_fltval)
+              or ((dot>0) and (s_fltval=copy(s_val,dot-1)))
+            );
+        end;
+
+        if match then
             flt.Add(CCharProp.Str(TCharPropKanji));
         CCharProp.Next;
-        s_val:=uppercase(CCharProp.Str(TCharPropValue));
       end;
     end;
 
