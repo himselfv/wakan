@@ -1,7 +1,7 @@
-object fCharDataBrowser: TfCharDataBrowser
+object fTextTableBrowser: TfTextTableBrowser
   Left = 0
   Top = 0
-  Caption = 'Character DB Browser'
+  Caption = 'Text table browser'
   ClientHeight = 337
   ClientWidth = 576
   Color = clBtnFace
@@ -12,7 +12,6 @@ object fCharDataBrowser: TfCharDataBrowser
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
-  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -37,31 +36,21 @@ object fCharDataBrowser: TfCharDataBrowser
       TabOrder = 0
     end
   end
-  object tsTabs: TTabControl
+  object Grid: TStringGrid
     Left = 0
     Top = 0
     Width = 576
     Height = 304
     Align = alClient
+    ColCount = 7
+    DefaultColWidth = 80
+    DefaultRowHeight = 20
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
     TabOrder = 1
-    Tabs.Strings = (
-      'Chars'
-      'Props'
-      'Radicals')
-    TabIndex = 0
-    OnChange = tsTabsChange
-    object Grid: TStringGrid
-      Left = 4
-      Top = 24
-      Width = 568
-      Height = 276
-      Align = alClient
-      ColCount = 7
-      DefaultColWidth = 80
-      DefaultRowHeight = 20
-      FixedCols = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing]
-      TabOrder = 0
-    end
+    ExplicitLeft = 4
+    ExplicitTop = 24
+    ExplicitWidth = 568
+    ExplicitHeight = 276
   end
 end

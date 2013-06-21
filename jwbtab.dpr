@@ -6,7 +6,12 @@ Wakan TTextTable mgr tool.
 {$APPTYPE CONSOLE}
 
 uses
-  SysUtils, Classes, Windows, TextTable, JWBIO;
+  SysUtils,
+  Classes,
+  Windows,
+  TextTable,
+  JWBIO,
+  TextTableBrowser in 'Forms\TextTableBrowser.pas' {fTextTableBrowser};
 
 type
   EBadUsage = class(Exception);
@@ -32,7 +37,8 @@ begin
     +'  export-text|dump -- export to text file / console'#13#10
     +'  import-text -- import from text file / keyboard'#13#10
     +'  dump-index <index-id> [/signatures] -- prints index contents'#13#10
-    +'  check-index [index-id] -- checks all indices'#13#10;
+    +'  check-index [index-id] -- checks all indices'#13#10
+    +'  browse -- open a window with table contents'#13#10;
 
   if errmsg<>'' then
     s := errmsg + #13#10#13#10 + s;
@@ -104,6 +110,11 @@ begin
         BadUsage('Invalid option: '+s);
 
       end else
+      if Command='browse' then begin
+       //No options
+        BadUsage('Invalid option: '+s);
+
+      end else
         BadUsage('Invalid option: '+s);
 
     end else
@@ -122,6 +133,9 @@ begin
         FillChar(DumpIndexParams, SizeOf(DumpIndexParams), 0);
       end else
       if Command='check-index' then begin
+       //Nothing to initialize
+      end else
+      if Command='browse' then begin
        //Nothing to initialize
       end else
         BadUsage('Invalid command or file: "'+s+'"');
@@ -155,6 +169,11 @@ begin
         else
          //No options
           BadUsage('Invalid param: '+s);
+
+      end else
+      if Command='browse' then begin
+       //No options
+        BadUsage('Invalid param: '+s);
 
       end else
         BadUsage('Invalid param: "'+s+'"');
@@ -307,6 +326,18 @@ begin
   FreeAndNil(tt);
 end;
 
+procedure RunBrowse();
+var tt: TTextTable;
+  fBrowse: TfTextTableBrowser;
+begin
+  tt := TTextTable.Create(nil, TablePath, true, false);
+  fBrowse := TfTextTableBrowser.Create(nil);
+  fBrowse.SetTable(tt);
+  fBrowse.ShowModal;
+  FreeAndNil(fBrowse);
+  FreeAndNil(tt);
+end;
+
 begin
   try
     ParseCommandLine();
@@ -328,6 +359,9 @@ begin
     else
     if Command='check-index' then
       RunCheckIndex()
+    else
+    if Command='browse' then
+      RunBrowse()
     else
       BadUsage('Invalid command: '+Command);
   except
