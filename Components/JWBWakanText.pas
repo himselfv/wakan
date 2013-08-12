@@ -147,10 +147,10 @@ type
 
   public //File opening/saving
     procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
-    function LoadWakanText(stream: TStream; silent: boolean = false): boolean; overload;
-    procedure LoadWakanText(const filename:string); overload;
-    procedure SaveWakanText(stream: TStream; block: PTextSelection = nil); overload;
-    procedure SaveWakanText(const filename:string); overload;
+    function LoadWakanText(AStream: TStream; ASilent: boolean = false): boolean; overload;
+    procedure LoadWakanText(const AFilename:string); overload;
+    procedure SaveWakanText(AStream: TStream; ABlock: PTextSelection = nil); overload;
+    procedure SaveWakanText(const AFilename:string); overload;
     procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat;
       stream: TStream; block: PTextSelection = nil);
 
@@ -183,6 +183,8 @@ type
     procedure DeleteBlock(const block: TSourceBlock);
     procedure PasteText(const APos: TSourcePos; const chars: FString;
       const props: TCharacterLineProps; AnnotMode: TTextAnnotMode;
+      AEndPos: PSourcePos = nil);
+    procedure PasteDoc(const APos: TSourcePos; const ADoc: TWakanText;
       AEndPos: PSourcePos = nil);
 
   protected //Ruby stuff
@@ -1374,9 +1376,8 @@ Explicit ruby is currently stored expanded (as text). This is not the best solut
 but otherwise we'd need to change the file format.
 }
 
-//Loads Wakan text from stream and merge-pastes it at the cursor position.
-//Used to load Wakan files and to paste Wakan clipboard cuts.
-function TWakanText.LoadWakanText(stream: TStream; silent: boolean): boolean;
+{ Loads Wakan text from stream into this document, replacing its contents. }
+function TWakanText.LoadWakanText(AStream: TStream; ASilent: boolean): boolean;
 var s,s2:string;
   s3: TCharacterLineProps;
   i:integer;
@@ -1398,17 +1399,19 @@ var s,s2:string;
   dicconv: array of integer; //maps local dictionaries to document dictionaries
 
 begin
-  reat:=stream.Read(w,2);
+  Clear;
+
+  reat:=AStream.Read(w,2);
   if (reat<1) or (w<>$f1ff) then
     raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
 
-  stream.Read(ws,32);
+  AStream.Read(ws,32);
   s:=string(ws);
   if copy(s,1,22)<>'WaKan Translated Text>'then
     raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
   delete(s,1,22);
 
-  stream.Read(w,2);
+  AStream.Read(w,2);
   if w<>3294 then
     raise EBadWakanTextFormat.Create(_l('#00681^eThis JTT file was created by '
       +'old version of WaKan.'#13'It is not compatible with the current version.'));
@@ -1416,8 +1419,8 @@ begin
   locdics := TStringList.Create;
   try
    //Read local dictionaries
-    stream.Read(w,2);
-    stream.Read(wss,w*2);
+    AStream.Read(w,2);
+    AStream.Read(wss,w*2);
     wss[w*2]:=#0;
     s:=string(wss);
     while (s<>'') and (s[1]<>'$') do
@@ -1442,7 +1445,7 @@ begin
 
   s:='';
   s3.Clear;
-  reat := stream.Read(buf,Length(buf)*SizeOf(word));
+  reat := AStream.Read(buf,Length(buf)*SizeOf(word));
   while reat>0 do
   begin
 
@@ -1482,7 +1485,7 @@ begin
       end;
     end;
 
-    reat := stream.Read(buf,Length(buf)*SizeOf(word));
+    reat := AStream.Read(buf,Length(buf)*SizeOf(word));
   end;
 
   if s<>'' then
@@ -1495,11 +1498,11 @@ begin
   Result := true;
 end;
 
-procedure TWakanText.LoadWakanText(const filename:string);
+procedure TWakanText.LoadWakanText(const AFilename:string);
 var ms: TStream;
 begin
   ms := TStreamReader.Create(
-    TFileStream.Create(filename, fmOpenRead or fmShareDenyWrite),
+    TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite),
     {OwnsStream=}true
   );
   try
@@ -1509,7 +1512,7 @@ begin
   end;
 end;
 
-procedure TWakanText.SaveWakanText(stream: TStream; block: PTextSelection = nil);
+procedure TWakanText.SaveWakanText(AStream: TStream; ABlock: PTextSelection = nil);
 var i,j,bc:integer;
   buf:array[0..16383] of word;
   sig:word;
@@ -1532,7 +1535,7 @@ var i,j,bc:integer;
     inc(bc,4);
     if bc=16384 then
     begin
-      stream.Write(buf,bc*2);
+      AStream.Write(buf,bc*2);
       bc:=0;
     end;
   end;
@@ -1575,7 +1578,7 @@ var i,j,bc:integer;
 
 begin
   sig:=$f1ff;
-  stream.Write(sig,2);
+  AStream.Write(sig,2);
 
   inReading := false;
   reading := '';
@@ -1583,20 +1586,20 @@ begin
 
   s:=AnsiString('WaKan Translated Text>'+WakanDatestamp(CharDataProps.DicBuildDate));
   while length(s)<32 do s:=s+' ';
-  stream.Write(s[1],32);
+  AStream.Write(s[1],32);
 
   w:=3294;
-  stream.Write(w,2);
+  AStream.Write(w,2);
 
   s:='';
   for i:=0 to docdic.Count-1 do s:=s+AnsiString(docdic[i])+',';
   w:=(length(s)+1) div 2;
-  stream.Write(w,2);
+  AStream.Write(w,2);
   s:=s+'$$$$';
-  stream.Write(s[1],w*2);
+  AStream.Write(s[1],w*2);
 
-  if block<>nil then begin
-    sel := block^;
+  if ABlock<>nil then begin
+    sel := ABlock^;
     if sel.fromy<0 then sel.fromy := 0;
     if sel.toy<0 then sel.toy := doc.Count-1;
     if sel.fromx<0 then sel.fromx := 0;
@@ -1668,14 +1671,14 @@ begin
     if i<>sel.toy then
       PutBC(ord('$'), 0, 0, 0);
   end;
-  stream.Write(buf,bc*2);
+  AStream.Write(buf,bc*2);
 end;
 
-procedure TWakanText.SaveWakanText(const filename:string);
+procedure TWakanText.SaveWakanText(const AFilename:string);
 var ms: TStream;
 begin
   ms := TStreamWriter.Create(
-    TFileStream.Create(filename, fmCreate),
+    TFileStream.Create(AFilename, fmCreate),
     {OwnsStream=}true
   );
   try
@@ -1803,12 +1806,12 @@ begin
 end;
 
 { Receives a string contanining multiple lines of text separated by CRLF.
- Splits into lines, inserts at the current position of the cursor.
- Expands ruby, if AnnotMode dictates so.
+ Splits ti into lines, inserts at the specified position. Expands ruby if
+ AnnotMode dictates so.
 
  Props may be omitted, in which case default props are used for all symbols.
 
- Returns SourcePos of the end of the inserted text in APos }
+ Returns SourcePos of the end of the inserted text in AEndPos }
 procedure TWakanText.PasteText(const APos: TSourcePos; const chars: FString;
   const props: TCharacterLineProps; AnnotMode: TTextAnnotMode;
   AEndPos: PSourcePos);
@@ -1871,6 +1874,52 @@ begin
   JoinLine(y);
   if AEndPos<>nil then
     AEndPos^ := SourcePos(l,y);
+end;
+
+procedure TWakanText.PasteDoc(const APos: TSourcePos; const ADoc: TWakanText;
+  AEndPos: PSourcePos = nil);
+var dicconv: array of integer; //maps document dictionaries to local dictionaries
+  i, j: integer;
+  y, x_s:integer;
+
+begin
+ //Create dictionary conversion table
+  SetLength(dicconv, ADoc.docdic.Count);
+  for i := 0 to Length(dicconv) - 1 do
+    if not docdic.Find(ADoc.docdic[i], dicconv[i]) then
+      dicconv[i] := docdic.Add(ADoc.docdic[i]);
+
+ { This function is sometimes used to load text, at which point there's not even
+  a single default line available and SplitLine would die. }
+  if APos.y >= doc.Count then begin
+    doc.Add('');
+    doctr.AddNewLine;
+  end else
+    SplitLine(APos.x,APos.y);
+
+  y := APos.y; //in case ADoc has no lines at all
+  for i := 0 to ADoc.Lines.Count-1 do begin
+    y := APos.y+i;
+    if i=0 then
+      x_s := flength(doc[y])
+    else begin
+      doc.Insert(y,'');
+      doctr.InsertNewLine(y);
+      x_s := 0;
+    end;
+
+    doc[y] := doc[y] + ADoc.Lines[i];
+    doctr[y].AddChars(ADoc.PropertyLines[i]^);
+
+   //Fix dictionary references
+    for j := x_s to doctr[y].charcount-1 do
+      doctr[y].chars[j].docdic := dicconv[doctr[y].chars[j].docdic];
+  end;
+
+  x_s:=flength(doc[y]);
+  JoinLine(y);
+  if AEndPos<>nil then
+    AEndPos^ := SourcePos(x_s,y);
 end;
 
 end.

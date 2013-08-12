@@ -3178,6 +3178,8 @@ procedure TfTranslate.PasteOp;
 var ms: TMemoryStream;
   props: TCharacterLineProps;
   Loaded: boolean;
+  pasteEndPos: TSourcePos;
+  tmpDoc: TWakanText;
 begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot do!
@@ -3188,18 +3190,30 @@ begin
   if fMenu.GetClipboard(CF_WAKAN, ms) then
   try
     ms.Seek(0,soFromBeginning);
+    tmpDoc := nil;
     try
-      Loaded := doc.LoadWakanText(ms,{silent=}true);
-    except
-      on E: EBadWakanTextFormat do Loaded := false;
+      try
+        tmpDoc := TWakanText.Create;
+        Loaded := tmpDoc.LoadWakanText(ms,{silent=}true);
+        doc.PasteDoc(rcur, tmpDoc, @pasteEndPos);
+      except
+        on E: EBadWakanTextFormat do
+          Loaded := false;
+      end;
+    finally
+      FreeAndNil(tmpDoc);
     end;
+    rcur := pasteEndPos; //end of inserted text
+    RefreshLines;
+    if Loaded then
+      FileChanged:=true;
   finally
     FreeAndNil(ms);
   end;
 
   if not Loaded then begin //default to bare text
     props.Clear;
-    PasteText(clip,props,amDefault);
+    PasteText(clip,props,amDefault); //does RefreshLines/FileChanged internally
   end;
 
   ShowText(true);
@@ -3209,6 +3223,7 @@ procedure TfTranslate.DeleteSelection;
 begin
   CalcBlockFromTo(false);
   doc.DeleteBlock(block);
+  rcur := SourcePos(block.fromx, block.fromy);
   if block.fromy<>block.toy then
     RefreshLines;
   FileChanged:=true;
