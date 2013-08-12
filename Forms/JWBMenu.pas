@@ -8,7 +8,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
 
 type
   TfMenu = class(TForm)
@@ -242,8 +242,6 @@ type
     aVocabImport1: TMenuItem;
     ClipboardPaintbox: TWakanPaintbox;
     aStrokeOrder: TAction;
-    aCharDataBrowser: TAction;
-    BrowsecharacterDB1: TMenuItem;
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -359,7 +357,6 @@ type
     procedure aUserSettingsChecked(Sender: TObject);
     procedure aUserDetailsChecked(Sender: TObject);
     procedure aUserExamplesChecked(Sender: TObject);
-    procedure aCharDataBrowserExecute(Sender: TObject);
     procedure aKanjiDetailsChecked(Sender: TObject);
 
   private
@@ -565,7 +562,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
   JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils,
-  JWBCharDataBrowser, JWBCharDataImport;
+  JWBCharDataImport;
 
 {$R *.DFM}
 
@@ -587,12 +584,6 @@ begin
   HoverCtl:=nil;
   HandlingPopup:=false;
   LastMouseMove:=GetTickCount;
-
- {$IFDEF DEBUG}
-  aCharDataBrowser.Visible := true;
- {$ELSE}
-  aCharDataBrowser.Visible := false;
- {$ENDIF}
 
  //Nothing is docked to these so initialized them to hidden
   Panel2.Width := 0;
@@ -3155,11 +3146,6 @@ begin
 //    fKanjiDetails.UpdateAlignment; //TODO: Do we need this?
   end;
  //ChangeDisplay -- should not be needed
-end;
-
-procedure TfMenu.aCharDataBrowserExecute(Sender: TObject);
-begin
-  fCharDataBrowser.ShowModal;
 end;
 
 initialization
