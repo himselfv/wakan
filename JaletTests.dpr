@@ -19,7 +19,8 @@ uses
   TestFramework,
   GUITestRunner,
   TextTestRunner,
-  TextTableTests in 'Components\TextTable\TextTableTests.pas';
+  TextTableTests in 'Components\TextTable\TextTableTests.pas',
+  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
 
 {$R *.RES}
 
