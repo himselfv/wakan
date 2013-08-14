@@ -105,15 +105,27 @@ type
  { Character position in source text. }
   TSourcePos = record
     y: integer; //line, 0-based
-    x: integer  //char, 0-based
+    x: integer;  //char, 0-based
+    class operator Equal(const a: TSourcePos; const b: TSourcePos): boolean; inline;
+    class operator NotEqual(const a: TSourcePos; const b: TSourcePos): boolean; inline;
+    class operator GreaterThan(const a: TSourcePos; const b: TSourcePos): boolean; inline;
+    class operator GreaterThanOrEqual(const a: TSourcePos; const b: TSourcePos): boolean; inline;
+    class operator LessThan(const a: TSourcePos; const b: TSourcePos): boolean; inline;
+    class operator LessThanOrEqual(const a: TSourcePos; const b: TSourcePos): boolean; inline;
   end;
   PSourcePos = ^TSourcePos;
 
+ { Text block, see SourcePos. Usually not inclusive on the read end }
   TSourceBlock = record
     fromy: integer;
     fromx: integer;
     toy: integer;
     tox: integer;
+    function FromPoint: TSourcePos; inline;
+    function ToPoint: TSourcePos; inline;
+    class operator Equal(const a: TSourceBlock; const b: TSourceBlock): boolean; inline;
+    class operator NotEqual(const a: TSourceBlock; const b: TSourceBlock): boolean; inline;
+    class operator BitwiseAnd(const a: TSourceBlock; const b: TSourceBlock): TSourceBlock;
   end;
   PSourceBlock = ^TSourceBlock;
   TTextSelection = TSourceBlock; { Text selection in logical coordinates }
@@ -180,7 +192,8 @@ type
     procedure JoinLine(y:integer);
     procedure DeleteCharacter(const APos: TSourcePos); overload; inline;
     procedure DeleteCharacter(x,y:integer); overload;
-    procedure DeleteBlock(const block: TSourceBlock);
+    procedure DeleteLine(AIndex: integer);
+    procedure DeleteBlock(block: TSourceBlock);
     procedure PasteText(const APos: TSourcePos; const chars: FString;
       const props: TCharacterLineProps; AnnotMode: TTextAnnotMode;
       AEndPos: PSourcePos = nil);
@@ -308,11 +321,115 @@ const
   HtmlStartFragment = '<!--StartFragment -->';
   HtmlEndFragment = '<!--EndFragment -->';
 
-function SourcePos(x,y: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+function SourcePos(x,y: integer): TSourcePos; inline;
+function SourceBlock(const AFromY, AFromX, AToY, AToX: integer): TSourceBlock; inline;
 
 implementation
 uses Forms, Windows, JclCompression, JWBUnit, JWBCharData,
   StreamUtils;
+
+{ Source position }
+
+function SourcePos(x,y: integer): TSourcePos;
+begin
+  Result.x := x;
+  Result.y := y;
+end;
+
+class operator TSourcePos.Equal(const a: TSourcePos; const b: TSourcePos): boolean;
+begin
+  Result := (a.y=b.y) and (a.x=b.x);
+end;
+
+class operator TSourcePos.NotEqual(const a: TSourcePos; const b: TSourcePos): boolean;
+begin
+  Result := (a.y<>b.y) or (a.x<>b.x);
+end;
+
+class operator TSourcePos.GreaterThan(const a: TSourcePos; const b: TSourcePos): boolean;
+begin
+  Result := (a.y>b.y) or ((a.y=b.y) and (a.x>b.x));
+end;
+
+class operator TSourcePos.GreaterThanOrEqual(const a: TSourcePos; const b: TSourcePos): boolean;
+begin
+  Result := (a.y>b.y) or ((a.y=b.y) and (a.x>=b.x));
+end;
+
+class operator TSourcePos.LessThan(const a: TSourcePos; const b: TSourcePos): boolean;
+begin
+  Result := (a.y<b.y) or ((a.y=b.y) and (a.x<b.x));
+end;
+
+class operator TSourcePos.LessThanOrEqual(const a: TSourcePos; const b: TSourcePos): boolean;
+begin
+  Result := (a.y<b.y) or ((a.y=b.y) and (a.x<=b.x));
+end;
+
+function SourceBlock(const AFromY, AFromX, AToY, AToX: integer): TSourceBlock;
+begin
+  Result.fromy := AFromY;
+  Result.fromx := AFromX;
+  Result.toy := AToY;
+  Result.tox := AToX;
+end;
+
+function TSourceBlock.FromPoint: TSourcePos;
+begin
+  Result.y := fromy;
+  Result.x := fromx;
+end;
+
+function TSourceBlock.ToPoint: TSourcePos;
+begin
+  Result.y := toy;
+  Result.x := tox;
+end;
+
+class operator TSourceBlock.Equal(const a: TSourceBlock; const b: TSourceBlock): boolean;
+begin
+  Result := (a.fromy=b.fromy) and (a.fromx=b.fromx) and (a.toy=b.toy) and (a.tox=b.tox);
+end;
+
+class operator TSourceBlock.NotEqual(const a: TSourceBlock; const b: TSourceBlock): boolean;
+begin
+  Result := (a.fromy<>b.fromy) or (a.fromx<>b.fromx) or (a.toy<>b.toy) or (a.tox<>b.tox);
+end;
+
+class operator TSourceBlock.BitwiseAnd(const a: TSourceBlock; const b: TSourceBlock): TSourceBlock;
+begin
+ //highest "from"
+  if a.fromy=b.fromy then begin
+    Result.fromy := a.fromy;
+    if a.fromx>=b.fromx then
+      Result.fromx := a.fromx
+    else
+      Result.fromx := b.fromx;
+  end else
+  if a.fromy>b.fromy then begin
+    Result.fromy := a.fromy;
+    Result.fromx := a.fromx;
+  end else begin
+    Result.fromy := b.fromy;
+    Result.fromx := b.fromx;
+  end;
+
+ //lowest "to"
+  if a.toy=b.toy then begin
+    Result.toy := a.toy;
+    if a.tox<=b.tox then
+      Result.tox := a.tox
+    else
+      Result.tox := b.tox;
+  end else
+  if a.toy<b.toy then begin
+    Result.toy := a.toy;
+    Result.tox := a.tox;
+  end else begin
+    Result.toy := b.toy;
+    Result.tox := b.tox;
+  end;
+end;
 
 { Character props }
 
@@ -572,15 +689,6 @@ begin
   SetLength(Result, Length(a));
   for i := 0 to Length(a) - 1 do
     Result[i] := a[i];
-end;
-
-
-{ }
-
-function SourcePos(x,y: integer): TSourcePos;
-begin
-  Result.x := x;
-  Result.y := y;
 end;
 
 
@@ -1712,6 +1820,7 @@ begin
   if props<>nil then
     PropertyLines.AddLine(props^)
   else begin
+    _props.Clear;
     _props.AddChars(flength(chars));
     for i := 1 to flength(chars) do
       _props.chars[i-1].SetChar('-', 9, 0, 1);
@@ -1753,9 +1862,10 @@ begin
   end;
 end;
 
+{ y is the # of the line into which you want to merge the following one }
 procedure TWakanText.JoinLine(y:integer);
 begin
-  if y+1=doc.Count then exit;
+  if (y<0) or (y>=doc.Count-1) then exit;
   doc[y]:=doc[y]+doc[y+1];
   doctr[y].AddChars(doctr[y+1]^);
   doc.delete(y+1);
@@ -1777,25 +1887,46 @@ begin
   end;
 end;
 
-procedure TWakanText.DeleteBlock(const block: TSourceBlock);
+procedure TWakanText.DeleteLine(AIndex: integer);
+begin
+  doc.Delete(AIndex);
+  doctr.DeleteLine(AIndex);
+end;
+
+{ Deletes the text contained between [block.from and block.to), last position
+ not inclusive.
+ Lines strictly inside the block (fromy < y < toy), are deleted completely. }
+procedure TWakanText.DeleteBlock(block: TSourceBlock);
 var i: integer;
 begin
-  if block.fromy=block.toy then
-  begin
+  if block.fromy>block.toy then exit;
+  if block.fromy=block.toy then begin
+    if block.fromx<=0 then block.fromx:=0;
+    if (block.toy<0) or (block.toy>=Lines.Count) then exit; //invalid line
+    if block.tox>=Length(Lines[block.toy]) then block.tox:=Length(Lines[block.toy]);
+    if block.fromx>block.tox then exit; //empty block
     doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx)
       +fcopy(doc[block.fromy],block.tox+1,flength(doc[block.fromy])-block.tox);
     doctr[block.fromy].DeleteChars(block.fromx, block.tox-block.fromx);
-  end else
-  begin
-    doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx);
-    doc[block.toy]:=fcopy(doc[block.toy],block.tox+1,flength(doc[block.toy])-block.tox);
-    if block.fromx < doctr[block.fromy].charcount then
-      doctr[block.fromy].DeleteChars(block.fromx);
-    if block.tox < doctr[block.toy].charcount then
-      doctr[block.toy].DeleteChars(0, block.tox)
-    else
-      if doctr[block.toy].charcount>0 then
-        doctr[block.toy].DeleteChars(0);
+  end else begin
+   { We have to figure out which lines are "strictly" inside the block later,
+    so we cannot just fix the block outright if it's oversized. }
+    if block.fromy>=0 then begin
+      doc[block.fromy]:=fcopy(doc[block.fromy],1,block.fromx);
+      if block.fromx < doctr[block.fromy].charcount then
+        doctr[block.fromy].DeleteChars(block.fromx);
+    end else
+      block.fromy:=-1; //one less than allowed
+    if block.toy<Lines.Count then begin
+      doc[block.toy]:=fcopy(doc[block.toy],block.tox+1,flength(doc[block.toy])-block.tox);
+      if block.tox < doctr[block.toy].charcount then
+        doctr[block.toy].DeleteChars(0, block.tox)
+      else
+        if doctr[block.toy].charcount>0 then
+          doctr[block.toy].DeleteChars(0);
+    end else
+      block.toy:=Lines.Count; //one more than allowed
+   { Enumerate only internal lines }
     for i:=block.fromy+1 to block.toy-1 do
     begin
       doc.Delete(block.fromy+1);

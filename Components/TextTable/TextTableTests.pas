@@ -754,17 +754,26 @@ begin
 end;
 
 
+function TTextTableTests: ITestSuite;
+var ASuite: TTestSuite;
+begin
+  ASuite := TTestSuite.create('TextTable');
+  ASuite.addTest(TIntIndexCase.Suite);
+  ASuite.addTest(TRawIntIndexCase.Suite);
+  ASuite.addTest(TCommitIntIndexCase.Suite);
+  ASuite.addTest(TCommitRawIntIndexCase.Suite);
+  ASuite.addTest(TStrIntIndexCase.Suite);
+  ASuite.addTest(TRawStrIntIndexCase.Suite);
+  ASuite.addTest(TUStringIndexCase.Suite);
+  ASuite.addTest(TRawUStringIndexCase.Suite);
+  ASuite.addTest(TCommitUStringIndexCase.Suite);
+  ASuite.addTest(TCommitRawUStringIndexCase.Suite);
+  ASuite.addTest(TFillMultiIndexCase.Suite);
+  ASuite.addTest(TEditMultiIndexCase.Suite);
+  Result := ASuite;
+end;
+
 initialization
-  RegisterTest(TIntIndexCase.Suite);
-  RegisterTest(TRawIntIndexCase.Suite);
-  RegisterTest(TCommitIntIndexCase.Suite);
-  RegisterTest(TCommitRawIntIndexCase.Suite);
-  RegisterTest(TStrIntIndexCase.Suite);
-  RegisterTest(TRawStrIntIndexCase.Suite);
-  RegisterTest(TUStringIndexCase.Suite);
-  RegisterTest(TRawUStringIndexCase.Suite);
-  RegisterTest(TCommitUStringIndexCase.Suite);
-  RegisterTest(TCommitRawUStringIndexCase.Suite);
-  RegisterTest(TFillMultiIndexCase.Suite);
-  RegisterTest(TEditMultiIndexCase.Suite);
+  RegisterTest(TTextTableTests);
+
 end.
