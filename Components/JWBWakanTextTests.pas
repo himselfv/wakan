@@ -1,4 +1,4 @@
-unit JWBWakanTextTests;
+﻿unit JWBWakanTextTests;
 
 interface
 uses TestFramework, JWBWakanText;
@@ -21,6 +21,9 @@ type
     text: TWakanText;
     procedure SetUp; override;
     procedure TearDown; override;
+  end;
+
+  TLinesTestCase = class(TWakanTextTestCase)
   published
     procedure BaseState;
     procedure Clearing;
@@ -33,13 +36,44 @@ type
     procedure MiscSimple;
   end;
 
-//TODO: Loading from examples (different encodings, Wakan text)
+  TEncodingTestCase = class(TWakanTextTestCase)
+  protected
+    procedure VerifyText(const AFilename: string; AEncoding: byte);
+    procedure VerifyAscii(const AFilename: string; AEncoding: byte);
+  published
+    procedure Ascii;
+    procedure UTF8;
+    procedure UTF8Sign;
+    procedure UTF16LE;
+    procedure UTF16LESign;
+    procedure UTF16BE;
+    procedure UTF16BESign;
+    procedure EUC;
+    procedure ShiftJis;
+
+    procedure GuessAscii;
+    procedure GuessUTF8;
+    procedure GuessUTF8Sign;
+    procedure GuessUTF16LE;
+    procedure GuessUTF16LESign;
+    procedure GuessUTF16BE;
+    procedure GuessUTF16BESign;
+    procedure GuessEUC;
+    procedure GuessShiftJis;
+
+  end;
+
+  TLoadingTestCase = class(TWakanTextTestCase)
+  published
+  end;
+
+//TODO: Loading from examples (Wakan text, ruby text)
 //TODO: Saving to temp then reloading.
 //TODO: Pasting.
 //TODO: Expanding Ruby
 
 implementation
-uses SysUtils, JWBStrings;
+uses SysUtils, JWBStrings, JWBConvert;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -189,7 +223,7 @@ begin
   FreeAndNil(text);
 end;
 
-procedure TWakanTextTestCase.BaseState;
+procedure TLinesTestCase.BaseState;
 begin
   Check(text.Lines<>nil);
   Check(text.PropertyLines<>nil);
@@ -197,7 +231,7 @@ begin
   Check(text.PropertyLines.Count=0);
 end;
 
-procedure TWakanTextTestCase.Clearing;
+procedure TLinesTestCase.Clearing;
 begin
   text.AddLine('Example text.');
   text.AddLine('Another line.');
@@ -229,7 +263,7 @@ begin
   Check(text.PropertyLines.Count=0);
 end;
 
-procedure TWakanTextTestCase.AddingLines;
+procedure TLinesTestCase.AddingLines;
 begin
  //Adding
   text.AddLine('Example text.');
@@ -247,7 +281,7 @@ begin
   Check(text.PropertyLines[1].charcount=Length(text.Lines[1]));
 end;
 
-procedure TWakanTextTestCase.SplittingLines;
+procedure TLinesTestCase.SplittingLines;
 begin
   text.AddLine('Example text.');
   text.AddLine('Another line.');
@@ -288,7 +322,7 @@ begin
   Check(text.Lines[0]='Example text.');
 end;
 
-procedure TWakanTextTestCase.DeletingCharacters;
+procedure TLinesTestCase.DeletingCharacters;
 begin
   text.AddLine('Example text.');
   text.AddLine('Another line.');
@@ -321,7 +355,7 @@ begin
   Check(text.PropertyLines.Count=3);
 end;
 
-procedure TWakanTextTestCase.DeletingLines;
+procedure TLinesTestCase.DeletingLines;
 begin
   text.AddLine('Example text.');
   text.AddLine('Another line.');
@@ -338,7 +372,7 @@ begin
   Check(text.Lines[1]='Fourth line.');
 end;
 
-procedure TWakanTextTestCase.DeletingBlocks;
+procedure TLinesTestCase.DeletingBlocks;
 begin
  //Multiline block
   text.AddLine('Example text.');
@@ -385,7 +419,7 @@ begin
   Check(text.PropertyLines.Count=0);
 end;
 
-procedure TWakanTextTestCase.LotsOfLines;
+procedure TLinesTestCase.LotsOfLines;
 var i: integer;
 begin
   for i := 0 to 8000 do
@@ -412,7 +446,7 @@ begin
   Check(text.PropertyLines.Count=1);
 end;
 
-procedure TWakanTextTestCase.MiscSimple;
+procedure TLinesTestCase.MiscSimple;
 begin
   text.AddLine('Example text.');
   text.AddLine('Another line.');
@@ -447,13 +481,145 @@ begin
 end;
 
 
+{ All unicode text files contain the same text, so we run the same series of tests
+to verify that they were decoded properly.
+Expand the text to include various corner cases. Do not cover Ruby or any extended
+parsing here. }
+procedure TEncodingTestCase.VerifyText(const AFilename: string; AEncoding: byte);
+begin
+  if AEncoding=FILETYPE_UNKNOWN then
+    Check(Conv_DetectTypeEx('Tests\encoding\'+AFilename, AEncoding)
+      or (AEncoding<>FILETYPE_UNKNOWN),
+      'Cannot guess file encoding.');
+
+ //All encoding test files are stored in the same folder
+  text.LoadText('Tests\encoding\'+AFilename, AEncoding, amNone);
+
+  Check(text.Lines.Count=3);
+  Check(text.PropertyLines.Count=3);
+  Check(text.Lines[0].StartsWith('世間体を気にするのは'));
+  Check(text.Lines[2].EndsWith('女子中学生だ。'));
+end;
+
+{ Ascii text is different since it can't contain unicode }
+procedure TEncodingTestCase.VerifyAscii(const AFilename: string; AEncoding: byte);
+begin
+  if AEncoding=FILETYPE_UNKNOWN then
+    Check(Conv_DetectTypeEx('Tests\encoding\'+AFilename, AEncoding)
+      or (AEncoding<>FILETYPE_UNKNOWN),
+      'Cannot guess file encoding.');
+
+ //All encoding test files are stored in the same folder
+  text.LoadText('Tests\encoding\'+AFilename, AEncoding, amNone);
+
+  Check(text.Lines.Count=3);
+  Check(text.PropertyLines.Count=3);
+  Check(text.Lines[0].StartsWith('Example ansi'));
+  Check(text.Lines[2].EndsWith('other line.'));
+end;
+
+procedure TEncodingTestCase.Ascii;
+begin
+  VerifyAscii('ascii.txt', FILETYPE_ASCII);
+end;
+
+procedure TEncodingTestCase.UTF8;
+begin
+  VerifyText('utf8.txt', FILETYPE_UTF8);
+end;
+
+procedure TEncodingTestCase.UTF8Sign;
+begin
+  VerifyText('utf8sign.txt', FILETYPE_UTF8);
+end;
+
+procedure TEncodingTestCase.UTF16LE;
+begin
+  VerifyText('utf16le.txt', FILETYPE_UTF16LE);
+end;
+
+procedure TEncodingTestCase.UTF16LESign;
+begin
+  VerifyText('utf16lesign.txt', FILETYPE_UTF16LE);
+end;
+
+procedure TEncodingTestCase.UTF16BE;
+begin
+  VerifyText('utf16be.txt', FILETYPE_UTF16BE);
+end;
+
+procedure TEncodingTestCase.UTF16BESign;
+begin
+  VerifyText('utf16besign.txt', FILETYPE_UTF16BE);
+end;
+
+procedure TEncodingTestCase.EUC;
+begin
+  VerifyText('euc.txt', FILETYPE_EUC);
+end;
+
+procedure TEncodingTestCase.ShiftJis;
+begin
+  VerifyText('shiftjis.txt', FILETYPE_SJS);
+end;
+
+{ Guess* versions make converter guess the encoding }
+procedure TEncodingTestCase.GuessAscii;
+begin
+  VerifyAscii('ascii.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessUTF8;
+begin
+  VerifyText('utf8.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessUTF8Sign;
+begin
+  VerifyText('utf8sign.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessUTF16LE;
+begin
+  VerifyText('utf16le.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessUTF16LESign;
+begin
+  VerifyText('utf16lesign.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessUTF16BE;
+begin
+  VerifyText('utf16be.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessUTF16BESign;
+begin
+  VerifyText('utf16besign.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessEUC;
+begin
+  VerifyText('euc.txt', FILETYPE_UNKNOWN);
+end;
+
+procedure TEncodingTestCase.GuessShiftJis;
+begin
+  VerifyText('shiftjis.txt', FILETYPE_UNKNOWN);
+end;
+
+
+
+
 function WakanTextTests: ITestSuite;
 var ASuite: TTestSuite;
 begin
   ASuite := TTestSuite.create('JWBWakanText');
   ASuite.addTest(TSourcePosTestCase.Suite);
   ASuite.addTest(TSourceBlockTestCase.Suite);
-  ASuite.addTest(TWakanTextTestCase.Suite);
+  ASuite.addTest(TLinesTestCase.Suite);
+  ASuite.addTest(TEncodingTestCase.Suite);
   Result := ASuite;
 end;
 

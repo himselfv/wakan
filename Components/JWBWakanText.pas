@@ -2044,7 +2044,10 @@ begin
 
    //Fix dictionary references
     for j := x_s to doctr[y].charcount-1 do
-      doctr[y].chars[j].docdic := dicconv[doctr[y].chars[j].docdic];
+      if doctr[y].chars[j].dicidx>0 then
+        doctr[y].chars[j].docdic := dicconv[doctr[y].chars[j].docdic]
+      else
+        doctr[y].chars[j].docdic := 0; //just in case
   end;
 
   x_s:=flength(doc[y]);
