@@ -61,6 +61,8 @@ type
     procedure GuessEUC;
     procedure GuessShiftJis;
 
+   //TODO: Save in all these encodings and compare to original file
+
   end;
 
   TLoadingTestCase = class(TWakanTextTestCase)
