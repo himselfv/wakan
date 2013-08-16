@@ -152,6 +152,7 @@ function GetTempPathStr: string;
 function CreateGuidStr: string;
 function CreateRandomTempDirName: string;
 function CreateRandomTempDir: string;
+procedure DeleteDirectory(dir:string);
 function AppFolder: string;
 function GetSpecialFolderPath(folderId: integer): string;
 function ForceDirectories2(Dir: string): Boolean;
@@ -446,6 +447,25 @@ function CreateRandomTempDir: string;
 begin
   Result := CreateRandomTempDirName();
   ForceDirectories(Result);
+end;
+
+procedure DeleteDirectory(dir:string);
+var sRec: TSearchRec;
+begin
+  if dir='' then exit; //just in case! don't delete random files
+  if not FindFirst(dir + '\*.*', faAnyFile, sRec) = 0 then
+    exit;
+  repeat
+    if sRec.Attr and faDirectory <> 0 then
+      if (sRec.Name = '.') or (sRec.Name = '..') then begin
+       //Nothing
+      end else
+        RemoveDirectory(PChar(dir + '\' + sRec.Name))
+    else
+      DeleteFile(PChar(dir + '\' + sRec.Name));
+  until FindNext(sRec) <> 0;
+  SysUtils.FindClose(sRec);
+  Windows.RemoveDirectory(PChar(dir));
 end;
 
 function AppFolder: string;

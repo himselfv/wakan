@@ -38,8 +38,11 @@ type
 
   TEncodingTestCase = class(TWakanTextTestCase)
   protected
+    function GetTestFilename(const AFilename: string): string;
+    procedure LoadFile(const AFilename: string; AEncoding: byte);
     procedure VerifyText(const AFilename: string; AEncoding: byte);
     procedure VerifyAscii(const AFilename: string; AEncoding: byte);
+    procedure LoadSaveCompare(const AFilename: string; AEncoding: byte; ABom: boolean);
   published
     procedure Ascii;
     procedure UTF8;
@@ -61,6 +64,16 @@ type
     procedure GuessEUC;
     procedure GuessShiftJis;
 
+    procedure SaveAscii;
+    procedure SaveUTF8;
+    procedure SaveUTF8Sign;
+    procedure SaveUTF16LE;
+    procedure SaveUTF16LESign;
+    procedure SaveUTF16BE;
+    procedure SaveUTF16BESign;
+    procedure SaveEUC;
+    procedure SaveShiftJis;
+
    //TODO: Save in all these encodings and compare to original file
 
   end;
@@ -75,7 +88,7 @@ type
 //TODO: Expanding Ruby
 
 implementation
-uses SysUtils, JWBStrings, JWBConvert;
+uses SysUtils, Classes, JWBStrings, JWBConvert;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -479,15 +492,16 @@ begin
   Check(text.EndOfDocument=SourcePos(Length(text.Lines[text.Lines.Count-1]), text.Lines.Count-1));
   Check(text.EndOfLine(text.Lines.Count-1)=text.EndOfDocument);
   Check(text.EndOfLine(0)=SourcePos(Length(text.Lines[0]),0));
-
 end;
 
 
-{ All unicode text files contain the same text, so we run the same series of tests
-to verify that they were decoded properly.
-Expand the text to include various corner cases. Do not cover Ruby or any extended
-parsing here. }
-procedure TEncodingTestCase.VerifyText(const AFilename: string; AEncoding: byte);
+function TEncodingTestcase.GetTestFilename(const AFilename: string): string;
+begin
+ //All encoding test files are stored in the same folder
+  Result := 'Tests\encoding\'+AFilename;
+end;
+
+procedure TEncodingTestCase.LoadFile(const AFilename: string; AEncoding: byte);
 begin
   if AEncoding=FILETYPE_UNKNOWN then
     Check(Conv_DetectTypeEx('Tests\encoding\'+AFilename, AEncoding)
@@ -495,8 +509,16 @@ begin
       'Cannot guess file encoding.');
 
  //All encoding test files are stored in the same folder
-  text.LoadText('Tests\encoding\'+AFilename, AEncoding, amNone);
+  text.LoadText(GetTestFilename(AFilename), AEncoding, amNone);
+end;
 
+{ All unicode text files contain the same text, so we run the same series of tests
+to verify that they were decoded properly.
+Expand the text to include various corner cases. Do not cover Ruby or any extended
+parsing here. }
+procedure TEncodingTestCase.VerifyText(const AFilename: string; AEncoding: byte);
+begin
+  LoadFile(AFilename, AEncoding);
   Check(text.Lines.Count=3);
   Check(text.PropertyLines.Count=3);
   Check(text.Lines[0].StartsWith('世間体を気にするのは'));
@@ -506,20 +528,33 @@ end;
 { Ascii text is different since it can't contain unicode }
 procedure TEncodingTestCase.VerifyAscii(const AFilename: string; AEncoding: byte);
 begin
-  if AEncoding=FILETYPE_UNKNOWN then
-    Check(Conv_DetectTypeEx('Tests\encoding\'+AFilename, AEncoding)
-      or (AEncoding<>FILETYPE_UNKNOWN),
-      'Cannot guess file encoding.');
-
- //All encoding test files are stored in the same folder
-  text.LoadText('Tests\encoding\'+AFilename, AEncoding, amNone);
-
+  LoadFile(AFilename, AEncoding);
   Check(text.Lines.Count=3);
   Check(text.PropertyLines.Count=3);
   Check(text.Lines[0].StartsWith('Example ansi'));
   Check(text.Lines[2].EndsWith('other line.'));
 end;
 
+{ Load the file, save it in the same encoding to a temporary folder and then
+ compare byte-by-byte to the original file.
+ Realistically, there will be cases when some of the nuances are lost. If this
+ happens another test might be needed to load the file back and compare as data }
+procedure TEncodingTestCase.LoadSaveCompare(const AFilename: string;
+  AEncoding: byte; ABom: boolean;);
+var tempDir: string;
+begin
+  LoadFile(AFilename, AEncoding);
+  tempDir := CreateRandomTempDir();
+  try
+    text.SaveText(amDefault, TTextSaveFormat.Create(AEncoding, not ABom),
+      TFileStream.Create(tempDir+'\'+AFilename, fmCreate));
+    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename));
+  finally
+    DeleteDirectory(tempDir);
+  end;
+end;
+
+{ Simple loading }
 procedure TEncodingTestCase.Ascii;
 begin
   VerifyAscii('ascii.txt', FILETYPE_ASCII);
@@ -611,6 +646,51 @@ begin
   VerifyText('shiftjis.txt', FILETYPE_UNKNOWN);
 end;
 
+{ Save* to load, then save, then compare to original file }
+procedure TEncodingTestCase.SaveAscii;
+begin
+  LoadSaveCompare('ascii.txt', FILETYPE_ASCII, false);
+end;
+
+procedure TEncodingTestCase.SaveUTF8;
+begin
+  LoadSaveCompare('utf8.txt', FILETYPE_UTF8, false);
+end;
+
+procedure TEncodingTestCase.SaveUTF8Sign;
+begin
+  LoadSaveCompare('utf8sign.txt', FILETYPE_UTF8, true);
+end;
+
+procedure TEncodingTestCase.SaveUTF16LE;
+begin
+  LoadSaveCompare('utf16le.txt', FILETYPE_UTF16LE, false);
+end;
+
+procedure TEncodingTestCase.SaveUTF16LESign;
+begin
+  LoadSaveCompare('utf16lesign.txt', FILETYPE_UTF16LE, true);
+end;
+
+procedure TEncodingTestCase.SaveUTF16BE;
+begin
+  LoadSaveCompare('utf16be.txt', FILETYPE_UTF16BE, false);
+end;
+
+procedure TEncodingTestCase.SaveUTF16BESign;
+begin
+  LoadSaveCompare('utf16besign.txt', FILETYPE_UTF16BE, true);
+end;
+
+procedure TEncodingTestCase.SaveEUC;
+begin
+  LoadSaveCompare('euc.txt', FILETYPE_EUC, false);
+end;
+
+procedure TEncodingTestCase.SaveShiftJis;
+begin
+  LoadSaveCompare('shiftjis.txt', FILETYPE_SJS, false);
+end;
 
 
 
