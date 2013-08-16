@@ -16,7 +16,6 @@ const
   FILETYPE_EUC=8;
   FILETYPE_GB=9;
   FILETYPE_BIG5=10;
-  FILETYPE_EUCORSJIS=99;
   FILETYPE_ASCII=98;
   FILETYPE_WTT=255;
 
@@ -435,7 +434,8 @@ begin
   begin
     _rewind;
     tp:=FILETYPE_ASCII;
-    while (tp=FILETYPE_ASCII) or (tp=FILETYPE_EUCORSJIS) do
+    eucsjis:=false;
+    while (tp=FILETYPE_ASCII) or ((tp=0) and eucsjis)  do
     begin
       i:=_fread;
       if i=-1 then break;
@@ -451,18 +451,25 @@ begin
       end else if i=JIS_SS2 then
       begin
         i:=_fread;
-        if (i>=161) and (i<=223) then tp:=FILETYPE_EUCORSJIS
+        if (i>=161) and (i<=223) then begin
+          tp:=0;
+          eucsjis:=true;
+        end
         else if (i<>127) and (i>=64) and (i<=252) then tp:=FILETYPE_SJS;
       end else if (i>=129) and (i<=159) then tp:=FILETYPE_SJS
       else if (i>=161) and (i<=223) then
       begin
         i:=_fread;
         if (i>=240) and (i<=254) then tp:=FILETYPE_EUC
-        else if (i>=161) and (i<=223) then tp:=FILETYPE_EUCORSJIS
+        else if (i>=161) and (i<=223) then begin
+          tp:=0;
+          eucsjis:=true;
+        end
         else if (i>=224) and (i<=239) then
         begin
-          tp:=FILETYPE_EUCORSJIS;
-          while ((i>=64) and (tp=FILETYPE_EUCORSJIS)) do
+          tp:=0;
+          eucsjis:=true;
+          while ((i>=64) and (tp=0) and eucsjis) do
           begin
             if i>=129 then
             begin
@@ -479,11 +486,14 @@ begin
         i:=_fread;
         if ((i>=64) and (i<=126)) or ((i>=128) and (i<=160)) then tp:=FILETYPE_SJS
         else if (i>=253) and (i<=254) then tp:=FILETYPE_EUC
-        else if (i>=161) and (i<=252) then tp:=FILETYPE_EUCORSJIS;
+        else if (i>=161) and (i<=252) then begin
+          tp:=0;
+          eucsjis:=true;
+        end;
       end;
     end;
   end;
-  if tp=FILETYPE_EUCORSJIS then tp:=FILETYPE_SJS;
+  if (tp=0) and eucsjis then tp:=FILETYPE_SJS;
 end;
 
 //Returns -1 if no char is available. It's fine because we return integer.
