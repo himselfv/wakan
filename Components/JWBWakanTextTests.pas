@@ -42,7 +42,9 @@ type
     procedure LoadFile(const AFilename: string; AEncoding: byte);
     procedure VerifyText(const AFilename: string; AEncoding: byte);
     procedure VerifyAscii(const AFilename: string; AEncoding: byte);
+    procedure VerifyAcp(const AFilename: string; AEncoding: byte);
     procedure LoadSaveCompare(const AFilename: string; AEncoding: byte; ABom: boolean);
+    function CompareFiles(const AFilename1, AFilename2: string): boolean;
   published
     procedure Ascii;
     procedure UTF8;
@@ -53,6 +55,7 @@ type
     procedure UTF16BESign;
     procedure EUC;
     procedure ShiftJis;
+    procedure Acp;
 
     procedure GuessAscii;
     procedure GuessUTF8;
@@ -73,22 +76,21 @@ type
     procedure SaveUTF16BESign;
     procedure SaveEUC;
     procedure SaveShiftJis;
-
-   //TODO: Save in all these encodings and compare to original file
+    procedure SaveAcp;
 
   end;
 
-  TLoadingTestCase = class(TWakanTextTestCase)
+  TFormatTestCase = class(TWakanTextTestCase)
   published
   end;
 
 //TODO: Loading from examples (Wakan text, ruby text)
-//TODO: Saving to temp then reloading.
+//TODO: Saving to temp then reloading of Wakan text, ruby text.
 //TODO: Pasting.
 //TODO: Expanding Ruby
 
 implementation
-uses SysUtils, Classes, JWBStrings, JWBConvert;
+uses SysUtils, Classes, JWBStrings, JWBConvert, StreamUtils;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -535,22 +537,77 @@ begin
   Check(text.Lines[2].EndsWith('other line.'));
 end;
 
+{ With ACP we cannot verify ACP text because the active codepage can be different
+ on the PC where tests are run, but at least we check what we can }
+procedure TEncodingTestCase.VerifyAcp(const AFilename: string; AEncoding: byte);
+begin
+  LoadFile(AFilename, AEncoding);
+  Check(text.Lines.Count=4);
+  Check(text.PropertyLines.Count=4);
+  Check(text.Lines[0].StartsWith('Example ansi'));
+  Check(text.Lines[2].EndsWith('other line.'));
+end;
+
 { Load the file, save it in the same encoding to a temporary folder and then
  compare byte-by-byte to the original file.
  Realistically, there will be cases when some of the nuances are lost. If this
  happens another test might be needed to load the file back and compare as data }
 procedure TEncodingTestCase.LoadSaveCompare(const AFilename: string;
-  AEncoding: byte; ABom: boolean;);
+  AEncoding: byte; ABom: boolean);
 var tempDir: string;
+  stream: TStream;
 begin
   LoadFile(AFilename, AEncoding);
   tempDir := CreateRandomTempDir();
   try
-    text.SaveText(amDefault, TTextSaveFormat.Create(AEncoding, not ABom),
-      TFileStream.Create(tempDir+'\'+AFilename, fmCreate));
+    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
+    try
+      text.SaveText(amDefault, TTextSaveFormat.Create(AEncoding, not ABom),
+        stream);
+    finally
+      FreeAndNil(stream);
+    end;
     Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename));
   finally
     DeleteDirectory(tempDir);
+  end;
+end;
+
+{ Binary comparison for files }
+function TEncodingTestCase.CompareFiles(const AFilename1, AFilename2: string): boolean;
+var f1, f2: TStream;
+  b1, b2: byte;
+  r1, r2: boolean;
+begin
+  f1 := nil;
+  f2 := nil;
+  try
+    f1 := TStreamReader.Create(
+      TFileStream.Create(AFilename1, fmOpenRead),
+      true
+    );
+    f2 := TStreamReader.Create(
+      TFileStream.Create(AFilename2, fmOpenRead),
+      true
+    );
+
+   { Can be easily made somewhat faster by reading in dwords and comparing
+    only the number of bytes read (e.g. case 1: 2: 3: 4: if (d1 & $000F) == etc.) }
+    Result := true;
+    while true do begin
+      r1 := (f1.Read(b1,1)=1);
+      r2 := (f2.Read(b2,1)=1);
+      if r1 xor r2 then
+        Result := false;
+      if b1<>b2 then
+        Result := false;
+      if not r1 then
+        break;
+    end;
+
+  finally
+    FreeAndNil(f2);
+    FreeAndNil(f1);
   end;
 end;
 
@@ -598,6 +655,11 @@ end;
 procedure TEncodingTestCase.ShiftJis;
 begin
   VerifyText('shiftjis.txt', FILETYPE_SJS);
+end;
+
+procedure TEncodingTestCase.Acp;
+begin
+  VerifyAcp('acp.txt', FILETYPE_ACP);
 end;
 
 { Guess* versions make converter guess the encoding }
@@ -690,6 +752,11 @@ end;
 procedure TEncodingTestCase.SaveShiftJis;
 begin
   LoadSaveCompare('shiftjis.txt', FILETYPE_SJS, false);
+end;
+
+procedure TEncodingTestCase.SaveAcp;
+begin
+  LoadSaveCompare('acp.txt', FILETYPE_ACP, false);
 end;
 
 

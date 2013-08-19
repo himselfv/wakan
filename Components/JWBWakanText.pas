@@ -163,8 +163,8 @@ type
     procedure LoadWakanText(const AFilename:string); overload;
     procedure SaveWakanText(AStream: TStream; ABlock: PTextSelection = nil); overload;
     procedure SaveWakanText(const AFilename:string); overload;
-    procedure SaveText(AnnotMode:TTextAnnotMode; format: TTextSaveFormat;
-      stream: TStream; block: PTextSelection = nil);
+    procedure SaveText(AAnnotMode:TTextAnnotMode; AFormat: TTextSaveFormat;
+      AStream: TStream; ABlock: PTextSelection = nil);
 
   protected //Document
     doc: TStringList; //document lines
@@ -1318,15 +1318,18 @@ begin
 end;
 
 {
+Save content to a AStream in a given AFormat.
+AFormat is freed after completing the task, but disposing of AStream is left
+to the caller.
+
 Ruby saving strategy:
 - We always save "hard ruby" since if its present then we have loaded it from the file
 - As for soft ruby, we save that to the file according to user's choice.
+Perhaps we should move Ruby code to ExpandRuby/DropRuby someday, and just write
+strings here.
 }
-//Perhaps we should move Ruby code to ExpandRuby/DropRuby someday,
-//and just write strings here.
-
-procedure TWakanText.SaveText(AnnotMode:TTextAnnotMode; format:TTextSaveFormat;
-  stream: TStream; block: PTextSelection);
+procedure TWakanText.SaveText(AAnnotMode:TTextAnnotMode; AFormat:TTextSaveFormat;
+  AStream: TStream; ABlock: PTextSelection);
 var i,j,k: integer;
   inReading:boolean;
   meaning: string;
@@ -1339,15 +1342,15 @@ var i,j,k: integer;
 
   procedure outp(s: FString);
   begin
-    format.AddChars(s)
+    AFormat.AddChars(s)
   end;
 
   procedure FinalizeRuby();
   begin
-    if (AnnotMode=amRuby) or (explicitRuby and (AnnotMode<>amNone)) then
-      format.AddWord(kanji,reading,meaning,rubyTextBreak)
+    if (AAnnotMode=amRuby) or (explicitRuby and (AAnnotMode<>amNone)) then
+      AFormat.AddWord(kanji,reading,meaning,rubyTextBreak)
     else
-      format.AddChars(kanji);
+      AFormat.AddChars(kanji);
     inReading := false;
     reading := '';
     explicitRuby := false;
@@ -1358,8 +1361,8 @@ begin
   rootLen := -1;
   explicitRuby := true;
 
-  if block<>nil then begin
-    sel := block^;
+  if ABlock<>nil then begin
+    sel := ABlock^;
     if sel.fromy<0 then sel.fromy := 0;
     if sel.toy<0 then sel.toy := doc.Count-1;
     if sel.fromx<0 then sel.fromx := 0;
@@ -1371,8 +1374,8 @@ begin
     sel.tox := flength(doc[sel.toy]);
   end;
 
-  format.Stream := stream;
-  format.BeginDocument;
+  AFormat.Stream := AStream;
+  AFormat.BeginDocument;
   for i:=sel.fromy to sel.toy do
   begin
     if i=sel.fromy then
@@ -1414,7 +1417,7 @@ begin
         end;
 
        //Implicit ruby load (if explicit is not loaded -- checked by inReading)
-        if (AnnotMode=amRuby) and not inReading then begin
+        if (AAnnotMode=amRuby) and not inReading then begin
           GetDictionaryEntry(SourcePos(j,i),kanji,reading,meaning);
           inReading := (reading<>'');
           explicitRuby := false;
@@ -1430,7 +1433,7 @@ begin
            //we have found no match per kanji, let's try it the other way:
            //assume the whole word is matched and check if there's anything special to the reading
             and (reading<>fcopy(doc[i], j, j+flength(reading)))
-            and (AnnotMode=amRuby) //better annotate something than nothing
+            and (AAnnotMode=amRuby) //better annotate something than nothing
               //in amKana it's the reverse: better replace nothing than too much
             then
               rootLen := -1; //annotate whole word
@@ -1459,8 +1462,8 @@ begin
       outp(UH_CR+UH_LF);
   end;
 
-  format.EndDocument;
-  FreeAndNil(format);
+  AFormat.EndDocument;
+  FreeAndNil(AFormat);
 end;
 
 {

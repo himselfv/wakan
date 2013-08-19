@@ -16,8 +16,13 @@ const
   FILETYPE_EUC=8;
   FILETYPE_GB=9;
   FILETYPE_BIG5=10;
-  FILETYPE_ASCII=98;
+  FILETYPE_ASCII=98; //Pure ASCII
+  FILETYPE_ACP=99; //ASCII / Active code page
   FILETYPE_WTT=255;
+
+const
+  INBUFSZ = 1024;
+  OUTBUFSZ = 1024;
 
 type
   TJwbCreateFlag = (
@@ -33,9 +38,11 @@ type
     FOwnsStream: boolean;
     FEOF: boolean;
     ftp:byte;
-    buf:array[1..1024] of byte;
+    buf:array[1..INBUFSZ] of byte;
     bufpos:integer;
     buflen:integer;
+    outbuf:array[1..OUTBUFSZ] of byte;
+    outbufpos:integer;
     inp_intwobyte:boolean;
     function _fread:integer;
     function _freadw:integer;
@@ -88,7 +95,7 @@ procedure Conv_Rewind;
 
 implementation
 
-uses JWBConvertTbl, SysUtils, JWBFileType, Controls;
+uses JWBConvertTbl, SysUtils, JWBFileType, Controls, Windows;
 
 const IS_EUC=1;
       IS_HALFKATA=2;
@@ -305,16 +312,45 @@ end;
 
 destructor TJwbConvert.Destroy;
 begin
+  Flush;
   if OwnsStream then
     FreeAndNil(FStream);
   inherited;
+end;
+
+procedure TJwbConvert.Rewind;
+begin
+  _rewind;
+ //Skip BOM if present
+  case ftp of
+    FILETYPE_UTF16LE:
+      if (_fread<>$ff) or (_fread<>$fe) then
+        _rewind;
+    FILETYPE_UTF16BE:
+      if (_fread<>$fe) or (_fread<>$ff) then
+        _rewind;
+    FILETYPE_UTF8:
+      if (_fread<>$ef) or (_fread<>$bb) or (_fread<>$bf) then
+        _rewind;
+  end;
 end;
 
 //Call after determining stream type to start reading
 procedure TJwbConvert.RewindAsType(tp: byte);
 begin
   _rewind;
-  if (tp=FILETYPE_UTF16LE) or (tp=FILETYPE_UTF16BE) then begin _fread; _fread; end;
+ //Skip BOM if present
+  case tp of
+    FILETYPE_UTF16LE:
+      if (_fread<>$ff) or (_fread<>$fe) then
+        _rewind;
+    FILETYPE_UTF16BE:
+      if (_fread<>$fe) or (_fread<>$ff) then
+        _rewind;
+    FILETYPE_UTF8:
+      if (_fread<>$ef) or (_fread<>$bb) or (_fread<>$bf) then
+        _rewind;
+  end;
   ftp:=tp;
 end;
 
@@ -322,17 +358,25 @@ end;
 procedure TJwbConvert.RewriteAsType(tp: byte);
 begin
   _rewind;
-  if tp=FILETYPE_UTF16LE then begin _fwrite(255); _fwrite(254); end;
-  if tp=FILETYPE_UTF16BE then begin _fwrite(254); _fwrite(255); end;
+  if tp=FILETYPE_UTF16LE then begin _fwrite($ff); _fwrite($fe); end;
+  if tp=FILETYPE_UTF16BE then begin _fwrite($fe); _fwrite($ff); end;
+  if tp=FILETYPE_UTF8 then begin _fwrite($ef); _fwrite($bb); _fwrite($bf); end;
   ftp:=tp;
 end;
 
 //Returns -1 if no char is available. It's fine because we return integer.
 function TJwbConvert._fread:integer;
+var tmp: array[1..INBUFSZ div 2] of byte;
 begin
   if bufpos>buflen then
   begin
-    buflen := FStream.Read(buf,1024);
+    if ftp = FILETYPE_ACP then begin
+      buflen := FStream.Read(tmp,INBUFSZ div 2);
+      if not MultiByteToWideChar(CP_ACP, 0, @tmp[1], INBUFSZ div 2, @buf[1], INBUFSZ)=INBUFSZ then
+        raise Exception.Create('Cannot convert text buffer.'); //exactly 1-to-2
+      buflen := buflen*2;
+    end else
+      buflen := FStream.Read(buf,INBUFSZ);
     if buflen<=0 then begin
       FEOF := true;
       Result := -1;
@@ -356,6 +400,7 @@ begin
   FEOF := false;
   bufpos:=1;
   buflen:=0;
+  outbufpos:=0;
   FStream.Seek(0,soFromBeginning);
 end;
 
@@ -527,6 +572,7 @@ begin
       FILETYPE_UTF16BE: begin i2:=_fread; if i2<0 then exit; result:=256*i+i2; exit; end;
       FILETYPE_UTF16LE: begin i2:=_fread; if i2<0 then exit; result:=256*i2+i; exit; end;
       FILETYPE_ASCII: begin result:=i; exit; end;
+      FILETYPE_ACP: begin {buffer is utf16le} i2:=_fread; if i2<0 then exit; result:=256*i2+i; exit; end;
       FILETYPE_EUC: begin
         if _is(i,IS_EUC) then begin
           i2:=_fread; if i2<0 then exit;
@@ -591,7 +637,11 @@ end;
 
 procedure TJwbConvert._fwrite(b:byte);
 begin
-  FStream.Write(b,1);
+ // FStream.Write(b,1); //<-- simple version
+  if outbufpos>=Length(outbuf) then
+    Flush;
+  Inc(outbufpos);
+  outbuf[outbufpos] := b;
 end;
 
 procedure TJwbConvert._fputstart(tp:byte);
@@ -622,6 +672,8 @@ procedure TJwbConvert._output(tp:byte;w:word);
 var i:integer;
 begin
   case tp of
+    FILETYPE_ASCII: begin if (w mod 256 = w) then _fwrite(w mod 256); end;
+    FILETYPE_ACP: begin {buffer is utf16le} _fwrite(w mod 256); _fwrite(w div 256); end;
     FILETYPE_UTF8:if (w and UTF8_WRITE1)=0 then _fwrite(w mod 256) else
                   if (w and UTF8_WRITE2)=0 then begin _fwrite(UTF8_VALUE2 or (w shr 6)); _fwrite(UTF8_VALUEC or (w and $3f)); end else
                   begin _fwrite(UTF8_VALUE3 or (w shr 12)); _fwrite(UTF8_VALUEC or ((w shr 6) and $3f)); _fwrite(UTF8_VALUEC or (w and $3f)); end;
@@ -732,23 +784,6 @@ begin
   end;
 end;
 
-procedure TJwbConvert.Rewind;
-begin
-  _rewind;
- //Skip BOM if present
-  case ftp of
-    FILETYPE_UTF16LE:
-      if (_fread<>$ff) or (_fread<>$fe) then
-        _rewind;
-    FILETYPE_UTF16BE:
-      if (_fread<>$fe) or (_fread<>$ff) then
-        _rewind;
-    FILETYPE_UTF8:
-      if (_fread<>$ef) or (_fread<>$bb) or (_fread<>$bf) then
-        _rewind;
-  end;
-end;
-
 procedure TJwbConvert.Write(s:FString);
 {$IFNDEF UNICODE}
 var s2:FString;
@@ -781,8 +816,21 @@ begin
 end;
 
 procedure TJwbConvert.Flush;
+var tmp: array[1..OUTBUFSZ] of byte;
+ sz: integer;
+ useddef: boolean;
 begin
-  FStream.Write(buf,bufpos-1)
+  if outbufpos=0 then exit; //nothing to flush
+  if ftp=FILETYPE_ACP then begin
+    useddef := false;
+    sz := WideCharToMultiByte(CP_ACP, 0, @outbuf[1], outbufpos div 2,
+      @tmp[1], outbufpos div 2, nil, @useddef);
+    if sz<>outbufpos div 2 then
+      raise Exception.Create('Cannot convert block of text.');
+    FStream.Write(tmp,outbufpos div 2);
+  end else
+    FStream.Write(outbuf,outbufpos);
+  outbufpos:=0;
 end;
 
 
