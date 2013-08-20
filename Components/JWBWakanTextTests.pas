@@ -16,13 +16,17 @@ type
     procedure Arithmetics;
   end;
 
+ { Base class for cases which test TWakanText }
   TWakanTextTestCase = class(TTestCase)
   protected
     text: TWakanText;
     procedure SetUp; override;
     procedure TearDown; override;
+   //Helpers
+    function CompareFiles(const AFilename1, AFilename2: string): boolean;
   end;
 
+ { Manipulations with TWakanText contents: accessing characters, lines }
   TLinesTestCase = class(TWakanTextTestCase)
   published
     procedure BaseState;
@@ -36,6 +40,8 @@ type
     procedure MiscSimple;
   end;
 
+ { Wakan supports reading and writing text in a range of encodings, with or
+  without BOM. }
   TEncodingTestCase = class(TWakanTextTestCase)
   protected
     function GetTestFilename(const AFilename: string): string;
@@ -43,8 +49,8 @@ type
     procedure VerifyText(const AFilename: string; AEncoding: byte);
     procedure VerifyAscii(const AFilename: string; AEncoding: byte);
     procedure VerifyAcp(const AFilename: string; AEncoding: byte);
-    procedure LoadSaveCompare(const AFilename: string; AEncoding: byte; ABom: boolean);
-    function CompareFiles(const AFilename1, AFilename2: string): boolean;
+    procedure LoadSaveCompare(const AFilename: string; AEncoding: byte;
+      ABom: boolean; const ATestComment: string = '');
   published
     procedure Ascii;
     procedure UTF8;
@@ -77,17 +83,54 @@ type
     procedure SaveEUC;
     procedure SaveShiftJis;
     procedure SaveAcp;
+  end;
+
+ { Wakan supports loading and saving from text (enhanced with ruby) and native
+  WTT format which may contain dictionary references.
+  This requires text encoder to be working -- run TEncodingTestCase first }
+  TRubyTextTestCase = class(TWakanTextTestCase)
+  protected
+    function GetTestFilename(const AFilename: string): string;
+    procedure SaveCompare(const AFilename: string; AAnnotMode: TTextAnnotMode;
+      const ATestComment: string = '');
+  published
+    procedure LoadNoRuby;
+    procedure LoadRuby;
+   //TODO: SaveAllRuby (i.e. even the ones generated from the dictionary)
+   //  At this point can't be done because I can't be sure we have at least one
+   //  dictionary while doing the tests.
+  end;
+
+  TWttTestCase = class(TWakanTextTestCase)
 
   end;
 
-  TFormatTestCase = class(TWakanTextTestCase)
+ { Wakan can export in a wide range of formats, but most of those cannot be
+  read back.
+  To test a format we load the source, export it and compare the result. This
+  relies on ruby parser working -- run TLoadSaveTestCase first }
+  TExportTestCase = class(TWakanTextTestCase)
+  protected
+    function GetTestFilename(const AFilename: string): string;
+    procedure LoadSave(const AFilename: string; AFormat: TTextSaveFormat;
+      const ATestComment: string = '');
+    procedure LoadSaveCompare(const AFilename: string; AFormat: TTextSaveFormat;
+      const ATestComment: string = '');
   published
+    procedure KanaOnly;
+    procedure KanaOnlySpaces;
+    procedure KanjiOnly;
+    procedure KanjiKana;
+    procedure Html;
+    procedure HtmlFragm;
+    procedure OpenDocumentContent;
+    procedure OpenDocument;
   end;
 
 //TODO: Loading from examples (Wakan text, ruby text)
 //TODO: Saving to temp then reloading of Wakan text, ruby text.
-//TODO: Pasting.
 //TODO: Expanding Ruby
+//TODO: Pasting.
 
 implementation
 uses SysUtils, Classes, JWBStrings, JWBConvert, StreamUtils;
@@ -238,6 +281,44 @@ end;
 procedure TWakanTextTestCase.TearDown;
 begin
   FreeAndNil(text);
+end;
+
+{ Binary comparison for files }
+function TWakanTextTestCase.CompareFiles(const AFilename1, AFilename2: string): boolean;
+var f1, f2: TStream;
+  b1, b2: byte;
+  r1, r2: boolean;
+begin
+  f1 := nil;
+  f2 := nil;
+  try
+    f1 := TStreamReader.Create(
+      TFileStream.Create(AFilename1, fmOpenRead),
+      true
+    );
+    f2 := TStreamReader.Create(
+      TFileStream.Create(AFilename2, fmOpenRead),
+      true
+    );
+
+   { Can be easily made somewhat faster by reading in dwords and comparing
+    only the number of bytes read (e.g. case 1: 2: 3: 4: if (d1 & $000F) == etc.) }
+    Result := true;
+    while true do begin
+      r1 := (f1.Read(b1,1)=1);
+      r2 := (f2.Read(b2,1)=1);
+      if r1 xor r2 then
+        Result := false;
+      if b1<>b2 then
+        Result := false;
+      if (not r1) or (not Result) then //not Result => diff; not r1 => both over
+        break;
+    end;
+
+  finally
+    FreeAndNil(f2);
+    FreeAndNil(f1);
+  end;
 end;
 
 procedure TLinesTestCase.BaseState;
@@ -553,7 +634,7 @@ end;
  Realistically, there will be cases when some of the nuances are lost. If this
  happens another test might be needed to load the file back and compare as data }
 procedure TEncodingTestCase.LoadSaveCompare(const AFilename: string;
-  AEncoding: byte; ABom: boolean);
+  AEncoding: byte; ABom: boolean; const ATestComment: string = '');
 var tempDir: string;
   stream: TStream;
 begin
@@ -570,44 +651,6 @@ begin
     Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename));
   finally
     DeleteDirectory(tempDir);
-  end;
-end;
-
-{ Binary comparison for files }
-function TEncodingTestCase.CompareFiles(const AFilename1, AFilename2: string): boolean;
-var f1, f2: TStream;
-  b1, b2: byte;
-  r1, r2: boolean;
-begin
-  f1 := nil;
-  f2 := nil;
-  try
-    f1 := TStreamReader.Create(
-      TFileStream.Create(AFilename1, fmOpenRead),
-      true
-    );
-    f2 := TStreamReader.Create(
-      TFileStream.Create(AFilename2, fmOpenRead),
-      true
-    );
-
-   { Can be easily made somewhat faster by reading in dwords and comparing
-    only the number of bytes read (e.g. case 1: 2: 3: 4: if (d1 & $000F) == etc.) }
-    Result := true;
-    while true do begin
-      r1 := (f1.Read(b1,1)=1);
-      r2 := (f2.Read(b2,1)=1);
-      if r1 xor r2 then
-        Result := false;
-      if b1<>b2 then
-        Result := false;
-      if not r1 then
-        break;
-    end;
-
-  finally
-    FreeAndNil(f2);
-    FreeAndNil(f1);
   end;
 end;
 
@@ -690,6 +733,7 @@ end;
 
 procedure TEncodingTestCase.GuessUTF16BE;
 begin
+ //UTF16BE is not being detected at this point, so this test always fails.
   VerifyText('utf16be.txt', FILETYPE_UNKNOWN);
 end;
 
@@ -760,6 +804,184 @@ begin
 end;
 
 
+{ Ruby text }
+
+function TRubyTextTestCase.GetTestFilename(const AFilename: string): string;
+begin
+  Result := 'Tests\'+AFilename;
+end;
+
+procedure TRubyTextTestCase.SaveCompare(const AFilename: string;
+  AAnnotMode: TTextAnnotMode; const ATestComment: string = '');
+var tempDir: string;
+  stream: TStream;
+begin
+  tempDir := CreateRandomTempDir();
+  try
+    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
+    try
+      text.SaveText(AAnnotMode, TRubyTextFormat.Create(FILETYPE_UTF16LE, false),
+        stream);
+    finally
+      FreeAndNil(stream);
+    end;
+    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename));
+  finally
+    DeleteDirectory(tempDir);
+  end;
+end;
+
+
+procedure TRubyTextTestCase.LoadNoRuby;
+begin
+  text.Clear;
+  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amNone);
+  Check(text.Lines.Count=19);
+  Check(text.Lines[1].StartsWith('学校《がっこう》から帰宅《きたく》する'));
+  Check(text.Lines[2].EndsWith('女子《じょし》｜中学生《ちゅうがくせい》だ。'));
+  Check(text.Lines[5].StartsWith('《ちゅうがくせい》だ。'));
+  Check(text.Lines[6].StartsWith('近所の｜《ちゅうがくせい》だ。'));
+  Check(text.Lines[18].StartsWith('近所》きん》じょ《きん《じょ｜中学生《《｜がくせい'));
+
+ //it shouldn't matter whether we use amNone or amDefault though
+  SaveCompare('rubytext.txt', amNone, 'Saving back with amNone');
+  SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
+end;
+
+procedure TRubyTextTestCase.LoadRuby;
+var i: integer;
+begin
+  text.Clear;
+  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+  Check(text.Lines.Count=19);
+  Check(text.Lines[1].StartsWith('学校から帰宅する'));
+  Check(text.Lines[2].EndsWith('女子中学生だ。'));
+  Check(text.Lines[5].StartsWith(UH_RUBY_PLACEHOLDER+'だ。'));
+  Check(text.Lines[6].StartsWith('近所の'+UH_RUBY_PLACEHOLDER+'だ。'));
+  Check(text.Lines[18].StartsWith('近所》きん》じょ《きん《じょ｜中学生《《｜がくせい'));
+
+ //Normal ruby
+  Check(text.PropertyLines[1].chars[0].ruby='がっこう');
+  Check(text.PropertyLines[1].chars[1].wordstate='<');
+  Check(text.PropertyLines[1].chars[2].wordstate<>'<');
+  Check(text.PropertyLines[1].chars[4].ruby='きたく');
+
+ //Ruby with no base (various)
+  Check(text.PropertyLines[5].chars[0].ruby='ちゅうがくせい');
+  Check(text.PropertyLines[6].chars[3].ruby='ちゅうがくせい');
+
+ { Ruby parsing quality will mostly be tested by restoring the file and comparing
+  to the original one. For now we'll just check that all valid ruby was parsed away }
+  for i := 0 to 17 do begin
+    Check(not text.Lines[i].Contains('《'), 'Not all valid ruby was parsed away');
+    Check(not text.Lines[i].Contains('》'), 'Not all valid ruby was parsed away');
+    Check(not text.Lines[i].Contains('｜'), 'Not all valid ruby was parsed away');
+  end;
+
+ { Broken ruby line must have no parsed ruby }
+  for i := 0 to text.PropertyLines[18].charcount-1 do
+    Check(text.PropertyLines[18].chars[i].ruby='');
+
+  SaveCompare('norubytext.txt', amNone, 'Saving back with amNone');
+  SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
+end;
+
+{ Export formats }
+
+function TExportTestCase.GetTestFilename(const AFilename: string): string;
+begin
+ //All encoding test files are stored in the same folder
+  Result := 'Tests\format\'+AFilename;
+end;
+
+procedure TExportTestCase.LoadSave(const AFilename: string;
+  AFormat: TTextSaveFormat; const ATestComment: string);
+var tempDir: string;
+  stream: TStream;
+begin
+ //Load text and parse Ruby
+  text.Clear;
+  text.LoadText(GetTestFilename('_source.txt'), FILETYPE_UTF16LE, amRuby);
+
+  tempDir := CreateRandomTempDir();
+  try
+    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
+    try
+      text.SaveText(amDefault, AFormat, stream);
+    finally
+      FreeAndNil(stream);
+    end;
+  finally
+    DeleteDirectory(tempDir);
+  end;
+end;
+
+procedure TExportTestCase.LoadSaveCompare(const AFilename: string;
+  AFormat: TTextSaveFormat; const ATestComment: string);
+var tempDir: string;
+  stream: TStream;
+begin
+ //Load text and parse Ruby
+  text.Clear;
+  text.LoadText(GetTestFilename('_source.txt'), FILETYPE_UTF16LE, amRuby);
+
+  tempDir := CreateRandomTempDir();
+  try
+    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
+    try
+      text.SaveText(amDefault, AFormat, stream);
+    finally
+      FreeAndNil(stream);
+    end;
+    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename), ATestComment);
+  finally
+    DeleteDirectory(tempDir);
+  end;
+end;
+
+procedure TExportTestCase.KanaOnly;
+begin
+  LoadSaveCompare('kanaonly.txt', TKanaOnlyFormat.Create(FILETYPE_UTF16LE,false), 'Without spaces');
+end;
+
+procedure TExportTestCase.KanaOnlySpaces;
+begin
+  LoadSaveCompare('kanaonlysp.txt', TKanaOnlyFormat.Create(FILETYPE_UTF16LE,true), 'With spaces');
+end;
+
+procedure TExportTestCase.KanjiOnly;
+begin
+  LoadSaveCompare('kanjionly.txt', TKanjiOnlyFormat.Create(FILETYPE_UTF16LE,false));
+end;
+
+procedure TExportTestCase.KanjiKana;
+begin
+  LoadSaveCompare('kanjikana.txt', TKanjiKanaFormat.Create(FILETYPE_UTF16LE,false));
+end;
+
+procedure TExportTestCase.Html;
+begin
+  LoadSaveCompare('html.txt', THtmlFormat.Create([]), 'Full document');
+end;
+
+procedure TExportTestCase.HtmlFragm;
+begin
+  LoadSaveCompare('htmlfragm.txt', THtmlFormat.Create([hoClipFragment]), 'Clip fragment');
+end;
+
+procedure TExportTestCase.OpenDocumentContent;
+begin
+  LoadSaveCompare('odtcontent.xml', TOpenDocumentContentFormat.Create());
+end;
+
+procedure TExportTestCase.OpenDocument;
+begin
+ { ODT is a zip file, it stores creation/last write dates of all its contents,
+  so there's no point comparing it against the reference. It will not be identical.
+  Let's at least check that Save works }
+  LoadSave('odt.odt', TOpenDocumentFormat.Create());
+end;
+
 
 function WakanTextTests: ITestSuite;
 var ASuite: TTestSuite;
@@ -769,6 +991,9 @@ begin
   ASuite.addTest(TSourceBlockTestCase.Suite);
   ASuite.addTest(TLinesTestCase.Suite);
   ASuite.addTest(TEncodingTestCase.Suite);
+  ASuite.addTest(TRubyTextTestCase.Suite);
+  ASuite.addTest(TWttTestCase.Suite);
+  ASuite.addTest(TExportTestCase.Suite);
   Result := ASuite;
 end;
 
