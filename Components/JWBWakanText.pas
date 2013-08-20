@@ -1605,7 +1605,7 @@ begin
     props.AddChars(s3);
   end;
 
-  PasteText(SourcePos(0,0),chars,props,amRuby); //paste as is, do not expand ruby
+  PasteText(SourcePos(0,0),chars,props,amRuby); //paste and expand ruby
   Result := true;
 end;
 

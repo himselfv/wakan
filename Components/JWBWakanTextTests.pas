@@ -93,12 +93,19 @@ type
     function GetTestFilename(const AFilename: string): string;
     procedure SaveCompare(const AFilename: string; AAnnotMode: TTextAnnotMode;
       const ATestComment: string = '');
+    procedure SaveCompareWtt(const AFilename: string;
+      const ATestComment: string = '');
+    procedure CheckNoRuby;
+    procedure CheckRuby;
   published
     procedure LoadNoRuby;
     procedure LoadRuby;
    //TODO: SaveAllRuby (i.e. even the ones generated from the dictionary)
    //  At this point can't be done because I can't be sure we have at least one
    //  dictionary while doing the tests.
+    procedure LoadWttRuby;
+    procedure LoadWttDict;
+    procedure LoadWttOlderVersions;
   end;
 
   TWttTestCase = class(TWakanTextTestCase)
@@ -808,7 +815,7 @@ end;
 
 function TRubyTextTestCase.GetTestFilename(const AFilename: string): string;
 begin
-  Result := 'Tests\'+AFilename;
+  Result := 'Tests\rubywtt\'+AFilename;
 end;
 
 procedure TRubyTextTestCase.SaveCompare(const AFilename: string;
@@ -825,34 +832,47 @@ begin
     finally
       FreeAndNil(stream);
     end;
-    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename));
+    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename),
+      ATestComment);
   finally
     DeleteDirectory(tempDir);
   end;
 end;
 
-
-procedure TRubyTextTestCase.LoadNoRuby;
+procedure TRubyTextTestCase.SaveCompareWtt(const AFilename: string;
+  const ATestComment: string = '');
+var tempDir: string;
+  stream: TStream;
 begin
-  text.Clear;
-  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amNone);
+  tempDir := CreateRandomTempDir();
+  try
+    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
+    try
+      text.SaveWakanText(stream);
+    finally
+      FreeAndNil(stream);
+    end;
+    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename),
+      ATestComment);
+  finally
+    DeleteDirectory(tempDir);
+  end;
+end;
+
+{ Checks to do with standard text when loaded without and with parsing Ruby. }
+procedure TRubyTextTestCase.CheckNoRuby;
+begin
   Check(text.Lines.Count=19);
   Check(text.Lines[1].StartsWith('学校《がっこう》から帰宅《きたく》する'));
   Check(text.Lines[2].EndsWith('女子《じょし》｜中学生《ちゅうがくせい》だ。'));
   Check(text.Lines[5].StartsWith('《ちゅうがくせい》だ。'));
   Check(text.Lines[6].StartsWith('近所の｜《ちゅうがくせい》だ。'));
   Check(text.Lines[18].StartsWith('近所》きん》じょ《きん《じょ｜中学生《《｜がくせい'));
-
- //it shouldn't matter whether we use amNone or amDefault though
-  SaveCompare('rubytext.txt', amNone, 'Saving back with amNone');
-  SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
 end;
 
-procedure TRubyTextTestCase.LoadRuby;
+procedure TRubyTextTestCase.CheckRuby;
 var i: integer;
 begin
-  text.Clear;
-  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
   Check(text.Lines.Count=19);
   Check(text.Lines[1].StartsWith('学校から帰宅する'));
   Check(text.Lines[2].EndsWith('女子中学生だ。'));
@@ -881,9 +901,60 @@ begin
  { Broken ruby line must have no parsed ruby }
   for i := 0 to text.PropertyLines[18].charcount-1 do
     Check(text.PropertyLines[18].chars[i].ruby='');
+end;
+
+procedure TRubyTextTestCase.LoadNoRuby;
+begin
+  text.Clear;
+  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amNone);
+  CheckNoRuby;
+
+ //it shouldn't matter whether we use amNone or amDefault though
+  SaveCompare('rubytext.txt', amNone, 'Saving back with amNone');
+  SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
+end;
+
+procedure TRubyTextTestCase.LoadRuby;
+begin
+  text.Clear;
+  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+  CheckRuby;
 
   SaveCompare('norubytext.txt', amNone, 'Saving back with amNone');
   SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
+end;
+
+procedure TRubyTextTestCase.LoadWttRuby;
+begin
+  text.Clear;
+  text.LoadWakanText(GetTestFilename('rubytext.wtt'));
+  CheckRuby(); //assume the same text
+ { We cannot directly compare WTT since some fields (char.db version) may change
+  + local dictionary list may be indexed differently. }
+  SaveCompare('rubytext.wtt', amDefault, 'Saving to ruby text and comparing')
+ //TODO: Still, saved version lacks dictionary list at all. Bad.
+  SaveCompareWtt('rubytext.wtt', 'Saving back to WTT');
+end;
+
+procedure TRubyTextTestCase.LoadWttDict;
+begin
+  text.Clear;
+  text.LoadWakanText(GetTestFilename('dicttext.wtt'));
+
+ //Run some checks
+  Check(text.Lines[0][1]=WideChar($3000));
+  Check(text.PropertyLines[0].chars[1].learnstate=2);
+  Check(text.PropertyLines[0].chars[1].dicidx=166076);
+  Check(text.PropertyLines[0].chars[1].docdic=0);
+  Check(text.PropertyLines[0].chars[1].wordstate='F');
+  Check(text.PropertyLines[0].chars[2].wordstate='<');
+
+  SaveCompareWtt('rubytext.wtt', 'Saving back to WTT');
+end;
+
+procedure TRubyTextTestCase.LoadWttOlderVersions;
+begin
+
 end;
 
 { Export formats }
