@@ -1130,6 +1130,7 @@ var c: FChar;
   end;
 
 begin
+  Self.Clear;
   s := '';
   sp.Clear;
 
@@ -1504,10 +1505,7 @@ var s,s2:string;
 
   chars: FString;
   props: TCharacterLineProps;
-
-  locdics: TStringList;
   locdicidx: integer;
-  dicconv: array of integer; //maps local dictionaries to document dictionaries
 
 begin
   Clear;
@@ -1527,27 +1525,17 @@ begin
     raise EBadWakanTextFormat.Create(_l('#00681^eThis JTT file was created by '
       +'old version of WaKan.'#13'It is not compatible with the current version.'));
 
-  locdics := TStringList.Create;
-  try
-   //Read local dictionaries
-    AStream.Read(w,2);
-    AStream.Read(wss,w*2);
-    wss[w*2]:=#0;
-    s:=string(wss);
-    while (s<>'') and (s[1]<>'$') do
-    begin
-      s2:=copy(s,1,pos(',',s)-1);
-      delete(s,1,pos(',',s));
-      locdics.Add(s2);
-    end;
-
-   //Create dictionary conversion table
-    SetLength(dicconv, locdics.Count);
-    for i := 0 to Length(dicconv) - 1 do
-      if not docdic.Find(locdics[i], dicconv[i]) then
-        dicconv[i] := docdic.Add(locdics[i]);
-  finally
-    FreeAndNil(locdics);
+ { We're loading this to an empty document, so we just replace dictionary list
+  with the one provided in WTT. }
+  AStream.Read(w,2);
+  AStream.Read(wss,w*2);
+  wss[w*2]:=#0;
+  s:=string(wss);
+  while (s<>'') and (s[1]<>'$') do
+  begin
+    s2:=copy(s,1,pos(',',s)-1);
+    delete(s,1,pos(',',s));
+    docdic.Add(s2);
   end;
 
  //We will build a text in these variables, then pass it to PasteText.
@@ -1585,13 +1573,6 @@ begin
 
        //dic index is apparently stored as character (ex. '1', '2') and we need it as int
         locdicidx := buf[i*4+2] div 256 - ord('0');
-       //convert to document indexes
-        if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
-          locdicidx := 0 //trust no one
-          { this in fact might happen because Wakan by default sets dicidx to 1,
-           even if there's no dictionaries }
-        else
-          locdicidx := dicconv[locdicidx];
         s3.AddChar(dp, buf[i*4] div 256, l, locdicidx);
       end;
     end;
@@ -2051,6 +2032,17 @@ begin
         doctr[y].chars[j].docdic := dicconv[doctr[y].chars[j].docdic]
       else
         doctr[y].chars[j].docdic := 0; //just in case
+
+(* not needed?
+       //convert to document indexes
+        if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
+          locdicidx := 0 //trust no one
+          { this in fact might happen because Wakan by default sets dicidx to 1,
+           even if there's no dictionaries }
+        else
+          locdicidx := dicconv[locdicidx];
+
+*)
   end;
 
   x_s:=flength(doc[y]);

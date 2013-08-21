@@ -24,6 +24,7 @@ type
     procedure TearDown; override;
    //Helpers
     function CompareFiles(const AFilename1, AFilename2: string): boolean;
+    procedure CompareData(const AText: TWakanText);
   end;
 
  { Manipulations with TWakanText contents: accessing characters, lines }
@@ -93,8 +94,7 @@ type
     function GetTestFilename(const AFilename: string): string;
     procedure SaveCompare(const AFilename: string; AAnnotMode: TTextAnnotMode;
       const ATestComment: string = '');
-    procedure SaveCompareWtt(const AFilename: string;
-      const ATestComment: string = '');
+    procedure SaveReloadCompareDataWtt();
     procedure CheckNoRuby;
     procedure CheckRuby;
   published
@@ -103,6 +103,7 @@ type
    //TODO: SaveAllRuby (i.e. even the ones generated from the dictionary)
    //  At this point can't be done because I can't be sure we have at least one
    //  dictionary while doing the tests.
+    procedure LoadRubyTestWttSave;
     procedure LoadWttRuby;
     procedure LoadWttDict;
     procedure LoadWttOlderVersions;
@@ -134,9 +135,6 @@ type
     procedure OpenDocument;
   end;
 
-//TODO: Loading from examples (Wakan text, ruby text)
-//TODO: Saving to temp then reloading of Wakan text, ruby text.
-//TODO: Expanding Ruby
 //TODO: Pasting.
 
 implementation
@@ -325,6 +323,46 @@ begin
   finally
     FreeAndNil(f2);
     FreeAndNil(f1);
+  end;
+end;
+
+{ Compares another TWakanText to this one. Tests that the actual contents is
+ the same, even if the order is different where it doesn't matter, etc. }
+procedure TWakanTextTestCase.CompareData(const AText: TWakanText);
+var i, j: integer;
+  line1, line2: PCharacterLineProps;
+  locdics: array of integer; //map: AText.docdics -> text.docdics
+begin
+  Check(text.Lines.Count=AText.Lines.Count, 'Number of lines differ');
+  Check(text.PropertyLines.Count=AText.PropertyLines.Count, 'Number of property lines differ');
+
+ //Dictionary lists (mb in different order)
+  Check(text.docdic.Count=AText.docdic.Count, 'Number of dictionaries differ');
+  SetLength(locdics, text.docdic.Count);
+  for i := 0 to AText.docdic.Count-1 do begin
+    j := text.docdic.IndexOf(AText.docdic[i]);
+    Check(j>=0, 'Dictionary list differs');
+    locdics[i] := j;
+  end;
+
+  for i := 0 to text.Lines.Count-1 do
+    Check(text.Lines[i]=AText.Lines[i], 'Text contents differs');
+
+  for i := 0 to text.PropertyLines.Count-1 do begin
+    line1 := text.PropertyLines[i];
+    line2 := AText.PropertyLines[i];
+    Check(line1.charcount=line2.charcount, 'Property line length differs');
+    for j := 0 to line1.charcount-1 do begin
+      Check(line1.chars[j].wordstate=line2.chars[j].wordstate, 'Char wordstate differs');
+      Check(line1.chars[j].learnstate=line2.chars[j].learnstate, 'Char learnstate differs');
+      Check(line1.chars[j].dicidx=line2.chars[j].dicidx, 'Char dicidx differs');
+      if line1.chars[j].dicidx<>0 then { else there's no link and docdic can be anything
+        and we shouldn't check because Length(locdics) can be == 0 }
+        Check(line1.chars[j].docdic=locdics[line2.chars[j].docdic], 'Char docdic differs');
+      Check(line1.chars[j].rubyTextBreak=line2.chars[j].rubyTextBreak, 'Char rubyTextBreak differs');
+      Check(line1.chars[j].ruby=line2.chars[j].ruby, 'Char ruby differs');
+      Check(line1.chars[j].flags=line2.chars[j].flags, 'Char flags differ');
+    end;
   end;
 end;
 
@@ -839,21 +877,35 @@ begin
   end;
 end;
 
-procedure TRubyTextTestCase.SaveCompareWtt(const AFilename: string;
-  const ATestComment: string = '');
+{ Saves the contents as WTT, reloads it into another TWakanText and compares
+ the contents to the one after reloading.
+ We cannot directly compare WTT files since some fields (char.db version) may
+ change + local dictionary list may be indexed differently. }
+procedure TRubyTextTestCase.SaveReloadCompareDataWtt();
 var tempDir: string;
   stream: TStream;
+  text2: TWakanText;
 begin
   tempDir := CreateRandomTempDir();
   try
-    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
+    stream := TFileStream.Create(tempDir+'\temp.wtt', fmCreate);
     try
       text.SaveWakanText(stream);
     finally
       FreeAndNil(stream);
     end;
-    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename),
-      ATestComment);
+
+    text2 := nil;
+    stream := nil;
+    try
+      text2 := TWakanText.Create;
+      stream := TFileStream.Create(tempDir+'\temp.wtt', fmOpenRead);
+      text2.LoadWakanText(stream);
+      CompareData(text2);
+    finally
+      FreeAndNil(text2);
+      FreeAndNil(stream);
+    end;
   finally
     DeleteDirectory(tempDir);
   end;
@@ -924,18 +976,25 @@ begin
   SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
 end;
 
+{ Loads ruby txt, saves as WTT, loads back and compares }
+procedure TRubyTextTestCase.LoadRubyTestWttSave;
+begin
+  text.Clear;
+  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+  SaveReloadCompareDataWtt();
+end;
+
+{ Tests WTT with text ruby }
 procedure TRubyTextTestCase.LoadWttRuby;
 begin
   text.Clear;
   text.LoadWakanText(GetTestFilename('rubytext.wtt'));
   CheckRuby(); //assume the same text
- { We cannot directly compare WTT since some fields (char.db version) may change
-  + local dictionary list may be indexed differently. }
-  SaveCompare('rubytext.wtt', amDefault, 'Saving to ruby text and comparing')
- //TODO: Still, saved version lacks dictionary list at all. Bad.
-  SaveCompareWtt('rubytext.wtt', 'Saving back to WTT');
+  SaveCompare('rubytext.txt', amDefault, 'Saving to ruby text and comparing');
+  SaveReloadCompareDataWtt();
 end;
 
+{ Tests WTT with dictionary references }
 procedure TRubyTextTestCase.LoadWttDict;
 begin
   text.Clear;
@@ -949,7 +1008,7 @@ begin
   Check(text.PropertyLines[0].chars[1].wordstate='F');
   Check(text.PropertyLines[0].chars[2].wordstate='<');
 
-  SaveCompareWtt('rubytext.wtt', 'Saving back to WTT');
+  SaveReloadCompareDataWtt();
 end;
 
 procedure TRubyTextTestCase.LoadWttOlderVersions;
