@@ -100,6 +100,7 @@ type
   end;
 
 function CharPropArray(a: array of TCharacterProps): TCharacterPropArray;
+function CharacterLineProps(a: array of TCharacterProps): TCharacterLineProps;
 
 type
  { Character position in source text. }
@@ -689,6 +690,12 @@ begin
   SetLength(Result, Length(a));
   for i := 0 to Length(a) - 1 do
     Result[i] := a[i];
+end;
+
+function CharacterLineProps(a: array of TCharacterProps): TCharacterLineProps;
+begin
+  Result.chars := CharPropArray(a);
+  Result.charcount := Length(a);
 end;
 
 
@@ -1516,8 +1523,9 @@ begin
 
   AStream.Read(ws,32);
   s:=string(ws);
-  if copy(s,1,22)<>'WaKan Translated Text>'then
-    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
+  if (copy(s,1,22)<>'WaKan Translated Text>')
+  and (copy(s,1,22)<>'JaLeT Translated Text>') then
+    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid Wakan text file.'));
   delete(s,1,22);
 
   AStream.Read(w,2);
@@ -1921,12 +1929,12 @@ begin
 end;
 
 { Receives a string contanining multiple lines of text separated by CRLF.
- Splits ti into lines, inserts at the specified position. Expands ruby if
+ Splits it into lines, inserts before the specified position. Expands ruby if
  AnnotMode dictates so.
 
  Props may be omitted, in which case default props are used for all symbols.
 
- Returns SourcePos of the end of the inserted text in AEndPos }
+ Returns SourcePos of the last character in the inserted text in AEndPos }
 procedure TWakanText.PasteText(const APos: TSourcePos; const chars: FString;
   const props: TCharacterLineProps; AnnotMode: TTextAnnotMode;
   AEndPos: PSourcePos);
@@ -1996,6 +2004,7 @@ procedure TWakanText.PasteDoc(const APos: TSourcePos; const ADoc: TWakanText;
 var dicconv: array of integer; //maps document dictionaries to local dictionaries
   i, j: integer;
   y, x_s:integer;
+  locidx: integer;
 
 begin
  //Create dictionary conversion table
@@ -2032,17 +2041,6 @@ begin
         doctr[y].chars[j].docdic := dicconv[doctr[y].chars[j].docdic]
       else
         doctr[y].chars[j].docdic := 0; //just in case
-
-(* not needed?
-       //convert to document indexes
-        if (locdicidx<0) or (locdicidx>=Length(dicconv)) then
-          locdicidx := 0 //trust no one
-          { this in fact might happen because Wakan by default sets dicidx to 1,
-           even if there's no dictionaries }
-        else
-          locdicidx := dicconv[locdicidx];
-
-*)
   end;
 
   x_s:=flength(doc[y]);

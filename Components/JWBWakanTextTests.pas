@@ -98,19 +98,12 @@ type
     procedure CheckNoRuby;
     procedure CheckRuby;
   published
-    procedure LoadNoRuby;
-    procedure LoadRuby;
-   //TODO: SaveAllRuby (i.e. even the ones generated from the dictionary)
-   //  At this point can't be done because I can't be sure we have at least one
-   //  dictionary while doing the tests.
-    procedure LoadRubyTestWttSave;
-    procedure LoadWttRuby;
-    procedure LoadWttDict;
-    procedure LoadWttOlderVersions;
-  end;
-
-  TWttTestCase = class(TWakanTextTestCase)
-
+    procedure TextNoRuby;
+    procedure TextRuby;
+    procedure WttSaveReload;
+    procedure WttRuby;
+    procedure WttDict;
+    procedure WttOlderVersions;
   end;
 
  { Wakan can export in a wide range of formats, but most of those cannot be
@@ -135,7 +128,16 @@ type
     procedure OpenDocument;
   end;
 
-//TODO: Pasting.
+  TPasteTestCase = class(TWakanTextTestCase)
+  protected
+    function GetTestFilename(const AFilename: string): string;
+    procedure PasteAndTest(text2: TWakanText; ins: TSourcePos);
+  published
+    procedure PasteWtt;
+    procedure PasteText;
+  end;
+
+ //TODO: Write PasteText()
 
 implementation
 uses SysUtils, Classes, JWBStrings, JWBConvert, StreamUtils;
@@ -955,18 +957,20 @@ begin
     Check(text.PropertyLines[18].chars[i].ruby='');
 end;
 
-procedure TRubyTextTestCase.LoadNoRuby;
+{ Loads ruby-text file without parsing ruby }
+procedure TRubyTextTestCase.TextNoRuby;
 begin
   text.Clear;
   text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amNone);
   CheckNoRuby;
 
- //it shouldn't matter whether we use amNone or amDefault though
+ //it shouldn't matter whether we use amNone or amDefault
   SaveCompare('rubytext.txt', amNone, 'Saving back with amNone');
   SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
 end;
 
-procedure TRubyTextTestCase.LoadRuby;
+{ Loads ruby-text file and parses ruby }
+procedure TRubyTextTestCase.TextRuby;
 begin
   text.Clear;
   text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
@@ -976,16 +980,17 @@ begin
   SaveCompare('rubytext.txt', amDefault, 'Saving back with amDefault');
 end;
 
-{ Loads ruby txt, saves as WTT, loads back and compares }
-procedure TRubyTextTestCase.LoadRubyTestWttSave;
+{ Loads ruby txt, saves as WTT, loads back and compares. This tests that
+ saving and loading does not lose any info }
+procedure TRubyTextTestCase.WttSaveReload;
 begin
   text.Clear;
   text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
   SaveReloadCompareDataWtt();
 end;
 
-{ Tests WTT with text ruby }
-procedure TRubyTextTestCase.LoadWttRuby;
+{ Loads WTT with freeform ruby }
+procedure TRubyTextTestCase.WttRuby;
 begin
   text.Clear;
   text.LoadWakanText(GetTestFilename('rubytext.wtt'));
@@ -994,8 +999,8 @@ begin
   SaveReloadCompareDataWtt();
 end;
 
-{ Tests WTT with dictionary references }
-procedure TRubyTextTestCase.LoadWttDict;
+{ Loads WTT with dictionary references }
+procedure TRubyTextTestCase.WttDict;
 begin
   text.Clear;
   text.LoadWakanText(GetTestFilename('dicttext.wtt'));
@@ -1011,9 +1016,12 @@ begin
   SaveReloadCompareDataWtt();
 end;
 
-procedure TRubyTextTestCase.LoadWttOlderVersions;
+{ Tries to load samples of files saved in older formats. }
+procedure TRubyTextTestCase.WttOlderVersions;
 begin
-
+ { For now there's no older formats which we can load.
+  'JaLeT translated text' version is hopelessly outdated and not documented. }
+  Check(true);
 end;
 
 { Export formats }
@@ -1113,6 +1121,136 @@ begin
 end;
 
 
+{ Paste }
+
+function TPasteTestCase.GetTestFilename(const AFilename: string): string;
+begin
+  Result := 'Tests\rubywtt\'+AFilename;
+end;
+
+{ Pastes the specified document at the specified position and runs integrity checks.
+ Tries to be broad in what it accepts (i.e. empty documents, with no docdics, etc)
+ NOTE: Afterwards, this document is considered scrapped and has to be rebuilt }
+procedure TPasteTestCase.PasteAndTest(text2: TWakanText; ins: TSourcePos);
+var  endpos: TSourcePos;
+  oldCount, oldInsLen: integer;
+  i, j, x_s: integer;
+  locdics: array of integer;
+  locdic: integer;
+begin
+  oldCount := text.Lines.Count;
+
+ { Add some fake dictionaries to text1's list to make sure merging of lists is needed }
+  if text2.docdic.Count>0 then
+    text.docdic.Add(text2.docdic[0]); //this one will be common to both texts
+  text.docdic.Add('no_way_text2_has_this_dict');
+
+  oldInsLen := Length(text.Lines[ins.y]);
+  text.PasteDoc(ins, text2, @endpos);
+
+ //total lines
+  Check(text.Lines.Count = oldCount + text2.Lines.Count - 1);
+
+ //end position
+  Check(endpos.y = ins.y + text2.Lines.Count - 1);
+  Check(endpos.x = Length(text2.Lines[text2.Lines.Count-1]));
+
+ //insertion start and end line lengths
+  Check(Length(text.Lines[ins.y])=ins.x+Length(text2.Lines[0])); //length = insertion offset + first line length
+  Check(text.PropertyLines[ins.y].charcount=Length(text.Lines[ins.y]));
+  Check(Length(text.Lines[endpos.y])=endpos.x+oldInsLen-ins.x);
+  Check(text.PropertyLines[endpos.y].charcount=Length(text.Lines[endpos.y]));
+
+ //TODO: Что-то сделать с этими проверками. Мы же тут не знаем, какое содержимое
+ //у файла. Либо вынести их в вызывающую функцию, либо как-то обобщить (на ходу
+ //генерить то, на что проверяем? Или вообще проверять все места, где во вставляемом
+ //текст был руби/цепочки, а вызывающие просто должны гарантировать, что вставляют
+ //в такое место, где эти проверки имеют смысл (цепочка рвётся)?)
+ //Наверное, второе.
+ //contents
+  Check(text.Lines[4].StartsWith('latin　誰か')); //new content from 5th symbol on
+  Check(text.PropertyLines[4].chars[0].ruby='ちゅうがくせい'); //ruby must remain complete
+  Check(text.PropertyLines[ins.y].chars[ins.x].wordstate<>'<');
+    { word at the insertion point must not continue the chain, although if it
+     was this way in text2[0] then it will, but it wasn't }
+  Check(text.PropertyLines[endpos.y].chars[endpos.x+1].wordstate<>'<');
+    { even though we inserted in the middle of the chain, the tail must
+     be corrected to start with a fixed position at least }
+ //TODO: Досюда.
+
+ { Map all dictionaries to their local indexes.
+  Paste() may optimize some dicts away if they were only declared but not used
+  in the file.
+  Therefore we don't crash if mapping returns -1, but instead later check that
+  all dictionaries that are actually used are properly mapped. }
+  SetLength(locdics, text2.docdic.Count);
+  for i := 0 to Length(locdics)-1 do
+    locdics[i] := text.docdic.IndexOf(text2.docdic[i]);
+
+ { Check that all pasted characters reference valid dictionaries and that those
+  dictionary indexes are localized versions of the original ones }
+  for i := 0 to text2.Lines.Count-1 do begin
+    if i=0 then x_s := ins.x else x_s := 0;
+    for j := 0 to Length(text2.Lines[i])-1 do begin
+      locdic := text2.PropertyLines[i].chars[j].docdic;
+      Check((locdic>=0) and (locdic<Length(locdics)),
+        'One of the dictionary indexes in the original file is invalid.'); //not a problem of pasting though
+      locdic := locdics[locdic]; //localize index
+      Check(locdic>=0, 'One of the dictionary indexes is used by a character '
+        +'but haven''t been localized.');
+      Check(text.PropertyLines[ins.y+i].chars[x_s+j].docdic=locdic,
+        'Dictionary index localized incorrectly.');
+    end;
+  end;
+end;
+
+procedure TPasteTestCase.PasteWtt;
+var text2: TWakanText;
+  ins: TSourcePos;
+begin
+  text2 := TWakanText.Create;
+  try
+   { We need a text with dictionary references to test dictionary list merging. }
+    text2.LoadWakanText(GetTestFilename('dicttext.wtt'));
+    Check(text2.docdic.Count>0, 'We really need a file with non-empty dictionary list for this test.');
+
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    PasteAndTest(text2, SourcePos({x=}5, {y=}4));
+
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    PasteAndTest(text2, SourcePos({x=}0, {y=}0));
+
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    PasteAndTest(text2, text.EndOfDocument);
+
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    PasteAndTest(text2, text.EndOfLine(1));
+
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text2.Clear;
+    PasteAndTest(text2, SourcePos(5,4));
+  finally
+    FreeAndNil(text2);
+  end;
+end;
+
+procedure TPasteTestCase.PasteText;
+var text2: TWakanText;
+begin
+  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+
+  text2 := TWakanText.Create;
+  try
+    text2.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+
+   //Simple text
+    text.PasteText(SourcePos(4,5), 'test', CharacterLineProps([]), amNone);
+
+  finally
+    FreeAndNil(text2);
+  end;
+end;
+
 function WakanTextTests: ITestSuite;
 var ASuite: TTestSuite;
 begin
@@ -1122,8 +1260,8 @@ begin
   ASuite.addTest(TLinesTestCase.Suite);
   ASuite.addTest(TEncodingTestCase.Suite);
   ASuite.addTest(TRubyTextTestCase.Suite);
-  ASuite.addTest(TWttTestCase.Suite);
   ASuite.addTest(TExportTestCase.Suite);
+  ASuite.addTest(TPasteTestCase.Suite);
   Result := ASuite;
 end;
 

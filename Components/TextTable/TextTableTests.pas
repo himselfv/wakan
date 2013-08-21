@@ -25,7 +25,9 @@ type
     procedure RandomFill10;
     procedure RandomFill1k;
     procedure RandomFill10k;
+   {$IFDEF HARDCORE}
     procedure RandomFill100k;
+   {$ENDIF}
   end;
 
  { Same -- with $RAWINDEX }
@@ -48,10 +50,13 @@ type
     procedure AfterFill; override;
   end;
 
- { Same but the field is declared as string; we test what happens when we
-  Locate(integer) on a string field -- it should work, albeit slower,
-  when values are less than 10.
-  Bigger values will be sorted as strings. }
+ (*
+  What if the field is declared as string and we do Locate(integer)?
+  It will not work: integers when sorted as strings appear in a different order
+  from numerical.
+  Code is kept for completeness, but when run, it will fail on tests with
+  values >= 10.
+
   TStrIntIndexCase = class(TIntIndexCase)
   protected
     function CreateTable: TTextTable; override;
@@ -61,6 +66,7 @@ type
   protected
     function CreateTable: TTextTable; override;
   end;
+ *)
 
  { Randomly populates string index with UCS-2 characters and then tests it }
   TUStringIndexCase = class(TTextTableCase)
@@ -74,7 +80,9 @@ type
     procedure RandomFill10;
     procedure RandomFill1k;
     procedure RandomFill10k;
+   {$IFDEF HARDCORE}
     procedure RandomFill100k;
+   {$ENDIF}
   end;
 
  { Same -- with $RAWINDEX }
@@ -136,7 +144,9 @@ type
     procedure RandomFill10;
     procedure RandomFill1k;
     procedure RandomFill10k;
+   {$IFDEF HARDCORE}
     procedure RandomFill100k;
+   {$ENDIF}
   end;
 
  { Same but record fields are randomly edited after inserting.
@@ -148,7 +158,9 @@ type
     procedure RandomFillEdit10;
     procedure RandomFillEdit1k;
     procedure RandomFillEdit10k;
+   {$IFDEF HARDCORE}
     procedure RandomFillEdit100k;
+   {$ENDIF}
   end;
 
 implementation
@@ -252,10 +264,12 @@ begin
   RandomFill(500, 10000);
 end;
 
+{$IFDEF HARDCORE}
 procedure TIntIndexCase.RandomFill100k;
 begin
   RandomFill(5000, 100000)
 end;
+{$ENDIF}
 
 function TRawIntIndexCase.CreateTable: TTextTable;
 begin
@@ -295,6 +309,9 @@ begin
   FTable.Reindex;
 end;
 
+(*
+See comments in declaration section
+
 function TStrIntIndexCase.CreateTable: TTextTable;
 begin
   Result := TTextTable.Create([
@@ -325,6 +342,7 @@ begin
     'Value'
   ]);
 end;
+*)
 
 function TUStringIndexCase.CreateTable: TTextTable;
 begin
@@ -421,10 +439,12 @@ begin
   RandomFill(WideChar($4E00), WideChar($9FBF), 10000);
 end;
 
+{$IFDEF HARDCORE}
 procedure TUStringIndexCase.RandomFill100k;
 begin
   RandomFill(WideChar($4E00), WideChar($9FBF), 100000);
 end;
+{$ENDIF}
 
 function TRawUStringIndexCase.CreateTable: TTextTable;
 begin
@@ -684,10 +704,12 @@ begin
   RandomFill(10000);
 end;
 
+{$IFDEF HARDCORE}
 procedure TFillMultiIndexCase.RandomFill100k;
 begin
   RandomFill(100000);
 end;
+{$ENDIF}
 
 procedure TEditMultiIndexCase.RandomFillEdit(const count: integer);
 var i: integer;
@@ -701,9 +723,11 @@ begin
   hiChar := WideChar($9FBF);
   InitValues();
 
+ //Insert
   for i := 0 to count - 1 do
     FTable.AddRecord([IntToStr(NewIntValue), string(NewAnsiValue), NewWideValue]);
 
+ //Edit
   for i := 0 to Length(IntValues) - 1 do
     if IntValues[i]>0 then begin
       Dec(IntValues[i]);
@@ -711,7 +735,6 @@ begin
       CTable.Edit([fIntValue],[IntToStr(NewIntValue)]);
     end;
 
-{
   for i := 0 to Length(AnsiValues) - 1 do
     if AnsiValues[i]>0 then begin
       Dec(AnsiValues[i]);
@@ -725,8 +748,8 @@ begin
       Check(CTable.Locate(@soWideValue,WideValue(i)),'Wide: cannot locate value which should be in a table.');
       CTable.Edit([fWideValue],[NewWideValue]);
     end;
-}
 
+ //Check
   CheckIntValues();
   CheckAnsiValues();
   CheckWideValues();
@@ -748,10 +771,12 @@ begin
   RandomFillEdit(10000);
 end;
 
+{$IFDEF HARDCORE}
 procedure TEditMultiIndexCase.RandomFillEdit100k;
 begin
   RandomFillEdit(100000);
 end;
+{$ENDIF}
 
 
 function TTextTableTests: ITestSuite;
@@ -762,8 +787,9 @@ begin
   ASuite.addTest(TRawIntIndexCase.Suite);
   ASuite.addTest(TCommitIntIndexCase.Suite);
   ASuite.addTest(TCommitRawIntIndexCase.Suite);
+{ See comments in declaration section
   ASuite.addTest(TStrIntIndexCase.Suite);
-  ASuite.addTest(TRawStrIntIndexCase.Suite);
+  ASuite.addTest(TRawStrIntIndexCase.Suite); }
   ASuite.addTest(TUStringIndexCase.Suite);
   ASuite.addTest(TRawUStringIndexCase.Suite);
   ASuite.addTest(TCommitUStringIndexCase.Suite);
