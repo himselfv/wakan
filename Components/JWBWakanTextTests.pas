@@ -138,6 +138,8 @@ type
   end;
 
  //TODO: Write PasteText()
+ //TODO: Test PasteLines, SplitText, CollapseRuby separately,
+ //  then only test parts of PasteText which are independent.
 
 implementation
 uses SysUtils, Classes, JWBStrings, JWBConvert, StreamUtils;
@@ -1134,49 +1136,107 @@ end;
 procedure TPasteTestCase.PasteAndTest(text2: TWakanText; ins: TSourcePos);
 var  endpos: TSourcePos;
   oldCount, oldInsLen: integer;
+  oldLine: string;
+  oldProps: TCharacterLineProps;
   i, j, x_s: integer;
   locdics: array of integer;
   locdic: integer;
 begin
   oldCount := text.Lines.Count;
+  if ins.y>=text.Lines.Count then
+    Inc(oldCount); //one line will be auto-added
 
  { Add some fake dictionaries to text1's list to make sure merging of lists is needed }
   if text2.docdic.Count>0 then
     text.docdic.Add(text2.docdic[0]); //this one will be common to both texts
   text.docdic.Add('no_way_text2_has_this_dict');
 
-  oldInsLen := Length(text.Lines[ins.y]);
+ //Save some info about the original text
+  if (ins.y>=0) and (ins.y<=text.Lines.Count-1) then begin
+    oldLine := text.Lines[ins.y];
+    oldInsLen := Length(oldLine);
+    oldProps := text.PropertyLines[ins.y].CopySubstr(0,MaxInt);
+  end else begin
+    oldLine := '';
+    oldInsLen := 0;
+    oldProps := CharacterLineProps([]);
+  end;
+
+ //Paste
   text.PasteDoc(ins, text2, @endpos);
 
  //total lines
-  Check(text.Lines.Count = oldCount + text2.Lines.Count - 1);
+  if (oldCount>0) and (text2.Lines.Count>0) then
+    Check(text.Lines.Count = oldCount + text2.Lines.Count - 1, 'Invalid line count')
+  else
+    Check(text.Lines.Count = oldCount + text2.Lines.Count, 'Invalid line count');
 
  //end position
-  Check(endpos.y = ins.y + text2.Lines.Count - 1);
-  Check(endpos.x = Length(text2.Lines[text2.Lines.Count-1]));
+  if text2.Lines.Count>0 then
+    Check(endpos.y = ins.y + text2.Lines.Count - 1, 'Invalid endpos.y')
+  else
+    Check(endpos.y = ins.y + text2.Lines.Count, 'Invalid endpos.y');
+
+  if text2.Lines.Count>0 then
+    Check(endpos.x = Length(text2.Lines[text2.Lines.Count-1]), 'Invalid endpos.x')
+  else
+  if text2.Lines.Count=1 then
+    Check(endpos.x = ins.x + Length(text2.Lines[text2.Lines.Count-1]), 'Invalid endpos.x')
+  else
+    Check(endpos.x = ins.x, 'Invalid endpos.x');
 
  //insertion start and end line lengths
-  Check(Length(text.Lines[ins.y])=ins.x+Length(text2.Lines[0])); //length = insertion offset + first line length
-  Check(text.PropertyLines[ins.y].charcount=Length(text.Lines[ins.y]));
-  Check(Length(text.Lines[endpos.y])=endpos.x+oldInsLen-ins.x);
-  Check(text.PropertyLines[endpos.y].charcount=Length(text.Lines[endpos.y]));
+  if oldCount+text2.Lines.Count>0 then begin //any being non-empty guarantees non-empty result
+    if text2.Lines.Count>0 then begin
+      Check(Length(text.Lines[ins.y])=ins.x+Length(text2.Lines[0])); //length = insertion offset + first line length
+      Check(Length(text.Lines[endpos.y])=endpos.x+oldInsLen-ins.x);
+    end else begin
+      Check(Length(text.Lines[ins.y])=oldInsLen); //no split
+    end;
+    Check(text.PropertyLines[ins.y].charcount=Length(text.Lines[ins.y]));
+    Check(text.PropertyLines[endpos.y].charcount=Length(text.Lines[endpos.y]));
+  end;
 
- //TODO: Что-то сделать с этими проверками. Мы же тут не знаем, какое содержимое
- //у файла. Либо вынести их в вызывающую функцию, либо как-то обобщить (на ходу
- //генерить то, на что проверяем? Или вообще проверять все места, где во вставляемом
- //текст был руби/цепочки, а вызывающие просто должны гарантировать, что вставляют
- //в такое место, где эти проверки имеют смысл (цепочка рвётся)?)
- //Наверное, второе.
- //contents
-  Check(text.Lines[4].StartsWith('latin　誰か')); //new content from 5th symbol on
-  Check(text.PropertyLines[4].chars[0].ruby='ちゅうがくせい'); //ruby must remain complete
-  Check(text.PropertyLines[ins.y].chars[ins.x].wordstate<>'<');
-    { word at the insertion point must not continue the chain, although if it
-     was this way in text2[0] then it will, but it wasn't }
-  Check(text.PropertyLines[endpos.y].chars[endpos.x+1].wordstate<>'<');
-    { even though we inserted in the middle of the chain, the tail must
-     be corrected to start with a fixed position at least }
- //TODO: Досюда.
+ //line contents
+  if text2.Lines.Count<=0 then
+    Check(text.Lines[ins.y].Equals(oldLine)) //no changes
+  else
+  if text2.Lines.Count=1 then
+    Check(text.Lines[ins.y].Equals(
+      copy(oldLine,1,ins.x)+text2.Lines[0]+copy(oldLine,ins.x+1,MaxInt))) //inserted inline
+  else
+  begin
+    Check(text.Lines[ins.y].Equals(
+      copy(oldLine,1,ins.x)+text2.Lines[0])); //new content from ins.x-th symbol
+    Check(text.Lines[endpos.y].Equals(
+      text2.Lines[text2.Lines.Count-1]+copy(oldLine,ins.x+1,MaxInt))); //old content at the end
+  end;
+
+ //ruby before insertion point must remain unchanged (no split guessing)
+  for i := 0 to ins.x-1 do
+    Check(oldProps.chars[i].ruby=text.PropertyLines[ins.y].chars[i].ruby,
+      'Ruby before the insertion point must remain unchanged');
+
+ { When possible, we will try to test that insertion at the middle of the char
+  chain correctly breaks the chain.
+  For this to have any meaning you have to insert in the middle of the chain
+  though. If you insert at the chain break, checks are trivially true. }
+
+  if (text2.Lines.Count>0) and (text2.PropertyLines[0].charcount>0) then begin
+   { To test that chain breaking is properly handled we need that text2[0][0].wordstate<>'<'.
+    This would be illegal anyway. }
+    Check(text2.PropertyLines[0].chars[0].wordstate<>'<',
+      'Insertion block starts with wordstate<, which is not allowed.');
+
+   { New word at the insertion point must not continue the chain }
+    Check(text.PropertyLines[ins.y].chars[ins.x].wordstate<>'<',
+      'New word at the insertion point must not continue the character chain');
+
+   { Even when we inserted in the middle of the chain, the tail must
+    be adjusted to start with a fixed wordstate at least }
+    Check(text.PropertyLines[endpos.y].chars[endpos.x+1].wordstate<>'<',
+      'Character chain must be properly split at the insertion point');
+  end;
 
  { Map all dictionaries to their local indexes.
   Paste() may optimize some dicts away if they were only declared but not used
@@ -1206,29 +1266,46 @@ end;
 
 procedure TPasteTestCase.PasteWtt;
 var text2: TWakanText;
-  ins: TSourcePos;
 begin
   text2 := TWakanText.Create;
   try
    { We need a text with dictionary references to test dictionary list merging. }
     text2.LoadWakanText(GetTestFilename('dicttext.wtt'));
-    Check(text2.docdic.Count>0, 'We really need a file with non-empty dictionary list for this test.');
+    Check(text2.docdic.Count>0,
+      'We really need a file with non-empty dictionary list for this test.');
 
+   //Insert into a middle of the F<<<< chain to test chain breaking
     text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    Check(text.PropertyLines[4].chars[5].wordstate='<',
+      'We need rubytext.txt to have a ruby chain at position y=4, x=5 to test '
+        +'ruby chain breaking.');
     PasteAndTest(text2, SourcePos({x=}5, {y=}4));
 
+   //Insert at position 0
     text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
     PasteAndTest(text2, SourcePos({x=}0, {y=}0));
 
+   //At the end of the document
     text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
     PasteAndTest(text2, text.EndOfDocument);
 
+   //End of the line
     text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
     PasteAndTest(text2, text.EndOfLine(1));
 
+   //Empty document and to (0,0)
+    text.Clear;
+    PasteAndTest(text2, SourcePos(0,0));
+
+   //Empty text2
     text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
     text2.Clear;
     PasteAndTest(text2, SourcePos(5,4));
+
+   //Empty to empty
+    text.Clear;
+    PasteAndTest(text2, SourcePos(0,0));
+
   finally
     FreeAndNil(text2);
   end;
@@ -1236,15 +1313,51 @@ end;
 
 procedure TPasteTestCase.PasteText;
 var text2: TWakanText;
+  line: string;
+  props: TCharacterLineProps;
 begin
-  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-
   text2 := TWakanText.Create;
   try
     text2.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
 
-   //Simple text
-    text.PasteText(SourcePos(4,5), 'test', CharacterLineProps([]), amNone);
+   { We don't have a good set of tests for the resulting text for now,
+    so we at least test that nothing crashes and burns }
+
+   //Simple
+    line := 'test';
+    props := CharacterLineProps([]);
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.PasteText(SourcePos(4,5), line, props, amNone);
+
+   //Insert at position 0
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.PasteText(SourcePos(0,0), line, props, amNone);
+
+   //At the end of the document
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.PasteText(text.EndOfDocument, line, props, amNone);
+
+   //End of the line
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.PasteText(text.EndOfLine(1), line, props, amNone);
+
+   //Empty document and to (0,0)
+    text.Clear;
+    text.PasteText(SourcePos(0,0), line, props, amNone);
+
+   //Empty text2
+    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    line := '';
+    props := CharacterLineProps([]);
+    text.PasteText(SourcePos(5,4), line, props, amNone);
+
+   //Empty to empty
+    text.Clear;
+    text.PasteText(SourcePos(0,0), line, props, amNone);
+
+   //TODO: Test with non-trivial prop lines
+   //TODO: Test splitting into lines by CRLF
+   //TODO: Test ruby parsing
 
   finally
     FreeAndNil(text2);

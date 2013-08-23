@@ -187,6 +187,10 @@ type
 
   protected //Editing
     procedure CheckTransCont(x,y:integer);
+    procedure PasteLines(const APos: TSourcePos; const ALines: TStringList;
+      const APropertyLines: TCharacterPropList; AEndPos: PSourcePos = nil);
+    procedure SplitText(const AChars: FString; const AProps: TCharacterLineProps;
+      ALines: TStringList; APropertyLines: TCharacterPropList);
   public
     procedure AddLine(const chars: FString; const props: PCharacterLineProps = nil);
     procedure SplitLine(x,y:integer);
@@ -1928,75 +1932,120 @@ begin
   end;
 end;
 
-{ Receives a string contanining multiple lines of text separated by CRLF.
- Splits it into lines, inserts before the specified position. Expands ruby if
- AnnotMode dictates so.
-
- Props may be omitted, in which case default props are used for all symbols.
-
- Returns SourcePos of the last character in the inserted text in AEndPos }
-procedure TWakanText.PasteText(const APos: TSourcePos; const chars: FString;
-  const props: TCharacterLineProps; AnnotMode: TTextAnnotMode;
-  AEndPos: PSourcePos);
-var s: string;
-  sp: TCharacterLineProps;
-  y:integer;
-  i:integer;
-  l:integer;
-
-  procedure FinalizeLine;
-  begin
-    if AnnotMode=amRuby then
-      CollapseRuby(s, sp);
-    doc[y] := doc[y] + s;
-    doctr[y].AddChars(sp);
-    s := '';
-    sp.Clear;
+{ Receives a list of Lines and PropertyLines and inserts it at the specified
+ position.
+ Lines must be local to this TWakanText (using proper dictionary indexes etc).
+ Pos must be inside the text, or at the beginning of the first line after the
+ text.
+ Returns SourcePos of the first character after the newly inserted text in AEndPos. }
+procedure TWakanText.PasteLines(const APos: TSourcePos; const ALines: TStringList;
+  const APropertyLines: TCharacterPropList; AEndPos: PSourcePos = nil);
+var i, y, x_s: integer;
+begin
+ //For lines which are clearly out of range
+  if (APos.y<0) or (APos.y>Self.Lines.Count) then
+    raise Exception.Create('Invalid insertion line: '+IntToStr(APos.y));
+ { We allow auto-adding one line after the last one.
+  There are several reasons, including that we may want to insert at (0, 0)
+  when the document is empty. }
+  if (APos.y=Self.Lines.Count) then begin
+    if (APos.x<0) or (APos.x>0) then
+      raise Exception.Create('Invalid insertion point: '+IntToStr(APos.x)+','+IntToStr(APos.y));
+    doc.Add('');
+    doctr.AddNewLine;
+  end else begin
+   //For positions which are out of range
+    if (APos.x<0) or (APos.x>Length(Self.Lines[APos.y])) then
+      raise Exception.Create('Invalid insertion point: '+IntToStr(APos.x)+','+IntToStr(APos.y));
   end;
 
-  procedure InsertNewLine;
+  SplitLine(APos.x,APos.y);
+
+  y := APos.y; //in case ADoc has no lines at all
+  for i := 0 to ALines.Count-1 do begin
+    y := APos.y+i;
+    if i=0 then begin
+      doc[y] := doc[y] + ALines[i];
+      doctr[y].AddChars(APropertyLines[i]^);
+    end else begin
+      doc.Insert(y,ALines[i]);
+      doctr.InsertLine(y, APropertyLines[i]^);
+    end;
+  end;
+
+  x_s:=flength(doc[y]);
+  JoinLine(y);
+  if AEndPos<>nil then
+    AEndPos^ := SourcePos(x_s,y);
+end;
+
+{ Receives a string contanining multiple lines of text separated by CRLF.
+ Splits it into lines. }
+procedure TWakanText.SplitText(const AChars: FString; const AProps: TCharacterLineProps;
+  ALines: TStringList; APropertyLines: TCharacterPropList);
+var s: string;
+  sp: TCharacterLineProps;
+  i:integer;
+
+  procedure AddLine;
   begin
-    inc(y);
-    doc.Insert(y,'');
-    doctr.InsertNewLine(y);
+    ALines.Add(s);
+    APropertyLines.AddLine(sp);
+    s := '';
+    sp.Clear;
   end;
 
 begin
   s := '';
   sp.Clear;
 
- { This function is sometimes used to load text, at which point there's not even
-  a single default line available and SplitLine would die. }
-  if APos.y >= doc.Count then begin
-    doc.Add('');
-    doctr.AddNewLine;
-  end else
-    SplitLine(APos.x,APos.y);
-
-  y:=APos.y;
-  for i:=1 to flength(chars) do
+  for i:=1 to flength(AChars) do
   begin
-    if fgetch(chars,i)=UH_LF then begin
-      FinalizeLine;
-      InsertNewLine;
-    end else
-    if fgetch(chars,i)<>UH_CR then
+    if fgetch(AChars,i)=UH_LF then
+      AddLine()
+    else
+    if fgetch(AChars,i)<>UH_CR then
     begin
-      s:=s+fgetch(chars,i);
-      if props.charcount>i-1 then
-        sp.AddChar(props.chars[i-1])
+      s:=s+fgetch(AChars,i);
+      if AProps.charcount>i-1 then
+        sp.AddChar(AProps.chars[i-1])
       else
         sp.AddChar('-', 9, 0, 1);
     end;
   end;
 
   if Length(s)>0 then
-    FinalizeLine;
+    AddLine();
+end;
 
-  l:=flength(doc[y]);
-  JoinLine(y);
-  if AEndPos<>nil then
-    AEndPos^ := SourcePos(l,y);
+{ Receives a string contanining multiple lines of text separated by CRLF.
+ Splits it into lines, inserts before the specified position. Expands ruby if
+ AnnotMode dictates so.
+ See: PasteLines. }
+procedure TWakanText.PasteText(const APos: TSourcePos; const chars: FString;
+  const props: TCharacterLineProps; AnnotMode: TTextAnnotMode;
+  AEndPos: PSourcePos);
+var ALines: TStringList;
+  APropLines: TCharacterPropList;
+  i: integer;
+  s: string;
+begin
+  ALines := nil;
+  APropLines := nil;
+  try
+    ALines := TStringList.Create;
+    APropLines := TCharacterPropList.Create;
+    SplitText(chars, props, ALines, APropLines);
+    if AnnotMode=amRuby then
+      for i := 0 to ALines.Count-1 do begin
+        s := ALines[i];
+        CollapseRuby(s, APropLines[i]^);
+        ALines[i] := s;
+      end;
+  finally
+    FreeAndNil(APropLines);
+    FreeAndNil(ALines);
+  end;
 end;
 
 procedure TWakanText.PasteDoc(const APos: TSourcePos; const ADoc: TWakanText;
@@ -2004,8 +2053,6 @@ procedure TWakanText.PasteDoc(const APos: TSourcePos; const ADoc: TWakanText;
 var dicconv: array of integer; //maps document dictionaries to local dictionaries
   i, j: integer;
   y, x_s:integer;
-  locidx: integer;
-
 begin
  //Create dictionary conversion table
   SetLength(dicconv, ADoc.docdic.Count);
@@ -2013,27 +2060,16 @@ begin
     if not docdic.Find(ADoc.docdic[i], dicconv[i]) then
       dicconv[i] := docdic.Add(ADoc.docdic[i]);
 
- { This function is sometimes used to load text, at which point there's not even
-  a single default line available and SplitLine would die. }
-  if APos.y >= doc.Count then begin
-    doc.Add('');
-    doctr.AddNewLine;
-  end else
-    SplitLine(APos.x,APos.y);
+ //Insert
+  PasteLines(APos, ADoc.Lines, ADoc.PropertyLines, AEndPos);
 
-  y := APos.y; //in case ADoc has no lines at all
+ //Update dictionary references
   for i := 0 to ADoc.Lines.Count-1 do begin
     y := APos.y+i;
     if i=0 then
       x_s := flength(doc[y])
-    else begin
-      doc.Insert(y,'');
-      doctr.InsertNewLine(y);
+    else
       x_s := 0;
-    end;
-
-    doc[y] := doc[y] + ADoc.Lines[i];
-    doctr[y].AddChars(ADoc.PropertyLines[i]^);
 
    //Fix dictionary references
     for j := x_s to doctr[y].charcount-1 do
@@ -2042,11 +2078,6 @@ begin
       else
         doctr[y].chars[j].docdic := 0; //just in case
   end;
-
-  x_s:=flength(doc[y]);
-  JoinLine(y);
-  if AEndPos<>nil then
-    AEndPos^ := SourcePos(x_s,y);
 end;
 
 end.
