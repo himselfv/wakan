@@ -191,6 +191,8 @@ type
       const APropertyLines: TCharacterPropList; AEndPos: PSourcePos = nil);
     procedure SplitText(const AChars: FString; const AProps: TCharacterLineProps;
       ALines: TStringList; APropertyLines: TCharacterPropList);
+    procedure MergeText(const ALines: TStringList; const APropertyLines: TCharacterPropList;
+      out AChars: FString; out AProps: TCharacterLineProps);
   public
     procedure AddLine(const chars: FString; const props: PCharacterLineProps = nil);
     procedure SplitLine(x,y:integer);
@@ -1932,8 +1934,7 @@ begin
   end;
 end;
 
-{ Receives a list of Lines and PropertyLines and inserts it at the specified
- position.
+{ Inserts the contents of Lines and PropertyLines at the specified position.
  Lines must be local to this TWakanText (using proper dictionary indexes etc).
  Pos must be inside the text, or at the beginning of the first line after the
  text.
@@ -2018,6 +2019,26 @@ begin
     AddLine();
 end;
 
+{ Receives a list of lines, merges it into a single line.
+ Lines and PropertyLines must have the same number of items }
+procedure TWakanText.MergeText(const ALines: TStringList;
+  const APropertyLines: TCharacterPropList; out AChars: FString;
+  out AProps: TCharacterLineProps);
+var i: integer;
+begin
+  AChars := '';
+  AProps.Clear;
+  for i := 0 to ALines.Count-1 do begin
+    AChars := AChars + ALines[i];
+    AProps.AddChars(APropertyLines[i]^);
+    if i<ALines.Count-1 then begin
+      AChars := AChars + UH_CR + UH_LF;
+      AProps.AddChar('-', 9, 0, 1);
+      AProps.AddChar('-', 9, 0, 1);
+    end;
+  end;
+end;
+
 { Receives a string contanining multiple lines of text separated by CRLF.
  Splits it into lines, inserts before the specified position. Expands ruby if
  AnnotMode dictates so.
@@ -2042,6 +2063,7 @@ begin
         CollapseRuby(s, APropLines[i]^);
         ALines[i] := s;
       end;
+    PasteLines(APos, ALines, APropLines, AEndPos);
   finally
     FreeAndNil(APropLines);
     FreeAndNil(ALines);

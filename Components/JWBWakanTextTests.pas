@@ -1,9 +1,11 @@
 ﻿unit JWBWakanTextTests;
 
 interface
-uses TestFramework, JWBWakanText;
+uses Classes, TestFramework, JWBWakanText;
 
 type
+  TFriendlyWakanText = class(TWakanText); //to access protected members
+
   TSourcePosTestCase = class(TTestCase)
   published
     procedure Initializers;
@@ -19,7 +21,7 @@ type
  { Base class for cases which test TWakanText }
   TWakanTextTestCase = class(TTestCase)
   protected
-    text: TWakanText;
+    text: TFriendlyWakanText;
     procedure SetUp; override;
     procedure TearDown; override;
    //Helpers
@@ -86,6 +88,22 @@ type
     procedure SaveAcp;
   end;
 
+ { Tests TWakanText.CollapseRuby (ruby parsing for a single line).
+  Does not require external resources. }
+  TCollapseRubyTestCase = class(TWakanTextTestCase)
+  protected
+    procedure ParseRuby(const AExpanded: string; out ACollapsed: string;
+      out ACollapsedProps: TCharacterLineProps);
+  published
+    procedure Empty;
+    procedure NoRuby;
+    procedure Simple;
+    procedure ExplicitStart;
+    procedure EmptyBase;
+    procedure ExplicitEmptyBase;
+    procedure BrokenRuby;
+  end;
+
  { Wakan supports loading and saving from text (enhanced with ruby) and native
   WTT format which may contain dictionary references.
   This requires text encoder to be working -- run TEncodingTestCase first }
@@ -131,18 +149,19 @@ type
   TPasteTestCase = class(TWakanTextTestCase)
   protected
     function GetTestFilename(const AFilename: string): string;
-    procedure PasteAndTest(text2: TWakanText; ins: TSourcePos);
+    procedure PasteAndTest(text2: TWakanText; ins: TSourcePos); overload;
   published
+    procedure SplitMerge;
     procedure PasteWtt;
-    procedure PasteText;
+   { TODO: Test PasteLines/PasteText separately.
+    PasteWtt is implemented through PasteLines and PasteText mostly relies
+    on PasteLines and CollapseRuby, so by testing PasteWtt heavily as we do,
+    we are more or less sure that PasteLines and the core of PasteText is okay.
+    Proper testing routines would be better. }
   end;
 
- //TODO: Write PasteText()
- //TODO: Test PasteLines, SplitText, CollapseRuby separately,
- //  then only test parts of PasteText which are independent.
-
 implementation
-uses SysUtils, Classes, JWBStrings, JWBConvert, StreamUtils;
+uses SysUtils, JWBStrings, JWBConvert, StreamUtils;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -284,7 +303,7 @@ end;
 
 procedure TWakanTextTestCase.SetUp;
 begin
-  text := TWakanText.Create;
+  text := TFriendlyWakanText.Create;
 end;
 
 procedure TWakanTextTestCase.TearDown;
@@ -853,6 +872,133 @@ begin
 end;
 
 
+{ CollapseRuby set.
+ Tests ruby handling for a single line. Does not require external resources. }
+
+procedure TCollapseRubyTestCase.ParseRuby(const AExpanded: string;
+  out ACollapsed: string; out ACollapsedProps: TCharacterLineProps);
+var i: integer;
+begin
+  ACollapsed := AExpanded;
+  ACollapsedProps.Clear;
+  ACollapsedProps.AddChars(Length(ACollapsed));
+  for i := 0 to ACollapsedProps.charcount-1 do
+    ACollapsedProps.chars[i].Reset;
+  text.CollapseRuby(ACollapsed, ACollapsedProps);
+end;
+
+//Empty line
+procedure TCollapseRubyTestCase.Empty;
+var line: string;
+  props: TCharacterLineProps;
+begin
+  ParseRuby('', line, props);
+  Check(line='', 'collapsed line invalid');
+  Check(props.charcount=0);
+end;
+
+//Without ruby
+procedure TCollapseRubyTestCase.NoRuby;
+var line: string;
+  props: TCharacterLineProps;
+  i: integer;
+begin
+  ParseRuby('学校から帰宅する', line, props);
+  Check(line='学校から帰宅する', 'collapsed line invalid');
+  Check(props.charcount=Length(line));
+  for i := 0 to props.charcount-1 do
+    Check(props.chars[i].ruby='');
+end;
+
+//Simple ruby
+procedure TCollapseRubyTestCase.Simple;
+var line: string;
+  props: TCharacterLineProps;
+  i, ind: integer;
+begin
+  line := '学校《がっこう》から帰宅《きたく》する';
+  props.Clear;
+  props.AddChars(Length(line));
+ //We are also going to test that collapseRuby preserves unaffected char props.
+  for i := 0 to props.charcount-1 do begin
+    props.chars[i].Reset;
+    props.chars[i].learnstate := 10+i;
+    props.chars[i].dicidx := 110+i;
+    props.chars[i].docdic := 210+i;
+  end;
+  text.CollapseRuby(line, props);
+  Check(line='学校から帰宅する', 'collapsed line invalid');
+  Check(props.charcount=Length(line));
+  Check(props.chars[0].ruby='がっこう', 'missing ruby at position 0');
+  Check(props.chars[4].ruby='きたく', 'missing ruby at position 4');
+  for i := 0 to props.charcount-1 do begin
+    if (i<>0) and (i<>4) then
+      Check(props.chars[i].ruby='', 'non-empty ruby at invalid position');
+    if i<2 then ind := i else
+    if i<6 then ind := i+6 else
+      ind := i+6+5;
+    Check(props.chars[i].learnstate=10+ind, 'learnstate differs');
+    Check(props.chars[i].dicidx=110+ind, 'dicidx differs');
+    Check(props.chars[i].docdic=210+ind, 'doddic differs');
+  end;
+end;
+
+//Explicit start
+procedure TCollapseRubyTestCase.ExplicitStart;
+var line: string;
+  props: TCharacterLineProps;
+  i: integer;
+begin
+  ParseRuby('女子《じょし》｜中学生《ちゅうがくせい》だ。', line, props);
+  Check(line='女子中学生だ。', 'collapsed line invalid');
+  Check(props.charcount=Length(line));
+  Check(props.chars[0].ruby='じょし');
+  Check(props.chars[2].ruby='ちゅうがくせい');
+  for i := 0 to props.charcount-1 do
+    if (i<>0) and (i<>2) then Check(props.chars[i].ruby='');
+end;
+
+//Empty base
+procedure TCollapseRubyTestCase.EmptyBase;
+var line: string;
+  props: TCharacterLineProps;
+  i: integer;
+begin
+  ParseRuby('《ちゅうがくせい》だ。', line, props);
+  Check(line=UH_RUBY_PLACEHOLDER+'だ。', 'collapsed line invalid');
+  Check(props.charcount=Length(line));
+  Check(props.chars[0].ruby='ちゅうがくせい');
+  for i := 0 to props.charcount-1 do
+    if (i<>0) then Check(props.chars[i].ruby='');
+end;
+
+//Empty explicit base
+procedure TCollapseRubyTestCase.ExplicitEmptyBase;
+var line: string;
+  props: TCharacterLineProps;
+  i: integer;
+begin
+  ParseRuby('近所の｜《ちゅうがくせい》だ。', line, props);
+  Check(line='近所の'+UH_RUBY_PLACEHOLDER+'だ。', 'collapsed line invalid');
+  Check(props.charcount=Length(line));
+  Check(props.chars[3].ruby='ちゅうがくせい');
+  for i := 0 to props.charcount-1 do
+    if (i<>3) then Check(props.chars[i].ruby='');
+end;
+
+//Broken ruby
+procedure TCollapseRubyTestCase.BrokenRuby;
+var line: string;
+  props: TCharacterLineProps;
+  i: integer;
+begin
+  ParseRuby('近所》きん》じょ《きん《じょ｜中学生《《｜がくせい', line, props);
+  Check(line='近所》きん》じょ《きん《じょ｜中学生《《｜がくせい', 'collapsed line invalid');
+  Check(props.charcount=Length(line));
+  for i := 0 to props.charcount-1 do
+    Check(props.chars[i].ruby='');
+end;
+
 { Ruby text }
 
 function TRubyTextTestCase.GetTestFilename(const AFilename: string): string;
@@ -1130,11 +1276,38 @@ begin
   Result := 'Tests\rubywtt\'+AFilename;
 end;
 
+procedure TPasteTestCase.SplitMerge;
+var testLine, line: string;
+  props: TCharacterLineProps;
+  i: integer;
+begin
+  testLine := 'test1'+UH_CR+UH_LF+'test2'+UH_CR+UH_LF+'test3';
+  line := testLine;
+  props.Clear;
+  props.AddChars(Length(line));
+  for i := 0 to props.charcount-1 do begin
+    props.chars[i].Reset;
+    props.chars[i].dicidx := 110+i;
+  end;
+  text.SplitText(line, props, text.Lines, text.PropertyLines);
+  Check(text.Lines.Count=3);
+  Check(text.Lines[0]='test1');
+  Check(text.Lines[1]='test2');
+  Check(text.Lines[2]='test3');
+  Check(text.PropertyLines[0].chars[0].dicidx=110+0);
+  Check(text.PropertyLines[1].chars[0].dicidx=110+7);
+  text.MergeText(text.Lines, text.PropertyLines, line, props);
+  Check(line=testLine);
+  for i := 0 to props.charcount-1 do
+    if (fgetch(line, 1+i)<>UH_CR) and (fgetch(line, 1+i)<>UH_LF) then //CR and LF positions were lost
+      Check(props.chars[i].dicidx=110+i);
+end;
+
 { Pastes the specified document at the specified position and runs integrity checks.
  Tries to be broad in what it accepts (i.e. empty documents, with no docdics, etc)
  NOTE: Afterwards, this document is considered scrapped and has to be rebuilt }
 procedure TPasteTestCase.PasteAndTest(text2: TWakanText; ins: TSourcePos);
-var  endpos: TSourcePos;
+var endpos: TSourcePos;
   oldCount, oldInsLen: integer;
   oldLine: string;
   oldProps: TCharacterLineProps;
@@ -1234,8 +1407,9 @@ begin
 
    { Even when we inserted in the middle of the chain, the tail must
     be adjusted to start with a fixed wordstate at least }
-    Check(text.PropertyLines[endpos.y].chars[endpos.x+1].wordstate<>'<',
-      'Character chain must be properly split at the insertion point');
+    if (endpos < text.EndOfDocument) and (endpos < text.EndOfLine(endpos.y)) then
+      Check(text.PropertyLines[endpos.y].chars[endpos.x+1].wordstate<>'<',
+        'Character chain must be properly split at the insertion point');
   end;
 
  { Map all dictionaries to their local indexes.
@@ -1311,59 +1485,6 @@ begin
   end;
 end;
 
-procedure TPasteTestCase.PasteText;
-var text2: TWakanText;
-  line: string;
-  props: TCharacterLineProps;
-begin
-  text2 := TWakanText.Create;
-  try
-    text2.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-
-   { We don't have a good set of tests for the resulting text for now,
-    so we at least test that nothing crashes and burns }
-
-   //Simple
-    line := 'test';
-    props := CharacterLineProps([]);
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-    text.PasteText(SourcePos(4,5), line, props, amNone);
-
-   //Insert at position 0
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-    text.PasteText(SourcePos(0,0), line, props, amNone);
-
-   //At the end of the document
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-    text.PasteText(text.EndOfDocument, line, props, amNone);
-
-   //End of the line
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-    text.PasteText(text.EndOfLine(1), line, props, amNone);
-
-   //Empty document and to (0,0)
-    text.Clear;
-    text.PasteText(SourcePos(0,0), line, props, amNone);
-
-   //Empty text2
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
-    line := '';
-    props := CharacterLineProps([]);
-    text.PasteText(SourcePos(5,4), line, props, amNone);
-
-   //Empty to empty
-    text.Clear;
-    text.PasteText(SourcePos(0,0), line, props, amNone);
-
-   //TODO: Test with non-trivial prop lines
-   //TODO: Test splitting into lines by CRLF
-   //TODO: Test ruby parsing
-
-  finally
-    FreeAndNil(text2);
-  end;
-end;
-
 function WakanTextTests: ITestSuite;
 var ASuite: TTestSuite;
 begin
@@ -1372,6 +1493,7 @@ begin
   ASuite.addTest(TSourceBlockTestCase.Suite);
   ASuite.addTest(TLinesTestCase.Suite);
   ASuite.addTest(TEncodingTestCase.Suite);
+  ASuite.addTest(TCollapseRubyTestCase.Suite);
   ASuite.addTest(TRubyTextTestCase.Suite);
   ASuite.addTest(TExportTestCase.Suite);
   ASuite.addTest(TPasteTestCase.Suite);
