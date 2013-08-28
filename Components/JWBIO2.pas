@@ -4,10 +4,44 @@ interface
 uses SysUtils, Classes, JWBStrings;
 
 { TODO: Buffered _fread/_fwrite/_fseeks }
-{ TODO: Active code page (through buffering/QueryNextBlock) }
-{ TODO: RtlDecoder(TEncoding) }
+{ TODO: ACP (Active codepage, similar to ANSI but with local [128..255]),
+ through buffering/QueryNextBlock }
+{ TODO: RtlDecoder(TEncoding)
+ We do not use Delphi's RTL TEncodings because those do not support converting
+ only a part of the buffer.
+ We may write a wrapper using some tricks (convert too much + drop ending) maybe. }
 
 type
+ { Encoding is created once and executed sequentially on a stream, starting with
+  a legal position (not inside a surrogate).
+  It may keep track of decoding state, so a new one is required for every stream.
+
+  It is recommended to use TEncoding with a buffered, best effort stream.
+  1. BOM checking and some routines require seeks.
+  2. socket-like "read available bytes and return" behavior WILL break things.
+   TStream has to block until requested number of bytes is available or the
+   stream is over. }
+
+  TEncodingLikelihood = (
+    elIdentified, //data is self-marked as being in this encoding
+    elLikely,     //data is likely to be in this encoding
+    elUnlikely    //data is unlikely to be in this encoding
+  );
+
+  TEncoding = class
+    BOM: TBytes; //set in constructor
+    constructor Create; virtual;
+    function ReadBom(AStream: TStream): boolean; virtual;
+    procedure WriteBom(AStream: TStream); virtual;
+    function Analyze(AStream: TStream): TEncodingLikelihood; virtual;
+    function Read(AStream: TStream; MaxChars: integer): string; virtual; abstract;
+   { MaxChars is given in 2 byte positions. Surrogate pairs may be broken }
+    procedure Write(AStream: TStream; const AData: string); virtual; abstract;
+   { Encoding descendants do not check the number of bytes written. If you care,
+    raise exceptions in TStream descendant wrapper.  }
+  end;
+  CEncoding = class of TEncoding;
+
  { Base classes }
   TStreamDecoder = class
   protected
@@ -69,115 +103,77 @@ type
 
  { Simple encodings }
  { TODO: UTF16 surrogate pairs (LE and BE in different order) }
-
-  TAnsiDecoder = class(TStreamDecoder)
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TAnsiEncoder = class(TStreamEncoder)
-    procedure WriteChar(const ch: WideChar); override;
+  TAnsiEncoding = class(TEncoding)
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
- { TODO: ACP (Active codepage, similar to ANSI but with local [128..255]) }
-
-  TUTF8Decoder = class(TStreamDecoder)
-    procedure TrySkipBom; override;
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TUTF8Encoder = class(TStreamEncoder)
-    procedure WriteBom; override;
-    procedure WriteChar(const ch: WideChar); override;
+  TUTF8Encoding = class(TEncoding)
+    constructor Create; override;
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-  TUTF16LEDecoder = class(TStreamDecoder)
-    procedure TrySkipBom; override;
-    function ReadChar(out ch: WideChar): boolean; override;
+  TUTF16LEEncoding = class(TEncoding)
+    constructor Create; override;
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
-  TUTF16LEEncoder = class(TStreamEncoder)
-    procedure WriteBom; override;
-    procedure WriteChar(const ch: WideChar); override;
+  TUTF16Encoding = TUTF16LEEncoding;
+  TUnicodeEncoding = TUTF16LEEncoding;
+
+  TUTF16BEEncoding = class(TEncoding)
+    constructor Create; override;
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-  TUTF16BEDecoder = class(TStreamDecoder)
-    procedure TrySkipBom; override;
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TUTF16BEEncoder = class(TStreamEncoder)
-    procedure WriteBom; override;
-    procedure WriteChar(const ch: WideChar); override;
+  TEUCEncoding = class(TEncoding)
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-  TUTF16Decoder = TUTF16LEDecoder;
-  TUTF16Encoder = TUTF16LEEncoder;
-  TUnicodeDecoder = TUTF16LEDecoder;
-  TUnicodeEncoder = TUTF16LEEncoder;
-
- { Compability names }
-  TAnsiFileReader = TAnsiDecoder;
-  TAnsiFileWriter = TAnsiEncoder;
-  TUnicodeFileReader = TUnicodeDecoder;
-  TUnicodeFileWriter = TUnicodeEncoder;
- {$IFDEF UNICODE}
-  TFileReader = TUnicodeFileReader;
-  TFileWriter = TUnicodeFileWriter;
- {$ELSE}
-  TFileReader = TAnsiFileReader;
-  TFileWriter = TAnsiFileWriter;
- {$ENDIF}
-
- { We do not use Delphi's RTL TEncodings because those do not support converting
-  only a part of the buffer.
-  We may write a wrapper using some tricks (convert too much + drop ending) maybe. }
-
-{ Wakan decoders }
-
-  TEUCDecoder = class(TStreamDecoder)
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TEUCEncoder = class(TStreamEncoder)
-    procedure WriteChar(const ch: WideChar); override;
+  TSJISEncoding = class(TEncoding)
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-  TSJSDecoder = class(TStreamDecoder)
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TSJSEncoder = class(TStreamEncoder)
-    procedure WriteChar(const ch: WideChar); override;
-  end;
-
- { Supports New-JIS, Old-JIS and NEC-JIS. Decoder handles all of these, but encoder
-  requires specifying one before writing. }
-  TJISDecoder = class(TStreamDecoder)
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TJISType = (jtNew = 0, jtOld, jtNec);
-  TJISEncoder = class(TStreamEncoder)
+ { New-JIS, Old-JIS and NEC-JIS differ only by Start and End markers.
+  Read() covers all of them while Write() depends on markers being set by descendants below }
+  TBaseJISEncoding = class(TEncoding)
   protected
-    FJISType: TJISType;
     intwobyte: boolean;
-    procedure _fputstart();
-    procedure _fputend();
+    StartMark: TBytes;
+    EndMark: TBytes;
+    procedure _fputstart(AStream: TStream);
+    procedure _fputend(AStream: TStream);
   public
-    procedure WriteChar(const ch: WideChar); override;
-    property JISType: TJISType read FJISType write FJISType;
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
+  end;
+  TJISEncoding = class(TBaseJISEncoding)
+    constructor Create; override;
+  end;
+  TOldJISEncoding = class(TBaseJISEncoding)
+    constructor Create; override;
+  end;
+  TNECJISEncoding = class(TBaseJISEncoding)
+    constructor Create; override;
   end;
 
-  TGBDecoder = class(TStreamDecoder)
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TGBEncoder = class(TStreamEncoder)
-    procedure WriteChar(const ch: WideChar); override;
+  TGBEncoding = class(TEncoding)
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-  TBIG5Decoder = class(TStreamDecoder)
-    function ReadChar(out ch: WideChar): boolean; override;
-  end;
-  TBIG5Encoder = class(TStreamEncoder)
-    procedure WriteChar(const ch: WideChar); override;
+  TBIG5Encoding = class(TEncoding)
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-function Conv_DetectType(AStream: TStream): TStreamDecoder;
-function Conv_DetectTypeEx(AStream: TStream; out ADecoder: TStreamDecoder): boolean;
-function Conv_ChooseType(AChinese:boolean; ADefault: CStreamDecoder): TStreamDecoder;
+function Conv_DetectType(AStream: TStream): CEncoding;
+function Conv_DetectTypeEx(AStream: TStream; out ADecoder: CEncoding): boolean;
+function Conv_ChooseType(AChinese:boolean; ADefault: CEncoding): CEncoding;
 
 (*
 function Conv_DetectType(filename:string):byte;
@@ -187,6 +183,90 @@ function Conv_ChooseType(chinese:boolean; def:byte):byte;
 
 implementation
 uses Controls, JWBConvertTbl, JWBFileType;
+
+{ Various helpers }
+
+//Swaps bytes in a word
+function _swapw(const w: word): word; inline;
+begin
+  Result :=
+    (w and $00FF) shl 8 +
+    (w and $FF00) shr 8;
+{ or:
+    (w mod $100) shl 8 +
+    (w div $100);
+  dunno which is faster }
+end;
+
+
+{ Encoding }
+
+constructor TEncoding.Create;
+begin
+  inherited; { reimplement to initialize vars }
+end;
+
+{ Reads out any of the BOMs supported by this encoding and returns true,
+ or returns false and returns AStream to the previous position.
+ Avoid calling for streams which do not support seeking when BOM is not really
+ expected. }
+function TEncoding.ReadBom(AStream: TStream): boolean;
+var data: TBytes;
+  read_sz: integer;
+  i: integer;
+begin
+  if Length(BOM)<=0 then begin
+    Result := false;
+    exit;
+  end;
+ { Default implementation just checks for the main BOM }
+  SetLength(data, Length(BOM));
+  read_sz := AStream.Read(data[0], Length(data));
+  Result := true;
+  for i := 0 to Length(data)-1 do
+    if BOM[i]<>data[i] then begin
+      Result := false;
+      break;
+    end;
+  if not Result then
+    AStream.Seek(-read_sz, soCurrent);
+end;
+
+procedure TEncoding.WriteBom(AStream: TStream);
+begin
+  if Length(BOM)>0 then
+    AStream.Write(BOM[0], Length(BOM));
+end;
+
+function TEncoding.Analyze(AStream: TStream): TEncodingLikelihood;
+begin
+ { Default implementation only tests for BOM }
+  if ReadBom(AStream) then
+    Result := elIdentified
+  else
+    Result := elUnlikely;
+end;
+
+procedure _fwrite1(AStream: TStream; const b: byte); inline;
+begin
+  AStream.Write(b, 1);
+end;
+
+procedure _fwrite2(AStream: TStream; const w: word); inline;
+begin
+  AStream.Write(w, 2);
+end;
+
+procedure _fwrite3(AStream: TStream; const dw: cardinal); inline;
+begin
+  AStream.Write(dw, 3);
+end;
+
+procedure _fwrite4(AStream: TStream; const dw: cardinal); inline;
+begin
+  AStream.Write(dw, 4);
+end;
+
 
 { Stream decoder }
 
@@ -406,145 +486,124 @@ end;
 
 { Simple encodings }
 
-function TAnsiDecoder.ReadChar(out ch: WideChar): boolean;
+function TAnsiEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var ac: AnsiChar;
 begin
-  Result := _fread(ac,SizeOf(ac))=SizeOf(ac);
-  if Result then
-    ch := WideChar(ac);
-end;
-
-procedure TAnsiEncoder.WriteChar(const ch: WideChar);
-var ac: AnsiChar;
-begin
-  ac := AnsiChar(ch); //Maybe more sophisticated conversion?
-  _fwrite(ac,SizeOf(ac)); //Maybe check for errors?
-end;
-
-procedure TUTF8Decoder.TrySkipBom;
-var bom: integer;
-  read_sz: integer;
-begin
-  bom := 0; //zero high order byte
-  read_sz := _fread(bom, 3);
-  if (read_sz<>3) or (bom<>$BFBBEF) then
-    _fseek(-read_sz,soCurrent);
-end;
-
-function TUTF8Decoder.ReadChar(out ch: WideChar): boolean;
-var b1, b2, b3: byte;
-  tmp: integer;
-begin
-  Result := _fread(b1, 1)=1;
-  if not Result then exit;
-
-  if (b1 and UTF8_MASK2)=UTF8_VALUE2 then begin
-    Result := _fread(b2, 1)=1;
-    if not Result then exit;
-    ch := WideChar(((b1 and $1f) shl 6) or (b2 and $3f))
-  end else
-  if (b1 and UTF8_MASK3)=UTF8_VALUE3 then begin
-    Result := (_fread(b2, 1)=1) and (_fread(b3, 1)=1);
-    if not Result then exit;
-    ch := WideChar(((b1 and $0f) shl 12) or ((b2 and $3f) shl 6) or (b3 and $3f));
-  end else
-  if (b1 and UTF8_MASK4)=UTF8_VALUE4 then
-  begin
-   { TODO: Decode and return a surrogate pair }
-    Result := (_fread(tmp,3)=3);
-    ch := #$0000;
-  end else begin
-    Result := true;
-    ch := WideChar(b1);
+  Result := '';
+  while (AStream.Read(ac,1)=1) and (MaxChars>0) do begin
+    Result := Result + WideChar(ac);
+    Dec(MaxChars);
   end;
 end;
 
-procedure TUTF8Encoder.WriteBom;
-var bom: integer;
+procedure TAnsiEncoding.Write(AStream: TStream; const AData: string);
+var i: integer;
 begin
-  bom := $BFBBEF;
-  _fwrite(bom,3);
+  for i := 1 to Length(AData) do
+    AStream.Write(AnsiChar(AData[i]), 1);
 end;
 
-procedure TUTF8Encoder.WriteChar(const ch: WideChar);
-var w: word absolute ch;
+constructor TUTF8Encoding.Create;
 begin
-  if (w and UTF8_WRITE1)=0 then
-    _fwrite1(w mod 256)
-  else
-  if (w and UTF8_WRITE2)=0 then
-    _fwrite2(
-        (UTF8_VALUE2 or (w shr 6))
-      + (UTF8_VALUEC or (w and $3f)) shl 8
-    )
-  else
-    _fwrite3(
-        (UTF8_VALUE3 or (w shr 12))
-      + (UTF8_VALUEC or ((w shr 6) and $3f)) shl 8
-      + (UTF8_VALUEC or (w and $3f)) shl 16
-    );
+  inherited;
+  BOM := TBytes.Create($EF, $BB, $BF);
 end;
 
-procedure TUTF16LEDecoder.TrySkipBom;
-var bom: word;
-  read_sz: integer;
+function TUTF8Encoding.Read(AStream: TStream; MaxChars: integer): string;
+var b1, b2, b3: byte;
+  tmp: integer;
 begin
-  read_sz := _fread(bom, 2);
-  if (read_sz<>2) or (bom<>$FEFF) then
-    _fseek(-read_sz,soCurrent);
+  Result := '';
+  while MaxChars>0 do begin
+    if not AStream.Read(b1,1)=1 then exit;
+
+    if (b1 and UTF8_MASK2)=UTF8_VALUE2 then begin
+      if not AStream.Read(b2,1)=1 then exit;
+      Result := Result + WideChar(((b1 and $1f) shl 6) or (b2 and $3f))
+    end else
+    if (b1 and UTF8_MASK3)=UTF8_VALUE3 then begin
+      if not (AStream.Read(b2,1)=1)
+      or not (AStream.Read(b3,1)=1) then exit;
+      Result := Result + WideChar(((b1 and $0f) shl 12) or ((b2 and $3f) shl 6) or (b3 and $3f));
+    end else
+    if (b1 and UTF8_MASK4)=UTF8_VALUE4 then
+    begin
+      AStream.Read(tmp, 3); //and ignore
+     { TODO: Decode and return a surrogate pair }
+    end else
+      Result := Result + WideChar(b1);
+
+    Dec(MaxChars);
+  end;
 end;
 
-function TUTF16LEDecoder.ReadChar(out ch: WideChar): boolean;
+procedure TUTF8Encoding.Write(AStream: TStream; const AData: string);
+var i: integer;
+  w: word;
 begin
-  Result := _fread(ch,SizeOf(ch))=SizeOf(ch);
-  if not Result then
-    FEOF := true;
+  for i := 1 to Length(AData) do begin
+    w := Word(AData[i]);
+    if (w and UTF8_WRITE1)=0 then
+      _fwrite1(AStream, w mod 256)
+    else
+    if (w and UTF8_WRITE2)=0 then
+      _fwrite2(AStream,
+          (UTF8_VALUE2 or (w shr 6))
+        + (UTF8_VALUEC or (w and $3f)) shl 8
+      )
+    else
+      _fwrite3(AStream,
+          (UTF8_VALUE3 or (w shr 12))
+        + (UTF8_VALUEC or ((w shr 6) and $3f)) shl 8
+        + (UTF8_VALUEC or (w and $3f)) shl 16
+      );
+  end;
 end;
 
-procedure TUTF16LEEncoder.WriteBom;
+constructor TUTF16LEEncoding.Create;
 begin
-  _fwrite2($FEFF);
+  inherited;
+  BOM := TBytes.Create($FF, $FE);
 end;
 
-procedure TUTF16LEEncoder.WriteChar(const ch: WideChar);
+function TUTF16LEEncoding.Read(AStream: TStream; MaxChars: integer): string;
+var read_sz: integer;
 begin
-  _fwrite(ch,SizeOf(ch)); //Maybe check for errors?
+  SetLength(Result, MaxChars);
+  read_sz := AStream.Read(Result[1], MaxChars*SizeOf(WideChar));
+  if read_sz<MaxChars*SizeOf(WideChar) then
+    SetLength(Result, read_sz div SizeOf(WideChar));
 end;
 
-procedure TUTF16BEDecoder.TrySkipBom;
-var bom: word;
-  read_sz: integer;
+procedure TUTF16LEEncoding.Write(AStream: TStream; const AData: string);
 begin
-  read_sz := _fread(bom, 2);
-  if (read_sz<>2) or (bom<>$FEFF) then
-    _fseek(-read_sz,soCurrent);
+  if AData<>'' then
+    AStream.Write(AData[1], Length(AData)*SizeOf(WideChar));
 end;
 
-function TUTF16BEDecoder.ReadChar(out ch: WideChar): boolean;
+constructor TUTF16BEEncoding.Create;
 begin
-  Result := _fread(ch,SizeOf(ch))=SizeOf(ch);
-  if not Result then
-    FEOF := true
-  else
-   //swap bytes
-    ch := WideChar(
-      (Word(ch) and $00FF) shl 8 +
-      (Word(ch) and $FF00 ) shr 8
-    );
+  inherited;
+  BOM := TBytes.Create($FE, $FF);
 end;
 
-procedure TUTF16BEEncoder.WriteBom;
+function TUTF16BEEncoding.Read(AStream: TStream; MaxChars: integer): string;
+var read_sz: integer;
+  i: integer;
 begin
-  _fwrite2($FEFF);
+  SetLength(Result, MaxChars);
+  read_sz := AStream.Read(Result[1], MaxChars*SizeOf(WideChar));
+  if read_sz<MaxChars*SizeOf(WideChar) then
+    SetLength(Result, read_sz div SizeOf(WideChar));
+  for i := 1 to Length(Result) do
+    Result[i] := WideChar(_swapw(Word(Result[i])));
 end;
 
-procedure TUTF16BEEncoder.WriteChar(const ch: WideChar);
+procedure TUTF16BEEncoding.Write(AStream: TStream; const AData: string);
+var i: integer;
 begin
- //swap bytes
-  _fwrite2(
-    (Word(ch) and $00FF) shl 8 +
-    (Word(ch) and $FF00 ) shr 8
-  );
+  for i := 1 to Length(AData) do
+    _fwrite1(AStream, _swapw(Word(AData[i])));
 end;
 
 
@@ -727,229 +786,262 @@ begin
   end;
 end;
 
-function TEUCDecoder.ReadChar(out ch: WideChar): boolean;
+function TEUCEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
 begin
-  Result := _fread(b1, 1)=1;
-  if not Result then exit;
+  Result := '';
+  while MaxChars>0 do begin
+    if not AStream.Read(b1,1)=1 then exit;
 
-  if _is(b1,IS_EUC) then begin
-    Result := _fread(b2, 1)=1;
-    if not Result then exit;
-    ch := WideChar(JIS2Unicode((b1*256+b2) and $7f7f));
-  end else
-    ch := WideChar(b1);
+    if _is(b1,IS_EUC) then begin
+      if not AStream.Read(b2,1)=1 then exit;
+      Result := Result + WideChar(JIS2Unicode((b1*256+b2) and $7f7f));
+    end else
+      Result := Result + WideChar(b1);
+
+    Dec(MaxChars);
+  end;
 end;
 
-procedure TEUCEncoder.WriteChar(const ch: WideChar);
-var w: word;
+procedure TEUCEncoding.Write(AStream: TStream; const AData: string);
+var i: integer;
+  w: word;
 begin
-  w := Unicode2JIS(Word(ch));
-  if _is(w,IS_JIS) then
-    _fwrite2(
-        ((w shr 8) or $80)
-      + ((w mod 256) or $80) shl 8
-    )
-  else if (w and $80)>0 then
-    _fwrite2(
-         JIS_SS2
-      + (w and $7f) shl 8
-    )
-  else
-    _fwrite1(w);
-end;
-
-function TSJSDecoder.ReadChar(out ch: WideChar): boolean;
-var b1, b2: byte;
-begin
-  Result := _fread(b1, 1)=1;
-  if not Result then exit;
-
-  if _is(b1,IS_SJIS1) then begin
-    Result := _fread(b2, 1)=1;
-    if not Result then exit;
-    if _is(b2,IS_SJIS2) then
-      ch := WideChar(JIS2Unicode(SJIS2JIS(b1*256+b2)))
+  for i := 1 to Length(AData) do begin
+    w := Unicode2JIS(Word(AData[i]));
+    if _is(w,IS_JIS) then
+      _fwrite2(AStream,
+          ((w shr 8) or $80)
+        + ((w mod 256) or $80) shl 8
+      )
+    else if (w and $80)>0 then
+      _fwrite2(AStream,
+           JIS_SS2
+        + (w and $7f) shl 8
+      )
     else
-      ch := WideChar(JIS2Unicode(b1*256+b2));
-  end else
-    ch := WideChar(b1);
+      _fwrite1(AStream, w);
+  end;
 end;
 
-procedure TSJSEncoder.WriteChar(const ch: WideChar);
-var w: word;
+function TSJISEncoding.Read(AStream: TStream; MaxChars: integer): string;
+var b1, b2: byte;
 begin
-  w:=Unicode2JIS(Word(ch));
-  if _is(w,IS_JIS) then
-  begin
-    w:=jis2sjis(w);
-    _fwrite2(
-        (w div 256)
-      + (w mod 256) shl 8
-    );
-  end else
-    _fwrite1(w);
+  Result := '';
+  while MaxChars>0 do begin
+    if not AStream.Read(b1,1)=1 then exit;
+
+    if _is(b1,IS_SJIS1) then begin
+      if not AStream.Read(b2,1)=1 then exit;
+      if _is(b2,IS_SJIS2) then
+        Result := Result + WideChar(JIS2Unicode(SJIS2JIS(b1*256+b2)))
+      else
+        Result := Result + WideChar(JIS2Unicode(b1*256+b2));
+    end else
+      Result := Result + WideChar(b1);
+
+    Dec(MaxChars);
+  end;
 end;
 
-function TJISDecoder.ReadChar(out ch: WideChar): boolean;
+procedure TSJISEncoding.Write(AStream: TStream; const AData: string);
+var i: integer;
+  w: word;
+begin
+  for i := 1 to Length(AData) do begin
+    w:=Unicode2JIS(Word(AData[i]));
+    if _is(w,IS_JIS) then
+    begin
+      w:=jis2sjis(w);
+      _fwrite2(AStream, _swapw(w));
+    end else
+      _fwrite1(AStream, w);
+  end;
+end;
+
+function TBaseJISEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
   inp_intwobyte: boolean;
 begin
-  Result := false;
+  Result := '';
   inp_intwobyte := false;
   while true do begin
-    Result := _fread(b1, 1)=1;
-    if not Result then exit;
+    if not AStream.Read(b1,1)=1 then exit;
 
     if b1=JIS_ESC then
     begin
-      Result := _fread(b2, 1)=1;
-      if not Result then exit;
-      if (b2=ord('$')) or (b2=ord('(')) then _fread(b1, 1); //don't care about the result
+      if not AStream.Read(b2,1)=1 then exit;
+      if (b2=ord('$')) or (b2=ord('(')) then AStream.Read(b1,1); //don't care about the result
       if (b2=ord('K')) or (b2=ord('$')) then inp_intwobyte:=true else inp_intwobyte:=false;
      //Do not exit, continue to the next char
     end else begin
       if (b1=JIS_NL) or (b1=JIS_CR) then
-        ch:=WideChar(b1)
+        Result := Result + WideChar(b1)
       else begin
-        Result := _fread(b2, 1)=1;
-        if not Result then exit;
-        if inp_intwobyte then ch:=WideChar(JIS2Unicode(b1*256+b2)) else ch:=WideChar(b1);
+        if not AStream.Read(b2,1)=1 then exit;
+        if inp_intwobyte then
+          Result := Result + WideChar(JIS2Unicode(b1*256+b2))
+        else
+          Result := Result + WideChar(b1);
       end;
-      break;
+
+      Dec(MaxChars);
+      if MaxChars<=0 then break;
+    end;
+
+  end;
+end;
+
+procedure TBaseJISEncoding.Write(AStream: TStream; const AData: string);
+var i: integer;
+  w: word;
+begin
+  for i := 1 to Length(AData) do begin
+    w := Word(AData[i]);
+
+    if (w=13) or (w=10) then
+    begin
+      _fputend(AStream);
+      _fwrite1(AStream, w);
+    end else
+    begin
+      w:=Unicode2JIS(w);
+      if _is(w,IS_JIS) then
+      begin
+        _fputstart(AStream);
+        _fwrite2(AStream, _swapw(w));
+      end else begin
+        _fputend(AStream);
+        _fwrite1(AStream, w);
+      end;
     end;
   end;
 end;
 
-procedure TJISEncoder._fputstart();
+procedure TBaseJISEncoding._fputstart(AStream: TStream);
 begin
   if intwobyte then exit;
   intwobyte:=true;
-  _fwrite1(JIS_ESC);
-  case JISType of
-    jtNew: _fwrite2(ord('$') + ord('B') shl 8);
-    jtOld: _fwrite2(ord('$') + ord('@') shl 8);
-    jtNec: _fwrite1(ord('K'));
-  end;
+  AStream.Write(StartMark[0], Length(StartMark));
 end;
 
-procedure TJISEncoder._fputend();
+procedure TBaseJISEncoding._fputend(AStream: TStream);
 begin
   if not intwobyte then exit;
   intwobyte:=false;
-  _fwrite1(JIS_ESC);
-  if (JISType=jtNEC) then
-    _fwrite1(ord('H'))
-  else begin
-    _fwrite1(ord('('));
-    _fwrite1(ord('J'));
+  AStream.Write(EndMark[0], Length(EndMark));
+end;
+
+constructor TJISEncoding.Create;
+begin
+  inherited;
+  StartMark := TBytes.Create(JIS_ESC, ord('B'), ord('$'));
+  EndMark := TBytes.Create(JIS_ESC, ord('('), ord('J'));
+end;
+
+constructor TOldJISEncoding.Create;
+begin
+  inherited;
+  StartMark := TBytes.Create(JIS_ESC, ord('@'), ord('$'));
+  EndMark := TBytes.Create(JIS_ESC, ord('('), ord('J'));
+end;
+
+constructor TNECJISEncoding.Create;
+begin
+  inherited;
+  StartMark := TBytes.Create(JIS_ESC, ord('K'));
+  EndMark := TBytes.Create(JIS_ESC, ord('H'));
+end;
+
+function TGBEncoding.Read(AStream: TStream; MaxChars: integer): string;
+var b1, b2: byte;
+begin
+  Result := '';
+  while MaxChars>0 do begin
+    if not AStream.Read(b1,1)=1 then exit;
+
+    if (b1>=$a1) and (b1<=$fe) then
+    begin
+      if not AStream.Read(b2,1)=1 then exit;
+      if (b2>=$a1) and (b2<=$fe) then
+        Result := Result + WideChar(Table_GB[(b1-$a0)*96+(b2-$a0)])
+      else
+        Result := Result + WideChar(b1*256+b2);
+    end else
+      Result := Result + WideChar(b1);
+
+    Dec(MaxChars);
   end;
 end;
 
-procedure TJISEncoder.WriteChar(const ch: WideChar);
-var w: Word;
+procedure TGBEncoding.Write(AStream: TStream; const AData: string);
+var i,j: integer;
+  w: word;
 begin
-  w := Word(ch);
-
-  if (w=13) or (w=10) then
-  begin
-    _fputend();
-    _fwrite1(w);
-  end else
-  begin
-    w:=Unicode2JIS(w);
-    if _is(w,IS_JIS) then
+  for j := 1 to Length(AData) do begin
+    w := Word(AData[j]);
+    if w<128 then
+      _fwrite1(AStream, byte(w))
+    else
     begin
-      _fputstart();
-      _fwrite2(
-          (w mod 256) shl 8
+      for i:=0 to 96*96-1 do if Table_GB[i]=w then begin
+        _fwrite2(AStream,
+            (i mod 96+$a0) shl 8
+          + (i div 96+$a0)
+        );
+        exit;
+      end;
+      _fwrite2(AStream,
+        (w mod 256) shl 8
         + (w div 256)
       );
-    end else begin
-      _fputend();
-      _fwrite1(w);
     end;
   end;
 end;
 
-function TGBDecoder.ReadChar(out ch: WideChar): boolean;
+function TBIG5Encoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
 begin
-  Result := _fread(b1, 1)=1;
-  if not Result then exit;
+  Result := '';
+  while MaxChars>0 do begin
+    if not AStream.Read(b1,1)=1 then exit;
 
-  if (b1>=$a1) and (b1<=$fe) then
-  begin
-    Result := _fread(b2, 1)=1;
-    if not Result then exit;
-    if (b2>=$a1) and (b2<=$fe) then
-      ch := WideChar(Table_GB[(b1-$a0)*96+(b2-$a0)])
-    else
-      ch := WideChar(b1*256+b2);
-  end else
-    ch := WideChar(b1);
-end;
+    if (b1>=$a1) and (b1<=$fe) then
+    begin
+      if not AStream.Read(b2,1)=1 then exit;
+      if (b2>=$40) and (b2<=$7f) then
+        Result := Result + WideChar(Table_Big5[(b1-$a0)*160+(b2-$40)])
+      else
+      if (b2>=$a1) and (b2<=$fe) then
+        Result := Result + WideChar(Table_Big5[(b1-$a0)*160+(b2-$a0)])
+      else
+        Result := Result + WideChar(b1*256+b2);
+    end else
+      Result := Result + WideChar(b1);
 
-procedure TGBEncoder.WriteChar(const ch: WideChar);
-var i: integer;
-begin
-  if Word(ch)<128 then
-    _fwrite1(byte(ch))
-  else
-  begin
-    for i:=0 to 96*96-1 do if Table_GB[i]=Word(ch) then begin
-      _fwrite2(
-          (i mod 96+$a0) shl 8
-        + (i div 96+$a0)
-      );
-      exit;
-    end;
-    _fwrite2(
-      (Word(ch) mod 256) shl 8
-      + (Word(ch) div 256)
-    );
+    Dec(MaxChars);
   end;
 end;
 
-function TBIG5Decoder.ReadChar(out ch: WideChar): boolean;
-var b1, b2: byte;
+procedure TBIG5Encoding.Write(AStream: TStream; const AData: string);
+var i, j: integer;
+  w: word;
 begin
-  Result := _fread(b1, 1)=1;
-  if not Result then exit;
-
-  if (b1>=$a1) and (b1<=$fe) then
-  begin
-    Result := _fread(b2, 1)=1;
-    if not Result then exit;
-    if (b2>=$40) and (b2<=$7f) then
-      ch := WideChar(Table_Big5[(b1-$a0)*160+(b2-$40)])
+  for j := 1 to Length(AData) do begin
+    w := Word(AData[j]);
+    if w<128 then
+      _fwrite1(AStream, byte(w))
     else
-    if (b2>=$a1) and (b2<=$fe) then
-      ch := WideChar(Table_Big5[(b1-$a0)*160+(b2-$a0)])
-    else
-      ch := WideChar(b1*256+b2);
-  end else
-    ch := WideChar(b1);
-end;
-
-procedure TBIG5Encoder.WriteChar(const ch: WideChar);
-var i: integer;
-begin
-  if Word(ch)<128 then
-    _fwrite1(byte(ch))
-  else
-  begin
-    for i:=0 to 96*160-1 do if Table_GB[i]=Word(ch) then begin
-      _fwrite2(
-          (i mod 96+$a0) shl 8
-        + (i div 96+$a0)
-      );
-      exit;
+    begin
+      for i:=0 to 96*160-1 do if Table_GB[i]=w then begin
+        _fwrite2(AStream,
+            (i mod 96+$a0) shl 8
+          + (i div 96+$a0)
+        );
+        exit;
+      end;
+      _fwrite2(AStream, _swapw(w));
     end;
-    _fwrite2(
-        (Word(ch) mod 256) shl 8
-      + (Word(ch) div 256)
-    );
   end;
 end;
 
@@ -1017,18 +1109,18 @@ begin
 end;
 *)
 
-function Conv_DetectType(AStream: TStream): TStreamDecoder;
+function Conv_DetectType(AStream: TStream): CEncoding;
 begin
   if not Conv_DetectTypeEx(AStream, Result) then
     Result := nil;
 end;
 
-function Conv_DetectTypeEx(AStream: TStream; out ADecoder: TStreamDecoder): boolean;
+function Conv_DetectTypeEx(AStream: TStream; out ADecoder: CEncoding): boolean;
 begin
 
 end;
 
-function Conv_ChooseType(AChinese:boolean; ADefault: CStreamDecoder): TStreamDecoder;
+function Conv_ChooseType(AChinese:boolean; ADefault: CEncoding): CEncoding;
 var fFileType: TfFileType;
 begin
   Result := nil;
@@ -1042,30 +1134,30 @@ begin
       fFileType.rgType.Items.Add('Big5');
       fFileType.rgType.Items.Add('GB2312');
       fFileType.rgType.Items.Add('Unicode (UCS2) reversed bytes');
-      if ADefault=TUTF16LEDecoder then
+      if ADefault=TUTF16LEEncoding then
         fFileType.rgType.ItemIndex:=0
       else
-      if ADefault=TUTF8Decoder then
+      if ADefault=TUTF8Encoding then
         fFileType.rgType.ItemIndex:=1
       else
-      if ADefault=TBIG5Decoder then
+      if ADefault=TBIG5Encoding then
         fFileType.rgType.ItemIndex:=2
       else
-      if ADefault=TGBDecoder then
+      if ADefault=TGBEncoding then
         fFileType.rgType.ItemIndex:=3
       else
-      if ADefault=TUTF16BEDecoder then
+      if ADefault=TUTF16BEEncoding then
         fFileType.rgType.ItemIndex:=4
       else
         fFileType.rgType.ItemIndex:=0;
       if fFileType.ShowModal=mrOK then
       case fFileType.rgType.ItemIndex of
-        0: Result:=TUTF16LEDecoder.Create;
-        1: Result:=TUTF8Decoder.Create;
-        2: Result:=TBIG5Decoder.Create;
-        3: Result:=TUTF16BEDecoder.Create;
-        4: Result:=TUTF16BEDecoder.Create;
-      end else result:=0;
+        0: Result:=TUTF16LEEncoding;
+        1: Result:=TUTF8Encoding;
+        2: Result:=TBIG5Encoding;
+        3: Result:=TUTF16BEEncoding;
+        4: Result:=TUTF16BEEncoding;
+      end else Result:=nil;
     end else
     begin
       fFileType.rgType.Items.Clear;
@@ -1077,35 +1169,47 @@ begin
       fFileType.rgType.Items.Add('NEC JIS');
       fFileType.rgType.Items.Add('EUC');
       fFileType.rgType.Items.Add('Unicode (UCS2) reversed bytes');
-      case def of
-        FILETYPE_UTF16LE: fFileType.rgType.ItemIndex:=0;
-        FILETYPE_UTF8: fFileType.rgType.ItemIndex:=1;
-        FILETYPE_SJS: fFileType.rgType.ItemIndex:=2;
-        FILETYPE_JIS: fFileType.rgType.ItemIndex:=3;
-        FILETYPE_OLD: fFileType.rgType.ItemIndex:=4;
-        FILETYPE_NEC: fFileType.rgType.ItemIndex:=5;
-        FILETYPE_EUC: fFileType.rgType.ItemIndex:=6;
-        FILETYPE_UTF16BE: fFileType.rgType.ItemIndex:=7;
-        else fFileType.rgType.ItemIndex:=0;
-      end;
+      if ADefault=TUTF16LEEncoding then
+        fFileType.rgType.ItemIndex:=0
+      else
+      if ADefault=TUTF8Encoding then
+        fFileType.rgType.ItemIndex:=1
+      else
+      if ADefault=TSJISEncoding then
+        fFileType.rgType.ItemIndex:=2
+      else
+      if ADefault=TJISEncoding then
+        fFileType.rgType.ItemIndex:=3
+      else
+      if ADefault=TOldJISEncoding then
+        fFileType.rgType.ItemIndex:=4
+      else
+      if ADefault=TNECJISEncoding then
+        fFileType.rgType.ItemIndex:=5
+      else
+      if ADefault=TEUCEncoding then
+        fFileType.rgType.ItemIndex:=6
+      else
+      if ADefault=TUTF16BEEncoding then
+        fFileType.rgType.ItemIndex:=7
+      else
+        fFileType.rgType.ItemIndex:=0;
       if fFileType.ShowModal=mrOK then
       case fFileType.rgType.ItemIndex of
-        0: result:=FILETYPE_UTF16LE;
-        1: result:=FILETYPE_UTF8;
-        2: result:=FILETYPE_SJS;
-        3: result:=FILETYPE_JIS;
-        4: result:=FILETYPE_OLD;
-        5: result:=FILETYPE_NEC;
-        6: result:=FILETYPE_EUC;
-        7: result:=FILETYPE_UTF16BE;
+        0: Result:=TUTF16LEEncoding;
+        1: Result:=TUTF8Encoding;
+        2: Result:=TSJISEncoding;
+        3: Result:=TJISEncoding;
+        4: Result:=TOldJISEncoding;
+        5: Result:=TNECJISEncoding;
+        6: Result:=TEUCEncoding;
+        7: Result:=TUTF16BEEncoding;
       end;
     end;
   finally
     FreeAndNil(fFileType);
   end;
 end;
-
-
 (*
 { Detects file encoding. Returns true if it's truly detected (i.e. through BOM),
  or false if it's a best guess. }
