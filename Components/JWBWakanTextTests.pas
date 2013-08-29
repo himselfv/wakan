@@ -1,7 +1,7 @@
 ﻿unit JWBWakanTextTests;
 
 interface
-uses Classes, TestFramework, JWBWakanText;
+uses SysUtils, Classes, TestFramework, JWBIO2, JWBWakanText;
 
 type
   TFriendlyWakanText = class(TWakanText); //to access protected members
@@ -48,11 +48,11 @@ type
   TEncodingTestCase = class(TWakanTextTestCase)
   protected
     function GetTestFilename(const AFilename: string): string;
-    procedure LoadFile(const AFilename: string; AEncoding: byte);
-    procedure VerifyText(const AFilename: string; AEncoding: byte);
-    procedure VerifyAscii(const AFilename: string; AEncoding: byte);
-    procedure VerifyAcp(const AFilename: string; AEncoding: byte);
-    procedure LoadSaveCompare(const AFilename: string; AEncoding: byte;
+    procedure LoadFile(const AFilename: string; AEncoding: CEncoding);
+    procedure VerifyText(const AFilename: string; AEncoding: CEncoding);
+    procedure VerifyAscii(const AFilename: string; AEncoding: CEncoding);
+    procedure VerifyAcp(const AFilename: string; AEncoding: CEncoding);
+    procedure LoadSaveCompare(const AFilename: string; AEncoding: CEncoding;
       ABom: boolean; const ATestComment: string = '');
   published
     procedure Ascii;
@@ -161,7 +161,7 @@ type
   end;
 
 implementation
-uses SysUtils, JWBStrings, JWBConvert, StreamUtils;
+uses JWBStrings, StreamUtils;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -652,11 +652,11 @@ begin
   Result := 'Tests\encoding\'+AFilename;
 end;
 
-procedure TEncodingTestCase.LoadFile(const AFilename: string; AEncoding: byte);
+procedure TEncodingTestCase.LoadFile(const AFilename: string; AEncoding: CEncoding);
 begin
-  if AEncoding=FILETYPE_UNKNOWN then
-    Check(Conv_DetectTypeEx('Tests\encoding\'+AFilename, AEncoding)
-      or (AEncoding<>FILETYPE_UNKNOWN),
+  if AEncoding=nil then
+    Check(Conv_DetectType('Tests\encoding\'+AFilename, AEncoding)
+      or (AEncoding<>nil),
       'Cannot guess file encoding.');
 
  //All encoding test files are stored in the same folder
@@ -667,7 +667,7 @@ end;
 to verify that they were decoded properly.
 Expand the text to include various corner cases. Do not cover Ruby or any extended
 parsing here. }
-procedure TEncodingTestCase.VerifyText(const AFilename: string; AEncoding: byte);
+procedure TEncodingTestCase.VerifyText(const AFilename: string; AEncoding: CEncoding);
 begin
   LoadFile(AFilename, AEncoding);
   Check(text.Lines.Count=3);
@@ -677,7 +677,7 @@ begin
 end;
 
 { Ascii text is different since it can't contain unicode }
-procedure TEncodingTestCase.VerifyAscii(const AFilename: string; AEncoding: byte);
+procedure TEncodingTestCase.VerifyAscii(const AFilename: string; AEncoding: CEncoding);
 begin
   LoadFile(AFilename, AEncoding);
   Check(text.Lines.Count=3);
@@ -688,7 +688,7 @@ end;
 
 { With ACP we cannot verify ACP text because the active codepage can be different
  on the PC where tests are run, but at least we check what we can }
-procedure TEncodingTestCase.VerifyAcp(const AFilename: string; AEncoding: byte);
+procedure TEncodingTestCase.VerifyAcp(const AFilename: string; AEncoding: CEncoding);
 begin
   LoadFile(AFilename, AEncoding);
   Check(text.Lines.Count=4);
@@ -702,7 +702,7 @@ end;
  Realistically, there will be cases when some of the nuances are lost. If this
  happens another test might be needed to load the file back and compare as data }
 procedure TEncodingTestCase.LoadSaveCompare(const AFilename: string;
-  AEncoding: byte; ABom: boolean; const ATestComment: string = '');
+  AEncoding: CEncoding; ABom: boolean; const ATestComment: string = '');
 var tempDir: string;
   stream: TStream;
 begin
@@ -725,150 +725,150 @@ end;
 { Simple loading }
 procedure TEncodingTestCase.Ascii;
 begin
-  VerifyAscii('ascii.txt', FILETYPE_ASCII);
+  VerifyAscii('ascii.txt', TAsciiEncoding);
 end;
 
 procedure TEncodingTestCase.UTF8;
 begin
-  VerifyText('utf8.txt', FILETYPE_UTF8);
+  VerifyText('utf8.txt', TUTF8Encoding);
 end;
 
 procedure TEncodingTestCase.UTF8Sign;
 begin
-  VerifyText('utf8sign.txt', FILETYPE_UTF8);
+  VerifyText('utf8sign.txt', TUTF8Encoding);
 end;
 
 procedure TEncodingTestCase.UTF16LE;
 begin
-  VerifyText('utf16le.txt', FILETYPE_UTF16LE);
+  VerifyText('utf16le.txt', TUTF16LEEncoding);
 end;
 
 procedure TEncodingTestCase.UTF16LESign;
 begin
-  VerifyText('utf16lesign.txt', FILETYPE_UTF16LE);
+  VerifyText('utf16lesign.txt', TUTF16LEEncoding);
 end;
 
 procedure TEncodingTestCase.UTF16BE;
 begin
-  VerifyText('utf16be.txt', FILETYPE_UTF16BE);
+  VerifyText('utf16be.txt', TUTF16BEEncoding);
 end;
 
 procedure TEncodingTestCase.UTF16BESign;
 begin
-  VerifyText('utf16besign.txt', FILETYPE_UTF16BE);
+  VerifyText('utf16besign.txt', TUTF16BEEncoding);
 end;
 
 procedure TEncodingTestCase.EUC;
 begin
-  VerifyText('euc.txt', FILETYPE_EUC);
+  VerifyText('euc.txt', TEUCEncoding);
 end;
 
 procedure TEncodingTestCase.ShiftJis;
 begin
-  VerifyText('shiftjis.txt', FILETYPE_SJS);
+  VerifyText('shiftjis.txt', TSJISEncoding);
 end;
 
 procedure TEncodingTestCase.Acp;
 begin
-  VerifyAcp('acp.txt', FILETYPE_ACP);
+  VerifyAcp('acp.txt', TACPEncoding);
 end;
 
 { Guess* versions make converter guess the encoding }
 procedure TEncodingTestCase.GuessAscii;
 begin
-  VerifyAscii('ascii.txt', FILETYPE_UNKNOWN);
+  VerifyAscii('ascii.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessUTF8;
 begin
-  VerifyText('utf8.txt', FILETYPE_UNKNOWN);
+  VerifyText('utf8.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessUTF8Sign;
 begin
-  VerifyText('utf8sign.txt', FILETYPE_UNKNOWN);
+  VerifyText('utf8sign.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessUTF16LE;
 begin
-  VerifyText('utf16le.txt', FILETYPE_UNKNOWN);
+  VerifyText('utf16le.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessUTF16LESign;
 begin
-  VerifyText('utf16lesign.txt', FILETYPE_UNKNOWN);
+  VerifyText('utf16lesign.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessUTF16BE;
 begin
  //UTF16BE is not being detected at this point, so this test always fails.
-  VerifyText('utf16be.txt', FILETYPE_UNKNOWN);
+  VerifyText('utf16be.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessUTF16BESign;
 begin
-  VerifyText('utf16besign.txt', FILETYPE_UNKNOWN);
+  VerifyText('utf16besign.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessEUC;
 begin
-  VerifyText('euc.txt', FILETYPE_UNKNOWN);
+  VerifyText('euc.txt', nil);
 end;
 
 procedure TEncodingTestCase.GuessShiftJis;
 begin
-  VerifyText('shiftjis.txt', FILETYPE_UNKNOWN);
+  VerifyText('shiftjis.txt', nil);
 end;
 
 { Save* to load, then save, then compare to original file }
 procedure TEncodingTestCase.SaveAscii;
 begin
-  LoadSaveCompare('ascii.txt', FILETYPE_ASCII, false);
+  LoadSaveCompare('ascii.txt', TAsciiEncoding, false);
 end;
 
 procedure TEncodingTestCase.SaveUTF8;
 begin
-  LoadSaveCompare('utf8.txt', FILETYPE_UTF8, false);
+  LoadSaveCompare('utf8.txt', TUTF8Encoding, false);
 end;
 
 procedure TEncodingTestCase.SaveUTF8Sign;
 begin
-  LoadSaveCompare('utf8sign.txt', FILETYPE_UTF8, true);
+  LoadSaveCompare('utf8sign.txt', TUTF8Encoding, true);
 end;
 
 procedure TEncodingTestCase.SaveUTF16LE;
 begin
-  LoadSaveCompare('utf16le.txt', FILETYPE_UTF16LE, false);
+  LoadSaveCompare('utf16le.txt', TUTF16LEEncoding, false);
 end;
 
 procedure TEncodingTestCase.SaveUTF16LESign;
 begin
-  LoadSaveCompare('utf16lesign.txt', FILETYPE_UTF16LE, true);
+  LoadSaveCompare('utf16lesign.txt', TUTF16LEEncoding, true);
 end;
 
 procedure TEncodingTestCase.SaveUTF16BE;
 begin
-  LoadSaveCompare('utf16be.txt', FILETYPE_UTF16BE, false);
+  LoadSaveCompare('utf16be.txt', TUTF16BEEncoding, false);
 end;
 
 procedure TEncodingTestCase.SaveUTF16BESign;
 begin
-  LoadSaveCompare('utf16besign.txt', FILETYPE_UTF16BE, true);
+  LoadSaveCompare('utf16besign.txt', TUTF16BEEncoding, true);
 end;
 
 procedure TEncodingTestCase.SaveEUC;
 begin
-  LoadSaveCompare('euc.txt', FILETYPE_EUC, false);
+  LoadSaveCompare('euc.txt', TEUCEncoding, false);
 end;
 
 procedure TEncodingTestCase.SaveShiftJis;
 begin
-  LoadSaveCompare('shiftjis.txt', FILETYPE_SJS, false);
+  LoadSaveCompare('shiftjis.txt', TSJISEncoding, false);
 end;
 
 procedure TEncodingTestCase.SaveAcp;
 begin
-  LoadSaveCompare('acp.txt', FILETYPE_ACP, false);
+  LoadSaveCompare('acp.txt', TACPEncoding, false);
 end;
 
 
@@ -1015,7 +1015,7 @@ begin
   try
     stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
     try
-      text.SaveText(AAnnotMode, TRubyTextFormat.Create(FILETYPE_UTF16LE, false),
+      text.SaveText(AAnnotMode, TRubyTextFormat.Create(TUTF16LEEncoding, false),
         stream);
     finally
       FreeAndNil(stream);
@@ -1109,7 +1109,7 @@ end;
 procedure TRubyTextTestCase.TextNoRuby;
 begin
   text.Clear;
-  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amNone);
+  text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amNone);
   CheckNoRuby;
 
  //it shouldn't matter whether we use amNone or amDefault
@@ -1121,7 +1121,7 @@ end;
 procedure TRubyTextTestCase.TextRuby;
 begin
   text.Clear;
-  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+  text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
   CheckRuby;
 
   SaveCompare('norubytext.txt', amNone, 'Saving back with amNone');
@@ -1133,7 +1133,7 @@ end;
 procedure TRubyTextTestCase.WttSaveReload;
 begin
   text.Clear;
-  text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+  text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
   SaveReloadCompareDataWtt();
 end;
 
@@ -1187,7 +1187,7 @@ var tempDir: string;
 begin
  //Load text and parse Ruby
   text.Clear;
-  text.LoadText(GetTestFilename('_source.txt'), FILETYPE_UTF16LE, amRuby);
+  text.LoadText(GetTestFilename('_source.txt'), TUTF16LEEncoding, amRuby);
 
   tempDir := CreateRandomTempDir();
   try
@@ -1209,7 +1209,7 @@ var tempDir: string;
 begin
  //Load text and parse Ruby
   text.Clear;
-  text.LoadText(GetTestFilename('_source.txt'), FILETYPE_UTF16LE, amRuby);
+  text.LoadText(GetTestFilename('_source.txt'), TUTF16LEEncoding, amRuby);
 
   tempDir := CreateRandomTempDir();
   try
@@ -1227,22 +1227,22 @@ end;
 
 procedure TExportTestCase.KanaOnly;
 begin
-  LoadSaveCompare('kanaonly.txt', TKanaOnlyFormat.Create(FILETYPE_UTF16LE,false), 'Without spaces');
+  LoadSaveCompare('kanaonly.txt', TKanaOnlyFormat.Create(TUTF16LEEncoding,false), 'Without spaces');
 end;
 
 procedure TExportTestCase.KanaOnlySpaces;
 begin
-  LoadSaveCompare('kanaonlysp.txt', TKanaOnlyFormat.Create(FILETYPE_UTF16LE,true), 'With spaces');
+  LoadSaveCompare('kanaonlysp.txt', TKanaOnlyFormat.Create(TUTF16LEEncoding,true), 'With spaces');
 end;
 
 procedure TExportTestCase.KanjiOnly;
 begin
-  LoadSaveCompare('kanjionly.txt', TKanjiOnlyFormat.Create(FILETYPE_UTF16LE,false));
+  LoadSaveCompare('kanjionly.txt', TKanjiOnlyFormat.Create(TUTF16LEEncoding,false));
 end;
 
 procedure TExportTestCase.KanjiKana;
 begin
-  LoadSaveCompare('kanjikana.txt', TKanjiKanaFormat.Create(FILETYPE_UTF16LE,false));
+  LoadSaveCompare('kanjikana.txt', TKanjiKanaFormat.Create(TUTF16LEEncoding,false));
 end;
 
 procedure TExportTestCase.Html;
@@ -1449,22 +1449,22 @@ begin
       'We really need a file with non-empty dictionary list for this test.');
 
    //Insert into a middle of the F<<<< chain to test chain breaking
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
     Check(text.PropertyLines[4].chars[5].wordstate='<',
       'We need rubytext.txt to have a ruby chain at position y=4, x=5 to test '
         +'ruby chain breaking.');
     PasteAndTest(text2, SourcePos({x=}5, {y=}4));
 
    //Insert at position 0
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
     PasteAndTest(text2, SourcePos({x=}0, {y=}0));
 
    //At the end of the document
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
     PasteAndTest(text2, text.EndOfDocument);
 
    //End of the line
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
     PasteAndTest(text2, text.EndOfLine(1));
 
    //Empty document and to (0,0)
@@ -1472,7 +1472,7 @@ begin
     PasteAndTest(text2, SourcePos(0,0));
 
    //Empty text2
-    text.LoadText(GetTestFilename('rubytext.txt'), FILETYPE_UTF16LE, amRuby);
+    text.LoadText(GetTestFilename('rubytext.txt'), TUTF16LEEncoding, amRuby);
     text2.Clear;
     PasteAndTest(text2, SourcePos(5,4));
 

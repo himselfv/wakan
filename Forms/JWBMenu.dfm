@@ -1435,4 +1435,9 @@ object fMenu: TfMenu
     Left = 504
     Top = 57
   end
+  object ApplicationEvents1: TApplicationEvents
+    OnException = ApplicationEvents1Exception
+    Left = 40
+    Top = 48
+  end
 end

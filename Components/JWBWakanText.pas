@@ -1,7 +1,7 @@
 ﻿unit JWBWakanText;
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBConvert;
+uses SysUtils, Classes, JWBStrings, JWBIO2;
 
 { Character properties for the editor.
 Each character gets its own set of properties. They are made into chains with
@@ -159,7 +159,8 @@ type
     procedure Clear;
 
   public //File opening/saving
-    procedure LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure LoadText(const AFilename: string; AEncoding: CEncoding;
+      AAnnotMode:TTextAnnotMode);
     function LoadWakanText(AStream: TStream; ASilent: boolean = false): boolean; overload;
     procedure LoadWakanText(const AFilename:string); overload;
     procedure SaveWakanText(AStream: TStream; ABlock: PTextSelection = nil); overload;
@@ -229,8 +230,8 @@ type
   protected
     FStream: TStream;
     FOwnsStream: boolean;
-    FOutput: TJwbConvert;
-    FEncType: integer;
+    FOutput: TStreamEncoder;
+    FEncType: CEncoding;
     FNoBOM: boolean;
     LastChar: FChar;
     AtSpace: boolean;
@@ -238,7 +239,7 @@ type
     procedure outpln(const s: string);
     procedure outp(const s: string);
   public
-    constructor Create(AEncType: integer; ANoBOM: boolean=false);
+    constructor Create(AEncType: CEncoding; ANoBOM: boolean=false);
     destructor Destroy; override;
     procedure BeginDocument; virtual;
     procedure AddChars(const s: FString); virtual;
@@ -254,7 +255,7 @@ type
   protected
     FAddSpaces: boolean;
   public
-    constructor Create(AEncType: integer; AAddSpaces: boolean);
+    constructor Create(AEncType: CEncoding; AAddSpaces: boolean);
     procedure AddWord(const word,reading: FString; const meaning: string;
       rubyTextBreak: TRubyTextBreakType); override;
   end;
@@ -332,8 +333,7 @@ function SourcePos(x,y: integer): TSourcePos; inline;
 function SourceBlock(const AFromY, AFromX, AToY, AToX: integer): TSourceBlock; inline;
 
 implementation
-uses Forms, Windows, JclCompression, JWBUnit, JWBCharData,
-  StreamUtils;
+uses Forms, Windows, JclCompression, StreamUtils; {JWBUnit, JWBCharData}
 
 { Source position }
 
@@ -707,7 +707,7 @@ end;
 
 { Text save formats }
 
-constructor TTextSaveFormat.Create(AEncType: integer; ANoBOM: boolean);
+constructor TTextSaveFormat.Create(AEncType: CEncoding; ANoBOM: boolean);
 begin
   inherited Create;
   FEncType := AEncType;
@@ -737,11 +737,10 @@ begin
 end;
 
 procedure TTextSaveFormat.BeginDocument;
-var AFlags: TJwbCreateFlags;
 begin
-  AFlags := [];
-  if not FNoBOM then AFlags := AFlags + [cfBom];
-  FOutput := TJwbConvert.CreateNew(FStream,FEncType,AFlags);
+  FOutput := TStreamEncoder.Open(FStream,FEncType.Create);
+  if not FNoBOM then
+    FOutput.WriteBom;
 end;
 
 procedure TTextSaveFormat.EndDocument;
@@ -768,7 +767,7 @@ begin
   AddChars(word);
 end;
 
-constructor TKanaOnlyFormat.Create(AEncType:integer; AAddSpaces:boolean);
+constructor TKanaOnlyFormat.Create(AEncType: CEncoding; AAddSpaces: boolean);
 begin
   inherited Create(AEncType);
   FAddSpaces := AAddSpaces;
@@ -805,7 +804,7 @@ end;
 
 constructor THtmlFormat.Create(AOptions: THtmlFormatOptions);
 begin
-  inherited Create(FILETYPE_UTF8);
+  inherited Create(TUTF8Encoding);
   FOptions := AOptions;
   FNoBOM := true; //always no bom with html
 end;
@@ -927,7 +926,7 @@ end;
 
 constructor TOpenDocumentContentFormat.Create;
 begin
-  inherited Create(FILETYPE_UTF8);
+  inherited Create(TUTF8Encoding);
 end;
 
 procedure TOpenDocumentContentFormat.BeginDocument;
@@ -982,7 +981,7 @@ end;
 
 constructor TOpenDocumentFormat.Create();
 begin
-  inherited Create(0); //inherited converted not used
+  inherited Create(nil); //inherited converter not used
   FContentMem := TMemoryStream.Create;
   FContentFormat := TOpenDocumentContentFormat.Create();
   FContentFormat.Stream := FContentMem;
@@ -1124,17 +1123,19 @@ end;
 { Loading/saving }
 
 //Loads classic text file in any encoding.
-procedure TWakanText.LoadText(const filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+procedure TWakanText.LoadText(const AFilename: string; AEncoding: CEncoding;
+  AAnnotMode:TTextAnnotMode);
 var c: FChar;
   cp: TCharacterProps;
   s: FString; //current line text
   sp: TCharacterLineProps; //current line props
+  conv: TStreamDecoder;
 
   //Called before we go to the next line,
   //to save whatever needs saving and apply whatever needs applying.
   procedure FinalizeLine;
   begin
-    if AnnotMode=amRuby then
+    if AAnnotMode=amRuby then
       CollapseRuby(s, sp);
     doc.Add(s);
     doctr.AddLine(sp);
@@ -1147,28 +1148,31 @@ begin
   s := '';
   sp.Clear;
 
-  Conv_Open(filename,tp);
-  while Conv_ReadChar(c) do
-  begin
-   //Default properties for this character
-    cp.Reset;
-    cp.SetChar('-', 9, 0, 1);
-    cp.rubyTextBreak := btAuto;
-    cp.ruby := '';
-    cp.flags := [];
+  conv := TStreamDecoder.Open(AFilename, AEncoding.Create);
+  try
+    while conv.ReadChar(c) do
+    begin
+     //Default properties for this character
+      cp.Reset;
+      cp.SetChar('-', 9, 0, 1);
+      cp.rubyTextBreak := btAuto;
+      cp.ruby := '';
+      cp.flags := [];
 
-   //A linebreak breaks everything, even a ruby
-    if c=UH_CR then
-      FinalizeLine
-    else
+     //A linebreak breaks everything, even a ruby
+      if c=UH_CR then
+        FinalizeLine
+      else
 
-   //Normal symbol
-    if c<>UH_LF then begin
-      s:=s+c;
-      sp.AddChar(cp);
+     //Normal symbol
+      if c<>UH_LF then begin
+        s:=s+c;
+        sp.AddChar(cp);
+      end;
     end;
+  finally
+    FreeAndNil(conv);
   end;
-  Conv_Close;
   if s<>'' then
     FinalizeLine();
 end;
@@ -1525,19 +1529,19 @@ begin
 
   reat:=AStream.Read(w,2);
   if (reat<1) or (w<>$f1ff) then
-    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid UTF-8 or JTT file.'));
+    raise EBadWakanTextFormat.Create('#00679^eThis is not a valid UTF-8 or JTT file.');
 
   AStream.Read(ws,32);
   s:=string(ws);
   if (copy(s,1,22)<>'WaKan Translated Text>')
   and (copy(s,1,22)<>'JaLeT Translated Text>') then
-    raise EBadWakanTextFormat.Create(_l('#00679^eThis is not a valid Wakan text file.'));
+    raise EBadWakanTextFormat.Create('#00679^eThis is not a valid Wakan text file.');
   delete(s,1,22);
 
   AStream.Read(w,2);
   if w<>3294 then
-    raise EBadWakanTextFormat.Create(_l('#00681^eThis JTT file was created by '
-      +'old version of WaKan.'#13'It is not compatible with the current version.'));
+    raise EBadWakanTextFormat.Create('#00681^eThis JTT file was created by '
+      +'old version of WaKan.'#13'It is not compatible with the current version.');
 
  { We're loading this to an empty document, so we just replace dictionary list
   with the one provided in WTT. }
@@ -1690,7 +1694,8 @@ begin
   reading := '';
   kanji := '';
 
-  s:=AnsiString('WaKan Translated Text>'+WakanDatestamp(CharDataProps.DicBuildDate));
+//  s:=AnsiString('WaKan Translated Text>'+WakanDatestamp(CharDataProps.DicBuildDate));
+  s:=AnsiString('WaKan Translated Text>01JAN13'); //TODO: Do not leave like this. Make a decision.
   while length(s)<32 do s:=s+' ';
   AStream.Write(s[1],32);
 

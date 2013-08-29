@@ -475,6 +475,7 @@ begin
     end;
     if asciionly then tp:=0;
   end;
+
   if tp=0 then
   begin
     _rewind;

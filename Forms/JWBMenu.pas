@@ -8,7 +8,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions;
+  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions,
+  Vcl.AppEvnts;
 
 type
   TfMenu = class(TForm)
@@ -242,6 +243,7 @@ type
     aVocabImport1: TMenuItem;
     ClipboardPaintbox: TWakanPaintbox;
     aStrokeOrder: TAction;
+    ApplicationEvents1: TApplicationEvents;
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -358,6 +360,7 @@ type
     procedure aUserDetailsChecked(Sender: TObject);
     procedure aUserExamplesChecked(Sender: TObject);
     procedure aKanjiDetailsChecked(Sender: TObject);
+    procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
 
   private
     initdone:boolean;
@@ -3146,6 +3149,13 @@ begin
 //    fKanjiDetails.UpdateAlignment; //TODO: Do we need this?
   end;
  //ChangeDisplay -- should not be needed
+end;
+
+procedure TfMenu.ApplicationEvents1Exception(Sender: TObject; E: Exception);
+begin
+  if E is EAbort then exit;
+  E.Message := _l(E.Message);
+  Application.ShowException(E);
 end;
 
 initialization
