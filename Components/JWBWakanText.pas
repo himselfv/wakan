@@ -1,7 +1,7 @@
 ﻿unit JWBWakanText;
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBIO2;
+uses SysUtils, Classes, JWBStrings, JWBIO;
 
 { Character properties for the editor.
 Each character gets its own set of properties. They are made into chains with
@@ -932,6 +932,9 @@ end;
 procedure TOpenDocumentContentFormat.BeginDocument;
 var res: TResourceStream;
 begin
+  inherited BeginDocument;
+  FOutput.Flush; //will write to stream directly
+
   res := TResourceStream.Create(hInstance,'ODT_CONTENT_START',RT_RCDATA);
   try
     FStream.CopyFrom(res,res.Size);
@@ -939,7 +942,6 @@ begin
     FreeAndNil(res);
   end;
 
-  inherited BeginDocument;
   outp('<text:p>');
 end;
 

@@ -243,8 +243,8 @@ type
     property Orders: TStringList read FOrders;
 
   public //Import/export
-    procedure ExportToText(t:TCustomFileWriter;ord:string);
-    procedure ImportFromText(t:TCustomFileReader);
+    procedure ExportToText(t:TStreamEncoder;ord:string);
+    procedure ImportFromText(t:TStreamDecoder);
 
   protected
     reccount:integer;
@@ -2361,7 +2361,7 @@ end;
 { Import/export }
 { This will only work properly on Ansi }
 
-procedure TTextTable.ExportToText(t:TCustomFileWriter;ord:string);
+procedure TTextTable.ExportToText(t:TStreamEncoder;ord:string);
 var i,j:integer;
     s,s2:string;
     ordn:integer;
@@ -2386,7 +2386,7 @@ begin
   t.Writeln('.');
 end;
 
-procedure TTextTable.ImportFromText(t:TCustomFileReader);
+procedure TTextTable.ImportFromText(t:TStreamDecoder);
 var s:string;
     i,j:integer;
     fld:TStringList;

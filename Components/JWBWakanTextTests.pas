@@ -1,7 +1,7 @@
 ﻿unit JWBWakanTextTests;
 
 interface
-uses SysUtils, Classes, TestFramework, JWBIO2, JWBWakanText;
+uses SysUtils, Classes, TestFramework, JWBIO, JWBWakanText;
 
 type
   TFriendlyWakanText = class(TWakanText); //to access protected members
