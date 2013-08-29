@@ -1,4 +1,4 @@
-unit JWBIO2;
+unit JWBIO;
 {
 Encodings and stream encoders/decoders.
 How to use:
