@@ -1,7 +1,7 @@
 ﻿unit JWBWakanTextTests;
 
 interface
-uses SysUtils, Classes, TestFramework, JWBIO, JWBWakanText;
+uses SysUtils, Classes, TestFramework, JWBConvert, JWBIO, JWBWakanText;
 
 type
   TFriendlyWakanText = class(TWakanText); //to access protected members
@@ -160,8 +160,35 @@ type
     Proper testing routines would be better. }
   end;
 
+  TWhosFaster = class(TTestCase)
+  protected
+    procedure TestJWBIO(const AFilename: string; AEncoding: CEncoding);
+    procedure TestJWBConvert(const AFilename: string; AFiletype: byte);
+  published
+    procedure JWBIO_Ascii;
+    procedure JWBConvert_Ascii;
+    procedure JWBIO_Acp;
+    procedure JWBConvert_Acp;
+    procedure JWBIO_Utf8;
+    procedure JWBConvert_Utf8;
+    procedure JWBIO_Utf16le;
+    procedure JWBConvert_Utf16le;
+    procedure JWBIO_Utf16be;
+    procedure JWBConvert_Utf16be;
+    procedure JWBIO_Jis;
+    procedure JWBConvert_Jis;
+    procedure JWBIO_Sjs;
+    procedure JWBConvert_Sjs;
+    procedure JWBIO_Euc;
+    procedure JWBConvert_Euc;
+    procedure JWBIO_Gb;
+    procedure JWBConvert_Gb;
+    procedure JWBIO_Big5;
+    procedure JWBConvert_Big5;
+  end;
+
 implementation
-uses JWBStrings, StreamUtils;
+uses JWBStrings, StreamUtils, Windows;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -1485,6 +1512,163 @@ begin
   end;
 end;
 
+const
+  iter_count: integer = 100;
+
+procedure TWhosFaster.TestJWBConvert(const AFilename: string; AFiletype: byte);
+var tm: cardinal;
+  i, lines_cnt: integer;
+  ms: TJWBConvert;
+  ln: string;
+begin
+  tm := GetTickCount();
+
+  for i := 0 to iter_count-1 do begin
+    lines_cnt := 0;
+    ms := TJWBConvert.Open(
+      TStreamReader.Create(
+        TFileStream.Create(AFilename, fmOpenRead or fmShareDenyNone),
+        {owns=}true
+      ),
+      AFiletype,
+      {owns=}true
+    );
+    while not ms.EOF do begin
+      ln := ms.ReadLn;
+      Inc(lines_cnt);
+    end;
+    //not good, last ReadLn could be either empty line or "no data at all", can't tell which it is
+    //let's hope this doesn't happen
+
+    Check(lines_cnt=12964, 'Invalid number of lines');
+    FreeAndNil(ms);
+  end;
+
+  tm := GetTickCount()-tm;
+  Check(false, Format('%d msec, %d iter, %g avg', [tm, iter_count, tm/iter_count]));
+end;
+
+procedure TWhosFaster.TestJWBIO(const AFilename: string; AEncoding: CEncoding);
+var tm: cardinal;
+  i, lines_cnt: integer;
+  ms: TStreamDecoder;
+  ln: string;
+begin
+  tm := GetTickCount();
+
+  for i := 0 to iter_count-1 do begin
+    lines_cnt := 0;
+    ms := OpenTextFile(AFilename, AEncoding);
+    while ms.ReadLn(ln) do
+      Inc(lines_cnt);
+    Check(lines_cnt=12964, 'Invalid number of lines');
+    FreeAndNil(ms);
+  end;
+
+  tm := GetTickCount()-tm;
+  Check(false, Format('%d msec, %d iter, %g avg', [tm, iter_count, tm/iter_count]));
+end;
+
+procedure TWhosFaster.JWBIO_Ascii;
+begin
+  TestJWBIO('Tests\big\ascii.txt', TAsciiEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Ascii;
+begin
+  TestJWBConvert('Tests\big\ascii.txt', FILETYPE_ASCII);
+end;
+
+procedure TWhosFaster.JWBIO_Acp;
+begin
+  TestJWBIO('Tests\big\acp.txt', TAcpEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Acp;
+begin
+  TestJWBConvert('Tests\big\acp.txt', FILETYPE_ACP);
+end;
+
+procedure TWhosFaster.JWBIO_Utf8;
+begin
+  TestJWBIO('Tests\big\utf8.txt', TUTF8Encoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Utf8;
+begin
+  TestJWBConvert('Tests\big\utf8.txt', FILETYPE_UTF8);
+end;
+
+procedure TWhosFaster.JWBIO_Utf16le;
+begin
+  TestJWBIO('Tests\big\utf16le.txt', TUTF16LEEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Utf16le;
+begin
+  TestJWBConvert('Tests\big\utf16le.txt', FILETYPE_UTF16LE);
+end;
+
+procedure TWhosFaster.JWBIO_Utf16be;
+begin
+  TestJWBIO('Tests\big\utf16be.txt', TUTF16BEEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Utf16be;
+begin
+  TestJWBConvert('Tests\big\utf16be.txt', FILETYPE_UTF16BE);
+end;
+
+procedure TWhosFaster.JWBIO_Jis;
+begin
+  TestJWBIO('Tests\big\jis.txt', TJISEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Jis;
+begin
+  TestJWBConvert('Tests\big\jis.txt', FILETYPE_JIS);
+end;
+
+procedure TWhosFaster.JWBIO_Sjs;
+begin
+  TestJWBIO('Tests\big\sjis.txt', TSJISEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_Sjs;
+begin
+  TestJWBConvert('Tests\big\sjis.txt', FILETYPE_SJS);
+end;
+
+procedure TWhosFaster.JWBIO_EUC;
+begin
+  TestJWBIO('Tests\big\euc.txt', TEUCEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_EUC;
+begin
+  TestJWBConvert('Tests\big\euc.txt', FILETYPE_EUC);
+end;
+
+procedure TWhosFaster.JWBIO_GB;
+begin
+  TestJWBIO('Tests\big\gb.txt', TGBEncoding);
+end;
+
+procedure TWhosFaster.JWBConvert_GB;
+begin
+  TestJWBConvert('Tests\big\gb.txt', FILETYPE_GB);
+end;
+
+procedure TWhosFaster.JWBIO_BIG5;
+begin
+  TestJWBIO('Tests\big\big5.txt', TBIG5Encoding);
+end;
+
+procedure TWhosFaster.JWBConvert_BIG5;
+begin
+  TestJWBConvert('Tests\big\big5.txt', FILETYPE_BIG5);
+end;
+
 function WakanTextTests: ITestSuite;
 var ASuite: TTestSuite;
 begin
@@ -1502,5 +1686,6 @@ end;
 
 initialization
   RegisterTest(WakanTextTests);
+  RegisterTest(TWhosFaster.Suite);
 
 end.

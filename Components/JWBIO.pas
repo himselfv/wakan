@@ -31,6 +31,10 @@ How to use:
 interface
 uses SysUtils, Classes, JWBStrings;
 
+{ TODO: Fix "Invalid number of lines" for ASCII encoding }
+{ TODO: Replace Result := Result + ch; schemes with something more efficeint
+  (tests show they really are slow) }
+
 { TODO: ACP (Active codepage, similar to ANSI but with local [128..255]),
  through buffering/QueryNextBlock }
 { TODO: RtlDecoder(TEncoding)
@@ -1386,7 +1390,7 @@ function OpenTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStr
 var fsr: TStreamReader;
 begin
   fsr := TStreamReader.Create(
-    TFileStream.Create(AFilename, fmOpenRead),
+    TFileStream.Create(AFilename, fmOpenRead or fmShareDenyNone),
     {OwnsStream=}true
   );
   try
