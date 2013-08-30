@@ -510,7 +510,7 @@ function TAsciiEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var ac: AnsiChar;
 begin
   Result := '';
-  while (AStream.Read(ac,1)=1) and (MaxChars>0) do begin
+  while (MaxChars>0) and (AStream.Read(ac,1)=1) do begin
     Result := Result + WideChar(ac);
     Dec(MaxChars);
   end;
