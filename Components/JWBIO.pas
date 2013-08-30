@@ -31,16 +31,49 @@ How to use:
 interface
 uses SysUtils, Classes, JWBStrings;
 
-{ TODO: Fix "Invalid number of lines" for ASCII encoding }
-{ TODO: Replace Result := Result + ch; schemes with something more efficeint
-  (tests show they really are slow) }
+{ TODO: Encodings with params?
 
-{ TODO: ACP (Active codepage, similar to ANSI but with local [128..255]),
- through buffering/QueryNextBlock }
-{ TODO: RtlDecoder(TEncoding)
- We do not use Delphi's RTL TEncodings because those do not support converting
- only a part of the buffer.
- We may write a wrapper using some tricks (convert too much + drop ending) maybe. }
+  We have to choose between being able to parametrize encodings:
+    enc := TEncoding.Create('cp1251');
+  To do TRtlEncoding, as it requires passing an instance of TEncoding, which is
+  impossible even with generics (and generics wouldn't let us specify a created
+  TEncoding params anyway).
+
+  And able to store encoding/decoding state, parts of surrogate pairs
+    ch := enc.GetChar(stream); // -> Surrogate_part_1
+    ch := enc.GetChar(stream); // -> Surrogate_part_2
+  To add BOM support to single-base-multiple-codepages encodings such as
+  TMultibyteEncoding.
+
+  Over being able to characterize file encoding simply by the encoding class:
+    if DetectEncoding('text.txt')=TUTF8Encoding then [...]
+  To pass the class everywhere without much action:
+    reader := TStreamReader.Create('text.txt', TUTF8Encoding)
+  To run common routines (file type guessing, bom checking) without creating an
+  instance of every encoding we want to check against.
+  To auto-create detected encoding in a common way
+  To register encodings by registering their class types (how do you register
+  class+param_set?)
+
+  In short, we have 3 options for TEncoding:
+  1. Descriptor: class, Parser: class
+  2. Descriptor: class, Parser: object
+  3. Descriptor: object
+  Where descriptor is something which contains a full set of properties which
+  define encoding, and parser is something which is used on a particular text.
+
+  We may also use a combination of approaches, e.g.:
+  - Create all possible encodings at the start of the app
+  - Use these for encoding properties/detection
+  - Encodings are stateless
+  - Encoding state is save in additional object, TEncodingState, which is returned
+   by the encoding or passed to it and modified.
+  But this would require us to have a state param for every encoding.
+}
+
+{ TODO: TRtlEncoding(SysUtils.TEncoding) }
+{ TODO: UTF16BE guessing }
+{ TODO: Move WTT detection and handling out of here }
 { TODO: UTF16 surrogate pairs (LE and BE in different order) }
 
 type
@@ -66,11 +99,15 @@ type
     class function ReadBom(AStream: TStream): boolean; virtual;
     procedure WriteBom(AStream: TStream); virtual;
     function Analyze(AStream: TStream): TEncodingLikelihood; virtual;
-    function Read(AStream: TStream; MaxChars: integer): string; virtual; abstract;
-   { MaxChars is given in 2 byte positions. Surrogate pairs may be broken }
-    procedure Write(AStream: TStream; const AData: string); virtual; abstract;
-   { Encoding descendants do not check the number of bytes written. If you care,
-    raise exceptions in TStream descendant wrapper.  }
+   { Implement *at least one* of Read/ReadChar.
+    MaxChars is given in 2 byte positions. Surrogate pairs count as separate chars. }
+    function Read(AStream: TStream; MaxChars: integer): string; virtual;
+    function ReadChar(AStream: TStream; out AChar: WideChar): boolean; virtual;
+   { Implement *at least one* of Write/WriteChar.
+    Encoding descendants do not check the number of bytes written. If you care,
+    wrap TStream and raise exceptions. }
+    procedure Write(AStream: TStream; const AData: string); virtual;
+    procedure WriteChar(AStream: TStream; AChar: WideChar); virtual;
   end;
   CEncoding = class of TEncoding;
 
@@ -80,7 +117,20 @@ type
     procedure Write(AStream: TStream; const AData: string); override;
   end;
 
-  TACPEncoding = class(TAsciiEncoding); //for now
+ {$IFDEF MSWINDOWS}
+ { Encoding class based on MultiByteToWideChar/WideCharToMultiByte. Slowish but safe.
+  As things are right now, you need a derived classes for actual encodings (see TAcpEncoding) }
+  TMultibyteEncoding = class(TEncoding)
+  protected
+    FCodepage: integer; //set in Create() override
+  public
+    function Read(AStream: TStream; MaxChars: integer): string; override;
+    procedure Write(AStream: TStream; const AData: string); override;
+  end;
+  TAcpEncoding = class(TMultibyteEncoding)
+    constructor Create; override;
+  end;
+ {$ENDIF}
 
   TUTF8Encoding = class(TEncoding)
     class function GetBom: TBytes; override;
@@ -304,6 +354,40 @@ begin
     Result := elUnlikely;
 end;
 
+function TEncoding.Read(AStream: TStream; MaxChars: integer): string;
+var pos: integer;
+begin
+  SetLength(Result, MaxChars);
+  pos := 1;
+  while MaxChars>0 do begin
+    if not ReadChar(AStream, Result[pos]) then break;
+    Inc(pos);
+    Dec(MaxChars);
+  end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
+end;
+
+function TEncoding.ReadChar(AStream: TStream; out AChar: WideChar): boolean;
+var s: string;
+begin
+  s := Read(AStream, 1);
+  Result := Length(s)>=1;
+  if Result then AChar := s[1];
+end;
+
+procedure TEncoding.Write(AStream: TStream; const AData: string);
+var i: integer;
+begin
+  for i := 1 to Length(AData) do
+    WriteChar(AStream, AData[i]);
+end;
+
+procedure TEncoding.WriteChar(AStream: TStream; AChar: WideChar);
+begin
+  Write(AStream, AChar);
+end;
+
 procedure _fwrite1(AStream: TStream; const b: byte); inline;
 begin
   AStream.Write(b, 1);
@@ -507,13 +591,18 @@ end;
 { Simple encodings }
 
 function TAsciiEncoding.Read(AStream: TStream; MaxChars: integer): string;
-var ac: AnsiChar;
+var pos: integer;
+  ac: AnsiChar;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   while (MaxChars>0) and (AStream.Read(ac,1)=1) do begin
-    Result := Result + WideChar(ac);
+    Result[pos] := WideChar(ac);
+    Inc(pos);
     Dec(MaxChars);
   end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TAsciiEncoding.Write(AStream: TStream; const AData: string);
@@ -523,6 +612,76 @@ begin
     AStream.Write(AnsiChar(AData[i]), 1);
 end;
 
+{$IFDEF MSWINDOWS}
+function TMultibyteEncoding.Read(AStream: TStream; MaxChars: integer): string;
+var inp: array[0..4] of AnsiChar;
+  i, pos: integer;
+  found: boolean;
+begin
+  SetLength(Result, MaxChars);
+  pos := 1;
+  while MaxChars>0 do begin
+
+   { Hold on to your seats guys, this is going to be slow!
+    CP_* encodings on Windows can be multibyte and MultiByteToWideChar does not
+    return the number of bytes it used (only the number of *resulting* chars).
+    To know where to start next time we read data byte by byte, until there's
+    enough bytes for MultiByteToWideChar to produce one char. }
+
+    i := 0;
+    found := false;
+    while i<Length(inp) do begin
+      if AStream.Read(inp[i],1)<>1 then break;
+
+      if MultiByteToWideChar(CP_ACP, 0, @inp[0], i+1, @Result[pos], 1)>=1 then begin
+        found := true;
+        break;
+      end;
+
+      Inc(i);
+    end;
+
+    if not found then
+      if i>=Length(inp) then begin
+       { This was a byte we could not decode, so move to next byte and try again.
+        Instead of putting '?' here, we could have just skipped Inc(pos)/Dec(maxchars),
+        but it's important that we continue until we reach MaxChars of output or EOF }
+        Result[pos] := '?';
+        AStream.Seek(-i+1, soCurrent);
+      end else begin
+       { We've reached the end of file, break }
+        if i>0 then AStream.Seek(-i, soCurrent);
+        break;
+      end;
+
+    Inc(pos);
+    Dec(MaxChars);
+  end;
+
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
+end;
+
+procedure TMultibyteEncoding.Write(AStream: TStream; const AData: string);
+const def: AnsiChar = '?';
+var buf: AnsiString;
+  written: integer;
+begin
+  if Length(AData)=0 then exit;
+  SetLength(buf, Length(AData)*4); //there aren't any encodings with more than 4 byte chars
+  written := WideCharToMultiByte(CP_ACP, 0, PWideChar(AData), Length(AData), PAnsiChar(buf), Length(buf), @def, nil);
+  if written=0 then
+    RaiseLastOsError();
+  AStream.Write(buf[1], written);
+end;
+
+constructor TAcpEncoding.Create;
+begin
+  inherited;
+  FCodepage := CP_ACP;
+end;
+{$ENDIF}
+
 class function TUTF8Encoding.GetBOM: TBytes;
 begin
   Result := TBytes.Create($EF, $BB, $BF);
@@ -531,29 +690,35 @@ end;
 function TUTF8Encoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2, b3: byte;
   tmp: integer;
+  pos: integer;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   while MaxChars>0 do begin
-    if AStream.Read(b1,1)<>1 then exit;
+    if AStream.Read(b1,1)<>1 then break;
 
     if (b1 and UTF8_MASK2)=UTF8_VALUE2 then begin
-      if AStream.Read(b2,1)<>1 then exit;
-      Result := Result + WideChar(((b1 and $1f) shl 6) or (b2 and $3f))
+      if AStream.Read(b2,1)<>1 then break;
+      Result[pos] := WideChar(((b1 and $1f) shl 6) or (b2 and $3f))
     end else
     if (b1 and UTF8_MASK3)=UTF8_VALUE3 then begin
       if (AStream.Read(b2,1)<>1)
-      or (AStream.Read(b3,1)<>1) then exit;
-      Result := Result + WideChar(((b1 and $0f) shl 12) or ((b2 and $3f) shl 6) or (b3 and $3f));
+      or (AStream.Read(b3,1)<>1) then break;
+      Result[pos] := WideChar(((b1 and $0f) shl 12) or ((b2 and $3f) shl 6) or (b3 and $3f));
     end else
     if (b1 and UTF8_MASK4)=UTF8_VALUE4 then
     begin
       AStream.Read(tmp, 3); //and ignore
      { TODO: Decode and return a surrogate pair }
     end else
-      Result := Result + WideChar(b1);
+      Result[pos] := WideChar(b1);
 
+    Inc(pos);
     Dec(MaxChars);
   end;
+
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TUTF8Encoding.Write(AStream: TStream; const AData: string);
@@ -805,19 +970,24 @@ end;
 
 function TEUCEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
+  pos: integer;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   while MaxChars>0 do begin
-    if AStream.Read(b1,1)<>1 then exit;
+    if AStream.Read(b1,1)<>1 then break;
 
     if _is(b1,IS_EUC) then begin
-      if AStream.Read(b2,1)<>1 then exit;
-      Result := Result + WideChar(JIS2Unicode((b1*256+b2) and $7f7f));
+      if AStream.Read(b2,1)<>1 then break;
+      Result[pos] := WideChar(JIS2Unicode((b1*256+b2) and $7f7f));
     end else
-      Result := Result + WideChar(b1);
+      Result[pos] := WideChar(b1);
 
+    Inc(pos);
     Dec(MaxChars);
   end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TEUCEncoding.Write(AStream: TStream; const AData: string);
@@ -843,22 +1013,27 @@ end;
 
 function TSJISEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
+  pos: integer;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   while MaxChars>0 do begin
-    if AStream.Read(b1,1)<>1 then exit;
+    if AStream.Read(b1,1)<>1 then break;
 
     if _is(b1,IS_SJIS1) then begin
-      if AStream.Read(b2,1)<>1 then exit;
+      if AStream.Read(b2,1)<>1 then break;
       if _is(b2,IS_SJIS2) then
-        Result := Result + WideChar(JIS2Unicode(SJIS2JIS(b1*256+b2)))
+        Result[pos] := WideChar(JIS2Unicode(SJIS2JIS(b1*256+b2)))
       else
-        Result := Result + WideChar(JIS2Unicode(b1*256+b2));
+        Result[pos] := WideChar(JIS2Unicode(b1*256+b2));
     end else
-      Result := Result + WideChar(b1);
+      Result[pos] := WideChar(b1);
 
+    Inc(pos);
     Dec(MaxChars);
   end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TSJISEncoding.Write(AStream: TStream; const AData: string);
@@ -879,34 +1054,38 @@ end;
 function TBaseJISEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
   inp_intwobyte: boolean;
+  pos: integer;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   inp_intwobyte := false;
   while true do begin
-    if AStream.Read(b1,1)<>1 then exit;
+    if AStream.Read(b1,1)<>1 then break;
 
     if b1=JIS_ESC then
     begin
-      if AStream.Read(b2,1)<>1 then exit;
+      if AStream.Read(b2,1)<>1 then break;
       if (b2=ord('$')) or (b2=ord('(')) then AStream.Read(b1,1); //don't care about the result
       if (b2=ord('K')) or (b2=ord('$')) then inp_intwobyte:=true else inp_intwobyte:=false;
      //Do not exit, continue to the next char
     end else begin
       if (b1=JIS_NL) or (b1=JIS_CR) then
-        Result := Result + WideChar(b1)
+        Result[pos] := WideChar(b1)
       else begin
-        if AStream.Read(b2,1)<>1 then exit;
+        if AStream.Read(b2,1)<>1 then break;
         if inp_intwobyte then
-          Result := Result + WideChar(JIS2Unicode(b1*256+b2))
+          Result[pos] := WideChar(JIS2Unicode(b1*256+b2))
         else
-          Result := Result + WideChar(b1);
+          Result[pos] := WideChar(b1);
       end;
 
+      Inc(pos);
       Dec(MaxChars);
       if MaxChars<=0 then break;
     end;
-
   end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TBaseJISEncoding.Write(AStream: TStream; const AData: string);
@@ -972,23 +1151,28 @@ end;
 
 function TGBEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
+  pos: integer;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   while MaxChars>0 do begin
-    if AStream.Read(b1,1)<>1 then exit;
+    if AStream.Read(b1,1)<>1 then break;
 
     if (b1>=$a1) and (b1<=$fe) then
     begin
-      if AStream.Read(b2,1)<>1 then exit;
+      if AStream.Read(b2,1)<>1 then break;
       if (b2>=$a1) and (b2<=$fe) then
-        Result := Result + WideChar(Table_GB[(b1-$a0)*96+(b2-$a0)])
+        Result[pos] := WideChar(Table_GB[(b1-$a0)*96+(b2-$a0)])
       else
-        Result := Result + WideChar(b1*256+b2);
+        Result[pos] := WideChar(b1*256+b2);
     end else
-      Result := Result + WideChar(b1);
+      Result[pos] := WideChar(b1);
 
+    Inc(pos);
     Dec(MaxChars);
   end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TGBEncoding.Write(AStream: TStream; const AData: string);
@@ -1018,26 +1202,31 @@ end;
 
 function TBIG5Encoding.Read(AStream: TStream; MaxChars: integer): string;
 var b1, b2: byte;
+  pos: integer;
 begin
-  Result := '';
+  SetLength(Result, MaxChars);
+  pos := 1;
   while MaxChars>0 do begin
-    if AStream.Read(b1,1)<>1 then exit;
+    if AStream.Read(b1,1)<>1 then break;
 
     if (b1>=$a1) and (b1<=$fe) then
     begin
-      if AStream.Read(b2,1)<>1 then exit;
+      if AStream.Read(b2,1)<>1 then break;
       if (b2>=$40) and (b2<=$7f) then
-        Result := Result + WideChar(Table_Big5[(b1-$a0)*160+(b2-$40)])
+        Result[pos] := WideChar(Table_Big5[(b1-$a0)*160+(b2-$40)])
       else
       if (b2>=$a1) and (b2<=$fe) then
-        Result := Result + WideChar(Table_Big5[(b1-$a0)*160+(b2-$a0)])
+        Result[pos] := WideChar(Table_Big5[(b1-$a0)*160+(b2-$a0)])
       else
-        Result := Result + WideChar(b1*256+b2);
+        Result[pos] := WideChar(b1*256+b2);
     end else
-      Result := Result + WideChar(b1);
+      Result[pos] := WideChar(b1);
 
+    Inc(pos);
     Dec(MaxChars);
   end;
+  if pos<Length(Result) then
+    SetLength(Result, pos-1);
 end;
 
 procedure TBIG5Encoding.Write(AStream: TStream; const AData: string);
