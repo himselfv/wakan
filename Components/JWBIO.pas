@@ -218,6 +218,7 @@ type
    { Since this may require backward seek, try not to TrySkipBom for sources where
     you do not really expect it (i.e. console) }
     procedure TrySkipBom;
+    procedure Rewind;
     function EOF: boolean;
     function ReadChar(out ch: WideChar): boolean; overload;
    { If reading next position produces a surrogate pair, store it somewhere and
@@ -255,6 +256,8 @@ type
     property BufferSize: integer read FBufferSize write FBufferSize;
   end;
   CStreamEncoder = class of TStreamDecoder;
+
+function GuessUTF16(AStream: TStream; out AEncoding: CEncoding): boolean;
 
 function Conv_DetectType(AStream: TStream): CEncoding; overload;
 function Conv_DetectType(AStream: TStream; out AEncoding: CEncoding): boolean; overload;
@@ -462,6 +465,12 @@ end;
 procedure TStreamDecoder.TrySkipBom;
 begin
   FEncoding.ReadBom(Stream);
+end;
+
+procedure TStreamDecoder.Rewind;
+begin
+  Stream.Seek(0, soBeginning);
+  TrySkipBom;
 end;
 
 function TStreamDecoder.EOF: boolean;
@@ -1325,8 +1334,10 @@ end;
  or false if it's a best guess. }
 function Conv_DetectType(AStream: TStream; out AEncoding: CEncoding): boolean;
 var i,b,j:integer;
-    eucsjis:boolean;
-    asciionly:boolean;
+  w: word;
+  eucsjis:boolean;
+  asciionly:boolean;
+  failed_le, failed_be: boolean;
 begin
   AStream.Seek(0, soBeginning);
   AEncoding := nil;
@@ -1350,26 +1361,24 @@ begin
     exit;
   end;
 
- (*
-   TODO: Move to WakanText.pas
-
-    if i=$f1ff then begin
-      tp:=FILETYPE_WTT;
-      Result:=true;
-      exit;
-    end;
-
- *)
-
-  AEncoding:=TUTF16LEEncoding;
+ { UTF16LE/BE first try }
+  failed_le:=false;
+  failed_be:=false;
   eucsjis:=true;
-  i := 0; //zero higher bytes
-  while (AStream.Read(i, 2)=2) and (AEncoding=TUTF16LEEncoding) do
+  while (AStream.Read(w, 2)=2) and not (failed_be and failed_le) do
   begin
-    if Unicode2JIS(i)=0 then AEncoding:=nil;
-    if (i and $8080)<>$8080 then eucsjis:=false;
+    if Unicode2JIS(w)=0 then failed_le:=true;
+    if Unicode2JIS(_swapw(w))=0 then failed_be:=true;
+    if (w and $8080)<>$8080 then eucsjis:=false;
   end;
-  if eucsjis then AEncoding:=nil;
+  if eucsjis then
+    AEncoding:=nil
+  else
+  if failed_be and not failed_le then
+    AEncoding := TUTF16LEEncoding
+  else
+  if failed_le and not failed_be then
+    AEncoding := TUTF16BEEncoding;
   if AEncoding<>nil then exit;
 
   AStream.Seek(0, soBeginning);
@@ -1393,6 +1402,12 @@ begin
   if asciionly then AEncoding:=nil;
   if AEncoding<>nil then exit;
 
+ { UTF16 LE/BE second try }
+  if AEncoding=nil then
+    if GuessUTF16(AStream, AEncoding) and (AEncoding<>nil) then begin
+      Result := true;
+      exit;
+    end;
 
   AStream.Seek(0, soBeginning);
   AEncoding := TAsciiEncoding;
@@ -1458,6 +1473,155 @@ begin
 
   if (AEncoding=nil) and eucsjis then
     AEncoding:=TSJISEncoding;
+end;
+
+{ Tries to guess the variety of UTF16 encoding used in the text heuristically.
+  Return values:
+    True, TUTF16LE --- "I think it may be UTF16LE"
+    True, TUTF16BE --- "I think it may be UTF16BE"
+    True, nil      --- "I don't think it's UTF16 at all"
+    False          --- "I'm not sure" }
+function GuessUTF16(AStream: TStream; out AEncoding: CEncoding): boolean;
+var lead_le, lead_be,
+  trail_le, trail_be: integer;
+  evenb, oddb: array[0..255] of word;
+  evenavg, oddavg: double;
+  evencnt, oddcnt: integer;
+  totalread: integer;
+  failed_le, failed_be: boolean;
+  i: integer;
+  w: word;
+begin
+  lead_le := 0;
+  lead_be := 0;
+  trail_le := 0;
+  trail_be := 0;
+
+  for i := 0 to 255 do begin
+    oddb[i] := 0;
+    evenb[i] := 0;
+  end;
+
+ { Parse up to 32Kb of text }
+  totalread := 0;
+  AStream.Seek(0, soBeginning);
+  while totalread < 32767 do begin
+    if AStream.Read(w, 2)<>2 then break;
+
+   { Build the distribution of leading and trailing byte values }
+    Inc(evenb[w and $00FF]); //0, 2, 4...
+    Inc(oddb[w shr 8]); //1, 3, 5...
+
+   { Count the number of occurences of leading surrogates and trailing
+    surrogates, looking through LE or BE glasses. }
+    if (w>=$D800) and (w<=$DBFF) then Inc(lead_le);
+    if (w>=$DC00) and (w<=$DFFF) then Inc(trail_le);
+    w := _swapw(w);
+    if (w>=$D800) and (w<=$DBFF) then Inc(lead_be);
+    if (w>=$DC00) and (w<=$DFFF) then Inc(trail_be);
+
+    Inc(totalread);
+  end;
+
+  failed_le := false;
+  failed_be := false;
+
+ { Test surrogates. The number of leading surrogates must match that of trailing. }
+
+ { If either of the sum pairs is close to (0,0) we haven't gathered enough data
+  to make a solid comparison. }
+  if (lead_le<=2) and (trail_le<=2) then begin
+    if Abs(lead_be-trail_be)>2 then
+      failed_be := true;
+   { Continue to the next test. }
+  end else
+  if (lead_be<=2) and (trail_be<=2) then begin
+    if Abs(lead_le-trail_le)>2 then
+      failed_le := true;
+   { Continue to the next test. }
+  end else
+  if Abs(lead_le-trail_le)<=2 then
+    if Abs(lead_be-trail_be)<=2 then begin
+     { Both match, continue to the next test. }
+    end else
+    begin
+     { BE fails, LE matches }
+      AEncoding := TUTF16LEEncoding;
+      Result := true;
+      exit;
+    end
+  else
+    if Abs(lead_be-trail_be)<=2 then begin
+     { BE matches, LE fails }
+      AEncoding := TUTF16BEEncoding;
+      Result := true;
+      exit;
+    end
+    else begin
+     { Both invalid }
+      AEncoding := nil;
+      Result := true;
+      exit;
+    end;
+
+ { Chars in text are usually grouped pretty tightly, i.e. kana is $30**,
+  latin is $00** etc. Lower byte will be distributed evenly, while higher byte
+  will have several spikes.
+  We use this to figure which is the leading byte.
+  One of the broadest cases, CJK United Ideographs covers $34-$4D which is only
+  25 values for the higher byte out of 255 possible, less than 10%. }
+
+ { This is pointless if we've had less than 255 characters of text }
+{  if totalread<255 then begin
+    AEncoding := nil;
+    Result := false;
+    exit;
+  end;}
+
+ { Calculate averages }
+  evenavg := 0;
+  oddavg := 0;
+  for i := 0 to 255 do begin
+    evenavg := evenavg + evenb[i];
+    oddavg := oddavg + oddb[i];
+  end;
+  evenavg := evenavg / 255;
+  oddavg := oddavg / 255;
+
+ { Number of items higher than average }
+  evencnt := 0;
+  oddcnt := 0;
+  for i := 0 to 255 do begin
+    if evenb[i]>evenavg then Inc(evencnt);
+    if oddb[i]>oddavg then Inc(oddcnt);
+  end;
+
+  if (evencnt>80) and (oddcnt>80) then begin
+   //Both suck
+    AEncoding := nil;
+    Result := false;
+    exit;
+  end;
+
+  if (evencnt<=30) and (oddcnt>30) then begin
+    if failed_be then
+      AEncoding := nil
+    else
+      AEncoding := TUTF16BEEncoding;
+    Result := true;
+    exit;
+  end;
+
+  if (evencnt>30) and (oddcnt<=30) then begin
+    if failed_le then
+      AEncoding := nil
+    else
+      AEncoding := TUTF16LEEncoding;
+    Result := true;
+    exit;
+  end;
+
+  Result := false;
 end;
 
 function Conv_DetectType(const AFilename: string): CEncoding;

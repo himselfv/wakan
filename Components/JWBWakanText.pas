@@ -332,6 +332,9 @@ const
 function SourcePos(x,y: integer): TSourcePos; inline;
 function SourceBlock(const AFromY, AFromX, AToY, AToX: integer): TSourceBlock; inline;
 
+function IsWakanText(const AStream: TStream): boolean; overload;
+function IsWakanText(const AFilename: string): boolean; overload;
+
 implementation
 uses Forms, Windows, JclCompression, StreamUtils; {JWBUnit, JWBCharData}
 
@@ -1506,6 +1509,24 @@ Wakan text format.
 Explicit ruby is currently stored expanded (as text). This is not the best solution,
 but otherwise we'd need to change the file format.
 }
+
+function IsWakanText(const AStream: TStream): boolean;
+var w: word;
+begin
+  AStream.Seek(0, soBeginning);
+  Result := (AStream.Read(w, 2)=2) and (w=$f1ff);
+end;
+
+function IsWakanText(const AFilename: string): boolean;
+var fs: TStream;
+begin
+  fs := TFileStream.Create(AFilename, fmOpenRead);
+  try
+    Result := IsWakanText(fs);
+  finally
+    FreeAndNil(fs);
+  end;
+end;
 
 { Loads Wakan text from stream into this document, replacing its contents. }
 function TWakanText.LoadWakanText(AStream: TStream; ASilent: boolean): boolean;

@@ -135,9 +135,9 @@ const
 implementation
 
 uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
-  JWBWordList, JWBVocabDetails, JWBVocabAdd,
+  JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO,
   JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
-  JWBConvert, JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
+  JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
   JWBCharData, TextTable;
 
 var wl,wlc:TStringList;
@@ -613,10 +613,12 @@ procedure TfVocab.ExportVocabToCsv(const filename: string);
 var sp: TSMPromptForm;
   i,j:integer;
   sl:TStringList;
+  conv: TStreamEncoder;
 begin
   Screen.Cursor:=crHourGlass;
   sl := nil;
   sp := nil;
+  conv := nil;
   try
     sp:=SMProgressDlgCreate(
       _l('#01007^eVocabulary export'),
@@ -625,22 +627,22 @@ begin
       {canCancel=}true);
     sp.AppearModal;
 
-    Conv_Create(filename,Conv_ChooseType(curlang='c',0));
+    conv := TStreamEncoder.CreateNew(filename,Conv_ChooseType(curlang='c',nil).Create);
     if fWordsExpChoose.ShowModal=mrCancel then exit;
-    Conv_Write(fstr(#9' Wakan Word List'#13#10));
-    Conv_Write(fstr(#9''#13#10));
-    Conv_Write(fstr(#9' created by '+WakanAppName+' '+WakanCopyright+#13#10));
-    Conv_Write(fstr(#9' This file lists words that were exported from user vocabulary.'#13#10));
-    Conv_Write(fstr(#9' Each entry consists of one line where the following values are separated by a delimiter:'#13#10));
-    Conv_Write(fstr(#9' <written>;<phonetic>;<meaning>[;<category>[;<learned>]]'#13#10));
-    Conv_Write(fstr(#9' <category> and <learned> fields are optional.'#13#10));
-    Conv_Write(fstr(#9' <written> - How the word is written (in kanji/hanzi/kana)'#13#10));
-    Conv_Write(fstr(#9' <phonetic> - How the word is pronounced (in kana/Hepburn romaji/BoPoMoFo/PinYin)'#13#10));
-    Conv_Write(fstr(#9' <meaning> - English meaning of the word (cannot contain semicolons!)'#13#10));
-    Conv_Write(fstr(#9' <category> - Name of the category to place the word into (if new, user is asked to specify type) (optional)'#13#10));
-    Conv_Write(fstr(#9' <learned> - Learned state of the word: "P" - problematic, "U" - unlearned, "L" - learned, "M" - mastered (optional)'#13#10));
-    Conv_Write(fstr(#9' Delimiter is the first non-kanji character encountered.'#13#10));
-    Conv_Write(fstr(#9''#13#10));
+    conv.Write(fstr(#9' Wakan Word List'#13#10));
+    conv.Write(fstr(#9''#13#10));
+    conv.Write(fstr(#9' created by '+WakanAppName+' '+WakanCopyright+#13#10));
+    conv.Write(fstr(#9' This file lists words that were exported from user vocabulary.'#13#10));
+    conv.Write(fstr(#9' Each entry consists of one line where the following values are separated by a delimiter:'#13#10));
+    conv.Write(fstr(#9' <written>;<phonetic>;<meaning>[;<category>[;<learned>]]'#13#10));
+    conv.Write(fstr(#9' <category> and <learned> fields are optional.'#13#10));
+    conv.Write(fstr(#9' <written> - How the word is written (in kanji/hanzi/kana)'#13#10));
+    conv.Write(fstr(#9' <phonetic> - How the word is pronounced (in kana/Hepburn romaji/BoPoMoFo/PinYin)'#13#10));
+    conv.Write(fstr(#9' <meaning> - English meaning of the word (cannot contain semicolons!)'#13#10));
+    conv.Write(fstr(#9' <category> - Name of the category to place the word into (if new, user is asked to specify type) (optional)'#13#10));
+    conv.Write(fstr(#9' <learned> - Learned state of the word: "P" - problematic, "U" - unlearned, "L" - learned, "M" - mastered (optional)'#13#10));
+    conv.Write(fstr(#9' Delimiter is the first non-kanji character encountered.'#13#10));
+    conv.Write(fstr(#9''#13#10));
     sl:=TStringList.Create;
     for i:=0 to wl.Count-1 do
     begin
@@ -649,33 +651,33 @@ begin
       for j:=0 to fVocabFilters.lbCategories.Items.Count-1 do
         if (fVocabFilters.lbCategories.Checked[j]) and (sl.IndexOf(curlang+'~'+fVocabFilters.lbCategories.Items[j])<>-1) then
       begin
-        Conv_Write(TUser.Str(TUserKanji));
-        Conv_Write(fstr(#9));
+        conv.Write(TUser.Str(TUserKanji));
+        conv.Write(fstr(#9));
         if not showroma then
-          Conv_Write(TUser.Str(TUserPhonetic))
+          conv.Write(TUser.Str(TUserPhonetic))
         else
           if curlang='c'then
-            Conv_Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c')))
+            conv.Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c')))
           else
-            Conv_Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
-        Conv_Write(fstr(#9));
-        Conv_Write(fstr(replc(TUser.Str(TUserEnglish),';',',')));
+            conv.Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
+        conv.Write(fstr(#9));
+        conv.Write(fstr(replc(TUser.Str(TUserEnglish),';',',')));
         if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
         begin
-          Conv_Write(fstr(#9));
-          Conv_Write(fstr(fVocabFilters.lbCategories.Items[j]));
+          conv.Write(fstr(#9));
+          conv.Write(fstr(fVocabFilters.lbCategories.Items[j]));
           if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
           begin
-            Conv_Write(fstr(#9));
+            conv.Write(fstr(#9));
             case TUser.Int(TUserScore) of
-              0:Conv_Write(fstr('P'));
-              1:Conv_Write(fstr('U'));
-              2:Conv_Write(fstr('L'));
-              3:Conv_Write(fstr('M'));
+              0:conv.Write(fstr('P'));
+              1:conv.Write(fstr('U'));
+              2:conv.Write(fstr('L'));
+              3:conv.Write(fstr('M'));
             end;
           end;
         end;
-        Conv_Write(fstr(#13#10));
+        conv.Write(fstr(#13#10));
       end;
 
       sp.SetProgress(i);
@@ -683,12 +685,11 @@ begin
       if sp.ModalResult=mrCancel then
         raise EAbort.Create('User aborted');
     end;
-    Conv_Flush;
+    conv.Flush;
 
   finally
     sl.Free;
-    if Conv_IsOpen then
-      Conv_Close;
+    FreeAndNil(conv);
     Screen.Cursor:=crDefault;
     sp.Free;
   end;
@@ -811,6 +812,7 @@ var awf: TAddWordFast;
   field:integer;
   unknowncat:string;
   st:integer;
+  conv: TStreamDecoder;
 
   function IsPotentialDelimiter(const ch: WideChar): boolean;
   begin
@@ -840,15 +842,15 @@ begin
   sp := nil;
   try
     awf := TAddWordFast.Create;
-    Conv_Open(filename,Conv_ChooseType(curlang='c',Conv_DetectType(filename)));
+    conv := TStreamDecoder.Open(filename,Conv_ChooseType(curlang='c',Conv_DetectType(filename)).Create);
 
     linc:=0;
     repeat
-      s:=Conv_Read;
+      s:=conv.ReadLn();
       if s=UH_CR then inc(linc);
     until s='';
 
-    Conv_Rewind;
+    conv.Rewind;
 
     curwrit:='';
     curphon:='';
@@ -868,7 +870,7 @@ begin
 
     linc:=0;
     Screen.Cursor:=crHourGlass;
-    s:=Conv_Read;
+    s:=conv.ReadLn;
 
     delim:=fstr(';');
     delimdetect:=true;
@@ -950,9 +952,9 @@ begin
         end;
       end;
 
-      s:=Conv_Read;
+      s:=conv.ReadLn;
     until s='';
-    Conv_Close;
+    FreeAndNil(conv);
 
     sp.show;
     sp.SetMessage(_l('#00907^eRebuilding indexes'));

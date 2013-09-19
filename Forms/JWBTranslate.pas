@@ -39,8 +39,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBWordLookup,
-  JWBDicSearch, JWBConvert, JclCompression, WakanPaintbox, WinSpeedButton,
-  ComCtrls, ToolWin, ImgList, JWBWakanText;
+  JWBDicSearch, JclCompression, WakanPaintbox, WinSpeedButton,
+  ComCtrls, ToolWin, ImgList, JWBWakanText, JWBIO;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -107,6 +107,9 @@ type
 
   TTranslationThread = class;
   TTranslationThreads = array of TTranslationThread;
+
+ //Supported document types
+  TDocType = (dtText, dtWakanText);
 
   TfTranslate = class(TForm)
     Bevel: TPanel;
@@ -217,7 +220,8 @@ type
   public
     doc: TWakanText;
     docfilename:string;
-    doctp:byte;
+    FDocType: TDocType;
+    FDocEncoding: CEncoding; //for text documents
     property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
 
   protected //Unsorted
@@ -360,9 +364,11 @@ type
     procedure SetFileChanged(Value: boolean);
   public //File open/save
     procedure ClearEditor;
-    procedure OpenAnyFile(filename:string);
-    procedure OpenFile(filename:string;tp:byte);
-    procedure SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+    procedure OpenAnyFile(const AFilename: string);
+    procedure OpenFile(const AFilename: string; const AType: TDocType;
+      const AEncoding: CEncoding);
+    procedure SaveToFile(const AFilename: string; const AType: TDocType;
+      const AEncoding: CEncoding; AnnotMode: TTextAnnotMode);
     function SaveAs: boolean;
     function CommitFile:boolean;
     function ExportAs: boolean;
@@ -422,7 +428,7 @@ implementation
 
 uses Types, TextTable, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
-  JWBCategories, JWBDic, JWBEdictMarkers,
+  JWBCategories, JWBDic, JWBEdictMarkers, JWBIO,
   JWBUserData, JWBCharData, StreamUtils;
 
 {$R *.DFM}
@@ -678,23 +684,30 @@ begin
 end;
 
 { Opens a file by guessing format/encoding or asking user for it }
-procedure TfTranslate.OpenAnyFile(filename:string);
-var tp:byte;
+procedure TfTranslate.OpenAnyFile(const AFilename:string);
+var AEncoding: CEncoding;
 begin
-  if not FileExists(filename) then
-    raise Exception.Create('File not found: "'+filename+'"');
-  if not Conv_DetectTypeEx(filename, tp) then begin
-    tp:=Conv_ChooseType(curlang='c', tp);
-    if tp=0 then exit;
+  if not FileExists(AFilename) then
+    raise Exception.Create('File not found: "'+AFilename+'"');
+ //TODO: Open the stream once, reuse for all detections and load
+  if IsWakanText(AFilename) then
+    OpenFile(AFilename, dtWakanText, nil)
+  else begin
+    if not Conv_DetectType(AFilename, AEncoding) then begin
+      AEncoding:=Conv_ChooseType(curlang='c', AEncoding);
+      if AEncoding=nil then exit;
+    end;
+    OpenFile(AFilename, AEncoding);
   end;
-  OpenFile(filename, tp);
 end;
 
-procedure TfTranslate.OpenFile(filename:string;tp:byte);
+procedure TfTranslate.OpenFile(const AFilename:string; const AType: TDocType;
+  const AEncoding: CEncoding);
 var LoadAnnotMode: TTextAnnotMode;
 begin
-  docfilename:=filename;
-  doctp:=tp;
+  docfilename:=AFilename;
+  FDocType := AType;
+  FDocEncoding := AEncoding;
 
   //by default we set SaveAnnotMode to default, meaning no preference has been chosen
   //auto-loaded rubys will be saved either way
@@ -706,7 +719,7 @@ begin
   else
     LoadAnnotMode := amNone;
 
-  lblFilename.Caption:=uppercase(ExtractFilename(filename));
+  lblFilename.Caption:=uppercase(ExtractFilename(AFilename));
   doc.Clear;
   InvalidateLines;
   Screen.Cursor:=crHourGlass;
@@ -718,10 +731,10 @@ begin
     FileChanged:=false;
     FullTextTranslated:=false;
 
-    if tp=FILETYPE_WTT then
-      doc.LoadWakanText(docfilename)
-    else
-      doc.LoadText(docfilename, tp, LoadAnnotMode);
+    case AType of
+      dtText: doc.LoadText(docfilename, AEncoding, LoadAnnotMode);
+      dtWakanText: doc.LoadWakanText(docfilename);
+    end;
 
     ShowText(true);
 
@@ -733,10 +746,16 @@ end;
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
-procedure TfTranslate.SaveToFile(filename:string;tp:byte;AnnotMode:TTextAnnotMode);
+procedure TfTranslate.SaveToFile(const AFilename: string; const AType: TDocType;
+  const AEncoding: CEncoding; AnnotMode: TTextAnnotMode);
 var stream: TStream;
 begin
   Screen.Cursor:=crHourGlass;
+ {
+  !!!!! TODO
+  Rewrite this to use new JWBIO etc.
+  !!!!!
+ }
   if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
     doc.SaveWakanText(filename)
   else begin

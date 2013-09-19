@@ -30,7 +30,7 @@ function HaveAnnotations:boolean; {$IFDEF INLINE}inline;{$ENDIF}
 procedure AnnotShowMedia(kanji,kana:string);
 
 implementation
-uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBConvert, JWBMenu;
+uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBMenu, JWBIO;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 var pack: TPackageBuilder;
@@ -79,7 +79,8 @@ var
   pd:TSMPromptForm;
   ps:TPackageSource;
   tt:TTextTable;
-  ftp:byte;
+  AEncoding: CEncoding;
+  conv: TStreamDecoder;
   moded:boolean;
   curt,curd:FString;
   dd:string;
@@ -138,13 +139,13 @@ begin
     tt.Nocommitting:=true;
     if FindFirst('*.ANO',faAnyFile,sr)=0 then
     repeat
-      ftp:=Conv_DetectType(sr.name);
-      if ftp=0 then ftp:=98;
-      Conv_Open(sr.name,ftp);
+      AEncoding:=Conv_DetectType(sr.name);
+      if AEncoding=nil then AEncoding:=TAsciiEncoding;
+      conv := TStreamDecoder.Open(sr.name, AEncoding.Create);
       if Uppercase(sr.name)='_USER.ANO' then dd:='1' else dd:='0';
       moded:=false;
       curd:=''; curt:='';
-      while Conv_ReadChar(ch) do
+      while conv.ReadChar(ch) do
       begin
         if ch=UH_LF then
         begin
@@ -159,9 +160,9 @@ begin
           else
           if ch<>UH_CR then
             if moded then curd:=curd+ch else curt:=curt+ch;
-        Conv_ReadChar(ch);
+        conv.ReadChar(ch);
       end;
-      Conv_Close;
+      FreeAndNil(conv);
     until FindNext(sr)<>0;
     tt.Nocommitting:=false;
     tt.ReIndex;

@@ -24,7 +24,6 @@ uses
   JWBDicSearch in 'Components\JWBDicSearch.pas',
   JWBKanjiCard in 'Components\JWBKanjiCard.pas',
   JWBConvertTbl in 'Components\JWBConvertTbl.pas',
-  JWBConvert in 'Components\JWBConvert.pas',
   JWBMenu in 'Forms\JWBMenu.pas' {fMenu},
   JWBKanji in 'Forms\JWBKanji.pas' {fKanji},
   JWBRadical in 'Forms\JWBRadical.pas' {fRadical},

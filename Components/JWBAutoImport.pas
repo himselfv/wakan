@@ -7,7 +7,7 @@ Call:
 }
 
 interface
-uses JWBStrings, JWBConvert, JWBDic, JWBDictImport;
+uses JWBStrings, JWBDic, JWBDictImport;
 
 type
   TKnownImportFormat = (ifEdict, ifCEdict);
