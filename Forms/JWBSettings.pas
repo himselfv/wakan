@@ -891,7 +891,10 @@ begin
   reg.WriteInteger('Editor','ReleaseCursorMode',rgReleaseCursorMode.ItemIndex);
   reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
   reg.WriteInteger('Editor','DocType',integer(fTranslate.DocType)); //This too.
-  reg.WriteString('Editor','DocEncoding',string(fTranslate.DocEncoding.Classname));
+  if fTranslate.DocEncoding<>nil then
+    reg.WriteString('Editor','DocEncoding',string(fTranslate.DocEncoding.Classname))
+  else
+    reg.WriteString('Editor','DocEncoding','');
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
   if fExamples.btnDisplayTranslation.Down then exmode:=0 else
   if fExamples.btnUseBigFont.Down then exmode:=1 else
