@@ -502,6 +502,7 @@ object fWordLookup: TfWordLookup
       TabOrder = 3
       OnDblClick = StringGrid1DblClick
       OnDrawCell = StringGrid1DrawCell
+      OnKeyPress = StringGrid1KeyPress
       OnMouseDown = StringGrid1MouseDown
       OnMouseMove = StringGrid1MouseMove
       OnMouseUp = StringGrid1MouseUp

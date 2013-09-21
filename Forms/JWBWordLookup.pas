@@ -80,6 +80,7 @@ type
     procedure PopupMenu1Popup(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
+    procedure StringGrid1KeyPress(Sender: TObject; var Key: Char);
 
   public
     procedure SetDefaultColumnWidths;
@@ -597,14 +598,30 @@ begin
 end;
 
 procedure TfWordLookup.btnCopyToClipboardClick(Sender: TObject);
+var tmp: string;
 begin
-  clip:=clip+curkanji;
+  if GetKeyState(VK_SHIFT)<>0 then begin
+    tmp := curmeaning;
+    if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
+    tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
+    clip:=curkanji+' ['+curphonetic+'] '+tmp;
+  end else
+    clip:=clip+curkanji;
   fMenu.SetClipboard;
 end;
 
 procedure TfWordLookup.StringGrid1DblClick(Sender: TObject);
 begin
   if SpeedButton17.Enabled then SpeedButton17Click(sender);
+end;
+
+procedure TfWordLookup.StringGrid1KeyPress(Sender: TObject; var Key: Char);
+begin
+ //Copy the article to clipboard on Ctrl-C
+  if Key=^C then begin
+    btnCopyToClipboardClick(Sender);
+    Key := #00;
+  end;
 end;
 
 function GridStateToStr(const state: TGridDrawState): string;

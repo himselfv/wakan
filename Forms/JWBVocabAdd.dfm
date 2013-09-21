@@ -3,7 +3,7 @@ object fVocabAdd: TfVocabAdd
   Top = 259
   BorderStyle = bsDialog
   Caption = '#00057^eAdd into vocabulary'
-  ClientHeight = 268
+  ClientHeight = 311
   ClientWidth = 671
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object fVocabAdd: TfVocabAdd
   OnClose = FormClose
   DesignSize = (
     671
-    268)
+    311)
   PixelsPerInch = 96
   TextHeight = 13
   object lblPhonetic: TLabel
@@ -49,7 +49,7 @@ object fVocabAdd: TfVocabAdd
   end
   object lblCategory: TLabel
     Left = 6
-    Top = 224
+    Top = 267
     Width = 94
     Height = 13
     Anchors = [akLeft, akBottom]
@@ -102,36 +102,33 @@ object fVocabAdd: TfVocabAdd
   end
   object cbCategories: TComboBox
     Left = 6
-    Top = 240
+    Top = 283
     Width = 371
     Height = 21
     Anchors = [akLeft, akRight, akBottom]
-    TabOrder = 1
-    ExplicitTop = 197
+    TabOrder = 2
   end
   object btnOk: TBitBtn
     Left = 400
-    Top = 238
+    Top = 281
     Width = 129
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '#00062^eAdd to vocabulary'
     Kind = bkOK
     NumGlyphs = 2
-    TabOrder = 2
-    ExplicitTop = 195
+    TabOrder = 3
   end
   object btnCancel: TBitBtn
     Left = 537
-    Top = 237
+    Top = 280
     Width = 129
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = '#00050^eCancel'
     Kind = bkCancel
     NumGlyphs = 2
-    TabOrder = 3
-    ExplicitTop = 194
+    TabOrder = 4
   end
   object pbWritten: TWakanPaintbox
     Left = 8
@@ -157,7 +154,7 @@ object fVocabAdd: TfVocabAdd
     Left = 8
     Top = 155
     Width = 658
-    Height = 55
+    Height = 98
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -165,7 +162,8 @@ object fVocabAdd: TfVocabAdd
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    TabOrder = 7
+    TabOrder = 1
     WantReturns = False
+    OnKeyPress = edtMeaningKeyPress
   end
 end

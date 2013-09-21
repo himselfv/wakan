@@ -29,6 +29,7 @@ type
     procedure pbWrittenPaint(Sender: TObject; Canvas: TCanvas);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
+    procedure edtMeaningKeyPress(Sender: TObject; var Key: Char);
   protected
     FMeaningOnly: boolean;
     FFixedKanji: FString;
@@ -98,6 +99,32 @@ begin
     DrawUnicode(Canvas,2,2,22,FFixedKanji,FontJapanese)
   else
     DrawUnicode(Canvas,2,2,22,FClipText,FontJapanese);
+end;
+
+procedure TfVocabAdd.edtMeaningKeyPress(Sender: TObject; var Key: Char);
+var str: string;
+begin
+ //TMemo doesn't support Ctrl-A by itself
+  if Key=^A then begin
+    (Sender as TMemo).SelectAll;
+    Key := #00;
+  end;
+
+ { Pressing Ctrl-C without a text being selected copies everything for this article.
+  I'd like this to work anywhere on a form, but it doesnt :(
+  We need to override Ctrl-C only when it's meaningless otherwise, and first of
+  all, the focus mostly stays in this TMemo where Ctrl-C HAS meaning.
+  And TForm has no way to "receive keypress but only if no one handled it". }
+  if (Key=^C) and ((Sender as TMemo).SelLength<=0) then begin
+    if MeaningOnly then
+      str := FFixedKanji + ' [' + FFixedPhonetic + '] ' + edtMeaning.Text
+    else
+      str := FClipText + ' [' + RomajiToKana(edtPhonetic.Text,romasys,curlang,[rfDeleteInvalidChars]) + ']'
+        + edtMeaning.Text;
+    clip := str;
+    fMenu.SetClipboard;
+    Key := #00;
+  end;
 end;
 
 procedure TfVocabAdd.FormClose(Sender: TObject; var Action: TCloseAction);
