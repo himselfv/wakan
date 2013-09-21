@@ -69,7 +69,7 @@ type
   private
    //Shared between ImportDictionary calls
     cfreql:TStringList; //cached frequency list, call GetFrequencyList
-    roma_prob: TUnicodeFileWriter; //error log
+    roma_prob: TStreamEncoder; //error log
     roma_prob_cnt: integer; //increased on every record error
     ProblemRecords: integer; //# of records which weren't imported
     ProblemDictionaries: string; //>5% of each wasn't imported
@@ -85,8 +85,8 @@ type
     LastArticle: integer;
     function GetFrequencyList: TStringList;
     procedure AddArticle(const ed: PEdictArticle; const roma: TEdictRoma);
-    function ImportCCEdict(fuin: TUnicodeFileReader): integer;
-    function ImportEdict(fuin: TUnicodeFileReader): integer;
+    function ImportCCEdict(fuin: TStreamDecoder): integer;
+    function ImportEdict(fuin: TStreamDecoder): integer;
     procedure SetProgress(perc: integer);
 
   public
@@ -433,7 +433,7 @@ begin
             break;
           end;
         if not kanji_found then begin
-          roma_prob.WritelnUnicode(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
+          roma_prob.Writeln(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
           Inc(roma_prob_cnt);
         end;
       end;
@@ -493,7 +493,7 @@ begin
 end;
 
 { This also works for older CEDICTs }
-function TfDictImport.ImportCCEdict(fuin: TUnicodeFileReader): integer;
+function TfDictImport.ImportCCEdict(fuin: TStreamDecoder): integer;
 const
  //Format markers
   UH_CEDICT_COMMENT = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -524,7 +524,7 @@ begin
      //Unlike with EDICT we can't just assume kanji contained pinyin and copy it to kana.
      //For now I fail such records (haven't seen them in the wild anyway).
       if ed.kana_used<=0 then begin
-        roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': no reading.');
+        roma_prob.Writeln('Line '+IntToStr(loclineno)+': no reading.');
         Inc(roma_prob_cnt);
         continue;
       end;
@@ -543,9 +543,9 @@ begin
         if pos('?',roma[i])>0 then
         begin
           if dic.language='c' then
-            roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+pphon+' ('+ed.kana[i].kana+') ---> '+roma[i])
+            roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+pphon+' ('+ed.kana[i].kana+') ---> '+roma[i])
           else
-            roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+pphon+' ---> '+roma[i]);
+            roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+pphon+' ---> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
         repl(roma[i],'?','');
@@ -562,7 +562,7 @@ begin
 
     except
       on E: EEdictParsingException do begin
-        roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+E.Message);
+        roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+E.Message);
         Inc(roma_prob_cnt);
       end;
     end;
@@ -572,7 +572,7 @@ begin
   Result := loclineno;
 end;
 
-function TfDictImport.ImportEdict(fuin: TUnicodeFileReader): integer;
+function TfDictImport.ImportEdict(fuin: TStreamDecoder): integer;
 var
   ustr: string;
   i: integer;
@@ -609,7 +609,7 @@ begin
        //First check for completely invalid characters
         roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language,[rfConvertLatin,rfConvertPunctuation]);
         if pos('?',roma[i])>0 then begin
-          roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+roma[i]);
+          roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
 
@@ -628,7 +628,7 @@ begin
 
     except
       on E: EEdictParsingException do begin
-        roma_prob.WritelnUnicode('Line '+IntToStr(loclineno)+': '+E.Message);
+        roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+E.Message);
         Inc(roma_prob_cnt);
       end;
     end;
@@ -665,17 +665,17 @@ end;
 
 { Compiles "sources.lst" -- a file listing dictionary sources and their last write times }
 procedure WriteSources(const fname: string; const files:TFileList);
-var fwr:TUnicodeFileWriter;
+var fwr: TStreamEncoder;
   fi: integer;
   dt: TDatetime;
 begin
-  fwr := TUnicodeFileWriter.Rewrite(fname);
+  fwr := CreateTextFile(fname, TUTF16LEEncoding);
   try
-    fwr.WriteWideChar(#$FEFF); //BOM
+    fwr.WriteChar(#$FEFF); //BOM
     for fi:=0 to Length(files)-1 do begin
       if not GetLastWriteTime(files[fi],dt) then
         dt := 0; //unknown -- will be skipped, unless it becomes known later
-      fwr.WritelnUnicode(ExtractFilename(files[fi])+','
+      fwr.Writeln(ExtractFilename(files[fi])+','
         +DatetimeToStr(dt, DictFormatSettings));
     end;
   finally
@@ -697,7 +697,7 @@ var
   fname:string;
   mes:string;
   cd:string; //stores chosen encoding when converting
-  fuin:TUnicodeFileReader;
+  fuin:TStreamDecoder;
   uc: WideChar;
   dicrecno: integer;
 
@@ -803,8 +803,8 @@ begin
         raise EDictImportException.CreateFmt(_l('File conversion failed (%s)'), [files[fi]]);
 
      //Count number of lines in the converted file and add to total
-      fuin := TUnicodeFileReader.Create(fname);
-      while fuin.ReadWideChar(uc) do
+      fuin := OpenTextFile(fname, TUTF16LEEncoding);
+      while fuin.ReadChar(uc) do
         if uc=#$000A then
           Inc(linecount);
       FreeAndNil(fuin);
@@ -813,8 +813,8 @@ begin
 
    { Import }
     if roma_prob=nil then begin
-      roma_prob := TUnicodeFileWriter.Rewrite(UserDataDir+'\roma_problems.txt');
-      roma_prob.WriteWideChar(#$FEFF); //BOM
+      roma_prob := CreateTextFile(UserDataDir+'\roma_problems.txt', TUTF16LEEncoding);
+      roma_prob.WriteChar(#$FEFF); //BOM
     end;
 
     prog.SetMaxProgress(100); //progress bar
@@ -824,9 +824,9 @@ begin
       mes:=_l('#00086^eReading && parsing ');
       prog.SetMessage(mes+ExtractFilename(files[fi])+'...');
 
-      fuin := TUnicodeFileReader.Create(tempDir+'\DICT_'+inttostr(fi)+'.TMP');
+      fuin := OpenTextFile(tempDir+'\DICT_'+inttostr(fi)+'.TMP', TUnicodeEncoding);
       try
-        if not fuin.ReadWideChar(uc) or (uc<>#$FEFF) then
+        if not fuin.ReadChar(uc) or (uc<>#$FEFF) then
           raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
 
         roma_prob_cnt := 0;
@@ -939,7 +939,8 @@ const
 var fc: FChar;
   newline,nownum,comment:boolean;
   addkan,addnum:string;
-  tp: byte;
+  conv: TStreamDecoder;
+  enctype: CEncoding;
 begin
   if cfreql<>nil then begin
     Result := cfreql;
@@ -948,48 +949,53 @@ begin
 
   Result:=TStringList.Create;
   if FileExists('wordfreq_ck.uni') then
-    Conv_Open('wordfreq_ck.uni', FILETYPE_UTF16LE)
+    conv := OpenTextFile('wordfreq_ck.uni', TUTF16LEEncoding)
   else
   if FileExists('wordfreq_ck.euc') then
-    Conv_Open('wordfreq_ck.euc', FILETYPE_EUC)
+    conv := OpenTextFile('wordfreq_ck.euc', TEUCEncoding)
   else
   if FileExists('wordfreq_ck') then begin
    //best guess
-    tp := Conv_DetectType('wordfreq_ck');
-    Conv_Open('wordfreq_ck', tp);
+    enctype := Conv_DetectType('wordfreq_ck');
+    conv := OpenTextFile('wordfreq_ck', enctype);
   end else
     raise EDictImportException.Create(_l('#00915^eCannot find WORDFREQ_CK file.'));
 
-  newline:=true;
-  nownum:=false;
-  addkan:='';
-  addnum:='';
-  comment:=false;
-  while Conv_ReadChar(fc) do
-  begin
-    if (newline) and (fc=UH_FREQ_COMMENT) then comment:=true;
-    newline:=false;
-    if fc=UH_LF then
+  try
+    newline:=true;
+    nownum:=false;
+    addkan:='';
+    addnum:='';
+    comment:=false;
+    while conv.ReadChar(fc) do
     begin
-      if not comment and (addkan<>'') and (addnum<>'') then
+      if (newline) and (fc=UH_FREQ_COMMENT) then comment:=true;
+      newline:=false;
+      if fc=UH_LF then
       begin
-        Result.AddObject(addkan,TObject(strtoint(addnum)));
-      end;
-      addkan:='';
-      addnum:='';
-      newline:=true;
-      comment:=false;
-      nownum:=false;
-    end else
-    if not comment and (fc=UH_TAB) then
-      nownum:=true
-    else
-    if not comment then if nownum then
-    begin
-      if IsLatinDigitF(fc) then addnum:=addnum+fstrtouni(fc);
-    end else
-      addkan:=addkan+fc;
+        if not comment and (addkan<>'') and (addnum<>'') then
+        begin
+          Result.AddObject(addkan,TObject(strtoint(addnum)));
+        end;
+        addkan:='';
+        addnum:='';
+        newline:=true;
+        comment:=false;
+        nownum:=false;
+      end else
+      if not comment and (fc=UH_TAB) then
+        nownum:=true
+      else
+      if not comment then if nownum then
+      begin
+        if IsLatinDigitF(fc) then addnum:=addnum+fstrtouni(fc);
+      end else
+        addkan:=addkan+fc;
+    end;
+  finally
+    FreeAndNil(conv);
   end;
+
   Result.Sorted:=true;
   Result.Sort;
   cfreql := Result;

@@ -231,11 +231,11 @@ end;
 
 procedure RunExportText();
 var tt: TTextTable;
-  wri: TCustomFileWriter;
+  wri: TStreamEncoder;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
   SetConsoleOutputCP(CP_UTF8);
-  wri := TConsoleUTF8Writer.Create();
+  wri := ConsoleUTF8Writer();
   tt.ExportToText(wri, '');
   FreeAndNil(wri);
   FreeAndNil(tt);
@@ -243,10 +243,10 @@ end;
 
 procedure RunImportText();
 var tt: TTextTable;
-  rea: TCustomFileReader;
+  rea: TStreamDecoder;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
-  rea := TConsoleReader.Create();
+  rea := ConsoleReader();
   tt.ImportFromText(rea);
   FreeAndNil(rea);
   FreeAndNil(tt);
@@ -255,10 +255,10 @@ end;
 type
   TTextTableEx = class(TTextTable)
   public
-    procedure DumpIndex(wri: TCustomFileWriter; IndexId: integer; DumpSignatures: boolean);
+    procedure DumpIndex(wri: TStreamEncoder; IndexId: integer; DumpSignatures: boolean);
   end;
 
-procedure TTextTableEx.DumpIndex(wri: TCustomFileWriter; IndexId: integer; DumpSignatures: boolean);
+procedure TTextTableEx.DumpIndex(wri: TStreamEncoder; IndexId: integer; DumpSignatures: boolean);
 var i: integer;
   RecId: integer;
   sign: string;
@@ -288,13 +288,13 @@ end;
 
 procedure RunDumpIndex();
 var tt: TTextTableEx;
-  wri: TConsoleUTF8Writer;
+  wri: TStreamEncoder;
   IndexId: integer;
 begin
   SetConsoleOutputCP(CP_UTF8);
   tt := TTextTableEx.Create(nil, TablePath, true, false);
   IndexId := IndexParamToId(tt,IndexName);
-  wri := TConsoleUTF8Writer.Create;
+  wri := ConsoleUTF8Writer();
   tt.DumpIndex(wri, IndexId, DumpIndexParams.DumpSignatures);
   FreeAndNil(wri);
   FreeAndNil(tt);

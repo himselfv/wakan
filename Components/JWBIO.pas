@@ -26,6 +26,11 @@ How to use:
   AWriter := CreateTextFile(filename, TUTF8Encoding);
   AWriter := AppendToTextFile(filename, TUTF8Encoding);
   AWriter.Writeln('Hello world');
+
+4. Permanently storing encoding selection:
+
+  WriteString(ChosenEncoding.ClassName);
+  ChosenEncoding := FindEncoding(ReadString()).Create();
 }
 
 interface
@@ -71,10 +76,15 @@ uses SysUtils, Classes, JWBStrings;
   But this would require us to have a state param for every encoding.
 }
 
-{ TODO: TRtlEncoding(SysUtils.TEncoding) }
-{ TODO: UTF16BE guessing }
-{ TODO: Move WTT detection and handling out of here }
+{ TODO: Encoder speed test. It seems to be slow (at least jwbtab exporting 11Mb
+     is slow -- 15-20 sec.) }
+{ TODO: UTF16BE guessing.
+   Current algortihm mistakes EUC for UTF16 and doesn't detect short UTF16.
+   Throw the latter part of it out of the window, although the first part stays
+   (it's relatively good guess).
+   Check how it's done in other apps }
 { TODO: UTF16 surrogate pairs (LE and BE in different order) }
+{ TODO: TRtlEncoding(SysUtils.TEncoding) }
 
 type
  { Encoding is created once and executed sequentially on a stream, starting with
@@ -235,10 +245,12 @@ type
   TStreamEncoder = class
   protected
     FBuffer: string;
-    FBufferSize: integer;
+    FBufferPos: integer;
     FStream: TStream;
     FOwnsStream: boolean;
     FEncoding: TEncoding;
+    function GetBufferSize: integer;
+    procedure SetBufferSize(const Value: integer);
   public
     constructor Open(AStream: TStream; AEncoding: TEncoding;
       AOwnsStream: boolean = false);
@@ -253,7 +265,7 @@ type
     property Stream: TStream read FStream;
     property OwnsStream: boolean read FOwnsStream;
     property Encoding: TEncoding read FEncoding;
-    property BufferSize: integer read FBufferSize write FBufferSize;
+    property BufferSize: integer read GetBufferSize write SetBufferSize;
   end;
   CStreamEncoder = class of TStreamDecoder;
 
@@ -268,6 +280,9 @@ function Conv_ChooseType(AChinese:boolean; ADefault: CEncoding): CEncoding;
 function OpenTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamDecoder;
 function CreateTextFile(const AFilename: string; AEncoding: CEncoding): TStreamEncoder;
 function AppendToTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamEncoder;
+
+//Finds a class by it's name. Good to store encoding selection in a permanent way.
+function FindEncoding(const AClassName: string): CEncoding;
 
 { Compatibility functions }
 function AnsiFileReader(const AFilename: string): TStreamDecoder;
@@ -537,7 +552,8 @@ begin
   FStream := AStream;
   FOwnsStream := AOwnsStream;
   FEncoding := AEncoding;
-  FBufferSize := OUTBUFSZ;
+  SetLength(FBuffer, OUTBUFSZ);
+  FBufferPos := 0;
 end;
 
 constructor TStreamEncoder.CreateNew(const AFilename: string; AEncoding: TEncoding);
@@ -564,11 +580,25 @@ begin
   inherited;
 end;
 
+function TStreamEncoder.GetBufferSize: integer;
+begin
+  Result := Length(FBuffer);
+end;
+
+procedure TStreamEncoder.SetBufferSize(const Value: integer);
+begin
+  Flush;
+  SetLength(FBuffer, Value);
+end;
+
 procedure TStreamEncoder.Flush;
 begin
-  if FBuffer<>'' then
-    FEncoding.Write(FStream, FBuffer);
-  FBuffer := '';
+  if FBufferPos>=Length(FBuffer) then
+    FEncoding.Write(FStream, FBuffer)
+  else
+  if FBufferPos>0 then
+    FEncoding.Write(FStream, copy(FBuffer, 1, FBufferPos));
+  FBufferPos := 0;
 end;
 
 procedure TStreamEncoder.WriteBom;
@@ -579,16 +609,37 @@ end;
 
 procedure TStreamEncoder.WriteChar(const ch: WideChar);
 begin
-  FBuffer := FBuffer + ch;
-  if Length(FBuffer)>=FBufferSize then
-    Flush;
+  if Length(FBuffer)<=0 then
+    FEncoding.WriteChar(FStream, ch)
+  else begin
+    Inc(FBufferPos);
+    FBuffer[FBufferPos] := ch;
+    if FBufferPos>=Length(FBuffer) then
+      Flush();
+  end;
 end;
 
 procedure TStreamEncoder.Write(const ln: UnicodeString);
+var fst: integer;
 begin
-  FBuffer := FBuffer + ln;
-  if Length(FBuffer)>=FBufferSize then
-    Flush;
+  if ln='' then exit;
+  if Length(FBuffer)>0 then begin
+   //Whatever fits into buffer
+    fst := Length(FBuffer)-FBufferPos;
+    if fst>Length(ln) then fst := Length(ln);
+
+    Move(ln[1], FBuffer[FBufferPos+1], fst*SizeOf(WideChar));
+    Inc(FBufferPos, fst);
+    if FBufferPos>=Length(FBuffer) then
+      Flush();
+
+    Inc(fst);
+  end else
+    fst := 1;
+
+ //Remainder
+  if fst<Length(ln)+1 then
+    FEncoding.Write(FStream, copy(ln, fst, MaxInt));
 end;
 
 procedure TStreamEncoder.WriteLn(const ln: UnicodeString);
@@ -1789,6 +1840,53 @@ begin
     FreeAndNil(fsr);
     raise;
   end;
+end;
+
+
+//Finds a class by it's name. Good to store encoding selection in a permanent way.
+function FindEncoding(const AClassName: string): CEncoding;
+begin
+ //Stupid for now
+  if AClassName='TAsciiEncoding' then
+    Result := TAsciiEncoding
+  else
+ {$IFDEF MSWINDOWS}
+  if AClassName='TAcpEncoding' then
+    Result := TAcpEncoding
+  else
+ {$ENDIF}
+  if AClassName='TUTF8Encoding' then
+    Result := TUTF8Encoding
+  else
+  if AClassName='TUTF16LEEncoding' then
+    Result := TUTF16LEEncoding
+  else
+  if AClassName='TUTF16BEEncoding' then
+    Result := TUTF16BEEncoding
+  else
+  if AClassName='TEUCEncoding' then
+    Result := TEUCEncoding
+  else
+  if AClassName='TSJISEncoding' then
+    Result := TSJISEncoding
+  else
+  if AClassName='TJISEncoding' then
+    Result := TJISEncoding
+  else
+  if AClassName='TOldJISEncoding' then
+    Result := TOldJISEncoding
+  else
+  if AClassName='TNECJISEncoding' then
+    Result := TNECJISEncoding
+  else
+  if AClassName='TGBEncoding' then
+    Result := TGBEncoding
+  else
+  if AClassName='TBIG5Encoding' then
+    Result := TBIG5Encoding
+  else
+    Result := nil;
+
 end;
 
 { Compatibility functions }

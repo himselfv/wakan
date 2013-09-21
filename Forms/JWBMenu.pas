@@ -6,7 +6,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Db, DBTables, ExtCtrls, Grids, TextTable, Buttons,
+  StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
   StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions,
   Vcl.AppEvnts;
@@ -967,7 +967,8 @@ begin
    //Last opened file in Editor
     if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
     try
-      fTranslate.OpenFile(fTranslate.docfilename, fTranslate.doctp);
+      fTranslate.OpenFile(fTranslate.docfilename, fTranslate.DocType,
+        fTranslate.DocEncoding);
     except
       on E: Exception do begin
        //Re-raise with additional comment
@@ -1323,13 +1324,13 @@ begin
 end;
 
 procedure TfMenu.ExportUserData(filename:string);
-var t:TCustomFileWriter;
+var t:TStreamEncoder;
   i:integer;
   w:widechar;
 begin
   if not FlushUserData then exit;
   //User data is stored in Ansi, because compability.
-  t := TAnsiFileWriter.Rewrite(filename);
+  t := AnsiFileWriter(filename);
   t.Writeln('$User');
   TUser.ExportToText(t,'Index_Ind');
   t.Writeln('$UserIdx');
@@ -1351,14 +1352,14 @@ begin
 end;
 
 procedure TfMenu.ImportUserData(filename:string);
-var t:TCustomFileReader;
+var t:TStreamDecoder;
   s:string;
 begin
   DeleteFile(UserDataDir+'\wakan.usr');
   LoadUserData;
   Screen.Cursor:=crHourGlass;
  //User data is stored in Ansi, because compability.
-  t := TAnsiFileReader.Create(filename);
+  t := AnsiFileReader(filename);
   while not t.Eof() do
   begin
     s := t.ReadLn();

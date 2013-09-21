@@ -384,7 +384,8 @@ uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
-  JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport;
+  JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport,
+  JWBIO;
 
 var colorfrom:integer;
 
@@ -461,7 +462,7 @@ end;
 function TfSettings.OpenWakanIni: TCustomIniFile;
 begin
   Result := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
-  TMemIniFile(Result).Encoding := TEncoding.UTF8; //write UTF8 only
+  TMemIniFile(Result).Encoding := SysUtils.TEncoding.UTF8; //write UTF8 only
 end;
 
 //See comments in JWBPortableMode.pas about Wakan modes
@@ -630,7 +631,8 @@ begin
   if CheckBox61.Checked then
   begin
     fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
-    fTranslate.DocTp:=Reg.ReadInteger('Editor','DocType',0);
+    fTranslate.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
+    fTranslate.DocEncoding:=FindEncoding(Reg.ReadString('Editor','DocType',''));
   end;
   fExamples.btnRandomOrder.Down:=reg.ReadBool('Dict','RandomExamples',false);
   Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
@@ -888,7 +890,8 @@ begin
   reg.WriteBool('Editor','AdjustCharPriorities',cbAdjustCharPriorities.Checked);
   reg.WriteInteger('Editor','ReleaseCursorMode',rgReleaseCursorMode.ItemIndex);
   reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
-  reg.WriteInteger('Editor','DocType',fTranslate.DocTp);          //This too.
+  reg.WriteInteger('Editor','DocType',integer(fTranslate.DocType)); //This too.
+  reg.WriteString('Editor','DocEncoding',string(fTranslate.DocEncoding.Classname));
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
   if fExamples.btnDisplayTranslation.Down then exmode:=0 else
   if fExamples.btnUseBigFont.Down then exmode:=1 else

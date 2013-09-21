@@ -666,6 +666,8 @@ var
   rad_char: WideChar;
   rad_scnt: integer; //stroke count
 
+  conv: TStreamDecoder;
+
 begin
  { radicals.txt format:
     4E00-01-0762-00000
@@ -677,9 +679,9 @@ begin
   rad_idx := -1;
 
   lineno := 0;
-  Conv_Open(filename, FILETYPE_EUC); //RADKFILEs are in EUC
-  while not Conv_EOF() do begin
-    ln := Conv_ReadLn();
+  conv := OpenTextFile(filename, TEUCEncoding); //RADKFILEs are in EUC
+  while not conv.EOF() do begin
+    ln := conv.ReadLn();
     Inc(lineno);
     if flength(ln)<=0 then continue;
 
@@ -730,20 +732,20 @@ begin
    //RADKFILE/RADKFILE2 cover non-overlapping sets of kanjis
 
   end;
-  Conv_Close();
+  FreeAndNil(conv);
 end;
 
 { Saves search.bin and radicals.txt to the target dir }
 procedure TRadicalIndexBuilder.Save(path: string);
 var
   sl_radicals: TStringList;
-  f_searchbin: TUnicodeFileWriter;
+  f_searchbin: TStreamEncoder;
   pos: integer;
   i, j: integer;
   chars_w: UnicodeString;
 begin
   sl_radicals := TStringList.Create;
-  f_searchbin := TUnicodeFileWriter.Rewrite(path+'\search.bin');
+  f_searchbin := UnicodeFileWriter(path+'\search.bin');
   try
     pos := 0;
     for i := 0 to Length(radicals) - 1 do begin
@@ -753,7 +755,7 @@ begin
       );
       chars_w := fstrtouni(radicals[i].chars);
       for j := 1 to length(chars_w) do
-        f_searchbin.WriteWideChar(chars_w[j]);
+        f_searchbin.WriteChar(chars_w[j]);
       Inc(pos, length(chars_w));
     end;
     sl_radicals.SaveToFile(path+'\radicals.txt');

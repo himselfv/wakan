@@ -7,7 +7,7 @@ Call:
 }
 
 interface
-uses JWBStrings, JWBDic, JWBDictImport;
+uses SysUtils, JWBStrings, JWBDic, JWBDictImport, JWBIO;
 
 type
   TKnownImportFormat = (ifEdict, ifCEdict);
@@ -16,7 +16,7 @@ type
     Filename: string;
     Name: string;
     Format: TKnownImportFormat;
-    Encoding: integer; //see JWBConvert
+    Encoding: CEncoding; //see JWBIO
     Language: char; //j or c
     Description: string;
     Copyright: string;
@@ -68,7 +68,7 @@ const
   sCannotUpdateCantBeLoaded='#00990^eCannot update the dictionary "%s" because it cannot be loaded: %s';
 
 implementation
-uses SysUtils, Classes, Forms, Windows, MemSource, JWBUnit, JWBCommandLine;
+uses Classes, Forms, Windows, MemSource, JWBUnit, JWBCommandLine;
 
 var
  //Don't check the same dictionary twice
@@ -108,17 +108,17 @@ begin
     raise Exception.Create('Unknown auto import format: "'+parts[2]+'"');
 
   if parts[3]='' then
-    item.Encoding := FILETYPE_UNKNOWN
+    item.Encoding := nil
   else
   if lowercase(parts[3])='utf8' then
-    item.Encoding := FILETYPE_UTF8
+    item.Encoding := TUTF8Encoding
   else
   if (lowercase(parts[3])='utf16')
   or (lowercase(parts[3])='utf16-le') then
-    item.Encoding := FILETYPE_UTF16LE
+    item.Encoding := TUTF16LEEncoding
   else
   if (lowercase(parts[3])='utf16-be') then
-    item.Encoding := FILETYPE_UTF16BE
+    item.Encoding := TUTF16BEEncoding
   else
     raise Exception.Create('Unknown auto import encoding: "'+parts[3]+'"');
 

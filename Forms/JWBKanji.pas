@@ -92,7 +92,7 @@ implementation
 
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
-  MemSource, JWBTranslate, JWBVocab,
+  MemSource, JWBTranslate, JWBVocab, JWBIO,
   JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBWakanText, JWBCategories,
   JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
 
@@ -1025,14 +1025,17 @@ end;
 
 procedure TfKanji.SaveChars;
 var i:integer;
+  conv: TStreamEncoder;
 begin
-  if SaveDialog1.Execute then
-  begin
-    Conv_Create(SaveDialog1.FileName,Conv_ChooseType(false,1));
+  if not SaveDialog1.Execute then
+    exit;
+
+  conv := CreateTextFile(SaveDialog1.FileName,Conv_ChooseType(false,TUnicodeEncoding));
+  try
     for i:=0 to ki.Count-1 do
-      Conv_Write(copy(ki[i],2,4));
-    Conv_Flush;
-    Conv_Close;
+      conv.Write(copy(ki[i],2,4));
+  finally
+    FreeAndNil(conv);
   end;
 end;
 

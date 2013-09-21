@@ -63,7 +63,7 @@ var
 
 implementation
 uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
-  JWBConvert, JWBUnit, JWBIO;
+  JWBUnit, JWBIO;
 
 {$R *.dfm}
 
@@ -332,11 +332,11 @@ var prog: TSMPromptForm;
   less than it covered on previous import. }
 
   procedure ImportRadicals(const AFilename: string);
-  var re: TUnicodeFileReader;
+  var re: TStreamDecoder;
   begin
-    re := TUnicodeFileReader.Create(AFilename);
+    re := UnicodeFileReader(AFilename);
     try
-      re.SkipBom;
+      re.TrySkipBom;
       TRadicals.ImportFromText(re);
     finally
       FreeAndNil(re);
@@ -465,8 +465,8 @@ procedure TfCharDataImport.ImportKanjidic(const KanjidicFilename: string;
   out CharsCovered: TFlagList);
 var CChar: TTextTableCursor;
   CNewProp: TCharPropBuilder;
-  fuin: TJwbConvert;
-  conv_type: integer;
+  fuin: TStreamDecoder;
+  conv_type: CEncoding;
   ed: TKanjidicEntry;
   line: string;
   CharIdx: integer;
@@ -507,14 +507,12 @@ begin
     CNewProp := TCharPropBuilder.Create(TCharProp);
 
     ed.Reset;
-    fuin := TJwbConvert.Open(KanjidicFilename, FILETYPE_UNKNOWN);
-
-    conv_type := fuin.DetectType;
-    if conv_type=FILETYPE_UNKNOWN then
-      conv_type := Conv_ChooseType({chinese=}false,FILETYPE_EUC); //kanjidic is by default EUC
-    if conv_type=FILETYPE_UNKNOWN then
+    conv_type := Conv_DetectType(KanjidicFilename);
+    if conv_type=nil then
+      conv_type := Conv_ChooseType({chinese=}false,TEUCEncoding); //kanjidic is by default EUC
+    if conv_type=nil then
       raise EAbort.Create('');
-    fuin.RewindAsType(conv_type);
+    fuin := OpenTextFile(KanjidicFilename, conv_type);
     while not fuin.EOF do begin
       line := fuin.ReadLn;
       if line='' then continue;
@@ -614,7 +612,7 @@ var CChar: TTextTableCursor;
   end;
 
   procedure ImportFile(const UnihanFile: string);
-  var fuin: TJwbConvert;
+  var fuin: TStreamDecoder;
     line: string;
     ed: TUnihanPropertyEntry;
     propType: PCharPropType;
@@ -622,7 +620,7 @@ var CChar: TTextTableCursor;
     entry_no: integer;
     varpropvals: TVariantValues;
   begin
-    fuin := TJwbConvert.Open(UnihanFile, FILETYPE_UTF8);
+    fuin := OpenTextFile(UnihanFile, TUTF8Encoding);
     try
       while not fuin.Eof do begin
         line := Trim(fuin.ReadLn);

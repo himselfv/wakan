@@ -2392,7 +2392,6 @@ var s:string;
     fld:TStringList;
     a:array of string;
     s2:string;
-    cnt:integer;
 begin
   nocommit:=true;
   fld:=TStringList.Create;  
@@ -2423,11 +2422,9 @@ begin
       raise Exception.Create('Field not found: "'+fld[i]+'"');
 
  //Import
-  cnt:=0;
   while true do begin
-    s := Trim(t.ReadLn());  
+    s := Trim(t.ReadLn());
     if (s='') or (s='.') then break;
-    Inc(cnt);
     if s[1]<>'+' then
       raise Exception.Create('Value set starts with invalid symbol: "'+s+'"');
     system.delete(s,1,1);

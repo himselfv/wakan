@@ -39,7 +39,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBWordLookup,
-  JWBDicSearch, JclCompression, WakanPaintbox, WinSpeedButton,
+  JWBDicSearch, WakanPaintbox, WinSpeedButton,
   ComCtrls, ToolWin, ImgList, JWBWakanText, JWBIO;
 
 //If enabled, support multithreaded translation
@@ -216,12 +216,15 @@ type
     function CopyAsWakanText: TMemoryStream;
 
   protected
+    FDocFilename:string;
+    FDocType: TDocType;
+    FDocEncoding: CEncoding; //for text documents
     function Get_doctr(Index: integer): PCharacterLineProps;
   public
     doc: TWakanText;
-    docfilename:string;
-    FDocType: TDocType;
-    FDocEncoding: CEncoding; //for text documents
+    property DocFilename: string read FDocFilename write FDocFilename;
+    property DocType: TDocType read FDocType write FDocType;
+    property DocEncoding: CEncoding read FDocEncoding write FDocEncoding;
     property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
 
   protected //Unsorted
@@ -428,7 +431,7 @@ implementation
 
 uses Types, TextTable, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
-  JWBCategories, JWBDic, JWBEdictMarkers, JWBIO,
+  JWBCategories, JWBDic, JWBEdictMarkers,
   JWBUserData, JWBCharData, StreamUtils;
 
 {$R *.DFM}
@@ -572,7 +575,8 @@ begin
   doc.OnGetDictionaryEntry := DocGetDictionaryEntry;
 
   docfilename:='';
-  doctp:=0;
+  FDocType := dtText;
+  FDocEncoding := nil;
   FileChanged:=false;
   FullTextTranslated:=false;
 
@@ -697,7 +701,7 @@ begin
       AEncoding:=Conv_ChooseType(curlang='c', AEncoding);
       if AEncoding=nil then exit;
     end;
-    OpenFile(AFilename, AEncoding);
+    OpenFile(AFilename, dtText, AEncoding);
   end;
 end;
 
@@ -751,19 +755,15 @@ procedure TfTranslate.SaveToFile(const AFilename: string; const AType: TDocType;
 var stream: TStream;
 begin
   Screen.Cursor:=crHourGlass;
- {
-  !!!!! TODO
-  Rewrite this to use new JWBIO etc.
-  !!!!!
- }
-  if (tp=FILETYPE_WTT) or (pos('.WTT',UpperCase(filename))>0) then
-    doc.SaveWakanText(filename)
+
+  if AType=dtWakanText then
+    doc.SaveWakanText(AFilename)
   else begin
-    stream := TStreamWriter.Create(TFileStream.Create(filename,fmCreate),true);
+    stream := TStreamWriter.Create(TFileStream.Create(AFilename, fmCreate),true);
     try
       doc.SaveText(
         AnnotMode,
-        TRubyTextFormat.Create(tp),
+        TRubyTextFormat.Create(AEncoding),
         stream
       );
     finally
@@ -776,7 +776,9 @@ end;
 
 //Returns false if user have cancelled the dialog
 function TfTranslate.SaveAs: boolean;
-var tp: byte;
+var ADocType: TDocType;
+  AAnnotMode: TTextAnnotMode;
+  AEncoding: CEncoding;
 begin
  //If configured to, or if we have chosen this option before
   if (SaveAnnotMode=amRuby) or fSettings.cbSaveAnnotationsToRuby.Checked then
@@ -787,21 +789,39 @@ begin
   Result := SaveTextDialog.Execute;
   if not Result then exit;
 
+  AEncoding := nil;
   case SaveTextDialog.FilterIndex of
-    1: SaveAnnotMode := amDefault;
-    2: SaveAnnotMode := amRuby;
-   //WTT file option is handled differently, that's how it was inherited.
+    1: begin
+      ADocType := dtText;
+      AAnnotMode := amDefault;
+    end;
+    2: begin
+      ADocType := dtText;
+      AAnnotMode := amRuby;
+    end;
+    3: begin
+      ADocType := dtWakanText;
+      AAnnotMode := amDefault;
+    end;
+  else
+    exit; //wtf though?
+  end;
+
+  //Hack: If the file name has .WTT, we assume the user made an error and chose
+  //the wrong item.
+  if pos('.WTT',uppercase(SaveTextDialog.FileName))>0 then begin
+    ADocType := dtWakanText;
+    AAnnotMode := amDefault;
   end;
 
   //Choose encoding
-  if pos('.WTT',uppercase(SaveTextDialog.FileName))>0 then
-    tp:=FILETYPE_WTT
-  else
-    tp:=Conv_ChooseType(curlang='c',0);
+  if ADocType=dtText then
+    AEncoding := Conv_ChooseType(curlang='c', nil);
 
-  SaveToFile(SaveTextDialog.FileName,tp,SaveAnnotMode);
+  SaveToFile(SaveTextDialog.FileName, ADocType, AEncoding, AAnnotMode);
   docfilename:=SaveTextDialog.FileName;
-  doctp:=tp;
+  FDocType := ADocType;
+  FDocEncoding := AEncoding;
   lblFilename.Caption:=uppercase(ExtractFilename(SaveTextDialog.FileName));
 end;
 
@@ -830,7 +850,7 @@ begin
 
   if (fSettings.CheckBox60.Checked) and (docfilename<>'') then begin
    //Auto-"Yes"
-    SaveToFile(docfilename,doctp,SaveAnnotMode);
+    SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode);
     filechanged := false;
     exit;
   end;
@@ -852,7 +872,7 @@ begin
 
   if docfilename<>'' then begin
    //"Yes"
-    SaveToFile(docfilename,doctp,SaveAnnotMode);
+    SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode);
     filechanged := false;
     exit;
   end;
@@ -869,9 +889,8 @@ begin
 end;
 
 function TfTranslate.ExportAs: boolean;
-var
-  stream: TStream;
-  enctype: integer;
+var stream: TStream;
+  enctype: CEncoding;
 begin
   if not Self.FullTextTranslated then
     Application.MessageBox(
@@ -885,9 +904,9 @@ begin
   end;
 
   case SaveAsKanaDialog.FilterIndex of
-    1,2,3: enctype := Conv_ChooseType(false,0);
-    4,5: enctype := FILETYPE_UTF8; //UTF8 only for HTML, ODT
-  else enctype := FILETYPE_UNKNOWN; //should not be used
+    1,2,3: enctype := Conv_ChooseType(false, nil);
+    4,5: enctype := TUTF8Encoding; //UTF8 only for HTML, ODT
+  else enctype := nil; //should not be used
   end;
 
   stream := nil;
@@ -1453,7 +1472,7 @@ end;
 procedure TfTranslate.sbFileSaveClick(Sender: TObject);
 begin
   if docfilename<>'' then
-    SaveToFile(docfilename,doctp,SaveAnnotMode)
+    SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode)
   else
     SaveAs;
 end;
@@ -1475,7 +1494,7 @@ function TfTranslate.CopyAsText: UnicodeString;
 var stream: TStream;
 begin
   stream := TUnicodeStringStream.Create(@Result);
-  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE,{NoBOM=}true),stream,amNone);
+  CopySelection(TRubyTextFormat.Create(TUTF16LEEncoding,{NoBOM=}true),stream,amNone);
   FreeAndNil(stream);
 end;
 
@@ -1484,7 +1503,7 @@ function TfTranslate.CopyAsRuby: UnicodeString;
 var stream: TStream;
 begin
   stream := TUnicodeStringStream.Create(@Result);
-  CopySelection(TRubyTextFormat.Create(FILETYPE_UTF16LE,{NoBOM=}true),stream);
+  CopySelection(TRubyTextFormat.Create(TUTF16LEEncoding,{NoBOM=}true),stream);
   FreeAndNil(stream);
 end;
 

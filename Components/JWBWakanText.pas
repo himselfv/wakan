@@ -336,7 +336,7 @@ function IsWakanText(const AStream: TStream): boolean; overload;
 function IsWakanText(const AFilename: string): boolean; overload;
 
 implementation
-uses Forms, Windows, JclCompression, StreamUtils; {JWBUnit, JWBCharData}
+uses Forms, Windows, StreamUtils, JclCompression;
 
 { Source position }
 
