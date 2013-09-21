@@ -90,6 +90,7 @@ type
     curkanjid: array of TKanjiEntry; //kanji entries for current word
     procedure ShowWord;
     procedure DetailsForKanji(n:integer);
+    procedure CopyToClipboard(const AFullArticle, AReplace: boolean);
 
   public
     procedure UpdateLookMode;
@@ -597,31 +598,45 @@ begin
   fMenu.aDictExamples.Execute;
 end;
 
-procedure TfWordLookup.btnCopyToClipboardClick(Sender: TObject);
-var tmp: string;
+//Copies currently selected article to the clipboard
+procedure TfWordLookup.CopyToClipboard(const AFullArticle, AReplace: boolean);
+var AText, tmp: string;
 begin
-  if GetKeyState(VK_SHIFT)<>0 then begin
+  if AFullArticle then begin
     tmp := curmeaning;
     if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
     tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
-    clip:=curkanji+' ['+curphonetic+'] '+tmp;
+    AText:=curkanji+' ['+curphonetic+'] '+tmp;
   end else
-    clip:=clip+curkanji;
+    AText:=curkanji;
+  if AReplace then
+    clip := AText
+  else
+    clip := clip + AText;
   fMenu.SetClipboard;
 end;
 
-procedure TfWordLookup.StringGrid1DblClick(Sender: TObject);
+procedure TfWordLookup.btnCopyToClipboardClick(Sender: TObject);
 begin
-  if SpeedButton17.Enabled then SpeedButton17Click(sender);
+ //Emulate older behavior
+  CopyToClipboard({full=}false,{replace=}false);
 end;
 
 procedure TfWordLookup.StringGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
  //Copy the article to clipboard on Ctrl-C
-  if Key=^C then begin
-    btnCopyToClipboardClick(Sender);
+  if (Key=^C) and (StringGrid1.Visible) then begin
+    CopyToClipboard(
+      {full=}GetKeyState(VK_SHIFT) and $F0 = 0, //word-only when Shift pressed
+      {replace=}true //always replace
+      );
     Key := #00;
   end;
+end;
+
+procedure TfWordLookup.StringGrid1DblClick(Sender: TObject);
+begin
+  if SpeedButton17.Enabled then SpeedButton17Click(sender);
 end;
 
 function GridStateToStr(const state: TGridDrawState): string;
