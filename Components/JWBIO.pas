@@ -76,15 +76,16 @@ uses SysUtils, Classes, JWBStrings;
   But this would require us to have a state param for every encoding.
 }
 
-{ TODO: Encoder speed test. It seems to be slow (at least jwbtab exporting 11Mb
-     is slow -- 15-20 sec.) }
-{ TODO: UTF16BE guessing.
-   Current algortihm mistakes EUC for UTF16 and doesn't detect short UTF16.
-   Throw the latter part of it out of the window, although the first part stays
-   (it's relatively good guess).
-   Check how it's done in other apps }
 { TODO: UTF16 surrogate pairs (LE and BE in different order) }
 { TODO: TRtlEncoding(SysUtils.TEncoding) }
+
+
+{ TODO: Extended UTF16 LE/BE detection.
+ Current algorithm may be unreliable and/or slow. There are some experiments
+ hidden under GUESSUTF16 switch, but they suck.
+ Check how it's done in other apps. }
+//{$DEFINE GUESS_UTF16}
+
 
 type
  { Encoding is created once and executed sequentially on a stream, starting with
@@ -269,7 +270,9 @@ type
   end;
   CStreamEncoder = class of TStreamDecoder;
 
+{$IFDEF GUESS_UTF16}
 function GuessUTF16(AStream: TStream; out AEncoding: CEncoding): boolean;
+{$ENDIF}
 
 function Conv_DetectType(AStream: TStream): CEncoding; overload;
 function Conv_DetectType(AStream: TStream; out AEncoding: CEncoding): boolean; overload;
@@ -283,6 +286,10 @@ function AppendToTextFile(const AFilename: string; AEncoding: CEncoding = nil): 
 
 //Finds a class by it's name. Good to store encoding selection in a permanent way.
 function FindEncoding(const AClassName: string): CEncoding;
+
+//Compares binary data in files
+function CompareStreams(const AStream1, AStream2: TStream): boolean;
+function CompareFiles(const AFilename1, AFilename2: string): boolean;
 
 { Compatibility functions }
 function AnsiFileReader(const AFilename: string): TStreamDecoder;
@@ -488,11 +495,17 @@ begin
   TrySkipBom;
 end;
 
+{ True if there *already was* at least one ReadChar() which resulted in False,
+ and no subsequent calls can be expected to succeed.
+ Should not return true even if we're at EOF until someone tries to ReadChar()
+ and finds it. }
 function TStreamDecoder.EOF: boolean;
 begin
   Result := FEOF;
 end;
 
+{ Reads another character from the stream or returns False to indicate that
+ no more are available. }
 function TStreamDecoder.ReadChar(out ch: WideChar): boolean;
 begin
   if FBufferPos>=Length(FBuffer) then begin
@@ -511,12 +524,16 @@ begin
   Result := true;
 end;
 
+{ Reads until next CRLF or the end of the stream.
+ Last line always ends with the stream. If the file ends in CRLF, it'll be
+ returned as a last, empty line.
+ To reproduce the content when saving, always write last line without CRLF.
+ As an exception, empty file is thought to have no lines. }
 function TStreamDecoder.ReadLn(out ln: UnicodeString): boolean;
 var ch: WideChar;
 begin
- { Reimplement in descendants if you have a better way }
   ln := '';
-  Result := false;
+  Result := not EOF; //there may be no more characters, but at least we haven't found that out yet
   while ReadChar(ch) do begin
    { Maybe a more thorough CRLF/CR/LF handling is needed }
     if ch=#$000D then begin
@@ -526,7 +543,6 @@ begin
       break
     else
       ln := ln + ch;
-    Result := true;
   end;
 end;
 
@@ -642,6 +658,9 @@ begin
     FEncoding.Write(FStream, copy(ln, fst, MaxInt));
 end;
 
+{ Writes a line with CRLF in the end.
+ Note that if you've read the lines with ReadLn, to reproduce the file content,
+ last line has to be written without CRLF. See ReadLn. }
 procedure TStreamEncoder.WriteLn(const ln: UnicodeString);
 begin
   Write(ln+#$000D+#$000A);
@@ -1453,12 +1472,14 @@ begin
   if asciionly then AEncoding:=nil;
   if AEncoding<>nil then exit;
 
- { UTF16 LE/BE second try }
+ {$IFDEF GUESS_UTF16}
+  { UTF16 LE/BE second try }
   if AEncoding=nil then
     if GuessUTF16(AStream, AEncoding) and (AEncoding<>nil) then begin
       Result := true;
       exit;
     end;
+ {$ENDIF}
 
   AStream.Seek(0, soBeginning);
   AEncoding := TAsciiEncoding;
@@ -1526,12 +1547,29 @@ begin
     AEncoding:=TSJISEncoding;
 end;
 
+{$IFDEF GUESS_UTF16}
 { Tries to guess the variety of UTF16 encoding used in the text heuristically.
   Return values:
     True, TUTF16LE --- "I think it may be UTF16LE"
     True, TUTF16BE --- "I think it may be UTF16BE"
     True, nil      --- "I don't think it's UTF16 at all"
     False          --- "I'm not sure" }
+{ Methods used:
+1. Count the number of leading and trailing surrogates, assuming it was LE or BE.
+ If the guess is right, the number must be almost equal (spare for one surrogate
+ being lost on the border of the sample block, or for somewhat broken text).
+ Pros: If the number of surrogates is high enough (>4-5) AND their numbers are
+   equal, this almost certainly means the guess is right.
+ Cons: In most of the texts there are no surrogates at all, or sometimes one
+   or two, which is too small because they can occur spontaneously in unrelated
+   files.
+
+2. Count the distribution of the values in the odd an in the even bytes in the
+  text. Supposedly, higher position values will have just a bunch of highly
+  popular values while lower position values will be distributed mostly randomly.
+  Cons: It's not so simple in real life, and many EUC or JIS texts may trigger
+  this heuristic to fire accidentally if you set the borderline checks low enough.
+}
 function GuessUTF16(AStream: TStream; out AEncoding: CEncoding): boolean;
 var lead_le, lead_be,
   trail_le, trail_be: integer;
@@ -1674,6 +1712,7 @@ begin
 
   Result := false;
 end;
+{$ENDIF}
 
 function Conv_DetectType(const AFilename: string): CEncoding;
 var fsr: TStreamReader;
@@ -1809,9 +1848,9 @@ begin
 end;
 
 function CreateTextFile(const AFilename: string; AEncoding: CEncoding): TStreamEncoder;
-var fsr: TStreamReader;
+var fsr: TStreamWriter;
 begin
-  fsr := TStreamReader.Create(
+  fsr := TStreamWriter.Create(
     TFileStream.Create(AFilename, fmCreate),
     {OwnsStream=}true
   );
@@ -1824,15 +1863,16 @@ begin
 end;
 
 function AppendToTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamEncoder;
-var fsr: TStreamReader;
+var fsr: TStreamWriter;
 begin
-  fsr := TStreamReader.Create(
+  fsr := TStreamWriter.Create(
     TFileStream.Create(AFilename, fmOpenReadWrite), //read is for encoding detection
     {OwnsStream=}true
   );
   try
     if AEncoding=nil then
-      if not Conv_DetectType(fsr, AEncoding) and (AEncoding=nil) {not even a best guess} then
+     //Conv_DetectType by filename since TStreamWriter cannot read
+      if not Conv_DetectType(AFilename, AEncoding) and (AEncoding=nil) {not even a best guess} then
         AEncoding := TAsciiEncoding;
     fsr.Seek(0, soEnd);
     Result := TStreamEncoder.Open(fsr, AEncoding.Create, {OwnsStream=}true);
@@ -1888,6 +1928,51 @@ begin
     Result := nil;
 
 end;
+
+
+{ Compares binary data in streams }
+
+function CompareStreams(const AStream1, AStream2: TStream): boolean;
+var
+  b1, b2: byte;
+  r1, r2: boolean;
+begin
+ { Can be easily made somewhat faster by reading in dwords and comparing
+  only the number of bytes read (e.g. case 1: 2: 3: 4: if (d1 & $000F) == etc.) }
+  Result := true;
+  while true do begin
+    r1 := (AStream1.Read(b1,1)=1);
+    r2 := (AStream2.Read(b2,1)=1);
+    if r1 xor r2 then
+      Result := false;
+    if b1<>b2 then
+      Result := false;
+    if (not r1) or (not Result) then //not Result => diff; not r1 => both over
+      break;
+  end;
+end;
+
+function CompareFiles(const AFilename1, AFilename2: string): boolean;
+var f1, f2: TStream;
+begin
+  f1 := nil;
+  f2 := nil;
+  try
+    f1 := TStreamReader.Create(
+      TFileStream.Create(AFilename1, fmOpenRead),
+      true
+    );
+    f2 := TStreamReader.Create(
+      TFileStream.Create(AFilename2, fmOpenRead),
+      true
+    );
+    Result := CompareStreams(f1, f2);
+  finally
+    FreeAndNil(f2);
+    FreeAndNil(f1);
+  end;
+end;
+
 
 { Compatibility functions }
 

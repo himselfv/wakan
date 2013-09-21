@@ -22,21 +22,24 @@ program JaletTests;
 {$ENDIF}
 
 uses
-  Forms,
+  SysUtils, Forms,
   TestFramework,
   GUITestRunner,
   TextTestRunner,
   TextTableTests in 'Components\TextTable\TextTableTests.pas',
+  JWBIOTests in 'Components\JWBIOTests.pas',
   JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
 
 {$R *.RES}
 
 begin
   Application.Initialize;
-  if IsConsole then
+  if IsConsole then begin
     with TextTestRunner.RunRegisteredTests do
-      Free
-  else
-    GUITestRunner.RunRegisteredTests;
+      Free;
+    if FindCmdLineSwitch('pause') then
+      readln;
+  end else
+    GuiTestRunner.RunRegisteredTests;
 end.
 

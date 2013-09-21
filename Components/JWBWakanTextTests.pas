@@ -1,7 +1,7 @@
 ﻿unit JWBWakanTextTests;
 
 interface
-uses SysUtils, Classes, TestFramework, JWBConvert, JWBIO, JWBWakanText;
+uses SysUtils, Classes, TestFramework, JWBIO, JWBWakanText;
 
 type
   TFriendlyWakanText = class(TWakanText); //to access protected members
@@ -25,7 +25,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
    //Helpers
-    function CompareFiles(const AFilename1, AFilename2: string): boolean;
+
     procedure CompareData(const AText: TWakanText);
   end;
 
@@ -41,51 +41,6 @@ type
     procedure DeletingBlocks;
     procedure LotsOfLines;
     procedure MiscSimple;
-  end;
-
- { Wakan supports reading and writing text in a range of encodings, with or
-  without BOM. }
-  TEncodingTestCase = class(TWakanTextTestCase)
-  protected
-    function GetTestFilename(const AFilename: string): string;
-    procedure LoadFile(const AFilename: string; AEncoding: CEncoding);
-    procedure VerifyText(const AFilename: string; AEncoding: CEncoding);
-    procedure VerifyAscii(const AFilename: string; AEncoding: CEncoding);
-    procedure VerifyAcp(const AFilename: string; AEncoding: CEncoding);
-    procedure LoadSaveCompare(const AFilename: string; AEncoding: CEncoding;
-      ABom: boolean; const ATestComment: string = '');
-  published
-    procedure Ascii;
-    procedure UTF8;
-    procedure UTF8Sign;
-    procedure UTF16LE;
-    procedure UTF16LESign;
-    procedure UTF16BE;
-    procedure UTF16BESign;
-    procedure EUC;
-    procedure ShiftJis;
-    procedure Acp;
-
-    procedure GuessAscii;
-    procedure GuessUTF8;
-    procedure GuessUTF8Sign;
-    procedure GuessUTF16LE;
-    procedure GuessUTF16LESign;
-    procedure GuessUTF16BE;
-    procedure GuessUTF16BESign;
-    procedure GuessEUC;
-    procedure GuessShiftJis;
-
-    procedure SaveAscii;
-    procedure SaveUTF8;
-    procedure SaveUTF8Sign;
-    procedure SaveUTF16LE;
-    procedure SaveUTF16LESign;
-    procedure SaveUTF16BE;
-    procedure SaveUTF16BESign;
-    procedure SaveEUC;
-    procedure SaveShiftJis;
-    procedure SaveAcp;
   end;
 
  { Tests TWakanText.CollapseRuby (ruby parsing for a single line).
@@ -158,33 +113,6 @@ type
     on PasteLines and CollapseRuby, so by testing PasteWtt heavily as we do,
     we are more or less sure that PasteLines and the core of PasteText is okay.
     Proper testing routines would be better. }
-  end;
-
-  TWhosFaster = class(TTestCase)
-  protected
-    procedure TestJWBIO(const AFilename: string; AEncoding: CEncoding);
-    procedure TestJWBConvert(const AFilename: string; AFiletype: byte);
-  published
-    procedure JWBIO_Ascii;
-    procedure JWBConvert_Ascii;
-    procedure JWBIO_Acp;
-    procedure JWBConvert_Acp;
-    procedure JWBIO_Utf8;
-    procedure JWBConvert_Utf8;
-    procedure JWBIO_Utf16le;
-    procedure JWBConvert_Utf16le;
-    procedure JWBIO_Utf16be;
-    procedure JWBConvert_Utf16be;
-    procedure JWBIO_Jis;
-    procedure JWBConvert_Jis;
-    procedure JWBIO_Sjs;
-    procedure JWBConvert_Sjs;
-    procedure JWBIO_Euc;
-    procedure JWBConvert_Euc;
-    procedure JWBIO_Gb;
-    procedure JWBConvert_Gb;
-    procedure JWBIO_Big5;
-    procedure JWBConvert_Big5;
   end;
 
 implementation
@@ -336,44 +264,6 @@ end;
 procedure TWakanTextTestCase.TearDown;
 begin
   FreeAndNil(text);
-end;
-
-{ Binary comparison for files }
-function TWakanTextTestCase.CompareFiles(const AFilename1, AFilename2: string): boolean;
-var f1, f2: TStream;
-  b1, b2: byte;
-  r1, r2: boolean;
-begin
-  f1 := nil;
-  f2 := nil;
-  try
-    f1 := TStreamReader.Create(
-      TFileStream.Create(AFilename1, fmOpenRead),
-      true
-    );
-    f2 := TStreamReader.Create(
-      TFileStream.Create(AFilename2, fmOpenRead),
-      true
-    );
-
-   { Can be easily made somewhat faster by reading in dwords and comparing
-    only the number of bytes read (e.g. case 1: 2: 3: 4: if (d1 & $000F) == etc.) }
-    Result := true;
-    while true do begin
-      r1 := (f1.Read(b1,1)=1);
-      r2 := (f2.Read(b2,1)=1);
-      if r1 xor r2 then
-        Result := false;
-      if b1<>b2 then
-        Result := false;
-      if (not r1) or (not Result) then //not Result => diff; not r1 => both over
-        break;
-    end;
-
-  finally
-    FreeAndNil(f2);
-    FreeAndNil(f1);
-  end;
 end;
 
 { Compares another TWakanText to this one. Tests that the actual contents is
@@ -670,232 +560,6 @@ begin
   Check(text.EndOfDocument=SourcePos(Length(text.Lines[text.Lines.Count-1]), text.Lines.Count-1));
   Check(text.EndOfLine(text.Lines.Count-1)=text.EndOfDocument);
   Check(text.EndOfLine(0)=SourcePos(Length(text.Lines[0]),0));
-end;
-
-
-function TEncodingTestcase.GetTestFilename(const AFilename: string): string;
-begin
- //All encoding test files are stored in the same folder
-  Result := 'Tests\encoding\'+AFilename;
-end;
-
-procedure TEncodingTestCase.LoadFile(const AFilename: string; AEncoding: CEncoding);
-begin
-  if AEncoding=nil then
-    Check(Conv_DetectType('Tests\encoding\'+AFilename, AEncoding)
-      or (AEncoding<>nil),
-      'Cannot guess file encoding.');
-
- //All encoding test files are stored in the same folder
-  text.LoadText(GetTestFilename(AFilename), AEncoding, amNone);
-end;
-
-{ All unicode text files contain the same text, so we run the same series of tests
-to verify that they were decoded properly.
-Expand the text to include various corner cases. Do not cover Ruby or any extended
-parsing here. }
-procedure TEncodingTestCase.VerifyText(const AFilename: string; AEncoding: CEncoding);
-begin
-  LoadFile(AFilename, AEncoding);
-  Check(text.Lines.Count=3);
-  Check(text.PropertyLines.Count=3);
-  Check(text.Lines[0].StartsWith('世間体を気にするのは'));
-  Check(text.Lines[2].EndsWith('女子中学生だ。'));
-end;
-
-{ Ascii text is different since it can't contain unicode }
-procedure TEncodingTestCase.VerifyAscii(const AFilename: string; AEncoding: CEncoding);
-begin
-  LoadFile(AFilename, AEncoding);
-  Check(text.Lines.Count=3);
-  Check(text.PropertyLines.Count=3);
-  Check(text.Lines[0].StartsWith('Example ansi'));
-  Check(text.Lines[2].EndsWith('other line.'));
-end;
-
-{ With ACP we cannot verify ACP text because the active codepage can be different
- on the PC where tests are run, but at least we check what we can }
-procedure TEncodingTestCase.VerifyAcp(const AFilename: string; AEncoding: CEncoding);
-begin
-  LoadFile(AFilename, AEncoding);
-  Check(text.Lines.Count=4);
-  Check(text.PropertyLines.Count=4);
-  Check(text.Lines[0].StartsWith('Example ansi'));
-  Check(text.Lines[2].EndsWith('other line.'));
-end;
-
-{ Load the file, save it in the same encoding to a temporary folder and then
- compare byte-by-byte to the original file.
- Realistically, there will be cases when some of the nuances are lost. If this
- happens another test might be needed to load the file back and compare as data }
-procedure TEncodingTestCase.LoadSaveCompare(const AFilename: string;
-  AEncoding: CEncoding; ABom: boolean; const ATestComment: string = '');
-var tempDir: string;
-  stream: TStream;
-begin
-  LoadFile(AFilename, AEncoding);
-  tempDir := CreateRandomTempDir();
-  try
-    stream := TFileStream.Create(tempDir+'\'+AFilename, fmCreate);
-    try
-      text.SaveText(amDefault, TTextSaveFormat.Create(AEncoding, not ABom),
-        stream);
-    finally
-      FreeAndNil(stream);
-    end;
-    Check(CompareFiles(GetTestFilename(AFilename), tempDir+'\'+AFilename));
-  finally
-    DeleteDirectory(tempDir);
-  end;
-end;
-
-{ Simple loading }
-procedure TEncodingTestCase.Ascii;
-begin
-  VerifyAscii('ascii.txt', TAsciiEncoding);
-end;
-
-procedure TEncodingTestCase.UTF8;
-begin
-  VerifyText('utf8.txt', TUTF8Encoding);
-end;
-
-procedure TEncodingTestCase.UTF8Sign;
-begin
-  VerifyText('utf8sign.txt', TUTF8Encoding);
-end;
-
-procedure TEncodingTestCase.UTF16LE;
-begin
-  VerifyText('utf16le.txt', TUTF16LEEncoding);
-end;
-
-procedure TEncodingTestCase.UTF16LESign;
-begin
-  VerifyText('utf16lesign.txt', TUTF16LEEncoding);
-end;
-
-procedure TEncodingTestCase.UTF16BE;
-begin
-  VerifyText('utf16be.txt', TUTF16BEEncoding);
-end;
-
-procedure TEncodingTestCase.UTF16BESign;
-begin
-  VerifyText('utf16besign.txt', TUTF16BEEncoding);
-end;
-
-procedure TEncodingTestCase.EUC;
-begin
-  VerifyText('euc.txt', TEUCEncoding);
-end;
-
-procedure TEncodingTestCase.ShiftJis;
-begin
-  VerifyText('shiftjis.txt', TSJISEncoding);
-end;
-
-procedure TEncodingTestCase.Acp;
-begin
-  VerifyAcp('acp.txt', TACPEncoding);
-end;
-
-{ Guess* versions make converter guess the encoding }
-procedure TEncodingTestCase.GuessAscii;
-begin
-  VerifyAscii('ascii.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessUTF8;
-begin
-  VerifyText('utf8.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessUTF8Sign;
-begin
-  VerifyText('utf8sign.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessUTF16LE;
-begin
-  VerifyText('utf16le.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessUTF16LESign;
-begin
-  VerifyText('utf16lesign.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessUTF16BE;
-begin
- //UTF16BE is not being detected at this point, so this test always fails.
-  VerifyText('utf16be.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessUTF16BESign;
-begin
-  VerifyText('utf16besign.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessEUC;
-begin
-  VerifyText('euc.txt', nil);
-end;
-
-procedure TEncodingTestCase.GuessShiftJis;
-begin
-  VerifyText('shiftjis.txt', nil);
-end;
-
-{ Save* to load, then save, then compare to original file }
-procedure TEncodingTestCase.SaveAscii;
-begin
-  LoadSaveCompare('ascii.txt', TAsciiEncoding, false);
-end;
-
-procedure TEncodingTestCase.SaveUTF8;
-begin
-  LoadSaveCompare('utf8.txt', TUTF8Encoding, false);
-end;
-
-procedure TEncodingTestCase.SaveUTF8Sign;
-begin
-  LoadSaveCompare('utf8sign.txt', TUTF8Encoding, true);
-end;
-
-procedure TEncodingTestCase.SaveUTF16LE;
-begin
-  LoadSaveCompare('utf16le.txt', TUTF16LEEncoding, false);
-end;
-
-procedure TEncodingTestCase.SaveUTF16LESign;
-begin
-  LoadSaveCompare('utf16lesign.txt', TUTF16LEEncoding, true);
-end;
-
-procedure TEncodingTestCase.SaveUTF16BE;
-begin
-  LoadSaveCompare('utf16be.txt', TUTF16BEEncoding, false);
-end;
-
-procedure TEncodingTestCase.SaveUTF16BESign;
-begin
-  LoadSaveCompare('utf16besign.txt', TUTF16BEEncoding, true);
-end;
-
-procedure TEncodingTestCase.SaveEUC;
-begin
-  LoadSaveCompare('euc.txt', TEUCEncoding, false);
-end;
-
-procedure TEncodingTestCase.SaveShiftJis;
-begin
-  LoadSaveCompare('shiftjis.txt', TSJISEncoding, false);
-end;
-
-procedure TEncodingTestCase.SaveAcp;
-begin
-  LoadSaveCompare('acp.txt', TACPEncoding, false);
 end;
 
 
@@ -1512,163 +1176,6 @@ begin
   end;
 end;
 
-const
-  iter_count: integer = 100;
-
-procedure TWhosFaster.TestJWBConvert(const AFilename: string; AFiletype: byte);
-var tm: cardinal;
-  i, lines_cnt: integer;
-  ms: TJWBConvert;
-  ln: string;
-begin
-  tm := GetTickCount();
-
-  for i := 0 to iter_count-1 do begin
-    lines_cnt := 0;
-    ms := TJWBConvert.Open(
-      TStreamReader.Create(
-        TFileStream.Create(AFilename, fmOpenRead or fmShareDenyNone),
-        {owns=}true
-      ),
-      AFiletype,
-      {owns=}true
-    );
-    while not ms.EOF do begin
-      ln := ms.ReadLn;
-      Inc(lines_cnt);
-    end;
-    //not good, last ReadLn could be either empty line or "no data at all", can't tell which it is
-    //let's hope this doesn't happen
-
-    Check(lines_cnt=12964, 'Invalid number of lines');
-    FreeAndNil(ms);
-  end;
-
-  tm := GetTickCount()-tm;
-  Check(false, Format('%d msec, %d iter, %g avg', [tm, iter_count, tm/iter_count]));
-end;
-
-procedure TWhosFaster.TestJWBIO(const AFilename: string; AEncoding: CEncoding);
-var tm: cardinal;
-  i, lines_cnt: integer;
-  ms: TStreamDecoder;
-  ln: string;
-begin
-  tm := GetTickCount();
-
-  for i := 0 to iter_count-1 do begin
-    lines_cnt := 0;
-    ms := OpenTextFile(AFilename, AEncoding);
-    while ms.ReadLn(ln) do
-      Inc(lines_cnt);
-    Check(lines_cnt=12964, 'Invalid number of lines');
-    FreeAndNil(ms);
-  end;
-
-  tm := GetTickCount()-tm;
-  Check(false, Format('%d msec, %d iter, %g avg', [tm, iter_count, tm/iter_count]));
-end;
-
-procedure TWhosFaster.JWBIO_Ascii;
-begin
-  TestJWBIO('Tests\big\ascii.txt', TAsciiEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Ascii;
-begin
-  TestJWBConvert('Tests\big\ascii.txt', FILETYPE_ASCII);
-end;
-
-procedure TWhosFaster.JWBIO_Acp;
-begin
-  TestJWBIO('Tests\big\acp.txt', TAcpEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Acp;
-begin
-  TestJWBConvert('Tests\big\acp.txt', FILETYPE_ACP);
-end;
-
-procedure TWhosFaster.JWBIO_Utf8;
-begin
-  TestJWBIO('Tests\big\utf8.txt', TUTF8Encoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Utf8;
-begin
-  TestJWBConvert('Tests\big\utf8.txt', FILETYPE_UTF8);
-end;
-
-procedure TWhosFaster.JWBIO_Utf16le;
-begin
-  TestJWBIO('Tests\big\utf16le.txt', TUTF16LEEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Utf16le;
-begin
-  TestJWBConvert('Tests\big\utf16le.txt', FILETYPE_UTF16LE);
-end;
-
-procedure TWhosFaster.JWBIO_Utf16be;
-begin
-  TestJWBIO('Tests\big\utf16be.txt', TUTF16BEEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Utf16be;
-begin
-  TestJWBConvert('Tests\big\utf16be.txt', FILETYPE_UTF16BE);
-end;
-
-procedure TWhosFaster.JWBIO_Jis;
-begin
-  TestJWBIO('Tests\big\jis.txt', TJISEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Jis;
-begin
-  TestJWBConvert('Tests\big\jis.txt', FILETYPE_JIS);
-end;
-
-procedure TWhosFaster.JWBIO_Sjs;
-begin
-  TestJWBIO('Tests\big\sjis.txt', TSJISEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_Sjs;
-begin
-  TestJWBConvert('Tests\big\sjis.txt', FILETYPE_SJS);
-end;
-
-procedure TWhosFaster.JWBIO_EUC;
-begin
-  TestJWBIO('Tests\big\euc.txt', TEUCEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_EUC;
-begin
-  TestJWBConvert('Tests\big\euc.txt', FILETYPE_EUC);
-end;
-
-procedure TWhosFaster.JWBIO_GB;
-begin
-  TestJWBIO('Tests\big\gb.txt', TGBEncoding);
-end;
-
-procedure TWhosFaster.JWBConvert_GB;
-begin
-  TestJWBConvert('Tests\big\gb.txt', FILETYPE_GB);
-end;
-
-procedure TWhosFaster.JWBIO_BIG5;
-begin
-  TestJWBIO('Tests\big\big5.txt', TBIG5Encoding);
-end;
-
-procedure TWhosFaster.JWBConvert_BIG5;
-begin
-  TestJWBConvert('Tests\big\big5.txt', FILETYPE_BIG5);
-end;
-
 function WakanTextTests: ITestSuite;
 var ASuite: TTestSuite;
 begin
@@ -1676,7 +1183,6 @@ begin
   ASuite.addTest(TSourcePosTestCase.Suite);
   ASuite.addTest(TSourceBlockTestCase.Suite);
   ASuite.addTest(TLinesTestCase.Suite);
-  ASuite.addTest(TEncodingTestCase.Suite);
   ASuite.addTest(TCollapseRubyTestCase.Suite);
   ASuite.addTest(TRubyTextTestCase.Suite);
   ASuite.addTest(TExportTestCase.Suite);
@@ -1686,6 +1192,5 @@ end;
 
 initialization
   RegisterTest(WakanTextTests);
-  RegisterTest(TWhosFaster.Suite);
 
 end.
