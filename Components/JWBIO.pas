@@ -79,13 +79,11 @@ uses SysUtils, Classes, JWBStrings;
 { TODO: UTF16 surrogate pairs (LE and BE in different order) }
 { TODO: TRtlEncoding(SysUtils.TEncoding) }
 
-
 { TODO: Extended UTF16 LE/BE detection.
  Current algorithm may be unreliable and/or slow. There are some experiments
  hidden under GUESSUTF16 switch, but they suck.
  Check how it's done in other apps. }
 //{$DEFINE GUESS_UTF16}
-
 
 type
  { Encoding is created once and executed sequentially on a stream, starting with

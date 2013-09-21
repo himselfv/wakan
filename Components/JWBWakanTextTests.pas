@@ -25,7 +25,6 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
    //Helpers
-
     procedure CompareData(const AText: TWakanText);
   end;
 
