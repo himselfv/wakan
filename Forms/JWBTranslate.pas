@@ -26,11 +26,11 @@ Cursor position is stored in curx, cury. Both are zero-based:
   x==len(line) => after the last character
 When doing selection, mouse drag start is kept in blockx, blocky.
 
-CalcBlockFromTo() converts that to:
-  blockfromy      first line in selection
-  blockfromx      first selected char
-  blocktox        last line in selection
-  blocktoy        last selected char
+GetTextSelection() converts that to:
+  fromy      first line in selection
+  fromx      first selected char
+  tox        last line in selection
+  toy        last selected char
 All inclusive.
 }
 
@@ -329,11 +329,12 @@ type
 
   protected //Selection block
     oldblock: TTextSelection; //Selection block last time it was repainted (allows us to only repaint changed parts)
+    function GetTextSelection: TTextSelection;
+    function BacktrackSelection(const ASelection: TTextSelection): TTextSelection;
   public
-    block: TTextSelection; //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
-    procedure CalcBlockFromTo(backtrack:boolean);
     procedure DrawBlock(Canvas: TCanvas; ClientRect: TRect);
     procedure SelectAll;
+    property TextSelection: TTextSelection read GetTextSelection; //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
 
   public //Hint
     procedure ShowHint;
@@ -1016,6 +1017,8 @@ var j:integer;
   donework: integer;
   totalwork: integer;
 
+  block: TTextSelection;
+
  {$IFDEF MTHREAD_SUPPORT}
   threads: TTranslationThreads;
   useThreads: boolean;
@@ -1035,7 +1038,7 @@ begin
     block.tox:=flength(doc.Lines[doc.Lines.Count-1])-1;
     block.toy:=doc.Lines.Count-1;
   end else
-    CalcBlockFromTo(true);
+    block := BacktrackSelection(Self.TextSelection);
   Screen.Cursor:=crHourGlass;
 
  {$IFDEF MTHREAD_SUPPORT}
@@ -1422,9 +1425,10 @@ end;
 
 procedure TfTranslate.sbClearTranslationClick(Sender: TObject);
 var i,j:integer;
-    bg,en:integer;
+  bg,en:integer;
+  block: TTextSelection;
 begin
-  CalcBlockFromTo(true);
+  block := BacktrackSelection(Self.TextSelection);
   for i:=block.fromy to block.toy do
   begin
     bg:=0;
@@ -1485,8 +1489,7 @@ end;
 
 procedure TfTranslate.sbClipCutClick(Sender: TObject);
 begin
-  CalcBlockFromTo(false);
-  if Self.block.IsEmpty then exit;
+  if Self.TextSelection.IsEmpty then exit;
   sbClipCopyClick(Sender);
   DeleteSelection;
 end;
@@ -1562,9 +1565,10 @@ begin
 end;
 
 function TfTranslate.CopyAsWakanText: TMemoryStream;
+var block: TTextSelection;
 begin
   Result := TMemoryStream.Create;
-  CalcBlockFromTo(false);
+  block := self.TextSelection;
   doc.SaveWakanText(Result,@block);
 end;
 
@@ -1573,8 +1577,7 @@ end;
 procedure TfTranslate.sbClipCopyClick(Sender: TObject);
 var NormalText: UnicodeString;
 begin
-  CalcBlockFromTo(false);
-  if Self.block.IsEmpty then exit;
+  if Self.TextSelection.IsEmpty then exit;
   NormalText := CopyAsText;
   fMenu.ResetClipboard;
   try
@@ -1592,8 +1595,7 @@ end;
 procedure TfTranslate.CopyAs;
 var RubyText: UnicodeString;
 begin
-  CalcBlockFromTo(false);
-  if Self.block.IsEmpty then exit;
+  if Self.TextSelection.IsEmpty then exit;
   RubyText := CopyAsRuby;
   fMenu.ResetClipboard;
   try
@@ -1955,28 +1957,31 @@ begin
 end;
 
 { Converts startdrag+cursor positions to block selection. }
-procedure TfTranslate.CalcBlockFromTo(backtrack:boolean);
+function TfTranslate.GetTextSelection: TTextSelection;
 begin
   if (rcur.y<dragstart.y) or ((rcur.y=dragstart.y) and (rcur.x<dragstart.x)) then
   begin
-    block.fromx:=rcur.x;
-    block.fromy:=rcur.y;
-    block.tox:=dragstart.x;
-    block.toy:=dragstart.y;
+    Result.fromx:=rcur.x;
+    Result.fromy:=rcur.y;
+    Result.tox:=dragstart.x;
+    Result.toy:=dragstart.y;
   end else
   begin
-    block.fromx:=dragstart.x;
-    block.fromy:=dragstart.y;
-    block.tox:=rcur.x;
-    block.toy:=rcur.y;
+    Result.fromx:=dragstart.x;
+    Result.fromy:=dragstart.y;
+    Result.tox:=rcur.x;
+    Result.toy:=rcur.y;
   end;
-  if backtrack then
-  begin
-    if block.fromx<doctr[block.fromy].charcount then //it can be after the last char in the line
-      while (block.fromx>=0) and (doctr[block.fromy].chars[block.fromx].wordstate='<') do dec(block.fromx);
-    while (block.tox+1<doctr[block.toy].charcount)
-      and (doctr[block.toy].chars[block.tox+1].wordstate='<') do inc(block.tox);
-  end;
+end;
+
+{ Expands selection so that it starts with a nearest word. Selection must be valid. }
+function TfTranslate.BacktrackSelection(const ASelection: TTextSelection): TTextSelection;
+begin
+  Result := ASelection;
+  if Result.fromx<doctr[Result.fromy].charcount then //it can be after the last char in the line
+    while (Result.fromx>=0) and (doctr[Result.fromy].chars[Result.fromx].wordstate='<') do dec(Result.fromx);
+  while (Result.tox+1<doctr[Result.toy].charcount)
+    and (doctr[Result.toy].chars[Result.tox+1].wordstate='<') do inc(Result.tox);
 end;
 
 {
@@ -3124,12 +3129,14 @@ Canvas:
 }
 procedure TfTranslate.DrawBlock(Canvas: TCanvas; ClientRect: TRect);
 var rect:TRect;
-    i,js:integer;
-    hw: boolean;
+  i,js:integer;
+  hw: boolean;
 
-    ypos: integer;      //logical line containing this graphical line
-    xpos: integer;      //current symbol in the logical line
-    llen: integer;      //graphical line length
+  block: TTextSelection;
+
+  ypos: integer;      //logical line containing this graphical line
+  xpos: integer;      //current symbol in the logical line
+  llen: integer;      //graphical line length
 
 
   function InSelection(x, y: integer; const sel: TTextSelection): boolean;
@@ -3156,7 +3163,7 @@ begin
   if oldblock.fromx=-1 then
    //safe values for the rest of the algorithm
     oldblock := Selection(-1, -1, -1, -1);
-  CalcBlockFromTo(false);
+  block := Self.TextSelection;
 
  {
   i: graphical line index
@@ -3197,8 +3204,9 @@ end;
 
 procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream;
   AnnotMode: TTextAnnotMode);
+var block: TTextSelection;
 begin
-  CalcBlockFromTo(false);
+  block := Self.TextSelection;
   doc.SaveText(AnnotMode,format,stream,@block);
 end;
 
@@ -3266,8 +3274,9 @@ begin
 end;
 
 procedure TfTranslate.DeleteSelection;
+var block: TTextSelection;
 begin
-  CalcBlockFromTo(false);
+  block := Self.TextSelection;
   doc.DeleteBlock(block);
   rcur := SourcePos(block.fromx, block.fromy);
   if block.fromy<>block.toy then
