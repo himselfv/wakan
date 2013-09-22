@@ -1485,6 +1485,8 @@ end;
 
 procedure TfTranslate.sbClipCutClick(Sender: TObject);
 begin
+  CalcBlockFromTo(false);
+  if Self.block.IsEmpty then exit;
   sbClipCopyClick(Sender);
   DeleteSelection;
 end;
@@ -1571,6 +1573,8 @@ end;
 procedure TfTranslate.sbClipCopyClick(Sender: TObject);
 var NormalText: UnicodeString;
 begin
+  CalcBlockFromTo(false);
+  if Self.block.IsEmpty then exit;
   NormalText := CopyAsText;
   fMenu.ResetClipboard;
   try
@@ -1588,6 +1592,8 @@ end;
 procedure TfTranslate.CopyAs;
 var RubyText: UnicodeString;
 begin
+  CalcBlockFromTo(false);
+  if Self.block.IsEmpty then exit;
   RubyText := CopyAsRuby;
   fMenu.ResetClipboard;
   try
@@ -3200,6 +3206,8 @@ procedure TfTranslate.PasteText(const chars: FString; const props: TCharacterLin
   AnnotMode: TTextAnnotMode);
 var tmp: TSourcePos;
 begin
+  if Length(chars)<=0 then exit; //do not mark the document dirty
+
   if AnnotMode=amDefault then
     if fSettings.cbLoadAozoraRuby.Checked then
       AnnotMode := amRuby

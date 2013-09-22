@@ -719,93 +719,111 @@ object fMenu: TfMenu
       OnExecute = aChineseExecute
     end
     object aEditorNew: TAction
+      Category = 'Editor'
       Caption = '#00261^eNew'
       ShortCut = 16462
       OnExecute = aEditorNewExecute
     end
     object aEditorOpen: TAction
+      Category = 'Editor'
       Caption = '#00262^eOpen...'
       ShortCut = 16463
       OnExecute = aEditorOpenExecute
     end
     object aEditorSave: TAction
+      Category = 'Editor'
       Caption = '#00263^eSave'
       ShortCut = 16467
       OnExecute = aEditorSaveExecute
     end
     object aEditorSaveAs: TAction
+      Category = 'Editor'
       Caption = '#00264^eSave as...'
       OnExecute = aEditorSaveAsExecute
     end
     object aEditorCut: TAction
+      Category = 'Editor'
       Caption = '#00265^eCut'
       ShortCut = 16472
       OnExecute = aEditorCutExecute
     end
     object aEditorCopy: TAction
+      Category = 'Editor'
       Caption = '#00266^eCopy'
       ShortCut = 16451
       OnExecute = aEditorCopyExecute
     end
     object aEditorCopyAs: TAction
+      Category = 'Editor'
       Caption = '#01059^eCopy as...'
       ShortCut = 49219
       OnExecute = aEditorCopyAsExecute
     end
     object aEditorPaste: TAction
+      Category = 'Editor'
       Caption = '#00267^ePaste'
       ShortCut = 16470
       OnExecute = aEditorPasteExecute
     end
     object aEditorSelectAll: TAction
+      Category = 'Editor'
       Caption = '#00268^eSelect all'
       ShortCut = 16449
       OnExecute = aEditorSelectAllExecute
     end
     object aEditorKanjiMode: TAction
+      Category = 'Editor'
       Caption = '#00269^eCharacter mode'
       Checked = True
       ShortCut = 16465
       OnExecute = aEditorKanjiModeExecute
     end
     object aEditorKanaMode: TAction
+      Category = 'Editor'
       Caption = '#00270^eKana mode'
       ShortCut = 16471
       OnExecute = aEditorKanaModeExecute
     end
     object aEditorASCIIMode: TAction
+      Category = 'Editor'
       Caption = '#00271^eASCII mode'
       ShortCut = 16464
       OnExecute = aEditorASCIIModeExecute
     end
     object aEditorReading: TAction
+      Category = 'Editor'
       Caption = '#00272^eDisplay reading'
       Checked = True
       ShortCut = 16456
       OnExecute = aEditorReadingExecute
     end
     object aEditorMeaning: TAction
+      Category = 'Editor'
       Caption = '#00273^eDisplay meaning'
       Checked = True
       ShortCut = 16458
       OnExecute = aEditorMeaningExecute
     end
     object aEditorClear: TAction
+      Category = 'Editor'
       Caption = '#00274^eClear translation'
       ShortCut = 16450
       OnExecute = aEditorClearExecute
     end
     object aEditorFill: TAction
+      Category = 'Editor'
       Caption = '#00275^eAuto-fill translation'
       ShortCut = 16454
       OnExecute = aEditorFillExecute
     end
     object aEditorSet: TAction
+      Category = 'Editor'
       Caption = '#00276^eSet translation'
       ShortCut = 16468
       OnExecute = aEditorSetExecute
     end
     object aEditorPrint: TAction
+      Category = 'Editor'
       Caption = '#00277^ePrint...'
       ShortCut = 16502
       OnExecute = aEditorPrintExecute
@@ -901,19 +919,23 @@ object fMenu: TfMenu
       OnExecute = aKanjiMeaningExecute
     end
     object aEditorWindow: TAction
+      Category = 'Editor'
       Caption = '#00296^eEditor window'
       ShortCut = 16453
       OnExecute = aEditorWindowExecute
     end
     object aEditorSmallFont: TAction
+      Category = 'Editor'
       Caption = '#00052^eSmall'
       OnExecute = aEditorSmallFontExecute
     end
     object aEditorLargeFont: TAction
+      Category = 'Editor'
       Caption = '#00297^eLarge'
       OnExecute = aEditorLargeFontExecute
     end
     object aEditorMedFont: TAction
+      Category = 'Editor'
       Caption = '#00053^eMedium'
       OnExecute = aEditorMedFontExecute
     end
@@ -983,6 +1005,7 @@ object fMenu: TfMenu
       OnChecked = aUserExamplesChecked
     end
     object aEditorColors: TAction
+      Category = 'Editor'
       Caption = '#00309^eUse colors'
       OnExecute = aEditorColorsExecute
     end
@@ -1009,6 +1032,7 @@ object fMenu: TfMenu
       OnExecute = aPortraitModeExecute
     end
     object aEditorExport: TAction
+      Category = 'Editor'
       Caption = '#01058^eExport as...'
       OnExecute = aEditorExportExecute
     end

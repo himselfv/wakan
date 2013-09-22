@@ -2038,17 +2038,17 @@ begin
   fTranslate.SaveAs;
 end;
 
+procedure TfMenu.aEditorExportExecute(Sender: TObject);
+begin
+  if not fTranslate.Visible then aModeEditor.Execute;
+  fTranslate.ExportAs;
+end;
+
 procedure TfMenu.aEditorCutExecute(Sender: TObject);
 begin
   if not fTranslate.ListBox1.Focused then exit;
   if not fTranslate.Visible then aModeEditor.Execute;
   fTranslate.sbClipCutClick(sender);
-end;
-
-procedure TfMenu.aEditorExportExecute(Sender: TObject);
-begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.ExportAs;
 end;
 
 procedure TfMenu.aEditorCopyExecute(Sender: TObject);

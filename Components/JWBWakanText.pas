@@ -116,7 +116,7 @@ type
   end;
   PSourcePos = ^TSourcePos;
 
- { Text block, see SourcePos. Usually not inclusive on the read end }
+ { Text block, see SourcePos. Usually not inclusive on the "to" end }
   TSourceBlock = record
     fromy: integer;
     fromx: integer;
@@ -124,6 +124,7 @@ type
     tox: integer;
     function FromPoint: TSourcePos; inline;
     function ToPoint: TSourcePos; inline;
+    function IsEmpty: boolean; inline;
     class operator Equal(const a: TSourceBlock; const b: TSourceBlock): boolean; inline;
     class operator NotEqual(const a: TSourceBlock; const b: TSourceBlock): boolean; inline;
     class operator BitwiseAnd(const a: TSourceBlock; const b: TSourceBlock): TSourceBlock;
@@ -394,6 +395,11 @@ function TSourceBlock.ToPoint: TSourcePos;
 begin
   Result.y := toy;
   Result.x := tox;
+end;
+
+function TSourceBlock.IsEmpty: boolean;
+begin
+  Result := (Self.toy<Self.fromy) or ((Self.toy=Self.fromy) and (Self.tox<=Self.fromx));
 end;
 
 class operator TSourceBlock.Equal(const a: TSourceBlock; const b: TSourceBlock): boolean;
