@@ -778,7 +778,10 @@ end;
 
 procedure TUnicodeStringStream.SetSize(NewSize: Longint);
 begin
-  SetLength(FString^, (NewSize div SizeOf(WideChar)) + 1);
+  if NewSize mod 2 = 0 then
+    SetLength(FString^, NewSize div SizeOf(WideChar))
+  else
+    SetLength(FString^, NewSize div SizeOf(WideChar) + 1); //no choice but to allocate one more symbol
   FPtr := pointer(FString^);
 end;
 
