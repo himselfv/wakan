@@ -46,11 +46,12 @@ begin
 
  //There's some trouble going on when the form is showing:
  //the host deactivates, tries to Hide us which leads to Hiding in the middle of Showing().
- //Until I fix this I'm keeping inherited solution of flags, James flags.
+ //Until I fix this I'm keeping this inherited solution with flags.
   FShowing := true;
   try
     Self.Show;
     Self.Invalidate;
+    PaintBox1.Invalidate; //because the form can be double buffered and consider buffer valid on redraw
   finally
     FShowing := false;
   end;
