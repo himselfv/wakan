@@ -92,6 +92,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure FormActivate(Sender: TObject);
+    procedure FormDeactivate(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -103,7 +105,6 @@ type
     procedure Clear;
     procedure SetCharDetails(chars: FString);
     procedure RefreshDetails;
-
 
   protected
    { Info box painting }
@@ -127,6 +128,7 @@ type
     procedure WMSaveDockedWH(var msg: TMessage); message WM_SAVE_DOCKED_WH;
     procedure WMSetDockMode(var msg: TMessage); message WM_SET_DOCK_MODE;
   public
+    procedure BeforeDestruction; override;
     procedure UpdateAlignment;
     procedure SetDocked(Value: boolean; Loading: boolean);
     procedure UpdateVisible;
@@ -160,10 +162,17 @@ begin
   DockedHeight:=220;
 end;
 
-procedure TfKanjiDetails.FormDestroy(Sender: TObject);
+procedure TfKanjiDetails.BeforeDestruction;
 begin
+ { We do this here because TForm.BeforeDestruction hides the form and there's
+  no way to know if it was Visible. }
   if (not fMenu.CharDetDocked) and FormPlacement1.PlacementRestored then
     FormPlacement1.SaveFormPlacement;
+  inherited;
+end;
+
+procedure TfKanjiDetails.FormDestroy(Sender: TObject);
+begin
   kval.Free;
 end;
 
@@ -182,6 +191,16 @@ procedure TfKanjiDetails.FormHide(Sender: TObject);
 begin
   if not (csDestroying in ComponentState) then //forms might already cease to exist on destruction
     UpdateVisible();
+end;
+
+procedure TfKanjiDetails.FormActivate(Sender: TObject);
+begin
+//
+end;
+
+procedure TfKanjiDetails.FormDeactivate(Sender: TObject);
+begin
+//
 end;
 
 procedure TfKanjiDetails.UpdateVisible;

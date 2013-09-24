@@ -9,7 +9,7 @@ uses
   SysUtils, Classes, IniFiles, Registry;
 
 type
-  TFormPlacementOption = (foPosition);
+  TFormPlacementOption = (foPosition, foVisibility);
   TFormPlacementOptions = set of TFormPlacementOption;
 
   TFormPlacement = class(TComponent)
@@ -31,7 +31,7 @@ type
     property UseRegistry: boolean read FUseRegistry write FUseRegistry default true;
     property IniFileName: string read FIniFileName write FIniFileName;
     property IniSection: string read FIniSection write FIniSection;
-    property Options: TFormPlacementOptions read FOptions write FOptions default [foPosition];
+    property Options: TFormPlacementOptions read FOptions write FOptions default [foPosition, foVisibility];
   end;
 
 procedure Register;
@@ -45,7 +45,7 @@ begin
   FUseRegistry := true;
   FIniFileName := '';
   FIniSection := '';
-  FOptions := [foPosition];
+  FOptions := [foPosition, foVisibility];
 end;
 
 function TFormPlacement.OpenIniFile: TCustomIniFile;
@@ -110,6 +110,26 @@ begin
   );
 end;
 
+{ GetWindowPlacement does not return SW_HIDE when the form is hidden,
+ it always returns SW_SHOW*SOMETHING (source: MSDN).
+ Use this function to adjust showCmd returned by GetWindowPlacement to properly
+ reflect "what needs to be done with the window to bring it to current state".
+ Activation is handled separately. }
+function GetRealShowCmd(const AShowCmd: integer; AForm: TCustomForm): integer;
+begin
+  Result := AShowCmd;
+  if not TForm(AForm).Visible then
+    Result := SW_HIDE
+  else //Delphi says it's visible, let's believe Delphi
+    if Result<>SW_HIDE then
+     //We could've just chosen SW_SHOWNORMAL for all cases but whatever
+      case TForm(AForm).WindowState of
+        wsMaximized: Result := SW_SHOWMAXIMIZED;
+        wsMinimized: Result := SW_SHOWMINIMIZED;
+      else Result := SW_SHOWNORMAL;
+      end;
+end;
+
 procedure TFormPlacement.SaveFormPlacement;
 var ini: TCustomIniFile;
   form: TCustomForm;
@@ -124,6 +144,7 @@ begin
     rc.TopLeft := wp.ptMinPosition;
     rc.BottomRight := wp.ptMaxPosition;
     ini.WriteRect(FIniSection,'MinMaxPos',rc);
+    wp.showCmd := GetRealShowCmd(wp.showCmd, form); //adjust showCmd to cover invisibility too
     ini.WriteInteger(FIniSection,'ShowCmd',wp.showCmd);
     ini.WriteInteger(FIniSection,'Flags',wp.flags);
     ini.UpdateFile;
@@ -142,14 +163,49 @@ begin
   ini := OpenIniFile;
   try
     GetWindowPlacement(form.Handle, wp);
-    ini.TryReadRect(FIniSection,'NormPos',wp.rcNormalPosition);
-    if ini.TryReadRect(FIniSection,'MinMaxPos', rc) then begin
-      wp.ptMinPosition := rc.TopLeft;
-      wp.ptMaxPosition := rc.BottomRight;
+
+    if foPosition in self.FOptions then begin
+      ini.TryReadRect(FIniSection,'NormPos',wp.rcNormalPosition);
+      if ini.TryReadRect(FIniSection,'MinMaxPos', rc) then begin
+        wp.ptMinPosition := rc.TopLeft;
+        wp.ptMaxPosition := rc.BottomRight;
+      end;
     end;
-    wp.showCmd := ini.ReadInteger(FIniSection,'ShowCmd',wp.showCmd);
-    wp.flags := ini.ReadInteger(FIniSection,'Flags',wp.flags);
+
+    if foVisibility in Self.FOptions then begin
+      wp.flags := ini.ReadInteger(FIniSection,'Flags',wp.flags);
+     { Only one flag is supported, RESTORETOMAXIMIZED. No special treatment
+      is needed when setting it. }
+      wp.showCmd := ini.ReadInteger(FIniSection,'ShowCmd',wp.showCmd);
+    end else
+      wp.showCmd := GetRealShowCmd(wp.showCmd, form); //adjust showCmd to cover invisibility too
+
+   { Issue 187: showCmd values returned by GetWindowPlacement have to be adjusted
+    to not activate the window on applying }
+    if not form.Active then
+   { If it's active we MUST NOT deflect to non-active version, the activation
+    may have yet to be applied, such as on creation. }
+    case wp.showCmd of
+      //SW_HIDE: begin end; //hiding does not change activation unless neccessary
+      SW_SHOWNORMAL: wp.showCmd := SW_SHOWNOACTIVATE;
+      SW_SHOWMINIMIZED: wp.showCmd := SW_SHOWMINNOACTIVE;
+      //SW_SHOWMAXIMIZED: begin end; //there's no way to maximize and not activate
+      //SW_SHOWNOACTIVATE: begin end; //already safe
+      SW_SHOW: wp.showCmd := SW_SHOWNA;
+    end;
+
     SetWindowPlacement(form.Handle, wp);
+
+   { Issue 187: Visibility changes are not synchronized directly back to Delphi.
+    We have to do it explicitly. Visible:=true activates the window, but not
+    when we just did SW_SHOWNA. }
+   { We don't check foVisibility because setting Visible does no harm anyway }
+    case wp.showCmd of
+      SW_HIDE: TForm(form).Visible := false;
+    else //basically everything else
+      TForm(form).Visible := true;
+    end;
+
     FPlacementRestored := true;
   finally
     FreeAndNil(ini);

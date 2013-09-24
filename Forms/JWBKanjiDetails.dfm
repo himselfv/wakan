@@ -13,9 +13,11 @@ object fKanjiDetails: TfKanjiDetails
   Font.Style = []
   FormStyle = fsStayOnTop
   OldCreateOrder = False
+  OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnDeactivate = FormDeactivate
   OnHide = FormHide
   OnKeyPress = FormKeyPress
   OnResize = FormResize

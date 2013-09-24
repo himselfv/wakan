@@ -1772,7 +1772,7 @@ begin
     if not Loading then
       DockExpress(fKanjiDetails,false); //hides and undocks it
     fKanjiDetails.SetDocked(false, Loading);
-    if not Loading then
+    if (not Loading) and (not fKanjiDetails.Visible) then
       aKanjiDetails.Execute; //shows it as free floating
   end;
 end;
@@ -2307,6 +2307,7 @@ end;
 
 procedure TfMenu.FormResize(Sender: TObject);
 begin
+//TODO: Either delete or document and make available with at least a switch.
 //  PaintBox3.Visible:=Width>815;
 //  Shape9.Visible:=Width>815;
 //  SpeedButton22.Visible:=Width>815;
