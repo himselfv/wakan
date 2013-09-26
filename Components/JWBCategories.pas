@@ -465,13 +465,19 @@ end;
  Word categories are created automatically when you add words to them.
  Returns new category index or <0 }
 function NewKanjiCategoryUI(): integer;
-var catname:string;
+var fNewCategory: TfNewCategory;
+  catname:string;
 begin
   catname := '';
-  fNewCategory.Caption:=_l('#01038^eNew category');
-  if not fNewCategory.EditCategory(catname) then begin
-    Result := -1;
-    exit;
+  fNewCategory := TfNewCategory.Create(Application);
+  try
+    fNewCategory.Caption:=_l('#01038^eNew category');
+    if not fNewCategory.EditCategory(catname) then begin
+      Result := -1;
+      exit;
+    end;
+  finally
+    FreeAndNil(fNewCategory);
   end;
 
   TUserCat.Insert(['0','k~'+catname,inttostr(ord('K')),
@@ -483,13 +489,15 @@ begin
 end;
 
 function EditCategoryUI(cat:integer): boolean;
-var CUserCat: TTextTableCursor;
+var fNewCategory: TfNewCategory;
+  CUserCat: TTextTableCursor;
   category: string;
   catname: string;
   cattype: char;
   pref: TCatPrefix;
 begin
   Result := false;
+  fNewCategory := nil;
   CUserCat := TUserCat.NewCursor;
   try
     if not CUserCat.Locate('Index',cat) then
@@ -497,6 +505,7 @@ begin
     category := CUserCat.Str(TUserCatName);
     catname := StripCatName(category);
     pref := GetCatPrefix(category);
+    fNewCategory := TfNewCategory.Create(Application);
     fNewCategory.Caption:=_l('#01039^eEdit category');
     if pref='k' then begin
       Result := fNewCategory.EditCategory(catname);
@@ -511,6 +520,7 @@ begin
     if not Result then exit;
   finally
     FreeAndNil(CUserCat);
+    FreeAndNil(fNewCategory);
   end;
 
   CategoriesChanged;
@@ -637,7 +647,8 @@ end;
 { Creates a copy of the specified category with the same content.
  Returns index of the new category, or < 0 }
 function DuplicateCategoryUI(catidx:integer): integer;
-var CUserCat: TTextTableCursor;
+var fNewCategory: TfNewCategory;
+  CUserCat: TTextTableCursor;
   category: string;
   pref: TCatPrefix;
   catname: string;
@@ -645,6 +656,7 @@ var CUserCat: TTextTableCursor;
   confirmed: boolean;
 begin
   Result := -1;
+  fNewCategory := nil;
   CUserCat := TUserCat.NewCursor;
   try
     if not CUserCat.Locate('Index',catidx) then
@@ -653,6 +665,7 @@ begin
 
     catname := StripCatName(category);
     catname := _l('#01056^e%s - Copy', [catname]); //do not provoke duplicate names, suggest a different one
+    fNewCategory := TfNewCategory.Create(Application);
     fNewCategory.Caption:=_l('#01040^eDuplicate category');
     pref := GetCatPrefix(category);
     if pref='k' then begin
@@ -681,6 +694,7 @@ begin
       CopyCategory(catidx, Result);
   finally
     FreeAndNil(CUserCat);
+    FreeAndNil(fNewCategory);
   end;
 
   CategoriesChanged;
@@ -694,7 +708,8 @@ end;
  Note that while there could be several categories with the same name,
  this function will only choose the first one. }
 function NeedCategoryUI(category: string; cattype: char; silent: boolean): integer;
-var catname: string;
+var fNewCategory: TfNewCategory;
+  catname: string;
 begin
   if TUserCat.Locate('Name',category) then begin
     Result:=TUserCat.Int(TUserCatIndex);
@@ -704,10 +719,15 @@ begin
   if cattype='?' then
   begin
     catname := StripCatName(category);
-    fNewCategory.Caption:=_l('#01038^eNew category');
-    if not fNewCategory.EditCategory(catname, cattype, []) then begin
-      Result := -1;
-      exit;
+    fNewCategory := TfNewCategory.Create(Application);
+    try
+      fNewCategory.Caption:=_l('#01038^eNew category');
+      if not fNewCategory.EditCategory(catname, cattype, []) then begin
+        Result := -1;
+        exit;
+      end;
+    finally
+      FreeAndNil(fNewCategory);
     end;
     category:=curlang+'~'+catname;
   end;

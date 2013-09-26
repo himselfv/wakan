@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls;
+  StdCtrls, Buttons, ExtCtrls, JwbForms;
 
 type
   TEditCategoryFlag = (
@@ -12,7 +12,7 @@ type
   );
   TEditCategoryFlags = set of TEditCategoryFlag;
 
-  TfNewCategory = class(TForm)
+  TfNewCategory = class(TJwbForm)
     Label1: TLabel;
     Edit1: TEdit;
     RadioGroup1: TRadioGroup;
@@ -22,9 +22,6 @@ type
     function EditCategory(var catname: string; flags: TEditCategoryFlags=[]): boolean; overload;
     function EditCategory(var catname: string; var cattype: char; flags: TEditCategoryFlags=[]): boolean; overload;
   end;
-
-var
-  fNewCategory: TfNewCategory;
 
 implementation
 uses JWBMenu, JWBUserData, JWBCategories;
@@ -59,7 +56,7 @@ begin
   Result := (ShowModal=idOK);
   if Result then begin
     catname := Edit1.Text;
-    case fNewCategory.RadioGroup1.ItemIndex of
+    case RadioGroup1.ItemIndex of
       0:cattype:='L';
       1:cattype:='G';
       2:cattype:='T';

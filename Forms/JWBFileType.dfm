@@ -29,8 +29,9 @@ object fFileType: TfFileType
     Top = 160
     Width = 75
     Height = 25
-    TabOrder = 1
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 1
   end
   object BitBtn2: TBitBtn
     Left = 200
@@ -38,7 +39,8 @@ object fFileType: TfFileType
     Width = 75
     Height = 25
     Caption = '#00890^eCancel'
-    TabOrder = 2
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 2
   end
 end

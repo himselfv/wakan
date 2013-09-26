@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls;
+  StdCtrls, Buttons, ExtCtrls, JwbForms;
 
 type
-  TfCharItem = class(TForm)
+  TfCharItem = class(TJwbForm)
     Label1: TLabel;
     ComboBox1: TComboBox;
     Label2: TLabel;
@@ -32,9 +32,6 @@ type
     results:string;
     function GetDet(j:integer):string;
   end;
-
-var
-  fCharItem: TfCharItem;
 
 implementation
 

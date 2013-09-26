@@ -1463,7 +1463,7 @@ end;
 
 procedure TfTranslate.sbPrintClick(Sender: TObject);
 begin
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
+  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
 end;
 
 procedure TfTranslate.sbFileOpenClick(Sender: TObject);

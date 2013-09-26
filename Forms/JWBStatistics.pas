@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons;
+  StdCtrls, ExtCtrls, Buttons, JwbForms;
 
 type
-  TfStatistics = class(TForm)
+  TfStatistics = class(TJwbForm)
     BitBtn1: TBitBtn;
     RxLabel16: TLabel;
     Bevel1: TBevel;
@@ -59,9 +59,6 @@ type
   protected
     procedure DoStatistic;
   end;
-
-var
-  fStatistics: TfStatistics;
 
 implementation
 uses TextTable, JWBCharData, JWBUserData, JWBCategories, JWBSettings, JWBUnit;

@@ -15,6 +15,8 @@ object fVocabAdd: TfVocabAdd
   Position = poScreenCenter
   Scaled = False
   OnClose = FormClose
+  OnHide = FormHide
+  OnShow = FormShow
   DesignSize = (
     671
     311)

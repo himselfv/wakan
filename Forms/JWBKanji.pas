@@ -671,7 +671,7 @@ end;
 procedure TfKanji.btnPrintCardsClick(Sender: TObject);
 begin
   ClearKanjiCardCache;
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards'));
+  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards'));
 end;
 
 procedure TfKanji.RadioGroup1Click(Sender: TObject);

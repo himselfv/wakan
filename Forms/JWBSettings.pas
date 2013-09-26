@@ -1692,20 +1692,30 @@ begin
 end;
 
 procedure TfSettings.Button7Click(Sender: TObject);
+var fCharItem: TfCharItem;
 begin
-  fCharItem.inputs:='';
-  if fCharItem.ShowModal=mrOK then chardetl.Add(fCharItem.results);
+  fCharItem := TfCharItem.Create(Application);
+  try
+    fCharItem.inputs:='';
+    if fCharItem.ShowModal=mrOK then chardetl.Add(fCharItem.results);
+  finally
+    FreeAndNil(fCharItem);
+  end;
   ResetDetList;
 end;
 
 procedure TfSettings.Button8Click(Sender: TObject);
+var fCharItem: TfCharItem;
 begin
-  if ListBox2.ItemIndex<>-1 then
-  begin
+  if ListBox2.ItemIndex<0 then exit;
+  fCharItem := TfCharItem.Create(Application);
+  try
     fCharItem.inputs:=chardetl[ListBox2.ItemIndex];
     if fCharItem.ShowModal=mrOK then chardetl[ListBox2.ItemIndex]:=fCharItem.results;
-    ResetDetList;
+  finally
+    FreeAndNil(fCharItem);
   end;
+  ResetDetList;
 end;
 
 procedure TfSettings.Button9Click(Sender: TObject);

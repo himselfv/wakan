@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, Grids, JWBStrings, WakanPaintbox;
+  StdCtrls, Buttons, ExtCtrls, Grids, JWBStrings, JwbForms, WakanPaintbox;
 
 type
-  TfSelectFont = class(TForm)
+  TfSelectFont = class(TJwbForm)
     StringGrid1: TStringGrid;
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
@@ -21,9 +21,6 @@ type
     deffont,selfont:string;
     selcoding:string;
   end;
-
-var
-  fSelectFont: TfSelectFont;
 
 const
  {$IFNDEF UNICODE}
@@ -139,13 +136,14 @@ end;
 
 function ChooseFont(charsets:array of TFontCharset;teststring:FString;
   var supportedsets:string;defaultfont:string;selectfirst:boolean):string;
-var fonts: TStringList;
+var fSelectFont: TfSelectFont;
+  fonts: TStringList;
   i:integer;
   curfont:string;
   csets:string;
-    s:string;
-    ci:integer;
-    y:integer;
+  s:string;
+  ci:integer;
+  y:integer;
 
  //If one font handles several character sets, it appears several times.
  //So we store data and commit it when the font name changes.
@@ -161,64 +159,69 @@ var fonts: TStringList;
   end;
 
 begin
-  fonts := ListFonts('',0);
+  fSelectFont := TfSelectFont.Create(Application);
   try
-    fonts.Sort;
+    fonts := ListFonts('',0);
+    try
+      fonts.Sort;
 
-    fSelectFont.StringGrid1.RowCount:=2;
-    fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name');
-    fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets');
+      fSelectFont.StringGrid1.RowCount:=2;
+      fSelectFont.StringGrid1.Cells[0,0]:=_l('#00636^eFont name');
+      fSelectFont.StringGrid1.Cells[1,0]:=_l('#00637^eCharsets');
 
-    curfont:='';
-    y:=0;
-    for i:=0 to fonts.Count-1 do
-    begin
-      s:=fonts[i];
-      if (Length(s)<=0) or (s[1]='@') then continue;
-      if (curfont<>s) and (curfont<>'') then
-        CommitFont;
-      curfont:=s;
+      curfont:='';
+      y:=0;
+      for i:=0 to fonts.Count-1 do
+      begin
+        s:=fonts[i];
+        if (Length(s)<=0) or (s[1]='@') then continue;
+        if (curfont<>s) and (curfont<>'') then
+          CommitFont;
+        curfont:=s;
 
-      ci:=integer(fonts.Objects[i]);
-      case ci of
-        ANSI_CHARSET:csets:=csets+'ANSI,';
-        ARABIC_CHARSET:csets:=csets+'Arabic,';
-        BALTIC_CHARSET:csets:=csets+'Baltic,';
-        DEFAULT_CHARSET:csets:=csets+'Def,';
-        EASTEUROPE_CHARSET:csets:=csets+'EastEurope,';
-        GB2312_CHARSET:csets:=csets+'GB2312,';
-        GREEK_CHARSET:csets:=csets+'Greek,';
-        HANGEUL_CHARSET:csets:=csets+'Hangeul,';
-        HEBREW_CHARSET:csets:=csets+'Hebrew,';
-        CHINESEBIG5_CHARSET:csets:=csets+'Big5,';
-        JOHAB_CHARSET:csets:=csets+'Johab,';
-        MAC_CHARSET:csets:=csets+'Mac,';
-        OEM_CHARSET:csets:=csets+'OEM,';
-        RUSSIAN_CHARSET:csets:=csets+'Russian,';
-        SHIFTJIS_CHARSET:csets:=csets+'Shift-JIS,';
-        SYMBOL_CHARSET:csets:=csets+'Symbol,';
-        THAI_CHARSET:csets:=csets+'Thai,';
-        TURKISH_CHARSET:csets:=csets+'Turkish,';
+        ci:=integer(fonts.Objects[i]);
+        case ci of
+          ANSI_CHARSET:csets:=csets+'ANSI,';
+          ARABIC_CHARSET:csets:=csets+'Arabic,';
+          BALTIC_CHARSET:csets:=csets+'Baltic,';
+          DEFAULT_CHARSET:csets:=csets+'Def,';
+          EASTEUROPE_CHARSET:csets:=csets+'EastEurope,';
+          GB2312_CHARSET:csets:=csets+'GB2312,';
+          GREEK_CHARSET:csets:=csets+'Greek,';
+          HANGEUL_CHARSET:csets:=csets+'Hangeul,';
+          HEBREW_CHARSET:csets:=csets+'Hebrew,';
+          CHINESEBIG5_CHARSET:csets:=csets+'Big5,';
+          JOHAB_CHARSET:csets:=csets+'Johab,';
+          MAC_CHARSET:csets:=csets+'Mac,';
+          OEM_CHARSET:csets:=csets+'OEM,';
+          RUSSIAN_CHARSET:csets:=csets+'Russian,';
+          SHIFTJIS_CHARSET:csets:=csets+'Shift-JIS,';
+          SYMBOL_CHARSET:csets:=csets+'Symbol,';
+          THAI_CHARSET:csets:=csets+'Thai,';
+          TURKISH_CHARSET:csets:=csets+'Turkish,';
+        end;
       end;
+
+    finally
+      FreeAndNil(fonts);
     end;
 
+    if curfont<>'' then
+      CommitFont;
+
+    fSelectFont.teststring:=teststring;
+    fSelectFont.deffont:=defaultfont;
+    fSelectFont.StringGrid1.RowCount:=y;
+    if selectfirst then
+    begin
+      if y>1 then result:=curfont else result:='!';
+      exit;
+    end;
+    if fSelectFont.ShowModal<>idOK then result:=defaultfont else result:=fSelectFont.selfont;
+    supportedsets:=fSelectFont.selcoding;
   finally
-    FreeAndNil(fonts);
+    FreeAndNil(fSelectFont);
   end;
-
-  if curfont<>'' then
-    CommitFont;
-
-  fSelectFont.teststring:=teststring;
-  fSelectFont.deffont:=defaultfont;
-  fSelectFont.StringGrid1.RowCount:=y;
-  if selectfirst then
-  begin
-    if y>1 then result:=curfont else result:='!';
-    exit;
-  end;
-  if fSelectFont.ShowModal<>idOK then result:=defaultfont else result:=fSelectFont.selfont;
-  supportedsets:=fSelectFont.selcoding;
 end;
 
 end.

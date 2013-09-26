@@ -9,7 +9,7 @@ uses
   StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons,
   MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
   StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions,
-  Vcl.AppEvnts;
+  Vcl.AppEvnts, Generics.Collections;
 
 type
   TfMenu = class(TForm)
@@ -244,12 +244,12 @@ type
     ClipboardPaintbox: TWakanPaintbox;
     aStrokeOrder: TAction;
     ApplicationEvents1: TApplicationEvents;
+    procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
@@ -475,6 +475,8 @@ type
     procedure Clipboard_Update; //update clip with UNICODETEXT from Clipboard
     procedure Clipboard_Clear;
   public
+    ClipboardWatchers: TList<TNotifyEvent>;
+  public
    { 
     How to use:
       Reset
@@ -593,12 +595,16 @@ begin
   Panel2.Height := 0;
   Panel4.Width := 0;
   Panel4.Height := 0;
+
+  ClipboardWatchers := TList<TNotifyEvent>.Create;
 end;
 
 procedure TfMenu.FormDestroy(Sender: TObject);
 begin
   FreeCharData;
   FreeKnownLists;
+
+  FreeAndNil(ClipboardWatchers);
 
   defll.Free; //+
   suffixl.Free; //+
@@ -612,6 +618,7 @@ end;
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
   ms:TMemoryStream;
+  fSplash: TfSplash;
   i:integer;
 begin
   LastSaveTime := now;
@@ -628,6 +635,7 @@ begin
     ParseCommandLine();
 
    //Load language or suggest to choose one
+    fLanguage := TfLanguage.Create(Application);
     fLanguage.LoadPerSettings;
     fLanguage.TranslateAllForms;
 
@@ -649,6 +657,7 @@ begin
     fSettings.LoadSettings({DelayUI=}true);
 
     if fSettings.cbShowSplashscreen.Checked then begin
+      fSplash := TfSplash.Create(Application);
       fSplash.Show;
       fSplash.Update;
     end;
@@ -940,7 +949,8 @@ begin
       exit; //so this can be run in batch mode
     end;
 
-    fSplash.Hide;
+    FreeAndNil(fSplash);
+
   {  if ((Screen.Width<1024) or (Screen.Height<768)) then
     begin
       fMenu.Constraints.MinHeight:=80;
@@ -1211,7 +1221,6 @@ var b:boolean;
     lc:char;
     s:string;
 begin
-  fVocabAdd.cbCategories.Items.Clear;
   fVocabDetails.cbAddCategory.Items.Clear;
   fVocabFilters.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
 
@@ -1226,15 +1235,9 @@ begin
     end;
     s:=StripCatName(s);
     if lc=curlang then
-    begin
-      fVocabAdd.cbCategories.Items.Add(s);
       fVocabDetails.cbAddCategory.Items.Add(s);
-    end;
     TUserCat.Next;
   end;
-
-  if fVocabAdd.cbCategories.Items.Count>0 then
-    fVocabAdd.cbCategories.Text:=fVocabAdd.cbCategories.Items[0];
 end;
 
 procedure TfMenu.RefreshKanjiCategory;
@@ -1504,10 +1507,7 @@ begin
   if newclip<>clip then
   begin
     clip := newclip;
-    ClipboardPaintbox.Invalidate;
-    fVocabAdd.ClipText := clip;
-    if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt;
-    if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
+    ClipboardChanged;
   end;
   UpdatingClipboard:=false;
 end;
@@ -1575,12 +1575,13 @@ begin
 end;
 
 procedure TfMenu.ClipboardChanged;
+var i: integer;
 begin
   ClipboardPaintbox.Invalidate;
-  fVocabAdd.ClipText := clip;
-
-  if (fKanji.Visible) and (fKanjiSearch.btnInClipboard.Down) then fKanji.DoIt;
-  if (fWordLookup.Visible) and (fWordLookup.btnLookupClip.Down) then fWordLookup.Look();
+  for i := 0 to ClipboardWatchers.Count-1 do
+    ClipboardWatchers[i](Self);
+  if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt();
+  if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
 end;
 
 //Retrieves a data for an HGLOBAL-containing clipboard format (most of them are)
@@ -1686,8 +1687,14 @@ begin
 end;
 
 procedure TfMenu.aStatisticsExecute(Sender: TObject);
+var fStatistics: TfStatistics;
 begin
-  fStatistics.ShowModal;
+  fStatistics := TfStatistics.Create(Self);
+  try
+    fStatistics.ShowModal;
+  finally
+    FreeAndNil(fStatistics);
+  end;
 end;
 
 procedure TfMenu.aStrokeOrderExecute(Sender: TObject);
@@ -1966,8 +1973,14 @@ begin
 end;
 
 procedure TfMenu.aSettingsDictExecute(Sender: TObject);
+var fDictMan: TfDictMan;
 begin
-  fDictMan.ShowModal;
+  fDictMan := TfDictMan.Create(Self);
+  try
+    fDictMan.ShowModal;
+  finally
+    FreeAndNil(fDictMan);
+  end;
 end;
 
 procedure TfMenu.aHelpExecute(Sender: TObject);
@@ -1998,10 +2011,16 @@ begin
 end;
 
 procedure TfMenu.aAboutExecute(Sender: TObject);
+var fSplash: TfSplash;
 begin
-  fSplash.ProgressBar1.Hide;
-  fSplash.BitBtn1.Show;
-  fSplash.ShowModal;
+  fSplash := TfSplash.Create(Self);
+  try
+    fSplash.ProgressBar1.Hide;
+    fSplash.BitBtn1.Show;
+    fSplash.ShowModal;
+  finally
+    FreeAndNil(fSplash);
+  end;
 end;
 
 procedure TfMenu.aJapaneseExecute(Sender: TObject);
@@ -2707,6 +2726,7 @@ var pt:TPoint;
     wtt:integer;
     curt:TDateTime;
   intmosc:TPoint;
+  fInvalidator: TfInvalidator;
 begin
   if not screenModeWk and not screenModeSc and not ShowImmediate and not popcreated then exit;
 
@@ -3111,8 +3131,14 @@ begin
 end;
 
 procedure TfMenu.aCategoryManagerExecute(Sender: TObject);
+var fCategoryMgr: TfCategoryMgr;
 begin
-  fCategoryMgr.ShowModal;
+  fCategoryMgr := TfCategoryMgr.Create(Application);
+  try
+    fCategoryMgr.ShowModal;
+  finally
+    FreeAndNil(fCategoryMgr);
+  end;
 end;
 
 procedure TfMenu.aPortraitModeExecute(Sender: TObject);
@@ -3159,6 +3185,7 @@ begin
   E.Message := _l(E.Message);
   Application.ShowException(E);
 end;
+
 
 initialization
   rdcnt:=0;

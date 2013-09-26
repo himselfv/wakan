@@ -7,10 +7,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, ComCtrls, ExtCtrls, Generics.Collections;
+  Dialogs, StdCtrls, Buttons, ComCtrls, ExtCtrls, Generics.Collections,
+  JwbForms;
 
 type
-  TfCategoryMgr = class(TForm)
+  TfCategoryMgr = class(TJwbForm)
     pcPages: TTabControl;
     lbList: TListBox;
     btnClose: TBitBtn;
@@ -46,9 +47,6 @@ type
   public
     procedure ReloadList;
   end;
-
-var
-  fCategoryMgr: TfCategoryMgr;
 
 const //Tab indices
   TI_LESSON = 0;

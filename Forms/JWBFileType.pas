@@ -4,18 +4,15 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons;
+  StdCtrls, ExtCtrls, Buttons, JwbForms;
 
 type
-  TfFileType = class(TForm)
+  TfFileType = class(TJwbForm)
     rgType: TRadioGroup;
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     procedure FormShow(Sender: TObject);
   end;
-
-var
-  fFileType: TfFileType;
 
 implementation
 

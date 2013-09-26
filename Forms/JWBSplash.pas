@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, ComCtrls, StdCtrls, Buttons, UrlLabel;
+  ExtCtrls, ComCtrls, StdCtrls, Buttons, UrlLabel, JwbForms;
 
 type
-  TfSplash = class(TForm)
+  TfSplash = class(TJwbForm)
     Panel1: TPanel;
     lblVersion: TLabel;
     Image1: TImage;
@@ -21,9 +21,6 @@ type
     lblTargetOS: TLabel;
     procedure FormCreate(Sender: TObject);
   end;
-
-var
-  fSplash: TfSplash;
 
 implementation
 uses JWBUnit;

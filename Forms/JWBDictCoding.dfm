@@ -76,9 +76,6 @@ object fDictCoding: TfDictCoding
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    OnClick = BitBtn1Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -97,6 +94,9 @@ object fDictCoding: TfDictCoding
       333A333333333333333338330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 1
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 192
@@ -110,9 +110,6 @@ object fDictCoding: TfDictCoding
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 2
-    OnClick = BitBtn2Click
     Glyph.Data = {
       DE010000424DDE01000000000000760000002800000024000000120000000100
       0400000000006801000000000000000000001000000000000000000000000000
@@ -131,5 +128,8 @@ object fDictCoding: TfDictCoding
       3333333333333333333888330000333333333333333333333333333333333333
       0000}
     NumGlyphs = 2
+    ParentFont = False
+    TabOrder = 2
+    OnClick = BitBtn2Click
   end
 end

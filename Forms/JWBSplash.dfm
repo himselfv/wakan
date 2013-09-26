@@ -2749,6 +2749,7 @@ object fSplash: TfSplash
       Width = 75
       Height = 24
       Kind = bkOK
+      NumGlyphs = 2
       TabOrder = 1
       Visible = False
     end

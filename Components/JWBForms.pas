@@ -27,8 +27,18 @@ const
 function DockProc(slave:TForm;panel:TPanel;dir:TAlign;dock:boolean): boolean;
 procedure UndockedMakeVisible(slave:TForm);
 
+type
+{ You don't *have* to inherit from TJwbForm but it does give you some benefits:
+  - automatic translation on creation -- it's impossible to hook creation event
+   and translated all fonts on the fly, but all static forms are translated at
+   the start even without this }
+  TJwbForm = class(TForm)
+  protected
+    procedure DoCreate; override;
+  end;
+
 implementation
-uses Classes;
+uses Classes, JWBLanguage;
 
 {
 Many forms are built on Anchors, and those are broken. See:
@@ -139,6 +149,12 @@ begin
     slave.SetCsLoading(false);
   end;
  {$ENDIF}
+end;
+
+procedure TJwbForm.DoCreate;
+begin
+  if fLanguage<>nil then
+    fLanguage.TranslateForm(Self);
 end;
 
 end.

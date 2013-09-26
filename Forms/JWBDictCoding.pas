@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls;
+  StdCtrls, Buttons, ExtCtrls, JwbForms;
 
 type
-  TfDictCoding = class(TForm)
+  TfDictCoding = class(TJwbForm)
     Label1: TLabel;
     Label2: TLabel;
     RadioGroup1: TRadioGroup;
@@ -20,11 +20,7 @@ type
     succeeded:boolean;
   end;
 
-var
-  fDictCoding: TfDictCoding;
-
 implementation
-
 uses JWBMenu;
 
 {$R *.DFM}

@@ -41,6 +41,7 @@ object fSelectFont: TfSelectFont
     Width = 113
     Height = 25
     Kind = bkOK
+    NumGlyphs = 2
     TabOrder = 1
   end
   object BitBtn2: TBitBtn
@@ -49,6 +50,7 @@ object fSelectFont: TfSelectFont
     Width = 121
     Height = 25
     Kind = bkCancel
+    NumGlyphs = 2
     TabOrder = 2
   end
   object PaintBox3: TWakanPaintbox

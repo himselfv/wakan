@@ -19,7 +19,7 @@ object fNewCategory: TfNewCategory
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 126
+    Width = 80
     Height = 13
     Caption = '#00371^eName:'
   end
@@ -50,8 +50,9 @@ object fNewCategory: TfNewCategory
     Top = 112
     Width = 97
     Height = 25
-    TabOrder = 2
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 2
   end
   object BitBtn2: TBitBtn
     Left = 280
@@ -59,7 +60,8 @@ object fNewCategory: TfNewCategory
     Width = 99
     Height = 25
     Caption = '#00007^eCancel'
-    TabOrder = 3
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 3
   end
 end

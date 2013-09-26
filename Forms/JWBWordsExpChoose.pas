@@ -4,17 +4,14 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls;
+  StdCtrls, Buttons, ExtCtrls, JwbForms;
 
 type
-  TfWordsExpChoose = class(TForm)
+  TfWordsExpChoose = class(TJwbForm)
     RadioGroup1: TRadioGroup;
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
   end;
-
-var
-  fWordsExpChoose: TfWordsExpChoose;
 
 implementation
 

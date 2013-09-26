@@ -614,6 +614,8 @@ var sp: TSMPromptForm;
   i,j:integer;
   sl:TStringList;
   conv: TStreamEncoder;
+  fWordsExpChoose: TfWordsExpChoose;
+  FExportType: integer;
 begin
   Screen.Cursor:=crHourGlass;
   sl := nil;
@@ -628,7 +630,15 @@ begin
     sp.AppearModal;
 
     conv := TStreamEncoder.CreateNew(filename,Conv_ChooseType(curlang='c',nil).Create);
-    if fWordsExpChoose.ShowModal=mrCancel then exit;
+
+    fWordsExpChoose := TfWordsExpChoose.Create(Application);
+    try
+      if fWordsExpChoose.ShowModal=mrCancel then exit;
+      FExportType := fWordsExpChoose.RadioGroup1.ItemIndex;
+    finally
+      FreeAndNil(fWordsExpChoose);
+    end;
+
     conv.Write(fstr(#9' Wakan Word List'#13#10));
     conv.Write(fstr(#9''#13#10));
     conv.Write(fstr(#9' created by '+WakanAppName+' '+WakanCopyright+#13#10));
@@ -662,11 +672,11 @@ begin
             conv.Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
         conv.Write(fstr(#9));
         conv.Write(fstr(replc(TUser.Str(TUserEnglish),';',',')));
-        if fWordsExpChoose.RadioGroup1.ItemIndex<2 then
+        if FExportType<2 then
         begin
           conv.Write(fstr(#9));
           conv.Write(fstr(fVocabFilters.lbCategories.Items[j]));
-          if fWordsExpChoose.RadioGroup1.ItemIndex=0 then
+          if FExportType=0 then
           begin
             conv.Write(fstr(#9));
             case TUser.Int(TUserScore) of
@@ -1294,7 +1304,7 @@ end;
 
 procedure TfVocab.Button15Click(Sender: TObject);
 begin
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00828^eVocabulary list'));
+  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00828^eVocabulary list'));
 end;
 
 //TODO: Convert to Unicode.
@@ -2020,7 +2030,7 @@ begin
        (TUser.Int(TUserScore)<2) then
       wl.Add(ll[i]);
   end;
-  fPrint.Preview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00861^eLearning list'));
+  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00861^eLearning list'));
   wl.Clear;
   wl.Assign(bk);
   bk.Free;

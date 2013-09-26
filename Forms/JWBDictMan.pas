@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, CheckLst, Buttons;
+  ExtCtrls, StdCtrls, CheckLst, Buttons, JwbForms;
 
 type
-  TfDictMan = class(TForm)
+  TfDictMan = class(TJwbForm)
     Label1: TLabel;
     cbDicts: TCheckListBox;
     Button1: TButton;
@@ -61,11 +61,7 @@ type
     procedure ReloadDicts;
     procedure CarefulRefreshDicts;
 
-
   end;
-
-var
-  fDictMan: TfDictMan;
 
 implementation
 

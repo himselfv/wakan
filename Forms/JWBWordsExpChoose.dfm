@@ -34,6 +34,7 @@ object fWordsExpChoose: TfWordsExpChoose
     Width = 75
     Height = 25
     Kind = bkOK
+    NumGlyphs = 2
     TabOrder = 1
   end
   object BitBtn2: TBitBtn
@@ -43,6 +44,7 @@ object fWordsExpChoose: TfWordsExpChoose
     Height = 25
     Caption = '#00913^eCancel'
     Kind = bkCancel
+    NumGlyphs = 2
     TabOrder = 2
   end
 end

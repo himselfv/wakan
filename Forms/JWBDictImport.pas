@@ -691,7 +691,7 @@ Returns true if the package was successfully built, false if aborted.
 }
 function TfDictImport.ImportDictionary(dicFilename: string; info: TDictInfo;
   files: TFileList; diclang:char; flags: TImportDictFlags): boolean;
-var
+var fDictCoding: TfDictCoding;
   tempDir, tempDir2: string;
   fi:integer;
   fname:string;
@@ -718,6 +718,7 @@ begin
   linecount:=0;
   LastArticle := 0;
   LastDictEntry := 0;
+  fDictCoding := nil;
   try
     prog.SetMaxProgress(0); //indeterminate state
 
@@ -753,6 +754,8 @@ begin
     dic.Demand;
     dic.TTDict.NoCommitting := true;
     dic.TTEntries.NoCommitting := true;
+
+    fDictCoding := TfDictCoding.Create(Application);
 
    { Convert all dictionaries to UTF16-LE }
     for fi:=0 to Length(files)-1 do
@@ -892,6 +895,7 @@ begin
     FreeAndNil(wordidx);
     FreeAndNil(charidx);
     FreeAndNil(prog);
+    FreeAndNil(fDictCoding);
     freql := nil;
   end;
 

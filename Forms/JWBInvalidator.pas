@@ -9,9 +9,6 @@ type
   TfInvalidator = class(TForm)
   end;
 
-var
-  fInvalidator: TfInvalidator;
-
 implementation
 
 {$R *.DFM}

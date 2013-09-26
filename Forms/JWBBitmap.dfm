@@ -19,7 +19,7 @@ object fBitmap: TfBitmap
   object Label1: TLabel
     Left = 8
     Top = 8
-    Width = 235
+    Width = 126
     Height = 13
     Caption = '#00003^eWidth (in pixels):'
   end
@@ -34,17 +34,16 @@ object fBitmap: TfBitmap
   object Label3: TLabel
     Left = 8
     Top = 56
-    Width = 235
+    Width = 122
     Height = 13
     Caption = '#00005^eFilename prefix:'
   end
   object Label4: TLabel
     Left = 8
     Top = 96
-    Width = 603
+    Width = 323
     Height = 14
-    Caption = 
-      '#00006^e%d.BMP will be added after prefix (%d is page number).'
+    Caption = '#00006^e%d.BMP will be added after prefix (%d is page number).'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -57,8 +56,10 @@ object fBitmap: TfBitmap
     Top = 120
     Width = 97
     Height = 25
-    TabOrder = 0
     Kind = bkOK
+    NumGlyphs = 2
+    TabOrder = 0
+    OnClick = BitBtn1Click
   end
   object BitBtn2: TBitBtn
     Left = 264
@@ -66,8 +67,9 @@ object fBitmap: TfBitmap
     Width = 91
     Height = 25
     Caption = '#00007^eCancel'
-    TabOrder = 1
     Kind = bkCancel
+    NumGlyphs = 2
+    TabOrder = 1
   end
   object Edit1: TEdit
     Left = 8

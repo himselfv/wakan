@@ -80,47 +80,57 @@ uses
 
 {$R *.RES}
 
+{ Only static forms are auto-created. Dynamic forms are created when needed and
+ destroyed after use.
+ Some forms may be singletons and be created on the first use. }
+
 begin
   Application.Initialize;
   Application.Title := 'wakan';
   Application.HelpFile := 'wakan_en.chm';
   Application.CreateForm(TfMenu, fMenu);
   Application.CreateForm(TfKanji, fKanji);
-  Application.CreateForm(TfRadical, fRadical);
+  Application.CreateForm(TfRadical, fRadical); //?
   Application.CreateForm(TfWordLookup, fWordLookup);
   Application.CreateForm(TfSettings, fSettings);
-  Application.CreateForm(TfSplash, fSplash);
-  Application.CreateForm(TfSelectFont, fSelectFont);
   Application.CreateForm(TfVocab, fVocab);
-  Application.CreateForm(TfNewCategory, fNewCategory);
-  Application.CreateForm(TfPrint, fPrint);
-  Application.CreateForm(TfStatistics, fStatistics);
-  Application.CreateForm(TfWordList, fWordList);
-  Application.CreateForm(TfBitmap, fBitmap);
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
-  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
+  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup?
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
   Application.CreateForm(TfTranslate, fTranslate);
-  Application.CreateForm(TfWordDetails, fWordDetails);
+  Application.CreateForm(TfWordDetails, fWordDetails); //-?
   Application.CreateForm(TfWordKanji, fWordKanji);
   Application.CreateForm(TfExamples, fExamples);
-  Application.CreateForm(TfWordCategory, fWordCategory);
+  Application.CreateForm(TfWordCategory, fWordCategory); //-?
   Application.CreateForm(TfVocabDetails, fVocabDetails);
-  Application.CreateForm(TfVocabAdd, fVocabAdd);
   Application.CreateForm(TfVocabFilters, fVocabFilters);
-  Application.CreateForm(TfDictMan, fDictMan);
-  Application.CreateForm(TfDictImport, fDictImport);
-  Application.CreateForm(TfDictCoding, fDictCoding);
   Application.CreateForm(TfHint, fHint);
-  Application.CreateForm(TfCharItem, fCharItem);
-  Application.CreateForm(TfInvalidator, fInvalidator);
-  Application.CreateForm(TfLanguage, fLanguage);
-  Application.CreateForm(TfFileType, fFileType);
-  Application.CreateForm(TfWordsExpChoose, fWordsExpChoose);
-  Application.CreateForm(TfMedia, fMedia);
-  Application.CreateForm(TfPortableMode, fPortableMode);
-  Application.CreateForm(TfCategoryMgr, fCategoryMgr);
-  Application.CreateForm(TfCharDataImport, fCharDataImport);
+  Application.CreateForm(TfMedia, fMedia); //?
+  Application.CreateForm(TfWordList, fWordList); //- but it's a pain to tear it out
+ //kept for now:
+  Application.CreateForm(TfDictImport, fDictImport); //-
+ //will be converted
+  Application.CreateForm(TfPortableMode, fPortableMode); //-
+  Application.CreateForm(TfCharDataImport, fCharDataImport); //-
+
+
+(*  Application.CreateForm(TfSplash, fSplash); //-
+  Application.CreateForm(TfSelectFont, fSelectFont); //-
+  Application.CreateForm(TfNewCategory, fNewCategory); //-
+  Application.CreateForm(TfPrint, fPrint); //-
+  Application.CreateForm(TfStatistics, fStatistics); //-
+  Application.CreateForm(TfBitmap, fBitmap); //-
+  Application.CreateForm(TfVocabAdd, fVocabAdd); //-
+  Application.CreateForm(TfDictMan, fDictMan); //-
+  Application.CreateForm(TfDictCoding, fDictCoding); //- and remove entirely? I mean, it's obvious which language it is: the one we're importing for
+  Application.CreateForm(TfInvalidator, fInvalidator); //-? and remove entirely? wtf is it for
+  Application.CreateForm(TfLanguage, fLanguage); //-
+  Application.CreateForm(TfFileType, fFileType); //-
+  Application.CreateForm(TfCategoryMgr, fCategoryMgr); //-
+  Application.CreateForm(TfWordsExpChoose, fWordsExpChoose); //-
+  Application.CreateForm(TfCharItem, fCharItem); //-
+ *)
+
   fMenu.InitializeWakan;
   Application.Run;
 end.

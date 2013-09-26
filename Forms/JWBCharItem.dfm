@@ -122,6 +122,7 @@ object fCharItem: TfCharItem
     Width = 113
     Height = 25
     Kind = bkOK
+    NumGlyphs = 2
     TabOrder = 6
   end
   object BitBtn2: TBitBtn
@@ -131,6 +132,7 @@ object fCharItem: TfCharItem
     Height = 25
     Caption = '#00050^eCancel'
     Kind = bkCancel
+    NumGlyphs = 2
     TabOrder = 7
   end
   object RadioGroup4: TRadioGroup

@@ -46,12 +46,12 @@ type
     procedure SaveSettings; //save changes
 
   protected
-    procedure TranslateForm(f:TForm);
     procedure LocalizeEdictMarkers();
   public
     procedure LoadLanguage(fname:string); //and use for translation
     function TranslateString(id:string):string;
     function GetTlVar(id:string):string;
+    procedure TranslateForm(f:TForm);
     procedure TranslateAllForms();
     procedure LocalizePropertyTypes();
 
@@ -67,8 +67,6 @@ var
   curTransInfo: TLanguageFileInfo;
   curGUILanguage: string; //same as curTransFile, only without an extension
     //used for stuff like wakan_LNG.chm
-
-
 
 implementation
 uses JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
@@ -299,8 +297,6 @@ begin
   end;
 end;
 
-
-
 function TfLanguage.TranslateString(id:string):string;
 var i,sk,m,l,r:integer;
     s:string;
@@ -480,6 +476,24 @@ begin
   end;
 end;
 
+
+type
+  CComponent = class of TComponent;
+  TFormTranslated = class(TComponent);
+  TFormHelper = class helper for TForm
+    function FindComponent(const AClass: CComponent): integer;
+  end;
+
+function TFormHelper.FindComponent(const AClass: CComponent): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to ComponentCount-1 do
+    if Components[i].ClassType=AClass then begin
+      Result := i;
+      break;
+    end;
+end;
 
 initialization
   TransDir := ExtractFilePath(GetModuleFilenameStr(0));

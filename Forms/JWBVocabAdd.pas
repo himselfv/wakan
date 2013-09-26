@@ -1,17 +1,17 @@
 unit JWBVocabAdd;
 {
 Has two modes: "enter anything" and "copy dictionary word (possibly alter meaning)".
-Needs to be supplied with latest clipboard data through ClipText := value.
+Watches clipboard data for changes through fMenu.ClipboardWatchers.
 }
 
 interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, WakanPaintbox, JWBStrings;
+  StdCtrls, ExtCtrls, Buttons, WakanPaintbox, JWBStrings, JwbForms;
 
 type
-  TfVocabAdd = class(TForm)
+  TfVocabAdd = class(TJwbForm)
     lblPhonetic: TLabel;
     lblWritten: TLabel;
     lblCategory: TLabel;
@@ -30,6 +30,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
     procedure edtMeaningKeyPress(Sender: TObject; var Key: Char);
+    procedure FormShow(Sender: TObject);
+    procedure FormHide(Sender: TObject);
   protected
     FMeaningOnly: boolean;
     FFixedKanji: FString;
@@ -37,6 +39,8 @@ type
     FClipText: FString;
     procedure SetMeaningOnly(const Value: boolean);
     procedure SetClipText(const Value: FString);
+    procedure ReloadCategories;
+    procedure ClipboardChanged(Sender: TObject);
   public
     function ModalAddWord(): TModalResult;
     function ModalAddFixed(const AKanji, APhonetic: FString; const AMeaning: FString): TModalResult;
@@ -44,14 +48,27 @@ type
     property ClipText: FString read FClipText write SetClipText; //call when clipboard text changes
   end;
 
-var
-  fVocabAdd: TfVocabAdd;
+{ This form is static because user may expect the choice of category to persist
+ between additions.
+ E.g. *double click* Add word, category "Verbs". *double click* Why is the
+ category reset to "Animals"?
+ We don't create the form until the first time it's used. }
+function fVocabAdd: TfVocabAdd;
 
 implementation
-
-uses JWBVocab, JWBUnit, JWBKanaConv, JWBMenu;
+uses JWBVocab, JWBUnit, JWBKanaConv, JWBMenu, JWBUserData, JWBCategories;
 
 {$R *.DFM}
+
+var
+  fVocabAddInstance: TfVocabAdd;
+
+function fVocabAdd: TfVocabAdd;
+begin
+  if fVocabAddInstance=nil then
+    Application.CreateForm(TfVocabAdd, fVocabAddInstance);
+  Result := fVocabAddInstance;
+end;
 
 procedure TfVocabAdd.SetMeaningOnly(const Value: boolean);
 begin
@@ -131,6 +148,49 @@ procedure TfVocabAdd.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   fVocab.SpeedButton1.Down:=false;
   fMenu.aUserAdd.Checked:=false;
+end;
+
+procedure TfVocabAdd.FormShow(Sender: TObject);
+begin
+ //Reload categories
+  ReloadCategories;
+  fMenu.ClipboardWatchers.Add(Self.ClipboardChanged);
+  Self.ClipboardChanged(Self);
+end;
+
+procedure TfVocabAdd.FormHide(Sender: TObject);
+begin
+  fMenu.ClipboardWatchers.Remove(Self.ClipboardChanged)
+end;
+
+procedure TfVocabAdd.ReloadCategories;
+var s: string;
+  lc: char;
+begin
+  cbCategories.Items.Clear;
+
+  TUserCat.First;
+  while not TUserCat.EOF do
+  begin
+    s:=TUserCat.Str(TUserCatName);
+    lc:=GetCatPrefix(s);
+    if lc='?' then begin
+      lc := 'j';
+      TUserCat.Edit([TUserCatName],['j~'+s])
+    end;
+    s:=StripCatName(s);
+    if lc=curlang then
+      cbCategories.Items.Add(s);
+    TUserCat.Next;
+  end;
+
+  if cbCategories.Items.Count>0 then
+    cbCategories.Text:=cbCategories.Items[0];
+end;
+
+procedure TfVocabAdd.ClipboardChanged(Sender: TObject);
+begin
+  Self.ClipText := clip;
 end;
 
 function TfVocabAdd.ModalAddWord(): TModalResult;

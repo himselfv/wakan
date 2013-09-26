@@ -689,10 +689,10 @@ begin
   tmp := curmeaning;
   if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
   tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
-  if IsPositiveResult(fVocabAdd.ModalAddFixed(curkanji,curphonetic,fstr(tmp))) then begin
-    Look();
-    if Edit1.Enabled then Edit1.SetFocus;
-  end;
+  if not IsPositiveResult(fVocabAdd.ModalAddFixed(curkanji,curphonetic,fstr(tmp))) then
+    exit;
+  Look();
+  if Edit1.Enabled then Edit1.SetFocus;
 end;
 
 procedure TfWordLookup.StringGrid1MouseDown(Sender: TObject;

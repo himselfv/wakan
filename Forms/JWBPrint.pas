@@ -4,14 +4,14 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, Buttons, Printers;
+  ExtCtrls, StdCtrls, Buttons, Printers, JwbForms;
 
 type
   TPrintGetPageNum=function (canvas:TCanvas; width,height:integer; userdata:pointer):integer;
   TPrintDrawPage=procedure (canvas:TCanvas; pagenum:integer; width,height,origwidth,origheight:integer; userdata:pointer);
   TPrintConfigure=procedure (userdata:pointer);
 
-  TfPrint = class(TForm)
+  TfPrint = class(TJwbForm)
     Panel1: TPanel;
     btnGotoFirst: TSpeedButton;
     btnGotoPrev: TSpeedButton;
@@ -58,9 +58,7 @@ type
   end;
 
 procedure GetPrintLine(width,height,origwidth,origheight,nolines:integer;var lineheight,linecount:integer);
-
-var
-  fPrint: TfPrint;
+procedure PrintPreview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
 
 implementation
 
@@ -218,6 +216,34 @@ begin
   Prepare;
 end;
 
+procedure TfPrint.btnPrintToFileClick(Sender: TObject);
+var AParams: TBitmapParams;
+  bmp:TBitmap;
+  i:integer;
+  pn:integer;
+begin
+  if not QuerySaveToBitmap(AParams) then
+    exit;
+
+  bmp:=TBitmap.Create;
+  bmp.PixelFormat:=pf24bit;
+  bmp.Width:=AParams.Width;
+  bmp.Height:=AParams.Height;
+  pn:=GetPageNum(bmp.Canvas,bmp.Width,bmp.Height,UserData);
+  Screen.Cursor:=crHourGlass;
+  for i:=1 to pn do
+  begin
+    bmp.Canvas.Pen.Color:=clWhite;
+    bmp.Canvas.Brush.Color:=clWhite;
+    bmp.Canvas.Rectangle(0,0,bmp.Width-1,bmp.Height-1);
+    bmp.Canvas.Pen.Color:=clBlack;
+    DrawPage(bmp.Canvas,i,bmp.Width,bmp.Height,bmp.Width,bmp.Height,UserData);
+    bmp.SaveToFile(AParams.Filename+inttostr(i)+'.bmp');
+  end;
+  Screen.Cursor:=crDefault;
+  Prepare;
+end;
+
 procedure GetPrintLine(width,height,origwidth,origheight,nolines:integer;var lineheight,linecount:integer);
 var a,btnGotoLast:double;
 begin
@@ -227,32 +253,14 @@ begin
   lineheight:=height div linecount;
 end;
 
-procedure TfPrint.btnPrintToFileClick(Sender: TObject);
-var bmp:TBitmap;
-    i:integer;
-    pn:integer;
+procedure PrintPreview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
+var fPrint: TfPrint;
 begin
-  if fBitmap.ShowModal=mrOK then
-  begin
-    bmp:=TBitmap.Create;
-    bmp.PixelFormat:=pf24bit;
-    try
-      bmp.Width:=strtoint(fBitmap.Edit1.Text);
-      bmp.Height:=strtoint(fBitmap.Edit2.Text);
-    except end;
-    pn:=GetPageNum(bmp.Canvas,bmp.Width,bmp.Height,UserData);
-    Screen.Cursor:=crHourGlass;
-    for i:=1 to pn do
-    begin
-      bmp.Canvas.Pen.Color:=clWhite;
-      bmp.Canvas.Brush.Color:=clWhite;
-      bmp.Canvas.Rectangle(0,0,bmp.Width-1,bmp.Height-1);
-      bmp.Canvas.Pen.Color:=clBlack;
-      DrawPage(bmp.Canvas,i,bmp.Width,bmp.Height,bmp.Width,bmp.Height,UserData);
-      bmp.SaveToFile(fBitmap.Edit3.Text+inttostr(i)+'.bmp');
-    end;
-    Screen.Cursor:=crDefault;
-    Prepare;
+  fPrint := TfPrint.Create(Application);
+  try
+    fPrint.Preview(gpn, dp, pc, user, desc);
+  finally
+    FreeAndNil(fPrint);
   end;
 end;
 
