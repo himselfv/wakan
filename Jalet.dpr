@@ -85,52 +85,59 @@ uses
  Some forms may be singletons and be created on the first use. }
 
 begin
+  Log('Before initialize');
   Application.Initialize;
   Application.Title := 'wakan';
   Application.HelpFile := 'wakan_en.chm';
+  Log('Before TfMenu');
   Application.CreateForm(TfMenu, fMenu);
+  Log('Before TfKanji');
   Application.CreateForm(TfKanji, fKanji);
+  Log('Before TfRadical');
   Application.CreateForm(TfRadical, fRadical); //?
+  Log('Before TfWordLookup');
   Application.CreateForm(TfWordLookup, fWordLookup);
+  Log('Before TfSettings');
   Application.CreateForm(TfSettings, fSettings);
+  Log('Before TfVocab');
   Application.CreateForm(TfVocab, fVocab);
+  Log('Before TfKanjiSearch');
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
+  Log('Before TfKanjiCompounds');
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup?
+  Log('Before TfKanjiDetails');
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
+  Log('Before TfTranslate');
   Application.CreateForm(TfTranslate, fTranslate);
+  Log('Before TfWordDetails');
   Application.CreateForm(TfWordDetails, fWordDetails); //-?
+  Log('Before TfWordKanji');
   Application.CreateForm(TfWordKanji, fWordKanji);
+  Log('Before TfExamples');
   Application.CreateForm(TfExamples, fExamples);
+  Log('Before TfWordCategory');
   Application.CreateForm(TfWordCategory, fWordCategory); //-?
+  Log('Before TfVocabDetails');
   Application.CreateForm(TfVocabDetails, fVocabDetails);
+  Log('Before TfVocabFilters');
   Application.CreateForm(TfVocabFilters, fVocabFilters);
+  Log('Before TfHint');
   Application.CreateForm(TfHint, fHint);
+  Log('Before TfMedia');
   Application.CreateForm(TfMedia, fMedia); //?
-  Application.CreateForm(TfWordList, fWordList); //- but it's a pain to tear it out
  //kept for now:
+  Log('Before TfWordList');
+  Application.CreateForm(TfWordList, fWordList); //- it's a pain to tear it out
+  Log('Before TfDictImport');
   Application.CreateForm(TfDictImport, fDictImport); //-
  //will be converted
+  Log('Before TfPortableMode');
   Application.CreateForm(TfPortableMode, fPortableMode); //-
+  Log('Before TfCharDataImport');
   Application.CreateForm(TfCharDataImport, fCharDataImport); //-
 
-
-(*  Application.CreateForm(TfSplash, fSplash); //-
-  Application.CreateForm(TfSelectFont, fSelectFont); //-
-  Application.CreateForm(TfNewCategory, fNewCategory); //-
-  Application.CreateForm(TfPrint, fPrint); //-
-  Application.CreateForm(TfStatistics, fStatistics); //-
-  Application.CreateForm(TfBitmap, fBitmap); //-
-  Application.CreateForm(TfVocabAdd, fVocabAdd); //-
-  Application.CreateForm(TfDictMan, fDictMan); //-
-  Application.CreateForm(TfDictCoding, fDictCoding); //- and remove entirely? I mean, it's obvious which language it is: the one we're importing for
-  Application.CreateForm(TfInvalidator, fInvalidator); //-? and remove entirely? wtf is it for
-  Application.CreateForm(TfLanguage, fLanguage); //-
-  Application.CreateForm(TfFileType, fFileType); //-
-  Application.CreateForm(TfCategoryMgr, fCategoryMgr); //-
-  Application.CreateForm(TfWordsExpChoose, fWordsExpChoose); //-
-  Application.CreateForm(TfCharItem, fCharItem); //-
- *)
-
+  Log('Before InitializeWakan');
   fMenu.InitializeWakan;
+  Log('Before Run');
   Application.Run;
 end.

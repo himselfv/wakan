@@ -361,6 +361,7 @@ type
     procedure aUserExamplesChecked(Sender: TObject);
     procedure aKanjiDetailsChecked(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
+    procedure FormShow(Sender: TObject);
 
   private
     initdone:boolean;
@@ -576,6 +577,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
 
 procedure TfMenu.FormCreate(Sender: TObject);
 begin
+  Log('TfMenu.OnCreate');
   initdone:=false;
 
   defll:=TDeflectionList.Create;
@@ -621,6 +623,7 @@ var ps:TPackageSource;
   fSplash: TfSplash;
   i:integer;
 begin
+  Log('Init: start');
   LastSaveTime := now;
   examstruct:=nil;
   examindex:=nil;
@@ -632,12 +635,17 @@ begin
   Self.Enabled := false; //or MainForm will receive shortcuts and crash
 
   try
+    Log('Init: before ParseCommandLine()');
     ParseCommandLine();
+
+    Log('Init: before loading languages');
 
    //Load language or suggest to choose one
     fLanguage := TfLanguage.Create(Application);
     fLanguage.LoadPerSettings;
+    Log('Init: before translating forms');
     fLanguage.TranslateAllForms;
+    Log('Init: after translating forms');
 
     Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
     if (Screen.Width<800) or (Screen.Height<600) then
@@ -654,7 +662,9 @@ begin
     showroma:=false;
     clip:='';
 
+    Log('Init: before loading settings');
     fSettings.LoadSettings({DelayUI=}true);
+    Log('Init: after loading settings');
 
     if fSettings.cbShowSplashscreen.Checked then begin
       fSplash := TfSplash.Create(Application);
@@ -662,6 +672,7 @@ begin
       fSplash.Update;
     end;
 
+    Log('Init: before loading wakan.cfg');
    //Configuration file
     if not FileExists('wakan.cfg') then
     begin
@@ -676,6 +687,7 @@ begin
     end;
     try
       LoadWakanCfg('wakan.cfg');
+      Log('Init: before localizing property types');
       fLanguage.LocalizePropertyTypes();
     except
       Application.MessageBox(
@@ -686,12 +698,14 @@ begin
       Application.Terminate;
       exit;
     end;
+    Log('Init: after loading wakan.cfg');
 
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
 
    { DownloadTest(); }
 
+    Log('Init: before checking examples.pkg');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
@@ -724,12 +738,18 @@ begin
       exit;
     end;
 
+    Log('Init: before AutoImportDicts');
+
     AutoImportDicts();
+
+    Log('Init: before CheckFontsPresent');
 
    //Force user to select fonts
     fSettings.CheckFontsPresent;
 
    { Wakan.chr }
+
+    Log('Init: before checking wakan.chr');
 
     if (Command='makechars') and MakeCharsParams.ResetDb then begin
      { Do not load wakan.chr, we don't need it }
@@ -794,11 +814,15 @@ begin
 
    { Annotations }
 
+    Log('Init: before checking annotations');
+
     if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
     if fSettings.CheckBox64.Checked then LoadAnnotations;
 
 
    { Radical search }
+
+    Log('Init: before checking radicals');
 
    //Raine radical rebuilding -- before complaining about missing rad
     if Command='makerad' then
@@ -853,6 +877,8 @@ begin
 
    { Stroke order display }
 
+    Log('Init: before checking stroke order');
+
    //Stroke-order rebuilding -- before complaining about missing sod
     if Command='makesod' then
     begin
@@ -903,6 +929,9 @@ begin
 
 
    { User data }
+
+    Log('Init: before loading user data');
+
     try
       userdataloaded:=false;
       LoadUserData;
@@ -923,6 +952,8 @@ begin
     end;
     if Application.Terminated then exit;
 
+    Log('Init: after loading user data');
+
     jromasys:=fSettings.RadioGroup1.ItemIndex+1;
     jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
     cromasys:=fSettings.RadioGroup6.ItemIndex+1;
@@ -936,11 +967,15 @@ begin
       JWBAutoImport.ForceUpdateList := UpdateDicsParams.Files;
     end;
 
+    Log('Init: before switching language');
+
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
     RescanDicts;
     RefreshCategory;
     RefreshKanjiCategory; }
+
+    Log('Init: after switching language');
 
     if Command='updatedics' then begin
       if Length(UpdateDicsParams.Files)>0 then
@@ -950,6 +985,8 @@ begin
     end;
 
     FreeAndNil(fSplash);
+
+    Log('Init: before applying UI settings');
 
   {  if ((Screen.Width<1024) or (Screen.Height<768)) then
     begin
@@ -961,6 +998,8 @@ begin
     curdisplaymode:=0;
     FormPlacement1.RestoreFormPlacement;
     fSettings.ApplyUISettings();
+
+    Log('Init: after applying UI settings');
 
    { Init clipboard viewer }
     CbNextViewer := SetClipboardViewer(Self.Handle);
@@ -987,6 +1026,8 @@ begin
       end;
     end;
 
+    Log('Init: before initdone');
+
     initdone:=true;
   except
     on E: EBadUsage do begin
@@ -1010,6 +1051,8 @@ begin
 
   Timer1.Enabled:=true;
   Timer1Timer(Timer1);
+
+  Log('Init: done.');
 
  { Done. }
 end;
@@ -2331,6 +2374,11 @@ begin
 //  Shape9.Visible:=Width>815;
 //  SpeedButton22.Visible:=Width>815;
 //  Bevel5.Visible:=Width>815;
+end;
+
+procedure TfMenu.FormShow(Sender: TObject);
+begin
+  Log('TfMenu.OnShow');
 end;
 
 { Panel docker.
