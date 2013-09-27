@@ -85,28 +85,6 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton5: TSpeedButton
-      Left = 290
-      Top = 193
-      Width = 128
-      Height = 17
-      Hint = '#00648^eSelected word (Ctrl-Alt-F)'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 2
-      Caption = '#00649^eSelected word'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      Visible = False
-      OnClick = SpeedButton5Click
-      ExplicitTop = 195
-    end
     object SpeedButton6: TSpeedButton
       Left = 7
       Top = 193
@@ -126,28 +104,6 @@ object fWordLookup: TfWordLookup
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton6Click
-      ExplicitTop = 195
-    end
-    object SpeedButton7: TSpeedButton
-      Left = 271
-      Top = 193
-      Width = 123
-      Height = 17
-      Hint = '#00652^eInformation (Ctrl-Alt-I)'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 3
-      Caption = '#00653^eWord information'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      Visible = False
-      OnClick = SpeedButton7Click
       ExplicitTop = 195
     end
     object SpeedButton9: TSpeedButton

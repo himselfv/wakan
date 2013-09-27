@@ -85,59 +85,58 @@ uses
  Some forms may be singletons and be created on the first use. }
 
 begin
-  Log('Before initialize');
+  Profile('Before initialize');
   Application.Initialize;
   Application.Title := 'wakan';
   Application.HelpFile := 'wakan_en.chm';
-  Log('Before TfMenu');
+  Profile('Before TfMenu');
   Application.CreateForm(TfMenu, fMenu);
-  Log('Before TfKanji');
+  Profile('Before TfKanji');
   Application.CreateForm(TfKanji, fKanji);
-  Log('Before TfRadical');
-  Application.CreateForm(TfRadical, fRadical); //?
-  Log('Before TfWordLookup');
+  Profile('Before TfWordLookup');
   Application.CreateForm(TfWordLookup, fWordLookup);
-  Log('Before TfSettings');
+  Profile('Before TfSettings');
   Application.CreateForm(TfSettings, fSettings);
-  Log('Before TfVocab');
+  Profile('Before TfVocab');
   Application.CreateForm(TfVocab, fVocab);
-  Log('Before TfKanjiSearch');
+  Profile('Before TfKanjiSearch');
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
-  Log('Before TfKanjiCompounds');
+  Profile('Before TfKanjiCompounds');
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup?
-  Log('Before TfKanjiDetails');
+  Profile('Before TfKanjiDetails');
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
-  Log('Before TfTranslate');
+  Profile('Before TfTranslate');
   Application.CreateForm(TfTranslate, fTranslate);
-  Log('Before TfWordDetails');
-  Application.CreateForm(TfWordDetails, fWordDetails); //-?
-  Log('Before TfWordKanji');
+  Profile('Before TfWordKanji');
   Application.CreateForm(TfWordKanji, fWordKanji);
-  Log('Before TfExamples');
+  Profile('Before TfExamples');
   Application.CreateForm(TfExamples, fExamples);
-  Log('Before TfWordCategory');
-  Application.CreateForm(TfWordCategory, fWordCategory); //-?
-  Log('Before TfVocabDetails');
+  Profile('Before TfVocabDetails');
   Application.CreateForm(TfVocabDetails, fVocabDetails);
-  Log('Before TfVocabFilters');
+  Profile('Before TfVocabFilters');
   Application.CreateForm(TfVocabFilters, fVocabFilters);
-  Log('Before TfHint');
+  Profile('Before TfHint');
   Application.CreateForm(TfHint, fHint);
-  Log('Before TfMedia');
-  Application.CreateForm(TfMedia, fMedia); //?
  //kept for now:
-  Log('Before TfWordList');
+  Profile('Before TfWordList');
   Application.CreateForm(TfWordList, fWordList); //- it's a pain to tear it out
-  Log('Before TfDictImport');
+  Profile('Before TfDictImport');
   Application.CreateForm(TfDictImport, fDictImport); //-
- //will be converted
-  Log('Before TfPortableMode');
+  Profile('Before TfWordCategory');
+  Application.CreateForm(TfWordCategory, fWordCategory); //-?
+  Profile('Before TfWordDetails');
+  Application.CreateForm(TfWordDetails, fWordDetails); //- and remove this at all (not used and not useful anymore)
+  Profile('Before TfRadical');
+  Application.CreateForm(TfRadical, fRadical); //-
+  Profile('Before TfMedia');
+  Application.CreateForm(TfMedia, fMedia); //?
+  Profile('Before TfPortableMode');
   Application.CreateForm(TfPortableMode, fPortableMode); //-
-  Log('Before TfCharDataImport');
+  Profile('Before TfCharDataImport');
   Application.CreateForm(TfCharDataImport, fCharDataImport); //-
 
-  Log('Before InitializeWakan');
+  Profile('Before InitializeWakan');
   fMenu.InitializeWakan;
-  Log('Before Run');
+  Profile('Before Run');
   Application.Run;
 end.

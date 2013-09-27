@@ -124,7 +124,6 @@ object fMenu: TfMenu
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
-  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -627,20 +626,10 @@ object fMenu: TfMenu
       Enabled = False
       Visible = False
     end
-    object aDictDetails: TCheckAction
-      Caption = '#00236^e&Selected word'
-      OnExecute = aDictDetailsExecute
-      OnChecked = aDictDetailsChecked
-    end
     object aDictKanji: TCheckAction
       Caption = '#00237^e&Characters in word'
       OnExecute = aDictKanjiExecute
       OnChecked = aDictKanjiChecked
-    end
-    object aDictCategories: TCheckAction
-      Caption = '#00238^e&Information'
-      OnExecute = aDictCategoriesExecute
-      OnChecked = aDictCategoriesChecked
     end
     object aDictExamples: TCheckAction
       Caption = '#00315^eExamples'

@@ -15,6 +15,7 @@ var
 type
   TPortabilityMode = (pmStandalone, pmPortable, pmCompatible);
 
+{$WRITEABLECONST ON}
 const
   WakanAppName = 'WaKan - Japanese & Chinese Learning Tool';
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
@@ -32,12 +33,13 @@ function GetAppDataFolder: string;
 { Some logging tools.
 Define NOLOG to make sure that nothing in the application calls these. }
 //{$DEFINE NOLOG}
+{$DEFINE PROFILE}
 {$IFNDEF NOLOG}
 procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF} //inline in debug so that it's completely eliminated
 procedure Log(const msg: string; args: array of const); overload;
 procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IFNDEF DEBUG}inline;{$ENDIF}
+procedure Profile(const msg: string); inline;
 {$ENDIF}
-
 
 { Romaji conversions }
 {
@@ -279,6 +281,15 @@ procedure Log(const msg: string; args: array of const); overload;
 begin
 {$IFDEF DEBUG}
   Log(Format(msg,args));
+{$ENDIF}
+end;
+
+procedure Profile(const msg: string);
+begin
+{$IFDEF PROFILE}
+  Log(msg);
+{$ELSE}
+ //Empty, so it's eliminated when inlined
 {$ENDIF}
 end;
 

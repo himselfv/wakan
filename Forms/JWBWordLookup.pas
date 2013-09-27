@@ -20,9 +20,7 @@ type
     btnLookupJtoE: TSpeedButton;
     btnLookupEtoJ: TSpeedButton;
     btnLookupClip: TSpeedButton;
-    SpeedButton5: TSpeedButton;
     SpeedButton6: TSpeedButton;
-    SpeedButton7: TSpeedButton;
     SpeedButton9: TSpeedButton;
     SpeedButton10: TSpeedButton;
     SpeedButton11: TSpeedButton;
@@ -52,14 +50,10 @@ type
     procedure Edit1Click(Sender: TObject);
     procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
-    procedure WordDetails_PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
-    procedure WordDetails_PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
     procedure FormShow(Sender: TObject);
     procedure btnLookupJtoEClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
-    procedure SpeedButton5Click(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
-    procedure SpeedButton7Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
     procedure btnCopyToClipboardClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -443,27 +437,11 @@ begin
   if curword<=dicrl.Count then ShowWord;
 end;
 
-procedure TfWordLookup.WordDetails_PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
-begin
-  Canvas.Brush.Color:=clWindow;
-  if showroma then
-    DrawUnicode(Canvas,2,2,22,KanaToRomaji(curphonetic,romasys,curlang),FontEnglish)
-  else
-    DrawUnicode(Canvas,2,2,22,curphonetic,FontJapanese);
-end;
-
-procedure TfWordLookup.WordDetails_PaintBox2Paint(Sender: TObject; Canvas: TCanvas);
-begin
-  Canvas.Brush.Color:=clWindow;
-  DrawUnicode(Canvas,2,2,22,curkanji,FontJapanese);
-end;
-
 procedure TfWordLookup.ShowWord;
 var s,s2:string;
   meaning: FString;
-    radf:integer;
-    sl:TStringList;
-    i:integer;
+  radf:integer;
+  i:integer;
   rad:FString;
   CCharProp: TCharPropertyCursor;
 begin
@@ -474,12 +452,7 @@ begin
   SpeedButton17.Enabled:=false;
   btnCopyToClipboard.Enabled:=false;
   SpeedButton19.Enabled:=false;
-  fWordCategory.RxLabel9.Caption:='-';
-  fWordCategory.Label55.Caption:='-';
-  fWordCategory.Label11.Caption:='-';
-  fWordCategory.Label12.Caption:='-';
-  fWordCategory.Label13.Caption:='-';
-  fWordCategory.Label14.Caption:='-';
+  fWordCategory.Clear;
   fWordKanji.Clear;
   if curword<>0 then
   begin
@@ -489,7 +462,7 @@ begin
     fExamples.SetExamples(curkanji);
     SpeedButton17.Enabled:=true;
     btnCopyToClipboard.Enabled:=true;
-    fWordCategory.RxLabel9.Caption:=_l('#00677^eNot in vocabulary');
+    fWordCategory.SetWord(-1);
     s:=remexcl(curkanji);
     SetLength(curkanjid,0);
     while flength(s)>0 do
@@ -540,22 +513,9 @@ begin
         end;
       end;
     end;
-    if dicrl[curword-1].userIndex<>0 then
-    begin
+    if dicrl[curword-1].userIndex<>0 then begin
       SpeedButton19.Enabled:=true;
-      TUser.Locate('Index',dicrl[curword-1].userIndex);
-      fWordCategory.Label11.Caption:=DateForm(TUser.Str(TUserAdded));
-      fWordCategory.Label12.Caption:=DateForm(TUser.Str(TUserLearned));
-      fWordCategory.Label13.Caption:=DateForm(TUser.Str(TUserMastered));
-      fWordCategory.Label14.Caption:=DateForm(TUser.Str(TUserPrinted));
-      if fWordCategory.Label13.Caption<>'-'then fWordCategory.Label13.Caption:=fWordCategory.Label13.Caption+' ('+TUser.Str(TUserNoPrinted)+'x)';
-      fWordCategory.RxLabel9.Caption:=StateStr(TUser.Int(TUserScore));
-      sl:=TStringList.Create;
-      sl.Clear;
-      ListWordCategories(dicrl[curword-1].UserIndex,sl);
-      s:='';
-      for i:=0 to sl.Count-1 do if s='' then s:=sl[i] else s:=s+', '+sl[i];
-      fWordCategory.Label55.Caption:=s;
+      fWordCategory.SetWord(dicrl[curword-1].userIndex);
     end;
   end else fExamples.SetExamples('');
   fWordDetails.PaintBox1.Invalidate;
@@ -578,19 +538,9 @@ begin
   Look();
 end;
 
-procedure TfWordLookup.SpeedButton5Click(Sender: TObject);
-begin
-  fMenu.aDictDetails.Execute;
-end;
-
 procedure TfWordLookup.SpeedButton6Click(Sender: TObject);
 begin
   fMenu.aDictKanji.Execute;
-end;
-
-procedure TfWordLookup.SpeedButton7Click(Sender: TObject);
-begin
-  fMenu.aDictCategories.Execute;
 end;
 
 procedure TfWordLookup.SpeedButton9Click(Sender: TObject);

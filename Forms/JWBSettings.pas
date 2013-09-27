@@ -319,7 +319,6 @@ type
     procedure SpeedButton13Click(Sender: TObject);
     procedure SpeedButton14Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
     procedure btnUpgradeToStandaloneClick(Sender: TObject);
     procedure lblSettingsPathClick(Sender: TObject);
@@ -339,6 +338,7 @@ type
     procedure ResetDetList;
 
   protected
+    FContentsInitialized: boolean;
     procedure InitContents;
     procedure SelectActiveContentItem;
     procedure UpdatePortabilityPage;
@@ -391,12 +391,22 @@ var colorfrom:integer;
 
 {$R *.DFM}
 
-{ Helpers }
-
-procedure TfSettings.FormCreate(Sender: TObject);
+procedure TfSettings.FormShow(Sender: TObject);
 begin
-  InitContents;
- //Default states for all controls will be set when loading data (even if we lack data)
+  if not FContentsInitialized then
+    InitContents();
+
+ { pcPages.OnChange is not triggered when ActivePage is loaded initially from FormSettings,
+  so whatever, we'll do this on show just to be safe: }
+  SelectActiveContentItem();
+
+  Edit15Change(sender);
+  Edit20Change(sender);
+  Edit19.Text:=dicts.NotUsedDicts;
+  ResetDetList;
+  ComboBox2.ItemIndex:=0;
+  ClearKanjiCardCache;
+  ComboBox2Change(sender);
 end;
 
 procedure TfSettings.InitContents;
@@ -407,6 +417,7 @@ begin
   SelectActiveContentItem;
   tvContents.Width := tvContents.Width + 1;
   tvContents.Width := tvContents.Width - 1;
+  FContentsInitialized := true;
 end;
 
 procedure TfSettings.SelectActiveContentItem;
@@ -439,21 +450,6 @@ begin
       pcPages.ActivePageIndex := i;
       break;
     end;
-end;
-
-procedure TfSettings.FormShow(Sender: TObject);
-begin
- { pcPages.OnChange is not triggered when ActivePage is loaded initially from FormSettings,
-  so whatever, we'll do this on show just to be safe: }
-  SelectActiveContentItem();
-
-  Edit15Change(sender);
-  Edit20Change(sender);
-  Edit19.Text:=dicts.NotUsedDicts;
-  ResetDetList;
-  ComboBox2.ItemIndex:=0;
-  ClearKanjiCardCache;
-  ComboBox2Change(sender);
 end;
 
 { Try to access ini file through this function only.

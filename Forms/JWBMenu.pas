@@ -4,6 +4,11 @@ interface
 
 {$R WINXP.RES}
 
+{$DEFINE NODICLOADPROMPT}
+{ Do not show "Loading dictionary..." window when hot-loading a dictionary.
+ It was needed before when loading was slow, but I feel like now it only makes
+ the interface feel sluggish. }
+
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons,
@@ -35,9 +40,7 @@ type
     aKanjiCompounds: TCheckAction;
     aKanjiPrint: TAction;
     aDeprecatedDict: TAction;
-    aDictDetails: TCheckAction;
     aDictKanji: TCheckAction;
-    aDictCategories: TCheckAction;
     aDictExamples: TCheckAction;
     aDeprecatedDictEditor: TAction;
     aDeprecatedUser: TAction;
@@ -263,9 +266,7 @@ type
     procedure aKanjiDetailsExecute(Sender: TObject);
     procedure aKanjiCompoundsExecute(Sender: TObject);
     procedure aKanjiPrintExecute(Sender: TObject);
-    procedure aDictDetailsExecute(Sender: TObject);
     procedure aDictKanjiExecute(Sender: TObject);
-    procedure aDictCategoriesExecute(Sender: TObject);
     procedure aDictExamplesExecute(Sender: TObject);
     procedure aUserAddExecute(Sender: TObject);
     procedure aUserSettingsExecute(Sender: TObject);
@@ -352,16 +353,13 @@ type
     procedure aStrokeOrderExecute(Sender: TObject);
     procedure aKanjiSearchChecked(Sender: TObject);
     procedure aKanjiCompoundsChecked(Sender: TObject);
-    procedure aDictDetailsChecked(Sender: TObject);
     procedure aDictKanjiChecked(Sender: TObject);
-    procedure aDictCategoriesChecked(Sender: TObject);
     procedure aDictExamplesChecked(Sender: TObject);
     procedure aUserSettingsChecked(Sender: TObject);
     procedure aUserDetailsChecked(Sender: TObject);
     procedure aUserExamplesChecked(Sender: TObject);
     procedure aKanjiDetailsChecked(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
-    procedure FormShow(Sender: TObject);
 
   private
     initdone:boolean;
@@ -419,9 +417,11 @@ type
     procedure SwitchLanguage(lanchar:char);
 
   protected
+   {$IFNDEF NODICLOADPROMPT}
     DicLoadPrompt: TSMPromptForm;
     procedure DicLoadStart(Sender: TObject);
     procedure DicLoadEnd(Sender: TObject);
+   {$ENDIF}
     procedure DicLoadException(Sender: TObject; E: Exception);
   public
     function NewDict(dicname: string): TJaletDic;
@@ -577,7 +577,6 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
 
 procedure TfMenu.FormCreate(Sender: TObject);
 begin
-  Log('TfMenu.OnCreate');
   initdone:=false;
 
   defll:=TDeflectionList.Create;
@@ -615,15 +614,13 @@ begin
   dicts.Free; //+
 end;
 
-
-
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
   ms:TMemoryStream;
   fSplash: TfSplash;
   i:integer;
 begin
-  Log('Init: start');
+  Profile('Init: start');
   LastSaveTime := now;
   examstruct:=nil;
   examindex:=nil;
@@ -635,17 +632,17 @@ begin
   Self.Enabled := false; //or MainForm will receive shortcuts and crash
 
   try
-    Log('Init: before ParseCommandLine()');
+    Profile('Init: before ParseCommandLine()');
     ParseCommandLine();
 
-    Log('Init: before loading languages');
+    Profile('Init: before loading languages');
 
    //Load language or suggest to choose one
     fLanguage := TfLanguage.Create(Application);
     fLanguage.LoadPerSettings;
-    Log('Init: before translating forms');
+    Profile('Init: before translating forms');
     fLanguage.TranslateAllForms;
-    Log('Init: after translating forms');
+    Profile('Init: after translating forms');
 
     Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
     if (Screen.Width<800) or (Screen.Height<600) then
@@ -662,9 +659,9 @@ begin
     showroma:=false;
     clip:='';
 
-    Log('Init: before loading settings');
+    Profile('Init: before loading settings');
     fSettings.LoadSettings({DelayUI=}true);
-    Log('Init: after loading settings');
+    Profile('Init: after loading settings');
 
     if fSettings.cbShowSplashscreen.Checked then begin
       fSplash := TfSplash.Create(Application);
@@ -672,7 +669,7 @@ begin
       fSplash.Update;
     end;
 
-    Log('Init: before loading wakan.cfg');
+    Profile('Init: before loading wakan.cfg');
    //Configuration file
     if not FileExists('wakan.cfg') then
     begin
@@ -687,7 +684,7 @@ begin
     end;
     try
       LoadWakanCfg('wakan.cfg');
-      Log('Init: before localizing property types');
+      Profile('Init: before localizing property types');
       fLanguage.LocalizePropertyTypes();
     except
       Application.MessageBox(
@@ -698,14 +695,14 @@ begin
       Application.Terminate;
       exit;
     end;
-    Log('Init: after loading wakan.cfg');
+    Profile('Init: after loading wakan.cfg');
 
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
 
    { DownloadTest(); }
 
-    Log('Init: before checking examples.pkg');
+    Profile('Init: before checking examples.pkg');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
@@ -738,18 +735,18 @@ begin
       exit;
     end;
 
-    Log('Init: before AutoImportDicts');
+    Profile('Init: before AutoImportDicts');
 
     AutoImportDicts();
 
-    Log('Init: before CheckFontsPresent');
+    Profile('Init: before CheckFontsPresent');
 
    //Force user to select fonts
     fSettings.CheckFontsPresent;
 
    { Wakan.chr }
 
-    Log('Init: before checking wakan.chr');
+    Profile('Init: before checking wakan.chr');
 
     if (Command='makechars') and MakeCharsParams.ResetDb then begin
      { Do not load wakan.chr, we don't need it }
@@ -814,7 +811,7 @@ begin
 
    { Annotations }
 
-    Log('Init: before checking annotations');
+    Profile('Init: before checking annotations');
 
     if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
     if fSettings.CheckBox64.Checked then LoadAnnotations;
@@ -822,7 +819,7 @@ begin
 
    { Radical search }
 
-    Log('Init: before checking radicals');
+    Profile('Init: before checking radicals');
 
    //Raine radical rebuilding -- before complaining about missing rad
     if Command='makerad' then
@@ -877,7 +874,7 @@ begin
 
    { Stroke order display }
 
-    Log('Init: before checking stroke order');
+    Profile('Init: before checking stroke order');
 
    //Stroke-order rebuilding -- before complaining about missing sod
     if Command='makesod' then
@@ -930,7 +927,7 @@ begin
 
    { User data }
 
-    Log('Init: before loading user data');
+    Profile('Init: before loading user data');
 
     try
       userdataloaded:=false;
@@ -952,7 +949,7 @@ begin
     end;
     if Application.Terminated then exit;
 
-    Log('Init: after loading user data');
+    Profile('Init: after loading user data');
 
     jromasys:=fSettings.RadioGroup1.ItemIndex+1;
     jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
@@ -967,15 +964,16 @@ begin
       JWBAutoImport.ForceUpdateList := UpdateDicsParams.Files;
     end;
 
-    Log('Init: before switching language');
+    Profile('Init: before switching language');
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
     RescanDicts;
+    ReloadExamples;
     RefreshCategory;
     RefreshKanjiCategory; }
 
-    Log('Init: after switching language');
+    Profile('Init: after switching language');
 
     if Command='updatedics' then begin
       if Length(UpdateDicsParams.Files)>0 then
@@ -986,7 +984,7 @@ begin
 
     FreeAndNil(fSplash);
 
-    Log('Init: before applying UI settings');
+    Profile('Init: before applying UI settings');
 
   {  if ((Screen.Width<1024) or (Screen.Height<768)) then
     begin
@@ -999,7 +997,7 @@ begin
     FormPlacement1.RestoreFormPlacement;
     fSettings.ApplyUISettings();
 
-    Log('Init: after applying UI settings');
+    Profile('Init: after applying UI settings');
 
    { Init clipboard viewer }
     CbNextViewer := SetClipboardViewer(Self.Handle);
@@ -1026,7 +1024,7 @@ begin
       end;
     end;
 
-    Log('Init: before initdone');
+    Profile('Init: before initdone');
 
     initdone:=true;
   except
@@ -1052,7 +1050,7 @@ begin
   Timer1.Enabled:=true;
   Timer1Timer(Timer1);
 
-  Log('Init: done.');
+  Profile('Init: done.');
 
  { Done. }
 end;
@@ -1192,8 +1190,10 @@ Applies all default settings such as Offline/LoadOnDemand per dict settings.
 function TfMenu.NewDict(dicname: string): TJaletDic;
 begin
   Result:=TJaletDic.Create;
+ {$IFNDEF NODICLOADPROMPT}
   Result.OnLoadStart := DicLoadStart;
   Result.OnLoadEnd := DicLoadEnd;
+ {$ENDIF}
   Result.OnLoadException := DicLoadException;
   Result.LoadOnDemand := fSettings.CheckBox49.Checked;
   Result.Offline := dicts.IsInGroup(dicname,GROUP_OFFLINE);
@@ -1207,6 +1207,7 @@ begin
   end;
 end;
 
+{$IFNDEF NODICLOADPROMPT}
 procedure TfMenu.DicLoadStart(Sender: TObject);
 begin
   DicLoadPrompt.Free; //just in case
@@ -1219,6 +1220,7 @@ procedure TfMenu.DicLoadEnd(Sender: TObject);
 begin
   FreeAndNil(DicLoadPrompt);
 end;
+{$ENDIF}
 
 procedure TfMenu.DicLoadException(Sender: TObject; E: Exception);
 begin
@@ -1889,21 +1891,6 @@ begin
   fKanji.btnPrintCardsClick(Sender);
 end;
 
-procedure TfMenu.aDictDetailsExecute(Sender: TObject);
-var pre:boolean;
-begin
-  pre:=aDictDetails.Checked;
-  if not fWordLookup.Visible then aModeUser.Execute;
-  if aDictDetails.Checked<>pre then exit;
-  aDictDetails.Checked := not aDictDetails.Checked;
-end;
-
-procedure TfMenu.aDictDetailsChecked(Sender: TObject);
-begin
-  ToggleForm(fWordDetails, aDictDetails.Checked);
-  fWordLookup.SpeedButton5.Down := aDictDetails.Checked;
-end;
-
 procedure TfMenu.aDictKanjiExecute(Sender: TObject);
 var pre:boolean;
 begin
@@ -1917,21 +1904,6 @@ procedure TfMenu.aDictKanjiChecked(Sender: TObject);
 begin
   ToggleForm(fWordKanji, aDictKanji.Checked);
   fWordLookup.SpeedButton6.Down := aDictKanji.Checked;
-end;
-
-procedure TfMenu.aDictCategoriesExecute(Sender: TObject);
-var pre:boolean;
-begin
-  pre:=aDictCategories.Checked;
-  if not fWordLookup.Visible then aModeUser.Execute;
-  if aDictCategories.Checked<>pre then exit;
-  aDictCategories.Checked := not aDictCategories.Checked;
-end;
-
-procedure TfMenu.aDictCategoriesChecked(Sender: TObject);
-begin
-  ToggleForm(fWordCategory, aDictCategories.Checked);
-  fWordLookup.SpeedButton7.Down := aDictCategories.Checked;
 end;
 
 procedure TfMenu.aDictExamplesExecute(Sender: TObject);
@@ -2374,11 +2346,6 @@ begin
 //  Shape9.Visible:=Width>815;
 //  SpeedButton22.Visible:=Width>815;
 //  Bevel5.Visible:=Width>815;
-end;
-
-procedure TfMenu.FormShow(Sender: TObject);
-begin
-  Log('TfMenu.OnShow');
 end;
 
 { Panel docker.
