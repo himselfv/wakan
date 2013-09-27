@@ -116,8 +116,6 @@ begin
   Profile('Before TfHint');
   Application.CreateForm(TfHint, fHint);
  //kept for now:
-  Profile('Before TfWordList');
-  Application.CreateForm(TfWordList, fWordList); //- it's a pain to tear it out
   Profile('Before TfDictImport');
   Application.CreateForm(TfDictImport, fDictImport); //-
   Profile('Before TfRadical');

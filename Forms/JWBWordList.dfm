@@ -12,9 +12,11 @@ object fWordList: TfWordList
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   Scaled = False
   OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -1005,8 +1007,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'EvalResults'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel1: TLabel
         Left = 16
         Top = 4
@@ -1228,8 +1228,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Final'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel2: TLabel
         Left = 16
         Top = 4
@@ -1309,7 +1307,7 @@ object fWordList: TfWordList
       end
     end
   end
-  object BitBtn1: TBitBtn
+  object btnCancel: TBitBtn
     Left = 504
     Top = 368
     Width = 99
@@ -1341,9 +1339,9 @@ object fWordList: TfWordList
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 1
-    OnClick = BitBtn1Click
+    OnClick = btnCancelClick
   end
-  object BitBtn2: TBitBtn
+  object btnNext: TBitBtn
     Left = 266
     Top = 368
     Width = 107
@@ -1371,9 +1369,9 @@ object fWordList: TfWordList
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 2
-    OnClick = BitBtn2Click
+    OnClick = btnNextClick
   end
-  object BitBtn3: TBitBtn
+  object btnPrev: TBitBtn
     Left = 160
     Top = 368
     Width = 105
@@ -1400,9 +1398,9 @@ object fWordList: TfWordList
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 3
-    OnClick = BitBtn3Click
+    OnClick = btnPrevClick
   end
-  object BitBtn4: TBitBtn
+  object btnFinish: TBitBtn
     Left = 384
     Top = 368
     Width = 113
@@ -1433,6 +1431,6 @@ object fWordList: TfWordList
     NumGlyphs = 2
     ParentFont = False
     TabOrder = 4
-    OnClick = BitBtn2Click
+    OnClick = btnNextClick
   end
 end
