@@ -114,8 +114,8 @@ var
 implementation
 
 uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
-  JWBPrint, JWBTranslate, JWBWordDetails, JWBWordKanji, JWBExamples,
-  JWBWordCategory, JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
+  JWBPrint, JWBTranslate, JWBWordKanji, JWBExamples,
+  JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
   JWBCategories, JWBAnnotations, JWBUserData, JWBCharData;
 
 {$R *.DFM}
@@ -452,7 +452,6 @@ begin
   SpeedButton17.Enabled:=false;
   btnCopyToClipboard.Enabled:=false;
   SpeedButton19.Enabled:=false;
-  fWordCategory.Clear;
   fWordKanji.Clear;
   if curword<>0 then
   begin
@@ -462,7 +461,6 @@ begin
     fExamples.SetExamples(curkanji);
     SpeedButton17.Enabled:=true;
     btnCopyToClipboard.Enabled:=true;
-    fWordCategory.SetWord(-1);
     s:=remexcl(curkanji);
     SetLength(curkanjid,0);
     while flength(s)>0 do
@@ -513,14 +511,9 @@ begin
         end;
       end;
     end;
-    if dicrl[curword-1].userIndex<>0 then begin
+    if dicrl[curword-1].userIndex<>0 then
       SpeedButton19.Enabled:=true;
-      fWordCategory.SetWord(dicrl[curword-1].userIndex);
-    end;
   end else fExamples.SetExamples('');
-  fWordDetails.PaintBox1.Invalidate;
-  fWordDetails.PaintBox2.Invalidate;
-  fWordDetails.PaintBox5.Invalidate;
   fWordKanji.InvalidateBoxes;
   AnnotShowMedia(curkanji,curphonetic);
 end;
@@ -676,6 +669,5 @@ begin
   if dicrl[curword-1].userIndex<>0 then
     fVocab.SearchWord(dicrl[curword-1].userIndex);
 end;
-
 
 end.

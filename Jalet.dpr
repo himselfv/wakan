@@ -34,7 +34,6 @@ uses
   JWBVocabDetails in 'Forms\JWBVocabDetails.pas' {fVocabDetails},
   JWBVocabAdd in 'Forms\JWBVocabAdd.pas' {fVocabAdd},
   JWBVocabFilters in 'Forms\JWBVocabFilters.pas' {fVocabFilters},
-  JWBWordDetails in 'Forms\JWBWordDetails.pas' {fWordDetails},
   JWBNewCategory in 'Forms\JWBNewCategory.pas' {fNewCategory},
   JWBPrint in 'Forms\JWBPrint.pas' {fPrint},
   JWBStatistics in 'Forms\JWBStatistics.pas' {fStatistics},
@@ -46,7 +45,6 @@ uses
   JWBTranslate in 'Forms\JWBTranslate.pas' {fTranslate},
   JWBWordKanji in 'Forms\JWBWordKanji.pas' {fWordKanji},
   JWBExamples in 'Forms\JWBExamples.pas' {fExamples},
-  JWBWordCategory in 'Forms\JWBWordCategory.pas' {fWordCategory},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
   JWBDictImport in 'Forms\JWBDictImport.pas' {fDictImport},
   JWBDictCoding in 'Forms\JWBDictCoding.pas' {fDictCoding},
@@ -122,10 +120,6 @@ begin
   Application.CreateForm(TfWordList, fWordList); //- it's a pain to tear it out
   Profile('Before TfDictImport');
   Application.CreateForm(TfDictImport, fDictImport); //-
-  Profile('Before TfWordCategory');
-  Application.CreateForm(TfWordCategory, fWordCategory); //-?
-  Profile('Before TfWordDetails');
-  Application.CreateForm(TfWordDetails, fWordDetails); //- and remove this at all (not used and not useful anymore)
   Profile('Before TfRadical');
   Application.CreateForm(TfRadical, fRadical); //-
   Profile('Before TfMedia');
