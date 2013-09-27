@@ -464,19 +464,25 @@ end;
 //See comments in JWBPortableMode.pas about Wakan modes
 procedure TfSettings.LoadSettings(DelayUI: boolean);
 var ini: TCustomIniFile;
+  fPortableMode: TfPortableMode;
   s: string;
 begin
   ini := OpenWakanIni;
   try
     s := LowerCase(ini.ReadString('General', 'Install', ''));
 
-    if s='' then
+    fPortableMode := nil;
+    if s='' then begin
+      fPortableMode := TfPortableMode.Create(Application);
       s := LowerCase(fPortableMode.Initialize(ini))
-    else
-    if s='upgrade' then
+    end else
+    if s='upgrade' then begin
+      fPortableMode := TfPortableMode.Create(Application);
      //We cannot just copy some of the files. If we start this operation,
      //we have to continue it even after restart.
       s := LowerCase(fPortableMode.ContinueUpgrade(ini));
+    end;
+    FreeAndNil(fPortableMode);
 
     if s='standalone' then begin
       SetPortabilityMode(pmStandalone);
@@ -1958,8 +1964,14 @@ begin
 end;
 
 procedure TfSettings.btnImportKanjidicClick(Sender: TObject);
+var fCharDataImport: TfCharDataImport;
 begin
-  fCharDataImport.ShowModal;
+  fCharDataImport := TfCharDataImport.Create(Self);
+  try
+    fCharDataImport.ShowModal;
+  finally
+    FreeAndNil(fCharDataImport);
+  end;
 end;
 
 //Returns the type ID of the chosen preferred radical type

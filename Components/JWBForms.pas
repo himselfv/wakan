@@ -153,6 +153,7 @@ end;
 
 procedure TJwbForm.DoCreate;
 begin
+  inherited;
   if fLanguage<>nil then
     fLanguage.TranslateForm(Self);
 end;

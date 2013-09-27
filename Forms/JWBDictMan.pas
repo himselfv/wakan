@@ -194,9 +194,15 @@ begin
 end;
 
 procedure TfDictMan.Button2Click(Sender: TObject);
+var fDictImport: TfDictImport;
 begin
-  if IsPositiveResult(fDictImport.ShowModal) then
-    CarefulRefreshDicts;
+  fDictImport := TfDictImport.Create(Self);
+  try
+    if IsPositiveResult(fDictImport.ShowModal) then
+      CarefulRefreshDicts;
+  finally
+    FreeAndNil(fDictImport);
+  end;
 end;
 
 procedure TfDictMan.SpeedButton1Click(Sender: TObject);

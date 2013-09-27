@@ -214,11 +214,15 @@ begin
 end;
 
 procedure AnnotShowMedia(kanji, kana: string);
+const fMedia: TfMedia = nil; { created on the first access .
+  It's okay to not destroy it explicitly as we register it in the Application }
 var s:string;
     b:boolean;
 begin
   if not HaveAnnotations then exit;
   Annot.SeekK(kanji,kana);
+  if fMedia=nil then
+    Application.CreateForm(TfMedia, fMedia);
   fMedia.media.Clear;
   fMedia.TabSet1.Tabs.Clear;
  // images

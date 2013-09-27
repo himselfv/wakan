@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBStrings, JWBIO, JWBDic, JWBIndex,
-  JWBEdictMarkers, JWBEdictReader;
+  JWBEdictMarkers, JWBEdictReader, JwbForms;
 
 type
   TImportDictFlag = (
@@ -27,7 +27,7 @@ type
 
   TEdictRoma = array[0..MaxKana-1] of string;
 
-  TfDictImport = class(TForm)
+  TfDictImport = class(TJwbForm)
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -97,9 +97,6 @@ type
   end;
 
   EDictImportException = class(Exception);
-
-var
-  fDictImport: TfDictImport;
 
 function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 
@@ -921,7 +918,7 @@ begin
 end;
 
 {
-Returns true if importer things it could load WORDFREQ_CK and add frequency info,
+Returns true if importer thinks it could load WORDFREQ_CK and add frequency info,
 if asked to.
 }
 function TfDictImport.SupportsFrequencyList: boolean;

@@ -158,6 +158,10 @@ begin
          or ((dt_ex>OneMinute) and (dt_new>dt_ex+OneMinute));
 end;
 
+var
+  fAutoImportForm: TfDictImport; { created on the first need, only used for auto-import.
+    deleted with other forms by application }
+
 {
 Automatically imports/updates all known dictionaries:
 Update strategy:
@@ -257,7 +261,9 @@ begin
   info.Version := '';
   info.Priority := 0;
   flags := [ifAddWordIndex, ifAddCharacterIndex, ifSilent];
-  if fDictImport.SupportsFrequencyList then
+  if fAutoImportForm=nil then
+    Application.CreateForm(TfDictImport, fAutoImportForm);
+  if fAutoImportForm.SupportsFrequencyList then
     flags := flags + [ifAddFrequencyInfo];
   SetLength(files,1);
   files[0] := item.Filename;
@@ -266,7 +272,7 @@ begin
     Backup(targetFname);
 
   try
-    fDictImport.ImportDictionary(targetFname, info, files, item.Language, flags);
+    fAutoImportForm.ImportDictionary(targetFname, info, files, item.Language, flags);
     AddFilename(AutoUpdateChecked, targetFname);
     AddFilename(AutoUpdateImported, targetFname);
   except
@@ -386,7 +392,9 @@ begin
     flags := flags + [ifAddWordIndex];
   if dic.hasCharIndex then
     flags := flags + [ifAddCharacterIndex];
-  if fDictImport.SupportsFrequencyList then
+  if fAutoImportForm=nil then
+    Application.CreateForm(TfDictImport, fAutoImportForm);
+  if fAutoImportForm.SupportsFrequencyList then
     flags := flags + [ifAddFrequencyInfo];
 
  //Unload the dictionary so that it doesn't block us,
@@ -397,7 +405,7 @@ begin
   Backup(fname);
 
   try
-    fDictImport.ImportDictionary(fname, info, files, lang, flags);
+    fAutoImportForm.ImportDictionary(fname, info, files, lang, flags);
     AddFilename(AutoUpdateImported, fname);
   except
     on E: EAbort do begin end; //do nothing, but the dictionary is not updated

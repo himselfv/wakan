@@ -1,10 +1,11 @@
 unit JWBRadical;
+{ Classic radicals are stored in wakan.chr, Raine are loaded from wakan.rad }
 
 interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, ExtCtrls, Buttons, StdCtrls, JWBStrings;
+  Grids, ExtCtrls, Buttons, StdCtrls, JWBStrings, JwbForms;
 
 type
   TRadSearchType = (
@@ -25,7 +26,7 @@ type
      2
      etc }
 
-  TfRadical = class(TForm)
+  TfRadical = class(TJwbForm)
     DrawGrid: TDrawGrid;
     RxLabel17: TLabel;
     Shape6: TShape;
@@ -91,15 +92,12 @@ type
     property SelectedIndexes: string read FSelectedIndexes;
     property OnSelectionChanged: TNotifyEvent read FOnSelectionChanged write FOnSelectionChanged;
 
-  public
-    procedure BuildRadicalPackage(sourceFiles: array of string);
-
   end;
 
  { Casting this to access protected members }
   TFriendlyDrawGrid = class(TDrawGrid);
 
- { Builds radical index from multiple files }
+ { Builds Raine radical index from multiple files }
   TRadicalIndexBuilder = class
   protected
     radicals: array of record
@@ -116,17 +114,19 @@ type
     procedure Save(path: string);
   end;
 
-var
-  fRadical: TfRadical;
+{ Radical selection form - a singleton }
+
+function fRadical: TfRadical;
 
 { Raine radicals }
 
 var
-  rainesearch:pointer;
+  rainesearch:pointer; //if nil, Raine radicals are not available
   raineradicals:TStringList;
 
 procedure LoadRaineRadicals(const filename: string);
 procedure UnloadRaineRadicals;
+procedure BuildRadicalPackage(sourceFiles: array of string);
 
 implementation
 
@@ -618,6 +618,14 @@ begin
   ShowIt;
 end;
 
+function fRadical: TfRadical;
+const Instance: TfRadical = nil;
+begin
+  if Instance=nil then
+    Application.CreateForm(TfRadical, Instance);
+  Result := Instance;
+end;
+
 
 { Radical index builder }
 
@@ -767,7 +775,7 @@ begin
 end;
 
 { Rebuilds wakan.rad from RADKFILE }
-procedure TfRadical.BuildRadicalPackage(sourceFiles: array of string);
+procedure BuildRadicalPackage(sourceFiles: array of string);
 var tempDir: string;
   radIndex: TRadicalIndexBuilder;
   pack: TPackageBuilder;

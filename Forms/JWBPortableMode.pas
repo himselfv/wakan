@@ -29,10 +29,10 @@ See also:
 interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, ComCtrls, IniFiles, JWBStrings;
+  StdCtrls, Buttons, ExtCtrls, ComCtrls, IniFiles, JWBStrings, JwbForms;
 
 type
-  TfPortableMode = class(TForm)
+  TfPortableMode = class(TJwbForm)
     pcPages: TPageControl;
     tsSelectMode: TTabSheet;
     lblQuestion: TLabel;
@@ -60,9 +60,6 @@ type
     function Initialize(ini: TCustomIniFile): string;
     function ContinueUpgrade(ini: TCustomIniFile): string;
   end;
-
-var
-  fPortableMode: TfPortableMode;
 
 const
   MR_STANDALONE = 1001;

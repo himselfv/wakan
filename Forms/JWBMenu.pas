@@ -617,6 +617,8 @@ procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
   ms:TMemoryStream;
   fSplash: TfSplash;
+  fCharDataImport: TfCharDataImport;
+  fDictImport: TfDictImport;
   i:integer;
 begin
   Profile('Init: start');
@@ -712,24 +714,29 @@ begin
     end else
     if Command='makedic'then
     begin
-      fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
-      fDictImport.edtDictName.Text:=MakeDicParams.Name;
-      fDictImport.edtVersion.Text:=MakeDicParams.Version;
-      if (MakeDicParams.Language='C')
-      or (MakeDicParams.Language='c') then
-        fDictImport.rgLanguage.ItemIndex:=1
-      else
-        fDictImport.rgLanguage.ItemIndex:=0;
-      fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
-      fDictImport.edtDescription.Text:=MakeDicParams.Description;
-      fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
-      fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
-      fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
-      fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
-      fDictImport.Silent := true;
-      for i := 0 to Length(MakeDicParams.Files) - 1 do
-        fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
-      fDictImport.btnBuildClick(self);
+      fDictImport := TfDictImport.Create(Application);
+      try
+        fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
+        fDictImport.edtDictName.Text:=MakeDicParams.Name;
+        fDictImport.edtVersion.Text:=MakeDicParams.Version;
+        if (MakeDicParams.Language='C')
+        or (MakeDicParams.Language='c') then
+          fDictImport.rgLanguage.ItemIndex:=1
+        else
+          fDictImport.rgLanguage.ItemIndex:=0;
+        fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
+        fDictImport.edtDescription.Text:=MakeDicParams.Description;
+        fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
+        fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
+        fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
+        fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
+        fDictImport.Silent := true;
+        for i := 0 to Length(MakeDicParams.Files) - 1 do
+          fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
+        fDictImport.btnBuildClick(self);
+      finally
+        FreeAndNil(fDictImport);
+      end;
       Application.Terminate;
       exit;
     end;
@@ -793,16 +800,21 @@ begin
         FreeAndNil(TRadicals);
         ClearCharDbProps();
       end;
-      if Command='makechars' then begin
-        fCharDataImport.cbResetDb.Checked := MakeCharsParams.ResetDb;
-        fCharDataImport.edtKanjidicFilename.Text := MakeCharsParams.KanjidicFilename;
-        fCharDataImport.edtUnihanFolder.Text := MakeCharsParams.UnihanFolder;
-      end else begin
-        fCharDataImport.cbResetDb.Checked := true;
-        fCharDataImport.edtKanjidicFilename.Text := 'KANJIDIC';
-        fCharDataImport.edtUnihanFolder.Text := 'Unihan';
+      fCharDataImport := TfCharDataImport.Create(Self);
+      try
+        if Command='makechars' then begin
+          fCharDataImport.cbResetDb.Checked := MakeCharsParams.ResetDb;
+          fCharDataImport.edtKanjidicFilename.Text := MakeCharsParams.KanjidicFilename;
+          fCharDataImport.edtUnihanFolder.Text := MakeCharsParams.UnihanFolder;
+        end else begin
+          fCharDataImport.cbResetDb.Checked := true;
+          fCharDataImport.edtKanjidicFilename.Text := 'KANJIDIC';
+          fCharDataImport.edtUnihanFolder.Text := 'Unihan';
+        end;
+        fCharDataImport.Import;
+      finally
+        FreeAndNil(fCharDataImport);
       end;
-      fCharDataImport.Import;
       if Command='makechars' then //if that was autoimport, continue
         Application.Terminate;
     end;
@@ -832,7 +844,7 @@ begin
             +'Either put this file there or explicitly specify which files to use to MAKERAD.'));
       end;
 
-      fRadical.BuildRadicalPackage(MakeRadParams.Files);
+      BuildRadicalPackage(MakeRadParams.Files);
       Application.Terminate;
       exit;
     end;
@@ -843,7 +855,7 @@ begin
       if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
      // if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2'); //see above
       if Length(MakeRadParams.Files)>0 then //else just continue and fail later
-        fRadical.BuildRadicalPackage(MakeRadParams.Files);
+        BuildRadicalPackage(MakeRadParams.Files);
     end;
 
    //Radical search

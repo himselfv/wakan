@@ -115,17 +115,6 @@ begin
   Application.CreateForm(TfVocabFilters, fVocabFilters);
   Profile('Before TfHint');
   Application.CreateForm(TfHint, fHint);
- //kept for now:
-  Profile('Before TfDictImport');
-  Application.CreateForm(TfDictImport, fDictImport); //-
-  Profile('Before TfRadical');
-  Application.CreateForm(TfRadical, fRadical); //-
-  Profile('Before TfMedia');
-  Application.CreateForm(TfMedia, fMedia); //?
-  Profile('Before TfPortableMode');
-  Application.CreateForm(TfPortableMode, fPortableMode); //-
-  Profile('Before TfCharDataImport');
-  Application.CreateForm(TfCharDataImport, fCharDataImport); //-
 
   Profile('Before InitializeWakan');
   fMenu.InitializeWakan;

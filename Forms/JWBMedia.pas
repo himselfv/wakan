@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  OleCtrls, SHDocVw, Tabs, ExtCtrls;
+  OleCtrls, SHDocVw, Tabs, ExtCtrls, JwbForms;
 
 type
-  TfMedia = class(TForm)
+  TfMedia = class(TJwbForm)
     TabSet1: TTabSet;
     WebBrowser1: TWebBrowser;
     Image1: TImage;
@@ -15,14 +15,11 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure TabSet1Change(Sender: TObject; NewTab: Integer;
       var AllowChange: Boolean);
-    procedure WebBrowser1DocumentComplete(Sender: TObject;
-      const pDisp: IDispatch; var URL: OleVariant);
+    procedure WebBrowser1DocumentComplete(ASender: TObject;
+      const pDisp: IDispatch; const URL: OleVariant);
   public
     media:TStringList;
   end;
-
-var
-  fMedia: TfMedia;
 
 implementation
 
@@ -58,8 +55,8 @@ begin
   end;
 end;
 
-procedure TfMedia.WebBrowser1DocumentComplete(Sender: TObject;
-  const pDisp: IDispatch; var URL: OleVariant);
+procedure TfMedia.WebBrowser1DocumentComplete(ASender: TObject;
+  const pDisp: IDispatch; const URL: OleVariant);
 begin
   fMenu.SetFocus;
 end;

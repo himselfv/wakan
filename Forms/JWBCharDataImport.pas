@@ -13,7 +13,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, UrlLabel, TextTable;
+  Dialogs, StdCtrls, UrlLabel, TextTable, JwbForms;
 
 type
   TFlagList = array of boolean;
@@ -23,7 +23,7 @@ type
  If ResetDb is set, existing information is discarded, otherwise preserved where
  no new info is available. }
 
-  TfCharDataImport = class(TForm)
+  TfCharDataImport = class(TJwbForm)
     Label1: TLabel;
     edtKanjidicFilename: TEdit;
     btnKanjidicBrowse: TButton;
@@ -56,10 +56,6 @@ type
     procedure Import;
 
   end;
-
-
-var
-  fCharDataImport: TfCharDataImport;
 
 implementation
 uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
