@@ -214,6 +214,7 @@ begin
 end;
 
 procedure AnnotShowMedia(kanji, kana: string);
+{$WRITEABLECONST ON}
 const fMedia: TfMedia = nil; { created on the first access .
   It's okay to not destroy it explicitly as we register it in the Application }
 var s:string;

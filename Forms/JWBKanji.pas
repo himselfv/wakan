@@ -294,17 +294,12 @@ end;
 
 var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     accept:boolean;
-    radf:integer;
-    i,j,k,grs:integer;
+    i,j,grs:integer;
     s1,s2,s3:string;
     sbJouyou:string;
     x:integer;
     sl4,sl10:TStringList;
     fltradical,fltskip,fltother:TStringList;
-    sltemp:TStringList;
-    p:pchar;
-    w:word;
-    onecheck:boolean;
     clipsort:boolean;
     clipind:integer;
 
@@ -426,7 +421,6 @@ begin
         2:TChar.SetOrder('ChFrequency_Ind');
       end;
     ki.Clear;
-    radf:=fSettings.GetPreferredRadicalType();
     clipsort:=(fKanjiSearch.btnInClipboard.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;

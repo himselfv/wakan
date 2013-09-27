@@ -619,6 +619,7 @@ begin
 end;
 
 function fRadical: TfRadical;
+{$WRITEABLECONST ON}
 const Instance: TfRadical = nil;
 begin
   if Instance=nil then
