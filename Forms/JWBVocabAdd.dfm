@@ -1,9 +1,9 @@
 object fVocabAdd: TfVocabAdd
   Left = 328
   Top = 259
-  BorderStyle = bsSizeToolWin
+  BorderIcons = [biSystemMenu, biMinimize]
   Caption = '#00057^eAdd into vocabulary'
-  ClientHeight = 281
+  ClientHeight = 265
   ClientWidth = 661
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,12 +19,12 @@ object fVocabAdd: TfVocabAdd
   OnShow = FormShow
   DesignSize = (
     661
-    281)
+    265)
   PixelsPerInch = 96
   TextHeight = 13
   object lblPhonetic: TLabel
     Left = 8
-    Top = 8
+    Top = 14
     Width = 94
     Height = 13
     Caption = '#00060^ePhonetic:'
@@ -38,7 +38,7 @@ object fVocabAdd: TfVocabAdd
   end
   object lblWritten: TLabel
     Left = 8
-    Top = 80
+    Top = 71
     Width = 161
     Height = 13
     Caption = '#00690^eWritten (from clipboard):'
@@ -50,8 +50,8 @@ object fVocabAdd: TfVocabAdd
     ParentFont = False
   end
   object lblCategory: TLabel
-    Left = 6
-    Top = 237
+    Left = 8
+    Top = 220
     Width = 94
     Height = 13
     Anchors = [akLeft, akBottom]
@@ -62,11 +62,11 @@ object fVocabAdd: TfVocabAdd
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    ExplicitTop = 181
+    ExplicitTop = 237
   end
   object lblMeaning: TLabel
     Left = 8
-    Top = 136
+    Top = 125
     Width = 93
     Height = 13
     Caption = '#00691^eMeaning:'
@@ -78,20 +78,19 @@ object fVocabAdd: TfVocabAdd
     ParentFont = False
   end
   object pbPhonetic: TWakanPaintbox
-    Left = 7
-    Top = 22
-    Width = 649
+    Left = 8
+    Top = 33
+    Width = 645
     Height = 28
     Anchors = [akLeft, akTop, akRight]
-    Color = clWhite
+    Color = clWindow
     DoubleBuffered = True
     OnPaint = pbPhoneticPaint
-    ExplicitWidth = 659
   end
   object edtPhonetic: TEdit
-    Left = 8
-    Top = 24
-    Width = 648
+    Left = 115
+    Top = 8
+    Width = 538
     Height = 24
     Anchors = [akLeft, akTop, akRight]
     Font.Charset = DEFAULT_CHARSET
@@ -104,18 +103,17 @@ object fVocabAdd: TfVocabAdd
     OnChange = edtPhoneticChange
   end
   object cbCategories: TComboBox
-    Left = 6
-    Top = 253
+    Left = 8
+    Top = 236
     Width = 361
     Height = 21
     Anchors = [akLeft, akRight, akBottom]
     TabOrder = 2
-    ExplicitTop = 283
-    ExplicitWidth = 371
+    ExplicitTop = 253
   end
   object btnOk: TBitBtn
     Left = 390
-    Top = 251
+    Top = 234
     Width = 129
     Height = 25
     Anchors = [akRight, akBottom]
@@ -123,12 +121,11 @@ object fVocabAdd: TfVocabAdd
     Kind = bkOK
     NumGlyphs = 2
     TabOrder = 3
-    ExplicitLeft = 400
-    ExplicitTop = 281
+    ExplicitTop = 251
   end
   object btnCancel: TBitBtn
-    Left = 527
-    Top = 251
+    Left = 524
+    Top = 234
     Width = 129
     Height = 25
     Anchors = [akRight, akBottom]
@@ -139,31 +136,19 @@ object fVocabAdd: TfVocabAdd
   end
   object pbWritten: TWakanPaintbox
     Left = 8
-    Top = 96
+    Top = 90
     Width = 645
     Height = 28
     Anchors = [akLeft, akTop, akRight]
-    Color = clWhite
+    Color = clWindow
     DoubleBuffered = True
     OnPaint = pbWrittenPaint
-    ExplicitWidth = 655
-  end
-  object pbPhoneticConv: TWakanPaintbox
-    Left = 8
-    Top = 48
-    Width = 648
-    Height = 20
-    Anchors = [akLeft, akTop, akRight]
-    Color = clBtnFace
-    DoubleBuffered = True
-    OnPaint = pbPhoneticConvPaint
-    ExplicitWidth = 658
   end
   object edtMeaning: TMemo
     Left = 8
-    Top = 155
-    Width = 648
-    Height = 68
+    Top = 144
+    Width = 645
+    Height = 70
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -178,7 +163,5 @@ object fVocabAdd: TfVocabAdd
     TabOrder = 1
     WantReturns = False
     OnKeyPress = edtMeaningKeyPress
-    ExplicitWidth = 658
-    ExplicitHeight = 98
   end
 end

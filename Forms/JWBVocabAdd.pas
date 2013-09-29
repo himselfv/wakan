@@ -21,11 +21,9 @@ type
     btnOk: TBitBtn;
     btnCancel: TBitBtn;
     pbWritten: TWakanPaintbox;
-    pbPhoneticConv: TWakanPaintbox;
     pbPhonetic: TWakanPaintbox;
     edtMeaning: TMemo;
     procedure edtPhoneticChange(Sender: TObject);
-    procedure pbPhoneticConvPaint(Sender: TObject; Canvas: TCanvas);
     procedure pbWrittenPaint(Sender: TObject; Canvas: TCanvas);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
@@ -73,9 +71,11 @@ end;
 procedure TfVocabAdd.SetMeaningOnly(const Value: boolean);
 begin
   FMeaningOnly := Value;
-  pbPhonetic.Visible := Value;
   edtPhonetic.Visible := not Value;
-  pbPhoneticConv.Visible := not Value;
+  if Value then
+    pbPhonetic.Color := clWindow
+  else
+    pbPhonetic.Color := clBtnFace;
   if FMeaningOnly then begin
     lblWritten.Caption := _l('#00061^eWritten:');
     lblMeaning.Caption := _l('#00058^eMeaning (editable):');
@@ -94,24 +94,21 @@ end;
 
 procedure TfVocabAdd.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
 begin
-  Canvas.Brush.Color:=clWindow;
-  DrawUnicode(Canvas,2,2,22,FFixedPhonetic,FontJapanese)
+  Canvas.Brush.Color:=Self.Color;
+  if MeaningOnly then
+    DrawUnicode(Canvas,2,2,22,FFixedPhonetic,FontJapanese)
+  else
+    DrawUnicode(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,romasys,curlang,[]),FontJapanese);
 end;
 
 procedure TfVocabAdd.edtPhoneticChange(Sender: TObject);
 begin
-  pbPhoneticConv.Invalidate;
-end;
-
-procedure TfVocabAdd.pbPhoneticConvPaint(Sender: TObject; Canvas: TCanvas);
-begin
-  Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(Canvas,2,2,16,RomajiToKana(edtPhonetic.Text,romasys,curlang,[]),FontSmall);
+  pbPhonetic.Invalidate;
 end;
 
 procedure TfVocabAdd.pbWrittenPaint(Sender: TObject; Canvas: TCanvas);
 begin
-  Canvas.Brush.Color:=clWindow;
+  Canvas.Brush.Color:=Self.Color;
   if MeaningOnly then
     DrawUnicode(Canvas,2,2,22,FFixedKanji,FontJapanese)
   else
