@@ -189,32 +189,32 @@ Disable Compiling> String format checking in Delphi Project Options:
   http://www.micro-isv.asia/2008/10/needless-string-checks-with-ensureunicodestring/
 }
 
-function flength(const s:FString): integer; {$IFDEF INLINE}inline;{$ENDIF}
-function flenfc(lenn:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
-function flenn(lenfc:integer): integer; {$IFDEF INLINE}inline;{$ENDIF}
-function fcopy(const s: FString; Index, Count: Integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
-procedure fdelete(var s: FString; Index, Count: Integer); {$IFDEF INLINE}inline;{$ENDIF}
-function fpos(const substr: FString; const str:FString):integer; {$IFDEF INLINE}inline;{$ENDIF}
-function fgetch(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
-function fgetchl(const s: FString; Index: integer): FChar; {$IFDEF INLINE}inline;{$ENDIF}
-procedure fputch(var s: FString; Index: integer; const ch: FChar); {$IFDEF INLINE}inline;{$ENDIF}
-function fstr(const s: AnsiString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
-function fstr(const s: UnicodeString): FString; overload; {$IFDEF INLINE}inline;{$ENDIF}
-function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
-function hextofstr(const s: FHex): FString; {$IFDEF INLINE}inline;{$ENDIF}
-function fstrtohex(const s: FString): FHex; {$IFDEF INLINE}inline;{$ENDIF}
+function flength(const s:FString): integer; inline;
+function flenfc(lenn:integer): integer; inline;
+function flenn(lenfc:integer): integer; inline;
+function fcopy(const s: FString; Index, Count: Integer):FString; inline;
+procedure fdelete(var s: FString; Index, Count: Integer); inline;
+function fpos(const substr: FString; const str:FString):integer; inline;
+function fgetch(const s: FString; Index: integer): FChar; inline;
+function fgetchl(const s: FString; Index: integer): FChar; inline;
+procedure fputch(var s: FString; Index: integer; const ch: FChar); inline;
+function fstr(const s: AnsiString): FString; overload; inline;
+function fstr(const s: UnicodeString): FString; overload; inline;
+function fstrtouni(const s: FString): UnicodeString; inline;
+function hextofstr(const s: FHex): FString; inline;
+function fstrtohex(const s: FString): FHex; inline;
 
 {$IFNDEF UNICODE}
-function FcharCmp(a, b: PFChar; cnt: integer): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function FcharCmp(a, b: PFChar; cnt: integer): boolean; inline;
 {$ENDIF}
-function EatOneFChar(var pc: PAnsiChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
-function EatOneFCharW(var pc: PWideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function EatOneFChar(var pc: PAnsiChar): boolean; inline;
+function EatOneFCharW(var pc: PWideChar): boolean; inline;
 
-function fch(const c: AnsiChar): FChar; overload; {$IFDEF INLINE}inline;{$ENDIF}
-function fch(const c: WideChar): FChar; overload; {$IFDEF INLINE}inline;{$ENDIF}
+function fch(const c: AnsiChar): FChar; overload; inline;
+function fch(const c: WideChar): FChar; overload; inline;
 function ftoansi(c: FChar; out ac: AnsiChar): boolean; overload;
 function ftoansi(c: FChar): AnsiChar; overload;
-function ftowide(c: FChar): WideChar; {$IFDEF INLINE}inline;{$ENDIF}
+function ftowide(c: FChar): WideChar; inline;
 
 {
 Unicode versions of some function which are unavailable/inefficient on Ansi builds.
@@ -230,15 +230,15 @@ function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inli
 { General purpose string functions }
 
 function IsHexChar(wc: WideChar): boolean;
-function HexCharCode(c:AnsiChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
-function HexCharCodeW(c:WideChar): byte; {$IFDEF INLINE}inline;{$ENDIF}
+function HexCharCode(c:AnsiChar): byte; inline;
+function HexCharCodeW(c:WideChar): byte; inline;
 function HexToUnicode(ps:PAnsiChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicodeW(ps:PWideChar; maxlen: integer): UnicodeString; overload;
 function HexToUnicode(const s:string):UnicodeString; overload;
 function BytesToHex(pb:PByte;sz:integer):string;
 function UnicodeToHex(pc:PWideChar; len: integer):string; overload;
 function UnicodeToHex(const s:UnicodeString):string; overload;
-function AnsiToHex(const s:AnsiString):string; {$IFDEF INLINE}inline;{$ENDIF}
+function AnsiToHex(const s:AnsiString):string; inline;
 function UnicodeToML(s:widestring):string;
 
 function Utf16ToUnicodeIndex(const c: WideChar): integer; inline;
@@ -291,9 +291,9 @@ const //Character types for EvalChar
   EC_KATAKANA_HW      = 8; // half-width katakana
 
 
-function EvalChar(char:WideChar):integer; overload; {$IFDEF INLINE}inline;{$ENDIF}
+function EvalChar(char:WideChar):integer; overload; inline;
 {$IFDEF UNICODE}
-function EvalChar(const char:FString):integer; overload; {$IFDEF INLINE}inline;{$ENDIF}
+function EvalChar(const char:FString):integer; overload; inline;
 {$ELSE}
 function EvalChar(const char:FString):integer; overload;
 {$ENDIF}
@@ -311,9 +311,9 @@ function IsDigit(ch: AnsiChar): boolean; overload; inline;
 function IsDigit(ch: WideChar): boolean; overload; inline;
 
 //Shit sucks. We have to have a ton of versions!
-function IsLatinLetter(c:char): boolean; {$IFDEF INLINE}inline;{$ENDIF}
-function IsLatinLetterW(c:WideChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
-function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function IsLatinLetter(c:char): boolean; inline;
+function IsLatinLetterW(c:WideChar): boolean; inline;
+function IsLatinLetterF(c:FChar): boolean; inline;
 function IsHalfWidthChar(c:FChar): boolean;
 function IsLatinDigit(c:char):boolean;
 function IsLatinDigitF(c:FChar):boolean;
@@ -562,7 +562,7 @@ begin
 {$ENDIF}
 end;
 
-function fpos(const substr: FString; const str:FString):integer; {$IFDEF INLINE}inline;{$ENDIF}
+function fpos(const substr: FString; const str:FString):integer;
 begin
   Result := pos(substr,str){$IFNDEF UNICODE}div 4{$ENDIF};
 end;
@@ -621,7 +621,7 @@ end;
 
 //Converts FString to raw UnicodeString. On unicode does nothing!
 //Call when you want to pass FString to someone who accepts UnicodeStrings
-function fstrtouni(const s: FString): UnicodeString; {$IFDEF INLINE}inline;{$ENDIF}
+function fstrtouni(const s: FString): UnicodeString;
 begin
  {$IFDEF UNICODE}
   Result := UnicodeString(s);
@@ -1431,7 +1431,7 @@ begin
 end;
 
 //FChar
-function IsLatinLetterF(c:FChar): boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function IsLatinLetterF(c:FChar): boolean;
 begin
 {$IFDEF UNICODE}
   Result := IsLatinLetterW(c);

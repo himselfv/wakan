@@ -216,7 +216,7 @@ type
 
    //Generates a signature for a record in sort order (i.e. FIELD1_FIELD2_FIELD3)
     function SortRec(r:integer;const fields:TSeekFieldDescriptions):string; overload; //newer cooler version
-    function SortRec(r:integer;seekIndex:integer):string; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function SortRec(r:integer;seekIndex:integer):string; overload; inline;
 
    { Comparison functions. TextTable has two comparison modes:
      - Field comparison (string or integer, used by LocateRecord)
@@ -285,21 +285,21 @@ type
     function Test(const fil:string):boolean;
   public
     procedure Insert(values:array of string);
-    procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Delete; inline;
     procedure Edit(const fields:array of byte;const values:array of string);
-    function Locate(seek: PSeekObject; const value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(const seek,value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(seek:PSeekObject; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(const seek:string; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek: PSeekObject; const value:string):boolean; overload; inline;
+    function Locate(const seek,value:string):boolean; overload; inline;
+    function Locate(seek:PSeekObject; const value:integer):boolean; overload; inline;
+    function Locate(const seek:string; const value:integer):boolean; overload; inline;
   public
-    function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
-    function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
-    function TrueInt(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
-    function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
+    function Str(field:integer):string; inline;
+    function Int(field:integer):integer; inline;
+    function TrueInt(field:integer):integer; inline;
+    function Bool(field:integer):boolean; inline;
    {$IFDEF UNICODE}
-    function Fch(field:integer):WideChar; {$IFDEF INLINE}inline;{$ENDIF}
+    function Fch(field:integer):WideChar; inline;
    {$ELSE}
-    function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+    function Fch(field:integer):string; inline;
    {$ENDIF}
  {$ENDIF}
 
@@ -326,27 +326,27 @@ type
   public
    { Write access to TTextTable MUST BE EXCLUSIVE. ALWAYS. NO EXCEPTIONS. }
     procedure Insert(values:array of string);
-    procedure Delete; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure Delete; inline;
     procedure Edit(const fields:array of byte; const values:array of string);
 
   public
-    function Locate(seek:PSeekObject; const value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(const seek,value:string):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(seek:PSeekObject; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-    function Locate(const seek:string; const value:integer):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function Locate(seek:PSeekObject; const value:string):boolean; overload; inline;
+    function Locate(const seek,value:string):boolean; overload; inline;
+    function Locate(seek:PSeekObject; const value:integer):boolean; overload; inline;
+    function Locate(const seek:string; const value:integer):boolean; overload; inline;
 
   public
-    function Str(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
-    function AnsiStr(field:integer):AnsiString; {$IFDEF INLINE}inline;{$ENDIF}
-    function Int(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
-    function TrueInt(field:integer):integer; {$IFDEF INLINE}inline;{$ENDIF}
-    function Bool(field:integer):boolean; {$IFDEF INLINE}inline;{$ENDIF}
+    function Str(field:integer):string; inline;
+    function AnsiStr(field:integer):AnsiString; inline;
+    function Int(field:integer):integer; inline;
+    function TrueInt(field:integer):integer; inline;
+    function Bool(field:integer):boolean; inline;
    {$IFDEF UNICODE}
-    function Fch(field:integer):WideChar; {$IFDEF INLINE}inline;{$ENDIF}
+    function Fch(field:integer):WideChar; inline;
    {$ELSE}
-    function Fch(field:integer):string; {$IFDEF INLINE}inline;{$ENDIF}
+    function Fch(field:integer):string; inline;
    {$ENDIF}
-    function Dehex(field:integer):FString; {$IFDEF INLINE}inline;{$ENDIF}
+    function Dehex(field:integer):FString; inline;
 
   end;
 

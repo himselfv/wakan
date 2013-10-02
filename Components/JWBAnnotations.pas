@@ -26,11 +26,12 @@ var
 
 procedure RebuildAnnotations;
 procedure LoadAnnotations;
-function HaveAnnotations:boolean; {$IFDEF INLINE}inline;{$ENDIF}
+function HaveAnnotations:boolean; inline;
 procedure AnnotShowMedia(kanji,kana:string);
 
 implementation
-uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBMenu, JWBIO;
+uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBMenu, JWBIO,
+  JWBKanaConv;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 var pack: TPackageBuilder;

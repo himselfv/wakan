@@ -88,7 +88,7 @@ begin
  //Not really needed but let's check beforehand
   if (edtKanjidicFilename.Text<>'') and not FileExists(edtKanjidicFilename.Text) then
     raise Exception.CreateFmt(_l('#01075^eFile %s does not exist!'), [edtKanjidicFilename.Text]);
-  if (edtUnihanFolder.Text<>'') and not DirectoryExists(edtUnihanFolder.Text) then
+  if (edtUnihanFolder.Text<>'') and not SysUtils.DirectoryExists(edtUnihanFolder.Text) then
     raise Exception.CreateFmt(_l('#01089^eFolder %s does not exist!'), [edtUnihanFolder.Text]);
 
   if Application.MessageBox(

@@ -54,8 +54,8 @@ type
     ruby: FString;
     flags: TCharacterFlags;
     procedure Reset;
-    procedure SetChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); {$IFDEF INLINE}inline;{$ENDIF}
-    procedure SetRubyChar(awordstate: char; alearnstate: byte; arubyBreak: boolean; aruby: FString); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure SetChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); inline;
+    procedure SetRubyChar(awordstate: char; alearnstate: byte; arubyBreak: boolean; aruby: FString); inline;
   end;
   PCharacterProps = ^TCharacterProps;
   TCharacterPropArray = array of TCharacterProps;
@@ -65,19 +65,19 @@ type
     charcount: integer;
     procedure Grow(ARequiredFreeLen: integer);
     function AddChar(): PCharacterProps; overload;
-    procedure AddChar(const acp: TCharacterProps); overload; {$IFDEF INLINE}inline;{$ENDIF}
-    procedure AddChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); overload; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure AddChar(const acp: TCharacterProps); overload; inline;
+    procedure AddChar(awordstate: char; alearnstate: byte; adicidx: integer; adocdic: byte); overload; inline;
     procedure AddChars(Count: integer); overload;
-    procedure AddChars(const AChars: TCharacterPropArray); overload; {$IFDEF INLINE}inline;{$ENDIF}
-    procedure AddChars(const AChars: TCharacterLineProps); overload; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure AddChars(const AChars: TCharacterPropArray); overload; inline;
+    procedure AddChars(const AChars: TCharacterLineProps); overload; inline;
     function InsertChar(Index: integer): PCharacterProps;
     procedure InsertChars(Index: integer; Count: integer); overload;
     procedure InsertChars(Index: integer; const AChars: TCharacterPropArray); overload;
     procedure DeleteChar(Index: integer);
     procedure DeleteChars(Index: integer; Count: integer); overload;
-    procedure DeleteChars(Index: integer); overload; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure DeleteChars(Index: integer); overload; inline;
     function CopySubstr(Index: integer; Count: integer): TCharacterLineProps; overload;
-    function CopySubstr(Index: integer): TCharacterLineProps; overload; {$IFDEF INLINE}inline;{$ENDIF}
+    function CopySubstr(Index: integer): TCharacterLineProps; overload; inline;
     procedure Clear;
   end;
   PCharacterLineProps = ^TCharacterLineProps;
@@ -87,12 +87,12 @@ type
     FList: array of TCharacterLineProps;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetLinePtr(Index: integer): PCharacterLineProps;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetLinePtr(Index: integer): PCharacterLineProps; inline;
   public
     function AddNewLine: PCharacterLineProps;
     function InsertNewLine(Index: integer): PCharacterLineProps;
-    procedure AddLine(const l: TCharacterLineProps); {$IFDEF INLINE}inline;{$ENDIF}
-    procedure InsertLine(Index: integer; const l: TCharacterLineProps); {$IFDEF INLINE}inline;{$ENDIF}
+    procedure AddLine(const l: TCharacterLineProps); inline;
+    procedure InsertLine(Index: integer; const l: TCharacterLineProps); inline;
     procedure DeleteLine(Index: integer);
     procedure Clear;
     property Count: integer read FListUsed;
@@ -178,8 +178,8 @@ type
     function GetDoc(ax,ay:integer):FChar;
     function GetDocChain(cx,cy:integer):FString;
     procedure AdjustDocument;
-    function EndOfDocument: TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
-    function EndOfLine(const LogicalLineIndex: integer): TSourcePos; {$IFDEF INLINE}inline;{$ENDIF}
+    function EndOfDocument: TSourcePos; inline;
+    function EndOfLine(const LogicalLineIndex: integer): TSourcePos; inline;
     procedure GetDictionaryEntry(const APos: TSourcePos; out kanji, reading: FString;
       out meaning: string);
     property Lines: TStringList read doc;

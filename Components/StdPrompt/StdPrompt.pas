@@ -227,7 +227,7 @@ function SMYesNo(warningst:boolean;title,mess:string):boolean;
 // user pressed Yes button and False if user pressed No button
 
 implementation
-uses Consts;
+uses Consts, Types;
 
 {$R *.DFM}
 

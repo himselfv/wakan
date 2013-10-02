@@ -78,7 +78,7 @@ type
     FList: array of PIndexEntryPrep;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PIndexEntryPrep;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PIndexEntryPrep; inline;
     function InsertItem(Index: integer): PIndexEntryPrep;
     function Find(const entry: int64; var Index: Integer): Boolean;
   public

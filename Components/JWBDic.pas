@@ -145,8 +145,8 @@ type
     procedure Unload; virtual;
     procedure Demand;
    {$IFDEF DIC_CURSOR_IN_TABLE}
-    procedure FindIndexString(t:TIndexType;const locator:UnicodeString); {$IFDEF INLINE}inline;{$ENDIF}
-    function ReadIndex:integer; {$IFDEF INLINE}inline;{$ENDIF}
+    procedure FindIndexString(t:TIndexType;const locator:UnicodeString); inline;
+    function ReadIndex:integer; inline;
    {$ENDIF}
     function NewCursor: TDicCursor;
     function NewLookup(AMatchType: TMatchType): TDicLookupCursor;

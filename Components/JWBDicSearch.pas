@@ -33,11 +33,11 @@ type
     FList: TDeflectionArray;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PDeflectionRule;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PDeflectionRule; inline;
     function MakeNewItem: PDeflectionRule;
   public
     procedure Add(const r: TDeflectionRule); overload;
-    procedure Add(const s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const s: string); overload; inline;
     procedure Clear;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PDeflectionRule read GetItemPtr; default;
@@ -94,12 +94,12 @@ type
     FList: TCandidateLookupArray;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PCandidateLookup;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PCandidateLookup; inline;
     function MakeNewItem: PCandidateLookup;
   public
     procedure Add(priority: integer; len: integer; verbType: char; roma: TRomaType;
       const str: string); overload;
-    procedure Add(const ct: TCandidateLookup); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const ct: TCandidateLookup); overload; inline;
     procedure Delete(Index: integer);
     procedure Clear;
     function Find(len: integer; verbType: char; const str: string): integer;
@@ -149,7 +149,7 @@ type
     FList: array of PSearchResult;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PSearchResult;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PSearchResult; inline;
     procedure ExchangeItems(I,J: integer);
     procedure QuickSort(L, R: Integer; SCompare: TSearchResultsCompare);
   public
@@ -256,7 +256,7 @@ Deflexion rules
 
 //Parses deflection rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseDeflectionRule(const s: string): TDeflectionRule; {$IFDEF INLINE}inline;{$ENDIF}
+function ParseDeflectionRule(const s: string): TDeflectionRule;
 var i: integer;
 begin
   Result.vt := s[1];

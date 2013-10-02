@@ -67,7 +67,7 @@ type
     FOneCharTree: TBinTree;
     FTwoCharTree: TBinTree;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PRomajiTranslationRule;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PRomajiTranslationRule; inline;
     function MakeNewItem: PRomajiTranslationRule;
     procedure SetupRule(r: PRomajiTranslationRule);
     procedure AddToIndex(r: PRomajiTranslationRule);
@@ -76,7 +76,7 @@ type
     destructor Destroy; override;
     procedure Add(const r: TRomajiTranslationRule); overload;
     procedure Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string); overload;
-    procedure Add(const s: string); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const s: string); overload; inline;
     procedure Clear;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiTranslationRule read GetItemPtr; default;
@@ -95,12 +95,12 @@ type
     FList: array of TRomajiReplacementRule;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PRomajiReplacementRule;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PRomajiReplacementRule; inline;
     function MakeNewItem: PRomajiReplacementRule;
   public
     procedure Add(const r: TRomajiReplacementRule); overload;
     procedure Add(const AFind, ARepl: string; ARomaType: integer; APref: char); overload;
-    procedure Add(const s: string; const pref: char); overload;{$IFDEF INLINE} inline;{$ENDIF}
+    procedure Add(const s: string; const pref: char); overload; inline;
     procedure Clear;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiReplacementRule read GetItemPtr; default;
@@ -390,7 +390,7 @@ end;
 
 //Parses romaji translation rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule; {$IFDEF INLINE}inline;{$ENDIF}
+function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule; inline;
 var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 5);
@@ -467,7 +467,7 @@ end;
 
 //Parses romaji translation rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseRomajiReplacementRule(const s: string): TRomajiReplacementRule; {$IFDEF INLINE}inline;{$ENDIF}
+function ParseRomajiReplacementRule(const s: string): TRomajiReplacementRule; inline;
 var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 3);

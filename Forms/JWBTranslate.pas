@@ -93,7 +93,7 @@ type
     FList: array of TGraphicalLineInfo;
     FListUsed: integer;
     procedure Grow(ARequiredFreeLen: integer);
-    function GetItemPtr(Index: integer): PGraphicalLineInfo;{$IFDEF INLINE} inline;{$ENDIF}
+    function GetItemPtr(Index: integer): PGraphicalLineInfo; inline;
     function MakeNewItem: PGraphicalLineInfo;
     function InsertNewItem(Index: integer): PGraphicalLineInfo;
   public
@@ -413,8 +413,8 @@ const
   FontSizeMedium = 12;
   FontSizeLarge = 16;
 
-function CursorPos(x,y: integer): TCursorPos; {$IFDEF INLINE}inline;{$ENDIF}
-function Selection(fromx, fromy, tox, toy: integer): TTextSelection; {$IFDEF INLINE}inline;{$ENDIF}
+function CursorPos(x,y: integer): TCursorPos; inline;
+function Selection(fromx, fromy, tox, toy: integer): TTextSelection; inline;
 
 type
   TRectHelper = record helper for TRect

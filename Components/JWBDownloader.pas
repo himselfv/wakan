@@ -217,6 +217,6 @@ begin
 end;
 
 initialization
-  GetLocaleFormatSettings($0409, HttpFormatSettings);
+  HttpFormatSettings := TFormatSettings.Create($0409);
 
 end.

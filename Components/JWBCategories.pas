@@ -124,8 +124,8 @@ procedure SetKnown(listno:integer;const char:FChar;known:boolean); overload;
 function FirstUnknownKanjiIndex(const kanji:FString):integer;
 function CheckKnownKanji(const kanji:FString): FString;
 {$IFDEF UNICODE}
-function IsKnown(listno:integer;const char:FString):boolean; overload; {$IFDEF INLINE}inline;{$ENDIF}
-procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; {$IFDEF INLINE}inline;{$ENDIF}
+function IsKnown(listno:integer;const char:FString):boolean; overload; inline;
+procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; inline;
 {$ENDIF}
 
 
@@ -846,7 +846,7 @@ begin
   for i:=1 to 20000 do KnownList[i]:=nil;
 end;
 
-procedure CheckListIndex(listno: integer); {$IFDEF INLINE}inline;{$ENDIF}
+procedure CheckListIndex(listno: integer); inline;
 begin
   if listno>20000 then raise Exception.Create('ListNo size exceeded!');
 end;
