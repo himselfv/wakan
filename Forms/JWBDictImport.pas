@@ -826,6 +826,7 @@ begin
 
       fuin := OpenTextFile(tempDir+'\DICT_'+inttostr(fi)+'.TMP', TUnicodeEncoding);
       try
+        fuin.Rewind({DontSkipBom=}true);
         if not fuin.ReadChar(uc) or (uc<>#$FEFF) then
           raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+files[fi]+')');
 

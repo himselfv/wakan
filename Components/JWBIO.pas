@@ -227,7 +227,7 @@ type
    { Since this may require backward seek, try not to TrySkipBom for sources where
     you do not really expect it (i.e. console) }
     procedure TrySkipBom;
-    procedure Rewind;
+    procedure Rewind(const ADontSkipBom: boolean = false);
     function EOF: boolean;
     function ReadChar(out ch: WideChar): boolean; overload;
    { If reading next position produces a surrogate pair, store it somewhere and
@@ -487,10 +487,12 @@ begin
   FEncoding.ReadBom(Stream);
 end;
 
-procedure TStreamDecoder.Rewind;
+procedure TStreamDecoder.Rewind(const ADontSkipBom: boolean);
 begin
   Stream.Seek(0, soBeginning);
-  TrySkipBom;
+  FBufferPos := Length(FBuffer)+1;
+  if not ADontSkipBom then
+    TrySkipBom;
 end;
 
 { True if there *already was* at least one ReadChar() which resulted in False,
@@ -1838,6 +1840,7 @@ begin
     if AEncoding=nil then
       if not Conv_DetectType(fsr, AEncoding) and (AEncoding=nil) {not even a best guess} then
         AEncoding := TAsciiEncoding;
+    fsr.Seek(0, soBeginning);
     Result := TStreamDecoder.Open(fsr, AEncoding.Create, {OwnsStream=}true);
   except
     FreeAndNil(fsr);
