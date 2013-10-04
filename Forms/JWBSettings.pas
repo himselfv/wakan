@@ -509,9 +509,11 @@ begin
       fMenu.FormPlacement1.IniFileName := WakanRegKey;
     end;
     fMenu.FormPlacement1.IniSection := 'MainPos';
-    fKanjiDetails.FormPlacement1.UseRegistry := fMenu.FormPlacement1.UseRegistry;
-    fKanjiDetails.FormPlacement1.IniFileName := fMenu.FormPlacement1.IniFileName;
-    fKanjiDetails.FormPlacement1.IniSection := 'DetailPos';
+    if fKanjiDetails<>nil then begin
+      fKanjiDetails.FormPlacement1.UseRegistry := fMenu.FormPlacement1.UseRegistry;
+      fKanjiDetails.FormPlacement1.IniFileName := fMenu.FormPlacement1.IniFileName;
+      fKanjiDetails.FormPlacement1.IniSection := 'DetailPos';
+    end;
    //Placement must be configured before doing LoadRegistrySettings
    //because applying some settings requires being able to load Placement
 
@@ -578,9 +580,11 @@ begin
   RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
   RadioGroup6.ItemIndex:=reg.ReadInteger('Romanization','ChineseSystem',0);
   RadioGroup7.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
-  fKanjiCompounds.cbLeftMatchOnly.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);
-  fKanjiCompounds.cbPopularOnly.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
-  fKanjiCompounds.cbSortByFrequency.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
+  if fKanjiCompounds<>nil then begin
+    fKanjiCompounds.cbLeftMatchOnly.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);
+    fKanjiCompounds.cbPopularOnly.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
+    fKanjiCompounds.cbSortByFrequency.Checked:=reg.ReadBool('Characters','CompoundsFreq',true);
+  end;
   RadioGroup5.ItemIndex:=reg.ReadInteger('Characters','Chinese',0);
   rgKanjiGridSize.ItemIndex:=reg.ReadInteger('Characters','GridSize',1);
   cbRadicalType.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
@@ -611,7 +615,8 @@ begin
   CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
   CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
   CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
-  fWordLookup.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
+  if fWordLookup<>nil then
+    fWordLookup.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
   CheckBox8.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
   cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
@@ -636,12 +641,14 @@ begin
     fTranslate.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
     fTranslate.DocEncoding:=FindEncoding(Reg.ReadString('Editor','DocType',''));
   end;
-  fExamples.btnRandomOrder.Down:=reg.ReadBool('Dict','RandomExamples',false);
   Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
   exmode:=reg.ReadInteger('Dict','ExMode',0);
-  if exmode=0 then fExamples.btnDisplayTranslation.Down:=true;
-  if exmode=1 then fExamples.btnUseBigFont.Down:=true;
-  if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
+  if fExamples<>nil then begin
+    fExamples.btnRandomOrder.Down:=reg.ReadBool('Dict','RandomExamples',false);
+    if exmode=0 then fExamples.btnDisplayTranslation.Down:=true;
+    if exmode=1 then fExamples.btnUseBigFont.Down:=true;
+    if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
+  end;
   Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
   GridFontSize:=strtoint(Edit25.text);
   lbWordPrintFormat.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
@@ -678,7 +685,8 @@ begin
   CheckBox62.Checked:=reg.ReadBool('KanjiCards','PrintFullComp',true);
   CheckBox63.Checked:=reg.ReadBool('KanjiCards','SortFrequency',true);
   CheckBox26.Checked:=reg.ReadBool('Vocabulary','SaveStat',false);
-  fWordLookup.SpeedButton4.Down:=reg.ReadBool('Dict','DeflexItalic',true);
+  if fWordLookup<>nil then
+    fWordLookup.SpeedButton4.Down:=reg.ReadBool('Dict','DeflexItalic',true);
   CheckBox43.Checked:=reg.ReadBool('Translate','BreakLines',true);
   cbDisplayLines.Checked:=reg.ReadBool('Translate','DisplayLines',true);
   CheckBox41.Checked:=reg.ReadBool('Translate','DisplayNonJapanese',true);
@@ -698,13 +706,15 @@ begin
   cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
   cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
-  fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
-  fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
-  fTranslate.sbUseTlColors.Down:=reg.ReadBool('Translate','TransColors',true);
-  fTranslate.sbDisplayReadingClick(fTranslate.sbDisplayReading);
-  fTranslate.sbDisplayMeaningClick(fTranslate.sbDisplayMeaning);
-  fTranslate.sbUseTlColorsClick(fTranslate.sbUseTlColors);
-  fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
+  if fTranslate<>nil then begin
+    fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
+    fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
+    fTranslate.sbUseTlColors.Down:=reg.ReadBool('Translate','TransColors',true);
+    fTranslate.sbDisplayReadingClick(fTranslate.sbDisplayReading);
+    fTranslate.sbDisplayMeaningClick(fTranslate.sbDisplayMeaning);
+    fTranslate.sbUseTlColorsClick(fTranslate.sbUseTlColors);
+    fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
+  end;
   CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
   CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
   CheckBox48.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
@@ -717,15 +727,17 @@ begin
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
   fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
-  tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
-  if tmp_int>0 then
-    fTranslate.FontSize := tmp_int
-  else
-    case reg.ReadInteger('Translate','FontSize',2) of
-      0:fTranslate.FontSize := FontSizeSmall;
-      1:fTranslate.FontSize := FontSizeMedium;
-      2:fTranslate.FontSize := FontSizeLarge;
-    end;
+  if fTranslate<>nil then begin
+    tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
+    if tmp_int>0 then
+      fTranslate.FontSize := tmp_int
+    else
+      case reg.ReadInteger('Translate','FontSize',2) of
+        0:fTranslate.FontSize := FontSizeSmall;
+        1:fTranslate.FontSize := FontSizeMedium;
+        2:fTranslate.FontSize := FontSizeLarge;
+      end;
+  end;
   edtMeaningLines.Text:=reg.ReadString('Translate','MeaningLines','2');
   edtPrintLines.Text:=reg.ReadString('Translate','PrintLines','20');
   setsort:=reg.ReadInteger('Characters','Sort',0);
@@ -743,26 +755,35 @@ begin
   cbSaveSearchParams.Checked:=reg.ReadBool('General','SaveSearchParams',true);
 
  //Column widths
-  fVocab.SetDefaultColumnWidths;
-  fWordLookup.SetDefaultColumnWidths;
-  fKanjiCompounds.SetDefaultColumnWidths;
+  if fVocab<>nil then
+    fVocab.SetDefaultColumnWidths;
+  if fWordLookup<>nil then
+    fWordLookup.SetDefaultColumnWidths;
+  if fKanjiCompounds<>nil then
+    fKanjiCompounds.SetDefaultColumnWidths;
   if cbSaveColumnWidths.Checked then begin
-    fVocab.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',fVocab.StringGrid1.ColWidths[0]);
-    fVocab.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','UserCol2',fVocab.StringGrid1.ColWidths[1]);
-    fVocab.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',fVocab.StringGrid1.ColWidths[2]);
-    fVocab.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',fVocab.StringGrid1.ColWidths[3]);
+    if fVocab<>nil then begin
+      fVocab.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','UserCol1',fVocab.StringGrid1.ColWidths[0]);
+      fVocab.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','UserCol2',fVocab.StringGrid1.ColWidths[1]);
+      fVocab.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','UserCol3',fVocab.StringGrid1.ColWidths[2]);
+      fVocab.StringGrid1.ColWidths[3]:=reg.ReadInteger('Grids','UserCol4',fVocab.StringGrid1.ColWidths[3]);
+    end;
 
-    fWordLookup.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
-    fWordLookup.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
-    fWordLookup.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
+    if fWordLookup<>nil then begin
+      fWordLookup.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
+      fWordLookup.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
+      fWordLookup.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
+    end;
 
-    fKanjiCompounds.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
-    fKanjiCompounds.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
-    fKanjiCompounds.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid1.ColWidths[2]);
+    if fKanjiCompounds<>nil then begin
+      fKanjiCompounds.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
+      fKanjiCompounds.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
+      fKanjiCompounds.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid1.ColWidths[2]);
+    end;
   end;
 
   //Search params
-  if cbSaveSearchParams.Checked then begin
+  if cbSaveSearchParams.Checked and (fKanjiSearch<>nil) then begin
     fKanjiSearch.btnOnlyCommon.Down :=reg.ReadBool('KanjiSearch','OnlyCommon',false);
 //    fKanjiSearch.btnInClipboard.Down :=reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
     fKanjiSearch.edtPinYin.Text :=reg.ReadString('KanjiSearch','PinYin','');
@@ -781,10 +802,16 @@ begin
   setPortraitMode := reg.ReadBool('Layout','PortraitMode',false);
 
  //Panel sizes
-  fVocabFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
-  fVocabFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
-  fVocabDetails.ClientHeight := reg.ReadInteger('Layout','UserDetailsHeight',120);
-  fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
+  if fVocabFilters<>nil then begin
+    fVocabFilters.ClientWidth := reg.ReadInteger('Layout','UserFiltersWidth',192);
+    fVocabFilters.ClientHeight := reg.ReadInteger('Layout','UserFiltersHeight',120);
+  end;
+  if fVocabDetails<>nil then begin
+    fVocabDetails.ClientHeight := reg.ReadInteger('Layout','UserDetailsHeight',120);
+  end;
+  if fKanjiCompounds<>nil then begin
+    fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
+  end;
 
   fMenu.SetCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false), true); //after KanjiDetails.DockedWidth/Height
   fMenu.CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
@@ -809,9 +836,11 @@ begin
   fMenu.displaymode:=setlayout;
 
  //Before fKanji->OnShow => first possible Compounds reload
-  if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
-  if Assigned(fKanjiCompounds.sbShowVocab.OnClick) then
-    fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
+  if fKanjiCompounds<>nil then begin
+    if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
+    if Assigned(fKanjiCompounds.sbShowVocab.OnClick) then
+      fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
+  end;
 
   fMenu.ChangeDisplay;
   if setwindows and 1=1 then fMenu.aKanjiSearch.Checked := true;
@@ -826,10 +855,13 @@ begin
   fMenu.aPortraitMode.Checked := not setPortraitMode;
   fMenu.aPortraitMode.Execute;
 
-  fKanjiSearch.rgSortBy.ItemIndex:=setsort;
-  kanji_othersearch:=setothersearch;
-  fKanjiSearch.cbOtherType.ItemIndex:=-1;
-  if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
+  if fKanjiSearch<>nil then begin
+    fKanjiSearch.rgSortBy.ItemIndex:=setsort;
+    kanji_othersearch:=setothersearch;
+    fKanjiSearch.cbOtherType.ItemIndex:=-1;
+  end;
+  if fWordLookup<>nil then
+    if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);

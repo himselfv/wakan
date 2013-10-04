@@ -1011,7 +1011,7 @@ begin
       FDockMode := alCustom;
       Perform(WM_SET_DOCK_MODE, integer(alNone), 0);
     end;
-    FormPlacement1.RestoreFormPlacement; //docking breaks placement so we restore it
+    FormPlacement1.RestoreFormPlacement([]); //docking breaks placement so we restore it
   end;
 end;
 

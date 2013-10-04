@@ -452,7 +452,8 @@ begin
   SpeedButton17.Enabled:=false;
   btnCopyToClipboard.Enabled:=false;
   SpeedButton19.Enabled:=false;
-  fWordKanji.Clear;
+  if fWordKanji<>nil then
+    fWordKanji.Clear;
   if curword<>0 then
   begin
     curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
@@ -513,8 +514,12 @@ begin
     end;
     if dicrl[curword-1].userIndex<>0 then
       SpeedButton19.Enabled:=true;
-  end else fExamples.SetExamples('');
-  fWordKanji.InvalidateBoxes;
+  end else begin
+    if fExamples<>nil then
+      fExamples.SetExamples('');
+  end;
+  if fWordKanji<>nil then
+    fWordKanji.InvalidateBoxes;
   AnnotShowMedia(curkanji,curphonetic);
 end;
 

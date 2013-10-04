@@ -1,6 +1,6 @@
 program Jalet;
 {
-Stuff you can define for the whole project:
+Define for the whole project:
   UNICODE -- defined by the compiler if the default string type is UnicodeString
   CLEAN_DEINIT -- delete and destroy everything properly, otherwise we cheat to speed up unloading (who cares!)
 
@@ -81,6 +81,8 @@ uses
  destroyed after use.
  Some forms may be singletons and be created on the first use. }
 
+//{$DEFINE CUT}
+
 begin
   Profile('Before initialize');
   Application.Initialize;
@@ -96,10 +98,12 @@ begin
   Application.CreateForm(TfSettings, fSettings);
   Profile('Before TfVocab');
   Application.CreateForm(TfVocab, fVocab);
+ {$IFNDEF CUT}
   Profile('Before TfKanjiSearch');
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
   Profile('Before TfKanjiCompounds');
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup?
+ {$ENDIF}
   Profile('Before TfKanjiDetails');
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
   Profile('Before TfTranslate');
@@ -110,8 +114,10 @@ begin
   Application.CreateForm(TfExamples, fExamples);
   Profile('Before TfVocabDetails');
   Application.CreateForm(TfVocabDetails, fVocabDetails);
+ {$IFNDEF CUT}
+ {$ENDIF}
   Profile('Before TfVocabFilters');
-  Application.CreateForm(TfVocabFilters, fVocabFilters);
+  Application.CreateForm(TfVocabFilters, fVocabFilters); //this one
   Profile('Before TfHint');
   Application.CreateForm(TfHint, fHint);
 

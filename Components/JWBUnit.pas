@@ -33,7 +33,6 @@ function GetAppDataFolder: string;
 { Some logging tools.
 Define NOLOG to make sure that nothing in the application calls these. }
 //{$DEFINE NOLOG}
-{$DEFINE PROFILE}
 {$IFNDEF NOLOG}
 procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF} //inline in debug so that it's completely eliminated
 procedure Log(const msg: string; args: array of const); overload;

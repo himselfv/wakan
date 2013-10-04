@@ -12,6 +12,9 @@ type
   TFormPlacementOption = (foPosition, foVisibility);
   TFormPlacementOptions = set of TFormPlacementOption;
 
+  TRestoreOption = (roActivate, roJustWrite);
+  TRestoreOptions = set of TRestoreOption;
+
   TFormPlacement = class(TComponent)
   protected
     FUseRegistry: boolean;
@@ -25,7 +28,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     procedure SaveFormPlacement;
-    procedure RestoreFormPlacement;
+    procedure RestoreFormPlacement(AOptions: TRestoreOptions);
     property PlacementRestored: boolean read FPlacementRestored write FPlacementRestored;
   published
     property UseRegistry: boolean read FUseRegistry write FUseRegistry default true;
@@ -153,7 +156,7 @@ begin
   end;
 end;
 
-procedure TFormPlacement.RestoreFormPlacement;
+procedure TFormPlacement.RestoreFormPlacement(AOptions: TRestoreOptions);
 var ini: TCustomIniFile;
   form: TCustomForm;
   wp: TWindowPlacement;
@@ -182,7 +185,7 @@ begin
 
    { Issue 187: showCmd values returned by GetWindowPlacement have to be adjusted
     to not activate the window on applying }
-    if not form.Active then
+    if not form.Active and not (roActivate in AOptions) then
    { If it's active we MUST NOT deflect to non-active version, the activation
     may have yet to be applied, such as on creation. }
     case wp.showCmd of
@@ -194,16 +197,20 @@ begin
       SW_SHOW: wp.showCmd := SW_SHOWNA;
     end;
 
-    SetWindowPlacement(form.Handle, wp);
+    if roJustWrite in AOptions then begin
+      TForm(form).BoundsRect := wp.rcNormalPosition;
+    end else begin
+      SetWindowPlacement(form.Handle, wp);
 
-   { Issue 187: Visibility changes are not synchronized directly back to Delphi.
-    We have to do it explicitly. Visible:=true activates the window, but not
-    when we just did SW_SHOWNA. }
-   { We don't check foVisibility because setting Visible does no harm anyway }
-    case wp.showCmd of
-      SW_HIDE: TForm(form).Visible := false;
-    else //basically everything else
-      TForm(form).Visible := true;
+     { Issue 187: Visibility changes are not synchronized directly back to Delphi.
+      We have to do it explicitly. Visible:=true activates the window, but not
+      when we just did SW_SHOWNA. }
+     { We don't check foVisibility because setting Visible does no harm anyway }
+      case wp.showCmd of
+        SW_HIDE: TForm(form).Visible := false;
+      else //basically everything else
+        TForm(form).Visible := true;
+      end;
     end;
 
     FPlacementRestored := true;

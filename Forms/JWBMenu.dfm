@@ -136,7 +136,7 @@ object fMenu: TfMenu
     DoubleBuffered = False
     FullRepaint = False
     ParentDoubleBuffered = False
-    TabOrder = 0
+    TabOrder = 1
     DesignSize = (
       694
       33)
@@ -541,7 +541,7 @@ object fMenu: TfMenu
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
-    TabOrder = 1
+    TabOrder = 0
   end
   object Panel2: TPanel
     Left = 0

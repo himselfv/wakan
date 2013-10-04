@@ -269,9 +269,7 @@ object fVocab: TfVocab
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
-      DoubleBuffered = False
       FullRepaint = False
-      ParentDoubleBuffered = False
       TabOrder = 1
     end
     object pnlDockExamples: TPanel

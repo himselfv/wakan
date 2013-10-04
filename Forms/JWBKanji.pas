@@ -676,6 +676,7 @@ end;
 //It's not an event handler, actually. fMenu calls this on language reload.
 procedure TfKanji.KanjiSearch_SpeedButton20Click(Sender: TObject);
 begin
+  if fKanjiSearch=nil then exit;
   chin:=curlang='c';
   fKanjiSearch.rgSortBy.Items.Clear;
   if chin then

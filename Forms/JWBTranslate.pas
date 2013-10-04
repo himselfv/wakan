@@ -1878,7 +1878,7 @@ end;
 
 procedure TfTranslate.HideHint;
 begin
-  if fHint.Visible then fHint.Hide;
+  if (fHint<>nil) and fHint.Visible then fHint.Hide;
 end;
 
 function TfTranslate.PaintBoxClientRect: TRect;
@@ -1929,17 +1929,19 @@ begin
     dragstart.y:=rcur.y;
   end;
 
-  fWordLookup.btnLookupJtoE.Down:=false;
-  fWordLookup.btnLookupEtoJ.Down:=false;
-  fWordLookup.btnLookupClip.Down:=false;
+  if fWordLookup<>nil then begin
+    fWordLookup.btnLookupJtoE.Down:=false;
+    fWordLookup.btnLookupEtoJ.Down:=false;
+    fWordLookup.btnLookupClip.Down:=false;
 
-  if dolook then
-    if fWordLookup.Visible or (insertBuffer<>'') then
-      fWordLookup.Look()
-    else begin
-      s:=GetDocWord(rcur.x,rcur.y,wt,false);
-      if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
-    end;
+    if dolook then
+      if fWordLookup.Visible or (insertBuffer<>'') then
+        fWordLookup.Look()
+      else begin
+        s:=GetDocWord(rcur.x,rcur.y,wt,false);
+        if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
+      end;
+  end;
 
   if mustrepaint then
     EditorPaintbox.Repaint //not just Invalidate() because we want Paint be done now
@@ -1952,8 +1954,9 @@ begin
   mustrepaint:=false;
   shiftpressed:=false;
   UpdateScrollbar;
-  with fWordLookup do
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
+  if fWordLookup<>nil then
+    with fWordLookup do
+      if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
 { Converts startdrag+cursor positions to block selection. }

@@ -208,6 +208,10 @@ object fSettings: TfSettings
       Tag = 1
       Caption = 'Romanization'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 3
         Top = 3
@@ -1268,6 +1272,10 @@ object fSettings: TfSettings
       Tag = 6
       Caption = 'Character details'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         465
         425)
@@ -2044,6 +2052,10 @@ object fSettings: TfSettings
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         465
         425)

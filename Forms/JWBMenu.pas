@@ -1005,7 +1005,7 @@ begin
       fMenu.Image1.Top:=0;
     end;}
     curdisplaymode:=0;
-    FormPlacement1.RestoreFormPlacement;
+    FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
     fSettings.ApplyUISettings();
 
     Profile('Init: after applying UI settings');
@@ -1014,24 +1014,26 @@ begin
     CbNextViewer := SetClipboardViewer(Self.Handle);
 
    { Open file in the editor }
-    fTranslate.FileChanged := false;
-   //Explicitly specified file
-    if Command='open' then begin
-      fTranslate.OpenAnyFile(OpenParams.Filename);
-     //Press "Editor" programmatically
-      tab3.Down := true;
-      TabControl1Change(tab3);
-    end else
-   //Last opened file in Editor
-    if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
-    try
-      fTranslate.OpenFile(fTranslate.docfilename, fTranslate.DocType,
-        fTranslate.DocEncoding);
-    except
-      on E: Exception do begin
-       //Re-raise with additional comment
-        E.Message := 'Cannot autoload your last-used file: '+E.Message;
-        raise;
+    if fTranslate<>nil then begin
+      fTranslate.FileChanged := false;
+     //Explicitly specified file
+      if Command='open' then begin
+        fTranslate.OpenAnyFile(OpenParams.Filename);
+       //Press "Editor" programmatically
+        tab3.Down := true;
+        TabControl1Change(tab3);
+      end else
+     //Last opened file in Editor
+      if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
+      try
+        fTranslate.OpenFile(fTranslate.docfilename, fTranslate.DocType,
+          fTranslate.DocEncoding);
+      except
+        on E: Exception do begin
+         //Re-raise with additional comment
+          E.Message := 'Cannot autoload your last-used file: '+E.Message;
+          raise;
+        end;
       end;
     end;
 
@@ -1251,8 +1253,10 @@ begin
     btnJapaneseMode.Down:=true;
     aJapanese.Checked:=true;
     aChinese.Checked:=false;
-    fWordLookup.btnLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
-    fWordLookup.btnLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
+    if fWordLookup<>nil then begin
+      fWordLookup.btnLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
+      fWordLookup.btnLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
+    end;
   end else
   begin
     romasys:=fSettings.RadioGroup6.ItemIndex+1;
@@ -1260,14 +1264,20 @@ begin
     btnChineseMode.Down:=true;
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
-    fWordLookup.btnLookupJtoE.Caption:=_l('#00331^eChinese ->English');
-    fWordLookup.btnLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
+    if fWordLookup<>nil then begin
+      fWordLookup.btnLookupJtoE.Caption:=_l('#00331^eChinese ->English');
+      fWordLookup.btnLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
+    end;
   end;
   RescanDicts;
-  fKanji.KanjiSearch_SpeedButton20Click(self);
-  if (not fWordLookup.btnLookupClip.Enabled) and fWordLookup.btnLookupClip.Down then fWordLookup.btnLookupJtoE.Down:=true;
-  fExamples.ReloadExamples;
-  fWordLookup.Look();
+  if fKanji<>nil then
+    fKanji.KanjiSearch_SpeedButton20Click(self);
+  if fWordLookup<>nil then
+    if (not fWordLookup.btnLookupClip.Enabled) and fWordLookup.btnLookupClip.Down then fWordLookup.btnLookupJtoE.Down:=true;
+  if fExamples<>nil then
+    fExamples.ReloadExamples;
+  if fWordLookup<>nil then
+    fWordLookup.Look();
   RefreshCategory;
   RefreshKanjiCategory;
 end;
@@ -1277,8 +1287,10 @@ var b:boolean;
     lc:char;
     s:string;
 begin
-  fVocabDetails.cbAddCategory.Items.Clear;
-  fVocabFilters.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
+  if fVocabDetails<>nil then
+    fVocabDetails.cbAddCategory.Items.Clear;
+  if fVocabFilters<>nil then
+    fVocabFilters.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
 
   TUserCat.First;
   while not TUserCat.EOF do
@@ -1291,7 +1303,8 @@ begin
     end;
     s:=StripCatName(s);
     if lc=curlang then
-      fVocabDetails.cbAddCategory.Items.Add(s);
+      if fVocabDetails<>nil then
+        fVocabDetails.cbAddCategory.Items.Add(s);
     TUserCat.Next;
   end;
 end;
@@ -1299,11 +1312,16 @@ end;
 procedure TfMenu.RefreshKanjiCategory;
 begin
   ReloadKanjiCategories();
-  PasteKanjiCategoriesTo(fKanjiDetails.cbCategories.Items);
-  PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
-  fKanjiDetails.cbCategories.ItemIndex:=0;
-  fKanjiSearch.lbCategories.ItemIndex:=0;
-  fKanjiSearch.lbCategoriesClick(Self); //react to changes
+  if fKanjiDetails<>nil then
+    PasteKanjiCategoriesTo(fKanjiDetails.cbCategories.Items);
+  if fKanjiSearch<>nil then
+    PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
+  if fKanjiDetails<>nil then
+    fKanjiDetails.cbCategories.ItemIndex:=0;
+  if fKanjiSearch<>nil then begin
+    fKanjiSearch.lbCategories.ItemIndex:=0;
+    fKanjiSearch.lbCategoriesClick(Self); //react to changes
+  end;
 end;
 
 procedure TfMenu.LoadUserData;
@@ -1357,7 +1375,8 @@ begin
  //Refresh everything
   RefreshCategory;
   RefreshKanjiCategory;
-  fKanjiDetails.RefreshDetails;
+  if fKanjiDetails<>nil then
+    fKanjiDetails.RefreshDetails;
 end;
 
 procedure TfMenu.SaveUserData;
@@ -1636,8 +1655,10 @@ begin
   ClipboardPaintbox.Invalidate;
   for i := 0 to ClipboardWatchers.Count-1 do
     ClipboardWatchers[i](Self);
-  if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt();
-  if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
+  if (fKanji<>nil) and (fKanjiSearch<>nil) then
+    if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt();
+  if fWordLookup<>nil then
+    if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
 end;
 
 //Retrieves a data for an HGLOBAL-containing clipboard format (most of them are)
@@ -1815,8 +1836,10 @@ end;
 
 procedure TfMenu.aKanjiSearchChecked(Sender: TObject);
 begin
-  ToggleForm(fKanjiSearch, aKanjiSearch.Checked);
-  fKanji.btnSearchSort.Down := aKanjiSearch.Checked;
+  if fKanjiSearch<>nil then
+    ToggleForm(fKanjiSearch, aKanjiSearch.Checked);
+  if fKanji<>nil then
+    fKanji.btnSearchSort.Down := aKanjiSearch.Checked;
 end;
 
 { Changes the mode of KanjiDetails window: docked or free-floating }
@@ -1825,18 +1848,21 @@ begin
   if (not Loading) and (FCharDetDocked=Value) then exit;
   FCharDetDocked := Value;
   if Value then begin
-    fKanjiDetails.SetDocked(Value,Loading);
+    if fKanjiDetails<>nil then
+      fKanjiDetails.SetDocked(Value,Loading);
     if not Loading then begin
       CharDetDockedVis1:=true;
       CharDetDockedVis2:=true;
       ChangeDisplay; //docks it and shows if on appropriate page
     end;
   end else begin
-    if not Loading then
-      DockExpress(fKanjiDetails,false); //hides and undocks it
-    fKanjiDetails.SetDocked(false, Loading);
-    if (not Loading) and (not fKanjiDetails.Visible) then
-      aKanjiDetails.Execute; //shows it as free floating
+    if fKanjiDetails<>nil then begin
+      if not Loading then
+        DockExpress(fKanjiDetails,false); //hides and undocks it
+      fKanjiDetails.SetDocked(false, Loading);
+      if (not Loading) and (not fKanjiDetails.Visible) then
+        aKanjiDetails.Execute; //shows it as free floating
+    end;
   end;
 end;
 
@@ -1878,8 +1904,10 @@ procedure TfMenu.aKanjiDetailsChecked(Sender: TObject);
 begin
  { Set both btn.Down without checking which form is visible:
   if the form is invisible, the button is invisible too }
-  fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
-  fTranslate.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  if fKanji<>nil then
+    fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  if fTranslate<>nil then
+    fTranslate.btnKanjiDetails.Down:=fKanjiDetails.Visible;
 end;
 
 procedure TfMenu.aKanjiCompoundsExecute(Sender: TObject);
@@ -1893,8 +1921,10 @@ end;
 
 procedure TfMenu.aKanjiCompoundsChecked(Sender: TObject);
 begin
-  ToggleForm(fKanjiCompounds, aKanjiCompounds.Checked);
-  fKanji.btnCompounds.Down := aKanjiCompounds.Checked;
+  if fKanjiCompounds<>nil then
+    ToggleForm(fKanjiCompounds, aKanjiCompounds.Checked);
+  if fKanji<>nil then
+    fKanji.btnCompounds.Down := aKanjiCompounds.Checked;
 end;
 
 procedure TfMenu.aKanjiPrintExecute(Sender: TObject);
@@ -1954,8 +1984,10 @@ end;
 
 procedure TfMenu.aUserSettingsChecked(Sender: TObject);
 begin
-  ToggleForm(fVocabFilters, aUserSettings.Checked);
-  fVocab.SpeedButton2.Down := aUserSettings.Checked;
+  if fVocabFilters<>nil then
+    ToggleForm(fVocabFilters, aUserSettings.Checked);
+  if fVocab<>nil then
+    fVocab.SpeedButton2.Down := aUserSettings.Checked;
 end;
 
 procedure TfMenu.aUserDetailsExecute(Sender: TObject);
@@ -2451,9 +2483,10 @@ end;
 procedure TfMenu.ToggleExamples();
 begin
  //Undock from wherever it was
-  if fExamples.visible then
+  if (fExamples<>nil) and fExamples.visible then
     DockExpress(fExamples,false);
  //Dock to wherever it belongs to
+  if fExamples<>nil then
   if ((displaymode in [2, 4]) and aDictExamples.Checked) or
      ((displaymode=5) and aUserExamples.Checked) then
     DockExpress(fExamples,true);
@@ -2473,13 +2506,13 @@ procedure TfMenu.ChangeDisplay;
 begin
  //Hide active module
   case curdisplaymode of
-    1:fKanji.Hide;
-    2:fWordLookup.Hide;
-    5:fVocab.Hide;
-    3:fTranslate.Hide;
+    1:if fKanji<>nil then fKanji.Hide;
+    2:if fWordLookup<>nil then fWordLookup.Hide;
+    5:if fVocab<>nil then fVocab.Hide;
+    3:if fTranslate<>nil then fTranslate.Hide;
     4:begin
-        fWordLookup.Hide;
-        fTranslate.Hide;
+        if fWordLookup<>nil then fWordLookup.Hide;
+        if fTranslate<>nil then fTranslate.Hide;
       end;
   end;
   Panel2.Height:=0;
@@ -2502,43 +2535,53 @@ begin
     Panel4.Width := 0;
     Panel4.Height := 0;
   end;
-  if fExamples.visible then
+  if (fExamples<>nil) and fExamples.visible then
     DockExpress(fExamples,false);
   case displaymode of
     1:begin
-        MainDock(fKanji,Panel3);
+        if fKanji<>nil then
+          MainDock(fKanji,Panel3);
         tab1.Down:=true;
-        if fKanji.DrawGrid1.CanFocus then
-          fKanji.DrawGrid1.SetFocus;
+        if fKanji<>nil then
+          if fKanji.DrawGrid1.CanFocus then
+            fKanji.DrawGrid1.SetFocus;
         aModeKanji.Checked:=true;
       end;
     2:begin
-        MainDock(fWordLookup,Panel3);
+        if fWordLookup<>nil then
+          MainDock(fWordLookup,Panel3);
         tab2.Down:=true;
         aModeUser.Checked:=true;
       end;
     3:begin
-        MainDock(fTranslate,Panel3);
+        if fTranslate<>nil then
+          MainDock(fTranslate,Panel3);
         tab3.Down:=true;
-        fTranslate.sbDockDictionary.Down:=false;
+        if fTranslate<>nil then
+          fTranslate.sbDockDictionary.Down:=false;
         aModeEditor.Checked:=true;
       end;
     4:begin
         Panel2.height:=250;
-        MainDock(fWordLookup,Panel2);
-        MainDock(fTranslate,Panel3);
+        if fWordLookup<>nil then
+          MainDock(fWordLookup,Panel2);
+        if fTranslate<>nil then
+          MainDock(fTranslate,Panel3);
         tab3.Down:=true;
-        fTranslate.sbDockDictionary.Down:=true;
+        if fTranslate<>nil then
+          fTranslate.sbDockDictionary.Down:=true;
         aModeEditor.Checked:=true;
       end;
     5:begin
-        MainDock(fVocab,Panel3);
+        if fVocab<>nil then
+          MainDock(fVocab,Panel3);
         tab5.Down:=true;
         aModeEditor.Checked:=true;
       end;
   end;
   curdisplaymode:=displaymode;
-  fKanjiDetails.UpdateVisible();
+  if fKanjiDetails<>nil then
+    fKanjiDetails.UpdateVisible();
   ToggleExamples();
 end;
 
@@ -2546,8 +2589,8 @@ procedure TfMenu.TabControl1Change(Sender: TObject);
 begin
   if tab1.Down then displaymode:=1;
   if tab2.Down then displaymode:=2;
-  if tab3.Down and not fTranslate.sbDockDictionary.Down then displaymode:=3;
-  if tab3.Down and fTranslate.sbDockDictionary.Down then displaymode:=4;
+  if tab3.Down and ((fTranslate=nil) or not fTranslate.sbDockDictionary.Down) then displaymode:=3;
+  if tab3.Down and ((fTranslate<>nil) and fTranslate.sbDockDictionary.Down) then displaymode:=4;
   if tab5.Down then displaymode:=5;
   ChangeDisplay;
 end;
@@ -3042,7 +3085,7 @@ begin
     SetSelectionHighlight(0,0,0,0,nil);
   end else
 
-  if MouseControl=fTranslate.EditorPaintBox then
+  if (fTranslate<>nil) and (MouseControl=fTranslate.EditorPaintBox) then
   begin
     rpos:=fTranslate.TryGetExactLogicalPos(MousePos.x,MousePos.y);
     rx := rpos.x; ry := rpos.y;
@@ -3064,11 +3107,11 @@ begin
   if MouseControl is TCustomDrawGrid then
   begin
     gc:=TCustomDrawGrid(MouseControl).MouseCoord(MousePos.x,MousePos.y);
-    if MouseControl=fKanji.DrawGrid1 then begin
+    if (fKanji<>nil) and (MouseControl=fKanji.DrawGrid1) then begin
       s1:=fKanji.GetKanji(gc.x,gc.y);
       SetSelectionHighlight(0,0,0,0,nil);
     end else
-    if MouseControl=fRadical.DrawGrid then begin
+    if (fRadical<>nil) and (MouseControl=fRadical.DrawGrid) then begin
       s1:=fRadical.GetKanji(gc.x,gc.y);
       SetSelectionHighlight(0,0,0,0,nil);
     end else
@@ -3173,22 +3216,31 @@ var
   WordKanjiDocked: boolean;
   KanjiDetailsDocked: boolean;
 begin
-  UserFiltersDocked := DockExpress(fVocabFilters,false);
-  WordKanjiDocked := DockExpress(fWordKanji,false);
-  KanjiDetailsDocked := CharDetDocked and DockExpress(fKanjiDetails,false);
+  if fVocabFilters<>nil then
+    UserFiltersDocked := DockExpress(fVocabFilters,false);
+  if fWordKanji<>nil then
+    WordKanjiDocked := DockExpress(fWordKanji,false);
+  if fKanjiDetails<>nil then
+    KanjiDetailsDocked := CharDetDocked and DockExpress(fKanjiDetails,false);
 
   if aPortraitMode.Checked then begin
     Panel4.Align := alBottom;
-    fVocab.pnlDockFilters.Align := alBottom;
-    fVocab.splDockFilters.Align := alBottom;
-    fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
-    fWordLookup.Panel3.Align := alBottom;
+    if fVocab<>nil then begin
+      fVocab.pnlDockFilters.Align := alBottom;
+      fVocab.splDockFilters.Align := alBottom;
+      fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
+    end;
+    if fWordLookup<>nil then
+      fWordLookup.Panel3.Align := alBottom;
   end else begin
     Panel4.Align := alRight;
-    fVocab.pnlDockFilters.Align := alRight;
-    fVocab.splDockFilters.Align := alRight;
-    fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
-    fWordLookup.Panel3.Align := alRight;
+    if fVocab<>nil then begin
+      fVocab.pnlDockFilters.Align := alRight;
+      fVocab.splDockFilters.Align := alRight;
+      fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
+    end;
+    if fWordLookup<>nil then
+      fWordLookup.Panel3.Align := alRight;
   end;
 
  //New dock mode will be applied to forms on re-docking
@@ -3196,12 +3248,15 @@ begin
  //If CharDetDocked was false (logically Undocked), then KanjiDetailsDocked
  //will be false too, and we won't even try to redock fKanjiDetails, which is right.
 
-  if UserFiltersDocked then DockExpress(fVocabFilters,true);
-  if WordKanjiDocked then DockExpress(fWordKanji,true);
-  if KanjiDetailsDocked then begin
-    DockExpress(fKanjiDetails,true);
-//    fKanjiDetails.UpdateAlignment; //TODO: Do we need this?
-  end;
+  if fVocabFilters<>nil then
+    if UserFiltersDocked then DockExpress(fVocabFilters,true);
+  if fWordKanji<>nil then
+    if WordKanjiDocked then DockExpress(fWordKanji,true);
+  if fKanjiDetails<>nil then
+    if KanjiDetailsDocked then begin
+      DockExpress(fKanjiDetails,true);
+    //fKanjiDetails.UpdateAlignment; //TODO: Do we need this?
+    end;
  //ChangeDisplay -- should not be needed
 end;
 
