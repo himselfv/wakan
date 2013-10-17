@@ -3077,10 +3077,25 @@ begin
   if MouseControl is TPaintBox then
   begin
     if DragStartCtl<>nil then //dragging
-      s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),DragStartPt,MousePos)
+      s1:=CanvasUpdateSelection(TPaintBox(MouseControl).Canvas,DragStartPt,MousePos)
     else //just hovering
-      s1:=PaintBoxUpdateSelection(TPaintBox(MouseControl),MousePos,MousePos);
+      s1:=CanvasUpdateSelection(TPaintBox(MouseControl).Canvas,MousePos,MousePos);
   end else
+
+ { TWakanPaintbox is mostly the same as TPaintBox with regard to custom painting,
+  but it inherits from TCustomControl instead of TGraphicControl and has a different
+  Canvas field }
+  if MouseControl is TWakanPaintBox then
+  begin
+    if DragStartCtl<>nil then //dragging
+      s1:=CanvasUpdateSelection(TWakanPaintBox(MouseControl).Canvas,DragStartPt,MousePos)
+    else //just hovering
+      s1:=CanvasUpdateSelection(TWakanPaintBox(MouseControl).Canvas,MousePos,MousePos);
+  end else
+
+ { Maybe I should have just taken the TGraphicControl/TCustomControl route instead of
+  messing with descendants? And moved these clauses to the bottom, if nothing else
+  works }
 
   if MouseControl is TCustomDrawGrid then
   begin

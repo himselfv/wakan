@@ -123,7 +123,7 @@ type
 procedure BeginDrawReg(p:TCanvas);
 procedure EndDrawReg;
 
-function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
+function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint):FString;
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
@@ -791,6 +791,8 @@ begin
 
       j:=GetCoveredCharNo(p,fontface,fs,itt[i].s,x-itt[i].rect.Left,
         {halfCharRounding=}ffHalfCharRounding in flags);
+      if not (ffHalfCharRounding in flags) then
+        Dec(j); //without hcr we receive the character UNDER mouse, want BEFORE it
       if j<0 then continue; //should not happen
       if j>flength(itt[i].s) then continue;
       cx:=itt[i].rect.Left+CalcStrWidth(p,fontface,fs,copy(itt[i].s,1,j));
@@ -1301,7 +1303,7 @@ end;
 p: PaintBox which currently receives mouse events (the one mouse is over,
   or the one which captures it because of dragging)
 If DragStart equals CursorPos, assumes no selection. }
-function PaintBoxUpdateSelection(p:TPaintBox;DragStart,CursorPos:TPoint):FString;
+function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint):FString;
 var id1,id2:integer;
   x1,x2,y1,fs,fs2,x_tmp:integer;
   s2,s_tmp:string;
@@ -1309,13 +1311,13 @@ var id1,id2:integer;
 begin
   if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
    //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
-    Result:=FindDrawReg(p.Canvas,CursorPos.x,CursorPos.y,[],id1,x1,y1,fontface,fs);
+    Result:=FindDrawReg(Canvas,CursorPos.x,CursorPos.y,[],id1,x1,y1,fontface,fs);
     SetSelectionHighlight(0,0,0,0,nil);
     exit;
   end;
 
-  Result:=FindDrawReg(p.Canvas,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
-  s2:=FindDrawReg(p.Canvas,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fontface2,fs2);
+  Result:=FindDrawReg(Canvas,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
+  s2:=FindDrawReg(Canvas,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fontface2,fs2);
   if id2<0 then begin //drag from dead point => no selection
     Result := '';
     SetSelectionHighlight(0,0,0,0,nil);
@@ -1325,12 +1327,12 @@ begin
   if id1<>id2 then begin //mouse over different control/line
    //Try again, with Y set to that of DragStart
     CursorPos.Y := DragStart.Y;
-    Result:=FindDrawReg(p.Canvas,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
+    Result:=FindDrawReg(Canvas,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
     if id1<>id2 then begin
      //Just set the endpoint to the start or the end of the capturing line
       if CursorPos.X>DragStart.X then begin
         Result:=s2;
-        SetSelectionHighlight(x2,y1,x2+CalcStrWidth(p.Canvas,fontface2,fs2,s2),y1+fs2,p.Canvas);
+        SetSelectionHighlight(x2,y1,x2+CalcStrWidth(Canvas,fontface2,fs2,s2),y1+fs2,Canvas);
         exit;
       end else begin
         Result:=GetDrawReg(id2,x1,y1,fontface,fs); //get whole line
@@ -1345,7 +1347,7 @@ begin
     x_tmp:=x2; x2:=x1; x1:=x_tmp;
   end;
   Result:=copy(Result,1,length(Result)-length(s2));
-  SetSelectionHighlight(x1,y1,x2,y1+fs,p.Canvas);
+  SetSelectionHighlight(x1,y1,x2,y1+fs,Canvas);
 end;
 
 //NOTE: Fonts here must match DrawWordInfo() and DrawKana() choices for each cell.

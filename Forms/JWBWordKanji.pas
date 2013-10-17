@@ -20,6 +20,8 @@ type
     Bevel1: TBevel;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure PaintBoxK1Paint(Sender: TObject);
+    procedure PaintBoxK1MouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure PaintBoxK1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure PaintBoxK1Click(Sender: TObject);
@@ -100,6 +102,7 @@ begin
   box.pb.Width := 89;
   box.pb.Tag := idx+1;
   box.pb.OnClick := PaintBoxK1Click;
+  box.pb.OnMouseDown := PaintBoxK1MouseDown;
   box.pb.OnMouseMove := PaintBoxK1MouseMove;
   box.pb.OnMouseUp := PaintBoxK1MouseUp;
   box.pb.OnPaint := PaintBoxK1Paint;
@@ -152,6 +155,12 @@ begin
   end;
   DrawUnicode(pb.Canvas,4,2,36,fWordLookup.curkanjid[KN-1].char,FontJapaneseGrid);
   EndDrawReg;
+end;
+
+procedure TfWordKanji.PaintBoxK1MouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if mbRight=Button then fMenu.PopupImmediate(false);
 end;
 
 procedure TfWordKanji.PaintBoxK1MouseMove(Sender: TObject;
