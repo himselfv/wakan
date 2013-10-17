@@ -104,14 +104,16 @@ var ki:TStringList;
 
 procedure TfKanji.FormShow(Sender: TObject);
 begin
-  fKanjiSearch.ReloadOtherTypes;
+  if fKanjiSearch<>nil then
+    fKanjiSearch.ReloadOtherTypes;
 //  fKanjiSearch.SpeedButton20.Enabled:=ChinesePresent;
   chin:=false;
   if curlang='c'then chin:=true;
 //  if fKanjiSearch.SpeedButton20.Down then chin:=true;
   DoIt;
   caltype:=0;
-  fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  if fKanjiSearch<>nil then
+    Self.btnKanjiDetails.Down:=fKanjiDetails.Visible;
 end;
 
 procedure TfKanji.FormHide(Sender: TObject);
@@ -339,6 +341,7 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
 
 begin
   if not Visible then exit;
+  if fKanjiSearch=nil then exit;
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
     Screen.Cursor:=crHourGlass;
