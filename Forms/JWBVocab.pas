@@ -911,7 +911,7 @@ begin
                 s2:=DeconvertPinYin(romac,curphon);
                 curphon:=RomajiToKana(DeconvertPinYin(romac,curphon),1,'c',[rfDeleteInvalidChars])
               end else
-                curphon:=RomajiToKana(HexToUnicode(curphon),2,'j',[rfDeleteInvalidChars]);
+                curphon:=RomajiToKana(fstrtouni(curphon),2,'j',[rfDeleteInvalidChars]);
             if curcat='' then curcat:=unknowncat;
             if curcat='' then
             begin
@@ -1051,11 +1051,11 @@ begin
     begin
       wn:=strtoint(fVocab.wl[(pagenum-1)*pr*c+i+j*pr]);
       TUser.Locate('Index',wn);
-      tm:=UnicodeToHex(remmark(TUser.Str(TUserEnglish)));
+      tm:=fstr(remmark(TUser.Str(TUserEnglish)));
       tk:=TUser.Str(TUserPhonetic);
-      tr:=UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang));
+      tr:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang));
       if showroma then
-        tp:=UnicodeToHex(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang)) else
+        tp:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang)) else
         tp:=TUser.Str(TUserPhonetic);
       if (not fSettings.CheckBox17.Checked) or (FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0) then
         tw:=TUser.Str(TUserKanji) else tw:='';

@@ -334,7 +334,7 @@ end;
 procedure TfWordList.PaintBox2Paint(Sender: TObject);
 begin
   PaintBox2.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(PaintBox2.Canvas,1,1,22,UnicodeToHex(twmeaning),FontEnglish);
+  DrawUnicode(PaintBox2.Canvas,1,1,22,fstr(twmeaning),FontEnglish);
 end;
 
 procedure TfWordList.Button10Click(Sender: TObject);

@@ -32,7 +32,7 @@ object fWordList: TfWordList
     Top = 7
     Width = 593
     Height = 353
-    PageIndex = 1
+    PageIndex = 5
     TabOrder = 0
     object TPage
       Left = 0
