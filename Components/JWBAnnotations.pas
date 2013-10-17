@@ -216,43 +216,76 @@ end;
 
 procedure AnnotShowMedia(kanji, kana: string);
 {$WRITEABLECONST ON}
-const fMedia: TfMedia = nil; { created on the first access .
-  It's okay to not destroy it explicitly as we register it in the Application }
+const fMedia: TfMedia = nil; {
+  Created at the first need. It's okay to not destroy it explicitly as we
+  register it in the Application. }
 var s:string;
-    b:boolean;
+  b:boolean;
+  media: TStrings;
+  tabs: TStrings;
 begin
   if not HaveAnnotations then exit;
   Annot.SeekK(kanji,kana);
-  if fMedia=nil then
-    Application.CreateForm(TfMedia, fMedia);
-  fMedia.media.Clear;
-  fMedia.TabSet1.Tabs.Clear;
- // images
-  Annot.First;
-  s:=Annot.Get('I');
-  while s<>'' do
-  begin
-    fMedia.media.Add(s);
-    fMedia.TabSet1.Tabs.Add(inttostr(fMedia.TabSet1.Tabs.Count+1)+': '+copy(s,1,pos('.',s)-1));
+
+ { Creating fMedia is a heavy operation since it loads IE libraries. We try to
+  avoid it until we really need it. }
+  if fMedia=nil then begin
+   //Create temporary lists to avoid relying on the window
+    media := TStringList.Create;
+    tabs := TStringList.Create;
+  end else begin
+    media := fMedia.media;
+    tabs := fMedia.TabSet1.Tabs;
+    media.Clear;
+    tabs.Clear;
+  end;
+
+  try
+   // images
+    Annot.First;
     s:=Annot.Get('I');
-  end;
-  // pages
-  Annot.First;
-  s:=Annot.Get('W');
-  while s<>'' do
-  begin
-    fMedia.media.Add('http://'+s);
-    fMedia.TabSet1.Tabs.Add(inttostr(fMedia.TabSet1.Tabs.Count+1)+': '+s);
+    while s<>'' do
+    begin
+      media.Add(s);
+      tabs.Add(inttostr(tabs.Count+1)+': '+copy(s,1,pos('.',s)-1));
+      s:=Annot.Get('I');
+    end;
+
+    // pages
+    Annot.First;
     s:=Annot.Get('W');
+    while s<>'' do
+    begin
+      media.Add('http://'+s);
+      tabs.Add(inttostr(tabs.Count+1)+': '+s);
+      s:=Annot.Get('W');
+    end;
+
+    if media.Count=0 then begin
+     //no annotations, hide everything
+      if fMedia<>nil then
+        fMedia.Hide;
+    end else begin
+     //have annotations
+      if fMedia=nil then begin
+        Application.CreateForm(TfMedia, fMedia);
+        fMedia.media.Assign(media);
+        fMedia.TabSet1.Tabs.Assign(tabs);
+      end;
+      fMedia.Show;
+      fMedia.TabSet1.Visible:=fMedia.media.Count>1;
+      fMedia.TabSet1.TabIndex:=0;
+      fMedia.TabSet1Change(fMenu,0,b);
+      fMenu.SetFocus;
+    end;
+
+  finally
+   //free temporary lists
+    if (fMedia<>nil) and (media<>fMedia.media) then
+      FreeAndNil(media);
+    if (fMedia<>nil) and (tabs<>fMedia.TabSet1.Tabs) then
+      FreeAndNil(tabs);
   end;
-  if fMedia.media.Count>0 then
-  begin
-    fMedia.Show;
-    fMedia.TabSet1.Visible:=fMedia.media.Count>1;
-    fMedia.TabSet1.TabIndex:=0;
-    fMedia.TabSet1Change(fMenu,0,b);
-    fMenu.SetFocus;
-  end else fMedia.Hide;
 end;
 
 procedure TAnnotationCursor.Seek(const des: array of string);
