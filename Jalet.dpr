@@ -77,52 +77,31 @@ uses
 
 {$R *.RES}
 
+
+begin
+  Application.Initialize;
+  Application.Title := 'wakan';
+  Application.HelpFile := 'wakan_en.chm';
+
 { Only static forms are auto-created. Dynamic forms are created when needed and
  destroyed after use.
  Some forms may be singletons and be created on the first use. }
 
-//{$DEFINE CUT}
-
-begin
-  Profile('Before initialize');
-  Application.Initialize;
-  Application.Title := 'wakan';
-  Application.HelpFile := 'wakan_en.chm';
-  Profile('Before TfMenu');
   Application.CreateForm(TfMenu, fMenu);
-  Profile('Before TfKanji');
   Application.CreateForm(TfKanji, fKanji);
-  Profile('Before TfWordLookup');
   Application.CreateForm(TfWordLookup, fWordLookup);
-  Profile('Before TfSettings');
   Application.CreateForm(TfSettings, fSettings);
-  Profile('Before TfVocab');
   Application.CreateForm(TfVocab, fVocab);
- {$IFNDEF CUT}
-  Profile('Before TfKanjiSearch');
-  Application.CreateForm(TfKanjiSearch, fKanjiSearch);
-  Profile('Before TfKanjiCompounds');
-  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup?
- {$ENDIF}
-  Profile('Before TfKanjiDetails');
+  Application.CreateForm(TfKanjiSearch, fKanjiSearch); //this one
+  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup? //this one
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
-  Profile('Before TfTranslate');
   Application.CreateForm(TfTranslate, fTranslate);
-  Profile('Before TfWordKanji');
   Application.CreateForm(TfWordKanji, fWordKanji);
-  Profile('Before TfExamples');
   Application.CreateForm(TfExamples, fExamples);
-  Profile('Before TfVocabDetails');
   Application.CreateForm(TfVocabDetails, fVocabDetails);
- {$IFNDEF CUT}
- {$ENDIF}
-  Profile('Before TfVocabFilters');
   Application.CreateForm(TfVocabFilters, fVocabFilters); //this one
-  Profile('Before TfHint');
   Application.CreateForm(TfHint, fHint);
 
-  Profile('Before InitializeWakan');
   fMenu.InitializeWakan;
-  Profile('Before Run');
   Application.Run;
 end.

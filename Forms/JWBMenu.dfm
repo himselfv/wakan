@@ -124,6 +124,7 @@ object fMenu: TfMenu
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnResize = FormResize
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
@@ -1444,6 +1445,7 @@ object fMenu: TfMenu
     Top = 41
   end
   object ScreenTimer: TTimer
+    Enabled = False
     Interval = 100
     OnTimer = ScreenTimerTimer
     Left = 504

@@ -584,6 +584,9 @@ end;
 
 
 initialization
+  examstruct:=nil;
+  examindex:=nil;
+  exampackage:=nil;
   ex_jap := '';
   ex_en := '';
 

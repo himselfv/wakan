@@ -343,13 +343,11 @@ type
     procedure SelectActiveContentItem;
     procedure UpdatePortabilityPage;
 
-  private
-   { When doing LoadSettings with DelayUI=true, we load some settings into
-    these variables and apply them later }
+  public
+   { Layout settings are loaded into these variables and applied later }
     setlayout: integer;
     setwindows: integer;
     setsort: integer;
-    setothersearch: integer;
     setusercompounds: boolean;
     setPortraitMode: boolean;
   protected
@@ -357,8 +355,7 @@ type
     procedure SaveRegistrySettings(reg: TCustomIniFile);
     function OpenWakanIni: TCustomIniFile;
   public
-    procedure LoadSettings(DelayUI: boolean);
-    procedure ApplyUISettings;
+    procedure LoadSettings;
     procedure SaveSettings;
     procedure AcceptSettings;
 
@@ -462,7 +459,7 @@ begin
 end;
 
 //See comments in JWBPortableMode.pas about Wakan modes
-procedure TfSettings.LoadSettings(DelayUI: boolean);
+procedure TfSettings.LoadSettings;
 var ini: TCustomIniFile;
   fPortableMode: TfPortableMode;
   s: string;
@@ -530,9 +527,6 @@ begin
     Button10Click(Self);
 
   InitColors;
-
-  if not DelayUI then
-    ApplyUISettings();
 end;
 
 //Initializes wakan.ini and moves user files as needed.
@@ -741,7 +735,7 @@ begin
   edtMeaningLines.Text:=reg.ReadString('Translate','MeaningLines','2');
   edtPrintLines.Text:=reg.ReadString('Translate','PrintLines','20');
   setsort:=reg.ReadInteger('Characters','Sort',0);
-  setothersearch:=reg.ReadInteger('Characters','OtherSearch',0);
+  kanji_othersearch:=reg.ReadInteger('Characters','OtherSearch',0);
   setusercompounds:=reg.ReadBool('Characters','UserCompounds',false);
   if reg.ReadBool('Dict','Meaning',false) then dictmodeset:=1 else dictmodeset:=0;
   dictbeginset:=reg.ReadInteger('Dict','SearchBeg',0);
@@ -818,50 +812,6 @@ begin
   fMenu.CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
   setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
   setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
-end;
-
-procedure TfSettings.ApplyUISettings;
-begin
- //Hide everything, and most importantly, turn all actions off
- //This will do no harm if the form is already hidden.
-  fMenu.aKanjiDetails.Checked := false;
-  fMenu.aKanjiSearch.Checked := false;
-  fMenu.aKanjiCompounds.Checked := false;
-  fMenu.aDictKanji.Checked := false;
-  fMenu.aUserExamples.Checked := false;
-  fMenu.aDictExamples.Checked := false;
-  fMenu.aUserDetails.Checked := false;
-  fMenu.aUserSettings.Checked := false;
-
-  fMenu.displaymode:=setlayout;
-
- //Before fKanji->OnShow => first possible Compounds reload
-  if fKanjiCompounds<>nil then begin
-    if setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
-    if Assigned(fKanjiCompounds.sbShowVocab.OnClick) then
-      fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
-  end;
-
-  fMenu.ChangeDisplay;
-  if setwindows and 1=1 then fMenu.aKanjiSearch.Checked := true;
-  if setwindows and 2=2 then fMenu.aKanjiCompounds.Checked := true;
-  if setwindows and 4=4 then fMenu.aDictKanji.Checked := true;
-  if setwindows and 8=8 then fMenu.aDictExamples.Checked := true;
-  if setwindows and 16=16 then fMenu.aUserExamples.Checked := true;
-  if setwindows and 32=32 then fMenu.aUserDetails.Checked := true;
-  if setwindows and 64=64 then fMenu.aUserSettings.Checked := true;
-  if (setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.aKanjiDetails.Checked := true;
-
-  fMenu.aPortraitMode.Checked := not setPortraitMode;
-  fMenu.aPortraitMode.Execute;
-
-  if fKanjiSearch<>nil then begin
-    fKanjiSearch.rgSortBy.ItemIndex:=setsort;
-    kanji_othersearch:=setothersearch;
-    fKanjiSearch.cbOtherType.ItemIndex:=-1;
-  end;
-  if fWordLookup<>nil then
-    if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);

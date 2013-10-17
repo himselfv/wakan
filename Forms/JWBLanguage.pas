@@ -68,10 +68,21 @@ var
   curGUILanguage: string; //same as curTransFile, only without an extension
     //used for stuff like wakan_LNG.chm
 
+//Call at the start of the application
+procedure InitLanguage;
+
 implementation
 uses JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
 
 {$R *.DFM}
+
+procedure InitLanguage;
+begin
+ //Load language or suggest to choose one
+  fLanguage := TfLanguage.Create(Application);
+  fLanguage.LoadPerSettings;
+  fLanguage.TranslateAllForms;
+end;
 
 procedure TfLanguage.btnShowInfoClick(Sender: TObject);
 begin

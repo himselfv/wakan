@@ -360,10 +360,13 @@ type
     procedure aUserExamplesChecked(Sender: TObject);
     procedure aKanjiDetailsChecked(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
+    procedure FormShow(Sender: TObject);
 
   private
     initdone:boolean;
+    procedure CheckResolution;
     procedure LoadWakanCfg(const filename: string);
+    procedure ApplyUI;
   public
     procedure InitializeWakan;
 
@@ -613,56 +616,58 @@ begin
   dicts.Free; //+
 end;
 
+
+procedure MakeDic;
+var fDictImport: TfDictImport;
+  i:integer;
+begin
+  fDictImport := TfDictImport.Create(Application);
+  try
+    fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
+    fDictImport.edtDictName.Text:=MakeDicParams.Name;
+    fDictImport.edtVersion.Text:=MakeDicParams.Version;
+    if (MakeDicParams.Language='C')
+    or (MakeDicParams.Language='c') then
+      fDictImport.rgLanguage.ItemIndex:=1
+    else
+      fDictImport.rgLanguage.ItemIndex:=0;
+    fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
+    fDictImport.edtDescription.Text:=MakeDicParams.Description;
+    fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
+    fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
+    fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
+    fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
+    fDictImport.Silent := true;
+    for i := 0 to Length(MakeDicParams.Files) - 1 do
+      fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
+    fDictImport.btnBuildClick(nil);
+  finally
+    FreeAndNil(fDictImport);
+  end;
+end;
+
 procedure TfMenu.InitializeWakan;
 var ps:TPackageSource;
   ms:TMemoryStream;
   fSplash: TfSplash;
   fCharDataImport: TfCharDataImport;
-  fDictImport: TfDictImport;
-  i:integer;
 begin
-  Profile('Init: start');
-  LastSaveTime := now;
-  examstruct:=nil;
-  examindex:=nil;
-  exampackage:=nil;
+  if initdone then exit;
   screenModeSc:=false;
   screenModeWk:=false;
-  if initdone then exit;
 
   Self.Enabled := false; //or MainForm will receive shortcuts and crash
 
   try
-    Profile('Init: before ParseCommandLine()');
     ParseCommandLine();
+    InitLanguage;
+    CheckResolution;
 
-    Profile('Init: before loading languages');
-
-   //Load language or suggest to choose one
-    fLanguage := TfLanguage.Create(Application);
-    fLanguage.LoadPerSettings;
-    Profile('Init: before translating forms');
-    fLanguage.TranslateAllForms;
-    Profile('Init: after translating forms');
-
-    Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
-    if (Screen.Width<800) or (Screen.Height<600) then
-      if Application.MessageBox(
-        pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?')),
-        pchar(_l('#00020^eError')),
-        MB_YESNO or MB_ICONERROR)=idNo then
-      begin
-        Application.Terminate;
-        exit;
-      end;
-
-    romasys:=1;
-    showroma:=false;
-    clip:='';
-
-    Profile('Init: before loading settings');
-    fSettings.LoadSettings({DelayUI=}true);
-    Profile('Init: after loading settings');
+    fSettings.LoadSettings;
+    jromasys:=fSettings.RadioGroup1.ItemIndex+1;
+    jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
+    cromasys:=fSettings.RadioGroup6.ItemIndex+1;
+    cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
 
     if fSettings.cbShowSplashscreen.Checked then begin
       fSplash := TfSplash.Create(Application);
@@ -670,40 +675,23 @@ begin
       fSplash.Update;
     end;
 
-    Profile('Init: before loading wakan.cfg');
    //Configuration file
     if not FileExists('wakan.cfg') then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00347^eFile WAKAN.CFG is missing.'#13
+      raise Exception.Create(_l('#00347^eFile WAKAN.CFG is missing.'#13
           +'This file contains important configuration parameters and is required'
-          +'for application to run.'#13#13'Application will now be terminated.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
-    end;
+          +'for application to run.'#13#13'Application will now be terminated.'));
     try
       LoadWakanCfg('wakan.cfg');
-      Profile('Init: before localizing property types');
       fLanguage.LocalizePropertyTypes();
     except
-      Application.MessageBox(
-        pchar(_l('#00352^eCannot load main configuration file.'#13
-          +'File WAKAN.CFG is corrupted.'#13#13'Application will now exit.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
+      raise Exception.Create(_l('#00352^eCannot load main configuration file.'#13
+          +'File WAKAN.CFG is corrupted.'#13#13'Application will now exit.'));
     end;
-    Profile('Init: after loading wakan.cfg');
 
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
 
    { DownloadTest(); }
-
-    Profile('Init: before checking examples.pkg');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
@@ -714,45 +702,17 @@ begin
     end else
     if Command='makedic'then
     begin
-      fDictImport := TfDictImport.Create(Application);
-      try
-        fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
-        fDictImport.edtDictName.Text:=MakeDicParams.Name;
-        fDictImport.edtVersion.Text:=MakeDicParams.Version;
-        if (MakeDicParams.Language='C')
-        or (MakeDicParams.Language='c') then
-          fDictImport.rgLanguage.ItemIndex:=1
-        else
-          fDictImport.rgLanguage.ItemIndex:=0;
-        fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
-        fDictImport.edtDescription.Text:=MakeDicParams.Description;
-        fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
-        fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
-        fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
-        fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
-        fDictImport.Silent := true;
-        for i := 0 to Length(MakeDicParams.Files) - 1 do
-          fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
-        fDictImport.btnBuildClick(self);
-      finally
-        FreeAndNil(fDictImport);
-      end;
+      MakeDic();
       Application.Terminate;
       exit;
     end;
 
-    Profile('Init: before AutoImportDicts');
-
     AutoImportDicts();
-
-    Profile('Init: before CheckFontsPresent');
 
    //Force user to select fonts
     fSettings.CheckFontsPresent;
 
    { Wakan.chr }
-
-    Profile('Init: before checking wakan.chr');
 
     if (Command='makechars') and MakeCharsParams.ResetDb then begin
      { Do not load wakan.chr, we don't need it }
@@ -780,17 +740,10 @@ begin
     if FileExists('KANJIDIC') and DirectoryExists('Unihan') and FileExists('radicals.txt') then begin
      { We can try autoimport }
     end else
-    begin
-      Application.MessageBox(
-        pchar(_l('#00346^eFile WAKAN.CHR was not found.'#13
+      raise Exception.Create(_l('#00346^eFile WAKAN.CHR was not found.'#13
           +'This file is required for application to run.'#13
           +'Please download this file from WAKAN website.'#13#13
-          +'Application will now be terminated.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
-    end;
+          +'Application will now be terminated.'));
 
    //Console/auto-import
     if (Command='makechars') or (TChar=nil) then begin
@@ -822,15 +775,11 @@ begin
 
    { Annotations }
 
-    Profile('Init: before checking annotations');
-
     if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
     if fSettings.CheckBox64.Checked then LoadAnnotations;
 
 
    { Radical search }
-
-    Profile('Init: before checking radicals');
 
    //Raine radical rebuilding -- before complaining about missing rad
     if Command='makerad' then
@@ -868,24 +817,19 @@ begin
         MB_OK or MB_ICONERROR);
       rainesearch:=nil;
     end else
-    begin
       try
         LoadRaineRadicals('WAKAN.RAD');
       except
-        Application.MessageBox(
-          pchar(_l('#00358^eCannot load Japanese radicals file.'#13
-            +'File WAKAN.RAD is corrupted.'#13#13'Application will now exit.')),
-          pchar(_l('#00020^eError')),
-          MB_OK or MB_ICONERROR);
-        Application.Terminate;
-        exit;
+        on E: Exception do begin
+          E.Message := _l('#00358^eCannot load Japanese radicals file.'#13
+            +'File WAKAN.RAD is corrupted.'#13#13'Application will now exit.')+#13
+            +E.Message;
+          raise;
+        end;
       end;
-    end;
 
 
    { Stroke order display }
-
-    Profile('Init: before checking stroke order');
 
    //Stroke-order rebuilding -- before complaining about missing sod
     if Command='makesod' then
@@ -911,7 +855,6 @@ begin
       sodir:=nil;
       sobin:=nil;
     end else
-    begin
       try
         ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
         ms:=ps['strokes.bin'].Lock;
@@ -924,48 +867,33 @@ begin
         ps['dir.txt'].Unlock;
         ps.Free;
       except
-        Application.MessageBox(
-          pchar(_l('#00360^eCannot load Japanese stroke-order file.'#13
-            +'File WAKAN.SOD is corrupted.'#13#13'Application will now exit.')),
-          pchar(_l('#00020^eError')),
-          MB_OK or MB_ICONERROR);
-        Application.Terminate;
-        exit;
+        on E: Exception do begin
+          E.Message := _l('#00360^eCannot load Japanese stroke-order file.'#13
+            +'File WAKAN.SOD is corrupted.'#13#13'Application will now exit.')+#13
+            +E.Message;
+          raise;
+        end;
       end;
-    end;
     StrokeOrderPackage:=nil;
 
 
    { User data }
 
-    Profile('Init: before loading user data');
-
     try
       userdataloaded:=false;
       LoadUserData;
+      LastSaveTime := now;
     except
-      if FileExists(UserDataDir+'\WAKAN.USR') then Application.MessageBox(
-        pchar(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13
-          +'If you delete this file, it will be created anew.'#13#13'Application will now exit.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR)
-      else Application.MessageBox(
-        pchar(_l('#00362^eUnable to create user data file WAKAN.USR.'#13
+      if FileExists(UserDataDir+'\WAKAN.USR') then
+        raise Exception.Create(_l('#00361^eCannot load user data file.'#13'File WAKAN.USR is corrupted.'#13
+          +'If you delete this file, it will be created anew.'#13#13'Application will now exit.'))
+      else
+        raise Exception.Create(_l('#00362^eUnable to create user data file WAKAN.USR.'#13
           +'Please run this program from a folder that is not read-only.'#13#13
-          +'Application will now exit.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
+          +'Application will now exit.'));
     end;
     if Application.Terminated then exit;
 
-    Profile('Init: after loading user data');
-
-    jromasys:=fSettings.RadioGroup1.ItemIndex+1;
-    jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
-    cromasys:=fSettings.RadioGroup6.ItemIndex+1;
-    cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
 
    //Prepare for SwitchLanguage->RescanDicts->AutoUpdate(dic)
     if Command='updatedics' then begin
@@ -975,7 +903,6 @@ begin
       JWBAutoImport.ForceUpdateList := UpdateDicsParams.Files;
     end;
 
-    Profile('Init: before switching language');
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
@@ -984,7 +911,6 @@ begin
     RefreshCategory;
     RefreshKanjiCategory; }
 
-    Profile('Init: after switching language');
 
     if Command='updatedics' then begin
       if Length(UpdateDicsParams.Files)>0 then
@@ -995,20 +921,7 @@ begin
 
     FreeAndNil(fSplash);
 
-    Profile('Init: before applying UI settings');
-
-  {  if ((Screen.Width<1024) or (Screen.Height<768)) then
-    begin
-      fMenu.Constraints.MinHeight:=80;
-      fMenu.Constraints.MaxHeight:=80;
-      fMenu.Height:=80;
-      fMenu.Image1.Top:=0;
-    end;}
-    curdisplaymode:=0;
-    FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
-    fSettings.ApplyUISettings();
-
-    Profile('Init: after applying UI settings');
+    Self.ApplyUI;
 
    { Init clipboard viewer }
     CbNextViewer := SetClipboardViewer(Self.Handle);
@@ -1037,8 +950,6 @@ begin
       end;
     end;
 
-    Profile('Init: before initdone');
-
     initdone:=true;
   except
     on E: EBadUsage do begin
@@ -1062,10 +973,72 @@ begin
 
   Timer1.Enabled:=true;
   Timer1Timer(Timer1);
-
-  Profile('Init: done.');
+  ScreenTimer.Enabled:=true;
 
  { Done. }
+end;
+
+procedure TfMenu.FormShow(Sender: TObject);
+begin
+  Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
+end;
+
+procedure TfMenu.ApplyUI;
+begin
+  curdisplaymode:=0;
+  FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
+ //Hide everything, and most importantly, turn all actions off
+ //This will do no harm if the form is already hidden.
+  fMenu.aKanjiDetails.Checked := false;
+  fMenu.aKanjiSearch.Checked := false;
+  fMenu.aKanjiCompounds.Checked := false;
+  fMenu.aDictKanji.Checked := false;
+  fMenu.aUserExamples.Checked := false;
+  fMenu.aDictExamples.Checked := false;
+  fMenu.aUserDetails.Checked := false;
+  fMenu.aUserSettings.Checked := false;
+
+  fMenu.displaymode:=fSettings.setlayout;
+
+ //Before fKanji->OnShow => first possible Compounds reload
+  if fKanjiCompounds<>nil then begin
+    if fSettings.setusercompounds then fKanjiCompounds.sbShowVocab.Down:=true else fKanjiCompounds.sbShowDict.Down:=true;
+    if Assigned(fKanjiCompounds.sbShowVocab.OnClick) then
+      fKanjiCompounds.sbShowVocab.OnClick(fKanjiCompounds.sbShowVocab);
+  end;
+
+  fMenu.ChangeDisplay;
+  if fSettings.setwindows and 1=1 then fMenu.aKanjiSearch.Checked := true;
+  if fSettings.setwindows and 2=2 then fMenu.aKanjiCompounds.Checked := true;
+  if fSettings.setwindows and 4=4 then fMenu.aDictKanji.Checked := true;
+  if fSettings.setwindows and 8=8 then fMenu.aDictExamples.Checked := true;
+  if fSettings.setwindows and 16=16 then fMenu.aUserExamples.Checked := true;
+  if fSettings.setwindows and 32=32 then fMenu.aUserDetails.Checked := true;
+  if fSettings.setwindows and 64=64 then fMenu.aUserSettings.Checked := true;
+  if (fSettings.setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.aKanjiDetails.Checked := true;
+
+  fMenu.aPortraitMode.Checked := not fSettings.setPortraitMode;
+  fMenu.aPortraitMode.Execute;
+
+  if fKanjiSearch<>nil then begin
+    fKanjiSearch.rgSortBy.ItemIndex:=fSettings.setsort;
+    fKanjiSearch.cbOtherType.ItemIndex:=-1;
+  end;
+  if fWordLookup<>nil then
+    if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
+end;
+
+procedure TfMenu.CheckResolution;
+begin
+  if (Screen.Width<800) or (Screen.Height<600) then
+    if Application.MessageBox(
+      pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?')),
+      pchar(_l('#00020^eError')),
+      MB_YESNO or MB_ICONERROR)=idNo then
+    begin
+      Application.Terminate;
+      exit;
+    end;
 end;
 
 procedure TfMenu.LoadWakanCfg(const filename: string);
@@ -2391,7 +2364,12 @@ begin
 //  Bevel5.Visible:=Width>815;
 end;
 
-{ Panel docker.
+{ procedure TfMenu.FormShow(Sender: TObject);
+begin
+
+end;
+
+Panel docker.
  If given "dock", docks the form to its rightful place and shows it,
  else hides it and undocks it.
  Returns true if the form was docked before this call. }
@@ -3271,6 +3249,9 @@ end;
 initialization
   rdcnt:=0;
   popcreated:=false;
+  romasys:=1;
+  showroma:=false;
+  clip:='';
 
 finalization
 
