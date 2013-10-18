@@ -325,8 +325,8 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
       var AllowCollapse: Boolean);
-    procedure tvContentsClick(Sender: TObject);
     procedure btnImportKanjidicClick(Sender: TObject);
+    procedure tvContentsChange(Sender: TObject; Node: TTreeNode);
 
   protected
     procedure UpdateFontNames;
@@ -438,7 +438,7 @@ begin
   AllowCollapse := false;
 end;
 
-procedure TfSettings.tvContentsClick(Sender: TObject);
+procedure TfSettings.tvContentsChange(Sender: TObject; Node: TTreeNode);
 var i: integer;
 begin
   if (tvContents.Selected = nil) or (tvContents.Selected.StateIndex<0) then exit;

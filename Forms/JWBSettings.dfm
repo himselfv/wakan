@@ -2582,11 +2582,12 @@ object fSettings: TfSettings
     HideSelection = False
     Indent = 19
     ParentShowHint = False
+    ReadOnly = True
     RowSelect = True
     ShowHint = True
     ShowLines = False
     TabOrder = 0
-    OnClick = tvContentsClick
+    OnChange = tvContentsChange
     OnCollapsing = tvContentsCollapsing
     Items.NodeData = {
       03080000003C000000000000000000000000000000FFFFFFFF00000000000000
