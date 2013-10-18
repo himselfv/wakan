@@ -1937,7 +1937,7 @@ object fSettings: TfSettings
         Anchors = [akLeft, akTop, akRight]
         Shape = bsTopLine
       end
-      object CheckBox64: TCheckBox
+      object cbEnableAnnotations: TCheckBox
         Left = 3
         Top = 3
         Width = 446
@@ -1946,7 +1946,7 @@ object fSettings: TfSettings
         Caption = '^eEnable annotations (ANNOTATE.PKG)'
         TabOrder = 0
       end
-      object CheckBox65: TCheckBox
+      object cbRebuildAnnotations: TCheckBox
         Left = 3
         Top = 41
         Width = 446

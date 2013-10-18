@@ -25,7 +25,7 @@ var
   fldAnnotsData: integer;
 
 procedure RebuildAnnotations;
-procedure LoadAnnotations;
+procedure LoadAnnotations(const AAutoCreate: boolean);
 function HaveAnnotations:boolean; inline;
 procedure AnnotShowMedia(kanji,kana:string);
 
@@ -62,7 +62,9 @@ begin
 end;
 
 { Rebuilds the annotation package if it's missing, or if any of the *.ANO files
-have been changed. }
+have been changed.
+Note that it might decline to build it for a number of reasons - e.g. if it's
+empty. So expect that annotate.pkg may still be missing. }
 procedure RebuildAnnotations;
 const
   UH_COMMENT:FChar = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -112,8 +114,8 @@ begin
     nchk.Free;
   end;
 
- { This is called at app start, so try to be efficient. If there are no annotations
-  and no existing package to update, do not write package. }
+ { This is called at the app start, so try to be efficient. If there are no
+  annotations and no existing package to update, do not write the package. }
 
   had_pkg := FileExists('ANNOTATE.PKG');
   if had_pkg and not bld then exit;
@@ -204,12 +206,14 @@ begin
   end;
 end;
 
-procedure LoadAnnotations;
+{ AutoCreate: build package if it's missing }
+procedure LoadAnnotations(const AAutoCreate: boolean);
 var ps:TPackageSource;
 begin
   try
-    if not fileexists('annotate.pkg') then RebuildAnnotations;
-    if not fileexists('annotate.pkg') then exit;
+    if AAutoCreate and not FileExists('annotate.pkg') then
+      RebuildAnnotations; //may refuse to do so
+    if not FileExists('annotate.pkg') then exit;
     ps:=TPackageSource.Create('annotate.pkg',621030,587135,453267);
     TAnnots:=TTextTable.Create(ps,'annot',false,false);
     fldAnnotsTag:=TAnnots.Field('Tag');

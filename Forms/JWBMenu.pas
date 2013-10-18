@@ -774,9 +774,10 @@ begin
 
 
    { Annotations }
-
-    if fSettings.CheckBox64.Checked and fSettings.CheckBox65.Checked then RebuildAnnotations;
-    if fSettings.CheckBox64.Checked then LoadAnnotations;
+    if fSettings.cbEnableAnnotations.Checked then begin
+      if fSettings.cbRebuildAnnotations.Checked then RebuildAnnotations;
+      LoadAnnotations({AutoCreate=}not fSettings.cbRebuildAnnotations.Checked);
+    end;
 
 
    { Radical search }

@@ -188,8 +188,8 @@ type
     CheckBox63: TCheckBox;
     Edit35: TEdit;
     tsAnnotations: TTabSheet;
-    CheckBox64: TCheckBox;
-    CheckBox65: TCheckBox;
+    cbEnableAnnotations: TCheckBox;
+    cbRebuildAnnotations: TCheckBox;
     CheckBox66: TCheckBox;
     CheckBox67: TCheckBox;
     CheckBox68: TCheckBox;
@@ -558,8 +558,8 @@ var s: string;
   tmp_int: integer;
   exmode:integer;
 begin
-  CheckBox64.Checked:=reg.ReadBool('Annotate','Enabled',true);
-  CheckBox65.Checked:=reg.ReadBool('Annotate','Rebuild',true);
+  cbEnableAnnotations.Checked:=reg.ReadBool('Annotate','Enabled',true);
+  cbRebuildAnnotations.Checked:=reg.ReadBool('Annotate','Rebuild',true);
   CheckBox66.Checked:=reg.ReadBool('Annotate','Sound',true);
   CheckBox67.Checked:=reg.ReadBool('Annotate','Pictures',true);
   CheckBox68.Checked:=reg.ReadBool('Annotate','WebPages',true);
@@ -937,8 +937,8 @@ begin
   reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
-  reg.WriteBool('Annotate','Enabled',CheckBox64.Checked);
-  reg.WriteBool('Annotate','Rebuild',CheckBox65.Checked);
+  reg.WriteBool('Annotate','Enabled',cbEnableAnnotations.Checked);
+  reg.WriteBool('Annotate','Rebuild',cbRebuildAnnotations.Checked);
   reg.WriteBool('Annotate','Sound',CheckBox66.Checked);
   reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
   reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
