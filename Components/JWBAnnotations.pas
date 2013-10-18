@@ -63,7 +63,6 @@ end;
 
 { Rebuilds the annotation package if it's missing, or if any of the *.ANO files
 have been changed. }
-//TODO: Convert to Unicode
 procedure RebuildAnnotations;
 const
   UH_COMMENT:FChar = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
@@ -85,23 +84,40 @@ var
   moded:boolean;
   curt,curd:FString;
   dd:string;
+  had_chk: boolean;
+  had_pkg: boolean;
+  new_chk_empty: boolean;
 begin
+ { List *.ANO files and check if there are new ones since last time.
+  Save up-to-date list. }
   chk:=TStringList.Create;
   nchk:=TStringList.Create;
-  bld:=false;
-  if FileExists('ANNOTATE.CHK') then chk.LoadFromFile('ANNOTATE.CHK');
-  if FindFirst('*.ANO',faAnyFile,sr)=0 then
-  repeat
-    ss:=sr.name+';'+inttostr(sr.size)+';'+inttostr(sr.time);
-    if chk.IndexOf(ss)=-1 then bld:=true;
-    nchk.Add(ss);
-  until FindNext(sr)<>0;
-  SysUtils.FindClose(sr);
-  nchk.SaveToFile('ANNOTATE.CHK');
-  chk.Free;
-  nchk.Free;
+  try
+    bld:=false;
+    had_chk := FileExists('ANNOTATE.CHK');
+    if had_chk then
+      chk.LoadFromFile('ANNOTATE.CHK');
+    if FindFirst('*.ANO',faAnyFile,sr)=0 then
+    repeat
+      ss:=sr.name+';'+inttostr(sr.size)+';'+inttostr(sr.time);
+      if chk.IndexOf(ss)=-1 then bld:=true;
+      nchk.Add(ss);
+    until FindNext(sr)<>0;
+    SysUtils.FindClose(sr);
+    if had_chk or (nchk.Count>0) then //no point in creating a new empty file
+      nchk.SaveToFile('ANNOTATE.CHK');
+    new_chk_empty := nchk.Count<=0;
+  finally
+    chk.Free;
+    nchk.Free;
+  end;
 
-  if FileExists('ANNOTATE.PKG') and not bld then exit;
+ { This is called at app start, so try to be efficient. If there are no annotations
+  and no existing package to update, do not write package. }
+
+  had_pkg := FileExists('ANNOTATE.PKG');
+  if had_pkg and not bld then exit;
+  if new_chk_empty and not had_pkg then exit;
 
   ps:=nil;
   tt:=nil;
