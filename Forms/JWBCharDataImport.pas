@@ -108,12 +108,22 @@ begin
   end;
 
   try
-    Self.Import;
-    Application.MessageBox(
-      PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
-      PChar(_l('#01073^eImport completed')),
-      MB_OK or MB_ICONINFORMATION
-    );
+    try
+      Self.Import;
+      Application.MessageBox(
+        PChar(_l('#01074^eCharacter data has been imported. Application will now terminate.')),
+        PChar(_l('#01073^eImport completed')),
+        MB_OK or MB_ICONINFORMATION
+      );
+    except
+      on E: Exception do
+        Application.MessageBox(
+          PChar(_l('#01091^eCannot import character data. Application will now terminate.')+#13
+            +E.Message),
+          PChar(_l('#00020^eError')),
+          MB_OK or MB_ICONERROR
+        );
+    end;
   finally
    //Terminate anyway because TChar tables has been messed up with.
    //If the import failed or was cancelled, old tables will be loaded next time.
@@ -443,7 +453,11 @@ begin
     tempDir := CreateRandomTempDir();
     SaveCharData(tempDir+'\wakan.chr');
     if (backupFile<>'') and not DeleteFile(AppFolder+'\wakan.chr') then
-      raise Exception.Create('Cannot replace current wakan.chr');
+      raise Exception.Create('Cannot replace current wakan.chr. Maybe the file '
+        +'is in use or you do not have permissions to delete it.'#13
+        +'Make sure only one copy of Wakan is running and that you have '
+        +'permissions to delete files in the folder where character data is '
+        +'stored.');
     if not MoveFile(PChar(tempDir+'\wakan.chr'), PChar(AppFolder+'\wakan.chr')) then begin
       if backupFile<>'' then
         CopyFile(PChar(backupFile), PChar(AppFolder+'\wakan.chr'), true);
@@ -535,7 +549,12 @@ begin
          IntToStr(JpStrokeCount)
         ]);
       end else
-        CharsCovered[CChar.tcur] := true; //migrated
+       { If there are duplicate records in KANJIDIC we may get CChar.tcur for a
+        newly-added record, outside of CharsCovered.
+        New records have no properies to migrate so we need not to extend
+        CharsCovered to them }
+        if CChar.tcur < Length(CharsCovered) then
+          CharsCovered[CChar.tcur] := true; //mark as migrated
 
       CharIdx := CChar.TrueInt(TCharIndex);
       CNewProp.OpenKanji(CharIdx);

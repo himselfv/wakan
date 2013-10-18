@@ -1194,6 +1194,7 @@
 01088>None
 01089>Folder %s does not exist!
 01090>Select UNIHAN directory:
+01091>Cannot import character data. Application will now terminate.
 ;
 ;
 ; EDICT markers.

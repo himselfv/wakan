@@ -133,7 +133,6 @@ object fCharDataImport: TfCharDataImport
     Caption = '#01083^eUpdate'
     TabOrder = 2
     OnClick = btnUpdateClick
-    ExplicitTop = 379
   end
   object btnCancel: TButton
     Left = 207
@@ -145,7 +144,6 @@ object fCharDataImport: TfCharDataImport
     Caption = '#01086^eCancel'
     ModalResult = 2
     TabOrder = 3
-    ExplicitTop = 379
   end
   object cbResetDb: TCheckBox
     Left = 14
