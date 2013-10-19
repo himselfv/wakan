@@ -4,15 +4,20 @@ Simple form placement storage.
 }
 
 interface
-
-uses
-  SysUtils, Classes, IniFiles, Registry;
+uses SysUtils, Classes, Types, IniFiles, Registry;
 
 type
   TFormPlacementOption = (foPosition, foVisibility);
   TFormPlacementOptions = set of TFormPlacementOption;
 
-  TRestoreOption = (roActivate, roJustWrite);
+  TRestoreOption = (
+    roActivate,   { position AND activate the form. When you position the main
+      form while starting the application, if you don't activate it you might
+      lose activation permission }
+    roJustWrite   { do not call SetWindowPlacement, just write settings to the
+      Delphi form object. If the form is yet to be created, it will be created
+      with the new settings }
+  );
   TRestoreOptions = set of TRestoreOption;
 
   TFormPlacement = class(TComponent)
@@ -21,8 +26,8 @@ type
     FIniFileName: string;
     FIniSection: string;
     FOptions: TFormPlacementOptions;
-    FPlacementRestored: boolean;
-   { Set to true on each successful RestorePlacement, set to false manually
+    FPlacementRestored: boolean; {
+    Set to true on each successful RestorePlacement, set to false manually
     to track when form placement is valid and should be saved }
     function OpenIniFile: TCustomIniFile;
   public
@@ -40,7 +45,7 @@ type
 procedure Register;
 
 implementation
-uses Types, Forms, Windows;
+uses Forms, Windows;
 
 constructor TFormPlacement.Create(AOwner: TComponent);
 begin
@@ -165,10 +170,13 @@ begin
   form := self.Owner as TCustomForm;
   ini := OpenIniFile;
   try
-    GetWindowPlacement(form.Handle, wp);
+    if not GetWindowPlacement(form.Handle, wp) then
+      RaiseLastOsError();
 
     if foPosition in self.FOptions then begin
-      ini.TryReadRect(FIniSection,'NormPos',wp.rcNormalPosition);
+      if ini.TryReadRect(FIniSection,'NormPos',wp.rcNormalPosition) then begin
+       //nothing
+      end;
       if ini.TryReadRect(FIniSection,'MinMaxPos', rc) then begin
         wp.ptMinPosition := rc.TopLeft;
         wp.ptMaxPosition := rc.BottomRight;
@@ -186,16 +194,16 @@ begin
    { Issue 187: showCmd values returned by GetWindowPlacement have to be adjusted
     to not activate the window on applying }
     if not form.Active and not (roActivate in AOptions) then
-   { If it's active we MUST NOT deflect to non-active version, the activation
-    may have yet to be applied, such as on creation. }
-    case wp.showCmd of
-      //SW_HIDE: begin end; //hiding does not change activation unless neccessary
-      SW_SHOWNORMAL: wp.showCmd := SW_SHOWNOACTIVATE;
-      SW_SHOWMINIMIZED: wp.showCmd := SW_SHOWMINNOACTIVE;
-      //SW_SHOWMAXIMIZED: begin end; //there's no way to maximize and not activate
-      //SW_SHOWNOACTIVATE: begin end; //already safe
-      SW_SHOW: wp.showCmd := SW_SHOWNA;
-    end;
+     { If it's active we MUST NOT deflect to non-active version, the activation
+      may have yet to be applied, such as on creation. }
+      case wp.showCmd of
+        //SW_HIDE: begin end; //hiding does not change activation unless neccessary
+        SW_SHOWNORMAL: wp.showCmd := SW_SHOWNOACTIVATE;
+        SW_SHOWMINIMIZED: wp.showCmd := SW_SHOWMINNOACTIVE;
+        //SW_SHOWMAXIMIZED: begin end; //there's no way to maximize and not activate
+        //SW_SHOWNOACTIVATE: begin end; //already safe
+        SW_SHOW: wp.showCmd := SW_SHOWNA;
+      end;
 
     if roJustWrite in AOptions then begin
       TForm(form).BoundsRect := wp.rcNormalPosition;

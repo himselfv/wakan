@@ -2365,12 +2365,7 @@ begin
 //  Bevel5.Visible:=Width>815;
 end;
 
-{ procedure TfMenu.FormShow(Sender: TObject);
-begin
-
-end;
-
-Panel docker.
+{ Panel docker.
  If given "dock", docks the form to its rightful place and shows it,
  else hides it and undocks it.
  Returns true if the form was docked before this call. }
@@ -3210,12 +3205,9 @@ var
   WordKanjiDocked: boolean;
   KanjiDetailsDocked: boolean;
 begin
-  if fVocabFilters<>nil then
-    UserFiltersDocked := DockExpress(fVocabFilters,false);
-  if fWordKanji<>nil then
-    WordKanjiDocked := DockExpress(fWordKanji,false);
-  if fKanjiDetails<>nil then
-    KanjiDetailsDocked := CharDetDocked and DockExpress(fKanjiDetails,false);
+  UserFiltersDocked := (fVocabFilters<>nil) and DockExpress(fVocabFilters,false);
+  WordKanjiDocked := (fWordKanji<>nil) and DockExpress(fWordKanji,false);
+  KanjiDetailsDocked := (fKanjiDetails<>nil) and CharDetDocked and DockExpress(fKanjiDetails,false);
 
   if aPortraitMode.Checked then begin
     Panel4.Align := alBottom;

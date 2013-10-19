@@ -3,7 +3,7 @@ object fKanjiDetails: TfKanjiDetails
   Top = 140
   BorderStyle = bsSizeToolWin
   Caption = '#00159^eCharacter details'
-  ClientHeight = 370
+  ClientHeight = 435
   ClientWidth = 321
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -24,7 +24,7 @@ object fKanjiDetails: TfKanjiDetails
   OnShow = FormShow
   DesignSize = (
     321
-    370)
+    435)
   PixelsPerInch = 96
   TextHeight = 13
   object ShapeKanji: TShape
@@ -259,13 +259,14 @@ object fKanjiDetails: TfKanjiDetails
     Left = 7
     Top = 198
     Width = 305
-    Height = 164
+    Height = 229
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitHeight = 164
     DesignSize = (
       305
-      164)
+      229)
     object ProUrlLabel1: TUrlLabel
       Left = 1
       Top = 0
@@ -364,7 +365,7 @@ object fKanjiDetails: TfKanjiDetails
     end
     object btnClose: TButton
       Left = -1
-      Top = 144
+      Top = 209
       Width = 225
       Height = 17
       Anchors = [akLeft, akRight, akBottom]
@@ -373,10 +374,11 @@ object fKanjiDetails: TfKanjiDetails
       TabOrder = 0
       OnClick = btnCloseClick
       OnKeyPress = btnCloseKeyPress
+      ExplicitTop = 144
     end
     object btnDock: TButton
       Left = 230
-      Top = 144
+      Top = 209
       Width = 75
       Height = 17
       Hint = '#00171^eDocks / undocks this window into main window'
@@ -384,18 +386,20 @@ object fKanjiDetails: TfKanjiDetails
       Caption = 'DOCK'
       TabOrder = 1
       OnClick = btnDockClick
+      ExplicitTop = 144
     end
     object ScrollBox1: TScrollBox
       Left = 0
       Top = 23
       Width = 304
-      Height = 115
+      Height = 180
       VertScrollBar.Position = 258
       VertScrollBar.Tracking = True
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelKind = bkFlat
       BorderStyle = bsNone
       TabOrder = 2
+      ExplicitHeight = 115
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = -250

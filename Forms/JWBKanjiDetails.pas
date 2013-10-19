@@ -1,5 +1,10 @@
 unit JWBKanjiDetails;
 
+//{$DEFINE NO_KD_PLACEMENT}
+{ Disable saving and restoring of form placement for this window.
+ Used to debug form position handling - we must be able to keep track of it even
+ with position saving turned off in options }
+
 interface
 
 uses
@@ -164,10 +169,12 @@ end;
 
 procedure TfKanjiDetails.BeforeDestruction;
 begin
+ {$IFNDEF NO_KD_PLACEMENT}
  { We do this here because TForm.BeforeDestruction hides the form and there's
   no way to know if it was Visible. }
   if (not fMenu.CharDetDocked) and FormPlacement1.PlacementRestored then
     FormPlacement1.SaveFormPlacement;
+ {$ENDIF}
   inherited;
 end;
 
@@ -974,17 +981,25 @@ begin
     Constraints.MinHeight := 0;
    //Realign
     Self.Hide; //it's okay, we're going to be hidden as part of docking anyway
-    ClientWidth := 1000;
-    ClientHeight := 1000;
-    UpdateAlignment;
+   { UpdateAlignment may rearrange controls, say, from vertical to horizontal
+    and some controls may end up with negative width/height due to current width
+    being insufficient.
+    See JWBForms for comments }
+    with SafeRearrange(Self) do try
+      UpdateAlignment;
+    finally
+      Unlock;
+    end;
    //Docked sizes will be applied at docking
     btnDock.Caption:=_l('#00172^eUndock');
   end else begin //after undock
    //The form is hidden.
    //Realign
-    ClientWidth := 1000;
-    ClientHeight := 1000;
-    UpdateAlignment;
+    with SafeRearrange(Self) do try
+      UpdateAlignment;
+    finally
+      Unlock;
+    end;
    //Add constraints when undocked
     Constraints.MinWidth := 337;
     Constraints.MaxWidth := 337;
@@ -1001,8 +1016,10 @@ end;
 procedure TfKanjiDetails.SetDocked(Value: boolean; Loading: boolean);
 begin
   if Value then begin //before dock
+   {$IFNDEF NO_KD_PLACEMENT}
     if (not Loading) and FormPlacement1.PlacementRestored then
       FormPlacement1.SaveFormPlacement; //save placement before breaking it with docking
+   {$ENDIF}
   end else begin //after undock
     if Loading then begin
      //Issue 161: if Loading and undocked, we won't get SetDockMode otherwise, and we have stuff to configure
@@ -1011,7 +1028,9 @@ begin
       FDockMode := alCustom;
       Perform(WM_SET_DOCK_MODE, integer(alNone), 0);
     end;
+   {$IFNDEF NO_KD_PLACEMENT}
     FormPlacement1.RestoreFormPlacement([]); //docking breaks placement so we restore it
+   {$ENDIF}
   end;
 end;
 
