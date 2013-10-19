@@ -279,6 +279,7 @@ begin
     Self.ShowModal;
     if curTransFile<>'' then //user cancelled
       curTransFile := '?'; //can't be a filename; means: "don't need tl"
+    raise EAbort.Create('');
   end;
   if curTransFile <> '?' then
     Self.LoadLanguage(curTransFile);
