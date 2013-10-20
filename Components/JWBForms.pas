@@ -13,6 +13,7 @@ Docking guide.
 
 1. Every form has docked and undocked dimensions. Undocked ones are saved on dock
  and kept in UndockWidth/UndockHeight.
+ TODO: Save and keep X, Y somewhere as they are lost.
 
 2. When docking, the form is asked to provide docked dimensions it preserved.
  By default, undocked dimensions are used.
