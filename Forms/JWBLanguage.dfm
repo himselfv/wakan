@@ -96,11 +96,12 @@ object fLanguage: TfLanguage
     TabOrder = 0
     OnClick = lbLanguagesClick
   end
-  object bbOk: TBitBtn
+  object btnOk: TBitBtn
     Left = 8
     Top = 384
     Width = 75
     Height = 25
+    Enabled = False
     Kind = bkOK
     NumGlyphs = 2
     TabOrder = 1

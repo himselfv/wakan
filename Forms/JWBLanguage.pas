@@ -27,7 +27,7 @@ type
     Label3: TLabel;
     lbLanguageFile: TLabel;
     lbLanguageAuthor: TLabel;
-    bbOk: TBitBtn;
+    btnOk: TBitBtn;
     btnShowInfo: TButton;
     RxLabel1: TLabel;
     RxLabel2: TLabel;
@@ -42,8 +42,6 @@ type
     finfo: array of TLanguageFileInfo;
 
   public
-    procedure LoadPerSettings; //when loading app
-    procedure SaveSettings; //save changes
 
   protected
     procedure LocalizeEdictMarkers();
@@ -54,6 +52,11 @@ type
     procedure TranslateForm(f:TForm);
     procedure TranslateAllForms();
     procedure LocalizePropertyTypes();
+
+  public
+    procedure AutoLoad; //read settings and load OR ask to choose
+    procedure SelectLanguage;
+    procedure SaveSettings; //save changes
 
   end;
 
@@ -80,8 +83,41 @@ procedure InitLanguage;
 begin
  //Load language or suggest to choose one
   fLanguage := TfLanguage.Create(Application);
-  fLanguage.LoadPerSettings;
+  fLanguage.AutoLoad;
   fLanguage.TranslateAllForms;
+end;
+
+{ Reads registry settings and loads appropriate language. If it's not
+ configured, asks the user to choose one. }
+procedure TfLanguage.AutoLoad;
+begin
+  curTransFile := fSettings.GetTranslationFile;
+  if curTransFile='' then begin
+    if not IsPositiveResult(Self.ShowModal) or (curTransFile='') then
+      raise Exception.Create('Wakan cannot run without a language selected.'#13
+        +'The application will now be terminated.');
+  end;
+  Self.SaveSettings();
+  Self.LoadLanguage(curTransFile);
+ //continue, because nothing has yet been translated
+end;
+
+{ Brings up a dialog to change interface translation. }
+procedure TfLanguage.SelectLanguage;
+begin
+  if not IsPositiveResult(Self.ShowModal) then
+    exit; //nothing has been changed
+  SaveSettings();
+
+ { This module translates some form statically at the start of the application.
+  Currently there's no choice but to do this }
+  ShowMessage('Language has been changed. Please restart the application.');
+  Application.Terminate;
+end;
+
+procedure TfLanguage.SaveSettings;
+begin
+  fSettings.SetTranslationFile(curTransFile);
 end;
 
 procedure TfLanguage.btnShowInfoClick(Sender: TObject);
@@ -188,6 +224,7 @@ procedure TfLanguage.FormShow(Sender: TObject);
 var i: integer;
 begin
   lbLanguages.Items.Clear;
+  btnOk.Enabled := false; //if there turns out to be no language selected
 
  //List translation files
   SetLength(fnames, 0);
@@ -264,49 +301,21 @@ end;
 
 procedure TfLanguage.lbLanguagesClick(Sender: TObject);
 begin
+  if lbLanguages.ItemIndex<0 then exit; //may have clicked on empty space
   lbLanguageFile.Caption:=fnames[lbLanguages.ItemIndex];
   lbLanguageAuthor.Caption:=finfo[lbLanguages.ItemIndex].lAuthor;
+  btnOk.Enabled := true;
 end;
 
-{
-Reads registry settings and loads appropriate language.
-If it's not configured, asks the user to choose one.
-}
-procedure TfLanguage.LoadPerSettings;
-begin
-  curTransFile := fSettings.GetTranslationFile;
-  if curTransFile='' then begin
-    Self.ShowModal;
-    if curTransFile<>'' then //user cancelled
-      curTransFile := '?'; //can't be a filename; means: "don't need tl"
-    raise EAbort.Create('');
-  end;
-  if curTransFile <> '?' then
-    Self.LoadLanguage(curTransFile);
-end;
 
-procedure TfLanguage.SaveSettings;
-begin
-  fSettings.SetTranslationFile(curTransFile);
-end;
 
-{
-Save the choice and apply the language, OR -- cancel and exit.
-}
 procedure TfLanguage.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   if not IsPositiveResult(ModalResult) then exit;
-
- //Else save the choice and load language
-  if lbLanguages.ItemIndex>=0 then begin
-    curTransFile := fnames[lbLanguages.ItemIndex];
-    SaveSettings();
-    LoadLanguage(curTransFile); //not really needed right now...
-
-   //Currently there's no choice but to do this
-    showmessage('Language has been changed. Please restart the application.');
-    Application.Terminate;
-  end;
+  if lbLanguages.ItemIndex>=0 then
+    curTransFile := fnames[lbLanguages.ItemIndex]
+  else
+    curTransFile := '';
 end;
 
 function TfLanguage.TranslateString(id:string):string;

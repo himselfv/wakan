@@ -2001,7 +2001,7 @@ end;
 
 procedure TfMenu.aChangeLanguageExecute(Sender: TObject);
 begin
-  fLanguage.ShowModal;
+  fLanguage.SelectLanguage;
 end;
 
 procedure TfMenu.aSettingsDictExecute(Sender: TObject);

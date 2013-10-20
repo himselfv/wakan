@@ -327,6 +327,7 @@ type
       var AllowCollapse: Boolean);
     procedure btnImportKanjidicClick(Sender: TObject);
     procedure tvContentsChange(Sender: TObject; Node: TTreeNode);
+    procedure FormDestroy(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -343,6 +344,17 @@ type
     procedure SelectActiveContentItem;
     procedure UpdatePortabilityPage;
 
+  protected
+   { Shared settings. To avoid reading the same file twice, call GetSettingsStore
+    to receive a shared copy. }
+    FWakanIni: TCustomIniFile;
+    FSettingsStore: TCustomIniFile;
+    FSettingsLoaded: boolean;
+    function GetWakanIni: TCustomIniFile;
+  public
+    function GetSettingsStore: TCustomIniFile;
+    procedure FreeSettings;
+
   public
    { Layout settings are loaded into these variables and applied later }
     setlayout: integer;
@@ -353,7 +365,6 @@ type
   protected
     procedure LoadRegistrySettings(reg: TCustomIniFile);
     procedure SaveRegistrySettings(reg: TCustomIniFile);
-    function OpenWakanIni: TCustomIniFile;
   public
     procedure LoadSettings;
     procedure SaveSettings;
@@ -449,13 +460,68 @@ begin
     end;
 end;
 
-{ Try to access ini file through this function only.
- There's one exception, TJvFormPlacement uses their own mechanics to access ini,
- but it preserves the codepage and doesn't write anything in Unicode so it works. }
-function TfSettings.OpenWakanIni: TCustomIniFile;
+{ Opens wakan.ini file from the application directory which either contains
+ the settings or an instruction to look in registry. }
+function TfSettings.GetWakanIni: TCustomIniFile;
 begin
+  if FWakanIni<>nil then begin
+    Result := FWakanIni;
+    exit;
+  end;
   Result := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
   TMemIniFile(Result).Encoding := SysUtils.TEncoding.UTF8; //write UTF8 only
+  FWakanIni := Result;
+end;
+
+{ Opens whatever settings store is configured for the application.
+I.e.:
+  portable mode => wakan.ini
+  registry mode => registry key
+Queued operations will not be executed -- do proper LoadSettings for that.
+If you're doing this *before* LoadSettings the settings location is not yet
+certain -- use the store only for reading. }
+function TfSettings.GetSettingsStore: TCustomIniFile;
+var ini: TCustomIniFile;
+  s: string;
+begin
+  if FSettingsStore<>nil then begin
+    Result := FSettingsStore;
+    exit;
+  end;
+
+ { If the settings has been loaded then the application is running in a
+  particular mode and it doesn't matter what ini says anymore }
+  if FSettingsLoaded then begin
+    case PortabilityMode of
+      pmPortable: Result := GetWakanIni;
+    else Result := TRegistryIniFile.Create(WakanRegKey);
+    end;
+    exit;
+  end;
+
+ { The settings has not been loaded yet, read those from ini }
+  ini := GetWakanIni;
+
+  s := LowerCase(ini.ReadString('General', 'Install', ''));
+  if (s='') or (s='upgrade') or (s='compatible') or (s='standalone') then begin
+    Result := TRegistryIniFile.Create(WakanRegKey);
+  end else
+  if (s='portable') then begin
+    Result := ini;
+  end else
+    raise Exception.Create('Invalid installation mode configuration.');
+
+  FSettingsStore := Result;
+end;
+
+{ Releases the shared settings objects. As things stand, there's no hurry as file
+ is not kept locked. }
+procedure TfSettings.FreeSettings;
+begin
+  if FSettingsStore=FWakanIni then
+    FSettingsStore := nil; //same object
+  FreeAndNil(FSettingsStore);
+  FreeAndNil(FWakanIni);
 end;
 
 //See comments in JWBPortableMode.pas about Wakan modes
@@ -464,60 +530,58 @@ var ini: TCustomIniFile;
   fPortableMode: TfPortableMode;
   s: string;
 begin
-  ini := OpenWakanIni;
-  try
-    s := LowerCase(ini.ReadString('General', 'Install', ''));
+  ini := GetWakanIni;
 
-    fPortableMode := nil;
-    if s='' then begin
-      fPortableMode := TfPortableMode.Create(Application);
-      s := LowerCase(fPortableMode.Initialize(ini))
-    end else
-    if s='upgrade' then begin
-      fPortableMode := TfPortableMode.Create(Application);
-     //We cannot just copy some of the files. If we start this operation,
-     //we have to continue it even after restart.
-      s := LowerCase(fPortableMode.ContinueUpgrade(ini));
-    end;
-    FreeAndNil(fPortableMode);
+  s := LowerCase(ini.ReadString('General', 'Install', ''));
 
-    if s='standalone' then begin
-      SetPortabilityMode(pmStandalone);
-      FreeAndNil(ini);
-      ini := TRegistryIniFile.Create(WakanRegKey);
-    end else
-    if s='compatible' then begin
-      SetPortabilityMode(pmCompatible);
-      FreeAndNil(ini);
-      ini := TRegistryIniFile.Create(WakanRegKey);
-    end else
-    if s='portable' then begin
-      SetPortabilityMode(pmPortable);
-    end else
-      raise Exception.Create('Invalid installation mode configuration.');
-
-   //Configure various FormPlacement components throught the application
-   //-- but don't load placement just now.
-    if PortabilityMode=pmPortable then begin
-      fMenu.FormPlacement1.UseRegistry := false;
-      fMenu.FormPlacement1.IniFileName := AppFolder + '\wakan.ini';
-    end else begin
-      fMenu.FormPlacement1.UseRegistry := true;
-      fMenu.FormPlacement1.IniFileName := WakanRegKey;
-    end;
-    fMenu.FormPlacement1.IniSection := 'MainPos';
-    if fKanjiDetails<>nil then begin
-      fKanjiDetails.FormPlacement1.UseRegistry := fMenu.FormPlacement1.UseRegistry;
-      fKanjiDetails.FormPlacement1.IniFileName := fMenu.FormPlacement1.IniFileName;
-      fKanjiDetails.FormPlacement1.IniSection := 'DetailPos';
-    end;
-   //Placement must be configured before doing LoadRegistrySettings
-   //because applying some settings requires being able to load Placement
-
-    LoadRegistrySettings(ini);
-  finally
-    ini.Free;
+  fPortableMode := nil;
+  if s='' then begin
+    fPortableMode := TfPortableMode.Create(Application);
+    s := LowerCase(fPortableMode.Initialize(ini))
+  end else
+  if s='upgrade' then begin
+    fPortableMode := TfPortableMode.Create(Application);
+   //We cannot just copy some of the files. If we start this operation,
+   //we have to continue it even after restart.
+    s := LowerCase(fPortableMode.ContinueUpgrade(ini));
   end;
+  if fPortableMode<>nil then
+    FreeAndNil(FSettingsStore); //settings store location could have changed -- recreate later
+  FreeAndNil(fPortableMode);
+
+  if s='standalone' then begin
+    SetPortabilityMode(pmStandalone);
+  end else
+  if s='compatible' then begin
+    SetPortabilityMode(pmCompatible);
+  end else
+  if s='portable' then begin
+    SetPortabilityMode(pmPortable);
+  end else
+    raise Exception.Create('Invalid installation mode configuration.');
+
+  ini := GetSettingsStore;
+
+ //Configure various FormPlacement components throught the application
+ //-- but don't load placement just now.
+  if PortabilityMode=pmPortable then begin
+    fMenu.FormPlacement1.UseRegistry := false;
+    fMenu.FormPlacement1.IniFileName := AppFolder + '\wakan.ini';
+  end else begin
+    fMenu.FormPlacement1.UseRegistry := true;
+    fMenu.FormPlacement1.IniFileName := WakanRegKey;
+  end;
+  fMenu.FormPlacement1.IniSection := 'MainPos';
+  if fKanjiDetails<>nil then begin
+    fKanjiDetails.FormPlacement1.UseRegistry := fMenu.FormPlacement1.UseRegistry;
+    fKanjiDetails.FormPlacement1.IniFileName := fMenu.FormPlacement1.IniFileName;
+    fKanjiDetails.FormPlacement1.IniSection := 'DetailPos';
+  end;
+ //Placement must be configured before doing LoadRegistrySettings
+ //because applying some settings requires being able to load Placement
+
+  LoadRegistrySettings(ini);
+  InitColors(ini);
 
   UpdatePortabilityPage;
 
@@ -525,32 +589,30 @@ begin
     chardetl.LoadFromFile(UserDataDir+'\WAKAN.CDT')
   else
     Button10Click(Self);
-
-  InitColors;
 end;
 
-//Initializes wakan.ini and moves user files as needed.
 procedure TfSettings.SaveSettings;
 var ini: TCustomIniFile;
 begin
+  FreeSettings(); //trigger reload in case files were changed
+
+  ini := GetWakanIni;
   case PortabilityMode of
-    pmPortable: begin
-      ini := OpenWakanIni;
-      ini.WriteString('General', 'Install', 'Portable');
-    end;
-  else
-    ini := TRegistryIniFile.Create(WakanRegKey);
+    pmStandalone: ini.WriteString('General', 'Install', 'Standalone');
+    pmCompatible: ini.WriteString('General', 'Install', 'Compatible');
+    pmPortable: ini.WriteString('General', 'Install', 'Portable');
   end;
 
+  ini := GetSettingsStore;
   try
     SaveRegistrySettings(ini);
+    WriteColors(ini);
   finally
     ini.UpdateFile;
-    ini.Free;
+    FreeSettings();
   end;
 
   chardetl.SaveToFile(UserDataDir+'\WAKAN.CDT');
-  WriteColors;
 end;
 
 procedure TfSettings.LoadRegistrySettings(reg: TCustomIniFile);
@@ -1076,25 +1138,21 @@ begin
 end;
 
 function TfSettings.GetTranslationFile: string;
-var reg:TRegIniFile;
+var ini: TCustomIniFile;
 begin
-  reg := TRegIniFile.Create(WakanRegKey);
-  try
-    Result := reg.ReadString('Language','LNGFile','');
-  finally
-    reg.Free;
-  end;
+  ini := GetSettingsStore;
+  if ini=nil then
+    Result := ''
+  else
+    Result := ini.ReadString('Language','LNGFile','');
 end;
 
 procedure TfSettings.SetTranslationFile(const Value: string);
-var reg:TRegIniFile;
+var ini: TCustomIniFile;
 begin
-  reg := TRegIniFile.Create('Software\Labyrinth\Wakan');
-  try
-    reg.WriteString('Language', 'LNGFile', curTransFile);
-  finally
-    reg.Free;
-  end;
+  ini := GetSettingsStore;
+  ini.WriteString('Language', 'LNGFile', curTransFile);
+  ini.UpdateFile;
 end;
 
 
@@ -1115,7 +1173,7 @@ end;
 
 procedure TfSettings.btnChangeLanguageClick(Sender: TObject);
 begin
-  fLanguage.ShowModal;
+  fLanguage.SelectLanguage;
 end;
 
 procedure TfSettings.SpeedButton1Click(Sender: TObject);
@@ -1243,6 +1301,10 @@ begin
   SaveSettings();
 end;
 
+procedure TfSettings.FormDestroy(Sender: TObject);
+begin
+  FreeSettings();
+end;
 
 procedure TfSettings.SpeedButton10Click(Sender: TObject);
 var sup:string;
@@ -1438,31 +1500,6 @@ begin
   Label32.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),2,'c');
   Label33.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),3,'c');
 end;
-
-{
-  sx:string;
-    sx:='';
-    if ChooseFont([SHIFTJIS_CHARSET],'',s,'',true)='!'then sx:=sx+',Shift-JIS';
-    if ChooseFont([CHINESEBIG5_CHARSET],'',s,'',true)='!'then sx:=sx+',Big5';
-    if ChooseFont([GB2312_CHARSET],'',s,'',true)='!'then sx:=sx+',GB2312';
-    if sx<>'' then
-    begin
-      delete(sx,1,1);
-      Application.MessageBox(
-        pchar(_l('#00348^eNo fonts of there character sets were found on your computer:'#13#13
-          +sx+#13#13
-          +'You must have at least one font of each of these sets on your computer '
-          +'to run this application.'#13#13
-          +'I recommend installing Ms Mincho, MS Gothic, SimSun and MingLiU fonts.'#13
-          +'These fonts are automatically installed when you install support for '
-          +'reading Japanese & Chinese language in windows.'#13#13
-          +'Please install required fonts and run this application again.')),
-        pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      Application.Terminate;
-      exit;
-    end;
-}
 
 //Silent: do not say anything in case of success
 function TfSettings.AutoDetectFonts(Silent:boolean):boolean;
@@ -1928,12 +1965,12 @@ begin
     MB_YESNO or MB_ICONQUESTION
   ) <> ID_YES then exit;
 
-  ini := OpenWakanIni;
+  ini := GetWakanIni;
   try
     ini.WriteString('General','Install','Upgrade');
     ini.UpdateFile;
   finally
-    FreeAndNil(ini);
+    FreeSettings;
   end;
 
   //Localize

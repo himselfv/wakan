@@ -3,7 +3,7 @@
 
 interface
 uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
-  ExtCtrls, Registry, JWBStrings, JWBKanaConv;
+  ExtCtrls, IniFiles, JWBStrings, JWBKanaConv;
 
 { Misc }
 
@@ -102,12 +102,12 @@ procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 
 { Colors }
 
-procedure InitColors;
+procedure InitColors(const reg: TCustomIniFile);
 function GetColorString(i:integer):string;
 procedure SetCol(col:integer;val:TColor);
 function GetCol(col:integer):TColor;
 function Col(col:string):TColor;
-procedure WriteColors;
+procedure WriteColors(const reg: TCustomIniFile);
 procedure SetColDefault(i:integer);
 
 
@@ -181,8 +181,8 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses Messages, StrUtils, ShlObj, JWBMenu, JWBSettings, JWBLanguage, TextTable,
-  JWBCharData;
+uses Messages, StrUtils, ShlObj, Registry, JWBMenu, JWBSettings, JWBLanguage,
+  TextTable, JWBCharData;
 
 
 { Portable/standalone }
@@ -565,12 +565,12 @@ var
   colsval:array[0..Color_Max] of TColor;
   colsarr:TStringList;
 
-procedure InitColors;
+procedure InitColors(const reg: TCustomIniFile);
 var i:integer;
-    reg:TRegIniFile;
     s:string;
     s2:string;
 begin
+  FreeAndNil(colarr);
   colarr:=TStringList.Create;
   colarr.add('0Kanji_Back=FFFFFF,^eBackground');
   colarr.add('0Kanji_Common=000000,^eCommon characters');
@@ -620,8 +620,9 @@ begin
   colarr.add('4Popup_Lines=000000,^eLines');
   colarr.add('4Popup_Card=FFFFFF,^eCharacter card');
   colarr.add('4Popup_Text=000000,^eText on the caracter card');
+  FreeAndNil(colval);
+  FreeAndNil(colsarr);
   colval:=TStringList.Create;
-  reg:=TRegIniFile.Create(WakanRegKey);
   colsarr:=TStringList.Create;
   for i:=0 to colarr.Count-1 do
   begin
@@ -636,7 +637,6 @@ begin
   end;
   colsarr.Sorted:=true;
   colsarr.Sort;
-  reg.Free;
   SetCol(-1,clBlack);
 end;
 
@@ -682,13 +682,11 @@ begin
   result:=colsval[colsarr.IndexOf(col)];
 end;
 
-procedure WriteColors;
+procedure WriteColors(const reg: TCustomIniFile);
 var i:integer;
-    reg:TRegIniFile;
     s:string;
     s2:string;
 begin
-  reg:=TRegIniFile.Create(WakanRegKey);
   for i:=0 to colarr.Count-1 do
   begin
     s:=colarr[i];
