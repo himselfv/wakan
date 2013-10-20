@@ -73,17 +73,9 @@ begin
 end;
 
 procedure TfVocabFilters.lbCategoriesDblClick(Sender: TObject);
-var i:integer;
 begin
   if lbCategories.ItemIndex<>-1 then lbCategories.Checked[lbCategories.ItemIndex]:=not
     lbCategories.Checked[lbCategories.ItemIndex];
-  exit;
-  if lbCategories.ItemIndex<>-1 then
-  begin
-    for i:=0 to lbCategories.Items.Count-1 do
-      lbCategories.Checked[i]:=i=lbCategories.ItemIndex;
-    fVocab.ShowIt(false);
-  end;
 end;
 
 procedure TfVocabFilters.tabCatListChange(Sender: TObject; NewTab: Integer;
