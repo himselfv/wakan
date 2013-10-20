@@ -986,8 +986,8 @@ end;
 
 procedure TfMenu.ApplyUI;
 begin
+  Self.Visible := false;
   curdisplaymode:=0;
-  FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
  //Hide everything, and most importantly, turn all actions off
  //This will do no harm if the form is already hidden.
   fMenu.aKanjiDetails.Checked := false;
@@ -1000,6 +1000,10 @@ begin
   fMenu.aUserSettings.Checked := false;
 
   fMenu.displaymode:=fSettings.setlayout;
+
+  fMenu.SetCharDetDocked(fSettings.CharDetDocked, true); //after KanjiDetails.DockedWidth/Height
+  fMenu.CharDetDockedVis1:=fSettings.CharDetDockedVis1;
+  fMenu.CharDetDockedVis2:=fSettings.CharDetDockedVis2;
 
  //Before fKanji->OnShow => first possible Compounds reload
   if fKanjiCompounds<>nil then begin
@@ -1027,6 +1031,8 @@ begin
   end;
   if fWordLookup<>nil then
     if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
+
+  FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
 end;
 
 procedure TfMenu.CheckResolution;

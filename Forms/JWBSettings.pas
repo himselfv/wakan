@@ -349,7 +349,7 @@ type
     to receive a shared copy. }
     FWakanIni: TCustomIniFile;
     FSettingsStore: TCustomIniFile;
-    FSettingsLoaded: boolean;
+    FPortabilityLoaded: boolean;
     function GetWakanIni: TCustomIniFile;
   public
     function GetSettingsStore: TCustomIniFile;
@@ -357,11 +357,14 @@ type
 
   public
    { Layout settings are loaded into these variables and applied later }
-    setlayout: integer;
-    setwindows: integer;
+    SetLayout: integer;
+    SetWindows: integer;
     setsort: integer;
     setusercompounds: boolean;
     setPortraitMode: boolean;
+    CharDetDocked: boolean;
+    CharDetDockedVis1: boolean;
+    CharDetDockedVis2: boolean;
   protected
     procedure LoadRegistrySettings(reg: TCustomIniFile);
     procedure SaveRegistrySettings(reg: TCustomIniFile);
@@ -477,9 +480,8 @@ end;
 I.e.:
   portable mode => wakan.ini
   registry mode => registry key
-Queued operations will not be executed -- do proper LoadSettings for that.
-If you're doing this *before* LoadSettings the settings location is not yet
-certain -- use the store only for reading. }
+If you're using this before proper LoadSettings, only read, do not write,
+and be ready to receive nil }
 function TfSettings.GetSettingsStore: TCustomIniFile;
 var ini: TCustomIniFile;
   s: string;
@@ -491,7 +493,7 @@ begin
 
  { If the settings has been loaded then the application is running in a
   particular mode and it doesn't matter what ini says anymore }
-  if FSettingsLoaded then begin
+  if FPortabilityLoaded then begin
     case PortabilityMode of
       pmPortable: Result := GetWakanIni;
     else Result := TRegistryIniFile.Create(WakanRegKey);
@@ -559,6 +561,7 @@ begin
     SetPortabilityMode(pmPortable);
   end else
     raise Exception.Create('Invalid installation mode configuration.');
+  FPortabilityLoaded := true;
 
   ini := GetSettingsStore;
 
@@ -869,11 +872,12 @@ begin
     fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
   end;
 
-  fMenu.SetCharDetDocked(reg.ReadBool('Layout','CharDetailsDocked',false), true); //after KanjiDetails.DockedWidth/Height
-  fMenu.CharDetDockedVis1:=reg.ReadBool('Layout','CharDetailsVisible1',true);
-  fMenu.CharDetDockedVis2:=reg.ReadBool('Layout','CharDetailsVisible2',true);
-  setlayout:=reg.ReadInteger('Layout','DisplayLayout',1);
-  setwindows:=reg.ReadInteger('Layout','SecondaryWindows',72);
+ //Read UI settings to apply later
+  CharDetDocked := reg.ReadBool('Layout','CharDetailsDocked',false);
+  CharDetDockedVis1 := reg.ReadBool('Layout','CharDetailsVisible1',true);
+  CharDetDockedVis2 := reg.ReadBool('Layout','CharDetailsVisible2',true);
+  SetLayout := reg.ReadInteger('Layout','DisplayLayout',1);
+  SetWindows := reg.ReadInteger('Layout','SecondaryWindows',72);
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
@@ -1151,6 +1155,7 @@ procedure TfSettings.SetTranslationFile(const Value: string);
 var ini: TCustomIniFile;
 begin
   ini := GetSettingsStore;
+  if ini=nil then exit; //no store yet configured, cannot save
   ini.WriteString('Language', 'LNGFile', curTransFile);
   ini.UpdateFile;
 end;

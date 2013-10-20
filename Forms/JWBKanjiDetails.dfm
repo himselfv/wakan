@@ -263,7 +263,6 @@ object fKanjiDetails: TfKanjiDetails
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 164
     DesignSize = (
       305
       229)
@@ -374,7 +373,6 @@ object fKanjiDetails: TfKanjiDetails
       TabOrder = 0
       OnClick = btnCloseClick
       OnKeyPress = btnCloseKeyPress
-      ExplicitTop = 144
     end
     object btnDock: TButton
       Left = 230
@@ -386,7 +384,6 @@ object fKanjiDetails: TfKanjiDetails
       Caption = 'DOCK'
       TabOrder = 1
       OnClick = btnDockClick
-      ExplicitTop = 144
     end
     object ScrollBox1: TScrollBox
       Left = 0
@@ -399,7 +396,6 @@ object fKanjiDetails: TfKanjiDetails
       BevelKind = bkFlat
       BorderStyle = bsNone
       TabOrder = 2
-      ExplicitHeight = 115
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = -250
