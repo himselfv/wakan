@@ -302,7 +302,7 @@ function UnicodeStreamWriter(AStream: TStream; AOwnsStream: boolean = false): TS
 function FileWriter(const AFilename: string): TStreamEncoder; inline; //->Unicode on Unicode, ->Ansi on Ansi
 
 implementation
-uses Controls, Windows, StreamUtils, JWBConvertTbl;
+uses Windows, StreamUtils, JWBConvertTbl;
 
 { Various helpers }
 

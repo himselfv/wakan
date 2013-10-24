@@ -3,8 +3,29 @@
 Reads KANJIDIC format.
   # comment
   亜 3021 U4e9c [fields] [readings] [T1 readings] [T2 ...] [meanings]
-
 See http://www.csse.monash.edu.au/~jwb/kanjidic_doc.html
+
+This is a parser, not a database. It's optimized for a single pass decoding.
+If you need something like:
+  KanjiDic.GetKanji('..').Readings
+Then parse KANJIDIC with this parser and store the data in easily accessible
+format.
+
+Reading entries:
+  var entry: TKanjidicEntry;
+  while input.ReadLn(s) do begin
+    ParseKanjidicLine(s, @entry);
+    DoStuffWithEntry(@entry);
+  end;
+For speed, it's important that you allocate a single TKanjidicEntry and do not
+realloc it with every line.
+
+Accessing fields:
+  entry.readings[0].JoinKuns(', '); //a list of all common kuns
+  entry.readings[2].JoinOns(', '); //a list of rare ons
+  entry.JoinMeanings(', ');
+  entry.TryGetIntValue('J', x);
+  x := entry.GetIntValueDef('G', 5);
 }
 
 interface
@@ -42,6 +63,7 @@ type
     values_used: integer;
     procedure Reset;
     procedure AddValue(const value: string);
+    function Join(const sep: string): string;
   end;
   PFieldEntry = ^TFieldEntry;
 
@@ -54,6 +76,8 @@ type
     procedure Reset;
     procedure AddOn(const value: UnicodeString);
     procedure AddKun(const value: UnicodeString);
+    function JoinOns(const sep: UnicodeString): UnicodeString;
+    function JoinKuns(const sep: UnicodeString): UnicodeString;
   end;
   PReadingClassEntry = ^TReadingClassEntry;
 
@@ -70,9 +94,13 @@ type
     procedure Reset;
     procedure AddField(const key: string; const value: string);
     procedure AddMeaning(const value: UnicodeString);
-   //Shortcuts for ease of access
     function GetField(const key: string): PFieldEntry;
-    function GetFieldValue(const key: string): string;
+    function TryGetStrValue(const key: string; out value: UnicodeString): boolean;
+    function GetStrValueDef(const key: string; const def: string = ''): UnicodeString;
+    function TryGetIntValue(const key: string; out value: integer): boolean;
+    function GetIntValueDef(const key: string; const def: integer = 0): integer;
+    function JoinMeanings(const sep: UnicodeString): UnicodeString;
+   //Shortcuts for ease of access
     function GetPinyin: PFieldEntry;
     function GetKoreanReadings: PFieldEntry;
   end;
@@ -112,6 +140,18 @@ begin
   values[values_used-1] := value;
 end;
 
+function TFieldEntry.Join(const sep: string): string;
+var i: integer;
+begin
+  if Self.values_used<=0 then begin
+    Result := '';
+    exit;
+  end;
+  Result := Self.values[0];
+  for i := 1 to Self.values_used-1 do
+    Result := Result + sep + Self.values[i];
+end;
+
 procedure TReadingClassEntry.Reset;
 begin
   ons_used := 0;
@@ -132,6 +172,30 @@ begin
   if kuns_used>Length(kuns) then
     raise EKanjidicParsingException.CreateFmt(eReadingClassEntryKunOverflow, [kuns_used]);
   kuns[kuns_used-1] := value;
+end;
+
+function TReadingClassEntry.JoinOns(const sep: UnicodeString): UnicodeString;
+var i: integer;
+begin
+  if Self.ons_used<=0 then begin
+    Result := '';
+    exit;
+  end;
+  Result := Self.ons[0];
+  for i := 1 to Self.ons_used-1 do
+    Result := Result + sep + Self.ons[i];
+end;
+
+function TReadingClassEntry.JoinKuns(const sep: UnicodeString): UnicodeString;
+var i: integer;
+begin
+  if Self.kuns_used<=0 then begin
+    Result := '';
+    exit;
+  end;
+  Result := Self.kuns[0];
+  for i := 1 to Self.kuns_used-1 do
+    Result := Result + sep + Self.kuns[i];
 end;
 
 procedure TKanjidicEntry.Reset;
@@ -181,15 +245,47 @@ begin
     end;
 end;
 
-{ Returns first value for the field, or empty string }
-function TKanjidicEntry.GetFieldValue(const key: string): string;
+function TKanjidicEntry.TryGetStrValue(const key: string; out value: UnicodeString): boolean;
 var field: PFieldEntry;
 begin
   field := GetField(key);
   if (field=nil) or (field.values_used<=0) then
-    Result := ''
-  else
-    Result := field.values[0];
+    Result := false
+  else begin
+    Result := true;
+    value := field.values[0];
+  end;
+end;
+
+{ Returns first value for the field, or empty string }
+function TKanjidicEntry.GetStrValueDef(const key: string; const def: UnicodeString = ''): UnicodeString;
+begin
+  if not TryGetStrValue(key, Result) then
+    Result := def;
+end;
+
+function TKanjidicEntry.TryGetIntValue(const key: string; out value: integer): boolean;
+var str: UnicodeString;
+begin
+  Result := TryGetStrValue(key, str) and TryStrToInt(str, value);
+end;
+
+function TKanjidicEntry.GetIntValueDef(const key: string; const def: integer = 0): integer;
+begin
+  if not TryGetIntValue(key, Result) then
+    Result := def;
+end;
+
+function TKanjidicEntry.JoinMeanings(const sep: UnicodeString): UnicodeString;
+var i: integer;
+begin
+  if Self.meanings_used<=0 then begin
+    Result := '';
+    exit;
+  end;
+  Result := Self.meanings[0];
+  for i := 1 to Self.meanings_used-1 do
+    Result := Result + sep + Self.meanings[i];
 end;
 
 function TKanjidicEntry.GetPinyin: PFieldEntry;
