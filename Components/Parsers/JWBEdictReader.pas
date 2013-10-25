@@ -47,7 +47,7 @@ type
   PKanaEntry = ^TKanaEntry;
 
   TSenseEntry = record
-    pos:TMarkers;
+    pos: TMarkers;
     markers: TMarkers;
     text: UnicodeString;
     procedure Reset;

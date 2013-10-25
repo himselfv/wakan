@@ -277,7 +277,8 @@ function Conv_DetectType(AStream: TStream; out AEncoding: CEncoding): boolean; o
 function Conv_DetectType(const AFilename: string): CEncoding; overload;
 function Conv_DetectType(const AFilename: string; out AEncoding: CEncoding): boolean; overload;
 
-function OpenTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamDecoder;
+function OpenStream(const AStream: TStream; AOwnsStream: boolean; AEncoding: CEncoding = nil): TStreamDecoder;
+function OpenTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamDecoder; inline;
 function CreateTextFile(const AFilename: string; AEncoding: CEncoding): TStreamEncoder;
 function AppendToTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamEncoder;
 
@@ -490,6 +491,7 @@ procedure TStreamDecoder.Rewind(const ADontSkipBom: boolean);
 begin
   Stream.Seek(0, soBeginning);
   FBufferPos := Length(FBuffer)+1;
+  FEOF := false;
   if not ADontSkipBom then
     TrySkipBom;
 end;
@@ -1737,13 +1739,10 @@ begin
   end;
 end;
 
-function OpenTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamDecoder;
+function OpenStream(const AStream: TStream; AOwnsStream: boolean; AEncoding: CEncoding = nil): TStreamDecoder;
 var fsr: TStreamReader;
 begin
-  fsr := TStreamReader.Create(
-    TFileStream.Create(AFilename, fmOpenRead or fmShareDenyNone),
-    {OwnsStream=}true
-  );
+  fsr := TStreamReader.Create(AStream, AOwnsStream);
   try
     if AEncoding=nil then
       if not Conv_DetectType(fsr, AEncoding) and (AEncoding=nil) {not even a best guess} then
@@ -1754,6 +1753,14 @@ begin
     FreeAndNil(fsr);
     raise;
   end;
+end;
+
+function OpenTextFile(const AFilename: string; AEncoding: CEncoding = nil): TStreamDecoder;
+begin
+  Result := OpenStream(
+    TFileStream.Create(AFilename, fmOpenRead or fmShareDenyNone),
+    {OwnsStream=}true
+  );
 end;
 
 function CreateTextFile(const AFilename: string; AEncoding: CEncoding): TStreamEncoder;
