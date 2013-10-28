@@ -432,7 +432,7 @@ implementation
 
 uses Types, TextTable, JWBMenu, JWBHint, JWBKanjiDetails, JWBKanji,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit,
-  JWBCategories, JWBDic, JWBEdictMarkers,
+  JWBCategories, JWBDic, JWBEdictMarkers, JWBFileType,
   JWBUserData, JWBCharData, StreamUtils;
 
 {$R *.DFM}

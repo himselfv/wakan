@@ -127,7 +127,7 @@ const
 implementation
 
 uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
-  JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO,
+  JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType,
   JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
   JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
   JWBCharData, TextTable;
