@@ -612,7 +612,7 @@ uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBVocab, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
   JWBExamples, JWBVocabDetails, JWBVocabAdd, JWBVocabFilters, JWBUserData,
-  JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBTranslate,
+  JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBEditor,
   JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
   JWBInvalidator, JWBLanguage,
   JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
@@ -977,20 +977,20 @@ begin
     CbNextViewer := SetClipboardViewer(Self.Handle);
 
    { Open file in the editor }
-    if fTranslate<>nil then begin
-      fTranslate.FileChanged := false;
+    if fEditor<>nil then begin
+      fEditor.FileChanged := false;
      //Explicitly specified file
       if Command='open' then begin
-        fTranslate.OpenAnyFile(OpenParams.Filename);
+        fEditor.OpenAnyFile(OpenParams.Filename);
        //Press "Editor" programmatically
         tab3.Down := true;
         TabControl1Change(tab3);
       end else
      //Last opened file in Editor
-      if (fSettings.CheckBox61.Checked) and (fTranslate.docfilename<>'') then
+      if (fSettings.CheckBox61.Checked) and (fEditor.docfilename<>'') then
       try
-        fTranslate.OpenFile(fTranslate.docfilename, fTranslate.DocType,
-          fTranslate.DocEncoding);
+        fEditor.OpenFile(fEditor.docfilename, fEditor.DocType,
+          fEditor.DocEncoding);
       except
         on E: Exception do begin
          //Re-raise with additional comment
@@ -1548,7 +1548,7 @@ begin
   ChangeClipboardChain(Self.Handle, CbNextViewer);
 
   if not FlushUserData then Action:=caNone;
-  if not fTranslate.CommitFile then Action:=caNone;
+  if not fEditor.CommitFile then Action:=caNone;
   if FormPlacement1.PlacementRestored then
     FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
@@ -1560,7 +1560,7 @@ begin
       Screen.Cursor:=crDefault;
     end;
     fSettings.SaveSettings;
-    fTranslate.Close;
+    fEditor.Close;
     fWordLookup.Close;
     fVocab.Close;
     fKanji.Close;
@@ -1941,8 +1941,8 @@ begin
   if the form is invisible, the button is invisible too }
   if fKanji<>nil then
     fKanji.btnKanjiDetails.Down:=fKanjiDetails.Visible;
-  if fTranslate<>nil then
-    fTranslate.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  if fEditor<>nil then
+    fEditor.btnKanjiDetails.Down:=fKanjiDetails.Visible;
 end;
 
 procedure TfMenu.aKanjiCompoundsExecute(Sender: TObject);
@@ -2057,7 +2057,7 @@ begin
   if fKanji.Visible then fKanji.DoIt;
   if fWordLookup.Visible then fWordLookup.Look();
   if fVocab.Visible then fVocab.ShowIt(false);
-  if fTranslate.Visible then fTranslate.RepaintText;
+  if fEditor.Visible then fEditor.RepaintText;
 end;
 
 procedure TfMenu.aChangeLanguageExecute(Sender: TObject);
@@ -2128,137 +2128,137 @@ end;
 
 procedure TfMenu.aEditorNewExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbFileNewClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbFileNewClick(sender);
 end;
 
 procedure TfMenu.aEditorOpenExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbFileOpenClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbFileOpenClick(sender);
 end;
 
 procedure TfMenu.aEditorSaveExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbFileSaveClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbFileSaveClick(sender);
 end;
 
 procedure TfMenu.aEditorSaveAsExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.SaveAs;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.SaveAs;
 end;
 
 procedure TfMenu.aEditorExportExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.ExportAs;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.ExportAs;
 end;
 
 procedure TfMenu.aEditorCutExecute(Sender: TObject);
 begin
-  if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbClipCutClick(sender);
+  if not fEditor.ListBox1.Focused then exit;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbClipCutClick(sender);
 end;
 
 procedure TfMenu.aEditorCopyExecute(Sender: TObject);
 begin
-  if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbClipCopyClick(sender);
+  if not fEditor.ListBox1.Focused then exit;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbClipCopyClick(sender);
 end;
 
 procedure TfMenu.aEditorCopyAsExecute(Sender: TObject);
 begin
-  if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.CopyAs;
+  if not fEditor.ListBox1.Focused then exit;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.CopyAs;
 end;
 
 procedure TfMenu.aEditorPasteExecute(Sender: TObject);
 begin
-  if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbClipPasteClick(sender);
+  if not fEditor.ListBox1.Focused then exit;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbClipPasteClick(sender);
 end;
 
 procedure TfMenu.aEditorSelectAllExecute(Sender: TObject);
 begin
-  if not fTranslate.ListBox1.Focused then exit;
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.SelectAll;
+  if not fEditor.ListBox1.Focused then exit;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.SelectAll;
 end;
 
 { These simply switch to a page and click appropriate button.
  All handling is done in the editor module. }
 procedure TfMenu.aEditorKanjiModeExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbKanjiMode.Down := true;
-  fTranslate.sbKanjiModeClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbKanjiMode.Down := true;
+  fEditor.sbKanjiModeClick(sender);
 end;
 
 procedure TfMenu.aEditorKanaModeExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbKanaMode.Down := true;
-  fTranslate.sbKanaModeClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbKanaMode.Down := true;
+  fEditor.sbKanaModeClick(sender);
 end;
 
 procedure TfMenu.aEditorASCIIModeExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbAsciiMode.Down := true;
-  fTranslate.sbAsciiModeClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbAsciiMode.Down := true;
+  fEditor.sbAsciiModeClick(sender);
 end;
 
 { These simply switch to a page and click appropriate button.
  All handling is done in the editor module. }
 procedure TfMenu.aEditorReadingExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbDisplayReading.Down:=not fTranslate.sbDisplayReading.Down;
-  fTranslate.sbDisplayReadingClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbDisplayReading.Down:=not fEditor.sbDisplayReading.Down;
+  fEditor.sbDisplayReadingClick(sender);
 end;
 
 procedure TfMenu.aEditorMeaningExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbDisplayMeaning.Down:=not fTranslate.sbDisplayMeaning.Down;
-  fTranslate.sbDisplayMeaningClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbDisplayMeaning.Down:=not fEditor.sbDisplayMeaning.Down;
+  fEditor.sbDisplayMeaningClick(sender);
 end;
 
 procedure TfMenu.aEditorColorsExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbUseTlColors.Down:=not fTranslate.sbUseTlColors.Down;
-  fTranslate.sbUseTlColorsClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbUseTlColors.Down:=not fEditor.sbUseTlColors.Down;
+  fEditor.sbUseTlColorsClick(sender);
 end;
 
 procedure TfMenu.aEditorClearExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbClearTranslationClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbClearTranslationClick(sender);
 end;
 
 procedure TfMenu.aEditorFillExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbAutoTranslateClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbAutoTranslateClick(sender);
 end;
 
 procedure TfMenu.aEditorSetExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbSetTranslationClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbSetTranslationClick(sender);
 end;
 
 procedure TfMenu.aEditorPrintExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.sbPrintClick(sender);
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.sbPrintClick(sender);
 end;
 
 procedure TfMenu.aKanjiAllExecute(Sender: TObject);
@@ -2395,26 +2395,26 @@ end;
 
 procedure TfMenu.aEditorWindowExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.ListBox1.SetFocus;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.ListBox1.SetFocus;
 end;
 
 procedure TfMenu.aEditorSmallFontExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.FontSize := FontSizeSmall;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.FontSize := FontSizeSmall;
 end;
 
 procedure TfMenu.aEditorMedFontExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.FontSize := FontSizeMedium;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.FontSize := FontSizeMedium;
 end;
 
 procedure TfMenu.aEditorLargeFontExecute(Sender: TObject);
 begin
-  if not fTranslate.Visible then aModeEditor.Execute;
-  fTranslate.FontSize := FontSizeLarge;
+  if not fEditor.Visible then aModeEditor.Execute;
+  fEditor.FontSize := FontSizeLarge;
 end;
 
 procedure TfMenu.FormResize(Sender: TObject);
@@ -2544,10 +2544,10 @@ begin
     1:if fKanji<>nil then fKanji.Hide;
     2:if fWordLookup<>nil then fWordLookup.Hide;
     5:if fVocab<>nil then fVocab.Hide;
-    3:if fTranslate<>nil then fTranslate.Hide;
+    3:if fEditor<>nil then fEditor.Hide;
     4:begin
         if fWordLookup<>nil then fWordLookup.Hide;
-        if fTranslate<>nil then fTranslate.Hide;
+        if fEditor<>nil then fEditor.Hide;
       end;
   end;
   Panel2.Height:=0;
@@ -2589,22 +2589,22 @@ begin
         aModeUser.Checked:=true;
       end;
     3:begin
-        if fTranslate<>nil then
-          MainDock(fTranslate,Panel3);
+        if fEditor<>nil then
+          MainDock(fEditor,Panel3);
         tab3.Down:=true;
-        if fTranslate<>nil then
-          fTranslate.sbDockDictionary.Down:=false;
+        if fEditor<>nil then
+          fEditor.sbDockDictionary.Down:=false;
         aModeEditor.Checked:=true;
       end;
     4:begin
         Panel2.height:=250;
         if fWordLookup<>nil then
           MainDock(fWordLookup,Panel2);
-        if fTranslate<>nil then
-          MainDock(fTranslate,Panel3);
+        if fEditor<>nil then
+          MainDock(fEditor,Panel3);
         tab3.Down:=true;
-        if fTranslate<>nil then
-          fTranslate.sbDockDictionary.Down:=true;
+        if fEditor<>nil then
+          fEditor.sbDockDictionary.Down:=true;
         aModeEditor.Checked:=true;
       end;
     5:begin
@@ -2624,8 +2624,8 @@ procedure TfMenu.TabControl1Change(Sender: TObject);
 begin
   if tab1.Down then displaymode:=1;
   if tab2.Down then displaymode:=2;
-  if tab3.Down and ((fTranslate=nil) or not fTranslate.sbDockDictionary.Down) then displaymode:=3;
-  if tab3.Down and ((fTranslate<>nil) and fTranslate.sbDockDictionary.Down) then displaymode:=4;
+  if tab3.Down and ((fEditor=nil) or not fEditor.sbDockDictionary.Down) then displaymode:=3;
+  if tab3.Down and ((fEditor<>nil) and fEditor.sbDockDictionary.Down) then displaymode:=4;
   if tab5.Down then displaymode:=5;
   ChangeDisplay;
 end;
@@ -2644,7 +2644,7 @@ end;
 
 procedure TfMenu.aModeEditorExecute(Sender: TObject);
 begin
-  if fTranslate.sbDockDictionary.Down then
+  if fEditor.sbDockDictionary.Down then
     displaymode:=4
   else
     displaymode:=3;
@@ -3120,12 +3120,12 @@ begin
     SetSelectionHighlight(0,0,0,0,nil);
   end else
 
-  if (fTranslate<>nil) and (MouseControl=fTranslate.EditorPaintBox) then
+  if (fEditor<>nil) and (MouseControl=fEditor.EditorPaintBox) then
   begin
-    rpos:=fTranslate.TryGetExactLogicalPos(MousePos.x,MousePos.y);
+    rpos:=fEditor.TryGetExactLogicalPos(MousePos.x,MousePos.y);
     rx := rpos.x; ry := rpos.y;
-    if (ry>=0) and (rx>=0) and (rx<=fTranslate.doctr[ry].charcount) then
-      s1:=fTranslate.GetDocWord(rx,ry,wtt,false)
+    if (ry>=0) and (rx>=0) and (rx<=fEditor.doctr[ry].charcount) then
+      s1:=fEditor.GetDocWord(rx,ry,wtt,false)
     else
       s1:='';
     SetSelectionHighlight(0,0,0,0,nil);

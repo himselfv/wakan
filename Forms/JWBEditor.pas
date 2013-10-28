@@ -1,4 +1,4 @@
-﻿unit JWBTranslate;
+﻿unit JWBEditor;
 {
 Text editor and translator.
 
@@ -111,7 +111,7 @@ type
  //Supported document types
   TDocType = (dtText, dtWakanText);
 
-  TfTranslate = class(TForm)
+  TfEditor = class(TForm)
     Bevel: TPanel;
     lblControlsHint: TLabel;
     sbDockDictionary: TSpeedButton;
@@ -393,6 +393,7 @@ type
 
   TTranslationThread = class(TThread)
   protected
+    FEditor: TfEditor;
     req: TDicSearchRequest;
     dicsl: TSearchResults;
     blockfromy: integer;
@@ -400,13 +401,13 @@ type
     blockfromx: integer;
     blocktox: integer;
   public
-    constructor Create(ablockfromy, ablocktoy: integer);
+    constructor Create(AEditor: TfEditor; ablockfromy, ablocktoy: integer);
     destructor Destroy; override;
     procedure Execute; override;
   end;
 
 var
-  fTranslate: TfTranslate;
+  fEditor: TfEditor;
 
 const
   FontSizeSmall = 8;
@@ -553,7 +554,7 @@ function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):inte
 var pl,xs,yc:integer;
 begin
   plinl.Clear;
-  fTranslate.RenderText(Canvas,
+  fEditor.RenderText(Canvas,
     RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
     plinl,0,pl,xs,yc,true,true);
   printpl:=pl;
@@ -565,12 +566,12 @@ procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origh
 var pl,xs,yc:integer;
 begin
   if plinl.Count<=(pagenum-1)*printpl then exit;
-  fTranslate.RenderText(canvas,
+  fEditor.RenderText(canvas,
     RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
     plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
 end;
 
-procedure TfTranslate.FormCreate(Sender: TObject);
+procedure TfEditor.FormCreate(Sender: TObject);
 begin
   doc:=TWakanText.Create;
   doc.OnGetDictionaryEntry := DocGetDictionaryEntry;
@@ -628,7 +629,7 @@ begin
   if CF_WAKAN=0 then RaiseLastOsError();
 end;
 
-procedure TfTranslate.FormDestroy(Sender: TObject);
+procedure TfEditor.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(EditorBitmap);
   linl.Free;
@@ -636,7 +637,7 @@ begin
   FreeAndNil(doc);
 end;
 
-procedure TfTranslate.FormShow(Sender: TObject);
+procedure TfEditor.FormShow(Sender: TObject);
 begin
   if FFontSize<=0 then FontSize:=FontSizeMedium; //see FormCreate for explanation
   ShowText(true);
@@ -644,7 +645,7 @@ begin
   ListBox1.SetFocus;
 end;
 
-procedure TfTranslate.FormHide(Sender: TObject);
+procedure TfEditor.FormHide(Sender: TObject);
 begin
   case dictmodeset of
     0: fWordLookup.btnLookupJtoE.Down:=true;
@@ -654,7 +655,7 @@ begin
 //  fUser.Look(false);
 end;
 
-procedure TfTranslate.FormResize(Sender: TObject);
+procedure TfEditor.FormResize(Sender: TObject);
 begin
   InvalidateLines;
   Invalidate;
@@ -663,18 +664,18 @@ begin
   InvalidateNormalizeView;
 end;
 
-procedure TfTranslate.FormActivate(Sender: TObject);
+procedure TfEditor.FormActivate(Sender: TObject);
 begin
   ListBox1.SetFocus;
 end;
 
-procedure TfTranslate.FormDeactivate(Sender: TObject);
+procedure TfEditor.FormDeactivate(Sender: TObject);
 begin
   if fHint.Visible then HideHint;
 end;
 
 
-procedure TfTranslate.ClearEditor;
+procedure TfEditor.ClearEditor;
 begin
   doc.Clear;
   InvalidateLines;
@@ -689,7 +690,7 @@ begin
 end;
 
 { Opens a file by guessing format/encoding or asking user for it }
-procedure TfTranslate.OpenAnyFile(const AFilename:string);
+procedure TfEditor.OpenAnyFile(const AFilename:string);
 var AEncoding: CEncoding;
 begin
   if not FileExists(AFilename) then
@@ -706,7 +707,7 @@ begin
   end;
 end;
 
-procedure TfTranslate.OpenFile(const AFilename:string; const AType: TDocType;
+procedure TfEditor.OpenFile(const AFilename:string; const AType: TDocType;
   const AEncoding: CEncoding);
 var LoadAnnotMode: TTextAnnotMode;
 begin
@@ -751,7 +752,7 @@ end;
 { Doesn't save Filename, tp or AnnotMode choice. That is correct.
 This function can be called by others to make one-time special-format save.
 SaveAs does the choice remembering. }
-procedure TfTranslate.SaveToFile(const AFilename: string; const AType: TDocType;
+procedure TfEditor.SaveToFile(const AFilename: string; const AType: TDocType;
   const AEncoding: CEncoding; AnnotMode: TTextAnnotMode);
 var stream: TStream;
 begin
@@ -776,7 +777,7 @@ begin
 end;
 
 //Returns false if user have cancelled the dialog
-function TfTranslate.SaveAs: boolean;
+function TfEditor.SaveAs: boolean;
 var ADocType: TDocType;
   AAnnotMode: TTextAnnotMode;
   AEncoding: CEncoding;
@@ -826,7 +827,7 @@ begin
   lblFilename.Caption:=uppercase(ExtractFilename(SaveTextDialog.FileName));
 end;
 
-procedure TfTranslate.SetFileChanged(Value: boolean);
+procedure TfEditor.SetFileChanged(Value: boolean);
 begin
   FFileChanged:=Value;
   sbFileSave.Enabled:=Value;
@@ -843,7 +844,7 @@ It has three possible outcomes:
 3. "Cancel": Changes not saved, dirty flag not cleared, operation cancelled.
   Result = false
 }
-function TfTranslate.CommitFile:boolean;
+function TfEditor.CommitFile:boolean;
 var i:integer;
 begin
   Result := true;
@@ -889,7 +890,7 @@ begin
   Result := true;
 end;
 
-function TfTranslate.ExportAs: boolean;
+function TfEditor.ExportAs: boolean;
 var stream: TStream;
   enctype: CEncoding;
 begin
@@ -931,7 +932,7 @@ begin
   Result := true;
 end;
 
-constructor TTranslationThread.Create(ablockfromy, ablocktoy: integer);
+constructor TTranslationThread.Create(AEditor: TfEditor; ablockfromy, ablocktoy: integer);
 begin
  {$IF CompilerVersion<21}
   inherited Create({CreateSuspended=}true);
@@ -942,6 +943,7 @@ begin
   This sucks. }
   inherited Create(false);
  {$IFEND}
+  FEditor := AEditor;
   blockfromy := ablockfromy;
   blocktoy := ablocktoy;
   req := nil;
@@ -969,8 +971,8 @@ begin
     i := blockfromy;
     while (not Terminated) and (i<=blocktoy) do begin
       bg:=0;
-      en:=flength(fTranslate.doc.Lines[i])-1;
-      fTranslate.AutoTranslateLine(i, bg, en, req, dicsl);
+      en:=flength(FEditor.doc.Lines[i])-1;
+      FEditor.AutoTranslateLine(i, bg, en, req, dicsl);
       Inc(i);
     end;
 
@@ -985,7 +987,7 @@ end;
  Always leaves the last chunk to the calling thread because the last line of the last chunk
  might be incomplete and it's easier to care about that only in the main thread.
  On exit sets y to reflect calling thread's new share of work. }
-function TfTranslate.CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
+function TfEditor.CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
 var sysinfo: SYSTEM_INFO;
   i, yshare: integer;
 begin
@@ -998,13 +1000,13 @@ begin
   SetLength(Result, sysinfo.dwNumberOfProcessors-1);
   yshare := (abtoy-y) div (Length(Result)+1);
   for i := 0 to Length(Result)-1 do begin
-    Result[i] := TTranslationThread.Create(y, y+yshare-1);
+    Result[i] := TTranslationThread.Create(Self, y, y+yshare-1);
     Inc(y, yshare);
   end;
 end;
 {$ENDIF}
 
-procedure TfTranslate.AutoTranslate;
+procedure TfEditor.AutoTranslate;
 var j:integer;
   bg,en:integer;
   y:integer;
@@ -1162,7 +1164,7 @@ begin
   Screen.Cursor:=crDefault;
 end;
 
-procedure TfTranslate.AutoTranslateLine(y: integer; x_bg, x_en: integer;
+procedure TfEditor.AutoTranslateLine(y: integer; x_bg, x_en: integer;
   req: TDicSearchRequest; dicsl: TSearchResults);
 var x: integer;
   a:integer;
@@ -1195,7 +1197,7 @@ begin
     end;
 end;
 
-procedure TfTranslate.SetTranslation();
+procedure TfEditor.SetTranslation();
 begin
   if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
   begin
@@ -1206,7 +1208,7 @@ begin
     AutoTranslate();
 end;
 
-procedure TfTranslate.ListBox1Enter(Sender: TObject);
+procedure TfEditor.ListBox1Enter(Sender: TObject);
 begin
   fMenu.aEditorCopy.ShortCut:=CopyShort;
   fMenu.aEditorCopyAs.ShortCut:=CopyAsShort;
@@ -1216,7 +1218,7 @@ begin
   DrawCaret(csVisible); //show cursor
 end;
 
-procedure TfTranslate.ListBox1Exit(Sender: TObject);
+procedure TfEditor.ListBox1Exit(Sender: TObject);
 begin
   fMenu.aEditorCopy.ShortCut:=0;
   fMenu.aEditorCopyAs.ShortCut:=0;
@@ -1226,7 +1228,7 @@ begin
   DrawCaret(csHidden); //kill cursor
 end;
 
-procedure TfTranslate.ListBox1KeyDown(Sender: TObject; var Key: Word;
+procedure TfEditor.ListBox1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var oldCur: TCursorPos;
   ukn:boolean;
@@ -1298,17 +1300,17 @@ begin
   end;
 end;
 
-procedure TfTranslate.ListBox1KeyPress(Sender: TObject; var Key: Char);
+procedure TfEditor.ListBox1KeyPress(Sender: TObject; var Key: Char);
 begin
   InsertCharacter(key);
 end;
 
-procedure TfTranslate.EditorPaintBoxClick(Sender: TObject);
+procedure TfEditor.EditorPaintBoxClick(Sender: TObject);
 begin
   ListBox1.SetFocus;
 end;
 
-procedure TfTranslate.EditorPaintBoxMouseDown(Sender: TObject;
+procedure TfEditor.EditorPaintBoxMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if not TryReleaseCursorFromInsert() then
@@ -1320,7 +1322,7 @@ begin
   ShowText(true);
 end;
 
-procedure TfTranslate.EditorPaintBoxMouseMove(Sender: TObject;
+procedure TfEditor.EditorPaintBoxMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   //Sometimes we receive "ssLeft + MouseMove" when we double click something
@@ -1349,13 +1351,13 @@ begin
   fMenu.IntTipMouseMove(EditorPaintBox,x,y,false);
 end;
 
-procedure TfTranslate.EditorPaintBoxDblClick(Sender: TObject);
+procedure TfEditor.EditorPaintBoxDblClick(Sender: TObject);
 begin
   if not fKanjiDetails.Visible then
     fMenu.aKanjiDetailsExecute(nil);
 end;
 
-procedure TfTranslate.EditorPaintBoxPaint(Sender: TObject; Canvas: TCanvas);
+procedure TfEditor.EditorPaintBoxPaint(Sender: TObject; Canvas: TCanvas);
 var r: TRect;
 begin
   r := PaintBoxClientRect;
@@ -1382,21 +1384,21 @@ begin
 end;
 
 { These are auto-check grouped buttones so they handle Down/Undown automatically }
-procedure TfTranslate.sbKanjiModeClick(Sender: TObject);
+procedure TfEditor.sbKanjiModeClick(Sender: TObject);
 begin
   fMenu.aEditorKanjiMode.Checked:=true;
   fMenu.aEditorKanaMode.Checked:=false;
   fMenu.aEditorASCIIMode.Checked:=false;
 end;
 
-procedure TfTranslate.sbKanaModeClick(Sender: TObject);
+procedure TfEditor.sbKanaModeClick(Sender: TObject);
 begin
   fMenu.aEditorKanaMode.Checked:=true;
   fMenu.aEditorKanjiMode.Checked:=false;
   fMenu.aEditorASCIIMode.Checked:=false;
 end;
 
-procedure TfTranslate.sbAsciiModeClick(Sender: TObject);
+procedure TfEditor.sbAsciiModeClick(Sender: TObject);
 begin
   fMenu.aEditorASCIIMode.Checked:=true;
   fMenu.aEditorKanaMode.Checked:=false;
@@ -1404,26 +1406,26 @@ begin
 end;
 
 { These are auto-check allow-all-up buttons so they handle Down/Undown automatically }
-procedure TfTranslate.sbDisplayReadingClick(Sender: TObject);
+procedure TfEditor.sbDisplayReadingClick(Sender: TObject);
 begin
  //Keeps fMenu.Actions in sync but doesn't call Execute
   fMenu.aEditorReading.Checked:=sbDisplayReading.Down;
   RepaintText();
 end;
 
-procedure TfTranslate.sbDisplayMeaningClick(Sender: TObject);
+procedure TfEditor.sbDisplayMeaningClick(Sender: TObject);
 begin
   fMenu.aEditorMeaning.Checked:=sbDisplayMeaning.Down;
   RepaintText();
 end;
 
-procedure TfTranslate.sbUseTlColorsClick(Sender: TObject);
+procedure TfEditor.sbUseTlColorsClick(Sender: TObject);
 begin
   fMenu.aEditorColors.Checked:=sbUseTlColors.Down;
   RepaintText();
 end;
 
-procedure TfTranslate.sbClearTranslationClick(Sender: TObject);
+procedure TfEditor.sbClearTranslationClick(Sender: TObject);
 var i,j:integer;
   bg,en:integer;
   block: TTextSelection;
@@ -1445,12 +1447,12 @@ begin
   ShowText(true);
 end;
 
-procedure TfTranslate.sbAutoTranslateClick(Sender: TObject);
+procedure TfEditor.sbAutoTranslateClick(Sender: TObject);
 begin
   Self.AutoTranslate();
 end;
 
-procedure TfTranslate.sbSetTranslationClick(Sender: TObject);
+procedure TfEditor.sbSetTranslationClick(Sender: TObject);
 begin
   Self.SetTranslation();
 end;
@@ -1461,19 +1463,19 @@ begin
   fSettings.ShowModal;
 end;
 
-procedure TfTranslate.sbPrintClick(Sender: TObject);
+procedure TfEditor.sbPrintClick(Sender: TObject);
 begin
   PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
 end;
 
-procedure TfTranslate.sbFileOpenClick(Sender: TObject);
+procedure TfEditor.sbFileOpenClick(Sender: TObject);
 begin
   if not CommitFile then exit;
   if OpenTextDialog.Execute then
     OpenAnyFile(OpenTextDialog.Filename);
 end;
 
-procedure TfTranslate.sbFileSaveClick(Sender: TObject);
+procedure TfEditor.sbFileSaveClick(Sender: TObject);
 begin
   if docfilename<>'' then
     SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode)
@@ -1481,13 +1483,13 @@ begin
     SaveAs;
 end;
 
-procedure TfTranslate.sbFileNewClick(Sender: TObject);
+procedure TfEditor.sbFileNewClick(Sender: TObject);
 begin
   if not CommitFile then exit;
   ClearEditor;
 end;
 
-procedure TfTranslate.sbClipCutClick(Sender: TObject);
+procedure TfEditor.sbClipCutClick(Sender: TObject);
 begin
   if Self.TextSelection.IsEmpty then exit;
   sbClipCopyClick(Sender);
@@ -1495,7 +1497,7 @@ begin
 end;
 
 //Copies selection as text without any Ruby
-function TfTranslate.CopyAsText: UnicodeString;
+function TfEditor.CopyAsText: UnicodeString;
 var stream: TStream;
 begin
   stream := TUnicodeStringStream.Create(@Result);
@@ -1504,7 +1506,7 @@ begin
 end;
 
 //Copies selection as a text with Aozora-Ruby
-function TfTranslate.CopyAsRuby: UnicodeString;
+function TfEditor.CopyAsRuby: UnicodeString;
 var stream: TStream;
 begin
   stream := TUnicodeStringStream.Create(@Result);
@@ -1513,7 +1515,7 @@ begin
 end;
 
 //Copies selection as HTML, with <!--StartFragment --><!--EndFragment --> marks
-function TfTranslate.CopyAsHtml: Utf8String;
+function TfEditor.CopyAsHtml: Utf8String;
 var stream: TStream;
 begin
   stream := TAnsiStringStream.Create(@Result);
@@ -1522,7 +1524,7 @@ begin
 end;
 
 //Generates CF_HTML clipboard header for a text
-function TfTranslate.GenerateHtmlClipHeader(const lenHtml: integer;
+function TfEditor.GenerateHtmlClipHeader(const lenHtml: integer;
   const startFragment, endFragment: integer): UnicodeString;
 const
  //The way we use it, header must produce fixed-length text no matter the input
@@ -1538,7 +1540,7 @@ begin
 end;
 
 //Copies selection as HTML enhanced with a CF_HTML clipboard header
-function TfTranslate.CopyAsClipHtml: Utf8String;
+function TfEditor.CopyAsClipHtml: Utf8String;
 var startFragment, endFragment: integer;
 begin
   Result := CopyAsHtml;
@@ -1550,7 +1552,7 @@ begin
 end;
 
 //Copies selection as OpenDocumentText, content file
-function TfTranslate.CopyAsOpenDocumentTextContent: Utf8String;
+function TfEditor.CopyAsOpenDocumentTextContent: Utf8String;
 var stream: TStream;
 begin
   stream := TAnsiStringStream.Create(@Result);
@@ -1558,13 +1560,13 @@ begin
   FreeAndNil(stream);
 end;
 
-function TfTranslate.CopyAsOpenDocument: TMemoryStream;
+function TfEditor.CopyAsOpenDocument: TMemoryStream;
 begin
   Result := TMemoryStream.Create;
   Self.CopySelection(TOpenDocumentFormat.Create(),Result);
 end;
 
-function TfTranslate.CopyAsWakanText: TMemoryStream;
+function TfEditor.CopyAsWakanText: TMemoryStream;
 var block: TTextSelection;
 begin
   Result := TMemoryStream.Create;
@@ -1574,7 +1576,7 @@ end;
 
 { Normal Ctrl-C -- only in a few basic formats.
  For enhanced copy, use Ctrl+Alt+C / CopyAs() }
-procedure TfTranslate.sbClipCopyClick(Sender: TObject);
+procedure TfEditor.sbClipCopyClick(Sender: TObject);
 var NormalText: UnicodeString;
 begin
   if Self.TextSelection.IsEmpty then exit;
@@ -1592,7 +1594,7 @@ end;
 
 { Enhanced Ctrl-Alt-C -- all ruby + all supported formats.
  In the future perhaps this will pop up a dialog asking to choose a format }
-procedure TfTranslate.CopyAs;
+procedure TfEditor.CopyAs;
 var RubyText: UnicodeString;
 begin
   if Self.TextSelection.IsEmpty then exit;
@@ -1612,12 +1614,12 @@ begin
   end;
 end;
 
-procedure TfTranslate.sbClipPasteClick(Sender: TObject);
+procedure TfEditor.sbClipPasteClick(Sender: TObject);
 begin
   PasteOp;
 end;
 
-function TfTranslate.GetView: integer;
+function TfEditor.GetView: integer;
 begin
   Assert(linl.Count>0, 'GetView() without lines flow done');
   if FViewLineCached<0 then
@@ -1626,7 +1628,7 @@ begin
 end;
 
 { Sets ViewPos to a position which represents given View (line) value most closely }
-procedure TfTranslate.SetView(Value: integer);
+procedure TfEditor.SetView(Value: integer);
 begin
   Assert(linl.Count>0, 'SetView() without lines flow done');
 
@@ -1642,13 +1644,13 @@ begin
   NormalizeView;
 end;
 
-procedure TfTranslate.InvalidateViewLine;
+procedure TfEditor.InvalidateViewLine;
 begin
   FViewLineCached := -1;
 end;
 
 { Recalculates cached ViewLine and updates visual controls }
-procedure TfTranslate.UpdateViewLine;
+procedure TfEditor.UpdateViewLine;
 var i: integer;
 begin
   Assert(linl.Count>0, 'UpdateViewLine() without lines flow done');
@@ -1679,7 +1681,7 @@ begin
   UpdateScrollbar;
 end;
 
-procedure TfTranslate.SetViewPos(const Value: TSourcePos);
+procedure TfEditor.SetViewPos(const Value: TSourcePos);
 var oldview: integer;
 begin
   oldview := 0;
@@ -1700,7 +1702,7 @@ begin
 end;
 
 { Adjusts ViewPos so that it's placed on a legal point in a document }
-function TfTranslate.NormalizeViewPos(const APos: TSourcePos): TSourcePos;
+function TfEditor.NormalizeViewPos(const APos: TSourcePos): TSourcePos;
 begin
   Result := APos;
   if doc=nil then begin
@@ -1722,7 +1724,7 @@ end;
 { View anchor is normalized so that its position is valid (<= end of line)
 and we have at least one full screen of text.
 This happens on SetView() e.g. scroll, and on any changes (additions/deletions). }
-function TfTranslate.NormalizeView: boolean;
+function TfEditor.NormalizeView: boolean;
 var LCurView: integer;
   LCurViewPos: TSourcePos;
 begin
@@ -1752,7 +1754,7 @@ begin
 end;
 
 //Changes View so that cursor is visible
-function TfTranslate.ScrollIntoView: boolean;
+function TfEditor.ScrollIntoView: boolean;
 var LCurView: integer;
 begin
   Assert(linl.Count>0, 'ScrollIntoView() without lines flow done');
@@ -1764,23 +1766,23 @@ begin
     View:=LCurView;
 end;
 
-procedure TfTranslate.InvalidateNormalizeView;
+procedure TfEditor.InvalidateNormalizeView;
 begin
   FNormalizeViewPlanned := true;
 end;
 
-procedure TfTranslate.EditorScrollBarChange(Sender: TObject);
+procedure TfEditor.EditorScrollBarChange(Sender: TObject);
 begin
   if not FUpdatingScrollbar then //else we'd update View even when reacting to View changes
     View:=EditorScrollBar.Position;
 end;
 
-procedure TfTranslate.HandleWheel(down:boolean);
+procedure TfEditor.HandleWheel(down:boolean);
 begin
   if down then View := View+1 else View := View-1;
 end;
 
-procedure TfTranslate.UpdateScrollbar;
+procedure TfEditor.UpdateScrollbar;
 begin
   FUpdatingScrollbar := true;
   try
@@ -1803,14 +1805,14 @@ begin
 end;
 
 { Number of fully visible graphical lines which fit on the screen }
-function TfTranslate.GetScreenLineCount: integer;
+function TfEditor.GetScreenLineCount: integer;
 begin
  //For now we use printl, although it can be not set
  //TODO: Calculate this dynamically
   Result := printl;
 end;
 
-function TfTranslate.IsCursorOnScreen(const APos: TCursorPos): boolean;
+function TfEditor.IsCursorOnScreen(const APos: TCursorPos): boolean;
 begin
   Assert(linl.Count>0, 'IsCursorOnScreen() without lines flow done');
   if (APos.x<0) or (APos.y<0) or (APos.y>=linl.Count) or (APos.x>linl[APos.y].len) then
@@ -1821,36 +1823,36 @@ begin
   Result:= (APos.y>=View) and (APos.y<View+printl);
 end;
 
-procedure TfTranslate.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
+procedure TfEditor.FormMouseWheelUp(Sender: TObject; Shift: TShiftState;
   MousePos: TPoint; var Handled: Boolean);
 begin
   HandleWheel(false);
   handled:=true;
 end;
 
-procedure TfTranslate.FormMouseWheelDown(Sender: TObject;
+procedure TfEditor.FormMouseWheelDown(Sender: TObject;
   Shift: TShiftState; MousePos: TPoint; var Handled: Boolean);
 begin
   HandleWheel(true);
   handled:=true;
 end;
 
-procedure TfTranslate.btnKanjiDetailsClick(Sender: TObject);
+procedure TfEditor.btnKanjiDetailsClick(Sender: TObject);
 begin
   fMenu.aKanjiDetails.Execute;
 end;
 
-procedure TfTranslate.sbDockDictionaryClick(Sender: TObject);
+procedure TfEditor.sbDockDictionaryClick(Sender: TObject);
 begin
   fMenu.TabControl1Change(sender);
 end;
 
-procedure TfTranslate.BlinkCursorTimerTimer(Sender: TObject);
+procedure TfEditor.BlinkCursorTimerTimer(Sender: TObject);
 begin
   if Self.Visible then DrawCaret(csBlink);
 end;
 
-procedure TfTranslate.SelectAll;
+procedure TfEditor.SelectAll;
 begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot move cursor!
@@ -1861,27 +1863,27 @@ begin
 end;
 
 { Shows hint window if configured to }
-procedure TfTranslate.ShowHint;
+procedure TfEditor.ShowHint;
 var p: TPoint;
   tmp: TCursorPos;
 begin
-  if not fTranslate.sbKanjiMode.Down then
+  if not Self.sbKanjiMode.Down then
     HideHint;
   tmp := CursorScreenPos;
   tmp.x := PosToWidth(tmp.x, tmp.y);
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
-  p.x:=p.x+tmp.x*fTranslate.lastxsiz;
-  p.y:=p.y+(tmp.y+1-fTranslate.View)*fTranslate.lastxsiz*fTranslate.lastycnt;
+  p.x:=p.x+tmp.x*Self.lastxsiz;
+  p.y:=p.y+(tmp.y+1-Self.View)*Self.lastxsiz*Self.lastycnt;
   fHint.ShowHint(p);
   ListBox1.SetFocus;
 end;
 
-procedure TfTranslate.HideHint;
+procedure TfEditor.HideHint;
 begin
   if (fHint<>nil) and fHint.Visible then fHint.Hide;
 end;
 
-function TfTranslate.PaintBoxClientRect: TRect;
+function TfEditor.PaintBoxClientRect: TRect;
 begin
   Result := EditorPaintBox.ClientRect;
   Result.Left := Result.Left + 1 {normal margin} + 1;
@@ -1891,7 +1893,7 @@ begin
 end;
 
 { Also updates various controls such as ScrollBar, to match current state }
-procedure TfTranslate.ShowText(dolook:boolean);
+procedure TfEditor.ShowText(dolook:boolean);
 var s:string;
   wt:integer;
   tmp: TCursorPos;
@@ -1960,7 +1962,7 @@ begin
 end;
 
 { Converts startdrag+cursor positions to block selection. }
-function TfTranslate.GetTextSelection: TTextSelection;
+function TfEditor.GetTextSelection: TTextSelection;
 begin
   if (rcur.y<dragstart.y) or ((rcur.y=dragstart.y) and (rcur.x<dragstart.x)) then
   begin
@@ -1978,7 +1980,7 @@ begin
 end;
 
 { Expands selection so that it starts with a nearest word. Selection must be valid. }
-function TfTranslate.BacktrackSelection(const ASelection: TTextSelection): TTextSelection;
+function TfEditor.BacktrackSelection(const ASelection: TTextSelection): TTextSelection;
 begin
   Result := ASelection;
   if Result.fromx<doctr[Result.fromy].charcount then //it can be after the last char in the line
@@ -1994,7 +1996,7 @@ But for now we RecalculateGraphicalLines() every full render,
 and start with current position, not with the start of the document.
 }
 
-procedure TfTranslate.InvalidateLines;
+procedure TfEditor.InvalidateLines;
 begin
   linl.Clear;
   InvalidateViewLine;
@@ -2006,7 +2008,7 @@ RecalculateGraphicalLines()
 Does a full rebuild of graphical line schema for a document.
 rs: half-char size in pixels (depends on font)
 }
-procedure TfTranslate.RecalculateGraphicalLines(ll: TGraphicalLineList;
+procedure TfEditor.RecalculateGraphicalLines(ll: TGraphicalLineList;
   rs: integer; screenw: integer; vert: boolean);
 var
   cx, cy: integer;
@@ -2111,7 +2113,7 @@ ll:
 printl (out):
   total number of lines which fit on the screen
 }
-procedure TfTranslate.RenderText(canvas:TCanvas; r:TRect; ll:TGraphicalLineList;
+procedure TfEditor.RenderText(canvas:TCanvas; r:TRect; ll:TGraphicalLineList;
   view:integer;var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
 var
   x,y:integer;
@@ -2616,7 +2618,7 @@ end;
 
 { Makes sure graphical lines and related variables are up to date.
  Use force=true to force full reflow. }
-procedure TfTranslate.ReflowText(force:boolean);
+procedure TfEditor.ReflowText(force:boolean);
 begin
   if force then
     InvalidateLines;
@@ -2626,7 +2628,7 @@ begin
 end;
 
 
-procedure TfTranslate.ClearInsBlock;
+procedure TfEditor.ClearInsBlock;
 begin
   if (priorkanji<>'') and fSettings.cbAdjustCharPriorities.Checked then
   begin
@@ -2644,7 +2646,7 @@ end;
 
 { Called when the insert is not finalized, but we really have to end it now.
  Either cancels it or finalizes it if it was already confirmed. }
-procedure TfTranslate.CloseInsert;
+procedure TfEditor.CloseInsert;
 begin
   if not insconfirmed then begin
     resolvebuffer:=false; //cancel suggestion
@@ -2655,7 +2657,7 @@ end;
 
 { Called when we are about to do an operation which requires us to not be in insert mode.
  Returns true if the insert mode was aborted, or false if according to user preferences this is impossible. }
-function TfTranslate.TryReleaseCursorFromInsert: boolean;
+function TfEditor.TryReleaseCursorFromInsert: boolean;
 begin
   if insertbuffer='' then begin //not in insert mode
     Result := true;
@@ -2677,7 +2679,7 @@ begin
   Result := true;
 end;
 
-procedure TfTranslate.DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
+procedure TfEditor.DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
 var i:integer;
   s: FString;
   lp: PCharacterLineProps;
@@ -2706,7 +2708,7 @@ begin
     insconfirmed:=true;
 end;
 
-procedure TfTranslate.ResolveInsert(final:boolean);
+procedure TfEditor.ResolveInsert(final:boolean);
 var s,s2,s3:string;
   i:integer;
   lp: TCharacterPropArray;
@@ -2768,7 +2770,7 @@ begin
 end;
 
 //When returning chinese, tones are in F03* format (this is used for DB lookups)
-function TfTranslate.GetInsertKana(display:boolean):FString;
+function TfEditor.GetInsertKana(display:boolean):FString;
 begin
   if curlang='j'then
   begin
@@ -2791,7 +2793,7 @@ begin
   end;
 end;
 
-procedure TfTranslate.InsertCharacter(c:char);
+procedure TfEditor.InsertCharacter(c:char);
 const
   DEFCPROPS: TCharacterProps = (wordstate:'-';learnstate:9;dicidx:0;docdic:1);
 var chartype:char;
@@ -2931,7 +2933,7 @@ begin
 end;
 
 
-procedure TfTranslate.RefreshLines;
+procedure TfEditor.RefreshLines;
 begin
   if linl=nil then exit; //still creating
   InvalidateLines;
@@ -2941,7 +2943,7 @@ end;
 
 { Set word translation to whatever is selected in Dictionary Search results grid,
  or to the first result if gridfirst==true }
-function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer;
+function TfEditor.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer;
 var i: integer;
   word: PSearchResult;
 begin
@@ -2968,7 +2970,7 @@ Set word translation to the specified article.
 word:
   a string specifying dictionary + article index, in fUser.dicrl list format
 }
-function TfTranslate.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
+function TfEditor.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
 var wordpart:char;
     i:integer;
     rlen:integer;
@@ -3088,7 +3090,7 @@ AState:
   csVisible: show caret on the control
   csBlink: change caret state
 }
-procedure TfTranslate.DrawCaret(AState: TCaretState);
+procedure TfEditor.DrawCaret(AState: TCaretState);
 var pbRect: TRect;
 
   procedure DrawIt(x,y:integer);
@@ -3130,7 +3132,7 @@ This function can be used without buffering, so try to only draw where it's real
 Canvas:
   A canvas to draw on. Either edit control (when updating) or backbuffer.
 }
-procedure TfTranslate.DrawBlock(Canvas: TCanvas; ClientRect: TRect);
+procedure TfEditor.DrawBlock(Canvas: TCanvas; ClientRect: TRect);
 var rect:TRect;
   i,js:integer;
   hw: boolean;
@@ -3199,13 +3201,13 @@ begin
   oldblock := block;
 end;
 
-procedure TfTranslate.RepaintText;
+procedure TfEditor.RepaintText;
 begin
   mustrepaint:=true;
   ShowText(true);
 end;
 
-procedure TfTranslate.CopySelection(format:TTextSaveFormat;stream:TStream;
+procedure TfEditor.CopySelection(format:TTextSaveFormat;stream:TStream;
   AnnotMode: TTextAnnotMode);
 var block: TTextSelection;
 begin
@@ -3213,7 +3215,7 @@ begin
   doc.SaveText(AnnotMode,format,stream,@block);
 end;
 
-procedure TfTranslate.PasteText(const chars: FString; const props: TCharacterLineProps;
+procedure TfEditor.PasteText(const chars: FString; const props: TCharacterLineProps;
   AnnotMode: TTextAnnotMode);
 var tmp: TSourcePos;
 begin
@@ -3231,7 +3233,7 @@ begin
   FileChanged:=true;
 end;
 
-procedure TfTranslate.PasteOp;
+procedure TfEditor.PasteOp;
 var ms: TMemoryStream;
   props: TCharacterLineProps;
   Loaded: boolean;
@@ -3276,7 +3278,7 @@ begin
   ShowText(true);
 end;
 
-procedure TfTranslate.DeleteSelection;
+procedure TfEditor.DeleteSelection;
 var block: TTextSelection;
 begin
   block := Self.TextSelection;
@@ -3290,7 +3292,7 @@ end;
 { Returns kanji, reading and meaning for a text at a specified logical position.
  Reading may contain unconverted F03*-tones (in chinese parts of text),
  but may contain bopomofo tones too (in hand-made annotations). }
-procedure TfTranslate.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
+procedure TfEditor.GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:string);
 var dnam:string;
     dic:TJaletDic;
     i:integer;
@@ -3342,19 +3344,19 @@ begin
   end;
 end;
 
-procedure TfTranslate.DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
+procedure TfEditor.DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
   out kanji, reading: FString; out meaning: string);
 begin
   GetTextWordInfo(APos.x, APos.y, meaning, reading, kanji);
   reading := ConvertBopomofo(reading); //dictionary stores it with F03*-style tones
 end;
 
-function TfTranslate.Get_doctr(Index: integer): PCharacterLineProps;
+function TfEditor.Get_doctr(Index: integer): PCharacterLineProps;
 begin
   Result := doc.PropertyLines[Index];
 end;
 
-function TfTranslate.GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
+function TfEditor.GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
 var wt2:integer;
     i:integer;
     nmk:boolean;
@@ -3420,7 +3422,7 @@ end;
 
 { Font }
 
-procedure TfTranslate.SetFontSize(Value: integer);
+procedure TfEditor.SetFontSize(Value: integer);
 begin
   if FFontSize=Value then exit;
   FFontSize := Value;
@@ -3438,7 +3440,7 @@ end;
 //If there's an item in the listbox with the exact same text, select that item
 //instead of just setting text property (there's a difference: ItemIndex is set)
 //Does not call OnChange.
-procedure TfTranslate.cbFontSizeGuessItem(Value: string);
+procedure TfEditor.cbFontSizeGuessItem(Value: string);
 var i: integer;
 begin
   for i := 0 to cbFontSize.Items.Count - 1 do
@@ -3448,14 +3450,14 @@ begin
     end;
 end;
 
-procedure TfTranslate.cbFontSizeChange(Sender: TObject);
+procedure TfEditor.cbFontSizeChange(Sender: TObject);
 var tmp: integer;
 begin
   if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then
     SetFontSize(tmp);
 end;
 
-procedure TfTranslate.cbFontSizeExit(Sender: TObject);
+procedure TfEditor.cbFontSizeExit(Sender: TObject);
 var tmp: integer;
 begin
   if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then begin
@@ -3465,7 +3467,7 @@ begin
     cbFontSize.Text := IntToStr(FontSize);
 end;
 
-procedure TfTranslate.cbFontSizeKeyPress(Sender: TObject; var Key: Char);
+procedure TfEditor.cbFontSizeKeyPress(Sender: TObject; var Key: Char);
 begin
   if Ord(Key)=VK_RETURN then
     ListBox1.SetFocus; //jump to editor
@@ -3474,13 +3476,13 @@ end;
 
 { Cursor }
 
-procedure TfTranslate.InvalidateCursorPos;
+procedure TfEditor.InvalidateCursorPos;
 begin
   FCursorPosInvalid:=true;
 end;
 
 { Returns current graphical cursor position. }
-function TfTranslate.GetCur: TCursorPos;
+function TfEditor.GetCur: TCursorPos;
 var i:integer;
 begin
   if not FCursorPosInvalid then begin
@@ -3511,7 +3513,7 @@ begin
 end;
 
 { Sets current graphical cursor position }
-procedure TfTranslate.SetCur(Value: TCursorPos);
+procedure TfEditor.SetCur(Value: TCursorPos);
 var newrcur: TSourcePos;
   NewCursorEnd: boolean;
 begin
@@ -3537,7 +3539,7 @@ end;
 { Differs from GetCur in that there are special states
  when the cursor is logically at one place but visually at another (see CursorEnd).
  This function returns actual resulting visual position of the cursor. }
-function TfTranslate.GetCursorScreenPos: TCursorPos;
+function TfEditor.GetCursorScreenPos: TCursorPos;
 begin
   Result := cur;
  //In CursorEnd mode we draw cursor at the end of the previous graphical line
@@ -3550,7 +3552,7 @@ end;
 { Moves the cursor to another graphical line while keeping it at the same column.
  Remeber that there are half-width and full-width chars, and if we simply chose
  the same char index on the new line, it'd be at a different column. }
-procedure TfTranslate.CursorJumpToLine(newy: integer);
+procedure TfEditor.CursorJumpToLine(newy: integer);
 var tmp: TCursorPos;
 begin
  { It's important that we jump at least how much we can.
@@ -3566,7 +3568,7 @@ begin
   SetCur(tmp);
 end;
 
-procedure TfTranslate.SetRCur(const Value: TSourcePos);
+procedure TfEditor.SetRCur(const Value: TSourcePos);
 begin
   FRCur := Value;
   CursorEnd := false;
@@ -3575,7 +3577,7 @@ begin
   InvalidateCursorPos;
 end;
 
-function TfTranslate.IsHalfWidth(x,y:integer):boolean;
+function TfEditor.IsHalfWidth(x,y:integer):boolean;
 begin
   result:=IsHalfWidthChar(doc.GetDoc(x,y));
 end;
@@ -3586,7 +3588,7 @@ end;
  These functions convert between these two things! They are unrelated to
  pixel widths. }
 
-function TfTranslate.PosToWidth(x,y:integer):integer;
+function TfEditor.PosToWidth(x,y:integer):integer;
 var i,cx,cy:integer;
 begin
   if (x<0) or (y<0) or (y>=linl.Count) then
@@ -3610,7 +3612,7 @@ x: number of half-width positions from the left
 Returns: number of characters from the start of the line or -1 if the position is
  outside of existing chars.
 }
-function TfTranslate.WidthToPos(x,y:integer):integer;
+function TfEditor.WidthToPos(x,y:integer):integer;
 var i,jx,cx,cy,clen:integer;
 begin
   if (x<0) or (y<0) or (y>=linl.Count) then
@@ -3644,7 +3646,7 @@ Returns: number of characters from the start of the line to the closes valid
   TCursorPos.
   (There's got to be at least one at every line)
 }
-function TfTranslate.HalfUnitsToCursorPos(x,y:integer):integer;
+function TfEditor.HalfUnitsToCursorPos(x,y:integer):integer;
 var i,jx,cx,cy,clen:integer;
 begin
   Assert((y>=0) and (y<linl.Count));
@@ -3677,7 +3679,7 @@ Makes sure what you get is a legal text point, not some negative or over-the-end
 NOTE:
 - Do not call if linl is cleared (linl.Count=0)
 }
-function TfTranslate.GetClosestCursorPos(x,y:integer): TCursorPos;
+function TfEditor.GetClosestCursorPos(x,y:integer): TCursorPos;
 begin
   if y<0 then y:=0;
   if x<0 then x:=0;
@@ -3696,7 +3698,7 @@ If there's no character at that point, returns -1 as either of the coordinates.
 NOTE:
 - Do not call if linl is cleared (linl.Count=0)
 }
-function TfTranslate.GetExactLogicalPos(x,y:integer):TSourcePos;
+function TfEditor.GetExactLogicalPos(x,y:integer):TSourcePos;
 var cx,cy:integer;
 begin
   Result.y:=-1;
@@ -3718,7 +3720,7 @@ begin
 end;
 
 { Same, but also returns -1 if linl is cleared }
-function TfTranslate.TryGetExactLogicalPos(x,y: integer):TSourcePos;
+function TfEditor.TryGetExactLogicalPos(x,y: integer):TSourcePos;
 begin
   if linl.Count<=0 then
     Result := SourcePos(0,-1)

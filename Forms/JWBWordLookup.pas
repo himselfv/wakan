@@ -114,7 +114,7 @@ var
 implementation
 
 uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
-  JWBPrint, JWBTranslate, JWBWordKanji, JWBExamples,
+  JWBPrint, JWBEditor, JWBWordKanji, JWBExamples,
   JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
   JWBCategories, JWBAnnotations, JWBUserData, JWBCharData;
 
@@ -305,14 +305,14 @@ begin
       wt := -1;
     end;
     stEditorInsert: begin //In "word insert" mode
-      s := fTranslate.GetInsertKana(false);
-      if fTranslate.buffertype='H'then
+      s := fEditor.GetInsertKana(false);
+      if fEditor.buffertype='H'then
         wt := -1
       else
         wt := -2;
     end;
     stEditorAuto: //In "translate text" mode
-      s:=fTranslate.GetDocWord(fTranslate.rcur.x,fTranslate.rcur.y,wt,{stopuser=}true);
+      s:=fEditor.GetDocWord(fEditor.rcur.x,fEditor.rcur.y,wt,{stopuser=}true);
   end;
 
   req.Search(s, wt, dicrl);

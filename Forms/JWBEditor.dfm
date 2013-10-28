@@ -1,4 +1,4 @@
-object fTranslate: TfTranslate
+object fEditor: TfEditor
   Left = 303
   Top = 453
   BorderStyle = bsNone
@@ -155,8 +155,7 @@ object fTranslate: TfTranslate
       Align = alNone
       AutoSize = True
       BorderWidth = 1
-      ButtonHeight = 7
-      ButtonWidth = 15
+      ButtonWidth = 43
       EdgeBorders = [ebLeft, ebTop, ebRight, ebBottom]
       Images = ImageList1
       List = True
@@ -400,7 +399,7 @@ object fTranslate: TfTranslate
     Left = 544
     Top = 48
     Bitmap = {
-      494C010110001500280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101100015002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

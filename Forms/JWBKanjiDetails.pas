@@ -150,7 +150,7 @@ var
 
 implementation
 
-uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu, JWBTranslate,
+uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
   JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard,
   JWBVocabFilters, JWBKanaConv, JWBCharData;
 

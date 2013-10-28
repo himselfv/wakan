@@ -391,7 +391,7 @@ var
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBTranslate,
+uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
@@ -696,9 +696,9 @@ begin
   rgReleaseCursorMode.ItemIndex := reg.ReadInteger('Editor','ReleaseCursorMode',0);
   if CheckBox61.Checked then
   begin
-    fTranslate.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
-    fTranslate.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
-    fTranslate.DocEncoding:=FindEncoding(Reg.ReadString('Editor','DocType',''));
+    fEditor.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
+    fEditor.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
+    fEditor.DocEncoding:=FindEncoding(Reg.ReadString('Editor','DocType',''));
   end;
   Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
   exmode:=reg.ReadInteger('Dict','ExMode',0);
@@ -765,14 +765,14 @@ begin
   cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
   cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
-  if fTranslate<>nil then begin
-    fTranslate.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
-    fTranslate.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
-    fTranslate.sbUseTlColors.Down:=reg.ReadBool('Translate','TransColors',true);
-    fTranslate.sbDisplayReadingClick(fTranslate.sbDisplayReading);
-    fTranslate.sbDisplayMeaningClick(fTranslate.sbDisplayMeaning);
-    fTranslate.sbUseTlColorsClick(fTranslate.sbUseTlColors);
-    fTranslate.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
+  if fEditor<>nil then begin
+    fEditor.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
+    fEditor.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
+    fEditor.sbUseTlColors.Down:=reg.ReadBool('Translate','TransColors',true);
+    fEditor.sbDisplayReadingClick(fEditor.sbDisplayReading);
+    fEditor.sbDisplayMeaningClick(fEditor.sbDisplayMeaning);
+    fEditor.sbUseTlColorsClick(fEditor.sbUseTlColors);
+    fEditor.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
   end;
   CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
   CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
@@ -786,15 +786,15 @@ begin
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
   fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
-  if fTranslate<>nil then begin
+  if fEditor<>nil then begin
     tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
     if tmp_int>0 then
-      fTranslate.FontSize := tmp_int
+      fEditor.FontSize := tmp_int
     else
       case reg.ReadInteger('Translate','FontSize',2) of
-        0:fTranslate.FontSize := FontSizeSmall;
-        1:fTranslate.FontSize := FontSizeMedium;
-        2:fTranslate.FontSize := FontSizeLarge;
+        0:fEditor.FontSize := FontSizeSmall;
+        1:fEditor.FontSize := FontSizeMedium;
+        2:fEditor.FontSize := FontSizeLarge;
       end;
   end;
   edtMeaningLines.Text:=reg.ReadString('Translate','MeaningLines','2');
@@ -939,10 +939,10 @@ begin
   reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
   reg.WriteBool('Editor','AdjustCharPriorities',cbAdjustCharPriorities.Checked);
   reg.WriteInteger('Editor','ReleaseCursorMode',rgReleaseCursorMode.ItemIndex);
-  reg.WriteString('Editor','DocFilename',fTranslate.DocFilename); //For autoload
-  reg.WriteInteger('Editor','DocType',integer(fTranslate.DocType)); //This too.
-  if fTranslate.DocEncoding<>nil then
-    reg.WriteString('Editor','DocEncoding',string(fTranslate.DocEncoding.Classname))
+  reg.WriteString('Editor','DocFilename',fEditor.DocFilename); //For autoload
+  reg.WriteInteger('Editor','DocType',integer(fEditor.DocType)); //This too.
+  if fEditor.DocEncoding<>nil then
+    reg.WriteString('Editor','DocEncoding',string(fEditor.DocEncoding.Classname))
   else
     reg.WriteString('Editor','DocEncoding','');
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
@@ -997,10 +997,10 @@ begin
   reg.WriteBool('Translate','PrintMeaning',cbPrintMeaning.Checked);
   reg.WriteBool('Translate','NoPrintColors',cbNoPrintColors.Checked);
   reg.WriteBool('Translate','VerticalPrint',cbVerticalPrint.Checked);
-  reg.WriteBool('Translate','Reading',fTranslate.sbDisplayReading.Down);
-  reg.WriteBool('Translate','Meaning',fTranslate.sbDisplayMeaning.Down);
-  reg.WriteBool('Translate','TransColors',fTranslate.sbUseTlColors.Down);
-  reg.WriteBool('Translate','Dictionary',fTranslate.sbDockDictionary.Down);
+  reg.WriteBool('Translate','Reading',fEditor.sbDisplayReading.Down);
+  reg.WriteBool('Translate','Meaning',fEditor.sbDisplayMeaning.Down);
+  reg.WriteBool('Translate','TransColors',fEditor.sbUseTlColors.Down);
+  reg.WriteBool('Translate','Dictionary',fEditor.sbDockDictionary.Down);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
   reg.WriteBool('Annotate','Enabled',cbEnableAnnotations.Checked);
@@ -1009,13 +1009,13 @@ begin
   reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
   reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
   reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
-  reg.WriteInteger('Translate','FontSizeInt',fTranslate.FontSize);
+  reg.WriteInteger('Translate','FontSizeInt',fEditor.FontSize);
   //These values are used only by Wakan previous version, but let's play nice
   //and update those too to the best that we can.
-  if fTranslate.FontSize<=((FontSizeMedium+FontSizeSmall) div 2) then
+  if fEditor.FontSize<=((FontSizeMedium+FontSizeSmall) div 2) then
     reg.WriteInteger('Translate','FontSize',0)
   else
-  if fTranslate.FontSize<=((FontSizeLarge+FontSizeMedium) div 2) then
+  if fEditor.FontSize<=((FontSizeLarge+FontSizeMedium) div 2) then
     reg.WriteInteger('Translate','FontSize',1)
   else
     reg.WriteInteger('Translate','FontSize',2);

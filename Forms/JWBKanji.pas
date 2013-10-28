@@ -92,7 +92,7 @@ implementation
 
 uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
-  MemSource, JWBTranslate, JWBVocab, JWBIO, JWBFileType,
+  MemSource, JWBVocab, JWBIO, JWBFileType,
   JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBWakanText, JWBCategories,
   JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
 

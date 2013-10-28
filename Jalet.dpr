@@ -41,7 +41,7 @@ uses
   JWBKanjiSearch in 'Forms\JWBKanjiSearch.pas' {fKanjiSearch},
   JWBKanjiCompounds in 'Forms\JWBKanjiCompounds.pas' {fKanjiCompounds},
   JWBKanjiDetails in 'Forms\JWBKanjiDetails.pas' {fKanjiDetails},
-  JWBTranslate in 'Forms\JWBTranslate.pas' {fTranslate},
+  JWBEditor in 'Forms\JWBEditor.pas' {fEditor},
   JWBWordKanji in 'Forms\JWBWordKanji.pas' {fWordKanji},
   JWBExamples in 'Forms\JWBExamples.pas' {fExamples},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
@@ -92,10 +92,11 @@ begin
   Application.CreateForm(TfWordLookup, fWordLookup);
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfVocab, fVocab);
-  Application.CreateForm(TfKanjiSearch, fKanjiSearch); //this one
+  Application.CreateForm(TfKanjiSearch, fKanjiSearch);
+  //this one
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup? //this one
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
-  Application.CreateForm(TfTranslate, fTranslate);
+  Application.CreateForm(TfEditor, fEditor);
   Application.CreateForm(TfWordKanji, fWordKanji);
   Application.CreateForm(TfExamples, fExamples);
   Application.CreateForm(TfVocabDetails, fVocabDetails);
