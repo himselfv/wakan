@@ -3386,7 +3386,7 @@ begin
   honor:=false;
   if (tc={$IFNDEF UNICODE}'304A'{$ELSE}#$304A{$ENDIF})
   or (tc={$IFNDEF UNICODE}'3054'{$ELSE}#$3054{$ENDIF}) then honor:=true;
-  if (honor) and (flength(doc.Lines[y])>x+2) and (EvalChar(fgetch(doc.Lines[y],x+2))<=2) then
+  if (honor) and (flength(doc.Lines[y])>=x+2) and (EvalChar(fgetch(doc.Lines[y],x+2))<=2) then
     wordtype:=EvalChar(fgetch(doc.Lines[y],x+2))
   else
     wordtype:=EvalChar(fgetch(doc.Lines[y],x+1));
