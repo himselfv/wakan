@@ -370,40 +370,89 @@ type
   public
     procedure InitializeWakan;
 
-  private //Docking
+ {
+  Wakan has four types of dockable forms:
+  1. Simple forms: docked once and remain where they are.
+  2. Pages.
+  3. Redockable forms: on some pages shown, on others hidden.
+  4. KanjiDetails form.
+
+  Forms #2-4 and type #1 forms which depend on other flags such as PortraitMode
+  are called 'dynamically docked'.
+
+  Wakan has five pages. On page change ChangeDisplay is called, and it completely
+  redocks all dynamic forms as needed (trying to keep what's not changed).
+  It takes into account all secondary settings such as PortraitMode.
+  In other words, ChangeDisplay completely applies docking state.
+
+  Each static form has an associated action, usually TCheckAction descendant:
+    OnExecute: switch to containing page, flip Checked
+    OnChecked: update all controls, dock/undock+hide the form
+  Static form actions are Checked/Unchecked at load according to a last saved
+  state, and left alone.
+
+  Each redockable form has as many actions as there are docking places for it:
+    actShowHintsOnPage1: Checked==true
+    actShowHintsOnPage2: Checked==false
+  ChangeDisplay uses this information to dock or hide the form accordingly when
+  switching pages. It does so by first showing the new page:
+    ShowPage(ActivePage)
+  And then calling the ***Redock function for each dynamic form:
+    HintsRedock;
+    ExamplesRedock;
+  The task of such a function is to check for active page and:
+    1. Undock+hide if it shouldn't be shown where it is now. (Maybe it's already where it should be).
+    2. Dock+show if it should be shown on the active page, taking into account
+     any secondary flags.
+  ***Redock is suitable for any adjustment to the form docking.
+
+  ...This is theory, but in fact ChangeDisplay is not so nice yet and there are
+  no ***Redock functions for most of dynamically docked forms.
+  But this is how it should be.
+
+  Each action handles only one dock position. It switches the flag for that
+  position and then calls ***Redock to possibly adjust docking (if needed).
+  Stuff that must be updated according to form's absolute visibility should be
+  updated in Form's OnShow/OnHide.
+
+  KanjiDetails is special: it has two dock positions, but it can also be
+  undocked and then only has one state (shown everywhere/hidden everywhere).
+
+  PortraitMode and other such flags work in a similar way: they do any permanent
+  changes (reconfigure the form), and then adjust docking as ChangeDisplay would
+  have done.
+  If they're not smart, they may just call ChangeDisplay.
+
+  When loading, all functions are instructed to skip any dynamic docking. After
+  the form is fully configured to the saved state, ChangeDisplay is called once.
+  See Issue 187.
+
+  On technical details of docking and preserving width/height, see JwbForms.
+ }
+
+  private
    { Kanji details can work in docked or free-floating mode.
     If CharDetDocked is set, KanjiDetails is docked and will be shown/hidden by
     ChangeDisplay, like other panels. }
     FCharDetDocked: boolean;
     procedure MainDock(form:TForm;panel:TPanel);
     procedure MainUndock(form:TForm);
-  public
-   { In docked mode, we remember whether to show KanjiDetails on page 3 and on
-    page 4 separately. }
-    CharDetDockedVis1,
-    CharDetDockedVis2:boolean;
-    function DockExpress(form:TForm;dock:boolean):boolean;
-    procedure SetCharDetDocked(Value: boolean; Loading: boolean);
-    property CharDetDocked: boolean read FCharDetDocked;
-
- {
-  Every secondary form has an action, usually TCheckAction descendant.
-  OnExecute: switch to containing page, flip Checked
-  OnChecked: update all controls, dock/undock+hide the form
-
-  Some secondary forms may have several dock positions (ex.: fExamples),
-  in which case they need several actions. Each action handles one dock position.
-  Stuff that must be updated according to form's absolute visibility, should
-  be updated in Form's OnShow/OnHide.
-  Dock position-related stuff is updated in Action's OnChecked.
- }
   protected
     procedure ToggleForm(form:TForm;state:boolean);
     procedure ToggleExamples();
   public
     displaymode:integer; //will be applied on ChangeDisplay
     curdisplaymode:integer; //last applied mode
+   { In docked mode, we remember whether to show KanjiDetails on page 3 and on
+    page 4 separately. }
+    CharDetDockedVis1,
+    CharDetDockedVis2:boolean;
+    function DockExpress(form:TForm;dock:boolean):boolean;
+    procedure SetCharDetDocked(Value: boolean; Loading: boolean);
+    procedure SetPortraitMode(Value: boolean; Loading: boolean);
     procedure ChangeDisplay;
+    property CharDetDocked: boolean read FCharDetDocked;
+
 
   public
     StrokeOrderPackage:TPackageSource; //apparently a remnant from an older way of drawing stroke order. Always == nil
@@ -1001,6 +1050,15 @@ begin
 
   fMenu.displaymode:=fSettings.setlayout;
 
+ { Issue 187:	Focus lost in the editor when starting the program.
+  SetPortraitMode may redock forms appropriately, and excessive redocking leads
+  to losing input focus.
+  Explicitly ask for NO REDOCKING with Loading:=true. Docking state will be
+  applied directly with ChangeDisplay later. }
+  fMenu.aPortraitMode.Checked := fSettings.setPortraitMode;
+  SetPortraitMode(fSettings.setPortraitMode, {Loading=}true);
+
+ { Again, pass Loading:=true to ask for no ChangeDisplay, no docking updates }
   fMenu.SetCharDetDocked(fSettings.CharDetDocked, true); //after KanjiDetails.DockedWidth/Height
   fMenu.CharDetDockedVis1:=fSettings.CharDetDockedVis1;
   fMenu.CharDetDockedVis2:=fSettings.CharDetDockedVis2;
@@ -1021,9 +1079,6 @@ begin
   if fSettings.setwindows and 32=32 then fMenu.aUserDetails.Checked := true;
   if fSettings.setwindows and 64=64 then fMenu.aUserSettings.Checked := true;
   if (fSettings.setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.aKanjiDetails.Checked := true;
-
-  fMenu.aPortraitMode.Checked := not fSettings.setPortraitMode;
-  fMenu.aPortraitMode.Execute;
 
   if fKanjiSearch<>nil then begin
     fKanjiSearch.rgSortBy.ItemIndex:=fSettings.setsort;
@@ -3205,17 +3260,28 @@ begin
   end;
 end;
 
-procedure TfMenu.aPortraitModeExecute(Sender: TObject);
-var
-  UserFiltersDocked: boolean;
+{ Reconfigures the form to a landscape or portrait mode.
+ If Loading is set, only applies the configuration part (button captions,
+ panel alignment etc), and does not do actual docking.
+
+ Why? See Issue 187. We want to configure everything first, then dock once,
+ by ChangeDisplay.
+
+ If there are ever forms that only need to be redocked here, still redock them
+ as needed in ChangeDisplay. This function must be able to skip all redocking.
+
+ I don't know what happens if Loading==true and some forms are docked by that
+ point. Maybe their layout will be broken.}
+procedure TfMenu.SetPortraitMode(Value: boolean; Loading: boolean);
+var UserFiltersDocked: boolean;
   WordKanjiDocked: boolean;
   KanjiDetailsDocked: boolean;
 begin
-  UserFiltersDocked := (fVocabFilters<>nil) and DockExpress(fVocabFilters,false);
-  WordKanjiDocked := (fWordKanji<>nil) and DockExpress(fWordKanji,false);
-  KanjiDetailsDocked := (fKanjiDetails<>nil) and CharDetDocked and DockExpress(fKanjiDetails,false);
+  UserFiltersDocked := (not Loading) and (fVocabFilters<>nil) and DockExpress(fVocabFilters,false);
+  WordKanjiDocked := (not Loading) and (fWordKanji<>nil) and DockExpress(fWordKanji,false);
+  KanjiDetailsDocked := (not Loading) and (fKanjiDetails<>nil) and CharDetDocked and DockExpress(fKanjiDetails,false);
 
-  if aPortraitMode.Checked then begin
+  if Value then begin
     Panel4.Align := alBottom;
     if fVocab<>nil then begin
       fVocab.pnlDockFilters.Align := alBottom;
@@ -3247,9 +3313,13 @@ begin
   if fKanjiDetails<>nil then
     if KanjiDetailsDocked then begin
       DockExpress(fKanjiDetails,true);
-    //fKanjiDetails.UpdateAlignment; //TODO: Do we need this?
     end;
  //ChangeDisplay -- should not be needed
+end;
+
+procedure TfMenu.aPortraitModeExecute(Sender: TObject);
+begin
+  SetPortraitMode(aPortraitMode.Checked, {Loading=}false);
 end;
 
 procedure TfMenu.ApplicationEvents1Exception(Sender: TObject; E: Exception);
