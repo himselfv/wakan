@@ -131,7 +131,9 @@ type
     userscore: integer;
     dicindex: integer;  //only one dictionary reference is supported for the result
     dicname: string;
-    slen: integer; //wtf
+    slen: integer; { Length of the inflexed expression as it appeared in the text.
+      Different search results are different guesses at deflexion and may assume
+      original expression was of different length. }
     sdef: char; //match class -- see TCandidateLookup.verbType
     kanji: string;
     kana: string;
@@ -570,11 +572,16 @@ begin
         begin
           if (flength(dr.defl)+j<=6) and (core+fcopy(roma,1,j)+dr.defl<>w) then
           begin
-            //ws:=flength(core+fcopy(roma,1,j)+dr.infl);
-            //if dr.infl='KKKK'then ws:=flength(core);
-            //if ws<=flength(core) then ws:=flength(core)+1;
-            //if ws<=1 then ws:=2;
-            ws:=flength(w);
+           //Calculate inflected length for this guess
+            if dr.infl<>'KKKK' then
+              ws:=flength(core)+j+flength(dr.infl)
+            else
+              ws:=flength(core);
+           { if ws<=flength(core) then ws:=flength(core)+1;
+            if ws<=1 then ws:=2; } //why +1 in both cases? core is enough
+            if ws<flength(core) then ws:=flength(core);
+            if ws<=1 then ws:=2;
+
             ad:=core+fcopy(roma,1,j)+dr.defl;
             suf:=fcopy(roma,j+1+flength(dr.infl),flength(roma)-j-flength(dr.infl));
             if sl.Find(ws, dr.vt, ad)>=0 then

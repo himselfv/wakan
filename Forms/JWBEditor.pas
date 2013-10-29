@@ -1192,7 +1192,7 @@ begin
       req.Search(s, wt, dicsl);
       if dicsl.Count>0 then word:=dicsl[0] else word:=nil;
       a:=SetWordTrans(x,y,[tfScanParticle],word);
-      if a=0 then a:=1;
+      if a=0 then a:=1; //move at least one character forward
       inc(x,a);
     end;
 end;
@@ -2966,9 +2966,11 @@ begin
 end;
 
 {
-Set word translation to the specified article.
-word:
-  a string specifying dictionary + article index, in fUser.dicrl list format
+Attaches a deflexion/search result to the position in the text. Colors the
+inflected word. Recognizes and colors particles after the word.
+Returns the number of characters covered (inflected word length + particles).
+x,y: Starting point.
+word: Translation guess (dictionary, article#, inflexion details).
 }
 function TfEditor.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
 var wordpart:char;
@@ -2994,7 +2996,12 @@ begin
   end;
   s2:=doc.GetDoc(x,y);
   dw:=GetDocWord(x,y,wt,not (tfManuallyChosen in flags));
-  rlen:=flength(dw);
+ //GetDocWord makes only upper bound guess on the length of the word,
+ //the search result gives us exact value.
+  if word<>nil then
+    rlen:=word.slen
+  else
+    rlen:=flength(dw);
   globdict:=0;
 
   if word=nil then
@@ -3060,16 +3067,18 @@ begin
     if (x+i-1)<flength(doc.Lines[y]) then
       doctr[y].chars[x+i-1].SetChar('<', learnstate, 0, globdict);
 
+  Result := rlen;
+
+ //Analyze the tail after the inflected result and maybe color the particles.
   fdelete(dw,1,rlen);
   if (wordstate='K') and (flength(doc.Lines[y])>x+rlen) then
   begin
     dw:=GetDocWord(x+rlen,y,wt,false);
     if wt<>2 then dw:='';
   end;
-  if flength(dw)>4 then dw:=fcopy(dw,1,4); //yes 4 in unicode. Cut overly long tails
+  if flength(dw)>4 then delete(dw,5,MaxInt); //yes 4 in unicode. Cut overly long particle tails
   for i:=flength(dw) downto 1 do
-    if EvalChar(fgetch(dw,i))=EC_IDG_CHAR then fdelete(dw,i,length(dw)-i+1); //cut kanji since it clearly belongs to next word
-  result:=rlen;
+    if EvalChar(fgetch(dw,i))=EC_IDG_CHAR then fdelete(dw,i,MaxInt); //cut kanji since it clearly belongs to next word
   if (tfScanParticle in flags) and (wordstate<>'-') and (partl.IndexOf(dw)>-1) then
   begin
     if tfManuallyChosen in flags then
