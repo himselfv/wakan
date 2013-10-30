@@ -394,12 +394,11 @@ function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule; in
 var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 5);
- {$IFDEF UNICODE}
   Result.hiragana := autohextofstr(s_parts[0]);
   Result.katakana := autohextofstr(s_parts[1]);
- {$ELSE}
-  Result.hiragana := Uppercase(autohextofstr(s_parts[0]));
-  Result.katakana := Uppercase(autohextofstr(s_parts[1]));
+ {$IFNDEF UNICODE}
+  Result.hiragana := Uppercase(Result.hiragana);
+  Result.katakana := Uppercase(Result.katakana);
  {$ENDIF}
   Result.japanese := s_parts[2];
   Result.english := s_parts[3];
