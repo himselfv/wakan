@@ -45,6 +45,9 @@ uses
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
 
+//Ignore kana only words when auto-translating. Faster but worse results.
+//{$DEFINE TL_IGNORE_KANA}
+
 {$IFDEF DEBUG} //don't do in release versions
 
   //Display a window showing how much time Auto-TL took
@@ -245,7 +248,7 @@ type
     function WidthToPos(x,y:integer):integer;
     function HalfUnitsToCursorPos(x,y: integer):integer;
   public
-    function GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
+    function GetDocWord(x,y:integer;var wordtype: TEvalCharType;stopuser:boolean):string;
     function GetClosestCursorPos(x,y:integer):TCursorPos;
     function GetExactLogicalPos(x,y:integer):TSourcePos;
     function TryGetExactLogicalPos(x,y: integer):TSourcePos;
@@ -963,7 +966,9 @@ var bg, en: integer;
   i: integer;
 begin
   fWordLookup.SetupSearchRequest(stEditorAuto, req);
+ {$IFDEF TL_IGNORE_KANA}
   req.dic_ignorekana := true;
+ {$ENDIF}
   req.Prepare;
 
   dicsl := TSearchResults.Create;
@@ -1065,7 +1070,9 @@ begin
     fWordLookup.btnLookupEtoJ.Down:=false;
     fWordLookup.btnLookupClip.Down:=false;
     fWordLookup.SetupSearchRequest(stEditorAuto, req);
+   {$IFDEF TL_IGNORE_KANA}
     req.dic_ignorekana := true;
+   {$ENDIF}
     req.Prepare;
 
     totalwork := block.toy-block.fromy+1;
@@ -1170,7 +1177,7 @@ var x: integer;
   a:integer;
   s:string;
   word:PSearchResult;
-  wt:integer;
+  wt:TEvalCharType;
 begin
   x:=x_bg;
   while x<=x_en do
@@ -1895,7 +1902,7 @@ end;
 { Also updates various controls such as ScrollBar, to match current state }
 procedure TfEditor.ShowText(dolook:boolean);
 var s:string;
-  wt:integer;
+  wt: TEvalCharType;
   tmp: TCursorPos;
 begin
   if not Visible then exit;
@@ -2095,7 +2102,7 @@ begin
     else
       Result := gd1; //by default
 
-    if (flength(Result)>1) and (EvalChars(Result) and (1 shl EC_KATAKANA) <> 0) then
+    if (flength(Result)>1) and (EC_KATAKANA in EvalChars(Result)) then
      //To hiragana
       Result:=RomajiToKana('H'+KanaToRomaji(Result,1,'j'),1,'j',[rfDeleteInvalidChars]);
   end
@@ -2491,7 +2498,9 @@ begin
 
         if not fSettings.cbNoEditorColors.Checked then
         begin
-          if fSettings.CheckBox41.Checked and validChar and ((EvalChar(doc.GetDoc(cx,cy))>4) or (EvalChar(doc.GetDoc(cx,cy))=0)) then
+          if fSettings.CheckBox41.Checked and validChar
+          and not (EvalChar(doc.GetDoc(cx,cy)) in [EC_IDG_CHAR, EC_HIRAGANA,
+            EC_KATAKANA, EC_IDG_PUNCTUATION]) then
             canvas.Font.Color:=Col('Editor_ASCII');
           if wordstate='I'then
             canvas.Font.Color:=Col('Editor_Active')
@@ -2977,8 +2986,8 @@ var wordpart:char;
     i:integer;
     rlen:integer;
     s,s2:string;
-    wt:integer;
-    dw:string;
+  wt:TEvalCharType;
+  dw:string;
 
   globdict_s: string;
   learnstate_s: string;
@@ -3009,7 +3018,7 @@ begin
     wordpart:='-';
     worddict:=0;
     learnstate:=9;
-    if wt=1 then rlen:=1;
+    if wt=EC_IDG_CHAR then rlen:=1;
   end else
   begin
     wordpart:=word.sdef;
@@ -3048,13 +3057,13 @@ begin
  //out   <-- wordpart, worddict, globdict, learnstate, rlen,
 
   if wordpart='-' then begin
-    if wt<>1 then wordstate:='-' else wordstate:='?'
+    if wt<>EC_IDG_CHAR then wordstate:='-' else wordstate:='?'
   end else
     case wt of
-      2:if fSettings.cbNoTranslateHiragana.Checked then wordstate:='-'else wordstate:='H';
-      3:if s2={$IFNDEF UNICODE}'30FC'{$ELSE}#$30FC{$ENDIF} then wordstate:='-' else wordstate:='K';
-      1:if wordpart='I'then wordstate:='D' else wordstate:='F';
-      else wordstate:='-';
+      EC_HIRAGANA:if fSettings.cbNoTranslateHiragana.Checked then wordstate:='-'else wordstate:='H';
+      EC_KATAKANA:if s2={$IFNDEF UNICODE}'30FC'{$ELSE}#$30FC{$ENDIF} then wordstate:='-' else wordstate:='K';
+      EC_IDG_CHAR:if wordpart='I'then wordstate:='D' else wordstate:='F';
+    else wordstate:='-';
     end;
   if wordpart='P' then wordstate:='P';
   if tfManuallyChosen in flags then wordstate:=LoCase(wordstate);
@@ -3074,7 +3083,7 @@ begin
   if (wordstate='K') and (flength(doc.Lines[y])>x+rlen) then
   begin
     dw:=GetDocWord(x+rlen,y,wt,false);
-    if wt<>2 then dw:='';
+    if wt<>EC_HIRAGANA then dw:='';
   end;
   if flength(dw)>4 then delete(dw,5,MaxInt); //yes 4 in unicode. Cut overly long particle tails
   for i:=flength(dw) downto 1 do
@@ -3365,8 +3374,8 @@ begin
   Result := doc.PropertyLines[Index];
 end;
 
-function TfEditor.GetDocWord(x,y:integer;var wordtype:integer;stopuser:boolean):string;
-var wt2:integer;
+function TfEditor.GetDocWord(x,y:integer;var wordtype:TEvalCharType;stopuser:boolean):string;
+var wt2:TEvalCharType;
     i:integer;
     nmk:boolean;
     tc:string;
@@ -3375,14 +3384,14 @@ var wt2:integer;
 begin
   if (y=-1) or (y>doc.Lines.Count-1) or (x>flength(doc.Lines[y])-1) or (x=-1) then
   begin
-    wordtype:=0;
+    wordtype:=EC_UNKNOWN;
     result:='';
     exit;
   end;
   if curlang='c'then
   begin
     result:='';
-    wordtype:=1;
+    wordtype:=EC_IDG_CHAR;
     for i:=1 to 4 do
     begin
       result:=result+fgetch(doc.Lines[y],x+1);
@@ -3395,35 +3404,39 @@ begin
   honor:=false;
   if (tc={$IFNDEF UNICODE}'304A'{$ELSE}#$304A{$ENDIF})
   or (tc={$IFNDEF UNICODE}'3054'{$ELSE}#$3054{$ENDIF}) then honor:=true;
-  if (honor) and (flength(doc.Lines[y])>=x+2) and (EvalChar(fgetch(doc.Lines[y],x+2))<=2) then
+  if (honor) and (flength(doc.Lines[y])>=x+2) and (EvalChar(fgetch(doc.Lines[y],x+2)) in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA]) then
     wordtype:=EvalChar(fgetch(doc.Lines[y],x+2))
   else
     wordtype:=EvalChar(fgetch(doc.Lines[y],x+1));
-  if wordtype>4 then wordtype:=4;
+  if not (wordtype in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
+    EC_IDG_PUNCTUATION]) then
+    wordtype:=EC_IDG_PUNCTUATION;
   nmk:=false;
   stray:=0;
   result:=fgetch(doc.Lines[y],x+1);
   repeat
     inc(x);
     if stopuser and IsLocaseLatin(doctr[y].chars[x].wordstate) then exit;
-    wt2:=0;
+    wt2:=EC_UNKNOWN;
     if x<flength(doc.Lines[y]) then
     begin
       wt2:=EvalChar(fgetch(doc.Lines[y],x+1));
-      if wt2>4 then wt2:=4;
-      if (wordtype=1) and (wt2=2) then begin
+      if not (wt2 in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
+        EC_IDG_PUNCTUATION]) then
+        wt2:=EC_IDG_PUNCTUATION;
+      if (wordtype=EC_IDG_CHAR) and (wt2=EC_HIRAGANA) then begin
         nmk:=true;
         if stray=0 then stray:=1 else stray:=-1;
       end;
-      if (nmk) and (wt2=1) then
+      if (nmk) and (wt2=EC_IDG_CHAR) then
       begin
-        if stray=1 then wt2:=1 else wt2:=4;
+        if stray=1 then wt2:=EC_IDG_CHAR else wt2:=EC_IDG_PUNCTUATION;
         stray:=-1;
         nmk:=false;
       end;
-      if (wt2<>wordtype) and ((wordtype<>1) or (wt2<>2)) then exit;
+      if (wt2<>wordtype) and ((wordtype<>EC_IDG_CHAR) or (wt2<>EC_HIRAGANA)) then exit;
     end;
-    if wt2=0 then exit;
+    if wt2=EC_UNKNOWN then exit;
     result:=result+fgetch(doc.Lines[y],x+1);
   until false;
 end;

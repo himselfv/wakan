@@ -279,27 +279,30 @@ function FilenameListToString(const list: TFilenameList; const sep: string = ', 
 
 { Character processing }
 
-const //Character types for EvalChar
-  EC_UNKNOWN          = 0; // unrecognized
-  EC_IDG_CHAR         = 1; // ideographic char
-  EC_HIRAGANA         = 2; // hiragana
-  EC_KATAKANA         = 3; // katakana
-  EC_IDG_PUNCTUATION  = 4; // ideographic punctuation
-  EC_IDG_OTHER        = 5; // ideographic other
-  EC_LATIN_FW         = 6; // full-width latin
-  EC_LATIN_HW         = 7; // half-width latin
-  EC_KATAKANA_HW      = 8; // half-width katakana
+type //Character types for EvalChar
+  TEvalCharType = (
+    EC_UNKNOWN          = 0, // unrecognized
+    EC_IDG_CHAR         = 1, // ideographic char
+    EC_HIRAGANA         = 2, // hiragana
+    EC_KATAKANA         = 3, // katakana
+    EC_IDG_PUNCTUATION  = 4, // ideographic punctuation
+    EC_IDG_OTHER        = 5, // ideographic other
+    EC_LATIN_FW         = 6, // full-width latin
+    EC_LATIN_HW         = 7, // half-width latin
+    EC_KATAKANA_HW      = 8  // half-width katakana
+  );
+  TEvalCharTypes = set of TEvalCharType;
 
-
-function EvalChar(char:WideChar):integer; overload; inline;
+function EvalChar(char: WideChar): TEvalCharType; overload; inline;
 {$IFDEF UNICODE}
-function EvalChar(const char:FString):integer; overload; inline;
+function EvalChar(const char: FString): TEvalCharType; overload; inline;
 {$ELSE}
-function EvalChar(const char:FString):integer; overload;
+function EvalChar(const char: FString): TEvalCharType; overload;
 {$ENDIF}
 
 //Returns a set of (1 shl EC_*) flags indicating some chars are present in string
-function EvalChars(const chars:FString):integer;
+function EvalChars(const chars: FString): TEvalCharTypes;
+function TestCharsAre(const chars: FString; ec: TEvalCharTypes): boolean; inline;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean; overload; inline;
 function IsUpcaseLatin(ch: WideChar): boolean; overload; inline;
@@ -1324,10 +1327,10 @@ end;
 
 { Character processing }
 
-function EvalChar(char:WideChar):integer;
+function EvalChar(char: WideChar): TEvalCharType;
 var ch: Word absolute char;
 begin
-  if ch=$3005 then result:=1 else // kurikaeshi
+  if ch=$3005 then result:=EC_IDG_CHAR else // kurikaeshi
   if (ch>=$3000) and (ch<=$303F) then result:=EC_IDG_PUNCTUATION else
   if (ch>=$3040) and (ch<=$309F) then result:=EC_HIRAGANA else
   if (ch>=$30A0) and (ch<=$30FF) then result:=EC_KATAKANA else
@@ -1342,14 +1345,14 @@ begin
 end;
 
 {$IFDEF UNICODE}
-function EvalChar(const char:FString):integer;
+function EvalChar(const char:FString): TEvalCharType;
 begin
   Result := EvalChar(WideChar(PWideChar(char)^));
 end;
 {$ELSE}
-function EvalChar(const char:FString):integer;
+function EvalChar(const char:FString): TEvalCharType;
 begin
-  if char='3005'then result:=1 else // kurikaeshi
+  if char='3005'then result:=EC_IDG_CHAR else // kurikaeshi
   if (char>='3000') and (char<='303F') then result:=EC_IDG_PUNCTUATION else
   if (char>='3040') and (char<='309F') then result:=EC_HIRAGANA else
   if (char>='30A0') and (char<='30FF') then result:=EC_KATAKANA else
@@ -1364,12 +1367,23 @@ begin
 end;
 {$ENDIF}
 
-function EvalChars(const chars:FString):integer;
+function EvalChars(const chars: FString): TEvalCharTypes;
 var i: integer;
 begin
-  Result := 0;
+  Result := [];
   for i := 1 to flength(chars) do
-    Result := Result or (1 shl EvalChar(fgetch(chars,i)));
+    Result := Result + [EvalChar(fgetch(chars,i))];
+end;
+
+function TestCharsAre(const chars: FString; ec: TEvalCharTypes): boolean;
+var i: integer;
+begin
+  Result := true;
+  for i:=1 to flength(chars) do
+    if not (EvalChar(fgetch(chars,i)) in ec) then begin
+      Result := false;
+      break;
+    end;
 end;
 
 function IsUpcaseLatin(ch: AnsiChar): boolean;

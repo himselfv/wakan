@@ -2816,14 +2816,14 @@ var pt:TPoint;
     gen:array[0..255] of integer;
     wp:WINDOWPLACEMENT;
     ct:TTextInfo;
-    ev,cev:integer;
+    ev,cev:TEvalCharType;
     ttim,tleft,tright:integer;
     wnd:HWnd;
     wt:shortstring;
     wr:TRect;
     savedx:array[1..100] of integer;
     savedy:array[1..100] of integer;
-    evc:integer;
+    evc:TEvalCharType;
     rx,ry:integer;
     gc:TGridCoord;
     rect:TRect;
@@ -3010,17 +3010,17 @@ begin
           if wtp=1 then wwadd(gen[wen],gen[wen],32);
         end;
       end;
-      cev:=0;
+      cev:=EC_UNKNOWN;
       cx:=-100;
       last:=0;
       if (ftextpos>0) and (ftextbeg[0]<=pt.x+2) then
       for i:=0 to ftextpos-1 do
       begin
-        if cev=0 then cev:=EvalChar(WideChar(ftext[i]));
+        if cev=EC_UNKNOWN then cev:=EvalChar(WideChar(ftext[i]));
         ev:=EvalChar(WideChar(ftext[i]));
-        if (cev=ev) or ((cev=1) and (ev=2)) then
+        if (cev=ev) or ((cev=EC_IDG_CHAR) and (ev=EC_HIRAGANA)) then
         begin
-          if (ev<>0) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then
+          if (ev<>EC_UNKNOWN) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then
             s:=s+fstr(widechar(ftext[i]))
         end else break;
         cx:=ftextbeg[i];
@@ -3093,8 +3093,9 @@ end;
 //Updates text selection highlight and currently highlighted contents in intcurString
 procedure TfMenu.UpdateSelection;
 var s1:string;
-    rx,ry,wtt:integer;
-    gc:TGridCoord;
+    rx,ry:integer;
+  wtt:TEvalCharType;
+  gc:TGridCoord;
   rpos: TSourcePos;
   MouseControl: TControl; //control which receives the mouse events
   MousePos: TPoint; //mouse pos in that control coordinate system

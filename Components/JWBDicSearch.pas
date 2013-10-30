@@ -217,13 +217,13 @@ type
     stUserPriorKanji: TSeekObject;
     fldUserPriorCount: integer;
   public
-    procedure Search(search:SatanString; wt: integer; sl: TSearchResults);
+    procedure Search(search:SatanString; wt: TEvalCharType; sl: TSearchResults);
 
   public //Output
     WasFull: boolean;
 
   protected
-    procedure MakeLookupList(se: TCandidateLookupList; search: string; wt: integer);
+    procedure MakeLookupList(se: TCandidateLookupList; search: string; wt: TEvalCharType);
 
   protected
     nowt:TDateTime; //Search start time
@@ -231,7 +231,7 @@ type
     se: TCandidateLookupList; //Lookup candidates -- see comments where this type is declared
     presentl:TStringList;
     p4reading:boolean;
-    procedure TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup; wt: integer;
+    procedure TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
       sl: TSearchResults);
 
   protected
@@ -243,7 +243,8 @@ type
 
 //Compability
 procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
-  full:boolean;wt,maxwords:integer;sl:TSearchResults;dictgroup:integer;var wasfull:boolean);
+  full:boolean;wt:TEvalCharType;maxwords:integer;sl:TSearchResults;
+  dictgroup:integer;var wasfull:boolean);
 
 implementation
 uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSettings,
@@ -639,12 +640,13 @@ end;
 MakeLookupList()
 Given a search string, search type, match type and word type,
 builds a list of all possible matches to look for in the dictionary.
+wt: word type (can be EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA)
 }
-procedure TDicSearchRequest.MakeLookupList(se: TCandidateLookupList; search: string; wt: integer);
+procedure TDicSearchRequest.MakeLookupList(se: TCandidateLookupList; search: string;
+  wt: TEvalCharType);
 var _s: string;
   i: integer;
   partfound:boolean;
-  every:boolean;
   tmpkana:string;
 begin
   case a of
@@ -684,34 +686,38 @@ begin
      end;
     stEditorInsert,
     stEditorAuto:
-      if wt<0 then
+      if wt=EC_UNKNOWN then
       begin
         _s:=ChinTraditional(search);
         Deflex(_s,se,9,8,false); //ignores AutoDeflex
         se.Add(9, flength(_s), 'F', rtNormal, _s);
       end else
       begin
-        if (wt=1) or (wt=2) then
+        if (wt=EC_IDG_CHAR) or (wt=EC_HIRAGANA) then
         begin
           _s:=ChinTraditional(search);
-          if wt=1 then begin
+          if wt=EC_IDG_CHAR then begin
             Deflex(_s,se,9,8,false); //ignores AutoDeflex
             se.Add(9, flength(_s), 'F', rtNormal, _s);
           end;
+         //Generate partial left guesses
           for i:=flength(_s) downto 1 do
           begin
             partfound:=false;
-            every:=false;
-            if EvalChar(fgetch(_s,i))=1 then every:=true;
-            if (wt=2) and (i<flength(_s)) and (i>=flength(_s)-1)
+            if (wt=EC_HIRAGANA)
+            and (i<flength(_s)) and (i>=flength(_s)-1) //at most last two chars or it'll be slow
             and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
               partfound:=true;
-            //if ((i<flength(_s)) and every) or (wt=2) then
-            if (every) or ((i>1) and (MatchType=mtMatchLeft)) or (i=flength(_s)) or (partfound) then
+            if (
+              partfound
+              or ((i>1) and (MatchType=mtMatchLeft))
+              or (i=flength(_s))
+              or (EvalChar(fgetch(_s,i))=EC_IDG_CHAR) //if current char is kanji, to the left of it can be a subexpression
+            ) then
               se.Add(i, i, 'F', rtNormal, fcopy(_s,1,i));
           end;
         end;
-        if (wt=3) then
+        if (wt=EC_KATAKANA) then
         begin
           _s:=ChinTraditional(search);
           se.Add(9, fLength(_s), 'F', rtNormal, _s);
@@ -727,7 +733,8 @@ DicSearch()
 Don't use if you're doing a lot of searches, use TDicSearchRequest instead.
 }
 procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
-  full:boolean;wt,maxwords:integer;sl:TSearchResults;dictgroup:integer;var wasfull:boolean);
+  full:boolean;wt:TEvalCharType;maxwords:integer;sl:TSearchResults;
+  dictgroup:integer;var wasfull:boolean);
 var req: TDicSearchRequest;
 begin
   req := TDicSearchRequest.Create;
@@ -818,9 +825,7 @@ Searches the dictionary for all candidate translations to the line.
 search
   string to look for
 wt
-  WordType
-  ???
-  -2, -1, [0..4] from EvalChar
+  Word character type. "Unknown", "Kanji/kana mixed", "Hiragana", "Katakana"
 sl
   Match results to return.
 wasfull
@@ -830,7 +835,7 @@ Note:
 - Except for mode=2, then "search" must be raw english
 }
 
-procedure TDicSearchRequest.Search(search:SatanString; wt: integer; sl:TSearchResults);
+procedure TDicSearchRequest.Search(search:SatanString; wt: TEvalCharType; sl:TSearchResults);
 var i,di:integer;
 begin
   if search='' then exit;
@@ -847,8 +852,8 @@ begin
   case a of
     stEditorInsert,
     stEditorAuto: begin
-      p4reading:=wt=-1;
-      if wt=-1 then if partl.IndexOf(search)>-1 then
+      p4reading:=wt=EC_UNKNOWN;
+      if wt=EC_UNKNOWN then if partl.IndexOf(search)>-1 then
         with sl.AddResult^ do begin
           Reset();
           sdef := 'P';
@@ -871,17 +876,11 @@ begin
   Note that if lookup candidates could possibly differ in this regard, we'd have
   to re-check for this property for every candidate. }
   case a of
-    stClipboard: begin
-      kanaonly:=true;
-      for i:=1 to flength(search) do
-        if not (EvalChar(fgetch(search,i)) in [EC_HIRAGANA, EC_KATAKANA]) then begin
-          kanaonly := false;
-          break;
-        end;
-    end;
+    stClipboard:
+      kanaonly := TestCharsAre(search, [EC_HIRAGANA, EC_KATAKANA]);
     stEditorInsert,
     stEditorAuto:
-      kanaonly := p4reading or (wt=2);
+      kanaonly := p4reading or (wt=EC_HIRAGANA);
   else
     kanaonly := false;
   end;
@@ -890,7 +889,7 @@ begin
   for di:=0 to Length(dics)-1 do begin
     if dics[di].cursor=nil then continue;
     for i:=0 to se.Count-1 do
-      TestLookupCandidate(dics[di], se[i], wt, sl);
+      TestLookupCandidate(dics[di], se[i], sl);
   end; //of dict enum
 
   FinalizeResults(sl);
@@ -943,7 +942,7 @@ begin
 end;
 
 procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
-  wt: integer; sl: TSearchResults);
+  sl: TSearchResults);
 var
   dic: TDicLookupCursor;
   i: integer;

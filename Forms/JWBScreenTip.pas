@@ -18,7 +18,7 @@ type
     procedure FormDestroy(Sender: TObject);
   public
     screenTipText:string;
-    screenTipWt:integer;
+    screenTipWt:TEvalCharType;
     screenTipList:TSearchResults;
     screenTipWords:integer;
     screenTipWidth:integer;
@@ -36,7 +36,7 @@ const
   PopupButtonWidth=23;
   PopupButtonSep=2;
 
-procedure ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
+procedure ShowScreenTip(x,y:integer;s:FString;wt:TEvalCharType;immediate:boolean);
 procedure HideScreenTip;
 
 implementation
@@ -82,7 +82,7 @@ var sl:TSearchResults;
     vsiz,hsiz,vfsiz,hfsiz:integer;
     i:integer;
     s:string;
-    wt:integer;
+    wt:TEvalCharType;
     sep:integer;
     tpp:integer;
     cl:TColor;
@@ -131,7 +131,7 @@ begin
   end;
   fScreenTip.pb.canvas.Font.Style:=[];
   fScreenTip.pb.canvas.Font.Color:=Col('Popup_Text');
-  if (wt=1) and (fSettings.CheckBox48.Checked) then
+  if (wt=EC_IDG_CHAR) and (fSettings.CheckBox48.Checked) then
   begin
     fScreenTip.pb.Canvas.Brush.Color:=Col('Popup_Card');
     fScreenTip.pb.Canvas.Pen.Color:=Col('Popup_Text');
@@ -216,7 +216,7 @@ begin
 end;
 
 //Create screen tip form and show it
-procedure ShowScreenTip(x,y:integer;s:FString;wt:integer;immediate:boolean);
+procedure ShowScreenTip(x,y:integer;s:FString;wt:TEvalCharType;immediate:boolean);
 var maxwords,maxwordss:integer;
     wasfull:boolean;
     s1,s2:FString; //kinda fstring, has control chars
@@ -234,16 +234,16 @@ var maxwords,maxwordss:integer;
     maxslen,slen:integer;
 begin
   if fScreenTip<>nil then HideScreenTip;
-  if ((wt=7) and (not fSettings.CheckBox47.Checked)) then exit;
-  if ((wt<7) and (not fSettings.CheckBox28.Checked)) then exit;
+  if ((wt=EC_LATIN_HW) and (not fSettings.CheckBox47.Checked)) then exit;
+  if ((wt<>EC_LATIN_HW) and (not fSettings.CheckBox28.Checked)) then exit;
   fScreenTip:=TfScreenTip.Create(nil);
   maxwords:=strtoint(fSettings.Edit24.Text);
   if maxwordss<10 then maxwordss:=10;
-  if wt=7 then
+  if wt=EC_LATIN_HW then
   begin
-    //Apparently, word type 7 means "latin word", so we try to look for one
+    //Try to look for a latin word
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(fstrtouni(s),stEn,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
     if (fScreenTip.screenTipList.Count=0) then
     begin
       ss:=fstrtouni(s);
@@ -252,10 +252,10 @@ begin
      //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,stEn,mtExactMatch,false,7,maxwordss,fScreenTip.screenTipList,5,wasfull);
+      DicSearch(ss,stEn,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
     end;
   end;
-  if wt<7 then
+  if wt<>EC_LATIN_HW then
     DicSearch(s,stEditorInsert,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
   if maxwords>fScreenTip.screenTipList.Count then
     maxwords:=fScreenTip.screenTipList.Count;
@@ -302,7 +302,7 @@ begin
   fScreenTip.Left:=x;
   fScreenTip.Top:=y;
   fScreenTip.Width:=kkcw+sep*2+1;
-  if (wt=1) and (fSettings.CheckBox48.Checked) then
+  if (wt=EC_IDG_CHAR) and (fSettings.CheckBox48.Checked) then
     fScreenTip.Height:=maxwords*ch+sep*3+kkch+tpp else fScreenTip.Height:=maxwords*ch+sep*2+1+tpp;
   if not immediate then
   begin

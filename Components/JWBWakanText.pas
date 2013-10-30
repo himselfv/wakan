@@ -917,7 +917,7 @@ begin
     if EvalChar(fgetch(word,1))=EvalChar(LastChar) then
       rubyTextBreak := btBreak //break when there are two characters of the same type in a row
     else
-    if EvalChars(word) and not (1 shl EC_IDG_CHAR) <> 0 then
+    if EvalChars(word) - [EC_IDG_CHAR] <> [] then
       rubyTextBreak := btBreak //break when there's something other than kanji in the line,
       //such as 髪の毛 -- or ruby will be applied only to 毛
     else

@@ -268,6 +268,8 @@ begin
   if a in [stEditorInsert,stEditorAuto] then begin //ignore some UI settings in these modes
     req.dictgroup := 5;
     req.MatchType := mtExactMatch;
+   { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
+    which is obviously not what we want. }
   end;
 
   req.AutoDeflex := SpeedButton4.Down;
@@ -281,7 +283,7 @@ and populate the grid with the results
 Don't call directly.
 }
 procedure TfWordLookup.Look_Run(req: TDicSearchRequest);
-var wt:integer;
+var wt:TEvalCharType;
   i:integer;
   wasfull:boolean;
   s:string;
@@ -291,8 +293,8 @@ begin
   dicrl.Clear;
 
   case req.a of
-    stJp: begin s := Edit1.Text; wt := -1; end;
-    stEn: begin s := Edit1.Text; wt := -1; end;
+    stJp: begin s := Edit1.Text; wt := EC_UNKNOWN; end;
+    stEn: begin s := Edit1.Text; wt := EC_UNKNOWN; end;
     stClipboard: begin
       s:='';
       for i:=1 to flength(clip) do
@@ -302,14 +304,11 @@ begin
         if fgetch(clip,i)<=#$00FF then break
        {$ENDIF}
         else s:=s+fgetch(clip,i);
-      wt := -1;
+      wt := EC_UNKNOWN;
     end;
     stEditorInsert: begin //In "word insert" mode
       s := fEditor.GetInsertKana(false);
-      if fEditor.buffertype='H'then
-        wt := -1
-      else
-        wt := -2;
+      wt := EC_UNKNOWN
     end;
     stEditorAuto: //In "translate text" mode
       s:=fEditor.GetDocWord(fEditor.rcur.x,fEditor.rcur.y,wt,{stopuser=}true);
