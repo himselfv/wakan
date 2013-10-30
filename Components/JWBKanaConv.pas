@@ -395,11 +395,11 @@ var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 5);
  {$IFDEF UNICODE}
-  Result.hiragana := HexToUnicode(s_parts[0]);
-  Result.katakana := HexToUnicode(s_parts[1]);
+  Result.hiragana := autohextofstr(s_parts[0]);
+  Result.katakana := autohextofstr(s_parts[1]);
  {$ELSE}
-  Result.hiragana := Uppercase(s_parts[0]);
-  Result.katakana := Uppercase(s_parts[1]);
+  Result.hiragana := Uppercase(autohextofstr(s_parts[0]));
+  Result.katakana := Uppercase(autohextofstr(s_parts[1]));
  {$ENDIF}
   Result.japanese := s_parts[2];
   Result.english := s_parts[3];
@@ -984,7 +984,7 @@ begin
     case sect of
       LS_TABLE: begin
         parts := SplitStr(ln,4);
-        parts[0] := hextofstr(parts[0]);
+        parts[0] := autohextofstr(parts[0]);
         parts[1] := uppercase(parts[1]);
         parts[2] := uppercase(parts[2]);
         parts[3] := uppercase(parts[3]);

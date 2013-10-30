@@ -8,6 +8,15 @@ interface
 uses SysUtils, Classes, JWBStrings, TextTable, MemSource, StdPrompt, JWBDic;
 
 {
+Particle list
+}
+type
+  TParticleList = class(TStringList)
+  public
+    procedure Add(const entry: string); inline;
+  end;
+
+{
 Deflection parsing code and deflection list.
 For more info see wakan.cfg.
 }
@@ -252,28 +261,33 @@ uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSett
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
+{
+Particle list.
+}
+
+{ Adds a particle from configuration list. Supports both FHex and direct Unicode }
+procedure TParticleList.Add(const entry: string);
+begin
+  inherited Add(autohextofstr(entry))
+end;
 
 {
 Deflexion rules
 }
 
-//Parses deflection rule from string form into record
-//See comments in wakan.cfg for format details.
+{ Parses deflection rule from string form into record. Supports both FHex and
+ Unicode.
+ See comments in wakan.cfg for format details. }
 function ParseDeflectionRule(const s: string): TDeflectionRule;
 var i: integer;
 begin
   Result.vt := s[1];
   Result.sufcat := s[2];
   i := pos('->', s);
- {$IFDEF UNICODE}
   Result.infl := copy(s,3,i-3);
   if Result.infl<>'KKKK' then
-    Result.infl := HexToUnicode(Result.infl);
-  Result.defl := HexToUnicode(copy(s,i+2,Length(s)-(i+2)+1));
- {$ELSE}
-  Result.infl := copy(s,3,i-3);
-  Result.defl := copy(s,i+2,Length(s)-(i+2)+1);
- {$ENDIF}
+    Result.infl := autohextofstr(Result.infl);
+  Result.defl := autohextofstr(copy(s,i+2,Length(s)-(i+2)+1));
 end;
 
 function TDeflectionList.GetItemPtr(Index: integer): PDeflectionRule;

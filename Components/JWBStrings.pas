@@ -203,6 +203,7 @@ function fstr(const s: UnicodeString): FString; overload; inline;
 function fstrtouni(const s: FString): UnicodeString; inline;
 function hextofstr(const s: FHex): FString; inline;
 function fstrtohex(const s: FString): FHex; inline;
+function autohextofstr(const text: string): FString;
 
 {$IFNDEF UNICODE}
 function FcharCmp(a, b: PFChar; cnt: integer): boolean; inline;
@@ -653,6 +654,17 @@ begin
  {$ELSE}
   Result := FString(s);
  {$ENDIF}
+end;
+
+{ Many formats in support both FHex and direct Unicode entries when loading
+ configuration for backward compability.
+ This function decodes such strings appropriately. }
+function autohextofstr(const text: string): FString;
+begin
+  if EvalChars(text) = [EC_LATIN_HW] then
+    Result := hextofstr(text)
+  else
+    Result := fstr(text); //on non-unicode convert to hex
 end;
 
 
@@ -1352,7 +1364,7 @@ end;
 {$ELSE}
 function EvalChar(const char:FString): TEvalCharType;
 begin
-  if char='3005'then result:=EC_IDG_CHAR else // kurikaeshi
+  if char='3005' then result:=EC_IDG_CHAR else // kurikaeshi
   if (char>='3000') and (char<='303F') then result:=EC_IDG_PUNCTUATION else
   if (char>='3040') and (char<='309F') then result:=EC_HIRAGANA else
   if (char>='30A0') and (char<='30FF') then result:=EC_KATAKANA else

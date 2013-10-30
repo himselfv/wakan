@@ -577,7 +577,7 @@ var
   clip:FString;
 
  //Loaded from config file -- see comments in wakan.cfg
-  partl: TStringList; //particles such as NO, NI, etc
+  partl: TParticleList; //particles such as NO, NI, etc
   suffixl: TStringList; //suffixes
   defll: TDeflectionList; //verb deflections
 
@@ -632,7 +632,7 @@ begin
 
   defll:=TDeflectionList.Create;
   suffixl:=TStringList.Create;
-  partl:=TStringList.Create;
+  partl:=TParticleList.Create;
   readchl:=TStringList.Create;
   dicts:=TDictionaryList.Create;
 
@@ -1138,13 +1138,13 @@ begin
         end else
         begin
          //Some of the fields are in hex unicode, so we have to convert them
-          if sect=1 then partl.Add(hextofstr(ln));
+          if sect=1 then partl.Add(ln);
           if sect=2 then defll.Add(ln);
           if sect=5 then AddCharPropType(ln);
           if sect=6 then AddRomaSortRecord(ln);
-          if sect=7 then suffixl.Add(copy(ln,1,1)+hextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
+          if sect=7 then suffixl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
           if sect=8 then ignorel.Add(fstr(ln));
-          if sect=9 then readchl.Add(copy(ln,1,1)+hextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
+          if sect=9 then readchl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
           if sect=10 then KnownDictSources.Add(ln);
         end;
       end;

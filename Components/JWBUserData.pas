@@ -409,7 +409,7 @@ begin
   if Length(parts)<=0 then exit;
   i := Length(romasortl);
   SetLength(romasortl, i+1);
-  romasortl[i].roma := hextofstr(parts[0]);
+  romasortl[i].roma := autohextofstr(parts[0]);
   if Length(parts)>=2 then
     romasortl[i].order := parts[1]
   else
