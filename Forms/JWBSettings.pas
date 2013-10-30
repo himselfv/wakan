@@ -675,7 +675,7 @@ begin
   CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
   CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
   if fWordLookup<>nil then
-    fWordLookup.SpeedButton13.Down:=reg.ReadBool('Dict','QuickSearch',true);
+    fWordLookup.sbAutoPreview.Down:=reg.ReadBool('Dict','QuickSearch',true);
   CheckBox8.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
   cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
@@ -920,7 +920,7 @@ begin
   reg.WriteBool('Dict','PreferNouns',CheckBox5.Checked);
   reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
   reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
-  reg.WriteBool('Dict','QuickSearch',fWordLookup.SpeedButton13.Down);
+  reg.WriteBool('Dict','QuickSearch',fWordLookup.sbAutoPreview.Down);
   reg.WriteBool('Dict','ReplaceKanji',CheckBox8.Checked);
   reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);

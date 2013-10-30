@@ -1179,7 +1179,7 @@ end;
 function TDicLookupCursorV4.NextAnywhereMatch: boolean;
 begin
  { mtAnywhere searches can't use any index, so we scan through all the records -- very slow }
-  if EOF then begin
+  if CDict.EOF then begin
     Result := false;
     exit;
   end;
@@ -1187,7 +1187,7 @@ begin
   repeat
     CDict.Next;
   until CDict.EOF or HaveMatch;
-  Result := not EOF;
+  Result := not CDict.EOF;
 end;
 
 

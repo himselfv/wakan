@@ -3190,7 +3190,7 @@ end;
 procedure TfMenu.aDictAutoExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeUser.Execute;
-  fWordLookup.SpeedButton13.Down:=not fWordLookup.SpeedButton13.Down;
+  fWordLookup.sbAutoPreview.Down:=not fWordLookup.sbAutoPreview.Down;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 

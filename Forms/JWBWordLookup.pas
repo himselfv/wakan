@@ -31,7 +31,7 @@ type
     pnlDockExamples: TPanel;
     Panel3: TPanel;
     SpeedButton4: TSpeedButton;
-    SpeedButton13: TSpeedButton;
+    sbAutoPreview: TSpeedButton;
     SpeedButton14: TSpeedButton;
     SpeedButton15: TSpeedButton;
     SpeedButton16: TSpeedButton;
@@ -191,7 +191,7 @@ begin
   fMenu.aDictEnd.Enabled:=SpeedButton12.Enabled;
   fMenu.aDictMiddle.Enabled:=SpeedButton18.Enabled;
   fMenu.aDictInflect.Checked:=SpeedButton4.Down;
-  fMenu.aDictAuto.Checked:=SpeedButton13.Down;
+  fMenu.aDictAuto.Checked:=sbAutoPreview.Down;
   fMenu.aDictGroup1.Checked:=SpeedButton14.Down;
   fMenu.aDictGroup2.Checked:=SpeedButton15.Down;
   fMenu.aDictGroup3.Checked:=SpeedButton16.Down;
@@ -208,7 +208,7 @@ begin
     3:fWordLookup.SpeedButton18.Down:=true;
   end;
 
-  if (not SpeedButton13.Down) or (SpeedButton18.Down) then
+  if (not sbAutoPreview.Down) or (SpeedButton18.Down) then
     BitBtn1.Caption:=_l('#00669^eSearch')
   else
     BitBtn1.Caption:=_l('#00670^eAll');
@@ -383,7 +383,7 @@ begin
   UpdateLookMode;
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
-  if (a<>stEditorInsert) and (BitBtn1.Enabled) and ((not SpeedButton13.Down) or (SpeedButton18.Down)) then
+  if (a<>stEditorInsert) and (BitBtn1.Enabled) and ((not sbAutoPreview.Down) or (SpeedButton18.Down)) then
   begin
     BitBtn1.Visible:=true;
     Label2.Visible:=false;

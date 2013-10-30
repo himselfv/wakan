@@ -220,7 +220,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton13: TSpeedButton
+    object sbAutoPreview: TSpeedButton
       Left = 438
       Top = 4
       Width = 33

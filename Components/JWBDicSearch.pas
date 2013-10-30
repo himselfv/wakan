@@ -899,7 +899,7 @@ begin
     kanaonly := false;
   end;
 
-  if full or (fWordLookup.SpeedButton13.Down and (MatchType<>mtMatchAnywhere)) then //TODO: Move this line out of here
+  if full or (fWordLookup.sbAutoPreview.Down and (MatchType<>mtMatchAnywhere)) then //TODO: Move this line out of here
   for di:=0 to Length(dics)-1 do begin
     if dics[di].cursor=nil then continue;
     for i:=0 to se.Count-1 do
@@ -1144,6 +1144,12 @@ begin
           scomp.userindex := scur.userindex;
           scomp.userscore := scur.userscore;
         end;
+        //sometimes we have two identical deflexions, one with longer source match than another
+        if scomp.slen < scur.slen then begin
+          scomp.slen := scur.slen;
+          scomp.sdef := scur.sdef;
+        end;
+
         //add tl
         if pos(copy(entry,3,length(entry)-2),scomp.entry)=0 then begin
          //for now we add everything to the end, ignoring what result had higher score
