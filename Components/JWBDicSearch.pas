@@ -1071,15 +1071,20 @@ begin
         entry:=entry+' '+UH_LBEG+'pwc'+IntToStr(dic.GetFrequency)+UH_LEND;
       entry:=entry+' '+UH_LBEG+'d'+dic.dic.name+UH_LEND;
 
-     //Calculate sorting order
-      sort:=0; //the bigger the worse (will apear later in list)
-      if a=stEn then
-      begin
-        if pos(trim(uppercase(sxx)),trim(uppercase(dic.GetArticleBody)))=1 then sort:=10000 else sort:=11000;
-        sort:=sort+popclas*100;
+     //Calculate sorting order -- the bigger the worse (will apear later in list)
+      case a of
+        stEn: begin
+          if pos(trim(uppercase(sxx)),trim(uppercase(dic.GetArticleBody)))=1 then sort:=10000 else sort:=11000;
+          sort:=sort+popclas*100;
+        end;
+        stJp: sort:=(10000*(9-min(sp,9)))+length(dic.GetPhonetic)*1000+popclas*10;
+        stClipboard,
+        stEditorInsert,
+        stEditorAuto:
+          sort:=(10000*(9-min(sp,9)))-length(dic.GetPhonetic)+popclas*10;
+         //in auto-translation mode longer matches are better (those are longer *exact* matches after all)
+      else sort:=0;
       end;
-      if a=stJp then sort:=(10000*(9-min(sp,9)))+length(dic.GetPhonetic)*1000+popclas*10;
-      if a in [stClipboard, stEditorInsert, stEditorAuto] then sort:=(10000*(9-min(sp,9)))+popclas*10;
       sort:=sort+10000;
       //if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then sort:=10000+popclas*10;
       if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
