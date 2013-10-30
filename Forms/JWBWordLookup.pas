@@ -396,6 +396,10 @@ begin
 
   SetupSearchRequest(a, req);
   try
+   //If full search was not requested and autopreview off / too costly
+    if not req.full
+    and (not Self.sbAutoPreview.Down or (req.MatchType=mtMatchAnywhere)) then
+      exit; //do not search
     req.Prepare;
     Look_Run(req);
   finally

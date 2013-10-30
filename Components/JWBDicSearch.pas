@@ -899,7 +899,6 @@ begin
     kanaonly := false;
   end;
 
-  if full or (fWordLookup.sbAutoPreview.Down and (MatchType<>mtMatchAnywhere)) then //TODO: Move this line out of here
   for di:=0 to Length(dics)-1 do begin
     if dics[di].cursor=nil then continue;
     for i:=0 to se.Count-1 do
@@ -1088,7 +1087,7 @@ begin
       if IsKanaCharKatakana(dic.GetPhonetic, 1) then inc(sort,1000);
       sort:=sort+dic.dic.priority*20000;
       sort:=sort+ds.PriorityClass;
-      if (fSettings.CheckBox59.Checked) then
+      if fSettings.CheckBox59.Checked then
       begin
         if dic.GetFrequency>-1 then
         begin
