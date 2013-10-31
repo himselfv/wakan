@@ -3302,8 +3302,7 @@ begin
   block := Self.TextSelection;
   doc.DeleteBlock(block);
   rcur := SourcePos(block.fromx, block.fromy);
-  if block.fromy<>block.toy then
-    RefreshLines;
+  RefreshLines;
   FileChanged:=true;
 end;
 
