@@ -11,6 +11,7 @@ procedure ShowUsage(errmsg: string = '');
 
 var
   Command: string;
+  SkipAutoRepair: boolean;
 
  { Each block of params is only valid (initialized) if that command is in Command }
 
@@ -81,7 +82,9 @@ begin
       +'[/description text] [/copyright text] [/priority int] [/version text] '
       +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
       +'[/addfrequencyinfo]'#13
-    +'* updatedics [dicname dicname ...]';
+    +'* updatedics [dicname dicname ...]'
+    +'Supported flags:'
+    +'* [/fast]';
 
   if errmsg<>'' then
     s := errmsg + #13#13 + s;
@@ -99,6 +102,7 @@ var i: integer;
 begin
  //Set to default
   Command := '';
+  SkipAutoRepair := false;
 
  //Parse
   i := 1;
@@ -110,7 +114,9 @@ begin
     if s[1]='/' then begin
 
      //Common options
-     //Currently none.
+      if s='/fast' then begin
+        SkipAutoRepair := true;
+      end else
 
      //Command-related options
       if Command='makeexamples' then begin
