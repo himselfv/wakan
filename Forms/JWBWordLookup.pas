@@ -307,8 +307,12 @@ begin
       wt := EC_UNKNOWN;
     end;
     stEditorInsert: begin //In "word insert" mode
+     //First try real word insert buffer
       s := fEditor.GetInsertKana(false);
-      wt := EC_UNKNOWN
+      wt := EC_UNKNOWN;
+     //If that is empty, show whatever the caret is at
+      if s='' then
+        s:=fEditor.GetWordAtCaret(wt);
     end;
     stEditorAuto: //In "translate text" mode
       s:=fEditor.GetDocWord(fEditor.rcur.x,fEditor.rcur.y,wt,{stopuser=}true);

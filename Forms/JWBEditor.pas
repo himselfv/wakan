@@ -249,6 +249,7 @@ type
     function HalfUnitsToCursorPos(x,y: integer):integer;
   public
     function GetDocWord(x,y:integer;var wordtype: TEvalCharType;stopuser:boolean):string;
+    function GetWordAtCaret(out AWordtype: TEvalCharType): string;
     function GetClosestCursorPos(x,y:integer):TCursorPos;
     function GetExactLogicalPos(x,y:integer):TSourcePos;
     function TryGetExactLogicalPos(x,y: integer):TSourcePos;
@@ -655,7 +656,6 @@ begin
     1: fWordLookup.btnLookupEtoJ.Down:=true;
     2: fWordLookup.btnLookupClip.Down:=true;
   end;
-//  fUser.Look(false);
 end;
 
 procedure TfEditor.FormResize(Sender: TObject);
@@ -1947,7 +1947,7 @@ begin
       if fWordLookup.Visible or (insertBuffer<>'') then
         fWordLookup.Look()
       else begin
-        s:=GetDocWord(rcur.x,rcur.y,wt,false);
+        s:=GetDocWord(rcur.x,rcur.y,wt,{stopuser=}false);
         if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
       end;
   end;
@@ -3004,7 +3004,7 @@ begin
     exit;
   end;
   s2:=doc.GetDoc(x,y);
-  dw:=GetDocWord(x,y,wt,not (tfManuallyChosen in flags));
+  dw:=GetDocWord(x,y,wt,{stopuser=}not (tfManuallyChosen in flags));
  //GetDocWord makes only upper bound guess on the length of the word,
  //the search result gives us exact value.
   if word<>nil then
@@ -3082,7 +3082,7 @@ begin
   fdelete(dw,1,rlen);
   if (wordstate='K') and (flength(doc.Lines[y])>x+rlen) then
   begin
-    dw:=GetDocWord(x+rlen,y,wt,false);
+    dw:=GetDocWord(x+rlen,y,wt,{stopuser=}false);
     if wt<>EC_HIRAGANA then dw:='';
   end;
   if flength(dw)>4 then delete(dw,5,MaxInt); //yes 4 in unicode. Cut overly long particle tails
@@ -3373,6 +3373,7 @@ begin
   Result := doc.PropertyLines[Index];
 end;
 
+{ What the hell is "stopuser"? }
 function TfEditor.GetDocWord(x,y:integer;var wordtype:TEvalCharType;stopuser:boolean):string;
 var wt2:TEvalCharType;
     i:integer;
@@ -3438,6 +3439,15 @@ begin
     if wt2=EC_UNKNOWN then exit;
     result:=result+fgetch(doc.Lines[y],x+1);
   until false;
+end;
+
+{ Returns the word currently under the caret }
+function TfEditor.GetWordAtCaret(out AWordtype: TEvalCharType): string;
+var fcur: TSourcePos;
+begin
+  fcur := RCur;
+  AWordtype := EC_UNKNOWN;
+  Result := GetDocWord(fcur.x, fcur.y, AWordtype, {stopuser=}false);
 end;
 
 
