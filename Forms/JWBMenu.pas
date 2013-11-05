@@ -1157,10 +1157,11 @@ begin
 
    { Load user romaji setup. For now just load fixed files }
     roma_user.Clear;
-    roma_user.LoadFromFile('Kunreishiki.roma');
-    roma_user.LoadFromFile('Hepburn.roma');
-    roma_user.LoadFromFile('Czech.roma');
-    roma_user.LoadFromFile('Kiriji - Polivanov.roma');
+    roma_user.LoadFromFile('Awful kiriji.roma');
+//    roma_user.LoadFromFile('Kiriji - Polivanov.roma');
+//    roma_user.LoadFromFile('Kunreishiki.roma');
+//    roma_user.LoadFromFile('Hepburn.roma');
+//    roma_user.LoadFromFile('Czech.roma');
 
     rpy_db.Clear;
     rpy_db.LoadFromFile('PinYin.rpy');

@@ -819,8 +819,8 @@ begin
   while length(s2)>0 do
   begin
     fn:='';
-    if s2[1]='_'then fn:=fstr('_');
-    if s2[1]='-'then fn:=fstr('-');
+    if s2[1]='_' then begin fn:=fstr('_'); l:=1; end;
+    if s2[1]='-' then begin fn:=fstr('-'); l:=1; end;
 
     for i:=0 to FTrans.Count-1 do begin
       j := 0;
