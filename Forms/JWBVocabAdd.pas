@@ -99,7 +99,7 @@ begin
   if MeaningOnly then
     DrawUnicode(Canvas,2,2,22,FFixedPhonetic,FontJapanese)
   else
-    DrawUnicode(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,romasys,curlang,[]),FontJapanese);
+    DrawUnicode(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,curlang,[]),FontJapanese);
 end;
 
 procedure TfVocabAdd.edtPhoneticChange(Sender: TObject);
@@ -134,7 +134,7 @@ begin
     if MeaningOnly then
       str := FFixedKanji + ' [' + FFixedPhonetic + '] ' + edtMeaning.Text
     else
-      str := FClipText + ' [' + RomajiToKana(edtPhonetic.Text,romasys,curlang,[rfDeleteInvalidChars]) + ']'
+      str := FClipText + ' [' + RomajiToKana(edtPhonetic.Text,curlang,[rfDeleteInvalidChars]) + ']'
         + edtMeaning.Text;
     clip := str;
     fMenu.SetClipboard;
@@ -202,7 +202,7 @@ begin
   if IsPositiveResult(Result) then
     fVocab.AddWord(
       FClipText,
-      RomajiToKana(edtPhonetic.Text,romasys,curlang,[rfDeleteInvalidChars]),
+      RomajiToKana(edtPhonetic.Text,curlang,[rfDeleteInvalidChars]),
       edtMeaning.Text,
       cbCategories.Text,
       '?', false, 1

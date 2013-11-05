@@ -619,7 +619,7 @@ begin
   if curlang='c'then
   begin
     sl.Add(prior, ws, 'F', rtNormal, w);
-    if pos('?',KanaToRomaji(w,romasys,'c'))>0 then exit;
+    if pos('?',KanaToRomaji(w,'c'))>0 then exit;
    //For every lookup candidate check if there were "unknown" tone markers,
    //and generate all possible resolutions for those.
     repeat
@@ -671,9 +671,9 @@ begin
         se.Add(9,length(search),'F',rtRoma,search)
       end else begin
         if curlang='j'then
-          tmpkana:=RomajiToKana('H'+search,romasys,'j',[])
+          tmpkana:=RomajiToKana('H'+search,'j',[])
         else
-          tmpkana:=RomajiToKana(search,romasys,'c',[]);
+          tmpkana:=RomajiToKana(search,'c',[]);
        //Add exact roma first
         search := SignatureFrom(search);
         se.Add(9,length(search),'F',rtRoma,search);
@@ -873,7 +873,7 @@ begin
           sdef := 'P';
           kana := ChinTraditional(search);
           kanji := kana;
-          entry := KanaToRomaji(search,1,'j')+' particle';
+          entry := KanaToRomaji(search,'j')+' particle';
           slen := Length(kanji);
         end;
     end;
@@ -1012,7 +1012,7 @@ begin
       if lc.roma=rtRoma then
         sxxr:=sxx
       else
-        sxxr:=KanaToRomaji(sxx,1,curlang);
+        sxxr:=DbKanaToRomaji(sxx,curlang);
       dic.LookupRomaji(sxxr);
     end;
     stEn: dic.LookupMeaning(sxx);
@@ -1023,7 +1023,7 @@ begin
         dic.LookupRomaji(lc.str)
       else
       if kanaonly then begin
-        sxxr:=KanaToRomaji(sxx,1,curlang);
+        sxxr:=DbKanaToRomaji(sxx,curlang);
         dic.LookupRomaji(sxxr);
       end else
         dic.LookupKanji(sxx);

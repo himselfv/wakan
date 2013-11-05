@@ -665,9 +665,9 @@ begin
           conv.Write(TUser.Str(TUserPhonetic))
         else
           if curlang='c'then
-            conv.Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),1,'c')))
+            conv.Write(fstr(DbKanaToRomaji(TUser.Str(TUserPhonetic),'c')))
           else
-            conv.Write(fstr(KanaToRomaji(TUser.Str(TUserPhonetic),2,'j')));
+            conv.Write(fstr(DbKanaToRomaji(TUser.Str(TUserPhonetic),'j')));
         conv.Write(fstr(#9));
         conv.Write(fstr(replc(TUser.Str(TUserEnglish),';',',')));
         if FExportType<2 then
@@ -908,10 +908,10 @@ begin
             or (fgetch(curphon,1)={$IFNDEF UNICODE}'2026'{$ELSE}#$2026{$ENDIF}) then
               if curlang='c'then
               begin
-                s2:=DeconvertPinYin(romac,curphon);
-                curphon:=RomajiToKana(DeconvertPinYin(romac,curphon),1,'c',[rfDeleteInvalidChars])
+                s2:=DeconvertPinYin(rpy_user,curphon);
+                curphon:=DbRomajiToKana(DeconvertPinYin(rpy_user,curphon),'c',[rfDeleteInvalidChars])
               end else
-                curphon:=RomajiToKana(fstrtouni(curphon),2,'j',[rfDeleteInvalidChars]);
+                curphon:=DbRomajiToKana(fstrtouni(curphon),'j',[rfDeleteInvalidChars]);
             if curcat='' then curcat:=unknowncat;
             if curcat='' then
             begin
@@ -1053,9 +1053,9 @@ begin
       TUser.Locate('Index',wn);
       tm:=fstr(remmark(TUser.Str(TUserEnglish)));
       tk:=TUser.Str(TUserPhonetic);
-      tr:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang));
+      tr:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),curlang));
       if showroma then
-        tp:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),romasys,curlang)) else
+        tp:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),curlang)) else
         tp:=TUser.Str(TUserPhonetic);
       if (not fSettings.CheckBox17.Checked) or (FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0) then
         tw:=TUser.Str(TUserKanji) else tw:='';
@@ -1094,7 +1094,7 @@ begin
         if (ft=FontJapanese) and (curlang='c') then ft:=FontChinese;
         if (ps[k*2-1]<>'p') then
           DrawUnicode(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),t,ft) else
-          DrawKana(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),tk,ft,showroma,romasys,curlang);
+          DrawKana(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),tk,ft,showroma,curlang);
         if fSettings.CheckBox15.Checked then
         begin
           canvas.MoveTo(ph+((width-ph*2) div 4)*(k-1),ph*i+(height-ph*pr) div 2);

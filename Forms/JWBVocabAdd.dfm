@@ -109,7 +109,6 @@ object fVocabAdd: TfVocabAdd
     Height = 21
     Anchors = [akLeft, akRight, akBottom]
     TabOrder = 2
-    ExplicitTop = 253
   end
   object btnOk: TBitBtn
     Left = 390

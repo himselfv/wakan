@@ -1007,6 +1007,8 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'EvalResults'
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object RxLabel1: TLabel
         Left = 16
         Top = 4
@@ -1228,6 +1230,8 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Final'
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object RxLabel2: TLabel
         Left = 16
         Top = 4

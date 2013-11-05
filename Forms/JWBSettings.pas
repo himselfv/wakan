@@ -1326,7 +1326,7 @@ end;
 procedure TfSettings.PaintBox3Paint(Sender: TObject);
 begin
   PaintBox3.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[]),FontSmall);
+  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,'j',[]),FontSmall);
 end;
 
 procedure TfSettings.pcPagesChange(Sender: TObject);
@@ -1338,15 +1338,12 @@ procedure TfSettings.Edit15Change(Sender: TObject);
 begin
   PaintBox3.Invalidate;
   PaintBox1.Invalidate;
-  Label20.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[rfDeleteInvalidChars]),1,'j');
-  Label21.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[rfDeleteInvalidChars]),2,'j');
-  Label22.Caption:=KanaToRomaji(RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[rfDeleteInvalidChars]),3,'j');
 end;
 
 procedure TfSettings.PaintBox1Paint(Sender: TObject);
 begin
   PaintBox1.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox1.Canvas,1,1,16,RomajiToKana('K'+Edit15.Text,RadioGroup1.ItemIndex+1,'j',[]),FontSmall);
+  DrawUnicode(PaintBox1.Canvas,1,1,16,RomajiToKana('K'+Edit15.Text,'j',[]),FontSmall);
 end;
 
 procedure TfSettings.Button1Click(Sender: TObject);
@@ -1453,7 +1450,7 @@ begin
           if chr(TUserCat.Int(TUserCatType))='G'then gfound:=true;
           TUserSheet.Next;
         end;
-        s:=KanaToRomaji(TUser.Str(TUserPhonetic),romasys,'j');
+        s:=KanaToRomaji(TUser.Str(TUserPhonetic),'j');
         if not gfound then begin
           inc(gfn);
           if gfn=10 then gfs:=gfs+',...';
@@ -1495,15 +1492,12 @@ end;
 procedure TfSettings.PaintBox2Paint(Sender: TObject);
 begin
   PaintBox2.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox2.Canvas,1,1,16,RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[]),FontSmall);
+  DrawUnicode(PaintBox2.Canvas,1,1,16,RomajiToKana(Edit20.Text,'c',[]),FontSmall);
 end;
 
 procedure TfSettings.Edit20Change(Sender: TObject);
 begin
   PaintBox2.Invalidate;
-  Label31.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),1,'c');
-  Label32.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),2,'c');
-  Label33.Caption:=KanaToRomaji(RomajiToKana(Edit20.Text,RadioGroup6.ItemIndex+1,'c',[rfDeleteInvalidChars]),3,'c');
 end;
 
 //Silent: do not say anything in case of success

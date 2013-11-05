@@ -191,7 +191,7 @@ end;
 procedure TfVocabDetails.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Brush.Color:=clWindow;
-  DrawKana(Canvas,1,1,22,fVocab.curphonetic,FontJapanese,showroma,romasys,curlang);
+  DrawKana(Canvas,1,1,22,fVocab.curphonetic,FontJapanese,showroma,curlang);
 end;
 
 procedure TfVocabDetails.pbKanjiPaint(Sender: TObject; Canvas: TCanvas);

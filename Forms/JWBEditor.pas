@@ -2080,8 +2080,7 @@ begin
   end;
 
   if not showroma and (EvalChar(gd1)=EC_KATAKANA) then
-   //To hiragana
-    Result := RomajiToKana('H'+KanaToRomaji(gd1,1,'j'),1,'j',[rfDeleteInvalidChars])
+    Result := ToHiragana(gd1)
   else
   if showroma and (EvalChar(gd1) in [EC_HIRAGANA, EC_KATAKANA]) then begin
     Result := '';
@@ -2103,8 +2102,7 @@ begin
       Result := gd1; //by default
 
     if (flength(Result)>1) and (EC_KATAKANA in EvalChars(Result)) then
-     //To hiragana
-      Result:=RomajiToKana('H'+KanaToRomaji(Result,1,'j'),1,'j',[rfDeleteInvalidChars]);
+      Result := ToHiragana(Result);
   end
   else
     Result := '';
@@ -2482,7 +2480,7 @@ begin
         //Append reading to print later
         if reading<>'' then begin
           if showroma then
-            reading:=KanaToRomajiF(reading,romasys,curlang)
+            reading:=KanaToRomajiF(reading,curlang)
           else
             reading:=ConvertBopomofo(reading); //pointless in roma
           kanaq:=kanaq+reading;
@@ -2784,10 +2782,10 @@ begin
   if curlang='j'then
   begin
     if buffertype='H' then
-      Result:=RomajiToKana('H'+lowercase(insertbuffer),romasys,curlang,[])
+      Result:=RomajiToKana('H'+lowercase(insertbuffer),curlang,[])
     else
     if buffertype='K'then
-      Result:=RomajiToKana('K'+lowercase(insertbuffer),romasys,curlang,[])
+      Result:=RomajiToKana('K'+lowercase(insertbuffer),curlang,[])
     else
       Result:=fstr(insertbuffer); //latin
   end else
@@ -2796,7 +2794,7 @@ begin
       Result:=fstr(insertbuffer)
     else
     if buffertype='H' then
-      Result:=RomajiToKana(lowercase(insertbuffer),romasys,curlang,[])
+      Result:=RomajiToKana(lowercase(insertbuffer),curlang,[])
     else
       Result:=fstr(insertbuffer);
   end;

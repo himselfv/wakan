@@ -8,6 +8,7 @@ TODO: Make both Romaji and Pinyin convertors support arbitrary format:
   Kana,Any,Number,Of,Romaji
 TODO: Make Pinyin convertor use BTrees too.
 TODO: Make Romaji and Pinyin convertors descend from the same class.
+TODO: Разделять все ромадзи первого файла, затем все второго, и т.д., а не кучей.
 }
 
 interface
@@ -30,9 +31,7 @@ type
    { Hiragana and katakana: FStrings. Hex is already upcased! Do not upcase. }
     hiragana: string;
     katakana: string;
-    japanese: string;
-    english: string;
-    czech: string;
+    romaji: array of string;
    { These pointers always point to somewhere.
     If hiragana or katakana strings are nil, they're pointing to const strings of '000000000'
     So there's no need to check for nil; they're also guaranteed to have at least two 4-chars available
@@ -40,6 +39,9 @@ type
     so it won't match to anything) }
     hiragana_ptr: PFCharPtr;
     katakana_ptr: PFCharPtr;
+    function FindRomaji(const ARomaji: string): integer;
+    procedure AddRomaji(const ARomaji: string);
+    procedure Add(const ARule: TRomajiTranslationRule);
   end;
   PRomajiTranslationRule = ^TRomajiTranslationRule;
 
@@ -74,10 +76,10 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    procedure Add(const r: TRomajiTranslationRule); overload;
-    procedure Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string); overload;
-    procedure Add(const s: string); overload; inline;
     procedure Clear;
+    procedure Add(const r: TRomajiTranslationRule); overload;
+    procedure Add(const s: string); overload;
+    function FindItem(const AKana: string): PRomajiTranslationRule;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiTranslationRule read GetItemPtr; default;
   end;
@@ -85,8 +87,7 @@ type
   TRomajiReplacementRule = record
     s_find: string;
     s_repl: string;
-    romatype: integer; //0 means any
-    pref: char; //Q, H, K, #00 means any
+    pref: char; //H, K, #00 means any
   end;
   PRomajiReplacementRule = ^TRomajiReplacementRule;
 
@@ -99,7 +100,6 @@ type
     function MakeNewItem: PRomajiReplacementRule;
   public
     procedure Add(const r: TRomajiReplacementRule); overload;
-    procedure Add(const AFind, ARepl: string; ARomaType: integer; APref: char); overload;
     procedure Add(const s: string; const pref: char); overload; inline;
     procedure Clear;
     property Count: integer read FListUsed;
@@ -142,39 +142,63 @@ type
     FTrans: TRomajiTranslationTable;
     FReplKtr: TRomajiReplacementTable;
     FReplRtk: TRomajiReplacementTable;
-    function SingleKanaToRomaji(var ps: PFChar; romatype: integer; flags: TResolveFlags): string;
+    function SingleKanaToRomaji(var ps: PFChar; flags: TResolveFlags): string;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     procedure LoadFromFile(const filename: string);
     procedure LoadFromStrings(const sl: TStrings);
-    function KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
-    function RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
+    function KanaToRomaji(const s:FString;flags:TResolveFlags):string;
+    function RomajiToKana(const s:string;flags:TResolveFlags):FString;
+  end;
+
+  TPinYinTranslationRule = record
+    bopomofo: FString;
+    romaji: array of string;
+    function FindRomaji(const ARomaji: string): integer;
+    procedure AddRomaji(const ARomaji: string);
+    procedure Add(const ARule: TPinYinTranslationRule);
+  end;
+  PPinYinTranslationRule = ^TPinYinTranslationRule;
+
+  TPinYinTranslationTable = class
+  protected
+    FList: array of PPinYinTranslationRule;
+    FListUsed: integer;
+    procedure Grow(ARequiredFreeLen: integer);
+    function GetItemPtr(Index: integer): PPinYinTranslationRule; inline;
+    function MakeNewItem: PPinYinTranslationRule;
+  public
+    procedure Clear;
+    procedure Add(const r: TPinYinTranslationRule); overload;
+    function FindItem(const ABopomofo: string): PPinYinTranslationRule;
+    property Count: integer read FListUsed;
+    property Items[Index: integer]: PPinYinTranslationRule read GetItemPtr; default;
   end;
 
   TPinYinTranslator = class
-  type
-    EvilString = string; //contains FString if we convert uni->pinyin, string otherwise
   protected
-   { Chinese version, not upcased. Someone upgrade this one too... }
-    list: TStringList;
-    function FindRomaC(const find: EvilString; roma_type: integer; partial: boolean): integer;
-    function FindRomaCBestMatch(const s: EvilString; roma_type: integer): integer;
-    function ResolveCrom(s:EvilString;typein,typeout:integer;flags:TResolveFlags):EvilString;
+    FRules: TPinYinTranslationTable;
+    function BopomofoBestMatch(const AText: FString): integer;
+    function PinyinBestMatch(const AText: string; out ARomaIdx: integer): integer;
+    function PinyinPartialMatch(const ASyllable: string): integer;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     procedure LoadFromFile(const filename: string);
     procedure LoadFromStrings(const sl: TStrings);
-    function KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
-    function RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
+    function KanaToRomaji(s:FString;flags:TResolveFlags):string;
+    function RomajiToKana(s:string;flags:TResolveFlags):FString;
   end;
 
 function IsAllowedPunctuation(c:WideChar): boolean;
 function ConvertPunctuation(c:WideChar): char;
 function ConvertPunctuationF(c:FChar): char;
+
+function ToHiragana(const s: FString): FString;
+function ToKatakana(const s: FString): FString;
 
 
 {
@@ -215,6 +239,34 @@ function ConvertBopomofo(const str:FString):FString;
 
 implementation
 uses SysUtils;
+
+{ TRomajiTranslationRule }
+
+function TRomajiTranslationRule.FindRomaji(const ARomaji: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(romaji)-1 do
+    if romaji[i]=ARomaji then begin
+      Result := i;
+      break;
+    end;
+end;
+
+procedure TRomajiTranslationRule.AddRomaji(const ARomaji: string);
+begin
+  SetLength(romaji, Length(romaji)+1);
+  romaji[Length(romaji)-1] := ARomaji;
+end;
+
+procedure TRomajiTranslationRule.Add(const ARule: TRomajiTranslationRule);
+var i: integer;
+begin
+  //Add new parts
+  for i := 0 to Length(ARule.romaji)-1 do
+    if Self.FindRomaji(ARule.romaji[i])<0 then
+      Self.AddRomaji(ARule.romaji[i]);
+end;
 
 { TRomajiRuleNode }
 
@@ -366,43 +418,63 @@ begin
   end;
 end;
 
-procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule);
-var pr: PRomajiTranslationRule;
+function TRomajiTranslationTable.FindItem(const AKana: string): PRomajiTranslationRule;
+var data: PFChar;
+  bti: TBinTreeItem;
 begin
-  pr := MakeNewItem;
-  pr^ := r;
-  SetupRule(pr);
-  AddToIndex(pr);
+  case Length(AKana) of
+   1: begin
+     data := @AKana[1];
+     bti := FOneCharTree.SearchData(data);
+     if bti=nil then
+       Result := nil
+     else
+       Result := TRomajiRuleNode(bti).FRule;
+   end;
+   2: begin
+     data := @AKana[1];
+     bti := FTwoCharTree.SearchData(data);
+     if bti=nil then
+       Result := nil
+     else
+       Result := TRomajiRuleNode(bti).FRule;
+   end;
+  else Result := nil;
+  end;
 end;
 
-//Hiragana and katakana must be in decoded format (unicode on UFCHAR builds)
-procedure TRomajiTranslationTable.Add(const AHiragana, AKatakana, AJapanese, AEnglish, ACzech: string);
-var r: PRomajiTranslationRule;
+procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule);
+var pr: PRomajiTranslationRule;
+  base, i: integer;
 begin
-  r := MakeNewItem;
-  r.hiragana := AHiragana;
-  r.katakana := AKatakana;
-  r.japanese := AJapanese;
-  r.english := AEnglish;
-  r.czech := ACzech;
-  SetupRule(r);
+  pr := FindItem(r.hiragana);
+  if pr=nil then
+    pr := FindItem(r.katakana);
+  if pr=nil then begin
+    pr := MakeNewItem;
+    pr^ := r;
+    SetupRule(pr);
+    AddToIndex(pr);
+  end else
+    pr^.Add(r);
 end;
 
 //Parses romaji translation rule from string form into record
 //See comments in wakan.cfg for format details.
-function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule; inline;
+function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule;
 var s_parts: TStringArray;
+  i: integer;
 begin
-  s_parts := SplitStr(s, 5);
+  s_parts := SplitStr(s,',');
   Result.hiragana := autohextofstr(s_parts[0]);
   Result.katakana := autohextofstr(s_parts[1]);
  {$IFNDEF UNICODE}
   Result.hiragana := Uppercase(Result.hiragana);
   Result.katakana := Uppercase(Result.katakana);
  {$ENDIF}
-  Result.japanese := s_parts[2];
-  Result.english := s_parts[3];
-  Result.czech := s_parts[4];
+  SetLength(Result.romaji, Length(s_parts)-2);
+  for i := 0 to Length(Result.romaji)-1 do
+    Result.romaji[i] := s_parts[2+i];
 end;
 
 procedure TRomajiTranslationTable.Add(const s: string);
@@ -453,29 +525,14 @@ begin
   MakeNewItem^ := r;
 end;
 
-//Hiragana and katakana must be in decoded format (unicode on UFCHAR builds)
-procedure TRomajiReplacementTable.Add(const AFind, ARepl: string; ARomaType: integer; APref: char);
-var r: PRomajiReplacementRule;
-begin
-  r := MakeNewItem;
-  r.s_find := AFind;
-  r.s_repl := ARepl;
-  r.romatype := ARomaType;
-  r.pref := APref;
-end;
-
 //Parses romaji translation rule from string form into record
 //See comments in wakan.cfg for format details.
 function ParseRomajiReplacementRule(const s: string): TRomajiReplacementRule; inline;
 var s_parts: TStringArray;
 begin
-  s_parts := SplitStr(s, 3);
+  s_parts := SplitStr(s, 2);
   Result.s_find := s_parts[0];
   Result.s_repl := s_parts[1];
-  if s_parts[2]<>'' then
-    Result.romatype := StrToInt(s_parts[2])
-  else
-    Result.romatype := 0; //any
   Result.pref := #00; //by default
 end;
 
@@ -549,7 +606,6 @@ var i: integer;
   sect: integer;
   pref: char;
 begin
-  Clear;
   pref := #00;
   sect := LS_NONE;
   for i := 0 to sl.Count - 1 do begin
@@ -568,15 +624,11 @@ begin
       sect := LS_ROMAJITOKANA;
       pref := #00;
     end else
-    if ln='[RomajiToKanaK]' then begin
+    if ln='[RomajiToKatakana]' then begin
       sect := LS_ROMAJITOKANA;
       pref := 'K';
     end else
-    if ln='[RomajiToKanaQ]' then begin
-      sect := LS_ROMAJITOKANA;
-      pref := 'Q';
-    end else
-    if ln='[RomajiToKanaH]' then begin
+    if ln='[RomajiToHiragana]' then begin
       sect := LS_ROMAJITOKANA;
       pref := 'H';
     end else
@@ -599,7 +651,7 @@ so we're going to try and implement it reallly fast.
 }
 
 //ps must have at least one 4-char symbol in it
-function TRomajiTranslator.SingleKanaToRomaji(var ps: PFChar; romatype: integer; flags: TResolveFlags): string;
+function TRomajiTranslator.SingleKanaToRomaji(var ps: PFChar; flags: TResolveFlags): string;
 var
  {$IFNDEF UNICODE}
   pe: PFChar;
@@ -639,12 +691,7 @@ begin
  {$ENDIF}
     bn := FTrans.FTwoCharTree.SearchData(ps);
     if bn<>nil then begin
-      case romatype of
-        2: Result := TRomajiRuleNode(bn).FRule.english;
-        3: Result := TRomajiRuleNode(bn).FRule.czech;
-      else
-        Result := TRomajiRuleNode(bn).FRule.japanese;
-      end;
+      Result := TRomajiRuleNode(bn).FRule.romaji[0];
      {$IFDEF UNICODE}
       Inc(ps, 2);
      {$ELSE}
@@ -657,12 +704,7 @@ begin
  //this time 1 FChar only
   bn := FTrans.FOneCharTree.SearchData(ps);
   if bn<>nil then begin
-    case romatype of
-      2: Result := TRomajiRuleNode(bn).FRule.english;
-      3: Result := TRomajiRuleNode(bn).FRule.czech;
-    else
-      Result := TRomajiRuleNode(bn).FRule.japanese;
-    end;
+    Result := TRomajiRuleNode(bn).FRule.romaji[0];
    {$IFDEF UNICODE}
     Inc(ps);
    {$ELSE}
@@ -670,23 +712,6 @@ begin
    {$ENDIF}
     exit;
   end;
-
-(*
-  Converts all 00xx ansi characters.
-  I think this is not right.
-
- {$IFDEF UNICODE}
-  if PWord(ps)^ and $FF00 = 0 then begin
-    Result := ps^;
-    Inc(ps);
- {$ELSE}
-  if (ps^='0') and (PChar(IntPtr(ps)+1)^='0') then begin
-    Result := HexToUnicode(ps, 4);
-    Inc(ps, 4);
- {$ENDIF}
-    exit;
-  end;
-*)
 
  //Latin symbol
   if IsLatinLetterF(ps^) and (rfConvertLatin in flags) then
@@ -707,7 +732,7 @@ begin
  {$ENDIF}
 end;
 
-function TRomajiTranslator.KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
+function TRomajiTranslator.KanaToRomaji(const s:FString;flags:TResolveFlags):string;
 var upcased_s: FString;
   fn:string;
   s2:string;
@@ -738,7 +763,7 @@ begin
   pn := ps;
   while EatOneFChar(pn) do begin
  {$ENDIF}
-    fn := SingleKanaToRomaji(ps, romatype, flags); //also eats one or two symbols
+    fn := SingleKanaToRomaji(ps, flags); //also eats one or two symbols
     if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///TODO:WTF?!!
     s2:=s2+fn;
    {$IFNDEF UNICODE}
@@ -749,8 +774,7 @@ begin
  { Replacements }
   for i := 0 to FReplKtr.Count - 1 do begin
     r := FReplKtr[i];
-    if ((r.romatype=0) or (r.romatype=romatype)) then
-      repl(s2, r.s_find, r.s_repl);
+    repl(s2, r.s_find, r.s_repl);
   end;
 
   if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
@@ -763,10 +787,10 @@ Also accepts strange first letter flags:
   K
   H
 }
-function TRomajiTranslator.RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):string;
+function TRomajiTranslator.RomajiToKana(const s:string;flags:TResolveFlags):string;
 var sr,s2,s3,fn:string;
   kata:integer;
-  l,i:integer;
+  l,i,j:integer;
   pref: char;
   r: PRomajiReplacementRule;
 begin
@@ -782,8 +806,7 @@ begin
  { Replacements }
   for i := 0 to FReplRtk.Count - 1 do begin
     r := FReplRtk[i];
-    if ((r.romatype=0) or (r.romatype=romatype))
-    and ((r.pref=#00) or (r.pref=pref)) then
+    if (r.pref=#00) or (r.pref=pref) then
    { Only a limited set of first letters are prefixes, so we shouldn't just compare pref to whatever --
     -- but since we only load those supported prefixes into r.pref and there's no way to break that,
      this will do. }
@@ -798,64 +821,25 @@ begin
     fn:='';
     if s2[1]='_'then fn:=fstr('_');
     if s2[1]='-'then fn:=fstr('-');
-    for i:=0 to FTrans.Count-1 do
-    begin
-      case romatype of
-        2: sr := FTrans[i].english;
-        3: sr := FTrans[i].czech;
-      else
-        sr := FTrans[i].japanese;
-      end;
-      if pos(sr,s2)=1 then
-      begin
-        l:=length(sr);
-        if kata=0 then
-          fn := FTrans[i].hiragana
-        else
-          fn := FTrans[i].katakana;
-        break;
-      end else
-      if (romatype>0) and (pos(FTrans[i].english,s2)=1) then
-      begin
-        l:=length(FTrans[i].japanese);
-        if kata=0 then
-          fn := FTrans[i].hiragana
-        else
-          fn := FTrans[i].katakana;
-        break;
-      end;
-    end;
 
-   //If we haven't found the match, try other romaji types
-    if fn='' then
-    for i:=0 to FTrans.Count-1 do
-      if pos(FTrans[i].japanese,s2)=1 then
-      begin
-        l:=length(FTrans[i].japanese);
-        if kata=0 then
-          fn := FTrans[i].hiragana
-        else
-          fn := FTrans[i].katakana;
-        break;
-      end else
-      if pos(FTrans[i].english,s2)=1 then
-      begin
-        l:=length(FTrans[i].english);
-        if kata=0 then
-          fn := FTrans[i].hiragana
-        else
-          fn := FTrans[i].katakana;
-        break;
-      end else
-      if pos(FTrans[i].czech,s2)=1 then
-      begin
-        l:=length(FTrans[i].czech);
-        if kata=0 then
-          fn := FTrans[i].hiragana
-        else
-          fn := FTrans[i].katakana;
-        break;
+    for i:=0 to FTrans.Count-1 do begin
+      j := 0;
+      while j<Length(FTrans[i].romaji) do begin
+        sr := FTrans[i].romaji[j];
+        if pos(sr,s2)=1 then
+        begin
+          l:=length(sr);
+          if kata=0 then
+            fn := FTrans[i].hiragana
+          else
+            fn := FTrans[i].katakana;
+          break;
+        end;
+        Inc(j);
       end;
+      if j<Length(FTrans[i].romaji) then
+        break; //found!
+    end;
 
     if fn='' then
     begin
@@ -919,24 +903,147 @@ begin
 {$ENDIF}
 end;
 
+//Converts all katakana in the string to hiragana
+//Invalid characters are deleted.
+function ToHiragana(const s: FString): FString;
+var i: integer;
+  c: FChar;
+begin
+  Result := '';
+  for i := 1 to flength(s) do begin
+    c := fgetch(s,i);
+    if (Ord(c)>=$30A1) and (Ord(c)<=$30F4) then
+      Result := Result + Chr(Ord(c)-$60)
+    else
+    if (Ord(c)>=$30F5) and (Ord(c)<=$30FA) then begin
+     //Unconvertable katakana
+    end else
+      Result := Result + c;
+  end;
+end;
+
+//Converts all hiragana in the string to katakana
+function ToKatakana(const s: FString): FString;
+var i: integer;
+  c: FChar;
+begin
+  Result := '';
+  for i := 1 to flength(s) do begin
+    c := fgetch(s,i);
+    if (Ord(c)>=$3041) and (Ord(c)<=$3094) then
+      Result := Result + Chr(Ord(c)+$60)
+    else
+      Result := Result + c;
+  end;
+end;
+
+{ TPinyinTranslationRule }
+
+function TPinyinTranslationRule.FindRomaji(const ARomaji: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(romaji)-1 do
+    if romaji[i]=ARomaji then begin
+      Result := i;
+      break;
+    end;
+end;
+
+procedure TPinyinTranslationRule.AddRomaji(const ARomaji: string);
+begin
+  SetLength(romaji, Length(romaji)+1);
+  romaji[Length(romaji)-1] := ARomaji;
+end;
+
+procedure TPinyinTranslationRule.Add(const ARule: TPinYinTranslationRule);
+var i: integer;
+begin
+  //Add new parts
+  for i := 0 to Length(ARule.romaji)-1 do
+    if Self.FindRomaji(ARule.romaji[i])<=0 then
+      Self.AddRomaji(ARule.romaji[i]);
+end;
+
+
+{ TPinyinTranslationTable }
+
+//Reserves enough memory to store at least ARequiredFreeLen additional items to list.
+procedure TPinYinTranslationTable.Grow(ARequiredFreeLen: integer);
+const MIN_GROW_LEN = 40;
+begin
+  if Length(FList)-FListUsed>=ARequiredFreeLen then exit; //already have the space
+ //else we don't grow in less than a chunk
+  if ARequiredFreeLen < MIN_GROW_LEN then
+    ARequiredFreeLen := MIN_GROW_LEN;
+  SetLength(FList, Length(FList)+ARequiredFreeLen);
+end;
+
+function TPinYinTranslationTable.GetItemPtr(Index: integer): PPinYinTranslationRule;
+begin
+  Result := FList[Index]; //valid until next list growth
+end;
+
+function TPinYinTranslationTable.MakeNewItem: PPinYinTranslationRule;
+begin
+ //Thread unsafe
+  Grow(1);
+  New(Result);
+  FList[FListUsed] := Result;
+  Inc(FListUsed);
+end;
+
+procedure TPinYinTranslationTable.Clear;
+var i: integer;
+begin
+  for i := 0 to FListUsed - 1 do
+    Dispose(FList[i]);
+  SetLength(FList, 0);
+  FListUsed := 0;
+end;
+
+procedure TPinYinTranslationTable.Add(const r: TPinYinTranslationRule);
+var pr: PPinYinTranslationRule;
+  base, i: integer;
+begin
+  pr := FindItem(r.bopomofo);
+  if pr=nil then begin
+    pr := MakeNewItem;
+    pr^ := r;
+  end else
+    pr^.Add(r);
+end;
+
+function TPinYinTranslationTable.FindItem(const ABopomofo: string): PPinYinTranslationRule;
+var i: integer;
+begin
+ //Stupid for now
+  Result := nil;
+  for i := 0 to Self.Count-1 do
+    if FList[i].bopomofo=ABopomofo then begin
+      Result := FList[i];
+      break;
+    end;
+end;
+
 
 { Bopomofo/pinyin conversions }
 
 constructor TPinYinTranslator.Create;
 begin
   inherited;
-  list := TStringList.Create;
+  FRules := TPinYinTranslationTable.Create;
 end;
 
 destructor TPinYinTranslator.Destroy;
 begin
-  FreeAndNil(list);
+  FreeAndNil(FRules);
   inherited;
 end;
 
 procedure TPinYinTranslator.Clear;
 begin
-  list.Clear;
+  FRules.Clear;
 end;
 
 {
@@ -961,12 +1068,12 @@ procedure TPinYinTranslator.LoadFromStrings(const sl: TStrings);
 const //sections
   LS_NONE = 0;
   LS_TABLE = 1;
-var i: integer;
+var i, j: integer;
   ln: string;
   sect: integer;
   parts: TStringArray;
+  r: TPinYinTranslationRule;
 begin
-  Clear;
   sect := LS_NONE;
   for i := 0 to sl.Count - 1 do begin
     ln := Trim(sl[i]);
@@ -982,106 +1089,149 @@ begin
     else
     case sect of
       LS_TABLE: begin
-        parts := SplitStr(ln,4);
-        parts[0] := autohextofstr(parts[0]);
-        parts[1] := uppercase(parts[1]);
-        parts[2] := uppercase(parts[2]);
-        parts[3] := uppercase(parts[3]);
-        StrListAdd(list, parts);
+        parts := SplitStr(ln);
+        r.bopomofo := autohextofstr(parts[0]);
+        SetLength(r.romaji, Length(parts)-1);
+        for j := 0 to Length(parts)-2 do
+          r.romaji[j] := uppercase(parts[1+j]);
+        FRules.Add(r);
       end;
     end;
   end;
 end;
 
-//Index of romac entry for this item or -1
-//Text must be uppercased
-function TPinYinTranslator.FindRomaC(const find: EvilString; roma_type: integer; partial: boolean): integer;
-var i: integer;
-begin
-  Result := -1;
-  for i:=0 to (list.count div 4)-1 do
-    if (partial and (pos(find,list[i*4+roma_type])=1))
-    or ((not partial) and (list[i*4+roma_type]=find)) then begin
-      Result := i;
-      break;
-    end;
-end;
-
-//Finds best roma_c match at the start of the string
-function TPinYinTranslator.FindRomaCBestMatch(const s: EvilString; roma_type: integer): integer;
+//Finds best matching entry for bopomofo syllable at the start of the text
+function TPinYinTranslator.BopomofoBestMatch(const AText: FString): integer;
 var i, cl: integer;
 begin
   Result := -1;
   cl := 0;
-  for i:=0 to (list.count div 4)-1 do
-    if pos(list[i*4+roma_type],s)=1 then
-      if length(list[i*4+roma_type])>cl then
+  for i:=0 to FRules.Count-1 do
+    if pos(FRules[i].bopomofo,AText)=1 then
+      if flength(FRules[i].bopomofo)>cl then
       begin
-        cl:=length(list[i*4+roma_type]);
+        cl:=flength(FRules[i].bopomofo);
         Result:=i;
       end;
 end;
 
-{
-Converts chinese string between:
-  0 - bopomofo (fstring)
-  1 - pinyin
-  2 - wade-giles
-  3 - yale
-TypeIn: conversion source
-TypeOut: conversion target type
-Clean: ignore unknown characters instead of adding '?'
-}
+//Finds best matching entry for the pinyin syllable at the start of the text
+//Text must be uppercased
+function TPinYinTranslator.PinyinBestMatch(const AText: string; out ARomaIdx: integer): integer;
+var i, j, cl: integer;
+  rom: string;
+begin
+  Result := -1;
+  cl := 0;
+  for i:=0 to FRules.Count-1 do
+    for j:=0 to Length(FRules[i].romaji)-1 do begin
+      rom := FRules[i].romaji[j];
+      if pos(rom, AText)=1 then
+        if flength(rom)>cl then
+        begin
+          cl:=flength(rom);
+          Result:=i;
+          ARomaIdx:=j;
+        end;
+    end;
+end;
 
-function TPinYinTranslator.ResolveCrom(s:EvilString;typein,typeout:integer;flags:TResolveFlags):EvilString;
+//Finds first entry which starts with ASyllable
+//Text must be uppercased.
+function TPinYinTranslator.PinyinPartialMatch(const ASyllable: string): integer;
+var i, j, cl: integer;
+  rom: string;
+begin
+  Result := -1;
+  cl := 0;
+  for i:=0 to FRules.Count-1 do begin
+    for j:=0 to Length(FRules[i].romaji)-1 do begin
+      rom := FRules[i].romaji[j];
+      if pos(ASyllable,rom)=1 then begin
+        Result := i;
+        break;
+      end;
+    end;
+    if Result>=0 then
+      break;
+  end;
+end;
+
+function TPinYinTranslator.KanaToRomaji(s:FString;flags:TResolveFlags):string;
 var s2:string;
   cl:integer;
   i:integer;
   ch:WideChar;
 begin
+  s2:='';
+  while s<>'' do
+  begin
+    //Find longest match for character sequence starting at this point
+    i := BopomofoBestMatch(s);
+    if i>=0 then
+      cl := Length(FRules[i].bopomofo)
+    else
+      cl := 0;
+
+    if i>=0 then begin
+      s2:=s2+FRules[i].romaji[0];
+      delete(s,1,cl);
+    end
+    else begin
+      ch:=fstrtouni(fgetch(s,1))[1];
+      fdelete(s,1,1);
+
+      if (rfConvertLatin in flags) and IsLatinLetterW(ch) then
+        s2:=s2+ch
+      else
+      if (rfConvertPunctuation in flags) and IsAllowedPunctuation(ch) then
+        s2:=s2+ConvertPunctuation(ch)
+      else
+
+      if not (rfDeleteInvalidChars in flags) then
+        s2 := s2 + '?';
+    end;
+
+   //Extract tones always, as they are in special characters
+    if fpygettone(s) in [0..5] then
+      s2 := s2 + Chr(Ord('0') + fpyextrtone(s)); //to digit
+  end;
+  Result:=lowercase(s2);
+end;
+
+function TPinYinTranslator.RomajiToKana(s:string;flags:TResolveFlags):FString;
+var s2:string;
+  cl:integer;
+  i,j:integer;
+  ch:WideChar;
+begin
+  repl(s,'v','u:');
   s:=uppercase(s);
   s2:='';
   while s<>'' do
   begin
     //Find longest match for character sequence starting at this point
-    i := FindRomaCBestMatch(s,typein);
+    i := PinyinBestMatch(s,j);
     if i>=0 then
-      cl := Length(list[i*4+typein])
+      cl := Length(FRules[i].romaji[j])
     else
       cl := 0;
-   { We'd like to try other romanization systemss if the specified one failed us,
-    but we cannot.
-    Most of the times, when there's no "correct" match, there would still be
-    *some* match (i.e. KE instead of KEI).
-    And we can't just "select best match from all the romanizations", that would
-    be dangerous. }
 
     if i>=0 then begin
-      s2:=s2+list[i*4+typeout];
+      s2:=s2+FRules[i].bopomofo;
       delete(s,1,cl);
 
      //with ansi pinyin, we only try to extract tone after a syllable match
-      if typein>0 then
-        if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
-        begin
-          if typeout>0 then
-            s2:=s2+s[1]
-          else
-            s2:=s2+fpytone(Ord(s[1])-Ord('0')); //from digit
-          delete(s,1,1);
-        end else
-        begin
-          if typeout>0 then s2:=s2+'0' else s2:=s2+UH_PY_TONE;
-        end;
+      if (length(s)>0) and (s[1]>='0') and (s[1]<='5') then
+      begin
+        s2:=s2+fpytone(Ord(s[1])-Ord('0')); //from digit
+        delete(s,1,1);
+      end else
+        s2:=s2+UH_PY_TONE;
     end
     else begin
-      if typein>0 then begin
-        ch:=s[1];
-        delete(s,1,1)
-      end else begin
-        ch:=fstrtouni(fgetch(s,1))[1];
-        fdelete(s,1,1);
-      end;
+      ch:=s[1];
+      delete(s,1,1);
 
       if (rfConvertLatin in flags) and IsLatinLetterW(ch) then
         s2:=s2+ch
@@ -1094,32 +1244,12 @@ begin
      {$IFDEF UNICODE}
         s2 := s2 + '?'; //in unicode both strings are in native form
      {$ELSE}
-        if typeout>0 then s2:=s2+'?' else s2:=s2+'003F';
+        s2:=s2+'003F';
      {$ENDIF}
     end;
-
-   //With bopomofo, we extract tones always, as they are in special characters
-    if typein=0 then
-      if fpygettone(s) in [0..5] then begin
-        s2 := s2 + Chr(Ord('0') + fpyextrtone(s)); //to digit
-      end;
   end;
-  if typeout>0 then result:=lowercase(s2) else result:=s2;
+  Result := s2;
 end;
-
-function TPinYinTranslator.KanaToRomaji(const s:FString;romatype:integer;flags:TResolveFlags):string;
-begin
-  Result:=ResolveCrom(s,0,romatype,flags);
-end;
-
-function TPinYinTranslator.RomajiToKana(const s:string;romatype:integer;flags:TResolveFlags):FString;
-var s_rep: string;
-begin
-  s_rep := s;
-  repl(s_rep,'v','u:');
-  Result:=ResolveCrom(s_rep,romatype,0,flags);
-end;
-
 
 {
 PinYin tones -- see comment to UH_PY_TONE
@@ -1287,8 +1417,7 @@ Converts tonemark-enhanced pínín back into ansi pin4yin4.
 Only works for pure pinyin (no latin letters).
 }
 function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
-{ Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway.
- TODO: Test Unicode conversion }
+{ Implemented only in Unicode. This is slower on Ansi, but FStrings are deprecated anyway. }
 var cnv:UnicodeString; //source string
   curs:UnicodeString;
   nch:string;
@@ -1372,7 +1501,7 @@ begin
     else cc:='?';
     if (((cc>='A') and (cc<='Z')) or (cc=':')) and (cc<>'''') then curcc:=curcc+cc;
 
-    fnd:=romac.FindRomaC(uppercase(curcc),1,{Partial=}true)>=0;
+    fnd:=romac.PinyinPartialMatch(uppercase(curcc))>=0;
     if ((cc<'A') or (cc>'Z')) and (cc<>':') then
     begin
       if curcc<>'' then cnv2:=cnv2+lowercase(curcc)+curp;

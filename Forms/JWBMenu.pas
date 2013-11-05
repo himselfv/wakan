@@ -1150,9 +1150,28 @@ begin
       end;
     end;
 
-   //It'll only read sections which it understands
-    roma_t.LoadFromStrings(sl);
-    romac.LoadFromStrings(sl);
+   { Load roma_db; these files must be present }
+    roma_db.Clear;
+    roma_db.LoadFromFile('Kunreishiki.roma');
+    roma_db.LoadFromFile('Hepburn.roma');
+
+   { Load user romaji setup. For now just load fixed files }
+    roma_user.Clear;
+    roma_user.LoadFromFile('Kunreishiki.roma');
+    roma_user.LoadFromFile('Hepburn.roma');
+    roma_user.LoadFromFile('Czech.roma');
+    roma_user.LoadFromFile('Kiriji - Polivanov.roma');
+
+    rpy_db.Clear;
+    rpy_db.LoadFromFile('PinYin.rpy');
+    rpy_db.LoadFromFile('Wade-Giles.rpy');
+    rpy_db.LoadFromFile('Yale.rpy');
+
+   //For now just fixed list
+    rpy_user.Clear;
+    rpy_user.LoadFromFile('PinYin.rpy');
+    rpy_user.LoadFromFile('Wade-Giles.rpy');
+    rpy_user.LoadFromFile('Yale.rpy');
 
   finally
     FreeAndNil(sl);

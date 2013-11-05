@@ -429,7 +429,7 @@ begin
    //Reconvert to some standard format and then use a preset table of
    //katakana syllable weights
     Result:='';
-    s:=RomajiToKana('H'+KanaToRomaji(phonetic,1,'j'),1,'j',[rfDeleteInvalidChars]);
+    s:=RomajiToKana('H'+DbKanaToRomaji(phonetic,'j'),'j',[rfDeleteInvalidChars]);
     for i:=1 to flength(s) do
     begin
       s2:=fgetch(s,i);
@@ -449,7 +449,7 @@ begin
       if a1='' then Result:=Result+a2 else Result:=Result+a1;
     end;
   end else
-    Result:=KanaToRomaji(phonetic,1,'c');
+    Result:=DbKanaToRomaji(phonetic,'c');
 end;
 
 

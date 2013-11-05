@@ -379,7 +379,7 @@ begin
   begin
     if length(kanji)>4 then Seek([kanji]) else Seek([kanji,UnicodeToHex(UH_UNKNOWN_KANJI+kanji)]);
   end else
-    Seek([kanji,kana,UnicodeToHex(KanaToRomaji(kana,1,'j')),kanji+UnicodeToHex('+')+kana]);
+    Seek([kanji,kana,UnicodeToHex(DbKanaToRomaji(kana,'j')),kanji+UnicodeToHex('+')+kana]);
 end;
 
 

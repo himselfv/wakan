@@ -72,15 +72,23 @@ So,
 //See JWBKanaConv.ResolveFlag
 
 var
- { Romaji translation table. Populated on load.
-  See comments where class is defined. }
-  roma_t: TRomajiTranslator;
-  romac: TPinYinTranslator;
+ { Romaji translation tables. Populated on load. }
+  roma_db: TRomajiTranslator;
+  roma_user: TRomajiTranslator;
+  rpy_db: TPinYinTranslator;
+  rpy_user: TPinYinTranslator;
 
-function KanaToRomaji(const s:FString;romatype:integer;lang:char):string; overload; inline;
-function KanaToRomajiF(const s:FString;romatype:integer;lang:char):FString; overload; inline;
-function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags):string; overload;
-function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags):FString;
+//Converts according to user preferences. Use for live input/output.
+function KanaToRomaji(const s:FString;lang:char):string; overload; inline;
+function KanaToRomajiF(const s:FString;lang:char):FString; overload; inline;
+function KanaToRomaji(const s:FString;lang:char;flags:TResolveFlags):string; overload;
+function RomajiToKana(const s:string;lang:char;flags:TResolveFlags):FString;
+
+//Converts with a standard romaji. Use for DB/dictionaries/persistence.
+function DbKanaToRomaji(const s:FString;lang:char):string; overload; inline;
+function DbKanaToRomajiF(const s:FString;lang:char):FString; overload; inline;
+function DbKanaToRomaji(const s:FString;lang:char;flags:TResolveFlags):string; overload;
+function DbRomajiToKana(const s:string;lang:char;flags:TResolveFlags):FString;
 
 { Packs and cleans any romaji (perhaps coming from user) to signature format:
  no punctuation, no spaces, no unknown chars, lowercase.
@@ -133,8 +141,8 @@ function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integ
 procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
 procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 
-procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
-function ConvertKana(const ch: FString;romas:integer;showr:boolean;lang:char): FString; overload;
+procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
+function ConvertKana(const ch: FString;showr:boolean;lang:char): FString; overload;
 function ConvertKana(const ch: FString): FString; overload;
 
 procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
@@ -327,46 +335,79 @@ end;
 
 { Romaji conversions }
 
-
 { Converts kana to romaji in a default way, that is assuming the input is a
  kana from database and the output is for user display.
  Equivalent to older "KanaToRomaji(clean)". }
-function KanaToRomaji(const s:FString;romatype:integer;lang:char):string;
+function KanaToRomaji(const s:FString;lang:char):string;
 begin
-  Result:=KanaToRomaji(s,romatype,lang,[rfConvertLatin,rfConvertPunctuation,
-    rfDeleteInvalidChars])
+  Result:=KanaToRomaji(s,lang,[rfConvertLatin,rfConvertPunctuation, rfDeleteInvalidChars])
 end;
 
 //Same, but also converts the result to FString, enhances PinYin
-function KanaToRomajiF(const s:FString;romatype:integer;lang:char):FString;
+function KanaToRomajiF(const s:FString;lang:char):FString;
 begin
   if lang='c'then
-    Result:=ConvertPinYin(KanaToRomaji(s,romatype,lang))
+    Result:=ConvertPinYin(KanaToRomaji(s,lang))
   else
-    Result:=fstr(KanaToRomaji(s,romatype,lang));
+    Result:=fstr(KanaToRomaji(s,lang));
 end;
 
 //Converts kana to romaji, per flags
-function KanaToRomaji(const s:FString;romatype:integer;lang:char;flags:TResolveFlags):string;
+function KanaToRomaji(const s:FString;lang:char;flags:TResolveFlags):string;
 begin
   if lang='j'then
-    Result:=roma_t.KanaToRomaji(s,romatype,flags)
+    Result:=roma_user.KanaToRomaji(s,flags)
   else
   if lang='c'then
-    result:=romac.KanaToRomaji(s,romatype,flags);
+    result:=rpy_user.KanaToRomaji(s,flags);
 end;
 
 { Converts romaji to kana. Romaji must be a clean-romaji, i.e. no latin letters,
  no punctuation. Appropriate keep flags have no effect.
  All in all, romaji-to-kana conversion ought to happen only on import, therefore
  no flagless version. }
-function RomajiToKana(const s:string;romatype:integer;lang:char;flags:TResolveFlags):FString;
+function RomajiToKana(const s:string;lang:char;flags:TResolveFlags):FString;
 begin
   if lang='j'then
-    Result:=roma_t.RomajiToKana(s,romatype,flags)
+    Result:=roma_user.RomajiToKana(s,flags)
   else
   if lang='c'then
-    result:=romac.RomajiToKana(s,romatype,flags);
+    result:=rpy_user.RomajiToKana(s,flags);
+end;
+
+function DbKanaToRomaji(const s:FString;lang:char):string;
+begin
+  Result:=DbKanaToRomaji(s,lang,[rfConvertLatin,rfConvertPunctuation, rfDeleteInvalidChars])
+end;
+
+function DbKanaToRomajiF(const s:FString;lang:char):FString;
+begin
+  if lang='c'then
+    Result:=ConvertPinYin(DbKanaToRomaji(s,lang))
+  else
+    Result:=fstr(DbKanaToRomaji(s,lang));
+end;
+
+function DbKanaToRomaji(const s:FString;lang:char;flags:TResolveFlags):string;
+begin
+  if lang='j'then
+    Result:=roma_db.KanaToRomaji(s,flags)
+  else
+  if lang='c'then
+    result:=rpy_db.KanaToRomaji(s,flags);
+end;
+
+{ Converts romaji to kana. Romaji must be a clean-romaji, i.e. no latin letters,
+ no punctuation. Appropriate keep flags have no effect.
+ All in all, romaji-to-kana conversion ought to happen only on import, therefore
+ no flagless version. }
+function DbRomajiToKana(const s:string;lang:char;flags:TResolveFlags):FString;
+begin
+  if lang='j'then
+    Result:=roma_db.RomajiToKana(s,flags)
+  else
+  if lang='c'then
+    result:=rpy_db.RomajiToKana(s,flags);
 end;
 
 function SignatureFrom(const s:string): string;
@@ -1023,7 +1064,7 @@ begin
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
-    DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,romasys,curlang);
+    DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,curlang);
   end else
   if (length(s)>0) and (s[1]=UH_DRAWWORD_KANJI) then
   begin
@@ -1163,7 +1204,7 @@ begin
   if curlang='c'then
   begin
     if s2[1]=ALTCH_EXCL then delete(s2,1,2);
-    s2:=KanaToRomajiF(s2,romasys,curlang);
+    s2:=KanaToRomajiF(s2,curlang);
     sx1:=s1;
     s1:=s1+UH_SPACE+s2;
     DrawWordInfo(Canvas,rect,false,false,0,UH_DRAWWORD_KANJI+s1,false,false,ch-3,boldfont);
@@ -1200,27 +1241,27 @@ begin
 end;
 
 { Converts raw kana/bopomofo to romaji/kana for presentation }
-function ConvertKana(const ch: FString;romas:integer;showr:boolean;lang:char): FString;
+function ConvertKana(const ch: FString;showr:boolean;lang:char): FString;
 begin
   if showr then
-    Result := KanaToRomajiF(ch,romas,lang)
+    Result := KanaToRomajiF(ch,lang)
   else
     Result := ConvertBopomofo(ch);
 end;
 
 function ConvertKana(const ch: FString): FString;
 begin
-  Result := ConvertKana(ch,romasys,showroma,curlang);
+  Result := ConvertKana(ch,showroma,curlang);
 end;
 
 //NOTE: If you update fonts here, update DrawGridUpdateSelection() too.
-procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;romas:integer;lang:char);
+procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
 var cnv2:string;
 begin
   c.Font.Style:=[];
   if showr then
   begin
-    cnv2:=KanaToRomajiF(ch,romas,lang);
+    cnv2:=KanaToRomajiF(ch,lang);
     DrawUnicode(c,x,y,fs+1,cnv2,FontPinYin);
   end else
     DrawUnicode(c,x,y,fs,ConvertBopomofo(ch),fontface);
@@ -1523,12 +1564,17 @@ initialization
   GridFontSize:=14;
   STB_Canvas:=nil;
 
-  roma_t:=TRomajiTranslator.Create;
-  romac:=TPinyinTranslator.Create;
+  roma_db := TRomajiTranslator.Create;
+  roma_user := TRomajiTranslator.Create;
+  rpy_db := TPinyinTranslator.Create;
+  rpy_user := TPinyinTranslator.Create;
 
 finalization
-  romac.Free;
-  roma_t.Free;
-
+ {$IFDEF CLEAN_DEINIT}
+  FreeAndNil(rpy_user);
+  FreeAndNil(rpy_db);
+  FreeAndNil(roma_user);
+  FreeAndNil(roma_db);
+ {$ENDIF}
 
 end.

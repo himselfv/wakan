@@ -314,7 +314,7 @@ end;
 procedure TfWordList.PaintBox1Paint(Sender: TObject);
 begin
   PaintBox1.Canvas.Brush.Color:=clWindow;
-  DrawKana(PaintBox1.Canvas,1,1,22,twphonetic,FontJapanese,showroma,romasys,curlang);
+  DrawKana(PaintBox1.Canvas,1,1,22,twphonetic,FontJapanese,showroma,curlang);
 end;
 
 procedure TfWordList.PaintBox6Paint(Sender: TObject);

@@ -470,9 +470,9 @@ var syl:string;
       if IsLatinLetterW(syl[1]) then //punctuation does not make it into pinyin
         PinYin := PinYin + syl[1];
     end else begin
-      tmp := RomajiToKana(syl,1,lang,[]);
+      tmp := DbRomajiToKana(syl,lang,[]);
       Bopomofo := Bopomofo + tmp;
-      PinYin := PinYin + KanaToRomaji(tmp,1,lang); //this way we make sure no unsupported stuff gets into pinyin
+      PinYin := PinYin + DbKanaToRomaji(tmp,lang); //this way we make sure no unsupported stuff gets into pinyin
     end;
   end;
 
@@ -604,14 +604,14 @@ begin
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
        //First check for completely invalid characters
-        roma[i]:=KanaToRomaji(ed.kana[i].kana,1,dic.language,[rfConvertLatin,rfConvertPunctuation]);
+        roma[i]:=DbKanaToRomaji(ed.kana[i].kana,dic.language,[rfConvertLatin,rfConvertPunctuation]);
         if pos('?',roma[i])>0 then begin
           roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
 
        //Now keep latin, clean the rest (punctuation+invalid)
-        roma[i]:=SignatureFrom(KanaToRomaji(ed.kana[i].kana,1,dic.language,[rfConvertLatin,rfDeleteInvalidChars]));
+        roma[i]:=SignatureFrom(DbKanaToRomaji(ed.kana[i].kana,dic.language,[rfConvertLatin,rfDeleteInvalidChars]));
         if roma[i]='' then roma[i]:='XXX';
       end;
 

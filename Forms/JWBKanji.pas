@@ -372,10 +372,10 @@ begin
         flags := [rfPartial, rfTakedot]
       else
         flags := [];
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,flags);
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,flags);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),4,flags);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,romasys,'j',[rfDeleteInvalidChars]),5,flags);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),4,flags);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),5,flags);
+      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),4,flags);
+      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),5,flags);
     end;
     if fKanjiSearch.sbSKIP.Down then
       ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,[rfPartial]); //SKIP
