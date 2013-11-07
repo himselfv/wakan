@@ -99,7 +99,7 @@
 ゔ,ヴ,vu
 きゃ,キャ,kya
 ぎゃ,ギャ,gya
-しゃ,シャ,sya
+しゃ,シャ,sha
 じゃ,ジャ,ja
 ちゃ,チャ,cha
 にゃ,ニャ,nya
@@ -121,7 +121,7 @@
 りゅ,リュ,ryu
 きょ,キョ,kyo
 ぎょ,ギョ,gyo
-しょ,ショ,syo
+しょ,ショ,sho
 じょ,ジョ,jo
 ちょ,チョ,cho
 にょ,ニョ,nyo
@@ -199,8 +199,6 @@ Dr,rr
 Dy,yy
 Dw,ww
 Dj,jj
-Dљ,љљ
-Dи,ии
 Df,ff
 Dc,cc
 ',
@@ -208,11 +206,6 @@ nb,mb,2
 nb,mb,3
 np,mp,2
 nm,mm,3
-aa,б,3
-ii,н,3
-uu,ъ,3
-oo,у,3
-ee,й,3
 
 ; Additional conversions to do before doing de-romanization
 [RomajiToKana]
@@ -235,16 +228,8 @@ rr,Dr
 yy,Dy
 ww,Dw
 jj,Dj
-љљ,Dљ
-ии,Dи
 ff,Df
 cc,Dc
-б,aa,3
-н,ii,3
-у,oo,3
-ъ,uu,3
-щ,uu,3
-й,ee,3
 ; oo,ou,2
 ; oo,ou,3
 ; ee,ei,2

@@ -1,11 +1,11 @@
-unit JWBSettings;
+﻿unit JWBSettings;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel,
-  ImgList;
+  ImgList, WakanPaintbox, Vcl.CheckLst, WakanListBoxes;
 
 type
   TfSettings = class(TForm)
@@ -92,33 +92,14 @@ type
     Label26: TLabel;
     Edit19: TEdit;
     GroupBox6: TGroupBox;
-    Shape1: TShape;
     Label16: TLabel;
-    Shape9: TShape;
-    PaintBox3: TPaintBox;
-    Label17: TLabel;
-    Label18: TLabel;
-    Label19: TLabel;
-    Label20: TLabel;
-    Label21: TLabel;
-    Label22: TLabel;
-    PaintBox1: TPaintBox;
-    RadioGroup1: TRadioGroup;
     RadioGroup2: TRadioGroup;
-    Edit15: TEdit;
+    edtTestRomaji: TEdit;
     GroupBox7: TGroupBox;
     Label27: TLabel;
-    Shape3: TShape;
-    PaintBox2: TPaintBox;
-    Label28: TLabel;
-    Label29: TLabel;
-    Label30: TLabel;
-    Label31: TLabel;
-    Label32: TLabel;
-    Label33: TLabel;
     RadioGroup6: TRadioGroup;
     RadioGroup7: TRadioGroup;
-    Edit20: TEdit;
+    edtTestPinyin: TEdit;
     Button5: TButton;
     tsCharacterDetails: TTabSheet;
     Label34: TLabel;
@@ -275,6 +256,15 @@ type
     btnImportKanjidic: TButton;
     lblBackupPath: TUrlLabel;
     Label59: TLabel;
+    pbRomajiAsHiragana: TWakanPaintbox;
+    pbRomajiAsKatakana: TWakanPaintbox;
+    pbPinyinAsBopomofo: TWakanPaintbox;
+    cbMultipleRoma: TCheckBox;
+    btnRomaSystemUp: TBitBtn;
+    btnRomaSystemDown: TBitBtn;
+    lbRomaSystems: TWakanCheckListBox;
+    pbKanaAsRomaji: TWakanPaintbox;
+    lblKanaToRomajiHint: TLabel;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -288,17 +278,14 @@ type
     procedure SpeedButton9Click(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
-    procedure PaintBox3Paint(Sender: TObject);
-    procedure Edit15Change(Sender: TObject);
+    procedure edtTestRomajiChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure PaintBox1Paint(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure lbWordPrintFormatClick(Sender: TObject);
     procedure Button4Click(Sender: TObject);
-    procedure PaintBox2Paint(Sender: TObject);
-    procedure Edit20Change(Sender: TObject);
+    procedure edtTestPinyinChange(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure Button7Click(Sender: TObject);
     procedure Button8Click(Sender: TObject);
@@ -328,6 +315,16 @@ type
     procedure btnImportKanjidicClick(Sender: TObject);
     procedure tvContentsChange(Sender: TObject; Node: TTreeNode);
     procedure FormDestroy(Sender: TObject);
+    procedure pbRomajiAsHiraganaPaint(Sender: TObject; Canvas: TCanvas);
+    procedure pbRomajiAsKatakanaPaint(Sender: TObject; Canvas: TCanvas);
+    procedure pbPinyinAsBopomofoPaint(Sender: TObject; Canvas: TCanvas);
+    procedure btnRomaSystemUpClick(Sender: TObject);
+    procedure btnRomaSystemDownClick(Sender: TObject);
+    procedure lbRomaSystemsClick(Sender: TObject);
+    procedure cbMultipleRomaClick(Sender: TObject);
+    procedure lbRomaSystemsSelectionChanged(Sender: TObject);
+    procedure pbKanaAsRomajiPaint(Sender: TObject; Canvas: TCanvas);
+    procedure pbKanaAsRomajiClick(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -354,6 +351,16 @@ type
   public
     function GetSettingsStore: TCustomIniFile;
     procedure FreeSettings;
+
+  protected //Romanization
+    FRomaExample: string; //current string to romanize, see pbKanaAsRomajiClick
+    procedure ReloadRomaSystems;
+    function GetRomaList: string;
+    procedure SetRomaList(const Value: string);
+    procedure SetEnhancedRomaListOn(const Value: boolean);
+    procedure CheckRomaSystemMoveButtonsEnabled;
+  public
+    procedure ReloadRomaSetup;
 
   public
    { Layout settings are loaded into these variables and applied later }
@@ -386,6 +393,12 @@ const
  //Values must be reasonable
   DefaultAutoSavePeriod: integer = 10;
 
+const
+ //Default romanization files
+  KunreishikiRoma = 'Kunreishiki.roma';
+  HepburnRoma = 'Hepburn.roma';
+  CzechRoma = 'Czech.roma';
+
 var
   fSettings: TfSettings;
 
@@ -411,14 +424,59 @@ begin
   so whatever, we'll do this on show just to be safe: }
   SelectActiveContentItem();
 
-  Edit15Change(sender);
-  Edit20Change(sender);
+  edtTestRomajiChange(sender);
+  edtTestPinyinChange(sender);
   Edit19.Text:=dicts.NotUsedDicts;
   ResetDetList;
   ComboBox2.ItemIndex:=0;
   ClearKanjiCardCache;
   ComboBox2Change(sender);
 end;
+
+{
+Called when user clicks "OK" in the dialog.
+Use this chance to:
+ 1. Complain about invalid data in some fields.
+ 2. Auto-correct the data if you use it without checking somewhere (still a bad idea)
+ 3. Apply the new settings to the program, if needed.
+}
+procedure TfSettings.AcceptSettings;
+var tmp:integer;
+begin
+ //Verify control
+  if edit11.text='0' then edit11.text:='1';
+  if not TryStrToInt(Edit10.Text, tmp) then Edit10.Text := '0';
+  if not TryStrToInt(Edit11.Text, tmp) then Edit11.Text := '0';
+  if not TryStrToInt(Edit12.Text, tmp) then Edit12.Text := '0';
+  if not TryStrToInt(Edit13.Text, tmp) then Edit13.Text := '0';
+  if not TryStrToInt(edtAutoSavePeriod.Text, tmp) then
+    edtAutoSavePeriod.Text := IntToStr(DefaultAutoSavePeriod);
+  GridFontSize:=strtoint(Edit25.text);
+end;
+
+procedure TfSettings.btnOkClick(Sender: TObject);
+begin
+{
+ Currently the majority of the settings is changed on the fly,
+ so no matter which way the dialog is closed, it must run "OK" code.
+ (There's simply no "Cancel")
+ Therefore all handling is in FormClose (triggered by any closing of the form).
+}
+end;
+
+procedure TfSettings.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  AcceptSettings(); //this can raise exceptions on invalid data => dialog not closed
+  SaveSettings();
+end;
+
+procedure TfSettings.FormDestroy(Sender: TObject);
+begin
+  FreeSettings();
+end;
+
+
+{ Contents }
 
 procedure TfSettings.InitContents;
 var i: integer;
@@ -462,6 +520,14 @@ begin
       break;
     end;
 end;
+
+procedure TfSettings.pcPagesChange(Sender: TObject);
+begin
+  SelectActiveContentItem();
+end;
+
+
+{ Settings store }
 
 { Opens wakan.ini file from the application directory which either contains
  the settings or an instruction to look in registry. }
@@ -635,7 +701,19 @@ begin
   edtAutoSavePeriod.Text:=inttostr(reg.ReadInteger('Vocabulary','AutoSavePeriod',DefaultAutoSavePeriod));
   CheckBox55.Checked:=reg.ReadBool('Vocabulary','MakeBackups',true);
   cbShowSplashscreen.Checked := reg.ReadBool('Vocabulary','ShowSplashscreen',true);
-  RadioGroup1.ItemIndex:=reg.ReadInteger('Romanization','System',1);
+
+  ReloadRomaSystems; //can't do before we know Portability mode
+
+ //Backward compatible setting
+  tmp_int:=reg.ReadInteger('Romanization','System',-1);
+  case tmp_int of
+    0: SetRomaList(KunreishikiRoma);
+    1: SetRomaList(HepburnRoma);
+    2: SetRomaList(CzechRoma);
+  else
+    SetRomaList(reg.ReadString('Romanization','RomaList','Kunreishiki.roma'));
+  end;
+
   RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
   RadioGroup6.ItemIndex:=reg.ReadInteger('Romanization','ChineseSystem',0);
   RadioGroup7.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
@@ -883,6 +961,7 @@ end;
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
 var setwindows:integer;
   exmode:integer;
+  tmp_str: string;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
@@ -890,7 +969,21 @@ begin
   reg.WriteInteger('Vocabulary','AutoSavePeriod',StrToIntDef(edtAutoSavePeriod.text,DefaultAutoSavePeriod));
   reg.WriteBool('Vocabulary','MakeBackups',CheckBox55.Checked);
   reg.WriteBool('Vocabulary','ShowSplashscreen',cbShowSplashscreen.Checked);
-  reg.WriteInteger('Romanization','System',RadioGroup1.ItemIndex);
+
+  tmp_str := GetRomaList;
+  reg.WriteString('Romanization','RomaList',tmp_str);
+ //Also write older param or we'll always read the inherited value
+  if tmp_str=KunreishikiRoma then
+    reg.WriteInteger('Romanization','System',0)
+  else
+  if tmp_str=HepburnRoma then
+    reg.WriteInteger('Romanization','System',1)
+  else
+  if tmp_str=CzechRoma then
+    reg.WriteInteger('Romanization','System',2)
+  else
+    reg.DeleteKey('Romanization','System');
+
   reg.WriteInteger('Romanization','ShowKana',RadioGroup2.ItemIndex);
   reg.WriteInteger('Romanization','ChineseSystem',RadioGroup6.ItemIndex);
   reg.WriteInteger('Romanization','ShowBopomofo',RadioGroup7.ItemIndex);
@@ -1162,20 +1255,6 @@ end;
 
 
 
-procedure TfSettings.RadioGroup1Click(Sender: TObject);
-begin
-  jromasys:=RadioGroup1.ItemIndex+1;
-  jshowroma:=RadioGroup2.ItemIndex=1;
-  cromasys:=RadioGroup6.ItemIndex+1;
-  cshowroma:=RadioGroup7.ItemIndex=1;
-  if curlang='c'then
-  begin
-    romasys:=cromasys; showroma:=cshowroma;
-  end else begin
-    romasys:=jromasys; showroma:=jshowroma;
-  end;
-end;
-
 procedure TfSettings.btnChangeLanguageClick(Sender: TObject);
 begin
   fLanguage.SelectLanguage;
@@ -1269,48 +1348,6 @@ begin
   Edit9.Text:=FontChineseGB;
 end;
 
-{
-Called when user clicks "OK" in the dialog.
-Use this chance to:
- 1. Complain about invalid data in some fields.
- 2. Auto-correct the data if you use it without checking somewhere (still a bad idea)
- 3. Apply the new settings to the program, if needed.
-}
-procedure TfSettings.AcceptSettings;
-var tmp:integer;
-begin
- //Verify control
-  if edit11.text='0' then edit11.text:='1';
-  if not TryStrToInt(Edit10.Text, tmp) then Edit10.Text := '0';
-  if not TryStrToInt(Edit11.Text, tmp) then Edit11.Text := '0';
-  if not TryStrToInt(Edit12.Text, tmp) then Edit12.Text := '0';
-  if not TryStrToInt(Edit13.Text, tmp) then Edit13.Text := '0';
-  if not TryStrToInt(edtAutoSavePeriod.Text, tmp) then
-    edtAutoSavePeriod.Text := IntToStr(DefaultAutoSavePeriod);
-  GridFontSize:=strtoint(Edit25.text);
-end;
-
-procedure TfSettings.btnOkClick(Sender: TObject);
-begin
-{
- Currently the majority of the settings is changed on the fly,
- so no matter which way the dialog is closed, it must run "OK" code.
- (There's simply no "Cancel")
- Therefore all handling is in FormClose (triggered by any closing of the form).
-}
-end;
-
-procedure TfSettings.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  AcceptSettings(); //this can raise exceptions on invalid data => dialog not closed
-  SaveSettings();
-end;
-
-procedure TfSettings.FormDestroy(Sender: TObject);
-begin
-  FreeSettings();
-end;
-
 procedure TfSettings.SpeedButton10Click(Sender: TObject);
 var sup:string;
 begin
@@ -1321,29 +1358,6 @@ begin
     pchar(_l('#00566^eNotice')),
   MB_OK or MB_ICONINFORMATION);
   Edit14.Text:=ChooseFont([CHINESEBIG5_CHARSET,GB2312_CHARSET,SHIFTJIS_CHARSET],testkanji,sup,Edit9.Text,false);
-end;
-
-procedure TfSettings.PaintBox3Paint(Sender: TObject);
-begin
-  PaintBox3.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox3.Canvas,1,1,16,RomajiToKana('H'+Edit15.Text,'j',[]),FontSmall);
-end;
-
-procedure TfSettings.pcPagesChange(Sender: TObject);
-begin
-  SelectActiveContentItem();
-end;
-
-procedure TfSettings.Edit15Change(Sender: TObject);
-begin
-  PaintBox3.Invalidate;
-  PaintBox1.Invalidate;
-end;
-
-procedure TfSettings.PaintBox1Paint(Sender: TObject);
-begin
-  PaintBox1.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox1.Canvas,1,1,16,RomajiToKana('K'+Edit15.Text,'j',[]),FontSmall);
 end;
 
 procedure TfSettings.Button1Click(Sender: TObject);
@@ -1487,17 +1501,6 @@ begin
           pchar(_l('#00094^eSuccess')),
           MB_ICONINFORMATION or MB_OK);
   end;
-end;
-
-procedure TfSettings.PaintBox2Paint(Sender: TObject);
-begin
-  PaintBox2.Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(PaintBox2.Canvas,1,1,16,RomajiToKana(Edit20.Text,'c',[]),FontSmall);
-end;
-
-procedure TfSettings.Edit20Change(Sender: TObject);
-begin
-  PaintBox2.Invalidate;
 end;
 
 //Silent: do not say anything in case of success
@@ -1997,5 +2000,187 @@ function TfSettings.GetPreferredRadicalType: integer;
 begin
   Result := cbRadicalType.ItemIndex+12;
 end;
+
+{ Romaji systems }
+
+{ Reloads the list of available romanizations, preserving user selection as
+ possible. }
+procedure TfSettings.ReloadRomaSystems;
+var OldList: string;
+  sr: TSearchRec;
+  res: integer;
+begin
+  OldList := GetRomaList;
+  lbRomaSystems.Clear;
+  res := FindFirst(ProgramDataDir+'\*.roma', faAnyFile and not faDirectory, sr);
+  while res=0 do begin
+    lbRomaSystems.Items.Add(ChangeFileExt(ExtractFilename(sr.Name),''));
+    res := FindNext(sr);
+  end;
+  SysUtils.FindClose(sr);
+  SetRomaList(OldList);
+end;
+
+{ Returns comma-separated list of selected romanizations, in the priority order. }
+function TfSettings.GetRomaList: string;
+begin
+  Result := AnsiLowerCase(lbRomaSystems.Selection);
+end;
+
+{ Sets the priority order and selection of romanizations. If any is missing,
+ ignores it }
+procedure TfSettings.SetRomaList(const Value: string);
+begin
+  SetEnhancedRomaListOn(pos(',',Value)>0);
+  lbRomaSystems.Selection := Value;
+end;
+
+{ Reconfigures the romanization list to display in basic (one romanization)
+ or enhanced format. Tries to preserve roma selection }
+procedure TfSettings.SetEnhancedRomaListOn(const Value: boolean);
+var i: integer;
+begin
+  cbMultipleRoma.Checked := Value;
+  btnRomaSystemUp.Visible := Value;
+  btnRomaSystemDown.Visible := Value;
+  CheckRomaSystemMoveButtonsEnabled();
+  lbRomaSystems.MultiSelect := Value;
+  lbRomaSystems.Invalidate;
+end;
+
+procedure TfSettings.cbMultipleRomaClick(Sender: TObject);
+begin
+  SetEnhancedRomaListOn(cbMultipleRoma.Checked);
+end;
+
+procedure TfSettings.lbRomaSystemsClick(Sender: TObject);
+begin
+  CheckRomaSystemMoveButtonsEnabled();
+end;
+
+procedure TfSettings.lbRomaSystemsSelectionChanged(Sender: TObject);
+begin
+  ReloadRomaSetup();
+  edtTestRomajiChange(nil); //Update preview
+end;
+
+procedure TfSettings.CheckRomaSystemMoveButtonsEnabled;
+begin
+  btnRomaSystemUp.Enabled := (lbRomaSystems.ItemIndex>0);
+  btnRomaSystemDown.Enabled := (lbRomaSystems.ItemIndex<lbRomaSystems.Count-1);
+end;
+
+procedure TfSettings.btnRomaSystemUpClick(Sender: TObject);
+begin
+  if lbRomaSystems.ItemIndex>0 then begin
+    lbRomaSystems.Items.Exchange(lbRomaSystems.ItemIndex, lbRomaSystems.ItemIndex-1);
+    lbRomaSystemsSelectionChanged(nil);
+  end;
+  CheckRomaSystemMoveButtonsEnabled();
+end;
+
+procedure TfSettings.btnRomaSystemDownClick(Sender: TObject);
+begin
+  if lbRomaSystems.ItemIndex<lbRomaSystems.Count-1 then begin
+    lbRomaSystems.Items.Exchange(lbRomaSystems.ItemIndex, lbRomaSystems.ItemIndex+1);
+    lbRomaSystemsSelectionChanged(nil);
+  end;
+  CheckRomaSystemMoveButtonsEnabled();
+end;
+
+//Reloads all user romanization files in the order they are configured to be load.
+//Called at settings load and every time the setup changes.
+procedure TfSettings.ReloadRomaSetup;
+var list: string;
+  parts: TStringArray;
+  i: integer;
+begin
+  roma_user.Clear;
+  list := GetRomaList;
+  parts := SplitStr(list,',');
+  for i := 0 to Length(parts)-1 do
+    roma_user.LoadFromFile(parts[i]+'.roma');
+end;
+
+{ Test romaji/pinyin }
+
+procedure TfSettings.pbRomajiAsHiraganaPaint(Sender: TObject; Canvas: TCanvas);
+begin
+  Canvas.Brush.Color := clBtnFace;
+  DrawUnicode(Canvas,1,1,16,RomajiToKana('H'+edtTestRomaji.Text,'j',[]),FontSmall);
+end;
+
+procedure TfSettings.pbRomajiAsKatakanaPaint(Sender: TObject; Canvas: TCanvas);
+begin
+  Canvas.Brush.Color := clBtnFace;
+  DrawUnicode(Canvas,1,1,16,RomajiToKana('K'+edtTestRomaji.Text,'j',[]),FontSmall);
+end;
+
+const
+  JapaneseExamples: array[0..3] of string = (
+   'だじゃれなしゃみせん',
+   'そうしきのつづくおっさん',
+   'ずっときたないまち',
+   'れっしゃだいこうしんザムービー'
+  );
+
+procedure TfSettings.pbKanaAsRomajiClick(Sender: TObject);
+var i: integer;
+  found: boolean;
+begin
+  found := false;
+  for i := 0 to Length(JapaneseExamples)-2{sic} do
+    if FRomaExample = JapaneseExamples[i] then begin
+      FRomaExample := JapaneseExamples[i+1];
+      found := true;
+    end;
+  if not found then
+    FRomaExample := JapaneseExamples[0]; //init or rewind
+  pbKanaAsRomaji.Invalidate;
+end;
+
+procedure TfSettings.pbKanaAsRomajiPaint(Sender: TObject; Canvas: TCanvas);
+begin
+  if FRomaExample='' then pbKanaAsRomajiClick(nil); //select one
+  Canvas.Brush.Color := clBtnFace;
+  if jshowroma then
+    DrawUnicode(Canvas,1,1,16,KanaToRomaji(FRomaExample,'j',[]),FontEnglish)
+  else
+    DrawUnicode(Canvas,1,1,16,FRomaExample,FontSmall)
+end;
+
+procedure TfSettings.edtTestRomajiChange(Sender: TObject);
+begin
+  pbRomajiAsHiragana.Invalidate;
+  pbRomajiAsKatakana.Invalidate;
+  pbKanaAsRomaji.Invalidate; //this doesn't belong here, but whatever
+end;
+
+procedure TfSettings.pbPinyinAsBopomofoPaint(Sender: TObject; Canvas: TCanvas);
+begin
+  Canvas.Brush.Color:=clBtnFace;
+  DrawUnicode(Canvas,1,1,16,RomajiToKana(edtTestPinyin.Text,'c',[]),FontSmall);
+end;
+
+procedure TfSettings.edtTestPinyinChange(Sender: TObject);
+begin
+  pbPinyinAsBopomofo.Invalidate;
+end;
+
+procedure TfSettings.RadioGroup1Click(Sender: TObject);
+begin
+  jshowroma:=RadioGroup2.ItemIndex=1;
+  cromasys:=RadioGroup6.ItemIndex+1;
+  cshowroma:=RadioGroup7.ItemIndex=1;
+  if curlang='c'then
+  begin
+    showroma:=cshowroma;
+  end else begin
+    showroma:=jshowroma;
+  end;
+  pbKanaAsRomaji.Invalidate;
+end;
+
+
 
 end.

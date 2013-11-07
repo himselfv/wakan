@@ -21,12 +21,14 @@ const
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
 
- //All paths have no trail. slashes
-  UserDataDir: string = '';
-  DictionaryDir: string = '';
   PortabilityMode: TPortabilityMode = pmCompatible;
 
+ //All paths have no trailing slashes
+  UserDataDir: string = '';  //wakan.usr, collections
+  ProgramDataDir: string = ''; //dictionaries, romanizations
+
 procedure SetPortabilityMode(AMode: TPortabilityMode);
+function DictionaryDir: string;
 function GetAppDataFolder: string;
 
 
@@ -213,8 +215,13 @@ begin
     pmPortable: UserDataDir := AppFolder;
     pmCompatible: UserDataDir := AppFolder;
   end;
+  ProgramDataDir := AppFolder;
+end;
+
+function DictionaryDir: string;
+begin
  //Dictionaries are always stored in application folder
-  DictionaryDir := AppFolder;
+  Result := ProgramDataDir;
 end;
 
 

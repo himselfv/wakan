@@ -568,7 +568,7 @@ type
 
 var
   fMenu: TfMenu;
-  romasys,jromasys,cromasys:integer;
+  cromasys:integer;
   showroma,jshowroma,cshowroma:boolean;
 
  { Dictionaries }
@@ -713,7 +713,6 @@ begin
     CheckResolution;
 
     fSettings.LoadSettings;
-    jromasys:=fSettings.RadioGroup1.ItemIndex+1;
     jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
     cromasys:=fSettings.RadioGroup6.ItemIndex+1;
     cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
@@ -1303,7 +1302,6 @@ begin
   curlang:=lanchar;
   if lanchar='j'then
   begin
-    romasys:=fSettings.RadioGroup1.ItemIndex+1;
     showroma:=fSettings.RadioGroup2.ItemIndex=1;
     btnJapaneseMode.Down:=true;
     aJapanese.Checked:=true;
@@ -1314,7 +1312,6 @@ begin
     end;
   end else
   begin
-    romasys:=fSettings.RadioGroup6.ItemIndex+1;
     showroma:=fSettings.RadioGroup7.ItemIndex=1;
     btnChineseMode.Down:=true;
     aJapanese.Checked:=false;
@@ -3358,7 +3355,6 @@ end;
 initialization
   rdcnt:=0;
   popcreated:=false;
-  romasys:=1;
   showroma:=false;
   clip:='';
 
