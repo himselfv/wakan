@@ -4,11 +4,11 @@ Converts kana to romaji and back according to a set of rules.
 This is a VERY hot codepath when translating in Wakan. Therefore we use
 balanced binary trees and do everything in a very optimal way.
 
-TODO: Make both Romaji and Pinyin convertors support arbitrary format:
-  Kana,Any,Number,Of,Romaji
 TODO: Make Pinyin convertor use BTrees too.
 TODO: Make Romaji and Pinyin convertors descend from the same class.
-TODO: Разделять все ромадзи первого файла, затем все второго, и т.д., а не кучей.
+TODO: Замены первого-второго-ит.д. файла тоже разделять, а не кучей
+TODO: hiragana+katakana => just "kana". Use other means to check for both.
+TODO: Test speed
 }
 
 interface
@@ -53,7 +53,6 @@ type
     constructor Create(const ATextPtr: PFCharPtr; ARule: PRomajiTranslationRule);
     function Compare(a:TBinTreeItem):Integer; override;
     procedure Copy(ToA:TBinTreeItem); override;
-    procedure List; override;
   end;
   TRomajiRuleNode1 = class(TRomajiRuleNode) //1-char comparison
     function CompareData(const a):Integer; override;
@@ -62,23 +61,41 @@ type
     function CompareData(const a):Integer; override;
   end;
 
+ { There's a romaji index entry for every romaji syllable at every priority.
+  It links to all the table entries it can potentially mean. }
+  TRomajiIndexEntry = class(TBinTreeItem)
+  public
+    roma: string;
+    prior: integer;
+    entries: array of PRomajiTranslationRule;
+    constructor Create(const ARoma: string; APrior: integer);
+    function CompareData(const a):Integer; override;
+    function Compare(a:TBinTreeItem):Integer; override;
+    procedure Copy(ToA:TBinTreeItem); override;
+    procedure AddEntry(const AEntry: PRomajiTranslationRule);
+    procedure Merge(const A: TRomajiIndexEntry);
+    procedure SortEntries(const AKanaList: TStringArray);
+  end;
+  PRomajiIndexEntry = ^TRomajiIndexEntry;
+
   TRomajiTranslationTable = class
   protected
     FList: array of PRomajiTranslationRule;
     FListUsed: integer;
     FOneCharTree: TBinTree;
     FTwoCharTree: TBinTree;
+    FRomajiIndex: TBinTree;
     procedure Grow(ARequiredFreeLen: integer);
     function GetItemPtr(Index: integer): PRomajiTranslationRule; inline;
     function MakeNewItem: PRomajiTranslationRule;
     procedure SetupRule(r: PRomajiTranslationRule);
-    procedure AddToIndex(r: PRomajiTranslationRule);
+    procedure AddToIndex(r: PRomajiTranslationRule; APrior: integer);
+    procedure AddRomajiToIndex(r: PRomajiTranslationRule; AFirst: integer; APrior: integer);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
-    procedure Add(const r: TRomajiTranslationRule); overload;
-    procedure Add(const s: string); overload;
+    procedure Add(const r: TRomajiTranslationRule; APrior: integer); overload;
     function FindItem(const AKana: string): PRomajiTranslationRule;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiTranslationRule read GetItemPtr; default;
@@ -139,6 +156,7 @@ type
  { Instantiate and call this. }
   TRomajiTranslator = class
   protected
+    FTablesLoaded: integer;
     FTrans: TRomajiTranslationTable;
     FReplKtr: TRomajiReplacementTable;
     FReplRtk: TRomajiReplacementTable;
@@ -332,9 +350,78 @@ begin
   Self.FRule := TRomajiRuleNode(ToA).FRule;
 end;
 
-procedure TRomajiRuleNode.List;
+{ TRomajiIndexEntry }
+
+constructor TRomajiIndexEntry.Create(const ARoma: string; APrior: integer);
 begin
- //Nothing
+  inherited Create;
+  Self.roma := ARoma;
+  Self.prior := APrior;
+end;
+
+function TRomajiIndexEntry.CompareData(const a):Integer;
+begin
+  Result := 0; //not supported
+end;
+
+function TRomajiIndexEntry.Compare(a:TBinTreeItem):Integer;
+begin
+ //First sort by priority, lower is better
+  Result := (TRomajiIndexEntry(a).prior-Self.prior);
+  if Result<>0 then exit;
+
+ //Then by length, longer is better
+  Result := Length(self.roma)-Length(TRomajiIndexEntry(a).roma);
+  if Result<>0 then exit;
+
+ //Then by the text itself
+  Result := AnsiCompareStr(TRomajiIndexEntry(a).roma, Self.roma);
+end;
+
+procedure TRomajiIndexEntry.Copy(ToA:TBinTreeItem);
+begin
+  TRomajiIndexEntry(ToA).roma := Self.roma;
+  TRomajiIndexEntry(ToA).prior := Self.prior;
+  TRomajiIndexEntry(ToA).entries := System.Copy(Self.entries);
+end;
+
+procedure TRomajiIndexEntry.AddEntry(const AEntry: PRomajiTranslationRule);
+begin
+  SetLength(Self.entries, Length(Self.entries)+1);
+  Self.entries[Length(Self.entries)-1] := AEntry;
+end;
+
+procedure TRomajiIndexEntry.Merge(const A: TRomajiIndexEntry);
+var i, j: integer;
+begin
+  i := Length(Self.entries);
+  SetLength(Self.entries, i+Length(A.entries));
+  for j := 0 to Length(A.entries) do
+    Self.entries[i+j] := A.entries[J];
+end;
+
+//Reorders Entries to match the order of AKanaList. Entries which are not
+//mentioned are moved to the tail.
+procedure TRomajiIndexEntry.SortEntries(const AKanaList: TStringArray);
+var i, j, j_pos, j_found: integer;
+  ARule: PRomajiTranslationRule;
+begin
+  j_pos := 0;
+  for i := 0 to Length(AKanaList)-1 do begin
+    j_found := -1;
+    for j := j_pos to Length(entries)-1 do
+      if (entries[j].hiragana=AKanaList[i])
+      or (entries[j].katakana=AKanaList[j]) then begin
+        j_found := j;
+        break;
+      end;
+    if j_found>=0 then begin
+      ARule := entries[j_found];
+      Move(entries[j_pos], entries[j_pos+1], SizeOf(entries[j_pos])*(j_found-j_pos));
+      entries[j_pos] := ARule;
+      Inc(j_pos);
+    end;
+  end;
 end;
 
 { TRomajiTranslationTable }
@@ -344,11 +431,13 @@ begin
   inherited;
   FOneCharTree := TBinTree.Create;
   FTwoCharTree := TBinTree.Create;
+  FRomajiIndex := TBinTree.Create;
 end;
 
 destructor TRomajiTranslationTable.Destroy;
 begin
   Clear();
+  FreeAndNil(FRomajiIndex);
   FreeAndNil(FTwoCharTree);
   FreeAndNil(FOneCharTree);
   inherited;
@@ -404,7 +493,7 @@ begin
   if r.katakana_ptr=nil then r.katakana_ptr := pointer(UNICODE_ZERO_CODE);
 end;
 
-procedure TRomajiTranslationTable.AddToIndex(r: PRomajiTranslationRule);
+procedure TRomajiTranslationTable.AddToIndex(r: PRomajiTranslationRule; APrior: integer);
 begin
   case flength(r.hiragana) of
     1: FOneCharTree.Add(TRomajiRuleNode1.Create(r.hiragana_ptr, r));
@@ -415,6 +504,22 @@ begin
   case flength(r.katakana) of
     1: FOneCharTree.Add(TRomajiRuleNode1.Create(r.katakana_ptr, r));
     2: FTwoCharTree.Add(TRomajiRuleNode2.Create(r.katakana_ptr, r));
+  end;
+end;
+
+procedure TRomajiTranslationTable.AddRomajiToIndex(r: PRomajiTranslationRule;
+  AFirst: integer; APrior: integer);
+var i: integer;
+  bi, bi_ex: TRomajiIndexEntry;
+begin
+  for i := AFirst to Length(r.romaji)-1 do begin
+    bi := TRomajiIndexEntry.Create(r.romaji[i], APrior);
+    bi_ex := TRomajiIndexEntry(FRomajiIndex.AddOrSearch(bi));
+    if bi_ex<>bi then begin //already existed
+      FreeAndNil(bi);
+      bi := bi_ex;
+    end;
+    bi.AddEntry(r);
   end;
 end;
 
@@ -443,9 +548,9 @@ begin
   end;
 end;
 
-procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule);
+procedure TRomajiTranslationTable.Add(const r: TRomajiTranslationRule; APrior: integer);
 var pr: PRomajiTranslationRule;
-  base, i: integer;
+  oldcnt: integer;
 begin
   pr := FindItem(r.hiragana);
   if pr=nil then
@@ -454,32 +559,13 @@ begin
     pr := MakeNewItem;
     pr^ := r;
     SetupRule(pr);
-    AddToIndex(pr);
-  end else
+    AddToIndex(pr, APrior);
+    AddRomajiToIndex(pr, 0, APrior);
+  end else begin
+    oldcnt := Length(pr^.romaji);
     pr^.Add(r);
-end;
-
-//Parses romaji translation rule from string form into record
-//See comments in wakan.cfg for format details.
-function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule;
-var s_parts: TStringArray;
-  i: integer;
-begin
-  s_parts := SplitStr(s,',');
-  Result.hiragana := autohextofstr(s_parts[0]);
-  Result.katakana := autohextofstr(s_parts[1]);
- {$IFNDEF UNICODE}
-  Result.hiragana := Uppercase(Result.hiragana);
-  Result.katakana := Uppercase(Result.katakana);
- {$ENDIF}
-  SetLength(Result.romaji, Length(s_parts)-2);
-  for i := 0 to Length(Result.romaji)-1 do
-    Result.romaji[i] := s_parts[2+i];
-end;
-
-procedure TRomajiTranslationTable.Add(const s: string);
-begin
-  Add(ParseRomajiTranslationRule(s));
+    AddRomajiToIndex(pr, oldcnt, APrior);
+  end;
 end;
 
 procedure TRomajiTranslationTable.Clear;
@@ -491,6 +577,7 @@ begin
   FListUsed := 0;
   FOneCharTree.Clear;
   FTwoCharTree.Clear;
+  FRomajiIndex.Clear;
 end;
 
 
@@ -551,6 +638,24 @@ begin
 end;
 
 
+//Parses romaji translation rule from string form into record
+//See comments in wakan.cfg for format details.
+function ParseRomajiTranslationRule(const s: string): TRomajiTranslationRule;
+var s_parts: TStringArray;
+  i: integer;
+begin
+  s_parts := SplitStr(s,',');
+  Result.hiragana := autohextofstr(s_parts[0]);
+  Result.katakana := autohextofstr(s_parts[1]);
+ {$IFNDEF UNICODE}
+  Result.hiragana := Uppercase(Result.hiragana);
+  Result.katakana := Uppercase(Result.katakana);
+ {$ENDIF}
+  SetLength(Result.romaji, Length(s_parts)-2);
+  for i := 0 to Length(Result.romaji)-1 do
+    Result.romaji[i] := s_parts[2+i];
+end;
+
 
 { TRomajiTranslator }
 
@@ -560,6 +665,7 @@ begin
   FTrans := TRomajiTranslationTable.Create;
   FReplKtr := TRomajiReplacementTable.Create;
   FReplRtk := TRomajiReplacementTable.Create;
+  FTablesLoaded := 0;
 end;
 
 destructor TRomajiTranslator.Destroy;
@@ -575,6 +681,7 @@ begin
   FTrans.Clear;
   FReplKtr.Clear;
   FReplRtk.Clear;
+  FTablesLoaded := 0;
 end;
 
 {
@@ -599,12 +706,15 @@ procedure TRomajiTranslator.LoadFromStrings(const sl: TStrings);
 const //sections
   LS_NONE = 0;
   LS_TABLE = 1;
-  LS_KANATOROMAJI = 2;
-  LS_ROMAJITOKANA = 3;
+  LS_PRIORITY = 2;
+  LS_KANATOROMAJI = 3;
+  LS_ROMAJITOKANA = 4;
 var i: integer;
   ln: string;
   sect: integer;
   pref: char;
+  parts: TStringArray;
+  bi, bi_ex: TRomajiIndexEntry;
 begin
   pref := #00;
   sect := LS_NONE;
@@ -615,6 +725,9 @@ begin
 
     if ln='[Romaji]' then
       sect := LS_TABLE
+    else
+    if ln='[Priority]' then
+      sect := LS_PRIORITY
     else
     if ln='[KanaToRomaji]' then begin
       sect := LS_KANATOROMAJI;
@@ -637,11 +750,23 @@ begin
       sect := LS_NONE
     else
     case sect of
-      LS_TABLE: FTrans.Add(ln);
+      LS_TABLE: FTrans.Add(ParseRomajiTranslationRule(ln), FTablesLoaded);
+      LS_PRIORITY: begin
+        parts := SplitStr(ln,',');
+        if Length(parts)<=1 then continue;
+        bi := TRomajiIndexEntry.Create(parts[0], FTablesLoaded);
+        bi_ex := TRomajiIndexEntry(FTrans.FRomajiIndex.SearchItem(bi));
+        FreeAndNil(bi);
+        if bi_ex<>nil then begin
+          parts := copy(parts,1,MaxInt);
+          bi_ex.SortEntries(parts);
+        end;
+      end;
       LS_ROMAJITOKANA: FReplRtk.Add(ln, pref);
       LS_KANATOROMAJI: FReplKtr.Add(ln, pref);
     end;
   end;
+  Inc(FTablesLoaded);
 end;
 
 {
@@ -788,11 +913,13 @@ Also accepts strange first letter flags:
   H
 }
 function TRomajiTranslator.RomajiToKana(const s:string;flags:TResolveFlags):string;
-var sr,s2,s3,fn:string;
+var s2,s3,fn:string;
   kata:integer;
-  l,i,j:integer;
+  l,i:integer;
   pref: char;
   r: PRomajiReplacementRule;
+  bi: TBinTreeItem;
+  bir: TRomajiIndexEntry absolute bi;
 begin
   if length(s)<=0 then begin
     Result := '';
@@ -819,30 +946,21 @@ begin
   while length(s2)>0 do
   begin
     fn:='';
+    l:=0;
     if s2[1]='_' then begin fn:=fstr('_'); l:=1; end;
     if s2[1]='-' then begin fn:=fstr('-'); l:=1; end;
 
-    for i:=0 to FTrans.Count-1 do begin
-      j := 0;
-      while j<Length(FTrans[i].romaji) do begin
-        sr := FTrans[i].romaji[j];
-        if pos(sr,s2)=1 then
-        begin
-          l:=length(sr);
-          if kata=0 then
-            fn := FTrans[i].hiragana
-          else
-            fn := FTrans[i].katakana;
-          break;
-        end;
-        Inc(j);
+    for bi in FTrans.FRomajiIndex do
+      if StartsStr(bir.roma, s2) then begin
+        l := Length(bir.roma);
+        if kata=0 then
+          fn := bir.entries[0].hiragana
+        else
+          fn := bir.entries[0].katakana;
+        break;
       end;
-      if j<Length(FTrans[i].romaji) then
-        break; //found!
-    end;
 
-    if fn='' then
-    begin
+    if l=0 then begin
       if not (rfDeleteInvalidChars in flags) then
         if s2[1]<>'''' then
          //Latin letter (supposedly)
@@ -855,14 +973,13 @@ begin
           fn:='';
       l:=1;
     end;
-    if s2[1]='H'then
-    begin
+
+    if s2[1]='H' then begin
       kata:=0;
       l:=1;
       fn:='';
-    end;
-    if (s2[1]='K') or (s2[1]='Q') then
-    begin
+    end else
+    if (s2[1]='K') or (s2[1]='Q') then begin
       kata:=1;
       l:=1;
       fn:='';
@@ -1004,7 +1121,6 @@ end;
 
 procedure TPinYinTranslationTable.Add(const r: TPinYinTranslationRule);
 var pr: PPinYinTranslationRule;
-  base, i: integer;
 begin
   pr := FindItem(r.bopomofo);
   if pr=nil then begin
@@ -1139,11 +1255,10 @@ end;
 //Finds first entry which starts with ASyllable
 //Text must be uppercased.
 function TPinYinTranslator.PinyinPartialMatch(const ASyllable: string): integer;
-var i, j, cl: integer;
+var i, j: integer;
   rom: string;
 begin
   Result := -1;
-  cl := 0;
   for i:=0 to FRules.Count-1 do begin
     for j:=0 to Length(FRules[i].romaji)-1 do begin
       rom := FRules[i].romaji[j];

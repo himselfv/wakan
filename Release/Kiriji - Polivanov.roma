@@ -1,8 +1,8 @@
 ﻿;Kana romanization chart
-;Киридзи по Поливанову.
-;Конвертация в киридзи и назад неоднозначно (например, を и お --> о),
-;хотя для всех спорных слогов есть однозначные доп. записи.
-;TODO: Как указать, какой вариант 'о' главнее? Для записи нам нужно о --> お
+; Киридзи по Поливанову.
+; Конвертация в киридзи и назад неоднозначно (например, を и お --> о),
+; хотя для всех спорных слогов есть однозначные доп. записи.
+; TODO: Как указать, какой вариант 'о' главнее? Для записи нам нужно о --> お
 
 [Romaji]
 ; Initial romanization.
@@ -76,7 +76,7 @@
 ふ,フ,фу
 ぶ,ブ,бу
 ぷ,プ,пу
-へ,ヘ,хэ
+へ,ヘ,э,хэ
 べ,ベ,бэ
 ぺ,ペ,пэ
 ほ,ホ,хо
@@ -164,7 +164,7 @@
 みぃ,ミィ,мьи
 りぃ,リィ,рьи
 きぇ,キェ,кье
-ぎぇ,ギェ,gye
+ぎぇ,ギェ,гье
 すぃ,スィ,сьи
 ずぃ,ズィ,зьи
 つぉ,ツォ,цьо
@@ -177,6 +177,13 @@
 どぅ,ドゥ,ду
 ん,ン,н
 ん,ン,нъ
+
+[Priority]
+; If there are several kana resulting in the same romaji,
+; you can set which kana should be "main" interpretation of it.
+; Either katakana or hiragana is good for each position.
+о,お,を
+э,え,へ
 
 ; Additional conversions to do after basic romanization
 [KanaToRomaji]
@@ -213,9 +220,6 @@ Dс,сс
 эи,эй
 ои,ой
 ; прочее
-',
-ъ,
-
 
 ; Additional conversions to do before doing de-romanization
 [RomajiToKana]
@@ -253,7 +257,7 @@ Dс,сс
 ии,i-
 уу,u-
 ээ,e-
-оо,o-
+оо,о-
 яА,я-
 юУ,ю-
 ёО,ё-

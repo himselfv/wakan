@@ -228,6 +228,9 @@ function UTrimRight(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inli
 function ULowerCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 
+function StartsStr(const substr, str: string): boolean; overload;
+function StartsStr(substr, str: PChar): boolean; overload;
+
 { General purpose string functions }
 
 function IsHexChar(wc: WideChar): boolean;
@@ -845,6 +848,29 @@ begin
   Result := WideUpperCase(S);
 end;
 {$ENDIF}
+
+//True if str starts with substr. Delphi version is slow.
+function StartsStr(const substr, str: string): boolean;
+begin
+  Result := StartsStr(PChar(substr),PChar(str));
+end;
+
+function StartsStr(substr, str: PChar): boolean;
+begin
+  if substr=nil then
+    Result := true
+  else
+  if str=nil then
+    Result := false
+  else begin
+    Result := true;
+    while (substr^<>#00) and (substr^=str^) do begin
+      Inc(substr);
+      Inc(str);
+    end;
+    Result := (substr^=#00);
+  end;
+end;
 
 
 {

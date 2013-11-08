@@ -1,14 +1,16 @@
 unit BalancedTree;
-//
-//  Taken from Nicklaus Wirth :
-//    Algorithmen und Datenstrukturen ( in Pascal )
-//    Balanced Binary Trees p 250 ++
-//
-//
-// Fixed By Giacomo Policicchio
-// pgiacomo@tiscalinet.it
-// 19/05/2000
-//
+{
+  Taken from Nicklaus Wirth :
+    Algorithmen und Datenstrukturen ( in Pascal )
+    Balanced Binary Trees p 250 ++
+
+  Fixed By Giacomo Policicchio
+  pgiacomo@tiscalinet.it
+  19/05/2000
+
+  Modifications by Wakan project,
+  http://code.google.com/p/wakan/
+}
 
 interface
 uses Classes;
@@ -24,28 +26,40 @@ type
     // a < self :-1  a=self :0  a > self :+1
     function CompareData(const a):Integer; virtual; abstract;
     function Compare(a:TBinTreeItem):Integer; virtual; abstract;
-    procedure Copy(ToA:TBinTreeItem);  virtual; abstract; // data
-    procedure List; virtual; abstract;                    // used to list the tree
+    procedure Copy(ToA:TBinTreeItem); virtual; abstract; // data
+  end;
+
+  TBinTreeEnumerator = record
+    FStack: array of TBinTreeItem;
+    FStackUsed: integer;
+    FBOF: boolean;
+    procedure ResetEmpty; overload;
+    procedure Reset(const ARoot: TBinTreeItem); overload;
+    procedure Push(const AItem: TBinTreeItem);
+    function Pop: TBinTreeItem;
+    function GetCurrent: TBinTreeItem;
+    function MoveNext: boolean;
+    property Current: TBinTreeItem read GetCurrent;
   end;
 
   TBinTree=class(TPersistent)
   private
     root:TBinTreeItem;
     procedure Delete(item:TBinTreeItem;var p:TBinTreeItem;var h:boolean;var ok:boolean);
-    procedure SearchAndInsert(item:TBinTreeItem;var p:TBinTreeItem;var h:boolean;var Found:boolean);
+    function SearchAndInsert(item:TBinTreeItem;var p:TBinTreeItem;var h:boolean): TBinTreeItem;
     procedure balanceLeft(var p:TBinTreeItem;var h:boolean;dl:boolean);
     procedure balanceRight(var p:TBinTreeItem;var h:boolean;dl:boolean);
-    procedure listitems(var p:TBinTreeItem);
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     function Add(item:TBinTreeItem):boolean;
+    function AddOrSearch(item:TBinTreeItem):TBinTreeItem;
     function Remove(item:TBinTreeItem):boolean;
     function Search(item:TBinTreeItem):boolean;
     function SearchItem(const item:TBinTreeItem):TBinTreeItem;
     function SearchData(const data):TBinTreeItem;
-    procedure List; //uses item.list through listitems recursively
+    function GetEnumerator: TBinTreeEnumerator;
   end;
 
 
@@ -55,6 +69,81 @@ constructor TBinTreeItem.Create;
 begin
   inherited create;
   count:=0;
+end;
+
+procedure TBinTreeEnumerator.ResetEmpty;
+begin
+  FStackUsed := 0;
+  FBOF := true;
+end;
+
+procedure TBinTreeEnumerator.Reset(const ARoot: TBinTreeItem);
+begin
+  if ARoot=nil then begin
+    ResetEmpty;
+    exit;
+  end;
+  if Length(FStack)<1 then
+    SetLength(FStack, 4);
+  FStack[0] := ARoot;
+  FStackUsed := 1;
+  FBOF := true;
+end;
+
+procedure TBinTreeEnumerator.Push(const AItem: TBinTreeItem);
+begin
+  if FStackUsed>=Length(FStack) then
+    SetLength(FStack, Length(FStack)*2+1);
+  FStack[FStackUsed] := AItem;
+  Inc(FStackUsed);
+end;
+
+function TBinTreeEnumerator.Pop: TBinTreeItem;
+begin
+  if FStackUsed<=0 then begin
+    Result := nil;
+    exit;
+  end;
+  Dec(FStackUsed);
+  Result := FStack[FStackUsed];
+end;
+
+function TBinTreeEnumerator.GetCurrent: TBinTreeItem;
+begin
+  if FStackUsed<=0 then
+    Result := nil
+  else
+    Result := FStack[FStackUsed-1];
+end;
+
+function TBinTreeEnumerator.MoveNext: boolean;
+var item: TBinTreeItem;
+begin
+  if FStackUsed=0 then //no entries left
+    Result := false
+  else
+  if FBOF then begin
+   //Move to the leftmost node or remain on this one
+    while Current.left<>nil do
+      Push(Current.left);
+    FBOF := false;
+    Result := true;
+  end else
+  if Current.right<>nil then begin
+    Push(Current.right);
+    while Current.left<>nil do
+      Push(Current.left);
+    Result := true;
+  end else
+  begin
+    repeat
+      item := Pop();
+    until (Current=nil) or (item=Current.left); //search for the first parent where we were on the left subtree
+    if Current=nil then
+      Result := false
+    else
+      Result := true;
+  end;
 end;
 
 constructor TBinTree.Create;
@@ -75,10 +164,11 @@ begin
   while root <> nil do remove(root);
 end;
 
-procedure TBinTree.SearchAndInsert(item:TBinTreeItem;var p:TBinTreeItem;var h:boolean;var Found:boolean);
+//Tries to locate identical item in the tree, or inserts the given item.
+//Returns the item located or the item inserted => if (Result==item) then Added else Found.
+function TBinTree.SearchAndInsert(item:TBinTreeItem;var p:TBinTreeItem;var h:boolean): TBinTreeItem;
 var cmp: integer;
 begin
-  found:=false;
   if p=nil then begin // word not in tree, insert it
     p:=item;
     p.count:=1;
@@ -86,6 +176,7 @@ begin
     p.right:=nil;
     p.bal:=0;
     if root=nil then root:=p;
+    Result:=p;
     h:=true;
     exit;
   end;
@@ -93,20 +184,20 @@ begin
   cmp := item.compare(p);
   if cmp > 0 then      // new < current
   begin
-    searchAndInsert(item,p.left,h,found);
-    if h and not found then BalanceLeft(p,h,false);
+    Result := searchAndInsert(item,p.left,h);
+    if h and (Result=item) then BalanceLeft(p,h,false);
   end
   else
   if cmp < 0 then     // new > current
   begin
-    searchAndInsert(item,p.right,h,found);
-    if h and not found then balanceRight(p,h,false);
+    Result := searchAndInsert(item,p.right,h);
+    if h and (Result=item) then balanceRight(p,h,false);
   end
   else
   begin
     p.count:=p.count+1;
     h:=false;
-    found:=true;
+    Result:=p;
   end;
 end;      //searchAndInsert
 
@@ -142,6 +233,11 @@ begin
     else //item < Result
       Result := Result.left;
   end;
+end;
+
+function TBinTree.GetEnumerator: TBinTreeEnumerator;
+begin
+  Result.Reset(root);
 end;
 
 
@@ -302,36 +398,30 @@ begin { main of delete }
     end;
 end; { delete }
 
-function TBinTree.add(item:TBinTreeItem):boolean;
-var h,found:boolean;
+//Returns true if the item was added, false if an identical one existed.
+function TBinTree.Add(item:TBinTreeItem):boolean;
+var h:boolean;
 begin
- SearchAndInsert(item,root,h,found);
- add:=found;
+  Result:=SearchAndInsert(item,root,h)=item;
 end;
 
-function TBinTree.remove(item:TBinTreeItem):Boolean;
+//Same, but returns the item found or added
+function TBinTree.AddOrSearch(item:TBinTreeItem):TBinTreeItem;
+var h:boolean;
+begin
+  Result:=SearchAndInsert(item,root,h);
+end;
+
+function TBinTree.Remove(item:TBinTreeItem):Boolean;
 var h,ok:boolean;
 begin
- Delete(item,root,h,ok);
- remove:=ok;
+  Delete(item,root,h,ok);
+  Result:=ok;
 end;
 
 function TBinTree.Search(item:TBinTreeItem):Boolean;
 begin
   Result:=SearchItem(item)<>nil;
-end;
-
-procedure TBinTree.listitems(var p:TBinTreeItem);
-begin
-  if p=nil then exit;
-  if p.left <> nil then listitems(p.left);
-  p.list;
-  if p.right <> nil then listitems(p.right);
-end;
-
-procedure TBinTree.list;      // uses item.list recursively
-begin
- listitems(root);
 end;
 
 end.
