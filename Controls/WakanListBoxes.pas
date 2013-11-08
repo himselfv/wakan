@@ -65,7 +65,7 @@ begin
   while i<=Length(s) do begin
     i_pos := pos(sep,s,i);
     if i_pos<=0 then break;
-    i:=i+i_pos+Length(sep)-1;
+    i:=i_pos+Length(sep);
     Inc(cnt);
   end;
   if Length(s)>i then
@@ -81,8 +81,8 @@ begin
   while i<=Length(s) do begin
     i_pos := pos(sep,s,i);
     if i_pos<=0 then break;
-    Result[cnt] := copy(s,i,i_pos-1);
-    i:=i+i_pos+Length(sep)-1;
+    Result[cnt] := copy(s,i,i_pos-i);
+    i:=i_pos+Length(sep);
     Inc(cnt);
   end;
 

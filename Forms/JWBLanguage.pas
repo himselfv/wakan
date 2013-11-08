@@ -318,6 +318,10 @@ begin
     curTransFile := '';
 end;
 
+{ Supports string like:
+  #01032^Default text
+  #01032^eDefault text (for backward compability)
+Do not use ^ and to not start your default text with letter "e". }
 function TfLanguage.TranslateString(id:string):string;
 var i,sk,m,l,r:integer;
     s:string;
@@ -341,20 +345,16 @@ begin
       if l<=r then result:=copy(curtrans[m],7,length(curtrans[m])-6);
     end;
   end;
-  if (pos('^e',result)>0) then
-  begin
-    s:=result;
-    result:='';
-    if pos('^e',s)=0 then exit;
-    i:=pos('^e',s);
-    i:=i+2;
-    while (i<=length(s)) do
-    begin
-      if s[i]='^'then break;
-      result:=result+s[i];
-      inc(i);
-    end;
-  end;
+
+  i := pos('^', Result);
+  if i<=0 then exit; //no default translation
+  if (i<Length(Result)) and (Result[i+1]='e') then
+    Inc(i);
+  delete(Result, 1, i);
+ { That's it. Only a single default text is allowed.
+  Previously there could have been versions for several languages, in random order:
+    #01032^cCzech text^eEnglish text
+  But not anymore, we don't support this, any instance of this have been removed. }
 end;
 
 function TfLanguage.GetTlVar(id:string):string;

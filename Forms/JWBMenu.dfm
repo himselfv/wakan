@@ -1064,18 +1064,15 @@ object fMenu: TfMenu
       object N26: TMenuItem
         Caption = '-'
       end
-      object miDictionaryManager: TMenuItem
-        Action = aSettingsDict
-      end
-      object N27: TMenuItem
-        Caption = '-'
-      end
       object miSettings: TMenuItem
         Action = aSettings
         Caption = '#00940^eOptions...'
       end
       object miChangeLanguage: TMenuItem
         Action = aChangeLanguage
+      end
+      object miDictionaryManager: TMenuItem
+        Action = aSettingsDict
       end
       object N15: TMenuItem
         Caption = '-'

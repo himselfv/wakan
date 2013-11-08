@@ -1195,6 +1195,15 @@
 01089>Folder %s does not exist!
 01090>Select UNIHAN directory:
 01091>Cannot import character data. Application will now terminate.
+01092>Bopomofo
+01093>Romaji
+01094>Multiple
+01095>Use multiple romanization schemes at the same time
+01096>Give the romanization more priority
+01097>Give the romanization less priority
+01098>Input some text to see how it converts to kana
+01099>Input some text to see how it converts to bopomofo
+01100>An example of how the phonetic would look. Click to see another example.
 ;
 ;
 ; EDICT markers.

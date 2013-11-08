@@ -3,7 +3,7 @@ object fSettings: TfSettings
   Top = 131
   BorderStyle = bsDialog
   Caption = '#00397^eSettings'
-  ClientHeight = 476
+  ClientHeight = 503
   ClientWidth = 660
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -24,7 +24,7 @@ object fSettings: TfSettings
     Left = 187
     Top = 0
     Width = 473
-    Height = 435
+    Height = 462
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
@@ -41,7 +41,7 @@ object fSettings: TfSettings
         Left = 0
         Top = 0
         Width = 465
-        Height = 425
+        Height = 452
         Align = alClient
         BorderStyle = bsNone
         TabOrder = 0
@@ -220,7 +220,7 @@ object fSettings: TfSettings
           Top = 20
           Width = 163
           Height = 13
-          Anchors = [akRight, akBottom]
+          Anchors = [akTop, akRight]
           Caption = '#00414^eRomanization test:'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
@@ -238,7 +238,7 @@ object fSettings: TfSettings
           Anchors = [akTop, akRight]
           Caption = 'click ->'
         end
-        object RadioGroup2: TRadioGroup
+        object rgShowKana: TRadioGroup
           Left = 232
           Top = 110
           Width = 193
@@ -257,7 +257,8 @@ object fSettings: TfSettings
           Top = 39
           Width = 209
           Height = 21
-          Anchors = [akRight, akBottom]
+          Hint = '#01098^Input some text to see how it converts to kana'
+          Anchors = [akTop, akRight]
           TabOrder = 1
           OnChange = edtTestRomajiChange
         end
@@ -266,7 +267,7 @@ object fSettings: TfSettings
           Top = 61
           Width = 209
           Height = 20
-          Anchors = [akRight, akBottom]
+          Anchors = [akTop, akRight]
           Color = clBtnFace
           OnPaint = pbRomajiAsHiraganaPaint
         end
@@ -275,7 +276,7 @@ object fSettings: TfSettings
           Top = 80
           Width = 209
           Height = 20
-          Anchors = [akRight, akBottom]
+          Anchors = [akTop, akRight]
           Color = clBtnFace
           OnPaint = pbRomajiAsKatakanaPaint
         end
@@ -284,8 +285,9 @@ object fSettings: TfSettings
           Top = 185
           Width = 163
           Height = 17
+          Hint = '#01095^Use multiple romanization schemes at the same time'
           Anchors = [akLeft, akRight, akBottom]
-          Caption = 'Multiple'
+          Caption = '#01094^Multiple'
           TabOrder = 4
           OnClick = cbMultipleRomaClick
         end
@@ -294,6 +296,7 @@ object fSettings: TfSettings
           Top = 20
           Width = 32
           Height = 32
+          Hint = '#01096^Give the romanization more priority'
           Anchors = [akTop, akRight]
           Glyph.Data = {
             76010000424D7601000000000000760000002800000020000000100000000100
@@ -318,6 +321,7 @@ object fSettings: TfSettings
           Top = 58
           Width = 32
           Height = 32
+          Hint = '#01097^Give the romanization less priority'
           Anchors = [akTop, akRight]
           Glyph.Data = {
             76010000424D7601000000000000760000002800000020000000100000000100
@@ -356,24 +360,31 @@ object fSettings: TfSettings
           Top = 182
           Width = 209
           Height = 20
-          Anchors = [akRight, akBottom]
+          Hint = 
+            '#01100^An example of how the phonetic would look. Click to see a' +
+            'nother example.'
+          Anchors = [akTop, akRight]
           Color = clBtnFace
           OnPaint = pbKanaAsRomajiPaint
           OnClick = pbKanaAsRomajiClick
         end
       end
       object GroupBox7: TGroupBox
-        Left = 2
+        Left = 3
         Top = 227
         Width = 457
-        Height = 161
+        Height = 218
         Caption = '#00426^eRomanization of chinese'
         TabOrder = 1
+        DesignSize = (
+          457
+          218)
         object Label27: TLabel
-          Left = 16
-          Top = 88
+          Left = 232
+          Top = 20
           Width = 163
           Height = 13
+          Anchors = [akTop, akRight]
           Caption = '#00414^eRomanization test:'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
@@ -382,51 +393,135 @@ object fSettings: TfSettings
           Font.Style = [fsBold]
           ParentFont = False
         end
-        object RadioGroup6: TRadioGroup
-          Left = 16
-          Top = 20
-          Width = 185
-          Height = 61
-          Hint = 
-            '#00418^eSelect romanization system used in both input and displa' +
-            'y'
-          Caption = '#00419^eRomanization system'
-          ItemIndex = 0
-          Items.Strings = (
-            'PinYin'
-            'Wade-Giles'
-            'Yale')
-          TabOrder = 0
-          OnClick = RadioGroup1Click
+        object Label17: TLabel
+          Left = 194
+          Top = 185
+          Width = 34
+          Height = 13
+          Alignment = taRightJustify
+          Anchors = [akTop, akRight]
+          Caption = 'click ->'
         end
-        object RadioGroup7: TRadioGroup
-          Left = 216
-          Top = 20
-          Width = 225
+        object rgShowBopomofo: TRadioGroup
+          Left = 232
+          Top = 110
+          Width = 208
           Height = 61
+          Anchors = [akTop, akRight]
           Caption = '#00423^eShow phonetic in'
           ItemIndex = 0
           Items.Strings = (
-            'BoPoMoFo'
-            'PinYin / Wade-Giles / Yale')
-          TabOrder = 1
-          OnClick = RadioGroup1Click
+            '#01092^Bopomofo'
+            '#01093^Romaji')
+          TabOrder = 0
+          OnClick = rgShowBopomofoClick
         end
         object edtTestPinyin: TEdit
-          Left = 16
-          Top = 104
-          Width = 225
+          Left = 232
+          Top = 39
+          Width = 209
           Height = 21
-          TabOrder = 2
+          Hint = '#01099^Input some text to see how it converts to bopomofo'
+          Anchors = [akTop, akRight]
+          TabOrder = 1
           OnChange = edtTestPinyinChange
         end
         object pbPinyinAsBopomofo: TWakanPaintbox
-          Left = 16
-          Top = 126
-          Width = 226
+          Left = 232
+          Top = 61
+          Width = 209
           Height = 20
+          Anchors = [akTop, akRight]
           Color = clBtnFace
           OnPaint = pbPinyinAsBopomofoPaint
+        end
+        object pbBopomofoAsPinyin: TWakanPaintbox
+          Left = 232
+          Top = 182
+          Width = 209
+          Height = 20
+          Hint = 
+            '#01100^An example of how the phonetic would look. Click to see a' +
+            'nother example.'
+          Anchors = [akTop, akRight]
+          Color = clBtnFace
+          OnPaint = pbBopomofoAsPinyinPaint
+          OnClick = pbBopomofoAsPinyinClick
+        end
+        object btnPinyinSystemUp: TBitBtn
+          Left = 184
+          Top = 20
+          Width = 32
+          Height = 32
+          Hint = '#01096^Give the romanization more priority'
+          Anchors = [akTop, akRight]
+          Glyph.Data = {
+            76010000424D7601000000000000760000002800000020000000100000000100
+            04000000000000010000120B0000120B00001000000000000000000000000000
+            800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+            FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333000333
+            3333333333777F33333333333309033333333333337F7F333333333333090333
+            33333333337F7F33333333333309033333333333337F7F333333333333090333
+            33333333337F7F33333333333309033333333333FF7F7FFFF333333000090000
+            3333333777737777F333333099999990333333373F3333373333333309999903
+            333333337F33337F33333333099999033333333373F333733333333330999033
+            3333333337F337F3333333333099903333333333373F37333333333333090333
+            33333333337F7F33333333333309033333333333337373333333333333303333
+            333333333337F333333333333330333333333333333733333333}
+          NumGlyphs = 2
+          TabOrder = 4
+          Visible = False
+          OnClick = btnPinyinSystemUpClick
+        end
+        object btnPinyinSystemDown: TBitBtn
+          Left = 184
+          Top = 58
+          Width = 32
+          Height = 32
+          Hint = '#01097^Give the romanization less priority'
+          Anchors = [akTop, akRight]
+          Glyph.Data = {
+            76010000424D7601000000000000760000002800000020000000100000000100
+            04000000000000010000120B0000120B00001000000000000000000000000000
+            800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
+            FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333303333
+            333333333337F33333333333333033333333333333373F333333333333090333
+            33333333337F7F33333333333309033333333333337373F33333333330999033
+            3333333337F337F33333333330999033333333333733373F3333333309999903
+            333333337F33337F33333333099999033333333373333373F333333099999990
+            33333337FFFF3FF7F33333300009000033333337777F77773333333333090333
+            33333333337F7F33333333333309033333333333337F7F333333333333090333
+            33333333337F7F33333333333309033333333333337F7F333333333333090333
+            33333333337F7F33333333333300033333333333337773333333}
+          NumGlyphs = 2
+          TabOrder = 5
+          Visible = False
+          OnClick = btnPinyinSystemDownClick
+        end
+        object lbPinyinSystems: TWakanCheckListBox
+          Left = 15
+          Top = 20
+          Width = 163
+          Height = 159
+          Anchors = [akLeft, akTop, akRight, akBottom]
+          DragMode = dmAutomatic
+          ItemHeight = 13
+          TabOrder = 6
+          OnClick = lbPinyinSystemsClick
+          AutoDragItems = True
+          AutoCtrlMove = True
+          OnSelectionChanged = lbPinyinSystemsSelectionChanged
+        end
+        object cbMultiplePinyin: TCheckBox
+          Left = 15
+          Top = 185
+          Width = 163
+          Height = 17
+          Hint = '#01095^Use multiple romanization schemes at the same time'
+          Anchors = [akLeft, akRight, akBottom]
+          Caption = '#01094^Multiple'
+          TabOrder = 7
+          OnClick = cbMultiplePinyinClick
         end
       end
     end
@@ -828,13 +923,14 @@ object fSettings: TfSettings
       TabVisible = False
       DesignSize = (
         465
-        425)
+        452)
       object Shape2: TShape
         Left = 3
-        Top = 326
+        Top = 353
         Width = 105
         Height = 25
         Anchors = [akLeft, akBottom]
+        ExplicitTop = 326
       end
       object Label42: TLabel
         Left = 3
@@ -847,7 +943,7 @@ object fSettings: TfSettings
         Left = 3
         Top = 67
         Width = 457
-        Height = 256
+        Height = 283
         Anchors = [akLeft, akTop, akBottom]
         ItemHeight = 13
         TabOrder = 0
@@ -855,7 +951,7 @@ object fSettings: TfSettings
       end
       object Button12: TButton
         Left = 115
-        Top = 326
+        Top = 353
         Width = 217
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -865,7 +961,7 @@ object fSettings: TfSettings
       end
       object Button14: TButton
         Left = 339
-        Top = 326
+        Top = 353
         Width = 121
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -1177,7 +1273,7 @@ object fSettings: TfSettings
       TabVisible = False
       DesignSize = (
         465
-        425)
+        452)
       object Label34: TLabel
         Left = 2
         Top = 9
@@ -1242,7 +1338,7 @@ object fSettings: TfSettings
         Left = 2
         Top = 25
         Width = 432
-        Height = 307
+        Height = 334
         Anchors = [akLeft, akTop, akRight, akBottom]
         ItemHeight = 13
         TabOrder = 0
@@ -1250,7 +1346,7 @@ object fSettings: TfSettings
       end
       object Button7: TButton
         Left = 2
-        Top = 339
+        Top = 366
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -1260,7 +1356,7 @@ object fSettings: TfSettings
       end
       object Button8: TButton
         Left = 170
-        Top = 339
+        Top = 366
         Width = 113
         Height = 25
         Anchors = [akLeft, akBottom]
@@ -1270,7 +1366,7 @@ object fSettings: TfSettings
       end
       object Button9: TButton
         Left = 337
-        Top = 339
+        Top = 366
         Width = 97
         Height = 25
         Anchors = [akRight, akBottom]
@@ -1855,7 +1951,7 @@ object fSettings: TfSettings
       TabVisible = False
       DesignSize = (
         465
-        425)
+        452)
       object Bevel1: TBevel
         Left = 0
         Top = 27
@@ -1943,7 +2039,7 @@ object fSettings: TfSettings
       TabVisible = False
       DesignSize = (
         465
-        425)
+        452)
       object Button2: TButton
         Left = 3
         Top = 368
@@ -2443,7 +2539,7 @@ object fSettings: TfSettings
   end
   object pnlButtons: TPanel
     Left = 0
-    Top = 435
+    Top = 462
     Width = 660
     Height = 41
     Align = alBottom
@@ -2504,7 +2600,7 @@ object fSettings: TfSettings
     Left = 0
     Top = 0
     Width = 177
-    Height = 435
+    Height = 462
     Align = alLeft
     HideSelection = False
     Indent = 19
@@ -2567,7 +2663,7 @@ object fSettings: TfSettings
     Left = 177
     Top = 0
     Width = 10
-    Height = 435
+    Height = 462
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 3
@@ -2576,15 +2672,15 @@ object fSettings: TfSettings
     DefaultExt = '.wbk'
     Filter = 'WaKan User Data Backup|*.wbk'
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
-    Left = 528
-    Top = 304
+    Left = 16
+    Top = 408
   end
   object SaveDialog2: TSaveDialog
     DefaultExt = '.wbk'
     Filter = 'WaKan User Data Bakup|*.wbk'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofNoChangeDir, ofEnableSizing]
-    Left = 600
-    Top = 304
+    Left = 80
+    Top = 408
   end
   object ColorDialog1: TColorDialog
     Left = 148

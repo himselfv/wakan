@@ -93,12 +93,11 @@ type
     Edit19: TEdit;
     GroupBox6: TGroupBox;
     Label16: TLabel;
-    RadioGroup2: TRadioGroup;
+    rgShowKana: TRadioGroup;
     edtTestRomaji: TEdit;
     GroupBox7: TGroupBox;
     Label27: TLabel;
-    RadioGroup6: TRadioGroup;
-    RadioGroup7: TRadioGroup;
+    rgShowBopomofo: TRadioGroup;
     edtTestPinyin: TEdit;
     Button5: TButton;
     tsCharacterDetails: TTabSheet;
@@ -265,6 +264,12 @@ type
     lbRomaSystems: TWakanCheckListBox;
     pbKanaAsRomaji: TWakanPaintbox;
     lblKanaToRomajiHint: TLabel;
+    pbBopomofoAsPinyin: TWakanPaintbox;
+    Label17: TLabel;
+    btnPinyinSystemUp: TBitBtn;
+    btnPinyinSystemDown: TBitBtn;
+    lbPinyinSystems: TWakanCheckListBox;
+    cbMultiplePinyin: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -325,6 +330,14 @@ type
     procedure lbRomaSystemsSelectionChanged(Sender: TObject);
     procedure pbKanaAsRomajiPaint(Sender: TObject; Canvas: TCanvas);
     procedure pbKanaAsRomajiClick(Sender: TObject);
+    procedure lbPinyinSystemsClick(Sender: TObject);
+    procedure lbPinyinSystemsSelectionChanged(Sender: TObject);
+    procedure btnPinyinSystemUpClick(Sender: TObject);
+    procedure btnPinyinSystemDownClick(Sender: TObject);
+    procedure cbMultiplePinyinClick(Sender: TObject);
+    procedure pbBopomofoAsPinyinClick(Sender: TObject);
+    procedure pbBopomofoAsPinyinPaint(Sender: TObject; Canvas: TCanvas);
+    procedure rgShowBopomofoClick(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -353,14 +366,21 @@ type
     procedure FreeSettings;
 
   protected //Romanization
-    FRomaExample: string; //current string to romanize, see pbKanaAsRomajiClick
+    FKanaExample: string; //current string to romanize, see pbKanaAsRomajiClick
+    FBopomofoExample: string;
     procedure ReloadRomaSystems;
+    procedure ReloadPinyinSystems;
     function GetRomaList: string;
     procedure SetRomaList(const Value: string);
+    function GetPinyinList: string;
+    procedure SetPinyinList(const Value: string);
     procedure SetEnhancedRomaListOn(const Value: boolean);
+    procedure SetEnhancedPinyinListOn(const Value: boolean);
     procedure CheckRomaSystemMoveButtonsEnabled;
+    procedure CheckPinyinSystemMoveButtonsEnabled;
   public
     procedure ReloadRomaSetup;
+    procedure ReloadPinyinSetup;
 
   public
    { Layout settings are loaded into these variables and applied later }
@@ -389,18 +409,37 @@ type
 
   end;
 
+var
+  fSettings: TfSettings;
+
 const
  //Values must be reasonable
   DefaultAutoSavePeriod: integer = 10;
 
-const
  //Default romanization files
-  KunreishikiRoma = 'Kunreishiki.roma';
-  HepburnRoma = 'Hepburn.roma';
+  KunreishikiRoma = 'Kunreishiki.roma'; //important
+  HepburnRoma = 'Hepburn.roma'; //important
   CzechRoma = 'Czech.roma';
+  PinYinRoma = 'PinYin.rpy';
+  WadeGilesRoma = 'Wade-Giles.rpy'; //important
+  YaleRoma = 'Yale.rpy';
+ //Extensions
+  RomajiExt = '.roma';
+  PinyinExt = '.rpy';
 
-var
-  fSettings: TfSettings;
+ //Examples for romanization
+  KanaExamples: array[0..5] of string = (
+   'だじゃれなしゃみせん',
+   'きたないまちへ',
+   'ずっとつづくれっしゃ',
+   'マスコミのだいこうしん',
+   'おっさんをよべ',
+   'えいえん'
+  );
+  BopomofoExamples: array[0..1] of string = (
+   'ㄓㄨˋㄧㄣㄈㄨˊㄏㄠˋ',
+   'ㄆㄧㄥˊㄗ˙'
+  );
 
 implementation
 
@@ -703,20 +742,30 @@ begin
   cbShowSplashscreen.Checked := reg.ReadBool('Vocabulary','ShowSplashscreen',true);
 
   ReloadRomaSystems; //can't do before we know Portability mode
+  ReloadPinyinSystems;
 
  //Backward compatible setting
   tmp_int:=reg.ReadInteger('Romanization','System',-1);
   case tmp_int of
-    0: SetRomaList(KunreishikiRoma);
-    1: SetRomaList(HepburnRoma);
-    2: SetRomaList(CzechRoma);
+    0: SetRomaList(ChangeFileExt(KunreishikiRoma,''));
+    1: SetRomaList(ChangeFileExt(HepburnRoma,''));
+    2: SetRomaList(ChangeFileExt(CzechRoma,''));
   else
-    SetRomaList(reg.ReadString('Romanization','RomaList','Kunreishiki.roma'));
+    SetRomaList(reg.ReadString('Romanization','RomaList',ChangeFileExt(KunreishikiRoma,'')));
   end;
 
-  RadioGroup2.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
-  RadioGroup6.ItemIndex:=reg.ReadInteger('Romanization','ChineseSystem',0);
-  RadioGroup7.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
+  tmp_int:=reg.ReadInteger('Romanization','ChineseSystem',-1);
+  case tmp_int of
+    0: SetPinyinList(ChangeFileExt(PinYinRoma,''));
+    1: SetPinyinList(ChangeFileExt(WadeGilesRoma,''));
+    2: SetPinyinList(ChangeFileExt(YaleRoma,''));
+  else
+    SetPinyinList(reg.ReadString('Romanization','ChineseRomaList',ChangeFileExt(PinYinRoma,'')));
+  end;
+
+  rgShowKana.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
+  rgShowBopomofo.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
+
   if fKanjiCompounds<>nil then begin
     fKanjiCompounds.cbLeftMatchOnly.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);
     fKanjiCompounds.cbPopularOnly.Checked:=reg.ReadBool('Characters','CompoundsPop',true);
@@ -984,9 +1033,23 @@ begin
   else
     reg.DeleteKey('Romanization','System');
 
-  reg.WriteInteger('Romanization','ShowKana',RadioGroup2.ItemIndex);
-  reg.WriteInteger('Romanization','ChineseSystem',RadioGroup6.ItemIndex);
-  reg.WriteInteger('Romanization','ShowBopomofo',RadioGroup7.ItemIndex);
+  tmp_str := GetPinyinList;
+  reg.WriteString('Romanization','ChineseRomaList',tmp_str);
+ //Also write older param or we'll always read the inherited value
+  if tmp_str=PinYinRoma then
+    reg.WriteInteger('Romanization','ChineseSystem',0)
+  else
+  if tmp_str=WadeGilesRoma then
+    reg.WriteInteger('Romanization','ChineseSystem',1)
+  else
+  if tmp_str=YaleRoma then
+    reg.WriteInteger('Romanization','ChineseSystem',2)
+  else
+    reg.DeleteKey('Romanization','ChineseSystem');
+
+  reg.WriteInteger('Romanization','ShowKana',rgShowKana.ItemIndex);
+  reg.WriteInteger('Romanization','ShowBopomofo',rgShowBopomofo.ItemIndex);
+
   reg.WriteInteger('Characters','Chinese',RadioGroup5.ItemIndex);
   reg.WriteInteger('Characters','GridSize',rgKanjiGridSize.ItemIndex);
   reg.WriteInteger('Characters','RadicalType',cbRadicalType.ItemIndex);
@@ -2012,7 +2075,7 @@ var OldList: string;
 begin
   OldList := GetRomaList;
   lbRomaSystems.Clear;
-  res := FindFirst(ProgramDataDir+'\*.roma', faAnyFile and not faDirectory, sr);
+  res := FindFirst(ProgramDataDir+'\*'+RomajiExt, faAnyFile and not faDirectory, sr);
   while res=0 do begin
     lbRomaSystems.Items.Add(ChangeFileExt(ExtractFilename(sr.Name),''));
     res := FindNext(sr);
@@ -2038,7 +2101,6 @@ end;
 { Reconfigures the romanization list to display in basic (one romanization)
  or enhanced format. Tries to preserve roma selection }
 procedure TfSettings.SetEnhancedRomaListOn(const Value: boolean);
-var i: integer;
 begin
   cbMultipleRoma.Checked := Value;
   btnRomaSystemUp.Visible := Value;
@@ -2081,7 +2143,8 @@ end;
 
 procedure TfSettings.btnRomaSystemDownClick(Sender: TObject);
 begin
-  if lbRomaSystems.ItemIndex<lbRomaSystems.Count-1 then begin
+  if (lbRomaSystems.ItemIndex>=0)
+  and (lbRomaSystems.ItemIndex<lbRomaSystems.Count-1) then begin
     lbRomaSystems.Items.Exchange(lbRomaSystems.ItemIndex, lbRomaSystems.ItemIndex+1);
     lbRomaSystemsSelectionChanged(nil);
   end;
@@ -2099,8 +2162,101 @@ begin
   list := GetRomaList;
   parts := SplitStr(list,',');
   for i := 0 to Length(parts)-1 do
-    roma_user.LoadFromFile(parts[i]+'.roma');
+    roma_user.LoadFromFile(parts[i]+RomajiExt);
 end;
+
+{ Same for pinyin }
+
+procedure TfSettings.ReloadPinyinSystems;
+var OldList: string;
+  sr: TSearchRec;
+  res: integer;
+begin
+  OldList := GetPinyinList;
+  lbPinyinSystems.Clear;
+  res := FindFirst(ProgramDataDir+'\*'+PinyinExt, faAnyFile and not faDirectory, sr);
+  while res=0 do begin
+    lbPinyinSystems.Items.Add(ChangeFileExt(ExtractFilename(sr.Name),''));
+    res := FindNext(sr);
+  end;
+  SysUtils.FindClose(sr);
+  SetPinyinList(OldList);
+end;
+
+function TfSettings.GetPinyinList: string;
+begin
+  Result := AnsiLowerCase(lbPinyinSystems.Selection);
+end;
+
+procedure TfSettings.SetPinyinList(const Value: string);
+begin
+  SetEnhancedPinyinListOn(pos(',',Value)>0);
+  lbPinyinSystems.Selection := Value;
+end;
+
+procedure TfSettings.SetEnhancedPinyinListOn(const Value: boolean);
+begin
+  cbMultiplePinyin.Checked := Value;
+  btnPinyinSystemUp.Visible := Value;
+  btnPinyinSystemDown.Visible := Value;
+  CheckPinyinSystemMoveButtonsEnabled();
+  lbPinyinSystems.MultiSelect := Value;
+  lbPinyinSystems.Invalidate;
+end;
+
+procedure TfSettings.lbPinyinSystemsClick(Sender: TObject);
+begin
+  CheckPinyinSystemMoveButtonsEnabled();
+end;
+
+procedure TfSettings.lbPinyinSystemsSelectionChanged(Sender: TObject);
+begin
+  ReloadPinyinSetup();
+  edtTestPinyinChange(nil); //Update preview
+end;
+
+procedure TfSettings.CheckPinyinSystemMoveButtonsEnabled;
+begin
+  btnPinyinSystemUp.Enabled := (lbPinyinSystems.ItemIndex>0);
+  btnPinyinSystemDown.Enabled := (lbPinyinSystems.ItemIndex<lbPinyinSystems.Count-1);
+end;
+
+procedure TfSettings.btnPinyinSystemUpClick(Sender: TObject);
+begin
+  if lbPinyinSystems.ItemIndex>0 then begin
+    lbPinyinSystems.Items.Exchange(lbPinyinSystems.ItemIndex, lbPinyinSystems.ItemIndex-1);
+    lbPinyinSystemsSelectionChanged(nil);
+  end;
+  CheckPinyinSystemMoveButtonsEnabled();
+end;
+
+procedure TfSettings.btnPinyinSystemDownClick(Sender: TObject);
+begin
+  if (lbPinyinSystems.ItemIndex>=0)
+  and (lbPinyinSystems.ItemIndex<lbPinyinSystems.Count-1) then begin
+    lbPinyinSystems.Items.Exchange(lbPinyinSystems.ItemIndex, lbPinyinSystems.ItemIndex+1);
+    lbPinyinSystemsSelectionChanged(nil);
+  end;
+  CheckPinyinSystemMoveButtonsEnabled();
+end;
+
+procedure TfSettings.cbMultiplePinyinClick(Sender: TObject);
+begin
+  SetEnhancedPinyinListOn(cbMultiplePinyin.Checked);
+end;
+
+procedure TfSettings.ReloadPinyinSetup;
+var list: string;
+  parts: TStringArray;
+  i: integer;
+begin
+  rpy_user.Clear;
+  list := GetPinyinList;
+  parts := SplitStr(list,',');
+  for i := 0 to Length(parts)-1 do
+    rpy_user.LoadFromFile(parts[i]+PinyinExt);
+end;
+
 
 { Test romaji/pinyin }
 
@@ -2116,37 +2272,30 @@ begin
   DrawUnicode(Canvas,1,1,16,RomajiToKana('K'+edtTestRomaji.Text,'j',[]),FontSmall);
 end;
 
-const
-  JapaneseExamples: array[0..3] of string = (
-   'だじゃれなしゃみせん',
-   'そうしきのつづくおっさん',
-   'ずっときたないまち',
-   'れっしゃだいこうしんザムービー'
-  );
-
 procedure TfSettings.pbKanaAsRomajiClick(Sender: TObject);
 var i: integer;
   found: boolean;
 begin
   found := false;
-  for i := 0 to Length(JapaneseExamples)-2{sic} do
-    if FRomaExample = JapaneseExamples[i] then begin
-      FRomaExample := JapaneseExamples[i+1];
+  for i := Low(KanaExamples) to High(KanaExamples)-1{sic} do
+    if FKanaExample = KanaExamples[i] then begin
+      FKanaExample := KanaExamples[i+1];
       found := true;
+      break;
     end;
   if not found then
-    FRomaExample := JapaneseExamples[0]; //init or rewind
+    FKanaExample := KanaExamples[0]; //init or rewind
   pbKanaAsRomaji.Invalidate;
 end;
 
 procedure TfSettings.pbKanaAsRomajiPaint(Sender: TObject; Canvas: TCanvas);
 begin
-  if FRomaExample='' then pbKanaAsRomajiClick(nil); //select one
+  if FKanaExample='' then pbKanaAsRomajiClick(nil); //select one
   Canvas.Brush.Color := clBtnFace;
   if jshowroma then
-    DrawUnicode(Canvas,1,1,16,KanaToRomaji(FRomaExample,'j',[]),FontEnglish)
+    DrawUnicode(Canvas,1,1,16,KanaToRomaji(FKanaExample,'j',[]),FontEnglish)
   else
-    DrawUnicode(Canvas,1,1,16,FRomaExample,FontSmall)
+    DrawUnicode(Canvas,1,1,16,FKanaExample,FontSmall);
 end;
 
 procedure TfSettings.edtTestRomajiChange(Sender: TObject);
@@ -2162,25 +2311,52 @@ begin
   DrawUnicode(Canvas,1,1,16,RomajiToKana(edtTestPinyin.Text,'c',[]),FontSmall);
 end;
 
+procedure TfSettings.pbBopomofoAsPinyinClick(Sender: TObject);
+var i: integer;
+  found: boolean;
+begin
+  found := false;
+  for i := Low(BopomofoExamples) to High(BopomofoExamples)-1{sic} do
+    if FBopomofoExample = BopomofoExamples[i] then begin
+      FBopomofoExample := BopomofoExamples[i+1];
+      found := true;
+      break;
+    end;
+  if not found then
+    FBopomofoExample := BopomofoExamples[0]; //init or rewind
+  pbBopomofoAsPinyin.Invalidate;
+end;
+
+procedure TfSettings.pbBopomofoAsPinyinPaint(Sender: TObject; Canvas: TCanvas);
+begin
+  if FBopomofoExample='' then pbBopomofoAsPinyinClick(nil); //select one
+  Canvas.Brush.Color := clBtnFace;
+  if cshowroma then
+    DrawUnicode(Canvas,1,1,16,KanaToRomaji(FBopomofoExample,'c',[]),FontPinyin)
+  else
+    DrawUnicode(Canvas,1,1,16,FBopomofoExample,FontSmall);
+end;
+
 procedure TfSettings.edtTestPinyinChange(Sender: TObject);
 begin
   pbPinyinAsBopomofo.Invalidate;
+  pbBopomofoAsPinyin.Invalidate; //this doesn't belong here, but whatever
 end;
 
 procedure TfSettings.RadioGroup1Click(Sender: TObject);
 begin
-  jshowroma:=RadioGroup2.ItemIndex=1;
-  cromasys:=RadioGroup6.ItemIndex+1;
-  cshowroma:=RadioGroup7.ItemIndex=1;
-  if curlang='c'then
-  begin
-    showroma:=cshowroma;
-  end else begin
+  jshowroma:=rgShowKana.ItemIndex=1;
+  if curlang='j' then
     showroma:=jshowroma;
-  end;
   pbKanaAsRomaji.Invalidate;
 end;
 
-
+procedure TfSettings.rgShowBopomofoClick(Sender: TObject);
+begin
+  cshowroma:=rgShowBopomofo.ItemIndex=1;
+  if curlang='c' then
+    showroma:=cshowroma;
+  pbBopomofoAsPinyin.Invalidate;
+end;
 
 end.

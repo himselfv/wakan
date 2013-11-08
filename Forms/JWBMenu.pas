@@ -231,7 +231,6 @@ type
     aFullscreenMode: TAction;
     FullscreenMode1: TMenuItem;
     N26: TMenuItem;
-    N27: TMenuItem;
     aCategoryManager: TAction;
     miManageCategories: TMenuItem;
     N24: TMenuItem;
@@ -713,9 +712,8 @@ begin
     CheckResolution;
 
     fSettings.LoadSettings;
-    jshowroma:=fSettings.RadioGroup2.ItemIndex=1;
-    cromasys:=fSettings.RadioGroup6.ItemIndex+1;
-    cshowroma:=fSettings.RadioGroup7.ItemIndex=1;
+    jshowroma:=fSettings.rgShowKana.ItemIndex=1;
+    cshowroma:=fSettings.rgShowBopomofo.ItemIndex=1;
 
     if fSettings.cbShowSplashscreen.Checked then begin
       fSplash := TfSplash.Create(Application);
@@ -1149,29 +1147,15 @@ begin
       end;
     end;
 
-   { Load roma_db; these files must be present }
+   // Load roma_db; these files must be present
     roma_db.Clear;
-    roma_db.LoadFromFile('Kunreishiki.roma');
-    roma_db.LoadFromFile('Hepburn.roma');
-
-   { Load user romaji setup. For now just load fixed files }
-    roma_user.Clear;
-    roma_user.LoadFromFile('Awful kiriji.roma');
-//    roma_user.LoadFromFile('Kiriji - Polivanov.roma');
-//    roma_user.LoadFromFile('Kunreishiki.roma');
-//    roma_user.LoadFromFile('Hepburn.roma');
-//    roma_user.LoadFromFile('Czech.roma');
+    roma_db.LoadFromFile(KunreishikiRoma);
+    roma_db.LoadFromFile(HepburnRoma);
+   // roma_user was already read from settings
 
     rpy_db.Clear;
-    rpy_db.LoadFromFile('PinYin.rpy');
-    rpy_db.LoadFromFile('Wade-Giles.rpy');
-    rpy_db.LoadFromFile('Yale.rpy');
-
-   //For now just fixed list
-    rpy_user.Clear;
-    rpy_user.LoadFromFile('PinYin.rpy');
-    rpy_user.LoadFromFile('Wade-Giles.rpy');
-    rpy_user.LoadFromFile('Yale.rpy');
+    rpy_db.LoadFromFile(PinYinRoma);
+   // rpy_user was read from settings
 
   finally
     FreeAndNil(sl);
@@ -1302,7 +1286,7 @@ begin
   curlang:=lanchar;
   if lanchar='j'then
   begin
-    showroma:=fSettings.RadioGroup2.ItemIndex=1;
+    showroma:=fSettings.rgShowKana.ItemIndex=1;
     btnJapaneseMode.Down:=true;
     aJapanese.Checked:=true;
     aChinese.Checked:=false;
@@ -1312,7 +1296,7 @@ begin
     end;
   end else
   begin
-    showroma:=fSettings.RadioGroup7.ItemIndex=1;
+    showroma:=fSettings.rgShowBopomofo.ItemIndex=1;
     btnChineseMode.Down:=true;
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
