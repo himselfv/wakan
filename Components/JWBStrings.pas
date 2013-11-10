@@ -222,11 +222,15 @@ Unicode versions of some function which are unavailable/inefficient on Ansi buil
 On Unicode builds all resolve to default Unicode equivalents.
 }
 function upos(const substr, str: UnicodeString):integer; {$IFDEF UNICODE}inline;{$ENDIF}
-function UTrim(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
-function UTrimLeft(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
-function UTrimRight(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
+function UTrim(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF} overload;
+function UTrimLeft(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF} overload;
+function UTrimRight(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF} overload;
 function ULowerCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
 function UUpperCase(const S: UnicodeString): UnicodeString; {$IFDEF UNICODE}inline;{$ENDIF}
+function UCharPos(const Ch: WideChar; const Str: UnicodeString): integer; inline;
+function UTrim(const S: UnicodeString; const Chars: UnicodeString): UnicodeString; overload;
+function UTrimLeft(const S: UnicodeString; const Chars: UnicodeString): UnicodeString; overload;
+function UTrimRight(const S: UnicodeString; const Chars: UnicodeString): UnicodeString; overload;
 
 function StartsStr(const substr, str: string): boolean; overload;
 function StartsStr(substr, str: PChar): boolean; overload;
@@ -827,6 +831,75 @@ begin
 end;
 {$ENDIF}
 
+//<= 0 if not found
+function UCharPos(const Ch: WideChar; const Str: UnicodeString): integer;
+begin
+  Result := 1;
+  while Result<=Length(Str) do begin
+    if Ch=Str[Result] then
+      exit;
+    Inc(Result);
+  end;
+  Result := -1;
+end;
+
+function UTrim(const S: UnicodeString; const Chars: UnicodeString): UnicodeString;
+var i_l, i_r: integer;
+begin
+ //Left side
+  i_l:=1;
+  while i_l<=Length(s) do begin
+    if UCharPos(s[i_l], Chars)<=0 then
+      break;
+    Inc(i_l);
+  end;
+ //Right side
+  i_r:=Length(s);
+  while i_r>=1 do begin
+    if UCharPos(s[i_r], Chars)<=0 then
+      break;
+    Dec(i_r);
+  end;
+
+  if (i_l=1) and (i_r=Length(s)) then
+    Result := S
+  else
+  if i_r<i_l then
+    Result := ''
+  else
+    Result := Copy(S,i_l,i_r-i_l+1);
+end;
+
+function UTrimLeft(const S: UnicodeString; const Chars: UnicodeString): UnicodeString;
+var i: integer;
+begin
+  i:=1;
+  while i<=Length(s) do begin
+    if UCharPos(s[i], Chars)<=0 then
+      break;
+    Inc(i);
+  end;
+  if i=1 then
+    Result := S
+  else
+    Result := Copy(s,i,MaxInt);
+end;
+
+function UTrimRight(const S: UnicodeString; const Chars: UnicodeString): UnicodeString;
+var i: integer;
+begin
+  i:=Length(s);
+  while i>=1 do begin
+    if UCharPos(s[i], Chars)<=0 then
+      break;
+    Dec(i);
+  end;
+  if i=Length(S) then
+    Result := S
+  else
+    Result := Copy(s,1,i);
+end;
+
 function ULowerCase(const S: UnicodeString): UnicodeString;
 {$IFDEF UNICODE}
 begin
@@ -863,7 +936,6 @@ begin
   if str=nil then
     Result := false
   else begin
-    Result := true;
     while (substr^<>#00) and (substr^=str^) do begin
       Inc(substr);
       Inc(str);

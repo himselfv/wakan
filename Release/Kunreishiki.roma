@@ -1,5 +1,4 @@
-﻿;Kana romanization chart
-;Kunreishiki-romaji
+﻿#Kunreishiki-romaji
 
 [Romaji]
 ; Initial romanization.
@@ -7,7 +6,7 @@
 ; {hiragana} and {katakana} can be in Unicode or Hex
 ; Any number of romaji readings can be given, but the first one
 ; will be used when converting to romaji.
-,ー,-
+ー,-
 っ,ッ,D
 ぁ,ァ,xa
 ぃ,ィ,xi
@@ -19,8 +18,8 @@
 ゅ,ュ,xyu
 ょ,ョ,xyo
 ゎ,ヮ,xwa
-,ヵ,xka
-,ヶ,xke
+ヵ,xka
+ヶ,xke
 ゐ,ヰ,wi
 ゑ,ヱ,we
 を,ヲ,wo
@@ -172,8 +171,7 @@
 でゅ,デュ,dyu
 とぅ,トゥ,tu
 どぅ,ドゥ,du
-ん,ン,n
-ん,ン,n'
+ん,ン,n,n'
 
 ; Additional conversions to do after basic romanization
 [KanaToRomaji]

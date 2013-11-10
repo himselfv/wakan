@@ -75,8 +75,8 @@ So,
 
 var
  { Romaji translation tables. Populated on load. }
-  roma_db: TRomajiTranslator;
-  roma_user: TRomajiTranslator;
+  roma_db: TKanaTranslator;
+  roma_user: TKanaTranslator;
   rpy_db: TPinYinTranslator;
   rpy_user: TPinYinTranslator;
 
@@ -1571,8 +1571,8 @@ initialization
   GridFontSize:=14;
   STB_Canvas:=nil;
 
-  roma_db := TRomajiTranslator.Create;
-  roma_user := TRomajiTranslator.Create;
+  roma_db := TKanaTranslator.Create;
+  roma_user := TKanaTranslator.Create;
   rpy_db := TPinyinTranslator.Create;
   rpy_user := TPinyinTranslator.Create;
 

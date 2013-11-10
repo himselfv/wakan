@@ -10,7 +10,7 @@
 ; {hiragana} and {katakana} can be in Unicode or Hex
 ; Any number of romaji readings can be given, but the first one
 ; will be used when converting to romaji.
-,ー,-
+ー,-
 っ,ッ,D
 ぁ,ァ,ьа
 ぃ,ィ,ьи
@@ -22,8 +22,8 @@
 ゅ,ュ,ью
 ょ,ョ,ьё
 ゎ,ヮ,ьва
-,ヵ,ька
-,ヶ,ьке
+ヵ,ька
+ヶ,ьке
 ゐ,ヰ,ви
 ゑ,ヱ,вэ,ве
 を,ヲ,о,во
@@ -175,8 +175,7 @@
 でゅ,デュ,дю
 とぅ,トゥ,ту
 どぅ,ドゥ,ду
-ん,ン,н
-ん,ン,нъ
+ん,ン,н,нъ
 
 [Priority]
 ; If there are several kana resulting in the same romaji,
