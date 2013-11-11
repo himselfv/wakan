@@ -862,7 +862,7 @@ begin
           +'Japanese advanced radicals search will be disabled.')),
         pchar(_l('#00020^eError')),
         MB_OK or MB_ICONERROR);
-      rainesearch:=nil;
+      RaineRadicals:=nil;
     end else
       try
         LoadRaineRadicals('WAKAN.RAD');

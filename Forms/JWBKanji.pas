@@ -251,10 +251,10 @@ procedure TfKanji.ReadRaineFilter(fltradical:TStringList;const tx:string);
 var sltemp:TStringList;
   s1,s2:string;
   rrind:integer;
-  rrfrom,rrlen:integer;
   rrus:boolean;
   p:PWideChar;
   i:integer;
+  rchars:FString;
 begin
   sltemp:=TStringList.Create;
   sltemp.Sorted:=true;
@@ -264,11 +264,9 @@ begin
   while s1<>'' do
   begin
     rrind:=StrToInt(strqpop(s1,';'));
-    rrlen:=strtoint(copy(raineradicals[rrind-1],9,4));
-    rrfrom:=strtoint(copy(raineradicals[rrind-1],14,5));
-    p:=PWideChar(integer(rainesearch)+rrfrom*sizeof(WideChar));
-    for i:=1 to rrlen do
-    begin
+    rchars := RaineRadicals.GetContainingChars(rrind-1);
+    p:=PWideChar(rchars);
+    for i:=1 to Length(rchars) do begin
       s2:=fstr(p^);
       p:=p+1;
       if not rrus or (sltemp.IndexOf(s2)<>-1) then fltradical.Add(s2);
