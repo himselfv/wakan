@@ -258,6 +258,8 @@ procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
 function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray; overload;
 function SplitStr(s: string; ch: char=','): TStringArray; overload;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
+function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string;
+procedure Append(var ATo: TStringArray; const AFrom: TStringArray);
 
 function remexcl(const s:string):string;
 function remmark(s:string):string;
@@ -1217,6 +1219,31 @@ var i: integer;
 begin
   for i := 0 to Length(sa) - 1 do
     sl.Add(sa[i]);
+end;
+
+function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string;
+var i: integer;
+begin
+  if Length(AParts)<=0 then
+    Result := ''
+  else
+  if Length(AParts)=1 then
+    Result := AParts[0]
+  else begin
+    Result := AParts[0];
+    for i := 1 to Length(AParts)-1 do
+      Result := Result + ASep + AParts[i];
+  end;
+end;
+
+procedure Append(var ATo: TStringArray; const AFrom: TStringArray);
+var base, i: integer;
+begin
+  if Length(AFrom)<=0 then exit;
+  base := Length(ATo);
+  SetLength(ATo, base+Length(AFrom));
+  for i := 0 to Length(AFrom)-1 do
+    ATo[base+i] := AFrom[i];
 end;
 
 { Removes all Wakan marks (unknown kanji, field type, word type etc) from the string }
