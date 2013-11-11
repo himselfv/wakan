@@ -953,7 +953,7 @@ var ALen, AFrom: integer;
   pc: PWideChar;
 begin
   Result := false;
-  GetItemDataSpan(ARadicalIndex, ALen, AFrom);
+  GetItemDataSpan(ARadicalIndex, AFrom, ALen);
   pc := PWideChar(integer(FData)+AFrom*SizeOf(WideChar));
   while ALen>0 do begin
     if pc^=AChar then begin

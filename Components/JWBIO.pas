@@ -128,11 +128,13 @@ type
 
  {$IFDEF MSWINDOWS}
  { Encoding class based on MultiByteToWideChar/WideCharToMultiByte. Slowish but safe.
-  As things are right now, you need a derived classes for actual encodings (see TAcpEncoding) }
+  As things are right now, it's better to use derived classes for actual encodings
+  (e.g. TAcpEncoding) }
   TMultibyteEncoding = class(TEncoding)
   protected
-    FCodepage: integer; //set in Create() override
+    FCodepage: integer;
   public
+    constructor Create(const ACodepage: integer); reintroduce; overload;
     function Read(AStream: TStream; MaxChars: integer): string; override;
     procedure Write(AStream: TStream; const AData: string); override;
   end;
@@ -693,6 +695,15 @@ begin
 end;
 
 {$IFDEF MSWINDOWS}
+{ A note on parametrized encodings:
+ They will work, but no with any special code which assumes one encoding == one type.
+ You also cannot rely on comparisons like "if Encoding1==Encoding2". }
+constructor TMultibyteEncoding.Create(const ACodepage: integer);
+begin
+  inherited Create;
+  FCodepage := ACodepage;
+end;
+
 function TMultibyteEncoding.Read(AStream: TStream; MaxChars: integer): string;
 var inp: array[0..4] of AnsiChar;
   i, pos: integer;
@@ -757,7 +768,7 @@ end;
 
 constructor TAcpEncoding.Create;
 begin
-  inherited;
+  inherited Create();
   FCodepage := CP_ACP;
 end;
 {$ENDIF}
@@ -1906,7 +1917,11 @@ function ConsoleReader(): TStreamDecoder;
 begin
   Result := TStreamDecoder.Open(
     THandleStream.Create(GetStdHandle(STD_INPUT_HANDLE)),
-    TUTF16LEEncoding.Create,
+ {$IFDEF MSWINDOWS}
+    TUTF16Encoding.Create(),
+ {$ELSE}
+    TUTF8Encoding.Create(),
+ {$ENDIF}
     {OwnsStream=}true
   );
 end;

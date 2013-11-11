@@ -904,14 +904,14 @@ end;
 function TCharPropertyCursor.GetJapaneseDefinitions(kanjiIndex: integer; const sep: string): FString;
 begin
  //Newer versions sometimes have both Unicode and non-Unicode fields for compability
-  Result := GetCharValues(kanjiIndex, ptJapaneseDefinitionUnicode, fstr(', '));
+  Result := GetCharValues(kanjiIndex, ptJapaneseDefinitionUnicode, fstr(sep));
   if Result='' then
-    Result := GetCharValues(kanjiIndex, ptJapaneseDefinition, ', ');
+    Result := GetCharValues(kanjiIndex, ptJapaneseDefinition, sep);
 end;
 
 function TCharPropertyCursor.GetChineseDefinitions(kanjiIndex: integer; const sep: string): FString;
 begin
-  Result := GetCharValues(kanjiIndex, ptChineseDefinition, ', ');
+  Result := GetCharValues(kanjiIndex, ptChineseDefinition, sep);
 end;
 
 
