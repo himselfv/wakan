@@ -1,7 +1,7 @@
 NOTES ON BUILDING WAKAN.
 
 I. For Ansi builds you'll need non-unicode Delphi (at most Delphi 2007).
-Install everything as per Components\readme.txt.
+Checkout http://code.google.com/p/jp-tools/ which Wakan uses heavily.
 Build and install JaletControls.
 
 II. Copy wakan.chr from live wakan installation.

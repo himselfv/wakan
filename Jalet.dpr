@@ -62,8 +62,6 @@ uses
   JWBIndex in 'Components\JWBIndex.pas',
   JWBEdictMarkers in 'Components\Parsers\JWBEdictMarkers.pas',
   JWBEdictReader in 'Components\Parsers\JWBEdictReader.pas',
-  JWBKanjiDicReader in 'Components\Parsers\JWBKanjiDicReader.pas',
-  JWBUnihanReader in 'Components\Parsers\JWBUnihanReader.pas',
   JWBAutoImport in 'Components\JWBAutoImport.pas',
   JWBDownloader in 'Components\JWBDownloader.pas',
   JWBDownloadSources in 'Components\JWBDownloadSources.pas',

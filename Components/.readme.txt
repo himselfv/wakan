@@ -1,9 +1,0 @@
-COMPONENTS FOR WAKAN COMPILATION
-
-1. Install JaletControls
-2. Add to the project's search path:
-  Components
-  Components\Package
-  Components\TextTable
-  Components\UrlLabel
-  Components\ScaleMM

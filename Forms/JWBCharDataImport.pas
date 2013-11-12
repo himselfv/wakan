@@ -58,7 +58,7 @@ type
   end;
 
 implementation
-uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, JWBKanjidicReader, JWBUnihanReader,
+uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, KanjidicReader, UnihanReader,
   JWBUnit, JWBIO, JWBFileType;
 
 {$R *.dfm}
@@ -251,9 +251,9 @@ begin
   Result := 0;
   if field=nil then exit;
   if propType=nil then exit;
-  for i := 0 to field.values_used - 1 do
+  for i := 0 to field.values.Length - 1 do
     AddCharProp(propType, field.values[i], 0, pre_idx+i);
-  Result := field.values_used;
+  Result := field.values.Length;
 end;
 
 procedure TCharPropBuilder.AddProperties(propType: PCharPropType; ed: PKanjidicEntry);
@@ -279,9 +279,9 @@ begin
     Result := 0;
     exit;
   end;
-  for i := 0 to ed.meanings_used - 1 do
+  for i := 0 to ed.meanings.Length - 1 do
     AddCharProp(propType, ed.meanings[i], 0, pre_idx+i);
-  Result := ed.meanings_used;
+  Result := ed.meanings.Length;
 end;
 
 function TCharPropBuilder.AddOns(propType: PCharPropType; cla: PReadingClassEntry;
@@ -292,9 +292,9 @@ begin
     Result := 0;
     exit;
   end;
-  for i := 0 to cla.ons_used - 1 do
+  for i := 0 to cla.ons.Length - 1 do
     AddCharProp(propType.id, cla.ons[i], 0, pre_idx+i);
-  Result := cla.ons_used;
+  Result := cla.ons.Length;
 end;
 
 function TCharPropBuilder.AddKuns(propType: PCharPropType; cla: PReadingClassEntry;
@@ -306,14 +306,14 @@ begin
     Result := 0;
     exit;
   end;
-  for i := 0 to cla.kuns_used - 1 do begin
+  for i := 0 to cla.kuns.Length - 1 do begin
     val := cla.kuns[i];
     dot_pos := pos(val, '.');
     if dot_pos>0 then
       delete(val, dot_pos, 1);
     AddCharProp(propType.id, val, dot_pos, pre_idx+i);
   end;
-  Result := cla.kuns_used;
+  Result := cla.kuns.Length;
 end;
 
 procedure TCharPropBuilder.CloseKanji;
@@ -492,7 +492,7 @@ var CChar: TTextTableCursor;
   var field: PFieldEntry;
   begin
     field := ed.GetField(key);
-    if (field=nil) or (field.values_used<1) then begin
+    if (field=nil) or (field.values.Length <1) then begin
       Result := false;
       exit;
     end;
