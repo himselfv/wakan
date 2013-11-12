@@ -73,7 +73,8 @@ uses
   JWBForms in 'Components\JWBForms.pas',
   JWBCharData in 'Components\JWBCharData.pas',
   JWBWakanText in 'Components\JWBWakanText.pas',
-  JWBCharDataImport in 'Forms\JWBCharDataImport.pas' {fCharDataImport};
+  JWBCharDataImport in 'Forms\JWBCharDataImport.pas' {fCharDataImport},
+  RaineRadicals in 'Components\RaineRadicals.pas';
 
 {$R *.RES}
 

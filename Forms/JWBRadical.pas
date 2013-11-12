@@ -5,7 +5,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  Grids, ExtCtrls, Buttons, StdCtrls, JWBStrings, JwbForms;
+  Grids, ExtCtrls, Buttons, StdCtrls, JWBStrings, JwbForms, RaineRadicals;
 
 type
   TRadSearchType = (
@@ -97,63 +97,24 @@ type
  { Casting this to access protected members }
   TFriendlyDrawGrid = class(TDrawGrid);
 
- { Builds Raine radical index from multiple files }
-  TRadicalIndexBuilder = class
-  protected
-    radicals: array of record
-      rad_char: FChar;
-      strokeCount: integer; //stroke count
-      chars: FString;
-    end;
-    function AddRadical(rad_char: WideChar): integer;
-    function FindRadical(rad_char: WideChar): integer;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure ParseRadKFile(filename: string);
-    procedure Save(path: string);
-  end;
-
-{ Radical selection form - a singleton }
-
+//Radical selection form - a singleton
 function fRadical: TfRadical;
 
-{ Raine radicals }
-{ With Raine radicals mean "parts of characters". There could be several of these
- for a character. }
-
 type
-  TRaineRadicals = class
+  TRaineRadicalsPackage = class(TRaineRadicals)
   protected
    { radicals.txt format:
     4E00-01-0762-00000
     FF5C-01-0632-00762
     char-type-len-from }
-    FList: TStringList;
    { search.bin format:
      simply UTF16-LE characters one after another }
-    FData: pointer;
-    function GetCount: integer;
-    function GetItem(const AIndex: integer): FChar;
-    function GetItemType(const AIndex: integer): byte;
-    procedure GetItemDataSpan(const AIndex: integer; out AFrom, ALen: integer);
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Clear;
     procedure LoadFromPackage(const AFilename: string);
-    function FindRadical(const ARadical: FChar): integer;
-    function HasRadical(const AChar: FChar; const ARadicalIndex: integer): boolean; overload;
-    function HasRadical(const AChar: FChar; const ARadical: FChar): boolean; overload;
-    function GetContainingChars(ARadicalIndex: integer): FString; overload;
-    function GetContainingChars(const ARadical: FChar): FString; overload;
-    function GetCharRadicals(const AChar: FChar): FString;
-    property Count: integer read GetCount;
-    property Items[const Index: integer]: FChar read GetItem;
+    procedure SaveToFolder(const APath: string);
   end;
 
 var
-  RaineRadicals: TRaineRadicals; //if nil, Raine radicals are not available
+  RaineRadicals: TRaineRadicalsPackage; //if nil, Raine radicals are not available
 
 procedure LoadRaineRadicals(const AFilename: string);
 procedure UnloadRaineRadicals;
@@ -300,24 +261,21 @@ end;
 
 procedure TfRadical.FillRaineRadicals;
 var i,j: integer;
-  rs:string;
   rad:FString;
-  AType: byte;
-  AFrom, ALen: integer;
+  AStrokes: byte;
 begin
   j:=0;
   for i:=0 to RaineRadicals.Count-1 do
   begin
-    AType := RaineRadicals.GetItemType(i);
-    if AType<>j then begin
-      j:=AType;
+    AStrokes := RaineRadicals[i].StrokeCount;
+    if AStrokes<>j then begin
+      j:=AStrokes;
       rl.Add(inttostr(j));
       rlc.Add('0');
       rli.Add('0');
     end;
 
-    rad := RaineRadicals.Items[i];
-    RaineRadicals.GetItemDataSpan(i, AFrom, ALen);
+    rad := RaineRadicals[i].Radical;
 
     rl.Add(rad);
     if cbLearnedInBlue.Checked and IsKnown(KnownLearned,rad) then
@@ -325,10 +283,10 @@ begin
     else
       if cbUncommonInGray.Checked then
       begin
-        if ALen>100 then
+        if Length(RaineRadicals[i].Chars)>100 then
           rlc.Add('0020')
         else
-          if ALen>20 then
+          if Length(RaineRadicals[i].Chars)>20 then
             rlc.Add('0005')
           else
             rlc.Add('0000');
@@ -586,7 +544,7 @@ begin
       TRadicals.Locate('Number',i);
       FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicalsUnicode);
     end else
-      FSelectedRadicals:=FSelectedRadicals+RaineRadicals.Items[i];
+      FSelectedRadicals:=FSelectedRadicals+RaineRadicals.Items[i].Chars;
     FSelectedIndexes:=FSelectedIndexes+';'+IntToStr(i);
   end;
   delete(FSelectedIndexes,1,1); //delete first ';'
@@ -663,118 +621,85 @@ begin
 end;
 
 
-{ Radical index builder }
+{ Raine radicals }
 
-constructor TRadicalIndexBuilder.Create;
+{ Load/unload shortcuts }
+procedure LoadRaineRadicals(const AFilename: string);
 begin
-  inherited Create;
-end;
-
-destructor TRadicalIndexBuilder.Destroy;
-begin
-  inherited Destroy;
-end;
-
-function TRadicalIndexBuilder.AddRadical(rad_char: WideChar): integer;
-begin
-  Result := Length(radicals);
-  SetLength(radicals, Result+1);
-  radicals[Result].rad_char := rad_char;
-  radicals[Result].strokeCount := 0;
-  radicals[Result].chars := '';
-end;
-
-function TRadicalIndexBuilder.FindRadical(rad_char: WideChar): integer;
-var i: integer;
-begin
-  Result := -1;
-  for i := 0 to Length(radicals) - 1 do
-    if radicals[i].rad_char=rad_char then begin
-      Result := i;
-      break;
-    end;
-end;
-
-procedure TRadicalIndexBuilder.ParseRadKFile(filename: string);
-const
-  UH_RK_COMMENT: FChar = {$IFDEF UNICODE}'#'{$ELSE}'0023'{$ENDIF};
-  UH_RK_RAD: FChar = {$IFDEF UNICODE}'$'{$ELSE}'0024'{$ENDIF};
-var
-  ln: FString;
-  lineno: integer;
-  ch: FChar;
-  ach: AnsiChar;
-  i: integer;
-
-  rad_idx: integer; //index to active radical record
-  rad_char: WideChar;
-  rad_scnt: integer; //stroke count
-
-  conv: TStreamDecoder;
-
-begin
- { See comments in TRaineRadicals for format }
-  rad_idx := -1;
-
-  lineno := 0;
-  conv := OpenTextFile(filename, TEUCEncoding); //RADKFILEs are in EUC
-  while not conv.EOF() do begin
-    ln := conv.ReadLn();
-    Inc(lineno);
-    if flength(ln)<=0 then continue;
-
-    ch := fgetch(ln,1);
-    if ch=UH_RK_COMMENT then
-      continue;
-    if ch=UH_RK_RAD then begin
-      i := 2;
-     //Skip spaces
-      while (i<=flength(ln)) and (fgetch(ln,i)=UH_SPACE) do
-        Inc(i);
-      if i>flength(ln) then
-        raise Exception.Create('Bad RADKFILE: missing glyph char @ line '+IntToStr(lineno));
-     //Read char
-      rad_char := fstrtouni(fgetch(ln, i))[1];
-      Inc(i);
-     //Skip spaces
-      while (i<=flength(ln)) and (fgetch(ln,i)=UH_SPACE) do
-        Inc(i);
-      if i>flength(ln) then
-        raise Exception.Create('Bad RADKFILE: missing stroke count @ line '+IntToStr(lineno));
-     //Read int
-      rad_scnt := 0;
-      while (i<=flength(ln)) and (fgetch(ln,i)<>UH_SPACE) do begin
-        if not ftoansi(fgetch(ln, i), ach)
-        or not (ord(ach)>=ord('0'))
-        or not (ord(ach)<=ord('9')) then
-          raise Exception.Create('Bad RADKFILE: invalid stroke count @ line '+IntToStr(lineno));
-        rad_scnt := rad_scnt * 10 + (Ord(ach)-Ord('0'));
-        Inc(i);
-      end;
-     //There could be jis code/image file name after this, but we're...
-     //Done with this line
-      rad_idx := FindRadical(rad_char);
-      if rad_idx<0 then begin
-        rad_idx := AddRadical(rad_char);
-        radicals[rad_idx].strokeCount := rad_scnt;
-      end;
-      continue;
-    end;
-
-   //Character line
-    if rad_idx<0 then //we must have a rad_idx by this point
-      raise Exception.Create('Bad RADKFILE: character data before any radical identification @ line '+IntToStr(lineno));
-    radicals[rad_idx].chars := radicals[rad_idx].chars + ln;
-
-   //we make no attempt to find duplicate kanjis since it's not in our use case.
-   //RADKFILE/RADKFILE2 cover non-overlapping sets of kanjis
-
+  RaineRadicals := TRaineRadicalsPackage.Create;
+  try
+    RaineRadicals.LoadFromPackage(AFilename);
+  except
+    FreeAndNil(RaineRadicals);
+    raise;
   end;
-  FreeAndNil(conv);
+end;
+
+procedure UnloadRaineRadicals;
+begin
+  FreeAndNil(RaineRadicals);
+end;
+
+   { radicals.txt format:
+    4E00-01-0762-00000
+    FF5C-01-0632-00762
+    char-type-len-from }
+   { search.bin format:
+     simply UTF16-LE characters one after another }
+procedure TRaineRadicalsPackage.LoadFromPackage(const AFilename: string);
+var ps:TPackageSource;
+  ms:TMemoryStream;
+  FList: TStringList;
+  FData: PByte;
+  ALen, AFrom: integer;
+  entry: PRadicalEntry;
+  i,j: integer;
+  tm: cardinal;
+begin
+  tm := GetTickCount();
+  for j := 0 to 1000 do begin
+
+  Clear;
+  FList := nil;
+  FData := nil;
+  ps:=TPackageSource.Create(AFilename,791564,978132,978123);
+  try
+    FList:=TStringList.Create;
+
+    ms:=ps['radicals.txt'].Lock;
+    FList.LoadFromStream(ms);
+    ps['radicals.txt'].Unlock;
+
+    ms:=ps['search.bin'].Lock;
+    GetMem(FData,ms.Size);
+    ms.Read(FData^,ms.Size);
+    ps['search.bin'].Unlock;
+
+    FRadicalsUsed := FList.Count;
+    SetLength(FRadicals, FRadicalsUsed);
+    for i := 0 to FList.Count-1 do begin
+      entry := @FRadicals[i];
+      entry.Radical := fgetch(hextofstr(copy(FList[i],1,4)),1);
+      entry.StrokeCount := StrToInt(copy(FList[i],6,2));
+      ALen := StrToInt(copy(FList[i],9,4));
+      AFrom := StrToInt(copy(FList[i],14,5));
+      SetLength(entry.Chars, ALen);
+      if ALen>0 then
+        Move(PChar(FData+AFrom*SizeOf(Char))^,entry.Chars[1],ALen*SizeOf(Char));
+    end;
+
+  finally
+    ps.Free;
+    FreeMem(FData);
+    FList.Free;
+  end;
+  end;
+  tm := GetTickCount() - tm;
+  ShowMessage(IntToStr(tm));
 end;
 
 { Saves search.bin and radicals.txt to the target dir }
-procedure TRadicalIndexBuilder.Save(path: string);
+procedure TRaineRadicalsPackage.SaveToFolder(const APath: string);
 var
   sl_radicals: TStringList;
   f_searchbin: TStreamEncoder;
@@ -783,20 +708,20 @@ var
   chars_w: UnicodeString;
 begin
   sl_radicals := TStringList.Create;
-  f_searchbin := UnicodeFileWriter(path+'\search.bin');
+  f_searchbin := UnicodeFileWriter(APath+'\search.bin');
   try
     pos := 0;
-    for i := 0 to Length(radicals) - 1 do begin
+    for i := 0 to Length(FRadicals) - 1 do begin
       sl_radicals.Add(
-        fstrtohex(radicals[i].rad_char)+'-'+
-        Format('%2.2d-%4.4d-%5.5d', [radicals[i].strokeCount, flength(radicals[i].chars), pos])
+        fstrtohex(FRadicals[i].Radical)+'-'+
+        Format('%2.2d-%4.4d-%5.5d', [FRadicals[i].strokeCount, flength(FRadicals[i].Chars), pos])
       );
-      chars_w := fstrtouni(radicals[i].chars);
+      chars_w := fstrtouni(FRadicals[i].chars);
       for j := 1 to length(chars_w) do
         f_searchbin.WriteChar(chars_w[j]);
       Inc(pos, length(chars_w));
     end;
-    sl_radicals.SaveToFile(path+'\radicals.txt');
+    sl_radicals.SaveToFile(APath+'\radicals.txt');
     f_searchbin.Flush();
   finally
     f_searchbin.Free;
@@ -807,14 +732,14 @@ end;
 { Rebuilds wakan.rad from RADKFILE }
 procedure BuildRadicalPackage(sourceFiles: array of string);
 var tempDir: string;
-  radIndex: TRadicalIndexBuilder;
+  radicals: TRaineRadicalsPackage;
   pack: TPackageBuilder;
   i: integer;
 begin
-  radIndex := TRadicalIndexBuilder.Create;
+  radicals := TRaineRadicalsPackage.Create;
   for i := 0 to Length(sourceFiles) - 1 do
   try
-    radIndex.ParseRadKFile(sourceFiles[i])
+    radicals.LoadFromRadKFile(sourceFiles[i])
   except
     on E: Exception do begin
       E.Message := 'While importing "'+sourceFiles[i]+'": '+E.Message;
@@ -825,8 +750,8 @@ begin
   tempDir := CreateRandomTempDirName();
   ForceDirectories(tempDir);
   try
-    radIndex.Save(tempDir);
-    FreeAndNil(radIndex);
+    radicals.SaveToFolder(tempDir);
+    FreeAndNil(radicals);
 
     pack := TPackageBuilder.Create;
     try
@@ -853,161 +778,10 @@ begin
       FreeAndNil(pack);
     end;
   finally
-    radIndex.Free;
+    radicals.Free;
     DeleteDirectory(tempDir);
   end;
 end;
-
-{ Raine radicals }
-
-{ Load/unload shortcuts }
-procedure LoadRaineRadicals(const AFilename: string);
-begin
-  RaineRadicals := TRaineRadicals.Create;
-  try
-    RaineRadicals.LoadFromPackage(AFilename);
-  except
-    FreeAndNil(RaineRadicals);
-    raise;
-  end;
-end;
-
-procedure UnloadRaineRadicals;
-begin
-  FreeAndNil(RaineRadicals);
-end;
-
-constructor TRaineRadicals.Create;
-begin
-  inherited;
-  FList := TStringList.Create;
-end;
-
-destructor TRaineRadicals.Destroy;
-begin
-  Clear;
-  FreeAndNil(FList);
-  inherited;
-end;
-
-procedure TRaineRadicals.Clear;
-begin
-  FreeMem(FData);
-  FList.Clear;
-end;
-
-procedure TRaineRadicals.LoadFromPackage(const AFilename: string);
-var ps:TPackageSource;
-  ms:TMemoryStream;
-begin
-  Clear;
-  ps:=TPackageSource.Create(AFilename,791564,978132,978123);
-  try
-    ms:=ps['search.bin'].Lock;
-    GetMem(FData,ms.Size);
-    ms.Read(FData^,ms.Size);
-    ps['search.bin'].Unlock;
-    ms:=ps['radicals.txt'].Lock;
-    FList:=TStringList.Create;
-    FList.LoadFromStream(ms);
-    ps['radicals.txt'].Unlock;
-  finally
-    ps.Free;
-  end;
-end;
-
-function TRaineRadicals.GetCount: integer;
-begin
-  Result := FList.Count;
-end;
-
-function TRaineRadicals.GetItem(const AIndex: integer): FChar;
-begin
-  Result := fgetch(hextofstr(copy(FList[AIndex],1,4)),1);
-end;
-
-function TRaineRadicals.GetItemType(const AIndex: integer): byte;
-begin
-  Result := StrToInt(copy(FList[AIndex],6,2));
-end;
-
-procedure TRaineRadicals.GetItemDataSpan(const AIndex: integer; out AFrom, ALen: integer);
-begin
-  ALen := StrToInt(copy(FList[AIndex],9,4));
-  AFrom := StrToInt(copy(FList[AIndex],14,5));
-end;
-
-function TRaineRadicals.FindRadical(const ARadical: FChar): integer;
-var i: integer;
-begin
-  Result := -1;
-  for i := 0 to Count-1 do
-    if Items[i]=ARadical then begin
-      Result := i;
-      break;
-    end;
-end;
-
-function TRaineRadicals.HasRadical(const AChar: FChar; const ARadicalIndex: integer): boolean;
-var ALen, AFrom: integer;
-  pc: PWideChar;
-begin
-  Result := false;
-  GetItemDataSpan(ARadicalIndex, AFrom, ALen);
-  pc := PWideChar(integer(FData)+AFrom*SizeOf(WideChar));
-  while ALen>0 do begin
-    if pc^=AChar then begin
-      Result := true;
-      break;
-    end;
-    Dec(ALen);
-    Inc(pc);
-  end;
-end;
-
-function TRaineRadicals.HasRadical(const AChar: FChar; const ARadical: FChar): boolean;
-var AIndex: integer;
-begin
-  AIndex := FindRadical(ARadical);
-  if AIndex<0 then
-    Result := false
-  else
-    Result := HasRadical(AChar, AIndex);
-end;
-
-function TRaineRadicals.GetContainingChars(ARadicalIndex: integer): FString;
-var ALen, AFrom: integer;
-begin
-  GetItemDataSpan(ARadicalIndex, AFrom, ALen);
-  SetLength(Result, ALen);
-  if ALen<=0 then exit;
-
-  Move(
-    PByte(integer(FData)+AFrom*SizeOf(WideChar))^,
-    Result[1],
-    ALen*SizeOf(WideChar)
-  );
-end;
-
-function TRaineRadicals.GetContainingChars(const ARadical: FChar): FString;
-var AIndex: integer;
-begin
-  AIndex := FindRadical(ARadical);
-  if AIndex<0 then
-    Result := ''
-  else
-    Result := GetContainingChars(AIndex);
-end;
-
-function TRaineRadicals.GetCharRadicals(const AChar: FChar): FString;
-var i: integer;
-begin
-  Result := '';
-  for i := 0 to Count-1 do
-    if HasRadical(AChar, i) then
-      Result := Result + Items[i];
-end;
-
 
 
 initialization
