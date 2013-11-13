@@ -55,6 +55,11 @@ type
     procedure SaveAcp;
   end;
 
+  TMiscEncodingTests = class(TTestCase)
+  published
+    procedure SurrogateLinefeed;
+  end;
+
  { Writes ~11Mb through the encoder, outputs the time to Status().
   You need console test runner to see it. }
   TReadWriteSpeedTestCase = class(TTestCase)
@@ -333,6 +338,27 @@ begin
   LoadSaveCompare('acp.txt', TACPEncoding, false);
 end;
 
+{ Misc encoding tests }
+
+procedure TMiscEncodingTests.SurrogateLinefeed;
+var inp: TStreamDecoder;
+  linecnt: integer;
+  ln: UnicodeString;
+begin
+  inp := OpenTextFile('Tests\encoding-misc\utf8-surrogates.txt', TUTF8Encoding);
+  Check(inp.ReadLn(ln), 'Cannot read introductory lines');
+  Check(inp.ReadLn(ln), 'Cannot read introductory lines');
+  Check(inp.ReadLn(ln), 'Cannot read data line');
+  Check(Length(ln)>=4, 'Length(data)<4');
+  Check(ln[1]=' ');
+  Check(ln[4]=' ');
+  Check(Ord(ln[2])=$D860);
+  Check(Ord(ln[3])=$DEB0);
+end;
+
+
+{ Speed tests }
+
 procedure TReadWriteSpeedTestCase.TestSpeed(AEncoding: CEncoding);
 var enc: TStreamEncoder;
   dec: TStreamDecoder;
@@ -440,6 +466,7 @@ var ASuite: TTestSuite;
 begin
   ASuite := TTestSuite.create('JWBIO Tests');
   ASuite.addTest(TEncodingTestCase.Suite);
+  ASuite.addTest(TMiscEncodingTests.Suite);
   ASuite.addTest(TReadWriteSpeedTestCase.Suite);
   Result := ASuite;
 end;

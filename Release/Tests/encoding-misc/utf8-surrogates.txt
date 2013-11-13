@@ -1,0 +1,3 @@
+UTF-8 characters which take more than 4 bytes and/or take more than one WideChar in UTF-16. There was bug in IO once where it put random characters in their place.
+The following character is F0A88AB0. It must start at a position 2. UTF16 representation must be D860 DEB0. Before and after must be spaces.
+ 𨊰 .

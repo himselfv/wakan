@@ -304,6 +304,9 @@ function ConsoleUTF8Writer(): TStreamEncoder;
 function UnicodeStreamWriter(AStream: TStream; AOwnsStream: boolean = false): TStreamEncoder;
 function FileWriter(const AFilename: string): TStreamEncoder; inline; //->Unicode on Unicode, ->Ansi on Ansi
 
+{ Misc useful functions }
+function GetLineCount(AText: TStreamDecoder): integer;
+
 implementation
 uses Windows, StreamUtils, JWBConvertTbl;
 
@@ -779,45 +782,103 @@ begin
 end;
 
 function TUTF8Encoding.Read(AStream: TStream; MaxChars: integer): string;
-var b1, b2, b3: byte;
-  tmp: integer;
-  pos: integer;
+var b: array[0..5] of byte;
+ { Thought of making it packed record ( b0,b1,b2,b3,b4,b5: byte; ) for speed,
+  but the assembly is identical. }
+  chno: integer;
+  pc: PWideChar;
 begin
   SetLength(Result, MaxChars);
-  pos := 1;
+  if MaxChars=0 then exit;
+
+  pc := PWideChar(Result);
   while MaxChars>0 do begin
-    if AStream.Read(b1,1)<>1 then break;
+    if AStream.Read(b[0],1)<>1 then break;
+    chno := 0;
 
-    if (b1 and UTF8_MASK2)=UTF8_VALUE2 then begin
-      if AStream.Read(b2,1)<>1 then break;
-      Result[pos] := WideChar(((b1 and $1f) shl 6) or (b2 and $3f))
+    if (b[0] and UTF8_MASK1)=UTF8_VALUE1 then begin
+     //Most common case, single-byte char
+      pc^ := WideChar(b[0]);
     end else
-    if (b1 and UTF8_MASK3)=UTF8_VALUE3 then begin
-      if (AStream.Read(b2,1)<>1)
-      or (AStream.Read(b3,1)<>1) then break;
-      Result[pos] := WideChar(((b1 and $0f) shl 12) or ((b2 and $3f) shl 6) or (b3 and $3f));
+    if (b[0] and UTF8_MASK2)=UTF8_VALUE2 then begin
+      if AStream.Read(b[1],1)<>1 then break;
+      pc^ := WideChar( (b[0] and $1f) shl 6
+        + (b[1] and $3f));
     end else
-    if (b1 and UTF8_MASK4)=UTF8_VALUE4 then
+    if (b[0] and UTF8_MASK3)=UTF8_VALUE3 then begin
+      if AStream.Read(b[1],2)<>2 then break;
+      pc^ := WideChar((b[0] and $0f) shl 12
+        + (b[1] and $3f) shl 6
+        + (b[2] and $3f));
+    end else
+    if (b[0] and UTF8_MASK4)=UTF8_VALUE4 then
     begin
-      AStream.Read(tmp, 3); //and ignore
-     { TODO: Decode and return a surrogate pair }
+      if AStream.Read(b[1],3)<>3 then break; //and ignore
+      chno := (b[0] and $0f) shl 18
+        + (b[1] and $3f) shl 12
+        + (b[2] and $3f) shl 6
+        + (b[3] and $3f);
+     //will be stored below
     end else
-      Result[pos] := WideChar(b1);
+    if (b[0] and UTF8_MASK5)=UTF8_VALUE5 then
+    begin
+      if AStream.Read(b[1],4)<>4 then break; //and ignore
+      chno := (b[0] and $0f) shl 24
+        + (b[1] and $3f) shl 18
+        + (b[2] and $3f) shl 12
+        + (b[3] and $3f) shl 6
+        + (b[4] and $3f);
+    end else
+    if (b[0] and UTF8_MASK6)=UTF8_VALUE4 then
+    begin
+      if AStream.Read(b[1],5)<>5 then break; //and ignore
+      chno := (b[0] and $0f) shl 30
+        + (b[1] and $3f) shl 24
+        + (b[2] and $3f) shl 18
+        + (b[3] and $3f) shl 12
+        + (b[4] and $3f) shl 6
+        + (b[5] and $3f);
+    end else
+     //Broken, unsupported character, probably a remnant of a surrogate. Skip it.
+      Dec(pc);
+    { TODO: Maybe an option to replace broken characters instead? We need
+     parametrized encodings.
+      pc^ := '?'; }
 
-    Inc(pos);
+   //Store complicated characters by setting their chno insteead
+    if chno<>0 then begin
+      if chno<$10000 then
+        pc^ := WideChar(chno)
+      else begin
+        chno := chno-$10000;
+        pc^ := WideChar(UTF16_LEAD + chno shr 10);
+        Inc(pc);
+        Dec(MaxChars);
+        if MaxChars<=0 then
+         //Store additional character because we have nowhere to put it and no way
+         //to roll back (and we shouldn't roll back anyway)
+          Result := Result + WideChar(UTF16_TRAIL + chno and $03FF)
+        else
+          pc^ := WideChar(UTF16_TRAIL + chno and $03FF);
+      end;
+    end;
+
+    Inc(pc);
     Dec(MaxChars);
   end;
 
-  if pos<Length(Result) then
-    SetLength(Result, pos-1);
+  if MaxChars>0 then
+    SetLength(Result, Length(Result)-MaxChars);
 end;
 
 procedure TUTF8Encoding.Write(AStream: TStream; const AData: string);
 var i: integer;
-  w: word;
+  w: integer;
 begin
   for i := 1 to Length(AData) do begin
     w := Word(AData[i]);
+   //TODO: UTF16 surrogates
+
     if (w and UTF8_WRITE1)=0 then
       _fwrite1(AStream, w mod 256)
     else
@@ -827,6 +888,7 @@ begin
         + (UTF8_VALUEC or (w and $3f)) shl 8
       )
     else
+    //TODO: Write 3,4,5-byte sequences when needed
       _fwrite3(AStream,
           (UTF8_VALUE3 or (w shr 12))
         + (UTF8_VALUEC or ((w shr 6) and $3f)) shl 8
@@ -1980,6 +2042,19 @@ begin
  {$ELSE}
   Result := AnsiFileWriter(AFilename);
  {$ENDIF}
+end;
+
+
+{ Reads out everything there is in the file and counts lines. Do not forget to
+ rewind later. Do not do with Console, TCP and other non-rewindable streams.
+ Avoid counting lines beforehand where possible, prefer just parsing for however
+ much lines there is. }
+function GetLineCount(AText: TStreamDecoder): integer;
+var ln: string;
+begin
+  Result := 0;
+  while AText.ReadLn(ln) do
+    Inc(Result);
 end;
 
 end.

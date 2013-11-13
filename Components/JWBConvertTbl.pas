@@ -3,21 +3,31 @@ unit JWBConvertTbl;
 interface
 
 const
-NUMBER_EXTUNICODE = $80;
-NUMBER_MISCUNICODE = 220;
-NUMBER_KANJIUNICODE = 6398;
-UTF8_VALUE1 = $00;        // Value for set bits for single byte UTF-8 Code.
-UTF8_MASK1 = $80;        // Mask (i.e. bits not set by the standard) 0xxxxxxx
-UTF8_WRITE1 = $ff80;      // Mask of bits we cannot allow if we are going to write one byte code
-UTF8_VALUE2 = $c0;        // Two byte codes
-UTF8_MASK2 = $e0;        // 110xxxxx 10yyyyyy
-UTF8_WRITE2 = $f800;      // Mask of mits we cannot allow if we are going to write two byte code
-UTF8_VALUE3 = $e0;        // Three byte codes
-UTF8_MASK3 = $f0;        // 1110xxxx 10yyyyyy 10zzzzzz
-UTF8_VALUE4 = $f0;        // Four byte values
-UTF8_MASK4 = $f8;        // 11110xxx ----    (These values are not supported by JWPce).
-UTF8_VALUEC = $80;        // Continueation byte (10xxxxxx).
-UTF8_MASKC = $c0;
+  NUMBER_EXTUNICODE = $80;
+  NUMBER_MISCUNICODE = 220;
+  NUMBER_KANJIUNICODE = 6398;
+
+  UTF8_MASK1  = $80;     // Mask (i.e. bits set by the standard)
+  UTF8_VALUE1 = $00;     // Value for set bits, 0xxxxxxx
+  UTF8_MASK2  = $e0;     // Two byte codes
+  UTF8_VALUE2 = $c0;     // 110xxxxx 10yyyyyy
+  UTF8_MASK3  = $f0;     // Three byte codes
+  UTF8_VALUE3 = $e0;     // 1110xxxx 10yyyyyy 10zzzzzz
+  UTF8_MASK4  = $f8;     // Four byte codes
+  UTF8_VALUE4 = $f0;     // 11110xxx 10yyyyyy 10zzzzzz ...
+  UTF8_MASK5  = $fc;     // Five byte codes
+  UTF8_VALUE5 = $f8;     // 111110xx 10yyyyyy 10zzzzzz ...
+  UTF8_MASK6  = $fe;     // Six byte codes
+  UTF8_VALUE6 = $fc;     // 1111110x 10yyyyyy 10zzzzzz ...
+  UTF8_MASKC  = $c0;
+  UTF8_VALUEC = $80;     // Continuation byte (10xxxxxx)
+
+  UTF8_WRITE1 = $ff80;   // Mask of bits we cannot allow if we are going to write one byte code
+  UTF8_WRITE2 = $f800;   // Mask of bits we cannot allow if we are going to write two byte code
+
+  UTF16_LEAD  = $D800;  //lead surrogate base
+  UTF16_TRAIL = $DC00;  //trail surrogate base
+
 Table_ExtAscii : array[0..NUMBER_EXTUNICODE-1] of word = (
   $c23b,$c23b,$201a,$0192,$201e,$2026,$2020,$2021,$02c6,$2030,  // $0080..$0089
   $0160,$2039,$0152,$c23b,$c23b,$c23b,$c23b,$2018,$2019,$201c,  // $008a..$0093
