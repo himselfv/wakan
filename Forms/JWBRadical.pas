@@ -653,12 +653,8 @@ var ps:TPackageSource;
   FData: PByte;
   ALen, AFrom: integer;
   entry: PRadicalEntry;
-  i,j: integer;
-  tm: cardinal;
+  i: integer;
 begin
-  tm := GetTickCount();
-  for j := 0 to 1000 do begin
-
   Clear;
   FList := nil;
   FData := nil;
@@ -693,9 +689,6 @@ begin
     FreeMem(FData);
     FList.Free;
   end;
-  end;
-  tm := GetTickCount() - tm;
-  ShowMessage(IntToStr(tm));
 end;
 
 { Saves search.bin and radicals.txt to the target dir }
