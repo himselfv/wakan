@@ -76,10 +76,6 @@ begin
     s := AnsiLowerCase(ParamStr(i));
     if Length(s)<=0 then continue;
 
-   //Aliases
-    if Command='dump' then
-      Command := 'export-text';
-
    //Options
     if s[1]='/' then begin
 
@@ -123,6 +119,11 @@ begin
     if Command='' then begin
       Command := s;
 
+     //Aliases
+      if Command='dump' then
+        Command := 'export-text';
+
+     //Normal parsing
       if Command='export-text' then begin
        //Nothing to initialize
       end else
