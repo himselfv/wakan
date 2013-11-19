@@ -2791,7 +2791,13 @@ begin
   end;
 end;
 
-//When returning chinese, tones are in F03* format (this is used for DB lookups)
+{
+Returns the contents of insert buffer.
+  display: sometimes returns raw romaji (e.g. for chinese), since in chinese
+    we don't convert input to bopomofo until the last moment.
+    => (display==true) means "I'm only going to show it"
+When returning chinese, tones are in F03* format (this is used for DB lookups)
+}
 function TfEditor.GetInsertKana(display:boolean):FString;
 begin
   if curlang='j'then
