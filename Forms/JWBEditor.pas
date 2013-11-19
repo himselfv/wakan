@@ -2716,7 +2716,8 @@ begin
 end;
 
 procedure TfEditor.ResolveInsert(final:boolean);
-var s,s2,s3:string;
+var inskana: string;
+  s,s3:string;
   i:integer;
   lp: TCharacterPropArray;
 begin
@@ -2724,29 +2725,36 @@ begin
   if (buffertype='H') and (resolvebuffer) then
   begin
     with fWordLookup do
-    if StringGrid1.Visible then
-    begin
-      s:=curkanji;
-      priorkanji:=curkanji;
-      s2:=GetInsertKana(false);
-      s3:=curphonetic;
-      //Delete common ending
-      while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
+      if StringGrid1.Visible then
       begin
-        fdelete(s,flength(s),1);
-        fdelete(s3,flength(s3),1);
+        s:=curkanji;
+        priorkanji:=curkanji;
+        inskana:=GetInsertKana(false);
+        s3:=curphonetic;
+        //Delete common ending
+        while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
+        begin
+          fdelete(s,flength(s),1);
+          fdelete(s3,flength(s3),1);
+        end;
+        if (s='') and ({$IFNDEF UNICODE}curkanji[3]>='A'{$ELSE}Ord(curkanji[1]) and $00F0 > $00A0{$ENDIF}) then //TODO: Only 3-rd symbol? WTF?
+          s:=curkanji
+        else
+          s:=s+copy(inskana,length(s3)+1,length(inskana)-length(s3));
+        DisplayInsert(s,nil,true);
+      end else
+      if not final then
+        DisplayInsert(GetInsertKana(true),nil,true);
+    if final then begin
+      inskana := GetInsertKana(false);
+      i:=SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
+     { Not all word may be covered, so we reset prop for other chars.
+      In older Wakans the rest was colored as match as well. I'm not against it,
+      but either way it needs to happen here, not in SetWordTrans }
+      while i<Length(inskana) do begin
+        Inc(i);
+        doctr[ins.y].chars[ins.x+i-1].Reset;
       end;
-      if (s='') and ({$IFNDEF UNICODE}curkanji[3]>='A'{$ELSE}Ord(curkanji[1]) and $00F0 > $00A0{$ENDIF}) then //TODO: Only 3-rd symbol? WTF?
-        s:=curkanji
-      else
-        s:=s+copy(s2,length(s3)+1,length(s2)-length(s3));
-      DisplayInsert(s,nil,true);
-    end else
-    if not final then
-      DisplayInsert(GetInsertKana(true),nil,true);
-    if final then
-    begin
-      SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
       insconfirmed:=true;
       mustrepaint:=true;
       ShowText(false);
@@ -2767,7 +2775,14 @@ begin
         else
           lp[i].SetChar('<', 9, 0, 1); //word continues
       DisplayInsert(s,lp,true);
-      if resolvebuffer then SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
+      if resolvebuffer then begin
+        i:=SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
+       { Not all word may be covered, so we reset prop for other chars. See above. }
+        while i<Length(inskana) do begin
+          Inc(i);
+          doctr[ins.y].chars[ins.x+i-1].Reset;
+        end;
+      end;
       insconfirmed:=true;
       mustrepaint:=true;
       ShowText(false);
@@ -3003,8 +3018,9 @@ begin
   end;
   s2:=doc.GetDoc(x,y);
   dw:=GetDocWord(x,y,wt,{stopuser=}not (tfManuallyChosen in flags));
- //GetDocWord makes only upper bound guess on the length of the word,
- //the search result gives us exact value.
+ { GetDocWord makes upper bound guess on the length of the word,
+  then search result gives us exact value.
+  It may be shorter (itteoku => only ITTE is parsed) or longer (rarely) }
   if word<>nil then
     rlen:=word.slen
   else
