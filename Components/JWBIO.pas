@@ -294,12 +294,12 @@ function CompareFiles(const AFilename1, AFilename2: string): boolean;
 { Compatibility functions }
 function AnsiFileReader(const AFilename: string): TStreamDecoder;
 function UnicodeFileReader(const AFilename: string): TStreamDecoder;
-function ConsoleReader(): TStreamDecoder;
+function ConsoleReader(AEncoding: TEncoding = nil): TStreamDecoder;
 function UnicodeStreamReader(AStream: TStream; AOwnsStream: boolean = false): TStreamDecoder;
 function FileReader(const AFilename: string): TStreamDecoder; inline; //->Unicode on Unicode, ->Ansi on Ansi
 function AnsiFileWriter(const AFilename: string): TStreamEncoder;
 function UnicodeFileWriter(const AFilename: string): TStreamEncoder;
-function ConsoleWriter(): TStreamEncoder;
+function ConsoleWriter(AEncoding: TEncoding = nil): TStreamEncoder;
 function ConsoleUTF8Writer(): TStreamEncoder;
 function UnicodeStreamWriter(AStream: TStream; AOwnsStream: boolean = false): TStreamEncoder;
 function FileWriter(const AFilename: string): TStreamEncoder; inline; //->Unicode on Unicode, ->Ansi on Ansi
@@ -727,7 +727,7 @@ begin
     while i<Length(inp) do begin
       if AStream.Read(inp[i],1)<>1 then break;
 
-      if MultiByteToWideChar(CP_ACP, 0, @inp[0], i+1, @Result[pos], 1)>=1 then begin
+      if MultiByteToWideChar(FCodepage, 0, @inp[0], i+1, @Result[pos], 1)>=1 then begin
         found := true;
         break;
       end;
@@ -763,7 +763,10 @@ var buf: AnsiString;
 begin
   if Length(AData)=0 then exit;
   SetLength(buf, Length(AData)*4); //there aren't any encodings with more than 4 byte chars
-  written := WideCharToMultiByte(CP_ACP, 0, PWideChar(AData), Length(AData), PAnsiChar(buf), Length(buf), @def, nil);
+  if (FCodepage=CP_UTF8) or (FCodepage=CP_UTF7) then //defaultchar must be set to nil
+    written := WideCharToMultiByte(FCodepage, 0, PWideChar(AData), Length(AData), PAnsiChar(buf), Length(buf), nil, nil)
+  else
+    written := WideCharToMultiByte(FCodepage, 0, PWideChar(AData), Length(AData), PAnsiChar(buf), Length(buf), @def, nil);
   if written=0 then
     RaiseLastOsError();
   AStream.Write(buf[1], written);
@@ -1975,15 +1978,28 @@ begin
   Result := OpenTextFile(AFilename, TUnicodeEncoding);
 end;
 
-function ConsoleReader(): TStreamDecoder;
+function ConsoleReader(AEncoding: TEncoding = nil): TStreamDecoder;
+var AInputHandle: THandle;
 begin
+  AInputHandle := GetStdHandle(STD_INPUT_HANDLE);
+  if AEncoding=nil then begin
+  {$IFDEF MSWINDOWS}
+  { If our outputs are redirected, we *really* do not know what to expect, so we
+   default to UTF8 (allows for ASCII and interoperability).
+   But if we are sure we're reading from console, we may optimize and use the
+   console CP. }
+    if GetFileType(AInputHandle)=FILE_TYPE_CHAR then
+      AEncoding := TMultibyteEncoding.Create(GetConsoleOutputCP())
+    else
+      AEncoding := TUTF8Encoding.Create();
+  {$ELSE}
+      AEncoding := TUTF8Encoding.Create();
+  {$ENDIF}
+  end;
+
   Result := TStreamDecoder.Open(
-    THandleStream.Create(GetStdHandle(STD_INPUT_HANDLE)),
- {$IFDEF MSWINDOWS}
-    TUTF16Encoding.Create(),
- {$ELSE}
-    TUTF8Encoding.Create(),
- {$ENDIF}
+    THandleStream.Create(AInputHandle),
+    AEncoding,
     {OwnsStream=}true
   );
 end;
@@ -2012,22 +2028,35 @@ begin
   Result := CreateTextFile(AFilename, TUnicodeEncoding);
 end;
 
-function ConsoleWriter(): TStreamEncoder;
+function ConsoleWriter(AEncoding: TEncoding): TStreamEncoder;
+var AOutputHandle: THandle;
 begin
+  AOutputHandle := GetStdHandle(STD_OUTPUT_HANDLE);
+  if AEncoding=nil then begin
+  {$IFDEF MSWINDOWS}
+  { If our outputs are redirected, we *really* do not know which codepage to
+   output in, so we use UTF8 as default.
+   But if we are sure we're printing to console, we may optimize and use the
+   console CP. }
+    if GetFileType(AOutputHandle)=FILE_TYPE_CHAR then
+      AEncoding := TMultibyteEncoding.Create(GetConsoleOutputCP())
+    else
+      AEncoding := TUTF8Encoding.Create();
+  {$ELSE}
+      AEncoding := TUTF8Encoding.Create();
+  {$ENDIF}
+  end;
+
   Result := TStreamEncoder.Open(
-    THandleStream.Create(GetStdHandle(STD_OUTPUT_HANDLE)),
-    TUTF16LEEncoding.Create,
+    THandleStream.Create(AOutputHandle),
+    AEncoding,
     {OwnsStream=}true
   );
 end;
 
 function ConsoleUTF8Writer(): TStreamEncoder;
 begin
-  Result := TStreamEncoder.Open(
-    THandleStream.Create(GetStdHandle(STD_OUTPUT_HANDLE)),
-    TUTF8Encoding.Create,
-    {OwnsStream=}true
-  );
+  Result := ConsoleWriter(TUTF8Encoding.Create);
 end;
 
 function UnicodeStreamWriter(AStream: TStream; AOwnsStream: boolean = false): TStreamEncoder;
