@@ -75,7 +75,7 @@ var
 procedure InitLanguage;
 
 implementation
-uses JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
+uses UITypes, JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
 
 {$R *.DFM}
 
@@ -324,7 +324,6 @@ end;
 Do not use ^ and to not start your default text with letter "e". }
 function TfLanguage.TranslateString(id:string):string;
 var i,sk,m,l,r:integer;
-    s:string;
 begin
   result:=id;
   if (length(id)>6) and (id[1]='#') then

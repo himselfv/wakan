@@ -13,7 +13,7 @@ Particle list
 type
   TParticleList = class(TStringList)
   public
-    procedure Add(const entry: string); inline;
+    procedure Add(const entry: string); reintroduce; inline;
   end;
 
 {

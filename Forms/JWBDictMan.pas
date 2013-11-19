@@ -64,8 +64,7 @@ type
   end;
 
 implementation
-
-uses JWBMenu, JWBDictImport, JWBDic, JWBDicSearch;
+uses UITypes, JWBMenu, JWBDictImport, JWBDic, JWBDicSearch;
 
 {$R *.DFM}
 

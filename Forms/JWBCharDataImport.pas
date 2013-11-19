@@ -59,7 +59,7 @@ type
 
 implementation
 uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, KanjidicReader, UnihanReader,
-  JWBUnit, JWBIO, JWBFileType;
+  JWBUnit, JWBIO, JWBFileType, FastArray;
 
 {$R *.dfm}
 
