@@ -110,6 +110,7 @@ type
     procedure Clear; virtual;
     procedure Add(const r: TTranslationRule; APrior: integer);
     function FindItem(const APhonetic: string): PTranslationRule; virtual;
+    function IndexOf(const AItem: PTranslationRule): integer;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PTranslationRule read GetItem; default;
   end;
@@ -177,7 +178,7 @@ type
   );
   TResolveFlags = set of TResolveFlag;
 
- { Instantiate and call this. }
+ { Instantiate and call this or descendants. }
   TRomajiTranslator = class
   protected
     FTablesLoaded: integer;
@@ -574,6 +575,17 @@ begin
   for i := 0 to Self.Count-1 do
     if FList[i].Phonetic=APhonetic then begin
       Result := FList[i];
+      break;
+    end;
+end;
+
+function TTranslationTable.IndexOf(const AItem: PTranslationRule): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Self.Count-1 do
+    if FList[i]=AItem then begin
+      Result := i;
       break;
     end;
 end;
