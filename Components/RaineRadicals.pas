@@ -47,7 +47,7 @@ type
   ERadKFileParsingException = class(Exception);
 
 implementation
-uses JWBIO;
+uses Classes, JWBIO;
 
 constructor TRaineRadicals.Create;
 begin
@@ -217,8 +217,5 @@ begin
   end;
   FreeAndNil(conv);
 end;
-
-
-
 
 end.
