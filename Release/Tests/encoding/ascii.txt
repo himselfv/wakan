@@ -1,3 +1,0 @@
-Example ansi text.
-Test line.
-Another line.
