@@ -1,41 +1,27 @@
 ﻿unit JWBKanaConv;
 {
 Converts kana to romaji and back according to a set of rules.
-This is a VERY hot codepath when translating in Wakan. Therefore we use
+This is a very hot codepath when translating in Wakan. Therefore we use
 balanced binary trees and do everything in a very optimal way.
 
 Throughout this file Romaji stands to mean also Polaji, Kiriji, Pinyin etc.
 
 Unicode only.
 
-TODO: SortEntries receives APhoneticList. Make sure in kana case it's hiraganized
-  because it just compares it to Phonetic.
-  * Same with FindItem()
-TODO: Replacement rules must also be prioritized by first, second file and so on.
-  Duplicate replacement rules have to be ignored (presently duplicated).
 TODO: Unit tests. Speed tests.
-
-At this moment hiragana and katakana, lowercase and uppercase are equal. The
-code prefers to turn everything lowercase, hiragana.
 }
-
-{
-Where katakana/hiragana matters:
-1. Phonetic is stored in Hiragana.
-2. SortEntries() receives APhoneticList in Hiragana
-3. FindItem expects Hiragana
-4. KanaToRomaji converts to Hiragana on the fly
-5. RomajiToKana converts from Hiragana to whatever is requested
-}
-
-{$DEFINE KATA_AT_SEARCH}
-//Convert katakana to hiragana at search instead of looking for it as is
 
 interface
 uses Classes, JWBStrings, BalancedTree;
 
+{$DEFINE KATA_AT_SEARCH}
+{ Convert katakana to hiragana at search instead of looking for it as is.
+ Atm the only supported way. }
+
 type
   PFCharPtr = PWideChar;
+
+ { Common classes for handling roma<->kata translations. }
 
  { A rule assigning a set of Romaji to one Phonetic syllable.
   First Romaji entry is the one which will be used for Phonetic -> Romaji replacements }
@@ -140,14 +126,15 @@ type
     function GetItemPtr(Index: integer): PRomajiReplacementRule; inline;
     function MakeNewItem: PRomajiReplacementRule;
   public
-    procedure Add(const r: TRomajiReplacementRule);
     procedure Clear;
+    procedure Add(const r: TRomajiReplacementRule);
+    function Find(const r: TRomajiReplacementRule): integer; overload;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PRomajiReplacementRule read GetItemPtr; default;
   end;
 
  {
-  Katakana and romaji in dictionaries can contain latin letters and punctuation.
+  Kana and romaji in dictionaries can contain latin letters and punctuation.
   In general, it is safe to mix latin letters with katakana/bopomofo, but not with
   romaji (i.e. is "ding" an english word or a pinyin syllable?)
 
@@ -176,7 +163,21 @@ type
   );
   TResolveFlags = set of TResolveFlag;
 
- { Instantiate and call descendants. }
+ {
+  Instantiate and call descendants:
+
+    conv := TKanaTranslator.Create;
+    conv.LoadFromFile('Hepburn.roma');
+    roma := conv.KanaToRomaji(kana);
+    kana := conv.RomajiToKana(roma);
+
+  You can load several transliterations but they may conflict:
+
+    conv.LoadFromFile('Hepburn.roma');
+    conv.LoadFromFile('Kiriji.roma');
+    kana := conv.RomajiToKana(kiriji);
+
+  }
   TRomajiTranslator = class
   protected
     FTablesLoaded: integer;
@@ -190,18 +191,28 @@ type
     procedure Clear;
     procedure LoadFromFile(const filename: string);
     procedure LoadFromStrings(const sl: TStrings);
-    function KanaToRomaji(const s:FString;flags:TResolveFlags):string; virtual; abstract;
-    function RomajiToKana(const s:string;flags:TResolveFlags):FString; virtual; abstract;
+    function KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string; virtual; abstract;
+    function RomajiToKana(const AString: string; AFlags: TResolveFlags): FString; virtual; abstract;
   end;
 
+ { At this moment hiragana and katakana, lowercase and uppercase chars are equal.
+  The code converts everything to lowercase, hiragana internally before passing
+  to any of the common code.
+  The only exception is kana index where entries are created both for hira and
+  kata, for speed. }
   TKanaTranslator = class(TRomajiTranslator)
   protected
     FTrans: TKanaTranslationTable;
     procedure CreateTranslationTable; override;
     function SingleKanaToRomaji(var ps: PFChar; flags: TResolveFlags): string;
   public
-    function KanaToRomaji(const s:FString;flags:TResolveFlags):string; override;
-    function RomajiToKana(const s:string;flags:TResolveFlags):FString; override;
+   { Always generates lowcase romaji }
+    function KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string; override;
+   { Supports inline markers:
+      K -- from this point it's katakana
+      H -- from this point it's hiragana }
+    function RomajiToKana(const AString: string; AFlags: TResolveFlags): FString; override;
+   { Someone might add an option to treat BIG LETTERS as katakana instead }
   end;
 
   TPinYinTranslator = class(TRomajiTranslator)
@@ -685,7 +696,29 @@ end;
 
 procedure TRomajiReplacementTable.Add(const r: TRomajiReplacementRule);
 begin
-  MakeNewItem^ := r;
+ { Skip exact duplicates. We still add expanded rules, e.g.
+          nn->nm only for hiragana
+      ++  nn->nm for all cases
+   The reason we don't simply upgrade in place is that rules are prioritized:
+   all rules from the preceding files must execute before we can apply this
+   expanded rule (maybe someone before us relied on NN not being replaced for
+   katakana) }
+  if Find(r)<0 then
+    MakeNewItem^ := r;
+end;
+
+{ Locates the replacement rule which is exactly equal to the given rule. }
+function TRomajiReplacementTable.Find(const r: TRomajiReplacementRule): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Count-1 do
+    if (r.s_find=Items[i].s_find)
+    and (r.s_repl=Items[i].s_repl)
+    and (r.pref=Items[i].pref) then begin
+      Result := i;
+      break;
+    end;
 end;
 
 procedure TRomajiReplacementTable.Clear;
@@ -961,7 +994,7 @@ begin
   Inc(ps);
 end;
 
-function TKanaTranslator.KanaToRomaji(const s:FString;flags:TResolveFlags):string;
+function TKanaTranslator.KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string;
 var lowcased_s: FString;
   fn:string;
   s2:string;
@@ -969,17 +1002,17 @@ var lowcased_s: FString;
   i: integer;
   r: PRomajiReplacementRule;
 begin
-  if Length(s)<=0 then begin
+  if Length(AString)<=0 then begin
     Result := '';
     exit;
   end;
-  lowcased_s := Lowercase(s);
+  lowcased_s := Lowercase(AString);
   s2 := '';
   ps := PWideChar(lowcased_s);
 
  { Translation }
   while ps^<>#00 do begin
-    fn := SingleKanaToRomaji(ps, flags); //also eats one or two symbols
+    fn := SingleKanaToRomaji(ps, AFlags); //also eats one or two symbols
     s2:=s2+fn;
   end;
 
@@ -993,12 +1026,7 @@ begin
   result:=s2;
 end;
 
-{
-Also accepts inline flags:
-  K -- from this point it's katakana
-  H -- from this point it's hiragana
-}
-function TKanaTranslator.RomajiToKana(const s:string;flags:TResolveFlags):string;
+function TKanaTranslator.RomajiToKana(const AString: string; AFlags: TResolveFlags): string;
 var s2,s3,fn:string;
   kata:integer;
   l,i:integer;
@@ -1007,14 +1035,14 @@ var s2,s3,fn:string;
   bi: TBinTreeItem;
   bir: TRomajiIndexEntry absolute bi;
 begin
-  if length(s)<=0 then begin
+  if length(AString)<=0 then begin
     Result := '';
     exit;
   end;
 
  { First character sometimes codes something (sometimes doesn't...) -- see replacements }
-  pref := s[1];
-  s2 := s;
+  pref := AString[1];
+  s2 := AString;
 
  { Replacements }
   for i := 0 to FReplRtk.Count - 1 do begin
@@ -1047,7 +1075,7 @@ begin
       end;
 
     if l=0 then begin
-      if not (rfDeleteInvalidChars in flags) then
+      if not (rfDeleteInvalidChars in AFlags) then
         if s2[1]<>'''' then
          //Latin letter (supposedly)
           fn := s2[1]
@@ -1061,7 +1089,7 @@ begin
       l:=1;
       fn:='';
     end else
-    if (s2[1]='K') or (s2[1]='Q') then begin
+    if (s2[1]='K') then begin
       kata:=1;
       l:=1;
       fn:='';
