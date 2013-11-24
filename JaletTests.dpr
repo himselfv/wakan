@@ -27,7 +27,6 @@ uses
   GUITestRunner,
   TextTestRunner,
   TextTableTests in 'Components\TextTable\TextTableTests.pas',
-  JWBIOTests in 'Components\JWBIOTests.pas',
   JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
 
 {$R *.RES}
