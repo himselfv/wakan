@@ -8,17 +8,15 @@ Throughout this file Romaji stands to mean also Polaji, Kiriji, Pinyin etc.
 
 Unicode only.
 
-TODO: Make Pinyin convertor use BTrees too.
 TODO: SortEntries receives APhoneticList. Make sure in kana case it's hiraganized
   because it just compares it to Phonetic.
-TODO: Same with FindItem()
-TODO: Замены первого-второго-ит.д. файла тоже разделять, а не кучей
-TODO: Test speed
-TODO: Decide if we should go with:
-  1. Store: Hiragana only, Index: Hiragana only, convert on search/insert
-  2. Store: Hiragana only, Index: Hiragana and Katakana, search intact, convert on insert
-  3. Store: Hiragana and Katakana, Index: Hiragana and Katakana, search/insert intact
-  For the time being going with 1.
+  * Same with FindItem()
+TODO: Replacement rules must also be prioritized by first, second file and so on.
+  Duplicate replacement rules have to be ignored (presently duplicated).
+TODO: Unit tests. Speed tests.
+
+At this moment hiragana and katakana, lowercase and uppercase are equal. The
+code prefers to turn everything lowercase, hiragana.
 }
 
 {
@@ -178,7 +176,7 @@ type
   );
   TResolveFlags = set of TResolveFlag;
 
- { Instantiate and call this or descendants. }
+ { Instantiate and call descendants. }
   TRomajiTranslator = class
   protected
     FTablesLoaded: integer;
@@ -821,7 +819,7 @@ begin
            //roma,kana,kana,kana
             parts := SplitStr(ln,',');
             if Length(parts)<=1 then continue;
-            bi := TRomajiIndexEntry.Create(parts[0], FTablesLoaded);
+            bi := TRomajiIndexEntry.Create(Lowercase(parts[0]), FTablesLoaded);
             bi_ex := TRomajiIndexEntry(FTrans.FRomajiIndex.SearchItem(bi));
             FreeAndNil(bi);
             if bi_ex<>nil then begin
@@ -865,7 +863,7 @@ begin
   end;
   SetLength(Result.romaji, Length(s_parts)-base);
   for i := 0 to Length(Result.romaji)-1 do
-    Result.romaji[i] := s_parts[base+i];
+    Result.romaji[i] := Lowercase(s_parts[base+i]);
 end;
 
 //Parses romaji translation rule from string form into record
@@ -874,8 +872,8 @@ function ParseRomajiReplacementRule(const s: string): TRomajiReplacementRule; in
 var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 2);
-  Result.s_find := s_parts[0];
-  Result.s_repl := s_parts[1];
+  Result.s_find := Lowercase(s_parts[0]);
+  Result.s_repl := Lowercase(s_parts[1]);
   Result.pref := #00; //by default
 end;
 
@@ -964,7 +962,7 @@ begin
 end;
 
 function TKanaTranslator.KanaToRomaji(const s:FString;flags:TResolveFlags):string;
-var upcased_s: FString;
+var lowcased_s: FString;
   fn:string;
   s2:string;
   ps: PWideChar;
@@ -975,14 +973,13 @@ begin
     Result := '';
     exit;
   end;
-  upcased_s := Uppercase(s);
+  lowcased_s := Lowercase(s);
   s2 := '';
-  ps := PWideChar(upcased_s);
+  ps := PWideChar(lowcased_s);
 
  { Translation }
   while ps^<>#00 do begin
     fn := SingleKanaToRomaji(ps, flags); //also eats one or two symbols
-    if (fn='O') and (length(s2)>0) then fn:=upcase(s2[length(s2)]); ///TODO:WTF?!!
     s2:=s2+fn;
   end;
 
@@ -1094,7 +1091,7 @@ begin
 end;
 
 //Finds best matching entry for the pinyin syllable at the start of the text
-//Text must be uppercased
+//Text must be lowercased
 function TPinYinTranslator.PinyinBestMatch(const AText: string; out ARomaIdx: integer): integer;
 var i, j, cl: integer;
   rom: string;
@@ -1115,7 +1112,7 @@ begin
 end;
 
 //Finds first entry which starts with ASyllable
-//Text must be uppercased.
+//Text must be lowercased.
 function TPinYinTranslator.PinyinPartialMatch(const ASyllable: string): integer;
 var i, j: integer;
   rom: string;
@@ -1185,7 +1182,7 @@ var s2:string;
   ch:WideChar;
   curstr:string;
 begin
-  curstr := uppercase(AString);
+  curstr := LowerCase(AString);
   repl(curstr,'v','u:');
   s2:='';
   while curstr<>'' do
@@ -1463,7 +1460,7 @@ begin
     else cc:='?';
     if (((cc>='A') and (cc<='Z')) or (cc=':')) and (cc<>'''') then curcc:=curcc+cc;
 
-    fnd:=romac.PinyinPartialMatch(uppercase(curcc))>=0;
+    fnd:=romac.PinyinPartialMatch(LowerCase(curcc))>=0;
     if ((cc<'A') or (cc>'Z')) and (cc<>':') then
     begin
       if curcc<>'' then cnv2:=cnv2+lowercase(curcc)+curp;
