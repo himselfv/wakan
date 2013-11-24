@@ -299,7 +299,8 @@ type //Character types for EvalChar
     EC_IDG_OTHER        = 5, // ideographic other
     EC_LATIN_FW         = 6, // full-width latin
     EC_LATIN_HW         = 7, // half-width latin
-    EC_KATAKANA_HW      = 8  // half-width katakana
+    EC_KATAKANA_HW      = 8, // half-width katakana
+    EC_BOPOMOFO         = 9  // bopomofo
   );
   TEvalCharTypes = set of TEvalCharType;
 
@@ -1471,6 +1472,7 @@ begin
   if (ch>=$3000) and (ch<=$303F) then result:=EC_IDG_PUNCTUATION else
   if (ch>=$3040) and (ch<=$309F) then result:=EC_HIRAGANA else
   if (ch>=$30A0) and (ch<=$30FF) then result:=EC_KATAKANA else
+  if (ch>=$3100) and (ch<=$312F) then result:=EC_BOPOMOFO else
   if (ch>=$3200) and (ch<=$33FF) then result:=EC_IDG_OTHER else
   if (ch>=$3400) and (ch<=$9FFF) then result:=EC_IDG_CHAR else
   if (ch>=$F900) and (ch<=$FAFF) then result:=EC_IDG_CHAR else
@@ -1493,6 +1495,7 @@ begin
   if (char>='3000') and (char<='303F') then result:=EC_IDG_PUNCTUATION else
   if (char>='3040') and (char<='309F') then result:=EC_HIRAGANA else
   if (char>='30A0') and (char<='30FF') then result:=EC_KATAKANA else
+  if (char>='3100') and (char<='312F') then result:=EC_BOPOMOFO else
   if (char>='3200') and (char<='33FF') then result:=EC_IDG_OTHER else
   if (char>='3400') and (char<='9FFF') then result:=EC_IDG_CHAR else
   if (char>='F900') and (char<='FAFF') then result:=EC_IDG_CHAR else

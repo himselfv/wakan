@@ -1,0 +1,20 @@
+﻿# Add complicated cases as you stumble upon them
+# Normal translations
+souzou=そうぞう
+shikkari=しっかり
+kyuushuu=きゅうしゅう
+shimatta=しまった
+# Kana
+Ksouzou=ソウゾウ
+Kshikkari=シッカリ
+Kkyuushuu=キューシュー
+Kshimatta=シマッタ
+# Backwards
+そうぞう=souzou
+しっかり=shikkari
+きゅうしゅう=kyuushuu
+しまった=shimatta
+ソウゾウ=souzou
+シッカリ=shikkari
+キューシュー=kyuushuu
+シマッタ=shimatta

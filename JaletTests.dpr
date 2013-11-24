@@ -22,12 +22,14 @@ program JaletTests;
 {$ENDIF}
 
 uses
-  SysUtils, Forms,
+  SysUtils,
+  Forms,
   TestFramework,
   GUITestRunner,
   TextTestRunner,
   TextTableTests in 'Components\TextTable\TextTableTests.pas',
-  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
+  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas',
+  JWBKanaConvTests in 'Components\JWBKanaConvTests.pas';
 
 {$R *.RES}
 

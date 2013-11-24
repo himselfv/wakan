@@ -7,8 +7,6 @@ balanced binary trees and do everything in a very optimal way.
 Throughout this file Romaji stands to mean also Polaji, Kiriji, Pinyin etc.
 
 Unicode only.
-
-TODO: Unit tests. Speed tests.
 }
 
 interface
@@ -205,6 +203,7 @@ type
     FTrans: TKanaTranslationTable;
     procedure CreateTranslationTable; override;
     function SingleKanaToRomaji(var ps: PFChar; flags: TResolveFlags): string;
+    procedure RomaReplace(var s: string; const r: PRomajiReplacementRule);
   public
    { Always generates lowcase romaji }
     function KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string; override;
@@ -1026,12 +1025,44 @@ begin
   result:=s2;
 end;
 
+function isMatch(pc_sub, pc_s: PChar): boolean; inline;
+begin
+  while (pc_sub^<>#00) and (pc_s^<>#00) do begin
+    if pc_sub^<>pc_s^ then break;
+    Inc(pc_sub);
+    Inc(pc_s);
+  end;
+  Result := pc_sub^=#00;
+end;
+
+{ Performs a replacement, minding Hiragana/Katakana mode. }
+procedure TKanaTranslator.RomaReplace(var s: string; const r: PRomajiReplacementRule);
+var mode: char;
+  i: integer;
+begin
+  mode := 'H';
+
+  i := 1;
+  while i<Length(s) do begin
+    if s[i]='H' then
+      mode := 'H'
+    else
+    if s[i]='K' then
+      mode := 'K'
+    else
+    if (r.pref=#00) or (r.pref=mode) then
+      if isMatch(@r.s_find[1], @s[i]) then begin
+        s := copy(s,1,i-1)+r.s_repl+copy(s,i+Length(r.s_find),MaxInt);
+        Inc(i,Length(r.s_find)-1);
+      end;
+    Inc(i);
+  end;
+end;
+
 function TKanaTranslator.RomajiToKana(const AString: string; AFlags: TResolveFlags): string;
 var s2,s3,fn:string;
   kata:integer;
   l,i:integer;
-  pref: char;
-  r: PRomajiReplacementRule;
   bi: TBinTreeItem;
   bir: TRomajiIndexEntry absolute bi;
 begin
@@ -1040,19 +1071,11 @@ begin
     exit;
   end;
 
- { First character sometimes codes something (sometimes doesn't...) -- see replacements }
-  pref := AString[1];
   s2 := AString;
 
  { Replacements }
-  for i := 0 to FReplRtk.Count - 1 do begin
-    r := FReplRtk[i];
-    if (r.pref=#00) or (r.pref=pref) then
-   { Only a limited set of first letters are prefixes, so we shouldn't just compare pref to whatever --
-    -- but since we only load those supported prefixes into r.pref and there's no way to break that,
-     this will do. }
-      repl(s2, r.s_find, r.s_repl);
-  end;
+  for i := 0 to FReplRtk.Count - 1 do
+    RomaReplace(s2, FReplRtk[i]);
 
  { Translation }
   kata:=0;
