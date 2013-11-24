@@ -2909,7 +2909,7 @@ begin
     '}':immchar:={$IFNDEF UNICODE}'3011'{$ELSE}#$3011{$ENDIF};
     ' ':immchar:={$IFNDEF UNICODE}'0020'{$ELSE}#$0020{$ENDIF};
   end;
-  if Ord(c)<=$0020 then //not a printable char
+  if Ord(c)<$0020 then //not a printable char
     exit;
   if (AnsiUppercase(c)=c) and ((c<'0') or (c>'9')) then
   begin
