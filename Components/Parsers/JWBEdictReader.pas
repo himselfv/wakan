@@ -114,6 +114,7 @@ begin
   kanji_used := 0;
   kana_used := 0;
   senses_used := 0;
+  pop := false;
 end;
 
 function TEdictArticle.AddKanji: PKanjiEntry;
