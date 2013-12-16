@@ -270,6 +270,7 @@ function ureplc(const s:UnicodeString;const sub,rep:UnicodeString):UnicodeString
 function strqpop(var s:string;c:char):string; overload;
 function strqpop(var s:string;const cs:string):string; overload;
 function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString; overload;
+function spancopy(ps, pe: PChar): string;
 
 procedure MakeFixedLen(var s: AnsiString; len: integer; pad_ch: AnsiChar); overload; inline;
 procedure MakeFixedLen(var s: UnicodeString; len: integer; pad_ch: WideChar); overload; inline;
@@ -1394,6 +1395,17 @@ begin
   end;
 end;
 {$ENDIF}
+
+{ Copies a span of characters between ps inclusive and pe not inclusive }
+function spancopy(ps, pe: PChar): string;
+var i: integer;
+begin
+  SetLength(Result, (NativeUInt(pe)-NativeUInt(ps)) div SizeOf(char));
+  for i := 1 to Length(Result) do begin
+    Result[i] := ps^;
+    Inc(ps);
+  end;
+end;
 
 { Makes the string fixed length -- cuts if it's too long or pads if it's too short }
 procedure MakeFixedLen(var s: AnsiString; len: integer; pad_ch: AnsiChar);
