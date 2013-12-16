@@ -46,16 +46,16 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
 
-  private
-    randbank:TStringList;
-
   public
     procedure BuildExamplesPackage;
-    procedure ReloadExamples;
+    procedure ReloadExamplesPackage;
 
   protected
+    FLastKanji: string;
+    randbank:TStringList;
     procedure ReadExample(ex_ind: integer; out ex_jap: FString; out ex_en: string);
   public
+    procedure RefreshExamples;
     procedure SetExamples(kanji:string);
     procedure ShowExample;
     procedure MoveExample(right:boolean);
@@ -120,13 +120,8 @@ begin
 end;
 
 procedure TfExamples.btnRandomOrderClick(Sender: TObject);
-var cansel:boolean;
 begin
-  if fWordLookup.Visible then
-    fWordLookup.ShowWord
-  else
-  if fVocab.Visible then
-    fVocab.StringGrid1SelectCell(sender,fVocab.StringGrid1.Col,fVocab.StringGrid1.Row,cansel);
+  RefreshExamples;
 end;
 
 procedure TfExamples.btnCopyToClipboardClick(Sender: TObject);
@@ -167,43 +162,6 @@ procedure TfExamples.PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbLeft=Button then fMenu.IntTipMouseUp;
-end;
-
-//There can be different example packages for japanese and chinese,
-//so we reload every time study language changes.
-procedure TfExamples.ReloadExamples;
-var mf:TMemoryFile;
-begin
-  if exampackage<>nil then exampackage.Free;
-  if examstruct<>nil then FreeMem(examstruct);
-  if examindex<>nil then FreeMem(examindex);
-  exampackage:=nil;
-  examstruct:=nil;
-  examindex:=nil;
-  try
-    if FileExists('examples_'+curlang+'.pkg') then
-    begin
-      exampackage:=TPackageSource.Create('examples_'+curlang+'.pkg',791564,978132,978123);
-      mf:=exampackage['struct.bin'];
-      if mf=nil then raise Exception.Create('Important file missing.');
-      GetMem(examstruct,mf.Size);
-      exampackage.ReadRawData(examstruct^,integer(mf.Position),mf.Size);
-      examstructsiz:=mf.Size div 4;
-      mf:=exampackage['index.bin'];
-      if mf=nil then raise Exception.Create('Important file missing.');
-      GetMem(examindex,mf.Size);
-      exampackage.ReadRawData(examindex^,integer(mf.Position),mf.Size);
-      examindexsiz:=mf.Size div 16;
-      examfile:=exampackage['examples.bin'];
-      if examfile=nil then raise Exception.Create('Important file missing.');
-    end;
-  except
-    Application.MessageBox(pchar(_l('#00333^eCouldn''t load example file EXAMPLES_'+upcase(curlang)+'.PKG.')),
-      pchar(_l('#00020^eError')),MB_ICONERROR or MB_OK);
-    exampackage:=nil;
-    examstruct:=nil;
-    examindex:=nil;
-  end;
 end;
 
 procedure TfExamples.BuildExamplesPackage;
@@ -381,6 +339,48 @@ begin
   DeleteDirectory(tempDir);
 end;
 
+{ There can be different example packages for japanese and chinese, so we reload
+ every time study language changes. }
+procedure TfExamples.ReloadExamplesPackage;
+var mf:TMemoryFile;
+begin
+  if exampackage<>nil then exampackage.Free;
+  if examstruct<>nil then FreeMem(examstruct);
+  if examindex<>nil then FreeMem(examindex);
+  exampackage:=nil;
+  examstruct:=nil;
+  examindex:=nil;
+  try
+    if FileExists('examples_'+curlang+'.pkg') then
+    begin
+      exampackage:=TPackageSource.Create('examples_'+curlang+'.pkg',791564,978132,978123);
+      mf:=exampackage['struct.bin'];
+      if mf=nil then raise Exception.Create('Important file missing.');
+      GetMem(examstruct,mf.Size);
+      exampackage.ReadRawData(examstruct^,integer(mf.Position),mf.Size);
+      examstructsiz:=mf.Size div 4;
+      mf:=exampackage['index.bin'];
+      if mf=nil then raise Exception.Create('Important file missing.');
+      GetMem(examindex,mf.Size);
+      exampackage.ReadRawData(examindex^,integer(mf.Position),mf.Size);
+      examindexsiz:=mf.Size div 16;
+      examfile:=exampackage['examples.bin'];
+      if examfile=nil then raise Exception.Create('Important file missing.');
+    end;
+  except
+    Application.MessageBox(pchar(_l('#00333^eCouldn''t load example file EXAMPLES_'+upcase(curlang)+'.PKG.')),
+      pchar(_l('#00020^eError')),MB_ICONERROR or MB_OK);
+    exampackage:=nil;
+    examstruct:=nil;
+    examindex:=nil;
+  end;
+end;
+
+procedure TfExamples.RefreshExamples;
+begin
+  SetExamples(FLastKanji);
+end;
+
 procedure TfExamples.SetExamples(kanji:string);
 var l,r,m,max:integer;
   s2:string;
@@ -388,6 +388,7 @@ var l,r,m,max:integer;
   w:word;
   j:integer;
 begin
+  FLastKanji := kanji;
   ex_indfirst:=-1;
   if kanji='' then
   begin

@@ -70,7 +70,8 @@ uses
   JWBCharData in 'Components\JWBCharData.pas',
   JWBWakanText in 'Components\JWBWakanText.pas',
   JWBCharDataImport in 'Forms\JWBCharDataImport.pas' {fCharDataImport},
-  RaineRadicals in 'Components\RaineRadicals.pas';
+  RaineRadicals in 'Components\RaineRadicals.pas',
+  JWBWordLookupBase in 'Forms\JWBWordLookupBase.pas' {fWordLookupBase};
 
 {$R *.RES}
 
@@ -90,6 +91,7 @@ begin
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfVocab, fVocab);
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
+  Application.CreateForm(TfWordLookupBase, fWordLookupBase);
   //this one
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup? //this one
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);

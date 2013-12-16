@@ -956,15 +956,15 @@ begin
     end;
 
     if fWordLookup<>nil then begin
-      fWordLookup.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
-      fWordLookup.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
-      fWordLookup.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
+      fWordLookup.StringGrid.ColWidths[0]:=reg.ReadInteger('Grids','DictCol1',fWordLookup.StringGrid.ColWidths[0]);
+      fWordLookup.StringGrid.ColWidths[1]:=reg.ReadInteger('Grids','DictCol2',fWordLookup.StringGrid.ColWidths[1]);
+      fWordLookup.StringGrid.ColWidths[2]:=reg.ReadInteger('Grids','DictCol3',fWordLookup.StringGrid.ColWidths[2]);
     end;
 
     if fKanjiCompounds<>nil then begin
-      fKanjiCompounds.StringGrid1.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
-      fKanjiCompounds.StringGrid1.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
-      fKanjiCompounds.StringGrid1.ColWidths[2]:=reg.ReadInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid1.ColWidths[2]);
+      fKanjiCompounds.StringGrid.ColWidths[0]:=reg.ReadInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid.ColWidths[0]);
+      fKanjiCompounds.StringGrid.ColWidths[1]:=reg.ReadInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid.ColWidths[1]);
+      fKanjiCompounds.StringGrid.ColWidths[2]:=reg.ReadInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid.ColWidths[2]);
     end;
   end;
 
@@ -1228,18 +1228,18 @@ begin
   reg.WriteBool('General','SaveSearchParams',cbSaveSearchParams.Checked);
 
   if cbSaveColumnWidths.Checked then begin
-    reg.WriteInteger('Grids','DictCol1',fWordLookup.StringGrid1.ColWidths[0]);
-    reg.WriteInteger('Grids','DictCol2',fWordLookup.StringGrid1.ColWidths[1]);
-    reg.WriteInteger('Grids','DictCol3',fWordLookup.StringGrid1.ColWidths[2]);
+    reg.WriteInteger('Grids','DictCol1',fWordLookup.StringGrid.ColWidths[0]);
+    reg.WriteInteger('Grids','DictCol2',fWordLookup.StringGrid.ColWidths[1]);
+    reg.WriteInteger('Grids','DictCol3',fWordLookup.StringGrid.ColWidths[2]);
 
     reg.WriteInteger('Grids','UserCol1',fVocab.StringGrid1.ColWidths[0]);
     reg.WriteInteger('Grids','UserCol2',fVocab.StringGrid1.ColWidths[1]);
     reg.WriteInteger('Grids','UserCol3',fVocab.StringGrid1.ColWidths[2]);
     reg.WriteInteger('Grids','UserCol4',fVocab.StringGrid1.ColWidths[3]);
 
-    reg.WriteInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid1.ColWidths[0]);
-    reg.WriteInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid1.ColWidths[1]);
-    reg.WriteInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid1.ColWidths[2]);
+    reg.WriteInteger('Grids','KanjiCompCol1',fKanjiCompounds.StringGrid.ColWidths[0]);
+    reg.WriteInteger('Grids','KanjiCompCol2',fKanjiCompounds.StringGrid.ColWidths[1]);
+    reg.WriteInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid.ColWidths[2]);
   end;
 
   if cbSaveSearchParams.Checked then begin

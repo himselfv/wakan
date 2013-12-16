@@ -606,7 +606,7 @@ function _l(const id:string):string; //shouldn't inline because it's for cases w
 
 implementation
 
-uses StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
+uses Types, StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBSettings, JWBSplash, PKGWrite, JWBWordLookup, UnicodeFont, registry, clipbrd,
   JWBVocab, JWBNewCategory, JWBPrint, JWBStatistics,
   JWBWordList, JWBBitmap, JWBKanjiCompounds,
@@ -1311,7 +1311,7 @@ begin
   if fWordLookup<>nil then
     if (not fWordLookup.btnLookupClip.Enabled) and fWordLookup.btnLookupClip.Down then fWordLookup.btnLookupJtoE.Down:=true;
   if fExamples<>nil then
-    fExamples.ReloadExamples;
+    fExamples.ReloadExamplesPackage;
   if fWordLookup<>nil then
     fWordLookup.Look();
   RefreshCategory;
@@ -2008,9 +2008,9 @@ begin
   if fVocab.Visible then
     fVocab.Button2Click(Sender) else
   if fWordLookup.Visible then
-    fWordLookup.SpeedButton17Click(Sender) else
+    fWordLookup.btnAddToVocabClick(Sender) else
   if fKanjiCompounds.Visible then
-    fKanjiCompounds.sbInsertIntoVocabClick(Sender) else
+    fKanjiCompounds.btnAddToVocabClick(Sender) else
 end;
 
 procedure TfMenu.aUserSettingsExecute(Sender: TObject);

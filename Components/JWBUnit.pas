@@ -537,10 +537,10 @@ end;
 //  kanji [kana] {translation} rest
 procedure SplitWord(s:FString; var sp1,sp2,sp4,sp3:FString);
 begin
+  sp1:='';
   sp2:='';
-  sp1:='';
   sp3:='';
-  sp1:='';
+  sp4:='';
   while s[1]<>' 'do
   begin
     sp1:=sp1+s[1];

@@ -54,6 +54,7 @@ function FindCategory(const category:string): integer;
 procedure ListCategoryWords(cat:integer;list:TList<integer>); overload;
 procedure ListWordCategories(word:integer;list:TStringList); overload; deprecated;
 procedure ListWordCategories(word:integer;list:TList<integer>); overload;
+
 function RemoveWordFromCategory(word:integer;cat:integer): boolean;
 function RemoveAllWordsFromCategory(cat:integer): boolean;
 procedure MergeCategories(idxCats: array of integer; idxIntoCat: integer);
@@ -281,7 +282,6 @@ begin
     CUserSheet.Next;
   end;
 end;
-
 
 //Removes a word from a category. Returns true if it was in there (false if it wasn't in that category).
 function RemoveWordFromCategory(word:integer;cat:integer): boolean;

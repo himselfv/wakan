@@ -72,7 +72,7 @@ var StringGrid1: TStringGrid;
   fs,fsl:integer;
   rect:TRect;
 begin
-  StringGrid1 := fWordLookup.StringGrid1; //faster access
+  StringGrid1 := fWordLookup.StringGrid; //faster access
 
   PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
   cw:=-1;

@@ -1301,9 +1301,9 @@ begin
   end else
   with fWordLookup do
   begin
-    if (key=VK_UP) and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
-    if (key=VK_DOWN) and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
-    if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
+    if (key=VK_UP) and (StringGrid.Row>1) then StringGrid.Row:=StringGrid.Row-1;
+    if (key=VK_DOWN) and (StringGrid.Row<StringGrid.RowCount-1) then StringGrid.Row:=StringGrid.Row+1;
+    if (StringGrid.RowCount>1) and (StringGrid.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
   end;
 end;
 
@@ -1965,7 +1965,7 @@ begin
   UpdateScrollbar;
   if fWordLookup<>nil then
     with fWordLookup do
-      if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
+      if (StringGrid.RowCount>1) and (StringGrid.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
 { Converts startdrag+cursor positions to block selection. }
@@ -2725,7 +2725,7 @@ begin
   if (buffertype='H') and (resolvebuffer) then
   begin
     with fWordLookup do
-      if StringGrid1.Visible then
+      if StringGrid.Visible then
       begin
         s:=curkanji;
         priorkanji:=curkanji;
@@ -2831,10 +2831,10 @@ begin
   if (c='[') or (c=']') then
     with fWordLookup do
     begin
-      if (c='[') and (StringGrid1.Row>1) then StringGrid1.Row:=StringGrid1.Row-1;
-      if (c=']') and (StringGrid1.Row<StringGrid1.RowCount-1) then StringGrid1.Row:=StringGrid1.Row+1;
+      if (c='[') and (StringGrid.Row>1) then StringGrid.Row:=StringGrid.Row-1;
+      if (c=']') and (StringGrid.Row<StringGrid.RowCount-1) then StringGrid.Row:=StringGrid.Row+1;
       if insconfirmed then ResolveInsert(true);
-      if (StringGrid1.RowCount>1) and (StringGrid1.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
+      if (StringGrid.RowCount>1) and (StringGrid.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
       exit;
     end;
   if insconfirmed then ClearInsBlock;
@@ -2980,15 +2980,15 @@ begin
     if gridfirst then
       i:=0
     else
-      if not StringGrid1.Visible then
+      if not StringGrid.Visible then
         i:=-1
       else
-        i:=StringGrid1.Row-1;
-    if dicrl.Count=0 then i:=-1;
+        i:=StringGrid.Row-1;
+    if Results.Count=0 then i:=-1;
     if i<0 then
       word := nil
     else
-      word := dicrl[i];
+      word := Results[i];
   end;
   Result := SetWordTrans(x,y,flags,word);
 end;

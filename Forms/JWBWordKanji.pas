@@ -4,9 +4,15 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, Buttons, JWBForms;
+  ExtCtrls, StdCtrls, Buttons, JWBStrings, JWBForms;
 
 type
+  TKanjiEntry = record
+    tp: char; //J, K, C, N, U -- see below in ShowKanjiFromString()
+    char: FChar; //character itself
+    rad: FChar; //its radical
+  end;
+
   TKanjiBox = record
     lbl: TLabel;
     sh: TShape;
@@ -30,16 +36,22 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
 
-  protected
-    procedure WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
-
+ //Low-level: boxes
   protected
     FBoxes: array of TKanjiBox;
-
+    procedure PaintBoxKNPaint(pb: TPaintBox; KN: integer);
   public
-    procedure Clear;
+    procedure ClearBoxes;
     procedure AddBox(const meaning: string);
     procedure InvalidateBoxes;
+
+ //High-level: kanji/word
+  protected
+    FKanji: array of TKanjiEntry;
+    procedure DetailsForKanji(n:integer);
+  public
+    procedure Clear;
+    procedure ShowKanjiFromString(s: FString);
 
   protected
    //Undocked width and height are used as permanent storage for dock width/height
@@ -55,8 +67,8 @@ var
   fWordKanji: TfWordKanji;
 
 implementation
-
-uses JWBUnit, JWBWordLookup, JWBMenu;
+uses TextTable, JWBUnit, JWBWordLookup, JWBMenu, JWBCategories, JWBCharData,
+  JWBKanjiDetails, JWBSettings;
 
 {$R *.DFM}
 
@@ -71,8 +83,13 @@ begin
   fMenu.aDictKanji.Checked:=false;
 end;
 
+procedure TfWordKanji.FormResize(Sender: TObject);
+begin
+  UpdateAlignment(); //we might be able to pack more boxes into new column size
+end;
+
 //Hides all kanji boxes
-procedure TfWordKanji.Clear;
+procedure TfWordKanji.ClearBoxes;
 var i: integer;
 begin
   for i := Length(FBoxes) - 1 downto 0 do begin
@@ -130,30 +147,30 @@ end;
 
 procedure TfWordKanji.PaintBoxK1Click(Sender: TObject);
 begin
-  fWordLookup.DetailsForKanji(TPaintBox(Sender).Tag);
+  DetailsForKanji(TPaintBox(Sender).Tag);
 end;
 
 procedure TfWordKanji.PaintBoxK1Paint(Sender: TObject);
 begin
-  WordKanji_PaintBoxKNPaint(TPaintBox(Sender), TPaintBox(Sender).Tag);
+  PaintBoxKNPaint(TPaintBox(Sender), TPaintBox(Sender).Tag);
 end;
 
 //Paints fWordKanji.PaintBoxK1...PaintBoxK9 contents.
 //KN: 1..9
-procedure TfWordKanji.WordKanji_PaintBoxKNPaint(pb: TPaintBox; KN: integer);
+procedure TfWordKanji.PaintBoxKNPaint(pb: TPaintBox; KN: integer);
 begin
   Assert((KN>=1) and (KN<=9));
-  if length(fWordLookup.curkanjid)<KN then exit;
+  if length(FKanji)<KN then exit;
   BeginDrawReg(pb.Canvas);
   pb.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(pb.Canvas,44,4,16,fWordLookup.curkanjid[KN-1].rad,FontJapaneseGrid);
-  case fWordLookup.curkanjid[KN-1].tp of
+  DrawUnicode(pb.Canvas,44,4,16,FKanji[KN-1].rad,FontJapaneseGrid);
+  case FKanji[KN-1].tp of
     'K':pb.Canvas.Font.Color:=Col('Kanji_Learned');
     'C':pb.Canvas.Font.Color:=Col('Kanji_Common');
     'U':pb.Canvas.Font.Color:=Col('Kanji_Rare');
     'N':pb.Canvas.Font.Color:=Col('Kanji_Names');
   end;
-  DrawUnicode(pb.Canvas,4,2,36,fWordLookup.curkanjid[KN-1].char,FontJapaneseGrid);
+  DrawUnicode(pb.Canvas,4,2,36,FKanji[KN-1].char,FontJapaneseGrid);
   EndDrawReg;
 end;
 
@@ -207,9 +224,76 @@ begin
   UpdateAlignment;
 end;
 
-procedure TfWordKanji.FormResize(Sender: TObject);
+procedure TfWordKanji.Clear;
 begin
-  UpdateAlignment(); //we might be able to pack more boxes into new column size
+  ClearBoxes;
+  SetLength(FKanji,0);
+end;
+
+procedure TfWordKanji.ShowKanjiFromString(s: FString);
+var s2: FString;
+  meaning: FString;
+  radf:integer;
+  rad:FString;
+  CCharProp: TCharPropertyCursor;
+begin
+  SetLength(FKanji,0);
+  while flength(s)>0 do
+  begin
+    s2:=fcopy(s,1,1);
+    fdelete(s,1,1);
+    if TChar.Locate('Unicode',s2) then
+    begin
+      radf:=fSettings.GetPreferredRadicalType();
+      if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf)) then
+      begin
+        rad := TRadicals.Str(TRadicalsUnicode);
+        SetLength(FKanji, Length(FKanji)+1);
+        if flength(s2)>0 then
+          FKanji[Length(FKanji)-1].char := fgetch(s2, 1)
+        else
+          FKanji[Length(FKanji)-1].char := UH_NOCHAR;
+        if flength(rad)>0 then
+          FKanji[Length(FKanji)-1].rad := fgetch(rad, 1)
+        else
+          FKanji[Length(FKanji)-1].rad := UH_NOCHAR;
+        if TChar.Bool(TCharChinese) then
+          FKanji[Length(FKanji)-1].tp := 'J'
+        else
+        if IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
+          FKanji[Length(FKanji)-1].tp := 'K'
+        else
+        if TChar.Int(TCharJouyouGrade)<9 then
+          FKanji[Length(FKanji)-1].tp := 'C'
+        else
+        if TChar.Int(TCharJouyouGrade)<10 then
+          FKanji[Length(FKanji)-1].tp := 'N'
+        else
+          FKanji[Length(FKanji)-1].tp := 'U';
+        CCharProp := TCharPropertyCursor.Create(TCharProp);
+        try
+          if curlang='j' then
+            meaning := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
+          else
+          if curlang='c' then
+            meaning := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
+          else
+            meaning := '';
+        finally
+          FreeAndNil(CCharProp);
+        end;
+        fWordKanji.AddBox(meaning);
+      end;
+    end;
+  end;
+end;
+
+procedure TfWordKanji.DetailsForKanji(n:integer);
+begin
+  if fMenu.CharDetDocked then exit;
+  if n<=Length(FKanji) then
+    fKanjiDetails.SetCharDetails(FKanji[n-1].char);
+  if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
 end;
 
 end.

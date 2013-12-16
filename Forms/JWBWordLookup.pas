@@ -6,100 +6,50 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons,
   JWBStrings, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
-  WakanPaintbox;
+  WakanPaintbox, JWBWordLookupBase;
 
 type
-  TKanjiEntry = record
-    tp: char; //J, K, C, N, U -- see below in ShowWord()
-    char: FChar; //character itself
-    rad: FChar; //its radical
-  end;
-
-  TfWordLookup = class(TForm)
-    Panel1: TPanel;
+  TfWordLookup = class(TfWordLookupBase)
+    pnlDockExamples: TPanel;
+    Panel3: TPanel;
     btnLookupJtoE: TSpeedButton;
     btnLookupEtoJ: TSpeedButton;
     btnLookupClip: TSpeedButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton9: TSpeedButton;
     SpeedButton10: TSpeedButton;
     SpeedButton11: TSpeedButton;
     SpeedButton12: TSpeedButton;
-    btnCopyToClipboard: TSpeedButton;
-    Edit1: TEdit;
-    BitBtn1: TBitBtn;
-    pnlDockExamples: TPanel;
-    Panel3: TPanel;
+    SpeedButton18: TSpeedButton;
     SpeedButton4: TSpeedButton;
     sbAutoPreview: TSpeedButton;
     SpeedButton14: TSpeedButton;
     SpeedButton15: TSpeedButton;
     SpeedButton16: TSpeedButton;
+    Edit1: TEdit;
+    BitBtn1: TBitBtn;
     Label2: TLabel;
-    SpeedButton17: TSpeedButton;
     Label3: TLabel;
-    SpeedButton18: TSpeedButton;
-    SpeedButton19: TSpeedButton;
-    PopupMenu1: TPopupMenu;
-    miResetColumns: TMenuItem;
-    BlankPanel: TBlankPanel;
-    StringGrid1: TWakanWordGrid;
+    SpeedButton6: TSpeedButton;
+    SpeedButton9: TSpeedButton;
     procedure Edit1Change(Sender: TObject);
-    procedure Edit2Change(Sender: TObject);
-    procedure Edit2Click(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
-    procedure StringGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
-      var CanSelect: Boolean);
     procedure FormShow(Sender: TObject);
     procedure btnLookupJtoEClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
-    procedure btnCopyToClipboardClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
-    procedure StringGrid1DblClick(Sender: TObject);
-    procedure CheckBox1Click(Sender: TObject);
-    procedure StringGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
-    procedure SpeedButton17Click(Sender: TObject);
-    procedure StringGrid1MouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure SpeedButton10Click(Sender: TObject);
-    procedure SpeedButton19Click(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure miResetColumnsClick(Sender: TObject);
-    procedure PopupMenu1Popup(Sender: TObject);
-    procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
-      Rect: TRect; State: TGridDrawState);
-    procedure StringGrid1KeyPress(Sender: TObject; var Key: Char);
+    procedure btnAddToVocabClick(Sender: TObject);
 
+  protected
+    procedure WordSelectionChanged; override;
   public
-    procedure SetDefaultColumnWidths;
-
-  public
-    curkanji,curphonetic,curmeaning:string;
-    curkanjid: array of TKanjiEntry; //kanji entries for current word
-    procedure ShowWord;
-    procedure DetailsForKanji(n:integer);
-    procedure CopyToClipboard(const AFullArticle, AReplace: boolean);
-
-  public
+    procedure SetDefaultColumnWidths; override;
     procedure UpdateLookMode;
 
   protected
     donotsetbegset:boolean;
     procedure Look_Run(req: TDicSearchRequest);
   public
-   { Some may reference "ul". That was a redundant string list before.
-    As a rule,
-      ul[i]==copy(dicl[i],6,25).
-      dicsl[i]=copy(dicl[i],31,length(dicsl[i])-30). }
-    dicrl:TSearchResults;
-   { Currently selected word. Needed to synchronize other clients such as JWBHint }
-    curword:integer;
    { Search with current settings, populate the results }
     procedure Look();
    { Initialize a TDicSearchRequest to search like Look() would.
@@ -120,22 +70,6 @@ uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
 
 {$R *.DFM}
 
-procedure TfWordLookup.FormCreate(Sender: TObject);
-begin
-  dicrl:=TSearchResults.Create;
-end;
-
-procedure TfWordLookup.FormDestroy(Sender: TObject);
-begin
-  FreeAndNil(dicrl);
-end;
-
-procedure TfWordLookup.FormActivate(Sender: TObject);
-begin
-//  if SpeedButton4.Down then SpeedButton1.Down:=true;
-//  SpeedButton1Click(sender);
-end;
-
 procedure TfWordLookup.FormShow(Sender: TObject);
 begin
   if Edit1.Enabled then Edit1.SetFocus;
@@ -144,24 +78,10 @@ end;
 
 procedure TfWordLookup.SetDefaultColumnWidths;
 begin
-  StringGrid1.ColWidths[0]:=131;
-  StringGrid1.ColWidths[1]:=128;
-  StringGrid1.ColWidths[2]:=575;
-  StringGrid1.AutoSizeColumns;
-end;
-
-procedure TfWordLookup.PopupMenu1Popup(Sender: TObject);
-var p: TPoint;
-  ACol, ARow: integer;
-begin
-  p := StringGrid1.ScreenToClient(Mouse.CursorPos);
-  StringGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
-  miResetColumns.Visible := (ARow=0); //click on header
-end;
-
-procedure TfWordLookup.miResetColumnsClick(Sender: TObject);
-begin
-  SetDefaultColumnWidths;
+  StringGrid.ColWidths[0]:=131;
+  StringGrid.ColWidths[1]:=128;
+  StringGrid.ColWidths[2]:=575;
+  StringGrid.AutoSizeColumns;
 end;
 
 //Called when any of the configuration buttons are pressed
@@ -227,7 +147,7 @@ begin
   end;
   donotsetbegset:=false;
 
-  StringGrid1.RowCount:=200;
+  StringGrid.RowCount:=200;
 end;
 
 {
@@ -254,7 +174,7 @@ begin
   req.full:=not BitBtn1.Enabled;
 //  if SpeedButton10.Down then req.full:=true;
 
-  req.maxwords:=StringGrid1.VisibleRowCount;
+  req.maxwords:=StringGrid.VisibleRowCount;
 
   if SpeedButton11.Down then req.MatchType := mtMatchLeft else
   if SpeedButton12.Down then req.MatchType := mtMatchRight else
@@ -288,9 +208,8 @@ var wt:TEvalCharType;
   wasfull:boolean;
   s:string;
   b:boolean;
-  tmp: TStringList;
 begin
-  dicrl.Clear;
+  FResults.Clear;
 
   case req.a of
     stJp: begin s := Edit1.Text; wt := EC_UNKNOWN; end;
@@ -318,30 +237,21 @@ begin
       s:=fEditor.GetDocWord(fEditor.rcur.x,fEditor.rcur.y,wt,{stopuser=}true);
   end;
 
-  req.Search(s, wt, dicrl);
+  req.Search(s, wt, FResults);
   wasfull := req.WasFull;
 
   if not (req.a in [stEditorInsert, stEditorAuto]) then
-    if dicrl.Count=0 then
+    if FResults.Count=0 then
       Label3.Caption:='-'
     else
       if not wasfull then
-        Label3.Caption:=inttostr(dicrl.Count)+'+'
+        Label3.Caption:=inttostr(FResults.Count)+'+'
       else
-        Label3.Caption:=inttostr(dicrl.Count);
+        Label3.Caption:=inttostr(FResults.Count);
   
   if req.a <> stEditorAuto then //update result list
   begin
-    tmp := TStringList.Create;
-    try
-      for i:=0 to dicrl.Count - 1 do
-        if req.full or (i<StringGrid1.VisibleRowCount) then
-          tmp.Add(dicrl[i].ArticlesToString);
-      FillWordGrid(StringGrid1,tmp,false,false);
-    finally
-      FreeAndNil(tmp);
-    end;
-
+    ResultsChanged;
     if not wasfull then
       s:=_l('#00671^eSearch results (partial)')
     else
@@ -355,12 +265,12 @@ begin
       stClipboard: s:=s+_l('#00675^eby written (clipboard)');
       stEditorInsert: s:=s+_l('#00676^eby written (text)');
     end;
-    s:=s+' ('+inttostr(dicrl.Count)+')';
+    s:=s+' ('+inttostr(FResults.Count)+')';
     curword:=0;
-    if StringGrid1.Visible then StringGrid1SelectCell(self,0,1,b);
-    if StringGrid1.Visible then StringGrid1.Row:=1;
-    if StringGrid1.Visible then curword:=1;
-    ShowWord;
+    if StringGrid.Visible then StringGridSelectCell(self,0,1,b);
+    if StringGrid.Visible then StringGrid.Row:=1;
+    if StringGrid.Visible then curword:=1;
+    WordSelectionChanged;
   end;
 end;
 
@@ -391,10 +301,10 @@ begin
   begin
     BitBtn1.Visible:=true;
     Label2.Visible:=false;
-    StringGrid1.Visible:=false;
+    StringGrid.Visible:=false;
     BlankPanel.TextVisible:=(edit1.text<>'') or (a=stEditorInsert);
     curword:=0;
-    ShowWord;
+    WordSelectionChanged;
     exit;
   end;
 
@@ -417,117 +327,30 @@ begin
   Look();
 end;
 
-procedure TfWordLookup.Edit2Change(Sender: TObject);
-begin
-  Look();
-end;
-
-procedure TfWordLookup.Edit2Click(Sender: TObject);
-begin
-  Look();
-end;
-
 procedure TfWordLookup.Edit1Click(Sender: TObject);
 begin
   Look();
 end;
 
-procedure TfWordLookup.StringGrid1SelectCell(Sender: TObject; ACol,
-  ARow: Integer; var CanSelect: Boolean);
+procedure TfWordLookup.WordSelectionChanged;
 begin
- { Careful not to enter an endless loop: ShowWord changes something in Grid
-  which triggers SelectCell which triggers ShowWord }
- { SelectCell also gets called endlessly while you hold mouse down
-  due to a bug in TStringGrid if RowSelect is true }
-  if curword=ARow then exit;
-  curword:=ARow;
-  if curword<=dicrl.Count then ShowWord;
+  inherited;
+  if fWordKanji<>nil then fWordKanji.Clear;
+  if curword<>0 then begin
+    if fExamples<>nil then fExamples.SetExamples(curkanji);
+    if fWordKanji<>nil then fWordKanji.ShowKanjiFromString(remexcl(curkanji));
+  end else begin
+    if fExamples<>nil then fExamples.SetExamples('');
+  end;
+  if fWordKanji<>nil then fWordKanji.InvalidateBoxes;
+  AnnotShowMedia(curkanji,curphonetic);
 end;
 
-procedure TfWordLookup.ShowWord;
-var s,s2:string;
-  meaning: FString;
-  radf:integer;
-  i:integer;
-  rad:FString;
-  CCharProp: TCharPropertyCursor;
+procedure TfWordLookup.btnAddToVocabClick(Sender: TObject);
 begin
-  SetLength(curkanjid,0);
-  curphonetic:='';
-  curkanji:='';
-  curmeaning:='';
-  SpeedButton17.Enabled:=false;
-  btnCopyToClipboard.Enabled:=false;
-  SpeedButton19.Enabled:=false;
-  if fWordKanji<>nil then
-    fWordKanji.Clear;
-  if curword<>0 then
-  begin
-    curphonetic:=remexcl(copy(StringGrid1.Cells[0,curword],2,length(StringGrid1.Cells[0,curword])-1));
-    curkanji:=remexcl(copy(StringGrid1.Cells[1,curword],2,length(StringGrid1.Cells[1,curword])-1));
-    curmeaning:=remexcl(StringGrid1.Cells[2,curword]);
-    fExamples.SetExamples(curkanji);
-    SpeedButton17.Enabled:=true;
-    btnCopyToClipboard.Enabled:=true;
-    s:=remexcl(curkanji);
-    SetLength(curkanjid,0);
-    while flength(s)>0 do
-    begin
-      s2:=fcopy(s,1,1);
-      fdelete(s,1,1);
-      if TChar.Locate('Unicode',s2) then
-      begin
-        radf:=fSettings.GetPreferredRadicalType();
-        if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf)) then
-        begin
-          rad := TRadicals.Str(TRadicalsUnicode);
-          SetLength(curkanjid, Length(curkanjid)+1);
-          if flength(s2)>0 then
-            curkanjid[Length(curkanjid)-1].char := fgetch(s2, 1)
-          else
-            curkanjid[Length(curkanjid)-1].char := UH_NOCHAR;
-          if flength(rad)>0 then
-            curkanjid[Length(curkanjid)-1].rad := fgetch(rad, 1)
-          else
-            curkanjid[Length(curkanjid)-1].rad := UH_NOCHAR;
-          if TChar.Bool(TCharChinese) then
-            curkanjid[Length(curkanjid)-1].tp := 'J'
-          else
-          if IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
-            curkanjid[Length(curkanjid)-1].tp := 'K'
-          else
-          if TChar.Int(TCharJouyouGrade)<9 then
-            curkanjid[Length(curkanjid)-1].tp := 'C'
-          else
-          if TChar.Int(TCharJouyouGrade)<10 then
-            curkanjid[Length(curkanjid)-1].tp := 'N'
-          else
-            curkanjid[Length(curkanjid)-1].tp := 'U';
-          CCharProp := TCharPropertyCursor.Create(TCharProp);
-          try
-            if curlang='j' then
-              meaning := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
-            else
-            if curlang='c' then
-              meaning := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
-            else
-              meaning := '';
-          finally
-            FreeAndNil(CCharProp);
-          end;
-          fWordKanji.AddBox(meaning);
-        end;
-      end;
-    end;
-    if dicrl[curword-1].userIndex<>0 then
-      SpeedButton19.Enabled:=true;
-  end else begin
-    if fExamples<>nil then
-      fExamples.SetExamples('');
-  end;
-  if fWordKanji<>nil then
-    fWordKanji.InvalidateBoxes;
-  AnnotShowMedia(curkanji,curphonetic);
+  inherited;
+  Look();
+  if Edit1.Enabled then Edit1.SetFocus;
 end;
 
 procedure TfWordLookup.btnLookupJtoEClick(Sender: TObject);
@@ -553,115 +376,6 @@ begin
   fMenu.aDictExamples.Execute;
 end;
 
-//Copies currently selected article to the clipboard
-procedure TfWordLookup.CopyToClipboard(const AFullArticle, AReplace: boolean);
-var AText, tmp: string;
-begin
-  if AFullArticle then begin
-    tmp := curmeaning;
-    if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
-    tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
-    AText:=curkanji+' ['+curphonetic+'] '+tmp;
-  end else
-    AText:=curkanji;
-  if AReplace then
-    clip := AText
-  else
-    clip := clip + AText;
-  fMenu.SetClipboard;
-end;
-
-procedure TfWordLookup.btnCopyToClipboardClick(Sender: TObject);
-begin
- //Emulate older behavior
-  CopyToClipboard({full=}false,{replace=}false);
-end;
-
-procedure TfWordLookup.StringGrid1KeyPress(Sender: TObject; var Key: Char);
-begin
- //Copy the article to clipboard on Ctrl-C
-  if (Key=^C) and (StringGrid1.Visible) then begin
-    CopyToClipboard(
-      {full=}GetKeyState(VK_SHIFT) and $F0 = 0, //word-only when Shift pressed
-      {replace=}true //always replace
-      );
-    Key := #00;
-  end;
-end;
-
-procedure TfWordLookup.StringGrid1DblClick(Sender: TObject);
-begin
-  if SpeedButton17.Enabled then SpeedButton17Click(sender);
-end;
-
-function GridStateToStr(const state: TGridDrawState): string;
-begin
-  Result := '';
-  if gdSelected in state then
-    Result := Result + ', gdSelected';
-  if gdFocused in state then
-    Result := Result + ', gdFocused';
-  if gdFixed in state then
-    Result := Result + ', gdFixed';
-  if gdRowSelected in state then
-    Result := Result + ', gdRowSelected';
-  if gdHotTrack in state then
-    Result := Result + ', gdHotTrack';
-  if gdPressed in state then
-    Result := Result + ', gdPressed';
-  if Length(Result)>0 then //cut forward ", "
-    Result := copy(Result, 3);
-end;
-
-procedure TfWordLookup.StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
-  Rect: TRect; State: TGridDrawState);
-begin
-  DrawWordCell(TStringGrid(Sender),ACol,ARow,Rect,State);
-end;
-
-procedure TfWordLookup.CheckBox1Click(Sender: TObject);
-begin
-//  Look(false);
-end;
-
-procedure TfWordLookup.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
-end;
-
-procedure TfWordLookup.DetailsForKanji(n:integer);
-begin
-  if fMenu.CharDetDocked then exit;
-  if n<=Length(curkanjid) then
-    fKanjiDetails.SetCharDetails(curkanjid[n-1].char);
-  if not fKanjiDetails.Visible then fMenu.aKanjiDetails.Execute else fKanjiDetails.SetFocus;
-end;
-
-procedure TfWordLookup.SpeedButton17Click(Sender: TObject);
-var tmp: string;
-begin
-  tmp := curmeaning;
-  if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
-  tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
-  if not IsPositiveResult(fVocabAdd.ModalAddFixed(curkanji,curphonetic,fstr(tmp))) then
-    exit;
-  Look();
-  if Edit1.Enabled then Edit1.SetFocus;
-end;
-
-procedure TfWordLookup.StringGrid1MouseDown(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
-end;
-
-procedure TfWordLookup.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
-end;
-
 procedure TfWordLookup.SpeedButton10Click(Sender: TObject);
 begin
   if not donotsetbegset then
@@ -673,13 +387,6 @@ begin
   end;
   Look();
   if Edit1.Enabled then Edit1.SetFocus;
-end;
-
-procedure TfWordLookup.SpeedButton19Click(Sender: TObject);
-begin
-  fMenu.aModeWordsExecute(sender);
-  if dicrl[curword-1].userIndex<>0 then
-    fVocab.SearchWord(dicrl[curword-1].userIndex);
 end;
 
 end.

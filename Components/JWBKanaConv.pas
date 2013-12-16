@@ -196,8 +196,11 @@ type
  { At this moment hiragana and katakana, lowercase and uppercase chars are equal.
   The code converts everything to lowercase, hiragana internally before passing
   to any of the common code.
-  The only exception is kana index where entries are created both for hira and
-  kata, for speed. }
+  Exceptions:
+   - entries in kana index are created both for hira and kata, for speed.
+   - although all romaji is lowercased in RomajiToKana, romaji rules loaded from
+    file are kept as is. This is because romaji tables sometimes use uppercase
+    as a temporary form between translation and replacements }
   TKanaTranslator = class(TRomajiTranslator)
   protected
     FTrans: TKanaTranslationTable;
@@ -851,7 +854,7 @@ begin
            //roma,kana,kana,kana
             parts := SplitStr(ln,',');
             if Length(parts)<=1 then continue;
-            bi := TRomajiIndexEntry.Create(Lowercase(parts[0]), FTablesLoaded);
+            bi := TRomajiIndexEntry.Create(parts[0], FTablesLoaded);
             bi_ex := TRomajiIndexEntry(FTrans.FRomajiIndex.SearchItem(bi));
             FreeAndNil(bi);
             if bi_ex<>nil then begin
@@ -879,7 +882,6 @@ begin
 end;
 
 //Parses romaji translation rule from string form into record
-//See comments in wakan.cfg for format details.
 function ParseTranslationRule(const s: string): TTranslationRule;
 var s_parts: TStringArray;
   i: integer;
@@ -895,17 +897,16 @@ begin
   end;
   SetLength(Result.romaji, Length(s_parts)-base);
   for i := 0 to Length(Result.romaji)-1 do
-    Result.romaji[i] := Lowercase(s_parts[base+i]);
+    Result.romaji[i] := s_parts[base+i];
 end;
 
 //Parses romaji translation rule from string form into record
-//See comments in wakan.cfg for format details.
 function ParseRomajiReplacementRule(const s: string): TRomajiReplacementRule; inline;
 var s_parts: TStringArray;
 begin
   s_parts := SplitStr(s, 2);
-  Result.s_find := Lowercase(s_parts[0]);
-  Result.s_repl := Lowercase(s_parts[1]);
+  Result.s_find := s_parts[0];
+  Result.s_repl := s_parts[1];
   Result.pref := #00; //by default
 end;
 

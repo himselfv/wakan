@@ -40,6 +40,7 @@ var
   TUserScore, //b
   TUserMaxScore: integer; //b
 
+ { Index of kanji usage in vocabulary words. Used by KanjiCompounds search }
   TUserIdx: TTextTable;
   TUserIdxWord, //i
   TUserIdxKanji, //x

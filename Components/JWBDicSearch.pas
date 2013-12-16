@@ -144,7 +144,7 @@ type
       Different search results are different guesses at deflexion and may assume
       original expression was of different length. }
     sdef: char; //match class -- see TCandidateLookup.verbType
-    kanji: string;
+    kanji: string; //already simplified if needed, but otherwise no special marks
     kana: string;
     entry: string;
     procedure Reset;
@@ -169,7 +169,9 @@ type
     function AddResult: PSearchResult;
     function Add(const sr: TSearchResult): integer;
     procedure CustomSort(SCompare: TSearchResultsCompare);
-    procedure Sort();
+    procedure SortByFrequency;
+    procedure SortByKanji;
+    procedure Trim(const AMaxItems: integer);
     property Count: integer read FListUsed;
     property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
@@ -474,6 +476,7 @@ procedure TSearchResults.QuickSort(L, R: Integer; SCompare: TSearchResultsCompar
 var
   I, J, P: Integer;
 begin
+  if R<=L then exit;
   repeat
     I := L;
     J := R;
@@ -503,7 +506,7 @@ begin
   QuickSort(0, Count-1, SCompare);
 end;
 
-function DefaultSearchResultCompare(List: TSearchResults; Index1, Index2: Integer): Integer;
+function SearchResultCompareScore(List: TSearchResults; Index1, Index2: Integer): Integer;
 var pi, pj: PSearchResult;
 begin
   pi := List.FList[Index1];
@@ -511,9 +514,33 @@ begin
   Result := (pi^.score-pj^.score);
 end;
 
-procedure TSearchResults.Sort();
+function SearchResultCompareKanji(List: TSearchResults; Index1, Index2: Integer): Integer;
+var pi, pj: PSearchResult;
 begin
-  CustomSort(@DefaultSearchResultCompare);
+  pi := List.FList[Index1];
+  pj := List.FList[Index2];
+  Result := AnsiCompareText(pi^.kanji, pj^.kanji);
+end;
+
+procedure TSearchResults.SortByFrequency;
+begin
+  CustomSort(@SearchResultCompareScore);
+end;
+
+procedure TSearchResults.SortByKanji;
+begin
+  CustomSort(@SearchResultCompareKanji);
+end;
+
+{ Leaves no more than AMaxItems entries }
+procedure TSearchResults.Trim(const AMaxItems: integer);
+begin
+  if FListUsed<AMaxItems then exit;
+  while FListUsed>AMaxItems do begin
+    Dec(FListUsed);
+    Dispose(FList[FListUsed]);
+    FList[FListUsed] := nil;
+  end;
 end;
 
 procedure TSearchResult.Reset;
@@ -542,7 +569,7 @@ begin
   tmp := entry;
   repl(tmp, '{', '(');
   repl(tmp, '}', ')');
-  Result := statpref + kanji + ' [' + statpref + kana + '] {' + statpref + tmp + '}';
+  Result := statpref + CheckKnownKanji(kanji) + ' [' + statpref + kana + '] {' + statpref + tmp + '}';
 end;
 
 
@@ -1128,7 +1155,7 @@ begin
       if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,entry)<>0) then
         scur.kanji := scur.kana
       else
-        scur.kanji := CheckKnownKanji(ChinSimplified(dic.GetKanji));
+        scur.kanji := ChinSimplified(dic.GetKanji);
       scur.entry := entry;
 
      //result signature (reading x kanji)
@@ -1189,7 +1216,7 @@ var i: integer;
 begin
   if sl.Count<=1 then exit; //apparently that's the most common case when translating
 
-  sl.Sort;
+  sl.SortByFrequency;
 
  //Add user entries to the beginning
   for i:=0 to sl.Count-1 do

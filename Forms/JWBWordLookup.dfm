@@ -1,39 +1,41 @@
-object fWordLookup: TfWordLookup
+inherited fWordLookup: TfWordLookup
   Left = 57
   Top = 137
   BorderStyle = bsSizeToolWin
   Caption = '#00642^eDictionary lookup'
   ClientHeight = 214
   ClientWidth = 704
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
   Font.Name = 'MS Sans Serif'
-  Font.Style = []
-  OldCreateOrder = False
+  OldCreateOrder = True
   Scaled = False
   ShowHint = True
-  OnActivate = FormActivate
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   OnShow = FormShow
+  ExplicitWidth = 720
+  ExplicitHeight = 248
   PixelsPerInch = 96
   TextHeight = 13
-  object Panel1: TPanel
-    Left = 0
-    Top = 0
+  inherited Bevel: TPanel
     Width = 704
     Height = 214
-    Align = alClient
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
-    FullRepaint = False
-    TabOrder = 0
-    DesignSize = (
-      704
-      214)
-    object btnLookupJtoE: TSpeedButton
+    TabOrder = 2
+    ExplicitWidth = 704
+    ExplicitHeight = 214
+    inherited btnGoToVocab: TSpeedButton
+      Left = 425
+      Top = 185
+      ExplicitTop = 185
+    end
+    inherited btnAddToVocab: TSpeedButton
+      Left = 521
+      Top = 185
+      ExplicitTop = 185
+    end
+    inherited btnCopyToClipboard: TSpeedButton
+      Left = 617
+      Top = 185
+      ExplicitTop = 185
+    end
+    object btnLookupJtoE: TSpeedButton [3]
       Left = 11
       Top = 4
       Width = 110
@@ -51,7 +53,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object btnLookupEtoJ: TSpeedButton
+    object btnLookupEtoJ: TSpeedButton [4]
       Left = 123
       Top = 4
       Width = 107
@@ -68,7 +70,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object btnLookupClip: TSpeedButton
+    object btnLookupClip: TSpeedButton [5]
       Left = 232
       Top = 4
       Width = 73
@@ -85,49 +87,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton6: TSpeedButton
-      Left = 7
-      Top = 193
-      Width = 123
-      Height = 17
-      Hint = '#00650^eCharacters in word'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 6
-      Caption = '#00651^eChar. in word'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton6Click
-      ExplicitTop = 195
-    end
-    object SpeedButton9: TSpeedButton
-      Left = 135
-      Top = 193
-      Width = 130
-      Height = 17
-      Hint = '#00062^eAdd to vocabulary'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 4
-      Caption = '#00315^eExamples'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton9Click
-      ExplicitTop = 195
-    end
-    object SpeedButton10: TSpeedButton
+    object SpeedButton10: TSpeedButton [6]
       Left = 311
       Top = 4
       Width = 23
@@ -144,7 +104,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = SpeedButton10Click
     end
-    object SpeedButton11: TSpeedButton
+    object SpeedButton11: TSpeedButton [7]
       Left = 335
       Top = 4
       Width = 23
@@ -160,7 +120,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = SpeedButton10Click
     end
-    object SpeedButton12: TSpeedButton
+    object SpeedButton12: TSpeedButton [8]
       Left = 359
       Top = 4
       Width = 23
@@ -176,34 +136,23 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = SpeedButton10Click
     end
-    object btnCopyToClipboard: TSpeedButton
-      Left = 617
-      Top = 185
-      Width = 80
+    object SpeedButton18: TSpeedButton [9]
+      Left = 383
+      Top = 4
+      Width = 25
       Height = 22
-      Hint = '#00659^eInsert word into clipboard'
-      Anchors = [akRight, akBottom]
-      Caption = '#00660^eClipboard'
-      Glyph.Data = {
-        76010000424D7601000000000000760000002800000020000000100000000100
-        04000000000000010000130B0000130B00001000000000000000000000000000
-        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
-        33333333FF33333333FF333993333333300033377F3333333777333993333333
-        300033F77FFF3333377739999993333333333777777F3333333F399999933333
-        33003777777333333377333993333333330033377F3333333377333993333333
-        3333333773333333333F333333333333330033333333F33333773333333C3333
-        330033333337FF3333773333333CC333333333FFFFF77FFF3FF33CCCCCCCCCC3
-        993337777777777F77F33CCCCCCCCCC3993337777777777377333333333CC333
-        333333333337733333FF3333333C333330003333333733333777333333333333
-        3000333333333333377733333333333333333333333333333333}
-      NumGlyphs = 2
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = btnCopyToClipboardClick
-      ExplicitTop = 187
+      Hint = '#00930^eSearch middle'
+      GroupIndex = 7
+      Caption = '+A+'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      OnClick = SpeedButton10Click
     end
-    object SpeedButton4: TSpeedButton
+    object SpeedButton4: TSpeedButton [10]
       Left = 414
       Top = 4
       Width = 23
@@ -220,7 +169,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object sbAutoPreview: TSpeedButton
+    object sbAutoPreview: TSpeedButton [11]
       Left = 438
       Top = 4
       Width = 33
@@ -239,7 +188,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton14: TSpeedButton
+    object SpeedButton14: TSpeedButton [12]
       Left = 478
       Top = 4
       Width = 25
@@ -256,7 +205,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton15: TSpeedButton
+    object SpeedButton15: TSpeedButton [13]
       Left = 504
       Top = 4
       Width = 25
@@ -272,7 +221,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton16: TSpeedButton
+    object SpeedButton16: TSpeedButton [14]
       Left = 530
       Top = 4
       Width = 25
@@ -288,7 +237,7 @@ object fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object Label2: TLabel
+    object Label2: TLabel [15]
       Left = 604
       Top = 37
       Width = 92
@@ -298,34 +247,7 @@ object fWordLookup: TfWordLookup
       Caption = '#00666^eAll visible'
       Enabled = False
     end
-    object SpeedButton17: TSpeedButton
-      Left = 521
-      Top = 185
-      Width = 94
-      Height = 22
-      Hint = '#00667^eInsert word into vocabulary'
-      Anchors = [akRight, akBottom]
-      Caption = '#00215^eVocabulary'
-      Glyph.Data = {
-        76010000424D7601000000000000760000002800000020000000100000000100
-        04000000000000010000130B0000130B00001000000000000000000000000000
-        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
-        33333333FF33333333FF333993333333300033377F3333333777333993333333
-        300033F77FFF3333377739999993333333333777777F3333333F399999933333
-        33003777777333333377333993333333330033377F3333333377333993333333
-        3333333773333333333F333333333333330033333333F33333773333333C3333
-        330033333337FF3333773333333CC333333333FFFFF77FFF3FF33CCCCCCCCCC3
-        993337777777777F77F33CCCCCCCCCC3993337777777777377333333333CC333
-        333333333337733333FF3333333C333330003333333733333777333333333333
-        3000333333333333377733333333333333333333333333333333}
-      NumGlyphs = 2
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton17Click
-      ExplicitTop = 187
-    end
-    object Label3: TLabel
+    object Label3: TLabel [16]
       Left = 688
       Top = 17
       Width = 6
@@ -334,48 +256,65 @@ object fWordLookup: TfWordLookup
       Anchors = [akTop, akRight]
       Caption = '0'
     end
-    object SpeedButton18: TSpeedButton
-      Left = 383
-      Top = 4
-      Width = 25
-      Height = 22
-      Hint = '#00930^eSearch middle'
-      GroupIndex = 7
-      Caption = '+A+'
+    object SpeedButton6: TSpeedButton [17]
+      Left = 8
+      Top = 189
+      Width = 123
+      Height = 17
+      Hint = '#00650^eCharacters in word'
+      AllowAllUp = True
+      Anchors = [akLeft, akBottom]
+      GroupIndex = 6
+      Caption = '#00651^eChar. in word'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton10Click
-    end
-    object SpeedButton19: TSpeedButton
-      Left = 425
-      Top = 185
-      Width = 94
-      Height = 22
-      Hint = '#00931^eGo to this word in vocabulary'
-      Anchors = [akRight, akBottom]
-      Caption = '#00215^eVocabulary'
-      Glyph.Data = {
-        76010000424D7601000000000000760000002800000020000000100000000100
-        04000000000000010000120B0000120B00001000000000000000000000000000
-        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333333333
-        3333333333333333333333333333333333333FFF333333333333000333333333
-        3333777FFF3FFFFF33330B000300000333337F777F777773F333000E00BFBFB0
-        3333777F773333F7F333000E0BFBF0003333777F7F3337773F33000E0FBFBFBF
-        0333777F7F3333FF7FFF000E0BFBF0000003777F7F3337777773000E0FBFBFBF
-        BFB0777F7F33FFFFFFF7000E0BF000000003777F7FF777777773000000BFB033
-        33337777773FF733333333333300033333333333337773333333333333333333
-        3333333333333333333333333333333333333333333333333333333333333333
-        3333333333333333333333333333333333333333333333333333}
-      NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton19Click
-      ExplicitTop = 187
+      OnClick = SpeedButton6Click
+    end
+    object SpeedButton9: TSpeedButton [18]
+      Left = 136
+      Top = 189
+      Width = 130
+      Height = 17
+      Hint = '#00062^eAdd to vocabulary'
+      AllowAllUp = True
+      Anchors = [akLeft, akBottom]
+      GroupIndex = 4
+      Caption = '#00315^eExamples'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = SpeedButton9Click
+    end
+    inherited BlankPanel: TBlankPanel
+      Top = 62
+      Width = 687
+      Height = 123
+      ExplicitTop = 62
+      ExplicitWidth = 687
+      ExplicitHeight = 123
+    end
+    inherited StringGrid: TWakanWordGrid
+      Top = 63
+      Width = 685
+      Height = 121
+      ExplicitTop = 63
+      ExplicitWidth = 685
+      ExplicitHeight = 121
+      ColWidths = (
+        110
+        138
+        413)
     end
     object Edit1: TEdit
       Left = 8
@@ -389,7 +328,7 @@ object fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      TabOrder = 0
+      TabOrder = 2
       OnChange = Edit1Change
       OnClick = Edit1Click
     end
@@ -424,52 +363,11 @@ object fWordLookup: TfWordLookup
         03333337777777F7F33333330000000003333337777777773333}
       NumGlyphs = 2
       ParentFont = False
-      TabOrder = 1
+      TabOrder = 3
       OnClick = BitBtn1Click
     end
-    object BlankPanel: TBlankPanel
-      Left = 10
-      Top = 63
-      Width = 687
-      Height = 122
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      TextLeft = 20
-      TextTop = 27
-      Text = '#00155^eNo words were found.'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-    end
-    object StringGrid1: TWakanWordGrid
-      Left = 11
-      Top = 64
-      Width = 685
-      Height = 119
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      BorderStyle = bsNone
-      ColCount = 3
-      DefaultRowHeight = 16
-      DefaultDrawing = False
-      FixedCols = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
-      PopupMenu = PopupMenu1
-      TabOrder = 3
-      OnDblClick = StringGrid1DblClick
-      OnDrawCell = StringGrid1DrawCell
-      OnKeyPress = StringGrid1KeyPress
-      OnMouseDown = StringGrid1MouseDown
-      OnMouseMove = StringGrid1MouseMove
-      OnMouseUp = StringGrid1MouseUp
-      OnSelectCell = StringGrid1SelectCell
-      ColWidths = (
-        131
-        128
-        402)
-    end
   end
-  object pnlDockExamples: TPanel
+  object pnlDockExamples: TPanel [1]
     Left = 0
     Top = 214
     Width = 704
@@ -477,9 +375,9 @@ object fWordLookup: TfWordLookup
     Align = alBottom
     BevelOuter = bvNone
     FullRepaint = False
-    TabOrder = 1
+    TabOrder = 0
   end
-  object Panel3: TPanel
+  object Panel3: TPanel [2]
     Left = 704
     Top = 0
     Width = 0
@@ -487,15 +385,6 @@ object fWordLookup: TfWordLookup
     Align = alRight
     BevelOuter = bvNone
     FullRepaint = False
-    TabOrder = 2
-  end
-  object PopupMenu1: TPopupMenu
-    OnPopup = PopupMenu1Popup
-    Left = 32
-    Top = 48
-    object miResetColumns: TMenuItem
-      Caption = '#01002^eReset columns'
-      OnClick = miResetColumnsClick
-    end
+    TabOrder = 1
   end
 end
