@@ -17,6 +17,14 @@ type
     radStrokeGroup
   );
 
+ { A list of radical indexes:
+     stClassic: classic radical index
+     stRaine: raine radical index in currently loaded raine database.
+   Strictly speaking, there could be several raine databases with different
+   indexing, and when you change one for another, your saved indexes are invalid.
+  Therefore it's better to save characters, not indexes. }
+  TRadicalIndexList = array of integer;
+
  // TMetaStringList = type TStringList;
   TDiabolicStringList = class(TStringList);
  { Contains FStrings for radicals and normal strings with number for radical group starts:
@@ -543,9 +551,11 @@ begin
       TRadicals.First;
       TRadicals.Locate('Number',i);
       FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicalsUnicode);
-    end else
+      FSelectedIndexes:=FSelectedIndexes+';'+IntToStr(i);
+    end else begin
       FSelectedRadicals:=FSelectedRadicals+RaineRadicals.Items[i].Chars;
-    FSelectedIndexes:=FSelectedIndexes+';'+IntToStr(i);
+      FSelectedIndexes:=FSelectedIndexes+';'+IntToStr(i-1); //raine indexes start with 0
+    end;
   end;
   delete(FSelectedIndexes,1,1); //delete first ';'
   if Assigned(FOnSelectionChanged) then

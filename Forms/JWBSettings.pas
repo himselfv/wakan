@@ -977,8 +977,7 @@ begin
     fKanjiSearch.edtDefinition.Text :=reg.ReadString('KanjiSearch','Definition','');
     fKanjiSearch.edtStrokeCount.Text :=reg.ReadString('KanjiSearch','Strokes','');
     fKanjiSearch.curRadSearchType :=TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
-    fKanjiSearch.curRadSearch :=reg.ReadString('KanjiSearch','RadSearch','');
-    fKanjiSearch.edtRadicals.Text :=reg.ReadString('KanjiSearch','RadIndexes','');
+    fKanjiSearch.curRadChars := reg.ReadString('KanjiSearch','RadSearch','');
     fKanjiSearch.edtSKIP.Text :=reg.ReadString('KanjiSearch','SKIP','');
     fKanjiSearch.edtJouyou.Text :=reg.ReadString('KanjiSearch','Jouyou','');
     fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
@@ -1263,8 +1262,7 @@ begin
       reg.DeleteKey('KanjiSearch','Strokes');
     if fKanjiSearch.sbRadicals.Down then begin
       reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
-      reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadSearch);
-      reg.WriteString('KanjiSearch','RadIndexes',fKanjiSearch.edtRadicals.Text);
+      reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadChars);
     end else begin
       reg.DeleteKey('KanjiSearch','RadSearchType');
       reg.DeleteKey('KanjiSearch','RadSearch');

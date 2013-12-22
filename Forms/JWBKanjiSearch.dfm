@@ -483,23 +483,13 @@ object fKanjiSearch: TfKanjiSearch
       TabOrder = 5
       OnChange = edtPinYinChange
     end
-    object edtRadicals: TEdit
-      Left = 64
-      Top = 103
-      Width = 54
-      Height = 21
-      Anchors = [akTop, akRight]
-      TabOrder = 6
-      Visible = False
-      OnChange = edtRadicalsChange
-    end
     object edtSkip: TEdit
       Left = 65
       Top = 128
       Width = 239
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 7
+      TabOrder = 6
       OnChange = edtSkipChange
     end
     object edtStrokeCount: TEdit
@@ -508,7 +498,7 @@ object fKanjiSearch: TfKanjiSearch
       Width = 160
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 8
+      TabOrder = 7
       OnChange = edtStrokeCountChange
     end
     object edtYomi: TEdit
@@ -517,7 +507,7 @@ object fKanjiSearch: TfKanjiSearch
       Width = 240
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 9
+      TabOrder = 8
       OnChange = edtYomiChange
     end
     object lbCategories: TCheckListBox
@@ -528,7 +518,7 @@ object fKanjiSearch: TfKanjiSearch
       OnClickCheck = lbCategoriesClickCheck
       Anchors = [akTop, akRight]
       ItemHeight = 13
-      TabOrder = 10
+      TabOrder = 9
       OnClick = lbCategoriesClick
       OnDblClick = lbCategoriesDblClick
       OnDrawItem = lbCategoriesDrawItem
@@ -553,7 +543,7 @@ object fKanjiSearch: TfKanjiSearch
       Items.Strings = (
         'OR'
         'AND')
-      TabOrder = 12
+      TabOrder = 11
       OnClick = rgOrAndClick
     end
     object rgSortBy: TRadioGroup
@@ -578,7 +568,7 @@ object fKanjiSearch: TfKanjiSearch
         'Remembering Kanji'
         '#00149^eRandom')
       ParentFont = False
-      TabOrder = 13
+      TabOrder = 12
       OnClick = rgSortByClick
     end
   end

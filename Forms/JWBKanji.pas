@@ -264,7 +264,7 @@ begin
   while s1<>'' do
   begin
     rrind:=StrToInt(strqpop(s1,';'));
-    rchars := RaineRadicals.GetContainingChars(rrind-1);
+    rchars := RaineRadicals.GetContainingChars(rrind);
     p:=PWideChar(rchars);
     for i:=1 to Length(rchars) do begin
       s2:=fstr(p^);
@@ -382,8 +382,8 @@ begin
     This is because a character has only one Classical Radical so AND is pointless. }
     if fKanjiSearch.sbRadicals.Down then
       case fKanjiSearch.curRadSearchType of
-        stClassic: ReadFilter(fltradical,fKanjiSearch.edtRadicals.Text,fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
-        stRaine: ReadRaineFilter(fltradical,fKanjiSearch.edtRadicals.Text);
+        stClassic: ReadFilter(fltradical,fKanjiSearch.CurRadIndexes,fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
+        stRaine: ReadRaineFilter(fltradical,fKanjiSearch.CurRadIndexes);
       end;
     if fKanjiSearch.sbOther.Down then
     begin
@@ -983,9 +983,8 @@ end;
 procedure TfKanji.FilterByRadical(const radno: integer);
 begin
   if radno=NoRadical then exit;
-  fKanjiSearch.curRadSearchType:=stClassic;
-  fKanjiSearch.curRadSearch:=RadicalUnicode(radno);
-  fKanjiSearch.edtRadicals.Text:=IntToStr(radno);
+  fKanjiSearch.CurRadSearchType:=stClassic;
+  fKanjiSearch.CurRadIndexes:=IntToStr(radno);
   fKanjiSearch.pbRadicals.Invalidate;
   fKanji.DoIt;
 end;

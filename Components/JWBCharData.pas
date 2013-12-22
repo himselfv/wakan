@@ -239,6 +239,7 @@ function GetCharValue(index,propType:integer):string;
 function GetCharValueRad(index,propType:integer):integer;
 
 function RadicalUnicode(const radno: integer): FString;
+function RadicalIndex(const rad: FChar): integer;
 
 
 implementation
@@ -957,6 +958,22 @@ begin
       Result := ''
     else
       Result := CRadical.Str(TRadicalsUnicode);
+  finally
+    FreeAndNil(CRadical);
+  end;
+end;
+
+{ Returns radical index for a radical character. If the character is not a radical,
+ returns -1 }
+function RadicalIndex(const rad: FChar): integer;
+var CRadical: TTextTableCursor;
+begin
+  CRadical := TRadicals.NewCursor;
+  try
+    if not CRadical.Locate('Unicode', rad) then
+      Result := -1
+    else
+      Result := CRadical.Int(TRadicalsNumber);
   finally
     FreeAndNil(CRadical);
   end;
