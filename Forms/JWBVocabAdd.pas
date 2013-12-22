@@ -162,9 +162,11 @@ begin
 end;
 
 procedure TfVocabAdd.ReloadCategories;
-var s: string;
+var s, oldcat: string;
   lc: char;
+  i: integer;
 begin
+  oldcat := cbCategories.Text;
   cbCategories.Items.Clear;
 
   TUserCat.First;
@@ -182,8 +184,17 @@ begin
     TUserCat.Next;
   end;
 
+  if oldcat<>'' then begin
+   //Restore previously selected category -- see Issue 215
+    for i := 0 to cbCategories.Items.Count-1 do
+      if cbCategories.Items[i]=oldcat then begin
+        cbCategories.ItemIndex := i;
+        break;
+      end;
+  end else
   if cbCategories.Items.Count>0 then
     cbCategories.Text:=cbCategories.Items[0];
+
 end;
 
 procedure TfVocabAdd.ClipboardChanged(Sender: TObject);
