@@ -19,13 +19,11 @@ type
 
  { A list of radical indexes:
      stClassic: classic radical index
-     stRaine: raine radical index in currently loaded raine database.
-   Strictly speaking, there could be several raine databases with different
-   indexing, and when you change one for another, your saved indexes are invalid.
-  Therefore it's better to save characters, not indexes. }
-  TRadicalIndexList = array of integer;
+     stRaine: Raine radical index in currently loaded raine database.
+  There could be several Raine databases with different indexing, so use radical
+  characters for permanent storage instead -- those are invariant. }
+  TRadicalIndexes = array of integer;
 
- // TMetaStringList = type TStringList;
   TDiabolicStringList = class(TStringList);
  { Contains FStrings for radicals and normal strings with number for radical group starts:
      1
@@ -63,7 +61,6 @@ type
       Y: Integer);
     procedure rgSearchMethodClick(Sender: TObject);
 
-
   private
     sel: array[1..300] of boolean;
     rl: TDiabolicStringList;    //radicals
@@ -85,7 +82,6 @@ type
     procedure EndChangingFocus;
   protected
     FSelectedRadicals: FString; //each char = one radical
-    FSelectedIndexes: string;   //index;index;index  --- TRadicals.Number for normal, or Index for raine
     FOnSelectionChanged: TNotifyEvent;
     procedure SelectionChanged;
     procedure FocusCell(idx: integer);
@@ -97,7 +93,6 @@ type
     procedure SetSelectedRadicals(ASearchType: TRadSearchType; AValue: string);
     property SearchType: TRadSearchType read GetSearchType;
     property SelectedRadicals: FString read FSelectedRadicals;
-    property SelectedIndexes: string read FSelectedIndexes;
     property OnSelectionChanged: TNotifyEvent read FOnSelectionChanged write FOnSelectionChanged;
 
   end;
@@ -127,6 +122,9 @@ var
 procedure LoadRaineRadicals(const AFilename: string);
 procedure UnloadRaineRadicals;
 procedure BuildRadicalPackage(sourceFiles: array of string);
+
+function RadicalsToIndexes(const AType: TRadSearchType; const AChars: FString): TRadicalIndexes;
+function IndexesToRadicals(const AType: TRadSearchType; const AIndexes: TRadicalIndexes): FString;
 
 implementation
 
@@ -519,31 +517,26 @@ begin
   FSelectedRadicals := AValue;
   FillRadicals; //we need radicals to build selection
 
- //Fill in sel[] and FSelectedIndexes.
-  FSelectedIndexes := '';
+ //Fill in sel[]
   for i := Low(sel) to High(sel) do
     sel[i] := false;
   for i := 1 to flength(FSelectedRadicals) do begin
     fch := fgetch(FSelectedRadicals, i);
     for j := 0 to rl.Count - 1 do
-      if (GetRadRecordType(j)=radRadical) and (rl[j]=fch) then begin
+      if (GetRadRecordType(j)=radRadical) and (rl[j]=fch) then
         sel[StrToInt(rli[j])] := true;
-        FSelectedIndexes := FSelectedIndexes + ';' + rli[j];
        //don't break
-      end;
   end;
-  delete(FSelectedIndexes,1,1); //delete first ';'
 
   if Visible then ShowIt;
 end;
 
 { Called when radical selection is changed as a result of user actions.
- Regenerates FSelectedRadicals, FSelectedIndexes and calls handlers. }
+ Regenerates FSelectedRadicals and calls handlers. }
 procedure TfRadical.SelectionChanged;
 var i:integer;
 begin
   FSelectedRadicals:='';
-  FSelectedIndexes:='';
   for i:=1 to 300 do if sel[i] then
   begin
     if rgSearchMethod.ItemIndex=1 then
@@ -551,13 +544,9 @@ begin
       TRadicals.First;
       TRadicals.Locate('Number',i);
       FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicalsUnicode);
-      FSelectedIndexes:=FSelectedIndexes+';'+IntToStr(i);
-    end else begin
-      FSelectedRadicals:=FSelectedRadicals+RaineRadicals.Items[i].Chars;
-      FSelectedIndexes:=FSelectedIndexes+';'+IntToStr(i-1); //raine indexes start with 0
-    end;
+    end else
+      FSelectedRadicals:=FSelectedRadicals+RaineRadicals.Items[i-1].Radical;
   end;
-  delete(FSelectedIndexes,1,1); //delete first ';'
   if Assigned(FOnSelectionChanged) then
     FOnSelectionChanged(Self);
 end;
@@ -784,6 +773,34 @@ begin
     radicals.Free;
     DeleteDirectory(tempDir);
   end;
+end;
+
+
+{ Radicals to indexes and back. Radical engines must already be loaded }
+
+function RadicalsToIndexes(const AType: TRadSearchType; const AChars: FString): TRadicalIndexes;
+var i: integer;
+  ch: FChar;
+begin
+  SetLength(Result, flength(AChars));
+  for i := 1 to flength(AChars) do begin
+    ch := fgetch(AChars, i);
+    case AType of
+      stClassic: Result[i-1] := RadicalIndex(ch);
+      stRaine: Result[i-1] := RaineRadicals.FindRadical(ch);
+    end;
+  end;
+end;
+
+function IndexesToRadicals(const AType: TRadSearchType; const AIndexes: TRadicalIndexes): FString;
+var i: integer;
+begin
+  Result := '';
+  for i := 0 to Length(AIndexes)-1 do
+    case AType of
+      stClassic: Result := Result + RadicalUnicode(AIndexes[i]);
+      stRaine: Result := Result + RaineRadicals.Items[AIndexes[i]].Radical;
+    end;
 end;
 
 

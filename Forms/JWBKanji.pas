@@ -70,13 +70,14 @@ type
     procedure KanjiSearch_SpeedButton20Click(Sender: TObject);
     procedure DoIt;
     procedure DoItTimer;
+    procedure InvalidateList;
     procedure SaveChars;
     procedure FilterByRadical(const radno: integer);
     function GetKanji(cx,cy:integer):string;
 
   protected
     procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
-    procedure ReadRaineFilter(fltradical:TStringList;const tx:string);
+    procedure ReadRaineFilter(fltradical:TStringList;const ARadicals:string);
 
   end;
 
@@ -247,23 +248,38 @@ begin
   flt.Sorted:=true;
 end;
 
-procedure TfKanji.ReadRaineFilter(fltradical:TStringList;const tx:string);
-var sltemp:TStringList;
-  s1,s2:string;
+{ Converts RadicalIndexes to the standard filter string acceptable by ReadFilter }
+function RadicalIndexesToFilter(const AIndexes: TRadicalIndexes): string;
+var i: integer;
+begin
+  if Length(AIndexes)<1 then begin
+    Result := '';
+    exit;
+  end;
+
+  Result := IntToStr(AIndexes[0]);
+  for i := 1 to Length(AIndexes)-1 do
+    Result := Result + ';' + IntToStr(AIndexes[i]);
+end;
+
+procedure TfKanji.ReadRaineFilter(fltradical:TStringList;const ARadicals:string);
+var ARadIndexes: TRadicalIndexes;
+  sltemp:TStringList;
+  s2:string;
   rrind:integer;
   rrus:boolean;
   p:PWideChar;
-  i:integer;
+  i,j:integer;
   rchars:FString;
 begin
+  ARadIndexes := RadicalsToIndexes(stRaine, ARadicals);
   sltemp:=TStringList.Create;
   sltemp.Sorted:=true;
   fltradical.Sorted:=true;
-  s1:=tx;
   rrus:=false;
-  while s1<>'' do
+  for j := 0 to Length(ARadIndexes)-1 do
   begin
-    rrind:=StrToInt(strqpop(s1,';'));
+    rrind:=ARadIndexes[j];
     rchars := RaineRadicals.GetContainingChars(rrind);
     p:=PWideChar(rchars);
     for i:=1 to Length(rchars) do begin
@@ -271,7 +287,7 @@ begin
       p:=p+1;
       if not rrus or (sltemp.IndexOf(s2)<>-1) then fltradical.Add(s2);
     end;
-    if s1<>'' then
+    if j<Length(ARadIndexes)-1 then
     begin
       sltemp.Assign(fltradical);
       fltradical.Clear;
@@ -382,8 +398,10 @@ begin
     This is because a character has only one Classical Radical so AND is pointless. }
     if fKanjiSearch.sbRadicals.Down then
       case fKanjiSearch.curRadSearchType of
-        stClassic: ReadFilter(fltradical,fKanjiSearch.CurRadIndexes,fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
-        stRaine: ReadRaineFilter(fltradical,fKanjiSearch.CurRadIndexes);
+        stClassic: ReadFilter(fltradical,
+          RadicalIndexesToFilter(RadicalsToIndexes(stClassic,fKanjiSearch.CurRadChars)),
+          fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
+        stRaine: ReadRaineFilter(fltradical,fKanjiSearch.CurRadChars);
       end;
     if fKanjiSearch.sbOther.Down then
     begin
@@ -912,6 +930,11 @@ begin
 {$ENDIF}
 end;
 
+procedure TfKanji.InvalidateList;
+begin
+  DoIt;
+end;
+
 procedure TfKanji.UpdateTimerTimer(Sender: TObject);
 begin
   UpdateTimer.Enabled:=false;
@@ -984,7 +1007,7 @@ procedure TfKanji.FilterByRadical(const radno: integer);
 begin
   if radno=NoRadical then exit;
   fKanjiSearch.CurRadSearchType:=stClassic;
-  fKanjiSearch.CurRadIndexes:=IntToStr(radno);
+  fKanjiSearch.CurRadChars:=RadicalUnicode(radno);
   fKanjiSearch.pbRadicals.Invalidate;
   fKanji.DoIt;
 end;

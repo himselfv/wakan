@@ -84,18 +84,14 @@ type
     procedure FormCreate(Sender: TObject);
 
   protected
-   { Currently selected radical indexes/characters. Kept in sync by Set* functions,
-    you only have to set one. }
-    FCurRadIndexes: string;
+   { Currently selected radical characters }
     FCurRadChars: string;
-    procedure SetCurRadIndexes(const Value: string);
     procedure SetCurRadChars(const Value: string);
     procedure RadicalSelectionChanged(Sender: TObject);
     function OffsetRange(tx:string;min,max:integer):string;
   public
-    curRadSearchType: TRadSearchType;
+    CurRadSearchType: TRadSearchType;
     procedure ReloadOtherTypes;
-    property CurRadIndexes: string read FCurRadIndexes write SetCurRadIndexes;
     property CurRadChars: string read FCurRadChars write SetCurRadChars;
 
   end;
@@ -112,8 +108,7 @@ uses JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBNewCategory,
 
 procedure TfKanjiSearch.FormCreate(Sender: TObject);
 begin
-  curRadSearchType:=stRaine;
-  FCurRadIndexes:='';
+  CurRadSearchType:=stRaine;
   FCurRadChars:='';
 end;
 
@@ -186,49 +181,11 @@ begin
 end;
 
 { Called when a radical filter changes }
-procedure TfKanjiSearch.SetCurRadIndexes(const Value: string);
-var i, radno: integer;
-  parts: TStringArray;
-begin
-  FCurRadIndexes := Value;
-  sbRadicals.Down := FCurRadIndexes<>'';
-
- //Update CurRadChars appropriately
-  parts := SplitStr(FCurRadIndexes,';');
-  FCurRadChars := '';
-  for i := 0 to Length(parts)-1 do begin
-    radno := StrToInt(parts[i]);
-    case CurRadSearchType of
-      stClassic: FCurRadChars := FCurRadChars+RadicalUnicode(radno);
-      stRaine: FCurRadChars := FCurRadChars+RaineRadicals.Items[radno].Radical;
-    end;
-  end;
-
-  fKanji.DoItTimer;
-end;
-
 procedure TfKanjiSearch.SetCurRadChars(const Value: string);
-var i: integer;
-  ch: char;
 begin
   FCurRadChars := Value;
-  sbRadicals.Down := FCurRadIndexes<>'';
-
- //Update CurRadIndexes appropriately
-  FCurRadIndexes := '';
-  for i := 1 to Length(FCurRadChars) do begin
-    ch := FCurRadChars[i];
-    case CurRadSearchType of
-      stClassic: FCurRadIndexes := FCurRadIndexes+IntToStr(RadicalIndex(ch))+';';
-      stRaine: FCurRadIndexes := FCurRadIndexes+IntToStr(RaineRadicals.FindRadical(ch))+';';
-    end;
-  end;
-
- //Delete final ';'
-  if Length(FCurRadIndexes)>0 then
-    SetLength(FCurRadIndexes, Length(FCurRadIndexes)-1);
-
-  fKanji.DoItTimer;
+  sbRadicals.Down := FCurRadChars<>'';
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtSkipChange(Sender: TObject);
@@ -265,30 +222,30 @@ end;
 procedure TfKanjiSearch.RadicalSelectionChanged(Sender: TObject);
 begin
   curRadSearchType := fRadical.SearchType;
-  curRadIndexes := fRadical.SelectedIndexes;
- //SetCurRadIndexes() will trigger filter update
+  curRadChars := fRadical.SelectedRadicals;
+ //SetCurRadChars() will trigger filter update
   pbRadicals.Invalidate;
 end;
 
 procedure TfKanjiSearch.sbListRadicalsClick(Sender: TObject);
 var
-  _radsearchtype: TRadSearchType;
-  _radindexes: string;
+  _radSearchType: TRadSearchType;
+  _radChars: string;
 begin
  //save current search, it'll be broken by RadicalSelectionChanged
   _radSearchType := curRadSearchType;
-  _radindexes := FCurRadIndexes;
+  _radChars := FCurRadChars;
  //bring up selection window
   fRadical.SetSelectedRadicals(curRadSearchType, FCurRadChars);
   fRadical.OnSelectionChanged := Self.RadicalSelectionChanged;
   if IsPositiveResult(fRadical.ShowModal) then begin
-    _radsearchtype := fRadical.SearchType;
-    _radindexes := fRadical.SelectedIndexes;
+    _radSearchType := fRadical.SearchType;
+    _radChars := fRadical.SelectedRadicals;
   end;
   fRadical.OnSelectionChanged := nil;
  //apply new search, or re-apply old search
-  curRadSearchType := _radsearchtype;
-  curRadIndexes := _radindexes;
+  curRadSearchType := _radSearchType;
+  curRadChars := _radChars;
  //SetCurRadicals will trigger filter update
   pbRadicals.Invalidate;
 end;

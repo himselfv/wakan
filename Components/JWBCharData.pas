@@ -970,10 +970,16 @@ var CRadical: TTextTableCursor;
 begin
   CRadical := TRadicals.NewCursor;
   try
-    if not CRadical.Locate('Unicode', rad) then
-      Result := -1
-    else
-      Result := CRadical.Int(TRadicalsNumber);
+   { Unfortuantely there's no Unicode index in the Radicals table => enumerating }
+    Result := -1;
+    CRadical.First;
+    while not CRadical.EOF do begin
+      if CRadical.Str(TRadicalsUnicode)=rad then begin
+        Result := CRadical.Int(TRadicalsNumber);
+        break;
+      end;
+      CRadical.Next;
+    end;
   finally
     FreeAndNil(CRadical);
   end;
