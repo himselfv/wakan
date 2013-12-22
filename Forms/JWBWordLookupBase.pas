@@ -148,10 +148,10 @@ end;
 procedure TfWordLookupBase.StringGridKeyPress(Sender: TObject; var Key: Char);
 begin
  //Copy the article to clipboard on Ctrl-C
-  if (Key=^C) and (StringGrid.Visible) then begin
+  if (Key=^C) and StringGrid.Visible then begin
     CopyToClipboard(
-      {full=}GetKeyState(VK_SHIFT) and $F0 = 0, //word-only when Shift pressed
-      {replace=}true //always replace
+      {full=}true, //I'd like to copy non-full on ALT, but it's not being detected!
+      {replace=}GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       );
     Key := #00;
   end;
@@ -258,10 +258,8 @@ var ps, pc: PChar;
   end;
 
 begin
-  if s='' then begin
-    Result := '';
-    exit;
-  end;
+  Result := '';
+  if s='' then exit;
 
   flags := '';
 
@@ -315,19 +313,31 @@ end;
 
 //Copies currently selected article to the clipboard
 procedure TfWordLookupBase.CopyToClipboard(const AFullArticle, AReplace: boolean);
-var AText, tmp: string;
+var i: integer;
+   AText, tmp: string;
 begin
-  if AFullArticle then begin
-    tmp := curmeaning;
-    if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
-    tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
-    tmp:=GlorifyCopypaste(tmp); //reformat a bit to make it more pleasant
-    AText:=curkanji+' ['+curphonetic+'] '+tmp;
-  end else
-    AText:=curkanji;
+  AText := '';
+  for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
+    if AFullArticle then begin
+      tmp := remexcl(FResults[i-1].entry);
+      if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
+      tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
+      tmp:=GlorifyCopypaste(tmp); //reformat a bit to make it more pleasant
+      if AText<>'' then AText := AText+#13;
+      AText:=AText+FResults[i-1].kanji+' ['+FResults[i-1].kana+'] '+tmp;
+    end else
+      AText:=AText+FResults[i-1].kanji;
+  end;
+
   if AReplace then
     clip := AText
   else
+  if AFullArticle then begin
+    if clip<>'' then
+      clip := clip + #13 + AText //add newline
+    else
+      clip := AText;
+  end else
     clip := clip + AText;
   fMenu.SetClipboard;
 end;

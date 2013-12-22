@@ -136,7 +136,7 @@ object fWordLookupBase: TfWordLookupBase
       DefaultRowHeight = 16
       DefaultDrawing = False
       FixedCols = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
       PopupMenu = pmHeader
       TabOrder = 0
       OnDblClick = StringGridDblClick
