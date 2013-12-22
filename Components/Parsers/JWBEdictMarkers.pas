@@ -7,7 +7,7 @@ uses JWBStrings;
 { Marker IDs are stored in dictionaries so we have to keep absolute backward
  compability.
  Do not change marker IDs.
- Do not deleted markers (even deprecated ones).
+ Do not delete markers (even deprecated ones).
  Only add marker IDs after the last one.
  New marker IDs have no effect on previously compiled dictionaries. }
 
