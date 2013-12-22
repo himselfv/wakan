@@ -143,7 +143,12 @@ begin
     end;
     if (length(txleft)>0) and ((txleft[1]=';') or (txleft[1]=',')) then delete(txleft,1,1);
     if not number then
-      sl.Add(uppercase(curtx))
+      sl.Add(curtx) {Previously this added uppercase(curtx), but I removed that
+        because that breaks searching for Definitions (they're not uppercase).
+        I suppose uppercase was added when everything passed here was already
+        in hex, which is not the case now.
+        When the contents is in hex, it has to be uppercased just before
+        searching for it. }
     else
       if pos('-',curtx)=0 then
         sl.Add(curtx)
@@ -169,6 +174,9 @@ var CCharProp: TTextTableCursor;
   dot:integer;
   propType: PCharPropType;
   match: boolean;
+ { See the comment on ansi hex type below }
+  s_sp: string;
+  s_dot: string;
 begin
   sl:=TStringList.Create;
   CCharProp := TCharProp.NewCursor;
@@ -190,7 +198,12 @@ begin
       sl.Sorted := false; //don't really care if it's sorted
       for i := 0 to sl.Count - 1 do
         sl[i] := UnicodeToHex(sl[i]);
-    end; //else it's AnsiString
+      s_sp := '0020';
+      s_dot := '002E';
+    end else begin //else it's AnsiString
+      s_sp := ' ';
+      s_dot := '.';
+    end;
    {$ELSE}
     //On Ansi anything Unicode will already be internally in FChars
    {$ENDIF}
@@ -207,7 +220,7 @@ begin
           if not (rfPartial in flags) then
             break
           else
-          if (rfSpace in flags) and (pos(s_fltval+' ',s_val)<>1) then
+          if (rfSpace in flags) and (pos(s_fltval+s_sp, s_val)<>1) then
             break
           else
           if pos(s_fltval,s_val)<>1 then
@@ -217,8 +230,8 @@ begin
         case propType.dataType of
           'R': begin //Radical format: radical['][.stroke_count]
             match := match and (
-                 (pos(s_fltval+'.',s_val)=1)
-              or (pos(s_fltval+'.',s_val)=1)
+                 (pos(s_fltval+s_dot, s_val)=1)
+              or (pos(s_fltval+s_dot, s_val)=1)
               or (s_fltval=s_val)
             );
           end;
