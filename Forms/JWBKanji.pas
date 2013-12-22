@@ -377,8 +377,8 @@ begin
         if (Word(fgetch(clip,i)) >= $4000) and (fltclip.IndexOf(fgetch(clip,i))<0) then
           fltclip.Add(fgetch(clip,i));
     if fKanjiSearch.sbPinYin.Down then begin
-      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,2,[rfPartial]); //Mandarin
-      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,8,[rfPartial]); //Canton
+      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,ptMandarinReading,[rfPartial]); //Mandarin
+      ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,ptCantoneseReading,[rfPartial]); //Canton
     end;
     if fKanjiSearch.sbYomi.Down then begin
      //ON and KUN
@@ -386,13 +386,13 @@ begin
         flags := [rfPartial, rfTakedot]
       else
         flags := [];
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),4,flags);
-      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),5,flags);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),4,flags);
-      ReadFilter(fltyomi,RomajiToKana('Q'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),5,flags);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptOnReading,flags);
+      ReadFilter(fltyomi,RomajiToKana('H'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptKunReading,flags);
+      ReadFilter(fltyomi,RomajiToKana('K'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptOnReading,flags);
+      ReadFilter(fltyomi,RomajiToKana('K'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptKunReading,flags);
     end;
     if fKanjiSearch.sbSKIP.Down then
-      ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,22,[rfPartial]); //SKIP
+      ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,ptSKIP,[rfPartial]); //SKIP
    { Raine filters multi-selection with AND (only the characters with all the chosen parts are shown),
     Classical with OR (characters which match at least one radical are shown).
     This is because a character has only one Classical Radical so AND is pointless. }
@@ -422,10 +422,14 @@ begin
           end;
         end;
     end;
-    if fKanjiSearch.sbDefinition.Down then if chin then
-      ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,7,[rfPartial,rfSpace]) //Chinese definition
-    else
-      ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,3,[rfPartial,rfSpace]); //Japanese definition
+    if fKanjiSearch.sbDefinition.Down then
+      if chin then begin
+        ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinition,[rfPartial,rfSpace]); //Chinese definition
+        ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinitionUnicode,[rfPartial,rfSpace]);
+      end else begin
+        ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptJapaneseDefinition,[rfPartial,rfSpace]); //Japanese definition
+        ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptJapaneseDefinitionUnicode,[rfPartial,rfSpace]);
+      end;
     grs := GetCellSize();
     if not chin then
       case fKanjiSearch.rgSortBy.ItemIndex of

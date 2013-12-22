@@ -176,6 +176,8 @@ const
   ptRSKangXi = 16;
   ptRSKorean = 17;
 
+  ptSKIP = 22;
+
   ptJapaneseDefinitionUnicode = 121;
   ptChineseDefinitionUnicode = 122;
   ptClassicalRadical = 123;
