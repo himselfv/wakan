@@ -139,10 +139,11 @@ begin
           userindex := 0; //TODO: try to find
           userscore := -1; //or they'll be red
           dicindex := i;
-          dicname := ''; //who cares
+          dicname := dic.dic.name;
           kanji := ChinSimplified(dic.GetKanji);
           kana := dic.GetPhonetic;
-          entry := ent.ToEnrichedString;
+          entry := ent.ToEnrichedString
+            +' '+UH_LBEG+'d'+dic.dic.name+UH_LEND; //see comments in JWBDicSearch
         end;
 
       end;

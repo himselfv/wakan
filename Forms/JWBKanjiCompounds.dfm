@@ -15,14 +15,18 @@ inherited fKanjiCompounds: TfKanjiCompounds
   TextHeight = 13
   inherited Bevel: TPanel
     Width = 556
+    ExplicitWidth = 556
     inherited btnGoToVocab: TSpeedButton
       Left = 277
+      ExplicitLeft = 277
     end
     inherited btnAddToVocab: TSpeedButton
       Left = 373
+      ExplicitLeft = 373
     end
     inherited btnCopyToClipboard: TSpeedButton
       Left = 469
+      ExplicitLeft = 469
     end
     object sbShowDict: TSpeedButton [3]
       Left = 152
@@ -61,9 +65,11 @@ inherited fKanjiCompounds: TfKanjiCompounds
     end
     inherited BlankPanel: TBlankPanel
       Width = 539
+      ExplicitWidth = 539
     end
     inherited StringGrid: TWakanWordGrid
       Width = 537
+      ExplicitWidth = 537
       ColWidths = (
         110
         138
