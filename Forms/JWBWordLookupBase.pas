@@ -58,8 +58,7 @@ type
     curmeaning: string;
     procedure SetDefaultColumnWidths; virtual;
     procedure Clear; virtual;
-    procedure CopyToClipboard(const AFullArticle, AReplace: boolean); overload;
-    procedure CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean); overload;
+    procedure CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
     property Results: TSearchResults read FResults;
 
   end;
@@ -134,6 +133,8 @@ begin
     item.Caption := CopyFormats[i].Name;
     item.Tag := i;
     item.OnClick := CopyInFormatClick;
+    if i=fSettings.DefaultCopyFormat then
+      item.Default := true;
     miCopyAs.Add(item);
   end;
 
@@ -203,12 +204,20 @@ begin
 end;
 
 procedure TfWordLookupBase.StringGridKeyPress(Sender: TObject; var Key: Char);
+var CopyFormat: integer;
 begin
  //Copy the article to clipboard on Ctrl-C
   if (Key=^C) and StringGrid.Visible then begin
-    CopyToClipboard(
-      {full=}true, //I'd like to copy non-full on ALT, but it's not being detected!
-      {replace=}GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+    CopyFormat := fSettings.DefaultCopyFormat;
+    if (CopyFormat<0) or (CopyFormat>CopyFormats.Count-1) then
+      CopyToClipboard(
+        nil,
+        GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+      )
+    else
+      CopyToClipboard(
+        CopyFormats[CopyFormat],
+        GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       );
     Key := #00;
   end;
@@ -269,143 +278,16 @@ begin
   end;
 end;
 
-{ Reformats combined article text a bit: moves all flags into a single clause,
- adds linebreaks etc }
-function GlorifyCopypaste(const s: string): string;
-var ps, pc: PChar;
-  flags: string;
-
-  procedure CommitText;
-  begin
-    if pc<=ps then exit;
-    Result := Result + spancopy(ps,pc);
-  end;
-
-  procedure CommitTrimSpace;
-  begin
-   //We're going to cut something from this point on,
-   //so maybe trim a space at the end of the previous block
-    Dec(pc);
-    if pc^=' ' then begin
-      CommitText;
-      Inc(pc);
-    end else begin
-      Inc(pc);
-      CommitText;
-    end;
-  end;
-
-  procedure CommitFlags;
-  begin
-    if flags<>'' then
-      Result := Result + ' <'+flags+'>';
-    flags := '';
-  end;
-
-  procedure IncTrimSpace(var pc: PChar);
-  begin
-   //We have cut something before this point in the string,
-   //so maybe trim a space at the start of the next block
-    Inc(pc);
-    if pc^=' ' then begin
-      Inc(pc);
-      if pc^<>' ' then
-        Dec(pc);
-    end;
-  end;
-
-begin
-  Result := '';
-  if s='' then exit;
-
-  flags := '';
-
-  pc := PChar(s);
-  ps := pc;
-  while pc^<>#00 do
-
-    if pc^='<' then begin
-      CommitTrimSpace;
-      Inc(pc);
-      ps := pc;
-      while (pc^<>#00) and (pc^<>'>') do
-        Inc(pc);
-      if pc>ps then
-       //First char of the flag is always its type; we don't care
-        Inc(ps);
-      if pc>ps then begin
-        if flags<>'' then
-          flags := flags + ', ';
-        flags := flags + spancopy(ps,pc);
-      end;
-      IncTrimSpace(pc);
-      ps := pc;
-    end else
-
-    if pc^='/' then begin
-      CommitTrimSpace;
-      CommitFlags;
-      if (Result<>'') and (Result[Length(Result)]<>#13) then
-        Result := Result + #13;
-      IncTrimSpace(pc);
-      ps := pc;
-    end else
-
-    if (pc^='(') and IsDigit(pc[1]) and (
-      (pc[2]=')') or ( IsDigit(pc[2]) and (pc[3]=')')  )
-    ) then begin
-      CommitTrimSpace;
-      CommitFlags;
-      if (Result<>'') and (Result[Length(Result)]<>#13) then
-        Result := Result + #13;
-      ps := pc; //include brackets too
-      Inc(pc);
-    end else
-
-      Inc(pc); //any other char
-
-  CommitText;
-  CommitFlags;
-end;
-
-//Copies currently selected article to the clipboard
-procedure TfWordLookupBase.CopyToClipboard(const AFullArticle, AReplace: boolean);
-var i: integer;
-   AText, tmp: string;
-begin
-  AText := '';
-  for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
-    if AFullArticle then begin
-      tmp := remexcl(FResults[i-1].entry);
-      if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3);
-      tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
-      tmp:=GlorifyCopypaste(tmp); //reformat a bit to make it more pleasant
-      if AText<>'' then AText := AText+#13;
-      AText:=AText+FResults[i-1].kanji+' ['+FResults[i-1].kana+'] '+tmp;
-    end else
-      AText:=AText+FResults[i-1].kanji;
-  end;
-
-  if AReplace then
-    clip := AText
-  else
-  if AFullArticle then begin
-    if clip<>'' then
-      clip := clip + #13 + AText //add newline
-    else
-      clip := AText;
-  end else
-    clip := clip + AText;
-  fMenu.SetClipboard;
-end;
-
 procedure TfWordLookupBase.CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
 var i: integer;
    AText, tmp: string;
 begin
   AText := '';
   for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
-    tmp := AFormat.FormatResult(FResults[i-1]);
+    if AFormat<>nil then
+      tmp := AFormat.FormatResult(FResults[i-1])
+    else
+      tmp := FResults[i-1].kanji; //very simple default copying
     if AText<>'' then
       AText := AText+#13+tmp
     else
@@ -442,7 +324,7 @@ end;
 procedure TfWordLookupBase.btnCopyToClipboardClick(Sender: TObject);
 begin
  //Emulate older behavior
-  CopyToClipboard({full=}false,{replace=}false);
+  CopyToClipboard(nil,{replace=}false);
 end;
 
 end.

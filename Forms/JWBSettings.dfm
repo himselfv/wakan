@@ -28,6 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
+    ActivePage = tsDictCopyFormats
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -2540,8 +2541,43 @@ object fSettings: TfSettings
       Caption = 'Dictionary: Copy Formats'
       ImageIndex = 18
       TabVisible = False
+      OnShow = tsDictCopyFormatsShow
       ExplicitTop = 27
       ExplicitHeight = 431
+      DesignSize = (
+        465
+        452)
+      object Label18: TLabel
+        Left = 3
+        Top = 3
+        Width = 282
+        Height = 13
+        Caption = '#01104^eWhen you press Ctrl-C, copy dictionary entries as:'
+      end
+      object lbCopyFormats: TListBox
+        Left = 3
+        Top = 22
+        Width = 159
+        Height = 171
+        ItemHeight = 13
+        TabOrder = 0
+        OnClick = lbCopyFormatsClick
+      end
+      object mmCopyFormatExample: TMemo
+        Left = 168
+        Top = 22
+        Width = 294
+        Height = 171
+        Anchors = [akLeft, akTop, akRight]
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Courier New'
+        Font.Style = []
+        ParentFont = False
+        ReadOnly = True
+        TabOrder = 1
+      end
     end
   end
   object pnlButtons: TPanel

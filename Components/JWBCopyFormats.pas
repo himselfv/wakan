@@ -50,6 +50,7 @@ type
     procedure SaveToIni(reg: TCustomIniFile);
     procedure LoadFromFile(const AFilename: string);
     procedure SaveToFile(const AFilename: string);
+    function Find(const AFormat: string): integer;
     property Count: integer read GetCount;
     property Items[const Index: integer]: TCopyFormat read GetItem; default;
   end;
@@ -140,6 +141,17 @@ begin
   finally
     FreeAndNil(ini);
   end;
+end;
+
+function TCopyFormats.Find(const AFormat: string): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Count-1 do
+    if Items[i].Name=AFormat then begin
+      Result := i;
+      break;
+    end;
 end;
 
 constructor TCopyFormat.Create;

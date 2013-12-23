@@ -271,6 +271,9 @@ type
     lbPinyinSystems: TWakanCheckListBox;
     cbMultiplePinyin: TCheckBox;
     tsDictCopyFormats: TTabSheet;
+    Label18: TLabel;
+    lbCopyFormats: TListBox;
+    mmCopyFormatExample: TMemo;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -339,6 +342,8 @@ type
     procedure pbBopomofoAsPinyinClick(Sender: TObject);
     procedure pbBopomofoAsPinyinPaint(Sender: TObject; Canvas: TCanvas);
     procedure rgShowBopomofoClick(Sender: TObject);
+    procedure tsDictCopyFormatsShow(Sender: TObject);
+    procedure lbCopyFormatsClick(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -382,6 +387,21 @@ type
   public
     procedure ReloadRomaSetup;
     procedure ReloadPinyinSetup;
+
+  protected //CopyFormats
+    FDefaultCopyFormat: integer;
+    FDefaultCopyFormatName: string; //see commens for GetDefaultCopyFormat
+    procedure ReloadCopyFormats;
+    procedure UpdateCopyFormatExample;
+    function GetDefaultCopyFormat: integer;
+    procedure SetDefaultCopyFormat(const Value: integer);
+    procedure SetDefaultCopyFormatName(const Value: string);
+  public
+    property DefaultCopyFormat: integer read GetDefaultCopyFormat
+      write SetDefaultCopyFormat;
+    property DefaultCopyFormatName: string read FDefaultCopyFormatName
+      write SetDefaultCopyFormatName;
+
 
   public
    { Layout settings are loaded into these variables and applied later }
@@ -449,7 +469,7 @@ uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
   JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport,
-  JWBIO;
+  JWBIO, JWBDicSearch, JWBCopyFormats;
 
 var colorfrom:integer;
 
@@ -837,6 +857,7 @@ begin
     if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
   end;
   Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
+  DefaultCopyFormatName:=reg.ReadString('Dict','CopyFormat','');
   GridFontSize:=strtoint(Edit25.text);
   lbWordPrintFormat.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
   CheckBox14.Checked:=reg.ReadBool('WordSheet','InsideLines',true);
@@ -1109,6 +1130,7 @@ begin
   reg.WriteInteger('Dict','ExMode',exmode);
   reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
   reg.WriteBool('Dict','MultiLineGrid',cbMultilineGrids.Checked);
+  reg.WriteString('Dict','CopyFormat',DefaultCopyFormatName);
   reg.WriteInteger('WordSheet','Columns',lbWordPrintFormat.ItemIndex);
   reg.WriteBool('WordSheet','InsideLines',CheckBox14.Checked);
   reg.WriteBool('WordSheet','OutsideLines',CheckBox15.Checked);
@@ -2357,5 +2379,91 @@ begin
     showroma:=cshowroma;
   pbBopomofoAsPinyin.Invalidate;
 end;
+
+
+{ Copy formats }
+
+{ Default copy format is stored in the registry and we need something invariant
+ there, preferably format name, not number.
+ But when loading the settings the formats are not yet available, so we read
+ the name and resolve it on the first request }
+function TfSettings.GetDefaultCopyFormat: integer;
+begin
+  if FDefaultCopyFormat>=0 then begin
+    Result := FDefaultCopyFormat;
+    exit;
+  end;
+  if CopyFormats.Count<1 then begin
+   //Nothing we could return even if we wanted to!
+    Result := -1;
+    exit;
+  end else
+  if FDefaultCopyFormatName<>'' then begin
+   //Resolve format name set earlier
+    Result := CopyFormats.Find(FDefaultCopyFormatName);
+    FDefaultCopyFormat := Result;
+  end else begin
+   //Use first one available
+    Result := 0;
+    exit;
+  end;
+end;
+
+procedure TfSettings.SetDefaultCopyFormat(const Value: integer);
+begin
+  FDefaultCopyFormat := Value;
+  if (Value<0) or (Value>CopyFormats.Count-1) then
+    FDefaultCopyFormatName := ''
+  else
+    FDefaultCopyFormatName := CopyFormats[FDefaultCopyFormat].Name;
+end;
+
+procedure TfSettings.SetDefaultCopyFormatName(const Value: string);
+begin
+  FDefaultCopyFormatName := Value;
+  FDefaultCopyFormat := -1; //resolve next time it's needed
+end;
+
+procedure TfSettings.tsDictCopyFormatsShow(Sender: TObject);
+begin
+  ReloadCopyFormats;
+end;
+
+procedure TfSettings.ReloadCopyFormats;
+var i: integer;
+begin
+  lbCopyFormats.Clear;
+  for i := 0 to CopyFormats.Count-1 do
+    lbCopyFormats.Items.Add(CopyFormats[i].Name);
+  lbCopyFormats.ItemIndex := DefaultCopyFormat;
+  lbCopyFormatsClick(lbCopyFormats);
+end;
+
+procedure TfSettings.lbCopyFormatsClick(Sender: TObject);
+begin
+  if lbCopyFormats.ItemIndex<0 then exit;
+  DefaultCopyFormat := lbCopyFormats.ItemIndex;
+  UpdateCopyFormatExample;
+end;
+
+procedure TfSettings.UpdateCopyFormatExample;
+var res: TSearchResult;
+begin
+  if FDefaultCopyFormat<0 then begin
+    mmCopyFormatExample.Text := '';
+    exit;
+  end;
+
+  res.kanji := '来る';
+  res.kana := 'くる';
+  res.entry := 'F(1) gverb gintan-verb gaux-v to come (spatially or '
+    +'temporally); to approach; to arrive spop; (2) gverb gintran-verb '
+    +'gaux-v (See 行って来る) to come back; to do ... and come back spop; '
+    +'(3) gverb gintran-verb gaux-v to come to be; to become; to get; to '
+    +'grow; to continue spop; dEDICT2';
+  mmCopyFormatExample.Text :=
+    CopyFormats[FDefaultCopyFormat].FormatResult(@res);
+end;
+
 
 end.
