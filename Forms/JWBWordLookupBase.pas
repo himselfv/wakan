@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, WakanWordGrid, StdCtrls, WakanPaintbox, Buttons, ExtCtrls,
-  Menus, JWBDicSearch;
+  Menus, JWBDicSearch, JWBCopyFormats;
 
 type
   TfWordLookupBase = class(TForm)
@@ -17,6 +17,7 @@ type
     btnCopyToClipboard: TSpeedButton;
     pmHeader: TPopupMenu;
     miResetColumns: TMenuItem;
+    miCopyAs: TMenuItem;
     procedure pmHeaderPopup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
     procedure StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -45,6 +46,9 @@ type
     FResults: TSearchResults;
     procedure ResultsChanged; virtual;
     procedure WordSelectionChanged; virtual;
+    procedure ReloadCopyFormats;
+    procedure CopyInFormatClick(Sender: TObject);
+    procedure ConfigureClick(Sender: TObject);
   public
    { Currently selected word, cached for simplicity. Some rely on it outside
     of the form, such as JWBHint on JWBWordLookup.curword }
@@ -54,9 +58,9 @@ type
     curmeaning: string;
     procedure SetDefaultColumnWidths; virtual;
     procedure Clear; virtual;
-    procedure CopyToClipboard(const AFullArticle, AReplace: boolean);
+    procedure CopyToClipboard(const AFullArticle, AReplace: boolean); overload;
+    procedure CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean); overload;
     property Results: TSearchResults read FResults;
-
 
   end;
 
@@ -65,7 +69,8 @@ var
 
 
 implementation
-uses UITypes, JWBStrings, JWBUnit, JWBMenu, JWBCategories, JWBVocab, JWBVocabAdd;
+uses UITypes, JWBStrings, JWBUnit, JWBMenu, JWBCategories, JWBVocab, JWBVocabAdd,
+  JWBSettings;
 
 {$R *.dfm}
 
@@ -114,6 +119,46 @@ begin
   p := StringGrid.ScreenToClient(Mouse.CursorPos);
   StringGrid.MouseToCell(p.X, p.Y, ACol, ARow);
   miResetColumns.Visible := (ARow=0); //click on header
+  miCopyAs.Visible := (ARow>0); //click on data
+  if miCopyAs.Visible then
+    ReloadCopyFormats;
+end;
+
+procedure TfWordLookupBase.ReloadCopyFormats;
+var i: integer;
+  item: TMenuItem;
+begin
+  miCopyAs.Clear;
+  for i := 0 to CopyFormats.Count-1 do begin
+    item := TMenuItem.Create(Self);
+    item.Caption := CopyFormats[i].Name;
+    item.Tag := i;
+    item.OnClick := CopyInFormatClick;
+    miCopyAs.Add(item);
+  end;
+
+  item := TMenuItem.Create(Self);
+  item.Caption := '-';
+  miCopyAs.Add(item);
+
+  item := TMenuItem.Create(Self);
+  item.Caption := _l('#01103^eConfigure...');
+  item.OnClick := ConfigureClick;
+  miCopyAs.Add(item);
+end;
+
+procedure TfWordLookupBase.CopyInFormatClick(Sender: TObject);
+begin
+  CopyToClipboard(
+    CopyFormats[(Sender as TMenuItem).Tag],
+    GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+  );
+end;
+
+procedure TfWordLookupBase.ConfigureClick(Sender: TObject);
+begin
+  fSettings.pcPages.ActivePage:=fSettings.tsDictCopyFormats;
+  fSettings.ShowModal;
 end;
 
 procedure TfWordLookupBase.miResetColumnsClick(Sender: TObject);
@@ -135,8 +180,20 @@ end;
 
 procedure TfWordLookupBase.StringGridMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var p: TPoint;
+  ACol, ARow: integer;
+  r: TGridRect;
 begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
+ //Right-click-select
+  p := StringGrid.ScreenToClient(Mouse.CursorPos);
+  StringGrid.MouseToCell(p.X, p.Y, ACol, ARow);
+  if ARow>0 then
+    if (ARow<StringGrid.Selection.Top) or (ARow>StringGrid.Selection.Bottom) then begin
+      r := StringGrid.Selection;
+      r.Top := ARow;
+      r.Bottom := ARow;
+      StringGrid.Selection := r;
+    end;
 end;
 
 procedure TfWordLookupBase.StringGridMouseUp(Sender: TObject;
@@ -339,6 +396,29 @@ begin
       clip := AText;
   end else
     clip := clip + AText;
+  fMenu.SetClipboard;
+end;
+
+procedure TfWordLookupBase.CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
+var i: integer;
+   AText, tmp: string;
+begin
+  AText := '';
+  for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
+    tmp := AFormat.FormatResult(FResults[i-1]);
+    if AText<>'' then
+      AText := AText+#13+tmp
+    else
+      AText := tmp;
+  end;
+
+  if AReplace then
+    clip := AText
+  else
+  if clip<>'' then
+    clip := clip + #13 + AText //add newline
+  else
+    clip := AText;
   fMenu.SetClipboard;
 end;
 

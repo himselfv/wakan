@@ -1204,6 +1204,10 @@
 01098>Input some text to see how it converts to kana
 01099>Input some text to see how it converts to bopomofo
 01100>An example of how the phonetic would look. Click to see another example.
+01101>Copy Formats
+01102>Copy As
+01103>Configure...
+
 ;
 ;
 ; EDICT markers.

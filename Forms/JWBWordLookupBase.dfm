@@ -160,5 +160,10 @@ object fWordLookupBase: TfWordLookupBase
       Caption = '#01002^eReset columns'
       OnClick = miResetColumnsClick
     end
+    object miCopyAs: TMenuItem
+      Caption = '#01102^eCopy As'
+      object TMenuItem
+      end
+    end
   end
 end

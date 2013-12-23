@@ -618,7 +618,7 @@ uses Types, StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
   JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils,
-  JWBCharDataImport;
+  JWBCharDataImport, JWBCopyFormats;
 
 {$R *.DFM}
 
@@ -922,6 +922,10 @@ begin
         end;
       end;
     StrokeOrderPackage:=nil;
+
+
+   { Misc }
+    CopyFormats.LoadFromFile(ProgramDataDir+'\copyformats.ini');
 
 
    { User data }

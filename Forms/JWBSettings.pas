@@ -270,6 +270,7 @@ type
     btnPinyinSystemDown: TBitBtn;
     lbPinyinSystems: TWakanCheckListBox;
     cbMultiplePinyin: TCheckBox;
+    tsDictCopyFormats: TTabSheet;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
