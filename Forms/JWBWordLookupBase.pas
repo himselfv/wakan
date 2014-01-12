@@ -59,6 +59,7 @@ type
     procedure SetDefaultColumnWidths; virtual;
     procedure Clear; virtual;
     procedure CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
+    function IsEmpty: boolean;
     property Results: TSearchResults read FResults;
 
   end;
@@ -302,6 +303,12 @@ begin
   else
     clip := AText;
   fMenu.SetClipboard;
+end;
+
+//True if no results in the table
+function TfWordLookupBase.IsEmpty: boolean;
+begin
+  Result := FResults.Count<=0;
 end;
 
 procedure TfWordLookupBase.btnGoToVocabClick(Sender: TObject);

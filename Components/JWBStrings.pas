@@ -337,6 +337,11 @@ function IsKanaCharKatakana(c:FString; i:integer): boolean;
 function IsSokuon(const c: FChar): boolean; inline;
 function IsSmallKanaVowel(const c: FChar): boolean; inline;
 
+function AsciiToFullwidth(const c: char): char; overload;
+function AsciiToFullwidth(const s: string): string; overload;
+function AsciiToHalfwidth(const c: char): char; overload;
+function AsciiToHalfwidth(const s: string): string; overload;
+
 implementation
 uses WideStrUtils, ShlObj;
 
@@ -1662,5 +1667,46 @@ begin
     or (c='30A1') or (c='30A3') or (c='30A5') or (c='30A7') or (c='30A9') or (c='30E3') or (c='30E5') or (c='30E7');
  {$ENDIF}
 end;
+
+function AsciiToFullwidth(const c: char): char;
+begin
+  if c=' ' then
+    Result := #$3000 //space is the exception
+  else
+ //Two char blocks are equal: 0021..007E <-> FF01..FF5E
+  if (c>#$0020) and (c<#$0080) then
+    Result := Chr(Ord(c)-$0020+$FF00)
+  else
+    Result := c;
+end;
+
+function AsciiToFullwidth(const s: string): string;
+var i: integer;
+begin
+  Result := s;
+  for i := 1 to Length(Result) do
+    Result[i] := AsciiToFullwidth(Result[i]);
+end;
+
+function AsciiToHalfwidth(const c: char): char;
+begin
+  if c=#$3000 then
+    Result := ' ' //space is the exception
+  else
+ //Two char blocks are equal: 0021..007E <-> FF01..FF5E
+  if (c>#$FF00) and (c<#$FF60) then
+    Result := Chr(Ord(c)-$FF00+$0020)
+  else
+    Result := c;
+end;
+
+function AsciiToHalfwidth(const s: string): string;
+var i: integer;
+begin
+  Result := s;
+  for i := 1 to Length(Result) do
+    Result[i] := AsciiToFullwidth(Result[i]);
+end;
+
 
 end.

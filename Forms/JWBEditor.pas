@@ -348,6 +348,7 @@ type
     insconfirmed:boolean;
     priorkanji:string;
     insertbuffer:string; //collects keypresses
+    buffertype:char; //type of data in the buffer: H=hiragana, K=katakana, -=latin/unknown
     resolvebuffer:boolean; //set to true before doing ResolveInsert to replace kana with kanji suggestion, false to keep input intact
     shiftpressed:boolean;
     procedure DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
@@ -356,12 +357,12 @@ type
     procedure ClearInsBlock;
     procedure CloseInsert;
     function TryReleaseCursorFromInsert: boolean;
+    function NextSuggestion(const ANext: boolean): boolean;
   public
    //Unfortunately some stuff is used from elswehere
     ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
     inslen: integer;
-    buffertype:char;
-    function GetInsertKana(display:boolean):FString;
+    function GetInsertKana(const APreview: boolean): FString;
 
   protected //File opening/saving
     FFileChanged: boolean;
@@ -1243,7 +1244,7 @@ var oldCur: TCursorPos;
 begin
   oldCur:=GetCur;
   tmp:=oldCur;
-  if (ins.x=-1) or (insconfirmed) then
+  if (ins.x=-1) or insconfirmed then
   begin
     ukn:=false;
     if key=VK_RIGHT then
@@ -1299,12 +1300,8 @@ begin
       end;
     end;
   end else
-  with fWordLookup do
-  begin
-    if (key=VK_UP) and (StringGrid.Row>1) then StringGrid.Row:=StringGrid.Row-1;
-    if (key=VK_DOWN) and (StringGrid.Row<StringGrid.RowCount-1) then StringGrid.Row:=StringGrid.Row+1;
-    if (StringGrid.RowCount>1) and (StringGrid.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
-  end;
+  if key=VK_UP then NextSuggestion(false) else
+  if key=VK_DOWN then NextSuggestion(true);
 end;
 
 procedure TfEditor.ListBox1KeyPress(Sender: TObject; var Key: Char);
@@ -2721,8 +2718,9 @@ var inskana: string;
   i:integer;
   lp: TCharacterPropArray;
 begin
-  if (ins.x=-1) and (final) then exit;
-  if (buffertype='H') and (resolvebuffer) then
+  if (ins.x=-1) and final then exit;
+
+  if (buffertype='H') and resolvebuffer then
   begin
     with fWordLookup do
       if StringGrid.Visible then
@@ -2760,45 +2758,44 @@ begin
       ShowText(false);
     end;
   end else
+
+  if final then
   begin
-    if final then
-    begin
-     { We're accepting input as kana, so we have no dictionary word to check against.
-      Therefore if the user didn't enter tones we don't know tones. In F03* notation
-      we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
-      just drops these. }
-      s:=ConvertBopomofo(GetInsertKana(false));
-      SetLength(lp, flength(s));
-      for i:=0 to flength(s)-1 do
-        if i=0 then
-          lp[i].SetChar(buffertype, 9, 0, 1)
-        else
-          lp[i].SetChar('<', 9, 0, 1); //word continues
-      DisplayInsert(s,lp,true);
-      if resolvebuffer then begin
-        i:=SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
-       { Not all word may be covered, so we reset prop for other chars. See above. }
-        while i<Length(inskana) do begin
-          Inc(i);
-          doctr[ins.y].chars[ins.x+i-1].Reset;
-        end;
+   { We're accepting input as kana, so we have no dictionary word to check against.
+    Therefore if the user didn't enter tones we don't know tones. In F03* notation
+    we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
+    just drops these. }
+    s:=ConvertBopomofo(GetInsertKana(false));
+    SetLength(lp, flength(s));
+    for i:=0 to flength(s)-1 do
+      if i=0 then
+        lp[i].SetChar(buffertype, 9, 0, 1)
+      else
+        lp[i].SetChar('<', 9, 0, 1); //word continues
+    DisplayInsert(s,lp,true);
+    if resolvebuffer then begin
+      i:=SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
+     { Not all word may be covered, so we reset prop for other chars. See above. }
+      while i<Length(inskana) do begin
+        Inc(i);
+        doctr[ins.y].chars[ins.x+i-1].Reset;
       end;
-      insconfirmed:=true;
-      mustrepaint:=true;
-      ShowText(false);
-    end else
-      DisplayInsert(GetInsertKana(true),nil,true);
-  end;
+    end;
+    insconfirmed:=true;
+    mustrepaint:=true;
+    ShowText(false);
+  end else
+    DisplayInsert(GetInsertKana(true),nil,true);
 end;
 
 {
-Returns the contents of insert buffer.
-  display: sometimes returns raw romaji (e.g. for chinese), since in chinese
-    we don't convert input to bopomofo until the last moment.
-    => (display==true) means "I'm only going to show it"
+Returns the contents of input buffer upgraded for presentation according
+to buffer type (to hiragana/katakana, to FW-latin etc.)
+  APreview: return contents for preview, not insertion. In chinese we don't convert
+    input to bopomofo until the last moment, so this'll return raw romaji.
 When returning chinese, tones are in F03* format (this is used for DB lookups)
 }
-function TfEditor.GetInsertKana(display:boolean):FString;
+function TfEditor.GetInsertKana(const APreview: boolean):FString;
 begin
   if curlang='j'then
   begin
@@ -2811,7 +2808,7 @@ begin
       Result:=fstr(insertbuffer); //latin
   end else
   begin
-    if display then
+    if APreview then
       Result:=fstr(insertbuffer)
     else
     if buffertype='H' then
@@ -2821,24 +2818,50 @@ begin
   end;
 end;
 
-procedure TfEditor.InsertCharacter(c:char);
-const
-  DEFCPROPS: TCharacterProps = (wordstate:'-';learnstate:9;dicidx:0;docdic:1);
-var chartype:char;
-    immchar:string;
-    immmode:boolean;
+{ If the suggestion box is open, moves to the next/previous suggestions.
+ANext: whether to move to the next (true) or previous (false) suggestion.
+Returns false if there was no next/previous suggestion to move to. }
+function TfEditor.NextSuggestion(const ANext: boolean): boolean;
 begin
-  if (c='[') or (c=']') then
-    with fWordLookup do
-    begin
-      if (c='[') and (StringGrid.Row>1) then StringGrid.Row:=StringGrid.Row-1;
-      if (c=']') and (StringGrid.Row<StringGrid.RowCount-1) then StringGrid.Row:=StringGrid.Row+1;
-      if insconfirmed then ResolveInsert(true);
-      if (StringGrid.RowCount>1) and (StringGrid.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
-      exit;
+  if fWordLookup.IsEmpty then begin
+   //When no results, fWordLookup.StringGrid.RowCount might be 200, so cut that
+   //case out now.
+    Result := false;
+    exit;
+  end;
+
+  with fWordLookup do begin
+    if ANext then begin
+      Result := StringGrid.Row<StringGrid.RowCount-1;
+      if Result then StringGrid.Row:=StringGrid.Row+1;
+    end else begin
+      Result := StringGrid.Row>1;
+      if Result then StringGrid.Row:=StringGrid.Row-1;
     end;
+    if insconfirmed then ResolveInsert(true);
+    if (StringGrid.RowCount>1) and StringGrid.Visible and (ins.x<>-1) then Self.ShowHint else HideHint;
+  end;
+end;
+
+procedure TfEditor.InsertCharacter(c:char);
+const DEFCPROPS: TCharacterProps = (wordstate:'-';learnstate:9;dicidx:0;docdic:1);
+var chartype:char; //H=hiragana, K=katakana, -=as is, immediate, 0=keep current
+  AsciiMode: boolean;
+  ImmediateChar: boolean; //drop any chains and print the char
+begin
+ { [ ] scroll works the same way UP/DOWN does, but after you've applied one
+  suggestion it still lets you change it inline.
+  UP/DOWN stops working at that point and turns into normal arrow keys.
+  But [] keys are also needed in typing, so we only steal them if the suggestion
+  box is visible. }
+  if not fWordLookup.IsEmpty then
+  case c of
+   '[': begin NextSuggestion(false); exit; end;
+   ']': begin NextSuggestion(true); exit; end;
+  end;
+
   if insconfirmed then ClearInsBlock;
-  immmode:=sbAsciiMode.down;
+  AsciiMode:=sbAsciiMode.down;
   if (c=' ') and (insertbuffer<>'') then
   begin
    //Accept suggestion
@@ -2894,45 +2917,114 @@ begin
     RefreshLines;
     exit;
   end;
-  immchar:='';
-  case c of
-    ',':immchar:={$IFNDEF UNICODE}'3001'{$ELSE}#$3001{$ENDIF};
-    '.':immchar:={$IFNDEF UNICODE}'3002'{$ELSE}#$3002{$ENDIF};
-    '"':immchar:={$IFNDEF UNICODE}'3003'{$ELSE}#$3003{$ENDIF};
-    '<':immchar:={$IFNDEF UNICODE}'3008'{$ELSE}#$3008{$ENDIF};
-    '>':immchar:={$IFNDEF UNICODE}'3009'{$ELSE}#$3009{$ENDIF};
-    '(':immchar:={$IFNDEF UNICODE}'300C'{$ELSE}#$300C{$ENDIF};
-    ')':immchar:={$IFNDEF UNICODE}'300D'{$ELSE}#$300D{$ENDIF};
-    '[':immchar:={$IFNDEF UNICODE}'3016'{$ELSE}#$3016{$ENDIF};
-    ']':immchar:={$IFNDEF UNICODE}'3017'{$ELSE}#$3017{$ENDIF};
-    '{':immchar:={$IFNDEF UNICODE}'3010'{$ELSE}#$3010{$ENDIF};
-    '}':immchar:={$IFNDEF UNICODE}'3011'{$ELSE}#$3011{$ENDIF};
-    ' ':immchar:={$IFNDEF UNICODE}'0020'{$ELSE}#$0020{$ENDIF};
-  end;
+
   if Ord(c)<$0020 then //not a printable char
     exit;
-  if (AnsiUppercase(c)=c) and ((c<'0') or (c>'9')) then
-  begin
-    if curlang='c'then chartype:='-'else chartype:='K'
-  end else chartype:='H';
-  if immmode then chartype:='-';
-  if c='''' then chartype:='0';
-  if c='+'then chartype:='H';
-  if immchar<>'' then chartype:='-';
-  if (chartype='-') then
-  begin
+
+ { We accept characters and store them mostly as-is in inputbuffer. We also keep
+  track of what kind of word we're typing (hiragana H/katakana K/other -).
+  Elsewhere we take current contents of input buffer and convert according to
+  its type (to hiragana/to katakana/leave as is).
+  There are also immediate characters (punctuation and the like) which flush
+  input buffer and are printed instantly. }
+
+  if AsciiMode then begin
+   { In AsciiMode all characters are immediate + no conversion }
+    chartype:='-';
+
+  end else begin
+   {  At this time all punctuation is split into breaking and non-breaking.
+      Breaking punctuation is immediate, and because of that cannot be used in
+      kana formulas.
+      Non-breaking punctuation can be used in formulas, but it's non-breaking.
+
+      Digits are non-breaking, at the very least because they are needed for
+      pinyin tones. Some other stuff which can be used in a dictionary entry is
+      non-breaking too.
+
+      Ideally, we'd like a selected set of characters to be breaking irrelevant
+      to if they're used in kana or not, BUT if they're used in kana, we'd like
+      to override it and make them non-breaking.
+      E.g.
+        if AsciiMode then
+          breaking := true
+        else
+          breaking := IsBreakingPunctuation(char);
+        if kanaconv.IsMeaningfulCharacter(char) then
+          breaking := false;
+  }
+    case c of
+      ' ', ',', '.', '<', '>', '(', ')', '[', ']', '{', '}':
+        ImmediateChar := true;
+    else ImmediateChar := false;
+    end;
+
+   //Uppercase letter in Japanese mode => katakana
+    if (AnsiUppercase(c)=c) and ((c<'0') or (c>'9')) then begin
+      if curlang='c' then chartype:='-' else chartype:='K'
+    end
+    else chartype:='H'; //hiragana
+
+    if c='''' then chartype:='0'; //WTF? "'" continues any chain
+    if c='+' then chartype:='H'; //WTF? "+" continues hiragana chain...
+
+    if ImmediateChar then chartype:='-'; //overrides previous lines
+
+   { Make permanent replacements. Ideally we'd like to avoid this and replace
+    on presentation in GetInsertKana, so that we keep raw input as long as
+    possible.
+    Chars which we replace here we basically make unavailable for kana formulas
+    as there's no way to type them now. }
+    case c of
+      ',': c:=#$3001;
+      '.': c:=#$3002;
+     //Special uses for standard chars. How do we type <>()[]{} then?
+      '<': c:=#$3008;
+      '>': c:=#$3009;
+      '(': c:=#$300C;
+      ')': c:=#$300D;
+      '[': c:=#$3016;
+      ']': c:=#$3017;
+      '{': c:=#$3010;
+      '}': c:=#$3011;
+     //This should later be moved to common HW->FW upgrade:
+      '~': c:= '～';
+    end;
+
+  {
+    We'd like to use this code to convert all latin to fullwidth, but we shouldn't:
+
+     //Upgrade all punctuation to fullwidth, but do not touch latin (need it for romaji).
+     //Two char blocks are equal: 0021..007E <-> FF01..FF5E
+     //TODO: In fact, what if romaji decoder uses any of punctuation?
+     //#$3000; //upgrade space
+      if (Ord(c)>$0020) and (Ord(c)<$0080)
+      and ((Ord(c)<Ord('a')) or (Ord(c)>Ord('z')))
+      and ((Ord(c)<Ord('A')) or (Ord(c)>Ord('Z'))) then
+        immchar := Chr(Ord(c)-$0020+$FF00);
+
+    Fullwidth latin here will break kana conversion later. We should accept raw
+    input and:
+      - either attach it to inputbuffer and convert on presentation, according
+       to input buffer type
+      - or if this is an immediate char, convert later in this function.
+  }
+  end;
+
+
+ //Instant output
+  if chartype='-' then begin
     resolvebuffer:=false;
     if insertbuffer<>'' then ResolveInsert(true);
     ClearInsBlock;
-    if (immchar<>'') and (not immmode) then
-      DisplayInsert(immchar,CharPropArray(DEFCPROPS),false)
-    else
-      DisplayInsert(fstring(c),CharPropArray(DEFCPROPS),false);
+    DisplayInsert(fstring(c),CharPropArray(DEFCPROPS),false);
     FileChanged:=true;
     mustrepaint:=true;
     ShowText(true);
     exit;
   end;
+
+ //Input buffer
   FileChanged:=true;
   if insertbuffer='' then
   begin
