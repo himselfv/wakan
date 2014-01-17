@@ -618,7 +618,7 @@ uses Types, StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
   JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils,
-  JWBCharDataImport, JWBCopyFormats;
+JWBCharDataImport, JWBCopyFormats;
 
 {$R *.DFM}
 

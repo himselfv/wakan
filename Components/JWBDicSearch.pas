@@ -5,7 +5,8 @@ Has a lot of dark legacy in code form.
 }
 
 interface
-uses SysUtils, Classes, JWBStrings, TextTable, MemSource, StdPrompt, JWBDic;
+uses SysUtils, Classes, JWBStrings, TextTable, MemSource, StdPrompt, JWBDic,
+  JWBEdictMarkers;
 
 {
 Particle list
@@ -122,33 +123,74 @@ Search result list.
 Populated by TDicSearchRequest.Search().
 }
 type
-  {
-   If DicIndex/DicName are set, article contents MUST contain "dDicname" too
-   because Wakan relies on it. (I'll fix that later)
-
-   If several results are really similar, Wakan merges those into one. Header then
-   contains the best of everything (lowest sort score, first availabe userindex etc)
-   and article is a merger of all articles.
-
-   Article which information (dicindex+dicname) went to the header MUST go first
-   in this merger.
-  }
+(*
+  Our ideal nuclear search result:
 
   TSearchResult = record
     score: integer; //lower is better
-    userindex: integer; //0 means not in a user dict
-    userscore: integer;
-    dicindex: integer;  //only one dictionary reference is supported for the result
+    dicindex: integer; //dictinary index
     dicname: string;
+    artindex: integer; //article index in dictionary
+    entindex: integer; //entry index in article
+    kanji: string; //kanji and kana pair which matched
+    kana: string;
+    freq: integer; //word frequency according to the dictionary, -1 if unavailable
+    sdef: char; //match class -- see TCandidateLookup.verbType
     slen: integer; { Length of the inflexed expression as it appeared in the text.
       Different search results are different guesses at deflexion and may assume
       original expression was of different length. }
+    text: string; //entry text
+    markers: TMarkers; //full set of entry markers
+  end;
+  PSearchResult = ^TSearchResult;
+
+  We'd then like to group these nuclear results into clusters somehow, but that's
+  still unclear.
+
+  For now, legacy version:
+*)
+
+ {
+  If several results are really similar, Wakan merges those into one. Header then
+  contains the best of everything (lowest sort score, first availabe userindex etc)
+  and article is a merger of all articles.
+ }
+
+  TSearchResArticle = record
+    score: integer; //lower is better
+    dicname: string;
+    dicindex: integer;
+    freq: integer; //word frequency according to the dictionary, -1 if unavailable
+    entries: TEntries;
+    procedure Reset;
+    function ToLegacyString: string;
+  end;
+  PSearchResArticle = ^TSearchResArticle;
+
+  TSearchResult = record
+   //At this time there has to be a "primary" match which is duplicated here:
+    score: integer;
+    dicname: string;
+    dicindex: integer;
+    freq: integer;
+   //If the word is in the user vocabulary, that's added as an article + indicated here
+    userindex: integer; //0 means not in a user dict
+    userscore: integer;
+   //There's currently only one match class for all grouped entries
     sdef: char; //match class -- see TCandidateLookup.verbType
+    slen: integer; { Length of the inflexed expression as it appeared in the text.
+      Different search results are different guesses at deflexion and may assume
+      original expression was of different length. }
     kanji: string; //already simplified if needed, but otherwise no special marks
     kana: string;
-    entry: string;
+    articles: array of TSearchResArticle;
     procedure Reset;
-    function ArticlesToString: string;
+    function AddArticle: PSearchResArticle; overload;
+    procedure AddArticle(const art: TSearchResArticle); overload;
+    procedure InsertArticle(const AIndex: integer; const art: TSearchResArticle);
+    procedure DeleteArticle(const AIndex: integer);
+    function FindArticle(const dicname: string; const dicindex: integer): integer;
+    function ToLegacyString: string;
   end;
   PSearchResult = ^TSearchResult;
 
@@ -259,7 +301,7 @@ procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
 
 implementation
 uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSettings,
-  JWBVocab, JWBCategories, JWBEdictMarkers, JWBUserData;
+  JWBVocab, JWBCategories, JWBUserData;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
@@ -548,30 +590,95 @@ begin
   score := 0;
   userIndex := 0;
   userScore := -1;
-  dicindex := 0;
-  dicname := '';
-  slen := 0;
   sdef := 'F'; //maybe something else?
+  slen := 0;
   kanji := '';
   kana := '';
-  entry := '';
+  SetLength(articles, 0);
 end;
 
-function TSearchResult.ArticlesToString: string;
+function TSearchResult.AddArticle: PSearchResArticle;
+begin
+  SetLength(articles, Length(articles)+1);
+  Result := @articles[Length(articles)-1];
+  Result.Reset;
+end;
+
+procedure TSearchResult.AddArticle(const art: TSearchResArticle);
+begin
+  AddArticle^ := art;
+end;
+
+procedure TSearchResult.InsertArticle(const AIndex: integer; const art: TSearchResArticle);
+begin
+  SetLength(articles, Length(articles)+1);
+  Move(articles[AIndex], articles[AIndex+1], (Length(articles)-AIndex-1)*SizeOf(articles[AIndex]));
+  ZeroMemory(@articles[AIndex], SizeOf(articles[AIndex]));
+  articles[AIndex] := art;
+end;
+
+procedure TSearchResult.DeleteArticle(const AIndex: integer);
+begin
+  articles[AIndex].Reset;
+  Move(articles[AIndex+1], articles[AIndex], (Length(articles)-AIndex-1)*SizeOf(articles[AIndex]));
+  ZeroMemory(@articles[Length(articles)-1], SizeOf(articles[Length(articles)-1]));
+  SetLength(articles, Length(articles)-1);
+end;
+
+{ Locates a reference to this exact article or returns -1 }
+function TSearchResult.FindArticle(const dicname: string; const dicindex: integer): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to Length(articles)-1 do
+    if (articles[i].dicname=dicname) and (dicindex=dicindex) then begin
+      Result := i;
+      break;
+    end;
+end;
+
+function TSearchResult.ToLegacyString: string;
 var statpref: string;
-  tmp: string;
+  i: integer;
 begin
   if UserScore>=0 then
     statpref:=ALTCH_EXCL+inttostr(UserScore)
   else
     statpref:='';
+
+ //Store match type in the string. The only place where this is used is
+ //DrawWordInfo(), and it should not be used anywhere else.
+  if sdef<>'F' then
+    Result := ALTCH_TILDE+'I'
+  else
+    Result := ALTCH_TILDE+'F';
+
+  Result := '';
+  for i := 0 to Length(articles)-1 do begin
+    if Result<>'' then Result := Result + ' / ';
+    Result := Result + articles[i].ToLegacyString();
+  end;
+
  //wakan uses {} as special chars, unfortunately
-  tmp := entry;
-  repl(tmp, '{', '(');
-  repl(tmp, '}', ')');
-  Result := statpref + CheckKnownKanji(kanji) + ' [' + statpref + kana + '] {' + statpref + tmp + '}';
+  repl(Result, '{', '(');
+  repl(Result, '}', ')');
+  Result := statpref + CheckKnownKanji(kanji) + ' [' + statpref + kana + '] {' + statpref + Result + '}';
 end;
 
+procedure TSearchResArticle.Reset;
+begin
+  dicindex := 0;
+  dicname := '';
+  entries.Reset;
+end;
+
+{ Returns backward-compatible entry string. Eventually do be deleted. }
+function TSearchResArticle.ToLegacyString: string;
+begin
+  Result := entries.ToEnrichedString;
+  if Self.dicname<>'' then
+    Result := Result  +' '+UH_LBEG+'d'+Self.dicname+UH_LEND;
+end;
 
 {
 Deflex()
@@ -900,7 +1007,10 @@ begin
           sdef := 'P';
           kana := ChinTraditional(search);
           kanji := kana;
-          entry := KanaToRomaji(search,'j')+' particle';
+          with AddArticle^ do begin
+            sdef := 'P';
+            entries.Add(KanaToRomaji(search,'j')+' particle', ''); //TODO: Localize
+          end;
           slen := Length(kanji);
         end;
     end;
@@ -994,7 +1104,6 @@ var
   slen:integer; //==lc.len
 
   raw_entries: TEntries;
-  entry:string; //translation entry text
   markers,kmarkers:TMarkers;
   popclas:integer;
   UserScore:integer;
@@ -1004,6 +1113,7 @@ var
   ssig:string; //translation signature (reading x kanji) to merge duplicates
   scomp:PSearchResult;
   scur:TSearchResult;
+  sart:PSearchResArticle;
 
   existingIdx: integer;
 
@@ -1061,16 +1171,14 @@ begin
   while dic.HaveMatch do begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
       mess:=SMMessageDlg(_l(sDicSearchTitle), _l(sDicSearchText));
-    if sdef<>'F' then entry:=ALTCH_TILDE+'I'else entry:=ALTCH_TILDE+'F';
 
     raw_entries:=dic.GetEntries;
     markers:=raw_entries.MergeMarkers;
     kmarkers:=dic.GetKanjiKanaMarkers;
-    entry:=entry+raw_entries.ToEnrichedString;
 
     if IsAppropriateVerbType(sdef, markers) then
     if (not dic_ignorekana) or (not (a in [stEditorInsert,stEditorAuto]))
-      or (not kanaonly) or (pos(UH_LBEG+'skana'+UH_LEND,entry)>0) then
+      or (not kanaonly) or raw_entries.HasMarker(MarkUsuallyKana) then
     begin
 
      //Calculate popularity class
@@ -1088,15 +1196,11 @@ begin
 
       UserScore:=-1;
       UserIndex:=0;
-      if pos(UH_LBEG+'skana'+UH_LEND,entry)>0 then
+      if raw_entries.HasMarker(MarkUsuallyKana) then
         TryGetUserScore(dic.GetPhonetic);
       TryGetUserScore(dic.GetKanji);
       if (UserScore=-1) and (dic.GetKanji<>ChinSimplified(dic.GetKanji)) then
         TryGetUserScore(ChinSimplified(dic.GetKanji));
-
-      if (fSettings.CheckBox58.Checked) and (dic.GetFrequency>-1) and (dic.GetFrequency>0) then
-        entry:=entry+' '+UH_LBEG+'pwc'+IntToStr(dic.GetFrequency)+UH_LEND;
-      entry:=entry+' '+UH_LBEG+'d'+dic.dic.name+UH_LEND;
 
      //Calculate sorting order -- the bigger the worse (will apear later in list)
       case a of
@@ -1119,51 +1223,87 @@ begin
       if IsKanaCharKatakana(dic.GetPhonetic, 1) then inc(sort,1000);
       sort:=sort+dic.dic.priority*20000;
       sort:=sort+ds.PriorityClass;
-      if fSettings.CheckBox59.Checked then
-      begin
-        if dic.GetFrequency>-1 then
-        begin
-          freq:=dic.GetFrequency;
-          if freq>=500000 then freq:=10000 else
-          if freq>=10000 then freq:=2000+(freq-10000) div 100 else
-          if freq>=1000 then freq:=1000+(freq-1000) div 10;
-        end else
-          freq:=0;
-        sort:=sort+10000-freq;
-      end;
 
-      if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then
-        entry:=copy(entry,1,2)+UH_LBEG+'pp'+inttostr(sort div 100)+UH_LEND+' '+copy(entry,3,length(entry)-2);
+      if fSettings.cbShowFreq.Checked or fSettings.cbOrderFreq.Checked then
+        freq := dic.GetFrequency //may also return -1
+      else
+        freq := -1;
+
+      if fSettings.cbOrderFreq.Checked and (freq>=0) then begin
+        if freq>=500000 then
+          sort := sort + 0 //top score
+        else
+        if freq>=10000 then
+          sort := sort + 8000 - (freq-10000) div 100
+        else
+        if freq>=1000 then
+          sort := sort + 9000 - (freq-1000) div 10
+        else
+          sort := sort + 10000 - freq;
+      end;
 
      //Fill in current result
       scur.Reset;
-      scur.score := sort;
       scur.userindex := UserIndex;
       if fSettings.cbStatusColors.Checked then
         scur.userscore := UserScore
       else
         scur.userscore := -1;
-      scur.dicindex := dic.GetIndex;
-      scur.dicname := dic.dic.name;
-      scur.slen := slen;
-     // if sdef<>'F'then scur.sdef:='I' else scur.sdef:='F';
-      if (pos('-v'+UH_LEND,entry)>0) then
-        scur.sdef:='I'
-      else
-        scur.sdef:='F';
+
       scur.kana := dic.GetPhonetic;
-      if (fSettings.CheckBox8.Checked) and (pos(UH_LBEG+'skana'+UH_LEND,entry)<>0) then
+     { TODO: Not good. UsuallyKana is set for only some results, not all of them.
+        The replacement is applied for all. }
+      if fSettings.cbReplaceKanji.Checked and raw_entries.HasMarker(MarkUsuallyKana) then
         scur.kanji := scur.kana
       else
         scur.kanji := ChinSimplified(dic.GetKanji);
-      scur.entry := entry;
+
+      scur.slen := slen;
+      scur.sdef := sdef;
+     {
+      TODO: There were two other ways sdef could be set.
+      First one is similar to what entries.EntryText does:
+        if sdef<>'F' then scur.sdef:='I' else scur.sdef:='F';
+
+      Second one is like this:
+        if (pos('-v'+UH_LEND,entry)>0) then
+          scur.sdef:='I'
+        else
+          scur.sdef:='F';
+
+      Second one was ultimately the one active. -v refers to markers which have it,
+      which turns out to be ichidan and all godan subtypes.
+      I stands for "iku verb" so I don't understand what's going on, so I'm
+      disabling it for now.
+      When/if I find out who expects sdef==I and why, I may reenable it.
+     }
+
+      sart := scur.AddArticle;
+      sart.score := sort;
+      sart.dicname := dic.dic.name;
+      sart.dicindex := dic.GetIndex;
+      sart.freq := freq;
+      sart.entries := raw_entries;
+
+     //Copy to header (in case we're going to store this)
+      scur.score := sart.score;
+      scur.dicname := sart.dicname;
+      scur.dicindex := sart.dicindex;
+      scur.freq := sart.freq;
+
+    { Result grouping.
+      This intends to group results which have the same reading x kanji into
+      a single entry.
+      In the future, grouping should be smarter. Different kanji/kana for the
+      same meaning should be grouped together like it's done in EDICT.
+      Sometimes only some of the entries have to be returned (if others are
+      inappropriate due to verb type or something). }
 
      //result signature (reading x kanji)
       ssig:=dic.GetPhonetic+'x'+dic.GetKanji;
-     //if we already have that result, only upgrade it (lower it's sorting order, add translations)
+     //if we already have that result, only upgrade it (lower its sorting order, add translations)
       existingIdx := presentl.IndexOf(ssig);
-      if existingIdx>=0 then
-      begin
+      if existingIdx>=0 then begin
         existingIdx := integer(presentl.Objects[existingIdx]); //presentl is sorted, real indexes are kept this way
        //Update existing one
         scomp:=sl[existingIdx];
@@ -1181,18 +1321,16 @@ begin
           scomp.sdef := scur.sdef;
         end;
 
-        //add tl
-        if pos(copy(entry,3,length(entry)-2),scomp.entry)=0 then begin
-         //for now we add everything to the end, ignoring what result had higher score
-         //if we ever care about that, we also have to replace DicName and WordIndex in the header
-          if (length(entry)>0) and (entry[1]=ALTCH_TILDE) then delete(entry,1,2);
-          scomp.entry:=scomp.entry+' / '+entry;
-        end;
-      end else
-      begin
+       //already present? multiple matches are totally possible
+        if scomp.FindArticle(sart.dicname, sart.dicindex)<0 then
+         //add tl
+          scomp.AddArticle(sart^);
+      end else begin
+       //Store group
         existingIdx := sl.Add(scur);
         presentl.AddObject(ssig, TObject(existingIdx));
       end;
+
       inc(i);
     end;
 
@@ -1207,12 +1345,14 @@ begin
 end;
 
 procedure TDicSearchRequest.FinalizeResults(sl: TSearchResults);
-var i: integer;
+var i, j: integer;
   scomp: PSearchResult;
+  voc_entry: string;
   ex_pos: integer;
   s2: string;
   sl2: TStringList;
   sl2i: integer;
+  sart: TSearchResArticle;
 begin
   if sl.Count<=1 then exit; //apparently that's the most common case when translating
 
@@ -1222,25 +1362,46 @@ begin
   for i:=0 to sl.Count-1 do
     if sl[i].userindex<>0 then
     begin
-      CUser.Locate(@stUserIndex,sl[i].userindex);
       scomp:=sl[i];
-      s2:=FixVocabEntry(CUser.Str(TUserEnglish));
-      ex_pos := pos(s2,scomp.entry);
 
-     //If there's already this article in the list, cut it
-      if ex_pos>0 then
-        scomp.entry := copy(scomp.entry,1,ex_pos-1) + copy(scomp.entry,ex_pos+Length(s2),length(scomp.entry)-length(s2)-ex_pos+1);
+      CUser.Locate(@stUserIndex,sl[i].userindex);
+      voc_entry := FixVocabEntry(CUser.Str(TUserEnglish));
 
-     //Delete ~F/~I word type since it would be ignored by painting anyway as it stands
-     //And it would be visible.
-      if (length(scomp.entry)>0) and (scomp.entry[1]=ALTCH_TILDE) then delete(scomp.entry,1,2);
+     //Often user entries are copies of dictionary entries, remove such entries.
+     //Fat chance, but whatever.
+      for j := 0 to Length(scomp.articles)-1 do
+       { We will be forgiving and compare without marks, because otherwise scomp
+         may never match - it contains <dDictName>
+         It's also possible that vocabulary entry contains several dict entries,
+         so we pos() for them instead. }
+        if pos(remmark(scomp.articles[j].ToLegacyString), remmark(voc_entry))>=0 then begin
+          scomp.DeleteArticle(j);
+         //Do not break, per above
+        end;
+     { All of this is pretty shitty since we can't reorder results inside vocab
+      entry. Common deduplication should be written instead. }
 
+     //Delete ~F/~I word type if it's present at the beginning of the vocab entry -
+     //it will be added dynamically
+      if (length(voc_entry)>0) and (voc_entry[1]=ALTCH_TILDE) then
+        delete(voc_entry,1,2);
+
+     //Enhance with word categories
       sl2:=TStringList.Create;
-      ListWordCategories(CUser.Int(TUserIndex),sl2);
-      for sl2i:=0 to sl2.Count-1 do s2:=s2+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
-      sl2.Free;
+      try
+        ListWordCategories(CUser.Int(TUserIndex),sl2);
+        for sl2i:=0 to sl2.Count-1 do
+          voc_entry:=voc_entry+' '+UH_LBEG+'l'+copy(sl2[sl2i],3,length(sl2[sl2i])-2)+UH_LEND;
+      finally
+        sl2.Free;
+      end;
 
-      scomp.entry := s2+' / '+scomp.entry;
+      sart.Reset;
+      sart.score := 0; //ultimate
+      sart.dicname := '';
+      sart.dicindex := scomp.userindex;
+      sart.entries.Add(voc_entry, ''); //TODO: We should parse voc_entry instead into parts
+      scomp.InsertArticle(0, sart);
     end;
 end;
 

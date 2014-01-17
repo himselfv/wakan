@@ -120,7 +120,7 @@ begin
   if curlang='c'then FontJpCh:=FontChinese else FontJpCh:=FontJapanese;
   for i:=0 to maxwords-1 do
   begin
-    ss:=sl[i].ArticlesToString;
+    ss:=sl[i].ToLegacyString;
     rect.left:=sep+1;
     rect.right:=fScreenTip.Width-sep-2;
     rect.top:=sep+ch*i+1+tpp;
@@ -270,7 +270,7 @@ begin
   begin
     slen:=fScreenTip.screenTipList[i].slen;
     if slen>maxslen then maxslen:=slen;
-    ss:=fScreenTip.screenTipList[i].ArticlesToString;
+    ss:=fScreenTip.screenTipList[i].ToLegacyString;
     SplitWord(ss,s1,s2,s3,s4);
     rect.left:=0;
     rect.right:=Screen.Width;

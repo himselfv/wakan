@@ -48,7 +48,7 @@ type
     CheckBox5: TCheckBox;
     CheckBox6: TCheckBox;
     CheckBox7: TCheckBox;
-    CheckBox8: TCheckBox;
+    cbReplaceKanji: TCheckBox;
     tsWordListPrinting: TTabSheet;
     CheckBox14: TCheckBox;
     CheckBox15: TCheckBox;
@@ -158,8 +158,8 @@ type
     Label51: TLabel;
     SpeedButton14: TSpeedButton;
     Edit33: TEdit;
-    CheckBox58: TCheckBox;
-    CheckBox59: TCheckBox;
+    cbShowFreq: TCheckBox;
+    cbOrderFreq: TCheckBox;
     Edit34: TEdit;
     Label52: TLabel;
     tsEditor: TTabSheet;
@@ -824,7 +824,7 @@ begin
   CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
   if fWordLookup<>nil then
     fWordLookup.sbAutoPreview.Down:=reg.ReadBool('Dict','QuickSearch',true);
-  CheckBox8.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
+  cbReplaceKanji.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
   cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
   cbStatusColors.Checked:=reg.ReadBool('Dict','StatusColors',true);
@@ -832,8 +832,8 @@ begin
   CheckBox49.Checked:=reg.ReadBool('Dict','DemandLoad',true);
   CheckBox50.Checked:=reg.ReadBool('Dict','AutoExamples',true);
   cbMultilineGrids.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
-  CheckBox58.Checked:=reg.ReadBool('Dict','ShowFreq',false);
-  CheckBox59.Checked:=reg.ReadBool('Dict','OrderFreq',true);
+  cbShowFreq.Checked:=reg.ReadBool('Dict','ShowFreq',false);
+  cbOrderFreq.Checked:=reg.ReadBool('Dict','OrderFreq',true);
   CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
   CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
   cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);
@@ -1098,7 +1098,7 @@ begin
   reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
   reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
   reg.WriteBool('Dict','QuickSearch',fWordLookup.sbAutoPreview.Down);
-  reg.WriteBool('Dict','ReplaceKanji',CheckBox8.Checked);
+  reg.WriteBool('Dict','ReplaceKanji',cbReplaceKanji.Checked);
   reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
   reg.WriteBool('Dict','StatusColors',cbStatusColors.Checked);
@@ -1106,8 +1106,8 @@ begin
   reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
   reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
   reg.WriteBool('Dict','RandomExamples',fExamples.btnRandomOrder.Down);
-  reg.WriteBool('Dict','ShowFreq',CheckBox58.Checked);
-  reg.WriteBool('Dict','OrderFreq',CheckBox59.Checked);
+  reg.WriteBool('Dict','ShowFreq',cbShowFreq.Checked);
+  reg.WriteBool('Dict','OrderFreq',cbOrderFreq.Checked);
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
   reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
   reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
@@ -2454,13 +2454,25 @@ begin
     exit;
   end;
 
+  res.Reset;
   res.kanji := '来る';
   res.kana := 'くる';
-  res.entry := 'F(1) gverb gintan-verb gaux-v to come (spatially or '
-    +'temporally); to approach; to arrive spop; (2) gverb gintran-verb '
-    +'gaux-v (See 行って来る) to come back; to do ... and come back spop; '
-    +'(3) gverb gintran-verb gaux-v to come to be; to become; to get; to '
-    +'grow; to continue spop; dEDICT2';
+  with res.AddArticle^ do begin
+    dicname := 'EDICT2';
+    entries.Add(
+      'to come (spatially or temporally); to approach; to arrive',
+      #75#81#51#98 //verb intan-verb aux-v pop
+    );
+    entries.Add(
+      'to come back; to do ... and come back',
+      #75#81#51#98 //verb intan-verb aux-v pop
+    );
+    entries.Add(
+      'to come to be; to become; to get; to grow; to continue',
+      #75#81#51#98 //verb intan-verb aux-v pop
+    );
+  end;
+
   mmCopyFormatExample.Text :=
     CopyFormats[FDefaultCopyFormat].FormatResult(@res);
 end;

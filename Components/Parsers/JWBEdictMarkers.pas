@@ -172,6 +172,7 @@ const
  { There's also an empty ID space #01..#32 }
 
   MarkPop: TMarker = #98;
+  MarkUsuallyKana: TMarker = #96;
 
 type
   TMarkersByType = record

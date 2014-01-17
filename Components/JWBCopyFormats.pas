@@ -2,7 +2,7 @@ unit JWBCopyFormats;
 { Template language for copying dictionary results with Ctrl-C. }
 
 interface
-uses SysUtils, Classes, IniFiles, JWBDicSearch;
+uses SysUtils, Classes, IniFiles, JWBDic, JWBDicSearch;
 
 type
   TParsedFlags = array of string;
@@ -28,7 +28,8 @@ type
     FName: string;
     FTemplates: TStringList;
     function ParseResult(const res: PSearchResult): TParsedResult;
-    function ParseArticle(const s: string): TParsedArticle;
+//    function ParseArticle(const s: string): TParsedArticle;
+    function ParseArticle(const res: PSearchResArticle): TParsedArticle;
     function ApplyTemplate(templ: string; const values: TStringList): string;
   public
     constructor Create;
@@ -61,7 +62,7 @@ var
   CopyFormats: TCopyFormats;
 
 implementation
-uses JWBStrings;
+uses JWBStrings, JWBEdictMarkers;
 
 destructor TCopyFormats.Destroy;
 begin
@@ -235,16 +236,31 @@ var parts: TStringArray;
 begin
   Result.expression := res.kanji;
   Result.reading := res.kana;
-  tmp := remexcl(replc(res.entry, '//', '/'));
-//    if pos(' >> ',tmp)>0 then delete(tmp,1,pos(' >> ',tmp)+3); //not sure if needed
-  parts := SplitStr(tmp, '/');
-  SetLength(Result.articles, Length(parts));
-  for i := 0 to Length(parts)-1 do begin
-    parts[i] := Trim(parts[i]);
-    Result.articles[i] := ParseArticle(parts[i]);
+  SetLength(Result.articles, Length(res.articles));
+  for i := 0 to Length(Result.articles)-1 do
+    Result.articles[i] := ParseArticle(@res.articles[i]);
+end;
+
+function TCopyFormat.ParseArticle(const res: PSearchResArticle): TParsedArticle;
+var i, j: integer;
+  tmp: string;
+begin
+  Result.dict := res.dicname;
+  SetLength(Result.clauses, Length(res.entries.items));
+  for i := 0 to Length(Result.clauses)-1 do begin
+    Result.clauses[i].id := IntToStr(i+1);
+    Result.clauses[i].text := res.entries.items[i].text;
+    SetLength(Result.clauses[i].flags, Length(res.entries.items[i].markers));
+    for j := 0 to Length(Result.clauses[i].flags)-1 do begin
+      tmp := GetMarkAbbr(res.entries.items[i].markers[j+1]);
+     //Delete marker type id (first char)
+      if Length(tmp)>1 then delete(tmp,1,1);
+      Result.clauses[i].flags[j] := tmp;
+    end;
   end;
 end;
 
+(*
 function TCopyFormat.ParseArticle(const s: string): TParsedArticle;
 var ps, pc: PChar;
   cla: PParsedClause;
@@ -368,6 +384,7 @@ begin
   CommitFlags;
   EndClause;
 end;
+*)
 
 (*
 Recieves a template and a set of values and fills the resulting string accordingly.

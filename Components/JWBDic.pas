@@ -167,9 +167,12 @@ type
 
   TEntries = record
     items: array of TEntry;
+    procedure Reset;
+    procedure Add(const AText: FString; AMarkers: TMarkers);
     function ToString: FString;
     function ToEnrichedString: FString;
     function MergeMarkers: TMarkers;
+    function HasMarker(const AMarker: TMarker): boolean;
   end;
   PEntries = ^TEntries;
 
@@ -879,6 +882,20 @@ begin
   end;
 end;
 
+procedure TEntries.Reset;
+begin
+  SetLength(Self.items, 0);
+end;
+
+procedure TEntries.Add(const AText: FString; AMarkers: TMarkers);
+begin
+  SetLength(Self.items, Length(Self.items)+1);
+  with Self.items[Length(Self.items)-1] do begin
+    Text := AText;
+    Markers := AMarkers;
+  end;
+end;
+
 function TEntries.ToString: FString;
 var i: integer;
   ent: FString;
@@ -921,6 +938,20 @@ begin
   Result := '';
   for i := 0 to Length(items) - 1 do
     Result := Result + items[i].markers;
+end;
+
+{ True if any of the entries has the specified marker. Entry markers do not apply
+ to the whole entry set, but sometimes this is useful (e.g. if any of the meanings
+ has written-in-kana flag, then we should do some additional lookups just by kana) }
+function TEntries.HasMarker(const AMarker: TMarker): boolean;
+var i: integer;
+begin
+  Result := false;
+  for i := 0 to Length(items)-1 do
+    if TestMarkers(AMarker, items[i].markers) then begin
+      Result := true;
+      break;
+    end;
 end;
 
 

@@ -138,12 +138,13 @@ begin
             score := 9999999 - dic.GetFrequency;
           userindex := 0; //TODO: try to find
           userscore := -1; //or they'll be red
-          dicindex := i;
-          dicname := dic.dic.name;
+          with AddArticle^ do begin
+            dicindex := i;
+            dicname := dic.dic.name;
+            entries := ent;
+          end;
           kanji := ChinSimplified(dic.GetKanji);
           kana := dic.GetPhonetic;
-          entry := ent.ToEnrichedString
-            +' '+UH_LBEG+'d'+dic.dic.name+UH_LEND; //see comments in JWBDicSearch
         end;
 
       end;
@@ -185,11 +186,17 @@ begin
             score := CUser.Int(TUserScore);
             userindex := CUser.Int(TUserIndex);
             userscore := score;
-            dicindex := 0;
-            dicname := '';
             kanji := ChinSimplified(CUser.Str(TUserKanji));
             kana := CUser.Str(TUserPhonetic);
-            entry := FixVocabEntry(CUser.Str(TUserEnglish));
+            with AddArticle^ do begin
+              dicindex := 0;
+              dicname := '';
+              entries.Reset;
+              entries.Add(
+               //Unfortunately we don't have much choice
+                FixVocabEntry(CUser.Str(TUserEnglish)),
+                '');
+            end;
           end;
         end;
 

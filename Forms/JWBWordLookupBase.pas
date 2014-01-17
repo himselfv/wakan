@@ -272,7 +272,7 @@ begin
   tmp := TStringList.Create;
   try
     for i:=0 to FResults.Count - 1 do
-      tmp.Add(FResults[i].ArticlesToString);
+      tmp.Add(FResults[i].ToLegacyString);
     FillWordGrid(StringGrid,tmp,false,false);
   finally
     FreeAndNil(tmp);

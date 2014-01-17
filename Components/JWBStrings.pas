@@ -136,6 +136,48 @@ const
   UH_RUBY_PLACEHOLDER:FChar = #$E100;
  {$ENDIF}
 
+{
+ALTCH_TILDE and UH_LBEG/UH_LEND are legacy markers to store information inside
+the text.
+They are still used in rendering but added only at the last moment.
+
+Unfortunately, older vocabularies stored text with ascii equivalent of these
+markers:
+  ALTCH_TILDE    ~
+  UH_LBEG        <
+  UH_LEND        >
+So we have to produce/parse them when it comes to working with vocabularies.
+
+ALTCH_TILDE can occur once in a result, and is always followed by match type -
+see JWBDicSearch.TCandidateLookup.verbType. In practice all types are always
+dumbed down to either I or F, where I is italicised.
+Only DrawWordInfo() uses this flag and after we upgrade it, no one ever should.
+
+UH_LBEG/LEND are generic brackets which contain a prefix + content. Known
+prefixes:
+  1[string]   "Special"
+  s[string]   "Usage"
+  g[string]   "Grammatical"
+     dictionary marker abbreviations of three different types. "s" can also be
+     used to add generic tiny-font comment (users do this in vocabularies)
+
+  d[string]   "Dict"
+     dictionary name from where this particular match came from, in a string with
+     multiple matches
+
+  l[string]   "Lesson"
+     unsure, something related to vocabularies
+     also used to list word categories for vocab entries, one by one
+
+  pp[Self.score div 100: int]
+     this match score (in a string with multiple matches). Not used in the app
+     but older vocabularies may contain remnants of this.
+
+  pwc[frequency: int]
+     this match's word frequency as marked in the dict where it came from. Again,
+     not used in the app, but vocabs may contain this.
+}
+
 
 { Math }
 

@@ -3135,7 +3135,7 @@ begin
   begin
     wordpart:=word.sdef;
     worddict:=word.dicindex;
-    s:=word.ArticlesToString;
+    s:=word.ToLegacyString;
     globdict:=0;
     if (pos(UH_LBEG+'d',s)>0) then
     begin
