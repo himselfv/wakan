@@ -24,7 +24,7 @@ var
   fHint: TfHint;
 
 implementation
-uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids;
+uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup;
 
 {$R *.DFM}
 

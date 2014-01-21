@@ -169,10 +169,12 @@ type
     items: array of TEntry;
     procedure Reset;
     procedure Add(const AText: FString; AMarkers: TMarkers);
+    function GetCount: integer; inline;
     function ToString: FString;
     function ToEnrichedString: FString;
     function MergeMarkers: TMarkers;
     function HasMarker(const AMarker: TMarker): boolean;
+    property Count: integer read GetCount;
   end;
   PEntries = ^TEntries;
 
@@ -330,7 +332,7 @@ var
   DictFormatSettings: TFormatSettings; //to use in locate-neutral information
 
 implementation
-uses Forms;
+uses Forms, JWBLegacyMarkup;
 
 {
 Dictionary list
@@ -894,6 +896,11 @@ begin
     Text := AText;
     Markers := AMarkers;
   end;
+end;
+
+function TEntries.GetCount: integer;
+begin
+  Result := Length(items);
 end;
 
 function TEntries.ToString: FString;

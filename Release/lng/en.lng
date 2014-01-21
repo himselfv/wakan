@@ -1208,6 +1208,11 @@
 01102>Copy As
 01103>Configure...
 01104>When you press Ctrl-C, copy dictionary entries as:
+01105>Edit available formats:
+01106>Documentation
+01107>Restart the application for changes to take effect.
+01108>Go to Vocabulary
+01109>Add to Vocabulary
 
 ;
 ;

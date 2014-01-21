@@ -14,7 +14,7 @@ procedure ClearKanjiCardCache;
 
 implementation
 uses TextTable, JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
-  JWBSettings, JWBUserData, JWBKanaConv, JWBCharData;
+  JWBSettings, JWBUserData, JWBKanaConv, JWBCharData, JWBLegacyMarkup;
 
 procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
   stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;

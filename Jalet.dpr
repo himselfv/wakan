@@ -72,7 +72,8 @@ uses
   JWBCharDataImport in 'Forms\JWBCharDataImport.pas' {fCharDataImport},
   RaineRadicals in 'Components\RaineRadicals.pas',
   JWBWordLookupBase in 'Forms\JWBWordLookupBase.pas' {fWordLookupBase},
-  JWBCopyFormats in 'Components\JWBCopyFormats.pas';
+  JWBCopyFormats in 'Components\JWBCopyFormats.pas',
+  JWBLegacyMarkup in 'Components\JWBLegacyMarkup.pas';
 
 {$R *.RES}
 

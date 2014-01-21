@@ -82,24 +82,6 @@ const
   UH_AORUBY_TAG_OPEN:FChar = '003C';
   UH_AORUBY_TAG_CLOSE:FChar = '003E';
 
- { Control Characters.
-  Wakan uses single characters like 'U', '~', '@' to control text markup.
-  We can't do that in Unicode because those characters can legitimately occur in text.
-  Instead we use symbols U+E000..U+F8FF which are for private use by applications.
-
-  Not all control characters are well understood, so they don't yet have descriptive names.
-  For non-descriptive names use prefix ALTCH_ }
-  UH_UNKNOWN_KANJI:Char = 'U'; //Set by CheckKnownKanji
-
- { All used by DrawWordInfo }
-  ALTCH_EXCL:Char = '!';
-  UH_DRAWWORD_KANA:Char = '#'; //can only be first character in the string. Means that this field is Kana.
-  UH_DRAWWORD_KANJI:Char = '@'; //same, kanji
-  ALTCH_TILDE:Char = '~'; //followed by 1 character word type (F, I)
-  UH_SETCOLOR:Char = '%'; //followed by 6 character hex color
-  UH_LBEG:Char ='<'; //begin flag text (ex.: <dEDICT> <gram> <suf>)
-  UH_LEND:Char = '>'; //end flag text
-
   UH_RUBY_PLACEHOLDER:FChar = 'E100'; //when ruby has nothing to be attached to,
     //but we still have to store it in the decoded form
 
@@ -123,60 +105,8 @@ const
   UH_AORUBY_TAG_OPEN:FChar = '<';
   UH_AORUBY_TAG_CLOSE:FChar = '>';
 
-  UH_UNKNOWN_KANJI:Char = #$E001;
-
-  ALTCH_EXCL:Char = #$E002;
-  UH_DRAWWORD_KANA = #$E003;
-  UH_DRAWWORD_KANJI = #$E004;
-  ALTCH_TILDE:Char = #$E005;
-  UH_SETCOLOR:Char = #$E006;
-  UH_LBEG:Char = #$E008;
-  UH_LEND:Char = #$E007;
-
   UH_RUBY_PLACEHOLDER:FChar = #$E100;
  {$ENDIF}
-
-{
-ALTCH_TILDE and UH_LBEG/UH_LEND are legacy markers to store information inside
-the text.
-They are still used in rendering but added only at the last moment.
-
-Unfortunately, older vocabularies stored text with ascii equivalent of these
-markers:
-  ALTCH_TILDE    ~
-  UH_LBEG        <
-  UH_LEND        >
-So we have to produce/parse them when it comes to working with vocabularies.
-
-ALTCH_TILDE can occur once in a result, and is always followed by match type -
-see JWBDicSearch.TCandidateLookup.verbType. In practice all types are always
-dumbed down to either I or F, where I is italicised.
-Only DrawWordInfo() uses this flag and after we upgrade it, no one ever should.
-
-UH_LBEG/LEND are generic brackets which contain a prefix + content. Known
-prefixes:
-  1[string]   "Special"
-  s[string]   "Usage"
-  g[string]   "Grammatical"
-     dictionary marker abbreviations of three different types. "s" can also be
-     used to add generic tiny-font comment (users do this in vocabularies)
-
-  d[string]   "Dict"
-     dictionary name from where this particular match came from, in a string with
-     multiple matches
-
-  l[string]   "Lesson"
-     unsure, something related to vocabularies
-     also used to list word categories for vocab entries, one by one
-
-  pp[Self.score div 100: int]
-     this match score (in a string with multiple matches). Not used in the app
-     but older vocabularies may contain remnants of this.
-
-  pwc[frequency: int]
-     this match's word frequency as marked in the dict where it came from. Again,
-     not used in the app, but vocabs may contain this.
-}
 
 
 { Math }
@@ -303,8 +233,6 @@ procedure StrListAdd(sl: TStringList; sa: TStringArray);
 function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string;
 procedure Append(var ATo: TStringArray; const AFrom: TStringArray);
 
-function remexcl(const s:string):string;
-function remmark(s:string):string;
 function repl(var s:string;const sub,rep:string):string;
 function urepl(var s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
 function replc(const s:string;const sub,rep:string):string;
@@ -1295,58 +1223,6 @@ begin
     ATo[base+i] := AFrom[i];
 end;
 
-{ Removes all Wakan marks (unknown kanji, field type, word type etc) from the string }
-function remexcl(const s:string):string;
-begin
-{
- I have three versions of this code and they all look different!
-
-  if (length(s)>1) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
-  if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
-  if (length(s)>1) and (s[2]=UH_UNKNOWN_KANJI) then delete(s,2,1);
-  if (length(s)>1) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
-  if (length(s)>1) and (s[1]=ALTCH_TILDE) then delete(s,1,2);
-  result:=s;
-
-  if (length(s1)>0) and (s1[1]=ALTCH_EXCL) then delete(s1,1,2);
-  if (length(s2)>0) and (s2[1]=ALTCH_EXCL) then delete(s2,1,2);
-  if (length(s1)>0) and (s1[1]=UH_UNKNOWN_KANJI) then delete(s1,1,1);
-  if (length(s2)>0) and (s2[1]=UH_UNKNOWN_KANJI) then delete(s2,1,1);
-
-  if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
-  if (length(s)>2) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
-  if (length(s)>1) and (s[1]=UH_DRAWWORD_KANA) then delete(s,1,1);
-  if (length(s)>1) and (s[1]=UH_DRAWWORD_KANJI) then delete(s,1,1);
-  if (length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then delete(s,1,1);
-
- This is just crazy. I'm going to write something reasonable now and pray it works.
-}
-
- { All marks are at the beginning of the string }
-  Result := s;
-  while Length(Result)>0 do begin
-    if Result[1]=ALTCH_EXCL then delete(Result,1,2) else
-    if Result[1]=UH_DRAWWORD_KANA then delete(Result,1,1) else
-    if Result[1]=UH_DRAWWORD_KANJI then delete(Result,1,1) else
-    if Result[1]=UH_UNKNOWN_KANJI then delete(Result,1,1) else
-    if Result[1]=ALTCH_TILDE then delete(Result,1,2) else
-      break;
-  end;
-end;
-
-{ Removes all internal Wakan markers (<dEDICT> <gabbr> etc) from the string }
-function remmark(s:string):string;
-var beg, en: integer;
-begin
-  beg := pos(UH_LBEG,s);
-  en := pos(UH_LEND,s);
-  while (beg>0) and (en>0) and (en>beg) do begin
-    delete(s,beg,en-beg+1);
-    beg := pos(UH_LBEG,s);
-    en := pos(UH_LEND,s);
-  end;
-  result:=trim(s);
-end;
 
 function repl(var s:string;const sub,rep:string):string;
 var i_pos: integer;

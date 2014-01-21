@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   Grids, StdCtrls, ExtCtrls, Buttons, JWBStrings, WakanWordGrid, Menus,
-  WakanPaintbox, JWBWordLookupBase;
+  WakanPaintbox, JWBWordLookupBase, Vcl.ImgList;
 
 type
   TfKanjiCompounds = class(TfWordLookupBase)
@@ -26,7 +26,7 @@ type
     procedure FillVocabResults(const ch: FString);
   public
     procedure Clear; override;
-    procedure Refresh;
+    procedure Refresh; override;
     procedure SetCharCompounds(ch:FChar);
 
   end;
@@ -37,7 +37,8 @@ var
 implementation
 
 uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBWordLookup, JWBVocab,
-  JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories, JWBVocabAdd;
+  JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories, JWBVocabAdd,
+  JWBLegacyMarkup;
 
 {$R *.DFM}
 

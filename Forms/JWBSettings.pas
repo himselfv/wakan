@@ -274,6 +274,10 @@ type
     Label18: TLabel;
     lbCopyFormats: TListBox;
     mmCopyFormatExample: TMemo;
+    Label19: TLabel;
+    lblCopyFormatsIni: TUrlLabel;
+    lblCopyFormatsDocumentation: TUrlLabel;
+    Label20: TLabel;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -2427,6 +2431,8 @@ end;
 procedure TfSettings.tsDictCopyFormatsShow(Sender: TObject);
 begin
   ReloadCopyFormats;
+  lblCopyFormatsIni.URL := AppFolder + '/CopyFormats.ini';
+  lblCopyFormatsDocumentation.URL := WikiUrl('CopyFormats');
 end;
 
 procedure TfSettings.ReloadCopyFormats;
@@ -2476,6 +2482,5 @@ begin
   mmCopyFormatExample.Text :=
     CopyFormats[FDefaultCopyFormat].FormatResult(@res);
 end;
-
 
 end.

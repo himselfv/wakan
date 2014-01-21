@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons,
   JWBStrings, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
-  WakanPaintbox, JWBWordLookupBase;
+  WakanPaintbox, JWBWordLookupBase, Vcl.ImgList;
 
 type
   TfWordLookup = class(TfWordLookupBase)
@@ -44,6 +44,7 @@ type
     procedure WordSelectionChanged; override;
   public
     procedure SetDefaultColumnWidths; override;
+    procedure Refresh; override;
     procedure UpdateLookMode;
 
   protected
@@ -66,7 +67,7 @@ implementation
 uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
   JWBPrint, JWBEditor, JWBWordKanji, JWBExamples,
   JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
-  JWBCategories, JWBAnnotations, JWBUserData, JWBCharData;
+  JWBCategories, JWBAnnotations, JWBUserData, JWBCharData, JWBLegacyMarkup;
 
 {$R *.DFM}
 
@@ -82,6 +83,11 @@ begin
   StringGrid.ColWidths[1]:=128;
   StringGrid.ColWidths[2]:=575;
   StringGrid.AutoSizeColumns;
+end;
+
+procedure TfWordLookup.Refresh;
+begin
+  Look();
 end;
 
 //Called when any of the configuration buttons are pressed

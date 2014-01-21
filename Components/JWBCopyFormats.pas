@@ -5,31 +5,10 @@ interface
 uses SysUtils, Classes, IniFiles, JWBDic, JWBDicSearch;
 
 type
-  TParsedFlags = array of string;
-  TParsedClause = record
-    id: string;
-    text: string;
-    flags: TParsedFlags;
-  end;
-  PParsedClause = ^TParsedClause;
-  TParsedArticle = record
-    clauses: array of TParsedClause;
-    dict: string;
-  end;
-  PParsedArticle = ^TParsedArticle;
-  TParsedResult = record
-    expression: string;
-    reading: string;
-    articles: array of TParsedArticle;
-  end;
-
   TCopyFormat = class
   protected
     FName: string;
     FTemplates: TStringList;
-    function ParseResult(const res: PSearchResult): TParsedResult;
-//    function ParseArticle(const s: string): TParsedArticle;
-    function ParseArticle(const res: PSearchResArticle): TParsedArticle;
     function ApplyTemplate(templ: string; const values: TStringList): string;
   public
     constructor Create;
@@ -168,56 +147,65 @@ begin
 end;
 
 function TCopyFormat.FormatResult(const res: PSearchResult): string;
-var pres: TParsedResult;
-  art: PParsedArticle;
-  cla: PParsedClause;
+var art: PSearchResArticle;
+  cla: PEntry;
   values: TStringList;
   i, j, k: integer;
   articles_text: string;
   clauses_text: string;
   flags_text: string;
+  glosssep: string;
+  tmp: string;
 begin
-  pres := ParseResult(res);
+  if Templates.IndexOfName('glosssep')>=0 then
+    glosssep := Templates.Values['glosssep']
+  else
+    glosssep := ';';
 
   values := TStringList.Create;
   try
     articles_text := '';
-    for i := 0 to Length(pres.articles)-1 do begin
-      art := @pres.articles[i];
+    for i := 0 to Length(res.articles)-1 do begin
+      art := @res.articles[i];
 
       clauses_text := '';
-      for j := 0 to Length(art.clauses)-1 do begin
-        cla := @art.clauses[j];
+      for j := 0 to art.entries.Count-1 do begin
+        cla := @art.entries.items[j];
 
         flags_text := '';
-        for k := 0 to Length(cla.flags)-1 do begin
+        for k := 1 to Length(cla.markers) do begin
           values.Clear;
-          values.Values['text'] := cla.flags[k];
+          tmp := GetMarkAbbr(cla.markers[k]);
+          delete(tmp,1,1);
+          values.Values['text'] := tmp;
           if k=0 then values.Values['first'] := 'true';
-          if k=Length(cla.flags)-1 then values.Values['last'] := 'true';
+          if k=Length(cla.markers) then values.Values['last'] := 'true';
           flags_text := flags_text + ApplyTemplate(Templates.Values['flag'], values);
         end;
 
         values.Clear;
-        values.Values['id'] := cla.id;
-        values.Values['text'] := cla.text;
+        values.Values['id'] := IntToStr(j+1);
+        tmp := cla.text;
+        if glosssep<>';' then
+          repl(tmp, ';', glosssep);
+        values.Values['text'] := tmp;
         values.Values['flags'] := flags_text;
         if j=0 then values.Values['first'] := 'true';
-        if j=Length(art.clauses)-1 then values.Values['last'] := 'true';
+        if j=art.entries.Count-1 then values.Values['last'] := 'true';
         clauses_text := clauses_text + ApplyTemplate(Templates.Values['clause'], values);
       end;
 
       values.Clear;
       values.Values['clauses'] := clauses_text;
-      values.Values['dict'] := pres.articles[i].dict;
+      values.Values['dict'] := art.dicname;
       if i=0 then values.Values['first'] := 'true';
-      if i=Length(pres.articles)-1 then values.Values['last'] := 'true';
+      if i=Length(res.articles)-1 then values.Values['last'] := 'true';
       articles_text := articles_text + ApplyTemplate(Templates.Values['article'], values);
     end;
 
     values.Clear;
-    values.Values['expr'] := pres.expression;
-    values.Values['read'] := pres.reading;
+    values.Values['expr'] := res.kanji;
+    values.Values['read'] := res.kana;
     values.Values['articles'] := articles_text;
     values.Values['last'] := 'true';
     Result := ApplyTemplate(Templates.Values['entry'], values);
@@ -226,165 +214,6 @@ begin
     FreeAndNil(Values);
   end;
 end;
-
-
-{ Splits what we have from TSearchResult into more detailed parts. }
-function TCopyFormat.ParseResult(const res: PSearchResult): TParsedResult;
-var parts: TStringArray;
-  tmp: string;
-  i: integer;
-begin
-  Result.expression := res.kanji;
-  Result.reading := res.kana;
-  SetLength(Result.articles, Length(res.articles));
-  for i := 0 to Length(Result.articles)-1 do
-    Result.articles[i] := ParseArticle(@res.articles[i]);
-end;
-
-function TCopyFormat.ParseArticle(const res: PSearchResArticle): TParsedArticle;
-var i, j: integer;
-  tmp: string;
-begin
-  Result.dict := res.dicname;
-  SetLength(Result.clauses, Length(res.entries.items));
-  for i := 0 to Length(Result.clauses)-1 do begin
-    Result.clauses[i].id := IntToStr(i+1);
-    Result.clauses[i].text := res.entries.items[i].text;
-    SetLength(Result.clauses[i].flags, Length(res.entries.items[i].markers));
-    for j := 0 to Length(Result.clauses[i].flags)-1 do begin
-      tmp := GetMarkAbbr(res.entries.items[i].markers[j+1]);
-     //Delete marker type id (first char)
-      if Length(tmp)>1 then delete(tmp,1,1);
-      Result.clauses[i].flags[j] := tmp;
-    end;
-  end;
-end;
-
-(*
-function TCopyFormat.ParseArticle(const s: string): TParsedArticle;
-var ps, pc: PChar;
-  cla: PParsedClause;
-  flags: TParsedFlags;
-  ftype: char;
-
-  procedure NeedClause;
-  begin
-    if cla<>nil then exit; //don't create clause for nothing
-    SetLength(Result.clauses, Length(Result.clauses)+1);
-    cla := @Result.clauses[Length(Result.clauses)-1];
-    cla.id := '';
-    cla.text := '';
-    cla.flags := nil;
-  end;
-
-  procedure EndClause;
-  begin
-    if cla<>nil then
-      cla.text := Trim(cla.text);
-    cla := nil;
-  end;
-
-  procedure CommitText;
-  begin
-    if pc<=ps then exit;
-    NeedClause;
-    cla.text := cla.text + spancopy(ps,pc);
-  end;
-
-  procedure CommitTrimSpace;
-  begin
-   //We're going to cut something from this point on,
-   //so maybe trim a space at the end of the previous block
-    Dec(pc);
-    if pc^=' ' then begin
-      CommitText;
-      Inc(pc);
-    end else begin
-      Inc(pc);
-      CommitText;
-    end;
-  end;
-
-  procedure CommitFlags;
-  begin
-    if Length(flags)<=0 then exit; //don't create clause for nothing
-    NeedClause;
-    cla.flags := flags;
-    flags := nil;
-  end;
-
-  procedure IncTrimSpace(var pc: PChar);
-  begin
-   //We have cut something before this point in the string,
-   //so maybe trim a space at the start of the next block
-    Inc(pc);
-    if pc^=' ' then begin
-      Inc(pc);
-      if pc^<>' ' then
-        Dec(pc);
-    end;
-  end;
-
-begin
-  Result.clauses := nil;
-  Result.dict := '';
-  if s='' then exit;
-
-  cla := nil;
-  flags := nil;
-
-  pc := PChar(s);
-  ps := pc;
-  while pc^<>#00 do
-
-    if pc^=UH_LBEG then begin
-      CommitTrimSpace;
-      Inc(pc);
-      ps := pc;
-      while (pc^<>#00) and (pc^<>UH_LEND) do
-        Inc(pc);
-      if pc>ps then begin
-       //First char of the flag is always its type
-        ftype := ps^;
-        Inc(ps);
-      end else
-        ftype := 's';
-      if pc>ps then
-        if ftype='d' then begin //dictionary
-          Result.dict := spancopy(ps,pc);
-        end else begin
-          SetLength(flags, Length(flags)+1);
-          flags[Length(flags)-1] := spancopy(ps,pc);
-        end;
-      IncTrimSpace(pc);
-      ps := pc;
-    end else
-
-    if (pc^='(') and IsDigit(pc[1]) and (
-      (pc[2]=')') or ( IsDigit(pc[2]) and (pc[3]=')')  )
-    ) then begin
-      CommitTrimSpace;
-      CommitFlags;
-      EndClause;
-      NeedClause;
-      if pc[2]=')' then begin
-        cla.id := pc[1];
-        Inc(pc,3);
-      end else begin
-        cla.id := pc[1]+pc[2];
-        Inc(pc,4);
-      end;
-      if pc^=' ' then Inc(pc);
-      ps := pc;
-    end else
-
-      Inc(pc); //any other char
-
-  CommitText;
-  CommitFlags;
-  EndClause;
-end;
-*)
 
 (*
 Recieves a template and a set of values and fills the resulting string accordingly.

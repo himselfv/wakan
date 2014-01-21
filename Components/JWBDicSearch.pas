@@ -301,7 +301,7 @@ procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
 
 implementation
 uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSettings,
-  JWBVocab, JWBCategories, JWBUserData;
+  JWBVocab, JWBCategories, JWBUserData, JWBLegacyMarkup;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
@@ -649,9 +649,9 @@ begin
  //Store match type in the string. The only place where this is used is
  //DrawWordInfo(), and it should not be used anywhere else.
   if sdef<>'F' then
-    Result := ALTCH_TILDE+'I'
+    Result := UH_WORDTYPE+'I'
   else
-    Result := ALTCH_TILDE+'F';
+    Result := UH_WORDTYPE+'F';
 
   Result := '';
   for i := 0 to Length(articles)-1 do begin
@@ -1383,7 +1383,7 @@ begin
 
      //Delete ~F/~I word type if it's present at the beginning of the vocab entry -
      //it will be added dynamically
-      if (length(voc_entry)>0) and (voc_entry[1]=ALTCH_TILDE) then
+      if (length(voc_entry)>0) and (voc_entry[1]=UH_WORDTYPE) then
         delete(voc_entry,1,2);
 
      //Enhance with word categories

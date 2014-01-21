@@ -37,10 +37,6 @@ object fSettings: TfSettings
     object tsGeneral: TTabSheet
       Caption = 'General'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -209,10 +205,6 @@ object fSettings: TfSettings
       Tag = 1
       Caption = 'Romanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 3
         Top = 3
@@ -537,10 +529,6 @@ object fSettings: TfSettings
       Tag = 2
       Caption = 'Fonts'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label4: TLabel
         Left = 3
         Top = 362
@@ -933,10 +921,6 @@ object fSettings: TfSettings
       Tag = 3
       Caption = 'Colors'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1054,10 +1038,6 @@ object fSettings: TfSettings
       Tag = 4
       Caption = 'Portability'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 3
         Top = 3
@@ -1209,10 +1189,6 @@ object fSettings: TfSettings
       Tag = 5
       Caption = 'Character list'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label35: TLabel
         Left = 3
         Top = 87
@@ -1295,10 +1271,6 @@ object fSettings: TfSettings
       Tag = 6
       Caption = 'Character details'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1417,10 +1389,6 @@ object fSettings: TfSettings
       Tag = 7
       Caption = 'Dictionary'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label26: TLabel
         Left = 3
         Top = 267
@@ -1525,10 +1493,6 @@ object fSettings: TfSettings
       Tag = 8
       Caption = 'Popup tool'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label36: TLabel
         Left = 3
         Top = 75
@@ -1679,10 +1643,6 @@ object fSettings: TfSettings
       Tag = 9
       Caption = 'Word list printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label11: TLabel
         Left = 3
         Top = 339
@@ -1789,10 +1749,6 @@ object fSettings: TfSettings
       Tag = 10
       Caption = 'Character cards printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label12: TLabel
         Left = 3
         Top = 0
@@ -1993,10 +1949,6 @@ object fSettings: TfSettings
       Tag = 11
       Caption = 'Annotations'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2085,10 +2037,6 @@ object fSettings: TfSettings
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2194,10 +2142,6 @@ object fSettings: TfSettings
       Tag = 13
       Caption = 'Editor'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label48: TLabel
         Left = 3
         Top = 3
@@ -2376,10 +2320,6 @@ object fSettings: TfSettings
       Tag = 14
       Caption = 'Editor: Saving and loading:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblSavingAndLoading: TLabel
         Left = 3
         Top = 3
@@ -2424,10 +2364,6 @@ object fSettings: TfSettings
       Tag = 15
       Caption = 'Editor: Printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label57: TLabel
         Left = 3
         Top = 3
@@ -2493,10 +2429,6 @@ object fSettings: TfSettings
       Tag = 16
       Caption = 'Editor: Text translator'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label58: TLabel
         Left = 3
         Top = 3
@@ -2550,10 +2482,6 @@ object fSettings: TfSettings
       Tag = 17
       Caption = 'Editor: Aozora Ruby:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 3
         Top = 3
@@ -2614,19 +2542,57 @@ object fSettings: TfSettings
       ImageIndex = 18
       TabVisible = False
       OnShow = tsDictCopyFormatsShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
       object Label18: TLabel
         Left = 3
         Top = 3
-        Width = 282
+        Width = 276
         Height = 13
-        Caption = '#01104^eWhen you press Ctrl-C, copy dictionary entries as:'
+        Caption = '#01104^When you press Ctrl-C, copy dictionary entries as:'
+      end
+      object Label19: TLabel
+        Left = 3
+        Top = 218
+        Width = 146
+        Height = 13
+        Caption = '#01105^Edit available formats:'
+      end
+      object lblCopyFormatsIni: TUrlLabel
+        Left = 20
+        Top = 241
+        Width = 90
+        Height = 13
+        Cursor = crHandPoint
+        Caption = 'CopyFormats.ini'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object lblCopyFormatsDocumentation: TUrlLabel
+        Left = 20
+        Top = 260
+        Width = 136
+        Height = 13
+        Cursor = crHandPoint
+        Caption = '#01106^Documentation'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+      object Label20: TLabel
+        Left = 3
+        Top = 290
+        Width = 277
+        Height = 13
+        Caption = '#01107^Restart the application for changes to take effect.'
       end
       object lbCopyFormats: TListBox
         Left = 3
@@ -2650,6 +2616,7 @@ object fSettings: TfSettings
         Font.Style = []
         ParentFont = False
         ReadOnly = True
+        ScrollBars = ssVertical
         TabOrder = 1
       end
     end

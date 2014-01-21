@@ -164,7 +164,7 @@ type
 implementation
 
 uses JWBStrings, JWBUnit, JWBSettings, JWBPrint, Printers, JWBVocab, JWBMenu,
-  JWBUserData, TextTable, StdPrompt, JWBCategories;
+  JWBUserData, TextTable, StdPrompt, JWBCategories, JWBLegacyMarkup;
 
 {$R *.DFM}
 

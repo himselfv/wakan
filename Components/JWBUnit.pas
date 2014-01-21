@@ -27,9 +27,13 @@ const
   UserDataDir: string = '';  //wakan.usr, collections
   ProgramDataDir: string = ''; //dictionaries, romanizations
 
+  AppUrl: string = 'http://code.google.com/p/wakan/';
+  WikiUrlBase: string = 'http://code.google.com/p/wakan/wiki/';
+
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 function DictionaryDir: string;
 function GetAppDataFolder: string;
+function WikiUrl(const APage: string = ''): string;
 
 
 { Some logging tools.
@@ -157,10 +161,6 @@ function StateStr(i:integer):string;
 function DateForm(s:string):string;
 procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
 
-{ Upgrades vocabulary entry -- see implementation comments }
-function FixVocabEntry(const s:string):string;
-function UnfixVocabEntry(const s:string):string;
-
 function BackupDir: string;
 function Backup(const filename: string): string;
 
@@ -192,7 +192,7 @@ function _l(const id:string; args: array of const):string; overload;
 
 implementation
 uses Messages, StrUtils, ShlObj, Registry, JWBMenu, JWBSettings, JWBLanguage,
-  TextTable, JWBCharData;
+  TextTable, JWBCharData, JWBLegacyMarkup;
 
 
 { Portable/standalone }
@@ -205,6 +205,11 @@ begin
   Assert(Result<>''); //just in case
   Result:=Result+'\Wakan';
   ForceDirectories(Result);
+end;
+
+function WikiUrl(const APage: string = ''): string;
+begin
+  Result := WikiUrlBase + APage;
 end;
 
 procedure SetPortabilityMode(AMode: TPortabilityMode);
@@ -748,31 +753,6 @@ begin
 end;
 
 
-{
-Vocabulary entries are stored in severely deprecated format.
-They have to be upgraded before working with them.
-}
-function FixVocabEntry(const s: string): string;
-begin
-  Result := s;
- {$IFDEF UNICODE}
- //User dictionaries often have inline markers in old format (<gvn>)
-  repl(Result,'<',UH_LBEG);
-  repl(Result,'>',UH_LEND);
- {$ENDIF}
-end;
-
-{ Reverts some fixes when storing the string back into vocabulary }
-function UnfixVocabEntry(const s:string):string;
-begin
-  Result := s;
- {$IFDEF UNICODE}
-  repl(Result,UH_LBEG,'<');
-  repl(Result,UH_LEND,'>');
- {$ENDIF}
-end;
-
-
 function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
   const w:UnicodeString): integer; forward;
 function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
@@ -1090,7 +1070,7 @@ begin
     cursiv:=false;
     FontColor:=Col('Dict_Text');
     if fSettings.cbNoGridColors.Checked then FontColor:=clWindowText;
-    if (length(s)>1) and (s[1]=ALTCH_TILDE) then
+    if (length(s)>1) and (s[1]=UH_WORDTYPE) then
     begin
       if s[2]='I'then cursiv:=true;
 //      if not fUser.CheckBox1.Checked then cursiv:=false;
@@ -1157,10 +1137,10 @@ begin
         resinmar:=false;
         if (multiline) and (rect.left+2+x+w>rect.right) then
         begin
-          if (length(curs)>0) and (curs[1]=' ') then curs[1]:=ALTCH_TILDE;
+          if (length(curs)>0) and (curs[1]=' ') then curs[1]:=UH_WORDTYPE;
           if inmar or (pos(' ',curs)=0) or (Canvas.TextExtent(copy(curs,1,pos(' ',curs)-1)).cx+rect.left+2+x>rect.right) then
           begin
-            if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
+            if (length(curs)>0) and (curs[1]=UH_WORDTYPE) then curs[1]:=' ';
             x:=0;
             y:=y+FontSize+2;
             rect2.left:=rect.left+2;
@@ -1169,15 +1149,15 @@ begin
           end else
           if not inmar and (pos(' ',curs)>0) then
           begin
-            if (length(curs)>0) and (curs[1]=' ') then curs[1]:=ALTCH_TILDE;
+            if (length(curs)>0) and (curs[1]=' ') then curs[1]:=UH_WORDTYPE;
             s:=copy(curs,pos(' ',curs),length(curs)-pos(' ',curs)+1)+UH_LBEG+s;
             curs:=copy(curs,1,pos(' ',curs)-1);
-            if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
+            if (length(curs)>0) and (curs[1]=UH_WORDTYPE) then curs[1]:=' ';
             resinmar:=true;
           end else
           begin
             curs:=s;
-            if (length(curs)>0) and (curs[1]=ALTCH_TILDE) then curs[1]:=' ';
+            if (length(curs)>0) and (curs[1]=UH_WORDTYPE) then curs[1]:=' ';
             s:='';
           end;
         end;

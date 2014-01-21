@@ -41,7 +41,7 @@ procedure HideScreenTip;
 
 implementation
 
-uses JWBUnit, JWBKanjiCard, JWBDic, JWBMenu, JWBSettings;
+uses JWBUnit, JWBKanjiCard, JWBDic, JWBMenu, JWBSettings, JWBLegacyMarkup;
 
 {$R *.DFM}
 

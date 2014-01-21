@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, WakanWordGrid, StdCtrls, WakanPaintbox, Buttons, ExtCtrls,
-  Menus, JWBDicSearch, JWBCopyFormats;
+  Menus, JWBDicSearch, JWBCopyFormats, Vcl.ImgList;
 
 type
   TfWordLookupBase = class(TForm)
@@ -15,10 +15,13 @@ type
     btnGoToVocab: TSpeedButton;
     btnAddToVocab: TSpeedButton;
     btnCopyToClipboard: TSpeedButton;
-    pmHeader: TPopupMenu;
+    pmPopup: TPopupMenu;
     miResetColumns: TMenuItem;
     miCopyAs: TMenuItem;
-    procedure pmHeaderPopup(Sender: TObject);
+    miGoToVocab: TMenuItem;
+    miAddToVocab: TMenuItem;
+    ilImages: TImageList;
+    procedure pmPopupPopup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
     procedure StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
@@ -35,6 +38,8 @@ type
     procedure StringGridDblClick(Sender: TObject);
     procedure StringGridSelectCell(Sender: TObject; ACol, ARow: Integer;
       var CanSelect: Boolean);
+    procedure miGoToVocabClick(Sender: TObject);
+    procedure miAddToVocabClick(Sender: TObject);
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -58,6 +63,7 @@ type
     curmeaning: string;
     procedure SetDefaultColumnWidths; virtual;
     procedure Clear; virtual;
+    procedure Refresh; virtual;
     procedure CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
     function IsEmpty: boolean;
     property Results: TSearchResults read FResults;
@@ -70,7 +76,7 @@ var
 
 implementation
 uses UITypes, JWBStrings, JWBUnit, JWBMenu, JWBCategories, JWBVocab, JWBVocabAdd,
-  JWBSettings;
+  JWBSettings, JWBLegacyMarkup;
 
 {$R *.dfm}
 
@@ -112,16 +118,26 @@ begin
   WordSelectionChanged;
 end;
 
-procedure TfWordLookupBase.pmHeaderPopup(Sender: TObject);
+procedure TfWordLookupBase.Refresh;
+begin
+ //Called when something thinks the results are not valid anymore and need to be
+ //repopulated.
+ //Implemented by descendants.
+end;
+
+procedure TfWordLookupBase.pmPopupPopup(Sender: TObject);
 var p: TPoint;
   ACol, ARow: integer;
 begin
   p := StringGrid.ScreenToClient(Mouse.CursorPos);
   StringGrid.MouseToCell(p.X, p.Y, ACol, ARow);
+ //ARow may be <0 while curword is always last valid selected entry
   miResetColumns.Visible := (ARow=0); //click on header
   miCopyAs.Visible := (ARow>0); //click on data
   if miCopyAs.Visible then
     ReloadCopyFormats;
+  miGoToVocab.Visible := (ARow>0) and (FResults[ARow-1].userIndex > 0);
+  miAddToVocab.Visible := (ARow>0);
 end;
 
 procedure TfWordLookupBase.ReloadCopyFormats;
@@ -185,6 +201,7 @@ procedure TfWordLookupBase.StringGridMouseDown(Sender: TObject;
 var p: TPoint;
   ACol, ARow: integer;
   r: TGridRect;
+  CanSelect: boolean;
 begin
  //Right-click-select
   p := StringGrid.ScreenToClient(Mouse.CursorPos);
@@ -192,6 +209,9 @@ begin
   if ARow>0 then
     if (ARow<StringGrid.Selection.Top) or (ARow>StringGrid.Selection.Bottom) then begin
       r := StringGrid.Selection;
+      CanSelect := true;
+      StringGridSelectCell(Sender, r.Left, r.Top, CanSelect);
+      if not CanSelect then exit;
       r.Top := ARow;
       r.Bottom := ARow;
       StringGrid.Selection := r;
@@ -326,12 +346,23 @@ begin
   tmp:=UnfixVocabEntry(tmp); //replace markup symbols with user readable
   if not IsPositiveResult(fVocabAdd.ModalAddFixed(curkanji,curphonetic,fstr(tmp))) then
     exit;
+  Self.Refresh;
 end;
 
 procedure TfWordLookupBase.btnCopyToClipboardClick(Sender: TObject);
 begin
  //Emulate older behavior
   CopyToClipboard(nil,{replace=}false);
+end;
+
+procedure TfWordLookupBase.miGoToVocabClick(Sender: TObject);
+begin
+  btnGoToVocabClick(Sender);
+end;
+
+procedure TfWordLookupBase.miAddToVocabClick(Sender: TObject);
+begin
+  btnAddToVocabClick(Sender);
 end;
 
 end.

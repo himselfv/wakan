@@ -130,7 +130,7 @@ uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
   JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType,
   JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
   JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
-  JWBCharData, TextTable;
+  JWBCharData, TextTable, JWBLegacyMarkup;
 
 var wlc:TStringList;
     lastwordind:integer;

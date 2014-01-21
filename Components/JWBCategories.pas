@@ -146,7 +146,7 @@ function FixDuplicateCategories(): boolean;
 
 implementation
 uses Controls, Forms, Windows, TextTable, JWBMenu, JWBUserData, JWBVocabFilters,
-  JWBNewCategory, JWBUnit, JWBCharData;
+  JWBNewCategory, JWBUnit, JWBCharData, JWBLegacyMarkup;
 
 const
   eCannotLocateCat: string = 'Cannot locate category.'; //Do not localize
