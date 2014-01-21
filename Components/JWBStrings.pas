@@ -229,6 +229,7 @@ type
 procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
 function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray; overload;
 function SplitStr(s: string; ch: char=','): TStringArray; overload;
+function SplitStr(s: string; sep: string): TStringArray; overload;
 procedure StrListAdd(sl: TStringList; sa: TStringArray);
 function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string;
 procedure Append(var ATo: TStringArray; const AFrom: TStringArray);
@@ -1184,6 +1185,24 @@ begin
     Result[Length(Result)-1] := copy(s, 1, i-1);
     delete(s, 1, i);
     i := pos(ch,s);
+  end;
+  if s<>'' then begin
+    SetLength(Result, Length(Result)+1);
+    Result[Length(Result)-1] := s;
+  end;
+end;
+
+//Same but with random length sep
+function SplitStr(s: string; sep: string): TStringArray;
+var i: integer;
+begin
+  SetLength(Result, 0);
+  i := pos(sep,s);
+  while i>0 do begin
+    SetLength(Result, Length(Result)+1);
+    Result[Length(Result)-1] := copy(s, 1, i-1);
+    delete(s, 1, i+Length(sep)-1);
+    i := pos(sep,s);
   end;
   if s<>'' then begin
     SetLength(Result, Length(Result)+1);

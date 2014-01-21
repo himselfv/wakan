@@ -41,7 +41,23 @@ var
   CopyFormats: TCopyFormats;
 
 implementation
-uses JWBStrings, JWBEdictMarkers;
+uses JWBStrings, JWBEdictMarkers, JWBLegacyMarkup;
+
+type
+  TStringListHelper = class helper for TStringList
+  public
+    function GetValueByNameDef(const AName: string; const ADefault: string = ''): string;
+  end;
+
+function TStringListHelper.GetValueByNameDef(const AName: string; const ADefault: string = ''): string;
+var i: integer;
+begin
+  i := Self.IndexOfName(AName);
+  if i>=0 then
+    Result := Self.ValueFromIndex[i]
+  else
+    Result := ADefault;
+end;
 
 destructor TCopyFormats.Destroy;
 begin
@@ -147,20 +163,21 @@ begin
 end;
 
 function TCopyFormat.FormatResult(const res: PSearchResult): string;
-var art: PSearchResArticle;
+var
+  t_clause, t_marker, t_comment, t_gloss: string;
+  art: PSearchResArticle;
   cla: PEntry;
   values: TStringList;
   i, j, k: integer;
   articles_text: string;
   clauses_text: string;
-  flags_text: string;
-  glosssep: string;
+  clause: string;
   tmp: string;
 begin
-  if Templates.IndexOfName('glosssep')>=0 then
-    glosssep := Templates.Values['glosssep']
-  else
-    glosssep := ';';
+  t_clause := Templates.GetValueByNameDef('clause', '(%id) %text%{%last%?!; }');
+  t_marker := Templates.GetValueByNameDef('marker', '<%text%>');
+  t_comment := Templates.GetValueByNameDef('comment', '(%text%)');
+  t_gloss := Templates.GetValueByNameDef('gloss', '%text%{%last%?!; }');
 
   values := TStringList.Create;
   try
@@ -172,7 +189,41 @@ begin
       for j := 0 to art.entries.Count-1 do begin
         cla := @art.entries.items[j];
 
-        flags_text := '';
+        clause := MatchFormat(cla.text,
+          function (const s: string): string
+          var templ: string;
+          begin
+            if Length(s)<1 then begin
+              Result := '';
+              exit;
+            end;
+
+            Result := s;
+            case Result[1] of
+              '1','g': templ := t_marker;
+              's': templ := t_comment;
+            else exit; //not a marker
+            end;
+
+            delete(Result,1,1);
+            values.Clear;
+            values.Values['text']:=Result;
+            Result := ApplyTemplate(templ, values);
+          end,
+          function (const s: string): string
+          begin
+            if Length(s)<1 then begin
+              Result := '';
+              exit;
+            end;
+
+            values.Clear;
+            values.Values['text']:=Result;
+            Result := ApplyTemplate(t_gloss, values);
+          end
+        );
+
+
         for k := 1 to Length(cla.markers) do begin
           values.Clear;
           tmp := GetMarkAbbr(cla.markers[k]);
@@ -180,16 +231,12 @@ begin
           values.Values['text'] := tmp;
           if k=0 then values.Values['first'] := 'true';
           if k=Length(cla.markers) then values.Values['last'] := 'true';
-          flags_text := flags_text + ApplyTemplate(Templates.Values['flag'], values);
+          clause := clause + ApplyTemplate(t_marker, values);
         end;
 
         values.Clear;
         values.Values['id'] := IntToStr(j+1);
-        tmp := cla.text;
-        if glosssep<>';' then
-          repl(tmp, ';', glosssep);
         values.Values['text'] := tmp;
-        values.Values['flags'] := flags_text;
         if j=0 then values.Values['first'] := 'true';
         if j=art.entries.Count-1 then values.Values['last'] := 'true';
         clauses_text := clauses_text + ApplyTemplate(Templates.Values['clause'], values);
@@ -208,7 +255,7 @@ begin
     values.Values['read'] := res.kana;
     values.Values['articles'] := articles_text;
     values.Values['last'] := 'true';
-    Result := ApplyTemplate(Templates.Values['entry'], values);
+    Result := ApplyTemplate(Templates.Values['result'], values);
 
   finally
     FreeAndNil(Values);

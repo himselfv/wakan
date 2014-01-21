@@ -36,8 +36,8 @@ var
 
 implementation
 
-uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBWordLookup, JWBVocab,
-  JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories, JWBVocabAdd,
+uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicSearch, JWBWordLookup,
+  JWBVocab, JWBSettings, JWBEdictMarkers, JWBUserData, JWBCategories, JWBVocabAdd,
   JWBLegacyMarkup;
 
 {$R *.DFM}
@@ -160,7 +160,7 @@ procedure TfKanjiCompounds.FillVocabResults(const ch: FString);
 var CUser, CUserIdx: TTextTableCursor;
   sl2:TStringList;
   relatedWord:boolean;
-  l: integer;
+  l, i: integer;
 begin
   CUser := TUser.NewCursor;
   CUserIdx := TUserIdx.NewCursor;
@@ -189,15 +189,7 @@ begin
             userscore := score;
             kanji := ChinSimplified(CUser.Str(TUserKanji));
             kana := CUser.Str(TUserPhonetic);
-            with AddArticle^ do begin
-              dicindex := 0;
-              dicname := '';
-              entries.Reset;
-              entries.Add(
-               //Unfortunately we don't have much choice
-                FixVocabEntry(CUser.Str(TUserEnglish)),
-                '');
-            end;
+            AddArticle^ := ParseLegacyArticle(FixVocabEntry(CUser.Str(TUserEnglish)));
           end;
         end;
 

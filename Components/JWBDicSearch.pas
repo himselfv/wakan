@@ -1397,10 +1397,10 @@ begin
       end;
 
       sart.Reset;
+      sart := ParseLegacyArticle(voc_entry);
       sart.score := 0; //ultimate
       sart.dicname := '';
       sart.dicindex := scomp.userindex;
-      sart.entries.Add(voc_entry, ''); //TODO: We should parse voc_entry instead into parts
       scomp.InsertArticle(0, sart);
     end;
 end;
