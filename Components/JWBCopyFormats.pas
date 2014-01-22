@@ -239,7 +239,8 @@ begin
         end;
 
         values.Clear;
-        values.Values['id'] := IntToStr(j+1);
+        if art.entries.Count>1 then
+          values.Values['id'] := IntToStr(j+1);
         values.Values['text'] := clause;
         if j=0 then values.Values['first'] := 'true';
         if j=art.entries.Count-1 then values.Values['last'] := 'true';
