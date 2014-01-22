@@ -164,20 +164,23 @@ end;
 
 function TCopyFormat.FormatResult(const res: PSearchResult): string;
 var
-  t_clause, t_marker, t_comment, t_gloss: string;
+  t_clause, t_gloss,
+  t_marker, t_comment, t_group: string;
   art: PSearchResArticle;
   cla: PEntry;
   values: TStringList;
   i, j, k: integer;
   articles_text: string;
   clauses_text: string;
+  glosses: TStringArray;
   clause: string;
   tmp: string;
 begin
   t_clause := Templates.GetValueByNameDef('clause', '(%id) %text%{%last%?!; }');
   t_marker := Templates.GetValueByNameDef('marker', '<%text%>');
   t_comment := Templates.GetValueByNameDef('comment', '(%text%)');
-  t_gloss := Templates.GetValueByNameDef('gloss', '%text%{%last%?!; }');
+  t_gloss := Templates.GetValueByNameDef('gloss', '%text%{%last%!?; }');
+  t_group := Templates.GetValueByNameDef('group', '');
 
   values := TStringList.Create;
   try
@@ -189,7 +192,17 @@ begin
       for j := 0 to art.entries.Count-1 do begin
         cla := @art.entries.items[j];
 
-        clause := MatchFormat(cla.text,
+        clause := '';
+        glosses := SplitGlosses(cla.text);
+        for k := 0 to Length(glosses)-1 do begin
+          values.Clear;
+          values.Values['text'] := glosses[k];
+          if k=0 then values.Values['first'] := 'true';
+          if k=Length(glosses)-1 then values.Values['last'] := 'true';
+          clause := clause + ApplyTemplate(t_gloss, values);
+        end;
+
+        clause := MatchMarkers(clause,
           function (const s: string): string
           var templ: string;
           begin
@@ -202,41 +215,32 @@ begin
             case Result[1] of
               '1','g': templ := t_marker;
               's': templ := t_comment;
+              'l': templ := t_group;
             else exit; //not a marker
             end;
 
             delete(Result,1,1);
             values.Clear;
-            values.Values['text']:=Result;
+            values.Values['text'] := Result;
+            values.Values['first'] := 'true';
+            values.Values['last'] := 'true';
             Result := ApplyTemplate(templ, values);
-          end,
-          function (const s: string): string
-          begin
-            if Length(s)<1 then begin
-              Result := '';
-              exit;
-            end;
-
-            values.Clear;
-            values.Values['text']:=Result;
-            Result := ApplyTemplate(t_gloss, values);
           end
         );
-
 
         for k := 1 to Length(cla.markers) do begin
           values.Clear;
           tmp := GetMarkAbbr(cla.markers[k]);
           delete(tmp,1,1);
           values.Values['text'] := tmp;
-          if k=0 then values.Values['first'] := 'true';
+          if k=1 then values.Values['first'] := 'true';
           if k=Length(cla.markers) then values.Values['last'] := 'true';
           clause := clause + ApplyTemplate(t_marker, values);
         end;
 
         values.Clear;
         values.Values['id'] := IntToStr(j+1);
-        values.Values['text'] := tmp;
+        values.Values['text'] := clause;
         if j=0 then values.Values['first'] := 'true';
         if j=art.entries.Count-1 then values.Values['last'] := 'true';
         clauses_text := clauses_text + ApplyTemplate(Templates.Values['clause'], values);

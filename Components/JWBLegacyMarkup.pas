@@ -117,11 +117,12 @@ function FinalizeVocabEntry(const s: string): string;
 function ParseLegacyArticle(s: string): TSearchResArticle;
 
 { Matches markers and glosses }
-type
-  TOnMarker = reference to function(const s: string): string;
-  TOnGloss = reference to function(const s: string): string;
+function SplitGlosses(const s: string): TStringArray;
 
-function MatchFormat(const s: string; AOnMarker: TOnMarker; AOnGloss: TOnGloss): string;
+type
+  TReplaceProc = reference to function(const s: string): string;
+
+function MatchMarkers(const s: string; AOnMarker: TReplaceProc): string;
 
 { Edict markers }
 function ConvertEdictEntry(const s:string;var mark:TMarkers):string;
@@ -350,71 +351,71 @@ begin
   EndClause;
 end;
 
-
-function MatchFormat(const s: string; AOnMarker: TOnMarker; AOnGloss: TOnGloss): string;
+{ Tries to split the entry text by glosses. Minds brackets and marker chars,
+ but still is not guaranteed to produce 100% precise result }
+function SplitGlosses(const s: string): TStringArray;
 var ps, pc: PChar;
-  text: string;
-  clauseOpen: boolean;
-
-  procedure NeedClause;
-  begin
-    clauseOpen := true; //ensures that we add it, even if the text is empty
-  end;
-
-  procedure EndClause;
-  begin
-    text := Trim(text);
-    if (Length(text)>0) and (text[Length(text)]=';') then
-      delete(text, Length(text), 1);
-    if (text<>'') or clauseOpen then
-      Result := Result + Trim(text);
-    text := '';
-    clauseOpen := false;
-  end;
 
   procedure CommitText;
   begin
-    if pc<=ps then exit;
-    NeedClause;
-    text := text + spancopy(ps,pc);
-  end;
-
-  procedure CommitTrimSpace;
-  begin
-   //We're going to cut something from this point on,
-   //so maybe trim a space at the end of the previous block
-    Dec(pc);
-    if pc^=' ' then begin
-      CommitText;
-      Inc(pc);
-    end else begin
-      Inc(pc);
-      CommitText;
-    end;
-  end;
-
-  procedure CommitFlags;
-  begin
-   //At this time there's nothing to commit in flags
-  end;
-
-  procedure IncTrimSpace(var pc: PChar);
-  begin
-   //We have cut something before this point in the string,
-   //so maybe trim a space at the start of the next block
-    Inc(pc);
-    if pc^=' ' then begin
-      Inc(pc);
-      if pc^<>' ' then
-        Dec(pc);
-    end;
+    if ps>=pc then exit;
+    SetLength(Result, Length(Result)+1);
+    Result[Length(Result)-1] := spancopy(ps, pc);
   end;
 
 begin
-  Result := s;
-  if Result='' then exit;
+  SetLength(Result, 0);
+  if s='' then exit;
 
-  text := '';
+  pc := PChar(s);
+  ps := pc;
+  while pc^<>#00 do
+
+    if pc^=UH_LBEG then begin
+     //Skip marker contents
+      Inc(pc);
+      while (pc^<>#00) and (pc^<>UH_LEND) do
+        Inc(pc);
+      Inc(pc);
+    end else
+
+    if pc^='(' then begin
+     //Skip contents
+      Inc(pc);
+      while (pc^<>#00) and (pc^<>')') do
+        Inc(pc);
+      Inc(pc);
+    end else
+
+    if pc^=';' then begin
+      CommitText;
+      Inc(pc);
+      if pc^=' ' then Inc(pc);
+      ps := pc;
+    end else
+
+      Inc(pc); //any other char
+
+  CommitText;
+end;
+
+{ Locates all markers in the string and passes their content to AOnMarker.
+ Puts whatever it returns instead of the marker.
+ Space handling: as long as the replacement is empty, removes up to one space
+ from each side of the marker.
+ To better handle spaces at the start/end of the glosses, pass glosses
+ separately. }
+function MatchMarkers(const s: string; AOnMarker: TReplaceProc): string;
+var ps, pc: PChar;
+
+  procedure CommitText;
+  begin
+    Result := Result + spancopy(ps, pc);
+  end;
+
+begin
+  Result := '';
+  if s='' then exit;
 
   pc := PChar(s);
   ps := pc;
@@ -426,49 +427,24 @@ begin
       ps := pc;
       while (pc^<>#00) and (pc^<>UH_LEND) do
         Inc(pc);
+      Result := Result + AOnMarker(spancopy(ps,pc));
+      Inc(pc);
 
-      if (pc<=ps) or (@AOnMarker=nil) then begin //not a valid marker, e.g. <> or <s>
-        text := text + spancopy(ps-1,pc+1);
-        Inc(pc);
-      end else begin
-        text := text + AOnMarker(spancopy(ps,pc));
-        Inc(pc);
-      end;
+     //Collapse up to one space from later (works both if marker ends with space,
+     //and if it was preceded by space and was destroyed)
+      if ((Length(Result)<=0) or (Result[Length(Result)]=' ')) then
+        if pc^=' ' then
+          Inc(pc)
+        else
+        if pc^=#00 then
+          delete(Result,Length(Result),1);
 
-      ps := pc;
-    end else
-
-    if (pc[0]=' ') and (pc[1]='/') and (pc[2]=' ') then begin
-      CommitTrimSpace;
-      CommitFlags;
-      EndClause;
-      NeedClause;
-      Inc(pc,3);
-      ps := pc;
-    end else
-
-    if (pc^='(') and IsDigit(pc[1]) and (
-      (pc[2]=')') or ( IsDigit(pc[2]) and (pc[3]=')')  )
-    ) then begin
-      CommitTrimSpace;
-      CommitFlags;
-      EndClause;
-      NeedClause;
-     //At this time we ignore the id value and just assume it's sequential as we expect it to be
-      if pc[2]=')' then begin
-        Inc(pc,3);
-      end else begin
-        Inc(pc,4);
-      end;
-      if pc^=' ' then Inc(pc);
       ps := pc;
     end else
 
       Inc(pc); //any other char
 
   CommitText;
-  CommitFlags;
-  EndClause;
 end;
 
 
