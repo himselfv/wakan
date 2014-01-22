@@ -204,8 +204,13 @@ function UTrim(const S: UnicodeString; const Chars: UnicodeString): UnicodeStrin
 function UTrimLeft(const S: UnicodeString; const Chars: UnicodeString): UnicodeString; overload;
 function UTrimRight(const S: UnicodeString; const Chars: UnicodeString): UnicodeString; overload;
 
-function StartsStr(const substr, str: string): boolean; overload;
+{ Delphi implementations are slow, so we roll out our own. Binary comparisons. }
+function SameStr(const substr, str: string): boolean; overload; inline;
+function SameStr(substr, str: PChar): boolean; overload;
+function StartsStr(const substr, str: string): boolean; overload; inline;
 function StartsStr(substr, str: PChar): boolean; overload;
+function EndsStr(const substr, str: string): boolean; overload;
+function EndsStr(substr, str: PChar): boolean; overload;
 
 { General purpose string functions }
 
@@ -902,10 +907,33 @@ begin
 end;
 {$ENDIF}
 
+
+//True if substr and str are binary equal.
+function SameStr(const substr, str: string): boolean;
+begin
+  Result := SameStr(PChar(substr), PChar(str));
+end;
+
+function SameStr(substr, str: PChar): boolean;
+begin
+  if substr=nil then
+    Result := str=nil
+  else
+  if str=nil then
+    Result := false
+  else begin
+    while (substr^<>#00) and (str^=substr^) do begin
+      Inc(substr);
+      Inc(str);
+    end;
+    Result := (substr^=#00) and (str^=#00);
+  end;
+end;
+
 //True if str starts with substr. Delphi version is slow.
 function StartsStr(const substr, str: string): boolean;
 begin
-  Result := StartsStr(PChar(substr),PChar(str));
+  Result := StartsStr(PChar(substr), PChar(str));
 end;
 
 function StartsStr(substr, str: PChar): boolean;
@@ -921,6 +949,34 @@ begin
       Inc(str);
     end;
     Result := (substr^=#00);
+  end;
+end;
+
+//True if str ends with substr. Not sure how fast this is.
+function EndsStr(const substr, str: string): boolean;
+var i_pos: integer;
+begin
+  i_pos := Length(str)-Length(substr)+1;
+  if (i_pos<1) or (i_pos>Length(str)) then
+    Result := false
+  else
+    Result := SameStr(PChar(substr), @str[i_pos]);
+end;
+
+function EndsStr(substr, str: PChar): boolean;
+var i_pos: integer;
+begin
+  if substr=nil then
+    Result := true
+  else
+  if str=nil then
+    Result := false //because substr<>nil
+  else begin
+    i_pos := StrLen(str)-StrLen(substr);
+    if (i_pos<0) or (i_pos>=Length(str)) then
+      Result := false
+    else
+      Result := SameStr(substr, str+i_pos);
   end;
 end;
 

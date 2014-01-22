@@ -1134,8 +1134,7 @@ begin
 end;
 
 function TDicLookupCursorV4.HaveMatch: boolean;
-var i_pos: integer;
-  s_val: string;
+var s_val: string;
 begin
   if FLookupType in [ltKanji,ltRomaji] then
     if CDict.EOF then begin
@@ -1146,12 +1145,8 @@ begin
   case FLookupType of
     ltKanji:
       case FMatchType of
-        mtMatchLeft: Result := pos(FValue,CDict.Str(TDictKanji))=1;
-        mtMatchRight: begin
-          s_val := CDict.Str(TDictKanji);
-          i_pos := pos(FValue, s_val);
-          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue));
-        end;
+        mtMatchLeft: Result := StartsStr(FValue, CDict.Str(TDictKanji));
+        mtMatchRight: Result := EndsStr(FValue, CDict.Str(TDictKanji));
         mtExactMatch: Result := FValue=CDict.Str(TDictKanji);
       else //anywhere
         Result := pos(FValue,CDict.Str(TDictKanji))>0;
@@ -1159,12 +1154,8 @@ begin
 
     ltRomaji:
       case FMatchType of
-        mtMatchLeft: Result := pos(FValue,CDict.Str(TDictSort))=1;
-        mtMatchRight: begin
-          s_val := CDict.Str(TDictSort);
-          i_pos := pos(FValue, s_val);
-          Result := (i_pos>0) and (i_pos=Length(s_val)-Length(FValue)+1);
-        end;
+        mtMatchLeft: Result := StartsStr(FValue, CDict.Str(TDictSort));
+        mtMatchRight: Result := EndsStr(FValue, CDict.Str(TDictSort));
         mtExactMatch: Result := FValue=CDict.Str(TDictSort);
       else //anywhere
         Result := pos(FValue,CDict.Str(TDictSort))>0;
