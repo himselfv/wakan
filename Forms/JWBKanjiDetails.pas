@@ -41,24 +41,27 @@ type
     RxLabel35: TLabel;
     RxLabel38: TLabel;
     lblStrokeCount: TLabel;
-    btnAddToCategory: TSpeedButton;
     RxLabel39: TLabel;
     FormPlacement1: TFormPlacement;
     lblRadicalNo: TLabel;
     btnStrokeOrder: TSpeedButton;
-    cbCategories: TComboBox;
-    RxLabel1: TLabel;
-    lblCategories: TLabel;
     pnlSecondHalf: TPanel;
+    pnlFooter: TPanel;
     btnClose: TButton;
     btnDock: TButton;
+    Scrollbox: TScrollBox;
+    pbKanjiInfo: TPaintBox;
+    FlowPanel1: TFlowPanel;
+    RxLabel1: TLabel;
+    lblCategories: TLabel;
+    cbCategories: TComboBox;
+    btnAddToCategory: TSpeedButton;
+    FlowPanel2: TFlowPanel;
     ProUrlLabel1: TUrlLabel;
     ProUrlLabel2: TUrlLabel;
     ProUrlLabel3: TUrlLabel;
     ProUrlLabel4: TUrlLabel;
     ProUrlLabel5: TUrlLabel;
-    ScrollBox1: TScrollBox;
-    pbKanjiInfo: TPaintBox;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -99,6 +102,9 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure ScrollboxClick(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -316,6 +322,36 @@ end;
 procedure TfKanjiDetails.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if key=#27 then Close;
+end;
+
+procedure TfKanjiDetails.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var msg, code, i, n: integer;
+begin
+ { Scrollbox does not support mouse wheel nor even focus, so handle it here }
+  if WindowFromPoint(mouse.CursorPos) = scrollbox.Handle then begin
+    Handled := true;
+    if ssShift in Shift Then
+      msg := WM_HSCROLL
+    else
+      msg := WM_VSCROLL;
+
+    if WheelDelta < 0 then begin
+      code := SB_LINEDOWN;
+      WheelDelta := -WheelDelta;
+    end else
+      code := SB_LINEUP;
+
+    n := 3* Mouse.WheelScrollLines * (WheelDelta div WHEEL_DELTA);
+    for i := 1 to n do
+      scrollbox.Perform(msg, code, 0);
+    scrollbox.Perform(msg, SB_ENDSCROLL, 0);
+  end;
+end;
+
+procedure TfKanjiDetails.ScrollboxClick(Sender: TObject);
+begin
+  Scrollbox.SetFocus; //does not set by default
 end;
 
 procedure TfKanjiDetails.btnCloseKeyPress(Sender: TObject; var Key: Char);
@@ -896,14 +932,13 @@ end;
 procedure TfKanjiDetails.UpdateAlignment;
 begin
   if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
-    pnlSecondHalf.Top := RxLabel1.Top + RxLabel1.Height + 3;
-    pnlSecondHalf.Left := RxLabel1.Left + 2;
+    pnlSecondHalf.Align := alBottom;
+    pnlSecondHalf.Height := Self.ClientHeight - RxLabel39.Top - RxLabel39.Height - 8;
   end else begin
-    pnlSecondHalf.Top := ShapeKanji.Top + 3;
-    pnlSecondHalf.Left := ShapeSimplified.Left + ShapeSimplified.Width + 9;
+    pnlSecondHalf.Align := alRight;
+    pnlSecondHalf.Width := Self.ClientWidth - ShapeSimplified.Left - ShapeSimplified.Width -9;
   end;
-  pnlSecondHalf.Width := Self.ClientWidth - pnlSecondHalf.Left - 8;
-  pnlSecondHalf.Height := Self.ClientHeight - pnlSecondHalf.Top - 8;
+  pnlSecondHalf.Anchors := [akLeft, akTop, akRight, akBottom]; //broken on SetAlign above
 end;
 
 procedure TfKanjiDetails.FormResize(Sender: TObject);
