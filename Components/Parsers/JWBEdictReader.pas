@@ -483,7 +483,7 @@ begin
   for i := 0 to ed.kanji_used - 1 do begin
     j := 0;
     while j+dupshift<i do begin
-      if SameStr(ed.kanji[i].kanji,ed.kanji[j].kanji) then
+      if SysUtils.SameStr(ed.kanji[i].kanji,ed.kanji[j].kanji) then
         break;
       Inc(j);
     end;

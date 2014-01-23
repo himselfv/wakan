@@ -304,7 +304,7 @@ begin
 
 
   fname := edtDictFilename.text;
-  if not EndsStr('.dic', LowerCase(fname, loUserLocale)) then
+  if not StrUtils.EndsStr('.dic', LowerCase(fname, loUserLocale)) then
     fname := fname + '.dic';
 
   info.name := edtDictName.text;
