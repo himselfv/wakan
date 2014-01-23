@@ -39,7 +39,7 @@ type
     Label14: TLabel;
     lblDateMastered: TLabel;
     Label12: TLabel;
-    lblTimesPrinted: TLabel;
+    lblDatePrinted: TLabel;
     pbPhonetic: TWakanPaintbox;
     pbKanji: TWakanPaintbox;
     procedure pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
@@ -103,7 +103,7 @@ begin
   lblDateCreated.Caption:='-';
   lblDateLearned.Caption:='-';
   lblDateMastered.Caption:='-';
-  lblTimesPrinted.Caption:='-';
+  lblDatePrinted.Caption:='-';
   SetWordControlsEnabled(false);
   btnMoveUpInCategory.Visible:=fVocabFilters.rgSort.ItemIndex=0;
   btnMoveDownInCategory.Visible:=fVocabFilters.rgSort.ItemIndex=0;
@@ -162,8 +162,8 @@ begin
   lblDateCreated.Caption:=DateForm(TUser.Str(TUserAdded));
   lblDateLearned.Caption:=DateForm(TUser.Str(TUserLearned));
   lblDateMastered.Caption:=DateForm(TUser.Str(TUserMastered));
-  lblTimesPrinted.Caption:=DateForm(TUser.Str(TUserPrinted));
-  if lblTimesPrinted.Caption<>'-'then lblTimesPrinted.Caption:=lblTimesPrinted.Caption+' ('+TUser.Str(TUserNoPrinted)+'x)';
+  lblDatePrinted.Caption:=DateForm(TUser.Str(TUserPrinted));
+  if lblDatePrinted.Caption<>'-'then lblDatePrinted.Caption:=lblDatePrinted.Caption+' ('+TUser.Str(TUserNoPrinted)+'x)';
   SetWordControlsEnabled(true);
   cbAddCategory.Enabled:=true;
   lbCategories.Enabled:=true;

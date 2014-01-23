@@ -120,6 +120,7 @@ object fVocabDetails: TfVocabDetails
       BevelOuter = bvNone
       FullRepaint = False
       TabOrder = 0
+      ExplicitWidth = 985
       object pnlEntryContents: TPanel
         Left = 0
         Top = 0
@@ -379,7 +380,7 @@ object fVocabDetails: TfVocabDetails
         Left = 822
         Top = 0
         Width = 153
-        Height = 98
+        Height = 90
         Align = alLeft
         BevelOuter = bvNone
         FullRepaint = False
@@ -414,7 +415,7 @@ object fVocabDetails: TfVocabDetails
         end
         object Label13: TLabel
           Left = 6
-          Top = 30
+          Top = 31
           Width = 91
           Height = 13
           Caption = '#00696^eLearned:'
@@ -428,7 +429,7 @@ object fVocabDetails: TfVocabDetails
         end
         object lblDateLearned: TLabel
           Left = 91
-          Top = 29
+          Top = 30
           Width = 48
           Height = 16
           Caption = 'Label15'
@@ -442,7 +443,7 @@ object fVocabDetails: TfVocabDetails
         end
         object Label14: TLabel
           Left = 6
-          Top = 49
+          Top = 50
           Width = 96
           Height = 13
           Caption = '#00697^eMastered:'
@@ -456,7 +457,7 @@ object fVocabDetails: TfVocabDetails
         end
         object lblDateMastered: TLabel
           Left = 91
-          Top = 48
+          Top = 49
           Width = 48
           Height = 16
           Caption = 'Label15'
@@ -470,7 +471,7 @@ object fVocabDetails: TfVocabDetails
         end
         object Label12: TLabel
           Left = 6
-          Top = 68
+          Top = 69
           Width = 108
           Height = 13
           Caption = '#00695^eLearning list:'
@@ -482,9 +483,9 @@ object fVocabDetails: TfVocabDetails
           ParentFont = False
           Transparent = True
         end
-        object lblTimesPrinted: TLabel
+        object lblDatePrinted: TLabel
           Left = 91
-          Top = 67
+          Top = 68
           Width = 48
           Height = 16
           Caption = 'Label15'
