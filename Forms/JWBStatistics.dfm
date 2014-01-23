@@ -15,6 +15,9 @@ object fStatistics: TfStatistics
   Position = poScreenCenter
   Scaled = False
   OnShow = FormShow
+  DesignSize = (
+    599
+    305)
   PixelsPerInch = 96
   TextHeight = 13
   object RxLabel16: TLabel
@@ -154,29 +157,29 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label10: TLabel
-    Left = 547
+  object lblChinesePresent: TLabel
+    Left = 552
     Top = 64
-    Width = 38
+    Width = 33
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label10'
+    Caption = 'Absent'
   end
-  object Label11: TLabel
-    Left = 548
+  object lblTotalJapanese: TLabel
+    Left = 506
     Top = 80
-    Width = 38
+    Width = 80
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label11'
+    Caption = 'lblTotalJapanese'
   end
-  object Label12: TLabel
-    Left = 548
+  object lblTotalKanji: TLabel
+    Left = 529
     Top = 96
-    Width = 38
+    Width = 57
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label12'
+    Caption = 'lblTotalKanji'
   end
   object lblDicBuildDate: TLabel
     Left = 198
@@ -306,69 +309,69 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label25: TLabel
-    Left = 232
+  object lblVocabTotal: TLabel
+    Left = 246
     Top = 152
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label25'
+    Caption = '0000'
   end
-  object Label26: TLabel
-    Left = 232
+  object lblVocabLearned: TLabel
+    Left = 246
     Top = 168
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label26'
+    Caption = '0000'
   end
-  object Label27: TLabel
-    Left = 232
+  object lblVocabMastered: TLabel
+    Left = 246
     Top = 184
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label27'
+    Caption = '0000'
   end
-  object Label28: TLabel
-    Left = 232
+  object lblVocabProblematic: TLabel
+    Left = 246
     Top = 200
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label28'
+    Caption = '0000'
   end
-  object Label29: TLabel
-    Left = 232
+  object lblVocabKatakana: TLabel
+    Left = 246
     Top = 232
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label29'
+    Caption = '0000'
   end
-  object Label30: TLabel
-    Left = 547
+  object lblKanjiInWords: TLabel
+    Left = 561
     Top = 152
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label30'
+    Caption = '0000'
   end
-  object Label31: TLabel
-    Left = 547
+  object lblLearnedKanji: TLabel
+    Left = 561
     Top = 184
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label31'
+    Caption = '0000'
   end
-  object Label32: TLabel
-    Left = 547
+  object lblUnlearnedBasic: TLabel
+    Left = 561
     Top = 200
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label32'
+    Caption = '0000'
   end
   object Label33: TLabel
     Left = 8
@@ -396,34 +399,21 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label35: TLabel
-    Left = 232
+  object lblVocabUnpopular: TLabel
+    Left = 246
     Top = 216
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label35'
+    Caption = '0000'
   end
-  object Label36: TLabel
-    Left = 547
+  object lblLearnedRare: TLabel
+    Left = 561
     Top = 216
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label36'
-  end
-  object Label37: TLabel
-    Left = 264
-    Top = 232
-    Width = 15
-    Height = 13
-    Caption = '^e'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
+    Caption = '0000'
   end
   object Label38: TLabel
     Left = 280
@@ -438,13 +428,13 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label39: TLabel
-    Left = 547
+  object lblRareKanjiInWords: TLabel
+    Left = 561
     Top = 168
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label39'
+    Caption = '0000'
   end
   object Label40: TLabel
     Left = 280
@@ -459,13 +449,13 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label41: TLabel
-    Left = 547
+  object lblLearnedChinese: TLabel
+    Left = 561
     Top = 232
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label36'
+    Caption = '0000'
   end
   object Label42: TLabel
     Left = 8
@@ -493,27 +483,28 @@ object fStatistics: TfStatistics
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label44: TLabel
-    Left = 232
+  object lblVocabWriting: TLabel
+    Left = 246
     Top = 248
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label29'
+    Caption = '0000'
   end
-  object Label45: TLabel
-    Left = 547
+  object lblLearnedRadicals: TLabel
+    Left = 561
     Top = 248
-    Width = 38
+    Width = 24
     Height = 13
     Alignment = taRightJustify
-    Caption = 'Label36'
+    Caption = '0000'
   end
   object BitBtn1: TBitBtn
     Left = 264
     Top = 272
     Width = 89
     Height = 25
+    Anchors = [akLeft, akBottom]
     Cancel = True
     Caption = 'OK'
     Default = True

@@ -20,9 +20,9 @@ type
     Label6: TLabel;
     Label7: TLabel;
     Label8: TLabel;
-    Label10: TLabel;
-    Label11: TLabel;
-    Label12: TLabel;
+    lblChinesePresent: TLabel;
+    lblTotalJapanese: TLabel;
+    lblTotalKanji: TLabel;
     lblDicBuildDate: TLabel;
     lblKanjidicVersion: TLabel;
     lblUnihanVersion: TLabel;
@@ -34,27 +34,26 @@ type
     Label22: TLabel;
     Label23: TLabel;
     Label24: TLabel;
-    Label25: TLabel;
-    Label26: TLabel;
-    Label27: TLabel;
-    Label28: TLabel;
-    Label29: TLabel;
-    Label30: TLabel;
-    Label31: TLabel;
-    Label32: TLabel;
+    lblVocabTotal: TLabel;
+    lblVocabLearned: TLabel;
+    lblVocabMastered: TLabel;
+    lblVocabProblematic: TLabel;
+    lblVocabKatakana: TLabel;
+    lblKanjiInWords: TLabel;
+    lblLearnedKanji: TLabel;
+    lblUnlearnedBasic: TLabel;
     Label33: TLabel;
     Label34: TLabel;
-    Label35: TLabel;
-    Label36: TLabel;
-    Label37: TLabel;
+    lblVocabUnpopular: TLabel;
+    lblLearnedRare: TLabel;
     Label38: TLabel;
-    Label39: TLabel;
+    lblRareKanjiInWords: TLabel;
     Label40: TLabel;
-    Label41: TLabel;
+    lblLearnedChinese: TLabel;
     Label42: TLabel;
     Label43: TLabel;
-    Label44: TLabel;
-    Label45: TLabel;
+    lblVocabWriting: TLabel;
+    lblLearnedRadicals: TLabel;
     procedure FormShow(Sender: TObject);
   protected
     procedure DoStatistic;
@@ -74,7 +73,27 @@ begin
 end;
 
 procedure TfStatistics.DoStatistic;
-var i,j,k,l,m,n,o,p,q:integer;
+var
+  vs: record
+    learned: integer;
+    mastered: integer;
+    problematic: integer;
+    unpopular: integer;
+    katakana: integer;
+    writing: integer;
+  end;
+  ks: record
+    totalJapanese: integer;
+    kanjiInWords: integer;
+    rareKanjiInWords: integer;
+    learnedKanji: integer;
+    learnedBasic: integer;
+    unlearnedBasic: integer;
+    learnedRare: integer;
+    learnedChinese: integer;
+    learnedRadicals: integer;
+  end;
+
   t:textfile;
   KanjiKnown: boolean;
   JouyouGrade: integer;
@@ -82,40 +101,43 @@ var i,j,k,l,m,n,o,p,q:integer;
 begin
   Screen.Cursor:=crHourGlass;
   if CharDataProps.ChinesePresent then
-    Label10.Caption:=_l('#00854^ePresent')
+    lblChinesePresent.Caption:=_l('#00854^ePresent')
   else
-    Label10.Caption:=_l('#00855^eAbsent');
+    lblChinesePresent.Caption:=_l('#00855^eAbsent');
+
+  FillChar(vs, SizeOf(vs), 0);
+  FillChar(ks, SizeOf(ks), 0);
+
   TChar.First;
-  i:=0;
   while not TChar.EOF do
   begin
-    if TChar.Int(TCharChinese)=0 then inc(i);
+    if TChar.Int(TCharChinese)=0 then inc(ks.totalJapanese);
     TChar.Next;
   end;
-  Label11.Caption:=inttostr(i);
-  p:=i;
-  Label12.Caption:=inttostr(TChar.RecordCount);
-  i:=0; j:=0; k:=0; l:=0; m:=0; n:=0;
+  lblTotalJapanese.Caption:=inttostr(ks.totalJapanese);
+  lblTotalKanji.Caption:=inttostr(TChar.RecordCount);
+
   TChar.First;
   TUser.First;
   while not TUser.EOF do
   begin
-    if TUser.Int(TUserScore)=0 then inc(i);
-    if TUser.Int(TUserScore)>=2 then inc(j);
-    if TUser.Int(TUserScore)=3 then inc(k);
-    if pos('<spop>',TUser.Str(TUserEnglish))=0 then inc(l);
-    if (length(TUser.Str(TUserPhonetic))>1) and (TUser.Str(TUserPhonetic)[3]>='A') then inc(m);
-    if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then inc(n);
+    if TUser.Int(TUserScore)=0 then inc(vs.problematic);
+    if TUser.Int(TUserScore)=2 then inc(vs.learned);
+    if TUser.Int(TUserScore)=3 then inc(vs.mastered);
+    if pos('<spop>',TUser.Str(TUserEnglish))=0 then inc(vs.unpopular);
+    if (length(TUser.Str(TUserPhonetic))>1) and (TUser.Str(TUserPhonetic)[3]>='A') then inc(vs.katakana);
+    if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then inc(vs.writing);
     TUser.Next;
   end;
   TUser.First;
-  Label25.Caption:=inttostr(TUser.RecordCount);
-  Label26.Caption:=perc(j,TUser.RecordCount);
-  Label27.Caption:=perc(k,TUser.RecordCount);
-  Label28.Caption:=perc(i,TUser.RecordCount);
-  Label35.Caption:=perc(l,TUser.RecordCount);
-  Label29.Caption:=perc(m,TUser.RecordCount);
-  Label44.Caption:=perc(n,TUser.RecordCount);
+  lblVocabTotal.Caption:=inttostr(TUser.RecordCount);
+  lblVocabLearned.Caption:=perc(vs.learned,TUser.RecordCount);
+  lblVocabMastered.Caption:=perc(vs.mastered,TUser.RecordCount);
+  lblVocabProblematic.Caption:=perc(vs.problematic,TUser.RecordCount);
+  lblVocabUnpopular.Caption:=perc(vs.unpopular,TUser.RecordCount);
+  lblVocabKatakana.Caption:=perc(vs.katakana,TUser.RecordCount);
+  lblVocabWriting.Caption:=perc(vs.writing,TUser.RecordCount);
+
   if fSettings.CheckBox26.Checked then
   begin
     {$I-}
@@ -127,51 +149,52 @@ begin
     writeln(t,'WAKAN STATISTICS LOG');
     writeln(t,'date = '+formatdatetime('yyyy/mm/dd',now));
     writeln(t,'total_words = '+inttostr(TUser.RecordCount));
-    writeln(t,'learned_words = '+inttostr(j));
-    writeln(t,'mastered_words = '+inttostr(k));
-    writeln(t,'problematic_words = '+inttostr(i));
-    writeln(t,'unpopular_words = '+inttostr(l));
-    writeln(t,'katakana_words = '+inttostr(m));
-    writeln(t,'known_writing_words = '+inttostr(n));
+    writeln(t,'learned_words = '+inttostr(vs.learned));
+    writeln(t,'mastered_words = '+inttostr(vs.mastered));
+    writeln(t,'problematic_words = '+inttostr(vs.problematic));
+    writeln(t,'unpopular_words = '+inttostr(vs.unpopular));
+    writeln(t,'katakana_words = '+inttostr(vs.katakana));
+    writeln(t,'known_writing_words = '+inttostr(vs.writing));
   end;
-  i:=0; j:=0; k:=0; l:=0; m:=0; n:=0; o:=0; q:=0;
+
   TChar.First;
   while not TChar.EOF do
   begin
     KanjiKnown := IsKnown(KnownLearned,TChar.Fch(TCharUnicode));
     JouyouGrade := TChar.Int(TCharJouyouGrade);
     InUserIdx := TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode));
-    if KanjiKnown then inc(i);
-    if KanjiKnown and (JouyouGrade>=9) then inc(j);
-    if (not KanjiKnown) and (JouyouGrade<9) then inc(k);
-    if JouyouGrade<9 then inc(o);
-    if InUserIdx then inc(l);
-    if InUserIdx and (JouyouGrade>=9) then inc(m);
-    if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(n);
+    if KanjiKnown then inc(ks.learnedKanji);
+    if KanjiKnown and (JouyouGrade>=9) then inc(ks.learnedRare);
+    if (not KanjiKnown) and (JouyouGrade<9) then inc(ks.unlearnedBasic);
+    if JouyouGrade<9 then inc(ks.learnedBasic);
+    if InUserIdx then inc(ks.kanjiInWords);
+    if InUserIdx and (JouyouGrade>=9) then inc(ks.rareKanjiInWords);
+    if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(ks.learnedChinese);
     if KanjiKnown
       and TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),13))
       and (TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode)) then
-        inc(q);
+        inc(ks.learnedRadicals);
 
     TChar.Next;
   end;
   TChar.First;
-  Label30.Caption:=perc(l,p);
-  Label31.Caption:=perc(i,l);
-  Label32.Caption:=perc(k,o);
-  Label36.Caption:=perc(j,i);
-  Label39.Caption:=perc(m,l);
-  Label41.Caption:=perc(n,i);
-  Label45.Caption:=perc(q,TRadicals.RecordCount);
+  lblKanjiInWords.Caption:=perc(ks.kanjiInWords,ks.totalJapanese);
+  lblLearnedKanji.Caption:=perc(ks.learnedKanji,ks.kanjiInWords);
+  lblUnlearnedBasic.Caption:=perc(ks.unlearnedBasic,ks.learnedBasic);
+  lblLearnedRare.Caption:=perc(ks.learnedRare,ks.learnedKanji);
+  lblRareKanjiInWords.Caption:=perc(ks.rareKanjiInWords,ks.kanjiInWords);
+  lblLearnedChinese.Caption:=perc(ks.learnedChinese,ks.learnedKanji);
+  lblLearnedRadicals.Caption:=perc(ks.learnedRadicals,TRadicals.RecordCount);
+
   if fSettings.CheckBox26.Checked then
   begin
-    writeln(t,'kanji_in_words = '+inttostr(l));
-    writeln(t,'known_kanji = '+inttostr(i));
-    writeln(t,'unknown_basic_kanji = '+inttostr(k));
-    writeln(t,'known_nonbasic_kanji = '+inttostr(j));
-    writeln(t,'nonbasic_kanji_in_words = '+inttostr(m));
-    writeln(t,'known_chineseonly_chars = '+inttostr(n));
-    writeln(t,'known_radicals = '+inttostr(q));
+    writeln(t,'kanji_in_words = '+inttostr(ks.kanjiInWords));
+    writeln(t,'known_kanji = '+inttostr(ks.learnedKanji));
+    writeln(t,'unknown_basic_kanji = '+inttostr(ks.unlearnedBasic));
+    writeln(t,'known_nonbasic_kanji = '+inttostr(ks.learnedRare));
+    writeln(t,'nonbasic_kanji_in_words = '+inttostr(ks.rareKanjiInWords));
+    writeln(t,'known_chineseonly_chars = '+inttostr(ks.learnedChinese));
+    writeln(t,'known_radicals = '+inttostr(ks.learnedRadicals));
     closefile(t);
   end;
   Screen.Cursor:=crDefault;
