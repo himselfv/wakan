@@ -69,22 +69,27 @@ object fKanjiDetails: TfKanjiDetails
     end
     object Scrollbox: TScrollBox
       AlignWithMargins = True
-      Left = 3
-      Top = 3
+      Left = 6
+      Top = 0
       Width = 315
-      Height = 317
+      Height = 323
+      Margins.Left = 6
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
       VertScrollBar.Tracking = True
       Align = alClient
       BorderStyle = bsNone
-      Padding.Right = 5
+      Padding.Right = 6
       TabOrder = 1
       OnClick = ScrollboxClick
+      ExplicitLeft = 3
       ExplicitTop = 16
       ExplicitHeight = 315
       object pbKanjiInfo: TPaintBox
         Left = 0
-        Top = 40
-        Width = 310
+        Top = 21
+        Width = 309
         Height = 200
         Align = alTop
         OnMouseDown = pbKanjiInfoMouseDown
@@ -98,12 +103,13 @@ object fKanjiDetails: TfKanjiDetails
       object FlowPanel1: TFlowPanel
         Left = 0
         Top = 0
-        Width = 310
+        Width = 309
         Height = 21
         Align = alTop
         AutoSize = True
         BevelOuter = bvNone
         TabOrder = 0
+        ExplicitWidth = 310
         object RxLabel1: TLabel
           Left = 0
           Top = 0
@@ -158,16 +164,18 @@ object fKanjiDetails: TfKanjiDetails
       end
       object FlowPanel2: TFlowPanel
         Left = 0
-        Top = 21
-        Width = 310
+        Top = 221
+        Width = 309
         Height = 19
         Align = alTop
         AutoSize = True
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitLeft = 3
+        ExplicitTop = 245
         object ProUrlLabel1: TUrlLabel
           AlignWithMargins = True
-          Left = 3
+          Left = 0
           Top = 3
           Width = 54
           Height = 13
@@ -175,6 +183,7 @@ object fKanjiDetails: TfKanjiDetails
           Hint = 
             '#00163^ewww.zhongwen.com - Etymological information about the ch' +
             'aracter'
+          Margins.Left = 0
           Caption = 'ZhongWen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -188,7 +197,7 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel2: TUrlLabel
           AlignWithMargins = True
-          Left = 63
+          Left = 60
           Top = 3
           Width = 56
           Height = 13
@@ -209,7 +218,7 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel3: TUrlLabel
           AlignWithMargins = True
-          Left = 125
+          Left = 122
           Top = 3
           Width = 36
           Height = 13
@@ -230,7 +239,7 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel4: TUrlLabel
           AlignWithMargins = True
-          Left = 167
+          Left = 164
           Top = 3
           Width = 26
           Height = 13
@@ -249,7 +258,7 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel5: TUrlLabel
           AlignWithMargins = True
-          Left = 199
+          Left = 196
           Top = 3
           Width = 56
           Height = 13
@@ -271,11 +280,16 @@ object fKanjiDetails: TfKanjiDetails
   end
   object pnlFirst: TPanel
     AlignWithMargins = True
-    Left = 3
-    Top = 3
-    Width = 315
-    Height = 174
+    Left = 6
+    Top = 6
+    Width = 309
+    Height = 170
+    Margins.Left = 6
+    Margins.Top = 6
+    Margins.Right = 6
+    Margins.Bottom = 6
     Align = alTop
+    AutoSize = True
     BevelOuter = bvNone
     TabOrder = 1
     object ShapeKanji: TShape
@@ -392,7 +406,7 @@ object fKanjiDetails: TfKanjiDetails
       Visible = False
     end
     object lblStrokeCount: TLabel
-      Left = 108
+      Left = 106
       Top = 156
       Width = 5
       Height = 13
@@ -407,7 +421,7 @@ object fKanjiDetails: TfKanjiDetails
       Transparent = True
     end
     object RxLabel39: TLabel
-      Left = 3
+      Left = 0
       Top = 156
       Width = 135
       Height = 13

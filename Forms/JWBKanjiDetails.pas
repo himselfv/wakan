@@ -124,7 +124,7 @@ type
       var x,y,rh:integer;onlycount:boolean);
     procedure DrawSingleText(canvas:TCanvas;tp:char;l,t,r,fh:integer;s:string);
     function FitText(canvas:TCanvas;tp:char;wrap:boolean;w,fh:integer;
-      fname:string;var l:integer;var s:string):string;
+      fname:string;out l:integer;var s: HellspawnString): HellspawnString;
 
   protected
     FDockMode: TAlign; //this window keeps different size settings for docked and undocked mode
@@ -749,14 +749,16 @@ end;
 { Info box painting }
 
 function TfKanjiDetails.InfoPaint(canvas:TCanvas;w:integer;onlycount:boolean):integer;
+const MARGIN_L=0;
+  MARGIN_R=0;
 var i:integer;
-    x,y,rh:integer;
+  x,y,rh:integer;
 begin
-  x:=6;
+  x:=MARGIN_L;
   y:=3;
   rh:=0;
   for i:=0 to (kval.Count div 2)-1 do
-    InfoDrawItem(canvas,kval[i*2],kval[i*2+1],2,w-2,x,y,rh,onlycount);
+    InfoDrawItem(canvas,kval[i*2],kval[i*2+1],MARGIN_L,w-MARGIN_R,x,y,rh,onlycount);
   result:=y;
 end;
 
@@ -870,75 +872,97 @@ begin
     canvas.TextOut(l,t,s);
 end;
 
+{
+Prints as much as possible on a canvas in a specified font.
+ canvas: The canvas to print on.
+ tp: Text type (non exhaustive list: U for unicode, P for what? )
+ wrap: Whether wrapping is allowed (?)
+ w: ?
+ fh: Font height (also width for full-width unicode)
+ fname: Font name
+ l: [out] Width of the printed part of text.
+ s: [in] Text to print. [out] The non-printed remainer of text.
+Returns: width taken by printed part of text
+}
 function TfKanjiDetails.FitText(canvas:TCanvas;tp:char;wrap:boolean;w,fh:integer;
-  fname:string;var l:integer;var s:string):string;
+  fname:string;out l:integer;var s: HellspawnString): HellspawnString;
 
   function countwidth(tp:char;fh:integer;s:string):integer;
   var ts:TSize;
   begin
-    if tp='P'then result:=0 else
-    if (tp='U') then result:=flength(s)*(fh-2)
-    else begin
+    if tp='P' then Result:=0 else
+    if tp='U' then Result:=flength(s)*(fh-2) else
+    begin
       ts:=canvas.TextExtent(s);
-      result:=ts.cx;
+      Result:=ts.cx;
     end;
   end;
 
-var st,stl:string;
-    i,ii,iii:integer;
+var cur_span,last_span:string;
+  last_i,i,next_i:integer;
 begin
   canvas.Font.Name:=fname;
   canvas.Font.Height:=fh;
   if countwidth(tp,fh,s)<=w then
-  begin
+  begin //Text fits completely
     l:=countwidth(tp,fh,s);
-    result:=s;
+    Result:=s;
     s:='';
     exit;
   end;
+
+  cur_span:='';
   i:=0;
-  stl:='';
-  st:='';
-  ii:=0;
+  next_i:=0;
   repeat
-    stl:=st;
-    iii:=ii;
-    ii:=i;
-    if (tp='U') or (tp='P') then st:=fcopy(s,1,i) else st:=copy(s,1,i);
-    if not wrap then
-      if (tp='U') or (tp='P') then st:=st+UH_ELLIPSIS else st:=st+'...';
-    if (tp='U') or (tp='P') or (not wrap) then inc(i) else
-    begin
-      inc(i);
-      while (i<length(s)) and (s[i+1]<>' ') do inc(i);
+    last_span:=cur_span;
+    last_i:=i;
+    i:=next_i;
+    if (tp='U') or (tp='P') then cur_span:=fcopy(s,1,next_i) else cur_span:=copy(s,1,next_i);
+    if not wrap then begin
+      if (tp='U') or (tp='P') then cur_span:=cur_span+UH_ELLIPSIS else cur_span:=cur_span+'...';
+      Inc(next_i);
+    end else
+    if (tp='U') or (tp='P') then
+      Inc(next_i)
+    else begin
+      Inc(next_i);
+      while (next_i<length(s)) and (s[next_i+1]<>' ') do inc(next_i);
     end;
-  until countwidth(tp,fh,st)>w;
-  if stl='' then stl:=st;
-  i:=iii;
-  if i<0 then i:=0;
+  until countwidth(tp,fh,cur_span)>w;
+
+  if last_span='' then begin
+    last_span:=cur_span; //if nothing matches at all, at least print one char
+    last_i:=next_i;
+  end;
+
+  if last_i<0 then last_i:=0;
   if wrap then
   begin
-    result:=stl;
-    if (tp='U') or (tp='P') then fdelete(s,1,i) else delete(s,1,i);
-    l:=countwidth(tp,fh,stl);
+    result:=last_span;
+    if (tp='U') or (tp='P') then fdelete(s,1,last_i) else delete(s,1,last_i);
+    l:=countwidth(tp,fh,last_span);
   end else
   begin
-    result:=stl;
+    result:=last_span;
     s:='';
-    l:=countwidth(tp,fh,stl);
+    l:=countwidth(tp,fh,last_span);
   end;
 end;
 
 procedure TfKanjiDetails.UpdateAlignment;
 begin
   if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
-    pnlSecondHalf.Align := alBottom;
-    pnlSecondHalf.Height := Self.ClientHeight - pnlFirst.Top - pnlFirst.Height;
+    pnlFirst.Align := alTop;
+{    pnlSecondHalf.Align := alBottom;
+    pnlSecondHalf.Height := Self.ClientHeight - pnlFirst.Top - pnlFirst.Height;}
   end else begin
-    pnlSecondHalf.Align := alRight;
-    pnlSecondHalf.Width := Self.ClientWidth - pnlFirst.Left - pnlFirst.Width - 9;
+    pnlFirst.Align := alLeft;
+{    pnlSecondHalf.Align := alRight;
+    pnlSecondHalf.Width := Self.ClientWidth - pnlFirst.Left - pnlFirst.Width - 9; }
   end;
-  pnlSecondHalf.Anchors := [akLeft, akTop, akRight, akBottom]; //broken on SetAlign above
+//  pnlSecondHalf.Anchors := [akLeft, akTop, akRight, akBottom]; //broken on SetAlign above
+  pnlSecondHalf.Align := alClient;
 end;
 
 procedure TfKanjiDetails.FormResize(Sender: TObject);
