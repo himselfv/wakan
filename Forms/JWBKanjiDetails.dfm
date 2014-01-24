@@ -12,12 +12,12 @@ object fKanjiDetails: TfKanjiDetails
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   FormStyle = fsStayOnTop
+  Padding.Left = 6
+  Padding.Top = 6
   OldCreateOrder = False
-  OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnDeactivate = FormDeactivate
   OnHide = FormHide
   OnKeyPress = FormKeyPress
   OnMouseWheel = FormMouseWheel
@@ -25,28 +25,31 @@ object fKanjiDetails: TfKanjiDetails
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object pnlSecondHalf: TPanel
-    Left = 0
+  object pnlSecond: TPanel
+    Left = 6
     Top = 200
-    Width = 321
+    Width = 315
     Height = 347
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitLeft = 0
+    ExplicitWidth = 321
     object pnlFooter: TPanel
-      AlignWithMargins = True
-      Left = 3
-      Top = 326
+      Left = 0
+      Top = 329
       Width = 315
       Height = 18
       Align = alBottom
       BevelOuter = bvNone
+      Padding.Right = 6
       TabOrder = 0
+      ExplicitLeft = 3
       ExplicitTop = 340
       object btnClose: TButton
         Left = 0
         Top = 0
-        Width = 240
+        Width = 234
         Height = 18
         Align = alClient
         Caption = '#00170^eClose'
@@ -54,9 +57,10 @@ object fKanjiDetails: TfKanjiDetails
         TabOrder = 0
         OnClick = btnCloseClick
         OnKeyPress = btnCloseKeyPress
+        ExplicitWidth = 240
       end
       object btnDock: TButton
-        Left = 240
+        Left = 234
         Top = 0
         Width = 75
         Height = 18
@@ -65,18 +69,14 @@ object fKanjiDetails: TfKanjiDetails
         Caption = 'DOCK'
         TabOrder = 1
         OnClick = btnDockClick
+        ExplicitLeft = 240
       end
     end
     object Scrollbox: TScrollBox
-      AlignWithMargins = True
-      Left = 6
+      Left = 0
       Top = 0
       Width = 315
-      Height = 323
-      Margins.Left = 6
-      Margins.Top = 0
-      Margins.Right = 0
-      Margins.Bottom = 0
+      Height = 329
       VertScrollBar.Tracking = True
       Align = alClient
       BorderStyle = bsNone
@@ -92,6 +92,7 @@ object fKanjiDetails: TfKanjiDetails
         Width = 309
         Height = 200
         Align = alTop
+        OnClick = ScrollboxClick
         OnMouseDown = pbKanjiInfoMouseDown
         OnMouseMove = pbKanjiInfoMouseMove
         OnMouseUp = pbKanjiInfoMouseUp
@@ -109,6 +110,7 @@ object fKanjiDetails: TfKanjiDetails
         AutoSize = True
         BevelOuter = bvNone
         TabOrder = 0
+        OnClick = ScrollboxClick
         ExplicitWidth = 310
         object RxLabel1: TLabel
           Left = 0
@@ -171,8 +173,7 @@ object fKanjiDetails: TfKanjiDetails
         AutoSize = True
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitLeft = 3
-        ExplicitTop = 245
+        OnClick = ScrollboxClick
         object ProUrlLabel1: TUrlLabel
           AlignWithMargins = True
           Left = 0
@@ -184,6 +185,7 @@ object fKanjiDetails: TfKanjiDetails
             '#00163^ewww.zhongwen.com - Etymological information about the ch' +
             'aracter'
           Margins.Left = 0
+          Margins.Right = 5
           Caption = 'ZhongWen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -197,7 +199,7 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel2: TUrlLabel
           AlignWithMargins = True
-          Left = 60
+          Left = 59
           Top = 3
           Width = 56
           Height = 13
@@ -205,6 +207,8 @@ object fKanjiDetails: TfKanjiDetails
           Hint = 
             '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
             'C dictionary server'
+          Margins.Left = 0
+          Margins.Right = 5
           Caption = 'WWWJDIC'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -218,7 +222,7 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel3: TUrlLabel
           AlignWithMargins = True
-          Left = 122
+          Left = 120
           Top = 3
           Width = 36
           Height = 13
@@ -226,6 +230,8 @@ object fKanjiDetails: TfKanjiDetails
           Hint = 
             '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
             'ter'
+          Margins.Left = 0
+          Margins.Right = 5
           Caption = 'UniHan'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -239,12 +245,14 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel4: TUrlLabel
           AlignWithMargins = True
-          Left = 164
+          Left = 161
           Top = 3
           Width = 26
           Height = 13
           Cursor = crHandPoint
           Hint = '#00166^ewww.ocrat.com - Animated stroke order'
+          Margins.Left = 0
+          Margins.Right = 5
           Caption = 'Ocrat'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -258,12 +266,14 @@ object fKanjiDetails: TfKanjiDetails
         end
         object ProUrlLabel5: TUrlLabel
           AlignWithMargins = True
-          Left = 196
+          Left = 192
           Top = 3
           Width = 56
           Height = 13
           Cursor = crHandPoint
           Hint = '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page'
+          Margins.Left = 0
+          Margins.Right = 5
           Caption = 'KanjiProject'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -279,19 +289,15 @@ object fKanjiDetails: TfKanjiDetails
     end
   end
   object pnlFirst: TPanel
-    AlignWithMargins = True
     Left = 6
     Top = 6
-    Width = 309
+    Width = 315
     Height = 170
-    Margins.Left = 6
-    Margins.Top = 6
-    Margins.Right = 6
-    Margins.Bottom = 6
     Align = alTop
     AutoSize = True
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 309
     object ShapeKanji: TShape
       Left = 0
       Top = 0
@@ -468,7 +474,7 @@ object fKanjiDetails: TfKanjiDetails
   object FormPlacement1: TFormPlacement
     UseRegistry = False
     IniSection = '\Software\Labyrinth\Wakan\DetailPos'
-    Left = 96
-    Top = 112
+    Left = 40
+    Top = 24
   end
 end

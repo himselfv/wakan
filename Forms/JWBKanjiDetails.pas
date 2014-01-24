@@ -29,7 +29,7 @@ type
   THellspawnStringList = TStringList;
 
   TfKanjiDetails = class(TForm)
-    pnlSecondHalf: TPanel;
+    pnlSecond: TPanel;
     pnlFooter: TPanel;
     btnClose: TButton;
     btnDock: TButton;
@@ -100,8 +100,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
-    procedure FormDeactivate(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure ScrollboxClick(Sender: TObject);
@@ -204,16 +202,6 @@ procedure TfKanjiDetails.FormHide(Sender: TObject);
 begin
   if not (csDestroying in ComponentState) then //forms might already cease to exist on destruction
     UpdateVisible();
-end;
-
-procedure TfKanjiDetails.FormActivate(Sender: TObject);
-begin
-//
-end;
-
-procedure TfKanjiDetails.FormDeactivate(Sender: TObject);
-begin
-//
 end;
 
 procedure TfKanjiDetails.UpdateVisible;
@@ -647,7 +635,7 @@ begin
     h:=InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,true);
     pbKanjiInfo.Height:=h;
   end else begin
-    pbKanjiInfo.Height:=0;
+    pbKanjiInfo.Height:=1; //do not make it zero or we'll break panel order (yeah, really)
   end;
   Screen.Cursor:=crDefault;
 end;
@@ -954,20 +942,28 @@ procedure TfKanjiDetails.UpdateAlignment;
 begin
   if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
     pnlFirst.Align := alTop;
-{    pnlSecondHalf.Align := alBottom;
-    pnlSecondHalf.Height := Self.ClientHeight - pnlFirst.Top - pnlFirst.Height;}
+//    pnlFooter.Parent := pnlSecond;
   end else begin
     pnlFirst.Align := alLeft;
-{    pnlSecondHalf.Align := alRight;
-    pnlSecondHalf.Width := Self.ClientWidth - pnlFirst.Left - pnlFirst.Width - 9; }
+//    pnlFooter.Parent := pnlFirst;
   end;
-//  pnlSecondHalf.Anchors := [akLeft, akTop, akRight, akBottom]; //broken on SetAlign above
-  pnlSecondHalf.Align := alClient;
+  pnlSecond.Align := alClient;
 end;
 
 procedure TfKanjiDetails.FormResize(Sender: TObject);
 begin
-//  UpdateAlignment();
+ { If kept on AutoSize, FlowPanels would not properly realign controls when
+  their width is expanded, at all }
+  if FlowPanel1.AutoSize then begin
+    FlowPanel1.AutoSize := false;
+    FlowPanel1.Realign;
+    FlowPanel1.AutoSize := true;
+  end;
+  if FlowPanel2.AutoSize then begin
+    FlowPanel2.AutoSize := false;
+    FlowPanel2.Realign;
+    FlowPanel2.AutoSize := true;
+  end;
 end;
 
 function TfKanjiDetails.GetDockedWidth: integer;
