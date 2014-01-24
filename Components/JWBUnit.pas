@@ -853,8 +853,9 @@ end;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 var i,l,r,m:integer;
-    xx,yy:byte;
-    p:pchar;
+  xx,yy:byte;
+  p:PByte;
+  fc:FChar;
 begin
   if sobin=nil then exit;
   l:=0;
@@ -863,8 +864,15 @@ begin
   while l<=r do
   begin
     m:=l+(r-l) div 2;
-    if (copy(sodir[m],1,4)<char) then l:=m+1 else
-    if (copy(sodir[m],1,4)>char) then r:=m-1 else break;
+   //sodir contains hex chars
+    fc := fgetch(hextofstr(copy(sodir[m],1,4)), 1);
+    if fc<char then
+      l:=m+1
+    else
+    if fc>char then
+      r:=m-1
+    else
+      break;
   end;
   if l>r then exit;
   i:=strtoint('0x'+copy(sodir[m],5,4));
@@ -886,12 +894,12 @@ begin
     if (xx<>0) and (yy<>0) then
     begin
       canvas.Font.Color:=clWindow;
-      DrawUnicode(canvas,round(x+w*(xx/256))+1,round(y+h*(yy/256)),fontsize,UnicodeToHex(inttostr(i)),FontEnglish);
-      DrawUnicode(canvas,round(x+w*(xx/256))-1,round(y+h*(yy/256)),fontsize,UnicodeToHex(inttostr(i)),FontEnglish);
-      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256))+1,fontsize,UnicodeToHex(inttostr(i)),FontEnglish);
-      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256))-1,fontsize,UnicodeToHex(inttostr(i)),FontEnglish);
+      DrawUnicode(canvas,round(x+w*(xx/256))+1,round(y+h*(yy/256)),fontsize,fstr(inttostr(i)),FontEnglish);
+      DrawUnicode(canvas,round(x+w*(xx/256))-1,round(y+h*(yy/256)),fontsize,fstr(inttostr(i)),FontEnglish);
+      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256))+1,fontsize,fstr(inttostr(i)),FontEnglish);
+      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256))-1,fontsize,fstr(inttostr(i)),FontEnglish);
       canvas.Font.Color:=color;
-      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256)),fontsize,UnicodeToHex(inttostr(i)),FontEnglish);
+      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256)),fontsize,fstr(inttostr(i)),FontEnglish);
     end;
   end;
   canvas.Font.Color:=clWindowText;
