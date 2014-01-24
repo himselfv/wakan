@@ -25,211 +25,24 @@ object fKanjiDetails: TfKanjiDetails
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object ShapeKanji: TShape
-    Left = 6
-    Top = 8
-    Width = 153
-    Height = 153
-    Brush.Color = clWindow
-  end
-  object lblMeaning: TLabel
-    Left = 166
-    Top = 94
-    Width = 151
-    Height = 60
-    AutoSize = False
-    Caption = '-'
-    Color = clBtnFace
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Arial'
-    Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    WordWrap = True
-  end
-  object RxLabel21: TLabel
-    Left = 6
-    Top = 8
-    Width = 44
-    Height = 18
-    Caption = 'Kanji'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Verdana'
-    Font.Style = [fsBold]
-    ParentFont = False
-    Visible = False
-  end
-  object ShapeRadical: TShape
-    Left = 166
-    Top = 24
-    Width = 65
-    Height = 65
-    Brush.Color = clWindow
-  end
-  object pbKanji: TPaintBox
-    Left = 14
-    Top = 16
-    Width = 137
-    Height = 137
-    Color = clBtnFace
-    ParentColor = False
-    OnPaint = pbKanjiPaint
-  end
-  object pbRadical: TPaintBox
-    Left = 174
-    Top = 32
-    Width = 49
-    Height = 49
-    Color = clBtnFace
-    ParentColor = False
-    OnDblClick = pbRadicalDblClick
-    OnMouseDown = pbRadicalMouseDown
-    OnMouseMove = pbRadicalMouseMove
-    OnMouseUp = pbRadicalMouseUp
-    OnPaint = pbRadicalPaint
-  end
-  object ShapeSimplified: TShape
-    Left = 254
-    Top = 24
-    Width = 65
-    Height = 65
-    Brush.Color = clWindow
-  end
-  object pbSimplified: TPaintBox
-    Left = 262
-    Top = 32
-    Width = 49
-    Height = 49
-    OnMouseDown = pbSimplifiedMouseDown
-    OnMouseMove = pbSimplifiedMouseMove
-    OnMouseUp = pbSimplifiedMouseUp
-    OnPaint = pbSimplifiedPaint
-  end
-  object RxLabel10: TLabel
-    Left = 166
-    Top = 5
-    Width = 105
-    Height = 13
-    Caption = '#00160^eRadical:'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-    Transparent = True
-  end
-  object RxLabel35: TLabel
-    Left = 246
-    Top = 5
-    Width = 35
-    Height = 13
-    Caption = 'Simpl:'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-    Transparent = True
-  end
-  object RxLabel38: TLabel
-    Left = 208
-    Top = 8
-    Width = 44
-    Height = 18
-    Alignment = taRightJustify
-    Caption = 'Kanji'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Verdana'
-    Font.Style = [fsBold]
-    ParentFont = False
-    Visible = False
-  end
-  object lblStrokeCount: TLabel
-    Left = 111
-    Top = 165
-    Width = 5
-    Height = 13
-    Alignment = taRightJustify
-    Caption = '-'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-    Transparent = True
-  end
-  object RxLabel39: TLabel
-    Left = 5
-    Top = 165
-    Width = 135
-    Height = 13
-    Caption = '#00162^eStroke count:'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-    Transparent = True
-  end
-  object lblRadicalNo: TLabel
-    Left = 225
-    Top = 75
-    Width = 3
-    Height = 13
-    Alignment = taRightJustify
-    Caption = ' '
-    Color = clBtnFace
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentColor = False
-    ParentFont = False
-    Transparent = True
-  end
-  object btnStrokeOrder: TSpeedButton
-    Left = 121
-    Top = 163
-    Width = 38
-    Height = 17
-    Hint = '#00168^eShow/hide stroke order (only for Japanese Jouyou-kanji)'
-    AllowAllUp = True
-    GroupIndex = 99
-    Caption = '#00169^eOrder'
-    ParentShowHint = False
-    ShowHint = True
-    OnClick = btnStrokeOrderClick
-  end
   object pnlSecondHalf: TPanel
     Left = 0
-    Top = 186
+    Top = 200
     Width = 321
-    Height = 361
+    Height = 347
     Align = alBottom
-    Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitHeight = 422
     object pnlFooter: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 340
+      Top = 326
       Width = 315
       Height = 18
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitTop = 340
       object btnClose: TButton
         Left = 0
         Top = 0
@@ -241,10 +54,6 @@ object fKanjiDetails: TfKanjiDetails
         TabOrder = 0
         OnClick = btnCloseClick
         OnKeyPress = btnCloseKeyPress
-        ExplicitLeft = -1
-        ExplicitTop = 2
-        ExplicitWidth = 224
-        ExplicitHeight = 17
       end
       object btnDock: TButton
         Left = 240
@@ -256,8 +65,6 @@ object fKanjiDetails: TfKanjiDetails
         Caption = 'DOCK'
         TabOrder = 1
         OnClick = btnDockClick
-        ExplicitLeft = 246
-        ExplicitHeight = 20
       end
     end
     object Scrollbox: TScrollBox
@@ -265,13 +72,15 @@ object fKanjiDetails: TfKanjiDetails
       Left = 3
       Top = 3
       Width = 315
-      Height = 331
+      Height = 317
       VertScrollBar.Tracking = True
       Align = alClient
       BorderStyle = bsNone
       Padding.Right = 5
       TabOrder = 1
       OnClick = ScrollboxClick
+      ExplicitTop = 16
+      ExplicitHeight = 315
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = 40
@@ -295,7 +104,6 @@ object fKanjiDetails: TfKanjiDetails
         AutoSize = True
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitWidth = 301
         object RxLabel1: TLabel
           Left = 0
           Top = 0
@@ -357,7 +165,6 @@ object fKanjiDetails: TfKanjiDetails
         AutoSize = True
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 301
         object ProUrlLabel1: TUrlLabel
           AlignWithMargins = True
           Left = 3
@@ -460,6 +267,188 @@ object fKanjiDetails: TfKanjiDetails
           Transparent = True
         end
       end
+    end
+  end
+  object pnlFirst: TPanel
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 315
+    Height = 174
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 1
+    object ShapeKanji: TShape
+      Left = 0
+      Top = 0
+      Width = 153
+      Height = 153
+      Brush.Color = clWindow
+    end
+    object pbKanji: TPaintBox
+      Left = 8
+      Top = 8
+      Width = 137
+      Height = 137
+      Color = clBtnFace
+      ParentColor = False
+      OnPaint = pbKanjiPaint
+    end
+    object lblMeaning: TLabel
+      Left = 160
+      Top = 88
+      Width = 151
+      Height = 60
+      AutoSize = False
+      Caption = '-'
+      Color = clBtnFace
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Arial'
+      Font.Style = []
+      ParentColor = False
+      ParentFont = False
+      WordWrap = True
+    end
+    object ShapeRadical: TShape
+      Left = 160
+      Top = 16
+      Width = 65
+      Height = 65
+      Brush.Color = clWindow
+    end
+    object pbRadical: TPaintBox
+      Left = 168
+      Top = 24
+      Width = 49
+      Height = 49
+      Color = clBtnFace
+      ParentColor = False
+      OnDblClick = pbRadicalDblClick
+      OnMouseDown = pbRadicalMouseDown
+      OnMouseMove = pbRadicalMouseMove
+      OnMouseUp = pbRadicalMouseUp
+      OnPaint = pbRadicalPaint
+    end
+    object ShapeSimplified: TShape
+      Left = 240
+      Top = 16
+      Width = 65
+      Height = 65
+      Brush.Color = clWindow
+    end
+    object pbSimplified: TPaintBox
+      Left = 248
+      Top = 24
+      Width = 49
+      Height = 49
+      OnMouseDown = pbSimplifiedMouseDown
+      OnMouseMove = pbSimplifiedMouseMove
+      OnMouseUp = pbSimplifiedMouseUp
+      OnPaint = pbSimplifiedPaint
+    end
+    object RxLabel10: TLabel
+      Left = 160
+      Top = 0
+      Width = 105
+      Height = 13
+      Caption = '#00160^eRadical:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+    end
+    object RxLabel35: TLabel
+      Left = 240
+      Top = 0
+      Width = 35
+      Height = 13
+      Caption = 'Simpl:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+    end
+    object RxLabel38: TLabel
+      Left = 159
+      Top = 130
+      Width = 44
+      Height = 18
+      Alignment = taRightJustify
+      Caption = 'Kanji'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Verdana'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Visible = False
+    end
+    object lblStrokeCount: TLabel
+      Left = 108
+      Top = 156
+      Width = 5
+      Height = 13
+      Alignment = taRightJustify
+      Caption = '-'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+    end
+    object RxLabel39: TLabel
+      Left = 3
+      Top = 156
+      Width = 135
+      Height = 13
+      Caption = '#00162^eStroke count:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
+    end
+    object lblRadicalNo: TLabel
+      Left = 219
+      Top = 67
+      Width = 3
+      Height = 13
+      Alignment = taRightJustify
+      Caption = ' '
+      Color = clBtnFace
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentColor = False
+      ParentFont = False
+      Transparent = True
+    end
+    object btnStrokeOrder: TSpeedButton
+      Left = 115
+      Top = 153
+      Width = 38
+      Height = 17
+      Hint = '#00168^eShow/hide stroke order (only for Japanese Jouyou-kanji)'
+      AllowAllUp = True
+      GroupIndex = 99
+      Caption = '#00169^eOrder'
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = btnStrokeOrderClick
     end
   end
   object FormPlacement1: TFormPlacement

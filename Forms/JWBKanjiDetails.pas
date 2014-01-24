@@ -29,22 +29,6 @@ type
   THellspawnStringList = TStringList;
 
   TfKanjiDetails = class(TForm)
-    lblMeaning: TLabel;
-    RxLabel21: TLabel;
-    ShapeKanji: TShape;
-    ShapeRadical: TShape;
-    ShapeSimplified: TShape;
-    pbKanji: TPaintBox;
-    pbRadical: TPaintBox;
-    pbSimplified: TPaintBox;
-    RxLabel10: TLabel;
-    RxLabel35: TLabel;
-    RxLabel38: TLabel;
-    lblStrokeCount: TLabel;
-    RxLabel39: TLabel;
-    FormPlacement1: TFormPlacement;
-    lblRadicalNo: TLabel;
-    btnStrokeOrder: TSpeedButton;
     pnlSecondHalf: TPanel;
     pnlFooter: TPanel;
     btnClose: TButton;
@@ -62,6 +46,22 @@ type
     ProUrlLabel3: TUrlLabel;
     ProUrlLabel4: TUrlLabel;
     ProUrlLabel5: TUrlLabel;
+    pnlFirst: TPanel;
+    FormPlacement1: TFormPlacement;
+    ShapeKanji: TShape;
+    lblMeaning: TLabel;
+    ShapeRadical: TShape;
+    pbKanji: TPaintBox;
+    pbRadical: TPaintBox;
+    ShapeSimplified: TShape;
+    pbSimplified: TPaintBox;
+    RxLabel10: TLabel;
+    RxLabel35: TLabel;
+    RxLabel38: TLabel;
+    lblStrokeCount: TLabel;
+    RxLabel39: TLabel;
+    lblRadicalNo: TLabel;
+    btnStrokeOrder: TSpeedButton;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -756,7 +756,7 @@ begin
   y:=3;
   rh:=0;
   for i:=0 to (kval.Count div 2)-1 do
-    InfoDrawItem(canvas,kval[i*2],kval[i*2+1],6,w-2,x,y,rh,onlycount);
+    InfoDrawItem(canvas,kval[i*2],kval[i*2+1],2,w-2,x,y,rh,onlycount);
   result:=y;
 end;
 
@@ -933,10 +933,10 @@ procedure TfKanjiDetails.UpdateAlignment;
 begin
   if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
     pnlSecondHalf.Align := alBottom;
-    pnlSecondHalf.Height := Self.ClientHeight - RxLabel39.Top - RxLabel39.Height - 8;
+    pnlSecondHalf.Height := Self.ClientHeight - pnlFirst.Top - pnlFirst.Height;
   end else begin
     pnlSecondHalf.Align := alRight;
-    pnlSecondHalf.Width := Self.ClientWidth - ShapeSimplified.Left - ShapeSimplified.Width -9;
+    pnlSecondHalf.Width := Self.ClientWidth - pnlFirst.Left - pnlFirst.Width - 9;
   end;
   pnlSecondHalf.Anchors := [akLeft, akTop, akRight, akBottom]; //broken on SetAlign above
 end;
