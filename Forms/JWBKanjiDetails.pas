@@ -10,7 +10,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, Buttons, StdCtrls, FormPlacemnt, UrlLabel, JWBStrings,
-  TextTable, JWBForms;
+  TextTable, JWBForms, Vcl.Menus;
 
 type
   TCharReadings = record
@@ -35,12 +35,8 @@ type
     btnDock: TButton;
     Scrollbox: TScrollBox;
     pbKanjiInfo: TPaintBox;
-    FlowPanel1: TFlowPanel;
-    RxLabel1: TLabel;
-    lblCategories: TLabel;
-    cbCategories: TComboBox;
-    btnAddToCategory: TSpeedButton;
-    FlowPanel2: TFlowPanel;
+    pnlCategories: TFlowPanel;
+    pnlLinks: TFlowPanel;
     ProUrlLabel1: TUrlLabel;
     ProUrlLabel2: TUrlLabel;
     ProUrlLabel3: TUrlLabel;
@@ -62,6 +58,13 @@ type
     RxLabel39: TLabel;
     lblRadicalNo: TLabel;
     btnStrokeOrder: TSpeedButton;
+    cbCategories: TComboBox;
+    btnAddToCategory: TSpeedButton;
+    pmCategoryMenu: TPopupMenu;
+    pmAddCategoryMenu: TPopupMenu;
+    pmGoToCategory: TMenuItem;
+    pmDelete: TMenuItem;
+    pmAddToAll: TMenuItem;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -103,6 +106,8 @@ type
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure ScrollboxClick(Sender: TObject);
+    procedure pmAddToAllClick(Sender: TObject);
+    procedure pmDeleteClick(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -143,6 +148,14 @@ type
     procedure UpdateVisible;
     property DockedWidth: integer read GetDockedWidth write SetDockedWidth;
     property DockedHeight: integer read GetDockedHeight write SetDockedHeight;
+
+  protected
+    procedure ClearCategories;
+    procedure ReloadCategories;
+    procedure ReloadAddCategoryMenu;
+    procedure CategoryButtonClick(Sender: TObject);
+    procedure AddCategoryButtonClick(Sender: TObject);
+    procedure AddCategoryClick(Sender: TObject);
 
   end;
 
@@ -251,7 +264,6 @@ begin
   EndDrawReg;
 end;
 
-
 procedure TfKanjiDetails.btnAddToCategoryClick(Sender: TObject);
 var catIndex: integer;
   newState: boolean;
@@ -266,7 +278,7 @@ begin
   for i := 1 to flength(curChars) do
     SetKnown(catIndex, fgetch(curChars,i), newState);
   fMenu.ChangeUserData;
-  SetCharDetails(curChars); //reload
+  RefreshDetails;
 end;
 
 procedure TfKanjiDetails.SpeedButton28Click(Sender: TObject);
@@ -561,18 +573,8 @@ begin
     else
       btnAddToCategory.Caption:='-';
 
-    //Categories -- include if any of the chars is in it
-    scat:='';
-    for i:=0 to Length(KanjiCats)-1 do
-    begin
-      if IsAnyKnown(KanjiCats[i].idx,curChars) then
-        if scat='' then
-          scat:=KanjiCats[i].name
-        else
-          scat:=scat+', '+KanjiCats[i].name;
-    end;
-    if scat='' then scat:='-';
-    lblCategories.Caption:=scat;
+    //Categories
+    ReloadCategories;
 
     //Stroke count/order
     btnStrokeOrder.Enabled := (curindex>=0);
@@ -731,6 +733,145 @@ begin
   finally
     FreeAndNil(CCharProp);
   end;
+end;
+
+{ Categories }
+
+procedure TfKanjiDetails.ClearCategories;
+var i: integer;
+begin
+  for i := pnlCategories.ControlCount-1 downto 0 do
+    pnlCategories.Controls[i].Destroy;
+end;
+
+procedure TfKanjiDetails.ReloadCategories;
+var i: integer;
+  btn: TButton;
+begin
+  SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
+  ClearCategories;
+
+ //include if any of the chars is in it
+  for i:=0 to Length(KanjiCats)-1 do
+    if IsAnyKnown(KanjiCats[i].idx,curChars) then begin
+      btn := TButton.Create(Self);
+      btn.Caption := KanjiCats[i].name;
+      btn.Margins.Top := 0;
+      btn.Margins.Left := 0;
+      btn.Margins.Bottom := 4;
+      btn.Margins.Right := 4;
+      btn.AlignWithMargins := true;
+      Self.Canvas.Font.Assign(btn.Font);
+      btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
+      btn.DropDownMenu := pmCategoryMenu;
+      btn.OnClick := CategoryButtonClick;
+      btn.Tag := i;
+      if not IsAllKnown(KanjiCats[i].idx,curChars) then
+        btn.Font.Style := btn.Font.Style + [fsUnderline];
+      pnlCategories.InsertControl(btn);
+    end;
+
+  ReloadAddCategoryMenu;
+
+  btn := TButton.Create(Self);
+  btn.Caption := _l('#01110^+Category');
+  btn.Hint := _l('#01111^Add to category');
+  btn.Margins.Top := 0;
+  btn.Margins.Left := 0;
+  btn.Margins.Bottom := 4;
+  btn.Margins.Right := 4;
+  btn.AlignWithMargins := true;
+  btn.DropDownMenu := pmAddCategoryMenu;
+  btn.OnClick := AddCategoryButtonClick;
+  SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
+
+
+ //TODO: All of this is not enough, god damn it :)
+  pnlCategories.InsertControl(btn);
+  pnlCategories.Invalidate;
+  pnlCategories.Update;
+  pnlCategories.Repaint;
+  pnlCategories.Realign;
+  Self.Invalidate;
+end;
+
+procedure TfKanjiDetails.CategoryButtonClick(Sender: TObject);
+var btn: TButton;
+begin
+  btn := TButton(Sender);
+  pmAddToAll.Visible := not IsAllKnown(KanjiCats[btn.Tag].idx, curChars);
+  AddCategoryButtonClick(Sender); //standard popup routine
+end;
+
+procedure TfKanjiDetails.AddCategoryButtonClick(Sender: TObject);
+var btn: TButton;
+  pm: TPopupMenu;
+  pos: TPoint;
+begin
+  btn := TButton(Sender);
+  pm := btn.DropDownMenu;
+  pm.PopupComponent := btn;
+  pos := btn.ClientOrigin;
+  pm.Popup(pos.X, pos.Y+btn.Height);
+end;
+
+procedure TfKanjiDetails.ReloadAddCategoryMenu;
+var i: integer;
+  item: TMenuItem;
+begin
+  pmAddCategoryMenu.Items.Clear;
+
+  for i:=0 to Length(KanjiCats)-1 do
+    if not IsAnyKnown(KanjiCats[i].idx,curChars) then begin
+      item := TMenuItem.Create(Self);
+      item.Caption := KanjiCats[i].name;
+      item.Tag := i;
+      item.OnClick := AddCategoryClick;
+      pmAddCategoryMenu.Items.Add(item);
+    end;
+
+  item := TMenuItem.Create(Self);
+  item.Caption := '-';
+  pmAddCategoryMenu.Items.Add(item);
+
+  item := TMenuItem.Create(Self);
+  item.Caption := _l('#01112^New...');
+  pmAddCategoryMenu.Items.Add(item);
+end;
+
+//Called from AddCategoryMenu with Sender set to one of TMenuItems
+procedure TfKanjiDetails.AddCategoryClick(Sender: TObject);
+var catIndex: integer;
+  i: integer;
+begin
+  catIndex := KanjiCats[TMenuItem(Sender).Tag].idx;
+  for i := 1 to flength(curChars) do
+    SetKnown(catIndex, fgetch(curChars,i), true);
+  fMenu.ChangeUserData;
+  RefreshDetails;
+end;
+
+//Called from CategoryMenu, with PopupItem set to one of Category buttons
+procedure TfKanjiDetails.pmAddToAllClick(Sender: TObject);
+var i: integer;
+  btn: TButton;
+begin
+  btn := TButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  for i := 1 to flength(curChars) do
+    SetKnown(KanjiCats[btn.Tag].idx, fgetch(curChars,i), true);
+  fMenu.ChangeUserData;
+  RefreshDetails;
+end;
+
+procedure TfKanjiDetails.pmDeleteClick(Sender: TObject);
+var i: integer;
+  btn: TButton;
+begin
+  btn := TButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  for i := 1 to flength(curChars) do
+    SetKnown(KanjiCats[btn.Tag].idx, fgetch(curChars,i), false);
+  fMenu.ChangeUserData;
+  RefreshDetails;
 end;
 
 
@@ -942,9 +1083,11 @@ procedure TfKanjiDetails.UpdateAlignment;
 begin
   if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
     pnlFirst.Align := alTop;
+    pnlFirst.Height := 170;
 //    pnlFooter.Parent := pnlSecond;
   end else begin
     pnlFirst.Align := alLeft;
+    pnlFirst.Width := 317;
 //    pnlFooter.Parent := pnlFirst;
   end;
   pnlSecond.Align := alClient;
@@ -954,15 +1097,15 @@ procedure TfKanjiDetails.FormResize(Sender: TObject);
 begin
  { If kept on AutoSize, FlowPanels would not properly realign controls when
   their width is expanded, at all }
-  if FlowPanel1.AutoSize then begin
-    FlowPanel1.AutoSize := false;
-    FlowPanel1.Realign;
-    FlowPanel1.AutoSize := true;
+  if pnlCategories.AutoSize then begin
+    pnlCategories.AutoSize := false;
+    pnlCategories.Realign;
+    pnlCategories.AutoSize := true;
   end;
-  if FlowPanel2.AutoSize then begin
-    FlowPanel2.AutoSize := false;
-    FlowPanel2.Realign;
-    FlowPanel2.AutoSize := true;
+  if pnlLinks.AutoSize then begin
+    pnlLinks.AutoSize := false;
+    pnlLinks.Realign;
+    pnlLinks.AutoSize := true;
   end;
 end;
 

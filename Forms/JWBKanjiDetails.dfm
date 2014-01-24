@@ -57,7 +57,6 @@ object fKanjiDetails: TfKanjiDetails
         TabOrder = 0
         OnClick = btnCloseClick
         OnKeyPress = btnCloseKeyPress
-        ExplicitWidth = 240
       end
       object btnDock: TButton
         Left = 234
@@ -88,7 +87,7 @@ object fKanjiDetails: TfKanjiDetails
       ExplicitHeight = 315
       object pbKanjiInfo: TPaintBox
         Left = 0
-        Top = 21
+        Top = 17
         Width = 309
         Height = 200
         Align = alTop
@@ -101,72 +100,27 @@ object fKanjiDetails: TfKanjiDetails
         ExplicitTop = 208
         ExplicitWidth = 295
       end
-      object FlowPanel1: TFlowPanel
+      object pnlCategories: TFlowPanel
         Left = 0
         Top = 0
         Width = 309
-        Height = 21
+        Height = 17
         Align = alTop
         AutoSize = True
         BevelOuter = bvNone
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Verdana'
+        Font.Style = []
+        Padding.Bottom = 4
+        ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
-        ExplicitWidth = 310
-        object RxLabel1: TLabel
-          Left = 0
-          Top = 0
-          Width = 122
-          Height = 13
-          Caption = '#00879^eCategories:'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          Transparent = True
-        end
-        object lblCategories: TLabel
-          Left = 122
-          Top = 0
-          Width = 19
-          Height = 13
-          Caption = 'cat'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          Transparent = True
-        end
-        object cbCategories: TComboBox
-          Left = 141
-          Top = 0
-          Width = 127
-          Height = 21
-          Style = csDropDownList
-          TabOrder = 0
-          OnChange = cbCategoriesChange
-        end
-        object btnAddToCategory: TSpeedButton
-          Left = 268
-          Top = 0
-          Width = 24
-          Height = 21
-          Caption = '+'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -16
-          Font.Name = 'Courier New'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = btnAddToCategoryClick
-        end
       end
-      object FlowPanel2: TFlowPanel
+      object pnlLinks: TFlowPanel
         Left = 0
-        Top = 221
+        Top = 217
         Width = 309
         Height = 19
         Align = alTop
@@ -174,6 +128,7 @@ object fKanjiDetails: TfKanjiDetails
         BevelOuter = bvNone
         TabOrder = 1
         OnClick = ScrollboxClick
+        ExplicitTop = 221
         object ProUrlLabel1: TUrlLabel
           AlignWithMargins = True
           Left = 0
@@ -294,10 +249,8 @@ object fKanjiDetails: TfKanjiDetails
     Width = 315
     Height = 170
     Align = alTop
-    AutoSize = True
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 309
     object ShapeKanji: TShape
       Left = 0
       Top = 0
@@ -470,11 +423,53 @@ object fKanjiDetails: TfKanjiDetails
       ShowHint = True
       OnClick = btnStrokeOrderClick
     end
+    object btnAddToCategory: TSpeedButton
+      Left = 285
+      Top = 148
+      Width = 24
+      Height = 21
+      Caption = '+'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Courier New'
+      Font.Style = [fsBold]
+      ParentFont = False
+      OnClick = btnAddToCategoryClick
+    end
+    object cbCategories: TComboBox
+      Left = 159
+      Top = 148
+      Width = 127
+      Height = 21
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = cbCategoriesChange
+    end
   end
   object FormPlacement1: TFormPlacement
     UseRegistry = False
     IniSection = '\Software\Labyrinth\Wakan\DetailPos'
     Left = 40
     Top = 24
+  end
+  object pmCategoryMenu: TPopupMenu
+    Left = 48
+    Top = 192
+    object pmGoToCategory: TMenuItem
+      Caption = 'Go to category'
+    end
+    object pmAddToAll: TMenuItem
+      Caption = 'Add to all'
+      OnClick = pmAddToAllClick
+    end
+    object pmDelete: TMenuItem
+      Caption = 'Delete'
+      OnClick = pmDeleteClick
+    end
+  end
+  object pmAddCategoryMenu: TPopupMenu
+    Left = 48
+    Top = 248
   end
 end
