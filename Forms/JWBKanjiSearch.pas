@@ -83,6 +83,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 
+  public
+    procedure ResetFilters;
+    procedure SetCategoryFilter(const ACategories: array of integer;
+      AOr, ANot: boolean);
+
   protected
    { Currently selected radical characters }
     FCurRadChars: string;
@@ -93,6 +98,9 @@ type
     CurRadSearchType: TRadSearchType;
     procedure ReloadOtherTypes;
     property CurRadChars: string read FCurRadChars write SetCurRadChars;
+
+  public
+    procedure LanguageChanged;
 
   end;
 
@@ -140,12 +148,8 @@ begin
   if bk<fKanjiSearch.cbOtherType.Items.Count-1 then fKanjiSearch.cbOtherType.ItemIndex:=bk;
 end;
 
-procedure TfKanjiSearch.sbPinYinClick(Sender: TObject);
-begin
-  fKanji.DoIt;
-end;
-
-procedure TfKanjiSearch.sbClearFiltersClick(Sender: TObject);
+//Resets filters but does not apply it, so that you can chain it with something.
+procedure TfKanjiSearch.ResetFilters;
 begin
   sbPinYin.Down:=false;
   sbYomi.Down:=false;
@@ -159,25 +163,35 @@ begin
   sbSKIP.Down:=false;
 //  SpeedButton16.Down:=false;
   sbJouyou.Down:=false;
-  fKanji.DoIt;
+end;
+
+procedure TfKanjiSearch.sbPinYinClick(Sender: TObject);
+begin
+  fKanji.Reload;
+end;
+
+procedure TfKanjiSearch.sbClearFiltersClick(Sender: TObject);
+begin
+  ResetFilters;
+  fKanji.Reload;
 end;
 
 procedure TfKanjiSearch.edtPinYinChange(Sender: TObject);
 begin
   sbPinYin.Down:=edtPinYin.Text<>'';;
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtYomiChange(Sender: TObject);
 begin
   sbYomi.Down:=edtYomi.Text<>'';
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtDefinitionChange(Sender: TObject);
 begin
   sbDefinition.Down:=edtDefinition.Text<>'';
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 { Called when a radical filter changes }
@@ -191,32 +205,32 @@ end;
 procedure TfKanjiSearch.edtSkipChange(Sender: TObject);
 begin
   sbSKIP.Down:=edtSkip.Text<>'';
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtOtherChange(Sender: TObject);
 begin
   sbOther.Down:=edtOther.Text<>'';
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtStrokeCountChange(Sender: TObject);
 begin
   sbStrokeCount.Down:=edtStrokeCount.Text<>'';
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtJouyouChange(Sender: TObject);
 begin
   sbJouyou.Down:=edtJouyou.Text<>'';
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.SpeedButton19Click(Sender: TObject);
 var i:integer;
 begin
   for i:=0 to lbCategories.Items.Count-1 do lbCategories.Checked[i]:=false;
-  fKanji.DoIt;
+  fKanji.Reload;
 end;
 
 procedure TfKanjiSearch.RadicalSelectionChanged(Sender: TObject);
@@ -330,12 +344,12 @@ end;
 
 procedure TfKanjiSearch.rgSortByClick(Sender: TObject);
 begin
-  fKanji.DoIt;
+  fKanji.Reload;
 end;
 
 procedure TfKanjiSearch.cbOtherTypeChange(Sender: TObject);
 begin
-  fKanji.DoItTimer;
+  fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
@@ -360,7 +374,7 @@ end;
 
 procedure TfKanjiSearch.lbCategoriesClickCheck(Sender: TObject);
 begin
-  fKanji.DoIt;
+  fKanji.Reload;
 end;
 
 procedure TfKanjiSearch.SpeedButton25Click(Sender: TObject);
@@ -389,7 +403,7 @@ end;
 
 procedure TfKanjiSearch.rgOrAndClick(Sender: TObject);
 begin
-  fKanji.DoIt;
+  fKanji.Reload;
 end;
 
 procedure TfKanjiSearch.lbCategoriesDblClick(Sender: TObject);
@@ -399,8 +413,49 @@ begin
   begin
     for i:=0 to lbCategories.Items.Count-1 do
       lbCategories.Checked[i]:=i=lbCategories.ItemIndex;
-    fKanji.DoIt;
+    fKanji.Reload;
   end;
+end;
+
+{ Sets category filter as specified but does not apply it, allowing you to chain
+ it with some other changes.
+ ACategories is an array of category indexes }
+procedure TfKanjiSearch.SetCategoryFilter(const ACategories: array of integer;
+  AOr, ANot: boolean);
+var i, j, idx: integer;
+  found: boolean;
+begin
+  if AOr then
+    rgOrAnd.ItemIndex := 0
+  else
+    rgOrAnd.ItemIndex := 1;
+  cbNot.Checked := ANot;
+
+  for i:=0 to lbCategories.Items.Count-1 do begin
+    idx := GetCatIdx(lbCategories, i);
+    found := false;
+    for j := Low(ACategories) to High(ACategories) do
+      if ACategories[j]=idx then begin
+        found := true;
+        break;
+      end;
+    lbCategories.Checked[i]:=found;
+  end;
+end;
+
+{ Called by MainForm when selected language (Japanese/Chinese) changes }
+procedure TfKanjiSearch.LanguageChanged;
+begin
+  fKanjiSearch.rgSortBy.Items.Clear;
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
+ { There could be additional sorting orders for Japanese, but they're somehow
+  disabled in Wakan 1.67+ }
+  fKanjiSearch.rgSortBy.ItemIndex:=0;
+  fKanji.Reload;
 end;
 
 end.

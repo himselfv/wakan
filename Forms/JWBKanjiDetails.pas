@@ -108,6 +108,7 @@ type
     procedure ScrollboxClick(Sender: TObject);
     procedure pmAddToAllClick(Sender: TObject);
     procedure pmDeleteClick(Sender: TObject);
+    procedure pmGoToCategoryClick(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -162,13 +163,14 @@ type
 var
   fKanjiDetails: TfKanjiDetails;
 
+  curkanji: FChar;
   curradno: integer;
   curradical: string;
 
 implementation
 
-uses ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
-  JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard,
+uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
+  JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard, JWBKanjiSearch,
   JWBVocabFilters, JWBKanaConv, JWBCharData;
 
 {$R *.DFM}
@@ -227,7 +229,7 @@ end;
 procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);
 var f:string;
 begin
-  if chin then
+  if curLang='c' then
     case fSettings.RadioGroup5.ItemIndex of
       0:f:=FontChinese;
       1:f:=FontChineseGB;
@@ -235,7 +237,7 @@ begin
     end
   else f:=FontJapanese;
   if btnStrokeOrder.Down then
-    if chin then f:=FontChinese else f:=FontStrokeOrder;
+    if curLang='c' then f:=FontChinese else f:=FontStrokeOrder;
   pbKanji.Canvas.Brush.Color:=clWindow;
   pbKanji.Canvas.Font.Style:=[];
   if flength(curChars)=1 then begin //can be 0 or multiple chars
@@ -581,7 +583,7 @@ begin
     if curindex<0 then
       lblStrokeCount.Caption := '-'
     else
-    if chin then begin
+    if curLang='c' then begin
       if CChar.Int(TCharStrokeCount)<255 then lblStrokeCount.Caption:=CChar.Str(TCharStrokeCount) else lblStrokeCount.Caption:='-';
     end else begin
       if CChar.Int(TCharJpStrokeCount)<255 then lblStrokeCount.Caption:=CChar.Str(TCharJpStrokeCount) else lblStrokeCount.Caption:='-';
@@ -591,7 +593,7 @@ begin
     if curindex<0 then
       kig:='U'
     else
-    if not chin then
+    if curLang<>'c' then
     begin
       if CChar.Int(TCharJouyouGrade)<9 then kig:='C'else
       if CChar.Int(TCharJouyouGrade)<10 then kig:='N'else
@@ -621,7 +623,7 @@ begin
       lblMeaning.Caption := _l('#01001^eMultiple kanji selected')
     else begin
       ReloadReadings(CChar, read);
-      if chin then
+      if curLang='c' then
         lblMeaning.Caption:=read.chiny
       else
         lblMeaning.Caption:=read.def;
@@ -748,7 +750,7 @@ procedure TfKanjiDetails.ReloadCategories;
 var i: integer;
   btn: TButton;
 begin
-  SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
+  if Self.Visible then SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
   ClearCategories;
 
  //include if any of the chars is in it
@@ -761,7 +763,7 @@ begin
       btn.Margins.Bottom := 4;
       btn.Margins.Right := 4;
       btn.AlignWithMargins := true;
-      Self.Canvas.Font.Assign(btn.Font);
+      Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
       btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
       btn.DropDownMenu := pmCategoryMenu;
       btn.OnClick := CategoryButtonClick;
@@ -783,16 +785,13 @@ begin
   btn.AlignWithMargins := true;
   btn.DropDownMenu := pmAddCategoryMenu;
   btn.OnClick := AddCategoryButtonClick;
-  SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
-
-
- //TODO: All of this is not enough, god damn it :)
   pnlCategories.InsertControl(btn);
-  pnlCategories.Invalidate;
-  pnlCategories.Update;
-  pnlCategories.Repaint;
-  pnlCategories.Realign;
-  Self.Invalidate;
+
+  if Self.Visible then begin
+    SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
+    RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
+   //Normal Invalidate is not enough
+  end;
 end;
 
 procedure TfKanjiDetails.CategoryButtonClick(Sender: TObject);
@@ -874,6 +873,20 @@ begin
   RefreshDetails;
 end;
 
+procedure TfKanjiDetails.pmGoToCategoryClick(Sender: TObject);
+var btn: TButton;
+begin
+  btn := TButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  if not fKanji.Visible then
+    fMenu.aModeKanji.Execute;
+ { For now we just reset filters to "show this group only".
+  Alternative would be to hide filters and apply some other filters without
+  resetting these. If the user wants to get back to his filters he just opens
+  those back. }
+  fKanjiSearch.ResetFilters;
+  fKanjiSearch.SetCategoryFilter([KanjiCats[btn.Tag].idx], true, false);
+  fKanji.InvalidateList;
+end;
 
 { Info box painting }
 
@@ -920,8 +933,8 @@ var lw,rr:integer;
     ws:string;
     s:string;
 begin
-  if (GetDet(4)='C') and not chin then exit;
-  if (GetDet(4)='J') and chin then exit;
+  if (GetDet(4)='C') and (curLang<>'c') then exit;
+  if (GetDet(4)='J') and (curLang='c') then exit;
   if (GetDet(5)='N') and (txs='') and (its[1]<>'-') then exit;
   if its[1]='R'then its[1]:='U';
   if txs='' then if (its[1]<>'U') and (its[1]<>'R') and (its[1]<>'P') then txs:='-';
@@ -994,7 +1007,7 @@ end;
 procedure TfKanjiDetails.DrawSingleText(canvas:TCanvas;tp:char;l,t,r,fh:integer;s:string);
 var font:string;
 begin
-  if chin then font:=FontRadical else font:=FontSmall;
+  if curLang='c' then font:=FontRadical else font:=FontSmall;
   if tp='P' then font:=FontEnglish;
   if (tp='U') or (tp='P') then DrawUnicode(canvas,l,t,fh-2,s,font) else
   if (tp='N') or (tp='T') then canvas.TextOut(r-canvas.TextExtent(s).cx,t,s) else
@@ -1083,12 +1096,12 @@ procedure TfKanjiDetails.UpdateAlignment;
 begin
   if FDockMode in [alNone,alLeft,alRight,alClient] then begin //in free floating mode always not Portrait
     pnlFirst.Align := alTop;
-    pnlFirst.Height := 170;
-//    pnlFooter.Parent := pnlSecond;
+    pnlFirst.Height := 176;
+    pnlFooter.Parent := pnlSecond;
   end else begin
     pnlFirst.Align := alLeft;
     pnlFirst.Width := 317;
-//    pnlFooter.Parent := pnlFirst;
+    pnlFooter.Parent := pnlFirst;
   end;
   pnlSecond.Align := alClient;
 end;

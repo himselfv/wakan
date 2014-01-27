@@ -1310,8 +1310,8 @@ begin
     end;
   end;
   RescanDicts;
-  if fKanji<>nil then
-    fKanji.KanjiSearch_SpeedButton20Click(self);
+  if fKanjiSearch<>nil then
+    fKanjiSearch.LanguageChanged;
   if fWordLookup<>nil then
     if (not fWordLookup.btnLookupClip.Enabled) and fWordLookup.btnLookupClip.Down then fWordLookup.btnLookupJtoE.Down:=true;
   if fExamples<>nil then
@@ -1700,7 +1700,7 @@ begin
   for i := 0 to ClipboardWatchers.Count-1 do
     ClipboardWatchers[i](Self);
   if (fKanji<>nil) and (fKanjiSearch<>nil) then
-    if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.DoIt();
+    if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.Reload();
   if fWordLookup<>nil then
     if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
 end;
@@ -2063,7 +2063,7 @@ procedure TfMenu.aSettingsExecute(Sender: TObject);
 begin
   fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
   fSettings.ShowModal;
-  if fKanji.Visible then fKanji.DoIt;
+  if fKanji.Visible then fKanji.Reload();
   if fWordLookup.Visible then fWordLookup.Look();
   if fVocab.Visible then fVocab.ShowIt(false);
   if fEditor.Visible then fEditor.RepaintText;

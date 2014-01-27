@@ -33,8 +33,6 @@ object fKanjiDetails: TfKanjiDetails
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitLeft = 0
-    ExplicitWidth = 321
     object pnlFooter: TPanel
       Left = 0
       Top = 329
@@ -44,8 +42,6 @@ object fKanjiDetails: TfKanjiDetails
       BevelOuter = bvNone
       Padding.Right = 6
       TabOrder = 0
-      ExplicitLeft = 3
-      ExplicitTop = 340
       object btnClose: TButton
         Left = 0
         Top = 0
@@ -68,7 +64,6 @@ object fKanjiDetails: TfKanjiDetails
         Caption = 'DOCK'
         TabOrder = 1
         OnClick = btnDockClick
-        ExplicitLeft = 240
       end
     end
     object Scrollbox: TScrollBox
@@ -82,9 +77,6 @@ object fKanjiDetails: TfKanjiDetails
       Padding.Right = 6
       TabOrder = 1
       OnClick = ScrollboxClick
-      ExplicitLeft = 3
-      ExplicitTop = 16
-      ExplicitHeight = 315
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = 17
@@ -128,7 +120,6 @@ object fKanjiDetails: TfKanjiDetails
         BevelOuter = bvNone
         TabOrder = 1
         OnClick = ScrollboxClick
-        ExplicitTop = 221
         object ProUrlLabel1: TUrlLabel
           AlignWithMargins = True
           Left = 0
@@ -247,7 +238,7 @@ object fKanjiDetails: TfKanjiDetails
     Left = 6
     Top = 6
     Width = 315
-    Height = 170
+    Height = 176
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
@@ -458,6 +449,7 @@ object fKanjiDetails: TfKanjiDetails
     Top = 192
     object pmGoToCategory: TMenuItem
       Caption = 'Go to category'
+      OnClick = pmGoToCategoryClick
     end
     object pmAddToAll: TMenuItem
       Caption = 'Add to all'

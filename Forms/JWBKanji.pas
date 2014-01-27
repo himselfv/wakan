@@ -7,8 +7,16 @@ uses
   StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBStrings,
   Grids, DB, ShellAPI, WakanPaintbox;
 
-//{$DEFINE UPDATE_WITH_DELAY}
-// If set, DoItTimer() will really use timer and not just update instanteneously.
+//{$DEFINE INVALIDATE_WITH_DELAY}
+// If set, InvalidateList() will use timer and not just update instanteneously.
+
+//{$DEFINE DRAW_UNSUPPORTED_CHAR_CODES}
+//  For chars which are not found in the specified font, draw char codes instead.
+//  Neat but confusing.
+
+{$DEFINE AUTODEFOCUS}
+//  If the previously selected character is not available under the new filters,
+//  automatically set focus to one of the available characters.
 
 type
   TReadFilterFlag = (rfPartial, rfSpace, rfNumber, rfTakedot);
@@ -36,9 +44,6 @@ type
       var CanSelect: Boolean);
     procedure DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
-    procedure CheckBox2Click(Sender: TObject);
-    procedure SpeedButton15Click(Sender: TObject);
-    procedure SpeedButton17Click(Sender: TObject);
     procedure DrawGrid1KeyPress(Sender: TObject; var Key: Char);
     procedure UpdateTimerTimer(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -61,19 +66,20 @@ type
     procedure DrawGrid1Click(Sender: TObject);
 
   protected
-    procedure ReactToKanjiSelection;
+    FFocusedChars: FString;
     function GetCellSize: integer;
     function GetCellFontSize: integer;
     function GetExpectedColCount: integer;
-    function FocusCurKanji: boolean;
+    procedure KanjiGridSelectionChanged;
+    function KanjiGridSetSelection(const chars: FString): boolean;
+    procedure SetFocusedChars(const Value: FString);
   public
-    procedure KanjiSearch_SpeedButton20Click(Sender: TObject);
-    procedure DoIt;
-    procedure DoItTimer;
+    procedure Reload;
     procedure InvalidateList;
     procedure SaveChars;
     procedure FilterByRadical(const radno: integer);
     function GetKanji(cx,cy:integer):string;
+    property FocusedChars: FString read FFocusedChars write SetFocusedChars;
 
   protected
     procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
@@ -83,11 +89,7 @@ type
 
 var
   fKanji: TfKanji;
-  chin:boolean;
   testkanji:string;
-
-var
-  curkanji: FChar;
 
 implementation
 
@@ -107,11 +109,7 @@ procedure TfKanji.FormShow(Sender: TObject);
 begin
   if fKanjiSearch<>nil then
     fKanjiSearch.ReloadOtherTypes;
-//  fKanjiSearch.SpeedButton20.Enabled:=ChinesePresent;
-  chin:=false;
-  if curlang='c'then chin:=true;
-//  if fKanjiSearch.SpeedButton20.Down then chin:=true;
-  DoIt;
+  Reload;
   caltype:=0;
   if fKanjiSearch<>nil then
     Self.btnKanjiDetails.Down:=fKanjiDetails.Visible;
@@ -313,7 +311,7 @@ end;
 //---------------------------------------
 //filter kanji and show them in the grid
 //---------------------------------------
-procedure TfKanji.DoIt;
+procedure TfKanji.Reload;
 
 function InRange(tx,fld:string;number:boolean;sl:TStringList):boolean;
 begin
@@ -436,7 +434,7 @@ begin
         end;
     end;
     if fKanjiSearch.sbDefinition.Down then
-      if chin then begin
+      if curLang='c' then begin
         ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinition,[rfPartial,rfSpace]); //Chinese definition
         ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinitionUnicode,[rfPartial,rfSpace]);
       end else begin
@@ -444,13 +442,13 @@ begin
         ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptJapaneseDefinitionUnicode,[rfPartial,rfSpace]);
       end;
     grs := GetCellSize();
-    if not chin then
+    if curlang='j' then
       case fKanjiSearch.rgSortBy.ItemIndex of
         0,3,4:TChar.SetOrder('JpUnicode_Ind');
         1:TChar.SetOrder('JpStrokeCount_Ind');
         2:TChar.SetOrder('JpFrequency_Ind');
-      end;
-    if chin then
+      end
+    else
       case fKanjiSearch.rgSortBy.ItemIndex of
         0,3,4:TChar.SetOrder('ChUnicode_Ind');
         1:TChar.SetOrder('ChStrokeCount_Ind');
@@ -460,15 +458,15 @@ begin
     clipsort:=(fKanjiSearch.btnInClipboard.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;
-    while ((not clipsort) and ((not TChar.EOF) and ((chin) or (TChar.Int(TCharChinese)=0)))) or
+    while ((not clipsort) and ((not TChar.EOF) and ((curlang='c') or (TChar.Int(TCharChinese)=0)))) or
           ((clipsort) and (clipind<fltclip.Count)) do
     begin
       accept:=true;
       if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
-      if accept and chin and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TCharType)='S') then accept:=false;
-      if accept and chin and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TCharType)='T') then accept:=false;
-      if accept and (fKanjiSearch.btnOnlyCommon.Down) and chin and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
-      if accept and (fKanjiSearch.btnOnlyCommon.Down) and not chin and (TChar.Int(TCharJouyouGrade)>=10) then accept:=false;
+      if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TCharType)='S') then accept:=false;
+      if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TCharType)='T') then accept:=false;
+      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang='c') and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
+      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang<>'c') and (TChar.Int(TCharJouyouGrade)>=10) then accept:=false;
       if accept and (not clipsort) and (fKanjiSearch.btnInClipboard.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TCharUnicode)))=-1) then accept:=false;
       if accept and (fKanjiSearch.sbPinYin.Down) and (fltpinyin.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
       if accept and (fKanjiSearch.sbYomi.Down) and (fltyomi.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
@@ -484,8 +482,8 @@ begin
   //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton25.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
   //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton26.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
   //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton27.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
-      if chin and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharStrokeCount),true,sl4) then accept:=false;
-      if (not chin) and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharJpStrokeCount),true,sl4) then accept:=false;
+      if (curlang='c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharStrokeCount),true,sl4) then accept:=false;
+      if (curlang<>'c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharJpStrokeCount),true,sl4) then accept:=false;
       if accept and (fKanjiSearch.sbSKIP.Down) then
       begin
         s1:=fKanjiSearch.edtSKIP.Text;
@@ -519,7 +517,7 @@ begin
       if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
       if accept then
       begin
-        if not chin then
+        if curlang<>'c' then
         begin
           if TChar.Int(TCharJouyouGrade)<9 then
             sbJouyou:='C'
@@ -536,8 +534,8 @@ begin
           else
             sbJouyou:='U';
         end;
-        if ((not chin) and (fKanjiSearch.rgSortBy.ItemIndex=3))
-        or ((chin) and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
+        if ((curlang<>'c') and (fKanjiSearch.rgSortBy.ItemIndex=3))
+        or ((curlang='c') and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
           ki.Insert(random(ki.Count),sbJouyou+TChar.Str(TCharUnicode))
         else
           ki.Add(sbJouyou+TChar.Str(TCharUnicode));
@@ -555,7 +553,7 @@ begin
     sl10.Free;
 
    //First try new translation strings
-    if chin then begin
+    if curlang='c' then begin
       case fSettings.RadioGroup5.ItemIndex of
         0: sbJouyou:=_l('#00958^eFound traditional characters (%d):', [ki.Count]);
         1: sbJouyou:=_l('#00959^eFound simplified characters (%d):', [ki.Count]);
@@ -574,8 +572,11 @@ begin
     testkanji:='';
     for i:=0 to 14 do if i<ki.Count then testkanji:=testkanji+copy(ki[i],2,4);
     TChar.SetOrder('ChUnicode_Ind');
-    if not FocusCurKanji then //previous kanji not in list
-      curkanji:=UH_NOCHAR;
+    if not KanjiGridSetSelection(FocusedChars) then begin //previous kanji not in list
+   {$IFDEF AUTODEFOCUS}
+      Self.KanjiGridSelectionChanged; //as if the user did that
+   {$ENDIF}
+    end;
   finally
     DrawGrid1.Perform(WM_SETREDRAW, 1, 0); //enable redraw
    { WM_SETREDRAW(1) implicitly makes DrawGrid visible without telling Delphi,
@@ -591,35 +592,6 @@ begin
 
   Screen.Cursor:=crDefault;
   DrawGrid1.Invalidate;
-end;
-
-function TfKanji.FocusCurKanji: boolean;
-var mr:TGridRect;
-  i, cols: integer;
-  CanSelect: boolean;
-begin
-  Result := false;
-  mr.Left := 0;
-  mr.Top := 0;
-  mr.Right := 0;
-  mr.Bottom := 0;
-  cols := DrawGrid1.ColCount;
-  for i:=0 to ki.Count-1 do if curkanji=copy(ki[i],2,4) then
-  begin
-    mr.Left:=i mod cols;
-    mr.Top:=i div cols;
-    mr.Right:=i mod cols;
-    mr.Bottom:=i div cols;
-    Result:=true;
-  end;
-  DrawGrid1.Selection:=mr;
-  ReactToKanjiSelection;
-  if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then
-    DrawGrid1.TopRow:=mr.Top-1
-  else
-    DrawGrid1.TopRow:=0;
-  CanSelect := true;
-  DrawGrid1SelectCell(self,mr.Left,mr.Top,CanSelect);
 end;
 
 function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
@@ -706,39 +678,14 @@ end;
 
 procedure TfKanji.RadioGroup1Click(Sender: TObject);
 begin
-  DoIt;
+  Reload;
 end;
 
-//It's not an event handler, actually. fMenu calls this on language reload.
-procedure TfKanji.KanjiSearch_SpeedButton20Click(Sender: TObject);
-begin
-  if fKanjiSearch=nil then exit;
-  chin:=curlang='c';
-  fKanjiSearch.rgSortBy.Items.Clear;
-  if chin then
-  begin
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
-  end else
-  begin
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
-    fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
-  end;
-  fKanjiSearch.rgSortBy.ItemIndex:=0;
-  DoIt;
-end;
-
-//Called when a kanji selection changes
-procedure TfKanji.ReactToKanjiSelection;
+{ Called when a kanji selection changes }
+procedure TfKanji.KanjiGridSelectionChanged;
 var sel: TGridRect;
   i, j: integer;
-  chars,char:FString;
+  chars, char:FString;
 begin
   chars := '';
   sel := DrawGrid1.Selection;
@@ -749,14 +696,62 @@ begin
       char := ki[DrawGrid1.ColCount*i+j];
       chars := chars + copy(char,2,Length(char)-1); //delete first char
     end;
-  fKanjiDetails.SetCharDetails(chars);
 
-  if (sel.Bottom>sel.Top) or (sel.Right>sel.Left) or (chars='') then begin //multiple or none
-    fKanjiCompounds.Clear;
-  end else begin //single char
-    AnnotShowMedia(chars,'');
-    fKanjiCompounds.SetCharCompounds(fgetch(chars, 1));
+ { Pass selected chars to all tool windows. Hope they're smart and wont re-apply
+  selection back to use }
+  FocusedChars := chars;
+end;
+
+{ Highlights the specified characters in the grid. There are limitations on what
+ we can highlight at this time, so returns false if the highlight differs from
+ what was requested.
+ Basic function. Does not call any additional handlers. }
+function TfKanji.KanjiGridSetSelection(const chars: FString): boolean;
+var i, j, cols: integer;
+  mr: TGridRect;
+begin
+  if flength(chars)<>1 then begin
+    Result := false;
+    exit;
   end;
+
+ //Find first matching char
+  Result := false;
+  mr.Left := 0;
+  mr.Top := 0;
+  mr.Right := 0;
+  mr.Bottom := 0;
+  cols := DrawGrid1.ColCount;
+  for i:=0 to ki.Count-1 do
+    for j := 1 to flength(chars) do
+      if fgetch(chars, j)=copy(ki[i],2,4) then begin
+        mr.Left:=i mod cols;
+        mr.Top:=i div cols;
+        mr.Right:=i mod cols;
+        mr.Bottom:=i div cols;
+        Result:=true;
+        break;
+      end;
+
+ { If nothing was highlighted, we must highlight something so highlight first
+  element }
+  if Result=false then begin
+    mr.Left := 0;
+    mr.Top := 0;
+    mr.Right := 0;
+    mr.Bottom := 0;
+  end;
+
+ { At this time we cannot highlight more than one char programmatically }
+  if flength(chars)>1 then
+    Result := false;
+
+ //Apply whatever highlight we generated
+  DrawGrid1.Selection:=mr;
+  if (mr.Top>1) and (DrawGrid1.RowCount>DrawGrid1.VisibleRowCount) then
+    DrawGrid1.TopRow:=mr.Top-1
+  else
+    DrawGrid1.TopRow:=0;
 end;
 
 procedure TfKanji.DrawGrid1SelectCell(Sender: TObject; ACol, ARow: Integer;
@@ -769,7 +764,7 @@ end;
 procedure TfKanji.DrawGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  ReactToKanjiSelection;
+  KanjiGridSelectionChanged;
 end;
 
 procedure TfKanji.DrawGrid1Click(Sender: TObject);
@@ -779,13 +774,13 @@ begin
   Click() seems to happen at any time focus changes so we do it here,
   but if this fails us we'll switch to reacting from SelectCell() I guess and
   manually constructing actual selection (because it's not saved yet there too) }
-  ReactToKanjiSelection;
+  KanjiGridSelectionChanged;
 end;
 
 procedure TfKanji.DrawGrid1KeyUp(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
-  ReactToKanjiSelection;
+  KanjiGridSelectionChanged;
 end;
 
 procedure TfKanji.DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -794,8 +789,6 @@ var w:widechar;
   kix:FString;
   kig:string;
   sbJouyou:string;
-{  w_ind: word;
-  ws: string;} //TODO: delete
   r_copy: TRect;
   fontface: string;
   fontsize: integer;
@@ -840,7 +833,7 @@ begin
     except end;
   end;
   DrawGrid1.Canvas.FillRect(Rect);
-  if not chin then
+  if curLang='j' then
     fontface:=FontJapaneseGrid
   else
   case fSettings.RadioGroup5.ItemIndex of
@@ -858,7 +851,7 @@ begin
   r_copy.Top := r_copy.Top + 4;
   DrawUnicodeChar(DrawGrid1.Canvas, r_copy, fontsize, w, fontface);
 
- {
+ {$IFDEF DRAW_UNSUPPORTED_CHAR_CODES}
   if GetGlyphIndices(DrawGrid1.Canvas.Handle,@w,1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
     RaiseLastOsError();
   if w_ind<>$FFFF then
@@ -875,7 +868,7 @@ begin
     r_copy:=Rect;
     DrawText(DrawGrid1.Canvas.Handle,PChar(ws),Length(ws),r_copy,DT_CENTER or DT_SINGLELINE or DT_VCENTER);
   end;
- }
+ {$ENDIF}
 
   if fSettings.CheckBox1.Checked then
   begin
@@ -883,27 +876,12 @@ begin
     DrawGrid1.Canvas.Font.Name:=FontEnglish;
     DrawGrid1.Canvas.Font.Height:=8+4*fSettings.rgKanjiGridSize.ItemIndex;
     DrawGrid1.Canvas.Font.Color:=clWindowText;
-    if chin then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharStrokeCount));
-    if not chin then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharJpStrokeCount));
+    if curlang='c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharStrokeCount));
+    if curlang<>'c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharJpStrokeCount));
   end;
   fKanjiDetails.pbKanji.Invalidate;
   fKanjiDetails.pbRadical.Invalidate;
   fKanjiDetails.pbSimplified.Invalidate;
-end;
-
-procedure TfKanji.CheckBox2Click(Sender: TObject);
-begin
-  DrawGrid1.Invalidate;
-end;
-
-procedure TfKanji.SpeedButton15Click(Sender: TObject);
-begin
-  showmessage(_l('#00150^eFeature not implemented yet.'));
-end;
-
-procedure TfKanji.SpeedButton17Click(Sender: TObject);
-begin
-  showmessage(_l('#00150^eFeature not implemented yet.'));
 end;
 
 procedure TfKanji.DrawGrid1KeyDown(Sender: TObject; var Key: Word;
@@ -937,25 +915,20 @@ begin
   end;
 end;
 
-procedure TfKanji.DoItTimer;
+procedure TfKanji.InvalidateList;
 begin
-{$IFDEF UPDATE_WITH_DELAY}
+{$IFDEF INVALIDATE_WITH_DELAY}
   UpdateTimer.Interval:=1000;
   UpdateTimer.Enabled:=true;
 {$ELSE}
-  DoIt;
+  Reload;
 {$ENDIF}
-end;
-
-procedure TfKanji.InvalidateList;
-begin
-  DoIt;
 end;
 
 procedure TfKanji.UpdateTimerTimer(Sender: TObject);
 begin
   UpdateTimer.Enabled:=false;
-  DoIt;
+  Reload;
 end;
 
 procedure TfKanji.BitBtn1Click(Sender: TObject);
@@ -965,7 +938,7 @@ end;
 
 procedure TfKanji.SpeedButton25Click(Sender: TObject);
 begin
-  DoIt;
+  Reload;
 end;
 
 { Returns cell width/height under current settings }
@@ -1000,7 +973,7 @@ end;
 
 procedure TfKanji.FormResize(Sender: TObject);
 begin
-  if DrawGrid1.ColCount<>GetExpectedColCount then DoIt;
+  if DrawGrid1.ColCount<>GetExpectedColCount then Reload;
 end;
 
 procedure TfKanji.btnSearchSortClick(Sender: TObject);
@@ -1026,7 +999,7 @@ begin
   fKanjiSearch.CurRadSearchType:=stClassic;
   fKanjiSearch.CurRadChars:=RadicalUnicode(radno);
   fKanjiSearch.pbRadicals.Invalidate;
-  fKanji.DoIt;
+  Self.Reload;
 end;
 
 procedure TfKanji.DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
@@ -1073,6 +1046,30 @@ begin
     FreeAndNil(conv);
   end;
 end;
+
+{ Changes the set of characters selected in the Kanji grid and in all related
+ tool windows. }
+procedure TfKanji.SetFocusedChars(const Value: FString);
+begin
+  if FFocusedChars=Value then exit;
+  FFocusedChars := Value;
+  if flength(Value)=1 then begin //single char
+    fKanjiDetails.SetCharDetails(Value);
+    fKanjiCompounds.SetCharCompounds(fgetch(Value, 1));
+    AnnotShowMedia(Value,'');
+  end else begin //multiple or none
+    fKanjiDetails.SetCharDetails(UH_NOCHAR);
+    fKanjiCompounds.Clear;
+  end;
+ //TODO: exit if the grid is not yet filled (we'll do the last part later)
+  if not KanjiGridSetSelection(Value) then begin
+ {$IFDEF AUTODEFOCUS}
+    Self.KanjiGridSelectionChanged; //as if the user did that
+ {$ENDIF}
+  end;
+end;
+
+
 
 initialization
   calfonts:=TStringList.Create;
