@@ -1353,12 +1353,9 @@ procedure TfMenu.RefreshKanjiCategory;
 begin
   ReloadKanjiCategories();
   if fKanjiDetails<>nil then
-    PasteKanjiCategoriesTo(fKanjiDetails.cbCategories.Items);
-  if fKanjiSearch<>nil then
-    PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
-  if fKanjiDetails<>nil then
-    fKanjiDetails.cbCategories.ItemIndex:=0;
+    fKanjiDetails.CategoryListChanged;
   if fKanjiSearch<>nil then begin
+    PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
     fKanjiSearch.lbCategories.ItemIndex:=0;
     fKanjiSearch.lbCategoriesClick(Self); //react to changes
   end;

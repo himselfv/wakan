@@ -161,7 +161,6 @@ begin
   sbStrokeCount.Down:=false;
   sbRadicals.Down:=false;
   sbSKIP.Down:=false;
-//  SpeedButton16.Down:=false;
   sbJouyou.Down:=false;
 end;
 

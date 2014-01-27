@@ -58,13 +58,15 @@ type
     RxLabel39: TLabel;
     lblRadicalNo: TLabel;
     btnStrokeOrder: TSpeedButton;
-    cbCategories: TComboBox;
-    btnAddToCategory: TSpeedButton;
     pmCategoryMenu: TPopupMenu;
     pmAddCategoryMenu: TPopupMenu;
     pmGoToCategory: TMenuItem;
     pmDelete: TMenuItem;
     pmAddToAll: TMenuItem;
+    cbCategories: TComboBox;
+    btnAddToCategory: TSpeedButton;
+    PopupMenu: TPopupMenu;
+    Configure1: TMenuItem;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -109,6 +111,7 @@ type
     procedure pmAddToAllClick(Sender: TObject);
     procedure pmDeleteClick(Sender: TObject);
     procedure pmGoToCategoryClick(Sender: TObject);
+    procedure Configure1Click(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -157,6 +160,8 @@ type
     procedure CategoryButtonClick(Sender: TObject);
     procedure AddCategoryButtonClick(Sender: TObject);
     procedure AddCategoryClick(Sender: TObject);
+  public
+    procedure CategoryListChanged;
 
   end;
 
@@ -768,8 +773,10 @@ begin
       btn.DropDownMenu := pmCategoryMenu;
       btn.OnClick := CategoryButtonClick;
       btn.Tag := i;
-      if not IsAllKnown(KanjiCats[i].idx,curChars) then
+      if not IsAllKnown(KanjiCats[i].idx,curChars) then begin
+        btn.Font := pnlCategories.Font;
         btn.Font.Style := btn.Font.Style + [fsUnderline];
+      end;
       pnlCategories.InsertControl(btn);
     end;
 
@@ -783,6 +790,8 @@ begin
   btn.Margins.Bottom := 4;
   btn.Margins.Right := 4;
   btn.AlignWithMargins := true;
+  Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
+  btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
   btn.DropDownMenu := pmAddCategoryMenu;
   btn.OnClick := AddCategoryButtonClick;
   pnlCategories.InsertControl(btn);
@@ -792,6 +801,14 @@ begin
     RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
    //Normal Invalidate is not enough
   end;
+end;
+
+{ Called by Main Form when category list changes }
+procedure TfKanjiDetails.CategoryListChanged;
+begin
+  PasteKanjiCategoriesTo(Self.cbCategories.Items);
+  Self.cbCategories.ItemIndex:=0;
+  Self.ReloadAddCategoryMenu;
 end;
 
 procedure TfKanjiDetails.CategoryButtonClick(Sender: TObject);
@@ -836,6 +853,8 @@ begin
   item := TMenuItem.Create(Self);
   item.Caption := _l('#01112^New...');
   pmAddCategoryMenu.Items.Add(item);
+
+  pmAddCategoryMenu.DispatchCommand()
 end;
 
 //Called from AddCategoryMenu with Sender set to one of TMenuItems
@@ -888,19 +907,26 @@ begin
   fKanji.InvalidateList;
 end;
 
+procedure TfKanjiDetails.Configure1Click(Sender: TObject);
+begin
+  fSettings.pcPages.ActivePage:=fSettings.tsCharacterDetails;
+  fSettings.ShowModal;
+  Self.RefreshDetails;
+end;
+
+
 { Info box painting }
 
 function TfKanjiDetails.InfoPaint(canvas:TCanvas;w:integer;onlycount:boolean):integer;
-const MARGIN_L=0;
-  MARGIN_R=0;
+const Margin: TRect = (left: 0; top: 0; right: 0; bottom: 0);
 var i:integer;
   x,y,rh:integer;
 begin
-  x:=MARGIN_L;
-  y:=3;
+  x:=Margin.Left;
+  y:=Margin.Top;
   rh:=0;
   for i:=0 to (kval.Count div 2)-1 do
-    InfoDrawItem(canvas,kval[i*2],kval[i*2+1],MARGIN_L,w-MARGIN_R,x,y,rh,onlycount);
+    InfoDrawItem(canvas,kval[i*2],kval[i*2+1],Margin.Left,w-Margin.Right,x,y,rh,onlycount);
   result:=y;
 end;
 
@@ -1091,6 +1117,9 @@ begin
     l:=countwidth(tp,fh,last_span);
   end;
 end;
+
+
+{ Form alignment / docking }
 
 procedure TfKanjiDetails.UpdateAlignment;
 begin

@@ -1216,6 +1216,10 @@
 01110>+Category
 01111>Add to category
 01112>New...
+01113>Go to category
+01114>Add to all
+01115>Delete
+01116>Configure...
 
 ;
 ;

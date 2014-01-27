@@ -75,6 +75,7 @@ object fKanjiDetails: TfKanjiDetails
       Align = alClient
       BorderStyle = bsNone
       Padding.Right = 6
+      PopupMenu = PopupMenu
       TabOrder = 1
       OnClick = ScrollboxClick
       object pbKanjiInfo: TPaintBox
@@ -105,7 +106,7 @@ object fKanjiDetails: TfKanjiDetails
         Font.Height = -11
         Font.Name = 'Verdana'
         Font.Style = []
-        Padding.Bottom = 4
+        Padding.Bottom = 3
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
@@ -415,7 +416,7 @@ object fKanjiDetails: TfKanjiDetails
       OnClick = btnStrokeOrderClick
     end
     object btnAddToCategory: TSpeedButton
-      Left = 285
+      Left = 287
       Top = 148
       Width = 24
       Height = 21
@@ -448,20 +449,28 @@ object fKanjiDetails: TfKanjiDetails
     Left = 48
     Top = 192
     object pmGoToCategory: TMenuItem
-      Caption = 'Go to category'
+      Caption = '#01113^Go to category'
       OnClick = pmGoToCategoryClick
     end
     object pmAddToAll: TMenuItem
-      Caption = 'Add to all'
+      Caption = '#01114^Add to all'
       OnClick = pmAddToAllClick
     end
     object pmDelete: TMenuItem
-      Caption = 'Delete'
+      Caption = '#01115^Delete'
       OnClick = pmDeleteClick
     end
   end
   object pmAddCategoryMenu: TPopupMenu
     Left = 48
     Top = 248
+  end
+  object PopupMenu: TPopupMenu
+    Left = 136
+    Top = 192
+    object Configure1: TMenuItem
+      Caption = '#01116^Configure...'
+      OnClick = Configure1Click
+    end
   end
 end

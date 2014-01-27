@@ -71,7 +71,9 @@ type
     function GetCellFontSize: integer;
     function GetExpectedColCount: integer;
     procedure KanjiGridSelectionChanged;
+    function KanjiGridGetSelection: FString;
     function KanjiGridSetSelection(const chars: FString): boolean;
+    procedure SetFocusedCharsLow(const Value: FString);
     procedure SetFocusedChars(const Value: FString);
   public
     procedure Reload;
@@ -683,23 +685,26 @@ end;
 
 { Called when a kanji selection changes }
 procedure TfKanji.KanjiGridSelectionChanged;
+begin
+ { Store selected chars and pass to all child windows, but do not apply selection
+  again }
+  SetFocusedCharsLow(KanjiGridGetSelection);
+end;
+
+function TfKanji.KanjiGridGetSelection: FString;
 var sel: TGridRect;
   i, j: integer;
-  chars, char:FString;
+  char:FString;
 begin
-  chars := '';
+  Result := '';
   sel := DrawGrid1.Selection;
   for i := sel.Top to sel.Bottom do
     for j := sel.Left to sel.Right do begin
       if DrawGrid1.ColCount*i+j>=ki.Count then //selection can cover unused cells
         continue;
       char := ki[DrawGrid1.ColCount*i+j];
-      chars := chars + copy(char,2,Length(char)-1); //delete first char
+      Result := Result + copy(char,2,Length(char)-1); //delete first char
     end;
-
- { Pass selected chars to all tool windows. Hope they're smart and wont re-apply
-  selection back to use }
-  FocusedChars := chars;
 end;
 
 { Highlights the specified characters in the grid. There are limitations on what
@@ -1049,18 +1054,26 @@ end;
 
 { Changes the set of characters selected in the Kanji grid and in all related
  tool windows. }
-procedure TfKanji.SetFocusedChars(const Value: FString);
+procedure TfKanji.SetFocusedCharsLow(const Value: FString);
 begin
   if FFocusedChars=Value then exit;
   FFocusedChars := Value;
+
+  fKanjiDetails.SetCharDetails(Value);
+
+ { Pass selected chars to all tool windows }
   if flength(Value)=1 then begin //single char
-    fKanjiDetails.SetCharDetails(Value);
     fKanjiCompounds.SetCharCompounds(fgetch(Value, 1));
     AnnotShowMedia(Value,'');
   end else begin //multiple or none
-    fKanjiDetails.SetCharDetails(UH_NOCHAR);
     fKanjiCompounds.Clear;
   end;
+end;
+
+procedure TfKanji.SetFocusedChars(const Value: FString);
+begin
+  if FFocusedChars=Value then exit;
+  SetFocusedChars(Value);
  //TODO: exit if the grid is not yet filled (we'll do the last part later)
   if not KanjiGridSetSelection(Value) then begin
  {$IFDEF AUTODEFOCUS}
