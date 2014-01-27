@@ -853,8 +853,6 @@ begin
   item := TMenuItem.Create(Self);
   item.Caption := _l('#01112^New...');
   pmAddCategoryMenu.Items.Add(item);
-
-  pmAddCategoryMenu.DispatchCommand()
 end;
 
 //Called from AddCategoryMenu with Sender set to one of TMenuItems
