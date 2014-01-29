@@ -28,7 +28,9 @@ Docking guide.
  differently depending on the type.
    alLeft, alRight: horizontal docking
    alTop, alBottom: vertical docking
-   alCustom: undocked
+   alClient: expand docking (take all available space and disallow resizing)
+   alCustom: as-is docking (preserve size and disallow resizing)
+   alNone: undocked (when docking, equals alCustom)
 
 5. Wakan supports "Portrait mode", this is simply re-docking the forms vertically.
  Support all types of docking and you're good to go.
@@ -42,7 +44,8 @@ const
   WM_SAVE_DOCKED_WH = WM_APP + 3; { Docker calls this to save docked sizes before undocking }
   WM_SET_DOCK_MODE = WM_APP + 4; { Docker calls this before docking or after undocking. Use this chance to prepare the form by rearranging controls }
 
-function DockProc(slave:TForm;panel:TPanel;dir:TAlign;dock:boolean): boolean;
+function DockProc(slave: TForm; panel: TWinControl; dir: TAlign): boolean; overload;
+function DockProc(slave: TForm; panel: TWinControl; dir: TAlign; dock: boolean): boolean; overload;
 procedure UndockedMakeVisible(slave:TForm);
 
 
@@ -174,25 +177,38 @@ end;
 
 
 {
-- Dock the form and make it visible, or
-- Hide and undock it, restore its permanent width and height.
+- Docks the form and makes it visible, or
+- Hides and undocks it, restores its permanent width and height.
+
+What the function un/does depends on dir/panel it receives. So when undocking,
+pass the same dir you used when docking.
+E.g. it hides the panel.
+
+For the same reason auto-redocking is discouraged. If you're not sure where it's
+docked you don't know how to undock it. Undock manually beforehand.
+
+panel: Where to dock (nil = undock).
+dir: Dock direction/style.
+
 Returns true if the form was docked before the call.
 }
-function DockProc(slave:TForm;panel:TPanel;dir:TAlign;dock:boolean): boolean;
-var vert:boolean;
-  rect:TRect;
+function DockProc(slave: TForm; panel: TWinControl; dir: TAlign): boolean;
+var rect:TRect;
   sz: integer;
 begin
   Result := slave.HostDockSite<>nil;
-  if Result=dock then exit;
-  vert:=dir in [alTop,alBottom];
 
-  if dock then begin
-    if vert then begin
+  if Result and (panel<>nil) and (slave.HostDockSite<>panel) then //auto-redock
+    DockProc(slave, nil, alNone);
+  if (not Result) and (panel=nil) then exit; //already undocked
+
+  if panel<>nil then begin //Dock
+    if dir in [alTop,alBottom,alNone] then begin
       sz := slave.Perform(WM_GET_DOCKED_H,0,0);
       if sz<=0 then sz := slave.Height;
       panel.Height := sz;
-    end else begin
+    end;
+    if dir in [alLeft,alRight,alNone] then begin
       sz := slave.Perform(WM_GET_DOCKED_W,0,0);
       if sz<=0 then sz := slave.Width;
       panel.Width := sz;
@@ -217,7 +233,8 @@ begin
     end;
    {$ENDIF}
     slave.Align := alClient;
-  end else begin
+  end else begin //Undock
+    panel := slave.HostDockSite; //old dock site
     slave.Perform(WM_SAVE_DOCKED_WH,0,0);
     slave.Hide;
     rect.Left:=0;
@@ -226,9 +243,22 @@ begin
     rect.Bottom:=slave.UndockHeight; //only available when docked
     slave.Align:=alNone;
     slave.ManualFloat(rect);
-    if vert then panel.height:=0 else panel.width:=0;
+    if panel<>nil then begin
+      if dir in [alTop,alBottom] then panel.height:=0;
+      if dir in [alLeft,alRight] then panel.width:=0;
+    end;
     slave.Perform(WM_SET_DOCK_MODE,integer(alNone),0);
   end;
+end;
+
+//Some like it stupid. You can already undock just by passing panel=nil,
+//but there's code which relies on additional parameter.
+function DockProc(slave: TForm; panel: TWinControl; dir: TAlign; dock: boolean): boolean;
+begin
+  if not dock then
+    Result := DockProc(slave, nil, dir)
+  else
+    Result := DockProc(slave, panel, dir);
 end;
 
 {

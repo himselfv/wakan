@@ -65,12 +65,11 @@ type
     btnAddToCategory: TSpeedButton;
     PopupMenu: TPopupMenu;
     Configure1: TMenuItem;
-    SpeedButton1: TSpeedButton;
+    sbGoToWords: TSpeedButton;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
     procedure btnAddToCategoryClick(Sender: TObject);
-    procedure SpeedButton28Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton23Click(Sender: TObject);
     procedure btnStrokeOrderClick(Sender: TObject);
@@ -111,6 +110,7 @@ type
     procedure pmDeleteClick(Sender: TObject);
     procedure pmGoToCategoryClick(Sender: TObject);
     procedure Configure1Click(Sender: TObject);
+    procedure sbGoToWordsClick(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -175,7 +175,7 @@ implementation
 
 uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
   JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard, JWBKanjiSearch,
-  JWBVocabFilters, JWBKanaConv, JWBCharData;
+  JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds;
 
 {$R *.DFM}
 
@@ -226,7 +226,7 @@ end;
 procedure TfKanjiDetails.UpdateVisible;
 begin
   fMenu.aKanjiDetails.Checked:=Self.Visible;
-  btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.curdisplaymode in [1,3,4]);
+  btnDock.Enabled:=fMenu.CharDetDocked or (fMenu.DisplayMode in [1,3,4]);
   btnClose.Default:=not fMenu.CharDetDocked;
 end;
 
@@ -287,14 +287,6 @@ begin
   RefreshDetails;
 end;
 
-procedure TfKanjiDetails.SpeedButton28Click(Sender: TObject);
-var s:string;
-begin
-  if curSingleChar=UH_NOCHAR then exit;
-  s:='StrokeOrder\'+FStrToHex(curSingleChar)+'.gif';
-  ShellExecute(handle,nil,pchar(s),nil,nil,SW_SHOW);
-end;
-
 procedure TfKanjiDetails.SpeedButton23Click(Sender: TObject);
 begin
   if curSingleChar=UH_NOCHAR then exit;
@@ -305,6 +297,12 @@ end;
 procedure TfKanjiDetails.btnStrokeOrderClick(Sender: TObject);
 begin
   pbKanji.Invalidate;
+end;
+
+procedure TfKanjiDetails.sbGoToWordsClick(Sender: TObject);
+begin
+  fMenu.DisplayMode := 6;
+  fKanjiCompounds.SetCharCompounds(Self.curSingleChar);
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoPaint(Sender: TObject);

@@ -1223,7 +1223,7 @@ begin
   reg.WriteInteger('Dict','SearchBeg',dictbeginset);
   reg.WriteBool('Translate','ShowHint',cbShowEditorHint.Checked);
   reg.WriteBool('Translate','HintMeaning',cbHintMeaning.Checked);
-  reg.WriteInteger('Layout','DisplayLayout',fMenu.curdisplaymode);
+  reg.WriteInteger('Layout','DisplayLayout',fMenu.DisplayMode);
   reg.WriteBool('Layout','CharDetailsDocked',fMenu.CharDetDocked);
   reg.WriteBool('Layout','CharDetailsVisible1',fMenu.CharDetDockedVis1);
   reg.WriteBool('Layout','CharDetailsVisible2',fMenu.CharDetDockedVis2);

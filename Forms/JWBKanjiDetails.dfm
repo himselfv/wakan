@@ -47,7 +47,6 @@ object fKanjiDetails: TfKanjiDetails
       BevelOuter = bvNone
       Padding.Right = 6
       TabOrder = 0
-      ExplicitTop = 329
       object btnClose: TButton
         AlignWithMargins = True
         Left = 0
@@ -63,7 +62,6 @@ object fKanjiDetails: TfKanjiDetails
         TabOrder = 0
         OnClick = btnCloseClick
         OnKeyPress = btnCloseKeyPress
-        ExplicitWidth = 217
       end
       object btnDock: TButton
         Left = 234
@@ -89,7 +87,6 @@ object fKanjiDetails: TfKanjiDetails
       PopupMenu = PopupMenu
       TabOrder = 1
       OnClick = ScrollboxClick
-      ExplicitHeight = 329
       object pbKanjiInfo: TPaintBox
         Left = 0
         Top = 36
@@ -424,7 +421,7 @@ object fKanjiDetails: TfKanjiDetails
       ParentFont = False
       OnClick = btnAddToCategoryClick
     end
-    object SpeedButton1: TSpeedButton
+    object sbGoToWords: TSpeedButton
       Left = 80
       Top = 153
       Width = 73
@@ -433,6 +430,7 @@ object fKanjiDetails: TfKanjiDetails
       Caption = '#01118^Words'
       ParentShowHint = False
       ShowHint = True
+      OnClick = sbGoToWordsClick
     end
     object cbCategories: TComboBox
       Left = 159
