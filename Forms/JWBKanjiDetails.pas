@@ -53,7 +53,6 @@ type
     pbSimplified: TPaintBox;
     RxLabel10: TLabel;
     RxLabel35: TLabel;
-    RxLabel38: TLabel;
     lblRadicalNo: TLabel;
     btnStrokeOrder: TSpeedButton;
     pmCategoryMenu: TPopupMenu;
@@ -61,11 +60,13 @@ type
     pmGoToCategory: TMenuItem;
     pmDelete: TMenuItem;
     pmAddToAll: TMenuItem;
-    cbCategories: TComboBox;
-    btnAddToCategory: TSpeedButton;
     PopupMenu: TPopupMenu;
     Configure1: TMenuItem;
     btnGoToWords: TSpeedButton;
+    pnlOldCategories: TFlowPanel;
+    cbCategories: TComboBox;
+    btnAddToCategory: TSpeedButton;
+    lblType: TLabel;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -612,18 +613,18 @@ begin
       if CChar.Int(TCharChFrequency)<=5 then kig:='C'else kig:='U';
     if IsAllKnown(KnownLearned,curChars) then kig:='K';
     case kig[1] of
-      'K':RxLabel38.Font.Color:=Col('Kanji_Learned');
-      'C':RxLabel38.Font.Color:=Col('Kanji_Common');
-      'U':RxLabel38.Font.Color:=Col('Kanji_Rare');
-      'N':RxLabel38.Font.Color:=Col('Kanji_Names');
+      'K':lblType.Font.Color:=Col('Kanji_Learned');
+      'C':lblType.Font.Color:=Col('Kanji_Common');
+      'U':lblType.Font.Color:=Col('Kanji_Rare');
+      'N':lblType.Font.Color:=Col('Kanji_Names');
     end;
     case kig[1] of
-      'K':RxLabel38.Caption:=_l('#00140^eLearned');
-      'C':RxLabel38.Caption:=_l('#00141^eCommon');
-      'U':RxLabel38.Caption:=_l('#00142^eRare');
-      'N':RxLabel38.Caption:=_l('#00143^eUsed in names');
-      'A':RxLabel38.Caption:=_l('#00144^eJapanese and chinese');
-      'J':RxLabel38.Caption:=_l('#00145^eJapanese only');
+      'K':lblType.Caption:=_l('#00140^eLearned');
+      'C':lblType.Caption:=_l('#00141^eCommon');
+      'U':lblType.Caption:=_l('#00142^eRare');
+      'N':lblType.Caption:=_l('#00143^eUsed in names');
+      'A':lblType.Caption:=_l('#00144^eJapanese and chinese');
+      'J':lblType.Caption:=_l('#00145^eJapanese only');
     end;
 
     if flength(curChars)<1 then

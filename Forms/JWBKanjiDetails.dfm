@@ -89,7 +89,7 @@ object fKanjiDetails: TfKanjiDetails
       OnClick = ScrollboxClick
       object pbKanjiInfo: TPaintBox
         Left = 0
-        Top = 36
+        Top = 61
         Width = 309
         Height = 200
         Align = alTop
@@ -120,6 +120,8 @@ object fKanjiDetails: TfKanjiDetails
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
+        ExplicitLeft = -3
+        ExplicitTop = 3
       end
       object pnlLinks: TFlowPanel
         Left = 0
@@ -254,6 +256,47 @@ object fKanjiDetails: TfKanjiDetails
           Transparent = True
         end
       end
+      object pnlOldCategories: TFlowPanel
+        Left = 0
+        Top = 36
+        Width = 309
+        Height = 25
+        Align = alTop
+        AutoSize = True
+        BevelOuter = bvNone
+        Font.Charset = RUSSIAN_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Verdana'
+        Font.Style = []
+        Padding.Bottom = 4
+        ParentFont = False
+        TabOrder = 2
+        OnClick = ScrollboxClick
+        object cbCategories: TComboBox
+          Left = 0
+          Top = 0
+          Width = 127
+          Height = 21
+          Style = csDropDownList
+          TabOrder = 0
+          OnChange = cbCategoriesChange
+        end
+        object btnAddToCategory: TSpeedButton
+          Left = 127
+          Top = 0
+          Width = 24
+          Height = 21
+          Caption = '+'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -16
+          Font.Name = 'Courier New'
+          Font.Style = [fsBold]
+          ParentFont = False
+          OnClick = btnAddToCategoryClick
+        end
+      end
     end
   end
   object pnlFirst: TPanel
@@ -362,21 +405,6 @@ object fKanjiDetails: TfKanjiDetails
       ParentFont = False
       Transparent = True
     end
-    object RxLabel38: TLabel
-      Left = 159
-      Top = 130
-      Width = 44
-      Height = 18
-      Alignment = taRightJustify
-      Caption = 'Kanji'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Verdana'
-      Font.Style = [fsBold]
-      ParentFont = False
-      Visible = False
-    end
     object lblRadicalNo: TLabel
       Left = 219
       Top = 67
@@ -407,20 +435,6 @@ object fKanjiDetails: TfKanjiDetails
       ShowHint = True
       OnClick = btnStrokeOrderClick
     end
-    object btnAddToCategory: TSpeedButton
-      Left = 287
-      Top = 151
-      Width = 24
-      Height = 21
-      Caption = '+'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Courier New'
-      Font.Style = [fsBold]
-      ParentFont = False
-      OnClick = btnAddToCategoryClick
-    end
     object btnGoToWords: TSpeedButton
       Left = 80
       Top = 153
@@ -432,14 +446,19 @@ object fKanjiDetails: TfKanjiDetails
       ShowHint = True
       OnClick = btnGoToWordsClick
     end
-    object cbCategories: TComboBox
-      Left = 159
-      Top = 151
-      Width = 127
-      Height = 21
-      Style = csDropDownList
-      TabOrder = 0
-      OnChange = cbCategoriesChange
+    object lblType: TLabel
+      Left = 4
+      Top = 4
+      Width = 57
+      Height = 13
+      Caption = 'Kanji type'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      ParentFont = False
+      Transparent = True
     end
   end
   object FormPlacement1: TFormPlacement
