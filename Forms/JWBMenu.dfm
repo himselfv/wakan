@@ -123,7 +123,6 @@ object fMenu: TfMenu
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  OnResize = FormResize
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -534,7 +533,7 @@ object fMenu: TfMenu
       OnMouseUp = ClipboardPaintboxMouseUp
     end
   end
-  object Panel3: TPanel
+  object MainPanel: TPanel
     Left = 0
     Top = 33
     Width = 509
@@ -544,7 +543,7 @@ object fMenu: TfMenu
     FullRepaint = False
     TabOrder = 0
   end
-  object Panel2: TPanel
+  object BottomPanel: TPanel
     Left = 0
     Top = 373
     Width = 694
@@ -554,7 +553,7 @@ object fMenu: TfMenu
     FullRepaint = False
     TabOrder = 2
   end
-  object Panel4: TPanel
+  object RightPanel: TPanel
     Left = 509
     Top = 33
     Width = 185
@@ -936,11 +935,11 @@ object fMenu: TfMenu
       ShortCut = 16496
       OnExecute = aModeKanjiExecute
     end
-    object aModeUser: TAction
+    object aModeDict: TAction
       Category = 'Modes'
       Caption = '#00217^eDictionary'
       ShortCut = 16497
-      OnExecute = aModeUserExecute
+      OnExecute = aModeDictExecute
     end
     object aModeEditor: TAction
       Category = 'Modes'
@@ -948,11 +947,11 @@ object fMenu: TfMenu
       ShortCut = 16498
       OnExecute = aModeEditorExecute
     end
-    object aModeWords: TAction
+    object aModeVocab: TAction
       Category = 'Modes'
       Caption = '#00215^eVocabulary'
       ShortCut = 16499
-      OnExecute = aModeWordsExecute
+      OnExecute = aModeVocabExecute
     end
     object aDictInflect: TAction
       Caption = '#00301^eSearch inflected words'
@@ -1088,7 +1087,7 @@ object fMenu: TfMenu
         RadioItem = True
       end
       object miDictionary: TMenuItem
-        Action = aModeUser
+        Action = aModeDict
         RadioItem = True
       end
       object miTextEditor: TMenuItem
@@ -1096,7 +1095,7 @@ object fMenu: TfMenu
         RadioItem = True
       end
       object miVocabulary: TMenuItem
-        Action = aModeWords
+        Action = aModeVocab
         RadioItem = True
       end
       object N23: TMenuItem
@@ -1197,7 +1196,7 @@ object fMenu: TfMenu
     object eDictionarycSlovnk1: TMenuItem
       Caption = '#00313^eD&ictionary'
       object miDictionary2: TMenuItem
-        Action = aModeUser
+        Action = aModeDict
       end
       object N4: TMenuItem
         Caption = '-'
@@ -1378,7 +1377,7 @@ object fMenu: TfMenu
     object miVocabulary1: TMenuItem
       Caption = '#00318^e&Vocabulary'
       object miVocabulary2: TMenuItem
-        Action = aModeWords
+        Action = aModeVocab
       end
       object N9: TMenuItem
         Caption = '-'

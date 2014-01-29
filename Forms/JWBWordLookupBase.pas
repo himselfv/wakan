@@ -333,7 +333,7 @@ end;
 
 procedure TfWordLookupBase.btnGoToVocabClick(Sender: TObject);
 begin
-  fMenu.aModeWordsExecute(sender);
+  fMenu.aModeVocabExecute(sender);
   if FResults[curword-1].userIndex<>0 then
     fVocab.SearchWord(FResults[curword-1].userIndex);
 end;

@@ -34,25 +34,36 @@ object fKanjiDetails: TfKanjiDetails
     BevelOuter = bvNone
     TabOrder = 0
     object pnlFooter: TPanel
+      AlignWithMargins = True
       Left = 0
-      Top = 329
+      Top = 327
       Width = 315
       Height = 18
+      Margins.Left = 0
+      Margins.Top = 2
+      Margins.Right = 0
+      Margins.Bottom = 2
       Align = alBottom
       BevelOuter = bvNone
       Padding.Right = 6
       TabOrder = 0
+      ExplicitTop = 329
       object btnClose: TButton
+        AlignWithMargins = True
         Left = 0
         Top = 0
-        Width = 234
+        Width = 231
         Height = 18
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Bottom = 0
         Align = alClient
         Caption = '#00170^eClose'
         Default = True
         TabOrder = 0
         OnClick = btnCloseClick
         OnKeyPress = btnCloseKeyPress
+        ExplicitWidth = 217
       end
       object btnDock: TButton
         Left = 234
@@ -70,7 +81,7 @@ object fKanjiDetails: TfKanjiDetails
       Left = 0
       Top = 0
       Width = 315
-      Height = 329
+      Height = 325
       VertScrollBar.Tracking = True
       Align = alClient
       BorderStyle = bsNone
@@ -78,12 +89,15 @@ object fKanjiDetails: TfKanjiDetails
       PopupMenu = PopupMenu
       TabOrder = 1
       OnClick = ScrollboxClick
+      ExplicitHeight = 329
       object pbKanjiInfo: TPaintBox
         Left = 0
-        Top = 17
+        Top = 36
         Width = 309
         Height = 200
         Align = alTop
+        Color = clBtnFace
+        ParentColor = False
         OnClick = ScrollboxClick
         OnMouseDown = pbKanjiInfoMouseDown
         OnMouseMove = pbKanjiInfoMouseMove
@@ -106,25 +120,25 @@ object fKanjiDetails: TfKanjiDetails
         Font.Height = -11
         Font.Name = 'Verdana'
         Font.Style = []
-        Padding.Bottom = 3
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
       end
       object pnlLinks: TFlowPanel
         Left = 0
-        Top = 217
+        Top = 17
         Width = 309
         Height = 19
         Align = alTop
         AutoSize = True
         BevelOuter = bvNone
+        Padding.Bottom = 2
         TabOrder = 1
         OnClick = ScrollboxClick
         object ProUrlLabel1: TUrlLabel
           AlignWithMargins = True
           Left = 0
-          Top = 3
+          Top = 0
           Width = 54
           Height = 13
           Cursor = crHandPoint
@@ -132,7 +146,9 @@ object fKanjiDetails: TfKanjiDetails
             '#00163^ewww.zhongwen.com - Etymological information about the ch' +
             'aracter'
           Margins.Left = 0
+          Margins.Top = 0
           Margins.Right = 5
+          Margins.Bottom = 4
           Caption = 'ZhongWen'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -147,7 +163,7 @@ object fKanjiDetails: TfKanjiDetails
         object ProUrlLabel2: TUrlLabel
           AlignWithMargins = True
           Left = 59
-          Top = 3
+          Top = 0
           Width = 56
           Height = 13
           Cursor = crHandPoint
@@ -155,7 +171,9 @@ object fKanjiDetails: TfKanjiDetails
             '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
             'C dictionary server'
           Margins.Left = 0
+          Margins.Top = 0
           Margins.Right = 5
+          Margins.Bottom = 4
           Caption = 'WWWJDIC'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -170,7 +188,7 @@ object fKanjiDetails: TfKanjiDetails
         object ProUrlLabel3: TUrlLabel
           AlignWithMargins = True
           Left = 120
-          Top = 3
+          Top = 0
           Width = 36
           Height = 13
           Cursor = crHandPoint
@@ -178,7 +196,9 @@ object fKanjiDetails: TfKanjiDetails
             '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
             'ter'
           Margins.Left = 0
+          Margins.Top = 0
           Margins.Right = 5
+          Margins.Bottom = 4
           Caption = 'UniHan'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -193,13 +213,15 @@ object fKanjiDetails: TfKanjiDetails
         object ProUrlLabel4: TUrlLabel
           AlignWithMargins = True
           Left = 161
-          Top = 3
+          Top = 0
           Width = 26
           Height = 13
           Cursor = crHandPoint
           Hint = '#00166^ewww.ocrat.com - Animated stroke order'
           Margins.Left = 0
+          Margins.Top = 0
           Margins.Right = 5
+          Margins.Bottom = 4
           Caption = 'Ocrat'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -214,13 +236,15 @@ object fKanjiDetails: TfKanjiDetails
         object ProUrlLabel5: TUrlLabel
           AlignWithMargins = True
           Left = 192
-          Top = 3
+          Top = 0
           Width = 56
           Height = 13
           Cursor = crHandPoint
           Hint = '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page'
           Margins.Left = 0
+          Margins.Top = 0
           Margins.Right = 5
+          Margins.Bottom = 4
           Caption = 'KanjiProject'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlue
@@ -356,35 +380,6 @@ object fKanjiDetails: TfKanjiDetails
       ParentFont = False
       Visible = False
     end
-    object lblStrokeCount: TLabel
-      Left = 106
-      Top = 156
-      Width = 5
-      Height = 13
-      Alignment = taRightJustify
-      Caption = '-'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-      Transparent = True
-    end
-    object RxLabel39: TLabel
-      Left = 0
-      Top = 156
-      Width = 135
-      Height = 13
-      Caption = '#00162^eStroke count:'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-      Transparent = True
-    end
     object lblRadicalNo: TLabel
       Left = 219
       Top = 67
@@ -403,14 +398,14 @@ object fKanjiDetails: TfKanjiDetails
       Transparent = True
     end
     object btnStrokeOrder: TSpeedButton
-      Left = 115
+      Left = -1
       Top = 153
-      Width = 38
-      Height = 17
-      Hint = '#00168^eShow/hide stroke order (only for Japanese Jouyou-kanji)'
+      Width = 82
+      Height = 19
+      Hint = '#00168^Show/hide stroke order (only for Japanese Jouyou-kanji)'
       AllowAllUp = True
       GroupIndex = 99
-      Caption = '#00169^eOrder'
+      Caption = '#00162^Stroke count:'
       ParentShowHint = False
       ShowHint = True
       OnClick = btnStrokeOrderClick
@@ -429,6 +424,16 @@ object fKanjiDetails: TfKanjiDetails
       ParentFont = False
       OnClick = btnAddToCategoryClick
     end
+    object SpeedButton1: TSpeedButton
+      Left = 80
+      Top = 153
+      Width = 73
+      Height = 19
+      Hint = '#01119^Show words with this kanji in the dictionary'
+      Caption = '#01118^Words'
+      ParentShowHint = False
+      ShowHint = True
+    end
     object cbCategories: TComboBox
       Left = 159
       Top = 148
@@ -446,8 +451,8 @@ object fKanjiDetails: TfKanjiDetails
     Top = 24
   end
   object pmCategoryMenu: TPopupMenu
-    Left = 48
-    Top = 192
+    Left = 32
+    Top = 256
     object pmGoToCategory: TMenuItem
       Caption = '#01113^Go to category'
       OnClick = pmGoToCategoryClick
@@ -462,12 +467,12 @@ object fKanjiDetails: TfKanjiDetails
     end
   end
   object pmAddCategoryMenu: TPopupMenu
-    Left = 48
-    Top = 248
+    Left = 32
+    Top = 312
   end
   object PopupMenu: TPopupMenu
-    Left = 136
-    Top = 192
+    Left = 120
+    Top = 256
     object Configure1: TMenuItem
       Caption = '#01116^Configure...'
       OnClick = Configure1Click

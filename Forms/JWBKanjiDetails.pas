@@ -54,8 +54,6 @@ type
     RxLabel10: TLabel;
     RxLabel35: TLabel;
     RxLabel38: TLabel;
-    lblStrokeCount: TLabel;
-    RxLabel39: TLabel;
     lblRadicalNo: TLabel;
     btnStrokeOrder: TSpeedButton;
     pmCategoryMenu: TPopupMenu;
@@ -67,6 +65,7 @@ type
     btnAddToCategory: TSpeedButton;
     PopupMenu: TPopupMenu;
     Configure1: TMenuItem;
+    SpeedButton1: TSpeedButton;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -586,12 +585,16 @@ begin
     //Stroke count/order
     btnStrokeOrder.Enabled := (curindex>=0);
     if curindex<0 then
-      lblStrokeCount.Caption := '-'
+      btnStrokeOrder.Caption := _l('#01117^Strokes')
     else
     if curLang='c' then begin
-      if CChar.Int(TCharStrokeCount)<255 then lblStrokeCount.Caption:=CChar.Str(TCharStrokeCount) else lblStrokeCount.Caption:='-';
+      if CChar.Int(TCharStrokeCount)<255 then
+        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TCharStrokeCount)
+      else btnStrokeOrder.Caption:='';
     end else begin
-      if CChar.Int(TCharJpStrokeCount)<255 then lblStrokeCount.Caption:=CChar.Str(TCharJpStrokeCount) else lblStrokeCount.Caption:='-';
+      if CChar.Int(TCharJpStrokeCount)<255 then
+        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TCharJpStrokeCount)
+      else btnStrokeOrder.Caption:='';
     end;
 
     //Kanji color

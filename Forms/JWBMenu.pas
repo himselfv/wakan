@@ -180,12 +180,12 @@ type
     miHelpContents: TMenuItem;
     N11: TMenuItem;
     miAbout: TMenuItem;
-    Panel3: TPanel;
-    Panel2: TPanel;
+    MainPanel: TPanel;
+    BottomPanel: TPanel;
     aModeKanji: TAction;
-    aModeUser: TAction;
+    aModeDict: TAction;
     aModeEditor: TAction;
-    aModeWords: TAction;
+    aModeVocab: TAction;
     miTools: TMenuItem;
     miCharacterList: TMenuItem;
     miDictionary: TMenuItem;
@@ -199,7 +199,7 @@ type
     N9: TMenuItem;
     Bevel1: TBevel;
     ScreenTimer: TTimer;
-    Panel4: TPanel;
+    RightPanel: TPanel;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     miEditorExportAs: TMenuItem;
@@ -319,12 +319,11 @@ type
     procedure aEditorSmallFontExecute(Sender: TObject);
     procedure aEditorLargeFontExecute(Sender: TObject);
     procedure aEditorMedFontExecute(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure aModeKanjiExecute(Sender: TObject);
-    procedure aModeUserExecute(Sender: TObject);
+    procedure aModeDictExecute(Sender: TObject);
     procedure aModeEditorExecute(Sender: TObject);
-    procedure aModeWordsExecute(Sender: TObject);
+    procedure aModeVocabExecute(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure ScreenTimerTimer(Sender: TObject);
     procedure aDictInflectExecute(Sender: TObject);
@@ -642,10 +641,10 @@ begin
   LastMouseMove:=GetTickCount;
 
  //Nothing is docked to these so initialized them to hidden
-  Panel2.Width := 0;
-  Panel2.Height := 0;
-  Panel4.Width := 0;
-  Panel4.Height := 0;
+  BottomPanel.Width := 0;
+  BottomPanel.Height := 0;
+  RightPanel.Width := 0;
+  RightPanel.Height := 0;
 
   ClipboardWatchers := TList<TNotifyEvent>.Create;
 end;
@@ -1977,7 +1976,7 @@ procedure TfMenu.aDictKanjiExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictKanji.Checked;
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   if aDictKanji.Checked<>pre then exit;
   aDictKanji.Checked := not aDictKanji.Checked;
 end;
@@ -1992,7 +1991,7 @@ procedure TfMenu.aDictExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aDictExamples.Checked;
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   if aDictExamples.Checked<>pre then exit;
   aDictExamples.Checked := not aDictExamples.Checked;
 end;
@@ -2007,18 +2006,20 @@ end;
 procedure TfMenu.aUserAddExecute(Sender: TObject);
 begin
   if fVocab.Visible then
-    fVocab.Button2Click(Sender) else
+    fVocab.Button2Click(Sender)
+  else
   if fWordLookup.Visible then
-    fWordLookup.btnAddToVocabClick(Sender) else
+    fWordLookup.btnAddToVocabClick(Sender)
+  else
   if fKanjiCompounds.Visible then
-    fKanjiCompounds.btnAddToVocabClick(Sender) else
+    fKanjiCompounds.btnAddToVocabClick(Sender);
 end;
 
 procedure TfMenu.aUserSettingsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserSettings.Checked;
-  if not fVocab.Visible then aModeWords.Execute;
+  if not fVocab.Visible then aModeVocab.Execute;
   if aUserSettings.Checked<>pre then exit;
   aUserSettings.Checked := not aUserSettings.Checked;
 end;
@@ -2035,7 +2036,7 @@ procedure TfMenu.aUserDetailsExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserDetails.Checked;
-  if not fVocab.Visible then aModeWords.Execute;
+  if not fVocab.Visible then aModeVocab.Execute;
   if aUserDetails.Checked<>pre then exit;
   aUserDetails.Checked := not aUserDetails.Checked;
 end;
@@ -2335,37 +2336,34 @@ end;
 
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnLookupJtoE.Down:=true;
-//  fWordLookup.Edit1.Text:='';
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictEnglishExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnLookupEtoJ.Down:=true;
-//  fWordLookup.Edit1.Text:='';
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictClipboardExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnLookupClip.Down:=true;
-//  fWordLookup.Edit1.Text:='';
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnCopyToClipboardClick(Sender);
 end;
 
 procedure TfMenu.aDictExactExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton10.Down:=true;
   dictbeginset:=0;
   fWordLookup.btnLookupJtoEClick(Sender);
@@ -2373,7 +2371,7 @@ end;
 
 procedure TfMenu.aDictBeginningExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton11.Down:=true;
   dictbeginset:=1;
   fWordLookup.btnLookupJtoEClick(Sender);
@@ -2381,7 +2379,7 @@ end;
 
 procedure TfMenu.aDictEndExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton12.Down:=true;
   dictbeginset:=2;
   fWordLookup.btnLookupJtoEClick(Sender);
@@ -2423,15 +2421,6 @@ begin
   fEditor.FontSize := FontSizeLarge;
 end;
 
-procedure TfMenu.FormResize(Sender: TObject);
-begin
-//TODO: Either delete or document and make available with at least a switch.
-//  PaintBox3.Visible:=Width>815;
-//  Shape9.Visible:=Width>815;
-//  SpeedButton22.Visible:=Width>815;
-//  Bevel5.Visible:=Width>815;
-end;
-
 { Panel docker.
  If given "dock", docks the form to its rightful place and shows it,
  else hides it and undocks it.
@@ -2441,9 +2430,9 @@ begin
   Result := false;
   if form=fKanjiDetails then begin
     if aPortraitMode.Checked then
-      Result:=DockProc(fKanjiDetails,Panel4,alBottom,dock)
+      Result:=DockProc(fKanjiDetails,RightPanel,alBottom,dock)
     else
-      Result:=DockProc(fKanjiDetails,Panel4,alRight,dock);
+      Result:=DockProc(fKanjiDetails,RightPanel,alRight,dock);
   end;
   if form=fKanjiSearch then
     Result:=DockProc(fKanjiSearch,fKanji.pnlDockSearch,alTop,dock);
@@ -2549,18 +2538,19 @@ begin
   case curdisplaymode of
     1:if fKanji<>nil then fKanji.Hide;
     2:if fWordLookup<>nil then fWordLookup.Hide;
-    5:if fVocab<>nil then fVocab.Hide;
     3:if fEditor<>nil then fEditor.Hide;
     4:begin
         if fWordLookup<>nil then fWordLookup.Hide;
         if fEditor<>nil then fEditor.Hide;
       end;
+    5:if fVocab<>nil then fVocab.Hide;
+    6:if fKanjiCompounds<>nil then fKanjiCompounds.Hide;
   end;
-  Panel2.Height:=0;
+  BottomPanel.Height:=0;
   aModeKanji.Checked:=false;
-  aModeUser.Checked:=false;
+  aModeDict.Checked:=false;
   aModeEditor.Checked:=false;
-  aModeWords.Checked:=false;
+  aModeVocab.Checked:=false;
  //If KanjiDetails is in docked mode, show or hide it as needed.
  //When in free-floating mode it doesn't need our attention.
   if CharDetDocked then begin
@@ -2573,15 +2563,15 @@ begin
       DockExpress(fKanjiDetails,false);
   end else begin
    //Hide dock panel
-    Panel4.Width := 0;
-    Panel4.Height := 0;
+    RightPanel.Width := 0;
+    RightPanel.Height := 0;
   end;
   if (fExamples<>nil) and fExamples.visible then
     DockExpress(fExamples,false);
   case displaymode of
     1:begin
         if fKanji<>nil then
-          MainDock(fKanji,Panel3);
+          MainDock(fKanji,MainPanel);
         tab1.Down:=true;
         if fKanji<>nil then
           if fKanji.DrawGrid1.CanFocus then
@@ -2590,24 +2580,24 @@ begin
       end;
     2:begin
         if fWordLookup<>nil then
-          MainDock(fWordLookup,Panel3);
+          MainDock(fWordLookup,MainPanel);
         tab2.Down:=true;
-        aModeUser.Checked:=true;
+        aModeDict.Checked:=true;
       end;
     3:begin
         if fEditor<>nil then
-          MainDock(fEditor,Panel3);
+          MainDock(fEditor,MainPanel);
         tab3.Down:=true;
         if fEditor<>nil then
           fEditor.sbDockDictionary.Down:=false;
         aModeEditor.Checked:=true;
       end;
     4:begin
-        Panel2.height:=250;
+        BottomPanel.height:=250;
         if fWordLookup<>nil then
-          MainDock(fWordLookup,Panel2);
+          MainDock(fWordLookup,BottomPanel);
         if fEditor<>nil then
-          MainDock(fEditor,Panel3);
+          MainDock(fEditor,MainPanel);
         tab3.Down:=true;
         if fEditor<>nil then
           fEditor.sbDockDictionary.Down:=true;
@@ -2615,9 +2605,17 @@ begin
       end;
     5:begin
         if fVocab<>nil then
-          MainDock(fVocab,Panel3);
+          MainDock(fVocab,MainPanel);
         tab5.Down:=true;
-        aModeEditor.Checked:=true;
+        aModeVocab.Checked:=true;
+      end;
+    6:begin
+        if fKanjiCompounds<>nil then
+          MainDock(fKanjiCompounds,MainPanel);
+        tab1.Down := false;
+        tab2.Down := false;
+        tab3.Down := false;
+        tab5.Down := false;
       end;
   end;
   curdisplaymode:=displaymode;
@@ -2642,7 +2640,7 @@ begin
   ChangeDisplay;
 end;
 
-procedure TfMenu.aModeUserExecute(Sender: TObject);
+procedure TfMenu.aModeDictExecute(Sender: TObject);
 begin
   displaymode:=2;
   ChangeDisplay;
@@ -2657,7 +2655,7 @@ begin
   ChangeDisplay;
 end;
 
-procedure TfMenu.aModeWordsExecute(Sender: TObject);
+procedure TfMenu.aModeVocabExecute(Sender: TObject);
 begin
   displaymode:=5;
   ChangeDisplay;
@@ -3188,35 +3186,35 @@ end;
 
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton4.Down:=not fWordLookup.SpeedButton4.Down;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictAutoExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.sbAutoPreview.Down:=not fWordLookup.sbAutoPreview.Down;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup1Execute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton14.Down:=true;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup2Execute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton15.Down:=true;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup3Execute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton16.Down:=true;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
@@ -3225,7 +3223,7 @@ procedure TfMenu.aUserExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
   pre:=aUserExamples.Checked;
-  if not fVocab.Visible then aModeWords.Execute;
+  if not fVocab.Visible then aModeVocab.Execute;
   if aUserExamples.Checked<>pre then exit;
   aUserExamples.Checked := not aUserExamples.Checked;
 end;
@@ -3250,7 +3248,7 @@ end;
 
 procedure TfMenu.aDictMiddleExecute(Sender: TObject);
 begin
-  if not fWordLookup.Visible then aModeUser.Execute;
+  if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.SpeedButton18.Down:=true;
   dictbeginset:=3;
   fWordLookup.btnLookupJtoEClick(Sender);
@@ -3289,7 +3287,7 @@ begin
   KanjiDetailsDocked := (not Loading) and (fKanjiDetails<>nil) and CharDetDocked and DockExpress(fKanjiDetails,false);
 
   if Value then begin
-    Panel4.Align := alBottom;
+    RightPanel.Align := alBottom;
     if fVocab<>nil then begin
       fVocab.pnlDockFilters.Align := alBottom;
       fVocab.splDockFilters.Align := alBottom;
@@ -3298,7 +3296,7 @@ begin
     if fWordLookup<>nil then
       fWordLookup.Panel3.Align := alBottom;
   end else begin
-    Panel4.Align := alRight;
+    RightPanel.Align := alRight;
     if fVocab<>nil then begin
       fVocab.pnlDockFilters.Align := alRight;
       fVocab.splDockFilters.Align := alRight;
