@@ -10,7 +10,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   ExtCtrls, Buttons, StdCtrls, FormPlacemnt, UrlLabel, JWBStrings,
-  TextTable, JWBForms, Vcl.Menus;
+  TextTable, JWBForms, Vcl.Menus, Vcl.Grids, WakanWordGrid;
 
 type
   TCharReadings = record
@@ -67,6 +67,7 @@ type
     cbCategories: TComboBox;
     btnAddToCategory: TSpeedButton;
     lblType: TLabel;
+    mmWords: TLabel;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -164,6 +165,9 @@ type
   public
     procedure CategoryListChanged;
 
+  public
+    procedure ReloadWordExamples(const read: TCharReadings);
+
   end;
 
 var
@@ -177,7 +181,7 @@ implementation
 
 uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
   JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard, JWBKanjiSearch,
-  JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds;
+  JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBDic;
 
 {$R *.DFM}
 
@@ -597,7 +601,7 @@ begin
       else btnStrokeOrder.Caption:='';
     end;
 
-    //Words
+    //Words button
      btnGoToWords.Enabled := curindex>0; //when 0 or multiple chars, can't "go to words"
 
     //Kanji color
@@ -640,6 +644,9 @@ begin
         lblMeaning.Caption:=read.def;
       PopulateKVal(CChar, read);
     end;
+
+   //Word examples
+    ReloadWordExamples(read);
 
   finally
     FreeAndNil(CChar);
@@ -1164,6 +1171,52 @@ begin
     s:='';
     l:=countwidth(tp,fh,last_span);
   end;
+end;
+
+
+{ Readings }
+
+procedure TfKanjiDetails.ReloadWordExamples(const read: TCharReadings);
+var parts: TStringArray;
+  i, j, sep: integer;
+  kanji: string;
+  kana: string;
+  dic: TDicLookupCursor;
+  tmp: string;
+begin
+//  mmWords.Caption := '';
+//  mmWords.Height := 1;
+  if self.curSingleChar=UH_NOCHAR then exit;
+
+  tmp := '';
+  parts := SplitStr(read.kuny, #$FF0C);
+  for i := 0 to Length(parts)-1 do begin
+    parts[i] := Trim(parts[i]);
+    sep := pos('.', parts[i]);
+    if sep>0 then begin
+      kanji := self.curSingleChar + copy(parts[i], sep+1, MaxInt);
+      kana := repl(parts[i],'.','');
+    end else begin
+      kanji := self.curSingleChar;
+      kana := parts[i];
+    end;
+
+    for j := 0 to dicts.Count-1 do
+      if dicts[j].loaded then begin
+        dic := dicts[j].NewLookup(mtExactMatch);
+        try
+          dic.LookupKanji(kanji);
+          while dic.HaveMatch do begin
+            tmp := tmp + kanji+' ['+kana+'] '+dic.GetEntries.ToString+' - '+dicts[j].name + #13#10;
+            dic.NextMatch;
+          end;
+        finally
+          FreeAndNil(dic);
+        end;
+      end;
+  end;
+
+  mmWords.Caption := tmp;
 end;
 
 

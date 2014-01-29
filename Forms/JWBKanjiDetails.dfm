@@ -3,7 +3,7 @@ object fKanjiDetails: TfKanjiDetails
   Top = 140
   BorderStyle = bsSizeToolWin
   Caption = '#00159^eCharacter details'
-  ClientHeight = 547
+  ClientHeight = 639
   ClientWidth = 321
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -27,16 +27,16 @@ object fKanjiDetails: TfKanjiDetails
   TextHeight = 13
   object pnlSecond: TPanel
     Left = 6
-    Top = 200
+    Top = 182
     Width = 315
-    Height = 347
-    Align = alBottom
+    Height = 457
+    Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
     object pnlFooter: TPanel
       AlignWithMargins = True
       Left = 0
-      Top = 327
+      Top = 437
       Width = 315
       Height = 18
       Margins.Left = 0
@@ -79,7 +79,7 @@ object fKanjiDetails: TfKanjiDetails
       Left = 0
       Top = 0
       Width = 315
-      Height = 325
+      Height = 435
       VertScrollBar.Tracking = True
       Align = alClient
       BorderStyle = bsNone
@@ -104,6 +104,16 @@ object fKanjiDetails: TfKanjiDetails
         ExplicitTop = 208
         ExplicitWidth = 295
       end
+      object mmWords: TLabel
+        Left = 0
+        Top = 261
+        Width = 309
+        Height = 26
+        Align = alTop
+        Caption = 'asd bsd'#13'Test'
+        WordWrap = True
+        ExplicitWidth = 37
+      end
       object pnlCategories: TFlowPanel
         Left = 0
         Top = 19
@@ -120,8 +130,6 @@ object fKanjiDetails: TfKanjiDetails
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
-        ExplicitLeft = -3
-        ExplicitTop = 3
       end
       object pnlLinks: TFlowPanel
         Left = 0
