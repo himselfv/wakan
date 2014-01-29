@@ -243,7 +243,6 @@ function GetCharValueRad(index,propType:integer):integer;
 function RadicalUnicode(const radno: integer): FString;
 function RadicalIndex(const rad: FChar): integer;
 
-
 implementation
 uses MemSource, PKGWrite, JWBUnit;
 

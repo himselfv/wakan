@@ -375,16 +375,6 @@ object fKanjiDetails: TfKanjiDetails
       Height = 65
       Brush.Color = clWindow
     end
-    object pbSimplified: TPaintBox
-      Left = 248
-      Top = 24
-      Width = 49
-      Height = 49
-      OnMouseDown = pbSimplifiedMouseDown
-      OnMouseMove = pbSimplifiedMouseMove
-      OnMouseUp = pbSimplifiedMouseUp
-      OnPaint = pbSimplifiedPaint
-    end
     object RxLabel10: TLabel
       Left = 160
       Top = 0
@@ -454,7 +444,7 @@ object fKanjiDetails: TfKanjiDetails
       ShowHint = True
       OnClick = btnGoToWordsClick
     end
-    object lblType: TLabel
+    object lblCharClass: TLabel
       Left = 4
       Top = 4
       Width = 57
@@ -467,6 +457,16 @@ object fKanjiDetails: TfKanjiDetails
       Font.Style = [fsBold]
       ParentFont = False
       Transparent = True
+    end
+    object pbSimplified: TPaintBox
+      Left = 248
+      Top = 24
+      Width = 49
+      Height = 49
+      OnMouseDown = pbSimplifiedMouseDown
+      OnMouseMove = pbSimplifiedMouseMove
+      OnMouseUp = pbSimplifiedMouseUp
+      OnPaint = pbSimplifiedPaint
     end
   end
   object FormPlacement1: TFormPlacement

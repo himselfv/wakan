@@ -334,6 +334,7 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
 
   categories: array of integer; //of checked category indexes
   flags: TReadFilterFlags;
+  kclass: char;
 
   procedure CopyCategories; //they're UNIMAGINABLY slow if used as is
   var i: integer;
@@ -519,28 +520,12 @@ begin
       if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
       if accept then
       begin
-        if curlang<>'c' then
-        begin
-          if TChar.Int(TCharJouyouGrade)<9 then
-            sbJouyou:='C'
-          else
-          if TChar.Int(TCharJouyouGrade)<10 then
-            sbJouyou:='N'
-          else
-            sbJouyou:='U';
-        end else begin
-  //        if TChar.Str(TCharType)[1]='A'then sbJouyou:='A'else
-  //        if TChar.Str(TCharType)[1]='J'then sbJouyou:='J'else
-          if TChar.Int(TCharChFrequency)<=5 then
-            sbJouyou:='C'
-          else
-            sbJouyou:='U';
-        end;
+        kclass := GetCharClass(TChar.Int(TCharIndex));
         if ((curlang<>'c') and (fKanjiSearch.rgSortBy.ItemIndex=3))
         or ((curlang='c') and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
-          ki.Insert(random(ki.Count),sbJouyou+TChar.Str(TCharUnicode))
+          ki.Insert(random(ki.Count),kclass+TChar.Str(TCharUnicode))
         else
-          ki.Add(sbJouyou+TChar.Str(TCharUnicode));
+          ki.Add(kclass+TChar.Str(TCharUnicode));
       end;
       if clipsort then inc(clipind) else TChar.Next;
     end;
@@ -821,7 +806,6 @@ begin
     DrawGrid1.Canvas.Brush.Color:=Col('Kanji_Back');
     TChar.Locate('Unicode',kix);
     kig:=ki[DrawGrid1.ColCount*ARow+Acol];
-    if IsKnown(KnownLearned,TChar.Str(TCharUnicode)) then kig:='K';
     case kig[1] of
       'K':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Learned');
       'C':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Common');

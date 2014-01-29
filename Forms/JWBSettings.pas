@@ -278,6 +278,8 @@ type
     lblCopyFormatsIni: TUrlLabel;
     lblCopyFormatsDocumentation: TUrlLabel;
     Label20: TLabel;
+    cbDetailsShowKanjiClass: TCheckBox;
+    cbDetailsKanjiInColor: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -803,6 +805,10 @@ begin
   CheckBox51.Checked:=reg.ReadBool('Characters','StrokeOrderGridFont',false);
   CheckBox3.Checked:=reg.ReadBool('Characters','NoShowColors',false);
   cbYomiIgnoreOkurigana.Checked:=reg.ReadBool('Characters','YomiOkurigana',false);
+
+  cbDetailsShowKanjiClass.Checked:=reg.ReadBool('KanjiDetails','ShowKanjiClass',true);
+  cbDetailsKanjiInColor.Checked:=reg.ReadBool('KanjiDetails','KanjiInColor',true);
+
   if reg.ReadString('Fonts','FontSet','0')<>'1' then
     AutoDetectFonts({Silent=}true)
   else begin
@@ -1085,6 +1091,10 @@ begin
   reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.cbLeftMatchOnly.Checked);
   reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.cbPopularOnly.Checked);
   reg.WriteBool('Characters','CompoundsFreq',fKanjiCompounds.cbSortByFrequency.Checked);
+
+  reg.WriteBool('KanjiDetails','ShowKanjiClass',cbDetailsShowKanjiClass.Checked);
+  reg.WriteBool('KanjiDetails','KanjiInColor',cbDetailsKanjiInColor.Checked);
+
   reg.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
   reg.WriteString('Fonts','Japanese',FontJapanese);
   reg.WriteString('Fonts','Small',FontSmall);

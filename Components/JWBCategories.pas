@@ -18,7 +18,7 @@ categories with the same name.
 
 interface
 uses SysUtils, Classes, StdCtrls, Generics.Collections, JWBStrings,
-  MemSource;
+  MemSource, TextTable;
 
 type
   TCatPrefix = char;
@@ -130,6 +130,21 @@ procedure SetKnown(listno:integer;const char:FString;known:boolean); overload; i
 {$ENDIF}
 
 
+{
+Classification depends on a number of factors, different classes are shown in
+different colors.
+Supported classes (not mutually exclusive, in the order of priority):
+  K: Learned
+  C: Common
+  U: Rare/Unknown
+  N: Names (mostly used in names only)
+  A: Japanese and chinese
+  J: Japanese only
+}
+function GetCharClass(const ACharIndex: integer; ACursor: TTextTableCursor = nil): char; overload;
+function GetCharClass(const AChar: FChar; ACursor: TTextTableCursor = nil): char; overload;
+
+
 { Loading }
 { Call these after you've loaded the user data }
 
@@ -145,7 +160,7 @@ function FixDuplicateCategories(): boolean;
 
 
 implementation
-uses Controls, Forms, Windows, TextTable, JWBMenu, JWBUserData, JWBVocabFilters,
+uses Controls, Forms, Windows, JWBMenu, JWBUserData, JWBVocabFilters,
   JWBNewCategory, JWBUnit, JWBCharData, JWBLegacyMarkup;
 
 const
@@ -1105,6 +1120,72 @@ begin
     SetKnown(listno, char[1], known);
 end;
 {$ENDIF}
+
+
+{ Character classes }
+
+function GetCharClass(const ACharIndex: integer; ACursor: TTextTableCursor): char;
+var CChar: TTextTableCursor;
+begin
+  if ACharIndex<0 then begin
+    Result:='U';
+    exit;
+  end;
+
+  if ACursor<>nil then
+    CChar := ACursor
+  else
+    CChar := TChar.NewCursor;
+  try
+    Assert(CChar.Locate('Index', ACharIndex)); //must not happen
+
+    if curLang<>'c' then
+    begin
+      if CChar.Int(TCharJouyouGrade)<9 then
+        Result:='C'
+      else
+      if CChar.Int(TCharJouyouGrade)<10 then
+        Result:='N'
+      else
+        Result:='U';
+    end else
+      Result := TChar.Str(TCharType)[1]; //'A'll or 'J'apanese only
+      if (Result='A') or (Result='J') then begin
+       //Keep it
+      end else
+      if CChar.Int(TCharChFrequency)<=5 then
+        Result:='C'
+      else
+        Result:='U';
+    if IsKnown(KnownLearned,CChar.Str(TCharUnicode)) then
+      Result:='K';
+
+  finally
+    if ACursor=nil then
+      FreeAndNil(CChar);
+  end;
+end;
+
+function GetCharClass(const AChar: FChar; ACursor: TTextTableCursor): char;
+var CChar: TTextTableCursor;
+begin
+  if ACursor<>nil then
+    CChar := ACursor
+  else
+    CChar := TChar.NewCursor;
+  try
+    if not CChar.Locate('Unicode', AChar) then begin
+      Result := 'U'; //unknown char
+      exit;
+    end;
+
+    Result := GetCharClass(CChar.Int(TCharIndex), CChar);
+
+  finally
+    if ACursor=nil then
+      FreeAndNil(CChar);
+  end;
+end;
 
 
 { Loading }

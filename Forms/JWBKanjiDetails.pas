@@ -50,7 +50,6 @@ type
     pbKanji: TPaintBox;
     pbRadical: TPaintBox;
     ShapeSimplified: TShape;
-    pbSimplified: TPaintBox;
     RxLabel10: TLabel;
     RxLabel35: TLabel;
     lblRadicalNo: TLabel;
@@ -66,8 +65,9 @@ type
     pnlOldCategories: TFlowPanel;
     cbCategories: TComboBox;
     btnAddToCategory: TSpeedButton;
-    lblType: TLabel;
+    lblCharClass: TLabel;
     mmWords: TLabel;
+    pbSimplified: TPaintBox;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -455,7 +455,6 @@ available.
 }
 procedure TfKanjiDetails.SetCharDetails(chars:FString);
 var i:integer;
-  kig:string;
   h:integer;
   cv:string;
   scat:string;
@@ -464,6 +463,7 @@ var i:integer;
   read: TCharReadings;
   curindex: integer;
   CChar: TTextTableCursor;
+  kclass: char;
 begin
   //Only Kanji are allowed
   for i := 1 to flength(chars) do
@@ -551,6 +551,16 @@ begin
       RxLabel35.Show;
       pbSimplified.Show;
       ShapeSimplified.Show;
+      if fSettings.cbDetailsKanjiInColor.Checked then begin
+        kclass := GetCharClass(cursimple[1]);
+        case kclass of
+          'K':pbSimplified.Font.Color:=Col('Kanji_Learned');
+          'C':pbSimplified.Font.Color:=Col('Kanji_Common');
+          'U':pbSimplified.Font.Color:=Col('Kanji_Rare');
+          'N':pbSimplified.Font.Color:=Col('Kanji_Names');
+        end;
+      end else
+        pbSimplified.Font.Color := clBlack;
     end else begin
       cursimple:='';
       RxLabel35.Hide;
@@ -569,6 +579,16 @@ begin
     end else begin
       lblRadicalNo.Caption:=IntToStr(curradno);
       curradical := RadicalUnicode(curradno);
+      if fSettings.cbDetailsKanjiInColor.Checked then begin
+        kclass := GetCharClass(curradical[1]);
+        case kclass of
+          'K':pbRadical.Font.Color:=Col('Kanji_Learned');
+          'C':pbRadical.Font.Color:=Col('Kanji_Common');
+          'U':pbRadical.Font.Color:=Col('Kanji_Rare');
+          'N':pbRadical.Font.Color:=Col('Kanji_Names');
+        end;
+      end else
+        pbRadical.Font.Color := clBlack;
     end;
 
     //AddToCategory -- "add" if any of the chars is not in it
@@ -602,34 +622,40 @@ begin
     end;
 
     //Words button
-     btnGoToWords.Enabled := curindex>0; //when 0 or multiple chars, can't "go to words"
+    btnGoToWords.Enabled := curindex>0; //when 0 or multiple chars, can't "go to words"
 
-    //Kanji color
+    //Kanji class/color
     if curindex<0 then
-      kig:='U'
+      kclass := 'U'
     else
-    if curLang<>'c' then
-    begin
-      if CChar.Int(TCharJouyouGrade)<9 then kig:='C'else
-      if CChar.Int(TCharJouyouGrade)<10 then kig:='N'else
-      kig:='U';
+      kclass := GetCharClass(curindex);
+
+    lblCharClass.Visible := (curindex>0) and fSettings.cbDetailsShowKanjiClass.Checked;
+    if lblCharClass.Visible then begin
+      case kclass of
+        'K':lblCharClass.Font.Color:=Col('Kanji_Learned');
+        'C':lblCharClass.Font.Color:=Col('Kanji_Common');
+        'U':lblCharClass.Font.Color:=Col('Kanji_Rare');
+        'N':lblCharClass.Font.Color:=Col('Kanji_Names');
+      end;
+      case kclass of
+        'K':lblCharClass.Caption:=_l('#00140^eLearned');
+        'C':lblCharClass.Caption:=_l('#00141^eCommon');
+        'U':lblCharClass.Caption:=_l('#00142^eRare');
+        'N':lblCharClass.Caption:=_l('#00143^eUsed in names');
+        'A':lblCharClass.Caption:=_l('#00144^eJapanese and chinese');
+        'J':lblCharClass.Caption:=_l('#00145^eJapanese only');
+      end;
+    end;
+    if fSettings.cbDetailsKanjiInColor.Checked then begin
+      case kclass of
+        'K':pbKanji.Font.Color:=Col('Kanji_Learned');
+        'C':pbKanji.Font.Color:=Col('Kanji_Common');
+        'U':pbKanji.Font.Color:=Col('Kanji_Rare');
+        'N':pbKanji.Font.Color:=Col('Kanji_Names');
+      end;
     end else
-      if CChar.Int(TCharChFrequency)<=5 then kig:='C'else kig:='U';
-    if IsAllKnown(KnownLearned,curChars) then kig:='K';
-    case kig[1] of
-      'K':lblType.Font.Color:=Col('Kanji_Learned');
-      'C':lblType.Font.Color:=Col('Kanji_Common');
-      'U':lblType.Font.Color:=Col('Kanji_Rare');
-      'N':lblType.Font.Color:=Col('Kanji_Names');
-    end;
-    case kig[1] of
-      'K':lblType.Caption:=_l('#00140^eLearned');
-      'C':lblType.Caption:=_l('#00141^eCommon');
-      'U':lblType.Caption:=_l('#00142^eRare');
-      'N':lblType.Caption:=_l('#00143^eUsed in names');
-      'A':lblType.Caption:=_l('#00144^eJapanese and chinese');
-      'J':lblType.Caption:=_l('#00145^eJapanese only');
-    end;
+      pbKanji.Font.Color := clBlack;
 
     if flength(curChars)<1 then
       lblMeaning.Caption := ''
