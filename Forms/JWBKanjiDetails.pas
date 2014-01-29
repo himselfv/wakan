@@ -65,7 +65,7 @@ type
     btnAddToCategory: TSpeedButton;
     PopupMenu: TPopupMenu;
     Configure1: TMenuItem;
-    sbGoToWords: TSpeedButton;
+    btnGoToWords: TSpeedButton;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -110,7 +110,7 @@ type
     procedure pmDeleteClick(Sender: TObject);
     procedure pmGoToCategoryClick(Sender: TObject);
     procedure Configure1Click(Sender: TObject);
-    procedure sbGoToWordsClick(Sender: TObject);
+    procedure btnGoToWordsClick(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -159,6 +159,7 @@ type
     procedure CategoryButtonClick(Sender: TObject);
     procedure AddCategoryButtonClick(Sender: TObject);
     procedure AddCategoryClick(Sender: TObject);
+    procedure NewCategoryClick(Sender: TObject);
   public
     procedure CategoryListChanged;
 
@@ -299,7 +300,7 @@ begin
   pbKanji.Invalidate;
 end;
 
-procedure TfKanjiDetails.sbGoToWordsClick(Sender: TObject);
+procedure TfKanjiDetails.btnGoToWordsClick(Sender: TObject);
 begin
   fMenu.DisplayMode := 6;
   fKanjiCompounds.SetCharCompounds(Self.curSingleChar);
@@ -595,6 +596,9 @@ begin
       else btnStrokeOrder.Caption:='';
     end;
 
+    //Words
+     btnGoToWords.Enabled := curindex>0; //when 0 or multiple chars, can't "go to words"
+
     //Kanji color
     if curindex<0 then
       kig:='U'
@@ -743,6 +747,7 @@ begin
   end;
 end;
 
+
 { Categories }
 
 procedure TfKanjiDetails.ClearCategories;
@@ -752,9 +757,51 @@ begin
     pnlCategories.Controls[i].Destroy;
 end;
 
+type
+  TCatButton = class(TButton)
+  protected
+    FPartial: boolean;
+    procedure CMParentFontChanged(var Message: TCMParentFontChanged); message CM_PARENTFONTCHANGED;
+  public
+    DropdownMenu: TPopupMenu;
+    constructor Create(AOwner: TComponent); override;
+    procedure SetPartial(const APartial: boolean);
+  end;
+
+constructor TCatButton.Create(AOwner: TComponent);
+begin
+  inherited;
+  FPartial := false;
+  Self.Margins.Top := 0;
+  Self.Margins.Left := 0;
+  Self.Margins.Bottom := 4; //6 for TLabel
+  Self.Margins.Right := 4; //8 for TLabel
+  Self.AlignWithMargins := true;
+  Self.Height := 20;
+ // Self.Cursor := crHandPoint; //for TButton
+end;
+
+procedure TCatButton.CMParentFontChanged(var Message: TCMParentFontChanged);
+begin
+  inherited;
+  if FPartial then
+    Self.Font.Color := clGrayText
+  else
+    Self.Font.Color := clBlue;
+ // Self.Font.Style := Self.Font.Style + [fsUnderline]; //for TLabel
+end;
+
+procedure TCatButton.SetPartial(const APartial: boolean);
+begin
+  FPartial := APartial;
+  if FPartial then
+    Self.Font.Color := clGrayText; //does not work with TButton
+  Self.Font.Style := Self.Font.Style + [fsItalic]; //for TButton
+end;
+
 procedure TfKanjiDetails.ReloadCategories;
 var i: integer;
-  btn: TButton;
+  btn: TCatButton;
 begin
   if Self.Visible then SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
   ClearCategories;
@@ -762,39 +809,28 @@ begin
  //include if any of the chars is in it
   for i:=0 to Length(KanjiCats)-1 do
     if IsAnyKnown(KanjiCats[i].idx,curChars) then begin
-      btn := TButton.Create(Self);
+      btn := TCatButton.Create(Self);
       btn.Caption := KanjiCats[i].name;
-      btn.Margins.Top := 0;
-      btn.Margins.Left := 0;
-      btn.Margins.Bottom := 4;
-      btn.Margins.Right := 4;
-      btn.AlignWithMargins := true;
       Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
       btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
-      btn.DropDownMenu := pmCategoryMenu;
+      btn.DropdownMenu := pmCategoryMenu;
       btn.OnClick := CategoryButtonClick;
       btn.Tag := i;
-      if not IsAllKnown(KanjiCats[i].idx,curChars) then begin
-        btn.Font := pnlCategories.Font;
-        btn.Font.Style := btn.Font.Style + [fsUnderline];
-      end;
       pnlCategories.InsertControl(btn);
+      if not IsAllKnown(KanjiCats[i].idx,curChars) then //after Insert because may require parent.Font
+        btn.SetPartial(true);
     end;
 
   ReloadAddCategoryMenu;
 
-  btn := TButton.Create(Self);
+  btn := TCatButton.Create(Self);
   btn.Caption := _l('#01110^+Category');
   btn.Hint := _l('#01111^Add to category');
-  btn.Margins.Top := 0;
-  btn.Margins.Left := 0;
-  btn.Margins.Bottom := 4;
-  btn.Margins.Right := 4;
-  btn.AlignWithMargins := true;
   Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
   btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
-  btn.DropDownMenu := pmAddCategoryMenu;
+  btn.DropdownMenu := pmAddCategoryMenu;
   btn.OnClick := AddCategoryButtonClick;
+  btn.Enabled := flength(curChars)>0; //cannot add categories to "no chars"
   pnlCategories.InsertControl(btn);
 
   if Self.Visible then begin
@@ -809,24 +845,25 @@ procedure TfKanjiDetails.CategoryListChanged;
 begin
   PasteKanjiCategoriesTo(Self.cbCategories.Items);
   Self.cbCategories.ItemIndex:=0;
-  Self.ReloadAddCategoryMenu;
+  ReloadCategories; //some could've been deleted
+ //ReloadAddCategoryMenu; //called from ReloadCategories
 end;
 
 procedure TfKanjiDetails.CategoryButtonClick(Sender: TObject);
-var btn: TButton;
+var btn: TCatButton;
 begin
-  btn := TButton(Sender);
+  btn := TCatButton(Sender);
   pmAddToAll.Visible := not IsAllKnown(KanjiCats[btn.Tag].idx, curChars);
   AddCategoryButtonClick(Sender); //standard popup routine
 end;
 
 procedure TfKanjiDetails.AddCategoryButtonClick(Sender: TObject);
-var btn: TButton;
+var btn: TCatButton;
   pm: TPopupMenu;
   pos: TPoint;
 begin
-  btn := TButton(Sender);
-  pm := btn.DropDownMenu;
+  btn := TCatButton(Sender);
+  pm := btn.DropdownMenu;
   pm.PopupComponent := btn;
   pos := btn.ClientOrigin;
   pm.Popup(pos.X, pos.Y+btn.Height);
@@ -853,15 +890,26 @@ begin
 
   item := TMenuItem.Create(Self);
   item.Caption := _l('#01112^New...');
+  item.OnClick := NewCategoryClick;
   pmAddCategoryMenu.Items.Add(item);
 end;
 
 //Called from AddCategoryMenu with Sender set to one of TMenuItems
 procedure TfKanjiDetails.AddCategoryClick(Sender: TObject);
-var catIndex: integer;
-  i: integer;
+var catIndex, i: integer;
 begin
   catIndex := KanjiCats[TMenuItem(Sender).Tag].idx;
+  for i := 1 to flength(curChars) do
+    SetKnown(catIndex, fgetch(curChars,i), true);
+  fMenu.ChangeUserData;
+  RefreshDetails;
+end;
+
+procedure TfKanjiDetails.NewCategoryClick(Sender: TObject);
+var catIndex, i: integer;
+begin
+  catIndex := NewKanjiCategoryUI();
+  if catIndex<0 then exit;
   for i := 1 to flength(curChars) do
     SetKnown(catIndex, fgetch(curChars,i), true);
   fMenu.ChangeUserData;
@@ -871,9 +919,9 @@ end;
 //Called from CategoryMenu, with PopupItem set to one of Category buttons
 procedure TfKanjiDetails.pmAddToAllClick(Sender: TObject);
 var i: integer;
-  btn: TButton;
+  btn: TCatButton;
 begin
-  btn := TButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  btn := TCatButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
   for i := 1 to flength(curChars) do
     SetKnown(KanjiCats[btn.Tag].idx, fgetch(curChars,i), true);
   fMenu.ChangeUserData;
@@ -882,9 +930,9 @@ end;
 
 procedure TfKanjiDetails.pmDeleteClick(Sender: TObject);
 var i: integer;
-  btn: TButton;
+  btn: TCatButton;
 begin
-  btn := TButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  btn := TCatButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
   for i := 1 to flength(curChars) do
     SetKnown(KanjiCats[btn.Tag].idx, fgetch(curChars,i), false);
   fMenu.ChangeUserData;
@@ -892,9 +940,9 @@ begin
 end;
 
 procedure TfKanjiDetails.pmGoToCategoryClick(Sender: TObject);
-var btn: TButton;
+var btn: TCatButton;
 begin
-  btn := TButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  btn := TCatButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
   if not fKanji.Visible then
     fMenu.aModeKanji.Execute;
  { For now we just reset filters to "show this group only".

@@ -106,7 +106,7 @@ object fKanjiDetails: TfKanjiDetails
       end
       object pnlCategories: TFlowPanel
         Left = 0
-        Top = 0
+        Top = 19
         Width = 309
         Height = 17
         Align = alTop
@@ -123,7 +123,7 @@ object fKanjiDetails: TfKanjiDetails
       end
       object pnlLinks: TFlowPanel
         Left = 0
-        Top = 17
+        Top = 0
         Width = 309
         Height = 19
         Align = alTop
@@ -409,7 +409,7 @@ object fKanjiDetails: TfKanjiDetails
     end
     object btnAddToCategory: TSpeedButton
       Left = 287
-      Top = 148
+      Top = 151
       Width = 24
       Height = 21
       Caption = '+'
@@ -421,7 +421,7 @@ object fKanjiDetails: TfKanjiDetails
       ParentFont = False
       OnClick = btnAddToCategoryClick
     end
-    object sbGoToWords: TSpeedButton
+    object btnGoToWords: TSpeedButton
       Left = 80
       Top = 153
       Width = 73
@@ -430,11 +430,11 @@ object fKanjiDetails: TfKanjiDetails
       Caption = '#01118^Words'
       ParentShowHint = False
       ShowHint = True
-      OnClick = sbGoToWordsClick
+      OnClick = btnGoToWordsClick
     end
     object cbCategories: TComboBox
       Left = 159
-      Top = 148
+      Top = 151
       Width = 127
       Height = 21
       Style = csDropDownList
