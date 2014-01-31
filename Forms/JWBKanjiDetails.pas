@@ -221,6 +221,9 @@ end;
 procedure TfKanjiDetails.FormShow(Sender: TObject);
 begin
   UpdateVisible();
+ { AutoSize does not work while invisible, so we have to trigger AdjustSize for
+  autosized controls }
+  pnlCategories.Height := pnlCategories.Height + 1;
 end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
@@ -837,7 +840,9 @@ procedure TfKanjiDetails.ReloadCategories;
 var i: integer;
   btn: TCatButton;
 begin
-  if Self.Visible then SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
+  if Self.Visible then
+    SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
+  pnlCategories.DisableAlign;
   ClearCategories;
 
  //include if any of the chars is in it
@@ -867,6 +872,7 @@ begin
   btn.Enabled := flength(curChars)>0; //cannot add categories to "no chars"
   pnlCategories.InsertControl(btn);
 
+  pnlCategories.EnableAlign;
   if Self.Visible then begin
     SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
     RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
