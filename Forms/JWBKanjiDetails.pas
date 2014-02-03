@@ -66,7 +66,6 @@ type
     cbCategories: TComboBox;
     btnAddToCategory: TSpeedButton;
     lblCharClass: TLabel;
-    mmWords: TLabel;
     pbSimplified: TPaintBox;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
@@ -164,9 +163,6 @@ type
     procedure NewCategoryClick(Sender: TObject);
   public
     procedure CategoryListChanged;
-
-  public
-    procedure ReloadWordExamples(const read: TCharReadings);
 
   end;
 
@@ -673,9 +669,6 @@ begin
         lblMeaning.Caption:=read.def;
       PopulateKVal(CChar, read);
     end;
-
-   //Word examples
-    ReloadWordExamples(read);
 
   finally
     FreeAndNil(CChar);
@@ -1208,6 +1201,9 @@ end;
 
 { Readings }
 
+{
+Disabled until we get to doing word examples properly
+
 procedure TfKanjiDetails.ReloadWordExamples(const read: TCharReadings);
 var parts: TStringArray;
   i, j, sep: integer;
@@ -1250,6 +1246,7 @@ begin
 
   mmWords.Caption := tmp;
 end;
+}
 
 
 { Form alignment / docking }

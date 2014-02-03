@@ -104,16 +104,6 @@ object fKanjiDetails: TfKanjiDetails
         ExplicitTop = 208
         ExplicitWidth = 295
       end
-      object mmWords: TLabel
-        Left = 0
-        Top = 261
-        Width = 309
-        Height = 26
-        Align = alTop
-        Caption = 'asd bsd'#13'Test'
-        WordWrap = True
-        ExplicitWidth = 37
-      end
       object pnlCategories: TFlowPanel
         Left = 0
         Top = 19
