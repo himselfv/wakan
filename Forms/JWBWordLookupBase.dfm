@@ -170,6 +170,7 @@ object fWordLookupBase: TfWordLookupBase
       Caption = '-'
     end
     object miLookUpIn: TMenuItem
+      AutoHotkeys = maManual
       Caption = '#01124^Look Up In'
       SubMenuImages = ilImages
       ImageIndex = 2

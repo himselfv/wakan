@@ -208,9 +208,13 @@ begin
   if fSettings.cbDictRefLinksInSubmenu.Checked then begin
     miBeforeLookupIn.Visible := false;
     miAfterLookupIn.Visible := false;
+    miBeforeLookupIn.Caption := ''; //or they'd still be visible, being separators
+    miAfterLookupIn.Caption := '';
     miLookUpIn.Visible := true;
     idx := -1; //unused
   end else begin
+    miBeforeLookupIn.Caption := '-';
+    miAfterLookupIn.Caption := '-';
     miBeforeLookupIn.Visible := true;
     miAfterLookupIn.Visible := true;
     miLookUpIn.Visible := false;
