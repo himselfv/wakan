@@ -318,6 +318,14 @@ function AsciiToFullwidth(const s: string): string; overload;
 function AsciiToHalfwidth(const c: char): char; overload;
 function AsciiToHalfwidth(const s: string): string; overload;
 
+type
+  TUrlEncodeOption = (
+    ueNoSpacePlus //Encode space as %20, not "+"
+  );
+  TUrlEncodeOptions = set of TUrlEncodeOption;
+
+function UrlEncode(const s: UnicodeString; options: TUrlEncodeOptions): AnsiString;
+
 implementation
 uses WideStrUtils, ShlObj;
 
@@ -1701,5 +1709,27 @@ begin
     Result[i] := AsciiToFullwidth(Result[i]);
 end;
 
+
+//Not UTF16-surrogate safe as of now
+function UrlEncode(const s: UnicodeString; options: TUrlEncodeOptions): AnsiString;
+var i, j: integer;
+  U: UTF8String;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+    if CharInSet(s[i], ['a'..'z', 'A'..'Z', '1'..'9', '0']) then
+      Result := Result + AnsiChar(s[i])
+    else
+    if s[i]=' ' then
+      if ueNoSpacePlus in options then
+        Result := Result + '%20'
+      else
+        Result := Result + '+'
+    else begin
+      U := UTF8String(s[i]); // explicit Unicode->UTF8 conversion
+      for j := 1 to Length(U) do
+        Result := Result + '%' + AnsiString(IntToHex(Ord(U[j]), 2));
+    end;
+end;
 
 end.

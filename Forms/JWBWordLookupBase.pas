@@ -21,6 +21,7 @@ type
     miGoToVocab: TMenuItem;
     miAddToVocab: TMenuItem;
     ilImages: TImageList;
+    miLookUpIn: TMenuItem;
     procedure pmPopupPopup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
     procedure StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -54,6 +55,7 @@ type
     procedure ReloadCopyFormats;
     procedure CopyInFormatClick(Sender: TObject);
     procedure ConfigureClick(Sender: TObject);
+    procedure ReloadReferenceLinks;
   public
    { Currently selected word, cached for simplicity. Some rely on it outside
     of the form, such as JWBHint on JWBWordLookup.curword }
@@ -76,7 +78,7 @@ var
 
 implementation
 uses UITypes, JWBStrings, JWBUnit, JWBMenu, JWBCategories, JWBVocab, JWBVocabAdd,
-  JWBSettings, JWBLegacyMarkup;
+  JWBSettings, JWBLegacyMarkup, JWBRefLinks;
 
 {$R *.dfm}
 
@@ -136,6 +138,9 @@ begin
   miCopyAs.Visible := (ARow>0); //click on data
   if miCopyAs.Visible then
     ReloadCopyFormats;
+  miLookUpIn.Visible := (ARow>0);
+  if miLookUpIn.Visible then
+    ReloadReferenceLinks;
   miGoToVocab.Visible := (ARow>0) and (FResults[ARow-1].userIndex > 0);
   miAddToVocab.Visible := (ARow>0);
 end;
@@ -177,6 +182,25 @@ procedure TfWordLookupBase.ConfigureClick(Sender: TObject);
 begin
   fSettings.pcPages.ActivePage:=fSettings.tsDictCopyFormats;
   fSettings.ShowModal;
+end;
+
+procedure TfWordLookupBase.ReloadReferenceLinks;
+var i, ARow: integer;
+  mi: TMenuItem;
+begin
+  miLookUpIn.Clear;
+
+  if StringGrid.Selection.Top <> StringGrid.Selection.Bottom then begin
+    miLookUpIn.Visible := false;
+    exit;
+  end;
+  ARow := StringGrid.Selection.Top;
+
+  for i := 0 to ExpressionLinks.Count-1 do
+    if ExpressionLinks[i].MatchesLang(curLang) then begin
+      mi := TRefMenuItem.Create(Self, ExpressionLinks[i], FResults[ARow-1].kanji);
+      miLookUpIn.Add(mi);
+    end;
 end;
 
 procedure TfWordLookupBase.miResetColumnsClick(Sender: TObject);

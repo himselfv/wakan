@@ -73,7 +73,8 @@ uses
   RaineRadicals in 'Components\RaineRadicals.pas',
   JWBWordLookupBase in 'Forms\JWBWordLookupBase.pas' {fWordLookupBase},
   JWBCopyFormats in 'Components\JWBCopyFormats.pas',
-  JWBLegacyMarkup in 'Components\JWBLegacyMarkup.pas';
+  JWBLegacyMarkup in 'Components\JWBLegacyMarkup.pas',
+  JWBRefLinks in 'Components\JWBRefLinks.pas';
 
 {$R *.RES}
 

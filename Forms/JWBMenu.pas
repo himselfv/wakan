@@ -619,7 +619,7 @@ uses Types, StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
   JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
   JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
   JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils,
-JWBCharDataImport, JWBCopyFormats;
+  JWBCharDataImport, JWBCopyFormats, JWBRefLinks;
 
 {$R *.DFM}
 
@@ -1139,19 +1139,23 @@ begin
           if ln='IgnoreWords'then sect:=8 else
           if ln='ReadingChart'then sect:=9 else
           if ln='KnownDictSources' then sect:=10 else
+          if ln='CharacterLinks' then sect:=11 else
+          if ln='ExpressionLinks' then sect:=12 else
           sect:=0;
         end else
-        begin
          //Some of the fields are in hex unicode, so we have to convert them
-          if sect=1 then partl.Add(ln);
-          if sect=2 then defll.Add(ln);
-          if sect=5 then AddCharPropType(ln);
-          if sect=6 then AddRomaSortRecord(ln);
-          if sect=7 then suffixl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
-          if sect=8 then ignorel.Add(fstr(ln));
-          if sect=9 then readchl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
-          if sect=10 then KnownDictSources.Add(ln);
-        end;
+          case sect of
+            1: partl.Add(ln);
+            2: defll.Add(ln);
+            5: AddCharPropType(ln);
+            6: AddRomaSortRecord(ln);
+            7: suffixl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
+            8: ignorel.Add(fstr(ln));
+            9: readchl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
+            10: KnownDictSources.Add(ln);
+            11: CharacterLinks.Add(TRefLink.FromString(ln));
+            12: ExpressionLinks.Add(TRefLink.FromString(ln));
+          end;
       end;
     end;
 
