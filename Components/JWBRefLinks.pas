@@ -9,7 +9,7 @@ How to use:
 }
 
 interface
-uses Classes, Generics.Collections, Menus,
+uses Classes, Generics.Collections, Graphics, StdCtrls, Menus, Controls,
 {$IFDEF MSWINDOWS}
   ShellAPI, Winapi.Windows
 {$ENDIF MSWINDOWS}
@@ -51,10 +51,20 @@ type
     procedure Click; override;
   end;
 
+  TRefLabel = class(TLabel)
+  protected
+    FRefLink: TRefLink;
+    FURL: string;
+    procedure CMParentFontChanged(var Message: TCMParentFontChanged); message CM_PARENTFONTCHANGED;
+  public
+    constructor Create(AOwner: TComponent; ARefLink: TRefLink; AData: string); reintroduce;
+    procedure Click; override;
+  end;
+
 procedure ShellOpen(const sCommand: string);
 
 implementation
-uses SysUtils, JWBStrings;
+uses SysUtils, JWBStrings, JWBIO;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';
@@ -138,12 +148,55 @@ begin
   end;
 end;
 
+//Converts every character to hex and prepends with % sign:
+//  %30%DF
+function UrlBytes(AData: PByte; ALength: integer): UTF8String; overload;
+const HexChars: UTF8String = '0123456789ABCDEF';
+var i: integer;
+begin
+  SetLength(Result, ALength*3);
+  for i := 1 to ALength do begin
+    Result[(i-1)*3+1] := '%';
+    Result[(i-1)*3+2] := HexChars[1+ AData^ shr 4];
+    Result[(i-1)*3+3] := HexChars[1+ AData^ and $0F];
+    Inc(AData);
+  end;
+end;
+
+function UrlBytes(const AText: UTF8String): UTF8String; overload;
+begin
+  if AText<>'' then
+    Result := UrlBytes(@AText[1], Length(AText))
+  else
+    Result := '';
+end;
+
+function EncodeStr(AString: string; const AOut: CEncoding): UTF8String;
+var ss: TMemoryStream;
+  enc: TEncoding;
+begin
+  enc := nil;
+  ss := TMemoryStream.Create;
+  try
+    enc := AOut.Create;
+    enc.Write(ss, AString);
+    FreeAndNil(enc); //Flush!
+    ss.Seek(0, soBeginning);
+    SetLength(Result, ss.Size);
+    ss.Read(Result[1], Length(Result));
+  finally
+    FreeAndNil(enc);
+    FreeAndNil(ss);
+  end;
+end;
+
 //Formats reference link text (Caption, Hint, Link), inserting data in the
 //appropriate formats where needed
 function FormatReferenceLinkText(AText: string; AData: string): string;
 var ps, pc: PChar;
   flag_specsymbol: boolean;
   form: string;
+  tmp: UTF8String;
 
   procedure CommitText;
   begin
@@ -182,28 +235,57 @@ begin
      }
       if pc^<>'s' then exit; //invalid format string
       Inc(pc);
-      if pc^=':' then begin
+
+      tmp := UTF8String(AData);
+     { Start from UTF16 data, but convert to UTF8 for handling. On conversions
+      which expect "normal text" we convert back to UTF16 temporarily where
+      required }
+      while pc^=':' do begin
+       //Read another conversion
         Inc(pc);
         ps := pc;
-        while (pc^<>#00) and (pc^<>'%') do
+        while (pc^<>#00) and (pc^<>'%') and (pc^<>':') do
           Inc(pc);
         if pc^=#00 then exit; //invalid format string
+
         form := spancopy(ps,pc);
-        Inc(pc);
-      end else
-        form := '';
 
-      if form='' then
-        Result := Result + AData
-      else
-      if form='hex' then
-        Result := Result + UnicodeToHex(AData)
-      else
-      if form='urlencode' then
-        Result := Result + string(URLEncode(AData, []))
-      else
-        exit; //unsupported format type
+       //Convert
+        if form='hex' then
+          tmp := UTF8String(UnicodeToHex(UnicodeString(tmp)))
+        else
+        if form='urlbytes' then
+          tmp := UrlBytes(tmp)
+        else
+        if form='urlencode' then
+          tmp := UTF8String(URLEncode(tmp, []))
+        else
+        if form='uppercase' then
+          tmp := UTF8String(Uppercase(UnicodeString(tmp)))
+        else
+        if form='lowercase' then
+          tmp := UTF8String(Lowercase(UnicodeString(tmp)))
+        else
+        if form='utf8' then
+          tmp := EncodeStr(UnicodeString(tmp), TUTF8Encoding)
+        else
+        if form='bigfive' then
+          tmp := EncodeStr(UnicodeString(tmp), TBIG5Encoding)
+        else
+        if form='gb2312' then
+          tmp := EncodeStr(UnicodeString(tmp), TGBEncoding)
+        else
+        if form='jis0208' then
+          tmp := EncodeStr(UnicodeString(tmp), TJISEncoding)
+        else
+          exit; //unsupported format type
 
+        if pc^='%' then
+          Inc(pc);
+        //leave :
+      end;
+
+      Result := Result + UnicodeString(tmp);
       ps := pc;
     end else
       Inc(pc);
@@ -212,14 +294,7 @@ begin
 
 end;
 
-constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
-begin
-  inherited Create(AOwner);
-  FRefLink := ARefLink;
-  Self.Caption := FormatReferenceLinkText(ARefLink.Caption, AData);
-  Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
-  Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
-end;
+
 
 procedure ShellOpen(const sCommand: string);
 begin
@@ -231,10 +306,42 @@ begin
 {$ENDIF POSIX}
 end;
 
+constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
+begin
+  inherited Create(AOwner);
+  FRefLink := ARefLink;
+  Self.Caption := FormatReferenceLinkText(ARefLink.Caption, AData);
+  Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
+  Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
+end;
+
 procedure TRefMenuItem.Click;
 begin
   ShellOpen(FURL);
 end;
+
+constructor TRefLabel.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
+begin
+  inherited Create(AOwner);
+  FRefLink := ARefLink;
+  Self.Caption := FormatReferenceLinkText(ARefLink.Caption, AData);
+  Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
+  Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
+  Self.Cursor := crHandPoint;
+end;
+
+procedure TRefLabel.Click;
+begin
+  ShellOpen(FURL);
+end;
+
+procedure TRefLabel.CMParentFontChanged(var Message: TCMParentFontChanged);
+begin
+  inherited;
+  Self.Font.Style := Self.Font.Style + [fsUnderline];
+  Self.Font.Color := clBlue;
+end;
+
 
 initialization
   CharacterLinks := TRefLinkList.Create(true);

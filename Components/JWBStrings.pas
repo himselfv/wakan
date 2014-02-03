@@ -324,7 +324,8 @@ type
   );
   TUrlEncodeOptions = set of TUrlEncodeOption;
 
-function UrlEncode(const s: UnicodeString; options: TUrlEncodeOptions): AnsiString;
+function UrlEncode(const s: UnicodeString; options: TUrlEncodeOptions): AnsiString; overload;
+function UrlEncode(const s: UTF8String; options: TUrlEncodeOptions): AnsiString; overload;
 
 implementation
 uses WideStrUtils, ShlObj;
@@ -1730,6 +1731,24 @@ begin
       for j := 1 to Length(U) do
         Result := Result + '%' + AnsiString(IntToHex(Ord(U[j]), 2));
     end;
+end;
+
+function UrlEncode(const s: UTF8String; options: TUrlEncodeOptions): AnsiString;
+var i: integer;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+    if CharInSet(s[i], ['a'..'z', 'A'..'Z', '1'..'9', '0']) then
+      Result := Result + AnsiChar(s[i])
+    else
+    if s[i]=' ' then
+      if ueNoSpacePlus in options then
+        Result := Result + '%20'
+      else
+        Result := Result + '+'
+    else
+     //This is already UTF8 so it's ok
+      Result := Result + '%' + AnsiString(IntToHex(Ord(s[i]), 2));
 end;
 
 end.

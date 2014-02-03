@@ -37,11 +37,6 @@ type
     pbKanjiInfo: TPaintBox;
     pnlCategories: TFlowPanel;
     pnlLinks: TFlowPanel;
-    ProUrlLabel1: TUrlLabel;
-    ProUrlLabel2: TUrlLabel;
-    ProUrlLabel3: TUrlLabel;
-    ProUrlLabel4: TUrlLabel;
-    ProUrlLabel5: TUrlLabel;
     pnlFirst: TPanel;
     FormPlacement1: TFormPlacement;
     ShapeKanji: TShape;
@@ -164,6 +159,10 @@ type
   public
     procedure CategoryListChanged;
 
+  protected
+    procedure ClearReferenceLinks;
+    procedure ReloadReferenceLinks;
+
   end;
 
 var
@@ -177,7 +176,8 @@ implementation
 
 uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
   JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard, JWBKanjiSearch,
-  JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBDic;
+  JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBDic,
+  JWBRefLinks;
 
 {$R *.DFM}
 
@@ -220,6 +220,7 @@ begin
  { AutoSize does not work while invisible, so we have to trigger AdjustSize for
   autosized controls }
   pnlCategories.Height := pnlCategories.Height + 1;
+  pnlLinks.Height := pnlLinks.Height + 1;
 end;
 
 procedure TfKanjiDetails.FormHide(Sender: TObject);
@@ -502,37 +503,10 @@ begin
       curkanji:=CChar.FCh(TCharUnicode); //curkanji is defined in another module, we set it because someone depends on it
     end;
 
-    { Url labels }
+   //Url labels
     pnlLinks.Visible := fSettings.cbDetailsShowLinks.Checked;
-    if curindex<0 then begin
-      ProURLLabel1.Enabled := false;
-      ProURLLabel1.URL := '';
-      ProURLLabel2.Enabled := false;
-      ProURLLabel2.URL := '';
-      ProURLLabel3.Enabled := false;
-      ProURLLabel3.URL := '';
-      ProURLLabel4.Enabled := false;
-      ProURLLabel4.URL := '';
-      ProURLLabel5.Enabled := false;
-      ProURLLabel5.URL := '';
-    end else begin
-      cv:=GetCharValue(curindex,51);
-      ProURLLabel1.Enabled:=cv<>'';
-      ProURLLabel1.URL:='http://www.zhongwen.com/cgi-bin/zipux2.cgi?b5=%'+copy(cv,1,2)+'%'+copy(cv,3,2);
-      ProURLLabel2.Enabled:=CChar.Int(TCharChinese)=0;
-      ProURLLabel2.URL:='http://www.csse.monash.edu.au/cgi-bin/cgiwrap/jwb/wwwjdic?1MKU'+lowercase(FStrToHex(curSingleChar));
-      ProURLLabel3.Enabled:=true;
-      ProURLLabel3.URL:='http://charts.unicode.org/unihan/unihan.acgi$0x'+lowercase(FStrToHex(curSingleChar));
-      cv:=GetCharValue(curindex,54);
-      ProURLLabel4.Enabled:=(cv<>'')
-        and TryStrToInt(copy(cv,1,2), cv_i1)
-        and TryStrToInt(copy(cv,3,2), cv_i2);
-      if ProURLLabel4.Enabled then
-        ProURLLabel4.URL:='www.ocrat.com/chargif/GB/horiz/'+lowercase(Format('%2x%2x',[cv_i1+160,cv_i2+160]))+'.html';
-      cv:=GetCharValue(curindex,57);
-      ProURLLabel5.Enabled:=cv<>'';
-      ProURLLabel5.URL:='http://web.mit.edu/jpnet/ji/data/'+cv+'.html';
-    end;
+    if pnlLinks.Visible then
+      ReloadReferenceLinks;
 
     //Simplified form
     if curindex<0 then
@@ -878,42 +852,45 @@ begin
   if Self.Visible then
     SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
   pnlCategories.DisableAlign;
-  ClearCategories;
+  try
+    ClearCategories;
 
- //include if any of the chars is in it
-  for i:=0 to Length(KanjiCats)-1 do
-    if IsAnyKnown(KanjiCats[i].idx,curChars) then begin
+   //include if any of the chars is in it
+    for i:=0 to Length(KanjiCats)-1 do
+      if IsAnyKnown(KanjiCats[i].idx,curChars) then begin
+        btn := TTagItem.Create(Self);
+        btn.Caption := KanjiCats[i].name;
+        Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
+        btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
+        btn.DropdownMenu := pmCategoryMenu;
+        btn.OnClick := CategoryButtonClick;
+        btn.Tag := i;
+        pnlCategories.InsertControl(btn);
+        if not IsAllKnown(KanjiCats[i].idx,curChars) then
+          btn.SetPartial(true);
+      end;
+
+    ReloadAddCategoryMenu;
+
+    if fSettings.rgDetailsCategoryEditorType.ItemIndex in [0,2] then begin
       btn := TTagItem.Create(Self);
-      btn.Caption := KanjiCats[i].name;
+      btn.Caption := _l('#01110^+Category');
+      btn.Hint := _l('#01111^Add to category');
       Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
       btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
-      btn.DropdownMenu := pmCategoryMenu;
-      btn.OnClick := CategoryButtonClick;
-      btn.Tag := i;
+      btn.DropdownMenu := pmAddCategoryMenu;
+      btn.OnClick := AddCategoryButtonClick;
+      btn.Enabled := flength(curChars)>0; //cannot add categories to "no chars"
       pnlCategories.InsertControl(btn);
-      if not IsAllKnown(KanjiCats[i].idx,curChars) then
-        btn.SetPartial(true);
     end;
 
-  ReloadAddCategoryMenu;
-
-  if fSettings.rgDetailsCategoryEditorType.ItemIndex in [0,2] then begin
-    btn := TTagItem.Create(Self);
-    btn.Caption := _l('#01110^+Category');
-    btn.Hint := _l('#01111^Add to category');
-    Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
-    btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
-    btn.DropdownMenu := pmAddCategoryMenu;
-    btn.OnClick := AddCategoryButtonClick;
-    btn.Enabled := flength(curChars)>0; //cannot add categories to "no chars"
-    pnlCategories.InsertControl(btn);
-  end;
-
-  pnlCategories.EnableAlign;
-  if Self.Visible then begin
-    SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
-    RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
-   //Normal Invalidate is not enough
+  finally
+    pnlCategories.EnableAlign;
+    if Self.Visible then begin
+      SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
+      RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
+     //Normal Invalidate is not enough
+    end;
   end;
 end;
 
@@ -1036,6 +1013,53 @@ begin
   fSettings.pcPages.ActivePage:=fSettings.tsCharacterDetailsItems;
   fSettings.ShowModal;
   Self.RefreshDetails;
+end;
+
+
+{ Reference links }
+
+procedure TfKanjiDetails.ClearReferenceLinks;
+var i: integer;
+begin
+  for i := pnlLinks.ControlCount-1 downto 0 do
+    pnlLinks.Controls[i].Destroy;
+end;
+
+procedure TfKanjiDetails.ReloadReferenceLinks;
+var i: integer;
+  lbl: TRefLabel;
+begin
+  if Self.Visible then
+    SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
+  pnlLinks.DisableAlign;
+  try
+    ClearReferenceLinks;
+
+    if curSingleChar=UH_NOCHAR then begin
+      pnlLinks.Visible := false;
+      exit;
+    end;
+
+    for i := 0 to CharacterLinks.Count-1 do
+      if CharacterLinks[i].MatchesLang(curLang) then begin
+        lbl := TRefLabel.Create(Self, CharacterLinks[i], curSingleChar);
+        lbl.Margins.Left := 0;
+        lbl.Margins.Top := 0;
+        lbl.Margins.Right := 5;
+        lbl.Margins.Bottom := 5;
+        lbl.AlignWithMargins := true;
+        lbl.Left := 10;
+        pnlLinks.InsertControl(lbl);
+      end;
+
+  finally
+    pnlLinks.EnableAlign;
+    if Self.Visible then begin
+      SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
+      RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
+     //Normal Invalidate is not enough
+    end;
+  end;
 end;
 
 

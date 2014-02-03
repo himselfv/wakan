@@ -89,7 +89,7 @@ object fKanjiDetails: TfKanjiDetails
       OnClick = ScrollboxClick
       object pbKanjiInfo: TPaintBox
         Left = 0
-        Top = 61
+        Top = 57
         Width = 309
         Height = 200
         Align = alTop
@@ -106,7 +106,7 @@ object fKanjiDetails: TfKanjiDetails
       end
       object pnlCategories: TFlowPanel
         Left = 0
-        Top = 19
+        Top = 15
         Width = 309
         Height = 17
         Align = alTop
@@ -121,143 +121,23 @@ object fKanjiDetails: TfKanjiDetails
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
+        ExplicitTop = 19
       end
       object pnlLinks: TFlowPanel
         Left = 0
         Top = 0
         Width = 309
-        Height = 19
+        Height = 15
         Align = alTop
         AutoSize = True
         BevelOuter = bvNone
         Padding.Bottom = 2
         TabOrder = 1
         OnClick = ScrollboxClick
-        object ProUrlLabel1: TUrlLabel
-          AlignWithMargins = True
-          Left = 0
-          Top = 0
-          Width = 54
-          Height = 13
-          Cursor = crHandPoint
-          Hint = 
-            '#00163^ewww.zhongwen.com - Etymological information about the ch' +
-            'aracter'
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 5
-          Margins.Bottom = 4
-          Caption = 'ZhongWen'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlue
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsUnderline]
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          Transparent = True
-        end
-        object ProUrlLabel2: TUrlLabel
-          AlignWithMargins = True
-          Left = 59
-          Top = 0
-          Width = 56
-          Height = 13
-          Cursor = crHandPoint
-          Hint = 
-            '#00164^ewww.csse.monash.edu.au/~jwb/wwwjdic - Jim Breen'#39's WWWJDI' +
-            'C dictionary server'
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 5
-          Margins.Bottom = 4
-          Caption = 'WWWJDIC'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlue
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsUnderline]
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          Transparent = True
-        end
-        object ProUrlLabel3: TUrlLabel
-          AlignWithMargins = True
-          Left = 120
-          Top = 0
-          Width = 36
-          Height = 13
-          Cursor = crHandPoint
-          Hint = 
-            '#00165^echarts.unicode.org/unihan - UniHan entry for this charac' +
-            'ter'
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 5
-          Margins.Bottom = 4
-          Caption = 'UniHan'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlue
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsUnderline]
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          Transparent = True
-        end
-        object ProUrlLabel4: TUrlLabel
-          AlignWithMargins = True
-          Left = 161
-          Top = 0
-          Width = 26
-          Height = 13
-          Cursor = crHandPoint
-          Hint = '#00166^ewww.ocrat.com - Animated stroke order'
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 5
-          Margins.Bottom = 4
-          Caption = 'Ocrat'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlue
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsUnderline]
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          Transparent = True
-        end
-        object ProUrlLabel5: TUrlLabel
-          AlignWithMargins = True
-          Left = 192
-          Top = 0
-          Width = 56
-          Height = 13
-          Cursor = crHandPoint
-          Hint = '#00167^eweb.mit.edu/jpnet/ji - KanjiProject Data Page'
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 5
-          Margins.Bottom = 4
-          Caption = 'KanjiProject'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clBlue
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsUnderline]
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          Transparent = True
-        end
       end
       object pnlOldCategories: TFlowPanel
         Left = 0
-        Top = 36
+        Top = 32
         Width = 309
         Height = 25
         Align = alTop
@@ -272,6 +152,7 @@ object fKanjiDetails: TfKanjiDetails
         ParentFont = False
         TabOrder = 2
         OnClick = ScrollboxClick
+        ExplicitTop = 36
         object cbCategories: TComboBox
           Left = 0
           Top = 0
