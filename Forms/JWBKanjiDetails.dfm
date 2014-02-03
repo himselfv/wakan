@@ -117,6 +117,7 @@ object fKanjiDetails: TfKanjiDetails
         Font.Height = -11
         Font.Name = 'Verdana'
         Font.Style = []
+        Padding.Bottom = 2
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick

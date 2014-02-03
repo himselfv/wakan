@@ -488,6 +488,8 @@ begin
   ShapeSimplified.Hide;
   lblMeaning.Caption:='-';
 
+  pnlOldCategories.Visible := fSettings.rgDetailsCategoryEditorType.ItemIndex in [1,2];
+
   CChar := TChar.NewCursor;
   try
     Screen.Cursor:=crHourGlass;
@@ -501,6 +503,7 @@ begin
     end;
 
     { Url labels }
+    pnlLinks.Visible := fSettings.cbDetailsShowLinks.Checked;
     if curindex<0 then begin
       ProURLLabel1.Enabled := false;
       ProURLLabel1.URL := '';
@@ -780,13 +783,6 @@ end;
 
 { Categories }
 
-procedure TfKanjiDetails.ClearCategories;
-var i: integer;
-begin
-  for i := pnlCategories.ControlCount-1 downto 0 do
-    pnlCategories.Controls[i].Destroy;
-end;
-
 type
   TCatButton = class(TButton)
   protected
@@ -798,40 +794,86 @@ type
     procedure SetPartial(const APartial: boolean);
   end;
 
+  TCatLabel = class(TLabel)
+  protected
+    FPartial: boolean;
+    procedure CMParentFontChanged(var Message: TCMParentFontChanged); message CM_PARENTFONTCHANGED;
+  public
+    DropdownMenu: TPopupMenu;
+    constructor Create(AOwner: TComponent); override;
+    procedure SetPartial(const APartial: boolean);
+  end;
+
+ { Only one is currently used, but it's possible to switch }
+  TTagItem = TCatLabel;
+
 constructor TCatButton.Create(AOwner: TComponent);
 begin
   inherited;
   FPartial := false;
   Self.Margins.Top := 0;
   Self.Margins.Left := 0;
-  Self.Margins.Bottom := 4; //6 for TLabel
-  Self.Margins.Right := 4; //8 for TLabel
+  Self.Margins.Bottom := 4;
+  Self.Margins.Right := 4;
   Self.AlignWithMargins := true;
   Self.Height := 20;
- // Self.Cursor := crHandPoint; //for TButton
 end;
 
 procedure TCatButton.CMParentFontChanged(var Message: TCMParentFontChanged);
 begin
   inherited;
-  if FPartial then
-    Self.Font.Color := clGrayText
-  else
-    Self.Font.Color := clBlue;
- // Self.Font.Style := Self.Font.Style + [fsUnderline]; //for TLabel
+  SetPartial(FPartial); //re-apply
 end;
 
 procedure TCatButton.SetPartial(const APartial: boolean);
 begin
   FPartial := APartial;
+ //Color cannot be changed for TButton so we resort to this
   if FPartial then
-    Self.Font.Color := clGrayText; //does not work with TButton
-  Self.Font.Style := Self.Font.Style + [fsItalic]; //for TButton
+    Self.Font.Style := Self.Font.Style + [fsUnderline]
+  else
+    Self.Font.Style := Self.Font.Style - [fsUnderline];
+end;
+
+constructor TCatLabel.Create(AOwner: TComponent);
+begin
+  inherited;
+  FPartial := false;
+  Self.Margins.Top := 0;
+  Self.Margins.Left := 0;
+  Self.Margins.Bottom := 5;
+  Self.Margins.Right := 5;
+  Self.AlignWithMargins := true;
+  Self.Height := 20;
+  Self.Cursor := crHandPoint;
+end;
+
+procedure TCatLabel.CMParentFontChanged(var Message: TCMParentFontChanged);
+begin
+  inherited;
+  SetPartial(FPartial); //re-apply
+end;
+
+procedure TCatLabel.SetPartial(const APartial: boolean);
+begin
+  FPartial := APartial;
+  if FPartial then
+    Self.Font.Color := clGrayText
+  else
+    Self.Font.Color := clBlue;
+  Self.Font.Style := Self.Font.Style + [fsUnderline]; //always underline links
+end;
+
+procedure TfKanjiDetails.ClearCategories;
+var i: integer;
+begin
+  for i := pnlCategories.ControlCount-1 downto 0 do
+    pnlCategories.Controls[i].Destroy;
 end;
 
 procedure TfKanjiDetails.ReloadCategories;
 var i: integer;
-  btn: TCatButton;
+  btn: TTagItem;
 begin
   if Self.Visible then
     SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
@@ -841,7 +883,7 @@ begin
  //include if any of the chars is in it
   for i:=0 to Length(KanjiCats)-1 do
     if IsAnyKnown(KanjiCats[i].idx,curChars) then begin
-      btn := TCatButton.Create(Self);
+      btn := TTagItem.Create(Self);
       btn.Caption := KanjiCats[i].name;
       Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
       btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
@@ -849,21 +891,23 @@ begin
       btn.OnClick := CategoryButtonClick;
       btn.Tag := i;
       pnlCategories.InsertControl(btn);
-      if not IsAllKnown(KanjiCats[i].idx,curChars) then //after Insert because may require parent.Font
+      if not IsAllKnown(KanjiCats[i].idx,curChars) then
         btn.SetPartial(true);
     end;
 
   ReloadAddCategoryMenu;
 
-  btn := TCatButton.Create(Self);
-  btn.Caption := _l('#01110^+Category');
-  btn.Hint := _l('#01111^Add to category');
-  Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
-  btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
-  btn.DropdownMenu := pmAddCategoryMenu;
-  btn.OnClick := AddCategoryButtonClick;
-  btn.Enabled := flength(curChars)>0; //cannot add categories to "no chars"
-  pnlCategories.InsertControl(btn);
+  if fSettings.rgDetailsCategoryEditorType.ItemIndex in [0,2] then begin
+    btn := TTagItem.Create(Self);
+    btn.Caption := _l('#01110^+Category');
+    btn.Hint := _l('#01111^Add to category');
+    Self.Canvas.Font.Assign(pnlCategories.Font); //will be applied to btn on insert
+    btn.Width := Self.Canvas.TextWidth(btn.Caption)+16;
+    btn.DropdownMenu := pmAddCategoryMenu;
+    btn.OnClick := AddCategoryButtonClick;
+    btn.Enabled := flength(curChars)>0; //cannot add categories to "no chars"
+    pnlCategories.InsertControl(btn);
+  end;
 
   pnlCategories.EnableAlign;
   if Self.Visible then begin
@@ -883,19 +927,19 @@ begin
 end;
 
 procedure TfKanjiDetails.CategoryButtonClick(Sender: TObject);
-var btn: TCatButton;
+var btn: TTagItem;
 begin
-  btn := TCatButton(Sender);
+  btn := TTagItem(Sender);
   pmAddToAll.Visible := not IsAllKnown(KanjiCats[btn.Tag].idx, curChars);
   AddCategoryButtonClick(Sender); //standard popup routine
 end;
 
 procedure TfKanjiDetails.AddCategoryButtonClick(Sender: TObject);
-var btn: TCatButton;
+var btn: TTagItem;
   pm: TPopupMenu;
   pos: TPoint;
 begin
-  btn := TCatButton(Sender);
+  btn := TTagItem(Sender);
   pm := btn.DropdownMenu;
   pm.PopupComponent := btn;
   pos := btn.ClientOrigin;
@@ -952,9 +996,9 @@ end;
 //Called from CategoryMenu, with PopupItem set to one of Category buttons
 procedure TfKanjiDetails.pmAddToAllClick(Sender: TObject);
 var i: integer;
-  btn: TCatButton;
+  btn: TTagItem;
 begin
-  btn := TCatButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  btn := TTagItem(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
   for i := 1 to flength(curChars) do
     SetKnown(KanjiCats[btn.Tag].idx, fgetch(curChars,i), true);
   fMenu.ChangeUserData;
@@ -963,9 +1007,9 @@ end;
 
 procedure TfKanjiDetails.pmDeleteClick(Sender: TObject);
 var i: integer;
-  btn: TCatButton;
+  btn: TTagItem;
 begin
-  btn := TCatButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  btn := TTagItem(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
   for i := 1 to flength(curChars) do
     SetKnown(KanjiCats[btn.Tag].idx, fgetch(curChars,i), false);
   fMenu.ChangeUserData;
@@ -973,9 +1017,9 @@ begin
 end;
 
 procedure TfKanjiDetails.pmGoToCategoryClick(Sender: TObject);
-var btn: TCatButton;
+var btn: TTagItem;
 begin
-  btn := TCatButton(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
+  btn := TTagItem(TPopupMenu(TMenuItem(Sender).GetParentMenu).PopupComponent);
   if not fKanji.Visible then
     fMenu.aModeKanji.Execute;
  { For now we just reset filters to "show this group only".
@@ -989,7 +1033,7 @@ end;
 
 procedure TfKanjiDetails.Configure1Click(Sender: TObject);
 begin
-  fSettings.pcPages.ActivePage:=fSettings.tsCharacterDetails;
+  fSettings.pcPages.ActivePage:=fSettings.tsCharacterDetailsItems;
   fSettings.ShowModal;
   Self.RefreshDetails;
 end;

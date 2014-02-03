@@ -100,7 +100,7 @@ type
     rgShowBopomofo: TRadioGroup;
     edtTestPinyin: TEdit;
     Button5: TButton;
-    tsCharacterDetails: TTabSheet;
+    tsCharacterDetailsItems: TTabSheet;
     Label34: TLabel;
     ListBox2: TListBox;
     Button7: TButton;
@@ -278,8 +278,11 @@ type
     lblCopyFormatsIni: TUrlLabel;
     lblCopyFormatsDocumentation: TUrlLabel;
     Label20: TLabel;
+    tsCharacterDetailsGeneral: TTabSheet;
     cbDetailsShowKanjiClass: TCheckBox;
     cbDetailsKanjiInColor: TCheckBox;
+    rgDetailsCategoryEditorType: TRadioGroup;
+    cbDetailsShowLinks: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -808,6 +811,8 @@ begin
 
   cbDetailsShowKanjiClass.Checked:=reg.ReadBool('KanjiDetails','ShowKanjiClass',true);
   cbDetailsKanjiInColor.Checked:=reg.ReadBool('KanjiDetails','KanjiInColor',true);
+  rgDetailsCategoryEditorType.ItemIndex:=reg.ReadInteger('KanjiDetails','CategoryEditorType',0);
+  cbDetailsShowLinks.Checked:=reg.ReadBool('KanjiDetails','ShowLinks',true);
 
   if reg.ReadString('Fonts','FontSet','0')<>'1' then
     AutoDetectFonts({Silent=}true)
@@ -1094,6 +1099,8 @@ begin
 
   reg.WriteBool('KanjiDetails','ShowKanjiClass',cbDetailsShowKanjiClass.Checked);
   reg.WriteBool('KanjiDetails','KanjiInColor',cbDetailsKanjiInColor.Checked);
+  reg.WriteInteger('KanjiDetails','CategoryEditorType',rgDetailsCategoryEditorType.ItemIndex);
+  reg.WriteBool('KanjiDetails','ShowLinks',cbDetailsShowLinks.Checked);
 
   reg.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
   reg.WriteString('Fonts','Japanese',FontJapanese);
