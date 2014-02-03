@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsCharacterDetailsGeneral
+    ActivePage = tsDictionary
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -1437,11 +1437,15 @@ object fSettings: TfSettings
       Tag = 7
       Caption = 'Dictionary'
       TabVisible = False
+      DesignSize = (
+        465
+        452)
       object Label26: TLabel
         Left = 3
-        Top = 267
+        Top = 411
         Width = 161
         Height = 13
+        Anchors = [akLeft, akBottom]
         Caption = '#00441^eNot used dictionary files'
         Visible = False
       end
@@ -1503,9 +1507,10 @@ object fSettings: TfSettings
       end
       object Edit19: TEdit
         Left = 3
-        Top = 283
+        Top = 427
         Width = 441
         Height = 21
+        Anchors = [akLeft, akRight, akBottom]
         Color = clBtnFace
         ReadOnly = True
         TabOrder = 2
@@ -1535,6 +1540,17 @@ object fSettings: TfSettings
         Height = 17
         Caption = '#00922^eDisplay word count for each word'
         TabOrder = 5
+      end
+      object cbDictRefLinksInSubmenu: TCheckBox
+        Left = 3
+        Top = 250
+        Width = 441
+        Height = 17
+        Hint = 
+          '#01131^If checked, shows reference links in submenu rather than ' +
+          'in main right-click menu'
+        Caption = '#01130^Show reference links in submenu'
+        TabOrder = 6
       end
     end
     object tsPopupTool: TTabSheet

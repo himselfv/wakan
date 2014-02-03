@@ -1233,6 +1233,8 @@
 01127>"Add category" button
 01128>"Add/remove category" combobox
 01129>Both
+01130>Show reference links in submenu
+01131>If checked, shows reference links in submenu rather than in main right-click menu
 
 ;
 ;

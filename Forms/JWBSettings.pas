@@ -283,6 +283,7 @@ type
     cbDetailsKanjiInColor: TCheckBox;
     rgDetailsCategoryEditorType: TRadioGroup;
     cbDetailsShowLinks: TCheckBox;
+    cbDictRefLinksInSubmenu: TCheckBox;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -849,6 +850,8 @@ begin
   cbMultilineGrids.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
   cbShowFreq.Checked:=reg.ReadBool('Dict','ShowFreq',false);
   cbOrderFreq.Checked:=reg.ReadBool('Dict','OrderFreq',true);
+  cbDictRefLinksInSubmenu.Checked:=reg.ReadBool('Dict','RefLinksInSubmenu',true);
+
   CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
   CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
   cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);
@@ -1129,6 +1132,8 @@ begin
   reg.WriteBool('Dict','RandomExamples',fExamples.btnRandomOrder.Down);
   reg.WriteBool('Dict','ShowFreq',cbShowFreq.Checked);
   reg.WriteBool('Dict','OrderFreq',cbOrderFreq.Checked);
+  reg.WriteBool('Dict','RefLinksInSubmenu',cbDictRefLinksInSubmenu.Checked);
+
   reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
   reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
   reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);

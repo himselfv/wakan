@@ -166,12 +166,18 @@ object fWordLookupBase: TfWordLookupBase
       object TMenuItem
       end
     end
+    object miBeforeLookupIn: TMenuItem
+      Caption = '-'
+    end
     object miLookUpIn: TMenuItem
       Caption = '#01124^Look Up In'
       SubMenuImages = ilImages
       ImageIndex = 2
       object TMenuItem
       end
+    end
+    object miAfterLookupIn: TMenuItem
+      Caption = '-'
     end
     object miGoToVocab: TMenuItem
       Caption = '#01108^Go to Vocabulary'

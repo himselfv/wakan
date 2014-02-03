@@ -22,6 +22,8 @@ type
     miAddToVocab: TMenuItem;
     ilImages: TImageList;
     miLookUpIn: TMenuItem;
+    miBeforeLookupIn: TMenuItem;
+    miAfterLookupIn: TMenuItem;
     procedure pmPopupPopup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
     procedure StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
@@ -185,21 +187,45 @@ begin
 end;
 
 procedure TfWordLookupBase.ReloadReferenceLinks;
-var i, ARow: integer;
+var i, ARow, idx: integer;
   mi: TMenuItem;
 begin
+ //Submenu
   miLookUpIn.Clear;
+ //Direct items
+  for i := pmPopup.Items.Count-1 downto 0 do
+    if pmPopup.Items[i] is TRefMenuItem then
+      pmPopup.Items[i].Destroy;
 
   if StringGrid.Selection.Top <> StringGrid.Selection.Bottom then begin
+    miBeforeLookupIn.Visible := false;
+    miAfterLookupIn.Visible := false;
     miLookUpIn.Visible := false;
     exit;
   end;
   ARow := StringGrid.Selection.Top;
 
+  if fSettings.cbDictRefLinksInSubmenu.Checked then begin
+    miBeforeLookupIn.Visible := false;
+    miAfterLookupIn.Visible := false;
+    miLookUpIn.Visible := true;
+    idx := -1; //unused
+  end else begin
+    miBeforeLookupIn.Visible := true;
+    miAfterLookupIn.Visible := true;
+    miLookUpIn.Visible := false;
+    idx := pmPopup.Items.IndexOf(miAfterLookupIn);
+  end;
+
   for i := 0 to ExpressionLinks.Count-1 do
     if ExpressionLinks[i].MatchesLang(curLang) then begin
       mi := TRefMenuItem.Create(Self, ExpressionLinks[i], FResults[ARow-1].kanji);
-      miLookUpIn.Add(mi);
+      if fSettings.cbDictRefLinksInSubmenu.Checked then
+        miLookUpIn.Add(mi)
+      else begin
+        pmPopup.Items.Insert(idx, mi);
+        Inc(idx);
+      end;
     end;
 end;
 
