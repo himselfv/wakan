@@ -1,7 +1,11 @@
 ﻿unit JWBDicSearch;
 {
-Dictionary engine.
-Has a lot of dark legacy in code form.
+Dictionary engine. Has a lot of dark legacy in code form.
+Throughout this module:
+  Japanese == Japanese, Chinese, any source language.
+  Kana     == Kana, Bopomofo etc.
+  Romaji   == Romaji, Pinyin etc.
+  English  == English, Polish, any target language (even Japanese in Jp->Jp dicts).
 }
 
 interface
@@ -223,18 +227,11 @@ type
 Search itself.
 }
 type
- { Translation type }
   TSearchType = (
-    stJp,           //jp->en
-    stEn,           //en->jp
-    stClipboard,    //clipboard translation
-    stEditorInsert, //editor input translation
-    stEditorAuto    //text translation (no UI)
+    stJapanese,     //japanese text in Unicode
+    stRomaji,       //romaji input
+    stEnglish       //english text
   );
-
- { SatanString is a string which is FString except for when you search for English,
-  then it contains raw english. Happy debugging. }
-  SatanString = string;
 
   TDicSetup = record
     cursor: TDicLookupCursor;
@@ -257,6 +254,7 @@ type
     DictGroup: TDictGroup;
     dic_ignorekana: boolean; //Do not include kana-only words in results. Half-baked.
     AutoDeflex: boolean; //Search for inflected words/conjugated verbs
+    MindUserPrior: boolean; //Mind kanji usage priorities for this user. See TUserPrior.
     procedure Prepare; //Call after changing settings
 
   protected
@@ -269,7 +267,7 @@ type
     stUserPriorKanji: TSeekObject;
     fldUserPriorCount: integer;
   public
-    procedure Search(search:SatanString; wt: TEvalCharType; sl: TSearchResults);
+    procedure Search(search: string; wt: TEvalCharType; sl: TSearchResults);
 
   public //Output
     WasFull: boolean;
@@ -282,7 +280,6 @@ type
     mess: TSMPromptForm; //"Please wait" form, created if the search takes too long
     se: TCandidateLookupList; //Lookup candidates -- see comments where this type is declared
     presentl:TStringList;
-    p4reading:boolean;
     procedure TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
       sl: TSearchResults);
 
@@ -797,7 +794,7 @@ var _s: string;
   tmpkana:string;
 begin
   case st of
-    stJp:
+    stRomaji:
       if not AutoDeflex then begin
        //No autodeflex => exact roma lookup
         search := SignatureFrom(search);
@@ -824,52 +821,57 @@ begin
           else
             se.Add(9, flength(tmpkana), 'F', rtNormal, tmpkana);
       end;
-    stEn:
+    stEnglish:
       se.Add(9, 1, 'F', rtNormal, search);
-    stClipboard: begin
-      se.Add(9,flength(search),'F',rtNormal,search);
-      if AutoDeflex then
-        Deflex(ChinTraditional(search),se,9,8,true);
-     end;
-    stEditorInsert,
-    stEditorAuto:
-      if wt=EC_UNKNOWN then
-      begin
+    stJapanese:
+      case wt of
+      EC_UNKNOWN: begin //Unsophisticated searches usually go this way
+        se.Add(9,flength(search),'F',rtNormal,search); //exactly as typed
         _s:=ChinTraditional(search);
-        Deflex(_s,se,9,8,false); //ignores AutoDeflex
-        se.Add(9, flength(_s), 'F', rtNormal, _s);
-      end else
-      begin
-        if (wt=EC_IDG_CHAR) or (wt=EC_HIRAGANA) then
-        begin
-          _s:=ChinTraditional(search);
-          if wt=EC_IDG_CHAR then begin
-            Deflex(_s,se,9,8,false); //ignores AutoDeflex
-            se.Add(9, flength(_s), 'F', rtNormal, _s);
-          end;
-         //Generate partial left guesses
-          for i:=flength(_s) downto 1 do
-          begin
-            partfound:=false;
-            if (wt=EC_HIRAGANA)
-            and (i<flength(_s)) and (i>=flength(_s)-1) //at most last two chars or it'll be slow
-            and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
-              partfound:=true;
-            if (
-              partfound
-              or ((i>1) and (MatchType=mtMatchLeft))
-              or (i=flength(_s))
-              or (EvalChar(fgetch(_s,i))=EC_IDG_CHAR) //if current char is kanji, to the left of it can be a subexpression
-            ) then
-              se.Add(i, i, 'F', rtNormal, fcopy(_s,1,i));
-          end;
+        if _s<>search then
+          se.Add(9,flength(_s),'F',rtNormal,_s); //traditionalized version
+        if AutoDeflex then
+          Deflex(_s,se,9,8,true);
+      end;
+
+      EC_IDG_CHAR,
+      EC_HIRAGANA: begin
+        _s:=ChinTraditional(search);
+        if wt=EC_IDG_CHAR then begin
+          Deflex(_s,se,9,8,false); //ignores AutoDeflex
+          se.Add(9, flength(_s), 'F', rtNormal, _s);
         end;
-        if (wt=EC_KATAKANA) then
+       //Generate partial left guesses
+        for i:=flength(_s) downto 1 do
         begin
-          _s:=ChinTraditional(search);
-          se.Add(9, fLength(_s), 'F', rtNormal, _s);
+          partfound:=false;
+          if (wt=EC_HIRAGANA)
+          and (i<flength(_s)) and (i>=flength(_s)-1) //at most last two chars or it'll be slow
+          and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
+            partfound:=true;
+          if (
+            partfound
+            or ((i>1) and (MatchType=mtMatchLeft))
+            or (i=flength(_s))
+            or (EvalChar(fgetch(_s,i))=EC_IDG_CHAR) //if current char is kanji, to the left of it can be a subexpression
+          ) then
+            se.Add(i, i, 'F', rtNormal, fcopy(_s,1,i));
         end;
       end;
+
+      EC_KATAKANA: begin
+        _s:=ChinTraditional(search);
+        se.Add(9, fLength(_s), 'F', rtNormal, _s);
+      end;
+
+      { Yep, no default case. This is how it was inherited.
+       We can make EC_IDG_UNKNOWN default but no guarantee auto-translation
+       will not slow down as it may expect Deflex to produce no test candidates
+       for clearly invalid parts of text.
+       We should filter requests by word-type before calling this, then we can
+       use UNKNOWN as default case here. }
+      end;
+
   end;
 end;
 
@@ -891,6 +893,7 @@ begin
     req.Full := Full;
     req.MaxWords := MaxWords;
     req.DictGroup := DictGroup;
+    req.AutoDeflex := true; //those who use this expect this
     req.Prepare;
     req.Search(search, wt, sl);
     wasfull := req.WasFull;
@@ -938,7 +941,7 @@ begin
   FreeAndNil(CUserPrior);
 
   //Verify some configuration? Stuff we can't do.
-  if (st=stEn) and not (Self.MatchType in [mtExactMatch, mtMatchLeft]) then
+  if (st=stEnglish) and not (Self.MatchType in [mtExactMatch, mtMatchLeft]) then
     Self.MatchType := mtExactMatch;
 
   //Create dictionary cursors
@@ -974,19 +977,19 @@ end;
 Search()
 Searches the dictionary for all candidate translations to the line.
 search
-  string to look for
+  string to look for:
+    romaji in stJp
+    english/other "translated" language in stEn
+    kanji/kana/whatever in stEditor/stClipboard
 wt
   Word character type. "Unknown", "Kanji/kana mixed", "Hiragana", "Katakana"
 sl
   Match results to return.
 wasfull
   True if we have retrieved all of the available results.
-Note:
-- "search" has to be in 4-char-per-symbol hex encoding (=> length divisible by 4)
-- Except for mode=2, then "search" must be raw english
 }
 
-procedure TDicSearchRequest.Search(search:SatanString; wt: TEvalCharType; sl:TSearchResults);
+procedure TDicSearchRequest.Search(search: string; wt: TEvalCharType; sl: TSearchResults);
 var i,di:integer;
 begin
   if search='' then exit;
@@ -994,17 +997,16 @@ begin
   se.Clear;
   presentl.Clear;
 
-  p4reading:=false;
   wasfull:=true;
   nowt:=now;
 
   MakeLookupList(se, search, wt);
 
-  case st of
-    stEditorInsert,
-    stEditorAuto: begin
-      p4reading:=wt=EC_UNKNOWN;
-      if wt=EC_UNKNOWN then if partl.IndexOf(search)>-1 then
+ //Particles are built into the program.
+ //Eventually should be moved out to own dictionaries and get common treatment.
+  if wt=EC_UNKNOWN then //assume that otherwise we know what we're doing
+    if st=stJapanese then //for now only this mode, although we can convert stRomaji to kana too
+      if partl.IndexOf(search)>-1 then
         with sl.AddResult^ do begin
           Reset();
           sdef := 'P';
@@ -1016,8 +1018,6 @@ begin
           end;
           slen := Length(kanji);
         end;
-    end;
-  end;
 
  { kanaonly:
   If this is set, we're going to convert kanji+kana to ??+romaji and search for that.
@@ -1029,15 +1029,12 @@ begin
 
   Note that if lookup candidates could possibly differ in this regard, we'd have
   to re-check for this property for every candidate. }
-  case st of
-    stClipboard:
-      kanaonly := TestCharsAre(search, [EC_HIRAGANA, EC_KATAKANA]);
-    stEditorInsert,
-    stEditorAuto:
-      kanaonly := p4reading or (wt=EC_HIRAGANA);
-  else
-    kanaonly := false;
-  end;
+  kanaonly := (st=stJapanese) and (
+    (wt in [EC_HIRAGANA, EC_KATAKANA])
+    or (
+      (wt=EC_UNKNOWN) and TestCharsAre(search, [EC_HIRAGANA, EC_KATAKANA])
+    )
+  );
 
   for di:=0 to Length(dics)-1 do begin
     if dics[di].cursor=nil then continue;
@@ -1143,22 +1140,20 @@ begin
   sdef:=lc.verbType;
   slen:=lc.len;
 
-  if st in [stJp,stEn] then slen:=1;
+  if st in [stRomaji, stEnglish] then slen:=1;
 
  //Initial lookup
  { KanaToRomaji is VERY expensive so let's only call it when really needed }
   case st of
-    stJp: begin
+    stRomaji: begin
       if lc.roma=rtRoma then
         sxxr:=sxx
       else
         sxxr:=DbKanaToRomaji(sxx,curlang);
       dic.LookupRomaji(sxxr);
     end;
-    stEn: dic.LookupMeaning(sxx);
-    stClipboard,
-    stEditorInsert,
-    stEditorAuto:
+    stEnglish: dic.LookupMeaning(sxx);
+    stJapanese:
       if lc.roma=rtRoma then
         dic.LookupRomaji(lc.str)
       else
@@ -1180,22 +1175,16 @@ begin
     kmarkers:=dic.GetKanjiKanaMarkers;
 
     if IsAppropriateVerbType(sdef, markers) then
-    if (not dic_ignorekana) or (not (st in [stEditorInsert,stEditorAuto]))
+    if (not dic_ignorekana) or (st<>stJapanese)
       or (not kanaonly) or raw_entries.HasMarker(MarkUsuallyKana) then
     begin
 
      //Calculate popularity class
       popclas := GetPopClass(markers)+GetPopClass(kmarkers);
-      //if ((a=1) or ((a=4) and (p4reading))) and (dic.Field('Priority')<>-1) then
-      //  if dic.Int(dic.Field('Priority'))>9 then
-      //    inc(popclas,90)
-      //  else
-      //    inc(popclas,dic.Int(dic.Field('Priority'))*10);
-      if (st in [stEditorInsert, stEditorAuto]) and (p4reading)
+
+      if MindUserPrior
       and CUserPrior.Locate(@stUserPriorKanji,dic.GetKanji) then
         dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
-
-      //CUser.SetOrder('Kanji_Ind');
 
       UserScore:=-1;
       UserIndex:=0;
@@ -1207,20 +1196,18 @@ begin
 
      //Calculate sorting order -- the bigger the worse (will apear later in list)
       case st of
-        stEn: begin
+        stEnglish: begin
           if pos(trim(uppercase(sxx)),trim(uppercase(dic.GetArticleBody)))=1 then sort:=10000 else sort:=11000;
           sort:=sort+popclas*100;
         end;
-        stJp: sort:=(10000*(9-min(sp,9)))+length(dic.GetPhonetic)*1000+popclas*10;
-        stClipboard,
-        stEditorInsert,
-        stEditorAuto:
+        stRomaji: sort:=(10000*(9-min(sp,9)))+length(dic.GetPhonetic)*1000+popclas*10;
+        stJapanese:
           sort:=(10000*(9-min(sp,9)))-length(dic.GetPhonetic)+popclas*10;
          //in auto-translation mode longer matches are better (those are longer *exact* matches after all)
       else sort:=0;
       end;
       sort:=sort+10000;
-      //if (a in [stEditorInsert, stEditorAuto]) and (p4reading) then sort:=10000+popclas*10;
+
       if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
       if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
       if IsKanaCharKatakana(dic.GetPhonetic, 1) then inc(sort,1000);

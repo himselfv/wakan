@@ -243,7 +243,7 @@ begin
   begin
     //Try to look for a latin word
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),stEn,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(fstrtouni(s),stEnglish,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
     if (fScreenTip.screenTipList.Count=0) then
     begin
       ss:=fstrtouni(s);
@@ -252,11 +252,11 @@ begin
      //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,stEn,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+      DicSearch(ss,stEnglish,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
     end;
   end;
   if wt<>EC_LATIN_HW then
-    DicSearch(s,stEditorInsert,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(s,stJapanese,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
   if maxwords>fScreenTip.screenTipList.Count then
     maxwords:=fScreenTip.screenTipList.Count;
   fScreenTip.screenTipWords:=maxwords;

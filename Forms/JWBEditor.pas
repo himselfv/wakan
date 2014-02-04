@@ -991,7 +991,7 @@ end;
 function TfEditor.SetupSearchRequest: TDicSearchRequest;
 begin
   Result := TDicSearchRequest.Create;
-  Result.st := stEditorAuto;
+  Result.st := stJapanese;
   Result.dictgroup := 5;
   Result.MatchType := mtExactMatch;
  { If we used mtMatchLeft, queries like "sama" would get results like "samazama"

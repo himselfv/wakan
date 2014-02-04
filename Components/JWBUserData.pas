@@ -58,6 +58,8 @@ var
   TUserCatType, //b, TCatType, see comments in JWBCategories
   TUserCatCreated: integer; //s, datetime of creation
 
+ { Usage priorities for kanji. The more the user accepts certain kanji suggestions,
+  the higher those suggestions appear in the list }
   TUserPrior: TTextTable;
 
 procedure InitializeUserPackage(const package:string);

@@ -242,6 +242,7 @@ begin
 
     req.AutoDeflex := btnInflect.Down;
     req.dic_ignorekana := false;
+    req.MindUserPrior := (lm=lmEditorInsert); //only mind kanji usage priorities in Editor suggestions
 
    //If full search was not requested and autopreview off / too costly
     if not req.full
@@ -252,29 +253,29 @@ begin
     wasfull := false;
     case lm of
       lmAuto: begin
-        req.st := stJp;
+        req.st := stRomaji;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
 
-        req.st := stEn;
+        req.st := stEnglish;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := wasfull or req.WasFull;
 
-        req.st := stClipboard;
+        req.st := stJapanese;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := wasfull or req.WasFull;
       end;
       lmJp: begin
-        req.st := stJp;
+        req.st := stRomaji;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
       end;
       lmEn: begin
-        req.st := stEn;
+        req.st := stEnglish;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
@@ -288,7 +289,7 @@ begin
           if fgetch(clip,i)<=#$00FF then break
          {$ENDIF}
           else text:=text+fgetch(clip,i);
-        req.st := stClipboard;
+        req.st := stJapanese;
         req.Prepare;
         req.Search(text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
@@ -300,7 +301,7 @@ begin
        //If that is empty, show whatever the caret is at
         if text='' then
           text:=fEditor.GetWordAtCaret(wt);
-        req.st := stEditorInsert;
+        req.st := stJapanese;
         req.Prepare;
         req.Search(text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
@@ -309,8 +310,7 @@ begin
 
 
    //Finalize and output
-
-    if not (req.st in [stEditorInsert, stEditorAuto]) then
+    if not (lm in [lmEditorInsert]) then
       if FResults.Count=0 then
         Label3.Caption:='-'
       else
@@ -319,7 +319,7 @@ begin
         else
           Label3.Caption:=inttostr(FResults.Count);
 
-    if req.st <> stEditorAuto then //update result list
+    if lm <> lmEditorInsert then //update result list
     begin
       ResultsChanged;
       if not wasfull then
@@ -328,12 +328,11 @@ begin
         text:=_l('#00672^eSearch results');
       BitBtn1.Visible:=not wasfull or (req.full and not BitBtn1.Enabled);
       Label2.Visible:=not BitBtn1.Visible;
-      text:=text+' ';
-      case req.st of
-        stJp: text:=text+_l('#00673^eby phonetic');
-        stEn: text:=text+_l('#00674^eby meaning');
-        stClipboard: text:=text+_l('#00675^eby written (clipboard)');
-        stEditorInsert: text:=text+_l('#00676^eby written (text)');
+      case lm of
+        lmJp: text:=text+' '+_l('#00673^eby phonetic');
+        lmEn: text:=text+' '+_l('#00674^eby meaning');
+        lmClipboard: text:=text+' '+_l('#00675^eby written (clipboard)');
+        lmEditorInsert: text:=text+' '+_l('#00676^eby written (text)');
       end;
       text:=text+' ('+inttostr(FResults.Count)+')';
       curword:=0;
