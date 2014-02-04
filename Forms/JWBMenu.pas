@@ -313,6 +313,7 @@ type
     procedure aDictExactExecute(Sender: TObject);
     procedure aDictBeginningExecute(Sender: TObject);
     procedure aDictEndExecute(Sender: TObject);
+    procedure aDictMiddleExecute(Sender: TObject);
     procedure aKanjiWindowExecute(Sender: TObject);
     procedure aKanjiMeaningExecute(Sender: TObject);
     procedure aEditorWindowExecute(Sender: TObject);
@@ -334,7 +335,6 @@ type
     procedure aUserExamplesExecute(Sender: TObject);
     procedure miSaveCharactersToFileClick(
       Sender: TObject);
-    procedure aDictMiddleExecute(Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
     procedure aFullscreenModeExecute(Sender: TObject);
     procedure aCategoryManagerExecute(Sender: TObject);
@@ -600,7 +600,6 @@ var
   sodir:TStringList;
   sobin:pointer;
 
-  dictbeginset,dictmodeset:integer;
   kanji_othersearch:integer;
 
 function _l(const id:string):string; //shouldn't inline because it's for cases when JWBUnit is not in Uses!
@@ -1090,7 +1089,7 @@ begin
     fKanjiSearch.cbOtherType.ItemIndex:=-1;
   end;
   if fWordLookup<>nil then
-    if dictmodeset=1 then fWordLookup.btnLookupEtoJ.Down:=true else fWordLookup.btnLookupJtoE.Down:=true;
+    fWordLookup.RestoreLookupMode;
 
   FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
 end;
@@ -2372,24 +2371,32 @@ end;
 procedure TfMenu.aDictExactExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton10.Down:=true;
-  dictbeginset:=0;
+  fWordLookup.btnMatchExact.Down:=true;
+  fWordLookup.dictBeginSet:=0;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictBeginningExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton11.Down:=true;
-  dictbeginset:=1;
+  fWordLookup.btnMatchLeft.Down:=true;
+  fWordLookup.dictBeginSet:=1;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictEndExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton12.Down:=true;
-  dictbeginset:=2;
+  fWordLookup.btnMatchRight.Down:=true;
+  fWordLookup.dictBeginSet:=2;
+  fWordLookup.btnLookupJtoEClick(Sender);
+end;
+
+procedure TfMenu.aDictMiddleExecute(Sender: TObject);
+begin
+  if not fWordLookup.Visible then aModeDict.Execute;
+  fWordLookup.btnMatchAnywhere.Down:=true;
+  fWordLookup.dictBeginSet:=3;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
@@ -3236,7 +3243,7 @@ end;
 procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton4.Down:=not fWordLookup.SpeedButton4.Down;
+  fWordLookup.btnInflect.Down:=not fWordLookup.btnInflect.Down;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
@@ -3250,21 +3257,21 @@ end;
 procedure TfMenu.aDictGroup1Execute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton14.Down:=true;
+  fWordLookup.btnDictGroup1.Down:=true;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup2Execute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton15.Down:=true;
+  fWordLookup.btnDictGroup2.Down:=true;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup3Execute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton16.Down:=true;
+  fWordLookup.btnDictGroup3.Down:=true;
   fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
@@ -3293,14 +3300,6 @@ procedure TfMenu.miSaveCharactersToFileClick(
   Sender: TObject);
 begin
   fKanji.SaveChars;
-end;
-
-procedure TfMenu.aDictMiddleExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.SpeedButton18.Down:=true;
-  dictbeginset:=3;
-  fWordLookup.btnLookupJtoEClick(Sender);
 end;
 
 procedure TfMenu.aCategoryManagerExecute(Sender: TObject);

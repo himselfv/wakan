@@ -150,7 +150,6 @@ var
   ln: string;
   lineno: integer;
   ch: char;
-  ach: AnsiChar;
   i: integer;
 
   rad_idx: integer; //index to active radical record
@@ -194,7 +193,7 @@ begin
         if not (ord(ln[i])>=ord('0'))
         or not (ord(ln[i])<=ord('9')) then
           raise ERadKFileParsingException.Create('Bad RADKFILE: invalid stroke count @ line '+IntToStr(lineno));
-        rad_scnt := rad_scnt * 10 + (Ord(ach)-Ord('0'));
+        rad_scnt := rad_scnt * 10 + (Ord(ln[i])-Ord('0'));
         Inc(i);
       end;
      //There could be jis code/image file name after this, but we're...

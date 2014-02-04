@@ -140,7 +140,7 @@ type
       Different search results are different guesses at deflexion and may assume
       original expression was of different length. }
     text: string; //entry text
-    markers: TMarkers; //full set of entry markers
+    markers: TMarkers; //Full set of entry markers
   end;
   PSearchResult = ^TSearchResult;
 
@@ -249,13 +249,12 @@ type
     destructor Destroy; override;
 
   public //Settings
-    a: TSearchType;
+    st: TSearchType;
     MatchType: TMatchType;
-   { Maximum number of words to look for [ignored if "full" is set?] }
-    maxwords: integer;
+    MaxWords: integer; //Maximum number of words to look for [ignored if "full" is set?]
    { Find all matches instead of only most relevant ones (slower) }
-    full: boolean;
-    dictgroup: TDictGroup;
+    Full: boolean;
+    DictGroup: TDictGroup;
     dic_ignorekana: boolean; //Do not include kana-only words in results. Half-baked.
     AutoDeflex: boolean; //Search for inflected words/conjugated verbs
     procedure Prepare; //Call after changing settings
@@ -295,9 +294,9 @@ type
 
 
 //Compability
-procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
-  full:boolean;wt:TEvalCharType;maxwords:integer;sl:TSearchResults;
-  dictgroup:integer;var wasfull:boolean);
+procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
+  Full:boolean;wt:TEvalCharType;MaxWords:integer;sl:TSearchResults;
+  DictGroup:integer;var wasfull:boolean);
 
 implementation
 uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSettings,
@@ -797,7 +796,7 @@ var _s: string;
   partfound:boolean;
   tmpkana:string;
 begin
-  case a of
+  case st of
     stJp:
       if not AutoDeflex then begin
        //No autodeflex => exact roma lookup
@@ -880,18 +879,18 @@ end;
 DicSearch()
 Don't use if you're doing a lot of searches, use TDicSearchRequest instead.
 }
-procedure DicSearch(search:string;a:TSearchType; MatchType: TMatchType;
-  full:boolean;wt:TEvalCharType;maxwords:integer;sl:TSearchResults;
-  dictgroup:integer;var wasfull:boolean);
+procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
+  Full:boolean;wt:TEvalCharType;MaxWords:integer;sl:TSearchResults;
+  DictGroup:integer;var wasfull:boolean);
 var req: TDicSearchRequest;
 begin
   req := TDicSearchRequest.Create;
   try
-    req.a := a;
+    req.st := st;
     req.MatchType := MatchType;
-    req.full := full;
-    req.maxwords := maxwords;
-    req.dictgroup := dictgroup;
+    req.Full := Full;
+    req.MaxWords := MaxWords;
+    req.DictGroup := DictGroup;
     req.Prepare;
     req.Search(search, wt, sl);
     wasfull := req.WasFull;
@@ -930,7 +929,7 @@ var di: integer;
   dic: TJaletDic;
   prior: integer;
 begin
-  if maxwords<10 then maxwords:=10;
+  if MaxWords<10 then MaxWords:=10;
 
   //Destroy existing cursors
   for di := 0 to Length(dics) - 1 do
@@ -938,12 +937,16 @@ begin
   FreeAndNil(CUser);
   FreeAndNil(CUserPrior);
 
+  //Verify some configuration? Stuff we can't do.
+  if (st=stEn) and not (Self.MatchType in [mtExactMatch, mtMatchLeft]) then
+    Self.MatchType := mtExactMatch;
+
   //Create dictionary cursors
   SetLength(dics, dicts.Count);
   for di:=0 to dicts.Count-1 do begin
     dics[di].cursor := nil;
     dic:=dicts[di];
-    if not dic.loaded or not dicts.IsInGroup(dic,dictgroup) then
+    if not dic.loaded or not dicts.IsInGroup(dic,DictGroup) then
       continue;
 
     dic.Demand;
@@ -997,7 +1000,7 @@ begin
 
   MakeLookupList(se, search, wt);
 
-  case a of
+  case st of
     stEditorInsert,
     stEditorAuto: begin
       p4reading:=wt=EC_UNKNOWN;
@@ -1026,7 +1029,7 @@ begin
 
   Note that if lookup candidates could possibly differ in this regard, we'd have
   to re-check for this property for every candidate. }
-  case a of
+  case st of
     stClipboard:
       kanaonly := TestCharsAre(search, [EC_HIRAGANA, EC_KATAKANA]);
     stEditorInsert,
@@ -1140,11 +1143,11 @@ begin
   sdef:=lc.verbType;
   slen:=lc.len;
 
-  if a in [stJp,stEn] then slen:=1;
+  if st in [stJp,stEn] then slen:=1;
 
  //Initial lookup
  { KanaToRomaji is VERY expensive so let's only call it when really needed }
-  case a of
+  case st of
     stJp: begin
       if lc.roma=rtRoma then
         sxxr:=sxx
@@ -1177,7 +1180,7 @@ begin
     kmarkers:=dic.GetKanjiKanaMarkers;
 
     if IsAppropriateVerbType(sdef, markers) then
-    if (not dic_ignorekana) or (not (a in [stEditorInsert,stEditorAuto]))
+    if (not dic_ignorekana) or (not (st in [stEditorInsert,stEditorAuto]))
       or (not kanaonly) or raw_entries.HasMarker(MarkUsuallyKana) then
     begin
 
@@ -1188,7 +1191,7 @@ begin
       //    inc(popclas,90)
       //  else
       //    inc(popclas,dic.Int(dic.Field('Priority'))*10);
-      if (a in [stEditorInsert, stEditorAuto]) and (p4reading)
+      if (st in [stEditorInsert, stEditorAuto]) and (p4reading)
       and CUserPrior.Locate(@stUserPriorKanji,dic.GetKanji) then
         dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
 
@@ -1203,7 +1206,7 @@ begin
         TryGetUserScore(ChinSimplified(dic.GetKanji));
 
      //Calculate sorting order -- the bigger the worse (will apear later in list)
-      case a of
+      case st of
         stEn: begin
           if pos(trim(uppercase(sxx)),trim(uppercase(dic.GetArticleBody)))=1 then sort:=10000 else sort:=11000;
           sort:=sort+popclas*100;
@@ -1334,7 +1337,7 @@ begin
       inc(i);
     end;
 
-    if (not full) and (i>=maxwords) then
+    if (not Full) and (i>=MaxWords) then
     begin
       wasfull:=false;
       break;

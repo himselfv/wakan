@@ -125,7 +125,7 @@ type
     Label40: TLabel;
     Edit24: TEdit;
     Button11: TButton;
-    CheckBox12: TCheckBox;
+    cbDictLimitAutoResults: TCheckBox;
     CheckBox50: TCheckBox;
     tsColors: TTabSheet;
     ListBox3: TListBox;
@@ -844,7 +844,7 @@ begin
   cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
   cbStatusColors.Checked:=reg.ReadBool('Dict','StatusColors',true);
-  CheckBox12.Checked:=reg.ReadBool('Dict','AutoPage',true);
+  cbDictLimitAutoResults.Checked:=reg.ReadBool('Dict','AutoPage',true);
   CheckBox49.Checked:=reg.ReadBool('Dict','DemandLoad',true);
   CheckBox50.Checked:=reg.ReadBool('Dict','AutoExamples',true);
   cbMultilineGrids.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
@@ -912,7 +912,7 @@ begin
   CheckBox63.Checked:=reg.ReadBool('KanjiCards','SortFrequency',true);
   CheckBox26.Checked:=reg.ReadBool('Vocabulary','SaveStat',false);
   if fWordLookup<>nil then
-    fWordLookup.SpeedButton4.Down:=reg.ReadBool('Dict','DeflexItalic',true);
+    fWordLookup.btnInflect.Down:=reg.ReadBool('Dict','DeflexItalic',true);
   CheckBox43.Checked:=reg.ReadBool('Translate','BreakLines',true);
   cbDisplayLines.Checked:=reg.ReadBool('Translate','DisplayLines',true);
   CheckBox41.Checked:=reg.ReadBool('Translate','DisplayNonJapanese',true);
@@ -969,8 +969,15 @@ begin
   setsort:=reg.ReadInteger('Characters','Sort',0);
   kanji_othersearch:=reg.ReadInteger('Characters','OtherSearch',0);
   setusercompounds:=reg.ReadBool('Characters','UserCompounds',false);
-  if reg.ReadBool('Dict','Meaning',false) then dictmodeset:=1 else dictmodeset:=0;
-  dictbeginset:=reg.ReadInteger('Dict','SearchBeg',0);
+
+  if fWordLookup<>nil then begin
+    if reg.ReadBool('Dict','Meaning',false) then
+      fWordLookup.dictModeSet := lmEn
+    else
+      fWordLookup.dictModeSet := lmAuto;
+    fWordLookup.dictBeginSet := reg.ReadInteger('Dict','SearchBeg',0);
+  end;
+
   cbShowEditorHint.Checked:=reg.ReadBool('Translate','ShowHint',true);
   cbHintMeaning.Checked:=reg.ReadBool('Translate','HintMeaning',true);
   s:=reg.ReadString('Dict','CurLanguage','j');
@@ -1126,7 +1133,7 @@ begin
   reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
   reg.WriteBool('Dict','StatusColors',cbStatusColors.Checked);
-  reg.WriteBool('Dict','AutoPage',CheckBox12.Checked);
+  reg.WriteBool('Dict','AutoPage',cbDictLimitAutoResults.Checked);
   reg.WriteBool('Dict','DemandLoad',CheckBox49.Checked);
   reg.WriteBool('Dict','AutoExamples',CheckBox50.Checked);
   reg.WriteBool('Dict','RandomExamples',fExamples.btnRandomOrder.Down);
@@ -1183,7 +1190,7 @@ begin
   reg.WriteBool('KanjiCards','PrintFullComp',CheckBox62.Checked);
   reg.WriteBool('KanjiCards','SortFrequency',CheckBox63.Checked);
   reg.WriteBool('Vocabulary','SaveStat',CheckBox26.Checked);
-  reg.WriteBool('Dict','DeflexItalic',fWordLookup.SpeedButton4.Down);
+  reg.WriteBool('Dict','DeflexItalic',fWordLookup.btnInflect.Down);
   reg.WriteBool('Translate','BreakLines',CheckBox43.Checked);
   reg.WriteBool('Translate','DisplayLines',cbDisplayLines.Checked);
   reg.WriteBool('Translate','DisplayNonJapanese',CheckBox41.Checked);
@@ -1241,8 +1248,12 @@ begin
   reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
   reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.sbShowVocab.Down);
-  reg.WriteBool('Dict','Meaning',dictmodeset=1);
-  reg.WriteInteger('Dict','SearchBeg',dictbeginset);
+
+  if fWordLookup<>nil then begin
+    reg.WriteBool('Dict','Meaning',fWordLookup.dictModeSet=lmEn);
+    reg.WriteInteger('Dict','SearchBeg',fWordLookup.dictBeginSet);
+  end;
+
   reg.WriteBool('Translate','ShowHint',cbShowEditorHint.Checked);
   reg.WriteBool('Translate','HintMeaning',cbHintMeaning.Checked);
   reg.WriteInteger('Layout','DisplayLayout',fMenu.DisplayMode);

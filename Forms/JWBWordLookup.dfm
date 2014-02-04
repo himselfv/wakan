@@ -36,14 +36,13 @@ inherited fWordLookup: TfWordLookup
       ExplicitTop = 185
     end
     object btnLookupJtoE: TSpeedButton [3]
-      Left = 11
+      Left = 123
       Top = 4
       Width = 110
       Height = 22
       Hint = '#00643^eSearch by japanese reading (F2)'
       AllowAllUp = True
       GroupIndex = 1
-      Down = True
       Caption = '#00644^eJ -> E'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -54,7 +53,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnLookupJtoEClick
     end
     object btnLookupEtoJ: TSpeedButton [4]
-      Left = 123
+      Left = 235
       Top = 4
       Width = 107
       Height = 22
@@ -71,7 +70,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnLookupJtoEClick
     end
     object btnLookupClip: TSpeedButton [5]
-      Left = 232
+      Left = 344
       Top = 4
       Width = 73
       Height = 22
@@ -87,8 +86,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton10: TSpeedButton [6]
-      Left = 311
+    object btnMatchExact: TSpeedButton [6]
+      Left = 423
       Top = 4
       Width = 23
       Height = 22
@@ -102,10 +101,10 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton10Click
+      OnClick = btnMatchExactClick
     end
-    object SpeedButton11: TSpeedButton [7]
-      Left = 335
+    object btnMatchLeft: TSpeedButton [7]
+      Left = 447
       Top = 4
       Width = 23
       Height = 22
@@ -118,10 +117,10 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton10Click
+      OnClick = btnMatchExactClick
     end
-    object SpeedButton12: TSpeedButton [8]
-      Left = 359
+    object btnMatchRight: TSpeedButton [8]
+      Left = 471
       Top = 4
       Width = 23
       Height = 22
@@ -134,10 +133,10 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton10Click
+      OnClick = btnMatchExactClick
     end
-    object SpeedButton18: TSpeedButton [9]
-      Left = 383
+    object btnMatchAnywhere: TSpeedButton [9]
+      Left = 495
       Top = 4
       Width = 25
       Height = 22
@@ -150,10 +149,10 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = SpeedButton10Click
+      OnClick = btnMatchExactClick
     end
-    object SpeedButton4: TSpeedButton [10]
-      Left = 414
+    object btnInflect: TSpeedButton [10]
+      Left = 526
       Top = 4
       Width = 23
       Height = 22
@@ -170,7 +169,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnLookupJtoEClick
     end
     object sbAutoPreview: TSpeedButton [11]
-      Left = 438
+      Left = 550
       Top = 4
       Width = 33
       Height = 22
@@ -188,8 +187,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton14: TSpeedButton [12]
-      Left = 478
+    object btnDictGroup1: TSpeedButton [12]
+      Left = 590
       Top = 4
       Width = 25
       Height = 22
@@ -205,8 +204,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton15: TSpeedButton [13]
-      Left = 504
+    object btnDictGroup2: TSpeedButton [13]
+      Left = 616
       Top = 4
       Width = 25
       Height = 22
@@ -221,8 +220,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnLookupJtoEClick
     end
-    object SpeedButton16: TSpeedButton [14]
-      Left = 530
+    object btnDictGroup3: TSpeedButton [14]
+      Left = 642
       Top = 4
       Width = 25
       Height = 22
@@ -295,6 +294,26 @@ inherited fWordLookup: TfWordLookup
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton9Click
+    end
+    object btnLookupAuto: TSpeedButton [19]
+      Left = 11
+      Top = 4
+      Width = 110
+      Height = 22
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      AllowAllUp = True
+      GroupIndex = 1
+      Down = True
+      Caption = '#01132^Auto/all'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      OnClick = btnLookupJtoEClick
     end
     inherited BlankPanel: TBlankPanel
       Top = 62
@@ -389,7 +408,7 @@ inherited fWordLookup: TfWordLookup
   end
   inherited ilImages: TImageList
     Bitmap = {
-      494C0101030008005C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800600010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

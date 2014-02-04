@@ -1134,7 +1134,6 @@ begin
 end;
 
 function TDicLookupCursorV4.HaveMatch: boolean;
-var s_val: string;
 begin
   if FLookupType in [ltKanji,ltRomaji] then
     if CDict.EOF then begin

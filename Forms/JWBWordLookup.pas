@@ -9,27 +9,38 @@ uses
   WakanPaintbox, JWBWordLookupBase, Vcl.ImgList;
 
 type
+ //Supported lookup modes for this window.
+ //Integer values are important, stored in registry.
+  TLookupMode = (
+    lmAuto = 0,
+    lmJp = 1,
+    lmEn = 2,
+    lmClipboard = 3,
+    lmEditorInsert = 4
+  );
+
   TfWordLookup = class(TfWordLookupBase)
     pnlDockExamples: TPanel;
     Panel3: TPanel;
     btnLookupJtoE: TSpeedButton;
     btnLookupEtoJ: TSpeedButton;
     btnLookupClip: TSpeedButton;
-    SpeedButton10: TSpeedButton;
-    SpeedButton11: TSpeedButton;
-    SpeedButton12: TSpeedButton;
-    SpeedButton18: TSpeedButton;
-    SpeedButton4: TSpeedButton;
+    btnMatchExact: TSpeedButton;
+    btnMatchLeft: TSpeedButton;
+    btnMatchRight: TSpeedButton;
+    btnMatchAnywhere: TSpeedButton;
+    btnInflect: TSpeedButton;
     sbAutoPreview: TSpeedButton;
-    SpeedButton14: TSpeedButton;
-    SpeedButton15: TSpeedButton;
-    SpeedButton16: TSpeedButton;
+    btnDictGroup1: TSpeedButton;
+    btnDictGroup2: TSpeedButton;
+    btnDictGroup3: TSpeedButton;
     Edit1: TEdit;
     BitBtn1: TBitBtn;
     Label2: TLabel;
     Label3: TLabel;
     SpeedButton6: TSpeedButton;
     SpeedButton9: TSpeedButton;
+    btnLookupAuto: TSpeedButton;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -37,25 +48,24 @@ type
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton10Click(Sender: TObject);
+    procedure btnMatchExactClick(Sender: TObject);
     procedure btnAddToVocabClick(Sender: TObject);
 
   protected
     procedure WordSelectionChanged; override;
   public
+    dictBeginSet: integer;
+    dictModeSet: TLookupMode;
     procedure SetDefaultColumnWidths; override;
     procedure Refresh; override;
-    procedure UpdateLookMode;
+    function UpdateLookupMode: TLookupMode;
+    procedure RestoreLookupMode;
 
   protected
     donotsetbegset:boolean;
-    procedure Look_Run(req: TDicSearchRequest);
   public
    { Search with current settings, populate the results }
     procedure Look();
-   { Initialize a TDicSearchRequest to search like Look() would.
-    You can then do a lot of searches without affecting the UI. }
-    procedure SetupSearchRequest(a: TSearchType; out req: TDicSearchRequest);
 
   end;
 
@@ -91,17 +101,19 @@ begin
 end;
 
 //Called when any of the configuration buttons are pressed
-procedure TfWordLookup.UpdateLookMode;
-var a: integer;
+function TfWordLookup.UpdateLookupMode: TLookupMode;
 begin
-  if btnLookupJtoE.Down then a:=1 else
-    if btnLookupEtoJ.Down then a:=2 else
-    if btnLookupClip.Down then a:=3 else a:=4;
+  if btnLookupAuto.Down then Result := lmAuto else
+  if btnLookupJtoE.Down then Result := lmJp else
+  if btnLookupEtoJ.Down then Result := lmEn else
+  if btnLookupClip.Down then Result := lmClipboard else
+   //All buttons are off -- we're being called from Editor's auto suggestions.
+   //Do not store this as a permanent state.
+    Result := lmEditorInsert;
+  if Result<>lmEditorInsert then
+    dictModeSet := Result;
 
-  if btnLookupJtoE.Down then dictmodeset:=0;
-  if btnLookupEtoJ.Down then dictmodeset:=1;
-  if btnLookupClip.Down then dictmodeset:=2;
-  if not((btnLookupJtoE.Down) or (btnLookupEtoJ.Down)) then
+  if not (btnLookupAuto.Down or btnLookupJtoE.Down or btnLookupEtoJ.Down) then
   begin
     Edit1.enabled:=false;
     Edit1.Color:=clMenu;
@@ -109,219 +121,228 @@ begin
     Edit1.enabled:=true;
     Edit1.Color:=clWindow;
   end;
-  fMenu.aDictExact.Checked:=SpeedButton10.Down;
-  fMenu.aDictBeginning.Checked:=SpeedButton11.Down;
-  fMenu.aDictEnd.Checked:=SpeedButton12.Down;
-  fMenu.aDictMiddle.Checked:=SpeedButton18.Down;
-  fMenu.aDictBeginning.Enabled:=SpeedButton11.Enabled;
-  fMenu.aDictEnd.Enabled:=SpeedButton12.Enabled;
-  fMenu.aDictMiddle.Enabled:=SpeedButton18.Enabled;
-  fMenu.aDictInflect.Checked:=SpeedButton4.Down;
+  fMenu.aDictExact.Checked:=btnMatchExact.Down;
+  fMenu.aDictBeginning.Checked:=btnMatchLeft.Down;
+  fMenu.aDictEnd.Checked:=btnMatchRight.Down;
+  fMenu.aDictMiddle.Checked:=btnMatchAnywhere.Down;
+  fMenu.aDictBeginning.Enabled:=btnMatchLeft.Enabled;
+  fMenu.aDictEnd.Enabled:=btnMatchRight.Enabled;
+  fMenu.aDictMiddle.Enabled:=btnMatchAnywhere.Enabled;
+  fMenu.aDictInflect.Checked:=btnInflect.Down;
   fMenu.aDictAuto.Checked:=sbAutoPreview.Down;
-  fMenu.aDictGroup1.Checked:=SpeedButton14.Down;
-  fMenu.aDictGroup2.Checked:=SpeedButton15.Down;
-  fMenu.aDictGroup3.Checked:=SpeedButton16.Down;
+  fMenu.aDictGroup1.Checked:=btnDictGroup1.Down;
+  fMenu.aDictGroup2.Checked:=btnDictGroup2.Down;
+  fMenu.aDictGroup3.Checked:=btnDictGroup3.Down;
 
   donotsetbegset:=true;
 
-  SpeedButton11.Enabled:=true;
-  SpeedButton12.Enabled:=true;
-  SpeedButton18.Enabled:=true;
+  btnMatchLeft.Enabled:=true;
+  btnMatchRight.Enabled:=true;
+  btnMatchAnywhere.Enabled:=true;
   case dictbeginset of
-    0:fWordLookup.SpeedButton10.Down:=true;
-    1:fWordLookup.SpeedButton11.Down:=true;
-    2:fWordLookup.SpeedButton12.Down:=true;
-    3:fWordLookup.SpeedButton18.Down:=true;
+    0:fWordLookup.btnMatchExact.Down:=true;
+    1:fWordLookup.btnMatchLeft.Down:=true;
+    2:fWordLookup.btnMatchRight.Down:=true;
+    3:fWordLookup.btnMatchAnywhere.Down:=true;
   end;
 
-  if (not sbAutoPreview.Down) or (SpeedButton18.Down) then
+  if (not sbAutoPreview.Down) or (btnMatchAnywhere.Down) then
     BitBtn1.Caption:=_l('#00669^eSearch')
   else
     BitBtn1.Caption:=_l('#00670^eAll');
 
-  if ((a=2) or (a=4)) then
+  if Result in [lmEn, lmEditorInsert] then
   begin
-    if SpeedButton12.Down then SpeedButton10.Down:=true;
-    if SpeedButton18.Down then SpeedButton10.Down:=true;
-    SpeedButton12.Enabled:=false;
-    SpeedButton18.Enabled:=false;
+    if btnMatchRight.Down then btnMatchExact.Down:=true;
+    if btnMatchAnywhere.Down then btnMatchExact.Down:=true;
+    btnMatchRight.Enabled:=false;
+    btnMatchAnywhere.Enabled:=false;
   end;
-  if a=4 then
+  if Result=lmEditorInsert then
   begin
-    if SpeedButton11.Down then SpeedButton10.Down:=true;
-    SpeedButton11.Enabled:=false;
+    if btnMatchLeft.Down then btnMatchExact.Down:=true;
+    btnMatchLeft.Enabled:=false;
   end;
   donotsetbegset:=false;
 
   StringGrid.RowCount:=200;
 end;
 
-{
-SetupSearchParams()
-Creates a TDicSearchRequest, configured according to user settings and the type of search request:
-  1: jp->en
-  2: en->jp
-  3: clipboard translation
-  4: word insert/translate text
-This is called automatically when doing Look(), or manually on auto-translation.
-}
-
-procedure TfWordLookup.SetupSearchRequest(a: TSearchType; out req: TDicSearchRequest);
+{ Restores lookup mode which was last selected by user when this form is open
+ by itself (as a dictionary lookup form).
+ It's overriden when it's used by Editor for word suggestions. }
+procedure TfWordLookup.RestoreLookupMode;
 begin
-  req := TDicSearchRequest.Create;
-  req.a := a;
-
- //Dictionary group
-  if SpeedButton14.Down then req.dictgroup:=1 else
-  if SpeedButton15.Down then req.dictgroup:=2 else
-  if SpeedButton16.Down then req.dictgroup:=3 else
-    req.dictgroup := 1; //we must have some group chosen
-
-  req.full:=not BitBtn1.Enabled;
-//  if SpeedButton10.Down then req.full:=true;
-
-  req.maxwords:=StringGrid.VisibleRowCount;
-
-  if SpeedButton11.Down then req.MatchType := mtMatchLeft else
-  if SpeedButton12.Down then req.MatchType := mtMatchRight else
-  if SpeedButton18.Down then req.MatchType := mtMatchAnywhere else
-    req.MatchType := mtExactMatch;
-  if (a=stEn) and not (req.MatchType in [mtExactMatch, mtMatchLeft]) then
-    req.MatchType := mtExactMatch;
-
-  if (not fSettings.CheckBox12.Checked) or (SpeedButton10.Down) then req.full:=true;
-
-  if a in [stEditorInsert,stEditorAuto] then begin //ignore some UI settings in these modes
-    req.dictgroup := 5;
-    req.MatchType := mtExactMatch;
-   { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
-    which is obviously not what we want. }
+  case dictmodeset of
+    lmJp: Self.btnLookupJtoE.Down:=true;
+    lmEn: Self.btnLookupEtoJ.Down:=true;
+    lmClipboard: Self.btnLookupClip.Down:=true;
+   //EditorInsert are not to be preserved
+  else Self.btnLookupAuto.Down := true;
   end;
-
-  req.AutoDeflex := SpeedButton4.Down;
-  req.dic_ignorekana := false; //by default, but this can be overriden
 end;
 
-{
-Look_Run()
-Called with a TDicSearchRequest initialized by SetupSearchRequest() to do a search
-and populate the grid with the results
-Don't call directly.
-}
-procedure TfWordLookup.Look_Run(req: TDicSearchRequest);
-var wt:TEvalCharType;
-  i:integer;
-  wasfull:boolean;
-  s:string;
-  b:boolean;
-begin
-  FResults.Clear;
-
-  case req.a of
-    stJp: begin s := Edit1.Text; wt := EC_UNKNOWN; end;
-    stEn: begin s := Edit1.Text; wt := EC_UNKNOWN; end;
-    stClipboard: begin
-      s:='';
-      for i:=1 to flength(clip) do
-       {$IFDEF UNICODE}
-        if copy(fgetch(clip,i),1,2)='00' then break
-       {$ELSE}
-        if fgetch(clip,i)<=#$00FF then break
-       {$ENDIF}
-        else s:=s+fgetch(clip,i);
-      wt := EC_UNKNOWN;
-    end;
-    stEditorInsert: begin //In "word insert" mode
-     //First try real word insert buffer
-      s := fEditor.GetInsertKana(false);
-      wt := EC_UNKNOWN;
-     //If that is empty, show whatever the caret is at
-      if s='' then
-        s:=fEditor.GetWordAtCaret(wt);
-    end;
-    stEditorAuto: //In "translate text" mode
-      s:=fEditor.GetDocWord(fEditor.rcur.x,fEditor.rcur.y,wt,{stopuser=}true);
-  end;
-
-  req.Search(s, wt, FResults);
-  wasfull := req.WasFull;
-
-  if not (req.a in [stEditorInsert, stEditorAuto]) then
-    if FResults.Count=0 then
-      Label3.Caption:='-'
-    else
-      if not wasfull then
-        Label3.Caption:=inttostr(FResults.Count)+'+'
-      else
-        Label3.Caption:=inttostr(FResults.Count);
-  
-  if req.a <> stEditorAuto then //update result list
-  begin
-    ResultsChanged;
-    if not wasfull then
-      s:=_l('#00671^eSearch results (partial)')
-    else
-      s:=_l('#00672^eSearch results');
-    BitBtn1.Visible:=not wasfull or (req.full and not BitBtn1.Enabled);
-    Label2.Visible:=not BitBtn1.Visible;
-    s:=s+' ';
-    case req.a of
-      stJp: s:=s+_l('#00673^eby phonetic');
-      stEn: s:=s+_l('#00674^eby meaning');
-      stClipboard: s:=s+_l('#00675^eby written (clipboard)');
-      stEditorInsert: s:=s+_l('#00676^eby written (text)');
-    end;
-    s:=s+' ('+inttostr(FResults.Count)+')';
-    curword:=0;
-    if StringGrid.Visible then StringGridSelectCell(self,0,1,b);
-    if StringGrid.Visible then StringGrid.Row:=1;
-    if StringGrid.Visible then curword:=1;
-    WordSelectionChanged;
-  end;
-end;
 
 {
 Look()
 Searches for currently entered word and populates the grid with results.
-Do not use for stEditorAuto-Translation, there's SetupSearchRequest()+Look_Run() for that.
+Do not use for stEditorAuto-Translation, Editor uses TDicSearchRequest directly.
 }
 procedure TfWordLookup.Look();
-var a: TSearchType;
+var lm: TLookupMode;
   req: TDicSearchRequest;
+  wt:TEvalCharType;
+  i:integer;
+  wasfull:boolean;
+  text:string;
+  b:boolean;
 begin
-  if btnLookupJtoE.Down then
-    a:=stJp
-  else
-  if btnLookupEtoJ.Down then
-    a:=stEn
-  else
-  if btnLookupClip.Down then
-    a:=stClipboard
-  else
-    a:=stEditorInsert;
-
-  UpdateLookMode;
+  //Retrieve current lookup mode (and adjust conflicting settings)
+  lm := UpdateLookupMode();
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
-  if (a<>stEditorInsert) and (BitBtn1.Enabled) and ((not sbAutoPreview.Down) or (SpeedButton18.Down)) then
+  if (lm<>lmEditorInsert) and BitBtn1.Enabled and ((not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
   begin
     BitBtn1.Visible:=true;
     Label2.Visible:=false;
     StringGrid.Visible:=false;
-    BlankPanel.TextVisible:=(edit1.text<>'') or (a=stEditorInsert);
+    BlankPanel.TextVisible:=(edit1.text<>'') or (lm=lmEditorInsert);
     curword:=0;
     WordSelectionChanged;
     exit;
   end;
 
-  SetupSearchRequest(a, req);
+  req := TDicSearchRequest.Create;
   try
+   //Dictionary group
+    if btnDictGroup1.Down then req.dictgroup:=1 else
+    if btnDictGroup2.Down then req.dictgroup:=2 else
+    if btnDictGroup3.Down then req.dictgroup:=3 else
+      req.dictgroup := 1; //we must have some group chosen
+
+    req.Full:=not BitBtn1.Enabled;
+    req.MaxWords:=StringGrid.VisibleRowCount;
+
+   //Match type (left/right/exact)
+    if btnMatchLeft.Down then req.MatchType := mtMatchLeft else
+    if btnMatchRight.Down then req.MatchType := mtMatchRight else
+    if btnMatchAnywhere.Down then req.MatchType := mtMatchAnywhere else
+      req.MatchType := mtExactMatch;
+    if (lm=lmEn) and not (req.MatchType in [mtExactMatch, mtMatchLeft]) then
+      req.MatchType := mtExactMatch;
+
+    if (not fSettings.cbDictLimitAutoResults.Checked) or btnMatchExact.Down then req.Full:=true;
+
+    if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
+      req.dictgroup := 5;
+      req.MatchType := mtExactMatch;
+     { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
+      which is obviously not what we want. }
+    end;
+
+    req.AutoDeflex := btnInflect.Down;
+    req.dic_ignorekana := false;
+
    //If full search was not requested and autopreview off / too costly
     if not req.full
     and (not Self.sbAutoPreview.Down or (req.MatchType=mtMatchAnywhere)) then
       exit; //do not search
-    req.Prepare;
-    Look_Run(req);
+
+    FResults.Clear;
+    wasfull := false;
+    case lm of
+      lmAuto: begin
+        req.st := stJp;
+        req.Prepare;
+        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        wasfull := req.WasFull;
+
+        req.st := stEn;
+        req.Prepare;
+        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        wasfull := wasfull or req.WasFull;
+
+        req.st := stClipboard;
+        req.Prepare;
+        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        wasfull := wasfull or req.WasFull;
+      end;
+      lmJp: begin
+        req.st := stJp;
+        req.Prepare;
+        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        wasfull := req.WasFull;
+      end;
+      lmEn: begin
+        req.st := stEn;
+        req.Prepare;
+        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        wasfull := req.WasFull;
+      end;
+      lmClipboard: begin
+        text:='';
+        for i:=1 to flength(clip) do
+         {$IFDEF UNICODE}
+          if copy(fgetch(clip,i),1,2)='00' then break
+         {$ELSE}
+          if fgetch(clip,i)<=#$00FF then break
+         {$ENDIF}
+          else text:=text+fgetch(clip,i);
+        req.st := stClipboard;
+        req.Prepare;
+        req.Search(text, EC_UNKNOWN, FResults);
+        wasfull := req.WasFull;
+      end;
+      lmEditorInsert: begin
+       //First try real word insert buffer
+        text := fEditor.GetInsertKana(false);
+        wt := EC_UNKNOWN;
+       //If that is empty, show whatever the caret is at
+        if text='' then
+          text:=fEditor.GetWordAtCaret(wt);
+        req.st := stEditorInsert;
+        req.Prepare;
+        req.Search(text, EC_UNKNOWN, FResults);
+        wasfull := req.WasFull;
+      end;
+    end;
+
+
+   //Finalize and output
+
+    if not (req.st in [stEditorInsert, stEditorAuto]) then
+      if FResults.Count=0 then
+        Label3.Caption:='-'
+      else
+        if not wasfull then
+          Label3.Caption:=inttostr(FResults.Count)+'+'
+        else
+          Label3.Caption:=inttostr(FResults.Count);
+
+    if req.st <> stEditorAuto then //update result list
+    begin
+      ResultsChanged;
+      if not wasfull then
+        text:=_l('#00671^eSearch results (partial)')
+      else
+        text:=_l('#00672^eSearch results');
+      BitBtn1.Visible:=not wasfull or (req.full and not BitBtn1.Enabled);
+      Label2.Visible:=not BitBtn1.Visible;
+      text:=text+' ';
+      case req.st of
+        stJp: text:=text+_l('#00673^eby phonetic');
+        stEn: text:=text+_l('#00674^eby meaning');
+        stClipboard: text:=text+_l('#00675^eby written (clipboard)');
+        stEditorInsert: text:=text+_l('#00676^eby written (text)');
+      end;
+      text:=text+' ('+inttostr(FResults.Count)+')';
+      curword:=0;
+      if StringGrid.Visible then StringGridSelectCell(self,0,1,b);
+      if StringGrid.Visible then StringGrid.Row:=1;
+      if StringGrid.Visible then curword:=1;
+      WordSelectionChanged;
+    end;
+
   finally
     FreeAndNil(req);
   end;
@@ -361,7 +382,7 @@ end;
 
 procedure TfWordLookup.btnLookupJtoEClick(Sender: TObject);
 begin
-  UpdateLookMode;
+  UpdateLookupMode;
   Look();
   if Edit1.Enabled then Edit1.SetFocus;
 end;
@@ -382,14 +403,14 @@ begin
   fMenu.aDictExamples.Execute;
 end;
 
-procedure TfWordLookup.SpeedButton10Click(Sender: TObject);
+procedure TfWordLookup.btnMatchExactClick(Sender: TObject);
 begin
   if not donotsetbegset then
   begin
-    if fWordLookup.SpeedButton10.Down then dictbeginset:=0;
-    if fWordLookup.SpeedButton11.Down then dictbeginset:=1;
-    if fWordLookup.SpeedButton12.Down then dictbeginset:=2;
-    if fWordLookup.SpeedButton18.Down then dictbeginset:=3;
+    if fWordLookup.btnMatchExact.Down then dictbeginset:=0;
+    if fWordLookup.btnMatchLeft.Down then dictbeginset:=1;
+    if fWordLookup.btnMatchRight.Down then dictbeginset:=2;
+    if fWordLookup.btnMatchAnywhere.Down then dictbeginset:=3;
   end;
   Look();
   if Edit1.Enabled then Edit1.SetFocus;

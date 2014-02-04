@@ -385,6 +385,7 @@ type
     property FullTextTranslated: boolean read FFullTextTranslated write FFullTextTranslated;
 
   protected
+    function SetupSearchRequest: TDicSearchRequest;
    {$IFDEF MTHREAD_SUPPORT}
     function CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
    {$ENDIF}
@@ -652,11 +653,7 @@ end;
 
 procedure TfEditor.FormHide(Sender: TObject);
 begin
-  case dictmodeset of
-    0: fWordLookup.btnLookupJtoE.Down:=true;
-    1: fWordLookup.btnLookupEtoJ.Down:=true;
-    2: fWordLookup.btnLookupClip.Down:=true;
-  end;
+  fWordLookup.RestoreLookupMode; //which we had overriden with word suggestions
 end;
 
 procedure TfEditor.FormResize(Sender: TObject);
@@ -936,6 +933,9 @@ begin
   Result := true;
 end;
 
+
+{ Auto-translation. Does NOT use anything from DictLookupForm (settings, setup etc). }
+
 constructor TTranslationThread.Create(AEditor: TfEditor; ablockfromy, ablocktoy: integer);
 begin
  {$IF CompilerVersion<21}
@@ -966,10 +966,7 @@ procedure TTranslationThread.Execute;
 var bg, en: integer;
   i: integer;
 begin
-  fWordLookup.SetupSearchRequest(stEditorAuto, req);
- {$IFDEF TL_IGNORE_KANA}
-  req.dic_ignorekana := true;
- {$ENDIF}
+  req := FEditor.SetupSearchRequest();
   req.Prepare;
 
   dicsl := TSearchResults.Create;
@@ -986,6 +983,27 @@ begin
     FreeAndNil(dicsl);
     FreeAndNil(req);
   end;
+end;
+
+{ Instantiates and appropriately configures a search request object for
+ auto-translation.
+ Do Prepare() with the result after making any modifications to defaults. }
+function TfEditor.SetupSearchRequest: TDicSearchRequest;
+begin
+  Result := TDicSearchRequest.Create;
+  Result.st := stEditorAuto;
+  Result.dictgroup := 5;
+  Result.MatchType := mtExactMatch;
+ { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
+  which is obviously not what we want. }
+  Result.maxwords:=0; //Ignored if Full is true?
+  Result.full := true; //Always true in auto-translation?
+  Result.AutoDeflex := true; //Always true for auto-translation?
+ {$IFDEF TL_IGNORE_KANA}
+  Result.dic_ignorekana := true;
+ {$ELSE}
+  Result.dic_ignorekana := false;
+ {$ENDIF}
 end;
 
 {$IFDEF MTHREAD_SUPPORT}
@@ -1067,13 +1085,7 @@ begin
   try
 
    //Setup everything for translation
-    fWordLookup.btnLookupJtoE.Down:=false;
-    fWordLookup.btnLookupEtoJ.Down:=false;
-    fWordLookup.btnLookupClip.Down:=false;
-    fWordLookup.SetupSearchRequest(stEditorAuto, req);
-   {$IFDEF TL_IGNORE_KANA}
-    req.dic_ignorekana := true;
-   {$ENDIF}
+    req := Self.SetupSearchRequest;
     req.Prepare;
 
     totalwork := block.toy-block.fromy+1;
