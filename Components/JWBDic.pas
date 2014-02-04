@@ -1141,6 +1141,12 @@ begin
       exit;
     end;
 
+  if FValue='' then begin
+    Result := false; //or everything would match
+    exit;
+  end;
+
+
   case FLookupType of
     ltKanji:
       case FMatchType of

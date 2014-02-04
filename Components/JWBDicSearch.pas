@@ -1148,8 +1148,10 @@ begin
     stRomaji: begin
       if lc.roma=rtRoma then
         sxxr:=sxx
-      else
+      else begin
         sxxr:=DbKanaToRomaji(sxx,curlang);
+        if sxxr='' then exit;
+      end;
       dic.LookupRomaji(sxxr);
     end;
     stEnglish: dic.LookupMeaning(sxx);
@@ -1159,6 +1161,7 @@ begin
       else
       if kanaonly then begin
         sxxr:=DbKanaToRomaji(sxx,curlang);
+        if sxxr='' then exit;
         dic.LookupRomaji(sxxr);
       end else
         dic.LookupKanji(sxx);
