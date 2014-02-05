@@ -196,6 +196,7 @@ begin
   sl:=TStringList.Create;
   s2:=TStringList.Create;
   curpos:=0;
+  nextpos:=0;
   read(f,b);
   read(f,b);
   while not eof(f) do
@@ -382,7 +383,7 @@ begin
 end;
 
 procedure TfExamples.SetExamples(kanji:string);
-var l,r,m,max:integer;
+var l,r,m:integer;
   s2:string;
   p:PByte;
   w:word;
@@ -390,21 +391,17 @@ var l,r,m,max:integer;
 begin
   FLastKanji := kanji;
   ex_indfirst:=-1;
-  if kanji='' then
-  begin
-    ShowExample;
-    exit;
-  end;
-  if examindex=nil then
+  if (kanji='') or (examindex=nil) then
   begin
     ShowExample;
     exit;
   end;
   while flength(kanji)<6 do kanji:=kanji+UH_ZERO;
   if flength(kanji)>6 then kanji:=fcopy(kanji,1,6);
+
   l:=0;
-  max:=examindexsiz;
-  r:=max;
+  m:=0; //carried if l>r from the start
+  r:=examindexsiz;
   while l<=r do
   begin
     m:=l+(r-l) div 2;
@@ -423,6 +420,7 @@ begin
     if s2=kanji then break;
     if s2<kanji then l:=m+1 else r:=m-1;
   end;
+
   if l>r then
     ex_indfirst:=-1
   else
@@ -430,10 +428,10 @@ begin
     p:=PByte(integer(examindex)+m*16+12);
     ex_indfirst := PInteger(p)^;
     Inc(p, 16);
-    if m<max then
+    if m<examindexsiz then
       ex_indlast := PInteger(p)^
     else
-      ex_indlast:=examstructsiz;
+      ex_indlast := examstructsiz;
     dec(ex_indlast);
   end;
   ex_indcur:=ex_indfirst;

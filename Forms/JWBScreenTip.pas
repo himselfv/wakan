@@ -20,7 +20,7 @@ type
     screenTipText:string;
     screenTipWt:TEvalCharType;
     screenTipList:TSearchResults;
-    screenTipWords:integer;
+    screenTipWords:integer; //no of words to show in a tip
     screenTipWidth:integer;
     screenTipButton:integer;
     procedure PaintScreenTip;
@@ -92,8 +92,6 @@ begin
   wt:=screenTipWt;
   sl:=screenTipList;
   cl:=Col('Popup_Back');
-  maxwords:=strtoint(fSettings.Edit24.Text);
-  if maxwords>sl.Count then maxwords:=sl.Count;
   maxwords:=screenTipWords;
   tpp:=20;
   ch:=GridFontSize+3;
@@ -217,7 +215,7 @@ end;
 
 //Create screen tip form and show it
 procedure ShowScreenTip(x,y:integer;s:FString;wt:TEvalCharType;immediate:boolean);
-var maxwords,maxwordss:integer;
+var maxwords:integer;
     wasfull:boolean;
     s1,s2:FString; //kinda fstring, has control chars
     s3,s4:string;
@@ -238,12 +236,12 @@ begin
   if ((wt<>EC_LATIN_HW) and (not fSettings.CheckBox28.Checked)) then exit;
   fScreenTip:=TfScreenTip.Create(nil);
   maxwords:=strtoint(fSettings.Edit24.Text);
-  if maxwordss<10 then maxwordss:=10;
+  if maxwords<10 then maxwords:=10;
   if wt=EC_LATIN_HW then
   begin
     //Try to look for a latin word
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),stEnglish,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(fstrtouni(s),stEnglish,mtExactMatch,false,wt,maxwords,fScreenTip.screenTipList,5,wasfull);
     if (fScreenTip.screenTipList.Count=0) then
     begin
       ss:=fstrtouni(s);
@@ -252,11 +250,11 @@ begin
      //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,stEnglish,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+      DicSearch(ss,stEnglish,mtExactMatch,false,wt,maxwords,fScreenTip.screenTipList,5,wasfull);
     end;
   end;
   if wt<>EC_LATIN_HW then
-    DicSearch(s,stJapanese,mtExactMatch,false,wt,maxwordss,fScreenTip.screenTipList,5,wasfull);
+    DicSearch(s,stJapanese,mtExactMatch,false,wt,maxwords,fScreenTip.screenTipList,5,wasfull);
   if maxwords>fScreenTip.screenTipList.Count then
     maxwords:=fScreenTip.screenTipList.Count;
   fScreenTip.screenTipWords:=maxwords;
@@ -282,13 +280,14 @@ begin
     if cw>optwidth then optwidth:=cw;
   end;
   if maxslen>0 then proposeds:=fcopy(s,1,maxslen);
-  vsiz:=5;
-  hsiz:=20;
+
   optwidth:=optwidth-5*kch;
   optwidth:=optwidth div kch;
   if optwidth<strtoint(fSettings.Edit27.Text) then optwidth:=strtoint(fSettings.Edit27.Text);
   if optwidth>strtoint(fSettings.Edit28.Text) then optwidth:=strtoint(fSettings.Edit28.Text);
   fScreenTip.ScreenTipWidth:=optwidth;
+
+  vsiz:=5;
   hsiz:=optwidth;
   sep:=4;
   vfsiz:=vsiz+5;

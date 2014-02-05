@@ -50,8 +50,8 @@ type
     CheckBox7: TCheckBox;
     cbReplaceKanji: TCheckBox;
     tsWordListPrinting: TTabSheet;
-    CheckBox14: TCheckBox;
-    CheckBox15: TCheckBox;
+    cbInsideLines: TCheckBox;
+    cbOutsideLines: TCheckBox;
     CheckBox16: TCheckBox;
     CheckBox17: TCheckBox;
     GroupBox4: TGroupBox;
@@ -878,8 +878,8 @@ begin
   DefaultCopyFormatName:=reg.ReadString('Dict','CopyFormat','');
   GridFontSize:=strtoint(Edit25.text);
   lbWordPrintFormat.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
-  CheckBox14.Checked:=reg.ReadBool('WordSheet','InsideLines',true);
-  CheckBox15.Checked:=reg.ReadBool('WordSheet','OutsideLines',true);
+  cbInsideLines.Checked:=reg.ReadBool('WordSheet','InsideLines',true);
+  cbOutsideLines.Checked:=reg.ReadBool('WordSheet','OutsideLines',true);
   CheckBox16.Checked:=reg.ReadBool('WordSheet','VaryColors',true);
   CheckBox17.Checked:=reg.ReadBool('WordSheet','PrintUnlearned',true);
   Edit10.Text:=inttostr(reg.ReadInteger('WordSheet','NoLines',40));
@@ -1165,8 +1165,8 @@ begin
   reg.WriteBool('Dict','MultiLineGrid',cbMultilineGrids.Checked);
   reg.WriteString('Dict','CopyFormat',DefaultCopyFormatName);
   reg.WriteInteger('WordSheet','Columns',lbWordPrintFormat.ItemIndex);
-  reg.WriteBool('WordSheet','InsideLines',CheckBox14.Checked);
-  reg.WriteBool('WordSheet','OutsideLines',CheckBox15.Checked);
+  reg.WriteBool('WordSheet','InsideLines',cbInsideLines.Checked);
+  reg.WriteBool('WordSheet','OutsideLines',cbOutsideLines.Checked);
   reg.WriteBool('WordSheet','VaryColors',CheckBox16.Checked);
   reg.WriteBool('WordSheet','PrintUnlearned',CheckBox17.Checked);
   reg.WriteInteger('WordSheet','NoLines',strtoint(Edit10.Text));

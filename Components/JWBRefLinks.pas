@@ -64,7 +64,7 @@ type
 procedure ShellOpen(const sCommand: string);
 
 implementation
-uses SysUtils, JWBStrings, JWBIO;
+uses SysUtils, UITypes, JWBStrings, JWBIO;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';

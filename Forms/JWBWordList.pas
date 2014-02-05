@@ -442,9 +442,15 @@ end;
 function DateOld(s:string;threshold:integer):integer;
 var d:TDateTime;
 begin
-  if s='00000000'then result:=threshold else
-  d:=EncodeDate(strtoint(copy(s,1,4)),strtoint(copy(s,5,2)),strtoint(copy(s,7,2)));
-  if trunc(now-d)<threshold then result:=trunc(now-d) else result:=threshold;
+  if s='00000000' then
+    Result:=threshold
+  else begin
+    d:=EncodeDate(strtoint(copy(s,1,4)),strtoint(copy(s,5,2)),strtoint(copy(s,7,2)));
+    if trunc(now-d)<threshold then
+      Result:=trunc(now-d)
+    else
+      Result:=threshold;
+  end;
 end;
 
 procedure TfWordList.BuildWordList;
@@ -469,17 +475,18 @@ var il,sl:TStringList;
 
   sp: TSMPromptForm;
 
-procedure SetPaQa(q:integer;w:integer);
-begin
-  case w of
-    0:begin pa[q]:=-2; qa[q]:=2; end;
-    1:begin pa[q]:=-1; qa[q]:=1; end;
-    2:begin pa[q]:=1; qa[q]:=1; end;
-    3:begin pa[q]:=2; qa[q]:=2; end;
-    4:begin pa[q]:=0; qa[q]:=1; end;
-    5:begin pa[q]:=0; qa[q]:=0; end;
+  procedure SetPaQa(q:integer;w:integer);
+  begin
+    case w of
+      0:begin pa[q]:=-2; qa[q]:=2; end;
+      1:begin pa[q]:=-1; qa[q]:=1; end;
+      2:begin pa[q]:=1; qa[q]:=1; end;
+      3:begin pa[q]:=2; qa[q]:=2; end;
+      4:begin pa[q]:=0; qa[q]:=1; end;
+      5:begin pa[q]:=0; qa[q]:=0; end;
+    end;
   end;
-end;
+
 begin
   sp:=SMProgressDlg(
     _l('#00860^eBuilding learning list...'),
@@ -600,9 +607,6 @@ begin
           if ia[k]>900 then ia[k]:=900;
           wa[k]:=(wa[k]+(coef*abs(ba[k]-sa[k])/500))/2;
         end;
-        s:='#'+inttostr(j)+' Sc:'+inttostr(best);
-        for k:=1 to 4 do s:=s+#13+inttostr(k)+': B:'+floattostrf(ba[k],ffNumber,7,2)+' W:'+floattostrf(wa[k],ffNumber,7,2)+' I:'+floattostrf(ia[k],ffNumber,7,2);
-//        showmessage(s);
       end;
     end;
     s:='DEBUG LEARNING LIST STATS:'#13;
@@ -648,16 +652,17 @@ begin
   sp.Free;
 end;
 
-function StateNew(i,j:integer):integer;
-var k:integer;
+//Takes present KnownState (0..3) and flashcard answer (0..2) and returns
+//new KnownState after this answer
+function StateNew(state, ans:integer):integer;
 begin
-  case i of
-    0:if j=0 then k:=0 else if j=1 then k:=1 else k:=2;
-    1:if j=0 then k:=1 else if j=1 then k:=2 else k:=3;
-    2:if j=0 then k:=0 else if j=1 then k:=2 else k:=3;
-    3:if j=0 then k:=0 else if j=1 then k:=1 else k:=3;
+  case state of
+    0:if ans=0 then Result:=0 else if ans=1 then Result:=1 else Result:=2;
+    1:if ans=0 then Result:=1 else if ans=1 then Result:=2 else Result:=3;
+    2:if ans=0 then Result:=0 else if ans=1 then Result:=2 else Result:=3;
+    3:if ans=0 then Result:=0 else if ans=1 then Result:=1 else Result:=3;
+  else Result := 0; //should not happen
   end;
-  result:=k;
 end;
 
 procedure TfWordList.PrepareTestWord;

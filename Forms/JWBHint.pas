@@ -76,6 +76,7 @@ begin
 
   PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
   cw:=-1;
+  cwl:=0;
   kanjis:='';
   for i:=1 to StringGrid1.RowCount-1 do
   begin
@@ -88,6 +89,7 @@ begin
     end;
     kanjis:=kanjis+curk;
   end;
+
   fs:=18;
   fsl:=PaintBox1.Width div fs;
   while flength(kanjis)>fsl do
@@ -108,6 +110,7 @@ begin
       kanjis:=kanjis+UH_ELLIPSIS;
     end;
   end;
+
 //  PaintBox1.Canvas.Font.Style:=[];
   PaintBox1.Canvas.Font.Color:=Col('Editor_HintText');
   DrawUnicode(PaintBox1.Canvas,2,2,fs,fcopy(kanjis,1,cw),FontJapaneseGrid);

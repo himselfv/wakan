@@ -1055,10 +1055,14 @@ begin
       tk:=TUser.Str(TUserPhonetic);
       tr:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),curlang));
       if showroma then
-        tp:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),curlang)) else
+        tp:=fstr(KanaToRomaji(TUser.Str(TUserPhonetic),curlang))
+      else
         tp:=TUser.Str(TUserPhonetic);
       if (not fSettings.CheckBox17.Checked) or (FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0) then
-        tw:=TUser.Str(TUserKanji) else tw:='';
+        tw:=TUser.Str(TUserKanji)
+      else
+        tw:='';
+      ls := 0;
       for k:=1 to 4 do if (ps[k*2]=chr(ord('1')+j)) then
       begin
         l:=k;
@@ -1072,7 +1076,7 @@ begin
           end;
           canvas.Rectangle(ph+((width-ph*2) div 4)*(l-1),ph*i+(height-ph*pr) div 2,ph+((width-ph*2) div 4)*l,(height-ph*pr) div 2+ph+ph*i);
           canvas.Pen.Color:=clBlack;
-          if fSettings.CheckBox14.Checked then
+          if fSettings.cbInsideLines.Checked then
           begin
             canvas.MoveTo(ph+((width-ph*2) div 4)*(l-1),ph*i+(height-ph*pr) div 2);
             canvas.LineTo(ph+((width-ph*2) div 4)*l,ph*i+(height-ph*pr) div 2);
@@ -1093,15 +1097,16 @@ begin
         end;
         if (ft=FontJapanese) and (curlang='c') then ft:=FontChinese;
         if (ps[k*2-1]<>'p') then
-          DrawUnicode(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),t,ft) else
+          DrawUnicode(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),t,ft)
+        else
           DrawKana(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),tk,ft,showroma,curlang);
-        if fSettings.CheckBox15.Checked then
+        if fSettings.cbOutsideLines.Checked then
         begin
           canvas.MoveTo(ph+((width-ph*2) div 4)*(k-1),ph*i+(height-ph*pr) div 2);
           canvas.LineTo(ph+((width-ph*2) div 4)*(k-1),ph+ph*i+(height-ph*pr) div 2);
         end;
       end;
-      if fSettings.CheckBox15.Checked then
+      if fSettings.cbOutsideLines.Checked then
       begin
         canvas.MoveTo(ph+((width-ph*2) div 4)*(ls-1),ph*i+(height-ph*pr) div 2);
         canvas.LineTo(ph+((width-ph*2) div 4)*(ls-1),ph+ph*i+(height-ph*pr) div 2);
@@ -1223,6 +1228,10 @@ begin
     ai:=strtoint(wl[StringGrid1.Row-1]);
     bi:=strtoint(wl[StringGrid1.Row]);
   end;
+
+  //Scan through category and determine word positions in it
+  ap := -1;
+  bp := -1;
   TUserSheet.SetOrder('Sheet_Ind');
   TUserSheet.Locate('Number',StrToInt(wlc[StringGrid1.Row-1]));
   while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
@@ -1231,13 +1240,21 @@ begin
     if TUserSheet.Int(TUserSheetWord)=bi then bp:=TUserSheet.Int(TUserSheetPos);
     TUserSheet.Next;
   end;
+  Assert(ap>0);
+  Assert(bp>0);
+
+  //Swap positions
   TUserSheet.Locate('Number',StrToInt(wlc[StringGrid1.Row-1]));
   while (not TUserSheet.EOF) and (TUserSheet.Str(TUserSheetNumber)=wlc[StringGrid1.Row-1]) do
   begin
-    if TUserSheet.Int(TUserSheetPos)=ap then TUserSheet.Edit([TUserSheetPos],[inttostr(bp)]) else
-    if TUserSheet.Int(TUserSheetPos)=bp then TUserSheet.Edit([TUserSheetPos],[inttostr(ap)]);
+    if TUserSheet.Int(TUserSheetPos)=ap then
+      TUserSheet.Edit([TUserSheetPos],[inttostr(bp)])
+    else
+      if TUserSheet.Int(TUserSheetPos)=bp then
+        TUserSheet.Edit([TUserSheetPos],[inttostr(ap)]);
     TUserSheet.Next;
   end;
+
   for i:=0 to 3 do
   begin
     s:=StringGrid1.Cells[i,StringGrid1.Row];

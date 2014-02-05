@@ -101,7 +101,11 @@ begin
       chk.LoadFromFile('ANNOTATE.CHK');
     if FindFirst('*.ANO',faAnyFile,sr)=0 then
     repeat
-      ss:=sr.name+';'+inttostr(sr.size)+';'+inttostr(sr.time);
+      ss:=sr.name+';'+inttostr(sr.size)+';'+inttostr(
+       //Delphi complains when we use sr.Time, but we need it for backward
+       //compability. This produces the same result but is formally more correct:
+        DateTimeToFileDate(sr.TimeStamp)
+      );
       if chk.IndexOf(ss)=-1 then bld:=true;
       nchk.Add(ss);
     until FindNext(sr)<>0;

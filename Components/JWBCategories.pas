@@ -52,7 +52,7 @@ type
 
 function FindCategory(const category:string): integer;
 procedure ListCategoryWords(cat:integer;list:TList<integer>); overload;
-procedure ListWordCategories(word:integer;list:TStringList); overload; deprecated;
+procedure ListWordCategories(word:integer;list:TStringList); overload;
 procedure ListWordCategories(word:integer;list:TList<integer>); overload;
 
 function RemoveWordFromCategory(word:integer;cat:integer): boolean;

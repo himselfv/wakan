@@ -322,27 +322,28 @@ end;
   #01032^Default text
   #01032^eDefault text (for backward compability)
 Do not use ^ and to not start your default text with letter "e". }
-function TfLanguage.TranslateString(id:string):string;
+function TfLanguage.TranslateString(id: string): string;
 var i,sk,m,l,r:integer;
 begin
-  result:=id;
-  if (length(id)>6) and (id[1]='#') then
-  begin
+  Result := id;
+
+  if (length(id)>6) and (id[1]='#') then try
     sk:=0;
     while pos('&',id)>0 do delete(id,pos('&',id),1);
-    try sk:=strtoint(copy(id,2,5)); except end;
-    if sk>0 then
-    begin
+    if TryStrToInt(copy(id,2,5), sk) and (sk>0) then begin
       l:=0;
+      m:=0;
       r:=curtrans.Count-1;
       while l<=r do
       begin
         m:=(l+r) div 2;
-        try i:=strtoint(copy(curtrans[m],1,5)); except showmessage('.LNG file corrupted!'); end;
+        i:=strtoint(copy(curtrans[m],1,5));
         if sk<i then r:=m-1 else if sk>i then l:=m+1 else break;
       end;
-      if l<=r then result:=copy(curtrans[m],7,length(curtrans[m])-6);
+      if l<=r then Result:=copy(curtrans[m],7,length(curtrans[m])-6);
     end;
+  except
+    ShowMessage('.LNG file corrupted!');
   end;
 
   i := pos('^', Result);

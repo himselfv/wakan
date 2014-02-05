@@ -217,6 +217,6 @@ begin
 end;
 
 initialization
-  HttpFormatSettings := TFormatSettings.Create($0409);
+  HttpFormatSettings := TFormatSettings.Create('en-us'); //$0409 but it's platform-incompatible
 
 end.
