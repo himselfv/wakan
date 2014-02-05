@@ -435,6 +435,7 @@ var j,k:integer;
   begin
     for i:=0 to mi.Count-1 do _menuitem(mi.Items[i]);
     mi.Caption:=TranslateString(mi.Caption);
+    mi.Hint:=TranslateString(mi.Hint);
   end;
 
 begin

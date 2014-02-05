@@ -41,8 +41,9 @@ type
     miLookupAuto: TMenuItem;
     miLookupJtoE: TMenuItem;
     miLookupEtoJ: TMenuItem;
-    btnLookupMode: TButton;
-    btnLookupClip: TButton;
+    SpeedButton1: TSpeedButton;
+    btnLookupMode: TSpeedButton;
+    btnLookupClip: TSpeedButton;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -53,6 +54,9 @@ type
     procedure btnAddToVocabClick(Sender: TObject);
     procedure miLookupAutoClick(Sender: TObject);
     procedure btnLookupModeClick(Sender: TObject);
+    procedure btnLookupClipClick(Sender: TObject);
+    procedure miLookupJtoEClick(Sender: TObject);
+    procedure miLookupEtoJClick(Sender: TObject);
 
   public
     procedure LanguageChanged;
@@ -108,29 +112,6 @@ end;
 procedure TfWordLookup.Refresh;
 begin
   Look();
-end;
-
-//TButton does not support Down by default
-type
-  TButtonHelper = class helper for TButton
-  protected
-    function GetDown: boolean;
-    procedure SetDown(const Value: boolean);
-  public
-    property Down: boolean read GetDown write SetDown;
-  end;
-
-function TButtonHelper.GetDown: boolean;
-begin
-  Result := Self.Perform(BM_GETSTATE, 0, 0)=1;
-end;
-
-procedure TButtonHelper.SetDown(const Value: boolean);
-begin
-  if Value then
-    Self.Perform(BM_SETSTATE, 1, 0)
-  else
-    Self.Perform(BM_SETSTATE, 0, 0);
 end;
 
 procedure TfWordLookup.LanguageChanged;
@@ -251,13 +232,16 @@ end;
 
 procedure TfWordLookup.SetLookupMode(const Value: TLookupMode);
 begin
-  btnLookupMode.Down := dictModeSet in [lmAuto, lmJp, lmEn];
-  btnLookupClip.Down :=  dictModeSet in [lmClipboard];
-  case dictModeSet of
+  btnLookupMode.Down := Value in [lmAuto, lmJp, lmEn];
+  btnLookupClip.Down :=  Value in [lmClipboard];
+  case Value of
     lmAuto: Self.miLookupAuto.Checked:=true;
     lmJp: Self.miLookupJtoE.Checked:=true;
     lmEn: Self.miLookupEtoJ.Checked:=true;
   end;
+  UpdateLookupMode;
+  Look();
+  if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then Edit1.SetFocus;
 end;
 
 
@@ -425,13 +409,6 @@ begin
   end;
 end;
 
-procedure TfWordLookup.miLookupAutoClick(Sender: TObject);
-begin
-  UpdateLookupMode;
-  Look();
-  if Edit1.Enabled then Edit1.SetFocus;
-end;
-
 procedure TfWordLookup.Edit1Change(Sender: TObject);
 begin
   BitBtn1.Enabled:=true;
@@ -466,8 +443,33 @@ end;
 
 procedure TfWordLookup.btnLookupModeClick(Sender: TObject);
 begin
-  TButton(Sender).Down := true;
-  miLookupAutoClick(Sender);
+  if miLookupJtoE.Checked then
+    LookupMode := lmJp
+  else
+  if miLookupEtoJ.Checked then
+    LookupMode := lmEn
+  else
+    LookupMode := lmAuto;
+end;
+
+procedure TfWordLookup.btnLookupClipClick(Sender: TObject);
+begin
+  LookupMode := lmClipboard;
+end;
+
+procedure TfWordLookup.miLookupAutoClick(Sender: TObject);
+begin
+  LookupMode := lmAuto;
+end;
+
+procedure TfWordLookup.miLookupJtoEClick(Sender: TObject);
+begin
+  LookupMode := lmJp;
+end;
+
+procedure TfWordLookup.miLookupEtoJClick(Sender: TObject);
+begin
+  LookupMode := lmEn;
 end;
 
 procedure TfWordLookup.BitBtn1Click(Sender: TObject);

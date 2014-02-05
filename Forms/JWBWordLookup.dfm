@@ -239,6 +239,38 @@ inherited fWordLookup: TfWordLookup
       ShowHint = True
       OnClick = SpeedButton9Click
     end
+    object SpeedButton1: TSpeedButton [16]
+      Left = 11
+      Top = 4
+      Width = 23
+      Height = 22
+    end
+    object btnLookupMode: TSpeedButton [17]
+      Left = 11
+      Top = 4
+      Width = 110
+      Height = 22
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      AllowAllUp = True
+      GroupIndex = 1
+      Caption = '#01132^Auto/all'
+      PopupMenu = pmLookupMode
+      OnClick = btnLookupModeClick
+    end
+    object btnLookupClip: TSpeedButton [18]
+      Left = 125
+      Top = 4
+      Width = 73
+      Height = 22
+      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
+      AllowAllUp = True
+      GroupIndex = 1
+      Caption = '#00289^eBy clipboard'
+      PopupMenu = pmLookupMode
+      OnClick = btnLookupClipClick
+    end
     inherited BlankPanel: TBlankPanel
       Top = 62
       Width = 687
@@ -309,30 +341,6 @@ inherited fWordLookup: TfWordLookup
       TabOrder = 3
       OnClick = BitBtn1Click
     end
-    object btnLookupMode: TButton
-      Left = 11
-      Top = 4
-      Width = 110
-      Height = 22
-      Hint = 
-        '#01133^Search by reading, writing or meaning, depending on what ' +
-        'you type'
-      Caption = '#01132^Auto/all'
-      DropDownMenu = pmLookupMode
-      Style = bsSplitButton
-      TabOrder = 4
-      OnClick = btnLookupModeClick
-    end
-    object btnLookupClip: TButton
-      Left = 125
-      Top = 4
-      Width = 73
-      Height = 22
-      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
-      Caption = '#00289^eBy clipboard'
-      TabOrder = 5
-      OnClick = btnLookupModeClick
-    end
   end
   object pnlDockExamples: TPanel [1]
     Left = 0
@@ -362,7 +370,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800640010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800680010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -523,7 +531,7 @@ inherited fWordLookup: TfWordLookup
       GroupIndex = 1
       Hint = '#00643^Search by japanese reading (F2)'
       RadioItem = True
-      OnClick = miLookupAutoClick
+      OnClick = miLookupJtoEClick
     end
     object miLookupEtoJ: TMenuItem
       AutoCheck = True
@@ -531,7 +539,7 @@ inherited fWordLookup: TfWordLookup
       GroupIndex = 1
       Hint = '#00645^Search by english meaning (F3)'
       RadioItem = True
-      OnClick = miLookupAutoClick
+      OnClick = miLookupEtoJClick
     end
   end
 end
