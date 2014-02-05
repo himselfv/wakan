@@ -190,6 +190,20 @@ begin
   end;
 end;
 
+//Assuming the input string is the sequence of JIS-encoded characters,
+//converts it to a sequence of decimally encoded ku/ten pairs (google: ku/ten).
+function ToKuten(AString: UTF8String): UTF8String;
+var i: integer;
+  b: byte;
+begin
+  SetLength(Result, Length(AString)*2);
+  for i := 1 to Length(AString) do begin
+    b := Ord(AString[i])-$A0;
+    Result[i*2-1] := AnsiChar(Ord('0') + (b mod 10));
+    Result[i*2-0] := AnsiChar(Ord('0') + (b div 10));
+  end;
+end;
+
 //Formats reference link text (Caption, Hint, Link), inserting data in the
 //appropriate formats where needed
 function FormatReferenceLinkText(AText: string; AData: string): string;
@@ -253,6 +267,9 @@ begin
        //Convert
         if form='hex' then
           tmp := UTF8String(UnicodeToHex(UnicodeString(tmp)))
+        else
+        if form='kuten' then
+          tmp := ToKuten(tmp)
         else
         if form='urlbytes' then
           tmp := UrlBytes(tmp)
