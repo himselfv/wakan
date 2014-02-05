@@ -22,9 +22,6 @@ type
   TfWordLookup = class(TfWordLookupBase)
     pnlDockExamples: TPanel;
     Panel3: TPanel;
-    btnLookupJtoE: TSpeedButton;
-    btnLookupEtoJ: TSpeedButton;
-    btnLookupClip: TSpeedButton;
     btnMatchExact: TSpeedButton;
     btnMatchLeft: TSpeedButton;
     btnMatchRight: TSpeedButton;
@@ -40,19 +37,30 @@ type
     Label3: TLabel;
     SpeedButton6: TSpeedButton;
     SpeedButton9: TSpeedButton;
-    btnLookupAuto: TSpeedButton;
+    pmLookupMode: TPopupMenu;
+    miLookupAuto: TMenuItem;
+    miLookupJtoE: TMenuItem;
+    miLookupEtoJ: TMenuItem;
+    btnLookupMode: TButton;
+    btnLookupClip: TButton;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure btnLookupJtoEClick(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
     procedure btnMatchExactClick(Sender: TObject);
     procedure btnAddToVocabClick(Sender: TObject);
+    procedure miLookupAutoClick(Sender: TObject);
+    procedure btnLookupModeClick(Sender: TObject);
+
+  public
+    procedure LanguageChanged;
 
   protected
     procedure WordSelectionChanged; override;
+    function GetLookupMode: TLookupMode;
+    procedure SetLookupMode(const Value: TLookupMode);    
   public
     dictBeginSet: integer;
     dictModeSet: TLookupMode;
@@ -60,6 +68,8 @@ type
     procedure Refresh; override;
     function UpdateLookupMode: TLookupMode;
     procedure RestoreLookupMode;
+    property LookupMode: TLookupMode read GetLookupMode write SetLookupMode;
+
 
   protected
     donotsetbegset:boolean;
@@ -100,20 +110,68 @@ begin
   Look();
 end;
 
+//TButton does not support Down by default
+type
+  TButtonHelper = class helper for TButton
+  protected
+    function GetDown: boolean;
+    procedure SetDown(const Value: boolean);
+  public
+    property Down: boolean read GetDown write SetDown;
+  end;
+
+function TButtonHelper.GetDown: boolean;
+begin
+  Result := Self.Perform(BM_GETSTATE, 0, 0)=1;
+end;
+
+procedure TButtonHelper.SetDown(const Value: boolean);
+begin
+  if Value then
+    Self.Perform(BM_SETSTATE, 1, 0)
+  else
+    Self.Perform(BM_SETSTATE, 0, 0);
+end;
+
+procedure TfWordLookup.LanguageChanged;
+begin
+  if curLang='j' then begin
+    fWordLookup.miLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
+    fWordLookup.miLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
+  end else begin
+    fWordLookup.miLookupJtoE.Caption:=_l('#00331^eChinese ->English');
+    fWordLookup.miLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
+  end;
+
+  if (not btnLookupClip.Enabled) and btnLookupClip.Down then
+    Self.SetLookupMode(lmJp);
+end;
+
+
+
 //Called when any of the configuration buttons are pressed
 function TfWordLookup.UpdateLookupMode: TLookupMode;
 begin
-  if btnLookupAuto.Down then Result := lmAuto else
-  if btnLookupJtoE.Down then Result := lmJp else
-  if btnLookupEtoJ.Down then Result := lmEn else
-  if btnLookupClip.Down then Result := lmClipboard else
-   //All buttons are off -- we're being called from Editor's auto suggestions.
-   //Do not store this as a permanent state.
-    Result := lmEditorInsert;
+  Result := GetLookupMode;
+ //Do not store this as a permanent state.    
   if Result<>lmEditorInsert then
     dictModeSet := Result;
 
-  if not (btnLookupAuto.Down or btnLookupJtoE.Down or btnLookupEtoJ.Down) then
+  if btnLookupMode.Down then
+    if miLookupAuto.Checked then begin
+      btnLookupMode.Caption := miLookupAuto.Caption;
+      btnLookupMode.Hint := miLookupAuto.Hint;
+    end else
+    if miLookupJtoE.Checked then begin
+      btnLookupMode.Caption := miLookupJtoE.Caption;
+      btnLookupMode.Hint := miLookupJtoE.Hint;
+    end else
+    if miLookupEtoJ.Checked then begin
+      btnLookupMode.Caption := miLookupEtoJ.Caption;
+      btnLookupMode.Hint := miLookupEtoJ.Hint;
+    end;
+
+  if not (Result in [lmAuto, lmJp, lmEn]) then
   begin
     Edit1.enabled:=false;
     Edit1.Color:=clMenu;
@@ -173,12 +231,32 @@ end;
  It's overriden when it's used by Editor for word suggestions. }
 procedure TfWordLookup.RestoreLookupMode;
 begin
-  case dictmodeset of
-    lmJp: Self.btnLookupJtoE.Down:=true;
-    lmEn: Self.btnLookupEtoJ.Down:=true;
-    lmClipboard: Self.btnLookupClip.Down:=true;
-   //EditorInsert are not to be preserved
-  else Self.btnLookupAuto.Down := true;
+  SetLookupMode(dictModeSet);
+end;
+
+function TfWordLookup.GetLookupMode: TLookupMode;
+begin
+  if btnLookupMode.Down then begin
+    if miLookupAuto.Checked then Result := lmAuto else
+    if miLookupJtoE.Checked then Result := lmJp else
+    if miLookupEtoJ.Checked then Result := lmEn else
+      Result := lmEditorInsert;
+  end else
+  if btnLookupClip.Down then
+    Result := lmClipboard
+  else
+   //All buttons are off -- we're being called from Editor's auto suggestions.  
+    Result := lmEditorInsert;
+end;
+
+procedure TfWordLookup.SetLookupMode(const Value: TLookupMode);
+begin
+  btnLookupMode.Down := dictModeSet in [lmAuto, lmJp, lmEn];
+  btnLookupClip.Down :=  dictModeSet in [lmClipboard];
+  case dictModeSet of
+    lmAuto: Self.miLookupAuto.Checked:=true;
+    lmJp: Self.miLookupJtoE.Checked:=true;
+    lmEn: Self.miLookupEtoJ.Checked:=true;
   end;
 end;
 
@@ -347,6 +425,13 @@ begin
   end;
 end;
 
+procedure TfWordLookup.miLookupAutoClick(Sender: TObject);
+begin
+  UpdateLookupMode;
+  Look();
+  if Edit1.Enabled then Edit1.SetFocus;
+end;
+
 procedure TfWordLookup.Edit1Change(Sender: TObject);
 begin
   BitBtn1.Enabled:=true;
@@ -379,11 +464,10 @@ begin
   if Edit1.Enabled then Edit1.SetFocus;
 end;
 
-procedure TfWordLookup.btnLookupJtoEClick(Sender: TObject);
+procedure TfWordLookup.btnLookupModeClick(Sender: TObject);
 begin
-  UpdateLookupMode;
-  Look();
-  if Edit1.Enabled then Edit1.SetFocus;
+  TButton(Sender).Down := true;
+  miLookupAutoClick(Sender);
 end;
 
 procedure TfWordLookup.BitBtn1Click(Sender: TObject);

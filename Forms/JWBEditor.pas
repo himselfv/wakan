@@ -1948,9 +1948,7 @@ begin
   end;
 
   if fWordLookup<>nil then begin
-    fWordLookup.btnLookupJtoE.Down:=false;
-    fWordLookup.btnLookupEtoJ.Down:=false;
-    fWordLookup.btnLookupClip.Down:=false;
+    fWordLookup.LookupMode := lmEditorInsert;
 
     if dolook then
       if fWordLookup.Visible or (insertBuffer<>'') then

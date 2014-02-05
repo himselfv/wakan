@@ -1301,26 +1301,18 @@ begin
     btnJapaneseMode.Down:=true;
     aJapanese.Checked:=true;
     aChinese.Checked:=false;
-    if fWordLookup<>nil then begin
-      fWordLookup.btnLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
-      fWordLookup.btnLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
-    end;
   end else
   begin
     showroma:=fSettings.rgShowBopomofo.ItemIndex=1;
     btnChineseMode.Down:=true;
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
-    if fWordLookup<>nil then begin
-      fWordLookup.btnLookupJtoE.Caption:=_l('#00331^eChinese ->English');
-      fWordLookup.btnLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
-    end;
   end;
   RescanDicts;
   if fKanjiSearch<>nil then
     fKanjiSearch.LanguageChanged;
   if fWordLookup<>nil then
-    if (not fWordLookup.btnLookupClip.Enabled) and fWordLookup.btnLookupClip.Down then fWordLookup.btnLookupJtoE.Down:=true;
+    fWordLookup.LanguageChanged;
   if fExamples<>nil then
     fExamples.ReloadExamplesPackage;
   if fWordLookup<>nil then
@@ -1706,7 +1698,7 @@ begin
   if (fKanji<>nil) and (fKanjiSearch<>nil) then
     if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.Reload();
   if fWordLookup<>nil then
-    if fWordLookup.Visible and fWordLookup.btnLookupClip.Down then fWordLookup.Look();
+    if fWordLookup.Visible and (fWordLookup.LookupMode=lmClipboard) then fWordLookup.Look();
 end;
 
 //Retrieves a data for an HGLOBAL-containing clipboard format (most of them are)
@@ -1774,7 +1766,7 @@ end;
 
 procedure TfMenu.Action1Execute(Sender: TObject);
 begin
-  fWordLookup.btnLookupEtoJ.Down:=true;
+  fWordLookup.LookupMode := lmEn;
 end;
 
 procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
@@ -2344,22 +2336,22 @@ end;
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnLookupJtoE.Down:=true;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.LookupMode := lmJp;
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictEnglishExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnLookupEtoJ.Down:=true;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.LookupMode := lmEn;
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictClipboardExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnLookupClip.Down:=true;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.LookupMode := lmClipboard;
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
@@ -2373,7 +2365,7 @@ begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnMatchExact.Down:=true;
   fWordLookup.dictBeginSet:=0;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictBeginningExecute(Sender: TObject);
@@ -2381,7 +2373,7 @@ begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnMatchLeft.Down:=true;
   fWordLookup.dictBeginSet:=1;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictEndExecute(Sender: TObject);
@@ -2389,7 +2381,7 @@ begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnMatchRight.Down:=true;
   fWordLookup.dictBeginSet:=2;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictMiddleExecute(Sender: TObject);
@@ -2397,7 +2389,7 @@ begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnMatchAnywhere.Down:=true;
   fWordLookup.dictBeginSet:=3;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aKanjiWindowExecute(Sender: TObject);
@@ -3244,35 +3236,35 @@ procedure TfMenu.aDictInflectExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnInflect.Down:=not fWordLookup.btnInflect.Down;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictAutoExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.sbAutoPreview.Down:=not fWordLookup.sbAutoPreview.Down;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup1Execute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnDictGroup1.Down:=true;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup2Execute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnDictGroup2.Down:=true;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictGroup3Execute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.btnDictGroup3.Down:=true;
-  fWordLookup.btnLookupJtoEClick(Sender);
+  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aUserExamplesExecute(Sender: TObject);

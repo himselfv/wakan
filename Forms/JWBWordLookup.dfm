@@ -35,59 +35,8 @@ inherited fWordLookup: TfWordLookup
       Top = 185
       ExplicitTop = 185
     end
-    object btnLookupJtoE: TSpeedButton [3]
-      Left = 123
-      Top = 4
-      Width = 110
-      Height = 22
-      Hint = '#00643^eSearch by japanese reading (F2)'
-      AllowAllUp = True
-      GroupIndex = 1
-      Caption = '#00644^eJ -> E'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnLookupJtoEClick
-    end
-    object btnLookupEtoJ: TSpeedButton [4]
-      Left = 235
-      Top = 4
-      Width = 107
-      Height = 22
-      Hint = '#00645^eSearch by english meaning (F3)'
-      AllowAllUp = True
-      GroupIndex = 1
-      Caption = '#00646^e&E -> J'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnLookupJtoEClick
-    end
-    object btnLookupClip: TSpeedButton [5]
-      Left = 344
-      Top = 4
-      Width = 73
-      Height = 22
-      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
-      AllowAllUp = True
-      GroupIndex = 1
-      Caption = '#00289^eBy clipboard'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnLookupJtoEClick
-    end
-    object btnMatchExact: TSpeedButton [6]
-      Left = 423
+    object btnMatchExact: TSpeedButton [3]
+      Left = 204
       Top = 4
       Width = 23
       Height = 22
@@ -103,8 +52,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnMatchExactClick
     end
-    object btnMatchLeft: TSpeedButton [7]
-      Left = 447
+    object btnMatchLeft: TSpeedButton [4]
+      Left = 228
       Top = 4
       Width = 23
       Height = 22
@@ -119,8 +68,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnMatchExactClick
     end
-    object btnMatchRight: TSpeedButton [8]
-      Left = 471
+    object btnMatchRight: TSpeedButton [5]
+      Left = 252
       Top = 4
       Width = 23
       Height = 22
@@ -135,8 +84,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnMatchExactClick
     end
-    object btnMatchAnywhere: TSpeedButton [9]
-      Left = 495
+    object btnMatchAnywhere: TSpeedButton [6]
+      Left = 276
       Top = 4
       Width = 25
       Height = 22
@@ -151,8 +100,8 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       OnClick = btnMatchExactClick
     end
-    object btnInflect: TSpeedButton [10]
-      Left = 526
+    object btnInflect: TSpeedButton [7]
+      Left = 307
       Top = 4
       Width = 23
       Height = 22
@@ -166,10 +115,9 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = btnLookupJtoEClick
     end
-    object sbAutoPreview: TSpeedButton [11]
-      Left = 550
+    object sbAutoPreview: TSpeedButton [8]
+      Left = 331
       Top = 4
       Width = 33
       Height = 22
@@ -185,10 +133,9 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = btnLookupJtoEClick
     end
-    object btnDictGroup1: TSpeedButton [12]
-      Left = 590
+    object btnDictGroup1: TSpeedButton [9]
+      Left = 371
       Top = 4
       Width = 25
       Height = 22
@@ -202,10 +149,9 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = btnLookupJtoEClick
     end
-    object btnDictGroup2: TSpeedButton [13]
-      Left = 616
+    object btnDictGroup2: TSpeedButton [10]
+      Left = 397
       Top = 4
       Width = 25
       Height = 22
@@ -218,10 +164,9 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = btnLookupJtoEClick
     end
-    object btnDictGroup3: TSpeedButton [14]
-      Left = 642
+    object btnDictGroup3: TSpeedButton [11]
+      Left = 423
       Top = 4
       Width = 25
       Height = 22
@@ -234,9 +179,8 @@ inherited fWordLookup: TfWordLookup
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnClick = btnLookupJtoEClick
     end
-    object Label2: TLabel [15]
+    object Label2: TLabel [12]
       Left = 604
       Top = 37
       Width = 92
@@ -246,7 +190,7 @@ inherited fWordLookup: TfWordLookup
       Caption = '#00666^eAll visible'
       Enabled = False
     end
-    object Label3: TLabel [16]
+    object Label3: TLabel [13]
       Left = 688
       Top = 17
       Width = 6
@@ -255,7 +199,7 @@ inherited fWordLookup: TfWordLookup
       Anchors = [akTop, akRight]
       Caption = '0'
     end
-    object SpeedButton6: TSpeedButton [17]
+    object SpeedButton6: TSpeedButton [14]
       Left = 8
       Top = 189
       Width = 123
@@ -275,7 +219,7 @@ inherited fWordLookup: TfWordLookup
       ShowHint = True
       OnClick = SpeedButton6Click
     end
-    object SpeedButton9: TSpeedButton [18]
+    object SpeedButton9: TSpeedButton [15]
       Left = 136
       Top = 189
       Width = 130
@@ -294,26 +238,6 @@ inherited fWordLookup: TfWordLookup
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton9Click
-    end
-    object btnLookupAuto: TSpeedButton [19]
-      Left = 11
-      Top = 4
-      Width = 110
-      Height = 22
-      Hint = 
-        '#01133^Search by reading, writing or meaning, depending on what ' +
-        'you type'
-      AllowAllUp = True
-      GroupIndex = 1
-      Down = True
-      Caption = '#01132^Auto/all'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnLookupJtoEClick
     end
     inherited BlankPanel: TBlankPanel
       Top = 62
@@ -385,6 +309,30 @@ inherited fWordLookup: TfWordLookup
       TabOrder = 3
       OnClick = BitBtn1Click
     end
+    object btnLookupMode: TButton
+      Left = 11
+      Top = 4
+      Width = 110
+      Height = 22
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      Caption = '#01132^Auto/all'
+      DropDownMenu = pmLookupMode
+      Style = bsSplitButton
+      TabOrder = 4
+      OnClick = btnLookupModeClick
+    end
+    object btnLookupClip: TButton
+      Left = 125
+      Top = 4
+      Width = 73
+      Height = 22
+      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
+      Caption = '#00289^eBy clipboard'
+      TabOrder = 5
+      OnClick = btnLookupModeClick
+    end
   end
   object pnlDockExamples: TPanel [1]
     Left = 0
@@ -406,9 +354,15 @@ inherited fWordLookup: TfWordLookup
     FullRepaint = False
     TabOrder = 1
   end
+  inherited pmPopup: TPopupMenu
+    Left = 32
+    Top = 40
+  end
   inherited ilImages: TImageList
+    Left = 96
+    Top = 40
     Bitmap = {
-      494C010103000800600010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800640010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -546,5 +500,38 @@ inherited fWordLookup: TfWordLookup
       003F8013C0030000FC7F8013E00F0000FFFFFE7FF07F0000FFFFFEF8F8FF0000
       FFFFFFF8FFFF0000FFFFFFFFFFFF000000000000000000000000000000000000
       000000000000}
+  end
+  object pmLookupMode: TPopupMenu
+    Images = ilImages
+    OnPopup = pmPopupPopup
+    Left = 32
+    Top = 96
+    object miLookupAuto: TMenuItem
+      AutoCheck = True
+      Caption = '#01132^Auto/all'
+      Checked = True
+      GroupIndex = 1
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      RadioItem = True
+      OnClick = miLookupAutoClick
+    end
+    object miLookupJtoE: TMenuItem
+      AutoCheck = True
+      Caption = '#00644^eJ -> E'
+      GroupIndex = 1
+      Hint = '#00643^Search by japanese reading (F2)'
+      RadioItem = True
+      OnClick = miLookupAutoClick
+    end
+    object miLookupEtoJ: TMenuItem
+      AutoCheck = True
+      Caption = '#00646^e&E -> J'
+      GroupIndex = 1
+      Hint = '#00645^Search by english meaning (F3)'
+      RadioItem = True
+      OnClick = miLookupAutoClick
+    end
   end
 end
