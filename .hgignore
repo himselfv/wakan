@@ -1,0 +1,90 @@
+syntax:glob
+
+# Object files
+*.dcu
+*.obj
+*.dcuil
+
+# Map files
+*.map
+*.tds
+*.rsm
+*.dsm
+
+# Don't import tlbs, import idls from which they're generated
+*.tlb
+
+# Delphi history
+__history
+~history
+*.~*
+
+# Cache/temp/local files
+*.local
+*.identcache
+*.drc
+*.cbk
+*.dsk
+Profiling
+Dcu
+
+# Log files (no need to version these)
+*.log
+*.Log
+
+# Projects are not stored for now
+*.groupproj
+*.bdsgroup
+*.dproj
+*.bdsproj
+*.bpg
+
+# Other permanent stuff we don't save
+dunit.ini
+*.vlb
+*.dof
+
+# Windows junk
+*/*/Thumbs.db
+
+# Binaries
+*.dpl
+*.bpl
+*.dcp
+*.dcpil
+
+# Release
+*.exe
+*.lay
+*.pkg
+*.uni
+*.CHK
+*.chr
+*.dic
+*.edc
+*.res
+Release/annota*
+Release/user
+Release/backup
+Release/btuc21d3.dll
+Release/uniconv.exe
+Release/roma_problems.txt
+Release/wordfreq_ck*
+Release/wakan.cdt
+Release/WAKAN.CDT
+Release/wakan.sod
+Release/wakan.rad
+Release/wakan.ini
+Release/wakan*.usr
+Release/wakan.bak
+Release/radk*
+Release/krad*
+Release/7z.dll
+Release/edict
+Release/edict2
+Release/kanjidic
+Release/Unihan
+Release/test.txt
+Release/unihan-field-sources.txt
+Release/unihan-fields.txt
+Release/warodai
