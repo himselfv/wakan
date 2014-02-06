@@ -656,20 +656,6 @@ var CChar: TTextTableCursor;
           NeedChar(ed.char);
           CChar.Edit([TCharStrokeCount],[IntToStr(StrToInt(ed.value))]);
         end else
-        if ed.propType='kBigFive' then begin
-          NeedChar(ed.char);
-          if CChar.Str(TCharType)='N' then
-            CChar.Edit([TCharType],['T'])
-          else;
-            CChar.Edit([TCharType],['A']);
-        end else
-        if ed.propType='kGB0' then begin
-          NeedChar(ed.char);
-          if CChar.Str(TCharType)='N' then
-            CChar.Edit([TCharType],['S'])
-          else;
-            CChar.Edit([TCharType],['A']);
-        end else
         if (ed.propType='kCantonese') or (ed.propType='kMandarin')
         or (ed.propType='kDefinition') or (ed.propType='kKorean') then begin
          //Split + add
@@ -694,8 +680,7 @@ var CChar: TTextTableCursor;
           CNewProp.CloseKanji;
         end else
         if propType<>nil then begin
-         //Just add
-         //May other properties need splitting too?
+         //Normal addition
 
          //Variant properties need reparsing
           if (propType.sourceField='kCompatibilityVariant')
@@ -707,6 +692,22 @@ var CChar: TTextTableCursor;
             ed.value := '';
             for i := 0 to Length(varpropvals)-1 do
               ed.value := ed.value + varpropvals[i].char;
+          end else
+
+         //These have special handling but also need normal handling
+          if ed.propType='kBigFive' then begin
+            NeedChar(ed.char);
+            if CChar.Str(TCharType)='N' then
+              CChar.Edit([TCharType],['T'])
+            else;
+              CChar.Edit([TCharType],['A']);
+          end else
+          if ed.propType='kGB0' then begin
+            NeedChar(ed.char);
+            if CChar.Str(TCharType)='N' then
+              CChar.Edit([TCharType],['S'])
+            else;
+              CChar.Edit([TCharType],['A']);
           end;
 
           NeedChar(ed.char);

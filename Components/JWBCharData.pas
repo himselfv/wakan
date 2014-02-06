@@ -237,6 +237,7 @@ type
 Shortcuts for getting character property values
 }
 
+function FindChar(const AChar: char): integer;
 function GetCharValue(index,propType:integer):string;
 function GetCharValueRad(index,propType:integer):integer;
 
@@ -919,6 +920,20 @@ end;
 
 { Following functions are kept for backward compability and simplicity,
  but if you do a lot of these, using a separate cursor is preferred. }
+
+function FindChar(const AChar: char): integer;
+var CChar: TTextTableCursor;
+begin
+  CChar := TChar.NewCursor;
+  try
+    if CChar.Locate('Unicode',AChar) then
+      Result := CChar.Int(TCharIndex)
+    else
+      Result := -1;
+  finally
+    FreeAndNil(CChar);
+  end;
+end;
 
 function GetCharValue(index,propType:integer):string;
 var CCharProp: TCharPropertyCursor;

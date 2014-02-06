@@ -64,7 +64,7 @@ type
 procedure ShellOpen(const sCommand: string);
 
 implementation
-uses SysUtils, UITypes, JWBStrings, JWBIO;
+uses SysUtils, UITypes, JWBStrings, JWBIO, JWBCharData;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';
@@ -171,9 +171,32 @@ begin
     Result := '';
 end;
 
+function UrlPairs(AData: PAnsiChar; ALength: integer): UTF8String; overload;
+var i: integer;
+begin
+  SetLength(Result, (ALength div 2)*3);
+  for i := 1 to ALength div 2 do begin
+    Result[(i-1)*3+1] := '%';
+    Result[(i-1)*3+2] := AData^;
+    Inc(AData);
+    Result[(i-1)*3+3] := AData^;
+    Inc(AData);
+  end;
+end;
+
+function UrlPairs(const AText: UTF8String): UTF8String; overload;
+begin
+  if AText<>'' then
+    Result := UrlPairs(@AText[1], Length(AText))
+  else
+    Result := '';
+end;
+
 function EncodeStr(AString: string; const AOut: CEncoding): UTF8String;
 var ss: TMemoryStream;
   enc: TEncoding;
+  len: integer;
+  newstr: UTF8String;
 begin
   enc := nil;
   ss := TMemoryStream.Create;
@@ -182,25 +205,32 @@ begin
     enc.Write(ss, AString);
     FreeAndNil(enc); //Flush!
     ss.Seek(0, soBeginning);
-    SetLength(Result, ss.Size);
-    ss.Read(Result[1], Length(Result));
+    len := ss.Size;
+
+   //Let's be extra safe with strings since Delphi does UniqueString pointlessly
+   //and makes us break stuff (maybe)
+    newstr := '';
+    SetLength(newstr, len);
+    ss.Read(newstr[1], len);
+
+    Result := newstr;
   finally
     FreeAndNil(enc);
     FreeAndNil(ss);
   end;
 end;
 
-//Assuming the input string is the sequence of JIS-encoded characters,
-//converts it to a sequence of decimally encoded ku/ten pairs (google: ku/ten).
-function ToKuten(AString: UTF8String): UTF8String;
-var i: integer;
-  b: byte;
+//Assuming the input string is a sequence of Unicode characters,
+//converts it to a sequence of character property values from the database
+//for the specified property type.
+function ChProp(AString: UnicodeString; APropNo: integer): UnicodeString;
+var i, idx: integer;
 begin
-  SetLength(Result, Length(AString)*2);
+  Result := '';
   for i := 1 to Length(AString) do begin
-    b := Ord(AString[i])-$A0;
-    Result[i*2-1] := AnsiChar(Ord('0') + (b mod 10));
-    Result[i*2-0] := AnsiChar(Ord('0') + (b div 10));
+    idx := FindChar(AString[i]);
+    if idx>=0 then
+      Result := Result + GetCharValue(idx, APropNo);
   end;
 end;
 
@@ -211,6 +241,7 @@ var ps, pc: PChar;
   flag_specsymbol: boolean;
   form: string;
   tmp: UTF8String;
+  propno: integer;
 
   procedure CommitText;
   begin
@@ -268,11 +299,11 @@ begin
         if form='hex' then
           tmp := UTF8String(UnicodeToHex(UnicodeString(tmp)))
         else
-        if form='kuten' then
-          tmp := ToKuten(tmp)
-        else
         if form='urlbytes' then
           tmp := UrlBytes(tmp)
+        else
+        if form='urlpairs' then
+          tmp := UrlPairs(tmp)
         else
         if form='urlencode' then
           tmp := UTF8String(URLEncode(tmp, []))
@@ -295,6 +326,14 @@ begin
         if form='jis0208' then
           tmp := EncodeStr(UnicodeString(tmp), TJISEncoding)
         else
+        if StartsStr('chprop(', form) then begin
+          delete(form, 1, Length('chprop('));
+          Assert(EndsStr(')', form));
+          delete(form, Length(form), 1);
+          if not TryStrToInt(form, propno) then
+            exit; //invalid translation
+          tmp := UTF8String(ChProp(UnicodeString(tmp), propno));
+        end else
           exit; //unsupported format type
 
         if pc^='%' then
