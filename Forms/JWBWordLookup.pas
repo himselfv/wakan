@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons,
   JWBStrings, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
-  WakanPaintbox, JWBWordLookupBase, Vcl.ImgList;
+  WakanPaintbox, JWBWordLookupBase, Vcl.ImgList, Vcl.ToolWin, JvExControls,
+  JvArrowButton;
 
 type
  //Supported lookup modes for this window.
@@ -42,8 +43,8 @@ type
     miLookupJtoE: TMenuItem;
     miLookupEtoJ: TMenuItem;
     SpeedButton1: TSpeedButton;
-    btnLookupMode: TSpeedButton;
     btnLookupClip: TSpeedButton;
+    btnLookupMode: TButton;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -138,19 +139,18 @@ begin
   if Result<>lmEditorInsert then
     dictModeSet := Result;
 
-  if btnLookupMode.Down then
-    if miLookupAuto.Checked then begin
-      btnLookupMode.Caption := miLookupAuto.Caption;
-      btnLookupMode.Hint := miLookupAuto.Hint;
-    end else
-    if miLookupJtoE.Checked then begin
-      btnLookupMode.Caption := miLookupJtoE.Caption;
-      btnLookupMode.Hint := miLookupJtoE.Hint;
-    end else
-    if miLookupEtoJ.Checked then begin
-      btnLookupMode.Caption := miLookupEtoJ.Caption;
-      btnLookupMode.Hint := miLookupEtoJ.Hint;
-    end;
+  if miLookupAuto.Checked then begin
+    btnLookupMode.Caption := miLookupAuto.Caption;
+    btnLookupMode.Hint := miLookupAuto.Hint;
+  end else
+  if miLookupJtoE.Checked then begin
+    btnLookupMode.Caption := miLookupJtoE.Caption;
+    btnLookupMode.Hint := miLookupJtoE.Hint;
+  end else
+  if miLookupEtoJ.Checked then begin
+    btnLookupMode.Caption := miLookupEtoJ.Caption;
+    btnLookupMode.Hint := miLookupEtoJ.Hint;
+  end;
 
   if not (Result in [lmAuto, lmJp, lmEn]) then
   begin
@@ -217,31 +217,31 @@ end;
 
 function TfWordLookup.GetLookupMode: TLookupMode;
 begin
-  if btnLookupMode.Down then begin
-    if miLookupAuto.Checked then Result := lmAuto else
-    if miLookupJtoE.Checked then Result := lmJp else
-    if miLookupEtoJ.Checked then Result := lmEn else
-      Result := lmEditorInsert;
-  end else
-  if btnLookupClip.Down then
-    Result := lmClipboard
-  else
-   //All buttons are off -- we're being called from Editor's auto suggestions.  
+  if btnLookupClip.Down then Result := lmClipboard else
+  if miLookupAuto.Checked then Result := lmAuto else
+  if miLookupJtoE.Checked then Result := lmJp else
+  if miLookupEtoJ.Checked then Result := lmEn else
+   //All buttons are off -- we're being called from Editor's auto suggestions.
     Result := lmEditorInsert;
 end;
 
 procedure TfWordLookup.SetLookupMode(const Value: TLookupMode);
 begin
-  btnLookupMode.Down := Value in [lmAuto, lmJp, lmEn];
   btnLookupClip.Down :=  Value in [lmClipboard];
   case Value of
     lmAuto: Self.miLookupAuto.Checked:=true;
     lmJp: Self.miLookupJtoE.Checked:=true;
     lmEn: Self.miLookupEtoJ.Checked:=true;
+    lmClipboard: Self.miLookupAuto.Checked := true;
+  else
+    miLookupAuto.Checked := false;
+    miLookupJtoE.Checked := false;
+    miLookupEtoJ.Checked := false;
   end;
   UpdateLookupMode;
   Look();
-  if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then Edit1.SetFocus;
+  if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then
+    Edit1.SetFocus;
 end;
 
 
@@ -452,11 +452,6 @@ begin
     LookupMode := lmAuto;
 end;
 
-procedure TfWordLookup.btnLookupClipClick(Sender: TObject);
-begin
-  LookupMode := lmClipboard;
-end;
-
 procedure TfWordLookup.miLookupAutoClick(Sender: TObject);
 begin
   LookupMode := lmAuto;
@@ -470,6 +465,11 @@ end;
 procedure TfWordLookup.miLookupEtoJClick(Sender: TObject);
 begin
   LookupMode := lmEn;
+end;
+
+procedure TfWordLookup.btnLookupClipClick(Sender: TObject);
+begin
+  UpdateLookupMode;
 end;
 
 procedure TfWordLookup.BitBtn1Click(Sender: TObject);

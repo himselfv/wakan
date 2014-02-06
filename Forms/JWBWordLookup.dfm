@@ -36,7 +36,7 @@ inherited fWordLookup: TfWordLookup
       ExplicitTop = 185
     end
     object btnMatchExact: TSpeedButton [3]
-      Left = 204
+      Left = 231
       Top = 4
       Width = 23
       Height = 22
@@ -53,7 +53,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnMatchExactClick
     end
     object btnMatchLeft: TSpeedButton [4]
-      Left = 228
+      Left = 255
       Top = 4
       Width = 23
       Height = 22
@@ -69,7 +69,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnMatchExactClick
     end
     object btnMatchRight: TSpeedButton [5]
-      Left = 252
+      Left = 279
       Top = 4
       Width = 23
       Height = 22
@@ -85,7 +85,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnMatchExactClick
     end
     object btnMatchAnywhere: TSpeedButton [6]
-      Left = 276
+      Left = 303
       Top = 4
       Width = 25
       Height = 22
@@ -101,7 +101,7 @@ inherited fWordLookup: TfWordLookup
       OnClick = btnMatchExactClick
     end
     object btnInflect: TSpeedButton [7]
-      Left = 307
+      Left = 334
       Top = 4
       Width = 23
       Height = 22
@@ -117,7 +117,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
     end
     object sbAutoPreview: TSpeedButton [8]
-      Left = 331
+      Left = 358
       Top = 4
       Width = 33
       Height = 22
@@ -135,7 +135,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
     end
     object btnDictGroup1: TSpeedButton [9]
-      Left = 371
+      Left = 398
       Top = 4
       Width = 25
       Height = 22
@@ -151,7 +151,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
     end
     object btnDictGroup2: TSpeedButton [10]
-      Left = 397
+      Left = 424
       Top = 4
       Width = 25
       Height = 22
@@ -166,7 +166,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
     end
     object btnDictGroup3: TSpeedButton [11]
-      Left = 423
+      Left = 450
       Top = 4
       Width = 25
       Height = 22
@@ -245,22 +245,8 @@ inherited fWordLookup: TfWordLookup
       Width = 23
       Height = 22
     end
-    object btnLookupMode: TSpeedButton [17]
-      Left = 11
-      Top = 4
-      Width = 110
-      Height = 22
-      Hint = 
-        '#01133^Search by reading, writing or meaning, depending on what ' +
-        'you type'
-      AllowAllUp = True
-      GroupIndex = 1
-      Caption = '#01132^Auto/all'
-      PopupMenu = pmLookupMode
-      OnClick = btnLookupModeClick
-    end
-    object btnLookupClip: TSpeedButton [18]
-      Left = 125
+    object btnLookupClip: TSpeedButton [17]
+      Left = 152
       Top = 4
       Width = 73
       Height = 22
@@ -341,6 +327,20 @@ inherited fWordLookup: TfWordLookup
       TabOrder = 3
       OnClick = BitBtn1Click
     end
+    object btnLookupMode: TButton
+      Left = 11
+      Top = 4
+      Width = 135
+      Height = 22
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      Caption = '#01132^Any matches'
+      DropDownMenu = pmLookupMode
+      Style = bsSplitButton
+      TabOrder = 4
+      OnClick = btnLookupModeClick
+    end
   end
   object pnlDockExamples: TPanel [1]
     Left = 0
@@ -370,7 +370,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800680010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101030008006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
