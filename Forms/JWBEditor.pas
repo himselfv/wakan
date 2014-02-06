@@ -362,6 +362,7 @@ type
    //Unfortunately some stuff is used from elswehere
     ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
     inslen: integer;
+    function GetInsertBuffer: string;
     function GetInsertKana(const APreview: boolean): FString;
 
   protected //File opening/saving
@@ -2796,6 +2797,11 @@ begin
     ShowText(false);
   end else
     DisplayInsert(GetInsertKana(true),nil,true);
+end;
+
+function TfEditor.GetInsertBuffer: string;
+begin
+  Result := insertbuffer;
 end;
 
 {

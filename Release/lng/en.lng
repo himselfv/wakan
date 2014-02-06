@@ -709,11 +709,11 @@
 00640>Learned
 00641>Mastered
 00642>Dictionary lookup
-00643>Search by japanese reading (F2)
+00643>Search by japanese reading
 00644>J -> E
-00645>Search by english meaning (F3)
+00645>Search by english meaning
 00646>&E -> J
-00647>Search by Kanji stored in clipboard (F4)
+00647>Search by Kanji stored in clipboard
 00648>Selected word (Ctrl-Alt-F)
 00649>Selected word
 00650>Characters in word
@@ -1228,7 +1228,7 @@
 01122>Displayed items
 01123>Show links
 01124>Look Up In
-01125>
+01125>Search by any text
 01126>Category editor
 01127>"Add category" button
 01128>"Add/remove category" combobox
@@ -1237,6 +1237,7 @@
 01131>If checked, shows reference links in submenu rather than in main right-click menu
 01132>Any matches
 01133>Search by reading, writing or meaning, depending on what you type
+01134>Search by chinese reading
 
 ;
 ;

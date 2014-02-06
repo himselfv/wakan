@@ -33,7 +33,7 @@ type
     btnDictGroup2: TSpeedButton;
     btnDictGroup3: TSpeedButton;
     Edit1: TEdit;
-    BitBtn1: TBitBtn;
+    btnSearch: TBitBtn;
     Label2: TLabel;
     Label3: TLabel;
     SpeedButton6: TSpeedButton;
@@ -48,7 +48,7 @@ type
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure BitBtn1Click(Sender: TObject);
+    procedure btnSearchClick(Sender: TObject);
     procedure SpeedButton6Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
     procedure btnMatchExactClick(Sender: TObject);
@@ -65,13 +65,14 @@ type
   protected
     procedure WordSelectionChanged; override;
     function GetLookupMode: TLookupMode;
-    procedure SetLookupMode(const Value: TLookupMode);    
+    procedure SetLookupMode(const Value: TLookupMode);
+    procedure LookupModeChanged; virtual;
+    procedure UpdateLookupModeButtonText;
   public
     dictBeginSet: integer;
     dictModeSet: TLookupMode;
     procedure SetDefaultColumnWidths; override;
     procedure Refresh; override;
-    function UpdateLookupMode: TLookupMode;
     procedure RestoreLookupMode;
     property LookupMode: TLookupMode read GetLookupMode write SetLookupMode;
 
@@ -119,54 +120,97 @@ procedure TfWordLookup.LanguageChanged;
 begin
   if curLang='j' then begin
     fWordLookup.miLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
+    fWordLookup.miLookupJtoE.Hint := _l('#00643^Search by japanese reading');
     fWordLookup.miLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
   end else begin
     fWordLookup.miLookupJtoE.Caption:=_l('#00331^eChinese ->English');
+    fWordLookup.miLookupJtoE.Hint := _l('#01134^Search by chinese reading');
     fWordLookup.miLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
   end;
+  UpdateLookupModeButtonText;
 
   if (not btnLookupClip.Enabled) and btnLookupClip.Down then
     Self.SetLookupMode(lmJp);
 end;
 
 
-
-//Called when any of the configuration buttons are pressed
-function TfWordLookup.UpdateLookupMode: TLookupMode;
+{ Restores lookup mode which was last selected by user when this form is open
+ by itself (as a dictionary lookup form).
+ It's overriden when it's used by Editor for word suggestions. }
+procedure TfWordLookup.RestoreLookupMode;
 begin
-  Result := GetLookupMode;
- //Do not store this as a permanent state.    
-  if Result<>lmEditorInsert then
-    dictModeSet := Result;
+  SetLookupMode(dictModeSet);
+end;
 
-  if miLookupAuto.Checked then begin
-    btnLookupMode.Caption := miLookupAuto.Caption;
-    btnLookupMode.Hint := miLookupAuto.Hint;
-  end else
-  if miLookupJtoE.Checked then begin
-    btnLookupMode.Caption := miLookupJtoE.Caption;
-    btnLookupMode.Hint := miLookupJtoE.Hint;
-  end else
-  if miLookupEtoJ.Checked then begin
-    btnLookupMode.Caption := miLookupEtoJ.Caption;
-    btnLookupMode.Hint := miLookupEtoJ.Hint;
+{ Gets or sets LookupMode as a variable. Lookup mode is internally stored as
+ "which button is pressed/checked" }
+function TfWordLookup.GetLookupMode: TLookupMode;
+begin
+  if btnLookupClip.Down then Result := lmClipboard else
+  if miLookupAuto.Checked then Result := lmAuto else
+  if miLookupJtoE.Checked then Result := lmJp else
+  if miLookupEtoJ.Checked then Result := lmEn else
+   //All buttons are off -- we're being called from Editor's auto suggestions.
+    Result := lmEditorInsert;
+end;
+
+procedure TfWordLookup.SetLookupMode(const Value: TLookupMode);
+begin
+  if GetLookupMode=Value then exit; //sometimes we just set it to be sure
+  btnLookupClip.Down := Value in [lmClipboard];
+  case Value of
+    lmAuto: Self.miLookupAuto.Checked:=true;
+    lmJp: Self.miLookupJtoE.Checked:=true;
+    lmEn: Self.miLookupEtoJ.Checked:=true;
+    lmClipboard: Self.miLookupAuto.Checked := true;
+  else
+    miLookupAuto.Checked := false;
+    miLookupJtoE.Checked := false;
+    miLookupEtoJ.Checked := false;
+  end;
+  LookupModeChanged;
+end;
+
+{ Called when lookup mode changes due to any of the buttons being pressed/unpressed,
+ checked/unchecked etc.
+ Updates all dependent controls such as fMenu actions. }
+procedure TfWordLookup.LookupModeChanged;
+var ANewMode: TLookupMode;
+begin
+  ANewMode := GetLookupMode;
+
+ //Do not store EditorInsert as a permanent state.
+  if ANewMode<>lmEditorInsert then begin
+    dictModeSet := ANewMode;
+    fMenu.aDictLookupAuto.Checked := (ANewMode=lmAuto);
+    fMenu.aDictJapanese.Checked := (ANewMode=lmJp);
+    fMenu.aDictEnglish.Checked := (ANewMode=lmEn);
+    fMenu.aDictClipboard.Checked := (ANewMode=lmClipboard);
   end;
 
-  if not (Result in [lmAuto, lmJp, lmEn]) then
+  UpdateLookupModeButtonText;
+
+  btnLookupMode.Enabled := (ANewMode<>lmEditorInsert);
+  btnLookupClip.Enabled := (ANewMode<>lmEditorInsert);
+
+  if not (ANewMode in [lmAuto, lmJp, lmEn]) then
   begin
-    Edit1.enabled:=false;
+    Edit1.Enabled:=false;
     Edit1.Color:=clMenu;
   end else begin
-    Edit1.enabled:=true;
+    Edit1.Enabled:=true;
     Edit1.Color:=clWindow;
   end;
+
   fMenu.aDictExact.Checked:=btnMatchExact.Down;
   fMenu.aDictBeginning.Checked:=btnMatchLeft.Down;
   fMenu.aDictEnd.Checked:=btnMatchRight.Down;
   fMenu.aDictMiddle.Checked:=btnMatchAnywhere.Down;
+
   fMenu.aDictBeginning.Enabled:=btnMatchLeft.Enabled;
   fMenu.aDictEnd.Enabled:=btnMatchRight.Enabled;
   fMenu.aDictMiddle.Enabled:=btnMatchAnywhere.Enabled;
+
   fMenu.aDictInflect.Checked:=btnInflect.Down;
   fMenu.aDictAuto.Checked:=sbAutoPreview.Down;
   fMenu.aDictGroup1.Checked:=btnDictGroup1.Down;
@@ -185,63 +229,50 @@ begin
     3:fWordLookup.btnMatchAnywhere.Down:=true;
   end;
 
-  if (not sbAutoPreview.Down) or (btnMatchAnywhere.Down) then
-    BitBtn1.Caption:=_l('#00669^eSearch')
+  if (not sbAutoPreview.Down) or btnMatchAnywhere.Down then
+    btnSearch.Caption:=_l('#00669^eSearch')
   else
-    BitBtn1.Caption:=_l('#00670^eAll');
+    btnSearch.Caption:=_l('#00670^eAll');
 
-  if Result in [lmEn, lmEditorInsert] then
+  if ANewMode in [lmEn, lmEditorInsert] then
   begin
     if btnMatchRight.Down then btnMatchExact.Down:=true;
     if btnMatchAnywhere.Down then btnMatchExact.Down:=true;
     btnMatchRight.Enabled:=false;
     btnMatchAnywhere.Enabled:=false;
   end;
-  if Result=lmEditorInsert then
+
+  if ANewMode=lmEditorInsert then
   begin
     if btnMatchLeft.Down then btnMatchExact.Down:=true;
     btnMatchLeft.Enabled:=false;
   end;
   donotsetbegset:=false;
 
-  StringGrid.RowCount:=200;
-end;
-
-{ Restores lookup mode which was last selected by user when this form is open
- by itself (as a dictionary lookup form).
- It's overriden when it's used by Editor for word suggestions. }
-procedure TfWordLookup.RestoreLookupMode;
-begin
-  SetLookupMode(dictModeSet);
-end;
-
-function TfWordLookup.GetLookupMode: TLookupMode;
-begin
-  if btnLookupClip.Down then Result := lmClipboard else
-  if miLookupAuto.Checked then Result := lmAuto else
-  if miLookupJtoE.Checked then Result := lmJp else
-  if miLookupEtoJ.Checked then Result := lmEn else
-   //All buttons are off -- we're being called from Editor's auto suggestions.
-    Result := lmEditorInsert;
-end;
-
-procedure TfWordLookup.SetLookupMode(const Value: TLookupMode);
-begin
-  btnLookupClip.Down :=  Value in [lmClipboard];
-  case Value of
-    lmAuto: Self.miLookupAuto.Checked:=true;
-    lmJp: Self.miLookupJtoE.Checked:=true;
-    lmEn: Self.miLookupEtoJ.Checked:=true;
-    lmClipboard: Self.miLookupAuto.Checked := true;
-  else
-    miLookupAuto.Checked := false;
-    miLookupJtoE.Checked := false;
-    miLookupEtoJ.Checked := false;
-  end;
-  UpdateLookupMode;
-  Look();
   if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then
     Edit1.SetFocus;
+  if Edit1.Text<>'' then
+    Look(); //update results in new mode
+end;
+
+{ Updates text on lookup mode button according to currently selected mode.
+ We wouldn't need this as a separate function since it's mostly part of
+ LookupModeChanged, but unfortunately text changes depending on Japanese/Chinese
+ being selected, so we need to do this separately sometimes. }
+procedure TfWordLookup.UpdateLookupModeButtonText;
+begin
+  if miLookupAuto.Checked then begin
+    btnLookupMode.Caption := miLookupAuto.Caption;
+    btnLookupMode.Hint := miLookupAuto.Hint;
+  end else
+  if miLookupJtoE.Checked then begin
+    btnLookupMode.Caption := miLookupJtoE.Caption;
+    btnLookupMode.Hint := miLookupJtoE.Hint;
+  end else
+  if miLookupEtoJ.Checked then begin
+    btnLookupMode.Caption := miLookupEtoJ.Caption;
+    btnLookupMode.Hint := miLookupEtoJ.Hint;
+  end;
 end;
 
 
@@ -259,13 +290,13 @@ var lm: TLookupMode;
   text:string;
   b:boolean;
 begin
-  //Retrieve current lookup mode (and adjust conflicting settings)
-  lm := UpdateLookupMode();
+  //Retrieve current lookup mode
+  lm := GetLookupMode();
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
-  if (lm<>lmEditorInsert) and BitBtn1.Enabled and ((not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
+  if (lm<>lmEditorInsert) and btnSearch.Enabled and ((not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
   begin
-    BitBtn1.Visible:=true;
+    btnSearch.Visible:=true;
     Label2.Visible:=false;
     StringGrid.Visible:=false;
     BlankPanel.TextVisible:=(edit1.text<>'') or (lm=lmEditorInsert);
@@ -282,7 +313,9 @@ begin
     if btnDictGroup3.Down then req.dictgroup:=3 else
       req.dictgroup := 1; //we must have some group chosen
 
-    req.Full:=not BitBtn1.Enabled;
+    req.Full:=not btnSearch.Enabled;
+
+    StringGrid.RowCount:=200;
     req.MaxWords:=StringGrid.VisibleRowCount;
 
    //Match type (left/right/exact)
@@ -298,8 +331,6 @@ begin
     if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
       req.dictgroup := 5;
       req.MatchType := mtExactMatch;
-     { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
-      which is obviously not what we want. }
     end;
 
     req.AutoDeflex := btnInflect.Down;
@@ -370,7 +401,6 @@ begin
       end;
     end;
 
-
    //Finalize and output
     if not (lm in [lmEditorInsert]) then
       if FResults.Count=0 then
@@ -381,28 +411,26 @@ begin
         else
           Label3.Caption:=inttostr(FResults.Count);
 
-    if lm <> lmEditorInsert then //update result list
-    begin
-      ResultsChanged;
-      if not wasfull then
-        text:=_l('#00671^eSearch results (partial)')
-      else
-        text:=_l('#00672^eSearch results');
-      BitBtn1.Visible:=not wasfull or (req.full and not BitBtn1.Enabled);
-      Label2.Visible:=not BitBtn1.Visible;
-      case lm of
-        lmJp: text:=text+' '+_l('#00673^eby phonetic');
-        lmEn: text:=text+' '+_l('#00674^eby meaning');
-        lmClipboard: text:=text+' '+_l('#00675^eby written (clipboard)');
-        lmEditorInsert: text:=text+' '+_l('#00676^eby written (text)');
-      end;
-      text:=text+' ('+inttostr(FResults.Count)+')';
-      curword:=0;
-      if StringGrid.Visible then StringGridSelectCell(self,0,1,b);
-      if StringGrid.Visible then StringGrid.Row:=1;
-      if StringGrid.Visible then curword:=1;
-      WordSelectionChanged;
+  //update result list
+    ResultsChanged;
+    if not wasfull then
+      text:=_l('#00671^eSearch results (partial)')
+    else
+      text:=_l('#00672^eSearch results');
+    btnSearch.Visible:=not wasfull or (req.full and not btnSearch.Enabled);
+    Label2.Visible:=not btnSearch.Visible;
+    case lm of
+      lmJp: text:=text+' '+_l('#00673^eby phonetic');
+      lmEn: text:=text+' '+_l('#00674^eby meaning');
+      lmClipboard: text:=text+' '+_l('#00675^eby written (clipboard)');
+      lmEditorInsert: text:=text+' '+_l('#00676^eby written (text)');
     end;
+    text:=text+' ('+inttostr(FResults.Count)+')';
+    curword:=0;
+    if StringGrid.Visible then StringGridSelectCell(self,0,1,b);
+    if StringGrid.Visible then StringGrid.Row:=1;
+    if StringGrid.Visible then curword:=1;
+    WordSelectionChanged;
 
   finally
     FreeAndNil(req);
@@ -411,7 +439,7 @@ end;
 
 procedure TfWordLookup.Edit1Change(Sender: TObject);
 begin
-  BitBtn1.Enabled:=true;
+  btnSearch.Enabled:=true;
   Look();
 end;
 
@@ -454,27 +482,27 @@ end;
 
 procedure TfWordLookup.miLookupAutoClick(Sender: TObject);
 begin
-  LookupMode := lmAuto;
+  LookupModeChanged;
 end;
 
 procedure TfWordLookup.miLookupJtoEClick(Sender: TObject);
 begin
-  LookupMode := lmJp;
+  LookupModeChanged;
 end;
 
 procedure TfWordLookup.miLookupEtoJClick(Sender: TObject);
 begin
-  LookupMode := lmEn;
+  LookupModeChanged;
 end;
 
 procedure TfWordLookup.btnLookupClipClick(Sender: TObject);
 begin
-  UpdateLookupMode;
+  LookupModeChanged;
 end;
 
-procedure TfWordLookup.BitBtn1Click(Sender: TObject);
+procedure TfWordLookup.btnSearchClick(Sender: TObject);
 begin
-  BitBtn1.Enabled:=false;
+  btnSearch.Enabled:=false;
   Look();
 end;
 

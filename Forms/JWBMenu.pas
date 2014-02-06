@@ -246,6 +246,8 @@ type
     ClipboardPaintbox: TWakanPaintbox;
     aStrokeOrder: TAction;
     ApplicationEvents1: TApplicationEvents;
+    aDictLookupAuto: TAction;
+    N01132Autoall1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -359,6 +361,7 @@ type
     procedure aKanjiDetailsChecked(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
     procedure FormShow(Sender: TObject);
+    procedure aDictLookupAutoExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -2333,25 +2336,28 @@ begin
   fKanjiDetails.btnStrokeOrderClick(Sender);
 end;
 
+procedure TfMenu.aDictLookupAutoExecute(Sender: TObject);
+begin
+  if not fWordLookup.Visible then aModeDict.Execute;
+  fWordLookup.LookupMode := lmAuto;
+end;
+
 procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.LookupMode := lmJp;
-  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictEnglishExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.LookupMode := lmEn;
-  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictClipboardExecute(Sender: TObject);
 begin
   if not fWordLookup.Visible then aModeDict.Execute;
   fWordLookup.LookupMode := lmClipboard;
-  fWordLookup.miLookupAutoClick(Sender);
 end;
 
 procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);

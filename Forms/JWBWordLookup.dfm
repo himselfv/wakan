@@ -293,7 +293,7 @@ inherited fWordLookup: TfWordLookup
       OnChange = Edit1Change
       OnClick = Edit1Click
     end
-    object BitBtn1: TBitBtn
+    object btnSearch: TBitBtn
       Left = 626
       Top = 32
       Width = 70
@@ -325,7 +325,7 @@ inherited fWordLookup: TfWordLookup
       NumGlyphs = 2
       ParentFont = False
       TabOrder = 3
-      OnClick = BitBtn1Click
+      OnClick = btnSearchClick
     end
     object btnLookupMode: TButton
       Left = 11
@@ -370,7 +370,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C0101030008006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

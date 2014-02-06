@@ -573,6 +573,15 @@ object fMenu: TfMenu
   object ActionList1: TActionList
     Left = 464
     Top = 64
+    object aDictLookupAuto: TAction
+      Category = 'DictLookup'
+      Caption = '#01132^Auto/all'
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      ShortCut = 113
+      OnExecute = aDictLookupAutoExecute
+    end
     object aSaveUser: TAction
       Caption = '#00225^e&Save user changes'
       OnExecute = aSaveUserExecute
@@ -860,17 +869,22 @@ object fMenu: TfMenu
       OnExecute = aKanjiFullDetailsExecute
     end
     object aDictJapanese: TAction
+      Category = 'DictLookup'
       Caption = '#00287^eJapanese/Chinese -> English'
-      ShortCut = 113
+      Hint = '#00643^Search by japanese reading'
       OnExecute = aDictJapaneseExecute
     end
     object aDictEnglish: TAction
+      Category = 'DictLookup'
       Caption = '#00288^eEnglish -> Japanese/Chinese'
+      Hint = '#00645^Search by english meaning'
       ShortCut = 114
       OnExecute = aDictEnglishExecute
     end
     object aDictClipboard: TAction
+      Category = 'DictLookup'
       Caption = '#00289^eSearch by clipboard'
+      Hint = '#00647^eSearch by Kanji stored in clipboard'
       ShortCut = 115
       OnExecute = aDictClipboardExecute
     end
@@ -1201,14 +1215,21 @@ object fMenu: TfMenu
       object N4: TMenuItem
         Caption = '-'
       end
+      object N01132Autoall1: TMenuItem
+        Action = aDictLookupAuto
+        Caption = '#01125^Search by any text'
+      end
       object miSearchJapanese: TMenuItem
         Action = aDictJapanese
+        Caption = '#00287^Japanese/Chinese -> English'
       end
       object miSearchEnglish: TMenuItem
         Action = aDictEnglish
+        Caption = '#00288^English -> Japanese/Chinese'
       end
       object miSearchByClipboard: TMenuItem
         Action = aDictClipboard
+        Caption = '#00289^Search by clipboard'
       end
       object N8: TMenuItem
         Caption = '-'
