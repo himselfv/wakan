@@ -1,6 +1,6 @@
 NOTES ON BUILDING WAKAN.
 
-I. For Ansi builds you'll need non-unicode Delphi (at most Delphi 2007).
+I. You'll need unicode Delphi (Delphi 2010+). Wakan can be built on Ansi, but the support for that is being swiftly deprecated.
 Checkout http://code.google.com/p/jp-tools/ which Wakan uses heavily.
 Build and install JaletControls.
 
@@ -73,5 +73,6 @@ Stuff that has to be done regularly to keep Wakan up to date:
 
 
 ADDITIONAL STUFF
+
 1. MadExcept (http://madshi.net/madExceptDescription.htm). Has an installer.
 NOTE: Not required. Be sure to disable it's auto-insertion functionality (Tools-> Mad Except Configuration-> Adjust project uses clause).
