@@ -251,8 +251,8 @@ begin
 
   if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then
     Edit1.SetFocus;
-  if Edit1.Text<>'' then
-    Look(); //update results in new mode
+  Look(); //update results in new mode
+ //^ with lmClipboard Edit1.Text can be empty, so don't check for that
 end;
 
 { Updates text on lookup mode button according to currently selected mode.
@@ -292,6 +292,8 @@ var lm: TLookupMode;
 begin
   //Retrieve current lookup mode
   lm := GetLookupMode();
+
+  //Don't exit if the query is empty, we need to reset results/update presentation/etc
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
   if (lm<>lmEditorInsert) and btnSearch.Enabled and ((not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
