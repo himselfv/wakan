@@ -9,14 +9,7 @@ How to use:
 }
 
 interface
-uses Classes, Generics.Collections, Graphics, StdCtrls, Menus, Controls,
-{$IFDEF MSWINDOWS}
-  ShellAPI, Winapi.Windows
-{$ENDIF MSWINDOWS}
-{$IFDEF POSIX}
-  Posix.Stdlib
-{$ENDIF POSIX}
-;
+uses Classes, Generics.Collections, Graphics, StdCtrls, Menus, Controls;
 
 type
   TRefLinkType = (ltJapaneseOnly, ltChineseOnly, ltAll);
@@ -61,10 +54,9 @@ type
     procedure Click; override;
   end;
 
-procedure ShellOpen(const sCommand: string);
 
 implementation
-uses SysUtils, UITypes, JWBStrings, JWBIO, JWBCharData;
+uses SysUtils, UITypes, JWBStrings, JWBUtils, JWBIO, JWBCharData;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';
@@ -348,18 +340,6 @@ begin
   end;
   CommitText;
 
-end;
-
-
-
-procedure ShellOpen(const sCommand: string);
-begin
-{$IFDEF MSWINDOWS}
-  ShellExecute(0, 'OPEN', PChar(sCommand), '', '', SW_SHOWNORMAL);
-{$ENDIF MSWINDOWS}
-{$IFDEF POSIX}
-  _system(PAnsiChar('open ' + AnsiString(sCommand)));
-{$ENDIF POSIX}
 end;
 
 constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);

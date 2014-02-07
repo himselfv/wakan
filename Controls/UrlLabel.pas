@@ -17,12 +17,12 @@ type
 procedure Register;
 
 implementation
-uses ShellApi, Windows;
+uses JwbUtils;
 
 procedure TUrlLabel.Click;
 begin
   if URL<>'' then
-    ShellExecute(0, PChar('open'), PChar(URL), nil, nil, SW_SHOW);
+    ShellOpen(URL);
   inherited;
 end;
 

@@ -474,7 +474,7 @@ const
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
+uses JWBMenu, JWBStrings, JWBUtils, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
@@ -2039,7 +2039,7 @@ end;
 
 procedure TfSettings.Button16Click(Sender: TObject);
 begin
-  winexec('notepad annotate.txt',SW_SHOW);
+  ShellOpen(WikiUrl('Annotations'));
 end;
 
 procedure TfSettings.UpdatePortabilityPage;
