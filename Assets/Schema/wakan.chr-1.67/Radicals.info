@@ -1,0 +1,15 @@
+$TEXTTABLE
+$PRECOUNTED
+$RAWINDEX
+$FIELDS
+bNumber
+bVariant
+xUnicode
+bStrokeCount
+wBushuCount
+wUnicodeCount
+wJapaneseCount
+wKangXiCount
+$ORDERS
+$SEEKS
+Number
