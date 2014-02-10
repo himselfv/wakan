@@ -654,7 +654,8 @@ end;
 
 procedure TfEditor.FormHide(Sender: TObject);
 begin
-  fWordLookup.RestoreLookupMode; //which we had overriden with word suggestions
+  if (fWordLookup<>nil) and not (csDestroying in ComponentState) then
+    fWordLookup.RestoreLookupMode; //which we had overriden with word suggestions
 end;
 
 procedure TfEditor.FormResize(Sender: TObject);
