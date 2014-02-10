@@ -3,7 +3,7 @@ object fStatistics: TfStatistics
   Top = 209
   BorderStyle = bsDialog
   Caption = '#00585^eStatistics'
-  ClientHeight = 305
+  ClientHeight = 322
   ClientWidth = 599
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,20 +12,21 @@ object fStatistics: TfStatistics
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poOwnerFormCenter
   Scaled = False
   OnShow = FormShow
   DesignSize = (
     599
-    305)
+    322)
   PixelsPerInch = 96
   TextHeight = 13
   object RxLabel16: TLabel
-    Left = 208
+    Left = 8
     Top = 8
-    Width = 207
+    Width = 583
     Height = 18
     Alignment = taCenter
+    Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = '#00585^eStatistics'
     Font.Charset = DEFAULT_CHARSET
@@ -43,9 +44,9 @@ object fStatistics: TfStatistics
     Shape = bsTopLine
   end
   object RxLabel1: TLabel
-    Left = 64
+    Left = 8
     Top = 40
-    Width = 395
+    Width = 583
     Height = 13
     Alignment = taCenter
     AutoSize = False
@@ -58,9 +59,9 @@ object fStatistics: TfStatistics
     ParentFont = False
   end
   object RxLabel2: TLabel
-    Left = 64
+    Left = 8
     Top = 128
-    Width = 393
+    Width = 583
     Height = 13
     Alignment = taCenter
     AutoSize = False
@@ -233,7 +234,7 @@ object fStatistics: TfStatistics
   end
   object Label19: TLabel
     Left = 8
-    Top = 184
+    Top = 200
     Width = 151
     Height = 13
     Caption = '#00596^eMastered words:'
@@ -246,7 +247,7 @@ object fStatistics: TfStatistics
   end
   object Label20: TLabel
     Left = 8
-    Top = 200
+    Top = 216
     Width = 165
     Height = 13
     Caption = '#00597^eProblematic words:'
@@ -259,7 +260,7 @@ object fStatistics: TfStatistics
   end
   object Label21: TLabel
     Left = 8
-    Top = 232
+    Top = 248
     Width = 214
     Height = 13
     Caption = '#00598^eNumber of katakana words:'
@@ -327,7 +328,7 @@ object fStatistics: TfStatistics
   end
   object lblVocabMastered: TLabel
     Left = 246
-    Top = 184
+    Top = 200
     Width = 24
     Height = 13
     Alignment = taRightJustify
@@ -335,7 +336,7 @@ object fStatistics: TfStatistics
   end
   object lblVocabProblematic: TLabel
     Left = 246
-    Top = 200
+    Top = 216
     Width = 24
     Height = 13
     Alignment = taRightJustify
@@ -343,7 +344,7 @@ object fStatistics: TfStatistics
   end
   object lblVocabKatakana: TLabel
     Left = 246
-    Top = 232
+    Top = 248
     Width = 24
     Height = 13
     Alignment = taRightJustify
@@ -375,7 +376,7 @@ object fStatistics: TfStatistics
   end
   object Label33: TLabel
     Left = 8
-    Top = 216
+    Top = 232
     Width = 168
     Height = 13
     Caption = '#00602^eNon-popular words:'
@@ -401,7 +402,7 @@ object fStatistics: TfStatistics
   end
   object lblVocabUnpopular: TLabel
     Left = 246
-    Top = 216
+    Top = 232
     Width = 24
     Height = 13
     Alignment = taRightJustify
@@ -459,7 +460,7 @@ object fStatistics: TfStatistics
   end
   object Label42: TLabel
     Left = 8
-    Top = 248
+    Top = 264
     Width = 207
     Height = 13
     Caption = '#00606^eWords with known writing:'
@@ -485,7 +486,7 @@ object fStatistics: TfStatistics
   end
   object lblVocabWriting: TLabel
     Left = 246
-    Top = 248
+    Top = 264
     Width = 24
     Height = 13
     Alignment = taRightJustify
@@ -499,10 +500,31 @@ object fStatistics: TfStatistics
     Alignment = taRightJustify
     Caption = '0000'
   end
+  object lblVocabLearnedButNotMasteredCaption: TLabel
+    Left = 19
+    Top = 184
+    Width = 162
+    Height = 13
+    Caption = '#01135^...but not mastered:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+  end
+  object lblVocabLearnedButNotMastered: TLabel
+    Left = 246
+    Top = 184
+    Width = 24
+    Height = 13
+    Alignment = taRightJustify
+    Caption = '0000'
+  end
   object BitBtn1: TBitBtn
-    Left = 264
-    Top = 272
-    Width = 89
+    Left = 246
+    Top = 289
+    Width = 105
     Height = 25
     Anchors = [akLeft, akBottom]
     Cancel = True
@@ -528,5 +550,6 @@ object fStatistics: TfStatistics
     ModalResult = 1
     NumGlyphs = 2
     TabOrder = 0
+    ExplicitTop = 300
   end
 end

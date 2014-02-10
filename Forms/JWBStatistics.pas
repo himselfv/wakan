@@ -54,6 +54,8 @@ type
     Label43: TLabel;
     lblVocabWriting: TLabel;
     lblLearnedRadicals: TLabel;
+    lblVocabLearnedButNotMasteredCaption: TLabel;
+    lblVocabLearnedButNotMastered: TLabel;
     procedure FormShow(Sender: TObject);
   protected
     procedure DoStatistic;
@@ -131,7 +133,8 @@ begin
   end;
   TUser.First;
   lblVocabTotal.Caption:=inttostr(TUser.RecordCount);
-  lblVocabLearned.Caption:=perc(vs.learned,TUser.RecordCount);
+  lblVocabLearned.Caption:=perc(vs.learned+vs.mastered,TUser.RecordCount);
+  lblVocabLearnedButNotMastered.Caption:=perc(vs.learned,TUser.RecordCount);
   lblVocabMastered.Caption:=perc(vs.mastered,TUser.RecordCount);
   lblVocabProblematic.Caption:=perc(vs.problematic,TUser.RecordCount);
   lblVocabUnpopular.Caption:=perc(vs.unpopular,TUser.RecordCount);
