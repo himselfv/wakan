@@ -13,6 +13,78 @@ uses SysUtils, Classes, TextTable, JWBStrings;
 type
   ECharDataException = class(Exception);
 
+
+{
+Character property type information.
+}
+type
+  TCharPropType = record
+    id: integer;
+    superceded_by: integer; //-1 if not obsolete
+    supercedes: integer;
+    sourceType: char;
+     { Where did we get that info
+        'D': KANJIDIC
+        'U': UNIHAN }
+    sourceField: string;
+    dataType: char;
+     { Controls how data for this property is stored and handled
+        'U': unicode, 4-hex string (sometimes with ansi '+' or '-' before or after it -- see parsing)
+        'P': pinyin, AnsiString
+        'R': radical, AnsiString
+          - in some cases (see parsing), TRadicals.Number field value, possibly
+           int or 'int' (int in quotes).
+        'N': 'Number' (?), AnsiString
+        'T': ?, AnsiString
+        'S': 'String', AnsiString }
+    englishName: string;
+    description: string; // in english
+    function Obsolete: boolean;
+  end;
+  PCharPropType = ^TCharPropType;
+
+var
+ { All possible pieces of information to store about Characters and to display
+  in KanjiDetails info box. }
+  CharPropTypes: array of TCharPropType;
+
+const
+ { Some predefined property type IDs. These cannot be changed at a later date,
+  only declared obsolete. }
+  ptKoreanReading = 1;
+  ptMandarinReading = 2;
+  ptJapaneseDefinition = 3;
+  ptOnReading = 4;
+  ptKunReading = 5;
+  ptNanoriReading = 6;
+  ptChineseDefinition = 7; //usually taken from UNIHAN
+  ptCantoneseReading = 8;
+  ptRadicals = 10; //virtual property
+
+  ptBushuRadical = 12;
+  ptRSUnicode = 13;
+  ptRSJapanese = 14;
+  ptRSKanWa = 15;
+  ptRSKangXi = 16;
+  ptRSKorean = 17;
+
+  ptSKIP = 22;
+
+  ptJapaneseDefinitionUnicode = 121;
+  ptChineseDefinitionUnicode = 122;
+  ptClassicalRadical = 123;
+
+ { ptRadicals internally has a special treatment and so we keep the list of all
+  properties which go into it }
+  ptRadicalsComposition = [ptBushuRadical,ptRSUnicode,ptRSJapanese,ptRSKanWa,
+    ptRSKangXi,ptRSKorean];
+
+procedure AddCharPropType(const str: string);
+function FindCharPropType(const propTypeId: integer): PCharPropType; overload;
+function FindCharPropTypeIndex(const propTypeId: integer): integer;
+function FindCharPropType(const ASource: char; const AField: string): PCharPropType; overload;
+
+
 const
  {
   Current WAKAN.CHR format. Version history:
@@ -122,84 +194,14 @@ procedure FixTCharJpStrokeOrderIndex(table: TTextTable);
 { Used for .wtt, .jtt header timestamps, for CharDataProps.*Version fields etc.  }
 function WakanDatestamp(const dt: TDatetime): string;
 
-{
-Character property type information.
-}
-type
-  TCharPropType = record
-    id: integer;
-    superceded_by: integer; //-1 if not obsolete
-    supercedes: integer;
-    sourceType: char;
-     { Where did we get that info
-        'D': KANJIDIC
-        'U': UNIHAN }
-    sourceField: string;
-    dataType: char;
-     { Controls how data for this property is stored and handled
-        'U': unicode, 4-hex string (sometimes with ansi '+' or '-' before or after it -- see parsing)
-        'P': pinyin, AnsiString
-        'R': radical, AnsiString
-          - in some cases (see parsing), TRadicals.Number field value, possibly
-           int or 'int' (int in quotes).
-        'N': 'Number' (?), AnsiString
-        'T': ?, AnsiString
-        'S': 'String', AnsiString }
-    englishName: string;
-    description: string; // in english
-    function Obsolete: boolean;
-  end;
-  PCharPropType = ^TCharPropType;
-
-var
- { All possible pieces of information to store about Characters and to display
-  in KanjiDetails info box. }
-  CharPropTypes: array of TCharPropType;
-
-const
- { Some predefined property type IDs. These cannot be changed at a later date,
-  only declared obsolete. }
-  ptKoreanReading = 1;
-  ptMandarinReading = 2;
-  ptJapaneseDefinition = 3;
-  ptOnReading = 4;
-  ptKunReading = 5;
-  ptNanoriReading = 6;
-  ptChineseDefinition = 7; //usually taken from UNIHAN
-  ptCantoneseReading = 8;
-  ptRadicals = 10; //virtual property
-
-  ptBushuRadical = 12;
-  ptRSUnicode = 13;
-  ptRSJapanese = 14;
-  ptRSKanWa = 15;
-  ptRSKangXi = 16;
-  ptRSKorean = 17;
-
-  ptSKIP = 22;
-
-  ptJapaneseDefinitionUnicode = 121;
-  ptChineseDefinitionUnicode = 122;
-  ptClassicalRadical = 123;
-
- { ptRadicals internally has a special treatment and so we keep the list of all
-  properties which go into it }
-  ptRadicalsComposition = [ptBushuRadical,ptRSUnicode,ptRSJapanese,ptRSKanWa,
-    ptRSKangXi,ptRSKorean];
-
-procedure AddCharPropType(const str: string);
-function FindCharPropType(const propTypeId: integer): PCharPropType; overload;
-function FindCharPropTypeIndex(const propTypeId: integer): integer;
-function FindCharPropType(const ASource: char; const AField: string): PCharPropType; overload;
 
 
-{
-User configuration for KanjiDetails info box -- stored in WAKAN.CDT
-}
-var
-  chardetl:TStringList;
 
-function GetCharDet(i,j:integer):string;
+
+
+
+
+
 
 
 {
@@ -243,6 +245,23 @@ function GetCharValueRad(index,propType:integer):integer;
 
 function RadicalUnicode(const radno: integer): FString;
 function RadicalIndex(const rad: FChar): integer;
+
+{
+ Chars.Find('..'): integer;
+ Chars.GetStr(char, prop)
+ Chars.GetInt(char, prop)
+ Chars.GetRadicalIndex(char, prop)
+ Chars.GetRadical(char, prop)
+
+ Chars.NewCursor;
+ Char.Seek()
+ Chars.Find('..'): TCharData;
+ Char.GetStr(prop)
+ Char.GetInt(prop)
+ Char.GetRadicalIndex(prop)
+ Char.GetRadical(prop)
+}
+
 
 implementation
 uses MemSource, PKGWrite, JWBUnit;
@@ -707,23 +726,6 @@ begin
 end;
 
 
-{
-User configuration for KanjiDetails info box
-}
-
-function GetCharDet(i,j:integer):string;
-var s:string;
-begin
-  s:=chardetl[i];
-  while j>0 do
-  begin
-    delete(s,1,pos(';',s));
-    dec(j);
-  end;
-  delete(s,pos(';',s),length(s)-pos(';',s)+1);
-  result:=s;
-end;
-
 
 {
 TCharPropertyCursor
@@ -1008,11 +1010,6 @@ initialization
   TCharProp := nil;
   TRadicals := nil;
   ClearCharDbProps();
-  chardetl:=TStringList.Create;
 
-finalization
- {$IFDEF CLEAN_DEINIT}
-  FreeAndNil(chardetl);
- {$ENDIF}
 
 end.

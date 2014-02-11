@@ -172,6 +172,14 @@ var
   curradno: integer;
   curradical: string;
 
+{
+User configuration for KanjiDetails info box -- stored in WAKAN.CDT
+}
+var
+  chardetl:TStringList;
+
+function GetCharDet(i,j:integer):string;
+
 implementation
 
 uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
@@ -183,6 +191,23 @@ uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
 
 var
   cursimple: FString;
+
+{
+User configuration for KanjiDetails info box
+}
+
+function GetCharDet(i,j:integer):string;
+var s:string;
+begin
+  s:=chardetl[i];
+  while j>0 do
+  begin
+    delete(s,1,pos(';',s));
+    dec(j);
+  end;
+  delete(s,pos(';',s),length(s)-pos(';',s)+1);
+  result:=s;
+end;
 
 procedure TfKanjiDetails.FormCreate(Sender: TObject);
 begin
@@ -1474,5 +1499,11 @@ end;
 
 initialization
   curradical:='';
+  chardetl:=TStringList.Create;
+
+finalization
+ {$IFDEF CLEAN_DEINIT}
+  FreeAndNil(chardetl);
+ {$ENDIF}
 
 end.
