@@ -59,9 +59,9 @@ begin
   TChar.Locate('Unicode',u);
   DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),u,calfont);
   if stcount then
-    if curlang<>'j' then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TCharStrokeCount)),FontEnglish);
+    if curlang<>'j' then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TChar.fChStrokeCount)),FontEnglish);
   if stcount then
-    if curlang='j' then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TCharJpStrokeCount)),FontEnglish);
+    if curlang='j' then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TChar.fJpStrokeCount)),FontEnglish);
   if strokeorder then
     DrawStrokeOrder(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),trunc((sizvert-1)*ch),u,trunc(ch/3*2),clBlack);
 
@@ -78,9 +78,9 @@ begin
   {alternate}
   if alt then begin
     radf:=fSettings.GetPreferredRadicalType;
-    rad_idx := GetCharValueRad(TChar.Int(TCharIndex),radf);
+    rad_idx := GetCharRadicalNumber(u,radf);
     if TRadicals.Locate('Number',rad_idx) then
-      DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicalsUnicode),FontRadical);
+      DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicals.fUnicode),FontRadical);
   end;
 
   {radical}
@@ -209,16 +209,15 @@ begin
     kuny:='';
     CCharProp := TCharPropertyCursor.Create(TCharProp);
     try
-      CCharProp.SetOrder('');
-      CCharProp.Locate('Kanji',TChar.TrueInt(TCharIndex));
-      while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=TChar.Int(TCharIndex)) do
+      CCharProp.Locate(u);
+      while (not CCharProp.EOF) and (CCharProp.Kanji=u) do
       begin
-        rt := CCharProp.Int(TCharPropTypeId);
+        rt := CCharProp.Int(TCharProp.fTypeId);
         case rt of
           2:if curlang='c' then if ony='' then ony:=ConvertPinYin(string(CCharProp.RawValue)) else ony:=ony+fstr(', ')+ConvertPinYin(string(CCharProp.RawValue));
           8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(string(CCharProp.RawValue))) else kuny:=kuny+fstr(', ')+fstr(lowercase(string(CCharProp.RawValue)));
           4, 5: begin
-            ws := CCharProp.Value;
+            ws := CCharProp.AsString;
             if (rt=4) and (curlang='j') and (flength(ony)+flength(ws)+2<=nch) then
               if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
             if (rt=5) and (curlang='j') and (flength(kuny)+flength(ws)+2<=nch) then
@@ -257,10 +256,10 @@ begin
     CCharProp := TCharPropertyCursor.Create(TCharProp);
     try
       if curlang='j' then
-        defy := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
+        defy := CCharProp.GetCharProps(u, ptJapaneseDefinition)
       else
       if curlang='c' then
-        defy := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
+        defy := CCharProp.GetCharProps(u, ptChineseDefinition)
       else
         defy := '';
     finally

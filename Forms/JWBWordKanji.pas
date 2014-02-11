@@ -245,9 +245,9 @@ begin
     if TChar.Locate('Unicode',s2) then
     begin
       radf:=fSettings.GetPreferredRadicalType();
-      if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),radf)) then
+      if TRadicals.Locate('Number',GetCharRadicalNumber(s2,radf)) then
       begin
-        rad := TRadicals.Str(TRadicalsUnicode);
+        rad := TRadicals.Str(TRadicals.fUnicode);
         SetLength(FKanji, Length(FKanji)+1);
         if flength(s2)>0 then
           FKanji[Length(FKanji)-1].char := fgetch(s2, 1)
@@ -257,26 +257,26 @@ begin
           FKanji[Length(FKanji)-1].rad := fgetch(rad, 1)
         else
           FKanji[Length(FKanji)-1].rad := UH_NOCHAR;
-        if TChar.Bool(TCharChinese) then
+        if TChar.Bool(TChar.fChinese) then
           FKanji[Length(FKanji)-1].tp := 'J'
         else
-        if IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
+        if IsKnown(KnownLearned,TChar.Fch(TChar.fUnicode)) then
           FKanji[Length(FKanji)-1].tp := 'K'
         else
-        if TChar.Int(TCharJouyouGrade)<9 then
+        if TChar.Int(TChar.fJouyouGrade)<9 then
           FKanji[Length(FKanji)-1].tp := 'C'
         else
-        if TChar.Int(TCharJouyouGrade)<10 then
+        if TChar.Int(TChar.fJouyouGrade)<10 then
           FKanji[Length(FKanji)-1].tp := 'N'
         else
           FKanji[Length(FKanji)-1].tp := 'U';
         CCharProp := TCharPropertyCursor.Create(TCharProp);
         try
           if curlang='j' then
-            meaning := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
+            meaning := CCharProp.GetCharProps(s2, ptJapaneseDefinition)
           else
           if curlang='c' then
-            meaning := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
+            meaning := CCharProp.GetCharProps(s2, ptChineseDefinition)
           else
             meaning := '';
         finally

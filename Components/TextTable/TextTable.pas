@@ -138,6 +138,7 @@ type
     procedure LoadData(const AFilename:string;ARawRead:boolean); //only from Source
     procedure UpgradeToPrecounted();
     procedure PrintDataStats();
+    procedure SetupTable; virtual;
 
   public
     constructor Create(ASource:TPackageSource;const AFilename:string;ARawread,AOffline:boolean); overload;
@@ -649,6 +650,7 @@ begin
     LoadData(AFilename, ARawRead);
 
   PrintDataStats();
+  SetupTable();
 end;
 
 { Creates a new empty table according to a info-schema taken from a stream }
@@ -661,6 +663,7 @@ begin
  {$IFDEF TTSTATS}
   statlist.Add('New table created.');
  {$ENDIF}
+  SetupTable();
 end;
 
 { Sometimes in code it's handier to specify schema line by line }
@@ -1025,6 +1028,12 @@ begin
     raise Exception.Create('Table is corrupt.');
 
   Precounted := true;
+end;
+
+{ Called after successful load or create to let descendants analyze field
+ structure and cache all required field indexes, seeks etc. }
+procedure TTextTable.SetupTable;
+begin
 end;
 
 { Outputs total size of all data in every column into stats log.

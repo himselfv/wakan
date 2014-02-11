@@ -166,7 +166,7 @@ begin
 end;
 
 procedure TfKanji.ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
-var CCharProp: TTextTableCursor;
+var CCharProp: TCharPropertyCursor;
   sl:TStringList;
   s_fltval:string;
   s_val:string;
@@ -179,7 +179,7 @@ var CCharProp: TTextTableCursor;
   s_dot: string;
 begin
   sl:=TStringList.Create;
-  CCharProp := TCharProp.NewCursor;
+  CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
 
    //Convert filter value into a list of exact values to match
@@ -211,11 +211,10 @@ begin
     for i:=0 to sl.Count-1 do
     begin
       s_fltval:=uppercase(sl[i]); //Locate is case-insensitive anyway
-      CCharProp.SetOrder('Reading_Ind');
-      CCharProp.Locate('Reading',s_fltval);
+      CCharProp.LocateRawValue(s_fltval);
       while not CCharProp.EOF do
       begin
-        s_val:=uppercase(CCharProp.Str(TCharPropValue));
+        s_val:=uppercase(CCharProp.RawValue);
         if s_val<>s_fltval then
           if not (rfPartial in flags) then
             break
@@ -226,7 +225,7 @@ begin
           if pos(s_fltval,s_val)<>1 then
             break;
 
-        match := (CCharProp.Int(TCharPropTypeId)=typ);
+        match := (CCharProp.Int(TCharProp.fTypeId)=typ);
         case propType.dataType of
           'R': begin //Radical format: radical['][.stroke_count]
             match := match and (
@@ -237,7 +236,7 @@ begin
           end;
         else
           if rfTakedot in flags then
-            dot:=CCharProp.Int(TCharPropReadDot)
+            dot:=CCharProp.Int(TCharProp.fReadDot)
           else
             dot:=0;
           match := match and (
@@ -248,7 +247,7 @@ begin
         end;
 
         if match then
-            flt.Add(CCharProp.Str(TCharPropKanji));
+            flt.Add(CCharProp.Str(TCharProp.fKanji));
         CCharProp.Next;
       end;
     end;
@@ -359,7 +358,7 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
    { Filter mode: 0=OR, 1=AND }
     Result := (fKanjiSearch.rgOrAnd.ItemIndex=1); //default result: true if ANDs, false if ORs
     for i := 0 to Length(categories) - 1 do
-      if IsKnown(categories[i], TChar.FCh(TCharUnicode)) then begin
+      if IsKnown(categories[i], TChar.FCh(TChar.fUnicode)) then begin
         if fKanjiSearch.rgOrAnd.ItemIndex=0 then begin Result:=true; break; end;
       end else begin
         if fKanjiSearch.rgOrAnd.ItemIndex=1 then Result:=false;
@@ -461,32 +460,32 @@ begin
     clipsort:=(fKanjiSearch.btnInClipboard.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;
-    while ((not clipsort) and ((not TChar.EOF) and ((curlang='c') or (TChar.Int(TCharChinese)=0)))) or
+    while ((not clipsort) and ((not TChar.EOF) and ((curlang='c') or (TChar.Int(TChar.fChinese)=0)))) or
           ((clipsort) and (clipind<fltclip.Count)) do
     begin
       accept:=true;
       if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
-      if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TCharType)='S') then accept:=false;
-      if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TCharType)='T') then accept:=false;
-      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang='c') and (TChar.Int(TCharChFrequency)>=255) then accept:=false;
-      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang<>'c') and (TChar.Int(TCharJouyouGrade)>=10) then accept:=false;
-      if accept and (not clipsort) and (fKanjiSearch.btnInClipboard.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TCharUnicode)))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbPinYin.Down) and (fltpinyin.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbYomi.Down) and (fltyomi.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbDefinition.Down) and (fltmean.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbSKIP.Down) and (fltskip.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+      if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TChar.fType)='S') then accept:=false;
+      if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TChar.fType)='T') then accept:=false;
+      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
+      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
+      if accept and (not clipsort) and (fKanjiSearch.btnInClipboard.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
+      if accept and (fKanjiSearch.sbPinYin.Down) and (fltpinyin.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.sbYomi.Down) and (fltyomi.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.sbDefinition.Down) and (fltmean.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.sbSKIP.Down) and (fltskip.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
       if accept and (fKanjiSearch.sbRadicals.Down) then
         case fKanjiSearch.curRadSearchType of
-          stClassic: if fltradical.IndexOf(TChar.Str(TCharIndex))=-1 then accept:=false;
-          stRaine: if fltradical.IndexOf(TChar.Str(TCharUnicode))=-1 then accept:=false;
+          stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
+          stRaine: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
         end;
-      if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TCharUnicode))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TCharIndex))=-1) then accept:=false;
+      if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
   //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton25.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
   //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton26.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
   //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton27.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
-      if (curlang='c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharStrokeCount),true,sl4) then accept:=false;
-      if (curlang<>'c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TCharJpStrokeCount),true,sl4) then accept:=false;
+      if (curlang='c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TChar.fChStrokeCount),true,sl4) then accept:=false;
+      if (curlang<>'c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TChar.fJpStrokeCount),true,sl4) then accept:=false;
       if accept and (fKanjiSearch.sbSKIP.Down) then
       begin
         s1:=fKanjiSearch.edtSKIP.Text;
@@ -517,15 +516,15 @@ begin
         if pos('.',s1)>0 then delete(s1,pos('.',s1),1);
         if accept then accept:=InRange(s1,TChar.Str(TCharFourCornerCode),false,sl9);
       end; }
-      if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TCharJouyouGrade),true,sl10) then accept:=false;
+      if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TChar.fJouyouGrade),true,sl10) then accept:=false;
       if accept then
       begin
-        kclass := GetCharClass(TChar.Int(TCharIndex));
+        kclass := GetCharClass(TChar.Str(TChar.fUnicode));
         if ((curlang<>'c') and (fKanjiSearch.rgSortBy.ItemIndex=3))
         or ((curlang='c') and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
-          ki.Insert(random(ki.Count),kclass+TChar.Str(TCharUnicode))
+          ki.Insert(random(ki.Count),kclass+TChar.Str(TChar.fUnicode))
         else
-          ki.Add(kclass+TChar.Str(TCharUnicode));
+          ki.Add(kclass+TChar.Str(TChar.fUnicode));
       end;
       if clipsort then inc(clipind) else TChar.Next;
     end;
@@ -865,8 +864,8 @@ begin
     DrawGrid1.Canvas.Font.Name:=FontEnglish;
     DrawGrid1.Canvas.Font.Height:=8+4*fSettings.rgKanjiGridSize.ItemIndex;
     DrawGrid1.Canvas.Font.Color:=clWindowText;
-    if curlang='c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharStrokeCount));
-    if curlang<>'c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TCharJpStrokeCount));
+    if curlang='c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TChar.fChStrokeCount));
+    if curlang<>'c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TChar.fJpStrokeCount));
   end;
   fKanjiDetails.pbKanji.Invalidate;
   fKanjiDetails.pbRadical.Invalidate;

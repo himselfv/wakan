@@ -399,7 +399,7 @@ begin
       if TChar.Locate('Unicode',s2) then
       begin
         if beg then bs:='T'else bs:='F';
-        TUserIdx.Insert([IntToStr(wordidx),TChar.Str(TCharUnicode),bs]);
+        TUserIdx.Insert([IntToStr(wordidx),TChar.Str(TChar.fUnicode),bs]);
       end;
       beg:=false;
     end;
@@ -514,7 +514,7 @@ begin
       if TChar.Locate('Unicode',s2) then
       begin
         if beg then bs:='T'else bs:='F';
-        TUserIdx.Insert([IntToStr(wordidx), TChar.Str(TCharUnicode), bs])
+        TUserIdx.Insert([IntToStr(wordidx), TChar.Str(TChar.fUnicode), bs])
       end;
       beg:=false;
     end;
@@ -1355,21 +1355,21 @@ begin
       begin
         s2:=copy(s,((j-1)*4)+1,4);
         if TChar.Locate('Unicode',s2) then
-        if not IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
+        if not IsKnown(KnownLearned,TChar.Fch(TChar.fUnicode)) then
         begin
-          v:=trunc(ln(TChar.Int(TCharStrokeCount))*5000);
-          if TChar.Int(TCharJouyouGrade)<10 then
-            v:=v+TChar.Int(TCharJouyouGrade)*4000 else v:=v+40000;
+          v:=trunc(ln(TChar.Int(TChar.fChStrokeCount))*5000);
+          if TChar.Int(TChar.fJouyouGrade)<10 then
+            v:=v+TChar.Int(TChar.fJouyouGrade)*4000 else v:=v+40000;
           v:=v+20000;
-          if TChar.Int(TCharJpFrequency)<65535 then
-            v:=v+TChar.Int(TCharJpFrequency)*3 else v:=v+7000;
+          if TChar.Int(TChar.fJpFrequency)<65535 then
+            v:=v+TChar.Int(TChar.fJpFrequency)*3 else v:=v+7000;
          //If this char has a radical
-          if TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),12))
-          and TChar.Locate('Unicode',TRadicals.Str(TRadicalsUnicode)) then begin
-            if TRadicals.Str(TRadicalsUnicode)=s2 then
+          if TRadicals.Locate('Number',GetCharRadicalNumber(s2,12))
+          and TChar.Locate('Unicode',TRadicals.Str(TRadicals.fUnicode)) then begin
+            if TRadicals.Str(TRadicals.fUnicode)=s2 then
               dec(v,3000) //if the char is the radical itself
             else
-            if not IsKnown(KnownLearned,TChar.Fch(TCharUnicode)) then
+            if not IsKnown(KnownLearned,TChar.Fch(TChar.fUnicode)) then
               inc(v,8000); //if the radical is not learned
           end;
           vb:=v;

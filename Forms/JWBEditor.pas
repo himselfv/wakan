@@ -3444,6 +3444,7 @@ var dnam:string;
     i:integer;
   markers: TMarkers;
   CCharProp: TCharPropertyCursor;
+  ch: FString;
 begin
   meaning:='';
   reading:='';
@@ -3467,15 +3468,16 @@ begin
   end else
   if doctr[cy].chars[cx].wordstate='?'then
   begin
-    if TChar.Locate('Unicode',doc.GetDoc(cx,cy)) then
+    ch := doc.GetDoc(cx,cy);
+    if TChar.Locate('Unicode',ch) then
     begin
       CCharProp := TCharPropertyCursor.Create(TCharProp);
       try
         if curlang='j' then
-          meaning := CCharProp.GetJapaneseDefinitions(TChar.TrueInt(TCharIndex))
+          meaning := CCharProp.GetCharProps(ch, ptJapaneseDefinition)
         else
         if curlang='c' then
-          meaning := CCharProp.GetChineseDefinitions(TChar.TrueInt(TCharIndex))
+          meaning := CCharProp.GetCharProps(ch, ptChineseDefinition)
         else
           meaning := '';
       finally

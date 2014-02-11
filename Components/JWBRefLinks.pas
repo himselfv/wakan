@@ -216,14 +216,11 @@ end;
 //converts it to a sequence of character property values from the database
 //for the specified property type.
 function ChProp(AString: UnicodeString; APropNo: integer): UnicodeString;
-var i, idx: integer;
+var i: integer;
 begin
   Result := '';
-  for i := 1 to Length(AString) do begin
-    idx := FindChar(AString[i]);
-    if idx>=0 then
-      Result := Result + GetCharValue(idx, APropNo);
-  end;
+  for i := 1 to Length(AString) do
+    Result := Result + GetCharProp(AString[i], APropNo);
 end;
 
 //Formats reference link text (Caption, Hint, Link), inserting data in the

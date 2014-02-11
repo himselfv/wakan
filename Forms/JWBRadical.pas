@@ -233,20 +233,20 @@ begin
   TRadicals.First;
   while not TRadicals.EOF do
   begin
-    if (TRadicals.Int(TRadicalsStrokeCount)>j) and (TRadicals.Int(TRadicalsVariant)=1) then
+    if (TRadicals.Int(TRadicals.fStrokeCount)>j) and (TRadicals.Int(TRadicals.fVariant)=1) then
     begin
-      j:=TRadicals.Int(TRadicalsStrokeCount);
+      j:=TRadicals.Int(TRadicals.fStrokeCount);
       rl.Add(inttostr(j));
       rlc.Add('0');
       rli.Add('0');
     end;
-    if (cbDisplayVariants.Checked) or (TRadicals.Int(TRadicalsVariant)=1) then
+    if (cbDisplayVariants.Checked) or (TRadicals.Int(TRadicals.fVariant)=1) then
     begin
-      rl.Add(TRadicals.Str(TRadicalsUnicode));
-      if TRadicals.Int(TRadicalsVariant)=1 then
+      rl.Add(TRadicals.Str(TRadicals.fUnicode));
+      if TRadicals.Int(TRadicals.fVariant)=1 then
       begin
-        knw:=IsKnown(KnownLearned,TRadicals.Fch(TRadicalsUnicode));
-        jap:=TRadicals.Int(TRadicalsJapaneseCount);
+        knw:=IsKnown(KnownLearned,TRadicals.Fch(TRadicals.fUnicode));
+        jap:=TRadicals.Int(TRadicals.fJapaneseCount);
       end; //else keep knw and jap from before -- variants go after the base radical
       if (cbLearnedInBlue.Checked) and (knw) then
         rlc.Add('0999')
@@ -259,7 +259,7 @@ begin
           end
         else
           rlc.Add('0020');
-      rli.Add(TRadicals.Str(TRadicalsNumber));
+      rli.Add(TRadicals.Str(TRadicals.fNumber));
     end;
     TRadicals.Next;
   end;
@@ -543,7 +543,7 @@ begin
     begin
       TRadicals.First;
       TRadicals.Locate('Number',i);
-      FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicalsUnicode);
+      FSelectedRadicals:=FSelectedRadicals+TRadicals.Str(TRadicals.fUnicode);
     end else
       FSelectedRadicals:=FSelectedRadicals+RaineRadicals.Items[i-1].Radical;
   end;
@@ -552,13 +552,10 @@ begin
 end;
 
 procedure TfRadical.DrawGridKeyPress(Sender: TObject; var Key: Char);
-var c: FChar;
 begin
   if (key='l') and (selradical<>'') then
   begin
-    TChar.Locate('Unicode',selradical);
-    c:=TChar.Fch(TCharUnicode);
-    SetKnown(KnownLearned,c,not IsKnown(KnownLearned,c));
+    SetKnown(KnownLearned,selradical,not IsKnown(KnownLearned,selradical));
     if not cbLearnedInBlue.Checked then begin
      //enable coloring if it was disabled
       cbLearnedInBlue.Checked := true;
@@ -786,7 +783,7 @@ begin
   for i := 1 to flength(AChars) do begin
     ch := fgetch(AChars, i);
     case AType of
-      stClassic: Result[i-1] := RadicalIndex(ch);
+      stClassic: Result[i-1] := RadicalNumber(ch);
       stRaine: Result[i-1] := RaineRadicals.FindRadical(ch);
     end;
   end;

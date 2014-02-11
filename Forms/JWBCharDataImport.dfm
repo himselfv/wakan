@@ -3,7 +3,7 @@ object fCharDataImport: TfCharDataImport
   Top = 0
   BorderStyle = bsDialog
   Caption = '#01079^eImport character data'
-  ClientHeight = 389
+  ClientHeight = 311
   ClientWidth = 386
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,19 +16,19 @@ object fCharDataImport: TfCharDataImport
   OnShow = FormShow
   DesignSize = (
     386
-    389)
+    311)
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 14
-    Top = 98
+    Top = 13
     Width = 210
     Height = 13
     Caption = '#01080^eSpecify the KANJIDIC file to use:'
   end
   object Label2: TLabel
     Left = 14
-    Top = 214
+    Top = 129
     Width = 364
     Height = 25
     Anchors = [akLeft, akTop, akRight]
@@ -40,7 +40,7 @@ object fCharDataImport: TfCharDataImport
   end
   object Label4: TLabel
     Left = 14
-    Top = 277
+    Top = 192
     Width = 364
     Height = 31
     Anchors = [akLeft, akTop, akRight]
@@ -52,7 +52,7 @@ object fCharDataImport: TfCharDataImport
   end
   object lblBackupPath: TUrlLabel
     Left = 14
-    Top = 314
+    Top = 229
     Width = 27
     Height = 13
     Cursor = crHandPoint
@@ -66,7 +66,7 @@ object fCharDataImport: TfCharDataImport
   end
   object Label3: TLabel
     Left = 14
-    Top = 245
+    Top = 160
     Width = 364
     Height = 25
     Anchors = [akLeft, akTop, akRight]
@@ -76,38 +76,16 @@ object fCharDataImport: TfCharDataImport
       'ion to restore kanji data at any time.'
     WordWrap = True
   end
-  object Label5: TLabel
-    Left = 14
-    Top = 37
-    Width = 364
-    Height = 26
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = 
-      'If you don'#39't reset the database, existing character definitions ' +
-      'will be kept intact if no new data is found in the files below.'
-    WordWrap = True
-  end
-  object Label6: TLabel
-    Left = 14
-    Top = 69
-    Width = 364
-    Height = 18
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = 'Handy if you'#39're importing a partial/small KANJIDIC.'
-    WordWrap = True
-  end
   object Label7: TLabel
     Left = 14
-    Top = 154
+    Top = 69
     Width = 210
     Height = 13
     Caption = '#01080^eSpecify the Unihan folder to use:'
   end
   object edtKanjidicFilename: TEdit
     Left = 14
-    Top = 117
+    Top = 32
     Width = 275
     Height = 21
     Anchors = [akLeft, akTop, akRight]
@@ -116,7 +94,7 @@ object fCharDataImport: TfCharDataImport
   end
   object btnKanjidicBrowse: TButton
     Left = 295
-    Top = 115
+    Top = 30
     Width = 75
     Height = 25
     Anchors = [akTop, akRight]
@@ -126,7 +104,7 @@ object fCharDataImport: TfCharDataImport
   end
   object btnUpdate: TButton
     Left = 87
-    Top = 347
+    Top = 269
     Width = 98
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -136,7 +114,7 @@ object fCharDataImport: TfCharDataImport
   end
   object btnCancel: TButton
     Left = 207
-    Top = 347
+    Top = 269
     Width = 98
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -145,33 +123,23 @@ object fCharDataImport: TfCharDataImport
     ModalResult = 2
     TabOrder = 3
   end
-  object cbResetDb: TCheckBox
-    Left = 14
-    Top = 14
-    Width = 364
-    Height = 17
-    Caption = 'Reset database'
-    Checked = True
-    State = cbChecked
-    TabOrder = 4
-  end
   object edtUnihanFolder: TEdit
     Left = 14
-    Top = 173
+    Top = 88
     Width = 275
     Height = 21
     Anchors = [akLeft, akTop, akRight]
-    TabOrder = 5
+    TabOrder = 4
     Text = 'Unihan'
   end
   object btnUnihanBrowse: TButton
     Left = 295
-    Top = 171
+    Top = 86
     Width = 75
     Height = 25
     Anchors = [akTop, akRight]
     Caption = '#01081^eBrowse'
-    TabOrder = 6
+    TabOrder = 5
     OnClick = btnUnihanBrowseClick
   end
   object OpenKanjidicDialog: TOpenDialog

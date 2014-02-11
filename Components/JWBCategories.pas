@@ -141,8 +141,7 @@ Supported classes (not mutually exclusive, in the order of priority):
   A: Japanese and chinese
   J: Japanese only
 }
-function GetCharClass(const ACharIndex: integer; ACursor: TTextTableCursor = nil): char; overload;
-function GetCharClass(const AChar: FChar; ACursor: TTextTableCursor = nil): char; overload;
+function GetCharClass(const AChar: FString; ACursor: TTextTableCursor = nil): char;
 
 
 { Loading }
@@ -1124,49 +1123,7 @@ end;
 
 { Character classes }
 
-function GetCharClass(const ACharIndex: integer; ACursor: TTextTableCursor): char;
-var CChar: TTextTableCursor;
-begin
-  if ACharIndex<0 then begin
-    Result:='U';
-    exit;
-  end;
-
-  if ACursor<>nil then
-    CChar := ACursor
-  else
-    CChar := TChar.NewCursor;
-  try
-    Assert(CChar.Locate('Index', ACharIndex)); //must not happen
-
-    if curLang<>'c' then
-    begin
-      if CChar.Int(TCharJouyouGrade)<9 then
-        Result:='C'
-      else
-      if CChar.Int(TCharJouyouGrade)<10 then
-        Result:='N'
-      else
-        Result:='U';
-    end else
-      Result := TChar.Str(TCharType)[1]; //'A'll or 'J'apanese only
-      if (Result='A') or (Result='J') then begin
-       //Keep it
-      end else
-      if CChar.Int(TCharChFrequency)<=5 then
-        Result:='C'
-      else
-        Result:='U';
-    if IsKnown(KnownLearned,CChar.Str(TCharUnicode)) then
-      Result:='K';
-
-  finally
-    if ACursor=nil then
-      FreeAndNil(CChar);
-  end;
-end;
-
-function GetCharClass(const AChar: FChar; ACursor: TTextTableCursor): char;
+function GetCharClass(const AChar: FString; ACursor: TTextTableCursor): char;
 var CChar: TTextTableCursor;
 begin
   if ACursor<>nil then
@@ -1179,7 +1136,26 @@ begin
       exit;
     end;
 
-    Result := GetCharClass(CChar.Int(TCharIndex), CChar);
+    if curLang<>'c' then
+    begin
+      if CChar.Int(TChar.fJouyouGrade)<9 then
+        Result:='C'
+      else
+      if CChar.Int(TChar.fJouyouGrade)<10 then
+        Result:='N'
+      else
+        Result:='U';
+    end else
+      Result := CChar.Str(TChar.fType)[1]; //'A'll or 'J'apanese only
+      if (Result='A') or (Result='J') then begin
+       //Keep it
+      end else
+      if CChar.Int(TChar.fChFrequency)<=5 then
+        Result:='C'
+      else
+        Result:='U';
+    if IsKnown(KnownLearned,AChar) then
+      Result:='K';
 
   finally
     if ACursor=nil then

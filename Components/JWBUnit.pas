@@ -452,7 +452,7 @@ begin
     result:=s;
     exit;
   end;
-  bk:=TChar.Str(TCharUnicode);
+  bk:=TChar.Str(TChar.fUnicode);
   result:='';
   while s<>'' do
   begin
@@ -461,7 +461,7 @@ begin
     if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
     and TChar.Locate('Unicode',s2) then
     begin
-      cd:=hextofstr(GetCharValue(TChar.Int(TCharIndex),43));
+      cd:=hextofstr(GetCharProp(s2,ptSimplifiedVariant));
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;
@@ -478,7 +478,7 @@ begin
     result:=s;
     exit;
   end;
-  bk:=TChar.Str(TCharUnicode);
+  bk:=TChar.Str(TChar.fUnicode);
   result:='';
   while s<>'' do
   begin
@@ -487,7 +487,7 @@ begin
     if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
     and TChar.Locate('Unicode',s2) then
     begin
-      cd:=hextofstr(GetCharValue(TChar.Int(TCharIndex),44));
+      cd:=hextofstr(GetCharProp(s2,ptTraditionalVariant));
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;

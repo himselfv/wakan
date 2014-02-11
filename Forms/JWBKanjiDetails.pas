@@ -486,7 +486,6 @@ var i:integer;
   cv_i1, cv_i2: integer;
   charval: string; //GetCharValue
   read: TCharReadings;
-  curindex: integer;
   CChar: TTextTableCursor;
   kclass: char;
 begin
@@ -519,14 +518,11 @@ begin
   CChar := TChar.NewCursor;
   try
     Screen.Cursor:=crHourGlass;
-    if (curSingleChar=UH_NOCHAR) or not CChar.Locate('Unicode',curSingleChar) then begin
+    if (curSingleChar=UH_NOCHAR) or not CChar.Locate('Unicode',curSingleChar) then
      //specific char, but not found in the char db -- valid case
-      curindex:=-1;
-      curkanji:=UH_NOCHAR;
-    end else begin
-      curindex:=CChar.Int(TCharIndex);
-      curkanji:=CChar.FCh(TCharUnicode); //curkanji is defined in another module, we set it because someone depends on it
-    end;
+      curkanji:=UH_NOCHAR
+    else
+      curkanji:=CChar.FCh(TChar.fUnicode);
 
    //Url labels
     pnlLinks.Visible := fSettings.cbDetailsShowLinks.Checked;
@@ -534,14 +530,14 @@ begin
       ReloadReferenceLinks;
 
     //Simplified form
-    if curindex<0 then
+    if curkanji=UH_NOCHAR then
       charval := ''
     else begin
-      charval := GetCharValue(CChar.Int(TCharIndex),43);
+      charval := GetCharProp(curkanji,ptSimplifiedVariant);
       if charval<>'' then
         RxLabel35.Caption:=_l('#00135^eSimplified:')
       else begin
-        charval := GetCharValue(CChar.Int(TCharIndex),44);
+        charval := GetCharProp(curkanji,ptTraditionalVariant);
         if charval<>'' then
           RxLabel35.Caption:=_l('#00136^eTraditional:');
       end;
@@ -570,10 +566,10 @@ begin
     end;
 
     //Radical
-    if curindex<0 then
+    if curkanji=UH_NOCHAR then
       curradno:=NoRadical
     else
-      curradno:=GetCharValueRad(CChar.Int(TCharIndex), fSettings.GetPreferredRadicalType());
+      curradno:=GetCharRadicalNumber(curkanji, fSettings.GetPreferredRadicalType());
     if curradno=NoRadical then begin
       lblRadicalNo.Caption:=_l('#01088^eNone');
       curradical := ''
@@ -608,30 +604,30 @@ begin
     ReloadCategories;
 
     //Stroke count/order
-    btnStrokeOrder.Enabled := (curindex>=0);
-    if curindex<0 then
+    btnStrokeOrder.Enabled := (curkanji<>UH_NOCHAR);
+    if curkanji=UH_NOCHAR then
       btnStrokeOrder.Caption := _l('#01117^Strokes')
     else
     if curLang='c' then begin
-      if CChar.Int(TCharStrokeCount)<255 then
-        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TCharStrokeCount)
+      if CChar.Int(TChar.fChStrokeCount)<255 then
+        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TChar.fChStrokeCount)
       else btnStrokeOrder.Caption:='';
     end else begin
-      if CChar.Int(TCharJpStrokeCount)<255 then
-        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TCharJpStrokeCount)
+      if CChar.Int(TChar.fJpStrokeCount)<255 then
+        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TChar.fJpStrokeCount)
       else btnStrokeOrder.Caption:='';
     end;
 
     //Words button
-    btnGoToWords.Enabled := curindex>0; //when 0 or multiple chars, can't "go to words"
+    btnGoToWords.Enabled := curkanji<>UH_NOCHAR; //when 0 or multiple chars, can't "go to words"
 
     //Kanji class/color
-    if curindex<0 then
+    if curkanji=UH_NOCHAR then
       kclass := 'U'
     else
-      kclass := GetCharClass(curindex);
+      kclass := GetCharClass(curkanji);
 
-    lblCharClass.Visible := (curindex>0) and fSettings.cbDetailsShowKanjiClass.Checked;
+    lblCharClass.Visible := (curkanji<>UH_NOCHAR) and fSettings.cbDetailsShowKanjiClass.Checked;
     if lblCharClass.Visible then begin
       case kclass of
         'K':lblCharClass.Font.Color:=Col('Kanji_Learned');
@@ -677,7 +673,7 @@ begin
   end;
 
  { Repaint }
-  if curindex>0 then begin
+  if curkanji<>UH_NOCHAR then begin
     h:=InfoPaint(pbKanjiInfo.Canvas,pbKanjiInfo.Width,true);
     pbKanjiInfo.Height:=h;
   end else begin
@@ -699,13 +695,12 @@ begin
   try
     def_u := '';
     def_a := '';
-    CCharProp.SetOrder('');
-    CCharProp.Locate('Kanji',CChar.TrueInt(TCharIndex));
-    while (not CCharProp.EOF) and (CCharProp.Int(TCharPropKanji)=CChar.Int(TCharIndex)) do
+    CCharProp.Locate(CChar.Str(TChar.fUnicode));
+    while (not CCharProp.EOF) and (CCharProp.Kanji=CChar.Str(TChar.fUnicode)) do
     begin
-      rt:=CCharProp.Int(TCharPropTypeId);
+      rt:=CCharProp.Int(TCharProp.fTypeId);
       if rt in[1,2,3,4,5,6,7,8,ptJapaneseDefinitionUnicode] then
-        ws:=CCharProp.Value;
+        ws:=CCharProp.AsString;
       case rt of
         1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
         2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
@@ -764,7 +759,7 @@ begin
         8:s:=LowerCase(read.cany);
         100:s:=curSingleChar;
         else
-          s := CCharProp.GetCharValues(CChar.TrueInt(TCharIndex), propTypeId, '')
+          s := CCharProp.GetCharProps(CChar.Str(TChar.fUnicode), propTypeId, '')
       end;
 
       if GetCharDet(i,6)<>'' then

@@ -805,11 +805,9 @@ begin
       fCharDataImport := TfCharDataImport.Create(Self);
       try
         if Command='makechars' then begin
-          fCharDataImport.cbResetDb.Checked := MakeCharsParams.ResetDb;
           fCharDataImport.edtKanjidicFilename.Text := MakeCharsParams.KanjidicFilename;
           fCharDataImport.edtUnihanFolder.Text := MakeCharsParams.UnihanFolder;
         end else begin
-          fCharDataImport.cbResetDb.Checked := true;
           fCharDataImport.edtKanjidicFilename.Text := 'KANJIDIC';
           fCharDataImport.edtUnihanFolder.Text := 'Unihan';
         end;

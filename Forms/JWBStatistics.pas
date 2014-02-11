@@ -113,7 +113,7 @@ begin
   TChar.First;
   while not TChar.EOF do
   begin
-    if TChar.Int(TCharChinese)=0 then inc(ks.totalJapanese);
+    if TChar.Int(TChar.fChinese)=0 then inc(ks.totalJapanese);
     TChar.Next;
   end;
   lblTotalJapanese.Caption:=inttostr(ks.totalJapanese);
@@ -163,19 +163,19 @@ begin
   TChar.First;
   while not TChar.EOF do
   begin
-    KanjiKnown := IsKnown(KnownLearned,TChar.Fch(TCharUnicode));
-    JouyouGrade := TChar.Int(TCharJouyouGrade);
-    InUserIdx := TUserIdx.Locate('Kanji',TChar.Str(TCharUnicode));
+    KanjiKnown := IsKnown(KnownLearned,TChar.Fch(TChar.fUnicode));
+    JouyouGrade := TChar.Int(TChar.fJouyouGrade);
+    InUserIdx := TUserIdx.Locate('Kanji',TChar.Str(TChar.fUnicode));
     if KanjiKnown then inc(ks.learnedKanji);
     if KanjiKnown and (JouyouGrade>=9) then inc(ks.learnedRare);
     if (not KanjiKnown) and (JouyouGrade<9) then inc(ks.unlearnedBasic);
     if JouyouGrade<9 then inc(ks.learnedBasic);
     if InUserIdx then inc(ks.kanjiInWords);
     if InUserIdx and (JouyouGrade>=9) then inc(ks.rareKanjiInWords);
-    if KanjiKnown and (TChar.Int(TCharChinese)=1) then inc(ks.learnedChinese);
+    if KanjiKnown and (TChar.Int(TChar.fChinese)=1) then inc(ks.learnedChinese);
     if KanjiKnown
-      and TRadicals.Locate('Number',GetCharValueRad(TChar.Int(TCharIndex),13))
-      and (TRadicals.Str(TRadicalsUnicode)=TChar.Str(TCharUnicode)) then
+      and TRadicals.Locate('Number',GetCharRadicalNumber(TChar.Str(TChar.fUnicode),ptRSUnicode))
+      and (TRadicals.Str(TRadicals.fUnicode)=TChar.Str(TChar.fUnicode)) then
         inc(ks.learnedRadicals);
 
     TChar.Next;

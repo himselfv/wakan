@@ -1,25 +1,22 @@
 unit JWBCharDataImport;
 {
-Updates or re-imports character database from sources.
+Creates character database from sources.
 Only full replacement of all relevant properties is supported (impossible to
 add translations while keeping existing ones at this point).
+Sources:
+  KANJIDIC
+  Unihan
+  radicals.txt (existing TRadicals table can be kept)
 }
-
-//TODO: Localize some messages
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, UrlLabel, TextTable, JwbForms;
+  Dialogs, StdCtrls, UrlLabel, TextTable, JwbForms, JWBCharData;
 
 type
   TFlagList = array of boolean;
-
-{ Updates or recreates from the scratch WAKAN.CHR.
- If any of KanjidicFilename, UnihanFolder is not specified, that part is skipped.
- If ResetDb is set, existing information is discarded, otherwise preserved where
- no new info is available. }
 
   TfCharDataImport = class(TJwbForm)
     Label1: TLabel;
@@ -32,9 +29,6 @@ type
     lblBackupPath: TUrlLabel;
     Label3: TLabel;
     btnCancel: TButton;
-    cbResetDb: TCheckBox;
-    Label5: TLabel;
-    Label6: TLabel;
     Label7: TLabel;
     edtUnihanFolder: TEdit;
     btnUnihanBrowse: TButton;
@@ -46,9 +40,7 @@ type
   protected
     procedure ImportKanjidic(const KanjidicFilename: string; out CharsCovered: TFlagList);
     procedure ImportUnihan(const UnihanFolder: string);
-    procedure CopyProperties(OldCharProp: TTextTable; const KanjidicCovered: TFlagList;
-      const UnihanPresent: boolean);
-    function SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
+    function SortByTChar(TChar: TCharTableV8; TCharProp: TCharPropTableV8): TCharPropTableV8;
 
   public
     procedure Import;
@@ -56,7 +48,7 @@ type
   end;
 
 implementation
-uses FileCtrl, StdPrompt, JWBStrings, JWBCharData, KanjidicReader, UnihanReader,
+uses FileCtrl, StdPrompt, JWBStrings, KanjidicReader, UnihanReader,
   JWBUnit, JWBIO, JWBFileType, FastArray;
 
 {$R *.dfm}
@@ -96,15 +88,6 @@ begin
     PChar(_l('#01071^eConfirm import')),
     MB_YESNO or MB_ICONQUESTION)<>ID_YES then exit;
 
-  if cbResetDb.Checked then begin
-    FreeAndNil(TChar);
-    FreeAndNil(TCharProp);
-   { Do not free radicals because most of the time, people importing from GUI
-    would not have radicals.txt }
-   // FreeAndNil(TRadicals);
-    ClearCharDbProps();
-  end;
-
   try
     try
       Self.Import;
@@ -139,45 +122,17 @@ begin
   Result := WakanDatestamp(dt);
 end;
 
-{
-Unfortunately, the CharProp table is made in such a way that records for the
-same kanji must go in one batch:
-  Kanji=5, Prop=7
-  Kanji=6, Prop=1
-  Kanji=5, Prop=8  <--- BAD, this property will be ignored
-This order is not even controlled by any field; it's the internal record order.
-In other words, you can not add properties, but only rebuild table from scratch.
-
-There's also the Index field which is supposed to have unique values, but it's
-not used anywhere in Wakan (there's no Order or Seek for this field).
-
-Wakan 1.80 enhances the format but remains compatible for now. We promote
-'Kanji' Seek (which already exists) to an Order by shifting it to a second
-position (by adding seek '0'):
-  $ORDERS
-  Kanji
-  [others]
-  $SEEKS
-  '0'
-  Kanji [already present]
-All code which previously did SetOrder(''); Seek('Kanji',kanji) now uses
-SetOrder('kanji').
-
-This is a non-breaking change and we are still rebuilding table from the scratch
-and even filling Index field even though nobody (even Wakan 1.67) uses it.
-We're just being a bit more future proof.
-}
 
 type
   TCharPropBuilder = class
   protected
     FTable: TTextTable;
-//    FRecIndex: integer;
-    FCharIdx: integer;
+    FChar: FString;
+    FCharIdxStr: string;
   public
     constructor Create(ATable: TTextTable);
     destructor Destroy; override;
-    procedure OpenKanji(ACharIdx: integer);
+    procedure OpenKanji(const AChar: FString);
     procedure AddCharPropRaw(TypeId: integer; Value: AnsiString; ReadDot: integer;
       Position: integer); overload;
     procedure AddCharProp(propType: PCharPropType; Value: string; ReadDot: integer;
@@ -200,8 +155,7 @@ constructor TCharPropBuilder.Create(ATable: TTextTable);
 begin
   inherited Create();
   FTable := ATable;
-  FCharIdx := -1;
-///  FRecIndex := 0;
+  FChar := '';
 end;
 
 destructor TCharPropBuilder.Destroy;
@@ -209,27 +163,32 @@ begin
   inherited;
 end;
 
-procedure TCharPropBuilder.OpenKanji(ACharIdx: integer);
+procedure TCharPropBuilder.OpenKanji(const AChar: FString);
 begin
-  Assert(FCharIdx<0, 'CharPropEditor: One kanji is already selected for editing');
-  FCharIdx := ACharIdx;
+  Assert(FChar='', 'CharPropEditor: One kanji is already selected for editing');
+  FChar := AChar;
+  FCharIdxStr := IntToStr(CharIndex(FChar)); //char index as string
 end;
 
 //Does not auto-convert Value according to the type preferences
 procedure TCharPropBuilder.AddCharPropRaw(TypeId: integer; Value: AnsiString; ReadDot: integer;
   Position: integer);
 begin
-  Assert(FCharIdx>=0, 'CharPropEditor: No kanji selected for editing');
-//  Inc(FRecIndex);
-  FTable.AddRecord(['0', IntToStr(FCharIdx), IntToStr(TypeId),
-    string(Value), IntToStr(ReadDot), IntToStr(Position)]);
+  Assert(FChar<>'', 'CharPropEditor: No kanji selected for editing');
+  FTable.AddRecord([
+    FCharIdxStr,
+    IntToStr(TypeId),
+    FString(Value),
+    IntToStr(ReadDot),
+    IntToStr(Position)
+  ]);
 end;
 
 //Auto-converts Value to appropriate string storage according to type preferences
 procedure TCharPropBuilder.AddCharProp(propType: PCharPropType; Value: string;
   ReadDot: integer; Position: integer);
 begin
-  Assert(FCharIdx>=0, 'CharPropEditor: No kanji selected for editing');
+  Assert(FChar<>'', 'CharPropEditor: No kanji selected for editing');
   if (propType.dataType='U') then
     Value := UnicodeToHex(UnicodeString(Value));
   AddCharPropRaw(propType.id, AnsiString(Value), ReadDot, Position);
@@ -316,8 +275,8 @@ end;
 
 procedure TCharPropBuilder.CloseKanji;
 begin
-  Assert(FCharIdx>=0, 'CharPropEditor: No kanji selected for editing');
-  FCharIdx := -1;
+  Assert(FChar<>'', 'CharPropEditor: No kanji selected for editing');
+  FChar := '';
 end;
 
 { Imports all supported data from KANJIDIC/UNIHAN into wakan.chr.
@@ -326,7 +285,6 @@ procedure TfCharDataImport.Import;
 var prog: TSMPromptForm;
   tempDir: string;
   backupFile: string;
-  OldCharProp: TTextTable;
   i: integer;
 
  { If we're updating DB, we need to port TChar and property entries which were
@@ -361,27 +319,23 @@ begin
    { STAGE I. Clear/reset everything }
     prog.SetMessage(_l('^eInitializing...'));
 
-   //Preserve current CharData table and create a new one
-    OldCharProp := TCharProp;
+   //Free existing tables
+    FreeAndNil(TChar);
+    FreeAndNil(TCharProp);
+   { Do not free radicals because most of the time, people importing from GUI
+    would not have radicals.txt }
+   // FreeAndNil(TRadicals);
+
+    ClearCharDbProps();
+
+   //Create new tables
     TCharProp := NewCharPropTable();
     TCharProp.NoCommitting := true;
-    SetupCharPropTable();
-
-   //Create TChar table if we don't have one
-    if TChar=nil then begin
-      TChar := NewCharTable();
-      SetupCharTable();
-    end else begin
-    { Fix older DBs where a seek formula was not defined for JpUnicode_Int order.
-     We won't be able to add records without this. }
-      FixTCharJpUnicodeIndex(TChar);
-      FixTCharJpStrokeOrderIndex(TChar);
-    end;
+    TChar := NewCharTable();
 
    //Create and import TRadicals table if we don't have one
     if TRadicals=nil then begin
       TRadicals := NewRadicalsTable();
-      SetupRadicalsTable();
       prog.SetMessage(_l('^eImporting radicals...'));
       ImportRadicals(AppFolder+'\radicals.txt');
     end;
@@ -412,11 +366,6 @@ begin
       Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing UNIHAN');
    {$ENDIF}
 
-   { STAGE IV. Copy missing stuff from old tables }
-    prog.SetMessage(_l('^eCopying old data...'));
-    if OldCharProp<>nil then
-      CopyProperties(OldCharProp, KanjidicCovered, edtUnihanFolder.Text<>'');
-
    { STAGE V. Sort, reindex and finalize }
     prog.SetMessage(_l('#01078^eReindexing...'));
 
@@ -424,11 +373,12 @@ begin
     TCharProp.NoCommitting := false;
     TCharProp.Reindex;
 
-   //Re-arrange TChar-wise
-    TCharProp := SortByTChar(TChar, TCharProp);
+    prog.SetMessage(_l('Sorting...'));
 
-   //Free old char data
-    FreeAndNil(OldCharProp);
+   //Re-arrange TChar-wise
+   //This is not required but may improve speed. I will decide later if this
+   //is of any help.
+    TCharProp := SortByTChar(TChar, TCharProp);
 
    { Update CharDataProps. See comments there about the relevance of fields }
     CharDataVersion := CurrentCharDataVersion;
@@ -477,7 +427,6 @@ var CChar: TTextTableCursor;
   conv_type: CEncoding;
   ed: TKanjidicEntry;
   line: string;
-  CharIdx: integer;
   OldCharCount: integer;
   propType: PCharPropType;
   pre_idx: integer;
@@ -536,15 +485,14 @@ begin
         if not ed_GetIntField('G', JouyouGrade) then
           JouyouGrade := 255;
         CChar.Insert([
-         '0', //Index
-         '0', //Not unicode-only
-         'J', //See comments for TCharType. For now, 'J'. Unihan parsing might alter this.
          ed.kanji, //Unicode,
-         '255', //Stroke count (chinese),
+         '0', //Not chinese-only
+         'J', //See comments for TCharType. For now, 'J'. Unihan parsing might alter this.
+         IntToStr(JpStrokeCount),
          IntToStr(JpFrequency),
+         '255', //ChStrokeCount
          '255', //ChFrequence
-         IntToStr(JouyouGrade),
-         IntToStr(JpStrokeCount)
+         IntToStr(JouyouGrade)
         ]);
       end else
        { If there are duplicate records in KANJIDIC we may get CChar.tcur for a
@@ -554,8 +502,7 @@ begin
         if CChar.tcur < Length(CharsCovered) then
           CharsCovered[CChar.tcur] := true; //mark as migrated
 
-      CharIdx := CChar.TrueInt(TCharIndex);
-      CNewProp.OpenKanji(CharIdx);
+      CNewProp.OpenKanji(ed.kanji);
 
      //Add standard properties
      { AddProperties allows passing Nil as a second param, so we don't check
@@ -596,7 +543,6 @@ end;
 procedure TfCharDataImport.ImportUnihan(const UnihanFolder: string);
 var CChar: TTextTableCursor;
   CNewProp: TCharPropBuilder;
-  CharIdx: integer;
   parts: TStringArray;
   soUnicode: TSeekObject;
   LastChar: UnicodeString;
@@ -612,14 +558,13 @@ var CChar: TTextTableCursor;
       exit;
 
     CChar.Insert([
-     '0', //Index
-     '1', //Unicode-only
-     'N', //See comments for TCharType
      kanji, //Unicode,
-     '255', //Stroke count,
-     '255', //Jp stroke count
-     '65535', //Jp frequency
-     '255', //Frequency
+     '1', //Chinese-only
+     'N', //See comments for TCharType
+     '255', //JpStroke count
+     '65535', //JpFrequency
+     '255', //ChStroke count,
+     '255', //ChFrequency
      '255' //Jouyou grade
     ]);
   end;
@@ -648,11 +593,11 @@ var CChar: TTextTableCursor;
         propType := FindCharPropType('U', ed.propType);
         if ed.propType='kFrequency' then begin
           NeedChar(ed.char);
-          CChar.Edit([TCharChFrequency],[IntToStr(StrToInt(ed.value))]);
+          CChar.Edit([TChar.fChFrequency],[IntToStr(StrToInt(ed.value))]);
         end else
         if ed.propType='kTotalStrokes' then begin
           NeedChar(ed.char);
-          CChar.Edit([TCharStrokeCount],[IntToStr(StrToInt(ed.value))]);
+          CChar.Edit([TChar.fChStrokeCount],[IntToStr(StrToInt(ed.value))]);
         end else
         if (ed.propType='kCantonese') or (ed.propType='kMandarin')
         or (ed.propType='kDefinition') or (ed.propType='kKorean') then begin
@@ -666,8 +611,7 @@ var CChar: TTextTableCursor;
           else
             parts := SplitStr(ed.value,' '); //cantonese, mandarin and korean are space-separated
           NeedChar(ed.char);
-          CharIdx := CChar.TrueInt(TCharIndex);
-          CNewProp.OpenKanji(CharIdx);
+          CNewProp.OpenKanji(ed.char);
           entry_no:=0; //we don't use 'i' because some parts[i] can be empty: Split('a  b') => ('a', '', 'b')
           for i := 0 to Length(parts) - 1 do begin
             parts[i] := Trim(parts[i]);
@@ -695,22 +639,21 @@ var CChar: TTextTableCursor;
          //These have special handling but also need normal handling
           if ed.propType='kBigFive' then begin
             NeedChar(ed.char);
-            if CChar.Str(TCharType)='N' then
-              CChar.Edit([TCharType],['T'])
+            if CChar.Str(TChar.fType)='N' then
+              CChar.Edit([TChar.fType],['T'])
             else;
-              CChar.Edit([TCharType],['A']);
+              CChar.Edit([TChar.fType],['A']);
           end else
           if ed.propType='kGB0' then begin
             NeedChar(ed.char);
-            if CChar.Str(TCharType)='N' then
-              CChar.Edit([TCharType],['S'])
+            if CChar.Str(TChar.fType)='N' then
+              CChar.Edit([TChar.fType],['S'])
             else;
-              CChar.Edit([TCharType],['A']);
+              CChar.Edit([TChar.fType],['A']);
           end;
 
           NeedChar(ed.char);
-          CharIdx := CChar.TrueInt(TCharIndex);
-          CNewProp.OpenKanji(CharIdx);
+          CNewProp.OpenKanji(ed.char);
           CNewProp.AddCharProp(propType, ed.value, 0, 0);
           CNewProp.CloseKanji;
         end;
@@ -746,89 +689,15 @@ begin
   end;
 end;
 
-const
-  MainKanjidicPropTypes = [ptKoreanReading, ptMandarinReading,
-    ptJapaneseDefinition, ptOnReading, ptKunReading, ptNanoriReading];
-  MainUnihanPropTypes = [ptChineseDefinition, ptCantoneseReading];
-
-{ For every char from TChar, checks which sources covered it in this update,
- and copies old data for any sources which did not cover it this time. }
-procedure TfCharDataImport.CopyProperties(OldCharProp: TTextTable;
-  const KanjidicCovered: TFlagList; const UnihanPresent: boolean);
-var CChar: TTextTableCursor;
-  CCharProp: TCharPropertyCursor;
-  CNewProp: TCharPropBuilder;
-  SCharIndex: TSeekObject;
-  CharIdx: integer;
-  propType: PCharPropType;
-  src: char;
-  skip: boolean;
-begin
-  SCharIndex := TChar.GetSeekObject('Index');
-
-  CChar := nil;
-  CCharProp := nil;
-  CNewProp := nil;
-  try
-    CChar := TTextTableCursor.Create(TChar);
-    CCharProp := TCharPropertyCursor.Create(OldCharProp);
-    CNewProp := TCharPropBuilder.Create(TCharProp);
-
-    CCharProp.First;
-    while not CCharProp.EOF do begin
-      CharIdx := CCharProp.TrueInt(TCharPropKanji);
-      if not CChar.Locate(@SCharIndex, CharIdx) then
-        raise Exception.Create('Somehow TChar for a property wasn''t found.'
-          +'Perhaps you have a broken WAKAN.CHR? Rebuild from the scratch.');
-
-     { Properties with id <= 10 are special ones and are crafted by hand,
-      others are more or less automated. }
-      propType := CCharProp.PropType;
-      if propType.id>10 then
-        src := propType.sourceType
-      else
-      if propType.id in MainKanjidicPropTypes then
-        src := 'D'
-      else
-      if propType.id in MainUnihanPropTypes then
-        src := 'U'
-      else
-        src := '?'; //god knows what it is, really.
-
-      if src='D' then
-        skip := (CChar.tcur < Length(KanjidicCovered)) and KanjidicCovered[CChar.tcur]
-      else
-      if src='U' then
-        skip := UnihanPresent
-      else
-        skip := false; //just copy the abomination
-
-      if not skip then begin
-        CNewProp.OpenKanji(CharIdx);
-        CNewProp.AddCharPropRaw(propType.id, CCharProp.AnsiStr(TCharPropValue),
-          CCharProp.Int(TCharPropReadDot), CCharProp.Int(TCharPropPosition));
-        CNewProp.CloseKanji;
-      end;
-
-      CCharProp.Next;
-    end;
-
-  finally
-    FreeAndNil(CNewProp);
-    FreeAndNil(CCharProp);
-    FreeAndNil(CChar);
-  end;
-end;
-
 { Rebuilds TCharProp table so that records are stored in a specific order --
  Kanji+Type+Index -- see NewCharPropTable() comments.
  Returns new table (old one is freed) }
-function TfCharDataImport.SortByTChar(TChar: TTextTable; TCharProp: TTextTable): TTextTable;
+function TfCharDataImport.SortByTChar(TChar: TCharTableV8; TCharProp: TCharPropTableV8): TCharPropTableV8;
 var CChar: TTextTableCursor;
-  CCharProp: TTextTableCursor;
+  CCharProp: TCharPropertyCursor;
   CharIdx: integer;
-  SCharPropKanji: TSeekObject;
   Builder: TCharPropBuilder;
+  ch: FString;
 begin
   Result := NewCharPropTable();
   Result.NoCommitting := true;
@@ -838,23 +707,24 @@ begin
   Builder := nil;
   try
     CChar := TTextTableCursor.Create(TChar);
-    CCharProp := TTextTableCursor.Create(TCharProp);
+    CCharProp := TCharPropertyCursor.Create(TCharProp);
     Builder := TCharPropBuilder.Create(Result);
 
     CCharProp.SetOrder('Kanji');
-    SCharPropKanji := TCharProp.GetSeekObject('Kanji');
-
     CChar.First;
     while not CChar.EOF do begin
-      CharIdx := CChar.TrueInt(TCharIndex);
-      CCharProp.Locate(@SCharPropKanji, CharIdx);
-      Builder.OpenKanji(CharIdx);
-      while CCharProp.Int(TCharPropKanji)=CharIdx do begin
+      ch := CChar.Str(TChar.fUnicode);
+      Assert(
+        CCharProp.Locate(ch),
+        'Cannot locate any properties for character '+ch
+      );
+      Builder.OpenKanji(ch);
+      while CCharProp.Kanji=ch do begin
         Builder.AddCharPropRaw(
-         CCharProp.TrueInt(TCharPropTypeId),
-         CCharProp.AnsiStr(TCharPropValue),
-         CCharProp.Int(TCharPropReadDot),
-         CCharProp.Int(TCharPropPosition)
+         CCharProp.TrueInt(TCharProp.fTypeId),
+         CCharProp.AnsiStr(TCharProp.fValue),
+         CCharProp.Int(TCharProp.fReadDot),
+         CCharProp.Int(TCharProp.fPosition)
         );
 
         CCharProp.Next;
