@@ -1,8 +1,6 @@
 unit JWBCharDataImport;
 {
 Updates or re-imports character database from sources.
-Currently only KANJIDIC is supported (and as a consequence no full reimport is
-possible).
 Only full replacement of all relevant properties is supported (impossible to
 add translations while keeping existing ones at this point).
 }

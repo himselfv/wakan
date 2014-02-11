@@ -842,7 +842,7 @@ begin
 
 end;
 
-{ Returns the value of current property as if it was a radical index.
+{ Assuming current property is a radical index, returns that index.
  In case of extended indexes (radical.stroke_count) returns only the radical. }
 function TCharPropertyCursor.AsRadicalNumber: integer;
 var propType: PCharPropType;
@@ -862,8 +862,9 @@ begin
     raise Exception.Create('AsRadical: invalid radical data ('+Self.RawValue+')');
 end;
 
-{ Returns the value of current property as if it was a radical index.
- In case of extended indexes (radical.stroke_count) returns only the radical. }
+{ Assuming current property is a radical index, returns that radical
+ (the character itself).
+ In case of extended indexes (radical.stroke_count) ignores the right part. }
 function TCharPropertyCursor.AsRadicalCharOnly: FString;
 var i: integer;
 begin
