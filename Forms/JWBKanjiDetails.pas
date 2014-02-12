@@ -484,7 +484,7 @@ var i:integer;
   cv:string;
   scat:string;
   cv_i1, cv_i2: integer;
-  charval: string; //GetCharValue
+  charvar: string; //simplified/traditional variant
   read: TCharReadings;
   CChar: TTextTableCursor;
   kclass: char;
@@ -531,20 +531,20 @@ begin
 
     //Simplified form
     if curkanji=UH_NOCHAR then
-      charval := ''
+      charvar := ''
     else begin
-      charval := GetCharProp(curkanji,ptSimplifiedVariant);
-      if charval<>'' then
+      charvar := GetCharProp(curkanji,ptSimplifiedVariant);
+      if charvar<>'' then
         RxLabel35.Caption:=_l('#00135^eSimplified:')
       else begin
-        charval := GetCharProp(curkanji,ptTraditionalVariant);
-        if charval<>'' then
+        charvar := GetCharProp(curkanji,ptTraditionalVariant);
+        if charvar<>'' then
           RxLabel35.Caption:=_l('#00136^eTraditional:');
       end;
     end;
-    if charval<>'' then
+    if charvar<>'' then
     begin
-      cursimple:=hextofstr(charval);
+      cursimple:=charvar;
       RxLabel35.Show;
       pbSimplified.Show;
       ShapeSimplified.Show;
@@ -684,41 +684,22 @@ end;
 
 { Reloads various character readings from TCharProp table }
 procedure TfKanjiDetails.ReloadReadings(CChar: TTextTableCursor; out read: TCharReadings);
-var rt: integer; //TCharProp.Int(TCharPropType)
-  ws:UnicodeString;
+var ch:FString;
   CCharProp: TCharPropertyCursor;
-  def_a, def_u: UnicodeString;
 begin
   FillChar(read, sizeof(read), 00); //initializes all strings to ''
+  ch := CChar.Str(TChar.fUnicode);
 
   CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
-    def_u := '';
-    def_a := '';
-    CCharProp.Locate(CChar.Str(TChar.fUnicode));
-    while (not CCharProp.EOF) and (CCharProp.Kanji=CChar.Str(TChar.fUnicode)) do
-    begin
-      rt:=CCharProp.Int(TCharProp.fTypeId);
-      if rt in[1,2,3,4,5,6,7,8,ptJapaneseDefinitionUnicode] then
-        ws:=CCharProp.AsString;
-      case rt of
-        1:if read.kory='' then read.kory:=fstrtouni(ws) else read.kory:=read.kory+', '+fstrtouni(ws);
-        2:if read.piny='' then read.piny:=fstrtouni(ws) else read.piny:=read.piny+','+fstrtouni(ws);
-        3:if def_a='' then def_a:=fstrtouni(ws) else def_a:=def_a+', '+fstrtouni(ws);
-        4:if read.ony='' then read.ony:=ws else read.ony:=read.ony+#$FF0C+ws;
-        5:if read.kuny='' then read.kuny:=ws else read.kuny:=read.kuny+#$FF0C+ws;
-        6:if read.nany='' then read.nany:=ws else read.nany:=read.nany+#$FF0C+ws;
-        7:if read.chiny='' then read.chiny:=fstrtouni(ws) else read.chiny:=read.chiny+', '+fstrtouni(ws);
-        8:if read.cany='' then read.cany:=fstrtouni(ws) else read.cany:=read.cany+', '+fstrtouni(ws);
-        ptJapaneseDefinitionUnicode:
-          if def_u='' then def_u:=fstrtouni(ws) else def_u:=def_u+', '+fstrtouni(ws);
-      end;
-      CCharProp.Next;
-    end;
-    if def_u<>'' then
-      read.def := def_u
-    else
-      read.def := def_a;
+    read.kory := CCharProp.GetCharProps(ch, ptKoreanReading);
+    read.piny := CCharProp.GetCharProps(ch, ptMandarinReading);
+    read.def := CCharProp.GetCharProps(ch, ptJapaneseDefinition);
+    read.ony := CCharProp.GetCharProps(ch, ptOnReading);
+    read.kuny := CCharProp.GetCharProps(ch, ptKunReading);
+    read.nany := CCharProp.GetCharProps(ch, ptNanoriReading);
+    read.chiny := CCharProp.GetCharProps(ch, ptChineseDefinition);
+    read.cany := CCharProp.GetCharProps(ch, ptCantoneseReading);
   finally
     FreeAndNil(CCharProp);
   end;
@@ -759,7 +740,7 @@ begin
         8:s:=LowerCase(read.cany);
         100:s:=curSingleChar;
         else
-          s := CCharProp.GetCharProps(CChar.Str(TChar.fUnicode), propTypeId, '')
+          s := CCharProp.GetCharProps(CChar.Str(TChar.fUnicode), propTypeId)
       end;
 
       if GetCharDet(i,6)<>'' then

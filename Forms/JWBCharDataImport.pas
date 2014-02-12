@@ -133,7 +133,7 @@ type
     constructor Create(ATable: TTextTable);
     destructor Destroy; override;
     procedure OpenKanji(const AChar: FString);
-    procedure AddCharPropRaw(TypeId: integer; Value: AnsiString; ReadDot: integer;
+    procedure AddCharPropRaw(TypeId: integer; Value: string; ReadDot: integer;
       Position: integer); overload;
     procedure AddCharProp(propType: PCharPropType; Value: string; ReadDot: integer;
       Position: integer); overload;
@@ -171,7 +171,7 @@ begin
 end;
 
 //Does not auto-convert Value according to the type preferences
-procedure TCharPropBuilder.AddCharPropRaw(TypeId: integer; Value: AnsiString; ReadDot: integer;
+procedure TCharPropBuilder.AddCharPropRaw(TypeId: integer; Value: string; ReadDot: integer;
   Position: integer);
 begin
   Assert(FChar<>'', 'CharPropEditor: No kanji selected for editing');
@@ -189,9 +189,7 @@ procedure TCharPropBuilder.AddCharProp(propType: PCharPropType; Value: string;
   ReadDot: integer; Position: integer);
 begin
   Assert(FChar<>'', 'CharPropEditor: No kanji selected for editing');
-  if (propType.dataType='U') then
-    Value := UnicodeToHex(UnicodeString(Value));
-  AddCharPropRaw(propType.id, AnsiString(Value), ReadDot, Position);
+  AddCharPropRaw(propType.id, Value, ReadDot, Position);
 end;
 
 procedure TCharPropBuilder.AddCharProp(TypeId: integer; Value: string;
@@ -509,7 +507,7 @@ begin
       if the optional fields are present }
       CNewProp.AddProperties(FindCharPropType(ptKoreanReading), ed.GetField('W'));
       CNewProp.AddProperties(FindCharPropType(ptMandarinReading), ed.GetField('Y'));
-      CNewProp.AddDefinitions(FindCharPropType(ptJapaneseDefinitionUnicode), @ed);
+      CNewProp.AddDefinitions(FindCharPropType(ptJapaneseDefinition), @ed);
       CNewProp.AddOns(FindCharPropType(ptOnReading), @ed.readings[0]);
       CNewProp.AddKuns(FindCharPropType(ptKunReading), @ed.readings[0]);
       pre_idx := CNewProp.AddOns(FindCharPropType(ptNanoriReading), @ed.readings[1]);
@@ -519,7 +517,7 @@ begin
       for i := 0 to Length(CharPropTypes) - 1 do begin
         propType := @CharPropTypes[i];
         if propType.id<=10 then continue; //not automated
-        if propType.id=ptJapaneseDefinitionUnicode then continue; //not automated either
+        if propType.id=ptJapaneseDefinition then continue; //not automated either
         if propType.sourceType<>'D' then continue; //not from kanjidic
         CNewProp.AddProperties(propType, PKanjidicEntry(@ed));
       end;
@@ -695,7 +693,6 @@ end;
 function TfCharDataImport.SortByTChar(TChar: TCharTableV8; TCharProp: TCharPropTableV8): TCharPropTableV8;
 var CChar: TTextTableCursor;
   CCharProp: TCharPropertyCursor;
-  CharIdx: integer;
   Builder: TCharPropBuilder;
   ch: FString;
 begin
@@ -722,7 +719,7 @@ begin
       while CCharProp.Kanji=ch do begin
         Builder.AddCharPropRaw(
          CCharProp.TrueInt(TCharProp.fTypeId),
-         CCharProp.AnsiStr(TCharProp.fValue),
+         CCharProp.Str(TCharProp.fValue),
          CCharProp.Int(TCharProp.fReadDot),
          CCharProp.Int(TCharProp.fPosition)
         );

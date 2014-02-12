@@ -152,7 +152,6 @@ object fKanjiDetails: TfKanjiDetails
         ParentFont = False
         TabOrder = 2
         OnClick = ScrollboxClick
-        ExplicitTop = 36
         object cbCategories: TComboBox
           Left = 0
           Top = 0

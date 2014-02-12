@@ -69,8 +69,6 @@ const
   ptSimplifiedVariant = 43;
   ptTraditionalVariant = 44;
 
-  ptJapaneseDefinitionUnicode = 121;
-  ptChineseDefinitionUnicode = 122;
   ptClassicalRadical = 123;
 
  { ptRadicals internally has a special treatment and so we keep the list of all
@@ -608,8 +606,8 @@ end;
 { Locates first entry of a property for a given kanji }
 function TCharPropertyCursor.Locate(const AChar: FString; const APropType: integer): boolean;
 begin
-  Result := Locate(AChar);
-  if not Self.Locate(TCharPropTableV8(FTable).sKanji, CharIndex(AChar)) then
+  Result := false;
+  if not Self.Locate(AChar) then
     exit;
   while (not Self.EOF) and (Self.Kanji=AChar) do begin
     if Self.Int(TCharProp.fTypeId)=APropType then
@@ -742,11 +740,11 @@ var propType: PCharPropType;
 begin
   propType := Self.PropType;
   case propType.dataType of
-    'F': sep := #$FF0C;
+    'F': sep := UH_IDG_COMMA; //There's also fullwidth latin comma: $FF0C
     'R': sep := '';
   else sep := ', '
   end;
-  Result := GetCharProps(AChar, APropType);
+  Result := GetCharProps(AChar, APropType, sep);
 end;
 
 

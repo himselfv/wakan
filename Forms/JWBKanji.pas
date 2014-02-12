@@ -174,43 +174,23 @@ var CCharProp: TCharPropertyCursor;
   dot:integer;
   propType: PCharPropType;
   match: boolean;
- { See the comment on ansi hex type below }
   s_sp: string;
   s_dot: string;
 begin
   sl:=TStringList.Create;
   CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
-
    //Convert filter value into a list of exact values to match
     MakeList(tx,rfNumber in flags,sl);
 
-   { We use a trick here. Database field type for PropValue column is always Ansi,
-    Unicode values are stored as 4-byte hex.
-    To do lookups we need to convert our query to this format, so if the property
-    type assumes unicode, we do UnicodeToHex. }
-
-   {$IFDEF UNICODE}
-   //Figure out this property's data format and convert values into it
     propType := FindCharPropType(typ);
-    if propType=nil then raise Exception.Create('Property type not found: '+IntToStr(typ));
-    if propType.dataType='U' then begin
-      sl.Sorted := false; //don't really care if it's sorted
-      for i := 0 to sl.Count - 1 do
-        sl[i] := UnicodeToHex(sl[i]);
-      s_sp := '0020';
-      s_dot := '002E';
-    end else begin //else it's AnsiString
-      s_sp := ' ';
-      s_dot := '.';
-    end;
-   {$ELSE}
-    //On Ansi anything Unicode will already be internally in FChars
-   {$ENDIF}
+    s_sp := ' ';
+    s_dot := '.';
 
     for i:=0 to sl.Count-1 do
     begin
       s_fltval:=uppercase(sl[i]); //Locate is case-insensitive anyway
+
       CCharProp.LocateRawValue(s_fltval);
       while not CCharProp.EOF do
       begin
@@ -247,7 +227,7 @@ begin
         end;
 
         if match then
-            flt.Add(CCharProp.Str(TCharProp.fKanji));
+          flt.Add(CCharProp.Kanji);
         CCharProp.Next;
       end;
     end;
@@ -438,10 +418,8 @@ begin
     if fKanjiSearch.sbDefinition.Down then
       if curLang='c' then begin
         ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinition,[rfPartial,rfSpace]); //Chinese definition
-        ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinitionUnicode,[rfPartial,rfSpace]);
       end else begin
         ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptJapaneseDefinition,[rfPartial,rfSpace]); //Japanese definition
-        ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptJapaneseDefinitionUnicode,[rfPartial,rfSpace]);
       end;
     grs := GetCellSize();
     if curlang='j' then

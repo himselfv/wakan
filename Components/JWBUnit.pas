@@ -445,53 +445,44 @@ end;
 function ChinSimplified(s:FString):FString;
 var s2:FString;
   cd:FString;
-  bk:FString;
 begin
   if (curlang='j') or (fSettings.RadioGroup5.ItemIndex<>1) then
   begin
     result:=s;
     exit;
   end;
-  bk:=TChar.Str(TChar.fUnicode);
   result:='';
-  while s<>'' do
-  begin
+  while s<>'' do begin
     s2:=fcopy(s,1,1);
     fdelete(s,1,1);
-    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
-    and TChar.Locate('Unicode',s2) then
+    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF}) then
     begin
-      cd:=hextofstr(GetCharProp(s2,ptSimplifiedVariant));
+      cd:=GetCharProp(s2,ptSimplifiedVariant);
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;
-  TChar.Locate('Unicode',bk);
 end;
 
 function ChinTraditional(s:FString):FString;
 var s2:FString;
   cd:FString;
-  bk:FString;
 begin
   if (curlang='j') or (fSettings.RadioGroup5.ItemIndex<>0) then
   begin
     result:=s;
     exit;
   end;
-  bk:=TChar.Str(TChar.fUnicode);
   result:='';
   while s<>'' do
   begin
     s2:=fcopy(s,1,1);
     fdelete(s,1,1);
-    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF})
-    and TChar.Locate('Unicode',s2) then
+    if ({$IFNDEF UNICODE}s2[1]>'3'{$ELSE}Ord(s2[1])>$3000{$ENDIF}) then
     begin
-      cd:=hextofstr(GetCharProp(s2,ptTraditionalVariant));
+      cd:=GetCharProp(s2,ptTraditionalVariant);
       if cd<>'' then result:=result+cd else result:=result+s2
     end else result:=result+s2;
   end;
-  TChar.Locate('Unicode',bk);
 end;
 
 

@@ -205,26 +205,17 @@ begin
       canvas.MoveTo(trunc(x+ch/2),trunc(y+ch*sizvert));
       canvas.LineTo(trunc(x+nch*ch-ch/2),trunc(y+ch*sizvert));
     end;
-    ony:='';
-    kuny:='';
     CCharProp := TCharPropertyCursor.Create(TCharProp);
     try
-      CCharProp.Locate(u);
-      while (not CCharProp.EOF) and (CCharProp.Kanji=u) do
-      begin
-        rt := CCharProp.Int(TCharProp.fTypeId);
-        case rt of
-          2:if curlang='c' then if ony='' then ony:=ConvertPinYin(string(CCharProp.RawValue)) else ony:=ony+fstr(', ')+ConvertPinYin(string(CCharProp.RawValue));
-          8:if curlang='c' then if kuny='' then kuny:=fstr(lowercase(string(CCharProp.RawValue))) else kuny:=kuny+fstr(', ')+fstr(lowercase(string(CCharProp.RawValue)));
-          4, 5: begin
-            ws := CCharProp.AsString;
-            if (rt=4) and (curlang='j') and (flength(ony)+flength(ws)+2<=nch) then
-              if ony='' then ony:=ws else ony:=ony+UH_IDG_COMMA+ws;
-            if (rt=5) and (curlang='j') and (flength(kuny)+flength(ws)+2<=nch) then
-              if kuny='' then kuny:=ws else kuny:=kuny+UH_IDG_COMMA+ws;
-          end;
-        end;
-        CCharProp.Next;
+      if curlang='j' then begin
+        ony:=CCharProp.GetCharProps(u, ptOnReading);
+        kuny:=CCharProp.GetCharProps(u, ptKunReading);
+        if Length(ony)>=nch then SetLength(ony, nch);
+        if Length(kuny)>=nch then SetLength(kuny, nch);
+      end else
+      if curlang='c' then begin
+        ony:=ConvertPinyin(CCharProp.GetCharProps(u, ptMandarinReading));
+        kuny:=lowercase(CCharProp.GetCharProps(u, ptCantoneseReading));
       end;
     finally
       FreeAndNil(CCharProp);

@@ -3469,20 +3469,17 @@ begin
   if doctr[cy].chars[cx].wordstate='?'then
   begin
     ch := doc.GetDoc(cx,cy);
-    if TChar.Locate('Unicode',ch) then
-    begin
-      CCharProp := TCharPropertyCursor.Create(TCharProp);
-      try
-        if curlang='j' then
-          meaning := CCharProp.GetCharProps(ch, ptJapaneseDefinition)
-        else
-        if curlang='c' then
-          meaning := CCharProp.GetCharProps(ch, ptChineseDefinition)
-        else
-          meaning := '';
-      finally
-        FreeAndNil(CCharProp);
-      end;
+    CCharProp := TCharPropertyCursor.Create(TCharProp);
+    try
+      if curlang='j' then
+        meaning := CCharProp.GetCharProps(ch, ptJapaneseDefinition)
+      else
+      if curlang='c' then
+        meaning := CCharProp.GetCharProps(ch, ptChineseDefinition)
+      else
+        meaning := '';
+    finally
+      FreeAndNil(CCharProp);
     end;
   end;
   while (reading<>'') and (kanji<>'') and (fgetch(reading,flength(reading))=fgetch(kanji,flength(kanji))) do
