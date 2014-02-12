@@ -361,6 +361,7 @@ begin
   Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
   Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
   Self.Cursor := crHandPoint;
+  Self.ShowHint := true;
 end;
 
 procedure TRefLabel.Click;
