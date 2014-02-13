@@ -595,7 +595,9 @@ var CChar: TTextTableCursor;
         end else
         if ed.propType='kTotalStrokes' then begin
           NeedChar(ed.char);
-          CChar.Edit([TChar.fChStrokeCount],[IntToStr(StrToInt(ed.value))]);
+          parts := SplitStr(ed.value,' '); //there could be several: zh-Hans (CN) and zh-Hant (TW)
+          if Length(parts)>1 then //take Chinese one
+            CChar.Edit([TChar.fChStrokeCount],[IntToStr(StrToInt(parts[0]))]);
         end else
         if (ed.propType='kCantonese') or (ed.propType='kMandarin')
         or (ed.propType='kDefinition') or (ed.propType='kKorean') then begin
