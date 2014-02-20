@@ -260,7 +260,7 @@ type
   protected
     dics: array of TDicSetup; //empty field => dic was not loaded, skip
     //Cached cursors and seeks for User tables
-    CUser: TTextTableCursor;
+    CUser: TTextTableCursor; //Order is always 'Kanji_ind' for now, do not change
     stUserKanji: TSeekObject;
     stUserIndex: TSeekObject;
     CUserPrior: TTextTableCursor;
@@ -968,6 +968,7 @@ begin
   CUser := TTextTableCursor.Create(TUser);
   stUserKanji := TUser.GetSeekObject('Kanji');
   stUserIndex := TUser.GetSeekObject('Index');
+  CUser.SetOrder('Kanji_Ind');
   CUserPrior := TTextTableCursor.Create(TUserPrior);
   stUserPriorKanji := TUserPrior.GetSeekObject('Kanji');
   fldUserPriorCount := TUserPrior.Field('Count');
@@ -1120,7 +1121,7 @@ var
  //Used several times with different kanji_vals
   procedure TryGetUserScore(kanji_val: string);
   begin
-    CUser.SetOrder('Kanji_Ind');
+   //CUser.Order is 'Kanji_ind'
     CUser.Locate(@stUserKanji,kanji_val);
     while (not CUser.EOF) and (kanji_val=CUser.Str(TUserKanji)) do
     begin
