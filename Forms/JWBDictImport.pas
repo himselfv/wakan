@@ -894,6 +894,7 @@ begin
     FreeAndNil(charidx);
     FreeAndNil(prog);
     FreeAndNil(fDictCoding);
+    FreeAndNil(roma_prob); //or else it'll remain open until the form is closed
     freql := nil;
   end;
 
