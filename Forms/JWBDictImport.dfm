@@ -74,7 +74,7 @@ object fDictImport: TfDictImport
     Height = 206
     Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 13
-    TabOrder = 1
+    TabOrder = 3
     ExplicitHeight = 209
   end
   object btnBuild: TBitBtn
@@ -109,7 +109,7 @@ object fDictImport: TfDictImport
       0000}
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 2
+    TabOrder = 7
     OnClick = btnBuildClick
     ExplicitTop = 512
   end
@@ -145,7 +145,7 @@ object fDictImport: TfDictImport
       0000}
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 3
+    TabOrder = 8
     OnClick = btnCancelClick
     ExplicitTop = 512
   end
@@ -199,7 +199,7 @@ object fDictImport: TfDictImport
       '#00081^eJapanese'
       '#00082^eMandarin chinese')
     ParentFont = False
-    TabOrder = 6
+    TabOrder = 2
   end
   object cbAddFrequencyInfo: TCheckBox
     Left = 8
@@ -210,7 +210,7 @@ object fDictImport: TfDictImport
     Caption = '#00914^eBuild with frequency information (requires WORDFREQ_CK)'
     Checked = True
     State = cbChecked
-    TabOrder = 7
+    TabOrder = 6
     ExplicitTop = 423
   end
   object mmDescription: TMemo
@@ -218,7 +218,7 @@ object fDictImport: TfDictImport
     Top = 54
     Width = 409
     Height = 60
-    TabOrder = 8
+    TabOrder = 1
   end
   object AddFileDialog: TOpenDialog
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
