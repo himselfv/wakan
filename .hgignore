@@ -88,3 +88,6 @@ Release/test.txt
 Release/unihan-field-sources.txt
 Release/unihan-fields.txt
 Release/warodai
+Release/cedict_ts.u8
+Release/jr-edict.tags.ucs2
+Release/jr-edict.tags.utf8
