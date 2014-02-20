@@ -1120,6 +1120,7 @@ var
  //Used several times with different kanji_vals
   procedure TryGetUserScore(kanji_val: string);
   begin
+    CUser.SetOrder('Kanji_Ind');
     CUser.Locate(@stUserKanji,kanji_val);
     while (not CUser.EOF) and (kanji_val=CUser.Str(TUserKanji)) do
     begin
