@@ -236,7 +236,7 @@ var tt: TTextTable;
 begin
   tt := TTextTable.Create(nil, TablePath, true, false);
   SetConsoleOutputCP(CP_UTF8);
-  wri := ConsoleUTF8Writer();
+  wri := ConsoleWriter(TUTF8Encoding.Create);
   tt.ExportToText(wri, '');
   FreeAndNil(wri);
   FreeAndNil(tt);
@@ -295,7 +295,7 @@ begin
   SetConsoleOutputCP(CP_UTF8);
   tt := TTextTableEx.Create(nil, TablePath, true, false);
   IndexId := IndexParamToId(tt,IndexName);
-  wri := ConsoleUTF8Writer();
+  wri := ConsoleWriter(TUTF8Encoding.Create);
   tt.DumpIndex(wri, IndexId, DumpIndexParams.DumpSignatures);
   FreeAndNil(wri);
   FreeAndNil(tt);
