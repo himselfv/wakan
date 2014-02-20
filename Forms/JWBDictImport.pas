@@ -9,47 +9,32 @@ uses
 
 type
   TImportDictFlag = (
-    ifAddWordIndex,       //add word index (words from translation, for reverse-lookups)
-    ifAddCharacterIndex,  //kanji index for all used kanjis
     ifAddFrequencyInfo,
     ifSilent              //don't display any UI
   );
   TImportDictFlags = set of TImportDictFlag;
 
   TDictInfo = record
-    Name: string;
     Description: string;
-    Copyright: string;
-    Version: string;
-    Priority: integer;
   end;
   PDictInfo = ^TDictInfo;
 
   TEdictRoma = array[0..MaxKana-1] of string;
 
   TfDictImport = class(TJwbForm)
-    Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
-    Label4: TLabel;
     Label5: TLabel;
-    Label6: TLabel;
-    edtDictFilename: TEdit;
     edtDictName: TEdit;
     lbFiles: TListBox;
-    edtVersion: TEdit;
-    rgPriority: TRadioGroup;
-    edtDescription: TEdit;
-    edtCopyright: TEdit;
     btnBuild: TBitBtn;
     btnCancel: TBitBtn;
     btnAddFile: TButton;
     btnRemoveFile: TButton;
     AddFileDialog: TOpenDialog;
     rgLanguage: TRadioGroup;
-    cbAddWordIndex: TCheckBox;
-    cbAddCharacterIndex: TCheckBox;
     cbAddFrequencyInfo: TCheckBox;
+    mmDescription: TMemo;
     procedure FormShow(Sender: TObject);
     procedure btnAddFileClick(Sender: TObject);
     procedure btnRemoveFileClick(Sender: TObject);
@@ -109,15 +94,11 @@ uses StrUtils, WideStrUtils, JWBDictCoding, JWBKanaConv, JWBUnit, JWBMenu,
 
 procedure TfDictImport.FormShow(Sender: TObject);
 begin
-  edtDictFilename.text:='noname';
-  edtDictName.text:='NONAME';
-  lbFiles.items.clear;
+  edtDictName.text:=''; //can be filled automatically from the first file
+  lbFiles.Items.Clear;
   btnRemoveFile.enabled:=false;
   btnBuild.enabled:=false;
-  edtVersion.text:='N/A';
-  rgPriority.ItemIndex:=0;
-  edtDescription.text:='';
-  edtCopyright.text:='';
+  mmDescription.text:='';
 end;
 
 destructor TfDictImport.Destroy;
@@ -129,22 +110,25 @@ end;
 
 procedure TfDictImport.btnAddFileClick(Sender: TObject);
 begin
-  if AddFileDialog.execute then
-  begin
-    lbFiles.Items.Add(AddFileDialog.FileName);
-    btnRemoveFile.enabled:=true;
-    btnBuild.enabled:=true;
-    if lbFiles.ItemIndex=-1 then lbFiles.ItemIndex:=0;
-  end;
+  if not AddFileDialog.Execute then
+    exit;
+  lbFiles.Items.Add(AddFileDialog.FileName);
+  btnRemoveFile.Enabled:=true;
+  btnBuild.Enabled:=true;
+  if lbFiles.ItemIndex=-1 then lbFiles.ItemIndex:=0;
+ //Automatically suggest first source as a dictionary name
+  if edtDictName.Text='' then
+    edtDictName.Text := ChangeFileExt(ExtractFilename(AddFileDialog.FileName), '');
 end;
 
 procedure TfDictImport.btnRemoveFileClick(Sender: TObject);
 begin
   lbFiles.Items.Delete(lbFiles.ItemIndex);
-  if lbFiles.Items.Count>0 then lbFiles.ItemIndex:=0 else
-  begin
+  if lbFiles.Items.Count>0 then
+    lbFiles.ItemIndex:=0
+  else begin
     btnRemoveFile.Enabled:=false;
-    btnBuild.enabled:=false;
+    btnBuild.Enabled:=false;
   end;
 end;
 
@@ -234,31 +218,34 @@ procedure TfDictImport.WriteDictPackage(dicFilename: string; tempDir: string;
 var f:textfile;
   path:string;
   pack: TPackageBuilder;
+  dicName: string;
 begin
   path := ExtractFilePath(dicFilename);
   if path<>'' then ForceDirectories(path);
+
+  dicName := ChangeFileExt(dicFilename,''); //Explicit name -- for compability
 
   assignfile(f,tempDir+'\dict.ver');
   rewrite(f);
   writeln(f,'DICT');
   writeln(f,'5');
-  writeln(f,inttostr(trunc(now)));
-  writeln(f,info.Version);
-  writeln(f,info.Name);
+  writeln(f,inttostr(Trunc(now)));
+  writeln(f,''); //Dictionary version -- deprecated
+  writeln(f,dicName);
   writeln(f,diclang);
-  writeln(f,info.Description);
-  writeln(f,IntToStr(info.Priority));
-  writeln(f,inttostr(entries));
-  writeln(f,info.Copyright);
+  writeln(f,EncodeInfoField(info.Description));
+  writeln(f,'0'); //Priority -- deprecated
+  writeln(f,IntToStr(entries));
+  writeln(f,''); //Copyright -- deprecated
   closefile(f);
 
   pack := TPackageBuilder.Create;
   try
     pack.PackageFile := dicFilename;
     pack.MemoryLimit := 100000000;
-    pack.Name := AnsiString(info.Name);
-    pack.TitleName := AnsiString(info.Name)+' Dictionary';
-    pack.CopyrightName := AnsiString(info.Copyright);
+    pack.Name := AnsiString(dicName);
+    pack.TitleName := AnsiString(dicName)+' Dictionary';
+    pack.CopyrightName := ''; //Copyright -- deprecated
     pack.FormatName := 'Pure Package File';
     pack.CommentName := 'File is used by '+WakanAppName;
     pack.VersionName := '1.0';
@@ -297,23 +284,27 @@ begin
   end;
 
   flags := [];
-  if cbAddWordIndex.Checked then flags := flags + [ifAddWordIndex];
-  if cbAddCharacterIndex.Checked then flags := flags + [ifAddCharacterIndex];
   if cbAddFrequencyInfo.Checked then flags := flags + [ifAddFrequencyInfo];
   if Silent then flags := flags + [ifSilent];
 
+ //Name == Filename - Extension
+ //We accept it both with or without extension and adjust
 
-  fname := edtDictFilename.text;
-  if not StrUtils.EndsStr('.dic', LowerCase(fname, loUserLocale)) then
-    fname := fname + '.dic';
+  fname := SanitizeFilename(edtDictName.Text);
+  if fname<>edtDictName.Text then
+    raise Exception.Create('Invalid dictionary name, please use only supported symbols'); //TODO: Localize
 
-  info.name := edtDictName.text;
-  if info.name='' then info.name := ExtractFilename(edtDictFilename.text);
-  info.version := edtVersion.Text;
-  info.description := edtDescription.text;
-  info.copyright := edtCopyright.text;
-  info.priority := rgPriority.itemindex;
+  fname := MakeDicFilename(fname);
 
+  if FileExists(fname) and (
+    MessageBox(Self.Handle, PChar(Format('Dictionary %s already exists. Do you want to replace it?', [fname])),
+      PChar(Self.Caption), MB_YESNO) <> ID_YES
+  ) then
+    raise EAbort.Create('');
+ //This doesn't guarantee it won't be present later, but we catch most of the
+ //common cases.
+
+  info.description := mmDescription.text;
   if ImportDictionary(fname, info, files, diclang, flags) then
   begin
     ModalResult := mrOk;
@@ -720,10 +711,8 @@ begin
     prog.SetMaxProgress(0); //indeterminate state
 
    //Create indexes
-    if ifAddCharacterIndex in flags then
-      charidx := TIndexBuilder.Create;
-    if ifAddWordIndex in flags then
-      wordidx := TWordIndexBuilder.Create;
+    charidx := TIndexBuilder.Create;
+    wordidx := TWordIndexBuilder.Create;
 
    //Create frequency list
     if ifAddFrequencyInfo in flags then

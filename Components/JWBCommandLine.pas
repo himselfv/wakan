@@ -20,17 +20,10 @@ var
   end;
 
   MakeDicParams: record
-    Filename: string;
     Name: string;
-    Files: TFilenameList;
-    Priority: integer;
-    Version: string;
     Description: string;
-    Copyright: string;
     Language: char;
-    UnicodeDic: boolean;
-    AddWordIndex: boolean;
-    AddCharacterIndex: boolean;
+    Files: TFilenameList;
     AddFrequencyInfo: boolean;
   end;
 
@@ -145,23 +138,6 @@ begin
           if i>ParamCount() then BadUsage('/description requires description value');
           MakeDicParams.Description := ParamStr(i);
         end else
-        if s='/copyright' then begin
-          Inc(i);
-          if i>ParamCount() then BadUsage('/copyright requires copyright text value');
-          MakeDicParams.Copyright := ParamStr(i);
-        end else
-        if s='/priority' then begin
-          Inc(i);
-          if i>ParamCount() then BadUsage('/priority requires priority value');
-          MakeDicParams.Priority := StrToInt(ParamStr(i));
-          if (MakeDicParams.Priority<0) or (MakeDicParams.Priority>4) then
-            BadUsage('Dictionary priority must be between 0 and 4');
-        end else
-        if s='/version' then begin
-          Inc(i);
-          if i>ParamCount() then BadUsage('/version requires version value');
-          MakeDicParams.Version := ParamStr(i);
-        end else
         if s='/language' then begin
           Inc(i);
           if i>ParamCount() then BadUsage('/language requires language value');
@@ -176,15 +152,6 @@ begin
           s := ParamStr(i);
           if s='' then BadUsage('invalid /include file name');
           AddFilename(MakeDicParams.Files, s);
-        end else
-        if s='/unicode' then begin
-          MakeDicParams.UnicodeDic := true;
-        end else
-        if s='/addwordindex' then begin
-          MakeDicParams.AddWordIndex := true;
-        end else
-        if s='/addcharacterindex' then begin
-          MakeDicParams.AddCharacterIndex := true;
         end else
         if s='/addfrequencyinfo' then begin
           MakeDicParams.AddFrequencyInfo := true;
@@ -233,12 +200,9 @@ begin
         FillChar(MakeDicParams, sizeof(MakeDicParams), 0);
         Inc(i);
         if i>ParamCount() then BadUsage('"makedic" requires dictionary file name');
-        MakeDicParams.Filename := Paramstr(i);
-        MakeDicParams.Name := ChangeFileExt(ExtractFileName(MakeDicParams.Filename), '');
+        MakeDicParams.Name := Paramstr(i);
         MakeDicParams.Language := 'j';
-        MakeDicParams.AddWordIndex := true;
-        MakeDicParams.AddCharacterIndex := true;
-       //but no frequency info because it requires additional file which is missing by default
+       //but no frequency info by default because it requires additional file which may be missing
       end else
       if Command='updatedics' then begin
         FillChar(UpdateDicsParams, sizeof(UpdateDicsParams), 0);

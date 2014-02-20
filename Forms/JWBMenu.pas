@@ -674,23 +674,17 @@ var fDictImport: TfDictImport;
 begin
   fDictImport := TfDictImport.Create(Application);
   try
-    fDictImport.edtDictFilename.Text:=MakeDicParams.Filename;
     fDictImport.edtDictName.Text:=MakeDicParams.Name;
-    fDictImport.edtVersion.Text:=MakeDicParams.Version;
     if (MakeDicParams.Language='C')
     or (MakeDicParams.Language='c') then
       fDictImport.rgLanguage.ItemIndex:=1
     else
       fDictImport.rgLanguage.ItemIndex:=0;
-    fDictImport.rgPriority.ItemIndex:=MakeDicParams.Priority;
-    fDictImport.edtDescription.Text:=MakeDicParams.Description;
-    fDictImport.edtCopyright.Text:=MakeDicParams.Copyright;
-    fDictImport.cbAddWordIndex.Checked:=MakeDicParams.AddWordIndex;
-    fDictImport.cbAddCharacterIndex.Checked:=MakeDicParams.AddCharacterIndex;
     fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
     fDictImport.Silent := true;
     for i := 0 to Length(MakeDicParams.Files) - 1 do
       fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
+    fDictImport.mmDescription.Text := DecodeInfoField(MakeDicParams.Description);
     fDictImport.btnBuildClick(nil);
   finally
     FreeAndNil(fDictImport);

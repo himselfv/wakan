@@ -16,25 +16,17 @@ type
     btnCancel: TBitBtn;
     Panel1: TPanel;
     Label2: TLabel;
-    Label3: TLabel;
-    Label5: TLabel;
     Label6: TLabel;
     Label7: TLabel;
     Label8: TLabel;
-    Label9: TLabel;
-    Label4: TLabel;
-    Label10: TLabel;
-    Label11: TLabel;
-    Label12: TLabel;
-    Label13: TLabel;
-    Label14: TLabel;
-    Label15: TLabel;
-    Label16: TLabel;
-    Label17: TLabel;
+    lblDicName: TLabel;
+    lblWordEntries: TLabel;
+    lblBuildDate: TLabel;
+    lblDescription: TLabel;
     Label18: TLabel;
-    Label19: TLabel;
+    lblWordIndex: TLabel;
     Label20: TLabel;
-    Label21: TLabel;
+    lblCharIndex: TLabel;
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     SpeedButton3: TSpeedButton;
@@ -166,16 +158,30 @@ begin
   dic:=dicts.Find(cbDicts.Items[cbDicts.ItemIndex]);
   FLoadingData := true;
   try
-    label4.Caption:=dic.name;
-    label10.caption:=dic.pname;
-    label11.caption:=dic.version;
-    if dic.entries=-1 then label12.caption:='N/A' else label12.caption:=inttostr(dic.entries);
-    label13.caption:=datetostr(dic.builddate);
-    label14.caption:=inttostr(dic.priority);
-    label15.caption:=dic.description;
-    label17.caption:=dic.copyright;
-    if dic.hasWordIndex then label19.Caption:=_l('#00115^ePresent') else label19.Caption:=_l('#00116^eAbsent');
-    if dic.hasCharIndex then label21.Caption:=_l('#00115^ePresent') else label21.Caption:=_l('#00116^eAbsent');
+    lblDicName.Caption := ChangeFileExt(ExtractFilename(dic.pname), ''); //We also have dic.name, but it's deprecated
+
+    lblDescription.Caption := dic.description;
+    if dic.version<>'' then
+      lblDescription.Caption := lblDescription.Caption + #13
+        +_l('#00075^Version:')+' '+dic.version;
+    if dic.copyright<>'' then
+      lblDescription.Caption := lblDescription.Caption + #13
+        +dic.copyright;
+
+    if dic.entries=-1 then
+      lblWordEntries.Caption:='N/A'
+    else
+      lblWordEntries.Caption:=IntToStr(dic.entries);
+    lblBuildDate.Caption:=DateToStr(dic.builddate);
+    if dic.hasWordIndex then
+      lblWordIndex.Caption:=_l('#00115^ePresent')
+    else
+      lblWordIndex.Caption:=_l('#00116^eAbsent');
+    if dic.hasCharIndex then
+      lblCharIndex.Caption:=_l('#00115^ePresent')
+    else
+      lblCharIndex.Caption:=_l('#00116^eAbsent');
+
     SpeedButton1.Down:=dicts.IsInGroup(dic, 1);
     SpeedButton2.Down:=dicts.IsInGroup(dic, 2);
     SpeedButton3.Down:=dicts.IsInGroup(dic, 3);

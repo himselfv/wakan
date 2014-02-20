@@ -331,6 +331,14 @@ var
   ignorel: TStringList; //words to ignore when indexing dictionaries
   DictFormatSettings: TFormatSettings; //to use in locate-neutral information
 
+
+//Sanitization
+function EncodeInfoField(const AText: string): string;
+function DecodeInfoField(const AText: string): string;
+function SanitizeFilename(const AFilename: string): string;
+function MakeDicName(const AText: string): string;
+function MakeDicFilename(const AText: string): string;
+
 implementation
 uses Forms, JWBLegacyMarkup;
 
@@ -514,13 +522,13 @@ begin
     if dicver<4 then
       raise EDictionaryException.Create('Outdated DIC structure - please download new DIC file');
 
-    builddate:=strtoint(vs[2]);
+    builddate:=StrToInt(vs[2]);
     version:=vs[3];
-    name:=vs[4];
+    name:=ChangeFileExt(Self.pname, ''); //vs[4]
     language:=vs[5][1];
-    description:=vs[6];
-    priority:=strtoint(vs[7]);
-    entries:=strtoint(vs[8]);
+    description:=DecodeInfoField(vs[6]);
+    priority:=StrToInt(vs[7]);
+    entries:=StrToInt(vs[8]);
     copyright:=vs[9];
 
     mf := ps['sources.lst'];
@@ -1223,6 +1231,66 @@ begin
   until CDict.EOF or HaveMatch;
   Result := not CDict.EOF;
 end;
+
+
+{ Sanitize multiline fields }
+
+function EncodeInfoField(const AText: string): string;
+var i: integer;
+begin
+  Result := '';
+  for i := 1 to Length(AText) do
+    if AText[i]='\' then
+      Result := Result + '\\'
+    else
+    if AText[i]=#13 then
+      Result := Result + '\n'
+    else
+    if AText[i]=#10 then begin
+    end else
+      Result := Result + AText[i];
+end;
+
+function DecodeInfoField(const AText: string): string;
+var i: integer;
+  flag_specSymbol: boolean;
+begin
+  Result := '';
+  flag_specSymbol := false;
+  for i := 1 to Length(AText) do
+    if flag_specSymbol and (AText[i]='n') then begin
+      Result := Result + #13#10;
+      flag_specSymbol := false;
+    end else
+    if flag_specSymbol or (AText[i]<>'\') then begin
+      Result := Result + AText[i];
+      flag_specSymbol := false;
+    end else
+      flag_specSymbol := true;
+end;
+
+function SanitizeFilename(const AFilename: string): string;
+begin
+  Result := AFilename; //TODO: Sanitize?
+end;
+
+//Removes '.dic' if it's present at the end of the name
+function MakeDicName(const AText: string): string;
+begin
+  Result := AText;
+  if EndsStr('.dic', LowerCase(Result, loUserLocale)) then
+    delete(Result, Length(Result)-4, MaxInt);
+end;
+
+//Adds '.dic' if it's missing at the end of the name
+function MakeDicFilename(const AText: string): string;
+begin
+  Result := AText;
+  if not EndsStr('.dic', LowerCase(Result, loUserLocale)) then
+    Result := Result + '.dic'
+end;
+
+
 
 
 initialization

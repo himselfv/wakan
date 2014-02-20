@@ -52,35 +52,9 @@ object fDictMan: TfDictMan
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object Label3: TLabel
-      Left = 8
-      Top = 32
-      Width = 112
-      Height = 13
-      Caption = '#00097^eFilename:'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object Label5: TLabel
-      Left = 8
-      Top = 56
-      Width = 104
-      Height = 13
-      Caption = '#00075^eVersion:'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
     object Label6: TLabel
       Left = 8
-      Top = 80
+      Top = 32
       Width = 134
       Height = 13
       Caption = '#00098^eWord entries:'
@@ -93,7 +67,7 @@ object fDictMan: TfDictMan
     end
     object Label7: TLabel
       Left = 8
-      Top = 152
+      Top = 104
       Width = 119
       Height = 13
       Caption = '#00099^eBuild date:'
@@ -106,7 +80,7 @@ object fDictMan: TfDictMan
     end
     object Label8: TLabel
       Left = 8
-      Top = 200
+      Top = 128
       Width = 126
       Height = 13
       Caption = '#00035^eDescription:'
@@ -117,91 +91,45 @@ object fDictMan: TfDictMan
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object Label9: TLabel
-      Left = 8
-      Top = 176
-      Width = 101
-      Height = 13
-      Caption = '#00100^ePriority:'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object Label4: TLabel
+    object lblDicName: TLabel
       Left = 176
       Top = 8
-      Width = 32
+      Width = 54
       Height = 13
-      Caption = 'Label4'
+      Caption = 'lblDicName'
     end
-    object Label10: TLabel
+    object lblWordEntries: TLabel
       Left = 176
       Top = 32
       Width = 32
       Height = 13
       Caption = 'Label4'
     end
-    object Label11: TLabel
+    object lblBuildDate: TLabel
       Left = 176
-      Top = 56
+      Top = 104
       Width = 32
       Height = 13
       Caption = 'Label4'
     end
-    object Label12: TLabel
-      Left = 176
-      Top = 80
-      Width = 32
-      Height = 13
-      Caption = 'Label4'
-    end
-    object Label13: TLabel
-      Left = 176
-      Top = 152
-      Width = 32
-      Height = 13
-      Caption = 'Label4'
-    end
-    object Label14: TLabel
-      Left = 176
-      Top = 176
-      Width = 32
-      Height = 13
-      Caption = 'Label4'
-    end
-    object Label15: TLabel
+    object lblDescription: TLabel
       Left = 8
-      Top = 216
-      Width = 32
-      Height = 13
+      Top = 144
+      Width = 329
+      Height = 137
+      AutoSize = False
       Caption = 'Label4'
-    end
-    object Label16: TLabel
-      Left = 8
-      Top = 238
-      Width = 115
-      Height = 13
-      Caption = '#00985^eCopyright:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
-      Font.Height = -11
+      Font.Height = -13
       Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
+      Font.Style = []
       ParentFont = False
-    end
-    object Label17: TLabel
-      Left = 8
-      Top = 254
-      Width = 32
-      Height = 13
-      Caption = 'Label4'
+      WordWrap = True
     end
     object Label18: TLabel
       Left = 8
-      Top = 104
+      Top = 56
       Width = 126
       Height = 13
       Caption = '#00101^eWord index:'
@@ -212,16 +140,16 @@ object fDictMan: TfDictMan
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object Label19: TLabel
+    object lblWordIndex: TLabel
       Left = 176
-      Top = 104
+      Top = 56
       Width = 32
       Height = 13
       Caption = 'Label4'
     end
     object Label20: TLabel
       Left = 8
-      Top = 128
+      Top = 80
       Width = 151
       Height = 13
       Caption = '#00102^eCharacter index:'
@@ -232,9 +160,9 @@ object fDictMan: TfDictMan
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object Label21: TLabel
+    object lblCharIndex: TLabel
       Left = 176
-      Top = 128
+      Top = 80
       Width = 32
       Height = 13
       Caption = 'Label4'

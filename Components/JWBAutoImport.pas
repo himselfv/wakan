@@ -19,7 +19,6 @@ type
     Encoding: CEncoding; //see JWBIO
     Language: char; //j or c
     Description: string;
-    Copyright: string;
   end;
   PKnownImportItem = ^TKnownImportItem;
 
@@ -94,7 +93,7 @@ end;
 procedure ParseKnownImportItem(const s: string; out item: TKnownImportItem);
 var parts: TStringArray;
 begin
-  parts := SplitStr(s,7,',');
+  parts := SplitStr(s,6,',');
   item.Filename := parts[0];
   item.Name := parts[1];
 
@@ -131,8 +130,7 @@ begin
   else
     raise Exception.Create('Unknown auto import language: "'+parts[4]+'"');
 
-  item.Description := parts[5];
-  item.Copyright := parts[6];
+  item.Description := DecodeInfoField(parts[5]);
 
   if item.Name='' then Item.Name := ChangeFileExt(ExtractFilename(item.Filename),'');
 end;
@@ -185,7 +183,7 @@ var targetFname: string;
   i: integer;
 begin
   if not FileExists(item.Filename) then exit;
-  targetFname := ExtractFilename(item.Filename)+'.dic';
+  targetFname := MakeDicFilename(item.Name);
 
   dic := nil;
   qmsg := '';
@@ -255,12 +253,8 @@ begin
   end;
 
  //Finally, import!
-  info.Name := item.Name;
   info.Description := item.Description;
-  info.Copyright := item.Copyright;
-  info.Version := '';
-  info.Priority := 0;
-  flags := [ifAddWordIndex, ifAddCharacterIndex, ifSilent];
+  flags := [ifSilent];
   if fAutoImportForm=nil then
     Application.CreateForm(TfDictImport, fAutoImportForm);
   if fAutoImportForm.SupportsFrequencyList then
@@ -381,17 +375,9 @@ begin
   end;
 
   fname := dic.pname; //dic.pname might be lost while playing with dic
-  info.Name := dic.name;
   info.Description := dic.description;
-  info.Copyright := dic.copyright;
-  info.Priority := dic.priority;
-  info.Version := dic.version;
   lang := dic.language;
   flags := [ifSilent];
-  if dic.hasWordIndex then
-    flags := flags + [ifAddWordIndex];
-  if dic.hasCharIndex then
-    flags := flags + [ifAddCharacterIndex];
   if fAutoImportForm=nil then
     Application.CreateForm(TfDictImport, fAutoImportForm);
   if fAutoImportForm.SupportsFrequencyList then

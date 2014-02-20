@@ -3,7 +3,7 @@ object fDictImport: TfDictImport
   Top = 231
   BorderStyle = bsDialog
   Caption = '#00071^eDictionary import'
-  ClientHeight = 548
+  ClientHeight = 497
   ClientWidth = 535
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -15,24 +15,14 @@ object fDictImport: TfDictImport
   Position = poOwnerFormCenter
   Scaled = False
   OnShow = FormShow
+  DesignSize = (
+    535
+    497)
   PixelsPerInch = 96
   TextHeight = 13
-  object Label1: TLabel
-    Left = 8
-    Top = 8
-    Width = 227
-    Height = 13
-    Caption = '#00072^eFile name (without extension):'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-  end
   object Label2: TLabel
     Left = 8
-    Top = 32
+    Top = 11
     Width = 153
     Height = 13
     Caption = '#00073^eDictionary name:'
@@ -45,7 +35,7 @@ object fDictImport: TfDictImport
   end
   object Label3: TLabel
     Left = 8
-    Top = 56
+    Top = 192
     Width = 218
     Height = 13
     Caption = '#00074^eIncluded EDICT format files:'
@@ -56,22 +46,9 @@ object fDictImport: TfDictImport
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label4: TLabel
-    Left = 8
-    Top = 288
-    Width = 104
-    Height = 13
-    Caption = '#00075^eVersion:'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-  end
   object Label5: TLabel
     Left = 8
-    Top = 392
+    Top = 35
     Width = 126
     Height = 13
     Caption = '#00035^eDescription:'
@@ -82,86 +59,30 @@ object fDictImport: TfDictImport
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object Label6: TLabel
-    Left = 8
-    Top = 416
-    Width = 58
-    Height = 13
-    Caption = 'Copyright:'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-  end
-  object edtDictFilename: TEdit
-    Left = 208
-    Top = 8
-    Width = 209
-    Height = 21
-    TabOrder = 0
-  end
   object edtDictName: TEdit
     Left = 128
-    Top = 32
+    Top = 8
     Width = 289
     Height = 21
-    TabOrder = 1
+    Anchors = [akLeft, akTop, akRight]
+    TabOrder = 0
   end
   object lbFiles: TListBox
     Left = 8
-    Top = 72
+    Top = 208
     Width = 409
-    Height = 209
+    Height = 206
+    Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 13
-    TabOrder = 2
-  end
-  object edtVersion: TEdit
-    Left = 136
-    Top = 288
-    Width = 281
-    Height = 21
-    TabOrder = 3
-    Text = 'Edit1'
-  end
-  object rgPriority: TRadioGroup
-    Left = 8
-    Top = 344
-    Width = 409
-    Height = 41
-    Caption = '#00076^ePriority'
-    Columns = 5
-    ItemIndex = 0
-    Items.Strings = (
-      '0'
-      '1'
-      '2'
-      '3'
-      '4')
-    TabOrder = 4
-  end
-  object edtDescription: TEdit
-    Left = 136
-    Top = 392
-    Width = 393
-    Height = 21
-    TabOrder = 5
-    Text = 'Edit1'
-  end
-  object edtCopyright: TEdit
-    Left = 136
-    Top = 416
-    Width = 393
-    Height = 21
-    TabOrder = 6
-    Text = 'Edit1'
+    TabOrder = 1
+    ExplicitHeight = 209
   end
   object btnBuild: TBitBtn
     Left = 88
-    Top = 512
+    Top = 461
     Width = 113
     Height = 25
+    Anchors = [akLeft, akBottom]
     Caption = '#00077^eBuild'
     Default = True
     Font.Charset = DEFAULT_CHARSET
@@ -188,14 +109,16 @@ object fDictImport: TfDictImport
       0000}
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 7
+    TabOrder = 2
     OnClick = btnBuildClick
+    ExplicitTop = 512
   end
   object btnCancel: TBitBtn
     Left = 344
-    Top = 512
+    Top = 461
     Width = 105
     Height = 25
+    Anchors = [akLeft, akBottom]
     Cancel = True
     Caption = '#00007^eCancel'
     Font.Charset = DEFAULT_CHARSET
@@ -222,14 +145,16 @@ object fDictImport: TfDictImport
       0000}
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 8
+    TabOrder = 3
     OnClick = btnCancelClick
+    ExplicitTop = 512
   end
   object btnAddFile: TButton
     Left = 424
-    Top = 72
+    Top = 208
     Width = 105
     Height = 25
+    Anchors = [akTop, akRight]
     Caption = '#00078^eAdd'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -237,14 +162,15 @@ object fDictImport: TfDictImport
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 9
+    TabOrder = 4
     OnClick = btnAddFileClick
   end
   object btnRemoveFile: TButton
     Left = 424
-    Top = 104
+    Top = 239
     Width = 105
     Height = 25
+    Anchors = [akTop, akRight]
     Caption = '#00079^eRemove'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -252,51 +178,47 @@ object fDictImport: TfDictImport
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 10
+    TabOrder = 5
     OnClick = btnRemoveFileClick
   end
   object rgLanguage: TRadioGroup
     Left = 8
-    Top = 304
+    Top = 128
     Width = 409
-    Height = 41
+    Height = 50
+    Anchors = [akLeft, akTop, akRight]
     Caption = '#00080^eLanguage'
     Columns = 2
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
     ItemIndex = 0
     Items.Strings = (
       '#00081^eJapanese'
       '#00082^eMandarin chinese')
-    TabOrder = 11
-  end
-  object cbAddWordIndex: TCheckBox
-    Left = 8
-    Top = 440
-    Width = 513
-    Height = 17
-    Caption = '#00083^eBuild with word index (allows English searching)'
-    Checked = True
-    State = cbChecked
-    TabOrder = 12
-  end
-  object cbAddCharacterIndex: TCheckBox
-    Left = 8
-    Top = 464
-    Width = 513
-    Height = 17
-    Caption = 
-      '#00084^eBuild with character index (enables character compounds ' +
-      'display)'
-    Checked = True
-    State = cbChecked
-    TabOrder = 13
+    ParentFont = False
+    TabOrder = 6
   end
   object cbAddFrequencyInfo: TCheckBox
     Left = 8
-    Top = 488
+    Top = 420
     Width = 513
     Height = 17
+    Anchors = [akLeft, akBottom]
     Caption = '#00914^eBuild with frequency information (requires WORDFREQ_CK)'
-    TabOrder = 14
+    Checked = True
+    State = cbChecked
+    TabOrder = 7
+    ExplicitTop = 423
+  end
+  object mmDescription: TMemo
+    Left = 8
+    Top = 54
+    Width = 409
+    Height = 60
+    TabOrder = 8
   end
   object AddFileDialog: TOpenDialog
     Options = [ofHideReadOnly, ofNoChangeDir, ofPathMustExist, ofFileMustExist, ofEnableSizing]
