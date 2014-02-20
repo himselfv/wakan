@@ -98,6 +98,8 @@ function GetSelCatIdx(ctl: TCustomListBox): integer; overload;
 function GetSelCatIdx(ctl: TCustomComboBox): integer; overload;
 function GetCatIdx(ctl: TCustomListBox; ItemIndex: integer): integer; overload;
 function GetCatIdx(ctl: TCustomComboBox; ItemIndex: integer): integer; overload;
+function FindCat(ctl: TCustomListBox; ACatIdx: integer): integer; overload;
+function FindCat(ctl: TCustomComboBox; ACatIdx: integer): integer; overload;
 function IsFocusedKnownLearned(ctl: TCustomListBox): boolean;
 function IsAnySelectedKnownLearned(ctl: TCustomListBox): boolean;
 
@@ -829,6 +831,28 @@ end;
 function GetCatIdx(ctl: TCustomComboBox; ItemIndex: integer): integer;
 begin
   Result := integer(ctl.Items.Objects[ItemIndex]);
+end;
+
+function FindCat(ctl: TCustomListBox; ACatIdx: integer): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to ctl.Items.Count-1 do
+    if integer(ctl.Items.Objects[i])=ACatIdx then begin
+      Result := i;
+      break;
+    end;
+end;
+
+function FindCat(ctl: TCustomComboBox; ACatIdx: integer): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to ctl.Items.Count-1 do
+    if integer(ctl.Items.Objects[i])=ACatIdx then begin
+      Result := i;
+      break;
+    end;
 end;
 
 function IsFocusedKnownLearned(ctl: TCustomListBox): boolean;

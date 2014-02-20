@@ -78,9 +78,8 @@ var
   fVocabDetails: TfVocabDetails;
 
 implementation
-
-uses TextTable, JWBVocab, JWBMenu, JWBUnit, JWBUserData, JWBVocabFilters,
-  JWBCategories;
+uses TextTable, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
+  JWBVocabFilters, JWBCategories;
 
 {$R *.DFM}
 
@@ -120,16 +119,19 @@ end;
 
 procedure TfVocabDetails.AddWordCategories(id:integer);
 var i: integer;
+  catName: string;
 begin
   if cl=nil then
     cl:=TStringList.Create
   else
     cl.Clear;
 
-  ListWordCategories(id,cl);
-  for i:=0 to cl.Count-1 do
-    if fVocabDetails.lbCategories.Items.IndexOf(copy(cl[i],3,length(cl[i])-2))=-1 then
-      fVocabDetails.lbCategories.Items.Add(copy(cl[i],3,length(cl[i])-2));
+  ListWordCategories(id, cl);
+  for i:=0 to cl.Count-1 do begin
+    catName := StripCatName(cl[i]);
+    if lbCategories.Items.IndexOf(catName)<0 then
+      AddCatItem(lbCategories, catName, FindCategory(cl[i]));
+  end;
 end;
 
 //Called when multiple words are selected in vocabulary list

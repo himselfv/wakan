@@ -120,7 +120,6 @@ object fVocabDetails: TfVocabDetails
       BevelOuter = bvNone
       FullRepaint = False
       TabOrder = 0
-      ExplicitWidth = 985
       object pnlEntryContents: TPanel
         Left = 0
         Top = 0
