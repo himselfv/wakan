@@ -264,7 +264,7 @@ begin
     if (ARow<StringGrid.Selection.Top) or (ARow>StringGrid.Selection.Bottom) then begin
       r := StringGrid.Selection;
       CanSelect := true;
-      StringGridSelectCell(Sender, r.Left, r.Top, CanSelect);
+      StringGridSelectCell(Sender, ACol, ARow, CanSelect);
       if not CanSelect then exit;
       r.Top := ARow;
       r.Bottom := ARow;
