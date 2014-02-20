@@ -1341,8 +1341,6 @@ procedure TDicSearchRequest.FinalizeResults(sl: TSearchResults);
 var i, j: integer;
   scomp: PSearchResult;
   voc_entry: string;
-  ex_pos: integer;
-  s2: string;
   sl2: TStringList;
   sl2i: integer;
   sart: TSearchResArticle;
