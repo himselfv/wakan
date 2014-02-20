@@ -78,7 +78,7 @@ uses
   JWBUtils in 'Components\JWBUtils.pas';
 
 {$R *.RES}
-
+{$R WINXP.RES}
 
 begin
   Application.Initialize;

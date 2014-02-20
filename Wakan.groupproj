@@ -1,0 +1,84 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{1432A20B-0446-455D-80DC-69048B90D678}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Jalet.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="JaletControls.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="jwbpkg.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="jwbtab.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="JaletTests.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Jalet">
+        <MSBuild Projects="Jalet.dproj"/>
+    </Target>
+    <Target Name="Jalet:Clean">
+        <MSBuild Projects="Jalet.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Jalet:Make">
+        <MSBuild Projects="Jalet.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="JaletControls">
+        <MSBuild Projects="JaletControls.dproj"/>
+    </Target>
+    <Target Name="JaletControls:Clean">
+        <MSBuild Projects="JaletControls.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="JaletControls:Make">
+        <MSBuild Projects="JaletControls.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="jwbpkg">
+        <MSBuild Projects="jwbpkg.dproj"/>
+    </Target>
+    <Target Name="jwbpkg:Clean">
+        <MSBuild Projects="jwbpkg.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="jwbpkg:Make">
+        <MSBuild Projects="jwbpkg.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="jwbtab">
+        <MSBuild Projects="jwbtab.dproj"/>
+    </Target>
+    <Target Name="jwbtab:Clean">
+        <MSBuild Projects="jwbtab.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="jwbtab:Make">
+        <MSBuild Projects="jwbtab.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="JaletTests">
+        <MSBuild Projects="JaletTests.dproj"/>
+    </Target>
+    <Target Name="JaletTests:Clean">
+        <MSBuild Projects="JaletTests.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="JaletTests:Make">
+        <MSBuild Projects="JaletTests.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Jalet;JaletControls;jwbpkg;jwbtab;JaletTests"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Jalet:Clean;JaletControls:Clean;jwbpkg:Clean;jwbtab:Clean;JaletTests:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Jalet:Make;JaletControls:Make;jwbpkg:Make;jwbtab:Make;JaletTests:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

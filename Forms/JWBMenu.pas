@@ -2,8 +2,6 @@ unit JWBMenu;
 
 interface
 
-{$R WINXP.RES}
-
 {$DEFINE NODICLOADPROMPT}
 { Do not show "Loading dictionary..." window when hot-loading a dictionary.
  It was needed before when loading was slow, but I feel like now it only makes

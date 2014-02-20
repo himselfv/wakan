@@ -1,0 +1,326 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{bff40415-9af6-4a28-8cb1-9336be6cfa70}</ProjectGuid>
+        <MainSource>Jalet.dpr</MainSource>
+        <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+        <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+        <DCC_DependencyCheckOutputName>Jalet.exe</DCC_DependencyCheckOutputName>
+        <ProjectVersion>14.3</ProjectVersion>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <FrameworkType>VCL</FrameworkType>
+        <Base>True</Base>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Application</AppType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
+        <Manifest_File>None</Manifest_File>
+        <Icon_MainIcon>Jalet_Icon.ico</Icon_MainIcon>
+        <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
+        <VerInfo_MinorVer>86</VerInfo_MinorVer>
+        <VerInfo_Locale>1033</VerInfo_Locale>
+        <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.86.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <DCC_StringChecks>off</DCC_StringChecks>
+        <DCC_ExeOutput>Release\</DCC_ExeOutput>
+        <DCC_UnitSearchPath>.\Forms;.\Components;.\Components\Package;.\Components\Parsers;.\Components\ScaleMM;.\Components\StdPrompt;.\Components\TextTable;.\Controls;$(JPTOOLS)\Share;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_DependencyCheckOutputName>Release\Jalet.exe</DCC_DependencyCheckOutputName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <Icon_MainIcon>Jalet_Icon.ico</Icon_MainIcon>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_Alignment>1</DCC_Alignment>
+        <Version>7.0</Version>
+        <DCC_DebugInformation>False</DCC_DebugInformation>
+        <DCC_WriteableConstants>True</DCC_WriteableConstants>
+        <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_Define>RELEASE;INLINE;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <Version>7.0</Version>
+        <DCC_Alignment>1</DCC_Alignment>
+        <DCC_WriteableConstants>True</DCC_WriteableConstants>
+        <DCC_MapFile>3</DCC_MapFile>
+        <DCC_Define>CLEAN_DEINIT;DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugInfoInExe>True</DCC_DebugInfoInExe>
+        <DCC_DebugVN>True</DCC_DebugVN>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+    </PropertyGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>VCLApplication</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Parameters>
+                    <Parameters Name="RunParams"/>
+                    <Parameters Name="UseLauncher">False</Parameters>
+                    <Parameters Name="LoadAllSymbols">True</Parameters>
+                    <Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+                </Parameters>
+                <Source>
+                    <Source Name="MainSource">Jalet.dpr</Source>
+                </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
+                <VersionInfo>
+                    <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+                    <VersionInfo Name="AutoIncBuild">False</VersionInfo>
+                    <VersionInfo Name="MajorVer">1</VersionInfo>
+                    <VersionInfo Name="MinorVer">0</VersionInfo>
+                    <VersionInfo Name="Release">0</VersionInfo>
+                    <VersionInfo Name="Build">0</VersionInfo>
+                    <VersionInfo Name="Debug">False</VersionInfo>
+                    <VersionInfo Name="PreRelease">False</VersionInfo>
+                    <VersionInfo Name="Special">False</VersionInfo>
+                    <VersionInfo Name="Private">False</VersionInfo>
+                    <VersionInfo Name="DLL">False</VersionInfo>
+                    <VersionInfo Name="Locale">1049</VersionInfo>
+                    <VersionInfo Name="CodePage">1251</VersionInfo>
+                </VersionInfo>
+                <VersionInfoKeys>
+                    <VersionInfoKeys Name="CompanyName"/>
+                    <VersionInfoKeys Name="FileDescription"/>
+                    <VersionInfoKeys Name="FileVersion">1.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="InternalName"/>
+                    <VersionInfoKeys Name="LegalCopyright"/>
+                    <VersionInfoKeys Name="LegalTrademarks"/>
+                    <VersionInfoKeys Name="OriginalFilename"/>
+                    <VersionInfoKeys Name="ProductName"/>
+                    <VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+                    <VersionInfoKeys Name="Comments"/>
+                    <VersionInfoKeys Name="CFBundleName"/>
+                    <VersionInfoKeys Name="CFBundleDisplayName"/>
+                    <VersionInfoKeys Name="CFBundleIdentifier"/>
+                    <VersionInfoKeys Name="CFBundleVersion"/>
+                    <VersionInfoKeys Name="CFBundlePackageType"/>
+                    <VersionInfoKeys Name="CFBundleSignature"/>
+                    <VersionInfoKeys Name="CFBundleAllowMixedLocalizations"/>
+                    <VersionInfoKeys Name="CFBundleExecutable"/>
+                </VersionInfoKeys>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="Components\ScaleMM\ScaleMM2.pas"/>
+        <DCCReference Include="Components\JWBStrings.pas"/>
+        <DCCReference Include="Components\Package\PackageCommon.pas"/>
+        <DCCReference Include="Components\TextTable\TextTable.pas"/>
+        <DCCReference Include="Components\Package\MemSource.pas"/>
+        <DCCReference Include="Components\Package\PKGWrite.pas">
+            <Form>PKGWriteForm</Form>
+        </DCCReference>
+        <DCCReference Include="Components\StdPrompt\StdPrompt.pas">
+            <Form>SMPromptForm</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\UnicodeFont.pas">
+            <Form>fSelectFont</Form>
+        </DCCReference>
+        <DCCReference Include="Components\JWBUnit.pas"/>
+        <DCCReference Include="Components\JWBCategories.pas"/>
+        <DCCReference Include="Components\JWBDicSearch.pas"/>
+        <DCCReference Include="Components\JWBKanjiCard.pas"/>
+        <DCCReference Include="Forms\JWBMenu.pas">
+            <Form>fMenu</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBKanji.pas">
+            <Form>fKanji</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBRadical.pas">
+            <Form>fRadical</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBWordLookup.pas">
+            <Form>fWordLookup</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBSettings.pas">
+            <Form>fSettings</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBSplash.pas">
+            <Form>fSplash</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBVocab.pas">
+            <Form>fVocab</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBVocabDetails.pas">
+            <Form>fVocabDetails</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBVocabAdd.pas">
+            <Form>fVocabAdd</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBVocabFilters.pas">
+            <Form>fVocabFilters</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBNewCategory.pas">
+            <Form>fNewCategory</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBPrint.pas">
+            <Form>fPrint</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBStatistics.pas">
+            <Form>fStatistics</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBWordList.pas">
+            <Form>fWordList</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBBitmap.pas">
+            <Form>fBitmap</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBKanjiSearch.pas">
+            <Form>fKanjiSearch</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBKanjiCompounds.pas">
+            <Form>fKanjiCompounds</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBKanjiDetails.pas">
+            <Form>fKanjiDetails</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBEditor.pas">
+            <Form>fEditor</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBWordKanji.pas">
+            <Form>fWordKanji</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBExamples.pas">
+            <Form>fExamples</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBDictMan.pas">
+            <Form>fDictMan</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBDictImport.pas">
+            <Form>fDictImport</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBDictCoding.pas">
+            <Form>fDictCoding</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBHint.pas">
+            <Form>fHint</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBCharItem.pas">
+            <Form>fCharItem</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBScreenTip.pas">
+            <Form>fScreenTip</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBInvalidator.pas">
+            <Form>fInvalidator</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBLanguage.pas">
+            <Form>fLanguage</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBFileType.pas">
+            <Form>fFileType</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBWordsExpChoose.pas">
+            <Form>fWordsExpChoose</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBMedia.pas">
+            <Form>fMedia</Form>
+        </DCCReference>
+        <DCCReference Include="Components\JWBAnnotations.pas"/>
+        <DCCReference Include="Components\JWBCommandLine.pas"/>
+        <DCCReference Include="Components\JWBDic.pas"/>
+        <DCCReference Include="Components\JWBKanaConv.pas"/>
+        <DCCReference Include="Components\JWBIndex.pas"/>
+        <DCCReference Include="Components\Parsers\JWBEdictMarkers.pas"/>
+        <DCCReference Include="Components\Parsers\JWBEdictReader.pas"/>
+        <DCCReference Include="Components\JWBAutoImport.pas"/>
+        <DCCReference Include="Components\JWBDownloader.pas"/>
+        <DCCReference Include="Components\JWBDownloadSources.pas"/>
+        <DCCReference Include="Components\JWBUserData.pas"/>
+        <DCCReference Include="Forms\JWBPortableMode.pas">
+            <Form>fPortableMode</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBCategoryMgr.pas">
+            <Form>fCategoryMgr</Form>
+        </DCCReference>
+        <DCCReference Include="Components\JWBForms.pas"/>
+        <DCCReference Include="Components\JWBCharData.pas"/>
+        <DCCReference Include="Components\JWBWakanText.pas"/>
+        <DCCReference Include="Forms\JWBCharDataImport.pas">
+            <Form>fCharDataImport</Form>
+        </DCCReference>
+        <DCCReference Include="Components\RaineRadicals.pas"/>
+        <DCCReference Include="Forms\JWBWordLookupBase.pas">
+            <Form>fWordLookupBase</Form>
+        </DCCReference>
+        <DCCReference Include="Components\JWBCopyFormats.pas"/>
+        <DCCReference Include="Components\JWBLegacyMarkup.pas"/>
+        <DCCReference Include="Components\JWBRefLinks.pas"/>
+        <DCCReference Include="Components\JWBUtils.pas"/>
+        <RcCompile Include="Assets\ODT\odt.rc">
+            <Form>odt.res</Form>
+        </RcCompile>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>
