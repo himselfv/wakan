@@ -246,6 +246,8 @@ type
     ApplicationEvents1: TApplicationEvents;
     aDictLookupAuto: TAction;
     N01132Autoall1: TMenuItem;
+    aDownloader: TAction;
+    Download1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -360,6 +362,7 @@ type
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
     procedure FormShow(Sender: TObject);
     procedure aDictLookupAutoExecute(Sender: TObject);
+    procedure aDownloaderExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -733,6 +736,7 @@ begin
     Package enhancements are going to be loaded now. }
 
    { DownloadTest(); }
+    DownloadSources.LoadFromFile('DownloadSources.ini');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
@@ -3366,6 +3370,11 @@ begin
   if E is EAbort then exit;
   E.Message := _l(E.Message);
   Application.ShowException(E);
+end;
+
+procedure TfMenu.aDownloaderExecute(Sender: TObject);
+begin
+  fDownloader.ShowModal;
 end;
 
 

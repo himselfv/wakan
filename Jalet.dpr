@@ -61,7 +61,7 @@ uses
   JWBEdictMarkers in 'Components\Parsers\JWBEdictMarkers.pas',
   JWBEdictReader in 'Components\Parsers\JWBEdictReader.pas',
   JWBAutoImport in 'Components\JWBAutoImport.pas',
-  JWBDownloader in 'Components\JWBDownloader.pas',
+  JWBDownloaderCore in 'Components\JWBDownloaderCore.pas',
   JWBDownloadSources in 'Components\JWBDownloadSources.pas',
   JWBUserData in 'Components\JWBUserData.pas',
   JWBPortableMode in 'Forms\JWBPortableMode.pas' {fPortableMode},
@@ -75,7 +75,8 @@ uses
   JWBCopyFormats in 'Components\JWBCopyFormats.pas',
   JWBLegacyMarkup in 'Components\JWBLegacyMarkup.pas',
   JWBRefLinks in 'Components\JWBRefLinks.pas',
-  JWBUtils in 'Components\JWBUtils.pas';
+  JWBUtils in 'Components\JWBUtils.pas',
+  JWBDownloader in 'Forms\JWBDownloader.pas' {fDownloader};
 
 {$R *.RES}
 {$R WINXP.RES}
@@ -96,6 +97,7 @@ begin
   Application.CreateForm(TfVocab, fVocab);
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
   Application.CreateForm(TfWordLookupBase, fWordLookupBase);
+  Application.CreateForm(TfDownloader, fDownloader);
   //this one
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup? //this one
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
