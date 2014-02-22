@@ -7,9 +7,18 @@ interface
 
 type
   TDownloadSource = record
-    name: string; //must be lowercase
-    url: string;
-    url_unpack: string; //lowercase
+    Category: string;
+    Language: string;
+    Name: string; //must be lowercase
+    Description: string; //multiline
+    URL: string;
+    URL_Unpack: string; //lowercase
+    Filename: string; //local filename
+    IsDefault: boolean;
+    IsDeprecated: boolean;
+    Encoding: string; //lowercase
+    Format: string; //lowercase
+    BaseLanguage: string; //lowercase
     procedure Reset;
   end;
   PDownloadSource = ^TDownloadSource;
@@ -29,7 +38,7 @@ type
     procedure LoadFromFile(const filename: string);
     function FindByName(const AName: string): PDownloadSource;
     property Count: integer read GetCount;
-    property Items[Index: integer]: PDownloadSource read GetItemByIndex;
+    property Items[Index: integer]: PDownloadSource read GetItemByIndex; default;
   end;
 
 var
@@ -42,14 +51,23 @@ function DownloadDependency(const depname: string): boolean;
 function VerifyDependency(const filename, depname: string): boolean;
 
 implementation
-uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloader,
+uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloaderCore,
   SevenZip, SevenZipUtils, StdPrompt, JWBUnit;
 
 procedure TDownloadSource.Reset;
 begin
-  name := '';
-  url := '';
-  url_unpack := '';
+  Category := '';
+  Language := '';
+  Name := '';
+  Description := '';
+  URL := '';
+  URL_Unpack := '';
+  Filename := '';
+  IsDefault := false;
+  IsDeprecated := false;
+  Encoding := '';
+  Format := '';
+  BaseLanguage := '';
 end;
 
 constructor TDownloadSources.Create;
@@ -74,11 +92,28 @@ begin
   Result.Reset;
 end;
 
+function DecodeSpecSymbols(const AText: string): string;
+var i: integer;
+  flag_specSymbol: boolean;
+begin
+  Result := '';
+  flag_specSymbol := false;
+  for i := 1 to Length(AText) do
+    if flag_specSymbol and (AText[i]='n') then begin
+      Result := Result + #13#10;
+      flag_specSymbol := false;
+    end else
+    if flag_specSymbol or (AText[i]<>'\') then begin
+      Result := Result + AText[i];
+      flag_specSymbol := false;
+    end else
+      flag_specSymbol := true;
+end;
+
 procedure TDownloadSources.LoadFromFile(const filename: string);
 var sl: TStringList;
   i: integer;
-  ln: string;
-  ln_name: string;
+  ln, param: string;
   ln_sep_pos: integer;
   item: PDownloadSource;
 begin
@@ -106,17 +141,44 @@ begin
        //and we'll merge two sections
         raise Exception.Create('Invalid line in '+filename+': '+ln);
 
-      ln_name := AnsiLowerCase(copy(ln,1,ln_sep_pos-1));
+      param := AnsiLowerCase(copy(ln,1,ln_sep_pos-1));
       delete(ln,1,ln_sep_pos);
 
       if item=nil then
         raise Exception.Create('Invalid line in '+filename+': invalid parameter outside of section');
 
-      if ln_name='url' then
-        item.url := ln
+      if param='category' then
+        item.Category := AnsiLowerCase(ln)
       else
-      if ln_name='url-unpack' then
-        item.url_unpack := AnsiLowerCase(ln)
+      if param='language' then
+        item.Language := AnsiLowerCase(ln)
+      else
+      if param='description' then
+        item.Description := DecodeSpecSymbols(ln)
+      else
+      if param='url' then
+        item.URL := ln
+      else
+      if param='url-unpack' then
+        item.URL_Unpack := AnsiLowerCase(ln)
+      else
+      if param='file' then
+        item.Filename := ln
+      else
+      if param='default' then
+        item.IsDefault := SameText(ln, 'true')
+      else
+      if param='deprecated' then
+        item.IsDeprecated := SameText(ln, 'true')
+      else
+      if param='encoding' then
+        item.Encoding := AnsiLowerCase(ln)
+      else
+      if param='format' then
+        item.Format := AnsiLowerCase(ln)
+      else
+      if param='base-language' then
+        item.BaseLanguage := AnsiLowerCase(ln)
       else
       begin
        //Skip params we don't understand -- allow for extensibility

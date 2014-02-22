@@ -283,7 +283,7 @@
         <DCCReference Include="Components\Parsers\JWBEdictMarkers.pas"/>
         <DCCReference Include="Components\Parsers\JWBEdictReader.pas"/>
         <DCCReference Include="Components\JWBAutoImport.pas"/>
-        <DCCReference Include="Components\JWBDownloader.pas"/>
+        <DCCReference Include="Components\JWBDownloaderCore.pas"/>
         <DCCReference Include="Components\JWBDownloadSources.pas"/>
         <DCCReference Include="Components\JWBUserData.pas"/>
         <DCCReference Include="Forms\JWBPortableMode.pas">
@@ -306,6 +306,10 @@
         <DCCReference Include="Components\JWBLegacyMarkup.pas"/>
         <DCCReference Include="Components\JWBRefLinks.pas"/>
         <DCCReference Include="Components\JWBUtils.pas"/>
+        <DCCReference Include="Forms\JWBDownloader.pas">
+            <Form>fDownloader</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>

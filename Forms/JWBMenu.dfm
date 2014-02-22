@@ -571,7 +571,7 @@ object fMenu: TfMenu
     Top = 64
   end
   object ActionList1: TActionList
-    Left = 464
+    Left = 48
     Top = 64
     object aDictLookupAuto: TAction
       Category = 'DictLookup'
@@ -583,18 +583,22 @@ object fMenu: TfMenu
       OnExecute = aDictLookupAutoExecute
     end
     object aSaveUser: TAction
+      Category = 'Main'
       Caption = '#00225^e&Save user changes'
       OnExecute = aSaveUserExecute
     end
     object aCancelUser: TAction
+      Category = 'Main'
       Caption = '#00226^e&Cancel user changes'
       OnExecute = aCancelUserExecute
     end
     object aStatistics: TAction
+      Category = 'Main'
       Caption = '#00227^eS&tatistics...'
       OnExecute = aStatisticsExecute
     end
     object aExit: TAction
+      Category = 'Main'
       Caption = '#00228^e&Exit'
       ShortCut = 32856
       OnExecute = aExitExecute
@@ -691,28 +695,34 @@ object fMenu: TfMenu
       OnExecute = aUserGenerateExecute
     end
     object aSettings: TAction
+      Category = 'Main'
       Caption = '#00248^e&Settings...'
       OnExecute = aSettingsExecute
     end
     object aSettingsDict: TAction
+      Category = 'Main'
       Caption = '#00249^e&Dictionary manager...'
       OnExecute = aSettingsDictExecute
     end
     object aHelp: TAction
+      Category = 'Main'
       Caption = '#00257^e&Help contents...'
       ShortCut = 112
       OnExecute = aHelpExecute
     end
     object aAbout: TAction
+      Category = 'Main'
       Caption = '#00258^e&About...'
       OnExecute = aAboutExecute
     end
     object aJapanese: TAction
+      Category = 'Main'
       Caption = '#00259^e&Japanese mode'
       ShortCut = 119
       OnExecute = aJapaneseExecute
     end
     object aChinese: TAction
+      Category = 'Main'
       Caption = '#00260^e&Chinese mode'
       ShortCut = 120
       OnExecute = aChineseExecute
@@ -1018,19 +1028,23 @@ object fMenu: TfMenu
       OnExecute = aDictMiddleExecute
     end
     object aChangeLanguage: TAction
+      Category = 'Main'
       Caption = '#00929^eChange language...'
       OnExecute = aChangeLanguageExecute
     end
     object aFullscreenMode: TAction
+      Category = 'Main'
       Caption = '#00987^eFullscreen Mode'
       ShortCut = 122
       OnExecute = aFullscreenModeExecute
     end
     object aCategoryManager: TAction
+      Category = 'Main'
       Caption = '#01057^eManage categories'
       OnExecute = aCategoryManagerExecute
     end
     object aPortraitMode: TAction
+      Category = 'Main'
       AutoCheck = True
       Caption = 'Portrait Mode'
       OnExecute = aPortraitModeExecute
@@ -1056,10 +1070,15 @@ object fMenu: TfMenu
       Caption = 'Stroke order'
       OnExecute = aStrokeOrderExecute
     end
+    object aDownloader: TAction
+      Category = 'Main'
+      Caption = 'Download components...'
+      OnExecute = aDownloaderExecute
+    end
   end
   object MainMenu1: TMainMenu
-    Left = 216
-    Top = 48
+    Left = 136
+    Top = 64
     object miDatabase: TMenuItem
       Caption = '#00310^e&Database'
       object miSaveUserChanges: TMenuItem
@@ -1086,6 +1105,9 @@ object fMenu: TfMenu
       end
       object miDictionaryManager: TMenuItem
         Action = aSettingsDict
+      end
+      object Download1: TMenuItem
+        Action = aDownloader
       end
       object N15: TMenuItem
         Caption = '-'
@@ -1470,7 +1492,7 @@ object fMenu: TfMenu
   end
   object ApplicationEvents1: TApplicationEvents
     OnException = ApplicationEvents1Exception
-    Left = 40
-    Top = 48
+    Left = 48
+    Top = 136
   end
 end
