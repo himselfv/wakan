@@ -327,6 +327,8 @@ type
 function UrlEncode(const s: UnicodeString; options: TUrlEncodeOptions): AnsiString; overload;
 function UrlEncode(const s: UTF8String; options: TUrlEncodeOptions): AnsiString; overload;
 
+function ExtractFileNameURL(const URL: string): string;
+
 implementation
 uses WideStrUtils, ShlObj;
 
@@ -1749,6 +1751,17 @@ begin
     else
      //This is already UTF8 so it's ok
       Result := Result + '%' + AnsiString(IntToHex(Ord(s[i]), 2));
+end;
+
+const
+  URLDelim  = '/';
+
+function ExtractFileNameURL(const URL: string): string;
+var
+  I: Integer;
+begin
+  I := URL.LastDelimiter(PathDelim + DriveDelim + URLDelim);
+  Result := URL.SubString(I + 1);
 end;
 
 end.

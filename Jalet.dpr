@@ -76,7 +76,8 @@ uses
   JWBLegacyMarkup in 'Components\JWBLegacyMarkup.pas',
   JWBRefLinks in 'Components\JWBRefLinks.pas',
   JWBUtils in 'Components\JWBUtils.pas',
-  JWBDownloader in 'Forms\JWBDownloader.pas' {fDownloader};
+  JWBDownloader in 'Forms\JWBDownloader.pas' {fDownloader},
+  JWBJobs in 'Components\JWBJobs.pas';
 
 {$R *.RES}
 {$R WINXP.RES}

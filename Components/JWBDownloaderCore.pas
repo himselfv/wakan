@@ -1,27 +1,56 @@
 unit JWBDownloaderCore;
 
 interface
-uses SysUtils, StdPrompt;
+uses SysUtils, Classes, StreamUtils, JWBJobs, Windows, WinInet, StdPrompt;
 
-//TODO: Use JWBIO
-//TODO: Check resulting header and determine if the download is needed before proceeding
- //If-Modified-Since
- //304 Not Modified
- //May be not supported, so we have to check for "last-modified" in the header anyway
- //It may be missing, then we have no choice but to import.
- //Because of all of the above, we are to check for new versions in only about 4 days.
- //Even if the server supports If-Modified-Since, no point in overloading it with requests.
 //TODO: Resume downloading
+
+const
+  BufferSize = 4096; //Download chunk size.
 
 type
   EDownloadException = class(Exception);
+
+  TDownloadResult = (
+    drDone,
+    drUpToDate,
+    drError
+  );
+
+  TDownloadJob = class(TJob)
+  protected
+    FFromURL: string;
+    FToFilename: string; //If only path is provided, will use Content-Disposition header, put name here
+    FIfModifiedSince: TDatetime;
+    hSession, hURL: HInternet;
+    Buffer: array[1..BufferSize] of Byte;
+    BufferLen: dword;
+    FOutputStream: TStreamWriter;
+    FResult: TDownloadResult;
+    FErrorCode: integer;
+    FHttpCode: integer;
+    FLastModified: TDatetime; //Last-Modified header
+    function StartDownload: boolean;
+    procedure SetError(const AErrorCode: integer);
+  public
+    constructor Create(const AFromURL: string; AToFilename: string);
+    destructor Destroy; override;
+    procedure ProcessChunk; override;
+    property FromURL: string read FFromURL write FFromURL;
+    property ToFilename: string read FToFilename write FToFilename;
+    property IfModifiedSince: TDatetime read FIfModifiedSince write FIfModifiedSince;
+    property Result: TDownloadResult read FResult;
+    property ErrorCode: integer read FErrorCode;
+    property HttpCode: integer read FHttpCode;
+    property LastModified: TDatetime read FLastModified;
+  end;
 
 procedure DownloadFile(const fileURL, FileName: string; prog: TSMPromptForm=nil);
 function DownloadFileIfModified(const fileURL, FileName: string;
   since: TDatetime; out LastModified: TDatetime): boolean;
 
 implementation
-uses Forms, Windows, WinInet, JWBUnit;
+uses Forms, JWBUnit, JWBStrings;
 
 var
  //English month names -- used for datetime formatting to servers and so on
@@ -104,58 +133,219 @@ begin
     Result := -1;
 end;
 
-procedure FetchContents(hURL: HInternet; const Filename: string; prog: TSMPromptForm=nil);
-const BufferSize = 4096;
-var f: File;
-  ContentLength: int64;
-  TotalLength: int64;
-  Buffer: array[1..BufferSize] of Byte;
-  BufferLen: DWORD;
+constructor TDownloadJob.Create(const AFromURL: string; AToFilename: string);
 begin
-  ContentLength := GetContentLength(hURL);
-  if prog<>nil then
-    if (ContentLength<=0) or (ContentLength>=MaxInt) then
-      prog.SetMaxProgress(0) //just display progress animation
-    else
-      prog.SetMaxProgress(integer(ContentLength));
-
-  TotalLength := 0;
-  AssignFile(f, FileName);
-  Rewrite(f,1);
-  repeat
-    if not InternetReadFile(hURL, @Buffer, SizeOf(Buffer), BufferLen) then
-      RaiseLastOsError();
-    BlockWrite(f, Buffer, BufferLen);
-    Inc(TotalLength, BufferLen);
-    if prog<>nil then begin
-      prog.SetProgress(integer(TotalLength));
-      prog.ProcessMessages;
-    end;
-  until BufferLen = 0;
-  CloseFile(f);
-end;
-
-procedure DownloadFile(const fileURL, FileName: string; prog: TSMPromptForm);
-var hSession, hURL: HInternet;
-  sAppName: string;
-begin
+  inherited Create;
+  FFromURL := AFromURL;
+  FToFilename := AToFilename;
+  FIfModifiedSince := 0;
   hSession := nil;
   hURL := nil;
-  try
-    if prog<>nil then
-      prog.SetMessage(_l('^eDownloading %s...', [ExtractFilename(Filename)]));
-    sAppName := ExtractFileName(Application.ExeName);
-    hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
-    if hSession=nil then RaiseLastOsError();
-    hURL := InternetOpenURL(hSession, PChar(fileURL), nil, 0, 0, 0);
-    if hURL=nil then RaiseLastOsError();
+end;
 
-    FetchContents(hURL, Filename, prog);
+destructor TDownloadJob.Destroy;
+begin
+  if hURL<>nil then
+    InternetCloseHandle(hURL);
+  if hSession<>nil then
+    InternetCloseHandle(hSession);
+  FreeAndNil(FOutputStream);
+  inherited;
+end;
+
+procedure TDownloadJob.SetError(const AErrorCode: integer);
+begin
+  FErrorCode := AErrorCode;
+  FResult := drError;
+  FState := jsCompleted;
+end;
+
+//To extract the main value, pass ''
+function ExtractHeaderPart(const AValue, APartName: string): string;
+var ps,pc: PChar;
+  inQuotes: boolean;
+  lcasePartName: string;
+  sPartName: string;
+  sPartValue: string;
+begin
+  if AValue='' then begin
+    Result := '';
+    exit;
+  end;
+
+  lcasePartName := AnsiLowerCase(APartName);
+
+  inQuotes := false;
+  sPartName := '';
+  sPartValue := '';
+  Result := '';
+
+  ps := PChar(AValue);
+  pc := ps;
+  while pc^<>#00 do begin
+    if pc^='"' then
+      inQuotes := not inQuotes
+    else
+    if (not inQuotes) and (pc^='=') then begin
+      sPartName := Trim(SpanCopy(ps, pc));
+      ps := pc + 1;
+    end else
+    if (not inQuotes) and (pc^=';') then begin
+      if AnsiLowerCase(sPartName)=lcasePartName then begin
+        Result := AnsiDequotedStr(Trim(SpanCopy(ps, pc)), '"');
+        break;
+      end;
+      ps := pc + 1;
+    end;
+
+    Inc(pc);
+  end;
+end;
+
+function TDownloadJob.StartDownload: boolean;
+var ContentLength: int64;
+  sAppName: string;
+  sSince: string;
+  sHeaders: string;
+  sContentDisposition: string;
+begin
+  sAppName := ExtractFileName(Application.ExeName);
+  hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  if hSession=nil then begin
+    SetError(GetLastError);
+    Result := false;
+    exit;
+  end;
+
+  sHeaders := '';
+  if FIfModifiedSince>1 then begin
+   //Ex.: Sat, 29 Oct 1994 19:43:31 GMT
+    sSince := FormatDatetime('ddd, d mmm yyyy hh:mm:ss', FIfModifiedSince, HttpFormatSettings);
+    sHeaders := 'If-Modified-Since: '+sSince+' GMT';
+  end;
+
+  hURL := InternetOpenURL(hSession, PChar(FFromURL), PChar(sHeaders), 0, 0, 0);
+  if hURL=nil then begin
+    SetError(GetLastError);
+    InternetCloseHandle(hSession);
+    Result := false;
+    exit;
+  end;
+
+  FHttpCode := GetStatusCode(hURL);
+  if FHttpCode<0 then begin
+    SetError(GetLastError);
+    InternetCloseHandle(hURL);
+    InternetCloseHandle(hSession);
+    Result := false;
+    exit;
+  end;
+
+ {
+  "If-Modified-Since", "304 Not Modified" may be not supported, so we have
+  to check for "last-modified" in the header anyway.
+  It may be missing, then we have no choice but to import.
+  Because of the above, we are to check for new versions in only about 4 days.
+  Even if the server supports If-Modified-Since, no point in overloading it with
+  requests.
+ }
+
+  if FHttpCode=304 then begin
+    FResult := drUpToDate;
+    FState := jsCompleted;
+    Result := false; //do not continue
+    exit;
+  end;
+
+  if (FHttpCode<>200) //OK
+  and (FHttpCode<>205) //No content
+  then begin
+    SetError(-1);
+    Result := false;
+    exit;
+  end;
+
+  if TryHttpQueryDatetime(hURL, HTTP_QUERY_LAST_MODIFIED, FLastModified) then begin
+    if (FIfModifiedSince>1) and (FLastModified<FIfModifiedSince) then begin
+      FResult := drUpToDate;
+      FState := jsCompleted;
+      Result := false; //do not continue
+      exit;
+    end;
+  end else
+    FLastModified := now(); //best guess
+
+  ContentLength := GetContentLength(hURL);
+  if (ContentLength<=0) or (ContentLength>=MaxInt) then
+    Self.FTotalSize := 0 //just display progress animation
+  else
+    Self.FTotalSize := integer(ContentLength); //really hope it's less than 2Gb!
+
+ //If filename is provided, use that, otherwise take one from Content-Disposition
+ //or URL
+  if ExtractFilename(FToFilename)='' then begin
+    if TryHttpQueryStr(hURL, HTTP_QUERY_CONTENT_DISPOSITION, sContentDisposition) then
+      sContentDisposition := ExtractHeaderPart(sContentDisposition, 'filename')
+    else
+      sContentDisposition := '';
+    if sContentDisposition<>'' then
+      FToFilename := FToFilename + sContentDisposition
+    else
+      FToFilename := FToFilename + ExtractFilenameURL(FFromURL);
+  end;
+
+
+  FOutputStream := TStreamWriter.Create(
+    TFileStream.Create(FToFilename, fmCreate)
+  );
+  Result := true;
+end;
+
+procedure TDownloadJob.ProcessChunk;
+begin
+  if State=jsPending then begin
+    if not StartDownload then exit;
+    FState := jsWorking;
+  end;
+
+  if not InternetReadFile(hURL, @Buffer, SizeOf(Buffer), BufferLen) then begin
+    SetError(GetLastError);
+    exit;
+  end;
+  FOutputStream.Write(Buffer, BufferLen);
+  Inc(FProgress, BufferLen);
+  if BufferLen=0 then begin
+    FState := jsCompleted;
+    FResult := drDone;
+  end;
+
+end;
+
+//Shortcut
+procedure DownloadFile(const fileURL, FileName: string; prog: TSMPromptForm);
+var job: TDownloadJob;
+begin
+  if prog<>nil then
+    prog.SetMessage(_l('^eDownloading %s...', [ExtractFilename(Filename)]));
+
+  job := TDownloadJob.Create(fileUrl, fileName);
+  try
+    job.ProcessChunk;
+    if prog<>nil then begin
+      prog.SetMaxProgress(integer(job.TotalSize));
+      prog.ProcessMessages;
+    end;
+    while job.State<>jsCompleted do begin
+      job.ProcessChunk;
+      if prog<>nil then begin
+        prog.SetProgress(integer(job.Progress));
+        prog.ProcessMessages;
+      end;
+    end;
+    if job.Result=drError then
+      RaiseLastOsError(job.ErrorCode);
   finally
-    if hURL<>nil then
-      InternetCloseHandle(hURL);
-    if hSession<>nil then
-      InternetCloseHandle(hSession);
+    FreeAndNil(job);
   end;
 end;
 
@@ -163,56 +353,36 @@ end;
 //Exception if could not download.
 function DownloadFileIfModified(const fileURL, FileName: string; since: TDatetime;
   out LastModified: TDatetime): boolean;
-var hSession, hURL: HInternet;
-  sAppName: string;
+var job: TDownloadJob;
   prog: TSMPromptForm;
-  s_since: string;
-  ret: integer;
 begin
-  hSession := nil;
-  hURL := nil;
-  prog := nil; //show only if needed
+  job := TDownloadJob.Create(fileUrl, fileName);
   try
-    sAppName := ExtractFileName(Application.ExeName);
-    hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
-    if hSession=nil then RaiseLastOsError();
-
-   //Ex.: Sat, 29 Oct 1994 19:43:31 GMT
-    s_since := FormatDatetime('ddd, d mmm yyyy hh:mm:ss', since, HttpFormatSettings);
-
-    hURL := InternetOpenURL(hSession, PChar(fileURL), PChar('If-Modified-Since: '+s_since+' GMT'), 0, 0, 0);
-    if hURL=nil then RaiseLastOsError();
-
-    ret := GetStatusCode(hURL);
-    if ret<0 then RaiseLastOsError();
-    if ret=304 then begin
-      Result := false; //unchanged
-      exit;
-    end;
-
-    if (ret<>200) //OK
-    and (ret<>200) and (ret<>205) //No content
-    then begin
-      Result := false; //not found
-      exit;
-    end;
+    job.IfModifiedSince := since;
 
     prog:=SMProgressDlgCreate(_l('^eDownload'),_l('^eDownloading %s...', [ExtractFilename(Filename)]),100,{CanCancel=}true);
     if not Application.MainForm.Visible then
       prog.Position := poScreenCenter;
     prog.AppearModal;
 
-    if not TryHttpQueryDatetime(hURL, HTTP_QUERY_LAST_MODIFIED, LastModified) then
-      LastModified := now(); //best guess
+    job.ProcessChunk;
+    if prog<>nil then begin
+      prog.SetMaxProgress(integer(job.TotalSize));
+      prog.ProcessMessages;
+    end;
+    while job.State<>jsCompleted do begin
+      job.ProcessChunk;
+      if prog<>nil then begin
+        prog.SetProgress(integer(job.Progress));
+        prog.ProcessMessages;
+      end;
+    end;
+    if job.Result=drError then
+      RaiseLastOsError(job.ErrorCode);
 
-    FetchContents(hURL, Filename, prog);
-    Result := true;
+    Result := job.State=jsCompleted; //else jsUpToDate
   finally
-    if hURL<>nil then
-      InternetCloseHandle(hURL);
-    if hSession<>nil then
-      InternetCloseHandle(hSession);
-    FreeAndNil(prog);
+    FreeAndNil(job);
   end;
 end;
 

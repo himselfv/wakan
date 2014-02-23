@@ -1072,7 +1072,7 @@ object fMenu: TfMenu
     end
     object aDownloader: TAction
       Category = 'Main'
-      Caption = 'Download components...'
+      Caption = 'Download/update components...'
       OnExecute = aDownloaderExecute
     end
   end

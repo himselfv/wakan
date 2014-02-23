@@ -13,13 +13,17 @@ type
     Description: string; //multiline
     URL: string;
     URL_Unpack: string; //lowercase
-    Filename: string; //local filename
+    TargetFilename: string; //local filename
+    CheckPresent: string;
     IsDefault: boolean;
-    IsDeprecated: boolean;
     Encoding: string; //lowercase
     Format: string; //lowercase
     BaseLanguage: string; //lowercase
     procedure Reset;
+    function GetTargetDir: string;
+    function GetURLFilename: string;
+    function GetStaticTargetFilename: string;
+    function GetCheckPresentFilename: string;
   end;
   PDownloadSource = ^TDownloadSource;
 
@@ -44,6 +48,9 @@ type
 var
   DownloadSources: TDownloadSources; //populated on load
 
+
+function IsComponentPresent(const ASource: PDownloadSource): boolean;
+
 {
 Downloads and extracts this dependency from whatever is specified as a download source
 }
@@ -62,12 +69,91 @@ begin
   Description := '';
   URL := '';
   URL_Unpack := '';
-  Filename := '';
+  TargetFilename := '';
+  CheckPresent := '';
   IsDefault := false;
-  IsDeprecated := false;
   Encoding := '';
   Format := '';
   BaseLanguage := '';
+end;
+
+{ Returns the file system path where the component has to be placed, depending
+ on its type.
+ For some components the returned path is temporary folder, from where they
+ have to be installed on the system. }
+function TDownloadSource.GetTargetDir: string;
+begin
+  if Category='base' then
+    Result := AppFolder
+  else
+  if Category='dic' then
+    Result := ProgramDataDir //TODO: ProgramDataDir + '/Dictionaries'
+  else
+  if Category='language' then
+    Result := AppFolder //TODO: ProgramDataDir + '/UITranslations'
+  else
+  if Category='font' then
+    Result := ProgramDataDir //TODO: ProgramDataDir + '/Fonts'... or can we use custom fonts? If not, then TempDir
+  else
+  if Category='romaji' then
+    Result := ProgramDataDir //TODO: ProgramDataDir + '/RomajiSchemes'
+  else
+    Result := ProgramDataDir;
+end;
+
+{
+URLFilename: provides static filename extracted from URL.
+Not always available. Some URLs provide no name (e.g. download.php?id=545)
+and some servers may override the URL name with Content-Disposition header.
+}
+function TDownloadSource.GetURLFilename: string;
+begin
+  Result := ExtractFilenameURL(URL);
+end;
+
+{
+TargetFilename: provides/overrides the name of the unpacked file.
+Not all downloads require or even support TargetFilename. Archives may contain
+multiple files with predefined names, and sometimes it's available by other
+means:
+
+1. If the download is archived and there are multiple files inside, ignore
+  everything and just unpack it.
+2. If TargetFilename is defined, use that.
+3. If downloading, check if the server provides the name in headers.
+ 3a. If unpacking, auto-remove archive extensions.
+4. Try to extract filename from URL (not always possible)
+ 4a. If unpacking, auto-remove archive extensions.
+
+Static version:
+1. If TargetFilename is defined, use that.
+2. Try to extract filename from URL (not always possible)
+ 2a. If unpacking, auto-remove archive extensions.
+}
+function TDownloadSource.GetStaticTargetFilename: string;
+var ext: string;
+begin
+  Result := TargetFilename;
+  if Result='' then
+    Result := ExtractFilenameURL(URL);
+  ext := ExtractFileExt(Result);
+  if (ext='.zip') or (ext='.gz') then
+    Result := ChangeFileExt(Result, '');
+end;
+
+{
+CheckPresent: file to use to check if the component is present.
+
+1. If CheckPresent is defined, use that.
+2. If TargetFilename is defined, use that.
+3. Try to extract filename from URL (not always possible)
+ 3a. If unpacking, auto-remove archive extensions.
+}
+function TDownloadSource.GetCheckPresentFilename: string;
+begin
+  Result := CheckPresent;
+  if Result='' then
+    Result := GetStaticTargetFilename;
 end;
 
 constructor TDownloadSources.Create;
@@ -162,14 +248,14 @@ begin
       if param='url-unpack' then
         item.URL_Unpack := AnsiLowerCase(ln)
       else
-      if param='file' then
-        item.Filename := ln
+      if param='targetfile' then
+        item.TargetFilename := ln
+      else
+      if param='checkpresent' then
+        item.CheckPresent := ln
       else
       if param='default' then
         item.IsDefault := SameText(ln, 'true')
-      else
-      if param='deprecated' then
-        item.IsDeprecated := SameText(ln, 'true')
       else
       if param='encoding' then
         item.Encoding := AnsiLowerCase(ln)
@@ -212,6 +298,13 @@ end;
 function TDownloadSources.GetItemByIndex(Index: integer): PDownloadSource;
 begin
   Result := @FItems[Index];
+end;
+
+function IsComponentPresent(const ASource: PDownloadSource): boolean;
+var TargetFile: string;
+begin
+  TargetFile := ASource.GetTargetDir + '\' + ASource.GetCheckPresentFilename;
+  Result := FileExists(TargetFile);
 end;
 
 function DownloadDependency(const depname: string): boolean;
