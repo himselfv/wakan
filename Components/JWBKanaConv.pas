@@ -1,8 +1,8 @@
 ﻿unit JWBKanaConv;
 {
 Converts kana to romaji and back according to a set of rules.
-This is a very hot codepath when translating in Wakan. Therefore we use
-balanced binary trees and do everything in a very optimal way.
+This is a very hot codepath when translating in Wakan. We use balanced binary
+trees and do everything in a very optimal way.
 
 Throughout this file Romaji stands to mean also Polaji, Kiriji, Pinyin etc.
 
@@ -15,6 +15,15 @@ uses Classes, JWBStrings, BalancedTree;
 {$DEFINE KATA_AT_SEARCH}
 { Convert katakana to hiragana at search instead of looking for it as is.
  Atm the only supported way. }
+
+{ At this moment hiragana and katakana, lowercase and uppercase chars are equal.
+ The code converts everything to lowercase, hiragana internally before passing
+ to any of the common code.
+ Exceptions:
+ - entries in kana index are created both for hira and kata, for speed.
+ - although all romaji is lowercased in RomajiToKana, romaji rules loaded from
+  file are kept as is. This is because romaji tables sometimes use uppercase
+  as a temporary form between translation and replacements }
 
 type
   PFCharPtr = PWideChar;
@@ -193,14 +202,7 @@ type
     function RomajiToKana(const AString: string; AFlags: TResolveFlags): FString; virtual; abstract;
   end;
 
- { At this moment hiragana and katakana, lowercase and uppercase chars are equal.
-  The code converts everything to lowercase, hiragana internally before passing
-  to any of the common code.
-  Exceptions:
-   - entries in kana index are created both for hira and kata, for speed.
-   - although all romaji is lowercased in RomajiToKana, romaji rules loaded from
-    file are kept as is. This is because romaji tables sometimes use uppercase
-    as a temporary form between translation and replacements }
+
   TKanaTranslator = class(TRomajiTranslator)
   protected
     FTrans: TKanaTranslationTable;
@@ -208,7 +210,7 @@ type
     function SingleKanaToRomaji(var ps: PFChar; flags: TResolveFlags): string;
     procedure RomaReplace(var s: string; const r: PRomajiReplacementRule);
   public
-   { Always generates lowcase romaji }
+   { Always generates lowercase romaji }
     function KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string; override;
    { Supports inline markers:
       K -- from this point it's katakana
@@ -995,20 +997,26 @@ begin
 end;
 
 function TKanaTranslator.KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string;
-var lowcased_s: FString;
-  fn:string;
+var fn:string;
   s2:string;
   ps: PWideChar;
   i: integer;
   r: PRomajiReplacementRule;
+ {$IFNDEF UNICODE}
+  lowcased_s: FString;
+ {$ENDIF}
 begin
   if Length(AString)<=0 then begin
     Result := '';
     exit;
   end;
-  lowcased_s := Lowercase(AString);
   s2 := '';
+ {$IFDEF UNICODE}
+  ps := PWideChar(AString);
+ {$ELSE}
+  lowcased_s := Lowercase(AString);
   ps := PWideChar(lowcased_s);
+ {$ENDIF}
 
  { Translation }
   while ps^<>#00 do begin
@@ -1072,6 +1080,7 @@ begin
     exit;
   end;
 
+ //s2 := Lowercase(AString); //cannot, because we will miss K and H flags
   s2 := AString;
 
  { Replacements }
@@ -1224,7 +1233,7 @@ begin
     if fpygettone(curstr) in [0..5] then
       s2 := s2 + Chr(Ord('0') + fpyextrtone(curstr)); //to digit
   end;
-  Result:=lowercase(s2);
+  Result := LowerCase(s2);
 end;
 
 function TPinYinTranslator.RomajiToKana(const AString: string; AFlags: TResolveFlags): FString;
