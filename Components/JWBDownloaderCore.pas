@@ -315,6 +315,7 @@ begin
   FOutputStream.Write(Buffer, BufferLen);
   Inc(FProgress, BufferLen);
   if BufferLen=0 then begin
+    FOutputStream.Flush; //to not delay it
     FState := jsCompleted;
     FResult := drDone;
   end;
