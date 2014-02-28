@@ -700,7 +700,7 @@ begin
   f_searchbin := UnicodeFileWriter(APath+'\search.bin');
   try
     pos := 0;
-    for i := 0 to Length(FRadicals) - 1 do begin
+    for i := 0 to Self.Count - 1 do begin
       sl_radicals.Add(
         fstrtohex(FRadicals[i].Radical)+'-'+
         Format('%2.2d-%4.4d-%5.5d', [FRadicals[i].strokeCount, flength(FRadicals[i].Chars), pos])
