@@ -55,6 +55,7 @@ function perc(i,j:integer):string;
 procedure ShellOpen(const sCommand: string);
 
 function BackupDir: string;
+function GetBackupFilename(const AFilename: string): string;
 function Backup(const filename: string): string;
 
 procedure RegeditAtKey(const key: string);
@@ -132,19 +133,20 @@ begin
   Result := UserDataDir+'\backup';
 end;
 
+//dir\wakan.usr --> wakan-20130111.usr
+function GetBackupFilename(const AFilename: string): string;
+begin
+  Result := BackupDir+'\'+ChangeFileExt(ExtractFilename(AFilename),'')+'-'
+    +FormatDateTime('yyyymmdd-hhnnss',now)+ExtractFileExt(AFilename);
+end;
+
 { Universal backup function. Backups everything to the directory designated for backups.
  Returns filename of the backup or empty string on failure }
 function Backup(const filename: string): string;
 begin
  //For now works as it did in previous Wakan versions.
  //Has to be reworked to put backups into user folder.
-  {$I-}
-  mkdir(BackupDir);
-  {$I+}
-  ioresult;
- //dir\wakan.usr --> wakan-20130111.usr
-  Result := BackupDir+'\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
-    +FormatDateTime('yyyymmdd-hhnnss',now)+ExtractFileExt(filename);
+  Result := GetBackupFilename(filename);
   if not CopyFile(PChar(filename),pchar(Result),false) then
     Result := '';
 end;
