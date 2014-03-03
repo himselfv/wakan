@@ -40,8 +40,8 @@ procedure ShowScreenTip(x,y:integer;s:FString;wt:TEvalCharType;immediate:boolean
 procedure HideScreenTip;
 
 implementation
-
-uses JWBUnit, JWBKanjiCard, JWBDic, JWBMenu, JWBSettings, JWBLegacyMarkup;
+uses JWBUnit, JWBKanjiCard, JWBDic, JWBMenu, JWBLanguage, JWBSettings,
+  JWBLegacyMarkup, JWBWordGrid;
 
 {$R *.DFM}
 
@@ -218,7 +218,7 @@ procedure ShowScreenTip(x,y:integer;s:FString;wt:TEvalCharType;immediate:boolean
 var maxwords:integer;
     wasfull:boolean;
     s1,s2:FString; //kinda fstring, has control chars
-    s3,s4:string;
+    s3:string;
     ss:string;
     ch,kch:integer;
     rect:TRect;
@@ -268,8 +268,7 @@ begin
   begin
     slen:=fScreenTip.screenTipList[i].slen;
     if slen>maxslen then maxslen:=slen;
-    ss:=fScreenTip.screenTipList[i].ToLegacyString;
-    SplitWord(ss,s1,s2,s3,s4);
+    fScreenTip.screenTipList[i].ToLegacyParts(s1, s2, s3);
     rect.left:=0;
     rect.right:=Screen.Width;
     rect.top:=0;

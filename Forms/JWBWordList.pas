@@ -158,13 +158,12 @@ type
     procedure SaveWordList;
     procedure UpdateWordListStats;
 
-
   end;
 
 implementation
-
-uses JWBStrings, JWBUnit, JWBSettings, JWBPrint, Printers, JWBVocab, JWBMenu,
-  JWBUserData, TextTable, StdPrompt, JWBCategories, JWBLegacyMarkup;
+uses JWBStrings, JWBLanguage, JWBCore, JWBUnit, JWBSettings, JWBPrint, Printers,
+  JWBVocab, JWBMenu, JWBUserData, TextTable, StdPrompt, JWBCategories,
+  JWBLegacyMarkup;
 
 {$R *.DFM}
 

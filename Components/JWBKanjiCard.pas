@@ -1,7 +1,8 @@
 unit JWBKanjiCard;
+{ Kanji card painting }
 
 interface
-uses SysUtils, Classes, Graphics, Windows, JWBStrings;
+uses SysUtils, Classes, Graphics, Grids, Windows, JWBStrings;
 
 var
   kcchind,
@@ -14,7 +15,8 @@ procedure ClearKanjiCardCache;
 
 implementation
 uses TextTable, JWBUnit, JWBEdictMarkers, JWBDic, JWBDicSearch, JWBMenu,
-  JWBSettings, JWBUserData, JWBKanaConv, JWBCharData, JWBLegacyMarkup;
+  JWBSettings, JWBUserData, JWBKanaConv, JWBCharData, JWBLegacyMarkup,
+  JWBWordGrid;
 
 procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
   stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;

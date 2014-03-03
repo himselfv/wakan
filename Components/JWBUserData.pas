@@ -89,7 +89,7 @@ function GetPhoneticSortStr(const phonetic: FString; const lang: char): string;
 
 
 implementation
-uses SysUtils, JWBUnit, JWBKanaConv, PKGWrite, JWBCategories, Classes;
+uses SysUtils, JWBCore, JWBUnit, JWBKanaConv, PKGWrite, JWBCategories, Classes;
 
 { Packs WAKAN.USR data from directory Dir to package Package.
  Do not use directly; there are functions to save and load user data packages. }

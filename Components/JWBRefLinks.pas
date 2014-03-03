@@ -56,7 +56,7 @@ type
 
 
 implementation
-uses SysUtils, UITypes, JWBStrings, JWBUtils, JWBIO, JWBCharData;
+uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';

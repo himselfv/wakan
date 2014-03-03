@@ -74,6 +74,11 @@ var
 //Call at the start of the application
 procedure InitLanguage;
 
+{ Translation }
+
+function _l(const id:string):string; overload;
+function _l(const id:string; args: array of const):string; overload;
+
 implementation
 uses UITypes, JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
 
@@ -515,6 +520,17 @@ begin
       Result := i;
       break;
     end;
+end;
+
+
+function _l(const id:string):string;
+begin
+  result := fLanguage.TranslateString(id);
+end;
+
+function _l(const id:string; args: array of const):string;
+begin
+  Result := Format(fLanguage.TranslateString(id), args);
 end;
 
 initialization

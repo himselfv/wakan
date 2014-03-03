@@ -50,7 +50,7 @@ function DownloadFileIfModified(const fileURL, FileName: string;
   since: TDatetime; out LastModified: TDatetime): boolean;
 
 implementation
-uses Forms, JWBUnit, JWBStrings;
+uses Forms, JWBUnit, JWBStrings, JWBLanguage;
 
 var
  //English month names -- used for datetime formatting to servers and so on

@@ -30,8 +30,8 @@ function HaveAnnotations:boolean; inline;
 procedure AnnotShowMedia(kanji,kana:string);
 
 implementation
-uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBUnit, JWBMenu, JWBIO,
-  JWBKanaConv, JWBLegacyMarkup;
+uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBCore, JWBUnit, JWBLanguage,
+  JWBIO, JWBKanaConv, JWBLegacyMarkup;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 var pack: TPackageBuilder;
@@ -296,11 +296,12 @@ begin
         fMedia.media.Assign(media);
         fMedia.TabSet1.Tabs.Assign(tabs);
       end;
-      fMedia.Show;
+     //Show without stealing focus
+      ShowWindow(fMedia.Handle, SW_SHOWNOACTIVATE);
+      fMedia.Visible := True;
       fMedia.TabSet1.Visible:=fMedia.media.Count>1;
       fMedia.TabSet1.TabIndex:=0;
-      fMedia.TabSet1Change(fMenu,0,b);
-      fMenu.SetFocus;
+      fMedia.TabSet1Change(nil,0,b);
     end;
 
   finally

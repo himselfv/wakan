@@ -47,7 +47,7 @@ function FindFont(const face: string; charset: integer): string;
 function ListFonts(const face: string; charset: integer): TStringList;
 
 implementation
-uses JWBMenu, JWBUnit;
+uses JWBLanguage, JWBUnit;
 
 {$R *.DFM}
 

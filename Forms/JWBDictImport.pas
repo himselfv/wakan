@@ -87,8 +87,8 @@ function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 
 implementation
 
-uses StrUtils, WideStrUtils, JWBDictCoding, JWBKanaConv, JWBUnit, JWBMenu,
-  PKGWrite, JWBDicSearch;
+uses StrUtils, WideStrUtils, JWBDictCoding, JWBKanaConv, JWBCore, JWBUnit,
+  JWBLanguage, PKGWrite, JWBDicSearch, JWBMenu;
 
 {$R *.DFM}
 
@@ -369,7 +369,7 @@ var freqi: integer;
         end;
        //Pop next word until space
         u_word:=ustrqpop(u_part,WideChar(' '));
-        urepl(u_part,';',',');
+        u_part:=repl(u_part,';',',');
         if (ignorel.IndexOf(u_word)=-1) and (u_word<>'')
         and (fgetch(u_word, 1)>{$IFDEF UNICODE}#$0040{$ELSE}'0040'{$ENDIF}) //it's all punctuation and digits before
         then
@@ -536,14 +536,14 @@ begin
             roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+pphon+' ---> '+roma[i]);
           Inc(roma_prob_cnt);
         end;
-        repl(roma[i],'?','');
+        roma[i]:=repl(roma[i],'?','');
         if roma[i]='' then roma[i]:='XXX';
       end;
 
       //Convert entries
       for i := 0 to ed.senses_used - 1 do begin
-        urepl(ed.senses[i].text,UH_EDICT_SEMICOL,','); //replace ; with ,
-        urepl(ed.senses[i].text,UH_EDICT_ALTERN,'; '); //replace / with ;
+        ed.senses[i].text:=repl(ed.senses[i].text,UH_EDICT_SEMICOL,','); //replace ; with ,
+        ed.senses[i].text:=repl(ed.senses[i].text,UH_EDICT_ALTERN,'; '); //replace / with ;
       end;
 
       AddArticle(@ed, roma);
@@ -608,8 +608,8 @@ begin
 
       //Convert entries
       for i := 0 to ed.senses_used - 1 do begin
-        urepl(ed.senses[i].text,UH_EDICT_SEMICOL,','); //replace ; with ,
-        urepl(ed.senses[i].text,UH_EDICT_ALTERN,'; '); //replace / with ;
+        ed.senses[i].text:=repl(ed.senses[i].text,UH_EDICT_SEMICOL,','); //replace ; with ,
+        ed.senses[i].text:=repl(ed.senses[i].text,UH_EDICT_ALTERN,'; '); //replace / with ;
       end;
 
       AddArticle(@ed, roma);

@@ -185,7 +185,7 @@ implementation
 uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
   JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard, JWBKanjiSearch,
   JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBDic,
-  JWBRefLinks;
+  JWBRefLinks, JWBLanguage;
 
 {$R *.DFM}
 

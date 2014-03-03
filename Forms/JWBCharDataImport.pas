@@ -49,14 +49,14 @@ type
 
 implementation
 uses FileCtrl, StdPrompt, JWBStrings, KanjidicReader, UnihanReader,
-  JWBUnit, JWBIO, JWBFileType, FastArray;
+  JWBCore, JWBUnit, JWBIO, JWBFileType, FastArray, JWBLanguage;
 
 {$R *.dfm}
 
 procedure TfCharDataImport.FormShow(Sender: TObject);
 begin
   lblBackupPath.Caption := BackupDir;
-  lblBackupPath.URL := 'file://'+replc(BackupDir,'\','/');
+  lblBackupPath.URL := 'file://'+repl(BackupDir,'\','/');
 end;
 
 procedure TfCharDataImport.btnKanjidicBrowseClick(Sender: TObject);

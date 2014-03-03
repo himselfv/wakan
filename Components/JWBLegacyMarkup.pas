@@ -126,7 +126,7 @@ function MatchMarkers(const s: string; AOnMarker: TReplaceProc): string;
 
 { Edict markers }
 function ConvertEdictEntry(const s:string;var mark:TMarkers):string;
-function FConvertEdictEntry(const s:FString;var mark:TMarkers):FString; deprecated
+function FConvertEdictEntry(const s:FString;var mark:TMarkers):FString; deprecated;
 function EnrichDictEntry(const s:string;const mark:TMarkers):string;
 function DropEdictMarkers(const s:string):string;
 
@@ -173,9 +173,9 @@ have to be upgraded.
 function FixVocabEntry(const s: string): string;
 begin
   Result := s;
-  repl(Result,AH_LBEG,UH_LBEG);
-  repl(Result,AH_LEND,UH_LEND);
-  repl(Result,AH_SETCOLOR,UH_SETCOLOR);
+  Result := repl(Result,AH_LBEG,UH_LBEG);
+  Result := repl(Result,AH_LEND,UH_LEND);
+  Result := repl(Result,AH_SETCOLOR,UH_SETCOLOR);
  //Let's hope other flags weren't used (they shouldn't have been)
 end;
 
@@ -283,7 +283,7 @@ begin
 { The resulting article is usually copied from search results and so can be
   an amalgamation of several search matches from different dictionaries.
   It is still a single article but at least we split that into clauses }
-  s := replc(s, '//', '/'); //can sometimes happen
+  s := repl(s, '//', '/'); //can sometimes happen
 
   text := '';
 

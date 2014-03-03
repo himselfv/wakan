@@ -195,6 +195,7 @@ type
     procedure DeleteArticle(const AIndex: integer);
     function FindArticle(const dicname: string; const dicindex: integer): integer;
     function ToLegacyString: string;
+    procedure ToLegacyParts(out AKanji, AKana, ABody: string);
   end;
   PSearchResult = ^TSearchResult;
 
@@ -297,7 +298,7 @@ procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
 
 implementation
 uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBWordLookup, JWBSettings,
-  JWBVocab, JWBCategories, JWBUserData, JWBLegacyMarkup;
+  JWBVocab, JWBCategories, JWBUserData, JWBLegacyMarkup, JWBLanguage;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
@@ -633,7 +634,16 @@ begin
     end;
 end;
 
+{ Returns the result in a legacy format. Do not use in new code. }
 function TSearchResult.ToLegacyString: string;
+var AKanji, AKana, ABody: string;
+begin
+  ToLegacyParts(AKanji, AKana, ABody);
+  Result := AKanji + ' [' + AKana + '] {' + ABody + '}';
+end;
+
+{ Returns the result in a legacy formatted parts. Do not use in new code }
+procedure TSearchResult.ToLegacyParts(out AKanji, AKana, ABody: string);
 var statpref: string;
   i: integer;
 begin
@@ -645,20 +655,24 @@ begin
  //Store match type in the string. The only place where this is used is
  //DrawWordInfo(), and it should not be used anywhere else.
   if sdef<>'F' then
-    Result := UH_WORDTYPE+'I'
+    ABody := UH_WORDTYPE+'I'
   else
-    Result := UH_WORDTYPE+'F';
+    ABody := UH_WORDTYPE+'F';
+ //TODO: Wtf? This is overriden just the next line.
 
-  Result := '';
+  ABody := '';
   for i := 0 to Length(articles)-1 do begin
-    if Result<>'' then Result := Result + ' / ';
-    Result := Result + articles[i].ToLegacyString();
+    if ABody<>'' then ABody := ABody + ' / ';
+    ABody := ABody + articles[i].ToLegacyString();
   end;
 
  //wakan uses {} as special chars, unfortunately
-  repl(Result, '{', '(');
-  repl(Result, '}', ')');
-  Result := statpref + CheckKnownKanji(kanji) + ' [' + statpref + kana + '] {' + statpref + Result + '}';
+  ABody := repl(ABody, '{', '(');
+  ABody := repl(ABody, '}', ')');
+
+  AKanji := statpref + CheckKnownKanji(kanji);
+  AKana := statpref + kana;
+  ABody := statpref + ABody;
 end;
 
 procedure TSearchResArticle.Reset;
@@ -809,7 +823,7 @@ begin
         se.Add(9,length(search),'F',rtRoma,search);
         if pos('?',tmpkana)>0 then begin
          //Deflex with lower priority since this is probably wrong decoding of roma
-          repl(tmpkana,'?','');
+          tmpkana := repl(tmpkana, '?', '');
           Deflex(tmpkana,se,6,5,true);
         end else
           Deflex(tmpkana,se,9,8,true);

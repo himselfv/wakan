@@ -260,9 +260,6 @@
         <DCCReference Include="Forms\JWBScreenTip.pas">
             <Form>fScreenTip</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBInvalidator.pas">
-            <Form>fInvalidator</Form>
-        </DCCReference>
         <DCCReference Include="Forms\JWBLanguage.pas">
             <Form>fLanguage</Form>
         </DCCReference>
@@ -275,6 +272,21 @@
         <DCCReference Include="Forms\JWBMedia.pas">
             <Form>fMedia</Form>
         </DCCReference>
+        <DCCReference Include="Forms\JWBPortableMode.pas">
+            <Form>fPortableMode</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBCategoryMgr.pas">
+            <Form>fCategoryMgr</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBCharDataImport.pas">
+            <Form>fCharDataImport</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBWordLookupBase.pas">
+            <Form>fWordLookupBase</Form>
+        </DCCReference>
+        <DCCReference Include="Forms\JWBDownloader.pas">
+            <Form>fDownloader</Form>
+        </DCCReference>
         <DCCReference Include="Components\JWBAnnotations.pas"/>
         <DCCReference Include="Components\JWBCommandLine.pas"/>
         <DCCReference Include="Components\JWBDic.pas"/>
@@ -286,31 +298,16 @@
         <DCCReference Include="Components\JWBDownloaderCore.pas"/>
         <DCCReference Include="Components\JWBDownloadSources.pas"/>
         <DCCReference Include="Components\JWBUserData.pas"/>
-        <DCCReference Include="Forms\JWBPortableMode.pas">
-            <Form>fPortableMode</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBCategoryMgr.pas">
-            <Form>fCategoryMgr</Form>
-        </DCCReference>
         <DCCReference Include="Components\JWBForms.pas"/>
         <DCCReference Include="Components\JWBCharData.pas"/>
         <DCCReference Include="Components\JWBWakanText.pas"/>
-        <DCCReference Include="Forms\JWBCharDataImport.pas">
-            <Form>fCharDataImport</Form>
-        </DCCReference>
         <DCCReference Include="Components\RaineRadicals.pas"/>
-        <DCCReference Include="Forms\JWBWordLookupBase.pas">
-            <Form>fWordLookupBase</Form>
-        </DCCReference>
         <DCCReference Include="Components\JWBCopyFormats.pas"/>
         <DCCReference Include="Components\JWBLegacyMarkup.pas"/>
         <DCCReference Include="Components\JWBRefLinks.pas"/>
-        <DCCReference Include="Components\JWBUtils.pas"/>
-        <DCCReference Include="Forms\JWBDownloader.pas">
-            <Form>fDownloader</Form>
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="Components\JWBJobs.pas"/>
+        <DCCReference Include="Components\JWBCore.pas"/>
+        <DCCReference Include="Components\JWBWordGrid.pas"/>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>

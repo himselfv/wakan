@@ -474,7 +474,7 @@ const
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBUtils, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
+uses JWBMenu, JWBStrings, JWBCore, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBWordKanji,
   JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
@@ -896,7 +896,7 @@ begin
   dicts.NotGroupDicts[4]:=reg.ReadString('Dict','NotGroup4Dicts','');
   dicts.NotGroupDicts[5]:=reg.ReadString('Dict','NotGroup5Dicts','');
   dicts.OfflineDicts:=reg.ReadString('Dict','OfflineDicts','');
-  dicts.Priority.Text := replc(reg.ReadString('Dict','Priority',''),',',#13#10);
+  dicts.Priority.Text := repl(reg.ReadString('Dict','Priority',''),',',#13#10);
   CheckBox18.Checked:=reg.ReadBool('KanjiCards','PrintCompounds',true);
   CheckBox19.Checked:=reg.ReadBool('KanjiCards','PrintRadical',true);
   CheckBox20.Checked:=reg.ReadBool('KanjiCards','PrintAlternate',true);
@@ -1240,7 +1240,7 @@ begin
   reg.WriteString('Dict','NotGroup5Dicts',dicts.NotGroupDicts[5]);
   reg.WriteString('Dict','OfflineDicts',dicts.OfflineDicts);
   reg.WriteString('Dict','CurLanguage',curlang);
-  reg.WriteString('Dict','Priority',replc(dicts.Priority.Text,#13#10,','));
+  reg.WriteString('Dict','Priority',repl(dicts.Priority.Text,#13#10,','));
 {
   for i := 0 to dicts.Priority.Count - 1 do
     reg.WriteString('DictPriority', IntToStr(i), dicts.Priority[i]);
@@ -2054,18 +2054,18 @@ begin
 
   if PortabilityMode=pmPortable then begin
     lblSettingsPath.Caption := AppFolder + '\wakan.ini';
-    lblSettingsPath.URL := 'file://'+replc(lblSettingsPath.Caption,'\','/');
+    lblSettingsPath.URL := 'file://'+repl(lblSettingsPath.Caption,'\','/');
   end else begin
     lblSettingsPath.Caption := 'HKEY_CURRENT_USER\'+WakanRegKey;
     lblSettingsPath.URL := '';
   end;
 
   lblDictionariesPath.Caption := DictionaryDir;
-  lblDictionariesPath.URL := 'file://'+replc(DictionaryDir,'\','/');
+  lblDictionariesPath.URL := 'file://'+repl(DictionaryDir,'\','/');
   lblUserDataPath.Caption := UserDataDir;
-  lblUserDataPath.URL := 'file://'+replc(UserDataDir,'\','/');
+  lblUserDataPath.URL := 'file://'+repl(UserDataDir,'\','/');
   lblBackupPath.Caption := BackupDir;
-  lblBackupPath.URL := 'file://'+replc(BackupDir,'\','/');
+  lblBackupPath.URL := 'file://'+repl(BackupDir,'\','/');
 
   btnUpgradeToStandalone.Visible := PortabilityMode=pmCompatible;
   lblUpgradeToStandalone.Visible := btnUpgradeToStandalone.Visible;

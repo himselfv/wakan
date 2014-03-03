@@ -90,7 +90,7 @@ var
 
 implementation
 
-uses TextTable, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
+uses TextTable, JWBLanguage, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
   JWBPrint, JWBEditor, JWBWordKanji, JWBExamples,
   JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
   JWBCategories, JWBAnnotations, JWBUserData, JWBCharData, JWBLegacyMarkup;
@@ -119,13 +119,13 @@ end;
 procedure TfWordLookup.LanguageChanged;
 begin
   if curLang='j' then begin
-    fWordLookup.miLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
-    fWordLookup.miLookupJtoE.Hint := _l('#00643^Search by japanese reading');
-    fWordLookup.miLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
+    Self.miLookupJtoE.Caption:=_l('#00329^eJapanese ->English');
+    Self.miLookupJtoE.Hint := _l('#00643^Search by japanese reading');
+    Self.miLookupEtoJ.Caption:=_l('#00330^eEnglish -> Japanese');
   end else begin
-    fWordLookup.miLookupJtoE.Caption:=_l('#00331^eChinese ->English');
-    fWordLookup.miLookupJtoE.Hint := _l('#01134^Search by chinese reading');
-    fWordLookup.miLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
+    Self.miLookupJtoE.Caption:=_l('#00331^eChinese ->English');
+    Self.miLookupJtoE.Hint := _l('#01134^Search by chinese reading');
+    Self.miLookupEtoJ.Caption:=_l('#00332^eEnglish -> Chinese');
   end;
   UpdateLookupModeButtonText;
 

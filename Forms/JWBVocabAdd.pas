@@ -54,8 +54,8 @@ type
 function fVocabAdd: TfVocabAdd;
 
 implementation
-uses UITypes, TextTable, JWBVocab, JWBUnit, JWBKanaConv, JWBMenu, JWBUserData,
-  JWBCategories;
+uses UITypes, TextTable, JWBLanguage, JWBVocab, JWBUnit, JWBKanaConv, JWBMenu,
+  JWBUserData, JWBCategories;
 
 {$R *.DFM}
 

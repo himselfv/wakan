@@ -109,13 +109,6 @@ const
  {$ENDIF}
 
 
-{ Math }
-
-{ Min and max so we don't have to link Math.pas just for that }
-function min(a, b: integer): integer; inline;
-function max(a, b: integer): integer; inline;
-
-
 { Files }
 
 function GetModuleFilenameStr(hModule: HMODULE = 0): string;
@@ -235,14 +228,16 @@ procedure SplitAdd(sl:TStringList;s:string;cnt:integer);
 function SplitStr(s: string; cnt: integer; ch: char=','): TStringArray; overload;
 function SplitStr(s: string; ch: char=','): TStringArray; overload;
 function SplitStr(s: string; sep: string): TStringArray; overload;
-procedure StrListAdd(sl: TStringList; sa: TStringArray);
-function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string;
+function split(s: string; sep: string): TStringArray; overload;
+function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string; inline;
+function join(const a: TStringArray; const sep: string): string;
 procedure Append(var ATo: TStringArray; const AFrom: TStringArray);
 
-function repl(var s:string;const sub,rep:string):string;
-function urepl(var s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
-function replc(const s:string;const sub,rep:string):string;
-function ureplc(const s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
+procedure StrListAdd(sl: TStringList; sa: TStringArray);
+
+function countc(const s:string;const c:char): integer;
+
+function repl(const s: string; const sub, repl: string): string; overload;
 function strqpop(var s:string;c:char):string; overload;
 function strqpop(var s:string;const cs:string):string; overload;
 function ustrqpop(var s:UnicodeString;c:WideChar):UnicodeString; overload;
@@ -331,18 +326,6 @@ function ExtractFileNameURL(const URL: string): string;
 
 implementation
 uses WideStrUtils, ShlObj;
-
-{ Math }
-
-function min(a, b: integer): integer;
-begin
-  if a<b then Result := a else Result := b;
-end;
-
-function max(a, b: integer): integer;
-begin
-  if a>b then Result := a else Result := b;
-end;
 
 
 { Files }
@@ -1277,26 +1260,25 @@ begin
   end;
 end;
 
-procedure StrListAdd(sl: TStringList; sa: TStringArray);
-var i: integer;
+function split(s: string; sep: string): TStringArray;
 begin
-  for i := 0 to Length(sa) - 1 do
-    sl.Add(sa[i]);
+  Result := SplitStr(s, sep);
 end;
 
 function JoinStr(const AParts: TStringArray; const ASep: string = ', '): string;
+begin
+  Result := join(AParts, ASep)
+end;
+
+function join(const a: TStringArray; const sep: string): string;
 var i: integer;
 begin
-  if Length(AParts)<=0 then
+  if Length(a)<=0 then
     Result := ''
   else
-  if Length(AParts)=1 then
-    Result := AParts[0]
-  else begin
-    Result := AParts[0];
-    for i := 1 to Length(AParts)-1 do
-      Result := Result + ASep + AParts[i];
-  end;
+    Result := a[0];
+  for i := 1 to Length(a) - 1 do
+    Result := Result + sep + a[i];
 end;
 
 procedure Append(var ATo: TStringArray; const AFrom: TStringArray);
@@ -1309,46 +1291,26 @@ begin
     ATo[base+i] := AFrom[i];
 end;
 
+procedure StrListAdd(sl: TStringList; sa: TStringArray);
+var i: integer;
+begin
+  for i := 0 to Length(sa) - 1 do
+    sl.Add(sa[i]);
+end;
 
-function repl(var s:string;const sub,rep:string):string;
+
+function repl(const s:string;const sub,repl:string):string;
 var i_pos: integer;
 begin
-  i_pos := pos(sub,s);
-  while i_pos>0 do begin
-    s:=copy(s,1,i_pos-1)+rep+copy(s,i_pos+length(sub),length(s)-i_pos+1-length(sub));
-    i_pos := pos(sub,s);
-  end;
-  result:=s;
-end;
-
-function urepl(var s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
-{$IFDEF UNICODE}
-begin
-  Result := repl(s,sub,rep);
-end;
-{$ELSE}
-var i_pos: integer;
-begin
-  i_pos := upos(sub,s);
-  while i_pos>0 do begin
-    s:=copy(s,1,i_pos-1)+rep+copy(s,i_pos+length(sub),length(s)-i_pos+1-length(sub));
-    i_pos := upos(sub,s);
-  end;
-  result:=s;
-end;
-{$ENDIF}
-
-function replc(const s:string;const sub,rep:string):string;
-begin
   Result := s;
-  repl(Result,sub,rep);
+  i_pos := pos(sub, Result);
+  while i_pos>0 do begin
+    Result:=copy(Result,1,i_pos-1) + repl
+      +copy(Result,i_pos+length(sub),length(Result)-i_pos+1-length(sub));
+    i_pos := pos(sub,Result);
+  end;
 end;
 
-function ureplc(const s:UnicodeString;const sub,rep:UnicodeString):UnicodeString;
-begin
-  Result := s;
-  urepl(Result,sub,rep);
-end;
 
 { Returns part of the string from the start to the first occurence of "c",
  and cuts that part, up to and including "c".
@@ -1414,6 +1376,15 @@ begin
     Result[i] := ps^;
     Inc(ps);
   end;
+end;
+
+//Число вхождений символа в строку
+function countc(const s:string;const c:char): integer;
+var i: integer;
+begin
+  Result := 0;
+  for i := 1 to Length(s) do
+    if s[i]=c then Inc(Result);
 end;
 
 { Makes the string fixed length -- cuts if it's too long or pads if it's too short }

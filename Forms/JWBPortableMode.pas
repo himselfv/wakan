@@ -68,7 +68,7 @@ const
   MR_PORTABLE = 1004;
 
 implementation
-uses JWBUnit, StdPrompt;
+uses JWBCore, JWBUnit, JWBLanguage, StdPrompt;
 
 {$R *.DFM}
 

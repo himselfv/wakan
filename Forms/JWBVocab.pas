@@ -126,11 +126,11 @@ const
 
 implementation
 
-uses JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory, JWBPrint, JWBSettings,
-  JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType,
-  JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
+uses JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory,
+  JWBPrint, JWBSettings, JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO,
+  JWBFileType, JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
   JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
-  JWBCharData, TextTable, JWBLegacyMarkup;
+  JWBCharData, TextTable, JWBLegacyMarkup, JWBWordGrid;
 
 var wlc:TStringList;
     lastwordind:integer;
@@ -669,7 +669,7 @@ begin
           else
             conv.Write(fstr(DbKanaToRomaji(TUser.Str(TUserPhonetic),'j')));
         conv.Write(fstr(#9));
-        conv.Write(fstr(replc(TUser.Str(TUserEnglish),';',',')));
+        conv.Write(fstr(repl(TUser.Str(TUserEnglish),';',',')));
         if FExportType<2 then
         begin
           conv.Write(fstr(#9));

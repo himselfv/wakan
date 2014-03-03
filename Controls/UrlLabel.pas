@@ -17,7 +17,7 @@ type
 procedure Register;
 
 implementation
-uses JwbUtils;
+uses JwbCore;
 
 procedure TUrlLabel.Click;
 begin

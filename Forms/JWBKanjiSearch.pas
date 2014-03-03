@@ -109,7 +109,7 @@ var
 
 implementation
 uses UITypes, JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBNewCategory,
-  JWBKanjiDetails, JWBUserData, JWBCategories, JWBCharData;
+  JWBKanjiDetails, JWBUserData, JWBCategories, JWBCharData, JWBLanguage;
 
 {$R *.DFM}
 

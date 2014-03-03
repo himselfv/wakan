@@ -21,7 +21,7 @@ type
   end;
 
 implementation
-uses JWBMenu;
+uses JWBLanguage;
 
 {$R *.DFM}
 

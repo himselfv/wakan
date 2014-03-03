@@ -1,7 +1,7 @@
 ﻿unit JWBWakanText;
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBIO;
+uses SysUtils, Classes, JWBStrings, JWBIO, JWBCore;
 
 { Character properties for the editor.
 Each character gets its own set of properties. They are made into chains with
@@ -863,10 +863,10 @@ procedure THtmlFormat.AddChars(const s: FString);
 var tmp: FString;
 begin
   tmp := HTMLEncode3(s);
-  repl(tmp,UH_CR+UH_LF,fstr('</p><p>'));
-  repl(tmp,UH_LF,fstr('</p><p>'));
-  repl(tmp,UH_CR,'');
-  repl(tmp,fstr('</p><p>'),fstr('</p>'#13#10'<p>')); //if we did that before, we'd be stuck in infinite replacements
+  tmp := repl(tmp,UH_CR+UH_LF,fstr('</p><p>'));
+  tmp := repl(tmp,UH_LF,fstr('</p><p>'));
+  tmp := repl(tmp,UH_CR,'');
+  tmp := repl(tmp,fstr('</p><p>'),fstr('</p>'#13#10'<p>')); //if we did that before, we'd be stuck in infinite replacements
   FOutput.Write(tmp);
 end;
 
@@ -958,10 +958,10 @@ procedure TOpenDocumentContentFormat.AddChars(const s: FString);
 var tmp: FString;
 begin
   tmp := HTMLEncode3(s);
-  repl(tmp,UH_CR+UH_LF,fstr('</text:p><text:p>'));
-  repl(tmp,UH_LF,fstr('</text:p><text:p>'));
-  repl(tmp,UH_CR,'');
-  repl(tmp,fstr('</text:p><text:p>'),fstr('</text:p>'#10'<text:p>')); //ODT MUST use LF-only linebreaks
+  tmp := repl(tmp,UH_CR+UH_LF,fstr('</text:p><text:p>'));
+  tmp := repl(tmp,UH_LF,fstr('</text:p><text:p>'));
+  tmp := repl(tmp,UH_CR,'');
+  tmp := repl(tmp,fstr('</text:p><text:p>'),fstr('</text:p>'#10'<text:p>')); //ODT MUST use LF-only linebreaks
   FOutput.Write(tmp);
 end;
 

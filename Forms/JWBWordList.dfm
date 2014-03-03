@@ -38,8 +38,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Intro'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel3: TLabel
         Left = 16
         Top = 4
@@ -87,8 +85,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Method'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel4: TLabel
         Left = 16
         Top = 4
@@ -190,8 +186,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Purpose'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel5: TLabel
         Left = 16
         Top = 4
@@ -325,8 +319,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Summary'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label18: TLabel
         Left = 16
         Top = 72
@@ -522,8 +514,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'EvalChoose'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel7: TLabel
         Left = 16
         Top = 4

@@ -1027,7 +1027,7 @@ begin
  { Replacements }
   for i := 0 to FReplKtr.Count - 1 do begin
     r := FReplKtr[i];
-    repl(s2, r.s_find, r.s_repl);
+    s2 := repl(s2, r.s_find, r.s_repl);
   end;
 
   if (length(s2)>0) and (s2[length(s2)]='''') then delete(s2,length(s2),1);
@@ -1244,7 +1244,7 @@ var s2:string;
   curstr:string;
 begin
   curstr := LowerCase(AString);
-  repl(curstr,'v','u:');
+  curstr := repl(curstr,'v','u:');
   s2:='';
   while curstr<>'' do
   begin

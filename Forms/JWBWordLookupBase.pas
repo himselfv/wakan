@@ -80,7 +80,7 @@ var
 
 implementation
 uses UITypes, JWBStrings, JWBUnit, JWBMenu, JWBCategories, JWBVocab, JWBVocabAdd,
-  JWBSettings, JWBLegacyMarkup, JWBRefLinks;
+  JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage, JWBWordGrid;
 
 {$R *.dfm}
 

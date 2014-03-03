@@ -78,7 +78,7 @@ var
   fVocabDetails: TfVocabDetails;
 
 implementation
-uses TextTable, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
+uses TextTable, JWBLanguage, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
   JWBVocabFilters, JWBCategories;
 
 {$R *.DFM}

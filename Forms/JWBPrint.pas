@@ -61,8 +61,7 @@ procedure GetPrintLine(width,height,origwidth,origheight,nolines:integer;var lin
 procedure PrintPreview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
 
 implementation
-
-uses JWBBitmap, JWBMenu;
+uses JWBBitmap, JWBLanguage;
 
 {$R *.DFM}
 

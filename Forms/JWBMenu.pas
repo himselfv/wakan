@@ -572,8 +572,6 @@ type
 
 var
   fMenu: TfMenu;
-  cromasys:integer;
-  showroma,jshowroma,cshowroma:boolean;
 
  { Dictionaries }
   dicts: TDictionaryList; //Active dictionary list
@@ -586,8 +584,6 @@ var
   defll: TDeflectionList; //verb deflections
 
   readchl: TStringList; //list of readings to include to the reading chart
-
-  curlang:char;
 
  { IPC stuff }
   rdcnt,bitcnt:integer;
@@ -606,23 +602,14 @@ var
 
   kanji_othersearch:integer;
 
-function _l(const id:string):string; //shouldn't inline because it's for cases when JWBUnit is not in Uses!
-
 implementation
-
-uses Types, StrUtils, JWBKanji, JWBUnit, JWBRadical, JWBForms,
-  JWBSettings, JWBSplash, PKGWrite, JWBWordLookup, UnicodeFont, registry, clipbrd,
-  JWBVocab, JWBNewCategory, JWBPrint, JWBStatistics,
-  JWBWordList, JWBBitmap, JWBKanjiCompounds,
-  JWBExamples, JWBVocabDetails, JWBVocabAdd, JWBVocabFilters, JWBUserData,
-  JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBEditor,
-  JWBDictMan, JWBDictImport, JWBDictCoding, JWBCharItem, JWBScreenTip,
-  JWBInvalidator, JWBLanguage,
-  JWBWordsExpChoose, JWBMedia, JWBKanjiCard,
-  JWBCategories, JWBAnnotations, JWBIO, JWBCommandLine,
-  JWBEdictMarkers, JWBAutoImport, JWBDownloader, JWBDownloadSources,
-  JWBPortableMode, JWBCategoryMgr, JWBCharData, JWBWakanText, StreamUtils,
-  JWBCharDataImport, JWBCopyFormats, JWBRefLinks;
+uses Types, clipbrd, JWBCore, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
+ JWBCharData, JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical,
+ JWBWordLookup, JWBKanjiCompounds, JWBExamples, JWBEditor, JWBWakanText,
+ JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBStatistics, JWBKanji,
+ JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBDictMan, JWBDictImport,
+ JWBScreenTip, JWBCategories, JWBAnnotations, JWBCommandLine, JWBAutoImport,
+ JWBDownloadSources, JWBDownloader, JWBCategoryMgr, JWBCopyFormats, JWBRefLinks;
 
 {$R *.DFM}
 
@@ -2882,7 +2869,7 @@ var pt:TPoint;
     wtt:integer;
     curt:TDateTime;
   intmosc:TPoint;
-  fInvalidator: TfInvalidator;
+  fInvalidator: TForm; //very stupid
 begin
   if not screenModeWk and not screenModeSc and not ShowImmediate and not popcreated then exit;
 
@@ -2944,7 +2931,7 @@ begin
     end;
     if (s='') and screenModeSc then
     begin
-      fInvalidator:=TfInvalidator.Create(nil);
+      fInvalidator:=TForm.Create(nil);
       fInvalidator.Width:=tleft+tright;
       fInvalidator.Height:=1;
       fInvalidator.Top:=pt.y;
@@ -3281,11 +3268,6 @@ begin
 //  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
   fVocab.SpeedButton1.Down := aUserExamples.Checked;
-end;
-
-function _l(const id:string):string;
-begin
-  Result := JWBUnit._l(id);
 end;
 
 procedure TfMenu.miSaveCharactersToFileClick(

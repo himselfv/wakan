@@ -51,7 +51,7 @@ var
 procedure ParseCommandLine();
 
 implementation
-uses Forms, Windows, JWBUnit;
+uses Forms, Windows, JWBCore;
 
 procedure BadUsage(msg: string);
 begin

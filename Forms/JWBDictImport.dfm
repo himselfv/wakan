@@ -75,7 +75,6 @@ object fDictImport: TfDictImport
     Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 13
     TabOrder = 3
-    ExplicitHeight = 209
   end
   object btnBuild: TBitBtn
     Left = 88

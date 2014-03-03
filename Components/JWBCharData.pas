@@ -236,7 +236,7 @@ function RadicalNumber(const rad: char): integer;
 
 
 implementation
-uses MemSource, PKGWrite, JWBUnit;
+uses MemSource, PKGWrite, JWBCore, JWBUnit;
 
 //Formats datetime in a Wakan "version" format (14AUG05)
 function WakanDatestamp(const dt: TDatetime): string;

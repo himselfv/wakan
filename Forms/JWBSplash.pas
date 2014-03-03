@@ -23,7 +23,7 @@ type
   end;
 
 implementation
-uses JWBUnit;
+uses JWBCore;
 
 {$R *.DFM}
 

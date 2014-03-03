@@ -5,47 +5,6 @@ interface
 uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
   ExtCtrls, IniFiles, JWBStrings, JWBKanaConv;
 
-{ Misc }
-
-var
-  AppFilename: string = '';
-  AppFolder: string = ''; //path to program, set on load (no trail. slash)
-  WakanVer: string = ''; //taken from resources on load
-
-type
-  TPortabilityMode = (pmStandalone, pmPortable, pmCompatible);
-
-{$WRITEABLECONST ON}
-const
-  WakanAppName = 'WaKan - Japanese & Chinese Learning Tool';
-  WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
-  WakanRegKey = 'Software\Labyrinth\Wakan';
-
-  PortabilityMode: TPortabilityMode = pmCompatible;
-
- //All paths have no trailing slashes
-  UserDataDir: string = '';  //wakan.usr, collections
-  ProgramDataDir: string = ''; //dictionaries, romanizations
-
-  AppUrl: string = 'http://code.google.com/p/wakan/';
-  WikiUrlBase: string = 'http://code.google.com/p/wakan/wiki/';
-
-procedure SetPortabilityMode(AMode: TPortabilityMode);
-function DictionaryDir: string;
-function GetAppDataFolder: string;
-function WikiUrl(const APage: string = ''): string;
-
-
-{ Some logging tools.
-Define NOLOG to make sure that nothing in the application calls these. }
-//{$DEFINE NOLOG}
-{$IFNDEF NOLOG}
-procedure Log(const msg: string); overload; {$IFNDEF DEBUG}inline;{$ENDIF} //inline in debug so that it's completely eliminated
-procedure Log(const msg: string; args: array of const); overload;
-procedure DumpHdc(const h: HDC; const r: TRect; const pref: string='hdc-'); {$IFNDEF DEBUG}inline;{$ENDIF}
-procedure Profile(const msg: string); inline;
-{$ENDIF}
-
 { Romaji conversions }
 {
 Katakana and romaji in dictionaries can contain latin letters and punctuation.
@@ -78,6 +37,10 @@ So,
 //See JWBKanaConv.ResolveFlag
 
 var
+  curlang:char;
+  cromasys:integer;
+  showroma,jshowroma,cshowroma:boolean;
+
  { Romaji translation tables. Populated on load. }
   roma_db: TKanaTranslator;
   roma_user: TKanaTranslator;
@@ -106,12 +69,9 @@ function SignatureFrom(const s:string): string;
 function ChinSimplified(s:FString):FString;
 function ChinTraditional(s:FString):FString;
 
-{ WordGrid }
-
-procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
-procedure AddWordGrid(grid:TStringGrid;sp1,sp2,sp4,sp3:string);
-procedure FinishWordGrid(grid:TStringGrid);
-procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
+{ Converts raw kana/bopomofo to romaji/kana for presentation }
+function ConvertKana(const ch: FString;showr:boolean;lang:char): FString; overload;
+function ConvertKana(const ch: FString): FString; overload;
 
 
 { Colors }
@@ -143,13 +103,8 @@ function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):F
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
 procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
-function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean;fontsize:integer;boldfont:boolean):integer;
-procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
-procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
-function ConvertKana(const ch: FString;showr:boolean;lang:char): FString; overload;
-function ConvertKana(const ch: FString): FString; overload;
 
 procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
 procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
@@ -159,14 +114,6 @@ procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 
 function StateStr(i:integer):string;
 function DateForm(s:string):string;
-procedure SplitWord(s:string; var sp1,sp2,sp4,sp3:string);
-
-function BackupDir: string;
-function Backup(const filename: string): string;
-
-procedure RegeditAtKey(const key: string);
-
-function perc(i,j:integer):string;
 
 var
  //Fonts
@@ -185,165 +132,10 @@ var
   GridFontSize:integer;
 
 
-{ Translation }
-
-function _l(const id:string):string; overload;
-function _l(const id:string; args: array of const):string; overload;
-
 implementation
-uses Messages, StrUtils, ShlObj, Registry, JWBMenu, JWBSettings, JWBLanguage,
+uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBMenu, JWBSettings, JWBLanguage,
   TextTable, JWBCharData, JWBLegacyMarkup;
 
-
-{ Portable/standalone }
-
-function GetAppDataFolder: string;
-begin
-  Result := GetSpecialFolderPath(CSIDL_APPDATA);
- //There's also CSIDL_LOCAL_APPDATA which might do if CSIDL_APPDATA is somehow not available.
- //But I don't think that can be the case!
-  Assert(Result<>''); //just in case
-  Result:=Result+'\Wakan';
-  ForceDirectories(Result);
-end;
-
-function WikiUrl(const APage: string = ''): string;
-begin
-  Result := WikiUrlBase + APage;
-end;
-
-procedure SetPortabilityMode(AMode: TPortabilityMode);
-begin
-  PortabilityMode := AMode;
-  case AMode of
-    pmStandalone: UserDataDir := GetAppDataFolder;
-    pmPortable: UserDataDir := AppFolder;
-    pmCompatible: UserDataDir := AppFolder;
-  end;
-  ProgramDataDir := AppFolder;
-end;
-
-function DictionaryDir: string;
-begin
- //Dictionaries are always stored in application folder
-  Result := ProgramDataDir;
-end;
-
-
-{ Log }
-{$IFNDEF NOLOG}
-
-{$IFDEF DEBUG}
-const
-  BOM_UTF16BE: AnsiString = #254#255; //FE FF
-  BOM_UTF16LE: AnsiString = #255#254; //FF FE
- //must be ansi or we'll get two unicode characters
-
-function ForceFilePath(const Filename: string): boolean;
-var Path: string;
-begin
-  Path := ExtractFilePath(Filename);
-  Result := (Path='') {current dir always exists} or ForceDirectories(Path);
-end;
-
-{ Writes to UTF16BE, adding BOM to new file.
- Better employ critical sections if you use it from multiple threads. }
-procedure WriteFileWithBom(const Filename: string; data: pointer; sz: cardinal);
-var HFile: THandle;
-  dwBytesWritten: cardinal;
-begin
-// if not ForceFilePath(Filename) then exit; --- do not waste time at first, try only if file/path is not found
-
- //Try open or create a file
-  HFile := CreateFile(PChar(Filename), GENERIC_WRITE,
-    FILE_SHARE_READ, nil, OPEN_ALWAYS, 0, 0);
-
- //The only problem we know how to solve is "path not found"
-  if HFile = INVALID_HANDLE_VALUE then begin
-    if GetLastError() <> ERROR_PATH_NOT_FOUND then exit;
-
-   //Create directories and try again
-    if not ForceFilePath(Filename) then exit;
-
-    HFile := CreateFile(PChar(Filename), GENERIC_WRITE,
-      FILE_SHARE_READ, nil, OPEN_ALWAYS, 0, 0);
-    if HFile = INVALID_HANDLE_VALUE then exit;
-  end;
-
- //If the file was present, scroll to the end
-  if GetLastError() = ERROR_ALREADY_EXISTS then
-    SetFilePointer(HFile, 0, nil, FILE_END)
-  else //Write BOM
-    WriteFile(HFile, BOM_UTF16LE[1], Length(BOM_UTF16LE), dwBytesWritten, nil);
- {Can be optimized: write BOM+first message at once. But the gain is too low.}
-
- //Anyway write the data
-  WriteFile(HFile, data^, sz, dwBytesWritten, nil);
-  CloseHandle(HFile);
-end;
-{$ENDIF}
-
-procedure Log(const msg: string);
-{$IFDEF DEBUG}
-var tmp: string;
-begin
-//  OutputDebugString(PChar(msg));
-  tmp:=IntToStr(GetTickCount)+': '+msg+#13#10;
-  WriteFileWithBom('wakan.log', @tmp[1], Length(tmp)*SizeOf(char));
-end;
-{$ELSE}
-begin
-end;
-{$ENDIF}
-
-procedure Log(const msg: string; args: array of const); overload;
-begin
-{$IFDEF DEBUG}
-  Log(Format(msg,args));
-{$ENDIF}
-end;
-
-procedure Profile(const msg: string);
-begin
-{$IFDEF PROFILE}
-  Log(msg);
-{$ELSE}
- //Empty, so it's eliminated when inlined
-{$ENDIF}
-end;
-
-var
-  DumpId: integer = 0;
-
-{ Outputs the contents of a canvas to a file.
- Files are named sequentially and recorded in log so that you know which goes where. }
-procedure DumpHdc(const h: HDC; const r: TRect; const pref: string);
-{$IFDEF DEBUG}
-var bmp: Graphics.TBitmap;
-  fname: string;
-begin
-  if (r.Right-r.Left<=0) or (r.Bottom-r.Top<=0) then exit;
-
-  bmp := Graphics.TBitmap.Create;
-  try
-    bmp.PixelFormat := pf32bit;
-    bmp.SetSize(r.Right-r.Left,r.Bottom-r.Top);
-    if not BitBlt(bmp.Canvas.Handle,0,0,r.Right-r.Left,r.Bottom-r.Top,h,r.Left,r.Top,SRCCOPY) then
-      RaiseLastOsError();
-    inc(DumpId);
-    fname := 'dump-'+IntToStr(GetTickCount)+'-'+IntToStr(DumpId)+'-'+pref+IntToHex(integer(h),8)+'.bmp';
-    bmp.SaveToFile(fname);
-    Log('Dumped: '+fname);
-  finally
-    FreeAndNil(bmp);
-  end;
-end;
-{$ELSE}
-begin
-end;
-{$ENDIF}
-
-{$ENDIF} //IFNDEF NOLOG
 
 { Romaji conversions }
 
@@ -485,101 +277,6 @@ begin
   end;
 end;
 
-
-var wgcur:integer;
-
-procedure InitWordGrid(grid:TStringGrid;stat,learn:boolean);
-begin
-  grid.Perform(WM_SETREDRAW, 0, 0);
-  grid.DefaultRowHeight:=GridFontSize+2;
-  grid.FixedRows:=1;
-  grid.Cells[0,0]:=_l('#00939^ePhonetic');
-  grid.Cells[1,0]:=_l('#00632^eWritten');
-  grid.Cells[2,0]:=_l('#00317^eTranslation');
-  if stat then if learn then
-    grid.Cells[3,0]:=_l('#00633^eAdded / Learned') else
-    grid.Cells[3,0]:=_l('#00634^eCategories');
-  wgcur:=1;
-end;
-
-procedure AddWordGrid(grid:TStringGrid;sp1,sp2,sp4,sp3:string);
-begin
-  grid.Cells[0,wgcur]:=UH_DRAWWORD_KANA+sp2;
-  grid.Cells[1,wgcur]:=UH_DRAWWORD_KANJI+sp1;
-  grid.Cells[2,wgcur]:=sp4;
-  if sp3<>'' then grid.Cells[3,wgcur]:=sp3;
-  inc(wgcur);
-end;
-
-procedure FinishWordGrid(grid:TStringGrid);
-begin
-  grid.Perform(WM_SETREDRAW, 1, 0);
-  if wgcur=1 then begin
-  { Careful! WM_SETREDRAW(1) causes control to become functionally visible
-   even with Visible set to false.
-   The only way to fix this for sure is to Show() and Hide() it again.
-   So try to avoid InitWordGrid/FinishWordGrid: if you have no items, just hide it. }
-    grid.Show;
-    grid.Hide
-  end else begin
-    grid.RowCount:=wgcur;
-    if not grid.Visible then
-      grid.Show;
-  end;
-  grid.Invalidate;
-end;
-
-//Splits translation record in old Wakan format into parts:
-//  kanji [kana] {translation} rest
-procedure SplitWord(s:FString; var sp1,sp2,sp4,sp3:FString);
-begin
-  sp1:='';
-  sp2:='';
-  sp3:='';
-  sp4:='';
-  while s[1]<>' 'do
-  begin
-    sp1:=sp1+s[1];
-    delete(s,1,1);
-  end;
-  delete(s,1,1);
-  if s[1]='['then
-  begin
-    delete(s,1,1);
-    while s[1]<>']'do
-    begin
-      sp2:=sp2+s[1];
-      delete(s,1,1);
-    end;
-    delete(s,1,2);
-  end else sp2:=sp1;
-  delete(s,1,1);
-  sp3:=s;
-  sp4:=copy(s,1,pos('}',s)-1);
-  delete(sp3,1,length(sp4)+1);
-end;
-
-procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
-var i:integer;
-    s,sp1,sp2,sp3,sp4:string;
-begin
-  if sl.Count=0 then
-  begin
-    grid.Hide;
-    exit;
-  end;
-  InitWordGrid(grid,stat,learn);
-  for i:=0 to sl.Count-1 do
-  begin
-    s:=sl[i];
-    SplitWord(s,sp1,sp2,sp4,sp3);
-    AddWordGrid(grid,sp1,sp2,sp4,sp3);
-  end;
-  if fSettings.cbMultilineGrids.Checked then
-    for i:=1 to grid.RowCount-1 do
-      grid.RowHeights[i]:=(GridFontSize+2)*DrawWordInfo(grid.Canvas,grid.CellRect(2,i),false,false,2,grid.Cells[2,i],true,true,GridFontSize,true);
-  FinishWordGrid(grid);
-end;
 
 
 
@@ -1012,219 +709,7 @@ begin
   end;
 end;
 
-//NOTE: If you update fonts here, update DrawGridUpdateSelection() too.
-function DrawWordInfo(canvas:TCanvas; Rect:TRect; sel,titrow:boolean; colx:integer; s:string; multiline,onlycount:boolean; fontsize:integer; boldfont:boolean):integer;
-var x:integer;
-    inmar,resinmar:boolean;
-    curs:string;
-    rect2:TRect;
-    c:char;
-    cursiv:boolean;
-    w:integer;
-    y:integer;
-    sbef:string;
-    fontcolor:TColor;
-begin
-  if multiline then result:=1 else result:=0;
-  Canvas.Brush.Color:=clWindow;
-  Canvas.Font.Color:=clWindowText;
-  Canvas.Font.Name:=FontEnglish;
-  Canvas.Font.Style:=[];
-  Canvas.Font.Size:=9;
-  if (fSettings.cbStatusColors.Checked) and (not fSettings.cbNoGridColors.Checked) and (not titrow) then
-  begin
-    c:=' ';
-    if (length(s)>1) and (s[1]=ALTCH_EXCL) then c:=s[2];
-    if (length(s)>2) and (s[2]=ALTCH_EXCL) then c:=s[3];
-    case c of
-      ' ':if sel then Canvas.Brush.Color:=Col('Dict_SelBack') else Canvas.Brush.Color:=Col('Dict_Back');
-      '0':if sel then Canvas.Brush.Color:=Col('Dict_SelProblematic') else Canvas.Brush.Color:=Col('Dict_Problematic');
-      '1':if sel then Canvas.Brush.Color:=Col('Dict_SelUnlearned') else Canvas.Brush.Color:=Col('Dict_Unlearned');
-      '2':if sel then Canvas.Brush.Color:=Col('Dict_SelLearned') else Canvas.Brush.Color:=Col('Dict_Learned');
-      '3':if sel then Canvas.Brush.Color:=Col('Dict_SelMastered') else Canvas.Brush.Color:=Col('Dict_Mastered');
-    end;
-  end;
-  if (length(s)>1) and (s[1]=ALTCH_EXCL) then delete(s,1,2);
-  if (length(s)>2) and (s[2]=ALTCH_EXCL) then delete(s,2,2);
-  if (length(s)>0) and (Colx=0) and (s[1]=UH_DRAWWORD_KANA) then
-  begin
-    Canvas.FillRect(Rect);
-    delete(s,1,1);
-    DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,curlang);
-  end else
-  if (length(s)>0) and (s[1]=UH_DRAWWORD_KANJI) then
-  begin
-    Canvas.FillRect(Rect);
-    delete(s,1,1);
-    if (Length(s)>0) and (s[1]=UH_UNKNOWN_KANJI) then
-    begin
-      if (fSettings.CheckBox10.Checked) then Canvas.Font.Color:=Col('Dict_UnknownChar') else Canvas.Font.Color:=Col('Dict_Text');
-      delete(s,1,1);
-    end
-    else Canvas.Font.Color:=Col('Dict_Text');
-    if fSettings.cbNoGridColors.Checked then Canvas.Font.Color:=clWindowText;
-    DrawUnicode(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall);
-  end else if not titrow then
-  begin
-    cursiv:=false;
-    FontColor:=Col('Dict_Text');
-    if fSettings.cbNoGridColors.Checked then FontColor:=clWindowText;
-    if (length(s)>1) and (s[1]=UH_WORDTYPE) then
-    begin
-      if s[2]='I'then cursiv:=true;
-//      if not fUser.CheckBox1.Checked then cursiv:=false;
-      delete(s,1,2);
-    end;
-    if (length(s)>1) and (s[1]=UH_SETCOLOR) then
-    begin
-      if (fSettings.CheckBox69.Checked) then
-        if not TryStrToInt('0x'+copy(s,6,2)+copy(s,4,2)+copy(s,2,2), integer(FontColor)) then
-          FontColor:=clWindowText;
-      delete(s,1,7);
-    end;
-    if not onlycount then Canvas.FillRect(Rect);
-    inmar:=false;
-    x:=0;
-    y:=0;
-    sbef:='';
-    while length(s)>0 do
-    begin
-//      if sbef=s then
-//      begin
-//        showmessage(sbef);
-//      end;
-      sbef:=s;
-      if inmar then
-        if pos(UH_LEND,s)>0 then curs:=copy(s,1,pos(UH_LEND,s)-1) else curs:=s;
-      if not inmar then
-        if pos(UH_LBEG,s)>0 then curs:=copy(s,1,pos(UH_LBEG,s)-1) else curs:=s;
-      delete(s,1,length(curs));
-      if (length(s)>0) and ((s[1]=UH_LBEG) or (s[1]=UH_LEND)) then delete(s,1,1);
-      rect2:=rect;
-      rect2.Left:=rect.left+x+2;
-      rect2.Top:=rect.top+y;
-      if x<rect.right-rect.left then
-      begin
-        if inmar then
-        begin
-          c:=curs[1];
-          delete(curs,1,1);
-          if fSettings.cbNoGridColors.Checked then
-            Canvas.Font.Color:=FontColor
-          else
-          case c of
-            '1':Canvas.Font.Color:=Col('Mark_Special');
-            's':Canvas.Font.Color:=Col('Mark_Usage');
-            'g':Canvas.Font.Color:=Col('Mark_Grammatical');
-            'd':Canvas.Font.Color:=Col('Mark_Dict');
-            'l':Canvas.Font.Color:=Col('Mark_Lesson');
-          end;
-          Canvas.Font.Height:=FontSize-3;
-          Canvas.Font.Style:=[fsItalic];
-        end else
-        begin
-          Canvas.Font.Color:=FontColor;
-          Canvas.Font.Height:=FontSize;
-          Canvas.Font.Style:=[];
-          if boldfont then
-            if cursiv then Canvas.Font.Style:=[fsItalic,fsBold] else
-              Canvas.Font.Style:=[fsBold];
-          if Colx=3 then Canvas.Font.Style:=[];
-        end;
-        w:=Canvas.TextExtent(curs).cx;
-        if not multiline then result:=result+w;
-        resinmar:=false;
-        if (multiline) and (rect.left+2+x+w>rect.right) then
-        begin
-          if (length(curs)>0) and (curs[1]=' ') then curs[1]:=UH_WORDTYPE;
-          if inmar or (pos(' ',curs)=0) or (Canvas.TextExtent(copy(curs,1,pos(' ',curs)-1)).cx+rect.left+2+x>rect.right) then
-          begin
-            if (length(curs)>0) and (curs[1]=UH_WORDTYPE) then curs[1]:=' ';
-            x:=0;
-            y:=y+FontSize+2;
-            rect2.left:=rect.left+2;
-            rect2.top:=rect.top+2+y;
-            result:=result+1;
-          end else
-          if not inmar and (pos(' ',curs)>0) then
-          begin
-            if (length(curs)>0) and (curs[1]=' ') then curs[1]:=UH_WORDTYPE;
-            s:=copy(curs,pos(' ',curs),length(curs)-pos(' ',curs)+1)+UH_LBEG+s;
-            curs:=copy(curs,1,pos(' ',curs)-1);
-            if (length(curs)>0) and (curs[1]=UH_WORDTYPE) then curs[1]:=' ';
-            resinmar:=true;
-          end else
-          begin
-            curs:=s;
-            if (length(curs)>0) and (curs[1]=UH_WORDTYPE) then curs[1]:=' ';
-            s:='';
-          end;
-        end;
-        if not onlycount then
-        begin
-          if inmar then
-            Canvas.TextRect(Rect2,Rect.Left+2+x,Rect.Top+5+y,curs) else
-            Canvas.TextRect(Rect2,Rect.Left+2+x,Rect.Top+1+y,curs);
-        end;
-        x:=x+Canvas.TextExtent(curs).cx;
-        if not resinmar then inmar:=not inmar;
-      end else s:='';
-    end;
-  end else
-  begin
-    Canvas.Font.Style:=[fsBold];
-    Canvas.Font.Size:=8;
-    Canvas.FillRect(Rect);
-    Canvas.TextRect(Rect,Rect.Left+2,Rect.Top+2,s);
-  end;
-  Canvas.Font.Color:=clWindowText;
-  Canvas.Font.Name:=FontEnglish;
-  Canvas.Font.Style:=[];
-  Canvas.Font.Size:=9;
-end;
 
-procedure DrawPackedWordInfo(canvas: TCanvas; Rect:TRect; s:FString; ch:integer;boldfont:boolean);
-var s1,sx1,s2,s3,s4:FString;
-begin
-  SplitWord(s,s1,s2,s3,s4);
-  if curlang='c'then
-  begin
-    if s2[1]=ALTCH_EXCL then delete(s2,1,2);
-    s2:=KanaToRomajiF(s2,curlang);
-    sx1:=s1;
-    s1:=s1+UH_SPACE+s2;
-    DrawWordInfo(Canvas,rect,false,false,0,UH_DRAWWORD_KANJI+s1,false,false,ch-3,boldfont);
-    rect.left:=rect.left+flength(sx1)*ch+ch+(flength(s2) div 2)*ch;
-  end else
-  begin
-    DrawWordInfo(Canvas,rect,false,false,0,UH_DRAWWORD_KANJI+s1,false,false,ch-3,boldfont);
-    rect.left:=rect.left+flength(remexcl(s1))*ch;
-  end;
-  if (s2<>s1) and (curlang='j') then
-  begin
-    if s2[1]=ALTCH_EXCL then s2:=ALTCH_EXCL+s1[2]+UH_UNKNOWN_KANJI+copy(s2,3,length(s2)-2) else s2:=UH_UNKNOWN_KANJI+s2;
-    DrawWordInfo(Canvas,rect,false,false,1,UH_DRAWWORD_KANJI+s2,false,false,ch-3,boldfont);
-    rect.left:=rect.left+flength(remexcl(s2))*ch;
-  end;
-  DrawWordInfo(Canvas,rect,false,false,2,s3,false,false,ch-3,boldfont);
-end;
-
-procedure DrawWordCell(Grid:TStringGrid; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
-var s:string;
-    gr:integer;
-    rect2:TRect;
-begin
-  s:=Grid.Cells[ACol,ARow];
-  rect2:=rect;
-  rect2.bottom:=1000;
-  if fSettings.cbMultilineGrids.Checked and (ACol=2) and (ARow>0) then
-  begin
-    gr:=(2+GridFontSize)*DrawWordInfo(Grid.Canvas, Rect2, gdSelected in State, ARow=0, ACol, s, true, true, GridFontSize,true);
-    if grid.rowheights[arow]<>gr then begin grid.rowheights[arow]:=gr; exit; end;
-  end;
-  DrawWordInfo(Grid.Canvas, Rect, gdSelected in State, ARow=0, ACol, s, true, false, GridFontSize,true);
-  PaintSelectionHighlight(Grid.Canvas,@rect);
-end;
 
 { Converts raw kana/bopomofo to romaji/kana for presentation }
 function ConvertKana(const ch: FString;showr:boolean;lang:char): FString;
@@ -1474,77 +959,10 @@ end;
 
 { Misc }
 
-{ Universal backup function. Backups everything to the directory designated for backups.
- Returns filename of the backup or empty string on failure }
-function Backup(const filename: string): string;
-begin
- //For now works as it did in previous Wakan versions.
- //Has to be reworked to put backups into user folder.
-  {$I-}
-  mkdir(BackupDir);
-  {$I+}
-  ioresult;
- //dir\wakan.usr --> wakan-20130111.usr
-  Result := BackupDir+'\'+ChangeFileExt(ExtractFilename(filename),'')+'-'
-    +FormatDateTime('yyyymmdd-hhnnss',now)+ExtractFileExt(filename);
-  if not CopyFile(PChar(filename),pchar(Result),false) then
-    Result := '';
-end;
-
-function BackupDir: string;
-begin
-  Result := UserDataDir+'\backup';
-end;
-
-//Opens registry editor at the specific key
-procedure RegeditAtKey(const key: string);
-var reg: TRegistry;
-begin
-  reg := TRegistry.Create;
-  try
-    reg.RootKey := HKEY_CURRENT_USER;
-    reg.OpenKey('Software', true);
-    reg.OpenKey('Microsoft', true);
-    reg.OpenKey('Windows', true);
-    reg.OpenKey('CurrentVersion', true);
-    reg.OpenKey('Applets', true);
-    reg.OpenKey('Regedit', true);
-    reg.WriteString('Lastkey', key);
-    WinExec(PAnsiChar(AnsiString('regedit.exe')), SW_SHOW);
-  finally
-    FreeAndNil(reg);
-  end;
-end;
-
-function perc(i,j:integer):string;
-begin
-  if j>0 then
-    result:=inttostr(i)+' ('+inttostr(round(i/j*100))+'%)'
-  else
-    result:=inttostr(i)+' (?%)';
-end;
-
-
-function _l(const id:string):string;
-begin
-  result:=fLanguage.TranslateString(id);
-end;
-
-function _l(const id:string; args: array of const):string;
-begin
-  Result := Format(fLanguage.TranslateString(id), args);
-end;
-
-
 var
   i:integer;
 
 initialization
-  AppFilename := GetModuleFilenameStr(0);
-  AppFolder := ExtractFileDir(AppFilename);
-  WakanVer := GetFileVersionInfoStr(AppFilename)
-    {$IFDEF UNICODE}+' unicode'{$ENDIF};
-
   CurPBox:=nil;
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
   GridFontSize:=14;

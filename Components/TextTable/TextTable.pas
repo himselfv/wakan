@@ -357,6 +357,16 @@ function BoolToStr(b: boolean): string;
 
 implementation
 
+function min(a, b: integer): integer;
+begin
+  if a<b then Result := a else Result := b;
+end;
+
+function max(a, b: integer): integer;
+begin
+  if a>b then Result := a else Result := b;
+end;
+
 resourcestring
   eReadOnlyIndexes = 'This table is missing definitions for some of its indexes. '
       +'Changes are impossible with such tables.';

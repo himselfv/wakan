@@ -62,7 +62,8 @@ type
   end;
 
 implementation
-uses TextTable, JWBCharData, JWBUserData, JWBCategories, JWBSettings, JWBUnit;
+uses TextTable, JWBCharData, JWBUserData, JWBCategories, JWBSettings, JWBCore,
+  JWBLanguage;
 
 {$R *.DFM}
 

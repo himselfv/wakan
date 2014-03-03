@@ -56,7 +56,7 @@ const //Tab indices
   TI_KANJI = 4;
 
 implementation
-uses TextTable, JWBCategories, JWBUserData, JWBMenu, JWBUnit;
+uses TextTable, JWBCategories, JWBUserData, JWBMenu, JWBUnit, JWBLanguage;
 
 {$R *.dfm}
 
