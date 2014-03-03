@@ -48,8 +48,8 @@ type
   end;
 
 implementation
-uses FileCtrl, StdPrompt, JWBStrings, KanjidicReader, UnihanReader,
-  JWBCore, JWBUnit, JWBIO, JWBFileType, FastArray, JWBLanguage;
+uses FileCtrl, StdPrompt, JWBStrings, KanjidicReader, UnihanReader, JWBCore,
+  JWBIO, JWBFileType, FastArray, JWBLanguage;
 
 {$R *.dfm}
 

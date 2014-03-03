@@ -59,7 +59,7 @@ function VerifyDependency(const filename, depname: string): boolean;
 
 implementation
 uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloaderCore,
-  SevenZip, SevenZipUtils, StdPrompt, JWBCore, JWBUnit, JWBLanguage;
+  SevenZip, SevenZipUtils, StdPrompt, JWBCore, JWBLanguage;
 
 procedure TDownloadSource.Reset;
 begin

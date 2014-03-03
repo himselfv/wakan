@@ -4,10 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons,
-  JWBStrings, JWBDic, JWBDicSearch, Menus, WakanWordGrid,
-  WakanPaintbox, JWBWordLookupBase, Vcl.ImgList, Vcl.ToolWin, JvExControls,
-  JvArrowButton;
+  StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons, Menus, ImgList, ToolWin, JWBDic,
+  JWBDicSearch, JWBStrings, WakanWordGrid, WakanPaintbox, JWBWordLookupBase;
 
 type
  //Supported lookup modes for this window.
@@ -90,10 +88,8 @@ var
 
 implementation
 
-uses TextTable, JWBLanguage, JWBUnit, JWBMenu, JWBVocab, JWBSettings,
-  JWBPrint, JWBEditor, JWBWordKanji, JWBExamples,
-  JWBHint, JWBKanjiDetails, JWBKanji, StdPrompt, JWBVocabAdd, Math,
-  JWBCategories, JWBAnnotations, JWBUserData, JWBCharData, JWBLegacyMarkup;
+uses Math, JWBLanguage, JWBUnit, JWBMenu, JWBSettings, JWBEditor, JWBWordKanji,
+  JWBExamples, JWBAnnotations, JWBLegacyMarkup;
 
 {$R *.DFM}
 

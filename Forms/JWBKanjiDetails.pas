@@ -9,8 +9,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, StdCtrls, FormPlacemnt, UrlLabel, JWBStrings,
-  TextTable, JWBForms, Vcl.Menus, Vcl.Grids, WakanWordGrid;
+  ExtCtrls, Buttons, StdCtrls, Menus, Grids, FormPlacemnt, UrlLabel, TextTable,
+  WakanWordGrid, JWBStrings, JWBForms;
 
 type
   TCharReadings = record
@@ -182,10 +182,9 @@ function GetCharDet(i,j:integer):string;
 
 implementation
 
-uses UITypes, ShellApi, MemSource, JWBDicSearch, JWBKanji, JWBMenu,
-  JWBSettings, JWBUnit, JWBCategories, JWBKanjiCard, JWBKanjiSearch,
-  JWBVocabFilters, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBDic,
-  JWBRefLinks, JWBLanguage;
+uses UITypes, ShellApi, JWBKanji, JWBMenu, JWBSettings, JWBUnit, JWBCategories,
+  JWBKanjiSearch, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBRefLinks,
+  JWBLanguage;
 
 {$R *.DFM}
 

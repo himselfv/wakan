@@ -9,10 +9,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons,
-  MemSource, ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings,
-  StdPrompt, JWBDic, JWBDicSearch, WakanPaintbox, CheckAction, System.Actions,
-  Vcl.AppEvnts, Generics.Collections;
+  StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons, MemSource,
+  ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings, JWBDic, JWBDicSearch,
+  WakanPaintbox, CheckAction, Actions, AppEvnts, Generics.Collections;
 
 type
   TfMenu = class(TForm)

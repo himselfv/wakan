@@ -88,7 +88,7 @@ function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 implementation
 
 uses StrUtils, WideStrUtils, JWBDictCoding, JWBKanaConv, JWBCore, JWBUnit,
-  JWBLanguage, PKGWrite, JWBDicSearch, JWBMenu;
+  JWBLanguage, PKGWrite, JWBMenu;
 
 {$R *.DFM}
 

@@ -126,11 +126,10 @@ const
 
 implementation
 
-uses JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBNewCategory,
-  JWBPrint, JWBSettings, JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO,
-  JWBFileType, JWBVocabFilters, JWBExamples, JWBWordLookup, JWBUserData,
-  JWBWordsExpChoose, JWBCategories, JWBAnnotations, PKGWrite,
-  JWBCharData, TextTable, JWBLegacyMarkup, JWBWordGrid;
+uses JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBPrint, JWBSettings,
+  JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType, JWBVocabFilters,
+  JWBExamples, JWBUserData, JWBWordsExpChoose, JWBCategories, JWBAnnotations,
+  PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup, JWBWordGrid;
 
 var wlc:TStringList;
     lastwordind:integer;

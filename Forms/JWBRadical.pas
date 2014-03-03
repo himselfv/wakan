@@ -128,8 +128,8 @@ function IndexesToRadicals(const AType: TRadSearchType; const AIndexes: TRadical
 
 implementation
 
-uses TextTable, JWBCore, JWBMenu, JWBUnit, JWBSettings, PKGWrite, JWBCategories,
-  JWBIO, JWBCharData, MemSource;
+uses TextTable, JWBCore, JWBMenu, JWBUnit, PKGWrite, JWBCategories, JWBIO,
+  JWBCharData, MemSource;
 
 {$R *.DFM}
 

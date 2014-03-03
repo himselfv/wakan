@@ -34,8 +34,7 @@ type
   end;
 
 implementation
-
-uses JWBMenu, JWBCharData;
+uses JWBCharData;
 
 {$R *.DFM}
 

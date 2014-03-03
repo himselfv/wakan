@@ -24,7 +24,6 @@ type
   end;
 
 implementation
-uses JWBMenu, JWBUserData, JWBCategories;
 
 {$R *.DFM}
 

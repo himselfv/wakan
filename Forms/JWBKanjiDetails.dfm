@@ -121,7 +121,6 @@ object fKanjiDetails: TfKanjiDetails
         ParentFont = False
         TabOrder = 0
         OnClick = ScrollboxClick
-        ExplicitTop = 19
       end
       object pnlLinks: TFlowPanel
         Left = 0

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, CheckLst, JWBStrings, JWBRadical, WakanPaintbox;
+  StdCtrls, ExtCtrls, Buttons, CheckLst, JWBRadical, WakanPaintbox;
 
 type
   TfKanjiSearch = class(TForm)
@@ -108,8 +108,7 @@ var
   fKanjiSearch: TfKanjiSearch;
 
 implementation
-uses UITypes, JWBKanji, JWBSettings, JWBUnit, JWBMenu, JWBNewCategory,
-  JWBKanjiDetails, JWBUserData, JWBCategories, JWBCharData, JWBLanguage;
+uses UITypes, JWBKanji, JWBUnit, JWBMenu, JWBCategories, JWBCharData, JWBLanguage;
 
 {$R *.DFM}
 

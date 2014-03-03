@@ -94,12 +94,9 @@ var
   testkanji:string;
 
 implementation
-
-uses JWBMenu, JWBRadical, JWBSettings, JWBPrint,
-  JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails,
-  MemSource, JWBVocab, JWBIO, JWBFileType, JWBLanguage,
-  JWBDicSearch, JWBKanjiCard, JWBKanaConv, JWBUnit, JWBWakanText, JWBCategories,
-  JWBAnnotations, TextTable, JWBDic, JWBEdictMarkers, JWBCharData;
+uses JWBIO, JWBUnit, JWBMenu, JWBRadical, JWBSettings, JWBPrint, JWBKanjiSearch,
+  JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
+  JWBKanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData;
 
 var ki:TStringList;
     calfonts:TStringList;

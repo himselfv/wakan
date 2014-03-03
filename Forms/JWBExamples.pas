@@ -78,8 +78,7 @@ var
   examfile:TMemoryFile;
 
 implementation
-uses JWBCore, JWBWordLookup, JWBMenu, JWBLanguage, JWBSettings, JWBVocab,
-  JWBUnit, PKGWrite;
+uses JWBCore, JWBMenu, JWBLanguage, JWBUnit, PKGWrite;
 
 {$R *.DFM}
 

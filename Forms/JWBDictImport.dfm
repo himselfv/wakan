@@ -110,7 +110,6 @@ object fDictImport: TfDictImport
     ParentFont = False
     TabOrder = 7
     OnClick = btnBuildClick
-    ExplicitTop = 512
   end
   object btnCancel: TBitBtn
     Left = 344
@@ -146,7 +145,6 @@ object fDictImport: TfDictImport
     ParentFont = False
     TabOrder = 8
     OnClick = btnCancelClick
-    ExplicitTop = 512
   end
   object btnAddFile: TButton
     Left = 424
@@ -210,7 +208,6 @@ object fDictImport: TfDictImport
     Checked = True
     State = cbChecked
     TabOrder = 6
-    ExplicitTop = 423
   end
   object mmDescription: TMemo
     Left = 8

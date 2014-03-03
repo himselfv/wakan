@@ -50,8 +50,6 @@ object fDownloader: TfDownloader
     Caption = 'Cancel'
     TabOrder = 3
     OnClick = btnCancelClick
-    ExplicitLeft = 506
-    ExplicitTop = 393
   end
   object btnNext: TBitBtn
     Left = 276
@@ -63,8 +61,6 @@ object fDownloader: TfDownloader
     Default = True
     TabOrder = 2
     OnClick = btnNextClick
-    ExplicitLeft = 405
-    ExplicitTop = 393
   end
   object btnPrev: TBitBtn
     Left = 175
@@ -75,8 +71,6 @@ object fDownloader: TfDownloader
     Caption = 'Back'
     TabOrder = 1
     OnClick = btnPrevClick
-    ExplicitLeft = 304
-    ExplicitTop = 393
   end
   object PageControl: TPageControl
     Left = 8
@@ -93,17 +87,18 @@ object fDownloader: TfDownloader
       Caption = 'Ready to download'
       ImageIndex = 1
       TabVisible = False
+      ExplicitLeft = 0
       ExplicitTop = 27
+      ExplicitWidth = 0
       ExplicitHeight = 361
       object Label1: TLabel
         AlignWithMargins = True
         Left = 3
         Top = 366
-        Width = 450
+        Width = 143
         Height = 13
         Align = alBottom
         Caption = 'Press "Download" to proceed.'
-        ExplicitWidth = 143
       end
       object lbFilesToDownload: TListBox
         Left = 0
@@ -113,8 +108,6 @@ object fDownloader: TfDownloader
         Align = alClient
         ItemHeight = 13
         TabOrder = 0
-        ExplicitTop = 8
-        ExplicitHeight = 280
       end
     end
     object tsDownloading: TTabSheet
@@ -122,14 +115,13 @@ object fDownloader: TfDownloader
       Caption = 'Downloading'
       ImageIndex = 2
       TabVisible = False
-      ExplicitTop = 27
-      ExplicitHeight = 361
       object vtJobs: TVirtualStringTree
         Left = 0
         Top = 0
         Width = 456
         Height = 382
         Align = alClient
+        BorderWidth = 1
         Header.AutoSizeIndex = 0
         Header.Font.Charset = DEFAULT_CHARSET
         Header.Font.Color = clWindowText
@@ -165,6 +157,8 @@ object fDownloader: TfDownloader
       Hint = 'Please select which files you want to download:'
       Caption = 'Select Files'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
       ExplicitWidth = 585
       ExplicitHeight = 319
       object vtKnownFiles: TVirtualStringTree
@@ -173,6 +167,7 @@ object fDownloader: TfDownloader
         Width = 456
         Height = 293
         Align = alClient
+        BorderWidth = 1
         Header.AutoSizeIndex = 0
         Header.Font.Charset = DEFAULT_CHARSET
         Header.Font.Color = clWindowText
@@ -230,7 +225,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C00200010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

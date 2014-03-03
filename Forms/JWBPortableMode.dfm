@@ -152,10 +152,6 @@ object fPortableMode: TfPortableMode
       Caption = 'tsMoveFiles'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         415
         339)

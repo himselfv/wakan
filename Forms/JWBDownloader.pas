@@ -119,7 +119,7 @@ var
   fDownloader: TfDownloader;
 
 implementation
-uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnit;
+uses UITypes, PngImage, JWBStrings, JWBDownloaderCore;
 
 {$R *.dfm}
 

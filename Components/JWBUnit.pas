@@ -134,7 +134,7 @@ var
 
 implementation
 uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBMenu, JWBSettings, JWBLanguage,
-  TextTable, JWBCharData, JWBLegacyMarkup;
+  JWBCharData, JWBLegacyMarkup;
 
 
 { Romaji conversions }
