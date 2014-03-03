@@ -361,8 +361,12 @@ type
     function AutoDetectFonts(Silent:boolean):boolean;
     procedure CheckFontsPresent;
 
+  protected
+    procedure ResetCharDetl;
+    procedure LoadCharDetl(reg: TCustomIniFile);
+    procedure SaveCharDetl(reg: TCustomIniFile);
   public
-    procedure ResetDetList;
+    procedure ReloadCharDetlList;
 
   protected
     FContentsInitialized: boolean;
@@ -497,7 +501,7 @@ begin
   edtTestRomajiChange(sender);
   edtTestPinyinChange(sender);
   Edit19.Text:=dicts.NotUsedDicts;
-  ResetDetList;
+  ReloadCharDetlList;
   ComboBox2.ItemIndex:=0;
   ClearKanjiCardCache;
   ComboBox2Change(sender);
@@ -721,13 +725,9 @@ begin
 
   LoadRegistrySettings(ini);
   InitColors(ini);
+  LoadCharDetl(ini);
 
   UpdatePortabilityPage;
-
-  if FileExists(UserDataDir+'\WAKAN.CDT') then
-    chardetl.LoadFromFile(UserDataDir+'\WAKAN.CDT')
-  else
-    Button10Click(Self);
 end;
 
 procedure TfSettings.SaveSettings;
@@ -746,12 +746,11 @@ begin
   try
     SaveRegistrySettings(ini);
     WriteColors(ini);
+    SaveCharDetl(ini);
   finally
     ini.UpdateFile;
     FreeSettings();
   end;
-
-  chardetl.SaveToFile(UserDataDir+'\WAKAN.CDT');
 end;
 
 procedure TfSettings.LoadRegistrySettings(reg: TCustomIniFile);
@@ -1808,70 +1807,8 @@ begin
   Edit32.Text:=FontStrokeOrder;
 end;
 
-procedure TfSettings.ResetDetList;
-var i:integer;
-  ii:integer;
-  propType: PCharPropType;
-begin
-  ii:=ListBox2.ItemIndex;
-  ListBox2.Items.Clear;
-  for i:=0 to chardetl.Count-1 do
-  begin
-    propType := FindCharPropType(StrToInt(GetCharDet(i,0)));
-    if propType=nil then continue;
-
-    if GetCharDet(i,6)<>'' then
-      ListBox2.Items.Add(_l('^e'+propType.englishName)+' ('+GetCharDet(i,6)+')')
-    else
-      ListBox2.Items.Add(_l('^e'+propType.englishName));
-  end;
-  Button8.Enabled:=ListBox2.Items.Count<>0;
-  Button9.Enabled:=ListBox2.Items.Count<>0;
-  SpeedButton11.Enabled:=ListBox2.Items.Count<>0;
-  SpeedButton12.Enabled:=ListBox2.Items.Count<>0;
-  if ListBox2.Items.Count<>0 then ListBox2.ItemIndex:=0;
-  if (ii>=0) and (ii<ListBox2.Items.Count) then ListBox2.ItemIndex:=ii;
-  SpeedButton11.Enabled:=ListBox2.ItemIndex>0;
-  SpeedButton12.Enabled:=ListBox2.ItemIndex<ListBox2.Items.Count-1;
-end;
-
-procedure TfSettings.Button7Click(Sender: TObject);
-var fCharItem: TfCharItem;
-begin
-  fCharItem := TfCharItem.Create(Application);
-  try
-    fCharItem.inputs:='';
-    if fCharItem.ShowModal=mrOK then chardetl.Add(fCharItem.results);
-  finally
-    FreeAndNil(fCharItem);
-  end;
-  ResetDetList;
-end;
-
-procedure TfSettings.Button8Click(Sender: TObject);
-var fCharItem: TfCharItem;
-begin
-  if ListBox2.ItemIndex<0 then exit;
-  fCharItem := TfCharItem.Create(Application);
-  try
-    fCharItem.inputs:=chardetl[ListBox2.ItemIndex];
-    if fCharItem.ShowModal=mrOK then chardetl[ListBox2.ItemIndex]:=fCharItem.results;
-  finally
-    FreeAndNil(fCharItem);
-  end;
-  ResetDetList;
-end;
-
-procedure TfSettings.Button9Click(Sender: TObject);
-begin
-  if ListBox2.ItemIndex<>-1 then
-  begin
-    chardetl.Delete(ListBox2.ItemIndex);
-    ResetDetList;
-  end;
-end;
-
-procedure TfSettings.Button10Click(Sender: TObject);
+{ Populates chardetl with default property set }
+procedure TfSettings.ResetCharDetl;
 begin
   chardetl.Clear;
   chardetl.Add('4;W;N;J;N;M;');
@@ -1908,7 +1845,116 @@ begin
   chardetl.Add('100;L;L;B;N;M;');
   chardetl.Add('101;L;L;J;N;M;');
   chardetl.Add('102;L;L;J;N;M;');
-  ResetDetList;
+end;
+
+procedure TfSettings.LoadCharDetl(reg: TCustomIniFile);
+var keys: TStringList;
+  i: integer;
+begin
+ { Char details configuration was previously being saved to Wakan.cdt.
+  If it's present, load it. }
+  if FileExists(UserDataDir+'\WAKAN.CDT') then begin
+    chardetl.LoadFromFile(UserDataDir+'\WAKAN.CDT');
+    exit;
+  end;
+
+ //Load from registry
+  chardetl.Clear;
+  keys := TStringList.Create;
+  try
+    reg.ReadSectionValues('CharDetl', keys);
+    if keys.Count<=0 then begin //section not available
+      ResetCharDetl;
+    end else begin
+      keys.Sort;
+      for i := 0 to keys.Count-1 do
+        chardetl.Add(keys.ValueFromIndex[i]);
+    end;
+  finally
+    FreeAndNil(keys);
+  end;
+end;
+
+procedure TfSettings.SaveCharDetl(reg: TCustomIniFile);
+var i: integer;
+begin
+ //Save to registry
+  reg.EraseSection('CharDetl');
+  for i := 0 to chardetl.Count-1 do
+    reg.WriteString('CharDetl', IntToStr(i), chardetl[i]);
+
+ //Delete wakan.cdt if it's present
+  DeleteFile(UserDataDir+'\WAKAN.CDT');
+end;
+
+
+procedure TfSettings.ReloadCharDetlList;
+var i:integer;
+  ii:integer;
+  propType: PCharPropType;
+begin
+  ii:=ListBox2.ItemIndex;
+  ListBox2.Items.Clear;
+  for i:=0 to chardetl.Count-1 do
+  begin
+    propType := FindCharPropType(StrToInt(GetCharDet(i,0)));
+    if propType=nil then continue;
+
+    if GetCharDet(i,6)<>'' then
+      ListBox2.Items.Add(_l('^e'+propType.englishName)+' ('+GetCharDet(i,6)+')')
+    else
+      ListBox2.Items.Add(_l('^e'+propType.englishName));
+  end;
+  Button8.Enabled:=ListBox2.Items.Count<>0;
+  Button9.Enabled:=ListBox2.Items.Count<>0;
+  SpeedButton11.Enabled:=ListBox2.Items.Count<>0;
+  SpeedButton12.Enabled:=ListBox2.Items.Count<>0;
+  if ListBox2.Items.Count<>0 then ListBox2.ItemIndex:=0;
+  if (ii>=0) and (ii<ListBox2.Items.Count) then ListBox2.ItemIndex:=ii;
+  SpeedButton11.Enabled:=ListBox2.ItemIndex>0;
+  SpeedButton12.Enabled:=ListBox2.ItemIndex<ListBox2.Items.Count-1;
+end;
+
+procedure TfSettings.Button7Click(Sender: TObject);
+var fCharItem: TfCharItem;
+begin
+  fCharItem := TfCharItem.Create(Application);
+  try
+    fCharItem.inputs:='';
+    if fCharItem.ShowModal=mrOK then chardetl.Add(fCharItem.results);
+  finally
+    FreeAndNil(fCharItem);
+  end;
+  ReloadCharDetlList;
+end;
+
+procedure TfSettings.Button8Click(Sender: TObject);
+var fCharItem: TfCharItem;
+begin
+  if ListBox2.ItemIndex<0 then exit;
+  fCharItem := TfCharItem.Create(Application);
+  try
+    fCharItem.inputs:=chardetl[ListBox2.ItemIndex];
+    if fCharItem.ShowModal=mrOK then chardetl[ListBox2.ItemIndex]:=fCharItem.results;
+  finally
+    FreeAndNil(fCharItem);
+  end;
+  ReloadCharDetlList;
+end;
+
+procedure TfSettings.Button9Click(Sender: TObject);
+begin
+  if ListBox2.ItemIndex<>-1 then
+  begin
+    chardetl.Delete(ListBox2.ItemIndex);
+    ReloadCharDetlList;
+  end;
+end;
+
+procedure TfSettings.Button10Click(Sender: TObject);
+begin
+  ResetCharDetl;
+  ReloadCharDetlList;
 end;
 
 procedure TfSettings.ListBox2Click(Sender: TObject);
@@ -1922,7 +1968,7 @@ begin
   chardetl.Insert(ListBox2.ItemIndex-1,chardetl[ListBox2.ItemIndex]);
   chardetl.Delete(ListBox2.ItemIndex+1);
   ListBox2.ItemIndex:=ListBox2.ItemIndex-1;
-  ResetDetList;
+  ReloadCharDetlList;
 end;
 
 procedure TfSettings.SpeedButton12Click(Sender: TObject);
@@ -1930,7 +1976,7 @@ begin
   chardetl.Insert(ListBox2.ItemIndex+2,chardetl[ListBox2.ItemIndex]);
   chardetl.Delete(ListBox2.ItemIndex);
   ListBox2.ItemIndex:=ListBox2.ItemIndex+1;
-  ResetDetList;
+  ReloadCharDetlList;
 end;
 
 procedure TfSettings.Button11Click(Sender: TObject);

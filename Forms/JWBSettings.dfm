@@ -2059,6 +2059,10 @@ object fSettings: TfSettings
       Tag = 11
       Caption = 'Annotations'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         465
         452)
