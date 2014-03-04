@@ -6,6 +6,8 @@ Requires Unicode or we will not be able to load sources.cfg in UTF-16.
 interface
 
 type
+  TSourceDicFormat = (sfEdict, sfCEdict, sfWakan);
+
   TDownloadSource = record
     Category: string;
     Language: string;
@@ -17,7 +19,7 @@ type
     CheckPresent: string;
     IsDefault: boolean;
     Encoding: string; //lowercase
-    Format: string; //lowercase
+    Format: TSourceDicFormat;
     BaseLanguage: string; //lowercase
     procedure Reset;
     function GetTargetDir: string;
@@ -73,7 +75,7 @@ begin
   CheckPresent := '';
   IsDefault := false;
   Encoding := '';
-  Format := '';
+  Format := sfEdict;
   BaseLanguage := '';
 end;
 
@@ -196,6 +198,22 @@ begin
       flag_specSymbol := true;
 end;
 
+function StrToSourceDicFormat(const AText: string): TSourceDicFormat;
+var tmp: string;
+begin
+  tmp := AnsiLowerCase(AText);
+  if tmp='edict' then
+    Result := sfEdict
+  else
+  if tmp='cedict' then
+    Result := sfCEdict
+  else
+  if tmp='wakan' then
+    Result := sfWakan
+  else
+    raise Exception.Create('Unknown source dictionary format: "'+AText+'"');
+end;
+
 procedure TDownloadSources.LoadFromFile(const filename: string);
 var sl: TStringList;
   i: integer;
@@ -261,7 +279,7 @@ begin
         item.Encoding := AnsiLowerCase(ln)
       else
       if param='format' then
-        item.Format := AnsiLowerCase(ln)
+        item.Format := StrToSourceDicFormat(ln)
       else
       if param='base-language' then
         item.BaseLanguage := AnsiLowerCase(ln)

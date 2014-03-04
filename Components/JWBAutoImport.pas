@@ -7,39 +7,16 @@ Call:
 }
 
 interface
-uses SysUtils, JWBStrings, JWBDic, JWBDictImport, JWBIO;
-
-type
-  TKnownImportFormat = (ifEdict, ifCEdict);
-
-  TKnownImportItem = record
-    Filename: string;
-    Name: string;
-    Format: TKnownImportFormat;
-    Encoding: CEncoding; //see JWBIO
-    Language: char; //j or c
-    Description: string;
-  end;
-  PKnownImportItem = ^TKnownImportItem;
-
-  TKnownImportList = record
-    items: array of TKnownImportItem;
-    procedure Clear;
-    procedure Add(const s: string);
-    function Count: integer;
-  end;
+uses SysUtils, JWBStrings, JWBIO, JWBDic, JWBDictImport, JWBDownloadSources;
 
 var
-  KnownDictSources: TKnownImportList; //loaded from wakan.cfg
   ForceUpdates: boolean;
   ForceUpdateList: TFileList; //if empty + ForceUpdates, force for any file
 
-procedure ParseKnownImportItem(const s: string; out item: TKnownImportItem);
-
 {
-Freshly imports all known dictionaries (EDICT/EDICT2/CEDICT/etc).
-If it decides current version only needs update and not full reimport,
-it leaves the work to AutoUpdate.
+Imports all known dictionaries (EDICT/EDICT2/CEDICT/etc).
+If it decides current version only needs update and not full reimport, it leaves
+the work to AutoUpdate.
 }
 procedure AutoImportDicts;
 
@@ -73,67 +50,6 @@ var
  //Don't check the same dictionary twice
   AutoUpdateChecked: TFilenameList;
   AutoUpdateImported: TFilenameList;
-
-procedure TKnownImportList.Clear;
-begin
-  SetLength(items,0);
-end;
-
-procedure TKnownImportList.Add(const s: string);
-begin
-  SetLength(items,Length(items)+1);
-  ParseKnownImportItem(s,items[Length(items)-1]); //and that's it
-end;
-
-function TKnownImportList.Count: integer;
-begin
-  Result := Length(items);
-end;
-
-procedure ParseKnownImportItem(const s: string; out item: TKnownImportItem);
-var parts: TStringArray;
-begin
-  parts := SplitStr(s,6,',');
-  item.Filename := parts[0];
-  item.Name := parts[1];
-
-  if (parts[2]='')
-  or (lowercase(parts[2])='edict') then
-    item.Format := ifEdict
-  else
-  if (lowercase(parts[2])='cedict') then
-    item.Format := ifCEdict
-  else
-    raise Exception.Create('Unknown auto import format: "'+parts[2]+'"');
-
-  if parts[3]='' then
-    item.Encoding := nil
-  else
-  if lowercase(parts[3])='utf8' then
-    item.Encoding := TUTF8Encoding
-  else
-  if (lowercase(parts[3])='utf16')
-  or (lowercase(parts[3])='utf16-le') then
-    item.Encoding := TUTF16LEEncoding
-  else
-  if (lowercase(parts[3])='utf16-be') then
-    item.Encoding := TUTF16BEEncoding
-  else
-    raise Exception.Create('Unknown auto import encoding: "'+parts[3]+'"');
-
-  if (parts[4]='')
-  or (lowercase(parts[4])='j') then
-    item.Language := 'j'
-  else
-  if (lowercase(parts[4])='c') then
-    item.Language := 'c'
-  else
-    raise Exception.Create('Unknown auto import language: "'+parts[4]+'"');
-
-  item.Description := DecodeInfoField(parts[5]);
-
-  if item.Name='' then Item.Name := ChangeFileExt(ExtractFilename(item.Filename),'');
-end;
 
 {
 sourceFname: file name
@@ -172,7 +88,7 @@ Assuming source and .dic are both present:
 
 4. Else do nothing and let the normal update process happen (which will update the file properly).
 }
-procedure TryAutoImportItem(item: PKnownImportItem);
+procedure TryAutoImportItem(item: PDownloadSource);
 var targetFname: string;
   files: TFileList;
   flags: TImportDictFlags;
@@ -181,8 +97,11 @@ var targetFname: string;
   parts: TStringArray;
   qmsg: string; //how to ask about replacing the dictionary
   i: integer;
+  fname: string;
+  lang: char;
 begin
-  if not FileExists(item.Filename) then exit;
+  fname := item.GetTargetDir + '\' + item.GetStaticTargetFilename;
+  if not FileExists(fname) then exit;
   targetFname := MakeDicFilename(item.Name);
 
   dic := nil;
@@ -214,7 +133,7 @@ begin
         +'Do you want to continue?'#13#13
         +'If you want to keep %0:s as it is, choose "No", close Wakan '
         +'and give %0:s some other name.',
-        [targetFname, item.Filename]
+        [targetFname, fname]
       );
     end
     else begin
@@ -223,7 +142,7 @@ begin
        //relegate the work to the normal update routine.
         for i := 0 to dic.sources.Count - 1 do begin
           parts := SplitStr(dic.sources[0], 2, ',');
-          if lowercase(parts[0])=lowercase(ExtractFilename(item.Filename)) then begin
+          if lowercase(parts[0])=lowercase(ExtractFilename(fname)) then begin
             FreeAndNil(dic);
             exit;
           end;
@@ -237,7 +156,7 @@ begin
         +'Do you want to replace it? It''s current contents will be lost.'#13#13
         +'If you want to keep %0:s as it is, choose "No", close Wakan '
         +'and give %0:s some other name.',
-        [targetFname, item.Filename]
+        [targetFname, fname]
       );
     end;
 
@@ -260,13 +179,20 @@ begin
   if fAutoImportForm.SupportsFrequencyList then
     flags := flags + [ifAddFrequencyInfo];
   SetLength(files,1);
-  files[0] := item.Filename;
+  files[0] := fname;
 
   if FileExists(targetFname) then
     Backup(targetFname);
 
   try
-    fAutoImportForm.ImportDictionary(targetFname, info, files, item.Language, flags);
+    if (item.BaseLanguage='jp') or (item.BaseLanguage='') then
+      lang := 'j'
+    else
+    if item.BaseLanguage='cn' then
+      lang := 'c'
+    else
+      raise Exception.Create('Invalid source dict language: '+item.BaseLanguage);
+    fAutoImportForm.ImportDictionary(targetFname, info, files, lang, flags);
     AddFilename(AutoUpdateChecked, targetFname);
     AddFilename(AutoUpdateImported, targetFname);
   except
@@ -277,16 +203,19 @@ end;
 procedure AutoImportDicts;
 var i: integer;
 begin
-  for i := 0 to KnownDictSources.Count - 1 do try
-    TryAutoImportItem(@KnownDictSources.items[i]);
-  except
-    on E: EDictImportException do begin
-      Application.MessageBox(
-        PChar(E.Message),
-        PChar(_l(sAutoImport)),
-        MB_ICONERROR+MB_OK);
-    end;
-  end;
+  for i := 0 to DownloadSources.Count - 1 do
+    if (DownloadSources[i].Category='dic')
+    and (DownloadSources[i].Format in [sfEdict, sfCEDict]) then
+      try
+        TryAutoImportItem(DownloadSources.items[i]);
+      except
+        on E: EDictImportException do begin
+          Application.MessageBox(
+            PChar(E.Message),
+            PChar(_l(sAutoImport)),
+            MB_ICONERROR+MB_OK);
+        end;
+      end;
 end;
 
 { Automatically update the dictionary if all source files are present and

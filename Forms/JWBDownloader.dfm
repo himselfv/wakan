@@ -2,7 +2,7 @@ object fDownloader: TfDownloader
   Left = 0
   Top = 0
   Caption = 'File Downloader'
-  ClientHeight = 493
+  ClientHeight = 562
   ClientWidth = 480
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,7 +17,7 @@ object fDownloader: TfDownloader
   OnShow = FormShow
   DesignSize = (
     480
-    493)
+    562)
   PixelsPerInch = 96
   TextHeight = 13
   object lblPageTitle: TLabel
@@ -42,7 +42,7 @@ object fDownloader: TfDownloader
   end
   object btnCancel: TBitBtn
     Left = 377
-    Top = 456
+    Top = 525
     Width = 95
     Height = 25
     Anchors = [akRight, akBottom]
@@ -50,10 +50,11 @@ object fDownloader: TfDownloader
     Caption = 'Cancel'
     TabOrder = 3
     OnClick = btnCancelClick
+    ExplicitTop = 456
   end
   object btnNext: TBitBtn
     Left = 276
-    Top = 456
+    Top = 525
     Width = 95
     Height = 25
     Anchors = [akRight, akBottom]
@@ -61,53 +62,56 @@ object fDownloader: TfDownloader
     Default = True
     TabOrder = 2
     OnClick = btnNextClick
+    ExplicitTop = 456
   end
   object btnPrev: TBitBtn
     Left = 175
-    Top = 456
+    Top = 525
     Width = 95
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Back'
     TabOrder = 1
     OnClick = btnPrevClick
+    ExplicitTop = 456
   end
   object PageControl: TPageControl
     Left = 8
     Top = 58
     Width = 464
-    Height = 392
-    ActivePage = tsDownloading
+    Height = 461
+    ActivePage = tsSelectFiles
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsButtons
     TabOrder = 0
     OnChange = PageControlChange
+    ExplicitHeight = 392
     object tsReadyToDownload: TTabSheet
       Hint = 'The following files will be downloaded/updated:'
       Caption = 'Ready to download'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 27
-      ExplicitWidth = 0
-      ExplicitHeight = 361
+      ExplicitHeight = 382
       object Label1: TLabel
         AlignWithMargins = True
         Left = 3
-        Top = 366
-        Width = 143
+        Top = 435
+        Width = 450
         Height = 13
         Align = alBottom
         Caption = 'Press "Download" to proceed.'
+        ExplicitTop = 366
+        ExplicitWidth = 143
       end
       object lbFilesToDownload: TListBox
         Left = 0
         Top = 0
         Width = 456
-        Height = 363
+        Height = 432
         Align = alClient
         ItemHeight = 13
         TabOrder = 0
+        ExplicitHeight = 363
       end
     end
     object tsDownloading: TTabSheet
@@ -115,11 +119,12 @@ object fDownloader: TfDownloader
       Caption = 'Downloading'
       ImageIndex = 2
       TabVisible = False
+      ExplicitHeight = 382
       object vtJobs: TVirtualStringTree
         Left = 0
         Top = 0
         Width = 456
-        Height = 382
+        Height = 451
         Align = alClient
         BorderWidth = 1
         Header.AutoSizeIndex = 0
@@ -139,6 +144,7 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtJobsGetImageIndex
         OnGetNodeDataSize = vtJobsGetNodeDataSize
         OnInitNode = vtJobsInitNode
+        ExplicitHeight = 382
         Columns = <
           item
             Position = 0
@@ -157,15 +163,12 @@ object fDownloader: TfDownloader
       Hint = 'Please select which files you want to download:'
       Caption = 'Select Files'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 585
-      ExplicitHeight = 319
+      ExplicitHeight = 382
       object vtKnownFiles: TVirtualStringTree
         Left = 0
         Top = 0
         Width = 456
-        Height = 293
+        Height = 362
         Align = alClient
         BorderWidth = 1
         Header.AutoSizeIndex = 0
@@ -181,6 +184,7 @@ object fDownloader: TfDownloader
         TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages]
         TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toRightClickSelect]
         OnChecked = vtKnownFilesChecked
+        OnCompareNodes = vtKnownFilesCompareNodes
         OnFocusChanged = vtKnownFilesFocusChanged
         OnFreeNode = vtKnownFilesFreeNode
         OnGetText = vtKnownFilesGetText
@@ -188,12 +192,11 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtKnownFilesGetImageIndex
         OnGetNodeDataSize = vtKnownFilesGetNodeDataSize
         OnInitNode = vtKnownFilesInitNode
-        ExplicitWidth = 585
-        ExplicitHeight = 230
+        ExplicitHeight = 293
         Columns = <
           item
             Position = 0
-            Width = 350
+            Width = 320
             WideText = 'Name'
             WideHint = 'Name'
           end
@@ -205,15 +208,14 @@ object fDownloader: TfDownloader
       end
       object mmFileDetails: TMemo
         Left = 0
-        Top = 293
+        Top = 362
         Width = 456
         Height = 89
         Align = alBottom
         Color = clBtnFace
         ReadOnly = True
         TabOrder = 1
-        ExplicitTop = 230
-        ExplicitWidth = 585
+        ExplicitTop = 293
       end
     end
   end
@@ -225,7 +227,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C00240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00280010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

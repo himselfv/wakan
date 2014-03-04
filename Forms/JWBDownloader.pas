@@ -10,6 +10,7 @@ uses
 type
   TNdFileData = record
     Source: PDownloadSource;
+    Index: integer;
     FlagImageIndex: integer;
     IsComponentPresent: boolean;
     Title: string; //if Source is not set
@@ -72,6 +73,9 @@ type
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: Integer);
     procedure tmrJobUpdateTimerTimer(Sender: TObject);
+    procedure vtKnownFilesCompareNodes(Sender: TBaseVirtualTree; Node1,
+      Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+
   protected
     procedure UpdatePageTitle;
     procedure UpdatePrevNextButtons;
@@ -81,15 +85,15 @@ type
     function GetFlagImageIndex(const ALangCode: string): integer;
 
   protected
-    BaseCat: PVirtualNode;
-    JpDicCat: PVirtualNode;
-    ChDicCat: PVirtualNode;
-    LanguageCat: PVirtualNode;
-    FontCat: PVirtualNode;
-    RomajiCat: PVirtualNode;
+    FKnownCats: array of record
+      Name: string;
+      Title: string;
+      Description: string;
+      Cat: PVirtualNode;
+    end;
     procedure ReloadKnownFiles;
-    function AddKnownCat(const AParent: PVirtualNode;
-      const ATitle, ADescription: string): PVirtualNode;
+    procedure AddKnownCat(const AName: string; const ATitle, ADescription: string);
+    function GetKnownCat(const AName: string): PVirtualNode;
     function AddKnownFile(const AParent: PVirtualNode;
       const ASource: PDownloadSource): PVirtualNode;
     function IsAnythingCheckedForDownload: boolean;
@@ -236,13 +240,19 @@ procedure TfDownloader.ReloadKnownFiles;
 var i: integer;
   cat: PVirtualNode;
 begin
+  SetLength(FKnownCats, 0);
   vtKnownFiles.Clear;
-  BaseCat := AddKnownCat(nil, 'Common files', 'Common files required for Wakan to function.'); //TODO: Localize
-  JpDicCat := AddKnownCat(nil, 'Japanese Dictionaries', 'Dictionaries of Japanese words');
-  ChDicCat := AddKnownCat(nil, 'Chinese Dictionaries', 'Dictionaries of Chinese words');
-  LanguageCat := AddKnownCat(nil, 'Interface Translations', 'With these interface translations Wakan can be shown in your own language');
-  FontCat := AddKnownCat(nil, 'Fonts', 'Recommended fonts if you don''t have appropriate fonts in your system.');
-  RomajiCat := AddKnownCat(nil, 'Romaji Schemes', 'With different romaji schemes you can enter kana in a different way');
+
+ //TODO: Localize all
+  AddKnownCat('', 'Common files', 'Common files required for Wakan to function.');
+  AddKnownCat('kanjidic', 'Kanji Dictionaries', 'Dictionaries with information about characters');
+  AddKnownCat('dic-jp', 'Japanese Dictionaries', 'Dictionaries of Japanese words');
+  AddKnownCat('dic-cn', 'Chinese Dictionaries', 'Dictionaries of Chinese words');
+  AddKnownCat('language', 'Interface Translations', 'With these interface translations Wakan can be shown in your own language');
+  AddKnownCat('font', 'Fonts', 'Recommended fonts if you don''t have appropriate fonts in your system.');
+  AddKnownCat('romaji', 'Romaji Schemes', 'With different romaji schemes you can enter kana in a different way');
+  AddKnownCat('group', 'Kanji Groups', 'Pre-populated sets of groups, or tags, for characters');
+
  //Or we can set all to nil and create as needed
 
   for i := 0 to DownloadSources.Count-1 do
@@ -250,38 +260,59 @@ begin
 
       if (DownloadSources[i].Category='dic')
       and (DownloadSources[i].BaseLanguage='cn') then
-        cat := ChDicCat
+        cat := GetKnownCat('dic-cn')
       else
       if (DownloadSources[i].Category='dic') then
-        cat := JpDicCat
+        cat := GetKnownCat('dic-jp')
       else
-      if DownloadSources[i].Category='language' then
-        cat := LanguageCat
-      else
-      if DownloadSources[i].Category='font' then
-        cat := FontCat
-      else
-      if DownloadSources[i].Category='romaji' then
-        cat := RomajiCat
-      else
-        cat := BaseCat;
-
+        cat := GetKnownCat(DownloadSources[i].Category); //same as in file
+      if cat=nil then
+        cat := GetKnownCat(''); //base
       AddKnownFile(cat, DownloadSources[i]);
     end;
 
+  vtKnownFiles.Sort(nil, NoColumn, sdAscending);
   vtKnownFiles.FullExpand();
 end;
 
-function TfDownloader.AddKnownCat(const AParent: PVirtualNode;
-  const ATitle, ADescription: string): PVirtualNode;
-var Data: PNdFileData;
+procedure TfDownloader.AddKnownCat(const AName: string; const ATitle, ADescription: string);
+var i: integer;
 begin
-  Result := vtKnownFiles.AddChild(AParent);
+  i := Length(FKnownCats);
+  SetLength(FKnownCats, i+1);
+  FKnownCats[i].Name := AName;
+  FKnownCats[i].Title := ATitle;
+  FKnownCats[i].Description := ADescription;
+  FKnownCats[i].Cat := nil;
+end;
+
+function TfDownloader.GetKnownCat(const AName: string): PVirtualNode;
+var Data: PNdFileData;
+  i, idx: integer;
+begin
+  idx := -1;
+  for i := 0 to Length(FKnownCats)-1 do
+    if FKnownCats[i].Name=AName then begin
+      idx := i;
+      break;
+    end;
+
+  if idx<0 then begin
+    Result := nil; //no such category
+    exit;
+  end;
+
+  Result := FKnownCats[idx].Cat;
+  if Result<>nil then exit; //exists
+
+  Result := vtKnownFiles.AddChild(nil);
   vtKnownFiles.ReinitNode(Result, false);
   Data := vtKnownFiles.GetNodeData(Result);
-  Data.Title := ATitle;
-  Data.Description := ADescription;
+  Data.Title := FKnownCats[idx].Title;
+  Data.Description := FKnownCats[idx].Description;
+  Data.Index := idx;
   Data.FlagImageIndex := -1;
+  FKnownCats[idx].Cat := Result;
 end;
 
 function TfDownloader.AddKnownFile(const AParent: PVirtualNode;
@@ -372,6 +403,30 @@ begin
   case Column of
     1: ImageIndex := Data.FlagImageIndex;
   end;
+end;
+
+procedure TfDownloader.vtKnownFilesCompareNodes(Sender: TBaseVirtualTree; Node1,
+  Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+var Data1, Data2: PNdFileData;
+begin
+  Data1 := Sender.GetNodeData(Node1);
+  Data2 := Sender.GetNodeData(Node2);
+  Result := Data1.Index-Data2.Index;
+  if Result<>0 then exit;
+
+  if (Data1.Source=nil) or (Data2.Source=nil) then
+    Result := integer(Data1.Source=nil) - integer(Data2.Source=nil)
+  else
+  if (Data1.Source.Language=Data2.Source.Language) then
+    Result := CompareText(Data1.Source.Name, Data2.Source.Name)
+  else
+  if (Data1.Source.Language='') or (Data2.Source.Language='') then
+    Result := integer(Data1.Source.Language='') - integer(Data2.Source.Language='')
+  else
+  if (Data1.Source.Language='en') or (Data2.Source.Language='en') then
+    Result := integer(Data1.Source.Language='en') - integer(Data2.Source.Language='en')
+  else
+    Result := CompareText(Data1.Source.Language, Data2.Source.Language);
 end;
 
 function Min(a,b: integer): integer;
