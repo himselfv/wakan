@@ -1,14 +1,11 @@
-unit JWBDownloadSources;
-{
-Requires Unicode or we will not be able to load sources.cfg in UTF-16.
-}
+unit JWBComponents;
 
 interface
 
 type
   TSourceDicFormat = (sfEdict, sfCEdict, sfWakan);
 
-  TDownloadSource = record
+  TAppComponent = record
     Category: string;
     Language: string;
     Name: string; //must be lowercase
@@ -27,31 +24,31 @@ type
     function GetStaticTargetFilename: string;
     function GetCheckPresentFilename: string;
   end;
-  PDownloadSource = ^TDownloadSource;
+  PAppComponent = ^TAppComponent;
 
-  TDownloadSourceArray = array of TDownloadSource;
+  TAppComponentArray = array of TAppComponent;
 
-  TDownloadSources = class
+  TAppComponents = class
   protected
-    FItems: TDownloadSourceArray;
+    FItems: TAppComponentArray;
     function GetCount: integer;
-    function GetItemByIndex(Index: integer): PDownloadSource;
-    function AddNew: PDownloadSource;
+    function GetItemByIndex(Index: integer): PAppComponent;
+    function AddNew: PAppComponent;
   public
     constructor Create;
     destructor Destroy; override;
     procedure Clear;
     procedure LoadFromFile(const filename: string);
-    function FindByName(const AName: string): PDownloadSource;
+    function FindByName(const AName: string): PAppComponent;
     property Count: integer read GetCount;
-    property Items[Index: integer]: PDownloadSource read GetItemByIndex; default;
+    property Items[Index: integer]: PAppComponent read GetItemByIndex; default;
   end;
 
 var
-  DownloadSources: TDownloadSources; //populated on load
+  AppComponents: TAppComponents; //populated on load
 
 
-function IsComponentPresent(const ASource: PDownloadSource): boolean;
+function IsComponentPresent(const ASource: PAppComponent): boolean;
 
 {
 Downloads and extracts this dependency from whatever is specified as a download source
@@ -63,7 +60,7 @@ implementation
 uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloaderCore,
   SevenZip, SevenZipUtils, StdPrompt, JWBCore, JWBLanguage;
 
-procedure TDownloadSource.Reset;
+procedure TAppComponent.Reset;
 begin
   Category := '';
   Language := '';
@@ -83,7 +80,7 @@ end;
  on its type.
  For some components the returned path is temporary folder, from where they
  have to be installed on the system. }
-function TDownloadSource.GetTargetDir: string;
+function TAppComponent.GetTargetDir: string;
 begin
   if Category='base' then
     Result := AppFolder
@@ -108,7 +105,7 @@ URLFilename: provides static filename extracted from URL.
 Not always available. Some URLs provide no name (e.g. download.php?id=545)
 and some servers may override the URL name with Content-Disposition header.
 }
-function TDownloadSource.GetURLFilename: string;
+function TAppComponent.GetURLFilename: string;
 begin
   Result := ExtractFilenameURL(URL);
 end;
@@ -132,7 +129,7 @@ Static version:
 2. Try to extract filename from URL (not always possible)
  2a. If unpacking, auto-remove archive extensions.
 }
-function TDownloadSource.GetStaticTargetFilename: string;
+function TAppComponent.GetStaticTargetFilename: string;
 var ext: string;
 begin
   Result := TargetFilename;
@@ -151,29 +148,29 @@ CheckPresent: file to use to check if the component is present.
 3. Try to extract filename from URL (not always possible)
  3a. If unpacking, auto-remove archive extensions.
 }
-function TDownloadSource.GetCheckPresentFilename: string;
+function TAppComponent.GetCheckPresentFilename: string;
 begin
   Result := CheckPresent;
   if Result='' then
     Result := GetStaticTargetFilename;
 end;
 
-constructor TDownloadSources.Create;
+constructor TAppComponents.Create;
 begin
   inherited;
 end;
 
-destructor TDownloadSources.Destroy;
+destructor TAppComponents.Destroy;
 begin
   inherited;
 end;
 
-procedure TDownloadSources.Clear;
+procedure TAppComponents.Clear;
 begin
   SetLength(FItems, 0);
 end;
 
-function TDownloadSources.AddNew: PDownloadSource;
+function TAppComponents.AddNew: PAppComponent;
 begin
   SetLength(FItems, Length(FItems)+1);
   Result := @FItems[Length(FItems)-1];
@@ -214,12 +211,12 @@ begin
     raise Exception.Create('Unknown source dictionary format: "'+AText+'"');
 end;
 
-procedure TDownloadSources.LoadFromFile(const filename: string);
+procedure TAppComponents.LoadFromFile(const filename: string);
 var sl: TStringList;
   i: integer;
   ln, param: string;
   ln_sep_pos: integer;
-  item: PDownloadSource;
+  item: PAppComponent;
 begin
   sl := TStringList.Create;
   try
@@ -295,7 +292,7 @@ begin
   end;
 end;
 
-function TDownloadSources.FindByName(const AName: string): PDownloadSource;
+function TAppComponents.FindByName(const AName: string): PAppComponent;
 var l_name: string;
   i: integer;
 begin
@@ -308,17 +305,17 @@ begin
     end;
 end;
 
-function TDownloadSources.GetCount: integer;
+function TAppComponents.GetCount: integer;
 begin
   Result := Length(FItems);
 end;
 
-function TDownloadSources.GetItemByIndex(Index: integer): PDownloadSource;
+function TAppComponents.GetItemByIndex(Index: integer): PAppComponent;
 begin
   Result := @FItems[Index];
 end;
 
-function IsComponentPresent(const ASource: PDownloadSource): boolean;
+function IsComponentPresent(const ASource: PAppComponent): boolean;
 var TargetFile: string;
 begin
   TargetFile := ASource.GetTargetDir + '\' + ASource.GetCheckPresentFilename;
@@ -326,14 +323,14 @@ begin
 end;
 
 function DownloadDependency(const depname: string): boolean;
-var dep: PDownloadSource;
+var dep: PAppComponent;
   tempDir: string;
   zip: TSevenZipArchive;
   zname: string;
   i: integer;
   prog: TSMPromptForm;
 begin
-  dep := DownloadSources.FindByName(depname);
+  dep := AppComponents.FindByName(depname);
   if dep=nil then begin
     Result := false;
     exit;
@@ -399,7 +396,7 @@ procedure DownloadTest;
 var tempDir: string;
   LastModified: TDatetime;
 begin
-  DownloadSources.LoadFromFile('Dependencies.cfg');
+  AppComponents.LoadFromFile('Dependencies.cfg');
 
   //Just a test
   tempDir := CreateRandomTempDirName();
@@ -414,9 +411,9 @@ begin
 end;
 
 initialization
-  DownloadSources := TDownloadSources.Create;
+  AppComponents := TAppComponents.Create;
 
 finalization
-  FreeAndNil(DownloadSources);
+  FreeAndNil(AppComponents);
 
 end.

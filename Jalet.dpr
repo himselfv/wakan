@@ -66,7 +66,7 @@ uses
   JWBEdictReader in 'Components\Parsers\JWBEdictReader.pas',
   JWBAutoImport in 'Components\JWBAutoImport.pas',
   JWBDownloaderCore in 'Components\JWBDownloaderCore.pas',
-  JWBDownloadSources in 'Components\JWBDownloadSources.pas',
+  JWBComponents in 'Components\JWBComponents.pas',
   JWBUserData in 'Components\JWBUserData.pas',
   JWBForms in 'Components\JWBForms.pas',
   JWBCharData in 'Components\JWBCharData.pas',

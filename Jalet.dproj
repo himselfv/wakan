@@ -296,7 +296,7 @@
         <DCCReference Include="Components\Parsers\JWBEdictReader.pas"/>
         <DCCReference Include="Components\JWBAutoImport.pas"/>
         <DCCReference Include="Components\JWBDownloaderCore.pas"/>
-        <DCCReference Include="Components\JWBDownloadSources.pas"/>
+        <DCCReference Include="Components\JWBComponents.pas"/>
         <DCCReference Include="Components\JWBUserData.pas"/>
         <DCCReference Include="Components\JWBForms.pas"/>
         <DCCReference Include="Components\JWBCharData.pas"/>

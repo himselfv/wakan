@@ -4,12 +4,12 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, VirtualTrees, Buttons, ComCtrls, JWBDownloadSources,
-  ImgList, Generics.Collections, JWBJobs, Vcl.ExtCtrls;
+  Dialogs, StdCtrls, VirtualTrees, Buttons, ComCtrls, ImgList, JWBComponents,
+  Generics.Collections, JWBJobs, Vcl.ExtCtrls;
 
 type
   TNdFileData = record
-    Source: PDownloadSource;
+    Source: PAppComponent;
     Index: integer;
     FlagImageIndex: integer;
     IsComponentPresent: boolean;
@@ -18,7 +18,7 @@ type
   end;
   PNdFileData = ^TNdFileData;
 
-  TSourceArray = array of PDownloadSource;
+  TSourceArray = array of PAppComponent;
   PSourceArray = ^TSourceArray;
 
   TfDownloader = class(TForm)
@@ -95,7 +95,7 @@ type
     procedure AddKnownCat(const AName: string; const ATitle, ADescription: string);
     function GetKnownCat(const AName: string): PVirtualNode;
     function AddKnownFile(const AParent: PVirtualNode;
-      const ASource: PDownloadSource): PVirtualNode;
+      const ASource: PAppComponent): PVirtualNode;
     function IsAnythingCheckedForDownload: boolean;
     procedure VtCountCheckedNodes(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Data: Pointer; var Abort: Boolean);
@@ -255,20 +255,20 @@ begin
 
  //Or we can set all to nil and create as needed
 
-  for i := 0 to DownloadSources.Count-1 do
-    if DownloadSources[i].URL <> '' then begin
+  for i := 0 to AppComponents.Count-1 do
+    if AppComponents[i].URL <> '' then begin
 
-      if (DownloadSources[i].Category='dic')
-      and (DownloadSources[i].BaseLanguage='cn') then
+      if (AppComponents[i].Category='dic')
+      and (AppComponents[i].BaseLanguage='cn') then
         cat := GetKnownCat('dic-cn')
       else
-      if (DownloadSources[i].Category='dic') then
+      if (AppComponents[i].Category='dic') then
         cat := GetKnownCat('dic-jp')
       else
-        cat := GetKnownCat(DownloadSources[i].Category); //same as in file
+        cat := GetKnownCat(AppComponents[i].Category); //same as in file
       if cat=nil then
         cat := GetKnownCat(''); //base
-      AddKnownFile(cat, DownloadSources[i]);
+      AddKnownFile(cat, AppComponents[i]);
     end;
 
   vtKnownFiles.Sort(nil, NoColumn, sdAscending);
@@ -316,7 +316,7 @@ begin
 end;
 
 function TfDownloader.AddKnownFile(const AParent: PVirtualNode;
-  const ASource: PDownloadSource): PVirtualNode;
+  const ASource: PAppComponent): PVirtualNode;
 var Data: PNdFileData;
 begin
   Result := vtKnownFiles.AddChild(AParent);
@@ -683,16 +683,16 @@ begin
   case Column of
     NoColumn, 0:
       if AJob is TCustomDownloadJob then
-        CellText := 'Downloading '+TCustomDownloadJob(AJob).Name;
+        CellText := TCustomDownloadJob(AJob).Name;
 
     1:
       case AJob.State of
         jsPending: CellText := '';
         jsWorking:
           if AJob.TotalSize>0 then
-            CellText := 'Working ('+CurrToStr(100*AJob.Progress/AJob.TotalSize)+'%)' //TODO: Job action name, TODO: Percent bar
+            CellText := 'Downloading ('+CurrToStr(100*AJob.Progress/AJob.TotalSize)+'%)' //TODO: Job action name, TODO: Percent bar
           else
-            CellText := 'Working...';
+            CellText := 'Downloading...';
         jsCompleted:
           if AJob is TCustomDownloadJob then
             case TCustomDownloadJob(AJob).Result of

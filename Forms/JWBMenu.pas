@@ -608,7 +608,7 @@ uses Types, clipbrd, JWBCore, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
  JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBStatistics, JWBKanji,
  JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBDictMan, JWBDictImport,
  JWBScreenTip, JWBCategories, JWBAnnotations, JWBCommandLine, JWBAutoImport,
- JWBDownloadSources, JWBDownloader, JWBCategoryMgr, JWBCopyFormats, JWBRefLinks;
+ JWBComponents, JWBDownloader, JWBCategoryMgr, JWBCopyFormats, JWBRefLinks;
 
 {$R *.DFM}
 
@@ -721,8 +721,7 @@ begin
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
 
-   { DownloadTest(); }
-    DownloadSources.LoadFromFile('DownloadSources.ini');
+    AppComponents.LoadFromFile('Components.ini');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then

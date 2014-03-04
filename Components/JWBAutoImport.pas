@@ -7,7 +7,7 @@ Call:
 }
 
 interface
-uses SysUtils, JWBStrings, JWBIO, JWBDic, JWBDictImport, JWBDownloadSources;
+uses SysUtils, JWBStrings, JWBIO, JWBDic, JWBDictImport, JWBComponents;
 
 var
   ForceUpdates: boolean;
@@ -88,7 +88,7 @@ Assuming source and .dic are both present:
 
 4. Else do nothing and let the normal update process happen (which will update the file properly).
 }
-procedure TryAutoImportItem(item: PDownloadSource);
+procedure TryAutoImportItem(item: PAppComponent);
 var targetFname: string;
   files: TFileList;
   flags: TImportDictFlags;
@@ -204,11 +204,11 @@ end;
 procedure AutoImportDicts;
 var i: integer;
 begin
-  for i := 0 to DownloadSources.Count - 1 do
-    if (DownloadSources[i].Category='dic')
-    and (DownloadSources[i].Format in [sfEdict, sfCEDict]) then
+  for i := 0 to AppComponents.Count - 1 do
+    if (AppComponents[i].Category='dic')
+    and (AppComponents[i].Format in [sfEdict, sfCEDict]) then
       try
-        TryAutoImportItem(DownloadSources.items[i]);
+        TryAutoImportItem(AppComponents.items[i]);
       except
         on E: EDictImportException do begin
           Application.MessageBox(
