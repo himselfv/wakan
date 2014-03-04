@@ -2095,7 +2095,6 @@ var fSplash: TfSplash;
 begin
   fSplash := TfSplash.Create(Self);
   try
-    fSplash.ProgressBar1.Hide;
     fSplash.BitBtn1.Show;
     fSplash.ShowModal;
   finally

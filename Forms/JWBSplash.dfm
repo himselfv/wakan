@@ -2694,10 +2694,10 @@ object fSplash: TfSplash
     object lblURL: TUrlLabel
       Left = 16
       Top = 382
-      Width = 96
+      Width = 88
       Height = 13
       Cursor = crHandPoint
-      Caption = 'wakan.manga.cz'
+      Caption = 'Wakan website'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -11
@@ -2734,15 +2734,6 @@ object fSplash: TfSplash
       Font.Style = [fsBold]
       ParentFont = False
     end
-    object ProgressBar1: TProgressBar
-      Left = 139
-      Top = 380
-      Width = 349
-      Height = 17
-      Anchors = [akLeft, akTop, akRight]
-      Max = 4
-      TabOrder = 0
-    end
     object BitBtn1: TBitBtn
       Left = 224
       Top = 379
@@ -2750,7 +2741,7 @@ object fSplash: TfSplash
       Height = 24
       Kind = bkOK
       NumGlyphs = 2
-      TabOrder = 1
+      TabOrder = 0
       Visible = False
     end
     object Memo1: TMemo
@@ -2796,7 +2787,7 @@ object fSplash: TfSplash
         '  usuarios.lycos.es/gsanroman')
       ParentFont = False
       ReadOnly = True
-      TabOrder = 2
+      TabOrder = 1
     end
   end
 end

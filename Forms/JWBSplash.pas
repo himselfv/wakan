@@ -13,7 +13,6 @@ type
     Image1: TImage;
     Bevel1: TBevel;
     lblURL: TUrlLabel;
-    ProgressBar1: TProgressBar;
     BitBtn1: TBitBtn;
     Memo1: TMemo;
     Shape1: TShape;
@@ -31,6 +30,7 @@ procedure TfSplash.FormCreate(Sender: TObject);
 begin
   lblVersion.Caption:=WakanVer;
   lblCopyright.Caption:=WakanCopyright;
+  lblUrl.URL := AppUrl;
 end;
 
 end.
