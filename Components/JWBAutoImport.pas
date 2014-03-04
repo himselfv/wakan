@@ -104,6 +104,14 @@ begin
   if not FileExists(fname) then exit;
   targetFname := MakeDicFilename(item.Name);
 
+  if (item.BaseLanguage='jp') or (item.BaseLanguage='') then
+    lang := 'j'
+  else
+  if item.BaseLanguage='cn' then
+    lang := 'c'
+  else
+    raise Exception.Create('Invalid source dict language: '+item.BaseLanguage);
+
   dic := nil;
   qmsg := '';
   if FileExists(targetFname) then begin
@@ -137,7 +145,7 @@ begin
       );
     end
     else begin
-      if dic.language=item.Language then
+      if dic.language=lang then
        //If this dictionary has at least one reference to this source,
        //relegate the work to the normal update routine.
         for i := 0 to dic.sources.Count - 1 do begin
@@ -185,13 +193,6 @@ begin
     Backup(targetFname);
 
   try
-    if (item.BaseLanguage='jp') or (item.BaseLanguage='') then
-      lang := 'j'
-    else
-    if item.BaseLanguage='cn' then
-      lang := 'c'
-    else
-      raise Exception.Create('Invalid source dict language: '+item.BaseLanguage);
     fAutoImportForm.ImportDictionary(targetFname, info, files, lang, flags);
     AddFilename(AutoUpdateChecked, targetFname);
     AddFilename(AutoUpdateImported, targetFname);
