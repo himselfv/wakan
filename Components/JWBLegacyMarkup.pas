@@ -183,9 +183,9 @@ end;
 function UnfixVocabEntry(const s: string): string;
 begin
   Result := s;
-  repl(Result,UH_LBEG,AH_LBEG);
-  repl(Result,UH_LEND,AH_LEND);
-  repl(Result,UH_SETCOLOR,AH_SETCOLOR);
+  Result := repl(Result,UH_LBEG,AH_LBEG);
+  Result := repl(Result,UH_LEND,AH_LEND);
+  Result := repl(Result,UH_SETCOLOR,AH_SETCOLOR);
 end;
 
 { Degrades vocabulary entry for textual presentation: removes control characters
@@ -193,9 +193,9 @@ end;
 function FinalizeVocabEntry(const s: string): string;
 begin
   Result := remexcl(s);
-  repl(Result,UH_LBEG,'');
-  repl(Result,UH_LEND,'');
-  repl(Result,UH_SETCOLOR,'');
+  Result := repl(Result,UH_LBEG,'');
+  Result := repl(Result,UH_LEND,'');
+  Result := repl(Result,UH_SETCOLOR,'');
 end;
 
 
