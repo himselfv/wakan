@@ -689,8 +689,8 @@ begin
       case AJob.State of
         jsPending: CellText := '';
         jsWorking:
-          if AJob.TotalSize>0 then
-            CellText := 'Downloading ('+CurrToStr(100*AJob.Progress/AJob.TotalSize)+'%)' //TODO: Job action name, TODO: Percent bar
+          if AJob.MaxProgress>0 then
+            CellText := 'Downloading ('+CurrToStr(100*AJob.Progress/AJob.MaxProgress)+'%)' //TODO: Job action name, TODO: Percent bar
           else
             CellText := 'Downloading...';
         jsCompleted:

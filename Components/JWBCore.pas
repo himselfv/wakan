@@ -31,6 +31,7 @@ const
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 function DictionaryDir: string;
 function GetAppDataFolder: string;
+function CommonDataDir: string;
 function WikiUrl(const APage: string = ''): string;
 
 
@@ -104,6 +105,11 @@ begin
   Assert(Result<>''); //just in case
   Result:=Result+'\Wakan';
   ForceDirectories(Result);
+end;
+
+function CommonDataDir: string;
+begin
+  Result := AppFolder; //for now
 end;
 
 function WikiUrl(const APage: string = ''): string;

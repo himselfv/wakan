@@ -3,6 +3,12 @@ unit JWBJobs;
 interface
 uses SysUtils, Classes, Generics.Collections;
 
+{
+A job is a component of work. You can run it synchronously or asynchronously,
+it reports the progress. It's done in chunks and can be terminated at any time.
+Override ProcessChunk() to implement a job.
+}
+
 type
   TJobState = (
     jsPending,
@@ -13,15 +19,27 @@ type
   TJob = class(TObject)
   protected
     FState: TJobState;
+    FAborted: boolean;
     FProgress: integer;
-    FTotalSize: integer;
+    FMaxProgress: integer;
+    FOperation: string;
+    FOnYield: TNotifyEvent;
+    procedure Yield;
+    procedure SetOperation(const AValue: string);
+    procedure SetProgress(const AValue: integer);
+    procedure SetMaxProgress(const AValue: integer);
+    procedure StartOperation(const AOperation: string; const AMaxProgress: integer);
   public
     constructor Create;
     destructor Destroy; override;
     procedure ProcessChunk; virtual; //Make chunks small enough
+    procedure Abort;
     property State: TJobState read FState;
-    property TotalSize: integer read FTotalSize; //if 0, total size is unknown
+    property Operation: string read FOperation;
     property Progress: integer read FProgress;
+    property MaxProgress: integer read FMaxProgress; //if 0, total size is unknown
+    property Aborted: boolean read FAborted;
+    property OnYield: TNotifyEvent read FOnYield write FOnYield;
   end;
   PJob = ^TJob;
 
@@ -50,7 +68,8 @@ begin
   inherited;
   FState := jsPending;
   FProgress := 0;
-  FTotalSize := 0;
+  FMaxProgress := 0;
+  FOperation := '';
 end;
 
 destructor TJob.Destroy;
@@ -58,9 +77,57 @@ begin
   inherited;
 end;
 
+{
+Override ProcessChunk() to implement a job:
+ * process a chunk of data
+ * update progress/state
+
+You can also implement all job in a single call of ProcessChunk. In this case
+call SetProgress() or Yield() from time to time and be ready for EAbort.
+}
 procedure TJob.ProcessChunk;
 begin
   FState := jsCompleted;
+end;
+
+{ The job calls this to relay execution to housekeeping code if called from
+ the same thread, and to check if the job has been terminated }
+procedure TJob.Yield;
+begin
+  if FAborted then
+    raise EAbort.Create('');
+  if Assigned(FOnYield) then
+    FOnYield(Self);
+end;
+
+{ Call to mark the job for premature termination. If the job finds it's been
+ aborted, EAbort will be raised }
+procedure TJob.Abort;
+begin
+  FAborted := true;
+end;
+
+procedure TJob.SetOperation(const AValue: string);
+begin
+  FOperation := AValue;
+  Yield;
+end;
+
+procedure TJob.SetProgress(const AValue: integer);
+begin
+  FMaxProgress := AValue;
+  Yield;
+end;
+
+procedure TJob.SetMaxProgress(const AValue: integer);
+begin
+  FMaxProgress := AValue;
+end;
+
+procedure TJob.StartOperation(const AOperation: string; const AMaxProgress: integer);
+begin
+  SetOperation(AOperation);
+  SetMaxProgress(AMaxProgress);
 end;
 
 constructor TWorkerThread.Create;

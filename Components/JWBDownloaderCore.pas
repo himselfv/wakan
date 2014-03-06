@@ -277,9 +277,9 @@ begin
 
   ContentLength := GetContentLength(hURL);
   if (ContentLength<=0) or (ContentLength>=MaxInt) then
-    Self.FTotalSize := 0 //just display progress animation
+    Self.FMaxProgress := 0 //just display progress animation
   else
-    Self.FTotalSize := integer(ContentLength); //really hope it's less than 2Gb!
+    Self.FMaxProgress := integer(ContentLength); //really hope it's less than 2Gb!
 
  //If filename is provided, use that, otherwise take one from Content-Disposition
  //or URL
@@ -333,7 +333,7 @@ begin
   try
     job.ProcessChunk;
     if prog<>nil then begin
-      prog.SetMaxProgress(integer(job.TotalSize));
+      prog.SetMaxProgress(job.MaxProgress);
       prog.ProcessMessages;
     end;
     while job.State<>jsCompleted do begin
@@ -368,7 +368,7 @@ begin
 
     job.ProcessChunk;
     if prog<>nil then begin
-      prog.SetMaxProgress(integer(job.TotalSize));
+      prog.SetMaxProgress(job.MaxProgress);
       prog.ProcessMessages;
     end;
     while job.State<>jsCompleted do begin

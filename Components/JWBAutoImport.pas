@@ -44,7 +44,8 @@ const
   sCannotUpdateCantBeLoaded='#00990^eCannot update the dictionary "%s" because it cannot be loaded: %s';
 
 implementation
-uses Classes, Forms, Windows, MemSource, JWBCore, JWBLanguage, JWBCommandLine;
+uses Classes, Forms, Windows, MemSource, JWBCore, JWBLanguage, JWBCommandLine,
+  JWBDicImportJob;
 
 var
  //Don't check the same dictionary twice
@@ -91,8 +92,6 @@ Assuming source and .dic are both present:
 procedure TryAutoImportItem(item: PAppComponent);
 var targetFname: string;
   files: TFileList;
-  flags: TImportDictFlags;
-  info: TDictInfo;
   dic: TJaletDic; //if set, update, else replace
   parts: TStringArray;
   qmsg: string; //how to ask about replacing the dictionary
@@ -180,12 +179,8 @@ begin
   end;
 
  //Finally, import!
-  info.Description := item.Description;
-  flags := [ifSilent];
   if fAutoImportForm=nil then
     Application.CreateForm(TfDictImport, fAutoImportForm);
-  if fAutoImportForm.SupportsFrequencyList then
-    flags := flags + [ifAddFrequencyInfo];
   SetLength(files,1);
   files[0] := fname;
 
@@ -193,7 +188,9 @@ begin
     Backup(targetFname);
 
   try
-    fAutoImportForm.ImportDictionary(targetFname, info, files, lang, flags);
+    fAutoImportForm.ImportDictionary(targetFname, item.Description, files, lang,
+      {AddFrequencyInfo=}JWBDicImportJob.SupportsFrequencyList,
+      {Silent=}true);
     AddFilename(AutoUpdateChecked, targetFname);
     AddFilename(AutoUpdateImported, targetFname);
   except
@@ -228,8 +225,7 @@ var i: integer;
   files: TFileList;
   missing: TFileList; //list of missing sources for current dic
   needupdate: TFileList; //list of sources which need update
-  flags: TImportDictFlags;
-  info: TDictInfo;
+  flags: TDicImportFlags;
   lang: char;
   parts: TStringArray;
   wasloaded: boolean;
@@ -305,13 +301,13 @@ begin
   end;
 
   fname := dic.pname; //dic.pname might be lost while playing with dic
-  info.Description := dic.description;
   lang := dic.language;
-  flags := [ifSilent];
   if fAutoImportForm=nil then
     Application.CreateForm(TfDictImport, fAutoImportForm);
-  if fAutoImportForm.SupportsFrequencyList then
-    flags := flags + [ifAddFrequencyInfo];
+  if JWBDicImportJob.SupportsFrequencyList then
+    flags := [ifAddFrequencyInfo]
+  else
+    flags := [];
 
  //Unload the dictionary so that it doesn't block us,
  //and make a backup
@@ -321,7 +317,9 @@ begin
   Backup(fname);
 
   try
-    fAutoImportForm.ImportDictionary(fname, info, files, lang, flags);
+    fAutoImportForm.ImportDictionary(fname, dic.description, files, lang,
+      {AddFrequencyInfo=}JWBDicImportJob.SupportsFrequencyList,
+      {Silent=}true);
     AddFilename(AutoUpdateImported, fname);
   except
     on E: EAbort do begin end; //do nothing, but the dictionary is not updated

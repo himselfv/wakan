@@ -77,7 +77,8 @@ uses
   JWBRefLinks in 'Components\JWBRefLinks.pas',
   JWBJobs in 'Components\JWBJobs.pas',
   JWBCore in 'Components\JWBCore.pas',
-  JWBWordGrid in 'Components\JWBWordGrid.pas';
+  JWBWordGrid in 'Components\JWBWordGrid.pas',
+  JWBDicImportJob in 'Components\JWBDicImportJob.pas';
 
 {$R *.RES}
 {$R WINXP.RES}

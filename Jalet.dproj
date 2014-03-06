@@ -308,6 +308,7 @@
         <DCCReference Include="Components\JWBJobs.pas"/>
         <DCCReference Include="Components\JWBCore.pas"/>
         <DCCReference Include="Components\JWBWordGrid.pas"/>
+        <DCCReference Include="Components\JWBDicImportJob.pas"/>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>
