@@ -24,7 +24,6 @@ var
     Description: string;
     Language: char;
     Files: TFilenameList;
-    AddFrequencyInfo: boolean;
   end;
 
   MakeRadParams: record
@@ -71,10 +70,8 @@ begin
     +'* makesod'#13
     +'* makerad [RADKFILE_filename] [...]'#13
     +'* makechars [/resetdb] [/kanjidic <kanjidic-filename>] [/unihan <unihan-folder>]'#13
-    +'* makedic <dicfilename> </include filename> [/include filename] [/name dic_name] '
-      +'[/description text] [/copyright text] [/priority int] [/version text] '
-      +'[/language <j|c>] [/unicode] [/addwordindex] [/addcharacterindex] '
-      +'[/addfrequencyinfo]'#13
+    +'* makedic <dicfilename> </include filename> [/include filename] '
+      +'[/description text] [/language <j|c>] '#13
     +'* updatedics [dicname dicname ...]'
     +'Supported flags:'
     +'* [/fast]';
@@ -152,9 +149,6 @@ begin
           s := ParamStr(i);
           if s='' then BadUsage('invalid /include file name');
           AddFilename(MakeDicParams.Files, s);
-        end else
-        if s='/addfrequencyinfo' then begin
-          MakeDicParams.AddFrequencyInfo := true;
         end else
           BadUsage('Invalid option: '+s);
 

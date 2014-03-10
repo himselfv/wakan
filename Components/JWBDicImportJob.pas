@@ -8,11 +8,6 @@ uses SysUtils, Classes, JWBStrings, JWBIO, JWBJobs, JWBDic, JWBIndex,
 type
   EDictImportException = class(Exception);
 
-  TDicImportFlag = (
-    ifAddFrequencyInfo
-  );
-  TDicImportFlags = set of TDicImportFlag;
-
   TDicInfo = record
     Description: string;
   end;
@@ -25,37 +20,31 @@ type
     FDicFilename: string;
     FDicDescription: string;
     FDicLanguage: char;
-    FFlags: TDicImportFlags;
     FFiles: array of record
       Filename: string;
-      ConvertEncoding: char; //Auto-encoding conversion group #00, 'j', 'c' or 'k'
-      ConvertedFilename: string;
-      LineCount: integer;
+      Encoding: CEncoding; //can be nil for autodetect
     end;
     procedure Initialize;
     procedure Cleanup;
+    function GetTotalLineCount: integer;
   public
     constructor Create;
     destructor Destroy; override;
     procedure ProcessChunk; override;
-    procedure AddSourceFile(const AFilename: string; AConvertEncoding: char);
+    procedure AddSourceFile(const AFilename: string; AEncoding: CEncoding=nil);
     property DicFilename: string read FDicFilename write FDicFilename;
     property DicDescription: string read FDicDescription write FDicDescription;
     property DicLanguage: char read FDicLanguage write FDicLanguage;
-    property Flags: TDicImportFlags read FFlags write FFlags;
 
   protected
     dic: TJaletDic;
     wordidx: TWordIndexBuilder;
     charidx: TIndexBuilder;
     freql: TStringList; //frequency list, if used
-    tempDir, tempDir2: string;
     roma_prob: TStreamEncoder; //error log
     procedure CreateDictTables(dicFilename: string; info: TDicInfo; diclang:char; entries: integer);
     procedure WriteDictPackage(dicFilename: string; tempDir: string; info: TDicInfo;
       diclang:char; entries:integer);
-    procedure RunUniConv(srcFile, outpFile: string; srcEnc: string);
-    procedure ConvertDictionaries;
     procedure WriteSources(const fname: string);
 
   protected
@@ -76,6 +65,7 @@ function SupportsFrequencyList: boolean;
 function GetFrequencyList: TStringList;
 
 function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
+
 
 implementation
 uses Windows, PKGWrite, JWBKanaConv, JWBCore, JWBLanguage, JWBUnit;
@@ -182,14 +172,13 @@ begin
   inherited;
 end;
 
-procedure TDicImportJob.AddSourceFile(const AFilename: string; AConvertEncoding: char);
+procedure TDicImportJob.AddSourceFile(const AFilename: string; AEncoding: CEncoding=nil);
 var i: integer;
 begin
   i := Length(FFiles);
   SetLength(FFiles, i+1);
   FFiles[i].Filename := AFilename;
-  FFiles[i].ConvertEncoding := AConvertEncoding;
-  FFiles[i].ConvertedFilename := '';
+  FFiles[i].Encoding := AEncoding;
 end;
 
 procedure TDicImportJob.Initialize;
@@ -199,21 +188,11 @@ begin
   freql := nil;
   ProblemRecords := 0;
   dic := nil;
-  tempDir := '';
-  tempDir2 := '';
   LastArticle := 0;
 end;
 
 procedure TDicImportJob.Cleanup;
 begin
-  if tempDir<>'' then begin
-    DeleteDirectory(tempDir);
-    tempDir := '';
-  end;
-  if tempDir2<>'' then begin
-    DeleteDirectory(tempDir2);
-    tempDir2 := '';
-  end;
   FreeAndNil(dic);
   FreeAndNil(wordidx);
   FreeAndNil(charidx);
@@ -231,24 +210,12 @@ procedure TDicImportJob.ProcessChunk;
 var fuin: TStreamDecoder;
   fi: integer;
   info: TDicInfo;
-{var
-  fi:integer;
-  fname:string;
-  mes:string;
-  cd:string; //stores chosen encoding when converting
-
-  uc: WideChar;
-  dicrecno: integer;}
+  tempDir: string;
 begin
   FState := jsWorking;
   StartOperation('Importing', 0); //indeterminate state //TODO: Localize
 
- //Create indexes
-  charidx := TIndexBuilder.Create;
-  wordidx := TWordIndexBuilder.Create;
-
  //Create frequency list
-  if ifAddFrequencyInfo in flags then
   try
     SetOperation(_l('#00917^eCreating frequency chart...'));
     freql := GetFrequencyList;
@@ -259,26 +226,34 @@ begin
     end;
   end;
 
+ //Create indexes
+  charidx := TIndexBuilder.Create;
+  wordidx := TWordIndexBuilder.Create;
+
+  LineCount := GetTotalLineCount;
+
  //Create temporary dir
   tempDir := CreateRandomTempDirName();
   ForceDirectories(tempDir);
-
-  ConvertDictionaries;
-
- //Create empty dictionary tables
-  info.Description := Self.DicDescription;
-  CreateDictTables(tempDir+'\DICT.TMP', info, Self.DicLanguage, 0);
-  dic := TJaletDic.Create;
-  dic.LoadOnDemand := true;
-  dic.FillInfo(tempDir+'\DICT.TMP');
-  if not dic.tested then
-    raise EDictImportException.Create('Cannot load the newly created dictionary.');
-  dic.Load;
-  if not dic.loaded then
-    raise EDictImportException.Create('Cannot load the target dictionary');
-  dic.Demand;
-  dic.TTDict.NoCommitting := true;
-  dic.TTEntries.NoCommitting := true;
+  try
+   //Create empty dictionary tables
+    info.Description := Self.DicDescription;
+    CreateDictTables(tempDir+'\DICT.TMP', info, Self.DicLanguage, 0);
+    dic := TJaletDic.Create;
+    dic.LoadOnDemand := true;
+    dic.FillInfo(tempDir+'\DICT.TMP');
+    if not dic.tested then
+      raise EDictImportException.Create('Cannot load the newly created dictionary.');
+    dic.Load;
+    if not dic.loaded then
+      raise EDictImportException.Create('Cannot load the target dictionary');
+    dic.Demand;
+    dic.TTDict.NoCommitting := true;
+    dic.TTEntries.NoCommitting := true;
+  finally
+    DeleteDirectory(tempDir);
+    tempDir := '';
+  end;
 
  //Create roma_problems (can be delayed until needed)
   if roma_prob=nil then begin
@@ -292,12 +267,8 @@ begin
   for fi:=0 to Length(FFiles)-1 do begin
     SetOperation(_l('#00086^eReading && parsing ')+ExtractFilename(FFiles[fi].Filename)+'...');
 
-    fuin := OpenTextFile(tempDir+'\DICT_'+inttostr(fi)+'.TMP', TUnicodeEncoding);
+    fuin := OpenTextFile(FFiles[fi].Filename, FFiles[fi].Encoding);
     try
-      fuin.Rewind({DontSkipBom=}true);
-      if not fuin.TrySkipBom then //BOM is required
-        raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+FFiles[fi].Filename+')');
-
       if Self.FDicLanguage='c' then
         ImportCCEdict(fuin)
       else
@@ -316,116 +287,48 @@ begin
   dic.TTEntries.Reindex;
 
  //This time it's for our package
-  tempDir2 := CreateRandomTempDirName();
-  ForceDirectories(tempDir2);
+  tempDir := CreateRandomTempDirName();
+  ForceDirectories(tempDir);
+  try
+    if charidx<>nil then begin
+      SetOperation(_l('^eWriting character index...'));
+      charidx.Write(tempDir+'\CharIdx.bin');
+    end;
 
-  if charidx<>nil then begin
-    SetOperation(_l('^eWriting character index...'));
-    charidx.Write(tempDir2+'\CharIdx.bin');
+    if wordidx<>nil then begin
+      SetOperation(_l('^eWriting word index...'));
+      wordidx.Write(tempDir+'\WordIdx.bin');
+    end;
+
+    SetOperation(_l('^eWriting dictionary table...'));
+    dic.TTDict.WriteTable(tempDir+'\Dict',true);
+    dic.TTEntries.WriteTable(tempDir+'\Entries',true);
+    FreeAndNil(dic);
+
+    WriteSources(tempDir+'\sources.lst');
+    WriteDictPackage(dicFilename, tempDir, info, Self.DicLanguage, LastArticle);
+  finally
+    if tempDir<>'' then begin
+      DeleteDirectory(tempDir);
+      tempDir := '';
+    end;
   end;
 
-  if wordidx<>nil then begin
-    SetOperation(_l('^eWriting word index...'));
-    wordidx.Write(tempDir2+'\WordIdx.bin');
-  end;
-
-  SetOperation(_l('^eWriting dictionary table...'));
-  dic.TTDict.WriteTable(tempDir2+'\Dict',true);
-  dic.TTEntries.WriteTable(tempDir2+'\Entries',true);
-  FreeAndNil(dic);
-
-  if tempDir<>'' then begin
-    DeleteDirectory(tempDir);
-    tempDir := '';
-  end;
-
-  WriteSources(tempDir2+'\sources.lst');
-  WriteDictPackage(dicFilename, tempDir2, info, Self.DicLanguage, LastArticle);
-
-  if tempDir2<>'' then begin
-    DeleteDirectory(tempDir2);
-    tempDir2 := '';
-  end;
   Cleanup;
-
   FState := jsCompleted;
 end;
 
-//Converts all dictionaries to UTF16-LE and counts total number of lines
-procedure TDicImportJob.ConvertDictionaries;
+function TDicImportJob.GetTotalLineCount: integer;
 var fuin: TStreamDecoder;
   fi: integer;
-  cd: string;
 begin
-  LineCount := 0;
+  Result := 0;
   for fi:=0 to Length(FFiles)-1 do begin
-
-    case FFiles[fi].ConvertEncoding of
-      'j': cd:='JapaneseAutoDetect';
-      'c': cd:='ChineseAutoDetect';
-      'k': cd:='KoreanAutoDetect';
-    else cd := '';
-    end;
-
-    if cd='' then
-      FFiles[fi].ConvertedFilename := FFiles[fi].Filename
-    else
-      try
-        FFiles[fi].ConvertedFilename := tempDir + '\DICT_'+inttostr(fi)+'.TMP';
-        SetOperation(_l('#00085^eConverting ')+ExtractFilename(FFiles[fi].Filename)+'...');
-        RunUniConv(FFiles[fi].Filename, FFiles[fi].ConvertedFilename, cd);
-        if not FileExists(FFiles[fi].ConvertedFilename) then
-          raise EDictImportException.CreateFmt(_l('File conversion failed (%s)'),
-            [FFiles[fi].Filename]);
-      except
-        on E: EDictImportException do begin
-          E.Message := _l('While converting ')+FFiles[fi].Filename+': '+E.Message;
-          raise;
-        end;
-      end;
-
    //Count number of lines in the converted file and add to total
-    fuin := OpenTextFile(FFiles[fi].ConvertedFilename, TUTF16LEEncoding);
-    FFiles[fi].LineCount := GetLineCount(fuin);
-    LineCount := LineCount + FFiles[fi].LineCount;
+    fuin := OpenTextFile(FFiles[fi].Filename, FFiles[fi].Encoding);
+    Result := Result + GetLineCount(fuin);
     FreeAndNil(fuin);
   end;
-end;
-
-{
-Executes UNICONV.exe to convert srcFile to outpFile.
-srcFile is assumed to be in srcEnc encoding (see UCONV docs). outpFile is in UCS2.
-Raise exceptions on any errors.
-}
-procedure TDicImportJob.RunUniConv(srcFile, outpFile: string; srcEnc: string);
-var lpi:PROCESS_INFORMATION;
-  si:STARTUPINFO;
-  fail: boolean;
-  err: integer;
-begin
-  if not FileExists(AppFolder+'\UNICONV.exe') then
-    raise EDictImportException.Create(_l('#00070^eUNICONV.EXE was not found. '
-      +'It is required for encoding conversion.'));
-
-  FillChar(lpi, sizeof(lpi), 0);
-  FillChar(si, sizeof(si), 0);
-  si.dwFlags:=STARTF_USESHOWWINDOW;
-  si.wShowWindow:=SW_HIDE;
-  if not CreateProcess(nil,pchar(AppFolder+'\UNICONV.EXE '+srcEnc+' "'+srcFile
-    +'" UCS2 "'+outpFile+'"'),nil,nil,false,0,nil,nil,si,lpi) then
-    RaiseLastOSError();
-
-  fail := (WaitForSingleObject(lpi.hProcess,30000)<>WAIT_OBJECT_0);
-  if fail then err := GetLastError() else err := 0; //shut up delphi
-
- { We don't try to terminate the process in case of failure for two reasons:
-   1. It might be impossible on Windows 7 or XP with stricter security.
-   2. It's better to leave it be, for user to see what's the problem. }
-
-  CloseHandle(lpi.hProcess);
-  CloseHandle(lpi.hThread);
-  if fail then
-    RaiseLastOsError(err);
 end;
 
 
@@ -436,54 +339,56 @@ var tempDir: string;
 begin
   tempDir := CreateRandomTempDirName();
   ForceDirectories(tempDir);
+  try
+    assignfile(t,tempDir+'\Dict.info');
+    rewrite(t);
+    writeln(t,'$TEXTTABLE');
+    writeln(t,'$PREBUFFER');
+    writeln(t,'$RAWINDEX');
+    writeln(t,'$WORDFSIZE');
+    writeln(t,'$FIELDS');
+    writeln(t,'xPhonetic');
+    writeln(t,'xKanji');
+    writeln(t,'sSort');
+    writeln(t,'sMarkers');
+    writeln(t,'iFrequency');
+    writeln(t,'iArticle');
+    writeln(t,'$ORDERS');
+    writeln(t,'Phonetic_Ind');
+    writeln(t,'Kanji_Ind');
+    writeln(t,'<Phonetic_Ind');
+    writeln(t,'<Kanji_Ind');
+    writeln(t,'Article');
+    writeln(t,'$SEEKS');
+    writeln(t,'0');
+    writeln(t,'Sort');
+    writeln(t,'Kanji');
+    writeln(t,'<Sort');
+    writeln(t,'<Kanji');
+    writeln(t,'Article');
+    writeln(t,'$CREATE');
+    closefile(t);
 
-  assignfile(t,tempDir+'\Dict.info');
-  rewrite(t);
-  writeln(t,'$TEXTTABLE');
-  writeln(t,'$PREBUFFER');
-  writeln(t,'$RAWINDEX');
-  writeln(t,'$WORDFSIZE');
-  writeln(t,'$FIELDS');
-  writeln(t,'xPhonetic');
-  writeln(t,'xKanji');
-  writeln(t,'sSort');
-  writeln(t,'sMarkers');
-  writeln(t,'iFrequency');
-  writeln(t,'iArticle');
-  writeln(t,'$ORDERS');
-  writeln(t,'Phonetic_Ind');
-  writeln(t,'Kanji_Ind');
-  writeln(t,'<Phonetic_Ind');
-  writeln(t,'<Kanji_Ind');
-  writeln(t,'Article');
-  writeln(t,'$SEEKS');
-  writeln(t,'0');
-  writeln(t,'Sort');
-  writeln(t,'Kanji');
-  writeln(t,'<Sort');
-  writeln(t,'<Kanji');
-  writeln(t,'Article');
-  writeln(t,'$CREATE');
-  closefile(t);
+    assignfile(t,tempDir+'\Entries.info');
+    rewrite(t);
+    writeln(t,'$TEXTTABLE');
+    writeln(t,'$PREBUFFER');
+    writeln(t,'$RAWINDEX');
+    writeln(t,'$WORDFSIZE');
+    writeln(t,'$FIELDS');
+    writeln(t,'iIndex');
+    writeln(t,'xEntry');
+    writeln(t,'sMarkers');
+    writeln(t,'$ORDERS');
+    writeln(t,'$SEEKS');
+    writeln(t,'Index');
+    writeln(t,'$CREATE');
+    closefile(t);
 
-  assignfile(t,tempDir+'\Entries.info');
-  rewrite(t);
-  writeln(t,'$TEXTTABLE');
-  writeln(t,'$PREBUFFER');
-  writeln(t,'$RAWINDEX');
-  writeln(t,'$WORDFSIZE');
-  writeln(t,'$FIELDS');
-  writeln(t,'iIndex');
-  writeln(t,'xEntry');
-  writeln(t,'sMarkers');
-  writeln(t,'$ORDERS');
-  writeln(t,'$SEEKS');
-  writeln(t,'Index');
-  writeln(t,'$CREATE');
-  closefile(t);
-
-  WriteDictPackage(dicFilename, tempDir, info, diclang, entries);
-  DeleteDirectory(tempDir);
+    WriteDictPackage(dicFilename, tempDir, info, diclang, entries);
+  finally
+    DeleteDirectory(tempDir);
+  end;
 end;
 
 procedure TDicImportJob.WriteDictPackage(dicFilename: string; tempDir: string;

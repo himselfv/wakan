@@ -3,7 +3,7 @@ object fDictImport: TfDictImport
   Top = 231
   BorderStyle = bsDialog
   Caption = '#00071^eDictionary import'
-  ClientHeight = 339
+  ClientHeight = 303
   ClientWidth = 430
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -66,7 +66,7 @@ object fDictImport: TfDictImport
   end
   object btnBuild: TBitBtn
     Left = 76
-    Top = 293
+    Top = 261
     Width = 113
     Height = 25
     Caption = '#00077^eBuild'
@@ -95,12 +95,12 @@ object fDictImport: TfDictImport
       0000}
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 4
+    TabOrder = 3
     OnClick = btnBuildClick
   end
   object btnCancel: TBitBtn
     Left = 240
-    Top = 293
+    Top = 261
     Width = 105
     Height = 25
     Cancel = True
@@ -129,7 +129,7 @@ object fDictImport: TfDictImport
       0000}
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 5
+    TabOrder = 4
     OnClick = btnCancelClick
   end
   object rgLanguage: TRadioGroup
@@ -151,16 +151,6 @@ object fDictImport: TfDictImport
     ParentFont = False
     TabOrder = 2
   end
-  object cbAddFrequencyInfo: TCheckBox
-    Left = 8
-    Top = 252
-    Width = 408
-    Height = 17
-    Caption = '#00914^eBuild with frequency information (requires WORDFREQ_CK)'
-    Checked = True
-    State = cbChecked
-    TabOrder = 3
-  end
   object mmDescription: TMemo
     Left = 8
     Top = 110
@@ -173,7 +163,7 @@ object fDictImport: TfDictImport
     Top = 27
     Width = 320
     Height = 21
-    TabOrder = 6
+    TabOrder = 5
     OnChange = edtFilenameChange
   end
   object btnChooseFile: TButton
@@ -182,7 +172,7 @@ object fDictImport: TfDictImport
     Width = 83
     Height = 25
     Caption = '#01137^Choose...'
-    TabOrder = 7
+    TabOrder = 6
     OnClick = btnChooseFileClick
   end
   object AddFileDialog: TOpenDialog

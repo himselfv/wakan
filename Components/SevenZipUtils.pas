@@ -327,7 +327,7 @@ begin
       ZipFail('Cannot extract file, error '+IntToStr(Callback.OpResult))
     else //without this ELSE Delphi will say Result:=nil earlier was in vain
       Result := Callback.FData;
-    Callback.FData := nil; //чтоб не уничтожил
+    Callback.FData := nil;
   finally
     (Callback as IInterface)._Release;
   end;

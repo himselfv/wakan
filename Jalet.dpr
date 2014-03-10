@@ -78,7 +78,8 @@ uses
   JWBJobs in 'Components\JWBJobs.pas',
   JWBCore in 'Components\JWBCore.pas',
   JWBWordGrid in 'Components\JWBWordGrid.pas',
-  JWBDicImportJob in 'Components\JWBDicImportJob.pas';
+  JWBDicImportJob in 'Components\JWBDicImportJob.pas',
+  JWBUnpackJob in 'Components\JWBUnpackJob.pas';
 
 {$R *.RES}
 {$R WINXP.RES}

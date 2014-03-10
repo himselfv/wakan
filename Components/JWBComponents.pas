@@ -17,11 +17,11 @@ type
     IsDefault: boolean;
     Encoding: string; //lowercase
     Format: TSourceDicFormat;
-    BaseLanguage: string; //lowercase
+    BaseLanguage: char;
     procedure Reset;
-    function GetTargetDir: string;
+    function GetTarget: string;       //where to place/unpack the component
+    function GetTargetDir: string;    //same, without filename
     function GetURLFilename: string;
-    function GetStaticTargetFilename: string;
     function GetCheckPresentFilename: string;
   end;
   PAppComponent = ^TAppComponent;
@@ -58,7 +58,7 @@ function VerifyDependency(const filename, depname: string): boolean;
 
 implementation
 uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloaderCore,
-  SevenZip, SevenZipUtils, StdPrompt, JWBCore, JWBLanguage;
+  SevenZip, SevenZipUtils, JWBUnpackJob, StdPrompt, JWBCore, JWBLanguage;
 
 procedure TAppComponent.Reset;
 begin
@@ -73,13 +73,33 @@ begin
   IsDefault := false;
   Encoding := '';
   Format := sfEdict;
-  BaseLanguage := '';
+  BaseLanguage := #00;
+end;
+
+{
+Returns the name for the unpacked file or the path where it needs to be placed.
+1. If TargetFilename is defined, uses that.
+2. Otherwise returns the target folder, and the name under which the file is
+ being downloaded should be preserved.
+
+The name under which the file is being downloaded:
+1. Server-provided name in the headers (not always provided).
+2. URL-provided name (not always available: download.php?id=759) -- see GetURLFilename.
+
+If the downloaded file is archive, it should just be unpacked to GetTargetDir.
+}
+function TAppComponent.GetTarget: string;
+begin
+  if TargetFilename<>'' then
+    Result := TargetFilename
+  else
+    Result := GetTargetDir;
 end;
 
 { Returns the file system path where the component has to be placed, depending
  on its type.
- For some components the returned path is temporary folder, from where they
- have to be installed on the system. }
+ For some components there's no target path as they have to be downloaded to
+ temporary folder and installed on the system. }
 function TAppComponent.GetTargetDir: string;
 begin
   if Category='base' then
@@ -102,8 +122,7 @@ end;
 
 {
 URLFilename: provides static filename extracted from URL.
-Not always available. Some URLs provide no name (e.g. download.php?id=545)
-and some servers may override the URL name with Content-Disposition header.
+Not always available: some URLs provide no name (e.g. download.php?id=545).
 }
 function TAppComponent.GetURLFilename: string;
 begin
@@ -111,48 +130,19 @@ begin
 end;
 
 {
-TargetFilename: provides/overrides the name of the unpacked file.
-Not all downloads require or even support TargetFilename. Archives may contain
-multiple files with predefined names, and sometimes it's available by other
-means:
-
-1. If the download is archived and there are multiple files inside, ignore
-  everything and just unpack it.
-2. If TargetFilename is defined, use that.
-3. If downloading, check if the server provides the name in headers.
- 3a. If unpacking, auto-remove archive extensions.
-4. Try to extract filename from URL (not always possible)
- 4a. If unpacking, auto-remove archive extensions.
-
-Static version:
-1. If TargetFilename is defined, use that.
-2. Try to extract filename from URL (not always possible)
- 2a. If unpacking, auto-remove archive extensions.
-}
-function TAppComponent.GetStaticTargetFilename: string;
-var ext: string;
-begin
-  Result := TargetFilename;
-  if Result='' then
-    Result := ExtractFilenameURL(URL);
-  ext := ExtractFileExt(Result);
-  if (ext='.zip') or (ext='.gz') then
-    Result := ChangeFileExt(Result, '');
-end;
-
-{
-CheckPresent: file to use to check if the component is present.
-
+File to use to check if the component is present.
 1. If CheckPresent is defined, use that.
 2. If TargetFilename is defined, use that.
-3. Try to extract filename from URL (not always possible)
- 3a. If unpacking, auto-remove archive extensions.
+3. Assuming the URL filename is kept when downloading (not alaways true --
+ the server can override), use that.
 }
 function TAppComponent.GetCheckPresentFilename: string;
 begin
   Result := CheckPresent;
   if Result='' then
-    Result := GetStaticTargetFilename;
+    Result := TargetFilename;
+  if Result='' then
+    Result := GetURLFilename;
 end;
 
 constructor TAppComponents.Create;
@@ -214,7 +204,7 @@ end;
 procedure TAppComponents.LoadFromFile(const filename: string);
 var sl: TStringList;
   i: integer;
-  ln, param: string;
+  ln, param, tmp: string;
   ln_sep_pos: integer;
   item: PAppComponent;
 begin
@@ -278,9 +268,16 @@ begin
       if param='format' then
         item.Format := StrToSourceDicFormat(ln)
       else
-      if param='base-language' then
-        item.BaseLanguage := AnsiLowerCase(ln)
-      else
+      if param='base-language' then begin
+        tmp := AnsiLowerCase(ln);
+        if tmp='jp' then
+          item.BaseLanguage := 'j'
+        else
+        if tmp='cn' then
+          item.BaseLanguage := 'c'
+        else
+          raise Exception.Create('Invalid base language: '+ln);
+      end else
       begin
        //Skip params we don't understand -- allow for extensibility
       end;
@@ -325,9 +322,6 @@ end;
 function DownloadDependency(const depname: string): boolean;
 var dep: PAppComponent;
   tempDir: string;
-  zip: TSevenZipArchive;
-  zname: string;
-  i: integer;
   prog: TSMPromptForm;
 begin
   dep := AppComponents.FindByName(depname);
@@ -348,37 +342,17 @@ begin
    //Also, return false if URL not accessible
     DownloadFile(dep.url, tempDir+'\'+depname, prog);
 
-    zip := nil;
-    if dep.url_unpack='zip' then
-      zip := TSevenZipArchive.Create(CLSID_CFormatZip, tempDir+'\'+depname)
-    else
-    if dep.url_unpack='7z' then
-      zip := TSevenZipArchive.Create(CLSID_CFormat7z, tempDir+'\'+depname)
-    else
-    if dep.url_unpack='rar' then
-      zip := TSevenZipArchive.Create(CLSID_CFormatRar, tempDir+'\'+depname)
-    else
-    if dep.url_unpack='tar' then
-      zip := TSevenZipArchive.Create(CLSID_CFormatTar, tempDir+'\'+depname)
-    else
-      CopyFile(PChar(tempDir+'\'+depname), PChar(ExtractFilename(dep.url)), false); //TODO: ExtractFilename is often meaningless for URLs ('dir/?get=hashcode') -- we have to get file name from HTTP headers
-
-    prog.SetMessage('Extracting...');
-    if zip<>nil then
-      for i := 0 to zip.NumberOfItems - 1 do begin
-        if zip.BoolProperty(i, kpidIsDir) then continue;
-        with zip.ExtractFile(i) do try
-          zname := zip.StrProperty(i, kpidPath);
-          if zname='' then continue; //wtf?
-          if ExtractFilePath(zname)<>'' then continue; //at least don't extract them to the root!
-          zname := ExtractFileName(zname); //only file name
-           //although in our case there's nothing EXCEPT the file name anyway, but that's now
-
-          SaveToFile(zname);
-        finally
-          Free;
-        end;
-      end;
+    if dep.url_unpack='' then
+      CopyFile(PChar(tempDir+'\'+depname), PChar(ExtractFilename(dep.url)), false)
+      //TODO: ExtractFilename is often meaningless for URLs ('dir/?get=hashcode') -- we have to get file name from HTTP headers
+    else begin
+      prog.SetMessage('Extracting...');
+      Unpack(
+        tempDir+'\'+depname,
+        AppFolder,
+        dep.url_unpack
+      );
+    end;
 
   finally
     FreeAndNil(prog);

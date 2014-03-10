@@ -17,7 +17,6 @@ type
     btnCancel: TBitBtn;
     AddFileDialog: TOpenDialog;
     rgLanguage: TRadioGroup;
-    cbAddFrequencyInfo: TCheckBox;
     mmDescription: TMemo;
     Label1: TLabel;
     edtFilename: TEdit;
@@ -33,15 +32,13 @@ type
     destructor Destroy; override;
     procedure UpdateBuildButton;
     procedure ImportDictionary(const AFilename: string; ADescription: string;
-      ASourceFiles: TFileList; ALang: char; AAddFrequencyInfo: boolean;
-      ASilent: boolean);
+      ASourceFiles: TFileList; ALang: char; ASilent: boolean);
 
   end;
 
 implementation
-
-uses StrUtils, WideStrUtils, JWBDictCoding, JWBKanaConv, JWBCore, JWBUnit,
-  JWBLanguage, PKGWrite, JWBMenu;
+uses StrUtils, WideStrUtils, JWBKanaConv, JWBCore, JWBUnit, JWBLanguage,
+  PKGWrite, JWBMenu;
 
 {$R *.DFM}
 
@@ -93,11 +90,7 @@ begin
 end;
 
 procedure TfDictImport.btnBuildClick(Sender: TObject);
-var job: TDicImportJob;
-  files: TFileList;
-  fname: string;
-  fDictCoding: TfDictCoding;
-  fi: integer;
+var files: TFileList;
   ALang: char;
 begin
  //We only support one file in package here, but the code is a bit more generic
@@ -115,7 +108,6 @@ begin
     mmDescription.Text,
     files,
     ALang,
-    cbAddFrequencyInfo.Checked,
     {Silent=}false
   );
 
@@ -123,13 +115,12 @@ begin
 end;
 
 procedure TfDictImport.ImportDictionary(const AFilename: string;
-  ADescription: string; ASourceFiles: TFileList; ALang: char;
-  AAddFrequencyInfo: boolean; ASilent: boolean);
+  ADescription: string; ASourceFiles: TFileList; ALang: char; ASilent: boolean);
 var job: TDicImportJob;
   prog: TSMPromptForm;
   fname: string;
-  fDictCoding: TfDictCoding;
   fi: integer;
+  AEncoding: CEncoding;
 begin
  //Name == Filename - Extension
  //We accept it both with or without extension and adjust
@@ -147,51 +138,40 @@ begin
  //This doesn't guarantee it won't be present later, but we catch most of the
  //common cases.
 
-  prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100,{CanCancel=}true); //TODO: Localize
-  if not self.Visible then //auto mode
-    prog.Position := poScreenCenter;
-  prog.Width := 500; //we're going to have long file names
-  prog.AppearModal;
-
   job := TDicImportJob.Create;
   try
     job.DicFilename := fname;
     job.DicDescription := ADescription;
     job.DicLanguage := ALang;
 
-    if AAddFrequencyInfo then
-      job.Flags := [ifAddFrequencyInfo]
-    else
-      job.Flags := [];
-
-    fDictCoding := nil;
+    prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100,{CanCancel=}true); //TODO: Localize
+    if not self.Visible then //auto mode
+      prog.Position := poScreenCenter;
+    prog.Width := 500; //we're going to have long file names
+    prog.AppearModal;
     try
       prog.SetMaxProgress(0);
-
-      fDictCoding := TfDictCoding.Create(Application);
 
      //Choose re-encoding actions for files
       for fi:=0 to Length(ASourceFiles)-1 do begin
         if not FileExists(ASourceFiles[fi]) then
           raise EDictImportException.CreateFmt(_l('File not found: %s'), [ASourceFiles[fi]]);
 
-        if ASilent then begin
-          job.AddSourceFile(ASourceFiles[fi], ALang); //same as dic language
-          continue;
-        end;
+       //Stupid encoding detection
+       //TODO: Return using uniconv to detect encoding OR
+       //TODO: Enable encoding selection (from all the available ones)
+        AEncoding := Conv_DetectType(ASourceFiles[fi]);
+        if AEncoding=nil then
+          case job.DicLanguage of
+           'j': AEncoding := TEUCEncoding;
+           'c': AEncoding := TGBEncoding;
+          else AEncoding := TUTF16Encoding; //wtf though
+          end;
 
-        fDictCoding.Label2.Caption:=_l('#00087^eInput file: ')+ExtractFilename(ASourceFiles[fi]);
-       //Ask user
-        fDictCoding.ShowModal;
-        if not fDictCoding.succeeded then
-          raise EAbort.Create('File conversion aborted ('+ASourceFiles[fi]+').');
+       //TODO: raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+FFiles[fi].Filename+')');
+       //  if we can't determine it
 
-        case fDictCoding.RadioGroup1.ItemIndex of
-         1: job.AddSourceFile(ASourceFiles[fi], 'j');
-         2: job.AddSourceFile(ASourceFiles[fi], 'c');
-         3: job.AddSourceFile(ASourceFiles[fi], 'k');
-        else job.AddSourceFile(ASourceFiles[fi], #00);
-        end;
+        job.AddSourceFile(ASourceFiles[fi], AEncoding);
       end;
 
       repeat
@@ -216,7 +196,6 @@ begin
       until (job.State=jsCompleted);
 
     finally
-      FreeAndNil(fDictCoding);
       FreeAndNil(prog);
     end;
 

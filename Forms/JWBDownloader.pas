@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, VirtualTrees, Buttons, ComCtrls, ImgList, JWBComponents,
-  Generics.Collections, JWBJobs, Vcl.ExtCtrls;
+  Generics.Collections, JWBJobs, ExtCtrls;
 
 type
   TNdFileData = record
@@ -123,17 +123,123 @@ var
   fDownloader: TfDownloader;
 
 implementation
-uses UITypes, PngImage, JWBStrings, JWBDownloaderCore;
+uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
+  JWBDicImportJob, JWBIO;
 
 {$R *.dfm}
 
 type
-  TCustomDownloadJob = class(TDownloadJob)
+  TComponentDownloadJob = class(TJob)
   protected
-    FName: string;
+    FComponent: PAppComponent;
+    FDownloadJob: TDownloadJob;
   public
-    property Name: string read FName write FName;
+    constructor Create(AComponent: PAppComponent);
+    destructor Destroy; override;
+    procedure ProcessChunk; override;
+    property DownloadJob: TDownloadJob read FDownloadJob;
   end;
+
+constructor TComponentDownloadJob.Create(AComponent: PAppComponent);
+begin
+  inherited Create();
+  FComponent := AComponent;
+end;
+
+destructor TComponentDownloadJob.Destroy;
+begin
+  FreeAndNil(FDownloadJob);
+  inherited;
+end;
+
+procedure TComponentDownloadJob.ProcessChunk;
+var
+  ATempDir: string;
+  ATempFilename: string; //temporary download filename
+  AEncoding: CEncoding;
+  ACheckPresent: string;
+  AFileTime: TDatetime;
+  AMoveJob: TJob;
+  AImportJob: TDicImportJob;
+begin
+  FState := jsWorking;
+
+  ATempDir := CreateRandomTempDir();
+  try
+    StartOperation('Downloading', 0); //TODO: Localize
+
+   //Download to temp folder
+    FDownloadJob := TDownloadJob.Create(FComponent.URL, ATempDir+'\');
+    ACheckPresent := FComponent.GetCheckPresentFilename;
+    if ACheckPresent<>'' then begin
+      ACheckPresent := FComponent.GetTargetDir + '\' + ACheckPresent;
+      if FileAge(ACheckPresent, AFileTime) then
+        FDownloadJob.IfModifiedSince := AFileTime;
+    end;
+    while FDownloadJob.State<>jsCompleted do begin
+      FDownloadJob.ProcessChunk;
+      if FMaxProgress<>FDownloadJob.MaxProgress then
+        FMaxProgress := FDownloadJob.MaxProgress;
+      SetProgress(FDownloadJob.Progress);
+    end;
+    if FDownloadJob.Result in [drUpToDate, drError] then
+      exit;
+    ATempFilename := FDownloadJob.ToFilename; //could have been taken from server
+
+   //Unpack or move
+    if FComponent.URL_Unpack='' then begin
+      StartOperation('Moving', 0); //TODO: Localize
+      AMoveJob := TFileMoveJob.Create(ATempFilename, FComponent.GetTarget);
+    end else begin
+      StartOperation('Unpacking', 0); //TODO: Localize
+      AMoveJob := TFileUnpackJob.Create(ATempFilename, FComponent.GetTargetDir);
+    end;
+    try
+      while AMoveJob.State<>jsCompleted do begin
+        AMoveJob.ProcessChunk;
+        if MaxProgress<>AMoveJob.MaxProgress then
+          FMaxProgress := AMoveJob.MaxProgress;
+        SetProgress(AMoveJob.Progress);
+      end;
+    finally
+      FreeAndNil(AMoveJob);
+    end;
+
+   //TODO: Font import etc.
+   //Install
+    if (FComponent.Category='dic') and (FComponent.Format<>sfWakan) and (FComponent.TargetFilename<>'') then begin
+      StartOperation('Importing', 0); //TODO: Localize
+      AImportJob := TDicImportJob.Create;
+      AImportJob.DicFilename := FComponent.Name+'.dic';
+      AImportJob.DicDescription := FComponent.Description;
+      AImportJob.DicLanguage := FComponent.BaseLanguage;
+      if AImportJob.DicLanguage=#00 then
+        AImportJob.DicLanguage := 'j';
+      if FComponent.Encoding='' then
+        AEncoding := nil
+      else begin
+        AEncoding := FindEncodingByName(FComponent.Encoding);
+        if AEncoding=nil then
+          raise Exception.Create('Unknown encoding: '+FComponent.Encoding);
+      end;
+      AImportJob.AddSourceFile(FComponent.GetTargetDir+'\'+FComponent.TargetFilename,
+        AEncoding);
+      try
+        while AImportJob.State<>jsCompleted do begin
+          AImportJob.ProcessChunk;
+          if MaxProgress<>AImportJob.MaxProgress then
+            FMaxProgress := AImportJob.MaxProgress;
+          SetProgress(AImportJob.Progress);
+        end;
+      finally
+        FreeAndNil(AImportJob);
+      end;
+    end;
+  finally
+    DeleteDirectory(ATempDir);
+  end;
+end;
+
 
 procedure TfDownloader.FormCreate(Sender: TObject);
 begin
@@ -579,11 +685,7 @@ end;
 
 procedure TfDownloader.StartDownloadJobs;
 var AList: TSourceArray;
-  AJob: TCustomDownloadJob;
-  ATempDir: string;
-  AToFilename: string;
-  ACheckPresent: string;
-  AFileTime: TDatetime;
+  AJob: TComponentDownloadJob;
   i: integer;
 begin
   CancelDownloadJobs; //just in case
@@ -592,18 +694,7 @@ begin
   FWorkerThread := TWorkerThread.Create;
   AList := GetDownloadList;
   for i := 0 to Length(AList)-1 do begin
-    ATempDir := CreateRandomTempDir();
-    AToFilename := ATempDir+'\'+AList[i].TargetFilename;
-    AJob := TCustomDownloadJob.Create(AList[i].URL, AToFilename);
-    AJob.Name := AList[i].Name;
-
-    ACheckPresent := AList[i].GetCheckPresentFilename;
-    if ACheckPresent<>'' then begin
-      ACheckPresent := AList[i].GetTargetDir + '\' + ACheckPresent;
-      if FileAge(ACheckPresent, AFileTime) then
-        AJob.IfModifiedSince := AFileTime;
-    end;
-
+    AJob := TComponentDownloadJob.Create(AList[i]);
     AddJobNode(AJob);
     FWorkerThread.AddJob(AJob);
   end;
@@ -676,30 +767,28 @@ end;
 procedure TfDownloader.vtJobsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
-var AJob: TJob;
+var AJob: TComponentDownloadJob;
 begin
   if TextType<>ttNormal then exit;
-  AJob := TJob(Sender.GetNodeData(Node)^);
+  AJob := TComponentDownloadJob(Sender.GetNodeData(Node)^);
   case Column of
     NoColumn, 0:
-      if AJob is TCustomDownloadJob then
-        CellText := TCustomDownloadJob(AJob).Name;
+      CellText := AJob.FComponent.Name;
 
     1:
       case AJob.State of
         jsPending: CellText := '';
         jsWorking:
           if AJob.MaxProgress>0 then
-            CellText := 'Downloading ('+CurrToStr(100*AJob.Progress/AJob.MaxProgress)+'%)' //TODO: Job action name, TODO: Percent bar
+            CellText := AJob.Operation+' ('+CurrToStr(100*AJob.Progress/AJob.MaxProgress)+'%)' //TODO: Job action name, TODO: Percent bar
           else
-            CellText := 'Downloading...';
+            CellText := AJob.Operation+'...';
         jsCompleted:
-          if AJob is TCustomDownloadJob then
-            case TCustomDownloadJob(AJob).Result of
-              drDone: CellText := 'Done.';
-              drUpToDate: CellText := 'Up to date.';
-              drError: CellText := 'Cannot download: '+IntToStr(TCustomDownloadJob(AJob).ErrorCode);
-            end;
+          case TComponentDownloadJob(AJob).DownloadJob.Result of
+            drDone: CellText := 'Done.';
+            drUpToDate: CellText := 'Up to date.';
+            drError: CellText := 'Cannot download: '+IntToStr(TComponentDownloadJob(AJob).DownloadJob.ErrorCode);
+          end;
       end;
   end;
 end;

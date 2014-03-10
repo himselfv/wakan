@@ -33,7 +33,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure ProcessChunk; virtual; //Make chunks small enough
-    procedure Abort;
+    procedure Abort; virtual;
     property State: TJobState read FState;
     property Operation: string read FOperation;
     property Progress: integer read FProgress;
@@ -43,10 +43,40 @@ type
   end;
   PJob = ^TJob;
 
- { Usage:
+ { ChainJob: Executes several jobs one after another.
+  Usage:
+    chain := TChainJob.Create;
+    chain.Add(DownloadJob, 'Downloading...');
+    chain.Add(UnpackJob, 'Unpacking...');
+    chain.Add(ImportJob, 'Importing...');
+    chain.Run;
+  }
+  TChainJob = class(TJob)
+  type
+    TJobChainEntry = record
+      Job: TJob;
+      Title: string;
+    end;
+  protected
+    FJobs: TList<TJobChainEntry>;
+    FCurrentJobIndex: integer;
+    FCurrentJob: TJob;
+    function FindNextJobIndex: integer;
+    procedure SetCurrentJobIndex(const AIndex: integer);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure ProcessChunk; override;
+    procedure Add(AJob: TJob; const ATitle: string = '');
+    procedure Abort; override;
+    property CurrentJobIndex: integer read FCurrentJobIndex write SetCurrentJobIndex;
+  end;
+
+ { WorkerThread: Executes several jobs in a separate thread.
+  Usage:
      worker := TWorkerThread.Create;
-     worker.AddJob();
-     worker.AddJob();
+     worker.AddJob(DownloadJob1);
+     worker.AddJob(DownloadJob2);
      worker.Start;
    Will auto-stop when done. Destroy to destroy all job objects. }
   TWorkerThread = class(TThread)
@@ -60,6 +90,9 @@ type
     procedure AddJob(AJob: TJob);
     property Jobs: TObjectList<TJob> read FJobs;
   end;
+
+procedure DoJob(const AJob: TJob; AAutoDestroy: boolean = true);
+procedure DoInParallel(const AJob: TJob);
 
 implementation
 
@@ -115,7 +148,7 @@ end;
 
 procedure TJob.SetProgress(const AValue: integer);
 begin
-  FMaxProgress := AValue;
+  FProgress := AValue;
   Yield;
 end;
 
@@ -129,6 +162,78 @@ begin
   SetOperation(AOperation);
   SetMaxProgress(AMaxProgress);
 end;
+
+constructor TChainJob.Create;
+begin
+  inherited;
+  FJobs := TList<TJobChainEntry>.Create;
+  FCurrentJobIndex := -1;
+end;
+
+destructor TChainJob.Destroy;
+begin
+  FreeAndNil(FJobs);
+  inherited;
+end;
+
+procedure TChainJob.Add(AJob: TJob; const ATitle: string = '');
+var AEntry: TJobChainEntry;
+begin
+  AEntry.Job := AJob;
+  AEntry.Title := ATitle;
+  FJobs.Add(AEntry);
+end;
+
+function TChainJob.FindNextJobIndex: integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to FJobs.Count-1 do
+    if (FJobs[i].Job.State<>jsCompleted) then begin
+      Result := i;
+      break;
+    end;
+end;
+
+procedure TChainJob.SetCurrentJobIndex(const AIndex: integer);
+begin
+  if FCurrentJobIndex=AIndex then exit;
+  FCurrentJobIndex := AIndex;
+  if (FCurrentJobIndex<0) or (FCurrentJobIndex>FJobs.Count-1) then begin
+    FCurrentJob := nil;
+    SetMaxProgress(0);
+    SetOperation('');
+  end else begin
+    FCurrentJob := FJobs[FCurrentJobIndex].Job;
+    SetMaxProgress(FCurrentJob.MaxProgress);
+    SetOperation(FJobs[FCurrentJobIndex].Title);
+  end;
+end;
+
+procedure TChainJob.ProcessChunk;
+begin
+  FState := jsWorking;
+  if (FCurrentJobIndex<0) or (FCurrentJobIndex>FJobs.Count-1)
+  or (FJobs[FCurrentJobIndex].Job.State=jsCompleted) then
+    CurrentJobIndex := FindNextJobIndex;
+  if FCurrentJobIndex<0 then begin
+    FState := jsCompleted;
+    exit;
+  end;
+
+  FCurrentJob.ProcessChunk;
+  Self.SetProgress(FCurrentJob.Progress);
+end;
+
+procedure TChainJob.Abort;
+begin
+  if FCurrentJob<>nil then
+    FCurrentJob.Abort;
+  inherited;
+end;
+
+
+
 
 constructor TWorkerThread.Create;
 begin
@@ -171,6 +276,29 @@ begin
       Result := FJobs[i];
       break;
     end;
+end;
+
+//Executes a job without displaying any progress.
+procedure DoJob(const AJob: TJob; AAutoDestroy: boolean = true);
+begin
+  try
+    while AJob.State<>jsCompleted do
+      AJob.ProcessChunk;
+  finally
+    if AAutoDestroy then
+      AJob.Destroy;
+  end;
+end;
+
+//Executes a job in a parallel thread created specifically for it.
+//The job is always auto-destroyed at the end.
+procedure DoInParallel(const AJob: TJob);
+var worker: TWorkerThread;
+begin
+  worker := TWorkerThread.Create;
+  worker.AddJob(AJob);
+  worker.FreeOnTerminate := true;
+  worker.Start;
 end;
 
 end.

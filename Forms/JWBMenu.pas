@@ -657,22 +657,16 @@ end;
 
 procedure MakeDic;
 var fDictImport: TfDictImport;
-  i:integer;
 begin
   fDictImport := TfDictImport.Create(Application);
   try
-    fDictImport.edtDictName.Text:=MakeDicParams.Name;
-    if (MakeDicParams.Language='C')
-    or (MakeDicParams.Language='c') then
-      fDictImport.rgLanguage.ItemIndex:=1
-    else
-      fDictImport.rgLanguage.ItemIndex:=0;
-    fDictImport.cbAddFrequencyInfo.Checked:=MakeDicParams.AddFrequencyInfo;
-    fDictImport.Silent := true;
-    for i := 0 to Length(MakeDicParams.Files) - 1 do
-      fDictImport.lbFiles.Items.Add(MakeDicParams.Files[i]);
-    fDictImport.mmDescription.Text := DecodeInfoField(MakeDicParams.Description);
-    fDictImport.btnBuildClick(nil);
+    fDictImport.ImportDictionary(
+      MakeDicParams.Name,
+      DecodeInfoField(MakeDicParams.Description),
+      MakeDicParams.Files,
+      MakeDicParams.Language,
+      {Silent=}true
+    );
   finally
     FreeAndNil(fDictImport);
   end;

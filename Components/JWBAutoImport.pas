@@ -99,8 +99,8 @@ var targetFname: string;
   fname: string;
   lang: char;
 begin
-  fname := item.GetTargetDir + '\' + item.GetStaticTargetFilename;
-  if not FileExists(fname) then exit;
+  fname := item.TargetFilename;
+  if (fname<>'') or not FileExists(fname) then exit;
   targetFname := MakeDicFilename(item.Name);
 
   if (item.BaseLanguage='jp') or (item.BaseLanguage='') then
@@ -189,7 +189,6 @@ begin
 
   try
     fAutoImportForm.ImportDictionary(targetFname, item.Description, files, lang,
-      {AddFrequencyInfo=}JWBDicImportJob.SupportsFrequencyList,
       {Silent=}true);
     AddFilename(AutoUpdateChecked, targetFname);
     AddFilename(AutoUpdateImported, targetFname);
@@ -225,7 +224,6 @@ var i: integer;
   files: TFileList;
   missing: TFileList; //list of missing sources for current dic
   needupdate: TFileList; //list of sources which need update
-  flags: TDicImportFlags;
   lang: char;
   parts: TStringArray;
   wasloaded: boolean;
@@ -304,10 +302,6 @@ begin
   lang := dic.language;
   if fAutoImportForm=nil then
     Application.CreateForm(TfDictImport, fAutoImportForm);
-  if JWBDicImportJob.SupportsFrequencyList then
-    flags := [ifAddFrequencyInfo]
-  else
-    flags := [];
 
  //Unload the dictionary so that it doesn't block us,
  //and make a backup
@@ -318,7 +312,6 @@ begin
 
   try
     fAutoImportForm.ImportDictionary(fname, dic.description, files, lang,
-      {AddFrequencyInfo=}JWBDicImportJob.SupportsFrequencyList,
       {Silent=}true);
     AddFilename(AutoUpdateImported, fname);
   except

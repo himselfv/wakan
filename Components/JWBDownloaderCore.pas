@@ -31,6 +31,7 @@ type
     FHttpCode: integer;
     FLastModified: TDatetime; //Last-Modified header
     function StartDownload: boolean;
+    procedure Cleanup;
     procedure SetError(const AErrorCode: integer);
   public
     constructor Create(const AFromURL: string; AToFilename: string);
@@ -145,11 +146,7 @@ end;
 
 destructor TDownloadJob.Destroy;
 begin
-  if hURL<>nil then
-    InternetCloseHandle(hURL);
-  if hSession<>nil then
-    InternetCloseHandle(hSession);
-  FreeAndNil(FOutputStream);
+  Cleanup;
   inherited;
 end;
 
@@ -292,13 +289,25 @@ begin
       FToFilename := FToFilename + sContentDisposition
     else
       FToFilename := FToFilename + ExtractFilenameURL(FFromURL);
+   //NOTE: If under any circumstances we cannot get the filename even from URL,
+   //  generate some randome one and return it in FToFilename.
   end;
 
 
   FOutputStream := TStreamWriter.Create(
-    TFileStream.Create(FToFilename, fmCreate)
+    TFileStream.Create(FToFilename, fmCreate),
+    {OwnsStream=}true
   );
   Result := true;
+end;
+
+procedure TDownloadJob.Cleanup;
+begin
+  if hURL<>nil then
+    InternetCloseHandle(hURL);
+  if hSession<>nil then
+    InternetCloseHandle(hSession);
+  FreeAndNil(FOutputStream);
 end;
 
 procedure TDownloadJob.ProcessChunk;
@@ -315,7 +324,7 @@ begin
   FOutputStream.Write(Buffer, BufferLen);
   Inc(FProgress, BufferLen);
   if BufferLen=0 then begin
-    FOutputStream.Flush; //to not delay it
+    Cleanup(); //or we'd be holding file hostage
     FState := jsCompleted;
     FResult := drDone;
   end;
