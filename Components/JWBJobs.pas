@@ -23,6 +23,8 @@ type
     FProgress: integer;
     FMaxProgress: integer;
     FOperation: string;
+    FOnOperationChanged: TNotifyEvent;
+    FOnProgressChanged: TNotifyEvent;
     FOnYield: TNotifyEvent;
     procedure Yield;
     procedure SetOperation(const AValue: string);
@@ -39,6 +41,10 @@ type
     property Progress: integer read FProgress;
     property MaxProgress: integer read FMaxProgress; //if 0, total size is unknown
     property Aborted: boolean read FAborted;
+    property OnProgressChanged: TNotifyEvent read FOnProgressChanged
+      write FOnProgressChanged;
+    property OnOperationChanged: TNotifyEvent read FOnOperationChanged
+      write FOnOperationChanged;
     property OnYield: TNotifyEvent read FOnYield write FOnYield;
   end;
   PJob = ^TJob;
@@ -63,6 +69,10 @@ type
     FCurrentJob: TJob;
     function FindNextJobIndex: integer;
     procedure SetCurrentJobIndex(const AIndex: integer);
+    procedure ChildJobProgressChanged(ASender: TObject);
+    procedure ChildJobOperationChanged(ASender: TObject);
+    procedure UpdateOperation;
+    procedure UpdateProgress;
   public
     constructor Create;
     destructor Destroy; override;
@@ -143,18 +153,26 @@ end;
 procedure TJob.SetOperation(const AValue: string);
 begin
   FOperation := AValue;
+  if Assigned(FOnOperationChanged) then
+    FOnOperationChanged(Self);
   Yield;
 end;
 
 procedure TJob.SetProgress(const AValue: integer);
 begin
+  if FProgress=AValue then exit;
   FProgress := AValue;
+  if Assigned(FOnProgressChanged) then
+    FOnProgressChanged(Self);
   Yield;
 end;
 
 procedure TJob.SetMaxProgress(const AValue: integer);
 begin
+  if FMaxProgress=AValue then exit;
   FMaxProgress := AValue;
+  if Assigned(FOnProgressChanged) then
+    FOnProgressChanged(Self);
 end;
 
 procedure TJob.StartOperation(const AOperation: string; const AMaxProgress: integer);
@@ -207,6 +225,35 @@ begin
     FCurrentJob := FJobs[FCurrentJobIndex].Job;
     SetMaxProgress(FCurrentJob.MaxProgress);
     SetOperation(FJobs[FCurrentJobIndex].Title);
+  end;
+end;
+
+procedure TChainJob.ChildJobProgressChanged(ASender: TObject);
+begin
+  UpdateProgress;
+end;
+
+procedure TChainJob.ChildJobOperationChanged(ASender: TObject);
+begin
+  UpdateOperation;
+end;
+
+procedure TChainJob.UpdateOperation;
+begin
+  if FCurrentJob=nil then
+    SetOperation('')
+  else
+    SetOperation(FCurrentJob.Operation);
+end;
+
+procedure TChainJob.UpdateProgress;
+begin
+  if FCurrentJob=nil then begin
+    SetMaxProgress(0);
+    SetProgress(0);
+  end else begin
+    SetMaxProgress(FCurrentJob.MaxProgress);
+    SetProgress(FCurrentJob.Progress);
   end;
 end;
 

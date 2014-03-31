@@ -42,6 +42,7 @@ type
     charidx: TIndexBuilder;
     freql: TStringList; //frequency list, if used
     roma_prob: TStreamEncoder; //error log
+    tempPackageDir: string; //a temporary dir where initial package file is stored
     procedure CreateDictTables(dicFilename: string; info: TDicInfo; diclang:char; entries: integer);
     procedure WriteDictPackage(dicFilename: string; tempDir: string; info: TDicInfo;
       diclang:char; entries:integer);
@@ -198,6 +199,10 @@ begin
   FreeAndNil(charidx);
   FreeAndNil(roma_prob); //or else it'll remain open until the form is closed
   freql := nil;
+  if tempPackageDir<>'' then begin
+    DeleteDirectory(tempPackageDir);
+    tempPackageDir := '';
+  end;
 end;
 
 procedure TDicImportJob.UpdateProgress;
@@ -232,28 +237,25 @@ begin
 
   LineCount := GetTotalLineCount;
 
- //Create temporary dir
-  tempDir := CreateRandomTempDirName();
-  ForceDirectories(tempDir);
-  try
-   //Create empty dictionary tables
-    info.Description := Self.DicDescription;
-    CreateDictTables(tempDir+'\DICT.TMP', info, Self.DicLanguage, 0);
-    dic := TJaletDic.Create;
-    dic.LoadOnDemand := true;
-    dic.FillInfo(tempDir+'\DICT.TMP');
-    if not dic.tested then
-      raise EDictImportException.Create('Cannot load the newly created dictionary.');
-    dic.Load;
-    if not dic.loaded then
-      raise EDictImportException.Create('Cannot load the target dictionary');
-    dic.Demand;
-    dic.TTDict.NoCommitting := true;
-    dic.TTEntries.NoCommitting := true;
-  finally
-    DeleteDirectory(tempDir);
-    tempDir := '';
-  end;
+ //Create temporary package dir
+ //Since dic holds the file open, we can't delete it until later
+  tempPackageDir := CreateRandomTempDirName();
+  ForceDirectories(tempPackageDir);
+
+ //Create empty dictionary tables
+  info.Description := Self.DicDescription;
+  CreateDictTables(tempPackageDir+'\DICT.TMP', info, Self.DicLanguage, 0);
+  dic := TJaletDic.Create;
+  dic.LoadOnDemand := true;
+  dic.FillInfo(tempPackageDir+'\DICT.TMP');
+  if not dic.tested then
+    raise EDictImportException.Create('Cannot load the newly created dictionary.');
+  dic.Load;
+  if not dic.loaded then
+    raise EDictImportException.Create('Cannot load the target dictionary');
+  dic.Demand;
+  dic.TTDict.NoCommitting := true;
+  dic.TTEntries.NoCommitting := true;
 
  //Create roma_problems (can be delayed until needed)
   if roma_prob=nil then begin

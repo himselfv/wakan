@@ -199,6 +199,8 @@ begin
   end;
 end;
 
+//True if the download was started, false if it wasnt.
+//Updates State on failure.
 function TDownloadJob.StartDownload: boolean;
 var ContentLength: int64;
   sAppName: string;
@@ -210,6 +212,7 @@ begin
   hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if hSession=nil then begin
     SetError(GetLastError);
+    FState := jsCompleted;
     Result := false;
     exit;
   end;
@@ -225,6 +228,7 @@ begin
   if hURL=nil then begin
     SetError(GetLastError);
     InternetCloseHandle(hSession);
+    FState := jsCompleted;
     Result := false;
     exit;
   end;
@@ -234,6 +238,7 @@ begin
     SetError(GetLastError);
     InternetCloseHandle(hURL);
     InternetCloseHandle(hSession);
+    FState := jsCompleted;
     Result := false;
     exit;
   end;
@@ -258,6 +263,7 @@ begin
   and (FHttpCode<>205) //No content
   then begin
     SetError(-1);
+    FState := jsCompleted;
     Result := false;
     exit;
   end;

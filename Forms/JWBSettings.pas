@@ -863,7 +863,7 @@ begin
   begin
     fEditor.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
     fEditor.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
-    fEditor.DocEncoding:=FindEncoding(Reg.ReadString('Editor','DocType',''));
+    fEditor.DocEncoding:=FindEncodingByClassName(Reg.ReadString('Editor','DocType',''));
   end;
   Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
   exmode:=reg.ReadInteger('Dict','ExMode',0);

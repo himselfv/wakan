@@ -22,7 +22,7 @@ type
   PSourceArray = ^TSourceArray;
 
   TfDownloader = class(TForm)
-    btnCancel: TBitBtn;
+    btnClose: TBitBtn;
     btnNext: TBitBtn;
     btnPrev: TBitBtn;
     PageControl: TPageControl;
@@ -43,7 +43,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure PageControlChange(Sender: TObject);
-    procedure btnCancelClick(Sender: TObject);
+    procedure btnCloseClick(Sender: TObject);
     procedure vtKnownFilesGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
     procedure vtKnownFilesInitNode(Sender: TBaseVirtualTree; ParentNode,
@@ -124,7 +124,7 @@ var
 
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
-  JWBDicImportJob, JWBIO;
+  JWBDicImportJob, JWBIO, JWBMenu;
 
 {$R *.dfm}
 
@@ -133,6 +133,8 @@ type
   protected
     FComponent: PAppComponent;
     FDownloadJob: TDownloadJob;
+    FImportJob: TDicImportJob;
+    procedure ImportJobProgressChanged(ASender: TObject);
   public
     constructor Create(AComponent: PAppComponent);
     destructor Destroy; override;
@@ -148,6 +150,7 @@ end;
 
 destructor TComponentDownloadJob.Destroy;
 begin
+  FreeAndNil(FImportJob);
   FreeAndNil(FDownloadJob);
   inherited;
 end;
@@ -160,7 +163,6 @@ var
   ACheckPresent: string;
   AFileTime: TDatetime;
   AMoveJob: TJob;
-  AImportJob: TDicImportJob;
 begin
   FState := jsWorking;
 
@@ -182,8 +184,10 @@ begin
         FMaxProgress := FDownloadJob.MaxProgress;
       SetProgress(FDownloadJob.Progress);
     end;
-    if FDownloadJob.Result in [drUpToDate, drError] then
+    if FDownloadJob.Result in [drUpToDate, drError] then begin
+      FState := jsCompleted;
       exit;
+    end;
     ATempFilename := FDownloadJob.ToFilename; //could have been taken from server
 
    //Unpack or move
@@ -206,15 +210,18 @@ begin
     end;
 
    //TODO: Font import etc.
+   //TODO: Kanjidic import
+
    //Install
     if (FComponent.Category='dic') and (FComponent.Format<>sfWakan) and (FComponent.TargetFilename<>'') then begin
       StartOperation('Importing', 0); //TODO: Localize
-      AImportJob := TDicImportJob.Create;
-      AImportJob.DicFilename := FComponent.Name+'.dic';
-      AImportJob.DicDescription := FComponent.Description;
-      AImportJob.DicLanguage := FComponent.BaseLanguage;
-      if AImportJob.DicLanguage=#00 then
-        AImportJob.DicLanguage := 'j';
+      FImportJob := TDicImportJob.Create;
+      FImportJob.DicFilename := FComponent.GetTargetDir + '\' + FComponent.Name+'.dic';
+      FImportJob.DicDescription := FComponent.Description;
+      FImportJob.DicLanguage := FComponent.BaseLanguage;
+      FImportJob.OnProgressChanged := ImportJobProgressChanged;
+      if FImportJob.DicLanguage=#00 then
+        FImportJob.DicLanguage := 'j';
       if FComponent.Encoding='' then
         AEncoding := nil
       else begin
@@ -222,22 +229,29 @@ begin
         if AEncoding=nil then
           raise Exception.Create('Unknown encoding: '+FComponent.Encoding);
       end;
-      AImportJob.AddSourceFile(FComponent.GetTargetDir+'\'+FComponent.TargetFilename,
+      FImportJob.AddSourceFile(FComponent.GetTargetDir+'\'+FComponent.TargetFilename,
         AEncoding);
       try
-        while AImportJob.State<>jsCompleted do begin
-          AImportJob.ProcessChunk;
-          if MaxProgress<>AImportJob.MaxProgress then
-            FMaxProgress := AImportJob.MaxProgress;
-          SetProgress(AImportJob.Progress);
+        while FImportJob.State<>jsCompleted do begin
+          FImportJob.ProcessChunk;
+          if MaxProgress<>FImportJob.MaxProgress then
+            FMaxProgress := FImportJob.MaxProgress;
+          SetProgress(FImportJob.Progress);
         end;
       finally
-        FreeAndNil(AImportJob);
+        FreeAndNil(FImportJob);
       end;
     end;
+    FState := jsCompleted;
   finally
     DeleteDirectory(ATempDir);
   end;
+end;
+
+procedure TComponentDownloadJob.ImportJobProgressChanged(ASender: TObject);
+begin
+  Self.SetMaxProgress(FImportJob.MaxProgress);
+  Self.SetProgress(FImportJob.Progress);
 end;
 
 
@@ -259,14 +273,14 @@ begin
   ReloadKnownFiles;
 end;
 
-procedure TfDownloader.btnCancelClick(Sender: TObject);
+procedure TfDownloader.btnCloseClick(Sender: TObject);
 var ConfirmText: string;
 begin
   if PageControl.ActivePage=tsReadyToDownload then
     ConfirmText := 'If you close the window now, you will not download files. '
       +'Do you want to close the window?' //TODO: Localize
   else
-  if PageControl.ActivePage=tsDownloading then
+  if (PageControl.ActivePage=tsDownloading) and not IsDownloadFinished then
     ConfirmText := 'Your files are still being downloaded. Some of them will not '
       +'be available. Do you want to cancel the operation?' //TODO: Localize
   else
@@ -314,7 +328,9 @@ begin
     PageControl.ActivePage := tsDownloading;
     PageControlChange(PageControl);
     StartDownloadJobs;
-  end;
+  end else
+  if (PageControl.ActivePage = tsDownloading) and IsDownloadFinished then
+    Close;
 end;
 
 procedure TfDownloader.UpdatePrevNextButtons;
@@ -330,7 +346,7 @@ begin
   end else
   if PageControl.ActivePage=tsDownloading then begin
     btnPrev.Visible := false;
-    btnNext.Enabled := IsDownloadFinished();
+    btnNext.Visible := false;
   end else begin
     btnPrev.Visible := true;
     btnNext.Enabled := false;
@@ -340,6 +356,11 @@ begin
     btnNext.Caption := 'Download' //TODO: Localize
   else
     btnNext.Caption := 'Next'; //TODO: Localize
+
+  if (PageControl.ActivePage=tsDownloading) and IsDownloadFinished then
+    btnClose.Caption := 'Close' //TODO: Localize
+  else
+    btnClose.Caption := 'Cancel'; //TODO: Localize;
 end;
 
 procedure TfDownloader.ReloadKnownFiles;
@@ -691,6 +712,9 @@ begin
   CancelDownloadJobs; //just in case
   vtJobs.Clear;
 
+ //Unload dictionaries in case any needs to be overriden
+  dicts.UnloadAll;
+
   FWorkerThread := TWorkerThread.Create;
   AList := GetDownloadList;
   for i := 0 to Length(AList)-1 do begin
@@ -780,7 +804,7 @@ begin
         jsPending: CellText := '';
         jsWorking:
           if AJob.MaxProgress>0 then
-            CellText := AJob.Operation+' ('+CurrToStr(100*AJob.Progress/AJob.MaxProgress)+'%)' //TODO: Job action name, TODO: Percent bar
+            CellText := AJob.Operation+Format(' (%f%%)', [100*AJob.Progress/AJob.MaxProgress]) //TODO: Job action name, TODO: Percent bar
           else
             CellText := AJob.Operation+'...';
         jsCompleted:

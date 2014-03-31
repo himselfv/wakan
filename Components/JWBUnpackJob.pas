@@ -99,7 +99,7 @@ begin
   if not FormatToCLSID(AFormat, zipCLSID) then
     raise Exception.Create('Unknown archive type: '+AFormat);
 
-  zip := TSevenZipArchive.Create(CLSID_CFormatZip, FSourceFile);
+  zip := TSevenZipArchive.Create(zipCLSID, FSourceFile);
   try
     SetMaxProgress(zip.NumberOfItems);
     SetProgress(0);

@@ -320,6 +320,7 @@ type
     procedure PutInGroup(dicname: string; group: TDictGroup; inGroup: boolean); overload;
     function IsInGroup(dic: TJaletDic; group: TDictGroup): boolean; overload; inline;
     function IsInGroup(dicname: string; group: TDictGroup): boolean; overload;
+    procedure UnloadAll;
     property Items[Index: Integer]: TJaletDic read Get write Put; default;
    //Lists in external compatible format of older Wakans -- do not use except when reading/saving settings
     property NotGroupDicts[Index:integer]: string read GetDicts write SetDicts;
@@ -461,6 +462,13 @@ var i: integer;
 begin
   i := FindIndex(AName);
   if i<0 then Result := nil else Result := Items[i];
+end;
+
+procedure TDictionaryList.UnloadAll;
+var i: integer;
+begin
+  for i := 0 to Count-1 do
+    Items[i].Unload;
 end;
 
 {
@@ -635,12 +643,13 @@ end;
 
 procedure TJaletDic.Unload;
 begin
-  if not demandloaded then exit;
+  if not loaded or not demandloaded then exit;
   TDict.Free;
   package.Free;
   FreeAndNil(WordIdx);
   FreeAndNil(CharIdx);
   loaded:=false;
+  demandloaded:=false;
 end;
 
 procedure TJaletDic.SetupSeekObjects;
