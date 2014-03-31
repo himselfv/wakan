@@ -18,6 +18,12 @@ type
   end;
   PNdFileData = ^TNdFileData;
 
+  PNdJobData = ^TNdJobData;
+  TNdJobData = record
+    Job: TJob;
+//    ProgressBar: TProgressBar;
+  end;
+
   TSourceArray = array of PAppComponent;
   PSourceArray = ^TSourceArray;
 
@@ -39,6 +45,7 @@ type
     vtJobs: TVirtualStringTree;
     ilJobImages: TImageList;
     tmrJobUpdateTimer: TTimer;
+    ProgressBar1: TProgressBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -75,6 +82,9 @@ type
     procedure tmrJobUpdateTimerTimer(Sender: TObject);
     procedure vtKnownFilesCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+    procedure vtJobsBeforeCellPaint(Sender: TBaseVirtualTree;
+      TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 
   protected
     procedure UpdatePageTitle;
@@ -168,7 +178,7 @@ begin
 
   ATempDir := CreateRandomTempDir();
   try
-    StartOperation('Downloading', 0); //TODO: Localize
+    StartOperation('Starting download', 0); //TODO: Localize
 
    //Download to temp folder
     FDownloadJob := TDownloadJob.Create(FComponent.URL, ATempDir+'\');
@@ -178,6 +188,8 @@ begin
       if FileAge(ACheckPresent, AFileTime) then
         FDownloadJob.IfModifiedSince := AFileTime;
     end;
+    FDownloadJob.ProcessChunk; //first chunk makes connection
+    StartOperation('Downloading', FDownloadJob.MaxProgress); //TODO: Localize
     while FDownloadJob.State<>jsCompleted do begin
       FDownloadJob.ProcessChunk;
       if FMaxProgress<>FDownloadJob.MaxProgress then
@@ -250,7 +262,8 @@ end;
 
 procedure TComponentDownloadJob.ImportJobProgressChanged(ASender: TObject);
 begin
-  Self.SetMaxProgress(FImportJob.MaxProgress);
+  if MaxProgress<>FImportJob.MaxProgress then
+    Self.SetMaxProgress(FImportJob.MaxProgress);
   Self.SetProgress(FImportJob.Progress);
 end;
 
@@ -778,23 +791,29 @@ end;
 
 procedure TfDownloader.vtJobsInitNode(Sender: TBaseVirtualTree; ParentNode,
   Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
+var Data: PNdJobData;
 begin
- //Nothing as of now
+  Data := Sender.GetNodeData(Node);
+  ZeroMemory(Data, SizeOf(Data^));
 end;
 
 procedure TfDownloader.vtJobsFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
+var Data: PNdJobData;
 begin
- //Nothing as of now
+  Data := Sender.GetNodeData(Node);
+//  FreeAndNil(Data.ProgressBar);
 end;
 
 procedure TfDownloader.vtJobsGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
-var AJob: TComponentDownloadJob;
+var Data: PNdJobData;
+  AJob: TComponentDownloadJob;
 begin
   if TextType<>ttNormal then exit;
-  AJob := TComponentDownloadJob(Sender.GetNodeData(Node)^);
+  Data := Sender.GetNodeData(Node);
+  AJob := TComponentDownloadJob(Data.Job);
   case Column of
     NoColumn, 0:
       CellText := AJob.FComponent.Name;
@@ -813,6 +832,50 @@ begin
             drUpToDate: CellText := 'Up to date.';
             drError: CellText := 'Cannot download: '+IntToStr(TComponentDownloadJob(AJob).DownloadJob.ErrorCode);
           end;
+      end;
+  end;
+end;
+
+procedure TfDownloader.vtJobsBeforeCellPaint(Sender: TBaseVirtualTree;
+  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+var Data: PNdJobData;
+  AJob: TComponentDownloadJob;
+  NodeRect: TRect;
+begin
+  Data := Sender.GetNodeData(Node);
+  AJob := TComponentDownloadJob(Data.Job);
+  case Column of
+    1:
+      case AJob.State of
+        jsWorking: begin
+{          if Data.ProgressBar=nil then begin
+            Data.ProgressBar := TProgressBar.Create(Self);
+            Data.ProgressBar.Parent := vtJobs;
+          end;
+          NodeRect := Sender.GetDisplayRect(Node, Column, false);
+          InflateRect(NodeRect, -2, 0);
+          if Data.ProgressBar.BoundsRect <> NodeRect then
+            Data.ProgressBar.BoundsRect := NodeRect;
+          if not Data.ProgressBar.Visible then begin
+            Data.ProgressBar.Visible := true;
+            Data.ProgressBar.SendToBack;
+          end;
+          if Data.ProgressBar.Max<>AJob.MaxProgress then
+            Data.ProgressBar.Max := AJob.MaxProgress;
+          Data.ProgressBar.Position := AJob.Progress;}
+          if Data.Job.MaxProgress>0 then begin
+            NodeRect := CellRect;
+            NodeRect.Width := Trunc(NodeRect.Width * (Data.Job.Progress / Data.Job.MaxProgress));
+            TargetCanvas.Brush.Color := clHighlight;
+            TargetCanvas.Brush.Style := bsSolid;
+            TargetCanvas.FillRect(NodeRect);
+          end;
+
+        end;
+      else
+{        if Data.ProgressBar<>nil then
+          Data.ProgressBar.Hide; }
       end;
   end;
 end;

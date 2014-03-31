@@ -139,6 +139,7 @@ object fDownloader: TfDownloader
         TreeOptions.MiscOptions = [toCheckSupport, toFullRepaintOnResize, toInitOnSave, toReportMode, toToggleOnDblClick, toWheelPanning, toFullRowDrag, toEditOnClick]
         TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toThemeAware, toUseBlendedImages]
         TreeOptions.SelectionOptions = [toExtendedFocus, toFullRowSelect, toRightClickSelect]
+        OnBeforeCellPaint = vtJobsBeforeCellPaint
         OnFreeNode = vtJobsFreeNode
         OnGetText = vtJobsGetText
         OnGetImageIndex = vtJobsGetImageIndex
@@ -218,6 +219,14 @@ object fDownloader: TfDownloader
         ExplicitTop = 362
       end
     end
+  end
+  object ProgressBar1: TProgressBar
+    Left = 12
+    Top = 444
+    Width = 150
+    Height = 21
+    Position = 33
+    TabOrder = 4
   end
   object ilKnownFileImages: TImageList
     Left = 312
