@@ -35,7 +35,7 @@ object fDictMan: TfDictMan
     Height = 373
     Anchors = [akTop, akRight, akBottom]
     BevelOuter = bvLowered
-    TabOrder = 5
+    TabOrder = 4
     DesignSize = (
       352
       373)
@@ -260,27 +260,12 @@ object fDictMan: TfDictMan
     Height = 373
     Anchors = [akLeft, akTop, akBottom]
     ItemHeight = 13
+    PopupMenu = pmDictionaries
     TabOrder = 0
     OnClick = cbDictsClick
   end
-  object Button1: TButton
+  object btnImport: TButton
     Left = 8
-    Top = 403
-    Width = 129
-    Height = 25
-    Anchors = [akLeft, akBottom]
-    Caption = '#00113^eRefresh && rescan'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'MS Sans Serif'
-    Font.Style = [fsBold]
-    ParentFont = False
-    TabOrder = 1
-    OnClick = Button1Click
-  end
-  object Button2: TButton
-    Left = 143
     Top = 403
     Width = 129
     Height = 25
@@ -292,8 +277,8 @@ object fDictMan: TfDictMan
     Font.Name = 'MS Sans Serif'
     Font.Style = [fsBold]
     ParentFont = False
-    TabOrder = 2
-    OnClick = Button2Click
+    TabOrder = 1
+    OnClick = btnImportClick
   end
   object btnOk: TBitBtn
     Left = 377
@@ -328,7 +313,7 @@ object fDictMan: TfDictMan
     ModalResult = 1
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 3
+    TabOrder = 2
     OnClick = btnOkClick
   end
   object btnCancel: TBitBtn
@@ -364,7 +349,7 @@ object fDictMan: TfDictMan
     ModalResult = 2
     NumGlyphs = 2
     ParentFont = False
-    TabOrder = 4
+    TabOrder = 3
   end
   object btnMoveUp: TBitBtn
     Left = 239
@@ -385,7 +370,7 @@ object fDictMan: TfDictMan
       33333333337F7F33333333333309033333333333337373333333333333303333
       333333333337F333333333333330333333333333333733333333}
     NumGlyphs = 2
-    TabOrder = 6
+    TabOrder = 5
     OnClick = btnMoveUpClick
   end
   object btnMoveDown: TBitBtn
@@ -407,7 +392,16 @@ object fDictMan: TfDictMan
       33333333337F7F33333333333309033333333333337F7F333333333333090333
       33333333337F7F33333333333300033333333333337773333333}
     NumGlyphs = 2
-    TabOrder = 7
+    TabOrder = 6
     OnClick = btnMoveDownClick
+  end
+  object pmDictionaries: TPopupMenu
+    Left = 40
+    Top = 48
+    object miRefreshDics: TMenuItem
+      Caption = '#00113^eRefresh && rescan'
+      ShortCut = 116
+      OnClick = miRefreshDicsClick
+    end
   end
 end

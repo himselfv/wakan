@@ -4,14 +4,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, CheckLst, Buttons, JwbForms;
+  ExtCtrls, StdCtrls, CheckLst, Buttons, JwbForms, Vcl.Menus;
 
 type
   TfDictMan = class(TJwbForm)
     Label1: TLabel;
     cbDicts: TCheckListBox;
-    Button1: TButton;
-    Button2: TButton;
+    btnImport: TButton;
     btnOk: TBitBtn;
     btnCancel: TBitBtn;
     Panel1: TPanel;
@@ -35,15 +34,17 @@ type
     CheckBox1: TCheckBox;
     btnMoveUp: TBitBtn;
     btnMoveDown: TBitBtn;
+    pmDictionaries: TPopupMenu;
+    miRefreshDics: TMenuItem;
     procedure cbDictsClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure Button1Click(Sender: TObject);
-    procedure Button2Click(Sender: TObject);
+    procedure btnImportClick(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure btnMoveUpClick(Sender: TObject);
     procedure btnMoveDownClick(Sender: TObject);
+    procedure miRefreshDicsClick(Sender: TObject);
 
   protected
     FLoadingData: boolean; //set when we are loading dict data -- do not handle checkbox changes etc
@@ -111,7 +112,9 @@ begin
  //Finally, checkbox states
   for i := 0 to cbDicts.Count - 1 do
     cbDicts.Checked[i]:= not dicts.IsInGroup(cbDicts.Items[i],GROUP_NOTUSED);
-  cbDicts.ItemIndex:=0
+  cbDicts.ItemIndex:=0;
+  if Assigned(cbDicts.OnClick) then
+    cbDicts.OnClick(cbDicts); //react to selection change
 end;
 
 {
@@ -190,12 +193,12 @@ begin
   end;
 end;
 
-procedure TfDictMan.Button1Click(Sender: TObject);
+procedure TfDictMan.miRefreshDicsClick(Sender: TObject);
 begin
   CarefulRefreshDicts;
 end;
 
-procedure TfDictMan.Button2Click(Sender: TObject);
+procedure TfDictMan.btnImportClick(Sender: TObject);
 var fDictImport: TfDictImport;
 begin
   fDictImport := TfDictImport.Create(Self);
