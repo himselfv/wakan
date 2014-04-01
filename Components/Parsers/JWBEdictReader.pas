@@ -471,6 +471,10 @@ begin
   if (cursense<>nil) and (Length(cursense.text)>0) and (cursense.text[Length(cursense.text)]='/') then
     delete(cursense.text, Length(cursense.text), 1);
 
+ //No sense part => 100% invalid line, helps to catch wrong encodings
+  if eh<>EH_SENSE then
+    raise EEdictParsingException.Create('Invalid CEDICT line.');
+
   ed.TrimEverything;
 
   //Simplified kanji could be the same as traditional, so kill off duplicates

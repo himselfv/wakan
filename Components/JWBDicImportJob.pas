@@ -760,6 +760,8 @@ begin
       on E: EEdictParsingException do begin
         roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+E.Message);
         Inc(ProblemRecords);
+        if (ProblemRecords>400) and (ProblemRecords>Trunc(0.75*LineCount)) then
+          raise; //this is probably an encoding or format problem so reraise
       end;
     end;
 
