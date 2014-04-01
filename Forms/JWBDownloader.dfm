@@ -50,7 +50,6 @@ object fDownloader: TfDownloader
     Caption = 'Cancel'
     TabOrder = 3
     OnClick = btnCloseClick
-    ExplicitTop = 525
   end
   object btnNext: TBitBtn
     Left = 276
@@ -62,7 +61,6 @@ object fDownloader: TfDownloader
     Default = True
     TabOrder = 2
     OnClick = btnNextClick
-    ExplicitTop = 525
   end
   object btnPrev: TBitBtn
     Left = 175
@@ -73,7 +71,6 @@ object fDownloader: TfDownloader
     Caption = 'Back'
     TabOrder = 1
     OnClick = btnPrevClick
-    ExplicitTop = 525
   end
   object PageControl: TPageControl
     Left = 8
@@ -85,13 +82,11 @@ object fDownloader: TfDownloader
     Style = tsButtons
     TabOrder = 0
     OnChange = PageControlChange
-    ExplicitHeight = 461
     object tsReadyToDownload: TTabSheet
       Hint = 'The following files will be downloaded/updated:'
       Caption = 'Ready to download'
       ImageIndex = 1
       TabVisible = False
-      ExplicitHeight = 451
       object Label1: TLabel
         AlignWithMargins = True
         Left = 3
@@ -100,7 +95,6 @@ object fDownloader: TfDownloader
         Height = 13
         Align = alBottom
         Caption = 'Press "Download" to proceed.'
-        ExplicitTop = 435
         ExplicitWidth = 143
       end
       object lbFilesToDownload: TListBox
@@ -111,7 +105,6 @@ object fDownloader: TfDownloader
         Align = alClient
         ItemHeight = 13
         TabOrder = 0
-        ExplicitHeight = 432
       end
     end
     object tsDownloading: TTabSheet
@@ -119,7 +112,6 @@ object fDownloader: TfDownloader
       Caption = 'Downloading'
       ImageIndex = 2
       TabVisible = False
-      ExplicitHeight = 451
       object vtJobs: TVirtualStringTree
         Left = 0
         Top = 0
@@ -145,7 +137,6 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtJobsGetImageIndex
         OnGetNodeDataSize = vtJobsGetNodeDataSize
         OnInitNode = vtJobsInitNode
-        ExplicitHeight = 451
         Columns = <
           item
             Position = 0
@@ -164,7 +155,6 @@ object fDownloader: TfDownloader
       Hint = 'Please select which files you want to download:'
       Caption = 'Select Files'
       TabVisible = False
-      ExplicitHeight = 451
       object vtKnownFiles: TVirtualStringTree
         Left = 0
         Top = 0
@@ -193,7 +183,6 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtKnownFilesGetImageIndex
         OnGetNodeDataSize = vtKnownFilesGetNodeDataSize
         OnInitNode = vtKnownFilesInitNode
-        ExplicitHeight = 362
         Columns = <
           item
             Position = 0
@@ -216,17 +205,8 @@ object fDownloader: TfDownloader
         Color = clBtnFace
         ReadOnly = True
         TabOrder = 1
-        ExplicitTop = 362
       end
     end
-  end
-  object ProgressBar1: TProgressBar
-    Left = 12
-    Top = 444
-    Width = 150
-    Height = 21
-    Position = 33
-    TabOrder = 4
   end
   object ilKnownFileImages: TImageList
     Left = 312
@@ -236,7 +216,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00400010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

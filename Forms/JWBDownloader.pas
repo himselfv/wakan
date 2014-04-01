@@ -45,7 +45,6 @@ type
     vtJobs: TVirtualStringTree;
     ilJobImages: TImageList;
     tmrJobUpdateTimer: TTimer;
-    ProgressBar1: TProgressBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
