@@ -29,9 +29,12 @@ type
     procedure edtDictNameChange(Sender: TObject);
 
   protected
+    procedure Reset;
+    function ChooseFileQuery: boolean;
     procedure ImportCancelQuery(Sender: TObject; var DoAbort: boolean);
   public
     destructor Destroy; override;
+    function ShowModal: integer; override;
     procedure UpdateBuildButton;
     procedure ImportDictionary(const AFilename: string; ADescription: string;
       ASourceFiles: TFileList; ALang: char; ASilent: boolean);
@@ -44,12 +47,29 @@ uses StrUtils, WideStrUtils, JWBKanaConv, JWBCore, JWBUnit, JWBLanguage,
 
 {$R *.DFM}
 
-procedure TfDictImport.FormShow(Sender: TObject);
+procedure TfDictImport.Reset;
 begin
   edtFilename.Text := '';
   edtDictName.Text := '';
-  mmDescription.Text:='';
+  mmDescription.Text := '';
   UpdateBuildButton;
+end;
+
+function TfDictImport.ShowModal: integer;
+begin
+  Reset;
+ //Ask to choose the source file before showing the dialog
+  if ChooseFileQuery then
+    Result := inherited ShowModal
+  else
+    Result := mrCancel;
+end;
+
+procedure TfDictImport.FormShow(Sender: TObject);
+begin
+ //Set focus to description because we don't show the form until the file is
+ //chosen
+  mmDescription.SetFocus;
 end;
 
 destructor TfDictImport.Destroy;
@@ -62,10 +82,12 @@ begin
   ModalResult := mrCancel;
 end;
 
-procedure TfDictImport.btnChooseFileClick(Sender: TObject);
+//Let the user choose the source dictionary file and accept it. False if cancelled.
+function TfDictImport.ChooseFileQuery: boolean;
 begin
   AddFileDialog.FileName := edtFilename.Text;
-  if not AddFileDialog.Execute then
+  Result := AddFileDialog.Execute;
+  if not Result then
     exit;
   edtFilename.Text := AddFileDialog.FileName;
   edtFilenameChange(nil);
@@ -74,6 +96,11 @@ begin
     edtDictName.Text := ChangeFileExt(ExtractFilename(AddFileDialog.FileName), '');
     edtDictNameChange(nil);
   end;
+end;
+
+procedure TfDictImport.btnChooseFileClick(Sender: TObject);
+begin
+  ChooseFileQuery;
 end;
 
 procedure TfDictImport.edtFilenameChange(Sender: TObject);
