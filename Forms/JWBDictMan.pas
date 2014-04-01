@@ -36,6 +36,7 @@ type
     btnMoveDown: TBitBtn;
     pmDictionaries: TPopupMenu;
     miRefreshDics: TMenuItem;
+    btnDownload: TButton;
     procedure cbDictsClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -45,6 +46,7 @@ type
     procedure btnMoveUpClick(Sender: TObject);
     procedure btnMoveDownClick(Sender: TObject);
     procedure miRefreshDicsClick(Sender: TObject);
+    procedure btnDownloadClick(Sender: TObject);
 
   protected
     FLoadingData: boolean; //set when we are loading dict data -- do not handle checkbox changes etc
@@ -57,7 +59,7 @@ type
   end;
 
 implementation
-uses UITypes, JWBMenu, JWBLanguage, JWBDictImport, JWBDic;
+uses UITypes, JWBMenu, JWBLanguage, JWBDictImport, JWBDic, JWBDownloader;
 
 {$R *.DFM}
 
@@ -208,6 +210,19 @@ begin
       CarefulRefreshDicts;
   finally
     FreeAndNil(fDictImport);
+  end;
+end;
+
+procedure TfDictMan.btnDownloadClick(Sender: TObject);
+begin
+ //We'd like to hide this form and open another, but this is modal form,
+ //our caller expects some result. No choice but to keep us open.
+  Self.Hide;
+  try
+    fDownloader.ShowModal;
+    CarefulRefreshDicts;
+  finally
+    Self.Show;
   end;
 end;
 

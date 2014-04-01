@@ -265,7 +265,7 @@ object fDictMan: TfDictMan
     OnClick = cbDictsClick
   end
   object btnImport: TButton
-    Left = 8
+    Left = 143
     Top = 403
     Width = 129
     Height = 25
@@ -394,6 +394,22 @@ object fDictMan: TfDictMan
     NumGlyphs = 2
     TabOrder = 6
     OnClick = btnMoveDownClick
+  end
+  object btnDownload: TButton
+    Left = 8
+    Top = 403
+    Width = 129
+    Height = 25
+    Anchors = [akLeft, akBottom]
+    Caption = '#01141^Download more...'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 7
+    OnClick = btnDownloadClick
   end
   object pmDictionaries: TPopupMenu
     Left = 40

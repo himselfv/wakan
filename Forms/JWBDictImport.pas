@@ -150,7 +150,6 @@ var job: TDicImportJob;
   prog: TSMPromptForm;
   fname: string;
   fi: integer;
-  AEncoding: CEncoding;
 begin
  //Name == Filename - Extension
  //We accept it both with or without extension and adjust
@@ -184,26 +183,10 @@ begin
     try
       prog.SetMaxProgress(0);
 
-     //Choose re-encoding actions for files
       for fi:=0 to Length(ASourceFiles)-1 do begin
         if not FileExists(ASourceFiles[fi]) then
           raise EDictImportException.CreateFmt(_l('File not found: %s'), [ASourceFiles[fi]]);
-
-       //Stupid encoding detection
-       //TODO: Return using uniconv to detect encoding OR
-       //TODO: Enable encoding selection (from all the available ones)
-        AEncoding := Conv_DetectType(ASourceFiles[fi]);
-        if AEncoding=nil then
-          case job.DicLanguage of
-           'j': AEncoding := TEUCEncoding;
-           'c': AEncoding := TGBEncoding;
-          else AEncoding := TUTF16Encoding; //wtf though
-          end;
-
-       //TODO: raise EDictImportException.Create(_l('#00088^eUnsupported file encoding')+' ('+FFiles[fi].Filename+')');
-       //  if we can't determine it
-
-        job.AddSourceFile(ASourceFiles[fi], AEncoding);
+        job.AddSourceFile(ASourceFiles[fi], {AEncoding=}nil);
       end;
 
       prog.OnCancelQuery := ImportCancelQuery;

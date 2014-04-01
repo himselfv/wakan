@@ -269,6 +269,21 @@ begin
   for fi:=0 to Length(FFiles)-1 do begin
     SetOperation(_l('#00086^eReading && parsing ')+ExtractFilename(FFiles[fi].Filename)+'...');
 
+    if FFiles[fi].Encoding=nil then begin
+     { Try to detect encoding, but don't be too smart about it.
+      This is not the place to ask the user, if anyone wants to implement it,
+      do it before passing the file to us.
+      Also, with auto import we are able to specify the exact encoding in config,
+      and with manual import just convert the dictionary manually. }
+      FFiles[fi].Encoding := Conv_DetectType(FFiles[fi].Filename);
+      if FFiles[fi].Encoding=nil then
+        FFiles[fi].Encoding := TUTF8Encoding;
+    end;
+
+   //We don't run checks to verify if the encoding is correct because there's no
+   //common header mark for all EDICT files out there.
+   //Instead EDICT parser must fail on some obviously wrong lines.
+
     fuin := OpenTextFile(FFiles[fi].Filename, FFiles[fi].Encoding);
     try
       if Self.FDicLanguage='c' then
