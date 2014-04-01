@@ -304,6 +304,7 @@ begin
       raise EAbort.Create('');
 
   CancelDownloadJobs;
+  fMenu.RescanDicts; //in case any were added
   Close;
 end;
 

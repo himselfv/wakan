@@ -85,6 +85,7 @@ end;
 //Let the user choose the source dictionary file and accept it. False if cancelled.
 function TfDictImport.ChooseFileQuery: boolean;
 begin
+  AddFileDialog.Title := _l('#01138^Choose dictionary file');
   AddFileDialog.FileName := edtFilename.Text;
   Result := AddFileDialog.Execute;
   if not Result then
@@ -238,6 +239,8 @@ begin
   finally
     FreeAndNil(job);
   end;
+
+  fMenu.RescanDicts; //make us notice the new dic
 end;
 
 procedure TfDictImport.ImportCancelQuery(Sender: TObject; var DoAbort: boolean);

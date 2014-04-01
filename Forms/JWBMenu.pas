@@ -247,6 +247,7 @@ type
     N01132Autoall1: TMenuItem;
     aDownloader: TAction;
     Download1: TMenuItem;
+    N27: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -468,7 +469,6 @@ type
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure RescanDicts;
-    procedure ClearDicts;
     procedure SwitchLanguage(lanchar:char);
 
   protected
@@ -1162,24 +1162,11 @@ begin
   UserDataChanged:=true;
 end;
 
-
-procedure TfMenu.ClearDicts;
-var i:integer;
-begin
-  for i:=0 to dicts.Count-1 do
-  begin
-    if dicts[i].loaded then
-      dicts[i].unload;
-    dicts[i].Free;
-  end;
-  dicts.Clear;
-end;
-
 procedure TfMenu.RescanDicts();
 var sr:TSearchRec;
     dic:TJaletDic;
 begin
-  ClearDicts;
+  dicts.Clear; //unload+delete all
   if FindFirst('*.dic',faAnyFile,sr)=0 then
   repeat
     dic := NewDict(sr.name);

@@ -1072,7 +1072,10 @@ object fMenu: TfMenu
     end
     object aDownloader: TAction
       Category = 'Main'
-      Caption = 'Download/update components...'
+      Caption = '#01139^Download/update...'
+      Hint = 
+        '#01140^Download dictionaries and other components or update exis' +
+        'ting ones.'
       OnExecute = aDownloaderExecute
     end
   end
@@ -1105,6 +1108,9 @@ object fMenu: TfMenu
       end
       object miDictionaryManager: TMenuItem
         Action = aSettingsDict
+      end
+      object N27: TMenuItem
+        Caption = '-'
       end
       object Download1: TMenuItem
         Action = aDownloader

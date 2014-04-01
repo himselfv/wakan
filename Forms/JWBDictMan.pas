@@ -63,6 +63,7 @@ uses UITypes, JWBMenu, JWBLanguage, JWBDictImport, JWBDic;
 
 procedure TfDictMan.FormShow(Sender: TObject);
 begin
+  fMenu.RescanDicts();
   ReloadDicts();
   cbDictsClick(self);
   ModalResult := mrNone;

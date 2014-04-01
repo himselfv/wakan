@@ -310,6 +310,7 @@ type
     procedure Put(Index: Integer; Item: TJaletDic); reintroduce;
     function GetDicts(Index: integer): string;
     procedure SetDicts(Index: integer; const Value: string);
+    procedure Notify(Ptr: Pointer; Action: TListNotification); override;
   public
     Priority: TStringList;
     constructor Create;
@@ -368,6 +369,12 @@ end;
 procedure TDictionaryList.Put(Index: Integer; Item: TJaletDic);
 begin
   inherited Put(Index, Item);
+end;
+
+procedure TDictionaryList.Notify(Ptr: Pointer; Action: TListNotification);
+begin
+  if Action=lnDeleted then
+    FreeAndNil(TJaletDic(Ptr));
 end;
 
 { Proxy functions to get and set dictionary lists in old string format.
