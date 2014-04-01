@@ -28,6 +28,8 @@ type
     procedure edtFilenameChange(Sender: TObject);
     procedure edtDictNameChange(Sender: TObject);
 
+  protected
+    procedure ImportCancelQuery(Sender: TObject; var DoAbort: boolean);
   public
     destructor Destroy; override;
     procedure UpdateBuildButton;
@@ -128,7 +130,7 @@ begin
   if fname<>AFilename then
     raise Exception.Create('Invalid dictionary name, please use only supported symbols'); //TODO: Localize
 
-  fname := MakeDicFilename(fname);
+  fname := ProgramDataDir+'\'+MakeDicFilename(fname);
 
   if FileExists(fname) and (
     MessageBox(Self.Handle, PChar(Format('Dictionary %s already exists. Do you want to replace it?', [fname])), //TODO: Localize
@@ -137,6 +139,8 @@ begin
     raise EAbort.Create('');
  //This doesn't guarantee it won't be present later, but we catch most of the
  //common cases.
+
+  dicts.UnloadAll; //may hold some files open
 
   job := TDicImportJob.Create;
   try
@@ -174,26 +178,8 @@ begin
         job.AddSourceFile(ASourceFiles[fi], AEncoding);
       end;
 
-      repeat
-        job.ProcessChunk;
-        prog.SetMessage(job.Operation);
-        prog.SetMaxProgress(job.MaxProgress);
-        prog.SetProgress(job.Progress);
-        prog.ProcessMessages;
-        if prog.ModalResult=mrCancel then begin
-          prog.SetProgressPaused(true);
-          if Application.MessageBox(
-            PChar(_l('#01003^eThe dictionary has not been yet completely imported. Do you '
-              +'really want to abort the operation?')),
-            PChar(_l('#01004^eConfirm abort')),
-            MB_ICONQUESTION+MB_YESNO
-          )=idYes then
-            raise EAbort.Create('Aborted by user'); //no need to localize
-          prog.ModalResult := 0;
-          prog.SetProgressPaused(false);
-          prog.Show; //ModalResult hides it
-        end;
-      until (job.State=jsCompleted);
+      prog.OnCancelQuery := ImportCancelQuery;
+      prog.ExecuteJob(job);
 
     finally
       FreeAndNil(prog);
@@ -222,11 +208,22 @@ begin
         pchar(_l('#00093^eDictionary was built.')),
         pchar(_l('#00094^eSuccess')),
         MB_ICONINFORMATION or MB_OK);
-
   finally
     FreeAndNil(job);
   end;
 end;
+
+procedure TfDictImport.ImportCancelQuery(Sender: TObject; var DoAbort: boolean);
+begin
+  if Application.MessageBox(
+    PChar(_l('#01003^eThe dictionary has not been yet completely imported. Do you '
+      +'really want to abort the operation?')),
+    PChar(_l('#01004^eConfirm abort')),
+    MB_ICONQUESTION+MB_YESNO
+  )<>idYes then
+    DoAbort := false;
+end;
+
 
 
 

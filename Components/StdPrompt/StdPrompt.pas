@@ -46,7 +46,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, ComCtrls, ComObj, ShlObj;
+  StdCtrls, ExtCtrls, Buttons, ComCtrls, ComObj, ShlObj, JWBJobs;
 
 type
  {$IF CompilerVersion<21}
@@ -62,6 +62,8 @@ type
   []: optional
   (): stretch
  }
+
+  TCancelQueryEvent = procedure(ASender: TObject; var DoAbort: boolean) of object;
 
   TSMPromptForm = class(TForm)
     Sign1Label: TLabel;
@@ -127,11 +129,21 @@ type
     WindowList: TTaskWindowList;
     LSaveFocusState: TFocusState;
     ActiveWindow: HWnd;
+    g_wmTBC: UINT;
+    FJob: TJob;
+    FOnCancelQuery: TCancelQueryEvent;
     procedure EnterModal;
     procedure ReleaseModal;
+    procedure JobOperationChanged(Sender: TObject);
+    procedure JobProgressChanged(Sender: TObject);
+    procedure JobYield(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Dispatch(var Message); override;
+    procedure ExecuteJob(AJob: TJob);
+    property OnCancelQuery: TCancelQueryEvent read FOnCancelQuery write
+      FOnCancelQuery;
 
   protected //Buttons
     FButtonYPos: integer; //set by FormResize
@@ -153,11 +165,6 @@ type
     procedure AppearModal; // shows the dialog in modal mode (but doesn't steal the execution like ShowModal does. Call ProcessModalMessages please.)
     procedure Refresh; // repaints the dialog
     procedure ProcessMessages; // processes messages from the queue so that the system doesn't think we're stuck.
-
-  protected //Message handling
-    g_wmTBC: UINT;
-  public
-    procedure Dispatch(var Message); override;
 
   end;
 
@@ -644,6 +651,59 @@ begin
   curres:=mbNoToAll;
   ModalResult:=mrNoToAll;
   Close;
+end;
+
+{ Executes a job in this thread until finished or failed. Updates operation,
+ progress indicators. Changes AJob's event handlers.
+ If cancelled by user, raises EAbort. }
+procedure TSMPromptForm.ExecuteJob(AJob: TJob);
+begin
+  FJob := AJob;
+  AJob.OnOperationChanged := Self.JobOperationChanged;
+  AJob.OnProgressChanged := Self.JobProgressChanged;
+  AJob.OnYield := Self.JobYield;
+  Self.SetMessage(AJob.Operation);
+  Self.SetMaxProgress(AJob.MaxProgress);
+  Self.SetProgress(AJob.Progress);
+  repeat
+    AJob.ProcessChunk;
+    JobYield(AJob); //in case this is a straight chunked job
+  until (AJob.State=jsCompleted);
+  AJob.OnProgressChanged := nil;
+  AJob.OnOperationChanged := nil;
+  AJob.OnYield := nil;
+end;
+
+procedure TSMPromptForm.JobOperationChanged(Sender: TObject);
+begin
+  Self.SetMessage(FJob.Operation);
+end;
+
+procedure TSMPromptForm.JobProgressChanged(Sender: TObject);
+begin
+  if Self.ProgressBar.Max<>FJob.MaxProgress then
+    Self.SetMaxProgress(FJob.MaxProgress);
+  if Self.ProgressBar.Position<>FJob.Progress then
+    Self.SetProgress(FJob.Progress);
+end;
+
+//Called when we have a moment to process messages and so on.
+procedure TSMPromptForm.JobYield(Sender: TObject);
+var DoAbort: boolean;
+begin
+  Self.ProcessMessages;
+  if Self.ModalResult=mrCancel then begin
+    Self.SetProgressPaused(true);
+    DoAbort := true;
+    if Assigned(FOnCancelQuery) then
+      FOnCancelQuery(Self, DoAbort);
+    if DoAbort then
+      raise EAbort.Create('Aborted by user'); //no need to localize
+   //Restore the window
+    Self.ModalResult := 0;
+    Self.SetProgressPaused(false);
+    Self.Show; //ModalResult hides it
+  end;
 end;
 
 
