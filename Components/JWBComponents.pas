@@ -40,6 +40,7 @@ type
     procedure Clear;
     procedure LoadFromFile(const filename: string);
     function FindByName(const AName: string): PAppComponent;
+    function FindByFile(const AFilename: string): PAppComponent;
     property Count: integer read GetCount;
     property Items[Index: integer]: PAppComponent read GetItemByIndex; default;
   end;
@@ -297,6 +298,20 @@ begin
   l_name := AnsiLowerCase(AName);
   for i := 0 to Self.Count - 1 do
     if FItems[i].name=l_name then begin
+      Result := @FItems[i];
+      break;
+    end;
+end;
+
+function TAppComponents.FindByFile(const AFilename: string): PAppComponent;
+var l_name: string;
+  i: integer;
+begin
+  Result := nil;
+  l_name := AnsiLowerCase(AFilename);
+  for i := 0 to Self.Count - 1 do
+    if (FItems[i].TargetFilename<>'')
+    and (AnsiLowerCase(FItems[i].TargetFilename)=l_name) then begin
       Result := @FItems[i];
       break;
     end;

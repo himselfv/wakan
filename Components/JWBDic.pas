@@ -322,6 +322,7 @@ type
     function IsInGroup(dic: TJaletDic; group: TDictGroup): boolean; overload; inline;
     function IsInGroup(dicname: string; group: TDictGroup): boolean; overload;
     procedure UnloadAll;
+    function FindBySourceFilename(ASourceFilename: string): TJaletDic;
     property Items[Index: Integer]: TJaletDic read Get write Put; default;
    //Lists in external compatible format of older Wakans -- do not use except when reading/saving settings
     property NotGroupDicts[Index:integer]: string read GetDicts write SetDicts;
@@ -337,9 +338,13 @@ var
 //Sanitization
 function EncodeInfoField(const AText: string): string;
 function DecodeInfoField(const AText: string): string;
-function SanitizeFilename(const AFilename: string): string;
+
+function SanitizeDicFilename(const AFilename: string): string;
 function MakeDicName(const AText: string): string;
 function MakeDicFilename(const AText: string): string;
+
+function EncodeSourceFilename(const AText: string): string;
+function DecodeSourceFilename(const AText: string): string;
 
 implementation
 uses Forms, JWBLegacyMarkup;
@@ -476,6 +481,28 @@ var i: integer;
 begin
   for i := 0 to Count-1 do
     Items[i].Unload;
+end;
+
+//Tries to locate a dictionary which contains the specified filename as one of
+//the sources.
+//Loads all dictionaries into memory.
+function TDictionaryList.FindBySourceFilename(ASourceFilename: string): TJaletDic;
+var i, j: integer;
+begin
+  ASourceFilename := EncodeSourceFilename(ASourceFilename.ToLowerInvariant);
+  Result := nil;
+  for i := 0 to Self.Count-1 do begin
+    if not Self[i].Loaded then begin
+      Self[i].Load;
+      Self[i].Demand;
+    end;
+    for j := 0 to Self[i].sources.Count-1 do
+      if Self[i].sources[j].ToLowerInvariant.StartsWith(ASourceFilename) then begin
+        Result := Self[i];
+        break;
+      end;
+    if Result<>nil then break;
+  end;
 end;
 
 {
@@ -1285,9 +1312,15 @@ begin
       flag_specSymbol := true;
 end;
 
-function SanitizeFilename(const AFilename: string): string;
+//Removes clearly unsupported symbols from the file name or replaces with some
+//equivalents.
+function SanitizeDicFilename(const AFilename: string): string;
 begin
-  Result := AFilename; //TODO: Sanitize?
+ //This is not exhaustive, as different filesystems and OSes have different
+ //requirements. Be ready for OS error instead.
+  Result := AFilename.Replace('\','').Replace('/','').Replace(':','')
+    .Replace('*','').Replace('?','').Replace('"','').Replace('<','')
+    .Replace('>','').Replace('|','');
 end;
 
 //Removes '.dic' if it's present at the end of the name
@@ -1304,6 +1337,19 @@ begin
   Result := AText;
   if not EndsStr('.dic', LowerCase(Result, loUserLocale)) then
     Result := Result + '.dic'
+end;
+
+//Escapes filename which goes into sources.lst not to contain anything which
+//might break the format
+function EncodeSourceFilename(const AText: string): string;
+begin
+ //Filenames can't contain \, so we're safe to just add this:
+  Result := AText.Replace(',', '\,');
+end;
+
+function DecodeSourceFilename(const AText: string): string;
+begin
+  Result := AText.Replace('\,', ',');
 end;
 
 

@@ -388,6 +388,10 @@ begin
   if (eh=EH_SENSE) and (nextsense.text<>'') or (nextsense.markers<>'') or (nextsense.pos<>'') then //shouldnt happen
     CommitNextSense();
 
+ //No sense part => 100% invalid line, helps to catch wrong encodings
+  if eh<>EH_SENSE then
+    raise EEdictParsingException.Create('Invalid EDICT line.');
+
   ed.TrimEverything;
 end;
 

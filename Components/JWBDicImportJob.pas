@@ -805,7 +805,7 @@ begin
     for fi:=0 to Length(FFiles)-1 do begin
       if not GetLastWriteTime(FFiles[fi].Filename, dt) then
         dt := 0; //unknown -- will be skipped, unless it becomes known later
-      fwr.Writeln(ExtractFilename(FFiles[fi].Filename)+','
+      fwr.Writeln(EncodeSourceFilename(ExtractFilename(FFiles[fi].Filename))+','
         +DatetimeToStr(dt, DictFormatSettings));
     end;
   finally

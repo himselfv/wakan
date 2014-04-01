@@ -31,6 +31,8 @@ type
   protected
     procedure Reset;
     function ChooseFileQuery: boolean;
+    function TryFillComponentDetails: boolean;
+    function TryFillExistingDetails: boolean;
     procedure ImportCancelQuery(Sender: TObject; var DoAbort: boolean);
   public
     destructor Destroy; override;
@@ -43,7 +45,7 @@ type
 
 implementation
 uses StrUtils, WideStrUtils, JWBKanaConv, JWBCore, JWBUnit, JWBLanguage,
-  PKGWrite, JWBMenu;
+  PKGWrite, JWBMenu, JWBComponents;
 
 {$R *.DFM}
 
@@ -92,11 +94,66 @@ begin
     exit;
   edtFilename.Text := AddFileDialog.FileName;
   edtFilenameChange(nil);
- //Automatically suggest first source as a dictionary name
+
+ //Try to pre-fill details from existing package / known component
+  if not TryFillExistingDetails
+  and not TryFillComponentDetails then begin
+   //Suggest file name as a dictionary name
+    if edtDictName.Text='' then begin
+      edtDictName.Text := ChangeFileExt(ExtractFilename(AddFileDialog.FileName), '');
+      edtDictNameChange(nil);
+    end;
+  end;
+end;
+
+//If this looks like a known dictionary source, pre-populate the default name
+//and description
+function TfDictImport.TryFillComponentDetails: boolean;
+var AComponent: PAppComponent;
+begin
+  AComponent := AppComponents.FindByFile(ExtractFilename(edtFilename.Text));
+  if (AComponent=nil) or (AComponent.Category<>'dic') or (AComponent.Format=sfWakan) then begin
+    Result := false;
+    exit;
+  end;
+
   if edtDictName.Text='' then begin
-    edtDictName.Text := ChangeFileExt(ExtractFilename(AddFileDialog.FileName), '');
+    edtDictName.Text := AComponent.Name;
     edtDictNameChange(nil);
   end;
+
+  if mmDescription.Text='' then
+    mmDescription.Text := AComponent.Description;
+
+  if AComponent.BaseLanguage='c' then
+    rgLanguage.ItemIndex := 1
+  else
+    rgLanguage.ItemIndex := 0;
+  Result := true;
+end;
+
+function TfDictImport.TryFillExistingDetails: boolean;
+var dic: TJaletDic;
+begin
+  dic := dicts.FindBySourceFilename(ExtractFilename(edtFilename.Text));
+  if dic=nil then begin
+    Result := false;
+    exit;
+  end;
+
+  if edtDictName.Text='' then begin
+    edtDictName.Text := dic.Name;
+    edtDictNameChange(nil);
+  end;
+
+  if mmDescription.Text='' then
+    mmDescription.Text := dic.Description;
+
+  if dic.language='c' then
+    rgLanguage.ItemIndex := 1
+  else
+    rgLanguage.ItemIndex := 0;
+  Result := true;
 end;
 
 procedure TfDictImport.btnChooseFileClick(Sender: TObject);
@@ -153,9 +210,9 @@ var job: TDicImportJob;
 begin
  //Name == Filename - Extension
  //We accept it both with or without extension and adjust
-  fname := SanitizeFilename(AFilename);
+  fname := SanitizeDicFilename(AFilename);
   if fname<>AFilename then
-    raise Exception.Create('Invalid dictionary name, please use only supported symbols'); //TODO: Localize
+    raise Exception.Create('Invalid dictionary name, please do not use special symbols (\/:*? and so on)'); //TODO: Localize
 
   fname := ProgramDataDir+'\'+MakeDicFilename(fname);
 
