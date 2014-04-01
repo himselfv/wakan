@@ -126,15 +126,12 @@ type
 
 procedure TfDictMan.CarefulRefreshDicts;
 var dicStates: array of TDicCheckState;
-  dic: TJaletDic;
   i,j: integer;
 begin
  //Save states
   SetLength(dicStates, cbDicts.Items.Count);
-  for i:=0 to cbDicts.Items.Count-1 do
-  begin
-    dic:=dicts[i];
-    dicStates[i].name := dic.name;
+  for i:=0 to cbDicts.Items.Count-1 do begin
+    dicStates[i].name := cbDicts.Items[i]; //can come in different order from dics[i]
     dicStates[i].state := cbDicts.Checked[i];
   end;
 
@@ -143,7 +140,7 @@ begin
 
  //Restore states for known dictionaries
   for i := 0 to Length(dicStates) - 1 do
-    for j :=0 to cbDicts.Items.Count-1 do
+    for j := 0 to cbDicts.Items.Count-1 do
       if cbDicts.Items[j]=dicStates[i].name then begin
         cbDicts.Checked[j] := dicStates[i].state;
         break; //of j-loop
