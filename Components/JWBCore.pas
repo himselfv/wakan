@@ -22,18 +22,17 @@ const
   PortabilityMode: TPortabilityMode = pmCompatible;
 
  //All paths have no trailing slashes
-  UserDataDir: string = '';  //wakan.usr, collections
   ProgramDataDir: string = ''; //dictionaries, romanizations
+  UserDataDir: string = '';  //wakan.usr, collections
 
   AppUrl: string = 'http://code.google.com/p/wakan/';
   WikiUrlBase: string = 'http://code.google.com/p/wakan/wiki/';
 
 procedure SetPortabilityMode(AMode: TPortabilityMode);
-function DictionaryDir: string;
 function GetAppDataFolder: string;
 function CommonDataDir: string;
+function DictionaryDir: string;
 function WikiUrl(const APage: string = ''): string;
-
 
 { Some logging tools.
 Define NOLOG to make sure that nothing in the application calls these. }
@@ -97,6 +96,8 @@ end;
 
 { Portable/standalone }
 
+//Returns AppData\Wakan folder NO MATTER what mode is active.
+//Do not use to get Wakan common/user data folders.
 function GetAppDataFolder: string;
 begin
   Result := GetSpecialFolderPath(CSIDL_APPDATA);
@@ -107,9 +108,10 @@ begin
   ForceDirectories(Result);
 end;
 
+//Absolutely the same as ProgramDataDir. Made just to prevent mistakes.
 function CommonDataDir: string;
 begin
-  Result := AppFolder; //for now
+  Result := ProgramDataDir;
 end;
 
 function WikiUrl(const APage: string = ''): string;
