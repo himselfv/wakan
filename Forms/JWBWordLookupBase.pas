@@ -57,6 +57,7 @@ type
     procedure ReloadCopyFormats;
     procedure CopyInFormatClick(Sender: TObject);
     procedure ConfigureClick(Sender: TObject);
+    procedure ClearReferenceLinks;
     procedure ReloadReferenceLinks;
   public
    { Currently selected word, cached for simplicity. Some rely on it outside
@@ -142,7 +143,9 @@ begin
     ReloadCopyFormats;
   miLookUpIn.Visible := (ARow>0);
   if miLookUpIn.Visible then
-    ReloadReferenceLinks;
+    ReloadReferenceLinks
+  else
+    ClearReferenceLinks; //some could have been in this menu
   miGoToVocab.Visible := (ARow>0) and (FResults[ARow-1].userIndex > 0);
   miAddToVocab.Visible := (ARow>0);
 end;
@@ -186,9 +189,8 @@ begin
   fSettings.ShowModal;
 end;
 
-procedure TfWordLookupBase.ReloadReferenceLinks;
-var i, ARow, idx: integer;
-  mi: TMenuItem;
+procedure TfWordLookupBase.ClearReferenceLinks;
+var i: integer;
 begin
  //Submenu
   miLookUpIn.Clear;
@@ -196,6 +198,13 @@ begin
   for i := pmPopup.Items.Count-1 downto 0 do
     if pmPopup.Items[i] is TRefMenuItem then
       pmPopup.Items[i].Destroy;
+end;
+
+procedure TfWordLookupBase.ReloadReferenceLinks;
+var i, ARow, idx: integer;
+  mi: TMenuItem;
+begin
+  ClearReferenceLinks;
 
   if StringGrid.Selection.Top <> StringGrid.Selection.Bottom then begin
     miBeforeLookupIn.Visible := false;
