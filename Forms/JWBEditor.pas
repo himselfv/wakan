@@ -3117,7 +3117,6 @@ var wordpart:char;
   wt:TEvalCharType;
   dw:string;
 
-  globdict_s: string;
   learnstate_s: string;
 
   wordstate: char;
@@ -3153,17 +3152,13 @@ begin
     wordpart:=word.sdef;
     worddict:=word.dicindex;
     s:=word.ToLegacyString;
-    globdict:=0;
-    if (pos(UH_LBEG+'d',s)>0) then
-    begin
-      globdict_s:=copy(s,pos(UH_LBEG+'d',s)+2,length(s)-pos(UH_LBEG+'d',s)-1);
-      globdict_s:=copy(globdict_s,1,pos(UH_LEND,globdict_s)-1);
-      globdict := doc.docdic.IndexOf(globdict_s);
+    if word.dicname<>'' then begin
+      globdict := doc.docdic.IndexOf(word.dicname);
       if globdict<0 then
-      begin
-        doc.docdic.add(globdict_s);
-        globdict:=doc.docdic.Count-1;
-      end;
+        globdict := doc.docdic.add(word.dicname);
+    end else begin
+      globdict := 0;
+      worddict := 0; //how did this happen though?
     end;
     if word.userindex=0 then
       learnstate:=9
@@ -3181,7 +3176,7 @@ begin
     end;
   end;
  //This subroutine ^^^:
- //local --- s, i, globdict_s, learnstate_s
+ //local --- s, i, learnstate_s
  //in    --> word, wt
  //out   <-- wordpart, worddict, globdict, learnstate, rlen,
 
