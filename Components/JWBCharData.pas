@@ -28,8 +28,8 @@ type
     sourceField: string;
     dataType: char;
      { Controls how data for this property is handled.
-        'S': generic string
-        'F': full-width generic string
+        'S': unicode string
+        'U': full-width unicode string (ideographic)
         'R': radical
         'N': number
         'P': pinyin
@@ -740,7 +740,7 @@ var propType: PCharPropType;
 begin
   propType := Self.PropType;
   case propType.dataType of
-    'F': sep := UH_IDG_COMMA; //There's also fullwidth latin comma: $FF0C
+    'U': sep := UH_IDG_COMMA; //There's also fullwidth latin comma: $FF0C
     'R': sep := '';
   else sep := ', '
   end;
