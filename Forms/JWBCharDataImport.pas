@@ -371,7 +371,7 @@ begin
     TCharProp.NoCommitting := false;
     TCharProp.Reindex;
 
-    prog.SetMessage(_l('Sorting...'));
+    prog.SetMessage(_l('Sorting...')); //TODO: Localize
 
    //Re-arrange TChar-wise
    //This is not required but may improve speed. I will decide later if this
@@ -596,7 +596,8 @@ var CChar: TTextTableCursor;
         if ed.propType='kTotalStrokes' then begin
           NeedChar(ed.char);
           parts := SplitStr(ed.value,' '); //there could be several: zh-Hans (CN) and zh-Hant (TW)
-          if Length(parts)>1 then //take Chinese one
+          if Length(parts)>0 then
+            //take Chinese one
             CChar.Edit([TChar.fChStrokeCount],[IntToStr(StrToInt(parts[0]))]);
         end else
         if (ed.propType='kCantonese') or (ed.propType='kMandarin')

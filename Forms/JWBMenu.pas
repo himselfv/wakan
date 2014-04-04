@@ -1280,6 +1280,8 @@ begin
     fWordLookup.Look();
   RefreshCategory;
   RefreshKanjiCategory;
+  if fKanjiDetails<>nil then
+    fKanjiDetails.RefreshDetails;
 end;
 
 procedure TfMenu.RefreshCategory;

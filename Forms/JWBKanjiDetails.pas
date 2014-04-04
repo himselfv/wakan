@@ -610,11 +610,13 @@ begin
     if curLang='c' then begin
       if CChar.Int(TChar.fChStrokeCount)<255 then
         btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TChar.fChStrokeCount)
-      else btnStrokeOrder.Caption:='';
+      else
+        btnStrokeOrder.Caption:=_l('#01117^Strokes');
     end else begin
       if CChar.Int(TChar.fJpStrokeCount)<255 then
         btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TChar.fJpStrokeCount)
-      else btnStrokeOrder.Caption:='';
+      else
+        btnStrokeOrder.Caption:=_l('#01117^Strokes');
     end;
 
     //Words button
