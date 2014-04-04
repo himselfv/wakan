@@ -242,13 +242,12 @@ begin
 
       for fi:=0 to Length(ASourceFiles)-1 do begin
         if not FileExists(ASourceFiles[fi]) then
-          raise EDictImportException.CreateFmt(_l('File not found: %s'), [ASourceFiles[fi]]);
+          raise EDictImportException.CreateFmt(_l('File not found: %s'), [ASourceFiles[fi]]); //TODO:Localize
         job.AddSourceFile(ASourceFiles[fi], {AEncoding=}nil);
       end;
 
       prog.OnCancelQuery := ImportCancelQuery;
       prog.ExecuteJob(job);
-
     finally
       FreeAndNil(prog);
     end;
@@ -257,8 +256,8 @@ begin
       Application.MessageBox(
         PChar('There were some problems during the conversion. '
         +IntToStr(job.ProblemRecords)+' records could not have been imported.'#13
-        +'Please study the roma_problems.txt found in the application directory.'),
-        'Had problems',
+        +'Please study the roma_problems.txt found in the application directory.'), //TODO: Localize
+        'Had problems', //TODO: Localize
         MB_ICONEXCLAMATION)
     else
     if job.ProblemRecords > 0 then
@@ -266,8 +265,8 @@ begin
         PChar('The dictionary has been created but '+IntToStr(job.ProblemRecords)
         +' records had some problems.'#13
         +'This is not much so it''s probably fine, but if you want details, '
-        +'study the roma_problems.txt found in the application directory.'),
-        'Notice',
+        +'study the roma_problems.txt found in the application directory.'), //TODO: Localize
+        'Notice', //TODO:Localize
         MB_ICONINFORMATION
       )
     else

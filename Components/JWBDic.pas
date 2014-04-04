@@ -137,9 +137,10 @@ type
    {$IFDEF DIC_CURSOR_IN_TABLE}
     _intcur: TDicIndexReader;
    {$ENDIF}
-    constructor Create;
+    constructor Create; overload;
+    constructor Create(const APackageFile: string); overload;
     destructor Destroy; override;
-    procedure FillInfo(const packagefile:string); overload;
+    procedure FillInfo(const APackageFile:string); overload;
     procedure FillInfo(ps:TPackageSource); overload;
     procedure Load; virtual;
     procedure Unload; virtual;
@@ -519,6 +520,12 @@ begin
   loaded:=false;
 end;
 
+constructor TJaletDic.Create(const APackageFile: string);
+begin
+  Create();
+  FillInfo(APackageFile);
+end;
+
 destructor TJaletDic.Destroy;
 begin
   if loaded then Unload;
@@ -531,10 +538,10 @@ end;
 { JaletDic cannot be loaded without calling this function at least once,
  because it sets pname.
  But just in case, we auto-FillInfo on load too, if it was not yet filled. }
-procedure TJaletDic.FillInfo(const packagefile:string);
+procedure TJaletDic.FillInfo(const APackageFile:string);
 var ps:TPackageSource;
 begin
-  pname:=packagefile;
+  pname:=APackageFile;
   ps:=TPackageSource.Create(pname,791564,978132,978123);
   try
     FillInfo(ps);

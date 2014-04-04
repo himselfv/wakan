@@ -280,9 +280,9 @@ begin
 
   ContentLength := GetContentLength(hURL);
   if (ContentLength<=0) or (ContentLength>=MaxInt) then
-    Self.FMaxProgress := 0 //just display progress animation
+    SetMaxProgress(0) //just display progress animation
   else
-    Self.FMaxProgress := integer(ContentLength); //really hope it's less than 2Gb!
+    SetMaxProgress(ContentLength); //really hope it's less than 2Gb!
 
  //If filename is provided, use that, otherwise take one from Content-Disposition
  //or URL
@@ -328,7 +328,7 @@ begin
     exit;
   end;
   FOutputStream.Write(Buffer, BufferLen);
-  Inc(FProgress, BufferLen);
+  SetProgress(Progress+integer(BufferLen));
   if BufferLen=0 then begin
     Cleanup(); //or we'd be holding file hostage
     FState := jsCompleted;

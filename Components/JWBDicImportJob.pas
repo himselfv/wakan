@@ -71,6 +71,10 @@ function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 implementation
 uses Windows, PKGWrite, JWBKanaConv, JWBCore, JWBLanguage, JWBUnit;
 
+const
+  eCannotImportDict = 'Cannot import dictionary. It''s probably in the '
+    +'different encoding, unsupported format or damaged.'; //TODO: Localize'
+
 {
 Returns true if importer thinks it could load WORDFREQ_CK and add frequency info,
 if asked to.
@@ -226,7 +230,7 @@ begin
     freql := GetFrequencyList;
   except
     on E: EDictImportException do begin
-      E.Message := 'Frequency list creation failed: '+E.Message;
+      E.Message := _l('Frequency list creation failed: ')+E.Message; //TODO: Localize
       raise;
     end;
   end;
@@ -245,14 +249,8 @@ begin
  //Create empty dictionary tables
   info.Description := Self.DicDescription;
   CreateDictTables(tempPackageDir+'\DICT.TMP', info, Self.DicLanguage, 0);
-  dic := TJaletDic.Create;
-  dic.LoadOnDemand := true;
-  dic.FillInfo(tempPackageDir+'\DICT.TMP');
-  if not dic.tested then
-    raise EDictImportException.Create('Cannot load the newly created dictionary.');
+  dic := TJaletDic.Create(tempPackageDir+'\DICT.TMP');
   dic.Load;
-  if not dic.loaded then
-    raise EDictImportException.Create('Cannot load the target dictionary');
   dic.Demand;
   dic.TTDict.NoCommitting := true;
   dic.TTEntries.NoCommitting := true;
@@ -696,6 +694,8 @@ begin
       on E: EEdictParsingException do begin
         roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+E.Message);
         Inc(ProblemRecords);
+        if (ProblemRecords>400) and (ProblemRecords>Trunc(0.75*LineCount)) then
+          raise EDictImportException.Create(_l(eCannotImportDict));
       end;
     end;
 
@@ -761,7 +761,7 @@ begin
         roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+E.Message);
         Inc(ProblemRecords);
         if (ProblemRecords>400) and (ProblemRecords>Trunc(0.75*LineCount)) then
-          raise; //this is probably an encoding or format problem so reraise
+          raise EDictImportException.Create(_l(eCannotImportDict));
       end;
     end;
 

@@ -87,15 +87,18 @@ object fDownloader: TfDownloader
       Caption = 'Ready to download'
       ImageIndex = 1
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object Label1: TLabel
         AlignWithMargins = True
         Left = 3
         Top = 358
-        Width = 450
+        Width = 143
         Height = 13
         Align = alBottom
         Caption = 'Press "Download" to proceed.'
-        ExplicitWidth = 143
       end
       object lbFilesToDownload: TListBox
         Left = 0
@@ -155,6 +158,10 @@ object fDownloader: TfDownloader
       Hint = 'Please select which files you want to download:'
       Caption = 'Select Files'
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object vtKnownFiles: TVirtualStringTree
         Left = 0
         Top = 0
@@ -216,7 +223,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C00400010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

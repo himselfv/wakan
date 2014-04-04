@@ -139,7 +139,7 @@ end;
 procedure Unpack(const ASourceFile, ATargetFolder: string;
   AForceFormat: string = '');
 begin
-  DoJob(TFileUnpackJob.Create(ASourceFile, ATargetFolder, AForceFormat));
+  Run(TFileUnpackJob.Create(ASourceFile, ATargetFolder, AForceFormat), true);
 end;
 
 end.

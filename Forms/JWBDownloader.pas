@@ -21,7 +21,6 @@ type
   PNdJobData = ^TNdJobData;
   TNdJobData = record
     Job: TJob;
-//    ProgressBar: TProgressBar;
   end;
 
   TSourceArray = array of PAppComponent;
@@ -121,6 +120,8 @@ type
     procedure CancelDownloadJobs;
     function IsDownloadFinished: boolean;
     function AreAllJobsSuccessful: boolean;
+    procedure WorkerThreadException(Sender: TObject; Job: TJob; E: Exception;
+      out StopJob: boolean);
     function AddJobNode(AJob: TJob): PVirtualNode;
     procedure UpdateJobNodes;
     procedure VtUpdateJobNode(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -142,13 +143,19 @@ type
   protected
     FComponent: PAppComponent;
     FDownloadJob: TDownloadJob;
-    FImportJob: TDicImportJob;
-    procedure ImportJobProgressChanged(ASender: TObject);
+    FImportJob: TJob;
+    FFatalException: string;
+    procedure ChildJobProgressChanged(Sender: TObject);
+    procedure ImportDictionary;
+    procedure ImportKanjidic;
+    procedure ImportFont;
   public
     constructor Create(AComponent: PAppComponent);
     destructor Destroy; override;
     procedure ProcessChunk; override;
     property DownloadJob: TDownloadJob read FDownloadJob;
+    property ImportJob: TJob read FImportJob;
+    property FatalException: string read FFatalException write FFatalException;
   end;
 
 constructor TComponentDownloadJob.Create(AComponent: PAppComponent);
@@ -168,7 +175,6 @@ procedure TComponentDownloadJob.ProcessChunk;
 var
   ATempDir: string;
   ATempFilename: string; //temporary download filename
-  AEncoding: CEncoding;
   ACheckPresent: string;
   AFileTime: TDatetime;
   AMoveJob: TJob;
@@ -187,14 +193,10 @@ begin
       if FileAge(ACheckPresent, AFileTime) then
         FDownloadJob.IfModifiedSince := AFileTime;
     end;
-    FDownloadJob.ProcessChunk; //first chunk makes connection
+    FDownloadJob.OnProgressChanged := ChildJobProgressChanged;
+    FDownloadJob.ProcessChunk; //first chunk establishes connection
     StartOperation('Downloading', FDownloadJob.MaxProgress); //TODO: Localize
-    while FDownloadJob.State<>jsCompleted do begin
-      FDownloadJob.ProcessChunk;
-      if FMaxProgress<>FDownloadJob.MaxProgress then
-        FMaxProgress := FDownloadJob.MaxProgress;
-      SetProgress(FDownloadJob.Progress);
-    end;
+    Run(FDownloadJob);
     if FDownloadJob.Result in [drUpToDate, drError] then begin
       FState := jsCompleted;
       exit;
@@ -208,63 +210,78 @@ begin
     end else begin
       StartOperation('Unpacking', 0); //TODO: Localize
       AMoveJob := TFileUnpackJob.Create(ATempFilename, FComponent.GetTargetDir);
+      TFileUnpackJob(AMoveJob).ForceFormat := FComponent.URL_Unpack;
     end;
     try
-      while AMoveJob.State<>jsCompleted do begin
-        AMoveJob.ProcessChunk;
-        if MaxProgress<>AMoveJob.MaxProgress then
-          FMaxProgress := AMoveJob.MaxProgress;
-        SetProgress(AMoveJob.Progress);
-      end;
+      AMoveJob.OnProgressChanged := ChildJobProgressChanged;
+      Run(AMoveJob);
     finally
       FreeAndNil(AMoveJob);
     end;
 
-   //TODO: Font import etc.
-   //TODO: Kanjidic import
-
    //Install
-    if (FComponent.Category='dic') and (FComponent.Format<>sfWakan) and (FComponent.TargetFilename<>'') then begin
-      StartOperation('Importing', 0); //TODO: Localize
-      FImportJob := TDicImportJob.Create;
-      FImportJob.DicFilename := FComponent.GetTargetDir + '\' + FComponent.Name+'.dic';
-      FImportJob.DicDescription := FComponent.Description;
-      FImportJob.DicLanguage := FComponent.BaseLanguage;
-      FImportJob.OnProgressChanged := ImportJobProgressChanged;
-      if FImportJob.DicLanguage=#00 then
-        FImportJob.DicLanguage := 'j';
-      if FComponent.Encoding='' then
-        AEncoding := nil
-      else begin
-        AEncoding := FindEncodingByName(FComponent.Encoding);
-        if AEncoding=nil then
-          raise Exception.Create('Unknown encoding: '+FComponent.Encoding);
-      end;
-      FImportJob.AddSourceFile(FComponent.GetTargetDir+'\'+FComponent.TargetFilename,
-        AEncoding);
-      try
-        while FImportJob.State<>jsCompleted do begin
-          FImportJob.ProcessChunk;
-          if MaxProgress<>FImportJob.MaxProgress then
-            FMaxProgress := FImportJob.MaxProgress;
-          SetProgress(FImportJob.Progress);
-        end;
-      finally
-        FreeAndNil(FImportJob);
-      end;
-    end;
+    StartOperation('Importing', 0); //TODO: Localize
+    if FComponent.Category='dic' then
+      ImportDictionary
+    else
+    if FComponent.Category='kanjidic' then
+      ImportKanjidic
+    else
+    if FComponent.Category='font' then
+      ImportFont;
+
     FState := jsCompleted;
   finally
     DeleteDirectory(ATempDir);
   end;
 end;
 
-procedure TComponentDownloadJob.ImportJobProgressChanged(ASender: TObject);
+procedure TComponentDownloadJob.ImportDictionary;
+var AJob: TDicImportJob;
+  AEncoding: CEncoding;
 begin
-  if MaxProgress<>FImportJob.MaxProgress then
-    Self.SetMaxProgress(FImportJob.MaxProgress);
-  Self.SetProgress(FImportJob.Progress);
+  if FComponent.Format<>sfWakan then exit; //no need to do anything
+  if FComponent.TargetFilename<>'' then
+    raise Exception.Create('Error in component definition file: TargetFilename'
+      +' not specified');
+   //We could have tried to import "the only file that was downloaded" or
+   //"the only file that was unpacked", but whatever.
+  AJob := TDicImportJob.Create;
+  AJob.DicFilename := FComponent.GetTargetDir + '\' + FComponent.Name+'.dic';
+  AJob.DicDescription := FComponent.Description;
+  AJob.DicLanguage := FComponent.BaseLanguage;
+  if AJob.DicLanguage=#00 then
+    AJob.DicLanguage := 'j';
+  if FComponent.Encoding<>'' then begin
+    AEncoding := FindEncodingByName(FComponent.Encoding);
+    if AEncoding=nil then
+      raise Exception.Create('Unknown encoding: '+FComponent.Encoding);
+  end else
+    AEncoding := nil;
+  AJob.OnProgressChanged := ChildJobProgressChanged;
+  AJob.AddSourceFile(FComponent.GetTargetDir+'\'+FComponent.TargetFilename,
+    AEncoding);
+  FImportJob := AJob;
+  Run(AJob);
 end;
+
+procedure TComponentDownloadJob.ImportKanjidic;
+begin
+ //TODO: Kanjidic import
+end;
+
+procedure TComponentDownloadJob.ImportFont;
+begin
+ //TODO: Font import
+end;
+
+procedure TComponentDownloadJob.ChildJobProgressChanged(Sender: TObject);
+begin
+  if MaxProgress<>TJob(Sender).MaxProgress then
+    Self.SetMaxProgress(TJob(Sender).MaxProgress);
+  Self.SetProgress(TJob(Sender).Progress);
+end;
+
 
 
 procedure TfDownloader.FormCreate(Sender: TObject);
@@ -729,6 +746,7 @@ begin
   dicts.UnloadAll;
 
   FWorkerThread := TWorkerThread.Create;
+  FWorkerThread.OnException := WorkerThreadException;
   AList := GetDownloadList;
   for i := 0 to Length(AList)-1 do begin
     AJob := TComponentDownloadJob.Create(AList[i]);
@@ -753,7 +771,7 @@ end;
 
 function TfDownloader.AreAllJobsSuccessful: boolean;
 var i: integer;
-  AJob: TJob;
+  AJob: TComponentDownloadJob;
 begin
   Result := true;
   if FWorkerThread=nil then begin
@@ -762,11 +780,17 @@ begin
   end;
 
   for i := 0 to FWorkerThread.Jobs.Count-1 do begin
-    AJob := FWorkerThread.Jobs[i];
-    if (AJob is TDownloadJob) and (TDownloadJob(AJob).Result=drError) then begin
+    AJob := TComponentDownloadJob(FWorkerThread.Jobs[i]);
+    if AJob.FatalException<>'' then begin
       Result := false;
-      break;
+      exit;
     end;
+    if AJob.ImportJob<>nil then
+      if (AJob.ImportJob is TDicImportJob)
+      and (TDicImportJob(AJob.ImportJob).ProblemRecords>300) then begin
+        Result := false;
+        exit;
+      end;
   end;
 end;
 
@@ -781,6 +805,13 @@ begin
     else
       lblPageDescription.Caption := 'There were problems downloading some files'; //TODO: Localize
   end;
+end;
+
+procedure TfDownloader.WorkerThreadException(Sender: TObject; Job: TJob;
+  E: Exception; out StopJob: boolean);
+begin
+  TComponentDownloadJob(Job).FatalException := E.Message;
+  StopJob := true;
 end;
 
 procedure TfDownloader.vtJobsGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -799,10 +830,34 @@ end;
 
 procedure TfDownloader.vtJobsFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
-var Data: PNdJobData;
+//var Data: PNdJobData;
 begin
-  Data := Sender.GetNodeData(Node);
-//  FreeAndNil(Data.ProgressBar);
+//  Data := Sender.GetNodeData(Node);
+end;
+
+function GetComponentJobResult(AJob: TComponentDownloadJob): string;
+begin
+  if AJob.FFatalException<>'' then begin
+    Result := AJob.FatalException;
+    exit;
+  end;
+
+  if AJob.DownloadJob.Result<>drDone then begin
+    case AJob.DownloadJob.Result of
+      drUpToDate: Result := 'Up to date.'; //TODO: Localize
+      drError: Result := Format('Cannot download: %d', [AJob.DownloadJob.ErrorCode]); //TODO: Localize
+    else Result := 'Cannot download.'; //TODO: Localize
+    end;
+    exit;
+  end;
+
+  Result := 'Done.'; //TODO: Localize
+  if AJob<>nil then
+    if AJob.ImportJob is TDicImportJob then
+      if TDicImportJob(AJob.ImportJob).ProblemRecords=0 then
+        Result := 'Done.' //TODO: Localize
+      else
+        Result := Format('%d problem records', [TDicImportJob(AJob.ImportJob).ProblemRecords]); //TODO: Localize
 end;
 
 procedure TfDownloader.vtJobsGetText(Sender: TBaseVirtualTree;
@@ -823,15 +878,11 @@ begin
         jsPending: CellText := '';
         jsWorking:
           if AJob.MaxProgress>0 then
-            CellText := AJob.Operation+Format(' (%f%%)', [100*AJob.Progress/AJob.MaxProgress]) //TODO: Job action name, TODO: Percent bar
+            CellText := AJob.Operation+Format(' (%f%%)', [100*AJob.Progress/AJob.MaxProgress])
           else
             CellText := AJob.Operation+'...';
         jsCompleted:
-          case TComponentDownloadJob(AJob).DownloadJob.Result of
-            drDone: CellText := 'Done.';
-            drUpToDate: CellText := 'Up to date.';
-            drError: CellText := 'Cannot download: '+IntToStr(TComponentDownloadJob(AJob).DownloadJob.ErrorCode);
-          end;
+          CellText := GetComponentJobResult(AJob);
       end;
   end;
 end;
@@ -849,21 +900,6 @@ begin
     1:
       case AJob.State of
         jsWorking: begin
-{          if Data.ProgressBar=nil then begin
-            Data.ProgressBar := TProgressBar.Create(Self);
-            Data.ProgressBar.Parent := vtJobs;
-          end;
-          NodeRect := Sender.GetDisplayRect(Node, Column, false);
-          InflateRect(NodeRect, -2, 0);
-          if Data.ProgressBar.BoundsRect <> NodeRect then
-            Data.ProgressBar.BoundsRect := NodeRect;
-          if not Data.ProgressBar.Visible then begin
-            Data.ProgressBar.Visible := true;
-            Data.ProgressBar.SendToBack;
-          end;
-          if Data.ProgressBar.Max<>AJob.MaxProgress then
-            Data.ProgressBar.Max := AJob.MaxProgress;
-          Data.ProgressBar.Position := AJob.Progress;}
           if Data.Job.MaxProgress>0 then begin
             NodeRect := CellRect;
             NodeRect.Width := Trunc(NodeRect.Width * (Data.Job.Progress / Data.Job.MaxProgress));
@@ -871,11 +907,7 @@ begin
             TargetCanvas.Brush.Style := bsSolid;
             TargetCanvas.FillRect(NodeRect);
           end;
-
         end;
-      else
-{        if Data.ProgressBar<>nil then
-          Data.ProgressBar.Hide; }
       end;
   end;
 end;

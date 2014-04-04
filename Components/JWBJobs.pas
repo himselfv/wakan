@@ -89,9 +89,12 @@ type
      worker.AddJob(DownloadJob2);
      worker.Start;
    Will auto-stop when done. Destroy to destroy all job objects. }
+  TExceptionEvent = procedure(Sender: TObject; Job: TJob; E: Exception;
+    out StopJob: boolean) of object;
   TWorkerThread = class(TThread)
   protected
     FJobs: TObjectList<TJob>;
+    FOnException: TExceptionEvent;
     function FindNextJob: TJob;
   public
     constructor Create;
@@ -99,10 +102,11 @@ type
     procedure Execute; override;
     procedure AddJob(AJob: TJob);
     property Jobs: TObjectList<TJob> read FJobs;
+    property OnException: TExceptionEvent read FOnException write FOnException;
   end;
 
-procedure DoJob(const AJob: TJob; AAutoDestroy: boolean = true);
-procedure DoInParallel(const AJob: TJob);
+procedure Run(const AJob: TJob; AAutoDestroy: boolean = false);
+procedure RunInParallel(const AJob: TJob);
 
 implementation
 
@@ -298,14 +302,24 @@ end;
 
 procedure TWorkerThread.Execute;
 var Job: TJob;
+  StopJob: boolean;
 begin
   Job := nil;
-  while not Terminated do begin
+  while not Terminated do try
     if (Job=nil) or (Job.State=jsCompleted) then begin
       Job := FindNextJob();
       if Job=nil then break;
     end;
     Job.ProcessChunk;
+  except
+    on E: Exception do begin
+      StopJob := true;
+      if Assigned(FOnException) then
+        FOnException(Self, Job, E, StopJob);
+      if StopJob then
+        Job.FState := jsCompleted;
+      Job := nil; //in any case, re-choose it/other job
+    end;
   end;
 end;
 
@@ -326,7 +340,7 @@ begin
 end;
 
 //Executes a job without displaying any progress.
-procedure DoJob(const AJob: TJob; AAutoDestroy: boolean = true);
+procedure Run(const AJob: TJob; AAutoDestroy: boolean);
 begin
   try
     while AJob.State<>jsCompleted do
@@ -339,7 +353,7 @@ end;
 
 //Executes a job in a parallel thread created specifically for it.
 //The job is always auto-destroyed at the end.
-procedure DoInParallel(const AJob: TJob);
+procedure RunInParallel(const AJob: TJob);
 var worker: TWorkerThread;
 begin
   worker := TWorkerThread.Create;
