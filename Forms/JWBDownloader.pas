@@ -44,6 +44,8 @@ type
     vtJobs: TVirtualStringTree;
     ilJobImages: TImageList;
     tmrJobUpdateTimer: TTimer;
+    Panel1: TPanel;
+    cbCheckDownloadAll: TCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -83,6 +85,7 @@ type
     procedure vtJobsBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure cbCheckDownloadAllClick(Sender: TObject);
 
   protected
     procedure UpdatePageTitle;
@@ -105,10 +108,14 @@ type
     function AddKnownFile(const AParent: PVirtualNode;
       const ASource: PAppComponent): PVirtualNode;
     function IsAnythingCheckedForDownload: boolean;
-    procedure VtCountCheckedNodes(Sender: TBaseVirtualTree; Node: PVirtualNode;
+    procedure vtCountCheckedNodes(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Data: Pointer; var Abort: Boolean);
     function GetDownloadList: TSourceArray;
-    procedure VtBuildDownloadList(Sender: TBaseVirtualTree; Node: PVirtualNode;
+    procedure vtBuildDownloadList(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Data: Pointer; var Abort: Boolean);
+    procedure vtKnownFiles_CheckDefault(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Data: Pointer; var Abort: Boolean);
+    procedure vtKnownFiles_UncheckAll(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Data: Pointer; var Abort: Boolean);
 
   protected
@@ -178,6 +185,7 @@ var
   ACheckPresent: string;
   AFileTime: TDatetime;
   AMoveJob: TJob;
+  ATargetPath: string;
 begin
   FState := jsWorking;
 
@@ -187,12 +195,9 @@ begin
 
    //Download to temp folder
     FDownloadJob := TDownloadJob.Create(FComponent.URL, ATempDir+'\');
-    ACheckPresent := FComponent.GetCheckPresentFilename;
-    if ACheckPresent<>'' then begin
-      ACheckPresent := FComponent.GetTargetDir + '\' + ACheckPresent;
-      if FileAge(ACheckPresent, AFileTime) then
-        FDownloadJob.IfModifiedSince := AFileTime;
-    end;
+    ACheckPresent := FComponent.GetAbsoluteCheckPresent;
+    if (ACheckPresent<>'') and FileAge(ACheckPresent, AFileTime) then
+      FDownloadJob.IfModifiedSince := AFileTime;
     FDownloadJob.OnProgressChanged := ChildJobProgressChanged;
     FDownloadJob.ProcessChunk; //first chunk establishes connection
     StartOperation('Downloading', FDownloadJob.MaxProgress); //TODO: Localize
@@ -204,15 +209,17 @@ begin
     ATempFilename := FDownloadJob.ToFilename; //could have been taken from server
 
    //Unpack or move
+    ATargetPath := FComponent.GetAbsoluteTarget;
     if FComponent.URL_Unpack='' then begin
       StartOperation('Moving', 0); //TODO: Localize
-      AMoveJob := TFileMoveJob.Create(ATempFilename, FComponent.GetTarget);
+      AMoveJob := TFileMoveJob.Create(ATempFilename, ATargetPath);
     end else begin
       StartOperation('Unpacking', 0); //TODO: Localize
-      AMoveJob := TFileUnpackJob.Create(ATempFilename, FComponent.GetTargetDir);
+      AMoveJob := TFileUnpackJob.Create(ATempFilename, ATargetPath);
       TFileUnpackJob(AMoveJob).ForceFormat := FComponent.URL_Unpack;
     end;
     try
+      ForceDirectories(ExtractFilePath(ATargetPath));
       AMoveJob.OnProgressChanged := ChildJobProgressChanged;
       Run(AMoveJob);
     finally
@@ -240,14 +247,14 @@ procedure TComponentDownloadJob.ImportDictionary;
 var AJob: TDicImportJob;
   AEncoding: CEncoding;
 begin
-  if FComponent.Format<>sfWakan then exit; //no need to do anything
-  if FComponent.TargetFilename<>'' then
-    raise Exception.Create('Error in component definition file: TargetFilename'
+  if FComponent.Format=sfWakan then exit; //no need to do anything
+  if FComponent.Target='' then
+    raise Exception.Create('Error in component definition file: Target filename'
       +' not specified');
    //We could have tried to import "the only file that was downloaded" or
    //"the only file that was unpacked", but whatever.
   AJob := TDicImportJob.Create;
-  AJob.DicFilename := FComponent.GetTargetDir + '\' + FComponent.Name+'.dic';
+  AJob.DicFilename := FComponent.GetBaseDir + '\' + FComponent.Name+'.dic';
   AJob.DicDescription := FComponent.Description;
   AJob.DicLanguage := FComponent.BaseLanguage;
   if AJob.DicLanguage=#00 then
@@ -259,8 +266,7 @@ begin
   end else
     AEncoding := nil;
   AJob.OnProgressChanged := ChildJobProgressChanged;
-  AJob.AddSourceFile(FComponent.GetTargetDir+'\'+FComponent.TargetFilename,
-    AEncoding);
+  AJob.AddSourceFile(FComponent.GetAbsoluteTarget, AEncoding);
   FImportJob := AJob;
   Run(AJob);
 end;
@@ -430,6 +436,7 @@ begin
 
   vtKnownFiles.Sort(nil, NoColumn, sdAscending);
   vtKnownFiles.FullExpand();
+  cbCheckDownloadAll.Checked := true;
 end;
 
 procedure TfDownloader.AddKnownCat(const AName: string; const ATitle, ADescription: string);
@@ -678,7 +685,7 @@ begin
   Result := CheckedNodeCount > 0;
 end;
 
-procedure TfDownloader.VtCountCheckedNodes(Sender: TBaseVirtualTree;
+procedure TfDownloader.vtCountCheckedNodes(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
 begin
   if Sender.CheckState[Node] in [csCheckedNormal, csCheckedPressed] then
@@ -704,10 +711,10 @@ end;
 function TfDownloader.GetDownloadList: TSourceArray;
 begin
   SetLength(Result, 0);
-  vtKnownFiles.IterateSubtree(nil, VtBuildDownloadList, @Result);
+  vtKnownFiles.IterateSubtree(nil, vtBuildDownloadList, @Result);
 end;
 
-procedure TfDownloader.VtBuildDownloadList(Sender: TBaseVirtualTree;
+procedure TfDownloader.vtBuildDownloadList(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
 var FileData: PNdFileData;
   AList: PSourceArray absolute Data;
@@ -722,6 +729,31 @@ begin
   AList^[Length(AList^)-1] := FileData.Source;
 end;
 
+procedure TfDownloader.cbCheckDownloadAllClick(Sender: TObject);
+begin
+  if TCheckBox(Sender).Checked then
+    vtKnownFiles.IterateSubtree(nil, vtKnownFiles_CheckDefault, nil)
+  else
+    vtKnownFiles.IterateSubtree(nil, vtKnownFiles_UncheckAll, nil)
+end;
+
+procedure TfDownloader.vtKnownFiles_CheckDefault(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
+var NodeData: PNdFileData;
+begin
+  NodeData := Sender.GetNodeData(Node);
+  if NodeData.IsComponentPresent then
+    Sender.CheckState[Node] := csCheckedNormal
+  else
+  if (NodeData.Source<>nil) and NodeData.Source.IsDefault then
+    Sender.CheckState[Node] := csCheckedNormal;
+end;
+
+procedure TfDownloader.vtKnownFiles_UncheckAll(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
+begin
+  Sender.CheckState[Node] := csUncheckedNormal;
+end;
 
 procedure TfDownloader.ReloadReadyToDownloadList;
 var AList: TSourceArray;

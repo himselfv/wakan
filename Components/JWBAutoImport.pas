@@ -99,7 +99,7 @@ var targetFname: string;
   fname: string;
   lang: char;
 begin
-  fname := item.TargetFilename;
+  fname := item.GetAbsoluteTarget;
   if (fname<>'') or not FileExists(fname) then exit;
   targetFname := MakeDicFilename(item.Name);
 

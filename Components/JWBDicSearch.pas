@@ -1036,7 +1036,7 @@ begin
  { kanaonly:
   If this is set, we're going to convert kanji+kana to ??+romaji and search for that.
   Makes sense only if we're sure our word is all kana, but gives us better kana
-  coverage (i.e. hiragana/katakana).
+  coverage (e.g. hiragana/katakana).
   This is expected, for instance, when handling user input. While we store original
   input as a roma lookup, deflexed lookups are in kana (deflexion happens in kana),
   and without this flag we'd miss words like KATAKANA ROOT + hiragana verb ending.
@@ -1044,9 +1044,9 @@ begin
   Note that if lookup candidates could possibly differ in this regard, we'd have
   to re-check for this property for every candidate. }
   kanaonly := (st=stJapanese) and (
-    (wt in [EC_HIRAGANA, EC_KATAKANA])
+    (wt in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO])
     or (
-      (wt=EC_UNKNOWN) and TestCharsAre(search, [EC_HIRAGANA, EC_KATAKANA])
+      (wt=EC_UNKNOWN) and TestCharsAre(search, [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO])
     )
   );
 

@@ -77,7 +77,7 @@ object fDownloader: TfDownloader
     Top = 58
     Width = 464
     Height = 384
-    ActivePage = tsDownloading
+    ActivePage = tsSelectFiles
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsButtons
     TabOrder = 0
@@ -87,18 +87,15 @@ object fDownloader: TfDownloader
       Caption = 'Ready to download'
       ImageIndex = 1
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label1: TLabel
         AlignWithMargins = True
         Left = 3
         Top = 358
-        Width = 143
+        Width = 450
         Height = 13
         Align = alBottom
         Caption = 'Press "Download" to proceed.'
+        ExplicitWidth = 143
       end
       object lbFilesToDownload: TListBox
         Left = 0
@@ -158,15 +155,11 @@ object fDownloader: TfDownloader
       Hint = 'Please select which files you want to download:'
       Caption = 'Select Files'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object vtKnownFiles: TVirtualStringTree
         Left = 0
         Top = 0
         Width = 456
-        Height = 285
+        Height = 255
         Align = alClient
         BorderWidth = 1
         Header.AutoSizeIndex = 0
@@ -190,6 +183,7 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtKnownFilesGetImageIndex
         OnGetNodeDataSize = vtKnownFilesGetNodeDataSize
         OnInitNode = vtKnownFilesInitNode
+        ExplicitHeight = 285
         Columns = <
           item
             Position = 0
@@ -213,6 +207,31 @@ object fDownloader: TfDownloader
         ReadOnly = True
         TabOrder = 1
       end
+      object Panel1: TPanel
+        Left = 0
+        Top = 255
+        Width = 456
+        Height = 30
+        Align = alBottom
+        BevelOuter = bvNone
+        TabOrder = 2
+        ExplicitTop = 344
+        DesignSize = (
+          456
+          30)
+        object cbCheckDownloadAll: TCheckBox
+          Left = 8
+          Top = 6
+          Width = 441
+          Height = 17
+          Anchors = [akLeft, akTop, akRight]
+          Caption = 'Check / uncheck all'
+          Checked = True
+          State = cbChecked
+          TabOrder = 0
+          OnClick = cbCheckDownloadAllClick
+        end
+      end
     end
   end
   object ilKnownFileImages: TImageList
@@ -223,7 +242,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C00440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

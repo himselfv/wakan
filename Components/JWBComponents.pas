@@ -6,23 +6,31 @@ type
   TSourceDicFormat = (sfEdict, sfCEdict, sfWakan);
 
   TAppComponent = record
-    Category: string;
-    Language: string;
-    Name: string; //must be lowercase
-    Description: string; //multiline
-    URL: string;
-    URL_Unpack: string; //lowercase
-    TargetFilename: string; //local filename
+    Name: string;             //Visible name. Must be lowercase.
+    Description: string;      //Multiline\nMultiline.
+    Language: string;         //Component language (e.g. English, Polish, Russian) -- optional
+    Category: string;         //Category (nothing / dic / font / translation / etc)
+    URL: string;              //Where to download the file -- optional
+    URL_Unpack: string;       //How to unpack (none / zip / gz / 7z). Lowercase.
+
+    Target: string;
+   { Where to place the file/files under the core folder for this component type,
+    if applicable.
+    Can be a filename or just a folder. If no filename is given, it's taken
+    from URL / from archive (when unpacking) / from server. }
+
     CheckPresent: string;
+   //Look for this file to test if the component is present / needs updating
+
     IsDefault: boolean;
-    Encoding: string; //lowercase
+    Encoding: string;         //lowercase
     Format: TSourceDicFormat;
-    BaseLanguage: char;
+    BaseLanguage: char;       //'j'apanese or 'c'hinese
     procedure Reset;
-    function GetTarget: string;       //where to place/unpack the component
-    function GetTargetDir: string;    //same, without filename
+    function GetBaseDir: string; //base dir for this type of component
+    function GetAbsoluteTarget: string;  //where to place/unpack the component
+    function GetAbsoluteCheckPresent: string;
     function GetURLFilename: string;
-    function GetCheckPresentFilename: string;
   end;
   PAppComponent = ^TAppComponent;
 
@@ -69,7 +77,7 @@ begin
   Description := '';
   URL := '';
   URL_Unpack := '';
-  TargetFilename := '';
+  Target := '';
   CheckPresent := '';
   IsDefault := false;
   Encoding := '';
@@ -77,39 +85,19 @@ begin
   BaseLanguage := #00;
 end;
 
-{
-Returns the name for the unpacked file or the path where it needs to be placed.
-1. If TargetFilename is defined, uses that.
-2. Otherwise returns the target folder, and the name under which the file is
- being downloaded should be preserved.
-
-The name under which the file is being downloaded:
-1. Server-provided name in the headers (not always provided).
-2. URL-provided name (not always available: download.php?id=759) -- see GetURLFilename.
-
-If the downloaded file is archive, it should just be unpacked to GetTargetDir.
-}
-function TAppComponent.GetTarget: string;
-begin
-  if TargetFilename<>'' then
-    Result := TargetFilename
-  else
-    Result := GetTargetDir;
-end;
-
 { Returns the file system path where the component has to be placed, depending
  on its type.
  For some components there's no target path as they have to be downloaded to
  temporary folder and installed on the system. }
-function TAppComponent.GetTargetDir: string;
+function TAppComponent.GetBaseDir: string;
 begin
-  if Category='base' then
+  if Category='' then
     Result := AppFolder
   else
   if Category='dic' then
     Result := ProgramDataDir //TODO: ProgramDataDir + '/Dictionaries'
   else
-  if Category='language' then
+  if Category='uilang' then
     Result := AppFolder //TODO: ProgramDataDir + '/UITranslations'
   else
   if Category='font' then
@@ -122,28 +110,44 @@ begin
 end;
 
 {
+Returns the absolute path/name for the unpacked file or the path where it needs
+to be placed.
+1. If TargetFile is defined, uses that.
+2. Otherwise returns the target folder, and the name under which the file is
+ being downloaded should be preserved.
+
+The name under which the file is being downloaded:
+1. Server-provided name in the headers (not always provided).
+2. URL-provided name (not always available: download.php?id=759) -- see GetURLFilename.
+
+If the downloaded file is an archive, it should be unpacked to the path provided
+here.
+}
+function TAppComponent.GetAbsoluteTarget: string;
+begin
+  Result := GetBaseDir+'\'; //important to distinguish this is a directory
+  if Target<>'' then
+    Result := Result+Target;
+end;
+
+function TAppComponent.GetAbsoluteCheckPresent: string;
+begin
+  if CheckPresent<>'' then
+    Result := GetBaseDir+'\'+CheckPresent
+  else
+  if Target<>'' then
+    Result := GetBaseDir+'\'+Target
+  else
+    Result := ''; //nothing to check against
+end;
+
+{
 URLFilename: provides static filename extracted from URL.
 Not always available: some URLs provide no name (e.g. download.php?id=545).
 }
 function TAppComponent.GetURLFilename: string;
 begin
   Result := ExtractFilenameURL(URL);
-end;
-
-{
-File to use to check if the component is present.
-1. If CheckPresent is defined, use that.
-2. If TargetFilename is defined, use that.
-3. Assuming the URL filename is kept when downloading (not alaways true --
- the server can override), use that.
-}
-function TAppComponent.GetCheckPresentFilename: string;
-begin
-  Result := CheckPresent;
-  if Result='' then
-    Result := TargetFilename;
-  if Result='' then
-    Result := GetURLFilename;
 end;
 
 constructor TAppComponents.Create;
@@ -254,8 +258,8 @@ begin
       if param='url-unpack' then
         item.URL_Unpack := AnsiLowerCase(ln)
       else
-      if param='targetfile' then
-        item.TargetFilename := ln
+      if param='target' then
+        item.Target := ln
       else
       if param='checkpresent' then
         item.CheckPresent := ln
@@ -310,8 +314,8 @@ begin
   Result := nil;
   l_name := AnsiLowerCase(AFilename);
   for i := 0 to Self.Count - 1 do
-    if (FItems[i].TargetFilename<>'')
-    and (AnsiLowerCase(FItems[i].TargetFilename)=l_name) then begin
+    if (FItems[i].Target<>'')
+    and SysUtils.SameStr(ExtractFilename(FItems[i].Target).ToLower, l_name) then begin
       Result := @FItems[i];
       break;
     end;
@@ -330,8 +334,8 @@ end;
 function IsComponentPresent(const ASource: PAppComponent): boolean;
 var TargetFile: string;
 begin
-  TargetFile := ASource.GetTargetDir + '\' + ASource.GetCheckPresentFilename;
-  Result := FileExists(TargetFile);
+  TargetFile := ASource.GetAbsoluteCheckPresent;
+  Result := (TargetFile<>'') and FileExists(TargetFile);
 end;
 
 function DownloadDependency(const depname: string): boolean;
