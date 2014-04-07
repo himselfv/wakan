@@ -1,0 +1,46 @@
+﻿<entry>
+<ent_seq>1171270</ent_seq>
+<k_ele>
+<keb>右翼</keb>
+<ke_pri>ichi1</ke_pri>
+<ke_pri>news1</ke_pri>
+<ke_pri>nf04</ke_pri>
+</k_ele>
+<r_ele>
+<reb>うよく</reb>
+<re_pri>ichi1</re_pri>
+<re_pri>news1</re_pri>
+<re_pri>nf04</re_pri>
+</r_ele>
+<sense>
+<pos>&adj-no;</pos>
+<gloss>right-wing</gloss>
+<gloss xml:lang="fr">aile droite (oiseau, armée, parti politique, base-ball)</gloss>
+<gloss xml:lang="ru">пра́вое крыло́</gloss>
+<gloss xml:lang="ru">пра́вый фланг</gloss>
+<gloss xml:lang="de">die Rechte</gloss>
+<gloss xml:lang="de">rechter Flügel</gloss>
+</sense>
+<sense>
+<pos>&n;</pos>
+<gloss>right field (e.g. in sport)</gloss>
+<gloss>right flank</gloss>
+<gloss>right wing</gloss>
+<gloss xml:lang="de">{Sport}</gloss>
+<gloss xml:lang="de">rechte Flanke</gloss>
+<gloss xml:lang="de">rechter Flügel</gloss>
+</sense>
+</entry>
+
+
+<entry>
+<ref>ref_id</ref>
+<expr>kanji<mark>a</mark><mark>b</mark></expr>
+<read>kana<mark>a</mark><mark>b</mark></read>
+<sense>
+<gloss>gloss</gloss>
+<pos>a</pos><pos>b</pos>
+<mark>a</mark><mark>b</mark>
+</sense>
+<pop />
+</entry>
