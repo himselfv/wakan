@@ -45,7 +45,7 @@ type
 
 implementation
 uses StrUtils, WideStrUtils, JWBKanaConv, JWBCore, JWBUnit, JWBLanguage,
-  PKGWrite, JWBMenu, JWBComponents;
+  PKGWrite, JWBMenu, JWBComponents, JWBFileType;
 
 {$R *.DFM}
 
@@ -207,6 +207,8 @@ var job: TDicImportJob;
   prog: TSMPromptForm;
   fname: string;
   fi: integer;
+  AComponent: PAppComponent;
+  AEncoding: CEncoding;
 begin
  //Name == Filename - Extension
  //We accept it both with or without extension and adjust
@@ -243,7 +245,20 @@ begin
       for fi:=0 to Length(ASourceFiles)-1 do begin
         if not FileExists(ASourceFiles[fi]) then
           raise EDictImportException.CreateFmt(_l('File not found: %s'), [ASourceFiles[fi]]); //TODO:Localize
-        job.AddSourceFile(ASourceFiles[fi], {AEncoding=}nil);
+
+       //If this is one of known files, use predefined encoding
+        AComponent := AppComponents.FindByFile(ExtractFilename(ASourceFiles[fi]));
+        if (AComponent<>nil) and (AComponent.Encoding<>'') then
+          AEncoding := FindEncodingByName(AComponent.Encoding)
+        else
+          AEncoding := nil;
+       //Else try to guess it
+        if AEncoding=nil then
+          AEncoding := Conv_DetectType(ASourceFiles[fi]);
+       //And in any case, let the user confirm/change it:
+        AEncoding := Conv_ChooseType({Chinese=}ALang='c', AEncoding);
+
+        job.AddSourceFile(ASourceFiles[fi], AEncoding);
       end;
 
       prog.OnCancelQuery := ImportCancelQuery;
