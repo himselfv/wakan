@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, VirtualTrees, Buttons, ComCtrls, ImgList, JWBComponents,
-  Generics.Collections, JWBJobs, ExtCtrls;
+  Generics.Collections, JWBJobs, ExtCtrls, TaskbarCtl;
 
 type
   TNdFileData = record
@@ -122,6 +122,7 @@ type
     procedure ReloadReadyToDownloadList;
 
   protected
+    taskbar: TTaskbarProgress;
     FWorkerThread: TWorkerThread;
     procedure StartDownloadJobs;
     procedure CancelDownloadJobs;
@@ -152,7 +153,12 @@ type
     FDownloadJob: TDownloadJob;
     FImportJob: TJob;
     FFatalException: string;
+    FStage: integer;
+    FStageProgress: integer; //between 1 and 1000
+    procedure StartOperation(const AOperation: string; AStage: integer); reintroduce;
     procedure ChildJobProgressChanged(Sender: TObject);
+    procedure SetStageProgress(const AValue: integer);
+    procedure UpdateProgress;
     procedure ImportDictionary;
     procedure ImportKanjidic;
     procedure ImportFont;
@@ -169,6 +175,8 @@ constructor TComponentDownloadJob.Create(AComponent: PAppComponent);
 begin
   inherited Create();
   FComponent := AComponent;
+  FMaxProgress := 1000; //split between all subtasks
+  FStage := 0;
 end;
 
 destructor TComponentDownloadJob.Destroy;
@@ -176,6 +184,16 @@ begin
   FreeAndNil(FImportJob);
   FreeAndNil(FDownloadJob);
   inherited;
+end;
+
+procedure TComponentDownloadJob.StartOperation(const AOperation: string;
+  AStage: integer);
+begin
+  SetOperation(AOperation);
+  if FStage<>AStage then begin
+    FStage := AStage;
+    UpdateProgress;
+  end;
 end;
 
 procedure TComponentDownloadJob.ProcessChunk;
@@ -200,7 +218,7 @@ begin
       FDownloadJob.IfModifiedSince := AFileTime;
     FDownloadJob.OnProgressChanged := ChildJobProgressChanged;
     FDownloadJob.ProcessChunk; //first chunk establishes connection
-    StartOperation('Downloading', FDownloadJob.MaxProgress); //TODO: Localize
+    StartOperation('Downloading', 0); //TODO: Localize
     Run(FDownloadJob);
     if FDownloadJob.Result in [drUpToDate, drError] then begin
       FState := jsCompleted;
@@ -211,10 +229,10 @@ begin
    //Unpack or move
     ATargetPath := FComponent.GetAbsoluteTarget;
     if FComponent.URL_Unpack='' then begin
-      StartOperation('Moving', 0); //TODO: Localize
+      StartOperation('Moving', 1); //TODO: Localize
       AMoveJob := TFileMoveJob.Create(ATempFilename, ATargetPath);
     end else begin
-      StartOperation('Unpacking', 0); //TODO: Localize
+      StartOperation('Unpacking', 1); //TODO: Localize
       AMoveJob := TFileUnpackJob.Create(ATempFilename, ATargetPath);
       TFileUnpackJob(AMoveJob).ForceFormat := FComponent.URL_Unpack;
     end;
@@ -227,7 +245,7 @@ begin
     end;
 
    //Install
-    StartOperation('Importing', 0); //TODO: Localize
+    StartOperation('Importing', 2); //TODO: Localize
     if FComponent.Category='dic' then
       ImportDictionary
     else
@@ -282,13 +300,31 @@ begin
 end;
 
 procedure TComponentDownloadJob.ChildJobProgressChanged(Sender: TObject);
+var AProg, AMax: integer;
 begin
-  if MaxProgress<>TJob(Sender).MaxProgress then
-    Self.SetMaxProgress(TJob(Sender).MaxProgress);
-  Self.SetProgress(TJob(Sender).Progress);
+  AProg := TJob(Sender).Progress;
+  AMax := TJob(Sender).MaxProgress;
+  if AMax = 0 then AProg := 0 else AProg := Trunc(AProg*10000 / AMax);
+  Self.SetStageProgress(AProg);
 end;
 
+procedure TComponentDownloadJob.SetStageProgress(const AValue: integer);
+begin
+  if FStageProgress=AValue then exit;
+  FStageProgress := AValue;
+  UpdateProgress;
+end;
 
+procedure TComponentDownloadJob.UpdateProgress;
+begin
+  case FStage of
+    0: SetProgress(0 + Trunc(FStageProgress*10000/5000));
+    1: SetProgress(5000 + Trunc(FStageProgress*10000/1000));
+    2: SetProgress(6000 + Trunc(FStageProgress*10000/4000));
+  else
+    SetProgress(10000);
+  end;
+end;
 
 procedure TfDownloader.FormCreate(Sender: TObject);
 begin
@@ -411,10 +447,11 @@ begin
   AddKnownCat('kanjidic', 'Kanji Dictionaries', 'Dictionaries with information about characters');
   AddKnownCat('dic-jp', 'Japanese Dictionaries', 'Dictionaries of Japanese words');
   AddKnownCat('dic-cn', 'Chinese Dictionaries', 'Dictionaries of Chinese words');
-  AddKnownCat('language', 'Interface Translations', 'With these interface translations Wakan can be shown in your own language');
+  AddKnownCat('uilang', 'Interface Translations', 'With these interface translations Wakan can be shown in your own language');
   AddKnownCat('font', 'Fonts', 'Recommended fonts if you don''t have appropriate fonts in your system.');
   AddKnownCat('romaji', 'Romaji Schemes', 'With different romaji schemes you can enter kana in a different way');
-  AddKnownCat('group', 'Kanji Groups', 'Pre-populated sets of groups, or tags, for characters');
+  AddKnownCat('copyformat', 'Copy Formats', 'Text formats to use when copying dictionary results');
+  AddKnownCat('kanjigroup', 'Kanji Groups', 'Pre-populated sets of groups, or tags, for characters');
 
  //Or we can set all to nil and create as needed
 
@@ -787,6 +824,8 @@ begin
   end;
   FWorkerThread.Start;
 
+  taskbar := TTaskbarProgress.Create;
+
   tmrJobUpdateTimer.Enabled := true;
 end;
 
@@ -794,6 +833,7 @@ procedure TfDownloader.CancelDownloadJobs;
 begin
   tmrJobUpdateTimer.Enabled := false;
   FreeAndNil(FWorkerThread);
+  FreeAndNil(taskbar);
 end;
 
 function TfDownloader.IsDownloadFinished: boolean;

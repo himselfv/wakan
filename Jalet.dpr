@@ -79,7 +79,8 @@ uses
   JWBCore in 'Components\JWBCore.pas',
   JWBWordGrid in 'Components\JWBWordGrid.pas',
   JWBDicImportJob in 'Components\JWBDicImportJob.pas',
-  JWBUnpackJob in 'Components\JWBUnpackJob.pas';
+  JWBUnpackJob in 'Components\JWBUnpackJob.pas',
+  TaskbarCtl in 'Components\TaskbarCtl.pas';
 
 {$R *.RES}
 {$R WINXP.RES}

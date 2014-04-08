@@ -46,7 +46,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, ComCtrls, ComObj, ShlObj, JWBJobs;
+  StdCtrls, ExtCtrls, Buttons, ComCtrls, ComObj, ShlObj, TaskbarCtl, JWBJobs;
 
 type
  {$IF CompilerVersion<21}
@@ -103,22 +103,14 @@ type
     lastUpdateProgress: integer;
     FProgressPaused: boolean;
     FProgressError: boolean;
+    taskbar: TTaskbarProgress; //Task bar progress indicator
     procedure UpdateProgressBarState;
+    procedure UpdateTaskbarProgress;
   public
     procedure SetMaxProgress(maxprogr:integer);
     procedure SetProgress(i:integer); //Set progress and repaint if needed
     procedure SetProgressPaused(Value: boolean); //call these when the operation is paused/in error
     procedure SetProgressError(Value: boolean);
-
-  protected //Task bar progress indication!
-    TaskbarList: ITaskbarList;
-    TaskbarList2: ITaskbarList2;
-    TaskbarList3: ITaskbarList3;
-    TaskbarList4: ITaskbarList4;
-    FProgressHandle: HWND;
-    procedure SetupTaskbar;
-    procedure ReleaseTaskbar;
-    procedure UpdateTaskbarProgress;
 
   { This form can be displayed as "Modal non-execution-stealing". This is useful
    for displaying the responsive progress bar.
@@ -263,76 +255,17 @@ end;
 
 procedure TSMPromptForm.FormShow(Sender: TObject);
 begin
-  SetupTaskbar;
+  taskbar := TTaskbarProgress.Create;
 end;
 
 procedure TSMPromptForm.FormHide(Sender: TObject);
 begin
-  ReleaseTaskbar;
+  FreeAndNil(taskbar);
 end;
 
 procedure TSMPromptForm.Dispatch(var Message);
 begin
   inherited Dispatch(Message);
-end;
-
-procedure TSMPromptForm.SetupTaskbar;
-var hr: HRESULT;
-begin
-  if CheckWin32Version(6, 1) then
-  begin
-    TaskbarList := CreateComObject(CLSID_TaskbarList) as ITaskbarList;
-    TaskbarList.HrInit;
-    Supports(TaskbarList, IID_ITaskbarList2, TaskbarList2);
-    Supports(TaskbarList, IID_ITaskbarList3, TaskbarList3);
-    Supports(TaskbarList, IID_ITaskbarList4, TaskbarList4);
-
-    FProgressHandle := Application.Handle;
-
-    hr := TaskbarList.AddTab(self.Handle);
-    if FAILED(hr) then begin
-      raise Exception.Create('Error Message');
-    end;
-
-   //Apply current progress state
-    UpdateTaskbarProgress;
-  end
-  else
-  begin
-    TaskbarList := nil;
-    TaskbarList2 := nil;
-    TaskbarList3 := nil;
-    TaskbarList4 := nil;
-  end
-end;
-
-procedure TSMPromptForm.ReleaseTaskbar;
-begin
-  if TaskbarList3<>nil then
-    TaskbarList3.SetProgressState(FProgressHandle, TBPF_NOPROGRESS);
-  TaskbarList := nil;
-  TaskbarList2 := nil;
-  TaskbarList3 := nil;
-  TaskbarList4 := nil;
-end;
-
-procedure TSMPromptForm.UpdateTaskbarProgress;
-begin
-  if TaskbarList3 = nil then exit;
-  if self.ProgressBar.Visible then begin
-    if FProgressError then
-      TaskbarList3.SetProgressState(FProgressHandle, TBPF_ERROR)
-    else
-    if FProgressPaused then
-      TaskbarList3.SetProgressState(FProgressHandle, TBPF_PAUSED)
-    else
-    if ProgressBar.Max>0 then begin
-      TaskbarList3.SetProgressState(FProgressHandle, TBPF_NORMAL);
-      TaskbarList3.SetProgressValue(FProgressHandle, ProgressBar.Position, ProgressBar.Max);
-    end else
-      TaskbarList3.SetProgressState(FProgressHandle, TBPF_INDETERMINATE);
-  end else
-    TaskbarList3.SetProgressState(FProgressHandle, TBPF_NOPROGRESS);
 end;
 
 //Makes this form Modal, but doesn't steal the execution like ShowModal does.
@@ -549,6 +482,22 @@ begin
     ProgressBar.State := pbsPaused
   else
     ProgressBar.State := pbsNormal;
+end;
+
+procedure TSMPromptForm.UpdateTaskbarProgress;
+begin
+  if not ProgressBar.Visible then
+    taskbar.State := tsNoProgress
+  else
+  if FProgressError then
+    taskbar.State := tsError
+  else
+  if FProgressPaused then
+    taskbar.State := tsPaused
+  else begin
+    taskbar.SetProgress(ProgressBar.Position, ProgressBar.Max);
+    taskbar.State := tsNormal;
+  end;
 end;
 
 procedure TSMPromptForm.SetProgressPaused(Value: boolean);

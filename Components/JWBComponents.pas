@@ -106,6 +106,12 @@ begin
   if Category='romaji' then
     Result := ProgramDataDir //TODO: ProgramDataDir + '/RomajiSchemes'
   else
+  if Category='copyformat' then
+    Result := UserDataDir + '\CopyFormats'
+  else
+  if Category='kanjigroup' then
+    Result := UserDataDir + '\KanjiGroups'
+  else
     Result := ProgramDataDir;
 end;
 

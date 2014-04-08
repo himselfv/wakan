@@ -112,6 +112,10 @@ object fDownloader: TfDownloader
       Caption = 'Downloading'
       ImageIndex = 2
       TabVisible = False
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object vtJobs: TVirtualStringTree
         Left = 0
         Top = 0
@@ -183,7 +187,6 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtKnownFilesGetImageIndex
         OnGetNodeDataSize = vtKnownFilesGetNodeDataSize
         OnInitNode = vtKnownFilesInitNode
-        ExplicitHeight = 285
         Columns = <
           item
             Position = 0
@@ -215,7 +218,6 @@ object fDownloader: TfDownloader
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 2
-        ExplicitTop = 344
         DesignSize = (
           456
           30)
@@ -242,7 +244,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C00480010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C004C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
