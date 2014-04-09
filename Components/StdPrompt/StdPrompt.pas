@@ -256,6 +256,7 @@ end;
 procedure TSMPromptForm.FormShow(Sender: TObject);
 begin
   taskbar := TTaskbarProgress.Create;
+  UpdateTaskbarProgress;
 end;
 
 procedure TSMPromptForm.FormHide(Sender: TObject);
@@ -486,6 +487,7 @@ end;
 
 procedure TSMPromptForm.UpdateTaskbarProgress;
 begin
+  if taskbar=nil then exit;
   if not ProgressBar.Visible then
     taskbar.State := tsNoProgress
   else

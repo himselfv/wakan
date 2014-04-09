@@ -100,16 +100,10 @@ var targetFname: string;
   lang: char;
 begin
   fname := item.GetAbsoluteTarget;
-  if (fname<>'') or not FileExists(fname) then exit;
+  if (fname='') or not FileExists(fname) then exit;
   targetFname := MakeDicFilename(item.Name);
 
-  if (item.BaseLanguage='jp') or (item.BaseLanguage='') then
-    lang := 'j'
-  else
-  if item.BaseLanguage='cn' then
-    lang := 'c'
-  else
-    raise Exception.Create('Invalid source dict language: '+item.BaseLanguage);
+  lang := item.BaseLanguage;
 
   dic := nil;
   qmsg := '';
