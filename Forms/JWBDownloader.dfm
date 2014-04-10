@@ -77,7 +77,7 @@ object fDownloader: TfDownloader
     Top = 58
     Width = 464
     Height = 384
-    ActivePage = tsSelectFiles
+    ActivePage = tsDownloading
     Anchors = [akLeft, akTop, akRight, akBottom]
     Style = tsButtons
     TabOrder = 0
@@ -112,24 +112,20 @@ object fDownloader: TfDownloader
       Caption = 'Downloading'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object vtJobs: TVirtualStringTree
         Left = 0
         Top = 0
         Width = 456
-        Height = 374
+        Height = 357
         Align = alClient
         BorderWidth = 1
-        Header.AutoSizeIndex = 0
+        Header.AutoSizeIndex = 1
         Header.Font.Charset = DEFAULT_CHARSET
         Header.Font.Color = clWindowText
         Header.Font.Height = -11
         Header.Font.Name = 'Tahoma'
         Header.Font.Style = []
-        Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+        Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
         Images = ilJobImages
         TabOrder = 0
         TreeOptions.MiscOptions = [toCheckSupport, toFullRepaintOnResize, toInitOnSave, toReportMode, toToggleOnDblClick, toWheelPanning, toFullRowDrag, toEditOnClick]
@@ -141,18 +137,30 @@ object fDownloader: TfDownloader
         OnGetImageIndex = vtJobsGetImageIndex
         OnGetNodeDataSize = vtJobsGetNodeDataSize
         OnInitNode = vtJobsInitNode
+        ExplicitHeight = 374
         Columns = <
           item
             Position = 0
-            Width = 210
+            Width = 200
             WideText = 'Component'
             WideHint = 'Name'
           end
           item
             Position = 1
-            Width = 210
+            Width = 250
             WideText = 'Status'
           end>
+      end
+      object ProgressBar: TProgressBar
+        Left = 0
+        Top = 357
+        Width = 456
+        Height = 17
+        Align = alBottom
+        TabOrder = 1
+        ExplicitLeft = 248
+        ExplicitTop = 320
+        ExplicitWidth = 150
       end
     end
     object tsSelectFiles: TTabSheet
@@ -244,7 +252,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C004C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00500010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

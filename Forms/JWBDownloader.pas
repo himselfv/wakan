@@ -46,6 +46,7 @@ type
     tmrJobUpdateTimer: TTimer;
     Panel1: TPanel;
     cbCheckDownloadAll: TCheckBox;
+    ProgressBar: TProgressBar;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -128,6 +129,7 @@ type
     procedure CancelDownloadJobs;
     function IsDownloadFinished: boolean;
     function AreAllJobsSuccessful: boolean;
+    function GetJobsTotalProgress: integer;
     procedure WorkerThreadException(Sender: TObject; Job: TJob; E: Exception;
       out StopJob: boolean);
     function AddJobNode(AJob: TJob): PVirtualNode;
@@ -192,6 +194,7 @@ begin
   SetOperation(AOperation);
   if FStage<>AStage then begin
     FStage := AStage;
+    FStageProgress := 0; //or there'd be a moment when it's show big
     UpdateProgress;
   end;
 end;
@@ -221,7 +224,7 @@ begin
     StartOperation('Downloading', 0); //TODO: Localize
     Run(FDownloadJob);
     if FDownloadJob.Result in [drUpToDate, drError] then begin
-      FState := jsCompleted;
+      FState := jsFinished;
       exit;
     end;
     ATempFilename := FDownloadJob.ToFilename; //could have been taken from server
@@ -233,7 +236,8 @@ begin
       AMoveJob := TFileMoveJob.Create(ATempFilename, ATargetPath);
     end else begin
       StartOperation('Unpacking', 1); //TODO: Localize
-      AMoveJob := TFileUnpackJob.Create(ATempFilename, ATargetPath);
+      AMoveJob := TFileUnpackJob.Create(ATempFilename, ExtractFilePath(ATargetPath));
+      TFileUnpackJob(AMoveJob).DefaultFilename := FComponent.Target;
       TFileUnpackJob(AMoveJob).ForceFormat := FComponent.URL_Unpack;
     end;
     try
@@ -255,7 +259,7 @@ begin
     if FComponent.Category='font' then
       ImportFont;
 
-    FState := jsCompleted;
+    FState := jsFinished;
   finally
     DeleteDirectory(ATempDir);
   end;
@@ -300,11 +304,12 @@ begin
 end;
 
 procedure TComponentDownloadJob.ChildJobProgressChanged(Sender: TObject);
-var AProg, AMax: integer;
+var AProg: int64;
+  AMax: integer;
 begin
   AProg := TJob(Sender).Progress;
   AMax := TJob(Sender).MaxProgress;
-  if AMax = 0 then AProg := 0 else AProg := Trunc(AProg*10000 / AMax);
+  if AMax = 0 then AProg := 0 else AProg := Trunc(AProg*1000 / AMax);
   Self.SetStageProgress(AProg);
 end;
 
@@ -318,11 +323,11 @@ end;
 procedure TComponentDownloadJob.UpdateProgress;
 begin
   case FStage of
-    0: SetProgress(0 + Trunc(FStageProgress*10000/5000));
-    1: SetProgress(5000 + Trunc(FStageProgress*10000/1000));
-    2: SetProgress(6000 + Trunc(FStageProgress*10000/4000));
+    0: SetProgress(0 + Trunc(FStageProgress*500/1000));
+    1: SetProgress(500 + Trunc(FStageProgress*100/1000));
+    2: SetProgress(600 + Trunc(FStageProgress*400/1000));
   else
-    SetProgress(10000);
+    SetProgress(1000);
   end;
 end;
 
@@ -824,7 +829,13 @@ begin
   end;
   FWorkerThread.Start;
 
+  ProgressBar.State := pbsNormal;
+  ProgressBar.Position := 0;
+  ProgressBar.Max := Length(AList)*100; //100 percents for each job
+
   taskbar := TTaskbarProgress.Create;
+  taskbar.State := tsNormal;
+  taskbar.SetProgress(0, ProgressBar.Max);
 
   tmrJobUpdateTimer.Enabled := true;
 end;
@@ -834,6 +845,9 @@ begin
   tmrJobUpdateTimer.Enabled := false;
   FreeAndNil(FWorkerThread);
   FreeAndNil(taskbar);
+  ProgressBar.State := pbsNormal;
+  ProgressBar.Position := 1;
+  ProgressBar.Max := 1;
 end;
 
 function TfDownloader.IsDownloadFinished: boolean;
@@ -866,9 +880,32 @@ begin
   end;
 end;
 
+{ Returns total progress of all jobs. Each job gets a chunk of 0..100, max
+ progress is 100 * NumberOfJobs }
+function TfDownloader.GetJobsTotalProgress: integer;
+var i, tmpMax: integer;
+begin
+  Result := 0;
+  for i := 0 to FWorkerThread.Jobs.Count-1 do
+    case FWorkerThread.Jobs[i].State of
+      jsWorking: begin
+        tmpMax := FWorkerThread.Jobs[i].MaxProgress;
+        if tmpMax>0 then
+          Result := Result + Trunc(FWorkerThread.Jobs[i].Progress * 100 / tmpMax);
+        //else can't do much until finished
+      end;
+      jsFinished: Result := Result + 100;
+     //else it's jsPending and add nothing
+    end;
+end;
+
 procedure TfDownloader.tmrJobUpdateTimerTimer(Sender: TObject);
 begin
   UpdateJobNodes;
+
+  ProgressBar.Position := GetJobsTotalProgress;
+  taskbar.Progress := ProgressBar.Position;
+
   if (FWorkerThread<>nil) and FWorkerThread.Finished then begin
    //Jobs finished
     UpdatePrevNextButtons;
@@ -950,10 +987,10 @@ begin
         jsPending: CellText := '';
         jsWorking:
           if AJob.MaxProgress>0 then
-            CellText := AJob.Operation+Format(' (%f%%)', [100*AJob.Progress/AJob.MaxProgress])
+            CellText := AJob.Operation+Format(' (%.1f%%)', [100*AJob.Progress/AJob.MaxProgress])
           else
             CellText := AJob.Operation+'...';
-        jsCompleted:
+        jsFinished:
           CellText := GetComponentJobResult(AJob);
       end;
   end;
@@ -994,7 +1031,7 @@ begin
   case Column of
     1:
       case AJob.State of
-        jsCompleted:
+        jsFinished:
           if AJob is TDownloadJob then
             case TDownloadJob(AJob).Result of
               drDone, drUpToDate:

@@ -330,7 +330,7 @@ begin
   end;
 
   Cleanup;
-  FState := jsCompleted;
+  FState := jsFinished;
 end;
 
 function TDicImportJob.GetTotalLineCount: integer;

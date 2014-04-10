@@ -24,12 +24,16 @@ type
     FProgress: integer;
     FMax: integer;
     procedure SetState(const AValue: TTaskbarProgressState);
+    procedure SetProgress(const AValue: integer); overload;
+    procedure SetMax(const AValue: integer);
     procedure ApplyTaskbarState;
   public
     constructor Create(const AWindowHandle: HWND = 0);
     destructor Destroy; override;
-    procedure SetProgress(const AProgress, AMax: integer);
+    procedure SetProgress(const AProgress, AMax: integer); overload;
     property State: TTaskbarProgressState read FState write SetState;
+    property Progress: integer read FProgress write SetProgress;
+    property Max: integer read FMax write SetMax;
   end;
 
 implementation
@@ -91,6 +95,20 @@ procedure TTaskbarProgress.SetState(const AValue: TTaskbarProgressState);
 begin
   if AValue=FState then exit;
   FState := AValue;
+  ApplyTaskbarState;
+end;
+
+procedure TTaskbarProgress.SetProgress(const AValue: integer);
+begin
+  if AValue=FProgress then exit;
+  FProgress := AValue;
+  ApplyTaskbarState;
+end;
+
+procedure TTaskbarProgress.SetMax(const AValue: integer);
+begin
+  if AValue=FMax then exit;
+  FMax := AValue;
   ApplyTaskbarState;
 end;
 

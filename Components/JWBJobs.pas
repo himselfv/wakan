@@ -11,9 +11,9 @@ Override ProcessChunk() to implement a job.
 
 type
   TJobState = (
-    jsPending,
-    jsWorking,    //set when ProcessChunk is first called for a Job
-    jsCompleted   //set when there's no need to call ProcessChunk anymore
+    jsPending,   //job haven't been started yet, some fields may be inaccurate (e.g. total size estimate)
+    jsWorking,   //job in progress, continue calling ProcessChunk
+    jsFinished   //job over (completed, aborted or failed), don't call ProcessChunk anymore
   );
 
   TJob = class(TObject)
@@ -134,7 +134,7 @@ call SetProgress() or Yield() from time to time and be ready for EAbort.
 }
 procedure TJob.ProcessChunk;
 begin
-  FState := jsCompleted;
+  FState := jsFinished;
 end;
 
 { The job calls this to relay execution to housekeeping code if called from
@@ -211,7 +211,7 @@ var i: integer;
 begin
   Result := -1;
   for i := 0 to FJobs.Count-1 do
-    if (FJobs[i].Job.State<>jsCompleted) then begin
+    if (FJobs[i].Job.State<>jsFinished) then begin
       Result := i;
       break;
     end;
@@ -265,10 +265,10 @@ procedure TChainJob.ProcessChunk;
 begin
   FState := jsWorking;
   if (FCurrentJobIndex<0) or (FCurrentJobIndex>FJobs.Count-1)
-  or (FJobs[FCurrentJobIndex].Job.State=jsCompleted) then
+  or (FJobs[FCurrentJobIndex].Job.State=jsFinished) then
     CurrentJobIndex := FindNextJobIndex;
   if FCurrentJobIndex<0 then begin
-    FState := jsCompleted;
+    FState := jsFinished;
     exit;
   end;
 
@@ -306,7 +306,7 @@ var Job: TJob;
 begin
   Job := nil;
   while not Terminated do try
-    if (Job=nil) or (Job.State=jsCompleted) then begin
+    if (Job=nil) or (Job.State=jsFinished) then begin
       Job := FindNextJob();
       if Job=nil then break;
     end;
@@ -317,7 +317,7 @@ begin
       if Assigned(FOnException) then
         FOnException(Self, Job, E, StopJob);
       if StopJob then
-        Job.FState := jsCompleted;
+        Job.FState := jsFinished;
       Job := nil; //in any case, re-choose it/other job
     end;
   end;
@@ -333,7 +333,7 @@ var i: integer;
 begin
   Result := nil;
   for i := 0 to FJobs.Count-1 do
-    if (FJobs[i].State<>jsCompleted) then begin
+    if (FJobs[i].State<>jsFinished) then begin
       Result := FJobs[i];
       break;
     end;
@@ -343,7 +343,7 @@ end;
 procedure Run(const AJob: TJob; AAutoDestroy: boolean);
 begin
   try
-    while AJob.State<>jsCompleted do
+    while AJob.State<>jsFinished do
       AJob.ProcessChunk;
   finally
     if AAutoDestroy then

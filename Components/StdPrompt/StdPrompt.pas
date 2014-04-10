@@ -619,7 +619,7 @@ begin
   repeat
     AJob.ProcessChunk;
     JobYield(AJob); //in case this is a straight chunked job
-  until (AJob.State=jsCompleted);
+  until (AJob.State=jsFinished);
   AJob.OnProgressChanged := nil;
   AJob.OnOperationChanged := nil;
   AJob.OnYield := nil;

@@ -154,7 +154,7 @@ procedure TDownloadJob.SetError(const AErrorCode: integer);
 begin
   FErrorCode := AErrorCode;
   FResult := drError;
-  FState := jsCompleted;
+  FState := jsFinished;
 end;
 
 //To extract the main value, pass ''
@@ -212,7 +212,7 @@ begin
   hSession := InternetOpen(PChar(sAppName), INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if hSession=nil then begin
     SetError(GetLastError);
-    FState := jsCompleted;
+    FState := jsFinished;
     Result := false;
     exit;
   end;
@@ -228,7 +228,7 @@ begin
   if hURL=nil then begin
     SetError(GetLastError);
     InternetCloseHandle(hSession);
-    FState := jsCompleted;
+    FState := jsFinished;
     Result := false;
     exit;
   end;
@@ -238,7 +238,7 @@ begin
     SetError(GetLastError);
     InternetCloseHandle(hURL);
     InternetCloseHandle(hSession);
-    FState := jsCompleted;
+    FState := jsFinished;
     Result := false;
     exit;
   end;
@@ -254,7 +254,7 @@ begin
 
   if FHttpCode=304 then begin
     FResult := drUpToDate;
-    FState := jsCompleted;
+    FState := jsFinished;
     Result := false; //do not continue
     exit;
   end;
@@ -263,7 +263,7 @@ begin
   and (FHttpCode<>205) //No content
   then begin
     SetError(-1);
-    FState := jsCompleted;
+    FState := jsFinished;
     Result := false;
     exit;
   end;
@@ -271,7 +271,7 @@ begin
   if TryHttpQueryDatetime(hURL, HTTP_QUERY_LAST_MODIFIED, FLastModified) then begin
     if (FIfModifiedSince>1) and (FLastModified<FIfModifiedSince) then begin
       FResult := drUpToDate;
-      FState := jsCompleted;
+      FState := jsFinished;
       Result := false; //do not continue
       exit;
     end;
@@ -331,7 +331,7 @@ begin
   SetProgress(Progress+integer(BufferLen));
   if BufferLen=0 then begin
     Cleanup(); //or we'd be holding file hostage
-    FState := jsCompleted;
+    FState := jsFinished;
     FResult := drDone;
   end;
 
@@ -351,7 +351,7 @@ begin
       prog.SetMaxProgress(job.MaxProgress);
       prog.ProcessMessages;
     end;
-    while job.State<>jsCompleted do begin
+    while job.State<>jsFinished do begin
       job.ProcessChunk;
       if prog<>nil then begin
         prog.SetProgress(integer(job.Progress));
@@ -386,7 +386,7 @@ begin
       prog.SetMaxProgress(job.MaxProgress);
       prog.ProcessMessages;
     end;
-    while job.State<>jsCompleted do begin
+    while job.State<>jsFinished do begin
       job.ProcessChunk;
       if prog<>nil then begin
         prog.SetProgress(integer(job.Progress));
@@ -396,7 +396,7 @@ begin
     if job.Result=drError then
       RaiseLastOsError(job.ErrorCode);
 
-    Result := job.State=jsCompleted; //else jsUpToDate
+    Result := job.State=jsFinished; //else jsUpToDate
   finally
     FreeAndNil(job);
   end;

@@ -3,7 +3,7 @@ unit JWBUnpackJob;
  disk->memory, memory->memory }
 
 interface
-uses JWBJobs;
+uses JWBJobs, SevenZip, SevenZipUtils;
 
 type
  //Extracts the archive file to a folder
@@ -11,9 +11,19 @@ type
   protected
     FSourceFile: string;
     FTargetFileOrFolder: string;
-   //If filename is specified, target archive must be single-file archive.
+    { Target folder or folder+filename. If filename is specified, source must
+     only have a single file inside. }
+    FDefaultFilename: string;
+    { If specified and source is a single-file archive lacking file name,
+     this will be used -- otherwise source filename minus extension }
     FForceFormat: string; //if empty, guess from filename
+  protected
+    zip: TSevenZipArchive;
+    FActiveZipEntry: integer;
     FNonameUsed: boolean; //if true, we've already had one noname file
+    procedure Initialize;
+    procedure Cleanup;
+    procedure MakePath(const ASubFolder: string);
   public
     constructor Create(const ASourceFile, ATargetFileOrFolder: string;
       AForceFormat: string = '');
@@ -22,6 +32,7 @@ type
     property SourceFile: string read FSourceFile write FSourceFile;
     property TargetFileOrFolder: string read FTargetFileOrFolder
       write FTargetFileOrFolder;
+    property DefaultFilename: string read FDefaultFilename write FDefaultFilename;
     property ForceFormat: string read FForceFormat write FForceFormat;
   end;
 
@@ -42,7 +53,7 @@ procedure Unpack(const ASourceFile, ATargetFileOrFolder: string;
   AForceFormat: string = '');
 
 implementation
-uses SysUtils, Windows, SevenZip, SevenZipUtils;
+uses SysUtils, Windows;
 
 { Converts a file extension to a 7-zip CLSID describing the format.
  The guess is not guaranteed to be correct as "zip" archives for example can
@@ -81,18 +92,14 @@ end;
 
 destructor TFileUnpackJob.Destroy;
 begin
+  Cleanup;
   inherited;
 end;
 
-procedure TFileUnpackJob.ProcessChunk;
-var zip: TSevenZipArchive;
-  zipCLSID: TGUID;
+procedure TFileUnpackJob.Initialize;
+var zipCLSID: TGUID;
   AFormat: string;
-  i: integer;
-  zname: string;
 begin
-  FState := jsWorking;
-
   if FForceFormat<>'' then
     AFormat := FForceFormat
   else begin
@@ -103,43 +110,76 @@ begin
     raise Exception.Create('Unknown archive type: '+AFormat);
 
   zip := TSevenZipArchive.Create(zipCLSID, FSourceFile);
-  try
-    SetMaxProgress(zip.NumberOfItems);
-    SetProgress(0);
-    for i := 0 to zip.NumberOfItems - 1 do begin
-      zname := zip.StrProperty(i, kpidPath);
-     //Some formats (notably GZ) support single-file nameless archives
-      if zname='' then begin
-        if FNonameUsed then
-          raise Exception.Create('Two nameless files in a single archive are not supported.'); //what is this, even
-        zname := ExtractFilename(FTargetFileOrFolder);
-        if zname='' then
-         //Lacking explicit filename, use original minus archive extension
-          zname := ChangeFileExt(ExtractFilename(FSourceFile), '');
-        FNonameUsed := true;
-      end;
-      if zip.BoolProperty(i, kpidIsDir) then begin
-        if ExtractFilename(FTargetFileOrFolder)<>'' then
-          raise Exception.Create('Simple filename specified but archive has complicated structure.');
-        ForceDirectories(FTargetFileOrFolder+'\'+zname);
-      end else
-        with zip.ExtractFile(i) do try
-          if ExtractFilePath(zname)<>'' then continue; //at least don't extract them to the root!
-          if ExtractFilename(FTargetFileOrFolder)<>'' then begin
-            if i>0 then
-              raise Exception.Create('Simple filename specified but archive has complicated structure.');
-            SaveToFile(FTargetFileOrFolder);
-          end else
-            SaveToFile(FTargetFileOrFolder+'\'+zname);
-        finally
-          Free;
-        end;
-      SetProgress(i+1);
-    end;
-  finally
-    FreeAndNil(zip);
-    FState := jsCompleted;
+  FActiveZipEntry := 0;
+  SetMaxProgress(zip.NumberOfItems);
+  SetProgress(FActiveZipEntry);
+end;
+
+procedure TFileUnpackJob.Cleanup;
+begin
+  FreeAndNil(zip);
+  FState := jsFinished;
+end;
+
+resourcestring
+  eSimpleFilenameComplexStructure = 'Simple filename specified as extraction '
+    +'target but archive has complex structure.';
+
+procedure TFileUnpackJob.ProcessChunk;
+var zname: string;
+begin
+  if FState = jsPending then begin
+    Initialize;
+    FState := jsWorking;
   end;
+
+  zname := zip.StrProperty(FActiveZipEntry, kpidPath);
+
+ //Some formats (notably GZ) support single-file nameless archives
+  if zname='' then begin
+    if FNonameUsed then
+      raise Exception.Create('Two nameless files in a single archive are not supported.'); //is this even possible?
+    zname := ExtractFilename(FTargetFileOrFolder);
+    if zname='' then
+      zname := FDefaultFilename;
+    if zname='' then
+     //Lacking explicit filename, use original minus archive extension
+      zname := ChangeFileExt(ExtractFilename(FSourceFile), '');
+    FNonameUsed := true;
+  end;
+
+  if zip.BoolProperty(FActiveZipEntry, kpidIsDir) then
+    MakePath(zname)
+  else
+    with zip.ExtractFile(FActiveZipEntry) do try
+      if ExtractFilePath(zname)<>'' then
+        MakePath(ExtractFilePath(zname)); //just in case
+      if ExtractFilename(FTargetFileOrFolder)<>'' then begin
+        if FActiveZipEntry>0 then
+          raise Exception.Create(eSimpleFilenameComplexStructure);
+        SaveToFile(FTargetFileOrFolder);
+      end else
+        SaveToFile(FTargetFileOrFolder+'\'+zname);
+    finally
+      Free;
+    end;
+
+ //Next file
+  Inc(FActiveZipEntry);
+  SetProgress(FActiveZipEntry);
+  if cardinal(FActiveZipEntry)>=zip.NumberOfItems then begin
+    Cleanup;
+    FState := jsFinished;
+  end;
+end;
+
+//Creates the specified subfolder in the extraction place
+procedure TFileUnpackJob.MakePath(const ASubFolder: string);
+begin
+  if ExtractFilename(FTargetFileOrFolder)<>'' then
+    raise Exception.Create(eSimpleFilenameComplexStructure);
+ //TODO: Check that the path is not absolute / outside of target folder?
+  ForceDirectories(FTargetFileOrFolder+'\'+ASubFolder);
 end;
 
 constructor TFileMoveJob.Create(const ASourceFile, ATargetFile: string);
@@ -152,7 +192,7 @@ end;
 procedure TFileMoveJob.ProcessChunk;
 begin
   MoveFile(PChar(FSourceFile), PChar(FTargetFile));
-  FState := jsCompleted;
+  FState := jsFinished;
 end;
 
 procedure Unpack(const ASourceFile, ATargetFileOrFolder: string;
