@@ -127,6 +127,7 @@ type
     FWorkerThread: TWorkerThread;
     procedure StartDownloadJobs;
     procedure CancelDownloadJobs;
+    procedure StopProgressUpdates;
     function IsDownloadFinished: boolean;
     function AreAllJobsSuccessful: boolean;
     function GetJobsTotalProgress: integer;
@@ -159,6 +160,7 @@ type
     FStageProgress: integer; //between 1 and 1000
     procedure StartOperation(const AOperation: string; AStage: integer); reintroduce;
     procedure ChildJobProgressChanged(Sender: TObject);
+    procedure ChildYield(Sender: TObject);
     procedure SetStageProgress(const AValue: integer);
     procedure UpdateProgress;
     procedure ImportDictionary;
@@ -220,6 +222,7 @@ begin
     if (ACheckPresent<>'') and FileAge(ACheckPresent, AFileTime) then
       FDownloadJob.IfModifiedSince := AFileTime;
     FDownloadJob.OnProgressChanged := ChildJobProgressChanged;
+    FDownloadJob.OnYield := ChildYield;
     FDownloadJob.ProcessChunk; //first chunk establishes connection
     StartOperation('Downloading', 0); //TODO: Localize
     Run(FDownloadJob);
@@ -243,6 +246,7 @@ begin
     try
       ForceDirectories(ExtractFilePath(ATargetPath));
       AMoveJob.OnProgressChanged := ChildJobProgressChanged;
+      AMoveJob.OnYield := ChildYield;
       Run(AMoveJob);
     finally
       FreeAndNil(AMoveJob);
@@ -288,6 +292,7 @@ begin
   end else
     AEncoding := nil;
   AJob.OnProgressChanged := ChildJobProgressChanged;
+  AJob.OnYield := ChildYield;
   AJob.AddSourceFile(FComponent.GetAbsoluteTarget, AEncoding);
   FImportJob := AJob;
   Run(AJob);
@@ -311,6 +316,11 @@ begin
   AMax := TJob(Sender).MaxProgress;
   if AMax = 0 then AProg := 0 else AProg := Trunc(AProg*1000 / AMax);
   Self.SetStageProgress(AProg);
+end;
+
+procedure TComponentDownloadJob.ChildYield(Sender: TObject);
+begin
+  Yield;
 end;
 
 procedure TComponentDownloadJob.SetStageProgress(const AValue: integer);
@@ -842,8 +852,13 @@ end;
 
 procedure TfDownloader.CancelDownloadJobs;
 begin
+  StopProgressUpdates;
+  FreeAndNil(FWorkerThread); //does Terminate
+end;
+
+procedure TfDownloader.StopProgressUpdates;
+begin
   tmrJobUpdateTimer.Enabled := false;
-  FreeAndNil(FWorkerThread);
   FreeAndNil(taskbar);
   ProgressBar.State := pbsNormal;
   ProgressBar.Position := 1;
@@ -908,6 +923,7 @@ begin
 
   if (FWorkerThread<>nil) and FWorkerThread.Finished then begin
    //Jobs finished
+    StopProgressUpdates; //but don't CancelDownloadJobs as we yet need Jobs
     UpdatePrevNextButtons;
     if AreAllJobsSuccessful then
       lblPageDescription.Caption := 'All files has been downloaded.' //TODO: Localize

@@ -96,6 +96,7 @@ type
     FJobs: TObjectList<TJob>;
     FOnException: TExceptionEvent;
     function FindNextJob: TJob;
+    procedure JobYield(ASender: TObject);
   public
     constructor Create;
     destructor Destroy; override;
@@ -310,6 +311,7 @@ begin
       Job := FindNextJob();
       if Job=nil then break;
     end;
+    Job.OnYield := Self.JobYield;
     Job.ProcessChunk;
   except
     on E: Exception do begin
@@ -321,6 +323,13 @@ begin
       Job := nil; //in any case, re-choose it/other job
     end;
   end;
+end;
+
+{ Some jobs run as a single big chunk, so we have to handle Yield to abort them }
+procedure TWorkerThread.JobYield(ASender: TObject);
+begin
+  if Terminated then
+    raise EAbort.Create('');
 end;
 
 procedure TWorkerThread.AddJob(AJob: TJob);
