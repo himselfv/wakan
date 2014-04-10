@@ -1,0 +1,6 @@
+[InternetShortcut]
+URL=http://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=%s:hex%
+Title=UniHan
+Hint=charts.unicode.org/unihan - UniHan entry for this character
+IDList=
+HotKey=0

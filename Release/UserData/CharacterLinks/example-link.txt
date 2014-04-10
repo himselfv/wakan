@@ -1,0 +1,18 @@
+﻿# Standard .URL-compatible link.
+# See http://code.google.com/p/wakan/wiki/CustomLinks
+
+# URL, Title and Hint may all contain %var% insertions.
+# If Title is missing, file name is used instead (without %var% insertions),
+# otherwise it's used only to sort links.
+
+[InternetShortcut]
+URL=http://web.mit.edu/jpnet/ji/data/%s:chprop(57)%.html
+Title=KanjiProject
+Hint=web.mit.edu/jpnet/ji - KanjiProject Data Page
+
+# We will try to honor these... with time.
+IconFile=C:\WINDOWS\SYSTEM\url.dll
+IconIndex=1
+HotKey=1601
+
+# It's recommended to leave a newline
