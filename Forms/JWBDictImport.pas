@@ -255,8 +255,9 @@ begin
        //Else try to guess it
         if AEncoding=nil then
           AEncoding := Conv_DetectType(ASourceFiles[fi]);
-       //And in any case, let the user confirm/change it:
-        AEncoding := Conv_ChooseType({Chinese=}ALang='c', AEncoding);
+       //Let the user confirm/change it (unless silent + not needed):
+        if (AEncoding=nil) or (not ASilent) then
+          AEncoding := Conv_ChooseType({Chinese=}ALang='c', AEncoding);
 
         job.AddSourceFile(ASourceFiles[fi], AEncoding);
       end;
@@ -269,18 +270,23 @@ begin
 
     if job.ProblemRecords > 300 then
       Application.MessageBox(
-        PChar('There were some problems during the conversion. '
-        +IntToStr(job.ProblemRecords)+' records could not have been imported.'#13
-        +'Please study the roma_problems.txt found in the application directory.'), //TODO: Localize
+        PChar(Format(_l(
+          'There were some problems building %s. %d records could not have '
+          +'been imported.'#13
+          +'Please study %s found in the dictionary directory.'), //TODO: Localize
+          [AFilename, job.ProblemRecords, 'roma_problems.txt']
+        )),
         'Had problems', //TODO: Localize
         MB_ICONEXCLAMATION)
     else
     if job.ProblemRecords > 0 then
       Application.MessageBox(
-        PChar('The dictionary has been created but '+IntToStr(job.ProblemRecords)
-        +' records had some problems.'#13
-        +'This is not much so it''s probably fine, but if you want details, '
-        +'study the roma_problems.txt found in the application directory.'), //TODO: Localize
+        PChar(Format(_l(
+          'The dictionary %s has been created but %d records had some problems.'#13
+          +'This is not much so it''s probably fine, but if you want details, '
+          +'study the roma_problems.txt found in the dictionary directory.'), //TODO: Localize
+          [AFilename, job.ProblemRecords, 'roma_problems.txt']
+        )),
         'Notice', //TODO:Localize
         MB_ICONINFORMATION
       )
