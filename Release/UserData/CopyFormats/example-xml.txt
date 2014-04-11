@@ -1,46 +1,59 @@
-﻿<entry>
-<ent_seq>1171270</ent_seq>
-<k_ele>
-<keb>右翼</keb>
-<ke_pri>ichi1</ke_pri>
-<ke_pri>news1</ke_pri>
-<ke_pri>nf04</ke_pri>
-</k_ele>
-<r_ele>
-<reb>うよく</reb>
-<re_pri>ichi1</re_pri>
-<re_pri>news1</re_pri>
-<re_pri>nf04</re_pri>
-</r_ele>
-<sense>
-<pos>&adj-no;</pos>
-<gloss>right-wing</gloss>
-<gloss xml:lang="fr">aile droite (oiseau, armée, parti politique, base-ball)</gloss>
-<gloss xml:lang="ru">пра́вое крыло́</gloss>
-<gloss xml:lang="ru">пра́вый фланг</gloss>
-<gloss xml:lang="de">die Rechte</gloss>
-<gloss xml:lang="de">rechter Flügel</gloss>
-</sense>
-<sense>
-<pos>&n;</pos>
-<gloss>right field (e.g. in sport)</gloss>
-<gloss>right flank</gloss>
-<gloss>right wing</gloss>
-<gloss xml:lang="de">{Sport}</gloss>
-<gloss xml:lang="de">rechte Flanke</gloss>
-<gloss xml:lang="de">rechter Flügel</gloss>
-</sense>
-</entry>
+﻿Wakan copies data in an XML format and automatically does one XSLT transformation
+http://en.wikipedia.org/wiki/XSLT
 
+XML is similar to JMDICT format, but without some fields and with some additional ones:
 
 <entry>
-<ref>ref_id</ref>
-<expr>kanji<mark>a</mark><mark>b</mark></expr>
-<read>kana<mark>a</mark><mark>b</mark></read>
-<sense>
-<gloss>gloss</gloss>
-<pos>a</pos><pos>b</pos>
-<mark>a</mark><mark>b</mark>
-</sense>
-<pop />
+
+<!-- Expression -->
+<k_ele>
+<keb>右翼</keb>
+<!-- At this time Wakan never produces any other fields here -->
+</k_ele>
+
+<!-- Reading may be missing if Expression is the same as it -->
+<r_ele>
+<reb>うよく</reb>
+<!-- At this time Wakan never produces any other fields here -->
+</r_ele>
+
+<!-- JMDICT has senses next, but Wakan groups senses into articles -->
+<article>
+  <sense>
+    <!-- This equates to JMDict's <sense>, but we don't support JMDICT markers, instead putting <m>markers</m>, <c>comments</c> and <g>grammar tags</g> both in glosses and sense-wide.  -->
+    <m>adj</m>
+    <m>marker</m>
+    <gloss>right-wing<m>marker</m><c>comment</c></gloss>
+  </sense>
+  <sense>
+    <gloss>right field (e.g. in sport)</gloss>
+    <gloss>right flank</gloss>
+    <gloss>right wing</gloss>
+  </sense>
+  <dict>EDICT</dict>
+</article>
+
+<article>
+  <sense>
+    <gloss>right field (e.g. in sport)</gloss>
+    <gloss>right flank</gloss>
+    <gloss>right wing</gloss>
+  </sense>
+  <dict>CLASSICAL</dict>
+</article>
+
 </entry>
+
+
+Entry:
+    kanji: string; //already simplified if needed, but otherwise no special marks
+    kana: string;
+    articles: array of TSearchResArticle;
+
+Article:
+    dict: string;
+    senses: array of Sense;
+
+Sense:
+    glosses: array of Gloss
+    markers: TMarkers;

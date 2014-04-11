@@ -1,10 +1,45 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
+<!--
+clause={%id%?%id%. }%text%{%last%!? }
+marker={%first%? <}%text%{%last%!?,}{%last%?>}
+group=
+comment=(%text%)
+gloss=%text%{%last%!?, }
+-->
+
 <xsl:template match="/entry">
+  <xsl:apply-templates select="k_ele" />
+  <xsl:if test="r_ele">
+    <xsl:text>[</xsl:text>
+    <xsl:apply-templates select="r_ele" />
+    <xsl:text>]</xsl:text>
+  </xsl:if>
+  <xsl:text> </xsl:text>
+  <xsl:apply-templates select="article" />
+</xsl:template>
+
+<xsl:template match="k_ele/keb">
+  <xsl:if test="preceding-sibling::node()[name()='keb']"><xsl:text>、</xsl:text></xsl:if>
+  <xsl:value-of select="."/>
+</xsl:template>
+
+<xsl:template match="r_ele/reb">
+  <xsl:if test="preceding-sibling::node()[name()='reb']"><xsl:text>、</xsl:text></xsl:if>
+  <xsl:value-of select="."/>
+</xsl:template>
+
+<!-- article=%clauses%{%dict%? ——%dict%}{%last%!?; } -->
+<xsl:template match="article">
+  <xsl:if test="preceding-sibling::node()[name()='article']"><xsl:text>; </xsl:text></xsl:if>
   <xsl:apply-templates select="sense" />
+  <xsl:if test="dict">
+    <xsl:text> ——</xsl:text>
+    <xsl:value-of select="dict"/>
+  </xsl:if>
 </xsl:template>
 
 <xsl:template match="sense">

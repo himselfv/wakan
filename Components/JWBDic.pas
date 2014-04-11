@@ -163,6 +163,8 @@ type
   TEntry = record
     text: FString;
     markers: TMarkers;
+    function Glosses: TStringArray;
+    function ToEdictXml: string;
   end;
   PEntry = ^TEntry;
 
@@ -173,6 +175,7 @@ type
     function GetCount: integer; inline;
     function ToString: FString;
     function ToEnrichedString: FString;
+    function ToEdictXml: string;
     function MergeMarkers: TMarkers;
     function HasMarker(const AMarker: TMarker): boolean;
     property Count: integer read GetCount;
@@ -334,7 +337,6 @@ type
 var
   ignorel: TStringList; //words to ignore when indexing dictionaries
   DictFormatSettings: TFormatSettings; //to use in locate-neutral information
-
 
 //Sanitization
 function EncodeInfoField(const AText: string): string;
@@ -995,6 +997,66 @@ begin
     else
       Result := Result+fstr('; ('+IntToStr(i+1)+') ')+ent;
   end;
+end;
+
+//Returns entry text split to glosses
+function TEntry.Glosses: TStringArray;
+begin
+  Result := SplitGlosses(Self.Text);
+end;
+
+{ Returns JMDICT-compatible XML string. TEntry equates to JMDict's <sense>,
+ but we don't support JMDICT markers, instead putting <m>markers</m>,
+ <c>comments</c> and <g>grammar tags</g> both in glosses and sense-wide. }
+function TEntry.ToEdictXml: string;
+var i: integer;
+  gl: TStringArray;
+  gloss: string;
+begin
+  Result := '<sense>';
+
+  gl := Glosses;
+  for i := 0 to Length(gl)-1 do begin
+   //Some older entries in user dictionaries have markers stored inline.
+   //We can't do much with this except try to find and mark.
+    gloss := MatchMarkers(HtmlEscape(gl[i]),
+        function (const s: string): string
+        var tag: string;
+        begin
+          if Length(s)<1 then begin
+            Result := '';
+            exit;
+          end;
+
+          Result := s;
+          case Result[1] of
+            '1','g': tag := 'm';
+            's': tag := 'c';
+            'l': tag := 'g';
+          else exit; //not a marker
+          end;
+
+          delete(Result,1,1);
+          Result := '<'+tag+'>'+Result+'</'+tag+'>';
+        end
+      );
+    Result := Result + '<gloss>' + gloss + '</gloss>';
+  end;
+
+ //More properly stored markers
+  for i := 1 to Length(markers) do
+    Result := Result + '<m>' + HtmlEscape(copy(GetMarkAbbr(markers[i]), 2, MaxInt)) + '</m>';
+
+  Result := Result + '</sense>';
+end;
+
+//Returns JMDICT-compatible list of <sense> entries
+function TEntries.ToEdictXml: string;
+var i: integer;
+begin
+  Result := '';
+  for i := 0 to Length(items)-1 do
+    Result := Result + items[i].ToEdictXml;
 end;
 
 function TEntries.MergeMarkers: TMarkers;

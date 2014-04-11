@@ -351,7 +351,7 @@ begin
   EndClause;
 end;
 
-{ Tries to split the entry text by glosses. Minds brackets and marker chars,
+{ Tries to split the entry text into glosses. Minds brackets and marker chars,
  but still is not guaranteed to produce 100% precise result }
 function SplitGlosses(const s: string): TStringArray;
 var ps, pc: PChar;

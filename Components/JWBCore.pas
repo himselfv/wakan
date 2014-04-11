@@ -123,8 +123,8 @@ procedure SetPortabilityMode(AMode: TPortabilityMode);
 begin
   PortabilityMode := AMode;
   case AMode of
-    pmStandalone: UserDataDir := GetAppDataFolder;
-    pmPortable: UserDataDir := AppFolder;
+    pmStandalone: UserDataDir := GetAppDataFolder+'\UserData';
+    pmPortable: UserDataDir := AppFolder+'\UserData';
     pmCompatible: UserDataDir := AppFolder;
   end;
   ProgramDataDir := AppFolder;

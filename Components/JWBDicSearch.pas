@@ -167,6 +167,7 @@ type
     entries: TEntries;
     procedure Reset;
     function ToLegacyString: string;
+    function ToEdictXml: string;
   end;
   PSearchResArticle = ^TSearchResArticle;
 
@@ -195,6 +196,7 @@ type
     function FindArticle(const dicname: string; const dicindex: integer): integer;
     function ToLegacyString: string;
     procedure ToLegacyParts(out AKanji, AKana, ABody: string);
+    function ToEdictXml: string;
   end;
   PSearchResult = ^TSearchResult;
 
@@ -674,6 +676,21 @@ begin
   ABody := statpref + ABody;
 end;
 
+{ Generates EDICT-compatible XML entry for this result. It roughly equates
+ to <entry>, but includes additional grouping of <senses> by <articles> }
+function TSearchResult.ToEdictXml: string;
+var i: integer;
+begin
+  Result := '<entry>'
+    +'<k_ele><keb>'+Self.kanji+'</keb></k_ele>';
+  if (Self.kana<>'') and (Self.kana<>Self.kanji) then
+    Result := Result
+      +'<r_ele><reb>'+Self.kana+'</reb></r_ele>';
+  for i := 0 to Length(Self.articles)-1 do
+    Result := Result + Self.articles[i].ToEdictXml;
+  Result := Result + '</entry>';
+end;
+
 procedure TSearchResArticle.Reset;
 begin
   dicindex := 0;
@@ -687,6 +704,20 @@ begin
   Result := entries.ToEnrichedString;
   if Self.dicname<>'' then
     Result := Result  +' '+UH_LBEG+'d'+Self.dicname+UH_LEND;
+end;
+
+{ Generates JMDICT-compatible entry for this result. Although compatible,
+ it uses a custom <article> tag = a middle ground between <entry> and <sense>.
+ It consists of <sense>s, grouped and with <dict> source but without kana/kanji. }
+function TSearchResArticle.ToEdictXml: string;
+var i: integer;
+begin
+  Result := '<article>';
+  for i := 0 to Self.entries.Count-1 do
+    Result := Result + Self.entries.items[i].ToEdictXml;
+  if dicname<>'' then
+    Result := Result + '<dict>' + HtmlEscape(dicname) + '</dict>';
+  Result := Result + '</article>';
 end;
 
 {

@@ -321,6 +321,7 @@ type
 
 function UrlEncode(const s: UnicodeString; options: TUrlEncodeOptions): AnsiString; overload;
 function UrlEncode(const s: UTF8String; options: TUrlEncodeOptions): AnsiString; overload;
+function HtmlEscape(const s: string): string;
 
 function ExtractFileNameURL(const URL: string): string;
 
@@ -1722,6 +1723,19 @@ begin
     else
      //This is already UTF8 so it's ok
       Result := Result + '%' + AnsiString(IntToHex(Ord(s[i]), 2));
+end;
+
+function HtmlEscape(const s: string): string;
+var i: integer;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+    if s[i]='&' then Result := Result + '&amp;' else
+    if s[i]='''' then Result := Result + '&apos;' else
+    if s[i]='"' then Result := Result + '&quot;' else
+    if s[i]='<' then Result := Result + '&lt;' else
+    if s[i]='>' then Result := Result + '&gt;' else
+    Result := Result + s[i];
 end;
 
 const

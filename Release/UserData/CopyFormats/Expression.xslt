@@ -4,21 +4,21 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <xsl:template match="/entry">
-  <xsl:apply-templates select="expr" />
-  <xsl:if test="read">
+  <xsl:apply-templates select="k_ele" />
+  <xsl:if test="r_ele">
     <xsl:text>[</xsl:text>
-    <xsl:apply-templates select="read" />
+    <xsl:apply-templates select="r_ele" />
     <xsl:text>]</xsl:text>
-  </xsl>
+  </xsl:if>
 </xsl:template>
 
-<xsl:template match="expr">
-  <xsl:if test="preceding-sibling::node()[name()='expr']"><xsl:text>、</xsl:text></xsl:if>
+<xsl:template match="k_ele/keb">
+  <xsl:if test="preceding-sibling::node()[name()='keb']"><xsl:text>、</xsl:text></xsl:if>
   <xsl:value-of select="."/>
 </xsl:template>
 
-<xsl:template match="expr">
-  <xsl:if test="preceding-sibling::node()[name()='expr']"><xsl:text>、</xsl:text></xsl:if>
+<xsl:template match="r_ele/reb">
+  <xsl:if test="preceding-sibling::node()[name()='reb']"><xsl:text>、</xsl:text></xsl:if>
   <xsl:value-of select="."/>
 </xsl:template>
 

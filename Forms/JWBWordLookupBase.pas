@@ -56,6 +56,7 @@ type
     procedure WordSelectionChanged; virtual;
     procedure ReloadCopyFormats;
     procedure CopyInFormatClick(Sender: TObject);
+    procedure CopyAsXMLClick(Sender: TObject);
     procedure ConfigureClick(Sender: TObject);
     procedure ClearReferenceLinks;
     procedure ReloadReferenceLinks;
@@ -69,7 +70,8 @@ type
     procedure SetDefaultColumnWidths; virtual;
     procedure Clear; virtual;
     procedure Refresh; virtual;
-    procedure CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
+    procedure CopyAsText(const AReplace: boolean);
+    procedure CopyToClipboard(const AXsltFilename: string; const AReplace: boolean);
     function IsEmpty: boolean;
     property Results: TSearchResults read FResults;
 
@@ -80,20 +82,23 @@ var
 
 
 implementation
-uses UITypes, JWBStrings, JWBUnit, JWBMenu, JWBCategories, JWBVocab, JWBVocabAdd,
-  JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage, JWBWordGrid;
+uses UITypes, JWBStrings, JWBCore, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
+  JWBVocabAdd, JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage,
+  JWBWordGrid, ActiveX, XmlDoc, XmlIntf;
 
 {$R *.dfm}
 
 constructor TfWordLookupBase.Create(AOwner: TComponent);
 begin
   inherited;
+  CoInitialize(nil); //for XSLT
   FResults:=TSearchResults.Create; //it is sometimes used even before FormCreate, somehow
 end;
 
 destructor TfWordLookupBase.Destroy;
 begin
   FreeAndNil(FResults);
+  CoUninitialize;
   inherited;
 end;
 
@@ -150,20 +155,44 @@ begin
   miAddToVocab.Visible := (ARow>0);
 end;
 
+type
+  TCopyFormatMenuItem = class(TMenuItem)
+  public
+    Filename: string;
+  end;
+
 procedure TfWordLookupBase.ReloadCopyFormats;
-var i: integer;
-  item: TMenuItem;
+var sr: TSearchRec;
+  res: integer;
+  item: TMenuItem;  
 begin
   miCopyAs.Clear;
-  for i := 0 to CopyFormats.Count-1 do begin
-    item := TMenuItem.Create(Self);
-    item.Caption := CopyFormats[i].Name;
-    item.Tag := i;
-    item.OnClick := CopyInFormatClick;
-    if i=fSettings.DefaultCopyFormat then
-      item.Default := true;
-    miCopyAs.Add(item);
+
+ //Rescan every time because the user could be adding files there
+ //and expecting results
+  res := FindFirst(UserDataDir+'\CopyFormats\*.xslt',
+    faAnyFile and not faDirectory, sr);
+  try
+    while res=0 do begin
+      item := TCopyFormatMenuItem.Create(Self);
+      item.Caption := ChangeFileExt(sr.Name, '');
+      TCopyFormatMenuItem(item).Filename := sr.Name;    
+      item.OnClick := CopyInFormatClick;
+      if item.Caption=fSettings.DefaultCopyFormatName then
+        item.Default := true;
+      miCopyAs.Add(item);
+      res := FindNext(sr);
+    end;
+  finally
+    SysUtils.FindClose(sr);
   end;
+
+  {$IFDEF DEBUG}
+  item := TMenuItem.Create(Self);
+  item.Caption := _l('XML...');
+  item.OnClick := CopyAsXMLClick;
+  miCopyAs.Add(item);
+ {$ENDIF}
 
   item := TMenuItem.Create(Self);
   item.Caption := '-';
@@ -178,7 +207,15 @@ end;
 procedure TfWordLookupBase.CopyInFormatClick(Sender: TObject);
 begin
   CopyToClipboard(
-    CopyFormats[(Sender as TMenuItem).Tag],
+    UserDataDir+'\CopyFormats\'+TCopyFormatMenuItem(Sender).Filename,
+    GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+  );
+end;
+
+procedure TfWordLookupBase.CopyAsXMLClick(Sender: TObject);
+begin
+  CopyToClipboard(
+    '',
     GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
   );
 end;
@@ -294,13 +331,12 @@ begin
   if (Key=^C) and StringGrid.Visible then begin
     CopyFormat := fSettings.DefaultCopyFormat;
     if (CopyFormat<0) or (CopyFormat>CopyFormats.Count-1) then
-      CopyToClipboard(
-        nil,
+      CopyAsText(
         GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       )
     else
       CopyToClipboard(
-        CopyFormats[CopyFormat],
+        UserDataDir+'\CopyFormats\'+fSettings.DefaultCopyFormatName+'.xslt',
         GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       );
     Key := #00;
@@ -362,31 +398,65 @@ begin
   end;
 end;
 
-procedure TfWordLookupBase.CopyToClipboard(const AFormat: TCopyFormat; const AReplace: boolean);
+//Very simple default copying
+procedure TfWordLookupBase.CopyAsText(const AReplace: boolean);
 var i: integer;
-   AText, tmp: string;
+  AText, tmp: string;
 begin
   AText := '';
   for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
-    if AFormat<>nil then
-      tmp := AFormat.FormatResult(FResults[i-1])
-    else
-      tmp := FResults[i-1].kanji; //very simple default copying
+    tmp := FResults[i-1].kanji; //very simple default copying
     if AText<>'' then
       AText := AText+#13+tmp
     else
       AText := tmp;
   end;
 
-  if AReplace then
+  if AReplace or (Clip='') then
     clip := AText
   else
-  if clip<>'' then
-    clip := clip + #13 + AText //add newline
-  else
-    clip := AText;
+    clip := clip + #13 + AText; //add newline
   fMenu.SetClipboard;
 end;
+
+
+function XsltTransform(const s: UnicodeString; const AXsl: IXMLDocument): WideString;
+var AInp: IXMLDocument;
+begin
+  AInp := LoadXMLData(s);
+  AInp.Node.TransformNode(AXsl.Node, Result);
+end;
+
+//AXsltFilename must be full path+filename or empty (default xml)
+procedure TfWordLookupBase.CopyToClipboard(const AXsltFilename: string;
+  const AReplace: boolean);
+var i: integer;
+   AText, tmp: string;
+   AXsl: IXMLDocument;
+begin
+  AText := '';
+  if AXsltFilename<>'' then
+    AXsl := LoadXMLDocument(AXsltFilename)
+  else
+    AXsl := nil;
+
+  for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
+    tmp := FResults[i-1].ToEdictXml;
+    if AXsl<>nil then
+      tmp := XsltTransform(tmp, AXsl);
+    if AText<>'' then
+      AText := AText+#13+tmp
+    else
+      AText := tmp;
+  end;
+
+  if AReplace or (Clip='') then
+    clip := AText
+  else
+    clip := clip + #13 + AText; //add newline
+  fMenu.SetClipboard;
+end;
+
 
 //True if no results in the table
 function TfWordLookupBase.IsEmpty: boolean;
@@ -415,7 +485,7 @@ end;
 procedure TfWordLookupBase.btnCopyToClipboardClick(Sender: TObject);
 begin
  //Emulate older behavior
-  CopyToClipboard(nil,{replace=}false);
+  CopyAsText({replace=}false);
 end;
 
 procedure TfWordLookupBase.miGoToVocabClick(Sender: TObject);
