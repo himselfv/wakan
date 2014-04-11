@@ -99,3 +99,7 @@ Release/warodai.edict2
 Release/cedict_ts.u8
 Release/jr-edict.tags.ucs2
 Release/jr-edict.tags.utf
+Release/classical
+Release/classical.euc
+Release/enamdict
+Release/UserData/wakan*.usr
