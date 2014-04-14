@@ -14,7 +14,7 @@ gloss=%text%{%last%!?, }
 <xsl:template match="/entry">
   <xsl:apply-templates select="k_ele" />
   <xsl:if test="r_ele">
-    <xsl:text>[</xsl:text>
+    <xsl:text> [</xsl:text>
     <xsl:apply-templates select="r_ele" />
     <xsl:text>]</xsl:text>
   </xsl:if>
