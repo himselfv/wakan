@@ -34,7 +34,7 @@ comment=(%text%)
 
 <!-- article=%clauses%{%dict%? ——%dict%}{%last%!?; } -->
 <xsl:template match="article">
-  <xsl:if test="preceding-sibling::node()[name()='article']"><xsl:text>; </xsl:text></xsl:if>
+  <xsl:if test="preceding-sibling::node()[name()='article']"><xsl:text> / </xsl:text></xsl:if>
   <xsl:apply-templates select="sense" />
   <xsl:if test="dict">
     <xsl:text> ——</xsl:text>
