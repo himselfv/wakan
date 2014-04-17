@@ -3,6 +3,10 @@
 
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
+<!--
+# 友船 [ともぶね]
+-->
+
 <xsl:template match="/entry">
   <xsl:apply-templates select="k_ele" />
   <xsl:if test="r_ele">

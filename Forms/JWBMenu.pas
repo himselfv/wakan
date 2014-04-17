@@ -608,7 +608,7 @@ uses Types, clipbrd, JWBCore, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
  JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBStatistics, JWBKanji,
  JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBDictMan, JWBDictImport,
  JWBScreenTip, JWBCategories, JWBAnnotations, JWBCommandLine, JWBAutoImport,
- JWBComponents, JWBDownloader, JWBCategoryMgr, JWBCopyFormats, JWBRefLinks;
+ JWBComponents, JWBDownloader, JWBCategoryMgr, JWBRefLinks;
 
 {$R *.DFM}
 
@@ -897,10 +897,6 @@ begin
           raise;
         end;
       end;
-
-
-   { Misc }
-    CopyFormats.LoadFromFile(ProgramDataDir+'\copyformats.ini');
 
 
    { User data }

@@ -302,7 +302,6 @@
         <DCCReference Include="Components\JWBCharData.pas"/>
         <DCCReference Include="Components\JWBWakanText.pas"/>
         <DCCReference Include="Components\RaineRadicals.pas"/>
-        <DCCReference Include="Components\JWBCopyFormats.pas"/>
         <DCCReference Include="Components\JWBLegacyMarkup.pas"/>
         <DCCReference Include="Components\JWBRefLinks.pas"/>
         <DCCReference Include="Components\JWBJobs.pas"/>

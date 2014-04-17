@@ -4,11 +4,11 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!--
-clause={%id%?%id%. }%text%{%last%!? }
-marker={%first%? <}%text%{%last%!?,}{%last%?>}
+# Single line with non-numbered senses
+# 伴船 [ともぶね] consort ship; joint boarding, boarding a ship together ——EDICT2
+marker=<%text>
 group=
 comment=(%text%)
-gloss=%text%{%last%!?, }
 -->
 
 <xsl:template match="/entry">

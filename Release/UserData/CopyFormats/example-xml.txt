@@ -41,7 +41,6 @@ XML is similar to JMDICT format, but without some fields and with some additiona
   </sense>
   <dict>CLASSICAL</dict>
 </article>
-
 </entry>
 
 
@@ -57,3 +56,19 @@ Article:
 Sense:
     glosses: array of Gloss
     markers: TMarkers;
+
+
+What can be changed:
+A. Sense numbering:
+  (1)
+  1.
+  no numbering
+B. Sense separator:
+  /
+  ;
+C. Gloss separator:
+  ;
+  ,
+D. Show/skip dictionary names.
+E. Show/skip grammar marks.
+F. Format as single/multiple lines.

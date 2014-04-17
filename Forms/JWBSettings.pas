@@ -274,10 +274,8 @@ type
     Label18: TLabel;
     lbCopyFormats: TListBox;
     mmCopyFormatExample: TMemo;
-    Label19: TLabel;
     lblCopyFormatsIni: TUrlLabel;
     lblCopyFormatsDocumentation: TUrlLabel;
-    Label20: TLabel;
     tsCharacterDetailsGeneral: TTabSheet;
     cbDetailsShowKanjiClass: TCheckBox;
     cbDetailsKanjiInColor: TCheckBox;
@@ -403,18 +401,12 @@ type
     procedure ReloadPinyinSetup;
 
   protected //CopyFormats
-    FDefaultCopyFormat: integer;
-    FDefaultCopyFormatName: string; //see commens for GetDefaultCopyFormat
+    FDefaultCopyFormatName: string;
     procedure ReloadCopyFormats;
     procedure UpdateCopyFormatExample;
-    function GetDefaultCopyFormat: integer;
-    procedure SetDefaultCopyFormat(const Value: integer);
-    procedure SetDefaultCopyFormatName(const Value: string);
   public
-    property DefaultCopyFormat: integer read GetDefaultCopyFormat
-      write SetDefaultCopyFormat;
     property DefaultCopyFormatName: string read FDefaultCopyFormatName
-      write SetDefaultCopyFormatName;
+      write FDefaultCopyFormatName;
 
 
   public
@@ -483,7 +475,7 @@ uses JWBMenu, JWBStrings, JWBCore, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
   JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
   JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport,
-  JWBIO, JWBDicSearch, JWBCopyFormats;
+  JWBIO, JWBDicSearch, JWBWordLookupBase;
 
 var colorfrom:integer;
 
@@ -2468,75 +2460,34 @@ end;
 
 { Copy formats }
 
-{ Default copy format is stored in the registry and we need something invariant
- there, preferably format name, not number.
- But when loading the settings the formats are not yet available, so we read
- the name and resolve it on the first request }
-function TfSettings.GetDefaultCopyFormat: integer;
-begin
-  if FDefaultCopyFormat>=0 then begin
-    Result := FDefaultCopyFormat;
-    exit;
-  end;
-  if CopyFormats.Count<1 then begin
-   //Nothing we could return even if we wanted to!
-    Result := -1;
-    exit;
-  end else
-  if FDefaultCopyFormatName<>'' then begin
-   //Resolve format name set earlier
-    Result := CopyFormats.Find(FDefaultCopyFormatName);
-    FDefaultCopyFormat := Result;
-  end else begin
-   //Use first one available
-    Result := 0;
-    exit;
-  end;
-end;
-
-procedure TfSettings.SetDefaultCopyFormat(const Value: integer);
-begin
-  FDefaultCopyFormat := Value;
-  if (Value<0) or (Value>CopyFormats.Count-1) then
-    FDefaultCopyFormatName := ''
-  else
-    FDefaultCopyFormatName := CopyFormats[FDefaultCopyFormat].Name;
-end;
-
-procedure TfSettings.SetDefaultCopyFormatName(const Value: string);
-begin
-  FDefaultCopyFormatName := Value;
-  FDefaultCopyFormat := -1; //resolve next time it's needed
-end;
-
 procedure TfSettings.tsDictCopyFormatsShow(Sender: TObject);
 begin
   ReloadCopyFormats;
-  lblCopyFormatsIni.URL := AppFolder + '/CopyFormats.ini';
+  lblCopyFormatsIni.URL := GetCopyFormatsDir;
   lblCopyFormatsDocumentation.URL := WikiUrl('CopyFormats');
 end;
 
 procedure TfSettings.ReloadCopyFormats;
-var i: integer;
+var fname: string;
 begin
   lbCopyFormats.Clear;
-  for i := 0 to CopyFormats.Count-1 do
-    lbCopyFormats.Items.Add(CopyFormats[i].Name);
-  lbCopyFormats.ItemIndex := DefaultCopyFormat;
+  for fname in GetCopyFormats do
+    lbCopyFormats.Items.Add(ChangeFileExt(ExtractFilename(fname),''));
+  lbCopyFormats.ItemIndex := lbCopyFormats.Items.IndexOf(DefaultCopyFormatName);
   lbCopyFormatsClick(lbCopyFormats);
 end;
 
 procedure TfSettings.lbCopyFormatsClick(Sender: TObject);
 begin
   if lbCopyFormats.ItemIndex<0 then exit;
-  DefaultCopyFormat := lbCopyFormats.ItemIndex;
+  DefaultCopyFormatName := lbCopyFormats.Items[lbCopyFormats.ItemIndex];
   UpdateCopyFormatExample;
 end;
 
 procedure TfSettings.UpdateCopyFormatExample;
 var res: TSearchResult;
 begin
-  if FDefaultCopyFormat<0 then begin
+  if DefaultCopyFormatName='' then begin
     mmCopyFormatExample.Text := '';
     exit;
   end;
@@ -2561,7 +2512,7 @@ begin
   end;
 
   mmCopyFormatExample.Text :=
-    CopyFormats[FDefaultCopyFormat].FormatResult(@res);
+    XsltTransform(res.ToEdictXml, GetCopyFormatsDir+'\'+DefaultCopyFormatName+'.xslt');
 end;
 
 end.

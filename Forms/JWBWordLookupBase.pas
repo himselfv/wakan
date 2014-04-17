@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, Grids, WakanWordGrid, StdCtrls, WakanPaintbox, Buttons, ExtCtrls,
-  Menus, JWBDicSearch, JWBCopyFormats, Vcl.ImgList;
+  Menus, ImgList, XmlDoc, XmlIntf, JWBDicSearch;
 
 type
   TfWordLookupBase = class(TForm)
@@ -80,11 +80,16 @@ type
 var
   fWordLookupBase: TfWordLookupBase;
 
+//CopyFormats
+function GetCopyFormatsDir: string;
+function GetCopyFormats: TArray<string>;
+function XsltTransform(const s: UnicodeString; const AXslt: IXMLDocument): WideString; overload;
+function XsltTransform(const s: UnicodeString; const AXsltFilename: string): WideString; overload;
 
 implementation
 uses UITypes, JWBStrings, JWBCore, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
   JWBVocabAdd, JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage,
-  JWBWordGrid, ActiveX, XmlDoc, XmlIntf;
+  JWBWordGrid, ActiveX;
 
 {$R *.dfm}
 
@@ -155,6 +160,54 @@ begin
   miAddToVocab.Visible := (ARow>0);
 end;
 
+
+{ CopyFormats }
+
+//Returns the full path to the folder where CopyFormats are stored in this
+//configuration
+function GetCopyFormatsDir: string;
+begin
+  Result := UserDataDir+'\CopyFormats';
+end;
+
+//Retrieves a list of all avaialable CopyFormat filenames
+function GetCopyFormats: TArray<string>;
+var sr: TSearchRec;
+  res: integer;
+  fdir: string;
+begin
+  SetLength(Result, 0);
+  fdir := GetCopyFormatsDir;
+  res := FindFirst(fdir+'\*.xslt', faAnyFile and not faDirectory, sr);
+  try
+    while res=0 do begin
+      SetLength(Result, Length(Result)+1);
+      Result[Length(Result)-1] := fdir + '\' + sr.Name;
+      res := FindNext(sr);
+    end;
+  finally
+    SysUtils.FindClose(sr);
+  end;
+end;
+
+//Transforms a JMDICT-XML-formatted record using the specified CopyFormat
+function XsltTransform(const s: UnicodeString; const AXslt: IXMLDocument): WideString; overload;
+var AInp: IXMLDocument;
+begin
+  AInp := LoadXMLData(s);
+  AInp.Node.TransformNode(AXslt.Node, Result);
+end;
+
+function XsltTransform(const s: UnicodeString; const AXsltFilename: string): WideString; overload;
+var AXslt: IXMLDocument;
+begin
+  if AXsltFilename<>'' then begin
+    AXslt := LoadXMLDocument(AXsltFilename);
+    Result := XsltTransform(s, AXslt);
+  end else
+    Result := s;
+end;
+
 type
   TCopyFormatMenuItem = class(TMenuItem)
   public
@@ -162,29 +215,21 @@ type
   end;
 
 procedure TfWordLookupBase.ReloadCopyFormats;
-var sr: TSearchRec;
-  res: integer;
-  item: TMenuItem;  
+var item: TMenuItem;
+  fname: string;
 begin
   miCopyAs.Clear;
 
  //Rescan every time because the user could be adding files there
  //and expecting results
-  res := FindFirst(UserDataDir+'\CopyFormats\*.xslt',
-    faAnyFile and not faDirectory, sr);
-  try
-    while res=0 do begin
-      item := TCopyFormatMenuItem.Create(Self);
-      item.Caption := ChangeFileExt(sr.Name, '');
-      TCopyFormatMenuItem(item).Filename := sr.Name;    
-      item.OnClick := CopyInFormatClick;
-      if item.Caption=fSettings.DefaultCopyFormatName then
-        item.Default := true;
-      miCopyAs.Add(item);
-      res := FindNext(sr);
-    end;
-  finally
-    SysUtils.FindClose(sr);
+  for fname in GetCopyFormats() do begin
+    item := TCopyFormatMenuItem.Create(Self);
+    TCopyFormatMenuItem(item).Filename := ExtractFilename(fname);
+    item.Caption := ChangeFileExt(TCopyFormatMenuItem(item).Filename, '');
+    item.OnClick := CopyInFormatClick;
+    if item.Caption=fSettings.DefaultCopyFormatName then
+      item.Default := true;
+    miCopyAs.Add(item);
   end;
 
   {$IFDEF DEBUG}
@@ -207,7 +252,7 @@ end;
 procedure TfWordLookupBase.CopyInFormatClick(Sender: TObject);
 begin
   CopyToClipboard(
-    UserDataDir+'\CopyFormats\'+TCopyFormatMenuItem(Sender).Filename,
+    GetCopyFormatsDir+'\'+TCopyFormatMenuItem(Sender).Filename,
     GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
   );
 end;
@@ -325,18 +370,16 @@ begin
 end;
 
 procedure TfWordLookupBase.StringGridKeyPress(Sender: TObject; var Key: Char);
-var CopyFormat: integer;
 begin
  //Copy the article to clipboard on Ctrl-C
   if (Key=^C) and StringGrid.Visible then begin
-    CopyFormat := fSettings.DefaultCopyFormat;
-    if (CopyFormat<0) or (CopyFormat>CopyFormats.Count-1) then
+    if fSettings.DefaultCopyFormatName='' then
       CopyAsText(
         GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       )
     else
       CopyToClipboard(
-        UserDataDir+'\CopyFormats\'+fSettings.DefaultCopyFormatName+'.xslt',
+        GetCopyFormatsDir+'\'+fSettings.DefaultCopyFormatName+'.xslt',
         GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       );
     Key := #00;
@@ -419,36 +462,19 @@ begin
   fMenu.SetClipboard;
 end;
 
-
-function XsltTransform(const s: UnicodeString; const AXsl: IXMLDocument): WideString;
-var AInp: IXMLDocument;
-begin
-  AInp := LoadXMLData(s);
-  AInp.Node.TransformNode(AXsl.Node, Result);
-end;
-
 //AXsltFilename must be full path+filename or empty (default xml)
 procedure TfWordLookupBase.CopyToClipboard(const AXsltFilename: string;
   const AReplace: boolean);
 var i: integer;
-   AText, tmp: string;
-   AXsl: IXMLDocument;
+   AText: string;
 begin
   AText := '';
-  if AXsltFilename<>'' then
-    AXsl := LoadXMLDocument(AXsltFilename)
-  else
-    AXsl := nil;
-
-  for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do begin
-    tmp := FResults[i-1].ToEdictXml;
-    if AXsl<>nil then
-      tmp := XsltTransform(tmp, AXsl);
+  for i := StringGrid.Selection.Top to StringGrid.Selection.Bottom do
     if AText<>'' then
-      AText := AText+#13+tmp
+      AText := AText+#13+FResults[i-1].ToEdictXml
     else
-      AText := tmp;
-  end;
+      AText := FResults[i-1].ToEdictXml;
+  AText := XsltTransform(AText, AXsltFilename);
 
   if AReplace or (Clip='') then
     clip := AText

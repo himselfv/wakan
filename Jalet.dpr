@@ -72,7 +72,6 @@ uses
   JWBCharData in 'Components\JWBCharData.pas',
   JWBWakanText in 'Components\JWBWakanText.pas',
   RaineRadicals in 'Components\RaineRadicals.pas',
-  JWBCopyFormats in 'Components\JWBCopyFormats.pas',
   JWBLegacyMarkup in 'Components\JWBLegacyMarkup.pas',
   JWBRefLinks in 'Components\JWBRefLinks.pas',
   JWBJobs in 'Components\JWBJobs.pas',
