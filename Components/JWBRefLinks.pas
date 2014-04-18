@@ -36,8 +36,10 @@ type
   TRefMenuItem = class(TMenuItem)
   protected
     FURL: string;
+    FIconLibID: HModule;
   public
     constructor Create(AOwner: TComponent; ARefLink: TRefLink; AData: string); reintroduce;
+    destructor Destroy; override;
     procedure Click; override;
   end;
 
@@ -58,7 +60,7 @@ function LoadLink(const AFilename: string): TRefLink;
 
 implementation
 uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData, IniFiles,
-  Windows;
+  Windows, ShellApi;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';
@@ -315,32 +317,44 @@ begin
 end;
 
 constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
-var ALibID: HModule;
-  hRes: HRSRC;
-  AIcon: TIcon;
+var AIcon: TIcon;
+  ext: string;
 begin
   inherited Create(AOwner);
   Self.Caption := FormatReferenceLinkText(ARefLink.Title, AData);
   Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
   Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
 
-  if ARefLink.IconFile<>'' then
-    if ExtractFileExt(ARefLink.IconFile)='.ico' then
-      Self.Bitmap.LoadFromFile(ARefLink.IconFile)
-    else begin
-      SetCurrentDir(ExtractFileDir(ARefLink.Filename));
-      ALibID := LoadLibrary(ARefLink.IconFile);
-      if ALibID<>0 then begin
-        LoadImage(
-          ALibID, MAKEINTRESOURCE(ARefLink.IconIndex), IMAGE_ICON, 16, 16,
-        );
-        hRes := FindResource(ALibID, , RT_GROUP_ICON);
-        AIcon.LoadFromResourceID();
-
+  if ARefLink.IconFile<>'' then begin
+    //Both .ico and .dll paths may be relative for all we know
+    SetCurrentDir(ExtractFileDir(ARefLink.Filename));
+    AIcon := TIcon.Create;
+    try
+      ext := ExtractFileExt(ARefLink.IconFile);
+      if (ext='.dll') or (ext='.exe') then begin
+        FIconLibID := LoadLibraryEx(PChar(ARefLink.IconFile), 0,
+          LOAD_LIBRARY_AS_DATAFILE);
+        if FIconLibID<>0 then begin
+          AIcon.LoadFromResourceID(FIconLibID, ARefLink.IconIndex);
+        end else
+          AIcon := nil;
+      end else begin
+        FIconLibID := 0;
+        AIcon.LoadFromFile(ARefLink.IconFile);
       end;
+      if AIcon<>nil then
+        Self.Bitmap.Assign(AIcon);
+    finally
+      FreeAndNil(AIcon);
     end;
+  end;
+end;
 
-
+destructor TRefMenuItem.Destroy;
+begin
+  if FIconLibID<>0 then
+    FreeLibrary(FIconLibID);
+  inherited;
 end;
 
 procedure TRefMenuItem.Click;

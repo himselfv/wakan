@@ -5,3 +5,5 @@ Hint=Look up "%s 同義語" in Google
 Language=J
 IDList=
 HotKey=0
+IconFile=.\google.ico
+IconIndex=0

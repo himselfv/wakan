@@ -4,3 +4,5 @@ Title="%s"
 Hint=Look up "%s" in Google
 IDList=
 HotKey=0
+IconFile=.\google.ico
+IconIndex=0
