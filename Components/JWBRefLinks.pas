@@ -16,19 +16,16 @@ type
   TRefLink = class
   public
     LinkType: TRefLinkType;
-    Caption: string;
+    Title: string;
     Hint: string;
     URL: string;
-    constructor FromString(const ADeclaration: string);
+    WorkingDirectory: string;
+    IconFile: string;
+    IconIndex: integer;
+    HotKey: integer;
+    constructor Create(const AFilename: string);
     function MatchesLang(const ACurLang: char): boolean;
   end;
-
-  TRefLinkList = class(TObjectList<TRefLink>);
-
-{ Pre-created lists. }
-var
-  CharacterLinks: TRefLinkList;
-  ExpressionLinks: TRefLinkList;
 
 { Formats any of "Caption, Hint, URL", inserting actual character/expression }
 function FormatReferenceLinkText(AText: string; AData: string): string;
@@ -37,7 +34,6 @@ type
  { TMenuItem tailored to open the specified link when clicked }
   TRefMenuItem = class(TMenuItem)
   protected
-    FRefLink: TRefLink;
     FURL: string;
   public
     constructor Create(AOwner: TComponent; ARefLink: TRefLink; AData: string); reintroduce;
@@ -46,7 +42,6 @@ type
 
   TRefLabel = class(TLabel)
   protected
-    FRefLink: TRefLink;
     FURL: string;
     procedure CMParentFontChanged(var Message: TCMParentFontChanged); message CM_PARENTFONTCHANGED;
   public
@@ -54,79 +49,56 @@ type
     procedure Click; override;
   end;
 
+function GetCharacterLinksDir: string;
+function GetExpressionLinksDir: string;
+function GetCharacterLinks: TArray<string>;
+function GetExpressionLinks: TArray<string>;
+function LoadLink(const AFilename: string): TRefLink;
 
 implementation
-uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData;
+uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData, IniFiles;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';
 
-constructor TRefLink.FromString(const ADeclaration: string);
-var ps, pc: PChar;
-  part_id: integer;
-  part: string;
-  flag_specsymbol: boolean;
-
-  procedure CommitText;
-  begin
-    part := part + spancopy(ps, pc);
-  end;
-
-  procedure FinalizePart;
-  begin
-    CommitText;
-    part := Trim(part);
-    case part_id of
-      0: begin
-        if Length(part)<>1 then
-          raise Exception.CreateFmt(eInvalidReferenceLinkDeclaration,[ADeclaration]);
-        case UpperCase(part)[1] of
-         'A': LinkType := ltAll;
-         'J': LinkType := ltJapaneseOnly;
-         'C': LinkType := ltChineseOnly;
-        else
-          raise Exception.CreateFmt(eInvalidReferenceLinkDeclaration,[ADeclaration]);
-        end;
-      end;
-
-      1: Caption := part;
-      2: Hint := part;
-      3: URL := part;
-    else
-      raise Exception.CreateFmt(eInvalidReferenceLinkDeclaration,[ADeclaration]);
-    end;
-    part := '';
-  end;
-
+function LinkTypeFromStr(const AType: string): TRefLinkType;
 begin
-  part_id := 0;
-  part := '';
-  flag_specsymbol := false;
-  ps := PChar(ADeclaration);
-  pc := ps;
-  while (pc^<>#00) and (part_id<4) do
-    if flag_specsymbol then begin
-      part := part + pc^;
-      flag_specsymbol := false;
-      Inc(pc);
-      ps := pc;
-    end else
-    if pc^='\' then begin
-      Inc(pc);
-      CommitText; //and keep the specsymbol opener, it's needed later
-      flag_specsymbol := true;
-      ps := pc;
-    end else
-    if pc^=',' then begin
-      FinalizePart();
-      Inc(part_id);
-      Inc(pc);
-      ps := pc;
-    end else
-      Inc(pc);
-  if pc^<>#00 then
-    raise Exception.CreateFmt(eInvalidReferenceLinkDeclaration, [ADeclaration]);
-  FinalizePart();
+  if AType='' then
+    raise Exception.CreateFmt(eInvalidReferenceLinkDeclaration,[AType])
+  else
+    case UpperCase(AType)[1] of
+     'A': Result := ltAll;
+     'J': Result := ltJapaneseOnly;
+     'C': Result := ltChineseOnly;
+    else
+      raise Exception.CreateFmt(eInvalidReferenceLinkDeclaration,[AType]);
+    end;
+end;
+
+constructor TRefLink.Create(const AFilename: string);
+var data: TMemIniFile;
+  tmp: string;
+begin
+  inherited Create;
+  data := TMemIniFile.Create(AFilename);
+  try
+    Self.URL := data.ReadString('InternetShortcut', 'URL', '');
+    Self.Title := data.ReadString('InternetShortcut', 'Title', '');
+    if Self.Title='' then
+      Self.Title := ChangeFileExt(ExtractFilename(AFilename), '');
+    Self.Hint := data.ReadString('InternetShortcut', 'Hint', '');
+    Self.WorkingDirectory := data.ReadString('InternetShortcut', 'WorkingDirectory', '');
+    Self.IconIndex := data.ReadInteger('InternetShortcut', 'IconIndex', -1);
+    Self.IconFile := data.ReadString('InternetShortcut', 'IconFile', '');
+    Self.HotKey := data.ReadInteger('InternetShortcut', 'HotKey', 0);
+    tmp := data.ReadString('InternetShortcut', 'Language', '');
+    if tmp='' then
+      Self.LinkType := ltAll
+    else
+      Self.LinkType := LinkTypeFromStr(tmp);
+  finally
+    FreeAndNil(data);
+  end;
 end;
 
 //True if this reference link should be shown for the specified target language
@@ -342,8 +314,7 @@ end;
 constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
 begin
   inherited Create(AOwner);
-  FRefLink := ARefLink;
-  Self.Caption := FormatReferenceLinkText(ARefLink.Caption, AData);
+  Self.Caption := FormatReferenceLinkText(ARefLink.Title, AData);
   Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
   Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
 end;
@@ -356,8 +327,7 @@ end;
 constructor TRefLabel.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
 begin
   inherited Create(AOwner);
-  FRefLink := ARefLink;
-  Self.Caption := FormatReferenceLinkText(ARefLink.Caption, AData);
+  Self.Caption := FormatReferenceLinkText(ARefLink.Title, AData);
   Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
   Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
   Self.Cursor := crHandPoint;
@@ -377,14 +347,55 @@ begin
 end;
 
 
-initialization
-  CharacterLinks := TRefLinkList.Create(true);
-  ExpressionLinks := TRefLinkList.Create(true);
+//Returns the full path to the folder where CharacterLinks are stored in this
+//configuration
+function GetCharacterLinksDir: string;
+begin
+  Result := UserDataDir + '\CharacterLinks';
+end;
 
-finalization
- {$IFDEF CLEAN_DEINIT}
-  FreeAndNil(ExpressionLinks);
-  FreeAndNil(CharacterLinks);
- {$ENDIF}
+//Same for ExpressionLinks
+function GetExpressionLinksDir: string;
+begin
+  Result := UserDataDir + '\ExpressionLinks';
+end;
+
+//Retrieves a list of all available link files in a folder
+function GetLinks(const ADir: string): TArray<string>;
+var sr: TSearchRec;
+  res: integer;
+  tmp: string;
+begin
+  SetLength(Result, 0);
+  res := FindFirst(ADir+'\*.*', faAnyFile and not faDirectory, sr);
+  try
+    while res=0 do begin
+      tmp := ExtractFileExt(sr.Name).ToLower;
+      if (tmp='.url') or (tmp='.website') then begin
+        SetLength(Result, Length(Result)+1);
+        Result[Length(Result)-1] := ADir + '\' + sr.Name;
+      end;
+      res := FindNext(sr);
+    end;
+  finally
+    SysUtils.FindClose(sr);
+  end;
+end;
+
+function GetCharacterLinks: TArray<string>;
+begin
+  Result := GetLinks(GetCharacterLinksDir);
+end;
+
+function GetExpressionLinks: TArray<string>;
+begin
+  Result := GetLinks(GetExpressionLinksDir);
+end;
+
+function LoadLink(const AFilename: string): TRefLink;
+begin
+  Result := TRefLink.Create(AFilename);
+end;
+
 
 end.

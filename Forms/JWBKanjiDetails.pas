@@ -1030,6 +1030,8 @@ end;
 procedure TfKanjiDetails.ReloadReferenceLinks;
 var i: integer;
   lbl: TRefLabel;
+  fname: string;
+  ref: TRefLink;
 begin
   if Self.Visible then
     SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
@@ -1042,17 +1044,23 @@ begin
       exit;
     end;
 
-    for i := 0 to CharacterLinks.Count-1 do
-      if CharacterLinks[i].MatchesLang(curLang) then begin
-        lbl := TRefLabel.Create(Self, CharacterLinks[i], curSingleChar);
-        lbl.Margins.Left := 0;
-        lbl.Margins.Top := 0;
-        lbl.Margins.Right := 5;
-        lbl.Margins.Bottom := 5;
-        lbl.AlignWithMargins := true;
-        lbl.Left := 10;
-        pnlLinks.InsertControl(lbl);
+    for fname in GetCharacterLinks() do begin
+      ref := LoadLink(fname);
+      try
+        if ref.MatchesLang(curLang) then begin
+          lbl := TRefLabel.Create(Self, ref, curSingleChar);
+          lbl.Margins.Left := 0;
+          lbl.Margins.Top := 0;
+          lbl.Margins.Right := 5;
+          lbl.Margins.Bottom := 5;
+          lbl.AlignWithMargins := true;
+          lbl.Left := 10;
+          pnlLinks.InsertControl(lbl);
+        end;
+      finally
+        FreeAndNil(ref);
       end;
+    end;
 
   finally
     pnlLinks.EnableAlign;

@@ -1109,8 +1109,6 @@ begin
           if ln='Suffixes'then sect:=7 else
           if ln='IgnoreWords'then sect:=8 else
           if ln='ReadingChart'then sect:=9 else
-          if ln='CharacterLinks' then sect:=11 else
-          if ln='ExpressionLinks' then sect:=12 else
           sect:=0;
         end else
          //Some of the fields are in hex unicode, so we have to convert them
@@ -1122,8 +1120,6 @@ begin
             7: suffixl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
             8: ignorel.Add(fstr(ln));
             9: readchl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
-            11: CharacterLinks.Add(TRefLink.FromString(ln));
-            12: ExpressionLinks.Add(TRefLink.FromString(ln));
           end;
       end;
     end;

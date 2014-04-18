@@ -9,6 +9,7 @@
 URL=http://web.mit.edu/jpnet/ji/data/%s:chprop(57)%.html
 Title=KanjiProject
 Hint=web.mit.edu/jpnet/ji - KanjiProject Data Page
+Language=Language
 
 # We will try to honor these... in time.
 IconFile=C:\WINDOWS\SYSTEM\url.dll

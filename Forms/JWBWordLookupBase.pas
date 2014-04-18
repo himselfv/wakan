@@ -285,6 +285,8 @@ end;
 procedure TfWordLookupBase.ReloadReferenceLinks;
 var i, ARow, idx: integer;
   mi: TMenuItem;
+  fname: string;
+  ref: TRefLink;
 begin
   ClearReferenceLinks;
 
@@ -312,16 +314,22 @@ begin
     idx := pmPopup.Items.IndexOf(miAfterLookupIn);
   end;
 
-  for i := 0 to ExpressionLinks.Count-1 do
-    if ExpressionLinks[i].MatchesLang(curLang) then begin
-      mi := TRefMenuItem.Create(Self, ExpressionLinks[i], FResults[ARow-1].kanji);
-      if fSettings.cbDictRefLinksInSubmenu.Checked then
-        miLookUpIn.Add(mi)
-      else begin
-        pmPopup.Items.Insert(idx, mi);
-        Inc(idx);
+  for fname in GetExpressionLinks() do begin
+    ref := LoadLink(fname);
+    try
+      if ref.MatchesLang(curLang) then begin
+        mi := TRefMenuItem.Create(Self, ref, FResults[ARow-1].kanji);
+        if fSettings.cbDictRefLinksInSubmenu.Checked then
+          miLookUpIn.Add(mi)
+        else begin
+          pmPopup.Items.Insert(idx, mi);
+          Inc(idx);
+        end;
       end;
+    finally
+      FreeAndNil(ref);
     end;
+  end;
 end;
 
 procedure TfWordLookupBase.miResetColumnsClick(Sender: TObject);
