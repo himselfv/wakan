@@ -15,6 +15,7 @@ type
   TRefLinkType = (ltJapaneseOnly, ltChineseOnly, ltAll);
   TRefLink = class
   public
+    Filename: string;
     LinkType: TRefLinkType;
     Title: string;
     Hint: string;
@@ -56,7 +57,8 @@ function GetExpressionLinks: TArray<string>;
 function LoadLink(const AFilename: string): TRefLink;
 
 implementation
-uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData, IniFiles;
+uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData, IniFiles,
+  Windows;
 
 resourcestring
   eInvalidReferenceLinkDeclaration = 'Invalid reference link declaration: %s';
@@ -82,6 +84,7 @@ begin
   inherited Create;
   data := TMemIniFile.Create(AFilename);
   try
+    Self.Filename := AFilename;
     Self.URL := data.ReadString('InternetShortcut', 'URL', '');
     Self.Title := data.ReadString('InternetShortcut', 'Title', '');
     if Self.Title='' then
@@ -312,11 +315,32 @@ begin
 end;
 
 constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
+var ALibID: HModule;
+  hRes: HRSRC;
+  AIcon: TIcon;
 begin
   inherited Create(AOwner);
   Self.Caption := FormatReferenceLinkText(ARefLink.Title, AData);
   Self.Hint := FormatReferenceLinkText(ARefLink.Hint, AData);
   Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
+
+  if ARefLink.IconFile<>'' then
+    if ExtractFileExt(ARefLink.IconFile)='.ico' then
+      Self.Bitmap.LoadFromFile(ARefLink.IconFile)
+    else begin
+      SetCurrentDir(ExtractFileDir(ARefLink.Filename));
+      ALibID := LoadLibrary(ARefLink.IconFile);
+      if ALibID<>0 then begin
+        LoadImage(
+          ALibID, MAKEINTRESOURCE(ARefLink.IconIndex), IMAGE_ICON, 16, 16,
+        );
+        hRes := FindResource(ALibID, , RT_GROUP_ICON);
+        AIcon.LoadFromResourceID();
+
+      end;
+    end;
+
+
 end;
 
 procedure TRefMenuItem.Click;
