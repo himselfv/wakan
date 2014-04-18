@@ -36,10 +36,8 @@ type
   TRefMenuItem = class(TMenuItem)
   protected
     FURL: string;
-    FIconLibID: HModule;
   public
     constructor Create(AOwner: TComponent; ARefLink: TRefLink; AData: string); reintroduce;
-    destructor Destroy; override;
     procedure Click; override;
   end;
 
@@ -93,7 +91,7 @@ begin
       Self.Title := ChangeFileExt(ExtractFilename(AFilename), '');
     Self.Hint := data.ReadString('InternetShortcut', 'Hint', '');
     Self.WorkingDirectory := data.ReadString('InternetShortcut', 'WorkingDirectory', '');
-    Self.IconIndex := data.ReadInteger('InternetShortcut', 'IconIndex', -1);
+    Self.IconIndex := data.ReadInteger('InternetShortcut', 'IconIndex', 0);
     Self.IconFile := data.ReadString('InternetShortcut', 'IconFile', '');
     Self.HotKey := data.ReadInteger('InternetShortcut', 'HotKey', 0);
     tmp := data.ReadString('InternetShortcut', 'Language', '');
@@ -318,7 +316,8 @@ end;
 
 constructor TRefMenuItem.Create(AOwner: TComponent; ARefLink: TRefLink; AData: string);
 var AIcon: TIcon;
-  ext: string;
+  hLargeIcon, hSmallIcon: HICON;
+  res: integer;
 begin
   inherited Create(AOwner);
   Self.Caption := FormatReferenceLinkText(ARefLink.Title, AData);
@@ -326,35 +325,23 @@ begin
   Self.FURL := FormatReferenceLinkText(ARefLink.URL, AData);
 
   if ARefLink.IconFile<>'' then begin
-    //Both .ico and .dll paths may be relative for all we know
-    SetCurrentDir(ExtractFileDir(ARefLink.Filename));
-    AIcon := TIcon.Create;
-    try
-      ext := ExtractFileExt(ARefLink.IconFile);
-      if (ext='.dll') or (ext='.exe') then begin
-        FIconLibID := LoadLibraryEx(PChar(ARefLink.IconFile), 0,
-          LOAD_LIBRARY_AS_DATAFILE);
-        if FIconLibID<>0 then begin
-          AIcon.LoadFromResourceID(FIconLibID, ARefLink.IconIndex);
-        end else
-          AIcon := nil;
-      end else begin
-        FIconLibID := 0;
-        AIcon.LoadFromFile(ARefLink.IconFile);
-      end;
-      if AIcon<>nil then
+    SetCurrentDir(ExtractFileDir(ARefLink.Filename)); //Paths may be relative for all we know
+    //Standard Windows way of handling the IconFile,IconIndex pair.
+    //Only extracts 32x32 and 16x16 sizes but good enough for us.
+    res := ExtractIconEx(PChar(ARefLink.IconFile), ARefLink.IconIndex,
+      hLargeIcon, hSmallIcon, 1);
+    //res=1 when generating both from ico, 2 when both are available
+    if (res=1) or (res=2) then begin
+      DestroyIcon(hLargeIcon); //thanks, Delphi, for declaring the field as var
+      AIcon := TIcon.Create;
+      try
+        AIcon.Handle := hSmallIcon; //will be destroyed
         Self.Bitmap.Assign(AIcon);
-    finally
-      FreeAndNil(AIcon);
+      finally
+        FreeAndNil(AIcon);
+      end;
     end;
   end;
-end;
-
-destructor TRefMenuItem.Destroy;
-begin
-  if FIconLibID<>0 then
-    FreeLibrary(FIconLibID);
-  inherited;
 end;
 
 procedure TRefMenuItem.Click;

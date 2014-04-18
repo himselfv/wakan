@@ -283,7 +283,7 @@ begin
 end;
 
 procedure TfWordLookupBase.ReloadReferenceLinks;
-var i, ARow, idx: integer;
+var ARow, idx: integer;
   mi: TMenuItem;
   fname: string;
   ref: TRefLink;
