@@ -1,0 +1,9 @@
+[InternetShortcut]
+URL=http://kotobank.jp/word/%s
+Title=Kotobank
+Hint=Lookup up %s in Kotobank
+Language=J
+IDList=
+HotKey=0
+IconFile=.\kotobank.ico
+IconIndex=0
