@@ -316,6 +316,7 @@ begin
 
   for fname in GetExpressionLinks() do begin
     ref := LoadLink(fname);
+    if ref<>nil then
     try
       if ref.MatchesLang(curLang) then begin
         mi := TRefMenuItem.Create(Self, ref, FResults[ARow-1].kanji);
@@ -323,6 +324,7 @@ begin
           miLookUpIn.Add(mi)
         else begin
           pmPopup.Items.Insert(idx, mi);
+//          TRefMenuItem(mi).PlantIconToImageList(pmPopup);
           Inc(idx);
         end;
       end;

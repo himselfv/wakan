@@ -1028,8 +1028,7 @@ begin
 end;
 
 procedure TfKanjiDetails.ReloadReferenceLinks;
-var i: integer;
-  lbl: TRefLabel;
+var lbl: TRefLabel;
   fname: string;
   ref: TRefLink;
 begin
@@ -1046,6 +1045,7 @@ begin
 
     for fname in GetCharacterLinks() do begin
       ref := LoadLink(fname);
+      if ref<>nil then
       try
         if ref.MatchesLang(curLang) then begin
           lbl := TRefLabel.Create(Self, ref, curSingleChar);

@@ -52,7 +52,7 @@ function min(a, b: integer): integer; inline;
 function max(a, b: integer): integer; inline;
 function perc(i,j:integer):string;
 
-procedure ShellOpen(const sCommand: string);
+procedure ShellOpen(const sCommand: string; const sParams: string = '');
 
 function BackupDir: string;
 function GetBackupFilename(const AFilename: string): string;
@@ -248,13 +248,16 @@ end;
 
 { Start applications }
 
-procedure ShellOpen(const sCommand: string);
+procedure ShellOpen(const sCommand: string; const sParams: string = '');
 begin
 {$IFDEF MSWINDOWS}
-  ShellExecute(0, 'open', PChar(sCommand), '', '', SW_SHOW);
+  ShellExecute(0, 'open', PChar(sCommand), PChar(sParams), '', SW_SHOW);
 {$ENDIF MSWINDOWS}
 {$IFDEF POSIX}
-  _system(PAnsiChar('open ' + AnsiString(sCommand)));
+  if sParams<>'' then
+    _system(PAnsiChar('open ' + AnsiString(sCommand)+' '+AnsiString(sParams)))
+  else
+    _system(PAnsiChar('open ' + AnsiString(sCommand)));
 {$ENDIF POSIX}
 end;
 
