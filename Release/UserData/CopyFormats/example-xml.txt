@@ -3,21 +3,30 @@ http://en.wikipedia.org/wiki/XSLT
 
 XML is similar to JMDICT format, but without some fields and with some additional ones:
 
+<entries>
+  <entry>...</entry>
+  <entry>...</entry>
+</entries>
+
+Note: JMDict groups <entry> items in <JMDict> instead.
+Note: If you copy only one record, there's no <entries> and one <entry> is the sole top-level element.
+
+
 <entry>
 
 <!-- Expression -->
 <k_ele>
-<keb>右翼</keb>
-<!-- At this time Wakan never produces any other fields here -->
+  <keb>右翼</keb>
+  <!-- At this time Wakan never produces any other fields here -->
 </k_ele>
 
-<!-- Reading may be missing if Expression is the same as it -->
+<!-- Reading, may be missing if same as Expression -->
 <r_ele>
-<reb>うよく</reb>
-<!-- At this time Wakan never produces any other fields here -->
+  <reb>うよく</reb>
+  <!-- At this time Wakan never produces any other fields here -->
 </r_ele>
 
-<!-- JMDICT has senses next, but Wakan groups senses into articles -->
+<!-- JMDICT lists senses next, but Wakan groups senses into articles -->
 <article>
   <sense>
     <!-- This equates to JMDict's <sense>, but we don't support JMDICT markers, instead putting <m>markers</m>, <c>comments</c> and <g>grammar tags</g> both in glosses and sense-wide.  -->
@@ -42,20 +51,6 @@ XML is similar to JMDICT format, but without some fields and with some additiona
   <dict>CLASSICAL</dict>
 </article>
 </entry>
-
-
-Entry:
-    kanji: string; //already simplified if needed, but otherwise no special marks
-    kana: string;
-    articles: array of TSearchResArticle;
-
-Article:
-    dict: string;
-    senses: array of Sense;
-
-Sense:
-    glosses: array of Gloss
-    markers: TMarkers;
 
 
 What can be changed:

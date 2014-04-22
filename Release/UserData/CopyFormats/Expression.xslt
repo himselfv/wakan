@@ -7,7 +7,8 @@
 # 友船 [ともぶね]
 -->
 
-<xsl:template match="/entry">
+<xsl:template match="entry">
+  <xsl:if test="preceding-sibling::node()[name()='entry']"><xsl:text>&#xA;</xsl:text></xsl:if>
   <xsl:apply-templates select="k_ele" />
   <xsl:if test="r_ele">
     <xsl:text> [</xsl:text>

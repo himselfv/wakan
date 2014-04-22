@@ -324,7 +324,6 @@ begin
           miLookUpIn.Add(mi)
         else begin
           pmPopup.Items.Insert(idx, mi);
-//          TRefMenuItem(mi).PlantIconToImageList(pmPopup);
           Inc(idx);
         end;
       end;
@@ -484,6 +483,9 @@ begin
       AText := AText+#13+FResults[i-1].ToEdictXml
     else
       AText := FResults[i-1].ToEdictXml;
+  //XML can't have multiple top-level elements so wrap them
+  if StringGrid.Selection.Bottom>StringGrid.Selection.Top then
+    AText:='<entries>'+AText+'</entries>';
   AText := XsltTransform(AText, AXsltFilename);
 
   if AReplace or (Clip='') then
