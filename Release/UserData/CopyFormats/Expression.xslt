@@ -27,5 +27,4 @@
   <xsl:value-of select="."/>
 </xsl:template>
 
-
 </xsl:stylesheet>

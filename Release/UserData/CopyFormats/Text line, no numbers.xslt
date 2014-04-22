@@ -6,11 +6,11 @@
 <!--
 # Single line with non-numbered senses
 # 伴船 [ともぶね] consort ship; joint boarding, boarding a ship together ——EDICT2
-marker=<%text>
-group=
-comment=(%text%)
+# Markers and groups are ignored
+# comment=(%text%)
 -->
 
+<!-- Expression -->
 <xsl:template match="entry">
   <xsl:if test="preceding-sibling::node()[name()='entry']"><xsl:text>&#xA;</xsl:text></xsl:if>
   <xsl:apply-templates select="k_ele" />
@@ -33,29 +33,45 @@ comment=(%text%)
   <xsl:value-of select="."/>
 </xsl:template>
 
-<!-- article=%clauses%{%dict%? ——%dict%}{%last%!?; } -->
+
+<!-- Article -->
 <xsl:template match="article">
   <xsl:if test="preceding-sibling::node()[name()='article']"><xsl:text>; </xsl:text></xsl:if>
-  <xsl:apply-templates select="sense" />
-  <xsl:if test="dict">
-    <xsl:text> ——</xsl:text>
-    <xsl:value-of select="dict"/>
-  </xsl:if>
+  <xsl:apply-templates />
+</xsl:template>
+
+<xsl:template match="dict">
+  <xsl:text> ——</xsl:text>
+  <xsl:apply-templates />
 </xsl:template>
 
 <xsl:template match="sense">
-  <xsl:if test="count(../sense) &gt; 1">
-    <xsl:if test="preceding-sibling::node()[name()='sense']"><xsl:text>; </xsl:text></xsl:if>
-  </xsl:if>
-  <xsl:apply-templates select="gloss" />
+  <xsl:if test="preceding-sibling::node()[name()='sense']"><xsl:text>; </xsl:text></xsl:if>
+  <xsl:apply-templates />
 </xsl:template>
 
 <xsl:template match="gloss">
-  <xsl:value-of select="."/><xsl:text>, </xsl:text>
+  <xsl:apply-templates /><xsl:text>, </xsl:text>
 </xsl:template>
 
 <xsl:template match="gloss[position() = last()]">
-  <xsl:value-of select="."/>
+  <xsl:apply-templates />
+</xsl:template>
+
+
+<!-- Flags -->
+<xsl:template match="m|g" />
+
+<xsl:template match="c[position()=1]">
+  <xsl:text> (</xsl:text><xsl:value-of select="."/><xsl:text>,</xsl:text>
+</xsl:template>
+
+<xsl:template match="c">
+  <xsl:value-of select="."/><xsl:text>; </xsl:text>
+</xsl:template>
+
+<xsl:template match="c[position()=last()]">
+  <xsl:value-of select="."/><xsl:text>)</xsl:text>
 </xsl:template>
 
 </xsl:stylesheet>

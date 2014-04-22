@@ -12,6 +12,7 @@ group=
 comment=(%text%)
 -->
 
+<!-- Expression -->
 <xsl:template match="entry">
   <xsl:if test="preceding-sibling::node()[name()='entry']"><xsl:text>&#xA;</xsl:text></xsl:if>
   <xsl:text>&lt;dt&gt;</xsl:text>
@@ -35,34 +36,54 @@ comment=(%text%)
   <xsl:value-of select="."/>
 </xsl:template>
 
-<!-- article=%clauses%{%dict%? ——%dict%}{%last%!?; } -->
+
+<!-- Article -->
 <xsl:template match="article">
   <xsl:text>&lt;dd&gt;</xsl:text>
-  <xsl:if test="sense">
-    <xsl:text>&lt;ol&gt;</xsl:text>
-    <xsl:apply-templates select="sense" />
-    <xsl:text>&lt;/ol&gt;</xsl:text>
-  </xsl:if>
-  <xsl:if test="dict">
-    <xsl:text>&lt;cite&gt;</xsl:text>
-    <xsl:value-of select="dict"/>
-    <xsl:text>&lt;/cite&gt;</xsl:text>
-  </xsl:if>
+  <xsl:apply-templates />
   <xsl:text>&lt;/dd&gt;&#13;&#10;</xsl:text>
 </xsl:template>
 
+<xsl:if test="sense">
+  <xsl:text>&lt;ol&gt;</xsl:text>
+  <xsl:apply-templates />
+  <xsl:text>&lt;/ol&gt;</xsl:text>
+</xsl:if>
+
+<xsl:if test="dict">
+  <xsl:text>&lt;cite&gt;</xsl:text>
+  <xsl:apply-templates />
+  <xsl:text>&lt;/cite&gt;</xsl:text>
+</xsl:if>
+
 <xsl:template match="sense">
   <xsl:text>&lt;li&gt;</xsl:text>
-  <xsl:apply-templates select="gloss" />
+  <xsl:apply-templates />
   <xsl:text>&lt;/li&gt;</xsl:text>
 </xsl:template>
 
 <xsl:template match="gloss">
-  <xsl:value-of select="."/><xsl:text>, </xsl:text>
+  <xsl:apply-templates /><xsl:text>, </xsl:text>
 </xsl:template>
 
 <xsl:template match="gloss[position() = last()]">
-  <xsl:value-of select="."/>
+  <xsl:apply-templates />
+</xsl:template>
+
+
+<!-- Flags -->
+<xsl:template match="m|g" />
+
+<xsl:template match="c[position()=1]">
+  <xsl:text> (</xsl:text><xsl:value-of select="."/><xsl:text>,</xsl:text>
+</xsl:template>
+
+<xsl:template match="c">
+  <xsl:value-of select="."/><xsl:text>; </xsl:text>
+</xsl:template>
+
+<xsl:template match="c[position()=last()]">
+  <xsl:value-of select="."/><xsl:text>)</xsl:text>
 </xsl:template>
 
 </xsl:stylesheet>
