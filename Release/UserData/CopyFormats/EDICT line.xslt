@@ -64,25 +64,23 @@ EDICT-style single line:
 
 <!-- Flags -->
 <xsl:template match="m|g">
-  <xsl:if test="preceding-sibling::node()[name()='m' | name()='g']"><xsl:text> &lg;</xsl:text></xsl:if>
-  <xsl:value-of select="."/><xsl:text>,</xsl:text>
-  <xsl:if test="following-sibling::node()[name()='m'|name()='g']"><xsl:text> &lg;</xsl:text></xsl:if>
-</xsl:template>
-
-<xsl:template match="m[position()=last()]|g[position()=last()]|c[position()=last()]">
-  <xsl:value-of select="."/><xsl:text>&gt;</xsl:text>
-</xsl:template>
-
-<xsl:template match="c[position()=1]">
-  <xsl:text> (</xsl:text><xsl:value-of select="."/><xsl:text>,</xsl:text>
+  <xsl:choose>
+    <xsl:when test="preceding-sibling::node()[name()='m'|name()='g']"><xsl:text>,</xsl:text></xsl:when>
+    <xsl:when test="preceding-sibling::node()"><xsl:text> &lt;</xsl:text></xsl:when>
+    <xsl:otherwise><xsl:text>&lt;</xsl:text></xsl:otherwise>
+  </xsl:choose>
+  <xsl:value-of select="."/>
+  <xsl:if test="following-sibling::node()[name()='m'|name()='g']"><xsl:text>&gt;</xsl:text></xsl:if>
 </xsl:template>
 
 <xsl:template match="c">
-  <xsl:value-of select="."/><xsl:text>; </xsl:text>
-</xsl:template>
-
-<xsl:template match="c[position()=last()]">
-  <xsl:value-of select="."/><xsl:text>)</xsl:text>
+  <xsl:choose>
+    <xsl:when test="preceding-sibling::node()[name()='c']"><xsl:text>; </xsl:text></xsl:when>
+    <xsl:when test="preceding-sibling::node()"><xsl:text> (</xsl:text></xsl:when>
+    <xsl:otherwise><xsl:text>(</xsl:text></xsl:otherwise>
+  </xsl:choose>
+  <xsl:value-of select="."/>
+  <xsl:if test="following-sibling::node()[name()='c']"><xsl:text>)</xsl:text></xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>
