@@ -8,52 +8,50 @@ XML is similar to JMDICT format, but without some fields and with some additiona
   <entry>...</entry>
 </entries>
 
-Note: JMDict groups <entry> items in <JMDict> instead.
+This lists all entries selected in Wakan for copying.
+Note: JMDict groups <entry> items in a top-level <JMDict> instead.
 Note: If you copy only one record, there's no <entries> and one <entry> is the sole top-level element.
 
-
+An <entry> is one search result line:
 <entry>
-
-<!-- Expression -->
-<k_ele>
-  <keb>右翼</keb>
-  <!-- At this time Wakan never produces any other fields here -->
-</k_ele>
-
-<!-- Reading, may be missing if same as Expression -->
-<r_ele>
-  <reb>うよく</reb>
-  <!-- At this time Wakan never produces any other fields here -->
-</r_ele>
-
-<!-- JMDICT lists senses next, but Wakan groups senses into articles -->
-<article>
-  <sense>
-    <!-- This equates to JMDict's <sense>, but we don't support JMDICT markers, instead putting <m>markers</m>, <c>comments</c> and <g>grammar tags</g> both in glosses and sense-wide.  -->
-    <m>adj</m>
-    <m>marker</m>
-    <gloss>right-wing<m>marker</m><c>comment</c></gloss>
-  </sense>
-  <sense>
-    <gloss>right field (e.g. in sport)</gloss>
-    <gloss>right flank</gloss>
-    <gloss>right wing</gloss>
-  </sense>
-  <dict>EDICT</dict>
-</article>
-
-<article>
-  <sense>
-    <gloss>right field (e.g. in sport)</gloss>
-    <gloss>right flank</gloss>
-    <gloss>right wing</gloss>
-  </sense>
-  <dict>CLASSICAL</dict>
-</article>
+  <k_ele>...</k_ele> <!-- expression -->
+  <r_ele>...</r_ele> <!-- reading, optional -->
+  <article>...</article>
+  <article>...</article>
 </entry>
 
+Note: JMDict lists <sense>s on this level, but Wakan groups senses into <article>s.
 
-What can be changed:
+Expression and reading are exactly how they appear in JMDict, but without some fields:
+<k_ele>
+  <keb>右翼</keb>
+</k_ele>
+<r_ele>
+  <reb>うよく</reb>
+</r_ele>
+At this point Wakan never produces any other tags in <k_ele> and <r_ele>.
+
+An <article> is a set of entries from a single dictionary:
+<article>
+  <sense>...</sense>
+  <sense>...</sense>
+  <dict>Dictionary name</dict>
+</article>
+
+Note: JMDict has no <dict> tag. All entries in JMDict are from JMDict.
+
+Sense:
+This equates to JMDict's <sense>, but we don't support JMDICT markers, instead putting <m>markers</m>, <c>comments</c> and <g>grammar tags</g> both in glosses and sense-wide:
+<sense>
+  <m>adj</m>
+  <m>marker</m>
+  <gloss>right-wing<m>marker</m><c>comment</c></gloss>
+  <gloss>right flank</gloss>
+  <gloss>right wing</gloss>
+</sense>
+
+
+What can be customized, some ideas:
 A. Sense numbering:
   (1)
   1.
@@ -65,5 +63,28 @@ C. Gloss separator:
   ;
   ,
 D. Show/skip dictionary names.
-E. Show/skip grammar marks.
+E. Show/skip grammar marks, comments.
 F. Format as single/multiple lines.
+
+
+Some patterns to use in XSLT with explanations:
+
+<xsl:template match="dict">
+Rules to apply to any occurence of <dict> anywhere (when processing that block).
+
+<xsl:value-of select="." />
+Used inside a template, inserts full text of currently matched block, not doing any processing inside it.
+
+<xsl:apply-templates />
+Used inside a template, inserts full text of currently matched block, processing all sub-templates in it.
+
+<xsl:apply-templates select="r_ele" />
+Used inside a template, inserts full text of currently matched block, processing all <r_ele> nodes in it and deleting everything else.
+
+<xsl:if test="preceding-sibling::node()[name()='entry']">
+<xsl:if test="following-sibling::node()[name()='entry']">
+Tests that there were <entry> nodes ANYWHERE on the same level before/after this element.
+
+<xsl:when test="preceding-sibling::*[1][self::entry]">
+<xsl:when test="following-sibling::*[1][self::entry]">
+Tests that then node right before/after this one is an <entry>.

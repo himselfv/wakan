@@ -63,28 +63,24 @@ Single text line in readable format.
 
 
 <!-- Flags -->
-<xsl:template match="m[position()=1]|g[position()=1]">
-  <xsl:text> &lt;</xsl:text><xsl:value-of select="."/><xsl:text>,</xsl:text>
-</xsl:template>
-
 <xsl:template match="m|g">
-  <xsl:value-of select="."/><xsl:text>,</xsl:text>
-</xsl:template>
-
-<xsl:template match="m[position()=last()]|g[position()=last()]|c[position()=last()]">
-  <xsl:value-of select="."/><xsl:text>&gt;</xsl:text>
-</xsl:template>
-
-<xsl:template match="c[position()=1]">
-  <xsl:text> (</xsl:text><xsl:value-of select="."/><xsl:text>,</xsl:text>
+  <xsl:choose>
+    <xsl:when test="preceding-sibling::*[1][self::m | self::g]"><xsl:text>,</xsl:text></xsl:when>
+    <xsl:when test="preceding-sibling::node()"><xsl:text> &lt;</xsl:text></xsl:when>
+    <xsl:otherwise><xsl:text>&lt;</xsl:text></xsl:otherwise>
+  </xsl:choose>
+  <xsl:value-of select="."/>
+  <xsl:if test="not(following-sibling::*[1][self::m | self::g])"><xsl:text>&gt;</xsl:text></xsl:if>
 </xsl:template>
 
 <xsl:template match="c">
-  <xsl:value-of select="."/><xsl:text>; </xsl:text>
-</xsl:template>
-
-<xsl:template match="c[position()=last()]">
-  <xsl:value-of select="."/><xsl:text>)</xsl:text>
+  <xsl:choose>
+    <xsl:when test="preceding-sibling::*[1][self::c]"><xsl:text>; </xsl:text></xsl:when>
+    <xsl:when test="preceding-sibling::node()"><xsl:text> (</xsl:text></xsl:when>
+    <xsl:otherwise><xsl:text>(</xsl:text></xsl:otherwise>
+  </xsl:choose>
+  <xsl:value-of select="."/>
+  <xsl:if test="not(following-sibling::*[1][self::c])"><xsl:text>)</xsl:text></xsl:if>
 </xsl:template>
 
 </xsl:stylesheet>
