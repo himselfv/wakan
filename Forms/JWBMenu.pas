@@ -568,7 +568,6 @@ type
   end;
 
 
-
 var
   fMenu: TfMenu;
 

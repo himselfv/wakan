@@ -285,6 +285,47 @@ var lm: TLookupMode;
   wasfull:boolean;
   text:string;
   b:boolean;
+
+ //Some search modes do several requests and we can't reuse request object
+ //with different settings after it has been Prepare()d.
+  function NewSearchRequest: TDicSearchRequest;
+  begin
+    Result := TDicSearchRequest.Create;
+
+   //Dictionary group
+    if btnDictGroup1.Down then Result.dictgroup:=1 else
+    if btnDictGroup2.Down then Result.dictgroup:=2 else
+    if btnDictGroup3.Down then Result.dictgroup:=3 else
+      Result.dictgroup := 1; //we must have some group chosen
+
+    Result.Full:=not btnSearch.Enabled;
+    Result.MaxWords:=StringGrid.VisibleRowCount;
+
+   //Match type (left/right/exact)
+    if btnMatchLeft.Down then Result.MatchType := mtMatchLeft else
+    if btnMatchRight.Down then Result.MatchType := mtMatchRight else
+    if btnMatchAnywhere.Down then Result.MatchType := mtMatchAnywhere else
+      Result.MatchType := mtExactMatch;
+    if (lm=lmEn) and not (Result.MatchType in [mtExactMatch, mtMatchLeft]) then
+      Result.MatchType := mtExactMatch;
+
+    if (not fSettings.cbDictLimitAutoResults.Checked) or btnMatchExact.Down then Result.Full:=true;
+
+    if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
+      Result.dictgroup := 5;
+      Result.MatchType := mtExactMatch;
+    end;
+
+    Result.AutoDeflex := btnInflect.Down;
+    Result.dic_ignorekana := false;
+    Result.MindUserPrior := (lm=lmEditorInsert); //only mind kanji usage priorities in Editor suggestions
+
+   //If full search was not requested and autopreview off / too costly
+    if not Result.full
+    and (not Self.sbAutoPreview.Down or (Result.MatchType=mtMatchAnywhere)) then
+      exit; //do not search
+  end;
+
 begin
   //Retrieve current lookup mode
   lm := GetLookupMode();
@@ -303,43 +344,10 @@ begin
     exit;
   end;
 
-  req := TDicSearchRequest.Create;
+  StringGrid.RowCount:=200;
+
+  req := NewSearchRequest;
   try
-   //Dictionary group
-    if btnDictGroup1.Down then req.dictgroup:=1 else
-    if btnDictGroup2.Down then req.dictgroup:=2 else
-    if btnDictGroup3.Down then req.dictgroup:=3 else
-      req.dictgroup := 1; //we must have some group chosen
-
-    req.Full:=not btnSearch.Enabled;
-
-    StringGrid.RowCount:=200;
-    req.MaxWords:=StringGrid.VisibleRowCount;
-
-   //Match type (left/right/exact)
-    if btnMatchLeft.Down then req.MatchType := mtMatchLeft else
-    if btnMatchRight.Down then req.MatchType := mtMatchRight else
-    if btnMatchAnywhere.Down then req.MatchType := mtMatchAnywhere else
-      req.MatchType := mtExactMatch;
-    if (lm=lmEn) and not (req.MatchType in [mtExactMatch, mtMatchLeft]) then
-      req.MatchType := mtExactMatch;
-
-    if (not fSettings.cbDictLimitAutoResults.Checked) or btnMatchExact.Down then req.Full:=true;
-
-    if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
-      req.dictgroup := 5;
-      req.MatchType := mtExactMatch;
-    end;
-
-    req.AutoDeflex := btnInflect.Down;
-    req.dic_ignorekana := false;
-    req.MindUserPrior := (lm=lmEditorInsert); //only mind kanji usage priorities in Editor suggestions
-
-   //If full search was not requested and autopreview off / too costly
-    if not req.full
-    and (not Self.sbAutoPreview.Down or (req.MatchType=mtMatchAnywhere)) then
-      exit; //do not search
-
     FResults.Clear;
     wasfull := false;
     case lm of
@@ -348,12 +356,16 @@ begin
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
+        FreeAndNil(req);
 
+        req := NewSearchRequest;
         req.st := stEnglish;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);
         wasfull := wasfull or req.WasFull;
+        FreeAndNil(req);
 
+        req := NewSearchRequest;
         req.st := stJapanese;
         req.Prepare;
         req.Search(Edit1.Text, EC_UNKNOWN, FResults);

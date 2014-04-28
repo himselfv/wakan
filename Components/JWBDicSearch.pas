@@ -971,6 +971,7 @@ begin
   inherited;
 end;
 
+//Search request params can't be changed after it has been Prepare()d.
 procedure TDicSearchRequest.Prepare;
 var di: integer;
   dic: TJaletDic;
