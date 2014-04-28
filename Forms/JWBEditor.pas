@@ -248,7 +248,7 @@ type
     function WidthToPos(x,y:integer):integer;
     function HalfUnitsToCursorPos(x,y: integer):integer;
   public
-    function GetDocWord(x,y:integer;var wordtype: TEvalCharType;stopuser:boolean):string;
+    function GetDocWord(x,y:integer;var wordtype: TEvalCharType):string;
     function GetWordAtCaret(out AWordtype: TEvalCharType): string;
     function GetClosestCursorPos(x,y:integer):TCursorPos;
     function GetExactLogicalPos(x,y:integer):TSourcePos;
@@ -1210,7 +1210,7 @@ begin
     end else
     begin
       dicsl.Clear;
-      s:=GetDocWord(x,y,wt,{stopuser=}true);
+      s:=GetDocWord(x,y,wt);
       req.Search(s, wt, dicsl);
       if dicsl.Count>0 then word:=dicsl[0] else word:=nil;
       a:=SetWordTrans(x,y,[tfScanParticle],word);
@@ -1956,7 +1956,7 @@ begin
       if fWordLookup.Visible or (insertBuffer<>'') then
         fWordLookup.Look()
       else begin
-        s:=GetDocWord(rcur.x,rcur.y,wt,{stopuser=}false);
+        s:=GetDocWord(rcur.x,rcur.y,wt);
         if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
       end;
   end;
@@ -3131,7 +3131,7 @@ begin
     exit;
   end;
   s2:=doc.GetDoc(x,y);
-  dw:=GetDocWord(x,y,wt,{stopuser=}not (tfManuallyChosen in flags));
+  dw:=GetDocWord(x,y,wt);
  { GetDocWord makes upper bound guess on the length of the word,
   then search result gives us exact value.
   It may be shorter (itteoku => only ITTE is parsed) or longer (rarely) }
@@ -3206,7 +3206,7 @@ begin
   fdelete(dw,1,rlen);
   if (wordstate='K') and (flength(doc.Lines[y])>x+rlen) then
   begin
-    dw:=GetDocWord(x+rlen,y,wt,{stopuser=}false);
+    dw:=GetDocWord(x+rlen,y,wt);
     if wt<>EC_HIRAGANA then dw:='';
   end;
   if flength(dw)>4 then delete(dw,5,MaxInt); //yes 4 in unicode. Cut overly long particle tails
@@ -3496,71 +3496,96 @@ begin
   Result := doc.PropertyLines[Index];
 end;
 
-{ What the hell is "stopuser"? }
-function TfEditor.GetDocWord(x,y:integer;var wordtype:TEvalCharType;stopuser:boolean):string;
+{ Makes upper bound guess on the length of the word starting at the specified
+ position. Actual word may be shorter (mi ni iku -> MI) or longer (rarely).
+ A guess at the word type is also given:
+   EC_UNKNOWN: We are not sure.
+   EC_IDG_CHAR: Ideographic word (kanji/kana/pinyin mixed).
+   EC_KATAKANA: Katakana-only word.
+   EC_HIRAGANA: Hiragana-only word.
+   EC_BOPOMOFO: Bopomofo-only word.
+   EC_PUNCTUATION: Punctuation only.
+   EC_LATIN_FW,
+   EC_LATIN_HW: Latin characters only.
+ This has to work both on Japanese and Chinese text, no matter what mode
+ we're in.
+}
+function TfEditor.GetDocWord(x,y: integer; var wordtype: TEvalCharType):string;
 var wt2:TEvalCharType;
-    i:integer;
-    nmk:boolean;
-    tc:string;
-    honor:boolean;
-    stray:integer;
+  i:integer;
+  tc: string; //"this character"
+  HasHonorific: boolean;
+  HiraCount,
+  KanjiCount: integer;
 begin
   if (y=-1) or (y>doc.Lines.Count-1) or (x>flength(doc.Lines[y])-1) or (x=-1) then
   begin
-    wordtype:=EC_UNKNOWN;
-    result:='';
+    wordtype := EC_UNKNOWN;
+    Result := '';
     exit;
   end;
-  if curlang='c'then
-  begin
-    result:='';
-    wordtype:=EC_IDG_CHAR;
-    for i:=1 to 4 do
-    begin
-      result:=result+fgetch(doc.Lines[y],x+1);
-      inc(x);
-      if x=flength(doc.Lines[y]) then exit;
-    end;
-    exit;
-  end;
+
+ //Determine initial word type from the first symbol
   tc:=fgetch(doc.Lines[y],x+1);
-  honor:=false;
-  if (tc={$IFNDEF UNICODE}'304A'{$ELSE}#$304A{$ENDIF})
-  or (tc={$IFNDEF UNICODE}'3054'{$ELSE}#$3054{$ENDIF}) then honor:=true;
-  if (honor) and (flength(doc.Lines[y])>=x+2) and (EvalChar(fgetch(doc.Lines[y],x+2)) in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA]) then
+
+ //Skip initial japanese honorific, if present
+  HasHonorific := (tc='お') or (tc='ご');
+  if HasHonorific and (flength(doc.Lines[y])>=x+2)
+  and (EvalChar(fgetch(doc.Lines[y],x+2)) in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA]) then
     wordtype:=EvalChar(fgetch(doc.Lines[y],x+2))
   else
-    wordtype:=EvalChar(fgetch(doc.Lines[y],x+1));
+    wordtype:=EvalChar(tc);
   if not (wordtype in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
     EC_IDG_PUNCTUATION]) then
     wordtype:=EC_IDG_PUNCTUATION;
-  nmk:=false;
-  stray:=0;
-  result:=fgetch(doc.Lines[y],x+1);
+
+ {
+  EC_IDG_CHAR for Japanese:
+  Allowed syllable sequences (captured part in brackets):
+    (***) A
+    (C H H) C
+    (C H C H) C
+    (C H C H H) C
+    (C H C H H H) C
+  Where C is IDG_CHAR, H is HIRAGANA and A is anything else.
+  I.e. up to one "middle" hiragana and any number of "tail" hiragana,
+  anything else breaks word.
+ }
+  HiraCount := 0; //total number of hiragana syllables in an IDG_CHAR word
+  KanjiCount := 0;
+  Result := fgetch(doc.Lines[y],x+1);
   repeat
     inc(x);
-    if stopuser and IsLocaseLatin(doctr[y].chars[x].wordstate) then exit;
-    wt2:=EC_UNKNOWN;
-    if x<flength(doc.Lines[y]) then
-    begin
-      wt2:=EvalChar(fgetch(doc.Lines[y],x+1));
+    if x>=flength(doc.Lines[y]) then
+      break;
+
+      tc := fgetch(doc.Lines[y],x+1);
+      wt2:=EvalChar(tc);
       if not (wt2 in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
         EC_IDG_PUNCTUATION]) then
         wt2:=EC_IDG_PUNCTUATION;
-      if (wordtype=EC_IDG_CHAR) and (wt2=EC_HIRAGANA) then begin
-        nmk:=true;
-        if stray=0 then stray:=1 else stray:=-1;
+
+      case wordtype of
+      EC_IDG_CHAR: begin
+        if wt2=EC_HIRAGANA then begin
+          if tc<>'っ' then //doesn't count towards characters
+            Inc(HiraCount)
+        end else
+        if wt2=EC_IDG_CHAR then begin
+          if HiraCount>=2 then break;
+         //There could be very long kanji chains (especially in chinese),
+         //we have to have some limit
+          Inc(KanjiCount);
+          if KanjiCount>=6 then
+            break;
+        end else
+          break;
       end;
-      if (nmk) and (wt2=EC_IDG_CHAR) then
-      begin
-        if stray=1 then wt2:=EC_IDG_CHAR else wt2:=EC_IDG_PUNCTUATION;
-        stray:=-1;
-        nmk:=false;
+      else
+        if wt2<>wordtype then break;
       end;
-      if (wt2<>wordtype) and ((wordtype<>EC_IDG_CHAR) or (wt2<>EC_HIRAGANA)) then exit;
-    end;
-    if wt2=EC_UNKNOWN then exit;
-    result:=result+fgetch(doc.Lines[y],x+1);
+
+    Result := Result + tc;
   until false;
 end;
 
@@ -3570,7 +3595,7 @@ var fcur: TSourcePos;
 begin
   fcur := RCur;
   AWordtype := EC_UNKNOWN;
-  Result := GetDocWord(fcur.x, fcur.y, AWordtype, {stopuser=}false);
+  Result := GetDocWord(fcur.x, fcur.y, AWordtype);
 end;
 
 

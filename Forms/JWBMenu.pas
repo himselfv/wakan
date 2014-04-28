@@ -3134,7 +3134,7 @@ begin
     rpos:=fEditor.TryGetExactLogicalPos(MousePos.x,MousePos.y);
     rx := rpos.x; ry := rpos.y;
     if (ry>=0) and (rx>=0) and (rx<=fEditor.doctr[ry].charcount) then
-      s1:=fEditor.GetDocWord(rx,ry,wtt,false)
+      s1:=fEditor.GetDocWord(rx,ry,wtt)
     else
       s1:='';
     SetSelectionHighlight(0,0,0,0,nil);
