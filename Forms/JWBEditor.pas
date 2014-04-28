@@ -344,24 +344,31 @@ type
     procedure ShowHint;
     procedure HideHint;
 
+  protected //Provisional insert
+   { Current state of insertion: position and length of yet unconfirmed /
+    not fully confirmed part of the text.
+    After it's been confirmed, this turns into editor aftertouch --- highlight
+    for the last inserted text }
+    ins: TSourcePos; //Insert position
+    inslen: integer; //Length of yet unconfirmed text
+    insconfirmed: boolean; { If set, we have confirmed insertion. It's colored
+      with editor aftertouch and we can still change it with SetProvisionalInsert(),
+      but if we leave now, it's accepted. }
+    procedure SetProvisionalInsert(const text: FString; props: TCharacterPropArray);
+
   protected //Insert buffer
-    insconfirmed:boolean;
     priorkanji:string;
     insertbuffer:string; //collects keypresses
     buffertype:char; //type of data in the buffer: H=hiragana, K=katakana, -=latin/unknown
     resolvebuffer:boolean; //set to true before doing ResolveInsert to replace kana with kanji suggestion, false to keep input intact
     shiftpressed:boolean;
-    procedure DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
-    procedure ResolveInsert(final:boolean);
+    procedure ResolveInsert;
     procedure InsertCharacter(c:char);
     procedure ClearInsBlock;
     procedure CloseInsert;
     function TryReleaseCursorFromInsert: boolean;
     function NextSuggestion(const ANext: boolean): boolean;
   public
-   //Unfortunately some stuff is used from elswehere
-    ins: TSourcePos; //editor aftertouch --- after we have inserted the word, it's highlighted
-    inslen: integer;
     function GetInsertBuffer: string;
     function GetInsertKana(const APreview: boolean): FString;
 
@@ -1294,7 +1301,7 @@ begin
       SetCur(tmp);
     end else
     if key=VK_DELETE then begin
-      ResolveInsert(true);
+      ResolveInsert();
       if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
         DeleteSelection()
       else
@@ -1309,7 +1316,7 @@ begin
       tmp := GetCur;
       if (oldCur.x<>tmp.x) or (oldCur.y<>tmp.y) then begin
        //We have moved somewhere else, finalize insert
-        ResolveInsert(true);
+        ResolveInsert();
         ShowText(true);
       end;
     end;
@@ -2666,7 +2673,7 @@ procedure TfEditor.CloseInsert;
 begin
   if not insconfirmed then begin
     resolvebuffer:=false; //cancel suggestion
-    if insertbuffer<>'' then ResolveInsert(true);
+    if insertbuffer<>'' then ResolveInsert();
   end;
   ClearInsBlock;
 end;
@@ -2695,51 +2702,57 @@ begin
   Result := true;
 end;
 
-procedure TfEditor.DisplayInsert(const convins:FString;transins:TCharacterPropArray;leaveinserted:boolean);
+{ Replaces current provisional insert in the editor with the specified one,
+ updates provisional insert state (position/length).
+ Props can be nil for default props }
+procedure TfEditor.SetProvisionalInsert(const text: FString; props: TCharacterPropArray);
 var i:integer;
   s: FString;
   lp: PCharacterLineProps;
 begin
-  if ins.x=-1 then
-  begin
+  if ins.x=-1 then begin
     ins:=rcur;
     inslen:=0;
   end;
-  s:=doc.Lines[ins.y];
-  fdelete(s,ins.x+1,inslen);
-  doc.Lines[ins.y]:=s;
-  lp:=doctr[ins.y];
-  lp.DeleteChars(ins.x,inslen);
-  inslen:=flength(convins);
-  if transins=nil then begin
-    SetLength(transins, flength(convins));
-    for i:=1 to flength(convins) do
-      transins[i-1].SetChar('I', 9, 0, 1);
+
+  if props=nil then begin
+    SetLength(props, flength(text));
+    for i:=1 to flength(text) do
+      props[i-1].SetChar('I', 9, 0, 1);
   end;
-  doc.Lines[ins.y]:=fcopy(doc.Lines[ins.y],1,ins.x)+convins+fcopy(doc.Lines[ins.y],ins.x+1,flength(doc.Lines[ins.y])-ins.x);
-  doctr[ins.y].InsertChars(ins.x,transins);
+
+  s := doc.Lines[ins.y];
+  doc.Lines[ins.y] := fcopy(s,1,ins.x) + text
+    +fcopy(s,ins.x+inslen+1,flength(s)-ins.x-inslen);
+
+  lp := doctr[ins.y];
+  lp.DeleteChars(ins.x,inslen);
+  lp.InsertChars(ins.x,props);
+
+  inslen:=flength(text);
   ReflowText({force=}true);
+
   rcur := SourcePos(ins.x+inslen, ins.y);
-  if not leaveinserted then
-    insconfirmed:=true;
 end;
 
-procedure TfEditor.ResolveInsert(final:boolean);
+{ Accept current insert suggestion and finalize insert. Replace kana with kanji
+ if needed. }
+procedure TfEditor.ResolveInsert;
 var inskana: string;
   s,s3:string;
   i:integer;
   lp: TCharacterPropArray;
 begin
-  if (ins.x=-1) and final then exit;
+  if ins.x=-1 then exit;
+  inskana:=GetInsertKana(false);
 
-  if (buffertype='H') and resolvebuffer then
-  begin
+  if ResolveBuffer and (buffertype='H') then begin
+   //Replace with focused dictionary suggestion
     with fWordLookup do
       if StringGrid.Visible then
       begin
         s:=curkanji;
         priorkanji:=curkanji;
-        inskana:=GetInsertKana(false);
         s3:=curphonetic;
         //Delete common ending
         while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
@@ -2747,57 +2760,47 @@ begin
           fdelete(s,flength(s),1);
           fdelete(s3,flength(s3),1);
         end;
-        if (s='') and ({$IFNDEF UNICODE}curkanji[3]>='A'{$ELSE}Ord(curkanji[1]) and $00F0 > $00A0{$ENDIF}) then //TODO: Only 3-rd symbol? WTF?
-          s:=curkanji
+       { Katakana words are listed without reading in EDICT and sometimes
+        imported as "kanji=katakana, reading=katakana" as a result.
+        So even though kanji==reading, both may be katakana }
+        if (s='') and (EvalChar(curkanji[1]) = EC_KATAKANA) then
+          s:=curkanji //use katakana
         else
-          s:=s+copy(inskana,length(s3)+1,length(inskana)-length(s3));
-        DisplayInsert(s,nil,true);
-      end else
-      if not final then
-        DisplayInsert(GetInsertKana(true),nil,true);
-    if final then begin
-      inskana := GetInsertKana(false);
-      i:=SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
-     { Not all word may be covered, so we reset prop for other chars.
-      In older Wakans the rest was colored as match as well. I'm not against it,
-      but either way it needs to happen here, not in SetWordTrans }
-      while i<Length(inskana) do begin
-        Inc(i);
-        doctr[ins.y].chars[ins.x+i-1].Reset;
+          s:=s+copy(inskana,length(s3)+1,length(inskana)-length(s3)); //use kanji/hiragana/whatever + tail
+        SetProvisionalInsert(s,nil);
       end;
-      insconfirmed:=true;
-      mustrepaint:=true;
-      ShowText(false);
-    end;
   end else
-
-  if final then
   begin
+   //Replacement disabled || Not hiragana/bopomofo => Accept as is
    { We're accepting input as kana, so we have no dictionary word to check against.
     Therefore if the user didn't enter tones we don't know tones. In F03* notation
     we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
     just drops these. }
-    s:=ConvertBopomofo(GetInsertKana(false));
+    s:=ConvertBopomofo(inskana);
     SetLength(lp, flength(s));
     for i:=0 to flength(s)-1 do
       if i=0 then
         lp[i].SetChar(buffertype, 9, 0, 1)
       else
         lp[i].SetChar('<', 9, 0, 1); //word continues
-    DisplayInsert(s,lp,true);
-    if resolvebuffer then begin
-      i:=SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
-     { Not all word may be covered, so we reset prop for other chars. See above. }
-      while i<Length(inskana) do begin
-        Inc(i);
-        doctr[ins.y].chars[ins.x+i-1].Reset;
-      end;
+    SetProvisionalInsert(s,lp);
+  end;
+
+ //Attach translation, if available, to the replaced text
+  if ResolveBuffer then begin
+    i := SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
+   { Not all word may be covered, so we reset prop for other chars.
+    In older Wakans the rest was colored as match as well. I'm not against it,
+    but either way it needs to happen here, not in SetWordTrans }
+    while i<Length(inskana) do begin
+      Inc(i);
+      doctr[ins.y].chars[ins.x+i-1].Reset;
     end;
-    insconfirmed:=true;
-    mustrepaint:=true;
-    ShowText(false);
-  end else
-    DisplayInsert(GetInsertKana(true),nil,true);
+  end;
+
+  insconfirmed:=true;
+  mustrepaint:=true;
+  ShowText(false);
 end;
 
 function TfEditor.GetInsertBuffer: string;
@@ -2855,7 +2858,7 @@ begin
       Result := StringGrid.Row>1;
       if Result then StringGrid.Row:=StringGrid.Row-1;
     end;
-    if insconfirmed then ResolveInsert(true);
+    if insconfirmed then ResolveInsert();
     if (StringGrid.RowCount>1) and StringGrid.Visible and (ins.x<>-1) then Self.ShowHint else HideHint;
   end;
 end;
@@ -2883,7 +2886,7 @@ begin
   begin
    //Accept suggestion
     resolvebuffer:=sbKanjiMode.down;
-    ResolveInsert(true);
+    ResolveInsert();
     FileChanged:=true;
     if sbKanjiMode.down then exit;
   end;
@@ -2891,14 +2894,16 @@ begin
   begin
    //Reject suggestion
     resolvebuffer:=false;
-    ResolveInsert(true);
+    ResolveInsert();
     FileChanged:=true;
     if sbKanjiMode.down then exit;
   end;
   if (c=#8) and (insertbuffer<>'') then
   begin
     delete(insertbuffer,length(insertbuffer),1);
-    DisplayInsert(GetInsertKana(true),nil,insertbuffer<>'');
+    SetProvisionalInsert(GetInsertKana(true),nil);
+    if insertbuffer='' then
+      insconfirmed:=true;
     FileChanged:=true;
     mustrepaint:=true;
     ShowText(true);
@@ -3032,9 +3037,10 @@ begin
  //Instant output
   if chartype='-' then begin
     resolvebuffer:=false;
-    if insertbuffer<>'' then ResolveInsert(true);
+    if insertbuffer<>'' then ResolveInsert();
     ClearInsBlock;
-    DisplayInsert(fstring(c),CharPropArray(DEFCPROPS),false);
+    SetProvisionalInsert(fstring(c),CharPropArray(DEFCPROPS));
+    insconfirmed:=true;
     FileChanged:=true;
     mustrepaint:=true;
     ShowText(true);
@@ -3053,7 +3059,7 @@ begin
     if (chartype<>'0') and (chartype<>buffertype) then
     begin
       resolvebuffer:=false;
-      ResolveInsert(true);
+      ResolveInsert();
       ClearInsBlock;
       buffertype:=chartype;
       insertbuffer:=c;
@@ -3061,12 +3067,9 @@ begin
       insertbuffer:=insertbuffer+c;
     insconfirmed:=false;
   end;
-  DisplayInsert(GetInsertKana(true),nil,true);
-//  resolvebuffer:=true;
-//  ResolveInsert(false);
+  SetProvisionalInsert(GetInsertKana(true),nil);
   mustrepaint:=true;
   ShowText(true);
-//  Look(false);
 end;
 
 
