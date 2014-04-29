@@ -87,6 +87,9 @@ procedure AddRomaSortRecord(const s: string);
 
 function GetPhoneticSortStr(const phonetic: FString; const lang: char): string;
 
+//Increase character priority a bit (will be sorted before others with less priority)
+procedure IncCharPriority(const char: FChar);
+
 
 implementation
 uses SysUtils, JWBCore, JWBUnit, JWBKanaConv, PKGWrite, JWBCategories, Classes;
@@ -455,6 +458,13 @@ begin
     Result:=DbKanaToRomaji(phonetic,'c');
 end;
 
+procedure IncCharPriority(const char: FChar);
+begin
+  if TUserPrior.Locate('Kanji', char) then
+    TUserPrior.Edit([TUserPrior.Field('Count')],[inttostr(TUserPrior.Int(TUserPrior.Field('Count'))+1)])
+  else
+    TUserPrior.Insert([char,'1']);
+end;
 
 
 initialization
