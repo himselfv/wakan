@@ -3,357 +3,404 @@ inherited fWordLookup: TfWordLookup
   Top = 137
   Caption = '#00642^eDictionary lookup'
   ClientHeight = 248
-  ClientWidth = 720
+  ClientWidth = 687
   Font.Name = 'MS Sans Serif'
   OldCreateOrder = True
   Scaled = False
   ShowHint = True
   OnShow = FormShow
-  ExplicitWidth = 720
+  ExplicitWidth = 687
   ExplicitHeight = 248
   PixelsPerInch = 96
   TextHeight = 13
   inherited Bevel: TPanel
-    Width = 720
+    Width = 687
     Height = 248
     TabOrder = 2
     ExplicitWidth = 704
     ExplicitHeight = 214
     inherited btnGoToVocab: TSpeedButton
-      Left = 441
+      Left = 408
       Top = 219
-      Visible = False
       ExplicitTop = 185
     end
     inherited btnAddToVocab: TSpeedButton
-      Left = 537
+      Left = 504
       Top = 219
-      Visible = False
       ExplicitTop = 185
     end
     inherited btnCopyToClipboard: TSpeedButton
-      Left = 633
+      Left = 600
       Top = 219
-      Visible = False
       ExplicitTop = 185
     end
-    object btnMatchExact: TSpeedButton [3]
-      Left = 231
-      Top = 4
-      Width = 23
-      Height = 22
-      Hint = '#00656^eSearch exact word (F5)'
-      GroupIndex = 7
-      Down = True
-      Caption = 'A'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnMatchExactClick
-    end
-    object btnMatchLeft: TSpeedButton [4]
-      Left = 255
-      Top = 4
-      Width = 23
-      Height = 22
-      Hint = '#00657^eSearch beginning (F6)'
-      GroupIndex = 7
-      Caption = 'A+'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnMatchExactClick
-    end
-    object btnMatchRight: TSpeedButton [5]
-      Left = 279
-      Top = 4
-      Width = 23
-      Height = 22
-      Hint = '#00658^eSearch end (F7)'
-      GroupIndex = 7
-      Caption = '+A'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnMatchExactClick
-    end
-    object btnMatchAnywhere: TSpeedButton [6]
-      Left = 303
-      Top = 4
-      Width = 25
-      Height = 22
-      Hint = '#00930^eSearch middle'
-      GroupIndex = 7
-      Caption = '+A+'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnMatchExactClick
-    end
-    object btnInflect: TSpeedButton [7]
-      Left = 334
-      Top = 4
-      Width = 23
-      Height = 22
-      Hint = '#00661^eSearch for inflected words / conjugated verbs'
-      AllowAllUp = True
-      GroupIndex = 8
-      Caption = 'Inf'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-    end
-    object sbAutoPreview: TSpeedButton [8]
-      Left = 358
-      Top = 4
-      Width = 33
-      Height = 22
-      Hint = 
-        '#00662^eAuto-preview while typing (full search with arrow button' +
-        ')'
-      AllowAllUp = True
-      GroupIndex = 9
-      Caption = 'Auto'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-    end
-    object btnDictGroup1: TSpeedButton [9]
-      Left = 398
-      Top = 4
-      Width = 25
-      Height = 22
-      Hint = '#00663^eUse dictionaries in group 1 (Ctrl-1)'
-      GroupIndex = 10
-      Down = True
-      Caption = 'D1'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-    end
-    object btnDictGroup2: TSpeedButton [10]
-      Left = 424
-      Top = 4
-      Width = 25
-      Height = 22
-      Hint = '#00664^eUse dictionaries in group 2 (Ctrl-2)'
-      GroupIndex = 10
-      Caption = 'D2'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-    end
-    object btnDictGroup3: TSpeedButton [11]
-      Left = 450
-      Top = 4
-      Width = 25
-      Height = 22
-      Hint = '#00665^eUse dictionaries in group 3 (Ctrl-3)'
-      GroupIndex = 10
-      Caption = 'D3'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-    end
-    object Label2: TLabel [12]
-      Left = 620
-      Top = 37
-      Width = 92
-      Height = 13
-      Alignment = taRightJustify
-      Anchors = [akTop, akRight]
-      Caption = '#00666^eAll visible'
-      Enabled = False
-      ExplicitLeft = 604
-    end
-    object Label3: TLabel [13]
-      Left = 704
-      Top = 17
-      Width = 6
-      Height = 13
-      Alignment = taRightJustify
-      Anchors = [akTop, akRight]
-      Caption = '0'
-      ExplicitLeft = 688
-    end
-    object SpeedButton6: TSpeedButton [14]
-      Left = 8
-      Top = 223
-      Width = 123
-      Height = 17
-      Hint = '#00650^eCharacters in word'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 6
-      Caption = '#00651^eChar. in word'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton6Click
-      ExplicitTop = 189
-    end
-    object SpeedButton9: TSpeedButton [15]
-      Left = 136
-      Top = 223
-      Width = 130
-      Height = 17
-      Hint = '#00062^eAdd to vocabulary'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 4
-      Caption = '#00315^eExamples'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = SpeedButton9Click
-      ExplicitTop = 189
-    end
-    object SpeedButton1: TSpeedButton [16]
-      Left = 11
-      Top = 4
-      Width = 23
-      Height = 22
-    end
-    object btnLookupClip: TSpeedButton [17]
-      Left = 152
-      Top = 4
-      Width = 73
-      Height = 22
-      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
-      AllowAllUp = True
-      GroupIndex = 1
-      Caption = '#00289^eBy clipboard'
-      PopupMenu = pmLookupMode
-      OnClick = btnLookupClipClick
+    object Panel2: TPanel [3]
+      AlignWithMargins = True
+      Left = 3
+      Top = 224
+      Width = 681
+      Height = 21
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 3
+      ExplicitWidth = 757
+      object SpeedButton6: TSpeedButton
+        Left = 0
+        Top = 0
+        Width = 123
+        Height = 21
+        Hint = '#00650^eCharacters in word'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 6
+        Caption = '#00651^eChar. in word'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = SpeedButton6Click
+        ExplicitLeft = 16
+        ExplicitTop = 8
+        ExplicitHeight = 17
+      end
+      object SpeedButton9: TSpeedButton
+        Left = 123
+        Top = 0
+        Width = 130
+        Height = 21
+        Hint = '#00062^eAdd to vocabulary'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 4
+        Caption = '#00315^eExamples'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = SpeedButton9Click
+        ExplicitLeft = 144
+        ExplicitTop = 8
+        ExplicitHeight = 17
+      end
     end
     inherited BlankPanel: TBlankPanel
-      Top = 62
-      Width = 703
-      Height = 157
+      Left = 0
+      Top = 26
+      Width = 687
+      Height = 195
+      Align = alClient
       ExplicitTop = 62
       ExplicitWidth = 687
       ExplicitHeight = 123
     end
     inherited StringGrid: TWakanWordGrid
-      Top = 63
-      Width = 701
-      Height = 155
+      AlignWithMargins = True
+      Left = 3
+      Top = 29
+      Width = 681
+      Height = 189
+      Align = alClient
       ExplicitTop = 63
       ExplicitWidth = 685
       ExplicitHeight = 121
       ColWidths = (
         110
         138
-        429)
+        409)
     end
-    object Edit1: TEdit
-      Left = 8
-      Top = 32
-      Width = 632
-      Height = 24
-      Anchors = [akLeft, akTop, akRight]
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
+    object Panel1: TPanel
+      AlignWithMargins = True
+      Left = 0
+      Top = 0
+      Width = 687
+      Height = 23
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Align = alTop
+      BevelOuter = bvNone
       TabOrder = 2
-      OnChange = Edit1Change
-      OnClick = Edit1Click
-      ExplicitWidth = 616
-    end
-    object btnSearch: TBitBtn
-      Left = 642
-      Top = 32
-      Width = 70
-      Height = 25
-      Hint = 
-        '#00668^eSearch results did not fit one page, click to display ev' +
-        'erything'
-      Anchors = [akTop, akRight]
-      Caption = '#00669^eSearch'
-      Default = True
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      Glyph.Data = {
-        76010000424D7601000000000000760000002800000020000000100000000100
-        04000000000000010000120B0000120B00001000000000000000000000000000
-        800000800000008080008000000080008000808000007F7F7F00BFBFBF000000
-        FF0000FF000000FFFF00FF000000FF00FF00FFFF0000FFFFFF00333333033333
-        33333333373F33333333333330B03333333333337F7F33333333333330F03333
-        333333337F7FF3333333333330B00333333333337F773FF33333333330F0F003
-        333333337F7F773F3333333330B0B0B0333333337F7F7F7F3333333300F0F0F0
-        333333377F73737F33333330B0BFBFB03333337F7F33337F33333330F0FBFBF0
-        3333337F7333337F33333330BFBFBFB033333373F3333373333333330BFBFB03
-        33333337FFFFF7FF3333333300000000333333377777777F333333330EEEEEE0
-        33333337FFFFFF7FF3333333000000000333333777777777F33333330000000B
-        03333337777777F7F33333330000000003333337777777773333}
-      NumGlyphs = 2
-      ParentFont = False
-      TabOrder = 3
-      OnClick = btnSearchClick
-      ExplicitLeft = 626
-    end
-    object btnLookupMode: TButton
-      Left = 11
-      Top = 4
-      Width = 135
-      Height = 22
-      Hint = 
-        '#01133^Search by reading, writing or meaning, depending on what ' +
-        'you type'
-      Caption = '#01132^Any matches'
-      DropDownMenu = pmLookupMode
-      Style = bsSplitButton
-      TabOrder = 4
-      OnClick = btnLookupModeClick
+      ExplicitLeft = 3
+      ExplicitTop = 3
+      ExplicitWidth = 815
+      object btnLookupClip: TSpeedButton
+        Left = 364
+        Top = 0
+        Width = 73
+        Height = 23
+        Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 1
+        Caption = '#00289^eBy clipboard'
+        PopupMenu = pmLookupMode
+        OnClick = btnLookupClipClick
+        ExplicitLeft = 413
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnMatchExact: TSpeedButton
+        Left = 441
+        Top = 0
+        Width = 23
+        Height = 23
+        Hint = '#00656^eSearch exact word (F5)'
+        Align = alLeft
+        GroupIndex = 7
+        Down = True
+        Caption = 'A'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        OnClick = btnMatchExactClick
+        ExplicitLeft = 535
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnMatchLeft: TSpeedButton
+        Left = 464
+        Top = 0
+        Width = 23
+        Height = 23
+        Hint = '#00657^eSearch beginning (F6)'
+        Align = alLeft
+        GroupIndex = 7
+        Caption = 'A+'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        OnClick = btnMatchExactClick
+        ExplicitLeft = 559
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnMatchRight: TSpeedButton
+        Left = 487
+        Top = 0
+        Width = 23
+        Height = 23
+        Hint = '#00658^eSearch end (F7)'
+        Align = alLeft
+        GroupIndex = 7
+        Caption = '+A'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        OnClick = btnMatchExactClick
+        ExplicitLeft = 583
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnMatchAnywhere: TSpeedButton
+        Left = 510
+        Top = 0
+        Width = 25
+        Height = 23
+        Hint = '#00930^eSearch middle'
+        Align = alLeft
+        GroupIndex = 7
+        Caption = '+A+'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        OnClick = btnMatchExactClick
+        ExplicitLeft = 607
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnInflect: TSpeedButton
+        Left = 539
+        Top = 0
+        Width = 23
+        Height = 23
+        Hint = '#00661^eSearch for inflected words / conjugated verbs'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 8
+        Caption = 'Inf'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ExplicitLeft = 742
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object sbAutoPreview: TSpeedButton
+        Left = 562
+        Top = 0
+        Width = 33
+        Height = 23
+        Hint = 
+          '#00662^eAuto-preview while typing (full search with arrow button' +
+          ')'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 9
+        Caption = 'Auto'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ExplicitLeft = 766
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnDictGroup1: TSpeedButton
+        Left = 599
+        Top = 0
+        Width = 25
+        Height = 23
+        Hint = '#00663^eUse dictionaries in group 1 (Ctrl-1)'
+        Align = alLeft
+        GroupIndex = 10
+        Down = True
+        Caption = 'D1'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ExplicitLeft = 801
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnDictGroup2: TSpeedButton
+        Left = 624
+        Top = 0
+        Width = 25
+        Height = 23
+        Hint = '#00664^eUse dictionaries in group 2 (Ctrl-2)'
+        Align = alLeft
+        GroupIndex = 10
+        Caption = 'D2'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ExplicitLeft = 832
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object btnDictGroup3: TSpeedButton
+        Left = 649
+        Top = 0
+        Width = 25
+        Height = 23
+        Hint = '#00665^eUse dictionaries in group 3 (Ctrl-3)'
+        Align = alLeft
+        GroupIndex = 10
+        Caption = 'D3'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ExplicitLeft = 858
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
+      object Bevel1: TBevel
+        Left = 437
+        Top = 0
+        Width = 4
+        Height = 23
+        Align = alLeft
+        Shape = bsSpacer
+      end
+      object Bevel2: TBevel
+        Left = 535
+        Top = 0
+        Width = 4
+        Height = 23
+        Align = alLeft
+        Shape = bsSpacer
+      end
+      object Bevel3: TBevel
+        Left = 595
+        Top = 0
+        Width = 4
+        Height = 23
+        Align = alLeft
+        Shape = bsSpacer
+      end
+      object Bevel4: TBevel
+        Left = 225
+        Top = 0
+        Width = 4
+        Height = 23
+        Align = alLeft
+        Shape = bsSpacer
+      end
+      object Edit1: TEdit
+        Left = 0
+        Top = 0
+        Width = 225
+        Height = 23
+        Align = alLeft
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        OnChange = Edit1Change
+        OnClick = Edit1Click
+      end
+      object btnLookupMode: TButton
+        Left = 229
+        Top = 0
+        Width = 135
+        Height = 23
+        Hint = 
+          '#01133^Search by reading, writing or meaning, depending on what ' +
+          'you type'
+        Align = alLeft
+        Caption = '#01132^Any matches'
+        DropDownMenu = pmLookupMode
+        PopupMenu = pmLookupMode
+        Style = bsSplitButton
+        TabOrder = 1
+        OnClick = btnLookupModeClick
+        ExplicitLeft = 272
+        ExplicitTop = 4
+        ExplicitHeight = 22
+      end
     end
   end
   object pnlDockExamples: TPanel [1]
     Left = 0
     Top = 248
-    Width = 720
+    Width = 687
     Height = 0
     Align = alBottom
     BevelOuter = bvNone
@@ -363,7 +410,7 @@ inherited fWordLookup: TfWordLookup
     ExplicitWidth = 704
   end
   object Panel3: TPanel [2]
-    Left = 720
+    Left = 687
     Top = 0
     Width = 0
     Height = 248

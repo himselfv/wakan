@@ -21,6 +21,14 @@ type
   TfWordLookup = class(TfWordLookupBase)
     pnlDockExamples: TPanel;
     Panel3: TPanel;
+    pmLookupMode: TPopupMenu;
+    miLookupAuto: TMenuItem;
+    miLookupJtoE: TMenuItem;
+    miLookupEtoJ: TMenuItem;
+    Panel1: TPanel;
+    Edit1: TEdit;
+    btnLookupMode: TButton;
+    btnLookupClip: TSpeedButton;
     btnMatchExact: TSpeedButton;
     btnMatchLeft: TSpeedButton;
     btnMatchRight: TSpeedButton;
@@ -30,19 +38,13 @@ type
     btnDictGroup1: TSpeedButton;
     btnDictGroup2: TSpeedButton;
     btnDictGroup3: TSpeedButton;
-    Edit1: TEdit;
-    btnSearch: TBitBtn;
-    Label2: TLabel;
-    Label3: TLabel;
+    Bevel1: TBevel;
+    Bevel2: TBevel;
+    Bevel3: TBevel;
+    Panel2: TPanel;
     SpeedButton6: TSpeedButton;
     SpeedButton9: TSpeedButton;
-    pmLookupMode: TPopupMenu;
-    miLookupAuto: TMenuItem;
-    miLookupJtoE: TMenuItem;
-    miLookupEtoJ: TMenuItem;
-    SpeedButton1: TSpeedButton;
-    btnLookupClip: TSpeedButton;
-    btnLookupMode: TButton;
+    Bevel4: TBevel;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -225,10 +227,12 @@ begin
     3:fWordLookup.btnMatchAnywhere.Down:=true;
   end;
 
+ {$IFDEF AUTOSEARCH}
   if (not sbAutoPreview.Down) or btnMatchAnywhere.Down then
     btnSearch.Caption:=_l('#00669^eSearch')
   else
     btnSearch.Caption:=_l('#00670^eAll');
+  {$ENDIF}
 
   if ANewMode in [lmEn, lmEditorInsert] then
   begin
@@ -298,7 +302,11 @@ var lm: TLookupMode;
     if btnDictGroup3.Down then Result.dictgroup:=3 else
       Result.dictgroup := 1; //we must have some group chosen
 
+ {$IFDEF AUTOSEARCH}
     Result.Full:=not btnSearch.Enabled;
+ {$ELSE}
+    Result.Full := true;
+ {$ENDIF}
     Result.MaxWords:=StringGrid.VisibleRowCount;
 
    //Match type (left/right/exact)
@@ -333,6 +341,7 @@ begin
   //Don't exit if the query is empty, we need to reset results/update presentation/etc
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
+ {$IFDEF AUTOSEARCH}
   if (lm<>lmEditorInsert) and btnSearch.Enabled and ((not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
   begin
     btnSearch.Visible:=true;
@@ -343,6 +352,7 @@ begin
     WordSelectionChanged;
     exit;
   end;
+ {$ENDIF}
 
   StringGrid.RowCount:=200;
 
@@ -411,6 +421,7 @@ begin
       end;
     end;
 
+ {$IFDEF AUTOSEARCH}
    //Finalize and output
     if not (lm in [lmEditorInsert]) then
       if FResults.Count=0 then
@@ -420,6 +431,7 @@ begin
           Label3.Caption:=inttostr(FResults.Count)+'+'
         else
           Label3.Caption:=inttostr(FResults.Count);
+ {$ENDIF}
 
   //update result list
     ResultsChanged;
@@ -427,8 +439,10 @@ begin
       text:=_l('#00671^eSearch results (partial)')
     else
       text:=_l('#00672^eSearch results');
+  {$IFDEF AUTOSEARCH}
     btnSearch.Visible:=not wasfull or (req.full and not btnSearch.Enabled);
     Label2.Visible:=not btnSearch.Visible;
+  {$ENDIF}
     case lm of
       lmJp: text:=text+' '+_l('#00673^eby phonetic');
       lmEn: text:=text+' '+_l('#00674^eby meaning');
@@ -449,7 +463,9 @@ end;
 
 procedure TfWordLookup.Edit1Change(Sender: TObject);
 begin
+ {$IFDEF AUTOSEARCH}
   btnSearch.Enabled:=true;
+ {$ENDIF}
   Look();
 end;
 
@@ -512,7 +528,9 @@ end;
 
 procedure TfWordLookup.btnSearchClick(Sender: TObject);
 begin
+ {$IFDEF AUTOSEARCH}
   btnSearch.Enabled:=false;
+ {$ENDIF}
   Look();
 end;
 
