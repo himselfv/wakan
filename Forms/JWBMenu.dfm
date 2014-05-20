@@ -130,9 +130,10 @@ object fMenu: TfMenu
     Left = 0
     Top = 0
     Width = 694
-    Height = 33
+    Height = 35
     Align = alTop
     BevelEdges = [beBottom]
+    BevelKind = bkFlat
     BevelOuter = bvNone
     DoubleBuffered = False
     FullRepaint = False
@@ -142,11 +143,12 @@ object fMenu: TfMenu
       694
       33)
     object tab1: TSpeedButton
-      Left = 3
-      Top = 4
+      Left = 0
+      Top = 0
       Width = 71
-      Height = 25
+      Height = 33
       Hint = '#00212^eCharacter list (Ctrl-F1)'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 1
       Caption = '#00213^eCharacters'
@@ -160,13 +162,17 @@ object fMenu: TfMenu
       ParentShowHint = False
       ShowHint = True
       OnClick = TabControl1Change
+      ExplicitLeft = 3
+      ExplicitTop = 4
+      ExplicitHeight = 25
     end
     object tab5: TSpeedButton
-      Left = 268
-      Top = 4
+      Left = 265
+      Top = 0
       Width = 69
-      Height = 25
+      Height = 33
       Hint = '#00214^eVocabulary manager (Ctrl-F4)'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 1
       Caption = '#00215^eVocabulary'
@@ -180,13 +186,17 @@ object fMenu: TfMenu
       ParentShowHint = False
       ShowHint = True
       OnClick = TabControl1Change
+      ExplicitLeft = 268
+      ExplicitTop = 4
+      ExplicitHeight = 25
     end
     object tab2: TSpeedButton
-      Left = 74
-      Top = 4
+      Left = 71
+      Top = 0
       Width = 71
-      Height = 25
+      Height = 33
       Hint = '#00216^eWord dictionary (Ctrl-F2)'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 1
       Caption = '#00217^eDictionary'
@@ -200,13 +210,17 @@ object fMenu: TfMenu
       ParentShowHint = False
       ShowHint = True
       OnClick = TabControl1Change
+      ExplicitLeft = 74
+      ExplicitTop = 4
+      ExplicitHeight = 25
     end
     object btnChineseMode: TSpeedButton
-      Left = 388
-      Top = 2
+      Left = 386
+      Top = 0
       Width = 42
-      Height = 29
+      Height = 33
       Hint = '#00218^eChinese mode (F9)'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 10
       Flat = True
@@ -292,20 +306,28 @@ object fMenu: TfMenu
         D3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED3172ED317
         2ED3172ED3172ED31E33C95A36B4}
       OnClick = btnChineseModeClick
+      ExplicitLeft = 388
+      ExplicitTop = 2
+      ExplicitHeight = 29
     end
     object Bevel3: TBevel
-      Left = 341
-      Top = 1
+      Left = 334
+      Top = 0
       Width = 10
-      Height = 32
-      Shape = bsLeftLine
+      Height = 33
+      Align = alLeft
+      Shape = bsSpacer
+      ExplicitLeft = 341
+      ExplicitTop = 1
+      ExplicitHeight = 32
     end
     object btnJapaneseMode: TSpeedButton
-      Left = 346
-      Top = 2
+      Left = 344
+      Top = 0
       Width = 42
-      Height = 29
+      Height = 33
       Hint = '#00219^eJapanese mode (F8)'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 10
       Flat = True
@@ -385,6 +407,9 @@ object fMenu: TfMenu
         EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEF
         EFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFEFE3E3E317}
       OnClick = btnJapaneseModeClick
+      ExplicitLeft = 346
+      ExplicitTop = 2
+      ExplicitHeight = 29
     end
     object btnClipboardClear: TSpeedButton
       Left = 663
@@ -412,18 +437,22 @@ object fMenu: TfMenu
       OnClick = btnClipboardClearClick
     end
     object Bevel5: TBevel
-      Left = 433
+      Left = 428
       Top = 0
       Width = 10
-      Height = 35
-      Shape = bsLeftLine
+      Height = 33
+      Align = alLeft
+      Shape = bsSpacer
+      ExplicitLeft = 433
+      ExplicitHeight = 35
     end
     object tab3: TSpeedButton
-      Left = 145
-      Top = 4
+      Left = 142
+      Top = 0
       Width = 123
-      Height = 25
+      Height = 33
       Hint = '#00221^eText editor (Ctrl-F3)'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 1
       Caption = '#00222^eEditor / Translator'
@@ -437,20 +466,27 @@ object fMenu: TfMenu
       ParentShowHint = False
       ShowHint = True
       OnClick = TabControl1Change
+      ExplicitLeft = 145
+      ExplicitTop = 4
+      ExplicitHeight = 25
     end
     object Bevel1: TBevel
-      Left = 491
+      Left = 488
       Top = 0
       Width = 10
-      Height = 35
-      Shape = bsLeftLine
+      Height = 33
+      Align = alLeft
+      Shape = bsSpacer
+      ExplicitLeft = 493
+      ExplicitTop = 4
     end
     object SpeedButton1: TSpeedButton
       Left = 463
-      Top = 4
+      Top = 0
       Width = 25
-      Height = 25
+      Height = 33
       Hint = '#00223^eActivate/deactivate screen popup tool'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 20
       Flat = True
@@ -482,13 +518,16 @@ object fMenu: TfMenu
         FF00FFFF000000FFFFFFFFFFFF00000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000FFFFFF}
       OnClick = SpeedButton1Click
+      ExplicitTop = 4
+      ExplicitHeight = 25
     end
     object SpeedButton2: TSpeedButton
       Left = 438
-      Top = 4
+      Top = 0
       Width = 25
-      Height = 25
+      Height = 33
       Hint = '#00224^eActivate/deactivate WaKan popup tool'
+      Align = alLeft
       AllowAllUp = True
       GroupIndex = 21
       Flat = True
@@ -520,6 +559,8 @@ object fMenu: TfMenu
         FF00FFFF000000FFFFFFFFFFFF00000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000FFFFFF}
       OnClick = SpeedButton2Click
+      ExplicitTop = 4
+      ExplicitHeight = 25
     end
     object ClipboardPaintbox: TWakanPaintbox
       Left = 495
@@ -535,14 +576,19 @@ object fMenu: TfMenu
     end
   end
   object MainPanel: TPanel
-    Left = 0
-    Top = 33
-    Width = 509
-    Height = 340
+    AlignWithMargins = True
+    Left = 3
+    Top = 38
+    Width = 503
+    Height = 332
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
+    ExplicitLeft = 0
+    ExplicitTop = 33
+    ExplicitWidth = 509
+    ExplicitHeight = 340
   end
   object BottomPanel: TPanel
     Left = 0
@@ -556,13 +602,15 @@ object fMenu: TfMenu
   end
   object RightPanel: TPanel
     Left = 509
-    Top = 33
+    Top = 35
     Width = 185
-    Height = 340
+    Height = 338
     Align = alRight
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 3
+    ExplicitTop = 33
+    ExplicitHeight = 340
   end
   object ClipboardUpdateTimer: TTimer
     Enabled = False

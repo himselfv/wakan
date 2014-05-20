@@ -41,90 +41,12 @@ object fKanji: TfKanji
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    DesignSize = (
-      630
-      345)
-    object RxLabel15: TLabel
-      Left = 8
-      Top = 8
-      Width = 75
-      Height = 16
-      Caption = 'RxLabel15'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -13
-      Font.Name = 'Verdana'
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
-    object btnSearchSort: TSpeedButton
-      Left = 8
-      Top = 320
-      Width = 113
-      Height = 17
-      Hint = '#00119^eSearch & change sort order'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 2
-      Caption = '#00120^eSearch && sort'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = btnSearchSortClick
-      ExplicitTop = 321
-    end
-    object btnKanjiDetails: TSpeedButton
-      Left = 495
-      Top = 320
-      Width = 129
-      Height = 17
-      Hint = '#00123^eDetails (Ctrl-D)'
-      AllowAllUp = True
-      Anchors = [akRight, akBottom]
-      GroupIndex = 4
-      Caption = '#00124^eDetails'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = btnKanjiDetailsClick
-    end
-    object btnCompounds: TSpeedButton
-      Left = 128
-      Top = 320
-      Width = 81
-      Height = 17
-      Hint = '#00125^eCompounds'
-      AllowAllUp = True
-      Anchors = [akLeft, akBottom]
-      GroupIndex = 5
-      Caption = '#00125^eCompounds'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      ParentShowHint = False
-      ShowHint = True
-      OnClick = btnCompoundsClick
-      ExplicitTop = 321
-    end
     object BlankPanel1: TBlankPanel
-      Left = 7
-      Top = 32
-      Width = 618
-      Height = 281
-      Anchors = [akLeft, akTop, akRight, akBottom]
+      Left = 0
+      Top = 27
+      Width = 630
+      Height = 291
+      Align = alClient
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
@@ -133,13 +55,18 @@ object fKanji: TfKanji
       Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
+      ExplicitLeft = 7
+      ExplicitTop = 32
+      ExplicitWidth = 618
+      ExplicitHeight = 281
     end
     object DrawGrid1: TDrawGrid
-      Left = 8
-      Top = 33
-      Width = 616
-      Height = 279
-      Anchors = [akLeft, akTop, akRight, akBottom]
+      AlignWithMargins = True
+      Left = 3
+      Top = 30
+      Width = 624
+      Height = 285
+      Align = alClient
       BorderStyle = bsNone
       ColCount = 10
       DefaultColWidth = 59
@@ -159,24 +86,129 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
+      ExplicitLeft = 7
+      ExplicitTop = 32
+      ExplicitWidth = 623
+      ExplicitHeight = 280
     end
-    object btnPrintCards: TButton
-      Left = 495
-      Top = 4
-      Width = 128
+    object Panel2: TPanel
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 624
       Height = 21
-      Hint = '#00127^ePrint Kanji cards (for memorizing) (Ctrl-F6)'
-      Anchors = [akTop, akRight]
-      Caption = '#00128^ePrint cards'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 1
-      TabStop = False
-      OnClick = btnPrintCardsClick
+      Align = alTop
+      BevelOuter = bvNone
+      TabOrder = 2
+      object RxLabel15: TLabel
+        Left = 0
+        Top = 0
+        Width = 495
+        Height = 21
+        Align = alClient
+        Caption = 'RxLabel15'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Verdana'
+        Font.Style = [fsBold]
+        ParentFont = False
+        Layout = tlCenter
+        ExplicitLeft = 4
+        ExplicitTop = 5
+        ExplicitWidth = 75
+        ExplicitHeight = 16
+      end
+      object btnPrintCards: TButton
+        Left = 495
+        Top = 0
+        Width = 129
+        Height = 21
+        Hint = '#00127^ePrint Kanji cards (for memorizing) (Ctrl-F6)'
+        Align = alRight
+        Caption = '#00128^ePrint cards'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        TabStop = False
+        OnClick = btnPrintCardsClick
+      end
+    end
+    object Panel3: TPanel
+      AlignWithMargins = True
+      Left = 3
+      Top = 321
+      Width = 624
+      Height = 21
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 3
+      object btnSearchSort: TSpeedButton
+        Left = 0
+        Top = 0
+        Width = 137
+        Height = 21
+        Hint = '#00119^eSearch & change sort order'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 2
+        Caption = '#00120^eSearch && sort'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnSearchSortClick
+      end
+      object btnCompounds: TSpeedButton
+        Left = 137
+        Top = 0
+        Width = 112
+        Height = 21
+        Hint = '#00125^eCompounds'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 5
+        Caption = '#00125^eCompounds'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnCompoundsClick
+      end
+      object btnKanjiDetails: TSpeedButton
+        Left = 495
+        Top = 0
+        Width = 129
+        Height = 21
+        Hint = '#00123^eDetails (Ctrl-D)'
+        Align = alRight
+        AllowAllUp = True
+        GroupIndex = 4
+        Caption = '#00124^eDetails'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnKanjiDetailsClick
+        ExplicitLeft = 499
+        ExplicitHeight = 17
+      end
     end
   end
   object pnlDockCompounds: TPanel

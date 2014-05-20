@@ -116,12 +116,11 @@ type
 
   TfEditor = class(TForm)
     Bevel: TPanel;
-    lblControlsHint: TLabel;
-    sbDockDictionary: TSpeedButton;
-    btnKanjiDetails: TSpeedButton;
-    EditorPaintbox: TWakanPaintbox;
-    ListBox1: TListBox;
-    EditorScrollBar: TScrollBar;
+    BlinkCursorTimer: TTimer;
+    OpenTextDialog: TOpenDialog;
+    SaveTextDialog: TSaveDialog;
+    SaveAsKanaDialog: TSaveDialog;
+    ImageList1: TImageList;
     ToolBar1: TToolBar;
     sbFileNew: TToolButton;
     sbFileOpen: TToolButton;
@@ -146,11 +145,12 @@ type
     cbFontSize: TComboBox;
     ToolButton21: TToolButton;
     sbPrint: TToolButton;
-    BlinkCursorTimer: TTimer;
-    OpenTextDialog: TOpenDialog;
-    SaveTextDialog: TSaveDialog;
-    SaveAsKanaDialog: TSaveDialog;
-    ImageList1: TImageList;
+    ListBox1: TListBox;
+    EditorPaintbox: TWakanPaintbox;
+    EditorScrollBar: TScrollBar;
+    lblControlsHint: TLabel;
+    btnKanjiDetails: TSpeedButton;
+    sbDockDictionary: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);

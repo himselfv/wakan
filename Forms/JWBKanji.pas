@@ -24,18 +24,20 @@ type
 
   TfKanji = class(TForm)
     Panel1: TPanel;
-    RxLabel15: TLabel;
-    btnSearchSort: TSpeedButton;
-    btnKanjiDetails: TSpeedButton;
-    btnCompounds: TSpeedButton;
     DrawGrid1: TDrawGrid;
-    btnPrintCards: TButton;
     pnlDockCompounds: TPanel;
     pnlDockSearch: TPanel;
     SaveDialog1: TSaveDialog;
     UpdateTimer: TTimer;
     splDockCompounds: TSplitter;
     BlankPanel1: TBlankPanel;
+    Panel2: TPanel;
+    Panel3: TPanel;
+    RxLabel15: TLabel;
+    btnPrintCards: TButton;
+    btnSearchSort: TSpeedButton;
+    btnCompounds: TSpeedButton;
+    btnKanjiDetails: TSpeedButton;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);
