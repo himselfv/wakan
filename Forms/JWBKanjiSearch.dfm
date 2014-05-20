@@ -24,8 +24,7 @@ object fKanjiSearch: TfKanjiSearch
     Width = 618
     Height = 209
     Align = alClient
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
+    BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
     DesignSize = (

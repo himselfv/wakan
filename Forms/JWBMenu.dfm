@@ -132,6 +132,7 @@ object fMenu: TfMenu
     Width = 694
     Height = 33
     Align = alTop
+    BevelEdges = [beBottom]
     BevelOuter = bvNone
     DoubleBuffered = False
     FullRepaint = False

@@ -1,10 +1,9 @@
 inherited fWordLookup: TfWordLookup
   Left = 57
   Top = 137
-  BorderStyle = bsSizeToolWin
   Caption = '#00642^eDictionary lookup'
-  ClientHeight = 214
-  ClientWidth = 704
+  ClientHeight = 248
+  ClientWidth = 720
   Font.Name = 'MS Sans Serif'
   OldCreateOrder = True
   Scaled = False
@@ -15,24 +14,27 @@ inherited fWordLookup: TfWordLookup
   PixelsPerInch = 96
   TextHeight = 13
   inherited Bevel: TPanel
-    Width = 704
-    Height = 214
+    Width = 720
+    Height = 248
     TabOrder = 2
     ExplicitWidth = 704
     ExplicitHeight = 214
     inherited btnGoToVocab: TSpeedButton
-      Left = 425
-      Top = 185
+      Left = 441
+      Top = 219
+      Visible = False
       ExplicitTop = 185
     end
     inherited btnAddToVocab: TSpeedButton
-      Left = 521
-      Top = 185
+      Left = 537
+      Top = 219
+      Visible = False
       ExplicitTop = 185
     end
     inherited btnCopyToClipboard: TSpeedButton
-      Left = 617
-      Top = 185
+      Left = 633
+      Top = 219
+      Visible = False
       ExplicitTop = 185
     end
     object btnMatchExact: TSpeedButton [3]
@@ -181,7 +183,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
     end
     object Label2: TLabel [12]
-      Left = 604
+      Left = 620
       Top = 37
       Width = 92
       Height = 13
@@ -189,19 +191,21 @@ inherited fWordLookup: TfWordLookup
       Anchors = [akTop, akRight]
       Caption = '#00666^eAll visible'
       Enabled = False
+      ExplicitLeft = 604
     end
     object Label3: TLabel [13]
-      Left = 688
+      Left = 704
       Top = 17
       Width = 6
       Height = 13
       Alignment = taRightJustify
       Anchors = [akTop, akRight]
       Caption = '0'
+      ExplicitLeft = 688
     end
     object SpeedButton6: TSpeedButton [14]
       Left = 8
-      Top = 189
+      Top = 223
       Width = 123
       Height = 17
       Hint = '#00650^eCharacters in word'
@@ -218,10 +222,11 @@ inherited fWordLookup: TfWordLookup
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton6Click
+      ExplicitTop = 189
     end
     object SpeedButton9: TSpeedButton [15]
       Left = 136
-      Top = 189
+      Top = 223
       Width = 130
       Height = 17
       Hint = '#00062^eAdd to vocabulary'
@@ -238,6 +243,7 @@ inherited fWordLookup: TfWordLookup
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton9Click
+      ExplicitTop = 189
     end
     object SpeedButton1: TSpeedButton [16]
       Left = 11
@@ -259,28 +265,28 @@ inherited fWordLookup: TfWordLookup
     end
     inherited BlankPanel: TBlankPanel
       Top = 62
-      Width = 687
-      Height = 123
+      Width = 703
+      Height = 157
       ExplicitTop = 62
       ExplicitWidth = 687
       ExplicitHeight = 123
     end
     inherited StringGrid: TWakanWordGrid
       Top = 63
-      Width = 685
-      Height = 121
+      Width = 701
+      Height = 155
       ExplicitTop = 63
       ExplicitWidth = 685
       ExplicitHeight = 121
       ColWidths = (
         110
         138
-        413)
+        429)
     end
     object Edit1: TEdit
       Left = 8
       Top = 32
-      Width = 616
+      Width = 632
       Height = 24
       Anchors = [akLeft, akTop, akRight]
       Font.Charset = DEFAULT_CHARSET
@@ -292,9 +298,10 @@ inherited fWordLookup: TfWordLookup
       TabOrder = 2
       OnChange = Edit1Change
       OnClick = Edit1Click
+      ExplicitWidth = 616
     end
     object btnSearch: TBitBtn
-      Left = 626
+      Left = 642
       Top = 32
       Width = 70
       Height = 25
@@ -326,6 +333,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       TabOrder = 3
       OnClick = btnSearchClick
+      ExplicitLeft = 626
     end
     object btnLookupMode: TButton
       Left = 11
@@ -344,23 +352,27 @@ inherited fWordLookup: TfWordLookup
   end
   object pnlDockExamples: TPanel [1]
     Left = 0
-    Top = 214
-    Width = 704
+    Top = 248
+    Width = 720
     Height = 0
     Align = alBottom
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
+    ExplicitTop = 214
+    ExplicitWidth = 704
   end
   object Panel3: TPanel [2]
-    Left = 704
+    Left = 720
     Top = 0
     Width = 0
-    Height = 214
+    Height = 248
     Align = alRight
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 1
+    ExplicitLeft = 704
+    ExplicitHeight = 214
   end
   inherited pmPopup: TPopupMenu
     Left = 32
@@ -370,7 +382,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800780010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101030008008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

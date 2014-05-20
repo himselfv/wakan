@@ -28,6 +28,7 @@ object fKanji: TfKanji
     Cursor = crVSplit
     Align = alBottom
     AutoSnap = False
+    Beveled = True
     Visible = False
     ExplicitTop = 330
   end
@@ -37,8 +38,7 @@ object fKanji: TfKanji
     Width = 630
     Height = 345
     Align = alClient
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
+    BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
     DesignSize = (
@@ -79,9 +79,9 @@ object fKanji: TfKanji
       ExplicitTop = 321
     end
     object btnKanjiDetails: TSpeedButton
-      Left = 559
+      Left = 495
       Top = 320
-      Width = 65
+      Width = 129
       Height = 17
       Hint = '#00123^eDetails (Ctrl-D)'
       AllowAllUp = True
@@ -97,7 +97,6 @@ object fKanji: TfKanji
       ParentShowHint = False
       ShowHint = True
       OnClick = btnKanjiDetailsClick
-      ExplicitTop = 321
     end
     object btnCompounds: TSpeedButton
       Left = 128
@@ -197,6 +196,8 @@ object fKanji: TfKanji
     Width = 630
     Height = 0
     Align = alTop
+    BevelEdges = [beBottom]
+    BevelKind = bkTile
     BevelOuter = bvNone
     UseDockManager = False
     DockSite = True

@@ -19,8 +19,7 @@ object fWordLookupBase: TfWordLookupBase
     Width = 468
     Height = 178
     Align = alClient
-    BevelInner = bvRaised
-    BevelOuter = bvLowered
+    BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
     DesignSize = (
@@ -50,6 +49,7 @@ object fWordLookupBase: TfWordLookupBase
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
+      Visible = False
       OnClick = btnGoToVocabClick
       ExplicitLeft = 425
       ExplicitTop = 187
@@ -78,6 +78,7 @@ object fWordLookupBase: TfWordLookupBase
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
+      Visible = False
       OnClick = btnAddToVocabClick
       ExplicitLeft = 521
       ExplicitTop = 187
@@ -106,6 +107,7 @@ object fWordLookupBase: TfWordLookupBase
       NumGlyphs = 2
       ParentShowHint = False
       ShowHint = True
+      Visible = False
       OnClick = btnCopyToClipboardClick
       ExplicitLeft = 617
       ExplicitTop = 187
@@ -116,8 +118,8 @@ object fWordLookupBase: TfWordLookupBase
       Width = 451
       Height = 140
       Anchors = [akLeft, akTop, akRight, akBottom]
-      TextLeft = 119
-      TextTop = 11
+      TextLeft = 24
+      TextTop = 24
       Text = '#00155^eNo words were found.'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -195,7 +197,7 @@ object fWordLookupBase: TfWordLookupBase
     Left = 88
     Top = 16
     Bitmap = {
-      494C010103000800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
