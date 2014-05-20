@@ -87,25 +87,6 @@ object fEditor: TfEditor
       ShowHint = True
       OnClick = btnKanjiDetailsClick
     end
-    object lblFilename: TPanel
-      Left = 522
-      Top = 6
-      Width = 243
-      Height = 28
-      Alignment = taLeftJustify
-      Anchors = [akLeft, akTop, akRight]
-      BevelOuter = bvLowered
-      BorderWidth = 4
-      Caption = '#00626^e<UNNAMED>'
-      FullRepaint = False
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = [fsBold]
-      ParentFont = False
-      TabOrder = 4
-    end
     object EditorPaintbox: TWakanPaintbox
       Left = 7
       Top = 39
@@ -122,7 +103,7 @@ object fEditor: TfEditor
       OnMouseDown = EditorPaintBoxMouseDown
     end
     object ListBox1: TListBox
-      Left = 771
+      Left = 522
       Top = 5
       Width = 21
       Height = 21

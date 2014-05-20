@@ -564,10 +564,10 @@ object fMenu: TfMenu
     FullRepaint = False
     TabOrder = 3
   end
-  object Timer1: TTimer
+  object ClipboardUpdateTimer: TTimer
     Enabled = False
     Interval = 2000
-    OnTimer = Timer1Timer
+    OnTimer = ClipboardUpdateTimerTimer
     Left = 280
     Top = 64
   end

@@ -151,7 +151,6 @@ type
     SaveTextDialog: TSaveDialog;
     SaveAsKanaDialog: TSaveDialog;
     ImageList1: TImageList;
-    lblFilename: TPanel;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -451,6 +450,9 @@ uses Types, TextTable, JWBCore, JWBLanguage, JWBMenu, JWBHint, JWBKanjiDetails,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
   JWBLegacyMarkup;
 
+var
+  EditorWindowTitle: string = '#00610^eText editor / translator'; //one param: file name
+
 {$R *.DFM}
 
 function CursorPos(x,y: integer): TCursorPos;
@@ -691,7 +693,7 @@ begin
   InvalidateLines;
   rcur := SourcePos(0, 0);
   ViewPos := SourcePos(0, 0);
-  lblFilename.Caption:=_l('#00678^e<UNNAMED>');
+  Self.Caption := _l(EditorWindowTitle) + ' - ' + _l('#00678^e<UNNAMED>');
   docfilename:='';
   mustrepaint:=true;
   ShowText(true);
@@ -735,7 +737,7 @@ begin
   else
     LoadAnnotMode := amNone;
 
-  lblFilename.Caption:=uppercase(ExtractFilename(AFilename));
+  Self.Caption:= _l(EditorWindowTitle) + ' - ' + ExtractFilename(AFilename);
   doc.Clear;
   InvalidateLines;
   Screen.Cursor:=crHourGlass;
@@ -834,7 +836,7 @@ begin
   docfilename:=SaveTextDialog.FileName;
   FDocType := ADocType;
   FDocEncoding := AEncoding;
-  lblFilename.Caption:=uppercase(ExtractFilename(SaveTextDialog.FileName));
+  Self.Caption := _l(EditorWindowTitle) + ' - ' +ExtractFilename(SaveTextDialog.FileName);
 end;
 
 procedure TfEditor.SetFileChanged(Value: boolean);

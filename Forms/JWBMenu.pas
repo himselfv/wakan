@@ -25,7 +25,7 @@ type
     btnClipboardClear: TSpeedButton;
     Bevel5: TBevel;
     tab3: TSpeedButton;
-    Timer1: TTimer;
+    ClipboardUpdateTimer: TTimer;
     ActionList1: TActionList;
     aSaveUser: TAction;
     aCancelUser: TAction;
@@ -254,7 +254,7 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    procedure ClipboardUpdateTimerTimer(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
@@ -456,6 +456,7 @@ type
     function DockExpress(form:TForm;dock:boolean):boolean;
     procedure SetCharDetDocked(Value: boolean; Loading: boolean);
     procedure SetPortraitMode(Value: boolean; Loading: boolean);
+    procedure UpdateWindowTitle;
     property DisplayMode: integer read FCurDisplayMode write SetDisplayMode;
     property CharDetDocked: boolean read FCharDetDocked;
 
@@ -992,8 +993,8 @@ begin
 
   Self.Enabled := true;
 
-  Timer1.Enabled:=true;
-  Timer1Timer(Timer1);
+  ClipboardUpdateTimer.Enabled:=true;
+  ClipboardUpdateTimerTimer(ClipboardUpdateTimer);
   ScreenTimer.Enabled:=true;
 
  { Done. }
@@ -1001,7 +1002,25 @@ end;
 
 procedure TfMenu.FormShow(Sender: TObject);
 begin
-  Caption:='WaKan '+WakanVer+' - '+_l('^eTool for learning Japanese & Chinese');
+  UpdateWindowTitle;
+end;
+
+procedure TfMenu.UpdateWindowTitle;
+var subttl: string;
+begin
+  case DisplayMode of
+    1: subttl := fKanji.Caption;
+    2: subttl := fWordLookup.Caption;
+    3: subttl := fEditor.Caption;
+    4: subttl := fEditor.Caption;
+    5: subttl := fVocab.Caption;
+    6: subttl := fKanjiCompounds.Caption;
+  else
+    subttl := _l('^eTool for learning Japanese & Chinese');
+  end;
+  subttl := 'Wakan ' + WakanVer + ' - ' + subttl;
+  if Self.Caption <> subttl then //at least avoid redrawing
+    Self.Caption := subttl;
 end;
 
 procedure TfMenu.ApplyUI;
@@ -1703,7 +1722,7 @@ begin
   LoadUserData;
 end;
 
-procedure TfMenu.Timer1Timer(Sender: TObject);
+procedure TfMenu.ClipboardUpdateTimerTimer(Sender: TObject);
 begin
   Clipboard_Update;
 end;
@@ -2624,6 +2643,8 @@ begin
       end;
   end;
 
+  UpdateWindowTitle();
+
   if fKanjiDetails<>nil then
     fKanjiDetails.UpdateVisible();
   ToggleExamples();
@@ -2766,6 +2787,7 @@ begin
   if not initdone then exit;
   AutosaveUserData;
   HandlePopup({ShowImmediate=}false);
+  UpdateWindowTitle; //have no way of knowing when child form caption changes =(
 end;
 
 { Shows or hides or updates popup, reacting to mouse movements.
