@@ -2316,6 +2316,7 @@ begin
     Canvas.Brush.Color:=clWindow
   else
     Canvas.Brush.Color:=colBack;
+  Canvas.Pen.Style := psClear;
   rect.Left:=r.Left-2;
   rect.Top:=r.Top-2;
   rect.Right:=r.Right+4;

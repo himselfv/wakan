@@ -13,22 +13,23 @@ inherited fKanjiCompounds: TfKanjiCompounds
   ExplicitWidth = 556
   PixelsPerInch = 96
   TextHeight = 13
-  inherited Bevel: TPanel
-    Width = 556
-    ExplicitWidth = 556
+  inherited BottomPanel: TPanel
+    Width = 550
+    Visible = False
+    ExplicitWidth = 550
     inherited btnGoToVocab: TSpeedButton
-      Left = 277
+      Left = 282
       ExplicitLeft = 277
     end
     inherited btnAddToVocab: TSpeedButton
-      Left = 373
+      Left = 376
       ExplicitLeft = 373
     end
     inherited btnCopyToClipboard: TSpeedButton
-      Left = 469
+      Left = 470
       ExplicitLeft = 469
     end
-    object sbShowDict: TSpeedButton [3]
+    object sbShowDict: TSpeedButton
       Left = 152
       Top = 153
       Width = 54
@@ -45,7 +46,7 @@ inherited fKanjiCompounds: TfKanjiCompounds
       ParentFont = False
       OnClick = OptionChanged
     end
-    object sbShowVocab: TSpeedButton [4]
+    object sbShowVocab: TSpeedButton
       Left = 208
       Top = 153
       Width = 60
@@ -62,18 +63,6 @@ inherited fKanjiCompounds: TfKanjiCompounds
       Font.Style = []
       ParentFont = False
       OnClick = OptionChanged
-    end
-    inherited BlankPanel: TBlankPanel
-      Width = 539
-      ExplicitWidth = 539
-    end
-    inherited StringGrid: TWakanWordGrid
-      Width = 537
-      ExplicitWidth = 537
-      ColWidths = (
-        110
-        138
-        265)
     end
     object cbLeftMatchOnly: TCheckBox
       Left = 9
@@ -98,7 +87,7 @@ inherited fKanjiCompounds: TfKanjiCompounds
       Caption = '^ePop'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 3
+      TabOrder = 0
       OnClick = OptionChanged
     end
     object cbSortByFrequency: TCheckBox
@@ -111,13 +100,25 @@ inherited fKanjiCompounds: TfKanjiCompounds
       Caption = '^eFreq'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 4
+      TabOrder = 1
       OnClick = OptionChanged
     end
   end
+  inherited BlankPanel: TBlankPanel
+    Width = 556
+    ExplicitWidth = 556
+  end
+  inherited StringGrid: TWakanWordGrid
+    Width = 554
+    ExplicitWidth = 554
+    ColWidths = (
+      110
+      138
+      282)
+  end
   inherited ilImages: TImageList
     Bitmap = {
-      494C010103000800600010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101030008006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

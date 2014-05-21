@@ -101,14 +101,13 @@ begin
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
   Application.CreateForm(TfWordLookupBase, fWordLookupBase);
   Application.CreateForm(TfDownloader, fDownloader);
-  //this one
-  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds); //replace with wordlookup? //this one
+  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
   Application.CreateForm(TfEditor, fEditor);
   Application.CreateForm(TfWordKanji, fWordKanji);
   Application.CreateForm(TfExamples, fExamples);
   Application.CreateForm(TfVocabDetails, fVocabDetails);
-  Application.CreateForm(TfVocabFilters, fVocabFilters); //this one
+  Application.CreateForm(TfVocabFilters, fVocabFilters);
   Application.CreateForm(TfHint, fHint);
 
   fMenu.InitializeWakan;

@@ -13,25 +13,23 @@ object fWordLookupBase: TfWordLookupBase
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object Bevel: TPanel
-    Left = 0
-    Top = 0
-    Width = 468
-    Height = 178
-    Align = alClient
+  object BottomPanel: TPanel
+    AlignWithMargins = True
+    Left = 3
+    Top = 153
+    Width = 462
+    Height = 22
+    Align = alBottom
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    DesignSize = (
-      468
-      178)
     object btnGoToVocab: TSpeedButton
-      Left = 189
-      Top = 149
+      Left = 194
+      Top = 0
       Width = 94
       Height = 22
       Hint = '#00931^eGo to this word in vocabulary'
-      Anchors = [akRight, akBottom]
+      Align = alRight
       Caption = '#00215^eVocabulary'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -55,12 +53,12 @@ object fWordLookupBase: TfWordLookupBase
       ExplicitTop = 187
     end
     object btnAddToVocab: TSpeedButton
-      Left = 285
-      Top = 149
+      Left = 288
+      Top = 0
       Width = 94
       Height = 22
       Hint = '#00667^eInsert word into vocabulary'
-      Anchors = [akRight, akBottom]
+      Align = alRight
       Caption = '#00215^eVocabulary'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -84,12 +82,12 @@ object fWordLookupBase: TfWordLookupBase
       ExplicitTop = 187
     end
     object btnCopyToClipboard: TSpeedButton
-      Left = 381
-      Top = 149
+      Left = 382
+      Top = 0
       Width = 80
       Height = 22
       Hint = '#00659^eInsert word into clipboard'
-      Anchors = [akRight, akBottom]
+      Align = alRight
       Caption = '#00660^eClipboard'
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
@@ -112,47 +110,52 @@ object fWordLookupBase: TfWordLookupBase
       ExplicitLeft = 617
       ExplicitTop = 187
     end
-    object BlankPanel: TBlankPanel
-      Left = 8
-      Top = 9
-      Width = 451
-      Height = 140
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      TextLeft = 24
-      TextTop = 24
-      Text = '#00155^eNo words were found.'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -16
-      Font.Name = 'Arial'
-      Font.Style = [fsBold]
-    end
-    object StringGrid: TWakanWordGrid
-      Left = 9
-      Top = 10
-      Width = 449
-      Height = 138
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      BorderStyle = bsNone
-      ColCount = 3
-      DefaultRowHeight = 16
-      DefaultDrawing = False
-      FixedCols = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
-      PopupMenu = pmPopup
-      TabOrder = 0
-      OnDblClick = StringGridDblClick
-      OnDrawCell = StringGridDrawCell
-      OnKeyPress = StringGridKeyPress
-      OnMouseDown = StringGridMouseDown
-      OnMouseMove = StringGridMouseMove
-      OnMouseUp = StringGridMouseUp
-      OnSelectCell = StringGridSelectCell
-      ColWidths = (
-        110
-        138
-        177)
-    end
+  end
+  object BlankPanel: TBlankPanel
+    Left = 0
+    Top = 0
+    Width = 468
+    Height = 150
+    Align = alClient
+    TextLeft = 24
+    TextTop = 24
+    Text = '#00155^eNo words were found.'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+  end
+  object StringGrid: TWakanWordGrid
+    AlignWithMargins = True
+    Left = 1
+    Top = 1
+    Width = 466
+    Height = 148
+    Margins.Left = 1
+    Margins.Top = 1
+    Margins.Right = 1
+    Margins.Bottom = 1
+    Align = alClient
+    BorderStyle = bsNone
+    ColCount = 3
+    DefaultRowHeight = 16
+    DefaultDrawing = False
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+    PopupMenu = pmPopup
+    TabOrder = 2
+    OnDblClick = StringGridDblClick
+    OnDrawCell = StringGridDrawCell
+    OnKeyPress = StringGridKeyPress
+    OnMouseDown = StringGridMouseDown
+    OnMouseMove = StringGridMouseMove
+    OnMouseUp = StringGridMouseUp
+    OnSelectCell = StringGridSelectCell
+    ColWidths = (
+      110
+      138
+      194)
   end
   object pmPopup: TPopupMenu
     Images = ilImages
@@ -197,7 +200,7 @@ object fWordLookupBase: TfWordLookupBase
     Left = 88
     Top = 16
     Bitmap = {
-      494C010103000800740010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800840010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

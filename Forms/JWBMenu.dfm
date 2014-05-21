@@ -585,10 +585,6 @@ object fMenu: TfMenu
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitLeft = 0
-    ExplicitTop = 33
-    ExplicitWidth = 509
-    ExplicitHeight = 340
   end
   object BottomPanel: TPanel
     Left = 0
@@ -609,8 +605,6 @@ object fMenu: TfMenu
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 3
-    ExplicitTop = 33
-    ExplicitHeight = 340
   end
   object ClipboardUpdateTimer: TTimer
     Enabled = False

@@ -6,13 +6,18 @@ uses
   SysUtils, Classes, Types, Messages, Graphics, Controls;
 
 type
+  TEdgeBorder = (ebLeft, ebTop, ebRight, ebBottom);
+  TEdgeBorders = set of TEdgeBorder;
+
  { Basic custom painted panel, supports simple Wakan-style border, double-buffering }
   TPaintEvent = procedure(Sender: TObject; Canvas: TCanvas) of object;
   TWakanPaintbox = class(TCustomControl)
   protected
+    FEdgeBorders: TEdgeBorders;
     FOnPaint: TPaintEvent;
     procedure WMEraseBkgnd(var Message: TWmEraseBkgnd); message WM_ERASEBKGND;
     procedure Paint; override;
+    procedure SetEdgeBorders(const Value: TEdgeBorders);
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -21,6 +26,8 @@ type
     property Canvas;
     property Color default clNone;
     property DoubleBuffered;
+    property EdgeBorders: TEdgeBorders read FEdgeBorders write SetEdgeBorders
+      stored true default [ebLeft, ebTop, ebRight, ebBottom];
     property OnPaint: TPaintEvent read FOnPaint write FOnPaint stored true;
     property OnClick;
     property OnDblClick;
@@ -65,6 +72,7 @@ begin
  //Initialize to default values
   Color := clWhite;
   BorderWidth := 0;
+  EdgeBorders := [ebLeft, ebTop, ebRight, ebBottom];
 end;
 
 procedure TWakanPaintbox.WMEraseBkgnd(var Message: TWmEraseBkgnd);
@@ -80,13 +88,49 @@ begin
     r := GetClientRect;
     Canvas.Brush.Color := Color;
     Canvas.Brush.Style := bsSolid;
-    Canvas.Pen.Color := clBlack;
-    Canvas.Pen.Style := psSolid;
-    Canvas.Pen.Width := 1;
+    if EdgeBorders=[ebLeft, ebTop, ebRight, ebBottom] then begin
+      Canvas.Pen.Color := clBlack;
+      Canvas.Pen.Style := psSolid; //draw now
+      Canvas.Pen.Width := 1;
+    end else begin
+      Canvas.Pen.Style := psClear; //later
+      Canvas.Pen.Width := 0;
+      Inc(r.Right); //fill border too
+      Inc(r.Bottom);
+    end;
     Canvas.Rectangle(r.Left, r.Top, r.Right, r.Bottom);
+    if EdgeBorders<>[ebLeft, ebTop, ebRight, ebBottom] then begin
+      Dec(r.Right, 1); //decrease back
+      Dec(r.Bottom, 1);
+      Canvas.Pen.Color := clBlack;
+      Canvas.Pen.Style := psSolid;
+      Canvas.Pen.Width := 1;
+      if ebLeft in EdgeBorders then begin
+        Canvas.MoveTo(r.Left, r.Top);
+        Canvas.LineTo(r.Left, r.Bottom-1);
+      end;
+      if ebTop in EdgeBorders then begin
+        Canvas.MoveTo(r.Left, r.Top);
+        Canvas.LineTo(r.Right-1, r.Top);
+      end;
+      if ebRight in EdgeBorders then begin
+        Canvas.MoveTo(r.Right-1, r.Top);
+        Canvas.LineTo(r.Right-1, r.Bottom-1);
+      end;
+      if ebBottom in EdgeBorders then begin
+        Canvas.MoveTo(r.Left, r.Bottom-1);
+        Canvas.LineTo(r.Right-1, r.Bottom-1);
+      end;
+    end;
   end;
   if Assigned(FOnPaint) then
     FOnPaint(Self, Canvas);
+end;
+
+procedure TWakanPaintbox.SetEdgeBorders(const Value: TEdgeBorders);
+begin
+  FEdgeBorders := Value;
+  Invalidate;
 end;
 
 

@@ -3,8 +3,8 @@ object fEditor: TfEditor
   Top = 453
   BorderStyle = bsNone
   Caption = '#00610^eText editor / translator'
-  ClientHeight = 175
-  ClientWidth = 801
+  ClientHeight = 180
+  ClientWidth = 796
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,12 +22,15 @@ object fEditor: TfEditor
   OnMouseWheelUp = FormMouseWheelUp
   OnResize = FormResize
   OnShow = FormShow
+  DesignSize = (
+    796
+    180)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel: TPanel
     Left = 0
-    Top = 152
-    Width = 801
+    Top = 157
+    Width = 796
     Height = 23
     Align = alBottom
     BevelOuter = bvNone
@@ -37,7 +40,7 @@ object fEditor: TfEditor
       AlignWithMargins = True
       Left = 139
       Top = 3
-      Width = 516
+      Width = 511
       Height = 17
       Align = alClient
       AutoSize = False
@@ -52,7 +55,7 @@ object fEditor: TfEditor
     end
     object btnKanjiDetails: TSpeedButton
       AlignWithMargins = True
-      Left = 661
+      Left = 656
       Top = 3
       Width = 137
       Height = 17
@@ -102,7 +105,7 @@ object fEditor: TfEditor
   object ToolBar1: TToolBar
     Left = 0
     Top = 0
-    Width = 801
+    Width = 796
     Height = 26
     AutoSize = True
     BorderWidth = 1
@@ -114,7 +117,7 @@ object fEditor: TfEditor
     TabOrder = 1
     Wrapable = False
     DesignSize = (
-      797
+      792
       22)
     object sbFileNew: TToolButton
       Left = 0
@@ -329,8 +332,8 @@ object fEditor: TfEditor
   object EditorPaintbox: TWakanPaintbox
     Left = 0
     Top = 26
-    Width = 785
-    Height = 126
+    Width = 796
+    Height = 131
     Cursor = crIBeam
     Align = alClient
     Color = clWhite
@@ -340,23 +343,18 @@ object fEditor: TfEditor
     OnDblClick = EditorPaintBoxDblClick
     OnMouseMove = EditorPaintBoxMouseMove
     OnMouseDown = EditorPaintBoxMouseDown
-    ExplicitLeft = 7
-    ExplicitTop = 39
-    ExplicitHeight = 104
+    ExplicitWidth = 780
   end
   object EditorScrollBar: TScrollBar
-    Left = 785
-    Top = 26
+    Left = 779
+    Top = 27
     Width = 16
-    Height = 126
-    Align = alRight
+    Height = 129
+    Anchors = [akTop, akRight, akBottom]
     Kind = sbVertical
     PageSize = 0
     TabOrder = 3
     OnChange = EditorScrollBarChange
-    ExplicitLeft = 775
-    ExplicitTop = 41
-    ExplicitHeight = 100
   end
   object BlinkCursorTimer: TTimer
     Interval = 500
@@ -397,7 +395,7 @@ object fEditor: TfEditor
     Left = 544
     Top = 48
     Bitmap = {
-      494C0101100015007C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010110001500A40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

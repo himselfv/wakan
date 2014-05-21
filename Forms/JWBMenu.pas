@@ -2426,9 +2426,9 @@ begin
   else
   if form=fWordKanji then
     if aPortraitMode.Checked then
-      Result:=DockProc(fWordKanji,fWordLookup.Panel3,alBottom,dock)
+      Result:=DockProc(fWordKanji,fWordLookup.CharInWordDock,alBottom,dock)
     else
-      Result:=DockProc(fWordKanji,fWordLookup.Panel3,alRight,dock)
+      Result:=DockProc(fWordKanji,fWordLookup.CharInWordDock,alRight,dock)
   else
   if form=fVocabFilters then
     if aPortraitMode.Checked then
@@ -3307,7 +3307,7 @@ begin
       fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
     end;
     if fWordLookup<>nil then
-      fWordLookup.Panel3.Align := alBottom;
+      fWordLookup.CharInWordDock.Align := alBottom;
   end else begin
     RightPanel.Align := alRight;
     if fVocab<>nil then begin
@@ -3316,7 +3316,7 @@ begin
       fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
     end;
     if fWordLookup<>nil then
-      fWordLookup.Panel3.Align := alRight;
+      fWordLookup.CharInWordDock.Align := alRight;
   end;
 
  //New dock mode will be applied to forms on re-docking

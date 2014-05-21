@@ -9,9 +9,7 @@ uses
 
 type
   TfWordLookupBase = class(TForm)
-    Bevel: TPanel;
-    BlankPanel: TBlankPanel;
-    StringGrid: TWakanWordGrid;
+    BottomPanel: TPanel;
     btnGoToVocab: TSpeedButton;
     btnAddToVocab: TSpeedButton;
     btnCopyToClipboard: TSpeedButton;
@@ -24,6 +22,8 @@ type
     miLookUpIn: TMenuItem;
     miBeforeLookupIn: TMenuItem;
     miAfterLookupIn: TMenuItem;
+    BlankPanel: TBlankPanel;
+    StringGrid: TWakanWordGrid;
     procedure pmPopupPopup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
     procedure StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
