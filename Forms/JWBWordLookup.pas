@@ -7,8 +7,6 @@ uses
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons, Menus, ImgList, ToolWin, JWBDic,
   JWBDicSearch, JWBStrings, WakanWordGrid, WakanPaintbox, JWBWordLookupBase;
 
-{$DEFINE AUTOSEARCH}
-
 type
  //Supported lookup modes for this window.
  //Integer values are important, stored in registry.
@@ -340,7 +338,6 @@ begin
   //Don't exit if the query is empty, we need to reset results/update presentation/etc
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
-  //AUTOSEARCH
   if (lm<>lmEditorInsert) and btnSearch.Enabled and (
     (not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
   begin
@@ -358,6 +355,10 @@ begin
   try
     FResults.Clear;
     wasfull := false;
+    if Edit1.Text='' then begin
+     //Don't touch dictionaries
+      wasfull := true;
+    end else
     case lm of
       lmAuto: begin
         req.st := stRomaji;

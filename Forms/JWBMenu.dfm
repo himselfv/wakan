@@ -594,6 +594,10 @@ object fMenu: TfMenu
     Align = alBottom
     BevelOuter = bvNone
     FullRepaint = False
+    Padding.Left = 3
+    Padding.Top = 3
+    Padding.Right = 3
+    Padding.Bottom = 3
     TabOrder = 2
   end
   object RightPanel: TPanel
