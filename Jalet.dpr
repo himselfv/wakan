@@ -99,8 +99,6 @@ begin
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfVocab, fVocab);
   Application.CreateForm(TfKanjiSearch, fKanjiSearch);
-  Application.CreateForm(TfWordLookupBase, fWordLookupBase);
-  Application.CreateForm(TfDownloader, fDownloader);
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
   Application.CreateForm(TfEditor, fEditor);

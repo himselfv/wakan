@@ -503,26 +503,6 @@ begin
   end;
 end;
 
-
-type
-  CComponent = class of TComponent;
-  TFormTranslated = class(TComponent);
-  TFormHelper = class helper for TForm
-    function FindComponent(const AClass: CComponent): integer;
-  end;
-
-function TFormHelper.FindComponent(const AClass: CComponent): integer;
-var i: integer;
-begin
-  Result := -1;
-  for i := 0 to ComponentCount-1 do
-    if Components[i].ClassType=AClass then begin
-      Result := i;
-      break;
-    end;
-end;
-
-
 function _l(const id:string):string;
 begin
   result := fLanguage.TranslateString(id);

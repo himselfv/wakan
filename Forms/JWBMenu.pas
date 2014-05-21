@@ -3347,7 +3347,7 @@ end;
 
 procedure TfMenu.aDownloaderExecute(Sender: TObject);
 begin
-  fDownloader.ShowModal;
+  ShowDownloader(Self);
 end;
 
 

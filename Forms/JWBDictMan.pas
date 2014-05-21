@@ -219,7 +219,7 @@ begin
  //our caller expects some result. No choice but to keep us open.
   Self.Hide;
   try
-    fDownloader.ShowModal;
+    ShowDownloader(Self);
     CarefulRefreshDicts;
   finally
     Self.Show;

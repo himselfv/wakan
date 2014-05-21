@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, VirtualTrees, Buttons, ComCtrls, ImgList, JWBComponents,
-  Generics.Collections, JWBJobs, ExtCtrls, TaskbarCtl;
+  Generics.Collections, JWBJobs, ExtCtrls, TaskbarCtl, JWBForms;
 
 type
   TNdFileData = record
@@ -26,7 +26,7 @@ type
   TSourceArray = array of PAppComponent;
   PSourceArray = ^TSourceArray;
 
-  TfDownloader = class(TForm)
+  TfDownloader = class(TJwbForm)
     btnClose: TBitBtn;
     btnNext: TBitBtn;
     btnPrev: TBitBtn;
@@ -140,14 +140,24 @@ type
 
   end;
 
-var
-  fDownloader: TfDownloader;
+function ShowDownloader(AOwner: TComponent): TModalResult;
 
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
   JWBDicImportJob, JWBIO, JWBMenu;
 
 {$R *.dfm}
+
+function ShowDownloader(AOwner: TComponent): TModalResult;
+var Instance: TfDownloader;
+begin
+  Instance := TfDownloader.Create(AOwner);
+  try
+    Result := Instance.ShowModal;
+  finally
+    FreeAndNil(Instance);
+  end;
+end;
 
 type
   TComponentDownloadJob = class(TJob)
