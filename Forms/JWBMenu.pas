@@ -574,7 +574,6 @@ var
 
  { Dictionaries }
   dicts: TDictionaryList; //Active dictionary list
-  globheight:integer;
   clip:FString;
 
  //Loaded from config file -- see comments in wakan.cfg
@@ -598,8 +597,6 @@ var
  { Stroke order }
   sodir:TStringList;
   sobin:pointer;
-
-  kanji_othersearch:integer;
 
 implementation
 uses Types, clipbrd, JWBCore, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
@@ -1074,10 +1071,6 @@ begin
   if fSettings.setwindows and 64=64 then fMenu.aUserSettings.Checked := true;
   if (fSettings.setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.aKanjiDetails.Checked := true;
 
-  if fKanjiSearch<>nil then begin
-    fKanjiSearch.rgSortBy.ItemIndex:=fSettings.setsort;
-    fKanjiSearch.cbOtherType.ItemIndex:=-1;
-  end;
   if fWordLookup<>nil then
     fWordLookup.RestoreLookupMode;
 

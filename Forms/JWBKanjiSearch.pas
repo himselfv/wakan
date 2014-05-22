@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, CheckLst, JWBRadical, WakanPaintbox;
+  StdCtrls, ExtCtrls, Buttons, CheckLst, IniFiles, JWBRadical, WakanPaintbox;
 
 type
   TfKanjiSearch = class(TForm)
@@ -84,9 +84,20 @@ type
     procedure FormCreate(Sender: TObject);
 
   public
+    procedure SaveSettings(reg: TCustomIniFile);
+    procedure LoadSettings(reg: TCustomIniFile);
+    procedure LanguageChanged;
     procedure ResetFilters;
     procedure SetCategoryFilter(const ACategories: array of integer;
       AOr, ANot: boolean);
+
+  protected
+    FSetOtherTypeIndex: integer; //set when reading settings, applied on next ReloadOtherTypes()
+    FSetSortBy: integer;
+    procedure SetOtherTypeIndex(const AItemIndex: integer);
+    procedure ReloadSortBy;
+  public
+    procedure ReloadOtherTypes;
 
   protected
    { Currently selected radical characters }
@@ -96,11 +107,7 @@ type
     function OffsetRange(tx:string;min,max:integer):string;
   public
     CurRadSearchType: TRadSearchType;
-    procedure ReloadOtherTypes;
     property CurRadChars: string read FCurRadChars write SetCurRadChars;
-
-  public
-    procedure LanguageChanged;
 
   end;
 
@@ -130,22 +137,6 @@ begin
   fMenu.aKanjiSearch.Checked:=false;
 end;
 
-//Reloads a list of "other" search types
-procedure TfKanjiSearch.ReloadOtherTypes;
-var i:integer;
-  bk:integer;
-begin
-  bk:=fKanjiSearch.cbOtherType.ItemIndex;
-  if bk=-1 then bk:=kanji_othersearch;
-  fKanjiSearch.cbOtherType.Items.Clear;
-  fKanjiSearch.cbOtherType.Items.Add('Unicode');
-  for i:=0 to Length(CharPropTypes)-1 do
-    if CharPropTypes[i].id>20 then
-      fKanjiSearch.cbOtherType.Items.Add(_l('^e'+CharPropTypes[i].englishName));
-  fKanjiSearch.cbOtherType.ItemIndex:=0;
-  if bk<fKanjiSearch.cbOtherType.Items.Count-1 then fKanjiSearch.cbOtherType.ItemIndex:=bk;
-end;
-
 //Resets filters but does not apply it, so that you can chain it with something.
 procedure TfKanjiSearch.ResetFilters;
 begin
@@ -160,6 +151,128 @@ begin
   sbRadicals.Down:=false;
   sbSKIP.Down:=false;
   sbJouyou.Down:=false;
+end;
+
+//Reloads a list of "other" search types
+procedure TfKanjiSearch.ReloadOtherTypes;
+var i: integer;
+  bk: integer;
+begin
+  bk := fKanjiSearch.cbOtherType.ItemIndex;
+  if bk=-1 then begin //this is the first reload
+    bk := FSetOtherTypeIndex;
+    FSetOtherTypeIndex := -1; //to make it obvious if we mistakengly reuse it
+  end;
+
+  fKanjiSearch.cbOtherType.Items.Clear;
+  fKanjiSearch.cbOtherType.Items.Add('Unicode');
+  for i:=0 to Length(CharPropTypes)-1 do
+    if CharPropTypes[i].id>20 then
+      fKanjiSearch.cbOtherType.Items.Add(_l('^e'+CharPropTypes[i].englishName));
+  fKanjiSearch.cbOtherType.ItemIndex:=0;
+  if bk<fKanjiSearch.cbOtherType.Items.Count-1 then fKanjiSearch.cbOtherType.ItemIndex:=bk;
+end;
+
+procedure TfKanjiSearch.SetOtherTypeIndex(const AItemIndex: integer);
+begin
+ //Sometimes this is called when "other search types" are not yet reloaded,
+ //so we save the value until then.
+  if cbOtherType.Items.Count<=0 then
+    FSetOtherTypeIndex := AItemIndex
+  else
+    fKanjiSearch.cbOtherType.ItemIndex := AItemIndex;
+end;
+
+//Called from LanguageChanged because can be different for different target languages
+procedure TfKanjiSearch.ReloadSortBy;
+begin
+  fKanjiSearch.rgSortBy.Items.Clear;
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
+  fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
+ { There could be additional sorting orders for Japanese, but they're somehow
+  disabled in Wakan 1.67+ }
+  fKanjiSearch.rgSortBy.ItemIndex := FSetSortBy; //0 by default
+  FSetSortBy := 0; //no reuse
+end;
+
+//Saves form settings to registry
+procedure TfKanjiSearch.SaveSettings(reg: TCustomIniFile);
+begin
+  reg.WriteBool('KanjiSearch','OnlyCommon',fKanjiSearch.btnOnlyCommon.Down);
+//  reg.WriteBool('KanjiSearch','InClipboard',fKanjiSearch.btnInClipboard.Down); //do not save-restore this for now (by design)
+  if fKanjiSearch.sbPinYin.Down then
+    reg.WriteString('KanjiSearch','PinYin',fKanjiSearch.edtPinYin.Text)
+  else
+    reg.DeleteKey('KanjiSearch','PinYin');
+  if fKanjiSearch.sbYomi.Down then
+    reg.WriteString('KanjiSearch','Yomi',fKanjiSearch.edtYomi.Text)
+  else
+    reg.DeleteKey('KanjiSearch','Yomi');
+  if fKanjiSearch.sbDefinition.Down then
+    reg.WriteString('KanjiSearch','Definition',fKanjiSearch.edtDefinition.Text)
+  else
+    reg.DeleteKey('KanjiSearch','Definition');
+  if fKanjiSearch.sbStrokeCount.Down then
+    reg.WriteString('KanjiSearch','Strokes',fKanjiSearch.edtStrokeCount.Text)
+  else
+    reg.DeleteKey('KanjiSearch','Strokes');
+  if fKanjiSearch.sbRadicals.Down then begin
+    reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
+    reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadChars);
+  end else begin
+    reg.DeleteKey('KanjiSearch','RadSearchType');
+    reg.DeleteKey('KanjiSearch','RadSearch');
+    reg.DeleteKey('KanjiSearch','RadIndexes');
+  end;
+  if fKanjiSearch.sbSKIP.Down then
+    reg.WriteString('KanjiSearch','SKIP',fKanjiSearch.edtSKIP.Text)
+  else
+    reg.DeleteKey('KanjiSearch','SKIP');
+  if fKanjiSearch.sbJouyou.Down then
+    reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text)
+  else
+    reg.DeleteKey('KanjiSearch','Jouyou');
+  if fKanjiSearch.sbOther.Down then begin
+    reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
+    reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text);
+  end else begin
+    reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
+    reg.DeleteKey('KanjiSearch','Other');
+  end;
+  reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
+  reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
+end;
+
+//Loads form settings from registry
+procedure TfKanjiSearch.LoadSettings(reg: TCustomIniFile);
+var AOtherTypeSelected: integer;
+begin
+  fKanjiSearch.btnOnlyCommon.Down := reg.ReadBool('KanjiSearch','OnlyCommon',false);
+//  fKanjiSearch.btnInClipboard.Down := reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
+  fKanjiSearch.edtPinYin.Text := reg.ReadString('KanjiSearch','PinYin','');
+  fKanjiSearch.edtYomi.Text := reg.ReadString('KanjiSearch','Yomi','');
+  fKanjiSearch.edtDefinition.Text := reg.ReadString('KanjiSearch','Definition','');
+  fKanjiSearch.edtStrokeCount.Text := reg.ReadString('KanjiSearch','Strokes','');
+  fKanjiSearch.curRadSearchType := TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
+  fKanjiSearch.curRadChars := reg.ReadString('KanjiSearch','RadSearch','');
+  fKanjiSearch.edtSKIP.Text := reg.ReadString('KanjiSearch','SKIP','');
+  fKanjiSearch.edtJouyou.Text := reg.ReadString('KanjiSearch','Jouyou','');
+  fKanjiSearch.edtOther.Text := reg.ReadString('KanjiSearch','Other',''); //why did we need this?
+  AOtherTypeSelected := reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
+  if AOtherTypeSelected<0 then
+    AOtherTypeSelected := reg.ReadInteger('Characters','OtherSearch',0); //backward compability
+  SetOtherTypeIndex(AOtherTypeSelected);
+  FSetSortBy := reg.ReadInteger('Characters','Sort',0);
+end;
+
+//Called by MainForm when selected language (Japanese/Chinese) changes
+procedure TfKanjiSearch.LanguageChanged;
+begin
+  ReloadSortBy;
+  fKanji.Reload;
 end;
 
 procedure TfKanjiSearch.sbPinYinClick(Sender: TObject);
@@ -438,21 +551,6 @@ begin
       end;
     lbCategories.Checked[i]:=found;
   end;
-end;
-
-{ Called by MainForm when selected language (Japanese/Chinese) changes }
-procedure TfKanjiSearch.LanguageChanged;
-begin
-  fKanjiSearch.rgSortBy.Items.Clear;
-  fKanjiSearch.rgSortBy.Items.Add(_l('#00146^eRadical'));
-  fKanjiSearch.rgSortBy.Items.Add(_l('#00147^eStroke count'));
-  fKanjiSearch.rgSortBy.Items.Add(_l('#00148^eFrequency'));
-  fKanjiSearch.rgSortBy.Items.Add(_l('#00149^eRandom'));
-  fKanjiSearch.rgSortBy.Items.Add(_l('#00877^eUnsorted'));
- { There could be additional sorting orders for Japanese, but they're somehow
-  disabled in Wakan 1.67+ }
-  fKanjiSearch.rgSortBy.ItemIndex:=0;
-  fKanji.Reload;
 end;
 
 end.

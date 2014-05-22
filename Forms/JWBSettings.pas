@@ -413,9 +413,9 @@ type
    { Layout settings are loaded into these variables and applied later }
     SetLayout: integer;
     SetWindows: integer;
-    setsort: integer;
-    setusercompounds: boolean;
+    setUserCompounds: boolean;
     setPortraitMode: boolean;
+    setKanjiCustomSearch: integer;
     CharDetDocked: boolean;
     CharDetDockedVis1: boolean;
     CharDetDockedVis2: boolean;
@@ -957,9 +957,7 @@ begin
   end;
   edtMeaningLines.Text:=reg.ReadString('Translate','MeaningLines','2');
   edtPrintLines.Text:=reg.ReadString('Translate','PrintLines','20');
-  setsort:=reg.ReadInteger('Characters','Sort',0);
-  kanji_othersearch:=reg.ReadInteger('Characters','OtherSearch',0);
-  setusercompounds:=reg.ReadBool('Characters','UserCompounds',false);
+  setUserCompounds:=reg.ReadBool('Characters','UserCompounds',false);
 
   if fWordLookup<>nil then begin
     if reg.ReadBool('Dict','Meaning',false) then
@@ -1007,20 +1005,9 @@ begin
   end;
 
   //Search params
-  if cbSaveSearchParams.Checked and (fKanjiSearch<>nil) then begin
-    fKanjiSearch.btnOnlyCommon.Down :=reg.ReadBool('KanjiSearch','OnlyCommon',false);
-//    fKanjiSearch.btnInClipboard.Down :=reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
-    fKanjiSearch.edtPinYin.Text :=reg.ReadString('KanjiSearch','PinYin','');
-    fKanjiSearch.edtYomi.Text :=reg.ReadString('KanjiSearch','Yomi','');
-    fKanjiSearch.edtDefinition.Text :=reg.ReadString('KanjiSearch','Definition','');
-    fKanjiSearch.edtStrokeCount.Text :=reg.ReadString('KanjiSearch','Strokes','');
-    fKanjiSearch.curRadSearchType :=TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
-    fKanjiSearch.curRadChars := reg.ReadString('KanjiSearch','RadSearch','');
-    fKanjiSearch.edtSKIP.Text :=reg.ReadString('KanjiSearch','SKIP','');
-    fKanjiSearch.edtJouyou.Text :=reg.ReadString('KanjiSearch','Jouyou','');
-    fKanjiSearch.cbOtherType.ItemIndex :=reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
-    fKanjiSearch.edtOther.text :=reg.ReadString('KanjiSearch','Other','');
-  end; //else they're empty by default
+  if cbSaveSearchParams.Checked and (fKanjiSearch<>nil) then
+    fKanjiSearch.LoadSettings(reg);
+   //else they're empty by default
 
   setPortraitMode := reg.ReadBool('Layout','PortraitMode',false);
 
@@ -1236,8 +1223,6 @@ begin
   for i := 0 to dicts.Priority.Count - 1 do
     reg.WriteString('DictPriority', IntToStr(i), dicts.Priority[i]);
 }
-  reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
-  reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.sbShowVocab.Down);
 
   if fWordLookup<>nil then begin
@@ -1292,49 +1277,8 @@ begin
     reg.WriteInteger('Grids','KanjiCompCol3',fKanjiCompounds.StringGrid.ColWidths[2]);
   end;
 
-  if cbSaveSearchParams.Checked then begin
-    reg.WriteBool('KanjiSearch','OnlyCommon',fKanjiSearch.btnOnlyCommon.Down);
-//    reg.WriteBool('KanjiSearch','InClipboard',fKanjiSearch.btnInClipboard.Down); //do not save-restore this for now (by design)
-    if fKanjiSearch.sbPinYin.Down then
-      reg.WriteString('KanjiSearch','PinYin',fKanjiSearch.edtPinYin.Text)
-    else
-      reg.DeleteKey('KanjiSearch','PinYin');
-    if fKanjiSearch.sbYomi.Down then
-      reg.WriteString('KanjiSearch','Yomi',fKanjiSearch.edtYomi.Text)
-    else
-      reg.DeleteKey('KanjiSearch','Yomi');
-    if fKanjiSearch.sbDefinition.Down then
-      reg.WriteString('KanjiSearch','Definition',fKanjiSearch.edtDefinition.Text)
-    else
-      reg.DeleteKey('KanjiSearch','Definition');
-    if fKanjiSearch.sbStrokeCount.Down then
-      reg.WriteString('KanjiSearch','Strokes',fKanjiSearch.edtStrokeCount.Text)
-    else
-      reg.DeleteKey('KanjiSearch','Strokes');
-    if fKanjiSearch.sbRadicals.Down then begin
-      reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
-      reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadChars);
-    end else begin
-      reg.DeleteKey('KanjiSearch','RadSearchType');
-      reg.DeleteKey('KanjiSearch','RadSearch');
-      reg.DeleteKey('KanjiSearch','RadIndexes');
-    end;
-    if fKanjiSearch.sbSKIP.Down then
-      reg.WriteString('KanjiSearch','SKIP',fKanjiSearch.edtSKIP.Text)
-    else
-      reg.DeleteKey('KanjiSearch','SKIP');
-    if fKanjiSearch.sbJouyou.Down then
-      reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text)
-    else
-      reg.DeleteKey('KanjiSearch','Jouyou');
-    if fKanjiSearch.sbOther.Down then begin
-      reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
-      reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text);
-    end else begin
-      reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
-      reg.DeleteKey('KanjiSearch','Other');
-    end;
-  end;
+  if cbSaveSearchParams.Checked and (fKanjiSearch<>nil) then
+    fKanjiSearch.SaveSettings(reg);
 
   reg.WriteBool('Layout','PortraitMode',fMenu.aPortraitMode.Checked);
 
