@@ -2,11 +2,6 @@ unit JWBMenu;
 
 interface
 
-{$DEFINE NODICLOADPROMPT}
-{ Do not show "Loading dictionary..." window when hot-loading a dictionary.
- It was needed before when loading was slow, but I feel like now it only makes
- the interface feel sluggish. }
-
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons, MemSource,
@@ -469,18 +464,7 @@ type
 
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
-    procedure RescanDicts;
     procedure SwitchLanguage(lanchar:char);
-
-  protected
-   {$IFNDEF NODICLOADPROMPT}
-    DicLoadPrompt: TSMPromptForm;
-    procedure DicLoadStart(Sender: TObject);
-    procedure DicLoadEnd(Sender: TObject);
-   {$ENDIF}
-    procedure DicLoadException(Sender: TObject; E: Exception);
-  public
-    function NewDict(dicname: string): TJaletDic;
 
   protected
     UserDataLoaded:boolean;
@@ -572,8 +556,6 @@ type
 var
   fMenu: TfMenu;
 
- { Dictionaries }
-  dicts: TDictionaryList; //Active dictionary list
   clip:FString;
 
  //Loaded from config file -- see comments in wakan.cfg
@@ -620,7 +602,7 @@ begin
   suffixl:=TStringList.Create;
   partl:=TParticleList.Create;
   readchl:=TStringList.Create;
-  dicts:=TDictionaryList.Create;
+
 
   curlang:='j';
   DragStartCtl:=nil;
@@ -648,7 +630,6 @@ begin
   suffixl.Free; //+
   partl.Free; //+
   readchl.Free; //+
-  dicts.Free; //+
 end;
 
 
@@ -922,14 +903,13 @@ begin
       JWBAutoImport.ForceUpdateList := UpdateDicsParams.Files;
     end;
 
-
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
     RescanDicts;
     ReloadExamples;
     RefreshCategory;
     RefreshKanjiCategory; }
-
+    dicts.AutoUpgradeListed();
 
     if Command='updatedics' then begin
       if Length(UpdateDicsParams.Files)>0 then
@@ -1165,97 +1145,6 @@ begin
   UserDataChanged:=true;
 end;
 
-procedure TfMenu.RescanDicts();
-var sr:TSearchRec;
-    dic:TJaletDic;
-begin
-  dicts.Clear; //unload+delete all
-  if FindFirst('*.dic',faAnyFile,sr)=0 then
-  repeat
-    dic := NewDict(sr.name);
-    if dic.tested then
-    begin
-      if Uppercase(dic.pname)='JALET.DIC'then
-        Application.MessageBox(
-          pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
-          pchar(_l('#00090^eWarning')),
-          MB_ICONWARNING or MB_OK);
-      if not initdone then //we're still loading
-        AutoUpdate(dic);
-      if curlang=dic.language then
-      begin
-        dicts.Add(dic);
-        if not dicts.IsInGroup(dic,GROUP_NOTUSED) then
-          dic.Load;
-      end;
-    end else dic.Free;
-  until FindNext(sr)<>0;
-  FindClose(sr);
-
-  if dicts.Count=0 then
-  begin
-    if curlang='j'then
-      Application.MessageBox(
-        pchar(_l('#00327^eNo valid japanese dictionary was found.'#13
-          +'Please download some japanese .DIC files from WAKAN website.')),
-        pchar(_l('#00090^eWarning')),
-        MB_ICONWARNING or MB_OK)
-    else
-      Application.MessageBox(
-        pchar(_l('#00328^eNo valid chinese dictionary was found.'#13
-          +'Please download some chinese .DIC files from WAKAN website.')),
-          pchar(_l('#00090^eWarning')),
-          MB_ICONWARNING or MB_OK);
-  end;
-end;
-
-{
-Creates a new standardly configured dictionary object from a specified file.
-Applies all default settings such as Offline/LoadOnDemand per dict settings.
-}
-function TfMenu.NewDict(dicname: string): TJaletDic;
-begin
-  Result:=TJaletDic.Create;
- {$IFNDEF NODICLOADPROMPT}
-  Result.OnLoadStart := DicLoadStart;
-  Result.OnLoadEnd := DicLoadEnd;
- {$ENDIF}
-  Result.OnLoadException := DicLoadException;
-  Result.LoadOnDemand := fSettings.CheckBox49.Checked;
-  Result.Offline := dicts.IsInGroup(dicname,GROUP_OFFLINE);
-  try
-    Result.FillInfo(dicname);
-  except
-    Application.MessageBox(
-      pchar(_l('#00321^eCannot register dictionary ')+dicname+#13#13+(ExceptObject as Exception).Message),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
-  end;
-end;
-
-{$IFNDEF NODICLOADPROMPT}
-procedure TfMenu.DicLoadStart(Sender: TObject);
-begin
-  DicLoadPrompt.Free; //just in case
-  DicLoadPrompt := SMMessageDlg(
-    _l('#00323^eDictionary loading'),
-    _l('#00324^eLoading dictionary ')+TJaletDic(Sender).name+'...');
-end;
-
-procedure TfMenu.DicLoadEnd(Sender: TObject);
-begin
-  FreeAndNil(DicLoadPrompt);
-end;
-{$ENDIF}
-
-procedure TfMenu.DicLoadException(Sender: TObject; E: Exception);
-begin
-  Application.MessageBox(
-    pchar(_l('#00325^eCannot load dictionary ')+TJaletDic(Sender).name+#13#13+E.Message),
-    pchar(_l('#00020^eError')),
-    MB_ICONERROR or MB_OK);
-end;
-
 procedure TfMenu.SwitchLanguage(lanchar:char);
 begin
   curlang:=lanchar;
@@ -1272,7 +1161,24 @@ begin
     aJapanese.Checked:=false;
     aChinese.Checked:=true;
   end;
-  RescanDicts;
+
+  dicts.Rescan(false);
+  if dicts.Count<=0 then
+    dicts.Rescan(true); //try even the disabled ones
+  if dicts.Count<=0 then //complain
+    if curlang='j'then
+      Application.MessageBox(
+        pchar(_l('#00327^eNo valid japanese dictionary was found.'#13
+          +'Please download some japanese .DIC files from WAKAN website.')),
+        pchar(_l('#00090^eWarning')),
+        MB_ICONWARNING or MB_OK)
+    else
+      Application.MessageBox(
+        pchar(_l('#00328^eNo valid chinese dictionary was found.'#13
+          +'Please download some chinese .DIC files from WAKAN website.')),
+          pchar(_l('#00090^eWarning')),
+          MB_ICONWARNING or MB_OK);
+
   if fKanjiSearch<>nil then
     fKanjiSearch.LanguageChanged;
   if fWordLookup<>nil then

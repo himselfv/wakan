@@ -299,8 +299,6 @@ begin
   finally
     FreeAndNil(job);
   end;
-
-  fMenu.RescanDicts; //make us notice the new dic
 end;
 
 procedure TfDictImport.ImportCancelQuery(Sender: TObject; var DoAbort: boolean);

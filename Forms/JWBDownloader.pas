@@ -144,7 +144,7 @@ function ShowDownloader(AOwner: TComponent): TModalResult;
 
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
-  JWBDicImportJob, JWBIO, JWBMenu;
+  JWBDicImportJob, JWBIO, JWBUnit;
 
 {$R *.dfm}
 
@@ -388,7 +388,7 @@ begin
       raise EAbort.Create('');
 
   CancelDownloadJobs;
-  fMenu.RescanDicts; //in case any were added
+  dicts.Rescan(); //in case any were added
   Close;
 end;
 

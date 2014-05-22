@@ -973,8 +973,9 @@ end;
 
 //Search request params can't be changed after it has been Prepare()d.
 procedure TDicSearchRequest.Prepare;
-var di: integer;
+var di, dj: integer;
   dic: TJaletDic;
+  dicSetup: TDicSetup;
   prior: integer;
 begin
   if MaxWords<10 then MaxWords:=10;
@@ -989,9 +990,9 @@ begin
   if (st=stEnglish) and not (Self.MatchType in [mtExactMatch, mtMatchLeft]) then
     Self.MatchType := mtExactMatch;
 
-  //Create dictionary cursors
+ //Create dictionary cursors
   SetLength(dics, dicts.Count);
-  for di:=0 to dicts.Count-1 do begin
+  for di := 0 to dicts.Count-1 do begin
     dics[di].cursor := nil;
     dic:=dicts[di];
     if not dic.loaded or not dicts.IsInGroup(dic,DictGroup) then
@@ -1008,6 +1009,17 @@ begin
       prior := Trunc(20000*(prior/dicts.Priority.Count));
     dics[di].PriorityClass := prior;
   end; //of dict enum
+
+ //Sort by dict priority, glosses are gonna be listed in that order in merged entries (for now anyway)
+  for di := 0 to Length(dics)-2 do begin
+    dj := di + 1;
+    while (dj>0) and (dics[dj].PriorityClass<dics[dj-1].PriorityClass) do begin
+      dicSetup := dics[dj-1];
+      dics[dj-1] := dics[dj];
+      dics[dj] := dicSetup;
+      Dec(dj);
+    end;
+  end;
 
   //Create cached table cursors
   CUser := TTextTableCursor.Create(TUser);

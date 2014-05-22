@@ -59,13 +59,13 @@ type
   end;
 
 implementation
-uses UITypes, JWBMenu, JWBLanguage, JWBDictImport, JWBDic, JWBDownloader;
+uses UITypes, JWBUnit, JWBLanguage, JWBDictImport, JWBDic, JWBDownloader;
 
 {$R *.DFM}
 
 procedure TfDictMan.FormShow(Sender: TObject);
 begin
-  fMenu.RescanDicts();
+  dicts.Rescan(true);
   ReloadDicts();
   cbDictsClick(self);
   ModalResult := mrNone;
@@ -141,7 +141,7 @@ begin
     dicStates[i].state := cbDicts.Checked[i];
   end;
 
-  fMenu.RescanDicts();
+  dicts.Rescan(true);
   ReloadDicts(); //might introduce new dictionaries
 
  //Restore states for known dictionaries

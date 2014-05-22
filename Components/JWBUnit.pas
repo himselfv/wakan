@@ -1,9 +1,14 @@
 ﻿unit JWBUnit;
 { Common stuff for Wakan. }
 
+{$DEFINE NODICLOADPROMPT}
+{ Do not show "Loading dictionary..." window when hot-loading a dictionary.
+ It was needed before when loading was slow, but I feel like now it only makes
+ the interface feel sluggish. }
+
 interface
 uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
-  ExtCtrls, IniFiles, JWBStrings, JWBKanaConv;
+  ExtCtrls, IniFiles, JWBStrings, JWBKanaConv, JWBDic;
 
 { Romaji conversions }
 {
@@ -110,13 +115,9 @@ procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
 procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 
 
-{ Rest }
-
-function StateStr(i:integer):string;
-function DateForm(s:string):string;
+{ Fonts }
 
 var
- //Fonts
   FontStrokeOrder,
   FontChinese,
   FontChineseGB,
@@ -132,9 +133,35 @@ var
   GridFontSize:integer;
 
 
+{ Dictionaries }
+
+type
+  TJaletDictionaryList = class(TDictionaryList)
+  protected
+   {$IFNDEF NODICLOADPROMPT}
+    DicLoadPrompt: TSMPromptForm;
+    procedure DicLoadStart(Sender: TObject);
+    procedure DicLoadEnd(Sender: TObject);
+   {$ENDIF}
+    procedure DicLoadException(Sender: TObject; E: Exception);
+  public
+    function NewDict(const ADictName: string): TJaletDic;
+    procedure Rescan(const AIncludeDisabled: boolean = false);
+    procedure AutoUpgradeListed;
+  end;
+
+var
+  dicts: TJaletDictionaryList; //Active dictionary list
+
+
+{ Misc }
+
+function StateStr(i:integer):string;
+function DateForm(s:string):string;
+
 implementation
 uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBMenu, JWBSettings, JWBLanguage,
-  JWBCharData, JWBLegacyMarkup;
+  JWBCharData, JWBLegacyMarkup, JWBAutoImport;
 
 
 { Romaji conversions }
@@ -280,24 +307,8 @@ end;
 
 
 
-function StateStr(i:integer):string;
-begin
-  case i of
-    0:result:=_l('#00638^eProblematic');
-    1:result:=_l('#00639^eUnlearned');
-    2:result:=_l('#00640^eLearned');
-    3:result:=_l('#00641^eMastered');
-  end;
-end;
-
-function DateForm(s:string):string;
-begin
-  if s='00000000'then result:='-'else
-  result:=copy(s,7,2)+'.'+copy(s,5,2)+'.'+copy(s,1,4);
-end;
-
-
 { Color configuration }
+
 const
   Color_Max=100;
 var
@@ -957,7 +968,120 @@ begin
 end;
 
 
+{ Dicts }
+
+{ Creates a new standardly configured dictionary object from a specified file.
+Applies all default settings such as Offline/LoadOnDemand per dict settings. }
+function TJaletDictionaryList.NewDict(const ADictName: string): TJaletDic;
+begin
+  Result := TJaletDic.Create;
+ {$IFNDEF NODICLOADPROMPT}
+  Result.OnLoadStart := DicLoadStart;
+  Result.OnLoadEnd := DicLoadEnd;
+ {$ENDIF}
+  Result.OnLoadException := DicLoadException;
+  Result.LoadOnDemand := fSettings.CheckBox49.Checked;
+  Result.Offline := dicts.IsInGroup(ADictName,GROUP_OFFLINE);
+  try
+    Result.FillInfo(ADictName);
+  except
+    Application.MessageBox(
+      pchar(_l('#00321^eCannot register dictionary ')+ADictName+#13#13
+        +(ExceptObject as Exception).Message),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
+  end;
+end;
+
+{$IFNDEF NODICLOADPROMPT}
+procedure TJaletDictionaryList.DicLoadStart(Sender: TObject);
+begin
+  DicLoadPrompt.Free; //just in case
+  DicLoadPrompt := SMMessageDlg(
+    _l('#00323^eDictionary loading'),
+    _l('#00324^eLoading dictionary ')+TJaletDic(Sender).name+'...');
+end;
+
+procedure TJaletDictionaryList.DicLoadEnd(Sender: TObject);
+begin
+  FreeAndNil(DicLoadPrompt);
+end;
+{$ENDIF}
+
+procedure TJaletDictionaryList.DicLoadException(Sender: TObject; E: Exception);
+begin
+  Application.MessageBox(
+    pchar(_l('#00325^eCannot load dictionary ')+TJaletDic(Sender).name+#13#13+E.Message),
+    pchar(_l('#00020^eError')),
+    MB_ICONERROR or MB_OK);
+end;
+
+procedure TJaletDictionaryList.Rescan(const AIncludeDisabled: boolean = false);
+var sr: TSearchRec;
+  dic: TJaletDic;
+  baseDir: string;
+  dicName: string;
+begin
+  Self.Clear; //unload+delete all
+   //time can probably be saved on not unloading/reloadings dicts which are fine
+  baseDir := DictionaryDir;
+  if FindFirst(baseDir+'\*.dic', faAnyFile, sr)<>0 then
+    exit;
+  repeat
+    if not AIncludeDisabled then begin
+      dicName := ChangeFileExt(ExtractFilename(sr.Name), '');
+      if Self.IsInGroup(dicName, GROUP_NOTUSED) then continue;
+    end;
+
+    dic := TJaletDictionaryList(dicts).NewDict(sr.name);
+    if not dic.tested then begin
+      dic.Free;
+      continue; //some kind of invalid dict
+    end;
+
+    if Uppercase(dic.pname)='JALET.DIC'then
+      Application.MessageBox(
+        pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
+        pchar(_l('#00090^eWarning')),
+        MB_ICONWARNING or MB_OK);
+
+    if curlang<>dic.language then begin
+      dic.Free;
+      continue;
+    end;
+
+    dicts.Add(dic);
+    if not dicts.IsInGroup(dic, GROUP_NOTUSED) then
+      dic.Load; //but maybe not actually DemandLoad()
+  until FindNext(sr)<>0;
+  FindClose(sr);
+end;
+
+procedure TJaletDictionaryList.AutoUpgradeListed;
+var i: integer;
+begin
+  for i := 0 to Self.Count-1 do
+    AutoUpdate(Self[i]);
+end;
+
+
 { Misc }
+
+function StateStr(i:integer):string;
+begin
+  case i of
+    0:result:=_l('#00638^eProblematic');
+    1:result:=_l('#00639^eUnlearned');
+    2:result:=_l('#00640^eLearned');
+    3:result:=_l('#00641^eMastered');
+  end;
+end;
+
+function DateForm(s:string):string;
+begin
+  if s='00000000'then result:='-'else
+  result:=copy(s,7,2)+'.'+copy(s,5,2)+'.'+copy(s,1,4);
+end;
 
 var
   i:integer;
@@ -973,8 +1097,11 @@ initialization
   rpy_db := TPinyinTranslator.Create;
   rpy_user := TPinyinTranslator.Create;
 
+  dicts := TJaletDictionaryList.Create;
+
 finalization
  {$IFDEF CLEAN_DEINIT}
+  FreeAndNil(dicts);
   FreeAndNil(rpy_user);
   FreeAndNil(rpy_db);
   FreeAndNil(roma_user);
