@@ -55,10 +55,6 @@ object fKanji: TfKanji
       Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
-      ExplicitLeft = 7
-      ExplicitTop = 32
-      ExplicitWidth = 618
-      ExplicitHeight = 281
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
@@ -86,10 +82,6 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitLeft = 7
-      ExplicitTop = 32
-      ExplicitWidth = 623
-      ExplicitHeight = 280
     end
     object Panel2: TPanel
       AlignWithMargins = True
@@ -103,7 +95,7 @@ object fKanji: TfKanji
       object RxLabel15: TLabel
         Left = 0
         Top = 0
-        Width = 495
+        Width = 487
         Height = 21
         Align = alClient
         Caption = 'RxLabel15'
@@ -114,46 +106,16 @@ object fKanji: TfKanji
         Font.Style = [fsBold]
         ParentFont = False
         Layout = tlCenter
-        ExplicitLeft = 4
-        ExplicitTop = 5
         ExplicitWidth = 75
         ExplicitHeight = 16
       end
-      object btnPrintCards: TButton
-        Left = 495
-        Top = 0
-        Width = 129
-        Height = 21
-        Hint = '#00127^ePrint Kanji cards (for memorizing) (Ctrl-F6)'
-        Align = alRight
-        Caption = '#00128^ePrint cards'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        TabOrder = 0
-        TabStop = False
-        OnClick = btnPrintCardsClick
-      end
-    end
-    object Panel3: TPanel
-      AlignWithMargins = True
-      Left = 3
-      Top = 321
-      Width = 624
-      Height = 21
-      Align = alBottom
-      BevelOuter = bvNone
-      TabOrder = 3
       object btnSearchSort: TSpeedButton
-        Left = 0
+        Left = 487
         Top = 0
         Width = 137
         Height = 21
         Hint = '#00119^eSearch & change sort order'
-        Align = alLeft
+        Align = alRight
         AllowAllUp = True
         GroupIndex = 2
         Caption = '#00120^eSearch && sort'
@@ -166,9 +128,20 @@ object fKanji: TfKanji
         ParentShowHint = False
         ShowHint = True
         OnClick = btnSearchSortClick
+        ExplicitLeft = 8
       end
+    end
+    object Panel3: TPanel
+      AlignWithMargins = True
+      Left = 3
+      Top = 321
+      Width = 624
+      Height = 21
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 3
       object btnCompounds: TSpeedButton
-        Left = 137
+        Left = 0
         Top = 0
         Width = 112
         Height = 21
@@ -186,6 +159,7 @@ object fKanji: TfKanji
         ParentShowHint = False
         ShowHint = True
         OnClick = btnCompoundsClick
+        ExplicitLeft = 137
       end
       object btnKanjiDetails: TSpeedButton
         Left = 495
@@ -208,6 +182,24 @@ object fKanji: TfKanji
         OnClick = btnKanjiDetailsClick
         ExplicitLeft = 499
         ExplicitHeight = 17
+      end
+      object btnPrintCards: TButton
+        Left = 366
+        Top = 0
+        Width = 129
+        Height = 21
+        Hint = '#00127^ePrint Kanji cards (for memorizing) (Ctrl-F6)'
+        Align = alRight
+        Caption = '#00128^ePrint cards'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        TabStop = False
+        OnClick = btnPrintCardsClick
       end
     end
   end

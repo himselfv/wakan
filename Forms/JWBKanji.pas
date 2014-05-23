@@ -34,10 +34,10 @@ type
     Panel2: TPanel;
     Panel3: TPanel;
     RxLabel15: TLabel;
-    btnPrintCards: TButton;
-    btnSearchSort: TSpeedButton;
     btnCompounds: TSpeedButton;
     btnKanjiDetails: TSpeedButton;
+    btnPrintCards: TButton;
+    btnSearchSort: TSpeedButton;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);
