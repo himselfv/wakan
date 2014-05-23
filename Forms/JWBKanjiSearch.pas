@@ -9,11 +9,6 @@ uses
 type
   TfKanjiSearch = class(TForm)
     Bevel: TPanel;
-    Bevel2: TBevel;
-    Bevel3: TBevel;
-    btnInClipboard: TSpeedButton;
-    btnOnlyCommon: TSpeedButton;
-    cbNot: TCheckBox;
     cbOtherType: TComboBox;
     edtDefinition: TEdit;
     edtJouyou: TEdit;
@@ -22,11 +17,7 @@ type
     edtSkip: TEdit;
     edtStrokeCount: TEdit;
     edtYomi: TEdit;
-    lbCategories: TCheckListBox;
     pbRadicals: TWakanPaintbox;
-    rgOrAnd: TRadioGroup;
-    rgSortBy: TRadioGroup;
-    sbClearFilters: TSpeedButton;
     sbDefinition: TSpeedButton;
     sbJouyou: TSpeedButton;
     sbJouyouExpand: TSpeedButton;
@@ -44,10 +35,19 @@ type
     sbStrokeCountPlus: TSpeedButton;
     sbStrokeCountShrink: TSpeedButton;
     sbYomi: TSpeedButton;
+    Panel1: TPanel;
+    rgSortBy: TRadioGroup;
+    btnOnlyCommon: TSpeedButton;
+    btnInClipboard: TSpeedButton;
+    sbClearFilters: TSpeedButton;
+    Panel2: TPanel;
     SpeedButton1: TSpeedButton;
     SpeedButton19: TSpeedButton;
     SpeedButton20: TSpeedButton;
     SpeedButton25: TSpeedButton;
+    rgOrAnd: TRadioGroup;
+    cbNot: TCheckBox;
+    lbCategories: TCheckListBox;
     procedure sbPinYinClick(Sender: TObject);
     procedure sbClearFiltersClick(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);

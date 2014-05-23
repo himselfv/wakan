@@ -4,7 +4,7 @@ object fKanjiSearch: TfKanjiSearch
   BorderStyle = bsNone
   Caption = '#00174^eSearch characters'
   ClientHeight = 209
-  ClientWidth = 618
+  ClientWidth = 613
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,84 +21,12 @@ object fKanjiSearch: TfKanjiSearch
   object Bevel: TPanel
     Left = 0
     Top = 0
-    Width = 618
+    Width = 313
     Height = 209
-    Align = alClient
+    Align = alLeft
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    DesignSize = (
-      618
-      209)
-    object Bevel2: TBevel
-      Left = 310
-      Top = 8
-      Width = 5
-      Height = 193
-      Anchors = [akTop, akRight]
-      Shape = bsLeftLine
-    end
-    object Bevel3: TBevel
-      Left = 473
-      Top = 8
-      Width = 5
-      Height = 193
-      Anchors = [akTop, akRight]
-      Shape = bsLeftLine
-    end
-    object btnInClipboard: TSpeedButton
-      Left = 480
-      Top = 155
-      Width = 131
-      Height = 22
-      Hint = '#00188^eDisplay only characters in clipboard'
-      AllowAllUp = True
-      Anchors = [akTop, akRight]
-      GroupIndex = 21
-      Caption = '#00189^eIn clipboard'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object btnOnlyCommon: TSpeedButton
-      Left = 480
-      Top = 132
-      Width = 131
-      Height = 22
-      Hint = '#00186^eDisplay only common characters'
-      AllowAllUp = True
-      Anchors = [akTop, akRight]
-      GroupIndex = 20
-      Caption = '#00187^eCommon'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object sbClearFilters: TSpeedButton
-      Left = 480
-      Top = 178
-      Width = 131
-      Height = 22
-      Hint = '#00182^eDisplay all characters (Ctrl-N)'
-      AllowAllUp = True
-      Anchors = [akTop, akRight]
-      Caption = '#00183^eAll filters off'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbClearFiltersClick
-    end
     object sbDefinition: TSpeedButton
       Left = 8
       Top = 56
@@ -138,7 +66,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 152
       Width = 22
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '-/+'
       OnClick = sbJouyouExpandClick
     end
@@ -147,7 +74,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 152
       Width = 17
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '-'
       OnClick = sbJouyouMinusClick
     end
@@ -156,7 +82,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 152
       Width = 17
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '+'
       OnClick = sbJouyouPlusClick
     end
@@ -165,7 +90,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 152
       Width = 22
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '+/-'
       OnClick = sbJouyouShrinkClick
     end
@@ -176,7 +100,6 @@ object fKanjiSearch: TfKanjiSearch
       Height = 22
       Hint = '#00177^eFilter by radical (Ctrl-R)'
       AllowAllUp = True
-      Anchors = [akTop, akRight]
       Caption = '#00195^eList...'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -278,7 +201,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 80
       Width = 22
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '-/+'
       OnClick = sbStrokeCountExpandClick
     end
@@ -287,7 +209,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 80
       Width = 17
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '-'
       OnClick = sbStrokeCountMinusClick
     end
@@ -296,7 +217,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 80
       Width = 17
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '+'
       OnClick = sbStrokeCountPlusClick
     end
@@ -305,7 +225,6 @@ object fKanjiSearch: TfKanjiSearch
       Top = 80
       Width = 22
       Height = 22
-      Anchors = [akTop, akRight]
       Caption = '+/-'
       OnClick = sbStrokeCountShrinkClick
     end
@@ -326,13 +245,180 @@ object fKanjiSearch: TfKanjiSearch
       ParentFont = False
       OnClick = sbPinYinClick
     end
+    object cbOtherType: TComboBox
+      Left = 155
+      Top = 176
+      Width = 149
+      Height = 21
+      Style = csDropDownList
+      TabOrder = 0
+      OnChange = cbOtherTypeChange
+    end
+    object edtDefinition: TEdit
+      Left = 64
+      Top = 56
+      Width = 240
+      Height = 21
+      TabOrder = 1
+      OnChange = edtDefinitionChange
+    end
+    object edtJouyou: TEdit
+      Left = 65
+      Top = 152
+      Width = 160
+      Height = 21
+      TabOrder = 2
+      OnChange = edtJouyouChange
+    end
+    object edtOther: TEdit
+      Left = 64
+      Top = 176
+      Width = 91
+      Height = 21
+      TabOrder = 3
+      OnChange = edtOtherChange
+    end
+    object edtPinYin: TEdit
+      Left = 64
+      Top = 8
+      Width = 240
+      Height = 21
+      TabOrder = 4
+      OnChange = edtPinYinChange
+    end
+    object edtSkip: TEdit
+      Left = 65
+      Top = 128
+      Width = 239
+      Height = 21
+      TabOrder = 5
+      OnChange = edtSkipChange
+    end
+    object edtStrokeCount: TEdit
+      Left = 64
+      Top = 80
+      Width = 160
+      Height = 21
+      TabOrder = 6
+      OnChange = edtStrokeCountChange
+    end
+    object edtYomi: TEdit
+      Left = 64
+      Top = 32
+      Width = 240
+      Height = 21
+      TabOrder = 7
+      OnChange = edtYomiChange
+    end
+    object pbRadicals: TWakanPaintbox
+      Left = 66
+      Top = 103
+      Width = 175
+      Height = 22
+      Color = clBtnFace
+      DoubleBuffered = True
+      OnPaint = pbRadicalsPaint
+    end
+  end
+  object Panel1: TPanel
+    Left = 467
+    Top = 0
+    Width = 146
+    Height = 209
+    Align = alRight
+    BevelOuter = bvNone
+    TabOrder = 1
+    ExplicitLeft = 480
+    object btnOnlyCommon: TSpeedButton
+      Left = 4
+      Top = 131
+      Width = 131
+      Height = 22
+      Hint = '#00186^eDisplay only common characters'
+      AllowAllUp = True
+      GroupIndex = 20
+      Caption = '#00187^eCommon'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      OnClick = sbPinYinClick
+    end
+    object btnInClipboard: TSpeedButton
+      Left = 4
+      Top = 154
+      Width = 131
+      Height = 22
+      Hint = '#00188^eDisplay only characters in clipboard'
+      AllowAllUp = True
+      GroupIndex = 21
+      Caption = '#00189^eIn clipboard'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      OnClick = sbPinYinClick
+    end
+    object sbClearFilters: TSpeedButton
+      Left = 4
+      Top = 177
+      Width = 131
+      Height = 22
+      Hint = '#00182^eDisplay all characters (Ctrl-N)'
+      AllowAllUp = True
+      Caption = '#00183^eAll filters off'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      OnClick = sbClearFiltersClick
+    end
+    object rgSortBy: TRadioGroup
+      Left = 6
+      Top = 7
+      Width = 129
+      Height = 119
+      Caption = '#00197^eSort by'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ItemIndex = 0
+      Items.Strings = (
+        '#00146^eRadical'
+        '#00147^eStroke count'
+        '#00148^eFrequency'
+        '#00198^eLearner index'
+        'Gakken Kanji'
+        'Remembering Kanji'
+        '#00149^eRandom')
+      ParentFont = False
+      TabOrder = 0
+      OnClick = rgSortByClick
+    end
+  end
+  object Panel2: TPanel
+    Left = 315
+    Top = 0
+    Width = 152
+    Height = 209
+    Align = alRight
+    BevelOuter = bvNone
+    TabOrder = 2
+    ExplicitLeft = 328
     object SpeedButton1: TSpeedButton
-      Left = 374
-      Top = 153
+      Left = 58
+      Top = 150
       Width = 23
       Height = 22
       Hint = '#00881^eAdd category'
-      Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -352,12 +438,11 @@ object fKanjiSearch: TfKanjiSearch
       OnClick = SpeedButton1Click
     end
     object SpeedButton19: TSpeedButton
-      Left = 397
-      Top = 153
+      Left = 81
+      Top = 150
       Width = 23
       Height = 22
       Hint = '#00880^eUncheck all categories'
-      Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -377,12 +462,11 @@ object fKanjiSearch: TfKanjiSearch
       OnClick = SpeedButton19Click
     end
     object SpeedButton20: TSpeedButton
-      Left = 420
-      Top = 153
+      Left = 104
+      Top = 150
       Width = 23
       Height = 22
       Hint = '#00030^eEdit category'
-      Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -402,12 +486,11 @@ object fKanjiSearch: TfKanjiSearch
       OnClick = SpeedButton20Click
     end
     object SpeedButton25: TSpeedButton
-      Left = 443
-      Top = 153
+      Left = 127
+      Top = 150
       Width = 23
       Height = 22
       Hint = '#00031^eDelete category'
-      Anchors = [akTop, akRight]
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000130B0000130B00001000000000000000000000000000
@@ -426,149 +509,38 @@ object fKanjiSearch: TfKanjiSearch
       ShowHint = True
       OnClick = SpeedButton25Click
     end
-    object cbNot: TCheckBox
-      Left = 376
-      Top = 183
-      Width = 81
-      Height = 17
-      Anchors = [akTop, akRight]
-      Caption = 'NOT'
-      TabOrder = 0
-      OnClick = rgOrAndClick
-    end
-    object cbOtherType: TComboBox
-      Left = 155
-      Top = 176
-      Width = 149
-      Height = 21
-      Style = csDropDownList
-      Anchors = [akTop, akRight]
-      TabOrder = 1
-      OnChange = cbOtherTypeChange
-    end
-    object edtDefinition: TEdit
-      Left = 64
-      Top = 56
-      Width = 240
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 2
-      OnChange = edtDefinitionChange
-    end
-    object edtJouyou: TEdit
-      Left = 65
-      Top = 152
-      Width = 160
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 3
-      OnChange = edtJouyouChange
-    end
-    object edtOther: TEdit
-      Left = 64
-      Top = 176
-      Width = 91
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 4
-      OnChange = edtOtherChange
-    end
-    object edtPinYin: TEdit
-      Left = 64
-      Top = 8
-      Width = 240
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 5
-      OnChange = edtPinYinChange
-    end
-    object edtSkip: TEdit
-      Left = 65
-      Top = 128
-      Width = 239
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 6
-      OnChange = edtSkipChange
-    end
-    object edtStrokeCount: TEdit
-      Left = 64
-      Top = 80
-      Width = 160
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 7
-      OnChange = edtStrokeCountChange
-    end
-    object edtYomi: TEdit
-      Left = 64
-      Top = 32
-      Width = 240
-      Height = 21
-      Anchors = [akLeft, akTop, akRight]
-      TabOrder = 8
-      OnChange = edtYomiChange
-    end
-    object lbCategories: TCheckListBox
-      Left = 318
-      Top = 9
-      Width = 148
-      Height = 144
-      OnClickCheck = lbCategoriesClickCheck
-      Anchors = [akTop, akRight]
-      ItemHeight = 13
-      TabOrder = 9
-      OnClick = lbCategoriesClick
-      OnDblClick = lbCategoriesDblClick
-      OnDrawItem = lbCategoriesDrawItem
-    end
-    object pbRadicals: TWakanPaintbox
-      Left = 66
-      Top = 103
-      Width = 175
-      Height = 22
-      Anchors = [akLeft, akTop, akRight]
-      Color = clBtnFace
-      DoubleBuffered = True
-      OnPaint = pbRadicalsPaint
-    end
     object rgOrAnd: TRadioGroup
-      Left = 318
-      Top = 157
+      Left = 2
+      Top = 154
       Width = 53
       Height = 44
-      Anchors = [akTop, akRight]
       ItemIndex = 0
       Items.Strings = (
         'OR'
         'AND')
-      TabOrder = 11
+      TabOrder = 0
       OnClick = rgOrAndClick
     end
-    object rgSortBy: TRadioGroup
-      Left = 481
-      Top = 8
-      Width = 129
-      Height = 119
-      Anchors = [akTop, akRight]
-      Caption = '#00197^eSort by'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ItemIndex = 0
-      Items.Strings = (
-        '#00146^eRadical'
-        '#00147^eStroke count'
-        '#00148^eFrequency'
-        '#00198^eLearner index'
-        'Gakken Kanji'
-        'Remembering Kanji'
-        '#00149^eRandom')
-      ParentFont = False
-      TabOrder = 12
-      OnClick = rgSortByClick
+    object cbNot: TCheckBox
+      Left = 60
+      Top = 180
+      Width = 81
+      Height = 17
+      Caption = 'NOT'
+      TabOrder = 1
+      OnClick = rgOrAndClick
+    end
+    object lbCategories: TCheckListBox
+      Left = 2
+      Top = 6
+      Width = 148
+      Height = 144
+      OnClickCheck = lbCategoriesClickCheck
+      ItemHeight = 13
+      TabOrder = 2
+      OnClick = lbCategoriesClick
+      OnDblClick = lbCategoriesDblClick
+      OnDrawItem = lbCategoriesDrawItem
     end
   end
 end
