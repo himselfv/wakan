@@ -355,7 +355,8 @@ begin
   try
     FResults.Clear;
     wasfull := false;
-    if Edit1.Text='' then begin
+    if ((lm in [lmAuto, lmJp, lmEn]) and (Edit1.Text=''))
+    or ((lm=lmClipboard) and (clip='')) then begin
      //Don't touch dictionaries
       wasfull := true;
     end else
@@ -413,9 +414,11 @@ begin
        //If that is empty, show whatever the caret is at
         if text='' then
           text:=fEditor.GetWordAtCaret(wt);
-        req.st := stJapanese;
-        req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        if text<>'' then begin
+          req.st := stJapanese;
+          req.Prepare;
+          req.Search(text, EC_UNKNOWN, FResults);
+        end;
         wasfull := req.WasFull;
       end;
     end;
