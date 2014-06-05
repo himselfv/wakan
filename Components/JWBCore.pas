@@ -155,6 +155,7 @@ begin
  //For now works as it did in previous Wakan versions.
  //Has to be reworked to put backups into user folder.
   Result := GetBackupFilename(filename);
+  ForceDirectories(ExtractFileDir(Result));
   if not CopyFile(PChar(filename),pchar(Result),false) then
     Result := '';
 end;
