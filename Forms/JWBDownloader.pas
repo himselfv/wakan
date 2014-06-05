@@ -148,7 +148,7 @@ function OpenDownloader(AOwner: TComponent; ACategory: string;
 
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
-  JWBDicImportJob, JWBIO, JWBUnit;
+  JWBDicImportJob, JWBIO, JWBUnit, JWBLanguage;
 
 {$R *.dfm}
 
@@ -241,7 +241,7 @@ begin
 
   ATempDir := CreateRandomTempDir();
   try
-    StartOperation('Starting download', 0); //TODO: Localize
+    StartOperation(_l('#01161^Starting download'), 0);
 
    //Download to temp folder
     FDownloadJob := TDownloadJob.Create(FComponent.URL, ATempDir+'\');
@@ -251,7 +251,7 @@ begin
     FDownloadJob.OnProgressChanged := ChildJobProgressChanged;
     FDownloadJob.OnYield := ChildYield;
     FDownloadJob.ProcessChunk; //first chunk establishes connection
-    StartOperation('Downloading', 0); //TODO: Localize
+    StartOperation(_l('#01162^Downloading'), 0);
     Run(FDownloadJob);
     if FDownloadJob.Result in [drUpToDate, drError] then begin
       FState := jsFinished;
@@ -262,10 +262,10 @@ begin
    //Unpack or move
     ATargetPath := FComponent.GetAbsoluteTarget;
     if FComponent.URL_Unpack='' then begin
-      StartOperation('Moving', 1); //TODO: Localize
+      StartOperation(_l('#01163^Moving'), 1);
       AMoveJob := TFileMoveJob.Create(ATempFilename, ATargetPath);
     end else begin
-      StartOperation('Unpacking', 1); //TODO: Localize
+      StartOperation(_l('#01164^Unpacking'), 1);
       AMoveJob := TFileUnpackJob.Create(ATempFilename, ExtractFilePath(ATargetPath));
       TFileUnpackJob(AMoveJob).DefaultFilename := FComponent.Target;
       TFileUnpackJob(AMoveJob).ForceFormat := FComponent.URL_Unpack;
@@ -280,7 +280,7 @@ begin
     end;
 
    //Install
-    StartOperation('Importing', 2); //TODO: Localize
+    StartOperation(_l('#01165^Importing'), 2);
     if FComponent.Category='dic' then
       ImportDictionary
     else
@@ -382,17 +382,17 @@ procedure TfDownloader.btnCloseClick(Sender: TObject);
 var ConfirmText: string;
 begin
   if PageControl.ActivePage=tsReadyToDownload then
-    ConfirmText := 'If you close the window now, you will not download files. '
-      +'Do you want to close the window?' //TODO: Localize
+    ConfirmText := '#01166^If you close the window now, you will not download files. '
+      +'Do you want to close the window?'
   else
   if (PageControl.ActivePage=tsDownloading) and not IsDownloadFinished then
-    ConfirmText := 'Your files are still being downloaded. Some of them will not '
-      +'be available. Do you want to cancel the operation?' //TODO: Localize
+    ConfirmText := '#01167^Your files are still being downloaded. Some of them will not '
+      +'be available. Do you want to cancel the operation?'
   else
     ConfirmText := '';
 
   if ConfirmText<>'' then
-    if MessageBox(Self.Handle, PChar(ConfirmText), PChar(Self.Caption),
+    if MessageBox(Self.Handle, PChar(_l(ConfirmText)), PChar(Self.Caption),
       MB_TASKMODAL or MB_YESNO)<>ID_YES then
       raise EAbort.Create('');
 
@@ -459,14 +459,14 @@ begin
   end;
 
   if PageControl.ActivePage=tsReadyToDownload then
-    btnNext.Caption := 'Download' //TODO: Localize
+    btnNext.Caption := _l('#01168^Download')
   else
-    btnNext.Caption := 'Next'; //TODO: Localize
+    btnNext.Caption := _l('#01169^Next');
 
   if (PageControl.ActivePage=tsDownloading) and IsDownloadFinished then
-    btnClose.Caption := 'Close' //TODO: Localize
+    btnClose.Caption := _l('#01170^Close')
   else
-    btnClose.Caption := 'Cancel'; //TODO: Localize;
+    btnClose.Caption := _l('#01171^Cancel');
 end;
 
 procedure TfDownloader.ReloadKnownFiles;
@@ -477,16 +477,16 @@ begin
   SetLength(FKnownCats, 0);
   vtKnownFiles.Clear;
 
- //TODO: Localize all
-  AddKnownCat('', 'Common files', 'Common files required for Wakan to function.');
-  AddKnownCat('kanjidic', 'Kanji Dictionaries', 'Dictionaries with information about characters');
-  AddKnownCat('dic-jp', 'Japanese Dictionaries', 'Dictionaries of Japanese words');
-  AddKnownCat('dic-cn', 'Chinese Dictionaries', 'Dictionaries of Chinese words');
+  AddKnownCat('', '#01179^Common files', '#01180^Common files required for Wakan to function.');
+  AddKnownCat('kanjidic', '#01181^Kanji Dictionaries', '#01182^Dictionaries with information about characters');
+  AddKnownCat('dic-jp', '#01183^Japanese Dictionaries', '#01184^Dictionaries of Japanese words');
+  AddKnownCat('dic-cn', '#01185^Chinese Dictionaries', '#01186^Dictionaries of Chinese words');
+{ Not yet supported:
   AddKnownCat('uilang', 'Interface Translations', 'With these interface translations Wakan can be shown in your own language');
   AddKnownCat('font', 'Fonts', 'Recommended fonts if you don''t have appropriate fonts in your system.');
   AddKnownCat('romaji', 'Romaji Schemes', 'With different romaji schemes you can enter kana in a different way');
   AddKnownCat('copyformat', 'Copy Formats', 'Text formats to use when copying dictionary results');
-  AddKnownCat('kanjigroup', 'Kanji Groups', 'Pre-populated sets of groups, or tags, for characters');
+  AddKnownCat('kanjigroup', 'Kanji Groups', 'Pre-populated sets of groups, or tags, for characters'); }
 
  //Or we can set all to nil and create as needed
 
@@ -522,8 +522,8 @@ begin
   i := Length(FKnownCats);
   SetLength(FKnownCats, i+1);
   FKnownCats[i].Name := AName;
-  FKnownCats[i].Title := ATitle;
-  FKnownCats[i].Description := ADescription;
+  FKnownCats[i].Title := _l(ATitle);
+  FKnownCats[i].Description := _l(ADescription);
   FKnownCats[i].Cat := nil;
 end;
 
@@ -951,9 +951,9 @@ begin
     StopProgressUpdates; //but don't CancelDownloadJobs as we yet need Jobs
     UpdatePrevNextButtons;
     if AreAllJobsSuccessful then
-      lblPageDescription.Caption := 'All files has been downloaded.' //TODO: Localize
+      lblPageDescription.Caption := _l('#01187^All files has been downloaded.')
     else
-      lblPageDescription.Caption := 'There were problems downloading some files'; //TODO: Localize
+      lblPageDescription.Caption := _l('#01188^There were problems downloading some files');
   end;
 end;
 
@@ -994,20 +994,20 @@ begin
 
   if AJob.DownloadJob.Result<>drDone then begin
     case AJob.DownloadJob.Result of
-      drUpToDate: Result := 'Up to date.'; //TODO: Localize
-      drError: Result := Format('Cannot download: %d', [AJob.DownloadJob.ErrorCode]); //TODO: Localize
-    else Result := 'Cannot download.'; //TODO: Localize
+      drUpToDate: Result := _l('#01189^Up to date.');
+      drError: Result := _l('#01190^Cannot download: %d', [AJob.DownloadJob.ErrorCode]);
+    else Result := _l('#01191^Cannot download.');
     end;
     exit;
   end;
 
-  Result := 'Done.'; //TODO: Localize
+  Result := _l('#01192^Done.');
   if AJob<>nil then
     if AJob.ImportJob is TDicImportJob then
       if TDicImportJob(AJob.ImportJob).ProblemRecords=0 then
-        Result := 'Done.' //TODO: Localize
+        Result := _l('#01192^Done.')
       else
-        Result := Format('%d problem records', [TDicImportJob(AJob.ImportJob).ProblemRecords]); //TODO: Localize
+        Result := _l('#01193^%d problem records', [TDicImportJob(AJob.ImportJob).ProblemRecords]);
 end;
 
 procedure TfDownloader.vtJobsGetText(Sender: TBaseVirtualTree;

@@ -47,7 +47,7 @@ object fDownloader: TfDownloader
     Height = 25
     Anchors = [akRight, akBottom]
     Cancel = True
-    Caption = 'Cancel'
+    Caption = '#01171^Cancel'
     TabOrder = 3
     OnClick = btnCloseClick
   end
@@ -57,7 +57,7 @@ object fDownloader: TfDownloader
     Width = 95
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = 'Next'
+    Caption = '#01169^Next'
     Default = True
     TabOrder = 2
     OnClick = btnNextClick
@@ -68,7 +68,7 @@ object fDownloader: TfDownloader
     Width = 95
     Height = 25
     Anchors = [akRight, akBottom]
-    Caption = 'Back'
+    Caption = '#01172^Back'
     TabOrder = 1
     OnClick = btnPrevClick
   end
@@ -83,8 +83,8 @@ object fDownloader: TfDownloader
     TabOrder = 0
     OnChange = PageControlChange
     object tsReadyToDownload: TTabSheet
-      Hint = 'The following files will be downloaded/updated:'
-      Caption = 'Ready to download'
+      Hint = '#01199^The following files will be downloaded/updated:'
+      Caption = '#01198^Ready to download'
       ImageIndex = 1
       TabVisible = False
       object Label1: TLabel
@@ -94,8 +94,8 @@ object fDownloader: TfDownloader
         Width = 450
         Height = 13
         Align = alBottom
-        Caption = 'Press "Download" to proceed.'
-        ExplicitWidth = 143
+        Caption = '#01176^Press "Download" to proceed.'
+        ExplicitWidth = 189
       end
       object lbFilesToDownload: TListBox
         Left = 0
@@ -108,8 +108,8 @@ object fDownloader: TfDownloader
       end
     end
     object tsDownloading: TTabSheet
-      Hint = 'Your files are being downloaded. Please wait...'
-      Caption = 'Downloading'
+      Hint = '#01201^Your files are being downloaded. Please wait...'
+      Caption = '#01200^Downloading'
       ImageIndex = 2
       TabVisible = False
       object vtJobs: TVirtualStringTree
@@ -141,13 +141,13 @@ object fDownloader: TfDownloader
           item
             Position = 0
             Width = 200
-            WideText = 'Component'
+            WideText = '#01177^Component'
             WideHint = 'Name'
           end
           item
             Position = 1
             Width = 250
-            WideText = 'Status'
+            WideText = '#01178^Status'
           end>
       end
       object ProgressBar: TProgressBar
@@ -160,8 +160,8 @@ object fDownloader: TfDownloader
       end
     end
     object tsSelectFiles: TTabSheet
-      Hint = 'Please select which files you want to download:'
-      Caption = 'Select Files'
+      Hint = '#01197^Please select which files you want to download:'
+      Caption = '#01196^Select Files'
       TabVisible = False
       object vtKnownFiles: TVirtualStringTree
         Left = 0
@@ -195,13 +195,13 @@ object fDownloader: TfDownloader
           item
             Position = 0
             Width = 320
-            WideText = 'Name'
+            WideText = '#01173^Name'
             WideHint = 'Name'
           end
           item
             Position = 1
             Width = 100
-            WideText = 'Language'
+            WideText = '#01174^Language'
           end>
       end
       object mmFileDetails: TMemo
@@ -231,7 +231,7 @@ object fDownloader: TfDownloader
           Width = 441
           Height = 17
           Anchors = [akLeft, akTop, akRight]
-          Caption = 'Check / uncheck all'
+          Caption = '#01175^Check / uncheck all'
           Checked = True
           State = cbChecked
           TabOrder = 0

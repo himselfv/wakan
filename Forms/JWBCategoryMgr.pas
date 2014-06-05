@@ -2,9 +2,6 @@ unit JWBCategoryMgr;
 
 interface
 
-//TODO: Localize everything here
-//TODO: Also aCategoryManager in JWBMenu
-
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ComCtrls, ExtCtrls, Generics.Collections,

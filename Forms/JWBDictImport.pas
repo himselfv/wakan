@@ -214,12 +214,12 @@ begin
  //We accept it both with or without extension and adjust
   fname := SanitizeDicFilename(AFilename);
   if fname<>AFilename then
-    raise Exception.Create('Invalid dictionary name, please do not use special symbols (\/:*? and so on)'); //TODO: Localize
+    raise Exception.Create(_l('#01145^Invalid dictionary name, please do not use special symbols (\/:*? and so on)'));
 
   fname := ProgramDataDir+'\'+MakeDicFilename(fname);
 
   if FileExists(fname) and (
-    MessageBox(Self.Handle, PChar(Format('Dictionary %s already exists. Do you want to replace it?', [fname])), //TODO: Localize
+    MessageBox(Self.Handle, PChar(_l('#01146^Dictionary %s already exists. Do you want to replace it?', [fname])),
       PChar(Self.Caption), MB_YESNO) <> ID_YES
   ) then
     raise EAbort.Create('');
@@ -234,7 +234,7 @@ begin
     job.DicDescription := ADescription;
     job.DicLanguage := ALang;
 
-    prog:=SMProgressDlgCreate(_l('#00071^eDictionary import'),_l('^eImporting...'),100,{CanCancel=}true); //TODO: Localize
+    prog:=SMProgressDlgCreate(_l('#00071^Dictionary import'),_l('#01147^Importing...'),100,{CanCancel=}true);
     if not self.Visible then //auto mode
       prog.Position := poScreenCenter;
     prog.Width := 500; //we're going to have long file names
@@ -244,7 +244,7 @@ begin
 
       for fi:=0 to Length(ASourceFiles)-1 do begin
         if not FileExists(ASourceFiles[fi]) then
-          raise EDictImportException.CreateFmt(_l('File not found: %s'), [ASourceFiles[fi]]); //TODO:Localize
+          raise EDictImportException.CreateFmt(_l('#01148^File not found: %s'), [ASourceFiles[fi]]);
 
        //If this is one of known files, use predefined encoding
         AComponent := AppComponents.FindByFile(ExtractFilename(ASourceFiles[fi]));
@@ -270,24 +270,23 @@ begin
 
     if job.ProblemRecords > 300 then
       Application.MessageBox(
-        PChar(Format(_l(
-          'There were some problems building %s. %d records could not have '
-          +'been imported.'#13
-          +'Please study %s found in the dictionary directory.'), //TODO: Localize
+        PChar(_l(
+          '#01149^There were some problems building %s. %d records could not have been imported.'#13
+          +'Please study %s found in the dictionary directory.',
           [AFilename, job.ProblemRecords, 'roma_problems.txt']
         )),
-        'Had problems', //TODO: Localize
+        PChar(_l('#01150^Had problems')),
         MB_ICONEXCLAMATION)
     else
     if job.ProblemRecords > 0 then
       Application.MessageBox(
-        PChar(Format(_l(
-          'The dictionary %s has been created but %d records had some problems.'#13
+        PChar(_l(
+          '#01151^The dictionary %s has been created but %d records had some problems.'#13
           +'This is not much so it''s probably fine, but if you want details, '
-          +'study the roma_problems.txt found in the dictionary directory.'), //TODO: Localize
+          +'study %s found in the dictionary directory.',
           [AFilename, job.ProblemRecords, 'roma_problems.txt']
         )),
-        'Notice', //TODO:Localize
+        PChar(_l('#01152^Notice')),
         MB_ICONINFORMATION
       )
     else

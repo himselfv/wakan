@@ -120,7 +120,7 @@ begin
   FState := jsWorking;
 
  { STAGE I. Clear/reset everything }
-  StartOperation(_l('^eInitializing...'), 0); //indeterminate state //TODO: Localize
+  StartOperation(_l('#01153^Initializing...'), 0); //indeterminate state
 
  //Free existing tables
   FreeAndNil(TChar);
@@ -139,16 +139,16 @@ begin
  //Create and import TRadicals table if we don't have one
   if TRadicals=nil then begin
     TRadicals := NewRadicalsTable();
-    SetOperation(_l('^eImporting radicals...')); //TODO: Localize
+    SetOperation(_l('#01154^Importing radicals...'));
     ImportRadicals(AppFolder+'\radicals.txt');
   end;
 
  {$IFDEF DEBUG}
-  Assert(TChar.CheckIndex,'TChar index broken before any import (?!)');
+  Assert(TChar.CheckIndex, 'TChar index broken before any import (?!)');
  {$ENDIF}
 
    { STAGE II. Import KANJIDIC }
-  SetOperation(_l('^eImporting KANJIDIC...')); //TODO: Localize
+  SetOperation(_l('#01155^Importing KANJIDIC...'));
   if FKanjidicFilename<>'' then
     ImportKanjidic(FKanjidicFilename, KanjidicCovered)
   else
@@ -156,17 +156,17 @@ begin
 
  {$IFDEF DEBUG}
   for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count)-1 do
-    Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing KANJIDIC');
+    Assert(TChar.CheckIndex(i), 'TChar index '+TChar.Orders[i]+' broken after importing KANJIDIC');
  {$ENDIF}
 
  { STAGE III. Import UNIHAN }
-  SetOperation(_l('^eImporting UNIHAN...')); //TODO: Localize
+  SetOperation(_l('#01156^Importing UNIHAN...'));
   if FUnihanFolder<>'' then
     ImportUnihan(FUnihanFolder);
 
  {$IFDEF DEBUG}
   for i := 0 to Min(TChar.Seeks.Count-1,TChar.Orders.Count)-1 do
-    Assert(TChar.CheckIndex(i),'TChar index '+TChar.Orders[i]+' broken after importing UNIHAN');
+    Assert(TChar.CheckIndex(i), 'TChar index '+TChar.Orders[i]+' broken after importing UNIHAN');
  {$ENDIF}
 
  { STAGE V. Sort, reindex and finalize }
@@ -176,7 +176,7 @@ begin
   TCharProp.NoCommitting := false;
   TCharProp.Reindex;
 
-  SetOperation(_l('Sorting...')); //TODO: Localize
+  SetOperation(_l('#01157^Sorting...'));
 
  //Re-arrange TChar-wise
  //This is not required but may improve speed. I will decide later if this
@@ -197,22 +197,22 @@ begin
   if FileExists(AppFolder+'\wakan.chr') then begin
     backupFile := Backup(AppFolder+'\wakan.chr');
     if backupFile='' then
-      raise Exception.Create('Cannot backup WAKAN.CHR, will not continue');
+      raise Exception.Create(_l('#01158^Cannot backup WAKAN.CHR, will not continue'));
   end else
     backupFile := ''; //the only case we continue without backup
 
   tempDir := CreateRandomTempDir();
   SaveCharData(tempDir+'\wakan.chr');
   if (backupFile<>'') and not DeleteFile(AppFolder+'\wakan.chr') then
-    raise Exception.Create('Cannot replace current wakan.chr. Maybe the file '
+    raise Exception.Create(_l('#01159^Cannot replace current wakan.chr. Maybe the file '
       +'is in use or you do not have permissions to delete it.'#13
       +'Make sure only one copy of Wakan is running and that you have '
       +'permissions to delete files in the folder where character data is '
-      +'stored.');
+      +'stored.'));
   if not MoveFile(PChar(tempDir+'\wakan.chr'), PChar(AppFolder+'\wakan.chr')) then begin
     if backupFile<>'' then
       CopyFile(PChar(backupFile), PChar(AppFolder+'\wakan.chr'), true);
-    raise Exception.Create('Cannot move newly created wakan.chr. Old wakan.chr restored.');
+    raise Exception.Create(_l('#01160^Cannot move newly created wakan.chr. Old wakan.chr restored.'));
   end;
   DeleteDirectory(tempDir);
 

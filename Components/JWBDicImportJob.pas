@@ -72,8 +72,8 @@ implementation
 uses Windows, PKGWrite, JWBKanaConv, JWBCore, JWBLanguage, JWBUnit;
 
 const
-  eCannotImportDict = 'Cannot import dictionary. It''s probably in the '
-    +'different encoding, unsupported format or damaged.'; //TODO: Localize'
+  eCannotImportDict = '#01194^Cannot import dictionary. It''s probably in the '
+    +'different encoding, unsupported format or damaged.';
 
 {
 Returns true if importer thinks it could load WORDFREQ_CK and add frequency info,
@@ -222,7 +222,7 @@ var fuin: TStreamDecoder;
   tempDir: string;
 begin
   FState := jsWorking;
-  StartOperation('Importing', 0); //indeterminate state //TODO: Localize
+  StartOperation(_l('#01165>Importing'), 0); //indeterminate state
 
  //Create frequency list
   try
@@ -230,7 +230,7 @@ begin
     freql := GetFrequencyList;
   except
     on E: EDictImportException do begin
-      E.Message := _l('Frequency list creation failed: ')+E.Message; //TODO: Localize
+      E.Message := _l('#01195^Frequency list creation failed: %s', [E.Message]);
       raise;
     end;
   end;

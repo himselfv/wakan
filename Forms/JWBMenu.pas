@@ -1168,15 +1168,15 @@ begin
     dicts.Rescan(true); //try even the disabled ones
   if dicts.Count<=0 then begin
     if curlang='j'then
-      mb_res := Application.MessageBox('No valid japanese dictionary was found.'#13
-        +'Do you want to open the downloader and choose some japanese dictionaries to download?',
+      mb_res := Application.MessageBox(PChar(_l('#01143^No valid japanese dictionary was found.'#13
+        +'Do you want to open the downloader and choose some japanese dictionaries to download?')),
         PChar(_l('#00090^eWarning')),
-        MB_ICONWARNING or MB_YESNO) //TODO: Localize
+        MB_ICONWARNING or MB_YESNO)
     else
-      mb_res := Application.MessageBox('No valid chinese dictionary was found.'#13
-        +'Do you want to open the downloader and choose some chinese dictionaries to download?',
+      mb_res := Application.MessageBox(PChar(_l('#01144^No valid chinese dictionary was found.'#13
+        +'Do you want to open the downloader and choose some chinese dictionaries to download?')),
         PChar(_l('#00090^eWarning')),
-        MB_ICONWARNING or MB_YESNO); //TODO: Localize
+        MB_ICONWARNING or MB_YESNO);
     if mb_res=ID_YES then
       OpenDownloader(Self, 'dic', curlang);
      //we don't care if they proceeded or not because we can't do much anyway

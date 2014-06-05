@@ -1072,7 +1072,7 @@ begin
           kanji := kana;
           with AddArticle^ do begin
             sdef := 'P';
-            entries.Add(KanaToRomaji(search,'j')+' particle', ''); //TODO: Localize
+            entries.Add(_l('#01142^%s particle', [KanaToRomaji(search,'j')]), '');
           end;
           slen := Length(kanji);
         end;

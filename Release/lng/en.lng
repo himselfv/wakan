@@ -1245,6 +1245,72 @@
 01139>Download/update components...
 01140>Download dictionaries and other components or update existing ones.
 01141>Download more...
+01142>%s particle
+01143+No valid japanese dictionary was found.
+01143>Do you want to open the downloader and choose some japanese dictionaries to download?
+01144+No valid chinese dictionary was found.
+01144>Do you want to open the downloader and choose some chinese dictionaries to download?
+01145>Invalid dictionary name, please do not use special symbols (\/:*? and so on)
+01146>Dictionary %s already exists. Do you want to replace it?
+01147>Importing...
+01148>File not found: %s
+01149+There were some problems building %s. %d records could not have been imported.
+01149>Please study %s found in the dictionary directory.
+01150>Had problems
+01151+The dictionary %s has been created but %d records had some problems.
+01151>This is not much so it''s probably fine, but if you want details, study %s found in the dictionary directory.
+01152>Notice
+01153>Initializing...
+01154>Importing radicals...
+01155>Importing KANJIDIC...
+01156>Importing UNIHAN...
+01157>Sorting...
+01158>Cannot backup WAKAN.CHR, will not continue
+01159+Cannot replace current wakan.chr. Maybe the file is in use or you do not have permissions to delete it.
+01159>Make sure only one copy of Wakan is running and that you have permissions to delete files in the folder where character data is stored.
+01160>Cannot move newly created wakan.chr. Old wakan.chr restored.
+01161>Starting download
+01162>Downloading
+01163>Moving
+01164>Unpacking
+01165>Importing
+01166>If you close the window now, you will not download files. Do you want to close the window?
+01167>Your files are still being downloaded. Some of them will not be available. Do you want to cancel the operation?
+01168>Download
+01169>Next
+01170>Close
+01171>Cancel
+01172>Back
+01173>Name
+01174>Language
+01175>Check / uncheck all
+01176>Press "Download" to proceed.
+01177>Component
+01178>Status
+01179>Common files
+01180>Common files required for Wakan to function.
+01181>Kanji Dictionaries
+01182>Dictionaries with information about characters
+01183>Japanese Dictionaries
+01184>Dictionaries of Japanese words
+01185>Chinese Dictionaries
+01186>Dictionaries of Chinese words
+01187>All files has been downloaded.
+01188>There were problems downloading some files
+01189>Up to date.
+01190>Cannot download: %d
+01191>Cannot download.
+01192>Done.
+01193>%d problem records
+01194>Cannot import dictionary. It's probably in the different encoding, unsupported format or damaged.
+01195>Frequency list creation failed: %s
+01196>Select Files
+01197>Please select which files you want to download:
+01198>Ready to download
+01199>The following files will be downloaded/updated:
+01200>Downloading
+01201>Your files are being downloaded. Please wait...
+
 
 ;
 ;
