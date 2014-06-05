@@ -219,7 +219,7 @@ begin
  //our caller expects some result. No choice but to keep us open.
   Self.Hide;
   try
-    ShowDownloader(Self);
+    OpenDownloader(Self, 'dic');
     CarefulRefreshDicts;
   finally
     Self.Show;

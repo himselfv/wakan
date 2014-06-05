@@ -44,7 +44,6 @@ uses
   JWBExamples in 'Forms\JWBExamples.pas' {fExamples},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
   JWBDictImport in 'Forms\JWBDictImport.pas' {fDictImport},
-  JWBDictCoding in 'Forms\JWBDictCoding.pas' {fDictCoding},
   JWBHint in 'Forms\JWBHint.pas' {fHint},
   JWBCharItem in 'Forms\JWBCharItem.pas' {fCharItem},
   JWBScreenTip in 'Forms\JWBScreenTip.pas' {fScreenTip},

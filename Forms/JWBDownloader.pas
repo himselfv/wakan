@@ -103,6 +103,8 @@ type
       Description: string;
       Cat: PVirtualNode;
     end;
+    FFilterCategory: string;
+    FFilterBaseLanguage: char;
     procedure ReloadKnownFiles;
     procedure AddKnownCat(const AName: string; const ATitle, ADescription: string);
     function GetKnownCat(const AName: string): PVirtualNode;
@@ -140,7 +142,9 @@ type
 
   end;
 
-function ShowDownloader(AOwner: TComponent): TModalResult;
+function OpenDownloader(AOwner: TComponent): TModalResult; overload;
+function OpenDownloader(AOwner: TComponent; ACategory: string;
+  ABaseLanguage: char = #00): TModalResult; overload;
 
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
@@ -148,11 +152,25 @@ uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
 
 {$R *.dfm}
 
-function ShowDownloader(AOwner: TComponent): TModalResult;
+function OpenDownloader(AOwner: TComponent): TModalResult;
 var Instance: TfDownloader;
 begin
   Instance := TfDownloader.Create(AOwner);
   try
+    Result := Instance.ShowModal;
+  finally
+    FreeAndNil(Instance);
+  end;
+end;
+
+function OpenDownloader(AOwner: TComponent; ACategory: string;
+  ABaseLanguage: char): TModalResult;
+var Instance: TfDownloader;
+begin
+  Instance := TfDownloader.Create(AOwner);
+  try
+    Instance.FFilterCategory := ACategory;
+    Instance.FFilterBaseLanguage := ABaseLanguage;
     Result := Instance.ShowModal;
   finally
     FreeAndNil(Instance);
@@ -175,7 +193,6 @@ type
     procedure UpdateProgress;
     procedure ImportDictionary;
     procedure ImportKanjidic;
-    procedure ImportFont;
   public
     constructor Create(AComponent: PAppComponent);
     destructor Destroy; override;
@@ -268,10 +285,7 @@ begin
       ImportDictionary
     else
     if FComponent.Category='kanjidic' then
-      ImportKanjidic
-    else
-    if FComponent.Category='font' then
-      ImportFont;
+      ImportKanjidic;
 
     FState := jsFinished;
   finally
@@ -311,11 +325,6 @@ end;
 procedure TComponentDownloadJob.ImportKanjidic;
 begin
  //TODO: Kanjidic import
-end;
-
-procedure TComponentDownloadJob.ImportFont;
-begin
- //TODO: Font import
 end;
 
 procedure TComponentDownloadJob.ChildJobProgressChanged(Sender: TObject);
@@ -463,6 +472,7 @@ end;
 procedure TfDownloader.ReloadKnownFiles;
 var i: integer;
   cat: PVirtualNode;
+  AFilterCategory: string;
 begin
   SetLength(FKnownCats, 0);
   vtKnownFiles.Clear;
@@ -480,21 +490,26 @@ begin
 
  //Or we can set all to nil and create as needed
 
-  for i := 0 to AppComponents.Count-1 do
-    if AppComponents[i].URL <> '' then begin
+  AFilterCategory := FFilterCategory.ToLower;
+  for i := 0 to AppComponents.Count-1 do begin
+    if AppComponents[i].URL = '' then continue; //can't download, not interested
+    if (AFilterCategory<>'') and (AppComponents[i].Category<>AFilterCategory) then
+      continue;
+    if (FFilterBaseLanguage<>#00) and (AppComponents[i].BaseLanguage<>FFilterBaseLanguage) then
+      continue;
 
-      if (AppComponents[i].Category='dic')
-      and (AppComponents[i].BaseLanguage='cn') then
-        cat := GetKnownCat('dic-cn')
-      else
-      if (AppComponents[i].Category='dic') then
-        cat := GetKnownCat('dic-jp')
-      else
-        cat := GetKnownCat(AppComponents[i].Category); //same as in file
-      if cat=nil then
-        cat := GetKnownCat(''); //base
-      AddKnownFile(cat, AppComponents[i]);
-    end;
+    if (AppComponents[i].Category='dic')
+    and (AppComponents[i].BaseLanguage='c') then
+      cat := GetKnownCat('dic-cn')
+    else
+    if (AppComponents[i].Category='dic') then
+      cat := GetKnownCat('dic-jp')
+    else
+      cat := GetKnownCat(AppComponents[i].Category); //same as in file
+    if cat=nil then
+      cat := GetKnownCat(''); //base
+    AddKnownFile(cat, AppComponents[i]);
+  end;
 
   vtKnownFiles.Sort(nil, NoColumn, sdAscending);
   vtKnownFiles.FullExpand();

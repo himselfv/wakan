@@ -59,12 +59,6 @@ var
 
 function IsComponentPresent(const ASource: PAppComponent): boolean;
 
-{
-Downloads and extracts this dependency from whatever is specified as a download source
-}
-function DownloadDependency(const depname: string): boolean;
-function VerifyDependency(const filename, depname: string): boolean;
-
 implementation
 uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloaderCore,
   SevenZip, SevenZipUtils, JWBUnpackJob, StdPrompt, JWBCore, JWBLanguage;
@@ -342,71 +336,6 @@ var TargetFile: string;
 begin
   TargetFile := ASource.GetAbsoluteCheckPresent;
   Result := (TargetFile<>'') and FileExists(TargetFile);
-end;
-
-function DownloadDependency(const depname: string): boolean;
-var dep: PAppComponent;
-  tempDir: string;
-  prog: TSMPromptForm;
-begin
-  dep := AppComponents.FindByName(depname);
-  if dep=nil then begin
-    Result := false;
-    exit;
-  end;
-
-  prog:=SMProgressDlgCreate(_l('^eDownload'),'',100,{CanCancel=}true);
-  if not Application.MainForm.Visible then
-    prog.Position := poScreenCenter;
-  prog.AppearModal;
-  try
-
-    tempDir := CreateRandomTempDirName();
-    ForceDirectories(tempDir);
-
-   //Also, return false if URL not accessible
-    DownloadFile(dep.url, tempDir+'\'+depname, prog);
-
-    if dep.url_unpack='' then
-      CopyFile(PChar(tempDir+'\'+depname), PChar(ExtractFilename(dep.url)), false)
-      //TODO: ExtractFilename is often meaningless for URLs ('dir/?get=hashcode') -- we have to get file name from HTTP headers
-    else begin
-      prog.SetMessage('Extracting...');
-      Unpack(
-        tempDir+'\'+depname,
-        AppFolder,
-        dep.url_unpack
-      );
-    end;
-
-  finally
-    FreeAndNil(prog);
-  end;
-
-  Result := true;
-end;
-
-function VerifyDependency(const filename, depname: string): boolean;
-begin
-  Result := FileExists(filename) or DownloadDependency(depname);
-end;
-
-procedure DownloadTest;
-var tempDir: string;
-  LastModified: TDatetime;
-begin
-  AppComponents.LoadFromFile('Dependencies.cfg');
-
-  //Just a test
-  tempDir := CreateRandomTempDirName();
-  ForceDirectories(tempDir);
-  //DownloadFile('http://ftp.monash.edu.au/pub/nihongo/edict2.gz', tempDir+'\EDICT2.gz');
-  DownloadFileIfModified('http://ftp.monash.edu.au/pub/nihongo/edicthdr.txt', tempDir+'\edicthdr.txt',
-    now, LastModified);
-
- //Download dependencies!
-  VerifyDependency('WORDFREQ_CK', 'WORDFREQ_CK');
-  VerifyDependency('UNICONV.exe', 'UNICONV');
 end;
 
 initialization

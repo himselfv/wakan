@@ -1146,6 +1146,7 @@ begin
 end;
 
 procedure TfMenu.SwitchLanguage(lanchar:char);
+var mb_res: integer;
 begin
   curlang:=lanchar;
   if lanchar='j'then
@@ -1165,19 +1166,21 @@ begin
   dicts.Rescan(false);
   if dicts.Count<=0 then
     dicts.Rescan(true); //try even the disabled ones
-  if dicts.Count<=0 then //complain
+  if dicts.Count<=0 then begin
     if curlang='j'then
-      Application.MessageBox(
-        pchar(_l('#00327^eNo valid japanese dictionary was found.'#13
-          +'Please download some japanese .DIC files from WAKAN website.')),
-        pchar(_l('#00090^eWarning')),
-        MB_ICONWARNING or MB_OK)
+      mb_res := Application.MessageBox('No valid japanese dictionary was found.'#13
+        +'Do you want to open the downloader and choose some japanese dictionaries to download?',
+        PChar(_l('#00090^eWarning')),
+        MB_ICONWARNING or MB_YESNO) //TODO: Localize
     else
-      Application.MessageBox(
-        pchar(_l('#00328^eNo valid chinese dictionary was found.'#13
-          +'Please download some chinese .DIC files from WAKAN website.')),
-          pchar(_l('#00090^eWarning')),
-          MB_ICONWARNING or MB_OK);
+      mb_res := Application.MessageBox('No valid chinese dictionary was found.'#13
+        +'Do you want to open the downloader and choose some chinese dictionaries to download?',
+        PChar(_l('#00090^eWarning')),
+        MB_ICONWARNING or MB_YESNO); //TODO: Localize
+    if mb_res=ID_YES then
+      OpenDownloader(Self, 'dic', curlang);
+     //we don't care if they proceeded or not because we can't do much anyway
+  end;
 
   if fKanjiSearch<>nil then
     fKanjiSearch.LanguageChanged;
@@ -3246,7 +3249,7 @@ end;
 
 procedure TfMenu.aDownloaderExecute(Sender: TObject);
 begin
-  ShowDownloader(Self);
+  OpenDownloader(Self);
 end;
 
 
