@@ -358,12 +358,26 @@ begin
   if key=#27 then Close;
 end;
 
+//Tests if the mouse is pointing at a window, or at a child of that window etc.
+function PointingAt(AHwnd: HWND; const APoint: TPoint): boolean;
+var ACurHwnd: HWND;
+begin
+  ACurHwnd := WindowFromPoint(mouse.CursorPos);
+  while ACurHwnd<>0 do
+    if ACurHwnd=AHwnd then begin
+      Result := true;
+      exit;
+    end else
+      ACurHwnd := GetParent(ACurHwnd);
+  Result := false;
+end;
+
 procedure TfKanjiDetails.FormMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 var msg, code, i, n: integer;
 begin
  { Scrollbox does not support mouse wheel nor even focus, so handle it here }
-  if WindowFromPoint(mouse.CursorPos) = scrollbox.Handle then begin
+  if PointingAt(scrollBox.Handle, mouse.CursorPos) then begin
     Handled := true;
     if ssShift in Shift Then
       msg := WM_HSCROLL
