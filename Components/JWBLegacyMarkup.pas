@@ -120,9 +120,12 @@ function ParseLegacyArticle(s: string): TSearchResArticle;
 function SplitGlosses(const s: string): TStringArray;
 
 type
-  TReplaceProc = reference to function(const s: string): string;
+ //sepBefore: separating text (spaces) before the marker
+ //sepAfter: after the marker
+ //use this to collapse spaces if needed
+  TMarkerReplaceProc = reference to function(const sepBefore, s, sepAfter: string): string;
 
-function MatchMarkers(const s: string; AOnMarker: TReplaceProc): string;
+function MatchMarkers(const s: string; AOnMarker: TMarkerReplaceProc): string;
 
 { Edict markers }
 function ConvertEdictEntry(const s:string;var mark:TMarkers):string;
@@ -401,12 +404,13 @@ end;
 
 { Locates all markers in the string and passes their content to AOnMarker.
  Puts whatever it returns instead of the marker.
- Space handling: as long as the replacement is empty, removes up to one space
- from each side of the marker.
+ Space handling: matches every separator with surrounding spaces, collapse
+ those or remove entirely.
  To better handle spaces at the start/end of the glosses, pass glosses
  separately. }
-function MatchMarkers(const s: string; AOnMarker: TReplaceProc): string;
+function MatchMarkers(const s: string; AOnMarker: TMarkerReplaceProc): string;
 var ps, pc: PChar;
+  tmpBefore, tmp, tmpAfter: string;
 
   procedure CommitText;
   begin
@@ -424,21 +428,28 @@ begin
     if pc^=UH_LBEG then begin
       CommitText;
       Inc(pc);
+
+     //Read marker
       ps := pc;
       while (pc^<>#00) and (pc^<>UH_LEND) do
         Inc(pc);
-      Result := Result + AOnMarker(spancopy(ps,pc));
+      tmp := spancopy(ps,pc);
       Inc(pc);
 
-     //Collapse up to one space from later (works both if marker ends with space,
-     //and if it was preceded by space and was destroyed)
-      if ((Length(Result)<=0) or (Result[Length(Result)]=' ')) then
-        if pc^=' ' then
-          Inc(pc)
-        else
-        if pc^=#00 then
-          delete(Result,Length(Result),1);
+     //Pop separators from before
+      tmpBefore := '';
+      while Length(Result)>0 do begin
+        if Result[Length(Result)]<>' ' then break;
+        tmpBefore := Result[Length(Result)] + tmpBefore;
+        SetLength(Result, Length(Result)-1);
+      end;
 
+      ps := pc;
+      while pc^=' ' do
+        Inc(pc);
+      tmpAfter := spancopy(ps, pc);
+
+      Result := Result + AOnMarker(tmpBefore, tmp, tmpAfter);
       ps := pc;
     end else
 

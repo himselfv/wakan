@@ -1020,7 +1020,7 @@ begin
    //Some older entries in user dictionaries have markers stored inline.
    //We can't do much with this except try to find and mark.
     gloss := MatchMarkers(HtmlEscape(gl[i]),
-        function (const s: string): string
+        function (const sBefore, s, sAfter: string): string
         var tag: string;
         begin
           if Length(s)<1 then begin
@@ -1040,7 +1040,7 @@ begin
           Result := '<'+tag+'>'+Result+'</'+tag+'>';
         end
       );
-    Result := Result + '<gloss>' + gloss + '</gloss>';
+    Result := Result + '<gloss>' + Trim(gloss) + '</gloss>';
   end;
 
  //More properly stored markers
