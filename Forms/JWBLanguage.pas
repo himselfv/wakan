@@ -41,8 +41,6 @@ type
     fnames: TFilenameArray; //without paths
     finfo: array of TLanguageFileInfo;
 
-  public
-
   protected
     procedure LocalizeEdictMarkers();
   public
@@ -80,7 +78,8 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses UITypes, JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData;
+uses UITypes, JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData,
+  VirtualTrees;
 
 {$R *.DFM}
 
@@ -391,18 +390,15 @@ begin
 end;
 
 procedure TfLanguage.TranslateForm(f:TForm);
-var j,k:integer;
+var i,j:integer;
   a:TComponent;
   PropInfo:PPropInfo;
 
   procedure _set(a:TObject;prop:string);
   begin
-    if a is TControl then
-    begin
-      PropInfo:=GetPropInfo(a.ClassInfo,prop);
-      if (PropInfo<>nil) and IsStringProperty(PropInfo) then
-        SetStrProp(a,PropInfo,TranslateString(GetStrProp(a,PropInfo)));
-    end;
+    PropInfo:=GetPropInfo(a.ClassInfo,prop);
+    if (PropInfo<>nil) and IsStringProperty(PropInfo) then
+      SetStrProp(a,PropInfo,TranslateString(GetStrProp(a,PropInfo)));
   end;
 
   procedure _setlist(a:TObject;prop:string);
@@ -443,14 +439,22 @@ var j,k:integer;
     mi.Hint:=TranslateString(mi.Hint);
   end;
 
+  procedure _vtreecolumn(vc: TVirtualTreeColumn);
+  begin
+    vc.Text := TranslateString(vc.Text);
+    vc.Hint := TranslateString(vc.Hint);
+  end;
+
 begin
   _set(f,'Caption');
-  for j:=0 to f.ComponentCount-1 do
+  for i:=0 to f.ComponentCount-1 do
   begin
-    a:=f.Components[j];
-    _set(a,'Caption');
-    _set(a,'Text');
-    _set(a,'Hint');
+    a:=f.Components[i];
+    if a is TControl then begin
+      _set(a,'Caption');
+      _set(a,'Text');
+      _set(a,'Hint');
+    end;
     if (a is TCustomListBox) or
        (a is TCustomComboBox) or
        (a is TCustomMemo) or
@@ -461,13 +465,16 @@ begin
     end;
     if a is TMenu then
     begin
-      for k:=0 to (a as TMenu).Items.Count-1 do
-        _menuitem((a as TMenu).Items[k]);
+      for j:=0 to TMenu(a).Items.Count-1 do
+        _menuitem(TMenu(a).Items[j]);
     end;
     if a is TTabControl then
       _setlist(a,'Tabs');
     if a is TCustomTreeView then
       _tlnodes(TTreeView(a));
+    if a is TBaseVirtualTree then
+      for j:=0 to TVirtualStringTree(a).Header.Columns.Count-1 do
+        _vtreecolumn(TVirtualStringTree(a).Header.Columns[j]);
   end;
 end;
 
