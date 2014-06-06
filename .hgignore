@@ -104,3 +104,5 @@ Release/classical.euc
 Release/enamdict
 Release/UserData/wakan*.usr
 Release/UserData/wakan*.bak
+Release/UserData/backup/*
+Release/UserData/roma_problems.txt
