@@ -968,7 +968,7 @@ begin
 end;
 
 procedure TfKanji.DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+  Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then
     fMenu.PopupImmediate(false);
