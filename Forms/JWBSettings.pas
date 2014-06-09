@@ -1020,6 +1020,7 @@ begin
     fVocabDetails.ClientHeight := reg.ReadInteger('Layout','UserDetailsHeight',120);
   end;
   if fKanjiCompounds<>nil then begin
+   //Read into ClientHeight, then copy to fMenu.KanjiCompoundsDockedHeight in fMenu.ApplyUI
     fKanjiCompounds.ClientHeight := reg.ReadInteger('Layout','KanjiCompoundsHeight',178);
   end;
 
@@ -1287,7 +1288,7 @@ begin
   reg.WriteInteger('Layout','UserFiltersWidth',fVocabFilters.UndockWidth);
   reg.WriteInteger('Layout','UserFiltersHeight',fVocabFilters.UndockHeight);
   reg.WriteInteger('Layout','UserDetailsHeight',fVocabDetails.UndockHeight);
-  reg.WriteInteger('Layout','KanjiCompoundsHeight',fKanjiCompounds.UndockHeight);
+  reg.WriteInteger('Layout','KanjiCompoundsHeight',fMenu.KanjiCompoundsDockedHeight);
 end;
 
 function TfSettings.GetTranslationFile: string;

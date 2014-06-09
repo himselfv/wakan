@@ -438,7 +438,6 @@ type
   protected
     FCurDisplayMode:integer; //currently applied mode
     FSetDisplayMode: integer; //will be applied on ApplyDisplayMode
-    FKanjiCompoundsDockedHeight: integer; //can be lost when it's undocked
     procedure ToggleForm(form:TForm;state:boolean);
     procedure ToggleExamples();
     procedure SetDisplayMode(const AMode: integer);
@@ -448,6 +447,7 @@ type
     page 4 separately. }
     CharDetDockedVis1,
     CharDetDockedVis2:boolean;
+    KanjiCompoundsDockedHeight: integer; //can be lost when it's undocked
     function DockExpress(form:TForm;dock:boolean):boolean;
     procedure SetCharDetDocked(Value: boolean; Loading: boolean);
     procedure SetPortraitMode(Value: boolean; Loading: boolean);
@@ -1018,8 +1018,8 @@ begin
   FSetDisplayMode:=fSettings.setlayout;
 
   if fKanjiCompounds<>nil then
-   //By default set to design height
-    FKanjiCompoundsDockedHeight := fKanjiCompounds.Height;
+   //Set to value loaded with settings / design height
+    KanjiCompoundsDockedHeight := fKanjiCompounds.Height;
 
  { Issue 187:	Focus lost in the editor when starting the program.
   SetPortraitMode may redock forms appropriately, and excessive redocking leads
@@ -2440,7 +2440,7 @@ begin
     1:if fKanji<>nil then begin
       fKanji.Hide;
       if (fKanjiCompounds<>nil) and (fKanjiCompounds.HostDockSite=fKanji.pnlDockCompounds) then begin
-        FKanjiCompoundsDockedHeight := fKanjiCompounds.Height;
+        KanjiCompoundsDockedHeight := fKanjiCompounds.Height;
         DockProc(fKanjiCompounds,nil,alBottom);
       end;
       fKanji.splDockCompounds.Visible := false;
@@ -2492,7 +2492,7 @@ begin
         if fKanji<>nil then
           MainDock(fKanji,MainPanel);
         if (fKanji<>nil) and (fKanjiCompounds<>nil) and aKanjiCompounds.Checked then begin
-          fKanjiCompounds.Height := FKanjiCompoundsDockedHeight;
+          fKanjiCompounds.Height := KanjiCompoundsDockedHeight;
           DockProc(fKanjiCompounds,fKanji.pnlDockCompounds,alBottom);
           fKanji.splDockCompounds.Visible := true;
           fKanji.splDockCompounds.Top := fKanji.pnlDockCompounds.Top - 1;

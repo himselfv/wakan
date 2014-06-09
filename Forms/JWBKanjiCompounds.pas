@@ -18,7 +18,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormResize(Sender: TObject);
 
   protected
     FCurChar: FChar;
@@ -205,13 +204,6 @@ end;
 procedure TfKanjiCompounds.OptionChanged(Sender: TObject);
 begin
   Self.Refresh;
-end;
-
-procedure TfKanjiCompounds.FormResize(Sender: TObject);
-begin
- //Remember width/height preferences in UndockWidth/Height
-  Self.UndockHeight := Self.Height;
- //width is never changed since this has no non-portrait mode
 end;
 
 end.
