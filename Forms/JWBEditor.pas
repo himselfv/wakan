@@ -200,6 +200,9 @@ type
     procedure cbFontSizeExit(Sender: TObject);
     procedure cbFontSizeKeyPress(Sender: TObject; var Key: Char);
 
+  public
+    procedure LanguageChanged;
+
   protected
     CopyShort, CopyAsShort,
     CutShort, PasteShort,
@@ -354,57 +357,56 @@ type
     function GetProvisionalInsertText: FString;
     procedure SetProvisionalInsert(const AText: FString; AProps: TCharacterPropArray);
 
+{ Wakan supports three input modes:
+  1. HW Latin mode: All characters are output instantly as is, no replacements.
+  Latin/cyrillic/czech/punctuation/whatever.
+
+  FW latin enabled: If there's a FW version of the character, it's used instead.
+  There's a FW version of latin (0x20..0x80) and maybe others.
+
+  2. Kana mode.
+  Keystrokes are accumulated in input buffer as we type, converted to
+  presentational format (hiragana/katakana/as is) before showing.
+  Backspace deletes one keystroke, updates presentation.
+  Space commits input buffer.
+
+  BREAKING PUNCTUATION: Some symbols are declared "breaking" and commit the
+  buffer instantly, but not if:
+  - it still can be continued to form a romaji syllable. E.g. if ' is breaking,
+  but there's a romaji formula which says:
+    h'ag => hug
+  Then the chain isn't broken at h' until we continue with h'o or h'u or h'ax.
+
+  REPLACEMENTS: Any lowercase = hiragana, any uppercase = katakana, other
+  characters are replaced with japanese equivalents as we see fit at the time of
+  presentation.
+  E.g. if there's a rule which says:
+    '  => "
+  Then as we type h'ag, it should be displayed as
+    h"ag
+  But still converted to hug per the rule above.
+
+  HIRAGANA/KATAKANA SEPARATION: We remember if we started typing lowercase or
+  uppercase and auto-commit if we switch to other case.
+
+  PINYIN: Works similarly, but the provisional presentation for the buffer is
+  not bopomofo (kana) but latin. It's replaced with bopomofo when we accept
+  the buffer.
+  Digits are also mandatory non-breaking with Pinyin as they are used to
+  specify tones.
+
+  3. Kanji mode.
+  Same as kana mode, only we're constantly presented with possible kanji
+  replacements for the kana generated from current input buffer.
+  We can choose one with [ ] or Up-Down and accept with SPACE. This will then
+  be substituted instead of the typed part, and marked as Provisional Insert.
+  Provisional Insert can still be replaced with other substitutions with [ ].
+ }
+
   protected //Input/Insert buffer
-  { Wakan supports following input modes:
-    1. HW latin mode.
-    All characters are breaking, output instantly as is, no replacements.
-    Latin/russian/czech/punctuation/whatever.
-
-      1.5. FW latin mode.
-      Same, but if there's a FW version of the character in Unicode table, it's
-      used instead.
-      There's a FW version of latin (codes 0..128) and maybe others (Russian?)
-
-    2. Kana mode.
-    Keystrokes are accumulated in input buffer, converted to presentational
-    format (hiragana/katakana/latin) as we type.
-    Backspace deletes one keystroke, updates presentation.
-    Space commits input buffer.
-    BREAKING PUNCTUATION: A bunch of symbols are declared "breaking" and commit
-    the chain immediately, but not in certain cases:
-    - Not if it still can be continued to form a romaji syllable. E.g. if ' is
-    breaking, but there's a romaji formula which says:
-      h'ag => hug
-    Then the chain isn't broken at h' until we continue with h'o or h'u or h'ax.
-    REPLACEMENTS: Lowercase prints hiragana, uppercase prints katakana,
-    other characters are replaced with japanese equivalents as we see fit
-    (if you need exact characters, use modes 1 or 2) at the time of presentation.
-    E.g. if there's a rule which says:
-      '  => "
-    Then as we type h'ag, it's displayed as
-      h"ag
-    But still converted to hug per the rule above.
-    HIRAGANA/KATAKANA SEPARATION: We remember if we started typing lowercase or
-    uppercase and auto-commit if we switch to other case.
-    PINYIN: Works similarly, but the provisional presentation for the buffer is
-    not kana (bopomofo) but latin. It's replaced with bopomofo only when we
-    accept the buffer.
-    Digits are also mandatory non-breaking with Pinyin as they are used to
-    specify tones.
-    INTL: Russian and other symbols are handled similarly, can be used in
-    formulas.
-
-    3. Kanji mode.
-    Same as kana mode, only we're constantly presented with possible kanji
-    replacements for the kana generated from current input buffer.
-    We can choose one with [ ] or Up-Down and accept with SPACE. This will then
-    be substituted instead of the typed part, and marked as Provisional Insert.
-    Provisional Insert can still be replaced with other substitutions with [ ].
-   }
-
   type
     TInputBufferType = (
-      ibLatin,          //or any other script, as is
+      ibAsIs,           //latin/other characters as is
       ibHiragana,       //romaji to convert into hiragana
       ibKatakana        //...into katakana
     );
@@ -420,7 +422,7 @@ type
   protected
     FInsertionState: TInsertionState;
     FInputBuffer: string; //collects keypresses
-    FInputBufferType: TInputBufferType; //type of data in the buffer
+    FInputBufferType: TInputBufferType; //type of data in the buffer (ibAsIs is usually not buffered)
     procedure HandleKeypress(c: char);
     procedure ResolveInsert(AAcceptSuggestion: boolean = true);
     procedure ClearInsBlock;
@@ -744,6 +746,10 @@ begin
   if fHint.Visible then HideHint;
 end;
 
+procedure TfEditor.LanguageChanged;
+begin
+  ResolveInsert(false);
+end;
 
 procedure TfEditor.ClearEditor;
 begin
@@ -1474,6 +1480,7 @@ begin
   fMenu.aEditorKanjiMode.Checked:=true;
   fMenu.aEditorKanaMode.Checked:=false;
   fMenu.aEditorASCIIMode.Checked:=false;
+  ResolveInsert(false); //old buffer invalid
 end;
 
 procedure TfEditor.sbKanaModeClick(Sender: TObject);
@@ -1481,6 +1488,7 @@ begin
   fMenu.aEditorKanaMode.Checked:=true;
   fMenu.aEditorKanjiMode.Checked:=false;
   fMenu.aEditorASCIIMode.Checked:=false;
+  ResolveInsert(false); //old buffer invalid
 end;
 
 procedure TfEditor.sbAsciiModeClick(Sender: TObject);
@@ -1488,6 +1496,7 @@ begin
   fMenu.aEditorASCIIMode.Checked:=true;
   fMenu.aEditorKanaMode.Checked:=false;
   fMenu.aEditorKanjiMode.Checked:=false;
+  ResolveInsert(false); //old buffer invalid
 end;
 
 { These are auto-check allow-all-up buttons so they handle Down/Undown automatically }
@@ -2732,7 +2741,7 @@ begin
   ins := SourcePos(-1,-1);
   inslen:=0;
   FInputBuffer := '';
-  FInputBufferType := ibLatin;
+  FInputBufferType := ibAsIs;
   FInsertionState := isTyping;
 end;
 
@@ -3078,23 +3087,23 @@ begin
 
   if sbAsciiMode.Down then begin
    //In AsciiMode all characters are immediate + no conversion
-    CharType := ibLatin;
+    CharType := ibAsIs;
   end else begin
     if TCharacter.IsUpper(c) then begin
       if curlang='c' then
-        CharType := ibLatin
+        CharType := ibAsIs
       else
-        CharType := ibKatakana
+        CharType := ibKatakana //uppercase encodes katakana
     end else
-      CharType := ibHiragana;
+      CharType := ibHiragana; //lowercase = hiragana
 
     if (not RomaHasPotentialMatches(FInputBuffer+c))
     and IsImmediateCharacter(c) then
-      CharType := ibLatin; //immediate output
+      CharType := ibAsIs; //immediate output
   end;
 
- //Instant output
-  if CharType = ibLatin then begin
+ //Instant output - AsIs data is not buffered
+  if CharType = ibAsIs then begin
     if FInputBuffer<>'' then
       ResolveInsert({AcceptSuggestion=}false);
     ClearInsBlock;

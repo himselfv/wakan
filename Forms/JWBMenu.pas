@@ -1186,6 +1186,8 @@ begin
     fKanjiSearch.LanguageChanged;
   if fWordLookup<>nil then
     fWordLookup.LanguageChanged;
+  if fEditor<>nil then
+    fEditor.LanguageChanged;
   if fExamples<>nil then
     fExamples.ReloadExamplesPackage;
   if fWordLookup<>nil then
