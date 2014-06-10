@@ -2857,7 +2857,7 @@ begin
     end;
   end else
   begin
-   //Replacement disabled or no matches => Keep hiragana/bopomofo/whatever
+   //Replacement disabled => Keep hiragana/bopomofo/whatever
    { We're accepting input as kana, so we have no dictionary word to check against.
     Therefore if the user didn't enter tones we don't know tones. In F03* notation
     we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
