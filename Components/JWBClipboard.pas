@@ -1,4 +1,5 @@
 unit JWBClipboard;
+{ Common clipboard handling for Wakan }
 
 interface
 uses Classes, Messages, Windows, Controls, ExtCtrls, Generics.Collections,
