@@ -2,6 +2,7 @@
 URL=http://ja.wiktionary.org/wiki/%s
 Title=Wiktionary JP
 Hint=Lookup up %s in Japanese Wiktionary
+Language=J
 IDList=
 HotKey=0
 IconFile=.\wiktionary-ja.ico
