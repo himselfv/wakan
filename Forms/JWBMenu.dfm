@@ -610,13 +610,6 @@ object fMenu: TfMenu
     FullRepaint = False
     TabOrder = 3
   end
-  object ClipboardUpdateTimer: TTimer
-    Enabled = False
-    Interval = 2000
-    OnTimer = ClipboardUpdateTimerTimer
-    Left = 280
-    Top = 64
-  end
   object ActionList1: TActionList
     Left = 48
     Top = 64

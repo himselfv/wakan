@@ -78,7 +78,8 @@ uses
   JWBWordGrid in 'Components\JWBWordGrid.pas',
   JWBDicImportJob in 'Components\JWBDicImportJob.pas',
   JWBUnpackJob in 'Components\JWBUnpackJob.pas',
-  TaskbarCtl in 'Components\TaskbarCtl.pas';
+  TaskbarCtl in 'Components\TaskbarCtl.pas',
+  JWBClipboard in 'Components\JWBClipboard.pas';
 
 {$R *.RES}
 {$R WINXP.RES}
@@ -106,7 +107,6 @@ begin
   Application.CreateForm(TfVocabDetails, fVocabDetails);
   Application.CreateForm(TfVocabFilters, fVocabFilters);
   Application.CreateForm(TfHint, fHint);
-
   fMenu.InitializeWakan;
   Application.Run;
 end.

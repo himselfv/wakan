@@ -20,7 +20,6 @@ type
     btnClipboardClear: TSpeedButton;
     Bevel5: TBevel;
     tab3: TSpeedButton;
-    ClipboardUpdateTimer: TTimer;
     ActionList1: TActionList;
     aSaveUser: TAction;
     aCancelUser: TAction;
@@ -249,7 +248,6 @@ type
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure SpeedButton2Click(Sender: TObject);
     procedure SpeedButton7Click(Sender: TObject);
-    procedure ClipboardUpdateTimerTimer(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
     procedure Action1Execute(Sender: TObject);
@@ -504,36 +502,8 @@ type
     procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
     procedure PopupImmediate(left:boolean);
 
-  protected //Clipboard
-   { SetClipboardViewer is supported starting with Windows 2000,
-    so if there's a need we can implement dynamic linking and fall back to polling -
-    it's kept as a safety measure anyway since CB chains are prone to breaking }
-    CbNextViewer: HWND;
-    UpdatingClipboard:boolean;
-    procedure WmChangeCbChain(var Msg: TMessage); message WM_CHANGECBCHAIN;
-    procedure WmDrawClipboard(var Msg: TMessage); message WM_DRAWCLIPBOARD;
-    procedure ClipboardChanged;
-    procedure Clipboard_Update; //update clip with UNICODETEXT from Clipboard
-    procedure Clipboard_Clear;
-  public
-    ClipboardWatchers: TList<TNotifyEvent>;
-  public
-   { 
-    How to use:
-      Reset
-      Add(...)
-      Add(...)
-      clip := '...'
-      Publish
-   }
-    procedure ResetClipboard;
-    procedure AddToClipboard(uFormat: UINT; data: pointer; size: integer); overload;
-    procedure AddToClipboard(uFormat: UINT; text: RawByteString); overload;
-    procedure AddToClipboard(uFormat: UINT; text: UnicodeString); overload;
-    procedure AddToClipboard(uFormat: UINT; data: TMemoryStream; AOwnsStream: boolean = false); overload;
-    procedure PublishClipboard;
-    procedure SetClipboard; //to whatever is in clip
-    function GetClipboard(uFormat: UINT; out ms: TMemoryStream): boolean;
+  protected
+    procedure ClipboardChanged(Sender: TObject);
 
   end;
 
@@ -555,8 +525,6 @@ type
 
 var
   fMenu: TfMenu;
-
-  clip:FString;
 
  //Loaded from config file -- see comments in wakan.cfg
   partl: TParticleList; //particles such as NO, NI, etc
@@ -581,7 +549,7 @@ var
   sobin:pointer;
 
 implementation
-uses Types, clipbrd, JWBCore, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
+uses Types, JWBCore, JWBClipboard, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
  JWBCharData, JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical,
  JWBWordLookup, JWBKanjiCompounds, JWBExamples, JWBEditor, JWBWakanText,
  JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBStatistics, JWBKanji,
@@ -616,15 +584,15 @@ begin
   RightPanel.Width := 0;
   RightPanel.Height := 0;
 
-  ClipboardWatchers := TList<TNotifyEvent>.Create;
+  Clipboard.Watchers.Add(Self.ClipboardChanged);
 end;
 
 procedure TfMenu.FormDestroy(Sender: TObject);
 begin
+  Clipboard.Watchers.Remove(Self.ClipboardChanged);
+
   FreeCharData;
   FreeKnownLists;
-
-  FreeAndNil(ClipboardWatchers);
 
   defll.Free; //+
   suffixl.Free; //+
@@ -922,9 +890,6 @@ begin
 
     Self.ApplyUI;
 
-   { Init clipboard viewer }
-    CbNextViewer := SetClipboardViewer(Self.Handle);
-
    { Open file in the editor }
     if fEditor<>nil then begin
       fEditor.FileChanged := false;
@@ -970,8 +935,7 @@ begin
 
   Self.Enabled := true;
 
-  ClipboardUpdateTimer.Enabled:=true;
-  ClipboardUpdateTimerTimer(ClipboardUpdateTimer);
+
   ScreenTimer.Enabled:=true;
 
  { Done. }
@@ -1426,9 +1390,6 @@ end;
 
 procedure TfMenu.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- { Disconnect from clipboard viewer }
-  ChangeClipboardChain(Self.Handle, CbNextViewer);
-
   if not FlushUserData then Action:=caNone;
   if not fEditor.CommitFile then Action:=caNone;
   if FormPlacement1.PlacementRestored then
@@ -1449,171 +1410,9 @@ begin
   end;
 end;
 
-procedure TfMenu.WmChangeCbChain(var Msg: TMessage);
-begin
-  if HWND(Msg.wParam)=CbNextViewer then begin
-   // Replace next window and return
-    CbNextViewer := Msg.lParam;
-    Msg.Result := 0;
-  end else
-   // Pass to the next window
-    if CbNextViewer<>0 then
-      Msg.Result := SendMessage(CbNextViewer, Msg.Msg, Msg.wParam, Msg.lParam);
-end;
-
-procedure TfMenu.WmDrawClipboard(var Msg: TMessage);
-begin
-  Clipboard_Update;
-  if CbNextViewer<>0 then
-    SendMessage(CbNextViewer, Msg.Msg, Msg.wParam, Msg.lParam); //call next viewer
-end;
-
-procedure TfMenu.Clipboard_Update;
-var i:integer;
-  h:boolean;
-  newclip:FString;
-  MyHandle:THandle;
-  textptr:PWideChar;
-  s:widestring;
-begin
-  if UpdatingClipboard then exit;
-  UpdatingClipboard:=true;
-  try
-    Clipboard.Open;
-    h:=false;
-    for i:=0 to Clipboard.FormatCount-1 do
-      if Clipboard.Formats[i]=CF_UNICODETEXT then h:=true;
-    if h then
-    begin
-      MyHandle:=Clipboard.GetAsHandle(CF_UNICODETEXT);
-      TextPtr:=GlobalLock(MyHandle);
-      s:=textptr;
-//      if length(s)>64000 then s:=_l('#00342^eToo much data.');
-      newclip := fstr(s);
-      GlobalUnlock(MyHandle);
-    end;
-    Clipboard.Close;
-  except
-    newclip := {$IFDEF UNICODE}'ERROR'{$ELSE}UnicodeToHex('ERROR'){$ENDIF};
-  end;
-  if newclip<>clip then
-  begin
-    clip := newclip;
-    ClipboardChanged;
-  end;
-  UpdatingClipboard:=false;
-end;
-
-procedure TfMenu.Clipboard_Clear;
-begin
-  clip:='';
-  ResetClipboard;
-  PublishClipboard;
-end;
-
-procedure TfMenu.SetClipboard;
-begin
-  ResetClipboard;
-  try
-    AddToClipboard(CF_UNICODETEXT, clip)
-  finally
-    PublishClipboard;
-  end;
-end;
-
-//Open the clipboard and clear it
-procedure TfMenu.ResetClipboard;
-begin
-  OpenClipboard(Handle);
-  EmptyClipboard;
-end;
-
-//Does not add terminating null
-procedure TfMenu.AddToClipboard(uFormat: UINT; data: pointer; size: integer);
-var
-  DataHandle :  THandle;
-  ToPointer  :  Pointer;
-begin
-  DataHandle := GlobalAlloc(GMEM_DDESHARE OR GMEM_MOVEABLE, size);
-  ToPointer := GlobalLock(DataHandle);
-  if size>0 then
-    Move(data^, ToPointer^, size); //die if data is invalid
-  GlobalUnlock(DataHandle);
-  SetClipboardData(uFormat, DataHandle);
-end;
-
-procedure TfMenu.AddToClipboard(uFormat: UINT; text: RawByteString);
-begin
-  if Length(text)>0 then
-    AddToClipboard(uFormat, pointer(text), Length(text)+1); //string + term 0
-end;
-
-procedure TfMenu.AddToClipboard(uFormat: UINT; text: UnicodeString);
-begin
-  if Length(text)>0 then
-    AddToClipboard(uFormat, pointer(text), Length(text)*2 + 2); //string + term 0
-end;
-
-procedure TfMenu.AddToClipboard(uFormat: UINT; data: TMemoryStream; AOwnsStream: boolean = false);
-begin
-  AddToClipboard(uFormat,data.Memory,data.Size);
-  if AOwnsStream then FreeAndNil(data);
-end;
-
-procedure TfMenu.PublishClipboard;
-begin
-  CloseClipboard;
-  ClipboardChanged;
-end;
-
-procedure TfMenu.ClipboardChanged;
-var i: integer;
+procedure TfMenu.ClipboardChanged(Sender: TObject);
 begin
   ClipboardPaintbox.Invalidate;
-  for i := 0 to ClipboardWatchers.Count-1 do
-    ClipboardWatchers[i](Self);
-  if (fKanji<>nil) and (fKanjiSearch<>nil) then
-    if fKanji.Visible and fKanjiSearch.btnInClipboard.Down then fKanji.Reload();
-  if fWordLookup<>nil then
-    if fWordLookup.Visible and (fWordLookup.LookupMode=lmClipboard) then fWordLookup.Look();
-end;
-
-//Retrieves a data for an HGLOBAL-containing clipboard format (most of them are)
-function TfMenu.GetClipboard(uFormat: UINT; out ms: TMemoryStream): boolean;
-var h: THandle;
-  pb: PByte;
-  sz: integer;
-  format: cardinal;
-begin
-  OpenClipboard(Handle);
-  try
-    format := 0;
-    repeat
-      format := EnumClipboardFormats(format);
-    until (format=0) or (format=uFormat);
-
-    if format=0 then begin
-      Result := false;
-      exit;
-    end;
-
-    h := GetClipboardData(uFormat);
-    if h=0 then RaiseLastOsError();
-
-    pb := GlobalLock(h);
-    if pb=nil then RaiseLastOsError();
-
-    sz := GlobalSize(h);
-    if sz>MaxWord then sz := MaxWord; //won't accept more
-    
-    ms := TMemoryStream.Create;
-    ms.Write(pb^,sz);
-    
-    GlobalUnlock(h);
-    Result := true;
-  finally
-    CloseClipboard();
-  end;
 end;
 
 procedure TfMenu.SpeedButton2Click(Sender: TObject);
@@ -1624,11 +1423,6 @@ end;
 procedure TfMenu.SpeedButton7Click(Sender: TObject);
 begin
   LoadUserData;
-end;
-
-procedure TfMenu.ClipboardUpdateTimerTimer(Sender: TObject);
-begin
-  Clipboard_Update;
 end;
 
 procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
@@ -1650,7 +1444,7 @@ procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
   Canvas.Font.Color:=clWindowText;
-  DrawUnicode(Canvas,2,2,22,copy(clip,1,200),FontRadical);
+  DrawUnicode(Canvas,2,2,22,copy(Clipboard.Text,1,200),FontRadical);
 end;
 
 procedure TfMenu.ClipboardPaintboxMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -1667,7 +1461,7 @@ end;
 
 procedure TfMenu.btnClipboardClearClick(Sender: TObject);
 begin
-  Clipboard_Clear;
+  Clipboard.Clear;
 end;
 
 procedure TfMenu.aSaveUserExecute(Sender: TObject);
@@ -2639,16 +2433,13 @@ begin
   if (fScreenTip.screenTipButton>2) and (not fMenu.Focused) then fMenu.Show;
   case fScreenTip.screenTipButton of
     1:begin
-        clip:=clip+fScreenTip.screenTipText;
-        SetClipboard;
+        Clipboard.Text := Clipboard.Text + fScreenTip.screenTipText;
       end;
     2:begin
-        clip:=fScreenTip.screenTipText;
-        SetClipboard;
+        Clipboard.Text := fScreenTip.screenTipText;
       end;
     3:begin
-        clip:=fScreenTip.screenTipText;
-        SetClipboard;
+        Clipboard.Text := fScreenTip.screenTipText;
         if not fRadical.Visible then aDictClipboard.Execute;
       end;
     4:begin
@@ -3259,7 +3050,6 @@ initialization
   rdcnt:=0;
   popcreated:=false;
   showroma:=false;
-  clip:='';
 
 finalization
 

@@ -60,6 +60,8 @@ type
     procedure miLookupEtoJClick(Sender: TObject);
     procedure Edit1KeyPress(Sender: TObject; var Key: Char);
 
+  protected
+    procedure ClipboardChanged(Sender: TObject);
   public
     procedure LanguageChanged;
 
@@ -91,8 +93,8 @@ var
 
 implementation
 
-uses Math, JWBLanguage, JWBUnit, JWBMenu, JWBSettings, JWBEditor, JWBWordKanji,
-  JWBExamples, JWBAnnotations, JWBLegacyMarkup;
+uses Math, JWBLanguage, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBEditor,
+  JWBWordKanji, JWBExamples, JWBAnnotations, JWBLegacyMarkup;
 
 {$R *.DFM}
 
@@ -100,10 +102,12 @@ procedure TfWordLookup.FormShow(Sender: TObject);
 begin
   if Edit1.Enabled then Edit1.SetFocus;
   Look();
+  Clipboard.Watchers.Add(Self.ClipboardChanged);
 end;
 
 procedure TfWordLookup.SetDefaultColumnWidths;
 begin
+  Clipboard.Watchers.Remove(Self.ClipboardChanged);
   StringGrid.ColWidths[0]:=131;
   StringGrid.ColWidths[1]:=128;
   StringGrid.ColWidths[2]:=575;
@@ -130,6 +134,12 @@ begin
 
   if (not btnLookupClip.Enabled) and btnLookupClip.Down then
     Self.SetLookupMode(lmJp);
+end;
+
+procedure TfWordLookup.ClipboardChanged(Sender: TObject);
+begin
+  if Self.Visible and (Self.LookupMode=lmClipboard) then
+    Self.Look();
 end;
 
 
@@ -356,7 +366,7 @@ begin
     FResults.Clear;
     wasfull := false;
     if ((lm in [lmAuto, lmJp, lmEn]) and (Edit1.Text=''))
-    or ((lm=lmClipboard) and (clip='')) then begin
+    or ((lm=lmClipboard) and (Clipboard.Text='')) then begin
      //Don't touch dictionaries
       wasfull := true;
     end else
@@ -395,13 +405,13 @@ begin
       end;
       lmClipboard: begin
         text:='';
-        for i:=1 to flength(clip) do
+        for i:=1 to flength(Clipboard.Text) do
          {$IFDEF UNICODE}
-          if copy(fgetch(clip,i),1,2)='00' then break
+          if copy(fgetch(Clipboard.Text,i),1,2)='00' then break
          {$ELSE}
           if fgetch(clip,i)<=#$00FF then break
          {$ENDIF}
-          else text:=text+fgetch(clip,i);
+          else text:=text+fgetch(Clipboard.Text,i);
         req.st := stJapanese;
         req.Prepare;
         req.Search(text, EC_UNKNOWN, FResults);

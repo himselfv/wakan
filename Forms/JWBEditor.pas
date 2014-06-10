@@ -505,10 +505,10 @@ type
 function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
-uses Types, TextTable, JWBCore, JWBLanguage, JWBMenu, JWBHint, JWBKanjiDetails,
+uses Types, TextTable, JWBCore, JWBLanguage, JWBHint, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
-  JWBLegacyMarkup, System.Character;
+  JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard;
 
 var
   EditorWindowTitle: string = '#00610^eText editor / translator'; //one param: file name
@@ -1675,14 +1675,13 @@ var NormalText: UnicodeString;
 begin
   if Self.TextSelection.IsEmpty then exit;
   NormalText := CopyAsText;
-  fMenu.ResetClipboard;
+  Clipboard.ResetClipboard;
   try
-    clip := fstr(NormalText);
-    fMenu.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
-    fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
-    fMenu.AddToClipboard(CF_UNICODETEXT,NormalText);
+    Clipboard.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
+    Clipboard.AddToClipboard(CF_HTML,CopyAsClipHtml());
+    Clipboard.AddToClipboard(CF_UNICODETEXT,NormalText);
   finally
-    fMenu.PublishClipboard;
+    Clipboard.PublishClipboard;
   end;
 end;
 
@@ -1693,18 +1692,17 @@ var RubyText: UnicodeString;
 begin
   if Self.TextSelection.IsEmpty then exit;
   RubyText := CopyAsRuby;
-  fMenu.ResetClipboard;
+  Clipboard.ResetClipboard;
   try
-    clip := fstr(RubyText);
-    fMenu.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
+    Clipboard.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
    {$IFDEF DEBUG}
    //No point since no one supports this... Even LibreOffice doesn't paste this.
-    fMenu.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true);
+    Clipboard.AddToClipboard(CF_ODT,CopyAsOpenDocument(),{OwnsStream=}true);
    {$ENDIF}
-    fMenu.AddToClipboard(CF_HTML,CopyAsClipHtml());
-    fMenu.AddToClipboard(CF_UNICODETEXT,RubyText);
+    Clipboard.AddToClipboard(CF_HTML,CopyAsClipHtml());
+    Clipboard.AddToClipboard(CF_UNICODETEXT,RubyText);
   finally
-    fMenu.PublishClipboard;
+    Clipboard.PublishClipboard;
   end;
 end;
 
@@ -3491,7 +3489,7 @@ begin
   DeleteSelection; //selected text is replaced
 
   Loaded := false;
-  if fMenu.GetClipboard(CF_WAKAN, ms) then
+  if Clipboard.GetClipboard(CF_WAKAN, ms) then
   try
     ms.Seek(0,soFromBeginning);
     tmpDoc := nil;
@@ -3517,7 +3515,7 @@ begin
 
   if not Loaded then begin //default to bare text
     props.Clear;
-    PasteText(clip,props,amDefault); //does RefreshLines/FileChanged internally
+    PasteText(Clipboard.Text,props,amDefault); //does RefreshLines/FileChanged internally
   end;
 
   ShowText(true);

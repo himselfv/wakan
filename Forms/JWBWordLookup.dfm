@@ -387,7 +387,6 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       TabOrder = 2
       OnClick = btnSearchClick
-      ExplicitLeft = 168
     end
     object Edit1: TEdit
       Left = 0
@@ -405,7 +404,6 @@ inherited fWordLookup: TfWordLookup
       OnChange = Edit1Change
       OnClick = Edit1Click
       OnKeyPress = Edit1KeyPress
-      ExplicitWidth = 238
       ExplicitHeight = 24
     end
     object btnLookupMode: TButton
@@ -443,7 +441,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800B80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

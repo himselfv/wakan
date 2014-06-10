@@ -77,6 +77,7 @@ type
     function KanjiGridSetSelection(const chars: FString): boolean;
     procedure SetFocusedCharsLow(const Value: FString);
     procedure SetFocusedChars(const Value: FString);
+    procedure ClipboardChanged(Sender: TObject);
   public
     procedure Reload;
     procedure InvalidateList;
@@ -96,9 +97,10 @@ var
   testkanji:string;
 
 implementation
-uses JWBIO, JWBUnit, JWBMenu, JWBRadical, JWBSettings, JWBPrint, JWBKanjiSearch,
-  JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
-  JWBKanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData;
+uses JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBRadical, JWBSettings, JWBPrint,
+  JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage,
+  JWBKanjiCard, JWBKanaConv, JWBCategories, JWBAnnotations, TextTable,
+  JWBCharData;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -114,10 +116,12 @@ begin
   caltype:=0;
   if fKanjiSearch<>nil then
     Self.btnKanjiDetails.Down:=fKanjiDetails.Visible;
+  Clipboard.Watchers.Add(Self.ClipboardChanged);
 end;
 
 procedure TfKanji.FormHide(Sender: TObject);
 begin
+  Clipboard.Watchers.Remove(Self.ClipboardChanged);
 end;
 
 //split value string into string list. values are separated by comma or ;
@@ -365,9 +369,9 @@ begin
     sl10:=TStringList.Create;
     CopyCategories;
     if fKanjiSearch.btnInClipboard.Down then
-      for i:=1 to flength(clip) do
-        if (Word(fgetch(clip,i)) >= $4000) and (fltclip.IndexOf(fgetch(clip,i))<0) then
-          fltclip.Add(fgetch(clip,i));
+      for i:=1 to flength(Clipboard.Text) do
+        if (Word(fgetch(Clipboard.Text,i)) >= $4000) and (fltclip.IndexOf(fgetch(Clipboard.Text,i))<0) then
+          fltclip.Add(fgetch(Clipboard.Text,i));
     if fKanjiSearch.sbPinYin.Down then begin
       ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,ptMandarinReading,[rfPartial]); //Mandarin
       ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,ptCantoneseReading,[rfPartial]); //Canton
@@ -864,10 +868,8 @@ end;
 
 procedure TfKanji.DrawGrid1KeyPress(Sender: TObject; var Key: Char);
 begin
-  if key=' ' then begin
-    clip:=clip+curkanji;
-    fMenu.SetClipboard;
-  end;
+  if key=' ' then
+    Clipboard.Text := Clipboard.Text+curkanji;
   if key=Chr(VK_RETURN) then
     if not fMenu.aKanjiDetails.Checked then
       fMenu.aKanjiDetails.Execute
@@ -875,8 +877,8 @@ begin
       if fKanjiDetails.Visible then
         fKanjiDetails.SetFocus;
   if key=Chr(VK_BACK) then begin
-    if length(clip)>0 then delete(clip,length(clip)-3,4);
-    fMenu.SetClipboard;
+    if length(Clipboard.Text)>0 then
+      Clipboard.Text := copy(Clipboard.Text, 1, Length(Clipboard.Text)-4);
   end;
 end;
 
@@ -1040,6 +1042,12 @@ begin
     Self.KanjiGridSelectionChanged; //as if the user did that
  {$ENDIF}
   end;
+end;
+
+procedure TfKanji.ClipboardChanged(Sender: TObject);
+begin
+  if Self.Visible and (fKanjiSearch<>nil) and (fKanjiSearch.btnInClipboard.Down) then
+    Self.Reload();
 end;
 
 

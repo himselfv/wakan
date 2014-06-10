@@ -89,7 +89,7 @@ function XsltTransform(const s: UnicodeString; const AXsltFilename: string): Wid
 implementation
 uses UITypes, JWBStrings, JWBCore, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
   JWBVocabAdd, JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage,
-  JWBWordGrid, ActiveX;
+  JWBWordGrid, JWBClipboard, ActiveX;
 
 {$R *.dfm}
 
@@ -464,11 +464,10 @@ begin
       AText := tmp;
   end;
 
-  if AReplace or (Clip='') then
-    clip := AText
+  if AReplace or (Clipboard.Text='') then
+    Clipboard.Text := AText
   else
-    clip := clip + #13 + AText; //add newline
-  fMenu.SetClipboard;
+    Clipboard.Text := Clipboard.Text + #13 + AText; //add newline
 end;
 
 //AXsltFilename must be full path+filename or empty (default xml)
@@ -488,11 +487,10 @@ begin
     AText:='<entries>'+AText+'</entries>';
   AText := XsltTransform(AText, AXsltFilename);
 
-  if AReplace or (Clip='') then
-    clip := AText
+  if AReplace or (Clipboard.Text='') then
+    Clipboard.Text := AText
   else
-    clip := clip + #13 + AText; //add newline
-  fMenu.SetClipboard;
+    Clipboard.Text := Clipboard.Text + #13 + AText; //add newline
 end;
 
 

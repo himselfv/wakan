@@ -307,6 +307,7 @@
         <DCCReference Include="Components\JWBDicImportJob.pas"/>
         <DCCReference Include="Components\JWBUnpackJob.pas"/>
         <DCCReference Include="Components\TaskbarCtl.pas"/>
+        <DCCReference Include="Components\JWBClipboard.pas"/>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>

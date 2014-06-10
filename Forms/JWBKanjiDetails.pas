@@ -184,7 +184,7 @@ implementation
 
 uses UITypes, ShellApi, JWBKanji, JWBMenu, JWBSettings, JWBUnit, JWBCategories,
   JWBKanjiSearch, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBRefLinks,
-  JWBLanguage;
+  JWBLanguage, JWBClipboard;
 
 {$R *.DFM}
 
@@ -320,8 +320,7 @@ end;
 procedure TfKanjiDetails.SpeedButton23Click(Sender: TObject);
 begin
   if curSingleChar=UH_NOCHAR then exit;
-  clip:=clip+curSingleChar;
-  fMenu.SetClipboard;
+  Clipboard.Text := Clipboard.Text + curSingleChar;
 end;
 
 procedure TfKanjiDetails.btnStrokeOrderClick(Sender: TObject);

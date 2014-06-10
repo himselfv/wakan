@@ -129,7 +129,7 @@ implementation
 uses JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBPrint, JWBSettings,
   JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType, JWBVocabFilters,
   JWBExamples, JWBUserData, JWBWordsExpChoose, JWBCategories, JWBAnnotations,
-  PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup, JWBWordGrid;
+  PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup, JWBWordGrid, JWBClipboard;
 
 var wlc:TStringList;
     lastwordind:integer;
@@ -1336,6 +1336,7 @@ var csl:TStringList;
     vs,vbs:string;
     a,b:integer;
     tol:integer;
+  newClipText: FString;
 begin
   if Application.MessageBox(
     pchar(_l('#00946^eThis function inserts a list of some unlearned characters '
@@ -1391,7 +1392,7 @@ begin
       end;
     end;
     csl.Sort;
-    clip:='';
+    newClipText:='';
     b:=50000;
     tol:=10000;
     for i:=0 to csl.Count-1 do
@@ -1400,12 +1401,12 @@ begin
       if a<b then b:=a;
       if a<b+tol then
       begin
-        clip:=clip+copy(csl[i],11,4);
+        newClipText := newClipText + copy(csl[i],11,4);
         tol:=tol-tol div 3;
       end;
     end;
+    Clipboard.Text := newClipText;
 //    s:='';
-    fMenu.SetClipboard;
 //    for i:=0 to csl.Count-1 do
 //      if strtoint(copy(csl[i],1,5))<b+5000 then s:=s+copy(csl[i],1,5)+'-'+copy(csl[i],6,5)+'-'+copy(csl[i],11,4)+#13;
     csl.Free;

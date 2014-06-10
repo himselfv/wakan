@@ -1,7 +1,7 @@
 unit JWBVocabAdd;
 {
 Has two modes: "enter anything" and "copy dictionary word (possibly alter meaning)".
-Watches clipboard data for changes through fMenu.ClipboardWatchers.
+Watches clipboard data for changes through Clipboard.Watchers.
 }
 
 interface
@@ -55,7 +55,7 @@ function fVocabAdd: TfVocabAdd;
 
 implementation
 uses UITypes, TextTable, JWBLanguage, JWBVocab, JWBUnit, JWBKanaConv, JWBMenu,
-  JWBUserData, JWBCategories;
+  JWBUserData, JWBCategories, JWBClipboard;
 
 {$R *.DFM}
 
@@ -136,8 +136,7 @@ begin
     else
       str := FClipText + ' [' + RomajiToKana(edtPhonetic.Text,curlang,[rfDeleteInvalidChars]) + ']'
         + edtMeaning.Text;
-    clip := str;
-    fMenu.SetClipboard;
+    Clipboard.Text := str;
     Key := #00;
   end;
 end;
@@ -152,13 +151,13 @@ procedure TfVocabAdd.FormShow(Sender: TObject);
 begin
  //Reload categories
   ReloadCategories;
-  fMenu.ClipboardWatchers.Add(Self.ClipboardChanged);
+  Clipboard.Watchers.Add(Self.ClipboardChanged);
   Self.ClipboardChanged(Self);
 end;
 
 procedure TfVocabAdd.FormHide(Sender: TObject);
 begin
-  fMenu.ClipboardWatchers.Remove(Self.ClipboardChanged)
+  Clipboard.Watchers.Remove(Self.ClipboardChanged)
 end;
 
 procedure TfVocabAdd.ReloadCategories;
@@ -199,7 +198,7 @@ end;
 
 procedure TfVocabAdd.ClipboardChanged(Sender: TObject);
 begin
-  Self.ClipText := clip;
+  Self.ClipText := Clipboard.Text;
 end;
 
 function TfVocabAdd.ModalAddWord(): TModalResult;

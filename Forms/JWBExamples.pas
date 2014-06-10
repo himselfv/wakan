@@ -78,7 +78,7 @@ var
   examfile:TMemoryFile;
 
 implementation
-uses JWBCore, JWBMenu, JWBLanguage, JWBUnit, PKGWrite;
+uses JWBCore, JWBMenu, JWBLanguage, JWBUnit, PKGWrite, JWBClipboard;
 
 {$R *.DFM}
 
@@ -534,16 +534,17 @@ var i:integer;
   max:integer;
   tmp_jap: FString;
   tmp_en: string;
+  newClipText: FString;
 begin
   if not all then
   begin
     if btnDisplayTranslation.Down then
-      clip:=ex_jap+UH_CR+UH_LF+fstr(ex_en)
+      newClipText:=ex_jap+UH_CR+UH_LF+fstr(ex_en)
     else
-      clip:=ex_jap;
+      newClipText:=ex_jap;
   end else
   begin
-    clip:='';
+    newClipText:='';
     if ex_indlast-ex_indfirst>99 then
     begin
       max:=ex_indfirst+99;
@@ -555,12 +556,12 @@ begin
     begin
       ReadExample(i, tmp_jap, tmp_en);
       if btnDisplayTranslation.Down then
-        clip:=tmp_jap+UH_CR+UH_LF+fstr(tmp_en)+UH_CR+UH_LF
+        newClipText:=tmp_jap+UH_CR+UH_LF+fstr(tmp_en)+UH_CR+UH_LF
       else
-        clip:=tmp_jap+UH_CR+UH_LF;
+        newClipText:=tmp_jap+UH_CR+UH_LF;
     end;
   end;
-  fMenu.SetClipboard;
+  Clipboard.Text := newClipText;
 end;
 
 procedure TfExamples.GotoExample(num:integer);
