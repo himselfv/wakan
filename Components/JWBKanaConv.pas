@@ -200,8 +200,9 @@ type
     procedure LoadFromStrings(const sl: TStrings);
     function KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string; virtual; abstract;
     function RomajiToKana(const AString: string; AFlags: TResolveFlags): FString; virtual; abstract;
+    function RomajiPartialMatch(const ASyllable: string): integer; virtual;
+    function RomajiBestMatch(const AText: string; out ARomaIdx: integer): integer; virtual;
   end;
-
 
   TKanaTranslator = class(TRomajiTranslator)
   protected
@@ -222,8 +223,6 @@ type
   TPinYinTranslator = class(TRomajiTranslator)
   protected
     function BopomofoBestMatch(const AText: FString): integer;
-    function PinyinBestMatch(const AText: string; out ARomaIdx: integer): integer;
-    function PinyinPartialMatch(const ASyllable: string): integer;
   public
     function KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string; override;
     function RomajiToKana(const AString: string; AFlags: TResolveFlags): FString; override;
@@ -912,6 +911,47 @@ begin
   Result.pref := #00; //by default
 end;
 
+//Finds first entry which starts with ASyllable
+//Text must be lowercased.
+function TRomajiTranslator.RomajiPartialMatch(const ASyllable: string): integer;
+var i, j: integer;
+  rom: string;
+begin
+  Result := -1;
+  for i:=0 to FTrans.Count-1 do begin
+    for j:=0 to Length(FTrans[i].romaji)-1 do begin
+      rom := FTrans[i].romaji[j];
+      if pos(ASyllable,rom)=1 then begin
+        Result := i;
+        break;
+      end;
+    end;
+    if Result>=0 then
+      break;
+  end;
+end;
+
+//Finds best matching entry for the pinyin syllable at the start of the text
+//Text must be lowercased
+function TRomajiTranslator.RomajiBestMatch(const AText: string; out ARomaIdx: integer): integer;
+var i, j, cl: integer;
+  rom: string;
+begin
+  Result := -1;
+  cl := 0;
+  for i:=0 to FTrans.Count-1 do
+    for j:=0 to Length(FTrans[i].romaji)-1 do begin
+      rom := FTrans[i].romaji[j];
+      if pos(rom, AText)=1 then
+        if flength(rom)>cl then
+        begin
+          cl:=flength(rom);
+          Result:=i;
+          ARomaIdx:=j;
+        end;
+    end;
+end;
+
 
 { TKanaTranslator }
 
@@ -1151,47 +1191,6 @@ begin
       end;
 end;
 
-//Finds best matching entry for the pinyin syllable at the start of the text
-//Text must be lowercased
-function TPinYinTranslator.PinyinBestMatch(const AText: string; out ARomaIdx: integer): integer;
-var i, j, cl: integer;
-  rom: string;
-begin
-  Result := -1;
-  cl := 0;
-  for i:=0 to FTrans.Count-1 do
-    for j:=0 to Length(FTrans[i].romaji)-1 do begin
-      rom := FTrans[i].romaji[j];
-      if pos(rom, AText)=1 then
-        if flength(rom)>cl then
-        begin
-          cl:=flength(rom);
-          Result:=i;
-          ARomaIdx:=j;
-        end;
-    end;
-end;
-
-//Finds first entry which starts with ASyllable
-//Text must be lowercased.
-function TPinYinTranslator.PinyinPartialMatch(const ASyllable: string): integer;
-var i, j: integer;
-  rom: string;
-begin
-  Result := -1;
-  for i:=0 to FTrans.Count-1 do begin
-    for j:=0 to Length(FTrans[i].romaji)-1 do begin
-      rom := FTrans[i].romaji[j];
-      if pos(ASyllable,rom)=1 then begin
-        Result := i;
-        break;
-      end;
-    end;
-    if Result>=0 then
-      break;
-  end;
-end;
-
 function TPinYinTranslator.KanaToRomaji(const AString: FString; AFlags: TResolveFlags): string;
 var s2:string;
   cl:integer;
@@ -1249,7 +1248,7 @@ begin
   while curstr<>'' do
   begin
     //Find longest match for character sequence starting at this point
-    i := PinyinBestMatch(curstr,j);
+    i := RomajiBestMatch(curstr,j);
     if i>=0 then
       cl := Length(FTrans[i].romaji[j])
     else
@@ -1521,7 +1520,7 @@ begin
     else cc:='?';
     if (((cc>='A') and (cc<='Z')) or (cc=':')) and (cc<>'''') then curcc:=curcc+cc;
 
-    fnd:=romac.PinyinPartialMatch(LowerCase(curcc))>=0;
+    fnd:=romac.RomajiPartialMatch(LowerCase(curcc))>=0;
     if ((cc<'A') or (cc>'Z')) and (cc<>':') then
     begin
       if curcc<>'' then cnv2:=cnv2+lowercase(curcc)+curp;

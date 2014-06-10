@@ -409,7 +409,7 @@ begin
       end;
       lmEditorInsert: begin
        //First try real word insert buffer
-        text := fEditor.GetInsertKana(false);
+        text := fEditor.GetInsertKana(ikFinal);
         wt := EC_UNKNOWN;
        //If that is empty, show whatever the caret is at
         if text='' then

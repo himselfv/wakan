@@ -151,6 +151,8 @@ type
     lblControlsHint: TLabel;
     btnKanjiDetails: TSpeedButton;
     sbDockDictionary: TSpeedButton;
+    ToolButton1: TToolButton;
+    sbFullwidth: TToolButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -344,33 +346,90 @@ type
     procedure ShowHint;
     procedure HideHint;
 
-  protected //Provisional insert
-   //Just typed part of the text, colored in a special way, can be altered
-   //dynamically.
+  protected { Provisional insert.
+    Recently typed part of the text, colored in a special way, can be altered
+    dynamically, e.g. by "use different substitution" keys. }
     ins: TSourcePos; //Insert position
     inslen: integer; //Length of yet unconfirmed text
     function GetProvisionalInsertText: FString;
     procedure SetProvisionalInsert(const AText: FString; AProps: TCharacterPropArray);
 
   protected //Input/Insert buffer
-    type TInsertionState = (
+  { Wakan supports following input modes:
+    1. HW latin mode.
+    All characters are breaking, output instantly as is, no replacements.
+    Latin/russian/czech/punctuation/whatever.
+
+      1.5. FW latin mode.
+      Same, but if there's a FW version of the character in Unicode table, it's
+      used instead.
+      There's a FW version of latin (codes 0..128) and maybe others (Russian?)
+
+    2. Kana mode.
+    Keystrokes are accumulated in input buffer, converted to presentational
+    format (hiragana/katakana/latin) as we type.
+    Backspace deletes one keystroke, updates presentation.
+    Space commits input buffer.
+    BREAKING PUNCTUATION: A bunch of symbols are declared "breaking" and commit
+    the chain immediately, but not in certain cases:
+    - Not if it still can be continued to form a romaji syllable. E.g. if ' is
+    breaking, but there's a romaji formula which says:
+      h'ag => hug
+    Then the chain isn't broken at h' until we continue with h'o or h'u or h'ax.
+    REPLACEMENTS: Lowercase prints hiragana, uppercase prints katakana,
+    other characters are replaced with japanese equivalents as we see fit
+    (if you need exact characters, use modes 1 or 2) at the time of presentation.
+    E.g. if there's a rule which says:
+      '  => "
+    Then as we type h'ag, it's displayed as
+      h"ag
+    But still converted to hug per the rule above.
+    HIRAGANA/KATAKANA SEPARATION: We remember if we started typing lowercase or
+    uppercase and auto-commit if we switch to other case.
+    PINYIN: Works similarly, but the provisional presentation for the buffer is
+    not kana (bopomofo) but latin. It's replaced with bopomofo only when we
+    accept the buffer.
+    Digits are also mandatory non-breaking with Pinyin as they are used to
+    specify tones.
+    INTL: Russian and other symbols are handled similarly, can be used in
+    formulas.
+
+    3. Kanji mode.
+    Same as kana mode, only we're constantly presented with possible kanji
+    replacements for the kana generated from current input buffer.
+    We can choose one with [ ] or Up-Down and accept with SPACE. This will then
+    be substituted instead of the typed part, and marked as Provisional Insert.
+    Provisional Insert can still be replaced with other substitutions with [ ].
+   }
+
+  type
+    TInputBufferType = (
+      ibLatin,          //or any other script, as is
+      ibHiragana,       //romaji to convert into hiragana
+      ibKatakana        //...into katakana
+    );
+    TInsertionState = (
       isTyping,         //typing in letters
       isConfirmedAsIs,  //input confirmed as is (kana/bopomofo/whatever)
       isConverted       //input converted to focused dictionary entry
     );
+    TInsertKanaType = (
+      ikPreview,        //processed text as it shows while we're typing it
+      ikFinal           //as it is accepted when we finalize it (unless replaced by dict. entry)
+    );
   protected
     FInsertionState: TInsertionState;
-    FInsertBuffer: string; //collects keypresses
-    buffertype:char; //type of data in the buffer: H=hiragana, K=katakana, -=latin/unknown
+    FInputBuffer: string; //collects keypresses
+    FInputBufferType: TInputBufferType; //type of data in the buffer
+    procedure HandleKeypress(c: char);
     procedure ResolveInsert(AAcceptSuggestion: boolean = true);
-    procedure InsertCharacter(c:char);
     procedure ClearInsBlock;
     procedure CloseInsert;
     function TryReleaseCursorFromInsert: boolean;
     function NextSuggestion(const ANext: boolean): boolean;
+    function ConvertImmediateChar(const c: char): char;
   public
-    function GetInsertBuffer: string;
-    function GetInsertKana(const APreview: boolean): FString;
+    function GetInsertKana(const AType: TInsertKanaType): FString;
 
   protected //File opening/saving
     FFileChanged: boolean;
@@ -444,11 +503,10 @@ type
 function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
-
 uses Types, TextTable, JWBCore, JWBLanguage, JWBMenu, JWBHint, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
-  JWBLegacyMarkup;
+  JWBLegacyMarkup, System.Character;
 
 var
   EditorWindowTitle: string = '#00610^eText editor / translator'; //one param: file name
@@ -1329,7 +1387,7 @@ end;
 
 procedure TfEditor.ListBox1KeyPress(Sender: TObject; var Key: Char);
 begin
-  InsertCharacter(key);
+  HandleKeypress(key);
 end;
 
 procedure TfEditor.EditorPaintBoxClick(Sender: TObject);
@@ -1894,8 +1952,10 @@ procedure TfEditor.ShowHint;
 var p: TPoint;
   tmp: TCursorPos;
 begin
-  if not Self.sbKanjiMode.Down then
+  if not Self.sbKanjiMode.Down then begin
     HideHint;
+    exit;
+  end;
   tmp := CursorScreenPos;
   tmp.x := PosToWidth(tmp.x, tmp.y);
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
@@ -1962,7 +2022,7 @@ begin
     fWordLookup.LookupMode := lmEditorInsert;
 
     if dolook then
-      if fWordLookup.Visible or (FInsertBuffer<>'') then
+      if fWordLookup.Visible or (FInputBuffer<>'') then
         fWordLookup.Look()
       else begin
         s:=GetDocWord(rcur.x,rcur.y,wt);
@@ -2671,7 +2731,8 @@ begin
  //Reset everything
   ins := SourcePos(-1,-1);
   inslen:=0;
-  FInsertBuffer:='';
+  FInputBuffer := '';
+  FInputBufferType := ibLatin;
   FInsertionState := isTyping;
 end;
 
@@ -2688,7 +2749,7 @@ end;
  Returns true if the insert mode was aborted, or false if according to user preferences this is impossible. }
 function TfEditor.TryReleaseCursorFromInsert: boolean;
 begin
-  if FInsertBuffer='' then begin //not in insert mode
+  if FInputBuffer = '' then begin //not in insert mode
     Result := true;
     exit;
   end;
@@ -2749,14 +2810,15 @@ begin
   rcur := SourcePos(ins.x+inslen, ins.y);
 end;
 
-{ Accept current insert suggestion and finalize insert. Replace kana with kanji
- if needed.
- AAcceptSuggestion: accept focused dictionary suggestion and replace input
-  with it.
-
- After the insert is finalized, it remains marked as "provisional", colored
- with editor aftertouch, and can be switched to other suggestion,
- but if you do anything else then it's accepted forever. }
+{ Irreversibly convert input keystrokes to kana/text, add it to the document and
+clear insert buffer.
+AAcceptSuggestion: replace converted kana with focused dictionary suggestion.
+Attach that dictionary reference to the word.
+After the insert is finalized, it remains marked as "provisional", colored with
+editor aftertouch, and can be switched to other suggestion, but if you do
+anything else then it's accepted forever.
+Can be called several times, updating the provisional insert with the currently
+focused suggestion }
 procedure TfEditor.ResolveInsert(AAcceptSuggestion: boolean);
 var inskana: string;
   s,s3:string;
@@ -2771,33 +2833,31 @@ begin
     isConverted: AAcceptSuggestion := true;
   end;
 
-  inskana:=GetInsertKana(false);
+  inskana := GetInsertKana(ikFinal);
 
-  if AAcceptSuggestion and (buffertype='H') then begin
+  if AAcceptSuggestion and (FInputBufferType = ibHiragana) and not fWordLookup.IsEmpty then begin
    //Replace with focused dictionary suggestion
-    with fWordLookup do
-      if StringGrid.Visible then
+    with fWordLookup do begin
+      s:=curkanji;
+      s3:=curphonetic;
+      //Delete common ending
+      while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
       begin
-        s:=curkanji;
-        s3:=curphonetic;
-        //Delete common ending
-        while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
-        begin
-          fdelete(s,flength(s),1);
-          fdelete(s3,flength(s3),1);
-        end;
-       { Katakana words are listed without reading in EDICT and sometimes
-        imported as "kanji=katakana, reading=katakana" as a result.
-        So even though kanji==reading, both may be katakana }
-        if (s='') and (EvalChar(curkanji[1]) = EC_KATAKANA) then
-          s:=curkanji //use katakana
-        else
-          s:=s+copy(inskana,length(s3)+1,length(inskana)-length(s3)); //use kanji/hiragana/whatever + tail
-        SetProvisionalInsert(s,nil);
+        fdelete(s,flength(s),1);
+        fdelete(s3,flength(s3),1);
       end;
+     { Katakana words are listed without reading in EDICT and sometimes
+      imported as "kanji=katakana, reading=katakana" as a result.
+      So even though kanji==reading, both may be katakana }
+      if (s='') and (EvalChar(curkanji[1]) = EC_KATAKANA) then
+        s:=curkanji //use katakana
+      else
+        s:=s+copy(inskana,length(s3)+1,length(inskana)-length(s3)); //use kanji/hiragana/whatever + tail
+      SetProvisionalInsert(s,nil);
+    end;
   end else
   begin
-   //Replacement disabled => Keep hiragana/bopomofo/whatever
+   //Replacement disabled or no matches => Keep hiragana/bopomofo/whatever
    { We're accepting input as kana, so we have no dictionary word to check against.
     Therefore if the user didn't enter tones we don't know tones. In F03* notation
     we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
@@ -2806,7 +2866,11 @@ begin
     SetLength(lp, flength(s));
     for i:=0 to flength(s)-1 do
       if i=0 then
-        lp[i].SetChar(buffertype, 9, 0, 1)
+        case FInputBufferType of
+          ibHiragana: lp[i].SetChar('H', 9, 0, 1);
+          ibKatakana: lp[i].SetChar('K', 9, 0, 1);
+        else lp[i].SetChar('-', 9, 0, 1)
+        end
       else
         lp[i].SetChar('<', 9, 0, 1); //word continues
     SetProvisionalInsert(s,lp);
@@ -2832,38 +2896,31 @@ begin
   ShowText(false);
 end;
 
-function TfEditor.GetInsertBuffer: string;
-begin
-  Result := FInsertBuffer;
-end;
-
 {
 Returns the contents of input buffer upgraded for presentation according
 to buffer type (to hiragana/katakana, to FW-latin etc.)
-  APreview: return contents for preview, not insertion. In chinese we don't convert
-    input to bopomofo until the last moment, so this'll return raw romaji.
-When returning chinese, tones are in F03* format (this is used for DB lookups)
+AType: Whether to return content for preview or for final insertion.
+  In chinese we don't convert input to bopomofo until the last moment,
+  so Preview returns raw romaji.
+When returning chinese, tones are in F03* format (this is used for DB lookups).
 }
-function TfEditor.GetInsertKana(const APreview: boolean):FString;
+function TfEditor.GetInsertKana(const AType: TInsertKanaType): FString;
 begin
-  if curlang='j'then
-  begin
-    if buffertype='H' then
-      Result:=RomajiToKana('H'+lowercase(FInsertBuffer),curlang,[])
-    else
-    if buffertype='K'then
-      Result:=RomajiToKana('K'+lowercase(FInsertBuffer),curlang,[])
-    else
-      Result:=fstr(FInsertBuffer); //latin
+  if curlang='j'then begin
+    case FInputBufferType of
+      ibHiragana: Result:=RomajiToKana('H'+lowercase(FInputBuffer),curlang,[]);
+      ibKatakana: Result:=RomajiToKana('K'+lowercase(FInputBuffer),curlang,[]);
+    else Result:=fstr(FInputBuffer); //latin
+    end;
   end else
-  begin
-    if APreview then
-      Result:=fstr(FInsertBuffer)
+  begin //'c'
+    if AType=ikPreview then
+      Result:=fstr(FInputBuffer)
     else
-    if buffertype='H' then
-      Result:=RomajiToKana(lowercase(FInsertBuffer),curlang,[])
+    if FInputBufferType in [ibHiragana, ibKatakana] then
+      Result:=RomajiToKana(lowercase(FInputBuffer),curlang,[])
     else
-      Result:=fstr(FInsertBuffer);
+      Result:=fstr(FInputBuffer);
   end;
 end;
 
@@ -2895,11 +2952,47 @@ begin
   end;
 end;
 
-procedure TfEditor.InsertCharacter(c:char);
+//True if the specified character is output instantly, commiting the current buffer.
+//May be overriden by romaji rules.
+function IsImmediateCharacter(const c: char): boolean;
+begin
+  case c of
+    ' ', ',', '.', '<', '>', '(', ')', '[', ']', '{', '}':
+      Result := true;
+  else Result := false;
+  end;
+end;
+
+{ True if there's a romaji translation rule which starts with one or more last
+characters from the string. }
+function RomaHasPotentialMatches(const str: string): boolean;
+var i, j: integer;
+  tran: TRomajiTranslator;
+begin
+  if Length(str)<=0 then begin
+    Result := false;
+    exit;
+  end;
+
+  if curlang='j' then
+    tran := roma_user
+  else
+    tran := rpy_user;
+
+  Result := false;
+  for i := 1 to Length(str) do begin
+    j := tran.RomajiPartialMatch(copy(str,Length(str)-i+1,i));
+    if j>=0 then begin
+      Result := true;
+      break;
+    end;
+  end;
+end;
+
+//Handles a keystroke directed at the editor
+procedure TfEditor.HandleKeypress(c: char);
 const DEFCPROPS: TCharacterProps = (wordstate:'-';learnstate:9;dicidx:0;docdic:1);
-var chartype:char; //H=hiragana, K=katakana, -=as is, immediate, 0=keep current
-  AsciiMode: boolean;
-  ImmediateChar: boolean; //drop any chains and print the char
+var CharType: TInputBufferType;
 begin
  { [ ] scroll works the same way UP/DOWN does, but after you've applied one
   suggestion it still lets you change it inline.
@@ -2916,26 +3009,26 @@ begin
   if FInsertionState in [isConfirmedAsIs, isConverted] then
     ClearInsBlock;
 
-  AsciiMode:=sbAsciiMode.down;
-  if (c=' ') and (FInsertBuffer<>'') then
+  if (c=' ') and (FInputBuffer<>'') then
   begin
    //Accept suggestion
     ResolveInsert({AcceptSuggestion=}sbKanjiMode.down);
     FileChanged:=true;
-    if sbKanjiMode.down then exit;
+    if sbKanjiMode.Down then
+      exit;
   end;
-  if (c=Chr(VK_RETURN)) and (FInsertBuffer<>'') then
+  if (c=Chr(VK_RETURN)) and (FInputBuffer<>'') then
   begin
    //Reject suggestion
     ResolveInsert({AcceptSuggestion=}false);
     FileChanged:=true;
     if sbKanjiMode.down then exit;
   end;
-  if (c=Chr(VK_BACK)) and (FInsertBuffer<>'') then
+  if (c=Chr(VK_BACK)) and (FInputBuffer<>'') then
   begin
-    delete(FInsertBuffer, Length(FInsertBuffer), 1);
-    SetProvisionalInsert(GetInsertKana(true),nil);
-    if FInsertBuffer='' then
+    delete(FInputBuffer, Length(FInputBuffer), 1);
+    SetProvisionalInsert(GetInsertKana(ikPreview),nil);
+    if FInputBuffer='' then
       FInsertionState := isConfirmedAsIs;
     FileChanged:=true;
     mustrepaint:=true;
@@ -2976,103 +3069,36 @@ begin
   if Ord(c)<$0020 then //not a printable char
     exit;
 
- { We accept characters and store them mostly as-is in inputbuffer. We also keep
-  track of what kind of word we're typing (hiragana H/katakana K/other -).
+ { We accept characters and store them as-is in inputbuffer. We also keep
+  track of what kind of word we're typing (hiragana/katakana/other).
   Elsewhere we take current contents of input buffer and convert according to
   its type (to hiragana/to katakana/leave as is).
   There are also immediate characters (punctuation and the like) which flush
   input buffer and are printed instantly. }
 
-  if AsciiMode then begin
-   { In AsciiMode all characters are immediate + no conversion }
-    chartype:='-';
-
+  if sbAsciiMode.Down then begin
+   //In AsciiMode all characters are immediate + no conversion
+    CharType := ibLatin;
   end else begin
-   {  At this time all punctuation is split into breaking and non-breaking.
-      Breaking punctuation is immediate, and because of that cannot be used in
-      kana formulas.
-      Non-breaking punctuation can be used in formulas, but it's non-breaking.
+    if TCharacter.IsUpper(c) then begin
+      if curlang='c' then
+        CharType := ibLatin
+      else
+        CharType := ibKatakana
+    end else
+      CharType := ibHiragana;
 
-      Digits are non-breaking, at the very least because they are needed for
-      pinyin tones. Some other stuff which can be used in a dictionary entry is
-      non-breaking too.
-
-      Ideally, we'd like a selected set of characters to be breaking irrelevant
-      to if they're used in kana or not, BUT if they're used in kana, we'd like
-      to override it and make them non-breaking.
-      E.g.
-        if AsciiMode then
-          breaking := true
-        else
-          breaking := IsBreakingPunctuation(char);
-        if kanaconv.IsMeaningfulCharacter(char) then
-          breaking := false;
-  }
-    case c of
-      ' ', ',', '.', '<', '>', '(', ')', '[', ']', '{', '}':
-        ImmediateChar := true;
-    else ImmediateChar := false;
-    end;
-
-   //Uppercase letter in Japanese mode => katakana
-    if (AnsiUppercase(c)=c) and ((c<'0') or (c>'9')) then begin
-      if curlang='c' then chartype:='-' else chartype:='K'
-    end
-    else chartype:='H'; //hiragana
-
-    if c='''' then chartype:='0'; //WTF? "'" continues any chain
-    if c='+' then chartype:='H'; //WTF? "+" continues hiragana chain...
-
-    if ImmediateChar then chartype:='-'; //overrides previous lines
-
-   { Make permanent replacements. Ideally we'd like to avoid this and replace
-    on presentation in GetInsertKana, so that we keep raw input as long as
-    possible.
-    Chars which we replace here we basically make unavailable for kana formulas
-    as there's no way to type them now. }
-    case c of
-      ',': c:=#$3001;
-      '.': c:=#$3002;
-     //Special uses for standard chars. How do we type <>()[]{} then?
-      '<': c:=#$3008;
-      '>': c:=#$3009;
-      '(': c:=#$300C;
-      ')': c:=#$300D;
-      '[': c:=#$3016;
-      ']': c:=#$3017;
-      '{': c:=#$3010;
-      '}': c:=#$3011;
-     //This should later be moved to common HW->FW upgrade:
-      '~': c:= '～';
-    end;
-
-  {
-    We'd like to use this code to convert all latin to fullwidth, but we shouldn't:
-
-     //Upgrade all punctuation to fullwidth, but do not touch latin (need it for romaji).
-     //Two char blocks are equal: 0021..007E <-> FF01..FF5E
-     //TODO: In fact, what if romaji decoder uses any of punctuation?
-     //#$3000; //upgrade space
-      if (Ord(c)>$0020) and (Ord(c)<$0080)
-      and ((Ord(c)<Ord('a')) or (Ord(c)>Ord('z')))
-      and ((Ord(c)<Ord('A')) or (Ord(c)>Ord('Z'))) then
-        immchar := Chr(Ord(c)-$0020+$FF00);
-
-    Fullwidth latin here will break kana conversion later. We should accept raw
-    input and:
-      - either attach it to inputbuffer and convert on presentation, according
-       to input buffer type
-      - or if this is an immediate char, convert later in this function.
-  }
+    if (not RomaHasPotentialMatches(FInputBuffer+c))
+    and IsImmediateCharacter(c) then
+      CharType := ibLatin; //immediate output
   end;
 
-
  //Instant output
-  if chartype='-' then begin
-    if FInsertBuffer<>'' then
+  if CharType = ibLatin then begin
+    if FInputBuffer<>'' then
       ResolveInsert({AcceptSuggestion=}false);
     ClearInsBlock;
-    SetProvisionalInsert(fstring(c),CharPropArray(DEFCPROPS));
+    SetProvisionalInsert(fstring(ConvertImmediateChar(c)),CharPropArray(DEFCPROPS));
     FInsertionState:=isConfirmedAsIs;
     FileChanged:=true;
     mustrepaint:=true;
@@ -3082,27 +3108,61 @@ begin
 
  //Input buffer
   FileChanged:=true;
-  if FInsertBuffer='' then
-  begin
-    if chartype='0' then buffertype:='-' else buffertype:=chartype;
-    FInsertBuffer:=c;
+  if FInputBuffer='' then begin
+    FInputBufferType := CharType;
+    FInputBuffer:=c;
     FInsertionState:=isTyping;
-  end else
-  begin
-    if (chartype<>'0') and (chartype<>buffertype) then begin
+  end else begin
+    if chartype<>FInputBufferType then begin
       ResolveInsert({AcceptSuggestion=}false);
       ClearInsBlock;
-      buffertype:=chartype;
-      FInsertBuffer:=c;
+      FInputBufferType:=chartype;
+      FInputBuffer:=c;
     end else
-      FInsertBuffer:=FInsertBuffer+c;
+      FInputBuffer:=FInputBuffer+c;
     FInsertionState:=isTyping;
   end;
-  SetProvisionalInsert(GetInsertKana(true),nil);
+  SetProvisionalInsert(GetInsertKana(ikPreview),nil);
   mustrepaint:=true;
   ShowText(true);
 end;
 
+//Converts a single keypress into a character for immediate insertion,
+//or [may be used] when there are keypresses left after roma->kana conversion.
+//Only for presentation.
+function TfEditor.ConvertImmediateChar(const c: char): char;
+begin
+  if sbAsciiMode.Down then
+    Result := c
+  else begin
+   //Kana mode has some non-trivial character replacements
+    case c of
+      ',': Result := #$3001;
+      '.': Result := #$3002;
+     //Special uses for standard chars. How do we type <>()[]{} then?
+      '<': Result := #$3008;
+      '>': Result := #$3009;
+      '(': Result := #$300C;
+      ')': Result := #$300D;
+      '[': Result := #$3016;
+      ']': Result := #$3017;
+      '{': Result := #$3010;
+      '}': Result := #$3011;
+    else Result := c;
+    end;
+  end;
+
+ //In any case, honor fullwidth preference
+  if sbFullwidth.Down then begin
+   //Two char blocks are equal: 0021..007E <-> FF01..FF5E
+    if (Ord(Result)>$0020) and (Ord(Result)<$0080) then
+      Result := Chr(Ord(Result)-$0020+$FF00)
+    else
+    if Ord(Result)=$0020 then
+      Result := #$3000;
+   //Add any additional HW->FW transformations here.
+  end;
+end;
 
 procedure TfEditor.RefreshLines;
 begin
