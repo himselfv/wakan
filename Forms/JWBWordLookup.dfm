@@ -20,27 +20,27 @@ inherited fWordLookup: TfWordLookup
     ExplicitTop = 223
     ExplicitWidth = 681
     inherited btnGoToVocab: TSpeedButton
-      Left = 413
+      Left = 290
       ExplicitLeft = 413
       ExplicitTop = 26
     end
     inherited btnAddToVocab: TSpeedButton
-      Left = 507
+      Left = 384
       ExplicitLeft = 507
       ExplicitTop = 26
     end
     inherited btnCopyToClipboard: TSpeedButton
-      Left = 601
+      Left = 478
       ExplicitLeft = 601
       ExplicitTop = 26
     end
     object SpeedButton6: TSpeedButton
-      Left = 0
+      Left = 558
       Top = 0
       Width = 123
       Height = 22
       Hint = '#00650^eCharacters in word'
-      Align = alLeft
+      Align = alRight
       AllowAllUp = True
       GroupIndex = 6
       Caption = '#00651^eChar. in word'
@@ -53,10 +53,10 @@ inherited fWordLookup: TfWordLookup
       ParentShowHint = False
       ShowHint = True
       OnClick = SpeedButton6Click
-      ExplicitLeft = 8
+      ExplicitLeft = 607
     end
     object SpeedButton9: TSpeedButton
-      Left = 123
+      Left = 0
       Top = 0
       Width = 130
       Height = 22
@@ -441,7 +441,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800B80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800BC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -25,6 +25,7 @@ object fWordKanji: TfWordKanji
     Height = 79
     Align = alClient
     Shape = bsFrame
+    Visible = False
     ExplicitHeight = 605
   end
   object Label2: TLabel

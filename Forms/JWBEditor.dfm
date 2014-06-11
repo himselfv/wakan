@@ -28,20 +28,23 @@ object fEditor: TfEditor
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel: TPanel
-    Left = 0
-    Top = 157
-    Width = 796
-    Height = 23
+    AlignWithMargins = True
+    Left = 3
+    Top = 155
+    Width = 790
+    Height = 22
     Align = alBottom
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
     object lblControlsHint: TLabel
       AlignWithMargins = True
-      Left = 139
-      Top = 3
-      Width = 511
-      Height = 17
+      Left = 133
+      Top = 1
+      Width = 517
+      Height = 21
+      Margins.Top = 1
+      Margins.Bottom = 0
       Align = alClient
       AutoSize = False
       Caption = 
@@ -54,11 +57,10 @@ object fEditor: TfEditor
       ExplicitHeight = 13
     end
     object btnKanjiDetails: TSpeedButton
-      AlignWithMargins = True
-      Left = 656
-      Top = 3
+      Left = 653
+      Top = 0
       Width = 137
-      Height = 17
+      Height = 22
       Hint = '#00629^eShow character details (Ctrl-D)'
       Align = alRight
       AllowAllUp = True
@@ -74,15 +76,13 @@ object fEditor: TfEditor
       ShowHint = True
       OnClick = btnKanjiDetailsClick
       ExplicitLeft = 664
-      ExplicitTop = 0
       ExplicitHeight = 23
     end
     object sbDockDictionary: TSpeedButton
-      AlignWithMargins = True
-      Left = 3
-      Top = 3
+      Left = 0
+      Top = 0
       Width = 130
-      Height = 17
+      Height = 22
       Hint = '#00628^eShow dictionary tool as part of this window'
       Align = alLeft
       AllowAllUp = True
@@ -97,8 +97,6 @@ object fEditor: TfEditor
       ParentShowHint = False
       ShowHint = True
       OnClick = sbDockDictionaryClick
-      ExplicitLeft = 0
-      ExplicitTop = 0
       ExplicitHeight = 23
     end
   end
@@ -349,7 +347,7 @@ object fEditor: TfEditor
     Left = 0
     Top = 26
     Width = 796
-    Height = 131
+    Height = 126
     Cursor = crIBeam
     Align = alClient
     Color = clWhite
@@ -359,12 +357,13 @@ object fEditor: TfEditor
     OnDblClick = EditorPaintBoxDblClick
     OnMouseMove = EditorPaintBoxMouseMove
     OnMouseDown = EditorPaintBoxMouseDown
+    ExplicitHeight = 131
   end
   object EditorScrollBar: TScrollBar
     Left = 779
     Top = 27
     Width = 16
-    Height = 129
+    Height = 124
     Anchors = [akTop, akRight, akBottom]
     Kind = sbVertical
     PageSize = 0
@@ -410,7 +409,7 @@ object fEditor: TfEditor
     Left = 544
     Top = 48
     Bitmap = {
-      494C010111001500C80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010111001500CC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

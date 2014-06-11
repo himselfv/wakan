@@ -64,13 +64,15 @@ object fVocab: TfVocab
     object TopPanel: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 3
+      Top = 0
       Width = 767
       Height = 22
+      Margins.Top = 0
       Align = alTop
       BevelOuter = bvNone
       FullRepaint = False
       TabOrder = 0
+      ExplicitTop = 3
       object RxLabel1: TLabel
         Left = 0
         Top = 0
@@ -194,9 +196,9 @@ object fVocab: TfVocab
     end
     object BlankPanel: TBlankPanel
       Left = 0
-      Top = 28
+      Top = 25
       Width = 773
-      Height = 396
+      Height = 399
       Align = alClient
       TextLeft = 14
       TextTop = 16
@@ -209,14 +211,13 @@ object fVocab: TfVocab
       ExplicitLeft = 10
       ExplicitTop = 26
       ExplicitWidth = 753
-      ExplicitHeight = 399
     end
     object StringGrid1: TWakanGrid
       AlignWithMargins = True
       Left = 1
-      Top = 29
+      Top = 26
       Width = 771
-      Height = 394
+      Height = 397
       Margins.Left = 1
       Margins.Top = 1
       Margins.Right = 1
@@ -241,7 +242,6 @@ object fVocab: TfVocab
       ExplicitLeft = 11
       ExplicitTop = 27
       ExplicitWidth = 751
-      ExplicitHeight = 397
       ColWidths = (
         110
         138

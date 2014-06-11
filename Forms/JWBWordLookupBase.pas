@@ -24,6 +24,7 @@ type
     miAfterLookupIn: TMenuItem;
     BlankPanel: TBlankPanel;
     StringGrid: TWakanWordGrid;
+    N1: TMenuItem;
     procedure pmPopupPopup(Sender: TObject);
     procedure miResetColumnsClick(Sender: TObject);
     procedure StringGridDrawCell(Sender: TObject; ACol, ARow: Integer;
