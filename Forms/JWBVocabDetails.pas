@@ -60,6 +60,8 @@ type
     procedure edtMeaningKeyPress(Sender: TObject; var Key: Char);
     procedure FormResize(Sender: TObject);
     procedure ScrollBox1Resize(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 
   protected
     cl:TStringList; //cached instance
@@ -79,13 +81,19 @@ var
 
 implementation
 uses TextTable, JWBLanguage, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
-  JWBVocabFilters, JWBCategories;
+  JWBVocabFilters, JWBCategories, JWBForms;
 
 {$R *.DFM}
 
 procedure TfVocabDetails.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(cl);
+end;
+
+procedure TfVocabDetails.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  HandleScrollboxMouseWheel(Sender, Shift, WheelDelta, MousePos, Handled);
 end;
 
 procedure TfVocabDetails.Reset;

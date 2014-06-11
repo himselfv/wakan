@@ -6,7 +6,7 @@ unit JWBForms;
  If clear: Use ugly but proven and safe solution with form blinking. }
 
 interface
-uses Types, Forms, Graphics, Controls, ExtCtrls, Messages;
+uses Types, Classes, Forms, Graphics, Controls, ExtCtrls, Messages;
 
 {
 Docking guide.
@@ -102,6 +102,20 @@ function SafeRearrange(AForm: TForm): TSafeRearrangeHelper;
 
 
 {
+Scrollbox does not support mouse wheel nor even focus, so you have to handle it
+manually.
+Usage:
+  procedure FormMouseWheel(...);
+  begin
+    HandleScrollboxMouseWheel(...);
+  end;
+}
+
+procedure HandleScrollboxMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+
+
+{
 Common form ancestor for Wakan.
 You don't *have* to inherit from TJwbForm but it does give you some benefits:
  1. Automatic translation on creation.
@@ -115,7 +129,7 @@ type
   end;
 
 implementation
-uses Classes, JWBLanguage;
+uses Windows, JWBLanguage;
 
 type
   TComponentHack = class helper for TComponent
@@ -284,6 +298,81 @@ begin
   end;
  {$ENDIF}
 end;
+
+
+
+//Tests if the mouse is pointing at a window, or at a child of that window etc.
+function PointingAt(AHwnd: HWND; const APoint: TPoint): boolean;
+var ACurHwnd: HWND;
+begin
+  ACurHwnd := WindowFromPoint(mouse.CursorPos);
+  while ACurHwnd<>0 do
+    if ACurHwnd=AHwnd then begin
+      Result := true;
+      exit;
+    end else
+      ACurHwnd := GetParent(ACurHwnd);
+  Result := false;
+end;
+
+function FindControlAt(APos: TPoint; AllowDisabled: boolean = false): TControl; overload;
+var wctl: TWinControl;
+begin
+  wctl := FindVCLWindow(APos);
+  if wctl=nil then begin
+    Result := nil;
+    exit;
+  end;
+
+  APos := wctl.ScreenToClient(APos);
+  Result := wctl.ControlAtPos(APos, AllowDisabled);
+  while (Result<>nil) and (Result is TWinControl) do begin
+    wctl := TWinControl(Result);
+    APos := wctl.ParentToClient(APos);
+    Result := wctl.ControlAtPos(APos, AllowDisabled);
+  end;
+
+  if Result=nil then
+    Result := wctl;
+end;
+
+type
+  CControl = class of TControl;
+
+function FindControlAt(APos: TPoint; AClass: CControl; AllowDisabled: boolean = false): TControl; overload;
+begin
+  Result := FindControlAt(APos, AllowDisabled);
+  while (Result<>nil) and not (Result is AClass) do
+    Result := Result.Parent;
+end;
+
+procedure HandleScrollboxMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+var msg, code, i, n: integer;
+  ctl: TControl;
+begin
+  ctl := FindControlAt(MousePos, TScrollingWinControl); //mouse.CursorPos?
+  if ctl=nil then exit;
+
+  Handled := true;
+  if ssShift in Shift Then
+    msg := WM_HSCROLL
+  else
+    msg := WM_VSCROLL;
+
+  if WheelDelta < 0 then begin
+    code := SB_LINEDOWN;
+    WheelDelta := -WheelDelta;
+  end else
+    code := SB_LINEUP;
+
+  n := 3* Mouse.WheelScrollLines * (WheelDelta div WHEEL_DELTA);
+  for i := 1 to n do
+    TScrollingWinControl(ctl).Perform(msg, code, 0);
+  TScrollingWinControl(ctl).Perform(msg, SB_ENDSCROLL, 0);
+end;
+
+
 
 procedure TJwbForm.DoCreate;
 begin

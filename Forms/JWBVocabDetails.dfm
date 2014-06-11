@@ -16,6 +16,7 @@ object fVocabDetails: TfVocabDetails
   Scaled = False
   OnClose = FormClose
   OnDestroy = FormDestroy
+  OnMouseWheel = FormMouseWheel
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
@@ -222,6 +223,7 @@ object fVocabDetails: TfVocabDetails
           Top = 25
           Width = 248
           Height = 29
+          Anchors = [akLeft, akTop, akRight]
           Color = clWhite
           OnPaint = pbKanjiPaint
           OnMouseMove = pbKanjiMouseMove
