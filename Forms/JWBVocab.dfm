@@ -25,6 +25,7 @@ object fVocab: TfVocab
     Height = 455
     Align = alRight
     AutoSnap = False
+    Visible = False
     ExplicitLeft = 768
     ExplicitTop = -6
   end
@@ -55,28 +56,27 @@ object fVocab: TfVocab
       Cursor = crVSplit
       Align = alBottom
       AutoSnap = False
+      Visible = False
       ExplicitLeft = 770
       ExplicitTop = 0
       ExplicitWidth = 455
     end
-    object Panel3: TPanel
-      Left = 0
-      Top = 0
-      Width = 773
-      Height = 452
-      Align = alClient
-      BevelInner = bvRaised
-      BevelOuter = bvLowered
+    object TopPanel: TPanel
+      AlignWithMargins = True
+      Left = 3
+      Top = 3
+      Width = 767
+      Height = 22
+      Align = alTop
+      BevelOuter = bvNone
       FullRepaint = False
       TabOrder = 0
-      DesignSize = (
-        773
-        452)
       object RxLabel1: TLabel
-        Left = 8
-        Top = 5
+        Left = 0
+        Top = 0
         Width = 183
-        Height = 16
+        Height = 22
+        Align = alLeft
         Caption = '#00828^eVocabulary list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -84,77 +84,18 @@ object fVocab: TfVocab
         Font.Name = 'Verdana'
         Font.Style = [fsBold]
         ParentFont = False
+        Layout = tlCenter
+        ExplicitLeft = 8
+        ExplicitTop = 5
+        ExplicitHeight = 16
       end
-      object SpeedButton1: TSpeedButton
-        Left = 10
-        Top = 429
-        Width = 138
-        Height = 17
-        Hint = '#00829^eAdd word'
-        AllowAllUp = True
-        Anchors = [akLeft, akBottom]
-        GroupIndex = 1
-        Caption = '#00315^eExamples'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SpeedButton1Click
-        ExplicitTop = 432
-      end
-      object SpeedButton2: TSpeedButton
-        Left = 154
-        Top = 429
-        Width = 138
-        Height = 17
-        Hint = '#00830^eList settings'
-        AllowAllUp = True
-        Anchors = [akLeft, akBottom]
-        GroupIndex = 2
-        Caption = '#00830^eList settings'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SpeedButton2Click
-        ExplicitTop = 432
-      end
-      object SpeedButton4: TSpeedButton
-        Left = 298
-        Top = 429
-        Width = 159
-        Height = 17
-        Hint = '#00832^eWord details'
-        AllowAllUp = True
-        Anchors = [akLeft, akBottom]
-        GroupIndex = 4
-        Caption = '#00832^eWord details'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        OnClick = SpeedButton4Click
-        ExplicitTop = 432
-      end
-      object Button15: TButton
-        Left = 688
-        Top = 5
+      object btnPrintVocabList: TButton
+        Left = 621
+        Top = 0
         Width = 75
-        Height = 21
+        Height = 22
         Hint = '#00835^ePrint vocabulary list (Ctrl-F8)'
-        Anchors = [akTop, akRight]
+        Align = alRight
         Caption = '#00382^ePrint'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -163,17 +104,20 @@ object fVocab: TfVocab
         Font.Style = []
         ParentFont = False
         TabOrder = 0
-        OnClick = Button15Click
+        OnClick = btnPrintVocabListClick
+        ExplicitLeft = 688
+        ExplicitTop = 5
+        ExplicitHeight = 21
       end
-      object Button18: TButton
-        Left = 568
-        Top = 5
+      object btnRecommendKanji: TButton
+        Left = 391
+        Top = 0
         Width = 119
-        Height = 21
+        Height = 22
         Hint = 
           '#00836^eRecommend characters for learning based on current vocab' +
           'ulary'
-        Anchors = [akTop, akRight]
+        Align = alRight
         Caption = '#00837^eRecommend kanji'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -182,15 +126,18 @@ object fVocab: TfVocab
         Font.Style = []
         ParentFont = False
         TabOrder = 1
-        OnClick = Button18Click
+        OnClick = btnRecommendKanjiClick
+        ExplicitLeft = 568
+        ExplicitTop = 5
+        ExplicitHeight = 21
       end
-      object Button19: TButton
-        Left = 457
-        Top = 5
+      object btnLearningList: TButton
+        Left = 510
+        Top = 0
         Width = 111
-        Height = 21
+        Height = 22
         Hint = '#00838^eAutomatically generate learning list'
-        Anchors = [akTop, akRight]
+        Align = alRight
         Caption = '#00839^eLearning list'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -199,15 +146,18 @@ object fVocab: TfVocab
         Font.Style = []
         ParentFont = False
         TabOrder = 2
-        OnClick = Button19Click
+        OnClick = btnLearningListClick
+        ExplicitLeft = 457
+        ExplicitTop = 5
+        ExplicitHeight = 21
       end
-      object Button2: TButton
-        Left = 386
-        Top = 5
+      object btnAddWord: TButton
+        Left = 696
+        Top = 0
         Width = 71
-        Height = 21
+        Height = 22
         Hint = '#00936^eAdd to vocabulary'
-        Anchors = [akTop, akRight]
+        Align = alRight
         Caption = '#00534^eAdd...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -216,50 +166,10 @@ object fVocab: TfVocab
         Font.Style = []
         ParentFont = False
         TabOrder = 3
-        OnClick = Button2Click
-      end
-      object BlankPanel1: TBlankPanel
-        Left = 10
-        Top = 26
-        Width = 753
-        Height = 399
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        TextLeft = 14
-        TextTop = 16
-        Text = '#00155^eNo words were found.'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -16
-        Font.Name = 'Arial'
-        Font.Style = [fsBold]
-      end
-      object StringGrid1: TWakanGrid
-        Left = 11
-        Top = 27
-        Width = 751
-        Height = 397
-        Anchors = [akLeft, akTop, akRight, akBottom]
-        BorderStyle = bsNone
-        ColCount = 4
-        DefaultRowHeight = 16
-        DefaultDrawing = False
-        FixedCols = 0
-        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
-        PopupMenu = PopupMenu1
-        TabOrder = 5
-        OnClick = StringGrid1Click
-        OnDrawCell = StringGrid1DrawCell
-        OnKeyPress = StringGrid1KeyPress
-        OnMouseDown = StringGrid1MouseDown
-        OnMouseMove = StringGrid1MouseMove
-        OnMouseUp = StringGrid1MouseUp
-        OnSelectCell = StringGrid1SelectCell
-        OnControlWidthResize = StringGrid1ControlResize
-        ColWidths = (
-          110
-          138
-          306
-          159)
+        OnClick = btnAddWordClick
+        ExplicitLeft = 386
+        ExplicitTop = 5
+        ExplicitHeight = 21
       end
     end
     object pnlDockDetails: TPanel
@@ -281,6 +191,140 @@ object fVocab: TfVocab
       BevelOuter = bvNone
       FullRepaint = False
       TabOrder = 2
+    end
+    object BlankPanel: TBlankPanel
+      Left = 0
+      Top = 28
+      Width = 773
+      Height = 396
+      Align = alClient
+      TextLeft = 14
+      TextTop = 16
+      Text = '#00155^eNo words were found.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Arial'
+      Font.Style = [fsBold]
+      ExplicitLeft = 10
+      ExplicitTop = 26
+      ExplicitWidth = 753
+      ExplicitHeight = 399
+    end
+    object StringGrid1: TWakanGrid
+      AlignWithMargins = True
+      Left = 1
+      Top = 29
+      Width = 771
+      Height = 394
+      Margins.Left = 1
+      Margins.Top = 1
+      Margins.Right = 1
+      Margins.Bottom = 1
+      Align = alClient
+      BorderStyle = bsNone
+      ColCount = 4
+      DefaultRowHeight = 16
+      DefaultDrawing = False
+      FixedCols = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goColSizing, goRowSelect, goThumbTracking]
+      PopupMenu = PopupMenu1
+      TabOrder = 4
+      OnClick = StringGrid1Click
+      OnDrawCell = StringGrid1DrawCell
+      OnKeyPress = StringGrid1KeyPress
+      OnMouseDown = StringGrid1MouseDown
+      OnMouseMove = StringGrid1MouseMove
+      OnMouseUp = StringGrid1MouseUp
+      OnSelectCell = StringGrid1SelectCell
+      OnControlWidthResize = StringGrid1ControlResize
+      ExplicitLeft = 11
+      ExplicitTop = 27
+      ExplicitWidth = 751
+      ExplicitHeight = 397
+      ColWidths = (
+        110
+        138
+        306
+        159)
+    end
+    object BottomPanel: TPanel
+      AlignWithMargins = True
+      Left = 3
+      Top = 427
+      Width = 767
+      Height = 22
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 5
+      object btnExamples: TSpeedButton
+        Left = 0
+        Top = 0
+        Width = 138
+        Height = 22
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 1
+        Caption = '#00315^eExamples'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnExamplesClick
+        ExplicitLeft = 8
+        ExplicitTop = 8
+        ExplicitHeight = 17
+      end
+      object btnListSettings: TSpeedButton
+        Left = 629
+        Top = 0
+        Width = 138
+        Height = 22
+        Hint = '#00830^eList settings'
+        Align = alRight
+        AllowAllUp = True
+        GroupIndex = 2
+        Caption = '#00830^eList settings'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnListSettingsClick
+        ExplicitLeft = 152
+        ExplicitTop = 8
+        ExplicitHeight = 17
+      end
+      object btnWordDetails: TSpeedButton
+        Left = 138
+        Top = 0
+        Width = 159
+        Height = 22
+        Hint = '#00832^eWord details'
+        Align = alLeft
+        AllowAllUp = True
+        GroupIndex = 4
+        Caption = '#00832^eWord details'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        OnClick = btnWordDetailsClick
+        ExplicitLeft = 296
+        ExplicitTop = 8
+        ExplicitHeight = 17
+      end
     end
   end
   object OpenDialog1: TOpenDialog

@@ -264,7 +264,7 @@ end;
 procedure TfVocabDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fVocab.SpeedButton4.Down:=false;
+  fVocab.btnWordDetails.Down:=false;
   fMenu.aUserDetails.Checked:=false;
 end;
 

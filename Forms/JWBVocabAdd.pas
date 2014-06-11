@@ -143,7 +143,7 @@ end;
 
 procedure TfVocabAdd.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  fVocab.SpeedButton1.Down:=false;
+  fVocab.btnExamples.Down:=false;
   fMenu.aUserAdd.Checked:=false;
 end;
 

@@ -1676,7 +1676,7 @@ end;
 procedure TfMenu.aUserAddExecute(Sender: TObject);
 begin
   if fVocab.Visible then
-    fVocab.Button2Click(Sender)
+    fVocab.btnAddWordClick(Sender)
   else
   if fWordLookup.Visible then
     fWordLookup.btnAddToVocabClick(Sender)
@@ -1699,7 +1699,7 @@ begin
   if fVocabFilters<>nil then
     ToggleForm(fVocabFilters, aUserSettings.Checked);
   if fVocab<>nil then
-    fVocab.SpeedButton2.Down := aUserSettings.Checked;
+    fVocab.btnListSettings.Down := aUserSettings.Checked;
 end;
 
 procedure TfMenu.aUserDetailsExecute(Sender: TObject);
@@ -1714,17 +1714,17 @@ end;
 procedure TfMenu.aUserDetailsChecked(Sender: TObject);
 begin
   ToggleForm(fVocabDetails, aUserDetails.Checked);
-  fVocab.SpeedButton4.Down := aUserDetails.Checked;
+  fVocab.btnWordDetails.Down := aUserDetails.Checked;
 end;
 
 procedure TfMenu.aUserPrintExecute(Sender: TObject);
 begin
-  fVocab.Button15Click(sender);
+  fVocab.btnPrintVocabListClick(sender);
 end;
 
 procedure TfMenu.aUserGenerateExecute(Sender: TObject);
 begin
-  fVocab.Button19Click(sender);
+  fVocab.btnLearningListClick(sender);
 end;
 
 procedure TfMenu.aSettingsExecute(Sender: TObject);
@@ -2128,11 +2128,16 @@ begin
     else
       Result:=DockProc(fWordKanji,fWordLookup.CharInWordDock,alRight,dock)
   else
-  if form=fVocabFilters then
-    if aPortraitMode.Checked then
-      Result:=DockProc(fVocabFilters,fVocab.pnlDockFilters,alBottom,dock)
-    else
-      Result:=DockProc(fVocabFilters,fVocab.pnlDockFilters,alRight,dock)
+  if form=fVocabFilters then begin
+    fVocab.splDockFilters.Visible := dock;
+    if aPortraitMode.Checked then begin
+      Result:=DockProc(fVocabFilters,fVocab.pnlDockFilters,alBottom,dock);
+      fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
+    end else begin
+      Result:=DockProc(fVocabFilters,fVocab.pnlDockFilters,alRight,dock);
+      fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
+    end;
+  end
   else
   if form=fVocabDetails then begin
     Result:=DockProc(fVocabDetails,fVocab.pnlDockDetails,alBottom,dock);
@@ -2953,7 +2958,7 @@ procedure TfMenu.aUserExamplesChecked(Sender: TObject);
 begin
 //  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
-  fVocab.SpeedButton1.Down := aUserExamples.Checked;
+  fVocab.btnExamples.Down := aUserExamples.Checked;
 end;
 
 procedure TfMenu.miSaveCharactersToFileClick(

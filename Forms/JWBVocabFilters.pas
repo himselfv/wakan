@@ -62,7 +62,7 @@ end;
 procedure TfVocabFilters.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fVocab.SpeedButton2.Down:=false;
+  fVocab.btnListSettings.Down:=false;
   fMenu.aUserSettings.Checked:=false;
 end;
 

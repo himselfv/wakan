@@ -15,23 +15,24 @@ type
     SaveDialog1: TSaveDialog;
     pnlDockFilters: TPanel;
     Panel1: TPanel;
-    Panel3: TPanel;
+    TopPanel: TPanel;
     RxLabel1: TLabel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
-    SpeedButton4: TSpeedButton;
-    Button15: TButton;
-    Button18: TButton;
-    Button19: TButton;
+    btnPrintVocabList: TButton;
+    btnRecommendKanji: TButton;
+    btnLearningList: TButton;
     pnlDockDetails: TPanel;
     pnlDockExamples: TPanel;
-    Button2: TButton;
+    btnAddWord: TButton;
     PopupMenu1: TPopupMenu;
     miResetColumns: TMenuItem;
     splDockFilters: TSplitter;
     splDockDetails: TSplitter;
-    BlankPanel1: TBlankPanel;
+    BlankPanel: TBlankPanel;
     StringGrid1: TWakanGrid;
+    BottomPanel: TPanel;
+    btnExamples: TSpeedButton;
+    btnListSettings: TSpeedButton;
+    btnWordDetails: TSpeedButton;
     procedure FormShow(Sender: TObject);
     procedure StringGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
       Rect: TRect; State: TGridDrawState);
@@ -43,16 +44,16 @@ type
     procedure Button11Click(Sender: TObject);
     procedure Button12Click(Sender: TObject);
     procedure ListBox1Click(Sender: TObject);
-    procedure Button15Click(Sender: TObject);
-    procedure Button18Click(Sender: TObject);
+    procedure btnPrintVocabListClick(Sender: TObject);
+    procedure btnRecommendKanjiClick(Sender: TObject);
     procedure StringGrid1KeyPress(Sender: TObject; var Key: Char);
-    procedure Button19Click(sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
+    procedure btnLearningListClick(sender: TObject);
+    procedure btnExamplesClick(Sender: TObject);
+    procedure btnListSettingsClick(Sender: TObject);
+    procedure btnWordDetailsClick(Sender: TObject);
     procedure StringGrid1MouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure Button2Click(Sender: TObject);
+    procedure btnAddWordClick(Sender: TObject);
     procedure StringGrid1MouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure StringGrid1Click(Sender: TObject);
@@ -287,8 +288,8 @@ begin
   cl.Free;
   sl.Free;
   WordListCount:=wl.Count;
-  Button18.Enabled:=StringGrid1.Visible;
-  Button19.Enabled:=StringGrid1.Visible;
+  btnRecommendKanji.Enabled:=StringGrid1.Visible;
+  btnLearningList.Enabled:=StringGrid1.Visible;
   if StringGrid1.Visible then StringGrid1.SetFocus;
 end;
 
@@ -1126,7 +1127,7 @@ begin
   PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,ACaption);
 end;
 
-procedure TfVocab.Button15Click(Sender: TObject);
+procedure TfVocab.btnPrintVocabListClick(Sender: TObject);
 begin
   PrintList(_l('#00828^eVocabulary list'));
 end;
@@ -1328,7 +1329,7 @@ begin
 end;
 
 //TODO: Convert to Unicode.
-procedure TfVocab.Button18Click(Sender: TObject);
+procedure TfVocab.btnRecommendKanjiClick(Sender: TObject);
 var csl:TStringList;
     i,j,k:integer;
     s,s2:string;
@@ -1424,7 +1425,7 @@ begin
   if (key='.') and (fVocabDetails.btnMoveDownInCategory.Enabled) and (fVocabDetails.btnMoveDownInCategory.Visible) then MoveWordsInCategory(mdDown);
 end;
 
-procedure TfVocab.Button19Click(Sender: TObject);
+procedure TfVocab.btnLearningListClick(Sender: TObject);
 var fWordList: TfWordList;
   lname:string;
   i:integer;
@@ -1443,17 +1444,17 @@ begin
   ShowIt(false);
 end;
 
-procedure TfVocab.SpeedButton1Click(Sender: TObject);
+procedure TfVocab.btnExamplesClick(Sender: TObject);
 begin
   fMenu.aUserExamples.Execute;
 end;
 
-procedure TfVocab.SpeedButton2Click(Sender: TObject);
+procedure TfVocab.btnListSettingsClick(Sender: TObject);
 begin
   fMenu.aUserSettings.Execute;
 end;
 
-procedure TfVocab.SpeedButton4Click(Sender: TObject);
+procedure TfVocab.btnWordDetailsClick(Sender: TObject);
 begin
   fMenu.aUserDetails.Execute;
 end;
@@ -1464,7 +1465,7 @@ begin
   fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
-procedure TfVocab.Button2Click(Sender: TObject);
+procedure TfVocab.btnAddWordClick(Sender: TObject);
 begin
   fVocabAdd.ModalAddWord();
 end;
