@@ -430,6 +430,7 @@ type
     function TryReleaseCursorFromInsert: boolean;
     function NextSuggestion(const ANext: boolean): boolean;
     function ConvertImmediateChar(const c: char): char;
+    function ConvertImmediateChars(const str: FString): FString;
   public
     function GetInsertKana(const AType: TInsertKanaType): FString;
 
@@ -2929,6 +2930,8 @@ begin
     else
       Result:=fstr(FInputBuffer);
   end;
+ //Convert characters which weren't taken by kana parser
+  Result := ConvertImmediateChars(Result);
 end;
 
 { If the suggestion box is open, moves to the next/previous suggestions.
@@ -3169,6 +3172,15 @@ begin
       Result := #$3000;
    //Add any additional HW->FW transformations here.
   end;
+end;
+
+//Same but processes the whole string
+function TfEditor.ConvertImmediateChars(const str: FString): FString;
+var i: integer;
+begin
+  Result := '';
+  for i := 1 to flength(str) do
+    Result := Result + ConvertImmediateChar(fgetch(str, i));
 end;
 
 procedure TfEditor.RefreshLines;
