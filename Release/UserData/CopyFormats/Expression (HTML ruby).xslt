@@ -4,17 +4,19 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!--
-友船 [ともぶね]
+<ruby>友船<rt>ともぶね</rt></ruby>
 -->
 
 <xsl:template match="entry">
   <xsl:if test="preceding-sibling::node()[name()='entry']"><xsl:text>&#xA;</xsl:text></xsl:if>
+  <xsl:text>&lt;ruby&gt;</xsl:text>
   <xsl:apply-templates select="k_ele" />
   <xsl:if test="r_ele">
-    <xsl:text> [</xsl:text>
+    <xsl:text>&lt;rt&gt;</xsl:text>
     <xsl:apply-templates select="r_ele" />
-    <xsl:text>]</xsl:text>
+    <xsl:text>&lt;/rt&gt;</xsl:text>
   </xsl:if>
+  <xsl:text>&lt;/ruby&gt;</xsl:text>
 </xsl:template>
 
 <xsl:template match="k_ele/keb">

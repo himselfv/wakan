@@ -4,9 +4,9 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!--
-# Proper HTML definition list entry
-# <dt>伴船<span class=read>ともぶね</span></dt>
-# <dd><ol><li>consort ship</li><li>joint boarding, boarding a ship together</li></ol><cite>EDICT2</cite></dd>
+Proper HTML definition list entry
+  <dt>伴船<span class=read>ともぶね</span></dt>
+  <dd><ol><li>consort ship</li><li>joint boarding, boarding a ship together</li></ol><cite>EDICT2</cite></dd>
 marker=<%text>
 group=
 comment=(%text%)

@@ -5,9 +5,9 @@
 
 <!--
 EDICT-style single line:
-# 友船 [ともぶね] (1) consort ship / (2) joint boarding; boarding a ship together ——EDICT2
-# marker,group=<%text>
-# comment=(%text%)
+友船 [ともぶね] (1) consort ship / (2) joint boarding; boarding a ship together ——EDICT2
+marker,group=<%text>
+comment=(%text%)
 -->
 
 <!-- Expression -->

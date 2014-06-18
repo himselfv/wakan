@@ -4,10 +4,10 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!--
-# Single line with non-numbered senses
-# 伴船 [ともぶね] consort ship; joint boarding, boarding a ship together ——EDICT2
-# Markers and groups are ignored
-# comment=(%text%)
+Single line with non-numbered senses
+  伴船 [ともぶね] consort ship; joint boarding, boarding a ship together ——EDICT2
+Markers and groups are ignored
+comment=(%text%)
 -->
 
 <!-- Expression -->

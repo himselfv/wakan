@@ -4,12 +4,12 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!--
-# Breaks some of HTML rules - uses <rt> outside of <ruby> and <li> outside of list,
-# but it's shorter and it works anyway.
-# <dt>伴船<rt>ともぶね</rt></dt>
-# <dd><li>consort ship</li><li>joint boarding, boarding a ship together</li><cite>EDICT2</cite></dd>
-# Markers and groups are ignored.
-# comment=(%text%)
+Breaks some of HTML rules - uses <rt> outside of <ruby> and <li> outside of list,
+but it's shorter and it works anyway.
+  <dt>伴船<rt>ともぶね</rt></dt>
+  <dd><li>consort ship</li><li>joint boarding, boarding a ship together</li><cite>EDICT2</cite></dd>
+Markers and groups are ignored.
+comment=(%text%)
 -->
 
 <!-- Expression -->
