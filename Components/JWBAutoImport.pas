@@ -11,7 +11,7 @@ uses SysUtils, JWBStrings, JWBIO, JWBDic, JWBDictImport, JWBComponents;
 
 var
   ForceUpdates: boolean;
-  ForceUpdateList: TFileList; //if empty + ForceUpdates, force for any file
+  ForceUpdateList: TFileList; //only file names. If empty + ForceUpdates, force for any file
 
 {
 Imports all known dictionaries (EDICT/EDICT2/CEDICT/etc).
@@ -49,8 +49,8 @@ uses Classes, Forms, Windows, MemSource, JWBCore, JWBLanguage, JWBCommandLine,
 
 var
  //Don't check the same dictionary twice
-  AutoUpdateChecked: TFilenameList;
-  AutoUpdateImported: TFilenameList;
+  AutoUpdateChecked: TFilenameList; //absolute paths
+  AutoUpdateImported: TFilenameList; //absolute paths
 
 {
 sourceFname: file name
@@ -101,7 +101,7 @@ var targetFname: string;
 begin
   fname := item.GetAbsoluteTarget;
   if (fname='') or not FileExists(fname) then exit;
-  targetFname := MakeDicFilename(item.Name);
+  targetFname := DictionaryDir + '\' + MakeDicFilename(item.Name);
 
   lang := item.BaseLanguage;
 
@@ -214,25 +214,25 @@ end;
  Uses WORDFREQ_CK, so call after any auto-conversions related to it. }
 procedure AutoUpdate(dic: TJaletDic);
 var i: integer;
-  fname: string;
   files: TFileList;
   missing: TFileList; //list of missing sources for current dic
   needupdate: TFileList; //list of sources which need update
-  lang: char;
   parts: TStringArray;
   wasloaded: boolean;
-  pname_folder: string; //folder where dic is located -- look here first, if non-empty
+  dic_folder: string; //folder where dic is located -- look here first, if non-empty
+  dic_fname: string;
+  dic_lang: char;
 begin
   if dic.sources=nil then exit; //sources not supported, can't update
    //this is silent, because the user doesn't expect us to even try and update older dics anyway
-  if IsFileInList(dic.pname, AutoUpdateChecked) then exit;
+  if IsFileInList(dic.Filename, AutoUpdateChecked) then exit;
 
-  pname_folder := ExtractFilePath(dic.pname);
+  dic_folder := ExtractFilePath(dic.Filename);
  //And trim, just in case
-  while (Length(pname_folder)>1) and (pname_folder[1]='\') do
-    pname_folder := copy(pname_folder,2,Length(pname_folder)-1);
-  while (Length(pname_folder)>1) and (pname_folder[Length(pname_folder)-1]='\') do
-    pname_folder := copy(pname_folder,1,Length(pname_folder)-1);
+  while (Length(dic_folder)>1) and (dic_folder[1]='\') do
+    dic_folder := copy(dic_folder,2,Length(dic_folder)-1);
+  while (Length(dic_folder)>1) and (dic_folder[Length(dic_folder)-1]='\') do
+    dic_folder := copy(dic_folder,1,Length(dic_folder)-1);
  //It's not the end of the world if something's left; we'll just check the same dir twice
 
   SetLength(files, 0);
@@ -246,8 +246,8 @@ begin
     end;
 
    //If the package was from another folder, first look in that another folder
-    if (pname_folder<>'') and FileExists(pname_folder+'\'+parts[0]) then
-      parts[0] := pname_folder+'\'+parts[0] //this fixed path will be added to file list
+    if (dic_folder<>'') and FileExists(dic_folder+'\'+parts[0]) then
+      parts[0] := dic_folder+'\'+parts[0] //this fixed path will be added to file list
     else
     if not FileExists(parts[0]) then begin
       AddFilename(missing, parts[0]);
@@ -260,10 +260,11 @@ begin
     AddFilename(files, parts[0]);
   end;
 
-  if ForceUpdates and ((Length(ForceUpdateList)<=0) or IsFileInList(dic.pname, ForceUpdateList)) then
+  if ForceUpdates and ((Length(ForceUpdateList)<=0)
+    or IsFileInList(ExtractFilename(dic.Filename), ForceUpdateList)) then
     needUpdate := files; //everything needs update!
 
-  AddFilename(AutoUpdateChecked, dic.pname);
+  AddFilename(AutoUpdateChecked, dic.Filename);
   if Length(needUpdate)<=0 then
     exit; //nothing to update
 
@@ -283,7 +284,7 @@ begin
           +'%2:s'#13#13
           +'Please locate all of these files and place into Wakan folder next '
           +'time before you run Wakan.',
-          [dic.pname,
+          [dic.Filename,
            FilenameListToString(needUpdate, #13),
            FilenameListToString(missing, #13)]
         )),
@@ -292,8 +293,8 @@ begin
     exit;
   end;
 
-  fname := dic.pname; //dic.pname might be lost while playing with dic
-  lang := dic.language;
+  dic_fname := dic.Filename; //dic.pname might be lost while playing with dic
+  dic_lang := dic.language;
   if fAutoImportForm=nil then
     Application.CreateForm(TfDictImport, fAutoImportForm);
 
@@ -302,19 +303,19 @@ begin
   wasloaded := dic.loaded;
   if wasloaded then
     dic.Unload;
-  Backup(fname);
+  Backup(dic_fname);
 
   try
-    fAutoImportForm.ImportDictionary(fname, dic.description, files, lang,
+    fAutoImportForm.ImportDictionary(dic_fname, dic.description, files, dic_lang,
       {Silent=}true);
-    AddFilename(AutoUpdateImported, fname);
+    AddFilename(AutoUpdateImported, dic_fname);
   except
     on E: EAbort do begin end; //do nothing, but the dictionary is not updated
   end;
 
  //Load it again (I pray that it works...)
   if wasloaded then begin
-    dic.FillInfo(fname);
+    dic.FillInfo(dic_fname);
     dic.Load;
   end;
 end;

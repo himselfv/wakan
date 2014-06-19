@@ -59,7 +59,6 @@ type
     builddate:TDateTime;
     version:string;
     dicver:integer;
-    name:string;
     description:string;
     language:char;
     priority:integer;
@@ -117,6 +116,7 @@ type
     stEntriesIndex: PSeekObject;
 
   protected
+    FFilename: string; //full path and name of active dictionary file
    {
    Word and character indexes.
    On v4 both are indexed by 4-byte sequences,
@@ -128,11 +128,11 @@ type
    }
     charidx: TIndex;
     wordidx: TIndex;
+    function GetName: string;
 
   public
     package:TPackageSource;
     loaded:boolean;
-    pname:string;
     demandloaded:boolean;
    {$IFDEF DIC_CURSOR_IN_TABLE}
     _intcur: TDicIndexReader;
@@ -152,6 +152,8 @@ type
     function NewCursor: TDicCursor;
     function NewLookup(AMatchType: TMatchType): TDicLookupCursor;
     function GetRecord(Index: integer): TDicCursor;
+    property Filename: string read FFilename;
+    property Name: string read GetName;
     property Offline: boolean read FOffline write FOffline;
     property LoadOnDemand: boolean read FLoadOnDemand write FLoadOnDemand; //if set, load the dictionary only on demand
     property OnLoadStart: TNotifyEvent read FOnLoadStart write FOnLoadStart;
@@ -537,14 +539,19 @@ begin
  {$ENDIF}
 end;
 
+function TJaletDic.GetName: string;
+begin
+  Result := ChangeFileExt(ExtractFilename(Self.Filename), '');
+end;
+
 { JaletDic cannot be loaded without calling this function at least once,
  because it sets pname.
  But just in case, we auto-FillInfo on load too, if it was not yet filled. }
 procedure TJaletDic.FillInfo(const APackageFile:string);
 var ps:TPackageSource;
 begin
-  pname:=APackageFile;
-  ps:=TPackageSource.Create(pname,791564,978132,978123);
+  FFilename := APackageFile;
+  ps:=TPackageSource.Create(Filename,791564,978132,978123);
   try
     FillInfo(ps);
   finally
@@ -575,7 +582,7 @@ begin
 
     builddate:=StrToInt(vs[2]);
     version:=vs[3];
-    name:=ChangeFileExt(Self.pname, ''); //vs[4]
+   //vs[4] contains Name which is deprecated (we use file name now)
     language:=vs[5][1];
     description:=DecodeInfoField(vs[6]);
     priority:=StrToInt(vs[7]);
@@ -615,9 +622,9 @@ begin
   if Assigned(FOnLoadStart) then
     FOnLoadStart(Self);
   try
-    package:=TPackageSource.Create(pname,791564,978132,978123);
+    package:=TPackageSource.Create(Filename,791564,978132,978123);
     if not tested then FillInfo(package); //although this shouldn't happen
-    if not tested then raise Exception.Create('Cannot load dictionary info for "'+pname+'"');
+    if not tested then raise Exception.Create('Cannot load dictionary info for "'+Filename+'"');
     TDict:=TTextTable.Create(package,'Dict',true,Self.Offline);
     TDictIndex:=TDict.Field('Index');
     if dicver=4 then

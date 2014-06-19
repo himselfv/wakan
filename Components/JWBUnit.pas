@@ -145,7 +145,7 @@ type
    {$ENDIF}
     procedure DicLoadException(Sender: TObject; E: Exception);
   public
-    function NewDict(const ADictName: string): TJaletDic;
+    function NewDict(const ADictFilename: string): TJaletDic;
     procedure Rescan(const AIncludeDisabled: boolean = false);
     procedure AutoUpgradeListed;
   end;
@@ -972,7 +972,8 @@ end;
 
 { Creates a new standardly configured dictionary object from a specified file.
 Applies all default settings such as Offline/LoadOnDemand per dict settings. }
-function TJaletDictionaryList.NewDict(const ADictName: string): TJaletDic;
+function TJaletDictionaryList.NewDict(const ADictFilename: string): TJaletDic;
+var ADictName: string;
 begin
   Result := TJaletDic.Create;
  {$IFNDEF NODICLOADPROMPT}
@@ -981,9 +982,10 @@ begin
  {$ENDIF}
   Result.OnLoadException := DicLoadException;
   Result.LoadOnDemand := fSettings.CheckBox49.Checked;
+  ADictName := ExtractFilename(ADictFilename);
   Result.Offline := dicts.IsInGroup(ADictName,GROUP_OFFLINE);
   try
-    Result.FillInfo(ADictName);
+    Result.FillInfo(ADictFilename);
   except
     Application.MessageBox(
       pchar(_l('#00321^eCannot register dictionary ')+ADictName+#13#13
@@ -1019,13 +1021,11 @@ end;
 procedure TJaletDictionaryList.Rescan(const AIncludeDisabled: boolean = false);
 var sr: TSearchRec;
   dic: TJaletDic;
-  baseDir: string;
   dicName: string;
 begin
   Self.Clear; //unload+delete all
    //time can probably be saved on not unloading/reloadings dicts which are fine
-  baseDir := DictionaryDir;
-  if FindFirst(baseDir+'\*.dic', faAnyFile, sr)<>0 then
+  if FindFirst(DictionaryDir+'\*.dic', faAnyFile, sr)<>0 then
     exit;
   repeat
     if not AIncludeDisabled then begin
@@ -1033,13 +1033,13 @@ begin
       if Self.IsInGroup(dicName, GROUP_NOTUSED) then continue;
     end;
 
-    dic := TJaletDictionaryList(dicts).NewDict(sr.name);
+    dic := TJaletDictionaryList(dicts).NewDict(DictionaryDir+'\'+sr.name);
     if not dic.tested then begin
       dic.Free;
       continue; //some kind of invalid dict
     end;
 
-    if Uppercase(dic.pname)='JALET.DIC'then
+    if Uppercase(ExtractFilename(dic.Filename))='JALET.DIC' then
       Application.MessageBox(
         pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
         pchar(_l('#00090^eWarning')),

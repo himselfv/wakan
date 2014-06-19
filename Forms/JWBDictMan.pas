@@ -161,7 +161,7 @@ begin
   dic:=dicts.Find(cbDicts.Items[cbDicts.ItemIndex]);
   FLoadingData := true;
   try
-    lblDicName.Caption := ChangeFileExt(ExtractFilename(dic.pname), ''); //We also have dic.name, but it's deprecated
+    lblDicName.Caption := ChangeFileExt(ExtractFilename(dic.Filename), ''); //We also have dic.name, but it's deprecated
 
     lblDescription.Caption := dic.description;
     if dic.version<>'' then
