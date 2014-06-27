@@ -3,7 +3,7 @@ object fEditor: TfEditor
   Top = 453
   BorderStyle = bsNone
   Caption = '#00610^eText editor / translator'
-  ClientHeight = 180
+  ClientHeight = 200
   ClientWidth = 796
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -24,19 +24,20 @@ object fEditor: TfEditor
   OnShow = FormShow
   DesignSize = (
     796
-    180)
+    200)
   PixelsPerInch = 96
   TextHeight = 13
   object Bevel: TPanel
     AlignWithMargins = True
     Left = 3
-    Top = 155
+    Top = 175
     Width = 790
     Height = 22
     Align = alBottom
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
+    ExplicitTop = 155
     object lblControlsHint: TLabel
       AlignWithMargins = True
       Left = 133
@@ -107,7 +108,7 @@ object fEditor: TfEditor
     Height = 26
     AutoSize = True
     BorderWidth = 1
-    ButtonWidth = 43
+    ButtonWidth = 167
     Images = ActionIcons
     List = True
     ShowCaptions = True
@@ -117,26 +118,23 @@ object fEditor: TfEditor
     DesignSize = (
       792
       22)
-    object sbFileNew: TToolButton
+    object btnFileNew: TToolButton
       Left = 0
       Top = 0
-      Hint = '#00613^eNew (Ctrl-N)'
-      ImageIndex = 0
-      OnClick = sbFileNewClick
+      Hint = '#00261^eNew'
+      Action = aNew
     end
-    object sbFileOpen: TToolButton
+    object btnFileOpen: TToolButton
       Left = 24
       Top = 0
-      Hint = '#00611^eOpen (Ctrl-O)'
-      ImageIndex = 1
-      OnClick = sbFileOpenClick
+      Hint = '#00262^eOpen...'
+      Action = aOpen
     end
-    object sbFileSave: TToolButton
+    object btnFileSave: TToolButton
       Left = 48
       Top = 0
-      Hint = '#00612^eSave (Ctrl-S)'
-      ImageIndex = 2
-      OnClick = sbFileSaveClick
+      Hint = '#00263^eSave'
+      Action = aSave
     end
     object ToolButton4: TToolButton
       Left = 72
@@ -146,26 +144,23 @@ object fEditor: TfEditor
       ImageIndex = 3
       Style = tbsSeparator
     end
-    object sbClipCut: TToolButton
+    object btnClipCut: TToolButton
       Left = 80
       Top = 0
-      Hint = '#00614^eCut (Ctrl-X)'
-      ImageIndex = 3
-      OnClick = sbClipCutClick
+      Hint = '#00265^eCut'
+      Action = aCut
     end
-    object sbClipCopy: TToolButton
+    object btnClipCopy: TToolButton
       Left = 104
       Top = 0
-      Hint = '#00624^eCopy (Ctrl-C)'
-      ImageIndex = 4
-      OnClick = sbClipCopyClick
+      Hint = '#00266^eCopy'
+      Action = aCopy
     end
-    object sbClipPaste: TToolButton
+    object btnClipPaste: TToolButton
       Left = 128
       Top = 0
-      Hint = '#00625^ePaste (Ctrl-V)'
-      ImageIndex = 5
-      OnClick = sbClipPasteClick
+      Hint = '#00267^ePaste'
+      Action = aPaste
     end
     object ToolButton8: TToolButton
       Left = 152
@@ -175,33 +170,29 @@ object fEditor: TfEditor
       ImageIndex = 6
       Style = tbsSeparator
     end
-    object sbKanjiMode: TToolButton
+    object btnKanjiMode: TToolButton
       Left = 160
       Top = 0
-      Hint = '#00616^eCharacter mode (Ctrl-Q)'
-      Down = True
+      Hint = '#00269^eCharacter mode'
+      Action = aKanjiMode
       Grouped = True
-      ImageIndex = 6
       Style = tbsCheck
-      OnClick = sbKanjiModeClick
     end
-    object sbKanaMode: TToolButton
+    object btnKanaMode: TToolButton
       Left = 184
       Top = 0
-      Hint = '#00617^eKana mode (Ctrl-W)'
+      Hint = '#00270^eKana mode'
+      Action = aKanaMode
       Grouped = True
-      ImageIndex = 7
       Style = tbsCheck
-      OnClick = sbKanaModeClick
     end
-    object sbAsciiMode: TToolButton
+    object btnAsciiMode: TToolButton
       Left = 208
       Top = 0
-      Hint = '#00615^eASCII mode (Ctrl-P)'
+      Hint = '#00271^eASCII mode'
+      Action = aASCIIMode
       Grouped = True
-      ImageIndex = 8
       Style = tbsCheck
-      OnClick = sbAsciiModeClick
     end
     object ToolButton1: TToolButton
       Left = 232
@@ -211,12 +202,11 @@ object fEditor: TfEditor
       ImageIndex = 16
       Style = tbsSeparator
     end
-    object sbFullwidth: TToolButton
+    object btnFullwidth: TToolButton
       Left = 240
       Top = 0
-      Hint = 'Full-width characters'
-      Down = True
-      ImageIndex = 16
+      Hint = '#01202^Full-width characters'
+      Action = aFullwidthLatin
       Style = tbsCheck
     end
     object ToolButton12: TToolButton
@@ -227,32 +217,29 @@ object fEditor: TfEditor
       ImageIndex = 9
       Style = tbsSeparator
     end
-    object sbDisplayReading: TToolButton
+    object btnDisplayReading: TToolButton
       Left = 272
       Top = 0
-      Hint = '#00618^eDisplay reading (Ctrl-H)'
+      Hint = '#00272^eDisplay reading'
+      Action = aDisplayReading
       AllowAllUp = True
-      ImageIndex = 9
       Style = tbsCheck
-      OnClick = sbDisplayReadingClick
     end
-    object sbDisplayMeaning: TToolButton
+    object btnDisplayMeaning: TToolButton
       Left = 296
       Top = 0
-      Hint = '#00619^eDisplay meaning (Ctrl-J)'
+      Hint = '#00273^eDisplay meaning'
+      Action = aDisplayMeaning
       AllowAllUp = True
-      ImageIndex = 10
       Style = tbsCheck
-      OnClick = sbDisplayMeaningClick
     end
-    object sbUseTlColors: TToolButton
+    object btnUseTlColors: TToolButton
       Left = 320
       Top = 0
-      Hint = '#00631^eShow translation state by colors'
+      Hint = '#00309^eUse colors'
+      Action = aUseColors
       AllowAllUp = True
-      ImageIndex = 11
       Style = tbsCheck
-      OnClick = sbUseTlColorsClick
     end
     object ToolButton16: TToolButton
       Left = 344
@@ -262,26 +249,23 @@ object fEditor: TfEditor
       ImageIndex = 12
       Style = tbsSeparator
     end
-    object sbClearTranslation: TToolButton
+    object btnClearTranslation: TToolButton
       Left = 352
       Top = 0
-      Hint = '#00620^eClear translation (Ctrl-B)'
-      ImageIndex = 12
-      OnClick = sbClearTranslationClick
+      Hint = '#00274^eClear translation'
+      Action = aTranslationClear
     end
-    object sbAutoTranslate: TToolButton
+    object btnAutoTranslate: TToolButton
       Left = 376
       Top = 0
-      Hint = '#00621^eAuto-fill translation (Ctrl-F)'
-      ImageIndex = 13
-      OnClick = sbAutoTranslateClick
+      Hint = '#00275^eAuto-fill translation'
+      Action = aTranslationFill
     end
-    object sbSetTranslation: TToolButton
+    object btnSetTranslation: TToolButton
       Left = 400
       Top = 0
-      Hint = '#00622^eSet translation (Ctrl-T)'
-      ImageIndex = 14
-      OnClick = sbSetTranslationClick
+      Hint = '#00276^eSet translation'
+      Action = aTranslationSet
     end
     object ToolButton20: TToolButton
       Left = 424
@@ -321,12 +305,11 @@ object fEditor: TfEditor
       ImageIndex = 16
       Style = tbsSeparator
     end
-    object sbPrint: TToolButton
+    object btnPrint: TToolButton
       Left = 508
       Top = 0
-      Hint = '#00623^ePrint (Ctrl-F7)'
-      ImageIndex = 15
-      OnClick = sbPrintClick
+      Hint = '#00277^ePrint...'
+      Action = aPrint
     end
     object ListBox1: TListBox
       Left = 532
@@ -347,7 +330,7 @@ object fEditor: TfEditor
     Left = 0
     Top = 26
     Width = 796
-    Height = 126
+    Height = 146
     Cursor = crIBeam
     Align = alClient
     Color = clWhite
@@ -357,17 +340,19 @@ object fEditor: TfEditor
     OnDblClick = EditorPaintBoxDblClick
     OnMouseMove = EditorPaintBoxMouseMove
     OnMouseDown = EditorPaintBoxMouseDown
+    ExplicitHeight = 126
   end
   object EditorScrollBar: TScrollBar
     Left = 779
     Top = 27
     Width = 16
-    Height = 124
+    Height = 144
     Anchors = [akTop, akRight, akBottom]
     Kind = sbVertical
     PageSize = 0
     TabOrder = 3
     OnChange = EditorScrollBarChange
+    ExplicitHeight = 124
   end
   object BlinkCursorTimer: TTimer
     Interval = 500
@@ -1080,58 +1065,74 @@ object fEditor: TfEditor
     Left = 328
     Top = 64
     object aNew: TAction
+      Category = 'File'
       Caption = '#00261^eNew'
       ImageIndex = 0
       ShortCut = 16462
       OnExecute = aNewExecute
     end
     object aOpen: TAction
+      Category = 'File'
       Caption = '#00262^eOpen...'
       ImageIndex = 1
       ShortCut = 16463
       OnExecute = aOpenExecute
     end
     object aSave: TAction
+      Category = 'File'
       Caption = '#00263^eSave'
       ImageIndex = 2
       ShortCut = 16467
       OnExecute = aSaveExecute
     end
     object aSaveAs: TAction
+      Category = 'File'
       Caption = '#00264^eSave as...'
       ImageIndex = 2
       OnExecute = aSaveAsExecute
     end
+    object aExport: TAction
+      Category = 'File'
+      Caption = '#01058^eExport as...'
+      ImageIndex = 2
+      OnExecute = aExportExecute
+    end
     object aCut: TAction
+      Category = 'Edit'
       Caption = '#00265^eCut'
       ImageIndex = 3
       ShortCut = 16472
       OnExecute = aCutExecute
     end
     object aCopy: TAction
+      Category = 'Edit'
       Caption = '#00266^eCopy'
       ImageIndex = 4
       ShortCut = 16451
       OnExecute = aCopyExecute
     end
     object aCopyAs: TAction
+      Category = 'Edit'
       Caption = '#01059^eCopy as...'
       ImageIndex = 4
       ShortCut = 49219
       OnExecute = aCopyAsExecute
     end
     object aPaste: TAction
+      Category = 'Edit'
       Caption = '#00267^ePaste'
       ImageIndex = 5
       ShortCut = 16470
       OnExecute = aPasteExecute
     end
     object aSelectAll: TAction
+      Category = 'Edit'
       Caption = '#00268^eSelect all'
       ShortCut = 16449
       OnExecute = aSelectAllExecute
     end
     object aKanjiMode: TAction
+      Category = 'View'
       Caption = '#00269^eCharacter mode'
       Checked = True
       ImageIndex = 6
@@ -1139,83 +1140,93 @@ object fEditor: TfEditor
       OnExecute = aKanjiModeExecute
     end
     object aKanaMode: TAction
+      Category = 'View'
       Caption = '#00270^eKana mode'
       ImageIndex = 7
       ShortCut = 16471
       OnExecute = aKanaModeExecute
     end
     object aASCIIMode: TAction
+      Category = 'View'
       Caption = '#00271^eASCII mode'
       ImageIndex = 8
       ShortCut = 16464
       OnExecute = aASCIIModeExecute
     end
-    object aFullwidth: TAction
-      Caption = 'Full-width characters'
+    object aFullwidthLatin: TAction
+      Category = 'View'
+      AutoCheck = True
+      Caption = '#01202^Full-width characters'
       ImageIndex = 16
+      OnExecute = aFullwidthLatinExecute
     end
-    object aReading: TAction
+    object aDisplayReading: TAction
+      Category = 'View'
+      AutoCheck = True
       Caption = '#00272^eDisplay reading'
       Checked = True
       ImageIndex = 9
       ShortCut = 16456
-      OnExecute = aReadingExecute
+      OnExecute = aDisplayReadingExecute
     end
-    object aMeaning: TAction
+    object aDisplayMeaning: TAction
+      Category = 'View'
+      AutoCheck = True
       Caption = '#00273^eDisplay meaning'
       Checked = True
       ImageIndex = 10
       ShortCut = 16458
-      OnExecute = aMeaningExecute
+      OnExecute = aDisplayMeaningExecute
     end
-    object aClear: TAction
+    object aUseColors: TAction
+      Category = 'View'
+      AutoCheck = True
+      Caption = '#00309^eUse colors'
+      ImageIndex = 11
+      OnExecute = aUseColorsExecute
+    end
+    object aTranslationClear: TAction
+      Category = 'Edit'
       Caption = '#00274^eClear translation'
       ImageIndex = 12
       ShortCut = 16450
-      OnExecute = aClearExecute
+      OnExecute = aTranslationClearExecute
     end
-    object aFill: TAction
+    object aTranslationFill: TAction
+      Category = 'Edit'
       Caption = '#00275^eAuto-fill translation'
       ImageIndex = 13
       ShortCut = 16454
-      OnExecute = aFillExecute
+      OnExecute = aTranslationFillExecute
     end
-    object aSet: TAction
+    object aTranslationSet: TAction
+      Category = 'Edit'
       Caption = '#00276^eSet translation'
       ImageIndex = 14
       ShortCut = 16468
-      OnExecute = aSetExecute
+      OnExecute = aTranslationSetExecute
     end
     object aPrint: TAction
+      Category = 'File'
       Caption = '#00277^ePrint...'
       ImageIndex = 15
       ShortCut = 16502
       OnExecute = aPrintExecute
     end
-    object aWindow: TAction
-      Caption = '#00296^eEditor window'
-      ShortCut = 16453
-      OnExecute = aWindowExecute
-    end
     object aSmallFont: TAction
+      Category = 'View'
       Caption = '#00052^eSmall'
       OnExecute = aSmallFontExecute
     end
     object aMedFont: TAction
+      Category = 'View'
       Caption = '#00053^eMedium'
       OnExecute = aMedFontExecute
     end
     object aLargeFont: TAction
+      Category = 'View'
       Caption = '#00297^eLarge'
       OnExecute = aLargeFontExecute
-    end
-    object aColors: TAction
-      Caption = '#00309^eUse colors'
-      OnExecute = aColorsExecute
-    end
-    object aExport: TAction
-      Caption = '#01058^eExport as...'
-      OnExecute = aExportExecute
     end
   end
 end

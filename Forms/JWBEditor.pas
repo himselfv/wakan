@@ -49,7 +49,7 @@ uses
 //Ignore kana only words when auto-translating. Faster but worse results.
 //{$DEFINE TL_IGNORE_KANA}
 
-{$IFDEF DEBUG} //don't do in release versions
+{$IFDEF DEBUG}
 
   //Display a window showing how much time Auto-TL took
   {$DEFINE TLSPEEDREPORT}
@@ -123,29 +123,29 @@ type
     SaveAsKanaDialog: TSaveDialog;
     ActionIcons: TImageList;
     ToolBar1: TToolBar;
-    sbFileNew: TToolButton;
-    sbFileOpen: TToolButton;
-    sbFileSave: TToolButton;
+    btnFileNew: TToolButton;
+    btnFileOpen: TToolButton;
+    btnFileSave: TToolButton;
     ToolButton4: TToolButton;
-    sbClipCut: TToolButton;
-    sbClipCopy: TToolButton;
-    sbClipPaste: TToolButton;
+    btnClipCut: TToolButton;
+    btnClipCopy: TToolButton;
+    btnClipPaste: TToolButton;
     ToolButton8: TToolButton;
-    sbKanjiMode: TToolButton;
-    sbKanaMode: TToolButton;
-    sbAsciiMode: TToolButton;
+    btnKanjiMode: TToolButton;
+    btnKanaMode: TToolButton;
+    btnAsciiMode: TToolButton;
     ToolButton12: TToolButton;
-    sbDisplayReading: TToolButton;
-    sbDisplayMeaning: TToolButton;
-    sbUseTlColors: TToolButton;
+    btnDisplayReading: TToolButton;
+    btnDisplayMeaning: TToolButton;
+    btnUseTlColors: TToolButton;
     ToolButton16: TToolButton;
-    sbClearTranslation: TToolButton;
-    sbAutoTranslate: TToolButton;
-    sbSetTranslation: TToolButton;
+    btnClearTranslation: TToolButton;
+    btnAutoTranslate: TToolButton;
+    btnSetTranslation: TToolButton;
     ToolButton20: TToolButton;
     cbFontSize: TComboBox;
     ToolButton21: TToolButton;
-    sbPrint: TToolButton;
+    btnPrint: TToolButton;
     ListBox1: TListBox;
     EditorPaintbox: TWakanPaintbox;
     EditorScrollBar: TScrollBar;
@@ -153,7 +153,7 @@ type
     btnKanjiDetails: TSpeedButton;
     sbDockDictionary: TSpeedButton;
     ToolButton1: TToolButton;
-    sbFullwidth: TToolButton;
+    btnFullwidth: TToolButton;
     Actions: TActionList;
     aNew: TAction;
     aOpen: TAction;
@@ -166,20 +166,19 @@ type
     aKanjiMode: TAction;
     aKanaMode: TAction;
     aASCIIMode: TAction;
-    aReading: TAction;
-    aMeaning: TAction;
-    aClear: TAction;
-    aFill: TAction;
-    aSet: TAction;
+    aDisplayReading: TAction;
+    aDisplayMeaning: TAction;
+    aTranslationClear: TAction;
+    aTranslationFill: TAction;
+    aTranslationSet: TAction;
     aPrint: TAction;
-    aWindow: TAction;
     aSmallFont: TAction;
     aLargeFont: TAction;
     aMedFont: TAction;
-    aColors: TAction;
+    aUseColors: TAction;
     aExport: TAction;
     aCopyAs: TAction;
-    aFullwidth: TAction;
+    aFullwidthLatin: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -204,24 +203,8 @@ type
     procedure ListBox1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure ListBox1KeyPress(Sender: TObject; var Key: Char);
-    procedure sbDisplayReadingClick(Sender: TObject);
-    procedure sbDisplayMeaningClick(Sender: TObject);
-    procedure sbClearTranslationClick(Sender: TObject);
-    procedure sbAutoTranslateClick(Sender: TObject);
-    procedure sbSetTranslationClick(Sender: TObject);
-    procedure sbPrintClick(Sender: TObject);
-    procedure sbFileOpenClick(Sender: TObject);
-    procedure sbFileSaveClick(Sender: TObject);
-    procedure sbFileNewClick(Sender: TObject);
-    procedure sbClipCutClick(Sender: TObject);
-    procedure sbClipCopyClick(Sender: TObject);
-    procedure sbClipPasteClick(Sender: TObject);
-    procedure sbKanjiModeClick(Sender: TObject);
-    procedure sbKanaModeClick(Sender: TObject);
-    procedure sbAsciiModeClick(Sender: TObject);
     procedure btnKanjiDetailsClick(Sender: TObject);
     procedure sbDockDictionaryClick(Sender: TObject);
-    procedure sbUseTlColorsClick(Sender: TObject);
     procedure BlinkCursorTimerTimer(Sender: TObject);
     procedure cbFontSizeChange(Sender: TObject);
     procedure cbFontSizeExit(Sender: TObject);
@@ -230,6 +213,7 @@ type
     procedure aOpenExecute(Sender: TObject);
     procedure aSaveExecute(Sender: TObject);
     procedure aSaveAsExecute(Sender: TObject);
+    procedure aExportExecute(Sender: TObject);
     procedure aCutExecute(Sender: TObject);
     procedure aCopyExecute(Sender: TObject);
     procedure aCopyAsExecute(Sender: TObject);
@@ -238,18 +222,18 @@ type
     procedure aKanjiModeExecute(Sender: TObject);
     procedure aKanaModeExecute(Sender: TObject);
     procedure aASCIIModeExecute(Sender: TObject);
-    procedure aReadingExecute(Sender: TObject);
-    procedure aMeaningExecute(Sender: TObject);
-    procedure aClearExecute(Sender: TObject);
-    procedure aFillExecute(Sender: TObject);
-    procedure aSetExecute(Sender: TObject);
+    procedure aDisplayReadingExecute(Sender: TObject);
+    procedure aDisplayMeaningExecute(Sender: TObject);
+    procedure aUseColorsExecute(Sender: TObject);
+    procedure aFullwidthLatinExecute(Sender: TObject);
+    procedure aTranslationClearExecute(Sender: TObject);
+    procedure aTranslationFillExecute(Sender: TObject);
+    procedure aTranslationSetExecute(Sender: TObject);
     procedure aPrintExecute(Sender: TObject);
-    procedure aWindowExecute(Sender: TObject);
     procedure aSmallFontExecute(Sender: TObject);
     procedure aMedFontExecute(Sender: TObject);
     procedure aLargeFontExecute(Sender: TObject);
-    procedure aColorsExecute(Sender: TObject);
-    procedure aExportExecute(Sender: TObject);
+
 
   public
     procedure LanguageChanged;
@@ -958,7 +942,6 @@ end;
 procedure TfEditor.SetFileChanged(Value: boolean);
 begin
   FFileChanged:=Value;
-  sbFileSave.Enabled:=Value;
   aSave.Enabled:=Value;
 end;
 
@@ -1528,139 +1511,78 @@ end;
 
 procedure TfEditor.aNewExecute(Sender: TObject);
 begin
-  fEditor.sbFileNewClick(sender);
+  if not CommitFile then exit;
+  ClearEditor;
 end;
 
 procedure TfEditor.aOpenExecute(Sender: TObject);
 begin
-  fEditor.sbFileOpenClick(sender);
+  if not CommitFile then exit;
+  if OpenTextDialog.Execute then
+    OpenAnyFile(OpenTextDialog.Filename);
 end;
 
 procedure TfEditor.aSaveExecute(Sender: TObject);
 begin
-  fEditor.sbFileSaveClick(sender);
+  if docfilename<>'' then
+    SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode)
+  else
+    SaveAs;
 end;
 
 procedure TfEditor.aSaveAsExecute(Sender: TObject);
 begin
-  fEditor.SaveAs;
-end;
-
-procedure TfEditor.aCutExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  fEditor.sbClipCutClick(sender);
-end;
-
-procedure TfEditor.aCopyExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  fEditor.sbClipCopyClick(sender);
-end;
-
-procedure TfEditor.aCopyAsExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  fEditor.CopyAs;
-end;
-
-procedure TfEditor.aPasteExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  fEditor.sbClipPasteClick(sender);
-end;
-
-procedure TfEditor.aSelectAllExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  fEditor.SelectAll;
-end;
-
-procedure TfEditor.aKanjiModeExecute(Sender: TObject);
-begin
-  fEditor.sbKanjiMode.Down := true;
-  fEditor.sbKanjiModeClick(sender);
-end;
-
-procedure TfEditor.aKanaModeExecute(Sender: TObject);
-begin
-  fEditor.sbKanaMode.Down := true;
-  fEditor.sbKanaModeClick(sender);
-end;
-
-procedure TfEditor.aASCIIModeExecute(Sender: TObject);
-begin
-  fEditor.sbAsciiMode.Down := true;
-  fEditor.sbAsciiModeClick(sender);
-end;
-
-procedure TfEditor.aReadingExecute(Sender: TObject);
-begin
-  fEditor.sbDisplayReading.Down:=not fEditor.sbDisplayReading.Down;
-  fEditor.sbDisplayReadingClick(sender);
-end;
-
-procedure TfEditor.aMeaningExecute(Sender: TObject);
-begin
-  fEditor.sbDisplayMeaning.Down:=not fEditor.sbDisplayMeaning.Down;
-  fEditor.sbDisplayMeaningClick(sender);
-end;
-
-procedure TfEditor.aClearExecute(Sender: TObject);
-begin
-  fEditor.sbClearTranslationClick(sender);
-end;
-
-procedure TfEditor.aFillExecute(Sender: TObject);
-begin
-  fEditor.sbAutoTranslateClick(sender);
-end;
-
-procedure TfEditor.aSetExecute(Sender: TObject);
-begin
-  fEditor.sbSetTranslationClick(sender);
-end;
-
-procedure TfEditor.aPrintExecute(Sender: TObject);
-begin
-  fEditor.sbPrintClick(sender);
-end;
-
-procedure TfEditor.aWindowExecute(Sender: TObject);
-begin
-  fEditor.ListBox1.SetFocus;
-end;
-
-procedure TfEditor.aSmallFontExecute(Sender: TObject);
-begin
-  fEditor.FontSize := FontSizeSmall;
-end;
-
-procedure TfEditor.aMedFontExecute(Sender: TObject);
-begin
-  fEditor.FontSize := FontSizeMedium;
-end;
-
-procedure TfEditor.aLargeFontExecute(Sender: TObject);
-begin
-  fEditor.FontSize := FontSizeLarge;
-end;
-
-procedure TfEditor.aColorsExecute(Sender: TObject);
-begin
-  fEditor.sbUseTlColors.Down:=not fEditor.sbUseTlColors.Down;
-  fEditor.sbUseTlColorsClick(sender);
+  Self.SaveAs;
 end;
 
 procedure TfEditor.aExportExecute(Sender: TObject);
 begin
-  fEditor.ExportAs;
+  Self.ExportAs;
 end;
 
+procedure TfEditor.aCutExecute(Sender: TObject);
+begin
+  if Self.TextSelection.IsEmpty then exit;
+  aCopy.Execute;
+  DeleteSelection;
+end;
 
+{ Normal Ctrl-C -- only in a few basic formats.
+ For enhanced copy, use Ctrl+Alt+C / CopyAs() }
+procedure TfEditor.aCopyExecute(Sender: TObject);
+var NormalText: UnicodeString;
+begin
+  if Self.TextSelection.IsEmpty then exit;
+  NormalText := CopyAsText;
+  Clipboard.ResetClipboard;
+  try
+    Clipboard.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
+    Clipboard.AddToClipboard(CF_HTML,CopyAsClipHtml());
+    Clipboard.AddToClipboard(CF_UNICODETEXT,NormalText);
+  finally
+    Clipboard.PublishClipboard;
+  end;
+end;
+
+procedure TfEditor.aCopyAsExecute(Sender: TObject);
+begin
+  Self.CopyAs;
+end;
+
+procedure TfEditor.aPasteExecute(Sender: TObject);
+begin
+  if not Self.ListBox1.Focused then exit;
+  Self.PasteOp;
+end;
+
+procedure TfEditor.aSelectAllExecute(Sender: TObject);
+begin
+  if not Self.ListBox1.Focused then exit;
+  Self.SelectAll;
+end;
 
 { These are auto-check grouped buttones so they handle Down/Undown automatically }
-procedure TfEditor.sbKanjiModeClick(Sender: TObject);
+procedure TfEditor.aKanjiModeExecute(Sender: TObject);
 begin
   aKanjiMode.Checked:=true;
   aKanaMode.Checked:=false;
@@ -1668,7 +1590,7 @@ begin
   ResolveInsert(false); //old buffer invalid
 end;
 
-procedure TfEditor.sbKanaModeClick(Sender: TObject);
+procedure TfEditor.aKanaModeExecute(Sender: TObject);
 begin
   aKanaMode.Checked:=true;
   aKanjiMode.Checked:=false;
@@ -1676,7 +1598,7 @@ begin
   ResolveInsert(false); //old buffer invalid
 end;
 
-procedure TfEditor.sbAsciiModeClick(Sender: TObject);
+procedure TfEditor.aASCIIModeExecute(Sender: TObject);
 begin
   aASCIIMode.Checked:=true;
   aKanaMode.Checked:=false;
@@ -1685,26 +1607,27 @@ begin
 end;
 
 { These are auto-check allow-all-up buttons so they handle Down/Undown automatically }
-procedure TfEditor.sbDisplayReadingClick(Sender: TObject);
+procedure TfEditor.aDisplayReadingExecute(Sender: TObject);
 begin
- //Keeps fMenu.Actions in sync but doesn't call Execute
-  aReading.Checked:=sbDisplayReading.Down;
   RepaintText();
 end;
 
-procedure TfEditor.sbDisplayMeaningClick(Sender: TObject);
+procedure TfEditor.aDisplayMeaningExecute(Sender: TObject);
 begin
-  aMeaning.Checked:=sbDisplayMeaning.Down;
   RepaintText();
 end;
 
-procedure TfEditor.sbUseTlColorsClick(Sender: TObject);
+procedure TfEditor.aUseColorsExecute(Sender: TObject);
 begin
-  aColors.Checked:=sbUseTlColors.Down;
   RepaintText();
 end;
 
-procedure TfEditor.sbClearTranslationClick(Sender: TObject);
+procedure TfEditor.aFullwidthLatinExecute(Sender: TObject);
+begin
+  RepaintText();
+end;
+
+procedure TfEditor.aTranslationClearExecute(Sender: TObject);
 var i,j:integer;
   bg,en:integer;
   block: TTextSelection;
@@ -1726,54 +1649,42 @@ begin
   ShowText(true);
 end;
 
-procedure TfEditor.sbAutoTranslateClick(Sender: TObject);
+procedure TfEditor.aTranslationFillExecute(Sender: TObject);
 begin
   Self.AutoTranslate();
 end;
 
-procedure TfEditor.sbSetTranslationClick(Sender: TObject);
+procedure TfEditor.aTranslationSetExecute(Sender: TObject);
 begin
   Self.SetTranslation();
 end;
 
 procedure PrintConfigure(userdata:pointer);
 begin
-  fSettings.pcPages.ActivePage:=fSettings.tsTextTranslator;
+  fSettings.pcPages.ActivePage := fSettings.tsTextTranslator;
   fSettings.ShowModal;
 end;
 
-procedure TfEditor.sbPrintClick(Sender: TObject);
+procedure TfEditor.aPrintExecute(Sender: TObject);
 begin
   PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
 end;
 
-procedure TfEditor.sbFileOpenClick(Sender: TObject);
+procedure TfEditor.aSmallFontExecute(Sender: TObject);
 begin
-  if not CommitFile then exit;
-  if OpenTextDialog.Execute then
-    OpenAnyFile(OpenTextDialog.Filename);
+  Self.FontSize := FontSizeSmall;
 end;
 
-procedure TfEditor.sbFileSaveClick(Sender: TObject);
+procedure TfEditor.aMedFontExecute(Sender: TObject);
 begin
-  if docfilename<>'' then
-    SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode)
-  else
-    SaveAs;
+  Self.FontSize := FontSizeMedium;
 end;
 
-procedure TfEditor.sbFileNewClick(Sender: TObject);
+procedure TfEditor.aLargeFontExecute(Sender: TObject);
 begin
-  if not CommitFile then exit;
-  ClearEditor;
+  Self.FontSize := FontSizeLarge;
 end;
 
-procedure TfEditor.sbClipCutClick(Sender: TObject);
-begin
-  if Self.TextSelection.IsEmpty then exit;
-  sbClipCopyClick(Sender);
-  DeleteSelection;
-end;
 
 //Copies selection as text without any Ruby
 function TfEditor.CopyAsText: UnicodeString;
@@ -1853,23 +1764,6 @@ begin
   doc.SaveWakanText(Result,@block);
 end;
 
-{ Normal Ctrl-C -- only in a few basic formats.
- For enhanced copy, use Ctrl+Alt+C / CopyAs() }
-procedure TfEditor.sbClipCopyClick(Sender: TObject);
-var NormalText: UnicodeString;
-begin
-  if Self.TextSelection.IsEmpty then exit;
-  NormalText := CopyAsText;
-  Clipboard.ResetClipboard;
-  try
-    Clipboard.AddToClipboard(CF_WAKAN,CopyAsWakanText(),{OwnsStream=}true);
-    Clipboard.AddToClipboard(CF_HTML,CopyAsClipHtml());
-    Clipboard.AddToClipboard(CF_UNICODETEXT,NormalText);
-  finally
-    Clipboard.PublishClipboard;
-  end;
-end;
-
 { Enhanced Ctrl-Alt-C -- all ruby + all supported formats.
  In the future perhaps this will pop up a dialog asking to choose a format }
 procedure TfEditor.CopyAs;
@@ -1891,10 +1785,6 @@ begin
   end;
 end;
 
-procedure TfEditor.sbClipPasteClick(Sender: TObject);
-begin
-  PasteOp;
-end;
 
 function TfEditor.GetView: integer;
 begin
@@ -2144,7 +2034,7 @@ procedure TfEditor.ShowHint;
 var p: TPoint;
   tmp: TCursorPos;
 begin
-  if not Self.sbKanjiMode.Down then begin
+  if not Self.aKanjiMode.Checked then begin
     HideHint;
     exit;
   end;
@@ -2488,8 +2378,8 @@ begin
     PrintMeaning:=fSettings.cbPrintMeaning.Checked;
     PrintReading:=fSettings.cbPrintReading.Checked;
   end else begin
-    PrintMeaning:=sbDisplayMeaning.Down;
-    PrintReading:=sbDisplayReading.Down;
+    PrintMeaning:=aDisplayMeaning.Checked;
+    PrintReading:=aDisplayReading.Checked;
   end;
   ReserveSpaceForReading:=fSettings.cbReserveSpaceForReading.Checked;
   LeaveSpaceBetweenLines:=fSettings.cbSpaceBetweenLines.Checked;
@@ -2647,7 +2537,7 @@ begin
           if printing and fSettings.cbNoPrintColors.Checked then
             color:=$00FFFFFF
           else
-          if aColors.Checked then begin
+          if aUseColors.Checked then begin
             case upcase(wordstate) of
               '-','X':color:=Col('Editor_Untranslated');
               '?':color:=Col('Editor_NotFound');
@@ -2672,7 +2562,7 @@ begin
           begin
             //Nothing.
           end else
-            if aColors.Checked then
+            if aUseColors.Checked then
               case learnstate of
                 0: color:=Col('Editor_Problematic');
                 1: color:=Col('Editor_Unlearned');
@@ -3206,9 +3096,9 @@ begin
   if (c=' ') and (FInputBuffer<>'') then
   begin
    //Accept suggestion
-    ResolveInsert({AcceptSuggestion=}sbKanjiMode.down);
+    ResolveInsert({AcceptSuggestion=}aKanjiMode.Checked);
     FileChanged:=true;
-    if sbKanjiMode.Down then
+    if aKanjiMode.Checked then
       exit;
   end;
   if (c=Chr(VK_RETURN)) and (FInputBuffer<>'') then
@@ -3216,7 +3106,7 @@ begin
    //Reject suggestion
     ResolveInsert({AcceptSuggestion=}false);
     FileChanged:=true;
-    if sbKanjiMode.down then exit;
+    if aKanjiMode.Checked then exit;
   end;
   if (c=Chr(VK_BACK)) and (FInputBuffer<>'') then
   begin
@@ -3270,7 +3160,7 @@ begin
   There are also immediate characters (punctuation and the like) which flush
   input buffer and are printed instantly. }
 
-  if sbAsciiMode.Down then begin
+  if aAsciiMode.Checked then begin
    //In AsciiMode all characters are immediate + no conversion
     CharType := ibAsIs;
   end else begin
@@ -3326,7 +3216,7 @@ end;
 //Only for presentation.
 function TfEditor.ConvertImmediateChar(const c: char): char;
 begin
-  if sbAsciiMode.Down then
+  if aAsciiMode.Checked then
     Result := c
   else begin
    //Kana mode has some non-trivial character replacements
@@ -3347,7 +3237,7 @@ begin
   end;
 
  //In any case, honor fullwidth preference
-  if sbFullwidth.Down then begin
+  if aFullwidthLatin.Checked then begin
    //Two char blocks are equal: 0021..007E <-> FF01..FF5E
     if (Ord(Result)>$0020) and (Ord(Result)<$0080) then
       Result := Chr(Ord(Result)-$0020+$FF00)

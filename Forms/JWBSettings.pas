@@ -851,8 +851,7 @@ begin
   cbSaveAnnotationsToRuby.Checked:=reg.readBool('Editor','SaveAnnotationsToRuby', false);
   cbAdjustCharPriorities.Checked:=reg.readBool('Editor','AdjustCharPriorities', true);
   rgReleaseCursorMode.ItemIndex := reg.ReadInteger('Editor','ReleaseCursorMode',0);
-  if CheckBox61.Checked then
-  begin
+  if (fEditor<>nil) and CheckBox61.Checked then begin
     fEditor.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
     fEditor.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
     fEditor.DocEncoding:=FindEncodingByClassName(Reg.ReadString('Editor','DocType',''));
@@ -923,15 +922,6 @@ begin
   cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
   cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
-  if fEditor<>nil then begin
-    fEditor.sbDisplayReading.Down:=reg.ReadBool('Translate','Reading',true);
-    fEditor.sbDisplayMeaning.Down:=reg.ReadBool('Translate','Meaning',true);
-    fEditor.sbUseTlColors.Down:=reg.ReadBool('Translate','TransColors',true);
-    fEditor.sbDisplayReadingClick(fEditor.sbDisplayReading);
-    fEditor.sbDisplayMeaningClick(fEditor.sbDisplayMeaning);
-    fEditor.sbUseTlColorsClick(fEditor.sbUseTlColors);
-    fEditor.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
-  end;
   CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
   CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
   CheckBox48.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
@@ -945,6 +935,11 @@ begin
   fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
   fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
   if fEditor<>nil then begin
+    fEditor.aDisplayReading.Checked:=reg.ReadBool('Translate','Reading',true);
+    fEditor.aDisplayMeaning.Checked:=reg.ReadBool('Translate','Meaning',true);
+    fEditor.aUseColors.Checked:=reg.ReadBool('Translate','TransColors',true);
+    fEditor.aFullwidthLatin.Checked:=reg.ReadBool('Translate','FullwidthLatin',true);
+    fEditor.sbDockDictionary.Down:=reg.ReadBool('Translate','Dictionary',false);
     tmp_int := reg.ReadInteger('Translate','FontSizeInt',0);
     if tmp_int>0 then
       fEditor.FontSize := tmp_int
@@ -1128,12 +1123,14 @@ begin
   reg.WriteBool('Editor','SaveAnnotationsToRuby',cbSaveAnnotationsToRuby.Checked);
   reg.WriteBool('Editor','AdjustCharPriorities',cbAdjustCharPriorities.Checked);
   reg.WriteInteger('Editor','ReleaseCursorMode',rgReleaseCursorMode.ItemIndex);
-  reg.WriteString('Editor','DocFilename',fEditor.DocFilename); //For autoload
-  reg.WriteInteger('Editor','DocType',integer(fEditor.DocType)); //This too.
-  if fEditor.DocEncoding<>nil then
-    reg.WriteString('Editor','DocEncoding',string(fEditor.DocEncoding.Classname))
-  else
-    reg.WriteString('Editor','DocEncoding','');
+  if fEditor<>nil then begin
+    reg.WriteString('Editor','DocFilename',fEditor.DocFilename); //For autoload
+    reg.WriteInteger('Editor','DocType',integer(fEditor.DocType)); //This too.
+    if fEditor.DocEncoding<>nil then
+      reg.WriteString('Editor','DocEncoding',string(fEditor.DocEncoding.Classname))
+    else
+      reg.WriteString('Editor','DocEncoding','');
+  end;
   reg.WriteInteger('Characters','FreqLimit',strtoint(Edit34.Text));
   if fExamples.btnDisplayTranslation.Down then exmode:=0 else
   if fExamples.btnUseBigFont.Down then exmode:=1 else
@@ -1187,10 +1184,6 @@ begin
   reg.WriteBool('Translate','PrintMeaning',cbPrintMeaning.Checked);
   reg.WriteBool('Translate','NoPrintColors',cbNoPrintColors.Checked);
   reg.WriteBool('Translate','VerticalPrint',cbVerticalPrint.Checked);
-  reg.WriteBool('Translate','Reading',fEditor.sbDisplayReading.Down);
-  reg.WriteBool('Translate','Meaning',fEditor.sbDisplayMeaning.Down);
-  reg.WriteBool('Translate','TransColors',fEditor.sbUseTlColors.Down);
-  reg.WriteBool('Translate','Dictionary',fEditor.sbDockDictionary.Down);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
   reg.WriteBool('Annotate','Enabled',cbEnableAnnotations.Checked);
@@ -1199,16 +1192,23 @@ begin
   reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
   reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
   reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
-  reg.WriteInteger('Translate','FontSizeInt',fEditor.FontSize);
-  //These values are used only by Wakan previous version, but let's play nice
-  //and update those too to the best that we can.
-  if fEditor.FontSize<=((FontSizeMedium+FontSizeSmall) div 2) then
-    reg.WriteInteger('Translate','FontSize',0)
-  else
-  if fEditor.FontSize<=((FontSizeLarge+FontSizeMedium) div 2) then
-    reg.WriteInteger('Translate','FontSize',1)
-  else
-    reg.WriteInteger('Translate','FontSize',2);
+  if fEditor<>nil then begin
+    reg.WriteBool('Translate','Reading',fEditor.aDisplayReading.Checked);
+    reg.WriteBool('Translate','Meaning',fEditor.aDisplayMeaning.Checked);
+    reg.WriteBool('Translate','TransColors',fEditor.aUseColors.Checked);
+    reg.WriteBool('Translate','FullwidthLatin',fEditor.aFullwidthLatin.Checked);
+    reg.WriteBool('Translate','Dictionary',fEditor.sbDockDictionary.Down);
+    reg.WriteInteger('Translate','FontSizeInt',fEditor.FontSize);
+    //These values are used only by Wakan previous version, but let's play nice
+    //and update those too to the best that we can.
+    if fEditor.FontSize<=((FontSizeMedium+FontSizeSmall) div 2) then
+      reg.WriteInteger('Translate','FontSize',0)
+    else
+    if fEditor.FontSize<=((FontSizeLarge+FontSizeMedium) div 2) then
+      reg.WriteInteger('Translate','FontSize',1)
+    else
+      reg.WriteInteger('Translate','FontSize',2);
+  end;
   reg.WriteString('Translate','MeaningLines',edtMeaningLines.text);
   reg.WriteString('Translate','PrintLines',edtPrintLines.text);
   reg.WriteString('Dict','NotUsedDicts',dicts.NotUsedDicts);
