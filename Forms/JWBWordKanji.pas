@@ -79,7 +79,7 @@ end;
 
 procedure TfWordKanji.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  fWordLookup.SpeedButton6.Down:=false;
+  fWordLookup.btnWordKanji.Down:=false;
   fMenu.aDictKanji.Checked:=false;
 end;
 

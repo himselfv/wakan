@@ -1590,7 +1590,7 @@ end;
 procedure TfMenu.aDictKanjiChecked(Sender: TObject);
 begin
   ToggleForm(fWordKanji, aDictKanji.Checked);
-  fWordLookup.SpeedButton6.Down := aDictKanji.Checked;
+  fWordLookup.btnWordKanji.Down := aDictKanji.Checked;
 end;
 
 procedure TfMenu.aDictExamplesExecute(Sender: TObject);
@@ -1606,7 +1606,7 @@ procedure TfMenu.aDictExamplesChecked(Sender: TObject);
 begin
 //  ToggleForm(fExamples, aDictExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
-  fWordLookup.SpeedButton9.Down := aDictExamples.Checked;
+  fWordLookup.btnExamples.Down := aDictExamples.Checked;
 end;
 
 procedure TfMenu.aUserAddExecute(Sender: TObject);

@@ -264,10 +264,10 @@ begin
   btnMatchRight.Enabled:=true;
   btnMatchAnywhere.Enabled:=true;
   case dictbeginset of
-    0:fWordLookup.btnMatchExact.Down:=true;
-    1:fWordLookup.btnMatchLeft.Down:=true;
-    2:fWordLookup.btnMatchRight.Down:=true;
-    3:fWordLookup.btnMatchAnywhere.Down:=true;
+    0:Self.btnMatchExact.Down:=true;
+    1:Self.btnMatchLeft.Down:=true;
+    2:Self.btnMatchRight.Down:=true;
+    3:Self.btnMatchAnywhere.Down:=true;
   end;
 
  {$IFDEF SEARCH_BUTTON_CAPTION}
@@ -529,7 +529,7 @@ end;
 
 procedure TfWordLookup.aEnglishExecute(Sender: TObject);
 begin
-  fWordLookup.LookupMode := lmEn;
+  Self.LookupMode := lmEn;
 end;
 
 procedure TfWordLookup.aClipboardExecute(Sender: TObject);
@@ -666,10 +666,10 @@ procedure TfWordLookup.btnMatchExactClick(Sender: TObject);
 begin
   if not donotsetbegset then
   begin
-    if fWordLookup.btnMatchExact.Down then dictbeginset:=0;
-    if fWordLookup.btnMatchLeft.Down then dictbeginset:=1;
-    if fWordLookup.btnMatchRight.Down then dictbeginset:=2;
-    if fWordLookup.btnMatchAnywhere.Down then dictbeginset:=3;
+    if Self.btnMatchExact.Down then dictbeginset:=0;
+    if Self.btnMatchLeft.Down then dictbeginset:=1;
+    if Self.btnMatchRight.Down then dictbeginset:=2;
+    if Self.btnMatchAnywhere.Down then dictbeginset:=3;
   end;
   Look();
   if Edit1.Enabled then Edit1.SetFocus;
