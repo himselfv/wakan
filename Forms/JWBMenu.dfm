@@ -613,15 +613,6 @@ object fMenu: TfMenu
   object ActionList1: TActionList
     Left = 48
     Top = 64
-    object aDictLookupAuto: TAction
-      Category = 'DictLookup'
-      Caption = '#01132^Auto/all'
-      Hint = 
-        '#01133^Search by reading, writing or meaning, depending on what ' +
-        'you type'
-      ShortCut = 113
-      OnExecute = aDictLookupAutoExecute
-    end
     object aSaveUser: TAction
       Category = 'Main'
       Caption = '#00225^e&Save user changes'
@@ -650,12 +641,10 @@ object fMenu: TfMenu
       Visible = False
     end
     object aKanjiSearch: TCheckAction
+      Category = 'KanjiList'
       Caption = '#00230^e&Search'
       OnExecute = aKanjiSearchExecute
       OnChecked = aKanjiSearchChecked
-    end
-    object aKanjiSort: TAction
-      Caption = '#00231^eS&ort'
     end
     object aKanjiDetails: TCheckAction
       Caption = '#00232^e&Details'
@@ -669,6 +658,7 @@ object fMenu: TfMenu
       OnChecked = aKanjiCompoundsChecked
     end
     object aKanjiPrint: TAction
+      Category = 'KanjiList'
       Caption = '#00234^e&Print cards...'
       ShortCut = 16501
       OnExecute = aKanjiPrintExecute
@@ -680,11 +670,13 @@ object fMenu: TfMenu
       Visible = False
     end
     object aDictKanji: TCheckAction
+      Category = 'DictLookup'
       Caption = '#00237^e&Characters in word'
       OnExecute = aDictKanjiExecute
       OnChecked = aDictKanjiChecked
     end
     object aDictExamples: TCheckAction
+      Category = 'DictLookup'
       Caption = '#00315^eExamples'
       OnExecute = aDictExamplesExecute
       OnChecked = aDictExamplesChecked
@@ -768,38 +760,46 @@ object fMenu: TfMenu
       OnExecute = aChineseExecute
     end
     object aKanjiAll: TAction
+      Category = 'KanjiList'
       Caption = '#00278^eDisplay all'
       ShortCut = 16469
       OnExecute = aKanjiAllExecute
     end
     object aKanjiLearned: TAction
+      Category = 'KanjiList'
       Caption = '#00279^eLearned only'
       OnExecute = aKanjiLearnedExecute
     end
     object aKanjiCommon: TAction
+      Category = 'KanjiList'
       Caption = '#00280^eCommon only'
       OnExecute = aKanjiCommonExecute
     end
     object aKanjiClipboard: TAction
+      Category = 'KanjiList'
       Caption = '#00281^eIn clipboard only'
       OnExecute = aKanjiClipboardExecute
     end
     object aKanjiPinYin: TAction
+      Category = 'KanjiList'
       Caption = '#00282^eSearch by PinYin'
       ShortCut = 16457
       OnExecute = aKanjiPinYinExecute
     end
     object aKanjiYomi: TAction
+      Category = 'KanjiList'
       Caption = '#00283^eSearch by Yomi'
       ShortCut = 16473
       OnExecute = aKanjiYomiExecute
     end
     object aKanjiRadical: TAction
+      Category = 'KanjiList'
       Caption = '#00284^eSearch by radical...'
       ShortCut = 16466
       OnExecute = aKanjiRadicalExecute
     end
     object aKanjiAddClipboard: TAction
+      Category = 'KanjiList'
       Caption = '#00285^eAdd to clipboard'
       ShortCut = 16455
       OnExecute = aKanjiAddClipboardExecute
@@ -808,56 +808,19 @@ object fMenu: TfMenu
       Caption = '#00286^eFull details'
       OnExecute = aKanjiFullDetailsExecute
     end
-    object aDictJapanese: TAction
-      Category = 'DictLookup'
-      Caption = '#00287^eJapanese/Chinese -> English'
-      Hint = '#00643^Search by japanese reading'
-      OnExecute = aDictJapaneseExecute
-    end
-    object aDictEnglish: TAction
-      Category = 'DictLookup'
-      Caption = '#00288^eEnglish -> Japanese/Chinese'
-      Hint = '#00645^Search by english meaning'
-      ShortCut = 114
-      OnExecute = aDictEnglishExecute
-    end
-    object aDictClipboard: TAction
-      Category = 'DictLookup'
-      Caption = '#00289^eSearch by clipboard'
-      Hint = '#00647^eSearch by Kanji stored in clipboard'
-      ShortCut = 115
-      OnExecute = aDictClipboardExecute
-    end
-    object aDictAddClipboard: TAction
-      Caption = '#00285^eAdd to clipboard'
-      OnExecute = aDictAddClipboardExecute
-    end
-    object aDictExact: TAction
-      Caption = '#00290^eSearch exact word'
-      ShortCut = 116
-      OnExecute = aDictExactExecute
-    end
-    object aDictBeginning: TAction
-      Caption = '#00291^eSearch beginning'
-      ShortCut = 117
-      OnExecute = aDictBeginningExecute
-    end
-    object aDictEnd: TAction
-      Caption = '#00292^eSearch ending'
-      ShortCut = 118
-      OnExecute = aDictEndExecute
-    end
     object aKanjiWindow: TAction
       Caption = '#00293^eCharacter window'
       ShortCut = 16459
       OnExecute = aKanjiWindowExecute
     end
     object aKanjiSetLearned: TAction
+      Category = 'KanjiList'
       Caption = '#00294^eSet as (un)learned'
       ShortCut = 16460
       OnExecute = aKanjiSetLearnedExecute
     end
     object aKanjiMeaning: TAction
+      Category = 'KanjiList'
       Caption = '#00295^eSearch by meaning'
       ShortCut = 16461
       OnExecute = aKanjiMeaningExecute
@@ -886,50 +849,11 @@ object fMenu: TfMenu
       ShortCut = 16499
       OnExecute = aModeVocabExecute
     end
-    object aDictInflect: TAction
-      Caption = '#00301^eSearch inflected words'
-      OnExecute = aDictInflectExecute
-    end
-    object aDictAuto: TAction
-      Caption = '#00302^eAuto-search while typing'
-      OnExecute = aDictAutoExecute
-    end
-    object aDictGroup1: TAction
-      Caption = '#00303^eUse dictionaries in group 1'
-      ShortCut = 16433
-      OnExecute = aDictGroup1Execute
-    end
-    object aDictGroup2: TAction
-      Caption = '#00304^eUse dictionaries in group 2'
-      ShortCut = 16434
-      OnExecute = aDictGroup2Execute
-    end
-    object aDictGroup3: TAction
-      Caption = '#00305^eUse dictionaries in group 3'
-      ShortCut = 16435
-      OnExecute = aDictGroup3Execute
-    end
-    object aDictVoc1: TAction
-      Caption = '#00306^eExamples panel'
-      ShortCut = 16436
-    end
-    object aDictVoc2: TAction
-      Caption = '#00307^eVocabulary panel'
-      ShortCut = 16437
-    end
-    object aDictVoc3: TAction
-      Caption = '#00308^eFilter panel'
-      ShortCut = 16438
-    end
     object aUserExamples: TCheckAction
       Category = 'Vocabulary'
       Caption = 'Examples'
       OnExecute = aUserExamplesExecute
       OnChecked = aUserExamplesChecked
-    end
-    object aDictMiddle: TAction
-      Caption = '#00919^eSearch substring'
-      OnExecute = aDictMiddleExecute
     end
     object aChangeLanguage: TAction
       Category = 'Main'
@@ -976,6 +900,11 @@ object fMenu: TfMenu
         '#01140^Download dictionaries and other components or update exis' +
         'ting ones.'
       OnExecute = aDownloaderExecute
+    end
+    object aKanjiSaveToFile: TAction
+      Category = 'KanjiList'
+      Caption = '#00944^eSave characters to file...'
+      OnExecute = aKanjiSaveToFileExecute
     end
   end
   object MainMenu: TMainMenu
@@ -1133,8 +1062,7 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miSaveCharactersToFile: TMenuItem
-        Caption = '#00944^eSave characters to file...'
-        OnClick = miSaveCharactersToFileClick
+        Action = aKanjiSaveToFile
       end
     end
     object eDictionarycSlovnk1: TMenuItem
@@ -1147,60 +1075,57 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object N01132Autoall1: TMenuItem
-        Action = aDictLookupAuto
+        Action = fWordLookup.aLookupAuto
         Caption = '#01125^Search by any text'
       end
       object miSearchJapanese: TMenuItem
-        Action = aDictJapanese
-        Caption = '#00287^Japanese/Chinese -> English'
+        Action = fWordLookup.aJapanese
       end
       object miSearchEnglish: TMenuItem
-        Action = aDictEnglish
-        Caption = '#00288^English -> Japanese/Chinese'
+        Action = fWordLookup.aEnglish
       end
       object miSearchByClipboard: TMenuItem
-        Action = aDictClipboard
-        Caption = '#00289^Search by clipboard'
+        Action = fWordLookup.aClipboard
       end
       object N8: TMenuItem
         Caption = '-'
       end
       object miSearchExactWord: TMenuItem
-        Action = aDictExact
+        Action = fWordLookup.aExact
       end
       object miSearchBeginning: TMenuItem
-        Action = aDictBeginning
+        Action = fWordLookup.aBeginning
       end
       object miSearchEnding: TMenuItem
-        Action = aDictEnd
+        Action = fWordLookup.aEnd
       end
       object miSearchSubstring: TMenuItem
-        Action = aDictMiddle
+        Action = fWordLookup.aMiddle
       end
       object N12: TMenuItem
         Caption = '-'
       end
       object miSearchInflectedWords: TMenuItem
-        Action = aDictInflect
+        Action = fWordLookup.aInflect
       end
       object miAutoSearchWhileTyping: TMenuItem
-        Action = aDictAuto
+        Action = fWordLookup.aAuto
       end
       object miDictionaryGroup: TMenuItem
         Caption = '#00314^eUsed dictionary group'
         object miDictionaryGroup1: TMenuItem
-          Action = aDictGroup1
-          Caption = '#00104^eGroup 1'
+          Action = fWordLookup.aGroup1
+          Caption = '#00104^Group 1'
           RadioItem = True
         end
         object miDictionaryGroup2: TMenuItem
-          Action = aDictGroup2
-          Caption = '#00106^eGroup 2'
+          Action = fWordLookup.aGroup2
+          Caption = '#00106^Group 2'
           RadioItem = True
         end
         object miDictionaryGroup3: TMenuItem
-          Action = aDictGroup3
-          Caption = '#00108^eGroup 3'
+          Action = fWordLookup.aGroup3
+          Caption = '#00108^Group 3'
           RadioItem = True
         end
       end
@@ -1208,7 +1133,7 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miAddToClipboard2: TMenuItem
-        Action = aDictAddClipboard
+        Action = fWordLookup.aAddClipboard
       end
       object miAddWordIntoVocabulary: TMenuItem
         Action = aUserAdd
@@ -1283,13 +1208,10 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miDisplayReading: TMenuItem
-        Action = fEditor.aReading
       end
       object miDisplayMeaning: TMenuItem
-        Action = fEditor.aMeaning
       end
       object miUseColors: TMenuItem
-        Action = fEditor.aColors
       end
       object miFontSize: TMenuItem
         Caption = '#00051^eFont size'
@@ -1312,13 +1234,10 @@ object fMenu: TfMenu
       object miTranslation: TMenuItem
         Caption = '#00317^eTranslation'
         object miClearTranslation: TMenuItem
-          Action = fEditor.aClear
         end
         object miSetTranslation: TMenuItem
-          Action = fEditor.aSet
         end
         object miAutoFillTranslation: TMenuItem
-          Action = fEditor.aFill
         end
       end
       object N21: TMenuItem
@@ -1387,14 +1306,6 @@ object fMenu: TfMenu
       end
       object miAbout: TMenuItem
         Action = aAbout
-      end
-    end
-    object est1: TMenuItem
-      Caption = 'Test'
-      GroupIndex = 100
-      object Bsd1: TMenuItem
-        Caption = 'Bsd'
-        GroupIndex = 15
       end
     end
   end

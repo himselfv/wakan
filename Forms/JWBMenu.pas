@@ -55,13 +55,6 @@ type
     aKanjiRadical: TAction;
     aKanjiAddClipboard: TAction;
     aKanjiFullDetails: TAction;
-    aDictJapanese: TAction;
-    aDictEnglish: TAction;
-    aDictClipboard: TAction;
-    aDictAddClipboard: TAction;
-    aDictExact: TAction;
-    aDictBeginning: TAction;
-    aDictEnd: TAction;
     aKanjiWindow: TAction;
     aKanjiSetLearned: TAction;
     aKanjiMeaning: TAction;
@@ -172,11 +165,6 @@ type
     SpeedButton1: TSpeedButton;
     SpeedButton2: TSpeedButton;
     miEditorExportAs: TMenuItem;
-    aDictInflect: TAction;
-    aDictAuto: TAction;
-    aDictGroup1: TAction;
-    aDictGroup2: TAction;
-    aDictGroup3: TAction;
     miSearchInflectedWords: TMenuItem;
     miAutoSearchWhileTyping: TMenuItem;
     miDictionaryGroup: TMenuItem;
@@ -187,7 +175,6 @@ type
     aUserExamples: TCheckAction;
     miExamples2: TMenuItem;
     miUseColors: TMenuItem;
-    aDictMiddle: TAction;
     miSearchSubstring: TMenuItem;
     N23: TMenuItem;
     N25: TMenuItem;
@@ -213,13 +200,11 @@ type
     ClipboardPaintbox: TWakanPaintbox;
     aStrokeOrder: TAction;
     ApplicationEvents1: TApplicationEvents;
-    aDictLookupAuto: TAction;
     N01132Autoall1: TMenuItem;
     aDownloader: TAction;
     Download1: TMenuItem;
     N27: TMenuItem;
-    est1: TMenuItem;
-    Bsd1: TMenuItem;
+    aKanjiSaveToFile: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -261,14 +246,6 @@ type
     procedure aKanjiAddClipboardExecute(Sender: TObject);
     procedure aKanjiSetLearnedExecute(Sender: TObject);
     procedure aKanjiFullDetailsExecute(Sender: TObject);
-    procedure aDictJapaneseExecute(Sender: TObject);
-    procedure aDictEnglishExecute(Sender: TObject);
-    procedure aDictClipboardExecute(Sender: TObject);
-    procedure aDictAddClipboardExecute(Sender: TObject);
-    procedure aDictExactExecute(Sender: TObject);
-    procedure aDictBeginningExecute(Sender: TObject);
-    procedure aDictEndExecute(Sender: TObject);
-    procedure aDictMiddleExecute(Sender: TObject);
     procedure aKanjiWindowExecute(Sender: TObject);
     procedure aKanjiMeaningExecute(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
@@ -278,14 +255,7 @@ type
     procedure aModeVocabExecute(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
     procedure ScreenTimerTimer(Sender: TObject);
-    procedure aDictInflectExecute(Sender: TObject);
-    procedure aDictAutoExecute(Sender: TObject);
-    procedure aDictGroup1Execute(Sender: TObject);
-    procedure aDictGroup2Execute(Sender: TObject);
-    procedure aDictGroup3Execute(Sender: TObject);
     procedure aUserExamplesExecute(Sender: TObject);
-    procedure miSaveCharactersToFileClick(
-      Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
     procedure aFullscreenModeExecute(Sender: TObject);
     procedure aCategoryManagerExecute(Sender: TObject);
@@ -308,9 +278,10 @@ type
     procedure aKanjiDetailsChecked(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
     procedure FormShow(Sender: TObject);
-    procedure aDictLookupAutoExecute(Sender: TObject);
     procedure aDownloaderExecute(Sender: TObject);
     procedure EditorActionExecute(Action: TBasicAction; var Handled: Boolean);
+    procedure WordLookupActionExecute(Action: TBasicAction; var Handled: Boolean);
+    procedure aKanjiSaveToFileExecute(Sender: TObject);
 
   private
     initdone:boolean;
@@ -828,6 +799,8 @@ begin
 
    //Attach forms
     fEditor.Actions.OnExecute := Self.EditorActionExecute;
+    fWordLookup.Actions.OnExecute := Self.WordLookupActionExecute;
+
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
@@ -1503,6 +1476,11 @@ begin
   aKanjiSearch.Checked := not aKanjiSearch.Checked;
 end;
 
+procedure TfMenu.aKanjiSaveToFileExecute(Sender: TObject);
+begin
+  fKanji.SaveChars;
+end;
+
 procedure TfMenu.aKanjiSearchChecked(Sender: TObject);
 begin
   if fKanjiSearch<>nil then
@@ -1826,68 +1804,6 @@ begin
   fKanjiDetails.btnStrokeOrderClick(Sender);
 end;
 
-procedure TfMenu.aDictLookupAutoExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.LookupMode := lmAuto;
-end;
-
-procedure TfMenu.aDictJapaneseExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.LookupMode := lmJp;
-end;
-
-procedure TfMenu.aDictEnglishExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.LookupMode := lmEn;
-end;
-
-procedure TfMenu.aDictClipboardExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.LookupMode := lmClipboard;
-end;
-
-procedure TfMenu.aDictAddClipboardExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnCopyToClipboardClick(Sender);
-end;
-
-procedure TfMenu.aDictExactExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnMatchExact.Down:=true;
-  fWordLookup.dictBeginSet:=0;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictBeginningExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnMatchLeft.Down:=true;
-  fWordLookup.dictBeginSet:=1;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictEndExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnMatchRight.Down:=true;
-  fWordLookup.dictBeginSet:=2;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictMiddleExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnMatchAnywhere.Down:=true;
-  fWordLookup.dictBeginSet:=3;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
 procedure TfMenu.aKanjiWindowExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aModeKanji.Execute;
@@ -2192,6 +2108,13 @@ begin
   if not fEditor.Visible then aModeEditor.Execute;
 end;
 
+//Attached to run before any of fWordLookup.Actions
+procedure TfMenu.WordLookupActionExecute(Action: TBasicAction; var Handled: Boolean);
+begin
+  if not fWordLookup.Visible then aModeDict.Execute;
+end;
+
+
 procedure TfMenu.SpeedButton1Click(Sender: TObject);
 begin
   if SpeedButton1.Down then
@@ -2248,7 +2171,7 @@ begin
       end;
     3:begin
         Clipboard.Text := fScreenTip.screenTipText;
-        if not fRadical.Visible then aDictClipboard.Execute;
+        if not fRadical.Visible then fWordLookup.aClipboard.Execute;
       end;
     4:begin
         if fRadical.Visible then exit;
@@ -2713,41 +2636,6 @@ begin
   StringUnderMouse:=s1;
 end;
 
-procedure TfMenu.aDictInflectExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnInflect.Down:=not fWordLookup.btnInflect.Down;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictAutoExecute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.sbAutoPreview.Down:=not fWordLookup.sbAutoPreview.Down;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictGroup1Execute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnDictGroup1.Down:=true;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictGroup2Execute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnDictGroup2.Down:=true;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
-procedure TfMenu.aDictGroup3Execute(Sender: TObject);
-begin
-  if not fWordLookup.Visible then aModeDict.Execute;
-  fWordLookup.btnDictGroup3.Down:=true;
-  fWordLookup.miLookupAutoClick(Sender);
-end;
-
 procedure TfMenu.aUserExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
@@ -2762,12 +2650,6 @@ begin
 //  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
   fVocab.btnExamples.Down := aUserExamples.Checked;
-end;
-
-procedure TfMenu.miSaveCharactersToFileClick(
-  Sender: TObject);
-begin
-  fKanji.SaveChars;
 end;
 
 procedure TfMenu.aCategoryManagerExecute(Sender: TObject);

@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons, Menus, ImgList, ToolWin, JWBDic,
-  JWBDicSearch, JWBStrings, WakanWordGrid, WakanPaintbox, JWBWordLookupBase;
+  JWBDicSearch, JWBStrings, WakanWordGrid, WakanPaintbox, JWBWordLookupBase,
+  System.Actions, Vcl.ActnList;
 
 type
  //Supported lookup modes for this window.
@@ -41,16 +42,33 @@ type
     Bevel4: TBevel;
     Edit1: TEdit;
     btnLookupMode: TButton;
-    SpeedButton6: TSpeedButton;
-    SpeedButton9: TSpeedButton;
+    btnWordKanji: TSpeedButton;
+    btnExamples: TSpeedButton;
     CharInWordDock: TPanel;
     btnSearch: TBitBtn;
+    Actions: TActionList;
+    aLookupAuto: TAction;
+    aKanji: TAction;
+    aExamples: TAction;
+    aJapanese: TAction;
+    aEnglish: TAction;
+    aClipboard: TAction;
+    aAddClipboard: TAction;
+    aExact: TAction;
+    aBeginning: TAction;
+    aEnd: TAction;
+    aInflect: TAction;
+    aAuto: TAction;
+    aGroup1: TAction;
+    aGroup2: TAction;
+    aGroup3: TAction;
+    aMiddle: TAction;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
-    procedure SpeedButton6Click(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
+    procedure btnWordKanjiClick(Sender: TObject);
+    procedure btnExamplesClick(Sender: TObject);
     procedure btnMatchExactClick(Sender: TObject);
     procedure btnAddToVocabClick(Sender: TObject);
     procedure miLookupAutoClick(Sender: TObject);
@@ -59,6 +77,20 @@ type
     procedure miLookupJtoEClick(Sender: TObject);
     procedure miLookupEtoJClick(Sender: TObject);
     procedure Edit1KeyPress(Sender: TObject; var Key: Char);
+    procedure aLookupAutoExecute(Sender: TObject);
+    procedure aJapaneseExecute(Sender: TObject);
+    procedure aEnglishExecute(Sender: TObject);
+    procedure aClipboardExecute(Sender: TObject);
+    procedure aExactExecute(Sender: TObject);
+    procedure aBeginningExecute(Sender: TObject);
+    procedure aEndExecute(Sender: TObject);
+    procedure aMiddleExecute(Sender: TObject);
+    procedure aAutoExecute(Sender: TObject);
+    procedure aInflectExecute(Sender: TObject);
+    procedure aGroup1Execute(Sender: TObject);
+    procedure aGroup2Execute(Sender: TObject);
+    procedure aGroup3Execute(Sender: TObject);
+    procedure aAddClipboardExecute(Sender: TObject);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -191,10 +223,10 @@ begin
  //Do not store EditorInsert as a permanent state.
   if ANewMode<>lmEditorInsert then begin
     dictModeSet := ANewMode;
-    fMenu.aDictLookupAuto.Checked := (ANewMode=lmAuto);
-    fMenu.aDictJapanese.Checked := (ANewMode=lmJp);
-    fMenu.aDictEnglish.Checked := (ANewMode=lmEn);
-    fMenu.aDictClipboard.Checked := (ANewMode=lmClipboard);
+    Self.aLookupAuto.Checked := (ANewMode=lmAuto);
+    Self.aJapanese.Checked := (ANewMode=lmJp);
+    Self.aEnglish.Checked := (ANewMode=lmEn);
+    Self.aClipboard.Checked := (ANewMode=lmClipboard);
   end;
 
   UpdateLookupModeButtonText;
@@ -211,20 +243,20 @@ begin
     Edit1.Color:=clWindow;
   end;
 
-  fMenu.aDictExact.Checked:=btnMatchExact.Down;
-  fMenu.aDictBeginning.Checked:=btnMatchLeft.Down;
-  fMenu.aDictEnd.Checked:=btnMatchRight.Down;
-  fMenu.aDictMiddle.Checked:=btnMatchAnywhere.Down;
+  Self.aExact.Checked:=btnMatchExact.Down;
+  Self.aBeginning.Checked:=btnMatchLeft.Down;
+  Self.aEnd.Checked:=btnMatchRight.Down;
+  Self.aMiddle.Checked:=btnMatchAnywhere.Down;
 
-  fMenu.aDictBeginning.Enabled:=btnMatchLeft.Enabled;
-  fMenu.aDictEnd.Enabled:=btnMatchRight.Enabled;
-  fMenu.aDictMiddle.Enabled:=btnMatchAnywhere.Enabled;
+  Self.aBeginning.Enabled:=btnMatchLeft.Enabled;
+  Self.aEnd.Enabled:=btnMatchRight.Enabled;
+  Self.aMiddle.Enabled:=btnMatchAnywhere.Enabled;
 
-  fMenu.aDictInflect.Checked:=btnInflect.Down;
-  fMenu.aDictAuto.Checked:=sbAutoPreview.Down;
-  fMenu.aDictGroup1.Checked:=btnDictGroup1.Down;
-  fMenu.aDictGroup2.Checked:=btnDictGroup2.Down;
-  fMenu.aDictGroup3.Checked:=btnDictGroup3.Down;
+  Self.aInflect.Checked:=btnInflect.Down;
+  Self.aAuto.Checked:=sbAutoPreview.Down;
+  Self.aGroup1.Checked:=btnDictGroup1.Down;
+  Self.aGroup2.Checked:=btnDictGroup2.Down;
+  Self.aGroup3.Checked:=btnDictGroup3.Down;
 
   donotsetbegset:=true;
 
@@ -484,6 +516,91 @@ begin
   AnnotShowMedia(curkanji,curphonetic);
 end;
 
+
+procedure TfWordLookup.aLookupAutoExecute(Sender: TObject);
+begin
+  Self.LookupMode := lmAuto;
+end;
+
+procedure TfWordLookup.aJapaneseExecute(Sender: TObject);
+begin
+  Self.LookupMode := lmJp;
+end;
+
+procedure TfWordLookup.aEnglishExecute(Sender: TObject);
+begin
+  fWordLookup.LookupMode := lmEn;
+end;
+
+procedure TfWordLookup.aClipboardExecute(Sender: TObject);
+begin
+  Self.LookupMode := lmClipboard;
+end;
+
+procedure TfWordLookup.aExactExecute(Sender: TObject);
+begin
+  Self.btnMatchExact.Down:=true;
+  Self.dictBeginSet:=0;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aBeginningExecute(Sender: TObject);
+begin
+  Self.btnMatchLeft.Down:=true;
+  Self.dictBeginSet:=1;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aEndExecute(Sender: TObject);
+begin
+  Self.btnMatchRight.Down:=true;
+  Self.dictBeginSet:=2;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aMiddleExecute(Sender: TObject);
+begin
+  Self.btnMatchAnywhere.Down:=true;
+  Self.dictBeginSet:=3;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aInflectExecute(Sender: TObject);
+begin
+  Self.btnInflect.Down:=not fWordLookup.btnInflect.Down;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aAutoExecute(Sender: TObject);
+begin
+  Self.sbAutoPreview.Down:=not fWordLookup.sbAutoPreview.Down;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aGroup1Execute(Sender: TObject);
+begin
+  Self.btnDictGroup1.Down:=true;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aGroup2Execute(Sender: TObject);
+begin
+  Self.btnDictGroup2.Down:=true;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aGroup3Execute(Sender: TObject);
+begin
+  Self.btnDictGroup3.Down:=true;
+  Self.miLookupAutoClick(Sender);
+end;
+
+procedure TfWordLookup.aAddClipboardExecute(Sender: TObject);
+begin
+  Self.btnCopyToClipboardClick(Sender);
+end;
+
+
 procedure TfWordLookup.btnAddToVocabClick(Sender: TObject);
 begin
   inherited;
@@ -535,12 +652,12 @@ begin
   Look();
 end;
 
-procedure TfWordLookup.SpeedButton6Click(Sender: TObject);
+procedure TfWordLookup.btnWordKanjiClick(Sender: TObject);
 begin
   fMenu.aDictKanji.Execute;
 end;
 
-procedure TfWordLookup.SpeedButton9Click(Sender: TObject);
+procedure TfWordLookup.btnExamplesClick(Sender: TObject);
 begin
   fMenu.aDictExamples.Execute;
 end;

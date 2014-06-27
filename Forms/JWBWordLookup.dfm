@@ -34,7 +34,7 @@ inherited fWordLookup: TfWordLookup
       ExplicitLeft = 601
       ExplicitTop = 26
     end
-    object SpeedButton6: TSpeedButton
+    object btnWordKanji: TSpeedButton
       Left = 558
       Top = 0
       Width = 123
@@ -52,10 +52,10 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton6Click
+      OnClick = btnWordKanjiClick
       ExplicitLeft = 607
     end
-    object SpeedButton9: TSpeedButton
+    object btnExamples: TSpeedButton
       Left = 0
       Top = 0
       Width = 130
@@ -73,7 +73,7 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       ParentShowHint = False
       ShowHint = True
-      OnClick = SpeedButton9Click
+      OnClick = btnExamplesClick
       ExplicitLeft = 144
       ExplicitTop = 8
       ExplicitHeight = 17
@@ -441,7 +441,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800BC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800C00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -611,6 +611,89 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00645^Search by english meaning (F3)'
       RadioItem = True
       OnClick = miLookupEtoJClick
+    end
+  end
+  object Actions: TActionList
+    Left = 160
+    Top = 40
+    object aLookupAuto: TAction
+      Caption = '#01132^Auto/all'
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      ShortCut = 113
+      OnExecute = aLookupAutoExecute
+    end
+    object aKanji: TAction
+      Category = 'NotYetUsed'
+      Caption = '#00237^e&Characters in word'
+    end
+    object aExamples: TAction
+      Category = 'NotYetUsed'
+      Caption = '#00315^eExamples'
+    end
+    object aJapanese: TAction
+      Caption = '#00287^Japanese/Chinese -> English'
+      Hint = '#00643^Search by japanese reading'
+      OnExecute = aJapaneseExecute
+    end
+    object aEnglish: TAction
+      Caption = '#00288^English -> Japanese/Chinese'
+      Hint = '#00645^Search by english meaning'
+      ShortCut = 114
+      OnExecute = aEnglishExecute
+    end
+    object aClipboard: TAction
+      Caption = '#00289^Search by clipboard'
+      Hint = '#00647^Search by Kanji stored in clipboard'
+      ShortCut = 115
+      OnExecute = aClipboardExecute
+    end
+    object aAddClipboard: TAction
+      Caption = '#00285^Add to clipboard'
+      OnExecute = aAddClipboardExecute
+    end
+    object aExact: TAction
+      Caption = '#00290^Search exact word'
+      ShortCut = 116
+      OnExecute = aExactExecute
+    end
+    object aBeginning: TAction
+      Caption = '#00291^Search beginning'
+      ShortCut = 117
+      OnExecute = aBeginningExecute
+    end
+    object aEnd: TAction
+      Caption = '#00292^Search ending'
+      ShortCut = 118
+      OnExecute = aEndExecute
+    end
+    object aInflect: TAction
+      Caption = '#00301^Search inflected words'
+      OnExecute = aInflectExecute
+    end
+    object aAuto: TAction
+      Caption = '#00302^Auto-search while typing'
+      OnExecute = aAutoExecute
+    end
+    object aGroup1: TAction
+      Caption = '#00303^Use dictionaries in group 1'
+      ShortCut = 16433
+      OnExecute = aGroup1Execute
+    end
+    object aGroup2: TAction
+      Caption = '#00304^Use dictionaries in group 2'
+      ShortCut = 16434
+      OnExecute = aGroup2Execute
+    end
+    object aGroup3: TAction
+      Caption = '#00305^Use dictionaries in group 3'
+      ShortCut = 16435
+      OnExecute = aGroup3Execute
+    end
+    object aMiddle: TAction
+      Caption = '#00919^Search substring'
+      OnExecute = aMiddleExecute
     end
   end
 end
