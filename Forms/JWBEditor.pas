@@ -40,7 +40,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBWordLookup,
   JWBDicSearch, WakanPaintbox, WinSpeedButton,
-  ComCtrls, ToolWin, ImgList, JWBWakanText, JWBIO;
+  ComCtrls, ToolWin, ImgList, JWBWakanText, JWBIO, Vcl.Menus, System.Actions,
+  Vcl.ActnList;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -120,7 +121,7 @@ type
     OpenTextDialog: TOpenDialog;
     SaveTextDialog: TSaveDialog;
     SaveAsKanaDialog: TSaveDialog;
-    ImageList1: TImageList;
+    ActionIcons: TImageList;
     ToolBar1: TToolBar;
     sbFileNew: TToolButton;
     sbFileOpen: TToolButton;
@@ -153,6 +154,32 @@ type
     sbDockDictionary: TSpeedButton;
     ToolButton1: TToolButton;
     sbFullwidth: TToolButton;
+    Actions: TActionList;
+    aNew: TAction;
+    aOpen: TAction;
+    aSave: TAction;
+    aSaveAs: TAction;
+    aCut: TAction;
+    aCopy: TAction;
+    aPaste: TAction;
+    aSelectAll: TAction;
+    aKanjiMode: TAction;
+    aKanaMode: TAction;
+    aASCIIMode: TAction;
+    aReading: TAction;
+    aMeaning: TAction;
+    aClear: TAction;
+    aFill: TAction;
+    aSet: TAction;
+    aPrint: TAction;
+    aWindow: TAction;
+    aSmallFont: TAction;
+    aLargeFont: TAction;
+    aMedFont: TAction;
+    aColors: TAction;
+    aExport: TAction;
+    aCopyAs: TAction;
+    aFullwidth: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -199,6 +226,30 @@ type
     procedure cbFontSizeChange(Sender: TObject);
     procedure cbFontSizeExit(Sender: TObject);
     procedure cbFontSizeKeyPress(Sender: TObject; var Key: Char);
+    procedure aNewExecute(Sender: TObject);
+    procedure aOpenExecute(Sender: TObject);
+    procedure aSaveExecute(Sender: TObject);
+    procedure aSaveAsExecute(Sender: TObject);
+    procedure aCutExecute(Sender: TObject);
+    procedure aCopyExecute(Sender: TObject);
+    procedure aCopyAsExecute(Sender: TObject);
+    procedure aPasteExecute(Sender: TObject);
+    procedure aSelectAllExecute(Sender: TObject);
+    procedure aKanjiModeExecute(Sender: TObject);
+    procedure aKanaModeExecute(Sender: TObject);
+    procedure aASCIIModeExecute(Sender: TObject);
+    procedure aReadingExecute(Sender: TObject);
+    procedure aMeaningExecute(Sender: TObject);
+    procedure aClearExecute(Sender: TObject);
+    procedure aFillExecute(Sender: TObject);
+    procedure aSetExecute(Sender: TObject);
+    procedure aPrintExecute(Sender: TObject);
+    procedure aWindowExecute(Sender: TObject);
+    procedure aSmallFontExecute(Sender: TObject);
+    procedure aMedFontExecute(Sender: TObject);
+    procedure aLargeFontExecute(Sender: TObject);
+    procedure aColorsExecute(Sender: TObject);
+    procedure aExportExecute(Sender: TObject);
 
   public
     procedure LanguageChanged;
@@ -686,15 +737,15 @@ begin
 
   linl:=TGraphicalLineList.Create;
   plinl:=TGraphicalLineList.Create;
-  CopyShort:=fMenu.aEditorCopy.ShortCut;
-  CopyAsShort:=fMenu.aEditorCopyAs.ShortCut;
-  CutShort:=fMenu.aEditorCut.ShortCut;
-  PasteShort:=fMenu.aEditorPaste.ShortCut;
-  AllShort:=fMenu.aEditorSelectAll.ShortCut;
-  fMenu.aEditorCopy.ShortCut:=0;
-  fMenu.aEditorCut.ShortCut:=0;
-  fMenu.aEditorPaste.ShortCut:=0;
-  fMenu.aEditorSelectAll.ShortCut:=0;
+  CopyShort := aCopy.ShortCut;
+  CopyAsShort := aCopyAs.ShortCut;
+  CutShort := aCut.ShortCut;
+  PasteShort := aPaste.ShortCut;
+  AllShort := aSelectAll.ShortCut;
+  aCopy.ShortCut:=0;
+  aCut.ShortCut:=0;
+  aPaste.ShortCut:=0;
+  aSelectAll.ShortCut:=0;
 
   CF_HTML := RegisterClipboardFormat(PChar('HTML Format'));
   if CF_HTML=0 then RaiseLastOsError();
@@ -908,7 +959,7 @@ procedure TfEditor.SetFileChanged(Value: boolean);
 begin
   FFileChanged:=Value;
   sbFileSave.Enabled:=Value;
-  fMenu.aEditorSave.Enabled:=Value;
+  aSave.Enabled:=Value;
 end;
 
 {
@@ -1306,21 +1357,21 @@ end;
 
 procedure TfEditor.ListBox1Enter(Sender: TObject);
 begin
-  fMenu.aEditorCopy.ShortCut:=CopyShort;
-  fMenu.aEditorCopyAs.ShortCut:=CopyAsShort;
-  fMenu.aEditorCut.ShortCut:=CutShort;
-  fMenu.aEditorPaste.ShortCut:=PasteShort;
-  fMenu.aEditorSelectAll.ShortCut:=AllShort;
+  aCopy.ShortCut:=CopyShort;
+  aCopyAs.ShortCut:=CopyAsShort;
+  aCut.ShortCut:=CutShort;
+  aPaste.ShortCut:=PasteShort;
+  aSelectAll.ShortCut:=AllShort;
   DrawCaret(csVisible); //show cursor
 end;
 
 procedure TfEditor.ListBox1Exit(Sender: TObject);
 begin
-  fMenu.aEditorCopy.ShortCut:=0;
-  fMenu.aEditorCopyAs.ShortCut:=0;
-  fMenu.aEditorCut.ShortCut:=0;
-  fMenu.aEditorPaste.ShortCut:=0;
-  fMenu.aEditorSelectAll.ShortCut:=0;
+  aCopy.ShortCut:=0;
+  aCopyAs.ShortCut:=0;
+  aCut.ShortCut:=0;
+  aPaste.ShortCut:=0;
+  aSelectAll.ShortCut:=0;
   DrawCaret(csHidden); //kill cursor
 end;
 
@@ -1475,28 +1526,161 @@ begin
   DrawCaret(csHidden);
 end;
 
+procedure TfEditor.aNewExecute(Sender: TObject);
+begin
+  fEditor.sbFileNewClick(sender);
+end;
+
+procedure TfEditor.aOpenExecute(Sender: TObject);
+begin
+  fEditor.sbFileOpenClick(sender);
+end;
+
+procedure TfEditor.aSaveExecute(Sender: TObject);
+begin
+  fEditor.sbFileSaveClick(sender);
+end;
+
+procedure TfEditor.aSaveAsExecute(Sender: TObject);
+begin
+  fEditor.SaveAs;
+end;
+
+procedure TfEditor.aCutExecute(Sender: TObject);
+begin
+  if not fEditor.ListBox1.Focused then exit;
+  fEditor.sbClipCutClick(sender);
+end;
+
+procedure TfEditor.aCopyExecute(Sender: TObject);
+begin
+  if not fEditor.ListBox1.Focused then exit;
+  fEditor.sbClipCopyClick(sender);
+end;
+
+procedure TfEditor.aCopyAsExecute(Sender: TObject);
+begin
+  if not fEditor.ListBox1.Focused then exit;
+  fEditor.CopyAs;
+end;
+
+procedure TfEditor.aPasteExecute(Sender: TObject);
+begin
+  if not fEditor.ListBox1.Focused then exit;
+  fEditor.sbClipPasteClick(sender);
+end;
+
+procedure TfEditor.aSelectAllExecute(Sender: TObject);
+begin
+  if not fEditor.ListBox1.Focused then exit;
+  fEditor.SelectAll;
+end;
+
+procedure TfEditor.aKanjiModeExecute(Sender: TObject);
+begin
+  fEditor.sbKanjiMode.Down := true;
+  fEditor.sbKanjiModeClick(sender);
+end;
+
+procedure TfEditor.aKanaModeExecute(Sender: TObject);
+begin
+  fEditor.sbKanaMode.Down := true;
+  fEditor.sbKanaModeClick(sender);
+end;
+
+procedure TfEditor.aASCIIModeExecute(Sender: TObject);
+begin
+  fEditor.sbAsciiMode.Down := true;
+  fEditor.sbAsciiModeClick(sender);
+end;
+
+procedure TfEditor.aReadingExecute(Sender: TObject);
+begin
+  fEditor.sbDisplayReading.Down:=not fEditor.sbDisplayReading.Down;
+  fEditor.sbDisplayReadingClick(sender);
+end;
+
+procedure TfEditor.aMeaningExecute(Sender: TObject);
+begin
+  fEditor.sbDisplayMeaning.Down:=not fEditor.sbDisplayMeaning.Down;
+  fEditor.sbDisplayMeaningClick(sender);
+end;
+
+procedure TfEditor.aClearExecute(Sender: TObject);
+begin
+  fEditor.sbClearTranslationClick(sender);
+end;
+
+procedure TfEditor.aFillExecute(Sender: TObject);
+begin
+  fEditor.sbAutoTranslateClick(sender);
+end;
+
+procedure TfEditor.aSetExecute(Sender: TObject);
+begin
+  fEditor.sbSetTranslationClick(sender);
+end;
+
+procedure TfEditor.aPrintExecute(Sender: TObject);
+begin
+  fEditor.sbPrintClick(sender);
+end;
+
+procedure TfEditor.aWindowExecute(Sender: TObject);
+begin
+  fEditor.ListBox1.SetFocus;
+end;
+
+procedure TfEditor.aSmallFontExecute(Sender: TObject);
+begin
+  fEditor.FontSize := FontSizeSmall;
+end;
+
+procedure TfEditor.aMedFontExecute(Sender: TObject);
+begin
+  fEditor.FontSize := FontSizeMedium;
+end;
+
+procedure TfEditor.aLargeFontExecute(Sender: TObject);
+begin
+  fEditor.FontSize := FontSizeLarge;
+end;
+
+procedure TfEditor.aColorsExecute(Sender: TObject);
+begin
+  fEditor.sbUseTlColors.Down:=not fEditor.sbUseTlColors.Down;
+  fEditor.sbUseTlColorsClick(sender);
+end;
+
+procedure TfEditor.aExportExecute(Sender: TObject);
+begin
+  fEditor.ExportAs;
+end;
+
+
+
 { These are auto-check grouped buttones so they handle Down/Undown automatically }
 procedure TfEditor.sbKanjiModeClick(Sender: TObject);
 begin
-  fMenu.aEditorKanjiMode.Checked:=true;
-  fMenu.aEditorKanaMode.Checked:=false;
-  fMenu.aEditorASCIIMode.Checked:=false;
+  aKanjiMode.Checked:=true;
+  aKanaMode.Checked:=false;
+  aASCIIMode.Checked:=false;
   ResolveInsert(false); //old buffer invalid
 end;
 
 procedure TfEditor.sbKanaModeClick(Sender: TObject);
 begin
-  fMenu.aEditorKanaMode.Checked:=true;
-  fMenu.aEditorKanjiMode.Checked:=false;
-  fMenu.aEditorASCIIMode.Checked:=false;
+  aKanaMode.Checked:=true;
+  aKanjiMode.Checked:=false;
+  aASCIIMode.Checked:=false;
   ResolveInsert(false); //old buffer invalid
 end;
 
 procedure TfEditor.sbAsciiModeClick(Sender: TObject);
 begin
-  fMenu.aEditorASCIIMode.Checked:=true;
-  fMenu.aEditorKanaMode.Checked:=false;
-  fMenu.aEditorKanjiMode.Checked:=false;
+  aASCIIMode.Checked:=true;
+  aKanaMode.Checked:=false;
+  aKanjiMode.Checked:=false;
   ResolveInsert(false); //old buffer invalid
 end;
 
@@ -1504,19 +1688,19 @@ end;
 procedure TfEditor.sbDisplayReadingClick(Sender: TObject);
 begin
  //Keeps fMenu.Actions in sync but doesn't call Execute
-  fMenu.aEditorReading.Checked:=sbDisplayReading.Down;
+  aReading.Checked:=sbDisplayReading.Down;
   RepaintText();
 end;
 
 procedure TfEditor.sbDisplayMeaningClick(Sender: TObject);
 begin
-  fMenu.aEditorMeaning.Checked:=sbDisplayMeaning.Down;
+  aMeaning.Checked:=sbDisplayMeaning.Down;
   RepaintText();
 end;
 
 procedure TfEditor.sbUseTlColorsClick(Sender: TObject);
 begin
-  fMenu.aEditorColors.Checked:=sbUseTlColors.Down;
+  aColors.Checked:=sbUseTlColors.Down;
   RepaintText();
 end;
 
@@ -2463,7 +2647,7 @@ begin
           if printing and fSettings.cbNoPrintColors.Checked then
             color:=$00FFFFFF
           else
-          if fMenu.aEditorColors.Checked then begin
+          if aColors.Checked then begin
             case upcase(wordstate) of
               '-','X':color:=Col('Editor_Untranslated');
               '?':color:=Col('Editor_NotFound');
@@ -2488,7 +2672,7 @@ begin
           begin
             //Nothing.
           end else
-            if fMenu.aEditorColors.Checked then
+            if aColors.Checked then
               case learnstate of
                 0: color:=Col('Editor_Problematic');
                 1: color:=Col('Editor_Unlearned');
@@ -3718,9 +3902,9 @@ procedure TfEditor.SetFontSize(Value: integer);
 begin
   if FFontSize=Value then exit;
   FFontSize := Value;
-  fMenu.aEditorSmallFont.Checked:=(FFontSize=FontSizeSmall);
-  fMenu.aEditorMedFont.Checked:=(FFontSize=FontSizeMedium);
-  fMenu.aEditorLargeFont.Checked:=(FFontSize=FontSizeLarge);
+  aSmallFont.Checked:=(FFontSize=FontSizeSmall);
+  aMedFont.Checked:=(FFontSize=FontSizeMedium);
+  aLargeFont.Checked:=(FFontSize=FontSizeLarge);
   if cbFontSize.Text<>IntToStr(Value) then begin
     cbFontSize.Text := IntToStr(Value);
     cbFontSizeGuessItem(cbFontSize.Text);

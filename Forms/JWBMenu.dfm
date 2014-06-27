@@ -116,7 +116,7 @@ object fMenu: TfMenu
     0000000000000000000000000000000000000000000000000000000000000000
     0000000000000000000000000000000000000000000000000000000000000000
     000000000000000000000000000000000000000000000000000000000000}
-  Menu = MainMenu1
+  Menu = MainMenu
   OldCreateOrder = False
   Scaled = False
   ShowHint = True
@@ -767,116 +767,6 @@ object fMenu: TfMenu
       ShortCut = 120
       OnExecute = aChineseExecute
     end
-    object aEditorNew: TAction
-      Category = 'Editor'
-      Caption = '#00261^eNew'
-      ShortCut = 16462
-      OnExecute = aEditorNewExecute
-    end
-    object aEditorOpen: TAction
-      Category = 'Editor'
-      Caption = '#00262^eOpen...'
-      ShortCut = 16463
-      OnExecute = aEditorOpenExecute
-    end
-    object aEditorSave: TAction
-      Category = 'Editor'
-      Caption = '#00263^eSave'
-      ShortCut = 16467
-      OnExecute = aEditorSaveExecute
-    end
-    object aEditorSaveAs: TAction
-      Category = 'Editor'
-      Caption = '#00264^eSave as...'
-      OnExecute = aEditorSaveAsExecute
-    end
-    object aEditorCut: TAction
-      Category = 'Editor'
-      Caption = '#00265^eCut'
-      ShortCut = 16472
-      OnExecute = aEditorCutExecute
-    end
-    object aEditorCopy: TAction
-      Category = 'Editor'
-      Caption = '#00266^eCopy'
-      ShortCut = 16451
-      OnExecute = aEditorCopyExecute
-    end
-    object aEditorCopyAs: TAction
-      Category = 'Editor'
-      Caption = '#01059^eCopy as...'
-      ShortCut = 49219
-      OnExecute = aEditorCopyAsExecute
-    end
-    object aEditorPaste: TAction
-      Category = 'Editor'
-      Caption = '#00267^ePaste'
-      ShortCut = 16470
-      OnExecute = aEditorPasteExecute
-    end
-    object aEditorSelectAll: TAction
-      Category = 'Editor'
-      Caption = '#00268^eSelect all'
-      ShortCut = 16449
-      OnExecute = aEditorSelectAllExecute
-    end
-    object aEditorKanjiMode: TAction
-      Category = 'Editor'
-      Caption = '#00269^eCharacter mode'
-      Checked = True
-      ShortCut = 16465
-      OnExecute = aEditorKanjiModeExecute
-    end
-    object aEditorKanaMode: TAction
-      Category = 'Editor'
-      Caption = '#00270^eKana mode'
-      ShortCut = 16471
-      OnExecute = aEditorKanaModeExecute
-    end
-    object aEditorASCIIMode: TAction
-      Category = 'Editor'
-      Caption = '#00271^eASCII mode'
-      ShortCut = 16464
-      OnExecute = aEditorASCIIModeExecute
-    end
-    object aEditorReading: TAction
-      Category = 'Editor'
-      Caption = '#00272^eDisplay reading'
-      Checked = True
-      ShortCut = 16456
-      OnExecute = aEditorReadingExecute
-    end
-    object aEditorMeaning: TAction
-      Category = 'Editor'
-      Caption = '#00273^eDisplay meaning'
-      Checked = True
-      ShortCut = 16458
-      OnExecute = aEditorMeaningExecute
-    end
-    object aEditorClear: TAction
-      Category = 'Editor'
-      Caption = '#00274^eClear translation'
-      ShortCut = 16450
-      OnExecute = aEditorClearExecute
-    end
-    object aEditorFill: TAction
-      Category = 'Editor'
-      Caption = '#00275^eAuto-fill translation'
-      ShortCut = 16454
-      OnExecute = aEditorFillExecute
-    end
-    object aEditorSet: TAction
-      Category = 'Editor'
-      Caption = '#00276^eSet translation'
-      ShortCut = 16468
-      OnExecute = aEditorSetExecute
-    end
-    object aEditorPrint: TAction
-      Category = 'Editor'
-      Caption = '#00277^ePrint...'
-      ShortCut = 16502
-      OnExecute = aEditorPrintExecute
-    end
     object aKanjiAll: TAction
       Caption = '#00278^eDisplay all'
       ShortCut = 16469
@@ -972,27 +862,6 @@ object fMenu: TfMenu
       ShortCut = 16461
       OnExecute = aKanjiMeaningExecute
     end
-    object aEditorWindow: TAction
-      Category = 'Editor'
-      Caption = '#00296^eEditor window'
-      ShortCut = 16453
-      OnExecute = aEditorWindowExecute
-    end
-    object aEditorSmallFont: TAction
-      Category = 'Editor'
-      Caption = '#00052^eSmall'
-      OnExecute = aEditorSmallFontExecute
-    end
-    object aEditorLargeFont: TAction
-      Category = 'Editor'
-      Caption = '#00297^eLarge'
-      OnExecute = aEditorLargeFontExecute
-    end
-    object aEditorMedFont: TAction
-      Category = 'Editor'
-      Caption = '#00053^eMedium'
-      OnExecute = aEditorMedFontExecute
-    end
     object aModeKanji: TAction
       Category = 'Modes'
       Caption = '#00298^eCharacter list'
@@ -1058,11 +927,6 @@ object fMenu: TfMenu
       OnExecute = aUserExamplesExecute
       OnChecked = aUserExamplesChecked
     end
-    object aEditorColors: TAction
-      Category = 'Editor'
-      Caption = '#00309^eUse colors'
-      OnExecute = aEditorColorsExecute
-    end
     object aDictMiddle: TAction
       Caption = '#00919^eSearch substring'
       OnExecute = aDictMiddleExecute
@@ -1089,11 +953,6 @@ object fMenu: TfMenu
       Caption = 'Portrait Mode'
       OnExecute = aPortraitModeExecute
     end
-    object aEditorExport: TAction
-      Category = 'Editor'
-      Caption = '#01058^eExport as...'
-      OnExecute = aEditorExportExecute
-    end
     object aVocabExport: TAction
       Category = 'Vocabulary'
       Caption = '#00934^eExport'
@@ -1119,11 +978,12 @@ object fMenu: TfMenu
       OnExecute = aDownloaderExecute
     end
   end
-  object MainMenu1: TMainMenu
+  object MainMenu: TMainMenu
     Left = 136
     Top = 64
     object miDatabase: TMenuItem
       Caption = '#00310^e&Database'
+      GroupIndex = 10
       object miSaveUserChanges: TMenuItem
         Action = aSaveUser
       end
@@ -1164,6 +1024,7 @@ object fMenu: TfMenu
     end
     object miTools: TMenuItem
       Caption = '#00311^e&Tools'
+      GroupIndex = 20
       object miCharacterList: TMenuItem
         Action = aModeKanji
         RadioItem = True
@@ -1210,6 +1071,7 @@ object fMenu: TfMenu
     end
     object miCharacters: TMenuItem
       Caption = '#00312^e&Characters'
+      GroupIndex = 30
       object miCharacterList2: TMenuItem
         Action = aModeKanji
       end
@@ -1277,6 +1139,7 @@ object fMenu: TfMenu
     end
     object eDictionarycSlovnk1: TMenuItem
       Caption = '#00313^eD&ictionary'
+      GroupIndex = 40
       object miDictionary2: TMenuItem
         Action = aModeDict
       end
@@ -1363,6 +1226,8 @@ object fMenu: TfMenu
     end
     object Editor2: TMenuItem
       Caption = '#00896^eEditor'
+      SubMenuImages = fEditor.ActionIcons
+      GroupIndex = 50
       object miTextEditor2: TMenuItem
         Action = aModeEditor
       end
@@ -1370,74 +1235,74 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miEditorNew: TMenuItem
-        Action = aEditorNew
+        Action = fEditor.aNew
       end
       object miEditorOpen: TMenuItem
-        Action = aEditorOpen
+        Action = fEditor.aOpen
       end
       object miEditorSave: TMenuItem
-        Action = aEditorSave
+        Action = fEditor.aSave
       end
       object miEditorSaveAs: TMenuItem
-        Action = aEditorSaveAs
+        Action = fEditor.aSaveAs
       end
       object miEditorExportAs: TMenuItem
-        Action = aEditorExport
+        Action = fEditor.aExport
       end
       object N17: TMenuItem
         Caption = '-'
       end
       object miEditorCut: TMenuItem
-        Action = aEditorCut
+        Action = fEditor.aCut
       end
       object miEditorCopy: TMenuItem
-        Action = aEditorCopy
+        Action = fEditor.aCopy
       end
       object miEditorPaste: TMenuItem
-        Action = aEditorPaste
+        Action = fEditor.aPaste
       end
       object miEditorSelectAll: TMenuItem
-        Action = aEditorSelectAll
+        Action = fEditor.aSelectAll
       end
       object N18: TMenuItem
         Caption = '-'
       end
       object miCharacterMode: TMenuItem
-        Action = aEditorKanjiMode
+        Action = fEditor.aKanjiMode
         RadioItem = True
       end
       object miKanaMode: TMenuItem
-        Action = aEditorKanaMode
+        Action = fEditor.aKanaMode
         RadioItem = True
       end
       object miASCIIMode: TMenuItem
-        Action = aEditorASCIIMode
+        Action = fEditor.aASCIIMode
         RadioItem = True
       end
       object N19: TMenuItem
         Caption = '-'
       end
       object miDisplayReading: TMenuItem
-        Action = aEditorReading
+        Action = fEditor.aReading
       end
       object miDisplayMeaning: TMenuItem
-        Action = aEditorMeaning
+        Action = fEditor.aMeaning
       end
       object miUseColors: TMenuItem
-        Action = aEditorColors
+        Action = fEditor.aColors
       end
       object miFontSize: TMenuItem
         Caption = '#00051^eFont size'
         object miFontSizeSmall: TMenuItem
-          Action = aEditorSmallFont
+          Action = fEditor.aSmallFont
           RadioItem = True
         end
         object miFontSizeMedium: TMenuItem
-          Action = aEditorMedFont
+          Action = fEditor.aMedFont
           RadioItem = True
         end
         object miFontSizeLarge: TMenuItem
-          Action = aEditorLargeFont
+          Action = fEditor.aLargeFont
           RadioItem = True
         end
       end
@@ -1447,24 +1312,25 @@ object fMenu: TfMenu
       object miTranslation: TMenuItem
         Caption = '#00317^eTranslation'
         object miClearTranslation: TMenuItem
-          Action = aEditorClear
+          Action = fEditor.aClear
         end
         object miSetTranslation: TMenuItem
-          Action = aEditorSet
+          Action = fEditor.aSet
         end
         object miAutoFillTranslation: TMenuItem
-          Action = aEditorFill
+          Action = fEditor.aFill
         end
       end
       object N21: TMenuItem
         Caption = '-'
       end
       object miPrint: TMenuItem
-        Action = aEditorPrint
+        Action = fEditor.aPrint
       end
     end
     object miVocabulary1: TMenuItem
       Caption = '#00318^e&Vocabulary'
+      GroupIndex = 60
       object miVocabulary2: TMenuItem
         Action = aModeVocab
       end
@@ -1512,6 +1378,7 @@ object fMenu: TfMenu
     end
     object miHelp: TMenuItem
       Caption = '#00320^eHelp'
+      GroupIndex = 70
       object miHelpContents: TMenuItem
         Action = aHelp
       end
@@ -1520,6 +1387,14 @@ object fMenu: TfMenu
       end
       object miAbout: TMenuItem
         Action = aAbout
+      end
+    end
+    object est1: TMenuItem
+      Caption = 'Test'
+      GroupIndex = 100
+      object Bsd1: TMenuItem
+        Caption = 'Bsd'
+        GroupIndex = 15
       end
     end
   end

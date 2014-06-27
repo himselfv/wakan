@@ -108,7 +108,7 @@ object fEditor: TfEditor
     AutoSize = True
     BorderWidth = 1
     ButtonWidth = 43
-    Images = ImageList1
+    Images = ActionIcons
     List = True
     ShowCaptions = True
     AllowTextButtons = True
@@ -404,11 +404,11 @@ object fEditor: TfEditor
     Left = 207
     Top = 60
   end
-  object ImageList1: TImageList
-    Left = 544
-    Top = 48
+  object ActionIcons: TImageList
+    Left = 400
+    Top = 64
     Bitmap = {
-      494C010111001500D00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010111001500D80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1074,5 +1074,148 @@ object fEditor: TfEditor
       C007001F8001FEBFC0078FF18001FC9FC00FFFF98001FDDFC01FFF758001FDDF
       C03FFF8F8001FDDFFFFFFFFFFFFFFFFF00000000000000000000000000000000
       000000000000}
+  end
+  object Actions: TActionList
+    Images = ActionIcons
+    Left = 328
+    Top = 64
+    object aNew: TAction
+      Caption = '#00261^eNew'
+      ImageIndex = 0
+      ShortCut = 16462
+      OnExecute = aNewExecute
+    end
+    object aOpen: TAction
+      Caption = '#00262^eOpen...'
+      ImageIndex = 1
+      ShortCut = 16463
+      OnExecute = aOpenExecute
+    end
+    object aSave: TAction
+      Caption = '#00263^eSave'
+      ImageIndex = 2
+      ShortCut = 16467
+      OnExecute = aSaveExecute
+    end
+    object aSaveAs: TAction
+      Caption = '#00264^eSave as...'
+      ImageIndex = 2
+      OnExecute = aSaveAsExecute
+    end
+    object aCut: TAction
+      Caption = '#00265^eCut'
+      ImageIndex = 3
+      ShortCut = 16472
+      OnExecute = aCutExecute
+    end
+    object aCopy: TAction
+      Caption = '#00266^eCopy'
+      ImageIndex = 4
+      ShortCut = 16451
+      OnExecute = aCopyExecute
+    end
+    object aCopyAs: TAction
+      Caption = '#01059^eCopy as...'
+      ImageIndex = 4
+      ShortCut = 49219
+      OnExecute = aCopyAsExecute
+    end
+    object aPaste: TAction
+      Caption = '#00267^ePaste'
+      ImageIndex = 5
+      ShortCut = 16470
+      OnExecute = aPasteExecute
+    end
+    object aSelectAll: TAction
+      Caption = '#00268^eSelect all'
+      ShortCut = 16449
+      OnExecute = aSelectAllExecute
+    end
+    object aKanjiMode: TAction
+      Caption = '#00269^eCharacter mode'
+      Checked = True
+      ImageIndex = 6
+      ShortCut = 16465
+      OnExecute = aKanjiModeExecute
+    end
+    object aKanaMode: TAction
+      Caption = '#00270^eKana mode'
+      ImageIndex = 7
+      ShortCut = 16471
+      OnExecute = aKanaModeExecute
+    end
+    object aASCIIMode: TAction
+      Caption = '#00271^eASCII mode'
+      ImageIndex = 8
+      ShortCut = 16464
+      OnExecute = aASCIIModeExecute
+    end
+    object aFullwidth: TAction
+      Caption = 'Full-width characters'
+      ImageIndex = 16
+    end
+    object aReading: TAction
+      Caption = '#00272^eDisplay reading'
+      Checked = True
+      ImageIndex = 9
+      ShortCut = 16456
+      OnExecute = aReadingExecute
+    end
+    object aMeaning: TAction
+      Caption = '#00273^eDisplay meaning'
+      Checked = True
+      ImageIndex = 10
+      ShortCut = 16458
+      OnExecute = aMeaningExecute
+    end
+    object aClear: TAction
+      Caption = '#00274^eClear translation'
+      ImageIndex = 12
+      ShortCut = 16450
+      OnExecute = aClearExecute
+    end
+    object aFill: TAction
+      Caption = '#00275^eAuto-fill translation'
+      ImageIndex = 13
+      ShortCut = 16454
+      OnExecute = aFillExecute
+    end
+    object aSet: TAction
+      Caption = '#00276^eSet translation'
+      ImageIndex = 14
+      ShortCut = 16468
+      OnExecute = aSetExecute
+    end
+    object aPrint: TAction
+      Caption = '#00277^ePrint...'
+      ImageIndex = 15
+      ShortCut = 16502
+      OnExecute = aPrintExecute
+    end
+    object aWindow: TAction
+      Caption = '#00296^eEditor window'
+      ShortCut = 16453
+      OnExecute = aWindowExecute
+    end
+    object aSmallFont: TAction
+      Caption = '#00052^eSmall'
+      OnExecute = aSmallFontExecute
+    end
+    object aMedFont: TAction
+      Caption = '#00053^eMedium'
+      OnExecute = aMedFontExecute
+    end
+    object aLargeFont: TAction
+      Caption = '#00297^eLarge'
+      OnExecute = aLargeFontExecute
+    end
+    object aColors: TAction
+      Caption = '#00309^eUse colors'
+      OnExecute = aColorsExecute
+    end
+    object aExport: TAction
+      Caption = '#01058^eExport as...'
+      OnExecute = aExportExecute
+    end
   end
 end

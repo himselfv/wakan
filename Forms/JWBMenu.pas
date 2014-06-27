@@ -46,24 +46,6 @@ type
     aAbout: TAction;
     aJapanese: TAction;
     aChinese: TAction;
-    aEditorNew: TAction;
-    aEditorOpen: TAction;
-    aEditorSave: TAction;
-    aEditorSaveAs: TAction;
-    aEditorCut: TAction;
-    aEditorCopy: TAction;
-    aEditorPaste: TAction;
-    aEditorSelectAll: TAction;
-    aEditorKanjiMode: TAction;
-    aEditorKanaMode: TAction;
-    aEditorASCIIMode: TAction;
-    aEditorReading: TAction;
-    aEditorMeaning: TAction;
-    aEditorColors: TAction;
-    aEditorClear: TAction;
-    aEditorFill: TAction;
-    aEditorSet: TAction;
-    aEditorPrint: TAction;
     aKanjiAll: TAction;
     aKanjiLearned: TAction;
     aKanjiCommon: TAction;
@@ -83,11 +65,7 @@ type
     aKanjiWindow: TAction;
     aKanjiSetLearned: TAction;
     aKanjiMeaning: TAction;
-    aEditorWindow: TAction;
-    aEditorSmallFont: TAction;
-    aEditorLargeFont: TAction;
-    aEditorMedFont: TAction;
-    MainMenu1: TMainMenu;
+    MainMenu: TMainMenu;
     miDatabase: TMenuItem;
     JapMode1: TMenuItem;
     ChinMode1: TMenuItem;
@@ -225,10 +203,8 @@ type
     aCategoryManager: TAction;
     miManageCategories: TMenuItem;
     N24: TMenuItem;
-    aEditorCopyAs: TAction;
     aPortraitMode: TAction;
     PortraitMode1: TMenuItem;
-    aEditorExport: TAction;
     aVocabExport: TAction;
     aVocabImport: TAction;
     N14: TMenuItem;
@@ -242,6 +218,8 @@ type
     aDownloader: TAction;
     Download1: TMenuItem;
     N27: TMenuItem;
+    est1: TMenuItem;
+    Bsd1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -273,24 +251,6 @@ type
     procedure aAboutExecute(Sender: TObject);
     procedure aJapaneseExecute(Sender: TObject);
     procedure aChineseExecute(Sender: TObject);
-    procedure aEditorNewExecute(Sender: TObject);
-    procedure aEditorOpenExecute(Sender: TObject);
-    procedure aEditorSaveExecute(Sender: TObject);
-    procedure aEditorSaveAsExecute(Sender: TObject);
-    procedure aEditorCutExecute(Sender: TObject);
-    procedure aEditorCopyExecute(Sender: TObject);
-    procedure aEditorPasteExecute(Sender: TObject);
-    procedure aEditorSelectAllExecute(Sender: TObject);
-    procedure aEditorKanjiModeExecute(Sender: TObject);
-    procedure aEditorKanaModeExecute(Sender: TObject);
-    procedure aEditorASCIIModeExecute(Sender: TObject);
-    procedure aEditorReadingExecute(Sender: TObject);
-    procedure aEditorMeaningExecute(Sender: TObject);
-    procedure aEditorColorsExecute(Sender: TObject);
-    procedure aEditorClearExecute(Sender: TObject);
-    procedure aEditorFillExecute(Sender: TObject);
-    procedure aEditorSetExecute(Sender: TObject);
-    procedure aEditorPrintExecute(Sender: TObject);
     procedure aKanjiAllExecute(Sender: TObject);
     procedure aKanjiLearnedExecute(Sender: TObject);
     procedure aKanjiCommonExecute(Sender: TObject);
@@ -311,10 +271,6 @@ type
     procedure aDictMiddleExecute(Sender: TObject);
     procedure aKanjiWindowExecute(Sender: TObject);
     procedure aKanjiMeaningExecute(Sender: TObject);
-    procedure aEditorWindowExecute(Sender: TObject);
-    procedure aEditorSmallFontExecute(Sender: TObject);
-    procedure aEditorLargeFontExecute(Sender: TObject);
-    procedure aEditorMedFontExecute(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure aModeKanjiExecute(Sender: TObject);
     procedure aModeDictExecute(Sender: TObject);
@@ -333,9 +289,7 @@ type
     procedure aChangeLanguageExecute(Sender: TObject);
     procedure aFullscreenModeExecute(Sender: TObject);
     procedure aCategoryManagerExecute(Sender: TObject);
-    procedure aEditorCopyAsExecute(Sender: TObject);
     procedure aPortraitModeExecute(Sender: TObject);
-    procedure aEditorExportExecute(Sender: TObject);
     procedure aVocabExportExecute(Sender: TObject);
     procedure aVocabImportExecute(Sender: TObject);
     procedure ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
@@ -356,6 +310,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure aDictLookupAutoExecute(Sender: TObject);
     procedure aDownloaderExecute(Sender: TObject);
+    procedure EditorActionExecute(Action: TBasicAction; var Handled: Boolean);
 
   private
     initdone:boolean;
@@ -870,6 +825,9 @@ begin
       JWBAutoImport.ForceUpdates := true;
       JWBAutoImport.ForceUpdateList := UpdateDicsParams.Files;
     end;
+
+   //Attach forms
+    fEditor.Actions.OnExecute := Self.EditorActionExecute;
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
@@ -1527,7 +1485,7 @@ begin
   end
   else
   begin
-  	fmenu.Menu := fmenu.MainMenu1; //show menu
+  	fmenu.Menu := fmenu.MainMenu; //show menu
     BorderStyle := bsSizeable;
     if ws = wsMaximized then
       WindowState := wsMaximized
@@ -1802,141 +1760,6 @@ begin
   btnChineseModeClick(Sender);
 end;
 
-procedure TfMenu.aEditorNewExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbFileNewClick(sender);
-end;
-
-procedure TfMenu.aEditorOpenExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbFileOpenClick(sender);
-end;
-
-procedure TfMenu.aEditorSaveExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbFileSaveClick(sender);
-end;
-
-procedure TfMenu.aEditorSaveAsExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.SaveAs;
-end;
-
-procedure TfMenu.aEditorExportExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.ExportAs;
-end;
-
-procedure TfMenu.aEditorCutExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbClipCutClick(sender);
-end;
-
-procedure TfMenu.aEditorCopyExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbClipCopyClick(sender);
-end;
-
-procedure TfMenu.aEditorCopyAsExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.CopyAs;
-end;
-
-procedure TfMenu.aEditorPasteExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbClipPasteClick(sender);
-end;
-
-procedure TfMenu.aEditorSelectAllExecute(Sender: TObject);
-begin
-  if not fEditor.ListBox1.Focused then exit;
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.SelectAll;
-end;
-
-{ These simply switch to a page and click appropriate button.
- All handling is done in the editor module. }
-procedure TfMenu.aEditorKanjiModeExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbKanjiMode.Down := true;
-  fEditor.sbKanjiModeClick(sender);
-end;
-
-procedure TfMenu.aEditorKanaModeExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbKanaMode.Down := true;
-  fEditor.sbKanaModeClick(sender);
-end;
-
-procedure TfMenu.aEditorASCIIModeExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbAsciiMode.Down := true;
-  fEditor.sbAsciiModeClick(sender);
-end;
-
-{ These simply switch to a page and click appropriate button.
- All handling is done in the editor module. }
-procedure TfMenu.aEditorReadingExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbDisplayReading.Down:=not fEditor.sbDisplayReading.Down;
-  fEditor.sbDisplayReadingClick(sender);
-end;
-
-procedure TfMenu.aEditorMeaningExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbDisplayMeaning.Down:=not fEditor.sbDisplayMeaning.Down;
-  fEditor.sbDisplayMeaningClick(sender);
-end;
-
-procedure TfMenu.aEditorColorsExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbUseTlColors.Down:=not fEditor.sbUseTlColors.Down;
-  fEditor.sbUseTlColorsClick(sender);
-end;
-
-procedure TfMenu.aEditorClearExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbClearTranslationClick(sender);
-end;
-
-procedure TfMenu.aEditorFillExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbAutoTranslateClick(sender);
-end;
-
-procedure TfMenu.aEditorSetExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbSetTranslationClick(sender);
-end;
-
-procedure TfMenu.aEditorPrintExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.sbPrintClick(sender);
-end;
-
 procedure TfMenu.aKanjiAllExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aModeKanji.Execute;
@@ -2075,30 +1898,6 @@ procedure TfMenu.aKanjiMeaningExecute(Sender: TObject);
 begin
   if not fKanjiSearch.Visible then aKanjiSearchExecute(Sender);
   fKanjiSearch.edtDefinition.SetFocus;
-end;
-
-procedure TfMenu.aEditorWindowExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.ListBox1.SetFocus;
-end;
-
-procedure TfMenu.aEditorSmallFontExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.FontSize := FontSizeSmall;
-end;
-
-procedure TfMenu.aEditorMedFontExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.FontSize := FontSizeMedium;
-end;
-
-procedure TfMenu.aEditorLargeFontExecute(Sender: TObject);
-begin
-  if not fEditor.Visible then aModeEditor.Execute;
-  fEditor.FontSize := FontSizeLarge;
 end;
 
 { Panel docker.
@@ -2311,8 +2110,7 @@ begin
         aModeDict.Checked:=true;
       end;
     3:begin
-        if fEditor<>nil then
-          MainDock(fEditor,MainPanel);
+        if fEditor<>nil then MainDock(fEditor,MainPanel);
         tab3.Down:=true;
         if fEditor<>nil then
           fEditor.sbDockDictionary.Down:=false;
@@ -2322,8 +2120,7 @@ begin
         BottomPanel.height:=250;
         if fWordLookup<>nil then
           MainDock(fWordLookup,BottomPanel);
-        if fEditor<>nil then
-          MainDock(fEditor,MainPanel);
+        if fEditor<>nil then MainDock(fEditor,MainPanel);
         tab3.Down:=true;
         if fEditor<>nil then
           fEditor.sbDockDictionary.Down:=true;
@@ -2387,6 +2184,12 @@ end;
 procedure TfMenu.aModeVocabExecute(Sender: TObject);
 begin
   DisplayMode:=5;
+end;
+
+//Attached to run before any of fEditor.Actions
+procedure TfMenu.EditorActionExecute(Action: TBasicAction; var Handled: Boolean);
+begin
+  if not fEditor.Visible then aModeEditor.Execute;
 end;
 
 procedure TfMenu.SpeedButton1Click(Sender: TObject);
