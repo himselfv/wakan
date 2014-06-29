@@ -142,7 +142,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 23
       Height = 23
-      Hint = '#00656^eSearch exact word (F5)'
+      Hint = '#00290^Search exact word'
       Action = aMatchExact
       Align = alRight
       AllowAllUp = True
@@ -163,7 +163,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 23
       Height = 23
-      Hint = '#00657^eSearch beginning (F6)'
+      Hint = '#00291^Search beginning'
       Action = aMatchLeft
       Align = alRight
       AllowAllUp = True
@@ -184,7 +184,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 23
       Height = 23
-      Hint = '#00658^eSearch end (F7)'
+      Hint = '#00292^Search ending'
       Action = aMatchRight
       Align = alRight
       AllowAllUp = True
@@ -205,7 +205,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 25
       Height = 23
-      Hint = '#00930^eSearch middle'
+      Hint = '#00919^Search substring'
       Action = aMatchAnywhere
       Align = alRight
       AllowAllUp = True
@@ -226,7 +226,6 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 23
       Height = 23
-      Hint = '#00661^eSearch for inflected words / conjugated verbs'
       Action = aInflect
       Align = alRight
       AllowAllUp = True
@@ -247,9 +246,6 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 33
       Height = 23
-      Hint = 
-        '#00662^eAuto-preview while typing (full search with arrow button' +
-        ')'
       Action = aAutoPreview
       Align = alRight
       AllowAllUp = True
@@ -270,7 +266,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 25
       Height = 23
-      Hint = '#00663^eUse dictionaries in group 1 (Ctrl-1)'
+      Hint = '#00303^Use dictionaries in group 1'
       Action = aDictGroup1
       Align = alRight
       AllowAllUp = True
@@ -292,7 +288,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 25
       Height = 23
-      Hint = '#00664^eUse dictionaries in group 2 (Ctrl-2)'
+      Hint = '#00304^Use dictionaries in group 2'
       Action = aDictGroup2
       Align = alRight
       AllowAllUp = True
@@ -313,7 +309,7 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 25
       Height = 23
-      Hint = '#00665^eUse dictionaries in group 3 (Ctrl-3)'
+      Hint = '#00305^Use dictionaries in group 3'
       Action = aDictGroup3
       Align = alRight
       AllowAllUp = True
@@ -707,11 +703,15 @@ inherited fWordLookup: TfWordLookup
     object aInflect: TAction
       AutoCheck = True
       Caption = '#00301^Search inflected words'
+      Hint = '#00661^eSearch for inflected words / conjugated verbs'
       OnExecute = aMatchExactExecute
     end
     object aAutoPreview: TAction
       AutoCheck = True
       Caption = '#00302^Auto-search while typing'
+      Hint = 
+        '#00662^eAuto-preview while typing (full search with arrow button' +
+        ')'
       OnExecute = aMatchExactExecute
     end
     object aDictGroup1: TAction
