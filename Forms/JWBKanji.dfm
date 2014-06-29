@@ -15,6 +15,7 @@ object fKanji: TfKanji
   OldCreateOrder = False
   Scaled = False
   ShowHint = True
+  OnCreate = FormCreate
   OnHide = FormHide
   OnResize = FormResize
   OnShow = FormShow
@@ -115,6 +116,7 @@ object fKanji: TfKanji
         Width = 137
         Height = 21
         Hint = '#00119^eSearch & change sort order'
+        Action = aSearch
         Align = alRight
         AllowAllUp = True
         GroupIndex = 2
@@ -127,7 +129,6 @@ object fKanji: TfKanji
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
-        OnClick = btnSearchSortClick
         ExplicitLeft = 8
       end
     end
@@ -238,5 +239,61 @@ object fKanji: TfKanji
     OnTimer = UpdateTimerTimer
     Left = 222
     Top = 40
+  end
+  object Actions: TActionList
+    Left = 152
+    Top = 104
+    object aSearch: TCheckAction
+      AutoCheck = True
+      Caption = '#00230^e&Search'
+      OnExecute = aSearchExecute
+      OnChecked = aSearchChecked
+    end
+    object aAll: TAction
+      Caption = '#00278^eDisplay all'
+      ShortCut = 16469
+      OnExecute = aAllExecute
+    end
+    object aClipboard: TAction
+      Caption = '#00281^eIn clipboard only'
+      OnExecute = aClipboardExecute
+    end
+    object aLearned: TAction
+      Caption = '#00279^eLearned only'
+      OnExecute = aLearnedExecute
+    end
+    object aCommon: TAction
+      Caption = '#00280^eCommon only'
+      OnExecute = aCommonExecute
+    end
+    object aPinYin: TAction
+      Caption = '#00282^eSearch by PinYin'
+      ShortCut = 16457
+      OnExecute = aPinYinExecute
+    end
+    object aYomi: TAction
+      Caption = '#00283^eSearch by Yomi'
+      ShortCut = 16473
+      OnExecute = aYomiExecute
+    end
+    object aRadical: TAction
+      Caption = '#00284^eSearch by radical...'
+      ShortCut = 16466
+      OnExecute = aRadicalExecute
+    end
+    object aMeaning: TAction
+      Caption = '#00295^eSearch by meaning'
+      ShortCut = 16461
+      OnExecute = aMeaningExecute
+    end
+    object aPrint: TAction
+      Caption = '#00234^e&Print cards...'
+      ShortCut = 16501
+      OnExecute = aPrintExecute
+    end
+    object aSaveToFile: TAction
+      Caption = '#00944^eSave characters to file...'
+      OnExecute = aSaveToFileExecute
+    end
   end
 end

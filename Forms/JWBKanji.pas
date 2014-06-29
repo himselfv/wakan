@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBStrings,
-  Grids, DB, ShellAPI, WakanPaintbox;
+  Grids, DB, ShellAPI, WakanPaintbox, System.Actions, Vcl.ActnList, CheckAction;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -38,6 +38,18 @@ type
     btnKanjiDetails: TSpeedButton;
     btnPrintCards: TButton;
     btnSearchSort: TSpeedButton;
+    Actions: TActionList;
+    aPrint: TAction;
+    aAll: TAction;
+    aLearned: TAction;
+    aCommon: TAction;
+    aClipboard: TAction;
+    aPinYin: TAction;
+    aYomi: TAction;
+    aRadical: TAction;
+    aMeaning: TAction;
+    aSaveToFile: TAction;
+    aSearch: TCheckAction;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);
@@ -66,6 +78,19 @@ type
     procedure DrawGrid1KeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure DrawGrid1Click(Sender: TObject);
+    procedure aPrintExecute(Sender: TObject);
+    procedure aAllExecute(Sender: TObject);
+    procedure aLearnedExecute(Sender: TObject);
+    procedure aClipboardExecute(Sender: TObject);
+    procedure aCommonExecute(Sender: TObject);
+    procedure aPinYinExecute(Sender: TObject);
+    procedure aYomiExecute(Sender: TObject);
+    procedure aRadicalExecute(Sender: TObject);
+    procedure aMeaningExecute(Sender: TObject);
+    procedure aSaveToFileExecute(Sender: TObject);
+    procedure aSearchChecked(Sender: TObject);
+    procedure aSearchExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -100,13 +125,18 @@ implementation
 uses JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage,
   JWBKanjiCard, JWBKanaConv, JWBCategories, JWBAnnotations, TextTable,
-  JWBCharData;
+  JWBCharData, JWBForms;
 
 var ki:TStringList;
     calfonts:TStringList;
     caltype:integer;
 
 {$R *.DFM}
+
+procedure TfKanji.FormCreate(Sender: TObject);
+begin
+  btnSearchSort.GroupIndex := 2;
+end;
 
 procedure TfKanji.FormShow(Sender: TObject);
 begin
@@ -355,9 +385,9 @@ begin
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
     Screen.Cursor:=crHourGlass;
-    fMenu.aKanjiLearned.Checked:=fKanjiSearch.SpeedButton1.Down;
-    fMenu.aKanjiCommon.Checked:=fKanjiSearch.btnOnlyCommon.Down;
-    fMenu.aKanjiClipboard.Checked:=fKanjiSearch.btnInClipboard.Down;
+    Self.aLearned.Checked:=fKanjiSearch.SpeedButton1.Down;
+    Self.aCommon.Checked:=fKanjiSearch.btnOnlyCommon.Down;
+    Self.aClipboard.Checked:=fKanjiSearch.btnInClipboard.Down;
     fltclip:=TStringList.Create;
     fltpinyin:=TStringList.Create;
     fltyomi:=TStringList.Create;
@@ -945,7 +975,7 @@ end;
 
 procedure TfKanji.btnSearchSortClick(Sender: TObject);
 begin
-  fMenu.aKanjiSearch.Execute;
+  Self.aSearch.Execute;
 end;
 
 procedure TfKanji.btnKanjiDetailsClick(Sender: TObject);
@@ -1050,7 +1080,82 @@ begin
     Self.Reload();
 end;
 
+procedure TfKanji.aAllExecute(Sender: TObject);
+begin
+  fKanjiSearch.sbClearFiltersClick(Sender);
+end;
 
+procedure TfKanji.aClipboardExecute(Sender: TObject);
+begin
+  fKanjiSearch.btnInClipboard.Down:=not fKanjiSearch.btnInClipboard.Down;
+  fKanjiSearch.sbPinYinClick(Sender);
+end;
+
+procedure TfKanji.aCommonExecute(Sender: TObject);
+begin
+  fKanjiSearch.btnOnlyCommon.Down:=not fKanjiSearch.btnOnlyCommon.Down;
+  fKanjiSearch.sbPinYinClick(Sender);
+end;
+
+procedure TfKanji.aLearnedExecute(Sender: TObject);
+begin
+  fKanjiSearch.SpeedButton1.Down:=not fKanjiSearch.SpeedButton1.Down;
+  fKanjiSearch.sbPinYinClick(Sender);
+end;
+
+procedure TfKanji.aPinYinExecute(Sender: TObject);
+begin
+  if not fKanjiSearch.Visible then aSearch.Execute();
+  fKanjiSearch.edtPinYin.SetFocus;
+end;
+
+procedure TfKanji.aYomiExecute(Sender: TObject);
+begin
+  if not fKanjiSearch.Visible then aSearch.Execute;
+  fKanjiSearch.edtYomi.SetFocus;
+end;
+
+procedure TfKanji.aRadicalExecute(Sender: TObject);
+begin
+  if not fKanjiSearch.Visible then aSearch.Execute();
+  fKanjiSearch.sbListRadicalsClick(Sender);
+end;
+
+procedure TfKanji.aMeaningExecute(Sender: TObject);
+begin
+  if not fKanjiSearch.Visible then aSearch.Execute;
+  fKanjiSearch.edtDefinition.SetFocus;
+end;
+
+procedure TfKanji.aPrintExecute(Sender: TObject);
+begin
+  Self.btnPrintCardsClick(Sender);
+end;
+
+procedure TfKanji.aSaveToFileExecute(Sender: TObject);
+begin
+  Self.SaveChars;
+end;
+
+procedure TfKanji.aSearchChecked(Sender: TObject);
+begin
+  if (fKanjiSearch=nil)
+  or (aSearch.Checked = fKanjiSearch.Visible) then
+    exit;
+
+  if aSearch.Checked then begin
+    DockProc(fKanjiSearch,Self.pnlDockSearch,alTop,true);
+    fKanjiSearch.Show;
+  end else begin
+    fKanjiSearch.Hide;
+    DockProc(fKanjiSearch,Self.pnlDockSearch,alTop,false);
+  end;
+end;
+
+procedure TfKanji.aSearchExecute(Sender: TObject);
+begin
+ //Has to be non-empty or AutoCheck wont work
+end;
 
 initialization
   calfonts:=TStringList.Create;

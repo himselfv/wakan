@@ -266,7 +266,6 @@ object fKanjiSearch: TfKanjiSearch
       OnClick = lbCategoriesClick
       OnDblClick = lbCategoriesDblClick
       OnDrawItem = lbCategoriesDrawItem
-      ExplicitHeight = 144
     end
   end
   object ScrollBox1: TScrollBox

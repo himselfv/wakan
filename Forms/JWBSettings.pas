@@ -1256,7 +1256,7 @@ begin
   reg.WriteBool('ScreenTrans','WakanToolTip',fMenu.SpeedButton2.Down);
 
   setwindows:=0;
-  if fMenu.aKanjiSearch.Checked then inc(setwindows,1);
+  if fKanji.aSearch.Checked then inc(setwindows,1);
   if fMenu.aKanjiCompounds.Checked then inc(setwindows,2);
   if fMenu.aDictKanji.Checked then inc(setwindows,4);
   if fMenu.aDictExamples.Checked then inc(setwindows,8);

@@ -134,7 +134,7 @@ procedure TfKanjiSearch.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   fKanji.btnSearchSort.Down:=false;
-  fMenu.aKanjiSearch.Checked:=false;
+  fKanji.aSearch.Checked:=false;
 end;
 
 //Resets filters but does not apply it, so that you can chain it with something.

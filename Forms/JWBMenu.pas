@@ -25,16 +25,10 @@ type
     aCancelUser: TAction;
     aStatistics: TAction;
     aExit: TAction;
-    aDeprecatedKanji: TAction;
-    aKanjiSearch: TCheckAction;
     aKanjiDetails: TCheckAction;
     aKanjiCompounds: TCheckAction;
-    aKanjiPrint: TAction;
-    aDeprecatedDict: TAction;
     aDictKanji: TCheckAction;
     aDictExamples: TCheckAction;
-    aDeprecatedDictEditor: TAction;
-    aDeprecatedUser: TAction;
     aUserAdd: TAction;
     aUserSettings: TCheckAction;
     aUserDetails: TCheckAction;
@@ -46,18 +40,9 @@ type
     aAbout: TAction;
     aJapanese: TAction;
     aChinese: TAction;
-    aKanjiAll: TAction;
-    aKanjiLearned: TAction;
-    aKanjiCommon: TAction;
-    aKanjiClipboard: TAction;
-    aKanjiPinYin: TAction;
-    aKanjiYomi: TAction;
-    aKanjiRadical: TAction;
     aKanjiAddClipboard: TAction;
     aKanjiFullDetails: TAction;
-    aKanjiWindow: TAction;
     aKanjiSetLearned: TAction;
-    aKanjiMeaning: TAction;
     MainMenu: TMainMenu;
     miDatabase: TMenuItem;
     JapMode1: TMenuItem;
@@ -204,7 +189,6 @@ type
     aDownloader: TAction;
     Download1: TMenuItem;
     N27: TMenuItem;
-    aKanjiSaveToFile: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure BitBtn1Click(Sender: TObject);
@@ -219,10 +203,8 @@ type
     procedure aCancelUserExecute(Sender: TObject);
     procedure aStatisticsExecute(Sender: TObject);
     procedure aExitExecute(Sender: TObject);
-    procedure aKanjiSearchExecute(Sender: TObject);
     procedure aKanjiDetailsExecute(Sender: TObject);
     procedure aKanjiCompoundsExecute(Sender: TObject);
-    procedure aKanjiPrintExecute(Sender: TObject);
     procedure aDictKanjiExecute(Sender: TObject);
     procedure aDictExamplesExecute(Sender: TObject);
     procedure aUserAddExecute(Sender: TObject);
@@ -236,18 +218,9 @@ type
     procedure aAboutExecute(Sender: TObject);
     procedure aJapaneseExecute(Sender: TObject);
     procedure aChineseExecute(Sender: TObject);
-    procedure aKanjiAllExecute(Sender: TObject);
-    procedure aKanjiLearnedExecute(Sender: TObject);
-    procedure aKanjiCommonExecute(Sender: TObject);
-    procedure aKanjiClipboardExecute(Sender: TObject);
-    procedure aKanjiPinYinExecute(Sender: TObject);
-    procedure aKanjiYomiExecute(Sender: TObject);
-    procedure aKanjiRadicalExecute(Sender: TObject);
     procedure aKanjiAddClipboardExecute(Sender: TObject);
     procedure aKanjiSetLearnedExecute(Sender: TObject);
     procedure aKanjiFullDetailsExecute(Sender: TObject);
-    procedure aKanjiWindowExecute(Sender: TObject);
-    procedure aKanjiMeaningExecute(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure aModeKanjiExecute(Sender: TObject);
     procedure aModeDictExecute(Sender: TObject);
@@ -268,7 +241,6 @@ type
     procedure ClipboardPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure aStrokeOrderExecute(Sender: TObject);
-    procedure aKanjiSearchChecked(Sender: TObject);
     procedure aKanjiCompoundsChecked(Sender: TObject);
     procedure aDictKanjiChecked(Sender: TObject);
     procedure aDictExamplesChecked(Sender: TObject);
@@ -281,7 +253,7 @@ type
     procedure aDownloaderExecute(Sender: TObject);
     procedure EditorActionExecute(Action: TBasicAction; var Handled: Boolean);
     procedure WordLookupActionExecute(Action: TBasicAction; var Handled: Boolean);
-    procedure aKanjiSaveToFileExecute(Sender: TObject);
+    procedure KanjiListActionExecute(Action: TBasicAction; var Handled: Boolean);
 
   private
     initdone:boolean;
@@ -798,9 +770,12 @@ begin
     end;
 
    //Attach forms
-    fEditor.Actions.OnExecute := Self.EditorActionExecute;
-    fWordLookup.Actions.OnExecute := Self.WordLookupActionExecute;
-
+    if fEditor<>nil then
+      fEditor.Actions.OnExecute := Self.EditorActionExecute;
+    if fWordLookup<>nil then
+      fWordLookup.Actions.OnExecute := Self.WordLookupActionExecute;
+    if fKanji<>nil then
+      fKanji.Actions.OnExecute := Self.KanjiListActionExecute;
 
     SwitchLanguage(curlang);
     { SwitchLanguage will do this:
@@ -902,7 +877,7 @@ begin
  //Hide everything, and most importantly, turn all actions off
  //This will do no harm if the form is already hidden.
   Self.aKanjiDetails.Checked := false;
-  Self.aKanjiSearch.Checked := false;
+  fKanji.aSearch.Checked := false;
   Self.aKanjiCompounds.Checked := false;
   Self.aDictKanji.Checked := false;
   Self.aUserExamples.Checked := false;
@@ -937,7 +912,7 @@ begin
   end;
 
   fMenu.ApplyDisplayMode;
-  if fSettings.setwindows and 1=1 then fMenu.aKanjiSearch.Checked := true;
+  if fSettings.setwindows and 1=1 then fKanji.aSearch.Checked := true;
   if fSettings.setwindows and 2=2 then fMenu.aKanjiCompounds.Checked := true;
   if fSettings.setwindows and 4=4 then fMenu.aDictKanji.Checked := true;
   if fSettings.setwindows and 8=8 then fMenu.aDictExamples.Checked := true;
@@ -1467,28 +1442,6 @@ begin
   end;
 end;
 
-procedure TfMenu.aKanjiSearchExecute(Sender: TObject);
-var pre:boolean;
-begin
-  pre:=aKanjiSearch.Checked;
-  if not fKanji.Visible then aModeKanji.Execute;
-  if aKanjiSearch.Checked<>pre then exit;
-  aKanjiSearch.Checked := not aKanjiSearch.Checked;
-end;
-
-procedure TfMenu.aKanjiSaveToFileExecute(Sender: TObject);
-begin
-  fKanji.SaveChars;
-end;
-
-procedure TfMenu.aKanjiSearchChecked(Sender: TObject);
-begin
-  if fKanjiSearch<>nil then
-    ToggleForm(fKanjiSearch, aKanjiSearch.Checked);
-  if fKanji<>nil then
-    fKanji.btnSearchSort.Down := aKanjiSearch.Checked;
-end;
-
 { Changes the mode of KanjiDetails window: docked or free-floating }
 procedure TfMenu.SetCharDetDocked(Value: boolean; Loading: boolean);
 begin
@@ -1571,11 +1524,6 @@ begin
   if fKanji<>nil then
     fKanji.btnCompounds.Down := aKanjiCompounds.Checked;
   ApplyDisplayMode;
-end;
-
-procedure TfMenu.aKanjiPrintExecute(Sender: TObject);
-begin
-  fKanji.btnPrintCardsClick(Sender);
 end;
 
 procedure TfMenu.aDictKanjiExecute(Sender: TObject);
@@ -1738,54 +1686,6 @@ begin
   btnChineseModeClick(Sender);
 end;
 
-procedure TfMenu.aKanjiAllExecute(Sender: TObject);
-begin
-  if not fKanji.Visible then aModeKanji.Execute;
-  fKanjiSearch.sbClearFiltersClick(Sender);
-end;
-
-procedure TfMenu.aKanjiLearnedExecute(Sender: TObject);
-begin
-  if not fKanji.Visible then aModeKanji.Execute;
-  fKanjiSearch.SpeedButton1.Down:=not fKanjiSearch.SpeedButton1.Down;
-  fKanjiSearch.sbPinYinClick(Sender);
-end;
-
-procedure TfMenu.aKanjiCommonExecute(Sender: TObject);
-begin
-  if not fKanji.Visible then aModeKanji.Execute;
-  fKanjiSearch.btnOnlyCommon.Down:=not fKanjiSearch.btnOnlyCommon.Down;
-  fKanjiSearch.sbPinYinClick(Sender);
-end;
-
-procedure TfMenu.aKanjiClipboardExecute(Sender: TObject);
-begin
-  if not fKanji.Visible then aModeKanji.Execute;
-  fKanjiSearch.btnInClipboard.Down:=not fKanjiSearch.btnInClipboard.Down;
-  fKanjiSearch.sbPinYinClick(Sender);
-end;
-
-procedure TfMenu.aKanjiPinYinExecute(Sender: TObject);
-begin
-  if (not fKanji.Visible) then aModeKanji.Execute;
-  if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
-  fKanjiSearch.edtPinYin.SetFocus;
-end;
-
-procedure TfMenu.aKanjiYomiExecute(Sender: TObject);
-begin
-  if (not fKanji.Visible) then aModeKanji.Execute;
-  if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
-  fKanjiSearch.edtYomi.SetFocus;
-end;
-
-procedure TfMenu.aKanjiRadicalExecute(Sender: TObject);
-begin
-  if (not fKanji.Visible) then aModeKanji.Execute;
-  if (not fKanjiSearch.Visible) then aKanjiSearchExecute(Sender);
-  fKanjiSearch.sbListRadicalsClick(Sender);
-end;
-
 procedure TfMenu.aKanjiAddClipboardExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aModeKanji.Execute;
@@ -1804,18 +1704,6 @@ begin
   fKanjiDetails.btnStrokeOrderClick(Sender);
 end;
 
-procedure TfMenu.aKanjiWindowExecute(Sender: TObject);
-begin
-  if not fKanji.Visible then aModeKanji.Execute;
-  fKanji.DrawGrid1.SetFocus;
-end;
-
-procedure TfMenu.aKanjiMeaningExecute(Sender: TObject);
-begin
-  if not fKanjiSearch.Visible then aKanjiSearchExecute(Sender);
-  fKanjiSearch.edtDefinition.SetFocus;
-end;
-
 { Panel docker.
  If given "dock", docks the form to its rightful place and shows it,
  else hides it and undocks it.
@@ -1828,9 +1716,6 @@ begin
     else
       Result:=DockProc(fKanjiDetails,RightPanel,alRight,dock);
   end else
-  if form=fKanjiSearch then
-    Result:=DockProc(fKanjiSearch,fKanji.pnlDockSearch,alTop,dock)
-  else
   if (form=fExamples) and (DisplayMode<>5) then
     Result:=DockProc(fExamples,fWordLookup.pnlDockExamples,alBottom,dock)
   else
@@ -2091,7 +1976,7 @@ end;
 
 procedure TfMenu.aModeEditorExecute(Sender: TObject);
 begin
-  if fEditor.sbDockDictionary.Down then
+  if (fEditor<>nil) and fEditor.sbDockDictionary.Down then
     DisplayMode:=4
   else
     DisplayMode:=3;
@@ -2112,6 +1997,12 @@ end;
 procedure TfMenu.WordLookupActionExecute(Action: TBasicAction; var Handled: Boolean);
 begin
   if not fWordLookup.Visible and not fEditor.Visible then aModeDict.Execute;
+end;
+
+//Attached to run before any of fKanji.Actions
+procedure TfMenu.KanjiListActionExecute(Action: TBasicAction; var Handled: Boolean);
+begin
+  if not fKanji.Visible then aModeKanji.Execute;
 end;
 
 

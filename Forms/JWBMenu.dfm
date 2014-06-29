@@ -634,18 +634,6 @@ object fMenu: TfMenu
       ShortCut = 32856
       OnExecute = aExitExecute
     end
-    object aDeprecatedKanji: TAction
-      Category = 'Modes'
-      Caption = '#00229^eCharacter &list'
-      Enabled = False
-      Visible = False
-    end
-    object aKanjiSearch: TCheckAction
-      Category = 'KanjiList'
-      Caption = '#00230^e&Search'
-      OnExecute = aKanjiSearchExecute
-      OnChecked = aKanjiSearchChecked
-    end
     object aKanjiDetails: TCheckAction
       Caption = '#00232^e&Details'
       ShortCut = 16452
@@ -656,18 +644,6 @@ object fMenu: TfMenu
       Caption = '#00233^e&Compounds'
       OnExecute = aKanjiCompoundsExecute
       OnChecked = aKanjiCompoundsChecked
-    end
-    object aKanjiPrint: TAction
-      Category = 'KanjiList'
-      Caption = '#00234^e&Print cards...'
-      ShortCut = 16501
-      OnExecute = aKanjiPrintExecute
-    end
-    object aDeprecatedDict: TAction
-      Category = 'Modes'
-      Caption = '#00235^e&Word dictionary'
-      Enabled = False
-      Visible = False
     end
     object aDictKanji: TCheckAction
       Category = 'DictLookup'
@@ -680,18 +656,6 @@ object fMenu: TfMenu
       Caption = '#00315^eExamples'
       OnExecute = aDictExamplesExecute
       OnChecked = aDictExamplesChecked
-    end
-    object aDeprecatedDictEditor: TAction
-      Category = 'Modes'
-      Caption = '#00240^e&Editor && translator'
-      Enabled = False
-      Visible = False
-    end
-    object aDeprecatedUser: TAction
-      Category = 'Modes'
-      Caption = '#00241^eVocabulary &list'
-      Enabled = False
-      Visible = False
     end
     object aUserAdd: TAction
       Category = 'Vocabulary'
@@ -759,45 +723,6 @@ object fMenu: TfMenu
       ShortCut = 120
       OnExecute = aChineseExecute
     end
-    object aKanjiAll: TAction
-      Category = 'KanjiList'
-      Caption = '#00278^eDisplay all'
-      ShortCut = 16469
-      OnExecute = aKanjiAllExecute
-    end
-    object aKanjiLearned: TAction
-      Category = 'KanjiList'
-      Caption = '#00279^eLearned only'
-      OnExecute = aKanjiLearnedExecute
-    end
-    object aKanjiCommon: TAction
-      Category = 'KanjiList'
-      Caption = '#00280^eCommon only'
-      OnExecute = aKanjiCommonExecute
-    end
-    object aKanjiClipboard: TAction
-      Category = 'KanjiList'
-      Caption = '#00281^eIn clipboard only'
-      OnExecute = aKanjiClipboardExecute
-    end
-    object aKanjiPinYin: TAction
-      Category = 'KanjiList'
-      Caption = '#00282^eSearch by PinYin'
-      ShortCut = 16457
-      OnExecute = aKanjiPinYinExecute
-    end
-    object aKanjiYomi: TAction
-      Category = 'KanjiList'
-      Caption = '#00283^eSearch by Yomi'
-      ShortCut = 16473
-      OnExecute = aKanjiYomiExecute
-    end
-    object aKanjiRadical: TAction
-      Category = 'KanjiList'
-      Caption = '#00284^eSearch by radical...'
-      ShortCut = 16466
-      OnExecute = aKanjiRadicalExecute
-    end
     object aKanjiAddClipboard: TAction
       Category = 'KanjiList'
       Caption = '#00285^eAdd to clipboard'
@@ -808,22 +733,11 @@ object fMenu: TfMenu
       Caption = '#00286^eFull details'
       OnExecute = aKanjiFullDetailsExecute
     end
-    object aKanjiWindow: TAction
-      Caption = '#00293^eCharacter window'
-      ShortCut = 16459
-      OnExecute = aKanjiWindowExecute
-    end
     object aKanjiSetLearned: TAction
       Category = 'KanjiList'
       Caption = '#00294^eSet as (un)learned'
       ShortCut = 16460
       OnExecute = aKanjiSetLearnedExecute
-    end
-    object aKanjiMeaning: TAction
-      Category = 'KanjiList'
-      Caption = '#00295^eSearch by meaning'
-      ShortCut = 16461
-      OnExecute = aKanjiMeaningExecute
     end
     object aModeKanji: TAction
       Category = 'Modes'
@@ -900,11 +814,6 @@ object fMenu: TfMenu
         '#01140^Download dictionaries and other components or update exis' +
         'ting ones.'
       OnExecute = aDownloaderExecute
-    end
-    object aKanjiSaveToFile: TAction
-      Category = 'KanjiList'
-      Caption = '#00944^eSave characters to file...'
-      OnExecute = aKanjiSaveToFileExecute
     end
   end
   object MainMenu: TMainMenu
@@ -1008,31 +917,31 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miDisplayAll: TMenuItem
-        Action = aKanjiAll
+        Action = fKanji.aAll
       end
       object miLearnedOnly: TMenuItem
-        Action = aKanjiLearned
+        Action = fKanji.aLearned
       end
       object miCommonOnly: TMenuItem
-        Action = aKanjiCommon
+        Action = fKanji.aCommon
       end
       object miInClipboardOnly: TMenuItem
-        Action = aKanjiClipboard
+        Action = fKanji.aClipboard
       end
       object N3: TMenuItem
         Caption = '-'
       end
       object miSearchByPinYin: TMenuItem
-        Action = aKanjiPinYin
+        Action = fKanji.aPinYin
       end
       object miSearchByYomi: TMenuItem
-        Action = aKanjiYomi
+        Action = fKanji.aYomi
       end
       object miSearchByMeaning: TMenuItem
-        Action = aKanjiMeaning
+        Action = fKanji.aMeaning
       end
       object miSearchByRadical: TMenuItem
-        Action = aKanjiRadical
+        Action = fKanji.aRadical
       end
       object N6: TMenuItem
         Caption = '-'
@@ -1044,13 +953,14 @@ object fMenu: TfMenu
         Action = aKanjiSetLearned
       end
       object miPrintCards: TMenuItem
-        Action = aKanjiPrint
+        Action = fKanji.aPrint
       end
       object N13: TMenuItem
         Caption = '-'
       end
       object miSearch: TMenuItem
-        Action = aKanjiSearch
+        Action = fKanji.aSearch
+        AutoCheck = True
       end
       object miDetails: TMenuItem
         Action = aKanjiDetails
@@ -1062,7 +972,7 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miSaveCharactersToFile: TMenuItem
-        Action = aKanjiSaveToFile
+        Action = fKanji.aSaveToFile
       end
     end
     object eDictionarycSlovnk1: TMenuItem
