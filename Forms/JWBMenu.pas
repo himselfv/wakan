@@ -41,7 +41,6 @@ type
     aJapanese: TAction;
     aChinese: TAction;
     aKanjiAddClipboard: TAction;
-    aKanjiFullDetails: TAction;
     aKanjiSetLearned: TAction;
     MainMenu: TMainMenu;
     miDatabase: TMenuItem;
@@ -182,7 +181,6 @@ type
     N00934eExport1: TMenuItem;
     aVocabImport1: TMenuItem;
     ClipboardPaintbox: TWakanPaintbox;
-    aStrokeOrder: TAction;
     ApplicationEvents1: TApplicationEvents;
     N01132Autoall1: TMenuItem;
     aDownloader: TAction;
@@ -238,7 +236,6 @@ type
       Y: Integer);
     procedure ClipboardPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure aStrokeOrderExecute(Sender: TObject);
     procedure aKanjiCompoundsChecked(Sender: TObject);
     procedure aDictKanjiChecked(Sender: TObject);
     procedure aDictExamplesChecked(Sender: TObject);
@@ -1382,11 +1379,6 @@ begin
   finally
     FreeAndNil(fStatistics);
   end;
-end;
-
-procedure TfMenu.aStrokeOrderExecute(Sender: TObject);
-begin
-  fKanjiDetails.btnStrokeOrder.Down := aStrokeOrder.Checked;
 end;
 
 procedure TfMenu.aVocabExportExecute(Sender: TObject);

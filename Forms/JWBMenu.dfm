@@ -669,10 +669,6 @@ object fMenu: TfMenu
       OnExecute = aUserSettingsExecute
       OnChecked = aUserSettingsChecked
     end
-    object aUserCategory: TAction
-      Category = 'Vocabulary'
-      Caption = '#00244^e&Category'
-    end
     object aUserDetails: TCheckAction
       Category = 'Vocabulary'
       Caption = '#00245^e&Word details'
@@ -728,10 +724,6 @@ object fMenu: TfMenu
       Caption = '#00285^eAdd to clipboard'
       ShortCut = 16455
       OnExecute = aKanjiAddClipboardExecute
-    end
-    object aKanjiFullDetails: TAction
-      Caption = '#00286^eFull details'
-      OnExecute = aKanjiFullDetailsExecute
     end
     object aKanjiSetLearned: TAction
       Category = 'KanjiList'
@@ -802,10 +794,6 @@ object fMenu: TfMenu
       Caption = '#00935^eExport'
       Hint = '#00834^eImport vocabulary'
       OnExecute = aVocabImportExecute
-    end
-    object aStrokeOrder: TAction
-      Caption = 'Stroke order'
-      OnExecute = aStrokeOrderExecute
     end
     object aDownloader: TAction
       Category = 'Main'
@@ -987,7 +975,6 @@ object fMenu: TfMenu
       object N01132Autoall1: TMenuItem
         Action = fWordLookup.aLookupAuto
         AutoCheck = True
-        Caption = '#01125^Search by any text'
       end
       object miSearchJapanese: TMenuItem
         Action = fWordLookup.aLookupJtoE
@@ -1036,21 +1023,18 @@ object fMenu: TfMenu
         object miDictionaryGroup1: TMenuItem
           Action = fWordLookup.aDictGroup1
           AutoCheck = True
-          Caption = '#00104^Group 1'
           GroupIndex = 10
           RadioItem = True
         end
         object miDictionaryGroup2: TMenuItem
           Action = fWordLookup.aDictGroup2
           AutoCheck = True
-          Caption = '#00106^Group 2'
           GroupIndex = 10
           RadioItem = True
         end
         object miDictionaryGroup3: TMenuItem
           Action = fWordLookup.aDictGroup3
           AutoCheck = True
-          Caption = '#00108^Group 3'
           GroupIndex = 10
           RadioItem = True
         end
@@ -1219,6 +1203,7 @@ object fMenu: TfMenu
       end
       object aVocabImport1: TMenuItem
         Action = aVocabImport
+        Caption = '#00935^eImport'
       end
       object N24: TMenuItem
         Caption = '-'
