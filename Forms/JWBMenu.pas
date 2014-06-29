@@ -29,11 +29,11 @@ type
     aKanjiCompounds: TCheckAction;
     aDictKanji: TCheckAction;
     aDictExamples: TCheckAction;
-    aUserAdd: TAction;
-    aUserSettings: TCheckAction;
-    aUserDetails: TCheckAction;
-    aUserPrint: TAction;
-    aUserGenerate: TAction;
+    aVocabAdd: TAction;
+    aVocabSettings: TCheckAction;
+    aVocabDetails: TCheckAction;
+    aVocabPrint: TAction;
+    aVocabGenerate: TAction;
     aSettings: TAction;
     aSettingsDict: TAction;
     aHelp: TAction;
@@ -145,8 +145,8 @@ type
     Bevel1: TBevel;
     ScreenTimer: TTimer;
     RightPanel: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton2: TSpeedButton;
+    btnScreenModeSc: TSpeedButton;
+    btnScreenModeWk: TSpeedButton;
     miEditorExportAs: TMenuItem;
     miSearchInflectedWords: TMenuItem;
     miAutoSearchWhileTyping: TMenuItem;
@@ -155,7 +155,7 @@ type
     miDictionaryGroup1: TMenuItem;
     miDictionaryGroup2: TMenuItem;
     miDictionaryGroup3: TMenuItem;
-    aUserExamples: TCheckAction;
+    aVocabExamples: TCheckAction;
     miExamples2: TMenuItem;
     miUseColors: TMenuItem;
     miSearchSubstring: TMenuItem;
@@ -188,10 +188,8 @@ type
     N27: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure BitBtn1Click(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton7Click(Sender: TObject);
+    procedure btnScreenModeWkClick(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
     procedure btnClipboardClearClick(Sender: TObject);
@@ -203,11 +201,11 @@ type
     procedure aKanjiCompoundsExecute(Sender: TObject);
     procedure aDictKanjiExecute(Sender: TObject);
     procedure aDictExamplesExecute(Sender: TObject);
-    procedure aUserAddExecute(Sender: TObject);
-    procedure aUserSettingsExecute(Sender: TObject);
-    procedure aUserDetailsExecute(Sender: TObject);
-    procedure aUserPrintExecute(Sender: TObject);
-    procedure aUserGenerateExecute(Sender: TObject);
+    procedure aVocabAddExecute(Sender: TObject);
+    procedure aVocabSettingsExecute(Sender: TObject);
+    procedure aVocabDetailsExecute(Sender: TObject);
+    procedure aVocabPrintExecute(Sender: TObject);
+    procedure aVocabGenerateExecute(Sender: TObject);
     procedure aSettingsExecute(Sender: TObject);
     procedure aSettingsDictExecute(Sender: TObject);
     procedure aHelpExecute(Sender: TObject);
@@ -222,9 +220,9 @@ type
     procedure aModeDictExecute(Sender: TObject);
     procedure aModeEditorExecute(Sender: TObject);
     procedure aModeVocabExecute(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
+    procedure btnScreenModeScClick(Sender: TObject);
     procedure ScreenTimerTimer(Sender: TObject);
-    procedure aUserExamplesExecute(Sender: TObject);
+    procedure aVocabExamplesExecute(Sender: TObject);
     procedure aChangeLanguageExecute(Sender: TObject);
     procedure aFullscreenModeExecute(Sender: TObject);
     procedure aCategoryManagerExecute(Sender: TObject);
@@ -239,9 +237,9 @@ type
     procedure aKanjiCompoundsChecked(Sender: TObject);
     procedure aDictKanjiChecked(Sender: TObject);
     procedure aDictExamplesChecked(Sender: TObject);
-    procedure aUserSettingsChecked(Sender: TObject);
-    procedure aUserDetailsChecked(Sender: TObject);
-    procedure aUserExamplesChecked(Sender: TObject);
+    procedure aVocabSettingsChecked(Sender: TObject);
+    procedure aVocabDetailsChecked(Sender: TObject);
+    procedure aVocabExamplesChecked(Sender: TObject);
     procedure aKanjiDetailsChecked(Sender: TObject);
     procedure ApplicationEvents1Exception(Sender: TObject; E: Exception);
     procedure FormShow(Sender: TObject);
@@ -463,7 +461,6 @@ begin
   suffixl:=TStringList.Create;
   partl:=TParticleList.Create;
   readchl:=TStringList.Create;
-
 
   curlang:='j';
   DragStartCtl:=nil;
@@ -875,10 +872,10 @@ begin
   fKanji.aSearch.Checked := false;
   Self.aKanjiCompounds.Checked := false;
   Self.aDictKanji.Checked := false;
-  Self.aUserExamples.Checked := false;
+  Self.aVocabExamples.Checked := false;
   Self.aDictExamples.Checked := false;
-  Self.aUserDetails.Checked := false;
-  Self.aUserSettings.Checked := false;
+  Self.aVocabDetails.Checked := false;
+  Self.aVocabSettings.Checked := false;
 
   FSetDisplayMode:=fSettings.setlayout;
 
@@ -911,9 +908,9 @@ begin
   if fSettings.setwindows and 2=2 then fMenu.aKanjiCompounds.Checked := true;
   if fSettings.setwindows and 4=4 then fMenu.aDictKanji.Checked := true;
   if fSettings.setwindows and 8=8 then fMenu.aDictExamples.Checked := true;
-  if fSettings.setwindows and 16=16 then fMenu.aUserExamples.Checked := true;
-  if fSettings.setwindows and 32=32 then fMenu.aUserDetails.Checked := true;
-  if fSettings.setwindows and 64=64 then fMenu.aUserSettings.Checked := true;
+  if fSettings.setwindows and 16=16 then fMenu.aVocabExamples.Checked := true;
+  if fSettings.setwindows and 32=32 then fMenu.aVocabDetails.Checked := true;
+  if fSettings.setwindows and 64=64 then fMenu.aVocabSettings.Checked := true;
   if (fSettings.setwindows and 128=128) and (not fMenu.CharDetDocked) then fMenu.aKanjiDetails.Checked := true;
 
   if fWordLookup<>nil then
@@ -998,17 +995,6 @@ begin
   suffixl.Sort;
 end;
 
-procedure TfMenu.SetUserDataChanged(Value: boolean);
-begin
-  FUserDataChanged := Value;
-  aSaveUser.Enabled:=FUserDataChanged;
-  aCancelUser.Enabled:=FUserDataChanged;
-end;
-
-procedure TfMenu.ChangeUserData;
-begin
-  UserDataChanged:=true;
-end;
 
 procedure TfMenu.SwitchLanguage(lanchar:char);
 var mb_res: integer;
@@ -1100,6 +1086,19 @@ begin
     fKanjiSearch.lbCategories.ItemIndex:=0;
     fKanjiSearch.lbCategoriesClick(Self); //react to changes
   end;
+end;
+
+
+procedure TfMenu.SetUserDataChanged(Value: boolean);
+begin
+  FUserDataChanged := Value;
+  aSaveUser.Enabled:=FUserDataChanged;
+  aCancelUser.Enabled:=FUserDataChanged;
+end;
+
+procedure TfMenu.ChangeUserData;
+begin
+  UserDataChanged:=true;
 end;
 
 procedure TfMenu.LoadUserData;
@@ -1284,10 +1283,6 @@ begin
     SaveUserData; //updates LastSaveTime
 end;
 
-procedure TfMenu.BitBtn1Click(Sender: TObject);
-begin
-  Close;
-end;
 
 procedure TfMenu.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -1297,7 +1292,7 @@ begin
     FormPlacement1.SaveFormPlacement;
   if Action<>caNone then
   begin
-    if SpeedButton1.Down then
+    if btnScreenModeSc.Down then
     begin
       Screen.Cursor:=crHourGlass;
 {MCH      UninjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
@@ -1311,19 +1306,10 @@ begin
   end;
 end;
 
-procedure TfMenu.ClipboardChanged(Sender: TObject);
-begin
-  ClipboardPaintbox.Invalidate;
-end;
 
-procedure TfMenu.SpeedButton2Click(Sender: TObject);
+procedure TfMenu.btnScreenModeWkClick(Sender: TObject);
 begin
-  screenModeWk:=SpeedButton2.Down;
-end;
-
-procedure TfMenu.SpeedButton7Click(Sender: TObject);
-begin
-  LoadUserData;
+  screenModeWk:=btnScreenModeWk.Down;
 end;
 
 procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
@@ -1334,6 +1320,22 @@ end;
 procedure TfMenu.btnChineseModeClick(Sender: TObject);
 begin
   SwitchLanguage('c');
+end;
+
+procedure TfMenu.aJapaneseExecute(Sender: TObject);
+begin
+  btnJapaneseModeClick(Sender);
+end;
+
+procedure TfMenu.aChineseExecute(Sender: TObject);
+begin
+  btnChineseModeClick(Sender);
+end;
+
+
+procedure TfMenu.ClipboardChanged(Sender: TObject);
+begin
+  ClipboardPaintbox.Invalidate;
 end;
 
 procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
@@ -1360,6 +1362,7 @@ begin
   Clipboard.Clear;
 end;
 
+
 procedure TfMenu.aSaveUserExecute(Sender: TObject);
 begin
   SaveUserData;
@@ -1381,20 +1384,77 @@ begin
   end;
 end;
 
-procedure TfMenu.aVocabExportExecute(Sender: TObject);
+
+procedure TfMenu.aSettingsExecute(Sender: TObject);
 begin
-  fVocab.ExportVocab;
+  fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
+  fSettings.ShowModal;
+  if fKanji.Visible then fKanji.Reload();
+  if fWordLookup.Visible then fWordLookup.Look();
+  if fVocab.Visible then fVocab.ShowIt(false);
+  if fEditor.Visible then fEditor.RepaintText;
 end;
 
-procedure TfMenu.aVocabImportExecute(Sender: TObject);
+procedure TfMenu.aChangeLanguageExecute(Sender: TObject);
 begin
-  fVocab.ImportVocab;
+  fLanguage.SelectLanguage;
+end;
+
+procedure TfMenu.aSettingsDictExecute(Sender: TObject);
+var fDictMan: TfDictMan;
+begin
+  fDictMan := TfDictMan.Create(Self);
+  try
+    fDictMan.ShowModal;
+  finally
+    FreeAndNil(fDictMan);
+  end;
+end;
+
+procedure TfMenu.aHelpExecute(Sender: TObject);
+begin
+  if FileExists('wakan_'+curGUILanguage+'.chm') then
+    ShellExecute(fMenu.handle,nil,pchar('wakan_'+curGUILanguage+'.chm'),nil,nil,SW_SHOW) else
+  if FileExists('wakan.chm') then
+    ShellExecute(fMenu.handle,nil,'wakan.chm',nil,nil,SW_SHOW) else
+  if FileExists('wakan_bld.chm') then
+  begin
+    Application.MessageBox(
+      pchar(_l('#00363^eHelp file is under construction, the information may be inaccurate.')),
+      pchar(_l('#00364^eNotice')),
+      MB_ICONWARNING or MB_OK);
+    ShellExecute(fMenu.handle,nil,'wakan_bld.chm',nil,nil,SW_SHOW);
+  end else
+  if FileExists('wakan_en.chm') then
+    Application.MessageBox(
+      pchar(_l('#00365^eHelp file is out of date. Please download new help file '
+        +'from WaKan website: wakan.manga.cz.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK)
+  else
+    Application.MessageBox(
+      pchar(_l('#00366^eCannot find file WAKAN.CHM.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
+end;
+
+procedure TfMenu.aAboutExecute(Sender: TObject);
+var fSplash: TfSplash;
+begin
+  fSplash := TfSplash.Create(Self);
+  try
+    fSplash.BitBtn1.Show;
+    fSplash.ShowModal;
+  finally
+    FreeAndNil(fSplash);
+  end;
 end;
 
 procedure TfMenu.aExitExecute(Sender: TObject);
 begin
   Close;
 end;
+
 
 //switch between resizable window with borders and menu
 //and fullscreen borderless, menuless mode
@@ -1542,7 +1602,7 @@ begin
   fWordLookup.btnExamples.Down := aDictExamples.Checked;
 end;
 
-procedure TfMenu.aUserAddExecute(Sender: TObject);
+procedure TfMenu.aVocabAddExecute(Sender: TObject);
 begin
   if fVocab.Visible then
     fVocab.btnAddWordClick(Sender)
@@ -1554,121 +1614,56 @@ begin
     fKanjiCompounds.btnAddToVocabClick(Sender);
 end;
 
-procedure TfMenu.aUserSettingsExecute(Sender: TObject);
+procedure TfMenu.aVocabSettingsExecute(Sender: TObject);
 var pre:boolean;
 begin
-  pre:=aUserSettings.Checked;
+  pre:=aVocabSettings.Checked;
   if not fVocab.Visible then aModeVocab.Execute;
-  if aUserSettings.Checked<>pre then exit;
-  aUserSettings.Checked := not aUserSettings.Checked;
+  if aVocabSettings.Checked<>pre then exit;
+  aVocabSettings.Checked := not aVocabSettings.Checked;
 end;
 
-procedure TfMenu.aUserSettingsChecked(Sender: TObject);
+procedure TfMenu.aVocabSettingsChecked(Sender: TObject);
 begin
   if fVocabFilters<>nil then
-    ToggleForm(fVocabFilters, aUserSettings.Checked);
+    ToggleForm(fVocabFilters, aVocabSettings.Checked);
   if fVocab<>nil then
-    fVocab.btnListSettings.Down := aUserSettings.Checked;
+    fVocab.btnListSettings.Down := aVocabSettings.Checked;
 end;
 
-procedure TfMenu.aUserDetailsExecute(Sender: TObject);
+procedure TfMenu.aVocabDetailsExecute(Sender: TObject);
 var pre:boolean;
 begin
-  pre:=aUserDetails.Checked;
+  pre:=aVocabDetails.Checked;
   if not fVocab.Visible then aModeVocab.Execute;
-  if aUserDetails.Checked<>pre then exit;
-  aUserDetails.Checked := not aUserDetails.Checked;
+  if aVocabDetails.Checked<>pre then exit;
+  aVocabDetails.Checked := not aVocabDetails.Checked;
 end;
 
-procedure TfMenu.aUserDetailsChecked(Sender: TObject);
+procedure TfMenu.aVocabDetailsChecked(Sender: TObject);
 begin
-  ToggleForm(fVocabDetails, aUserDetails.Checked);
-  fVocab.btnWordDetails.Down := aUserDetails.Checked;
+  ToggleForm(fVocabDetails, aVocabDetails.Checked);
+  fVocab.btnWordDetails.Down := aVocabDetails.Checked;
 end;
 
-procedure TfMenu.aUserPrintExecute(Sender: TObject);
+procedure TfMenu.aVocabPrintExecute(Sender: TObject);
 begin
   fVocab.btnPrintVocabListClick(sender);
 end;
 
-procedure TfMenu.aUserGenerateExecute(Sender: TObject);
+procedure TfMenu.aVocabGenerateExecute(Sender: TObject);
 begin
   fVocab.btnLearningListClick(sender);
 end;
 
-procedure TfMenu.aSettingsExecute(Sender: TObject);
+procedure TfMenu.aVocabExportExecute(Sender: TObject);
 begin
-  fSettings.pcPages.ActivePage:=fSettings.tsGeneral;
-  fSettings.ShowModal;
-  if fKanji.Visible then fKanji.Reload();
-  if fWordLookup.Visible then fWordLookup.Look();
-  if fVocab.Visible then fVocab.ShowIt(false);
-  if fEditor.Visible then fEditor.RepaintText;
+  fVocab.ExportVocab;
 end;
 
-procedure TfMenu.aChangeLanguageExecute(Sender: TObject);
+procedure TfMenu.aVocabImportExecute(Sender: TObject);
 begin
-  fLanguage.SelectLanguage;
-end;
-
-procedure TfMenu.aSettingsDictExecute(Sender: TObject);
-var fDictMan: TfDictMan;
-begin
-  fDictMan := TfDictMan.Create(Self);
-  try
-    fDictMan.ShowModal;
-  finally
-    FreeAndNil(fDictMan);
-  end;
-end;
-
-procedure TfMenu.aHelpExecute(Sender: TObject);
-begin
-  if FileExists('wakan_'+curGUILanguage+'.chm') then
-    ShellExecute(fMenu.handle,nil,pchar('wakan_'+curGUILanguage+'.chm'),nil,nil,SW_SHOW) else
-  if FileExists('wakan.chm') then
-    ShellExecute(fMenu.handle,nil,'wakan.chm',nil,nil,SW_SHOW) else
-  if FileExists('wakan_bld.chm') then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00363^eHelp file is under construction, the information may be inaccurate.')),
-      pchar(_l('#00364^eNotice')),
-      MB_ICONWARNING or MB_OK);
-    ShellExecute(fMenu.handle,nil,'wakan_bld.chm',nil,nil,SW_SHOW);
-  end else
-  if FileExists('wakan_en.chm') then
-    Application.MessageBox(
-      pchar(_l('#00365^eHelp file is out of date. Please download new help file '
-        +'from WaKan website: wakan.manga.cz.')),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK)
-  else
-    Application.MessageBox(
-      pchar(_l('#00366^eCannot find file WAKAN.CHM.')),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
-end;
-
-procedure TfMenu.aAboutExecute(Sender: TObject);
-var fSplash: TfSplash;
-begin
-  fSplash := TfSplash.Create(Self);
-  try
-    fSplash.BitBtn1.Show;
-    fSplash.ShowModal;
-  finally
-    FreeAndNil(fSplash);
-  end;
-end;
-
-procedure TfMenu.aJapaneseExecute(Sender: TObject);
-begin
-  btnJapaneseModeClick(Sender);
-end;
-
-procedure TfMenu.aChineseExecute(Sender: TObject);
-begin
-  btnChineseModeClick(Sender);
+  fVocab.ImportVocab;
 end;
 
 procedure TfMenu.aKanjiAddClipboardExecute(Sender: TObject);
@@ -1788,7 +1783,7 @@ begin
  //Dock to wherever it belongs to
   if fExamples<>nil then
   if ((DisplayMode in [2, 4]) and aDictExamples.Checked) or
-     ((DisplayMode=5) and aUserExamples.Checked) then
+     ((DisplayMode=5) and aVocabExamples.Checked) then
     DockExpress(fExamples,true);
 end;
 
@@ -1997,9 +1992,9 @@ begin
 end;
 
 
-procedure TfMenu.SpeedButton1Click(Sender: TObject);
+procedure TfMenu.btnScreenModeScClick(Sender: TObject);
 begin
-  if SpeedButton1.Down then
+  if btnScreenModeSc.Down then
   begin
     if not FileExists('wakanh.dll') then
     begin
@@ -2518,20 +2513,20 @@ begin
   StringUnderMouse:=s1;
 end;
 
-procedure TfMenu.aUserExamplesExecute(Sender: TObject);
+procedure TfMenu.aVocabExamplesExecute(Sender: TObject);
 var pre:boolean;
 begin
-  pre:=aUserExamples.Checked;
+  pre:=aVocabExamples.Checked;
   if not fVocab.Visible then aModeVocab.Execute;
-  if aUserExamples.Checked<>pre then exit;
-  aUserExamples.Checked := not aUserExamples.Checked;
+  if aVocabExamples.Checked<>pre then exit;
+  aVocabExamples.Checked := not aVocabExamples.Checked;
 end;
 
-procedure TfMenu.aUserExamplesChecked(Sender: TObject);
+procedure TfMenu.aVocabExamplesChecked(Sender: TObject);
 begin
 //  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
   ToggleExamples();
-  fVocab.btnExamples.Down := aUserExamples.Checked;
+  fVocab.btnExamples.Down := aVocabExamples.Checked;
 end;
 
 procedure TfMenu.aCategoryManagerExecute(Sender: TObject);

@@ -942,8 +942,8 @@ begin
   Edit26.Text:=reg.ReadString('ScreenTrans','SizeFactor','12');
   Edit27.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
-  fMenu.SpeedButton2.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
-  fMenu.screenModeWk:=fMenu.SpeedButton2.Down;
+  fMenu.btnScreenModeWk.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
+  fMenu.screenModeWk:=fMenu.btnScreenModeWk.Down;
   if fEditor<>nil then begin
     fEditor.aDisplayReading.Checked:=reg.ReadBool('Translate','Reading',true);
     fEditor.aDisplayMeaning.Checked:=reg.ReadBool('Translate','Meaning',true);
@@ -1253,16 +1253,16 @@ begin
   reg.WriteString('ScreenTrans','SizeFactor',Edit26.Text);
   reg.WriteString('ScreenTrans','MinCompounds',Edit27.Text);
   reg.WriteString('ScreenTrans','MaxCompounds',Edit28.Text);
-  reg.WriteBool('ScreenTrans','WakanToolTip',fMenu.SpeedButton2.Down);
+  reg.WriteBool('ScreenTrans','WakanToolTip',fMenu.btnScreenModeWk.Down);
 
   setwindows:=0;
   if fKanji.aSearch.Checked then inc(setwindows,1);
   if fMenu.aKanjiCompounds.Checked then inc(setwindows,2);
   if fMenu.aDictKanji.Checked then inc(setwindows,4);
   if fMenu.aDictExamples.Checked then inc(setwindows,8);
-  if fMenu.aUserExamples.Checked then inc(setwindows,16);
-  if fMenu.aUserDetails.Checked then inc(setwindows,32);
-  if fMenu.aUserSettings.Checked then inc(setwindows,64);
+  if fMenu.aVocabExamples.Checked then inc(setwindows,16);
+  if fMenu.aVocabDetails.Checked then inc(setwindows,32);
+  if fMenu.aVocabSettings.Checked then inc(setwindows,64);
   if fKanjiDetails.Visible then inc(setwindows,128);
   reg.WriteInteger('Layout','SecondaryWindows',setwindows);
 

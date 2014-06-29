@@ -144,7 +144,7 @@ end;
 procedure TfVocabAdd.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   fVocab.btnExamples.Down:=false;
-  fMenu.aUserAdd.Checked:=false;
+  fMenu.aVocabAdd.Checked:=false;
 end;
 
 procedure TfVocabAdd.FormShow(Sender: TObject);

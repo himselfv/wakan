@@ -1135,8 +1135,6 @@ end;
 procedure TfVocab.Button11Click(Sender: TObject);
 begin
   fMenu.SaveUserData;
-//  fMenu.SpeedButton2.Enabled:=false;
-//  fMenu.SpeedButton7.Enabled:=false;
 end;
 
 procedure TfVocab.Button12Click(Sender: TObject);
@@ -1145,8 +1143,6 @@ begin
   TUserIdx.Free;
   fMenu.LoadUserData;
   ShowIt(false);
-//  fMenu.SpeedButton2.Enabled:=false;
-//  fMenu.SpeedButton7.Enabled:=false;
 end;
 
 procedure TfVocab.ListBox1Click(Sender: TObject);
@@ -1446,17 +1442,17 @@ end;
 
 procedure TfVocab.btnExamplesClick(Sender: TObject);
 begin
-  fMenu.aUserExamples.Execute;
+  fMenu.aVocabExamples.Execute;
 end;
 
 procedure TfVocab.btnListSettingsClick(Sender: TObject);
 begin
-  fMenu.aUserSettings.Execute;
+  fMenu.aVocabSettings.Execute;
 end;
 
 procedure TfVocab.btnWordDetailsClick(Sender: TObject);
 begin
-  fMenu.aUserDetails.Execute;
+  fMenu.aVocabDetails.Execute;
 end;
 
 procedure TfVocab.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;

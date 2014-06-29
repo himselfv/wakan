@@ -273,7 +273,7 @@ procedure TfVocabDetails.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   fVocab.btnWordDetails.Down:=false;
-  fMenu.aUserDetails.Checked:=false;
+  fMenu.aVocabDetails.Checked:=false;
 end;
 
 procedure TfVocabDetails.pbKanjiMouseMove(Sender: TObject;

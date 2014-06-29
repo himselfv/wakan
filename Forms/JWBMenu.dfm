@@ -480,7 +480,7 @@ object fMenu: TfMenu
       ExplicitLeft = 493
       ExplicitTop = 4
     end
-    object SpeedButton1: TSpeedButton
+    object btnScreenModeSc: TSpeedButton
       Left = 463
       Top = 0
       Width = 25
@@ -517,11 +517,11 @@ object fMenu: TfMenu
         00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         FF00FFFF000000FFFFFFFFFFFF00000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000FFFFFF}
-      OnClick = SpeedButton1Click
+      OnClick = btnScreenModeScClick
       ExplicitTop = 4
       ExplicitHeight = 25
     end
-    object SpeedButton2: TSpeedButton
+    object btnScreenModeWk: TSpeedButton
       Left = 438
       Top = 0
       Width = 25
@@ -558,7 +558,7 @@ object fMenu: TfMenu
         00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         FF00FFFF000000FFFFFFFFFFFF00000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000FFFFFF}
-      OnClick = SpeedButton2Click
+      OnClick = btnScreenModeWkClick
       ExplicitTop = 4
       ExplicitHeight = 25
     end
@@ -657,34 +657,34 @@ object fMenu: TfMenu
       OnExecute = aDictExamplesExecute
       OnChecked = aDictExamplesChecked
     end
-    object aUserAdd: TAction
+    object aVocabAdd: TAction
       Category = 'Vocabulary'
       Caption = '#00242^e&Add word'
       ShortCut = 16459
-      OnExecute = aUserAddExecute
+      OnExecute = aVocabAddExecute
     end
-    object aUserSettings: TCheckAction
+    object aVocabSettings: TCheckAction
       Category = 'Vocabulary'
       Caption = '#00243^eList &settings'
-      OnExecute = aUserSettingsExecute
-      OnChecked = aUserSettingsChecked
+      OnExecute = aVocabSettingsExecute
+      OnChecked = aVocabSettingsChecked
     end
-    object aUserDetails: TCheckAction
+    object aVocabDetails: TCheckAction
       Category = 'Vocabulary'
       Caption = '#00245^e&Word details'
-      OnExecute = aUserDetailsExecute
-      OnChecked = aUserDetailsChecked
+      OnExecute = aVocabDetailsExecute
+      OnChecked = aVocabDetailsChecked
     end
-    object aUserPrint: TAction
+    object aVocabPrint: TAction
       Category = 'Vocabulary'
       Caption = '#00246^e&Print list...'
       ShortCut = 16503
-      OnExecute = aUserPrintExecute
+      OnExecute = aVocabPrintExecute
     end
-    object aUserGenerate: TAction
+    object aVocabGenerate: TAction
       Category = 'Vocabulary'
       Caption = '#00247^e&List generator...'
-      OnExecute = aUserGenerateExecute
+      OnExecute = aVocabGenerateExecute
     end
     object aSettings: TAction
       Category = 'Main'
@@ -755,11 +755,11 @@ object fMenu: TfMenu
       ShortCut = 16499
       OnExecute = aModeVocabExecute
     end
-    object aUserExamples: TCheckAction
+    object aVocabExamples: TCheckAction
       Category = 'Vocabulary'
       Caption = 'Examples'
-      OnExecute = aUserExamplesExecute
-      OnChecked = aUserExamplesChecked
+      OnExecute = aVocabExamplesExecute
+      OnChecked = aVocabExamplesChecked
     end
     object aChangeLanguage: TAction
       Category = 'Main'
@@ -1043,7 +1043,7 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miAddWordIntoVocabulary: TMenuItem
-        Action = aUserAdd
+        Action = aVocabAdd
         Caption = '^e&Add word into vocabulary'
       end
       object N16: TMenuItem
@@ -1173,27 +1173,27 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miExamples2: TMenuItem
-        Action = aUserExamples
+        Action = aVocabExamples
         Caption = '#00315^eExamples'
       end
       object miListSettings: TMenuItem
-        Action = aUserSettings
+        Action = aVocabSettings
       end
       object miWordDetails: TMenuItem
-        Action = aUserDetails
+        Action = aVocabDetails
       end
       object N7: TMenuItem
         Caption = '-'
       end
       object miAddWord: TMenuItem
-        Action = aUserAdd
+        Action = aVocabAdd
         Caption = '#00319^e&Add word...'
       end
       object miPrintList: TMenuItem
-        Action = aUserPrint
+        Action = aVocabPrint
       end
       object miListGenerator: TMenuItem
-        Action = aUserGenerate
+        Action = aVocabGenerate
       end
       object N14: TMenuItem
         Caption = '-'

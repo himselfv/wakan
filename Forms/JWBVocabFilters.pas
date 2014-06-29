@@ -63,7 +63,7 @@ procedure TfVocabFilters.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   fVocab.btnListSettings.Down:=false;
-  fMenu.aUserSettings.Checked:=false;
+  fMenu.aVocabSettings.Checked:=false;
 end;
 
 procedure TfVocabFilters.lbCategoriesClick(Sender: TObject);
