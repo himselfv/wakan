@@ -63,6 +63,7 @@ type
     aDictGroup2: TAction;
     aDictGroup3: TAction;
     aMatchAnywhere: TAction;
+    aEditorInsert: TAction;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -70,18 +71,12 @@ type
     procedure btnWordKanjiClick(Sender: TObject);
     procedure btnExamplesClick(Sender: TObject);
     procedure btnAddToVocabClick(Sender: TObject);
-    procedure miLookupAutoClick(Sender: TObject);
     procedure btnLookupModeClick(Sender: TObject);
-    procedure btnLookupClipClick(Sender: TObject);
-    procedure miLookupJtoEClick(Sender: TObject);
-    procedure miLookupEtoJClick(Sender: TObject);
     procedure Edit1KeyPress(Sender: TObject; var Key: Char);
     procedure aLookupAutoExecute(Sender: TObject);
-    procedure aLookupJtoEExecute(Sender: TObject);
-    procedure aLookupEtoJExecute(Sender: TObject);
-    procedure aLookupClipExecute(Sender: TObject);
     procedure aMatchExactExecute(Sender: TObject);
     procedure aAddToClipboardExecute(Sender: TObject);
+    procedure aEditorInsertExecute(Sender: TObject);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -89,21 +84,15 @@ type
     procedure LanguageChanged;
 
   protected
-    FDictBeginSet: integer;
-    function GetDictBeginSet: integer;
-    procedure SetDictBeginSet(const Value: integer);
-    procedure ApplyDictBeginSet;
     procedure WordSelectionChanged; override;
     function GetLookupMode: TLookupMode;
     procedure SetLookupMode(const Value: TLookupMode);
     procedure LookupModeChanged; virtual;
     procedure UpdateLookupModeButtonText;
   public
-    dictModeSet: TLookupMode;
     procedure SetDefaultColumnWidths; override;
     procedure Refresh; override;
     procedure RestoreLookupMode;
-    property DictBeginSet: integer read GetDictBeginSet write SetDictBeginSet;
     property LookupMode: TLookupMode read GetLookupMode write SetLookupMode;
 
   public
@@ -124,8 +113,6 @@ uses Math, JWBLanguage, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBEditor,
 
 procedure TfWordLookup.FormShow(Sender: TObject);
 begin
-  if GetDictBeginSet<>FDictBeginSet then
-    ApplyDictBeginSet;
   if Edit1.Enabled then Edit1.SetFocus;
   Look();
   Clipboard.Watchers.Add(Self.ClipboardChanged);
@@ -169,76 +156,44 @@ begin
 end;
 
 
-{ A way to save beginning/middle/end/exact search config as an integer }
-function TfWordLookup.GetDictBeginSet: integer;
-begin
-  if Self.aMatchLeft.Checked then
-    Result := 1
-  else
-  if Self.aMatchRight.Checked then
-    Result := 2
-  else
-  if Self.aMatchAnywhere.Checked then
-    Result := 3
-  else
-    Result := 0;
-end;
-
-{ This can be called before the form is fully initialized, so we store the value
- and apply it when convenient }
-procedure TfWordLookup.SetDictBeginSet(const Value: integer);
-begin
-  FDictBeginSet := Value;
-  if Self.Visible then
-    ApplyDictBeginSet;
-end;
-
-procedure TfWordLookup.ApplyDictBeginSet;
-begin
-  case FDictBeginSet of
-    1: Self.aMatchLeft.Checked := true;
-    2: Self.aMatchRight.Checked := true;
-    3: Self.aMatchAnywhere.Checked := true;
-  else Self.aMatchExact.Checked := true;
-  end;
-end;
-
-
 { Restores lookup mode which was last selected by user when this form is open
  by itself (as a dictionary lookup form).
  It's overriden when it's used by Editor for word suggestions. }
 procedure TfWordLookup.RestoreLookupMode;
 begin
-  SetLookupMode(dictModeSet);
+  if aEditorInsert.Checked then begin
+    aEditorInsert.Checked := false;
+    LookupModeChanged;
+  end;
 end;
 
 { Gets or sets LookupMode as a variable. Lookup mode is internally stored as
  "which button is pressed/checked" }
 function TfWordLookup.GetLookupMode: TLookupMode;
 begin
-  if btnLookupClip.Down then Result := lmClipboard else
-  if miLookupAuto.Checked then Result := lmAuto else
-  if miLookupJtoE.Checked then Result := lmJp else
-  if miLookupEtoJ.Checked then Result := lmEn else
-   //All buttons are off -- we're being called from Editor's auto suggestions.
+  if aEditorInsert.Checked then Result := lmEditorInsert else
+  if aLookupClip.Checked then Result := lmClipboard else
+  if aLookupAuto.Checked then Result := lmAuto else
+  if aLookupJtoE.Checked then Result := lmJp else
+  if aLookupEtoJ.Checked then Result := lmEn else
     Result := lmEditorInsert;
+      //nothing is Checked usually on init, so return this to ensure re-applying
+      //the correct static value
 end;
 
 procedure TfWordLookup.SetLookupMode(const Value: TLookupMode);
 begin
-  if GetLookupMode=Value then exit; //sometimes we just set it to be sure
-  btnLookupClip.Down := Value in [lmClipboard];
-  case Value of
-    lmAuto: Self.miLookupAuto.Checked:=true;
-    lmJp: Self.miLookupJtoE.Checked:=true;
-    lmEn: Self.miLookupEtoJ.Checked:=true;
-    lmClipboard: Self.miLookupAuto.Checked := true;
-  else
-    miLookupAuto.Checked := false;
-    miLookupJtoE.Checked := false;
-    miLookupEtoJ.Checked := false;
-  end;
-  LookupModeChanged;
+  if GetLookupMode=Value then exit; //sometimes we set it just to be sure
+  aEditorInsert.Checked := (Value=lmEditorInsert);
+  if Value<>lmEditorInsert then //else leave static config as is
+    case Value of
+      lmAuto: aLookupAuto.Checked := true;
+      lmJp: aLookupJtoE.Checked := true;
+      lmEn: aLookupEtoJ.Checked := true;
+      lmClipboard: aLookupClip.Checked := true;
+    else aLookupAuto.Checked := true;
+    end;
+  LookupModeChanged; //apply restrictions and buttons
 end;
 
 { Called when lookup mode changes due to any of the buttons being pressed/unpressed,
@@ -249,19 +204,18 @@ var ANewMode: TLookupMode;
 begin
   ANewMode := GetLookupMode;
 
- //Do not store EditorInsert as a permanent state.
-  if ANewMode<>lmEditorInsert then begin
-    dictModeSet := ANewMode;
-    Self.aLookupAuto.Checked := (ANewMode=lmAuto);
-    Self.aLookupJtoE.Checked := (ANewMode=lmJp);
-    Self.aLookupEtoJ.Checked := (ANewMode=lmEn);
-    Self.aLookupClip.Checked := (ANewMode=lmClipboard);
-  end;
-
   UpdateLookupModeButtonText;
 
-  btnLookupMode.Enabled := (ANewMode<>lmEditorInsert);
-  btnLookupClip.Enabled := (ANewMode<>lmEditorInsert);
+  //Disable and uncheck some visual clues in EditorInsert override
+  if aNewMode in [lmEditorInsert] then begin
+    btnLookupMode.Enabled := false;
+    btnLookupClip.Enabled := false;
+    btnLookupClip.Down := false;
+  end else begin
+    btnLookupMode.Enabled := true;
+    btnLookupClip.Enabled := aLookupClip.Enabled;
+    btnLookupClip.Down := aLookupClip.Checked;
+  end;
 
   if not (ANewMode in [lmAuto, lmJp, lmEn]) then
   begin
@@ -308,15 +262,17 @@ end;
  being selected, so we need to do this separately sometimes. }
 procedure TfWordLookup.UpdateLookupModeButtonText;
 begin
-  if miLookupAuto.Checked then begin
+  if aEditorInsert.Checked
+  or aLookupClip.Checked
+  or aLookupAuto.Checked then begin
     btnLookupMode.Caption := miLookupAuto.Caption;
     btnLookupMode.Hint := miLookupAuto.Hint;
   end else
-  if miLookupJtoE.Checked then begin
+  if aLookupJtoE.Checked then begin
     btnLookupMode.Caption := miLookupJtoE.Caption;
     btnLookupMode.Hint := miLookupJtoE.Hint;
   end else
-  if miLookupEtoJ.Checked then begin
+  if aLookupEtoJ.Checked then begin
     btnLookupMode.Caption := miLookupEtoJ.Caption;
     btnLookupMode.Hint := miLookupEtoJ.Hint;
   end;
@@ -523,22 +479,14 @@ end;
 
 procedure TfWordLookup.aLookupAutoExecute(Sender: TObject);
 begin
-  Self.LookupMode := lmAuto;
+  if aEditorInsert.Checked then
+    aEditorInsert.Checked := false;
+  LookupModeChanged; //apply restrictions and buttons
 end;
 
-procedure TfWordLookup.aLookupJtoEExecute(Sender: TObject);
+procedure TfWordLookup.aEditorInsertExecute(Sender: TObject);
 begin
-  Self.LookupMode := lmJp;
-end;
-
-procedure TfWordLookup.aLookupEtoJExecute(Sender: TObject);
-begin
-  Self.LookupMode := lmEn;
-end;
-
-procedure TfWordLookup.aLookupClipExecute(Sender: TObject);
-begin
-  Self.LookupMode := lmClipboard;
+  LookupModeChanged; //apply restrictions and buttons
 end;
 
 //Called when any of a lot of lookup switches change
@@ -569,26 +517,6 @@ begin
     LookupMode := lmEn
   else
     LookupMode := lmAuto;
-end;
-
-procedure TfWordLookup.miLookupAutoClick(Sender: TObject);
-begin
-  LookupModeChanged;
-end;
-
-procedure TfWordLookup.miLookupJtoEClick(Sender: TObject);
-begin
-  LookupModeChanged;
-end;
-
-procedure TfWordLookup.miLookupEtoJClick(Sender: TObject);
-begin
-  LookupModeChanged;
-end;
-
-procedure TfWordLookup.btnLookupClipClick(Sender: TObject);
-begin
-  LookupModeChanged;
 end;
 
 procedure TfWordLookup.Edit1KeyPress(Sender: TObject; var Key: Char);

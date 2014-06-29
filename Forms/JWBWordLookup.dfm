@@ -127,13 +127,11 @@ inherited fWordLookup: TfWordLookup
       Top = 0
       Width = 73
       Height = 23
-      Hint = '#00647^eSearch by Kanji stored in clipboard (F4)'
+      Action = aLookupClip
       Align = alRight
       AllowAllUp = True
       GroupIndex = 1
-      Caption = '#00289^eBy clipboard'
       PopupMenu = pmLookupMode
-      OnClick = btnLookupClipClick
       ExplicitLeft = 413
       ExplicitTop = 4
       ExplicitHeight = 22
@@ -146,8 +144,8 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00656^eSearch exact word (F5)'
       Action = aMatchExact
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 7
-      Down = True
       Caption = 'A'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -167,6 +165,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00657^eSearch beginning (F6)'
       Action = aMatchLeft
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 7
       Caption = 'A+'
       Font.Charset = DEFAULT_CHARSET
@@ -187,6 +186,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00658^eSearch end (F7)'
       Action = aMatchRight
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 7
       Caption = '+A'
       Font.Charset = DEFAULT_CHARSET
@@ -207,6 +207,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00930^eSearch middle'
       Action = aMatchAnywhere
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 7
       Caption = '+A+'
       Font.Charset = DEFAULT_CHARSET
@@ -227,6 +228,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00661^eSearch for inflected words / conjugated verbs'
       Action = aInflect
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 8
       Caption = 'Inf'
       Font.Charset = DEFAULT_CHARSET
@@ -270,6 +272,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00663^eUse dictionaries in group 1 (Ctrl-1)'
       Action = aDictGroup1
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 10
       Down = True
       Caption = 'D1'
@@ -291,6 +294,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00664^eUse dictionaries in group 2 (Ctrl-2)'
       Action = aDictGroup2
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 10
       Caption = 'D2'
       Font.Charset = DEFAULT_CHARSET
@@ -311,6 +315,7 @@ inherited fWordLookup: TfWordLookup
       Hint = '#00665^eUse dictionaries in group 3 (Ctrl-3)'
       Action = aDictGroup3
       Align = alRight
+      AllowAllUp = True
       GroupIndex = 10
       Caption = 'D3'
       Font.Charset = DEFAULT_CHARSET
@@ -590,38 +595,33 @@ inherited fWordLookup: TfWordLookup
     Left = 32
     Top = 96
     object miLookupAuto: TMenuItem
+      Action = aLookupAuto
       AutoCheck = True
-      Caption = '#01132^Auto/all'
-      Checked = True
       GroupIndex = 1
-      Hint = 
-        '#01133^Search by reading, writing or meaning, depending on what ' +
-        'you type'
       RadioItem = True
-      OnClick = miLookupAutoClick
     end
     object miLookupJtoE: TMenuItem
+      Action = aLookupJtoE
       AutoCheck = True
-      Caption = '#00644^eJ -> E'
+      Caption = '#00644^J -> E'
       GroupIndex = 1
-      Hint = '#00643^Search by japanese reading (F2)'
       RadioItem = True
-      OnClick = miLookupJtoEClick
     end
     object miLookupEtoJ: TMenuItem
+      Action = aLookupEtoJ
       AutoCheck = True
-      Caption = '#00646^e&E -> J'
+      Caption = '#00646^E -> J'
       GroupIndex = 1
-      Hint = '#00645^Search by english meaning (F3)'
       RadioItem = True
-      OnClick = miLookupEtoJClick
     end
   end
   object Actions: TActionList
     Left = 160
     Top = 40
     object aLookupAuto: TAction
+      AutoCheck = True
       Caption = '#01132^Auto/all'
+      GroupIndex = 1
       Hint = 
         '#01133^Search by reading, writing or meaning, depending on what ' +
         'you type'
@@ -637,21 +637,32 @@ inherited fWordLookup: TfWordLookup
       Caption = '#00315^eExamples'
     end
     object aLookupJtoE: TAction
+      AutoCheck = True
       Caption = '#00287^Japanese/Chinese -> English'
+      GroupIndex = 1
       Hint = '#00643^Search by japanese reading'
-      OnExecute = aLookupJtoEExecute
+      OnExecute = aLookupAutoExecute
     end
     object aLookupEtoJ: TAction
+      AutoCheck = True
       Caption = '#00288^English -> Japanese/Chinese'
+      GroupIndex = 1
       Hint = '#00645^Search by english meaning'
       ShortCut = 114
-      OnExecute = aLookupEtoJExecute
+      OnExecute = aLookupAutoExecute
     end
     object aLookupClip: TAction
-      Caption = '#00289^Search by clipboard'
+      AutoCheck = True
+      Caption = '#00289^eBy clipboard'
+      GroupIndex = 1
       Hint = '#00647^Search by Kanji stored in clipboard'
       ShortCut = 115
-      OnExecute = aLookupClipExecute
+      OnExecute = aLookupAutoExecute
+    end
+    object aEditorInsert: TAction
+      AutoCheck = True
+      GroupIndex = 2
+      OnExecute = aEditorInsertExecute
     end
     object aAddToClipboard: TAction
       Caption = '#00285^Add to clipboard'
@@ -662,12 +673,6 @@ inherited fWordLookup: TfWordLookup
       Caption = '#00290^Search exact word'
       GroupIndex = 7
       ShortCut = 116
-      OnExecute = aMatchExactExecute
-    end
-    object aMatchAnywhere: TAction
-      AutoCheck = True
-      Caption = '#00919^Search substring'
-      GroupIndex = 7
       OnExecute = aMatchExactExecute
     end
     object aMatchLeft: TAction
@@ -684,6 +689,12 @@ inherited fWordLookup: TfWordLookup
       ShortCut = 118
       OnExecute = aMatchExactExecute
     end
+    object aMatchAnywhere: TAction
+      AutoCheck = True
+      Caption = '#00919^Search substring'
+      GroupIndex = 7
+      OnExecute = aMatchExactExecute
+    end
     object aInflect: TAction
       AutoCheck = True
       Caption = '#00301^Search inflected words'
@@ -697,18 +708,22 @@ inherited fWordLookup: TfWordLookup
       OnExecute = aMatchExactExecute
     end
     object aDictGroup1: TAction
+      AutoCheck = True
       Caption = '#00303^Use dictionaries in group 1'
+      Checked = True
       GroupIndex = 10
       ShortCut = 16433
       OnExecute = aMatchExactExecute
     end
     object aDictGroup2: TAction
+      AutoCheck = True
       Caption = '#00304^Use dictionaries in group 2'
       GroupIndex = 10
       ShortCut = 16434
       OnExecute = aMatchExactExecute
     end
     object aDictGroup3: TAction
+      AutoCheck = True
       Caption = '#00305^Use dictionaries in group 3'
       GroupIndex = 10
       ShortCut = 16435

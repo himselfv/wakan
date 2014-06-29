@@ -829,8 +829,20 @@ begin
   CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
   CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
   CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
-  if fWordLookup<>nil then
-    fWordLookup.sbAutoPreview.Down:=reg.ReadBool('Dict','QuickSearch',true);
+  if fWordLookup<>nil then begin
+    fWordLookup.aAutoPreview.Checked:=reg.ReadBool('Dict','QuickSearch',true);
+    fWordLookup.aInflect.Checked:=reg.ReadBool('Dict','DeflexItalic',true);
+    if reg.ReadBool('Dict','Meaning',false) then
+      fWordLookup.LookupMode := lmEn
+    else
+      fWordLookup.LookupMode := lmAuto;
+    case reg.ReadInteger('Dict','SearchBeg',0) of
+      1: fWordLookup.aMatchLeft.Checked := true;
+      2: fWordLookup.aMatchRight.Checked := true;
+      3: fWordLookup.aMatchAnywhere.Checked := true;
+    else fWordLookup.aMatchExact.Checked := true;
+    end;
+  end;
   cbReplaceKanji.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
   cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
@@ -901,8 +913,6 @@ begin
   CheckBox62.Checked:=reg.ReadBool('KanjiCards','PrintFullComp',true);
   CheckBox63.Checked:=reg.ReadBool('KanjiCards','SortFrequency',true);
   CheckBox26.Checked:=reg.ReadBool('Vocabulary','SaveStat',false);
-  if fWordLookup<>nil then
-    fWordLookup.btnInflect.Down:=reg.ReadBool('Dict','DeflexItalic',true);
   CheckBox43.Checked:=reg.ReadBool('Translate','BreakLines',true);
   cbDisplayLines.Checked:=reg.ReadBool('Translate','DisplayLines',true);
   CheckBox41.Checked:=reg.ReadBool('Translate','DisplayNonJapanese',true);
@@ -953,14 +963,6 @@ begin
   edtMeaningLines.Text:=reg.ReadString('Translate','MeaningLines','2');
   edtPrintLines.Text:=reg.ReadString('Translate','PrintLines','20');
   setUserCompounds:=reg.ReadBool('Characters','UserCompounds',false);
-
-  if fWordLookup<>nil then begin
-    if reg.ReadBool('Dict','Meaning',false) then
-      fWordLookup.dictModeSet := lmEn
-    else
-      fWordLookup.dictModeSet := lmAuto;
-    fWordLookup.dictBeginSet := reg.ReadInteger('Dict','SearchBeg',0);
-  end;
 
   cbShowEditorHint.Checked:=reg.ReadBool('Translate','ShowHint',true);
   cbHintMeaning.Checked:=reg.ReadBool('Translate','HintMeaning',true);
@@ -1031,6 +1033,7 @@ procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
 var setwindows:integer;
   exmode:integer;
   tmp_str: string;
+  tmp_int: integer;
 begin
   reg.WriteBool('Vocabulary','AutoSave',CheckBox46.Checked);
   reg.WriteBool('Vocabulary','DisplayMessage',CheckBox70.Checked);
@@ -1102,7 +1105,16 @@ begin
   reg.WriteBool('Dict','PreferNouns',CheckBox5.Checked);
   reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
   reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
-  reg.WriteBool('Dict','QuickSearch',fWordLookup.sbAutoPreview.Down);
+  if fWordLookup<>nil then begin
+    reg.WriteBool('Dict','QuickSearch',fWordLookup.aAutoPreview.Checked);
+    reg.WriteBool('Dict','DeflexItalic',fWordLookup.aInflect.Checked);
+    reg.WriteBool('Dict','Meaning',fWordLookup.LookupMode=lmEn);
+    if fWordLookup.aMatchLeft.Checked then tmp_int := 1 else
+    if fWordLookup.aMatchRight.Checked then tmp_int := 2 else
+    if fWordLookup.aMatchAnywhere.Checked then tmp_int := 3 else
+      tmp_int := 0;
+    reg.WriteInteger('Dict','SearchBeg',tmp_int);
+  end;
   reg.WriteBool('Dict','ReplaceKanji',cbReplaceKanji.Checked);
   reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
@@ -1166,7 +1178,6 @@ begin
   reg.WriteBool('KanjiCards','PrintFullComp',CheckBox62.Checked);
   reg.WriteBool('KanjiCards','SortFrequency',CheckBox63.Checked);
   reg.WriteBool('Vocabulary','SaveStat',CheckBox26.Checked);
-  reg.WriteBool('Dict','DeflexItalic',fWordLookup.btnInflect.Down);
   reg.WriteBool('Translate','BreakLines',CheckBox43.Checked);
   reg.WriteBool('Translate','DisplayLines',cbDisplayLines.Checked);
   reg.WriteBool('Translate','DisplayNonJapanese',CheckBox41.Checked);
@@ -1225,11 +1236,6 @@ begin
     reg.WriteString('DictPriority', IntToStr(i), dicts.Priority[i]);
 }
   reg.WriteBool('Characters','UserCompounds',fKanjiCompounds.sbShowVocab.Down);
-
-  if fWordLookup<>nil then begin
-    reg.WriteBool('Dict','Meaning',fWordLookup.dictModeSet=lmEn);
-    reg.WriteInteger('Dict','SearchBeg',fWordLookup.dictBeginSet);
-  end;
 
   reg.WriteBool('Translate','ShowHint',cbShowEditorHint.Checked);
   reg.WriteBool('Translate','HintMeaning',cbHintMeaning.Checked);

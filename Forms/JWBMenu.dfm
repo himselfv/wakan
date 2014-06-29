@@ -1076,16 +1076,20 @@ object fMenu: TfMenu
       end
       object N01132Autoall1: TMenuItem
         Action = fWordLookup.aLookupAuto
+        AutoCheck = True
         Caption = '#01125^Search by any text'
       end
       object miSearchJapanese: TMenuItem
         Action = fWordLookup.aLookupJtoE
+        AutoCheck = True
       end
       object miSearchEnglish: TMenuItem
         Action = fWordLookup.aLookupEtoJ
+        AutoCheck = True
       end
       object miSearchByClipboard: TMenuItem
         Action = fWordLookup.aLookupClip
+        AutoCheck = True
       end
       object N8: TMenuItem
         Caption = '-'
@@ -1120,18 +1124,21 @@ object fMenu: TfMenu
       object miDictionaryGroup: TMenuItem
         Caption = '#00314^eUsed dictionary group'
         object miDictionaryGroup1: TMenuItem
-          Action = fWordLookup.aGroup1
+          Action = fWordLookup.aDictGroup1
           Caption = '#00104^Group 1'
+          GroupIndex = 10
           RadioItem = True
         end
         object miDictionaryGroup2: TMenuItem
-          Action = fWordLookup.aGroup2
+          Action = fWordLookup.aDictGroup2
           Caption = '#00106^Group 2'
+          GroupIndex = 10
           RadioItem = True
         end
         object miDictionaryGroup3: TMenuItem
-          Action = fWordLookup.aGroup3
+          Action = fWordLookup.aDictGroup3
           Caption = '#00108^Group 3'
+          GroupIndex = 10
           RadioItem = True
         end
       end
@@ -1139,7 +1146,7 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miAddToClipboard2: TMenuItem
-        Action = fWordLookup.aAddClipboard
+        Action = fWordLookup.aAddToClipboard
       end
       object miAddWordIntoVocabulary: TMenuItem
         Action = aUserAdd
@@ -1214,10 +1221,16 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miDisplayReading: TMenuItem
+        Action = fEditor.aDisplayReading
+        AutoCheck = True
       end
       object miDisplayMeaning: TMenuItem
+        Action = fEditor.aDisplayMeaning
+        AutoCheck = True
       end
       object miUseColors: TMenuItem
+        Action = fEditor.aUseColors
+        AutoCheck = True
       end
       object miFontSize: TMenuItem
         Caption = '#00051^eFont size'
@@ -1240,10 +1253,13 @@ object fMenu: TfMenu
       object miTranslation: TMenuItem
         Caption = '#00317^eTranslation'
         object miClearTranslation: TMenuItem
+          Action = fEditor.aTranslationClear
         end
         object miSetTranslation: TMenuItem
+          Action = fEditor.aTranslationFill
         end
         object miAutoFillTranslation: TMenuItem
+          Action = fEditor.aTranslationSet
         end
       end
       object N21: TMenuItem
