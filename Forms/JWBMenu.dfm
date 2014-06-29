@@ -1079,37 +1079,43 @@ object fMenu: TfMenu
         Caption = '#01125^Search by any text'
       end
       object miSearchJapanese: TMenuItem
-        Action = fWordLookup.aJapanese
+        Action = fWordLookup.aLookupJtoE
       end
       object miSearchEnglish: TMenuItem
-        Action = fWordLookup.aEnglish
+        Action = fWordLookup.aLookupEtoJ
       end
       object miSearchByClipboard: TMenuItem
-        Action = fWordLookup.aClipboard
+        Action = fWordLookup.aLookupClip
       end
       object N8: TMenuItem
         Caption = '-'
       end
       object miSearchExactWord: TMenuItem
-        Action = fWordLookup.aExact
+        Action = fWordLookup.aMatchExact
+        AutoCheck = True
       end
       object miSearchBeginning: TMenuItem
-        Action = fWordLookup.aBeginning
+        Action = fWordLookup.aMatchLeft
+        AutoCheck = True
       end
       object miSearchEnding: TMenuItem
-        Action = fWordLookup.aEnd
+        Action = fWordLookup.aMatchRight
+        AutoCheck = True
       end
       object miSearchSubstring: TMenuItem
-        Action = fWordLookup.aMiddle
+        Action = fWordLookup.aMatchAnywhere
+        AutoCheck = True
       end
       object N12: TMenuItem
         Caption = '-'
       end
       object miSearchInflectedWords: TMenuItem
         Action = fWordLookup.aInflect
+        AutoCheck = True
       end
       object miAutoSearchWhileTyping: TMenuItem
-        Action = fWordLookup.aAuto
+        Action = fWordLookup.aAutoPreview
+        AutoCheck = True
       end
       object miDictionaryGroup: TMenuItem
         Caption = '#00314^eUsed dictionary group'

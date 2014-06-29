@@ -2171,7 +2171,7 @@ begin
       end;
     3:begin
         Clipboard.Text := fScreenTip.screenTipText;
-        if not fRadical.Visible then fWordLookup.aClipboard.Execute;
+        if not fRadical.Visible then fWordLookup.aLookupClip.Execute;
       end;
     4:begin
         if fRadical.Visible then exit;

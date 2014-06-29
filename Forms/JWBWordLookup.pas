@@ -50,26 +50,25 @@ type
     aLookupAuto: TAction;
     aKanji: TAction;
     aExamples: TAction;
-    aJapanese: TAction;
-    aEnglish: TAction;
-    aClipboard: TAction;
-    aAddClipboard: TAction;
-    aExact: TAction;
-    aBeginning: TAction;
-    aEnd: TAction;
+    aLookupJtoE: TAction;
+    aLookupEtoJ: TAction;
+    aLookupClip: TAction;
+    aAddToClipboard: TAction;
+    aMatchExact: TAction;
+    aMatchLeft: TAction;
+    aMatchRight: TAction;
     aInflect: TAction;
-    aAuto: TAction;
-    aGroup1: TAction;
-    aGroup2: TAction;
-    aGroup3: TAction;
-    aMiddle: TAction;
+    aAutoPreview: TAction;
+    aDictGroup1: TAction;
+    aDictGroup2: TAction;
+    aDictGroup3: TAction;
+    aMatchAnywhere: TAction;
     procedure Edit1Change(Sender: TObject);
     procedure Edit1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
     procedure btnWordKanjiClick(Sender: TObject);
     procedure btnExamplesClick(Sender: TObject);
-    procedure btnMatchExactClick(Sender: TObject);
     procedure btnAddToVocabClick(Sender: TObject);
     procedure miLookupAutoClick(Sender: TObject);
     procedure btnLookupModeClick(Sender: TObject);
@@ -78,19 +77,11 @@ type
     procedure miLookupEtoJClick(Sender: TObject);
     procedure Edit1KeyPress(Sender: TObject; var Key: Char);
     procedure aLookupAutoExecute(Sender: TObject);
-    procedure aJapaneseExecute(Sender: TObject);
-    procedure aEnglishExecute(Sender: TObject);
-    procedure aClipboardExecute(Sender: TObject);
-    procedure aExactExecute(Sender: TObject);
-    procedure aBeginningExecute(Sender: TObject);
-    procedure aEndExecute(Sender: TObject);
-    procedure aMiddleExecute(Sender: TObject);
-    procedure aAutoExecute(Sender: TObject);
-    procedure aInflectExecute(Sender: TObject);
-    procedure aGroup1Execute(Sender: TObject);
-    procedure aGroup2Execute(Sender: TObject);
-    procedure aGroup3Execute(Sender: TObject);
-    procedure aAddClipboardExecute(Sender: TObject);
+    procedure aLookupJtoEExecute(Sender: TObject);
+    procedure aLookupEtoJExecute(Sender: TObject);
+    procedure aLookupClipExecute(Sender: TObject);
+    procedure aMatchExactExecute(Sender: TObject);
+    procedure aAddToClipboardExecute(Sender: TObject);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -98,22 +89,23 @@ type
     procedure LanguageChanged;
 
   protected
+    FDictBeginSet: integer;
+    function GetDictBeginSet: integer;
+    procedure SetDictBeginSet(const Value: integer);
+    procedure ApplyDictBeginSet;
     procedure WordSelectionChanged; override;
     function GetLookupMode: TLookupMode;
     procedure SetLookupMode(const Value: TLookupMode);
     procedure LookupModeChanged; virtual;
     procedure UpdateLookupModeButtonText;
   public
-    dictBeginSet: integer;
     dictModeSet: TLookupMode;
     procedure SetDefaultColumnWidths; override;
     procedure Refresh; override;
     procedure RestoreLookupMode;
+    property DictBeginSet: integer read GetDictBeginSet write SetDictBeginSet;
     property LookupMode: TLookupMode read GetLookupMode write SetLookupMode;
 
-
-  protected
-    donotsetbegset:boolean;
   public
    { Search with current settings, populate the results }
     procedure Look();
@@ -132,6 +124,8 @@ uses Math, JWBLanguage, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBEditor,
 
 procedure TfWordLookup.FormShow(Sender: TObject);
 begin
+  if GetDictBeginSet<>FDictBeginSet then
+    ApplyDictBeginSet;
   if Edit1.Enabled then Edit1.SetFocus;
   Look();
   Clipboard.Watchers.Add(Self.ClipboardChanged);
@@ -164,7 +158,7 @@ begin
   end;
   UpdateLookupModeButtonText;
 
-  if (not btnLookupClip.Enabled) and btnLookupClip.Down then
+  if (not aLookupClip.Enabled) and aLookupClip.Checked then
     Self.SetLookupMode(lmJp);
 end;
 
@@ -172,6 +166,41 @@ procedure TfWordLookup.ClipboardChanged(Sender: TObject);
 begin
   if Self.Visible and (Self.LookupMode=lmClipboard) then
     Self.Look();
+end;
+
+
+{ A way to save beginning/middle/end/exact search config as an integer }
+function TfWordLookup.GetDictBeginSet: integer;
+begin
+  if Self.aMatchLeft.Checked then
+    Result := 1
+  else
+  if Self.aMatchRight.Checked then
+    Result := 2
+  else
+  if Self.aMatchAnywhere.Checked then
+    Result := 3
+  else
+    Result := 0;
+end;
+
+{ This can be called before the form is fully initialized, so we store the value
+ and apply it when convenient }
+procedure TfWordLookup.SetDictBeginSet(const Value: integer);
+begin
+  FDictBeginSet := Value;
+  if Self.Visible then
+    ApplyDictBeginSet;
+end;
+
+procedure TfWordLookup.ApplyDictBeginSet;
+begin
+  case FDictBeginSet of
+    1: Self.aMatchLeft.Checked := true;
+    2: Self.aMatchRight.Checked := true;
+    3: Self.aMatchAnywhere.Checked := true;
+  else Self.aMatchExact.Checked := true;
+  end;
 end;
 
 
@@ -224,9 +253,9 @@ begin
   if ANewMode<>lmEditorInsert then begin
     dictModeSet := ANewMode;
     Self.aLookupAuto.Checked := (ANewMode=lmAuto);
-    Self.aJapanese.Checked := (ANewMode=lmJp);
-    Self.aEnglish.Checked := (ANewMode=lmEn);
-    Self.aClipboard.Checked := (ANewMode=lmClipboard);
+    Self.aLookupJtoE.Checked := (ANewMode=lmJp);
+    Self.aLookupEtoJ.Checked := (ANewMode=lmEn);
+    Self.aLookupClip.Checked := (ANewMode=lmClipboard);
   end;
 
   UpdateLookupModeButtonText;
@@ -243,54 +272,29 @@ begin
     Edit1.Color:=clWindow;
   end;
 
-  Self.aExact.Checked:=btnMatchExact.Down;
-  Self.aBeginning.Checked:=btnMatchLeft.Down;
-  Self.aEnd.Checked:=btnMatchRight.Down;
-  Self.aMiddle.Checked:=btnMatchAnywhere.Down;
-
-  Self.aBeginning.Enabled:=btnMatchLeft.Enabled;
-  Self.aEnd.Enabled:=btnMatchRight.Enabled;
-  Self.aMiddle.Enabled:=btnMatchAnywhere.Enabled;
-
-  Self.aInflect.Checked:=btnInflect.Down;
-  Self.aAuto.Checked:=sbAutoPreview.Down;
-  Self.aGroup1.Checked:=btnDictGroup1.Down;
-  Self.aGroup2.Checked:=btnDictGroup2.Down;
-  Self.aGroup3.Checked:=btnDictGroup3.Down;
-
-  donotsetbegset:=true;
-
-  btnMatchLeft.Enabled:=true;
-  btnMatchRight.Enabled:=true;
-  btnMatchAnywhere.Enabled:=true;
-  case dictbeginset of
-    0:Self.btnMatchExact.Down:=true;
-    1:Self.btnMatchLeft.Down:=true;
-    2:Self.btnMatchRight.Down:=true;
-    3:Self.btnMatchAnywhere.Down:=true;
-  end;
+  aMatchLeft.Enabled:=true;
+  aMatchRight.Enabled:=true;
+  aMatchAnywhere.Enabled:=true;
 
  {$IFDEF SEARCH_BUTTON_CAPTION}
-  if (not sbAutoPreview.Down) or btnMatchAnywhere.Down then
+  if (not aAutoPreview.Checked) or aMatchAnywhere.Checked then
     btnSearch.Caption:=_l('#00669^eSearch')
   else
     btnSearch.Caption:=_l('#00670^eAll');
  {$ENDIF}
 
-  if ANewMode in [lmEn, lmEditorInsert] then
-  begin
-    if btnMatchRight.Down then btnMatchExact.Down:=true;
-    if btnMatchAnywhere.Down then btnMatchExact.Down:=true;
-    btnMatchRight.Enabled:=false;
-    btnMatchAnywhere.Enabled:=false;
+  if ANewMode in [lmEn, lmEditorInsert] then begin
+    if aMatchRight.Checked or aMatchAnywhere.Checked then
+      aMatchExact.Execute;
+    aMatchRight.Enabled:=false;
+    aMatchAnywhere.Enabled:=false;
   end;
 
-  if ANewMode=lmEditorInsert then
-  begin
-    if btnMatchLeft.Down then btnMatchExact.Down:=true;
-    btnMatchLeft.Enabled:=false;
+  if ANewMode=lmEditorInsert then begin
+    if aMatchLeft.Checked then
+      aMatchExact.Execute;
+    aMatchLeft.Enabled:=false;
   end;
-  donotsetbegset:=false;
 
   if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then
     Edit1.SetFocus;
@@ -340,36 +344,36 @@ var lm: TLookupMode;
     Result := TDicSearchRequest.Create;
 
    //Dictionary group
-    if btnDictGroup1.Down then Result.dictgroup:=1 else
-    if btnDictGroup2.Down then Result.dictgroup:=2 else
-    if btnDictGroup3.Down then Result.dictgroup:=3 else
+    if aDictGroup1.Checked then Result.dictgroup:=1 else
+    if aDictGroup2.Checked then Result.dictgroup:=2 else
+    if aDictGroup3.Checked then Result.dictgroup:=3 else
       Result.dictgroup := 1; //we must have some group chosen
 
     Result.Full := not btnSearch.Enabled; //if "More matches" is yet enabled, then partial
     Result.MaxWords:=StringGrid.VisibleRowCount;
 
    //Match type (left/right/exact)
-    if btnMatchLeft.Down then Result.MatchType := mtMatchLeft else
-    if btnMatchRight.Down then Result.MatchType := mtMatchRight else
-    if btnMatchAnywhere.Down then Result.MatchType := mtMatchAnywhere else
+    if aMatchLeft.Checked then Result.MatchType := mtMatchLeft else
+    if aMatchRight.Checked then Result.MatchType := mtMatchRight else
+    if aMatchAnywhere.Checked then Result.MatchType := mtMatchAnywhere else
       Result.MatchType := mtExactMatch;
     if (lm=lmEn) and not (Result.MatchType in [mtExactMatch, mtMatchLeft]) then
       Result.MatchType := mtExactMatch;
 
-    if (not fSettings.cbDictLimitAutoResults.Checked) or btnMatchExact.Down then Result.Full:=true;
+    if (not fSettings.cbDictLimitAutoResults.Checked) or aMatchExact.Checked then Result.Full:=true;
 
     if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
       Result.dictgroup := 5;
       Result.MatchType := mtExactMatch;
     end;
 
-    Result.AutoDeflex := btnInflect.Down;
+    Result.AutoDeflex := aInflect.Checked;
     Result.dic_ignorekana := false;
     Result.MindUserPrior := (lm=lmEditorInsert); //only mind kanji usage priorities in Editor suggestions
 
    //If full search was not requested and autopreview off / too costly
     if not Result.full
-    and (not Self.sbAutoPreview.Down or (Result.MatchType=mtMatchAnywhere)) then
+    and (not Self.aAutoPreview.Checked or (Result.MatchType=mtMatchAnywhere)) then
       exit; //do not search
   end;
 
@@ -381,7 +385,7 @@ begin
 
   //We don't auto-search when in MatchAnywhere or when Autosearch is disabled
   if (lm<>lmEditorInsert) and btnSearch.Enabled and (
-    (not sbAutoPreview.Down) or (btnMatchAnywhere.Down)) then
+    (not aAutoPreview.Checked) or aMatchAnywhere.Checked) then
   begin
     btnSearch.Visible:=true;
     StringGrid.Visible:=false;
@@ -522,80 +526,28 @@ begin
   Self.LookupMode := lmAuto;
 end;
 
-procedure TfWordLookup.aJapaneseExecute(Sender: TObject);
+procedure TfWordLookup.aLookupJtoEExecute(Sender: TObject);
 begin
   Self.LookupMode := lmJp;
 end;
 
-procedure TfWordLookup.aEnglishExecute(Sender: TObject);
+procedure TfWordLookup.aLookupEtoJExecute(Sender: TObject);
 begin
   Self.LookupMode := lmEn;
 end;
 
-procedure TfWordLookup.aClipboardExecute(Sender: TObject);
+procedure TfWordLookup.aLookupClipExecute(Sender: TObject);
 begin
   Self.LookupMode := lmClipboard;
 end;
 
-procedure TfWordLookup.aExactExecute(Sender: TObject);
+//Called when any of a lot of lookup switches change
+procedure TfWordLookup.aMatchExactExecute(Sender: TObject);
 begin
-  Self.btnMatchExact.Down:=true;
-  Self.dictBeginSet:=0;
-  Self.miLookupAutoClick(Sender);
+  LookupModeChanged;
 end;
 
-procedure TfWordLookup.aBeginningExecute(Sender: TObject);
-begin
-  Self.btnMatchLeft.Down:=true;
-  Self.dictBeginSet:=1;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aEndExecute(Sender: TObject);
-begin
-  Self.btnMatchRight.Down:=true;
-  Self.dictBeginSet:=2;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aMiddleExecute(Sender: TObject);
-begin
-  Self.btnMatchAnywhere.Down:=true;
-  Self.dictBeginSet:=3;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aInflectExecute(Sender: TObject);
-begin
-  Self.btnInflect.Down:=not fWordLookup.btnInflect.Down;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aAutoExecute(Sender: TObject);
-begin
-  Self.sbAutoPreview.Down:=not fWordLookup.sbAutoPreview.Down;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aGroup1Execute(Sender: TObject);
-begin
-  Self.btnDictGroup1.Down:=true;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aGroup2Execute(Sender: TObject);
-begin
-  Self.btnDictGroup2.Down:=true;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aGroup3Execute(Sender: TObject);
-begin
-  Self.btnDictGroup3.Down:=true;
-  Self.miLookupAutoClick(Sender);
-end;
-
-procedure TfWordLookup.aAddClipboardExecute(Sender: TObject);
+procedure TfWordLookup.aAddToClipboardExecute(Sender: TObject);
 begin
   Self.btnCopyToClipboardClick(Sender);
 end;
@@ -660,19 +612,6 @@ end;
 procedure TfWordLookup.btnExamplesClick(Sender: TObject);
 begin
   fMenu.aDictExamples.Execute;
-end;
-
-procedure TfWordLookup.btnMatchExactClick(Sender: TObject);
-begin
-  if not donotsetbegset then
-  begin
-    if Self.btnMatchExact.Down then dictbeginset:=0;
-    if Self.btnMatchLeft.Down then dictbeginset:=1;
-    if Self.btnMatchRight.Down then dictbeginset:=2;
-    if Self.btnMatchAnywhere.Down then dictbeginset:=3;
-  end;
-  Look();
-  if Edit1.Enabled then Edit1.SetFocus;
 end;
 
 end.
