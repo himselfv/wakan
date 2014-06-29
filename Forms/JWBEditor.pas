@@ -236,6 +236,7 @@ type
 
 
   public
+    procedure LanguageChanging;
     procedure LanguageChanged;
 
   protected
@@ -782,9 +783,18 @@ begin
   if fHint.Visible then HideHint;
 end;
 
+procedure TfEditor.LanguageChanging;
+begin
+ //This has to happen before language changes, because we may need to convert
+ //input to kana one final time.
+ //Modes such as Pinyin have it in a different form (latin text) until just
+ //the last moment.
+  CloseInsert;
+  RepaintText; //have to! to hide hint after CloseInsert
+end;
+
 procedure TfEditor.LanguageChanged;
 begin
-  ResolveInsert(false);
 end;
 
 procedure TfEditor.ClearEditor;
@@ -2826,7 +2836,7 @@ end;
  Either cancels it or finalizes it if it was already confirmed. }
 procedure TfEditor.CloseInsert;
 begin
-  if FInsertionState<>isTyping then
+  if (FInsertionState=isTyping) and (FInputBuffer<>'') then
     ResolveInsert({AcceptSuggestion=}false); //cancel suggestion
   ClearInsBlock;
 end;

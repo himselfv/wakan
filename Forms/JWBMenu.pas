@@ -1003,6 +1003,9 @@ end;
 procedure TfMenu.SwitchLanguage(lanchar:char);
 var mb_res: integer;
 begin
+  if fEditor<>nil then
+    fEditor.LanguageChanging;
+
   curlang:=lanchar;
   if lanchar='j'then
   begin
