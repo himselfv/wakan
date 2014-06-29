@@ -2810,6 +2810,10 @@ begin
       end;
   end;
 
+ //We have to clear suggestions or the suggestion box is going to hang there
+ //forever (and [ ] keys put older results for punctuation and spaces)
+  fWordLookup.Clear;
+
  //Reset everything
   ins := SourcePos(-1,-1);
   inslen:=0;

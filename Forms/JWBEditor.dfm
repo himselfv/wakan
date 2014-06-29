@@ -37,7 +37,6 @@ object fEditor: TfEditor
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitTop = 155
     object lblControlsHint: TLabel
       AlignWithMargins = True
       Left = 133
@@ -340,7 +339,6 @@ object fEditor: TfEditor
     OnDblClick = EditorPaintBoxDblClick
     OnMouseMove = EditorPaintBoxMouseMove
     OnMouseDown = EditorPaintBoxMouseDown
-    ExplicitHeight = 126
   end
   object EditorScrollBar: TScrollBar
     Left = 779
@@ -352,7 +350,6 @@ object fEditor: TfEditor
     PageSize = 0
     TabOrder = 3
     OnChange = EditorScrollBarChange
-    ExplicitHeight = 124
   end
   object BlinkCursorTimer: TTimer
     Interval = 500
@@ -393,7 +390,7 @@ object fEditor: TfEditor
     Left = 400
     Top = 64
     Bitmap = {
-      494C010111001500D80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010111001500DC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
