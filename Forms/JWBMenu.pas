@@ -2111,7 +2111,7 @@ end;
 //Attached to run before any of fWordLookup.Actions
 procedure TfMenu.WordLookupActionExecute(Action: TBasicAction; var Handled: Boolean);
 begin
-  if not fWordLookup.Visible then aModeDict.Execute;
+  if not fWordLookup.Visible and not fEditor.Visible then aModeDict.Execute;
 end;
 
 

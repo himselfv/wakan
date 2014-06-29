@@ -1125,18 +1125,21 @@ object fMenu: TfMenu
         Caption = '#00314^eUsed dictionary group'
         object miDictionaryGroup1: TMenuItem
           Action = fWordLookup.aDictGroup1
+          AutoCheck = True
           Caption = '#00104^Group 1'
           GroupIndex = 10
           RadioItem = True
         end
         object miDictionaryGroup2: TMenuItem
           Action = fWordLookup.aDictGroup2
+          AutoCheck = True
           Caption = '#00106^Group 2'
           GroupIndex = 10
           RadioItem = True
         end
         object miDictionaryGroup3: TMenuItem
           Action = fWordLookup.aDictGroup3
+          AutoCheck = True
           Caption = '#00108^Group 3'
           GroupIndex = 10
           RadioItem = True

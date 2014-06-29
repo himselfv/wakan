@@ -32,7 +32,7 @@ type
     btnMatchRight: TSpeedButton;
     btnMatchAnywhere: TSpeedButton;
     btnInflect: TSpeedButton;
-    sbAutoPreview: TSpeedButton;
+    btnAutoPreview: TSpeedButton;
     btnDictGroup1: TSpeedButton;
     btnDictGroup2: TSpeedButton;
     btnDictGroup3: TSpeedButton;
@@ -77,6 +77,8 @@ type
     procedure aMatchExactExecute(Sender: TObject);
     procedure aAddToClipboardExecute(Sender: TObject);
     procedure aEditorInsertExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure miLookupEtoJClick(Sender: TObject);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -110,6 +112,17 @@ uses Math, JWBLanguage, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBEditor,
   JWBWordKanji, JWBExamples, JWBAnnotations, JWBLegacyMarkup;
 
 {$R *.DFM}
+
+procedure TfWordLookup.FormCreate(Sender: TObject);
+begin
+  inherited;
+ { SpeedButtons are linked to Actions, so their GroupIndex is replaced at load,
+  but if we set TAction's GroupIndex to non-zero, AutoCheck is not going to work,
+  and if we leave TSpeedButton's GroupIndex as 0, it's Down property not going
+  to be updated (see TSpeedButtonActionLink.IsCheckedLinked) }
+  btnInflect.GroupIndex := 8;
+  btnAutoPreview.GroupIndex := 9;
+end;
 
 procedure TfWordLookup.FormShow(Sender: TObject);
 begin
@@ -206,14 +219,28 @@ begin
 
   UpdateLookupModeButtonText;
 
+ //Checked submenu item stays checked; auto-applied if you click parent button
+  case ANewMode of
+    lmAuto: miLookupAuto.Checked := true;
+    lmJp: miLookupJtoE.Checked := true;
+    lmEn: miLookupEtoJ.Checked := true
+  //else preserve checked submenu item
+  end;
+
   //Disable and uncheck some visual clues in EditorInsert override
   if aNewMode in [lmEditorInsert] then begin
+    aLookupAuto.Enabled := false;
+    aLookupJtoE.Enabled := false;
+    aLookupEtoJ.Enabled := false;
+    aLookupClip.Enabled := false;
     btnLookupMode.Enabled := false;
-    btnLookupClip.Enabled := false;
     btnLookupClip.Down := false;
   end else begin
+    aLookupAuto.Enabled := true;
+    aLookupJtoE.Enabled := true;
+    aLookupEtoJ.Enabled := true;
+    aLookupClip.Enabled := true;
     btnLookupMode.Enabled := true;
-    btnLookupClip.Enabled := aLookupClip.Enabled;
     btnLookupClip.Down := aLookupClip.Checked;
   end;
 
@@ -226,6 +253,7 @@ begin
     Edit1.Color:=clWindow;
   end;
 
+  aMatchExact.Enabled:=true;
   aMatchLeft.Enabled:=true;
   aMatchRight.Enabled:=true;
   aMatchAnywhere.Enabled:=true;
@@ -237,17 +265,19 @@ begin
     btnSearch.Caption:=_l('#00670^eAll');
  {$ENDIF}
 
-  if ANewMode in [lmEn, lmEditorInsert] then begin
+  if ANewMode = lmEn then begin
     if aMatchRight.Checked or aMatchAnywhere.Checked then
       aMatchExact.Execute;
     aMatchRight.Enabled:=false;
     aMatchAnywhere.Enabled:=false;
   end;
 
-  if ANewMode=lmEditorInsert then begin
-    if aMatchLeft.Checked then
-      aMatchExact.Execute;
-    aMatchLeft.Enabled:=false;
+  if ANewMode = lmEditorInsert then begin
+    aMatchExact.Enabled := false;
+    aMatchLeft.Enabled := false;
+    aMatchRight.Enabled := false;
+    aMatchAnywhere.Enabled := false;
+    //but leave the value as is
   end;
 
   if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then
@@ -263,7 +293,6 @@ end;
 procedure TfWordLookup.UpdateLookupModeButtonText;
 begin
   if aEditorInsert.Checked
-  or aLookupClip.Checked
   or aLookupAuto.Checked then begin
     btnLookupMode.Caption := miLookupAuto.Caption;
     btnLookupMode.Hint := miLookupAuto.Hint;
@@ -484,6 +513,15 @@ begin
   LookupModeChanged; //apply restrictions and buttons
 end;
 
+procedure TfWordLookup.miLookupEtoJClick(Sender: TObject);
+begin
+  case TMenuItem(Sender).Tag of
+   1: aLookupAuto.Execute;
+   2: aLookupJtoE.Execute;
+   3: aLookupEtoJ.Execute;
+  end;
+end;
+
 procedure TfWordLookup.aEditorInsertExecute(Sender: TObject);
 begin
   LookupModeChanged; //apply restrictions and buttons
@@ -510,6 +548,7 @@ end;
 
 procedure TfWordLookup.btnLookupModeClick(Sender: TObject);
 begin
+ //Re-apply last selected submenu item
   if miLookupJtoE.Checked then
     LookupMode := lmJp
   else

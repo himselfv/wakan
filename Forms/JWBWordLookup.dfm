@@ -8,6 +8,7 @@ inherited fWordLookup: TfWordLookup
   OldCreateOrder = True
   Scaled = False
   ShowHint = True
+  OnCreate = FormCreate
   OnShow = FormShow
   ExplicitWidth = 687
   ExplicitHeight = 248
@@ -241,7 +242,7 @@ inherited fWordLookup: TfWordLookup
       ExplicitTop = 4
       ExplicitHeight = 22
     end
-    object sbAutoPreview: TSpeedButton
+    object btnAutoPreview: TSpeedButton
       Left = 575
       Top = 0
       Width = 33
@@ -595,24 +596,32 @@ inherited fWordLookup: TfWordLookup
     Left = 32
     Top = 96
     object miLookupAuto: TMenuItem
-      Action = aLookupAuto
-      AutoCheck = True
+      Tag = 1
+      Caption = '#01132^Auto/all'
       GroupIndex = 1
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
       RadioItem = True
+      ShortCut = 113
+      OnClick = miLookupEtoJClick
     end
     object miLookupJtoE: TMenuItem
-      Action = aLookupJtoE
-      AutoCheck = True
+      Tag = 2
       Caption = '#00644^J -> E'
       GroupIndex = 1
+      Hint = '#00643^Search by japanese reading'
       RadioItem = True
+      OnClick = miLookupEtoJClick
     end
     object miLookupEtoJ: TMenuItem
-      Action = aLookupEtoJ
-      AutoCheck = True
+      Tag = 3
       Caption = '#00646^E -> J'
       GroupIndex = 1
+      Hint = '#00645^Search by english meaning'
       RadioItem = True
+      ShortCut = 114
+      OnClick = miLookupEtoJClick
     end
   end
   object Actions: TActionList
@@ -698,13 +707,11 @@ inherited fWordLookup: TfWordLookup
     object aInflect: TAction
       AutoCheck = True
       Caption = '#00301^Search inflected words'
-      GroupIndex = 8
       OnExecute = aMatchExactExecute
     end
     object aAutoPreview: TAction
       AutoCheck = True
       Caption = '#00302^Auto-search while typing'
-      GroupIndex = 9
       OnExecute = aMatchExactExecute
     end
     object aDictGroup1: TAction
