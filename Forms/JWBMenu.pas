@@ -344,13 +344,17 @@ type
     property DisplayMode: integer read FCurDisplayMode write SetDisplayMode;
     property CharDetDocked: boolean read FCharDetDocked;
 
+  //Screen tip hook
+  protected
+    ctlFileMap:cardinal;
+    ptrFileMap:pointer;
+    procedure LoadScreenTipHook;
+    procedure UnloadScreenTipHook;
+
 
   public
     screenTipDebug:string;
     screenModeSc,screenModeWk:boolean;
-    ctlFileMap:cardinal;
-    ptrFileMap:pointer;
-
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure SwitchLanguage(lanchar:char);
@@ -1290,15 +1294,10 @@ begin
   if not fEditor.CommitFile then Action:=caNone;
   if FormPlacement1.PlacementRestored then
     FormPlacement1.SaveFormPlacement;
-  if Action<>caNone then
-  begin
-    if btnScreenModeSc.Down then
-    begin
-      Screen.Cursor:=crHourGlass;
-{MCH      UninjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
-      Screen.Cursor:=crDefault;
-    end;
+  if Action<>caNone then begin
     fSettings.SaveSettings;
+    if btnScreenModeSc.Down then
+      UnloadScreenTipHook;
     fEditor.Close;
     fWordLookup.Close;
     fVocab.Close;
@@ -1306,11 +1305,13 @@ begin
   end;
 end;
 
-
-procedure TfMenu.btnScreenModeWkClick(Sender: TObject);
+procedure TfMenu.ApplicationEvents1Exception(Sender: TObject; E: Exception);
 begin
-  screenModeWk:=btnScreenModeWk.Down;
+  if E is EAbort then exit;
+  E.Message := _l(E.Message);
+  Application.ShowException(E);
 end;
+
 
 procedure TfMenu.btnJapaneseModeClick(Sender: TObject);
 begin
@@ -1409,6 +1410,22 @@ begin
   finally
     FreeAndNil(fDictMan);
   end;
+end;
+
+procedure TfMenu.aCategoryManagerExecute(Sender: TObject);
+var fCategoryMgr: TfCategoryMgr;
+begin
+  fCategoryMgr := TfCategoryMgr.Create(Application);
+  try
+    fCategoryMgr.ShowModal;
+  finally
+    FreeAndNil(fCategoryMgr);
+  end;
+end;
+
+procedure TfMenu.aDownloaderExecute(Sender: TObject);
+begin
+  OpenDownloader(Self);
 end;
 
 procedure TfMenu.aHelpExecute(Sender: TObject);
@@ -1682,6 +1699,22 @@ procedure TfMenu.aKanjiFullDetailsExecute(Sender: TObject);
 begin
   if not fKanjiDetails.Visible then aKanjiDetailsExecute(Sender);
   fKanjiDetails.btnStrokeOrderClick(Sender);
+end;
+
+procedure TfMenu.aVocabExamplesExecute(Sender: TObject);
+var pre:boolean;
+begin
+  pre:=aVocabExamples.Checked;
+  if not fVocab.Visible then aModeVocab.Execute;
+  if aVocabExamples.Checked<>pre then exit;
+  aVocabExamples.Checked := not aVocabExamples.Checked;
+end;
+
+procedure TfMenu.aVocabExamplesChecked(Sender: TObject);
+begin
+//  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
+  ToggleExamples();
+  fVocab.btnExamples.Down := aVocabExamples.Checked;
 end;
 
 { Panel docker.
@@ -1991,20 +2024,96 @@ begin
   if not fKanji.Visible then aModeKanji.Execute;
 end;
 
+{ Reconfigures the form to a landscape or portrait mode.
+ If Loading is set, only applies the configuration part (button captions,
+ panel alignment etc), and does not do actual docking.
+
+ Why? See Issue 187. We want to configure everything first, then dock once,
+ by ApplyDisplayMode.
+
+ If there are ever forms that only need to be redocked here, still redock them
+ as needed in ApplyDisplayMode. This function must be able to skip all redocking.
+
+ I don't know what happens if Loading==true and some forms are docked by that
+ point. Maybe their layout will be broken.}
+procedure TfMenu.SetPortraitMode(Value: boolean; Loading: boolean);
+var UserFiltersDocked: boolean;
+  WordKanjiDocked: boolean;
+  KanjiDetailsDocked: boolean;
+begin
+  UserFiltersDocked := (not Loading) and (fVocabFilters<>nil) and DockExpress(fVocabFilters,false);
+  WordKanjiDocked := (not Loading) and (fWordKanji<>nil) and DockExpress(fWordKanji,false);
+  KanjiDetailsDocked := (not Loading) and (fKanjiDetails<>nil) and CharDetDocked and DockExpress(fKanjiDetails,false);
+
+  if Value then begin
+    RightPanel.Align := alBottom;
+    if fVocab<>nil then begin
+      fVocab.pnlDockFilters.Align := alBottom;
+      fVocab.splDockFilters.Align := alBottom;
+      fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
+    end;
+    if fWordLookup<>nil then
+      fWordLookup.CharInWordDock.Align := alBottom;
+  end else begin
+    RightPanel.Align := alRight;
+    if fVocab<>nil then begin
+      fVocab.pnlDockFilters.Align := alRight;
+      fVocab.splDockFilters.Align := alRight;
+      fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
+    end;
+    if fWordLookup<>nil then
+      fWordLookup.CharInWordDock.Align := alRight;
+  end;
+
+ //New dock mode will be applied to forms on re-docking
+
+ //If CharDetDocked was false (logically Undocked), then KanjiDetailsDocked
+ //will be false too, and we won't even try to redock fKanjiDetails, which is right.
+
+  if fVocabFilters<>nil then
+    if UserFiltersDocked then DockExpress(fVocabFilters,true);
+  if fWordKanji<>nil then
+    if WordKanjiDocked then DockExpress(fWordKanji,true);
+  if (fKanjiDetails<>nil) and KanjiDetailsDocked then
+    DockExpress(fKanjiDetails,true);
+ //ApplyDisplayMode -- should not be needed
+end;
+
+procedure TfMenu.aPortraitModeExecute(Sender: TObject);
+begin
+  SetPortraitMode(aPortraitMode.Checked, {Loading=}false);
+end;
+
+
+{ Wakan and system-wide popup hint }
+procedure TfMenu.btnScreenModeWkClick(Sender: TObject);
+begin
+  screenModeWk:=btnScreenModeWk.Down;
+end;
 
 procedure TfMenu.btnScreenModeScClick(Sender: TObject);
 begin
-  if btnScreenModeSc.Down then
+  if btnScreenModeSc.Down then begin
+    LoadScreenTipHook();
+    screenModeSc:=true;
+  end else begin
+    screenModeSc:=false;
+    UnloadScreenTipHook();
+  end;
+end;
+
+procedure TfMenu.LoadScreenTipHook;
+begin
+  if not FileExists('wakanh.dll') then
   begin
-    if not FileExists('wakanh.dll') then
-    begin
-      Application.MessageBox(
-        pchar(_l('#00367^eCannot find file WAKANH.DLL.')),
-        pchar(_l('#00020^eError')),
-        MB_ICONERROR or MB_OK);
-      exit;
-    end;
-    Screen.Cursor:=crHourGlass;
+    Application.MessageBox(
+      pchar(_l('#00367^eCannot find file WAKANH.DLL.')),
+      pchar(_l('#00020^eError')),
+      MB_ICONERROR or MB_OK);
+    exit;
+  end;
+  Screen.Cursor:=crHourGlass;
+  try
     ctlFileMap:=CreateFileMapping($FFFFFFFF,nil,PAGE_READWRITE,0,1,'wakanh_ctl_sharemem');
     if ctlFileMap=0 then
     begin
@@ -2019,15 +2128,19 @@ begin
     end;
     byte(ptrFileMap^):=0;
 {MCH    InjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
+  finally
     Screen.Cursor:=crDefault;
-    screenModeSc:=true;
-  end else
-  begin
-    screenModeSc:=false;
-    Screen.Cursor:=crHourGlass;
+  end;
+end;
+
+procedure TfMenu.UnloadScreenTipHook;
+begin
+  Screen.Cursor:=crHourGlass;
+  try
     UnMapViewOfFile(ptrFileMap);
     CloseHandle(ctlFileMap);
 {MCH    UninjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
+  finally
     Screen.Cursor:=crDefault;
   end;
 end;
@@ -2040,12 +2153,8 @@ begin
   if fScreenTip.screenTipButton=0 then exit;
   if (fScreenTip.screenTipButton>2) and (not fMenu.Focused) then fMenu.Show;
   case fScreenTip.screenTipButton of
-    1:begin
-        Clipboard.Text := Clipboard.Text + fScreenTip.screenTipText;
-      end;
-    2:begin
-        Clipboard.Text := fScreenTip.screenTipText;
-      end;
+    1: Clipboard.Text := Clipboard.Text + fScreenTip.screenTipText;
+    2: Clipboard.Text := fScreenTip.screenTipText;
     3:begin
         Clipboard.Text := fScreenTip.screenTipText;
         if not fRadical.Visible then fWordLookup.aLookupClip.Execute;
@@ -2378,6 +2487,7 @@ begin
   end;
 end;
 
+
 {
 IntTip*()
 Various controls from all over the program call these on mouse events,
@@ -2513,104 +2623,6 @@ begin
   StringUnderMouse:=s1;
 end;
 
-procedure TfMenu.aVocabExamplesExecute(Sender: TObject);
-var pre:boolean;
-begin
-  pre:=aVocabExamples.Checked;
-  if not fVocab.Visible then aModeVocab.Execute;
-  if aVocabExamples.Checked<>pre then exit;
-  aVocabExamples.Checked := not aVocabExamples.Checked;
-end;
-
-procedure TfMenu.aVocabExamplesChecked(Sender: TObject);
-begin
-//  ToggleForm(fExamples, aUserExamples.Checked); //with Examples we need complex treatment
-  ToggleExamples();
-  fVocab.btnExamples.Down := aVocabExamples.Checked;
-end;
-
-procedure TfMenu.aCategoryManagerExecute(Sender: TObject);
-var fCategoryMgr: TfCategoryMgr;
-begin
-  fCategoryMgr := TfCategoryMgr.Create(Application);
-  try
-    fCategoryMgr.ShowModal;
-  finally
-    FreeAndNil(fCategoryMgr);
-  end;
-end;
-
-{ Reconfigures the form to a landscape or portrait mode.
- If Loading is set, only applies the configuration part (button captions,
- panel alignment etc), and does not do actual docking.
-
- Why? See Issue 187. We want to configure everything first, then dock once,
- by ApplyDisplayMode.
-
- If there are ever forms that only need to be redocked here, still redock them
- as needed in ApplyDisplayMode. This function must be able to skip all redocking.
-
- I don't know what happens if Loading==true and some forms are docked by that
- point. Maybe their layout will be broken.}
-procedure TfMenu.SetPortraitMode(Value: boolean; Loading: boolean);
-var UserFiltersDocked: boolean;
-  WordKanjiDocked: boolean;
-  KanjiDetailsDocked: boolean;
-begin
-  UserFiltersDocked := (not Loading) and (fVocabFilters<>nil) and DockExpress(fVocabFilters,false);
-  WordKanjiDocked := (not Loading) and (fWordKanji<>nil) and DockExpress(fWordKanji,false);
-  KanjiDetailsDocked := (not Loading) and (fKanjiDetails<>nil) and CharDetDocked and DockExpress(fKanjiDetails,false);
-
-  if Value then begin
-    RightPanel.Align := alBottom;
-    if fVocab<>nil then begin
-      fVocab.pnlDockFilters.Align := alBottom;
-      fVocab.splDockFilters.Align := alBottom;
-      fVocab.splDockFilters.Top := fVocab.pnlDockFilters.Top - 1;
-    end;
-    if fWordLookup<>nil then
-      fWordLookup.CharInWordDock.Align := alBottom;
-  end else begin
-    RightPanel.Align := alRight;
-    if fVocab<>nil then begin
-      fVocab.pnlDockFilters.Align := alRight;
-      fVocab.splDockFilters.Align := alRight;
-      fVocab.splDockFilters.Left := fVocab.pnlDockFilters.Left - 1;
-    end;
-    if fWordLookup<>nil then
-      fWordLookup.CharInWordDock.Align := alRight;
-  end;
-
- //New dock mode will be applied to forms on re-docking
-
- //If CharDetDocked was false (logically Undocked), then KanjiDetailsDocked
- //will be false too, and we won't even try to redock fKanjiDetails, which is right.
-
-  if fVocabFilters<>nil then
-    if UserFiltersDocked then DockExpress(fVocabFilters,true);
-  if fWordKanji<>nil then
-    if WordKanjiDocked then DockExpress(fWordKanji,true);
-  if (fKanjiDetails<>nil) and KanjiDetailsDocked then
-    DockExpress(fKanjiDetails,true);
- //ApplyDisplayMode -- should not be needed
-end;
-
-procedure TfMenu.aPortraitModeExecute(Sender: TObject);
-begin
-  SetPortraitMode(aPortraitMode.Checked, {Loading=}false);
-end;
-
-procedure TfMenu.ApplicationEvents1Exception(Sender: TObject; E: Exception);
-begin
-  if E is EAbort then exit;
-  E.Message := _l(E.Message);
-  Application.ShowException(E);
-end;
-
-procedure TfMenu.aDownloaderExecute(Sender: TObject);
-begin
-  OpenDownloader(Self);
-end;
 
 
 initialization
