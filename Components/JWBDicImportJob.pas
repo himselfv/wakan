@@ -1,4 +1,4 @@
-unit JWBDicImportJob;
+﻿unit JWBDicImportJob;
 { Core dictionary import routines. }
 
 interface
@@ -66,7 +66,6 @@ function SupportsFrequencyList: boolean;
 function GetFrequencyList: TStringList;
 
 function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
-
 
 implementation
 uses Windows, PKGWrite, JWBKanaConv, JWBCore, JWBLanguage, JWBUnit;
@@ -607,7 +606,7 @@ var syl:string;
     end else begin
       tmp := DbRomajiToKana(syl,lang,[]);
       Bopomofo := Bopomofo + tmp;
-      PinYin := PinYin + DbKanaToRomaji(tmp,lang); //this way we make sure no unsupported stuff gets into pinyin
+      PinYin := PinYin + DbKanaToRomaji(SanitizeKana(tmp),lang); //this way we make sure no unsupported stuff gets into pinyin
     end;
   end;
 
@@ -709,6 +708,7 @@ var
   ustr: string;
   i: integer;
   ed: TEdictArticle;
+  san_kana: string;
   roma: TEdictRoma;
   loclineno: integer;
 begin
@@ -737,14 +737,14 @@ begin
       //Generate romaji
       for i := 0 to ed.kana_used - 1 do begin
        //First check for completely invalid characters
-        roma[i]:=DbKanaToRomaji(ed.kana[i].kana,dic.language,[rfConvertLatin,rfConvertPunctuation]);
-        if pos('?',roma[i])>0 then begin
+        san_kana := SanitizeKana(ed.kana[i].kana, [sfKeepLatin, sfKeepAllowedPunctuation], '?');
+        if pos('?', san_kana)>0 then begin
           roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+roma[i]);
           Inc(ProblemRecords);
         end;
 
        //Now keep latin, clean the rest (punctuation+invalid)
-        roma[i]:=SignatureFrom(DbKanaToRomaji(ed.kana[i].kana,dic.language,[rfConvertLatin,rfDeleteInvalidChars]));
+        roma[i] := SignatureFrom(DbKanaToRomaji(san_kana, dic.language, []));
         if roma[i]='' then roma[i]:='XXX';
       end;
 

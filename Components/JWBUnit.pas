@@ -52,6 +52,22 @@ var
   rpy_db: TPinYinTranslator;
   rpy_user: TPinYinTranslator;
 
+//We allow some punctuation marks in kana/kanji fields in Wakan, but only some
+
+function IsAllowedPunctuation(c:WideChar): boolean;
+function ConvertPunctuation(c:WideChar): char;
+function ConvertPunctuationF(c:FChar): char;
+
+type
+  TSanitizeFlag = (
+    sfKeepLatin,              //keep HW latin
+    sfKeepAllowedPunctuation  //keep allowed punctuation (+ replace where needed)
+  );
+  TSanitizeFlags = set of TSanitizeFlag;
+
+function SanitizeKana(s: string; flags: TSanitizeFlags = [];
+  const replChar: string = ''): string;
+
 //Converts according to user preferences. Use for live input/output.
 function KanaToRomaji(const s:FString;lang:char):string; overload; inline;
 function KanaToRomajiF(const s:FString;lang:char):FString; overload; inline;
@@ -166,12 +182,57 @@ uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBMenu, JWBSettings, JWBLan
 
 { Romaji conversions }
 
+//True if c is a punctuation mark we allow in kanji and kana fields.
+function IsAllowedPunctuation(c:WideChar): boolean;
+begin
+  Result :=
+    (c='·') or (c=',') //in CCEDICT
+    or (c='・') or (c='、') or (c='〜'); //in EDICT2
+end;
+
+//When we need to store punctuation into pinyin, we have to make it ansi
+function ConvertPunctuation(c:WideChar): char;
+begin
+  case c of
+    '·': Result:='-';
+    '・': Result:='-';
+    '、': Result:=',';
+    '〜': Result:='~';
+  else
+    Result := c;
+  end;
+end;
+
+function ConvertPunctuationF(c:FChar): char;
+begin
+  Result := ConvertPunctuation(c);
+end;
+
+//Removes everything except for kana / pinyin from the string or replaces it
+//with appropriate characters
+function SanitizeKana(s: string; flags: TSanitizeFlags; const replChar: string): string;
+var i: integer;
+begin
+  Result := '';
+  for i := 1 to Length(s) do
+    if EvalChar(s[i]) in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO] then
+      Result := Result + s[i]
+    else
+    if IsAllowedPunctuation(s[i]) and (sfKeepAllowedPunctuation in flags) then
+      Result := Result + ConvertPunctuation(s[i])
+    else
+    if IsLatinLetter(s[i]) and (sfKeepLatin in flags) then
+      Result := Result + s[i]
+    else
+      Result := Result + replChar;
+end;
+
 { Converts kana to romaji in a default way, that is assuming the input is a
  kana from database and the output is for user display.
  Equivalent to older "KanaToRomaji(clean)". }
 function KanaToRomaji(const s:FString;lang:char):string;
 begin
-  Result:=KanaToRomaji(s,lang,[rfConvertLatin,rfConvertPunctuation, rfDeleteInvalidChars])
+  Result := KanaToRomaji(SanitizeKana(s,[sfKeepLatin,sfKeepAllowedPunctuation]),lang,[])
 end;
 
 //Same, but also converts the result to FString, enhances PinYin
@@ -208,7 +269,7 @@ end;
 
 function DbKanaToRomaji(const s:FString;lang:char):string;
 begin
-  Result:=DbKanaToRomaji(s,lang,[rfConvertLatin,rfConvertPunctuation, rfDeleteInvalidChars])
+  Result:=DbKanaToRomaji(SanitizeKana(s,[sfKeepLatin,sfKeepAllowedPunctuation]),lang,[])
 end;
 
 function DbKanaToRomajiF(const s:FString;lang:char):FString;

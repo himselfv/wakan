@@ -160,13 +160,10 @@ type
  }
 
   TResolveFlag = (
-    rfConvertLatin,
-      //Convert latin letters to target notation instead of treating as invalid chars.
-      //This is only reliable when doing Bopomofo->PinYin, not the reverse.
-    rfConvertPunctuation,
-      //Convert some punctuation to target notation.
+    rfReplaceInvalidChars,
+      //Replace characters which don't match any kana/romaji with character ''
     rfDeleteInvalidChars
-      //Delete invalid characters instead of replacing with '?'
+      //Delete invalid characters
   );
   TResolveFlags = set of TResolveFlag;
 
@@ -228,10 +225,6 @@ type
     function RomajiToKana(const AString: string; AFlags: TResolveFlags): FString; override;
   end;
 
-function IsAllowedPunctuation(c:WideChar): boolean;
-function ConvertPunctuation(c:WideChar): char;
-function ConvertPunctuationF(c:FChar): char;
-
 { Converts all hiragana characters in a string to katakana and vice versa }
 function ToHiragana(const ch: FChar): FChar; inline; overload;
 function ToKatakana(const ch: FChar): FChar; inline; overload;
@@ -273,36 +266,10 @@ function DeconvertPinYin(romac: TPinYinTranslator; const str:FString):string;
 { FF0*-enhanced bopomofo -> Tonemark-enhanced bopomofo
  There could be parentless tone marks already in the string, so the result
  is slightly less unambiguous. }
-function ConvertBopomofo(const str:FString):FString;
+function ConvertBopomofo(const str:FString): FString;
 
 implementation
 uses SysUtils;
-
-//True if c is a punctuation mark we allow in kanji and kana fields.
-function IsAllowedPunctuation(c:WideChar): boolean;
-begin
-  Result :=
-    (c='·') or (c=',') //in CCEDICT
-    or (c='・') or (c='、') or (c='〜'); //in EDICT2
-end;
-
-//When we need to store punctuation into pinyin, we have to make it ansi
-function ConvertPunctuation(c:WideChar): char;
-begin
-  case c of
-    '·': Result:='-';
-    '・': Result:='-';
-    '、': Result:=',';
-    '〜': Result:='~';
-  else
-    Result := c;
-  end;
-end;
-
-function ConvertPunctuationF(c:FChar): char;
-begin
-  Result := ConvertPunctuation(c);
-end;
 
 function ToHiragana(const ch: FChar): FChar;
 begin
@@ -1021,17 +988,14 @@ begin
     exit;
   end;
 
- //Latin symbol
-  if IsLatinLetterF(ps^) and (rfConvertLatin in flags) then
-    Result := Char(ftoansi(ps^))
-  else
-  if IsAllowedPunctuation(ps^) and (rfConvertPunctuation in flags) then
-    Result := ConvertPunctuationF(ps^)
-  else
+ //Other characters
   if rfDeleteInvalidChars in flags then
     Result := ''
   else
-    Result := '?';
+  if rfReplaceInvalidChars in flags then
+    Result := '?'
+  else
+    Result := ps^;
 
   Inc(ps);
 end;
@@ -1217,15 +1181,13 @@ begin
       ch:=fstrtouni(fgetch(curstr,1))[1];
       fdelete(curstr,1,1);
 
-      if (rfConvertLatin in AFlags) and IsLatinLetterW(ch) then
-        s2:=s2+ch
+      if rfDeleteInvalidChars in AFlags then begin
+        //Nothing
+      end else
+      if rfReplaceInvalidChars in AFlags then
+        s2 := s2 + '?'
       else
-      if (rfConvertPunctuation in AFlags) and IsAllowedPunctuation(ch) then
-        s2:=s2+ConvertPunctuation(ch)
-      else
-
-      if not (rfDeleteInvalidChars in AFlags) then
-        s2 := s2 + '?';
+        s2 := s2 + ch;
     end;
 
    //Extract tones always, as they are in special characters
@@ -1270,15 +1232,13 @@ begin
       ch:=curstr[1];
       delete(curstr,1,1);
 
-      if (rfConvertLatin in AFlags) and IsLatinLetterW(ch) then
-        s2:=s2+ch
+      if rfDeleteInvalidChars in AFlags then begin
+       //Nothing
+      end else
+      if rfReplaceInvalidChars in AFlags then
+        s2 := s2 + '?'
       else
-      if (rfConvertPunctuation in AFlags) and IsAllowedPunctuation(ch) then
-        s2:=s2+ConvertPunctuation(ch)
-      else
-
-      if not (rfDeleteInvalidChars in AFlags) then
-        s2 := s2 + '?'; //in unicode both strings are in native form
+        s2 := s2 + ch;
     end;
   end;
   Result := s2;
