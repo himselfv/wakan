@@ -83,7 +83,6 @@ type
     miSearchBeginning: TMenuItem;
     miSearchEnding: TMenuItem;
     N12: TMenuItem;
-    miAddToClipboard2: TMenuItem;
     N16: TMenuItem;
     miCharactersInWord: TMenuItem;
     miExamples: TMenuItem;
@@ -197,7 +196,6 @@ type
     procedure SpeedButton7Click(Sender: TObject);
     procedure btnJapaneseModeClick(Sender: TObject);
     procedure btnChineseModeClick(Sender: TObject);
-    procedure Action1Execute(Sender: TObject);
     procedure btnClipboardClearClick(Sender: TObject);
     procedure aSaveUserExecute(Sender: TObject);
     procedure aCancelUserExecute(Sender: TObject);
@@ -1341,11 +1339,6 @@ begin
   SwitchLanguage('c');
 end;
 
-procedure TfMenu.Action1Execute(Sender: TObject);
-begin
-  fWordLookup.LookupMode := lmEn;
-end;
-
 procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
@@ -1996,7 +1989,13 @@ end;
 //Attached to run before any of fWordLookup.Actions
 procedure TfMenu.WordLookupActionExecute(Action: TBasicAction; var Handled: Boolean);
 begin
-  if not fWordLookup.Visible and not fEditor.Visible then aModeDict.Execute;
+ //Dictionary may be used alone or from Editor
+  if not fWordLookup.Visible then
+    if fEditor.Visible then begin
+      fEditor.sbDockDictionary.Down := true;
+      fEditor.sbDockDictionaryClick(fEditor.sbDockDictionary);
+    end else
+      aModeDict.Execute;
 end;
 
 //Attached to run before any of fKanji.Actions

@@ -1058,9 +1058,6 @@ object fMenu: TfMenu
       object N10: TMenuItem
         Caption = '-'
       end
-      object miAddToClipboard2: TMenuItem
-        Action = fWordLookup.aAddToClipboard
-      end
       object miAddWordIntoVocabulary: TMenuItem
         Action = aUserAdd
         Caption = '^e&Add word into vocabulary'

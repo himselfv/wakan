@@ -48,12 +48,9 @@ type
     btnSearch: TBitBtn;
     Actions: TActionList;
     aLookupAuto: TAction;
-    aKanji: TAction;
-    aExamples: TAction;
     aLookupJtoE: TAction;
     aLookupEtoJ: TAction;
     aLookupClip: TAction;
-    aAddToClipboard: TAction;
     aMatchExact: TAction;
     aMatchLeft: TAction;
     aMatchRight: TAction;
@@ -75,7 +72,6 @@ type
     procedure Edit1KeyPress(Sender: TObject; var Key: Char);
     procedure aLookupAutoExecute(Sender: TObject);
     procedure aMatchExactExecute(Sender: TObject);
-    procedure aAddToClipboardExecute(Sender: TObject);
     procedure aEditorInsertExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure miLookupEtoJClick(Sender: TObject);
@@ -532,12 +528,6 @@ procedure TfWordLookup.aMatchExactExecute(Sender: TObject);
 begin
   LookupModeChanged;
 end;
-
-procedure TfWordLookup.aAddToClipboardExecute(Sender: TObject);
-begin
-  Self.btnCopyToClipboardClick(Sender);
-end;
-
 
 procedure TfWordLookup.btnAddToVocabClick(Sender: TObject);
 begin

@@ -633,14 +633,6 @@ inherited fWordLookup: TfWordLookup
       ShortCut = 113
       OnExecute = aLookupAutoExecute
     end
-    object aKanji: TAction
-      Category = 'NotYetUsed'
-      Caption = '#00237^e&Characters in word'
-    end
-    object aExamples: TAction
-      Category = 'NotYetUsed'
-      Caption = '#00315^eExamples'
-    end
     object aLookupJtoE: TAction
       AutoCheck = True
       Caption = '#00287^Japanese/Chinese -> English'
@@ -668,10 +660,6 @@ inherited fWordLookup: TfWordLookup
       AutoCheck = True
       GroupIndex = 2
       OnExecute = aEditorInsertExecute
-    end
-    object aAddToClipboard: TAction
-      Caption = '#00285^Add to clipboard'
-      OnExecute = aAddToClipboardExecute
     end
     object aMatchExact: TAction
       AutoCheck = True
