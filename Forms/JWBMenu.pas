@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, ExtCtrls, Grids, Buttons, ShellApi, ActnList, Menus,
-  FormPlacemnt, JWBDicSearch, WakanPaintbox, CheckAction, Actions, AppEvnts,
+  FormPlacemnt, WakanPaintbox, CheckAction, Actions, AppEvnts,
   Generics.Collections;
 
 type
@@ -344,20 +344,14 @@ type
     property DisplayMode: integer read FCurDisplayMode write SetDisplayMode;
     property CharDetDocked: boolean read FCharDetDocked;
 
-  //Screen tip hook
   protected
-    ctlFileMap:cardinal;
-    ptrFileMap:pointer;
-    procedure LoadScreenTipHook;
-    procedure UnloadScreenTipHook;
-
-
+    procedure ClipboardChanged(Sender: TObject);
   public
-    screenTipDebug:string;
     screenModeSc,screenModeWk:boolean;
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure SwitchLanguage(lanchar:char);
+    procedure ScreenTipButtonClick(ASender: TObject; AButtonId: integer);
 
   protected
     UserDataLoaded:boolean;
@@ -374,72 +368,21 @@ type
     procedure ImportUserData(filename:string);
     property UserDataChanged: boolean read FUserDataChanged write SetUserDataChanged;
 
-  private //Text under mouse
-   //Drag start control+point when drag-selecting, else nil.
-    DragStartCtl:TControl;
-    DragStartPt:TPoint;
-   //Last selection-enabled control mouse was sighted over
-    HoverCtl:TControl;
-    HoverPt:TPoint;
-   //Currently selected string/String under the mouse pointer right now
-   //UpdateSelection changes this member
-    StringUnderMouse:string;
-    HandlingPopup:boolean; //set while we're doing popup handling -- TODO: Do we really need this?
-    LastMousePt:TPoint; //used to check whether the mouse stays still
-    LastMouseMove:cardinal; //tick count
-    procedure AbortDrag;
-    procedure UpdateSelection;
-    procedure HandlePopup(ShowImmediate:boolean=false);
-  public
-    procedure IntTipMouseMove(c:TControl;x,y:integer;leftDown:boolean);
-    procedure IntTipMouseDown(c:TControl;x,y:integer);
-    procedure IntTipMouseUp;
-    procedure PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
-    procedure PopupImmediate(left:boolean);
-
-  protected
-    procedure ClipboardChanged(Sender: TObject);
-
-  end;
-
-  TTextInfo = record
-    hwnd:HWND;
-    hdc:HDC;
-    x,y,w,h:integer;
-    slen:byte;
-    str:array[0..255] of word;
-    len:array[0..255] of byte;
-    dcinfo:integer;
-  end;
-  TBitInfo = record
-    hwnd:HWND;
-    destdc,srcdc:HDC;
-    xofs,yofs:integer;
   end;
 
 
 var
   fMenu: TfMenu;
 
- { IPC stuff }
-  rdcnt,bitcnt:integer;
-  curtext:array[1..100] of TTextInfo;
-  curbit:array[1..100] of TBitInfo;
-
-  ftext:array[0..255] of word;
-  ftextbeg:array[0..255] of integer;
-  ftextend:array[0..255] of integer;
-  ftextpos:integer;
-  popcreated:boolean;
-
 implementation
 uses Types, MemSource, TextTable, JWBStrings, JWBCore, JWBClipboard, JWBUnit,
- JWBForms, JWBIO, JWBDic, JWBLanguage, JWBCharData, JWBCharDataImport, JWBSplash,
- JWBUserData, JWBSettings, JWBRadical, JWBWordLookup, JWBKanjiCompounds,
- JWBExamples, JWBEditor, JWBWakanText, JWBVocab, JWBVocabDetails, JWBVocabFilters,
- JWBStatistics, JWBKanji, JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBDictMan,
- JWBDictImport, JWBScreenTip, JWBCategories, JWBAnnotations, JWBCommandLine,
- JWBAutoImport, JWBComponents, JWBDownloader, JWBCategoryMgr;
+ JWBForms, JWBSplash, JWBIO, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
+ JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical, JWBWordLookup,
+ JWBKanjiCompounds, JWBExamples, JWBEditor, JWBVocab, JWBVocabDetails,
+ JWBVocabFilters, JWBStatistics, JWBKanji, JWBKanjiDetails, JWBKanjiSearch,
+ JWBWordKanji, JWBDictMan, JWBDictImport, JWBScreenTip, JWBCategories,
+ JWBAnnotations, JWBCommandLine, JWBAutoImport, JWBComponents, JWBDownloader,
+ JWBCategoryMgr, JWBIntTip;
 
 {$R *.DFM}
 
@@ -451,10 +394,6 @@ begin
   initdone:=false;
 
   curlang:='j';
-  DragStartCtl:=nil;
-  HoverCtl:=nil;
-  HandlingPopup:=false;
-  LastMouseMove:=GetTickCount;
 
  //Nothing is docked to these so initialized them to hidden
   BottomPanel.Width := 0;
@@ -463,6 +402,7 @@ begin
   RightPanel.Height := 0;
 
   Clipboard.Watchers.Add(Self.ClipboardChanged);
+  ScreenTip.OnTipButtonClick := Self.ScreenTipButtonClick;
 end;
 
 procedure TfMenu.FormDestroy(Sender: TObject);
@@ -1262,8 +1202,7 @@ begin
     FormPlacement1.SaveFormPlacement;
   if Action<>caNone then begin
     fSettings.SaveSettings;
-    if btnScreenModeSc.Down then
-      UnloadScreenTipHook;
+    ScreenTip.EnabledSystemWide := false;
     fEditor.Close;
     fWordLookup.Close;
     fVocab.Close;
@@ -1315,13 +1254,13 @@ end;
 procedure TfMenu.ClipboardPaintboxMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
-  fMenu.IntTipMouseMove(ClipboardPaintbox,x,y,ssLeft in Shift);
+  IntTip.MouseMove(ClipboardPaintbox,x,y,ssLeft in Shift);
 end;
 
 procedure TfMenu.ClipboardPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then Self.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfMenu.btnClipboardClearClick(Sender: TObject);
@@ -2050,552 +1989,44 @@ begin
   SetPortraitMode(aPortraitMode.Checked, {Loading=}false);
 end;
 
-
-{ Wakan and system-wide popup hint }
 procedure TfMenu.btnScreenModeWkClick(Sender: TObject);
 begin
-  screenModeWk:=btnScreenModeWk.Down;
+  ScreenTip.EnabledInWakan := btnScreenModeWk.Down;
 end;
 
 procedure TfMenu.btnScreenModeScClick(Sender: TObject);
 begin
-  if btnScreenModeSc.Down then begin
-    LoadScreenTipHook();
-    screenModeSc:=true;
-  end else begin
-    screenModeSc:=false;
-    UnloadScreenTipHook();
-  end;
-end;
-
-procedure TfMenu.LoadScreenTipHook;
-begin
-  if not FileExists('wakanh.dll') then
-  begin
-    Application.MessageBox(
-      pchar(_l('#00367^eCannot find file WAKANH.DLL.')),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
-    exit;
-  end;
-  Screen.Cursor:=crHourGlass;
-  try
-    ctlFileMap:=CreateFileMapping($FFFFFFFF,nil,PAGE_READWRITE,0,1,'wakanh_ctl_sharemem');
-    if ctlFileMap=0 then
-    begin
-      showmessage('Win32 API error: CreateFileMap() failed.');
-      exit;
-    end;
-    ptrFileMap:=MapViewOfFile(ctlFileMap,FILE_MAP_WRITE,0,0,1);
-    if ptrFileMap=nil then
-    begin
-      showmessage('Win32 API error: MapViewOfFile() failed.');
-      exit;
-    end;
-    byte(ptrFileMap^):=0;
-{MCH    InjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
-  finally
-    Screen.Cursor:=crDefault;
-  end;
-end;
-
-procedure TfMenu.UnloadScreenTipHook;
-begin
-  Screen.Cursor:=crHourGlass;
-  try
-    UnMapViewOfFile(ptrFileMap);
-    CloseHandle(ctlFileMap);
-{MCH    UninjectLibrary(ALL_SESSIONS or SYSTEM_PROCESSES, 'wakanh.dll');}
-  finally
-    Screen.Cursor:=crDefault;
-  end;
-end;
-
-//Called by ScreenTip to handle button clicking
-procedure TfMenu.PopupMouseUp(button:TMouseButton;shift:TShiftState;x,y:integer);
-begin
-  if fRadical.Visible then exit;
-  fScreenTip.PopupMouseMove(x,y);
-  if fScreenTip.screenTipButton=0 then exit;
-  if (fScreenTip.screenTipButton>2) and (not fMenu.Focused) then fMenu.Show;
-  case fScreenTip.screenTipButton of
-    1: Clipboard.Text := Clipboard.Text + fScreenTip.screenTipText;
-    2: Clipboard.Text := fScreenTip.screenTipText;
-    3:begin
-        Clipboard.Text := fScreenTip.screenTipText;
-        if not fRadical.Visible then fWordLookup.aLookupClip.Execute;
-      end;
-    4:begin
-        if fRadical.Visible then exit;
-        if not fKanjiDetails.Visible then aKanjiDetails.Execute;
-        fKanjiDetails.SetCharDetails(fcopy(fScreenTip.screenTipText,1,1));
-      end;
-  end;
-end;
-
-procedure TfMenu.PopupImmediate(left:boolean);
-begin
-  HandlePopup({ShowImmediate=}true);
-end;
-
-procedure IPCCallback(name: pchar; messageBuf : pointer; messageLen : dword;
-                      answerBuf  : pointer; answerLen  : dword); stdcall;
-var mycnt:integer;
-begin
-  if messageLen<>sizeof(TTextInfo) then exit;
-  inc(rdcnt);
-  if rdcnt>90 then exit;
-  mycnt:=rdcnt;
-  move(messageBuf^,curtext[mycnt],sizeof(TTextInfo));
-end;
-
-procedure BitCallback(name: pchar; messageBuf : pointer; messageLen : dword;
-                      answerBuf  : pointer; answerLen  : dword); stdcall;
-var mycnt:integer;
-begin
-  if messageLen<>sizeof(TBitInfo) then exit;
-  inc(bitcnt);
-  if bitcnt>90 then exit;
-  mycnt:=bitcnt;
-  move(messageBuf^,curbit[mycnt],sizeof(TBitInfo));
+  ScreenTip.EnabledSystemWide := btnScreenModeSc.Down;
 end;
 
 procedure TfMenu.ScreenTimerTimer(Sender: TObject);
 begin
   if not initdone then exit;
   AutosaveUserData;
-  HandlePopup({ShowImmediate=}false);
+  ScreenTip.MaybePopup;
   UpdateWindowTitle; //have no way of knowing when child form caption changes =(
 end;
 
-{ Shows or hides or updates popup, reacting to mouse movements.
- Call on timer, or possibly OnMouseMove, or manually with ShowImmediate=true. }
-procedure TfMenu.HandlePopup(ShowImmediate:boolean);
-  procedure wwadd(bg,en:integer;w:word);
-  var b:integer;
-      i,j:integer;
-      ass:boolean;
-  begin
-    b:=0;
-    for i:=0 to ftextpos-1 do if (ftextend[i]=en) and (ftextbeg[i]=bg) then
-    begin end else
-    begin
-      ftext[b]:=ftext[i];
-      ftextbeg[b]:=ftextbeg[i];
-      ftextend[b]:=ftextend[i];
-      inc(b);
-    end;
-    ftextpos:=b;
-    ass:=false;
-    for i:=0 to ftextpos-1 do if (not ass) and (ftextbeg[i]>bg) then
-    begin
-      for j:=ftextpos-1 downto i do
-      begin
-        ftext[j+1]:=ftext[j];
-        ftextbeg[j+1]:=ftextbeg[j];
-        ftextend[j+1]:=ftextend[j];
-      end;
-      ftext[i]:=w;
-      ftextbeg[i]:=bg;
-      ftextend[i]:=en;
-      inc(ftextpos);
-      ass:=true;
-    end;
-    if not ass then
-    begin
-      ftext[ftextpos]:=w;
-      ftextbeg[ftextpos]:=bg;
-      ftextend[ftextpos]:=en;
-      inc(ftextpos);
-    end;
-  end;
-var pt:TPoint;
-    s:string;
-    s2:FString;
-    i,j:integer;
-    b:byte;
-    wbg,wen:integer;
-    lp:TPoint;
-    cx:integer;
-    last:integer;
-    wtp:integer;
-    k:integer;
-    gbg:array[0..255] of integer;
-    gen:array[0..255] of integer;
-    wp:WINDOWPLACEMENT;
-    ct:TTextInfo;
-    ev,cev:TEvalCharType;
-    ttim,tleft,tright:integer;
-    wnd:HWnd;
-    wt:shortstring;
-    wr:TRect;
-    savedx:array[1..100] of integer;
-    savedy:array[1..100] of integer;
-    evc:TEvalCharType;
-    rx,ry:integer;
-    gc:TGridCoord;
-    rect:TRect;
-    wtt:integer;
-    curt:TDateTime;
-  intmosc:TPoint;
-  fInvalidator: TForm; //very stupid
+//Called by ScreenTip to handle button clicking
+procedure TfMenu.ScreenTipButtonClick(ASender: TObject; AButtonId: integer);
 begin
-  if not screenModeWk and not screenModeSc and not ShowImmediate and not popcreated then exit;
-
-  try
-    pt:=Mouse.CursorPos;
-  except
-   //Mouse.CursorPos can raise EOSError on some versions of Delphi,
-   //as underlying WINAPI GetCursorPos returns false if this is not the active desktop.
-    on E: EOSError do exit;
-  end;
-
-  if HandlingPopup then exit;
-  HandlingPopup:=true;
-  try
-    if not TryStrToInt(fSettings.Edit21.Text, ttim) then ttim:=10;
-    if not TryStrToInt(fSettings.Edit22.Text, tleft) then tleft:=10;
-    if not TryStrToInt(fSettings.Edit23.Text, tright) then tright:=100;
-
-   //Popup active + mouse inside popup => exit
-    if popcreated
-    and (pt.x>=fScreenTip.Left-10)
-    and (pt.y>=fScreenTip.Top-10)
-    and (pt.x<=fScreenTip.Left+fScreenTip.Width+10)
-    and (pt.y<=fScreenTip.Top+fScreenTip.Height+10) then
-      exit;
-
-   //Mouse moved => hide popup, reset popup timer
-    if (not ShowImmediate) and ((pt.x<>LastMousePt.x) or (pt.y<>LastMousePt.y)) then
-    begin
-      if popcreated then
-      begin
-        HideScreenTip;
-        popcreated:=false;
+  if fRadical.Visible then exit;
+  if AButtonID=0 then exit;
+  if (AButtonID>2) and (not Self.Focused) then Self.Show;
+  case AButtonID of
+    1: Clipboard.Text := Clipboard.Text + TfScreenTipForm(ASender).ScreenTipText;
+    2: Clipboard.Text := TfScreenTipForm(ASender).ScreenTipText;
+    3:begin
+        Clipboard.Text := TfScreenTipForm(ASender).ScreenTipText;
+        if not fRadical.Visible then fWordLookup.aLookupClip.Execute;
       end;
-      LastMousePt:=pt;
-      LastMouseMove:=GetTickCount;
-      exit;
-    end;
-
-   //Do not show popup if we're doing drag-selection
-    if (not ShowImmediate) and (not popcreated) and (DragStartCtl<>nil) then
-      exit;
-
-   //Wait for popup delay
-    if (not ShowImmediate) and (not popcreated) and (GetTickCount()-LastMouseMove<cardinal(ttim)*100) then
-      exit;
-
-    ftextpos:=0;
-    s:='';
-    if screenModeWk or ShowImmediate then
-    begin
-     //Popup delay might expire while we're over some unrelated place
-      if HoverCtl<>nil then begin
-        intmosc:=HoverCtl.ClientToScreen(HoverPt);
-        if (pt.x=intmosc.x) and (pt.y=intmosc.y) then
-          s:=StringUnderMouse;
+    4:begin
+        if fRadical.Visible then exit;
+        if not fKanjiDetails.Visible then aKanjiDetails.Execute;
+        fKanjiDetails.SetCharDetails(fcopy(TfScreenTipForm(ASender).ScreenTipText,1,1));
       end;
-      if flength(s)>=1 then evc:=EvalChar(fgetch(s,1));
-    end;
-    if (s='') and screenModeSc then
-    begin
-      fInvalidator:=TForm.Create(nil);
-      fInvalidator.Width:=tleft+tright;
-      fInvalidator.Height:=1;
-      fInvalidator.Top:=pt.y;
-      fInvalidator.Left:=pt.x-tleft;
-      for i:=1 to 100 do curtext[i].slen:=0;
-      rdcnt:=0;
-      bitcnt:=0;
-  {MCH    CreateIPCQueue('texthook_data',IPCCallback);
-      CreateIPCQueue('texthook_bit',BitCallback);}
-      byte(ptrFileMap^):=1;
-      SetWindowPos(fInvalidator.handle,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_SHOWWINDOW);
-      fInvalidator.Hide;
-      fInvalidator.Free;
-      sleep(100);
-      byte(ptrFileMap^):=0;
-  {MCH    DestroyIPCQueue('texthook_data');
-      DestroyIPCQueue('texthook_bit');}
-      s:='';
-      s2:='';
-      ftextpos:=0;
-      if rdcnt>90 then rdcnt:=90;
-      if bitcnt>90 then bitcnt:=90;
-      // create debug
-      for i:=1 to rdcnt do
-      begin
-        ct:=curtext[i];
-        savedx[i]:=ct.x;
-        savedy[i]:=ct.y;
-        if (ct.dcinfo and (TA_TOP or TA_BOTTOM or TA_BASELINE))=TA_BOTTOM then ct.y:=ct.y-ct.h;
-        if (ct.dcinfo and (TA_TOP or TA_BOTTOM or TA_BASELINE))=TA_BASELINE then ct.y:=ct.y-ct.h;
-        if (ct.dcinfo and (TA_RIGHT or TA_LEFT or TA_CENTER))=TA_CENTER then ct.x:=ct.x-ct.w div 2;
-        if (ct.dcinfo and (TA_LEFT or TA_RIGHT or TA_CENTER))=TA_RIGHT then ct.x:=ct.x-ct.w;
-        curtext[i]:=ct;
-      end;
-      wnd:=WindowFromPoint(pt);
-      wt[0]:=AnsiChar(chr(Windows.GetWindowText(wnd,@(wt[1]),255)));
-      s2:=s2+fstr('Window name: '+wt)+UH_CR+UH_LF;
-      Windows.GetWindowRect(wnd,wr);
-      s2:=s2+fstr('Window rect: ['+inttostr(wr.Left)+':'+
-        inttostr(wr.Top)+']-['+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+']')+UH_CR+UH_LF;
-      Windows.GetClientRect(wnd,wr);
-      s2:=s2+fstr('Client area: '+inttostr(wr.Right)+':'+inttostr(wr.Bottom)+'')+UH_CR+UH_LF;
-      s2:=s2+fstr('Cursor pos: '+inttostr(pt.x)+':'+inttostr(pt.y))+UH_CR+UH_LF;
-      s2:=s2+UH_CR+UH_LF+fstr('BitBlts:')+UH_CR+UH_LF;
-      for i:=1 to bitcnt do
-      begin
-        s2:=s2+fstr(inttostr(i)+'# Mod:');
-        for j:=1 to rdcnt do if curbit[i].srcdc=curtext[j].hdc then
-        begin
-          s2:=s2+fstr(inttostr(j)+';');
-          curtext[j].hwnd:=curbit[i].hwnd;
-          curtext[j].x:=curtext[j].x+curbit[i].xofs;
-          curtext[j].y:=curtext[j].y+curbit[i].yofs;
-      //    s:=s+'T+'+inttostr(curbit[i].xofs)+'='+inttostr(curbit[i].yofs)+'+';
-        end;
-        s2:=s2+fstr(' Ofs:'+inttostr(curbit[i].xofs)+':'+inttostr(curbit[i].yofs))+UH_CR+UH_LF;
-      end;
-      s2:=s2+UH_CR+UH_LF+fstr('TextOuts:')+UH_CR+UH_LF;
-      for i:=1 to rdcnt do
-      begin
-        lp.x:=curtext[i].x;
-        lp.y:=curtext[i].y;
-        Windows.GetWindowRect(wnd,wr);
-        lp.x:=lp.x+wr.Left;
-        lp.y:=lp.y+wr.Top;
-        s2:=s2+fstr(inttostr(i)+'# "');
-        for j:=0 to curtext[i].slen-1 do if curtext[i].str[j]>=32 then
-          s2:=s2+fstr(widechar(curtext[i].str[j]));
-        s2:=s2+fstr('"'+
-          ' Org:'+inttostr(savedx[i])+':'+inttostr(savedy[i])+
-          ' Align:'+inttostr(curtext[i].x)+':'+inttostr(curtext[i].y)+
-          ' Trans:'+inttostr(lp.x)+':'+inttostr(lp.y)+
-          ' Size:'+inttostr(curtext[i].w)+':'+inttostr(curtext[i].h)+' ');
-        if curtext[i].hwnd=wnd then s2:=s2+fstr('OK') else s2:=s2+fstr('BAD WND');
-        s2:=s2+UH_CR+UH_LF;
-      end;
-      for i:=1 to rdcnt do if (curtext[i].slen>0) and (curtext[i].hwnd=wnd) then
-      begin
-        wbg:=0;
-        lp.x:=curtext[i].x;
-        lp.y:=curtext[i].y;
-        Windows.GetWindowRect(wnd,wr);
-        lp.x:=lp.x+wr.Left;
-        lp.y:=lp.y+wr.Top;
-        if (lp.y<=pt.y) and (lp.x+curtext[i].w>=pt.x) and (lp.y+curtext[i].h>=pt.y) then
-        begin
-          cx:=lp.x;
-          wen:=-1;
-          for j:=0 to curtext[i].slen-1 do
-          begin
-            gbg[j]:=cx;
-            gen[j]:=cx+curtext[i].len[j];
-    //        s2:=s2+chr(curtext[i].str[j] mod 256);
-            if wen=-1 then
-            begin
-              if (curtext[i].str[j]<ord('A')) or ((curtext[i].str[j]>ord('Z')) and
-                  (curtext[i].str[j]<ord('a'))) or (curtext[i].str[j]>ord('z')) then
-                  begin wbg:=j+1; wtp:=2; end else wtp:=1;
-            end;
-            if (cx+curtext[i].len[j]>pt.x) and (wen=-1) then
-            begin
-              if wbg>j then wbg:=j;
-              if wbg=-1 then wbg:=0;
-              wen:=wbg;
-              if wtp=1 then while (wen+1<curtext[i].slen) and
-                (((curtext[i].str[wen+1]>=ord('a')) and (curtext[i].str[wen+1]<=ord('z'))) or
-                 ((curtext[i].str[wen+1]>=ord('A')) and (curtext[i].str[wen+1]<=ord('Z')))) do inc(wen);
-              if wtp=2 then wen:=wbg+10;
-              if wen>=curtext[i].slen then wen:=curtext[i].slen-1;
-            end;
-            cx:=cx+curtext[i].len[j];
-          end;
-          if wen<>-1 then for k:=wbg to wen do
-            wwadd(gbg[k],gen[k],curtext[i].str[k]);
-          if wtp=1 then wwadd(gen[wen],gen[wen],32);
-        end;
-      end;
-      cev:=EC_UNKNOWN;
-      cx:=-100;
-      last:=0;
-      if (ftextpos>0) and (ftextbeg[0]<=pt.x+2) then
-      for i:=0 to ftextpos-1 do
-      begin
-        if cev=EC_UNKNOWN then cev:=EvalChar(WideChar(ftext[i]));
-        ev:=EvalChar(WideChar(ftext[i]));
-        if (cev=ev) or ((cev=EC_IDG_CHAR) and (ev=EC_HIRAGANA)) then
-        begin
-          if (ev<>EC_UNKNOWN) and ((ftext[i]<>last) or (ftextbeg[i]>cx+2)) then
-            s:=s+fstr(widechar(ftext[i]))
-        end else break;
-        cx:=ftextbeg[i];
-        last:=ftext[i];
-        cev:=EvalChar(WideChar(ftext[i]));
-      end;
-      if s<>'' then evc:=EvalChar(WideChar(ftext[0]));
-    end;
-    screenTipDebug:=s2;
-    if s<>'' then
-    begin
-      DragStartCtl:=nil; //TODO: Perhaps, move this to some common function?
-      SetSelectionHighlight(0,0,0,0,nil); //This too
-      if ShowImmediate then
-        ShowScreenTip(pt.x-10,pt.y-10,s,evc,true)
-      else
-        ShowScreenTip(pt.x+10,pt.y+10,s,evc,false);
-      if fScreenTip<>nil then popcreated:=true;
-    end;
-  finally
-    HandlingPopup:=false;
   end;
 end;
 
-
-{
-IntTip*()
-Various controls from all over the program call these on mouse events,
-to support text selection and hint popups.
-Minimal set you have to call from a control:
- IntTipControlOver(...) on mouse move
- IntTipMouseUp() on mouse up
-
-Your control also has to be supported by UpdateSelection (see comments there).
-}
-procedure TfMenu.IntTipMouseMove(c:TControl;x,y:integer;leftDown:boolean);
-begin
-  if leftDown and (DragStartCtl<>c) then begin
-    if DragStartCtl<>nil then AbortDrag; //at old control
-    IntTipMouseDown(c,x,y); //auto-down
-  end;
-  if (not leftDown) and (DragStartCtl<>nil) then
-   //auto-up: some controls send MouseOver(leftDown=false) first, and we'd lose
-   //selected text if we just continued.
-    IntTipMouseUp;
-  HoverPt:=Point(x,y);
-  HoverCtl:=c;
-  UpdateSelection;
-end;
-
-procedure TfMenu.IntTipMouseDown(c:TControl;x,y:integer);
-begin
- //Remember "drag start" point and control
-  DragStartPt:=Point(x,y);
-  DragStartCtl:=c;
-end;
-
-procedure TfMenu.IntTipMouseUp;
-begin
- //Remove "drag start" point. Important - or we'll continue dragging
-  DragStartCtl:=nil;
-  fMenu.PopupImmediate(true);
-end;
-
-//Simply abort drag but show no popup
-procedure TfMenu.AbortDrag;
-begin
-  DragStartCtl:=nil;
-end;
-
-//Updates text selection highlight and currently highlighted contents in intcurString
-procedure TfMenu.UpdateSelection;
-var s1:string;
-    rx,ry:integer;
-  wtt:TEvalCharType;
-  gc:TGridCoord;
-  rpos: TSourcePos;
-  MouseControl: TControl; //control which receives the mouse events
-  MousePos: TPoint; //mouse pos in that control coordinate system
-begin
- //It is important that we route mouse events to the control which captured mouse,
- //else we'd get popup even when clicking in Text Editor, then dragging the mouse outside
-  if DragStartCtl=nil then begin
-   //mouse is free, hovering over intmo
-    MouseControl:=HoverCtl;
-    MousePos:=HoverPt;
-  end else begin
-   //mouse is captured by a different control
-    MouseControl:=DragStartCtl;
-    if DragStartCtl=HoverCtl then
-      MousePos:=HoverPt
-    else
-      MousePos:=MouseControl.ScreenToClient(HoverCtl.ClientToScreen(HoverPt)); //convert to capture control coordinate system
-  end;
- //Now MouseControl can either be DragStart control, MouseOver control or nil.
-
-  if MouseControl=nil then begin
-    s1 := '';
-    SetSelectionHighlight(0,0,0,0,nil);
-  end else
-
-  if (fEditor<>nil) and (MouseControl=fEditor.EditorPaintBox) then
-  begin
-    rpos:=fEditor.TryGetExactLogicalPos(MousePos.x,MousePos.y);
-    rx := rpos.x; ry := rpos.y;
-    if (ry>=0) and (rx>=0) and (rx<=fEditor.doctr[ry].charcount) then
-      s1:=fEditor.GetDocWord(rx,ry,wtt)
-    else
-      s1:='';
-    SetSelectionHighlight(0,0,0,0,nil);
-  end else
-
-  if MouseControl is TPaintBox then
-  begin
-    if DragStartCtl<>nil then //dragging
-      s1:=CanvasUpdateSelection(TPaintBox(MouseControl).Canvas,DragStartPt,MousePos)
-    else //just hovering
-      s1:=CanvasUpdateSelection(TPaintBox(MouseControl).Canvas,MousePos,MousePos);
-  end else
-
- { TWakanPaintbox is mostly the same as TPaintBox with regard to custom painting,
-  but it inherits from TCustomControl instead of TGraphicControl and has a different
-  Canvas field }
-  if MouseControl is TWakanPaintBox then
-  begin
-    if DragStartCtl<>nil then //dragging
-      s1:=CanvasUpdateSelection(TWakanPaintBox(MouseControl).Canvas,DragStartPt,MousePos)
-    else //just hovering
-      s1:=CanvasUpdateSelection(TWakanPaintBox(MouseControl).Canvas,MousePos,MousePos);
-  end else
-
- { Maybe I should have just taken the TGraphicControl/TCustomControl route instead of
-  messing with descendants? And moved these clauses to the bottom, if nothing else
-  works }
-
-  if MouseControl is TCustomDrawGrid then
-  begin
-    gc:=TCustomDrawGrid(MouseControl).MouseCoord(MousePos.x,MousePos.y);
-    if (fKanji<>nil) and (MouseControl=fKanji.DrawGrid1) then begin
-      s1:=fKanji.GetKanji(gc.x,gc.y);
-      SetSelectionHighlight(0,0,0,0,nil);
-    end else
-    if (fRadical<>nil) and (MouseControl=fRadical.DrawGrid) then begin
-      s1:=fRadical.GetKanji(gc.x,gc.y);
-      SetSelectionHighlight(0,0,0,0,nil);
-    end else
-    if DragStartCtl<>nil then //dragging
-      s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),DragStartPt,MousePos)
-    else //just hovering
-      s1:=DrawGridUpdateSelection(TCustomDrawGrid(MouseControl),MousePos,MousePos);
-  end else
-
-  begin
-    s1 := ''; //invalid control in intmo
-    SetSelectionHighlight(0,0,0,0,nil);
-  end;
-
-  StringUnderMouse:=s1;
-end;
-
-
-
-initialization
-  rdcnt:=0;
-  popcreated:=false;
-  showroma:=false;
-
-finalization
 
 end.

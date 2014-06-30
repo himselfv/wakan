@@ -125,7 +125,7 @@ implementation
 uses JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage,
   JWBKanjiCard, JWBKanaConv, JWBCategories, JWBAnnotations, TextTable,
-  JWBCharData, JWBForms;
+  JWBCharData, JWBForms, JWBIntTip, JWBScreenTip;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -1003,7 +1003,7 @@ procedure TfKanji.DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if mbRight=Button then
-    fMenu.PopupImmediate(false);
+    ScreenTip.PopupImmediate(false);
 end;
 
 procedure TfKanji.DrawGrid1DblClick(Sender: TObject);
@@ -1014,7 +1014,7 @@ end;
 procedure TfKanji.DrawGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(DrawGrid1,x,y,false);
+  IntTip.MouseMove(DrawGrid1,x,y,false);
 end;
 
 function TfKanji.GetKanji(cx,cy:integer):string;

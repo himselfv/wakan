@@ -128,8 +128,8 @@ function IndexesToRadicals(const AType: TRadSearchType; const AIndexes: TRadical
 
 implementation
 
-uses TextTable, JWBCore, JWBMenu, JWBUnit, PKGWrite, JWBCategories, JWBIO,
-  JWBCharData, MemSource;
+uses TextTable, JWBCore, JWBUnit, PKGWrite, JWBCategories, JWBIO, JWBCharData,
+  MemSource, JWBIntTip;
 
 {$R *.DFM}
 
@@ -586,7 +586,7 @@ end;
 procedure TfRadical.DrawGridMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(DrawGrid,x,y,false);
+  IntTip.MouseMove(DrawGrid,x,y,false);
 end;
 
 function TfRadical.GetKanji(x,y:integer):string;

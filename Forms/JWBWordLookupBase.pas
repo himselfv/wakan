@@ -90,7 +90,7 @@ function XsltTransform(const s: UnicodeString; const AXsltFilename: string): Wid
 implementation
 uses UITypes, JWBStrings, JWBCore, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
   JWBVocabAdd, JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage,
-  JWBWordGrid, JWBClipboard, ActiveX;
+  JWBWordGrid, JWBClipboard, JWBIntTip, ActiveX;
 
 {$R *.dfm}
 
@@ -348,7 +348,7 @@ end;
 procedure TfWordLookupBase.StringGridMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(TStringGrid(Sender),x,y,ssLeft in Shift);
+  IntTip.MouseMove(TStringGrid(Sender),x,y,ssLeft in Shift);
 end;
 
 procedure TfWordLookupBase.StringGridMouseDown(Sender: TObject;
@@ -376,7 +376,7 @@ end;
 procedure TfWordLookupBase.StringGridMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfWordLookupBase.StringGridKeyPress(Sender: TObject; var Key: Char);

@@ -184,7 +184,7 @@ implementation
 
 uses UITypes, ShellApi, JWBKanji, JWBMenu, JWBSettings, JWBUnit, JWBCategories,
   JWBKanjiSearch, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBRefLinks,
-  JWBLanguage, JWBClipboard;
+  JWBLanguage, JWBClipboard, JWBIntTip, JWBScreenTip;
 
 {$R *.DFM}
 
@@ -381,37 +381,37 @@ end;
 procedure TfKanjiDetails.pbRadicalMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(pbRadical,x,y,ssLeft in Shift);
+  IntTip.MouseMove(pbRadical,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(pbKanjiInfo,x,y,ssLeft in Shift);
+  IntTip.MouseMove(pbKanjiInfo,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiDetails.pbSimplifiedMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(pbSimplified,x,y,ssLeft in Shift);
+  IntTip.MouseMove(pbSimplified,x,y,ssLeft in Shift);
 end;
 
 procedure TfKanjiDetails.pbRadicalMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
+  if mbRight=Button then ScreenTip.PopupImmediate(false);
 end;
 
 procedure TfKanjiDetails.pbSimplifiedMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
+  if mbRight=Button then ScreenTip.PopupImmediate(false);
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
+  if mbRight=Button then ScreenTip.PopupImmediate(false);
 end;
 
 procedure TfKanjiDetails.cbCategoriesChange(Sender: TObject);
@@ -422,19 +422,19 @@ end;
 procedure TfKanjiDetails.pbRadicalMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfKanjiDetails.pbSimplifiedMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfKanjiDetails.RefreshDetails;

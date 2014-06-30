@@ -131,7 +131,7 @@ uses JWBStrings, JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBPrint,
   JWBSettings, JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType,
   JWBVocabFilters, JWBExamples, JWBUserData, JWBWordsExpChoose, JWBCategories,
   JWBAnnotations, StdPrompt, PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup,
-  JWBWordGrid, JWBClipboard;
+  JWBWordGrid, JWBClipboard, JWBIntTip, JWBScreenTip;
 
 var wlc:TStringList;
     lastwordind:integer;
@@ -1459,7 +1459,7 @@ end;
 procedure TfVocab.StringGrid1MouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(StringGrid1,x,y,ssLeft in Shift);
+  IntTip.MouseMove(StringGrid1,x,y,ssLeft in Shift);
 end;
 
 procedure TfVocab.btnAddWordClick(Sender: TObject);
@@ -1558,7 +1558,7 @@ end;
 procedure TfVocab.StringGrid1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbRight=Button then fMenu.PopupImmediate(true);
+  if mbRight=Button then ScreenTip.PopupImmediate(true);
 end;
 
 procedure TfVocab.StringGrid1Click(Sender: TObject);
@@ -1596,7 +1596,7 @@ end;
 procedure TfVocab.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfVocab.SearchWord(wordind: integer);

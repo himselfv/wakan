@@ -76,7 +76,7 @@ object fVocab: TfVocab
         Left = 0
         Top = 0
         Width = 183
-        Height = 22
+        Height = 16
         Align = alLeft
         Caption = '#00828^eVocabulary list'
         Font.Charset = DEFAULT_CHARSET
@@ -86,7 +86,6 @@ object fVocab: TfVocab
         Font.Style = [fsBold]
         ParentFont = False
         Layout = tlCenter
-        ExplicitHeight = 16
       end
       object btnPrintVocabList: TButton
         Left = 621

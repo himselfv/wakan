@@ -1,8 +1,8 @@
-object fScreenTip: TfScreenTip
+object fScreenTipForm: TfScreenTipForm
   Left = 192
   Top = 111
   BorderStyle = bsNone
-  Caption = 'fScreenTip'
+  Caption = 'fScreenTipForm'
   ClientHeight = 449
   ClientWidth = 677
   Color = clBtnFace

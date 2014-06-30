@@ -119,7 +119,6 @@ object fKanji: TfKanji
         Action = aSearch
         Align = alRight
         AllowAllUp = True
-        GroupIndex = 2
         Caption = '#00120^eSearch && sort'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText

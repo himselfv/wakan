@@ -78,7 +78,7 @@ var
   examfile:TMemoryFile;
 
 implementation
-uses JWBCore, JWBMenu, JWBLanguage, JWBUnit, PKGWrite, JWBClipboard;
+uses JWBCore, JWBLanguage, JWBUnit, PKGWrite, JWBClipboard, JWBIntTip, JWBScreenTip;
 
 {$R *.DFM}
 
@@ -148,19 +148,19 @@ end;
 procedure TfExamples.PaintBoxMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
+  if mbRight=Button then ScreenTip.PopupImmediate(false);
 end;
 
 procedure TfExamples.PaintBoxMouseMove(Sender: TObject; Shift: TShiftState;
   X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(PaintBox,x,y,ssLeft in Shift);
+  IntTip.MouseMove(PaintBox,x,y,ssLeft in Shift);
 end;
 
 procedure TfExamples.PaintBoxMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfExamples.BuildExamplesPackage;

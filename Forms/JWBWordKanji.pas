@@ -68,7 +68,7 @@ var
 
 implementation
 uses TextTable, JWBUnit, JWBWordLookup, JWBMenu, JWBCategories, JWBCharData,
-  JWBKanjiDetails, JWBSettings;
+  JWBKanjiDetails, JWBSettings, JWBIntTip, JWBScreenTip;
 
 {$R *.DFM}
 
@@ -177,19 +177,19 @@ end;
 procedure TfWordKanji.PaintBoxK1MouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbRight=Button then fMenu.PopupImmediate(false);
+  if mbRight=Button then ScreenTip.PopupImmediate(false);
 end;
 
 procedure TfWordKanji.PaintBoxK1MouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(TPaintBox(Sender),x,y,ssLeft in Shift);
+  IntTip.MouseMove(TPaintBox(Sender),x,y,ssLeft in Shift);
 end;
 
 procedure TfWordKanji.PaintBoxK1MouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if mbLeft=Button then fMenu.IntTipMouseUp;
+  if mbLeft=Button then IntTip.MouseUp;
 end;
 
 procedure TfWordKanji.UpdateAlignment;

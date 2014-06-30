@@ -81,7 +81,7 @@ var
 
 implementation
 uses TextTable, JWBLanguage, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
-  JWBVocabFilters, JWBCategories, JWBForms;
+  JWBVocabFilters, JWBCategories, JWBForms, JWBIntTip;
 
 {$R *.DFM}
 
@@ -279,7 +279,7 @@ end;
 procedure TfVocabDetails.pbKanjiMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
-  fMenu.IntTipMouseMove(pbKanji,x,y,ssLeft in Shift);
+  IntTip.MouseMove(pbKanji,x,y,ssLeft in Shift);
 end;
 
 procedure TfVocabDetails.FormResize(Sender: TObject);

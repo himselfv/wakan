@@ -118,9 +118,8 @@ type
 procedure BeginDrawReg(p:TCanvas);
 procedure EndDrawReg;
 
-function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint):FString;
-function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
-
+function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint): FString;
+function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint): FString;
 
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
 procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
@@ -130,8 +129,10 @@ procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:bool
 procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
 procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 
+
+{ Stroke order -- must be loaded with LoadStrokeOrder }
+
 var
- //Stroke order -- must be loaded with LoadStrokeOrder
   sodir: TStringList = nil;
   sobin: pointer = nil;
 
@@ -1187,6 +1188,7 @@ initialization
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
   GridFontSize:=14;
   STB_Canvas:=nil;
+  showroma:=false;
 
   roma_db := TKanaTranslator.Create;
   roma_user := TKanaTranslator.Create;

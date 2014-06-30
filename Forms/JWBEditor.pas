@@ -543,7 +543,8 @@ implementation
 uses Types, TextTable, JWBCore, JWBLanguage, JWBHint, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
-  JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup;
+  JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup,
+  JWBIntTip;
 
 var
   EditorWindowTitle: string = '#00610^eText editor / translator'; //one param: file name
@@ -1482,7 +1483,7 @@ begin
       ShowText(false);
     end;
 
-  fMenu.IntTipMouseMove(EditorPaintBox,x,y,false);
+  IntTip.MouseMove(EditorPaintBox,x,y,false);
 end;
 
 procedure TfEditor.EditorPaintBoxDblClick(Sender: TObject);

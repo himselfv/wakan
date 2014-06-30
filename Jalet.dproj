@@ -255,7 +255,7 @@
             <Form>fCharItem</Form>
         </DCCReference>
         <DCCReference Include="Forms\JWBScreenTip.pas">
-            <Form>fScreenTip</Form>
+            <Form>fScreenTipForm</Form>
         </DCCReference>
         <DCCReference Include="Forms\JWBLanguage.pas">
             <Form>fLanguage</Form>
@@ -308,6 +308,7 @@
         <DCCReference Include="Components\JWBUnpackJob.pas"/>
         <DCCReference Include="Components\TaskbarCtl.pas"/>
         <DCCReference Include="Components\JWBClipboard.pas"/>
+        <DCCReference Include="Components\JWBIntTip.pas"/>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>

@@ -46,7 +46,7 @@ uses
   JWBDictImport in 'Forms\JWBDictImport.pas' {fDictImport},
   JWBHint in 'Forms\JWBHint.pas' {fHint},
   JWBCharItem in 'Forms\JWBCharItem.pas' {fCharItem},
-  JWBScreenTip in 'Forms\JWBScreenTip.pas' {fScreenTip},
+  JWBScreenTip in 'Forms\JWBScreenTip.pas' {fScreenTipForm},
   JWBLanguage in 'Forms\JWBLanguage.pas' {fLanguage},
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
@@ -79,7 +79,8 @@ uses
   JWBDicImportJob in 'Components\JWBDicImportJob.pas',
   JWBUnpackJob in 'Components\JWBUnpackJob.pas',
   TaskbarCtl in 'Components\TaskbarCtl.pas',
-  JWBClipboard in 'Components\JWBClipboard.pas';
+  JWBClipboard in 'Components\JWBClipboard.pas',
+  JWBIntTip in 'Components\JWBIntTip.pas';
 
 {$R *.RES}
 {$R WINXP.RES}
