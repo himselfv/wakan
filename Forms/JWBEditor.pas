@@ -38,10 +38,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, JWBStrings, JWBWordLookup,
-  JWBDicSearch, WakanPaintbox, WinSpeedButton,
-  ComCtrls, ToolWin, ImgList, JWBWakanText, JWBIO, Vcl.Menus, System.Actions,
-  Vcl.ActnList;
+  StdCtrls, ExtCtrls, Buttons, ImgList, ComCtrls, ToolWin, Actions, ActnList,
+  WakanPaintbox, WinSpeedButton, JWBStrings, JWBDicSearch, JWBWakanText, JWBIO;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -545,7 +543,7 @@ implementation
 uses Types, TextTable, JWBCore, JWBLanguage, JWBHint, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
-  JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard;
+  JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup;
 
 var
   EditorWindowTitle: string = '#00610^eText editor / translator'; //one param: file name

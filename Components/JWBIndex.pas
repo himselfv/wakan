@@ -22,7 +22,7 @@ Last # of ref for the last entry is the ref at end of the file
 }
 
 interface
-uses Classes, JWBStrings;
+uses Classes;
 
 type
   TIndex = class
@@ -97,7 +97,7 @@ type
   end;
 
 implementation
-uses SysUtils;
+uses SysUtils, JWBStrings;
 
 {
 Index

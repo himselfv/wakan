@@ -26,7 +26,6 @@ object fKanjiSearch: TfKanjiSearch
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitHeight = 208
     DesignSize = (
       144
       206)
@@ -110,7 +109,6 @@ object fKanjiSearch: TfKanjiSearch
       ParentFont = False
       TabOrder = 0
       OnClick = rgSortByClick
-      ExplicitHeight = 119
     end
   end
   object Panel2: TPanel
@@ -121,7 +119,6 @@ object fKanjiSearch: TfKanjiSearch
     Align = alRight
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitHeight = 208
     DesignSize = (
       152
       206)
@@ -241,7 +238,6 @@ object fKanjiSearch: TfKanjiSearch
         'AND')
       TabOrder = 0
       OnClick = rgOrAndClick
-      ExplicitTop = 154
     end
     object cbNot: TCheckBox
       Left = 60
@@ -252,7 +248,6 @@ object fKanjiSearch: TfKanjiSearch
       Caption = 'NOT'
       TabOrder = 1
       OnClick = rgOrAndClick
-      ExplicitTop = 180
     end
     object lbCategories: TCheckListBox
       Left = 2
@@ -276,9 +271,6 @@ object fKanjiSearch: TfKanjiSearch
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 2
-    ExplicitLeft = 217
-    ExplicitWidth = 217
-    ExplicitHeight = 257
     DesignSize = (
       432
       206)
@@ -536,7 +528,6 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 1
       OnChange = edtDefinitionChange
-      ExplicitWidth = 144
     end
     object edtJouyou: TEdit
       Left = 65
@@ -546,7 +537,6 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 2
       OnChange = edtJouyouChange
-      ExplicitWidth = 64
     end
     object edtOther: TEdit
       Left = 64
@@ -565,7 +555,6 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 4
       OnChange = edtPinYinChange
-      ExplicitWidth = 144
     end
     object edtSkip: TEdit
       Left = 65
@@ -575,7 +564,6 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 5
       OnChange = edtSkipChange
-      ExplicitWidth = 143
     end
     object edtStrokeCount: TEdit
       Left = 64
@@ -585,7 +573,6 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 6
       OnChange = edtStrokeCountChange
-      ExplicitWidth = 64
     end
     object edtYomi: TEdit
       Left = 64
@@ -595,7 +582,6 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       TabOrder = 7
       OnChange = edtYomiChange
-      ExplicitWidth = 144
     end
     object pbRadicals: TWakanPaintbox
       Left = 66
@@ -606,7 +592,6 @@ object fKanjiSearch: TfKanjiSearch
       Color = clBtnFace
       DoubleBuffered = True
       OnPaint = pbRadicalsPaint
-      ExplicitWidth = 79
     end
   end
 end

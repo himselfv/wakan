@@ -115,7 +115,7 @@ var
   fKanjiSearch: TfKanjiSearch;
 
 implementation
-uses UITypes, JWBKanji, JWBUnit, JWBMenu, JWBCategories, JWBCharData, JWBLanguage;
+uses UITypes, JWBKanji, JWBUnit, JWBCategories, JWBCharData, JWBLanguage;
 
 {$R *.DFM}
 

@@ -2,8 +2,7 @@
 { Core dictionary import routines. }
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBIO, JWBJobs, JWBDic, JWBIndex,
-  JWBEdictReader, JWBEdictMarkers;
+uses SysUtils, Classes, JWBIO, JWBJobs, JWBDic, JWBIndex, JWBEdictReader;
 
 type
   EDictImportException = class(Exception);
@@ -68,7 +67,8 @@ function GetFrequencyList: TStringList;
 function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 
 implementation
-uses Windows, PKGWrite, JWBKanaConv, JWBCore, JWBLanguage, JWBUnit;
+uses Windows, PKGWrite, JWBStrings, JWBKanaConv, JWBCore, JWBLanguage, JWBUnit,
+  JWBEdictMarkers;
 
 const
   eCannotImportDict = '#01194^Cannot import dictionary. It''s probably in the '

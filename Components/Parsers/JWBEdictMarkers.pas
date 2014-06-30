@@ -1,7 +1,6 @@
 unit JWBEdictMarkers;
 
 interface
-uses JWBStrings;
 
 { EDict processing }
 { Marker IDs are stored in dictionaries so we have to keep absolute backward
@@ -198,7 +197,7 @@ function MarkersToStr(const s:TMarkers; out pop: boolean):string;
 function MarkersToStrEx(const s:TMarkers):TMarkersByType;
 
 implementation
-uses SysUtils, StrUtils;
+uses SysUtils, StrUtils, JWBStrings;
 
 procedure TestMarkersIntegrity;
 var i, j: integer;

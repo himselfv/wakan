@@ -1,7 +1,7 @@
 ﻿unit JWBWakanText;
 
 interface
-uses SysUtils, Classes, JWBStrings, JWBIO, JWBCore;
+uses SysUtils, Classes, JWBStrings, JWBIO;
 
 { Character properties for the editor.
 Each character gets its own set of properties. They are made into chains with
@@ -337,7 +337,7 @@ function IsWakanText(const AStream: TStream): boolean; overload;
 function IsWakanText(const AFilename: string): boolean; overload;
 
 implementation
-uses Forms, Windows, StreamUtils, JclCompression;
+uses Forms, Windows, StreamUtils, JWBCore, JclCompression;
 
 { Source position }
 

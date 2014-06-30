@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Grids, Buttons, Tabs, CheckLst, JWBStrings, Menus,
-  WakanWordGrid, StdPrompt, WakanPaintbox;
+  StdCtrls, ExtCtrls, Grids, Buttons, Tabs, CheckLst, Menus, WakanWordGrid,
+  WakanPaintbox;
 
 type
   TMoveDirection = (mdUp, mdDown);
@@ -127,10 +127,11 @@ const
 
 implementation
 
-uses JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBPrint, JWBSettings,
-  JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType, JWBVocabFilters,
-  JWBExamples, JWBUserData, JWBWordsExpChoose, JWBCategories, JWBAnnotations,
-  PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup, JWBWordGrid, JWBClipboard;
+uses JWBStrings, JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBPrint,
+  JWBSettings, JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType,
+  JWBVocabFilters, JWBExamples, JWBUserData, JWBWordsExpChoose, JWBCategories,
+  JWBAnnotations, StdPrompt, PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup,
+  JWBWordGrid, JWBClipboard;
 
 var wlc:TStringList;
     lastwordind:integer;

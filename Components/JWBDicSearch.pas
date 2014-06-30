@@ -9,7 +9,7 @@ Throughout this module:
 }
 
 interface
-uses SysUtils, Classes, JWBStrings, TextTable, StdPrompt, JWBDic, JWBEdictMarkers;
+uses SysUtils, Classes, JWBStrings, TextTable, StdPrompt, JWBDic;
 
 {
 Particle list
@@ -299,7 +299,7 @@ procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
 
 implementation
 uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBSettings,
-  JWBCategories, JWBUserData, JWBLegacyMarkup, JWBLanguage;
+  JWBCategories, JWBUserData, JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 

@@ -13,7 +13,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, UrlLabel, TextTable, JWBJobs, JwbForms, JWBIO, JWBCharData;
+  Dialogs, StdCtrls, UrlLabel, JWBJobs, JwbForms, JWBIO, JWBCharData;
 
 type
   TFlagList = array of boolean;
@@ -65,7 +65,7 @@ type
 
 implementation
 uses FileCtrl, StdPrompt, JWBStrings, KanjidicReader, UnihanReader, JWBCore,
-  JWBFileType, FastArray, JWBLanguage;
+  TextTable, JWBFileType, FastArray, JWBLanguage;
 
 {$R *.dfm}
 

@@ -3,7 +3,7 @@ unit JWBUnpackJob;
  disk->memory, memory->memory }
 
 interface
-uses JWBJobs, SevenZip, SevenZipUtils;
+uses JWBJobs, SevenZipUtils;
 
 type
  //Extracts the archive file to a folder
@@ -53,7 +53,7 @@ procedure Unpack(const ASourceFile, ATargetFileOrFolder: string;
   AForceFormat: string = '');
 
 implementation
-uses SysUtils, Windows;
+uses SysUtils, Windows, SevenZip;
 
 { Converts a file extension to a 7-zip CLSID describing the format.
  The guess is not guaranteed to be correct as "zip" archives for example can

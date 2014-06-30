@@ -25,7 +25,7 @@ split on reading.
 }
 
 interface
-uses JWBStrings, JWBEdictMarkers, JWBDic, JWBDicSearch;
+uses JWBStrings, JWBEdictMarkers, JWBDicSearch;
 
 const
 {
@@ -134,7 +134,7 @@ function EnrichDictEntry(const s:string;const mark:TMarkers):string;
 function DropEdictMarkers(const s:string):string;
 
 implementation
-uses SysUtils;
+uses SysUtils, JWBDic;
 
 { Removes Wakan "exclamation" markers (unknown kanji, field type, word type etc)
  from the beginning of the string }

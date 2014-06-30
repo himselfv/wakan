@@ -229,7 +229,6 @@ inherited fWordLookup: TfWordLookup
       Action = aInflect
       Align = alRight
       AllowAllUp = True
-      GroupIndex = 8
       Caption = 'Inf'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -249,7 +248,6 @@ inherited fWordLookup: TfWordLookup
       Action = aAutoPreview
       Align = alRight
       AllowAllUp = True
-      GroupIndex = 9
       Caption = 'Auto'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -447,7 +445,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800C80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

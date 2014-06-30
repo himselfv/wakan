@@ -11,7 +11,7 @@ See precise format description in comments below.
 //  Nothing I can do about it.
 
 interface
-uses SysUtils, JWBStrings, JWBEdictMarkers;
+uses SysUtils, JWBEdictMarkers;
 
 {
 We're using UnicodeStrings throughout this module. They resolve to slow WideStrings
@@ -78,6 +78,7 @@ procedure ParseEdict2Line(const s:UnicodeString; ed: PEdictArticle);
 procedure ParseCCEdictLine(const s:UnicodeString; ed: PEdictArticle);
 
 implementation
+uses JWBStrings;
 
 procedure TKanjiEntry.Reset;
 begin

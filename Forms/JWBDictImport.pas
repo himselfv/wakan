@@ -5,8 +5,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, Buttons, ExtCtrls, StdPrompt, JWBStrings, JWBIO, JWBDic, JWBIndex,
-  JWBEdictMarkers, JwbForms, JWBJobs, JWBDicImportJob;
+  StdCtrls, Buttons, ExtCtrls, JWBStrings, JWBIO, JwbForms;
 
 type
   TfDictImport = class(TJwbForm)
@@ -45,7 +44,7 @@ type
 
 implementation
 uses StrUtils, WideStrUtils, JWBKanaConv, JWBCore, JWBUnit, JWBLanguage,
-  PKGWrite, JWBMenu, JWBComponents, JWBFileType;
+  JWBComponents, JWBFileType, StdPrompt, JWBDic, JWBDicImportJob;
 
 {$R *.DFM}
 

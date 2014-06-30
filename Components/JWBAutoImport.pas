@@ -7,7 +7,7 @@ Call:
 }
 
 interface
-uses SysUtils, JWBStrings, JWBIO, JWBDic, JWBDictImport, JWBComponents;
+uses SysUtils, JWBStrings, JWBIO, JWBDic;
 
 var
   ForceUpdates: boolean;
@@ -45,7 +45,7 @@ const
 
 implementation
 uses Classes, Forms, Windows, MemSource, JWBCore, JWBLanguage, JWBCommandLine,
-  JWBDicImportJob;
+  JWBDicImportJob, JWBDictImport, JWBComponents;
 
 var
  //Don't check the same dictionary twice

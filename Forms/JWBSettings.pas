@@ -471,11 +471,11 @@ const
 implementation
 
 uses JWBMenu, JWBStrings, JWBCore, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
-  JWBKanjiSearch, JWBRadical, JWBKanjiCompounds, JWBWordLookup, JWBCharItem,
-  JWBExamples, JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable,
-  JWBLanguage, UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid,
-  JWBUserData, JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport,
-  JWBIO, JWBDicSearch, JWBWordLookupBase;
+  JWBKanjiSearch, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBExamples,
+  JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable, JWBLanguage,
+  UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid, JWBUserData, JWBDicSearch,
+  JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport, JWBIO,
+  JWBWordLookupBase;
 
 var colorfrom:integer;
 

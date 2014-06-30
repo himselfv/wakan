@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Db, ExtCtrls, Grids, TextTable, Buttons, MemSource,
-  ShellApi, ActnList, Menus, FormPlacemnt, JWBStrings, JWBDic, JWBDicSearch,
-  WakanPaintbox, CheckAction, Actions, AppEvnts, Generics.Collections;
+  StdCtrls, ComCtrls, Db, ExtCtrls, Grids, Buttons, ShellApi, ActnList, Menus,
+  FormPlacemnt, JWBDicSearch, WakanPaintbox, CheckAction, Actions, AppEvnts,
+  Generics.Collections;
 
 type
   TfMenu = class(TForm)
@@ -444,13 +444,13 @@ var
   sobin:pointer;
 
 implementation
-uses Types, JWBCore, JWBClipboard, JWBUnit, JWBForms, JWBIO, JWBSplash, JWBLanguage,
- JWBCharData, JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical,
- JWBWordLookup, JWBKanjiCompounds, JWBExamples, JWBEditor, JWBWakanText,
- JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBStatistics, JWBKanji,
- JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBDictMan, JWBDictImport,
- JWBScreenTip, JWBCategories, JWBAnnotations, JWBCommandLine, JWBAutoImport,
- JWBComponents, JWBDownloader, JWBCategoryMgr, JWBRefLinks;
+uses Types, MemSource, TextTable, JWBStrings, JWBCore, JWBClipboard, JWBUnit,
+ JWBForms, JWBIO, JWBDic, JWBLanguage, JWBCharData, JWBCharDataImport, JWBSplash,
+ JWBUserData, JWBSettings, JWBRadical, JWBWordLookup, JWBKanjiCompounds,
+ JWBExamples, JWBEditor, JWBWakanText, JWBVocab, JWBVocabDetails, JWBVocabFilters,
+ JWBStatistics, JWBKanji, JWBKanjiDetails, JWBKanjiSearch, JWBWordKanji, JWBDictMan,
+ JWBDictImport, JWBScreenTip, JWBCategories, JWBAnnotations, JWBCommandLine,
+ JWBAutoImport, JWBComponents, JWBDownloader, JWBCategoryMgr;
 
 {$R *.DFM}
 

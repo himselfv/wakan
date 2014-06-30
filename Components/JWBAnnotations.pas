@@ -1,7 +1,7 @@
 unit JWBAnnotations;
 
 interface
-uses SysUtils, Classes, Forms, Windows, TextTable, JWBStrings;
+uses SysUtils, Classes, Forms, Windows, TextTable;
 
 type
   TAnnotationCursor = class(TTextTableCursor)
@@ -30,8 +30,8 @@ function HaveAnnotations:boolean; inline;
 procedure AnnotShowMedia(kanji,kana:string);
 
 implementation
-uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBCore, JWBUnit, JWBLanguage,
-  JWBIO, JWBKanaConv, JWBLegacyMarkup;
+uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBCore, JWBStrings, JWBUnit,
+  JWBLanguage, JWBIO, JWBKanaConv, JWBLegacyMarkup;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 var pack: TPackageBuilder;

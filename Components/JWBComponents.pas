@@ -60,8 +60,8 @@ var
 function IsComponentPresent(const ASource: PAppComponent): boolean;
 
 implementation
-uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, JWBDownloaderCore,
-  SevenZip, SevenZipUtils, JWBUnpackJob, StdPrompt, JWBCore, JWBLanguage;
+uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, SevenZipUtils,
+  JWBCore;
 
 procedure TAppComponent.Reset;
 begin

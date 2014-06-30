@@ -72,12 +72,11 @@ object fVocab: TfVocab
       BevelOuter = bvNone
       FullRepaint = False
       TabOrder = 0
-      ExplicitTop = 3
       object RxLabel1: TLabel
         Left = 0
         Top = 0
         Width = 183
-        Height = 16
+        Height = 22
         Align = alLeft
         Caption = '#00828^eVocabulary list'
         Font.Charset = DEFAULT_CHARSET
@@ -87,6 +86,7 @@ object fVocab: TfVocab
         Font.Style = [fsBold]
         ParentFont = False
         Layout = tlCenter
+        ExplicitHeight = 16
       end
       object btnPrintVocabList: TButton
         Left = 621
@@ -104,9 +104,6 @@ object fVocab: TfVocab
         ParentFont = False
         TabOrder = 0
         OnClick = btnPrintVocabListClick
-        ExplicitLeft = 688
-        ExplicitTop = 5
-        ExplicitHeight = 21
       end
       object btnRecommendKanji: TButton
         Left = 391
@@ -126,9 +123,6 @@ object fVocab: TfVocab
         ParentFont = False
         TabOrder = 1
         OnClick = btnRecommendKanjiClick
-        ExplicitLeft = 568
-        ExplicitTop = 5
-        ExplicitHeight = 21
       end
       object btnLearningList: TButton
         Left = 510
@@ -146,9 +140,6 @@ object fVocab: TfVocab
         ParentFont = False
         TabOrder = 2
         OnClick = btnLearningListClick
-        ExplicitLeft = 457
-        ExplicitTop = 5
-        ExplicitHeight = 21
       end
       object btnAddWord: TButton
         Left = 696
@@ -166,9 +157,6 @@ object fVocab: TfVocab
         ParentFont = False
         TabOrder = 3
         OnClick = btnAddWordClick
-        ExplicitLeft = 386
-        ExplicitTop = 5
-        ExplicitHeight = 21
       end
     end
     object pnlDockDetails: TPanel
@@ -205,9 +193,6 @@ object fVocab: TfVocab
       Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
-      ExplicitLeft = 10
-      ExplicitTop = 26
-      ExplicitWidth = 753
     end
     object StringGrid1: TWakanGrid
       AlignWithMargins = True
@@ -236,9 +221,6 @@ object fVocab: TfVocab
       OnMouseUp = StringGrid1MouseUp
       OnSelectCell = StringGrid1SelectCell
       OnControlWidthResize = StringGrid1ControlResize
-      ExplicitLeft = 11
-      ExplicitTop = 27
-      ExplicitWidth = 751
       ColWidths = (
         110
         138
