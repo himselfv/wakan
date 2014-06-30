@@ -133,8 +133,7 @@ begin
   except
     newclip := {$IFDEF UNICODE}'ERROR'{$ELSE}UnicodeToHex('ERROR'){$ENDIF};
   end;
-  if newclip<>FClip then
-  begin
+  if newclip<>FClip then begin
     FClip := newclip;
     ClipboardChanged;
   end;
@@ -157,7 +156,9 @@ begin
   ResetClipboard;
   try
     AddToClipboard(CF_UNICODETEXT, AValue);
-    FClip := AValue;
+    //DO NOT update FClip, let PublishClipboard detect changes --
+    //or we'd have notify the subscribers ourselves
+    //FClip := AValue;
   finally
     PublishClipboard;
   end;
