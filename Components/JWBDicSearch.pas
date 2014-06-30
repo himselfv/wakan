@@ -291,6 +291,11 @@ type
 
   end;
 
+var
+ //Created here but must be populated manually from outside (perhaps config)
+  defll: TDeflectionList; //verb deflections
+  suffixl: TStringList; //suffixes
+  partl: TParticleList; //particles such as NO, NI, etc
 
 //Compability
 procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
@@ -298,7 +303,7 @@ procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
   DictGroup:integer;var wasfull:boolean);
 
 implementation
-uses Forms, Windows, Math, JWBMenu, JWBKanaConv, JWBUnit, JWBSettings,
+uses Forms, Windows, Math, JWBKanaConv, JWBUnit, JWBSettings,
   JWBCategories, JWBUserData, JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
@@ -1454,5 +1459,15 @@ begin
       scomp.InsertArticle(0, sart);
     end;
 end;
+
+initialization
+  defll := TDeflectionList.Create;
+  suffixl := TStringList.Create;
+  partl := TParticleList.Create;
+
+finalization
+  FreeAndNil(partl);
+  FreeAndNil(suffixl);
+  FreeAndNil(defll);
 
 end.

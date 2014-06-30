@@ -25,7 +25,6 @@ type
     edtMeaning: TMemo;
     procedure edtPhoneticChange(Sender: TObject);
     procedure pbWrittenPaint(Sender: TObject; Canvas: TCanvas);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
     procedure edtMeaningKeyPress(Sender: TObject; var Key: Char);
     procedure FormShow(Sender: TObject);
@@ -54,7 +53,7 @@ type
 function fVocabAdd: TfVocabAdd;
 
 implementation
-uses UITypes, TextTable, JWBLanguage, JWBVocab, JWBUnit, JWBKanaConv, JWBMenu,
+uses UITypes, TextTable, JWBLanguage, JWBVocab, JWBUnit, JWBKanaConv,
   JWBUserData, JWBCategories, JWBClipboard;
 
 {$R *.DFM}
@@ -139,12 +138,6 @@ begin
     Clipboard.Text := str;
     Key := #00;
   end;
-end;
-
-procedure TfVocabAdd.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  fVocab.btnExamples.Down:=false;
-  fMenu.aVocabAdd.Checked:=false;
 end;
 
 procedure TfVocabAdd.FormShow(Sender: TObject);

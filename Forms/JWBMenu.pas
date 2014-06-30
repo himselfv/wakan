@@ -421,13 +421,6 @@ type
 var
   fMenu: TfMenu;
 
- //Loaded from config file -- see comments in wakan.cfg
-  partl: TParticleList; //particles such as NO, NI, etc
-  suffixl: TStringList; //suffixes
-  defll: TDeflectionList; //verb deflections
-
-  readchl: TStringList; //list of readings to include to the reading chart
-
  { IPC stuff }
   rdcnt,bitcnt:integer;
   curtext:array[1..100] of TTextInfo;
@@ -438,10 +431,6 @@ var
   ftextend:array[0..255] of integer;
   ftextpos:integer;
   popcreated:boolean;
-
- { Stroke order }
-  sodir:TStringList;
-  sobin:pointer;
 
 implementation
 uses Types, MemSource, TextTable, JWBStrings, JWBCore, JWBClipboard, JWBUnit,
@@ -460,11 +449,6 @@ uses Types, MemSource, TextTable, JWBStrings, JWBCore, JWBClipboard, JWBUnit,
 procedure TfMenu.FormCreate(Sender: TObject);
 begin
   initdone:=false;
-
-  defll:=TDeflectionList.Create;
-  suffixl:=TStringList.Create;
-  partl:=TParticleList.Create;
-  readchl:=TStringList.Create;
 
   curlang:='j';
   DragStartCtl:=nil;
@@ -487,11 +471,6 @@ begin
 
   FreeCharData;
   FreeKnownLists;
-
-  defll.Free; //+
-  suffixl.Free; //+
-  partl.Free; //+
-  readchl.Free; //+
 end;
 
 
@@ -513,9 +492,7 @@ begin
 end;
 
 procedure TfMenu.InitializeWakan;
-var ps:TPackageSource;
-  ms:TMemoryStream;
-  fSplash: TfSplash;
+var fSplash: TfSplash;
   fCharDataImport: TfCharDataImport;
 begin
   if initdone then exit;
@@ -709,26 +686,14 @@ begin
 
    //Stroke-order display
     if not FileExists('wakan.sod') then
-    begin
       Application.MessageBox(
         pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13
           +'Japanese stroke-order display will be disabled.')),
         pchar(_l('#00020^eError')),
-        MB_OK or MB_ICONERROR);
-      sodir:=nil;
-      sobin:=nil;
-    end else
+        MB_OK or MB_ICONERROR)
+    else
       try
-        ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
-        ms:=ps['strokes.bin'].Lock;
-        GetMem(sobin,ms.Size);
-        ms.Read(sobin^,ms.Size);
-        ps['strokes.bin'].Unlock;
-        ms:=ps['dir.txt'].Lock;
-        sodir:=TStringList.Create;
-        sodir.LoadFromStream(ms);
-        ps['dir.txt'].Unlock;
-        ps.Free;
+        LoadStrokeOrder('wakan.sod');
       except
         on E: Exception do begin
           E.Message := _l('#00360^eCannot load Japanese stroke-order file.'#13
@@ -965,7 +930,6 @@ begin
           if ln='RomajiSort'then sect:=6 else
           if ln='Suffixes'then sect:=7 else
           if ln='IgnoreWords'then sect:=8 else
-          if ln='ReadingChart'then sect:=9 else
           sect:=0;
         end else
          //Some of the fields are in hex unicode, so we have to convert them
@@ -976,7 +940,6 @@ begin
             6: AddRomaSortRecord(ln);
             7: suffixl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
             8: ignorel.Add(fstr(ln));
-            9: readchl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{reading:fhex}
           end;
       end;
     end;

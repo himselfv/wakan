@@ -121,7 +121,7 @@ procedure EndDrawReg;
 function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint):FString;
 function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
 
-procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
+
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
 procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
 
@@ -129,6 +129,16 @@ procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:bool
 
 procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
 procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
+
+var
+ //Stroke order -- must be loaded with LoadStrokeOrder
+  sodir: TStringList = nil;
+  sobin: pointer = nil;
+
+procedure LoadStrokeOrder(const AFilename: string);
+procedure FreeStrokeOrder;
+procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
+
 
 
 { Fonts }
@@ -176,8 +186,8 @@ function StateStr(i:integer):string;
 function DateForm(s:string):string;
 
 implementation
-uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBMenu, JWBSettings, JWBLanguage,
-  JWBCharData, JWBLegacyMarkup, JWBAutoImport;
+uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBSettings, JWBLanguage,
+  JWBCharData, JWBLegacyMarkup, JWBAutoImport, MemSource;
 
 
 { Romaji conversions }
@@ -609,6 +619,31 @@ begin
       itt[i].s:=s;
       break;
     end;
+end;
+
+procedure LoadStrokeOrder(const AFilename: string);
+var ps: TPackageSource;
+  ms: TMemoryStream;
+begin
+  ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
+  ms:=ps['strokes.bin'].Lock;
+  GetMem(sobin,ms.Size);
+  ms.Read(sobin^,ms.Size);
+  ps['strokes.bin'].Unlock;
+  ms:=ps['dir.txt'].Lock;
+  sodir:=TStringList.Create;
+  sodir.LoadFromStream(ms);
+  ps['dir.txt'].Unlock;
+  ps.Free;
+end;
+
+procedure FreeStrokeOrder;
+begin
+  FreeAndNil(sodir);
+  if sobin<>nil then begin
+    FreeMem(sobin);
+    sobin := nil;
+  end;
 end;
 
 procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);

@@ -5,8 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons, Menus, ImgList, ToolWin,
-  Actions, ActnList, WakanWordGrid, WakanPaintbox, JWBStrings,
-  JWBWordLookupBase;
+  Actions, ActnList, WakanWordGrid, WakanPaintbox, JWBWordLookupBase;
 
 type
  //Supported lookup modes for this window.
@@ -104,8 +103,9 @@ var
 
 implementation
 
-uses Math, JWBLanguage, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBEditor,
- JWBWordKanji, JWBExamples, JWBAnnotations, JWBLegacyMarkup, JWBDic, JWBDicSearch;
+uses Math, JWBStrings, JWBLanguage, JWBUnit, JWBClipboard, JWBMenu, JWBSettings,
+  JWBEditor, JWBWordKanji, JWBExamples, JWBAnnotations, JWBLegacyMarkup, JWBDic,
+  JWBDicSearch;
 
 {$R *.DFM}
 

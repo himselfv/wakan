@@ -14,7 +14,6 @@ object fVocabAdd: TfVocabAdd
   OldCreateOrder = False
   Position = poOwnerFormCenter
   Scaled = False
-  OnClose = FormClose
   OnHide = FormHide
   OnShow = FormShow
   DesignSize = (
@@ -120,7 +119,6 @@ object fVocabAdd: TfVocabAdd
     Kind = bkOK
     NumGlyphs = 2
     TabOrder = 3
-    ExplicitTop = 251
   end
   object btnCancel: TBitBtn
     Left = 524
