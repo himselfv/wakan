@@ -14,7 +14,21 @@ interface
 uses Types, Controls;
 
 type
+  THighlightHandler = class
+  public
+    function UpdateSelection(Control: TControl; DragStart, CursorPos:TPoint): string; virtual;
+  end;
+
+  CControl = class of TControl;
+  CHighlightHandler = class of THighlightHandler;
+
   TIntTip = class
+  protected
+    FHighlightHandlers: array of record
+      ControlClass: CControl;
+      Handler: THighlightHandler;
+    end;
+    procedure UpdateSelection;
   public
    //Drag start control+point when drag-selecting, else nil.
     DragStartCtl: TControl;
@@ -25,8 +39,6 @@ type
    //Currently selected string/String under the mouse pointer right now
    //UpdateSelection changes this member
     StringUnderMouse: string;
-    procedure UpdateSelection;
-  public
     constructor Create;
     procedure MouseMove(c: TControl; x, y: integer; leftDown: boolean);
     procedure MouseDown(c: TControl; x, y: integer);
@@ -34,6 +46,8 @@ type
     function IsDragging: boolean;
     procedure AbortDrag;
     procedure ResetHighlight;
+    procedure RegisterHighlightHandler(AControlClass: CControl;
+      AHandlerClass: CHighlightHandler);
   end;
 
 var
@@ -48,6 +62,16 @@ begin
   inherited;
   DragStartCtl := nil;
   HoverCtl := nil;
+end;
+
+procedure TIntTip.RegisterHighlightHandler(AControlClass: CControl;
+  AHandlerClass: CHighlightHandler);
+var i: integer;
+begin
+  i := Length(FHighlightHandlers);
+  SetLength(FHighlightHandlers, i+1);
+  FHighlightHandlers[i].ControlClass := AControlClass;
+  FHighlightHandlers[i].Handler := AHandlerClass.Create;
 end;
 
 {
