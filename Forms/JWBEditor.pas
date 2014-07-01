@@ -4107,4 +4107,26 @@ begin
     Result := GetExactLogicalPos(x,y);
 end;
 
+
+function EditorHighlightContent(Control: TControl; DragStart, MousePos: TPoint): string;
+var rx,ry: integer;
+  rpos: TSourcePos;
+  wtt: TEvalCharType;
+begin
+  if (fEditor=nil) or (Control<>fEditor.EditorPaintBox) then begin
+    Result := '';
+    exit;
+  end;
+  rpos := fEditor.TryGetExactLogicalPos(MousePos.x,MousePos.y);
+  rx := rpos.x; ry := rpos.y;
+  if (ry>=0) and (rx>=0) and (rx<=fEditor.doctr[ry].charcount) then
+    Result:=fEditor.GetDocWord(rx,ry,wtt)
+  else
+    Result:='';
+  SetSelectionHighlight(0,0,0,0,nil);
+end;
+
+initialization
+  IntTip.RegisterHighlightHandler(TWakanPaintBox, EditorHighlightContent);
+
 end.

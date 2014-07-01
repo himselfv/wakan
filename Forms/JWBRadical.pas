@@ -801,7 +801,20 @@ begin
 end;
 
 
+function RadicalGridHighlightContent(Control: TControl; DragStart, MousePos: TPoint): string;
+var gc: TGridCoord;
+begin
+  if (fRadical=nil) or (Control<>fRadical.DrawGrid) then begin
+    Result := '';
+    exit;
+  end;
+  gc := TCustomDrawGrid(Control).MouseCoord(MousePos.x,MousePos.y);
+  Result := fRadical.GetKanji(gc.x,gc.y);
+  SetSelectionHighlight(0,0,0,0,nil);
+end;
+
 initialization
   RaineRadicals := nil;
+  IntTip.RegisterHighlightHandler(TCustomDrawGrid, RadicalGridHighlightContent);
 
 end.

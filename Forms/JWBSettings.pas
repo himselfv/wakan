@@ -475,7 +475,7 @@ uses JWBMenu, JWBStrings, JWBCore, JWBKanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBVocabDetails, JWBVocabFilters, JWBKanjiDetails, TextTable, JWBLanguage,
   UnicodeFont, JWBKanjiCard, JWBVocab, WakanWordGrid, JWBUserData, JWBDicSearch,
   JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport, JWBIO,
-  JWBWordLookupBase;
+  JWBWordLookupBase, JWBScreenTip;
 
 var colorfrom:integer;
 
@@ -943,7 +943,7 @@ begin
   Edit27.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
   Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.btnScreenModeWk.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
-  fMenu.screenModeWk:=fMenu.btnScreenModeWk.Down;
+  ScreenTip.EnabledInWakan:=fMenu.btnScreenModeWk.Down;
   if fEditor<>nil then begin
     fEditor.aDisplayReading.Checked:=reg.ReadBool('Translate','Reading',true);
     fEditor.aDisplayMeaning.Checked:=reg.ReadBool('Translate','Meaning',true);

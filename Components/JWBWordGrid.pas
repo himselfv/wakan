@@ -18,7 +18,8 @@ procedure FinishWordGrid(grid:TStringGrid);
 procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 
 implementation
-uses Messages, JWBLanguage, JWBUnit, JWBLegacyMarkup, JWBSettings, JWBKanaConv;
+uses Messages, Controls, JWBLanguage, JWBUnit, JWBLegacyMarkup, JWBSettings,
+  JWBKanaConv, JWBIntTip;
 
 //Splits translation record in old Wakan format into parts:
 //  kanji [kana] {translation} rest
@@ -330,5 +331,106 @@ begin
   FinishWordGrid(grid);
 end;
 
+
+//NOTE: Fonts here must match DrawWordInfo() and DrawKana() choices for each cell.
+function DrawGridHighlightContent(Control: TControl; DragStart, MousePos: TPoint): string;
+var p:TCustomDrawGrid;
+  gc,gc2:TGridCoord;
+  rect:TRect;
+  mox1,mox2:integer;
+  text:FString;
+  FontName:string;
+  FontSize:integer;
+begin
+  p := TCustomDrawGrid(Control);
+  gc:=p.MouseCoord(DragStart.x,DragStart.y);
+
+  if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
+   //Drag from header or drag from no-cell
+    Result:='';
+    SetSelectionHighlight(0,0,0,0,nil);
+    exit;
+  end;
+
+ //Select font name and actual text which was presented (differs from internal presentation sometimes)
+ //This is dirty! We have to remember text/font/size which were used for drawing.
+  case gc.x of
+    0: begin //kana/romaji
+      Result:=ConvertKana(remexcl(TStringGrid(p).Cells[gc.x,gc.y]));
+      if showroma then begin
+        FontName:=FontPinYin; //DrawKana draws all romaji with this one
+        FontSize:=GridFontSize+1;
+      end else begin
+        FontName:=FontSmall;
+        FontSize:=GridFontSize;
+      end;
+    end;
+    1: begin //kanji
+      Result := remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
+      FontName:=FontSmall;
+      FontSize:=GridFontSize;
+    end
+  else //not selectable
+    Result:='';
+    FontName:=FontEnglish;
+    FontSize:=GridFontSize;
+  end;
+
+  rect:=p.CellRect(gc.x,gc.y);
+  if (DragStart.X=MousePos.X) and (DragStart.Y=MousePos.Y) then begin
+   //No drag, mouse over
+    fdelete(Result,1,((MousePos.x-rect.left-2) div GridFontSize));
+    SetSelectionHighlight(0,0,0,0,nil);
+    exit;
+  end;
+
+  gc2:=p.MouseCoord(MousePos.x,MousePos.y);
+  if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin //mouse over different control/line
+   //Try again, with Y set to that of DragStart
+    MousePos.Y := DragStart.Y;
+    gc2:=p.MouseCoord(MousePos.x,MousePos.y);
+    if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin
+     //Just set the endpoint to the start or the end of the capturing line
+      if MousePos.X>DragStart.X then
+        MousePos.X:=rect.Right
+      else
+        MousePos.X:=rect.Left;
+     //and continue with normal handling
+    end;
+  end;
+
+ //Swap points so that mox2 is to the right
+  if DragStart.x>MousePos.x then
+  begin
+    mox1:=MousePos.x;
+    mox2:=DragStart.x;
+  end else
+  begin
+    mox1:=DragStart.x;
+    mox2:=MousePos.x;
+  end;
+
+ //calculate char count -- if half of the char is covered, it's covered
+  mox1 := GetCoveredCharNo(p.Canvas,FontName,FontSize,Result,mox1-rect.left-2,true);
+  mox2 := GetCoveredCharNo(p.Canvas,FontName,FontSize,Result,mox2-rect.left-2,true);
+  if mox1<0 then mox1 := 0;
+  if mox2<0 then mox2 := 0;
+  if mox1>flength(Result) then mox1 := flength(Result);
+  if mox2>flength(Result) then mox2 := flength(Result);
+
+  text:=Result;
+  Result:=fcopy(text,1+mox1,mox2-mox1);
+  if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
+
+  SetSelectionHighlight(
+    rect.Left+2+CalcStrWidth(p.Canvas,FontName,FontSize,copy(text,1,1+mox1-1)), //TODO: Hardcoded FontSmall
+    rect.Top,
+    rect.Left+2+CalcStrWidth(p.Canvas,FontName,FontSize,copy(text,1,1+mox2-1)),
+    rect.Bottom,
+    p.Canvas);
+end;
+
+initialization
+  IntTip.RegisterHighlightHandler(TCustomDrawGrid, DrawGridHighlightContent);
 
 end.

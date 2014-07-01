@@ -347,7 +347,6 @@ type
   protected
     procedure ClipboardChanged(Sender: TObject);
   public
-    screenModeSc,screenModeWk:boolean;
     procedure RefreshCategory;
     procedure RefreshKanjiCategory;
     procedure SwitchLanguage(lanchar:char);
@@ -436,8 +435,6 @@ var fSplash: TfSplash;
   fCharDataImport: TfCharDataImport;
 begin
   if initdone then exit;
-  screenModeSc:=false;
-  screenModeWk:=false;
 
   Self.Enabled := false; //or MainForm will receive shortcuts and crash
 

@@ -2680,6 +2680,10 @@ object fSettings: TfSettings
       ImageIndex = 18
       TabVisible = False
       OnShow = tsDictCopyFormatsShow
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       DesignSize = (
         465
         452)

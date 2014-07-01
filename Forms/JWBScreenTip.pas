@@ -80,6 +80,7 @@ type
     LastMousePt:TPoint; //used to check whether the mouse stays still
     LastMouseMove:cardinal; //tick count
     procedure HandlePopup(ShowImmediate:boolean=false);
+    procedure IntTipMouseUp(Sender: TObject);
 
   end;
 
@@ -750,7 +751,6 @@ var pt:TPoint;
   intmosc:TPoint;
   ttim:integer;
   evc:TEvalCharType;
-
 begin
   if not FEnabledInWakan and not FEnabledSystemWide and not ShowImmediate
     and (FScreenTipForm=nil) then exit;
@@ -822,9 +822,14 @@ begin
   end;
 end;
 
+procedure TScreenTip.IntTipMouseUp(Sender: TObject);
+begin
+  Self.PopupImmediate(true);
+end;
 
 initialization
   ScreenTip := TScreenTip.Create;
+  IntTip.OnMouseUp := ScreenTip.IntTipMouseUp;
 
 finalization
   FreeAndNil(ScreenTip);

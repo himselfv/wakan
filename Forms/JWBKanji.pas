@@ -1157,10 +1157,24 @@ begin
  //Has to be non-empty or AutoCheck wont work
 end;
 
+
+function KanjiGridHighlightContent(Control: TControl; DragStart, MousePos: TPoint): string;
+var gc: TGridCoord;
+begin
+  if (fKanji=nil) or (Control<>fKanji.DrawGrid1) then begin
+    Result := '';
+    exit;
+  end;
+  gc := TCustomDrawGrid(Control).MouseCoord(MousePos.x,MousePos.y);
+  Result := fKanji.GetKanji(gc.x,gc.y);
+  SetSelectionHighlight(0,0,0,0,nil);
+end;
+
 initialization
   calfonts:=TStringList.Create;
   ki:=TStringList.Create;
   curkanji:=UH_NOCHAR;
+  IntTip.RegisterHighlightHandler(TCustomDrawGrid, KanjiGridHighlightContent);
 
 finalization
   ki.Free;

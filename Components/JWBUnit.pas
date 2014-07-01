@@ -117,17 +117,19 @@ type
 
 procedure BeginDrawReg(p:TCanvas);
 procedure EndDrawReg;
-
-function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint): FString;
-function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint): FString;
+function FindDrawReg(p:TCanvas;x,y:integer;flags:TFindDrawRegFlags;
+  out id,cx,cy:integer; out fontface: string;out fs:integer):FString;
+function GetDrawReg(id:integer; out cx,cy: integer; out fontface:string;
+  out fs:integer):FString;
+function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
+  const w:UnicodeString): integer; forward;
+function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
+  const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
 
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
 procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
-
-procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
-procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
 
 
 { Stroke order -- must be loaded with LoadStrokeOrder }
@@ -524,11 +526,6 @@ begin
 end;
 
 
-function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
-  const w:UnicodeString): integer; forward;
-function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
-  const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
-
 {
 Draw registry.
 To support text selection, Wakan keeps a list of all text lines
@@ -847,223 +844,6 @@ begin
 end;
 
 
-{ Text selection highlight.
- Remembers one block of pixels to be highlighted, in any control.
- Used by DrawUnicode-powered controls for their custom selection mechanics. }
-var
-  STB_canvas:TCanvas;
-  STB:TRect; //ScreenTipBlock
-
-{ Clears old one, and sets and paints new selection highlight. }
-procedure SetSelectionHighlight(x1,y1,x2,y2:integer;canvas:TCanvas);
-begin
-  //No flicker please
-  if (STB_canvas=canvas) and (STB.Left=x1) and (STB.Right=x2) and (STB.Top=y1)
-    and (STB.Bottom=y2) then exit;
-  PaintSelectionHighlight;
-  STB := Rect(x1,y1,x2,y2);
-  STB_canvas:=canvas;
-  PaintSelectionHighlight;
-end;
-
-//Clips the rectangle to make it fit in in_rect
-function ClipRect(const rgn: TRect; in_rect: PRect): TRect;
-begin
-  Result := rgn;
- //For top/left prefer left/top...
-  if Result.Left>in_rect.Right then Result.Left:=in_rect.Right;
-  if Result.Left<in_rect.Left then Result.Left:=in_rect.Left;
-  if Result.Top>in_rect.Bottom then Result.Top:=in_rect.Bottom;
-  if Result.Top<in_rect.Top then Result.Top:=in_rect.Top;
- //For right/bottom prefer right/bottom. This makes the region negative if
- //in_rect is negative (this is desired)
-  if Result.Right>in_rect.Right then Result.Right:=in_rect.Right;
-  if Result.Right<in_rect.Left then Result.Right:=in_rect.Left;
-  if Result.Bottom>in_rect.Bottom then Result.Bottom:=in_rect.Bottom;
-  if Result.Bottom<in_rect.Top then Result.Bottom:=in_rect.Top;
-end;
-
-{ Re-applies currently active selection highlight where it has to be applied.
-Pass valid Canvas and Rect so we do proper clipping, otherwise we'll flip
-highlight even on unrelated repaints (=> highlight state broken).
-Only pass wildcard when the highlight has to be redrawn outside of repaint handlers
-(such as when it changes). }
-procedure PaintSelectionHighlight(canv: TCanvas; in_rect: PRect);
-var oldR2:integer;
-  rgn: TRect;
-begin
-  if STB_Canvas=nil then exit;
-  if canv<>nil then if canv<>STB_canvas then exit;
-  if in_rect=nil then
-    Log('PaintSelectionHighlight: nil',[])
-  else
-    Log('PaintSelectionHighlight: %d,%d -- %d,%d',[in_rect.Left, in_rect.Top, in_rect.Right, in_rect.Bottom]);
-  oldR2:=SetROP2(STB_Canvas.Handle,R2_NOT);
-
-  if in_rect<>nil then
-   { We don't use Windows HREGIONS because they're slower and were causing weird
-    focus drawing problems with TStringGrid before. Better just do it this way }
-    rgn := ClipRect(STB,in_rect)
-  else
-    rgn := STB;
-
-  STB_Canvas.Rectangle(rgn.Left,rgn.Top,rgn.Right,rgn.Bottom);
-  SetROP2(STB_Canvas.Handle,oldR2);
-end;
-
-
-{ DrawUnicode-powered text selection.
- See comments to AddDrawReg/FindDrawReg, also see TfMenu.UpdateSelection.
- Uses SelectionHighlight for highlighting blocks of pixels. }
-
-{ Updates ScreenTipBox and returns the substring of one of the strings drawn
- with DrawUnicode, currently selected in PaintBox according to DragStart->CursorPos.
-p: PaintBox which currently receives mouse events (the one mouse is over,
-  or the one which captures it because of dragging)
-If DragStart equals CursorPos, assumes no selection. }
-function CanvasUpdateSelection(Canvas:TCanvas;DragStart,CursorPos:TPoint):FString;
-var id1,id2:integer;
-  x1,x2,y1,fs,fs2,x_tmp:integer;
-  s2,s_tmp:string;
-  fontface,fontface2:string;
-begin
-  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
-   //No drag, mouse-over. Get text without char rounding (first half char also gives us this char)
-    Result:=FindDrawReg(Canvas,CursorPos.x,CursorPos.y,[],id1,x1,y1,fontface,fs);
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  Result:=FindDrawReg(Canvas,CursorPos.x,CursorPos.y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
-  s2:=FindDrawReg(Canvas,DragStart.x,DragStart.y,[ffHalfCharRounding],id2,x2,y1,fontface2,fs2);
-  if id2<0 then begin //drag from dead point => no selection
-    Result := '';
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  if id1<>id2 then begin //mouse over different control/line
-   //Try again, with Y set to that of DragStart
-    CursorPos.Y := DragStart.Y;
-    Result:=FindDrawReg(Canvas,CursorPos.X,CursorPos.Y,[ffHalfCharRounding],id1,x1,y1,fontface,fs);
-    if id1<>id2 then begin
-     //Just set the endpoint to the start or the end of the capturing line
-      if CursorPos.X>DragStart.X then begin
-        Result:=s2;
-        SetSelectionHighlight(x2,y1,x2+CalcStrWidth(Canvas,fontface2,fs2,s2),y1+fs2,Canvas);
-        exit;
-      end else begin
-        Result:=GetDrawReg(id2,x1,y1,fontface,fs); //get whole line
-        //and continue with normal handling
-      end;
-    end;
-  end;
-
-  if length(s2)>length(Result) then begin
-   //Swap s1 and s2
-    s_tmp:=s2; s2:=Result; Result:=s_tmp;
-    x_tmp:=x2; x2:=x1; x1:=x_tmp;
-  end;
-  Result:=copy(Result,1,length(Result)-length(s2));
-  SetSelectionHighlight(x1,y1,x2,y1+fs,Canvas);
-end;
-
-//NOTE: Fonts here must match DrawWordInfo() and DrawKana() choices for each cell.
-function DrawGridUpdateSelection(p:TCustomDrawGrid;DragStart,CursorPos:TPoint):FString;
-var gc,gc2:TGridCoord;
-  rect:TRect;
-  mox1,mox2:integer;
-  text:FString;
-  FontName:string;
-  FontSize:integer;
-begin
-  gc:=p.MouseCoord(DragStart.x,DragStart.y);
-
-  if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
-   //Drag from header or drag from no-cell
-    Result:='';
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
- //Select font name and actual text which was presented (differs from internal presentation sometimes)
- //This is dirty! We have to remember text/font/size which were used for drawing.
-  case gc.x of
-    0: begin //kana/romaji
-      Result:=ConvertKana(remexcl(TStringGrid(p).Cells[gc.x,gc.y]));
-      if showroma then begin
-        FontName:=FontPinYin; //DrawKana draws all romaji with this one
-        FontSize:=GridFontSize+1;
-      end else begin
-        FontName:=FontSmall;
-        FontSize:=GridFontSize;
-      end;
-    end;
-    1: begin //kanji
-      Result := remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
-      FontName:=FontSmall;
-      FontSize:=GridFontSize;
-    end
-  else //not selectable
-    Result:='';
-    FontName:=FontEnglish;
-    FontSize:=GridFontSize;
-  end;
-
-  rect:=p.CellRect(gc.x,gc.y);
-  if (DragStart.X=CursorPos.X) and (DragStart.Y=CursorPos.Y) then begin
-   //No drag, mouse over
-    fdelete(Result,1,((CursorPos.x-rect.left-2) div GridFontSize));
-    SetSelectionHighlight(0,0,0,0,nil);
-    exit;
-  end;
-
-  gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
-  if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin //mouse over different control/line
-   //Try again, with Y set to that of DragStart
-    CursorPos.Y := DragStart.Y;
-    gc2:=p.MouseCoord(CursorPos.x,CursorPos.y);
-    if (gc2.x<>gc.x) or (gc2.y<>gc.y) then begin
-     //Just set the endpoint to the start or the end of the capturing line
-      if CursorPos.X>DragStart.X then
-        CursorPos.X:=rect.Right
-      else
-        CursorPos.X:=rect.Left;
-     //and continue with normal handling
-    end;
-  end;
-
- //Swap points so that mox2 is to the right
-  if DragStart.x>CursorPos.x then
-  begin
-    mox1:=CursorPos.x;
-    mox2:=DragStart.x;
-  end else
-  begin
-    mox1:=DragStart.x;
-    mox2:=CursorPos.x;
-  end;
-
- //calculate char count -- if half of the char is covered, it's covered
-  mox1 := GetCoveredCharNo(p.Canvas,FontName,FontSize,Result,mox1-rect.left-2,true);
-  mox2 := GetCoveredCharNo(p.Canvas,FontName,FontSize,Result,mox2-rect.left-2,true);
-  if mox1<0 then mox1 := 0;
-  if mox2<0 then mox2 := 0;
-  if mox1>flength(Result) then mox1 := flength(Result);
-  if mox2>flength(Result) then mox2 := flength(Result);
-
-  text:=Result;
-  Result:=fcopy(text,1+mox1,mox2-mox1);
-  if flength(Result)<mox2-mox1 then mox2:=mox1+flength(Result); //don't select over the end of text
-
-  SetSelectionHighlight(
-    rect.Left+2+CalcStrWidth(p.Canvas,FontName,FontSize,copy(text,1,1+mox1-1)), //TODO: Hardcoded FontSmall
-    rect.Top,
-    rect.Left+2+CalcStrWidth(p.Canvas,FontName,FontSize,copy(text,1,1+mox2-1)),
-    rect.Bottom,
-    p.Canvas);
-end;
-
 
 { Dicts }
 
@@ -1187,7 +967,6 @@ initialization
   CurPBox:=nil;
   for i:=1 to MAX_INTTEXTINFO do itt[i].act:=false;
   GridFontSize:=14;
-  STB_Canvas:=nil;
   showroma:=false;
 
   roma_db := TKanaTranslator.Create;
