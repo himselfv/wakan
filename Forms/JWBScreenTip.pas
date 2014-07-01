@@ -11,7 +11,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, JWBStrings, JWBDicSearch;
+  ExtCtrls, Buttons, JWBStrings, JWBDicSearch, JWBKanjiCard;
 
 type
   //Called when one of ScreenTip buttons has been pressed
@@ -32,6 +32,9 @@ type
     FScreenTipButton:integer;
     FScreenTipList: TSearchResults;
     FScreenTipWidth:integer;
+    FKanjiCard: TKanjiCard;
+    SizeFactor: integer;
+    procedure Init;
   public
     screenTipText:string;
     screenTipWt:TEvalCharType;
@@ -108,7 +111,7 @@ const
   PopupButtonSep=2;
 
 implementation
-uses JWBUnit, JWBKanjiCard, JWBDic, JWBLanguage, JWBSettings, JWBLegacyMarkup,
+uses JWBUnit, JWBDic, JWBLanguage, JWBSettings, JWBLegacyMarkup,
   JWBWordGrid, JWBIntTip;
 
 {$R *.DFM}
@@ -121,6 +124,24 @@ end;
 procedure TfScreenTipForm.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FScreenTipList);
+  FreeAndNil(FKanjiCard);
+end;
+
+procedure TfScreenTipForm.Init;
+begin
+  SizeFactor := StrToInt(fSettings.edtScreenTipSizeFactor.Text);
+
+  FKanjiCard := TKanjiCard.Create(fcopy(screenTipText,1,1));
+  FKanjiCard.Flags := [koPrintRadical, koPrintAlternateForm, koPrintInnerLines,
+      koPrintVocabularyCompounds, koPrintReadings, koPrintDefinition,
+      koPrintFullCompounds, koSortCompoundsByFrequency];
+
+  FKanjiCard.CharDim := SizeFactor;
+  FKanjiCard.SizHor := hsiz;
+  FKanjiCard.SizVert := vsiz;
+  FKanjiCard.NoFullComp := 2;
+  FKanjiCard.CalFont := FontJpCh;
+
 end;
 
 procedure TfScreenTipForm.pbMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -147,7 +168,7 @@ end;
 
 procedure TfScreenTipForm.pbPaint(Sender: TObject);
 var ss:string;
-    ch,SizeFactor:integer;
+    ch:integer;
     rect:TRect;
     kkch,kkcw:integer;
     vsiz,hsiz,vfsiz,hfsiz:integer;
@@ -162,7 +183,6 @@ begin
   wt:=screenTipWt;
   tpp:=20;
   ch:=GridFontSize+3;
-  SizeFactor:=StrToInt(fSettings.edtScreenTipSizeFactor.Text);
   vsiz:=5;
   hsiz:=FScreenTipWidth;
   sep:=4;
@@ -208,20 +228,16 @@ begin
   begin
     Self.pb.Canvas.Brush.Color:=Col('Popup_Card');
     Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    Self.pb.Canvas.Rectangle(sep,sep*2+FScreenTipList.Count*ch+tpp,Self.Width-sep,sep*2+FScreenTipList.Count*ch+kkch+tpp);
-    Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    DrawKanjiCard(Self.pb.Canvas,fcopy(s,1,1),sep,sep*2+FScreenTipList.Count*ch+tpp,SizeFactor,
-      [koPrintRadical, koPrintAlternateForm, koPrintInnerLines,
-      koPrintVocabularyCompounds, koPrintReadings, koPrintDefinition,
-      koPrintFullCompounds, koSortCompoundsByFrequency],
-      hsiz,vsiz,2,FontJpCh);
+    Rect.Left := sep;
+    Rect.Top := sep*2+FScreenTipList.Count*ch+tpp;
+    Rect.Right := Self.Width - sep;
+    Rect.Bottom := Rect.Top + kkch;
+   //Altern: Rect.Bottom := Self.Height - sep; (should be the same)
+    Self.pb.Canvas.Rectangle(Rect.Left, Rect.Top, Rect.Right, Rect.Bottom);
+    FKanjiCard.Paint(Canvas, Rect);
     Self.pb.Canvas.Brush.Color:=Col('Popup_Text');
     Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    rect.left:=sep;
-    rect.top:=tpp+sep*2+FScreenTipList.Count*ch;
-    rect.right:=Self.Width-sep;
-    rect.bottom:=Self.Height-sep;
-    Self.pb.Canvas.FrameRect(rect);
+    Self.pb.Canvas.FrameRect(Rect);
   end;
 
  //Frame
