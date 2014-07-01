@@ -2,44 +2,206 @@ unit JWBKanjiCard;
 { Kanji card painting }
 
 interface
-uses SysUtils, Classes, Graphics, Grids, Windows;
+uses SysUtils, Classes, Types, Graphics, Grids, Windows;
 
-var
-  kcchind,
-  kcchcomp:TStringList;
+type
+  TKanjiCardOption = (
+    koPrintStrokeCount,
+    koPrintOuterLines,
+    koPrintRadical,
+    koPrintAlternateForm,
+    koPrintInnerLines,
+    koPrintVocabularyCompounds,
+    koPrintReadings,
+    koPrintDefinition,
+    koPrintStrokeOrder,
+    koPrintFullCompounds,
+    koSortCompoundsByFrequency
+  );
+  TKanjiCardOptions = set of TKanjiCardOption;
 
-procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
-  stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;
-  sizhor,sizvert,nofullcomp:integer;calfont:string);
-procedure ClearKanjiCardCache;
+  TKanjiCard = class
+  protected
+    FChar: string;
+    FFlags: TKanjiCardOptions;
+    FCharDim: double;
+    FSizHor: integer;
+    FSizVert: integer;
+    FNoFullComp: integer;
+    FCalFont: string;
+    FLoaded: boolean;
+    FVocabCompounds: TStringList;
+    FDictCompounds: TStringList;
+    FOnReadings: string;
+    FKunReadings: string;
+    FDefinition: string;
+    FStrokeCount: integer;
+    function LoadVocabCompounds: TStringList;
+    function LoadDictCompounds: TStringList;
+  public
+    constructor Create(AChar: string);
+    destructor Destroy; override;
+    procedure Reload;
+    procedure Paint(Canvas: TCanvas; TargetRect: TRect);
+    procedure MeasureHeight(const AWidth: integer; out AHeight: integer);
+    property Char: string read FChar;
+    property Flags: TKanjiCardOptions read FFlags write FFlags;
+    property CharDim: double read FCharDim write FCharDim;
+    property SizHor: integer read FSizHor write FSizHor;
+    property SizVert: integer read FSizVert write FSizVert;
+    property NoFullComp: integer read FNoFullComp write FNoFullComp;
+    property CalFont: string read FCalFont write FCalFont;
+  end;
+
+//u --> FChar
+//x,y --> Rect.x,y
+//ch --> CharDim
 
 implementation
 uses TextTable, JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBSettings,
   JWBUserData, JWBKanaConv, JWBCharData, JWBLegacyMarkup, JWBWordGrid;
 
-procedure DrawKanjiCard(canvas:TCanvas;u:string;x,y:integer;ch:double;
-  stcount,outlin,alt,rad,inlin,comp,read,mean,strokeorder,fullcomp,sortfreq:boolean;
-  sizhor,sizvert,nofullcomp:integer;calfont:string);
-var ony,kuny,defy,defyu:string;
+constructor TKanjiCard.Create(AChar: string);
+begin
+  inherited Create();
+  FChar := AChar;
+end;
+
+destructor TKanjiCard.Destroy;
+begin
+  FreeAndNil(FVocabCompounds);
+  FreeAndNil(FDictCompounds);
+  inherited;
+end;
+
+//Preprocess data, find dictionary examples etc.
+procedure TKanjiCard.Reload;
+var CCharProp: TCharPropertyCursor;
+begin
+  FreeAndNil(FVocabCompounds);
+  if koPrintVocabularyCompounds in flags then
+    FVocabCompounds := LoadVocabCompounds;
+
+  FreeAndNil(FDictCompounds);
+  if koPrintFullCompounds in flags then
+    FDictCompounds := LoadDictCompounds;
+
+  FOnReadings := '';
+  FKunReadings := '';
+  FDefinition := '';
+  CCharProp := TCharPropertyCursor.Create(TCharProp);
+  try
+    if curlang='j' then begin
+      FOnReadings:=CCharProp.GetCharProps(FChar, ptOnReading);
+      FKunReadings:=CCharProp.GetCharProps(FChar, ptKunReading);
+      FDefinition := CCharProp.GetCharProps(FChar, ptJapaneseDefinition)
+    end else
+    if curlang='c' then begin
+      FOnReadings:=ConvertPinyin(CCharProp.GetCharProps(FChar, ptMandarinReading));
+      FKunReadings:=lowercase(CCharProp.GetCharProps(FChar, ptCantoneseReading));
+      FDefinition := CCharProp.GetCharProps(FChar, ptChineseDefinition)
+    end;
+  finally
+    FreeAndNil(CCharProp);
+  end;
+
+  FStrokeCount := 0;
+  if koPrintStrokeCount in flags then begin
+    TChar.Locate('Unicode', FChar);
+    if curlang='j' then
+      FStrokeCount := TChar.Int(TChar.fJpStrokeCount)
+    else
+      FStrokeCount := TChar.Int(TChar.fChStrokeCount);
+  end;
+
+  FLoaded := true;
+end;
+
+//Returns matching vocabulary compounds in a special format
+function TKanjiCard.LoadVocabCompounds: TStringList;
+begin
+  Result := TStringList.Create;
+  TUserIdx.SetOrder('Kanji_Ind');
+  TUserIdx.Locate('Kanji',FChar);
+  while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=FChar) do
+  begin
+    TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord));
+    if flength(TUser.Str(TUserKanji))<10 then
+    //if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
+      if TUserIdx.Bool(TUserIdxBegin) then
+        Result.Add('+'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji))
+      else
+        Result.Add('-'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji));
+    TUserIdx.Next;
+  end;
+  Result.Sort;
+end;
+
+//Returns matching dictionary compounds in a special format (different from Vocab* one)
+function TKanjiCard.LoadDictCompounds: TStringList;
+var i: integer;
+  dic:TDicIndexCursor;
+  freq:string;
+  tmp:string;
+  mark:TMarkers;
+begin
+  Result := TStringList.Create;
+  for i:=0 to dicts.Count-1 do
+    if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
+  begin
+    dic:=TDicIndexCursor.Create(dicts[i]);
+    try
+      dic.Find(itChar,fstrtouni(FChar));
+      while dic.Next do
+      begin
+        mark:=dic.GetArticleMarkers;
+        freq:='0000000';
+        if dic.dic.SupportsFrequency and (koSortCompoundsByFrequency in flags) then
+          freq:=inttostr(9999999-dic.GetFrequency);
+        while length(freq)<7 do freq:='0'+freq;
+        tmp := EnrichDictEntry(dic.GetArticleBody,mark);
+        if pos(UH_LBEG+'spop'+UH_LEND,tmp)=0 then freq[1]:='a';
+        if freq<>'9999999'then
+        Result.Add(freq+#9+ChinSimplified(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+tmp+'}{');
+      end;
+    finally
+      FreeAndNil(dic);
+    end;
+  end;
+  Result.Sort;
+  while Result.Count > NoFullComp do
+    Result.Delete(Result.Count-1);
+end;
+
+procedure TKanjiCard.MeasureHeight(const AWidth: integer; out AHeight: integer);
+begin
+  if not FLoaded then
+    Reload;
+
+end;
+
+procedure TKanjiCard.Paint(Canvas: TCanvas; TargetRect: TRect);
+var
+  KanjiRect: TRect;
     radf:integer;
     sl:TStringList;
     s:string; //can contain fstring too
     ws:FString;
     p:integer;
     i,j:integer;
-    rect:TRect;
+//    rect:TRect;
     nch,ncv:integer;
     fontjpch:string;
     FontJpChGrid:string;
     FontJpEnGrid:string;
-    dic:TDicIndexCursor;
-    freq:string;
-    mark:TMarkers;
+
+
   rt: integer; //TCharProp.Int(TCharPropType)
-  tmp:string;
-  CCharProp: TCharPropertyCursor;
   rad_idx: integer;
 begin
+  if not FLoaded then
+    Reload;
+
   if curlang='j' then begin
     fontjpch:=FontJapanese;
     fontjpchgrid:=FontJapaneseGrid;
@@ -49,68 +211,60 @@ begin
     fontjpchgrid:=FontChineseGrid;
     fontjpengrid:=FontPinYin;
   end;
+
   ncv:=sizvert;
-  if read then inc(ncv,3);
-  if mean then inc(ncv,2);
-  if fullcomp then inc(ncv,1+nofullcomp);
+  if (koPrintReadings in flags) then inc(ncv,3);
+  if (koPrintDefinition in flags) then inc(ncv,2);
+  if (koPrintFullCompounds in flags) then inc(ncv,1+nofullcomp);
+
   nch:=sizvert;
-  if alt or rad then inc(nch,(sizvert div 2)+1);
-  if comp then nch:=nch+1+sizhor;
-  sl:=TStringList.Create;
-  TChar.Locate('Unicode',u);
-  DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),u,calfont);
-  if stcount then
-    if curlang<>'j' then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TChar.fChStrokeCount)),FontEnglish);
-  if stcount then
-    if curlang='j' then DrawUnicode(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc(ch),fstr(TChar.Str(TChar.fJpStrokeCount)),FontEnglish);
-  if strokeorder then
-    DrawStrokeOrder(canvas,trunc(x+ch/2),trunc(y+ch/2),trunc((sizvert-1)*ch),trunc((sizvert-1)*ch),u,trunc(ch/3*2),clBlack);
+  if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then inc(nch,(sizvert div 2)+1);
+  if (koPrintVocabularyCompounds in flags) then nch:=nch+1+sizhor;
+
+  KanjiRect := TargetRect;
+  KanjiRect.Width := sizhor*FCharDim; //should be less
+  KanjiRect.Height := sizvert*FCharDim;
+  InflateRect(KanjiRect, Trunc(-FCharDim/2), Trunc(-FCharDim/2)); //empty space
+
+
+  DrawUnicode(canvas,KanjiRect.Left,KanjiRect.Top,KanjiRect.Height,FChar,calfont);
+  if koPrintStrokeCount in flags then
+    DrawUnicode(canvas,KanjiRect.Left,KanjiRect.Top,trunc(FCharDim),fstr(IntToStr(FStrokeCount)),FontEnglish);
+  if koPrintStrokeOrder in flags then
+    DrawStrokeOrder(canvas,KanjiRect.Left,KanjiRect.Top,KanjiRect.Height,KanjiRect.Height,FChar,trunc(FCharDim/3*2),clBlack);
 
   {outer lines}
-  if outlin then
-  begin
-    canvas.MoveTo(x,y);
-    canvas.LineTo(trunc(x+nch*ch),y);
-    canvas.LineTo(trunc(x+nch*ch),trunc(y+ncv*ch));
-    canvas.LineTo(x,trunc(y+ncv*ch));
-    canvas.LineTo(x,y);
+  if koPrintOuterLines in flags then begin
+    canvas.MoveTo(TargetRect.Left,TargetRect.Top);
+    canvas.LineTo(TargetRect.Right,TargetRect.Top);
+    canvas.LineTo(TargetRect.Right,TargetRect.Bottom);
+    canvas.LineTo(TargetRect.Left,TargetRect.Bottom);
+    canvas.LineTo(TargetRect.Left,TargetRect.Top);
   end;
 
-  {alternate}
-  if alt then begin
+  //HERE
+  {alternate form}
+  if koPrintAlternateForm in flags then begin
     radf:=fSettings.GetPreferredRadicalType;
-    rad_idx := GetCharRadicalNumber(u,radf);
+    rad_idx := GetCharRadicalNumber(FChar,radf);
     if TRadicals.Locate('Number',rad_idx) then
       DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2),trunc(sizvert/8*3*ch),TRadicals.Str(TRadicals.fUnicode),FontRadical);
   end;
 
   {radical}
-  if rad then
-    DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2+(sizvert/2)*ch),trunc((sizvert/8*3)*ch),u,FontJpchGrid);
-  if inlin then
-  begin
+  if koPrintRadical in flags then
+    DrawUnicode(canvas,trunc(x+ch/2+(sizvert)*ch*17/16),trunc(y+ch/2+(sizvert/2)*ch),trunc((sizvert/8*3)*ch),FChar,FontJpchGrid);
+  if koPrintInnerLines in flags then begin
     canvas.MoveTo(trunc(x+ch*sizvert),trunc(y+ch/2));
     canvas.LineTo(trunc(x+ch*sizvert),trunc(y+ch*sizvert-ch/2));
   end;
 
-  {compounds}
-  sl.Clear;
-  if comp then
+ { Vocabulary entries -- print only words, without readings/definitions (these
+  words are supposed to be known) }
+  if koPrintVocabularyCompounds in flags then
   begin
-    TUserIdx.SetOrder('Kanji_Ind');
-    TUserIdx.Locate('Kanji',u);
-    while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=u) do
-    begin
-      TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord));
-      if flength(TUser.Str(TUserKanji))<10 then
-//      if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
-        if TUserIdx.Bool(TUserIdxBegin) then
-          sl.Add('+'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji))
-        else
-          sl.Add('-'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji));
-      TUserIdx.Next;
-    end;
-    sl.Sort;
+
+
     p:=0;
     for j:=0 to sizvert-2 do
     begin
@@ -121,12 +275,12 @@ begin
         inc(p);
       end;
       if (p>=sl.Count) and (flength(s)>0) then fdelete(s,flength(s),1);
-      if alt or rad then
+      if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then
         DrawUnicode(canvas,trunc(x+((sizvert)*3*ch)/2+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid)
       else
         DrawUnicode(canvas,trunc(x+(sizvert)*ch+ch+ch/2),trunc(y+ch/2+j*ch),trunc(ch),s,FontJpChGrid);
     end;
-    if (alt or rad) and (inlin) then
+    if ((koPrintAlternateForm in flags) or (koPrintRadical in flags)) and ((koPrintInnerLines in flags)) then
     begin
       canvas.MoveTo(trunc(x+ch*(((sizvert*3)/2)+1)),trunc(y+ch/2));
       canvas.LineTo(trunc(x+ch*(((sizvert*3)/2)+1)),trunc(y+ch*sizvert-ch/2));
@@ -134,64 +288,35 @@ begin
   end;
 
   {full compounds}
-  sl.Clear;
-  if fullcomp then
+  if koPrintFullCompounds in flags then
   begin
-    if kcchind.IndexOf(u)=-1 then
-    begin
-      for i:=0 to dicts.Count-1 do
-        if dicts[i].loaded and dicts.IsInGroup(dicts[i], 4) and dicts[i].SupportsFrequency then
-      begin
-        dic:=TDicIndexCursor.Create(dicts[i]);
-        try
-          dic.Find(itChar,fstrtouni(u));
-          while dic.Next do
-          begin
-            mark:=dic.GetArticleMarkers;
-            freq:='0000000';
-            if dic.dic.SupportsFrequency and sortfreq then
-              freq:=inttostr(9999999-dic.GetFrequency);
-            while length(freq)<7 do freq:='0'+freq;
-            tmp := EnrichDictEntry(dic.GetArticleBody,mark);
-            if pos(UH_LBEG+'spop'+UH_LEND,tmp)=0 then freq[1]:='a';
-            if freq<>'9999999'then
-            sl.Add(freq+#9+ChinSimplified(dic.GetKanji)+' ['+dic.GetPhonetic+'] {'+tmp+'}{');
-          end;
-        finally
-          FreeAndNil(dic);
-        end;
-      end;
-      sl.Sort;
-      for j:=0 to nofullcomp-1 do if sl.Count>j then kcchcomp.Add(sl[j]) else kcchcomp.Add('');
-      kcchind.Add(u);
-    end;
 
-    i:=kcchind.IndexOf(u);
+
     for j:=0 to nofullcomp-1 do
     begin
-      s:=kcchcomp[i*nofullcomp+j];
+      s:=kcchcomp[j];
       rect.left:=x+round(ch/2);
       rect.right:=x+round(nch*ch-ch/2);
       rect.top:=y+round(sizvert*ch+j*ch+ch/2);
       rect.bottom:=y+round(sizvert*ch+j*ch+ch+ch/2);
-      if read then
+      if koPrintReadings in flags then
       begin
         rect.top:=rect.top+trunc(ch*3);
         rect.bottom:=rect.bottom+trunc(ch*3);
       end;
-      if mean then
+      if koPrintDefinition in flags then
       begin
         rect.top:=rect.top+trunc(ch*2);
         rect.bottom:=rect.bottom+trunc(ch*2);
       end;
       if s<>'' then DrawPackedWordInfo(canvas,rect,copy(s,9,length(s)-8),trunc(ch),false);
     end;
-    if inlin then
+    if koPrintInnerLines in flags then
     begin
       rect.top:=y+round(sizvert*ch);
-      if read then
+      if (koPrintReadings in flags) then
         rect.top:=rect.top+trunc(ch*3);
-      if mean then
+      if (koPrintDefinition in flags) then
         rect.top:=rect.top+trunc(ch*2);
       canvas.MoveTo(trunc(x+ch/2),rect.top);
       canvas.LineTo(trunc(x+nch*ch-ch/2),rect.top);
@@ -199,83 +324,41 @@ begin
   end;
 
   {readings}
-  if read then
+  if koPrintReadings in flags then
   begin
-    if inlin then
-    begin
+    if koPrintInnerLines in flags then begin
       canvas.MoveTo(trunc(x+ch/2),trunc(y+ch*sizvert));
       canvas.LineTo(trunc(x+nch*ch-ch/2),trunc(y+ch*sizvert));
     end;
-    CCharProp := TCharPropertyCursor.Create(TCharProp);
-    try
-      if curlang='j' then begin
-        ony:=CCharProp.GetCharProps(u, ptOnReading);
-        kuny:=CCharProp.GetCharProps(u, ptKunReading);
-        if Length(ony)>=nch then SetLength(ony, nch);
-        if Length(kuny)>=nch then SetLength(kuny, nch);
-      end else
-      if curlang='c' then begin
-        ony:=ConvertPinyin(CCharProp.GetCharProps(u, ptMandarinReading));
-        kuny:=lowercase(CCharProp.GetCharProps(u, ptCantoneseReading));
-      end;
-    finally
-      FreeAndNil(CCharProp);
-    end;
+    if Length(ony)>=nch then SetLength(ony, nch);
+    if Length(kuny)>=nch then SetLength(kuny, nch);
     DrawUnicode(canvas,trunc(x+ch/2),trunc(y+sizvert*ch+ch/2),trunc(ch),ony,FontJpEnGrid);
     DrawUnicode(canvas,trunc(x+ch/2),trunc(y+sizvert*ch+ch/2+ch),trunc(ch),kuny,FontJpEnGrid);
   end;
 
-  if mean then
+  if koPrintDefinition in flags then
   begin
-    if inlin then if not read then
-    begin
-      canvas.MoveTo(trunc(x+ch/2),trunc(y+ch*sizvert));
-      canvas.LineTo(trunc(x+nch*ch-ch/2),trunc(y+ch*sizvert));
-    end else
-    begin
-      canvas.MoveTo(trunc(x+ch/2),trunc(y+ch*(3+sizvert)));
-      canvas.LineTo(trunc(x+nch*ch-ch/2),trunc(y+ch*(3+sizvert)));
-    end;
+    if koPrintInnerLines in flags then
+      if not (koPrintReadings in flags) then begin
+        canvas.MoveTo(trunc(x+ch/2),trunc(y+ch*sizvert));
+        canvas.LineTo(trunc(x+nch*ch-ch/2),trunc(y+ch*sizvert));
+      end else begin
+        canvas.MoveTo(trunc(x+ch/2),trunc(y+ch*(3+sizvert)));
+        canvas.LineTo(trunc(x+nch*ch-ch/2),trunc(y+ch*(3+sizvert)));
+      end;
     rect.left:=trunc(x+ch/2);
     rect.right:=trunc(x+nch*ch-ch/2);
     rect.top:=trunc(y+ch*(sizvert)+ch/2);
     rect.bottom:=trunc(y+ch*(1+sizvert)+ch/2);
-    if read then
-    begin
+    if koPrintReadings in flags then begin
       rect.top:=rect.top+trunc(ch*3);
       rect.bottom:=rect.bottom+trunc(ch*3);
     end;
-    CCharProp := TCharPropertyCursor.Create(TCharProp);
-    try
-      if curlang='j' then
-        defy := CCharProp.GetCharProps(u, ptJapaneseDefinition)
-      else
-      if curlang='c' then
-        defy := CCharProp.GetCharProps(u, ptChineseDefinition)
-      else
-        defy := '';
-    finally
-      FreeAndNil(CCharProp);
-    end;
+
     canvas.Font.Name:=FontEnglish;
     canvas.Font.Height:=trunc(ch);
-    canvas.TextRect(rect,rect.left,rect.top,defy);
+    canvas.TextRect(rect,rect.left,rect.top,FDefinition);
   end;
-  sl.Free;
 end;
-
-procedure ClearKanjiCardCache;
-begin
-  kcchind.Clear;
-  kcchcomp.Clear;
-end;
-
-initialization
-  kcchind:=TStringList.Create;
-  kcchcomp:=TStringList.Create;
-
-finalization
-  kcchind.Free;
-  kcchcomp.Free;
 
 end.

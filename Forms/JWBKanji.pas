@@ -618,6 +618,7 @@ var lh,lc:integer;
     numh,i:integer;
     u:string;
     x,xp,y,yp:integer;
+  flags: TKanjiCardOptions;
 begin
   GetPrintLine(origwidth,origheight,origwidth,origheight,strtoint(fSettings.Edit11.Text),lh,lc);
 //  lh:=round(0.98*lh);
@@ -651,11 +652,21 @@ begin
       if (numh>1) and (fSettings.CheckBox25.Checked) then
       x:=trunc(ch+((width-(numh*nch*ch+2*ch))/(numh-1))*xp+xp*nch*ch) else x:=trunc(ch+xp*nch*ch);
       try
-        DrawKanjiCard(canvas,u,x,y,ch,fSettings.CheckBox45.Checked,fSettings.CheckBox21.Checked,
-          fSettings.CheckBox19.Checked,fSettings.CheckBox20.Checked,fSettings.CheckBox23.Checked,
-          fSettings.CheckBox18.Checked,fSettings.CheckBox22.Checked,fSettings.CheckBox44.Checked,fSettings.CheckBox52.Checked,
-          fSettings.CheckBox62.Checked,fSettings.CheckBox63.Checked,
-          strtoint(fSettings.Edit12.Text),strtoint(fSettings.Edit13.Text),strtoint(fSettings.Edit35.Text),fSettings.Edit14.Text);
+        flags := [];
+        if fSettings.CheckBox45.Checked then flags := flags + [koPrintStrokeCount];
+        if fSettings.CheckBox21.Checked then flags := flags + [koPrintOuterLines];
+        if fSettings.CheckBox19.Checked then flags := flags + [koPrintRadical];
+        if fSettings.CheckBox20.Checked then flags := flags + [koPrintAlternateForm];
+        if fSettings.CheckBox23.Checked then flags := flags + [koPrintInnerLines];
+        if fSettings.CheckBox18.Checked then flags := flags + [koPrintVocabularyCompounds];
+        if fSettings.CheckBox22.Checked then flags := flags + [koPrintReadings];
+        if fSettings.CheckBox44.Checked then flags := flags + [koPrintDefinition];
+        if fSettings.CheckBox52.Checked then flags := flags + [koPrintStrokeOrder];
+        if fSettings.CheckBox62.Checked then flags := flags + [koPrintFullCompounds];
+        if fSettings.CheckBox63.Checked then flags := flags + [koSortCompoundsByFrequency];
+        DrawKanjiCard(canvas,u,x,y,ch,flags, strtoint(fSettings.Edit12.Text),
+          strtoint(fSettings.Edit13.Text),strtoint(fSettings.Edit35.Text),
+          fSettings.Edit14.Text);
       except end;
     end;
   end;

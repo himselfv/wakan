@@ -112,9 +112,9 @@ type
     SpeedButton11: TSpeedButton;
     SpeedButton12: TSpeedButton;
     tsPopupTool: TTabSheet;
-    CheckBox28: TCheckBox;
-    CheckBox47: TCheckBox;
-    CheckBox48: TCheckBox;
+    cbScreenTipForJapanese: TCheckBox;
+    cbScreenTipForEnglish: TCheckBox;
+    cbScreenTipForKanji: TCheckBox;
     Label36: TLabel;
     Edit21: TEdit;
     Label37: TLabel;
@@ -123,7 +123,7 @@ type
     Label39: TLabel;
     Edit23: TEdit;
     Label40: TLabel;
-    Edit24: TEdit;
+    edtScreenTipMaxDictEntries: TEdit;
     Button11: TButton;
     cbDictLimitAutoResults: TCheckBox;
     CheckBox50: TCheckBox;
@@ -142,12 +142,12 @@ type
     CheckBox51: TCheckBox;
     CheckBox52: TCheckBox;
     Label43: TLabel;
-    Edit26: TEdit;
+    edtScreenTipSizeFactor: TEdit;
     Label44: TLabel;
     Label45: TLabel;
     Label46: TLabel;
-    Edit27: TEdit;
-    Edit28: TEdit;
+    edtScreenTipMinCompounds: TEdit;
+    edtScreenTipMaxCompounds: TEdit;
     Label50: TLabel;
     Edit32: TEdit;
     SpeedButton13: TSpeedButton;
@@ -407,7 +407,6 @@ type
   public
     property DefaultCopyFormatName: string read FDefaultCopyFormatName
       write FDefaultCopyFormatName;
-
 
   public
    { Layout settings are loaded into these variables and applied later }
@@ -932,16 +931,16 @@ begin
   cbVerticalPrint.Checked:=reg.ReadBool('Translate','VerticalPrint',false);
   cbTranslateNoLongTextWarning.Checked := reg.ReadBool('Translate','NoLongTextWarning',true);
   cbMultithreadedTranslation.Checked := reg.ReadBool('Translate','MultithreadedTranslation',true);
-  CheckBox28.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
-  CheckBox47.Checked:=reg.ReadBool('ScreenTrans','English',true);
-  CheckBox48.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
+  cbScreenTipForJapanese.Checked:=reg.ReadBool('ScreenTrans','Japanese',true);
+  cbScreenTipForEnglish.Checked:=reg.ReadBool('ScreenTrans','English',true);
+  cbScreenTipForKanji.Checked:=reg.ReadBool('ScreenTrans','Kanji',true);
   Edit21.Text:=reg.ReadString('ScreenTrans','Delay','10');
   Edit22.Text:=reg.ReadString('ScreenTrans','LeftRange','20');
   Edit23.Text:=reg.ReadString('ScreenTrans','RightRange','100');
-  Edit24.Text:=reg.ReadString('ScreenTrans','DictEntries','4');
-  Edit26.Text:=reg.ReadString('ScreenTrans','SizeFactor','12');
-  Edit27.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
-  Edit28.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
+  edtScreenTipMaxDictEntries.Text:=reg.ReadString('ScreenTrans','DictEntries','4');
+  edtScreenTipSizeFactor.Text:=reg.ReadString('ScreenTrans','SizeFactor','12');
+  edtScreenTipMinCompounds.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
+  edtScreenTipMaxCompounds.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.btnScreenModeWk.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
   ScreenTip.EnabledInWakan:=fMenu.btnScreenModeWk.Down;
   if fEditor<>nil then begin
@@ -1243,16 +1242,16 @@ begin
   reg.WriteBool('Layout','CharDetailsDocked',fMenu.CharDetDocked);
   reg.WriteBool('Layout','CharDetailsVisible1',fMenu.CharDetDockedVis1);
   reg.WriteBool('Layout','CharDetailsVisible2',fMenu.CharDetDockedVis2);
-  reg.WriteBool('ScreenTrans','Japanese',CheckBox28.Checked);
-  reg.WriteBool('ScreenTrans','English',CheckBox47.Checked);
-  reg.WriteBool('ScreenTrans','Kanji',CheckBox48.Checked);
+  reg.WriteBool('ScreenTrans','Japanese',cbScreenTipForJapanese.Checked);
+  reg.WriteBool('ScreenTrans','English',cbScreenTipForEnglish.Checked);
+  reg.WriteBool('ScreenTrans','Kanji',cbScreenTipForKanji.Checked);
   reg.WriteString('ScreenTrans','Delay',Edit21.Text);
   reg.WriteString('ScreenTrans','LeftRange',Edit22.Text);
   reg.WriteString('ScreenTrans','RightRange',Edit23.Text);
-  reg.WriteString('ScreenTrans','DictEntries',Edit24.Text);
-  reg.WriteString('ScreenTrans','SizeFactor',Edit26.Text);
-  reg.WriteString('ScreenTrans','MinCompounds',Edit27.Text);
-  reg.WriteString('ScreenTrans','MaxCompounds',Edit28.Text);
+  reg.WriteString('ScreenTrans','DictEntries',edtScreenTipMaxDictEntries.Text);
+  reg.WriteString('ScreenTrans','SizeFactor',edtScreenTipSizeFactor.Text);
+  reg.WriteString('ScreenTrans','MinCompounds',edtScreenTipMinCompounds.Text);
+  reg.WriteString('ScreenTrans','MaxCompounds',edtScreenTipMaxCompounds.Text);
   reg.WriteBool('ScreenTrans','WakanToolTip',fMenu.btnScreenModeWk.Down);
 
   setwindows:=0;

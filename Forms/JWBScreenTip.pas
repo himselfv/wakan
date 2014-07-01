@@ -30,13 +30,11 @@ type
   protected
     FOnButtonClick: TButtonClickEvent;
     FScreenTipButton:integer;
-    FScreenTipList:TSearchResults;
-    FScreenTipWords:integer; //no of words to show in a tip
+    FScreenTipList: TSearchResults;
     FScreenTipWidth:integer;
   public
     screenTipText:string;
     screenTipWt:TEvalCharType;
-    procedure PaintScreenTip;
     procedure DrawPopupButtons(sel:integer);
     property OnButtonClick: TButtonClickEvent read FOnButtonClick
       write FOnButtonClick;
@@ -125,11 +123,6 @@ begin
   FreeAndNil(FScreenTipList);
 end;
 
-procedure TfScreenTipForm.pbPaint(Sender: TObject);
-begin
-  PaintScreenTip;
-end;
-
 procedure TfScreenTipForm.pbMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 var sb:integer;
@@ -152,11 +145,9 @@ begin
     FOnButtonClick(Self, FScreenTipButton);
 end;
 
-procedure TfScreenTipForm.PaintScreenTip;
-var sl:TSearchResults;
-    maxwords:integer;
-    ss:string;
-    ch,kch:integer;
+procedure TfScreenTipForm.pbPaint(Sender: TObject);
+var ss:string;
+    ch,SizeFactor:integer;
     rect:TRect;
     kkch,kkcw:integer;
     vsiz,hsiz,vfsiz,hfsiz:integer;
@@ -165,40 +156,42 @@ var sl:TSearchResults;
     wt:TEvalCharType;
     sep:integer;
     tpp:integer;
-    cl:TColor;
     FontJpCh:string;
 begin
   s:=screenTipText;
   wt:=screenTipWt;
-  sl:=FScreenTipList;
-  cl:=Col('Popup_Back');
-  maxwords:=FScreenTipWords;
   tpp:=20;
   ch:=GridFontSize+3;
-  kch:=strtoint(fSettings.Edit26.Text);
+  SizeFactor:=StrToInt(fSettings.edtScreenTipSizeFactor.Text);
   vsiz:=5;
   hsiz:=FScreenTipWidth;
   sep:=4;
   vfsiz:=vsiz+5;
   hfsiz:=hsiz+vsiz+4;
-  kkcw:=hfsiz*kch;
-  kkch:=vfsiz*kch;
+  kkcw:=hfsiz*SizeFactor;
+  kkch:=vfsiz*SizeFactor;
   Self.Width:=kkcw+sep*2;
-  Self.pb.Canvas.Brush.Color:=cl;
+
+ //Background color
+  Self.pb.Canvas.Brush.Color:=Col('Popup_Back');
   Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
   Self.pb.Canvas.Rectangle(0,0,Self.Width,Self.Height);
-//  Self.pb.Canvas.Brush.Color:=cl;
-//  Self.pb.Canvas.Pen.Color:=clBlack;
-//  Self.pb.Canvas.Rectangle(sep,sep,Self.Width-sep,tpp+1+sep);
+
+ //Popup buttons
   DrawPopupButtons(FScreenTipButton);
-  Self.pb.Canvas.Brush.Color:=cl;
+
+ //Text itself
+  Self.pb.Canvas.Brush.Color:=Col('Popup_Back');
   Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
-  DrawUnicode(Self.pb.Canvas,sep+2+PopupButtonNum*PopupButtonWidth+PopupButtonNum*PopupButtonSep+sep,sep,tpp-4,s,FontSmall);
-  Self.pb.Canvas.Rectangle(sep,sep+tpp,Self.Width-sep,sep+maxwords*ch+tpp);
+  DrawUnicode(Self.pb.Canvas,sep+2+PopupButtonNum*PopupButtonWidth
+    +PopupButtonNum*PopupButtonSep+sep,sep,tpp-4,s,FontSmall);
+
+ //Words
+  Self.pb.Canvas.Rectangle(sep,sep+tpp,Self.Width-sep,sep+FScreenTipList.Count*ch+tpp);
   if curlang='c'then FontJpCh:=FontChinese else FontJpCh:=FontJapanese;
-  for i:=0 to maxwords-1 do
+  for i:=0 to FScreenTipList.Count-1 do
   begin
-    ss:=sl[i].ToLegacyString;
+    ss:=FScreenTipList[i].ToLegacyString;
     rect.left:=sep+1;
     rect.right:=Self.Width-sep-2;
     rect.top:=sep+ch*i+1+tpp;
@@ -207,36 +200,42 @@ begin
     Self.pb.Canvas.MoveTo(sep+1,sep+ch*i+ch+tpp);
     Self.pb.Canvas.LineTo(Self.Width-sep-1,sep+ch*i+ch+tpp);
   end;
+
+ //Kanji card
   Self.pb.canvas.Font.Style:=[];
   Self.pb.canvas.Font.Color:=Col('Popup_Text');
-  if (wt=EC_IDG_CHAR) and (fSettings.CheckBox48.Checked) then
+  if (wt=EC_IDG_CHAR) and fSettings.cbScreenTipForKanji.Checked then
   begin
     Self.pb.Canvas.Brush.Color:=Col('Popup_Card');
     Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    Self.pb.Canvas.Rectangle(sep,sep*2+maxwords*ch+tpp,Self.Width-sep,sep*2+maxwords*ch+kkch+tpp);
+    Self.pb.Canvas.Rectangle(sep,sep*2+FScreenTipList.Count*ch+tpp,Self.Width-sep,sep*2+FScreenTipList.Count*ch+kkch+tpp);
     Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
-    DrawKanjiCard(Self.pb.Canvas,fcopy(s,1,1),sep,sep*2+maxwords*ch+tpp,
-      kch,false,false,true,true,true,true,true,true,false,true,true,hsiz,vsiz,2,FontJpCh);
+    DrawKanjiCard(Self.pb.Canvas,fcopy(s,1,1),sep,sep*2+FScreenTipList.Count*ch+tpp,SizeFactor,
+      [koPrintRadical, koPrintAlternateForm, koPrintInnerLines,
+      koPrintVocabularyCompounds, koPrintReadings, koPrintDefinition,
+      koPrintFullCompounds, koSortCompoundsByFrequency],
+      hsiz,vsiz,2,FontJpCh);
     Self.pb.Canvas.Brush.Color:=Col('Popup_Text');
     Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
     rect.left:=sep;
-    rect.top:=tpp+sep*2+maxwords*ch;
+    rect.top:=tpp+sep*2+FScreenTipList.Count*ch;
     rect.right:=Self.Width-sep;
     rect.bottom:=Self.Height-sep;
     Self.pb.Canvas.FrameRect(rect);
   end;
+
+ //Frame
   Self.pb.Canvas.Brush.Color:=Col('Popup_Text');
   Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
   rect.left:=sep;
   rect.top:=tpp+sep;
   rect.right:=Self.Width-sep;
-  rect.bottom:=tpp+sep+maxwords*ch+1;
+  rect.bottom:=tpp+sep+FScreenTipList.Count*ch+1;
   Self.pb.Canvas.FrameRect(rect);
   Self.pb.Canvas.Font.Height:=12;
   Self.pb.Canvas.Font.Name:='Arial';
   Self.pb.Canvas.Brush.Color:=clWhite;
   Self.pb.Canvas.Pen.Color:=clBlack;
-//  DrawUnicode(Self.pb.Canvas,7,Self.Height-20,12,screenTipDebug,FontSmall);
 end;
 
 procedure TfScreenTipForm.DrawPopupButtons(sel:integer);
@@ -623,12 +622,11 @@ end;
 //Show screen tip for the given word at the specified point
 procedure TScreenTip.Show(x,y: integer; s: FString; wt: TEvalCharType;
   immediate: boolean);
-var maxwords:integer;
-    wasfull:boolean;
+var wasfull:boolean;
     s1,s2:FString; //kinda fstring, has control chars
     s3:string;
     ss:string;
-    ch,kch:integer;
+    ch,SizeFactor:integer;
     rect:TRect;
     kkch,kkcw:integer;
     vsiz,hsiz,vfsiz,hfsiz:integer;
@@ -640,40 +638,40 @@ var maxwords:integer;
     maxslen,slen:integer;
 begin
   if FScreenTipForm<>nil then Self.Hide;
-  if ((wt=EC_LATIN_HW) and (not fSettings.CheckBox47.Checked)) then exit;
-  if ((wt<>EC_LATIN_HW) and (not fSettings.CheckBox28.Checked)) then exit;
+  if ((wt=EC_LATIN_HW) and not fSettings.cbScreenTipForEnglish.Checked) then exit;
+  if ((wt<>EC_LATIN_HW) and not fSettings.cbScreenTipForJapanese.Checked) then exit;
   FScreenTipForm:=TfScreenTipForm.Create(nil);
   FScreenTipForm.OnButtonClick := Self.OnTipButtonClick;
-  maxwords:=strtoint(fSettings.Edit24.Text);
-  if maxwords<10 then maxwords:=10;
-  if wt=EC_LATIN_HW then
-  begin
+
+ //Find matches
+  if wt=EC_LATIN_HW then begin
     //Try to look for a latin word
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(fstrtouni(s),stEnglish,mtExactMatch,false,wt,maxwords,FScreenTipForm.FScreenTipList,5,wasfull);
-    if (FScreenTipForm.FScreenTipList.Count=0) then
-    begin
+    DicSearch(fstrtouni(s),stEnglish,mtExactMatch,false,wt,-1,FScreenTipForm.FScreenTipList,5,wasfull);
+    if FScreenTipForm.FScreenTipList.Count=0 then begin
       ss:=fstrtouni(s);
      //What the hell are we doing here?! "If nothing matches, try deleting
      //some letters, but only if those are 'ed' or 's'"?
      //I think this calls for a proper english deflexion function.
       if (length(ss)>2) and (copy(ss,length(ss)-1,2)='ed') then delete(ss,length(ss)-1,2) else
         if (length(ss)>1) and (ss[length(ss)]='s') then delete(ss,length(ss),1);
-      DicSearch(ss,stEnglish,mtExactMatch,false,wt,maxwords,FScreenTipForm.FScreenTipList,5,wasfull);
+      DicSearch(ss,stEnglish,mtExactMatch,false,wt,-1,FScreenTipForm.FScreenTipList,5,wasfull);
     end;
-  end;
-  if wt<>EC_LATIN_HW then
-    DicSearch(s,stJapanese,mtExactMatch,false,wt,maxwords,FScreenTipForm.FScreenTipList,5,wasfull);
-  if maxwords>FScreenTipForm.FScreenTipList.Count then
-    maxwords:=FScreenTipForm.FScreenTipList.Count;
-  FScreenTipForm.FScreenTipWords:=maxwords;
+  end else
+    DicSearch(s,stJapanese,mtExactMatch,false,wt,-1,FScreenTipForm.FScreenTipList,5,wasfull);
+ //We might want to pass MaxMathes to DicSearch before, but it would return us
+ //FIRST N words ordered by frequency, not MOST FREQUENT N words.
+ //So no choice but to match all, sort and trim here.
+  FScreenTipForm.FScreenTipList.Trim(StrToInt(
+    fSettings.edtScreenTipMaxDictEntries.Text));
+
   tpp:=20;
   ch:=GridFontSize+3;
-  kch:=strtoint(fSettings.Edit26.Text);
+  SizeFactor:=strtoint(fSettings.edtScreenTipSizeFactor.Text);
   optwidth:=0;
   proposeds:='';
   maxslen:=0;
-  for i:=0 to maxwords-1 do
+  for i:=0 to FScreenTipForm.FScreenTipList.Count-1 do
   begin
     slen:=FScreenTipForm.FScreenTipList[i].slen;
     if slen>maxslen then maxslen:=slen;
@@ -689,10 +687,12 @@ begin
   end;
   if maxslen>0 then proposeds:=fcopy(s,1,maxslen);
 
-  optwidth:=optwidth-5*kch;
-  optwidth:=optwidth div kch;
-  if optwidth<strtoint(fSettings.Edit27.Text) then optwidth:=strtoint(fSettings.Edit27.Text);
-  if optwidth>strtoint(fSettings.Edit28.Text) then optwidth:=strtoint(fSettings.Edit28.Text);
+  optwidth:=optwidth-5*SizeFactor;
+  optwidth:=optwidth div SizeFactor;
+  if optwidth<strtoint(fSettings.edtScreenTipMinCompounds.Text) then
+    optwidth:=strtoint(fSettings.edtScreenTipMinCompounds.Text);
+  if optwidth>strtoint(fSettings.edtScreenTipMaxCompounds.Text) then
+    optwidth:=strtoint(fSettings.edtScreenTipMaxCompounds.Text);
   FScreenTipForm.FScreenTipWidth:=optwidth;
 
   vsiz:=5;
@@ -700,8 +700,8 @@ begin
   sep:=4;
   vfsiz:=vsiz+5;
   hfsiz:=hsiz+vsiz+4;
-  kkcw:=hfsiz*kch;
-  kkch:=vfsiz*kch;
+  kkcw:=hfsiz*SizeFactor;
+  kkch:=vfsiz*SizeFactor;
   FScreenTipForm.screenTipText:=s;
   if proposeds<>'' then
     FScreenTipForm.screenTipText:=proposeds;
@@ -709,8 +709,10 @@ begin
   FScreenTipForm.Left:=x;
   FScreenTipForm.Top:=y;
   FScreenTipForm.Width:=kkcw+sep*2+1;
-  if (wt=EC_IDG_CHAR) and (fSettings.CheckBox48.Checked) then
-    FScreenTipForm.Height:=maxwords*ch+sep*3+kkch+tpp else FScreenTipForm.Height:=maxwords*ch+sep*2+1+tpp;
+  if (wt=EC_IDG_CHAR) and fSettings.cbScreenTipForKanji.Checked then
+    FScreenTipForm.Height:=FScreenTipForm.FScreenTipList.Count*ch+sep*3+kkch+tpp
+  else
+    FScreenTipForm.Height:=FScreenTipForm.FScreenTipList.Count*ch+sep*2+1+tpp;
   if not immediate then
   begin
     if y+FScreenTipForm.Height>Screen.Height then FScreenTipForm.Top:=y-20-FScreenTipForm.Height;
