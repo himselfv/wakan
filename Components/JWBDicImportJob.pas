@@ -721,6 +721,7 @@ begin
 
     if (pos({$IFDEF UNICODE}#$FF1F#$FF1F{$ELSE}'FF1FFF1F'{$ENDIF},ustr)<>0) then //EDICT header line
       continue;
+    if ustr='' then continue; //sometimes last line
 
     try
       ParseEdict2Line(ustr, @ed);
@@ -739,7 +740,7 @@ begin
        //First check for completely invalid characters
         san_kana := SanitizeKana(ed.kana[i].kana, [sfKeepLatin, sfKeepAllowedPunctuation], '?');
         if pos('?', san_kana)>0 then begin
-          roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+roma[i]);
+          roma_prob.Writeln('Line '+IntToStr(loclineno)+': '+ed.kana[i].kana+' -> '+san_kana);
           Inc(ProblemRecords);
         end;
 

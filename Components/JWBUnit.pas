@@ -200,17 +200,26 @@ function IsAllowedPunctuation(c:WideChar): boolean;
 begin
   Result :=
     (c='·') or (c=',') //in CCEDICT
-    or (c='・') or (c='、') or (c='〜'); //in EDICT2
+    or (c='・') or (c='、') or (c='〜') or (c='～') //in EDICT2
+    or (c='.') or (c='「') or (c='」') or (c='『') or (c='』') or (c='。') or (c='!'); //Wadoku-jiten
 end;
 
 //When we need to store punctuation into pinyin, we have to make it ansi
 function ConvertPunctuation(c:WideChar): char;
 begin
   case c of
-    '·': Result:='-';
-    '・': Result:='-';
-    '、': Result:=',';
-    '〜': Result:='~';
+    '·': Result := '-';
+    '・': Result := '-';
+    '、': Result := ',';
+    '〜',
+    '～': Result := '~';
+    '.',
+    '。': Result := '.';
+    '「',
+    '『',
+    '」',
+    '』': Result := '"';
+    '!': Result := '!';
   else
     Result := c;
   end;
