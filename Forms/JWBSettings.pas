@@ -494,7 +494,6 @@ begin
   Edit19.Text:=dicts.NotUsedDicts;
   ReloadCharDetlList;
   ComboBox2.ItemIndex:=0;
-  ClearKanjiCardCache;
   ComboBox2Change(sender);
 end;
 

@@ -2011,16 +2011,16 @@ begin
   if AButtonID=0 then exit;
   if (AButtonID>2) and (not Self.Focused) then Self.Show;
   case AButtonID of
-    1: Clipboard.Text := Clipboard.Text + TfScreenTipForm(ASender).ScreenTipText;
-    2: Clipboard.Text := TfScreenTipForm(ASender).ScreenTipText;
+    1: Clipboard.Text := Clipboard.Text + TfScreenTipForm(ASender).Text;
+    2: Clipboard.Text := TfScreenTipForm(ASender).Text;
     3:begin
-        Clipboard.Text := TfScreenTipForm(ASender).ScreenTipText;
+        Clipboard.Text := TfScreenTipForm(ASender).Text;
         if not fRadical.Visible then fWordLookup.aLookupClip.Execute;
       end;
     4:begin
         if fRadical.Visible then exit;
         if not fKanjiDetails.Visible then aKanjiDetails.Execute;
-        fKanjiDetails.SetCharDetails(fcopy(TfScreenTipForm(ASender).ScreenTipText,1,1));
+        fKanjiDetails.SetCharDetails(fcopy(TfScreenTipForm(ASender).Text ,1,1));
       end;
   end;
 end;

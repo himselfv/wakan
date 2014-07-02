@@ -24,10 +24,11 @@ type
   protected
     FChar: string;
     FFlags: TKanjiCardOptions;
-    FCharDim: double;
-    FSizHor: integer;
-    FSizVert: integer;
-    FNoFullComp: integer;
+    FFontSize: integer; //font size of normal text (pixels, square characters assumed)
+    FMarginSize: integer; //margin size in pixels
+    FMainCharSize: integer; //font size of main char (pixels)
+    FMaxFullComp: integer; //show at most this # of dict compounds
+    FSuggestedAdditionalWidth: integer; //if set, will affect Measure() but not Paint()
     FCalFont: string;
     FLoaded: boolean;
     FVocabCompounds: TStringList;
@@ -47,16 +48,22 @@ type
     procedure Measure(out AWidth: integer; out AHeight: integer);
     property Char: string read FChar;
     property Flags: TKanjiCardOptions read FFlags write FFlags;
-    property CharDim: double read FCharDim write FCharDim;
-    property SizHor: integer read FSizHor write FSizHor;
-    property SizVert: integer read FSizVert write FSizVert;
-    property NoFullComp: integer read FNoFullComp write FNoFullComp;
+    property FontSize: integer read FFontSize write FFontSize;
+    property MarginSize: integer read FMarginSize write FMarginSize;
+    property MainCharSize: integer read FMainCharSize write FMainCharSize;
+    property MaxFullComp: integer read FMaxFullComp write FMaxFullComp;
+    property SuggestedAdditionalWidth: integer read FSuggestedAdditionalWidth
+      write FSuggestedAdditionalWidth;
     property CalFont: string read FCalFont write FCalFont;
   end;
 
 //u --> FChar
 //x,y --> Rect.x,y
-//ch --> CharDim
+//ch --> FontSize
+
+//Defaults:
+//Margin size: FFontSize div 2
+//Main char size: (sizevert-1)*FFontSize
 
 implementation
 uses TextTable, JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBSettings,
@@ -66,6 +73,7 @@ constructor TKanjiCard.Create(AChar: string);
 begin
   inherited Create();
   FChar := AChar;
+  FSuggestedAdditionalWidth := 25; //arbitrary;
 end;
 
 destructor TKanjiCard.Destroy;
@@ -137,12 +145,12 @@ begin
   while (not TUserIdx.EOF) and (TUserIdx.Str(TUserIdxKanji)=FChar) do
   begin
     TUser.Locate('Index',TUserIdx.TrueInt(TUserIdxWord));
-    if flength(TUser.Str(TUserKanji))<10 then
+    if Length(TUser.Str(TUserKanji))<10 then
     //if FirstUnknownKanjiIndex(TUser.Str(TUserKanji))<0 then
       if TUserIdx.Bool(TUserIdxBegin) then
-        Result.Add('+'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji))
+        Result.Add('+'+IntToStr(Length(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji))
       else
-        Result.Add('-'+inttostr(flength(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji));
+        Result.Add('-'+IntToStr(Length(TUser.Str(TUserKanji)))+TUser.Str(TUserKanji));
     TUserIdx.Next;
   end;
   Result.Sort;
@@ -162,7 +170,7 @@ begin
   begin
     dic:=TDicIndexCursor.Create(dicts[i]);
     try
-      dic.Find(itChar,fstrtouni(FChar));
+      dic.Find(itChar, FChar);
       while dic.Next do
       begin
         mark:=dic.GetArticleMarkers;
@@ -180,7 +188,7 @@ begin
     end;
   end;
   Result.Sort;
-  while Result.Count > NoFullComp do
+  while Result.Count > MaxFullComp do
     Result.Delete(Result.Count-1);
 end;
 
@@ -191,171 +199,158 @@ begin
   if not FLoaded then
     Reload;
 
-  AHeight := sizvert; //sic
-  if (koPrintReadings in flags) then inc(AHeight, 3);
-  if (koPrintDefinition in flags) then inc(AHeight, 2);
-  if (koPrintFullCompounds in flags) then inc(AHeight, 1+FDictCompounds.Count);
-  AHeight := Round(AHeight * FCharDim);
+  AHeight := MainCharSize;
+  if koPrintReadings in flags then
+    AHeight := AHeight + MarginSize + 2 * FontSize;
+  if koPrintDefinition in flags then
+    AHeight := AHeight + MarginSize + FontSize;
+  if koPrintFullCompounds in flags then
+    AHeight := AHeight + MarginSize + FDictCompounds.Count * FontSize;
+  Inc(AHeight, 2*MarginSize);
 
-  AWidth := sizvert;
-  if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then inc(AWidth,(sizvert div 2)+1);
-  if (koPrintVocabularyCompounds in flags) then Inc(AWidth, 1+sizhor);
-  AWidth := Round(AWidth * FCharDim);
+  AWidth := MainCharSize;
+  if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then
+    AWidth := AWidth + MarginSize + MainCharSize div 2;
+  if koPrintVocabularyCompounds in flags then
+    AWidth := AWidth + MarginSize + FontSize*FSuggestedAdditionalWidth;
+  Inc(AWidth, 2*MarginSize);
 end;
 
 procedure TKanjiCard.Paint(Canvas: TCanvas; TargetRect: TRect);
 var
   Rect, Rect2: TRect;
-  HalfKanjiSz: integer;
+  HalfCharSz: integer;
   FontJpCh:string;
   FontJpChGrid:string;
   FontJpEnGrid:string;
   j, p: integer;
   s: string;
-
-{
-    s:string; //can contain fstring too
-    ws:FString;
-    p:integer;
-    i,j:integer;
-
-  rt: integer; //TCharProp.Int(TCharPropType)
-}
-
 begin
   if not FLoaded then
     Reload;
 
-  if curlang='j' then begin
-    fontjpch:=FontJapanese;
-    fontjpchgrid:=FontJapaneseGrid;
-    fontjpengrid:=FontJapaneseGrid;
+  if curlang = 'j' then begin
+    fontjpch := FontJapanese;
+    fontjpchgrid := FontJapaneseGrid;
+    fontjpengrid := FontJapaneseGrid;
   end else begin
-    fontjpch:=FontChinese;
-    fontjpchgrid:=FontChineseGrid;
-    fontjpengrid:=FontPinYin;
+    fontjpch := FontChinese;
+    fontjpchgrid := FontChineseGrid;
+    fontjpengrid := FontPinYin;
   end;
 
-  InflateRect(TargetRect, Round(-FCharDim/2), Round(-FCharDim/2)); //empty fields
+  InflateRect(TargetRect, -MarginSize, -MarginSize);
 
   {outer lines}
   if koPrintOuterLines in flags then begin
-    Canvas.MoveTo(TargetRect.Left,TargetRect.Top);
-    Canvas.LineTo(TargetRect.Right,TargetRect.Top);
-    Canvas.LineTo(TargetRect.Right,TargetRect.Bottom);
-    Canvas.LineTo(TargetRect.Left,TargetRect.Bottom);
-    Canvas.LineTo(TargetRect.Left,TargetRect.Top);
+    Canvas.MoveTo(TargetRect.Left, TargetRect.Top);
+    Canvas.LineTo(TargetRect.Right, TargetRect.Top);
+    Canvas.LineTo(TargetRect.Right, TargetRect.Bottom);
+    Canvas.LineTo(TargetRect.Left, TargetRect.Bottom);
+    Canvas.LineTo(TargetRect.Left, TargetRect.Top);
   end;
 
   {character box}
   Rect := TargetRect;
-  Rect.Height := Round((sizvert-1)*FCharDim); //1 unit goes to margins
-  Rect.Width := Rect.Height;
-  DrawUnicode(Canvas,Rect.Left,Rect.Top,Rect.Height,FChar,calfont);
+  Rect.Height := MainCharSize;
+  Rect.Width := MainCharSize;
+  DrawUnicode(Canvas, Rect.Left, Rect.Top, Rect.Height, FChar, CalFont);
   if koPrintStrokeCount in flags then
-    DrawUnicode(Canvas,Rect.Left,Rect.Top,Round(FCharDim),fstr(IntToStr(FStrokeCount)),FontEnglish);
+    DrawUnicode(Canvas, Rect.Left, Rect.Top, FFontSize, IntToStr(FStrokeCount), FontEnglish);
   if koPrintStrokeOrder in flags then
-    DrawStrokeOrder(Canvas,Rect.Left,Rect.Top,Rect.Height,Rect.Height,FChar,Round(FCharDim/3*2),clBlack);
+    DrawStrokeOrder(Canvas, Rect.Left, Rect.Top, Rect.Width, Rect.Height, FChar, Round(FFontSize*2/3), clBlack);
 
-  Rect.Left := Rect.Right+Round(FCharDim/2);
+  Rect.Left := Rect.Right + MarginSize;
   Rect.Right := TargetRect.Right;
   if koPrintInnerLines in flags then begin
-    Canvas.MoveTo(Rect.Left, Rect.Top);
-    Canvas.LineTo(Rect.Left, Rect.Bottom);
+    Canvas.MoveTo(Rect.Left - 2*MarginSize div 3, Rect.Top);
+    Canvas.LineTo(Rect.Left - 2*MarginSize div 3, Rect.Bottom);
   end;
 
   {alternate form and radical}
   if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then begin
-    Rect.Left := Rect.Left + Round((1/16)*FCharDim*SizVert);
-    Rect.Height := Round(sizvert*FCharDim/2 - 5*FCharDim/8); //keep top/bottom margins + half that margin inbetween 2 parts
+    HalfCharSz := Round((MainCharSize - MarginSize div 2) div 2); //two + half-margin must fit in MainCharSize
     if koPrintAlternateForm in flags then
-      DrawUnicode(Canvas,Rect.Left,Rect.Top,Rect.Height,FChar,FontJpchGrid);
-    Inc(Rect.Top,Rect.Height+Round(FCharDim/4));
+      DrawUnicode(Canvas, Rect.Left, Rect.Top, HalfCharSz, FChar, FontJpchGrid);
+    Inc(Rect.Top, HalfCharSz + MarginSize div 2);
     if (koPrintRadical in flags) and (FRadical<>'') then
-      DrawUnicode(Canvas,Rect.Left,Rect.Top,Rect.Height,FRadical,FontRadical);
-    Rect.Left := Rect.Left + Rect.Height; //sic
+      DrawUnicode(Canvas, Rect.Left, Rect.Top, HalfCharSz, FRadical, FontRadical);
+    Rect.Top := TargetRect.Top; //restore top + height
+    Rect.Height := MainCharSize;
+    Rect.Left := Rect.Left + HalfCharSz + MarginSize;
+    Rect.Right := TargetRect.Right;
     if koPrintInnerLines in flags then begin
-      canvas.MoveTo(Rect.Left, TargetRect.Top); //sic
-      canvas.LineTo(Rect.Left, Rect.Bottom);
+      canvas.MoveTo(Rect.Left - 2*MarginSize div 3, Rect.Top);
+      canvas.LineTo(Rect.Left - 2*MarginSize div 3, Rect.Bottom);
     end;
   end;
-
-  Rect.Left := Rect.Left + Round(CharDim + CharDim/2);
 
  { Vocabulary entries -- print only words, without readings/definitions (these
   words are supposed to be known) }
   if koPrintVocabularyCompounds in flags then begin
-    Rect.Top := 0;
-
     p:=0;
-    for j:=0 to sizvert-2 do
-    begin
+    Rect.Top := TargetRect.Top;
+    while Rect.Top + FontSize <= TargetRect.Top + MainCharSize do begin
       s:='';
-      while (p<FVocabCompounds.Count) and (flenfc(length(FVocabCompounds[p])-2)+flength(s)+1<=sizhor) do
+      while (p<FVocabCompounds.Count)
+      and (FontSize*(Length(s)+1+Length(FVocabCompounds[p])-2) <= Rect.Width) do
       begin
-        s:=s+copy(FVocabCompounds[p],3,length(FVocabCompounds[p])-2)+UH_IDG_COMMA;
-        inc(p);
+        s := s + copy(FVocabCompounds[p], 3, length(FVocabCompounds[p])-2) + UH_IDG_COMMA;
+        Inc(p);
       end;
-      if (p>=FVocabCompounds.Count) and (flength(s)>0) then fdelete(s,flength(s),1);
-      DrawUnicode(canvas,Rect.Left,Rect.Top,Round(CharDim),s,FontJpChGrid);
-      Inc(Rect.Top, Round(CharDim));
+      if (p>=FVocabCompounds.Count) and (Length(s)>0) then delete(s, Length(s), 1); //remove last comma
+      DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, s, FontJpChGrid);
+      Inc(Rect.Top, FontSize);
     end;
   end;
 
   Rect.Left := TargetRect.Left;
   Rect.Right := TargetRect.Right;
-  Rect.Top := TargetRect.Top + Round(sizvert*CharDim); //just below the kanji
+  Rect.Top := TargetRect.Top + MainCharSize + MarginSize; //just below the kanji
 
   {readings}
   if koPrintReadings in flags then
   begin
     if koPrintInnerLines in flags then begin
-      Canvas.MoveTo(Rect.Left, Rect.Top);
-      Canvas.LineTo(Rect.Right, Rect.Top);
+      Canvas.MoveTo(Rect.Left, Rect.Top - 2*MarginSize div 3);
+      Canvas.LineTo(Rect.Right, Rect.Top - 2*MarginSize div 3);
     end;
-   { if Length(ony)>=nch then SetLength(ony, nch);
-    if Length(kuny)>=nch then SetLength(kuny, nch); }
-    Inc(Rect.Top, Round(CharDim/2));
-    DrawUnicode(canvas,Rect.Left,Rect.Top,Round(CharDim),FOnReadings,FontJpEnGrid);
-    Inc(Rect.Top, Round(CharDim));
-    DrawUnicode(canvas,Rect.Left,Rect.Top,Round(CharDim),FKunReadings,FontJpEnGrid);
-    Inc(Rect.Top, Round(CharDim + CharDim/2));
+    DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FOnReadings, FontJpEnGrid);
+    Inc(Rect.Top, FontSize);
+    DrawUnicode(Canvas, Rect.Left, Rect.Top, Round(FontSize), FKunReadings, FontJpEnGrid);
+    Inc(Rect.Top, FontSize + MarginSize);
   end;
 
   if koPrintDefinition in flags then
   begin
     if koPrintInnerLines in flags then begin
-      Canvas.MoveTo(Rect.Left, Rect.Top);
-      Canvas.LineTo(Rect.Right, Rect.Top);
+      Canvas.MoveTo(Rect.Left, Rect.Top - 2*MarginSize div 3);
+      Canvas.LineTo(Rect.Right, Rect.Top - 2*MarginSize div 3);
     end;
-    Inc(Rect.Top, Round(CharDim/2));
-    Rect.Bottom := Rect.Top + Round(CharDim);
     Rect2 := Rect;
-    canvas.Font.Name:=FontEnglish;
-    canvas.Font.Height:=Round(CharDim);
-    canvas.TextRect(Rect2, Rect.Left, Rect.Top, FDefinition);
-    Inc(Rect.Top, Round(CharDim + CharDim/2));
+    Rect2.Height := FontSize;
+    Canvas.Font.Name := FontEnglish;
+    Canvas.Font.Height := FontSize;
+    Canvas.Brush.Style := bsClear;
+    Canvas.TextRect(Rect2, Rect.Left, Rect.Top, FDefinition);
+    Inc(Rect.Top, FontSize + MarginSize);
   end;
 
   {full compounds}
   if koPrintFullCompounds in flags then
   begin
     if koPrintInnerLines in flags then begin
-      canvas.MoveTo(Rect.Left, Rect.Top);
-      canvas.LineTo(Rect.Right, Rect.Top);
+      canvas.MoveTo(Rect.Left, Rect.Top - 2*MarginSize div 3);
+      canvas.LineTo(Rect.Right, Rect.Top - 2*MarginSize div 3);
     end;
-
-    Rect.Top := Rect.Top + Round(CharDim/2); //free space
-    Rect.Bottom := Rect.Top + Round(CharDim);
     for j:=0 to FDictCompounds.Count-1 do begin
+      Rect.Height := FontSize;
       s := FDictCompounds[j];
       if s<>'' then
-        DrawPackedWordInfo(canvas,rect,copy(s,9,length(s)-8),Round(CharDim),false);
-      Rect.Top := Rect.Top + Round(CharDim);
-      Rect.Bottom := Rect.Bottom + Round(CharDim);
+        DrawPackedWordInfo(canvas,rect,copy(s,9,length(s)-8),FontSize,false);
+      Inc(Rect.Top, FontSize);
     end;
   end;
-
 end;
 
 end.

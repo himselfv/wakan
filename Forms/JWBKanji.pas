@@ -618,7 +618,8 @@ var lh,lc:integer;
     numh,i:integer;
     u:string;
     x,xp,y,yp:integer;
-  flags: TKanjiCardOptions;
+  card: TKanjiCard;
+  w,h: integer;
 begin
   GetPrintLine(origwidth,origheight,origwidth,origheight,strtoint(fSettings.Edit11.Text),lh,lc);
 //  lh:=round(0.98*lh);
@@ -651,23 +652,31 @@ begin
       y:=trunc((height-lc*ncv*ch)/2+(yp*ncv*ch));
       if (numh>1) and (fSettings.CheckBox25.Checked) then
       x:=trunc(ch+((width-(numh*nch*ch+2*ch))/(numh-1))*xp+xp*nch*ch) else x:=trunc(ch+xp*nch*ch);
+      card := TKanjiCard.Create(u);
       try
-        flags := [];
-        if fSettings.CheckBox45.Checked then flags := flags + [koPrintStrokeCount];
-        if fSettings.CheckBox21.Checked then flags := flags + [koPrintOuterLines];
-        if fSettings.CheckBox19.Checked then flags := flags + [koPrintRadical];
-        if fSettings.CheckBox20.Checked then flags := flags + [koPrintAlternateForm];
-        if fSettings.CheckBox23.Checked then flags := flags + [koPrintInnerLines];
-        if fSettings.CheckBox18.Checked then flags := flags + [koPrintVocabularyCompounds];
-        if fSettings.CheckBox22.Checked then flags := flags + [koPrintReadings];
-        if fSettings.CheckBox44.Checked then flags := flags + [koPrintDefinition];
-        if fSettings.CheckBox52.Checked then flags := flags + [koPrintStrokeOrder];
-        if fSettings.CheckBox62.Checked then flags := flags + [koPrintFullCompounds];
-        if fSettings.CheckBox63.Checked then flags := flags + [koSortCompoundsByFrequency];
-        DrawKanjiCard(canvas,u,x,y,ch,flags, strtoint(fSettings.Edit12.Text),
-          strtoint(fSettings.Edit13.Text),strtoint(fSettings.Edit35.Text),
-          fSettings.Edit14.Text);
-      except end;
+        card.Flags := [];
+        if fSettings.CheckBox45.Checked then card.Flags := card.Flags + [koPrintStrokeCount];
+        if fSettings.CheckBox21.Checked then card.Flags := card.Flags + [koPrintOuterLines];
+        if fSettings.CheckBox19.Checked then card.Flags := card.Flags + [koPrintRadical];
+        if fSettings.CheckBox20.Checked then card.Flags := card.Flags + [koPrintAlternateForm];
+        if fSettings.CheckBox23.Checked then card.Flags := card.Flags + [koPrintInnerLines];
+        if fSettings.CheckBox18.Checked then card.Flags := card.Flags + [koPrintVocabularyCompounds];
+        if fSettings.CheckBox22.Checked then card.Flags := card.Flags + [koPrintReadings];
+        if fSettings.CheckBox44.Checked then card.Flags := card.Flags + [koPrintDefinition];
+        if fSettings.CheckBox52.Checked then card.Flags := card.Flags + [koPrintStrokeOrder];
+        if fSettings.CheckBox62.Checked then card.Flags := card.Flags + [koPrintFullCompounds];
+        if fSettings.CheckBox63.Checked then card.Flags := card.Flags + [koSortCompoundsByFrequency];
+        card.FontSize := Trunc(ch);
+        card.MarginSize := Trunc(ch / 2);
+        card.MainCharSize := Trunc(ch * (StrToInt(fSettings.Edit12.Text)-1));
+        card.MaxFullComp := StrToInt(fSettings.Edit35.Text);
+        card.SuggestedAdditionalWidth := Trunc(ch * StrToInt(fSettings.Edit13.Text));
+        card.CalFont := fSettings.Edit14.Text;
+        card.Measure(w, h);
+        card.Paint(Canvas, TRect.Create(x, y, x+w, y+h));
+      finally
+        FreeAndNil(card);
+      end;
     end;
   end;
 end;
@@ -680,7 +689,6 @@ end;
 
 procedure TfKanji.btnPrintCardsClick(Sender: TObject);
 begin
-  ClearKanjiCardCache;
   PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards'));
 end;
 
