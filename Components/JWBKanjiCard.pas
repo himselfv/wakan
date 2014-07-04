@@ -200,20 +200,35 @@ begin
     Reload;
 
   AHeight := MainCharSize;
-  if koPrintReadings in flags then
-    AHeight := AHeight + MarginSize + 2 * FontSize;
-  if koPrintDefinition in flags then
-    AHeight := AHeight + MarginSize + FontSize;
-  if koPrintFullCompounds in flags then
-    AHeight := AHeight + MarginSize + FDictCompounds.Count * FontSize;
-  Inc(AHeight, 2*MarginSize);
+  if koPrintReadings in flags then begin
+    if koPrintInnerLines in flags then
+      Inc(AHeight, MarginSize);
+    Inc(AHeight, MarginSize + 2 * FontSize);
+  end;
+  if koPrintDefinition in flags then begin
+    if koPrintInnerLines in flags then
+      Inc(AHeight, MarginSize);
+    Inc(AHeight, MarginSize + FontSize);
+  end;
+  if koPrintFullCompounds in flags then begin
+    if koPrintInnerLines in flags then
+      Inc(AHeight, MarginSize);
+    Inc(AHeight, MarginSize + FDictCompounds.Count * FontSize);
+  end;
+  Inc(AHeight, 2*MarginSize); //outer margins
 
-  AWidth := MainCharSize;
-  if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then
-    AWidth := AWidth + MarginSize + MainCharSize div 2;
-  if koPrintVocabularyCompounds in flags then
-    AWidth := AWidth + MarginSize + FontSize*FSuggestedAdditionalWidth;
-  Inc(AWidth, 2*MarginSize);
+  AWidth := MainCharSize + MarginSize;
+  if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then begin
+    if koPrintInnerLines in flags then
+      Inc(AWidth, MarginSize);
+    Inc(AWidth, MarginSize + MainCharSize div 2);
+  end;
+  if koPrintVocabularyCompounds in flags then begin
+    if koPrintInnerLines in flags then
+      Inc(AWidth, MarginSize);
+    Inc(AWidth, MarginSize + FontSize*FSuggestedAdditionalWidth);
+  end;
+  Inc(AWidth, 2*MarginSize); //outer margins
 end;
 
 procedure TKanjiCard.Paint(Canvas: TCanvas; TargetRect: TRect);
@@ -260,34 +275,37 @@ begin
   if koPrintStrokeOrder in flags then
     DrawStrokeOrder(Canvas, Rect.Left, Rect.Top, Rect.Width, Rect.Height, FChar, Round(FFontSize*2/3), clBlack);
 
-  Rect.Left := Rect.Right + MarginSize;
-  Rect.Right := TargetRect.Right;
-  if koPrintInnerLines in flags then begin
-    Canvas.MoveTo(Rect.Left - 2*MarginSize div 3, Rect.Top);
-    Canvas.LineTo(Rect.Left - 2*MarginSize div 3, Rect.Bottom);
-  end;
+  Rect.Left := Rect.Right;
 
   {alternate form and radical}
   if (koPrintAlternateForm in flags) or (koPrintRadical in flags) then begin
+    if koPrintInnerLines in flags then begin
+      Inc(Rect.Left, MarginSize);
+      Canvas.MoveTo(Rect.Left, Rect.Top);
+      Canvas.LineTo(Rect.Left, Rect.Bottom);
+    end;
+    Inc(Rect.Left, MarginSize);
     HalfCharSz := Round((MainCharSize - MarginSize div 2) div 2); //two + half-margin must fit in MainCharSize
-    if koPrintAlternateForm in flags then
-      DrawUnicode(Canvas, Rect.Left, Rect.Top, HalfCharSz, FChar, FontJpchGrid);
-    Inc(Rect.Top, HalfCharSz + MarginSize div 2);
     if (koPrintRadical in flags) and (FRadical<>'') then
       DrawUnicode(Canvas, Rect.Left, Rect.Top, HalfCharSz, FRadical, FontRadical);
+    Inc(Rect.Top, HalfCharSz + MarginSize div 2);
+    if koPrintAlternateForm in flags then
+      DrawUnicode(Canvas, Rect.Left, Rect.Top, HalfCharSz, FChar, FontJpchGrid);
     Rect.Top := TargetRect.Top; //restore top + height
     Rect.Height := MainCharSize;
-    Rect.Left := Rect.Left + HalfCharSz + MarginSize;
+    Rect.Left := Rect.Left + HalfCharSz;
     Rect.Right := TargetRect.Right;
-    if koPrintInnerLines in flags then begin
-      canvas.MoveTo(Rect.Left - 2*MarginSize div 3, Rect.Top);
-      canvas.LineTo(Rect.Left - 2*MarginSize div 3, Rect.Bottom);
-    end;
   end;
 
  { Vocabulary entries -- print only words, without readings/definitions (these
   words are supposed to be known) }
   if koPrintVocabularyCompounds in flags then begin
+    if koPrintInnerLines in flags then begin
+      Inc(Rect.Left, MarginSize);
+      canvas.MoveTo(Rect.Left, Rect.Top);
+      canvas.LineTo(Rect.Left, Rect.Bottom);
+    end;
+    Inc(Rect.Left, MarginSize);
     p:=0;
     Rect.Top := TargetRect.Top;
     while Rect.Top + FontSize <= TargetRect.Top + MainCharSize do begin
@@ -306,43 +324,49 @@ begin
 
   Rect.Left := TargetRect.Left;
   Rect.Right := TargetRect.Right;
-  Rect.Top := TargetRect.Top + MainCharSize + MarginSize; //just below the kanji
+  Rect.Top := TargetRect.Top + MainCharSize; //just below the kanji
 
   {readings}
   if koPrintReadings in flags then
   begin
     if koPrintInnerLines in flags then begin
-      Canvas.MoveTo(Rect.Left, Rect.Top - 2*MarginSize div 3);
-      Canvas.LineTo(Rect.Right, Rect.Top - 2*MarginSize div 3);
+      Inc(Rect.Top, MarginSize);
+      Canvas.MoveTo(Rect.Left, Rect.Top);
+      Canvas.LineTo(Rect.Right, Rect.Top);
     end;
+    Inc(Rect.Top, MarginSize);
     DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FOnReadings, FontJpEnGrid);
     Inc(Rect.Top, FontSize);
     DrawUnicode(Canvas, Rect.Left, Rect.Top, Round(FontSize), FKunReadings, FontJpEnGrid);
-    Inc(Rect.Top, FontSize + MarginSize);
+    Inc(Rect.Top, FontSize);
   end;
 
   if koPrintDefinition in flags then
   begin
     if koPrintInnerLines in flags then begin
-      Canvas.MoveTo(Rect.Left, Rect.Top - 2*MarginSize div 3);
-      Canvas.LineTo(Rect.Right, Rect.Top - 2*MarginSize div 3);
+      Inc(Rect.Top, MarginSize);
+      Canvas.MoveTo(Rect.Left, Rect.Top);
+      Canvas.LineTo(Rect.Right, Rect.Top);
     end;
+    Inc(Rect.Top, MarginSize);
     Rect2 := Rect;
     Rect2.Height := FontSize;
     Canvas.Font.Name := FontEnglish;
     Canvas.Font.Height := FontSize;
     Canvas.Brush.Style := bsClear;
     Canvas.TextRect(Rect2, Rect.Left, Rect.Top, FDefinition);
-    Inc(Rect.Top, FontSize + MarginSize);
+    Inc(Rect.Top, FontSize);
   end;
 
   {full compounds}
   if koPrintFullCompounds in flags then
   begin
     if koPrintInnerLines in flags then begin
-      canvas.MoveTo(Rect.Left, Rect.Top - 2*MarginSize div 3);
-      canvas.LineTo(Rect.Right, Rect.Top - 2*MarginSize div 3);
+      Inc(Rect.Top, MarginSize);
+      Canvas.MoveTo(Rect.Left, Rect.Top);
+      Canvas.LineTo(Rect.Right, Rect.Top);
     end;
+    Inc(Rect.Top, MarginSize);
     for j:=0 to FDictCompounds.Count-1 do begin
       Rect.Height := FontSize;
       s := FDictCompounds[j];
