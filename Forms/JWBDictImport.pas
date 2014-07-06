@@ -37,7 +37,7 @@ type
     destructor Destroy; override;
     function ShowModal: integer; override;
     procedure UpdateBuildButton;
-    procedure ImportDictionary(const AFilename: string; ADescription: string;
+    procedure ImportDictionary(AFilename: string; ADescription: string;
       ASourceFiles: TFileList; ALang: char; ASilent: boolean);
 
   end;
@@ -200,25 +200,28 @@ begin
   ModalResult := mrOk;
 end;
 
-procedure TfDictImport.ImportDictionary(const AFilename: string;
-  ADescription: string; ASourceFiles: TFileList; ALang: char; ASilent: boolean);
+//AFilename can be either of: path+filename, filename only or dict name (without
+//extension)
+procedure TfDictImport.ImportDictionary(AFilename: string; ADescription: string;
+  ASourceFiles: TFileList; ALang: char; ASilent: boolean);
 var job: TDicImportJob;
   prog: TSMPromptForm;
-  fname: string;
   fi: integer;
   AComponent: PAppComponent;
   AEncoding: CEncoding;
 begin
- //Name == Filename - Extension
- //We accept it both with or without extension and adjust
-  fname := SanitizeDicFilename(AFilename);
-  if fname<>AFilename then
-    raise Exception.Create(_l('#01145^Invalid dictionary name, please do not use special symbols (\/:*? and so on)'));
+  if ExtractFilePath(AFilename)='' then begin
+   //Name == Filename - Extension
+   //We accept it both with or without extension and adjust
+    if ExtractFileExt(AFilename)<>'.dic' then
+      AFilename := AFilename + '.dic';
+    if SanitizeDicFilename(AFilename)<>AFilename then
+      raise Exception.Create(_l('#01145^Invalid dictionary name, please do not use special symbols (\/:*? and so on)'));
+    AFilename := ProgramDataDir+'\'+MakeDicFilename(AFilename);
+  end;
 
-  fname := ProgramDataDir+'\'+MakeDicFilename(fname);
-
-  if FileExists(fname) and (
-    MessageBox(Self.Handle, PChar(_l('#01146^Dictionary %s already exists. Do you want to replace it?', [fname])),
+  if FileExists(AFilename) and (
+    MessageBox(Self.Handle, PChar(_l('#01146^Dictionary %s already exists. Do you want to replace it?', [AFilename])),
       PChar(Self.Caption), MB_YESNO) <> ID_YES
   ) then
     raise EAbort.Create('');
@@ -229,7 +232,7 @@ begin
 
   job := TDicImportJob.Create;
   try
-    job.DicFilename := fname;
+    job.DicFilename := AFilename;
     job.DicDescription := ADescription;
     job.DicLanguage := ALang;
 
