@@ -262,6 +262,7 @@ object fExamples: TfExamples
       Color = clWhite
       DoubleBuffered = True
       OnPaint = PaintBoxPaint
+      OnClick = PaintboxClick
       OnMouseMove = PaintBoxMouseMove
       OnMouseDown = PaintBoxMouseDown
       OnMouseUp = PaintBoxMouseUp
