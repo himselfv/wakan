@@ -146,9 +146,11 @@ function OpenDownloader(AOwner: TComponent): TModalResult; overload;
 function OpenDownloader(AOwner: TComponent; ACategory: string;
   ABaseLanguage: char = #00): TModalResult; overload;
 
+function DownloadComponent(const AName: string): boolean;
+
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
-  JWBDicImportJob, JWBIO, JWBUnit, JWBLanguage;
+  JWBDicImportJob, JWBIO, JWBUnit, JWBLanguage, StdPrompt;
 
 {$R *.dfm}
 
@@ -1105,6 +1107,53 @@ procedure TfDownloader.VtUpdateJobNode(Sender: TBaseVirtualTree; Node: PVirtualN
   Data: Pointer; var Abort: Boolean);
 begin
  //Nothing as of now. Everything is updated on paint.
+end;
+
+type
+  TCancelQueryHandler = class
+  public
+    procedure CancelQuery(ASender: TObject; var DoAbort: boolean);
+  end;
+
+procedure TCancelQueryHandler.CancelQuery(ASender: TObject; var DoAbort: Boolean);
+begin
+  DoAbort := MessageBox(Application.Handle,
+    'Do you really want to abort the operation?', //TODO: Localize
+    PChar(TSMPromptForm(ASender).Caption),
+    MB_YESNO or MB_ICONQUESTION) = ID_YES;
+end;
+
+function DownloadComponent(const AName: string): boolean;
+var AComponent: PAppComponent;
+  prog: TSMPromptForm;
+  job: TComponentDownloadJob;
+  cq: TCancelQueryHandler;
+begin
+  AComponent := AppComponents.FindByName(AName);
+  if AComponent=nil then
+    raise Exception.Create('Cannot find component information for "'+AName+'".');
+  prog := SMProgressDlgCreate(
+    _l('^eDownloading'),
+    _l('^eDownloading %s...', [AName]),
+    100,
+    {canCancel=}true);
+  job := TComponentDownloadJob.Create(AComponent);
+  cq := TCancelQueryHandler.Create;
+  try
+    try
+      prog.OnCancelQuery := cq.CancelQuery;
+      prog.Show;
+      prog.ExecuteJob(job);
+      Result := true;
+    except
+      on EAbort do
+        Result := false;
+    end;
+  finally
+    FreeAndNil(cq);
+    FreeAndNil(job);
+    FreeAndNil(prog);
+  end;
 end;
 
 end.

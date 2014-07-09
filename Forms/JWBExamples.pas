@@ -45,6 +45,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure PaintboxClick(Sender: TObject);
 
   public
     procedure BuildExamplesPackage;
@@ -78,7 +79,8 @@ var
   examfile:TMemoryFile;
 
 implementation
-uses JWBCore, JWBLanguage, JWBUnit, PKGWrite, JWBClipboard, JWBIntTip, JWBScreenTip;
+uses JWBCore, JWBLanguage, JWBUnit, PKGWrite, JWBClipboard, JWBIntTip,
+  JWBScreenTip, JWBDownloader;
 
 {$R *.DFM}
 
@@ -143,6 +145,15 @@ begin
   if btnUseBigFont.Down then DrawUnicode(Canvas,4,6,24,ex_jap,FontJapanese);
   EndDrawReg;
   if btnDisplayTranslation.Down then DrawUnicode(Canvas,4,23,16,fstr(ex_en),FontEnglish);
+end;
+
+procedure TfExamples.PaintboxClick(Sender: TObject);
+begin
+  if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then
+    if (curlang='j') and DownloadComponent('examples_j.pkg') then begin
+      ReloadExamplesPackage();
+      RefreshExamples();
+    end;
 end;
 
 procedure TfExamples.PaintBoxMouseDown(Sender: TObject;
@@ -469,12 +480,13 @@ var ms:string;
 begin
   ex_jap:='';
   ex_en:='';
-  if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then
-  begin
-    if curlang='j'then
-      ex_jap:=fstr(' === '+_l('#00688^eExample database was not found. Download it from WaKan website.'))
-    else
-      ex_jap:=fstr(' === '+_l('^eExamples are not available in Chinese mode.'));
+  Paintbox.Cursor := crDefault;
+  if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then begin
+    if curlang='j'then begin
+      ex_jap:=fstr(' === '+_l('^eExample database was not found. Click here to download.')); //TODO: Localize
+      Paintbox.Cursor := crHandPoint;
+    end else
+      ex_jap:=fstr(' === '+_l('^eExamples are not available in Chinese mode.')); //TODO: Localize
     ex_indfirst:=-1;
   end
   else

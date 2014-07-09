@@ -107,6 +107,7 @@ type
     procedure UpdateProgressBarState;
     procedure UpdateTaskbarProgress;
   public
+    function GetMaxProgress: integer;
     procedure SetMaxProgress(maxprogr:integer);
     procedure SetProgress(i:integer); //Set progress and repaint if needed
     procedure SetProgressPaused(Value: boolean); //call these when the operation is paused/in error
@@ -441,6 +442,11 @@ begin
   Show;
   SendMessage(Handle, CM_ACTIVATE, 0, 0);
   Refresh;
+end;
+
+function TSMPromptForm.GetMaxProgress: integer;
+begin
+  Result := ProgressBar.Max;
 end;
 
 procedure TSMPromptForm.SetMaxProgress(maxprogr:integer);
