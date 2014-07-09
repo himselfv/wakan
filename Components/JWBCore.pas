@@ -18,19 +18,19 @@ const
   WakanAppName = 'WaKan - Japanese & Chinese Learning Tool';
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
+  AppUrl: string = 'http://code.google.com/p/wakan/';
+  WikiUrlBase: string = 'http://code.google.com/p/wakan/wiki/';
 
   PortabilityMode: TPortabilityMode = pmCompatible;
 
+ //Set by SetPortabilityMode()
  //All paths have no trailing slashes
   ProgramDataDir: string = ''; //dictionaries, romanizations
   UserDataDir: string = '';  //wakan.usr, collections
 
-  AppUrl: string = 'http://code.google.com/p/wakan/';
-  WikiUrlBase: string = 'http://code.google.com/p/wakan/wiki/';
 
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 function GetAppDataFolder: string;
-function CommonDataDir: string;
 function DictionaryDir: string;
 function WikiUrl(const APage: string = ''): string;
 
@@ -123,7 +123,7 @@ procedure SetPortabilityMode(AMode: TPortabilityMode);
 begin
   PortabilityMode := AMode;
   case AMode of
-    pmStandalone: UserDataDir := GetAppDataFolder+'\UserData';
+    pmStandalone: UserDataDir := GetAppDataFolder;
     pmPortable: UserDataDir := AppFolder+'\UserData';
     pmCompatible: UserDataDir := AppFolder;
   end;

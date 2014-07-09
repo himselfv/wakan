@@ -80,9 +80,9 @@ if asked to.
 }
 function SupportsFrequencyList: boolean;
 begin
-  Result:= FileExists(CommonDataDir+'\wordfreq_ck.uni')
-    or FileExists(CommonDataDir+'\wordfreq_ck.euc')
-    or FileExists(CommonDataDir+'\wordfreq_ck');
+  Result:= FileExists(ProgramDataDir+'\wordfreq_ck.uni')
+    or FileExists(ProgramDataDir+'\wordfreq_ck.euc')
+    or FileExists(ProgramDataDir+'\wordfreq_ck');
 end;
 
 {
@@ -109,16 +109,16 @@ begin
   end;
 
   Result:=TStringList.Create;
-  if FileExists(CommonDataDir+'\wordfreq_ck.uni') then
-    conv := OpenTextFile(CommonDataDir+'\wordfreq_ck.uni', TUTF16LEEncoding)
+  if FileExists(ProgramDataDir+'\wordfreq_ck.uni') then
+    conv := OpenTextFile(ProgramDataDir+'\wordfreq_ck.uni', TUTF16LEEncoding)
   else
-  if FileExists(CommonDataDir+'\wordfreq_ck.euc') then
-    conv := OpenTextFile(CommonDataDir+'\wordfreq_ck.euc', TEUCEncoding)
+  if FileExists(ProgramDataDir+'\wordfreq_ck.euc') then
+    conv := OpenTextFile(ProgramDataDir+'\wordfreq_ck.euc', TEUCEncoding)
   else
-  if FileExists(CommonDataDir+'\wordfreq_ck') then begin
+  if FileExists(ProgramDataDir+'\wordfreq_ck') then begin
    //best guess
-    enctype := Conv_DetectType(CommonDataDir+'\wordfreq_ck');
-    conv := OpenTextFile(CommonDataDir+'\wordfreq_ck', enctype);
+    enctype := Conv_DetectType(ProgramDataDir+'\wordfreq_ck');
+    conv := OpenTextFile(ProgramDataDir+'\wordfreq_ck', enctype);
   end else
     raise EDictImportException.Create(_l('#00915^eCannot find WORDFREQ_CK file.'));
 
