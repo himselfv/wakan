@@ -236,6 +236,9 @@
         <DCCReference Include="Forms\JWBEditor.pas">
             <Form>fEditor</Form>
         </DCCReference>
+        <DCCReference Include="Forms\JWBEditorHint.pas">
+            <Form>fEditorHint</Form>
+        </DCCReference>
         <DCCReference Include="Forms\JWBWordKanji.pas">
             <Form>fWordKanji</Form>
         </DCCReference>
@@ -247,9 +250,6 @@
         </DCCReference>
         <DCCReference Include="Forms\JWBDictImport.pas">
             <Form>fDictImport</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBHint.pas">
-            <Form>fHint</Form>
         </DCCReference>
         <DCCReference Include="Forms\JWBCharItem.pas">
             <Form>fCharItem</Form>

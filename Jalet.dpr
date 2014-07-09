@@ -40,11 +40,11 @@ uses
   JWBKanjiCompounds in 'Forms\JWBKanjiCompounds.pas' {fKanjiCompounds},
   JWBKanjiDetails in 'Forms\JWBKanjiDetails.pas' {fKanjiDetails},
   JWBEditor in 'Forms\JWBEditor.pas' {fEditor},
+  JWBEditorHint in 'Forms\JWBEditorHint.pas' {fEditorHint},
   JWBWordKanji in 'Forms\JWBWordKanji.pas' {fWordKanji},
   JWBExamples in 'Forms\JWBExamples.pas' {fExamples},
   JWBDictMan in 'Forms\JWBDictMan.pas' {fDictMan},
   JWBDictImport in 'Forms\JWBDictImport.pas' {fDictImport},
-  JWBHint in 'Forms\JWBHint.pas' {fHint},
   JWBCharItem in 'Forms\JWBCharItem.pas' {fCharItem},
   JWBScreenTip in 'Forms\JWBScreenTip.pas' {fScreenTipForm},
   JWBLanguage in 'Forms\JWBLanguage.pas' {fLanguage},
@@ -107,7 +107,7 @@ begin
   Application.CreateForm(TfExamples, fExamples);
   Application.CreateForm(TfVocabDetails, fVocabDetails);
   Application.CreateForm(TfVocabFilters, fVocabFilters);
-  Application.CreateForm(TfHint, fHint);
+  Application.CreateForm(TfEditorHint, fEditorHint);
   fMenu.InitializeWakan;
   Application.Run;
 end.

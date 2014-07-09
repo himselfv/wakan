@@ -1,4 +1,4 @@
-unit JWBHint;
+unit JWBEditorHint;
 
 interface
 
@@ -10,7 +10,7 @@ uses
  suited for giving the user hints as they type. }
 
 type
-  TfHint = class(TForm)
+  TfEditorHint = class(TForm)
     PaintBox1: TWakanPaintbox;
     procedure PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
   protected
@@ -21,7 +21,7 @@ type
   end;
 
 var
-  fHint: TfHint;
+  fEditorHint: TfEditorHint;
 
 implementation
 uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup;
@@ -30,7 +30,7 @@ uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup;
 
 { If configured to, shows hint at the position determined by APos.
  To hide it, simply call Hide(). }
-procedure TfHint.ShowHint(pos: TPoint);
+procedure TfEditorHint.ShowHint(pos: TPoint);
 begin
   if not fSettings.cbShowEditorHint.Checked then begin
     Hide();
@@ -57,13 +57,13 @@ begin
   end;
 end;
 
-procedure TfHint.Hide;
+procedure TfEditorHint.Hide;
 begin
   if FShowing then exit;
   if Visible then inherited Hide;
 end;
 
-procedure TfHint.PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
+procedure TfEditorHint.PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
 var StringGrid1: TStringGrid;
   kanjis:FString;
   i:integer;

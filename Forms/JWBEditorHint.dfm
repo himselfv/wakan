@@ -1,4 +1,4 @@
-object fHint: TfHint
+object fEditorHint: TfEditorHint
   Left = 192
   Top = 111
   BorderStyle = bsNone

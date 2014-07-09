@@ -540,7 +540,7 @@ type
 function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
-uses Types, TextTable, JWBCore, JWBLanguage, JWBHint, JWBKanjiDetails,
+uses Types, TextTable, JWBCore, JWBLanguage, JWBEditorHint, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
   JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup,
@@ -779,7 +779,7 @@ end;
 
 procedure TfEditor.FormDeactivate(Sender: TObject);
 begin
-  if fHint.Visible then HideHint;
+  if fEditorHint.Visible then HideHint;
 end;
 
 procedure TfEditor.LanguageChanging;
@@ -2052,13 +2052,13 @@ begin
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
   p.x:=p.x+tmp.x*Self.lastxsiz;
   p.y:=p.y+(tmp.y+1-Self.View)*Self.lastxsiz*Self.lastycnt;
-  fHint.ShowHint(p);
+  fEditorHint.ShowHint(p);
   ListBox1.SetFocus;
 end;
 
 procedure TfEditor.HideHint;
 begin
-  if (fHint<>nil) and fHint.Visible then fHint.Hide;
+  if (fEditorHint<>nil) and fEditorHint.Visible then fEditorHint.Hide;
 end;
 
 function TfEditor.PaintBoxClientRect: TRect;
