@@ -334,7 +334,7 @@ end;
 
 //NOTE: Fonts here must match DrawWordInfo() and DrawKana() choices for each cell.
 function DrawGridHighlightContent(Control: TControl; DragStart, MousePos: TPoint): string;
-var p:TCustomDrawGrid;
+var p: TStringGrid;
   gc,gc2:TGridCoord;
   rect:TRect;
   mox1,mox2:integer;
@@ -342,7 +342,7 @@ var p:TCustomDrawGrid;
   FontName:string;
   FontSize:integer;
 begin
-  p := TCustomDrawGrid(Control);
+  p := TStringGrid(Control);
   gc:=p.MouseCoord(DragStart.x,DragStart.y);
 
   if (gc.x<0) or (gc.x>=2) or (gc.y<=0) then begin
@@ -356,7 +356,7 @@ begin
  //This is dirty! We have to remember text/font/size which were used for drawing.
   case gc.x of
     0: begin //kana/romaji
-      Result:=ConvertKana(remexcl(TStringGrid(p).Cells[gc.x,gc.y]));
+      Result:=ConvertKana(remexcl(p.Cells[gc.x,gc.y]));
       if showroma then begin
         FontName:=FontPinYin; //DrawKana draws all romaji with this one
         FontSize:=GridFontSize+1;
@@ -366,7 +366,7 @@ begin
       end;
     end;
     1: begin //kanji
-      Result := remexcl(TStringGrid(p).Cells[gc.x,gc.y]);
+      Result := remexcl(p.Cells[gc.x,gc.y]);
       FontName:=FontSmall;
       FontSize:=GridFontSize;
     end
@@ -431,6 +431,6 @@ begin
 end;
 
 initialization
-  IntTip.RegisterHighlightHandler(TCustomDrawGrid, DrawGridHighlightContent);
+  IntTip.RegisterHighlightHandler(TStringGrid, DrawGridHighlightContent);
 
 end.
