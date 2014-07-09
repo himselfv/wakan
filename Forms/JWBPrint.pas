@@ -7,9 +7,20 @@ uses
   ExtCtrls, StdCtrls, Buttons, Printers, JwbForms;
 
 type
-  TPrintGetPageNum=function (canvas:TCanvas; width,height:integer; userdata:pointer):integer;
-  TPrintDrawPage=procedure (canvas:TCanvas; pagenum:integer; width,height,origwidth,origheight:integer; userdata:pointer);
-  TPrintConfigure=procedure (userdata:pointer);
+ //Inherit and override functions to paint contents
+  TPrintPainter = class
+  public
+    function GetPageNum(Canvas: TCanvas; Width, Height: integer): integer;
+      virtual; abstract;
+    //Return the total # of pages needed for this Width and Height
+
+    procedure DrawPage(Canvas: TCanvas; PageNum: integer; Width, Height: integer;
+      OrigWidth, OrigHeight: integer); virtual; abstract;
+    //Draw page X on a canvas Width x Height, scaled from OrigWidth x OrigHeight
+
+    procedure Configure; virtual; abstract;
+    //Open configuration dialog
+  end;
 
   TfPrint = class(TJwbForm)
     Panel1: TPanel;
@@ -42,54 +53,60 @@ type
     procedure btnPrintClick(Sender: TObject);
     procedure btnPageSettingsClick(Sender: TObject);
     procedure btnPrintToFileClick(Sender: TObject);
-  public
-    GetPageNum:TPrintGetPageNum;
-    DrawPage:TPrintDrawPage;
-    PrintConfigure:TPrintConfigure;
+  protected
+    Painter: TPrintPainter;
+    Title: string;
     PageNum:integer;
-    UserData:pointer;
     CurPage:integer;
-    Description:string;
     ZoomWidth:integer;
     PageRatio:double;
-    procedure Preview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
+    TargetPageWidth: integer;
+    TargetPageHeight: integer;
     procedure Prepare;
+  public
+    procedure Preview(APainter: TPrintPainter; ATitle: string);
     procedure PreviewPage;
   end;
 
 procedure GetPrintLine(width,height,origwidth,origheight,nolines:integer;var lineheight,linecount:integer);
-procedure PrintPreview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
+procedure PrintPreview(APainter: TPrintPainter; ATitle: string);
 
 implementation
 uses JWBBitmap, JWBLanguage;
 
 {$R *.DFM}
 
-procedure TfPrint.Preview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
+procedure PrintPreview(APainter: TPrintPainter; ATitle: string);
+var fPrint: TfPrint;
 begin
-  GetPageNum:=gpn;
-  DrawPage:=dp;
-  UserData:=user;
-  PrintConfigure:=pc;
-  Description:=desc;
+  fPrint := TfPrint.Create(Application);
+  try
+    fPrint.Preview(APainter, ATitle);
+  finally
+    FreeAndNil(fPrint);
+  end;
+end;
+
+procedure TfPrint.Preview(APainter: TPrintPainter; ATitle: string);
+begin
+  Painter := APainter;
+  Title := ATitle;
   Prepare;
   ShowModal;
 end;
 
-function Printer_PageWidth:integer;
-begin
-  try result:=Printer.PageWidth; except result:=Screen.Width; end;
-end;
-
-function Printer_PageHeight:integer;
-begin
-  try result:=Printer.PageHeight; except result:=Screen.Height; end;
-end;
-
 procedure TfPrint.Prepare;
 begin
-  PageNum:=GetPageNum(pbPrintPreview.Canvas, Printer_PageWidth, Printer_PageHeight, UserData);
-  PageRatio:=Printer_PageHeight/Printer_PageWidth;
+  try
+    TargetPageWidth := Printer.PageWidth;
+    TargetPageHeight := Printer.PageHeight;
+  except
+    TargetPageWidth := Screen.Width;
+    TargetPageHeight := Screen.Height;
+  end;
+  PageNum := Painter.GetPageNum(pbPrintPreview.Canvas, TargetPageWidth,
+    TargetPageHeight);
+  PageRatio := TargetPageWidth/TargetPageHeight;
   CurPage:=1;
   ZoomWidth:=ClientWidth-50;
   btnZoomFit.Down:=true;
@@ -108,7 +125,7 @@ begin
   btnGotoLast.Enabled:=CurPage<>PageNum;
   btnZoomOut.Enabled:=ZoomWidth>100;
   btnZoomFit.Enabled:=true;
-  Label1.Caption:=Description+' ('+inttostr(CurPage)+'/'+inttostr(PageNum)+')';
+  Label1.Caption:=Title+' ('+inttostr(CurPage)+'/'+inttostr(PageNum)+')';
   w:=ZoomWidth-6;
   h:=round(w*PageRatio);
   pbPrintPreview.Left:=10;
@@ -126,7 +143,8 @@ begin
   pbPrintPreview.Canvas.Pen.Color:=clBlack;
   pbPrintPreview.Canvas.Brush.Color:=clWhite;
   pbPrintPreview.Canvas.Rectangle(0,0,pbPrintPreview.Width-1,pbPrintPreview.Height-1);
-  DrawPage(pbPrintPreview.Canvas,CurPage,pbPrintPreview.Width,pbPrintPreview.Height,Printer_PageWidth,Printer_PageHeight,UserData);
+  Painter.DrawPage(pbPrintPreview.Canvas, CurPage, pbPrintPreview.Width,
+    pbPrintPreview.Height, TargetPageWidth, TargetPageHeight);
 end;
 
 procedure TfPrint.FormResize(Sender: TObject);
@@ -180,7 +198,7 @@ end;
 
 procedure TfPrint.btnPrintConfigureClick(Sender: TObject);
 begin
-  PrintConfigure(UserData);
+  Painter.Configure;
   Prepare;
 end;
 
@@ -188,7 +206,7 @@ procedure TfPrint.btnPrintClick(Sender: TObject);
 var i:integer;
 begin
   try
-    Printer.Title:=Description;
+    Printer.Title := Self.Title;
   except
     Application.MessageBox(
       pchar(_l('#00897^ePrinter is not ready.')),
@@ -204,7 +222,8 @@ begin
     Printer.Canvas.Brush.Color:=clWhite;
     Printer.Canvas.Rectangle(0,0,pbPrintPreview.Width-1,pbPrintPreview.Height-1);
     Printer.Canvas.Pen.Color:=clBlack;
-    DrawPage(Printer.Canvas,i,Printer.PageWidth,Printer.PageHeight,Printer.PageWidth,Printer.PageHeight,UserData);
+    Painter.DrawPage(Printer.Canvas,i,Printer.PageWidth,Printer.PageHeight,
+      Printer.PageWidth,Printer.PageHeight);
   end;
   Printer.EndDoc;
 end;
@@ -228,7 +247,7 @@ begin
   bmp.PixelFormat:=pf24bit;
   bmp.Width:=AParams.Width;
   bmp.Height:=AParams.Height;
-  pn:=GetPageNum(bmp.Canvas,bmp.Width,bmp.Height,UserData);
+  pn:=Painter.GetPageNum(bmp.Canvas, bmp.Width, bmp.Height);
   Screen.Cursor:=crHourGlass;
   for i:=1 to pn do
   begin
@@ -236,7 +255,7 @@ begin
     bmp.Canvas.Brush.Color:=clWhite;
     bmp.Canvas.Rectangle(0,0,bmp.Width-1,bmp.Height-1);
     bmp.Canvas.Pen.Color:=clBlack;
-    DrawPage(bmp.Canvas,i,bmp.Width,bmp.Height,bmp.Width,bmp.Height,UserData);
+    Painter.DrawPage(bmp.Canvas,i,bmp.Width,bmp.Height,bmp.Width,bmp.Height);
     bmp.SaveToFile(AParams.Filename+inttostr(i)+'.bmp');
   end;
   Screen.Cursor:=crDefault;
@@ -244,23 +263,11 @@ begin
 end;
 
 procedure GetPrintLine(width,height,origwidth,origheight,nolines:integer;var lineheight,linecount:integer);
-var a,btnGotoLast:double;
+var avg: double;
 begin
-  a:=origwidth*origheight;
-  btnGotoLast:=sqrt(a);
-  linecount:=trunc(nolines/btnGotoLast*origheight);
+  avg:=sqrt(origwidth*origheight);
+  linecount:=trunc(nolines/avg*origheight);
   lineheight:=height div linecount;
-end;
-
-procedure PrintPreview(gpn:TPrintGetPageNum; dp:TPrintDrawPage; pc:TPrintConfigure; user:pointer; desc:string);
-var fPrint: TfPrint;
-begin
-  fPrint := TfPrint.Create(Application);
-  try
-    fPrint.Preview(gpn, dp, pc, user, desc);
-  finally
-    FreeAndNil(fPrint);
-  end;
 end;
 
 end.

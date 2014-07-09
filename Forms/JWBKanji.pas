@@ -591,7 +591,17 @@ begin
   DrawGrid1.Invalidate;
 end;
 
-function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
+
+type
+  TKanjiCardPainter = class(TPrintPainter)
+    function GetPageNum(Canvas: TCanvas; Width, Height: integer): integer;
+      override;
+    procedure DrawPage(Canvas: TCanvas; PageNum: integer; Width, Height: integer;
+      OrigWidth, OrigHeight: integer); override;
+    procedure Configure; override;
+  end;
+
+function TKanjiCardPainter.GetPageNum(canvas:TCanvas; width,height:integer):integer;
 var lh,lc:integer;
     ncv,nch:integer;
     ch:double;
@@ -611,7 +621,8 @@ begin
   result:=((ki.Count-1) div (numh*lc))+1;
 end;
 
-procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origheight:integer; userdata:pointer);
+procedure TKanjiCardPainter.DrawPage(canvas:TCanvas; pagenum:integer;
+  width,height,origwidth,origheight:integer);
 var lh,lc:integer;
     ncv,nch:integer;
     ch:double;
@@ -681,16 +692,23 @@ begin
   end;
 end;
 
-procedure PrintConfigure(userdata:pointer);
+procedure TKanjiCardPainter.Configure();
 begin
   fSettings.pcPages.ActivePage:=fSettings.tsCharacterCardPrinting;
   fSettings.ShowModal;
 end;
 
 procedure TfKanji.btnPrintCardsClick(Sender: TObject);
+var painter: TKanjiCardPainter;
 begin
-  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00134^eKanji cards'));
+  painter := TKanjiCardPainter.Create;
+  try
+    PrintPreview(painter,_l('#00134^eKanji cards'));
+  finally
+    FreeAndNil(painter);
+  end;
 end;
+
 
 procedure TfKanji.RadioGroup1Click(Sender: TObject);
 begin

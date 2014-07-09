@@ -657,33 +657,6 @@ begin
   FListUsed := 0;
 end;
 
-
-var
- //Printing vars
-  plinl:TGraphicalLineList; //graphical lines for printing
-  printpl:integer;
-
-function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
-var pl,xs,yc:integer;
-begin
-  plinl.Clear;
-  fEditor.RenderText(Canvas,
-    RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
-    plinl,0,pl,xs,yc,true,true);
-  printpl:=pl;
-  result:=((plinl.Count-1) div pl)+1;
-  if result<1 then result:=1;
-end;
-
-procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origheight:integer; userdata:pointer);
-var pl,xs,yc:integer;
-begin
-  if plinl.Count<=(pagenum-1)*printpl then exit;
-  fEditor.RenderText(canvas,
-    RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
-    plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
-end;
-
 procedure TfEditor.FormCreate(Sender: TObject);
 begin
   doc:=TWakanText.Create;
@@ -720,7 +693,6 @@ begin
  //it'll get overwritten for some buggy VCL reason. So we use FormShow.
 
   linl:=TGraphicalLineList.Create;
-  plinl:=TGraphicalLineList.Create;
   CopyShort := aCopy.ShortCut;
   CopyAsShort := aCopyAs.ShortCut;
   CutShort := aCut.ShortCut;
@@ -745,7 +717,6 @@ procedure TfEditor.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(EditorBitmap);
   linl.Free;
-  plinl.Free;
   FreeAndNil(doc);
 end;
 
@@ -1668,16 +1639,74 @@ begin
   Self.SetTranslation();
 end;
 
-procedure PrintConfigure(userdata:pointer);
+
+type
+  TEditorPainter = class(TPrintPainter)
+  protected
+    FEditor: TfEditor;
+    plinl: TGraphicalLineList; //graphical lines for printing
+    printpl: integer;
+  public
+    constructor Create(AEditor: TfEditor);
+    destructor Destroy; override;
+    function GetPageNum(Canvas: TCanvas; Width, Height: integer): integer;
+      override;
+    procedure DrawPage(Canvas: TCanvas; PageNum: integer; Width, Height: integer;
+      OrigWidth, OrigHeight: integer); override;
+    procedure Configure; override;
+  end;
+
+constructor TEditorPainter.Create(AEditor: TfEditor);
+begin
+  inherited Create();
+  plinl := TGraphicalLineList.Create;
+end;
+
+destructor TEditorPainter.Destroy;
+begin
+  plinl.Free;
+  inherited;
+end;
+
+function TEditorPainter.GetPageNum(canvas:TCanvas; width,height:integer):integer;
+var pl,xs,yc:integer;
+begin
+  plinl.Clear;
+  FEditor.RenderText(Canvas,
+    RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
+    plinl,0,pl,xs,yc,true,true);
+  printpl:=pl;
+  result:=((plinl.Count-1) div pl)+1;
+  if result<1 then result:=1;
+end;
+
+procedure TEditorPainter.DrawPage(canvas:TCanvas; pagenum:integer;
+  width,height,origwidth,origheight:integer);
+var pl,xs,yc:integer;
+begin
+  if plinl.Count<=(pagenum-1)*printpl then exit;
+  FEditor.RenderText(canvas,
+    RectWH(width div 50,height div 50,width-width div 25,height-height div 25),
+    plinl,(pagenum-1)*printpl,pl,xs,yc,true,false);
+end;
+
+procedure TEditorPainter.Configure();
 begin
   fSettings.pcPages.ActivePage := fSettings.tsTextTranslator;
   fSettings.ShowModal;
 end;
 
 procedure TfEditor.aPrintExecute(Sender: TObject);
+var painter: TEditorPainter;
 begin
-  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,_l('#00686^eTranslated text'));
+  painter := TEditorPainter.Create(Self);
+  try
+    PrintPreview(painter, _l('#00686^eTranslated text'));
+  finally
+    FreeAndNil(painter);
+  end;
 end;
+
 
 procedure TfEditor.aSmallFontExecute(Sender: TObject);
 begin

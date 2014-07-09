@@ -1015,7 +1015,16 @@ begin
 end;
 
 
-function GetPageNum(canvas:TCanvas; width,height:integer; userdata:pointer):integer;
+type
+  TVocabPainter = class(TPrintPainter)
+    function GetPageNum(Canvas: TCanvas; Width, Height: integer): integer;
+      override;
+    procedure DrawPage(Canvas: TCanvas; PageNum: integer; Width, Height: integer;
+      OrigWidth, OrigHeight: integer); override;
+    procedure Configure; override;
+  end;
+
+function TVocabPainter.GetPageNum(canvas:TCanvas; width,height:integer):integer;
 var pr,ph:integer;
     c:integer;
     ps:string;
@@ -1029,7 +1038,8 @@ begin
   result:=((fVocab.wl.Count-1) div (pr*c))+1;
 end;
 
-procedure DrawPage(canvas:TCanvas; pagenum:integer; width,height,origwidth,origheight:integer; userdata:pointer);
+procedure TVocabPainter.DrawPage(canvas:TCanvas; pagenum:integer;
+  width,height,origwidth,origheight:integer);
 var pr:integer;
     ph,pw:integer;
     i,j,k,l:integer;
@@ -1116,7 +1126,7 @@ begin
   end;
 end;
 
-procedure PrintConfigure(userdata:pointer);
+procedure TVocabPainter.Configure();
 begin
   fSettings.pcPages.ActivePage:=fSettings.tsWordListPrinting;
   fSettings.ShowModal;
@@ -1124,14 +1134,21 @@ end;
 
 { This is needed so that fWordList can print its list through us. Ugh. }
 procedure TfVocab.PrintList(const ACaption: string);
+var painter: TVocabPainter;
 begin
-  PrintPreview(GetPageNum,DrawPage,PrintConfigure,nil,ACaption);
+  painter := TVocabPainter.Create;
+  try
+    PrintPreview(painter, ACaption);
+  finally
+    FreeAndNil(painter);
+  end;
 end;
 
 procedure TfVocab.btnPrintVocabListClick(Sender: TObject);
 begin
   PrintList(_l('#00828^eVocabulary list'));
 end;
+
 
 procedure TfVocab.Button11Click(Sender: TObject);
 begin

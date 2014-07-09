@@ -96,8 +96,8 @@ object fKanji: TfKanji
       object RxLabel15: TLabel
         Left = 0
         Top = 0
-        Width = 75
-        Height = 16
+        Width = 487
+        Height = 21
         Align = alClient
         Caption = 'RxLabel15'
         Font.Charset = DEFAULT_CHARSET
@@ -107,6 +107,8 @@ object fKanji: TfKanji
         Font.Style = [fsBold]
         ParentFont = False
         Layout = tlCenter
+        ExplicitWidth = 75
+        ExplicitHeight = 16
       end
       object btnSearchSort: TSpeedButton
         Left = 487
