@@ -40,26 +40,23 @@ comment=(%text%)
 <!-- Article -->
 <xsl:template match="article">
   <xsl:text>&lt;dd&gt;</xsl:text>
-  <xsl:apply-templates />
+  <xsl:text>&lt;ol&gt;</xsl:text>
+  <xsl:apply-templates select="sense" />
+  <xsl:text>&lt;/ol&gt;</xsl:text>
+  <xsl:apply-templates select="dict" />
   <xsl:text>&lt;/dd&gt;&#13;&#10;</xsl:text>
 </xsl:template>
-
-<xsl:if test="sense">
-  <xsl:text>&lt;ol&gt;</xsl:text>
-  <xsl:apply-templates />
-  <xsl:text>&lt;/ol&gt;</xsl:text>
-</xsl:if>
-
-<xsl:if test="dict">
-  <xsl:text>&lt;cite&gt;</xsl:text>
-  <xsl:apply-templates />
-  <xsl:text>&lt;/cite&gt;</xsl:text>
-</xsl:if>
 
 <xsl:template match="sense">
   <xsl:text>&lt;li&gt;</xsl:text>
   <xsl:apply-templates />
   <xsl:text>&lt;/li&gt;</xsl:text>
+</xsl:template>
+
+<xsl:template match="dict">
+  <xsl:text>&lt;cite&gt;</xsl:text>
+  <xsl:apply-templates />
+  <xsl:text>&lt;/cite&gt;</xsl:text>
 </xsl:template>
 
 <xsl:template match="gloss">
