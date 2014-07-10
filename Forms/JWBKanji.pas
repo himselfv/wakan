@@ -679,9 +679,9 @@ begin
         if fSettings.CheckBox63.Checked then card.Flags := card.Flags + [koSortCompoundsByFrequency];
         card.FontSize := Trunc(ch);
         card.MarginSize := Trunc(ch / 2);
-        card.MainCharSize := Trunc(ch * (StrToInt(fSettings.Edit12.Text)-1));
+        card.MainCharSize := Trunc(ch * (StrToInt(fSettings.Edit13.Text)-1));
         card.MaxFullComp := StrToInt(fSettings.Edit35.Text);
-        card.SuggestedAdditionalWidth := Trunc(ch * StrToInt(fSettings.Edit13.Text));
+        card.SuggestedAdditionalWidth := Trunc(ch * StrToInt(fSettings.Edit12.Text));
         card.CalFont := fSettings.Edit14.Text;
         card.Measure(w, h);
         card.Paint(Canvas, TRect.Create(x, y, x+w, y+h));
