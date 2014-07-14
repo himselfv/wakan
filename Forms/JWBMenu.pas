@@ -255,6 +255,7 @@ type
     procedure ApplyUI;
   public
     procedure InitializeWakan;
+    function SaveEverything: boolean;
 
  {
   Wakan has four types of dockable forms:
@@ -1193,18 +1194,31 @@ end;
 
 procedure TfMenu.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  if not FlushUserData then Action:=caNone;
-  if not fEditor.CommitFile then Action:=caNone;
-  if FormPlacement1.PlacementRestored then
-    FormPlacement1.SaveFormPlacement;
+  if not SaveEverything then
+    Action := caNone;
   if Action<>caNone then begin
-    fSettings.SaveSettings;
     ScreenTip.EnabledSystemWide := false;
     fEditor.Close;
     fWordLookup.Close;
     fVocab.Close;
     fKanji.Close;
   end;
+end;
+
+{ Called when the app is closing but everything is yet in place.
+Saves all settings and data and may let the user one last chance to cancel
+the close process.
+Call before proceeding with any work that will require terminating the app
+in the end. }
+function TfMenu.SaveEverything: boolean;
+begin
+  Result := FlushUserData;
+  if fEditor<>nil then
+    Result := Result and fEditor.CommitFile;
+  if not Result then exit;
+  if FormPlacement1.PlacementRestored then
+    FormPlacement1.SaveFormPlacement;
+  fSettings.SaveSettings;
 end;
 
 procedure TfMenu.ApplicationEvents1Exception(Sender: TObject; E: Exception);

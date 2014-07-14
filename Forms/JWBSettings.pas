@@ -282,6 +282,12 @@ type
     rgDetailsCategoryEditorType: TRadioGroup;
     cbDetailsShowLinks: TCheckBox;
     cbDictRefLinksInSubmenu: TCheckBox;
+    tsKanjiCopyFormats: TTabSheet;
+    Label19: TLabel;
+    lbKanjiCopyFormats: TListBox;
+    lblKanjiCopyFormatsIni: TUrlLabel;
+    lblKanjiCopyFormatsDocumentation: TUrlLabel;
+    mmKanjiCopyFormatsExample: TMemo;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -352,6 +358,8 @@ type
     procedure rgShowBopomofoClick(Sender: TObject);
     procedure tsDictCopyFormatsShow(Sender: TObject);
     procedure lbCopyFormatsClick(Sender: TObject);
+    procedure lbKanjiCopyFormatsClick(Sender: TObject);
+    procedure tsKanjiCopyFormatsShow(Sender: TObject);
 
   protected
     procedure UpdateFontNames;
@@ -407,6 +415,14 @@ type
   public
     property DefaultCopyFormatName: string read FDefaultCopyFormatName
       write FDefaultCopyFormatName;
+
+  protected //KanjiCopyFormats
+    FDefaultKanjiCopyFormatName: string;
+    procedure ReloadKanjiCopyFormats;
+    procedure UpdateKanjiCopyFormatExample;
+  public
+    property DefaultKanjiCopyFormatName: string read FDefaultKanjiCopyFormatName
+      write FDefaultKanjiCopyFormatName;
 
   public
    { Layout settings are loaded into these variables and applied later }
@@ -876,6 +892,7 @@ begin
   end;
   Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
   DefaultCopyFormatName:=reg.ReadString('Dict','CopyFormat','');
+  DefaultKanjiCopyFormatName:=reg.ReadString('Characters','CopyFormat','');
   GridFontSize:=strtoint(Edit25.text);
   lbWordPrintFormat.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
   cbInsideLines.Checked:=reg.ReadBool('WordSheet','InsideLines',true);
@@ -1150,6 +1167,7 @@ begin
   reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
   reg.WriteBool('Dict','MultiLineGrid',cbMultilineGrids.Checked);
   reg.WriteString('Dict','CopyFormat',DefaultCopyFormatName);
+  reg.WriteString('Characters','CopyFormat',DefaultKanjiCopyFormatName);
   reg.WriteInteger('WordSheet','Columns',lbWordPrintFormat.ItemIndex);
   reg.WriteBool('WordSheet','InsideLines',cbInsideLines.Checked);
   reg.WriteBool('WordSheet','OutsideLines',cbOutsideLines.Checked);
@@ -2462,6 +2480,46 @@ begin
 
   mmCopyFormatExample.Text :=
     XsltTransform(res.ToEdictXml, GetCopyFormatsDir+'\'+DefaultCopyFormatName+'.xslt');
+end;
+
+
+{ Kanji copy formats }
+
+procedure TfSettings.tsKanjiCopyFormatsShow(Sender: TObject);
+begin
+  ReloadKanjiCopyFormats;
+  lblKanjiCopyFormatsIni.URL := GetKanjiCopyFormatsDir;
+  lblKanjiCopyFormatsDocumentation.URL := WikiUrl('CopyFormats');
+end;
+
+procedure TfSettings.ReloadKanjiCopyFormats;
+var fname: string;
+begin
+  lbKanjiCopyFormats.Clear;
+  for fname in GetKanjiCopyFormats do
+    lbKanjiCopyFormats.Items.Add(ChangeFileExt(ExtractFilename(fname),''));
+  lbKanjiCopyFormats.ItemIndex := lbKanjiCopyFormats.Items.IndexOf(DefaultKanjiCopyFormatName);
+  lbKanjiCopyFormatsClick(lbKanjiCopyFormats);
+end;
+
+procedure TfSettings.lbKanjiCopyFormatsClick(Sender: TObject);
+begin
+  if lbKanjiCopyFormats.ItemIndex<0 then exit;
+  DefaultKanjiCopyFormatName := lbKanjiCopyFormats.Items[lbKanjiCopyFormats.ItemIndex];
+  UpdateKanjiCopyFormatExample;
+end;
+
+procedure TfSettings.UpdateKanjiCopyFormatExample;
+begin
+  if DefaultCopyFormatName='' then begin
+    mmCopyFormatExample.Text := '';
+    exit;
+  end;
+
+  //TODO: write this
+{  res.Reset;
+  mmKanjiCopyFormatExample.Text :=
+    XsltTransform(res.ToEdictXml, GetKanjiCopyFormatsDir+'\'+DefaultKanjiCopyFormatName+'.xslt');}
 end;
 
 end.

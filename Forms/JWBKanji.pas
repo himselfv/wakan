@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, JWBStrings,
-  Grids, DB, ShellAPI, WakanPaintbox, System.Actions, Vcl.ActnList, CheckAction;
+  Grids, DB, ShellAPI, WakanPaintbox, System.Actions, Vcl.ActnList, CheckAction,
+  Vcl.Menus;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -50,6 +51,9 @@ type
     aMeaning: TAction;
     aSaveToFile: TAction;
     aSearch: TCheckAction;
+    PopupMenu: TPopupMenu;
+    miCopyAs: TMenuItem;
+    N1: TMenuItem;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);
@@ -91,6 +95,7 @@ type
     procedure aSearchChecked(Sender: TObject);
     procedure aSearchExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -112,6 +117,15 @@ type
     property FocusedChars: FString read FFocusedChars write SetFocusedChars;
 
   protected
+    procedure ReloadCopyFormats;
+    procedure CopyInFormatClick(Sender: TObject);
+    procedure CopyAsXMLClick(Sender: TObject);
+    procedure ConfigureClick(Sender: TObject);
+  public
+    procedure CopyAsText(const AReplace: boolean);
+    procedure CopyToClipboard(const AXsltFilename: string; const AReplace: boolean);
+
+  protected
     procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
     procedure ReadRaineFilter(fltradical:TStringList;const ARadicals:string);
 
@@ -121,11 +135,15 @@ var
   fKanji: TfKanji;
   testkanji:string;
 
+function GetKanjiCopyFormatsDir: string;
+function GetKanjiCopyFormats: TArray<string>;
+function KanjiInfoToXml(const AChar: string): string;
+
 implementation
 uses JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBRadical, JWBSettings, JWBPrint,
   JWBKanjiSearch, JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage,
   JWBKanjiCard, JWBKanaConv, JWBCategories, JWBAnnotations, TextTable,
-  JWBCharData, JWBForms, JWBIntTip, JWBScreenTip;
+  JWBCharData, JWBForms, JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -973,6 +991,19 @@ begin
     if length(Clipboard.Text)>0 then
       Clipboard.Text := copy(Clipboard.Text, 1, Length(Clipboard.Text)-4);
   end;
+ //Copy to clipboard on Ctrl-C
+  if (Key=^C) and DrawGrid1.Visible then begin
+    if fSettings.DefaultKanjiCopyFormatName='' then
+      CopyAsText(
+        GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+      )
+    else
+      CopyToClipboard(
+        GetKanjiCopyFormatsDir+'\'+fSettings.DefaultKanjiCopyFormatName+'.xslt',
+        GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+      );
+    Key := #00;
+  end;
 end;
 
 procedure TfKanji.InvalidateList;
@@ -1064,9 +1095,45 @@ end;
 
 procedure TfKanji.DrawGrid1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
+var p: TPoint;
+  ACol, ARow: integer;
+  r: TGridRect;
+  CanSelect: boolean;
 begin
-  if mbRight=Button then
-    ScreenTip.PopupImmediate(false);
+//  if mbRight=Button then
+//    ScreenTip.PopupImmediate(false);
+// instead show popup menu
+
+ //Right-click-select
+  p := TDrawGrid(Sender).ScreenToClient(Mouse.CursorPos);
+  TDrawGrid(Sender).MouseToCell(p.X, p.Y, ACol, ARow);
+  if (ARow>=0) and (ACol>=0) then
+    if (ARow<TDrawGrid(Sender).Selection.Top)
+    or (ARow>TDrawGrid(Sender).Selection.Bottom)
+    or (ACol<TDrawGrid(Sender).Selection.Left)
+    or (ACol>TDrawGrid(Sender).Selection.Right) then begin
+      r := TDrawGrid(Sender).Selection;
+      CanSelect := true;
+      if Assigned(TDrawGrid(Sender).OnSelectCell) then
+        TDrawGrid(Sender).OnSelectCell(Sender, ACol, ARow, CanSelect);
+      if not CanSelect then exit;
+      r.Top := ARow;
+      r.Bottom := ARow;
+      r.Left := ACol;
+      r.Right := ACol;
+      TDrawGrid(Sender).Selection := r;
+    end;
+end;
+
+procedure TfKanji.PopupMenuPopup(Sender: TObject);
+var p: TPoint;
+  ACol, ARow: integer;
+begin
+  p := DrawGrid1.ScreenToClient(Mouse.CursorPos);
+  DrawGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
+  miCopyAs.Visible := (ARow>=0) and (ACol>=0); //click on data
+  if miCopyAs.Visible then
+    ReloadCopyFormats;
 end;
 
 procedure TfKanji.DrawGrid1DblClick(Sender: TObject);
@@ -1218,6 +1285,140 @@ end;
 procedure TfKanji.aSearchExecute(Sender: TObject);
 begin
  //Has to be non-empty or AutoCheck wont work
+end;
+
+
+{ CopyFormats }
+
+function GetKanjiCopyFormatsDir: string;
+begin
+  Result := UserDataDir+'\KanjiCopyFormats';
+end;
+
+//Retrieves a list of all avaialable KanjiCopyFormat filenames
+function GetKanjiCopyFormats: TArray<string>;
+var sr: TSearchRec;
+  res: integer;
+  fdir: string;
+begin
+  SetLength(Result, 0);
+  fdir := GetKanjiCopyFormatsDir;
+  res := FindFirst(fdir+'\*.xslt', faAnyFile and not faDirectory, sr);
+  try
+    while res=0 do begin
+      SetLength(Result, Length(Result)+1);
+      Result[Length(Result)-1] := fdir + '\' + sr.Name;
+      res := FindNext(sr);
+    end;
+  finally
+    SysUtils.FindClose(sr);
+  end;
+end;
+
+function KanjiInfoToXml(const AChar: string): string;
+var props: TCharPropertyCursor;
+begin
+  Result := '<char>'+HtmlEscape(AChar)+'</char>';
+  props := TCharPropertyCursor.Create(TCharProp);
+  try
+    props.Locate(AChar);
+    while (not props.EOF) and (props.Kanji=AChar) do begin
+      Result := Result + '<prop type="'+IntToStr(props.PropType.id)+'">'
+        + HtmlEscape(props.AsString) + '</prop>';
+      props.Next;
+    end;
+  finally
+    FreeAndNil(props);
+  end;
+  Result := '<kanji>'+Result+'</kanji>';
+end;
+
+type
+  TCopyFormatMenuItem = class(TMenuItem)
+  public
+    Filename: string;
+  end;
+
+procedure TfKanji.ReloadCopyFormats;
+var item: TMenuItem;
+  fname: string;
+begin
+  miCopyAs.Clear;
+
+ //Rescan every time because the user could be adding files there
+ //and expecting results
+  for fname in GetKanjiCopyFormats() do begin
+    item := TCopyFormatMenuItem.Create(Self);
+    TCopyFormatMenuItem(item).Filename := ExtractFilename(fname);
+    item.Caption := ChangeFileExt(TCopyFormatMenuItem(item).Filename, '');
+    item.OnClick := CopyInFormatClick;
+    if item.Caption=fSettings.DefaultCopyFormatName then
+      item.Default := true;
+    miCopyAs.Add(item);
+  end;
+
+  {$IFDEF DEBUG}
+  item := TMenuItem.Create(Self);
+  item.Caption := _l('XML...');
+  item.OnClick := CopyAsXMLClick;
+  miCopyAs.Add(item);
+ {$ENDIF}
+
+  item := TMenuItem.Create(Self);
+  item.Caption := '-';
+  miCopyAs.Add(item);
+
+  item := TMenuItem.Create(Self);
+  item.Caption := _l('#01103^eConfigure...');
+  item.OnClick := ConfigureClick;
+  miCopyAs.Add(item);
+end;
+
+procedure TfKanji.CopyInFormatClick(Sender: TObject);
+begin
+  CopyToClipboard(
+    GetKanjiCopyFormatsDir+'\'+TCopyFormatMenuItem(Sender).Filename,
+    GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+  );
+end;
+
+procedure TfKanji.CopyAsXMLClick(Sender: TObject);
+begin
+  CopyToClipboard(
+    '',
+    GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+  );
+end;
+
+procedure TfKanji.ConfigureClick(Sender: TObject);
+begin
+  fSettings.pcPages.ActivePage:=fSettings.tsKanjiCopyFormats;
+  fSettings.ShowModal;
+end;
+
+procedure TfKanji.CopyAsText(const AReplace: boolean);
+begin
+  if AReplace or (FocusedChars='') then
+    Clipboard.Text := FocusedChars
+  else
+    Clipboard.Text := Clipboard.Text + FocusedChars;
+end;
+
+procedure TfKanji.CopyToClipboard(const AXsltFilename: string; const AReplace: boolean);
+var chars, text: string;
+  i: integer;
+begin
+  chars := FocusedChars;
+  text := '';
+  for i := 1 to Length(chars) do
+    text := text + KanjiInfoToXml(chars[i]);
+  if Length(chars)>1 then
+    text := '<chars>' + text + '</chars>';
+  text := XsltTransform(text, AXsltFilename);
+  if AReplace or (FocusedChars='') then
+    Clipboard.Text := text
+  else
+    Clipboard.Text := Clipboard.Text + text;
 end;
 
 

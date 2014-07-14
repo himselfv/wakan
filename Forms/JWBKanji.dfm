@@ -72,6 +72,7 @@ object fKanji: TfKanji
       FixedCols = 0
       FixedRows = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goThumbTracking]
+      PopupMenu = PopupMenu
       TabOrder = 0
       OnClick = DrawGrid1Click
       OnDblClick = DrawGrid1DblClick
@@ -293,6 +294,16 @@ object fKanji: TfKanji
     object aSaveToFile: TAction
       Caption = '#00944^eSave characters to file...'
       OnExecute = aSaveToFileExecute
+    end
+  end
+  object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
+    Left = 224
+    Top = 104
+    object miCopyAs: TMenuItem
+      Caption = '#01102^Copy As'
+      object N1: TMenuItem
+      end
     end
   end
 end
