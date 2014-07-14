@@ -1409,9 +1409,8 @@ var i, j: integer;
   sl2i: integer;
   sart: TSearchResArticle;
 begin
-  if sl.Count<=1 then exit; //apparently that's the most common case when translating
-
-  sl.SortByFrequency;
+  if sl.Count > 1 then //saves a bit when translating
+    sl.SortByFrequency;
 
  //Add user entries to the beginning
   for i:=0 to sl.Count-1 do
