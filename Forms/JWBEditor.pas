@@ -3136,6 +3136,9 @@ begin
   if FInsertionState in [isConfirmedAsIs, isConverted] then
     ClearInsBlock;
 
+  if not Self.TextSelection.IsEmpty then
+    DeleteSelection();
+
   if (c=' ') and (FInputBuffer<>'') then
   begin
    //Accept suggestion
@@ -3164,7 +3167,6 @@ begin
   end;
   if c=Chr(VK_RETURN) then
   begin
-    DeleteSelection(); //Updates block and verifies everything
     doc.SplitLine(rcur.x,rcur.y);
     FileChanged:=true;
     rcur := SourcePos(0,rcur.y+1);
