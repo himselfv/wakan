@@ -760,11 +760,12 @@ begin
  //Modes such as Pinyin have it in a different form (latin text) until just
  //the last moment.
   CloseInsert;
-  RepaintText; //have to! to hide hint after CloseInsert
+ //have to RepaintText to hide hint after CloseInsert; will do after change
 end;
 
 procedure TfEditor.LanguageChanged;
 begin
+  RepaintText; //hide hint after CloseInsert + font changed
 end;
 
 procedure TfEditor.ClearEditor;

@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsPopupTool
+    ActivePage = tsCharacterCardPrinting
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -37,10 +37,6 @@ object fSettings: TfSettings
     object tsGeneral: TTabSheet
       Caption = 'General'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -209,10 +205,6 @@ object fSettings: TfSettings
       Tag = 1
       Caption = 'Romanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 3
         Top = 3
@@ -537,10 +529,6 @@ object fSettings: TfSettings
       Tag = 2
       Caption = 'Fonts'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label4: TLabel
         Left = 3
         Top = 362
@@ -933,10 +921,6 @@ object fSettings: TfSettings
       Tag = 3
       Caption = 'Colors'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1054,10 +1038,6 @@ object fSettings: TfSettings
       Tag = 4
       Caption = 'Portability'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblWakanMode: TLabel
         Left = 3
         Top = 3
@@ -1209,10 +1189,6 @@ object fSettings: TfSettings
       Tag = 5
       Caption = 'Character list'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label35: TLabel
         Left = 3
         Top = 87
@@ -1296,10 +1272,6 @@ object fSettings: TfSettings
       Caption = 'Character details'
       ImageIndex = 19
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object cbDetailsShowKanjiClass: TCheckBox
         AlignWithMargins = True
         Left = 3
@@ -1345,10 +1317,6 @@ object fSettings: TfSettings
       Tag = 6
       Caption = 'Character details items'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1467,10 +1435,6 @@ object fSettings: TfSettings
       Tag = 7
       Caption = 'Dictionary'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1737,10 +1701,6 @@ object fSettings: TfSettings
       Tag = 9
       Caption = 'Word list printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label11: TLabel
         Left = 3
         Top = 339
@@ -1847,10 +1807,6 @@ object fSettings: TfSettings
       Tag = 10
       Caption = 'Character cards printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label12: TLabel
         Left = 3
         Top = 0
@@ -1900,31 +1856,28 @@ object fSettings: TfSettings
         Height = 13
         Caption = '#00951^eNumber of full compounds:'
       end
-      object Edit11: TEdit
+      object edtKanjiCardRowsOnPage: TEdit
         Left = 3
         Top = 16
         Width = 121
         Height = 21
         TabOrder = 0
-        Text = 'Edit11'
       end
-      object Edit12: TEdit
+      object edtKanjiCardAdditionalWidth: TEdit
         Left = 3
         Top = 64
         Width = 121
         Height = 21
         TabOrder = 1
-        Text = 'Edit12'
       end
-      object Edit13: TEdit
+      object edtKanjiCardCharSize: TEdit
         Left = 3
         Top = 112
         Width = 121
         Height = 21
         TabOrder = 2
-        Text = 'Edit13'
       end
-      object CheckBox18: TCheckBox
+      object cbKanjiCardPrintCompounds: TCheckBox
         Left = 3
         Top = 192
         Width = 217
@@ -1932,7 +1885,7 @@ object fSettings: TfSettings
         Caption = '#00493^ePrint vocabulary compounds'
         TabOrder = 3
       end
-      object CheckBox19: TCheckBox
+      object cbKanjiCardPrintRadical: TCheckBox
         Left = 227
         Top = 216
         Width = 209
@@ -1940,7 +1893,7 @@ object fSettings: TfSettings
         Caption = '#00494^ePrint radical'
         TabOrder = 4
       end
-      object CheckBox20: TCheckBox
+      object cbKanjiCardPrintAlternate: TCheckBox
         Left = 227
         Top = 240
         Width = 225
@@ -1948,7 +1901,7 @@ object fSettings: TfSettings
         Caption = '#00495^ePrint alternate form'
         TabOrder = 5
       end
-      object CheckBox21: TCheckBox
+      object cbKanjiCardPrintOuterLines: TCheckBox
         Left = 3
         Top = 264
         Width = 257
@@ -1956,7 +1909,7 @@ object fSettings: TfSettings
         Caption = '#00496^ePrint outer lines'
         TabOrder = 6
       end
-      object CheckBox22: TCheckBox
+      object cbKanjiCardPrintReadings: TCheckBox
         Left = 3
         Top = 216
         Width = 209
@@ -1964,7 +1917,7 @@ object fSettings: TfSettings
         Caption = '#00497^ePrint readings'
         TabOrder = 7
       end
-      object CheckBox23: TCheckBox
+      object cbKanjiCardPrintInnerLines: TCheckBox
         Left = 3
         Top = 288
         Width = 225
@@ -1972,7 +1925,7 @@ object fSettings: TfSettings
         Caption = '#00498^ePrint inner lines'
         TabOrder = 8
       end
-      object Edit14: TEdit
+      object edtKanjiCardFont: TEdit
         Left = 3
         Top = 160
         Width = 129
@@ -1982,7 +1935,7 @@ object fSettings: TfSettings
         TabOrder = 9
         Text = 'MingLiU'
       end
-      object CheckBox24: TCheckBox
+      object cbKanjiCardPrintVertical: TCheckBox
         Left = 3
         Top = 312
         Width = 241
@@ -1990,15 +1943,16 @@ object fSettings: TfSettings
         Caption = '#00499^ePrint vertically (right to left)'
         TabOrder = 10
       end
-      object CheckBox25: TCheckBox
+      object cbKanjiCardColumnSpace: TCheckBox
         Left = 3
         Top = 336
         Width = 241
         Height = 17
         Caption = '#00500^eLeave space between columns'
         TabOrder = 11
+        Visible = False
       end
-      object CheckBox44: TCheckBox
+      object cbKanjiCardPrintDefinition: TCheckBox
         Left = 3
         Top = 240
         Width = 217
@@ -2006,7 +1960,7 @@ object fSettings: TfSettings
         Caption = '#00501^ePrint definition'
         TabOrder = 12
       end
-      object CheckBox45: TCheckBox
+      object cbKanjiCardPrintStrokeCount: TCheckBox
         Left = 227
         Top = 264
         Width = 217
@@ -2014,7 +1968,7 @@ object fSettings: TfSettings
         Caption = '#00502^ePrint stroke count'
         TabOrder = 13
       end
-      object CheckBox52: TCheckBox
+      object cbKanjiCardPrintStrokeOrder: TCheckBox
         Left = 227
         Top = 288
         Width = 225
@@ -2022,7 +1976,7 @@ object fSettings: TfSettings
         Caption = '#00503^ePrint stroke order'
         TabOrder = 14
       end
-      object CheckBox62: TCheckBox
+      object cbKanjiCardPrintFullComp: TCheckBox
         Left = 227
         Top = 192
         Width = 217
@@ -2030,7 +1984,7 @@ object fSettings: TfSettings
         Caption = '#00954^ePrint full compounds'
         TabOrder = 15
       end
-      object CheckBox63: TCheckBox
+      object cbKanjiCardSortFrequency: TCheckBox
         Left = 227
         Top = 312
         Width = 217
@@ -2038,23 +1992,18 @@ object fSettings: TfSettings
         Caption = '#00956^eSort compounds by frequency'
         TabOrder = 16
       end
-      object Edit35: TEdit
+      object edtKanjiCardFullCompounds: TEdit
         Left = 203
         Top = 112
         Width = 121
         Height = 21
         TabOrder = 17
-        Text = 'Edit35'
       end
     end
     object tsAnnotations: TTabSheet
       Tag = 11
       Caption = 'Annotations'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2143,10 +2092,6 @@ object fSettings: TfSettings
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2252,10 +2197,6 @@ object fSettings: TfSettings
       Tag = 13
       Caption = 'Editor'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label48: TLabel
         Left = 3
         Top = 3
@@ -2434,10 +2375,6 @@ object fSettings: TfSettings
       Tag = 14
       Caption = 'Editor: Saving and loading:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblSavingAndLoading: TLabel
         Left = 3
         Top = 3
@@ -2482,10 +2419,6 @@ object fSettings: TfSettings
       Tag = 15
       Caption = 'Editor: Printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label57: TLabel
         Left = 3
         Top = 3
@@ -2551,10 +2484,6 @@ object fSettings: TfSettings
       Tag = 16
       Caption = 'Editor: Text translator'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label58: TLabel
         Left = 3
         Top = 3
@@ -2608,10 +2537,6 @@ object fSettings: TfSettings
       Tag = 17
       Caption = 'Editor: Aozora Ruby:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 3
         Top = 3
@@ -2672,10 +2597,6 @@ object fSettings: TfSettings
       ImageIndex = 18
       TabVisible = False
       OnShow = tsDictCopyFormatsShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2807,10 +2728,11 @@ object fSettings: TfSettings
     Height = 462
     Align = alLeft
     HideSelection = False
-    Indent = 19
+    Indent = 12
     ParentShowHint = False
     ReadOnly = True
     RowSelect = True
+    ShowButtons = False
     ShowHint = True
     ShowLines = False
     TabOrder = 0

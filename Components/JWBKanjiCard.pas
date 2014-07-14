@@ -32,7 +32,7 @@ type
     FCalFont: string;
     FLoaded: boolean;
     FVocabCompounds: TStringList;
-    FDictCompounds: TStringList;
+    FFullCompounds: TStringList;
     FOnReadings: string;
     FKunReadings: string;
     FDefinition: string;
@@ -41,11 +41,12 @@ type
     function LoadVocabCompounds: TStringList;
     function LoadDictCompounds: TStringList;
   public
-    constructor Create(AChar: string);
+    constructor Create(const AChar: string);
     destructor Destroy; override;
     procedure Reload;
     procedure Paint(Canvas: TCanvas; TargetRect: TRect);
-    procedure Measure(out AWidth: integer; out AHeight: integer);
+    procedure Measure(out AWidth: integer; out AHeight: integer;
+      AAbstract: boolean = false);
     property Char: string read FChar;
     property Flags: TKanjiCardOptions read FFlags write FFlags;
     property FontSize: integer read FFontSize write FFontSize;
@@ -69,7 +70,7 @@ implementation
 uses TextTable, JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBSettings,
   JWBUserData, JWBKanaConv, JWBCharData, JWBLegacyMarkup, JWBWordGrid;
 
-constructor TKanjiCard.Create(AChar: string);
+constructor TKanjiCard.Create(const AChar: string);
 begin
   inherited Create();
   FChar := AChar;
@@ -79,7 +80,7 @@ end;
 destructor TKanjiCard.Destroy;
 begin
   FreeAndNil(FVocabCompounds);
-  FreeAndNil(FDictCompounds);
+  FreeAndNil(FFullCompounds);
   inherited;
 end;
 
@@ -93,9 +94,9 @@ begin
   if koPrintVocabularyCompounds in flags then
     FVocabCompounds := LoadVocabCompounds;
 
-  FreeAndNil(FDictCompounds);
+  FreeAndNil(FFullCompounds);
   if koPrintFullCompounds in flags then
-    FDictCompounds := LoadDictCompounds;
+    FFullCompounds := LoadDictCompounds;
 
   FOnReadings := '';
   FKunReadings := '';
@@ -127,7 +128,7 @@ begin
 
   FRadical := '';
   if koPrintRadical in flags then begin
-    radf:=fSettings.GetPreferredRadicalType;
+    radf := fSettings.GetPreferredRadicalType;
     rad_idx := GetCharRadicalNumber(FChar,radf);
     if TRadicals.Locate('Number',rad_idx) then
       FRadical := TRadicals.Str(TRadicals.fUnicode);
@@ -193,10 +194,12 @@ begin
 end;
 
 { Returns total suggested width and heigh needed to draw the card. You can
- sometimes shirnk it further but some info will be lost. }
-procedure TKanjiCard.Measure(out AWidth: integer; out AHeight: integer);
+ sometimes shirnk it further but some info will be lost.
+ AAbstract: ignore available data and just measure the maximal size. }
+procedure TKanjiCard.Measure(out AWidth: integer; out AHeight: integer;
+  AAbstract: boolean);
 begin
-  if not FLoaded then
+  if not FLoaded and not AAbstract then
     Reload;
 
   AHeight := MainCharSize;
@@ -213,7 +216,10 @@ begin
   if koPrintFullCompounds in flags then begin
     if koPrintInnerLines in flags then
       Inc(AHeight, MarginSize);
-    Inc(AHeight, MarginSize + FDictCompounds.Count * FontSize);
+    if AAbstract then
+      Inc(AHeight, MarginSize + FMaxFullComp * FontSize)
+    else
+      Inc(AHeight, MarginSize + FFullCompounds.Count * FontSize);
   end;
   Inc(AHeight, 2*MarginSize); //outer margins
 
@@ -254,7 +260,7 @@ begin
     fontjpengrid := FontPinYin;
   end;
 
-  InflateRect(TargetRect, -MarginSize, -MarginSize);
+  InflateRect(TargetRect, -MarginSize div 2, -MarginSize div 2);
 
   {outer lines}
   if koPrintOuterLines in flags then begin
@@ -264,6 +270,8 @@ begin
     Canvas.LineTo(TargetRect.Left, TargetRect.Bottom);
     Canvas.LineTo(TargetRect.Left, TargetRect.Top);
   end;
+
+  InflateRect(TargetRect, -MarginSize div 2, -MarginSize div 2);
 
   {character box}
   Rect := TargetRect;
@@ -337,7 +345,7 @@ begin
     Inc(Rect.Top, MarginSize);
     DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FOnReadings, FontJpEnGrid);
     Inc(Rect.Top, FontSize);
-    DrawUnicode(Canvas, Rect.Left, Rect.Top, Round(FontSize), FKunReadings, FontJpEnGrid);
+    DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FKunReadings, FontJpEnGrid);
     Inc(Rect.Top, FontSize);
   end;
 
@@ -361,19 +369,21 @@ begin
   {full compounds}
   if koPrintFullCompounds in flags then
   begin
+    Inc(Rect.Left, 1);
     if koPrintInnerLines in flags then begin
       Inc(Rect.Top, MarginSize);
       Canvas.MoveTo(Rect.Left, Rect.Top);
       Canvas.LineTo(Rect.Right, Rect.Top);
     end;
     Inc(Rect.Top, MarginSize);
-    for j:=0 to FDictCompounds.Count-1 do begin
+    for j:=0 to FFullCompounds.Count-1 do begin
       Rect.Height := FontSize;
-      s := FDictCompounds[j];
+      s := FFullCompounds[j];
       if s<>'' then
         DrawPackedWordInfo(canvas,rect,copy(s,9,length(s)-8),FontSize,false);
       Inc(Rect.Top, FontSize);
     end;
+    Dec(Rect.Left, 1);
   end;
 end;
 

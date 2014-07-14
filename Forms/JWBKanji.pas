@@ -594,6 +594,21 @@ end;
 
 type
   TKanjiCardPainter = class(TPrintPainter)
+  const
+    BaseFontSize = 12; //initial measurement made in this size
+  protected
+    FRowsOnPage: integer;
+    FAdditionalWidth: integer;
+    FCharSize: integer;
+    FFullCompounds: integer;
+    FBaseCardWidth: integer;
+    FBaseCardHeight: integer;
+    procedure Reinit;
+    function NewKanjiCard(const AChar: string; AFontSize: integer): TKanjiCard;
+    procedure GetCardSizes(Width, Height: integer; out AFontSize,
+      ACardWidth, ACardHeight: integer);
+  public
+    constructor Create;
     function GetPageNum(Canvas: TCanvas; Width, Height: integer): integer;
       override;
     procedure DrawPage(Canvas: TCanvas; PageNum: integer; Width, Height: integer;
@@ -601,101 +616,112 @@ type
     procedure Configure; override;
   end;
 
-function TKanjiCardPainter.GetPageNum(canvas:TCanvas; width,height:integer):integer;
-var lh,lc:integer;
-    ncv,nch:integer;
-    ch:double;
-    numh:integer;
+constructor TKanjiCardPainter.Create;
 begin
-  GetPrintLine(width,height,width,height,strtoint(fSettings.Edit11.Text),lh,lc);
-  ncv:=strtoint(fSettings.edit13.text);
-  if fSettings.CheckBox22.Checked then inc(ncv,3);
-  if fSettings.CheckBox44.Checked then inc(ncv,2);
-  if fSettings.CheckBox62.Checked then inc(ncv,1+strtoint(fSettings.Edit35.Text));
-  ch:=lh/ncv;
-  nch:=strtoint(fSettings.edit13.text);
-  if (fSettings.CheckBox19.Checked) or (fSettings.CheckBox20.Checked) then inc(nch,(strtoint(fSettings.Edit13.Text) div 2)+1);
-  if fSettings.CheckBox18.Checked then nch:=nch+1+strtoint(fSettings.edit12.text);
-  numh:=trunc(width-ch*2) div trunc(nch*ch);
-  lc:=trunc(height-ch*2) div trunc(ncv*ch);
-  result:=((ki.Count-1) div (numh*lc))+1;
+  inherited Create;
+  Reinit;
+end;
+
+//Reads paint setup from settings
+procedure TKanjiCardPainter.Reinit;
+var card: TKanjiCard;
+begin
+  FRowsOnPage := StrToInt(fSettings.edtKanjiCardRowsOnPage.Text);
+  FAdditionalWidth := StrToInt(fSettings.edtKanjiCardAdditionalWidth.text);
+  FCharSize := StrToInt(fSettings.edtKanjiCardCharSize.Text);
+  FFullCompounds := StrToInt(fSettings.edtKanjiCardFullCompounds.Text);
+ //Try and measure the card
+  card := NewKanjiCard('u', BaseFontSize);
+  card.Measure(FBaseCardWidth, FBaseCardHeight, {abstract=}true);
+end;
+
+function TKanjiCardPainter.NewKanjiCard(const AChar: string; AFontSize: integer): TKanjiCard;
+begin
+  Result := TKanjiCard.Create(AChar);
+  Result.Flags := [];
+  if fSettings.cbKanjiCardPrintStrokeCount.Checked then Result.Flags := Result.Flags + [koPrintStrokeCount];
+  if fSettings.cbKanjiCardPrintReadings.Checked then Result.Flags := Result.Flags + [koPrintOuterLines];
+  if fSettings.cbKanjiCardPrintRadical.Checked then Result.Flags := Result.Flags + [koPrintRadical];
+  if fSettings.cbKanjiCardPrintAlternate.Checked then Result.Flags := Result.Flags + [koPrintAlternateForm];
+  if fSettings.cbKanjiCardPrintInnerLines.Checked then Result.Flags := Result.Flags + [koPrintInnerLines];
+  if fSettings.cbKanjiCardPrintCompounds.Checked then Result.Flags := Result.Flags + [koPrintVocabularyCompounds];
+  if fSettings.cbKanjiCardPrintOuterLines.Checked then Result.Flags := Result.Flags + [koPrintReadings];
+  if fSettings.cbKanjiCardPrintDefinition.Checked then Result.Flags := Result.Flags + [koPrintDefinition];
+  if fSettings.cbKanjiCardPrintStrokeOrder.Checked then Result.Flags := Result.Flags + [koPrintStrokeOrder];
+  if fSettings.cbKanjiCardPrintFullComp.Checked then Result.Flags := Result.Flags + [koPrintFullCompounds];
+  if fSettings.cbKanjiCardSortFrequency.Checked then Result.Flags := Result.Flags + [koSortCompoundsByFrequency];
+  Result.FontSize := AFontSize;
+  Result.MarginSize := AFontSize div 2;
+  Result.MainCharSize := AFontSize * (FCharSize-1);
+  Result.MaxFullComp := FFullCompounds;
+  Result.SuggestedAdditionalWidth := FAdditionalWidth;
+  Result.CalFont := fSettings.edtKanjiCardFont.Text;
+end;
+
+//Has to be already Reinit()ialized
+procedure TKanjiCardPainter.GetCardSizes(Width, Height: integer; out AFontSize,
+  ACardWidth, ACardHeight: integer);
+var LineHeight, LineCount:integer;
+  HScale: double;
+begin
+  GetPrintLine(Width, Height, Width, Height, FRowsOnPage, LineHeight, LineCount);
+  HScale := LineHeight/FBaseCardHeight;
+  AFontSize := Trunc(BaseFontSize*HScale);
+  ACardWidth := Trunc(FBaseCardWidth*HScale);
+  ACardHeight := Trunc(FBaseCardHeight*HScale);
+end;
+
+function TKanjiCardPainter.GetPageNum(Canvas: TCanvas; Width, Height:integer): integer;
+var AFontSize, ACardWidth, ACardHeight: integer;
+  HCount, VCount: integer;
+begin
+  GetCardSizes(Width, Height, AFontSize, ACardWidth, ACardHeight);
+  HCount := Width div ACardWidth;
+  VCount := Height div ACardHeight;
+  Result := (ki.Count-1) div (HCount*VCount) + 1;
 end;
 
 procedure TKanjiCardPainter.DrawPage(canvas:TCanvas; pagenum:integer;
   width,height,origwidth,origheight:integer);
-var lh,lc:integer;
-    ncv,nch:integer;
-    ch:double;
-    numh,i:integer;
-    u:string;
-    x,xp,y,yp:integer;
+var AFontSize, ACardWidth, ACardHeight: integer;
+  HCount, VCount: integer;
+  i:integer;
+  u:string;
+  x,xp,y,yp:integer;
   card: TKanjiCard;
-  w,h: integer;
 begin
-  GetPrintLine(origwidth,origheight,origwidth,origheight,strtoint(fSettings.Edit11.Text),lh,lc);
-//  lh:=round(0.98*lh);
-  ncv:=strtoint(fSettings.edit13.text);
-  if fSettings.CheckBox22.Checked then inc(ncv,3);
-  if fSettings.CheckBox44.Checked then inc(ncv,2);
-  if fSettings.CheckBox62.Checked then inc(ncv,1+strtoint(fSettings.Edit35.Text));
-  ch:=lh/ncv;
-  nch:=strtoint(fSettings.edit13.text);
-  if (fSettings.CheckBox19.Checked) or (fSettings.CheckBox20.Checked) then inc(nch,(strtoint(fSettings.Edit13.Text) div 2)+1);
-  if fSettings.CheckBox18.Checked then nch:=nch+1+strtoint(fSettings.edit12.text);
-  numh:=trunc(origwidth-ch*2) div trunc(nch*ch);
-  lc:=trunc(origheight-ch*2) div trunc(ncv*ch);
-  ch:=ch/origwidth*width;
-  for i:=0 to numh*lc-1 do
-  begin
-    if ((pagenum-1)*numh*lc+i)<ki.Count then
-    begin
-      u:=ki[((pagenum-1)*numh*lc)+i];
+  GetCardSizes(Width, Height, AFontSize, ACardWidth, ACardHeight);
+  HCount := Width div ACardWidth;
+  VCount := Height div ACardHeight;
+
+  for i:=0 to HCount*VCount-1 do
+    if (pagenum-1)*VCount*HCount+i<ki.Count then begin
+      u:=ki[(pagenum-1)*VCount*HCount+i];
       delete(u,1,1);
-      if fSettings.CheckBox24.Checked then
-      begin
-        yp:=i mod lc;
-        xp:=numh-(i div lc)-1;
-      end else
-      begin
-        xp:=i mod numh;
-        yp:=i div numh;
+      if fSettings.cbKanjiCardPrintVertical.Checked then begin
+        yp:=i mod HCount;
+        xp:=VCount-(i div HCount)-1;
+      end
+      else begin
+        xp:=i mod VCount;
+        yp:=i div VCount;
       end;
-      y:=trunc((height-lc*ncv*ch)/2+(yp*ncv*ch));
-      if (numh>1) and (fSettings.CheckBox25.Checked) then
-      x:=trunc(ch+((width-(numh*nch*ch+2*ch))/(numh-1))*xp+xp*nch*ch) else x:=trunc(ch+xp*nch*ch);
-      card := TKanjiCard.Create(u);
+      y := yp*ACardHeight;
+      x := xp*ACardWidth;
+      card := NewKanjiCard(u, AFontSize);
       try
-        card.Flags := [];
-        if fSettings.CheckBox45.Checked then card.Flags := card.Flags + [koPrintStrokeCount];
-        if fSettings.CheckBox21.Checked then card.Flags := card.Flags + [koPrintOuterLines];
-        if fSettings.CheckBox19.Checked then card.Flags := card.Flags + [koPrintRadical];
-        if fSettings.CheckBox20.Checked then card.Flags := card.Flags + [koPrintAlternateForm];
-        if fSettings.CheckBox23.Checked then card.Flags := card.Flags + [koPrintInnerLines];
-        if fSettings.CheckBox18.Checked then card.Flags := card.Flags + [koPrintVocabularyCompounds];
-        if fSettings.CheckBox22.Checked then card.Flags := card.Flags + [koPrintReadings];
-        if fSettings.CheckBox44.Checked then card.Flags := card.Flags + [koPrintDefinition];
-        if fSettings.CheckBox52.Checked then card.Flags := card.Flags + [koPrintStrokeOrder];
-        if fSettings.CheckBox62.Checked then card.Flags := card.Flags + [koPrintFullCompounds];
-        if fSettings.CheckBox63.Checked then card.Flags := card.Flags + [koSortCompoundsByFrequency];
-        card.FontSize := Trunc(ch);
-        card.MarginSize := Trunc(ch / 2);
-        card.MainCharSize := Trunc(ch * (StrToInt(fSettings.Edit13.Text)-1));
-        card.MaxFullComp := StrToInt(fSettings.Edit35.Text);
-        card.SuggestedAdditionalWidth := Trunc(ch * StrToInt(fSettings.Edit12.Text));
-        card.CalFont := fSettings.Edit14.Text;
-        card.Measure(w, h);
-        card.Paint(Canvas, TRect.Create(x, y, x+w, y+h));
+        card.Paint(Canvas, TRect.Create(x, y, x+ACardWidth, y+ACardHeight));
       finally
         FreeAndNil(card);
       end;
     end;
-  end;
 end;
 
 procedure TKanjiCardPainter.Configure();
 begin
   fSettings.pcPages.ActivePage:=fSettings.tsCharacterCardPrinting;
   fSettings.ShowModal;
+  Reinit;
 end;
 
 procedure TfKanji.btnPrintCardsClick(Sender: TObject);
