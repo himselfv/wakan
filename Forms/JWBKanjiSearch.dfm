@@ -355,12 +355,11 @@ object fKanjiSearch: TfKanjiSearch
       ExplicitLeft = 406
     end
     object cbOtherType: TComboBox
-      Left = 157
+      Left = 3
       Top = 170
-      Width = 113
+      Width = 110
       Height = 21
       Style = csDropDownList
-      Anchors = [akTop, akRight]
       TabOrder = 0
       OnChange = cbOtherTypeChange
     end
@@ -390,19 +389,6 @@ object fKanjiSearch: TfKanjiSearch
       TextHint = '#00963^eJouyou'
       OnChange = edtJouyouChange
     end
-    object edtOther: TEdit
-      Left = 3
-      Top = 171
-      Width = 148
-      Height = 21
-      Hint = '#00192^eFilter by Unicode / Nelson index / Halpern index'
-      Anchors = [akLeft, akTop, akRight]
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 3
-      TextHint = '#00193^eOther'
-      OnChange = edtOtherChange
-    end
     object edtPinYin: TButtonedEdit
       Left = 3
       Top = 3
@@ -417,7 +403,7 @@ object fKanjiSearch: TfKanjiSearch
       ParentShowHint = False
       RightButton.ImageIndex = 0
       ShowHint = True
-      TabOrder = 4
+      TabOrder = 3
       TextHint = '#00964^e&PinYin'
       OnChange = edtPinYinChange
       OnLeftButtonClick = edtPinYinLeftButtonClick
@@ -432,7 +418,7 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 5
+      TabOrder = 4
       TextHint = '#00962^eSKIP'
       OnChange = edtSkipChange
     end
@@ -447,7 +433,7 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 6
+      TabOrder = 5
       TextHint = '#00191^eStroke #'
       OnChange = edtStrokeCountChange
     end
@@ -460,7 +446,7 @@ object fKanjiSearch: TfKanjiSearch
       Anchors = [akLeft, akTop, akRight]
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 7
+      TabOrder = 6
       TextHint = '#00965^eYomi'
       OnChange = edtYomiChange
     end
@@ -478,6 +464,16 @@ object fKanjiSearch: TfKanjiSearch
       ParentShowHint = False
       OnPaint = pbRadicalsPaint
       OnClick = sbListRadicalsClick
+    end
+    object edtOther: TEdit
+      Left = 113
+      Top = 170
+      Width = 157
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      TabOrder = 8
+      TextHint = '#00193^eOther'
+      OnChange = edtJouyouChange
     end
   end
   object ImageList1: TImageList

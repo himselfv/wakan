@@ -48,14 +48,15 @@ object fKanji: TfKanji
       Width = 630
       Height = 291
       Align = alClient
-      TextLeft = 8
-      TextTop = 8
-      Text = '#00118^eNo characters were found.'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
+      ParentFont = False
+      TextLeft = 8
+      TextTop = 8
+      Text = '#00118^eNo characters were found.'
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True

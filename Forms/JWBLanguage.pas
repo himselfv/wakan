@@ -455,7 +455,8 @@ begin
       _set(a,'Text');
       _set(a,'Hint');
     end;
-    if a is TCustomEdit then
+    if (a is TCustomEdit)
+    or (a is TCustomComboBox) then
       _set(a,'TextHint');
     if (a is TCustomListBox) or
        (a is TCustomComboBox) or
