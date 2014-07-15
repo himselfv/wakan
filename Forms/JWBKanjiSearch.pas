@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, CheckLst, IniFiles, JWBRadical, WakanPaintbox;
+  StdCtrls, ExtCtrls, Buttons, CheckLst, IniFiles, JWBRadical, WakanPaintbox,
+  Vcl.ImgList;
 
 type
   TfKanjiSearch = class(TForm)
@@ -22,32 +23,24 @@ type
     cbNot: TCheckBox;
     lbCategories: TCheckListBox;
     ScrollBox1: TScrollBox;
-    sbDefinition: TSpeedButton;
-    sbJouyou: TSpeedButton;
     sbJouyouExpand: TSpeedButton;
     sbJouyouMinus: TSpeedButton;
     sbJouyouPlus: TSpeedButton;
     sbJouyouShrink: TSpeedButton;
-    sbListRadicals: TSpeedButton;
-    sbOther: TSpeedButton;
-    sbPinYin: TSpeedButton;
-    sbRadicals: TSpeedButton;
-    sbSKIP: TSpeedButton;
-    sbStrokeCount: TSpeedButton;
     sbStrokeCountExpand: TSpeedButton;
     sbStrokeCountMinus: TSpeedButton;
     sbStrokeCountPlus: TSpeedButton;
     sbStrokeCountShrink: TSpeedButton;
-    sbYomi: TSpeedButton;
     cbOtherType: TComboBox;
     edtDefinition: TEdit;
     edtJouyou: TEdit;
     edtOther: TEdit;
-    edtPinYin: TEdit;
+    edtPinYin: TButtonedEdit;
     edtSkip: TEdit;
     edtStrokeCount: TEdit;
     edtYomi: TEdit;
     pbRadicals: TWakanPaintbox;
+    ImageList1: TImageList;
     procedure sbPinYinClick(Sender: TObject);
     procedure sbClearFiltersClick(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);
@@ -82,6 +75,7 @@ type
     procedure lbCategoriesDblClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure edtPinYinLeftButtonClick(Sender: TObject);
 
   public
     procedure SaveSettings(reg: TCustomIniFile);
@@ -140,17 +134,18 @@ end;
 //Resets filters but does not apply it, so that you can chain it with something.
 procedure TfKanjiSearch.ResetFilters;
 begin
-  sbPinYin.Down:=false;
-  sbYomi.Down:=false;
-  sbDefinition.Down:=false;
-  sbOther.Down:=false;
+  edtPinYin.Text := '';
+  edtYomi.Text := '';
+  edtDefinition.Text := '';
+  edtOther.Text := '';
   SpeedButton1.Down:=false;
   btnOnlyCommon.Down:=false;
   btnInClipboard.Down:=false;
-  sbStrokeCount.Down:=false;
-  sbRadicals.Down:=false;
-  sbSKIP.Down:=false;
-  sbJouyou.Down:=false;
+  edtStrokeCount.Text := '';
+  FCurRadChars := '';
+  pbRadicals.Invalidate;
+  edtSKIP.Text := '';
+  edtJouyou.Text := '';
 end;
 
 //Reloads a list of "other" search types
@@ -203,23 +198,23 @@ procedure TfKanjiSearch.SaveSettings(reg: TCustomIniFile);
 begin
   reg.WriteBool('KanjiSearch','OnlyCommon',fKanjiSearch.btnOnlyCommon.Down);
 //  reg.WriteBool('KanjiSearch','InClipboard',fKanjiSearch.btnInClipboard.Down); //do not save-restore this for now (by design)
-  if fKanjiSearch.sbPinYin.Down then
+  if fKanjiSearch.edtPinYin.Text<>'' then
     reg.WriteString('KanjiSearch','PinYin',fKanjiSearch.edtPinYin.Text)
   else
     reg.DeleteKey('KanjiSearch','PinYin');
-  if fKanjiSearch.sbYomi.Down then
+  if fKanjiSearch.edtYomi.Text<>'' then
     reg.WriteString('KanjiSearch','Yomi',fKanjiSearch.edtYomi.Text)
   else
     reg.DeleteKey('KanjiSearch','Yomi');
-  if fKanjiSearch.sbDefinition.Down then
+  if fKanjiSearch.edtDefinition.Text<>'' then
     reg.WriteString('KanjiSearch','Definition',fKanjiSearch.edtDefinition.Text)
   else
     reg.DeleteKey('KanjiSearch','Definition');
-  if fKanjiSearch.sbStrokeCount.Down then
+  if fKanjiSearch.edtStrokeCount.Text<>'' then
     reg.WriteString('KanjiSearch','Strokes',fKanjiSearch.edtStrokeCount.Text)
   else
     reg.DeleteKey('KanjiSearch','Strokes');
-  if fKanjiSearch.sbRadicals.Down then begin
+  if fKanjiSearch.curRadChars<>'' then begin
     reg.WriteInteger('KanjiSearch','RadSearchType',integer(fKanjiSearch.curRadSearchType));
     reg.WriteString('KanjiSearch','RadSearch',fKanjiSearch.curRadChars);
   end else begin
@@ -227,21 +222,19 @@ begin
     reg.DeleteKey('KanjiSearch','RadSearch');
     reg.DeleteKey('KanjiSearch','RadIndexes');
   end;
-  if fKanjiSearch.sbSKIP.Down then
+  if fKanjiSearch.edtSKIP.Text<>'' then
     reg.WriteString('KanjiSearch','SKIP',fKanjiSearch.edtSKIP.Text)
   else
     reg.DeleteKey('KanjiSearch','SKIP');
-  if fKanjiSearch.sbJouyou.Down then
+  if fKanjiSearch.edtJouyou.Text<>'' then
     reg.WriteString('KanjiSearch','Jouyou',fKanjiSearch.edtJouyou.Text)
   else
     reg.DeleteKey('KanjiSearch','Jouyou');
-  if fKanjiSearch.sbOther.Down then begin
-    reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
-    reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text);
-  end else begin
-    reg.DeleteKey('KanjiSearch','OtherCriteriaIndex');
+  reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',fKanjiSearch.cbOtherType.ItemIndex);
+  if fKanjiSearch.edtOther.Text<>'' then
+    reg.WriteString('KanjiSearch','Other',fKanjiSearch.edtOther.Text)
+  else
     reg.DeleteKey('KanjiSearch','Other');
-  end;
   reg.WriteInteger('Characters','Sort',fKanjiSearch.rgSortBy.ItemIndex);
   reg.WriteInteger('Characters','OtherSearch',fKanjiSearch.cbOtherType.ItemIndex);
 end;
@@ -288,19 +281,22 @@ end;
 
 procedure TfKanjiSearch.edtPinYinChange(Sender: TObject);
 begin
-  sbPinYin.Down:=edtPinYin.Text<>'';;
+  TButtonedEdit(Sender).RightButton.Visible := TEdit(Sender).Text <> '';
   fKanji.InvalidateList;
+end;
+
+procedure TfKanjiSearch.edtPinYinLeftButtonClick(Sender: TObject);
+begin
+  TEdit(Sender).Text := '';
 end;
 
 procedure TfKanjiSearch.edtYomiChange(Sender: TObject);
 begin
-  sbYomi.Down:=edtYomi.Text<>'';
   fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtDefinitionChange(Sender: TObject);
 begin
-  sbDefinition.Down:=edtDefinition.Text<>'';
   fKanji.InvalidateList;
 end;
 
@@ -308,31 +304,26 @@ end;
 procedure TfKanjiSearch.SetCurRadChars(const Value: string);
 begin
   FCurRadChars := Value;
-  sbRadicals.Down := FCurRadChars<>'';
   fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtSkipChange(Sender: TObject);
 begin
-  sbSKIP.Down:=edtSkip.Text<>'';
   fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtOtherChange(Sender: TObject);
 begin
-  sbOther.Down:=edtOther.Text<>'';
   fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtStrokeCountChange(Sender: TObject);
 begin
-  sbStrokeCount.Down:=edtStrokeCount.Text<>'';
   fKanji.InvalidateList;
 end;
 
 procedure TfKanjiSearch.edtJouyouChange(Sender: TObject);
 begin
-  sbJouyou.Down:=edtJouyou.Text<>'';
   fKanji.InvalidateList;
 end;
 
@@ -463,10 +454,16 @@ begin
 end;
 
 procedure TfKanjiSearch.pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
+var TextHint: string;
+  HintWidth, HintHeight: integer;
 begin
-  Canvas.Brush.Color:=clBtnFace;
-  Canvas.Font.Style:=[];
-  DrawUnicode(Canvas,1,1,16,FCurRadChars,FontRadical);
+  Canvas.Brush.Color := clBtnFace;
+  Canvas.Font := TWakanPaintbox(Sender).Font;
+  TextHint := _l('#00178^Radical')+': ';
+  HintWidth := Canvas.TextWidth(TextHint);
+  HintHeight := Canvas.TextHeight(TextHint);
+  Canvas.TextOut(4, (TControl(Sender).Height-HintHeight) div 2, TextHint);
+  DrawUnicode(Canvas,5+HintWidth,2,16,FCurRadChars,FontRadical);
 end;
 
 procedure TfKanjiSearch.SpeedButton1Click(Sender: TObject);

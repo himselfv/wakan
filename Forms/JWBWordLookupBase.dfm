@@ -117,14 +117,15 @@ object fWordLookupBase: TfWordLookupBase
     Width = 468
     Height = 150
     Align = alClient
-    TextLeft = 24
-    TextTop = 24
-    Text = '#00155^eNo words were found.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Arial'
     Font.Style = [fsBold]
+    ParentFont = False
+    TextLeft = 24
+    TextTop = 24
+    Text = '#00155^eNo words were found.'
   end
   object StringGrid: TWakanWordGrid
     AlignWithMargins = True
@@ -203,7 +204,7 @@ object fWordLookupBase: TfWordLookupBase
     Left = 88
     Top = 16
     Bitmap = {
-      494C0101030008008C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101030008009C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

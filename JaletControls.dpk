@@ -46,6 +46,7 @@ contains
   WinSpeedButton in 'Controls\WinSpeedButton.pas',
   CheckAction in 'Controls\CheckAction.pas',
   FormPlacemnt in 'Controls\FormPlacemnt.pas',
-  WakanListBoxes in 'Controls\WakanListBoxes.pas';
+  WakanListBoxes in 'Controls\WakanListBoxes.pas',
+  HintedEdit in 'Controls\HintedEdit.pas';
 
 end.

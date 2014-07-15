@@ -420,11 +420,11 @@ begin
       for i:=1 to flength(Clipboard.Text) do
         if (Word(fgetch(Clipboard.Text,i)) >= $4000) and (fltclip.IndexOf(fgetch(Clipboard.Text,i))<0) then
           fltclip.Add(fgetch(Clipboard.Text,i));
-    if fKanjiSearch.sbPinYin.Down then begin
+    if fKanjiSearch.edtPinYin.Text<>'' then begin
       ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,ptMandarinReading,[rfPartial]); //Mandarin
       ReadFilter(fltpinyin,fKanjiSearch.edtPinYin.text,ptCantoneseReading,[rfPartial]); //Canton
     end;
-    if fKanjiSearch.sbYomi.Down then begin
+    if fKanjiSearch.edtYomi.Text<>'' then begin
      //ON and KUN
       if fSettings.cbYomiIgnoreOkurigana.Checked then
         flags := [rfPartial, rfTakedot]
@@ -435,19 +435,19 @@ begin
       ReadFilter(fltyomi,RomajiToKana('K'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptOnReading,flags);
       ReadFilter(fltyomi,RomajiToKana('K'+fKanjiSearch.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptKunReading,flags);
     end;
-    if fKanjiSearch.sbSKIP.Down then
+    if fKanjiSearch.edtSKIP.Text<>'' then
       ReadFilter(fltskip,fKanjiSearch.edtSKIP.Text,ptSKIP,[rfPartial]); //SKIP
    { Raine filters multi-selection with AND (only the characters with all the chosen parts are shown),
     Classical with OR (characters which match at least one radical are shown).
     This is because a character has only one Classical Radical so AND is pointless. }
-    if fKanjiSearch.sbRadicals.Down then
+    if fKanjiSearch.curRadChars<>'' then
       case fKanjiSearch.curRadSearchType of
         stClassic: ReadFilter(fltradical,
           RadicalIndexesToFilter(RadicalsToIndexes(stClassic,fKanjiSearch.CurRadChars)),
           fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
         stRaine: ReadRaineFilter(fltradical,fKanjiSearch.CurRadChars);
       end;
-    if fKanjiSearch.sbOther.Down then
+    if fKanjiSearch.edtOther.Text<>'' then
     begin
       if fKanjiSearch.cbOtherType.ItemIndex=0 then
         fltother.Add(fKanjiSearch.edtOther.Text)
@@ -466,7 +466,7 @@ begin
           end;
         end;
     end;
-    if fKanjiSearch.sbDefinition.Down then
+    if fKanjiSearch.edtDefinition.Text<>'' then
       if curLang='c' then begin
         ReadFilter(fltmean,fKanjiSearch.edtDefinition.text,ptChineseDefinition,[rfPartial,rfSpace]); //Chinese definition
       end else begin
@@ -499,23 +499,23 @@ begin
       if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
       if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
       if accept and (not clipsort) and (fKanjiSearch.btnInClipboard.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbPinYin.Down) and (fltpinyin.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbYomi.Down) and (fltyomi.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbDefinition.Down) and (fltmean.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbSKIP.Down) and (fltskip.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbRadicals.Down) then
+      if accept and (fKanjiSearch.edtPinYin.Text<>'') and (fltpinyin.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.edtYomi.Text<>'') and (fltyomi.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.edtDefinition.Text<>'') and (fltmean.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.edtSKIP.Text<>'') and (fltskip.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.curRadChars<>'') then
         case fKanjiSearch.curRadSearchType of
           stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
           stRaine: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
         end;
-      if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.cbOtherType.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-  //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton25.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
-  //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton26.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
-  //    if accept and (fKanjiSearch.sbOther.Down) and (fKanjiSearch.SpeedButton27.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
-      if (curlang='c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TChar.fChStrokeCount),true,sl4) then accept:=false;
-      if (curlang<>'c') and accept and (fKanjiSearch.sbStrokeCount.Down) and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TChar.fJpStrokeCount),true,sl4) then accept:=false;
-      if accept and (fKanjiSearch.sbSKIP.Down) then
+      if accept and (fKanjiSearch.edtOther.Text<>'') and (fKanjiSearch.cbOtherType.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (fKanjiSearch.edtOther.Text<>'') and (fKanjiSearch.cbOtherType.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+  //    if accept and (fKanjiSearch.edtOther.Text<>'') and (fKanjiSearch.SpeedButton25.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
+  //    if accept and (fKanjiSearch.edtOther.Text<>'') and (fKanjiSearch.SpeedButton26.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
+  //    if accept and (fKanjiSearch.edtOther.Text<>'') and (fKanjiSearch.SpeedButton27.Down) and not InRange(fKanjiSearch.edtOther.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
+      if (curlang='c') and accept and (fKanjiSearch.edtStrokeCount.Text<>'') and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TChar.fChStrokeCount),true,sl4) then accept:=false;
+      if (curlang<>'c') and accept and (fKanjiSearch.edtStrokeCount.Text<>'') and not InRange(fKanjiSearch.edtStrokeCount.Text,TChar.Str(TChar.fJpStrokeCount),true,sl4) then accept:=false;
+      if accept and (fKanjiSearch.edtSKIP.Text<>'') then
       begin
         s1:=fKanjiSearch.edtSKIP.Text;
         s2:='0';
@@ -545,7 +545,7 @@ begin
         if pos('.',s1)>0 then delete(s1,pos('.',s1),1);
         if accept then accept:=InRange(s1,TChar.Str(TCharFourCornerCode),false,sl9);
       end; }
-      if accept and (fKanjiSearch.sbJouyou.Down) and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TChar.fJouyouGrade),true,sl10) then accept:=false;
+      if accept and (fKanjiSearch.edtJouyou.Text<>'') and not InRange(fKanjiSearch.edtJouyou.Text,TChar.Str(TChar.fJouyouGrade),true,sl10) then accept:=false;
       if accept then
       begin
         kclass := GetCharClass(TChar.Str(TChar.fUnicode));

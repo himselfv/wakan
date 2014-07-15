@@ -4,7 +4,7 @@ object fKanjiSearch: TfKanjiSearch
   BorderStyle = bsNone
   Caption = '#00174^eSearch characters'
   ClientHeight = 206
-  ClientWidth = 728
+  ClientWidth = 570
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object fKanjiSearch: TfKanjiSearch
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
-    Left = 584
+    Left = 426
     Top = 0
     Width = 144
     Height = 206
@@ -112,7 +112,7 @@ object fKanjiSearch: TfKanjiSearch
     end
   end
   object Panel2: TPanel
-    Left = 432
+    Left = 274
     Top = 0
     Width = 152
     Height = 206
@@ -266,253 +266,97 @@ object fKanjiSearch: TfKanjiSearch
   object ScrollBox1: TScrollBox
     Left = 0
     Top = 0
-    Width = 432
+    Width = 274
     Height = 206
     Align = alClient
     BorderStyle = bsNone
     TabOrder = 2
     DesignSize = (
-      432
+      274
       206)
-    object sbDefinition: TSpeedButton
-      Left = 8
-      Top = 56
-      Width = 57
-      Height = 22
-      Hint = '#00179^eFilter by definition (meaning) (Ctrl-M)'
-      AllowAllUp = True
-      GroupIndex = 12
-      Caption = '#00180^eDefinition'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object sbJouyou: TSpeedButton
-      Left = 8
-      Top = 152
-      Width = 57
-      Height = 22
-      Hint = '#00194^eFilter by Jouyou grade (Japanese school grade)'
-      AllowAllUp = True
-      GroupIndex = 18
-      Caption = '#00963^eJouyou'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
     object sbJouyouExpand: TSpeedButton
-      Left = 379
-      Top = 152
+      Left = 226
+      Top = 145
       Width = 22
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '-/+'
       OnClick = sbJouyouExpandClick
-      ExplicitLeft = 260
+      ExplicitLeft = 384
     end
     object sbJouyouMinus: TSpeedButton
-      Left = 362
-      Top = 152
+      Left = 209
+      Top = 145
       Width = 17
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '-'
       OnClick = sbJouyouMinusClick
-      ExplicitLeft = 243
+      ExplicitLeft = 367
     end
     object sbJouyouPlus: TSpeedButton
-      Left = 345
-      Top = 152
+      Left = 192
+      Top = 145
       Width = 17
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '+'
       OnClick = sbJouyouPlusClick
-      ExplicitLeft = 226
+      ExplicitLeft = 350
     end
     object sbJouyouShrink: TSpeedButton
-      Left = 401
-      Top = 152
+      Left = 248
+      Top = 145
       Width = 22
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '+/-'
       OnClick = sbJouyouShrinkClick
-      ExplicitLeft = 282
-    end
-    object sbListRadicals: TSpeedButton
-      Left = 360
-      Top = 104
-      Width = 63
-      Height = 22
-      Hint = '#00177^eFilter by radical (Ctrl-R)'
-      AllowAllUp = True
-      Anchors = [akTop, akRight]
-      Caption = '#00195^eList...'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbListRadicalsClick
-      ExplicitLeft = 241
-    end
-    object sbOther: TSpeedButton
-      Left = 8
-      Top = 176
-      Width = 57
-      Height = 22
-      Hint = '#00192^eFilter by Unicode / Nelson index / Halpern index'
-      AllowAllUp = True
-      GroupIndex = 13
-      Caption = '#00193^eOther'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object sbPinYin: TSpeedButton
-      Left = 8
-      Top = 8
-      Width = 57
-      Height = 22
-      Hint = '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)'
-      AllowAllUp = True
-      GroupIndex = 10
-      Caption = '#00964^e&PinYin'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object sbRadicals: TSpeedButton
-      Left = 8
-      Top = 104
-      Width = 58
-      Height = 22
-      Hint = '#00177^eFilter by radical (Ctrl-R)'
-      AllowAllUp = True
-      GroupIndex = 15
-      Caption = '#00178^eRadical'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object sbSKIP: TSpeedButton
-      Left = 8
-      Top = 128
-      Width = 57
-      Height = 22
-      Hint = '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
-      AllowAllUp = True
-      GroupIndex = 16
-      Caption = '#00962^eSKIP'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
-    end
-    object sbStrokeCount: TSpeedButton
-      Left = 8
-      Top = 80
-      Width = 57
-      Height = 22
-      Hint = 
-        '#00190^eFilter by stroke count (you can search by range, ex. 1-6' +
-        ')'
-      AllowAllUp = True
-      GroupIndex = 14
-      Caption = '#00191^eStroke #'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
+      ExplicitLeft = 406
     end
     object sbStrokeCountExpand: TSpeedButton
-      Left = 379
-      Top = 80
+      Left = 226
+      Top = 74
       Width = 22
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '-/+'
       OnClick = sbStrokeCountExpandClick
-      ExplicitLeft = 260
+      ExplicitLeft = 384
     end
     object sbStrokeCountMinus: TSpeedButton
-      Left = 362
-      Top = 80
+      Left = 209
+      Top = 74
       Width = 17
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '-'
       OnClick = sbStrokeCountMinusClick
-      ExplicitLeft = 243
+      ExplicitLeft = 367
     end
     object sbStrokeCountPlus: TSpeedButton
-      Left = 345
-      Top = 80
+      Left = 192
+      Top = 74
       Width = 17
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '+'
       OnClick = sbStrokeCountPlusClick
-      ExplicitLeft = 226
+      ExplicitLeft = 350
     end
     object sbStrokeCountShrink: TSpeedButton
-      Left = 401
-      Top = 80
+      Left = 248
+      Top = 74
       Width = 22
       Height = 22
       Anchors = [akTop, akRight]
       Caption = '+/-'
       OnClick = sbStrokeCountShrinkClick
-      ExplicitLeft = 282
-    end
-    object sbYomi: TSpeedButton
-      Left = 8
-      Top = 32
-      Width = 57
-      Height = 22
-      Hint = '#00176^eFilter by japanese reading (Ctrl-Y)'
-      AllowAllUp = True
-      GroupIndex = 11
-      Caption = '#00965^eYomi'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'MS Sans Serif'
-      Font.Style = []
-      ParentFont = False
-      OnClick = sbPinYinClick
+      ExplicitLeft = 406
     end
     object cbOtherType: TComboBox
-      Left = 310
-      Top = 176
+      Left = 157
+      Top = 170
       Width = 113
       Height = 21
       Style = csDropDownList
@@ -521,77 +365,262 @@ object fKanjiSearch: TfKanjiSearch
       OnChange = cbOtherTypeChange
     end
     object edtDefinition: TEdit
-      Left = 64
-      Top = 56
-      Width = 359
+      Left = 3
+      Top = 51
+      Width = 267
       Height = 21
+      Hint = '#00179^eFilter by definition (meaning) (Ctrl-M)'
       Anchors = [akLeft, akTop, akRight]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 1
+      TextHint = '#00180^eDefinition'
       OnChange = edtDefinitionChange
     end
     object edtJouyou: TEdit
-      Left = 65
-      Top = 152
-      Width = 279
+      Left = 4
+      Top = 147
+      Width = 182
       Height = 21
+      Hint = '#00194^eFilter by Jouyou grade (Japanese school grade)'
       Anchors = [akLeft, akTop, akRight]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 2
+      TextHint = '#00963^eJouyou'
       OnChange = edtJouyouChange
     end
     object edtOther: TEdit
-      Left = 64
-      Top = 176
-      Width = 244
+      Left = 3
+      Top = 171
+      Width = 148
       Height = 21
+      Hint = '#00192^eFilter by Unicode / Nelson index / Halpern index'
       Anchors = [akLeft, akTop, akRight]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 3
+      TextHint = '#00193^eOther'
       OnChange = edtOtherChange
     end
-    object edtPinYin: TEdit
-      Left = 64
-      Top = 8
-      Width = 359
+    object edtPinYin: TButtonedEdit
+      Left = 3
+      Top = 3
+      Width = 267
       Height = 21
+      Hint = '#00175^eFilter by PinYin (chinese reading) (Ctrl-I)'
       Anchors = [akLeft, akTop, akRight]
+      DoubleBuffered = True
+      Images = ImageList1
+      LeftButton.ImageIndex = 0
+      ParentDoubleBuffered = False
+      ParentShowHint = False
+      RightButton.ImageIndex = 0
+      ShowHint = True
       TabOrder = 4
+      TextHint = '#00964^e&PinYin'
       OnChange = edtPinYinChange
+      OnLeftButtonClick = edtPinYinLeftButtonClick
+      OnRightButtonClick = edtPinYinLeftButtonClick
     end
     object edtSkip: TEdit
-      Left = 65
-      Top = 128
-      Width = 358
+      Left = 4
+      Top = 123
+      Width = 266
       Height = 21
+      Hint = '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
       Anchors = [akLeft, akTop, akRight]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 5
+      TextHint = '#00962^eSKIP'
       OnChange = edtSkipChange
     end
     object edtStrokeCount: TEdit
-      Left = 64
-      Top = 80
-      Width = 279
+      Left = 3
+      Top = 75
+      Width = 184
       Height = 21
+      Hint = 
+        '#00190^eFilter by stroke count (you can search by range, ex. 1-6' +
+        ')'
       Anchors = [akLeft, akTop, akRight]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 6
+      TextHint = '#00191^eStroke #'
       OnChange = edtStrokeCountChange
     end
     object edtYomi: TEdit
-      Left = 64
-      Top = 32
-      Width = 359
+      Left = 3
+      Top = 27
+      Width = 267
       Height = 21
+      Hint = '#00176^eFilter by japanese reading (Ctrl-Y)'
       Anchors = [akLeft, akTop, akRight]
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 7
+      TextHint = '#00965^eYomi'
       OnChange = edtYomiChange
     end
     object pbRadicals: TWakanPaintbox
-      Left = 66
-      Top = 103
-      Width = 294
+      Left = 3
+      Top = 98
+      Width = 267
       Height = 22
+      Cursor = crHandPoint
+      Hint = '#00177^eFilter by radical (Ctrl-R)'
       Anchors = [akLeft, akTop, akRight]
       Color = clBtnFace
       DoubleBuffered = True
+      ShowHint = True
+      ParentShowHint = False
       OnPaint = pbRadicalsPaint
+      OnClick = sbListRadicalsClick
     end
+  end
+  object ImageList1: TImageList
+    Left = 296
+    Top = 32
+    Bitmap = {
+      494C010101000800240010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      0000000000003600000028000000400000001000000001002000000000000010
+      000000000000000000000000000000000000DEDEDEFFDCDCDCFFDCDCDCFFDCDC
+      DCFFDCDCDCFFDCDCDCFFDCDCDCFFDCDCDCFFDCDCDCFFDCDCDCFFDCDCDCFFDCDC
+      DCFFDCDCDCFFDCDCDCFFDCDCDCFFC1C1C1FB0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000EDEAEAFFEBE8E8FFEBE8E8FFEBE8
+      E8FFEBE8E8FFEBE8E8FFEBE8E8FFEBE8E8FFEBE8E8FFEBE8E8FFEBE8E8FFEBE8
+      E8FFEBE8E8FFEBE8E8FFEBE8E8FFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000ECE8E8FFEBE7E7FFEBE7E7FFEBE7
+      E7FFEBE7E7FFEBE7E7FFEBE7E7FFEBE7E7FFEBE7E7FFEBE7E7FFEBE7E7FFEBE7
+      E7FFEBE7E7FFEBE7E7FFEAE6E6FFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000EBE6E6FFE8E5E5FFE8E5E5FFE8E5
+      E5FFF4F0F0FFEBE7E7FFE8E5E5FFE8E5E5FFE8E5E5FFE8E4E4FFF6F2F2FFE9E5
+      E5FFE8E5E5FFE8E5E5FFE8E4E4FFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000E9E5E5FFE8E3E3FFE8E3E3FFFDFA
+      FAFF474747FF4E4F50FFECE7E7FFE8E3E3FFE7E1E1FFEEF0F0FF505050FFC6C2
+      C2FFE8E3E3FFE8E3E3FFE7E2E2FFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000E8E3E3FFE7E1E1FFE6DFDFFF7D7D
+      7DFF5D5D5FFF5D5D5FFF545555FFE9E4E4FFEDECEDFF5B5B5CFF5D5D5FFF5757
+      59FFE7E2E2FFE7E1E1FFE6E0E0FFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000E7E0E0FFE6E0E0FFE6E0E0FFE7E1
+      E1FF686A69FF646466FF646466FF5F5F61FF636364FF646466FF626364FFCAC5
+      C5FFE6E0E0FFE6E0E0FFE5DFDFFFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000E7E1E1FFE6DFDFFFE6DFDFFFE6DF
+      DFFFE7DFDFFF717071FF6D6D6DFF6D6D6DFF6D6D6DFF6B6B6BFFCBC3C3FFE6DF
+      DFFFE6DFDFFFE6DFDFFFE5DEDEFFDBDCDCFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000EDE6E6FFEBE4E4FFEBE4E4FFEBE4
+      E4FFEBE4E4FFF4F2F4FF737373FF757575FF757575FF706F71FFF0E7E7FFEBE4
+      E4FFEBE4E4FFEBE4E4FFEBE4E4FFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000F5EFEFFFF4EDEDFFF4EDEDFFF3EC
+      ECFFF5F4F3FF79797AFF7B7B7DFF7A7A7CFF7B7B7DFF7B7B7DFF747575FFF6F0
+      F0FFF4EDEDFFF4EDEDFFF3ECECFFDADBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000F7F2F2FFF4F0F0FFF4F0F0FFF4F3
+      F3FF808081FF828284FF818182FFDAD4D5FF878687FF828284FF828284FF7C7D
+      7DFFF7F0F0FFF4F0F0FFF4EFEFFFDADADAFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000F9F5F5FFF7F3F3FFF6F3F3FFE7E5
+      E5FF878788FF878788FFDAD7D7FFF7F3F3FFF9F4F4FF8C8C8CFF88888AFF8081
+      82FFF6F0F0FFF7F3F3FFF6F2F2FFDADADAFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FCF8F8FFF9F6F6FFF9F6F6FFF8F5
+      F5FFE5E3E3FFDBD9D9FFF9F6F6FFF9F6F6FFF9F6F6FFFBF7F7FF9A999AFFF8F5
+      F5FFF9F6F6FFF9F6F6FFF8F5F5FFDADADAFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FCFAFAFFFBF9F9FFFBF9F9FFFBF9
+      F9FFFBF9F9FFFBF9F9FFFBF9F9FFFBF9F9FFFBF9F9FFFBF9F9FFFBF9F9FFFBF9
+      F9FFFBF9F9FFFBF9F9FFFAF8F8FFD9DADAFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FFFEFEFFFDFCFCFFFDFCFCFFFDFC
+      FCFFFDFCFCFFFDFCFCFFFDFCFCFFFDFCFCFFFDFCFCFFFDFCFCFFFDFCFCFFFDFC
+      FCFFFDFCFCFFFDFCFCFFFDFCFCFFD9D9D9FF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      FFFFFFFFFFFFFFFFFFFFFFFFFFFFDBDBDBFF0000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000000000000000000000000000424D3E000000000000003E000000
+      2800000040000000100000000100010000000000800000000000000000000000
+      000000000000000000000000FFFFFF0000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      0000000000000000000000000000000000000000000000000000000000000000
+      000000000000}
   end
 end

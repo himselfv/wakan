@@ -25,9 +25,15 @@ type
     property Anchors;
     property Canvas;
     property Color default clNone;
+    property Cursor;
     property DoubleBuffered;
     property EdgeBorders: TEdgeBorders read FEdgeBorders write SetEdgeBorders
       stored true default [ebLeft, ebTop, ebRight, ebBottom];
+    property Font;
+    property Hint;
+    property ParentFont;
+    property ShowHint;
+    property ParentShowHint;
     property OnPaint: TPaintEvent read FOnPaint write FOnPaint stored true;
     property OnClick;
     property OnDblClick;
