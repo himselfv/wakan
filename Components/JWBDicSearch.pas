@@ -982,13 +982,13 @@ begin
  }
   HiraCount := 0; //total number of hiragana syllables in an IDG_CHAR word
   KanjiCount := 0;
-  Result := fgetch(AString,APos+1);
+  Result := AString[APos];
   repeat
-    inc(APos);
-    if APos>=flength(AString) then
+    Inc(APos);
+    if APos>Length(AString) then
       break;
 
-      tc := fgetch(AString,APos+1);
+      tc := AString[APos];
       wt2:=EvalChar(tc);
       if not (wt2 in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
         EC_IDG_PUNCTUATION]) then

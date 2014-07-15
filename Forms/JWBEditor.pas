@@ -3736,7 +3736,7 @@ begin
     WordType := EC_UNKNOWN;
     Result := '';
   end else
-    Result := GuessWord(doc.Lines[y], x, wordtype);
+    Result := GuessWord(doc.Lines[y], x+1, wordtype);
 end;
 
 { Returns the word currently under the caret }
