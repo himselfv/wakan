@@ -1,0 +1,22 @@
+﻿# This is not yet parsed automatically, just open it and auto-translate
+気持ち きもち
+忘れて わすれて
+生きていけないし いきていけないし
+出会い であい
+別れ わかれ
+羨ましがられる うらやましがられる
+招かれざる まねかれざる
+据え置き すえおき
+上手ければ うまければ # broken
+ちなみに ちなみに match
+とにかく とにかく match
+どんな どんな match
+あらゆる あらゆる match
+ものを ものを match
+もちろんお互いの もちろん match おたがい match の particle # broken
+この この "this"
+言葉にも ことば match にも particle # に hlted as part of word instead
+通っている かよっている match # いる is parsed as a separate word
+言いたい いいたい # たい is parsed as a separate word
+さまざまな さまざま match な particle
+四字熟語の よじじゅくご match の particle
