@@ -3729,96 +3729,14 @@ begin
 end;
 
 { Makes upper bound guess on the length of the word starting at the specified
- position. Actual word may be shorter (mi ni iku -> MI) or longer (rarely).
- A guess at the word type is also given:
-   EC_UNKNOWN: We are not sure.
-   EC_IDG_CHAR: Ideographic word (kanji/kana/pinyin mixed).
-   EC_KATAKANA: Katakana-only word.
-   EC_HIRAGANA: Hiragana-only word.
-   EC_BOPOMOFO: Bopomofo-only word.
-   EC_PUNCTUATION: Punctuation only.
-   EC_LATIN_FW,
-   EC_LATIN_HW: Latin characters only.
- This has to work both on Japanese and Chinese text, no matter what mode
- we're in.
-}
+ position. See JWBDicSearch.GuessWord() }
 function TfEditor.GetDocWord(x,y: integer; var wordtype: TEvalCharType):string;
-var wt2:TEvalCharType;
-  i:integer;
-  tc: string; //"this character"
-  HasHonorific: boolean;
-  HiraCount,
-  KanjiCount: integer;
 begin
-  if (y=-1) or (y>doc.Lines.Count-1) or (x>flength(doc.Lines[y])-1) or (x=-1) then
-  begin
-    wordtype := EC_UNKNOWN;
+  if (y=-1) or (y>doc.Lines.Count-1) then begin
+    WordType := EC_UNKNOWN;
     Result := '';
-    exit;
-  end;
-
- //Determine initial word type from the first symbol
-  tc:=fgetch(doc.Lines[y],x+1);
-
- //Skip initial japanese honorific, if present
-  HasHonorific := (tc='お') or (tc='ご');
-  if HasHonorific and (flength(doc.Lines[y])>=x+2)
-  and (EvalChar(fgetch(doc.Lines[y],x+2)) in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA]) then
-    wordtype:=EvalChar(fgetch(doc.Lines[y],x+2))
-  else
-    wordtype:=EvalChar(tc);
-  if not (wordtype in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
-    EC_IDG_PUNCTUATION]) then
-    wordtype:=EC_IDG_PUNCTUATION;
-
- {
-  EC_IDG_CHAR for Japanese:
-  Allowed syllable sequences (captured part in brackets):
-    (***) A
-    (C H H) C
-    (C H C H) C
-    (C H C H H) C
-    (C H C H H H) C
-  Where C is IDG_CHAR, H is HIRAGANA and A is anything else.
-  I.e. up to one "middle" hiragana and any number of "tail" hiragana,
-  anything else breaks word.
- }
-  HiraCount := 0; //total number of hiragana syllables in an IDG_CHAR word
-  KanjiCount := 0;
-  Result := fgetch(doc.Lines[y],x+1);
-  repeat
-    inc(x);
-    if x>=flength(doc.Lines[y]) then
-      break;
-
-      tc := fgetch(doc.Lines[y],x+1);
-      wt2:=EvalChar(tc);
-      if not (wt2 in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA,
-        EC_IDG_PUNCTUATION]) then
-        wt2:=EC_IDG_PUNCTUATION;
-
-      case wordtype of
-      EC_IDG_CHAR: begin
-        if wt2=EC_HIRAGANA then begin
-          if tc<>'っ' then //doesn't count towards characters
-            Inc(HiraCount)
-        end else
-        if wt2=EC_IDG_CHAR then begin
-          if HiraCount>=2 then break;
-         //There could be very long kanji chains (especially in chinese),
-         //we have to have some limit
-          Inc(KanjiCount);
-          if KanjiCount>=6 then
-            break;
-        end else
-          break;
-      end;
-      else
-        if wt2<>wordtype then break;
-      end;
-
-    Result := Result + tc;
-  until false;
+  end else
+    Result := GuessWord(doc.Lines[y], x, wordtype);
 end;
 
 { Returns the word currently under the caret }
