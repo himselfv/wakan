@@ -270,12 +270,12 @@ type
     btnPinyinSystemDown: TBitBtn;
     lbPinyinSystems: TWakanCheckListBox;
     cbMultiplePinyin: TCheckBox;
-    tsDictCopyFormats: TTabSheet;
+    tsExprCopyFormats: TTabSheet;
     Label18: TLabel;
-    lbCopyFormats: TListBox;
-    mmCopyFormatExample: TMemo;
-    lblCopyFormatsIni: TUrlLabel;
-    lblCopyFormatsDocumentation: TUrlLabel;
+    lbExprCopyFormats: TListBox;
+    mmExprCopyFormatExample: TMemo;
+    lblExprCopyFormatsEdit: TUrlLabel;
+    lblExprCopyFormatsDocs: TUrlLabel;
     tsCharacterDetailsGeneral: TTabSheet;
     cbDetailsShowKanjiClass: TCheckBox;
     cbDetailsKanjiInColor: TCheckBox;
@@ -285,9 +285,9 @@ type
     tsKanjiCopyFormats: TTabSheet;
     Label19: TLabel;
     lbKanjiCopyFormats: TListBox;
-    lblKanjiCopyFormatsIni: TUrlLabel;
-    lblKanjiCopyFormatsDocumentation: TUrlLabel;
-    mmKanjiCopyFormatsExample: TMemo;
+    lblKanjiCopyFormatsEdit: TUrlLabel;
+    lblKanjiCopyFormatsDocs: TUrlLabel;
+    mmKanjiCopyFormatExample: TMemo;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
@@ -356,8 +356,8 @@ type
     procedure pbBopomofoAsPinyinClick(Sender: TObject);
     procedure pbBopomofoAsPinyinPaint(Sender: TObject; Canvas: TCanvas);
     procedure rgShowBopomofoClick(Sender: TObject);
-    procedure tsDictCopyFormatsShow(Sender: TObject);
-    procedure lbCopyFormatsClick(Sender: TObject);
+    procedure tsExprCopyFormatsShow(Sender: TObject);
+    procedure lbExprCopyFormatsClick(Sender: TObject);
     procedure lbKanjiCopyFormatsClick(Sender: TObject);
     procedure tsKanjiCopyFormatsShow(Sender: TObject);
 
@@ -409,12 +409,12 @@ type
     procedure ReloadPinyinSetup;
 
   protected //CopyFormats
-    FDefaultCopyFormatName: string;
-    procedure ReloadCopyFormats;
-    procedure UpdateCopyFormatExample;
+    FDefaultExprCopyFormatName: string;
+    procedure ReloadExprCopyFormats;
+    procedure UpdateExprCopyFormatExample;
   public
-    property DefaultCopyFormatName: string read FDefaultCopyFormatName
-      write FDefaultCopyFormatName;
+    property DefaultExprCopyFormatName: string read FDefaultExprCopyFormatName
+      write FDefaultExprCopyFormatName;
 
   protected //KanjiCopyFormats
     FDefaultKanjiCopyFormatName: string;
@@ -891,7 +891,7 @@ begin
     if exmode=2 then fExamples.btnUseSmallFont.Down:=true;
   end;
   Edit25.Text:=inttostr(reg.ReadInteger('Dict','FontSize',14));
-  DefaultCopyFormatName:=reg.ReadString('Dict','CopyFormat','');
+  DefaultExprCopyFormatName:=reg.ReadString('Dict','CopyFormat','');
   DefaultKanjiCopyFormatName:=reg.ReadString('Characters','CopyFormat','');
   GridFontSize:=strtoint(Edit25.text);
   lbWordPrintFormat.ItemIndex:=reg.ReadInteger('WordSheet','Columns',0);
@@ -1166,7 +1166,7 @@ begin
   reg.WriteInteger('Dict','ExMode',exmode);
   reg.WriteInteger('Dict','FontSize',strtoint(Edit25.text));
   reg.WriteBool('Dict','MultiLineGrid',cbMultilineGrids.Checked);
-  reg.WriteString('Dict','CopyFormat',DefaultCopyFormatName);
+  reg.WriteString('Dict','CopyFormat',DefaultExprCopyFormatName);
   reg.WriteString('Characters','CopyFormat',DefaultKanjiCopyFormatName);
   reg.WriteInteger('WordSheet','Columns',lbWordPrintFormat.ItemIndex);
   reg.WriteBool('WordSheet','InsideLines',cbInsideLines.Checked);
@@ -2427,35 +2427,35 @@ end;
 
 { Copy formats }
 
-procedure TfSettings.tsDictCopyFormatsShow(Sender: TObject);
+procedure TfSettings.tsExprCopyFormatsShow(Sender: TObject);
 begin
-  ReloadCopyFormats;
-  lblCopyFormatsIni.URL := GetCopyFormatsDir;
-  lblCopyFormatsDocumentation.URL := WikiUrl('CopyFormats');
+  ReloadExprCopyFormats;
+  lblExprCopyFormatsEdit.URL := GetExprCopyFormatsDir;
+  lblexprCopyFormatsDocs.URL := WikiUrl('CopyFormats');
 end;
 
-procedure TfSettings.ReloadCopyFormats;
+procedure TfSettings.ReloadExprCopyFormats;
 var fname: string;
 begin
-  lbCopyFormats.Clear;
-  for fname in GetCopyFormats do
-    lbCopyFormats.Items.Add(ChangeFileExt(ExtractFilename(fname),''));
-  lbCopyFormats.ItemIndex := lbCopyFormats.Items.IndexOf(DefaultCopyFormatName);
-  lbCopyFormatsClick(lbCopyFormats);
+  lbExprCopyFormats.Clear;
+  for fname in GetExprCopyFormats do
+    lbExprCopyFormats.Items.Add(ChangeFileExt(ExtractFilename(fname),''));
+  lbExprCopyFormats.ItemIndex := lbExprCopyFormats.Items.IndexOf(DefaultExprCopyFormatName);
+  lbExprCopyFormatsClick(lbExprCopyFormats);
 end;
 
-procedure TfSettings.lbCopyFormatsClick(Sender: TObject);
+procedure TfSettings.lbExprCopyFormatsClick(Sender: TObject);
 begin
-  if lbCopyFormats.ItemIndex<0 then exit;
-  DefaultCopyFormatName := lbCopyFormats.Items[lbCopyFormats.ItemIndex];
-  UpdateCopyFormatExample;
+  if lbExprCopyFormats.ItemIndex<0 then exit;
+  DefaultExprCopyFormatName := lbExprCopyFormats.Items[lbExprCopyFormats.ItemIndex];
+  UpdateExprCopyFormatExample;
 end;
 
-procedure TfSettings.UpdateCopyFormatExample;
+procedure TfSettings.UpdateExprCopyFormatExample;
 var res: TSearchResult;
 begin
-  if DefaultCopyFormatName='' then begin
-    mmCopyFormatExample.Text := '';
+  if DefaultExprCopyFormatName='' then begin
+    mmExprCopyFormatExample.Text := '';
     exit;
   end;
 
@@ -2478,8 +2478,8 @@ begin
     );
   end;
 
-  mmCopyFormatExample.Text :=
-    XsltTransform(res.ToEdictXml, GetCopyFormatsDir+'\'+DefaultCopyFormatName+'.xslt');
+  mmExprCopyFormatExample.Text :=
+    XsltTransform(res.ToEdictXml, GetExprCopyFormatsDir+'\'+DefaultExprCopyFormatName+'.xslt');
 end;
 
 
@@ -2488,8 +2488,8 @@ end;
 procedure TfSettings.tsKanjiCopyFormatsShow(Sender: TObject);
 begin
   ReloadKanjiCopyFormats;
-  lblKanjiCopyFormatsIni.URL := GetKanjiCopyFormatsDir;
-  lblKanjiCopyFormatsDocumentation.URL := WikiUrl('CopyFormats');
+  lblKanjiCopyFormatsEdit.URL := GetKanjiCopyFormatsDir;
+  lblKanjiCopyFormatsDocs.URL := WikiUrl('CopyFormats');
 end;
 
 procedure TfSettings.ReloadKanjiCopyFormats;
@@ -2511,15 +2511,14 @@ end;
 
 procedure TfSettings.UpdateKanjiCopyFormatExample;
 begin
-  if DefaultCopyFormatName='' then begin
-    mmCopyFormatExample.Text := '';
+  if DefaultExprCopyFormatName='' then begin
+    mmExprCopyFormatExample.Text := '';
     exit;
   end;
 
-  //TODO: write this
-{  res.Reset;
   mmKanjiCopyFormatExample.Text :=
-    XsltTransform(res.ToEdictXml, GetKanjiCopyFormatsDir+'\'+DefaultKanjiCopyFormatName+'.xslt');}
+    XsltTransform(KanjiInfoToXml('間'),
+      GetKanjiCopyFormatsDir+'\'+DefaultKanjiCopyFormatName+'.xslt');
 end;
 
 end.

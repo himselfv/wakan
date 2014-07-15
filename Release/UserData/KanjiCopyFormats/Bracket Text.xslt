@@ -4,19 +4,19 @@
 <xsl:output method="text" indent="no" encoding="UTF-8"/>
 
 <!--
-Kanji [KUN, ON] definition
+Kanji (KUN, ON definition)
 -->
 
 <xsl:template match="kanji">
   <xsl:if test="preceding-sibling::node()[name()='kanji']"><xsl:text>&#xA;</xsl:text></xsl:if>
   <xsl:apply-templates select="char" />
-  <xsl:text> [</xsl:text>
+  <xsl:text> (</xsl:text>
     <xsl:apply-templates select="prop[@type=5]" /><!-- kun -->
     <xsl:if test="prop[@type=5]"><xsl:text>、</xsl:text></xsl:if>
     <xsl:apply-templates select="prop[@type=4]" /><!-- on -->
-  <xsl:text>]</xsl:text>
-  <xsl:if test="prop[@type=3]"><xsl:text> </xsl:text></xsl:if>
-  <xsl:apply-templates select="prop[@type=3]" /><!-- definition -->
+    <xsl:if test="prop[@type=3]"><xsl:text> </xsl:text></xsl:if>
+    <xsl:apply-templates select="prop[@type=3]" /><!-- definition -->
+  <xsl:text>)</xsl:text>
 </xsl:template>
 
 <xsl:template match="prop[@type='5' or @type='4']">

@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsKanjiCopyFormats
+    ActivePage = tsExprCopyFormats
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -2591,12 +2591,12 @@ object fSettings: TfSettings
         TabOrder = 2
       end
     end
-    object tsDictCopyFormats: TTabSheet
+    object tsExprCopyFormats: TTabSheet
       Tag = 18
       Caption = 'Dictionary: Copy Formats'
       ImageIndex = 18
       TabVisible = False
-      OnShow = tsDictCopyFormatsShow
+      OnShow = tsExprCopyFormatsShow
       DesignSize = (
         465
         452)
@@ -2607,7 +2607,7 @@ object fSettings: TfSettings
         Height = 13
         Caption = '#01104^When you press Ctrl-C, copy dictionary entries as:'
       end
-      object lblCopyFormatsIni: TUrlLabel
+      object lblExprCopyFormatsEdit: TUrlLabel
         Left = 228
         Top = 33
         Width = 173
@@ -2621,7 +2621,7 @@ object fSettings: TfSettings
         Font.Style = [fsBold, fsUnderline]
         ParentFont = False
       end
-      object lblCopyFormatsDocumentation: TUrlLabel
+      object lblExprCopyFormatsDocs: TUrlLabel
         Left = 228
         Top = 52
         Width = 136
@@ -2635,16 +2635,16 @@ object fSettings: TfSettings
         Font.Style = [fsBold, fsUnderline]
         ParentFont = False
       end
-      object lbCopyFormats: TListBox
+      object lbExprCopyFormats: TListBox
         Left = 3
         Top = 22
         Width = 211
         Height = 203
         ItemHeight = 13
         TabOrder = 0
-        OnClick = lbCopyFormatsClick
+        OnClick = lbExprCopyFormatsClick
       end
-      object mmCopyFormatExample: TMemo
+      object mmExprCopyFormatExample: TMemo
         Left = 3
         Top = 240
         Width = 459
@@ -2667,8 +2667,6 @@ object fSettings: TfSettings
       ImageIndex = 20
       TabVisible = False
       OnShow = tsKanjiCopyFormatsShow
-      ExplicitTop = 27
-      ExplicitHeight = 431
       DesignSize = (
         465
         452)
@@ -2679,7 +2677,7 @@ object fSettings: TfSettings
         Height = 13
         Caption = '#01104^When you press Ctrl-C, copy dictionary entries as:'
       end
-      object lblKanjiCopyFormatsIni: TUrlLabel
+      object lblKanjiCopyFormatsEdit: TUrlLabel
         Left = 228
         Top = 33
         Width = 173
@@ -2693,7 +2691,7 @@ object fSettings: TfSettings
         Font.Style = [fsBold, fsUnderline]
         ParentFont = False
       end
-      object lblKanjiCopyFormatsDocumentation: TUrlLabel
+      object lblKanjiCopyFormatsDocs: TUrlLabel
         Left = 228
         Top = 52
         Width = 136
@@ -2716,7 +2714,7 @@ object fSettings: TfSettings
         TabOrder = 0
         OnClick = lbKanjiCopyFormatsClick
       end
-      object mmKanjiCopyFormatsExample: TMemo
+      object mmKanjiCopyFormatExample: TMemo
         Left = 3
         Top = 240
         Width = 459

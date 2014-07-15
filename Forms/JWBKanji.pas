@@ -1352,7 +1352,7 @@ begin
     TCopyFormatMenuItem(item).Filename := ExtractFilename(fname);
     item.Caption := ChangeFileExt(TCopyFormatMenuItem(item).Filename, '');
     item.OnClick := CopyInFormatClick;
-    if item.Caption=fSettings.DefaultCopyFormatName then
+    if item.Caption=fSettings.DefaultKanjiCopyFormatName then
       item.Default := true;
     miCopyAs.Add(item);
   end;

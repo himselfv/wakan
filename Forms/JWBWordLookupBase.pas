@@ -82,8 +82,8 @@ var
   fWordLookupBase: TfWordLookupBase;
 
 //CopyFormats
-function GetCopyFormatsDir: string;
-function GetCopyFormats: TArray<string>;
+function GetExprCopyFormatsDir: string;
+function GetExprCopyFormats: TArray<string>;
 function XsltTransform(const s: UnicodeString; const AXslt: IXMLDocument): WideString; overload;
 function XsltTransform(const s: UnicodeString; const AXsltFilename: string): WideString; overload;
 
@@ -166,19 +166,19 @@ end;
 
 //Returns the full path to the folder where CopyFormats are stored in this
 //configuration
-function GetCopyFormatsDir: string;
+function GetExprCopyFormatsDir: string;
 begin
-  Result := UserDataDir+'\CopyFormats';
+  Result := UserDataDir+'\ExprCopyFormats';
 end;
 
 //Retrieves a list of all avaialable CopyFormat filenames
-function GetCopyFormats: TArray<string>;
+function GetExprCopyFormats: TArray<string>;
 var sr: TSearchRec;
   res: integer;
   fdir: string;
 begin
   SetLength(Result, 0);
-  fdir := GetCopyFormatsDir;
+  fdir := GetExprCopyFormatsDir;
   res := FindFirst(fdir+'\*.xslt', faAnyFile and not faDirectory, sr);
   try
     while res=0 do begin
@@ -223,12 +223,12 @@ begin
 
  //Rescan every time because the user could be adding files there
  //and expecting results
-  for fname in GetCopyFormats() do begin
+  for fname in GetExprCopyFormats() do begin
     item := TCopyFormatMenuItem.Create(Self);
     TCopyFormatMenuItem(item).Filename := ExtractFilename(fname);
     item.Caption := ChangeFileExt(TCopyFormatMenuItem(item).Filename, '');
     item.OnClick := CopyInFormatClick;
-    if item.Caption=fSettings.DefaultCopyFormatName then
+    if item.Caption=fSettings.DefaultExprCopyFormatName then
       item.Default := true;
     miCopyAs.Add(item);
   end;
@@ -253,7 +253,7 @@ end;
 procedure TfWordLookupBase.CopyInFormatClick(Sender: TObject);
 begin
   CopyToClipboard(
-    GetCopyFormatsDir+'\'+TCopyFormatMenuItem(Sender).Filename,
+    GetExprCopyFormatsDir+'\'+TCopyFormatMenuItem(Sender).Filename,
     GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
   );
 end;
@@ -268,7 +268,7 @@ end;
 
 procedure TfWordLookupBase.ConfigureClick(Sender: TObject);
 begin
-  fSettings.pcPages.ActivePage:=fSettings.tsDictCopyFormats;
+  fSettings.pcPages.ActivePage := fSettings.tsExprCopyFormats;
   fSettings.ShowModal;
 end;
 
@@ -383,13 +383,13 @@ procedure TfWordLookupBase.StringGridKeyPress(Sender: TObject; var Key: Char);
 begin
  //Copy the article to clipboard on Ctrl-C
   if (Key=^C) and StringGrid.Visible then begin
-    if fSettings.DefaultCopyFormatName='' then
+    if fSettings.DefaultExprCopyFormatName='' then
       CopyAsText(
         GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       )
     else
       CopyToClipboard(
-        GetCopyFormatsDir+'\'+fSettings.DefaultCopyFormatName+'.xslt',
+        GetExprCopyFormatsDir+'\'+fSettings.DefaultExprCopyFormatName+'.xslt',
         GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
       );
     Key := #00;
