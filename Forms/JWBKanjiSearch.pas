@@ -9,28 +9,7 @@ uses
 
 type
   TfKanjiSearch = class(TForm)
-    Panel1: TPanel;
-    rgSortBy: TRadioGroup;
-    btnOnlyCommon: TSpeedButton;
-    btnInClipboard: TSpeedButton;
-    sbClearFilters: TSpeedButton;
-    Panel2: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton19: TSpeedButton;
-    SpeedButton20: TSpeedButton;
-    SpeedButton25: TSpeedButton;
-    rgOrAnd: TRadioGroup;
-    cbNot: TCheckBox;
-    lbCategories: TCheckListBox;
     ScrollBox1: TScrollBox;
-    sbJouyouExpand: TSpeedButton;
-    sbJouyouMinus: TSpeedButton;
-    sbJouyouPlus: TSpeedButton;
-    sbJouyouShrink: TSpeedButton;
-    sbStrokeCountExpand: TSpeedButton;
-    sbStrokeCountMinus: TSpeedButton;
-    sbStrokeCountPlus: TSpeedButton;
-    sbStrokeCountShrink: TSpeedButton;
     cbOtherType: TComboBox;
     edtDefinition: TEdit;
     edtJouyou: TEdit;
@@ -41,6 +20,25 @@ type
     pbRadicals: TWakanPaintbox;
     ImageList1: TImageList;
     edtOther: TEdit;
+    Panel1: TPanel;
+    btnOnlyCommon: TSpeedButton;
+    btnInClipboard: TSpeedButton;
+    sbClearFilters: TSpeedButton;
+    rgSortBy: TRadioGroup;
+    Panel2: TPanel;
+    SpeedButton1: TSpeedButton;
+    SpeedButton19: TSpeedButton;
+    SpeedButton20: TSpeedButton;
+    SpeedButton25: TSpeedButton;
+    rgOrAnd: TRadioGroup;
+    cbNot: TCheckBox;
+    lbCategories: TCheckListBox;
+    RangeControlsPanel: TGridPanel;
+    sbStrokeCountMinus: TSpeedButton;
+    sbStrokeCountExpand: TSpeedButton;
+    sbStrokeCountPlus: TSpeedButton;
+    sbStrokeCountShrink: TSpeedButton;
+    HoverTimer: TTimer;
     procedure sbPinYinClick(Sender: TObject);
     procedure sbClearFiltersClick(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);
@@ -57,10 +55,6 @@ type
     procedure sbStrokeCountMinusClick(Sender: TObject);
     procedure sbStrokeCountExpandClick(Sender: TObject);
     procedure sbStrokeCountShrinkClick(Sender: TObject);
-    procedure sbJouyouPlusClick(Sender: TObject);
-    procedure sbJouyouMinusClick(Sender: TObject);
-    procedure sbJouyouExpandClick(Sender: TObject);
-    procedure sbJouyouShrinkClick(Sender: TObject);
     procedure rgSortByClick(Sender: TObject);
     procedure cbOtherTypeChange(Sender: TObject);
     procedure pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
@@ -76,7 +70,13 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure edtPinYinLeftButtonClick(Sender: TObject);
+    procedure edtStrokeCountMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure HoverTimerTimer(Sender: TObject);
 
+  protected
+    FCurHoverControl: TControl; //!nil when displaying hover-panel over something
+    FLastHoverTime: integer;
   public
     procedure SaveSettings(reg: TCustomIniFile);
     procedure LoadSettings(reg: TCustomIniFile);
@@ -322,6 +322,39 @@ begin
   fKanji.InvalidateList;
 end;
 
+procedure TfKanjiSearch.edtStrokeCountMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  FCurHoverControl := TControl(Sender);
+  FLastHoverTime := GetTickCount;
+  HoverTimer.Enabled := true;
+  RangeControlsPanel.Top := TEdit(Sender).Top + (TEdit(Sender).Height - RangeControlsPanel.Height) div 2;
+  if RangeControlsPanel.Top<0 then
+    RangeControlsPanel.Top := 0;
+  RangeControlsPanel.Left := TEdit(Sender).Left + TEdit(Sender).Width - RangeControlsPanel.Width div 3;
+  RangeControlsPanel.Visible := true;
+end;
+
+procedure TfKanjiSearch.HoverTimerTimer(Sender: TObject);
+begin
+  if FCurHoverControl=nil then begin
+    RangeControlsPanel.Hide;
+    FCurHoverControl := nil;
+    HoverTimer.Enabled := false;
+    exit;
+  end;
+
+  if PtInRect(FCurHoverControl.ClientRect, FCurHoverControl.ScreenToClient(Mouse.CursorPos))
+  or PtInRect(RangeControlsPanel.ClientRect, RangeControlsPanel.ScreenToClient(Mouse.CursorPos)) then
+    FLastHoverTime := GetTickCount()
+  else
+  if GetTickCount-FLastHoverTime > 200 then begin
+    RangeControlsPanel.Hide;
+    FCurHoverControl := nil;
+    HoverTimer.Enabled := false;
+  end;
+end;
+
 procedure TfKanjiSearch.edtJouyouChange(Sender: TObject);
 begin
   fKanji.InvalidateList;
@@ -403,45 +436,31 @@ begin
   result:=otx;
 end;
 
+
 procedure TfKanjiSearch.sbStrokeCountPlusClick(Sender: TObject);
 begin
-  edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,1,1);
+  if FCurHoverControl<>nil then
+    TEdit(FCurHoverControl).Text := OffsetRange(TEdit(FCurHoverControl).Text, 1, 1);
 end;
 
 procedure TfKanjiSearch.sbStrokeCountMinusClick(Sender: TObject);
 begin
-  edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,-1,-1);
+  if FCurHoverControl<>nil then
+    TEdit(FCurHoverControl).Text := OffsetRange(TEdit(FCurHoverControl).Text, -1, -1);
 end;
 
 procedure TfKanjiSearch.sbStrokeCountExpandClick(Sender: TObject);
 begin
-  edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,-1,1);
+  if FCurHoverControl<>nil then
+    TEdit(FCurHoverControl).Text := OffsetRange(TEdit(FCurHoverControl).Text, -1, 1);
 end;
 
 procedure TfKanjiSearch.sbStrokeCountShrinkClick(Sender: TObject);
 begin
-  edtStrokeCount.text:=OffsetRange(edtStrokeCount.text,1,-1);
+  if FCurHoverControl<>nil then
+    TEdit(FCurHoverControl).Text := OffsetRange(TEdit(FCurHoverControl).Text, 1, -1);
 end;
 
-procedure TfKanjiSearch.sbJouyouPlusClick(Sender: TObject);
-begin
-  edtJouyou.text:=OffsetRange(edtJouyou.text,1,1);
-end;
-
-procedure TfKanjiSearch.sbJouyouMinusClick(Sender: TObject);
-begin
-  edtJouyou.text:=OffsetRange(edtJouyou.text,-1,-1);
-end;
-
-procedure TfKanjiSearch.sbJouyouExpandClick(Sender: TObject);
-begin
-  edtJouyou.text:=OffsetRange(edtJouyou.text,-1,1);
-end;
-
-procedure TfKanjiSearch.sbJouyouShrinkClick(Sender: TObject);
-begin
-  edtJouyou.text:=OffsetRange(edtJouyou.text,1,-1);
-end;
 
 procedure TfKanjiSearch.rgSortByClick(Sender: TObject);
 begin
