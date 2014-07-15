@@ -155,7 +155,7 @@ end;
 function KanaConvTests: ITestSuite;
 var ASuite: TTestSuite;
 begin
-  ASuite := TTestSuite.create('KanaConv');
+  ASuite := TTestSuite.Create('KanaConv');
   ASuite.addTest(TKanaTableTest.Suite(['Hepburn.roma']));
   ASuite.addTest(TKanaTableTest.Suite(['Kiriji - Polivanov.roma']));
   ASuite.addTest(TBopomofoTableTest.Suite(['PinYin.rpy']));
