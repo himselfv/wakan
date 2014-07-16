@@ -16,7 +16,6 @@ type
     edtPinYin: TButtonedEdit;
     edtSkip: TEdit;
     edtStrokeCount: TEdit;
-    edtYomi: TEdit;
     pbRadicals: TWakanPaintbox;
     ImageList1: TImageList;
     edtOther: TEdit;
@@ -33,12 +32,13 @@ type
     rgOrAnd: TRadioGroup;
     cbNot: TCheckBox;
     lbCategories: TCheckListBox;
-    RangeControlsPanel: TGridPanel;
+    Panel3: TPanel;
+    edtYomi: TEdit;
     sbStrokeCountMinus: TSpeedButton;
     sbStrokeCountExpand: TSpeedButton;
-    sbStrokeCountPlus: TSpeedButton;
     sbStrokeCountShrink: TSpeedButton;
-    HoverTimer: TTimer;
+    sbStrokeCountPlus: TSpeedButton;
+    Label1: TLabel;
     procedure sbPinYinClick(Sender: TObject);
     procedure sbClearFiltersClick(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);
@@ -70,9 +70,6 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure edtPinYinLeftButtonClick(Sender: TObject);
-    procedure edtStrokeCountMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
-    procedure HoverTimerTimer(Sender: TObject);
 
   protected
     FCurHoverControl: TControl; //!nil when displaying hover-panel over something
@@ -320,39 +317,6 @@ end;
 procedure TfKanjiSearch.edtStrokeCountChange(Sender: TObject);
 begin
   fKanji.InvalidateList;
-end;
-
-procedure TfKanjiSearch.edtStrokeCountMouseMove(Sender: TObject;
-  Shift: TShiftState; X, Y: Integer);
-begin
-  FCurHoverControl := TControl(Sender);
-  FLastHoverTime := GetTickCount;
-  HoverTimer.Enabled := true;
-  RangeControlsPanel.Top := TEdit(Sender).Top + (TEdit(Sender).Height - RangeControlsPanel.Height) div 2;
-  if RangeControlsPanel.Top<0 then
-    RangeControlsPanel.Top := 0;
-  RangeControlsPanel.Left := TEdit(Sender).Left + TEdit(Sender).Width - RangeControlsPanel.Width div 3;
-  RangeControlsPanel.Visible := true;
-end;
-
-procedure TfKanjiSearch.HoverTimerTimer(Sender: TObject);
-begin
-  if FCurHoverControl=nil then begin
-    RangeControlsPanel.Hide;
-    FCurHoverControl := nil;
-    HoverTimer.Enabled := false;
-    exit;
-  end;
-
-  if PtInRect(FCurHoverControl.ClientRect, FCurHoverControl.ScreenToClient(Mouse.CursorPos))
-  or PtInRect(RangeControlsPanel.ClientRect, RangeControlsPanel.ScreenToClient(Mouse.CursorPos)) then
-    FLastHoverTime := GetTickCount()
-  else
-  if GetTickCount-FLastHoverTime > 200 then begin
-    RangeControlsPanel.Hide;
-    FCurHoverControl := nil;
-    HoverTimer.Enabled := false;
-  end;
 end;
 
 procedure TfKanjiSearch.edtJouyouChange(Sender: TObject);
