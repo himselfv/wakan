@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, CheckLst, IniFiles, JWBRadical, WakanPaintbox,
-  Vcl.ImgList;
+  Vcl.ImgList, Vcl.Menus;
 
 type
   TfKanjiSearch = class(TForm)
@@ -19,18 +19,7 @@ type
     pbRadicals: TWakanPaintbox;
     ImageList1: TImageList;
     edtOther: TEdit;
-    Panel1: TPanel;
-    btnOnlyCommon: TSpeedButton;
-    btnInClipboard: TSpeedButton;
-    sbClearFilters: TSpeedButton;
-    rgSortBy: TRadioGroup;
     Panel2: TPanel;
-    SpeedButton1: TSpeedButton;
-    SpeedButton19: TSpeedButton;
-    SpeedButton20: TSpeedButton;
-    SpeedButton25: TSpeedButton;
-    rgOrAnd: TRadioGroup;
-    cbNot: TCheckBox;
     lbCategories: TCheckListBox;
     Panel3: TPanel;
     edtYomi: TEdit;
@@ -39,6 +28,13 @@ type
     sbStrokeCountShrink: TSpeedButton;
     sbStrokeCountPlus: TSpeedButton;
     Label1: TLabel;
+    sbClearFilters: TSpeedButton;
+    PopupMenu1: TPopupMenu;
+    miAddCategory: TMenuItem;
+    miUncheckAllCategories: TMenuItem;
+    miEditCategory: TMenuItem;
+    miDeleteCategory: TMenuItem;
+    cbOrAnd: TComboBox;
     procedure sbPinYinClick(Sender: TObject);
     procedure sbClearFiltersClick(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);
@@ -65,11 +61,12 @@ type
     procedure SpeedButton20Click(Sender: TObject);
     procedure lbCategoriesDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
-    procedure rgOrAndClick(Sender: TObject);
     procedure lbCategoriesDblClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure edtPinYinLeftButtonClick(Sender: TObject);
+    procedure Panel3MouseEnter(Sender: TObject);
+    procedure Panel3MouseLeave(Sender: TObject);
 
   protected
     FCurHoverControl: TControl; //!nil when displaying hover-panel over something
@@ -77,16 +74,13 @@ type
   public
     procedure SaveSettings(reg: TCustomIniFile);
     procedure LoadSettings(reg: TCustomIniFile);
-    procedure LanguageChanged;
     procedure ResetFilters;
     procedure SetCategoryFilter(const ACategories: array of integer;
       AOr, ANot: boolean);
 
   protected
     FSetOtherTypeIndex: integer; //set when reading settings, applied on next ReloadOtherTypes()
-    FSetSortBy: integer;
     procedure SetOtherTypeIndex(const AItemIndex: integer);
-    procedure ReloadSortBy;
   public
     procedure ReloadOtherTypes;
 
@@ -119,12 +113,12 @@ end;
 procedure TfKanjiSearch.FormShow(Sender: TObject);
 begin
   ReloadOtherTypes;
+  cbOrAnd.ItemIndex := 0;
 end;
 
 procedure TfKanjiSearch.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  fKanji.btnSearchSort.Down:=false;
   fKanji.aSearch.Checked:=false;
 end;
 
@@ -135,9 +129,8 @@ begin
   edtYomi.Text := '';
   edtDefinition.Text := '';
   edtOther.Text := '';
-  SpeedButton1.Down:=false;
-  btnOnlyCommon.Down:=false;
-  btnInClipboard.Down:=false;
+  fKanji.cbOnlyCommon.Checked := false;
+  fKanji.cbInClipboard.Checked := false;
   edtStrokeCount.Text := '';
   FCurRadChars := '';
   pbRadicals.Invalidate;
@@ -175,26 +168,11 @@ begin
     cbOtherType.ItemIndex := AItemIndex;
 end;
 
-//Called from LanguageChanged because can be different for different target languages
-procedure TfKanjiSearch.ReloadSortBy;
-begin
-  rgSortBy.Items.Clear;
-  rgSortBy.Items.Add(_l('#00146^eRadical'));
-  rgSortBy.Items.Add(_l('#00147^eStroke count'));
-  rgSortBy.Items.Add(_l('#00148^eFrequency'));
-  rgSortBy.Items.Add(_l('#00149^eRandom'));
-  rgSortBy.Items.Add(_l('#00877^eUnsorted'));
- { There could be additional sorting orders for Japanese, but they're somehow
-  disabled in Wakan 1.67+ }
-  rgSortBy.ItemIndex := FSetSortBy; //0 by default
-  FSetSortBy := 0; //no reuse
-end;
-
 //Saves form settings to registry
 procedure TfKanjiSearch.SaveSettings(reg: TCustomIniFile);
 begin
-  reg.WriteBool('KanjiSearch','OnlyCommon',fKanjiSearch.btnOnlyCommon.Down);
-//  reg.WriteBool('KanjiSearch','InClipboard',fKanjiSearch.btnInClipboard.Down); //do not save-restore this for now (by design)
+  reg.WriteBool('KanjiSearch','OnlyCommon',fKanji.cbOnlyCommon.Checked);
+//  reg.WriteBool('KanjiSearch','InClipboard',fKanji.cbInClipboard.Checked); //do not save-restore this for now (by design)
   if Self.edtPinYin.Text<>'' then
     reg.WriteString('KanjiSearch','PinYin',Self.edtPinYin.Text)
   else
@@ -232,7 +210,7 @@ begin
     reg.WriteString('KanjiSearch','Other',Self.edtOther.Text)
   else
     reg.DeleteKey('KanjiSearch','Other');
-  reg.WriteInteger('Characters','Sort',Self.rgSortBy.ItemIndex);
+  reg.WriteInteger('Characters','Sort',fKanji.rgSortBy.ItemIndex);
   reg.WriteInteger('Characters','OtherSearch',Self.cbOtherType.ItemIndex);
 end;
 
@@ -240,8 +218,8 @@ end;
 procedure TfKanjiSearch.LoadSettings(reg: TCustomIniFile);
 var AOtherTypeSelected: integer;
 begin
-  Self.btnOnlyCommon.Down := reg.ReadBool('KanjiSearch','OnlyCommon',false);
-//  Self.btnInClipboard.Down := reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
+  fKanji.cbOnlyCommon.Checked := reg.ReadBool('KanjiSearch','OnlyCommon',false);
+//  fKanji.cbInClipboard.Checked := reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
   Self.edtPinYin.Text := reg.ReadString('KanjiSearch','PinYin','');
   Self.edtYomi.Text := reg.ReadString('KanjiSearch','Yomi','');
   Self.edtDefinition.Text := reg.ReadString('KanjiSearch','Definition','');
@@ -255,14 +233,7 @@ begin
   if AOtherTypeSelected<0 then
     AOtherTypeSelected := reg.ReadInteger('Characters','OtherSearch',0); //backward compability
   SetOtherTypeIndex(AOtherTypeSelected);
-  FSetSortBy := reg.ReadInteger('Characters','Sort',0);
-end;
-
-//Called by MainForm when selected language (Japanese/Chinese) changes
-procedure TfKanjiSearch.LanguageChanged;
-begin
-  ReloadSortBy;
-  fKanji.Reload;
+  fKanji.FSetSortBy := reg.ReadInteger('Characters','Sort',0);
 end;
 
 procedure TfKanjiSearch.sbPinYinClick(Sender: TObject);
@@ -401,6 +372,25 @@ begin
 end;
 
 
+procedure TfKanjiSearch.Panel3MouseEnter(Sender: TObject);
+begin
+  sbStrokeCountPlus.Visible := true;
+  sbStrokeCountMinus.Visible := true;
+  sbStrokeCountExpand.Visible := true;
+  sbStrokeCountShrink.Visible := true;
+  sbStrokeCountMinus.Left := sbStrokeCountPlus.Left + sbStrokeCountPlus.Width + 1;
+  sbStrokeCountExpand.Left := sbStrokeCountMinus.Left + sbStrokeCountMinus.Width + 1;
+  sbStrokeCountShrink.Left := sbStrokeCountExpand.Left + sbStrokeCountExpand.Width + 1;
+end;
+
+procedure TfKanjiSearch.Panel3MouseLeave(Sender: TObject);
+begin
+  sbStrokeCountPlus.Visible := false;
+  sbStrokeCountMinus.Visible := false;
+  sbStrokeCountExpand.Visible := false;
+  sbStrokeCountShrink.Visible := false;
+end;
+
 procedure TfKanjiSearch.sbStrokeCountPlusClick(Sender: TObject);
 begin
   if FCurHoverControl<>nil then
@@ -458,8 +448,8 @@ procedure TfKanjiSearch.lbCategoriesClick(Sender: TObject);
 var IsKnownLearned: boolean;
 begin
   IsKnownLearned := GetSelCatIdx(lbCategories)=KnownLearned;
-  SpeedButton25.Enabled:=not IsKnownLearned;
-  SpeedButton20.Enabled:=not IsKnownLearned;
+  miEditCategory.Enabled:=not IsKnownLearned;
+  miDeleteCategory.Enabled:=not IsKnownLearned;
 end;
 
 procedure TfKanjiSearch.lbCategoriesClickCheck(Sender: TObject);
@@ -491,11 +481,6 @@ begin
   lbCategories.Canvas.TextOut(Rect.Left,Rect.Top,lbCategories.Items[index]);
 end;
 
-procedure TfKanjiSearch.rgOrAndClick(Sender: TObject);
-begin
-  fKanji.Reload;
-end;
-
 procedure TfKanjiSearch.lbCategoriesDblClick(Sender: TObject);
 var i:integer;
 begin
@@ -516,10 +501,12 @@ var i, j, idx: integer;
   found: boolean;
 begin
   if AOr then
-    rgOrAnd.ItemIndex := 0
+    if not ANot then
+      cbOrAnd.ItemIndex := 0
+    else
+      cbOrAnd.ItemIndex := 2
   else
-    rgOrAnd.ItemIndex := 1;
-  cbNot.Checked := ANot;
+    cbOrAnd.ItemIndex := 1;
 
   for i:=0 to lbCategories.Items.Count-1 do begin
     idx := GetCatIdx(lbCategories, i);

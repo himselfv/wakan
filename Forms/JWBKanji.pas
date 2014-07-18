@@ -38,11 +38,9 @@ type
     btnCompounds: TSpeedButton;
     btnKanjiDetails: TSpeedButton;
     btnPrintCards: TButton;
-    btnSearchSort: TSpeedButton;
     Actions: TActionList;
     aPrint: TAction;
     aAll: TAction;
-    aLearned: TAction;
     aCommon: TAction;
     aClipboard: TAction;
     aPinYin: TAction;
@@ -54,6 +52,10 @@ type
     PopupMenu: TPopupMenu;
     miCopyAs: TMenuItem;
     N1: TMenuItem;
+    rgSortBy: TComboBox;
+    Label1: TLabel;
+    cbOnlyCommon: TCheckBox;
+    cbInClipboard: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
     procedure btnPrintCardsClick(Sender: TObject);
@@ -84,7 +86,6 @@ type
     procedure DrawGrid1Click(Sender: TObject);
     procedure aPrintExecute(Sender: TObject);
     procedure aAllExecute(Sender: TObject);
-    procedure aLearnedExecute(Sender: TObject);
     procedure aClipboardExecute(Sender: TObject);
     procedure aCommonExecute(Sender: TObject);
     procedure aPinYinExecute(Sender: TObject);
@@ -94,8 +95,8 @@ type
     procedure aSaveToFileExecute(Sender: TObject);
     procedure aSearchChecked(Sender: TObject);
     procedure aSearchExecute(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
+    procedure cbOnlyCommonClick(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -108,12 +109,15 @@ type
     procedure SetFocusedCharsLow(const Value: FString);
     procedure SetFocusedChars(const Value: FString);
     procedure ClipboardChanged(Sender: TObject);
+    procedure ReloadSortBy;
   public
+    FSetSortBy: integer;
     procedure Reload;
     procedure InvalidateList;
     procedure SaveChars;
     procedure FilterByRadical(const radno: integer);
     function GetKanji(cx,cy:integer):string;
+    procedure LanguageChanged;
     property FocusedChars: FString read FFocusedChars write SetFocusedChars;
 
   protected
@@ -151,11 +155,6 @@ var ki:TStringList;
 
 {$R *.DFM}
 
-procedure TfKanji.FormCreate(Sender: TObject);
-begin
-  btnSearchSort.GroupIndex := 2;
-end;
-
 procedure TfKanji.FormShow(Sender: TObject);
 begin
   if fKanjiSearch<>nil then
@@ -170,6 +169,28 @@ end;
 procedure TfKanji.FormHide(Sender: TObject);
 begin
   Clipboard.Watchers.Remove(Self.ClipboardChanged);
+end;
+
+//Called by MainForm when selected language (Japanese/Chinese) changes
+procedure TfKanji.LanguageChanged;
+begin
+  ReloadSortBy;
+  Self.Reload;
+end;
+
+//Called from LanguageChanged because can be different for different target languages
+procedure TfKanji.ReloadSortBy;
+begin
+  rgSortBy.Items.Clear;
+  rgSortBy.Items.Add(_l('#00146^eRadical'));
+  rgSortBy.Items.Add(_l('#00147^eStroke count'));
+  rgSortBy.Items.Add(_l('#00148^eFrequency'));
+  rgSortBy.Items.Add(_l('#00149^eRandom'));
+  rgSortBy.Items.Add(_l('#00877^eUnsorted'));
+ { There could be additional sorting orders for Japanese, but they're somehow
+  disabled in Wakan 1.67+ }
+  rgSortBy.ItemIndex := FSetSortBy; //0 by default
+  FSetSortBy := 0; //no reuse
 end;
 
 //split value string into string list. values are separated by comma or ;
@@ -387,14 +408,14 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
     end;
 
    { Filter mode: 0=OR, 1=AND }
-    Result := (fKanjiSearch.rgOrAnd.ItemIndex=1); //default result: true if ANDs, false if ORs
+    Result := (fKanjiSearch.cbOrAnd.ItemIndex=1); //default result: true if ANDs, false if ORs
     for i := 0 to Length(categories) - 1 do
       if IsKnown(categories[i], TChar.FCh(TChar.fUnicode)) then begin
-        if fKanjiSearch.rgOrAnd.ItemIndex=0 then begin Result:=true; break; end;
+        if fKanjiSearch.cbOrAnd.ItemIndex in [0, 2] then begin Result:=true; break; end;
       end else begin
-        if fKanjiSearch.rgOrAnd.ItemIndex=1 then Result:=false;
+        if fKanjiSearch.cbOrAnd.ItemIndex = 1 then Result:=false;
       end;
-    if fKanjiSearch.cbNot.Checked then Result:=not Result;
+    if fKanjiSearch.cbOrAnd.ItemIndex=2 then Result:=not Result;
   end;
 
 begin
@@ -403,9 +424,8 @@ begin
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
     Screen.Cursor:=crHourGlass;
-    Self.aLearned.Checked:=fKanjiSearch.SpeedButton1.Down;
-    Self.aCommon.Checked:=fKanjiSearch.btnOnlyCommon.Down;
-    Self.aClipboard.Checked:=fKanjiSearch.btnInClipboard.Down;
+    Self.aCommon.Checked:=Self.cbOnlyCommon.Checked;
+    Self.aClipboard.Checked:=Self.cbInClipboard.Checked;
     fltclip:=TStringList.Create;
     fltpinyin:=TStringList.Create;
     fltyomi:=TStringList.Create;
@@ -416,7 +436,7 @@ begin
     sl4:=TStringList.Create;
     sl10:=TStringList.Create;
     CopyCategories;
-    if fKanjiSearch.btnInClipboard.Down then
+    if Self.cbInClipboard.Checked then
       for i:=1 to flength(Clipboard.Text) do
         if (Word(fgetch(Clipboard.Text,i)) >= $4000) and (fltclip.IndexOf(fgetch(Clipboard.Text,i))<0) then
           fltclip.Add(fgetch(Clipboard.Text,i));
@@ -474,19 +494,19 @@ begin
       end;
     grs := GetCellSize();
     if curlang='j' then
-      case fKanjiSearch.rgSortBy.ItemIndex of
+      case Self.rgSortBy.ItemIndex of
         0,3,4:TChar.SetOrder('JpUnicode_Ind');
         1:TChar.SetOrder('JpStrokeCount_Ind');
         2:TChar.SetOrder('JpFrequency_Ind');
       end
     else
-      case fKanjiSearch.rgSortBy.ItemIndex of
+      case Self.rgSortBy.ItemIndex of
         0,3,4:TChar.SetOrder('ChUnicode_Ind');
         1:TChar.SetOrder('ChStrokeCount_Ind');
         2:TChar.SetOrder('ChFrequency_Ind');
       end;
     ki.Clear;
-    clipsort:=(fKanjiSearch.btnInClipboard.Down) and (fKanjiSearch.rgSortBy.ItemIndex=4);
+    clipsort:=(Self.cbInClipboard.Checked) and (Self.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;
     while ((not clipsort) and ((not TChar.EOF) and ((curlang='c') or (TChar.Int(TChar.fChinese)=0)))) or
@@ -496,9 +516,9 @@ begin
       if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TChar.fType)='S') then accept:=false;
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TChar.fType)='T') then accept:=false;
-      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
-      if accept and (fKanjiSearch.btnOnlyCommon.Down) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
-      if accept and (not clipsort) and (fKanjiSearch.btnInClipboard.Down) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
+      if accept and (Self.cbOnlyCommon.Checked) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
+      if accept and (Self.cbOnlyCommon.Checked) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
+      if accept and (not clipsort) and (Self.cbInClipboard.Checked) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
       if accept and (fKanjiSearch.edtPinYin.Text<>'') and (fltpinyin.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
       if accept and (fKanjiSearch.edtYomi.Text<>'') and (fltyomi.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
       if accept and (fKanjiSearch.edtDefinition.Text<>'') and (fltmean.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
@@ -549,8 +569,8 @@ begin
       if accept then
       begin
         kclass := GetCharClass(TChar.Str(TChar.fUnicode));
-        if ((curlang<>'c') and (fKanjiSearch.rgSortBy.ItemIndex=3))
-        or ((curlang='c') and (fKanjiSearch.rgSortBy.ItemIndex=3)) then
+        if ((curlang<>'c') and (Self.rgSortBy.ItemIndex=3))
+        or ((curlang='c') and (Self.rgSortBy.ItemIndex=3)) then
           ki.Insert(random(ki.Count),kclass+TChar.Str(TChar.fUnicode))
         else
           ki.Add(kclass+TChar.Str(TChar.fUnicode));
@@ -1072,6 +1092,11 @@ begin
   Self.aSearch.Execute;
 end;
 
+procedure TfKanji.cbOnlyCommonClick(Sender: TObject);
+begin
+  Self.Reload;
+end;
+
 procedure TfKanji.btnKanjiDetailsClick(Sender: TObject);
 begin
   fMenu.aKanjiDetails.Execute;
@@ -1206,7 +1231,7 @@ end;
 
 procedure TfKanji.ClipboardChanged(Sender: TObject);
 begin
-  if Self.Visible and (fKanjiSearch<>nil) and (fKanjiSearch.btnInClipboard.Down) then
+  if Self.Visible and (fKanjiSearch<>nil) and (Self.cbInClipboard.Checked) then
     Self.Reload();
 end;
 
@@ -1217,20 +1242,14 @@ end;
 
 procedure TfKanji.aClipboardExecute(Sender: TObject);
 begin
-  fKanjiSearch.btnInClipboard.Down:=not fKanjiSearch.btnInClipboard.Down;
-  fKanjiSearch.sbPinYinClick(Sender);
+  Self.cbInClipboard.Checked:=not Self.cbInClipboard.Checked;
+  Self.Reload;
 end;
 
 procedure TfKanji.aCommonExecute(Sender: TObject);
 begin
-  fKanjiSearch.btnOnlyCommon.Down:=not fKanjiSearch.btnOnlyCommon.Down;
-  fKanjiSearch.sbPinYinClick(Sender);
-end;
-
-procedure TfKanji.aLearnedExecute(Sender: TObject);
-begin
-  fKanjiSearch.SpeedButton1.Down:=not fKanjiSearch.SpeedButton1.Down;
-  fKanjiSearch.sbPinYinClick(Sender);
+  Self.cbOnlyCommon.Checked:=not Self.cbOnlyCommon.Checked;
+  Self.Reload;
 end;
 
 procedure TfKanji.aPinYinExecute(Sender: TObject);

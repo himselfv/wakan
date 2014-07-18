@@ -15,7 +15,6 @@ object fKanji: TfKanji
   OldCreateOrder = False
   Scaled = False
   ShowHint = True
-  OnCreate = FormCreate
   OnHide = FormHide
   OnResize = FormResize
   OnShow = FormShow
@@ -98,7 +97,7 @@ object fKanji: TfKanji
       object RxLabel15: TLabel
         Left = 0
         Top = 0
-        Width = 487
+        Width = 160
         Height = 21
         Align = alClient
         Caption = 'RxLabel15'
@@ -112,25 +111,58 @@ object fKanji: TfKanji
         ExplicitWidth = 75
         ExplicitHeight = 16
       end
-      object btnSearchSort: TSpeedButton
-        Left = 487
+      object Label1: TLabel
+        Left = 407
         Top = 0
-        Width = 137
+        Width = 49
         Height = 21
-        Hint = '#00119^eSearch & change sort order'
-        Action = aSearch
         Align = alRight
-        AllowAllUp = True
-        Caption = '#00120^eSearch && sort'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        ExplicitLeft = 8
+        Caption = 'Sort by: '
+        Layout = tlCenter
+        ExplicitLeft = 422
+        ExplicitTop = 3
+      end
+      object rgSortBy: TComboBox
+        Left = 456
+        Top = 0
+        Width = 168
+        Height = 21
+        Align = alRight
+        Style = csDropDownList
+        ItemIndex = 4
+        TabOrder = 0
+        Text = 'Gakken Kanji'
+        OnChange = cbOnlyCommonClick
+        Items.Strings = (
+          '#00146^eRadical'
+          '#00147^eStroke count'
+          '#00148^eFrequency'
+          '#00198^eLearner index'
+          'Gakken Kanji'
+          'Remembering Kanji'
+          '#00149^eRandom')
+      end
+      object cbOnlyCommon: TCheckBox
+        Left = 160
+        Top = 0
+        Width = 128
+        Height = 21
+        Hint = '#00186^eDisplay only common characters'
+        Align = alRight
+        Caption = '#00187^eCommon'
+        TabOrder = 1
+        OnClick = cbOnlyCommonClick
+      end
+      object cbInClipboard: TCheckBox
+        Left = 288
+        Top = 0
+        Width = 119
+        Height = 21
+        Hint = '#00188^eDisplay only characters in clipboard'
+        Align = alRight
+        Caption = '#00189^eIn clipboard'
+        TabOrder = 2
+        OnClick = cbOnlyCommonClick
       end
     end
     object Panel3: TPanel
@@ -258,10 +290,6 @@ object fKanji: TfKanji
     object aClipboard: TAction
       Caption = '#00281^eIn clipboard only'
       OnExecute = aClipboardExecute
-    end
-    object aLearned: TAction
-      Caption = '#00279^eLearned only'
-      OnExecute = aLearnedExecute
     end
     object aCommon: TAction
       Caption = '#00280^eCommon only'

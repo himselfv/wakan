@@ -941,8 +941,8 @@ begin
      //we don't care if they proceeded or not because we can't do much anyway
   end;
 
-  if fKanjiSearch<>nil then
-    fKanjiSearch.LanguageChanged;
+  if fKanji<>nil then
+    fKanji.LanguageChanged;
   if fWordLookup<>nil then
     fWordLookup.LanguageChanged;
   if fEditor<>nil then
