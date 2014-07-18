@@ -183,8 +183,8 @@ function GetCharDet(i,j:integer):string;
 implementation
 
 uses UITypes, ShellApi, JWBKanji, JWBMenu, JWBSettings, JWBUnit, JWBCategories,
-  JWBKanjiSearch, JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBRefLinks,
-  JWBLanguage, JWBClipboard, JWBIntTip, JWBScreenTip;
+  JWBKanaConv, JWBCharData, JWBKanjiCompounds, JWBRefLinks, JWBLanguage,
+  JWBClipboard, JWBIntTip, JWBScreenTip;
 
 {$R *.DFM}
 
@@ -985,8 +985,8 @@ begin
   Alternative would be to hide filters and apply some other filters without
   resetting these. If the user wants to get back to his filters he just opens
   those back. }
-  fKanjiSearch.ResetFilters;
-  fKanjiSearch.SetCategoryFilter([KanjiCats[btn.Tag].idx], true, false);
+  fKanji.ResetFilters;
+  fKanji.SetCategoryFilter([KanjiCats[btn.Tag].idx], true, false);
   fKanji.InvalidateList;
 end;
 

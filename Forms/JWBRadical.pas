@@ -589,16 +589,6 @@ begin
   IntTip.MouseMove(DrawGrid,x,y,false);
 end;
 
-function TfRadical.GetKanji(x,y:integer):string;
-var p:integer;
-begin
-  p:=y*DrawGrid.ColCount+x;
-  result:='';
-  if p>=rli.Count then exit;
-  if p<0 then exit;
-  result:=rl[p];
-end;
-
 procedure TfRadical.rgSearchMethodClick(Sender: TObject);
 var i:integer;
 begin
@@ -800,6 +790,18 @@ begin
     end;
 end;
 
+
+{ Content highlight }
+
+function TfRadical.GetKanji(x,y:integer):string;
+var p:integer;
+begin
+  p:=y*DrawGrid.ColCount+x;
+  result:='';
+  if p>=rli.Count then exit;
+  if p<0 then exit;
+  result:=rl[p];
+end;
 
 function RadicalGridHighlightContent(Control: TControl; DragStart, MousePos: TPoint): string;
 var gc: TGridCoord;

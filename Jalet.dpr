@@ -36,7 +36,6 @@ uses
   JWBStatistics in 'Forms\JWBStatistics.pas' {fStatistics},
   JWBWordList in 'Forms\JWBWordList.pas' {fWordList},
   JWBBitmap in 'Forms\JWBBitmap.pas' {fBitmap},
-  JWBKanjiSearch in 'Forms\JWBKanjiSearch.pas' {fKanjiSearch},
   JWBKanjiCompounds in 'Forms\JWBKanjiCompounds.pas' {fKanjiCompounds},
   JWBKanjiDetails in 'Forms\JWBKanjiDetails.pas' {fKanjiDetails},
   JWBEditor in 'Forms\JWBEditor.pas' {fEditor},
@@ -99,7 +98,6 @@ begin
   Application.CreateForm(TfWordLookup, fWordLookup);
   Application.CreateForm(TfSettings, fSettings);
   Application.CreateForm(TfVocab, fVocab);
-  Application.CreateForm(TfKanjiSearch, fKanjiSearch);
   Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
   Application.CreateForm(TfEditor, fEditor);

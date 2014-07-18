@@ -908,7 +908,7 @@ object fMenu: TfMenu
         Action = fKanji.aAll
       end
       object miLearnedOnly: TMenuItem
-        Action = fKanji.aLearned
+        Caption = '#00279^eLearned only'
       end
       object miCommonOnly: TMenuItem
         Action = fKanji.aCommon

@@ -379,10 +379,10 @@ uses Types, MemSource, TextTable, JWBStrings, JWBCore, JWBClipboard, JWBUnit,
  JWBForms, JWBSplash, JWBIO, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
  JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical, JWBWordLookup,
  JWBKanjiCompounds, JWBExamples, JWBEditor, JWBVocab, JWBVocabDetails,
- JWBVocabFilters, JWBStatistics, JWBKanji, JWBKanjiDetails, JWBKanjiSearch,
- JWBWordKanji, JWBDictMan, JWBDictImport, JWBScreenTip, JWBCategories,
- JWBAnnotations, JWBCommandLine, JWBAutoImport, JWBComponents, JWBDownloader,
- JWBCategoryMgr, JWBIntTip;
+ JWBVocabFilters, JWBStatistics, JWBKanji, JWBKanjiDetails, JWBWordKanji,
+ JWBDictMan, JWBDictImport, JWBScreenTip, JWBCategories, JWBAnnotations,
+ JWBCommandLine, JWBAutoImport, JWBComponents, JWBDownloader, JWBCategoryMgr,
+ JWBIntTip;
 
 {$R *.DFM}
 
@@ -989,10 +989,10 @@ begin
   ReloadKanjiCategories();
   if fKanjiDetails<>nil then
     fKanjiDetails.CategoryListChanged;
-  if fKanjiSearch<>nil then begin
-    PasteKanjiCategoriesTo(fKanjiSearch.lbCategories.Items);
-    fKanjiSearch.lbCategories.ItemIndex:=0;
-    fKanjiSearch.lbCategoriesClick(Self); //react to changes
+  if fKanji<>nil then begin
+    PasteKanjiCategoriesTo(fKanji.lbCategories.Items);
+    fKanji.lbCategories.ItemIndex:=0;
+    fKanji.lbCategoriesClick(Self); //react to changes
   end;
 end;
 

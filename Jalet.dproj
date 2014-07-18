@@ -224,9 +224,6 @@
         <DCCReference Include="Forms\JWBBitmap.pas">
             <Form>fBitmap</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBKanjiSearch.pas">
-            <Form>fKanjiSearch</Form>
-        </DCCReference>
         <DCCReference Include="Forms\JWBKanjiCompounds.pas">
             <Form>fKanjiCompounds</Form>
         </DCCReference>
