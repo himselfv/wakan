@@ -69,8 +69,9 @@ begin
     Canvas := TControlCanvas.Create;
     try
       Canvas.Control := Self;
+      Canvas.Font := Self.Font;
       W := GetSystemMetrics(SM_CXMENUCHECK) + 4 + Canvas.TextWidth(Self.Caption);
-      SetBounds(X, Top, X+W, Height);
+      SetBounds(X, Top, W, Height);
     finally
       FreeAndNil(Canvas);
     end;
