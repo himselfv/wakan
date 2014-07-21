@@ -53,23 +53,8 @@ type
     N1: TMenuItem;
     rgSortBy: TComboBox;
     Label1: TLabel;
-    ScrollBox1: TScrollBox;
-    cbOtherType: TComboBox;
-    edtDefinition: TEdit;
-    edtJouyou: TEdit;
-    edtPinYin: TButtonedEdit;
-    edtSkip: TEdit;
-    edtStrokeCount: TEdit;
-    pbRadicals: TWakanPaintbox;
-    edtOther: TEdit;
-    Panel4: TPanel;
-    sbStrokeCountMinus: TSpeedButton;
-    sbStrokeCountExpand: TSpeedButton;
-    sbStrokeCountShrink: TSpeedButton;
-    sbStrokeCountPlus: TSpeedButton;
-    edtYomi: TEdit;
+    ScrollBox1: TPanel;
     Panel5: TPanel;
-    sbClearFilters: TSpeedButton;
     lbCategories: TCheckListBox;
     cbOrAnd: TComboBox;
     ilCategoryActions: TImageList;
@@ -81,6 +66,34 @@ type
     Panel6: TPanel;
     cbInClipboard: TWakanCheckbox;
     cbOnlyCommon: TWakanCheckbox;
+    sbPinYin: TSpeedButton;
+    edtPinYin: TEdit;
+    edtYomi: TEdit;
+    sbYomi: TSpeedButton;
+    sbDefinition: TSpeedButton;
+    edtDefinition: TEdit;
+    sbStrokeCount: TSpeedButton;
+    edtStrokeCount: TEdit;
+    sbStrokeCountPlus: TSpeedButton;
+    sbStrokeCountMinus: TSpeedButton;
+    sbStrokeCountExpand: TSpeedButton;
+    sbStrokeCountShrink: TSpeedButton;
+    Panel4: TPanel;
+    sbRadicals: TSpeedButton;
+    pbRadicals: TWakanPaintbox;
+    sbListRadicals: TSpeedButton;
+    sbSKIP: TSpeedButton;
+    edtSkip: TEdit;
+    sbJouyou: TSpeedButton;
+    edtJouyou: TEdit;
+    sbJouyouPlus: TSpeedButton;
+    sbJouyouMinus: TSpeedButton;
+    sbJouyouExpand: TSpeedButton;
+    sbJouyouShrink: TSpeedButton;
+    cbOtherType: TComboBox;
+    edtOther: TEdit;
+    sbOther: TSpeedButton;
+    sbClearFilters: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -116,8 +129,6 @@ type
     procedure aSearchChecked(Sender: TObject);
     procedure aSearchExecute(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
-    procedure edtPinYinChange(Sender: TObject);
-    procedure edtPinYinRightButtonClick(Sender: TObject);
     procedure miUncheckAllCategoriesClick(Sender: TObject);
     procedure pbRadicalsClick(Sender: TObject);
     procedure Panel4MouseEnter(Sender: TObject);
@@ -1416,17 +1427,6 @@ begin
   Self.InvalidateList;
 end;
 
-procedure TfKanji.edtPinYinChange(Sender: TObject);
-begin
-  TButtonedEdit(Sender).RightButton.Visible := TEdit(Sender).Text <> '';
-  Self.InvalidateList;
-end;
-
-procedure TfKanji.edtPinYinRightButtonClick(Sender: TObject);
-begin
-  TEdit(Sender).Text := '';
-end;
-
 //Takes tx in the form of "number" or "number_min-number_max", and adds min
 //to number_min and max to number max.
 //Returns new value for this filter.
@@ -1601,16 +1601,10 @@ begin
 end;
 
 procedure TfKanji.pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
-var TextHint: string;
-  HintWidth, HintHeight: integer;
 begin
   Canvas.Brush.Color := clBtnFace;
   Canvas.Font := TWakanPaintbox(Sender).Font;
-  TextHint := _l('#00178^Radical')+': ';
-  HintWidth := Canvas.TextWidth(TextHint);
-  HintHeight := Canvas.TextHeight(TextHint);
-  Canvas.TextOut(4, (TControl(Sender).Height-HintHeight) div 2, TextHint);
-  DrawUnicode(Canvas,5+HintWidth,2,16,FCurRadChars,FontRadical);
+  DrawUnicode(Canvas,5,2,16,FCurRadChars,FontRadical);
 end;
 
 
