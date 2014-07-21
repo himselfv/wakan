@@ -47,6 +47,8 @@ contains
   CheckAction in 'Controls\CheckAction.pas',
   FormPlacemnt in 'Controls\FormPlacemnt.pas',
   WakanListBoxes in 'Controls\WakanListBoxes.pas',
-  HintedEdit in 'Controls\HintedEdit.pas';
+  HintedEdit in 'Controls\HintedEdit.pas',
+  WakanCheckbox in 'Controls\WakanCheckbox.pas';
 
 end.
+

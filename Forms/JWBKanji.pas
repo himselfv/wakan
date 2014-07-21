@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, Actions, ActnList, CheckAction,
   JWBStrings, IniFiles, Grids, DB, ShellAPI, WakanPaintbox, Menus, CheckLst,
-  ImgList, JWBRadical;
+  ImgList, JWBRadical, WakanCheckbox;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -53,8 +53,6 @@ type
     N1: TMenuItem;
     rgSortBy: TComboBox;
     Label1: TLabel;
-    cbOnlyCommon: TCheckBox;
-    cbInClipboard: TCheckBox;
     ScrollBox1: TScrollBox;
     cbOtherType: TComboBox;
     edtDefinition: TEdit;
@@ -80,6 +78,9 @@ type
     miUncheckAllCategories: TMenuItem;
     miEditCategory: TMenuItem;
     miDeleteCategory: TMenuItem;
+    Panel6: TPanel;
+    cbInClipboard: TWakanCheckbox;
+    cbOnlyCommon: TWakanCheckbox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);

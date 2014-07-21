@@ -126,25 +126,32 @@ object fKanji: TfKanji
           'Remembering Kanji'
           '#00149^eRandom')
       end
-      object cbOnlyCommon: TCheckBox
+      object Panel6: TPanel
         Left = 0
         Top = 0
-        Width = 105
+        Width = 392
         Height = 21
-        Action = aCommon
-        Align = alLeft
-        Caption = '#00187^eCommon'
+        Align = alClient
+        BevelOuter = bvNone
         TabOrder = 1
-      end
-      object cbInClipboard: TCheckBox
-        Left = 105
-        Top = 0
-        Width = 119
-        Height = 21
-        Action = aClipboard
-        Align = alLeft
-        Caption = '#00189^eIn clipboard'
-        TabOrder = 2
+        object cbInClipboard: TWakanCheckbox
+          Left = 135
+          Top = 0
+          Width = 281
+          Height = 21
+          Action = aClipboard
+          Align = alLeft
+          TabOrder = 0
+        end
+        object cbOnlyCommon: TWakanCheckbox
+          Left = 0
+          Top = 0
+          Width = 135
+          Height = 21
+          Action = aCommon
+          Align = alLeft
+          TabOrder = 1
+        end
       end
     end
     object Panel3: TPanel
@@ -780,7 +787,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 400
     Bitmap = {
-      494C010104000800440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800580010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
