@@ -43,9 +43,6 @@ object fKanji: TfKanji
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitLeft = 0
-    ExplicitWidth = 630
-    ExplicitHeight = 345
     object BlankPanel1: TBlankPanel
       Left = 0
       Top = 27
@@ -61,8 +58,6 @@ object fKanji: TfKanji
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
-      ExplicitWidth = 630
-      ExplicitHeight = 291
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
@@ -91,8 +86,6 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitLeft = 121
-      ExplicitWidth = 602
     end
     object Panel2: TPanel
       AlignWithMargins = True
@@ -103,7 +96,6 @@ object fKanji: TfKanji
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitWidth = 624
       object Label1: TLabel
         Left = 392
         Top = 0
@@ -112,7 +104,6 @@ object fKanji: TfKanji
         Align = alRight
         Caption = 'Sort by: '
         Layout = tlCenter
-        ExplicitLeft = 385
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
@@ -134,7 +125,6 @@ object fKanji: TfKanji
           'Gakken Kanji'
           'Remembering Kanji'
           '#00149^eRandom')
-        ExplicitLeft = 456
       end
       object cbOnlyCommon: TCheckBox
         Left = 0
@@ -155,7 +145,6 @@ object fKanji: TfKanji
         Align = alLeft
         Caption = '#00189^eIn clipboard'
         TabOrder = 2
-        ExplicitLeft = 288
       end
     end
     object Panel3: TPanel
@@ -167,8 +156,6 @@ object fKanji: TfKanji
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
-      ExplicitTop = 321
-      ExplicitWidth = 624
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -228,7 +215,6 @@ object fKanji: TfKanji
         ParentFont = False
         TabOrder = 0
         TabStop = False
-        ExplicitLeft = 366
       end
     end
   end
@@ -242,8 +228,6 @@ object fKanji: TfKanji
     UseDockManager = False
     DockSite = True
     TabOrder = 1
-    ExplicitTop = 348
-    ExplicitWidth = 630
   end
   object pnlDockSearch: TPanel
     AlignWithMargins = True
@@ -651,8 +635,6 @@ object fKanji: TfKanji
           OnClick = SearchFilterChanged
           OnMouseEnter = Panel4MouseEnter
           OnMouseLeave = Panel4MouseLeave
-          ExplicitLeft = 68
-          ExplicitWidth = 0
         end
       end
     end
@@ -665,9 +647,6 @@ object fKanji: TfKanji
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitTop = 377
-      ExplicitWidth = 151
-      ExplicitHeight = 152
       object sbClearFilters: TSpeedButton
         Left = 0
         Top = 286
@@ -699,7 +678,6 @@ object fKanji: TfKanji
         OnClick = lbCategoriesClick
         OnDblClick = lbCategoriesDblClick
         OnDrawItem = lbCategoriesDrawItem
-        ExplicitHeight = 109
       end
       object cbOrAnd: TComboBox
         Left = 0
@@ -715,7 +693,6 @@ object fKanji: TfKanji
           'In any of:'
           'In all of:'
           'Not in any of:')
-        ExplicitWidth = 152
       end
     end
   end
@@ -803,7 +780,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 400
     Bitmap = {
-      494C010104000800400010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800440010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

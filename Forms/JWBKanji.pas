@@ -885,12 +885,12 @@ begin
    //First try new translation strings
     if curlang='c' then begin
       case fSettings.RadioGroup5.ItemIndex of
-        0: sbJouyou:=_l('#00958^eFound traditional characters (%d):', [ki.Count]);
-        1: sbJouyou:=_l('#00959^eFound simplified characters (%d):', [ki.Count]);
-      else sbJouyou:=_l('#00960^eFound characters (%d):', [ki.Count]);
+        0: sbJouyou:=_l('#01204^%d traditional characters', [ki.Count]);
+        1: sbJouyou:=_l('#01205^%d simplified characters', [ki.Count]);
+      else sbJouyou:=_l('#01203^%d characters', [ki.Count]);
       end;
     end else
-      sbJouyou:=_l('#00961^eFound kanji (%d):',[ki.Count]);
+      sbJouyou:=_l('#01203^%d characters', [ki.Count]);
     Self.Caption := sbJouyou;
 
     DrawGrid1.ColCount:=GetExpectedColCount();
