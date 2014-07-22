@@ -3,7 +3,7 @@ object fKanji: TfKanji
   Top = 473
   BorderStyle = bsSizeToolWin
   Caption = '#00117^eCharacter list'
-  ClientHeight = 737
+  ClientHeight = 549
   ClientWidth = 723
   Color = clBtnFace
   DragKind = dkDock
@@ -21,37 +21,35 @@ object fKanji: TfKanji
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object splDockCompounds: TSplitter
-    Left = 0
-    Top = 734
-    Width = 723
-    Height = 3
-    Cursor = crVSplit
-    Align = alBottom
-    AutoSnap = False
-    Beveled = True
-    Visible = False
-    ExplicitTop = 330
-    ExplicitWidth = 630
-  end
   object Panel1: TPanel
     Left = 188
     Top = 0
     Width = 535
-    Height = 734
+    Height = 549
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitLeft = 0
-    ExplicitTop = 100
-    ExplicitWidth = 723
-    ExplicitHeight = 634
+    ExplicitLeft = 191
+    ExplicitTop = 8
+    object splDockCompounds: TSplitter
+      Left = 0
+      Top = 547
+      Width = 535
+      Height = 2
+      Cursor = crVSplit
+      Align = alBottom
+      AutoSnap = False
+      Beveled = True
+      Visible = False
+      ExplicitLeft = 3
+      ExplicitTop = 552
+    end
     object BlankPanel1: TBlankPanel
       Left = 0
       Top = 27
       Width = 535
-      Height = 680
+      Height = 493
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -70,7 +68,7 @@ object fKanji: TfKanji
       Left = 3
       Top = 30
       Width = 529
-      Height = 674
+      Height = 487
       Align = alClient
       BorderStyle = bsNone
       ColCount = 10
@@ -178,14 +176,13 @@ object fKanji: TfKanji
     object Panel3: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 710
+      Top = 523
       Width = 529
       Height = 21
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
-      ExplicitTop = 610
-      ExplicitWidth = 717
+      ExplicitTop = 499
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -248,24 +245,25 @@ object fKanji: TfKanji
         ExplicitLeft = 459
       end
     end
-  end
-  object pnlDockCompounds: TPanel
-    Left = 0
-    Top = 737
-    Width = 723
-    Height = 0
-    Align = alBottom
-    BevelOuter = bvNone
-    UseDockManager = False
-    DockSite = True
-    TabOrder = 1
+    object pnlDockCompounds: TPanel
+      Left = 0
+      Top = 547
+      Width = 535
+      Height = 0
+      Align = alBottom
+      BevelOuter = bvNone
+      UseDockManager = False
+      DockSite = True
+      TabOrder = 4
+      ExplicitTop = 544
+    end
   end
   object pnlDockSearch: TPanel
     AlignWithMargins = True
     Left = 0
     Top = 0
     Width = 185
-    Height = 734
+    Height = 549
     Margins.Left = 0
     Margins.Top = 0
     Margins.Bottom = 0
@@ -275,13 +273,15 @@ object fKanji: TfKanji
     UseDockManager = False
     DockSite = True
     ParentBackground = False
-    TabOrder = 2
+    TabOrder = 1
+    ExplicitHeight = 734
     object sbClearFilters: TSpeedButton
       AlignWithMargins = True
       Left = 3
-      Top = 704
+      Top = 519
       Width = 179
       Height = 27
+      Margins.Top = 5
       Action = aResetFilters
       Align = alBottom
       AllowAllUp = True
@@ -294,20 +294,19 @@ object fKanji: TfKanji
       ExplicitTop = 0
       ExplicitWidth = 219
     end
-    object ScrollBox1: TPanel
+    object Panel7: TPanel
       AlignWithMargins = True
       Left = 3
       Top = 3
       Width = 179
-      Height = 94
-      Margins.Bottom = 0
+      Height = 212
+      Margins.Bottom = 5
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 523
       DesignSize = (
         179
-        94)
+        212)
       object sbPinYin: TSpeedButton
         Left = 0
         Top = 0
@@ -414,6 +413,118 @@ object fKanji: TfKanji
         OnClick = sbStrokeCountShrinkClick
         ExplicitLeft = 180
       end
+      object sbJouyou: TSpeedButton
+        Left = 0
+        Top = 143
+        Width = 57
+        Height = 22
+        Hint = '#00194^eFilter by Jouyou grade (Japanese school grade)'
+        AllowAllUp = True
+        GroupIndex = 18
+        Caption = '#00963^eJouyou'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object sbJouyouExpand: TSpeedButton
+        Left = 135
+        Top = 144
+        Width = 22
+        Height = 22
+        Anchors = [akTop, akRight]
+        Caption = '-/+'
+      end
+      object sbJouyouMinus: TSpeedButton
+        Left = 118
+        Top = 144
+        Width = 17
+        Height = 22
+        Anchors = [akTop, akRight]
+        Caption = '-'
+      end
+      object sbJouyouPlus: TSpeedButton
+        Left = 101
+        Top = 144
+        Width = 17
+        Height = 22
+        Anchors = [akTop, akRight]
+        Caption = '+'
+      end
+      object sbJouyouShrink: TSpeedButton
+        Left = 157
+        Top = 144
+        Width = 22
+        Height = 22
+        Anchors = [akTop, akRight]
+        Caption = '+/-'
+      end
+      object sbListRadicals: TSpeedButton
+        Left = 116
+        Top = 96
+        Width = 63
+        Height = 22
+        Hint = '#00177^eFilter by radical (Ctrl-R)'
+        AllowAllUp = True
+        Anchors = [akTop, akRight]
+        Caption = '#00195^eList...'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object sbOther: TSpeedButton
+        Left = 0
+        Top = 167
+        Width = 57
+        Height = 22
+        Hint = '#00192^eFilter by Unicode / Nelson index / Halpern index'
+        AllowAllUp = True
+        GroupIndex = 13
+        Caption = '#00193^eOther'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object sbRadicals: TSpeedButton
+        Left = 0
+        Top = 95
+        Width = 57
+        Height = 22
+        Hint = '#00177^eFilter by radical (Ctrl-R)'
+        AllowAllUp = True
+        GroupIndex = 15
+        Caption = '#00178^eRadical'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
+      object sbSKIP: TSpeedButton
+        Left = 0
+        Top = 119
+        Width = 57
+        Height = 22
+        Hint = '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
+        AllowAllUp = True
+        GroupIndex = 16
+        Caption = '#00962^eSKIP'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'MS Sans Serif'
+        Font.Style = []
+        ParentFont = False
+      end
       object edtPinYin: TEdit
         Left = 56
         Top = 0
@@ -450,16 +561,60 @@ object fKanji: TfKanji
         TabOrder = 3
         ExplicitWidth = 44
       end
+      object cbOtherType: TComboBox
+        Left = 56
+        Top = 191
+        Width = 123
+        Height = 21
+        Style = csDropDownList
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 4
+      end
+      object edtJouyou: TEdit
+        Left = 57
+        Top = 144
+        Width = 43
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 5
+      end
+      object edtOther: TEdit
+        Left = 56
+        Top = 169
+        Width = 123
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 6
+      end
+      object edtSkip: TEdit
+        Left = 57
+        Top = 120
+        Width = 122
+        Height = 21
+        Anchors = [akLeft, akTop, akRight]
+        TabOrder = 7
+      end
+      object pbRadicals: TWakanPaintbox
+        Left = 58
+        Top = 96
+        Width = 58
+        Height = 22
+        Anchors = [akLeft, akTop, akRight]
+        Color = clBtnFace
+        DoubleBuffered = True
+        OnPaint = pbRadicalsPaint
+      end
     end
     object Panel5: TPanel
       AlignWithMargins = True
       Left = 0
-      Top = 224
+      Top = 225
       Width = 185
-      Height = 474
+      Height = 284
       Margins.Left = 0
-      Margins.Top = 6
+      Margins.Top = 5
       Margins.Right = 0
+      Margins.Bottom = 5
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
@@ -472,7 +627,8 @@ object fKanji: TfKanji
         Left = 3
         Top = 28
         Width = 179
-        Height = 443
+        Height = 256
+        Margins.Bottom = 0
         OnClickCheck = lbCategoriesClickCheck
         Align = alBottom
         Anchors = [akLeft, akTop, akRight, akBottom]
@@ -505,187 +661,6 @@ object fKanji: TfKanji
         ExplicitLeft = 4
         ExplicitTop = 2
         ExplicitWidth = 146
-      end
-    end
-    object Panel4: TPanel
-      AlignWithMargins = True
-      Left = 3
-      Top = 99
-      Width = 179
-      Height = 116
-      Margins.Top = 2
-      Align = alTop
-      BevelOuter = bvNone
-      TabOrder = 2
-      ExplicitTop = 103
-      ExplicitWidth = 219
-      DesignSize = (
-        179
-        116)
-      object sbRadicals: TSpeedButton
-        Left = 0
-        Top = 0
-        Width = 58
-        Height = 22
-        Hint = '#00177^eFilter by radical (Ctrl-R)'
-        AllowAllUp = True
-        GroupIndex = 15
-        Caption = '#00178^eRadical'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object sbListRadicals: TSpeedButton
-        Left = 116
-        Top = 0
-        Width = 63
-        Height = 22
-        Hint = '#00177^eFilter by radical (Ctrl-R)'
-        AllowAllUp = True
-        Anchors = [akTop, akRight]
-        Caption = '#00195^eList...'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        ExplicitLeft = 137
-      end
-      object sbSKIP: TSpeedButton
-        Left = 0
-        Top = 24
-        Width = 57
-        Height = 22
-        Hint = '#00181^eFilter by SKIP code (see KANJIDIC for explanation)'
-        AllowAllUp = True
-        GroupIndex = 16
-        Caption = '#00962^eSKIP'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object sbJouyou: TSpeedButton
-        Left = 0
-        Top = 48
-        Width = 57
-        Height = 22
-        Hint = '#00194^eFilter by Jouyou grade (Japanese school grade)'
-        AllowAllUp = True
-        GroupIndex = 18
-        Caption = '#00963^eJouyou'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object sbJouyouPlus: TSpeedButton
-        Left = 101
-        Top = 48
-        Width = 17
-        Height = 22
-        Anchors = [akTop, akRight]
-        Caption = '+'
-        ExplicitLeft = 122
-      end
-      object sbJouyouMinus: TSpeedButton
-        Left = 118
-        Top = 48
-        Width = 17
-        Height = 22
-        Anchors = [akTop, akRight]
-        Caption = '-'
-        ExplicitLeft = 139
-      end
-      object sbJouyouExpand: TSpeedButton
-        Left = 135
-        Top = 48
-        Width = 22
-        Height = 22
-        Anchors = [akTop, akRight]
-        Caption = '-/+'
-        ExplicitLeft = 156
-      end
-      object sbJouyouShrink: TSpeedButton
-        Left = 157
-        Top = 48
-        Width = 22
-        Height = 22
-        Anchors = [akTop, akRight]
-        Caption = '+/-'
-        ExplicitLeft = 178
-      end
-      object sbOther: TSpeedButton
-        Left = 0
-        Top = 72
-        Width = 57
-        Height = 22
-        Hint = '#00192^eFilter by Unicode / Nelson index / Halpern index'
-        AllowAllUp = True
-        GroupIndex = 13
-        Caption = '#00193^eOther'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object pbRadicals: TWakanPaintbox
-        Left = 58
-        Top = 0
-        Width = 58
-        Height = 22
-        Anchors = [akLeft, akTop, akRight]
-        Color = clBtnFace
-        DoubleBuffered = True
-        OnPaint = pbRadicalsPaint
-        ExplicitWidth = 89
-      end
-      object edtSkip: TEdit
-        Left = 57
-        Top = 24
-        Width = 122
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 1
-        ExplicitWidth = 153
-      end
-      object edtJouyou: TEdit
-        Left = 57
-        Top = 48
-        Width = 43
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 2
-        ExplicitWidth = 74
-      end
-      object cbOtherType: TComboBox
-        Left = 56
-        Top = 95
-        Width = 123
-        Height = 21
-        Style = csDropDownList
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 3
-        ExplicitWidth = 129
-      end
-      object edtOther: TEdit
-        Left = 56
-        Top = 73
-        Width = 123
-        Height = 21
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 4
-        ExplicitWidth = 129
       end
     end
   end
