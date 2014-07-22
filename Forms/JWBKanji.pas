@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, Actions, ActnList, CheckAction,
   JWBStrings, IniFiles, Grids, DB, ShellAPI, WakanPaintbox, Menus, CheckLst,
-  ImgList, JWBRadical, WakanCheckbox;
+  ImgList, JWBRadical, WakanCheckbox, RangeSpinEdit, Vcl.Samples.Spin;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -71,28 +71,20 @@ type
     sbDefinition: TSpeedButton;
     edtDefinition: TEdit;
     sbStrokeCount: TSpeedButton;
-    edtStrokeCount: TEdit;
-    sbStrokeCountPlus: TSpeedButton;
-    sbStrokeCountMinus: TSpeedButton;
-    sbStrokeCountExpand: TSpeedButton;
-    sbStrokeCountShrink: TSpeedButton;
     sbClearFilters: TSpeedButton;
     pnlDockCompounds: TPanel;
     splDockCompounds: TSplitter;
     cbOtherType: TComboBox;
-    edtJouyou: TEdit;
     edtOther: TEdit;
     edtSkip: TEdit;
     pbRadicals: TWakanPaintbox;
     sbJouyou: TSpeedButton;
-    sbJouyouExpand: TSpeedButton;
-    sbJouyouMinus: TSpeedButton;
-    sbJouyouPlus: TSpeedButton;
-    sbJouyouShrink: TSpeedButton;
     sbListRadicals: TSpeedButton;
     sbOther: TSpeedButton;
     sbRadicals: TSpeedButton;
     sbSKIP: TSpeedButton;
+    edtStrokeCount: TRangeSpinEdit;
+    edtJouyou: TRangeSpinEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -130,8 +122,6 @@ type
     procedure PopupMenuPopup(Sender: TObject);
     procedure miUncheckAllCategoriesClick(Sender: TObject);
     procedure pbRadicalsClick(Sender: TObject);
-    procedure Panel4MouseEnter(Sender: TObject);
-    procedure Panel4MouseLeave(Sender: TObject);
     procedure sbStrokeCountPlusClick(Sender: TObject);
     procedure sbStrokeCountMinusClick(Sender: TObject);
     procedure sbStrokeCountExpandClick(Sender: TObject);
@@ -1437,6 +1427,7 @@ begin
   otx:='';
   while txleft<>'' do
   begin
+
     curtx:='';
     while (length(txleft)>0) and (txleft[1]<>';') and (txleft[1]<>',') do
     begin
@@ -1444,17 +1435,17 @@ begin
       delete(txleft,1,1);
     end;
     if (length(txleft)>0) and ((txleft[1]=';') or (txleft[1]=',')) then delete(txleft,1,1);
-    nn1:=0;
-    nn2:=0;
-    if pos('-',curtx)=0 then begin try nn1:=strtoint(curtx); nn2:=strtoint(curtx); except end; end
-    else
-      begin
-        try
-          nn1:=strtoint(copy(curtx,1,pos('-',curtx)-1));
-          delete(curtx,1,pos('-',curtx));
-          nn2:=strtoint(curtx);
-        except end;
-      end;
+
+    if pos('-',curtx)=0 then begin
+      nn1 := StrToIntDef(curtx, 0);
+      nn2 := nn1;
+    end
+    else begin
+      nn1 := StrToIntDef(copy(curtx,1,pos('-',curtx)-1), 0);
+      delete(curtx,1,pos('-',curtx));
+      nn2 := StrToIntDef(curtx, 0);
+    end;
+
     nn1:=nn1+min; nn2:=nn2+max;
     if nn1<0 then nn1:=0; if nn2<0 then nn2:=0;
     if nn1>nn2 then nn1:=nn2;
@@ -1552,26 +1543,6 @@ var i:integer;
 begin
   for i:=0 to lbCategories.Items.Count-1 do lbCategories.Checked[i]:=false;
   Self.InvalidateList;
-end;
-
-
-procedure TfKanji.Panel4MouseEnter(Sender: TObject);
-begin
-  sbStrokeCountPlus.Visible := true;
-  sbStrokeCountMinus.Visible := true;
-  sbStrokeCountExpand.Visible := true;
-  sbStrokeCountShrink.Visible := true;
-  sbStrokeCountMinus.Left := sbStrokeCountPlus.Left + sbStrokeCountPlus.Width + 1;
-  sbStrokeCountExpand.Left := sbStrokeCountMinus.Left + sbStrokeCountMinus.Width + 1;
-  sbStrokeCountShrink.Left := sbStrokeCountExpand.Left + sbStrokeCountExpand.Width + 1;
-end;
-
-procedure TfKanji.Panel4MouseLeave(Sender: TObject);
-begin
-  sbStrokeCountPlus.Visible := false;
-  sbStrokeCountMinus.Visible := false;
-  sbStrokeCountExpand.Visible := false;
-  sbStrokeCountShrink.Visible := false;
 end;
 
 
