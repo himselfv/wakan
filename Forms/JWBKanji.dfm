@@ -35,19 +35,23 @@ object fKanji: TfKanji
     ExplicitWidth = 630
   end
   object Panel1: TPanel
-    Left = 0
-    Top = 100
-    Width = 723
-    Height = 634
+    Left = 188
+    Top = 0
+    Width = 535
+    Height = 734
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
+    ExplicitLeft = 0
+    ExplicitTop = 100
+    ExplicitWidth = 723
+    ExplicitHeight = 634
     object BlankPanel1: TBlankPanel
       Left = 0
       Top = 27
-      Width = 723
-      Height = 580
+      Width = 535
+      Height = 680
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -58,13 +62,15 @@ object fKanji: TfKanji
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
+      ExplicitWidth = 723
+      ExplicitHeight = 580
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
       Left = 3
       Top = 30
-      Width = 717
-      Height = 574
+      Width = 529
+      Height = 674
       Align = alClient
       BorderStyle = bsNone
       ColCount = 10
@@ -86,33 +92,34 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
+      ExplicitWidth = 717
+      ExplicitHeight = 574
     end
     object Panel2: TPanel
       AlignWithMargins = True
       Left = 0
       Top = 3
-      Width = 723
+      Width = 535
       Height = 21
       Margins.Left = 0
       Margins.Right = 0
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitLeft = 3
-      ExplicitWidth = 717
+      ExplicitWidth = 723
       object Label1: TLabel
-        Left = 516
+        Left = 328
         Top = 0
         Width = 39
         Height = 21
         Align = alRight
         Caption = 'Sort by: '
         Layout = tlCenter
-        ExplicitLeft = 510
+        ExplicitLeft = 516
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
-        Left = 555
+        Left = 367
         Top = 0
         Width = 168
         Height = 21
@@ -130,72 +137,55 @@ object fKanji: TfKanji
           'Gakken Kanji'
           'Remembering Kanji'
           '#00149^eRandom')
-        ExplicitLeft = 549
+        ExplicitLeft = 555
       end
       object Panel6: TPanel
         Left = 0
         Top = 0
-        Width = 516
+        Width = 328
         Height = 21
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 510
-        object sbClearFilters: TSpeedButton
-          AlignWithMargins = True
-          Left = 3
-          Top = 0
-          Width = 152
-          Height = 21
-          Margins.Top = 0
-          Margins.Bottom = 0
-          Action = aResetFilters
-          Align = alLeft
-          AllowAllUp = True
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = []
-          ParentFont = False
-          ExplicitLeft = -32
-        end
+        ExplicitWidth = 516
         object cbInClipboard: TWakanCheckbox
-          Left = 295
+          Left = 115
           Top = 0
-          Width = 145
+          Width = 123
           Height = 21
           Margins.Top = 0
           Margins.Bottom = 0
           Action = aClipboard
           Align = alLeft
+          Caption = '#00189^eIn clipboard'
           TabOrder = 0
-          ExplicitLeft = 283
         end
         object cbOnlyCommon: TWakanCheckbox
           AlignWithMargins = True
-          Left = 161
+          Left = 3
           Top = 0
-          Width = 131
+          Width = 109
           Height = 21
           Margins.Top = 0
           Margins.Bottom = 0
           Action = aCommon
           Align = alLeft
+          Caption = '#00187^eCommon'
           TabOrder = 1
-          ExplicitLeft = 152
         end
       end
     end
     object Panel3: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 610
-      Width = 717
+      Top = 710
+      Width = 529
       Height = 21
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
+      ExplicitTop = 610
+      ExplicitWidth = 717
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -218,7 +208,7 @@ object fKanji: TfKanji
         ExplicitLeft = 137
       end
       object btnKanjiDetails: TSpeedButton
-        Left = 588
+        Left = 400
         Top = 0
         Width = 129
         Height = 21
@@ -240,7 +230,7 @@ object fKanji: TfKanji
         ExplicitHeight = 17
       end
       object btnPrintCards: TButton
-        Left = 459
+        Left = 271
         Top = 0
         Width = 129
         Height = 21
@@ -255,6 +245,7 @@ object fKanji: TfKanji
         ParentFont = False
         TabOrder = 0
         TabStop = False
+        ExplicitLeft = 459
       end
     end
   end
@@ -270,31 +261,52 @@ object fKanji: TfKanji
     TabOrder = 1
   end
   object pnlDockSearch: TPanel
+    AlignWithMargins = True
     Left = 0
     Top = 0
-    Width = 723
-    Height = 100
+    Width = 185
+    Height = 734
     Margins.Left = 0
     Margins.Top = 0
     Margins.Bottom = 0
-    Align = alTop
+    Align = alLeft
     BevelEdges = [beBottom]
     BevelOuter = bvNone
     UseDockManager = False
     DockSite = True
     ParentBackground = False
     TabOrder = 2
+    object sbClearFilters: TSpeedButton
+      AlignWithMargins = True
+      Left = 3
+      Top = 704
+      Width = 179
+      Height = 27
+      Action = aResetFilters
+      Align = alBottom
+      AllowAllUp = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      ParentFont = False
+      ExplicitTop = 0
+      ExplicitWidth = 219
+    end
     object ScrollBox1: TPanel
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 180
+      Width = 179
       Height = 94
-      Align = alLeft
+      Margins.Bottom = 0
+      Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitWidth = 523
       DesignSize = (
-        180
+        179
         94)
       object sbPinYin: TSpeedButton
         Left = 0
@@ -363,7 +375,7 @@ object fKanji: TfKanji
         ParentFont = False
       end
       object sbStrokeCountPlus: TSpeedButton
-        Left = 102
+        Left = 101
         Top = 72
         Width = 17
         Height = 22
@@ -373,7 +385,7 @@ object fKanji: TfKanji
         ExplicitLeft = 124
       end
       object sbStrokeCountMinus: TSpeedButton
-        Left = 119
+        Left = 118
         Top = 72
         Width = 17
         Height = 22
@@ -383,7 +395,7 @@ object fKanji: TfKanji
         ExplicitLeft = 141
       end
       object sbStrokeCountExpand: TSpeedButton
-        Left = 136
+        Left = 135
         Top = 72
         Width = 22
         Height = 22
@@ -393,7 +405,7 @@ object fKanji: TfKanji
         ExplicitLeft = 158
       end
       object sbStrokeCountShrink: TSpeedButton
-        Left = 158
+        Left = 157
         Top = 72
         Width = 22
         Height = 22
@@ -405,50 +417,62 @@ object fKanji: TfKanji
       object edtPinYin: TEdit
         Left = 56
         Top = 0
-        Width = 124
+        Width = 123
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
+        ExplicitWidth = 124
       end
       object edtYomi: TEdit
         Left = 56
         Top = 24
-        Width = 124
+        Width = 123
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
+        ExplicitWidth = 124
       end
       object edtDefinition: TEdit
         Left = 56
         Top = 48
-        Width = 124
+        Width = 123
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 2
+        ExplicitWidth = 124
       end
       object edtStrokeCount: TEdit
         Left = 56
         Top = 72
-        Width = 44
+        Width = 43
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 3
+        ExplicitWidth = 44
       end
     end
     object Panel5: TPanel
       AlignWithMargins = True
-      Left = 405
-      Top = 3
-      Width = 315
-      Height = 94
+      Left = 0
+      Top = 224
+      Width = 185
+      Height = 474
+      Margins.Left = 0
+      Margins.Top = 6
+      Margins.Right = 0
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitLeft = 405
+      ExplicitTop = 3
+      ExplicitWidth = 315
+      ExplicitHeight = 94
       object lbCategories: TCheckListBox
-        Left = 0
-        Top = 27
-        Width = 315
-        Height = 67
+        AlignWithMargins = True
+        Left = 3
+        Top = 28
+        Width = 179
+        Height = 443
         OnClickCheck = lbCategoriesClickCheck
         Align = alBottom
         Anchors = [akLeft, akTop, akRight, akBottom]
@@ -458,12 +482,18 @@ object fKanji: TfKanji
         OnClick = lbCategoriesClick
         OnDblClick = lbCategoriesDblClick
         OnDrawItem = lbCategoriesDrawItem
+        ExplicitLeft = 0
+        ExplicitTop = 25
+        ExplicitWidth = 185
+        ExplicitHeight = 458
       end
       object cbOrAnd: TComboBox
-        Left = 0
-        Top = 1
-        Width = 146
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 179
         Height = 21
+        Align = alTop
         Style = csDropDownList
         ItemIndex = 1
         TabOrder = 1
@@ -472,20 +502,26 @@ object fKanji: TfKanji
           'In any of:'
           'In all of:'
           'Not in any of:')
+        ExplicitLeft = 4
+        ExplicitTop = 2
+        ExplicitWidth = 146
       end
     end
     object Panel4: TPanel
       AlignWithMargins = True
-      Left = 189
-      Top = 3
-      Width = 210
-      Height = 94
-      Align = alLeft
+      Left = 3
+      Top = 99
+      Width = 179
+      Height = 116
+      Margins.Top = 2
+      Align = alTop
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitTop = 103
+      ExplicitWidth = 219
       DesignSize = (
-        210
-        94)
+        179
+        116)
       object sbRadicals: TSpeedButton
         Left = 0
         Top = 0
@@ -503,7 +539,7 @@ object fKanji: TfKanji
         ParentFont = False
       end
       object sbListRadicals: TSpeedButton
-        Left = 147
+        Left = 116
         Top = 0
         Width = 63
         Height = 22
@@ -552,7 +588,7 @@ object fKanji: TfKanji
         ParentFont = False
       end
       object sbJouyouPlus: TSpeedButton
-        Left = 132
+        Left = 101
         Top = 48
         Width = 17
         Height = 22
@@ -561,7 +597,7 @@ object fKanji: TfKanji
         ExplicitLeft = 122
       end
       object sbJouyouMinus: TSpeedButton
-        Left = 149
+        Left = 118
         Top = 48
         Width = 17
         Height = 22
@@ -570,7 +606,7 @@ object fKanji: TfKanji
         ExplicitLeft = 139
       end
       object sbJouyouExpand: TSpeedButton
-        Left = 166
+        Left = 135
         Top = 48
         Width = 22
         Height = 22
@@ -579,7 +615,7 @@ object fKanji: TfKanji
         ExplicitLeft = 156
       end
       object sbJouyouShrink: TSpeedButton
-        Left = 188
+        Left = 157
         Top = 48
         Width = 22
         Height = 22
@@ -606,45 +642,50 @@ object fKanji: TfKanji
       object pbRadicals: TWakanPaintbox
         Left = 58
         Top = 0
-        Width = 89
+        Width = 58
         Height = 22
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
         DoubleBuffered = True
         OnPaint = pbRadicalsPaint
+        ExplicitWidth = 89
       end
       object edtSkip: TEdit
         Left = 57
         Top = 24
-        Width = 153
+        Width = 122
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
+        ExplicitWidth = 153
       end
       object edtJouyou: TEdit
         Left = 57
         Top = 48
-        Width = 74
+        Width = 43
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 2
+        ExplicitWidth = 74
       end
       object cbOtherType: TComboBox
-        Left = 97
-        Top = 72
-        Width = 113
+        Left = 56
+        Top = 95
+        Width = 123
         Height = 21
         Style = csDropDownList
-        Anchors = [akTop, akRight]
+        Anchors = [akLeft, akTop, akRight]
         TabOrder = 3
+        ExplicitWidth = 129
       end
       object edtOther: TEdit
         Left = 56
-        Top = 72
-        Width = 39
+        Top = 73
+        Width = 123
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 4
+        ExplicitWidth = 129
       end
     end
   end
@@ -732,7 +773,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 400
     Bitmap = {
-      494C0101040008006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
