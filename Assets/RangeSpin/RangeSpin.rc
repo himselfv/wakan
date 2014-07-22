@@ -1,0 +1,5 @@
+/*
+Contains resources for TRangeSpinEdit component
+*/
+SpinExpand BITMAP "expgl.bmp"
+SpinShrink BITMAP "shrgl.bmp"

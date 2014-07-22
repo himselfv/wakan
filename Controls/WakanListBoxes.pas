@@ -9,9 +9,11 @@ type
   TStringArray = array of string;
   TSelectionArray = TStringArray;
 
- { Base enhanced checkbox list class.
-  At this time it's only used for RomaSystem selection; at some point has to be
-  split into basic functionality and RomaSystem-related stuff. }
+ { Enhanced checkbox list class:
+   * Rearrange items by dragging
+   * Rearrange items with Ctrl+UP/DOWN
+   * Multi-selection
+ }
   TWakanCheckListBox = class(TCheckListBox)
   protected
     FAutoDragItems: boolean;
@@ -55,6 +57,11 @@ type
 procedure Register;
 
 implementation
+
+procedure Register;
+begin
+  RegisterComponents('Wakan', [TWakanCheckListBox]);
+end;
 
 function SplitStr(const s: string; sep: string): TStringArray;
 var cnt, i, i_pos: integer;
@@ -351,11 +358,6 @@ begin
   if Multiselect then //have to do this manually
     if Assigned(FOnSelectionChanged) then
       FOnSelectionChanged(Self);
-end;
-
-procedure Register;
-begin
-  RegisterComponents('Samples', [TWakanCheckListBox]);
 end;
 
 end.

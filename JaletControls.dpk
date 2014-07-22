@@ -36,7 +36,8 @@ requires
   vclx,
   JclVcl,
   Jcl,
-  JvSystem;
+  JvSystem,
+  VclSmp;
 
 contains
   FreeSelectionGrid in 'Controls\FreeSelectionGrid.pas',
@@ -48,7 +49,8 @@ contains
   FormPlacemnt in 'Controls\FormPlacemnt.pas',
   WakanListBoxes in 'Controls\WakanListBoxes.pas',
   HintedEdit in 'Controls\HintedEdit.pas',
-  WakanCheckbox in 'Controls\WakanCheckbox.pas';
+  WakanCheckbox in 'Controls\WakanCheckbox.pas',
+  RangeSpinEdit in 'Controls\RangeSpinEdit.pas';
 
 end.
 
