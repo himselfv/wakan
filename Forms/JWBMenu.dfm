@@ -905,16 +905,18 @@ object fMenu: TfMenu
         Caption = '-'
       end
       object miDisplayAll: TMenuItem
-        Action = fKanji.aAll
+        Action = fKanji.aResetFilters
       end
       object miLearnedOnly: TMenuItem
         Caption = '#00279^eLearned only'
       end
       object miCommonOnly: TMenuItem
         Action = fKanji.aCommon
+        AutoCheck = True
       end
       object miInClipboardOnly: TMenuItem
         Action = fKanji.aClipboard
+        AutoCheck = True
       end
       object N3: TMenuItem
         Caption = '-'
