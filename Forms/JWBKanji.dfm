@@ -76,6 +76,7 @@ object fKanji: TfKanji
       FixedRows = 0
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goDrawFocusSelected, goThumbTracking]
       PopupMenu = PopupMenu
+      ScrollBars = ssVertical
       TabOrder = 0
       OnClick = DrawGrid1Click
       OnDblClick = DrawGrid1DblClick
@@ -100,13 +101,19 @@ object fKanji: TfKanji
       BevelOuter = bvNone
       TabOrder = 2
       object Label1: TLabel
-        Left = 202
+        AlignWithMargins = True
+        Left = 159
         Top = 0
-        Width = 39
+        Width = 76
         Height = 21
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 6
+        Margins.Bottom = 0
         Align = alRight
-        Caption = 'Sort by: '
+        Caption = '#00197^Sort by'
         Layout = tlCenter
+        ExplicitLeft = 171
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
@@ -136,11 +143,12 @@ object fKanji: TfKanji
       object Panel6: TPanel
         Left = 0
         Top = 0
-        Width = 202
+        Width = 159
         Height = 21
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
+        ExplicitWidth = 202
         object cbInClipboard: TJwbCheckbox
           Left = 115
           Top = 0
@@ -662,7 +670,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 288
     Bitmap = {
-      494C010104000800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800AC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

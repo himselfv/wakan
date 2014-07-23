@@ -341,10 +341,14 @@ end;
 
 { Returns expected column count according to current cell size / width }
 function TfKanji.GetExpectedColCount: integer;
-var grs:integer;
+var CellSize, FreeSpace: integer;
 begin
-  grs := GetCellSize;
-  Result := (DrawGrid1.ClientWidth-24) div grs
+  CellSize := GetCellSize;
+  FreeSpace := DrawGrid1.ClientWidth - 8;
+  //To keep things simple, always leave space for scroll bar (even if it's hidden)
+  if GetWindowLong(DrawGrid1.Handle, GWL_STYLE) and WS_VSCROLL = 0 then
+    Dec(FreeSpace, GetSystemMetrics(SM_CXVSCROLL));
+  Result := FreeSpace div CellSize;
 end;
 
 //Resets filters but does not apply it, so that you can chain it with something.
@@ -1482,9 +1486,6 @@ end;
 
 
 
-
-
-
 procedure TfKanji.lbCategoriesClick(Sender: TObject);
 var IsKnownLearned: boolean;
 begin
@@ -1608,6 +1609,7 @@ begin
   if aSearch.Checked = pnlDockSearch.Visible then
     exit;
   pnlDockSearch.Visible := aSearch.Checked;
+  Self.InvalidateList;
 end;
 
 procedure TfKanji.aSearchExecute(Sender: TObject);
