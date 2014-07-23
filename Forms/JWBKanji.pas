@@ -85,8 +85,25 @@ type
     cbInClipboard: TJwbCheckbox;
     Label1: TLabel;
     rgSortBy: TComboBox;
-    btnSearchSort: TSpeedButton;
     lblFoundChars: TLabel;
+    Panel6: TPanel;
+    Panel8: TPanel;
+    Edit1: TEdit;
+    ComboBox1: TComboBox;
+    Panel10: TPanel;
+    SpeedButton4: TSpeedButton;
+    RangeSpinEdit1: TRangeSpinEdit;
+    SpeedButton8: TSpeedButton;
+    WakanPaintbox1: TWakanPaintbox;
+    SpeedButton6: TSpeedButton;
+    SpeedButton5: TSpeedButton;
+    RangeSpinEdit2: TRangeSpinEdit;
+    ComboBox3: TComboBox;
+    Label2: TLabel;
+    JwbCheckbox1: TJwbCheckbox;
+    JwbCheckbox2: TJwbCheckbox;
+    CheckListBox1: TCheckListBox;
+    SpeedButton1: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -140,6 +157,7 @@ type
     procedure edtSkipChange(Sender: TObject);
     procedure edtJouyouChange(Sender: TObject);
     procedure edtOtherChange(Sender: TObject);
+    procedure SpeedButton1Click(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -218,11 +236,6 @@ procedure TfKanji.FormCreate(Sender: TObject);
 begin
   CurRadSearchType:=stRaine;
   FCurRadChars:='';
- { SpeedButtons are linked to Actions, so their GroupIndex is replaced at load,
-  but if we set TAction's GroupIndex to non-zero, AutoCheck is not going to work,
-  and if we leave TSpeedButton's GroupIndex as 0, it's Down property not going
-  to be updated (see TSpeedButtonActionLink.IsCheckedLinked) }
-  btnSearchSort.GroupIndex := 16;
 end;
 
 procedure TfKanji.FormShow(Sender: TObject);
@@ -437,6 +450,16 @@ begin
     FSetOtherTypeIndex := AItemIndex
   else
     cbOtherType.ItemIndex := AItemIndex;
+end;
+
+procedure TfKanji.SpeedButton1Click(Sender: TObject);
+begin
+  Panel10.Visible := not Panel10.Visible;
+  if Panel10.Visible then
+    Panel6.Height := 121
+  else
+    Panel6.Height := 32;
+
 end;
 
 { Called when a radical filter changes }
