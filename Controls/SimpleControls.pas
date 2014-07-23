@@ -19,12 +19,13 @@ type
     property AutoSize: Boolean read FAutoSize write SetAutoSize default True;
   end;
 
- { Label which opens URL when clicked }
+ { Label which opens URL when clicked; blue and hand-pointed by default }
   TUrlLabel = class(TLabel)
   protected
     FURL: string;
     procedure Click; override;
-    procedure CMParentFontChanged(var Message: TMessage); message CM_PARENTFONTCHANGED;
+    procedure CMParentFontChanged(var Message: TCMParentFontChanged);
+      message CM_PARENTFONTCHANGED;
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -125,13 +126,20 @@ begin
   Self.Font.Color := clHighlight;
 end;
 
-procedure TUrlLabel.CMParentFontChanged(var Message: TMessage);
+procedure TUrlLabel.CMParentFontChanged(var Message: TCMParentFontChanged);
+var ChangeEvent: TNotifyEvent;
 begin
-  inherited;
+  inherited; //copies font from parent; sets FParentFont := true;
   if Self.ParentFont then begin
-   //Auto-upgrade parent font, unless overriden manualyy
-    Self.Font.Style := Self.Font.Style + [fsBold, fsUnderline];
-    Self.Font.Color := clHighlight;
+   //Auto-upgrade font but try not to break FParentFont==true
+    ChangeEvent := Self.Font.OnChange;
+    Self.Font.OnChange := nil;
+    try
+      Self.Font.Style := Self.Font.Style + [fsBold, fsUnderline];
+      Self.Font.Color := clHighlight;
+    finally
+      Self.Font.OnChange := ChangeEvent;
+    end;
   end;
 end;
 
