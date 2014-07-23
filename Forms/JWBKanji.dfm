@@ -113,7 +113,6 @@ object fKanji: TfKanji
         Align = alRight
         Caption = '#00197^Sort by'
         Layout = tlCenter
-        ExplicitLeft = 171
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
@@ -148,7 +147,6 @@ object fKanji: TfKanji
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 202
         object cbInClipboard: TJwbCheckbox
           Left = 115
           Top = 0
@@ -299,14 +297,14 @@ object fKanji: TfKanji
       Left = 3
       Top = 3
       Width = 163
-      Height = 214
+      Height = 212
       Margins.Bottom = 5
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
       DesignSize = (
         163
-        214)
+        212)
       object sbPinYin: TSpeedButton
         Left = 0
         Top = 0
@@ -541,9 +539,9 @@ object fKanji: TfKanji
     object Panel5: TPanel
       AlignWithMargins = True
       Left = 0
-      Top = 227
+      Top = 225
       Width = 169
-      Height = 139
+      Height = 141
       Margins.Left = 0
       Margins.Top = 5
       Margins.Right = 0
@@ -551,12 +549,14 @@ object fKanji: TfKanji
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitTop = 257
+      ExplicitHeight = 109
       object lbCategories: TCheckListBox
         AlignWithMargins = True
         Left = 3
         Top = 28
         Width = 163
-        Height = 111
+        Height = 113
         Margins.Bottom = 0
         OnClickCheck = lbCategoriesClickCheck
         Align = alBottom
@@ -567,6 +567,7 @@ object fKanji: TfKanji
         OnClick = lbCategoriesClick
         OnDblClick = lbCategoriesDblClick
         OnDrawItem = lbCategoriesDrawItem
+        ExplicitHeight = 81
       end
       object cbOrAnd: TComboBox
         AlignWithMargins = True
@@ -670,7 +671,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 288
     Bitmap = {
-      494C010104000800AC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800C40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
