@@ -1,4 +1,4 @@
-unit WakanListBoxes;
+unit ExtListBoxes;
 
 interface
 
@@ -14,7 +14,7 @@ type
    * Rearrange items with Ctrl+UP/DOWN
    * Multi-selection
  }
-  TWakanCheckListBox = class(TCheckListBox)
+  TRearrangeCheckListBox = class(TCheckListBox)
   protected
     FAutoDragItems: boolean;
     FAutoCtrlMove: boolean;
@@ -60,7 +60,7 @@ implementation
 
 procedure Register;
 begin
-  RegisterComponents('Wakan', [TWakanCheckListBox]);
+  RegisterComponents('Wakan', [TRearrangeCheckListBox]);
 end;
 
 function SplitStr(const s: string; sep: string): TStringArray;
@@ -111,7 +111,7 @@ begin
     Result := Result + sep + parts[i];
 end;
 
-constructor TWakanCheckListBox.Create(AOwner: TComponent);
+constructor TRearrangeCheckListBox.Create(AOwner: TComponent);
 begin
   inherited;
   FAutoDragItems := false;
@@ -119,17 +119,17 @@ begin
   FMultiSelect := true;
 end;
 
-function TWakanCheckListBox.GetSelection(): string;
+function TRearrangeCheckListBox.GetSelection(): string;
 begin
   Result := JoinStr(TStringArray(GetSelectionArray), ',');
 end;
 
-procedure TWakanCheckListBox.SetSelection(const Value: string);
+procedure TRearrangeCheckListBox.SetSelection(const Value: string);
 begin
   SetSelectionArray(TStringArray(SplitStr(Value,',')));
 end;
 
-function TWakanCheckListBox.GetSelectionArray: TSelectionArray;
+function TRearrangeCheckListBox.GetSelectionArray: TSelectionArray;
 var i, cnt: integer;
 begin
   if not FMultiSelect then begin
@@ -156,7 +156,7 @@ begin
     end;
 end;
 
-procedure TWakanCheckListBox.SetSelectionArray(const Value: TSelectionArray);
+procedure TRearrangeCheckListBox.SetSelectionArray(const Value: TSelectionArray);
 var i, j, j_pos: integer;
 begin
   j := 0;
@@ -183,7 +183,7 @@ begin
     FOnSelectionChanged(Self);
 end;
 
-procedure TWakanCheckListBox.SetMultiselect(const Value: boolean);
+procedure TRearrangeCheckListBox.SetMultiselect(const Value: boolean);
 var i, cnt: integer;
 begin
   cnt := 0;
@@ -204,7 +204,7 @@ begin
   reset Checked to it }
 end;
 
-procedure TWakanCheckListBox.Click;
+procedure TRearrangeCheckListBox.Click;
 begin
   inherited;
   if not Multiselect and ((ItemIndex<0) or not Checked[ItemIndex]) then begin
@@ -218,14 +218,14 @@ begin
   end;
 end;
 
-procedure TWakanCheckListBox.ClickCheck;
+procedure TRearrangeCheckListBox.ClickCheck;
 begin
   inherited;
   if Multiselect and Assigned(FOnSelectionChanged) then
     FOnSelectionChanged(Self);
 end;
 
-procedure TWakanCheckListBox.CNDrawItem(var Message: TWMDrawItem);
+procedure TRearrangeCheckListBox.CNDrawItem(var Message: TWMDrawItem);
 var LDrawItemStruct: PDrawItemStruct;
 begin
   if csDestroying in ComponentState then exit;
@@ -245,7 +245,7 @@ begin
   inherited;
 end;
 
-procedure TWakanCheckListBox.DrawItem(Index: Integer; Rect: TRect;
+procedure TRearrangeCheckListBox.DrawItem(Index: Integer; Rect: TRect;
   State: TOwnerDrawState);
 var
   Flags: Longint;
@@ -278,7 +278,7 @@ begin
   end;
 end;
 
-procedure TWakanCheckListBox.SetAutoDragItems(const Value: boolean);
+procedure TRearrangeCheckListBox.SetAutoDragItems(const Value: boolean);
 begin
   FAutoDragItems := Value;
   if Value then
@@ -287,7 +287,7 @@ begin
     Self.DragMode := dmManual;
 end;
 
-procedure TWakanCheckListBox.DragDrop(Source: TObject; X, Y: Integer);
+procedure TRearrangeCheckListBox.DragDrop(Source: TObject; X, Y: Integer);
 var
   DropPosition, StartPosition: Integer;
   DropPoint: TPoint;
@@ -305,7 +305,7 @@ begin
   OrderChanged;
 end;
 
-procedure TWakanCheckListBox.DragOver(Source: TObject; X, Y: Integer; State: TDragState;
+procedure TRearrangeCheckListBox.DragOver(Source: TObject; X, Y: Integer; State: TDragState;
   var Accept: Boolean);
 begin
   if FAutoDragItems then
@@ -314,7 +314,7 @@ begin
     inherited;
 end;
 
-procedure TWakanCheckListBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
+procedure TRearrangeCheckListBox.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   if FAutoDragItems and (Button=mbLeft) then begin
@@ -324,12 +324,12 @@ begin
   inherited;
 end;
 
-procedure TWakanCheckListBox.SetAutoCtrlMove(const Value: boolean);
+procedure TRearrangeCheckListBox.SetAutoCtrlMove(const Value: boolean);
 begin
   FAutoCtrlMove := Value;
 end;
 
-procedure TWakanCheckListBox.KeyDown(var Key: Word; Shift: TShiftState);
+procedure TRearrangeCheckListBox.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   if FAutoCtrlMove then begin
     if (Key=VK_UP) and (ssCtrl in Shift) then begin
@@ -352,7 +352,7 @@ end;
 
 //Item order has been changed. This means focus-change should be fired,
 //and possibly selection-change.
-procedure TWakanCheckListBox.OrderChanged;
+procedure TRearrangeCheckListBox.OrderChanged;
 begin
   Self.Click; //focus changed; also covers selection change in Single-Select
   if Multiselect then //have to do this manually

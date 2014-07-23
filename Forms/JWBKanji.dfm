@@ -3,8 +3,8 @@ object fKanji: TfKanji
   Top = 473
   BorderStyle = bsSizeToolWin
   Caption = '#00117^eCharacter list'
-  ClientHeight = 549
-  ClientWidth = 723
+  ClientHeight = 406
+  ClientWidth = 584
   Color = clBtnFace
   DragKind = dkDock
   Font.Charset = DEFAULT_CHARSET
@@ -22,18 +22,18 @@ object fKanji: TfKanji
   PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
-    Left = 188
+    Left = 172
     Top = 0
-    Width = 535
-    Height = 549
+    Width = 412
+    Height = 406
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
     object splDockCompounds: TSplitter
       Left = 0
-      Top = 547
-      Width = 535
+      Top = 404
+      Width = 412
       Height = 2
       Cursor = crVSplit
       Align = alBottom
@@ -42,12 +42,13 @@ object fKanji: TfKanji
       Visible = False
       ExplicitLeft = 3
       ExplicitTop = 552
+      ExplicitWidth = 535
     end
     object BlankPanel1: TBlankPanel
       Left = 0
       Top = 27
-      Width = 535
-      Height = 493
+      Width = 412
+      Height = 350
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -63,8 +64,8 @@ object fKanji: TfKanji
       AlignWithMargins = True
       Left = 3
       Top = 30
-      Width = 529
-      Height = 487
+      Width = 406
+      Height = 344
       Align = alClient
       BorderStyle = bsNone
       ColCount = 10
@@ -91,7 +92,7 @@ object fKanji: TfKanji
       AlignWithMargins = True
       Left = 0
       Top = 3
-      Width = 535
+      Width = 412
       Height = 21
       Margins.Left = 0
       Margins.Right = 0
@@ -99,7 +100,7 @@ object fKanji: TfKanji
       BevelOuter = bvNone
       TabOrder = 2
       object Label1: TLabel
-        Left = 328
+        Left = 202
         Top = 0
         Width = 39
         Height = 21
@@ -109,10 +110,14 @@ object fKanji: TfKanji
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
-        Left = 367
+        AlignWithMargins = True
+        Left = 241
         Top = 0
         Width = 168
         Height = 21
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Bottom = 0
         Align = alRight
         Style = csDropDownList
         ItemIndex = 4
@@ -131,12 +136,12 @@ object fKanji: TfKanji
       object Panel6: TPanel
         Left = 0
         Top = 0
-        Width = 328
+        Width = 202
         Height = 21
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        object cbInClipboard: TWakanCheckbox
+        object cbInClipboard: TJwbCheckbox
           Left = 115
           Top = 0
           Width = 123
@@ -148,7 +153,7 @@ object fKanji: TfKanji
           Caption = '#00189^eIn clipboard'
           TabOrder = 0
         end
-        object cbOnlyCommon: TWakanCheckbox
+        object cbOnlyCommon: TJwbCheckbox
           AlignWithMargins = True
           Left = 3
           Top = 0
@@ -166,8 +171,8 @@ object fKanji: TfKanji
     object Panel3: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 523
-      Width = 529
+      Top = 380
+      Width = 406
       Height = 21
       Align = alBottom
       BevelOuter = bvNone
@@ -194,7 +199,7 @@ object fKanji: TfKanji
         ExplicitLeft = 137
       end
       object btnKanjiDetails: TSpeedButton
-        Left = 400
+        Left = 277
         Top = 0
         Width = 129
         Height = 21
@@ -216,7 +221,7 @@ object fKanji: TfKanji
         ExplicitHeight = 17
       end
       object btnPrintCards: TButton
-        Left = 271
+        Left = 148
         Top = 0
         Width = 129
         Height = 21
@@ -235,8 +240,8 @@ object fKanji: TfKanji
     end
     object pnlDockCompounds: TPanel
       Left = 0
-      Top = 547
-      Width = 535
+      Top = 404
+      Width = 412
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
@@ -249,8 +254,8 @@ object fKanji: TfKanji
     AlignWithMargins = True
     Left = 0
     Top = 0
-    Width = 185
-    Height = 549
+    Width = 169
+    Height = 406
     Margins.Left = 0
     Margins.Top = 0
     Margins.Bottom = 0
@@ -261,11 +266,12 @@ object fKanji: TfKanji
     DockSite = True
     ParentBackground = False
     TabOrder = 1
+    Visible = False
     object sbClearFilters: TSpeedButton
       AlignWithMargins = True
       Left = 3
-      Top = 519
-      Width = 179
+      Top = 376
+      Width = 163
       Height = 27
       Margins.Top = 5
       Action = aResetFilters
@@ -284,15 +290,15 @@ object fKanji: TfKanji
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 179
-      Height = 254
+      Width = 163
+      Height = 214
       Margins.Bottom = 5
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
       DesignSize = (
-        179
-        254)
+        163
+        214)
       object sbPinYin: TSpeedButton
         Left = 0
         Top = 0
@@ -376,7 +382,7 @@ object fKanji: TfKanji
         ParentFont = False
       end
       object sbListRadicals: TSpeedButton
-        Left = 116
+        Left = 100
         Top = 96
         Width = 63
         Height = 22
@@ -390,6 +396,7 @@ object fKanji: TfKanji
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
+        ExplicitLeft = 116
       end
       object sbOther: TSpeedButton
         Left = 0
@@ -442,7 +449,7 @@ object fKanji: TfKanji
       object edtPinYin: TEdit
         Left = 56
         Top = 0
-        Width = 123
+        Width = 107
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
@@ -450,7 +457,7 @@ object fKanji: TfKanji
       object edtYomi: TEdit
         Left = 56
         Top = 24
-        Width = 123
+        Width = 107
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
@@ -458,7 +465,7 @@ object fKanji: TfKanji
       object edtDefinition: TEdit
         Left = 56
         Top = 48
-        Width = 123
+        Width = 107
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 2
@@ -466,7 +473,7 @@ object fKanji: TfKanji
       object cbOtherType: TComboBox
         Left = 56
         Top = 191
-        Width = 123
+        Width = 107
         Height = 21
         Style = csDropDownList
         Anchors = [akLeft, akTop, akRight]
@@ -475,7 +482,7 @@ object fKanji: TfKanji
       object edtOther: TEdit
         Left = 56
         Top = 169
-        Width = 123
+        Width = 107
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 4
@@ -483,7 +490,7 @@ object fKanji: TfKanji
       object edtSkip: TEdit
         Left = 56
         Top = 120
-        Width = 123
+        Width = 107
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 5
@@ -491,7 +498,7 @@ object fKanji: TfKanji
       object pbRadicals: TWakanPaintbox
         Left = 57
         Top = 96
-        Width = 59
+        Width = 43
         Height = 22
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
@@ -501,8 +508,9 @@ object fKanji: TfKanji
       object edtStrokeCount: TRangeSpinEdit
         Left = 56
         Top = 73
-        Width = 123
+        Width = 107
         Height = 22
+        Anchors = [akLeft, akTop, akRight]
         MaxValue = 100
         MinValue = 0
         TabOrder = 7
@@ -512,8 +520,9 @@ object fKanji: TfKanji
       object edtJouyou: TRangeSpinEdit
         Left = 56
         Top = 143
-        Width = 123
+        Width = 107
         Height = 22
+        Anchors = [akLeft, akTop, akRight]
         MaxValue = 100
         MinValue = 0
         TabOrder = 8
@@ -524,9 +533,9 @@ object fKanji: TfKanji
     object Panel5: TPanel
       AlignWithMargins = True
       Left = 0
-      Top = 267
-      Width = 185
-      Height = 242
+      Top = 227
+      Width = 169
+      Height = 139
       Margins.Left = 0
       Margins.Top = 5
       Margins.Right = 0
@@ -538,8 +547,8 @@ object fKanji: TfKanji
         AlignWithMargins = True
         Left = 3
         Top = 28
-        Width = 179
-        Height = 214
+        Width = 163
+        Height = 111
         Margins.Bottom = 0
         OnClickCheck = lbCategoriesClickCheck
         Align = alBottom
@@ -555,7 +564,7 @@ object fKanji: TfKanji
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 179
+        Width = 163
         Height = 21
         Align = alTop
         Style = csDropDownList
@@ -651,9 +660,9 @@ object fKanji: TfKanji
   end
   object ilCategoryActions: TImageList
     Left = 88
-    Top = 400
+    Top = 288
     Bitmap = {
-      494C0101040008009C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800A80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -927,7 +936,7 @@ object fKanji: TfKanji
   object pmCategories: TPopupMenu
     Images = ilCategoryActions
     Left = 32
-    Top = 400
+    Top = 288
     object miAddCategory: TMenuItem
       Caption = '#00881^eAdd category'
       ImageIndex = 0

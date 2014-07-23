@@ -40,17 +40,14 @@ requires
   VclSmp;
 
 contains
-  FreeSelectionGrid in 'Controls\FreeSelectionGrid.pas',
-  UrlLabel in 'Controls\UrlLabel.pas',
-  WakanWordGrid in 'Controls\WakanWordGrid.pas',
-  WakanPaintbox in 'Controls\WakanPaintbox.pas',
-  WinSpeedButton in 'Controls\WinSpeedButton.pas',
   CheckAction in 'Controls\CheckAction.pas',
   FormPlacemnt in 'Controls\FormPlacemnt.pas',
-  WakanListBoxes in 'Controls\WakanListBoxes.pas',
-  HintedEdit in 'Controls\HintedEdit.pas',
-  WakanCheckbox in 'Controls\WakanCheckbox.pas',
-  RangeSpinEdit in 'Controls\RangeSpinEdit.pas';
+  SimpleControls in 'Controls\SimpleControls.pas',
+  RangeSpinEdit in 'Controls\RangeSpinEdit.pas',
+  ExtListBoxes in 'Controls\ExtListBoxes.pas',
+  SelectionGrids in 'Controls\SelectionGrids.pas',
+  WakanWordGrid in 'Controls\WakanWordGrid.pas',
+  WakanPaintbox in 'Controls\WakanPaintbox.pas';
 
 end.
 

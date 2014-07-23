@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, Actions, ActnList, CheckAction,
   JWBStrings, IniFiles, Grids, DB, ShellAPI, WakanPaintbox, Menus, CheckLst,
-  ImgList, JWBRadical, WakanCheckbox, RangeSpinEdit, Vcl.Samples.Spin;
+  ImgList, JWBRadical, SimpleControls, RangeSpinEdit;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -62,8 +62,8 @@ type
     miEditCategory: TMenuItem;
     miDeleteCategory: TMenuItem;
     Panel6: TPanel;
-    cbInClipboard: TWakanCheckbox;
-    cbOnlyCommon: TWakanCheckbox;
+    cbInClipboard: TJwbCheckbox;
+    cbOnlyCommon: TJwbCheckbox;
     sbPinYin: TSpeedButton;
     edtPinYin: TEdit;
     edtYomi: TEdit;

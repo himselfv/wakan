@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, ComCtrls, StdCtrls, Buttons, UrlLabel, JwbForms;
+  ExtCtrls, ComCtrls, StdCtrls, Buttons, JwbForms, SimpleControls;
 
 type
   TfSplash = class(TJwbForm)

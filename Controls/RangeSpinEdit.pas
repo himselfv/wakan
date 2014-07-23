@@ -1,4 +1,5 @@
 unit RangeSpinEdit;
+{ Similar to TSpinEdit, but supports range expressions such as "3-5" }
 
 interface
 
@@ -6,14 +7,12 @@ uses
   SysUtils, Classes, Controls, StdCtrls, Messages, Windows, Vcl.Samples.Spin;
 
 type
- { Similar to TSpinEdit, but supports range expressions such as "3-5" }
-  TRangeSpinEdit = class(TCustomEdit)
+ //Simply TEdit for expressions of type "3-5", supports mouse wheel
+  TRangeEdit = class(TCustomEdit)
   private
     FMinValue: LongInt;
     FMaxValue: LongInt;
     FIncrement: LongInt;
-    FPlusButton: TSpinButton;
-    FExpandButton: TSpinButton;
     FEditorEnabled: Boolean;
     function GetMinHeight: Integer;
     function GetLowValue: LongInt;
@@ -23,8 +22,6 @@ type
     procedure SetLowValue(NewValue: LongInt);
     procedure SetHighValue(NewValue: LongInt);
     procedure SetValue(ALowValue, AHighValue: LongInt);
-    procedure SetEditRect;
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure CMEnter(var Message: TCMGotFocus); message CM_ENTER;
     procedure CMExit(var Message: TCMExit); message CM_EXIT;
     procedure WMPaste(var Message: TWMPaste); message WM_PASTE;
@@ -40,13 +37,10 @@ type
     function DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean; override;
     function DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean; override;
     procedure CreateParams(var Params: TCreateParams); override;
-    procedure CreateWnd; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
-    property PlusButton: TSpinButton read FPlusButton;
-    property ExpandButton: TSpinButton read FExpandButton;
   published
     property Anchors;
     property AutoSelect;
@@ -92,6 +86,21 @@ type
     property OnStartDrag;
   end;
 
+  //TSpinEdit for TRangeEdit, with additional buttons
+  TRangeSpinEdit = class(TRangeEdit)
+  protected
+    FPlusButton: TSpinButton;
+    FExpandButton: TSpinButton;
+    procedure CreateWnd; override;
+    procedure SetEditRect;
+    procedure WMSize(var Message: TWMSize); message WM_SIZE;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    property PlusButton: TSpinButton read FPlusButton;
+    property ExpandButton: TSpinButton read FExpandButton;
+  end;
+
 procedure Register;
 
 implementation
@@ -102,6 +111,244 @@ begin
 end;
 
 {$R 'RangeSpin'}
+
+constructor TRangeEdit.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Text := '0';
+  ControlStyle := ControlStyle - [csSetCaption];
+  FIncrement := 1;
+  FEditorEnabled := True;
+  ParentBackground := False;
+end;
+
+destructor TRangeEdit.Destroy;
+begin
+  inherited Destroy;
+end;
+
+procedure TRangeEdit.GetChildren(Proc: TGetChildProc; Root: TComponent);
+begin
+end;
+
+procedure TRangeEdit.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_UP then
+    if ssCtrl in Shift then
+      ExpandClick(Self)
+    else
+      UpClick(Self)
+  else
+  if Key = VK_DOWN then
+    if ssCtrl in Shift then
+      ShrinkClick(Self)
+    else
+      DownClick (Self);
+  inherited KeyDown(Key, Shift);
+end;
+
+procedure TRangeEdit.KeyPress(var Key: Char);
+begin
+  if not IsValidChar(Key) then
+  begin
+    Key := #0;
+    MessageBeep(0)
+  end;
+  if Key <> #0 then inherited KeyPress(Key);
+end;
+
+function TRangeEdit.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
+begin
+  if ssCtrl in Shift then
+    ShrinkClick(Self)
+  else
+    DownClick(Self);
+  Result := true;
+end;
+
+function TRangeEdit.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
+begin
+  if ssCtrl in Shift then
+    ExpandClick(Self)
+  else
+    UpClick(Self);
+  Result := true;
+end;
+
+function TRangeEdit.IsValidChar(Key: Char): Boolean;
+begin
+  Result := (CharInSet(Key, [FormatSettings.DecimalSeparator, '+', '-', '0'..'9'])) or
+    ((Key < #32) and (Key <> Chr(VK_RETURN)));
+  if not FEditorEnabled and Result and ((Key >= #32) or
+      (Key = Char(VK_BACK)) or (Key = Char(VK_DELETE))) then
+    Result := False;
+end;
+
+procedure TRangeEdit.CreateParams(var Params: TCreateParams);
+begin
+  inherited CreateParams(Params);
+  Params.Style := Params.Style or ES_MULTILINE or WS_CLIPCHILDREN;
+end;
+
+function TRangeEdit.GetMinHeight: Integer;
+var
+  DC: HDC;
+  SaveFont: HFont;
+  I: Integer;
+  SysMetrics, Metrics: TTextMetric;
+begin
+  DC := GetDC(0);
+  GetTextMetrics(DC, SysMetrics);
+  SaveFont := SelectObject(DC, Font.Handle);
+  GetTextMetrics(DC, Metrics);
+  SelectObject(DC, SaveFont);
+  ReleaseDC(0, DC);
+  I := SysMetrics.tmHeight;
+  if I > Metrics.tmHeight then I := Metrics.tmHeight;
+  Result := Metrics.tmHeight + I div 4 + GetSystemMetrics(SM_CYBORDER) * 4 + 2;
+end;
+
+procedure TRangeEdit.UpClick(Sender: TObject);
+begin
+  if ReadOnly then MessageBeep(0)
+  else begin
+    HighValue := HighValue + FIncrement;
+    LowValue := LowValue + FIncrement;
+  end;
+end;
+
+procedure TRangeEdit.DownClick(Sender: TObject);
+begin
+  if ReadOnly then MessageBeep(0)
+  else begin
+    LowValue := LowValue - FIncrement;
+    HighValue := HighValue - FIncrement;
+  end;
+end;
+
+procedure TRangeEdit.ExpandClick(Sender: TObject);
+begin
+  if ReadOnly then MessageBeep(0)
+  else begin
+    HighValue := HighValue + FIncrement;
+    LowValue := LowValue - FIncrement;
+  end;
+end;
+
+procedure TRangeEdit.ShrinkClick(Sender: TObject);
+begin
+  if ReadOnly then MessageBeep(0)
+  else begin
+    LowValue := LowValue + FIncrement;
+    HighValue := HighValue - FIncrement;
+  end;
+end;
+
+procedure TRangeEdit.WMPaste(var Message: TWMPaste);
+begin
+  if not FEditorEnabled or ReadOnly then Exit;
+  inherited;
+end;
+
+procedure TRangeEdit.WMCut(var Message: TWMPaste);
+begin
+  if not FEditorEnabled or ReadOnly then Exit;
+  inherited;
+end;
+
+procedure TRangeEdit.CMExit(var Message: TCMExit);
+var lo, hi: integer;
+begin
+  inherited;
+  lo := LowValue;
+  hi := HighValue;
+  if (CheckValue(lo) <> lo) or (CheckValue(hi) <> hi) or (lo > hi) then
+    SetValue(lo, hi);
+end;
+
+function TRangeEdit.GetLowValue: LongInt;
+var AHighValue: integer;
+begin
+  GetValue(Result, AHighValue);
+end;
+
+procedure TRangeEdit.SetLowValue(NewValue: LongInt);
+var AHighValue: integer;
+begin
+  AHighValue := GetHighValue;
+  NewValue := CheckValue(NewValue);
+  if NewValue > AHighValue then
+    SetValue(NewValue, NewValue)
+  else
+    SetValue(NewValue, AHighValue);
+end;
+
+function TRangeEdit.GetHighValue: LongInt;
+var ALowValue: integer;
+begin
+  GetValue(ALowValue, Result);
+end;
+
+procedure TRangeEdit.SetHighValue(NewValue: LongInt);
+var ALowValue: integer;
+begin
+  ALowValue := GetLowValue;
+  NewValue := CheckValue(NewValue);
+  if ALowValue > NewValue then
+    SetValue(NewValue, NewValue)
+  else
+    SetValue(ALowValue, NewValue);
+end;
+
+procedure TRangeEdit.GetValue(out ALowValue, AHighValue: LongInt);
+var i: integer;
+  AText: string;
+begin
+  AText := Trim(Self.Text);
+  i := pos('-', AText);
+  if i=1 then
+    //allow at most one minus before the first element
+    i := pos('-', AText, 2);
+  if i>0 then begin
+    ALowValue := StrToIntDef(copy(Text, 1, i-1), FMinValue);
+    AHighValue := StrToIntDef(copy(Text, i+1, MaxInt), FMinValue);
+  end else begin
+    ALowValue := StrToIntDef(Text, FMinValue);
+    AHighValue := ALowValue;
+  end;
+end;
+
+procedure TRangeEdit.SetValue(ALowValue, AHighValue: LongInt);
+begin
+  ALowValue := CheckValue(ALowValue);
+  AHighValue := CheckValue(AHighValue);
+  if ALowValue > AHighValue then
+    AHighValue := ALowValue;
+  if ALowValue=AHighValue then
+    Text := IntToStr(ALowValue)
+  else
+    Text := IntToStr(ALowValue) + '-' + IntToStr(AHighValue);
+end;
+
+function TRangeEdit.CheckValue(NewValue: LongInt): LongInt;
+begin
+  Result := NewValue;
+  if FMaxValue <> FMinValue then
+  begin
+    if NewValue < FMinValue then
+      Result := FMinValue
+    else if NewValue > FMaxValue then
+      Result := FMaxValue;
+  end;
+end;
+
+procedure TRangeEdit.CMEnter(var Message: TCMGotFocus);
+begin
+  if AutoSelect and not (csLButtonDown in ControlState) then
+    SelectAll;
+  inherited;
+end;
+
 
 constructor TRangeSpinEdit.Create(AOwner: TComponent);
 begin
@@ -124,81 +371,13 @@ begin
   FExpandButton.OnDownClick := ShrinkClick;
   FExpandButton.UpGlyph.Handle := LoadBitmap(HInstance, 'SpinExpand');
   FExpandButton.DownGlyph.Handle := LoadBitmap(HInstance, 'SpinShrink');
-  Text := '0';
-  ControlStyle := ControlStyle - [csSetCaption];
-  FIncrement := 1;
-  FEditorEnabled := True;
-  ParentBackground := False;
 end;
 
 destructor TRangeSpinEdit.Destroy;
 begin
   FExpandButton := nil;
   FPlusButton := nil;
-  inherited Destroy;
-end;
-
-procedure TRangeSpinEdit.GetChildren(Proc: TGetChildProc; Root: TComponent);
-begin
-end;
-
-procedure TRangeSpinEdit.KeyDown(var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_UP then
-    if ssCtrl in Shift then
-      ExpandClick(Self)
-    else
-      UpClick(Self)
-  else
-  if Key = VK_DOWN then
-    if ssCtrl in Shift then
-      ShrinkClick(Self)
-    else
-      DownClick (Self);
-  inherited KeyDown(Key, Shift);
-end;
-
-procedure TRangeSpinEdit.KeyPress(var Key: Char);
-begin
-  if not IsValidChar(Key) then
-  begin
-    Key := #0;
-    MessageBeep(0)
-  end;
-  if Key <> #0 then inherited KeyPress(Key);
-end;
-
-function TRangeSpinEdit.DoMouseWheelDown(Shift: TShiftState; MousePos: TPoint): Boolean;
-begin
-  if ssCtrl in Shift then
-    ShrinkClick(Self)
-  else
-    DownClick(Self);
-  Result := true;
-end;
-
-function TRangeSpinEdit.DoMouseWheelUp(Shift: TShiftState; MousePos: TPoint): Boolean;
-begin
-  if ssCtrl in Shift then
-    ExpandClick(Self)
-  else
-    UpClick(Self);
-  Result := true;
-end;
-
-function TRangeSpinEdit.IsValidChar(Key: Char): Boolean;
-begin
-  Result := (CharInSet(Key, [FormatSettings.DecimalSeparator, '+', '-', '0'..'9'])) or
-    ((Key < #32) and (Key <> Chr(VK_RETURN)));
-  if not FEditorEnabled and Result and ((Key >= #32) or
-      (Key = Char(VK_BACK)) or (Key = Char(VK_DELETE))) then
-    Result := False;
-end;
-
-procedure TRangeSpinEdit.CreateParams(var Params: TCreateParams);
-begin
-  inherited CreateParams(Params);
-  Params.Style := Params.Style or ES_MULTILINE or WS_CLIPCHILDREN;
+  inherited;
 end;
 
 procedure TRangeSpinEdit.CreateWnd;
@@ -245,165 +424,6 @@ begin
       FPlusButton.SetBounds(ExpandBtnRect.Left - FPlusButton.Width, 1, FPlusButton.Width, Height - 3);
     SetEditRect;
   end;
-end;
-
-function TRangeSpinEdit.GetMinHeight: Integer;
-var
-  DC: HDC;
-  SaveFont: HFont;
-  I: Integer;
-  SysMetrics, Metrics: TTextMetric;
-begin
-  DC := GetDC(0);
-  GetTextMetrics(DC, SysMetrics);
-  SaveFont := SelectObject(DC, Font.Handle);
-  GetTextMetrics(DC, Metrics);
-  SelectObject(DC, SaveFont);
-  ReleaseDC(0, DC);
-  I := SysMetrics.tmHeight;
-  if I > Metrics.tmHeight then I := Metrics.tmHeight;
-  Result := Metrics.tmHeight + I div 4 + GetSystemMetrics(SM_CYBORDER) * 4 + 2;
-end;
-
-procedure TRangeSpinEdit.UpClick(Sender: TObject);
-begin
-  if ReadOnly then MessageBeep(0)
-  else begin
-    HighValue := HighValue + FIncrement;
-    LowValue := LowValue + FIncrement;
-  end;
-end;
-
-procedure TRangeSpinEdit.DownClick(Sender: TObject);
-begin
-  if ReadOnly then MessageBeep(0)
-  else begin
-    LowValue := LowValue - FIncrement;
-    HighValue := HighValue - FIncrement;
-  end;
-end;
-
-procedure TRangeSpinEdit.ExpandClick(Sender: TObject);
-begin
-  if ReadOnly then MessageBeep(0)
-  else begin
-    HighValue := HighValue + FIncrement;
-    LowValue := LowValue - FIncrement;
-  end;
-end;
-
-procedure TRangeSpinEdit.ShrinkClick(Sender: TObject);
-begin
-  if ReadOnly then MessageBeep(0)
-  else begin
-    LowValue := LowValue + FIncrement;
-    HighValue := HighValue - FIncrement;
-  end;
-end;
-
-procedure TRangeSpinEdit.WMPaste(var Message: TWMPaste);
-begin
-  if not FEditorEnabled or ReadOnly then Exit;
-  inherited;
-end;
-
-procedure TRangeSpinEdit.WMCut(var Message: TWMPaste);
-begin
-  if not FEditorEnabled or ReadOnly then Exit;
-  inherited;
-end;
-
-procedure TRangeSpinEdit.CMExit(var Message: TCMExit);
-var lo, hi: integer;
-begin
-  inherited;
-  lo := LowValue;
-  hi := HighValue;
-  if (CheckValue(lo) <> lo) or (CheckValue(hi) <> hi) or (lo > hi) then
-    SetValue(lo, hi);
-end;
-
-function TRangeSpinEdit.GetLowValue: LongInt;
-var AHighValue: integer;
-begin
-  GetValue(Result, AHighValue);
-end;
-
-procedure TRangeSpinEdit.SetLowValue(NewValue: LongInt);
-var AHighValue: integer;
-begin
-  AHighValue := GetHighValue;
-  NewValue := CheckValue(NewValue);
-  if NewValue > AHighValue then
-    SetValue(NewValue, NewValue)
-  else
-    SetValue(NewValue, AHighValue);
-end;
-
-function TRangeSpinEdit.GetHighValue: LongInt;
-var ALowValue: integer;
-begin
-  GetValue(ALowValue, Result);
-end;
-
-procedure TRangeSpinEdit.SetHighValue(NewValue: LongInt);
-var ALowValue: integer;
-begin
-  ALowValue := GetLowValue;
-  NewValue := CheckValue(NewValue);
-  if ALowValue > NewValue then
-    SetValue(NewValue, NewValue)
-  else
-    SetValue(ALowValue, NewValue);
-end;
-
-procedure TRangeSpinEdit.GetValue(out ALowValue, AHighValue: LongInt);
-var i: integer;
-  AText: string;
-begin
-  AText := Trim(Self.Text);
-  i := pos('-', AText);
-  if i=1 then
-    //allow at most one minus before the first element
-    i := pos('-', AText, 2);
-  if i>0 then begin
-    ALowValue := StrToIntDef(copy(Text, 1, i-1), FMinValue);
-    AHighValue := StrToIntDef(copy(Text, i+1, MaxInt), FMinValue);
-  end else begin
-    ALowValue := StrToIntDef(Text, FMinValue);
-    AHighValue := ALowValue;
-  end;
-end;
-
-procedure TRangeSpinEdit.SetValue(ALowValue, AHighValue: LongInt);
-begin
-  ALowValue := CheckValue(ALowValue);
-  AHighValue := CheckValue(AHighValue);
-  if ALowValue > AHighValue then
-    AHighValue := ALowValue;
-  if ALowValue=AHighValue then
-    Text := IntToStr(ALowValue)
-  else
-    Text := IntToStr(ALowValue) + '-' + IntToStr(AHighValue);
-end;
-
-function TRangeSpinEdit.CheckValue(NewValue: LongInt): LongInt;
-begin
-  Result := NewValue;
-  if FMaxValue <> FMinValue then
-  begin
-    if NewValue < FMinValue then
-      Result := FMinValue
-    else if NewValue > FMaxValue then
-      Result := FMaxValue;
-  end;
-end;
-
-procedure TRangeSpinEdit.CMEnter(var Message: TCMGotFocus);
-begin
-  if AutoSelect and not (csLButtonDown in ControlState) then
-    SelectAll;
-  inherited;
 end;
 
 end.

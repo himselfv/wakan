@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, Buttons, ComCtrls, IniFiles, registry, UrlLabel,
-  ImgList, WakanPaintbox, Vcl.CheckLst, WakanListBoxes;
+  StdCtrls, ExtCtrls, Buttons, ComCtrls, IniFiles, registry, ImgList,
+  CheckLst, SimpleControls, ExtListBoxes, WakanPaintbox;
 
 type
   TfSettings = class(TForm)
@@ -261,14 +261,14 @@ type
     cbMultipleRoma: TCheckBox;
     btnRomaSystemUp: TBitBtn;
     btnRomaSystemDown: TBitBtn;
-    lbRomaSystems: TWakanCheckListBox;
+    lbRomaSystems: TRearrangeCheckListBox;
     pbKanaAsRomaji: TWakanPaintbox;
     lblKanaToRomajiHint: TLabel;
     pbBopomofoAsPinyin: TWakanPaintbox;
     Label17: TLabel;
     btnPinyinSystemUp: TBitBtn;
     btnPinyinSystemDown: TBitBtn;
-    lbPinyinSystems: TWakanCheckListBox;
+    lbPinyinSystems: TRearrangeCheckListBox;
     cbMultiplePinyin: TCheckBox;
     tsExprCopyFormats: TTabSheet;
     Label18: TLabel;

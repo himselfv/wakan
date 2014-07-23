@@ -9,7 +9,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, Buttons, StdCtrls, Menus, Grids, FormPlacemnt, UrlLabel, TextTable,
+  ExtCtrls, Buttons, StdCtrls, Menus, Grids, FormPlacemnt, TextTable,
   WakanWordGrid, JWBStrings, JWBForms;
 
 type

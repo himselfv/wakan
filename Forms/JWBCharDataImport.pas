@@ -13,7 +13,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, UrlLabel, JWBJobs, JwbForms, JWBIO, JWBCharData;
+  Dialogs, StdCtrls, SimpleControls, JWBJobs, JwbForms, JWBIO, JWBCharData;
 
 type
   TFlagList = array of boolean;

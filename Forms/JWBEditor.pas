@@ -39,7 +39,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, ImgList, ComCtrls, ToolWin, Actions, ActnList,
-  WakanPaintbox, WinSpeedButton, JWBStrings, JWBDicSearch, JWBWakanText, JWBIO;
+  WakanPaintbox, JWBStrings, JWBDicSearch, JWBWakanText, JWBIO;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
