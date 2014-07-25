@@ -5,3 +5,5 @@ Hint=Jim Breen's WWWJDIC dictionary server
 Language=J
 IDList=
 HotKey=0
+IconFile=.\WWWJDIC.ico
+IconIndex=0

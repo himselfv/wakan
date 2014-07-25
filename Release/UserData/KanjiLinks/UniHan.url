@@ -4,3 +4,5 @@ Title=UniHan
 Hint=charts.unicode.org/unihan - UniHan entry for this character
 IDList=
 HotKey=0
+IconFile=.\UniHan.ico
+IconIndex=0
