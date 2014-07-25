@@ -104,6 +104,15 @@ type
     JwbCheckbox2: TJwbCheckbox;
     CheckListBox1: TCheckListBox;
     SpeedButton1: TSpeedButton;
+    miCharWords: TMenuItem;
+    miCharDetails: TMenuItem;
+    N2: TMenuItem;
+    miCategories: TMenuItem;
+    miCopy: TMenuItem;
+    miLookUpIn: TMenuItem;
+    miBeforeLookupIn: TMenuItem;
+    miAfterLookupIn: TMenuItem;
+    PopupImages: TImageList;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -158,6 +167,9 @@ type
     procedure edtJouyouChange(Sender: TObject);
     procedure edtOtherChange(Sender: TObject);
     procedure SpeedButton1Click(Sender: TObject);
+    procedure miCharWordsClick(Sender: TObject);
+    procedure miCharDetailsClick(Sender: TObject);
+    procedure miCopyClick(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -176,6 +188,7 @@ type
     procedure SaveSettings(reg: TCustomIniFile);
     procedure LoadSettings(reg: TCustomIniFile);
     procedure LanguageChanged;
+    procedure CategoryListChanged;
     procedure InvalidateList;
     procedure Reload;
     procedure SaveChars;
@@ -201,11 +214,16 @@ type
     CurRadSearchType: TRadSearchType;
     property CurRadChars: string read FCurRadChars write SetCurRadChars;
 
-  protected //Copy formats
+  protected //Right-click menu
     procedure ReloadCopyFormats;
     procedure CopyInFormatClick(Sender: TObject);
     procedure CopyAsXMLClick(Sender: TObject);
     procedure ConfigureClick(Sender: TObject);
+    procedure ReloadPopupCategories;
+    procedure CategoryItemClick(Sender: TObject);
+    procedure CategoryNewItemClick(Sender: TObject);
+    procedure ClearReferenceLinks;
+    procedure ReloadReferenceLinks;
   public
     procedure CopyAsText(const AReplace: boolean);
     procedure CopyToClipboard(const AXsltFilename: string; const AReplace: boolean);
@@ -224,7 +242,7 @@ implementation
 uses JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
   JWBKanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
-  JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase;
+  JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -263,6 +281,15 @@ procedure TfKanji.LanguageChanged;
 begin
   ReloadSortBy;
   Self.InvalidateList;
+end;
+
+procedure TfKanji.CategoryListChanged;
+begin
+ //Reload filter categories
+  PasteKanjiCategoriesTo(Self.lbCategories.Items);
+  Self.lbCategories.ItemIndex:=0;
+  Self.lbCategoriesClick(Self); //react to changes
+ //Do not update popup categories here, instead do it in OnPopup
 end;
 
 procedure TfKanji.ClipboardChanged(Sender: TObject);
@@ -1653,18 +1680,6 @@ end;
 
 
 
-procedure TfKanji.PopupMenuPopup(Sender: TObject);
-var p: TPoint;
-  ACol, ARow: integer;
-begin
-  p := DrawGrid1.ScreenToClient(Mouse.CursorPos);
-  DrawGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
-  miCopyAs.Visible := (ARow>=0) and (ACol>=0); //click on data
-  if miCopyAs.Visible then
-    ReloadCopyFormats;
-end;
-
-
 { CopyFormats }
 
 function GetKanjiCopyFormatsDir: string;
@@ -1796,6 +1811,159 @@ begin
     Clipboard.Text := text
   else
     Clipboard.Text := Clipboard.Text + text;
+end;
+
+
+{ Right-click menu }
+
+
+procedure TfKanji.PopupMenuPopup(Sender: TObject);
+var p: TPoint;
+  ACol, ARow: integer;
+  AClickOnData: boolean;
+begin
+  p := DrawGrid1.ScreenToClient(Mouse.CursorPos);
+  DrawGrid1.MouseToCell(p.X, p.Y, ACol, ARow);
+  AClickOnData := (ARow>=0) and (ACol>=0);
+
+  miCopyAs.Visible := AClickOnData;
+  miCharDetails.Visible := AClickOnData;
+  miCharWords.Visible := AClickOnData;
+  miCategories.Visible := AClickOnData;
+  miLookupIn.Visible := AClickOnData;
+
+  if miCopyAs.Visible then
+    ReloadCopyFormats;
+  if miCategories.Visible then
+    ReloadPopupCategories;
+  if miLookupIn.Visible then
+    ReloadReferenceLinks;
+end;
+
+procedure TfKanji.miCopyClick(Sender: TObject);
+begin
+  CopyAsText(
+    GetKeyState(VK_SHIFT) and $F0 = 0 //append when Shift is pressed
+  );
+end;
+
+procedure TfKanji.miCharWordsClick(Sender: TObject);
+begin
+  if Length(FocusedChars)<1 then exit;
+  fMenu.DisplayMode := 6;
+  fKanjiCompounds.SetCharCompounds(Self.FocusedChars[1]);
+end;
+
+procedure TfKanji.miCharDetailsClick(Sender: TObject);
+begin
+  if not fMenu.aKanjiDetails.Checked then
+    fMenu.aKanjiDetails.Execute;
+end;
+
+procedure TfKanji.ReloadPopupCategories;
+var item: TMenuItem;
+  i: integer;
+begin
+  miCategories.Clear;
+
+  for i := 0 to Length(KanjiCats)-1 do begin
+    item := TMenuItem.Create(Self);
+    item.Caption := KanjiCats[i].name;
+    item.Checked := IsAllKnown(KanjiCats[i].idx, FocusedChars);
+    item.AutoCheck := true;
+    item.Tag := KanjiCats[i].idx;
+   //There's no "partially checked" for menu items, so check only when all are checked
+    item.OnClick := CategoryItemClick;
+    miCategories.Add(item);
+  end;
+
+  item := TMenuItem.Create(Self);
+  item.Caption := '-';
+  miCategories.Add(item);
+
+  item := TMenuItem.Create(Self);
+  item.Caption := _l('#01112^New...');
+  item.OnClick := CategoryNewItemClick;
+  miCategories.Add(item);
+end;
+
+procedure TfKanji.CategoryItemClick(Sender: TObject);
+var ch: char;
+begin
+  for ch in FocusedChars do
+    SetKnown(TMenuItem(Sender).Tag, ch, TMenuItem(Sender).Checked);
+  fMenu.ChangeUserData;
+ //Do not reload the list here even if it's filtered by category, or it'll confuse the user
+ //But maybe repaint (recolors learned/unlearned)
+  DrawGrid1.Invalidate;
+end;
+
+procedure TfKanji.CategoryNewItemClick(Sender: TObject);
+var catIndex: integer;
+  ch: char;
+begin
+  if Length(FocusedChars)<1 then exit;
+  catIndex := NewKanjiCategoryUI();
+  if catIndex<0 then exit;
+  for ch in FocusedChars do
+    SetKnown(catIndex, ch, true);
+  fMenu.ChangeUserData;
+  DrawGrid1.Invalidate;
+end;
+
+procedure TfKanji.ClearReferenceLinks;
+var i: integer;
+begin
+ //Submenu
+  miLookUpIn.Clear;
+ //Direct items
+  for i := PopupMenu.Items.Count-1 downto 0 do
+    if PopupMenu.Items[i] is TRefMenuItem then
+      PopupMenu.Items[i].Destroy;
+end;
+
+procedure TfKanji.ReloadReferenceLinks;
+var fname: string;
+  ref: TRefLink;
+  mi: TRefMenuItem;
+  idx: integer;
+begin
+  ClearReferenceLinks;
+  if Length(FocusedChars)<1 then exit;
+
+  if fSettings.cbDictRefLinksInSubmenu.Checked then begin
+    miBeforeLookupIn.Visible := false;
+    miAfterLookupIn.Visible := false;
+    miBeforeLookupIn.Caption := ''; //or they'd still be visible, being separators
+    miAfterLookupIn.Caption := '';
+    miLookUpIn.Visible := true;
+    idx := -1; //unused
+  end else begin
+    miBeforeLookupIn.Caption := '-';
+    miAfterLookupIn.Caption := '-';
+    miBeforeLookupIn.Visible := true;
+    miAfterLookupIn.Visible := true;
+    miLookUpIn.Visible := false;
+    idx := PopupMenu.Items.IndexOf(miAfterLookupIn);
+  end;
+
+  for fname in GetCharacterLinks() do begin
+    ref := LoadLink(fname);
+    if ref<>nil then
+    try
+      if ref.MatchesLang(curLang) then begin
+        mi := TRefMenuItem.Create(Self, ref, FocusedChars[1]);
+        if fSettings.cbDictRefLinksInSubmenu.Checked then
+          miLookUpIn.Add(mi)
+        else begin
+          PopupMenu.Items.Insert(idx, mi);
+          Inc(idx);
+        end;
+      end;
+    finally
+      FreeAndNil(ref);
+    end;
+  end;
 end;
 
 

@@ -989,11 +989,8 @@ begin
   ReloadKanjiCategories();
   if fKanjiDetails<>nil then
     fKanjiDetails.CategoryListChanged;
-  if fKanji<>nil then begin
-    PasteKanjiCategoriesTo(fKanji.lbCategories.Items);
-    fKanji.lbCategories.ItemIndex:=0;
-    fKanji.lbCategoriesClick(Self); //react to changes
-  end;
+  if fKanji<>nil then
+    fKanji.CategoryListChanged;
 end;
 
 

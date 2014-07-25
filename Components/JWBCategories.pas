@@ -108,7 +108,7 @@ function IsAnySelectedKnownLearned(ctl: TCustomListBox): boolean;
  Some categories have kanji bit mask buffer linked to it. }
 
 var
-  KnownLearned:integer; //index of "LEARNED" category (type 'Q'), set on load
+  KnownLearned: integer; //index of "LEARNED" category (type 'Q'), set on load
 
 procedure InitKnownLists;
 procedure CreateKnownList(listno:integer;charnumber:integer);

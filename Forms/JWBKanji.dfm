@@ -982,13 +982,46 @@ object fKanji: TfKanji
     end
   end
   object PopupMenu: TPopupMenu
+    Images = PopupImages
     OnPopup = PopupMenuPopup
-    Left = 352
-    Top = 592
+    Left = 272
+    Top = 528
+    object miCopy: TMenuItem
+      Caption = '#00266^Copy'
+      OnClick = miCopyClick
+    end
     object miCopyAs: TMenuItem
       Caption = '#01102^Copy As'
       object N1: TMenuItem
       end
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object miCharDetails: TMenuItem
+      Caption = '#00124^Details'
+      OnClick = miCharDetailsClick
+    end
+    object miCharWords: TMenuItem
+      Caption = '#01118^Words'
+      Hint = '#01119^Show words with this kanji in the dictionary'
+      OnClick = miCharWordsClick
+    end
+    object miCategories: TMenuItem
+      Caption = '#00634^Categories'
+      object TMenuItem
+      end
+    end
+    object miBeforeLookupIn: TMenuItem
+      Caption = '-'
+    end
+    object miLookUpIn: TMenuItem
+      Caption = '#01124^Look Up In'
+      object TMenuItem
+      end
+    end
+    object miAfterLookupIn: TMenuItem
+      Caption = '-'
     end
   end
   object ilCategoryActions: TImageList
@@ -1290,5 +1323,9 @@ object fKanji: TfKanji
       ImageIndex = 3
       OnClick = miDeleteCategoryClick
     end
+  end
+  object PopupImages: TImageList
+    Left = 336
+    Top = 528
   end
 end
