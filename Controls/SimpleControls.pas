@@ -3,7 +3,7 @@ unit SimpleControls;
 interface
 
 uses
-  SysUtils, Classes, Controls, StdCtrls, Messages;
+  SysUtils, Classes, Controls, StdCtrls, ExtCtrls, Messages;
 
 type
  { Adds Autosize like in TLabel }
@@ -32,6 +32,14 @@ type
     property URL: string read FURL write FURL;
   end;
 
+ { TPanel with some routines for popup-menu like support }
+  TPopupPanel = class(TPanel)
+  protected
+    procedure CMCancelMode(var message: TCMCancelMode); message CM_CANCELMODE;
+    procedure WMKillFocus(var message: TMessage); message WM_KILLFOCUS;
+  public
+  end;
+
 
 procedure Register;
 
@@ -48,6 +56,7 @@ procedure Register;
 begin
   RegisterComponents('Wakan', [TJwbCheckbox]);
   RegisterComponents('Wakan', [TUrlLabel]);
+  RegisterComponents('Wakan', [TPopupPanel]);
 end;
 
 
@@ -145,6 +154,19 @@ begin
   if URL<>'' then
     ShellOpen(URL);
   inherited;
+end;
+
+
+{ TPopupPanel }
+
+procedure TPopupPanel.CMCancelMode(var message: TCMCancelMode);
+begin
+  Self.Hide;
+end;
+
+procedure TPopupPanel.WMKillFocus(var message: TMessage);
+begin
+  Self.Hide;
 end;
 
 

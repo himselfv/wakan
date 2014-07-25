@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, Actions, ActnList, CheckAction,
   JWBStrings, IniFiles, Grids, DB, ShellAPI, WakanPaintbox, Menus, CheckLst,
-  ImgList, JWBRadical, SimpleControls, RangeSpinEdit;
+  ImgList, JWBRadical, SimpleControls, RangeSpinEdit, JvExControls,
+  JvArrowButton;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -38,8 +39,8 @@ type
     Actions: TActionList;
     aPrint: TAction;
     aResetFilters: TAction;
-    aCommon: TAction;
-    aClipboard: TAction;
+    aOnlyCommon: TAction;
+    aInClipboard: TAction;
     aPinYin: TAction;
     aYomi: TAction;
     aRadical: TAction;
@@ -50,9 +51,6 @@ type
     miCopyAs: TMenuItem;
     N1: TMenuItem;
     Panel7: TPanel;
-    Panel5: TPanel;
-    lbCategories: TCheckListBox;
-    cbOrAnd: TComboBox;
     ilCategoryActions: TImageList;
     pmCategories: TPopupMenu;
     miAddCategory: TMenuItem;
@@ -79,31 +77,12 @@ type
     sbSKIP: TSpeedButton;
     edtStrokeCount: TRangeSpinEdit;
     edtJouyou: TRangeSpinEdit;
-    Panel4: TPanel;
-    sbClearFilters: TSpeedButton;
-    cbOnlyCommon: TJwbCheckbox;
-    cbInClipboard: TJwbCheckbox;
-    Label1: TLabel;
-    rgSortBy: TComboBox;
     lblFoundChars: TLabel;
     Panel6: TPanel;
-    Panel8: TPanel;
-    Edit1: TEdit;
-    ComboBox1: TComboBox;
-    Panel10: TPanel;
-    SpeedButton4: TSpeedButton;
     RangeSpinEdit1: TRangeSpinEdit;
-    SpeedButton8: TSpeedButton;
-    WakanPaintbox1: TWakanPaintbox;
-    SpeedButton6: TSpeedButton;
-    SpeedButton5: TSpeedButton;
-    RangeSpinEdit2: TRangeSpinEdit;
-    ComboBox3: TComboBox;
+    PopupPanel1: TPopupPanel;
     Label2: TLabel;
-    JwbCheckbox1: TJwbCheckbox;
-    JwbCheckbox2: TJwbCheckbox;
-    CheckListBox1: TCheckListBox;
-    SpeedButton1: TSpeedButton;
+    pnlGroups: TPanel;
     miCharWords: TMenuItem;
     miCharDetails: TMenuItem;
     N2: TMenuItem;
@@ -113,6 +92,22 @@ type
     miBeforeLookupIn: TMenuItem;
     miAfterLookupIn: TMenuItem;
     PopupImages: TImageList;
+    Panel9: TPanel;
+    SpeedButton1: TSpeedButton;
+    RangeSpinEdit3: TRangeSpinEdit;
+    Panel11: TPanel;
+    SpeedButton5: TSpeedButton;
+    RangeSpinEdit2: TRangeSpinEdit;
+    rgSortBy: TComboBox;
+    Edit1: TEdit;
+    btnStrokes: TButton;
+    sbInClipboard: TSpeedButton;
+    sbOnlyCommon: TSpeedButton;
+    btnRadicals: TButton;
+    btnGroups: TButton;
+    ComboBox1: TComboBox;
+    lbCategories: TCheckListBox;
+    cbOrAnd: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -159,6 +154,7 @@ type
     procedure lbCategoriesDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
     procedure lbCategoriesDblClick(Sender: TObject);
+    procedure pnlGroupsExit(Sender: TObject);
     procedure edtPinYinChange(Sender: TObject);
     procedure edtYomiChange(Sender: TObject);
     procedure edtDefinitionChange(Sender: TObject);
@@ -166,11 +162,14 @@ type
     procedure edtSkipChange(Sender: TObject);
     procedure edtJouyouChange(Sender: TObject);
     procedure edtOtherChange(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
     procedure miCharWordsClick(Sender: TObject);
     procedure miCharDetailsClick(Sender: TObject);
     procedure miCopyClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure btnGroupsDropDownClick(Sender: TObject);
+    procedure btnStrokesDropDownClick(Sender: TObject);
+    procedure aInClipboardExecute(Sender: TObject);
+    procedure aOnlyCommonExecute(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -271,6 +270,8 @@ begin
   caltype:=0;
   Self.btnKanjiDetails.Down := fKanjiDetails.Visible;
   Clipboard.Watchers.Add(Self.ClipboardChanged);
+  sbOnlyCommon.GroupIndex := 14;
+  sbInClipboard.GroupIndex := 15;
 end;
 
 procedure TfKanji.FormHide(Sender: TObject);
@@ -301,14 +302,14 @@ end;
 
 procedure TfKanji.ClipboardChanged(Sender: TObject);
 begin
-  if Self.Visible and Self.cbInClipboard.Checked then
+  if Self.Visible and Self.aInClipboard.Checked then
     Self.InvalidateList;
 end;
 
 //Saves form settings to registry
 procedure TfKanji.SaveSettings(reg: TCustomIniFile);
 begin
-  reg.WriteBool('KanjiSearch','OnlyCommon',Self.cbOnlyCommon.Checked);
+  reg.WriteBool('KanjiSearch','OnlyCommon',Self.aOnlyCommon.Checked);
 //  reg.WriteBool('KanjiSearch','InClipboard',Self.cbInClipboard.Checked); //do not save-restore this for now (by design)
   if Self.edtPinYin.Text<>'' then
     reg.WriteString('KanjiSearch','PinYin',Self.edtPinYin.Text)
@@ -355,7 +356,7 @@ end;
 procedure TfKanji.LoadSettings(reg: TCustomIniFile);
 var AOtherTypeSelected: integer;
 begin
-  Self.cbOnlyCommon.Checked := reg.ReadBool('KanjiSearch','OnlyCommon',false);
+  Self.aOnlyCommon.Checked := reg.ReadBool('KanjiSearch','OnlyCommon',false);
 //  Self.cbInClipboard.Checked := reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
   Self.edtPinYin.Text := reg.ReadString('KanjiSearch','PinYin','');
   Self.edtYomi.Text := reg.ReadString('KanjiSearch','Yomi','');
@@ -413,8 +414,8 @@ begin
   edtYomi.Text := '';
   edtDefinition.Text := '';
   edtOther.Text := '';
-  cbOnlyCommon.Checked := false;
-  cbInClipboard.Checked := false;
+  aOnlyCommon.Checked := false;
+  aInClipboard.Checked := false;
   edtStrokeCount.Text := '';
   FCurRadChars := '';
   pbRadicals.Invalidate;
@@ -484,16 +485,6 @@ begin
     FSetOtherTypeIndex := AItemIndex
   else
     cbOtherType.ItemIndex := AItemIndex;
-end;
-
-procedure TfKanji.SpeedButton1Click(Sender: TObject);
-begin
-  Panel10.Visible := not Panel10.Visible;
-  if Panel10.Visible then
-    Panel6.Height := 121
-  else
-    Panel6.Height := 32;
-
 end;
 
 { Called when a radical filter changes }
@@ -788,8 +779,6 @@ begin
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
     Screen.Cursor:=crHourGlass;
-    Self.aCommon.Checked:=Self.cbOnlyCommon.Checked;
-    Self.aClipboard.Checked:=Self.cbInClipboard.Checked;
     fltclip:=TStringList.Create;
     fltpinyin:=TStringList.Create;
     fltyomi:=TStringList.Create;
@@ -800,7 +789,7 @@ begin
     sl4:=TStringList.Create;
     sl10:=TStringList.Create;
     CopyCategories;
-    if Self.cbInClipboard.Checked then
+    if Self.aInClipboard.Checked then
       for i:=1 to flength(Clipboard.Text) do
         if (Word(fgetch(Clipboard.Text,i)) >= $4000) and (fltclip.IndexOf(fgetch(Clipboard.Text,i))<0) then
           fltclip.Add(fgetch(Clipboard.Text,i));
@@ -870,7 +859,7 @@ begin
         2:TChar.SetOrder('ChFrequency_Ind');
       end;
     ki.Clear;
-    clipsort:=(Self.cbInClipboard.Checked) and (Self.rgSortBy.ItemIndex=4);
+    clipsort:=(Self.aInClipboard.Checked) and (Self.rgSortBy.ItemIndex=4);
     clipind:=0;
   //  if not clipsort then fltclip.Sort;
     while ((not clipsort) and ((not TChar.EOF) and ((curlang='c') or (TChar.Int(TChar.fChinese)=0)))) or
@@ -880,9 +869,9 @@ begin
       if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TChar.fType)='S') then accept:=false;
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TChar.fType)='T') then accept:=false;
-      if accept and (Self.cbOnlyCommon.Checked) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
-      if accept and (Self.cbOnlyCommon.Checked) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
-      if accept and (not clipsort) and (Self.cbInClipboard.Checked) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
+      if accept and (Self.aOnlyCommon.Checked) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
+      if accept and (Self.aOnlyCommon.Checked) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
+      if accept and (not clipsort) and (Self.aInClipboard.Checked) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
       if accept and sbPinYin.Down and (Self.edtPinYin.Text<>'') and (fltpinyin.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
       if accept and sbYomi.Down and (Self.edtYomi.Text<>'') and (fltyomi.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
       if accept and sbDefinition.Down and (Self.edtDefinition.Text<>'') and (fltmean.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
@@ -1593,8 +1582,6 @@ begin
   Self.InvalidateList;
 end;
 
-
-
 procedure TfKanji.pbRadicalsClick(Sender: TObject);
 var
   _radSearchType: TRadSearchType;
@@ -1623,6 +1610,52 @@ begin
   Canvas.Brush.Color := clBtnFace;
   Canvas.Font := TWakanPaintbox(Sender).Font;
   DrawUnicode(Canvas,5,2,16,FCurRadChars,FontRadical);
+end;
+
+procedure TfKanji.aOnlyCommonExecute(Sender: TObject);
+begin
+  sbOnlyCommon.Down := aOnlyCommon.Checked;
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.aInClipboardExecute(Sender: TObject);
+begin
+  sbInClipboard.Down := aInClipboard.Checked;
+  SearchFilterChanged(Sender);
+end;
+
+
+procedure PopupUnder(APopupControl, AAnchorControl: TWinControl);
+var pt: TPoint;
+begin
+  pt := AAnchorControl.ClientToScreen(Point(0,0));
+  pt.Y := pt.Y + AAnchorControl.Height + 2;
+  pt := APopupControl.Parent.ScreenToClient(pt);
+  if pt.X + APopupControl.Width > APopupControl.Parent.Width then
+    pt.X := APopupControl.Parent.Width - APopupControl.Width;
+  if pt.X < 0 then
+    pt.X := 0;
+  APopupControl.Left := pt.X;
+  APopupControl.Top := pt.Y;
+  APopupControl.Visible := true;
+  APopupControl.SetFocus;
+end;
+
+procedure TfKanji.btnGroupsDropDownClick(Sender: TObject);
+begin
+  PopupUnder(pnlGroups, btnGroups);
+end;
+
+procedure TfKanji.btnStrokesDropDownClick(Sender: TObject);
+begin
+  PopupUnder(PopupPanel1, btnStrokes);
+  PopupPanel1.Width := btnStrokes.Width;
+//  PopupUnder(RangeSpinEdit2, btnStrokes);
+end;
+
+procedure TfKanji.pnlGroupsExit(Sender: TObject);
+begin
+  (Sender as TControl).Hide;
 end;
 
 
@@ -1683,7 +1716,6 @@ procedure TfKanji.aMeaningExecute(Sender: TObject);
 begin
   Self.edtDefinition.SetFocus;
 end;
-
 
 
 
