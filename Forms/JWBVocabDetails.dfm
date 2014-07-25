@@ -15,6 +15,7 @@ object fVocabDetails: TfVocabDetails
   OldCreateOrder = False
   Scaled = False
   OnClose = FormClose
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnMouseWheel = FormMouseWheel
   OnResize = FormResize

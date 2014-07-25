@@ -71,13 +71,13 @@ procedure TfCategoryMgr.FormShow(Sender: TObject);
 begin
   ReloadList;
   if fsModal in FormState then
-    BeginCategoryUpdate; //do not update anyone else while in modal
+    BeginCategoryListUpdate; //do not update anyone else while in modal
 end;
 
 procedure TfCategoryMgr.FormHide(Sender: TObject);
 begin
   if fsModal in FormState then
-    EndCategoryUpdate;
+    EndCategoryListUpdate;
 end;
 
 procedure TfCategoryMgr.pcPagesChange(Sender: TObject);

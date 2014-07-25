@@ -184,14 +184,15 @@ object fVocab: TfVocab
       Width = 773
       Height = 399
       Align = alClient
-      TextLeft = 14
-      TextTop = 16
-      Text = '#00155^eNo words were found.'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -16
       Font.Name = 'Arial'
       Font.Style = [fsBold]
+      ParentFont = False
+      TextLeft = 14
+      TextTop = 16
+      Text = '#00155^eNo words were found.'
     end
     object StringGrid1: TWakanGrid
       AlignWithMargins = True

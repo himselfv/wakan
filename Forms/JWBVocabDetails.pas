@@ -62,9 +62,11 @@ type
     procedure ScrollBox1Resize(Sender: TObject);
     procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure FormCreate(Sender: TObject);
 
   protected
     cl:TStringList; //cached instance
+    procedure CategoryListChanged(Sender: TObject);
   public
     procedure Reset;
     procedure SetMultipleWords;
@@ -85,9 +87,36 @@ uses TextTable, JWBLanguage, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
 
 {$R *.DFM}
 
+procedure TfVocabDetails.FormCreate(Sender: TObject);
+begin
+  OnCategoryListChanged.Add(Self.CategoryListChanged);
+end;
+
 procedure TfVocabDetails.FormDestroy(Sender: TObject);
 begin
+  OnCategoryListChanged.Remove(Self.CategoryListChanged);
   FreeAndNil(cl);
+end;
+
+procedure TfVocabDetails.CategoryListChanged(Sender: TObject);
+var lc:char;
+  s:string;
+begin
+  Self.cbAddCategory.Items.Clear;
+  TUserCat.First;
+  while not TUserCat.EOF do
+  begin
+    s:=TUserCat.Str(TUserCatName);
+    lc:=GetCatPrefix(s);
+    if lc='?' then begin
+      lc := 'j';
+      TUserCat.Edit([TUserCatName],['j~'+s])
+    end;
+    s:=StripCatName(s);
+    if lc=curlang then
+      Self.cbAddCategory.Items.Add(s);
+    TUserCat.Next;
+  end;
 end;
 
 procedure TfVocabDetails.FormMouseWheel(Sender: TObject; Shift: TShiftState;

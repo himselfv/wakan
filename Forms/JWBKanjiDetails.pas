@@ -149,6 +149,8 @@ type
     property DockedHeight: integer read GetDockedHeight write SetDockedHeight;
 
   protected
+    procedure CategoryListChanged(Sender: TObject);
+    procedure KanjiCategoryEntriesChanged(Sender: TObject);
     procedure ClearCategories;
     procedure ReloadCategories;
     procedure ReloadAddCategoryMenu;
@@ -156,8 +158,6 @@ type
     procedure AddCategoryButtonClick(Sender: TObject);
     procedure AddCategoryClick(Sender: TObject);
     procedure NewCategoryClick(Sender: TObject);
-  public
-    procedure CategoryListChanged;
 
   protected
     procedure ClearReferenceLinks;
@@ -214,6 +214,8 @@ begin
   cursimple:='';
   DockedWidth:=321; //fixed docked size
   DockedHeight:=220;
+  OnCategoryListChanged.Add(Self.CategoryListChanged);
+  OnKanjiCategoryEntriesChanged.Add(Self.KanjiCategoryEntriesChanged);
 end;
 
 procedure TfKanjiDetails.BeforeDestruction;
@@ -229,6 +231,8 @@ end;
 
 procedure TfKanjiDetails.FormDestroy(Sender: TObject);
 begin
+  OnKanjiCategoryEntriesChanged.Remove(Self.KanjiCategoryEntriesChanged);
+  OnCategoryListChanged.Remove(Self.CategoryListChanged);
   kval.Free;
 end;
 
@@ -876,13 +880,20 @@ begin
   end;
 end;
 
-{ Called by Main Form when category list changes }
+//Called when category list changes
 procedure TfKanjiDetails.CategoryListChanged;
 begin
   PasteKanjiCategoriesTo(Self.cbCategories.Items);
   Self.cbCategories.ItemIndex:=0;
   ReloadCategories; //some could've been deleted
  //ReloadAddCategoryMenu; //called from ReloadCategories
+end;
+
+procedure TfKanjiDetails.KanjiCategoryEntriesChanged(Sender: TObject);
+begin
+ //This could have changed the learned/unlearned/category status of curren char,
+ //so reload
+  Self.RefreshDetails;
 end;
 
 procedure TfKanjiDetails.CategoryButtonClick(Sender: TObject);

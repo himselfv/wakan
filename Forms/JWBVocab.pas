@@ -716,8 +716,7 @@ begin
     ImportVocabFromCsv(OpenDialog1.FileName, catw, addw);
 
   //We've been doing silent AddCategories, so refresh now
-  fMenu.RefreshCategory;
-  fMenu.ChangeUserData;
+  WordCategoryListChanged;
   ShowIt(false);
   Application.MessageBox(
     pchar(_l('^e'+inttostr(catw)+' words imported'#13+inttostr(addw)+' new words')),

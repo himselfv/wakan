@@ -39,9 +39,25 @@ function StripCatName(const s:string):string;
 
 { Notifications. }
 
-procedure CategoriesChanged;
-procedure BeginCategoryUpdate;
-procedure EndCategoryUpdate;
+var
+  OnCategoryListChanged: TList<TNotifyEvent>;
+  OnWordCategoryEntriesChanged: TList<TNotifyEvent>;
+  OnKanjiCategoryEntriesChanged: TList<TNotifyEvent>;
+
+procedure CategoryListChanged;
+procedure BeginCategoryListUpdate;
+procedure EndCategoryListUpdate;
+
+//More specific versions if you know the particulars
+procedure WordCategoryListChanged;
+procedure KanjiCategoryListChanged;
+
+procedure WordCategoryEntriesChanged;
+procedure KanjiCategoryEntriesChanged;
+
+procedure UserDataChanged;
+
+
 
 
 { Raw Category manipulations.
@@ -77,8 +93,7 @@ function NeedCategoryUI(category: string; cattype: char; silent: boolean): integ
 
 { List of kanji categories (populated by mainform, used by others).
  It's okay to reload the list without reloading the controls which reference it,
- because the controls store category indexes inside them anyway.
- But the main form has methods for reloading all subscribers in one go }
+ because the controls store category indexes inside them anyway }
 
 var
   KanjiCats: array of record
@@ -189,31 +204,67 @@ var
   CategoryUpdateLock: integer;
   CategoryChangesRecorded: integer;
 
-procedure CategoriesChanged;
+procedure CategoryListChanged;
+var Event: TNotifyEvent;
 begin
   if CategoryUpdateLock>0 then begin
     Inc(CategoryChangesRecorded);
     exit;
   end;
-  fMenu.RefreshKanjiCategory;
-  fMenu.RefreshCategory;
-  fMenu.ChangeUserData;
+  ReloadKanjiCategories();
+  UserDataChanged;
+  for Event in OnCategoryListChanged do
+    Event(nil);
 end;
 
-procedure BeginCategoryUpdate;
+procedure WordCategoryListChanged;
+begin
+ //Currently just links to the common one
+  CategoryListChanged;
+end;
+
+procedure KanjiCategoryListChanged;
+begin
+ //Currently just links to the common one
+  CategoryListChanged;
+end;
+
+procedure BeginCategoryListUpdate;
 begin
   Inc(CategoryUpdateLock);
   if CategoryUpdateLock=1 then
     CategoryChangesRecorded := 0;
 end;
 
-procedure EndCategoryUpdate;
+procedure EndCategoryListUpdate;
 begin
   Dec(CategoryUpdateLock);
   if CategoryUpdateLock=0 then
     if CategoryChangesRecorded>0 then
-      CategoriesChanged;
+      CategoryListChanged;
 end;
+
+procedure WordCategoryEntriesChanged;
+var Event: TNotifyEvent;
+begin
+  UserDataChanged;
+  for Event in OnWordCategoryEntriesChanged do
+    Event(nil);
+end;
+
+procedure KanjiCategoryEntriesChanged;
+var Event: TNotifyEvent;
+begin
+  UserDataChanged;
+  for Event in OnKanjiCategoryEntriesChanged do
+    Event(nil);
+end;
+
+procedure UserDataChanged;
+begin
+  fMenu.ChangeUserData;
+end;
+
 
 
 threadvar
@@ -501,7 +552,7 @@ begin
   Result := TUserCat.TrueInt(TUserCatIndex);
   CreateKnownList(Result,0);
 
-  CategoriesChanged;
+  CategoryListChanged;
 end;
 
 function EditCategoryUI(cat:integer; const AOwner: TComponent): boolean;
@@ -539,7 +590,7 @@ begin
     FreeAndNil(fNewCategory);
   end;
 
-  CategoriesChanged;
+  CategoryListChanged;
 end;
 
 //Deletes a category, handling all required user interaction.
@@ -605,7 +656,7 @@ begin
     FreeAndNil(CUserCat);
   end;
 
-  CategoriesChanged;
+  CategoryListChanged;
 end;
 
 function MergeCategoryUI(categories: TCatIndexList): integer;
@@ -657,7 +708,7 @@ begin
     FreeAndNil(CUserCat);
   end;
 
-  CategoriesChanged;
+  CategoryListChanged;
 end;
 
 { Creates a copy of the specified category with the same content.
@@ -713,7 +764,7 @@ begin
     FreeAndNil(fNewCategory);
   end;
 
-  CategoriesChanged;
+  CategoryListChanged;
 end;
 
 { Finds a category by name, or creates a new one asking user for details.
@@ -758,7 +809,7 @@ begin
   TUserCat.Insert(['0',category,inttostr(ord(cattype)),FormatDateTime('yyyymmdd',now)]);
   Result:=TUserCat.TrueInt(TUserCatIndex);
   if not silent then
-    CategoriesChanged;
+    CategoryListChanged;
 end;
 
 
@@ -1080,6 +1131,7 @@ begin
   a:=TByteArray(KnownList[listno]^)[ki];
   if known then a:=a or (1 shl kj) else a:=a and not (1 shl kj);
   TByteArray(KnownList[listno]^)[ki]:=a;
+  KanjiCategoryEntriesChanged();
 end;
 
 {
@@ -1378,5 +1430,15 @@ end;
 
 initialization
   InitKnownLists;
+  OnCategoryListChanged := TList<TNotifyEvent>.Create;
+  OnKanjiCategoryEntriesChanged := TList<TNotifyEvent>.Create;
+  OnWordCategoryEntriesChanged := TList<TNotifyEvent>.Create;
+
+finalization
+ {$IFDEF CLEAN_DEINIT}
+  FreeAndNil(OnKanjiCategoryEntriesChanged);
+  FreeAndNil(OnWordCategoryEntriesChanged);
+  FreeAndNil(OnCategoryListChanged);
+ {$ENDIF}
 
 end.

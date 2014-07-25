@@ -16,6 +16,7 @@ object fKanji: TfKanji
   Scaled = False
   ShowHint = True
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnHide = FormHide
   OnResize = FormResize
   OnShow = FormShow
@@ -30,8 +31,6 @@ object fKanji: TfKanji
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitWidth = 560
-    ExplicitHeight = 231
     object splDockCompounds: TSplitter
       Left = 0
       Top = 436
@@ -61,9 +60,6 @@ object fKanji: TfKanji
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
-      ExplicitTop = 27
-      ExplicitWidth = 560
-      ExplicitHeight = 175
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
@@ -93,9 +89,6 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitTop = 30
-      ExplicitWidth = 554
-      ExplicitHeight = 169
     end
     object Panel2: TPanel
       AlignWithMargins = True
@@ -106,8 +99,6 @@ object fKanji: TfKanji
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 3
-      ExplicitWidth = 554
       object lblFoundChars: TLabel
         Left = 0
         Top = 0
@@ -122,7 +113,8 @@ object fKanji: TfKanji
         Font.Style = [fsBold]
         ParentFont = False
         Layout = tlCenter
-        ExplicitTop = 3
+        ExplicitWidth = 132
+        ExplicitHeight = 16
       end
       object Label2: TLabel
         AlignWithMargins = True
@@ -137,7 +129,6 @@ object fKanji: TfKanji
         Align = alRight
         Caption = '#00197^Sort by'
         Layout = tlCenter
-        ExplicitLeft = 352
         ExplicitHeight = 13
       end
       object ComboBox3: TComboBox
@@ -161,7 +152,6 @@ object fKanji: TfKanji
           'Gakken Kanji'
           'Remembering Kanji'
           '#00149^eRandom')
-        ExplicitTop = 3
       end
     end
     object Panel3: TPanel
@@ -173,8 +163,6 @@ object fKanji: TfKanji
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 3
-      ExplicitTop = 205
-      ExplicitWidth = 554
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -234,7 +222,6 @@ object fKanji: TfKanji
         ParentFont = False
         TabOrder = 0
         TabStop = False
-        ExplicitLeft = 296
       end
     end
     object pnlDockCompounds: TPanel
@@ -247,8 +234,6 @@ object fKanji: TfKanji
       UseDockManager = False
       DockSite = True
       TabOrder = 4
-      ExplicitTop = 229
-      ExplicitWidth = 560
     end
     object Panel6: TPanel
       Left = 0
@@ -337,8 +322,6 @@ object fKanji: TfKanji
         BevelOuter = bvNone
         TabOrder = 1
         Visible = False
-        ExplicitTop = 2
-        ExplicitHeight = 79
         object SpeedButton4: TSpeedButton
           Left = 0
           Top = -1
@@ -480,7 +463,6 @@ object fKanji: TfKanji
           OnClick = lbCategoriesClick
           OnDblClick = lbCategoriesDblClick
           OnDrawItem = lbCategoriesDrawItem
-          ExplicitHeight = 73
         end
       end
     end
@@ -500,7 +482,6 @@ object fKanji: TfKanji
     ParentBackground = False
     TabOrder = 1
     Visible = False
-    ExplicitWidth = 560
     object Panel7: TPanel
       AlignWithMargins = True
       Left = 3
@@ -510,7 +491,6 @@ object fKanji: TfKanji
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 190
       DesignSize = (
         209
         213)
@@ -678,7 +658,6 @@ object fKanji: TfKanji
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 0
         OnChange = edtPinYinChange
-        ExplicitWidth = 134
       end
       object edtYomi: TEdit
         Left = 56
@@ -688,7 +667,6 @@ object fKanji: TfKanji
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 1
         OnChange = edtYomiChange
-        ExplicitWidth = 134
       end
       object edtDefinition: TEdit
         Left = 56
@@ -698,7 +676,6 @@ object fKanji: TfKanji
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 2
         OnChange = edtDefinitionChange
-        ExplicitWidth = 134
       end
       object cbOtherType: TComboBox
         Left = 56
@@ -709,7 +686,6 @@ object fKanji: TfKanji
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 3
         OnChange = SearchFilterChanged
-        ExplicitWidth = 134
       end
       object edtOther: TEdit
         Left = 56
@@ -719,7 +695,6 @@ object fKanji: TfKanji
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 4
         OnChange = edtOtherChange
-        ExplicitWidth = 134
       end
       object edtSkip: TEdit
         Left = 56
@@ -729,7 +704,6 @@ object fKanji: TfKanji
         Anchors = [akLeft, akTop, akRight]
         TabOrder = 5
         OnChange = edtSkipChange
-        ExplicitWidth = 134
       end
       object pbRadicals: TWakanPaintbox
         Left = 57
@@ -742,7 +716,6 @@ object fKanji: TfKanji
         DoubleBuffered = True
         OnPaint = pbRadicalsPaint
         OnClick = pbRadicalsClick
-        ExplicitWidth = 70
       end
       object edtStrokeCount: TRangeSpinEdit
         Left = 56
@@ -756,7 +729,6 @@ object fKanji: TfKanji
         LowValue = 0
         HighValue = 0
         OnChange = edtStrokeCountChange
-        ExplicitWidth = 134
       end
       object edtJouyou: TRangeSpinEdit
         Left = 56
@@ -770,7 +742,6 @@ object fKanji: TfKanji
         LowValue = 0
         HighValue = 0
         OnChange = edtJouyouChange
-        ExplicitWidth = 134
       end
     end
     object Panel5: TPanel
@@ -782,7 +753,6 @@ object fKanji: TfKanji
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitLeft = 199
       object lbCategories: TCheckListBox
         AlignWithMargins = True
         Left = 0
@@ -830,7 +800,6 @@ object fKanji: TfKanji
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitLeft = 372
       object sbClearFilters: TSpeedButton
         Left = 0
         Top = 192
@@ -1028,7 +997,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104000800D00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800D40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

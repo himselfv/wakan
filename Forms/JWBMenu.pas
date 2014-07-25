@@ -214,7 +214,6 @@ type
     procedure aChineseExecute(Sender: TObject);
     procedure aKanjiAddClipboardExecute(Sender: TObject);
     procedure aKanjiSetLearnedExecute(Sender: TObject);
-    procedure aKanjiFullDetailsExecute(Sender: TObject);
     procedure TabControl1Change(Sender: TObject);
     procedure aModeKanjiExecute(Sender: TObject);
     procedure aModeDictExecute(Sender: TObject);
@@ -348,8 +347,6 @@ type
   protected
     procedure ClipboardChanged(Sender: TObject);
   public
-    procedure RefreshCategory;
-    procedure RefreshKanjiCategory;
     procedure SwitchLanguage(lanchar:char);
     procedure ScreenTipButtonClick(ASender: TObject; AButtonId: integer);
 
@@ -951,48 +948,10 @@ begin
     fExamples.ReloadExamplesPackage;
   if fWordLookup<>nil then
     fWordLookup.Look();
-  RefreshCategory;
-  RefreshKanjiCategory;
+  JWBCategories.CategoryListChanged;
   if fKanjiDetails<>nil then
     fKanjiDetails.RefreshDetails;
 end;
-
-procedure TfMenu.RefreshCategory;
-var b:boolean;
-    lc:char;
-    s:string;
-begin
-  if fVocabDetails<>nil then
-    fVocabDetails.cbAddCategory.Items.Clear;
-  if fVocabFilters<>nil then
-    fVocabFilters.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
-
-  TUserCat.First;
-  while not TUserCat.EOF do
-  begin
-    s:=TUserCat.Str(TUserCatName);
-    lc:=GetCatPrefix(s);
-    if lc='?' then begin
-      lc := 'j';
-      TUserCat.Edit([TUserCatName],['j~'+s])
-    end;
-    s:=StripCatName(s);
-    if lc=curlang then
-      if fVocabDetails<>nil then
-        fVocabDetails.cbAddCategory.Items.Add(s);
-    TUserCat.Next;
-  end;
-end;
-
-procedure TfMenu.RefreshKanjiCategory;
-begin
-  ReloadKanjiCategories();
-  if fKanjiDetails<>nil then
-    fKanjiDetails.CategoryListChanged;
-  if fKanji<>nil then
-    fKanji.CategoryListChanged;
-end;
-
 
 procedure TfMenu.SetUserDataChanged(Value: boolean);
 begin
@@ -1059,8 +1018,7 @@ begin
   end;
 
  //Refresh everything
-  RefreshCategory;
-  RefreshKanjiCategory;
+  JWBCategories.CategoryListChanged;
   if fKanjiDetails<>nil then
     fKanjiDetails.RefreshDetails;
 end;
@@ -1149,7 +1107,7 @@ begin
   t.Free;
   ChangeUserData;
   SaveUserData;
-  RefreshCategory;
+  JWBCategories.CategoryListChanged;
   Screen.Cursor:=crDefault;
 end;
 
@@ -1606,12 +1564,6 @@ procedure TfMenu.aKanjiSetLearnedExecute(Sender: TObject);
 begin
   if not fKanji.Visible then aModeKanji.Execute;
   fKanjiDetails.btnAddToCategoryClick(Sender);
-end;
-
-procedure TfMenu.aKanjiFullDetailsExecute(Sender: TObject);
-begin
-  if not fKanjiDetails.Visible then aKanjiDetailsExecute(Sender);
-  fKanjiDetails.btnStrokeOrderClick(Sender);
 end;
 
 procedure TfMenu.aVocabExamplesExecute(Sender: TObject);

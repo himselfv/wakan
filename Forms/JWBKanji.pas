@@ -170,6 +170,7 @@ type
     procedure miCharWordsClick(Sender: TObject);
     procedure miCharDetailsClick(Sender: TObject);
     procedure miCopyClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -181,6 +182,7 @@ type
     function KanjiGridSetSelection(const chars: FString): boolean;
     procedure SetFocusedCharsLow(const Value: FString);
     procedure SetFocusedChars(const Value: FString);
+    procedure CategoryListChanged(Sender: TObject);
     procedure ClipboardChanged(Sender: TObject);
     procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
     procedure ReadRaineFilter(fltradical:TStringList;const ARadicals:string);
@@ -188,7 +190,6 @@ type
     procedure SaveSettings(reg: TCustomIniFile);
     procedure LoadSettings(reg: TCustomIniFile);
     procedure LanguageChanged;
-    procedure CategoryListChanged;
     procedure InvalidateList;
     procedure Reload;
     procedure SaveChars;
@@ -239,7 +240,7 @@ function GetKanjiCopyFormats: TArray<string>;
 function KanjiInfoToXml(const AChar: string): string;
 
 implementation
-uses JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
+uses UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
   JWBKanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
   JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks;
@@ -254,6 +255,12 @@ procedure TfKanji.FormCreate(Sender: TObject);
 begin
   CurRadSearchType:=stRaine;
   FCurRadChars:='';
+  OnCategoryListChanged.Add(Self.CategoryListChanged);
+end;
+
+procedure TfKanji.FormDestroy(Sender: TObject);
+begin
+  OnCategoryListChanged.Remove(Self.CategoryListChanged);
 end;
 
 procedure TfKanji.FormShow(Sender: TObject);
@@ -1894,7 +1901,7 @@ begin
     SetKnown(TMenuItem(Sender).Tag, ch, TMenuItem(Sender).Checked);
   fMenu.ChangeUserData;
  //Do not reload the list here even if it's filtered by category, or it'll confuse the user
- //But maybe repaint (recolors learned/unlearned)
+ //But maybe repaint (recolors learned/unlearned if it's not cached)
   DrawGrid1.Invalidate;
 end;
 

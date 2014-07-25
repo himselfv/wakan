@@ -33,6 +33,11 @@ type
     procedure btnCatEditClick(Sender: TObject);
     procedure btnCatDeleteClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+
+  protected
+    procedure CategoryListChanged(Sender: TObject);
   public
     function CheckEnabledCategories(catlist: TStringList): boolean;
 
@@ -54,9 +59,14 @@ uses TextTable, JWBVocab, JWBMenu, JWBUserData, JWBCategories, JWBUnit;
 
 {$R *.DFM}
 
-procedure TfVocabFilters.cbFilterUnlearnedClick(Sender: TObject);
+procedure TfVocabFilters.FormCreate(Sender: TObject);
 begin
-  fVocab.ShowIt(false);
+  OnCategoryListChanged.Add(Self.CategoryListChanged);
+end;
+
+procedure TfVocabFilters.FormDestroy(Sender: TObject);
+begin
+  OnCategoryListChanged.Remove(Self.CategoryListChanged);
 end;
 
 procedure TfVocabFilters.FormClose(Sender: TObject;
@@ -64,6 +74,17 @@ procedure TfVocabFilters.FormClose(Sender: TObject;
 begin
   fVocab.btnListSettings.Down:=false;
   fMenu.aVocabSettings.Checked:=false;
+end;
+
+procedure TfVocabFilters.CategoryListChanged(Sender: TObject);
+var b:boolean;
+begin
+  Self.tabCatListChange(fMenu,fVocabFilters.tabCatList.TabIndex,b);
+end;
+
+procedure TfVocabFilters.cbFilterUnlearnedClick(Sender: TObject);
+begin
+  fVocab.ShowIt(false);
 end;
 
 procedure TfVocabFilters.lbCategoriesClick(Sender: TObject);

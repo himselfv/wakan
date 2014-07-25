@@ -896,8 +896,7 @@ begin
        (TUser.Int(TUserScore)<2) then
       TUserSheet.Insert([ll[i],IntToStr(catidx),inttostr(i)]);
   end;
-  fMenu.ChangeUserData;
-  fMenu.RefreshCategory;
+  WordCategoryListChanged;
   fVocab.SetCategoryFilter(Edit1.Text);
 end;
 
