@@ -42,6 +42,7 @@ type
     destructor Destroy; override;
     procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   published
+    property Align;
     property Anchors;
     property AutoSelect;
     property AutoSize;
