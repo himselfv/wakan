@@ -3,7 +3,7 @@ unit SimpleControls;
 interface
 
 uses
-  SysUtils, Classes, Controls, StdCtrls, ExtCtrls, Messages;
+  SysUtils, Classes, Controls, StdCtrls, ExtCtrls, Messages, Windows;
 
 type
  { Adds Autosize like in TLabel }
@@ -36,15 +36,16 @@ type
   TPopupPanel = class(TPanel)
   protected
     procedure CMCancelMode(var message: TCMCancelMode); message CM_CANCELMODE;
-    procedure WMKillFocus(var message: TMessage); message WM_KILLFOCUS;
+    procedure WndProc(var Message: TMessage); override;
   public
+    procedure Popup;
   end;
 
 
 procedure Register;
 
 implementation
-uses Graphics, Windows,
+uses Graphics, Forms,
 {$IFDEF MSWINDOWS}
   ShellAPI
 {$ENDIF MSWINDOWS}
@@ -159,15 +160,133 @@ end;
 
 { TPopupPanel }
 
+function IsChildrenOf(AControl, AParent: TControl): boolean;
+begin
+  while AControl<>nil do begin
+    if AControl=AParent then begin
+      Result := true;
+      exit;
+    end;
+    AControl := AControl.Parent;
+  end;
+  Result := false;
+end;
+
+function MsgToStr(const AMsg: integer): string;
+begin
+  case AMsg of
+    WM_ACTIVATE: Result := 'WM_ACTIVATE';
+    WM_ACTIVATEAPP: Result := 'WM_ACTIVATEAPP';
+    WM_SETFOCUS: Result := 'WM_SETFOCUS';
+    WM_KILLFOCUS: Result := 'WM_KILLFOCUS';
+    WM_LBUTTONDOWN: Result := 'WM_LBUTTONDOWN';
+    WM_LBUTTONUP: Result := 'WM_LBUTTONUP';
+    WM_LBUTTONDBLCLK: Result := 'WM_LBUTTONDBLCLK';
+    WM_RBUTTONDOWN: Result := 'WM_RBUTTONDOWN';
+    WM_RBUTTONUP: Result := 'WM_RBUTTONUP';
+    WM_RBUTTONDBLCLK: Result := 'WM_RBUTTONDBLCLK';
+    WM_MBUTTONDOWN: Result := 'WM_MBUTTONDOWN';
+    WM_MBUTTONUP: Result := 'WM_MBUTTONUP';
+    WM_MBUTTONDBLCLK: Result := 'WM_MBUTTONDBLCLK';
+    WM_XBUTTONDOWN: Result := 'WM_XBUTTONDOWN';
+    WM_XBUTTONUP: Result := 'WM_XBUTTONUP';
+    WM_XBUTTONDBLCLK: Result := 'WM_XBUTTONDBLCLK';
+    WM_KEYDOWN: Result := 'WM_KEYDOWN';
+    WM_KEYUP: Result := 'WM_KEYUP';
+    WM_CANCELMODE: Result := 'WM_CANCELMODE';
+    WM_GETTEXTLENGTH: Result := 'WM_GETTEXTLENGTH';
+    WM_ERASEBKGND: Result := 'WM_ERASEBKGND';
+    WM_CTLCOLOREDIT: Result := 'WM_CTLCOLOREDIT';
+    WM_COMMAND: Result := 'WM_COMMAND';
+    WM_IME_NOTIFY: Result := 'WM_IME_NOTIFY';
+    WM_IME_SETCONTEXT: Result := 'WM_IME_SETCONTEXT';
+    WM_NCHITTEST: Result := 'WM_NCHITTEST';
+    WM_PRINTCLIENT: Result := 'WM_PRINTCLIENT';
+    WM_SETCURSOR: Result := 'WM_SETCURSOR';
+    WM_TIMER: Result := 'WM_TIMER';
+    WM_MOUSEMOVE: Result := 'WM_MOUSEMOVE';
+    WM_NCMOUSEMOVE: Result := 'WM_NCMOUSEMOVE';
+    WM_PAINT: Result := 'WM_PAINT';
+    CM_ACTIVATE: Result := 'CM_ACTIVATE';
+    CM_DEACTIVATE: Result := 'CM_DEACTIVATE';
+    CM_TEXTCHANGED: Result := 'CM_TEXTCHANGED';
+    CM_MOUSEENTER: Result := 'CM_MOUSEENTER';
+    CM_MOUSELEAVE: Result := 'CM_MOUSELEAVE';
+    CM_HINTSHOW: Result := 'CM_HINTSHOW';
+    CM_HINTSHOWPAUSE: Result := 'CM_HINTSHOWPAUSE';
+  else Result := IntToStr(AMsg);
+  end;
+end;
+
+function IsHiddenMsg(const AMsg: integer): boolean;
+begin
+  case AMsg of
+    WM_TIMER,
+    WM_MOUSEMOVE,
+    WM_NCMOUSEMOVE,
+    WM_NCHITTEST,
+    WM_PAINT,
+    WM_SETCURSOR,
+    WM_CTLCOLOREDIT,
+    CM_HINTSHOWPAUSE:
+      Result := true;
+  else Result := false;
+  end;
+end;
+
+procedure TPopupPanel.Popup;
+var Msg: TMsg;
+begin
+  try
+    Self.Show;
+    Self.SetFocus;
+    Self.SelectFirst;
+    repeat
+      try
+        if PeekMessage(Msg, 0, 0, 0, PM_NOREMOVE) then begin
+{          if not IsHiddenMsg(Msg.message) then
+            OutputDebugString(PChar('Msg: '+MsgToStr(Msg.message))); }
+
+          if (Msg.message=WM_ACTIVATEAPP) and (Msg.wParam=0) then
+            break;
+          if (Msg.message=WM_ACTIVATE) and (Msg.wParam=WA_INACTIVE) and IsChildrenOf(Self, FindControl(Msg.hwnd)) then
+            break;
+          if (Msg.message=WM_KILLFOCUS) and IsChildrenOf(FindControl(msg.hwnd), Self)
+          and ((Msg.wParam=0) or not IsChildrenOf(FindControl(Msg.wParam), Self)) then
+            break;
+          if ((Msg.message=WM_LBUTTONDOWN) or (Msg.message=WM_LBUTTONDBLCLK)
+          or (Msg.message=WM_RBUTTONDOWN) or (Msg.message=WM_RBUTTONDBLCLK)
+          or (Msg.message=WM_MBUTTONDOWN) or (Msg.message=WM_MBUTTONDBLCLK)
+          or (Msg.message=WM_XBUTTONDOWN) or (Msg.message=WM_XBUTTONDBLCLK))
+          and not IsChildrenOf(FindControl(Msg.hwnd), Self) then
+            break;
+          if (Msg.message=WM_KEYDOWN) and (Msg.lParam=VK_ESCAPE) then
+            break;
+          if (Msg.message=WM_CANCELMODE) and IsChildrenOf(FindControl(Msg.hwnd), Self) then
+            break;
+
+          Application.HandleMessage;
+        end;
+      except
+        Application.HandleException(Self);
+      end;
+    until Application.Terminated;
+  finally
+    Self.Hide;
+  end;
+end;
+
 procedure TPopupPanel.CMCancelMode(var message: TCMCancelMode);
 begin
-  Self.Hide;
+  if not IsChildrenOf(message.Sender, Self) then
+    Self.Hide;
 end;
 
-procedure TPopupPanel.WMKillFocus(var message: TMessage);
+procedure TPopupPanel.WndProc(var Message: TMessage);
 begin
-  Self.Hide;
+  inherited WndProc(Message);
+{  if not IsHiddenMsg(message.Msg) then
+    OutputDebugString(PChar('Panel msg: '+MsgToStr(Message.Msg))); }
 end;
-
 
 end.

@@ -50,39 +50,20 @@ type
     PopupMenu: TPopupMenu;
     miCopyAs: TMenuItem;
     N1: TMenuItem;
-    Panel7: TPanel;
     ilCategoryActions: TImageList;
     pmCategories: TPopupMenu;
     miAddCategory: TMenuItem;
     miUncheckAllCategories: TMenuItem;
     miEditCategory: TMenuItem;
     miDeleteCategory: TMenuItem;
-    sbPinYin: TSpeedButton;
-    edtPinYin: TEdit;
-    edtYomi: TEdit;
-    sbYomi: TSpeedButton;
-    sbDefinition: TSpeedButton;
-    edtDefinition: TEdit;
-    sbStrokeCount: TSpeedButton;
     pnlDockCompounds: TPanel;
     splDockCompounds: TSplitter;
-    cbOtherType: TComboBox;
-    edtOther: TEdit;
-    edtSkip: TEdit;
-    pbRadicals: TWakanPaintbox;
-    sbJouyou: TSpeedButton;
-    sbListRadicals: TSpeedButton;
-    sbOther: TSpeedButton;
-    sbRadicals: TSpeedButton;
-    sbSKIP: TSpeedButton;
-    edtStrokeCount: TRangeSpinEdit;
-    edtJouyou: TRangeSpinEdit;
     lblFoundChars: TLabel;
     Panel6: TPanel;
     RangeSpinEdit1: TRangeSpinEdit;
     PopupPanel1: TPopupPanel;
     Label2: TLabel;
-    pnlGroups: TPanel;
+    pnlGroups: TPopupPanel;
     miCharWords: TMenuItem;
     miCharDetails: TMenuItem;
     N2: TMenuItem;
@@ -99,15 +80,32 @@ type
     SpeedButton5: TSpeedButton;
     RangeSpinEdit2: TRangeSpinEdit;
     rgSortBy: TComboBox;
-    Edit1: TEdit;
+    edtLookup: TEdit;
     btnStrokes: TButton;
     sbInClipboard: TSpeedButton;
     sbOnlyCommon: TSpeedButton;
     btnRadicals: TButton;
     btnGroups: TButton;
-    ComboBox1: TComboBox;
     lbCategories: TCheckListBox;
     cbOrAnd: TComboBox;
+    btnLookupMode: TButton;
+    pmLookupMode: TPopupMenu;
+    miLookupAuto: TMenuItem;
+    N3: TMenuItem;
+    miLookupCharacters: TMenuItem;
+    miLookupDefinition: TMenuItem;
+    miLookupOn: TMenuItem;
+    miLookupKun: TMenuItem;
+    miLookupPinYin: TMenuItem;
+    miLookupSKIP: TMenuItem;
+    N4: TMenuItem;
+    sbStrokeCount: TSpeedButton;
+    edtStrokeCount: TRangeSpinEdit;
+    sbRadicals: TSpeedButton;
+    pbRadicals: TWakanPaintbox;
+    sbListRadicals: TSpeedButton;
+    sbJouyou: TSpeedButton;
+    edtJouyou: TRangeSpinEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -155,13 +153,8 @@ type
       Rect: TRect; State: TOwnerDrawState);
     procedure lbCategoriesDblClick(Sender: TObject);
     procedure pnlGroupsExit(Sender: TObject);
-    procedure edtPinYinChange(Sender: TObject);
-    procedure edtYomiChange(Sender: TObject);
-    procedure edtDefinitionChange(Sender: TObject);
     procedure edtStrokeCountChange(Sender: TObject);
-    procedure edtSkipChange(Sender: TObject);
     procedure edtJouyouChange(Sender: TObject);
-    procedure edtOtherChange(Sender: TObject);
     procedure miCharWordsClick(Sender: TObject);
     procedure miCharDetailsClick(Sender: TObject);
     procedure miCopyClick(Sender: TObject);
@@ -170,6 +163,9 @@ type
     procedure btnStrokesDropDownClick(Sender: TObject);
     procedure aInClipboardExecute(Sender: TObject);
     procedure aOnlyCommonExecute(Sender: TObject);
+    procedure miLookupSKIPClick(Sender: TObject);
+    procedure sbOnlyCommonClick(Sender: TObject);
+    procedure sbInClipboardClick(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -201,9 +197,10 @@ type
 
   protected //Search filters
     FSetSortBy: integer;
-    FSetOtherTypeIndex: integer; //set when reading settings, applied on next ReloadOtherTypes()
-    procedure SetOtherTypeIndex(const AItemIndex: integer);
-    procedure ReloadOtherTypes;
+    FSetLookupTypeIndex: integer; //set when reading settings, applied on next ReloadLookupTypes()
+    function GetLookupTypeIndex: integer;
+    procedure SetLookupTypeIndex(const AItemIndex: integer);
+    procedure ReloadLookupTypes;
     procedure ReloadSortBy;
 
   protected
@@ -264,7 +261,7 @@ end;
 
 procedure TfKanji.FormShow(Sender: TObject);
 begin
-  ReloadOtherTypes;
+  ReloadLookupTypes;
   cbOrAnd.ItemIndex := 0;
   Reload;
   caltype:=0;
@@ -311,18 +308,10 @@ procedure TfKanji.SaveSettings(reg: TCustomIniFile);
 begin
   reg.WriteBool('KanjiSearch','OnlyCommon',Self.aOnlyCommon.Checked);
 //  reg.WriteBool('KanjiSearch','InClipboard',Self.cbInClipboard.Checked); //do not save-restore this for now (by design)
-  if Self.edtPinYin.Text<>'' then
-    reg.WriteString('KanjiSearch','PinYin',Self.edtPinYin.Text)
-  else
-    reg.DeleteKey('KanjiSearch','PinYin');
-  if Self.edtYomi.Text<>'' then
-    reg.WriteString('KanjiSearch','Yomi',Self.edtYomi.Text)
-  else
-    reg.DeleteKey('KanjiSearch','Yomi');
-  if Self.edtDefinition.Text<>'' then
-    reg.WriteString('KanjiSearch','Definition',Self.edtDefinition.Text)
-  else
-    reg.DeleteKey('KanjiSearch','Definition');
+
+  reg.WriteInteger('KanjiSearch','LookupTypeIndex', Self.GetLookupTypeIndex);
+  reg.WriteString('KanjiSearch','LookupQuery', Self.edtLookup.Text);
+
   if Self.edtStrokeCount.Text<>'' then
     reg.WriteString('KanjiSearch','Strokes',Self.edtStrokeCount.Text)
   else
@@ -335,42 +324,25 @@ begin
     reg.DeleteKey('KanjiSearch','RadSearch');
     reg.DeleteKey('KanjiSearch','RadIndexes');
   end;
-  if Self.edtSKIP.Text<>'' then
-    reg.WriteString('KanjiSearch','SKIP',Self.edtSKIP.Text)
-  else
-    reg.DeleteKey('KanjiSearch','SKIP');
   if Self.edtJouyou.Text<>'' then
     reg.WriteString('KanjiSearch','Jouyou',Self.edtJouyou.Text)
   else
     reg.DeleteKey('KanjiSearch','Jouyou');
-  reg.WriteInteger('KanjiSearch','OtherCriteriaIndex',Self.cbOtherType.ItemIndex);
-  if Self.edtOther.Text<>'' then
-    reg.WriteString('KanjiSearch','Other',Self.edtOther.Text)
-  else
-    reg.DeleteKey('KanjiSearch','Other');
   reg.WriteInteger('Characters','Sort',Self.rgSortBy.ItemIndex);
-  reg.WriteInteger('Characters','OtherSearch',Self.cbOtherType.ItemIndex);
 end;
 
 //Loads form settings from registry
 procedure TfKanji.LoadSettings(reg: TCustomIniFile);
-var AOtherTypeSelected: integer;
 begin
   Self.aOnlyCommon.Checked := reg.ReadBool('KanjiSearch','OnlyCommon',false);
 //  Self.cbInClipboard.Checked := reg.ReadBool('KanjiSearch','InClipboard',false); //do not save-restore this for now (by design)
-  Self.edtPinYin.Text := reg.ReadString('KanjiSearch','PinYin','');
-  Self.edtYomi.Text := reg.ReadString('KanjiSearch','Yomi','');
-  Self.edtDefinition.Text := reg.ReadString('KanjiSearch','Definition','');
+
+  SetLookupTypeIndex(reg.ReadInteger('KanjiSearch','LookupTypeIndex',0));
+  Self.edtLookup.Text := reg.ReadString('KanjiSearch','LookupQuery','');
   Self.edtStrokeCount.Text := reg.ReadString('KanjiSearch','Strokes','');
   Self.curRadSearchType := TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
   Self.curRadChars := reg.ReadString('KanjiSearch','RadSearch','');
-  Self.edtSKIP.Text := reg.ReadString('KanjiSearch','SKIP','');
   Self.edtJouyou.Text := reg.ReadString('KanjiSearch','Jouyou','');
-  Self.edtOther.Text := reg.ReadString('KanjiSearch','Other',''); //why did we need this?
-  AOtherTypeSelected := reg.ReadInteger('KanjiSearch','OtherCriteriaIndex',-1);
-  if AOtherTypeSelected<0 then
-    AOtherTypeSelected := reg.ReadInteger('Characters','OtherSearch',0); //backward compability
-  SetOtherTypeIndex(AOtherTypeSelected);
   Self.FSetSortBy := reg.ReadInteger('Characters','Sort',0);
 end;
 
@@ -410,16 +382,13 @@ end;
 //Resets filters but does not apply it, so that you can chain it with something.
 procedure TfKanji.ResetFilters;
 begin
-  edtPinYin.Text := '';
-  edtYomi.Text := '';
-  edtDefinition.Text := '';
-  edtOther.Text := '';
+  SetLookupTypeIndex(0);
+  edtLookup.Text := '';
   aOnlyCommon.Checked := false;
   aInClipboard.Checked := false;
   edtStrokeCount.Text := '';
   FCurRadChars := '';
   pbRadicals.Invalidate;
-  edtSKIP.Text := '';
   edtJouyou.Text := '';
 end;
 
@@ -457,12 +426,13 @@ begin
   end;
 end;
 
-//Reloads a list of "other" search types
-procedure TfKanji.ReloadOtherTypes;
+
+//Reloads a list of textual search types
+procedure TfKanji.ReloadLookupTypes;
 var i: integer;
   bk: integer;
 begin
-  bk := cbOtherType.ItemIndex;
+{  bk := cbOtherType.ItemIndex;
   if bk=-1 then begin //this is the first reload
     bk := FSetOtherTypeIndex;
     FSetOtherTypeIndex := -1; //to make it obvious if we mistakengly reuse it
@@ -474,17 +444,50 @@ begin
     if CharPropTypes[i].id>20 then
       cbOtherType.Items.Add(_l('^e'+CharPropTypes[i].englishName));
   cbOtherType.ItemIndex:=0;
-  if bk < cbOtherType.Items.Count-1 then cbOtherType.ItemIndex:=bk;
+  if bk < cbOtherType.Items.Count-1 then cbOtherType.ItemIndex:=bk;}
+    //TODO:!
 end;
 
-procedure TfKanji.SetOtherTypeIndex(const AItemIndex: integer);
+//Returns integer uniquely identifying the selected lookup type (either
+//predefined one or from the full list)
+function TfKanji.GetLookupTypeIndex: integer;
+begin
+  if miLookupAuto.Checked then
+    Result := 0
+  else
+  if miLookupCharacters.Checked then
+    Result := -1
+  else
+  if miLookupDefinition.Checked then
+    Result := -2
+  else
+  if miLookupOn.Checked then
+    Result := -3
+  else
+  if miLookupKun.Checked then
+    Result := -4
+  else
+  if miLookupPinYin.Checked then
+    Result := -5
+  else
+  if miLookupSKIP.Checked then
+    Result := -6
+  else
+    Result := 0;
+  //TODO: Else return positive integer for the property # selected from the full list
+end;
+
+//Selects the lookup type given it's id
+procedure TfKanji.SetLookupTypeIndex(const AItemIndex: integer);
 begin
  //Sometimes this is called when "other search types" are not yet reloaded,
  //so we save the value until then.
-  if cbOtherType.Items.Count<=0 then
+{  if cbOtherType.Items.Count<=0 then
     FSetOtherTypeIndex := AItemIndex
   else
-    cbOtherType.ItemIndex := AItemIndex;
+    cbOtherType.ItemIndex := AItemIndex;}
+    //TODO:!
+    //TODO: apply to lookup types if already loaded
 end;
 
 { Called when a radical filter changes }
@@ -656,7 +659,7 @@ begin
             );
         end;
 
-        if match then
+        if match and (flt.IndexOf(CCharProp.Kanji)<0) then
           flt.Add(CCharProp.Kanji);
         CCharProp.Next;
       end;
@@ -666,8 +669,6 @@ begin
     FreeAndNil(CCharProp);
     FreeAndNil(sl);
   end;
-  flt.Sort;
-  flt.Sorted:=true;
 end;
 
 { Converts RadicalIndexes to the standard filter string acceptable by ReadFilter }
@@ -719,6 +720,16 @@ begin
   sltemp.Free;
 end;
 
+//Extracts all kanji characters from the string and creates a filter set as used
+//below.
+procedure ExtractKanjiToFilter(const AText: string; AFilter: TStringList);
+var i: integer;
+begin
+  for i := 1 to Length(AText) do
+    if (EvalChar(AText[i])=EC_IDG_CHAR) and (AFilter.IndexOf(AText[i])<0) then
+      AFilter.Add(AText[i]);
+end;
+
 //filter kanji and show them in the grid
 procedure TfKanji.Reload;
 
@@ -728,13 +739,14 @@ begin
   result:=sl.IndexOf(uppercase(fld))>-1;
 end;
 
-var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
+var
+  fltLookup, fltClip: TStringList;
     accept:boolean;
     i,j,grs:integer;
     s1,s2,s3:string;
     x:integer;
     sl4,sl10:TStringList;
-    fltradical,fltskip,fltother:TStringList;
+    fltradical:TStringList;
     clipsort:boolean;
     clipind:integer;
 
@@ -776,75 +788,125 @@ var fltclip,fltpinyin,fltyomi,fltmean:TStringList;
 begin
   if not Visible then exit;
   if Self=nil then exit;
+
+  fltLookup := nil;
+  fltClip := nil;
+  fltRadical := nil;
+
+  Screen.Cursor:=crHourGlass;
+
+  CopyCategories;
+
+  if Self.aInClipboard.Checked then begin
+    fltClip := TStringList.Create;
+    ExtractKanjiToFilter(Clipboard.Text, fltClip);
+  end;
+
+  if edtLookup.Text<>'' then begin
+    fltLookup := TStringList.Create;
+    fltLookup.Sorted:=true;
+
+    if miLookupAuto.Checked or miLookupCharacters.Checked then
+      ExtractKanjiToFilter(edtLookup.Text, fltLookup);
+
+    if miLookupAuto.Checked or miLookupDefinition.Checked then
+      if curLang='c' then
+        ReadFilter(fltLookup, edtLookup.text, ptChineseDefinition, [rfPartial,rfSpace]) //Chinese definition
+      else
+        ReadFilter(fltLookup, edtLookup.text, ptJapaneseDefinition, [rfPartial,rfSpace]); //Japanese definition
+
+   //ON and KUN
+    if fSettings.cbYomiIgnoreOkurigana.Checked then
+      flags := [rfPartial, rfTakedot]
+    else
+      flags := [];
+
+    if miLookupAuto.Checked or miLookupOn.Checked then begin
+      ReadFilter(fltLookup, RomajiToKana(edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags); //as is (maybe that was kana?)
+      ReadFilter(fltLookup, RomajiToKana('H'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags); //maybe that was romaji?
+      ReadFilter(fltLookup, RomajiToKana('K'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags);
+    end;
+
+    if miLookupAuto.Checked or miLookupKun.Checked then begin
+      ReadFilter(fltLookup, RomajiToKana(edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags); //as is (maybe that was kana?)
+      ReadFilter(fltLookup, RomajiToKana('H'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags); //maybe that was romaji?
+      ReadFilter(fltLookup, RomajiToKana('K'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags);
+    end;
+
+    if miLookupAuto.Checked or miLookupPinYin.Checked then begin
+      ReadFilter(fltLookup, edtLookup.Text, ptMandarinReading, [rfPartial]); //Mandarin
+      ReadFilter(fltLookup, edtLookup.Text, ptCantoneseReading, [rfPartial]); //Canton
+    end;
+
+    if miLookupAuto.Checked or miLookupSKIP.Checked then
+      ReadFilter(fltLookup, edtLookup.Text, ptSKIP, [rfPartial]);
+
+   {
+    Some special handling for SKIP which weren't actually used:
+
+      if accept and sbSKIP.Down and (Self.edtSKIP.Text<>'') then
+      begin
+        s1:=Self.edtSKIP.Text;
+        s2:='0';
+        s3:='0';
+        if pos('-',s1)>0 then
+        begin
+          s2:=s1;
+          s1:=copy(s2,1,pos('-',s2)-1);
+          delete(s2,1,pos('-',s2));
+        end;
+        if pos('-',s2)>0 then
+        begin
+          s3:=s2;
+          s2:=copy(s3,1,pos('-',s3)-1);
+          delete(s3,1,pos('-',s3));
+        end;
+      end;
+
+    Perhaps delete?
+   }
+
+    //TODO: if Other is selected, look by that field
+    {
+    if Self.cbOtherType.ItemIndex=0 then
+      fltother.Add(Self.edtOther.Text)
+    else
+      j:=0;
+    for i:=0 to Length(CharPropTypes)-1 do
+      if CharPropTypes[i].id>20 then
+      begin
+        inc(j);
+        if j=Self.cbOtherType.ItemIndex then begin
+          if CharPropTypes[i].dataType='N' then
+            flags := [rfNumber]
+          else
+            flags := [];
+          ReadFilter(fltother,Self.edtOther.Text,CharPropTypes[i].id,flags);
+        end;
+      end;
+    }
+
+  end;
+
+ { Raine filters multi-selection with AND (only the characters with all the chosen parts are shown),
+  Classical with OR (characters which match at least one radical are shown).
+  This is because a character has only one Classical Radical so AND is pointless. }
+  if Self.curRadChars<>'' then begin
+    fltradical:=TStringList.Create;
+    case Self.curRadSearchType of
+      stClassic: ReadFilter(fltRadical,
+        RadicalIndexesToFilter(RadicalsToIndexes(stClassic,Self.CurRadChars)),
+        fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
+      stRaine: ReadRaineFilter(fltRadical,Self.CurRadChars);
+    end;
+  end;
+
+
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
-    Screen.Cursor:=crHourGlass;
-    fltclip:=TStringList.Create;
-    fltpinyin:=TStringList.Create;
-    fltyomi:=TStringList.Create;
-    fltmean:=TStringList.Create;
-    fltradical:=TStringList.Create;
-    fltskip:=TStringList.Create;
-    fltother:=TStringList.Create;
     sl4:=TStringList.Create;
     sl10:=TStringList.Create;
-    CopyCategories;
-    if Self.aInClipboard.Checked then
-      for i:=1 to flength(Clipboard.Text) do
-        if (Word(fgetch(Clipboard.Text,i)) >= $4000) and (fltclip.IndexOf(fgetch(Clipboard.Text,i))<0) then
-          fltclip.Add(fgetch(Clipboard.Text,i));
-    if sbPinYin.Down and (edtPinYin.Text<>'') then begin
-      ReadFilter(fltpinyin,Self.edtPinYin.text,ptMandarinReading,[rfPartial]); //Mandarin
-      ReadFilter(fltpinyin,Self.edtPinYin.text,ptCantoneseReading,[rfPartial]); //Canton
-    end;
-    if sbYomi.Down and (Self.edtYomi.Text<>'') then begin
-     //ON and KUN
-      if fSettings.cbYomiIgnoreOkurigana.Checked then
-        flags := [rfPartial, rfTakedot]
-      else
-        flags := [];
-      ReadFilter(fltyomi,RomajiToKana('H'+Self.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptOnReading,flags);
-      ReadFilter(fltyomi,RomajiToKana('H'+Self.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptKunReading,flags);
-      ReadFilter(fltyomi,RomajiToKana('K'+Self.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptOnReading,flags);
-      ReadFilter(fltyomi,RomajiToKana('K'+Self.edtYomi.Text,'j',[rfDeleteInvalidChars]),ptKunReading,flags);
-    end;
-    if sbSKIP.Down and (Self.edtSKIP.Text<>'') then
-      ReadFilter(fltskip,Self.edtSKIP.Text,ptSKIP,[rfPartial]); //SKIP
-   { Raine filters multi-selection with AND (only the characters with all the chosen parts are shown),
-    Classical with OR (characters which match at least one radical are shown).
-    This is because a character has only one Classical Radical so AND is pointless. }
-    if Self.curRadChars<>'' then
-      case Self.curRadSearchType of
-        stClassic: ReadFilter(fltradical,
-          RadicalIndexesToFilter(RadicalsToIndexes(stClassic,Self.CurRadChars)),
-          fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
-        stRaine: ReadRaineFilter(fltradical,Self.CurRadChars);
-      end;
-    if sbOther.Down and (Self.edtOther.Text<>'') then
-    begin
-      if Self.cbOtherType.ItemIndex=0 then
-        fltother.Add(Self.edtOther.Text)
-      else
-        j:=0;
-      for i:=0 to Length(CharPropTypes)-1 do
-        if CharPropTypes[i].id>20 then
-        begin
-          inc(j);
-          if j=Self.cbOtherType.ItemIndex then begin
-            if CharPropTypes[i].dataType='N' then
-              flags := [rfNumber]
-            else
-              flags := [];
-            ReadFilter(fltother,Self.edtOther.Text,CharPropTypes[i].id,flags);
-          end;
-        end;
-    end;
-    if sbDefinition.Down and (Self.edtDefinition.Text<>'') then
-      if curLang='c' then begin
-        ReadFilter(fltmean,Self.edtDefinition.text,ptChineseDefinition,[rfPartial,rfSpace]); //Chinese definition
-      end else begin
-        ReadFilter(fltmean,Self.edtDefinition.text,ptJapaneseDefinition,[rfPartial,rfSpace]); //Japanese definition
-      end;
+
     grs := GetCellSize();
     if curlang='j' then
       case Self.rgSortBy.ItemIndex of
@@ -871,44 +933,17 @@ begin
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TChar.fType)='T') then accept:=false;
       if accept and (Self.aOnlyCommon.Checked) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
       if accept and (Self.aOnlyCommon.Checked) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
-      if accept and (not clipsort) and (Self.aInClipboard.Checked) and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
-      if accept and sbPinYin.Down and (Self.edtPinYin.Text<>'') and (fltpinyin.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and sbYomi.Down and (Self.edtYomi.Text<>'') and (fltyomi.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and sbDefinition.Down and (Self.edtDefinition.Text<>'') and (fltmean.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and sbSKIP.Down and (Self.edtSKIP.Text<>'') and (fltskip.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
+      if accept and (not clipsort) and Self.aInClipboard.Checked and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
+      if accept and (fltLookup<>nil) and (fltLookup.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept := false;
+
       if accept and (Self.curRadChars<>'') then
         case Self.curRadSearchType of
           stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
           stRaine: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
         end;
-      if accept and sbOther.Down and (Self.edtOther.Text<>'') and (Self.cbOtherType.ItemIndex=0) and (fltother.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-      if accept and sbOther.Down and (Self.edtOther.Text<>'') and (Self.cbOtherType.ItemIndex>0) and (fltOther.IndexOf(TChar.Str(TChar.fUnicode))=-1) then accept:=false;
-  //    if accept and sbOther.Down and (Self.edtOther.Text<>'') and (Self.SpeedButton25.Down) and not InRange(Self.edtOther.text,TChar.Str(TCharUnicode),false,sl1) then accept:=false;
-  //    if accept and sbOther.Down and (Self.edtOther.Text<>'') and (Self.SpeedButton26.Down) and not InRange(Self.edtOther.text,TChar.Str(TCharUnicode),true,sl2) then accept:=false;
-  //    if accept and sbOther.Down and (Self.edtOther.Text<>'') and (Self.SpeedButton27.Down) and not InRange(Self.edtOther.text,TChar.Str(TCharUnicode),true,sl3) then accept:=false;
       if (curlang='c') and accept and sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and not InRange(Self.edtStrokeCount.Text,TChar.Str(TChar.fChStrokeCount),true,sl4) then accept:=false;
       if (curlang<>'c') and accept and sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and not InRange(Self.edtStrokeCount.Text,TChar.Str(TChar.fJpStrokeCount),true,sl4) then accept:=false;
-      if accept and sbSKIP.Down and (Self.edtSKIP.Text<>'') then
-      begin
-        s1:=Self.edtSKIP.Text;
-        s2:='0';
-        s3:='0';
-        if pos('-',s1)>0 then
-        begin
-          s2:=s1;
-          s1:=copy(s2,1,pos('-',s2)-1);
-          delete(s2,1,pos('-',s2));
-        end;
-        if pos('-',s2)>0 then
-        begin
-          s3:=s2;
-          s2:=copy(s3,1,pos('-',s3)-1);
-          delete(s3,1,pos('-',s3));
-        end;
-  //      if accept then accept:=InRange(s1,TChar.Str(TCharSKIP1),false,sl6);
-  //      if accept then accept:=InRange(s2,TChar.Str(TCharSKIP2),false,sl7);
-  //      if accept then accept:=InRange(s3,TChar.Str(TCharSKIP3),false,sl8);
-      end;
+
       if accept then
         accept := CheckCategories;
 
@@ -931,32 +966,11 @@ begin
       if clipsort then inc(clipind) else TChar.Next;
     end;
     fltclip.Free;
-    fltpinyin.Free;
-    fltyomi.Free;
-    fltmean.Free;
     fltradical.Free;
-    fltskip.Free;
-    fltother.Free;
+    FreeAndNil(fltClip);
+    FreeAndNil(fltLookup);
     sl4.Free;
     sl10.Free;
-
-    if curlang='c' then begin
-      case fSettings.RadioGroup5.ItemIndex of
-        0: Self.Caption := _l('#01204^%d traditional characters', [ki.Count]);
-        1: Self.Caption := _l('#01205^%d simplified characters', [ki.Count]);
-      else Self.Caption := _l('#01203^%d characters', [ki.Count]);
-      end;
-    end else
-      Self.Caption := _l('#01203^%d characters', [ki.Count]);
-
-    if curlang='c' then begin
-      case fSettings.RadioGroup5.ItemIndex of
-        0: lblFoundChars.Caption := _l('#00958^Found traditional characters (%d):', [ki.Count]);
-        1: lblFoundChars.Caption := _l('#00959^Found simplified characters (%d):', [ki.Count]);
-      else lblFoundChars.Caption := _l('#00960^Found characters (%d):', [ki.Count]);
-      end;
-    end else
-      lblFoundChars.Caption := _l('#00961^Found kanji (%d):', [ki.Count]);
 
     DrawGrid1.ColCount:=GetExpectedColCount();
     x:=DrawGrid1.ColCount;
@@ -985,8 +999,27 @@ begin
       ShowWindow(DrawGrid1.Handle,0);
   end;
 
-  Screen.Cursor:=crDefault;
   DrawGrid1.Invalidate;
+
+  if curlang='c' then begin
+    case fSettings.RadioGroup5.ItemIndex of
+      0: Self.Caption := _l('#01204^%d traditional characters', [ki.Count]);
+      1: Self.Caption := _l('#01205^%d simplified characters', [ki.Count]);
+    else Self.Caption := _l('#01203^%d characters', [ki.Count]);
+    end;
+  end else
+    Self.Caption := _l('#01203^%d characters', [ki.Count]);
+
+  if curlang='c' then begin
+    case fSettings.RadioGroup5.ItemIndex of
+      0: lblFoundChars.Caption := _l('#00958^Found traditional characters (%d):', [ki.Count]);
+      1: lblFoundChars.Caption := _l('#00959^Found simplified characters (%d):', [ki.Count]);
+    else lblFoundChars.Caption := _l('#00960^Found characters (%d):', [ki.Count]);
+    end;
+  end else
+    lblFoundChars.Caption := _l('#00961^Found kanji (%d):', [ki.Count]);
+
+  Screen.Cursor:=crDefault;
 end;
 
 procedure TfKanji.InvalidateList;
@@ -1540,22 +1573,35 @@ begin
   Self.InvalidateList;
 end;
 
-procedure TfKanji.edtPinYinChange(Sender: TObject);
+procedure TfKanji.miLookupSKIPClick(Sender: TObject);
 begin
-  sbPinYin.Down := edtPinYin.Text <> '';
+  btnLookupMode.Caption := TMenuItem(Sender).Caption;
+  btnLookupMode.Hint := TMenuItem(Sender).Hint;
   Self.InvalidateList;
 end;
 
-procedure TfKanji.edtYomiChange(Sender: TObject);
+procedure TfKanji.sbOnlyCommonClick(Sender: TObject);
 begin
-  sbYomi.Down := edtYomi.Text <> '';
-  Self.InvalidateList;
+  aOnlyCommon.Checked := sbOnlyCommon.Down;
+  SearchFilterChanged(Sender);
 end;
 
-procedure TfKanji.edtDefinitionChange(Sender: TObject);
+procedure TfKanji.sbInClipboardClick(Sender: TObject);
 begin
-  sbDefinition.Down := edtDefinition.Text <> '';
-  Self.InvalidateList;
+  aInClipboard.Checked := sbInClipboard.Down;
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.aOnlyCommonExecute(Sender: TObject);
+begin
+  sbOnlyCommon.Down := aOnlyCommon.Checked;
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.aInClipboardExecute(Sender: TObject);
+begin
+  sbInClipboard.Down := aInClipboard.Checked;
+  SearchFilterChanged(Sender);
 end;
 
 procedure TfKanji.edtStrokeCountChange(Sender: TObject);
@@ -1564,21 +1610,9 @@ begin
   Self.InvalidateList;
 end;
 
-procedure TfKanji.edtSkipChange(Sender: TObject);
-begin
-  sbSKIP.Down := edtSKIP.Text <> '';
-  Self.InvalidateList;
-end;
-
 procedure TfKanji.edtJouyouChange(Sender: TObject);
 begin
   sbJouyou.Down := (edtJouyou.Text <> '0') and (edtJouyou.Text <> '');
-  Self.InvalidateList;
-end;
-
-procedure TfKanji.edtOtherChange(Sender: TObject);
-begin
-  sbOther.Down := edtOther.Text <> '';
   Self.InvalidateList;
 end;
 
@@ -1612,24 +1646,12 @@ begin
   DrawUnicode(Canvas,5,2,16,FCurRadChars,FontRadical);
 end;
 
-procedure TfKanji.aOnlyCommonExecute(Sender: TObject);
-begin
-  sbOnlyCommon.Down := aOnlyCommon.Checked;
-  SearchFilterChanged(Sender);
-end;
-
-procedure TfKanji.aInClipboardExecute(Sender: TObject);
-begin
-  sbInClipboard.Down := aInClipboard.Checked;
-  SearchFilterChanged(Sender);
-end;
-
 
 procedure PopupUnder(APopupControl, AAnchorControl: TWinControl);
 var pt: TPoint;
 begin
   pt := AAnchorControl.ClientToScreen(Point(0,0));
-  pt.Y := pt.Y + AAnchorControl.Height + 2;
+  pt.Y := pt.Y + AAnchorControl.Height;
   pt := APopupControl.Parent.ScreenToClient(pt);
   if pt.X + APopupControl.Width > APopupControl.Parent.Width then
     pt.X := APopupControl.Parent.Width - APopupControl.Width;
@@ -1637,8 +1659,12 @@ begin
     pt.X := 0;
   APopupControl.Left := pt.X;
   APopupControl.Top := pt.Y;
-  APopupControl.Visible := true;
-  APopupControl.SetFocus;
+  if APopupControl is TPopupPanel then
+    TPopupPanel(APopupControl).Popup
+  else begin
+    APopupControl.Visible := true;
+    APopupControl.SetFocus;
+  end;
 end;
 
 procedure TfKanji.btnGroupsDropDownClick(Sender: TObject);
@@ -1699,12 +1725,14 @@ end;
 
 procedure TfKanji.aPinYinExecute(Sender: TObject);
 begin
-  Self.edtPinYin.SetFocus;
+  miLookupPinYin.Checked := true;
+  Self.edtLookup.SetFocus;
 end;
 
 procedure TfKanji.aYomiExecute(Sender: TObject);
 begin
-  Self.edtYomi.SetFocus;
+  miLookupOn.Checked := true;
+  Self.edtLookup.SetFocus;
 end;
 
 procedure TfKanji.aRadicalExecute(Sender: TObject);
@@ -1714,7 +1742,8 @@ end;
 
 procedure TfKanji.aMeaningExecute(Sender: TObject);
 begin
-  Self.edtDefinition.SetFocus;
+  miLookupDefinition.Checked := true;
+  Self.edtLookup.SetFocus;
 end;
 
 

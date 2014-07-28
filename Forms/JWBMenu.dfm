@@ -911,11 +911,11 @@ object fMenu: TfMenu
         Caption = '#00279^eLearned only'
       end
       object miCommonOnly: TMenuItem
-        Action = fKanji.aCommon
+        Action = fKanji.aOnlyCommon
         AutoCheck = True
       end
       object miInClipboardOnly: TMenuItem
-        Action = fKanji.aClipboard
+        Action = fKanji.aInClipboard
         AutoCheck = True
       end
       object N3: TMenuItem
