@@ -3,7 +3,8 @@ unit SimpleControls;
 interface
 
 uses
-  SysUtils, Classes, Controls, StdCtrls, ExtCtrls, Messages, Windows;
+  SysUtils, Classes, Graphics, Controls, StdCtrls, ExtCtrls, Messages, Windows,
+  Themes;
 
 type
  { Adds Autosize like in TLabel }
@@ -41,11 +42,198 @@ type
     procedure Popup;
   end;
 
+ {  TWinSpeedButton
+
+  Similar to TSpeedButton but based on windowed TButton, with nicer
+  ImageList-based images and platform-independent Down / DropDownList support.
+
+  Most of the code is based on TSpeedButton
+
+  TODO:
+    - FocusRect
+    - FocusRect in non-themed mode (copy from BitBtn)
+    - Choose between Layout and ImageAlignment
+    - Use or hide ImageMargins
+    - Perhaps better linking with ControlActionLink (GroupIndex, Images, ImageIndex)
+    - DropDown button and it's handling
+    - Reject focus (not working now: click and it's focused)
+  }
+
+  TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
+  TButtonState = (bsUp, bsDisabled, bsDown, bsExclusive);
+
+  //TCustomButton with TCustomControl additions over it.
+  TCustomPaintedButton = class(TCustomButton)
+  protected
+    FCanvas: TCanvas;
+    procedure Paint; virtual;
+    procedure PaintWindow(DC: HDC); override;
+    procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
+  {$IF NOT DEFINED(CLR)}
+    property Canvas: TCanvas read FCanvas;
+  {$ENDIF}
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  {$IF DEFINED(CLR)}
+    function get_Canvas: TCanvas;
+    property Canvas: TCanvas read get_Canvas;
+  {$ENDIF}
+  end;
+
+  TWinSpeedButtonPainter = class;
+
+  TWinSpeedButton = class(TCustomPaintedButton)
+  protected
+    FAllowAllUp: Boolean;
+    FDown: Boolean;
+    FDragging: Boolean;
+    FFocusable: Boolean;
+    FFlat: Boolean;
+    FGroupIndex: Integer;
+    FLayout: TButtonLayout;
+    FMargin: Integer; //distance from the anchor border to the glyph
+    FMouseInControl: Boolean;
+    FPainter: TWinSpeedButtonPainter;
+    FSpacing: Integer; //distance from the glyph to the caption
+    FState: TButtonState;
+    FTransparent: Boolean;
+    procedure UpdateExclusive;
+    procedure UpdateTracking;
+    procedure ButtonPressed(Group: Integer; Button: TWinSpeedButton);
+    procedure SetAllowAllUp(Value: Boolean);
+    procedure SetDown(Value: Boolean);
+    procedure SetFocusable(Value: Boolean);
+    procedure SetFlat(Value: Boolean);
+    procedure SetGroupIndex(Value: Integer);
+    procedure SetLayout(Value: TButtonLayout);
+    procedure SetMargin(Value: Integer);
+    procedure SetSpacing(Value: Integer);
+    procedure SetTransparent(Value: Boolean);
+    procedure Paint; override;
+    procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
+    procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
+    procedure CMDialogChar(var Message: TCMDialogChar); message CM_DIALOGCHAR;
+    procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
+    procedure CMTextChanged(var Message: TMessage); message CM_TEXTCHANGED;
+    procedure CMSysColorChange(var Message: TMessage); message CM_SYSCOLORCHANGE;
+    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    property MouseInControl: Boolean read FMouseInControl;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function CanFocus: Boolean; override;
+    procedure SetFocus; override;
+  published
+    property Action;
+    property Align;
+    property AllowAllUp: Boolean read FAllowAllUp write SetAllowAllUp default False;
+    property Anchors;
+    property BiDiMode;
+    property Cancel;
+    property Caption;
+    property Constraints;
+    property Default;
+    property DisabledImageIndex;
+    property DoubleBuffered;
+    property Down: Boolean read FDown write SetDown default False;
+    property DragCursor;
+    property DragKind;
+    property DragMode;
+    property DropDownMenu;
+    property Enabled;
+    property Flat: Boolean read FFlat write SetFlat default False;
+    property Focusable: Boolean read FFocusable write SetFocusable default True;
+    property Font;
+    property GroupIndex: Integer read FGroupIndex write SetGroupIndex default 0;
+    property HotImageIndex;
+    property ImageAlignment; //?
+    property ImageIndex;
+    property ImageMargins; //?
+    property Images;
+    property Layout: TButtonLayout read FLayout write SetLayout default blGlyphLeft; //?
+    property Margin: Integer read FMargin write SetMargin default -1;
+    property ModalResult;
+    property ParentBiDiMode;
+    property ParentDoubleBuffered;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property PressedImageIndex;
+    property SelectedImageIndex;
+    property ShowHint;
+    property Spacing: Integer read FSpacing write SetSpacing default 4;
+    property Style;
+    property StylusHotImageIndex;
+    property TabOrder;
+    property TabStop;
+    property Transparent: Boolean read FTransparent write SetTransparent default True;
+    property Visible;
+    property WordWrap;
+    property StyleElements;
+    property OnClick;
+    property OnContextPopup;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnDropDownClick;
+    property OnEndDock;
+    property OnEndDrag;
+    property OnEnter;
+    property OnExit;
+    property OnKeyDown;
+    property OnKeyPress;
+    property OnKeyUp;
+    property OnMouseActivate;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnStartDock;
+    property OnStartDrag;
+
+    //Dubious
+    property CommandLinkHint;
+    property ElevationRequired;
+  end;
+
+  //Paints WinSpeedButton contents (glyph + caption) on a given canvas
+  //Analogous to Buttons.TButtonGlyph, but does not host a glyph itself.
+  TWinSpeedButtonPainter = class
+  protected
+    FButton: TWinSpeedButton;
+    FPaintOnGlass: Boolean;
+    FThemeDetails: TThemedElementDetails;
+    FThemesEnabled: Boolean;
+    FThemeTextColor: Boolean;
+    procedure DrawButtonGlyph(Canvas: TCanvas; const GlyphPos: TPoint;
+      State: TButtonState; Transparent: Boolean);
+    procedure DrawButtonText(Canvas: TCanvas; const Caption: string;
+      TextBounds: TRect; State: TButtonState; Flags: Longint);
+    procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
+      const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
+      Margin, Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
+      BiDiFlags: Longint);
+  public
+    constructor Create(AButton: TWinSpeedButton);
+    function Draw(Canvas: TCanvas; const Client: TRect;
+      const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
+      Margin, Spacing: Integer; State: TButtonState; Transparent: Boolean;
+      BiDiFlags: LongInt): TRect;
+  end;
+
 
 procedure Register;
 
 implementation
-uses Graphics, Forms,
+uses Types, UITypes, Forms, ActnList, UxTheme, CommCtrl,
 {$IFDEF MSWINDOWS}
   ShellAPI
 {$ENDIF MSWINDOWS}
@@ -58,6 +246,7 @@ begin
   RegisterComponents('Wakan', [TJwbCheckbox]);
   RegisterComponents('Wakan', [TUrlLabel]);
   RegisterComponents('Wakan', [TPopupPanel]);
+  RegisterComponents('Wakan', [TWinSpeedButton]);
 end;
 
 
@@ -288,5 +477,840 @@ begin
 {  if not IsHiddenMsg(message.Msg) then
     OutputDebugString(PChar('Panel msg: '+MsgToStr(Message.Msg))); }
 end;
+
+
+{ TCustomPaintedButton }
+
+constructor TCustomPaintedButton.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FCanvas := TControlCanvas.Create;
+  TControlCanvas(FCanvas).Control := Self;
+end;
+
+destructor TCustomPaintedButton.Destroy;
+begin
+  FCanvas.Free;
+  inherited;
+end;
+
+{$IF DEFINED(CLR)}
+[UIPermission(SecurityAction.LinkDemand, Window=UIPermissionWindow.SafeSubWindows)]
+function TCustomPaintedButton.get_Canvas: TCanvas;
+begin
+  Result := FCanvas;
+end;
+{$ENDIF}
+
+procedure TCustomPaintedButton.WMPaint(var Message: TWMPaint);
+begin
+  ControlState := ControlState + [csCustomPaint];
+  inherited;
+  ControlState := ControlState - [csCustomPaint];
+end;
+
+procedure TCustomPaintedButton.PaintWindow(DC: HDC);
+begin
+  FCanvas.Lock;
+  try
+    FCanvas.Handle := DC;
+    try
+      TControlCanvas(FCanvas).UpdateTextFlags;
+      Paint;
+    finally
+      FCanvas.Handle := 0;
+    end;
+  finally
+    FCanvas.Unlock;
+  end;
+end;
+
+procedure TCustomPaintedButton.Paint;
+begin
+end;
+
+
+{ TWinSpeedButton }
+
+constructor TWinSpeedButton.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FPainter := TWinSpeedButtonPainter.Create(Self);
+  FFocusable := true;
+  FLayout := blGlyphLeft;
+  FMargin := -1;
+  FSpacing := 4;
+  FTransparent := True;
+end;
+
+destructor TWinSpeedButton.Destroy;
+begin
+  FreeAndNil(FPainter);
+  inherited;
+end;
+
+const
+  DownStyles: array[Boolean] of Integer = (BDR_RAISEDINNER, BDR_SUNKENOUTER);
+  FillStyles: array[Boolean] of Integer = (BF_MIDDLE, 0);
+
+procedure TWinSpeedButton.Paint;
+
+  function DoGlassPaint: Boolean;
+  var
+    LParent: TWinControl;
+  begin
+    Result := csGlassPaint in ControlState;
+    if Result then
+    begin
+      LParent := Parent;
+      while (LParent <> nil) and not LParent.DoubleBuffered do
+        LParent := LParent.Parent;
+      Result := (LParent = nil) or not LParent.DoubleBuffered or (LParent is TCustomForm);
+    end;
+  end;
+
+var
+  PaintRect: TRect;
+  DrawFlags: Integer;
+  Offset: TPoint;
+  LGlassPaint: Boolean;
+  Button: TThemedButton;
+  ToolButton: TThemedToolBar;
+  Details: TThemedElementDetails;
+  LStyle: TCustomStyleServices;
+begin
+  if not Enabled then
+  begin
+    FState := bsDisabled;
+    FDragging := False;
+  end
+  else if FState = bsDisabled then
+    if FDown and (GroupIndex <> 0) then
+      FState := bsExclusive
+    else
+      FState := bsUp;
+  Canvas.Font := Self.Font;
+
+  if ThemeControl(Self) then
+  begin
+    LGlassPaint := DoGlassPaint;
+    if not LGlassPaint then
+      if Transparent then
+        StyleServices.DrawParentBackground(0, Canvas.Handle, nil, True)
+      else
+        PerformEraseBackground(Self, Canvas.Handle)
+    else
+      FillRect(Canvas.Handle, ClientRect, GetStockObject(BLACK_BRUSH));
+
+    if not Enabled then
+      Button := tbPushButtonDisabled
+    else
+      if FState in [bsDown, bsExclusive] then
+        Button := tbPushButtonPressed
+      else
+        if MouseInControl then
+          Button := tbPushButtonHot
+        else
+          if Self.Focused or Self.Default then
+            Button := tbPushButtonDefaulted
+          else
+            Button := tbPushButtonNormal;
+
+    ToolButton := ttbToolbarDontCare;
+    if FFlat or TStyleManager.IsCustomStyleActive then
+    begin
+      case Button of
+        tbPushButtonDisabled:
+          Toolbutton := ttbButtonDisabled;
+        tbPushButtonPressed:
+          Toolbutton := ttbButtonPressed;
+        tbPushButtonHot:
+          Toolbutton := ttbButtonHot;
+        tbPushButtonDefaulted:
+          Toolbutton := ttbButtonNormal;
+        tbPushButtonNormal:
+          Toolbutton := ttbButtonNormal;
+      end;
+    end;
+
+    PaintRect := ClientRect;
+    if ToolButton = ttbToolbarDontCare then
+    begin
+      Details := StyleServices.GetElementDetails(Button);
+      StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
+      StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
+    end
+    else
+    begin
+      Details := StyleServices.GetElementDetails(ToolButton);
+      if not TStyleManager.IsCustomStyleActive then
+      begin
+        StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
+        // Windows theme services doesn't paint disabled toolbuttons
+        // with grayed text (as it appears in an actual toolbar). To workaround,
+        // retrieve Details for a disabled button for drawing the caption.
+        if (ToolButton = ttbButtonDisabled) then
+          Details := StyleServices.GetElementDetails(Button);
+      end
+      else
+      begin
+        // Special case for flat speedbuttons with custom styles. The assumptions
+        // made about the look of ToolBar buttons may not apply, so only paint
+        // the hot and pressed states , leaving normal/disabled to appear flat.
+        if not FFlat or ((Button = tbPushButtonPressed) or (Button = tbPushButtonHot)) then
+          StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
+      end;
+      StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
+    end;
+
+    Offset := Point(0, 0);
+    if Button = tbPushButtonPressed then
+    begin
+      // A pressed "flat" speed button has white text in XP, but the Themes
+      // API won't render it as such, so we need to hack it.
+      if (ToolButton <> ttbToolbarDontCare) and not CheckWin32Version(6) then
+        Canvas.Font.Color := clHighlightText
+      else
+        if FFlat then
+          Offset := Point(1, 0);
+    end;
+
+    FPainter.FPaintOnGlass := LGlassPaint;
+    FPainter.FThemeDetails := Details;
+    FPainter.FThemesEnabled := True;
+    FPainter.FThemeTextColor := seFont in StyleElements;
+    FPainter.Draw(Canvas, PaintRect, Offset, Caption, FLayout,
+      FMargin, FSpacing, FState, Transparent, DrawTextBiDiModeFlags(0));
+
+    if Self.Focused and Self.Default and LStyle.IsSystemStyle then
+    begin
+      FCanvas.Pen.Color := clWindowFrame;
+      FCanvas.Brush.Color := clBtnFace;
+      DrawFocusRect(FCanvas.Handle, PaintRect);
+    end;
+
+  end
+  else
+  begin
+    PaintRect := Rect(0, 0, Width, Height);
+    if not FFlat then
+    begin
+      DrawFlags := DFCS_BUTTONPUSH or DFCS_ADJUSTRECT;
+      if FState in [bsDown, bsExclusive] then
+        DrawFlags := DrawFlags or DFCS_PUSHED;
+      DrawFrameControl(Canvas.Handle, PaintRect, DFC_BUTTON, DrawFlags);
+    end
+    else
+    begin
+      if (FState in [bsDown, bsExclusive]) or
+        (FMouseInControl and (FState <> bsDisabled)) or
+        (csDesigning in ComponentState) then
+        DrawEdge(Canvas.Handle, PaintRect, DownStyles[FState in [bsDown, bsExclusive]],
+          FillStyles[Transparent] or BF_RECT)
+      else if not Transparent then
+      begin
+        Canvas.Brush.Color := Color;
+        Canvas.FillRect(PaintRect);
+      end;
+      InflateRect(PaintRect, -1, -1);
+    end;
+    if FState in [bsDown, bsExclusive] then
+    begin
+      if (FState = bsExclusive) and (not FFlat or not FMouseInControl) then
+      begin
+        Canvas.Brush.Bitmap := AllocPatternBitmap(clBtnFace, clBtnHighlight);
+        Canvas.FillRect(PaintRect);
+      end;
+      Offset.X := 1;
+      Offset.Y := 1;
+    end
+    else
+    begin
+      Offset.X := 0;
+      Offset.Y := 0;
+    end;
+
+    LStyle := StyleServices;
+
+    FPainter.FThemesEnabled := LStyle.Enabled;
+    FPainter.Draw(Canvas, PaintRect, Offset, Caption, FLayout, FMargin,
+      FSpacing, FState, Transparent, DrawTextBiDiModeFlags(0));
+
+  end;
+
+  if Self.Focused then begin
+    Canvas.Pen.Style := psSolid;
+    Canvas.Pen.Color := clBlack;
+    Canvas.DrawFocusRect(PaintRect);
+  end;
+end;
+
+constructor TWinSpeedButtonPainter.Create(AButton: TWinSpeedButton);
+begin
+  inherited Create;
+  Self.FButton := AButton;
+end;
+
+//Paints glyph and text contents inside the provided rectangle
+function TWinSpeedButtonPainter.Draw(Canvas: TCanvas; const Client: TRect;
+  const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
+  Margin, Spacing: Integer; State: TButtonState; Transparent: Boolean;
+  BiDiFlags: LongInt): TRect;
+var
+  GlyphPos: TPoint;
+begin
+  CalcButtonLayout(Canvas, Client, Offset, Caption, Layout, Margin, Spacing,
+    GlyphPos, Result, BiDiFlags);
+  DrawButtonGlyph(Canvas, GlyphPos, State, Transparent);
+  DrawButtonText(Canvas, Caption, Result, State, BiDiFlags);
+end;
+
+procedure TWinSpeedButtonPainter.DrawButtonGlyph(Canvas: TCanvas; const GlyphPos: TPoint;
+  State: TButtonState; Transparent: Boolean);
+var
+  Index: Integer;
+  Details: TThemedElementDetails;
+  R: TRect;
+  Button: TThemedButton;
+  MemDC: HDC;
+  PaintBuffer: HPAINTBUFFER;
+begin
+  if FButton.Images = nil then Exit;
+  if (FButton.Images.Width = 0) or (FButton.Images.Height = 0) then Exit;
+
+  case State of
+    bsUp: Index := FButton.ImageIndex;
+    bsDown: begin
+      Index := FButton.PressedImageIndex;
+      if Index<0 then
+        Index := FButton.ImageIndex;
+    end;
+    bsExclusive: begin
+      Index := FButton.HotImageIndex;
+      if Index<0 then
+        Index := FButton.ImageIndex;
+    end;
+    bsDisabled: begin
+      Index := FButton.DisabledImageIndex;
+      if Index<0 then
+        Index := FButton.ImageIndex;
+    end
+  else Index := -1;
+  end;
+  if Index < 0 then exit;
+
+  with GlyphPos do
+  begin
+    if FThemesEnabled then
+    begin
+      R.Left := GlyphPos.X;
+      R.Top := GlyphPos.Y;
+      R.Right := R.Left + FButton.Images.Width;
+      R.Bottom := R.Top + FButton.Images.Height;
+      case State of
+        bsDisabled:
+          Button := tbPushButtonDisabled;
+        bsDown,
+        bsExclusive:
+          Button := tbPushButtonPressed;
+      else
+        // bsUp
+        Button := tbPushButtonNormal;
+      end;
+      Details := StyleServices.GetElementDetails(Button);
+
+      if FPaintOnGlass then
+      begin
+        PaintBuffer := BeginBufferedPaint(Canvas.Handle, R, BPBF_TOPDOWNDIB, nil, MemDC);
+        try
+          StyleServices.DrawIcon(MemDC, Details, R, FButton.Images.Handle, Index);
+          BufferedPaintMakeOpaque(PaintBuffer, R);
+        finally
+          EndBufferedPaint(PaintBuffer, True);
+        end;
+      end
+      else
+        StyleServices.DrawIcon(Canvas.Handle, Details, R, FButton.Images.Handle, Index);
+    end
+    else
+      if Transparent or (State = bsExclusive) then
+      begin
+        ImageList_DrawEx(FButton.Images.Handle, Index, Canvas.Handle, X, Y, 0, 0,
+          clNone, clNone, ILD_Transparent)
+      end
+      else
+        ImageList_DrawEx(FButton.Images.Handle, Index, Canvas.Handle, X, Y, 0, 0,
+          ColorToRGB(clBtnFace), clNone, ILD_Normal);
+  end;
+end;
+
+procedure TWinSpeedButtonPainter.DrawButtonText(Canvas: TCanvas; const Caption: string;
+  TextBounds: TRect; State: TButtonState; Flags: LongInt);
+
+  procedure DoDrawText(DC: HDC; const Text: UnicodeString;
+    var TextRect: TRect; TextFlags: Cardinal);
+  var
+    LColor: TColor;
+    LFormats: TTextFormat;
+  begin
+    if FThemesEnabled then
+    begin
+      if (State = bsDisabled) or (not StyleServices.IsSystemStyle and FThemeTextColor) then
+      begin
+        if not StyleServices.GetElementColor(FThemeDetails, ecTextColor, LColor) or (LColor = clNone) then
+          LColor := Canvas.Font.Color;
+      end
+      else
+        LColor := Canvas.Font.Color;
+
+      LFormats := TTextFormatFlags(TextFlags);
+      if FPaintOnGlass then
+        Include(LFormats, tfComposited);
+      StyleServices.DrawText(DC, FThemeDetails, Text, TextRect, LFormats, LColor);
+    end
+    else
+      Windows.DrawText(DC, Text, Length(Text), TextRect, TextFlags);
+  end;
+
+begin
+  with Canvas do
+  begin
+    Brush.Style := bsClear;
+    if (State = bsDisabled) and not FThemesEnabled then
+    begin
+      OffsetRect(TextBounds, 1, 1);
+      Font.Color := clBtnHighlight;
+      DoDrawText(Handle, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
+      OffsetRect(TextBounds, -1, -1);
+      Font.Color := clBtnShadow;
+      DoDrawText(Handle, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
+    end
+    else
+      DoDrawText(Handle, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
+  end;
+end;
+
+procedure TWinSpeedButtonPainter.CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
+  const Offset: TPoint; const Caption: string; Layout: TButtonLayout; Margin,
+  Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
+  BiDiFlags: LongInt);
+var
+  TextPos: TPoint;
+  ClientSize, GlyphSize, TextSize: TPoint;
+  TotalSize: TPoint;
+begin
+  if (BiDiFlags and DT_RIGHT) = DT_RIGHT then
+    if Layout = blGlyphLeft then Layout := blGlyphRight
+    else
+      if Layout = blGlyphRight then Layout := blGlyphLeft;
+  { calculate the item sizes }
+  ClientSize := Point(Client.Right - Client.Left, Client.Bottom -
+    Client.Top);
+
+  if (FButton.Images<>nil) and (FButton.ImageIndex>=0) then
+    GlyphSize := Point(FButton.Images.Width, FButton.Images.Height) else
+    GlyphSize := Point(0, 0);
+
+  if Length(Caption) > 0 then
+  begin
+    TextBounds := Rect(0, 0, Client.Right - Client.Left, 0);
+    DrawText(Canvas.Handle, Caption, Length(Caption), TextBounds,
+      DT_CALCRECT or BiDiFlags);
+    TextSize := Point(TextBounds.Right - TextBounds.Left, TextBounds.Bottom -
+      TextBounds.Top);
+  end
+  else
+  begin
+    TextBounds := Rect(0, 0, 0, 0);
+    TextSize := Point(0,0);
+  end;
+
+  { If the layout has the glyph on the right or the left, then both the
+    text and the glyph are centered vertically.  If the glyph is on the top
+    or the bottom, then both the text and the glyph are centered horizontally.}
+  if Layout in [blGlyphLeft, blGlyphRight] then
+  begin
+    GlyphPos.Y := (ClientSize.Y - GlyphSize.Y + 1) div 2;
+    TextPos.Y := (ClientSize.Y - TextSize.Y + 1) div 2;
+  end
+  else
+  begin
+    GlyphPos.X := (ClientSize.X - GlyphSize.X + 1) div 2;
+    TextPos.X := (ClientSize.X - TextSize.X + 1) div 2;
+  end;
+
+  { if there is no text or no bitmap, then Spacing is irrelevant }
+  if (TextSize.X = 0) or (GlyphSize.X = 0) then
+    Spacing := 0;
+
+  { adjust Margin and Spacing }
+  if Margin = -1 then
+  begin
+    if Spacing < 0 then
+    begin
+      TotalSize := Point(GlyphSize.X + TextSize.X, GlyphSize.Y + TextSize.Y);
+      if Layout in [blGlyphLeft, blGlyphRight] then
+        Margin := (ClientSize.X - TotalSize.X) div 3
+      else
+        Margin := (ClientSize.Y - TotalSize.Y) div 3;
+      Spacing := Margin;
+    end
+    else
+    begin
+      TotalSize := Point(GlyphSize.X + Spacing + TextSize.X, GlyphSize.Y +
+        Spacing + TextSize.Y);
+      if Layout in [blGlyphLeft, blGlyphRight] then
+        Margin := (ClientSize.X - TotalSize.X + 1) div 2
+      else
+        Margin := (ClientSize.Y - TotalSize.Y + 1) div 2;
+    end;
+  end
+  else
+  begin
+    if Spacing < 0 then
+    begin
+      TotalSize := Point(ClientSize.X - (Margin + GlyphSize.X), ClientSize.Y -
+        (Margin + GlyphSize.Y));
+      if Layout in [blGlyphLeft, blGlyphRight] then
+        Spacing := (TotalSize.X - TextSize.X) div 2
+      else
+        Spacing := (TotalSize.Y - TextSize.Y) div 2;
+    end;
+  end;
+
+  case Layout of
+    blGlyphLeft:
+      begin
+        GlyphPos.X := Margin;
+        TextPos.X := GlyphPos.X + GlyphSize.X + Spacing;
+      end;
+    blGlyphRight:
+      begin
+        GlyphPos.X := ClientSize.X - Margin - GlyphSize.X;
+        TextPos.X := GlyphPos.X - Spacing - TextSize.X;
+      end;
+    blGlyphTop:
+      begin
+        GlyphPos.Y := Margin;
+        TextPos.Y := GlyphPos.Y + GlyphSize.Y + Spacing;
+      end;
+    blGlyphBottom:
+      begin
+        GlyphPos.Y := ClientSize.Y - Margin - GlyphSize.Y;
+        TextPos.Y := GlyphPos.Y - Spacing - TextSize.Y;
+      end;
+  end;
+
+  { fixup the result variables }
+  Inc(GlyphPos.X, Client.Left + Offset.X);
+  Inc(GlyphPos.Y, Client.Top + Offset.Y);
+
+  OffsetRect(TextBounds, TextPos.X + Client.Left + Offset.X, TextPos.Y + Client.Top + Offset.Y);
+end;
+
+//Notifies other SpeedButtons with the same GroupIndex if we have been pressed
+procedure TWinSpeedButton.UpdateExclusive;
+var
+  I: Integer;
+begin
+  if (FGroupIndex <> 0) and (Parent <> nil) then
+  begin
+    for I := 0 to Parent.ControlCount - 1 do
+      if Parent.Controls[I] is TWinSpeedButton then
+        TWinSpeedButton(Parent.Controls[I]).ButtonPressed(FGroupIndex, Self);
+   //^ This is a CLR way of notifying the siblings.
+   //TSpeedButton has a message-based version of this for non-CLR platforms,
+   //but otherwise it is identical, and existing message handlers assume
+   //the sender is TSpeedButton so it's risky to reuse. Let's stick to CLR way.
+  end;
+end;
+
+//Called by siblings when other SpeedButton with the same parent have been pressed.
+procedure TWinSpeedButton.ButtonPressed(Group: Integer; Button: TWinSpeedButton);
+begin
+  if (Group = FGroupIndex) and (Button <> Self) then
+  begin
+    if Button.Down and FDown then
+    begin
+      FDown := False;
+      FState := bsUp;
+      if (Action is TCustomAction) then
+        TCustomAction(Action).Checked := False;
+      Invalidate;
+    end;
+    FAllowAllUp := Button.AllowAllUp;
+  end;
+end;
+
+procedure TWinSpeedButton.UpdateTracking;
+var
+  P: TPoint;
+begin
+  if FFlat then
+  begin
+    if Enabled then
+    begin
+      GetCursorPos(P);
+      FMouseInControl := not (FindDragTarget(P, True) = Self);
+      if FMouseInControl then
+        Perform(CM_MOUSELEAVE, 0, 0)
+      else
+        Perform(CM_MOUSEENTER, 0, 0);
+    end;
+  end;
+end;
+
+procedure TWinSpeedButton.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited MouseDown(Button, Shift, X, Y);
+  if (Button = mbLeft) and Enabled then
+  begin
+    if not FDown then
+    begin
+      FState := bsDown;
+      Invalidate;
+    end;
+    FDragging := True;
+  end;
+end;
+
+procedure TWinSpeedButton.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  NewState: TButtonState;
+begin
+  inherited MouseMove(Shift, X, Y);
+  if FDragging then
+  begin
+    if not FDown then NewState := bsUp
+    else NewState := bsExclusive;
+    if (X >= 0) and (X < ClientWidth) and (Y >= 0) and (Y <= ClientHeight) then
+      if FDown then NewState := bsExclusive else NewState := bsDown;
+    if NewState <> FState then
+    begin
+      FState := NewState;
+      Invalidate;
+    end;
+  end
+  else if not FMouseInControl then
+    UpdateTracking;
+end;
+
+procedure TWinSpeedButton.MouseUp(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+var
+  DoClick: Boolean;
+begin
+  inherited MouseUp(Button, Shift, X, Y);
+  if FDragging then
+  begin
+    FDragging := False;
+    DoClick := (X >= 0) and (X < ClientWidth) and (Y >= 0) and (Y <= ClientHeight);
+    if FGroupIndex = 0 then
+    begin
+      { Redraw face in-case mouse is captured }
+      FState := bsUp;
+      FMouseInControl := False;
+      if DoClick and not (FState in [bsExclusive, bsDown]) then
+        Invalidate;
+    end
+    else
+      if DoClick then
+      begin
+        SetDown(not FDown);
+        if FDown then Repaint;
+      end
+      else
+      begin
+        if FDown then FState := bsExclusive;
+        Repaint;
+      end;
+    if DoClick then Click;
+    UpdateTracking;
+  end;
+end;
+
+procedure TWinSpeedButton.WMLButtonDblClk(var Message: TWMLButtonDblClk);
+begin
+  inherited;
+  if FDown then DblClick;
+end;
+
+procedure TWinSpeedButton.CMEnabledChanged(var Message: TMessage);
+const
+  NewState: array[Boolean] of TButtonState = (bsDisabled, bsUp);
+begin
+  UpdateTracking;
+  Repaint;
+end;
+
+procedure TWinSpeedButton.CMDialogChar(var Message: TCMDialogChar);
+begin
+ //Similar to inherited TCustomButton's, but it used CanFocus and this can
+ //be non-focusable
+  with Message do
+    if IsAccel(CharCode, Caption) and Enabled and Visible and
+      (Parent <> nil) and Parent.Showing then
+    begin
+      Click;
+      Result := 1;
+    end else
+      inherited;
+end;
+
+procedure TWinSpeedButton.CMFontChanged(var Message: TMessage);
+begin
+  Invalidate;
+end;
+
+procedure TWinSpeedButton.CMTextChanged(var Message: TMessage);
+begin
+  Invalidate;
+end;
+
+procedure TWinSpeedButton.CMSysColorChange(var Message: TMessage);
+begin
+  Invalidate;
+end;
+
+procedure TWinSpeedButton.CMMouseEnter(var Message: TMessage);
+var
+  NeedRepaint: Boolean;
+begin
+  inherited;
+  { Don't draw a border if DragMode <> dmAutomatic since this button is meant to
+    be used as a dock client. }
+  NeedRepaint := FFlat and not FMouseInControl and Enabled and (DragMode <> dmAutomatic) and (GetCapture = 0);
+
+  { Windows XP introduced hot states also for non-flat buttons. }
+  if (NeedRepaint or StyleServices.Enabled) and not (csDesigning in ComponentState) then
+  begin
+    FMouseInControl := True;
+    if Enabled then
+      Repaint;
+  end;
+end;
+
+procedure TWinSpeedButton.CMMouseLeave(var Message: TMessage);
+var
+  NeedRepaint: Boolean;
+begin
+  inherited;
+  NeedRepaint := FFlat and FMouseInControl and Enabled and not FDragging;
+  { Windows XP introduced hot states also for non-flat buttons. }
+  if NeedRepaint or StyleServices.Enabled then
+  begin
+    FMouseInControl := False;
+    if Enabled then
+      Repaint;
+  end;
+end;
+
+function TWinSpeedButton.CanFocus: Boolean;
+begin
+  Result := FFocusable and inherited;
+end;
+
+procedure TWinSpeedButton.SetFocus;
+begin
+  if FFocusable then inherited; //else nothing!
+end;
+
+procedure TWinSpeedButton.SetDown(Value: Boolean);
+begin
+  if FGroupIndex = 0 then Value := False;
+  if Value <> FDown then
+  begin
+    if FDown and (not FAllowAllUp) then Exit;
+    FDown := Value;
+    if Value then
+    begin
+      if FState = bsUp then Invalidate;
+      FState := bsExclusive
+    end
+    else
+    begin
+      FState := bsUp;
+      Repaint;
+    end;
+    if Value then UpdateExclusive;
+  end;
+end;
+
+procedure TWinSpeedButton.SetFocusable(Value: Boolean);
+begin
+  if Value <> FFocusable then
+  begin
+    FFocusable := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetFlat(Value: Boolean);
+begin
+  if Value <> FFlat then
+  begin
+    FFlat := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetGroupIndex(Value: Integer);
+begin
+  if FGroupIndex <> Value then
+  begin
+    FGroupIndex := Value;
+    UpdateExclusive;
+  end;
+end;
+
+procedure TWinSpeedButton.SetLayout(Value: TButtonLayout);
+begin
+  if FLayout <> Value then
+  begin
+    FLayout := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetMargin(Value: Integer);
+begin
+  if (Value <> FMargin) and (Value >= -1) then
+  begin
+    FMargin := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetSpacing(Value: Integer);
+begin
+  if Value <> FSpacing then
+  begin
+    FSpacing := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetTransparent(Value: Boolean);
+begin
+  if Value <> FTransparent then
+  begin
+    FTransparent := Value;
+    if Value then
+      ControlStyle := ControlStyle - [csOpaque] else
+      ControlStyle := ControlStyle + [csOpaque];
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetAllowAllUp(Value: Boolean);
+begin
+  if FAllowAllUp <> Value then
+  begin
+    FAllowAllUp := Value;
+    UpdateExclusive;
+  end;
+end;
+
 
 end.

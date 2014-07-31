@@ -107,8 +107,7 @@ object fEditor: TfEditor
     Height = 26
     AutoSize = True
     BorderWidth = 1
-    ButtonHeight = 7
-    ButtonWidth = 15
+    ButtonWidth = 167
     Images = ActionIcons
     List = True
     ShowCaptions = True
@@ -279,7 +278,7 @@ object fEditor: TfEditor
       Left = 432
       Top = 0
       Width = 68
-      Height = 22
+      Height = 21
       AutoComplete = False
       TabOrder = 0
       Text = '8'
@@ -391,7 +390,7 @@ object fEditor: TfEditor
     Left = 400
     Top = 64
     Bitmap = {
-      494C010111001500F00010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010111001500F40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000005000000001002000000000000050
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

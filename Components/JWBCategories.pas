@@ -212,7 +212,6 @@ begin
     exit;
   end;
   ReloadKanjiCategories();
-  UserDataChanged;
   for Event in OnCategoryListChanged do
     Event(nil);
 end;
@@ -553,6 +552,7 @@ begin
   CreateKnownList(Result,0);
 
   CategoryListChanged;
+  UserDataChanged;
 end;
 
 function EditCategoryUI(cat:integer; const AOwner: TComponent): boolean;
@@ -591,6 +591,7 @@ begin
   end;
 
   CategoryListChanged;
+  UserDataChanged;
 end;
 
 //Deletes a category, handling all required user interaction.
@@ -657,6 +658,7 @@ begin
   end;
 
   CategoryListChanged;
+  UserDataChanged;
 end;
 
 function MergeCategoryUI(categories: TCatIndexList): integer;
@@ -709,6 +711,7 @@ begin
   end;
 
   CategoryListChanged;
+  UserDataChanged;
 end;
 
 { Creates a copy of the specified category with the same content.
@@ -765,6 +768,7 @@ begin
   end;
 
   CategoryListChanged;
+  UserDataChanged;
 end;
 
 { Finds a category by name, or creates a new one asking user for details.
@@ -810,6 +814,7 @@ begin
   Result:=TUserCat.TrueInt(TUserCatIndex);
   if not silent then
     CategoryListChanged;
+  UserDataChanged;
 end;
 
 

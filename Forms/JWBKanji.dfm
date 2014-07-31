@@ -31,8 +31,6 @@ object fKanji: TfKanji
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitTop = 223
-    ExplicitHeight = 438
     object splDockCompounds: TSplitter
       Left = 0
       Top = 581
@@ -62,7 +60,6 @@ object fKanji: TfKanji
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
-      ExplicitHeight = 355
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
@@ -92,7 +89,6 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitHeight = 349
     end
     object Panel2: TPanel
       AlignWithMargins = True
@@ -165,7 +161,6 @@ object fKanji: TfKanji
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 412
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -237,7 +232,6 @@ object fKanji: TfKanji
       UseDockManager = False
       DockSite = True
       TabOrder = 4
-      ExplicitTop = 436
     end
     object Panel6: TPanel
       Left = 0
@@ -357,7 +351,6 @@ object fKanji: TfKanji
         Align = alClient
         TabOrder = 0
         OnChange = SearchFilterChanged
-        ExplicitWidth = 212
         ExplicitHeight = 21
       end
       object btnStrokes: TButton
@@ -435,8 +428,6 @@ object fKanji: TfKanji
         Style = bsSplitButton
         TabOrder = 1
         TabStop = False
-        ExplicitLeft = 83
-        ExplicitTop = -2
       end
     end
     object PopupPanel1: TPopupPanel
@@ -459,6 +450,78 @@ object fKanji: TfKanji
         OnChange = edtStrokeCountChange
       end
     end
+    object Panel4: TPanel
+      Left = 11
+      Top = 80
+      Width = 366
+      Height = 177
+      Caption = 'Panel4'
+      TabOrder = 7
+      object SpeedButton2: TSpeedButton
+        Left = 240
+        Top = 32
+        Width = 23
+        Height = 22
+      end
+      object WinSpeedButton1: TWinSpeedButton
+        Left = 40
+        Top = 28
+        Width = 137
+        Height = 37
+        AllowAllUp = True
+        Caption = 'WinSpeedButton1'
+        Focusable = False
+        ImageIndex = 1
+        Images = ilCategoryActions
+        TabOrder = 0
+        Transparent = False
+      end
+      object Button1: TButton
+        Left = 32
+        Top = 104
+        Width = 75
+        Height = 25
+        Caption = 'Button1'
+        TabOrder = 1
+      end
+      object Button2: TButton
+        Left = 113
+        Top = 88
+        Width = 75
+        Height = 73
+        Caption = 'Button1'
+        ImageIndex = 0
+        Images = ilCategoryActions
+        TabOrder = 2
+      end
+      object Button3: TButton
+        Left = 194
+        Top = 104
+        Width = 75
+        Height = 25
+        Caption = 'Button1'
+        Default = True
+        TabOrder = 3
+      end
+      object BitBtn1: TBitBtn
+        Left = 275
+        Top = 104
+        Width = 75
+        Height = 25
+        Caption = 'BitBtn1'
+        Default = True
+        TabOrder = 4
+      end
+      object BitBtn2: TBitBtn
+        Left = 275
+        Top = 135
+        Width = 75
+        Height = 25
+        Caption = 'BitBtn1'
+        Default = True
+        TabOrder = 5
+      end
+    end
   end
   object pnlDockSearch: TPanel
     AlignWithMargins = True
@@ -476,9 +539,6 @@ object fKanji: TfKanji
     ParentBackground = False
     TabOrder = 1
     Visible = False
-    ExplicitLeft = 0
-    ExplicitTop = 0
-    ExplicitWidth = 680
     DesignSize = (
       674
       70)
@@ -565,7 +625,6 @@ object fKanji: TfKanji
       LowValue = 0
       HighValue = 0
       OnChange = edtStrokeCountChange
-      ExplicitWidth = 618
     end
     object pbRadicals: TWakanPaintbox
       Left = 57
@@ -578,7 +637,6 @@ object fKanji: TfKanji
       DoubleBuffered = True
       OnPaint = pbRadicalsPaint
       OnClick = pbRadicalsClick
-      ExplicitWidth = 554
     end
     object edtJouyou: TRangeSpinEdit
       Left = 56
@@ -592,7 +650,6 @@ object fKanji: TfKanji
       LowValue = 0
       HighValue = 0
       OnChange = edtJouyouChange
-      ExplicitWidth = 618
     end
   end
   object pnlGroups: TPopupPanel
@@ -862,7 +919,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104000800EC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104000800080110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

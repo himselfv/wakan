@@ -106,6 +106,14 @@ type
     sbListRadicals: TSpeedButton;
     sbJouyou: TSpeedButton;
     edtJouyou: TRangeSpinEdit;
+    Panel4: TPanel;
+    WinSpeedButton1: TWinSpeedButton;
+    Button1: TButton;
+    Button2: TButton;
+    Button3: TButton;
+    BitBtn1: TBitBtn;
+    BitBtn2: TBitBtn;
+    SpeedButton2: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
