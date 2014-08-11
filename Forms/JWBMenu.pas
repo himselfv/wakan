@@ -452,12 +452,12 @@ begin
     end;
 
    //Configuration file
-    if not FileExists('wakan.cfg') then
+    if not FileExists(AppFolder+'\wakan.cfg') then
       raise Exception.Create(_l('#00347^eFile WAKAN.CFG is missing.'#13
           +'This file contains important configuration parameters and is required'
           +'for application to run.'#13#13'Application will now be terminated.'));
     try
-      LoadWakanCfg('wakan.cfg');
+      LoadWakanCfg(AppFolder+'\wakan.cfg');
       fLanguage.LocalizePropertyTypes();
     except
       raise Exception.Create(_l('#00352^eCannot load main configuration file.'#13
