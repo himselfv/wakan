@@ -50,10 +50,8 @@ type
   Most of the code is based on TSpeedButton
 
   TODO:
-    - Choose between Layout and ImageAlignment
     - Perhaps better linking with ControlActionLink (GroupIndex, Images, ImageIndex)
     - DropDown button and it's handling
-    - Reject focus (not working now: click and it's focused)
 
   Possible improvements:
     - Use normal Button fading mechanics (try moving focus away and watch)
@@ -102,6 +100,7 @@ type
     FSpacing: Integer; //distance from the glyph to the caption
     FState: TButtonState;
     FTransparent: Boolean;
+    FFakeFocus: boolean; //see WndProc->WM_LBUTTONDOWN
     procedure UpdateExclusive;
     procedure UpdateTracking;
     procedure ButtonPressed(Group: Integer; Button: TWinSpeedButton);
@@ -115,6 +114,7 @@ type
     procedure SetSpacing(Value: Integer);
     procedure SetTransparent(Value: Boolean);
     procedure Paint; override;
+    procedure WndProc(var Message: TMessage); override;
     procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
     procedure CMDialogChar(var Message: TCMDialogChar); message CM_DIALOGCHAR;
@@ -134,6 +134,8 @@ type
     destructor Destroy; override;
     function CanFocus: Boolean; override;
     procedure SetFocus; override;
+    function Focused: boolean; override;
+    procedure DefaultHandler(var Message); override;
   published
     property Action;
     property Align;
@@ -157,7 +159,6 @@ type
     property Font;
     property GroupIndex: Integer read FGroupIndex write SetGroupIndex default 0;
     property HotImageIndex;
-    property ImageAlignment; //?
     property ImageIndex;
     property ImageMargins;
     property Images;
@@ -1138,6 +1139,35 @@ begin
   if FDown then DblClick;
 end;
 
+procedure TWinSpeedButton.WndProc(var Message: TMessage);
+begin
+  case Message.Msg of
+    WM_LBUTTONDOWN, WM_LBUTTONDBLCLK: begin
+      if not Focusable then
+        FFakeFocus := true; //fake Focused() to avoid SetFocus() in parent WndProc
+      inherited WndProc(Message);
+      FFakeFocus := false;
+    end;
+  else
+    inherited WndProc(Message);
+  end;
+end;
+
+procedure TWinSpeedButton.DefaultHandler(var Message);
+begin
+  case TMessage(Message).Msg of
+    WM_LBUTTONDOWN, WM_LBUTTONDBLCLK:
+      if Focusable then
+        inherited DefaultHandler(Message)
+      else begin
+       //Do not do default handling which sets focus.
+       //If there's anything else going on, reimplement it here.
+      end
+  else
+    inherited DefaultHandler(Message);
+  end;
+end;
+
 procedure TWinSpeedButton.CMEnabledChanged(var Message: TMessage);
 const
   NewState: array[Boolean] of TButtonState = (bsDisabled, bsUp);
@@ -1216,6 +1246,16 @@ end;
 procedure TWinSpeedButton.SetFocus;
 begin
   if FFocusable then inherited; //else nothing!
+end;
+
+function TWinSpeedButton.Focused: boolean;
+begin
+ //Only way to stop parent TButtonControl.WndProc's WM_LBUTTONDOWN processing
+ //from setting Focus: tell that it's already set.
+  if FFakeFocus then
+    Result := true
+  else
+    Result := inherited;
 end;
 
 procedure TWinSpeedButton.SetDown(Value: Boolean);
