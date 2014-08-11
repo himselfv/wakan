@@ -3,7 +3,7 @@ object fKanji: TfKanji
   Top = 473
   BorderStyle = bsSizeToolWin
   Caption = '#00117^eCharacter list'
-  ClientHeight = 661
+  ClientHeight = 660
   ClientWidth = 680
   Color = clBtnFace
   DragKind = dkDock
@@ -26,14 +26,14 @@ object fKanji: TfKanji
     Left = 0
     Top = 78
     Width = 680
-    Height = 583
+    Height = 582
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
     object splDockCompounds: TSplitter
       Left = 0
-      Top = 581
+      Top = 580
       Width = 680
       Height = 2
       Cursor = crVSplit
@@ -49,7 +49,7 @@ object fKanji: TfKanji
       Left = 0
       Top = 54
       Width = 680
-      Height = 500
+      Height = 499
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -66,7 +66,7 @@ object fKanji: TfKanji
       Left = 3
       Top = 57
       Width = 674
-      Height = 494
+      Height = 493
       Align = alClient
       BorderStyle = bsNone
       ColCount = 10
@@ -155,7 +155,7 @@ object fKanji: TfKanji
     object Panel3: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 557
+      Top = 556
       Width = 674
       Height = 21
       Align = alBottom
@@ -224,7 +224,7 @@ object fKanji: TfKanji
     end
     object pnlDockCompounds: TPanel
       Left = 0
-      Top = 581
+      Top = 580
       Width = 680
       Height = 0
       Align = alBottom
@@ -464,17 +464,21 @@ object fKanji: TfKanji
         Height = 22
       end
       object WinSpeedButton1: TWinSpeedButton
-        Left = 40
+        Left = 48
         Top = 28
-        Width = 137
+        Width = 177
         Height = 37
+        Hint = '#00188^eDisplay only characters in clipboard'
         AllowAllUp = True
-        Caption = 'WinSpeedButton1'
+        Caption = '#00281^eIn clipboard only'
         Focusable = False
-        ImageIndex = 1
+        HotImageIndex = 1
         Images = ilCategoryActions
+        PressedImageIndex = 2
+        SelectedImageIndex = 3
         TabOrder = 0
         Transparent = False
+        OnClick = aInClipboardExecute
       end
       object Button1: TButton
         Left = 32
@@ -518,7 +522,6 @@ object fKanji: TfKanji
         Width = 75
         Height = 25
         Caption = 'BitBtn1'
-        Default = True
         TabOrder = 5
       end
     end
@@ -858,6 +861,7 @@ object fKanji: TfKanji
     end
     object aMeaning: TAction
       Caption = '#00295^eSearch by meaning'
+      GroupIndex = 1
       ShortCut = 16461
       OnExecute = aMeaningExecute
     end
@@ -919,7 +923,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104000800080110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401380110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

@@ -50,7 +50,6 @@ type
   Most of the code is based on TSpeedButton
 
   TODO:
-    - Perhaps better linking with ControlActionLink (GroupIndex, Images, ImageIndex)
     - DropDown button and it's handling
 
   Possible improvements:
@@ -83,7 +82,16 @@ type
   {$ENDIF}
   end;
 
+  TWinSpeedButton = class;
   TWinSpeedButtonPainter = class;
+
+  TWinSpeedButtonActionLink = class(TPushButtonActionLink)
+  protected
+    function IsCheckedLinked: Boolean; override;
+    function IsGroupIndexLinked: Boolean; override;
+    procedure SetChecked(Value: Boolean); override;
+    procedure SetGroupIndex(Value: Integer); override;
+  end;
 
   TWinSpeedButton = class(TCustomPaintedButton)
   protected
@@ -104,6 +112,7 @@ type
     procedure UpdateExclusive;
     procedure UpdateTracking;
     procedure ButtonPressed(Group: Integer; Button: TWinSpeedButton);
+    function GetActionLinkClass: TControlActionLinkClass; override;
     procedure SetAllowAllUp(Value: Boolean);
     procedure SetDown(Value: Boolean);
     procedure SetFocusable(Value: Boolean);
@@ -535,6 +544,34 @@ begin
 end;
 
 
+{ TWinSpeedButtonActionLink }
+
+function TWinSpeedButtonActionLink.IsCheckedLinked: Boolean;
+begin
+  Result := inherited IsCheckedLinked
+    and (TWinSpeedButton(FClient).GroupIndex <> 0)
+    and TWinSpeedButton(FClient).AllowAllUp
+    and (TWinSpeedButton(FClient).Down = TCustomAction(Action).Checked);
+end;
+
+function TWinSpeedButtonActionLink.IsGroupIndexLinked: Boolean;
+begin
+  Result := inherited IsGroupIndexLinked
+    and (TWinSpeedButton(FClient).GroupIndex = TCustomAction(Action).GroupIndex);
+end;
+
+procedure TWinSpeedButtonActionLink.SetChecked(Value: Boolean);
+begin
+  if IsCheckedLinked then TWinSpeedButton(FClient).Down := Value;
+end;
+
+procedure TWinSpeedButtonActionLink.SetGroupIndex(Value: Integer);
+begin
+  if IsGroupIndexLinked then TWinSpeedButton(FClient).GroupIndex := Value;
+end;
+
+
+
 { TWinSpeedButton }
 
 constructor TWinSpeedButton.Create(AOwner: TComponent);
@@ -552,6 +589,11 @@ destructor TWinSpeedButton.Destroy;
 begin
   FreeAndNil(FPainter);
   inherited;
+end;
+
+function TWinSpeedButton.GetActionLinkClass: TControlActionLinkClass;
+begin
+  Result := TWinSpeedButtonActionLink;
 end;
 
 const

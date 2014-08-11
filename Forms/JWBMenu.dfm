@@ -137,6 +137,8 @@ object fMenu: TfMenu
     BevelOuter = bvNone
     DoubleBuffered = False
     FullRepaint = False
+    Padding.Top = 1
+    Padding.Bottom = 1
     ParentDoubleBuffered = False
     TabOrder = 1
     DesignSize = (
@@ -144,9 +146,9 @@ object fMenu: TfMenu
       33)
     object tab1: TSpeedButton
       Left = 0
-      Top = 0
+      Top = 1
       Width = 71
-      Height = 33
+      Height = 31
       Hint = '#00212^eCharacter list (Ctrl-F1)'
       Align = alLeft
       AllowAllUp = True
@@ -168,9 +170,9 @@ object fMenu: TfMenu
     end
     object tab5: TSpeedButton
       Left = 265
-      Top = 0
+      Top = 1
       Width = 69
-      Height = 33
+      Height = 31
       Hint = '#00214^eVocabulary manager (Ctrl-F4)'
       Align = alLeft
       AllowAllUp = True
@@ -192,9 +194,9 @@ object fMenu: TfMenu
     end
     object tab2: TSpeedButton
       Left = 71
-      Top = 0
+      Top = 1
       Width = 71
-      Height = 33
+      Height = 31
       Hint = '#00216^eWord dictionary (Ctrl-F2)'
       Align = alLeft
       AllowAllUp = True
@@ -216,9 +218,9 @@ object fMenu: TfMenu
     end
     object btnChineseMode: TSpeedButton
       Left = 386
-      Top = 0
+      Top = 1
       Width = 42
-      Height = 33
+      Height = 31
       Hint = '#00218^eChinese mode (F9)'
       Align = alLeft
       AllowAllUp = True
@@ -312,20 +314,19 @@ object fMenu: TfMenu
     end
     object Bevel3: TBevel
       Left = 334
-      Top = 0
+      Top = 1
       Width = 10
-      Height = 33
+      Height = 31
       Align = alLeft
       Shape = bsSpacer
       ExplicitLeft = 341
-      ExplicitTop = 1
       ExplicitHeight = 32
     end
     object btnJapaneseMode: TSpeedButton
       Left = 344
-      Top = 0
+      Top = 1
       Width = 42
-      Height = 33
+      Height = 31
       Hint = '#00219^eJapanese mode (F8)'
       Align = alLeft
       AllowAllUp = True
@@ -438,19 +439,20 @@ object fMenu: TfMenu
     end
     object Bevel5: TBevel
       Left = 428
-      Top = 0
+      Top = 1
       Width = 10
-      Height = 33
+      Height = 31
       Align = alLeft
       Shape = bsSpacer
       ExplicitLeft = 433
+      ExplicitTop = 0
       ExplicitHeight = 35
     end
     object tab3: TSpeedButton
       Left = 142
-      Top = 0
+      Top = 1
       Width = 123
-      Height = 33
+      Height = 31
       Hint = '#00221^eText editor (Ctrl-F3)'
       Align = alLeft
       AllowAllUp = True
@@ -472,19 +474,20 @@ object fMenu: TfMenu
     end
     object Bevel1: TBevel
       Left = 488
-      Top = 0
+      Top = 1
       Width = 10
-      Height = 33
+      Height = 31
       Align = alLeft
       Shape = bsSpacer
       ExplicitLeft = 493
       ExplicitTop = 4
+      ExplicitHeight = 33
     end
     object btnScreenModeSc: TSpeedButton
       Left = 463
-      Top = 0
+      Top = 1
       Width = 25
-      Height = 33
+      Height = 31
       Hint = '#00223^eActivate/deactivate screen popup tool'
       Align = alLeft
       AllowAllUp = True
@@ -523,9 +526,9 @@ object fMenu: TfMenu
     end
     object btnScreenModeWk: TSpeedButton
       Left = 438
-      Top = 0
+      Top = 1
       Width = 25
-      Height = 33
+      Height = 31
       Hint = '#00224^eActivate/deactivate WaKan popup tool'
       Align = alLeft
       AllowAllUp = True
