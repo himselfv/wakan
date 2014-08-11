@@ -50,13 +50,17 @@ type
   Most of the code is based on TSpeedButton
 
   TODO:
-    - FocusRect
-    - FocusRect in non-themed mode (copy from BitBtn)
     - Choose between Layout and ImageAlignment
-    - Use or hide ImageMargins
     - Perhaps better linking with ControlActionLink (GroupIndex, Images, ImageIndex)
     - DropDown button and it's handling
     - Reject focus (not working now: click and it's focused)
+
+  Possible improvements:
+    - Use normal Button fading mechanics (try moving focus away and watch)
+    - Use normal Button focus mechanics (when you focus by clicking, there's
+     highlight but no focus rect. Only keyboard brings focus rect)
+    - Draw in DrawItem() handler, this allows for ODS_FOCUS handling too (see
+     how BitBtn.DrawItem does it, with no success though)
   }
 
   TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
@@ -155,7 +159,7 @@ type
     property HotImageIndex;
     property ImageAlignment; //?
     property ImageIndex;
-    property ImageMargins; //?
+    property ImageMargins;
     property Images;
     property Layout: TButtonLayout read FLayout write SetLayout default blGlyphLeft; //?
     property Margin: Integer read FMargin write SetMargin default -1;
@@ -205,7 +209,7 @@ type
   end;
 
   //Paints WinSpeedButton contents (glyph + caption) on a given canvas
-  //Analogous to Buttons.TButtonGlyph, but does not host a glyph itself.
+  //Analogous to Buttons.TButtonGlyph, but does not host the glyph itself.
   TWinSpeedButtonPainter = class
   protected
     FButton: TWinSpeedButton;
@@ -577,7 +581,6 @@ var
   Button: TThemedButton;
   ToolButton: TThemedToolBar;
   Details: TThemedElementDetails;
-  LStyle: TCustomStyleServices;
 begin
   if not Enabled then
   begin
@@ -682,7 +685,7 @@ begin
     FPainter.Draw(Canvas, PaintRect, Offset, Caption, FLayout,
       FMargin, FSpacing, FState, Transparent, DrawTextBiDiModeFlags(0));
 
-    if Self.Focused and Self.Default and LStyle.IsSystemStyle then
+    if Self.Focused and StyleServices.IsSystemStyle then
     begin
       FCanvas.Pen.Color := clWindowFrame;
       FCanvas.Brush.Color := clBtnFace;
@@ -692,7 +695,7 @@ begin
   end
   else
   begin
-    PaintRect := Rect(0, 0, Width, Height);
+    PaintRect := ClientRect;
     if not FFlat then
     begin
       DrawFlags := DFCS_BUTTONPUSH or DFCS_ADJUSTRECT;
@@ -730,19 +733,18 @@ begin
       Offset.Y := 0;
     end;
 
-    LStyle := StyleServices;
-
-    FPainter.FThemesEnabled := LStyle.Enabled;
+    FPainter.FThemesEnabled := StyleServices.Enabled;
     FPainter.Draw(Canvas, PaintRect, Offset, Caption, FLayout, FMargin,
       FSpacing, FState, Transparent, DrawTextBiDiModeFlags(0));
 
+    if Self.Focused then begin
+      Canvas.Pen.Color := clWindowFrame;
+      Canvas.Brush.Color := clBtnFace;
+      Canvas.DrawFocusRect(PaintRect);
+    end;
+
   end;
 
-  if Self.Focused then begin
-    Canvas.Pen.Style := psSolid;
-    Canvas.Pen.Color := clBlack;
-    Canvas.DrawFocusRect(PaintRect);
-  end;
 end;
 
 constructor TWinSpeedButtonPainter.Create(AButton: TWinSpeedButton);
@@ -799,49 +801,46 @@ begin
   end;
   if Index < 0 then exit;
 
-  with GlyphPos do
+  R.Left := GlyphPos.X + FButton.ImageMargins.Left;
+  R.Top := GlyphPos.Y + FButton.ImageMargins.Top;
+  R.Right := R.Left + FButton.Images.Width;
+  R.Bottom := R.Top + FButton.Images.Height;
+  if FThemesEnabled then
   begin
-    if FThemesEnabled then
-    begin
-      R.Left := GlyphPos.X;
-      R.Top := GlyphPos.Y;
-      R.Right := R.Left + FButton.Images.Width;
-      R.Bottom := R.Top + FButton.Images.Height;
-      case State of
-        bsDisabled:
-          Button := tbPushButtonDisabled;
-        bsDown,
-        bsExclusive:
-          Button := tbPushButtonPressed;
-      else
-        // bsUp
-        Button := tbPushButtonNormal;
-      end;
-      Details := StyleServices.GetElementDetails(Button);
+    case State of
+      bsDisabled:
+        Button := tbPushButtonDisabled;
+      bsDown,
+      bsExclusive:
+        Button := tbPushButtonPressed;
+    else
+      // bsUp
+      Button := tbPushButtonNormal;
+    end;
+    Details := StyleServices.GetElementDetails(Button);
 
-      if FPaintOnGlass then
-      begin
-        PaintBuffer := BeginBufferedPaint(Canvas.Handle, R, BPBF_TOPDOWNDIB, nil, MemDC);
-        try
-          StyleServices.DrawIcon(MemDC, Details, R, FButton.Images.Handle, Index);
-          BufferedPaintMakeOpaque(PaintBuffer, R);
-        finally
-          EndBufferedPaint(PaintBuffer, True);
-        end;
-      end
-      else
-        StyleServices.DrawIcon(Canvas.Handle, Details, R, FButton.Images.Handle, Index);
+    if FPaintOnGlass then
+    begin
+      PaintBuffer := BeginBufferedPaint(Canvas.Handle, R, BPBF_TOPDOWNDIB, nil, MemDC);
+      try
+        StyleServices.DrawIcon(MemDC, Details, R, FButton.Images.Handle, Index);
+        BufferedPaintMakeOpaque(PaintBuffer, R);
+      finally
+        EndBufferedPaint(PaintBuffer, True);
+      end;
     end
     else
-      if Transparent or (State = bsExclusive) then
-      begin
-        ImageList_DrawEx(FButton.Images.Handle, Index, Canvas.Handle, X, Y, 0, 0,
-          clNone, clNone, ILD_Transparent)
-      end
-      else
-        ImageList_DrawEx(FButton.Images.Handle, Index, Canvas.Handle, X, Y, 0, 0,
-          ColorToRGB(clBtnFace), clNone, ILD_Normal);
-  end;
+      StyleServices.DrawIcon(Canvas.Handle, Details, R, FButton.Images.Handle, Index);
+  end
+  else
+    if Transparent or (State = bsExclusive) then
+    begin
+      ImageList_DrawEx(FButton.Images.Handle, Index, Canvas.Handle, R.Left, R.Top, 0, 0,
+        clNone, clNone, ILD_Transparent)
+    end
+    else
+      ImageList_DrawEx(FButton.Images.Handle, Index, Canvas.Handle, R.Left, R.Top, 0, 0,
+        ColorToRGB(clBtnFace), clNone, ILD_Normal);
 end;
 
 procedure TWinSpeedButtonPainter.DrawButtonText(Canvas: TCanvas; const Caption: string;
@@ -908,7 +907,10 @@ begin
     Client.Top);
 
   if (FButton.Images<>nil) and (FButton.ImageIndex>=0) then
-    GlyphSize := Point(FButton.Images.Width, FButton.Images.Height) else
+    GlyphSize := Point(
+      FButton.Images.Width+FButton.ImageMargins.Left+FButton.ImageMargins.Right,
+      FButton.Images.Height+FButton.ImageMargins.Top+FButton.ImageMargins.Bottom)
+  else
     GlyphSize := Point(0, 0);
 
   if Length(Caption) > 0 then
