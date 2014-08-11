@@ -346,7 +346,7 @@ object fKanji: TfKanji
       object edtLookup: TEdit
         Left = 0
         Top = 0
-        Width = 196
+        Width = 58
         Height = 22
         Align = alClient
         TabOrder = 0
@@ -369,7 +369,6 @@ object fKanji: TfKanji
         Caption = 'Strokes: 15-17'
         Style = bsSplitButton
         TabOrder = 2
-        TabStop = False
         OnDropDownClick = btnStrokesDropDownClick
       end
       object btnRadicals: TButton
@@ -388,7 +387,6 @@ object fKanji: TfKanji
         Caption = 'Radicals: A B'
         Style = bsSplitButton
         TabOrder = 3
-        TabStop = False
         OnDropDownClick = pbRadicalsClick
       end
       object btnGroups: TButton
@@ -429,6 +427,31 @@ object fKanji: TfKanji
         TabOrder = 1
         TabStop = False
       end
+      object cbOtherType: TComboBox
+        AlignWithMargins = True
+        Left = 61
+        Top = 0
+        Width = 135
+        Height = 21
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alRight
+        Style = csDropDownList
+        ItemIndex = 0
+        TabOrder = 5
+        Text = '#01132^Any matches'
+        OnChange = SearchFilterChanged
+        Items.Strings = (
+          '#01132^Any matches'
+          'Characters'
+          'Definition'
+          'On'
+          'Kun'
+          'PinYin'
+          'SKIP'
+          '-')
+      end
     end
     object PopupPanel1: TPopupPanel
       Left = 238
@@ -464,9 +487,9 @@ object fKanji: TfKanji
         Height = 22
       end
       object WinSpeedButton1: TWinSpeedButton
-        Left = 48
-        Top = 28
-        Width = 177
+        Left = -1
+        Top = 29
+        Width = 170
         Height = 37
         Hint = '#00188^eDisplay only characters in clipboard'
         AllowAllUp = True
@@ -476,6 +499,7 @@ object fKanji: TfKanji
         Images = ilCategoryActions
         PressedImageIndex = 2
         SelectedImageIndex = 3
+        Style = bsSplitButton
         TabOrder = 0
         Transparent = False
         OnClick = aInClipboardExecute
@@ -523,6 +547,24 @@ object fKanji: TfKanji
         Height = 25
         Caption = 'BitBtn1'
         TabOrder = 5
+      end
+      object Button4: TButton
+        AlignWithMargins = True
+        Left = 175
+        Top = 0
+        Width = 175
+        Height = 85
+        Hint = 
+          '#01133^Search by reading, writing or meaning, depending on what ' +
+          'you type'
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = '#01132^Any matches'
+        DropDownMenu = pmLookupMode
+        Style = bsSplitButton
+        TabOrder = 6
+        TabStop = False
       end
     end
   end
@@ -923,7 +965,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104001401380110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101040014014C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

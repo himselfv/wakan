@@ -1,4 +1,4 @@
-unit SimpleControls;
+﻿unit SimpleControls;
 
 interface
 
@@ -51,6 +51,10 @@ type
 
   TODO:
     - DropDown button and it's handling
+    - Line between dropdown and normal parts
+    - DropDown rendering for classic UI case
+    - DropDown click handling (make it down, call DoDropDown, OnDropDown, bring
+      up menu, turn it up)
 
   Possible improvements:
     - Use normal Button fading mechanics (try moving focus away and watch)
@@ -62,6 +66,9 @@ type
 
   TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
   TButtonState = (bsUp, bsDisabled, bsDown, bsExclusive);
+  TDropButtonState = (dbsUp, dbsDown);
+  TMousePosition = (mpOutside, mpBody, mpDropBtn);
+  TButtonFrameState = (bfUp, bfDown, bfHot, bfDefault, bfDisabled);
 
   //TCustomButton with TCustomControl additions over it.
   TCustomPaintedButton = class(TCustomButton)
@@ -103,10 +110,11 @@ type
     FGroupIndex: Integer;
     FLayout: TButtonLayout;
     FMargin: Integer; //distance from the anchor border to the glyph
-    FMouseInControl: Boolean;
+    FMousePosition: TMousePosition;
     FPainter: TWinSpeedButtonPainter;
     FSpacing: Integer; //distance from the glyph to the caption
     FState: TButtonState;
+    FDropState: TDropButtonState;
     FTransparent: Boolean;
     FFakeFocus: boolean; //see WndProc->WM_LBUTTONDOWN
     procedure UpdateExclusive;
@@ -123,6 +131,8 @@ type
     procedure SetSpacing(Value: Integer);
     procedure SetTransparent(Value: Boolean);
     procedure Paint; override;
+    procedure PaintButtonFrame(State: TButtonFrameState; PaintRect, ClipRect: TRect;
+      out Details: TThemedElementDetails; out ContentRect: TRect);
     procedure WndProc(var Message: TMessage); override;
     procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
@@ -137,7 +147,9 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
-    property MouseInControl: Boolean read FMouseInControl;
+    function BodyRect: TRect;
+    function DropBtnRect: TRect;
+    property MousePosition: TMousePosition read FMousePosition;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -596,6 +608,22 @@ begin
   Result := TWinSpeedButtonActionLink;
 end;
 
+function TWinSpeedButton.BodyRect: TRect;
+begin
+  Result := ClientRect;
+  if Self.Style = bsSplitButton then
+    Result.Right := Result.Right - 15;
+end;
+
+function TWinSpeedButton.DropBtnRect: TRect;
+begin
+  Result := ClientRect;
+  if Self.Style = bsSplitButton then
+    Result.Left := Result.Right - 15
+  else
+    Result.Left := Result.Right;
+end;
+
 const
   DownStyles: array[Boolean] of Integer = (BDR_RAISEDINNER, BDR_SUNKENOUTER);
   FillStyles: array[Boolean] of Integer = (BF_MIDDLE, 0);
@@ -621,13 +649,13 @@ var
   DrawFlags: Integer;
   Offset: TPoint;
   LGlassPaint: Boolean;
-  Button: TThemedButton;
-  ToolButton: TThemedToolBar;
+  Button: TButtonFrameState;
   Details: TThemedElementDetails;
 begin
   if not Enabled then
   begin
     FState := bsDisabled;
+    FDropState := dbsUp;
     FDragging := False;
   end
   else if FState = bsDisabled then
@@ -637,8 +665,10 @@ begin
       FState := bsUp;
   Canvas.Font := Self.Font;
 
+
   if ThemeControl(Self) then
   begin
+    //Background
     LGlassPaint := DoGlassPaint;
     if not LGlassPaint then
       if Transparent then
@@ -648,77 +678,55 @@ begin
     else
       FillRect(Canvas.Handle, ClientRect, GetStockObject(BLACK_BRUSH));
 
+    //Paint DropBtn
+    if Self.Style = bsSplitButton then begin
+      if not Enabled then
+        Button := bfDisabled
+      else
+        if FDropState in [dbsDown] then
+          Button := bfDown
+        else
+          if FMousePosition in [mpBody, mpDropBtn] then
+            Button := bfHot
+          else
+            if Self.Focused or Self.Default then
+              Button := bfDefault
+            else
+              Button := bfUp;
+
+      PaintButtonFrame(Button, ClientRect, DropBtnRect, Details, PaintRect);
+      Canvas.Brush.Style := bsClear;
+      PaintRect.Top := PaintRect.Top + (PaintRect.Height - Canvas.TextHeight('▼')) div 2;
+      Canvas.TextOut(PaintRect.Left, PaintRect.Top, '▼');
+
+    end;
+
+    //Paint button body
     if not Enabled then
-      Button := tbPushButtonDisabled
+      Button := bfDisabled
     else
       if FState in [bsDown, bsExclusive] then
-        Button := tbPushButtonPressed
+        Button := bfDown
       else
-        if MouseInControl then
-          Button := tbPushButtonHot
+        if FMousePosition in [mpBody] then
+          Button := bfHot
         else
           if Self.Focused or Self.Default then
-            Button := tbPushButtonDefaulted
+            Button := bfDefault
           else
-            Button := tbPushButtonNormal;
+            Button := bfUp;
 
-    ToolButton := ttbToolbarDontCare;
-    if FFlat or TStyleManager.IsCustomStyleActive then
-    begin
-      case Button of
-        tbPushButtonDisabled:
-          Toolbutton := ttbButtonDisabled;
-        tbPushButtonPressed:
-          Toolbutton := ttbButtonPressed;
-        tbPushButtonHot:
-          Toolbutton := ttbButtonHot;
-        tbPushButtonDefaulted:
-          Toolbutton := ttbButtonNormal;
-        tbPushButtonNormal:
-          Toolbutton := ttbButtonNormal;
-      end;
-    end;
-
-    PaintRect := ClientRect;
-    if ToolButton = ttbToolbarDontCare then
-    begin
-      Details := StyleServices.GetElementDetails(Button);
-      StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
-    end
-    else
-    begin
-      Details := StyleServices.GetElementDetails(ToolButton);
-      if not TStyleManager.IsCustomStyleActive then
-      begin
-        StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
-        // Windows theme services doesn't paint disabled toolbuttons
-        // with grayed text (as it appears in an actual toolbar). To workaround,
-        // retrieve Details for a disabled button for drawing the caption.
-        if (ToolButton = ttbButtonDisabled) then
-          Details := StyleServices.GetElementDetails(Button);
-      end
-      else
-      begin
-        // Special case for flat speedbuttons with custom styles. The assumptions
-        // made about the look of ToolBar buttons may not apply, so only paint
-        // the hot and pressed states , leaving normal/disabled to appear flat.
-        if not FFlat or ((Button = tbPushButtonPressed) or (Button = tbPushButtonHot)) then
-          StyleServices.DrawElement(Canvas.Handle, Details, PaintRect);
-      end;
-      StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, PaintRect);
-    end;
+    PaintButtonFrame(Button, ClientRect, BodyRect, Details, PaintRect);
 
     Offset := Point(0, 0);
-    if Button = tbPushButtonPressed then
+    if (Button = bfDown) and FFlat then
     begin
       // A pressed "flat" speed button has white text in XP, but the Themes
       // API won't render it as such, so we need to hack it.
-      if (ToolButton <> ttbToolbarDontCare) and not CheckWin32Version(6) then
+      if not CheckWin32Version(6) then
         Canvas.Font.Color := clHighlightText
       else
-        if FFlat then
-          Offset := Point(1, 0);
+        Offset := Point(1, 0);
     end;
 
     FPainter.FPaintOnGlass := LGlassPaint;
@@ -739,6 +747,7 @@ begin
   else
   begin
     PaintRect := ClientRect;
+
     if not FFlat then
     begin
       DrawFlags := DFCS_BUTTONPUSH or DFCS_ADJUSTRECT;
@@ -749,7 +758,7 @@ begin
     else
     begin
       if (FState in [bsDown, bsExclusive]) or
-        (FMouseInControl and (FState <> bsDisabled)) or
+        ((FMousePosition in [mpBody, mpDropBtn]) and (FState <> bsDisabled)) or
         (csDesigning in ComponentState) then
         DrawEdge(Canvas.Handle, PaintRect, DownStyles[FState in [bsDown, bsExclusive]],
           FillStyles[Transparent] or BF_RECT)
@@ -762,7 +771,7 @@ begin
     end;
     if FState in [bsDown, bsExclusive] then
     begin
-      if (FState = bsExclusive) and (not FFlat or not FMouseInControl) then
+      if (FState = bsExclusive) and (not FFlat or (FMousePosition in [mpOutside])) then
       begin
         Canvas.Brush.Bitmap := AllocPatternBitmap(clBtnFace, clBtnHighlight);
         Canvas.FillRect(PaintRect);
@@ -788,6 +797,73 @@ begin
 
   end;
 
+end;
+
+//Paints themed button frame and returns theme details according to current
+//control styling
+//Non-themed styling is handled separately
+procedure TWinSpeedButton.PaintButtonFrame(State: TButtonFrameState;
+  PaintRect, ClipRect: TRect; out Details: TThemedElementDetails;
+  out ContentRect: TRect);
+var
+  Button: TThemedButton;
+  ToolButton: TThemedToolBar;
+begin
+  if not FFlat then begin
+
+    case State of
+      bfDown: Button := tbPushButtonPressed;
+      bfHot: Button := tbPushButtonHot;
+      bfDefault: Button := tbPushButtonDefaulted;
+      bfDisabled: Button := tbPushButtonDisabled;
+    else Button := tbPushButtonNormal;
+    end;
+
+    Details := StyleServices.GetElementDetails(Button);
+    StyleServices.DrawElement(Canvas.Handle, Details, PaintRect, ClipRect);
+
+  end else begin
+
+    case State of
+      bfDown: ToolButton := ttbButtonPressed;
+      bfHot: ToolButton := ttbButtonHot;
+      bfDefault: ToolButton := ttbButtonNormal;
+      bfDisabled: ToolButton := ttbButtonDisabled;
+    else ToolButton := ttbButtonNormal;
+    end;
+
+    Details := StyleServices.GetElementDetails(ToolButton);
+    if not TStyleManager.IsCustomStyleActive then
+    begin
+      StyleServices.DrawElement(Canvas.Handle, Details, PaintRect, ClipRect);
+      // Windows theme services doesn't paint disabled toolbuttons
+      // with grayed text (as it appears in an actual toolbar). To workaround,
+      // retrieve Details for a disabled button for drawing the caption.
+      if ToolButton = ttbButtonDisabled then
+        Details := StyleServices.GetElementDetails(tbPushButtonDisabled);
+    end
+    else
+    begin
+      // Special case for flat speedbuttons with custom styles. The assumptions
+      // made about the look of ToolBar buttons may not apply, so only paint
+      // the hot and pressed states , leaving normal/disabled to appear flat.
+      if not FFlat or ((State = bfDown) or (State = bfHot)) then
+        StyleServices.DrawElement(Canvas.Handle, Details, PaintRect, ClipRect);
+    end;
+
+  end;
+
+  StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, ContentRect);
+
+  //Intersect content rect with clip rect
+  if ContentRect.Left < ClipRect.Left then
+    ContentRect.Left := ClipRect.Left;
+  if ContentRect.Top < ClipRect.Top then
+    ContentRect.Top := ClipRect.Top;
+  if ContentRect.Right > ClipRect.Right then
+    ContentRect.Right := ClipRect.Right;
+  if ContentRect.Bottom > ClipRect.Bottom then
+    ContentRect.Bottom := ClipRect.Bottom;
 end;
 
 constructor TWinSpeedButtonPainter.Create(AButton: TWinSpeedButton);
@@ -1063,7 +1139,7 @@ begin
     for I := 0 to Parent.ControlCount - 1 do
       if Parent.Controls[I] is TWinSpeedButton then
         TWinSpeedButton(Parent.Controls[I]).ButtonPressed(FGroupIndex, Self);
-   //^ This is a CLR way of notifying the siblings.
+   //^ This is the CLR way of notifying the siblings.
    //TSpeedButton has a message-based version of this for non-CLR platforms,
    //but otherwise it is identical, and existing message handlers assume
    //the sender is TSpeedButton so it's risky to reuse. Let's stick to CLR way.
@@ -1091,16 +1167,30 @@ procedure TWinSpeedButton.UpdateTracking;
 var
   P: TPoint;
 begin
-  if FFlat then
-  begin
-    if Enabled then
-    begin
-      GetCursorPos(P);
-      FMouseInControl := not (FindDragTarget(P, True) = Self);
-      if FMouseInControl then
-        Perform(CM_MOUSELEAVE, 0, 0)
-      else
-        Perform(CM_MOUSEENTER, 0, 0);
+  if not Enabled then begin
+    FMousePosition := mpOutside;
+    exit;
+  end;
+
+  GetCursorPos(P);
+  if FindDragTarget(P, True) <> Self then begin
+    if FMousePosition <> mpOutside then begin
+      FMousePosition := mpOutside;
+      Invalidate;
+    end;
+    exit;
+  end;
+
+  P := Self.ScreenToClient(P);
+  if (Self.Style=bsSplitButton) and PtInRect(Self.DropBtnRect, P) then begin
+    if FMousePosition <> mpDropBtn then begin
+      FMousePosition := mpDropBtn;
+      Invalidate;
+    end;
+  end else begin
+    if FMousePosition <> mpBody then begin
+      FMousePosition := mpBody;
+      Invalidate;
     end;
   end;
 end;
@@ -1137,7 +1227,7 @@ begin
       Invalidate;
     end;
   end
-  else if not FMouseInControl then
+  else
     UpdateTracking;
 end;
 
@@ -1155,7 +1245,7 @@ begin
     begin
       { Redraw face in-case mouse is captured }
       FState := bsUp;
-      FMouseInControl := False;
+      FMousePosition := mpOutside;
       if DoClick and not (FState in [bsExclusive, bsDown]) then
         Invalidate;
     end
@@ -1254,12 +1344,13 @@ begin
   inherited;
   { Don't draw a border if DragMode <> dmAutomatic since this button is meant to
     be used as a dock client. }
-  NeedRepaint := FFlat and not FMouseInControl and Enabled and (DragMode <> dmAutomatic) and (GetCapture = 0);
+  NeedRepaint := FFlat and (FMousePosition = mpOutside) and Enabled
+    and (DragMode <> dmAutomatic) and (GetCapture = 0);
 
   { Windows XP introduced hot states also for non-flat buttons. }
   if (NeedRepaint or StyleServices.Enabled) and not (csDesigning in ComponentState) then
   begin
-    FMouseInControl := True;
+    UpdateTracking;
     if Enabled then
       Repaint;
   end;
@@ -1270,11 +1361,11 @@ var
   NeedRepaint: Boolean;
 begin
   inherited;
-  NeedRepaint := FFlat and FMouseInControl and Enabled and not FDragging;
+  NeedRepaint := FFlat and (FMousePosition<>mpOutside) and Enabled and not FDragging;
   { Windows XP introduced hot states also for non-flat buttons. }
   if NeedRepaint or StyleServices.Enabled then
   begin
-    FMouseInControl := False;
+    FMousePosition := mpOutside;
     if Enabled then
       Repaint;
   end;

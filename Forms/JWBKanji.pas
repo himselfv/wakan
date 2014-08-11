@@ -114,6 +114,8 @@ type
     BitBtn1: TBitBtn;
     BitBtn2: TBitBtn;
     SpeedButton2: TSpeedButton;
+    cbOtherType: TComboBox;
+    Button4: TButton;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -208,6 +210,7 @@ type
     FSetLookupTypeIndex: integer; //set when reading settings, applied on next ReloadLookupTypes()
     function GetLookupTypeIndex: integer;
     procedure SetLookupTypeIndex(const AItemIndex: integer);
+    procedure ClearLookupTypes;
     procedure ReloadLookupTypes;
     procedure ReloadSortBy;
 
@@ -436,9 +439,29 @@ end;
 
 
 //Reloads a list of textual search types
+procedure TfKanji.ClearLookupTypes;
+var i: integer;
+begin
+  for i := pmLookupMode.Items.Count-1 downto 0 do
+    if pmLookupMode.Items[i].Tag=-1 then
+      pmLookupMode.Items.Delete(i);
+
+  cbOtherType.Clear;
+  cbOtherType.Items.Add(_l('#01132^Any matches'));
+  cbOtherType.Items.Add('Characters');
+  cbOtherType.Items.Add('Definition');
+  cbOtherType.Items.Add('On');
+  cbOtherType.Items.Add('Kun');
+  cbOtherType.Items.Add('PinYin');
+  cbOtherType.Items.Add('SKIP');
+  cbOtherType.Items.Add('-');
+end;
+
+
 procedure TfKanji.ReloadLookupTypes;
 var i: integer;
   bk: integer;
+  item: TMenuItem;
 begin
 {  bk := cbOtherType.ItemIndex;
   if bk=-1 then begin //this is the first reload
@@ -454,6 +477,18 @@ begin
   cbOtherType.ItemIndex:=0;
   if bk < cbOtherType.Items.Count-1 then cbOtherType.ItemIndex:=bk;}
     //TODO:!
+
+  ClearLookupTypes;
+  for i:=0 to Length(CharPropTypes)-1 do
+    if CharPropTypes[i].id>20 then begin
+      item := TMenuItem.Create(Self);
+      item.Caption := _l('^e'+CharPropTypes[i].englishName);
+      item.GroupIndex := 1;
+      item.Tag := -1;
+      pmLookupMode.Items.Add(item);
+
+      cbOtherType.Items.Add(item.Caption);
+    end;
 end;
 
 //Returns integer uniquely identifying the selected lookup type (either
