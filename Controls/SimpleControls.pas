@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils, Classes, Graphics, Controls, StdCtrls, ExtCtrls, Messages, Windows,
-  Themes;
+  Themes, ImgList, UITypes;
 
 type
  { Adds Autosize like in TLabel }
@@ -50,11 +50,13 @@ type
   Most of the code is based on TSpeedButton
 
   TODO:
-    - DropDown button and it's handling
-    - Line between dropdown and normal parts
-    - DropDown rendering for classic UI case
-    - DropDown click handling (make it down, call DoDropDown, OnDropDown, bring
-      up menu, turn it up)
+    - DropDown rendering for classic UI case (incl. splitter, glyph)
+    - Use DrawGlyph-like function for DropBtn glyph drawing, instead of simple
+      one used now.
+    - Common glyph rendering for both cases (themed/classic)
+    - Make DropButtonSettings.*ImageIndex params behave as ImageIndex params in
+      ObjectInspector
+    - Render splitter through theming mechanics in themed case
 
   Possible improvements:
     - Use normal Button fading mechanics (try moving focus away and watch)
@@ -67,8 +69,9 @@ type
   TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
   TButtonState = (bsUp, bsDisabled, bsDown, bsExclusive);
   TDropButtonState = (dbsUp, dbsDown);
-  TMousePosition = (mpOutside, mpBody, mpDropBtn);
   TButtonFrameState = (bfUp, bfDown, bfHot, bfDefault, bfDisabled);
+  TMousePosition = (mpOutside, mpBody, mpDropBtn);
+  TDragState = (dsNone, dsBody, dsDropBtn);
 
   //TCustomButton with TCustomControl additions over it.
   TCustomPaintedButton = class(TCustomButton)
@@ -100,11 +103,48 @@ type
     procedure SetGroupIndex(Value: Integer); override;
   end;
 
+  TDropButtonSettings = class(TPersistent)
+  protected
+    FButton: TWinSpeedButton;
+    FSize: integer;
+    FShowSplit: boolean;
+    FImages: TCustomImageList;
+    FImageIndex: TImageIndex;
+    FHotImageIndex: TImageIndex;
+    FPressedImageIndex: TImageIndex;
+    FDisabledImageIndex: TImageIndex;
+    FSelectedImageIndex: TImageIndex;
+    FStylusHotImageIndex: TImageIndex;
+    procedure AssignTo(Dest: TPersistent); override;
+    procedure Changed; virtual;
+    procedure SetSize(const Value: integer);
+    procedure SetShowSplit(const Value: boolean);
+    procedure SetImages(const Value: TCustomImageList);
+    procedure SetImageIndex(const Value: TImageIndex);
+    procedure SetHotImageIndex(const Value: TImageIndex);
+    procedure SetPressedImageIndex(const Value: TImageIndex);
+    procedure SetDisabledImageIndex(const Value: TImageIndex);
+    procedure SetSelectedImageIndex(const Value: TImageIndex);
+    procedure SetStylusHotImageIndex(const Value: TImageIndex);
+  public
+    constructor Create(AButton: TWinSpeedButton);
+  published
+    property Size: integer read FSize write SetSize default 16;
+    property ShowSplit: boolean read FShowSplit write SetShowSplit default true;
+    property Images: TCustomImageList read FImages write SetImages;
+    property ImageIndex: TImageIndex read FImageIndex write SetImageIndex default -1;
+    property HotImageIndex: TImageIndex read FHotImageIndex write SetHotImageIndex default -1;
+    property PressedImageIndex: TImageIndex read FPressedImageIndex write SetPressedImageIndex default -1;
+    property DisabledImageIndex: TImageIndex read FDisabledImageIndex write SetDisabledImageIndex default -1;
+    property SelectedImageIndex: TImageIndex read FSelectedImageIndex write SetSelectedImageIndex default -1;
+    property StylusHotImageIndex: TImageIndex read FStylusHotImageIndex write SetStylusHotImageIndex default -1;
+  end;
+
   TWinSpeedButton = class(TCustomPaintedButton)
   protected
     FAllowAllUp: Boolean;
     FDown: Boolean;
-    FDragging: Boolean;
+    FDragState: TDragState;
     FFocusable: Boolean;
     FFlat: Boolean;
     FGroupIndex: Integer;
@@ -112,17 +152,22 @@ type
     FMargin: Integer; //distance from the anchor border to the glyph
     FMousePosition: TMousePosition;
     FPainter: TWinSpeedButtonPainter;
+    FDropButtonSettings: TDropButtonSettings;
     FSpacing: Integer; //distance from the glyph to the caption
     FState: TButtonState;
     FDropState: TDropButtonState;
     FTransparent: Boolean;
     FFakeFocus: boolean; //see WndProc->WM_LBUTTONDOWN
-    procedure UpdateExclusive;
-    procedure UpdateTracking;
-    procedure ButtonPressed(Group: Integer; Button: TWinSpeedButton);
+    procedure Paint; override;
+    procedure PaintButtonFrame(State: TButtonFrameState; PaintRect, ClipRect: TRect;
+      out Details: TThemedElementDetails; out ContentRect: TRect);
     function GetActionLinkClass: TControlActionLinkClass; override;
+    function GetBodyRect: TRect;
+    function GetDropBtnRect: TRect;
+    procedure DoDropDownClick; virtual;
     procedure SetAllowAllUp(Value: Boolean);
     procedure SetDown(Value: Boolean);
+    procedure SetDropButtonSettings(Value: TDropButtonSettings);
     procedure SetFocusable(Value: Boolean);
     procedure SetFlat(Value: Boolean);
     procedure SetGroupIndex(Value: Integer);
@@ -130,9 +175,6 @@ type
     procedure SetMargin(Value: Integer);
     procedure SetSpacing(Value: Integer);
     procedure SetTransparent(Value: Boolean);
-    procedure Paint; override;
-    procedure PaintButtonFrame(State: TButtonFrameState; PaintRect, ClipRect: TRect;
-      out Details: TThemedElementDetails; out ContentRect: TRect);
     procedure WndProc(var Message: TMessage); override;
     procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
@@ -147,16 +189,21 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
-    function BodyRect: TRect;
-    function DropBtnRect: TRect;
+    procedure EndDrag(X, Y: Integer);
+    procedure ButtonPressed(Group: Integer; Button: TWinSpeedButton);
+    procedure UpdateExclusive;
+    procedure UpdateTracking;
+    property BodyRect: TRect read GetBodyRect;
+    property DropBtnRect: TRect read GetDropBtnRect;
     property MousePosition: TMousePosition read FMousePosition;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure DefaultHandler(var Message); override;
     function CanFocus: Boolean; override;
     procedure SetFocus; override;
     function Focused: boolean; override;
-    procedure DefaultHandler(var Message); override;
+    function IsInDropButton(const APoint: TPoint): boolean;
   published
     property Action;
     property Align;
@@ -173,6 +220,8 @@ type
     property DragCursor;
     property DragKind;
     property DragMode;
+    property DropButtonSettings: TDropButtonSettings read FDropButtonSettings
+      write SetDropButtonSettings;
     property DropDownMenu;
     property Enabled;
     property Flat: Boolean read FFlat write SetFlat default False;
@@ -224,10 +273,6 @@ type
     property OnMouseUp;
     property OnStartDock;
     property OnStartDrag;
-
-    //Dubious
-    property CommandLinkHint;
-    property ElevationRequired;
   end;
 
   //Paints WinSpeedButton contents (glyph + caption) on a given canvas
@@ -239,14 +284,15 @@ type
     FThemeDetails: TThemedElementDetails;
     FThemesEnabled: Boolean;
     FThemeTextColor: Boolean;
+    function ImageIndexFromState(State: TButtonState): integer;
     procedure DrawButtonGlyph(Canvas: TCanvas; const GlyphPos: TPoint;
       State: TButtonState; Transparent: Boolean);
     procedure DrawButtonText(Canvas: TCanvas; const Caption: string;
       TextBounds: TRect; State: TButtonState; Flags: Longint);
     procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
       const Offset: TPoint; const Caption: string; Layout: TButtonLayout;
-      Margin, Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
-      BiDiFlags: Longint);
+      Margin, Spacing: Integer; State: TButtonState; var GlyphPos: TPoint;
+      var TextBounds: TRect; BiDiFlags: Longint);
   public
     constructor Create(AButton: TWinSpeedButton);
     function Draw(Canvas: TCanvas; const Client: TRect;
@@ -259,7 +305,7 @@ type
 procedure Register;
 
 implementation
-uses Types, UITypes, Forms, ActnList, UxTheme, CommCtrl,
+uses Types, Forms, ActnList, UxTheme, CommCtrl,
 {$IFDEF MSWINDOWS}
   ShellAPI
 {$ENDIF MSWINDOWS}
@@ -584,11 +630,106 @@ end;
 
 
 
+{ TDropButtonSettings }
+
+constructor TDropButtonSettings.Create(AButton: TWinSpeedButton);
+begin
+  inherited Create();
+  FButton := AButton;
+  FSize := 16;
+  FShowSplit := true;
+  FImageIndex := -1;
+  FHotImageIndex := -1;
+  FPressedImageIndex := -1;
+  FDisabledImageIndex := -1;
+  FSelectedImageIndex := -1;
+  FStylusHotImageIndex := -1;
+end;
+
+procedure TDropButtonSettings.AssignTo(Dest: TPersistent);
+begin
+  if Dest is TDropButtonSettings then begin
+    TDropButtonSettings(Dest).FSize := Self.FSize;
+    TDropButtonSettings(Dest).FShowSplit := Self.FShowSplit;
+    TDropButtonSettings(Dest).FImages := Self.FImages;
+    TDropButtonSettings(Dest).FImageIndex := Self.FImageIndex;
+    TDropButtonSettings(Dest).FHotImageIndex := Self.FHotImageIndex;
+    TDropButtonSettings(Dest).FPressedImageIndex := Self.FPressedImageIndex;
+    TDropButtonSettings(Dest).FDisabledImageIndex := Self.FDisabledImageIndex;
+    TDropButtonSettings(Dest).FSelectedImageIndex := Self.FSelectedImageIndex;
+    TDropButtonSettings(Dest).FStylusHotImageIndex := Self.FStylusHotImageIndex;    
+    TDropButtonSettings(Dest).Changed;
+  end else
+    inherited;
+end;
+
+procedure TDropButtonSettings.Changed;
+begin
+  if FButton.Style = bsSplitButton then
+    FButton.Invalidate;
+end;
+
+procedure TDropButtonSettings.SetSize(const Value: integer);
+begin
+  FSize := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetShowSplit(const Value: boolean);
+begin
+  FShowSplit := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetImages(const Value: TCustomImageList);
+begin
+  FImages := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetImageIndex(const Value: TImageIndex);
+begin
+  FImageIndex := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetHotImageIndex(const Value: TImageIndex);
+begin
+  FHotImageIndex := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetPressedImageIndex(const Value: TImageIndex);
+begin
+  FPressedImageIndex := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetDisabledImageIndex(const Value: TImageIndex);
+begin
+  FDisabledImageIndex := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetSelectedImageIndex(const Value: TImageIndex);
+begin
+  FSelectedImageIndex := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetStylusHotImageIndex(const Value: TImageIndex);
+begin
+  FStylusHotImageIndex := Value;
+  Changed;
+end;
+
+
 { TWinSpeedButton }
 
 constructor TWinSpeedButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FDropButtonSettings := TDropButtonSettings.Create(Self);
   FPainter := TWinSpeedButtonPainter.Create(Self);
   FFocusable := true;
   FLayout := blGlyphLeft;
@@ -600,6 +741,7 @@ end;
 destructor TWinSpeedButton.Destroy;
 begin
   FreeAndNil(FPainter);
+  FreeAndNil(FDropButtonSettings);
   inherited;
 end;
 
@@ -608,20 +750,32 @@ begin
   Result := TWinSpeedButtonActionLink;
 end;
 
-function TWinSpeedButton.BodyRect: TRect;
+function TWinSpeedButton.GetBodyRect: TRect;
 begin
   Result := ClientRect;
   if Self.Style = bsSplitButton then
-    Result.Right := Result.Right - 15;
+    Result.Right := Result.Right - DropButtonSettings.Size;
 end;
 
-function TWinSpeedButton.DropBtnRect: TRect;
+function TWinSpeedButton.GetDropBtnRect: TRect;
 begin
   Result := ClientRect;
   if Self.Style = bsSplitButton then
-    Result.Left := Result.Right - 15
+    Result.Left := Result.Right - DropButtonSettings.Size
   else
     Result.Left := Result.Right;
+end;
+
+procedure TWinSpeedButton.DoDropDownClick;
+var Pt: TPoint;
+begin
+  if Assigned(OnDropDownClick) then
+    OnDropDownClick(Self);
+  if Assigned(DropDownMenu) then begin
+    Pt := ClientToScreen(Point(0, Self.Height));
+    DropDownMenu.Popup(Pt.X, Pt.Y);
+  end;
+  Self.EndDrag(0, 0); //Popup or other code could have eaten WM_MOUSEUP
 end;
 
 const
@@ -646,17 +800,20 @@ procedure TWinSpeedButton.Paint;
 
 var
   PaintRect: TRect;
+  GlyphPos: TPoint;
   DrawFlags: Integer;
   Offset: TPoint;
   LGlassPaint: Boolean;
   Button: TButtonFrameState;
   Details: TThemedElementDetails;
+  ImgList: TCustomImageList;
+  ImgIndex: integer;
 begin
   if not Enabled then
   begin
     FState := bsDisabled;
     FDropState := dbsUp;
-    FDragging := False;
+    FDragState := dsNone;
   end
   else if FState = bsDisabled then
     if FDown and (GroupIndex <> 0) then
@@ -695,9 +852,49 @@ begin
               Button := bfUp;
 
       PaintButtonFrame(Button, ClientRect, DropBtnRect, Details, PaintRect);
-      Canvas.Brush.Style := bsClear;
-      PaintRect.Top := PaintRect.Top + (PaintRect.Height - Canvas.TextHeight('▼')) div 2;
-      Canvas.TextOut(PaintRect.Left, PaintRect.Top, '▼');
+
+      //Paint glyph
+      case Button of
+        bfDown: ImgIndex := DropButtonSettings.PressedImageIndex;
+        bfHot: ImgIndex := DropButtonSettings.HotImageIndex;
+        bfDefault: ImgIndex := DropButtonSettings.FSelectedImageIndex;
+        bfDisabled: ImgIndex := DropButtonSettings.DisabledImageIndex;
+      else ImgIndex := DropButtonSettings.ImageIndex;
+      end;
+      if ImgIndex<0 then
+        ImgIndex := DropButtonSettings.ImageIndex; //fallback for other cases
+
+      ImgList := DropButtonSettings.Images;
+      if ImgList = nil then
+        ImgList := Self.Images;
+
+      if (ImgIndex < 0) or (ImgList = nil) then begin
+        Canvas.Brush.Style := bsClear;
+        GlyphPos.X := PaintRect.Right - Canvas.TextWidth('▼');
+        GlyphPos.Y := PaintRect.Top + (PaintRect.Height - Canvas.TextHeight('▼')) div 2;
+        Canvas.TextOut(GlyphPos.X, GlyphPos.Y, '▼');
+      end else begin
+        GlyphPos.X := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
+        GlyphPos.Y := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
+
+        ImageList_DrawEx(ImgList.Handle, ImgIndex, Canvas.Handle, GlyphPos.X,
+          GlyphPos.Y, 0, 0, clNone, clNone, ILD_Transparent);
+      end;
+
+
+
+      if DropButtonSettings.ShowSplit then begin
+        //Paint splitter
+        Canvas.Pen.Style := psSolid;
+        Canvas.Pen.Color := clSilver;
+        Canvas.MoveTo(PaintRect.Left, PaintRect.Top);
+        Canvas.LineTo(PaintRect.Left, PaintRect.Bottom);
+        Inc(PaintRect.Left, 1);
+        Canvas.Pen.Color := clGray;
+        Canvas.MoveTo(PaintRect.Left, PaintRect.Top);
+        Canvas.LineTo(PaintRect.Left, PaintRect.Bottom);
+        Inc(PaintRect.Right, 1);
+      end;
 
     end;
 
@@ -728,6 +925,9 @@ begin
       else
         Offset := Point(1, 0);
     end;
+
+    if (Self.Style = bsSplitButton) and DropButtonSettings.ShowSplit then
+      Dec(PaintRect.Right, 2);
 
     FPainter.FPaintOnGlass := LGlassPaint;
     FPainter.FThemeDetails := Details;
@@ -866,6 +1066,7 @@ begin
     ContentRect.Bottom := ClipRect.Bottom;
 end;
 
+
 constructor TWinSpeedButtonPainter.Create(AButton: TWinSpeedButton);
 begin
   inherited Create;
@@ -881,9 +1082,22 @@ var
   GlyphPos: TPoint;
 begin
   CalcButtonLayout(Canvas, Client, Offset, Caption, Layout, Margin, Spacing,
-    GlyphPos, Result, BiDiFlags);
+    State, GlyphPos, Result, BiDiFlags);
   DrawButtonGlyph(Canvas, GlyphPos, State, Transparent);
   DrawButtonText(Canvas, Caption, Result, State, BiDiFlags);
+end;
+
+function TWinSpeedButtonPainter.ImageIndexFromState(State: TButtonState): integer;
+begin
+  case State of
+    bsUp: Result := FButton.ImageIndex;
+    bsDown: Result := FButton.PressedImageIndex;
+    bsExclusive: Result := FButton.HotImageIndex;
+    bsDisabled: Result := FButton.DisabledImageIndex;
+  else Result := -1;
+  end;
+  if Result < 0 then //fallback
+    Result := FButton.ImageIndex;
 end;
 
 procedure TWinSpeedButtonPainter.DrawButtonGlyph(Canvas: TCanvas; const GlyphPos: TPoint;
@@ -899,25 +1113,7 @@ begin
   if FButton.Images = nil then Exit;
   if (FButton.Images.Width = 0) or (FButton.Images.Height = 0) then Exit;
 
-  case State of
-    bsUp: Index := FButton.ImageIndex;
-    bsDown: begin
-      Index := FButton.PressedImageIndex;
-      if Index<0 then
-        Index := FButton.ImageIndex;
-    end;
-    bsExclusive: begin
-      Index := FButton.HotImageIndex;
-      if Index<0 then
-        Index := FButton.ImageIndex;
-    end;
-    bsDisabled: begin
-      Index := FButton.DisabledImageIndex;
-      if Index<0 then
-        Index := FButton.ImageIndex;
-    end
-  else Index := -1;
-  end;
+  Index := ImageIndexFromState(State);
   if Index < 0 then exit;
 
   R.Left := GlyphPos.X + FButton.ImageMargins.Left;
@@ -1010,8 +1206,8 @@ end;
 
 procedure TWinSpeedButtonPainter.CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
   const Offset: TPoint; const Caption: string; Layout: TButtonLayout; Margin,
-  Spacing: Integer; var GlyphPos: TPoint; var TextBounds: TRect;
-  BiDiFlags: LongInt);
+  Spacing: Integer; State: TButtonState; var GlyphPos: TPoint;
+  var TextBounds: TRect; BiDiFlags: LongInt);
 var
   TextPos: TPoint;
   ClientSize, GlyphSize, TextSize: TPoint;
@@ -1025,7 +1221,7 @@ begin
   ClientSize := Point(Client.Right - Client.Left, Client.Bottom -
     Client.Top);
 
-  if (FButton.Images<>nil) and (FButton.ImageIndex>=0) then
+  if (FButton.Images<>nil) and (ImageIndexFromState(State)>=0) then
     GlyphSize := Point(
       FButton.Images.Width+FButton.ImageMargins.Left+FButton.ImageMargins.Right,
       FButton.Images.Height+FButton.ImageMargins.Top+FButton.ImageMargins.Bottom)
@@ -1195,82 +1391,6 @@ begin
   end;
 end;
 
-procedure TWinSpeedButton.MouseDown(Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  inherited MouseDown(Button, Shift, X, Y);
-  if (Button = mbLeft) and Enabled then
-  begin
-    if not FDown then
-    begin
-      FState := bsDown;
-      Invalidate;
-    end;
-    FDragging := True;
-  end;
-end;
-
-procedure TWinSpeedButton.MouseMove(Shift: TShiftState; X, Y: Integer);
-var
-  NewState: TButtonState;
-begin
-  inherited MouseMove(Shift, X, Y);
-  if FDragging then
-  begin
-    if not FDown then NewState := bsUp
-    else NewState := bsExclusive;
-    if (X >= 0) and (X < ClientWidth) and (Y >= 0) and (Y <= ClientHeight) then
-      if FDown then NewState := bsExclusive else NewState := bsDown;
-    if NewState <> FState then
-    begin
-      FState := NewState;
-      Invalidate;
-    end;
-  end
-  else
-    UpdateTracking;
-end;
-
-procedure TWinSpeedButton.MouseUp(Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-var
-  DoClick: Boolean;
-begin
-  inherited MouseUp(Button, Shift, X, Y);
-  if FDragging then
-  begin
-    FDragging := False;
-    DoClick := (X >= 0) and (X < ClientWidth) and (Y >= 0) and (Y <= ClientHeight);
-    if FGroupIndex = 0 then
-    begin
-      { Redraw face in-case mouse is captured }
-      FState := bsUp;
-      FMousePosition := mpOutside;
-      if DoClick and not (FState in [bsExclusive, bsDown]) then
-        Invalidate;
-    end
-    else
-      if DoClick then
-      begin
-        SetDown(not FDown);
-        if FDown then Repaint;
-      end
-      else
-      begin
-        if FDown then FState := bsExclusive;
-        Repaint;
-      end;
-    if DoClick then Click;
-    UpdateTracking;
-  end;
-end;
-
-procedure TWinSpeedButton.WMLButtonDblClk(var Message: TWMLButtonDblClk);
-begin
-  inherited;
-  if FDown then DblClick;
-end;
-
 procedure TWinSpeedButton.WndProc(var Message: TMessage);
 begin
   case Message.Msg of
@@ -1288,16 +1408,128 @@ end;
 procedure TWinSpeedButton.DefaultHandler(var Message);
 begin
   case TMessage(Message).Msg of
-    WM_LBUTTONDOWN, WM_LBUTTONDBLCLK:
-      if Focusable then
-        inherited DefaultHandler(Message)
-      else begin
-       //Do not do default handling which sets focus.
-       //If there's anything else going on, reimplement it here.
-      end
+    WM_LBUTTONDOWN, WM_LBUTTONDBLCLK: begin
+     //Default handler sets focus (undesirable if Focusable==false) and handles
+     //clicking on different button parts (we do it differently).
+     //So just don't call it.
+    end;
+
   else
     inherited DefaultHandler(Message);
   end;
+end;
+
+procedure TWinSpeedButton.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited MouseDown(Button, Shift, X, Y);
+  if (Button = mbLeft) and Enabled then
+  begin
+    if IsInDropButton(Point(X, Y)) then begin
+      FDragState := dsDropBtn;
+      FDropState := dbsDown;
+      Repaint;
+      DoDropDownClick(); //drag can even be finished inside
+    end else begin
+      FDragState := dsBody;
+      if not FDown then begin
+        FState := bsDown;
+        Invalidate;
+      end;
+    end;
+  end;
+end;
+
+procedure TWinSpeedButton.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  NewState: TButtonState;
+  NewDropState: TDropButtonState;
+begin
+  inherited MouseMove(Shift, X, Y);
+  case FDragState of
+    dsBody: begin
+      if not FDown then
+        NewState := bsUp
+      else
+        NewState := bsExclusive;
+      if PtInRect(BodyRect, Point(X, Y)) then
+        if FDown then NewState := bsExclusive else NewState := bsDown;
+      if NewState <> FState then begin
+        FState := NewState;
+        Invalidate;
+      end;
+    end;
+
+    dsDropBtn: begin
+      if PtInRect(DropBtnRect, Point(X, Y)) then
+        NewDropState := dbsDown
+      else
+        NewDropState := dbsUp;
+      if NewDropState <> FDropState then begin
+        FDropState := NewDropState;
+        Invalidate;
+      end;
+    end;
+
+  else UpdateTracking;
+  end;
+end;
+
+procedure TWinSpeedButton.MouseUp(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  inherited MouseUp(Button, Shift, X, Y);
+  EndDrag(X, Y);
+end;
+
+procedure TWinSpeedButton.EndDrag(X, Y: Integer);
+var
+  DoClick: Boolean;
+  OldDragState: TDragState;
+begin
+  OldDragState := FDragState;
+  FDragState := dsNone;
+  case OldDragState of
+    dsBody: begin
+      DoClick := PtInRect(BodyRect, Point(X, Y));
+      if FGroupIndex = 0 then
+      begin
+        { Redraw face in-case mouse is captured }
+        FState := bsUp;
+        FMousePosition := mpOutside;
+        if DoClick and not (FState in [bsExclusive, bsDown]) then
+          Invalidate;
+      end
+      else
+        if DoClick then
+        begin
+          SetDown(not FDown);
+          if FDown then Repaint;
+        end
+        else
+        begin
+          if FDown then FState := bsExclusive;
+          Repaint;
+        end;
+      if DoClick then Click;
+      UpdateTracking;
+    end;
+
+    dsDropBtn: begin
+      //DropDownClick() called on press
+      if FDropState = dbsDown then begin
+        FDropState := dbsUp;
+        Invalidate;
+      end;
+      UpdateTracking;
+    end;
+  end;
+end;
+
+procedure TWinSpeedButton.WMLButtonDblClk(var Message: TWMLButtonDblClk);
+begin
+  inherited;
+  if FDown then DblClick;
 end;
 
 procedure TWinSpeedButton.CMEnabledChanged(var Message: TMessage);
@@ -1361,7 +1593,7 @@ var
   NeedRepaint: Boolean;
 begin
   inherited;
-  NeedRepaint := FFlat and (FMousePosition<>mpOutside) and Enabled and not FDragging;
+  NeedRepaint := FFlat and (FMousePosition<>mpOutside) and Enabled and (FDragState=dsNone);
   { Windows XP introduced hot states also for non-flat buttons. }
   if NeedRepaint or StyleServices.Enabled then
   begin
@@ -1391,6 +1623,12 @@ begin
     Result := inherited;
 end;
 
+function TWinSpeedButton.IsInDropButton(const APoint: TPoint): boolean;
+begin
+  Result := (Self.Style = bsSplitButton)
+    and PtInRect(DropBtnRect, APoint);
+end;
+
 procedure TWinSpeedButton.SetDown(Value: Boolean);
 begin
   if FGroupIndex = 0 then Value := False;
@@ -1410,6 +1648,11 @@ begin
     end;
     if Value then UpdateExclusive;
   end;
+end;
+
+procedure TWinSpeedButton.SetDropButtonSettings(Value: TDropButtonSettings);
+begin
+  FDropButtonSettings.Assign(Value);
 end;
 
 procedure TWinSpeedButton.SetFocusable(Value: Boolean);

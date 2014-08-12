@@ -487,14 +487,14 @@ object fKanji: TfKanji
         Height = 22
       end
       object WinSpeedButton1: TWinSpeedButton
-        Left = -1
-        Top = 29
+        Left = 3
+        Top = 26
         Width = 170
         Height = 37
         Hint = '#00188^eDisplay only characters in clipboard'
         AllowAllUp = True
         Caption = '#00281^eIn clipboard only'
-        Focusable = False
+        DropDownMenu = PopupMenu
         HotImageIndex = 1
         Images = ilCategoryActions
         PressedImageIndex = 2
@@ -561,7 +561,7 @@ object fKanji: TfKanji
         Margins.Right = 0
         Margins.Bottom = 0
         Caption = '#01132^Any matches'
-        DropDownMenu = pmLookupMode
+        DropDownMenu = PopupMenu
         Style = bsSplitButton
         TabOrder = 6
         TabStop = False
@@ -965,7 +965,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C0101040014014C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101040014017C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
