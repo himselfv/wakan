@@ -51,9 +51,6 @@ type
 
   TODO:
     - DropDown rendering for classic UI case (incl. splitter, glyph)
-    - Use DrawGlyph-like function for DropBtn glyph drawing, instead of simple
-      one used now.
-    - Common glyph rendering for both cases (themed/classic)
     - Make DropButtonSettings.*ImageIndex params behave as ImageIndex params in
       ObjectInspector
     - Render splitter through theming mechanics in themed case
@@ -273,6 +270,8 @@ type
     property OnStartDrag;
   end;
 
+  //Paints WinSpeedButton contents (glyph + caption) on a given canvas
+  //Different implementations support themed or classic and normal/flat look
   TWinSpeedButtonPainter = class
   protected
     FButton: TWinSpeedButton;
@@ -292,14 +291,13 @@ type
     procedure DrawDropButton(Canvas: TCanvas); virtual;
     procedure DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
       out PaintRect: TRect; out Offset: TPoint); virtual;
+    procedure DoDrawText(Canvas: TCanvas; State: TButtonState; const Text: UnicodeString;
+      var TextRect: TRect; TextFlags: Cardinal); virtual;
   public
     constructor Create(AButton: TWinSpeedButton);
-    procedure Paint(Canvas: TCanvas); virtual;
 
   end;
 
-  //Paints WinSpeedButton contents (glyph + caption) on a given canvas
-  //Different implementations support themed or classic and normal/flat look
   TThemedPainter = class(TWinSpeedButtonPainter)
   protected
     FPaintOnGlass: Boolean;
@@ -317,14 +315,8 @@ type
     procedure DrawDropButton(Canvas: TCanvas); override;
     procedure DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
       out PaintRect: TRect; out Offset: TPoint); override;
-  public
-    procedure Paint(Canvas: TCanvas); override;
-  end;
-
-  TThemedButtonPainter = class(TThemedPainter)
-  end;
-
-  TThemedFlatButtonPainter = class(TThemedPainter)
+    procedure DoDrawText(Canvas: TCanvas; State: TButtonState; const Text: UnicodeString;
+      var TextRect: TRect; TextFlags: Cardinal); override;
   end;
 
   TClassicPainter = class(TWinSpeedButtonPainter)
@@ -334,14 +326,8 @@ type
       ImageIndex: TImageIndex; Transparent: boolean); override;
     procedure DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
       out PaintRect: TRect; out Offset: TPoint); override;
-  public
-    procedure Paint(Canvas: TCanvas); override;
-  end;
-
-  TClassicButtonPainter = class(TClassicPainter)
-  end;
-
-  TClassicFlatButtonPainter = class(TClassicPainter)
+    procedure DoDrawText(Canvas: TCanvas; State: TButtonState; const Text: UnicodeString;
+      var TextRect: TRect; TextFlags: Cardinal); override;
   end;
 
 procedure Register;
@@ -843,13 +829,11 @@ procedure TWinSpeedButton.Paint;
 var
   PaintRect: TRect;
   GlyphPos: TPoint;
-  DrawFlags: Integer;
   Offset: TPoint;
-  LGlassPaint: Boolean;
-  Button: TButtonFrameState;
   Details: TThemedElementDetails;
-  ImgList: TCustomImageList;
-  ImgIndex: integer;
+  TextBounds: TRect;
+  BiDiFlags: integer;
+
 begin
   if not Enabled then
   begin
@@ -865,30 +849,39 @@ begin
   Canvas.Font := Self.Font;
 
   //Update painter
-  if ThemeControl(Self) then
-  begin
-    if Flat and not (FPainter is TThemedFlatButtonPainter) then begin
+  if ThemeControl(Self) then begin
+    if not (FPainter is TThemedPainter) then begin
       FreeAndNil(FPainter);
-      FPainter := TThemedFlatButtonPainter.Create(Self);
+      FPainter := TThemedPainter.Create(Self);
+      TThemedPainter(FPainter).FPaintOnGlass := DoGlassPaint();
     end;
-    if not Flat and not (FPainter is TThemedButtonPainter) then begin
-      FreeAndNil(FPainter);
-      FPainter := TThemedButtonPainter.Create(Self);
-    end;
-
-    TThemedPainter(FPainter).FPaintOnGlass := DoGlassPaint;
   end else begin
-    if Flat and not (FPainter is TClassicFlatButtonPainter) then begin
+    if not (FPainter is TClassicPainter) then begin
       FreeAndNil(FPainter);
-      FPainter := TClassicFlatButtonPainter.Create(Self);
-    end;
-    if not Flat and not (FPainter is TClassicButtonPainter) then begin
-      FreeAndNil(FPainter);
-      FPainter := TClassicButtonPainter.Create(Self);
+      FPainter := TClassicPainter.Create(Self);
     end;
   end;
 
-  FPainter.Paint(Canvas);
+  FPainter.DrawBackground(Canvas);
+
+  if Self.Style = bsSplitButton then
+    FPainter.DrawDropButton(Canvas);
+  FPainter.DrawBody(Canvas, Details, PaintRect, Offset);
+
+  BiDiFlags := Self.DrawTextBiDiModeFlags(0);
+
+  FPainter.CalcButtonLayout(Canvas, PaintRect, Offset, Self.Caption, Self.FLayout,
+    Self.FMargin, Self.FSpacing, Self.FState, GlyphPos, TextBounds,
+    BiDiFlags);
+  FPainter.DrawButtonGlyph(Canvas, GlyphPos, Self.FState, Self.Transparent);
+  FPainter.DrawButtonText(Canvas, Self.Caption, TextBounds, Self.FState, BiDiFlags);
+
+  if Self.Focused and (not (FPainter is TThemedPainter) or StyleServices.IsSystemStyle) then begin
+    Canvas.Pen.Color := clWindowFrame;
+    Canvas.Brush.Color := clBtnFace;
+    DrawFocusRect(Canvas.Handle, PaintRect);
+  end;
+
 end;
 
 
@@ -898,37 +891,6 @@ constructor TWinSpeedButtonPainter.Create(AButton: TWinSpeedButton);
 begin
   inherited Create;
   Self.FButton := AButton;
-end;
-
-procedure TWinSpeedButtonPainter.Paint(Canvas: TCanvas);
-var
-  GlyphPos: TPoint;
-  PaintRect: TRect;
-  TextBounds: TRect;
-  Offset: TPoint;
-  BiDiFlags: integer;
-  Details: TThemedElementDetails;
-begin
-  DrawBackground(Canvas);
-
-  if FButton.Style = bsSplitButton then
-    DrawDropButton(Canvas);
-  DrawBody(Canvas, Details, PaintRect, Offset);
-
-  BiDiFlags := FButton.DrawTextBiDiModeFlags(0);
-
-  CalcButtonLayout(Canvas, PaintRect, Offset, FButton.Caption, FButton.FLayout,
-    FButton.FMargin, FButton.FSpacing, FButton.FState, GlyphPos, TextBounds,
-    BiDiFlags);
-  DrawButtonGlyph(Canvas, GlyphPos, FButton.FState, FButton.Transparent);
-  DrawButtonText(Canvas, FButton.Caption, TextBounds, FButton.FState, BiDiFlags);
-
-  if FButton.Focused and (not (Self is TThemedPainter) or StyleServices.IsSystemStyle) then begin
-    Canvas.Pen.Color := clWindowFrame;
-    Canvas.Brush.Color := clBtnFace;
-    DrawFocusRect(Canvas.Handle, PaintRect);
-  end;
-
 end;
 
 procedure TWinSpeedButtonPainter.DrawBackground(Canvas: TCanvas);
@@ -941,6 +903,11 @@ end;
 
 procedure TWinSpeedButtonPainter.DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
   out PaintRect: TRect; out Offset: TPoint);
+begin
+end;
+
+procedure TWinSpeedButtonPainter.DoDrawText(Canvas: TCanvas; State: TButtonState;
+  const Text: UnicodeString; var TextRect: TRect; TextFlags: Cardinal);
 begin
 end;
 
@@ -1033,6 +1000,26 @@ begin
   Self.FThemeTextColor := seFont in FButton.StyleElements;
 end;
 
+procedure TThemedPainter.DoDrawText(Canvas: TCanvas; State: TButtonState;
+  const Text: UnicodeString; var TextRect: TRect; TextFlags: Cardinal);
+var
+  LColor: TColor;
+  LFormats: TTextFormat;
+begin
+  if (State = bsDisabled) or (not StyleServices.IsSystemStyle and FThemeTextColor) then
+  begin
+    if not StyleServices.GetElementColor(FThemeDetails, ecTextColor, LColor) or (LColor = clNone) then
+      LColor := Canvas.Font.Color;
+  end
+  else
+    LColor := Canvas.Font.Color;
+
+  LFormats := TTextFormatFlags(TextFlags);
+  if FPaintOnGlass then
+    Include(LFormats, tfComposited);
+  StyleServices.DrawText(Canvas.Handle, FThemeDetails, Text, TextRect, LFormats, LColor);
+end;
+
 procedure TClassicPainter.DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
   out PaintRect: TRect; out Offset: TPoint);
 var DrawFlags: Integer;
@@ -1075,6 +1062,12 @@ begin
     Offset.X := 0;
     Offset.Y := 0;
   end;
+end;
+
+procedure TClassicPainter.DoDrawText(Canvas: TCanvas; State: TButtonState;
+  const Text: UnicodeString; var TextRect: TRect; TextFlags: Cardinal);
+begin
+  Windows.DrawText(Canvas.Handle, Text, Length(Text), TextRect, TextFlags);
 end;
 
 
@@ -1174,7 +1167,7 @@ begin
     Canvas.TextOut(GlyphPos.X, GlyphPos.Y, '▼');
   end else begin
     GlyphPos.X := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
-    GlyphPos.Y := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
+    GlyphPos.Y := PaintRect.Top + (PaintRect.Height - ImgList.Height) div 2;
 
     DrawGlyph(Canvas, Details, GlyphPos, FButton.ImageMargins, ImgList, ImgIndex,
       FButton.Transparent);
@@ -1272,10 +1265,7 @@ procedure TWinSpeedButtonPainter.DrawButtonGlyph(Canvas: TCanvas; const GlyphPos
 var
   Index: Integer;
   Details: TThemedElementDetails;
-  R: TRect;
   Button: TThemedButton;
-  MemDC: HDC;
-  PaintBuffer: HPAINTBUFFER;
 begin
   if FButton.Images = nil then Exit;
   if (FButton.Images.Width = 0) or (FButton.Images.Height = 0) then Exit;
@@ -1304,48 +1294,19 @@ end;
 
 procedure TWinSpeedButtonPainter.DrawButtonText(Canvas: TCanvas; const Caption: string;
   TextBounds: TRect; State: TButtonState; Flags: LongInt);
-
-  procedure DoDrawText(DC: HDC; const Text: UnicodeString;
-    var TextRect: TRect; TextFlags: Cardinal);
-  var
-    LColor: TColor;
-    LFormats: TTextFormat;
-  begin
-    if FThemesEnabled then
-    begin
-      if (State = bsDisabled) or (not StyleServices.IsSystemStyle and FThemeTextColor) then
-      begin
-        if not StyleServices.GetElementColor(FThemeDetails, ecTextColor, LColor) or (LColor = clNone) then
-          LColor := Canvas.Font.Color;
-      end
-      else
-        LColor := Canvas.Font.Color;
-
-      LFormats := TTextFormatFlags(TextFlags);
-      if FPaintOnGlass then
-        Include(LFormats, tfComposited);
-      StyleServices.DrawText(DC, FThemeDetails, Text, TextRect, LFormats, LColor);
-    end
-    else
-      Windows.DrawText(DC, Text, Length(Text), TextRect, TextFlags);
-  end;
-
 begin
-  with Canvas do
+  Canvas.Brush.Style := bsClear;
+  if (State = bsDisabled) and not (Self is TThemedPainter) then
   begin
-    Brush.Style := bsClear;
-    if (State = bsDisabled) and not FThemesEnabled then
-    begin
-      OffsetRect(TextBounds, 1, 1);
-      Font.Color := clBtnHighlight;
-      DoDrawText(Handle, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
-      OffsetRect(TextBounds, -1, -1);
-      Font.Color := clBtnShadow;
-      DoDrawText(Handle, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
-    end
-    else
-      DoDrawText(Handle, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
-  end;
+    OffsetRect(TextBounds, 1, 1);
+    Canvas.Font.Color := clBtnHighlight;
+    DoDrawText(Canvas, State, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
+    OffsetRect(TextBounds, -1, -1);
+    Canvas.Font.Color := clBtnShadow;
+    DoDrawText(Canvas, State, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
+  end
+  else
+    DoDrawText(Canvas, State, Caption, TextBounds, DT_NOCLIP or DT_CENTER or DT_VCENTER or Flags);
 end;
 
 procedure TWinSpeedButtonPainter.CalcButtonLayout(Canvas: TCanvas; const Client: TRect;

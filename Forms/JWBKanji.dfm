@@ -493,9 +493,11 @@ object fKanji: TfKanji
         Height = 37
         Hint = '#00188^eDisplay only characters in clipboard'
         AllowAllUp = True
-        Caption = '#00281^eIn clipboard only'
+        Caption = 'Test'
+        DropButtonSettings.Size = 32
+        DropButtonSettings.ImageIndex = 1
         DropDownMenu = PopupMenu
-        HotImageIndex = 1
+        ImageIndex = 1
         Images = ilCategoryActions
         PressedImageIndex = 2
         SelectedImageIndex = 3
@@ -965,7 +967,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C0101040014017C0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401940110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
