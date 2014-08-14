@@ -1129,6 +1129,10 @@ begin
 
   StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, ContentRect);
 
+  //Toolbar content rect is returned with borders, which is bad
+  if FButton.FFlat then
+    InflateRect(ContentRect, -2, -2);
+
   //Intersect content rect with clip rect
   if ContentRect.Left < ClipRect.Left then
     ContentRect.Left := ClipRect.Left;
