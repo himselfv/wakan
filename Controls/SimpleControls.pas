@@ -50,6 +50,9 @@ type
   Most of the code is based on TSpeedButton
 
   TODO:
+    - Solve the +/- 3 pixel discrepancy (some themes add 3 pixels as borders,
+     others don't; additionaly it can be other # of pixels, and we subtract it
+     in one case when centering the glyph -- unify all)
     - DropDown rendering for classic UI case (incl. splitter, glyph)
     - Make DropButtonSettings.*ImageIndex params behave as ImageIndex params in
       ObjectInspector
@@ -100,11 +103,13 @@ type
     procedure SetGroupIndex(Value: Integer); override;
   end;
 
+  TSplitterStyle = (ssXP, ssVista);
   TDropButtonSettings = class(TPersistent)
   protected
     FButton: TWinSpeedButton;
     FSize: integer;
-    FShowSplit: boolean;
+    FShowSplitter: boolean;
+    FSplitterStyle: TSplitterStyle;
     FImages: TCustomImageList;
     FImageIndex: TImageIndex;
     FHotImageIndex: TImageIndex;
@@ -115,7 +120,8 @@ type
     procedure AssignTo(Dest: TPersistent); override;
     procedure Changed; virtual;
     procedure SetSize(const Value: integer);
-    procedure SetShowSplit(const Value: boolean);
+    procedure SetShowSplitter(const Value: boolean);
+    procedure SetSplitterStyle(const Value: TSplitterStyle);
     procedure SetImages(const Value: TCustomImageList);
     procedure SetImageIndex(const Value: TImageIndex);
     procedure SetHotImageIndex(const Value: TImageIndex);
@@ -127,7 +133,8 @@ type
     constructor Create(AButton: TWinSpeedButton);
   published
     property Size: integer read FSize write SetSize default 16;
-    property ShowSplit: boolean read FShowSplit write SetShowSplit default true;
+    property ShowSplitter: boolean read FShowSplitter write SetShowSplitter default true;
+    property SplitterStyle: TSplitterStyle read FSplitterStyle write SetSplitterStyle default ssVista;
     property Images: TCustomImageList read FImages write SetImages;
     property ImageIndex: TImageIndex read FImageIndex write SetImageIndex default -1;
     property HotImageIndex: TImageIndex read FHotImageIndex write SetHotImageIndex default -1;
@@ -138,6 +145,9 @@ type
   end;
 
   TWinSpeedButton = class(TCustomPaintedButton)
+  strict private
+    class constructor Create;
+    class destructor Destroy;
   protected
     FAllowAllUp: Boolean;
     FDown: Boolean;
@@ -155,6 +165,7 @@ type
     FDropState: TDropButtonState;
     FTransparent: Boolean;
     FFakeFocus: boolean; //see WndProc->WM_LBUTTONDOWN
+    FForceClassicLook: boolean; //TODO: Remove
     procedure Paint; override;
     function GetActionLinkClass: TControlActionLinkClass; override;
     function GetBodyRect: TRect;
@@ -164,6 +175,7 @@ type
     procedure SetDown(Value: Boolean);
     procedure SetDropButtonSettings(Value: TDropButtonSettings);
     procedure SetFocusable(Value: Boolean);
+    procedure SetForceClassicLook(Value: Boolean);
     procedure SetFlat(Value: Boolean);
     procedure SetGroupIndex(Value: Integer);
     procedure SetLayout(Value: TButtonLayout);
@@ -221,6 +233,8 @@ type
     property Enabled;
     property Flat: Boolean read FFlat write SetFlat default False;
     property Focusable: Boolean read FFocusable write SetFocusable default True;
+    property ForceClassicLook: Boolean read FForceClassicLook
+      write SetForceClassicLook default False;
     property Font;
     property GroupIndex: Integer read FGroupIndex write SetGroupIndex default 0;
     property HotImageIndex;
@@ -268,6 +282,11 @@ type
     property OnMouseUp;
     property OnStartDock;
     property OnStartDrag;
+  end;
+
+  TWinSpeedButtonStyleHook = class(TMouseTrackControlStyleHook)
+  public
+    constructor Create(AControl: TWinControl); override;
   end;
 
   //Paints WinSpeedButton contents (glyph + caption) on a given canvas
@@ -665,7 +684,8 @@ begin
   inherited Create();
   FButton := AButton;
   FSize := 16;
-  FShowSplit := true;
+  FShowSplitter := true;
+  FSplitterStyle := ssVista;
   FImageIndex := -1;
   FHotImageIndex := -1;
   FPressedImageIndex := -1;
@@ -678,7 +698,8 @@ procedure TDropButtonSettings.AssignTo(Dest: TPersistent);
 begin
   if Dest is TDropButtonSettings then begin
     TDropButtonSettings(Dest).FSize := Self.FSize;
-    TDropButtonSettings(Dest).FShowSplit := Self.FShowSplit;
+    TDropButtonSettings(Dest).FShowSplitter := Self.FShowSplitter;
+    TDropButtonSettings(Dest).FSplitterStyle := Self.FSplitterStyle;
     TDropButtonSettings(Dest).FImages := Self.FImages;
     TDropButtonSettings(Dest).FImageIndex := Self.FImageIndex;
     TDropButtonSettings(Dest).FHotImageIndex := Self.FHotImageIndex;
@@ -703,9 +724,15 @@ begin
   Changed;
 end;
 
-procedure TDropButtonSettings.SetShowSplit(const Value: boolean);
+procedure TDropButtonSettings.SetShowSplitter(const Value: boolean);
 begin
-  FShowSplit := Value;
+  FShowSplitter := Value;
+  Changed;
+end;
+
+procedure TDropButtonSettings.SetSplitterStyle(const Value: TSplitterStyle);
+begin
+  FSplitterStyle := Value;
   Changed;
 end;
 
@@ -753,6 +780,16 @@ end;
 
 
 { TWinSpeedButton }
+
+class constructor TWinSpeedButton.Create;
+begin
+  TCustomStyleEngine.RegisterStyleHook(TWinSpeedButton, TWinSpeedButtonStyleHook);
+end;
+
+class destructor TWinSpeedButton.Destroy;
+begin
+  TCustomStyleEngine.UnRegisterStyleHook(TWinSpeedButton, TWinSpeedButtonStyleHook);
+end;
 
 constructor TWinSpeedButton.Create(AOwner: TComponent);
 begin
@@ -806,10 +843,6 @@ begin
   Self.EndDrag(0, 0); //Popup or other code could have eaten WM_MOUSEUP
 end;
 
-const
-  DownStyles: array[Boolean] of Integer = (BDR_RAISEDINNER, BDR_SUNKENOUTER);
-  FillStyles: array[Boolean] of Integer = (BF_MIDDLE, 0);
-
 procedure TWinSpeedButton.Paint;
 
   function DoGlassPaint: Boolean;
@@ -849,7 +882,7 @@ begin
   Canvas.Font := Self.Font;
 
   //Update painter
-  if ThemeControl(Self) then begin
+  if ThemeControl(Self) and not FForceClassicLook then begin
     if not (FPainter is TThemedPainter) then begin
       FreeAndNil(FPainter);
       FPainter := TThemedPainter.Create(Self);
@@ -864,9 +897,9 @@ begin
 
   FPainter.DrawBackground(Canvas);
 
+  FPainter.DrawBody(Canvas, Details, PaintRect, Offset);
   if Self.Style = bsSplitButton then
     FPainter.DrawDropButton(Canvas);
-  FPainter.DrawBody(Canvas, Details, PaintRect, Offset);
 
   BiDiFlags := Self.DrawTextBiDiModeFlags(0);
 
@@ -882,6 +915,21 @@ begin
     DrawFocusRect(Canvas.Handle, PaintRect);
   end;
 
+end;
+
+
+{ StyleHooks }
+
+constructor TWinSpeedButtonStyleHook.Create(AControl: TWinControl);
+begin
+  inherited;
+{
+  OverridePaint := True;
+  OverrideEraseBkgnd := True;
+  DoubleBuffered := True;
+  FDropDown := False;
+  FOldMouseInControl := False;
+}
 end;
 
 
@@ -906,10 +954,17 @@ procedure TWinSpeedButtonPainter.DrawBody(Canvas: TCanvas; out Details: TThemedE
 begin
 end;
 
+procedure TWinSpeedButtonPainter.DrawGlyph(Canvas: TCanvas; Details: TThemedElementDetails;
+  const GlyphPos: TPoint; Margins: TImageMargins; Images: TCustomImageList;
+  ImageIndex: TImageIndex; Transparent: boolean);
+begin
+end;
+
 procedure TWinSpeedButtonPainter.DoDrawText(Canvas: TCanvas; State: TButtonState;
   const Text: UnicodeString; var TextRect: TRect; TextFlags: Cardinal);
 begin
 end;
+
 
 procedure TThemedPainter.DrawBackground(Canvas: TCanvas);
 begin
@@ -947,18 +1002,27 @@ begin
   //Paint glyph
   DrawDropGlyph(Canvas, State, PaintRect, Details);
 
-  if FButton.DropButtonSettings.ShowSplit then begin
+  if FButton.DropButtonSettings.ShowSplitter then begin
     //Paint splitter
-    Canvas.Pen.Style := psSolid;
-    Canvas.Pen.Color := clSilver;
+    if FButton.DropButtonSettings.SplitterStyle = ssXP then
+      Canvas.Pen.Color := StyleServices.GetSystemColor(clBtnShadow)
+    else
+      Canvas.Pen.Color := StyleServices.GetSystemColor(clActiveBorder);
     Canvas.MoveTo(PaintRect.Left, PaintRect.Top);
     Canvas.LineTo(PaintRect.Left, PaintRect.Bottom);
     Inc(PaintRect.Left, 1);
-    Canvas.Pen.Color := clGray;
+    if FButton.DropButtonSettings.SplitterStyle = ssXP then
+      if FButton.Enabled then
+        Canvas.Pen.Color := StyleServices.GetSystemColor(clBtnHighLight)
+      else
+        Canvas.Pen.Color := FButton.Font.Color
+    else
+      Canvas.Pen.Color := StyleServices.GetSystemColor(cl3DDkShadow);
     Canvas.MoveTo(PaintRect.Left, PaintRect.Top);
     Canvas.LineTo(PaintRect.Left, PaintRect.Bottom);
     Inc(PaintRect.Right, 1);
   end;
+
 end;
 
 procedure TThemedPainter.DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
@@ -993,7 +1057,7 @@ begin
       Offset := Point(1, 0);
   end;
 
-  if (FButton.Style = bsSplitButton) and FButton.DropButtonSettings.ShowSplit then
+  if (FButton.Style = bsSplitButton) and FButton.DropButtonSettings.ShowSplitter then
     Dec(PaintRect.Right, 2);
 
   Self.FThemeDetails := Details;
@@ -1005,6 +1069,7 @@ procedure TThemedPainter.DoDrawText(Canvas: TCanvas; State: TButtonState;
 var
   LColor: TColor;
   LFormats: TTextFormat;
+  th, tw: integer;
 begin
   if (State = bsDisabled) or (not StyleServices.IsSystemStyle and FThemeTextColor) then
   begin
@@ -1017,8 +1082,30 @@ begin
   LFormats := TTextFormatFlags(TextFlags);
   if FPaintOnGlass then
     Include(LFormats, tfComposited);
+
+  //DrawText has DT_CENTER/DT_VCENTER flags, unfortunately, not all themes can
+  //center (notably Windows default). Have to center manually.
+  if TextFlags and DT_CENTER <> 0 then begin
+    //TextWidth()/TextHeight() is not *exactly* how we should measure text in
+    //themed environment, but hopefully doesn't matter (how can W/H of fixed
+    //text in fixed font be different?)
+    tw := Canvas.TextWidth(Text);
+    TextRect.Left := TextRect.Left + (TextRect.Width - tw) div 2;
+    TextRect.Right := TextRect.Left + tw;
+  end;
+  if TextFlags and DT_VCENTER <> 0 then begin
+    th := Canvas.TextHeight('▼');
+    TextRect.Top := TextRect.Top + (TextRect.Height - th) div 2;
+    TextRect.Bottom := TextRect.Top + th;
+  end;
+
   StyleServices.DrawText(Canvas.Handle, FThemeDetails, Text, TextRect, LFormats, LColor);
 end;
+
+
+const
+  DownStyles: array[Boolean] of Integer = (BDR_RAISEDINNER, BDR_SUNKENOUTER);
+  FillStyles: array[Boolean] of Integer = (BF_MIDDLE, 0);
 
 procedure TClassicPainter.DrawBody(Canvas: TCanvas; out Details: TThemedElementDetails;
   out PaintRect: TRect; out Offset: TPoint);
@@ -1082,7 +1169,15 @@ procedure TThemedPainter.DrawButtonFrame(Canvas: TCanvas;
 var
   Button: TThemedButton;
   ToolButton: TThemedToolBar;
+  OldClipRgn: HRGN;
 begin
+  //Themes based on Delphi's TCustomTheme ignore DrawElement's ClipRect when
+  //drawing, so have to set it globally
+  OldClipRgn := 0;
+  GetClipRgn(Canvas.Handle, OldClipRgn);
+  IntersectClipRect(Canvas.Handle, ClipRect.Left, ClipRect.Top, ClipRect.Right,
+    ClipRect.Bottom);
+
   if not FButton.FFlat then begin
 
     case State of
@@ -1127,11 +1222,13 @@ begin
 
   end;
 
+  SelectClipRgn(Canvas.Handle, OldClipRgn);
+
   StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, ContentRect);
 
   //Toolbar content rect is returned with borders, which is bad
-  if FButton.FFlat then
-    InflateRect(ContentRect, -2, -2);
+//  if FButton.FFlat then
+//    InflateRect(ContentRect, -3, -3);
 
   //Intersect content rect with clip rect
   if ContentRect.Left < ClipRect.Left then
@@ -1149,6 +1246,7 @@ procedure TThemedPainter.DrawDropGlyph(Canvas: TCanvas; State: TButtonFrameState
 var ImgList: TCustomImageList;
   ImgIndex: integer;
   GlyphPos: TPoint;
+  TmpRect: TRect;
 begin
   case State of
     bfDown: ImgIndex := FButton.DropButtonSettings.PressedImageIndex;
@@ -1166,45 +1264,17 @@ begin
 
   if (ImgIndex < 0) or (ImgList = nil) then begin
     Canvas.Brush.Style := bsClear;
-    GlyphPos.X := PaintRect.Right - Canvas.TextWidth('▼');
-    GlyphPos.Y := PaintRect.Top + (PaintRect.Height - Canvas.TextHeight('▼')) div 2;
-    Canvas.TextOut(GlyphPos.X, GlyphPos.Y, '▼');
+    TmpRect := PaintRect;
+    TmpRect.Right := TmpRect.Right + 3; //ignore border, looks nicer //TODO: varying border size!
+    Self.DoDrawText(Canvas, bsUp, '▼', TmpRect, DT_NOCLIP or DT_CENTER or DT_VCENTER);
   end else begin
     GlyphPos.X := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
     GlyphPos.Y := PaintRect.Top + (PaintRect.Height - ImgList.Height) div 2;
 
     DrawGlyph(Canvas, Details, GlyphPos, FButton.ImageMargins, ImgList, ImgIndex,
       FButton.Transparent);
-
-    ImageList_DrawEx(ImgList.Handle, ImgIndex, Canvas.Handle, GlyphPos.X,
-      GlyphPos.Y, 0, 0, clNone, clNone, ILD_Transparent);
   end;
-
-(*
-  Button: TThemedButton;
-  case State of
-    bsDisabled:
-      Button := tbPushButtonDisabled;
-    bsDown,
-    bsExclusive:
-      Button := tbPushButtonPressed;
-  else
-    // bsUp
-    Button := tbPushButtonNormal;
-  end;
-  Details := StyleServices.GetElementDetails(Button);
-
-  Transparent  {or (State = bsExclusive)}
-*)
 end;
-
-procedure TWinSpeedButtonPainter.DrawGlyph(Canvas: TCanvas; Details: TThemedElementDetails;
-  const GlyphPos: TPoint; Margins: TImageMargins; Images: TCustomImageList;
-  ImageIndex: TImageIndex; Transparent: boolean);
-begin
-end;
-
-
 
 procedure TThemedPainter.DrawGlyph(Canvas: TCanvas; Details: TThemedElementDetails;
   const GlyphPos: TPoint; Margins: TImageMargins; Images: TCustomImageList;
@@ -1236,11 +1306,22 @@ begin
     StyleServices.DrawIcon(Canvas.Handle, Details, R, Images.Handle, ImageIndex);
 end;
 
+
+
 procedure TClassicPainter.DrawGlyph(Canvas: TCanvas; Details: TThemedElementDetails;
   const GlyphPos: TPoint; Margins: TImageMargins; Images: TCustomImageList;
   ImageIndex: TImageIndex; Transparent: boolean);
 var R: TRect;
 begin
+  if Images = nil then exit;
+  if (Images.Width = 0) or (Images.Height = 0) then exit;
+  if ImageIndex < 0 then exit;
+
+  R.Left := GlyphPos.X + Margins.Left;
+  R.Top := GlyphPos.Y + Margins.Top;
+  R.Right := R.Left + Images.Width;
+  R.Bottom := R.Top + Images.Height;
+
   if Transparent then
   begin
     ImageList_DrawEx(Images.Handle, ImageIndex, Canvas.Handle, R.Left, R.Top, 0, 0,
@@ -1771,6 +1852,15 @@ begin
   if Value <> FFocusable then
   begin
     FFocusable := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TWinSpeedButton.SetForceClassicLook(Value: Boolean);
+begin
+  if Value <> FForceClassicLook then
+  begin
+    FForceClassicLook := Value;
     Invalidate;
   end;
 end;

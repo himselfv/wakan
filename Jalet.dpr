@@ -79,13 +79,16 @@ uses
   JWBUnpackJob in 'Components\JWBUnpackJob.pas',
   TaskbarCtl in 'Components\TaskbarCtl.pas',
   JWBClipboard in 'Components\JWBClipboard.pas',
-  JWBIntTip in 'Components\JWBIntTip.pas';
+  JWBIntTip in 'Components\JWBIntTip.pas',
+  Vcl.Themes,
+  Vcl.Styles;
 
 {$R *.RES}
 {$R WINXP.RES}
 
 begin
   Application.Initialize;
+  TStyleManager.TrySetStyle('Silver');
   Application.Title := 'wakan';
   Application.HelpFile := 'wakan_en.chm';
 

@@ -487,15 +487,14 @@ object fKanji: TfKanji
         Height = 22
       end
       object WinSpeedButton1: TWinSpeedButton
-        Left = 3
-        Top = 26
+        Left = 4
+        Top = 27
         Width = 170
-        Height = 37
+        Height = 31
         Hint = '#00188^eDisplay only characters in clipboard'
         AllowAllUp = True
         Caption = 'Test'
-        DropButtonSettings.Size = 32
-        DropButtonSettings.ImageIndex = 1
+        DropButtonSettings.SplitterStyle = ssXP
         DropDownMenu = PopupMenu
         ImageIndex = 1
         Images = ilCategoryActions
@@ -967,7 +966,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104001401940110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401B00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
