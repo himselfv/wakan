@@ -50,13 +50,9 @@ type
   Most of the code is based on TSpeedButton
 
   TODO:
-    - Solve the +/- 3 pixel discrepancy (some themes add 3 pixels as borders,
-     others don't; additionaly it can be other # of pixels, and we subtract it
-     in one case when centering the glyph -- unify all)
     - DropDown rendering for classic UI case (incl. splitter, glyph)
     - Make DropButtonSettings.*ImageIndex params behave as ImageIndex params in
       ObjectInspector
-    - Render splitter through theming mechanics in themed case
 
   Possible improvements:
     - Use normal Button fading mechanics (try moving focus away and watch)
@@ -1226,9 +1222,11 @@ begin
 
   StyleServices.GetElementContentRect(Canvas.Handle, Details, PaintRect, ContentRect);
 
-  //Toolbar content rect is returned with borders, which is bad
-//  if FButton.FFlat then
-//    InflateRect(ContentRect, -3, -3);
+  //Some themes (notably all of Delphi's custom ones) and some items (Toolbar
+  //Button in W7 default theme) do not really exclude borders from content rect.
+  //Test for that case and make amends (better fixed border than nothing)
+  if PaintRect=ContentRect then
+    InflateRect(ContentRect, -3, -3);
 
   //Intersect content rect with clip rect
   if ContentRect.Left < ClipRect.Left then
@@ -1246,7 +1244,6 @@ procedure TThemedPainter.DrawDropGlyph(Canvas: TCanvas; State: TButtonFrameState
 var ImgList: TCustomImageList;
   ImgIndex: integer;
   GlyphPos: TPoint;
-  TmpRect: TRect;
 begin
   case State of
     bfDown: ImgIndex := FButton.DropButtonSettings.PressedImageIndex;
@@ -1262,11 +1259,11 @@ begin
   if ImgList = nil then
     ImgList := FButton.Images;
 
+  PaintRect.Right := FButton.ClientRect.Right; //ignore border, centers nicer
+
   if (ImgIndex < 0) or (ImgList = nil) then begin
     Canvas.Brush.Style := bsClear;
-    TmpRect := PaintRect;
-    TmpRect.Right := TmpRect.Right + 3; //ignore border, looks nicer //TODO: varying border size!
-    Self.DoDrawText(Canvas, bsUp, '▼', TmpRect, DT_NOCLIP or DT_CENTER or DT_VCENTER);
+    Self.DoDrawText(Canvas, bsUp, '▼', PaintRect, DT_NOCLIP or DT_CENTER or DT_VCENTER);
   end else begin
     GlyphPos.X := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
     GlyphPos.Y := PaintRect.Top + (PaintRect.Height - ImgList.Height) div 2;

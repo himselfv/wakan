@@ -88,7 +88,6 @@ uses
 
 begin
   Application.Initialize;
-  TStyleManager.TrySetStyle('Silver');
   Application.Title := 'wakan';
   Application.HelpFile := 'wakan_en.chm';
 
