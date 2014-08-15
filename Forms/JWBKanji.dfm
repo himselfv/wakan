@@ -494,11 +494,10 @@ object fKanji: TfKanji
         Hint = '#00188^eDisplay only characters in clipboard'
         AllowAllUp = True
         Caption = 'Test'
-        DropButtonSettings.SplitterStyle = ssXP
         DropDownMenu = PopupMenu
+        ForceClassicLook = True
         ImageIndex = 1
         Images = ilCategoryActions
-        PressedImageIndex = 2
         SelectedImageIndex = 3
         Style = bsSplitButton
         TabOrder = 0
@@ -514,8 +513,8 @@ object fKanji: TfKanji
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 113
-        Top = 88
+        Left = 111
+        Top = 93
         Width = 75
         Height = 73
         Caption = 'Button1'
@@ -551,8 +550,8 @@ object fKanji: TfKanji
       end
       object Button4: TButton
         AlignWithMargins = True
-        Left = 175
-        Top = 0
+        Left = 182
+        Top = 5
         Width = 175
         Height = 85
         Hint = 
@@ -966,7 +965,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104001401B00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401C00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
