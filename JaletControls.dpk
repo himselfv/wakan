@@ -47,7 +47,8 @@ contains
   ExtListBoxes in 'Controls\ExtListBoxes.pas',
   SelectionGrids in 'Controls\SelectionGrids.pas',
   WakanWordGrid in 'Controls\WakanWordGrid.pas',
-  WakanPaintbox in 'Controls\WakanPaintbox.pas';
+  WakanPaintbox in 'Controls\WakanPaintbox.pas',
+  SpeedBtn in 'Controls\SpeedBtn.pas';
 
 end.
 
