@@ -7,9 +7,7 @@ ImageList-based images and platform-independent Down / DropDownList support.
 
 Supports:
 * Split button (with dropdown arrow) even without platform support
-* Classic rendering
-* System-themed rendering
-* Delphi-themed rendering
+* Classic, system-themed and delphi-themed rendering
 * Flat versions of all of the above
 
 Most of the code is modelled after TSpeedButton, TBitBtn.
@@ -33,7 +31,6 @@ uses
 type
   TButtonLayout = (blGlyphLeft, blGlyphRight, blGlyphTop, blGlyphBottom);
   TButtonState = (bsUp, bsDisabled, bsDown, bsExclusive);
-  TDropButtonState = (dbsUp, dbsDown);
   TButtonFrameState = (bfUp, bfDown, bfExclusive, bfHot, bfDefault, bfDisabled);
   TMousePosition = (mpOutside, mpBody, mpDropBtn);
   TDragState = (dsNone, dsBody, dsDropBtn);
@@ -134,7 +131,7 @@ type
     FDropButtonSettings: TDropButtonSettings;
     FSpacing: Integer; //distance from the glyph to the caption
     FState: TButtonState;
-    FDropState: TDropButtonState;
+    FDropBtnState: TButtonState; //only bsUp or bsDown
     FTransparent: Boolean;
     FFakeFocus: boolean; //see WndProc->WM_LBUTTONDOWN
     FForceClassicLook: boolean; //TODO: Remove
@@ -629,7 +626,7 @@ begin
   if not Enabled then
   begin
     FState := bsDisabled;
-    FDropState := dbsUp;
+    FDropBtnState := bsUp;
     FDragState := dsNone;
   end
   else if FState = bsDisabled then
@@ -721,7 +718,7 @@ begin
   if not FButton.Enabled then
     Result := bfDisabled
   else
-    if FButton.FDropState in [dbsDown] then
+    if FButton.FDropBtnState in [bsDown] then
       Result := bfDown
     else
       if FButton.FMousePosition in [mpBody, mpDropBtn] then
@@ -1511,7 +1508,7 @@ begin
   begin
     if IsInDropButton(Point(X, Y)) then begin
       FDragState := dsDropBtn;
-      FDropState := dbsDown;
+      FDropBtnState := bsDown;
       Repaint;
       DoDropDownClick(); //drag can even be finished inside
     end else begin
@@ -1526,8 +1523,7 @@ end;
 
 procedure TWinSpeedButton.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
-  NewState: TButtonState;
-  NewDropState: TDropButtonState;
+  NewState, NewDropBtnState: TButtonState;
 begin
   inherited MouseMove(Shift, X, Y);
   case FDragState of
@@ -1546,11 +1542,11 @@ begin
 
     dsDropBtn: begin
       if PtInRect(DropBtnRect, Point(X, Y)) then
-        NewDropState := dbsDown
+        NewDropBtnState := bsDown
       else
-        NewDropState := dbsUp;
-      if NewDropState <> FDropState then begin
-        FDropState := NewDropState;
+        NewDropBtnState := bsUp;
+      if NewDropBtnState <> FDropBtnState then begin
+        FDropBtnState := NewDropBtnState;
         Invalidate;
       end;
     end;
@@ -1600,9 +1596,9 @@ begin
     end;
 
     dsDropBtn: begin
-      //DropDownClick() called on press
-      if FDropState = dbsDown then begin
-        FDropState := dbsUp;
+      //DropDownClick() was called on press
+      if FDropBtnState = bsDown then begin
+        FDropBtnState := bsUp;
         Invalidate;
       end;
       UpdateTracking;
