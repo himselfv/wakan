@@ -473,100 +473,6 @@ object fKanji: TfKanji
         OnChange = edtStrokeCountChange
       end
     end
-    object Panel4: TPanel
-      Left = 11
-      Top = 80
-      Width = 366
-      Height = 177
-      Caption = 'Panel4'
-      TabOrder = 7
-      object SpeedButton2: TSpeedButton
-        Left = 240
-        Top = 32
-        Width = 23
-        Height = 22
-      end
-      object WinSpeedButton1: TWinSpeedButton
-        Left = 4
-        Top = 27
-        Width = 170
-        Height = 31
-        Hint = '#00188^eDisplay only characters in clipboard'
-        AllowAllUp = True
-        Caption = 'Test'
-        DropDownMenu = PopupMenu
-        ForceClassicLook = True
-        ImageIndex = 1
-        Images = ilCategoryActions
-        SelectedImageIndex = 3
-        Style = bsSplitButton
-        TabOrder = 0
-        Transparent = False
-        OnClick = aInClipboardExecute
-      end
-      object Button1: TButton
-        Left = 32
-        Top = 104
-        Width = 75
-        Height = 25
-        Caption = 'Button1'
-        TabOrder = 1
-      end
-      object Button2: TButton
-        Left = 111
-        Top = 93
-        Width = 75
-        Height = 73
-        Caption = 'Button1'
-        ImageIndex = 0
-        Images = ilCategoryActions
-        TabOrder = 2
-      end
-      object Button3: TButton
-        Left = 194
-        Top = 104
-        Width = 75
-        Height = 25
-        Caption = 'Button1'
-        Default = True
-        TabOrder = 3
-      end
-      object BitBtn1: TBitBtn
-        Left = 275
-        Top = 104
-        Width = 75
-        Height = 25
-        Caption = 'BitBtn1'
-        Default = True
-        TabOrder = 4
-      end
-      object BitBtn2: TBitBtn
-        Left = 275
-        Top = 135
-        Width = 75
-        Height = 25
-        Caption = 'BitBtn1'
-        TabOrder = 5
-      end
-      object Button4: TButton
-        AlignWithMargins = True
-        Left = 182
-        Top = 5
-        Width = 175
-        Height = 85
-        Hint = 
-          '#01133^Search by reading, writing or meaning, depending on what ' +
-          'you type'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Caption = '#01132^Any matches'
-        DropDownMenu = PopupMenu
-        Style = bsSplitButton
-        TabOrder = 6
-        TabStop = False
-      end
-    end
   end
   object pnlDockSearch: TPanel
     AlignWithMargins = True
@@ -965,7 +871,7 @@ object fKanji: TfKanji
     Left = 96
     Top = 504
     Bitmap = {
-      494C010104001401C00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401D80110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
