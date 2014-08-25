@@ -15,7 +15,6 @@ Most of the code is modelled after TSpeedButton, TBitBtn.
 TODO:
   - Perhaps override standard DrawControlText instead of own DoDrawText?
   - "Default" drawing for Flat/Classic/ClassicFlat cases
-  - Glyph on flat themed buttons in some styles
 
 Possible improvements:
   - Use normal Button fading mechanics (try moving focus away and watch)
@@ -266,13 +265,11 @@ type
     procedure Paint(Canvas: TCanvas); override;
     function GetBodyFrameState: TButtonFrameState;
     function GetDropFrameState: TButtonFrameState;
+    function ImageIndexFromState(State: TButtonState): integer;
     procedure DrawSplitter(Canvas: TCanvas; Rect: TRect; Color1, Color2: TColor);
     procedure DrawGlyph(Canvas: TCanvas; Details: TThemedElementDetails;
       const GlyphPos: TPoint; Margins: TImageMargins; Images: TCustomImageList;
       ImageIndex: TImageIndex; Transparent: boolean); virtual;
-    function ImageIndexFromState(State: TButtonState): integer;
-    procedure DrawButtonGlyph(Canvas: TCanvas; const GlyphPos: TPoint;
-      State: TButtonState; Transparent: Boolean);
     procedure DrawButtonText(Canvas: TCanvas; const Caption: string;
       TextBounds: TRect; State: TButtonState; Flags: Longint);
     procedure CalcButtonLayout(Canvas: TCanvas; const Client: TRect;
@@ -653,6 +650,7 @@ procedure TWinSpeedButtonStyleHook.Paint(Canvas: TCanvas);
 var
   PaintRect: TRect;
   GlyphPos: TPoint;
+  GlyphIndex: integer;
   Offset: TPoint;
   Details: TThemedElementDetails;
   TextBounds: TRect;
@@ -671,7 +669,15 @@ begin
   Self.CalcButtonLayout(Canvas, PaintRect, Offset, FButton.Caption, FButton.FLayout,
     FButton.FMargin, FButton.FSpacing, FButton.FState, GlyphPos, TextBounds,
     BiDiFlags);
-  Self.DrawButtonGlyph(Canvas, GlyphPos, FButton.FState, FButton.Transparent);
+
+  if (FButton.Images <> nil) and (FButton.Images.Width <> 0)
+  and (FButton.Images.Height <> 0) then begin
+    GlyphIndex := ImageIndexFromState(FButton.FState);
+    if GlyphIndex >= 0 then
+      DrawGlyph(Canvas, Details, GlyphPos, FButton.ImageMargins, FButton.Images,
+        GlyphIndex, FButton.Transparent or (FButton.FState = bsExclusive));
+  end;
+
   Self.DrawButtonText(Canvas, FButton.Caption, TextBounds, FButton.FState, BiDiFlags);
 
   if FButton.Focused and (not (Self is TThemedSpeedBtnStyleHook) or StyleServices.IsSystemStyle) then begin
@@ -713,6 +719,19 @@ begin
           Result := bfDefault
         else
           Result := bfUp;
+end;
+
+function TWinSpeedButtonStyleHook.ImageIndexFromState(State: TButtonState): integer;
+begin
+  case State of
+    bsUp: Result := FButton.ImageIndex;
+    bsDown: Result := FButton.PressedImageIndex;
+    bsExclusive: Result := FButton.HotImageIndex;
+    bsDisabled: Result := FButton.DisabledImageIndex;
+  else Result := -1;
+  end;
+  if Result < 0 then //fallback
+    Result := FButton.ImageIndex;
 end;
 
 procedure TWinSpeedButtonStyleHook.DrawBackground(Canvas: TCanvas);
@@ -792,51 +811,6 @@ end;
 procedure TWinSpeedButtonStyleHook.DoDrawText(Canvas: TCanvas; State: TButtonState;
   const Text: UnicodeString; var TextRect: TRect; TextFlags: Cardinal);
 begin
-end;
-
-function TWinSpeedButtonStyleHook.ImageIndexFromState(State: TButtonState): integer;
-begin
-  case State of
-    bsUp: Result := FButton.ImageIndex;
-    bsDown: Result := FButton.PressedImageIndex;
-    bsExclusive: Result := FButton.HotImageIndex;
-    bsDisabled: Result := FButton.DisabledImageIndex;
-  else Result := -1;
-  end;
-  if Result < 0 then //fallback
-    Result := FButton.ImageIndex;
-end;
-
-procedure TWinSpeedButtonStyleHook.DrawButtonGlyph(Canvas: TCanvas;
-  const GlyphPos: TPoint; State: TButtonState; Transparent: Boolean);
-var
-  Index: Integer;
-  Details: TThemedElementDetails;
-  Button: TThemedButton;
-begin
-  if FButton.Images = nil then Exit;
-  if (FButton.Images.Width = 0) or (FButton.Images.Height = 0) then Exit;
-
-  Index := ImageIndexFromState(State);
-  if Index < 0 then exit;
-
-  if Self is TThemedSpeedBtnStyleHook then begin
-    case State of
-      bsDisabled:
-        Button := tbPushButtonDisabled;
-      bsDown,
-      bsExclusive:
-        Button := tbPushButtonPressed;
-    else
-      // bsUp
-      Button := tbPushButtonNormal;
-    end;
-    Details := StyleServices.GetElementDetails(Button);
-  end else
-    Details.Element := teButton;
-
-  DrawGlyph(Canvas, Details, GlyphPos, FButton.ImageMargins, FButton.Images,
-    Index, FButton.Transparent or (State = bsExclusive));
 end;
 
 procedure TWinSpeedButtonStyleHook.DrawButtonText(Canvas: TCanvas; const Caption: string;
@@ -1356,6 +1330,7 @@ procedure TThemedSpeedBtnStyleHook.DrawGlyph(Canvas: TCanvas;
 var R: TRect;
   MemDC: HDC;
   PaintBuffer: HPAINTBUFFER;
+  Button: TThemedButton;
 begin
   if Images = nil then exit;
   if (Images.Width = 0) or (Images.Height = 0) then exit;
@@ -1365,6 +1340,16 @@ begin
   R.Top := GlyphPos.Y + Margins.Top;
   R.Right := R.Left + Images.Width;
   R.Bottom := R.Top + Images.Height;
+
+  //Themed painters fail to paint on ToolbarButton so substitute with Button
+  if Details.Element = teToolBar then begin
+    case TThemedToolBar(Details.State) of
+      ttbButtonDisabled: Button := tbPushButtonDisabled;
+      ttbButtonPressed: Button := tbPushButtonPressed;
+    else Button := tbPushButtonNormal;
+    end;
+    Details := StyleServices.GetElementDetails(Button);
+  end;
 
   if FPaintOnGlass then
   begin
