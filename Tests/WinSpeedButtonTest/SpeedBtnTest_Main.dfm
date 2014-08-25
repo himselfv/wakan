@@ -15,7 +15,7 @@ object Form1: TForm1
   TextHeight = 13
   object SpeedButton2: TSpeedButton
     Left = 40
-    Top = 592
+    Top = 666
     Width = 23
     Height = 22
   end
@@ -77,24 +77,31 @@ object Form1: TForm1
   end
   object Label9: TLabel
     Left = 8
-    Top = 321
+    Top = 395
     Width = 52
     Height = 13
     Caption = 'WordWrap'
   end
   object Label10: TLabel
     Left = 8
-    Top = 367
-    Width = 27
+    Top = 349
+    Width = 66
     Height = 13
-    Caption = 'Down'
+    Caption = 'Disabled vista'
   end
   object Label11: TLabel
     Left = 8
-    Top = 407
+    Top = 481
     Width = 68
     Height = 13
     Caption = 'Image layouts'
+  end
+  object Label12: TLabel
+    Left = 8
+    Top = 312
+    Width = 40
+    Height = 13
+    Caption = 'Disabled'
   end
   object WinSpeedButton1: TWinSpeedButton
     Left = 104
@@ -118,7 +125,7 @@ object Form1: TForm1
   object Button4: TButton
     AlignWithMargins = True
     Left = 464
-    Top = 510
+    Top = 584
     Width = 175
     Height = 85
     Hint = 
@@ -137,7 +144,7 @@ object Form1: TForm1
   end
   object Button1: TButton
     Left = 90
-    Top = 527
+    Top = 601
     Width = 75
     Height = 25
     Caption = 'Button1'
@@ -145,7 +152,7 @@ object Form1: TForm1
   end
   object Button2: TButton
     Left = 169
-    Top = 516
+    Top = 590
     Width = 75
     Height = 73
     Caption = 'Button1'
@@ -154,7 +161,7 @@ object Form1: TForm1
   end
   object Button3: TButton
     Left = 252
-    Top = 527
+    Top = 601
     Width = 75
     Height = 25
     Caption = 'Button1'
@@ -163,7 +170,7 @@ object Form1: TForm1
   end
   object BitBtn1: TBitBtn
     Left = 333
-    Top = 527
+    Top = 601
     Width = 75
     Height = 25
     Caption = 'BitBtn1'
@@ -172,7 +179,7 @@ object Form1: TForm1
   end
   object BitBtn2: TBitBtn
     Left = 333
-    Top = 558
+    Top = 632
     Width = 75
     Height = 25
     Caption = 'BitBtn1'
@@ -785,7 +792,7 @@ object Form1: TForm1
   end
   object WinSpeedButton33: TWinSpeedButton
     Left = 104
-    Top = 304
+    Top = 378
     Width = 170
     Height = 49
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -803,7 +810,7 @@ object Form1: TForm1
   end
   object WinSpeedButton34: TWinSpeedButton
     Left = 288
-    Top = 304
+    Top = 378
     Width = 170
     Height = 49
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -822,7 +829,7 @@ object Form1: TForm1
   end
   object WinSpeedButton35: TWinSpeedButton
     Left = 480
-    Top = 304
+    Top = 378
     Width = 170
     Height = 49
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -841,7 +848,7 @@ object Form1: TForm1
   end
   object WinSpeedButton36: TWinSpeedButton
     Left = 672
-    Top = 304
+    Top = 378
     Width = 170
     Height = 49
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -861,13 +868,12 @@ object Form1: TForm1
   end
   object WinSpeedButton37: TWinSpeedButton
     Left = 104
-    Top = 359
+    Top = 433
     Width = 170
     Height = 31
     Hint = '#00188^eDisplay only characters in clipboard'
     AllowAllUp = True
     Caption = 'Test'
-    Down = True
     DropButtonSettings.Size = 32
     DropButtonSettings.ImageIndex = 1
     DropDownMenu = PopupMenu1
@@ -881,13 +887,12 @@ object Form1: TForm1
   end
   object WinSpeedButton38: TWinSpeedButton
     Left = 288
-    Top = 359
+    Top = 433
     Width = 170
     Height = 31
     Hint = '#00188^eDisplay only characters in clipboard'
     AllowAllUp = True
     Caption = 'Test'
-    Down = True
     DropButtonSettings.Size = 32
     DropButtonSettings.ImageIndex = 1
     DropDownMenu = PopupMenu1
@@ -902,13 +907,12 @@ object Form1: TForm1
   end
   object WinSpeedButton39: TWinSpeedButton
     Left = 480
-    Top = 359
+    Top = 433
     Width = 170
     Height = 31
     Hint = '#00188^eDisplay only characters in clipboard'
     AllowAllUp = True
     Caption = 'Test'
-    Down = True
     DropButtonSettings.Size = 32
     DropButtonSettings.ImageIndex = 1
     DropDownMenu = PopupMenu1
@@ -923,13 +927,12 @@ object Form1: TForm1
   end
   object WinSpeedButton40: TWinSpeedButton
     Left = 672
-    Top = 359
+    Top = 433
     Width = 170
     Height = 31
     Hint = '#00188^eDisplay only characters in clipboard'
     AllowAllUp = True
     Caption = 'Test'
-    Down = True
     DropButtonSettings.Size = 32
     DropButtonSettings.ImageIndex = 1
     DropDownMenu = PopupMenu1
@@ -945,7 +948,7 @@ object Form1: TForm1
   end
   object WinSpeedButton41: TWinSpeedButton
     Left = 104
-    Top = 396
+    Top = 470
     Width = 170
     Height = 89
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -964,7 +967,7 @@ object Form1: TForm1
   end
   object WinSpeedButton42: TWinSpeedButton
     Left = 288
-    Top = 396
+    Top = 470
     Width = 170
     Height = 89
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -983,7 +986,7 @@ object Form1: TForm1
   end
   object WinSpeedButton43: TWinSpeedButton
     Left = 480
-    Top = 396
+    Top = 470
     Width = 170
     Height = 89
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -1002,7 +1005,7 @@ object Form1: TForm1
   end
   object WinSpeedButton44: TWinSpeedButton
     Left = 672
-    Top = 396
+    Top = 470
     Width = 170
     Height = 89
     Hint = '#00188^eDisplay only characters in clipboard'
@@ -1017,11 +1020,180 @@ object Form1: TForm1
     Transparent = False
     WordWrap = True
   end
+  object WinSpeedButton45: TWinSpeedButton
+    Left = 104
+    Top = 304
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 50
+    Transparent = False
+  end
+  object WinSpeedButton46: TWinSpeedButton
+    Left = 288
+    Top = 304
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    Flat = True
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 51
+    Transparent = False
+  end
+  object WinSpeedButton47: TWinSpeedButton
+    Left = 480
+    Top = 304
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    ForceClassicLook = True
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 52
+    Transparent = False
+  end
+  object WinSpeedButton48: TWinSpeedButton
+    Left = 672
+    Top = 304
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    Flat = True
+    ForceClassicLook = True
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 53
+    Transparent = False
+  end
+  object Button5: TButton
+    AlignWithMargins = True
+    Left = 648
+    Top = 584
+    Width = 175
+    Height = 85
+    Hint = 
+      '#01133^Search by reading, writing or meaning, depending on what ' +
+      'you type'
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Caption = '#01132^Any matches blah blah blah blah'
+    Enabled = False
+    ImageIndex = 1
+    Images = ilCategoryActions
+    Style = bsSplitButton
+    TabOrder = 54
+    TabStop = False
+    WordWrap = True
+  end
+  object WinSpeedButton49: TWinSpeedButton
+    Left = 104
+    Top = 341
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropButtonSettings.SplitterStyle = ssClassic
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 55
+    Transparent = False
+  end
+  object WinSpeedButton50: TWinSpeedButton
+    Left = 288
+    Top = 341
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropButtonSettings.SplitterStyle = ssClassic
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    Flat = True
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 56
+    Transparent = False
+  end
+  object WinSpeedButton51: TWinSpeedButton
+    Left = 480
+    Top = 341
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropButtonSettings.SplitterStyle = ssVista
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    ForceClassicLook = True
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 57
+    Transparent = False
+  end
+  object WinSpeedButton52: TWinSpeedButton
+    Left = 672
+    Top = 341
+    Width = 170
+    Height = 31
+    Hint = '#00188^eDisplay only characters in clipboard'
+    AllowAllUp = True
+    Caption = 'Test'
+    DropButtonSettings.SplitterStyle = ssVista
+    DropDownMenu = PopupMenu1
+    Enabled = False
+    Flat = True
+    ForceClassicLook = True
+    ImageIndex = 1
+    Images = ilCategoryActions
+    SelectedImageIndex = 3
+    Style = bsSplitButton
+    TabOrder = 58
+    Transparent = False
+  end
   object ilCategoryActions: TImageList
     Left = 696
-    Top = 596
+    Top = 670
     Bitmap = {
-      494C010104001401E40110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401F80110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1294,7 +1466,7 @@ object Form1: TForm1
   end
   object PopupMenu1: TPopupMenu
     Left = 80
-    Top = 592
+    Top = 666
     object Asd1: TMenuItem
       Caption = 'Asd'
     end

@@ -75,6 +75,16 @@ type
     WinSpeedButton43: TWinSpeedButton;
     WinSpeedButton44: TWinSpeedButton;
     Label11: TLabel;
+    Label12: TLabel;
+    WinSpeedButton45: TWinSpeedButton;
+    WinSpeedButton46: TWinSpeedButton;
+    WinSpeedButton47: TWinSpeedButton;
+    WinSpeedButton48: TWinSpeedButton;
+    Button5: TButton;
+    WinSpeedButton49: TWinSpeedButton;
+    WinSpeedButton50: TWinSpeedButton;
+    WinSpeedButton51: TWinSpeedButton;
+    WinSpeedButton52: TWinSpeedButton;
   private
     { Private declarations }
   public
