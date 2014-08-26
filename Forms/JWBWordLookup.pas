@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, ComCtrls, Grids, Buttons, Menus, ImgList, ToolWin,
-  Actions, ActnList, WakanWordGrid, WakanPaintbox, JWBWordLookupBase;
+  Actions, ActnList, WakanWordGrid, WakanPaintbox, JWBWordLookupBase, SpeedBtn;
 
 type
  //Supported lookup modes for this window.
@@ -40,7 +40,7 @@ type
     Bevel3: TBevel;
     Bevel4: TBevel;
     Edit1: TEdit;
-    btnLookupMode: TButton;
+    btnLookupMode: TWinSpeedButton;
     btnWordKanji: TSpeedButton;
     btnExamples: TSpeedButton;
     CharInWordDock: TPanel;
@@ -74,6 +74,7 @@ type
     procedure aEditorInsertExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure miLookupEtoJClick(Sender: TObject);
+    procedure aLookupClipExecute(Sender: TObject);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -118,6 +119,7 @@ begin
   to be updated (see TSpeedButtonActionLink.IsCheckedLinked) }
   btnInflect.GroupIndex := 8;
   btnAutoPreview.GroupIndex := 9;
+  btnLookupClip.GroupIndex := 1;
 end;
 
 procedure TfWordLookup.FormShow(Sender: TObject);
@@ -507,6 +509,11 @@ begin
   if aEditorInsert.Checked then
     aEditorInsert.Checked := false;
   LookupModeChanged; //apply restrictions and buttons
+end;
+
+procedure TfWordLookup.aLookupClipExecute(Sender: TObject);
+begin
+  LookupModeChanged;
 end;
 
 procedure TfWordLookup.miLookupEtoJClick(Sender: TObject);

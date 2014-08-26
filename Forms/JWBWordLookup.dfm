@@ -411,7 +411,7 @@ inherited fWordLookup: TfWordLookup
       OnKeyPress = Edit1KeyPress
       ExplicitHeight = 24
     end
-    object btnLookupMode: TButton
+    object btnLookupMode: TWinSpeedButton
       Left = 242
       Top = 0
       Width = 135
@@ -446,7 +446,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800DC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800E40010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -653,7 +653,7 @@ inherited fWordLookup: TfWordLookup
       GroupIndex = 1
       Hint = '#00647^Search by Kanji stored in clipboard'
       ShortCut = 115
-      OnExecute = aLookupAutoExecute
+      OnExecute = aLookupClipExecute
     end
     object aEditorInsert: TAction
       AutoCheck = True

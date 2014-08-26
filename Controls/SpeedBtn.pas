@@ -728,9 +728,9 @@ begin
   else
 
  //--- Enable to draw whole button as down:
- { if FButton.FState in [bsDown, bsExclusive] then
+  if FButton.FState in [bsDown, bsExclusive] then
     Result := bfDown
-  else}
+  else
  //---
 
   if FButton.FMousePosition in [mpBody] then
@@ -797,9 +797,9 @@ begin
       Dec(PaintRect.Right, 1);
   end;
 
-  if AState in [bfDown, bfExclusive] then
+{  if AState in [bfDown, bfExclusive] then
     Offset := Point(1,1)
-  else
+  else}
     Offset := Point(0,0);
 end;
 

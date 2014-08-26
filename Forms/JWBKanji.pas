@@ -7,7 +7,7 @@ uses
   StdCtrls, ComCtrls, Buttons, ExtCtrls, Actions, ActnList, CheckAction,
   JWBStrings, IniFiles, Grids, DB, ShellAPI, WakanPaintbox, Menus, CheckLst,
   ImgList, JWBRadical, SimpleControls, RangeSpinEdit, JvExControls,
-  JvArrowButton;
+  JvArrowButton, SpeedBtn, Vcl.ToolWin;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
@@ -27,7 +27,6 @@ type
   TfKanji = class(TForm)
     Panel1: TPanel;
     DrawGrid1: TDrawGrid;
-    pnlDockSearch: TPanel;
     SaveDialog1: TSaveDialog;
     UpdateTimer: TTimer;
     BlankPanel1: TBlankPanel;
@@ -60,8 +59,7 @@ type
     splDockCompounds: TSplitter;
     lblFoundChars: TLabel;
     Panel6: TPanel;
-    RangeSpinEdit1: TRangeSpinEdit;
-    PopupPanel1: TPopupPanel;
+    pnlStrokeCount: TPopupPanel;
     Label2: TLabel;
     pnlGroups: TPopupPanel;
     miCharWords: TMenuItem;
@@ -74,39 +72,23 @@ type
     miAfterLookupIn: TMenuItem;
     PopupImages: TImageList;
     Panel9: TPanel;
-    SpeedButton1: TSpeedButton;
-    RangeSpinEdit3: TRangeSpinEdit;
     Panel11: TPanel;
-    SpeedButton5: TSpeedButton;
-    RangeSpinEdit2: TRangeSpinEdit;
+    sbJlpt: TSpeedButton;
+    edtJlpt: TRangeSpinEdit;
     rgSortBy: TComboBox;
     edtLookup: TEdit;
-    btnStrokes: TButton;
+    sbStrokeCount: TWinSpeedButton;
     sbInClipboard: TSpeedButton;
     sbOnlyCommon: TSpeedButton;
-    btnRadicals: TButton;
-    btnGroups: TButton;
+    sbRadicals: TWinSpeedButton;
+    btnGroups: TWinSpeedButton;
     lbCategories: TCheckListBox;
     cbOrAnd: TComboBox;
-    btnLookupMode: TButton;
-    pmLookupMode: TPopupMenu;
-    miLookupAuto: TMenuItem;
-    N3: TMenuItem;
-    miLookupCharacters: TMenuItem;
-    miLookupDefinition: TMenuItem;
-    miLookupOn: TMenuItem;
-    miLookupKun: TMenuItem;
-    miLookupPinYin: TMenuItem;
-    miLookupSKIP: TMenuItem;
-    N4: TMenuItem;
-    sbStrokeCount: TSpeedButton;
+    btnLookupMode: TWinSpeedButton;
+    cbLookupType: TComboBox;
     edtStrokeCount: TRangeSpinEdit;
-    sbRadicals: TSpeedButton;
-    pbRadicals: TWakanPaintbox;
-    sbListRadicals: TSpeedButton;
     sbJouyou: TSpeedButton;
     edtJouyou: TRangeSpinEdit;
-    cbOtherType: TComboBox;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -139,11 +121,9 @@ type
     procedure aRadicalExecute(Sender: TObject);
     procedure aMeaningExecute(Sender: TObject);
     procedure aSaveToFileExecute(Sender: TObject);
-    procedure aSearchChecked(Sender: TObject);
     procedure aSearchExecute(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
     procedure miUncheckAllCategoriesClick(Sender: TObject);
-    procedure pbRadicalsClick(Sender: TObject);
     procedure pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
     procedure miAddCategoryClick(Sender: TObject);
     procedure lbCategoriesClick(Sender: TObject);
@@ -161,12 +141,17 @@ type
     procedure miCopyClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnGroupsDropDownClick(Sender: TObject);
-    procedure btnStrokesDropDownClick(Sender: TObject);
+    procedure sbStrokeCountDropDownClick(Sender: TObject);
     procedure aInClipboardExecute(Sender: TObject);
     procedure aOnlyCommonExecute(Sender: TObject);
     procedure miLookupSKIPClick(Sender: TObject);
     procedure sbOnlyCommonClick(Sender: TObject);
     procedure sbInClipboardClick(Sender: TObject);
+    procedure sbStrokeCountClick(Sender: TObject);
+    procedure pnlStrokeCountExit(Sender: TObject);
+    procedure edtJlptChange(Sender: TObject);
+    procedure sbRadicalsClick(Sender: TObject);
+    procedure sbRadicalsDropDownClick(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -238,7 +223,7 @@ function GetKanjiCopyFormats: TArray<string>;
 function KanjiInfoToXml(const AChar: string): string;
 
 implementation
-uses UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
+uses Types, UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
   JWBKanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
   JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks;
@@ -326,10 +311,14 @@ begin
     reg.DeleteKey('KanjiSearch','RadSearch');
     reg.DeleteKey('KanjiSearch','RadIndexes');
   end;
-  if Self.edtJouyou.Text<>'' then
+  if (Self.edtJouyou.Text<>'') and (Self.edtJouyou.Text<>'0') then
     reg.WriteString('KanjiSearch','Jouyou',Self.edtJouyou.Text)
   else
     reg.DeleteKey('KanjiSearch','Jouyou');
+  if (Self.edtJlpt.Text<>'') and (Self.edtJlpt.Text<>'0') then
+    reg.WriteString('KanjiSearch','Jlpt',Self.edtJlpt.Text)
+  else
+    reg.DeleteKey('KanjiSearch','Jlpt');
   reg.WriteInteger('Characters','Sort',Self.rgSortBy.ItemIndex);
 end;
 
@@ -345,6 +334,7 @@ begin
   Self.curRadSearchType := TRadSearchType(reg.ReadInteger('KanjiSearch','RadSearchType',0));
   Self.curRadChars := reg.ReadString('KanjiSearch','RadSearch','');
   Self.edtJouyou.Text := reg.ReadString('KanjiSearch','Jouyou','');
+  Self.edtJlpt.Text := reg.ReadString('KanjiSearch','Jlpt','');
   Self.FSetSortBy := reg.ReadInteger('Characters','Sort',0);
 end;
 
@@ -390,8 +380,8 @@ begin
   aInClipboard.Checked := false;
   edtStrokeCount.Text := '';
   FCurRadChars := '';
-  pbRadicals.Invalidate;
   edtJouyou.Text := '';
+  edtJlpt.Text := '';
 end;
 
 procedure TfKanji.aResetFiltersExecute(Sender: TObject);
@@ -429,105 +419,98 @@ begin
 end;
 
 
+const
+  FIXED_LOOKUP_TYPES  = 6;
+  LOOKUP_ANY          = 0;
+  LOOKUP_CHARS        = 1;
+  LOOKUP_DEFINITION   = 2;
+  LOOKUP_ON           = 3;
+  LOOKUP_KUN          = 4;
+  LOOKUP_PINYIN       = 5;
+  LOOKUP_SKIP         = 6;
+
 //Reloads a list of textual search types
 procedure TfKanji.ClearLookupTypes;
-var i: integer;
 begin
-  for i := pmLookupMode.Items.Count-1 downto 0 do
-    if pmLookupMode.Items[i].Tag=-1 then
-      pmLookupMode.Items.Delete(i);
-
-  cbOtherType.Clear;
-  cbOtherType.Items.Add(_l('#01132^Any matches'));
-  cbOtherType.Items.Add('Characters');
-  cbOtherType.Items.Add('Definition');
-  cbOtherType.Items.Add('On');
-  cbOtherType.Items.Add('Kun');
-  cbOtherType.Items.Add('PinYin');
-  cbOtherType.Items.Add('SKIP');
-  cbOtherType.Items.Add('-');
+  cbLookupType.Clear;
+  cbLookupType.Items.Add(_l('#01132^Any matches'));
+  cbLookupType.Items.Add('Characters');
+  cbLookupType.Items.Add('Definition');
+  cbLookupType.Items.Add('On');
+  cbLookupType.Items.Add('Kun');
+  cbLookupType.Items.Add('PinYin');
+  cbLookupType.Items.Add('SKIP');
+//  cbLookupType.Items.Add('Unicode');?
 end;
-
 
 procedure TfKanji.ReloadLookupTypes;
 var i: integer;
-  bk: integer;
-  item: TMenuItem;
+  AOldLookupTypeIndex: integer;
 begin
-{  bk := cbOtherType.ItemIndex;
-  if bk=-1 then begin //this is the first reload
-    bk := FSetOtherTypeIndex;
-    FSetOtherTypeIndex := -1; //to make it obvious if we mistakengly reuse it
-  end;
-
-  cbOtherType.Items.Clear;
-  cbOtherType.Items.Add('Unicode');
-  for i:=0 to Length(CharPropTypes)-1 do
-    if CharPropTypes[i].id>20 then
-      cbOtherType.Items.Add(_l('^e'+CharPropTypes[i].englishName));
-  cbOtherType.ItemIndex:=0;
-  if bk < cbOtherType.Items.Count-1 then cbOtherType.ItemIndex:=bk;}
-    //TODO:!
+  if cbLookupType.ItemIndex=-1 then begin //this is the first reload
+    AOldLookupTypeIndex := FSetLookupTypeIndex;
+    FSetLookupTypeIndex := -MAXINT; //to make it obvious if we mistakengly reuse it
+  end else
+    AOldLookupTypeIndex := GetLookupTypeIndex;
 
   ClearLookupTypes;
   for i:=0 to Length(CharPropTypes)-1 do
-    if CharPropTypes[i].id>20 then begin
-      item := TMenuItem.Create(Self);
-      item.Caption := _l('^e'+CharPropTypes[i].englishName);
-      item.GroupIndex := 1;
-      item.Tag := -1;
-      pmLookupMode.Items.Add(item);
-
-      cbOtherType.Items.Add(item.Caption);
-    end;
+    if CharPropTypes[i].id>20 then
+      cbLookupType.Items.AddObject(_l('^e'+CharPropTypes[i].englishName),
+        TObject(CharPropTypes[i].id));
+  SetLookupTypeIndex(AOldLookupTypeIndex);
 end;
 
 //Returns integer uniquely identifying the selected lookup type (either
 //predefined one or from the full list)
 function TfKanji.GetLookupTypeIndex: integer;
 begin
-  if miLookupAuto.Checked then
+  if cbLookupType.ItemIndex < 0 then
     Result := 0
   else
-  if miLookupCharacters.Checked then
-    Result := -1
+  if cbLookupType.ItemIndex <= FIXED_LOOKUP_TYPES then
+    Result := -cbLookupType.ItemIndex
   else
-  if miLookupDefinition.Checked then
-    Result := -2
-  else
-  if miLookupOn.Checked then
-    Result := -3
-  else
-  if miLookupKun.Checked then
-    Result := -4
-  else
-  if miLookupPinYin.Checked then
-    Result := -5
-  else
-  if miLookupSKIP.Checked then
-    Result := -6
-  else
-    Result := 0;
-  //TODO: Else return positive integer for the property # selected from the full list
+   //Else return positive integer for the property # selected from the full list
+    Result := integer(cbLookupType.Items.Objects[cbLookupType.ItemIndex]);
 end;
 
 //Selects the lookup type given it's id
 procedure TfKanji.SetLookupTypeIndex(const AItemIndex: integer);
+var i, idx: integer;
 begin
  //Sometimes this is called when "other search types" are not yet reloaded,
  //so we save the value until then.
-{  if cbOtherType.Items.Count<=0 then
-    FSetOtherTypeIndex := AItemIndex
+  if cbLookupType.Items.Count<=0 then
+    FSetLookupTypeIndex := AItemIndex
   else
-    cbOtherType.ItemIndex := AItemIndex;}
-    //TODO:!
-    //TODO: apply to lookup types if already loaded
+  if AItemIndex < -FIXED_LOOKUP_TYPES then
+    cbLookupType.ItemIndex := 0 //unsupported fixed type
+  else
+  if AItemIndex < 0 then
+    cbLookupType.ItemIndex := -AItemIndex //fixed type
+  else begin
+    idx := 0; //fallback
+    for i := FIXED_LOOKUP_TYPES+1 to cbLookupType.Items.Count-1 do
+      if integer(cbLookupType.Items.Objects[i]) = AItemIndex then begin
+        idx := i;
+        break;
+      end;
+    cbLookupType.ItemIndex := idx;
+  end;
 end;
 
 { Called when a radical filter changes }
 procedure TfKanji.SetCurRadChars(const Value: string);
 begin
   FCurRadChars := Value;
+  if FCurRadChars = '' then begin
+    sbRadicals.Caption := _l('#00178^eRadical');
+    sbRadicals.Down := false;
+  end else begin
+    sbRadicals.Caption := _l('#00178^eRadical') + ' ' + FCurRadChars;
+    sbRadicals.Down := true;
+  end;
   Self.InvalidateList;
 end;
 
@@ -536,7 +519,6 @@ begin
   curRadSearchType := fRadical.SearchType;
   curRadChars := fRadical.SelectedRadicals;
  //SetCurRadChars() will trigger filter update
-  pbRadicals.Invalidate;
 end;
 
 //Called from LanguageChanged because can be different for different target languages
@@ -840,10 +822,10 @@ begin
     fltLookup := TStringList.Create;
     fltLookup.Sorted:=true;
 
-    if miLookupAuto.Checked or miLookupCharacters.Checked then
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_CHARS] then
       ExtractKanjiToFilter(edtLookup.Text, fltLookup);
 
-    if miLookupAuto.Checked or miLookupDefinition.Checked then
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_DEFINITION] then
       if curLang='c' then
         ReadFilter(fltLookup, edtLookup.text, ptChineseDefinition, [rfPartial,rfSpace]) //Chinese definition
       else
@@ -855,24 +837,24 @@ begin
     else
       flags := [];
 
-    if miLookupAuto.Checked or miLookupOn.Checked then begin
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_ON]  then begin
       ReadFilter(fltLookup, RomajiToKana(edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags); //as is (maybe that was kana?)
       ReadFilter(fltLookup, RomajiToKana('H'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags); //maybe that was romaji?
       ReadFilter(fltLookup, RomajiToKana('K'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags);
     end;
 
-    if miLookupAuto.Checked or miLookupKun.Checked then begin
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_KUN] then begin
       ReadFilter(fltLookup, RomajiToKana(edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags); //as is (maybe that was kana?)
       ReadFilter(fltLookup, RomajiToKana('H'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags); //maybe that was romaji?
       ReadFilter(fltLookup, RomajiToKana('K'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags);
     end;
 
-    if miLookupAuto.Checked or miLookupPinYin.Checked then begin
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_PINYIN] then begin
       ReadFilter(fltLookup, edtLookup.Text, ptMandarinReading, [rfPartial]); //Mandarin
       ReadFilter(fltLookup, edtLookup.Text, ptCantoneseReading, [rfPartial]); //Canton
     end;
 
-    if miLookupAuto.Checked or miLookupSKIP.Checked then
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_SKIP] then
       ReadFilter(fltLookup, edtLookup.Text, ptSKIP, [rfPartial]);
 
    {
@@ -925,7 +907,7 @@ begin
  { Raine filters multi-selection with AND (only the characters with all the chosen parts are shown),
   Classical with OR (characters which match at least one radical are shown).
   This is because a character has only one Classical Radical so AND is pointless. }
-  if Self.curRadChars<>'' then begin
+  if sbRadicals.Down and (Self.curRadChars<>'') then begin
     fltradical:=TStringList.Create;
     case Self.curRadSearchType of
       stClassic: ReadFilter(fltRadical,
@@ -970,7 +952,7 @@ begin
       if accept and (not clipsort) and Self.aInClipboard.Checked and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
       if accept and (fltLookup<>nil) and (fltLookup.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept := false;
 
-      if accept and (Self.curRadChars<>'') then
+      if accept and sbRadicals.Down and (Self.curRadChars<>'') then
         case Self.curRadSearchType of
           stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
           stRaine: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
@@ -1358,7 +1340,7 @@ procedure TfKanji.DrawGrid1DrawCell(Sender: TObject; ACol, ARow: Integer;
 var w:widechar;
   kix:FString;
   kig:string;
-  sbJouyou:string;
+  jouyou_val:string;
   r_copy: TRect;
   fontface: string;
   fontsize: integer;
@@ -1396,9 +1378,9 @@ begin
   if fSettings.CheckBox69.Checked and HaveAnnotations then
   begin
     Annot.SeekK(kix,'');
-    sbJouyou:=Annot.GetOne('c');
-    if sbJouyou<>'' then try
-      DrawGrid1.Canvas.Font.Color:=strtoint('0x'+copy(sbJouyou,5,2)+copy(sbJouyou,3,2)+copy(sbJouyou,1,2));
+    jouyou_val:=Annot.GetOne('c');
+    if jouyou_val<>'' then try
+      DrawGrid1.Canvas.Font.Color:=strtoint('0x'+copy(jouyou_val,5,2)+copy(jouyou_val,3,2)+copy(jouyou_val,1,2));
     except end;
   end;
   DrawGrid1.Canvas.FillRect(Rect);
@@ -1638,39 +1620,51 @@ begin
   SearchFilterChanged(Sender);
 end;
 
-procedure TfKanji.edtStrokeCountChange(Sender: TObject);
-begin
-  sbStrokeCount.Down := (edtStrokeCount.Text <> '0') and (edtStrokeCount.Text <> '');
-  Self.InvalidateList;
-end;
-
 procedure TfKanji.edtJouyouChange(Sender: TObject);
 begin
   sbJouyou.Down := (edtJouyou.Text <> '0') and (edtJouyou.Text <> '');
-  Self.InvalidateList;
+  SearchFilterChanged(Sender);
 end;
 
-procedure TfKanji.pbRadicalsClick(Sender: TObject);
+procedure TfKanji.edtJlptChange(Sender: TObject);
+begin
+  sbJlpt.Down := (edtJlpt.Text <> '0') and (edtJlpt.Text <> '');
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.sbRadicalsClick(Sender: TObject);
+begin
+  if sbRadicals.Down and (FCurRadChars = '') then
+    sbRadicalsDropDownClick(Sender)
+  else
+    SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.sbRadicalsDropDownClick(Sender: TObject);
 var
   _radSearchType: TRadSearchType;
   _radChars: string;
+  _radDown: boolean;
 begin
  //save current search, it'll be broken by RadicalSelectionChanged
   _radSearchType := curRadSearchType;
   _radChars := FCurRadChars;
+  _radDown := sbRadicals.Down;
  //bring up selection window
   fRadical.SetSelectedRadicals(curRadSearchType, FCurRadChars);
   fRadical.OnSelectionChanged := Self.RadicalSelectionChanged;
   if IsPositiveResult(fRadical.ShowModal) then begin
     _radSearchType := fRadical.SearchType;
     _radChars := fRadical.SelectedRadicals;
+    _radDown := true;
   end;
   fRadical.OnSelectionChanged := nil;
  //apply new search, or re-apply old search
   curRadSearchType := _radSearchType;
   curRadChars := _radChars;
+  sbRadicals.Down := _radDown;
  //SetCurRadicals will trigger filter update
-  pbRadicals.Invalidate;
+  SearchFilterChanged(Sender);
 end;
 
 procedure TfKanji.pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
@@ -1706,16 +1700,39 @@ begin
   PopupUnder(pnlGroups, btnGroups);
 end;
 
-procedure TfKanji.btnStrokesDropDownClick(Sender: TObject);
-begin
-  PopupUnder(PopupPanel1, btnStrokes);
-  PopupPanel1.Width := btnStrokes.Width;
-//  PopupUnder(RangeSpinEdit2, btnStrokes);
-end;
-
 procedure TfKanji.pnlGroupsExit(Sender: TObject);
 begin
   (Sender as TControl).Hide;
+end;
+
+procedure TfKanji.sbStrokeCountClick(Sender: TObject);
+begin
+  if sbStrokeCount.Down then
+    sbStrokeCountDropDownClick(Sender);
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.sbStrokeCountDropDownClick(Sender: TObject);
+begin
+  PopupUnder(pnlStrokeCount, sbStrokeCount);
+  pnlStrokeCount.Width := sbStrokeCount.Width;
+//  PopupUnder(RangeSpinEdit2, btnStrokes);
+end;
+
+procedure TfKanji.edtStrokeCountChange(Sender: TObject);
+begin
+  sbStrokeCount.Down := (edtStrokeCount.Text <> '0') and (edtStrokeCount.Text <> '');
+  if (edtStrokeCount.Text='0') or (edtStrokeCount.Text='') then
+    sbStrokeCount.Caption := _l('#00191^eStroke #')
+  else
+    sbStrokeCount.Caption := _l('#00191^eStroke #')+' '+edtStrokeCount.Text;
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.pnlStrokeCountExit(Sender: TObject);
+begin
+  if (edtStrokeCount.Text='0') or (edtStrokeCount.Text='') then
+    sbStrokeCount.Down := false;
 end;
 
 
@@ -1740,15 +1757,6 @@ begin
   if radno=NoRadical then exit;
   Self.CurRadSearchType:=stClassic;
   Self.CurRadChars:=RadicalUnicode(radno);
-  Self.pbRadicals.Invalidate;
-  Self.InvalidateList;
-end;
-
-procedure TfKanji.aSearchChecked(Sender: TObject);
-begin
-  if aSearch.Checked = pnlDockSearch.Visible then
-    exit;
-  pnlDockSearch.Visible := aSearch.Checked;
   Self.InvalidateList;
 end;
 
@@ -1759,24 +1767,24 @@ end;
 
 procedure TfKanji.aPinYinExecute(Sender: TObject);
 begin
-  miLookupPinYin.Checked := true;
+  cbLookupType.ItemIndex := LOOKUP_PINYIN;
   Self.edtLookup.SetFocus;
 end;
 
 procedure TfKanji.aYomiExecute(Sender: TObject);
 begin
-  miLookupOn.Checked := true;
+  cbLookupType.ItemIndex := LOOKUP_ON;
   Self.edtLookup.SetFocus;
 end;
 
 procedure TfKanji.aRadicalExecute(Sender: TObject);
 begin
-  Self.pbRadicalsClick(Sender);
+  Self.sbRadicalsClick(Sender);
 end;
 
 procedure TfKanji.aMeaningExecute(Sender: TObject);
 begin
-  miLookupDefinition.Checked := true;
+  cbLookupType.ItemIndex := LOOKUP_DEFINITION;
   Self.edtLookup.SetFocus;
 end;
 
