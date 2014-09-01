@@ -14,6 +14,8 @@ Most of the code is modelled after TSpeedButton, TBitBtn.
 
 TODO:
   - Clean up and streamline code.
+  - Press drop btn, menu pops up, press again, the button is now not drawn pressed
+  - Transparent drawing of background broken when themed
 
 Possible improvements:
   - Use normal Button fading mechanics (try moving focus away and watch)
@@ -25,6 +27,8 @@ Possible improvements:
    before going to GetOwner.Images() as builtin TPersistentImageIndexProperty
    Editor does.
 }
+
+{$DEFINE DRAW_WHOLE_BUTTON_AS_DOWN}
 
 interface
 uses
@@ -47,14 +51,14 @@ type
     procedure WMPaint(var Message: TWMPaint); message WM_PAINT;
   {$IF NOT DEFINED(CLR)}
     property Canvas: TCanvas read FCanvas;
-  {$ENDIF}
+  {$IFEND}
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   {$IF DEFINED(CLR)}
     function get_Canvas: TCanvas;
     property Canvas: TCanvas read get_Canvas;
-  {$ENDIF}
+  {$IFEND}
   end;
 
   TWinSpeedButton = class;
@@ -357,7 +361,7 @@ function TCustomPaintedButton.get_Canvas: TCanvas;
 begin
   Result := FCanvas;
 end;
-{$ENDIF}
+{$IFEND}
 
 procedure TCustomPaintedButton.WMPaint(var Message: TWMPaint);
 begin
@@ -723,15 +727,25 @@ begin
     Result := bfDown
   else
 
+  {$IFDEF DRAW_WHOLE_BUTTON_AS_DOWN}
+ //--- Enable to draw whole button as down even when hovering over dropbtn:
+  if FButton.FState in [bsDown, bsExclusive] then
+    Result := bfDown
+  else
+ //---
+ {$ENDIF}
+
   if FButton.FMousePosition in [mpDropBtn] then
     Result := bfHot
   else
 
+ {$IFDEF DRAW_WHOLE_BUTTON_AS_DOWN}
  //--- Enable to draw whole button as down:
   if FButton.FState in [bsDown, bsExclusive] then
     Result := bfDown
   else
  //---
+ {$ENDIF}
 
   if FButton.FMousePosition in [mpBody] then
     Result := bfHot
@@ -845,8 +859,10 @@ begin
       Canvas.Font.Color := clWindowText
     else
       Canvas.Font.Color := clBtnShadow;
+    Dec(PaintRect.Top, 2);
     Self.DoDrawText(Canvas, Details, bsUp, #$36 {alt: '▼' but this fits better},
       PaintRect, DT_NOCLIP or DT_CENTER or DT_VCENTER or DT_SINGLELINE);
+    Inc(PaintRect.Top, 2);
   end else begin
     GlyphPos.X := PaintRect.Left + (PaintRect.Width - ImgList.Width) div 2;
     GlyphPos.Y := PaintRect.Top + (PaintRect.Height - ImgList.Height) div 2;
