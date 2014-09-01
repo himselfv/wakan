@@ -131,7 +131,6 @@ inherited fWordLookup: TfWordLookup
       Action = aLookupClip
       Align = alRight
       AllowAllUp = True
-      GroupIndex = 1
       PopupMenu = pmLookupMode
       ExplicitLeft = 413
       ExplicitTop = 4
@@ -392,7 +391,7 @@ inherited fWordLookup: TfWordLookup
       TabOrder = 2
       OnClick = btnSearchClick
     end
-    object Edit1: TEdit
+    object edtSearchText: TEdit
       Left = 0
       Top = 0
       Width = 206
@@ -406,9 +405,9 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       TabOrder = 0
       TextHint = '#00669^Search'
-      OnChange = Edit1Change
-      OnClick = Edit1Click
-      OnKeyPress = Edit1KeyPress
+      OnChange = edtSearchTextChange
+      OnClick = edtSearchTextClick
+      OnKeyPress = edtSearchTextKeyPress
       ExplicitHeight = 24
     end
     object btnLookupMode: TWinSpeedButton
@@ -447,7 +446,7 @@ inherited fWordLookup: TfWordLookup
     Left = 96
     Top = 40
     Bitmap = {
-      494C010103000800E80010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800EC0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -651,14 +650,13 @@ inherited fWordLookup: TfWordLookup
     object aLookupClip: TAction
       AutoCheck = True
       Caption = '#00289^eBy clipboard'
-      GroupIndex = 1
       Hint = '#00647^Search by Kanji stored in clipboard'
       ShortCut = 115
       OnExecute = aLookupClipExecute
     end
     object aEditorInsert: TAction
       AutoCheck = True
-      GroupIndex = 2
+      GroupIndex = 3
       OnExecute = aEditorInsertExecute
     end
     object aMatchExact: TAction

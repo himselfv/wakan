@@ -14,7 +14,6 @@ type
     lmAuto = 0,
     lmJp = 1,
     lmEn = 2,
-    lmClipboard = 3,
     lmEditorInsert = 4
   );
 
@@ -39,7 +38,7 @@ type
     Bevel2: TBevel;
     Bevel3: TBevel;
     Bevel4: TBevel;
-    Edit1: TEdit;
+    edtSearchText: TEdit;
     btnLookupMode: TWinSpeedButton;
     btnWordKanji: TSpeedButton;
     btnExamples: TSpeedButton;
@@ -60,15 +59,15 @@ type
     aDictGroup3: TAction;
     aMatchAnywhere: TAction;
     aEditorInsert: TAction;
-    procedure Edit1Change(Sender: TObject);
-    procedure Edit1Click(Sender: TObject);
+    procedure edtSearchTextChange(Sender: TObject);
+    procedure edtSearchTextClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnSearchClick(Sender: TObject);
     procedure btnWordKanjiClick(Sender: TObject);
     procedure btnExamplesClick(Sender: TObject);
     procedure btnAddToVocabClick(Sender: TObject);
     procedure btnLookupModeClick(Sender: TObject);
-    procedure Edit1KeyPress(Sender: TObject; var Key: Char);
+    procedure edtSearchTextKeyPress(Sender: TObject; var Key: Char);
     procedure aLookupAutoExecute(Sender: TObject);
     procedure aMatchExactExecute(Sender: TObject);
     procedure aEditorInsertExecute(Sender: TObject);
@@ -119,12 +118,12 @@ begin
   to be updated (see TSpeedButtonActionLink.IsCheckedLinked) }
   btnInflect.GroupIndex := 8;
   btnAutoPreview.GroupIndex := 9;
-  btnLookupClip.GroupIndex := 1;
+  btnLookupClip.GroupIndex := 2;
 end;
 
 procedure TfWordLookup.FormShow(Sender: TObject);
 begin
-  if Edit1.Enabled then Edit1.SetFocus;
+  if edtSearchText.Enabled then edtSearchText.SetFocus;
   Look();
   Clipboard.Watchers.Add(Self.ClipboardChanged);
 end;
@@ -162,7 +161,7 @@ end;
 
 procedure TfWordLookup.ClipboardChanged(Sender: TObject);
 begin
-  if Self.Visible and (Self.LookupMode=lmClipboard) then
+  if Self.Visible and (LookupMode <> lmEditorInsert) and aLookupClip.Checked then
     Self.Look();
 end;
 
@@ -183,7 +182,6 @@ end;
 function TfWordLookup.GetLookupMode: TLookupMode;
 begin
   if aEditorInsert.Checked then Result := lmEditorInsert else
-  if aLookupClip.Checked then Result := lmClipboard else
   if aLookupAuto.Checked then Result := lmAuto else
   if aLookupJtoE.Checked then Result := lmJp else
   if aLookupEtoJ.Checked then Result := lmEn else
@@ -201,7 +199,6 @@ begin
       lmAuto: aLookupAuto.Checked := true;
       lmJp: aLookupJtoE.Checked := true;
       lmEn: aLookupEtoJ.Checked := true;
-      lmClipboard: aLookupClip.Checked := true;
     else aLookupAuto.Checked := true;
     end;
   LookupModeChanged; //apply restrictions and buttons
@@ -242,13 +239,13 @@ begin
     btnLookupClip.Down := aLookupClip.Checked;
   end;
 
-  if not (ANewMode in [lmAuto, lmJp, lmEn]) then
+  if (ANewMode in [lmAuto, lmJp, lmEn]) and not aLookupClip.Checked then
   begin
-    Edit1.Enabled:=false;
-    Edit1.Color:=clMenu;
+    edtSearchText.Enabled:=true;
+    edtSearchText.Color:=clWindow;  
   end else begin
-    Edit1.Enabled:=true;
-    Edit1.Color:=clWindow;
+    edtSearchText.Enabled:=false;
+    edtSearchText.Color:=clMenu;
   end;
 
   aMatchExact.Enabled:=true;
@@ -278,10 +275,10 @@ begin
     //but leave the value as is
   end;
 
-  if Edit1.Enabled and Edit1.Visible and Edit1.HandleAllocated and Self.Visible then
-    Edit1.SetFocus;
+  if edtSearchText.Enabled and edtSearchText.Visible and edtSearchText.HandleAllocated and Self.Visible then
+    edtSearchText.SetFocus;
   Look(); //update results in new mode
- //^ with lmClipboard Edit1.Text can be empty, so don't check for that
+ //^ with lmClipboard edtSearchText.Text can be empty, so don't check for that
 end;
 
 { Updates text on lookup mode button according to currently selected mode.
@@ -315,7 +312,6 @@ procedure TfWordLookup.Look();
 var lm: TLookupMode;
   req: TDicSearchRequest;
   wt:TEvalCharType;
-  i:integer;
   wasfull:boolean;
   text:string;
   b:boolean;
@@ -360,6 +356,22 @@ var lm: TLookupMode;
       exit; //do not search
   end;
 
+  function GetSearchText: string;
+  var i: integer;
+  begin
+    if aLookupClip.Checked then begin
+      Result := '';
+      for i:=1 to flength(Clipboard.Text) do
+       {$IFDEF UNICODE}
+        if copy(fgetch(Clipboard.Text,i),1,2)='00' then break
+       {$ELSE}
+        if fgetch(clip,i)<=#$00FF then break
+       {$ENDIF}
+        else Result :=Result + fgetch(Clipboard.Text, i);
+    end else
+      Result := edtSearchText.Text;
+  end;
+
 begin
   //Retrieve current lookup mode
   lm := GetLookupMode();
@@ -372,7 +384,7 @@ begin
   begin
     btnSearch.Visible:=true;
     StringGrid.Visible:=false;
-    BlankPanel.TextVisible:=(edit1.text<>'') or (lm=lmEditorInsert);
+    BlankPanel.TextVisible:=(edtSearchText.text<>'') or (lm=lmEditorInsert);
     curword:=0;
     WordSelectionChanged;
     exit;
@@ -384,56 +396,45 @@ begin
   try
     FResults.Clear;
     wasfull := false;
-    if ((lm in [lmAuto, lmJp, lmEn]) and (Edit1.Text=''))
-    or ((lm=lmClipboard) and (Clipboard.Text='')) then begin
+    if (lm in [lmAuto, lmJp, lmEn]) and (
+      (not aLookupClip.Checked and (edtSearchText.Text=''))
+      or (aLookupClip.Checked and (Clipboard.Text=''))
+    ) then begin
      //Don't touch dictionaries
       wasfull := true;
     end else
     case lm of
       lmAuto: begin
+        text := GetSearchText;
         req.st := stRomaji;
         req.Prepare;
-        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        req.Search(text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
         FreeAndNil(req);
 
         req := NewSearchRequest;
         req.st := stEnglish;
         req.Prepare;
-        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        req.Search(text, EC_UNKNOWN, FResults);
         wasfull := wasfull and req.WasFull;
         FreeAndNil(req);
 
         req := NewSearchRequest;
         req.st := stJapanese;
         req.Prepare;
-        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        req.Search(text, EC_UNKNOWN, FResults);
         wasfull := wasfull and req.WasFull;
       end;
       lmJp: begin
         req.st := stRomaji;
         req.Prepare;
-        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
+        req.Search(GetSearchText, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
       end;
       lmEn: begin
         req.st := stEnglish;
         req.Prepare;
-        req.Search(Edit1.Text, EC_UNKNOWN, FResults);
-        wasfull := req.WasFull;
-      end;
-      lmClipboard: begin
-        text:='';
-        for i:=1 to flength(Clipboard.Text) do
-         {$IFDEF UNICODE}
-          if copy(fgetch(Clipboard.Text,i),1,2)='00' then break
-         {$ELSE}
-          if fgetch(clip,i)<=#$00FF then break
-         {$ENDIF}
-          else text:=text+fgetch(Clipboard.Text,i);
-        req.st := stJapanese;
-        req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        req.Search(GetSearchText, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
       end;
       lmEditorInsert: begin
@@ -463,7 +464,6 @@ begin
     case lm of
       lmJp: text:=text+' '+_l('#00673^eby phonetic');
       lmEn: text:=text+' '+_l('#00674^eby meaning');
-      lmClipboard: text:=text+' '+_l('#00675^eby written (clipboard)');
       lmEditorInsert: text:=text+' '+_l('#00676^eby written (text)');
     end;
     text:=text+' ('+inttostr(FResults.Count)+')';
@@ -478,13 +478,13 @@ begin
   end;
 end;
 
-procedure TfWordLookup.Edit1Change(Sender: TObject);
+procedure TfWordLookup.edtSearchTextChange(Sender: TObject);
 begin
   btnSearch.Enabled:=true; //enable "More matches" => do partial search
   Look();
 end;
 
-procedure TfWordLookup.Edit1Click(Sender: TObject);
+procedure TfWordLookup.edtSearchTextClick(Sender: TObject);
 begin
   Look();
 end;
@@ -540,22 +540,15 @@ procedure TfWordLookup.btnAddToVocabClick(Sender: TObject);
 begin
   inherited;
   Look();
-  if Edit1.Enabled then Edit1.SetFocus;
+  if edtSearchText.Enabled then edtSearchText.SetFocus;
 end;
 
 procedure TfWordLookup.btnLookupModeClick(Sender: TObject);
 begin
- //Re-apply last selected submenu item
-  if miLookupJtoE.Checked then
-    LookupMode := lmJp
-  else
-  if miLookupEtoJ.Checked then
-    LookupMode := lmEn
-  else
-    LookupMode := lmAuto;
+  btnLookupMode.DropDownClick;
 end;
 
-procedure TfWordLookup.Edit1KeyPress(Sender: TObject; var Key: Char);
+procedure TfWordLookup.edtSearchTextKeyPress(Sender: TObject; var Key: Char);
 begin
   inherited;
   if Key=Chr(VK_RETURN) then

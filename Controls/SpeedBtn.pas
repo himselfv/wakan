@@ -146,7 +146,6 @@ type
     function GetActionLinkClass: TControlActionLinkClass; override;
     function GetBodyRect: TRect;
     function GetDropBtnRect: TRect;
-    procedure DoDropDownClick; virtual;
     procedure SetAllowAllUp(Value: Boolean);
     procedure SetDown(Value: Boolean);
     procedure SetDropButtonSettings(Value: TDropButtonSettings);
@@ -183,6 +182,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure DefaultHandler(var Message); override;
+    procedure DropDownClick; virtual;
     function CanFocus: Boolean; override;
     procedure SetFocus; override;
     function Focused: boolean; override;
@@ -591,7 +591,7 @@ begin
     Result.Left := Result.Right;
 end;
 
-procedure TWinSpeedButton.DoDropDownClick;
+procedure TWinSpeedButton.DropDownClick;
 var Pt: TPoint;
 begin
   if Assigned(OnDropDownClick) then
@@ -1530,7 +1530,7 @@ begin
       FDragState := dsDropBtn;
       FDropBtnState := bsDown;
       Repaint;
-      DoDropDownClick(); //drag can even be finished inside
+      DropDownClick(); //drag can even be finished inside
     end else begin
       FDragState := dsBody;
       if not FDown then begin
