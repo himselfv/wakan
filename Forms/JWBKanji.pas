@@ -434,11 +434,12 @@ begin
   cbLookupType.Items.Add(_l('#01132^Any matches'));
   cbLookupType.Items.Add('Characters');
   cbLookupType.Items.Add('Definition');
-  cbLookupType.Items.Add('On');
-  cbLookupType.Items.Add('Kun');
-  cbLookupType.Items.Add('PinYin');
-  cbLookupType.Items.Add('SKIP');
-//  cbLookupType.Items.Add('Unicode');?
+  cbLookupType.Items.Add('On'); //4
+  cbLookupType.Items.Add('Kun'); //5
+  cbLookupType.Items.Add('PinYin'); //2 mandarin
+  cbLookupType.Items.Add('SKIP'); //22
+  //6 nanori
+  //8 cantonese
 end;
 
 procedure TfKanji.ReloadLookupTypes;
@@ -1625,9 +1626,11 @@ end;
 
 procedure TfKanji.sbRadicalsClick(Sender: TObject);
 begin
-  if sbRadicals.Down and (FCurRadChars = '') then
-    sbRadicalsDropDownClick(Sender)
-  else
+  if sbRadicals.Down and (FCurRadChars = '') then begin
+    sbRadicalsDropDownClick(Sender);
+    if FCurRadChars = '' then
+      sbRadicals.Down := false;
+  end else
     SearchFilterChanged(Sender);
 end;
 
