@@ -4,7 +4,7 @@ object fKanji: TfKanji
   BorderStyle = bsSizeToolWin
   Caption = '#00117^eCharacter list'
   ClientHeight = 465
-  ClientWidth = 680
+  ClientWidth = 679
   Color = clBtnFace
   DragKind = dkDock
   Font.Charset = DEFAULT_CHARSET
@@ -24,19 +24,20 @@ object fKanji: TfKanji
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
-    Top = 0
-    Width = 680
-    Height = 465
+    Top = 27
+    Width = 530
+    Height = 438
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
     TabOrder = 0
-    ExplicitTop = 78
-    ExplicitHeight = 582
+    ExplicitTop = 0
+    ExplicitWidth = 680
+    ExplicitHeight = 465
     object splDockCompounds: TSplitter
       Left = 0
-      Top = 463
-      Width = 680
+      Top = 436
+      Width = 530
       Height = 2
       Cursor = crVSplit
       Align = alBottom
@@ -49,8 +50,8 @@ object fKanji: TfKanji
     end
     object BlankPanel1: TBlankPanel
       Left = 0
-      Top = 54
-      Width = 680
+      Top = 27
+      Width = 530
       Height = 382
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
@@ -62,13 +63,14 @@ object fKanji: TfKanji
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
-      ExplicitHeight = 499
+      ExplicitTop = 54
+      ExplicitWidth = 680
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
       Left = 3
-      Top = 57
-      Width = 674
+      Top = 30
+      Width = 524
       Height = 376
       Align = alClient
       BorderStyle = bsNone
@@ -92,21 +94,24 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitHeight = 493
+      ExplicitTop = 57
+      ExplicitWidth = 674
     end
     object Panel2: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 30
-      Width = 674
+      Top = 3
+      Width = 524
       Height = 21
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitTop = 30
+      ExplicitWidth = 674
       object lblFoundChars: TLabel
         Left = 0
         Top = 0
-        Width = 447
+        Width = 297
         Height = 21
         Align = alClient
         Caption = 'Found characters:'
@@ -122,7 +127,7 @@ object fKanji: TfKanji
       end
       object Label2: TLabel
         AlignWithMargins = True
-        Left = 447
+        Left = 297
         Top = 0
         Width = 76
         Height = 21
@@ -133,10 +138,11 @@ object fKanji: TfKanji
         Align = alRight
         Caption = '#00197^Sort by'
         Layout = tlCenter
+        ExplicitLeft = 447
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
-        Left = 528
+        Left = 378
         Top = 0
         Width = 146
         Height = 21
@@ -154,18 +160,20 @@ object fKanji: TfKanji
           'Gakken Kanji'
           'Remembering Kanji'
           '#00149^eRandom')
+        ExplicitLeft = 528
       end
     end
     object Panel3: TPanel
       AlignWithMargins = True
       Left = 3
-      Top = 439
-      Width = 674
+      Top = 412
+      Width = 524
       Height = 21
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitTop = 556
+      ExplicitTop = 439
+      ExplicitWidth = 674
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -188,7 +196,7 @@ object fKanji: TfKanji
         ExplicitLeft = 137
       end
       object btnKanjiDetails: TSpeedButton
-        Left = 545
+        Left = 395
         Top = 0
         Width = 129
         Height = 21
@@ -210,7 +218,7 @@ object fKanji: TfKanji
         ExplicitHeight = 17
       end
       object btnPrintCards: TButton
-        Left = 416
+        Left = 266
         Top = 0
         Width = 129
         Height = 21
@@ -225,279 +233,243 @@ object fKanji: TfKanji
         ParentFont = False
         TabOrder = 0
         TabStop = False
+        ExplicitLeft = 416
       end
     end
     object pnlDockCompounds: TPanel
       Left = 0
-      Top = 463
-      Width = 680
+      Top = 436
+      Width = 530
       Height = 0
       Align = alBottom
       BevelOuter = bvNone
       UseDockManager = False
       DockSite = True
       TabOrder = 4
-      ExplicitTop = 580
+      ExplicitTop = 463
+      ExplicitWidth = 680
     end
-    object Panel6: TPanel
+  end
+  object pnlSearch: TPanel
+    Left = 0
+    Top = 0
+    Width = 679
+    Height = 27
+    Align = alTop
+    BevelEdges = [beBottom]
+    BevelKind = bkSoft
+    BevelOuter = bvNone
+    UseDockManager = False
+    DockSite = True
+    Padding.Bottom = 3
+    ParentBackground = False
+    TabOrder = 1
+    ExplicitTop = 8
+    object sbInClipboard: TSpeedButton
+      AlignWithMargins = True
+      Left = 367
+      Top = 0
+      Width = 27
+      Height = 22
+      Hint = '#00188^eDisplay only characters in clipboard'
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      AllowAllUp = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      Glyph.Data = {
+        36030000424D3603000000000000360000002800000010000000100000000100
+        18000000000000030000C40E0000C40E00000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFDFDFDB2B2B2A4A4A4A3A3A3A1A1A19F9F9F9E9E9E9D9D
+        9D9B9B9B9A9A9AB4B4B4BED1E14980AB206398206398206398246395587388F7
+        F7F7F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F3F3F39F9F9F5588B062A5D7
+        65A8DA64A6D962A4D8629FD1758EA4EFEFEFE7E7E7E7E7E7E7E7E7E7E7E7E6E6
+        E6E6E6E6ECECECA0A0A020639868ABDC488ECF468BCE4387CD4484C66885A1F0
+        F0F0B4B4B4B4B4B4B4B4B4B4B4B4B4B4B4B3B3B3EDEDEDA2A2A220639869AEDC
+        4A93D1488FD0468BCE4788C76C88A3F0F0F0E8E8E8E8E8E8E7E7E7E7E7E7E7E7
+        E7E7E7E7EDEDEDA3A3A32063986BB1DE4D97D34B93D2488FD04A8CC96F8BA5F1
+        F1F1B6B6B6B5B5B5B5B5B5B4B4B4B4B4B4B4B4B4EDEDEDA5A5A52063986DB3DF
+        509CD54E98D34B94D14C91CB708EA7F1F1F1E9E9E9E9E9E9E8E8E8E8E8E8E8E8
+        E8E7E7E7EDEDEDA7A7A720639870B5E0529FD7509CD64E98D44F95CD7391AAF1
+        F1F1B7B7B7B6B6B6B6B6B6B6B6B6B5B5B5B5B5B5EEEEEEA9A9A920639873B7E1
+        57A3D753A0D7509DD55299CF7594ACF8F8F8F2F2F2F2F2F2F2F2F2F2F2F2F2F2
+        F2F1F1F1F4F4F4ABABAB20639876B9E25CA7D958A4D853A0D7539ED5618BA964
+        88A16487A16386A069879F4A6881AEAEAEADADADABABABC2C2C22063987ABBE3
+        61AADB5AA5D953A0D7529FD7529FD7529FD7529FD7529FD762A3D8206398FFFF
+        FFFFFFFFFFFFFFFFFFFF2063987CBDE465AEDD62ABDC5EA8DA5CA7D95CA7D95C
+        A7D95CA7D9529FD762A3D8206398FFFFFFFFFFFFFFFFFFFFFFFF2063987FBFE4
+        69B2DE4A9BDA4497DC4396DC4296DC4295DC4195DB519ED66CB2DE206398FFFF
+        FFFFFFFFFFFFFFFFFFFF3B75A471B3DB7EBFE44E9DDFB5EEFD75D4F075D4F0B5
+        EEFD4B9BDE6EB4E070B4DF2A6A9CFFFFFFFFFFFFFFFFFFFFFFFFD3E0EA6392B7
+        2063983775A4B6EFFE80DBF380DBF3B6EFFE2E6EA12063986E9ABCB6CCDDFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDAE5EE20639820639820639820639820
+        63982D6C9EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+      ParentFont = False
+      OnClick = sbInClipboardClick
+      ExplicitLeft = 368
+      ExplicitTop = 5
+    end
+    object sbOnlyCommon: TSpeedButton
+      AlignWithMargins = True
+      Left = 336
+      Top = 0
+      Width = 28
+      Height = 22
+      Hint = '#00186^eDisplay only common characters'
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      AllowAllUp = True
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      Glyph.Data = {
+        36030000424D3603000000000000360000002800000010000000100000000100
+        18000000000000030000C40E0000C40E00000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFF898989474747FFFFFFFFFFFFFFFFFF000000FFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8989894747
+        47FFFFFFFFFFFFFFFFFF000000696969000000696969FFFFFFFFFFFFA7A7A711
+        11110000007A7A7AFFFFFF898989343434343434111111989898000000B5B5B5
+        ECECEC232323989898DDDDDD000000B5B5B5ECECEC2323239898988989891111
+        11DDDDDDD0D0D0000000232323FFFFFFFFFFFF898989474747C3C3C3232323FF
+        FFFFFFFFFF7A7A7A575757898989696969FFFFFFFFFFFF474747232323FFFFFF
+        FFFFFF898989474747C3C3C3232323FFFFFFFFFFFF8989895757578989896969
+        69FFFFFFFFFFFF474747000000A7A7A7ECECEC232323989898DDDDDD000000B5
+        B5B5ECECEC232323989898898989111111D0D0D0D0D0D0000000000000696969
+        000000474747ECECECFFFFFFA7A7A71111110000007A7A7AFFFFFF8989893434
+        343434340000007A7A7AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
+      ParentFont = False
+      OnClick = sbOnlyCommonClick
+      ExplicitLeft = 337
+      ExplicitTop = -4
+    end
+    object edtLookup: TEdit
       Left = 0
       Top = 0
-      Width = 680
-      Height = 27
-      Align = alTop
-      BevelEdges = [beBottom]
-      BevelKind = bkSoft
-      BevelOuter = bvNone
-      UseDockManager = False
-      DockSite = True
-      Padding.Bottom = 3
-      ParentBackground = False
-      TabOrder = 5
-      object sbInClipboard: TSpeedButton
-        AlignWithMargins = True
-        Left = 368
-        Top = 0
-        Width = 27
-        Height = 22
-        Hint = '#00188^eDisplay only characters in clipboard'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        AllowAllUp = True
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        Glyph.Data = {
-          36030000424D3603000000000000360000002800000010000000100000000100
-          18000000000000030000C40E0000C40E00000000000000000000FFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFDFDFDB2B2B2A4A4A4A3A3A3A1A1A19F9F9F9E9E9E9D9D
-          9D9B9B9B9A9A9AB4B4B4BED1E14980AB206398206398206398246395587388F7
-          F7F7F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F3F3F39F9F9F5588B062A5D7
-          65A8DA64A6D962A4D8629FD1758EA4EFEFEFE7E7E7E7E7E7E7E7E7E7E7E7E6E6
-          E6E6E6E6ECECECA0A0A020639868ABDC488ECF468BCE4387CD4484C66885A1F0
-          F0F0B4B4B4B4B4B4B4B4B4B4B4B4B4B4B4B3B3B3EDEDEDA2A2A220639869AEDC
-          4A93D1488FD0468BCE4788C76C88A3F0F0F0E8E8E8E8E8E8E7E7E7E7E7E7E7E7
-          E7E7E7E7EDEDEDA3A3A32063986BB1DE4D97D34B93D2488FD04A8CC96F8BA5F1
-          F1F1B6B6B6B5B5B5B5B5B5B4B4B4B4B4B4B4B4B4EDEDEDA5A5A52063986DB3DF
-          509CD54E98D34B94D14C91CB708EA7F1F1F1E9E9E9E9E9E9E8E8E8E8E8E8E8E8
-          E8E7E7E7EDEDEDA7A7A720639870B5E0529FD7509CD64E98D44F95CD7391AAF1
-          F1F1B7B7B7B6B6B6B6B6B6B6B6B6B5B5B5B5B5B5EEEEEEA9A9A920639873B7E1
-          57A3D753A0D7509DD55299CF7594ACF8F8F8F2F2F2F2F2F2F2F2F2F2F2F2F2F2
-          F2F1F1F1F4F4F4ABABAB20639876B9E25CA7D958A4D853A0D7539ED5618BA964
-          88A16487A16386A069879F4A6881AEAEAEADADADABABABC2C2C22063987ABBE3
-          61AADB5AA5D953A0D7529FD7529FD7529FD7529FD7529FD762A3D8206398FFFF
-          FFFFFFFFFFFFFFFFFFFF2063987CBDE465AEDD62ABDC5EA8DA5CA7D95CA7D95C
-          A7D95CA7D9529FD762A3D8206398FFFFFFFFFFFFFFFFFFFFFFFF2063987FBFE4
-          69B2DE4A9BDA4497DC4396DC4296DC4295DC4195DB519ED66CB2DE206398FFFF
-          FFFFFFFFFFFFFFFFFFFF3B75A471B3DB7EBFE44E9DDFB5EEFD75D4F075D4F0B5
-          EEFD4B9BDE6EB4E070B4DF2A6A9CFFFFFFFFFFFFFFFFFFFFFFFFD3E0EA6392B7
-          2063983775A4B6EFFE80DBF380DBF3B6EFFE2E6EA12063986E9ABCB6CCDDFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDAE5EE20639820639820639820639820
-          63982D6C9EFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        ParentFont = False
-        OnClick = sbInClipboardClick
-        ExplicitTop = 5
-      end
-      object sbOnlyCommon: TSpeedButton
-        AlignWithMargins = True
-        Left = 337
-        Top = 0
-        Width = 28
-        Height = 22
-        Hint = '#00186^eDisplay only common characters'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        AllowAllUp = True
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        Glyph.Data = {
-          36030000424D3603000000000000360000002800000010000000100000000100
-          18000000000000030000C40E0000C40E00000000000000000000FFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFF898989474747FFFFFFFFFFFFFFFFFF000000FFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF8989894747
-          47FFFFFFFFFFFFFFFFFF000000696969000000696969FFFFFFFFFFFFA7A7A711
-          11110000007A7A7AFFFFFF898989343434343434111111989898000000B5B5B5
-          ECECEC232323989898DDDDDD000000B5B5B5ECECEC2323239898988989891111
-          11DDDDDDD0D0D0000000232323FFFFFFFFFFFF898989474747C3C3C3232323FF
-          FFFFFFFFFF7A7A7A575757898989696969FFFFFFFFFFFF474747232323FFFFFF
-          FFFFFF898989474747C3C3C3232323FFFFFFFFFFFF8989895757578989896969
-          69FFFFFFFFFFFF474747000000A7A7A7ECECEC232323989898DDDDDD000000B5
-          B5B5ECECEC232323989898898989111111D0D0D0D0D0D0000000000000696969
-          000000474747ECECECFFFFFFA7A7A71111110000007A7A7AFFFFFF8989893434
-          343434340000007A7A7AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF}
-        ParentFont = False
-        OnClick = sbOnlyCommonClick
-        ExplicitTop = -4
-      end
-      object edtLookup: TEdit
-        Left = 0
-        Top = 0
-        Width = 58
-        Height = 22
-        Align = alClient
-        TabOrder = 0
-        OnChange = SearchFilterChanged
-        ExplicitHeight = 21
-      end
-      object sbStrokeCount: TWinSpeedButton
-        AlignWithMargins = True
-        Left = 398
-        Top = 0
-        Width = 92
-        Height = 22
-        Hint = 
-          '#00190^eFilter by stroke count (you can search by range, ex. 1-6' +
-          ')'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        AllowAllUp = True
-        Caption = '#00191^eStroke #'
-        GroupIndex = 11
-        Style = bsSplitButton
-        TabOrder = 2
-        OnClick = sbStrokeCountClick
-        OnDropDownClick = sbStrokeCountDropDownClick
-      end
-      object sbRadicals: TWinSpeedButton
-        AlignWithMargins = True
-        Left = 493
-        Top = 0
-        Width = 92
-        Height = 22
-        Hint = '#00177^eFilter by radical (Ctrl-R)'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        AllowAllUp = True
-        Caption = '#00178^eRadical'
-        GroupIndex = 12
-        Style = bsSplitButton
-        TabOrder = 3
-        OnClick = sbRadicalsClick
-        OnDropDownClick = sbRadicalsDropDownClick
-        ExplicitTop = 5
-      end
-      object btnGroups: TWinSpeedButton
-        AlignWithMargins = True
-        Left = 588
-        Top = 0
-        Width = 92
-        Height = 22
-        Hint = 
-          '#01133^Search by reading, writing or meaning, depending on what ' +
-          'you type'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        Caption = 'Groups: A B'
-        Style = bsSplitButton
-        TabOrder = 4
-        TabStop = False
-        OnDropDownClick = btnGroupsDropDownClick
-      end
-      object btnLookupMode: TWinSpeedButton
-        AlignWithMargins = True
-        Left = 199
-        Top = 0
-        Width = 135
-        Height = 22
-        Hint = 
-          '#01133^Search by reading, writing or meaning, depending on what ' +
-          'you type'
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        Caption = '#01132^Any matches'
-        Style = bsSplitButton
-        TabOrder = 1
-        TabStop = False
-        Visible = False
-      end
-      object cbLookupType: TComboBox
-        AlignWithMargins = True
-        Left = 61
-        Top = 0
-        Width = 135
-        Height = 21
-        Margins.Top = 0
-        Margins.Right = 0
-        Margins.Bottom = 0
-        Align = alRight
-        Style = csDropDownList
-        TabOrder = 5
-        OnChange = SearchFilterChanged
-      end
+      Width = 195
+      Height = 22
+      Align = alClient
+      TabOrder = 0
+      OnChange = SearchFilterChanged
+      ExplicitHeight = 21
     end
-    object pnlStrokeCount: TPopupPanel
-      Left = 398
-      Top = 33
+    object sbStrokeCount: TWinSpeedButton
+      AlignWithMargins = True
+      Left = 397
+      Top = 0
       Width = 92
-      Height = 26
-      TabOrder = 6
-      Visible = False
-      OnExit = pnlStrokeCountExit
-      object edtStrokeCount: TRangeSpinEdit
-        AlignWithMargins = True
-        Left = 2
-        Top = 2
-        Width = 88
-        Height = 22
-        Margins.Left = 1
-        Margins.Top = 1
-        Margins.Right = 1
-        Margins.Bottom = 1
-        Align = alClient
-        MaxValue = 100
-        MinValue = 0
-        TabOrder = 0
-        LowValue = 0
-        HighValue = 0
-        OnChange = edtStrokeCountChange
-        ExplicitLeft = 1
-        ExplicitWidth = 89
-      end
+      Height = 22
+      Hint = 
+        '#00190^eFilter by stroke count (you can search by range, ex. 1-6' +
+        ')'
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      AllowAllUp = True
+      Caption = '#00191^eStroke #'
+      GroupIndex = 11
+      Style = bsSplitButton
+      TabOrder = 1
+      Transparent = False
+      OnClick = sbStrokeCountClick
+      OnDropDownClick = sbStrokeCountDropDownClick
+    end
+    object sbRadicals: TWinSpeedButton
+      AlignWithMargins = True
+      Left = 492
+      Top = 0
+      Width = 92
+      Height = 22
+      Hint = '#00177^eFilter by radical (Ctrl-R)'
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      AllowAllUp = True
+      Caption = '#00178^eRadical'
+      GroupIndex = 12
+      Style = bsSplitButton
+      TabOrder = 2
+      Transparent = False
+      OnClick = sbRadicalsClick
+      OnDropDownClick = sbRadicalsDropDownClick
+    end
+    object btnGroups: TWinSpeedButton
+      AlignWithMargins = True
+      Left = 587
+      Top = 0
+      Width = 92
+      Height = 22
+      Hint = 
+        '#01133^Search by reading, writing or meaning, depending on what ' +
+        'you type'
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      AllowAllUp = True
+      Caption = 'Groups'
+      GroupIndex = 41
+      TabOrder = 3
+      TabStop = False
+      Transparent = False
+      OnClick = btnGroupsClick
+    end
+    object cbLookupType: TComboBox
+      AlignWithMargins = True
+      Left = 198
+      Top = 0
+      Width = 135
+      Height = 21
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      Style = csDropDownList
+      TabOrder = 4
+      OnChange = SearchFilterChanged
     end
   end
   object pnlGroups: TPopupPanel
-    Left = 489
-    Top = 100
-    Width = 185
-    Height = 238
-    BevelKind = bkFlat
+    AlignWithMargins = True
+    Left = 533
+    Top = 30
+    Width = 143
+    Height = 432
+    Align = alRight
     BevelOuter = bvNone
-    TabOrder = 1
+    TabOrder = 2
     Visible = False
     OnExit = pnlGroupsExit
+    ExplicitLeft = 536
+    ExplicitTop = 27
+    ExplicitHeight = 438
     object Panel9: TPanel
       AlignWithMargins = True
       Left = 0
       Top = 0
-      Width = 181
+      Width = 143
       Height = 22
       Margins.Left = 0
       Margins.Top = 0
@@ -506,6 +478,7 @@ object fKanji: TfKanji
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitWidth = 139
       object sbJouyou: TSpeedButton
         Left = 0
         Top = 0
@@ -529,7 +502,7 @@ object fKanji: TfKanji
         AlignWithMargins = True
         Left = 57
         Top = 0
-        Width = 124
+        Width = 86
         Height = 22
         Margins.Left = 0
         Margins.Top = 0
@@ -542,21 +515,21 @@ object fKanji: TfKanji
         LowValue = 0
         HighValue = 0
         OnChange = edtJouyouChange
-        ExplicitLeft = -431
-        ExplicitWidth = 50
+        ExplicitWidth = 82
       end
     end
     object Panel11: TPanel
       AlignWithMargins = True
       Left = 0
       Top = 25
-      Width = 181
+      Width = 143
       Height = 22
       Margins.Left = 0
       Margins.Right = 0
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 139
       object sbJlpt: TSpeedButton
         Left = 0
         Top = 0
@@ -581,7 +554,7 @@ object fKanji: TfKanji
         AlignWithMargins = True
         Left = 57
         Top = 0
-        Width = 124
+        Width = 86
         Height = 22
         Margins.Left = 0
         Margins.Top = 0
@@ -594,14 +567,15 @@ object fKanji: TfKanji
         LowValue = 0
         HighValue = 0
         OnChange = edtJlptChange
+        ExplicitWidth = 82
       end
     end
     object lbCategories: TCheckListBox
       AlignWithMargins = True
       Left = 0
       Top = 77
-      Width = 181
-      Height = 157
+      Width = 143
+      Height = 355
       Margins.Left = 0
       Margins.Right = 0
       Margins.Bottom = 0
@@ -613,12 +587,14 @@ object fKanji: TfKanji
       OnClick = lbCategoriesClick
       OnDblClick = lbCategoriesDblClick
       OnDrawItem = lbCategoriesDrawItem
+      ExplicitWidth = 139
+      ExplicitHeight = 301
     end
     object cbOrAnd: TComboBox
       AlignWithMargins = True
       Left = 0
       Top = 53
-      Width = 181
+      Width = 143
       Height = 21
       Margins.Left = 0
       Margins.Right = 0
@@ -632,6 +608,34 @@ object fKanji: TfKanji
         'In any of:'
         'In all of:'
         'Not in any of:')
+      ExplicitWidth = 181
+    end
+  end
+  object pnlStrokeCount: TPopupPanel
+    Left = 398
+    Top = 33
+    Width = 92
+    Height = 26
+    TabOrder = 3
+    Visible = False
+    OnExit = pnlStrokeCountExit
+    object edtStrokeCount: TRangeSpinEdit
+      AlignWithMargins = True
+      Left = 2
+      Top = 2
+      Width = 88
+      Height = 22
+      Margins.Left = 1
+      Margins.Top = 1
+      Margins.Right = 1
+      Margins.Bottom = 1
+      Align = alClient
+      MaxValue = 100
+      MinValue = 0
+      TabOrder = 0
+      LowValue = 0
+      HighValue = 0
+      OnChange = edtStrokeCountChange
     end
   end
   object SaveDialog1: TSaveDialog
@@ -752,7 +756,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 352
     Bitmap = {
-      494C010104001401E00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401E80110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

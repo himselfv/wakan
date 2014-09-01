@@ -58,10 +58,7 @@ type
     pnlDockCompounds: TPanel;
     splDockCompounds: TSplitter;
     lblFoundChars: TLabel;
-    Panel6: TPanel;
-    pnlStrokeCount: TPopupPanel;
     Label2: TLabel;
-    pnlGroups: TPopupPanel;
     miCharWords: TMenuItem;
     miCharDetails: TMenuItem;
     N2: TMenuItem;
@@ -71,24 +68,26 @@ type
     miBeforeLookupIn: TMenuItem;
     miAfterLookupIn: TMenuItem;
     PopupImages: TImageList;
+    rgSortBy: TComboBox;
+    pnlSearch: TPanel;
+    sbInClipboard: TSpeedButton;
+    sbOnlyCommon: TSpeedButton;
+    edtLookup: TEdit;
+    sbStrokeCount: TWinSpeedButton;
+    sbRadicals: TWinSpeedButton;
+    btnGroups: TWinSpeedButton;
+    cbLookupType: TComboBox;
+    pnlGroups: TPopupPanel;
     Panel9: TPanel;
+    sbJouyou: TSpeedButton;
+    edtJouyou: TRangeSpinEdit;
     Panel11: TPanel;
     sbJlpt: TSpeedButton;
     edtJlpt: TRangeSpinEdit;
-    rgSortBy: TComboBox;
-    edtLookup: TEdit;
-    sbStrokeCount: TWinSpeedButton;
-    sbInClipboard: TSpeedButton;
-    sbOnlyCommon: TSpeedButton;
-    sbRadicals: TWinSpeedButton;
-    btnGroups: TWinSpeedButton;
     lbCategories: TCheckListBox;
     cbOrAnd: TComboBox;
-    btnLookupMode: TWinSpeedButton;
-    cbLookupType: TComboBox;
+    pnlStrokeCount: TPopupPanel;
     edtStrokeCount: TRangeSpinEdit;
-    sbJouyou: TSpeedButton;
-    edtJouyou: TRangeSpinEdit;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -140,11 +139,9 @@ type
     procedure miCharDetailsClick(Sender: TObject);
     procedure miCopyClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure btnGroupsDropDownClick(Sender: TObject);
     procedure sbStrokeCountDropDownClick(Sender: TObject);
     procedure aInClipboardExecute(Sender: TObject);
     procedure aOnlyCommonExecute(Sender: TObject);
-    procedure miLookupSKIPClick(Sender: TObject);
     procedure sbOnlyCommonClick(Sender: TObject);
     procedure sbInClipboardClick(Sender: TObject);
     procedure sbStrokeCountClick(Sender: TObject);
@@ -152,6 +149,7 @@ type
     procedure edtJlptChange(Sender: TObject);
     procedure sbRadicalsClick(Sender: TObject);
     procedure sbRadicalsDropDownClick(Sender: TObject);
+    procedure btnGroupsClick(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -299,11 +297,11 @@ begin
   reg.WriteInteger('KanjiSearch','LookupTypeIndex', Self.GetLookupTypeIndex);
   reg.WriteString('KanjiSearch','LookupQuery', Self.edtLookup.Text);
 
-  if Self.edtStrokeCount.Text<>'' then
+  if Self.sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and (Self.edtStrokeCount.Text<>'0') then
     reg.WriteString('KanjiSearch','Strokes',Self.edtStrokeCount.Text)
   else
     reg.DeleteKey('KanjiSearch','Strokes');
-  if Self.curRadChars<>'' then begin
+  if Self.sbRadicals.Down and (Self.curRadChars<>'') then begin
     reg.WriteInteger('KanjiSearch','RadSearchType',integer(Self.curRadSearchType));
     reg.WriteString('KanjiSearch','RadSearch',Self.curRadChars);
   end else begin
@@ -311,11 +309,11 @@ begin
     reg.DeleteKey('KanjiSearch','RadSearch');
     reg.DeleteKey('KanjiSearch','RadIndexes');
   end;
-  if (Self.edtJouyou.Text<>'') and (Self.edtJouyou.Text<>'0') then
+  if Self.sbJouyou.Down and (Self.edtJouyou.Text<>'') and (Self.edtJouyou.Text<>'0') then
     reg.WriteString('KanjiSearch','Jouyou',Self.edtJouyou.Text)
   else
     reg.DeleteKey('KanjiSearch','Jouyou');
-  if (Self.edtJlpt.Text<>'') and (Self.edtJlpt.Text<>'0') then
+  if Self.sbJlpt.Down and (Self.edtJlpt.Text<>'') and (Self.edtJlpt.Text<>'0') then
     reg.WriteString('KanjiSearch','Jlpt',Self.edtJlpt.Text)
   else
     reg.DeleteKey('KanjiSearch','Jlpt');
@@ -1589,13 +1587,6 @@ begin
   Self.InvalidateList;
 end;
 
-procedure TfKanji.miLookupSKIPClick(Sender: TObject);
-begin
-  btnLookupMode.Caption := TMenuItem(Sender).Caption;
-  btnLookupMode.Hint := TMenuItem(Sender).Hint;
-  Self.InvalidateList;
-end;
-
 procedure TfKanji.sbOnlyCommonClick(Sender: TObject);
 begin
   aOnlyCommon.Checked := sbOnlyCommon.Down;
@@ -1695,9 +1686,9 @@ begin
   end;
 end;
 
-procedure TfKanji.btnGroupsDropDownClick(Sender: TObject);
+procedure TfKanji.btnGroupsClick(Sender: TObject);
 begin
-  PopupUnder(pnlGroups, btnGroups);
+  pnlGroups.Visible := btnGroups.Down;
 end;
 
 procedure TfKanji.pnlGroupsExit(Sender: TObject);
