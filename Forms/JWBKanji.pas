@@ -24,6 +24,8 @@ type
   TReadFilterFlag = (rfPartial, rfSpace, rfNumber, rfTakedot);
   TReadFilterFlags = set of TReadFilterFlag;
 
+  TLanguageSet = set of AnsiChar;
+
   TfKanji = class(TForm)
     Panel1: TPanel;
     DrawGrid1: TDrawGrid;
@@ -163,6 +165,8 @@ type
     procedure CategoryListChanged(Sender: TObject);
     procedure ClipboardChanged(Sender: TObject);
     procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
+    procedure ReadAnyTextFilter(flt: TStringList; const tx: string; typ: integer;
+      flags: TReadFilterFlags; lang: TLanguageSet);
     procedure ReadRaineFilter(fltradical:TStringList;const ARadicals:string);
   public
     procedure SaveSettings(reg: TCustomIniFile);
@@ -418,7 +422,6 @@ end;
 
 
 const
-  FIXED_LOOKUP_TYPES  = 6;
   LOOKUP_ANY          = 0;
   LOOKUP_CHARS        = 1;
   LOOKUP_DEFINITION   = 2;
@@ -426,6 +429,7 @@ const
   LOOKUP_KUN          = 4;
   LOOKUP_PINYIN       = 5;
   LOOKUP_SKIP         = 6;
+  FIXED_LOOKUP_TYPES  = 6;
 
 //Reloads a list of textual search types
 procedure TfKanji.ClearLookupTypes;
@@ -701,6 +705,26 @@ begin
   end;
 end;
 
+//Text properties can be stored as katakana, hiragana and romaji; user can type
+//either, so try all conversions and merge results.
+//Don't use for text fields where there's no ambiguity in input / data format.
+procedure TfKanji.ReadAnyTextFilter(flt: TStringList; const tx: string;
+  typ: integer; flags: TReadFilterFlags; lang: TLanguageSet);
+begin
+  ReadFilter(flt, tx, typ, flags); //search as is
+
+  if AnsiChar('j') in lang then begin
+    //also converts raw katakana to hiragana (since RtoK keeps invalid chars):
+    ReadFilter(flt, ToHiragana(RomajiToKana('H'+tx,'j',[])), typ, flags); //maybe that was romaji?
+    ReadFilter(flt, ToKatakana(RomajiToKana('K'+tx,'j',[])), typ, flags);
+  end;
+
+  if AnsiChar('c') in lang then begin
+    ReadFilter(flt, RomajiToKana(tx,'c',[]), typ, flags);
+  end;
+end;
+
+
 { Converts RadicalIndexes to the standard filter string acceptable by ReadFilter }
 function RadicalIndexesToFilter(const AIndexes: TRadicalIndexes): string;
 var i: integer;
@@ -783,6 +807,7 @@ var
   categories: array of integer; //of checked category indexes
   flags: TReadFilterFlags;
   kclass: char;
+  prop: PCharPropType;
 
   procedure CopyCategories; //they're UNIMAGINABLY slow if used as is
   var i: integer;
@@ -851,45 +876,31 @@ begin
     else
       flags := [];
 
-    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_ON]  then begin
-      ReadFilter(fltLookup, RomajiToKana(edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags); //as is (maybe that was kana?)
-      ReadFilter(fltLookup, RomajiToKana('H'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags); //maybe that was romaji?
-      ReadFilter(fltLookup, RomajiToKana('K'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptOnReading, flags);
-    end;
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_ON]  then
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptOnReading, flags, ['j']);
 
-    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_KUN] then begin
-      ReadFilter(fltLookup, RomajiToKana(edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags); //as is (maybe that was kana?)
-      ReadFilter(fltLookup, RomajiToKana('H'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags); //maybe that was romaji?
-      ReadFilter(fltLookup, RomajiToKana('K'+edtLookup.Text,'j',[rfDeleteInvalidChars]), ptKunReading, flags);
-    end;
+    if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_KUN] then
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptKunReading, flags, ['j']);
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_PINYIN] then begin
-      ReadFilter(fltLookup, edtLookup.Text, ptMandarinReading, [rfPartial]); //Mandarin
-      ReadFilter(fltLookup, edtLookup.Text, ptCantoneseReading, [rfPartial]); //Canton
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptMandarinReading, [rfPartial], ['c']); //Mandarin
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptCantoneseReading, [rfPartial], ['c']); //Canton
     end;
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_SKIP] then
       ReadFilter(fltLookup, edtLookup.Text, ptSKIP, [rfPartial]);
 
-    //TODO: if Other is selected, look by that field
-    {
-    if Self.cbOtherType.ItemIndex=0 then
-      fltother.Add(Self.edtOther.Text)
+   //Generic types
+    if GetLookupTypeIndex > 0 then
+      prop := FindCharPropType(GetLookupTypeIndex())
     else
-      j:=0;
-    for i:=0 to Length(CharPropTypes)-1 do
-      if CharPropTypes[i].id>20 then
-      begin
-        inc(j);
-        if j=Self.cbOtherType.ItemIndex then begin
-          if CharPropTypes[i].dataType='N' then
-            flags := [rfNumber]
-          else
-            flags := [];
-          ReadFilter(fltother,Self.edtOther.Text,CharPropTypes[i].id,flags);
-        end;
-      end;
-    }
+      prop := nil;
+    if prop <> nil then begin
+      if prop.dataType = 'N' then
+        ReadFilter(fltLookup, edtLookup.Text, prop.id, [rfNumber])
+      else
+        ReadAnyTextFilter(fltLookup, edtLookup.Text, prop.id, [rfPartial], ['c', 'j'])
+    end;
 
   end;
 
@@ -905,7 +916,6 @@ begin
       stRaine: ReadRaineFilter(fltRadical,Self.CurRadChars);
     end;
   end;
-
 
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
@@ -948,6 +958,7 @@ begin
           stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
           stRaine: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
         end;
+
       if (curlang='c') and accept and sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and not InRange(Self.edtStrokeCount.Text,TChar.Str(TChar.fChStrokeCount),true,sl4) then accept:=false;
       if (curlang<>'c') and accept and sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and not InRange(Self.edtStrokeCount.Text,TChar.Str(TChar.fJpStrokeCount),true,sl4) then accept:=false;
 
