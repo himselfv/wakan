@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsExprCopyFormats
+    ActivePage = tsGeneral
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -2610,10 +2610,16 @@ object fSettings: TfSettings
       object lblExprCopyFormatsEdit: TUrlLabel
         Left = 228
         Top = 33
-        Width = 173
+        Width = 176
         Height = 13
         Cursor = crHandPoint
         Caption = '#01105^Edit available formats'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clHighlight
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = [fsBold, fsUnderline]
+        ParentFont = False
       end
       object lblExprCopyFormatsDocs: TUrlLabel
         Left = 228

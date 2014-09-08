@@ -786,21 +786,19 @@ end;
 
 //filter kanji and show them in the grid
 procedure TfKanji.Reload;
-
-function InRange(tx,fld:string;number:boolean;sl:TStringList):boolean;
-begin
-  MakeList(tx,number,sl);
-  result:=sl.IndexOf(uppercase(fld))>-1;
-end;
-
 var
-  fltLookup, fltClip: TStringList;
+  fltLookup,
+  fltClip,
+  fltRadical,
+  fltStrokeCount,
+  fltJlpt,
+  fltJouyou: TStringList;
+
     accept:boolean;
     i,j,grs:integer;
     s1,s2,s3:string;
     x:integer;
-    sl4,sl10:TStringList;
-    fltradical:TStringList;
+
     clipsort:boolean;
     clipind:integer;
 
@@ -847,8 +845,14 @@ begin
   fltLookup := nil;
   fltClip := nil;
   fltRadical := nil;
+  fltStrokeCount := nil;
+  fltJlpt := nil;
+  fltJouyou := nil;
 
   Screen.Cursor:=crHourGlass;
+
+ { Prepare lists of all possible characters matching each criteria / all possible
+  values for each criteria }
 
   CopyCategories;
 
@@ -908,20 +912,38 @@ begin
   Classical with OR (characters which match at least one radical are shown).
   This is because a character has only one Classical Radical so AND is pointless. }
   if sbRadicals.Down and (Self.curRadChars<>'') then begin
-    fltradical:=TStringList.Create;
+    fltRadical := TStringList.Create;
+    fltRadical.Sorted := true;
     case Self.curRadSearchType of
       stClassic: ReadFilter(fltRadical,
         RadicalIndexesToFilter(RadicalsToIndexes(stClassic,Self.CurRadChars)),
-        fSettings.GetPreferredRadicalType,[rfNumber]); //Radicals
+        fSettings.GetPreferredRadicalType,[rfNumber]);
       stRaine: ReadRaineFilter(fltRadical,Self.CurRadChars);
     end;
   end;
 
+  if sbJlpt.Down and (Self.edtJlpt.Text<>'') and (Self.edtJlpt.Text<>'0') then begin
+    fltJlpt := TStringList.Create;
+    fltJlpt.Sorted := true;
+    ReadFilter(fltJlpt, Self.edtJlpt.Text, ptJLPTLevel, [rfNumber]);
+  end;
+
+  if sbJouyou.Down and (Self.edtJouyou.Text<>'') and (Self.edtJouyou.Text<>'0') then begin
+    fltJouyou := TStringList.Create;
+    MakeList(Self.edtJouyou.Text, true, fltJouyou);
+  end;
+
+  if sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') then begin
+    fltStrokeCount := TStringList.Create;
+    MakeList(Self.edtStrokeCount.Text, true, fltStrokeCount);
+  end;
+
+
+ { Go through characters (either all characters or characters in clipboard),
+  leaving only those that are in all lists }
+
   DrawGrid1.Perform(WM_SETREDRAW, 0, 0); //disable redraw
   try
-    sl4:=TStringList.Create;
-    sl10:=TStringList.Create;
-
     grs := GetCellSize();
     if curlang='j' then
       case Self.rgSortBy.ItemIndex of
@@ -936,38 +958,48 @@ begin
         2:TChar.SetOrder('ChFrequency_Ind');
       end;
     ki.Clear;
+
     clipsort:=(Self.aInClipboard.Checked) and (Self.rgSortBy.ItemIndex=4);
     clipind:=0;
-  //  if not clipsort then fltclip.Sort;
     while ((not clipsort) and ((not TChar.EOF) and ((curlang='c') or (TChar.Int(TChar.fChinese)=0)))) or
           ((clipsort) and (clipind<fltclip.Count)) do
     begin
-      accept:=true;
-      if clipsort then accept:=TChar.Locate('Unicode',fltclip[clipind]);
+      accept := true;
+      if clipsort then accept := TChar.Locate('Unicode', fltClip[clipind]);
+
+      //Ignore traditional or simplified variants if configured
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=0) and (TChar.Str(TChar.fType)='S') then accept:=false;
       if accept and (curlang='c') and (fSettings.RadioGroup5.ItemIndex=1) and (TChar.Str(TChar.fType)='T') then accept:=false;
-      if accept and (Self.aOnlyCommon.Checked) and (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
-      if accept and (Self.aOnlyCommon.Checked) and (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
-      if accept and (not clipsort) and Self.aInClipboard.Checked and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
-      if accept and (fltLookup<>nil) and (fltLookup.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept := false;
 
-      //TODO: Filter by JLPT
+      //Only common characters
+      if accept and Self.aOnlyCommon.Checked then begin
+        if (curlang='c') and (TChar.Int(TChar.fChFrequency)>=255) then accept:=false;
+        if (curlang<>'c') and (TChar.Int(TChar.fJouyouGrade)>=10) then accept:=false;
+      end;
 
-      if accept and sbRadicals.Down and (Self.curRadChars<>'') then
+      if accept and (not clipsort) and Self.aInClipboard.Checked and (fltClip.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept:=false;
+
+      //Lookup text
+      if accept and (fltLookup <> nil) and (fltLookup.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept := false;
+
+      //Radicals
+      if accept and (fltradical <> nil) then
         case Self.curRadSearchType of
-          stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
-          stRaine: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
+          stClassic: if fltRadical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
+          stRaine: if fltRadical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
         end;
 
-      if (curlang='c') and accept and sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and not InRange(Self.edtStrokeCount.Text,TChar.Str(TChar.fChStrokeCount),true,sl4) then accept:=false;
-      if (curlang<>'c') and accept and sbStrokeCount.Down and (Self.edtStrokeCount.Text<>'') and not InRange(Self.edtStrokeCount.Text,TChar.Str(TChar.fJpStrokeCount),true,sl4) then accept:=false;
+      //Stroke count
+      if accept and (fltStrokeCount <> nil) then begin
+        if (curlang='c') and (fltStrokeCount.IndexOf(TChar.Str(TChar.fChStrokeCount))<0) then accept := false;
+        if (curlang<>'c') and (fltStrokeCount.IndexOf(TChar.Str(TChar.fJpStrokeCount))<0) then accept := false;
+      end;
 
-      if accept then
-        accept := CheckCategories;
+      if accept then accept := CheckCategories;
+      if accept and (fltJouyou <> nil) and (fltJouyou.IndexOf(TChar.Str(TChar.fJouyouGrade))<0) then accept := false;
+      if accept and (fltJlpt <> nil) and (fltJlpt.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept:=false;
 
-      if accept and sbJouyou.Down and (Self.edtJouyou.Text<>'') and not InRange(Self.edtJouyou.Text,TChar.Str(TChar.fJouyouGrade),true,sl10) then accept:=false;
-      if accept then
-      begin
+      if accept then begin
         kclass := GetCharClass(TChar.Str(TChar.fUnicode));
         if ((curlang<>'c') and (Self.rgSortBy.ItemIndex=3))
         or ((curlang='c') and (Self.rgSortBy.ItemIndex=3)) then
@@ -975,14 +1007,16 @@ begin
         else
           ki.Add(kclass+TChar.Str(TChar.fUnicode));
       end;
+
       if clipsort then inc(clipind) else TChar.Next;
     end;
-    fltclip.Free;
-    fltradical.Free;
+
+    FreeAndNil(fltRadical);
+    FreeAndNil(fltJlpt);
+    FreeAndNil(fltJouyou);
+    FreeAndNil(fltStrokeCount);
     FreeAndNil(fltClip);
     FreeAndNil(fltLookup);
-    sl4.Free;
-    sl10.Free;
 
     DrawGrid1.ColCount:=GetExpectedColCount();
     x:=DrawGrid1.ColCount;

@@ -66,6 +66,7 @@ const
   ptRSKorean = 17;
 
   ptSKIP = 22;
+  ptJLPTLevel = 35;
 
   ptSimplifiedVariant = 43;
   ptTraditionalVariant = 44;
