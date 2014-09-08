@@ -1314,6 +1314,20 @@
 01203>%d characters
 01204>%d traditional characters
 01205>%d simplified characters
+01206>Stroke #: %s
+01207>Radicals: %s
+01208>Groups
+01209>Sort by:
+01210>In any of:
+01211>In all of:
+01212>Not in any of:
+01213>Characters
+01214>Definition
+01215>On
+01216>Kun
+01217>PinYin
+01218>SKIP
+
 
 
 ;

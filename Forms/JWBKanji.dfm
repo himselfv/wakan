@@ -30,8 +30,7 @@ object fKanji: TfKanji
     Align = alClient
     BevelOuter = bvNone
     FullRepaint = False
-    TabOrder = 0
-    ExplicitWidth = 530
+    TabOrder = 2
     object splDockCompounds: TSplitter
       Left = 0
       Top = 436
@@ -61,7 +60,6 @@ object fKanji: TfKanji
       TextLeft = 8
       TextTop = 8
       Text = '#00118^eNo characters were found.'
-      ExplicitWidth = 530
     end
     object DrawGrid1: TDrawGrid
       AlignWithMargins = True
@@ -91,7 +89,6 @@ object fKanji: TfKanji
       OnMouseMove = DrawGrid1MouseMove
       OnMouseUp = DrawGrid1MouseUp
       OnSelectCell = DrawGrid1SelectCell
-      ExplicitWidth = 524
     end
     object Panel2: TPanel
       AlignWithMargins = True
@@ -102,11 +99,10 @@ object fKanji: TfKanji
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 524
       object lblFoundChars: TLabel
         Left = 0
         Top = 0
-        Width = 268
+        Width = 265
         Height = 21
         Align = alClient
         Caption = 'Found characters:'
@@ -122,18 +118,18 @@ object fKanji: TfKanji
       end
       object Label2: TLabel
         AlignWithMargins = True
-        Left = 268
+        Left = 265
         Top = 0
-        Width = 76
+        Width = 79
         Height = 21
         Margins.Left = 0
         Margins.Top = 0
         Margins.Right = 5
         Margins.Bottom = 0
         Align = alRight
-        Caption = '#00197^Sort by'
+        Caption = '#01209^Sort by:'
         Layout = tlCenter
-        ExplicitLeft = 297
+        ExplicitLeft = 271
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
@@ -155,7 +151,6 @@ object fKanji: TfKanji
           'Gakken Kanji'
           'Remembering Kanji'
           '#00149^eRandom')
-        ExplicitLeft = 378
       end
     end
     object Panel3: TPanel
@@ -167,7 +162,6 @@ object fKanji: TfKanji
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitWidth = 524
       object btnCompounds: TSpeedButton
         Left = 0
         Top = 0
@@ -227,7 +221,6 @@ object fKanji: TfKanji
         ParentFont = False
         TabOrder = 0
         TabStop = False
-        ExplicitLeft = 266
       end
     end
     object pnlDockCompounds: TPanel
@@ -240,7 +233,6 @@ object fKanji: TfKanji
       UseDockManager = False
       DockSite = True
       TabOrder = 4
-      ExplicitWidth = 530
     end
   end
   object pnlSearch: TPanel
@@ -256,11 +248,10 @@ object fKanji: TfKanji
     DockSite = True
     Padding.Bottom = 3
     ParentBackground = False
-    TabOrder = 1
-    ExplicitWidth = 662
+    TabOrder = 0
     object sbInClipboard: TSpeedButton
       AlignWithMargins = True
-      Left = 343
+      Left = 326
       Top = 0
       Width = 27
       Height = 22
@@ -309,7 +300,7 @@ object fKanji: TfKanji
     end
     object sbOnlyCommon: TSpeedButton
       AlignWithMargins = True
-      Left = 312
+      Left = 295
       Top = 0
       Width = 28
       Height = 22
@@ -359,17 +350,17 @@ object fKanji: TfKanji
     object edtLookup: TEdit
       Left = 0
       Top = 0
-      Width = 171
+      Width = 154
       Height = 22
       Align = alClient
       TabOrder = 0
       OnChange = SearchFilterChanged
-      ExplicitWidth = 195
+      ExplicitWidth = 171
       ExplicitHeight = 21
     end
     object sbStrokeCount: TWinSpeedButton
       AlignWithMargins = True
-      Left = 373
+      Left = 356
       Top = 0
       Width = 92
       Height = 22
@@ -382,19 +373,21 @@ object fKanji: TfKanji
       Align = alRight
       AllowAllUp = True
       Caption = '#00191^eStroke #'
+      Focusable = False
       GroupIndex = 11
       Style = bsSplitButton
-      TabOrder = 1
+      TabOrder = 2
+      TabStop = False
       Transparent = False
       OnClick = sbStrokeCountClick
       OnDropDownClick = sbStrokeCountDropDownClick
-      ExplicitLeft = 397
+      ExplicitLeft = 373
     end
     object sbRadicals: TWinSpeedButton
       AlignWithMargins = True
-      Left = 468
+      Left = 451
       Top = 0
-      Width = 92
+      Width = 109
       Height = 22
       Hint = '#00177^eFilter by radical (Ctrl-R)'
       Margins.Top = 0
@@ -403,13 +396,14 @@ object fKanji: TfKanji
       Align = alRight
       AllowAllUp = True
       Caption = '#00178^eRadical'
+      Focusable = False
       GroupIndex = 12
       Style = bsSplitButton
-      TabOrder = 2
+      TabOrder = 3
       Transparent = False
       OnClick = sbRadicalsClick
       OnDropDownClick = sbRadicalsDropDownClick
-      ExplicitLeft = 492
+      ExplicitLeft = 468
     end
     object btnGroups: TWinSpeedButton
       AlignWithMargins = True
@@ -425,17 +419,16 @@ object fKanji: TfKanji
       Margins.Bottom = 0
       Align = alRight
       AllowAllUp = True
-      Caption = 'Groups'
+      Caption = '#01208^Groups'
+      Focusable = False
       GroupIndex = 41
-      TabOrder = 3
-      TabStop = False
+      TabOrder = 4
       Transparent = False
       OnClick = btnGroupsClick
-      ExplicitLeft = 587
     end
     object cbLookupType: TComboBox
       AlignWithMargins = True
-      Left = 174
+      Left = 157
       Top = 0
       Width = 135
       Height = 21
@@ -444,9 +437,9 @@ object fKanji: TfKanji
       Margins.Bottom = 0
       Align = alRight
       Style = csDropDownList
-      TabOrder = 4
+      TabOrder = 1
       OnChange = SearchFilterChanged
-      ExplicitLeft = 198
+      ExplicitLeft = 174
     end
   end
   object pnlGroups: TPopupPanel
@@ -458,10 +451,8 @@ object fKanji: TfKanji
     Margins.Left = 8
     Align = alRight
     BevelOuter = bvNone
-    TabOrder = 2
+    TabOrder = 3
     Visible = False
-    OnExit = pnlGroupsExit
-    ExplicitLeft = 8
     object Panel9: TPanel
       AlignWithMargins = True
       Left = 0
@@ -568,7 +559,7 @@ object fKanji: TfKanji
       Left = 0
       Top = 77
       Width = 143
-      Height = 567
+      Height = 355
       Margins.Left = 0
       Margins.Right = 0
       Margins.Bottom = 0
@@ -576,11 +567,10 @@ object fKanji: TfKanji
       Align = alClient
       ItemHeight = 13
       PopupMenu = pmCategories
-      TabOrder = 2
+      TabOrder = 3
       OnClick = lbCategoriesClick
       OnDblClick = lbCategoriesDblClick
       OnDrawItem = lbCategoriesDrawItem
-      ExplicitHeight = 355
     end
     object cbOrAnd: TComboBox
       AlignWithMargins = True
@@ -593,13 +583,13 @@ object fKanji: TfKanji
       Margins.Bottom = 0
       Align = alTop
       Style = csDropDownList
-      ItemIndex = 1
-      TabOrder = 3
-      Text = 'In all of:'
+      ItemIndex = 0
+      TabOrder = 2
+      Text = '#01210^In any of:'
       Items.Strings = (
-        'In any of:'
-        'In all of:'
-        'Not in any of:')
+        '#01210^In any of:'
+        '#01211^In all of:'
+        '#01212^Not in any of:')
     end
   end
   object pnlStrokeCount: TPopupPanel
@@ -607,7 +597,7 @@ object fKanji: TfKanji
     Top = 33
     Width = 92
     Height = 26
-    TabOrder = 3
+    TabOrder = 1
     Visible = False
     OnExit = pnlStrokeCountExit
     object edtStrokeCount: TRangeSpinEdit
@@ -747,7 +737,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 352
     Bitmap = {
-      494C010104001401EC0110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401F00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

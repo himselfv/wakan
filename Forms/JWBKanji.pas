@@ -132,7 +132,6 @@ type
     procedure lbCategoriesDrawItem(Control: TWinControl; Index: Integer;
       Rect: TRect; State: TOwnerDrawState);
     procedure lbCategoriesDblClick(Sender: TObject);
-    procedure pnlGroupsExit(Sender: TObject);
     procedure edtStrokeCountChange(Sender: TObject);
     procedure edtJouyouChange(Sender: TObject);
     procedure miCharWordsClick(Sender: TObject);
@@ -254,6 +253,7 @@ begin
   Clipboard.Watchers.Add(Self.ClipboardChanged);
   sbOnlyCommon.GroupIndex := 14;
   sbInClipboard.GroupIndex := 15;
+  if edtLookup.Enabled then edtLookup.SetFocus;
 end;
 
 procedure TfKanji.FormHide(Sender: TObject);
@@ -432,14 +432,12 @@ procedure TfKanji.ClearLookupTypes;
 begin
   cbLookupType.Clear;
   cbLookupType.Items.Add(_l('#01132^Any matches'));
-  cbLookupType.Items.Add('Characters');
-  cbLookupType.Items.Add('Definition');
-  cbLookupType.Items.Add('On'); //4
-  cbLookupType.Items.Add('Kun'); //5
-  cbLookupType.Items.Add('PinYin'); //2 mandarin
-  cbLookupType.Items.Add('SKIP'); //22
-  //6 nanori
-  //8 cantonese
+  cbLookupType.Items.Add(_l('#01213^Characters'));
+  cbLookupType.Items.Add(_l('#01214^Definition'));
+  cbLookupType.Items.Add(_l('#01215^On')); //4
+  cbLookupType.Items.Add(_l('#01216^Kun')); //5
+  cbLookupType.Items.Add(_l('#01217^PinYin')); //2 mandarin
+  cbLookupType.Items.Add(_l('#01218^SKIP')); //22
 end;
 
 procedure TfKanji.ReloadLookupTypes;
@@ -454,7 +452,24 @@ begin
 
   ClearLookupTypes;
   for i:=0 to Length(CharPropTypes)-1 do
-    if CharPropTypes[i].id>20 then
+   //Exclude non-textual types and types handled in manual mode
+    if not (CharPropTypes[i].id in [
+      0, //-
+      ptMandarinReading,
+      ptJapaneseDefinition,
+      ptOnReading,
+      ptKunReading,
+      ptChineseDefinition,
+      ptRadicals,
+      ptTotalStrokes,
+      ptBushuRadical,
+      ptRSUnicode,
+      ptRSJapanese,
+      ptRSKanWa,
+      ptRSKangXi,
+      ptRSKorean,
+      ptSKIP
+    ]) then
       cbLookupType.Items.AddObject(_l('^e'+CharPropTypes[i].englishName),
         TObject(CharPropTypes[i].id));
   SetLookupTypeIndex(AOldLookupTypeIndex);
@@ -504,10 +519,10 @@ procedure TfKanji.SetCurRadChars(const Value: string);
 begin
   FCurRadChars := Value;
   if FCurRadChars = '' then begin
-    sbRadicals.Caption := _l('#00178^eRadical');
+    sbRadicals.Caption := _l('#00178^Radical');
     sbRadicals.Down := false;
   end else begin
-    sbRadicals.Caption := _l('#00178^eRadical') + ' ' + FCurRadChars;
+    sbRadicals.Caption := _l('#01207^Radicals: %s', [FCurRadChars]);
     sbRadicals.Down := true;
   end;
   Self.InvalidateList;
@@ -856,31 +871,6 @@ begin
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_SKIP] then
       ReadFilter(fltLookup, edtLookup.Text, ptSKIP, [rfPartial]);
 
-   {
-    Some special handling for SKIP which weren't actually used:
-
-      if accept and sbSKIP.Down and (Self.edtSKIP.Text<>'') then
-      begin
-        s1:=Self.edtSKIP.Text;
-        s2:='0';
-        s3:='0';
-        if pos('-',s1)>0 then
-        begin
-          s2:=s1;
-          s1:=copy(s2,1,pos('-',s2)-1);
-          delete(s2,1,pos('-',s2));
-        end;
-        if pos('-',s2)>0 then
-        begin
-          s3:=s2;
-          s2:=copy(s3,1,pos('-',s3)-1);
-          delete(s3,1,pos('-',s3));
-        end;
-      end;
-
-    Perhaps delete?
-   }
-
     //TODO: if Other is selected, look by that field
     {
     if Self.cbOtherType.ItemIndex=0 then
@@ -951,6 +941,8 @@ begin
       if accept and (not clipsort) and Self.aInClipboard.Checked and (fltclip.IndexOf(uppercase(TChar.Str(TChar.fUnicode)))=-1) then accept:=false;
       if accept and (fltLookup<>nil) and (fltLookup.IndexOf(TChar.Str(TChar.fUnicode))<0) then accept := false;
 
+      //TODO: Filter by JLPT
+
       if accept and sbRadicals.Down and (Self.curRadChars<>'') then
         case Self.curRadSearchType of
           stClassic: if fltradical.IndexOf(TChar.Str(TChar.fUnicode))=-1 then accept:=false;
@@ -962,12 +954,6 @@ begin
       if accept then
         accept := CheckCategories;
 
-  {    if accept and (Self.SpeedButton16.Down) then
-      begin
-        s1:=Self.Edit5.Text;
-        if pos('.',s1)>0 then delete(s1,pos('.',s1),1);
-        if accept then accept:=InRange(s1,TChar.Str(TCharFourCornerCode),false,sl9);
-      end; }
       if accept and sbJouyou.Down and (Self.edtJouyou.Text<>'') and not InRange(Self.edtJouyou.Text,TChar.Str(TChar.fJouyouGrade),true,sl10) then accept:=false;
       if accept then
       begin
@@ -1505,6 +1491,7 @@ begin
       r.Left := ACol;
       r.Right := ACol;
       TDrawGrid(Sender).Selection := r;
+      KanjiGridSelectionChanged;
     end;
 end;
 
@@ -1692,17 +1679,17 @@ end;
 procedure TfKanji.btnGroupsClick(Sender: TObject);
 begin
   pnlGroups.Visible := btnGroups.Down;
-end;
-
-procedure TfKanji.pnlGroupsExit(Sender: TObject);
-begin
-  (Sender as TControl).Hide;
+  Self.Reload; //width changed, reflow
 end;
 
 procedure TfKanji.sbStrokeCountClick(Sender: TObject);
 begin
-  if sbStrokeCount.Down then
-    sbStrokeCountDropDownClick(Sender);
+  if sbStrokeCount.Down then begin
+    if (edtStrokeCount.Text<>'') and (edtStrokeCount.Text<>'0') then
+      SearchFilterChanged(Sender) //apply immediately
+    else
+      sbStrokeCountDropDownClick(Sender);
+  end;
   SearchFilterChanged(Sender);
 end;
 
@@ -1710,16 +1697,15 @@ procedure TfKanji.sbStrokeCountDropDownClick(Sender: TObject);
 begin
   PopupUnder(pnlStrokeCount, sbStrokeCount);
   pnlStrokeCount.Width := sbStrokeCount.Width;
-//  PopupUnder(RangeSpinEdit2, btnStrokes);
 end;
 
 procedure TfKanji.edtStrokeCountChange(Sender: TObject);
 begin
   sbStrokeCount.Down := (edtStrokeCount.Text <> '0') and (edtStrokeCount.Text <> '');
   if (edtStrokeCount.Text='0') or (edtStrokeCount.Text='') then
-    sbStrokeCount.Caption := _l('#00191^eStroke #')
+    sbStrokeCount.Caption := _l('#00191^Stroke #')
   else
-    sbStrokeCount.Caption := _l('#00191^eStroke #')+' '+edtStrokeCount.Text;
+    sbStrokeCount.Caption := _l('#01206^Stroke #: %s', [edtStrokeCount.Text]);
   SearchFilterChanged(Sender);
 end;
 
@@ -1728,10 +1714,6 @@ begin
   if (edtStrokeCount.Text='0') or (edtStrokeCount.Text='') then
     sbStrokeCount.Down := false;
 end;
-
-
-
-
 
 
 procedure TfKanji.btnKanjiDetailsClick(Sender: TObject);

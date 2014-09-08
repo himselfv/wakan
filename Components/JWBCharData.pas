@@ -56,6 +56,7 @@ const
   ptChineseDefinition = 7; //usually taken from UNIHAN
   ptCantoneseReading = 8;
   ptRadicals = 10; //virtual property
+  ptTotalStrokes = 11;
 
   ptBushuRadical = 12;
   ptRSUnicode = 13;
