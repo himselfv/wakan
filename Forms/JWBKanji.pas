@@ -21,8 +21,14 @@ uses
 //  automatically set focus to one of the available characters.
 
 type
-  TReadFilterFlag = (rfPartial, rfSpace, rfNumber, rfTakedot);
-  TReadFilterFlags = set of TReadFilterFlag;
+  TFilterType = (
+    ftExact,        //exactly what's written (case insensitive)
+    ftStart,        //starts with it
+    ftExactOrBase,  //kana: match either full KUN or it's base without okurigana
+    ftAnywhere,     //any part of expression
+    ftAnyWord,      //any part between spaces/separators
+    ftNumber        //exact match, but allow filters like "5-7"
+  );
 
   TLanguageSet = set of AnsiChar;
 
@@ -40,8 +46,8 @@ type
     Actions: TActionList;
     aPrint: TAction;
     aResetFilters: TAction;
-    aOnlyCommon: TAction;
-    aInClipboard: TAction;
+    aOnlyCommon: TCheckAction;
+    aInClipboard: TCheckAction;
     aPinYin: TAction;
     aYomi: TAction;
     aRadical: TAction;
@@ -151,6 +157,8 @@ type
     procedure sbRadicalsClick(Sender: TObject);
     procedure sbRadicalsDropDownClick(Sender: TObject);
     procedure btnGroupsClick(Sender: TObject);
+    procedure aOnlyCommonChecked(Sender: TObject);
+    procedure aInClipboardChecked(Sender: TObject);
 
   protected
     FFocusedChars: FString;
@@ -164,9 +172,10 @@ type
     procedure SetFocusedChars(const Value: FString);
     procedure CategoryListChanged(Sender: TObject);
     procedure ClipboardChanged(Sender: TObject);
-    procedure ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
+    procedure ReadFilter(flt: TStringList; const tx: string; typ: integer;
+      ftype: TFilterType);
     procedure ReadAnyTextFilter(flt: TStringList; const tx: string; typ: integer;
-      flags: TReadFilterFlags; lang: TLanguageSet);
+      ftype: TFilterType; lang: TLanguageSet);
     procedure ReadRaineFilter(fltradical:TStringList;const ARadicals:string);
   public
     procedure SaveSettings(reg: TCustomIniFile);
@@ -257,6 +266,8 @@ begin
   Clipboard.Watchers.Add(Self.ClipboardChanged);
   sbOnlyCommon.GroupIndex := 14;
   sbInClipboard.GroupIndex := 15;
+  sbOnlyCommon.Down := aOnlyCommon.Checked; //property loading may break this at start
+  sbInClipboard.Down := aInClipboard.Checked;
   if edtLookup.Enabled then edtLookup.SetFocus;
 end;
 
@@ -632,7 +643,33 @@ begin
   if sl.Count=0 then sl.Add('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
 end;
 
-procedure TfKanji.ReadFilter(flt:TStringList;const tx:string;typ:integer;flags:TReadFilterFlags);
+function IsWordSeparator(const ch: char): boolean; inline;
+begin
+  Result := ch=' ';
+end;
+
+//Similar to pos(), but only finds word matches (space or beginstr before,
+//space or endstr after the match)
+function wordPos(const substr, str: string; offset: integer = 1): integer;
+begin
+  Result := offset-1;
+  repeat
+    Inc(Result);
+    if Length(str)-Result+1 < Length(substr) then begin
+      Result := 0;
+      exit;
+    end;
+
+    Result := pos(substr, str, Result);
+    if Result <= 0 then exit;
+  until ((Result=1) or IsWordSeparator(str[Result-1]))
+    and ((Result+Length(substr)>=Length(str)) or IsWordSeparator(str[Result+Length(substr)]));
+end;
+
+//Takes a property type Typ, a text Tx and a match type Ftype and populates /
+//updates Flt with characters that have at least one matching property.
+procedure TfKanji.ReadFilter(flt: TStringList; const tx: string; typ: integer;
+  ftype: TFilterType);
 var CCharProp: TCharPropertyCursor;
   sl:TStringList;
   s_fltval:string;
@@ -648,29 +685,33 @@ begin
   CCharProp := TCharPropertyCursor.Create(TCharProp);
   try
    //Convert filter value into a list of exact values to match
-    MakeList(tx,rfNumber in flags,sl);
+    MakeList(tx, {IsNumber=}ftype=ftNumber, sl);
 
     propType := FindCharPropType(typ);
     s_sp := ' ';
     s_dot := '.';
 
-    for i:=0 to sl.Count-1 do
+    for i := 0 to sl.Count - 1 do
     begin
-      s_fltval:=uppercase(sl[i]); //Locate is case-insensitive anyway
+      s_fltval := uppercase(sl[i]); //Locate is case-insensitive anyway
 
-      CCharProp.LocateRawValue(s_fltval);
+      if ftype in [ftAnywhere, ftAnyword] then
+        CCharProp.First //have to iterate through all records
+      else
+        CCharProp.LocateRawValue(s_fltval);
+
       while not CCharProp.EOF do
       begin
-        s_val:=uppercase(CCharProp.RawValue);
-        if s_val<>s_fltval then
-          if not (rfPartial in flags) then
-            break
-          else
-          if (rfSpace in flags) and (pos(s_fltval+s_sp, s_val)<>1) then
-            break
-          else
-          if pos(s_fltval,s_val)<>1 then
-            break;
+        s_val := uppercase(CCharProp.RawValue);
+
+        case ftype of
+          ftExact,
+          ftNumber:      if (s_fltval <> s_val) then break;
+          ftStart,
+          ftExactOrBase: if pos(s_fltval, s_val)<>1 then break;
+          ftAnywhere,
+          ftAnyWord:     begin end; //never break
+        end;
 
         match := (CCharProp.Int(TCharProp.fTypeId)=typ);
         case propType.dataType of
@@ -682,15 +723,22 @@ begin
             );
           end;
         else
-          if rfTakedot in flags then
-            dot:=CCharProp.Int(TCharProp.fReadDot)
-          else
-            dot:=0;
-          match := match and (
-              not (rfTakedot in flags)
-              or (s_val=s_fltval)
-              or ((dot>0) and (s_fltval=copy(s_val,dot-1)))
-            );
+          case ftype of
+            ftExact,
+            ftNumber:  match := match and (s_fltval = s_val);
+            ftStart:   match := match and (pos(s_fltval, s_val) = 1);
+            ftExactOrBase: begin
+              dot := CCharProp.Int(TCharProp.fReadDot);
+              if dot <= 0 then
+                match := match and (s_fltval = s_val)
+              else
+                match := match and (s_fltval = copy(s_val, 1, dot-1));
+            end;
+            ftAnywhere:
+              match := match and (pos(s_fltval, s_val) > 0);
+            ftAnyWord:
+              match := match and (wordPos(s_fltval, s_val) > 0);
+          end;
         end;
 
         if match and (flt.IndexOf(CCharProp.Kanji)<0) then
@@ -709,18 +757,18 @@ end;
 //either, so try all conversions and merge results.
 //Don't use for text fields where there's no ambiguity in input / data format.
 procedure TfKanji.ReadAnyTextFilter(flt: TStringList; const tx: string;
-  typ: integer; flags: TReadFilterFlags; lang: TLanguageSet);
+  typ: integer; ftype: TFilterType; lang: TLanguageSet);
 begin
-  ReadFilter(flt, tx, typ, flags); //search as is
+  ReadFilter(flt, tx, typ, ftype); //search as is
 
   if AnsiChar('j') in lang then begin
     //also converts raw katakana to hiragana (since RtoK keeps invalid chars):
-    ReadFilter(flt, ToHiragana(RomajiToKana('H'+tx,'j',[])), typ, flags); //maybe that was romaji?
-    ReadFilter(flt, ToKatakana(RomajiToKana('K'+tx,'j',[])), typ, flags);
+    ReadFilter(flt, ToHiragana(RomajiToKana('H'+tx,'j',[])), typ, ftype); //maybe that was romaji?
+    ReadFilter(flt, ToKatakana(RomajiToKana('K'+tx,'j',[])), typ, ftype);
   end;
 
   if AnsiChar('c') in lang then begin
-    ReadFilter(flt, RomajiToKana(tx,'c',[]), typ, flags);
+    ReadFilter(flt, RomajiToKana(tx,'c',[]), typ, ftype);
   end;
 end;
 
@@ -803,7 +851,7 @@ var
     clipind:integer;
 
   categories: array of integer; //of checked category indexes
-  flags: TReadFilterFlags;
+  ftype: TFilterType;
   kclass: char;
   prop: PCharPropType;
 
@@ -870,29 +918,29 @@ begin
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_DEFINITION] then
       if curLang='c' then
-        ReadFilter(fltLookup, edtLookup.text, ptChineseDefinition, [rfPartial,rfSpace]) //Chinese definition
+        ReadFilter(fltLookup, edtLookup.text, ptChineseDefinition, ftAnyWord) //Chinese definition
       else
-        ReadFilter(fltLookup, edtLookup.text, ptJapaneseDefinition, [rfPartial,rfSpace]); //Japanese definition
+        ReadFilter(fltLookup, edtLookup.text, ptJapaneseDefinition, ftAnyWord); //Japanese definition
 
    //ON and KUN
     if fSettings.cbYomiIgnoreOkurigana.Checked then
-      flags := [rfPartial, rfTakedot]
+      ftype := ftExactOrBase
     else
-      flags := [];
+      ftype := ftExact;
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_ON]  then
-      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptOnReading, flags, ['j']);
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptOnReading, ftype, ['j']);
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_KUN] then
-      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptKunReading, flags, ['j']);
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptKunReading, ftype, ['j']);
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_PINYIN] then begin
-      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptMandarinReading, [rfPartial], ['c']); //Mandarin
-      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptCantoneseReading, [rfPartial], ['c']); //Canton
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptMandarinReading, ftStart, ['c']); //Mandarin
+      ReadAnyTextFilter(fltLookup, edtLookup.Text, ptCantoneseReading, ftStart, ['c']); //Canton
     end;
 
     if cbLookupType.ItemIndex in [LOOKUP_ANY, LOOKUP_SKIP] then
-      ReadFilter(fltLookup, edtLookup.Text, ptSKIP, [rfPartial]);
+      ReadFilter(fltLookup, edtLookup.Text, ptSKIP, ftStart);
 
    //Generic types
     if GetLookupTypeIndex > 0 then
@@ -901,9 +949,9 @@ begin
       prop := nil;
     if prop <> nil then begin
       if prop.dataType = 'N' then
-        ReadFilter(fltLookup, edtLookup.Text, prop.id, [rfNumber])
+        ReadFilter(fltLookup, edtLookup.Text, prop.id, ftNumber)
       else
-        ReadAnyTextFilter(fltLookup, edtLookup.Text, prop.id, [rfPartial], ['c', 'j'])
+        ReadAnyTextFilter(fltLookup, edtLookup.Text, prop.id, ftStart, ['c', 'j'])
     end;
 
   end;
@@ -917,7 +965,7 @@ begin
     case Self.curRadSearchType of
       stClassic: ReadFilter(fltRadical,
         RadicalIndexesToFilter(RadicalsToIndexes(stClassic,Self.CurRadChars)),
-        fSettings.GetPreferredRadicalType,[rfNumber]);
+        fSettings.GetPreferredRadicalType, ftNumber);
       stRaine: ReadRaineFilter(fltRadical,Self.CurRadChars);
     end;
   end;
@@ -925,7 +973,7 @@ begin
   if sbJlpt.Down and (Self.edtJlpt.Text<>'') and (Self.edtJlpt.Text<>'0') then begin
     fltJlpt := TStringList.Create;
     fltJlpt.Sorted := true;
-    ReadFilter(fltJlpt, Self.edtJlpt.Text, ptJLPTLevel, [rfNumber]);
+    ReadFilter(fltJlpt, Self.edtJlpt.Text, ptJLPTLevel, ftNumber);
   end;
 
   if sbJouyou.Down and (Self.edtJouyou.Text<>'') and (Self.edtJouyou.Text<>'0') then begin
@@ -1632,15 +1680,23 @@ begin
   SearchFilterChanged(Sender);
 end;
 
-procedure TfKanji.aOnlyCommonExecute(Sender: TObject);
+procedure TfKanji.aOnlyCommonChecked(Sender: TObject);
 begin
   sbOnlyCommon.Down := aOnlyCommon.Checked;
+end;
+
+procedure TfKanji.aOnlyCommonExecute(Sender: TObject);
+begin
   SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.aInClipboardChecked(Sender: TObject);
+begin
+  sbInClipboard.Down := aInClipboard.Checked;
 end;
 
 procedure TfKanji.aInClipboardExecute(Sender: TObject);
 begin
-  sbInClipboard.Down := aInClipboard.Checked;
   SearchFilterChanged(Sender);
 end;
 

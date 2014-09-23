@@ -129,7 +129,6 @@ object fKanji: TfKanji
         Align = alRight
         Caption = '#01209^Sort by:'
         Layout = tlCenter
-        ExplicitLeft = 271
         ExplicitHeight = 13
       end
       object rgSortBy: TComboBox
@@ -355,7 +354,6 @@ object fKanji: TfKanji
       Align = alClient
       TabOrder = 0
       OnChange = SearchFilterChanged
-      ExplicitWidth = 171
       ExplicitHeight = 21
     end
     object sbStrokeCount: TWinSpeedButton
@@ -381,7 +379,6 @@ object fKanji: TfKanji
       Transparent = False
       OnClick = sbStrokeCountClick
       OnDropDownClick = sbStrokeCountDropDownClick
-      ExplicitLeft = 373
     end
     object sbRadicals: TWinSpeedButton
       AlignWithMargins = True
@@ -403,7 +400,6 @@ object fKanji: TfKanji
       Transparent = False
       OnClick = sbRadicalsClick
       OnDropDownClick = sbRadicalsDropDownClick
-      ExplicitLeft = 468
     end
     object btnGroups: TWinSpeedButton
       AlignWithMargins = True
@@ -439,7 +435,6 @@ object fKanji: TfKanji
       Style = csDropDownList
       TabOrder = 1
       OnChange = SearchFilterChanged
-      ExplicitLeft = 174
     end
   end
   object pnlGroups: TPopupPanel
@@ -646,17 +641,19 @@ object fKanji: TfKanji
       ShortCut = 16469
       OnExecute = aResetFiltersExecute
     end
-    object aInClipboard: TAction
+    object aInClipboard: TCheckAction
       AutoCheck = True
       Caption = '#00281^eIn clipboard only'
       Hint = '#00188^eDisplay only characters in clipboard'
       OnExecute = aInClipboardExecute
+      OnChecked = aInClipboardChecked
     end
-    object aOnlyCommon: TAction
+    object aOnlyCommon: TCheckAction
       AutoCheck = True
       Caption = '#00280^eCommon only'
       Hint = '#00186^eDisplay only common characters'
       OnExecute = aOnlyCommonExecute
+      OnChecked = aOnlyCommonChecked
     end
     object aPinYin: TAction
       Caption = '#00282^eSearch by PinYin'
@@ -737,7 +734,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 352
     Bitmap = {
-      494C010104001401F00110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401F80110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

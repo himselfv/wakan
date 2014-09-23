@@ -366,7 +366,7 @@ begin
   end;
   for i := 0 to cla.kuns.Length - 1 do begin
     val := cla.kuns[i];
-    dot_pos := pos(val, '.');
+    dot_pos := pos('.', val);
     if dot_pos>0 then
       delete(val, dot_pos, 1);
     AddCharProp(propType.id, val, dot_pos, pre_idx+i);
