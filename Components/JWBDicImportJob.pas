@@ -2,7 +2,7 @@
 { Core dictionary import routines. }
 
 interface
-uses SysUtils, Classes, JWBIO, JWBJobs, JWBDic, JWBIndex, JWBEdictReader;
+uses SysUtils, Classes, JWBIO, JWBJobs, JWBDic, JWBIndex, EdictReader;
 
 type
   EDictImportException = class(Exception);
@@ -541,11 +541,11 @@ begin
      //kana matches any kanji
       for j := 0 to ed.kanji_used - 1 do begin
         rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, roma[i],
-          string(ed.kanji[j].markers+ed.kana[i].markers), prior[j], s_art]);
+          string(ToWakanMarkers(ed.kanji[j].markers+ed.kana[i].markers)), prior[j], s_art]);
        { Markers are converted to (Unicode)String in the previous line. This can potentially
         lead to marker corruption since markers include illegal Ansi characters.
         So we set markers again, directly as Ansi (exactly as they are stored) }
-        dic.TTDict.SetAnsiField(rec,3,ed.kanji[j].markers+ed.kana[i].markers);
+        dic.TTDict.SetAnsiField(rec,3,ToWakanMarkers(ed.kanji[j].markers+ed.kana[i].markers));
         if charidx<>nil then
           IndexChars(rec, ed.kanji[j].kanji);
       end;
@@ -556,8 +556,8 @@ begin
         for k := 0 to ed.kanji_used - 1 do
           if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
             rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[k].kanji, roma[i],
-              string(ed.kanji[k].markers+ed.kana[i].markers), prior[k], s_art]);
-            dic.TTDict.SetAnsiField(rec,3,ed.kanji[k].markers+ed.kana[i].markers); //see above
+              string(ToWakanMarkers(ed.kanji[k].markers+ed.kana[i].markers)), prior[k], s_art]);
+            dic.TTDict.SetAnsiField(rec,3,ToWakanMarkers(ed.kanji[k].markers+ed.kana[i].markers)); //see above
             if charidx<>nil then
               IndexChars(rec, ed.kanji[k].kanji);
             kanji_found := true;
@@ -578,8 +578,8 @@ begin
 
  //Write out senses
   for i := 0 to ed.senses_used - 1 do begin
-    rec := dic.TTEntries.AddRecord([s_art, ed.senses[i].text, string(add_mark+ed.senses[i].pos+ed.senses[i].markers)]);
-    dic.TTEntries.SetAnsiField(rec,2,add_mark+ed.senses[i].pos+ed.senses[i].markers); //see above
+    rec := dic.TTEntries.AddRecord([s_art, ed.senses[i].text, string(ToWakanMarkers(add_mark+ed.senses[i].pos+ed.senses[i].markers))]);
+    dic.TTEntries.SetAnsiField(rec,2,ToWakanMarkers(add_mark+ed.senses[i].pos+ed.senses[i].markers)); //see above
     if wordidx<>nil then
       IndexWords(rec, ed.senses[i].text);
   end;

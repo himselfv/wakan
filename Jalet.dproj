@@ -271,8 +271,7 @@
         <DCCReference Include="Components\JWBDic.pas"/>
         <DCCReference Include="Components\JWBKanaConv.pas"/>
         <DCCReference Include="Components\JWBIndex.pas"/>
-        <DCCReference Include="Components\Parsers\JWBEdictMarkers.pas"/>
-        <DCCReference Include="Components\Parsers\JWBEdictReader.pas"/>
+        <DCCReference Include="Components\JWBEdictMarkers.pas"/>
         <DCCReference Include="Components\JWBAutoImport.pas"/>
         <DCCReference Include="Components\JWBDownloaderCore.pas"/>
         <DCCReference Include="Components\JWBComponents.pas"/>

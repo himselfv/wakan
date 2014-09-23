@@ -1,14 +1,14 @@
 unit JWBEdictMarkers;
+{
+Wakan uses AnsiChars as shorthands for EDICT grammar / usage markers.
+Marker IDs are stored in dictionaries so we have to keep absolute backward
+compability.
+Do not change marker IDs. Do not delete markers (even deprecated ones).
+Only add marker IDs after the last one.
+New marker IDs have no effect on previously compiled dictionaries. }
 
 interface
-
-{ EDict processing }
-{ Marker IDs are stored in dictionaries so we have to keep absolute backward
- compability.
- Do not change marker IDs.
- Do not delete markers (even deprecated ones).
- Only add marker IDs after the last one.
- New marker IDs have no effect on previously compiled dictionaries. }
+uses EdictReader;
 
 type
  { There's a reason we declare markers as AnsiString.
@@ -41,7 +41,7 @@ type
 
 {$J+}
 const
-  EdictMarkers: array[0..113] of TEdictMarkerDef = (
+  EdictMarkers: array[0..125] of TEdictMarkerDef = (
    //Part of Speech Marking
     (m: 'adj-i'; id: #99; f: [mfPos]; ab: 'g';),
     (m: 'adj-na'; id: #45; f: [mfPos]; ab: 'gna-adj'),
@@ -164,10 +164,23 @@ const
     (m: 'thb'; id: #143; f: [mfDial]),
     (m: 'tsug'; id: #144; f: [mfDial]),
     (m: 'kyu'; id: #145; f: [mfDial]),
-    (m: 'rkb'; id: #146; f: [mfDial])
+    (m: 'rkb'; id: #146; f: [mfDial]),
+
+    (m: 's'; id: #147; f: []; ab: 'ssurname'),
+    (m: 'p'; id: #148; f: []; ab: 'splace name'),
+    (m: 'u'; id: #149; f: []; ab: 'sperson name'),  //either given or surname, as-yet unclassified
+    (m: 'g'; id: #150; f: []; ab: 'sgiven name'),   //as-yet not classified by sex
+    (m: 'f'; id: #151; f: []; ab: 'sfemale name'),  //full (usually family plus given) name of a particular person
+    (m: 'm'; id: #152; f: []; ab: 'smale name'),
+    (m: 'h'; id: #153; f: []; ab: 'sperson'),
+    (m: 'pr'; id: #154; f: []; ab: 'sproduct name'),
+    (m: 'c'; id: #155; f: []; ab: 'scompany'),
+    (m: 'o'; id: #156; f: []; ab: 'sorganization'),
+    (m: 'st'; id: #157; f: []; ab: 'sstation'),
+    (m: 'wk'; id: #158; f: []; ab: 'swork of art') //work of literature, art, film, etc.
   );
 
-  LastMarkerID = #146;
+  LastMarkerID = #158;
  { There's also an empty ID space #01..#32 }
 
   MarkPop: TMarker = #98;
@@ -195,6 +208,8 @@ function GetMarkAbbr(mark:TMarker):string;
 function ConvertMarkers(const s:string; out unrecog:string):TMarkers;
 function MarkersToStr(const s:TMarkers; out pop: boolean):string;
 function MarkersToStrEx(const s:TMarkers):TMarkersByType;
+
+function ToWakanMarkers(const EdictMarkers: EdictReader.TMarkers): TMarkers;
 
 implementation
 uses SysUtils, StrUtils, JWBStrings;
@@ -352,7 +367,17 @@ begin
   delete(Result.m_misc,1,1);
 end;
 
-
+function ToWakanMarkers(const EdictMarkers: EdictReader.TMarkers): TMarkers;
+var em: EdictReader.TMarker;
+  m: TMarker;
+begin
+  Result := '';
+  for em in EdictMarkers do begin
+    m := FindMark(EdictReader.Markers[byte(em)].m);
+    if m<>#00 then
+      Result := Result + m;
+  end;
+end;
 
 
 initialization

@@ -1,2 +1,0 @@
-Contains parsers for various related formats and dictionaries.
-All code here ought to be independent from other Wakan facilities and use only String or UnicodeString types.
