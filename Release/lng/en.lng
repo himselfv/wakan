@@ -1327,6 +1327,8 @@
 01216>Kun
 01217>PinYin
 01218>SKIP
+01219>Example database was not found. Click here to download.
+01220>Examples are not available in Chinese mode.
 
 
 
@@ -1466,6 +1468,21 @@ mark-thb=
 mark-tsug=
 mark-kyu=
 mark-rkb=
+
+;ENAMDICT
+mark-enam-s=ssurname
+mark-enam-p=splace name
+mark-enam-u=sperson name
+mark-enam-g=sgiven name
+mark-enam-f=sfemale name
+mark-enam-m=smale name
+mark-enam-h=sperson
+mark-enam-pr=sproduct name
+mark-enam-c=scompany
+mark-enam-o=sorganization
+mark-enam-st=sstation
+mark-enam-wk=swork of art
+
 ;
 ;
 ; Character properties

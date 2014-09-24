@@ -1337,6 +1337,8 @@
 01216>Кун
 01217>Пиньин
 01218>SKIP
+01219>База примеров не найдена. Щёлкните здесь, чтобы скачать.
+01220>В китайском режиме примеры недоступны.
 
 ;
 ;
@@ -1469,6 +1471,21 @@ mark-thb=sдиал-то:хоку
 mark-tsug=sдиал-цугару
 mark-kyu=sдиал-кю:сю:
 mark-rkb=sдиал-рю:кю:
+
+;ENAMDICT
+mark-enam-s=sфамилия
+mark-enam-p=sназв. места
+mark-enam-u=sимя/фамилия
+mark-enam-g=sимя
+mark-enam-f=sжен. имя
+mark-enam-m=sмуж. имя
+mark-enam-h=sзнам. человек
+mark-enam-pr=sназвание товара
+mark-enam-c=sкомпания
+mark-enam-o=sорганизация
+mark-enam-st=sстанция
+mark-enam-wk=sхуд. произведение
+
 ;
 ;
 ; Character properties

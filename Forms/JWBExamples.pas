@@ -483,10 +483,10 @@ begin
   Paintbox.Cursor := crDefault;
   if (examindex=nil) or (examstruct=nil) or (exampackage=nil) then begin
     if curlang='j'then begin
-      ex_jap:=fstr(' === '+_l('^eExample database was not found. Click here to download.')); //TODO: Localize
+      ex_jap:=fstr(' === '+_l('01219^Example database was not found. Click here to download.'));
       Paintbox.Cursor := crHandPoint;
     end else
-      ex_jap:=fstr(' === '+_l('^eExamples are not available in Chinese mode.')); //TODO: Localize
+      ex_jap:=fstr(' === '+_l('01220^Examples are not available in Chinese mode.'));
     ex_indfirst:=-1;
   end
   else
