@@ -677,22 +677,24 @@ begin
     CChar.First;
     while not CChar.EOF do begin
       ch := CChar.Str(TChar.fUnicode);
-      Assert(
-        CCharProp.Locate(ch),
-        'Cannot locate any properties for character '+ch
-      );
-      Builder.OpenKanji(ch);
-      while CCharProp.Kanji=ch do begin
-        Builder.AddCharPropRaw(
-         CCharProp.TrueInt(TCharProp.fTypeId),
-         CCharProp.Str(TCharProp.fValue),
-         CCharProp.Int(TCharProp.fReadDot),
-         CCharProp.Int(TCharProp.fPosition)
-        );
 
-        CCharProp.Next;
+      if CCharProp.Locate(ch) then begin
+       //A character can have no properties when the only ones went into
+       //TChar.fChFrequency and so on
+
+        Builder.OpenKanji(ch);
+        while CCharProp.Kanji=ch do begin
+          Builder.AddCharPropRaw(
+           CCharProp.TrueInt(TCharProp.fTypeId),
+           CCharProp.Str(TCharProp.fValue),
+           CCharProp.Int(TCharProp.fReadDot),
+           CCharProp.Int(TCharProp.fPosition)
+          );
+
+          CCharProp.Next;
+        end;
+        Builder.CloseKanji;
       end;
-      Builder.CloseKanji;
 
       CChar.Next;
     end;
