@@ -294,7 +294,7 @@ begin
 
   roma_prob.Flush; //just in case someone goes looking at it straight away
 
-  SetOperation(_l('^eRebuilding index...'));
+  SetOperation(_l('^Rebuilding index...'));
   dic.TTDict.NoCommitting := false;
   dic.TTDict.Reindex;
   dic.TTEntries.NoCommitting := true;
@@ -305,16 +305,16 @@ begin
   ForceDirectories(tempDir);
   try
     if charidx<>nil then begin
-      SetOperation(_l('^eWriting character index...'));
+      SetOperation(_l('^Writing character index...'));
       charidx.Write(tempDir+'\CharIdx.bin');
     end;
 
     if wordidx<>nil then begin
-      SetOperation(_l('^eWriting word index...'));
+      SetOperation(_l('^Writing word index...'));
       wordidx.Write(tempDir+'\WordIdx.bin');
     end;
 
-    SetOperation(_l('^eWriting dictionary table...'));
+    SetOperation(_l('^Writing dictionary table...'));
     dic.TTDict.WriteTable(tempDir+'\Dict',true);
     dic.TTEntries.WriteTable(tempDir+'\Entries',true);
     FreeAndNil(dic);

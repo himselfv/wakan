@@ -128,8 +128,8 @@ begin
   ps:=nil;
   tt:=nil;
   pd:=SMMessageDlg(
-    _l('^eAnnotations'),
-    _l('^eRebuilding annotations...'));
+    _l('^Annotations'),
+    _l('^Rebuilding annotations...'));
   try
     tempDir:=CreateRandomTempDirName(); //for package files
     tempPkgDir:=CreateRandomTempDirName(); //another one for compiled package.
@@ -226,9 +226,9 @@ begin
     ps.Free;
   except
     Application.MessageBox(
-      pchar(_l('^eAnnotations file ANNOTATE.PKG is corrupt and wasn''t loaded.'#13
+      pchar(_l('^Annotations file ANNOTATE.PKG is corrupt and wasn''t loaded.'#13
         +'If you delete it, it will be recreated.')),
-      pchar(_l('^eError')),
+      pchar(_l('^Error')),
       MB_ICONERROR or MB_OK);
   end;
 end;

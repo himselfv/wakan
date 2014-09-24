@@ -1118,7 +1118,7 @@ type
 procedure TCancelQueryHandler.CancelQuery(ASender: TObject; var DoAbort: Boolean);
 begin
   DoAbort := MessageBox(Application.Handle,
-    'Do you really want to abort the operation?', //TODO: Localize
+    PChar(_l('01221^Do you really want to abort the operation?')),
     PChar(TSMPromptForm(ASender).Caption),
     MB_YESNO or MB_ICONQUESTION) = ID_YES;
 end;
@@ -1133,8 +1133,8 @@ begin
   if AComponent=nil then
     raise Exception.Create('Cannot find component information for "'+AName+'".');
   prog := SMProgressDlgCreate(
-    _l('^eDownloading'),
-    _l('^eDownloading %s...', [AName]),
+    _l('01222^Downloading'),
+    _l('01223^Downloading %s...', [AName]),
     100,
     {canCancel=}true);
   job := TComponentDownloadJob.Create(AComponent);

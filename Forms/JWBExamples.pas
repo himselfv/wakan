@@ -561,7 +561,7 @@ begin
     begin
       max:=ex_indfirst+99;
       Application.MessageBox(
-        pchar(_l('^eThere are too many examples. Only first hundred have been copied.')),
+        pchar(_l('^There are too many examples. Only first hundred have been copied.')),
         pchar(_l('#00364^eNotice')),MB_ICONINFORMATION or MB_OK);
     end else max:=ex_indlast;
     for i:=ex_indfirst to max do

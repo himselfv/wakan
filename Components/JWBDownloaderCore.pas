@@ -342,7 +342,7 @@ procedure DownloadFile(const fileURL, FileName: string; prog: TSMPromptForm);
 var job: TDownloadJob;
 begin
   if prog<>nil then
-    prog.SetMessage(_l('^eDownloading %s...', [ExtractFilename(Filename)]));
+    prog.SetMessage(_l('01223>Downloading %s...', [ExtractFilename(Filename)]));
 
   job := TDownloadJob.Create(fileUrl, fileName);
   try
@@ -376,7 +376,7 @@ begin
   try
     job.IfModifiedSince := since;
 
-    prog:=SMProgressDlgCreate(_l('^eDownload'),_l('^eDownloading %s...', [ExtractFilename(Filename)]),100,{CanCancel=}true);
+    prog:=SMProgressDlgCreate(_l('01224^Download'),_l('01223>Downloading %s...', [ExtractFilename(Filename)]),100,{CanCancel=}true);
     if not Application.MainForm.Visible then
       prog.Position := poScreenCenter;
     prog.AppearModal;

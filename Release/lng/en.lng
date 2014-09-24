@@ -1329,7 +1329,10 @@
 01218>SKIP
 01219>Example database was not found. Click here to download.
 01220>Examples are not available in Chinese mode.
-
+01221>Do you really want to abort the operation?
+01222>Downloading
+01223>Downloading %s...
+01224>Download
 
 
 ;
