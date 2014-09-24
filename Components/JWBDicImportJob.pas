@@ -578,8 +578,8 @@ begin
 
  //Write out senses
   for i := 0 to ed.senses_used - 1 do begin
-    rec := dic.TTEntries.AddRecord([s_art, ed.senses[i].text, string(ToWakanMarkers(add_mark+ed.senses[i].pos+ed.senses[i].markers))]);
-    dic.TTEntries.SetAnsiField(rec,2,ToWakanMarkers(add_mark+ed.senses[i].pos+ed.senses[i].markers)); //see above
+    rec := dic.TTEntries.AddRecord([s_art, ed.senses[i].text, string(add_mark+ToWakanMarkers(ed.senses[i].pos+ed.senses[i].markers))]);
+    dic.TTEntries.SetAnsiField(rec,2,add_mark+ToWakanMarkers(ed.senses[i].pos+ed.senses[i].markers)); //see above
     if wordidx<>nil then
       IndexWords(rec, ed.senses[i].text);
   end;
