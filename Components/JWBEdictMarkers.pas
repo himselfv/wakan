@@ -7,6 +7,10 @@ Do not change marker IDs. Do not delete markers (even deprecated ones).
 Only add marker IDs after the last one.
 New marker IDs have no effect on previously compiled dictionaries. }
 
+{$DEFINE CASE_SENSITIVE_MARKERS}
+{ Markers inside one dic are insensitive, but EDICT's (P) is not ENAMDICT's (p).
+ If this breaks anything or when there's case-euqivalent dupes, we'll implement better way }
+
 interface
 uses EdictReader;
 
@@ -24,7 +28,8 @@ type
       //they are handled differently (see JWBEdictReader.pas)
       //other marker types are not so important, but they are kept separately by JMDic
     mfField, //field of application
-    mfDial   //dialect
+    mfDial,  //dialect
+    mfEnamdict //from Enamdict -- there are dupes
   );
   TEdictMarkerFlags = set of TEdictMarkerFlag;
 
@@ -166,18 +171,18 @@ const
     (m: 'kyu'; id: #145; f: [mfDial]),
     (m: 'rkb'; id: #146; f: [mfDial]),
 
-    (m: 's'; id: #147; f: []; ab: 'ssurname'),
-    (m: 'p'; id: #148; f: []; ab: 'splace name'),
-    (m: 'u'; id: #149; f: []; ab: 'sperson name'),  //either given or surname, as-yet unclassified
-    (m: 'g'; id: #150; f: []; ab: 'sgiven name'),   //as-yet not classified by sex
-    (m: 'f'; id: #151; f: []; ab: 'sfemale name'),  //full (usually family plus given) name of a particular person
-    (m: 'm'; id: #152; f: []; ab: 'smale name'),
-    (m: 'h'; id: #153; f: []; ab: 'sperson'),
-    (m: 'pr'; id: #154; f: []; ab: 'sproduct name'),
-    (m: 'c'; id: #155; f: []; ab: 'scompany'),
-    (m: 'o'; id: #156; f: []; ab: 'sorganization'),
-    (m: 'st'; id: #157; f: []; ab: 'sstation'),
-    (m: 'wk'; id: #158; f: []; ab: 'swork of art') //work of literature, art, film, etc.
+    (m: 's'; id: #147; f: [mfEnamdict]; ab: 'ssurname'),
+    (m: 'p'; id: #148; f: [mfEnamdict]; ab: 'splace name'),
+    (m: 'u'; id: #149; f: [mfEnamdict]; ab: 'sperson name'),  //either given or surname, as-yet unclassified
+    (m: 'g'; id: #150; f: [mfEnamdict]; ab: 'sgiven name'),   //as-yet not classified by sex
+    (m: 'f'; id: #151; f: [mfEnamdict]; ab: 'sfemale name'),  //full (usually family plus given) name of a particular person
+    (m: 'm'; id: #152; f: [mfEnamdict]; ab: 'smale name'),
+    (m: 'h'; id: #153; f: [mfEnamdict]; ab: 'sperson'),
+    (m: 'pr'; id: #154; f: [mfEnamdict]; ab: 'sproduct name'),
+    (m: 'c'; id: #155; f: [mfEnamdict]; ab: 'scompany'),
+    (m: 'o'; id: #156; f: [mfEnamdict]; ab: 'sorganization'),
+    (m: 'st'; id: #157; f: [mfEnamdict]; ab: 'sstation'),
+    (m: 'wk'; id: #158; f: [mfEnamdict]; ab: 'swork of art') //work of literature, art, film, etc.
   );
 
   LastMarkerID = #158;
@@ -231,7 +236,11 @@ var i: integer;
 begin
   Result := nil;
   for i := 0 to Length(EdictMarkers) - 1 do
+   {$IFDEF CASE_SENSITIVE_MARKERS}
+    if SysUtils.SameStr(EdictMarkers[i].m, m) then begin
+   {$ELSE}
     if EdictMarkers[i].m=m then begin
+   {$ENDIF}
       Result := @EdictMarkers[i];
       break;
     end;
@@ -242,7 +251,11 @@ var i: integer;
 begin
   Result := #00;
   for i := 0 to Length(EdictMarkers) - 1 do
+   {$IFDEF CASE_SENSITIVE_MARKERS}
+    if SysUtils.SameStr(EdictMarkers[i].m, m) then begin
+   {$ELSE}
     if EdictMarkers[i].m=m then begin
+   {$ENDIF}
       Result := EdictMarkers[i].id;
       break;
     end;

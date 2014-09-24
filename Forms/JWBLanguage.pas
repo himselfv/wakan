@@ -492,7 +492,10 @@ procedure TfLanguage.LocalizeEdictMarkers();
 var i: integer;
 begin
   for i := 0 to Length(EdictMarkers) - 1 do
-    EdictMarkers[i].abl := GetTlVar('mark-'+EdictMarkers[i].m);
+    if mfEnamdict in EdictMarkers[i].f then
+      EdictMarkers[i].abl := GetTlVar('mark-enam-'+EdictMarkers[i].m)
+    else
+      EdictMarkers[i].abl := GetTlVar('mark-'+EdictMarkers[i].m);
 end;
 
 procedure TfLanguage.LocalizePropertyTypes();
