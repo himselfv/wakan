@@ -832,11 +832,11 @@ object fMenu: TfMenu
         Action = aSettings
         Caption = '#00940^eOptions...'
       end
-      object miChangeLanguage: TMenuItem
-        Action = aChangeLanguage
-      end
       object miDictionaryManager: TMenuItem
         Action = aSettingsDict
+      end
+      object miChangeLanguage: TMenuItem
+        Action = aChangeLanguage
       end
       object N27: TMenuItem
         Caption = '-'
