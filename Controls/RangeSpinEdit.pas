@@ -210,38 +210,42 @@ begin
 end;
 
 procedure TRangeEdit.UpClick(Sender: TObject);
+var lo, hi: integer;
 begin
   if ReadOnly then MessageBeep(0)
   else begin
-    HighValue := HighValue + FIncrement;
-    LowValue := LowValue + FIncrement;
+    GetValue(lo, hi);
+    SetValue(lo + FIncrement, hi + FIncrement);
   end;
 end;
 
 procedure TRangeEdit.DownClick(Sender: TObject);
+var lo, hi: integer;
 begin
   if ReadOnly then MessageBeep(0)
   else begin
-    LowValue := LowValue - FIncrement;
-    HighValue := HighValue - FIncrement;
+    GetValue(lo, hi);
+    SetValue(lo - FIncrement, hi - FIncrement);
   end;
 end;
 
 procedure TRangeEdit.ExpandClick(Sender: TObject);
+var lo, hi: integer;
 begin
   if ReadOnly then MessageBeep(0)
   else begin
-    HighValue := HighValue + FIncrement;
-    LowValue := LowValue - FIncrement;
+    GetValue(lo, hi);
+    SetValue(lo - FIncrement, hi + FIncrement);
   end;
 end;
 
 procedure TRangeEdit.ShrinkClick(Sender: TObject);
+var lo, hi: integer;
 begin
   if ReadOnly then MessageBeep(0)
   else begin
-    LowValue := LowValue + FIncrement;
-    HighValue := HighValue - FIncrement;
+    GetValue(lo, hi);
+    SetValue(lo + FIncrement, hi - FIncrement);
   end;
 end;
 
