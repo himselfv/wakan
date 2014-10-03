@@ -90,7 +90,7 @@ function XsltTransform(const s: UnicodeString; const AXsltFilename: string): Wid
 implementation
 uses UITypes, JWBStrings, JWBCore, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
   JWBVocabAdd, JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage,
-  JWBWordGrid, JWBClipboard, JWBIntTip, ActiveX;
+  JWBWordGrid, JWBClipboard, JWBIntTip, ActiveX, JWBVocab1;
 
 {$R *.dfm}
 

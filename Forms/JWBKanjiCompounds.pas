@@ -36,7 +36,7 @@ var
 implementation
 
 uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicSearch, JWBSettings,
-  JWBEdictMarkers, JWBUserData, JWBCategories, JWBLegacyMarkup;
+  JWBEdictMarkers, JWBUserData, JWBCategories, JWBLegacyMarkup, JWBVocab1;
 
 {$R *.DFM}
 
@@ -187,7 +187,7 @@ begin
             userscore := score;
             kanji := ChinSimplified(CUser.Str(TUserKanji));
             kana := CUser.Str(TUserPhonetic);
-            AddArticle^ := ParseLegacyArticle(FixVocabEntry(CUser.Str(TUserEnglish)));
+            AddArticle^ := Vocab1ToSearchRes(ParseVocab1Article(FixVocabEntry(CUser.Str(TUserEnglish))));
           end;
         end;
 

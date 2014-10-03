@@ -131,7 +131,7 @@ uses JWBStrings, JWBCore, JWBLanguage, JWBMenu, JWBKanaConv, JWBUnit, JWBPrint,
   JWBSettings, JWBWordList, JWBVocabDetails, JWBVocabAdd, JWBIO, JWBFileType,
   JWBVocabFilters, JWBExamples, JWBUserData, JWBWordsExpChoose, JWBCategories,
   JWBAnnotations, StdPrompt, PKGWrite, JWBCharData, TextTable, JWBLegacyMarkup,
-  JWBWordGrid, JWBClipboard, JWBIntTip, JWBScreenTip;
+  JWBWordGrid, JWBClipboard, JWBIntTip, JWBScreenTip, JWBVocab1;
 
 var wlc:TStringList;
     lastwordind:integer;

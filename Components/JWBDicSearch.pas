@@ -1,6 +1,7 @@
 ﻿unit JWBDicSearch;
 {
-Dictionary engine. Has a lot of dark legacy in code form.
+High-level dictionary search, unifies results from dictionaries and vocab.
+Has a lot of dark legacy in code form.
 Throughout this module:
   Japanese == Japanese, Chinese, any source language.
   Kana     == Kana, Bopomofo etc.
@@ -9,7 +10,7 @@ Throughout this module:
 }
 
 interface
-uses SysUtils, Classes, JWBStrings, TextTable, StdPrompt, JWBDic;
+uses SysUtils, Classes, JWBStrings, TextTable, StdPrompt, JWBDic, JWBVocab1;
 
 {
 Particle list
@@ -224,6 +225,10 @@ type
     property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
 
+//Converts Vocab1 parsed article to common search result.
+//Why do we even need a separate Vocab1-parsed structure? Because our common
+//TSearchResArticle can change, while Vocab1 format will always stay the same.
+function Vocab1ToSearchRes(const ASource: TVocab1Article): TSearchResArticle;
 
 {
 Search itself.
@@ -305,8 +310,8 @@ procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
   DictGroup:integer;var wasfull:boolean);
 
 implementation
-uses Forms, Windows, Math, JWBKanaConv, JWBUnit, JWBSettings,
-  JWBCategories, JWBUserData, JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
+uses Forms, Windows, Math, JWBKanaConv, JWBUnit, JWBSettings, JWBCategories,
+  JWBUserData, JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
@@ -726,6 +731,14 @@ begin
     Result := Result + '<dict>' + HtmlEscape(dicname) + '</dict>';
   Result := Result + '</article>';
 end;
+
+function Vocab1ToSearchRes(const ASource: TVocab1Article): TSearchResArticle;
+begin
+  Result.Reset;
+  Result.dicname := ASource.dicname;
+  Result.entries := ASource.entries;
+end;
+
 
 {
 Deflex()
@@ -1544,7 +1557,7 @@ begin
       end;
 
       sart.Reset;
-      sart := ParseLegacyArticle(voc_entry);
+      sart := Vocab1ToSearchRes(ParseVocab1Article(voc_entry));
       sart.score := 0; //ultimate
       sart.dicname := '';
       sart.dicindex := scomp.userindex;

@@ -21,6 +21,7 @@ uses
   JWBCategories in 'Components\JWBCategories.pas',
   JWBDicSearch in 'Components\JWBDicSearch.pas',
   JWBKanjiCard in 'Components\JWBKanjiCard.pas',
+  JWBVocab1 in 'Components\JWBVocab1.pas',
   JWBMenu in 'Forms\JWBMenu.pas' {fMenu},
   JWBKanji in 'Forms\JWBKanji.pas' {fKanji},
   JWBRadical in 'Forms\JWBRadical.pas' {fRadical},
