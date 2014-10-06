@@ -143,6 +143,7 @@ type
     FFakeFocus: boolean; //see WndProc->WM_LBUTTONDOWN
     FForceClassicLook: boolean;
     procedure Paint; override;
+    procedure CreateParams(var Params: TCreateParams); override;
     function GetActionLinkClass: TControlActionLinkClass; override;
     function GetBodyRect: TRect;
     function GetDropBtnRect: TRect;
@@ -157,7 +158,9 @@ type
     procedure SetMargin(Value: Integer);
     procedure SetSpacing(Value: Integer);
     procedure SetTransparent(Value: Boolean);
+    procedure SetButtonStyle(ADefault: Boolean); override;
     procedure WndProc(var Message: TMessage); override;
+    procedure WMDrawItem(var Message: TWMDrawItem); message WM_DRAWITEM;
     procedure WMLButtonDblClk(var Message: TWMLButtonDblClk); message WM_LBUTTONDBLCLK;
     procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
     procedure CMDialogChar(var Message: TCMDialogChar); message CM_DIALOGCHAR;
@@ -568,6 +571,18 @@ begin
   FreeAndNil(FPainter);
   FreeAndNil(FDropButtonSettings);
   inherited;
+end;
+
+procedure TWinSpeedButton.CreateParams(var Params: TCreateParams);
+begin
+  inherited CreateParams(Params);
+  Params.Style := (Params.Style and not $0F) //disable any previous BS_* styles
+    or BS_OWNERDRAW;
+end;
+
+procedure TWinSpeedButton.SetButtonStyle(ADefault: Boolean);
+begin
+ //Don't call inherited, it'll cancel BS_OWNERDRAW
 end;
 
 function TWinSpeedButton.GetActionLinkClass: TControlActionLinkClass;
@@ -1513,6 +1528,13 @@ begin
 
   else
     inherited DefaultHandler(Message);
+  end;
+end;
+
+procedure TWinSpeedButton.WMDrawItem(var Message: TWMDrawItem);
+begin
+  if Message.Msg=WM_DRAWITEM then begin
+    Message.Result := 0;
   end;
 end;
 
