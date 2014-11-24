@@ -61,7 +61,8 @@ function ConvertPunctuationF(c:FChar): char;
 type
   TSanitizeFlag = (
     sfKeepLatin,              //keep HW latin
-    sfKeepAllowedPunctuation  //keep allowed punctuation (+ replace where needed)
+    sfKeepAllowedPunctuation, //keep allowed punctuation (+ replace where needed)
+    sfKeepKanji               //keep kanji characters
   );
   TSanitizeFlags = set of TSanitizeFlag;
 
@@ -234,10 +235,15 @@ end;
 //with appropriate characters
 function SanitizeKana(s: string; flags: TSanitizeFlags; const replChar: string): string;
 var i: integer;
+  ec: TEvalCharType;
 begin
   Result := '';
-  for i := 1 to Length(s) do
-    if EvalChar(s[i]) in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO] then
+  for i := 1 to Length(s) do begin
+    ec := EvalChar(s[i]);
+    if ec in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO] then
+      Result := Result + s[i]
+    else
+    if (ec in [EC_IDG_CHAR]) and (sfKeepKanji in flags) then
       Result := Result + s[i]
     else
     if IsAllowedPunctuation(s[i]) and (sfKeepAllowedPunctuation in flags) then
@@ -247,6 +253,7 @@ begin
       Result := Result + s[i]
     else
       Result := Result + replChar;
+  end;
 end;
 
 { Converts kana to romaji in a default way, that is assuming the input is a
