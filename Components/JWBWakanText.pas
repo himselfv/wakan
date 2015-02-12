@@ -1453,7 +1453,7 @@ begin
           if inReading then begin
             rootLen := 0;
            //Explicit ruby has it from file, but with implicit we have to find the word root
-            for k := j to min(j+flength(kanji), doctr[i].charcount) do
+            for k := j to min(j+flength(kanji)-1, doctr[i].charcount) do
               if fgetch(kanji, k-j+1)=GetDoc(k,i) then
                 Inc(rootLen)
               else
