@@ -315,6 +315,7 @@ var i:integer;
 begin
   if sl.Count=0 then
   begin
+    grid.Show;
     grid.Hide;
     exit;
   end;
