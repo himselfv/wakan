@@ -2,39 +2,41 @@ inherited fKanjiCompounds: TfKanjiCompounds
   Left = 227
   Top = 187
   Caption = '#00125^eCompounds'
-  ClientWidth = 556
+  ClientHeight = 215
+  ClientWidth = 626
   Constraints.MinHeight = 100
   Constraints.MinWidth = 120
   Font.Name = 'MS Sans Serif'
   Scaled = False
   OnClose = FormClose
   OnShow = FormShow
-  ExplicitWidth = 556
+  ExplicitWidth = 626
+  ExplicitHeight = 215
   PixelsPerInch = 96
   TextHeight = 13
   inherited BottomPanel: TPanel
-    Width = 550
-    Visible = False
+    Top = 190
+    Width = 620
     ExplicitWidth = 550
     inherited btnGoToVocab: TSpeedButton
-      Left = 282
+      Left = 352
       ExplicitLeft = 277
     end
     inherited btnAddToVocab: TSpeedButton
-      Left = 376
+      Left = 446
       ExplicitLeft = 373
     end
     inherited btnCopyToClipboard: TSpeedButton
-      Left = 470
+      Left = 540
       ExplicitLeft = 469
     end
     object sbShowDict: TSpeedButton
-      Left = 152
-      Top = 153
-      Width = 54
+      Left = 192
+      Top = 0
+      Width = 80
       Height = 22
       Hint = '#00153^eShow dictionary compounds'
-      Anchors = [akLeft, akBottom]
+      Align = alRight
       GroupIndex = 4
       Caption = '#00154^eDict.'
       Font.Charset = DEFAULT_CHARSET
@@ -46,12 +48,12 @@ inherited fKanjiCompounds: TfKanjiCompounds
       OnClick = OptionChanged
     end
     object sbShowVocab: TSpeedButton
-      Left = 208
-      Top = 153
-      Width = 60
+      Left = 272
+      Top = 0
+      Width = 80
       Height = 22
       Hint = '#00151^eShow user vocabulary compounds'
-      Anchors = [akLeft, akBottom]
+      Align = alRight
       GroupIndex = 4
       Down = True
       Caption = '#00152^eUserDict'
@@ -62,14 +64,15 @@ inherited fKanjiCompounds: TfKanjiCompounds
       Font.Style = []
       ParentFont = False
       OnClick = OptionChanged
+      ExplicitLeft = 329
     end
     object cbLeftMatchOnly: TCheckBox
-      Left = 9
-      Top = 154
-      Width = 89
-      Height = 17
+      Left = 0
+      Top = 0
+      Width = 48
+      Height = 22
       Hint = '#00156^eShow only compounds with beginning character'
-      Anchors = [akLeft, akBottom]
+      Align = alLeft
       Caption = '#00878^eBeg.'
       Checked = True
       State = cbChecked
@@ -77,47 +80,51 @@ inherited fKanjiCompounds: TfKanjiCompounds
       OnClick = OptionChanged
     end
     object cbPopularOnly: TCheckBox
-      Left = 62
-      Top = 154
-      Width = 39
-      Height = 17
+      Left = 48
+      Top = 0
+      Width = 48
+      Height = 22
       Hint = '#00158^eShow only compounds marked as popular'
-      Anchors = [akLeft, akBottom]
+      Align = alLeft
       Caption = '^ePop'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
       OnClick = OptionChanged
+      ExplicitLeft = 57
     end
     object cbSortByFrequency: TCheckBox
-      Left = 105
-      Top = 154
-      Width = 39
-      Height = 17
+      Left = 96
+      Top = 0
+      Width = 48
+      Height = 22
       Hint = '^eShow compounds sorted by frequency'
-      Anchors = [akLeft, akBottom]
+      Align = alLeft
       Caption = '^eFreq'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
       OnClick = OptionChanged
+      ExplicitLeft = 105
     end
   end
   inherited BlankPanel: TBlankPanel
-    Width = 556
+    Width = 626
+    Height = 187
     ExplicitWidth = 556
   end
   inherited StringGrid: TWakanWordGrid
-    Width = 554
+    Width = 624
+    Height = 185
     ExplicitWidth = 554
     ColWidths = (
       110
       138
-      282)
+      352)
   end
   inherited ilImages: TImageList
     Bitmap = {
-      494C010103000800700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103000800800010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
