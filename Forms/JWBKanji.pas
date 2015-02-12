@@ -171,6 +171,7 @@ type
     procedure SetFocusedCharsLow(const Value: FString);
     procedure SetFocusedChars(const Value: FString);
     procedure CategoryListChanged(Sender: TObject);
+    procedure KanjiCategoryEntriesChanged(Sender: TObject);
     procedure ClipboardChanged(Sender: TObject);
     procedure ReadFilter(flt: TStringList; const tx: string; typ: integer;
       ftype: TFilterType);
@@ -249,10 +250,12 @@ begin
   CurRadSearchType:=stRaine;
   FCurRadChars:='';
   OnCategoryListChanged.Add(Self.CategoryListChanged);
+  OnKanjiCategoryEntriesChanged.Add(Self.KanjiCategoryEntriesChanged);
 end;
 
 procedure TfKanji.FormDestroy(Sender: TObject);
 begin
+  OnKanjiCategoryEntriesChanged.Add(Self.KanjiCategoryEntriesChanged);
   OnCategoryListChanged.Remove(Self.CategoryListChanged);
 end;
 
@@ -295,6 +298,14 @@ begin
   Self.lbCategories.ItemIndex:=0;
   Self.lbCategoriesClick(Self); //react to changes
  //Do not update popup categories here, instead do it in OnPopup
+end;
+
+procedure TfKanji.KanjiCategoryEntriesChanged(Sender: TObject);
+begin
+ //We may need to update the list of kanji if Category filters are in place.
+ //We may also need to repaint LEARNED kanji in new color and the way it's done now, this also
+ //requires Reload.
+  Self.Reload;
 end;
 
 procedure TfKanji.ClipboardChanged(Sender: TObject);
