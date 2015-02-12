@@ -251,13 +251,13 @@ begin
     Reload;
 
   if curlang = 'j' then begin
-    fontjpch := FontJapanese;
-    fontjpchgrid := FontJapaneseGrid;
-    fontjpengrid := FontJapaneseGrid;
+    FontJpCh := FontJapanese;
+    FontJpChGrid := FontJapaneseGrid;
+    FontJpEnGrid := FontJapaneseGrid;
   end else begin
-    fontjpch := FontChinese;
-    fontjpchgrid := FontChineseGrid;
-    fontjpengrid := FontPinYin;
+    FontJpCh := FontChinese;
+    FontJpChGrid := FontChineseGrid;
+    FontJpEnGrid := FontPinYin;
   end;
 
   InflateRect(TargetRect, -MarginSize div 2, -MarginSize div 2);
