@@ -787,7 +787,7 @@ begin
     1: SetRomaList(ChangeFileExt(HepburnRoma,''));
     2: SetRomaList(ChangeFileExt(CzechRoma,''));
   else
-    SetRomaList(reg.ReadString('Romanization','RomaList',ChangeFileExt(KunreishikiRoma,'')));
+    SetRomaList(reg.ReadString('Romanization','RomaList',ChangeFileExt(KunreishikiRoma,'')+','+ChangeFileExt(HepburnRoma,'')));
   end;
 
   tmp_int:=reg.ReadInteger('Romanization','ChineseSystem',-1);
