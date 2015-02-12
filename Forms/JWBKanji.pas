@@ -1433,6 +1433,7 @@ var w:widechar;
   r_copy: TRect;
   fontface: string;
   fontsize: integer;
+  foreCol, backCol: TColor;
 begin
   if (ARow*DrawGrid1.ColCount+ACol>=ki.Count) then
   begin
@@ -1448,22 +1449,35 @@ begin
  {$ELSE}
   w:=HexToUnicode(kix)[1];
  {$ENDIF}
-  if gdSelected in State then DrawGrid1.Canvas.Brush.Color:=clHighlight else
-  DrawGrid1.Canvas.Brush.Color:=clWindow;
-  if gdSelected in state then DrawGrid1.Canvas.Font.Color:=clHighlightText else
-  DrawGrid1.Canvas.Font.Color:=clWindowText;
-  if (not fSettings.CheckBox3.Checked) and not (gdSelected in State) then
+  if gdSelected in State then begin
+    DrawGrid1.Canvas.Brush.Color:=clHighlight;
+    DrawGrid1.Canvas.Font.Color:=clHighlightText;
+  end else begin
+    DrawGrid1.Canvas.Brush.Color:=clWindow;
+    DrawGrid1.Canvas.Font.Color:=clWindowText;
+  end;
+
+  if (not fSettings.cbNoCharColors.Checked) then
   begin
-    DrawGrid1.Canvas.Brush.Color:=Col('Kanji_Back');
+    backCol:=Col('Kanji_Back');
     TChar.Locate('Unicode',kix);
     kig:=ki[DrawGrid1.ColCount*ARow+Acol];
     case kig[1] of
-      'K':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Learned');
-      'C':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Common');
-      'U':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Rare');
-      'N':DrawGrid1.Canvas.Font.Color:=Col('Kanji_Names');
+      'K':foreCol:=Col('Kanji_Learned');
+      'C':foreCol:=Col('Kanji_Common');
+      'U':foreCol:=Col('Kanji_Rare');
+      'N':foreCol:=Col('Kanji_Names');
+    end;
+
+    if gdSelected in State then begin
+      DrawGrid1.Canvas.Brush.Color := foreCol;
+      DrawGrid1.Canvas.Font.Color := backCol;
+    end else begin
+      DrawGrid1.Canvas.Brush.Color := backCol;
+      DrawGrid1.Canvas.Font.Color := foreCol;
     end;
   end;
+
   if fSettings.CheckBox69.Checked and HaveAnnotations then
   begin
     Annot.SeekK(kix,'');
