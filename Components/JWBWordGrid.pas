@@ -71,7 +71,7 @@ begin
   Canvas.Font.Name:=FontEnglish;
   Canvas.Font.Style:=[];
   Canvas.Font.Size:=9;
-  if (fSettings.cbStatusColors.Checked) and (not fSettings.cbNoGridColors.Checked) and (not titrow) then
+  if (fSettings.cbStatusColors.Checked) and (not fSettings.cbNoWordGridColors.Checked) and (not titrow) then
   begin
     c:=' ';
     if (length(s)>1) and (s[1]=ALTCH_EXCL) then c:=s[2];
@@ -102,13 +102,13 @@ begin
       delete(s,1,1);
     end
     else Canvas.Font.Color:=Col('Dict_Text');
-    if fSettings.cbNoGridColors.Checked then Canvas.Font.Color:=clWindowText;
+    if fSettings.cbNoWordGridColors.Checked then Canvas.Font.Color:=clWindowText;
     DrawUnicode(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall);
   end else if not titrow then
   begin
     cursiv:=false;
     FontColor:=Col('Dict_Text');
-    if fSettings.cbNoGridColors.Checked then FontColor:=clWindowText;
+    if fSettings.cbNoWordGridColors.Checked then FontColor:=clWindowText;
     if (length(s)>1) and (s[1]=UH_WORDTYPE) then
     begin
       if s[2]='I'then cursiv:=true;
@@ -149,7 +149,7 @@ begin
         begin
           c:=curs[1];
           delete(curs,1,1);
-          if fSettings.cbNoGridColors.Checked then
+          if fSettings.cbNoWordGridColors.Checked then
             Canvas.Font.Color:=FontColor
           else
           case c of

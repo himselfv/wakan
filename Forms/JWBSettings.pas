@@ -135,9 +135,9 @@ type
     Button15: TButton;
     Label42: TLabel;
     ComboBox2: TComboBox;
-    CheckBox3: TCheckBox;
+    cbNoCharColors: TCheckBox;
     cbNoEditorColors: TCheckBox;
-    cbNoGridColors: TCheckBox;
+    cbNoWordGridColors: TCheckBox;
     ColorDialog1: TColorDialog;
     CheckBox51: TCheckBox;
     cbKanjiCardPrintStrokeOrder: TCheckBox;
@@ -323,9 +323,9 @@ type
     procedure Button15Click(Sender: TObject);
     procedure Button14Click(Sender: TObject);
     procedure Button12Click(Sender: TObject);
-    procedure CheckBox3Click(Sender: TObject);
-    procedure cbNoColorsClick(Sender: TObject);
-    procedure CheckBox9Click(Sender: TObject);
+    procedure cbNoCharColorsClick(Sender: TObject);
+    procedure cbNoEditorColorsClick(Sender: TObject);
+    procedure cbNoWordGridColorsClick(Sender: TObject);
     procedure SpeedButton13Click(Sender: TObject);
     procedure SpeedButton14Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
@@ -812,7 +812,7 @@ begin
   cbRadicalType.ItemIndex:=reg.ReadInteger('Characters','RadicalType',0);
   CheckBox1.Checked:=reg.ReadBool('Characters','ShowStrokes',false);
   CheckBox51.Checked:=reg.ReadBool('Characters','StrokeOrderGridFont',false);
-  CheckBox3.Checked:=reg.ReadBool('Characters','NoShowColors',false);
+  cbNoCharColors.Checked:=reg.ReadBool('Characters','NoShowColors',false);
   cbYomiIgnoreOkurigana.Checked:=reg.ReadBool('Characters','YomiOkurigana',false);
 
   cbDetailsShowKanjiClass.Checked:=reg.ReadBool('KanjiDetails','ShowKanjiClass',true);
@@ -858,7 +858,7 @@ begin
     end;
   end;
   cbReplaceKanji.Checked:=reg.ReadBool('Dict','ReplaceKanji',true);
-  cbNoGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
+  cbNoWordGridColors.Checked:=reg.ReadBool('Dict','NoUseColors',false);
   CheckBox10.Checked:=reg.ReadBool('Dict','UseGrey',false);
   cbStatusColors.Checked:=reg.ReadBool('Dict','StatusColors',true);
   cbDictLimitAutoResults.Checked:=reg.ReadBool('Dict','AutoPage',true);
@@ -1093,7 +1093,7 @@ begin
   reg.WriteInteger('Characters','RadicalType',cbRadicalType.ItemIndex);
   reg.WriteBool('Characters','ShowStrokes',CheckBox1.Checked);
   reg.WriteBool('Characters','StrokeOrderGridFont',CheckBox51.Checked);
-  reg.WriteBool('Characters','NoShowColors',CheckBox3.Checked);
+  reg.WriteBool('Characters','NoShowColors',cbNoCharColors.Checked);
   reg.WriteBool('Characters','YomiOkurigana',cbYomiIgnoreOkurigana.Checked);
   reg.WriteBool('Characters','CompoundsBeg',fKanjiCompounds.cbLeftMatchOnly.Checked);
   reg.WriteBool('Characters','CompoundsPop',fKanjiCompounds.cbPopularOnly.Checked);
@@ -1131,7 +1131,7 @@ begin
     reg.WriteInteger('Dict','SearchBeg',tmp_int);
   end;
   reg.WriteBool('Dict','ReplaceKanji',cbReplaceKanji.Checked);
-  reg.WriteBool('Dict','NoUseColors',cbNoGridColors.Checked);
+  reg.WriteBool('Dict','NoUseColors',cbNoWordGridColors.Checked);
   reg.WriteBool('Dict','UseGrey',CheckBox10.Checked);
   reg.WriteBool('Dict','StatusColors',cbStatusColors.Checked);
   reg.WriteBool('Dict','AutoPage',cbDictLimitAutoResults.Checked);
@@ -1966,13 +1966,13 @@ begin
   until s='';
   ListBox3.ItemIndex:=0;
   ListBox3Click(Sender);
-  CheckBox3.Visible:=ComboBox2.ItemIndex=0;
-  cbNoGridColors.Visible:=(ComboBox2.ItemIndex=1) or (ComboBox2.ItemIndex=2);
+  cbNoCharColors.Visible:=ComboBox2.ItemIndex=0;
+  cbNoWordGridColors.Visible:=(ComboBox2.ItemIndex=1) or (ComboBox2.ItemIndex=2);
   cbNoEditorColors.Visible:=ComboBox2.ItemIndex=3;
   case Combobox2.ItemIndex of
-    0: v:=not CheckBox3.Checked;
-    1: v:=not cbNoGridColors.Checked;
-    2: v:=not cbNoGridColors.Checked;
+    0: v:=not cbNoCharColors.Checked;
+    1: v:=not cbNoWordGridColors.Checked;
+    2: v:=not cbNoWordGridColors.Checked;
     3: v:=not cbNoEditorColors.Checked;
   else
     v := false;
@@ -2015,17 +2015,17 @@ begin
   ListBox3Click(Sender);
 end;
 
-procedure TfSettings.CheckBox3Click(Sender: TObject);
+procedure TfSettings.cbNoCharColorsClick(Sender: TObject);
 begin
   if fSettings.Visible then ComboBox2Change(sender);
 end;
 
-procedure TfSettings.cbNoColorsClick(Sender: TObject);
+procedure TfSettings.cbNoEditorColorsClick(Sender: TObject);
 begin
   if fSettings.Visible then ComboBox2Change(sender);
 end;
 
-procedure TfSettings.CheckBox9Click(Sender: TObject);
+procedure TfSettings.cbNoWordGridColorsClick(Sender: TObject);
 begin
   if fSettings.Visible then ComboBox2Change(sender);
 end;
