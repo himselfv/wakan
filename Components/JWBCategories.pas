@@ -1226,7 +1226,7 @@ begin
         Result:='N'
       else
         Result:='U';
-    end else
+    end else begin
       Result := CChar.Str(TChar.fType)[1]; //'A'll or 'J'apanese only
       if (Result='A') or (Result='J') then begin
        //Keep it
@@ -1235,6 +1235,7 @@ begin
         Result:='C'
       else
         Result:='U';
+    end;
     if IsKnown(KnownLearned,AChar) then
       Result:='K';
 
