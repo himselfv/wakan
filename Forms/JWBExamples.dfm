@@ -54,10 +54,11 @@ object fExamples: TfExamples
       Caption = 'Label2'
     end
     object Label3: TLabel
-      Left = 346
+      Left = 391
       Top = 2
-      Width = 79
+      Width = 71
       Height = 13
+      Alignment = taRightJustify
       Anchors = [akTop, akRight]
       Caption = '#00726^eClip'
       Font.Charset = DEFAULT_CHARSET
