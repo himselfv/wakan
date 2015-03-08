@@ -141,9 +141,6 @@ object fMenu: TfMenu
     Padding.Bottom = 1
     ParentDoubleBuffered = False
     TabOrder = 1
-    DesignSize = (
-      694
-      33)
     object tab1: TSpeedButton
       Left = 0
       Top = 1
@@ -413,12 +410,16 @@ object fMenu: TfMenu
       ExplicitHeight = 29
     end
     object btnClipboardClear: TSpeedButton
-      Left = 663
-      Top = 4
-      Width = 25
-      Height = 26
+      AlignWithMargins = True
+      Left = 665
+      Top = 3
+      Width = 26
+      Height = 28
       Hint = '#00220^eClear clipboard'
-      Anchors = [akTop, akRight]
+      Margins.Left = 0
+      Margins.Top = 2
+      Margins.Bottom = 1
+      Align = alRight
       Glyph.Data = {
         76010000424D7601000000000000760000002800000020000000100000000100
         04000000000000010000120B0000120B00001000000000000000000000000000
@@ -436,6 +437,9 @@ object fMenu: TfMenu
       ParentShowHint = False
       ShowHint = True
       OnClick = btnClipboardClearClick
+      ExplicitLeft = 663
+      ExplicitTop = 4
+      ExplicitHeight = 26
     end
     object Bevel5: TBevel
       Left = 428
@@ -520,6 +524,7 @@ object fMenu: TfMenu
         00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FFFF00FF
         FF00FFFF000000FFFFFFFFFFFF00000000000000000000000000000000000000
         0000000000000000000000000000000000000000000000FFFFFF}
+      Visible = False
       OnClick = btnScreenModeScClick
       ExplicitTop = 4
       ExplicitHeight = 25
@@ -566,16 +571,21 @@ object fMenu: TfMenu
       ExplicitHeight = 25
     end
     object ClipboardPaintbox: TWakanPaintbox
-      Left = 495
+      AlignWithMargins = True
+      Left = 498
       Top = 4
-      Width = 166
+      Width = 167
       Height = 26
-      Anchors = [akLeft, akTop, akRight]
+      Margins.Left = 0
+      Margins.Right = 0
+      Margins.Bottom = 2
+      Align = alClient
       Color = clWhite
       DoubleBuffered = True
       OnPaint = ClipboardPaintboxPaint
       OnMouseMove = ClipboardPaintboxMouseMove
       OnMouseUp = ClipboardPaintboxMouseUp
+      ExplicitLeft = 499
     end
   end
   object MainPanel: TPanel
