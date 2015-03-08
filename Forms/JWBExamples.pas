@@ -568,9 +568,9 @@ begin
     begin
       ReadExample(i, tmp_jap, tmp_en);
       if btnDisplayTranslation.Down then
-        newClipText:=tmp_jap+UH_CR+UH_LF+fstr(tmp_en)+UH_CR+UH_LF
+        newClipText := newClipText+tmp_jap+UH_CR+UH_LF+fstr(tmp_en)+UH_CR+UH_LF
       else
-        newClipText:=tmp_jap+UH_CR+UH_LF;
+        newClipText := newClipText+tmp_jap+UH_CR+UH_LF;
     end;
   end;
   Clipboard.Text := newClipText;
