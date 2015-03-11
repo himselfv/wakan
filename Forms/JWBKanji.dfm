@@ -655,6 +655,13 @@ object fKanji: TfKanji
       OnExecute = aOnlyCommonExecute
       OnChecked = aOnlyCommonChecked
     end
+    object aOnlyLearned: TCheckAction
+      AutoCheck = True
+      Caption = '#00279^Learned only'
+      Hint = '#00184^Display only learned characters'
+      OnExecute = aOnlyLearnedExecute
+      OnChecked = aOnlyLearnedChecked
+    end
     object aPinYin: TAction
       Caption = '#00282^eSearch by PinYin'
       ShortCut = 16457
@@ -734,7 +741,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 352
     Bitmap = {
-      494C010104001401F80110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101040014010C0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

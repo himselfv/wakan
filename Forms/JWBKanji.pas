@@ -47,6 +47,7 @@ type
     aPrint: TAction;
     aResetFilters: TAction;
     aOnlyCommon: TCheckAction;
+    aOnlyLearned: TCheckAction;
     aInClipboard: TCheckAction;
     aPinYin: TAction;
     aYomi: TAction;
@@ -149,7 +150,11 @@ type
     procedure sbStrokeCountDropDownClick(Sender: TObject);
     procedure aInClipboardExecute(Sender: TObject);
     procedure aOnlyCommonExecute(Sender: TObject);
+    procedure aOnlyCommonChecked(Sender: TObject);
     procedure sbOnlyCommonClick(Sender: TObject);
+    procedure aOnlyLearnedExecute(Sender: TObject);
+    procedure aOnlyLearnedChecked(Sender: TObject);
+    procedure aInClipboardChecked(Sender: TObject);
     procedure sbInClipboardClick(Sender: TObject);
     procedure sbStrokeCountClick(Sender: TObject);
     procedure pnlStrokeCountExit(Sender: TObject);
@@ -157,9 +162,6 @@ type
     procedure sbRadicalsClick(Sender: TObject);
     procedure sbRadicalsDropDownClick(Sender: TObject);
     procedure btnGroupsClick(Sender: TObject);
-    procedure aOnlyCommonChecked(Sender: TObject);
-    procedure aInClipboardChecked(Sender: TObject);
-
   protected
     FFocusedChars: FString;
     function GetCellSize: integer;
@@ -188,6 +190,8 @@ type
     procedure ResetFilters;
     procedure SetCategoryFilter(const ACategories: array of integer;
       AOr, ANot: boolean);
+    function GetLearnedChecked: boolean;
+    procedure SetLearnedChecked(const Value: boolean);
     procedure FilterByRadical(const radno: integer);
     function GetKanji(cx,cy:integer):string;
     property FocusedChars: FString read FFocusedChars write SetFocusedChars;
@@ -1633,6 +1637,29 @@ begin
   Self.InvalidateList;
 end;
 
+function TfKanji.GetLearnedChecked: boolean;
+var i: integer;
+begin
+  Result := false;
+  for i := 0 to lbCategories.Items.Count-1 do
+    if lbCategories.Checked[i] and (GetCatIdx(Self.lbCategories, i)=KnownLearned) then
+      Result := true;
+end;
+
+procedure TfKanji.SetLearnedChecked(const Value: boolean);
+var i: integer;
+  checkStateChanged: boolean;
+begin
+  checkStateChanged := false;
+  for i := 0 to lbCategories.Count-1 do
+    if (GetCatIdx(Self.lbCategories, i) = KnownLearned) and (lbCategories.Checked[i] <> Value) then begin
+      lbCategories.Checked[i] := Value;
+      checkStateChanged := true;
+    end;
+  if checkStateChanged then
+    Self.InvalidateList;
+end;
+
 procedure TfKanji.lbCategoriesClick(Sender: TObject);
 var IsKnownLearned: boolean;
 begin
@@ -1642,7 +1669,11 @@ begin
 end;
 
 procedure TfKanji.lbCategoriesClickCheck(Sender: TObject);
+var learnedChecked: boolean;
 begin
+  learnedChecked := GetLearnedChecked;
+  if aOnlyLearned.Checked <> learnedChecked then
+    aOnlyLearned.Checked := learnedChecked;
   Self.InvalidateList;
 end;
 
@@ -1693,24 +1724,29 @@ begin
   Self.InvalidateList;
 end;
 
-procedure TfKanji.sbOnlyCommonClick(Sender: TObject);
-begin
-  aOnlyCommon.Checked := sbOnlyCommon.Down;
-  SearchFilterChanged(Sender);
-end;
-
-procedure TfKanji.sbInClipboardClick(Sender: TObject);
-begin
-  aInClipboard.Checked := sbInClipboard.Down;
-  SearchFilterChanged(Sender);
-end;
-
 procedure TfKanji.aOnlyCommonChecked(Sender: TObject);
 begin
   sbOnlyCommon.Down := aOnlyCommon.Checked;
 end;
 
 procedure TfKanji.aOnlyCommonExecute(Sender: TObject);
+begin
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.sbOnlyCommonClick(Sender: TObject);
+begin
+  aOnlyCommon.Checked := sbOnlyCommon.Down;
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.aOnlyLearnedChecked(Sender: TObject);
+begin
+ //May be called from category list's OnCheck so be wary of infinite recursion
+  SetLearnedChecked(aOnlyLearned.Checked);
+end;
+
+procedure TfKanji.aOnlyLearnedExecute(Sender: TObject);
 begin
   SearchFilterChanged(Sender);
 end;
@@ -1722,6 +1758,12 @@ end;
 
 procedure TfKanji.aInClipboardExecute(Sender: TObject);
 begin
+  SearchFilterChanged(Sender);
+end;
+
+procedure TfKanji.sbInClipboardClick(Sender: TObject);
+begin
+  aInClipboard.Checked := sbInClipboard.Down;
   SearchFilterChanged(Sender);
 end;
 

@@ -585,7 +585,6 @@ object fMenu: TfMenu
       OnPaint = ClipboardPaintboxPaint
       OnMouseMove = ClipboardPaintboxMouseMove
       OnMouseUp = ClipboardPaintboxMouseUp
-      ExplicitLeft = 499
     end
   end
   object MainPanel: TPanel
@@ -921,7 +920,8 @@ object fMenu: TfMenu
         Action = fKanji.aResetFilters
       end
       object miLearnedOnly: TMenuItem
-        Caption = '#00279^eLearned only'
+        Action = fKanji.aOnlyLearned
+        AutoCheck = True
       end
       object miCommonOnly: TMenuItem
         Action = fKanji.aOnlyCommon
