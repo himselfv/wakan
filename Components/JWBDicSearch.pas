@@ -865,25 +865,29 @@ begin
         se.Add(9,length(search),'F',rtRoma,search)
       end else begin
         if curlang='j'then
-          tmpkana:=RomajiToKana('H'+search,'j',[])
+          tmpkana:=RomajiToKana('H'+search,'j',[rfReplaceInvalidChars])
         else
-          tmpkana:=RomajiToKana(search,'c',[]);
-       //Add exact roma first
+          tmpkana:=RomajiToKana(search,'c',[rfReplaceInvalidChars]);
+
+       //Add exact kunrei roma first, if there's anything that looks like it
         search := SignatureFrom(search);
-        se.Add(9,length(search),'F',rtRoma,search);
+        if search <> '' then
+          se.Add(9,length(search),'F',rtRoma,search);
+
         if pos('?',tmpkana)>0 then begin
          //Deflex with lower priority since this is probably wrong decoding of roma
           tmpkana := repl(tmpkana, '?', '');
-          Deflex(tmpkana,se,6,5,true);
-        end else
-          Deflex(tmpkana,se,9,8,true);
-       //in any case add non-deflexed kana translation,
-       //since the request could be in different romaji system (ex. mujun instead of mudjun)
-        if tmpkana<>'' then
-          if pos('?',tmpkana)>0 then
+          if tmpkana <> '' then begin
+            Deflex(tmpkana,se,6,5,true);
+           //in any case add non-deflexed kana translation,
+           //since the request could be in different romaji system (ex. mujun instead of mudjun)
             se.Add(6, flength(tmpkana), 'F', rtNormal, tmpkana)
-          else
+          end;
+        end else
+          if tmpkana <> '' then begin
+            Deflex(tmpkana,se,9,8,true);
             se.Add(9, flength(tmpkana), 'F', rtNormal, tmpkana);
+          end;
       end;
     stEnglish:
       se.Add(9, 1, 'F', rtNormal, search);

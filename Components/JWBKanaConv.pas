@@ -161,7 +161,7 @@ type
 
   TResolveFlag = (
     rfReplaceInvalidChars,
-      //Replace characters which don't match any kana/romaji with character ''
+      //Replace characters which don't match any kana/romaji with character '?'
     rfDeleteInvalidChars
       //Delete invalid characters
   );
@@ -1098,29 +1098,15 @@ begin
   begin
     fn:='';
     l:=0;
-    if s2[1]='_' then begin fn:=fstr('_'); l:=1; end;
-    if s2[1]='-' then begin fn:=fstr('-'); l:=1; end;
 
-    for bi in FTrans.FRomajiIndex do
-      if StartsStr(bir.roma, s2) then begin
-        l := Length(bir.roma);
-        if kata=0 then
-          fn := bir.entries[0].Phonetic
-        else
-          fn := ToKatakana(bir.entries[0].Phonetic);
-        break;
-      end;
-
-    if l=0 then begin
-      if not (rfDeleteInvalidChars in AFlags) then
-        if s2[1]<>'''' then
-         //Latin letter (supposedly)
-          fn := s2[1]
-        else
-          fn:='';
+    if s2[1]='_' then begin
+      fn:=fstr('_');
       l:=1;
-    end;
-
+    end else
+    if s2[1]='-' then begin
+      fn:=fstr('-');
+      l:=1;
+    end else
     if s2[1]='H' then begin
       kata:=0;
       l:=1;
@@ -1130,7 +1116,31 @@ begin
       kata:=1;
       l:=1;
       fn:='';
+    end else begin
+
+      for bi in FTrans.FRomajiIndex do
+        if StartsStr(bir.roma, s2) then begin
+          l := Length(bir.roma);
+          if kata=0 then
+            fn := bir.entries[0].Phonetic
+          else
+            fn := ToKatakana(bir.entries[0].Phonetic);
+          break;
+        end;
+
+      if l=0 then begin
+        if rfDeleteInvalidChars in AFlags then
+          fn := ''
+        else
+        if rfReplaceInvalidChars in AFlags then
+          fn := '?'
+        else
+          fn := s2[1];
+        l:=1;
+      end;
+
     end;
+
     delete(s2,1,l);
     s3:=s3+fn;
   end;

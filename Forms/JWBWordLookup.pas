@@ -426,10 +426,19 @@ begin
         wasfull := wasfull and req.WasFull;
       end;
       lmJp: begin
+        text := GetSearchText;
+
         req.st := stRomaji;
         req.Prepare;
-        req.Search(GetSearchText, EC_UNKNOWN, FResults);
+        req.Search(text, EC_UNKNOWN, FResults);
         wasfull := req.WasFull;
+        FreeAndNil(req);
+
+        req := NewSearchRequest;
+        req.st := stJapanese;
+        req.Prepare;
+        req.Search(text, EC_UNKNOWN, FResults);
+        wasfull := wasfull and req.WasFull;
       end;
       lmEn: begin
         req.st := stEnglish;
