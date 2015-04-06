@@ -279,10 +279,11 @@ begin
   if TryStrToInt(param, Result) then begin
     if Result>=tt.Orders.Count then
       raise Exception.Create('No index with id='+IntToStr(Result));
-  end else
-  if not tt.Orders.Find(param, Result) then begin
-    Result := tt.Seeks.Find(param);
-    if Result<0 then
+  end else begin
+    Result := tt.Orders.IndexOf(param);
+    if Result < 0 then
+      Result := tt.Seeks.IndexOf(param);
+    if Result < 0 then
       raise Exception.Create('Index not found: '+param);
   end;
 end;

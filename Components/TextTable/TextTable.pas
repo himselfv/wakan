@@ -108,7 +108,7 @@ type
     procedure Delete(const AIndex: integer);
     procedure Insert(const APos: integer; const AItem: TSeekDescription); overload;
     procedure Insert(const APos: integer; const AFormula: string); overload;
-    function Find(const AName: string): integer;
+    function IndexOf(const AName: string): integer;
     property Items[const Index: integer]: PSeekDescription read GetItem; default;
     property Count: integer read GetCount;
   end;
@@ -588,7 +588,7 @@ begin
   Result := Length(FItems);
 end;
 
-function TSeekList.Find(const AName: string): integer;
+function TSeekList.IndexOf(const AName: string): integer;
 var i: integer;
 begin
   Result := -1;
@@ -1682,7 +1682,7 @@ end;
 
 function TTextTable.GetSeekObject(seek: string): TSeekObject;
 begin
-  Result.ind_i:=Seeks.Find(seek);
+  Result.ind_i:=Seeks.IndexOf(seek);
   if Result.ind_i<0 then raise Exception.Create('Cannot find seek object "'+seek+'"');
   Result.reverse:=false;
   if (seek[1]='<') then
