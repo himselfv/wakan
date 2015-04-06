@@ -399,7 +399,9 @@ begin
     'Chinese+Unicode',
     'ChFrequency',
     'ChStrokeCount',
-    'JpFrequency',
+    //It's important that in Jp* family of indexes "japanese" characters always go first.
+    //F.e. KanjiList.Reload scans until 1st "chinese" charater when in jp mode, ignoring the rest.
+    'Chinese+JpFrequency',
     'Chinese+JpStrokeCount'
   ]);
 end;
