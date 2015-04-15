@@ -57,20 +57,13 @@ type
     miCharacters: TMenuItem;
     N5: TMenuItem;
     miDisplayAll: TMenuItem;
-    miLearnedOnly: TMenuItem;
     miCommonOnly: TMenuItem;
     miInClipboardOnly: TMenuItem;
-    N3: TMenuItem;
-    miSearchByPinYin: TMenuItem;
-    miSearchByYomi: TMenuItem;
-    miSearchByMeaning: TMenuItem;
     miSearchByRadical: TMenuItem;
-    N6: TMenuItem;
     miAddToClipboard: TMenuItem;
     miSetAsLearned: TMenuItem;
     miPrintCards: TMenuItem;
     N13: TMenuItem;
-    miSearch: TMenuItem;
     miDetails: TMenuItem;
     miCompounds: TMenuItem;
     eDictionarycSlovnk1: TMenuItem;
@@ -186,6 +179,7 @@ type
     aDownloader: TAction;
     Download1: TMenuItem;
     N27: TMenuItem;
+    N01225Search1: TMenuItem;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);

@@ -919,10 +919,6 @@ object fMenu: TfMenu
       object miDisplayAll: TMenuItem
         Action = fKanji.aResetFilters
       end
-      object miLearnedOnly: TMenuItem
-        Action = fKanji.aOnlyLearned
-        AutoCheck = True
-      end
       object miCommonOnly: TMenuItem
         Action = fKanji.aOnlyCommon
         AutoCheck = True
@@ -931,22 +927,22 @@ object fMenu: TfMenu
         Action = fKanji.aInClipboard
         AutoCheck = True
       end
-      object N3: TMenuItem
-        Caption = '-'
-      end
-      object miSearchByPinYin: TMenuItem
-        Action = fKanji.aPinYin
-      end
-      object miSearchByYomi: TMenuItem
-        Action = fKanji.aYomi
-      end
-      object miSearchByMeaning: TMenuItem
-        Action = fKanji.aMeaning
+      object N01225Search1: TMenuItem
+        Action = fKanji.aSearchByText
       end
       object miSearchByRadical: TMenuItem
         Action = fKanji.aRadical
       end
-      object N6: TMenuItem
+      object N13: TMenuItem
+        Caption = '-'
+      end
+      object miDetails: TMenuItem
+        Action = aKanjiDetails
+      end
+      object miCompounds: TMenuItem
+        Action = aKanjiCompounds
+      end
+      object N2: TMenuItem
         Caption = '-'
       end
       object miAddToClipboard: TMenuItem
@@ -957,22 +953,6 @@ object fMenu: TfMenu
       end
       object miPrintCards: TMenuItem
         Action = fKanji.aPrint
-      end
-      object N13: TMenuItem
-        Caption = '-'
-      end
-      object miSearch: TMenuItem
-        Action = fKanji.aSearch
-        AutoCheck = True
-      end
-      object miDetails: TMenuItem
-        Action = aKanjiDetails
-      end
-      object miCompounds: TMenuItem
-        Action = aKanjiCompounds
-      end
-      object N2: TMenuItem
-        Caption = '-'
       end
       object miSaveCharactersToFile: TMenuItem
         Action = fKanji.aSaveToFile

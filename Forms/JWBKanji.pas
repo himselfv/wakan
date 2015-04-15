@@ -47,7 +47,6 @@ type
     aPrint: TAction;
     aResetFilters: TAction;
     aOnlyCommon: TCheckAction;
-    aOnlyLearned: TCheckAction;
     aInClipboard: TCheckAction;
     aPinYin: TAction;
     aYomi: TAction;
@@ -97,6 +96,7 @@ type
     cbOrAnd: TComboBox;
     pnlStrokeCount: TPopupPanel;
     edtStrokeCount: TRangeSpinEdit;
+    aSearchByText: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormHide(Sender: TObject);
@@ -152,8 +152,6 @@ type
     procedure aOnlyCommonExecute(Sender: TObject);
     procedure aOnlyCommonChecked(Sender: TObject);
     procedure sbOnlyCommonClick(Sender: TObject);
-    procedure aOnlyLearnedExecute(Sender: TObject);
-    procedure aOnlyLearnedChecked(Sender: TObject);
     procedure aInClipboardChecked(Sender: TObject);
     procedure sbInClipboardClick(Sender: TObject);
     procedure sbStrokeCountClick(Sender: TObject);
@@ -162,6 +160,7 @@ type
     procedure sbRadicalsClick(Sender: TObject);
     procedure sbRadicalsDropDownClick(Sender: TObject);
     procedure btnGroupsClick(Sender: TObject);
+    procedure aSearchByTextExecute(Sender: TObject);
   protected
     FFocusedChars: FString;
     function GetCellSize: integer;
@@ -190,8 +189,6 @@ type
     procedure ResetFilters;
     procedure SetCategoryFilter(const ACategories: array of integer;
       AOr, ANot: boolean);
-    function GetLearnedChecked: boolean;
-    procedure SetLearnedChecked(const Value: boolean);
     procedure FilterByRadical(const radno: integer);
     function GetKanji(cx,cy:integer):string;
     property FocusedChars: FString read FFocusedChars write SetFocusedChars;
@@ -410,6 +407,7 @@ begin
   FCurRadChars := '';
   edtJouyou.Text := '';
   edtJlpt.Text := '';
+  SetCategoryFilter([],true,false);
 end;
 
 procedure TfKanji.aResetFiltersExecute(Sender: TObject);
@@ -1637,29 +1635,6 @@ begin
   Self.InvalidateList;
 end;
 
-function TfKanji.GetLearnedChecked: boolean;
-var i: integer;
-begin
-  Result := false;
-  for i := 0 to lbCategories.Items.Count-1 do
-    if lbCategories.Checked[i] and (GetCatIdx(Self.lbCategories, i)=KnownLearned) then
-      Result := true;
-end;
-
-procedure TfKanji.SetLearnedChecked(const Value: boolean);
-var i: integer;
-  checkStateChanged: boolean;
-begin
-  checkStateChanged := false;
-  for i := 0 to lbCategories.Count-1 do
-    if (GetCatIdx(Self.lbCategories, i) = KnownLearned) and (lbCategories.Checked[i] <> Value) then begin
-      lbCategories.Checked[i] := Value;
-      checkStateChanged := true;
-    end;
-  if checkStateChanged then
-    Self.InvalidateList;
-end;
-
 procedure TfKanji.lbCategoriesClick(Sender: TObject);
 var IsKnownLearned: boolean;
 begin
@@ -1669,11 +1644,7 @@ begin
 end;
 
 procedure TfKanji.lbCategoriesClickCheck(Sender: TObject);
-var learnedChecked: boolean;
 begin
-  learnedChecked := GetLearnedChecked;
-  if aOnlyLearned.Checked <> learnedChecked then
-    aOnlyLearned.Checked := learnedChecked;
   Self.InvalidateList;
 end;
 
@@ -1737,17 +1708,6 @@ end;
 procedure TfKanji.sbOnlyCommonClick(Sender: TObject);
 begin
   aOnlyCommon.Checked := sbOnlyCommon.Down;
-  SearchFilterChanged(Sender);
-end;
-
-procedure TfKanji.aOnlyLearnedChecked(Sender: TObject);
-begin
- //May be called from category list's OnCheck so be wary of infinite recursion
-  SetLearnedChecked(aOnlyLearned.Checked);
-end;
-
-procedure TfKanji.aOnlyLearnedExecute(Sender: TObject);
-begin
   SearchFilterChanged(Sender);
 end;
 
@@ -1909,6 +1869,18 @@ begin
  //Has to be non-empty or AutoCheck wont work
 end;
 
+procedure TfKanji.aRadicalExecute(Sender: TObject);
+begin
+  sbRadicals.Down := true;
+  Self.sbRadicalsClick(Sender);
+end;
+
+procedure TfKanji.aSearchByTextExecute(Sender: TObject);
+begin
+  cbLookupType.ItemIndex := LOOKUP_ANY;
+  Self.edtLookup.SetFocus;
+end;
+
 procedure TfKanji.aPinYinExecute(Sender: TObject);
 begin
   cbLookupType.ItemIndex := LOOKUP_PINYIN;
@@ -1921,18 +1893,11 @@ begin
   Self.edtLookup.SetFocus;
 end;
 
-procedure TfKanji.aRadicalExecute(Sender: TObject);
-begin
-  Self.sbRadicalsClick(Sender);
-end;
-
 procedure TfKanji.aMeaningExecute(Sender: TObject);
 begin
   cbLookupType.ItemIndex := LOOKUP_DEFINITION;
   Self.edtLookup.SetFocus;
 end;
-
-
 
 { CopyFormats }
 

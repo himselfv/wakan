@@ -655,13 +655,6 @@ object fKanji: TfKanji
       OnExecute = aOnlyCommonExecute
       OnChecked = aOnlyCommonChecked
     end
-    object aOnlyLearned: TCheckAction
-      AutoCheck = True
-      Caption = '#00279^Learned only'
-      Hint = '#00184^Display only learned characters'
-      OnExecute = aOnlyLearnedExecute
-      OnChecked = aOnlyLearnedChecked
-    end
     object aPinYin: TAction
       Caption = '#00282^eSearch by PinYin'
       ShortCut = 16457
@@ -673,7 +666,7 @@ object fKanji: TfKanji
       OnExecute = aYomiExecute
     end
     object aRadical: TAction
-      Caption = '#00284^eSearch by radical...'
+      Caption = '#00284^Search by radical...'
       ShortCut = 16466
       OnExecute = aRadicalExecute
     end
@@ -692,6 +685,11 @@ object fKanji: TfKanji
     object aSaveToFile: TAction
       Caption = '#00944^eSave characters to file...'
       OnExecute = aSaveToFileExecute
+    end
+    object aSearchByText: TAction
+      Caption = '#01225^Search...'
+      Hint = '#01226^Type any text to find matching characters'
+      OnExecute = aSearchByTextExecute
     end
   end
   object PopupMenu: TPopupMenu
@@ -741,7 +739,7 @@ object fKanji: TfKanji
     Left = 88
     Top = 352
     Bitmap = {
-      494C0101040014010C0210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001401180210001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000002000000001002000000000000020
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
