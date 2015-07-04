@@ -1661,6 +1661,7 @@ constructor TEditorPainter.Create(AEditor: TfEditor);
 begin
   inherited Create();
   plinl := TGraphicalLineList.Create;
+  FEditor := AEditor;
 end;
 
 destructor TEditorPainter.Destroy;
@@ -1693,7 +1694,7 @@ end;
 
 procedure TEditorPainter.Configure();
 begin
-  fSettings.pcPages.ActivePage := fSettings.tsTextTranslator;
+  fSettings.pcPages.ActivePage := fSettings.tsEditorPrinting;
   fSettings.ShowModal;
 end;
 
