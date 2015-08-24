@@ -37,6 +37,7 @@ This utility serves as a text editor and assists in translating text from Japane
 You can freely write text in hiragana or katakana in the editor window. Text entered in romaji is automatically converted to kana using the current [romanization settings](Settings#Romanization). See [romanization tips](Settings#Romanization) for more info. Text written UPPER-CASE is converted to katakana, text written in lower-case is converted to hiragana. Whenever you press SPACE the last entered text is converted to kanji of currently selected word in [dictionary](Dictionary) (you can change the selection by up and down arrow keys). By pressing ENTER you leave the text as it is performing no conversion.
 
 ## Keyboard summary
+
   * **SPACE** - Convert lastly entered word (shown in blue) to kanji.
   * **ENTER** - Perform no conversion to lastly entered word.
   * **UP/DOWN ARROW** - Change currently selected word in dictionary (to alter the conversion).
@@ -47,20 +48,35 @@ You can freely write text in hiragana or katakana in the editor window. Text ent
 
   1. Open the editor window and select kanji mode (by pressing button ![images/btn_transkanji.png](images/btn_transkanji.png)).
   1. Type `watashi`. Note that the text is displayed in hiragana (since you typed it in lowercase) and that it is coloured blue (because it is not yet converted to kanji).
+
     ![images/tutorial1.png](images/tutorial1.png)
+
   1. Press SPACE. Watashi is then converted to kanji.
+
     ![images/tutorial2.png](images/tutorial2.png)
+
   1. Type `ha` and press SPACE. Program identifies it as a particle and displays it in a different color.
+
     ![images/tutorial3.png](images/tutorial3.png)
+
   1. Type `hon`, press SPACE to convert it and type `wo` and SPACE for the particle.
+
     ![images/tutorial4.png](images/tutorial4.png)
+
   1. Type `yomimasu` and SPACE for conversion. Note that WaKan can handle inflected words and also that it is displayed in different color because it is a verb. If you meant yomimasu as to recite, you must press DOWN ARROW before the conversion to change the actual verb in dictionary.
+
     ![images/tutorial5.png](images/tutorial5.png)
+
   1. Type `ga,`. You don't need to press SPACE before the comma because WaKan can automatically identify the word has ended.
+
     ![images/tutorial6.png](images/tutorial6.png)
+
   1. Type `TEREBI` or `terebi` and SPACE. If you are entering katakana words that are not in dictionary you must type it in upper-case, however terebi is common and program converts it to katakana automatically.
+
     ![images/tutorial7.png](images/tutorial7.png)
+
   1. Type `wo mimasen.` to finish the sentence.
+
     ![images/tutorial8.png](images/tutorial8.png)
 
 # Tips
