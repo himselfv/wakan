@@ -1,6 +1,6 @@
 Wakan lets you quickly download or update dictionaries and other application components. This is done from `Database > Download / update components...`
 
-> ![http://wiki.wakan.googlecode.com/hg/images/downloader-select.png](http://wiki.wakan.googlecode.com/hg/images/downloader-select.png)
+> ![images/downloader-select.png](images/downloader-select.png)
 
 You can select any number of components to be downloaded simultaneously.
 

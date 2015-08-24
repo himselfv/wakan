@@ -1,6 +1,6 @@
 Wakan is a versatile tool for students of Japanese or Chinese. It features a character dictionary, a word dictionary, a text editor, a vocabulary management utility, many printing options (character flashcards, vocabulary lists, text including furigana), and a text translation tool. Wakan will help you to read real Japanese or Chinese text with minimum knowledge of characters and vocabulary.
 
-This is the continuation of the [older Wakan project](http://wakan.manga.cz). Many bugs were fixed, user experience improved and features added - see **[Changes](Changes.md)**.
+This is the continuation of the [older Wakan project](http://wakan.manga.cz). Many bugs were fixed, user experience improved and features added - see **[Changes](Changes)**.
 
 Developer builds can be installed over older Wakans although it's not recommended to use both versions side by side.
 
@@ -12,7 +12,7 @@ Developer builds can be installed over older Wakans although it's not recommende
 
     ![images/kanji-search-panel.png](images/kanji-search-panel.png)
 
- * [Dictionary and component downloader](Downloader.md) with auto-import
+ * [Dictionary and component downloader](Downloader) with auto-import
 
     ![images/downloader-select.png](images/downloader-select.png)
 

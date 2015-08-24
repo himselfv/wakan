@@ -18,7 +18,7 @@ Supported commands:
       * see [building notes](http://bitbucket.org/himselfv/wakan/src/tip/.building.txt) for details on RADKFILEs
   * `makechars [/kanjidic <filename>]` --- rebuilds wakan.chr (wakan character database) from sources. At this time can only update fields from KANJIDIC, English or non-English version.
   * `updatedics [dicname dicname ...]` --- forces updates to all dictionaries, or to a list of dictionaries (possibly from another folders)
-  * `/fast` --- disables some integrity checks and speeds up startup. Do not use if you use different Wakan versions with the same wakan.usr (maybe on different PCs). See Issue 207 (on Google Code).
+  * `/fast` --- disables some integrity checks and speeds up startup. Do not use if you use different Wakan versions with the same wakan.usr (maybe on different PCs). See Issue #207.
 
 # Wakan 1.85 and earlier
 Similar to Wakan 1.87 but:
