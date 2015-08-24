@@ -13,6 +13,7 @@ The Characters, Dictionary, Editor and Vocabulary menus provide commands relevan
 The Help menu provides access to this help, and to the "About" page for Wakan.
 
 ## Language Selector
+
   * ![images/btn_japanese.png](images/btn_japanese.png) - Switches program to Japanese mode.
   * ![images/btn_chinese.png](images/btn_chinese.png) - Switches program to Chinese mode.
 
@@ -30,6 +31,7 @@ Shows the contents of the Windows clipboard (or the beginning of the contents, i
 
 # Areas
 Main areas of the program:
+
   * **[Character list](KanjiList)** - The character list can display all of the characters in the database for the selected language, or the results of a [search](KanjiList#Search) for
 characters with specified properties. The list can be [sorted](KanjiList#Sort) in various ways, and [detailed information](KanjiDetails) can be displayed for a selected character.
   * **[Dictionary](Dictionary)** - The dictionary window provides the definition for a Japanese or Chinese word, or searches the dictionary for words whose definitions contain an English word
@@ -39,6 +41,7 @@ or phrase.
 
 
 # Database menu
+
   * **Save user changes** (Ctrl+F2): Writes all changes made in [vocabulary](Vocabulary) database to disk.
   * **Cancel user changes** (Ctrl+F3): Cancels all changes in [vocabulary](Vocabulary) database, causing it to revert to the last version saved to disk.
   * **Statistics**: Shows information about the dictionary files, and statistics on information stored in the user database (learned words and characters, vocabulary entries, etc).
