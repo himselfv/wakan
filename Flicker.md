@@ -127,18 +127,15 @@ Common ways of disabling updates include:
 
 2. `WM_SETREDRAW`. This works for all windows, but only disables the repainting. The control may continue to waste time on realign:
 
-```
-
-if Self.Visible then
-SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
-
-//...Make changes
-
-if Self.Visible then begin
-SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
-RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
-//Normal Invalidate is not enough
-end;
-```
+        if Self.Visible then
+        SendMessage(Handle, WM_SETREDRAW, WPARAM(False), 0);
+        
+        //...Make changes
+        
+        if Self.Visible then begin
+        SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
+        RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
+        //Normal Invalidate is not enough
+        end;
 
 3. `DisableAlign/EnableAlign`.
