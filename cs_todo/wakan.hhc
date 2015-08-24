@@ -1,0 +1,240 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<HTML>
+<HEAD>
+<meta name="GENERATOR" content="Microsoft&reg; HTML Help Workshop 4.1">
+<!-- Sitemap 1.0 -->
+</HEAD><BODY>
+<OBJECT type="text/site properties">
+	<param name="ImageType" value="Folder">
+</OBJECT>
+<UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Vítejte">
+		<param name="Local" value="start.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Licenèní informace (v angliètinì)">
+		<param name="Local" value="license.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Hlavní okno">
+		<param name="Local" value="main.html">
+		</OBJECT>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Seznam znakù">
+		<param name="Local" value="kanji.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Hledání">
+			<param name="Local" value="kanjisearch.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tøídìní">
+			<param name="Local" value="kanjisort.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Detaily">
+			<param name="Local" value="kanjidetails.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Složeniny">
+			<param name="Local" value="kanjicompounds.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Seznam radikálù">
+			<param name="Local" value="kanjiradicals.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tisk karet">
+			<param name="Local" value="kanjiprint.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Slovník">
+		<param name="Local" value="dict.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Vybrané slovo">
+			<param name="Local" value="dictdetails.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Znaky ve slovì">
+			<param name="Local" value="dictkanji.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Informace">
+			<param name="Local" value="dictcategories.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Pøidat do slovíèek">
+			<param name="Local" value="dictadd.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Pøeklad textu">
+			<param name="Local" value="dicttranslate.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Slovíèka">
+		<param name="Local" value="user.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Pøidat slovo">
+			<param name="Local" value="useradd.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení">
+			<param name="Local" value="usersettings.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Kategorie">
+			<param name="Local" value="usercategory.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Detaily slova">
+			<param name="Local" value="userdetails.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Nastavení">
+		<param name="Local" value="settings.html">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Obecná nastavení">
+			<param name="Local" value="settingsgeneral.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení romanizace">
+			<param name="Local" value="settingsromanization.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení seznamu znakù">
+			<param name="Local" value="settingscharacter.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení slovníku">
+			<param name="Local" value="settingsdict.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení fontù">
+			<param name="Local" value="settingsfonts.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení tisku seznamu slovíèek">
+			<param name="Local" value="settingsvocab.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení databáze">
+			<param name="Local" value="settingsdatabase.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení pøekladu textu">
+			<param name="Local" value="settingstranslate.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nastavení karet znakù">
+			<param name="Local" value="settingscharacter.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Tipy pro používání WaKanu">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tipy pro uèení">
+			<param name="Local" value="learningtips.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tipy pro pøekládání">
+			<param name="Local" value="translatingtips.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tipy pro hledání znakù">
+			<param name="Local" value="kanjisearchtips.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Tipy pro editaci textu">
+			<param name="Local" value="editortips.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Ostatní okna">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Prohlížeè schránky">
+			<param name="Local" value="clip.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Nová kategorie">
+			<param name="Local" value="newcategory.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Náhled tisku">
+			<param name="Local" value="printpreview.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Manažer slovníkù">
+			<param name="Local" value="dictman.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Manažer rozvržení">
+			<param name="Local" value="windowman.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Termíny &amp; reference">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Romanizace">
+			<param name="Local" value="romanization.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Kategorie slovíèek">
+			<param name="Local" value="category.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Termíny v detailech znakù">
+			<param name="Local" value="terms.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Pøíznaky ve slovníku">
+			<param name="Local" value="markers.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Seznam všech pøíznakù">
+			<param name="Local" value="chartmarkers.html">
+			</OBJECT>
+	</UL>
+	<LI> <OBJECT type="text/sitemap">
+		<param name="Name" value="Technické informace (v angliètinì)">
+		</OBJECT>
+	<UL>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Kódy SKIP">
+			<param name="Local" value="skip.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="FourCornerCode">
+			<param name="Local" value="fcc.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Formát anotaèního souboru">
+			<param name="Local" value="annotationformat.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Formát seznamu slovíèek">
+			<param name="Local" value="vocabformat.html">
+			</OBJECT>
+		<LI> <OBJECT type="text/sitemap">
+			<param name="Name" value="Formát souboru CSV">
+			<param name="Local" value="csvformat.html">
+			</OBJECT>
+	</UL>
+</UL>
+</BODY></HTML>
