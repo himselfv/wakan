@@ -1,6 +1,6 @@
 Wakan UI can be displayed in a number of languages, to change the translation click "Database > Change language..."
 
-Available languages are stored as .lng files in Wakan folder. You can download more languages manually or through [Downloader](Downloader.md)
+Available languages are stored as .lng files in Wakan folder. You can download more languages manually or through [Downloader](Downloader)
 
 
 ## Custom localizations

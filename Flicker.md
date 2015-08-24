@@ -2,7 +2,7 @@
 
 This article is intended for developers. It is to list ways of fighting flicker in VCL applications, as applied to Wakan.
 
-Compare Issue 116 (on Google Code).
+Compare Issue #116.
 
 # What causes flicker
 
@@ -138,6 +138,7 @@ if Self.Visible then begin
 SendMessage(Handle, WM_SETREDRAW, WPARAM(True), 0);
 RedrawWindow(Handle, nil, 0, RDW_ERASE or RDW_INVALIDATE or RDW_FRAME or RDW_ALLCHILDREN);
 //Normal Invalidate is not enough
-end;```
+end;
+```
 
 3. `DisableAlign/EnableAlign`.

@@ -1,27 +1,28 @@
-﻿#summary Vocabulary help page
-_This page has been ported from the old Wakan help and has not yet been updated. The information may be obsolete_
+﻿_This page has been ported from the old Wakan help and has not yet been updated. The information may be obsolete_
 
 # Vocabulary
-![http://wakan.googlecode.com/svn/wiki/images/user.png](http://wakan.googlecode.com/svn/wiki/images/user.png)
+![images/user.png](images/user.png)
 
 Vocabulary manager offers a convenient way to store, organize and print
 your vocabulary.
 
-**Tip:** For information about how to use this program for effective learning see [learning tips](LearningTips.md).
+**Tip:** For information about how to use this program for effective learning see [learning tips](LearningTips).
 
-To add dictionary words into vocabulary use the [words add screen](Dictionary#Adding_words_to_vocabulary.md). To add user words into vocabulary use the vocabulary add screen (see below).
+To add dictionary words into vocabulary use the [words add screen](Dictionary#Adding_words_to_vocabulary). To add user words into vocabulary use the vocabulary add screen (see below).
 
-Word readings can be displayed in kana/romaji/PinYin/BoPoMoFo. You can alter this in [settings](Settings#Romanization.md). Meaning can contain various [markers](Dictionary#Markers.md).
+Word readings can be displayed in kana/romaji/PinYin/BoPoMoFo. You can alter this in [settings](Settings#Romanization). Meaning can contain various [markers](Dictionary#Markers).
 
 ## Window controls
-  * **Learning list** - Quite complex wizard-style utility that allows you to randomly generate list of words, check whether you know them and finally allows you to store them as a separate category or print them. Follow instructions on the screen to build vocabulary list step-by-step. Please note that learning language by trying to memorize large lists of vocabulary is often not very effective (and certainly very boring), for more information see [learning tips](LearningTips.md).
-  * **Recommend characters** - Stores into [clipboard](MainWindow#Clipboard_viewer.md) some characters that appear in the vocabulary list and are not yet learned. Characters are selected by complexity and frequency.
-  * **Export** - Exports displayed vocabulary list into text file with special [format](FileFormats#Vocabulary_list_export.md).
-  * **Import** - Imports vocabulary list from text file with special [format](FileFormats#Vocabulary_list_export.md).
-  * **Print** - Shows [print preview](PrintPreview.md) window with the currently displayed vocabulary list. Print properties can be customized in the [settings](Settings#Vocabulary.md).
+
+  * **Learning list** - Quite complex wizard-style utility that allows you to randomly generate list of words, check whether you know them and finally allows you to store them as a separate category or print them. Follow instructions on the screen to build vocabulary list step-by-step. Please note that learning language by trying to memorize large lists of vocabulary is often not very effective (and certainly very boring), for more information see [learning tips](LearningTips).
+  * **Recommend characters** - Stores into [clipboard](MainWindow#Clipboard_viewer) some characters that appear in the vocabulary list and are not yet learned. Characters are selected by complexity and frequency.
+  * **Export** - Exports displayed vocabulary list into text file with special [format](FileFormats#Vocabulary_list_export).
+  * **Import** - Imports vocabulary list from text file with special [format](FileFormats#Vocabulary_list_export).
+  * **Print** - Shows [print preview](PrintPreview) window with the currently displayed vocabulary list. Print properties can be customized in the [settings](Settings#Vocabulary).
 
 ## Secondary windows
-  * **Add word** - You can add new words into vocabulary in this window. For adding words from dictionary use the [Dictionary word add window](Dictionary#Add_word_to_vocabulary.md).
+
+  * **Add word** - You can add new words into vocabulary in this window. For adding words from dictionary use the [Dictionary word add window](Dictionary#Add_word_to_vocabulary).
   * **List settings** - Allows to set filters or change sort order.
   * **Categories** - Displays categories and allows to filter by them.
   * **Word details - Displays details for selected vocabulary word and allows to change them.**
@@ -32,12 +33,13 @@ Word readings can be displayed in kana/romaji/PinYin/BoPoMoFo. You can alter thi
 
 
 # Word details
-![http://wakan.googlecode.com/svn/wiki/images/userdetails.png](http://wakan.googlecode.com/svn/wiki/images/userdetails.png)
+![images/userdetails.png](images/userdetails.png)
 
 You can view or change details of the selected vocabulary word in this
 window.
 
 # Window controls
+
   * **Change meaning** - You can change word meaning by this button (you cannot change reading nor writing).
   * **Delete** - Deletes the word permanently from vocabulary.
   * **Arrow buttons** - Moves the word within the category up or down. These buttons work only when sort order is set to "category order".
@@ -49,6 +51,7 @@ window.
 Every word in vocabulary must belong to at least one category. Categories allow you to organize vocabulary words according to various criteria.
 
 There are four types of categories:
+
   * **Lesson (L)** - Categories of this type denote the source of the word. For example when adding vocabulary of lesson 2 of some textbook, you could add them all to category "Lesson 2" to specify where you got them.
   * **Group (G)** - Categories of this type group words according to some semantic criteria, for example you could create a category "Animals" to include all words denoting animals.
   * **Temporary (T)** - Categories that do not fall into L or G type group, mainly those that are only temporary.
@@ -57,17 +60,18 @@ There are four types of categories:
 **Tip:** If you do not want to use categories, just add all words to one category.
 
 ## New category
-![http://wakan.googlecode.com/svn/wiki/images/newcategory.png](http://wakan.googlecode.com/svn/wiki/images/newcategory.png)
+![images/newcategory.png](images/newcategory.png)
 
 Dialog for adding / editing a category.
 
 ### Window controls
+
   * **Name** - Name of the category.
   * **Type** - Category type.
 
 
 # Filters
-![http://wakan.googlecode.com/svn/wiki/images/usersettings.png](http://wakan.googlecode.com/svn/wiki/images/usersettings.png)
+![images/usersettings.png](images/usersettings.png)
 
 You can change sort order or set filters to the vocabulary list in this
 window.
@@ -76,7 +80,7 @@ window.
   * **Sort** - Changes sort order. In "category order" each word is displayed once in each category.
 
 ## Category filter
-![http://wakan.googlecode.com/svn/wiki/images/usercategory.png](http://wakan.googlecode.com/svn/wiki/images/usercategory.png)
+![images/usercategory.png](images/usercategory.png)
 
 Shows available vocabulary categories and allows to filter by them.
 
@@ -86,18 +90,20 @@ Only words belonging to the checked categories are displayed in the vocabulary
 list.
 
 ### Window controls
-  * ![http://wakan.googlecode.com/svn/wiki/images/btn_categoryall.png](http://wakan.googlecode.com/svn/wiki/images/btn_categoryall.png) - Checks all displayed categories.
-  * ![http://wakan.googlecode.com/svn/wiki/images/btn_categoryedit.png](http://wakan.googlecode.com/svn/wiki/images/btn_categoryedit.png) - Shows [category edit](Vocabulary#New_category.md) window.
-  * ![http://wakan.googlecode.com/svn/wiki/images/btn_categorydelete.png](http://wakan.googlecode.com/svn/wiki/images/btn_categorydelete.png) - Deletes category. Since all words must belong to at least one category you can't delete category that contains words that do not belong to any other category.
+
+  * ![images/btn_categoryall.png](images/btn_categoryall.png) - Checks all displayed categories.
+  * ![images/btn_categoryedit.png](images/btn_categoryedit.png) - Shows [category edit](Vocabulary#New_category) window.
+  * ![images/btn_categorydelete.png](images/btn_categorydelete.png) - Deletes category. Since all words must belong to at least one category you can't delete category that contains words that do not belong to any other category.
 
 # Add word
-![http://wakan.googlecode.com/svn/wiki/images/useradd.png](http://wakan.googlecode.com/svn/wiki/images/useradd.png)
+![images/useradd.png](images/useradd.png)
 
 You can add any word into your user vocabulary by using this window.
 
 ## Window controls
-  * **Reading** - Romanized reading of the word. Many romanization modes are supported (Hepburn, Kunreisiki, Czech, PinYin, Wade/Giles, Yale), see [romanization settings](Settings#Romanization.md).
-  * **Written** - This field is taken from the [clipboard](MainWindow#Clipboard_viewer.md).
+
+  * **Reading** - Romanized reading of the word. Many romanization modes are supported (Hepburn, Kunreisiki, Czech, PinYin, Wade/Giles, Yale), see [romanization settings](Settings#Romanization).
+  * **Written** - This field is taken from the [clipboard](MainWindow#Clipboard_viewer).
   * **Meaning** - Meaning of the word.
-  * **Category** - Into which vocabulary [category](Vocabulary#Categories.md) will be the word added.
-  * **Add into vocabulary** - Adds the word into vocabulary. If you entered a new category, then a [new category dialog](Vocabulary#New_category.md) will be shown.
+  * **Category** - Into which vocabulary [category](Vocabulary#Categories) will be the word added.
+  * **Add into vocabulary** - Adds the word into vocabulary. If you entered a new category, then a [new category dialog](Vocabulary#New_category) will be shown.

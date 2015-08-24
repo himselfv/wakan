@@ -3,7 +3,7 @@ _This page has been ported from the old Wakan help and has not yet been updated.
 # File formats in Wakan
 
 ## Vocabulary list export
-_Any subset of [vocabulary](Vocabulary.md) can be exported to this format from Vocabulary window._
+_Any subset of [vocabulary](Vocabulary) can be exported to this format from Vocabulary window._
 
 First line must contain "`WaKan Word List 1`".
 Lines beginning with `;` are comments.
@@ -16,7 +16,7 @@ Each word is identified by four lines:
   1. category in the format `<language>~<category type><category name>`
 
 ## CSV vocabulary export
-_The entire vocabulary can be exported to this format from [Settings\Database maintenance](Settings#Database_maintenance.md) page._
+_The entire vocabulary can be exported to this format from [Settings\Database maintenance](Settings#Database_maintenance) page._
 
 First character of each line:
   * `$` - Table with the given table name begins here
@@ -36,6 +36,7 @@ Exported file contains following tables:
   * `KnownKanji`: List of learned characters
 
 Table references:
+
   * `UserIdx.Word` references `User.Index`
   * `UserSheet.Word` references `User.Index`
   * `UserSheet.Number` references `UserCat.Index`

@@ -9,6 +9,7 @@ Install=Portable
 ```
 
 Possible values for "Install" are:
+
   * **`Portable`** -- store all settings and user data in Wakan folder
   * **`Standalone`** -- store settings in registry and user data in roaming AppData folder
   * **`Compatible`** -- store settings in registry and all data in Wakan folder, like older versions did

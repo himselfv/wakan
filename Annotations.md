@@ -1,3 +1,5 @@
+_This page has been ported from the old Wakan documentation. Annotations feature was never finalized by the creator of Wakan, and so long as there's no demand for it, will probably be removed eventually._
+
 # Overview
 Wakan 1.69 introduced a new feature - the ability to read special "annotation" files that can make Wakan display a webpage, picture or text whenever you display a specific word inside the Dictionary or select a specific character in Character mode. For example, when typing word "bara" (a rose in Japanese) to the Dictionary, Wakan can display a picture of a rose.
 
@@ -38,6 +40,7 @@ The format of `<annotation>` is:
 ```
 
 Possibilities for `<command>` are:
+
   * "T" - show the text in `<parameter>` on word description line (for words only)
   * "C" - show the character/word in given foreground color
   * "I" - show the image whose location is given in `<parameter>` in special "media" window

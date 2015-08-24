@@ -1,7 +1,4 @@
-﻿#summary Describes what CopyFormats are and how to configure them
-
-**Information on this page applies to Wakan 1.9+**
-
+﻿**Information on this page applies to Wakan 1.9+**
 
 Wakan can copy search results and character data by Ctrl-C in various formats, e.g.:
 ```
@@ -21,7 +18,7 @@ There's a bunch of predefined formats shipped with Anki, but you can add your ow
 
 
 # Custom formats
-Formats are defined as .xslt files in Wakan user data folder (see [Where does Wakan keep my data?](Portable.md)). Formats for copying character data are in `KanjiCopyFormats\` subfolder and those shown for a word or expression are in `ExprCopyFormats\`.
+Formats are defined as .xslt files in Wakan user data folder (see [Where does Wakan keep my data?](Portable)). Formats for copying character data are in `KanjiCopyFormats\` subfolder and those shown for a word or expression are in `ExprCopyFormats\`.
 
 Each .xslt file defines a [XSLT Transformation](http://en.wikipedia.org/wiki/XSLT) which is the industry standard language for reformatting XML. Wakan copies data in an XML format (see below) and automatically does one such transformation.
 

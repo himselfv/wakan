@@ -44,7 +44,7 @@ Developer builds can be installed over older Wakans although it's not recommende
 
 
 ### Developing
-* [Building notes](http://wakan.googlecode.com/hg/.building.txt) and dependencies
+* [Building notes](http://bitbucket.org/himselfv/wakan/src/tip/.building.txt) and dependencies
 
 ### License
 The program itself is free and open source. However it uses dictionaries and character databases covered by separate licenses. For details, please see [copyright and license information](Copyright).
