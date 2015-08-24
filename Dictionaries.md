@@ -1,7 +1,7 @@
 Wakan uses dictionaries in its own format which has .DIC extension. Dictionary files must be located in the application folder. Dictionaries can be managed from `Main Menu > Database > Dictionary manager`.
 
 # Dictionary manager
-![http://wakan.googlecode.com/svn/wiki/images/dictman.png](http://wakan.googlecode.com/svn/wiki/images/dictman.png)
+![images/dictman.png](images/dictman.png)
 
 You can select dictionary files you want to use at this time from all the available dictionaries. Unchecked dictionaries will not be used.
 
@@ -37,11 +37,11 @@ Japanese to Russian:
 
   * [JR-Edict](http://rowaasr13.narod.ru/jr-edict/index.html) (also available from Jim Breen's page)
 
-  * [Warodai](http://e-lib.ua/dic/) (big japanese-russian dictionary) is not in EDICT form, but [a converter is available](http://code.google.com/p/jp-tools/).
+  * [Warodai](http://e-lib.ua/dic/) (big japanese-russian dictionary) is not in EDICT form, but [a converter is available](http://bitbucket.org/himselfv/jp-tools/).
 
 
 # Importing dictionaries
-To import dictionaries you need the import package: UNICONV.exe and WORDFREQ\_CK. See [here](http://code.google.com/p/wakan/issues/detail?id=67) and [here](http://code.google.com/p/wakan/issues/detail?id=66). Alternatively, download [Wakan Import Pack](.md) which contains everything you need to import dictionaries.
+To import dictionaries you need the import package: UNICONV.exe and WORDFREQ\_CK. See Issue #66 and Issue #67. Alternatively, download Wakan Import Pack which contains everything you need to import dictionaries.
 
 Wakan supports EDICT, EDICT2 and CEDICT, with full support to all features of EDICT2 (multi-kana, multi-kanji, multi-sense articles).
 

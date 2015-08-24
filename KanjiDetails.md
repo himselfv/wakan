@@ -1,31 +1,34 @@
 _This page has been ported from the old Wakan help and has not yet been updated. The information may be obsolete_
 
 # Character details window
-![http://wakan.googlecode.com/svn/wiki/images/kanjidetails.png](http://wakan.googlecode.com/svn/wiki/images/kanjidetails.png)
+![images/kanjidetails.png](images/kanjidetails.png)
 
 This window shows detailed information about the selected character.
 
 **How to Access:** **Details** (Ctrl+D) on the **Characters** menu.
 
 ## Window controls
-  * ![http://wakan.googlecode.com/svn/wiki/images/btn_clipadd.png](http://wakan.googlecode.com/svn/wiki/images/btn_clipadd.png) - Inserts character at the end of the clipboard.
-  * **Set as learned** - Toggles the status of the character between "learned" and "unlearned." Learned characters are displayed in blue in the [character list](KanjiList#Character_cards.md).
 
-The smaller box to the right of the box containing the selected character shows its radical. You can determine which kind of radical is displayed here in the [character list settings](Settings#Character_list.md). If the character has a simplified variant, it is displayed in a second box to the right of the radical. If the selected character is a simplified character, this second box displays the corresponding traditional character.
+  * ![images/btn_clipadd.png](images/btn_clipadd.png) - Inserts character at the end of the clipboard.
+  * **Set as learned** - Toggles the status of the character between "learned" and "unlearned." Learned characters are displayed in blue in the [character list](KanjiList#Character_cards).
 
-The lower part of the window displays other kinds of information (including frequency rankings, stroke counts, index numbers, alternate radicals, and encodings). You can customize which details are displayed in [character details settings](Settings#Character_details.md). The types of detailed information which can be displayed here are described below.
+The smaller box to the right of the box containing the selected character shows its radical. You can determine which kind of radical is displayed here in the [character list settings](Settings#Character_list). If the character has a simplified variant, it is displayed in a second box to the right of the radical. If the selected character is a simplified character, this second box displays the corresponding traditional character.
 
-Japanese readings can be displayed in kana or in romaji. Chinese readings can be displayed in PinYin/Wade-Giles/Yale or in bopomofo. You can make these choices in [romanization settings](Settings#Romanization.md).
+The lower part of the window displays other kinds of information (including frequency rankings, stroke counts, index numbers, alternate radicals, and encodings). You can customize which details are displayed in [character details settings](Settings#Character_details). The types of detailed information which can be displayed here are described below.
+
+Japanese readings can be displayed in kana or in romaji. Chinese readings can be displayed in PinYin/Wade-Giles/Yale or in bopomofo. You can make these choices in [romanization settings](Settings#Romanization).
 
 
 # Kanji details
-Detailed information about characters which can be displayed in the Character details window, or used as search criteria in the [Character list](KanjiList.md) window.
+Detailed information about characters which can be displayed in the Character details window, or used as search criteria in the [Character list](KanjiList) window.
 
 The majority of this information comes from KANJIDIC and Unihan databases. For detailed info on how those are built, please refer to:
+
   * [KANJIDIC documentation](http://www.csse.monash.edu.au/~jwb/kanjidic_doc.html)
   * [Unihan documentation](http://www.unicode.org/reports/tr38/)
 
 ### Japanese information
+
   * **Japanese definition**
   * **ON reading** - "Sound" reading in a Japanese word, in theory deriving historically from a Chinese reading, used mainly in words containing more than one kanji.
   * **KUN reading** - Japanese reading for the root of a word; used mainly when the given kanji is the only kanji in the word.
@@ -33,7 +36,8 @@ The majority of this information comes from KANJIDIC and Unihan databases. For d
   * **Jap. frequency** - A number from 1 to 2501 for the 2501 most frequently used kanji, with 1 for the most common; no number for other kanji.
   * **Jouyou grade** - The grade in the Japanese school system by which a student is expected to know the character. 1-6: grade in grade/middle school; 8: high school/general use; 9: used in names.
 
-### Chinese information=
+### Chinese information
+
   * **Chinese definition**
   * **Mandarin reading**
   * **Cantonese reading**
@@ -41,22 +45,26 @@ The majority of this information comes from KANJIDIC and Unihan databases. For d
   * **HongKong grade** - The grade in the Hong Kong school system by which a student is expected to know the character.
 
 ### Korean information
+
   * **Korean reading**
 
 ### Structural information
 (Used for Dictionary Lookup)
+
   * **DeRoo Code**
-  * **FourCornerCode** - A system developed by Jack Chen for locating characters by shape. [See details below](#FourCornerCode.md).
-  * **SKIP code** - A pattern code developed by Jack Halpern for locating character by shape. Please see the [SKIP instructions and license information](#SKIP.md).
+  * **FourCornerCode** - A system developed by Jack Chen for locating characters by shape. [See details below](#FourCornerCode).
+  * **SKIP code** - A pattern code developed by Jack Halpern for locating character by shape. Please see the [SKIP instructions and license information](#SKIP).
 
 
 ### Radicals
+
   * **Radicals** - List of all possible radicals of character
   * **Classical radical** - Stadard / traditional radical.
   * **Bushu radical** - Radical number used in the classic Nelson (not the New Nelson) Character Dictionary ("Modern Japanese-English Character Dictionary")
 
 ### Stroke counts
 (all but the first are in the form `r.s`, where `r` is the number of strokes in the radical, and `s` is the number of additional strokes, and `'` indicates a simplified version of the radical)
+
   * **Stroke Count** - Total number of strokes (including the radical)
   * **Unicode radical**
   * **Morohashi radical** - Radical and stroke counts in _Morohashi Daikanwajiten_
@@ -65,6 +73,7 @@ The majority of this information comes from KANJIDIC and Unihan databases. For d
   * **Japanese radical**
 
 ### Variant forms
+
   * **Simplified Variant** - Simplified character corresponding to the given character (if one exists).
   * **Traditional Variant** - Traditional character(s) corresponding to the given character.
   * **Z-Variant**
@@ -73,6 +82,7 @@ The majority of this information comes from KANJIDIC and Unihan databases. For d
 
 ### Japanese indexes
 Index Numbers in Japanese Dictionaries and Textbooks
+
   * **Crowley index** - Index number in _The Kanji Way to Japanese Language Power_, by Dale Crowley.
   * **Essential index** - Index number used in P.G. O'Neill's _Essential Kanji_ (ISBN 0-8348-0222-8).
   * **Gakken index** - Index number in the _Gakken Kanji Dictionary_ ("A New Dictionary of Kanji Usage").
@@ -100,6 +110,7 @@ Index Numbers in Chinese Dictionaries and Textbooks
   * **KangXi index** - Index number in _KangXi Zidian_ (classic dictionary)
 
 ### Hexadecimal encodings
+
   * **Unicode** - Hexadecimal Unicode index of the character - a unified system for representing characters in many different languages. More information can be found at http://www.unicode.org.
   * **JIS 0208**- A Japanese encoding.
   * **JIS 0212**- A Japanese encoding.
