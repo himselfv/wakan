@@ -7,9 +7,9 @@
     * [Compounds](KanjiList#Compounds)
     * [Print cards](KanjiList#Print_cards)
     * [Character details](KanjiDetails)
-      * [Character information](KanjiDetails#Kanji_details)
-      * [SKIP codes](KanjiDetails#SKIP)
-      * [FourCornerCode](KanjiDetails#FourCornerCode)
+        * [Character information](KanjiDetails#Kanji_details)
+        * [SKIP codes](KanjiDetails#SKIP)
+        * [FourCornerCode](KanjiDetails#FourCornerCode)
   * [Dictionary](Dictionary)
     * [Looking up a word](Dictionary#Dictionary)
     * [Characters in word](Dictionary#Word_kanji)
@@ -53,8 +53,8 @@
     * [Localization](Localization)
     * [Custom romanization](CustomRomaji)
     * File formats
-      * [Vocabulary list format](FileFormats#Vocabulary_list_export)
-      * [CSV export format](FileFormats#CSV_vocabulary_export)
+        * [Vocabulary list format](FileFormats#Vocabulary_list_export)
+        * [CSV export format](FileFormats#CSV_vocabulary_export)
     * [Annotations feature](Annotations)
   * Developer topics
     * [Algorithms of Wakan](Algorithms)
