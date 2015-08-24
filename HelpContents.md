@@ -1,5 +1,7 @@
 You may want to start learning how to use Wakan by reading a description of the [main window](MainWindow), which displays each of the four main areas of the program and provides access to all of the program's capabilities.
 
+# Basic features
+
   * [Main window](MainWindow)
     * [Clipboard viewer](MainWindow#Clipboard_viewer)
   * [Character list](KanjiList)
@@ -42,21 +44,36 @@ You may want to start learning how to use Wakan by reading a description of the 
     * [Tips for learning](Tips#Learning)
     * [Tips for locating characters](KanjiList#Search_tips)
     * [Cool things to do with Wakan](Tips#Things_to_do_with_Wakan)
-  * Reference
-    * [Romanization reference](Settings#Romanization)
-    * [Dictionary markers overview](Dictionary#Markers)
-  * Advanced topics
-    * [Command-line syntax](CommandLine)
-    * [Portable version](Portable)
-    * [Download/update](Downloader)
-    * [Ctrl-C formats](CopyFormats)
-    * [Custom links](CustomLinks)
-    * [Localization](Localization)
-    * [Custom romanization](CustomRomaji)
-    * File formats
-        * [Vocabulary list format](FileFormats#Vocabulary_list_export)
-        * [CSV export format](FileFormats#CSV_vocabulary_export)
-    * [Annotations feature](Annotations)
-  * Developer topics
-    * [Algorithms of Wakan](Algorithms)
-    * [Fighting flicker](Flicker)
+
+# Reference
+
+  * [Romanization reference](Settings#Romanization)
+  * [Dictionary markers overview](Dictionary#Markers)
+
+# Advanced topics
+
+  * Wakan [command-line syntax](CommandLine)
+
+  * [Portable version](Portable) and where Wakan keeps your data
+
+  * [Downloader/updater](Downloader) - update dictionaries and download new ones with a few mouse clicks
+
+  * Add custom [Ctrl-C formats](CopyFormats)
+
+  * Add [custom right-click links](CustomLinks) for kanji and words
+
+  * [Localize Wakan](Localization) into your language
+
+  * Define [custom romanization](CustomRomaji)
+
+  * File formats used in Wakan:
+      * [Vocabulary list format](FileFormats#Vocabulary_list_export)
+      * [CSV export format](FileFormats#CSV_vocabulary_export)
+
+  * [Annotations feature](Annotations)
+
+# Developer topics
+
+  * Short description of a few [algorithms used in Wakan](Algorithms)
+
+  * Flicker in user interface and [how to fight it](Flicker)
