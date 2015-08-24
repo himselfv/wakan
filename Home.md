@@ -27,22 +27,21 @@ Developer builds can be installed over older Wakans although it's not recommende
   * You can import any EDICT/CCEDICT-style dictionary.
   * Some dictionaries [are available for download](https://drive.google.com/folderview?id=0B0jSbSrihj-yVmtxMll3aEw0RVE&usp=sharing#list) (English, German, Russian)
 
+
 ### Quickstart
-You may want to start learning how to use Wakan by reading a description of the [main window](MainWindow), which displays each of the four main areas of the program and provides access to all of the program's capabilities.
 
-The following help pages are particularly important for learning how to use the program effectively:
+**[Documentation](HelpContents)**
 
-  * [How to search for a word in dictionary](Dictionary#Dictionary)
-  * [How to locate an unknown character](KanjiList#Search_tips)
-  * [How to use the text editor](Editor#How_to_write_Japanese_text)
-  * [Translating Japanese or Chinese text](Editor#Tips)
-  * [Cool things you can do with Wakan](Tips#ThingsToDoWithWakan)
-  * [Tips for effective learning](Tips#LearningTips)
+* [Search for a word in dictionary](Dictionary#Dictionary)
 
-You may also want to take a look at the following page to choose your preference in how Japanese and Chinese words are represented in Roman letters:
-  * [Romanization systems in Wakan](Settings#Romanization)
+* [Look up unknown characters](KanjiList#Search_tips)
 
-See **[Help contents](HelpContents)**
+* [Edit texts](Editor#How_to_write_Japanese_text)
+
+* [Configure your preferred romanization](Settings#Romanization)
+
+* [Tips and cool things you can do with Wakan](Tips)
+
 
 ### Developing
 * [Building notes](http://wakan.googlecode.com/hg/.building.txt) and dependencies

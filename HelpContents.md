@@ -1,4 +1,5 @@
-  * [Overview](Home)
+You may want to start learning how to use Wakan by reading a description of the [main window](MainWindow), which displays each of the four main areas of the program and provides access to all of the program's capabilities.
+
   * [Main window](MainWindow)
     * [Clipboard viewer](MainWindow#Clipboard_viewer)
   * [Character list](KanjiList)
@@ -59,5 +60,3 @@
   * Developer topics
     * [Algorithms of Wakan](Algorithms)
     * [Fighting flicker](Flicker)
-  * [License](Copyright)
-  * [History of changes](Changes)
