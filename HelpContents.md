@@ -88,6 +88,6 @@ You may want to start learning how to use Wakan by reading a description of the 
 
 # Developer topics
 
-  * Short description of a few [algorithms used in Wakan](Algorithms)
+  * Description of [a few algorithms used in Wakan](Algorithms)
 
-  * Flicker in user interface and [how to fight it](Flicker)
+  * [Flicker in user interface and how to fight it](Flicker)
