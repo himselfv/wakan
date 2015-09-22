@@ -541,7 +541,7 @@ function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
 uses Types, TextTable, JWBCore, JWBLanguage, JWBEditorHint, JWBKanjiDetails,
-  JWBSettings, JWBPrint, StdPrompt, JWBKanaConv, JWBUnit, JWBCategories, JWBDic,
+  JWBSettings, JWBPrint, StdPrompt, KanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
   JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup,
   JWBIntTip;

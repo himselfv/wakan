@@ -57,7 +57,7 @@
         <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.87.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_StringChecks>off</DCC_StringChecks>
         <DCC_ExeOutput>Release\</DCC_ExeOutput>
-        <DCC_UnitSearchPath>.\Forms;.\Components;.\Components\Package;.\Components\Parsers;.\Components\ScaleMM;.\Components\StdPrompt;.\Components\TextTable;.\Controls;$(JPTOOLS)\Share;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Forms;.\Components;.\Components\Package;.\Components\ScaleMM;.\Components\StdPrompt;.\Components\TextTable;.\Controls;$(JPTOOLS)\Share;$(JPTOOLS)\KanaConv;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DependencyCheckOutputName>Release\Jalet.exe</DCC_DependencyCheckOutputName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
@@ -280,7 +280,6 @@
         <DCCReference Include="Components\JWBAnnotations.pas"/>
         <DCCReference Include="Components\JWBCommandLine.pas"/>
         <DCCReference Include="Components\JWBDic.pas"/>
-        <DCCReference Include="Components\JWBKanaConv.pas"/>
         <DCCReference Include="Components\JWBIndex.pas"/>
         <DCCReference Include="Components\JWBEdictMarkers.pas"/>
         <DCCReference Include="Components\JWBAutoImport.pas"/>

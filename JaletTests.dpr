@@ -28,8 +28,7 @@ uses
   GUITestRunner,
   TextTestRunner,
   TextTableTests in 'Components\TextTable\TextTableTests.pas',
-  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas',
-  JWBKanaConvTests in 'Components\JWBKanaConvTests.pas';
+  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
 
 {$R *.RES}
 

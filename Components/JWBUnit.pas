@@ -8,7 +8,7 @@
 
 interface
 uses Graphics, Windows, SysUtils, Classes, Controls, Dialogs, Grids, Forms,
-  ExtCtrls, IniFiles, JWBStrings, JWBKanaConv, JWBDic;
+  ExtCtrls, IniFiles, JWBStrings, KanaConv, JWBDic;
 
 { Romaji conversions }
 {
@@ -39,7 +39,7 @@ So,
 4. On conversions from kana to romaji for display we only strip unknown characters.
 }
 
-//See JWBKanaConv.ResolveFlag
+//See KanaConv.ResolveFlag
 
 var
   curlang:char;

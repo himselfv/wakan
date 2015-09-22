@@ -59,7 +59,6 @@ uses
   JWBAnnotations in 'Components\JWBAnnotations.pas',
   JWBCommandLine in 'Components\JWBCommandLine.pas',
   JWBDic in 'Components\JWBDic.pas',
-  JWBKanaConv in 'Components\JWBKanaConv.pas',
   JWBIndex in 'Components\JWBIndex.pas',
   JWBEdictMarkers in 'Components\JWBEdictMarkers.pas',
   JWBAutoImport in 'Components\JWBAutoImport.pas',

@@ -31,7 +31,7 @@ procedure AnnotShowMedia(kanji,kana:string);
 
 implementation
 uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBCore, JWBStrings, JWBUnit,
-  JWBLanguage, JWBIO, JWBKanaConv, JWBLegacyMarkup;
+  JWBLanguage, JWBIO, KanaConv, JWBLegacyMarkup;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 var pack: TPackageBuilder;

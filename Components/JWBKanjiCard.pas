@@ -68,7 +68,7 @@ type
 
 implementation
 uses TextTable, JWBStrings, JWBUnit, JWBEdictMarkers, JWBDic, JWBSettings,
-  JWBUserData, JWBKanaConv, JWBCharData, JWBLegacyMarkup, JWBWordGrid;
+  JWBUserData, KanaConv, JWBCharData, JWBLegacyMarkup, JWBWordGrid;
 
 constructor TKanjiCard.Create(const AChar: string);
 begin

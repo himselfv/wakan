@@ -92,7 +92,7 @@ procedure IncCharPriority(const char: FChar);
 
 
 implementation
-uses SysUtils, JWBCore, JWBUnit, JWBKanaConv, PKGWrite, JWBCategories, Classes;
+uses SysUtils, JWBCore, JWBUnit, KanaConv, PKGWrite, JWBCategories, Classes;
 
 { Packs WAKAN.USR data from directory Dir to package Package.
  Do not use directly; there are functions to save and load user data packages. }

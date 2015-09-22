@@ -237,7 +237,7 @@ function KanjiInfoToXml(const AChar: string): string;
 implementation
 uses Types, UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
-  JWBKanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
+  KanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
   JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks;
 
 var ki:TStringList;
