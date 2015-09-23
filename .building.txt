@@ -1,15 +1,12 @@
 NOTES ON BUILDING WAKAN.
 
-I. You'll need unicode Delphi (Delphi 2010+). Wakan can be built on Ansi, but the support for that is being swiftly deprecated.
+I. You'll need unicode Delphi (Delphi 2010+). Ansi support is being deprecated.
 Checkout http://code.google.com/p/jp-tools/ which Wakan uses heavily.
 Build and install JaletControls.
 
-II. Copy wakan.chr from live wakan installation.
-OR  Copy kanjidic file, Unihan folder from appropriate sources (google it).
+II. Copy kanjidic file, Unihan folder from appropriate sources (google it).
 
 III. Build Jalet.dpr.
-
-If you want to pack executable, you'll need something like UPX.exe which is not included here.
 
 IV. Run Wakan to generate:
   wakan.chr (if not present) -- character database
