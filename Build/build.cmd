@@ -7,8 +7,6 @@ pushd ..
 rem TODO: Rebuild dependencies?
 rem TODO: Run dependencies' tests?
 
-rem TODO: Update version number.
-
 
 rem Build
 set BINOUT=%~dp0..\Release
@@ -24,17 +22,26 @@ msbuild Wakan.groupproj %BUILDCONF%
 if errorlevel 1 goto end
 
 
-rem Run tests
+rem Running tests...
 "%BINOUT%\JaletTests.exe"
 if errorlevel 1 goto end
 
 
 rem TODO: Update standard dicts? "wakan /updatedics ..."
 rem TODO: Update + rebuild character info? "wakan /updatechars ..."
-rem TODO: Rebuild rad/sod? (maybe even in other dir)
 
 
-rem Package setup
+echo.
+echo Rebuilding RAD/SOD from sources...
+cd "%BINOUT%"
+"%BINOUT%\Jalet.exe" makerad
+if errorlevel 1 goto end
+"%BINOUT%\Jalet.exe" makesod
+if errorlevel 1 goto end
+
+
+echo.
+echo Packaging installation...
 iscc "%~dp0wakan-setup.iss" /O+
 rem TODO: Include: history.txt, licence.txt?
 

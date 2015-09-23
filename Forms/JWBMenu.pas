@@ -563,6 +563,7 @@ begin
       end;
 
       BuildRadicalPackage(MakeRadParams.Files);
+      Application.ShowMainForm := false;
       Application.Terminate;
       exit;
     end;
@@ -604,6 +605,7 @@ begin
     if Command='makesod' then
     begin
       fVocab.BuildStrokeOrderPackage('STROKES.CSV');
+      Application.ShowMainForm := false;
       Application.Terminate;
       exit;
     end;
@@ -714,7 +716,9 @@ begin
   except
     on E: EBadUsage do begin
       ShowUsage(E.Message);
+      Application.ShowMainForm := false;
       Application.Terminate;
+      System.ExitCode := 2;
     end;
     on E: EAbort do
       Application.Terminate; //Silently
@@ -725,7 +729,9 @@ begin
         MB_ICONERROR or MB_OK
       );
      //It's better to exit right now than to continue uninitialized.
+      Application.ShowMainForm := false;
       Application.Terminate;
+      System.ExitCode := 1;
     end;
   end;
 
