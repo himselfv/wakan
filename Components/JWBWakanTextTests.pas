@@ -115,7 +115,7 @@ type
   end;
 
 implementation
-uses JWBStrings, StreamUtils, Windows;
+uses JWBStrings, StreamUtils, Windows, TestingCommon;
 
 procedure TSourcePosTestCase.Initializers;
 var p1: TSourcePos;
@@ -693,7 +693,7 @@ end;
 
 function TRubyTextTestCase.GetTestFilename(const AFilename: string): string;
 begin
-  Result := 'Tests\rubywtt\'+AFilename;
+  Result := TestDataFolder+'\rubywtt\'+AFilename;
 end;
 
 procedure TRubyTextTestCase.SaveCompare(const AFilename: string;
@@ -867,7 +867,7 @@ end;
 function TExportTestCase.GetTestFilename(const AFilename: string): string;
 begin
  //All encoding test files are stored in the same folder
-  Result := 'Tests\format\'+AFilename;
+  Result := TestDataFolder+'\format\'+AFilename;
 end;
 
 procedure TExportTestCase.LoadSave(const AFilename: string;
@@ -963,7 +963,7 @@ end;
 
 function TPasteTestCase.GetTestFilename(const AFilename: string): string;
 begin
-  Result := 'Tests\rubywtt\'+AFilename;
+  Result := TestDataFolder+'\rubywtt\'+AFilename;
 end;
 
 procedure TPasteTestCase.SplitMerge;

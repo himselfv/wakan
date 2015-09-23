@@ -59,6 +59,9 @@ dunit.ini
 *.dcp
 *.dcpil
 
+# Local files
+Build/setupvars.cmd
+
 # Release
 *.exe
 *.lay

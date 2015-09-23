@@ -27,6 +27,7 @@ uses
   TestFramework,
   GUITestRunner,
   TextTestRunner,
+  TestingCommon,
   TextTableTests in 'Components\TextTable\TextTableTests.pas',
   JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
 
@@ -34,6 +35,7 @@ uses
 
 begin
   Application.Initialize;
+  TestDataFolder := ExtractFilePath(Paramstr(0))+'\Tests';
   if IsConsole then begin
     with TextTestRunner.RunRegisteredTests do
       Free;

@@ -26,12 +26,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
-        <Cfg_1_Win32>true</Cfg_1_Win32>
-        <CfgParent>Cfg_1</CfgParent>
-        <Cfg_1>true</Cfg_1>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -48,13 +42,13 @@
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <Icon_MainIcon>Jalet_Icon.ico</Icon_MainIcon>
-        <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
+        <DCC_DcuOutput>.\Dcu\$(Platform)$(Config)</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_MinorVer>87</VerInfo_MinorVer>
+        <VerInfo_MinorVer>92</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.87.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.92.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_StringChecks>off</DCC_StringChecks>
         <DCC_ExeOutput>Release\</DCC_ExeOutput>
         <DCC_UnitSearchPath>.\Forms;.\Components;.\Components\Package;.\Components\ScaleMM;.\Components\StdPrompt;.\Components\TextTable;.\Controls;$(JPTOOLS)\Share;$(JPTOOLS)\KanaConv;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -71,10 +65,6 @@
         <DCC_LocalDebugSymbols>False</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
         <DCC_Define>RELEASE;INLINE;$(DCC_Define)</DCC_Define>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_MinorVer>90</VerInfo_MinorVer>
-        <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.90.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>

@@ -47,16 +47,17 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <DCC_Define>$(JALETTEST_DEFINES);$(DCC_Define)</DCC_Define>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Manifest_File>None</Manifest_File>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <DCC_ExeOutput>.\Release</DCC_ExeOutput>
-        <DCC_UnitSearchPath>.\Components\TextTable;.\Components\Package;.\Components\Parsers;.\Components\StdPrompt;.\Components;.\Controls;.\Forms;$(JPTOOLS)\Share;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Components\TextTable;.\Components\Package;.\Components\StdPrompt;.\Components;.\Controls;.\Forms;$(JPTOOLS)\Share;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DependencyCheckOutputName>Release\JaletTests.exe</DCC_DependencyCheckOutputName>
-        <DCC_DcuOutput>.\Dcu</DCC_DcuOutput>
+        <DCC_DcuOutput>.\Dcu\$(Platform)$(Config)</DCC_DcuOutput>
         <DCC_UsePackage>vcl;rtl;vclx;vclimg;vclactnband;vcltouch;dbrtl;adortl;vcldb;xmlrtl;vclribbon;DbxClientDriver;DbxCommonDriver;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;dbexpress;JclDeveloperTools;Jcl;JclVcl;JclContainers;VirtualTreesD13;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Platform>x86</DCC_Platform>
         <DCC_ImageBase>00400000</DCC_ImageBase>
@@ -149,6 +150,8 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k170.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp170.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <UnitTesting>
