@@ -5,5 +5,8 @@ set RADSTUDIO=C:\Program Files (x86)\Embarcadero\RAD Studio\10.0
 set JPTOOLS=C:\Projects\jptools
 set INNOSETUP=C:\Program Files (x86)\Inno Setup 5
 
+pushd ..
+set WAKAN=%CD%
+popd
 set PATH=%INNOSETUP%;%PATH%
 call "%RADSTUDIO%\bin\rsvars.bat"

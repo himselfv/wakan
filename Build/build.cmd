@@ -4,26 +4,28 @@ call setupvars.cmd
 if errorlevel 1 goto setupvars_fail
 pushd ..
 
-rem TODO: Rebuild dependencies?
-rem TODO: Run dependencies' tests?
-
-
-rem Build
 set BINOUT=%~dp0..\Release
-set JALETTEST_DEFINES=CONSOLE_TESTRUNNER
+set UNITTEST_DEFINES=CONSOLE_TESTRUNNER
+
+
+echo Building jp-tools...
+msbuild %JPTOOLS%\Tests\Tests.dproj /t:build /p:config=Release
+if errorlevel 1 goto end
+
+echo Testing jp-tools
+"%JPTOOLS%\Release\Tests.exe" /nospeed /halt
+if errorlevel 1 goto end
+
 
 rem Build configuration:
 rem   /p:OutputPath      build everything into a clean folder.
 rem   /p:DCC_ExeOutput   same (Delphi needs this)
 rem   /p:DCC_BplOutput   can't rebuild BPLs if Delphi is running, but Wakan is static linked so we only want fresh DCUs -- put BPLs wherever.
-set BUILDCONF=/t:build /p:config=Release /p:OutputPath="%BINOUT%" /p:DCC_ExeOutput="%BINOUT%" /p:DCC_BplOutput="%BINOUT%"
-
-msbuild Wakan.groupproj %BUILDCONF%
+msbuild Wakan.groupproj /t:build /p:config=Release /p:OutputPath="%BINOUT%" /p:DCC_ExeOutput="%BINOUT%" /p:DCC_BplOutput="%BINOUT%"
 if errorlevel 1 goto end
 
-
 rem Running tests...
-"%BINOUT%\JaletTests.exe"
+"%BINOUT%\JaletTests.exe" /nospeed /halt
 if errorlevel 1 goto end
 
 
@@ -43,6 +45,8 @@ if errorlevel 1 goto end
 echo.
 echo Packaging installation...
 iscc "%~dp0wakan-setup.iss" /O+
+echo.
+echo.
 rem TODO: Include: history.txt, licence.txt?
 
 

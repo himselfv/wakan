@@ -35,10 +35,17 @@ uses
 
 {$R *.RES}
 
+var
+  ExitBehavior: TRunnerExitBehavior;
+
 begin
   Application.Initialize;
   if IsConsole then begin
-    with TextTestRunner.RunRegisteredTests do
+    if FindCmdLineSwitch('halt') then
+      ExitBehavior := rxbHaltOnFailures
+    else
+      ExitBehavior := rxbContinue;
+    with TextTestRunner.RunRegisteredTests(ExitBehavior) do
       Free;
     if FindCmdLineSwitch('pause') then
       readln;
