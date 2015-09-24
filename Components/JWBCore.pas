@@ -18,8 +18,8 @@ const
   WakanAppName = 'WaKan - Japanese & Chinese Learning Tool';
   WakanCopyright = '(C) Filip Kabrt and others 2002-2013';
   WakanRegKey = 'Software\Labyrinth\Wakan';
-  AppUrl: string = 'http://code.google.com/p/wakan/';
-  WikiUrlBase: string = 'http://code.google.com/p/wakan/wiki/';
+  AppUrl: string = 'https://bitbucket.org/himselfv/wakan';
+  WikiUrlBase: string = 'https://bitbucket.org/himselfv/wakan/wiki/';
 
   PortabilityMode: TPortabilityMode = pmCompatible;
 
