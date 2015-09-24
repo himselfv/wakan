@@ -54,9 +54,9 @@ object fExamples: TfExamples
       Caption = 'Label2'
     end
     object Label3: TLabel
-      Left = 391
+      Left = 383
       Top = 2
-      Width = 71
+      Width = 79
       Height = 13
       Alignment = taRightJustify
       Anchors = [akTop, akRight]

@@ -51,7 +51,7 @@
         <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.92.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_StringChecks>off</DCC_StringChecks>
         <DCC_ExeOutput>Release\</DCC_ExeOutput>
-        <DCC_UnitSearchPath>.\Forms;.\Components;.\Components\Package;.\Components\ScaleMM;.\Components\StdPrompt;.\Components\TextTable;.\Controls;$(JPTOOLS)\Share;$(JPTOOLS)\KanaConv;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Modules;.\Modules\Package;.\Modules\ScaleMM;.\Modules\StdPrompt;.\Modules\TextTable;.\Controls;$(JPTOOLS)\Share;$(JPTOOLS)\KanaConv;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DependencyCheckOutputName>Release\Jalet.exe</DCC_DependencyCheckOutputName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
@@ -96,8 +96,6 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k170.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp170.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
                 </Excluded_Packages>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">False</VersionInfo>
@@ -146,153 +144,154 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Components\ScaleMM\ScaleMM2.pas"/>
-        <DCCReference Include="Components\JWBStrings.pas"/>
-        <DCCReference Include="Components\Package\PackageCommon.pas"/>
-        <DCCReference Include="Components\TextTable\TextTable.pas"/>
-        <DCCReference Include="Components\Package\MemSource.pas"/>
-        <DCCReference Include="Components\Package\PKGWrite.pas">
+        <DCCReference Include="Modules\ScaleMM\ScaleMM2.pas"/>
+        <DCCReference Include="Modules\JWBStrings.pas"/>
+        <DCCReference Include="Modules\TextTable\TextTable.pas"/>
+        <DCCReference Include="Modules\Package\PackageCommon.pas"/>
+        <DCCReference Include="Modules\Package\MemSource.pas"/>
+        <DCCReference Include="Modules\Package\PKGWrite.pas">
             <Form>PKGWriteForm</Form>
         </DCCReference>
-        <DCCReference Include="Components\StdPrompt\StdPrompt.pas">
+        <DCCReference Include="Modules\StdPrompt\StdPrompt.pas">
             <Form>SMPromptForm</Form>
         </DCCReference>
-        <DCCReference Include="Forms\UnicodeFont.pas">
-            <Form>fSelectFont</Form>
-        </DCCReference>
-        <DCCReference Include="Components\JWBUnit.pas"/>
-        <DCCReference Include="Components\JWBCategories.pas"/>
-        <DCCReference Include="Components\JWBDicSearch.pas"/>
-        <DCCReference Include="Components\JWBKanjiCard.pas"/>
-        <DCCReference Include="Components\JWBVocab1.pas"/>
-        <DCCReference Include="Forms\JWBMenu.pas">
+        <DCCReference Include="Modules\JWBMenu.pas">
             <Form>fMenu</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBKanji.pas">
-            <Form>fKanji</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBRadical.pas">
-            <Form>fRadical</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBWordLookup.pas">
-            <Form>fWordLookup</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBSettings.pas">
-            <Form>fSettings</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBSplash.pas">
+        <DCCReference Include="Modules\JWBSplash.pas">
             <Form>fSplash</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBVocab.pas">
-            <Form>fVocab</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBVocabDetails.pas">
-            <Form>fVocabDetails</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBVocabAdd.pas">
-            <Form>fVocabAdd</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBVocabFilters.pas">
-            <Form>fVocabFilters</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBNewCategory.pas">
-            <Form>fNewCategory</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBPrint.pas">
-            <Form>fPrint</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBStatistics.pas">
+        <DCCReference Include="Modules\JWBUnit.pas"/>
+        <DCCReference Include="Modules\JWBCore.pas"/>
+        <DCCReference Include="Modules\TaskbarCtl.pas"/>
+        <DCCReference Include="Modules\JWBClipboard.pas"/>
+        <DCCReference Include="Modules\JWBIntTip.pas"/>
+        <DCCReference Include="Modules\JWBStatistics.pas">
             <Form>fStatistics</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBWordList.pas">
-            <Form>fWordList</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBBitmap.pas">
-            <Form>fBitmap</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBKanjiCompounds.pas">
-            <Form>fKanjiCompounds</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBKanjiDetails.pas">
-            <Form>fKanjiDetails</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBEditor.pas">
-            <Form>fEditor</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBEditorHint.pas">
-            <Form>fEditorHint</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBWordKanji.pas">
+        <DCCReference Include="Modules\JWBWordKanji.pas">
             <Form>fWordKanji</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBExamples.pas">
+        <DCCReference Include="Modules\JWBExamples.pas">
             <Form>fExamples</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBDictMan.pas">
-            <Form>fDictMan</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBDictImport.pas">
-            <Form>fDictImport</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBCharItem.pas">
-            <Form>fCharItem</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBScreenTip.pas">
+        <DCCReference Include="Modules\JWBScreenTip.pas">
             <Form>fScreenTipForm</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBLanguage.pas">
+        <DCCReference Include="Modules\JWBLanguage.pas">
             <Form>fLanguage</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBFileType.pas">
+        <DCCReference Include="Modules\JWBFileType.pas">
             <Form>fFileType</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBWordsExpChoose.pas">
-            <Form>fWordsExpChoose</Form>
-        </DCCReference>
-        <DCCReference Include="Forms\JWBMedia.pas">
-            <Form>fMedia</Form>
-        </DCCReference>
+        <DCCReference Include="Modules\JWBCommandLine.pas"/>
+        <DCCReference Include="Modules\JWBForms.pas"/>
+        <DCCReference Include="Modules\JWBRefLinks.pas"/>
         <DCCReference Include="Modules\Portability\JWBPortableMode.pas">
             <Form>fPortableMode</Form>
         </DCCReference>
         <DCCReference Include="Modules\Portability\PortabilitySettings.pas">
             <Form>PortabilitySettingsPage</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBCategoryMgr.pas">
+        <DCCReference Include="Modules\Settings\JWBSettings.pas">
+            <Form>fSettings</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Settings\UnicodeFont.pas">
+            <Form>fSelectFont</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Settings\JWBCharItem.pas">
+            <Form>fCharItem</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\UserData\JWBUserData.pas"/>
+        <DCCReference Include="Modules\UserData\JWBCategories.pas"/>
+        <DCCReference Include="Modules\UserData\JWBCategoryMgr.pas">
             <Form>fCategoryMgr</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBCharDataImport.pas">
+        <DCCReference Include="Modules\UserData\JWBNewCategory.pas">
+            <Form>fNewCategory</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\CharData\JWBCharData.pas"/>
+        <DCCReference Include="Modules\CharData\JWBCharDataImport.pas">
             <Form>fCharDataImport</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBWordLookupBase.pas">
+        <DCCReference Include="Modules\KanjiList\JWBKanji.pas">
+            <Form>fKanji</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\KanjiDetails\JWBKanjiCard.pas"/>
+        <DCCReference Include="Modules\KanjiDetails\JWBKanjiDetails.pas">
+            <Form>fKanjiDetails</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Radicals\RaineRadicals.pas"/>
+        <DCCReference Include="Modules\Radicals\JWBRadical.pas">
+            <Form>fRadical</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Editor\JWBEditor.pas">
+            <Form>fEditor</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Editor\JWBEditorHint.pas">
+            <Form>fEditorHint</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Editor\JWBWakanText.pas"/>
+        <DCCReference Include="Modules\Dictionaries\JWBDictMan.pas">
+            <Form>fDictMan</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Dictionaries\JWBDictImport.pas">
+            <Form>fDictImport</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Dictionaries\JWBDicImportJob.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBDic.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBIndex.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBDicSearch.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBEdictMarkers.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBWordGrid.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBWordLookupBase.pas">
             <Form>fWordLookupBase</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBDownloader.pas">
+        <DCCReference Include="Modules\Dictionary\JWBWordLookup.pas">
+            <Form>fWordLookup</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Dictionary\JWBKanjiCompounds.pas">
+            <Form>fKanjiCompounds</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBVocab1.pas"/>
+        <DCCReference Include="Modules\Vocab\JWBVocab.pas">
+            <Form>fVocab</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBVocabDetails.pas">
+            <Form>fVocabDetails</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBVocabAdd.pas">
+            <Form>fVocabAdd</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBVocabFilters.pas">
+            <Form>fVocabFilters</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBWordsExpChoose.pas">
+            <Form>fWordsExpChoose</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBLegacyMarkup.pas"/>
+        <DCCReference Include="Modules\Components\JWBAutoImport.pas"/>
+        <DCCReference Include="Modules\Components\JWBDownloader.pas">
             <Form>fDownloader</Form>
         </DCCReference>
-        <DCCReference Include="Components\JWBAnnotations.pas"/>
-        <DCCReference Include="Components\JWBCommandLine.pas"/>
-        <DCCReference Include="Components\JWBDic.pas"/>
-        <DCCReference Include="Components\JWBIndex.pas"/>
-        <DCCReference Include="Components\JWBEdictMarkers.pas"/>
-        <DCCReference Include="Components\JWBAutoImport.pas"/>
-        <DCCReference Include="Components\JWBDownloaderCore.pas"/>
-        <DCCReference Include="Components\JWBComponents.pas"/>
-        <DCCReference Include="Components\JWBUserData.pas"/>
-        <DCCReference Include="Components\JWBForms.pas"/>
-        <DCCReference Include="Components\JWBCharData.pas"/>
-        <DCCReference Include="Components\JWBWakanText.pas"/>
-        <DCCReference Include="Components\RaineRadicals.pas"/>
-        <DCCReference Include="Components\JWBLegacyMarkup.pas"/>
-        <DCCReference Include="Components\JWBRefLinks.pas"/>
-        <DCCReference Include="Components\JWBJobs.pas"/>
-        <DCCReference Include="Components\JWBCore.pas"/>
-        <DCCReference Include="Components\JWBWordGrid.pas"/>
-        <DCCReference Include="Components\JWBDicImportJob.pas"/>
-        <DCCReference Include="Components\JWBUnpackJob.pas"/>
-        <DCCReference Include="Components\TaskbarCtl.pas"/>
-        <DCCReference Include="Components\JWBClipboard.pas"/>
-        <DCCReference Include="Components\JWBIntTip.pas"/>
+        <DCCReference Include="Modules\Components\JWBDownloaderCore.pas"/>
+        <DCCReference Include="Modules\Components\JWBComponents.pas"/>
+        <DCCReference Include="Modules\Components\JWBJobs.pas"/>
+        <DCCReference Include="Modules\Components\JWBUnpackJob.pas"/>
+        <DCCReference Include="Modules\Components\SevenZipUtils.pas"/>
+        <DCCReference Include="Modules\Print\JWBPrint.pas">
+            <Form>fPrint</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Print\JWBBitmap.pas">
+            <Form>fBitmap</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Annotations\JWBAnnotations.pas"/>
+        <DCCReference Include="Modules\Annotations\JWBMedia.pas">
+            <Form>fMedia</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\JWBWordList.pas">
+            <Form>fWordList</Form>
+        </DCCReference>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>
