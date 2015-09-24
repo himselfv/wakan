@@ -693,7 +693,7 @@ end;
 
 function TRubyTextTestCase.GetTestFilename(const AFilename: string): string;
 begin
-  Result := TestDataFolder+'\rubywtt\'+AFilename;
+  Result := TestCasesDir+'\rubywtt\'+AFilename;
 end;
 
 procedure TRubyTextTestCase.SaveCompare(const AFilename: string;
@@ -867,7 +867,7 @@ end;
 function TExportTestCase.GetTestFilename(const AFilename: string): string;
 begin
  //All encoding test files are stored in the same folder
-  Result := TestDataFolder+'\format\'+AFilename;
+  Result := TestCasesDir+'\format\'+AFilename;
 end;
 
 procedure TExportTestCase.LoadSave(const AFilename: string;
@@ -963,7 +963,7 @@ end;
 
 function TPasteTestCase.GetTestFilename(const AFilename: string): string;
 begin
-  Result := TestDataFolder+'\rubywtt\'+AFilename;
+  Result := TestCasesDir+'\rubywtt\'+AFilename;
 end;
 
 procedure TPasteTestCase.SplitMerge;

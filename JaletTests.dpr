@@ -29,13 +29,14 @@ uses
   TextTestRunner,
   TestingCommon,
   TextTableTests in 'Components\TextTable\TextTableTests.pas',
-  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas';
+  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas',
+  JWBComponentsTests in 'Components\JWBComponentsTests.pas',
+  RaineRadicalsTests in 'Components\RaineRadicalsTests.pas';
 
 {$R *.RES}
 
 begin
   Application.Initialize;
-  TestDataFolder := ExtractFilePath(Paramstr(0))+'\Tests';
   if IsConsole then begin
     with TextTestRunner.RunRegisteredTests do
       Free;
