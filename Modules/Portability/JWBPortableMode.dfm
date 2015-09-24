@@ -27,10 +27,6 @@ object fPortableMode: TfPortableMode
     object tsSelectMode: TTabSheet
       Caption = 'tsSelectMode'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         415
         339)

@@ -197,16 +197,6 @@ type
     cbShowSplashscreen: TCheckBox;
     cbSaveColumnWidths: TCheckBox;
     cbSaveSearchParams: TCheckBox;
-    tsPortability: TTabSheet;
-    lblWakanMode: TLabel;
-    Label49: TLabel;
-    Label55: TLabel;
-    Label56: TLabel;
-    lblSettingsPath: TUrlLabel;
-    lblDictionariesPath: TUrlLabel;
-    lblUserDataPath: TUrlLabel;
-    btnUpgradeToStandalone: TButton;
-    lblUpgradeToStandalone: TLabel;
     tvContents: TTreeView;
     tsEditorPrinting: TTabSheet;
     cbNoSearchParticles: TCheckBox;
@@ -253,8 +243,6 @@ type
     Label58: TLabel;
     Spacer: TPanel;
     btnImportKanjidic: TButton;
-    lblBackupPath: TUrlLabel;
-    Label59: TLabel;
     pbRomajiAsHiragana: TWakanPaintbox;
     pbRomajiAsKatakana: TWakanPaintbox;
     pbPinyinAsBopomofo: TWakanPaintbox;
@@ -330,8 +318,6 @@ type
     procedure SpeedButton14Click(Sender: TObject);
     procedure Button16Click(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
-    procedure btnUpgradeToStandaloneClick(Sender: TObject);
-    procedure lblSettingsPathClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
       var AllowCollapse: Boolean);
@@ -378,7 +364,11 @@ type
     FContentsInitialized: boolean;
     procedure InitContents;
     procedure SelectActiveContentItem;
-    procedure UpdatePortabilityPage;
+    function FindContentItemByTag(const ATag: integer): TTreeNode;
+    function FindNextFreeTag: integer;
+    procedure BroadcastToPages(Msg: cardinal; wParam: NativeUInt; lParam: NativeInt);
+  public
+    procedure AddSettingsPage(page: TForm; category: string);
 
   protected
    { Shared settings. To avoid reading the same file twice, call GetSettingsStore
@@ -386,8 +376,8 @@ type
     FWakanIni: TCustomIniFile;
     FSettingsStore: TCustomIniFile;
     FPortabilityLoaded: boolean;
-    function GetWakanIni: TCustomIniFile;
   public
+    function GetWakanIni: TCustomIniFile;
     function GetSettingsStore: TCustomIniFile;
     procedure FreeSettings;
 
@@ -450,6 +440,11 @@ type
     function GetPreferredRadicalType: integer;
 
   end;
+
+const
+ //Sent to all custom pages on events.
+  WM_SETTINGS = WM_USER + 2000;
+  WM_LOADSETTINGS = WM_SETTINGS + 1;
 
 var
   fSettings: TfSettings;
@@ -584,6 +579,26 @@ begin
     tvContents.Selected := nil; //deselect
 end;
 
+function TfSettings.FindContentItemByTag(const ATag: integer): TTreeNode;
+var i: integer;
+begin
+  Result := nil;
+  for i := 0 to tvContents.Items.Count - 1 do
+    if tvContents.Items[i].StateIndex=ATag then begin
+      Result := tvContents.Items[i];
+      break;
+    end;
+end;
+
+function TfSettings.FindNextFreeTag: integer;
+var i: integer;
+begin
+  Result := 0;
+  for i := 0 to pcPages.PageCount - 1 do
+    if pcPages.Pages[i].Tag >= Result then
+      Result := pcPages.Pages[i].Tag + 1;
+end;
+
 procedure TfSettings.tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
   var AllowCollapse: Boolean);
 begin
@@ -605,6 +620,50 @@ procedure TfSettings.pcPagesChange(Sender: TObject);
 begin
   SelectActiveContentItem();
 end;
+
+{ Custom settings pages }
+
+procedure TfSettings.AddSettingsPage(page: TForm; category: string);
+var parent, item: TTreeNode;
+begin
+  page.Visible := false; //чтобы не переключилось на него
+  page.ManualDock(Self.pcPages, nil, alClient);
+  page.Visible := true;
+  Assert(page.Parent is TTabSheet);
+  page.Parent.Tag := FindNextFreeTag;
+  TTabSheet(page.Parent).TabVisible := false;
+
+  if SameText(category, 'General') then
+    parent := FindContentItemByTag(tsGeneral.Tag)
+  else
+  if SameText(category, 'Characters') then
+    parent := FindContentItemByTag(tsCharacterList.Tag)
+  else
+  if SameText(category, 'Dictionary') then
+    parent := FindContentItemByTag(tsDictionary.Tag)
+  else
+  if SameText(category, 'Editor') then
+    parent := FindContentItemByTag(tsEditor.Tag)
+  else
+    parent := nil;
+
+  item := tvContents.Items.AddChild(parent, page.Caption);
+  item.StateIndex := page.Parent.Tag;
+end;
+
+//Broadcasts custom event message to all pages
+procedure TfSettings.BroadcastToPages(Msg: cardinal; wParam: NativeUInt; lParam: NativeInt);
+var i, j: integer;
+begin
+  for i := 0 to pcPages.PageCount-1 do
+    for j := 0 to pcPages.Pages[i].ControlCount-1 do
+      if pcPages.Pages[i].Controls[j] is TCustomForm then begin
+        SendMessage(TCustomForm(pcPages.Pages[i].Controls[j]).Handle, Msg, wParam, lParam); //TODO: send to docked form, not the placeholder
+      end;
+end;
+
+
+
 
 
 { Settings store }
@@ -733,7 +792,7 @@ begin
   InitColors(ini);
   LoadCharDetl(ini);
 
-  UpdatePortabilityPage;
+  BroadcastToPages(WM_LOADSETTINGS, 0, 0);
 end;
 
 procedure TfSettings.SaveSettings;
@@ -2049,69 +2108,6 @@ begin
   ShellOpen(WikiUrl('Annotations'));
 end;
 
-procedure TfSettings.UpdatePortabilityPage;
-begin
-  case PortabilityMode of
-    pmStandalone: lblWakanMode.Caption := _l('#01026^eWakan is running in standalone mode');
-    pmCompatible: lblWakanMode.Caption := _l('#01027^eWakan is running in compatible mode');
-    pmPortable: lblWakanMode.Caption := _l('#01028^eWakan is running in portable mode');
-  else
-    lblWakanMode.Caption := '[error]';
-  end;
-
-  if PortabilityMode=pmPortable then begin
-    lblSettingsPath.Caption := AppFolder + '\wakan.ini';
-    lblSettingsPath.URL := 'file://'+repl(lblSettingsPath.Caption,'\','/');
-  end else begin
-    lblSettingsPath.Caption := 'HKEY_CURRENT_USER\'+WakanRegKey;
-    lblSettingsPath.URL := '';
-  end;
-
-  lblDictionariesPath.Caption := DictionaryDir;
-  lblDictionariesPath.URL := 'file://'+repl(DictionaryDir,'\','/');
-  lblUserDataPath.Caption := UserDataDir;
-  lblUserDataPath.URL := 'file://'+repl(UserDataDir,'\','/');
-  lblBackupPath.Caption := BackupDir;
-  lblBackupPath.URL := 'file://'+repl(BackupDir,'\','/');
-
-  btnUpgradeToStandalone.Visible := PortabilityMode=pmCompatible;
-  lblUpgradeToStandalone.Visible := btnUpgradeToStandalone.Visible;
-end;
-
-procedure TfSettings.lblSettingsPathClick(Sender: TObject);
-begin
-  if PortabilityMode<>pmPortable then
-    RegeditAtKey(lblSettingsPath.Caption);
-end;
-
-procedure TfSettings.btnUpgradeToStandaloneClick(Sender: TObject);
-var ini: TCustomIniFile;
-begin
-  if PortabilityMode<>pmCompatible then exit;
-
-  if Application.MessageBox(
-    PChar(_l('#01034^eDo you really want to move all your files to Application Data and convert this installation to standalone?')),
-    PChar(_l('#01035^eConfirmation')),
-    MB_YESNO or MB_ICONQUESTION
-  ) <> ID_YES then exit;
-
-  ini := GetWakanIni;
-  try
-    ini.WriteString('General','Install','Upgrade');
-    ini.UpdateFile;
-  finally
-    FreeSettings;
-  end;
-
-  //Localize
-  Application.MessageBox(
-    PChar(_l('#01036^eWakan has to be restarted for the upgrade to be completed. The application will now exit.')),
-    PChar(_l('#01037^eRestart needed')),
-    MB_OK
-  );
-  Application.Terminate;
-end;
-
 procedure TfSettings.btnImportKanjidicClick(Sender: TObject);
 var fCharDataImport: TfCharDataImport;
 begin
@@ -2520,5 +2516,7 @@ begin
     XsltTransform(KanjiInfoToXml('間'),
       GetKanjiCopyFormatsDir+'\'+DefaultKanjiCopyFormatName+'.xslt');
 end;
+
+
 
 end.

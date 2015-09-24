@@ -51,7 +51,8 @@ uses
   JWBFileType in 'Forms\JWBFileType.pas' {fFileType},
   JWBWordsExpChoose in 'Forms\JWBWordsExpChoose.pas' {fWordsExpChoose},
   JWBMedia in 'Forms\JWBMedia.pas' {fMedia},
-  JWBPortableMode in 'Forms\JWBPortableMode.pas' {fPortableMode},
+  JWBPortableMode in 'Modules\Portability\JWBPortableMode.pas' {fPortableMode},
+  PortabilitySettings in 'Modules\Portability\PortabilitySettings.pas' {PortabilitySettingsPage},
   JWBCategoryMgr in 'Forms\JWBCategoryMgr.pas' {fCategoryMgr},
   JWBCharDataImport in 'Forms\JWBCharDataImport.pas' {fCharDataImport},
   JWBWordLookupBase in 'Forms\JWBWordLookupBase.pas' {fWordLookupBase},
@@ -107,6 +108,8 @@ begin
   Application.CreateForm(TfVocabDetails, fVocabDetails);
   Application.CreateForm(TfVocabFilters, fVocabFilters);
   Application.CreateForm(TfEditorHint, fEditorHint);
+  PortabilitySettings.Register;
+
   fMenu.InitializeWakan;
   Application.Run;
 end.

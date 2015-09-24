@@ -252,8 +252,11 @@
         <DCCReference Include="Forms\JWBMedia.pas">
             <Form>fMedia</Form>
         </DCCReference>
-        <DCCReference Include="Forms\JWBPortableMode.pas">
+        <DCCReference Include="Modules\Portability\JWBPortableMode.pas">
             <Form>fPortableMode</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Portability\PortabilitySettings.pas">
+            <Form>PortabilitySettingsPage</Form>
         </DCCReference>
         <DCCReference Include="Forms\JWBCategoryMgr.pas">
             <Form>fCategoryMgr</Form>

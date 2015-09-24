@@ -5,8 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Db, ExtCtrls, Grids, Buttons, ShellApi, ActnList, Menus,
-  FormPlacemnt, WakanPaintbox, CheckAction, Actions, AppEvnts,
-  Generics.Collections;
+  FormPlacemnt, WakanPaintbox, CheckAction, Actions, AppEvnts;
 
 type
   TfMenu = class(TForm)

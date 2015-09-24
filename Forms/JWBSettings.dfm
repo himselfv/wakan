@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsGeneral
+    ActivePage = tsCharacterList
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -205,10 +205,6 @@ object fSettings: TfSettings
       Tag = 1
       Caption = 'Romanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 3
         Top = 3
@@ -533,10 +529,6 @@ object fSettings: TfSettings
       Tag = 2
       Caption = 'Fonts'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label4: TLabel
         Left = 3
         Top = 362
@@ -929,10 +921,6 @@ object fSettings: TfSettings
       Tag = 3
       Caption = 'Colors'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1046,169 +1034,10 @@ object fSettings: TfSettings
         OnClick = cbNoWordGridColorsClick
       end
     end
-    object tsPortability: TTabSheet
-      Tag = 4
-      Caption = 'Portability'
-      TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object lblWakanMode: TLabel
-        Left = 3
-        Top = 3
-        Width = 198
-        Height = 13
-        Caption = 'Wakan is running in portable mode'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object Label49: TLabel
-        Left = 3
-        Top = 30
-        Width = 90
-        Height = 13
-        Caption = '#01029^eSettings:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object Label55: TLabel
-        Left = 3
-        Top = 49
-        Width = 107
-        Height = 13
-        Caption = '#01030^eDictionaries:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object Label56: TLabel
-        Left = 3
-        Top = 68
-        Width = 98
-        Height = 13
-        Caption = '#01031^eUser data:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblSettingsPath: TUrlLabel
-        Left = 107
-        Top = 30
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        OnClick = lblSettingsPathClick
-      end
-      object lblDictionariesPath: TUrlLabel
-        Left = 107
-        Top = 49
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblUserDataPath: TUrlLabel
-        Left = 107
-        Top = 68
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblUpgradeToStandalone: TLabel
-        Left = 3
-        Top = 118
-        Width = 453
-        Height = 26
-        Caption = 
-          '#01032^eYou can move all your data to Application Data folder an' +
-          'd make this copy standalone.'#13#10'This process is not reversible.'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblBackupPath: TUrlLabel
-        Left = 107
-        Top = 87
-        Width = 27
-        Height = 13
-        Cursor = crHandPoint
-        Caption = '[path]'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object Label59: TLabel
-        Left = 3
-        Top = 87
-        Width = 94
-        Height = 13
-        Caption = '#01087^eBackups:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-      end
-      object btnUpgradeToStandalone: TButton
-        Left = 123
-        Top = 158
-        Width = 177
-        Height = 25
-        Caption = '#01033^eUpgrade to standalone'
-        TabOrder = 0
-        OnClick = btnUpgradeToStandaloneClick
-      end
-    end
     object tsCharacterList: TTabSheet
       Tag = 5
       Caption = 'Character list'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label35: TLabel
         Left = 3
         Top = 87
@@ -1292,10 +1121,6 @@ object fSettings: TfSettings
       Caption = 'Character details'
       ImageIndex = 19
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object cbDetailsShowKanjiClass: TCheckBox
         AlignWithMargins = True
         Left = 3
@@ -1341,10 +1166,6 @@ object fSettings: TfSettings
       Tag = 6
       Caption = 'Character details items'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1463,10 +1284,6 @@ object fSettings: TfSettings
       Tag = 7
       Caption = 'Dictionary'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1587,10 +1404,6 @@ object fSettings: TfSettings
       Tag = 8
       Caption = 'Popup tool'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label36: TLabel
         Left = 3
         Top = 75
@@ -1737,10 +1550,6 @@ object fSettings: TfSettings
       Tag = 9
       Caption = 'Word list printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label11: TLabel
         Left = 3
         Top = 339
@@ -1847,10 +1656,6 @@ object fSettings: TfSettings
       Tag = 10
       Caption = 'Character cards printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label12: TLabel
         Left = 3
         Top = 0
@@ -2048,10 +1853,6 @@ object fSettings: TfSettings
       Tag = 11
       Caption = 'Annotations'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2140,10 +1941,6 @@ object fSettings: TfSettings
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2249,10 +2046,6 @@ object fSettings: TfSettings
       Tag = 13
       Caption = 'Editor'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label48: TLabel
         Left = 3
         Top = 3
@@ -2431,10 +2224,6 @@ object fSettings: TfSettings
       Tag = 14
       Caption = 'Editor: Saving and loading:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblSavingAndLoading: TLabel
         Left = 3
         Top = 3
@@ -2479,10 +2268,6 @@ object fSettings: TfSettings
       Tag = 15
       Caption = 'Editor: Printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label57: TLabel
         Left = 3
         Top = 3
@@ -2548,10 +2333,6 @@ object fSettings: TfSettings
       Tag = 16
       Caption = 'Editor: Text translator'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label58: TLabel
         Left = 3
         Top = 3
@@ -2605,10 +2386,6 @@ object fSettings: TfSettings
       Tag = 17
       Caption = 'Editor: Aozora Ruby:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 3
         Top = 3
@@ -2669,10 +2446,6 @@ object fSettings: TfSettings
       ImageIndex = 18
       TabVisible = False
       OnShow = tsExprCopyFormatsShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2743,10 +2516,6 @@ object fSettings: TfSettings
       ImageIndex = 20
       TabVisible = False
       OnShow = tsKanjiCopyFormatsShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2890,57 +2659,55 @@ object fSettings: TfSettings
     OnCollapsing = tvContentsCollapsing
     Items.NodeData = {
       03080000003C000000000000000000000000000000FFFFFFFF00000000000000
-      0004000000010F2300300030003300390038005E006500470065006E00650072
+      0003000000010F2300300030003300390038005E006500470065006E00650072
       0061006C0046000000000000000000000001000000FFFFFFFF00000000000000
       000000000001142300300030003400310032005E00650052006F006D0061006E
       0069007A006100740069006F006E0038000000000000000000000002000000FF
       FFFFFF000000000000000000000000010D2300300030003400350030005E0065
       0046006F006E00740073003A000000000000000000000003000000FFFFFFFF00
       0000000000000000000000010E2300300030003500350031005E00650043006F
-      006C006F007200730042000000000000000000000004000000FFFFFFFF000000
-      00000000000000000001122300300031003000360030005E0050006F00720074
-      006100620069006C006900740079004A000000000000000000000005000000FF
-      FFFFFF00000000000000000300000001162300300030003200390038005E0065
-      0043006800610072006100630074006500720020006C006900730074004E0000
-      00000000000000000013000000FFFFFFFF000000000000000000000000011823
-      00300030003500330030005E0043006800610072006100630074006500720020
-      00640065007400610069006C0073004A000000000000000000000006000000FF
-      FFFFFF00000000000000000000000001162300300031003100320032005E0044
-      006900730070006C00610079006500640020006900740065006D007300460000
-      00000000000000000014000000FFFFFFFF000000000000000000000000011423
-      00300031003100300031005E00650043006F0070007900200046006F0072006D
-      0061007400730042000000000000000000000007000000FFFFFFFF0000000000
-      0000000100000001122300300030003200310037005E00650044006900630074
-      0069006F006E0061007200790046000000000000000000000012000000FFFFFF
-      FF00000000000000000000000001142300300031003100300031005E00650043
-      006F0070007900200046006F0072006D00610074007300420000000000000000
-      00000008000000FFFFFFFF000000000000000000000000011223003000300035
-      00330038005E00650050006F00700075007000200074006F006F006C003A0000
-      0000000000000000000D000000FFFFFFFF000000000000000004000000010E23
-      00300030003900360036005E00650045006400690074006F0072005400000000
-      000000000000000E000000FFFFFFFF000000000000000000000000011B230030
-      0031003000360036005E00650053006100760069006E006700200061006E0064
-      0020006C006F006100640069006E0067003A003E00000000000000000000000F
-      000000FFFFFFFF00000000000000000000000001102300300031003000360035
-      005E0065005000720069006E00740069006E0067004C00000000000000000000
-      0010000000FFFFFFFF0000000000000000000000000117230030003000330030
-      0030005E006500540065007800740020007400720061006E0073006C00610074
-      006F00720044000000000000000000000011000000FFFFFFFF00000000000000
-      000000000001132300300031003000360037005E00650041006F007A006F0072
-      006100200052007500620079003E0000000000000000000000FFFFFFFFFFFFFF
-      FF00000000000000000200000001102300300031003000360031005E00650053
-      00740075006400790069006E00670052000000000000000000000009000000FF
-      FFFFFF000000000000000000000000011A2300300030003400360035005E0065
-      0057006F007200640020006C0069007300740020007000720069006E00740069
-      006E0067005E00000000000000000000000A000000FFFFFFFF00000000000000
-      000000000001202300300030003400380038005E006500430068006100720061
-      00630074006500720020006300610072006400730020007000720069006E0074
-      0069006E0067004400000000000000000000000B000000FFFFFFFF0000000000
-      0000000000000001132300300030003900360037005E00650041006E006E006F
-      0074006100740069006F006E0073005600000000000000000000000C000000FF
-      FFFFFF000000000000000000000000011C2300300030003500300034005E0065
-      004400610074006100620061007300650020006D00610069006E00740065006E
-      0061006E0063006500}
+      006C006F00720073004A000000000000000000000005000000FFFFFFFF000000
+      00000000000300000001162300300030003200390038005E0065004300680061
+      0072006100630074006500720020006C006900730074004E0000000000000000
+      00000013000000FFFFFFFF000000000000000000000000011823003000300035
+      00330030005E0043006800610072006100630074006500720020006400650074
+      00610069006C0073004A000000000000000000000006000000FFFFFFFF000000
+      00000000000000000001162300300031003100320032005E0044006900730070
+      006C00610079006500640020006900740065006D007300460000000000000000
+      00000014000000FFFFFFFF000000000000000000000000011423003000310031
+      00300031005E00650043006F0070007900200046006F0072006D006100740073
+      0042000000000000000000000007000000FFFFFFFF0000000000000000010000
+      0001122300300030003200310037005E006500440069006300740069006F006E
+      0061007200790046000000000000000000000012000000FFFFFFFF0000000000
+      0000000000000001142300300031003100300031005E00650043006F00700079
+      00200046006F0072006D00610074007300420000000000000000000000080000
+      00FFFFFFFF00000000000000000000000001122300300030003500330038005E
+      00650050006F00700075007000200074006F006F006C003A0000000000000000
+      0000000D000000FFFFFFFF000000000000000004000000010E23003000300039
+      00360036005E00650045006400690074006F0072005400000000000000000000
+      000E000000FFFFFFFF000000000000000000000000011B230030003100300036
+      0036005E00650053006100760069006E006700200061006E00640020006C006F
+      006100640069006E0067003A003E00000000000000000000000F000000FFFFFF
+      FF00000000000000000000000001102300300031003000360035005E00650050
+      00720069006E00740069006E0067004C000000000000000000000010000000FF
+      FFFFFF00000000000000000000000001172300300030003300300030005E0065
+      00540065007800740020007400720061006E0073006C00610074006F00720044
+      000000000000000000000011000000FFFFFFFF00000000000000000000000001
+      132300300031003000360037005E00650041006F007A006F0072006100200052
+      007500620079003E0000000000000000000000FFFFFFFFFFFFFFFF0000000000
+      0000000200000001102300300031003000360031005E00650053007400750064
+      00790069006E00670052000000000000000000000009000000FFFFFFFF000000
+      000000000000000000011A2300300030003400360035005E00650057006F0072
+      00640020006C0069007300740020007000720069006E00740069006E0067005E
+      00000000000000000000000A000000FFFFFFFF00000000000000000000000001
+      202300300030003400380038005E006500430068006100720061006300740065
+      00720020006300610072006400730020007000720069006E00740069006E0067
+      004400000000000000000000000B000000FFFFFFFF0000000000000000000000
+      0001132300300030003900360037005E00650041006E006E006F007400610074
+      0069006F006E0073005600000000000000000000000C000000FFFFFFFF000000
+      000000000000000000011C2300300030003500300034005E0065004400610074
+      006100620061007300650020006D00610069006E00740065006E0061006E0063
+      006500}
   end
   object Spacer: TPanel
     Left = 177
