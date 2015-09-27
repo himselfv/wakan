@@ -24,6 +24,8 @@ var
   fldAnnotsTag: integer;
   fldAnnotsData: integer;
 
+procedure Initialize;
+
 procedure RebuildAnnotations;
 procedure LoadAnnotations(const AAutoCreate: boolean);
 function HaveAnnotations:boolean; inline;
@@ -31,7 +33,15 @@ procedure AnnotShowMedia(kanji,kana:string);
 
 implementation
 uses MemSource, JWBMedia, PKGWrite, StdPrompt, JWBCore, JWBStrings, JWBUnit,
-  JWBLanguage, JWBIO, KanaConv, JWBLegacyMarkup;
+  JWBLanguage, JWBIO, KanaConv, JWBLegacyMarkup, AnnotationsSettings;
+
+procedure Initialize;
+begin
+  if AnnotationsSettingsPage.cbEnableAnnotations.Checked then begin
+    if AnnotationsSettingsPage.cbRebuildAnnotations.Checked then RebuildAnnotations;
+    LoadAnnotations({AutoCreate=}not AnnotationsSettingsPage.cbRebuildAnnotations.Checked);
+  end;
+end;
 
 procedure WriteAnnotPackage(const tempDir: string; pkg: string);
 var pack: TPackageBuilder;

@@ -28,7 +28,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsCharacterList
+    ActivePage = tsDatabaseMaintenance
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -37,10 +37,6 @@ object fSettings: TfSettings
     object tsGeneral: TTabSheet
       Caption = 'General'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -209,10 +205,6 @@ object fSettings: TfSettings
       Tag = 1
       Caption = 'Romanization'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object GroupBox6: TGroupBox
         Left = 3
         Top = 3
@@ -537,10 +529,6 @@ object fSettings: TfSettings
       Tag = 2
       Caption = 'Fonts'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label4: TLabel
         Left = 3
         Top = 362
@@ -933,10 +921,6 @@ object fSettings: TfSettings
       Tag = 3
       Caption = 'Colors'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1137,10 +1121,6 @@ object fSettings: TfSettings
       Caption = 'Character details'
       ImageIndex = 19
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object cbDetailsShowKanjiClass: TCheckBox
         AlignWithMargins = True
         Left = 3
@@ -1186,10 +1166,6 @@ object fSettings: TfSettings
       Tag = 6
       Caption = 'Character details items'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1308,10 +1284,6 @@ object fSettings: TfSettings
       Tag = 7
       Caption = 'Dictionary'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -1432,10 +1404,6 @@ object fSettings: TfSettings
       Tag = 8
       Caption = 'Popup tool'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label36: TLabel
         Left = 3
         Top = 75
@@ -1582,10 +1550,6 @@ object fSettings: TfSettings
       Tag = 9
       Caption = 'Word list printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label11: TLabel
         Left = 3
         Top = 339
@@ -1692,10 +1656,6 @@ object fSettings: TfSettings
       Tag = 10
       Caption = 'Character cards printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label12: TLabel
         Left = 3
         Top = 0
@@ -1889,106 +1849,10 @@ object fSettings: TfSettings
         TabOrder = 17
       end
     end
-    object tsAnnotations: TTabSheet
-      Tag = 11
-      Caption = 'Annotations'
-      TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      DesignSize = (
-        465
-        452)
-      object Bevel1: TBevel
-        Left = 0
-        Top = 27
-        Width = 457
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Shape = bsTopLine
-      end
-      object cbEnableAnnotations: TCheckBox
-        Left = 3
-        Top = 3
-        Width = 446
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = '^eEnable annotations (ANNOTATE.PKG)'
-        TabOrder = 0
-      end
-      object cbRebuildAnnotations: TCheckBox
-        Left = 3
-        Top = 41
-        Width = 446
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = 
-          '^eRebuild ANNOTATE.PKG from .ANO files if needed whenever WaKan ' +
-          'starts'
-        TabOrder = 1
-      end
-      object CheckBox66: TCheckBox
-        Left = 3
-        Top = 137
-        Width = 446
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = '^eAllow annotations to play sound files'
-        TabOrder = 2
-        Visible = False
-      end
-      object CheckBox67: TCheckBox
-        Left = 3
-        Top = 65
-        Width = 446
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = '^eAllow annotations to display pictures'
-        TabOrder = 3
-      end
-      object CheckBox68: TCheckBox
-        Left = 3
-        Top = 89
-        Width = 446
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = '^eAllow annotations to display web pages'
-        TabOrder = 4
-      end
-      object CheckBox69: TCheckBox
-        Left = 3
-        Top = 113
-        Width = 446
-        Height = 17
-        Anchors = [akLeft, akTop, akRight]
-        Caption = '^eAllow annotations to change foreground color'
-        TabOrder = 5
-      end
-      object Button16: TButton
-        Left = 64
-        Top = 339
-        Width = 337
-        Height = 25
-        Caption = '^eHelp for the annotation feature'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 6
-        OnClick = Button16Click
-      end
-    end
     object tsDatabaseMaintenance: TTabSheet
       Tag = 12
       Caption = 'Database maintenance'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2094,10 +1958,6 @@ object fSettings: TfSettings
       Tag = 13
       Caption = 'Editor'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label48: TLabel
         Left = 3
         Top = 3
@@ -2276,10 +2136,6 @@ object fSettings: TfSettings
       Tag = 14
       Caption = 'Editor: Saving and loading:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblSavingAndLoading: TLabel
         Left = 3
         Top = 3
@@ -2324,10 +2180,6 @@ object fSettings: TfSettings
       Tag = 15
       Caption = 'Editor: Printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label57: TLabel
         Left = 3
         Top = 3
@@ -2393,10 +2245,6 @@ object fSettings: TfSettings
       Tag = 16
       Caption = 'Editor: Text translator'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label58: TLabel
         Left = 3
         Top = 3
@@ -2450,10 +2298,6 @@ object fSettings: TfSettings
       Tag = 17
       Caption = 'Editor: Aozora Ruby:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 3
         Top = 3
@@ -2514,10 +2358,6 @@ object fSettings: TfSettings
       ImageIndex = 18
       TabVisible = False
       OnShow = tsExprCopyFormatsShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2588,10 +2428,6 @@ object fSettings: TfSettings
       ImageIndex = 20
       TabVisible = False
       OnShow = tsKanjiCopyFormatsShow
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
         465
         452)
@@ -2734,7 +2570,7 @@ object fSettings: TfSettings
     OnChange = tvContentsChange
     OnCollapsing = tvContentsCollapsing
     Items.NodeData = {
-      03080000003C000000000000000000000000000000FFFFFFFF00000000000000
+      03070000003C000000000000000000000000000000FFFFFFFF00000000000000
       0003000000010F2300300030003300390038005E006500470065006E00650072
       0061006C0046000000000000000000000001000000FFFFFFFF00000000000000
       000000000001142300300030003400310032005E00650052006F006D0061006E
@@ -2778,12 +2614,9 @@ object fSettings: TfSettings
       00000000000000000000000A000000FFFFFFFF00000000000000000000000001
       202300300030003400380038005E006500430068006100720061006300740065
       00720020006300610072006400730020007000720069006E00740069006E0067
-      004400000000000000000000000B000000FFFFFFFF0000000000000000000000
-      0001132300300030003900360037005E00650041006E006E006F007400610074
-      0069006F006E0073005600000000000000000000000C000000FFFFFFFF000000
-      000000000000000000011C2300300030003500300034005E0065004400610074
-      006100620061007300650020006D00610069006E00740065006E0061006E0063
-      006500}
+      005600000000000000000000000C000000FFFFFFFF0000000000000000000000
+      00011C2300300030003500300034005E00650044006100740061006200610073
+      00650020006D00610069006E00740065006E0061006E0063006500}
   end
   object Spacer: TPanel
     Left = 177

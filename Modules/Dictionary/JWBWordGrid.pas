@@ -19,7 +19,7 @@ procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 
 implementation
 uses Messages, Controls, JWBLanguage, JWBUnit, JWBLegacyMarkup, JWBSettings,
-  KanaConv, JWBIntTip;
+  KanaConv, JWBIntTip, AnnotationsSettings;
 
 //Splits translation record in old Wakan format into parts:
 //  kanji [kana] {translation} rest
@@ -117,7 +117,7 @@ begin
     end;
     if (length(s)>1) and (s[1]=UH_SETCOLOR) then
     begin
-      if (fSettings.CheckBox69.Checked) then
+      if (AnnotationsSettingsPage.cbAnnotateWithColors.Checked) then
         if not TryStrToInt('0x'+copy(s,6,2)+copy(s,4,2)+copy(s,2,2), integer(FontColor)) then
           FontColor:=clWindowText;
       delete(s,1,7);

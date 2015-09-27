@@ -541,11 +541,7 @@ begin
 
 
    { Annotations }
-    if fSettings.cbEnableAnnotations.Checked then begin
-      if fSettings.cbRebuildAnnotations.Checked then RebuildAnnotations;
-      LoadAnnotations({AutoCreate=}not fSettings.cbRebuildAnnotations.Checked);
-    end;
-
+    JWBAnnotations.Initialize;
 
    { Radical search }
 

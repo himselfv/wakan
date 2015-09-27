@@ -286,6 +286,9 @@
         <DCCReference Include="Modules\Annotations\JWBMedia.pas">
             <Form>fMedia</Form>
         </DCCReference>
+        <DCCReference Include="Modules\Annotations\AnnotationsSettings.pas">
+            <Form>AnnotationsSettingsPage</Form>
+        </DCCReference>
         <DCCReference Include="Modules\JWBWordList.pas">
             <Form>fWordList</Form>
         </DCCReference>

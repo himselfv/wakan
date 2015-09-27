@@ -167,15 +167,6 @@ type
     cbKanjiCardPrintFullComp: TCheckBox;
     cbKanjiCardSortFrequency: TCheckBox;
     edtKanjiCardFullCompounds: TEdit;
-    tsAnnotations: TTabSheet;
-    cbEnableAnnotations: TCheckBox;
-    cbRebuildAnnotations: TCheckBox;
-    CheckBox66: TCheckBox;
-    CheckBox67: TCheckBox;
-    CheckBox68: TCheckBox;
-    CheckBox69: TCheckBox;
-    Bevel1: TBevel;
-    Button16: TButton;
     pnlButtons: TPanel;
     btnChangeLanguage: TButton;
     btnOk: TBitBtn;
@@ -316,7 +307,6 @@ type
     procedure cbNoWordGridColorsClick(Sender: TObject);
     procedure SpeedButton13Click(Sender: TObject);
     procedure SpeedButton14Click(Sender: TObject);
-    procedure Button16Click(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
@@ -444,7 +434,8 @@ type
 const
  //Sent to all custom pages on events.
   WM_SETTINGS = WM_USER + 2000;
-  WM_LOADSETTINGS = WM_SETTINGS + 1;
+  WM_LOADSETTINGS = WM_SETTINGS + 1;   //wParam = TCustomIniFile
+  WM_SAVESETTINGS = WM_SETTINGS + 2;   //wParam = TCustomIniFile
 
 var
   fSettings: TfSettings;
@@ -792,7 +783,7 @@ begin
   InitColors(ini);
   LoadCharDetl(ini);
 
-  BroadcastToPages(WM_LOADSETTINGS, 0, 0);
+  BroadcastToPages(WM_LOADSETTINGS, NativeUInt(ini), 0);
 end;
 
 procedure TfSettings.SaveSettings;
@@ -812,6 +803,7 @@ begin
     SaveRegistrySettings(ini);
     WriteColors(ini);
     SaveCharDetl(ini);
+    BroadcastToPages(WM_SAVESETTINGS, NativeUInt(ini), 0);
   finally
     ini.UpdateFile;
     FreeSettings();
@@ -823,12 +815,6 @@ var s: string;
   tmp_int: integer;
   exmode:integer;
 begin
-  cbEnableAnnotations.Checked:=reg.ReadBool('Annotate','Enabled',true);
-  cbRebuildAnnotations.Checked:=reg.ReadBool('Annotate','Rebuild',true);
-  CheckBox66.Checked:=reg.ReadBool('Annotate','Sound',true);
-  CheckBox67.Checked:=reg.ReadBool('Annotate','Pictures',true);
-  CheckBox68.Checked:=reg.ReadBool('Annotate','WebPages',true);
-  CheckBox69.Checked:=reg.ReadBool('Annotate','Colors',true);
   CheckBox46.Checked:=reg.ReadBool('Vocabulary','AutoSave',false);
   CheckBox70.Checked:=reg.ReadBool('Vocabulary','DisplayMessage',true);
   cbAutoSave.Checked:=reg.ReadBool('Vocabulary','AutoSaveTimer',true);
@@ -1272,12 +1258,6 @@ begin
   reg.WriteBool('Translate','VerticalPrint',cbVerticalPrint.Checked);
   reg.WriteBool('Translate','NoLongTextWarning',cbTranslateNoLongTextWarning.Checked);
   reg.WriteBool('Translate','MultithreadedTranslation',cbMultithreadedTranslation.Checked);
-  reg.WriteBool('Annotate','Enabled',cbEnableAnnotations.Checked);
-  reg.WriteBool('Annotate','Rebuild',cbRebuildAnnotations.Checked);
-  reg.WriteBool('Annotate','Sound',CheckBox66.Checked);
-  reg.WriteBool('Annotate','Pictures',CheckBox67.Checked);
-  reg.WriteBool('Annotate','WebPages',CheckBox68.Checked);
-  reg.WriteBool('Annotate','Colors',CheckBox69.Checked);
   if fEditor<>nil then begin
     reg.WriteBool('Translate','Reading',fEditor.aDisplayReading.Checked);
     reg.WriteBool('Translate','Meaning',fEditor.aDisplayMeaning.Checked);
@@ -2101,11 +2081,6 @@ var sup:string;
 begin
   FontPinYin:=ChooseFont([ANSI_CHARSET],FS_PINYIN_CHARTEST,sup,edit33.text,false);
   Edit33.Text:=FontPinYin;
-end;
-
-procedure TfSettings.Button16Click(Sender: TObject);
-begin
-  ShellOpen(WikiUrl('Annotations'));
 end;
 
 procedure TfSettings.btnImportKanjidicClick(Sender: TObject);

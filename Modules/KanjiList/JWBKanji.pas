@@ -238,7 +238,8 @@ implementation
 uses Types, UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
   KanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
-  JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks;
+  JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks,
+  AnnotationsSettings;
 
 var ki:TStringList;
     calfonts:TStringList;
@@ -1480,7 +1481,7 @@ begin
     end;
   end;
 
-  if fSettings.CheckBox69.Checked and HaveAnnotations then
+  if AnnotationsSettingsPage.cbAnnotateWithColors.Checked and HaveAnnotations then
   begin
     Annot.SeekK(kix,'');
     jouyou_val:=Annot.GetOne('c');
