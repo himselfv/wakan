@@ -1,50 +1,46 @@
-++ PREREQUISITES
+## PREREQUISITES
 
 1. Unicode Delphi (Delphi 2010+). Ansi support is being deprecated.
 2. Inno Setup 5.
 3. Jp-tools (http://code.google.com/p/jp-tools/) which Wakan uses heavily.
 
 
-++ BUILDING
+## BUILDING
 
 1. Configure paths in setupvars.cmd (in Settings -> Environment, if building manually).
-
 2. Build and install JaletControls.dpr.
-
 3. Copy the dependencies (see below) to the Release folder.
-
 4. Run build.cmd to generate:
 
     * Binary files in Release
     * Installer in Build/Output.
 
 
-++ MANUAL BUILDING
+## MANUAL BUILDING
 
 1. Build Jalet.dpr.
-
 2. Run Jalet.exe to generate:
 
-    wakan.chr (if not present) -- character database
-    wakan.usr -- empty user package
-    wakan.sod -- stroke order package built from strokes.csv (included)
-    wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)
+    * wakan.chr (if not present) -- character database
+    * wakan.usr -- empty user package
+    * wakan.sod -- stroke order package built from strokes.csv (included)
+    * wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)
 
 3. Import/update any dictionaries (EDICT2/CC-EDICT variations).
-
 4. Pack these files into a distribution:
-  jalet.exe -> wakan.exe
-  wakan.cfg
-  wakan.sod
-  wakan.rad
-  wakan.chr
-  any dictionaries
-  lng\*.*
-  possibly: UNICONV.exe + related files
-  possibly: wordfreq_ck for frequency generation
+
+    * jalet.exe -> wakan.exe
+    * wakan.cfg
+    * wakan.sod
+    * wakan.rad
+    * wakan.chr
+    * any dictionaries
+    * lng\*.*
+    * possibly: UNICONV.exe + related files
+    * possibly: wordfreq_ck for frequency generation
 
 
-++ DEPENDENCIES
+## DEPENDENCIES
 
 1. UNICONV.exe - required for dictionary import.
 http://ringtail.its.monash.edu.au/pub/nihongo/uniconv.zip
