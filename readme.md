@@ -20,8 +20,9 @@ Enabling this option also effectively disables the "const s:string" optimization
 ## MAINTENANCE
 
 Stuff that has to be done regularly to keep Wakan up to date:
-- Up the version number.
-- Import new EDICT/ENAMDICT files
-- Update EDICT marker list in JWBUnit.pas (see http://www.csse.monash.edu.au/~jwb/edict_doc.html and http://www.csse.monash.edu.au/~jwb/edict_doc_old.html for older markers)
-- Update wakan.rad with new RADKFILEs (see dependencies)
+
+ * Up the version number.
+ * Import new EDICT/ENAMDICT files
+ * Update EDICT marker list in JWBUnit.pas (see http://www.csse.monash.edu.au/~jwb/edict_doc.html and http://www.csse.monash.edu.au/~jwb/edict_doc_old.html for older markers)
+ * Update wakan.rad with new RADKFILEs (see dependencies)
 

@@ -7,7 +7,7 @@
 
 ## BUILDING
 
-1. Configure paths in setupvars.cmd (in Settings -> Environment, if building manually).
+1. Configure paths in setupvars.cmd (and Settings -> Environment, if building from Delphi).
 2. Build and install JaletControls.dpr.
 3. Copy the dependencies (see below) to the Release folder.
 4. Run build.cmd to generate:
@@ -16,31 +16,9 @@
     * Installer in Build/Output.
 
 
-## MANUAL BUILDING
-
-1. Build Jalet.dpr.
-2. Run Jalet.exe to generate:
-
-    * wakan.chr (if not present) -- character database
-    * wakan.usr -- empty user package
-    * wakan.sod -- stroke order package built from strokes.csv (included)
-    * wakan.rad -- raine radical search package built from RADKFILE/RADKFILE2 (see dependencies)
-
-3. Import/update any dictionaries (EDICT2/CC-EDICT variations).
-4. Pack these files into a distribution:
-
-    * jalet.exe -> wakan.exe
-    * wakan.cfg
-    * wakan.sod
-    * wakan.rad
-    * wakan.chr
-    * any dictionaries
-    * lng\*.*
-    * possibly: UNICONV.exe + related files
-    * possibly: wordfreq_ck for frequency generation
-
-
 ## DEPENDENCIES
+
+In the recent versions Wakan can download some of these from the Download / Update components.
 
 1. UNICONV.exe - required for dictionary import.
 http://ringtail.its.monash.edu.au/pub/nihongo/uniconv.zip
@@ -56,4 +34,10 @@ Also see: http://code.google.com/p/wakan/issues/detail?id=66
 http://www.csse.monash.edu.au/~jwb/kradinf.html
 Download and place RADKFILE into Wakan release folder. You can import RADKFILE2 manually, but it's not yet supported.
 
-4. 7z.dll -- 7zip library
+4. 7z.dll -- 7zip library. Required for downloading packed dictionaries.
+
+5. KANJIDIC - required for character data.
+
+6. Unihan folder - required for character data.
+
+7. EDICT2 - required for dictionary data (Wakan will work without it, but installer requires it).
