@@ -15,7 +15,6 @@ uses
   PackageCommon in 'Modules\Package\PackageCommon.pas',
   MemSource in 'Modules\Package\MemSource.pas',
   PKGWrite in 'Modules\Package\PKGWrite.pas' {PKGWriteForm},
-  StdPrompt in 'Modules\StdPrompt\StdPrompt.pas' {SMPromptForm},
 
   JWBMenu in 'Modules\JWBMenu.pas' {fMenu},
   JWBSplash in 'Modules\JWBSplash.pas' {fSplash},

@@ -11,7 +11,7 @@ uses
   Windows,
   TextTable,
   JWBIO,
-  TextTableBrowser in 'Forms\TextTableBrowser.pas' {fTextTableBrowser};
+  TextTableBrowser in 'Modules\TextTable\TextTableBrowser.pas' {fTextTableBrowser};
 
 type
   EBadUsage = class(Exception);

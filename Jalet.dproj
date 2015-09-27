@@ -152,9 +152,6 @@
         <DCCReference Include="Modules\Package\PKGWrite.pas">
             <Form>PKGWriteForm</Form>
         </DCCReference>
-        <DCCReference Include="Modules\StdPrompt\StdPrompt.pas">
-            <Form>SMPromptForm</Form>
-        </DCCReference>
         <DCCReference Include="Modules\JWBMenu.pas">
             <Form>fMenu</Form>
         </DCCReference>

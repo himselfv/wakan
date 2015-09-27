@@ -28,10 +28,10 @@ uses
   GUITestRunner,
   TextTestRunner,
   TestingCommon,
-  TextTableTests in 'Components\TextTable\TextTableTests.pas',
-  JWBWakanTextTests in 'Components\JWBWakanTextTests.pas',
-  JWBComponentsTests in 'Components\JWBComponentsTests.pas',
-  RaineRadicalsTests in 'Components\RaineRadicalsTests.pas';
+  TextTableTests in 'Modules\TextTable\TextTableTests.pas',
+  JWBWakanTextTests in 'Modules\Editor\JWBWakanTextTests.pas',
+  JWBComponentsTests in 'Modules\Components\JWBComponentsTests.pas',
+  RaineRadicalsTests in 'Modules\Radicals\RaineRadicalsTests.pas';
 
 {$R *.RES}
 

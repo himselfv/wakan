@@ -47,7 +47,7 @@
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System.Win;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1049</VerInfo_Locale>
-        <DCC_UnitSearchPath>.\Components;.\Components\Package;.\Components\TextTable;.\Components\Parsers;.\Components\StdPrompt;.\Forms;.\Controls;$(JPTOOLS)\Share;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Modules;.\Modules\Package;.\Modules\TextTable;.\Controls;$(JPTOOLS)\Share;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_ExeOutput>.\Release</DCC_ExeOutput>
         <DCC_DependencyCheckOutputName>Release\jwbtab.exe</DCC_DependencyCheckOutputName>
         <DCC_UsePackage>vcl;rtl;vclx;vclimg;vclactnband;vcltouch;dbrtl;adortl;vcldb;xmlrtl;vclribbon;DbxClientDriver;DbxCommonDriver;DBXInterBaseDriver;DBXMySQLDriver;dbxcds;dbexpress;JclDeveloperTools;Jcl;JclVcl;JclContainers;VirtualTreesD13;$(DCC_UsePackage)</DCC_UsePackage>
@@ -77,7 +77,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Forms\TextTableBrowser.pas">
+        <DCCReference Include="Modules\TextTable\TextTableBrowser.pas">
             <Form>fTextTableBrowser</Form>
         </DCCReference>
         <BuildConfiguration Include="Debug">
@@ -136,8 +136,6 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k170.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp170.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
