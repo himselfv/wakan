@@ -1,0 +1,1 @@
+Custom prompt and progress display forms inherited from Wakan 1.67.
