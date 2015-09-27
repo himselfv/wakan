@@ -1,6 +1,7 @@
 unit smmSmallMemory;
 
 interface
+{$HINTS OFF}
 
 {$Include smmOptions.inc}
 
