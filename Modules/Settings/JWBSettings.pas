@@ -641,12 +641,9 @@ end;
 
 
 
-//See comments in JWBPortableMode.pas about Wakan modes
 procedure TfSettings.LoadSettings;
 var ini: TCustomIniFile;
 begin
-  InitPortability;
-
   ini := GetSettingsStore;
 
  //Configure various FormPlacement components throught the application

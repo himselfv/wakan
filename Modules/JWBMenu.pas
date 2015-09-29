@@ -434,6 +434,7 @@ begin
     InitLanguage;
     CheckResolution;
 
+    InitLocalData;
     fSettings.LoadSettings;
     jshowroma:=fSettings.rgShowKana.ItemIndex=1;
     cshowroma:=fSettings.rgShowBopomofo.ItemIndex=1;

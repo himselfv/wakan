@@ -18,7 +18,7 @@ const
   UserDataDir: string = '';  //wakan.usr, collections
 
 
-procedure InitPortability;
+procedure InitLocalData;
 
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 function GetAppDataFolder: string;
@@ -172,8 +172,9 @@ end;
 
 
 
+//See comments in JWBPortableMode.pas about Wakan modes
 //For now this sits here although should probably go somewhere else
-procedure InitPortability;
+procedure InitLocalData;
 var ini: TCustomIniFile;
   fPortableMode: TfPortableMode;
   s: string;
