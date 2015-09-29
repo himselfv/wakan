@@ -190,7 +190,7 @@ function StateStr(i:integer):string;
 function DateForm(s:string):string;
 
 implementation
-uses Messages, StrUtils, ShlObj, Registry, JWBCore, JWBSettings, JWBLanguage,
+uses Messages, StrUtils, ShlObj, Registry, AppData, JWBSettings, JWBLanguage,
   JWBCharData, JWBLegacyMarkup, JWBAutoImport, MemSource;
 
 

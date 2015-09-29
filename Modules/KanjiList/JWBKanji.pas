@@ -238,7 +238,7 @@ implementation
 uses Types, UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrint,
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
   KanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
-  JWBIntTip, JWBScreenTip, JWBCore, JWBWordLookupBase, JWBRefLinks,
+  JWBIntTip, JWBScreenTip, AppData, JWBWordLookupBase, JWBRefLinks,
   AnnotationsSettings;
 
 var ki:TStringList;

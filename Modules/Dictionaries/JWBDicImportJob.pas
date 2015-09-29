@@ -67,7 +67,7 @@ function GetFrequencyList: TStringList;
 function GetLastWriteTime(const filename: string; out dt: TDatetime): boolean;
 
 implementation
-uses Windows, PKGWrite, JWBStrings, KanaConv, JWBCore, JWBLanguage, JWBUnit,
+uses Windows, PKGWrite, JWBStrings, KanaConv, AppData, JWBCore, JWBLanguage, JWBUnit,
   JWBEdictMarkers;
 
 const

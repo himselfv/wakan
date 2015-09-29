@@ -44,7 +44,7 @@ const
   sCannotUpdateCantBeLoaded='#00990^eCannot update the dictionary "%s" because it cannot be loaded: %s';
 
 implementation
-uses Classes, Forms, Windows, MemSource, JWBCore, JWBLanguage, JWBCommandLine,
+uses Classes, Forms, Windows, MemSource, AppData, JWBLanguage, JWBCommandLine,
   JWBDicImportJob, JWBDictImport, JWBComponents;
 
 var

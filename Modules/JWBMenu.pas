@@ -365,7 +365,7 @@ var
   fMenu: TfMenu;
 
 implementation
-uses Types, MemSource, TextTable, JWBStrings, JWBCore, JWBClipboard, JWBUnit,
+uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JWBUnit,
  JWBForms, JWBSplash, JWBIO, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
  JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical, JWBWordLookup,
  JWBKanjiCompounds, JWBExamples, JWBEditor, JWBVocab, JWBVocabDetails,

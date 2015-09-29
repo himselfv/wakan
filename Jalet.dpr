@@ -31,6 +31,7 @@ uses
   JWBCommandLine in 'Modules\JWBCommandLine.pas',
   JWBForms in 'Modules\JWBForms.pas',
   JWBRefLinks in 'Modules\JWBRefLinks.pas',
+  AppData in 'Modules\Portability\AppData.pas',
   JWBPortableMode in 'Modules\Portability\JWBPortableMode.pas' {fPortableMode},
   PortabilitySettings in 'Modules\Portability\PortabilitySettings.pas' {PortabilitySettingsPage},
   JWBSettings in 'Modules\Settings\JWBSettings.pas' {fSettings},

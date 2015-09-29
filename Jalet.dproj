@@ -184,6 +184,7 @@
         <DCCReference Include="Modules\JWBCommandLine.pas"/>
         <DCCReference Include="Modules\JWBForms.pas"/>
         <DCCReference Include="Modules\JWBRefLinks.pas"/>
+        <DCCReference Include="Modules\Portability\AppData.pas"/>
         <DCCReference Include="Modules\Portability\JWBPortableMode.pas">
             <Form>fPortableMode</Form>
         </DCCReference>

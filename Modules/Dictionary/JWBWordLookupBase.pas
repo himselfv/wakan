@@ -88,7 +88,7 @@ function XsltTransform(const s: UnicodeString; const AXslt: IXMLDocument): WideS
 function XsltTransform(const s: UnicodeString; const AXsltFilename: string): WideString; overload;
 
 implementation
-uses UITypes, JWBStrings, JWBCore, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
+uses UITypes, JWBStrings, AppData, JWBUnit, JWBMenu, JWBCategories, JWBVocab,
   JWBVocabAdd, JWBSettings, JWBLegacyMarkup, JWBRefLinks, JWBLanguage,
   JWBWordGrid, JWBClipboard, JWBIntTip, ActiveX, JWBVocab1;
 

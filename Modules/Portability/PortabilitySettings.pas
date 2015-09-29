@@ -32,7 +32,7 @@ var
 procedure Register;
 
 implementation
-uses IniFiles, JWBStrings, JWBCore, JWBLanguage;
+uses IniFiles, JWBStrings, AppData, JWBCore, JWBLanguage;
 
 {$R *.dfm}
 
@@ -94,12 +94,12 @@ begin
     MB_YESNO or MB_ICONQUESTION
   ) <> ID_YES then exit;
 
-  ini := fSettings.GetWakanIni;
+  ini := GetWakanIni;
   try
     ini.WriteString('General','Install','Upgrade');
     ini.UpdateFile;
   finally
-    fSettings.FreeSettings;
+    FreeSettings;
   end;
 
   //Localize

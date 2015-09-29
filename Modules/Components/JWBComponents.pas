@@ -61,7 +61,7 @@ function IsComponentPresent(const ASource: PAppComponent): boolean;
 
 implementation
 uses SysUtils, Classes, Forms, StrUtils, Windows, JWBStrings, SevenZipUtils,
-  JWBCore;
+  AppData;
 
 procedure TAppComponent.Reset;
 begin

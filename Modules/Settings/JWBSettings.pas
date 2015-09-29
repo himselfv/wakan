@@ -313,7 +313,6 @@ type
       var AllowCollapse: Boolean);
     procedure btnImportKanjidicClick(Sender: TObject);
     procedure tvContentsChange(Sender: TObject; Node: TTreeNode);
-    procedure FormDestroy(Sender: TObject);
     procedure pbRomajiAsHiraganaPaint(Sender: TObject; Canvas: TCanvas);
     procedure pbRomajiAsKatakanaPaint(Sender: TObject; Canvas: TCanvas);
     procedure pbPinyinAsBopomofoPaint(Sender: TObject; Canvas: TCanvas);
@@ -359,17 +358,6 @@ type
     procedure BroadcastToPages(Msg: cardinal; wParam: NativeUInt; lParam: NativeInt);
   public
     procedure AddSettingsPage(page: TForm; category: string);
-
-  protected
-   { Shared settings. To avoid reading the same file twice, call GetSettingsStore
-    to receive a shared copy. }
-    FWakanIni: TCustomIniFile;
-    FSettingsStore: TCustomIniFile;
-    FPortabilityLoaded: boolean;
-  public
-    function GetWakanIni: TCustomIniFile;
-    function GetSettingsStore: TCustomIniFile;
-    procedure FreeSettings;
 
   protected //Romanization
     FKanaExample: string; //current string to romanize, see pbKanaAsRomajiClick
@@ -471,12 +459,12 @@ const
 
 implementation
 
-uses JWBMenu, JWBStrings, JWBCore, KanaConv, JWBUnit, JWBKanji, JWBEditor,
+uses JWBMenu, JWBStrings, AppData, KanaConv, JWBUnit, JWBKanji, JWBEditor,
   JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBExamples, JWBVocabDetails,
   JWBVocabFilters, JWBKanjiDetails, TextTable, JWBLanguage, UnicodeFont,
   JWBKanjiCard, JWBVocab, WakanWordGrid, JWBUserData, JWBDicSearch,
   JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport, JWBIO,
-  JWBWordLookupBase, JWBScreenTip;
+  JWBWordLookupBase, JWBScreenTip, JWBCore;
 
 var colorfrom:integer;
 
@@ -534,11 +522,6 @@ procedure TfSettings.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   AcceptSettings(); //this can raise exceptions on invalid data => dialog not closed
   SaveSettings();
-end;
-
-procedure TfSettings.FormDestroy(Sender: TObject);
-begin
-  FreeSettings();
 end;
 
 
@@ -657,107 +640,12 @@ end;
 
 
 
-{ Settings store }
-
-{ Opens wakan.ini file from the application directory which either contains
- the settings or an instruction to look in registry. }
-function TfSettings.GetWakanIni: TCustomIniFile;
-begin
-  if FWakanIni<>nil then begin
-    Result := FWakanIni;
-    exit;
-  end;
-  Result := TMemIniFile.Create(AppFolder+'\wakan.ini', nil); //read everything, Ansi/UTF8/UTF16
-  TMemIniFile(Result).Encoding := SysUtils.TEncoding.UTF8; //write UTF8 only
-  FWakanIni := Result;
-end;
-
-{ Opens whatever settings store is configured for the application.
-I.e.:
-  portable mode => wakan.ini
-  registry mode => registry key
-If you're using this before proper LoadSettings, only read, do not write,
-and be ready to receive nil }
-function TfSettings.GetSettingsStore: TCustomIniFile;
-var ini: TCustomIniFile;
-  s: string;
-begin
-  if FSettingsStore<>nil then begin
-    Result := FSettingsStore;
-    exit;
-  end;
-
- { If the settings has been loaded then the application is running in a
-  particular mode and it doesn't matter what ini says anymore }
-  if FPortabilityLoaded then begin
-    case PortabilityMode of
-      pmPortable: Result := GetWakanIni;
-    else Result := TRegistryIniFile.Create(WakanRegKey);
-    end;
-    exit;
-  end;
-
- { The settings has not been loaded yet, read those from ini }
-  ini := GetWakanIni;
-
-  s := LowerCase(ini.ReadString('General', 'Install', ''));
-  if (s='') or (s='upgrade') or (s='compatible') or (s='standalone') then begin
-    Result := TRegistryIniFile.Create(WakanRegKey);
-  end else
-  if (s='portable') then begin
-    Result := ini;
-  end else
-    raise Exception.Create('Invalid installation mode configuration.');
-
-  FSettingsStore := Result;
-end;
-
-{ Releases the shared settings objects. As things stand, there's no hurry as file
- is not kept locked. }
-procedure TfSettings.FreeSettings;
-begin
-  if FSettingsStore=FWakanIni then
-    FSettingsStore := nil; //same object
-  FreeAndNil(FSettingsStore);
-  FreeAndNil(FWakanIni);
-end;
 
 //See comments in JWBPortableMode.pas about Wakan modes
 procedure TfSettings.LoadSettings;
 var ini: TCustomIniFile;
-  fPortableMode: TfPortableMode;
-  s: string;
 begin
-  ini := GetWakanIni;
-
-  s := LowerCase(ini.ReadString('General', 'Install', ''));
-
-  fPortableMode := nil;
-  if s='' then begin
-    fPortableMode := TfPortableMode.Create(Application);
-    s := LowerCase(fPortableMode.Initialize(ini))
-  end else
-  if s='upgrade' then begin
-    fPortableMode := TfPortableMode.Create(Application);
-   //We cannot just copy some of the files. If we start this operation,
-   //we have to continue it even after restart.
-    s := LowerCase(fPortableMode.ContinueUpgrade(ini));
-  end;
-  if fPortableMode<>nil then
-    FreeAndNil(FSettingsStore); //settings store location could have changed -- recreate later
-  FreeAndNil(fPortableMode);
-
-  if s='standalone' then begin
-    SetPortabilityMode(pmStandalone);
-  end else
-  if s='compatible' then begin
-    SetPortabilityMode(pmCompatible);
-  end else
-  if s='portable' then begin
-    SetPortabilityMode(pmPortable);
-  end else
-    raise Exception.Create('Invalid installation mode configuration.');
-  FPortabilityLoaded := true;
+  InitPortability;
 
   ini := GetSettingsStore;
 

@@ -79,7 +79,7 @@ function GetExpressionLinks: TArray<string>;
 function LoadLink(const AFilename: string): TRefLink;
 
 implementation
-uses SysUtils, UITypes, JWBStrings, JWBCore, JWBIO, JWBCharData, IniFiles,
+uses SysUtils, UITypes, JWBStrings, AppData, JWBCore, JWBIO, JWBCharData, IniFiles,
   ShellApi, ShlObj, ActiveX;
 
 resourcestring
