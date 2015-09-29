@@ -44,7 +44,7 @@ So,
 var
   curlang:char;
   cromasys:integer;
-  showroma,jshowroma,cshowroma:boolean;
+  showroma:boolean;
 
  { Romaji translation tables. Populated on load. }
   roma_db: TKanaTranslator;

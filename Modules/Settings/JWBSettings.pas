@@ -362,6 +362,7 @@ type
   protected //Romanization
     FKanaExample: string; //current string to romanize, see pbKanaAsRomajiClick
     FBopomofoExample: string;
+    jshowroma, cshowroma: boolean;
     procedure ReloadRomaSystems;
     procedure ReloadPinyinSystems;
     function GetRomaList: string;
@@ -731,6 +732,8 @@ begin
 
   rgShowKana.ItemIndex:=reg.ReadInteger('Romanization','ShowKana',0);
   rgShowBopomofo.ItemIndex:=reg.ReadInteger('Romanization','ShowBopomofo',1);
+  jshowroma := Self.rgShowKana.ItemIndex=1;
+  cshowroma := Self.rgShowBopomofo.ItemIndex=1;
 
   if fKanjiCompounds<>nil then begin
     fKanjiCompounds.cbLeftMatchOnly.Checked:=reg.ReadBool('Characters','CompoundsBeg',false);

@@ -436,8 +436,6 @@ begin
 
     InitLocalData;
     fSettings.LoadSettings;
-    jshowroma:=fSettings.rgShowKana.ItemIndex=1;
-    cshowroma:=fSettings.rgShowBopomofo.ItemIndex=1;
 
     if fSettings.cbShowSplashscreen.Checked then begin
       fSplash := TfSplash.Create(Application);
