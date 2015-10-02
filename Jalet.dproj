@@ -219,6 +219,7 @@
         <DCCReference Include="Modules\KanjiDetails\JWBKanjiDetails.pas">
             <Form>fKanjiDetails</Form>
         </DCCReference>
+        <DCCReference Include="Modules\KanjiDetails\StrokeOrder.pas"/>
         <DCCReference Include="Modules\Radicals\RaineRadicals.pas"/>
         <DCCReference Include="Modules\Radicals\JWBRadical.pas">
             <Form>fRadical</Form>

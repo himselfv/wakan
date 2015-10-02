@@ -89,7 +89,6 @@ type
     procedure SetCategoryFilter(const ACategoryName: string);
     function AddWord(kanji,phonetic,english,category:string;cattype:char;nomessages:boolean;status:integer):boolean;
     procedure SearchWord(wordind:integer);
-    procedure BuildStrokeOrderPackage(sourceCsv: string);
 
   public
     wl:TStringList;
@@ -1481,94 +1480,6 @@ end;
 procedure TfVocab.btnAddWordClick(Sender: TObject);
 begin
   fVocabAdd.ModalAddWord();
-end;
-
-{ Rebuilds wakan.sod from strokes.csv. Mostly used by a devs, but users can do this too. }
-procedure TfVocab.BuildStrokeOrderPackage(sourceCsv: string);
-var
-  tempDir: string;
-  pack: TPackageBuilder;
-  sl,sl2:TStringList;
-  t:textfile;
-  f:file of byte;
-  s,s2,s3,s4,uni:string;
-  i,j,k:integer;
-  b:byte;
-begin
-  sl:=TStringList.Create;
-  assignfile(t,sourceCsv);
-  System.reset(t);
-  while not eof(t) do
-  begin
-    readln(t,s);
-    s2:='';
-    uni:=format('%4.4X',[strtoint(copy(s,4,5))]);
-    while (pos('";"',s)>0) do delete(s,1,pos('";"',s)+2);
-    delete(s,length(s),1);
-    while s<>'' do
-    begin
-      s3:=copy(s,2,pos(']',s)-2);
-      delete(s,1,pos(']',s));
-      s4:=copy(s3,1,pos(',',s3)-1);
-      delete(s3,1,pos(',',s3));
-      if (strtoint(s3)>255) or (strtoint(s4)>255) then showmessage('error');
-      s2:=s2+format('%2.2X%2.2X',[strtoint(s4),strtoint(s3)]);
-    end;
-    sl.Add(uni+s2);
-  end;
-  closefile(t);
-  sl2:=TStringList.Create;
-  sl.Sort;
-
-  tempDir := CreateRandomTempDirName();
-  ForceDirectories(tempDir);
-  assignfile(f,tempDir+'\strokes.bin');
-  rewrite(f);
-  k:=0;
-  for i:=0 to sl.Count-1 do
-  begin
-    sl2.Add(copy(sl[i],1,4)+Format('%4.4X',[k]));
-    s:=sl[i];
-    k:=k+(length(s) div 4);
-    for j:=2 to (length(s) div 2)-1 do
-    begin
-      b:=strtoint('0x'+copy(s,j*2+1,2));
-      write(f,b);
-    end;
-    b:=0;
-    write(f,b); write(f,b);
-  end;
-  closefile(f);
-  sl2.SaveToFile(tempDir+'\dir.txt');
-  sl.Free;
-  sl2.Free;
-
-  pack := TPackageBuilder.Create;
-  try
-    pack.PackageFile := 'wakan.sod';
-    pack.MemoryLimit := 100000000;
-    pack.Name := 'Stroke order';
-    pack.TitleName := 'Japanese stroke order charts';
-    pack.CompanyName := 'LABYRINTH';
-    pack.CopyrightName := '(C) Jim Breen, Yasuhito Tanaka';
-    pack.FormatName := 'Pure Package File';
-    pack.CommentName := 'File is used by '+WakanAppName;
-    pack.VersionName := '1.0';
-    pack.HeaderCode := 791564;
-    pack.FilesysCode := 978132;
-    pack.WriteHeader;
-    pack.LoadMode := lmTemporaryLoad;
-    pack.CryptMode := 0;
-    pack.CrcMode := 0;
-    pack.PackMode := 0;
-    pack.CryptCode := 978123;
-    pack.Include(tempDir);
-    pack.Finish;
-  finally
-    FreeAndNil(pack);
-  end;
-
-  DeleteDirectory(tempDir);
 end;
 
 procedure TfVocab.StringGrid1MouseDown(Sender: TObject;

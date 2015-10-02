@@ -46,6 +46,7 @@ uses
   JWBKanji in 'Modules\KanjiList\JWBKanji.pas' {fKanji},
   JWBKanjiCard in 'Modules\KanjiDetails\JWBKanjiCard.pas',
   JWBKanjiDetails in 'Modules\KanjiDetails\JWBKanjiDetails.pas' {fKanjiDetails},
+  StrokeOrder in 'Modules\KanjiDetails\StrokeOrder.pas',
   RaineRadicals in 'Modules\Radicals\RaineRadicals.pas',
   JWBRadical in 'Modules\Radicals\JWBRadical.pas' {fRadical},
   JWBEditor in 'Modules\Editor\JWBEditor.pas' {fEditor},

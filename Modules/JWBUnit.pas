@@ -133,16 +133,6 @@ procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
 
 
-{ Stroke order -- must be loaded with LoadStrokeOrder }
-
-var
-  sodir: TStringList = nil;
-  sobin: pointer = nil;
-
-procedure LoadStrokeOrder(const AFilename: string);
-procedure FreeStrokeOrder;
-procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
-
 
 
 { Fonts }
@@ -633,86 +623,6 @@ begin
       itt[i].s:=s;
       break;
     end;
-end;
-
-procedure LoadStrokeOrder(const AFilename: string);
-var ps: TPackageSource;
-  ms: TMemoryStream;
-begin
-  ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
-  ms:=ps['strokes.bin'].Lock;
-  GetMem(sobin,ms.Size);
-  ms.Read(sobin^,ms.Size);
-  ps['strokes.bin'].Unlock;
-  ms:=ps['dir.txt'].Lock;
-  sodir:=TStringList.Create;
-  sodir.LoadFromStream(ms);
-  ps['dir.txt'].Unlock;
-  ps.Free;
-end;
-
-procedure FreeStrokeOrder;
-begin
-  FreeAndNil(sodir);
-  if sobin<>nil then begin
-    FreeMem(sobin);
-    sobin := nil;
-  end;
-end;
-
-procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:integer;color:TColor);
-var i,l,r,m:integer;
-  xx,yy:byte;
-  p:PByte;
-  fc:FChar;
-begin
-  if sobin=nil then exit;
-  l:=0;
-  m:=0;//not really used but shut up delphi
-  r:=sodir.Count-1;
-  while l<=r do
-  begin
-    m:=l+(r-l) div 2;
-   //sodir contains hex chars
-    fc := fgetch(hextofstr(copy(sodir[m],1,4)), 1);
-    if fc<char then
-      l:=m+1
-    else
-    if fc>char then
-      r:=m-1
-    else
-      break;
-  end;
-  if l>r then exit;
-  i:=strtoint('0x'+copy(sodir[m],5,4));
-  p:=sobin;
-  p:=p+i*2;
-  xx:=255;
-  yy:=255;
-  i:=0;
-  SetBkMode(canvas.Handle,TRANSPARENT);
-  canvas.Font.Color:=color;
-  canvas.Font.Style:=[fsBold];
-  while (xx<>0) or (yy<>0) do
-  begin
-    xx:=byte(p^);
-    p:=p+1;
-    yy:=byte(p^);
-    p:=p+1;
-    inc(i);
-    if (xx<>0) and (yy<>0) then
-    begin
-      canvas.Font.Color:=clWindow;
-      DrawUnicode(canvas,round(x+w*(xx/256))+1,round(y+h*(yy/256)),fontsize,fstr(inttostr(i)),FontEnglish);
-      DrawUnicode(canvas,round(x+w*(xx/256))-1,round(y+h*(yy/256)),fontsize,fstr(inttostr(i)),FontEnglish);
-      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256))+1,fontsize,fstr(inttostr(i)),FontEnglish);
-      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256))-1,fontsize,fstr(inttostr(i)),FontEnglish);
-      canvas.Font.Color:=color;
-      DrawUnicode(canvas,round(x+w*(xx/256)),round(y+h*(yy/256)),fontsize,fstr(inttostr(i)),FontEnglish);
-    end;
-  end;
-  canvas.Font.Color:=clWindowText;
-  canvas.Font.Style:=[];
 end;
 
 { Returns the width of a string if drawn like specified.

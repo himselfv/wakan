@@ -365,7 +365,7 @@ var
   fMenu: TfMenu;
 
 implementation
-uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JWBUnit,
+uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JWBUnit, StrokeOrder,
  JWBForms, JWBSplash, JWBIO, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
  JWBCharDataImport, JWBUserData, JWBSettings, JWBRadical, JWBWordLookup,
  JWBKanjiCompounds, JWBExamples, JWBEditor, JWBVocab, JWBVocabDetails,
@@ -598,7 +598,7 @@ begin
    //Stroke-order rebuilding -- before complaining about missing sod
     if Command='makesod' then
     begin
-      fVocab.BuildStrokeOrderPackage('STROKES.CSV');
+      StrokeOrder.BuildStrokeOrderPackage('STROKES.CSV', 'wakan.sod');
       Application.ShowMainForm := false;
       Application.Terminate;
       exit;
@@ -607,7 +607,7 @@ begin
    //Auto-rebuild
     if not FileExists('wakan.sod')
     and FileExists('STROKES.CSV') then
-      fVocab.BuildStrokeOrderPackage('STROKES.CSV');
+      StrokeOrder.BuildStrokeOrderPackage('STROKES.CSV', 'wakan.sod');
 
    //Stroke-order display
     if not FileExists('wakan.sod') then
@@ -618,7 +618,7 @@ begin
         MB_OK or MB_ICONERROR)
     else
       try
-        LoadStrokeOrder('wakan.sod');
+        StrokeOrder.LoadStrokeOrder('wakan.sod');
       except
         on E: Exception do begin
           E.Message := _l('#00360^eCannot load Japanese stroke-order file.'#13
