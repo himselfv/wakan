@@ -78,8 +78,7 @@ function _l(const id:string):string; overload;
 function _l(const id:string; args: array of const):string; overload;
 
 implementation
-uses UITypes, JWBStrings, JWBEdictMarkers, JWBSettings, JWBCharData,
-  VirtualTrees;
+uses UITypes, IniFiles, AppData, JWBStrings, JWBEdictMarkers, JWBCharData, VirtualTrees;
 
 {$R *.DFM}
 
@@ -94,8 +93,14 @@ end;
 { Reads registry settings and loads appropriate language. If it's not
  configured, asks the user to choose one. }
 procedure TfLanguage.AutoLoad;
+var ini: TCustomIniFile;
 begin
-  curTransFile := fSettings.GetTranslationFile;
+  ini := GetSettingsStore;
+  if ini=nil then
+    curTransFile := ''
+  else
+    curTransFile := ini.ReadString('Language', 'LNGFile', '');
+
   if curTransFile='' then begin
     if not IsPositiveResult(Self.ShowModal) or (curTransFile='') then
       raise Exception.Create('Wakan cannot run without a language selected.'#13
@@ -120,8 +125,12 @@ begin
 end;
 
 procedure TfLanguage.SaveSettings;
+var ini: TCustomIniFile;
 begin
-  fSettings.SetTranslationFile(curTransFile);
+  ini := GetSettingsStore;
+  if ini=nil then exit; //no store yet configured, cannot save
+  ini.WriteString('Language', 'LNGFile', curTransFile);
+  ini.UpdateFile;
 end;
 
 procedure TfLanguage.btnShowInfoClick(Sender: TObject);

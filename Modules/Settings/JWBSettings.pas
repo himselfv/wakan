@@ -412,10 +412,6 @@ type
     procedure AcceptSettings;
 
   public
-    function GetTranslationFile: string;
-    procedure SetTranslationFile(const Value: string);
-
-  public
     function GetPreferredRadicalType: integer;
 
   end;
@@ -1238,25 +1234,6 @@ begin
   reg.WriteInteger('Layout','UserFiltersHeight',fVocabFilters.UndockHeight);
   reg.WriteInteger('Layout','UserDetailsHeight',fVocabDetails.UndockHeight);
   reg.WriteInteger('Layout','KanjiCompoundsHeight',fMenu.KanjiCompoundsDockedHeight);
-end;
-
-function TfSettings.GetTranslationFile: string;
-var ini: TCustomIniFile;
-begin
-  ini := GetSettingsStore;
-  if ini=nil then
-    Result := ''
-  else
-    Result := ini.ReadString('Language','LNGFile','');
-end;
-
-procedure TfSettings.SetTranslationFile(const Value: string);
-var ini: TCustomIniFile;
-begin
-  ini := GetSettingsStore;
-  if ini=nil then exit; //no store yet configured, cannot save
-  ini.WriteString('Language', 'LNGFile', curTransFile);
-  ini.UpdateFile;
 end;
 
 
