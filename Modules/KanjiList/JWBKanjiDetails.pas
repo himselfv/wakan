@@ -182,7 +182,7 @@ function GetCharDet(i,j:integer):string;
 
 implementation
 
-uses UITypes, ShellApi, JWBKanji, JWBMenu, JWBSettings, JWBUnit, StrokeOrder, JWBCategories,
+uses UITypes, ShellApi, JWBKanjiList, JWBMenu, JWBSettings, JWBUnit, StrokeOrder, JWBCategories,
   KanaConv, JWBCharData, JWBKanjiCompounds, JWBRefLinks, JWBLanguage,
   JWBClipboard, JWBIntTip, JWBScreenTip;
 

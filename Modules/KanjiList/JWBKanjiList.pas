@@ -1,4 +1,4 @@
-unit JWBKanji;
+unit JWBKanjiList;
 
 interface
 
@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Buttons, ExtCtrls, Actions, ActnList, CheckAction,
   JWBStrings, IniFiles, Grids, DB, ShellAPI, WakanPaintbox, Menus, CheckLst,
-  ImgList, JWBRadical, SimpleControls, RangeSpinEdit, JvExControls,
+  ImgList, JWBRadicalList, SimpleControls, RangeSpinEdit, JvExControls,
   JvArrowButton, SpeedBtn, Vcl.ToolWin;
 
 //{$DEFINE INVALIDATE_WITH_DELAY}

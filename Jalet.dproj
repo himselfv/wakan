@@ -212,7 +212,7 @@
         <DCCReference Include="Modules\CharData\JWBCharDataImport.pas">
             <Form>fCharDataImport</Form>
         </DCCReference>
-        <DCCReference Include="Modules\KanjiList\JWBKanji.pas">
+        <DCCReference Include="Modules\KanjiList\JWBKanjiList.pas">
             <Form>fKanji</Form>
         </DCCReference>
         <DCCReference Include="Modules\KanjiList\JWBKanjiCard.pas"/>

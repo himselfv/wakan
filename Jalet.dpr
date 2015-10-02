@@ -43,7 +43,7 @@ uses
   JWBNewCategory in 'Modules\UserData\JWBNewCategory.pas' {fNewCategory},
   JWBCharData in 'Modules\CharData\JWBCharData.pas',
   JWBCharDataImport in 'Modules\CharData\JWBCharDataImport.pas' {fCharDataImport},
-  JWBKanji in 'Modules\KanjiList\JWBKanji.pas' {fKanji},
+  JWBKanjiList in 'Modules\KanjiList\JWBKanjiList.pas' {fKanji},
   JWBKanjiCard in 'Modules\KanjiList\JWBKanjiCard.pas',
   JWBKanjiDetails in 'Modules\KanjiList\JWBKanjiDetails.pas' {fKanjiDetails},
   StrokeOrder in 'Modules\KanjiList\StrokeOrder.pas',

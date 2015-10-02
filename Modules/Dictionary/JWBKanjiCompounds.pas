@@ -35,7 +35,7 @@ var
 
 implementation
 
-uses TextTable, JWBKanji, JWBUnit, JWBMenu, JWBDic, JWBDicSearch, JWBSettings,
+uses TextTable, JWBKanjiList, JWBUnit, JWBMenu, JWBDic, JWBDicSearch, JWBSettings,
   JWBEdictMarkers, JWBUserData, JWBCategories, JWBLegacyMarkup, JWBVocab1;
 
 {$R *.DFM}
