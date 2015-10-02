@@ -1,4 +1,4 @@
-unit JWBRadical;
+unit JWBRadicalList;
 { Classic radicals are stored in wakan.chr, Raine are loaded from wakan.rad }
 
 interface

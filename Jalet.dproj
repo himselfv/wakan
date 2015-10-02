@@ -146,7 +146,7 @@
         </DelphiCompile>
         <DCCReference Include="Modules\ScaleMM\ScaleMM2.pas"/>
         <DCCReference Include="Modules\JWBStrings.pas"/>
-        <DCCReference Include="Modules\TextTable\TextTable.pas"/>
+        <DCCReference Include="Modules\Package\TextTable.pas"/>
         <DCCReference Include="Modules\Package\PackageCommon.pas"/>
         <DCCReference Include="Modules\Package\MemSource.pas"/>
         <DCCReference Include="Modules\Package\PKGWrite.pas">
@@ -184,11 +184,11 @@
         <DCCReference Include="Modules\JWBCommandLine.pas"/>
         <DCCReference Include="Modules\JWBForms.pas"/>
         <DCCReference Include="Modules\JWBRefLinks.pas"/>
-        <DCCReference Include="Modules\Portability\AppData.pas"/>
-        <DCCReference Include="Modules\Portability\JWBPortableMode.pas">
+        <DCCReference Include="Modules\LocalData\AppData.pas"/>
+        <DCCReference Include="Modules\LocalData\JWBPortableMode.pas">
             <Form>fPortableMode</Form>
         </DCCReference>
-        <DCCReference Include="Modules\Portability\PortabilitySettings.pas">
+        <DCCReference Include="Modules\LocalData\PortabilitySettings.pas">
             <Form>PortabilitySettingsPage</Form>
         </DCCReference>
         <DCCReference Include="Modules\Settings\JWBSettings.pas">
@@ -215,13 +215,13 @@
         <DCCReference Include="Modules\KanjiList\JWBKanji.pas">
             <Form>fKanji</Form>
         </DCCReference>
-        <DCCReference Include="Modules\KanjiDetails\JWBKanjiCard.pas"/>
-        <DCCReference Include="Modules\KanjiDetails\JWBKanjiDetails.pas">
+        <DCCReference Include="Modules\KanjiList\JWBKanjiCard.pas"/>
+        <DCCReference Include="Modules\KanjiList\JWBKanjiDetails.pas">
             <Form>fKanjiDetails</Form>
         </DCCReference>
-        <DCCReference Include="Modules\KanjiDetails\StrokeOrder.pas"/>
-        <DCCReference Include="Modules\Radicals\RaineRadicals.pas"/>
-        <DCCReference Include="Modules\Radicals\JWBRadical.pas">
+        <DCCReference Include="Modules\KanjiList\StrokeOrder.pas"/>
+        <DCCReference Include="Modules\KanjiList\RaineRadicals.pas"/>
+        <DCCReference Include="Modules\KanjiList\JWBRadicalList.pas">
             <Form>fRadical</Form>
         </DCCReference>
         <DCCReference Include="Modules\Editor\JWBEditor.pas">
@@ -231,13 +231,13 @@
             <Form>fEditorHint</Form>
         </DCCReference>
         <DCCReference Include="Modules\Editor\JWBWakanText.pas"/>
-        <DCCReference Include="Modules\Dictionaries\JWBDictMan.pas">
+        <DCCReference Include="Modules\Dictionary\JWBDictMan.pas">
             <Form>fDictMan</Form>
         </DCCReference>
-        <DCCReference Include="Modules\Dictionaries\JWBDictImport.pas">
+        <DCCReference Include="Modules\Dictionary\JWBDictImport.pas">
             <Form>fDictImport</Form>
         </DCCReference>
-        <DCCReference Include="Modules\Dictionaries\JWBDicImportJob.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBDicImportJob.pas"/>
         <DCCReference Include="Modules\Dictionary\JWBDic.pas"/>
         <DCCReference Include="Modules\Dictionary\JWBIndex.pas"/>
         <DCCReference Include="Modules\Dictionary\JWBDicSearch.pas"/>

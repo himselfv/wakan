@@ -1,4 +1,4 @@
-Everything related to where Wakan stores it's configuration and data.
+Where Wakan stores it's configuration and data.
 
 1. Whether Wakan works in portable mode or not.
 

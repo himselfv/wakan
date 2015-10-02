@@ -1,0 +1,1 @@
+KanjiList and KanjiDetails modules. More general access to kanji properties and managing available kanji information sources is in \CharData.

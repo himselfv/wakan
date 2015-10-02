@@ -1,0 +1,1 @@
+Personalized user data from wakan.usr. Categories, kanji usage statistics etc.
