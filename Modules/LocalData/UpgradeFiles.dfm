@@ -2,8 +2,8 @@ object fUpgradeFiles: TfUpgradeFiles
   Left = 0
   Top = 0
   Caption = '#01017^eMove files'
-  ClientHeight = 323
-  ClientWidth = 407
+  ClientHeight = 346
+  ClientWidth = 408
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,18 +12,18 @@ object fUpgradeFiles: TfUpgradeFiles
   Font.Style = []
   OldCreateOrder = False
   DesignSize = (
-    407
-    323)
+    408
+    346)
   PixelsPerInch = 96
   TextHeight = 13
   object lblMoveQuestion: TLabel
     Left = 8
     Top = 8
-    Width = 391
+    Width = 392
     Height = 25
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
-    Caption = '#01017^eMove files'
+    Caption = '#01230^Upgrade data'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -19
@@ -31,15 +31,18 @@ object fUpgradeFiles: TfUpgradeFiles
     Font.Style = []
     ParentFont = False
     WordWrap = True
+    ExplicitWidth = 391
   end
   object Label1: TLabel
     Left = 8
     Top = 39
-    Width = 391
+    Width = 392
     Height = 18
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
-    Caption = '#01018^eYour Wakan folder already contains some user data.'
+    Caption = 
+      '#01231^Your Wakan folder has some data which needs to be upgrade' +
+      'd.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -47,17 +50,18 @@ object fUpgradeFiles: TfUpgradeFiles
     Font.Style = []
     ParentFont = False
     WordWrap = True
+    ExplicitWidth = 389
   end
   object Label2: TLabel
     Left = 8
     Top = 247
-    Width = 391
-    Height = 18
-    Anchors = [akLeft, akTop, akRight]
+    Width = 392
+    Height = 42
+    Anchors = [akLeft, akRight, akBottom]
     AutoSize = False
     Caption = 
-      '#01019^eDo you want to move these files to the AppData directory' +
-      '?'
+      '#01233^If you decline, old data will not be accessible. You can ' +
+      'perform the upgrade manually from Settings.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -71,15 +75,17 @@ object fUpgradeFiles: TfUpgradeFiles
     Top = 63
     Width = 353
     Height = 178
+    Anchors = [akLeft, akTop, akRight, akBottom]
     ItemHeight = 13
     TabOrder = 0
   end
   object btnMoveFiles: TButton
     Left = 64
-    Top = 278
+    Top = 301
     Width = 129
     Height = 33
-    Caption = '#01020^eMove'
+    Anchors = [akLeft, akBottom]
+    Caption = '#01234^Upgrade'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -88,13 +94,15 @@ object fUpgradeFiles: TfUpgradeFiles
     ModalResult = 1
     ParentFont = False
     TabOrder = 1
+    ExplicitTop = 278
   end
   object btnIgnoreFiles: TButton
     Left = 208
-    Top = 278
+    Top = 301
     Width = 129
     Height = 33
-    Caption = '#01021^eIgnore'
+    Anchors = [akLeft, akBottom]
+    Caption = '#01235^Skip'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -103,5 +111,6 @@ object fUpgradeFiles: TfUpgradeFiles
     ModalResult = 2
     ParentFont = False
     TabOrder = 2
+    ExplicitTop = 278
   end
 end

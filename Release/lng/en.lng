@@ -1338,7 +1338,15 @@
 01227>Some files may be left in odd places from older versions of Wakan. The installer should have upgraded these automatically, but you may check again.
 01228>Upgrade local files
 01229>There was nothing to upgrade.
-
+01230>Upgrade data
+01231>Your Wakan folder has some data which needs to be upgraded.
+01232>Move %s
+01233>If you decline, old data will not be accessible. You can perform the upgrade manually from Settings.
+01234>Upgrade
+01235>Skip
+01236>Upgrading...
+01237+Not all files have been upgraded. You will need to restart the upgrade manually.
+01237>Do you want to abort the operation?
 
 
 ;
