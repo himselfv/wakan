@@ -130,13 +130,3 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Parameters: "upgradelocaldata"; Flags: runascurrentuser;
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
-[Code]                                                    
-#include "..\Modules\LocalData\UpgradeLocalData.iss"
-
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if Step = ssPostInstall then begin
-    UpgradeLocalData();
-  end;
-end;
