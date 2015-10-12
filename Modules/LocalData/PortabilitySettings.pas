@@ -15,12 +15,12 @@ type
     lblSettingsPath: TUrlLabel;
     lblDictionariesPath: TUrlLabel;
     lblUserDataPath: TUrlLabel;
-    lblUpgradeToStandalone: TLabel;
+    lblUpgradeLocalData: TLabel;
     lblBackupPath: TUrlLabel;
     Label59: TLabel;
-    btnUpgradeToStandalone: TButton;
+    btnUpgradeLocalData: TButton;
     procedure lblSettingsPathClick(Sender: TObject);
-    procedure btnUpgradeToStandaloneClick(Sender: TObject);
+    procedure btnUpgradeLocalDataClick(Sender: TObject);
   protected
     procedure UpdatePage;
     procedure WmLoadSettings(var Msg); message WM_LOADSETTINGS;
@@ -32,7 +32,7 @@ var
 procedure Register;
 
 implementation
-uses IniFiles, JWBStrings, AppData, JWBCore, JWBLanguage;
+uses IniFiles, JWBStrings, AppData, JWBCore, JWBLanguage, UpgradeFiles;
 
 {$R *.dfm}
 
@@ -52,7 +52,6 @@ procedure TPortabilitySettingsPage.UpdatePage;
 begin
   case PortabilityMode of
     pmStandalone: lblWakanMode.Caption := _l('#01026^eWakan is running in standalone mode');
-    pmCompatible: lblWakanMode.Caption := _l('#01027^eWakan is running in compatible mode');
     pmPortable: lblWakanMode.Caption := _l('#01028^eWakan is running in portable mode');
   else
     lblWakanMode.Caption := '[error]';
@@ -72,9 +71,6 @@ begin
   lblUserDataPath.URL := 'file://'+repl(UserDataDir,'\','/');
   lblBackupPath.Caption := BackupDir;
   lblBackupPath.URL := 'file://'+repl(BackupDir,'\','/');
-
-  btnUpgradeToStandalone.Visible := PortabilityMode=pmCompatible;
-  lblUpgradeToStandalone.Visible := btnUpgradeToStandalone.Visible;
 end;
 
 procedure TPortabilitySettingsPage.lblSettingsPathClick(Sender: TObject);
@@ -83,32 +79,21 @@ begin
     RegeditAtKey(lblSettingsPath.Caption);
 end;
 
-procedure TPortabilitySettingsPage.btnUpgradeToStandaloneClick(Sender: TObject);
-var ini: TCustomIniFile;
+procedure TPortabilitySettingsPage.btnUpgradeLocalDataClick(Sender: TObject);
 begin
-  if PortabilityMode<>pmCompatible then exit;
-
-  if Application.MessageBox(
-    PChar(_l('#01034^eDo you really want to move all your files to Application Data and convert this installation to standalone?')),
-    PChar(_l('#01035^eConfirmation')),
-    MB_YESNO or MB_ICONQUESTION
-  ) <> ID_YES then exit;
-
-  ini := GetWakanIni;
-  try
-    ini.WriteString('General','Install','Upgrade');
-    ini.UpdateFile;
-  finally
-    FreeSettings;
-  end;
-
-  //Localize
-  Application.MessageBox(
-    PChar(_l('#01036^eWakan has to be restarted for the upgrade to be completed. The application will now exit.')),
-    PChar(_l('#01037^eRestart needed')),
-    MB_OK
-  );
-  Application.Terminate;
+  if UpgradeLocalData() then begin
+    Application.MessageBox(
+      PChar(_l('#01036^eWakan has to be restarted for the upgrade to be completed. The application will now exit.')),
+      PChar(_l('#01037^eRestart needed')),
+      MB_OK
+    );
+    Application.Terminate;
+  end else
+    Application.MessageBox(
+      PChar(_l('#01229^There was nothing to upgrade.')),
+      PChar(Self.Caption),
+      MB_YESNO or MB_ICONQUESTION
+    );
 end;
 
 end.

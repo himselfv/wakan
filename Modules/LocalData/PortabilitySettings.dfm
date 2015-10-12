@@ -11,6 +11,9 @@ object PortabilitySettingsPage: TPortabilitySettingsPage
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  DesignSize = (
+    449
+    414)
   PixelsPerInch = 96
   TextHeight = 13
   object lblWakanMode: TLabel
@@ -107,20 +110,24 @@ object PortabilitySettingsPage: TPortabilitySettingsPage
     Font.Style = []
     ParentFont = False
   end
-  object lblUpgradeToStandalone: TLabel
+  object lblUpgradeLocalData: TLabel
     Left = -4
     Top = 118
     Width = 453
-    Height = 26
+    Height = 34
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
     Caption = 
-      '#01032^eYou can move all your data to Application Data folder an' +
-      'd make this copy standalone.'#13#10'This process is not reversible.'
+      '#01227^Some files may be left in odd places from older versions ' +
+      'of Wakan. The installer should have upgraded these automatically' +
+      ', but you may check again.'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    WordWrap = True
   end
   object lblBackupPath: TUrlLabel
     Left = 107
@@ -149,12 +156,13 @@ object PortabilitySettingsPage: TPortabilitySettingsPage
     Font.Style = []
     ParentFont = False
   end
-  object btnUpgradeToStandalone: TButton
+  object btnUpgradeLocalData: TButton
     Left = 123
     Top = 158
     Width = 177
     Height = 25
-    Caption = '#01033^eUpgrade to standalone'
+    Caption = '#01228^Upgrade local files'
     TabOrder = 0
+    OnClick = btnUpgradeLocalDataClick
   end
 end

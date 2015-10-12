@@ -1,16 +1,44 @@
 unit AppData;
-// Stores application data and settings, known folders.
+{
+Stores application data and settings, known folders.
+Wakan supports portable and standalone modes.
+
+Standalone mode:
+- User data in AppData\Roaming\Wakan
+- Settings in registry
+
+Portable mode:
+- User data in Wakan folder
+- Settings in wakan.ini
+
+Older Wakans worked in mixed (compatible) mode:
+- User data in Wakan folder
+- Settings in registry
+
+Wakan uses "wakan.ini" to determine the mode:
+  wakan.ini present + Install=portable    =>  force portable or die if not writeable folder
+  wakan.ini present + Install=standalone  =>  force standalone
+  wakan.ini absent                        =>  ask the user, initialize wakan.ini
+
+If the application needs to be installed in a specific mode, just put pre-configured
+wakan.ini in the same directory.
+
+Unsupported scenarios:
+1. Configured as portable and non-writeable dir     =>  error!
+2. No wakan.ini + non-writeable dir                 =>  error!
+  Trying to be smart here leads to all sorts of problems.
+}
 
 interface
 uses IniFiles;
 
 type
-  TPortabilityMode = (pmStandalone, pmPortable, pmCompatible);
+  TPortabilityMode = (pmStandalone, pmPortable);
 
 {$WRITEABLECONST ON}
 const
   WakanRegKey = 'Software\Labyrinth\Wakan';
-  PortabilityMode: TPortabilityMode = pmCompatible;
+  PortabilityMode: TPortabilityMode = pmStandalone;
 
  //Set by SetPortabilityMode()
  //All paths have no trailing slashes
@@ -24,16 +52,17 @@ procedure SetPortabilityMode(AMode: TPortabilityMode);
 function GetAppDataFolder: string;
 function DictionaryDir: string;
 
+//Call Backup(filename) to make a backup of anything, before breakingly changing
 function BackupDir: string;
 function GetBackupFilename(const AFilename: string): string;
 function Backup(const filename: string): string;
 
-function GetWakanIni: TCustomIniFile;
+function GetWakanIni: TCustomIniFile; //call GetSettingsStore instead
 function GetSettingsStore: TCustomIniFile;
 procedure FreeSettings;
 
 implementation
-uses SysUtils, ShlObj, Windows, Registry, JWBStrings, JWBPortableMode, Forms;
+uses SysUtils, Forms, ShlObj, Windows, Registry, JWBStrings, JWBPortableMode, UpgradeFiles;
 
 { Portable/standalone }
 
@@ -62,7 +91,6 @@ begin
   case AMode of
     pmStandalone: UserDataDir := GetAppDataFolder;
     pmPortable: UserDataDir := AppFolder+'\UserData';
-    pmCompatible: UserDataDir := AppFolder;
   end;
   ProgramDataDir := AppFolder;
 end;
@@ -171,38 +199,52 @@ begin
 end;
 
 
+// Saves portability settings to wakan.ini. May require administrator permissions.
+procedure SavePortabilityModeSetting(const ModeString: string);
+var ini: TCustomIniFile;
+begin
+ //TODO: Try writing to the file and if we cannot, spawn Wakan with administator rights
+ //  and some kind of a /setportability [ModeString] command line
+  ini := GetWakanIni;
+  ini.WriteString('General', 'Install', ModeString);
+  ini.UpdateFile;
+end;
 
-//See comments in JWBPortableMode.pas about Wakan modes
-//For now this sits here although should probably go somewhere else
+
+// Initializes Wakan in portable or standalone mode. Usually it's just a simple read from wakan.ini.
+// In complex cases may need to ask user and store their preference, do data upgrades.
+// See comments in JWBPortableMode.pas about Wakan modes.
 procedure InitLocalData;
 var ini: TCustomIniFile;
-  fPortableMode: TfPortableMode;
   s: string;
 begin
   ini := GetWakanIni;
 
   s := LowerCase(ini.ReadString('General', 'Install', ''));
 
-  fPortableMode := nil;
   if s='' then begin
-    fPortableMode := TfPortableMode.Create(Application);
-    s := LowerCase(fPortableMode.Initialize(ini))
+    s := LowerCase(TfPortableMode.SelectMode(nil));
+    UpgradeLocalData();
+    SavePortabilityModeSetting(s);
+    FreeAndNil(FSettingsStore); //settings location could have changed -- recreate later
+  end else
+  if s='compatible' then begin
+   //This was a mixed mode emulating older Wakan. Not supported anymore.
+    s := 'standalone';
+    UpgradeLocalData();
+    SavePortabilityModeSetting(s);
+    FreeAndNil(FSettingsStore);
   end else
   if s='upgrade' then begin
-    fPortableMode := TfPortableMode.Create(Application);
-   //We cannot just copy some of the files. If we start this operation,
-   //we have to continue it even after restart.
-    s := LowerCase(fPortableMode.ContinueUpgrade(ini));
+   //A mark from older Wakans that local data upgrade was aborted in the middle.
+    s := 'standalone'; //it was only possible to upgrade to standalone
+    UpgradeLocalData();
+    SavePortabilityModeSetting(s);
+    FreeAndNil(FSettingsStore);
   end;
-  if fPortableMode<>nil then
-    FreeAndNil(FSettingsStore); //settings store location could have changed -- recreate later
-  FreeAndNil(fPortableMode);
 
   if s='standalone' then begin
     SetPortabilityMode(pmStandalone);
-  end else
-  if s='compatible' then begin
-    SetPortabilityMode(pmCompatible);
   end else
   if s='portable' then begin
     SetPortabilityMode(pmPortable);

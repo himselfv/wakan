@@ -34,6 +34,7 @@ uses
   AppData in 'Modules\LocalData\AppData.pas',
   JWBPortableMode in 'Modules\LocalData\JWBPortableMode.pas' {fPortableMode},
   PortabilitySettings in 'Modules\LocalData\PortabilitySettings.pas' {PortabilitySettingsPage},
+  UpgradeFiles in 'Modules\LocalData\UpgradeFiles.pas' {fUpgradeFiles},
   JWBSettings in 'Modules\Settings\JWBSettings.pas' {fSettings},
   UnicodeFont in 'Modules\Settings\UnicodeFont.pas' {fSelectFont},
   JWBCharItem in 'Modules\Settings\JWBCharItem.pas' {fCharItem},

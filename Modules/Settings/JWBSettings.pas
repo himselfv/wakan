@@ -460,7 +460,7 @@ uses JWBMenu, JWBStrings, AppData, KanaConv, JWBUnit, JWBKanjiList, JWBEditor,
   JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBExamples, JWBVocabDetails,
   JWBVocabFilters, JWBKanjiDetails, TextTable, JWBLanguage, UnicodeFont,
   JWBKanjiCard, JWBVocab, WakanWordGrid, JWBUserData, JWBDicSearch,
-  JWBPortableMode, JWBCharData, ActnList, JWBCharDataImport, JWBIO,
+  JWBCharData, ActnList, JWBCharDataImport, JWBIO,
   JWBWordLookupBase, JWBScreenTip, JWBCore;
 
 var colorfrom:integer;
@@ -676,7 +676,6 @@ begin
   ini := GetWakanIni;
   case PortabilityMode of
     pmStandalone: ini.WriteString('General', 'Install', 'Standalone');
-    pmCompatible: ini.WriteString('General', 'Install', 'Compatible');
     pmPortable: ini.WriteString('General', 'Install', 'Portable');
   end;
 

@@ -1335,6 +1335,10 @@
 01224>Download
 01225>Search...
 01226>Type any text to find matching characters
+01227>Some files may be left in odd places from older versions of Wakan. The installer should have upgraded these automatically, but you may check again.
+01228>Upgrade local files
+01229>There was nothing to upgrade.
+
 
 
 ;

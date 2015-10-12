@@ -372,7 +372,7 @@ uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JW
  JWBVocabFilters, JWBStatistics, JWBKanjiList, JWBKanjiDetails, JWBWordKanji,
  JWBDictMan, JWBDictImport, JWBScreenTip, JWBCategories, JWBAnnotations,
  JWBCommandLine, JWBAutoImport, JWBComponents, JWBDownloader, JWBCategoryMgr,
- JWBIntTip;
+ JWBIntTip, UpgradeFiles;
 
 {$R *.DFM}
 
@@ -435,6 +435,13 @@ begin
     CheckResolution;
 
     InitLocalData;
+    if Command='upgradelocaldata' then begin
+      UpgradeLocalData();
+      Application.ShowMainForm := false;
+      Application.Terminate();
+      exit;
+    end;
+
     fSettings.LoadSettings;
 
     if fSettings.cbShowSplashscreen.Checked then begin
@@ -465,12 +472,14 @@ begin
     if Command='makeexamples'then
     begin
       fExamples.BuildExamplesPackage;
+      Application.ShowMainForm := false;
       Application.Terminate;
       exit;
     end else
     if Command='makedic'then
     begin
       MakeDic();
+      Application.ShowMainForm := false;
       Application.Terminate;
       exit;
     end;
@@ -534,8 +543,10 @@ begin
       finally
         FreeAndNil(fCharDataImport);
       end;
-      if Command='makechars' then //if that was autoimport, continue
+      if Command='makechars' then begin //if that was autoimport, continue
+        Application.ShowMainForm := false;
         Application.Terminate;
+      end;
     end;
 
 
@@ -674,6 +685,7 @@ begin
     if Command='updatedics' then begin
       if Length(UpdateDicsParams.Files)>0 then
         JWBAutoImport.AutoUpdateFiles(UpdateDicsParams.Files);
+      Application.ShowMainForm := false;
       Application.Terminate;
       exit; //so this can be run in batch mode
     end;
@@ -714,8 +726,10 @@ begin
       Application.Terminate;
       System.ExitCode := 2;
     end;
-    on E: EAbort do
+    on E: EAbort do begin
+      Application.ShowMainForm := false;
       Application.Terminate; //Silently
+    end;
     on E: Exception do begin
       Application.MessageBox(
         pchar(E.Message+' ('+E.Classname+')'),

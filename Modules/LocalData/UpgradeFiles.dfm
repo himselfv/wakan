@@ -1,10 +1,9 @@
-object fPortableMode: TfPortableMode
+object fUpgradeFiles: TfUpgradeFiles
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
-  Caption = '#01009^eSelect mode'
-  ClientHeight = 260
-  ClientWidth = 423
+  Caption = '#01017^eMove files'
+  ClientHeight = 323
+  ClientWidth = 407
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,20 +11,19 @@ object fPortableMode: TfPortableMode
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poOwnerFormCenter
   DesignSize = (
-    423
-    260)
+    407
+    323)
   PixelsPerInch = 96
   TextHeight = 13
-  object lblQuestion: TLabel
+  object lblMoveQuestion: TLabel
     Left = 8
     Top = 8
     Width = 391
     Height = 25
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
-    Caption = '#01010^eHow do you want Wakan to run?'
+    Caption = '#01017^eMove files'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -19
@@ -34,16 +32,32 @@ object fPortableMode: TfPortableMode
     ParentFont = False
     WordWrap = True
   end
-  object lblStandaloneDescription: TLabel
+  object Label1: TLabel
     Left = 8
-    Top = 95
+    Top = 39
     Width = 391
-    Height = 34
+    Height = 18
+    Anchors = [akLeft, akTop, akRight]
+    AutoSize = False
+    Caption = '#01018^eYour Wakan folder already contains some user data.'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -13
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    WordWrap = True
+  end
+  object Label2: TLabel
+    Left = 8
+    Top = 247
+    Width = 391
+    Height = 18
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = 
-      '#01012^eStore settings in registry and user data in roaming AppD' +
-      'ata folder'
+      '#01019^eDo you want to move these files to the AppData directory' +
+      '?'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -52,49 +66,42 @@ object fPortableMode: TfPortableMode
     ParentFont = False
     WordWrap = True
   end
-  object lblPortableDescription: TLabel
+  object lbFiles: TListBox
     Left = 8
-    Top = 191
-    Width = 391
-    Height = 34
-    Anchors = [akLeft, akTop, akRight]
-    AutoSize = False
-    Caption = '#01016^eStore all settings and user data in Wakan folder'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    WordWrap = True
-  end
-  object btnStandalone: TButton
-    Left = 8
-    Top = 56
-    Width = 193
-    Height = 33
-    Caption = '#01011^eStandalone'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
+    Top = 63
+    Width = 353
+    Height = 178
+    ItemHeight = 13
     TabOrder = 0
   end
-  object btnPortable: TButton
-    Left = 8
-    Top = 152
-    Width = 193
+  object btnMoveFiles: TButton
+    Left = 64
+    Top = 278
+    Width = 129
     Height = 33
-    Caption = '#01015^ePortable'
+    Caption = '#01020^eMove'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
     Font.Name = 'Tahoma'
     Font.Style = []
+    ModalResult = 1
     ParentFont = False
     TabOrder = 1
-    OnClick = btnPortableClick
+  end
+  object btnIgnoreFiles: TButton
+    Left = 208
+    Top = 278
+    Width = 129
+    Height = 33
+    Caption = '#01021^eIgnore'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ModalResult = 2
+    ParentFont = False
+    TabOrder = 2
   end
 end

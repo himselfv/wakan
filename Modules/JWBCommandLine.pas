@@ -72,7 +72,8 @@ begin
     +'* makechars [/resetdb] [/kanjidic <kanjidic-filename>] [/unihan <unihan-folder>]'#13
     +'* makedic <dicfilename> </include filename> [/include filename] '
       +'[/description text] [/language <j|c>] '#13
-    +'* updatedics [dicname dicname ...]'
+    +'* updatedics [dicname dicname ...]'#13
+    +'* upgradelocaldata'
     +'Supported flags:'
     +'* [/fast]';
 
@@ -205,6 +206,9 @@ begin
       end else
       if Command='makechars' then begin
         FillChar(MakeCharsParams, sizeof(MakeCharsParams), 0);
+      end else
+      if Command='upgradelocaldata' then begin
+       //Nothing to initialize
       end else
       if Command='open' then begin
         FillChar(OpenParams, sizeof(OpenParams), 0);

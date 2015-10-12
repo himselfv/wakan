@@ -77,6 +77,7 @@
         <DCC_DebugVN>True</DCC_DebugVN>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <Debugger_RunParams>upgradelocaldata</Debugger_RunParams>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
     </PropertyGroup>
     <ProjectExtensions>
@@ -190,6 +191,9 @@
         </DCCReference>
         <DCCReference Include="Modules\LocalData\PortabilitySettings.pas">
             <Form>PortabilitySettingsPage</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\LocalData\UpgradeFiles.pas">
+            <Form>fUpgradeFiles</Form>
         </DCCReference>
         <DCCReference Include="Modules\Settings\JWBSettings.pas">
             <Form>fSettings</Form>
