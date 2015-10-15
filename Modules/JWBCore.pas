@@ -322,30 +322,6 @@ begin
   end
   else
     Result := IsAdministrator;
-
-(*
-  HANDLE hToken;
-  TOKEN_ELEVATION_TYPE elevationType;
-  DWORD dwSize;
-
-  OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
-  GetTokenInformation(hToken, TokenElevationType, &elevationType, sizeof(elevationType), &dwSize);
-
-  switch (elevationType) {
-    case TokenElevationTypeDefault:
-      wprintf(TEXT("\nTokenElevationTypeDefault - User is not using a split token.\n"));
-      break;
-    case TokenElevationTypeFull:
-      wprintf(TEXT("\nTokenElevationTypeFull - User has a split token, and the process is running elevated.\n"));
-      break;
-    case TokenElevationTypeLimited:
-      wprintf(TEXT("\nTokenElevationTypeLimited - User has a split token, but the process is not running elevated.\n"));
-      break;
-  }
-
-  if (hToken) {
-    CloseHandle(hToken);
-*)
 end;
 {$ELSE}
  {$ERROR 'Not implemented yet outside of Windows. Posix systems probably can support this too.'}
