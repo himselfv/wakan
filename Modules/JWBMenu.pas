@@ -434,6 +434,7 @@ begin
       System.ExitCode := CustomCommand.Run();
       Application.ShowMainForm := false;
       Application.Terminate;
+      exit;
     end;
 
     InitLanguage;
