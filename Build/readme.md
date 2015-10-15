@@ -8,7 +8,7 @@
 ## BUILDING
 
 1. Configure paths in setupvars.cmd (and Settings -> Environment, if building from Delphi).
-2. Build and install JaletControls.dpr.
+2. Build and install WakanControls.dpr.
 3. Copy the dependencies (see below) to the Release folder.
 4. Run build.cmd to generate:
 
