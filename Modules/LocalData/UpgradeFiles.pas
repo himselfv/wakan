@@ -67,7 +67,7 @@ function UpgradeLocalData: boolean;
 function BuildUpgradeActionList: TUpgradeActionList;
 
 implementation
-uses UITypes, AppData, JWBLanguage, StdPrompt;
+uses UITypes, ShlObj, AppData, JWBCore, JWBLanguage, StdPrompt;
 
 {$R *.dfm}
 
@@ -138,7 +138,7 @@ var err: integer;
 begin
   if not FileExists(FBasePath+'\'+FFilename) then
     exit;
-  ForceDirectories(ExtractFilePath(FTargetPath+'\'+FFilename)); //FFilename might contain subdirs
+  SysUtils.ForceDirectories(ExtractFilePath(FTargetPath+'\'+FFilename)); //FFilename might contain subdirs
 
   RenameIndex := 1;
   TargetFilename := ExtractFilename(FFilename);
@@ -205,15 +205,39 @@ end;
 //current mode.
 function BuildUpgradeActionList: TUpgradeActionList;
 var Filename: string;
+  AppFolder: string;
+  AppFolderDrive: string;
+  UserDataDir: string;
+  VirtualStore: string;
+
 begin
   Result := TUpgradeActionList.Create;
+
+  AppFolder := JWBStrings.AppFolder;
+  UserDataDir := AppData.UserDataDir;
+  //On Vista+, some files are virtualized. They cannot be enumerated so we need to go
+  //where they are actually stored.
+  AppFolderDrive := ExtractFileDrive(AppFolder);
+  VirtualStore := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA) + '\VirtualStore'
+    + Copy(AppFolder, Length(AppFolderDrive), MaxInt); //AppFolder without Drive component
+
   //Older Wakans stored these in the application folder
+  Result.AddMoveFile(VirtualStore, 'wakan.usr', UserDataDir);
+  Result.AddMoveFile(VirtualStore, 'wakan.bak', UserDataDir);
+  Result.AddMoveFile(VirtualStore, 'wakan.cdt', UserDataDir);
+  Result.AddMoveFile(VirtualStore, 'wakan.lay', UserDataDir);
+  Result.AddMoveFile(VirtualStore, 'roma_problems.txt', UserDataDir);
+  for Filename in EnumByMask(VirtualStore+'\backup\', '*.*', true) do
+    Result.Add(TMoveFile.Create(VirtualStore, 'backup\'+Filename, UserDataDir, [mfAutoRename]));
+
   Result.AddMoveFile(AppFolder, 'wakan.usr', UserDataDir);
   Result.AddMoveFile(AppFolder, 'wakan.bak', UserDataDir);
   Result.AddMoveFile(AppFolder, 'wakan.cdt', UserDataDir);
+  Result.AddMoveFile(AppFolder, 'wakan.lay', UserDataDir);
   Result.AddMoveFile(AppFolder, 'roma_problems.txt', UserDataDir);
   for Filename in EnumByMask(AppFolder+'\backup\', '*.*', true) do
     Result.Add(TMoveFile.Create(AppFolder, 'backup\'+Filename, UserDataDir, [mfAutoRename]));
+
 
 //Do not move dictionaries, they are currently always in Wakan folder
 {  Result.AddMoveByMask(AppFolder, '*.dic', DictionaryDir, false);
@@ -307,6 +331,12 @@ begin
   try
     Result := (Actions <> nil) and (Actions.Count > 0);
     if not Result then exit;
+
+    if not IsElevated() then begin
+      RunElevatedWorker('upgradelocaldata');
+      Result := true; //we can't really tell
+      exit;
+    end;
 
     if not TfUpgradeFiles.ConfirmUpgrade(nil, Actions) then
       raise EAbort.Create('User cancelled');

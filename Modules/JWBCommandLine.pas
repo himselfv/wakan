@@ -109,6 +109,10 @@ begin
         SkipAutoRepair := true;
       end else
 
+      if s='/elevated' then begin
+       //Marks us as elevated worker. Nothing to do.
+      end else
+
      //Command-related options
       if Command='makeexamples' then begin
        //No options

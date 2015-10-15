@@ -444,7 +444,8 @@ begin
 
     fSettings.LoadSettings;
 
-    if fSettings.cbShowSplashscreen.Checked then begin
+    if fSettings.cbShowSplashscreen.Checked
+    and not IsElevatedWorker then begin
       fSplash := TfSplash.Create(Application);
       fSplash.Show;
       fSplash.Update;
@@ -691,6 +692,12 @@ begin
     end;
 
     FreeAndNil(fSplash);
+
+    if IsElevatedWorker then begin
+      Application.ShowMainForm := false;
+      Application.Terminate;
+      exit;
+    end;
 
     Self.ApplyUI;
 

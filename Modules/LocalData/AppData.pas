@@ -66,13 +66,12 @@ uses SysUtils, Forms, ShlObj, Windows, Registry, JWBStrings, JWBPortableMode, Up
 
 { Portable/standalone }
 
-//Returns AppData\Wakan folder NO MATTER what mode is active.
+//Returns AppData\Roaming\Wakan folder no matter what mode is active.
 //Do not use to get Wakan common/user data folders.
 function GetAppDataFolder: string;
 begin
   Result := GetSpecialFolderPath(CSIDL_APPDATA);
- //There's also CSIDL_LOCAL_APPDATA which might do if CSIDL_APPDATA is somehow not available.
- //But I don't think that can be the case!
+  //There is also CSIDL_LOCAL_APPDATA which Wakan doesn't use
   Assert(Result<>''); //just in case
   Result:=Result+'\Wakan';
   ForceDirectories(Result);
