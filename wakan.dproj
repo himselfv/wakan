@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{bff40415-9af6-4a28-8cb1-9336be6cfa70}</ProjectGuid>
-        <MainSource>Jalet.dpr</MainSource>
+        <MainSource>wakan.dpr</MainSource>
         <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <DCC_DependencyCheckOutputName>Jalet.exe</DCC_DependencyCheckOutputName>
@@ -41,7 +41,7 @@
         <VCL_Custom_Styles>&quot;Amethyst Kamri|VCLSTYLE|$(PUBLIC)\Documents\RAD Studio\10.0\Styles\AmethystKamri.vsf&quot;;&quot;Silver|VCLSTYLE|$(PUBLIC)\Documents\RAD Studio\10.0\Styles\Silver.vsf&quot;</VCL_Custom_Styles>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <Icon_MainIcon>Jalet_Icon.ico</Icon_MainIcon>
+        <Icon_MainIcon>wakan.ico</Icon_MainIcon>
         <DCC_DcuOutput>.\Dcu\$(Platform)$(Config)</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
@@ -55,7 +55,6 @@
         <DCC_DependencyCheckOutputName>Release\Jalet.exe</DCC_DependencyCheckOutputName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <Icon_MainIcon>Jalet_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Alignment>1</DCC_Alignment>
@@ -77,7 +76,6 @@
         <DCC_DebugVN>True</DCC_DebugVN>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <Debugger_RunParams>upgradelocaldata</Debugger_RunParams>
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
     </PropertyGroup>
     <ProjectExtensions>
@@ -92,11 +90,13 @@
                     <Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
                 </Parameters>
                 <Source>
-                    <Source Name="MainSource">Jalet.dpr</Source>
+                    <Source Name="MainSource">wakan.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k170.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp170.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k170.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp170.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
                 </Excluded_Packages>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">False</VersionInfo>

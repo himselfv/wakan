@@ -25,7 +25,7 @@ msbuild Wakan.groupproj /t:build /p:config=Release /p:OutputPath="%BINOUT%" /p:D
 if errorlevel 1 goto end
 
 rem Running tests...
-"%BINOUT%\JaletTests.exe" /nospeed /halt
+"%BINOUT%\WakanTests.exe" /nospeed /halt
 if errorlevel 1 goto end
 
 
@@ -36,9 +36,9 @@ rem TODO: Update + rebuild character info? "wakan /updatechars ..."
 echo.
 echo Rebuilding RAD/SOD from sources...
 cd "%BINOUT%"
-"%BINOUT%\Jalet.exe" makerad
+"%BINOUT%\Wakan.exe" makerad
 if errorlevel 1 goto end
-"%BINOUT%\Jalet.exe" makesod
+"%BINOUT%\Wakan.exe" makesod
 if errorlevel 1 goto end
 
 

@@ -1,4 +1,4 @@
-program JaletTests;
+program WakanTests;
 {
 
   Delphi DUnit Test Project

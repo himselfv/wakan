@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{05E84BD1-FFD4-4D73-894A-B3977B73C65A}</ProjectGuid>
-        <MainSource>JaletControls.dpk</MainSource>
+        <MainSource>WakanControls.dpk</MainSource>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
         <ProjectVersion>14.3</ProjectVersion>
@@ -102,7 +102,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">JaletControls.dpk</Source>
+                    <Source Name="MainSource">WakanControls.dpk</Source>
                 </Source>
                 <Parameters>
                     <Parameters Name="UseLauncher">False</Parameters>

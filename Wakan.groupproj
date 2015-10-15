@@ -3,10 +3,10 @@
         <ProjectGuid>{1432A20B-0446-455D-80DC-69048B90D678}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="Jalet.dproj">
+        <Projects Include="wakan.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="JaletControls.dproj">
+        <Projects Include="WakanControls.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="jwbpkg.dproj">
@@ -15,7 +15,7 @@
         <Projects Include="jwbtab.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="JaletTests.dproj">
+        <Projects Include="WakanTests.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -26,23 +26,23 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="Jalet">
-        <MSBuild Projects="Jalet.dproj"/>
+    <Target Name="wakan">
+        <MSBuild Projects="wakan.dproj"/>
     </Target>
-    <Target Name="Jalet:Clean">
-        <MSBuild Projects="Jalet.dproj" Targets="Clean"/>
+    <Target Name="wakan:Clean">
+        <MSBuild Projects="wakan.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Jalet:Make">
-        <MSBuild Projects="Jalet.dproj" Targets="Make"/>
+    <Target Name="wakan:Make">
+        <MSBuild Projects="wakan.dproj" Targets="Make"/>
     </Target>
-    <Target Name="JaletControls">
-        <MSBuild Projects="JaletControls.dproj"/>
+    <Target Name="WakanControls">
+        <MSBuild Projects="WakanControls.dproj"/>
     </Target>
-    <Target Name="JaletControls:Clean">
-        <MSBuild Projects="JaletControls.dproj" Targets="Clean"/>
+    <Target Name="WakanControls:Clean">
+        <MSBuild Projects="WakanControls.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="JaletControls:Make">
-        <MSBuild Projects="JaletControls.dproj" Targets="Make"/>
+    <Target Name="WakanControls:Make">
+        <MSBuild Projects="WakanControls.dproj" Targets="Make"/>
     </Target>
     <Target Name="jwbpkg">
         <MSBuild Projects="jwbpkg.dproj"/>
@@ -62,23 +62,23 @@
     <Target Name="jwbtab:Make">
         <MSBuild Projects="jwbtab.dproj" Targets="Make"/>
     </Target>
-    <Target Name="JaletTests">
-        <MSBuild Projects="JaletTests.dproj"/>
+    <Target Name="WakanTests">
+        <MSBuild Projects="WakanTests.dproj"/>
     </Target>
-    <Target Name="JaletTests:Clean">
-        <MSBuild Projects="JaletTests.dproj" Targets="Clean"/>
+    <Target Name="WakanTests:Clean">
+        <MSBuild Projects="WakanTests.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="JaletTests:Make">
-        <MSBuild Projects="JaletTests.dproj" Targets="Make"/>
+    <Target Name="WakanTests:Make">
+        <MSBuild Projects="WakanTests.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Jalet;JaletControls;jwbpkg;jwbtab;JaletTests"/>
+        <CallTarget Targets="wakan;WakanControls;jwbpkg;jwbtab;WakanTests"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Jalet:Clean;JaletControls:Clean;jwbpkg:Clean;jwbtab:Clean;JaletTests:Clean"/>
+        <CallTarget Targets="wakan:Clean;WakanControls:Clean;jwbpkg:Clean;jwbtab:Clean;WakanTests:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Jalet:Make;JaletControls:Make;jwbpkg:Make;jwbtab:Make;JaletTests:Make"/>
+        <CallTarget Targets="wakan:Make;WakanControls:Make;jwbpkg:Make;jwbtab:Make;WakanTests:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

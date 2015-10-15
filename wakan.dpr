@@ -1,4 +1,4 @@
-program Jalet;
+program wakan;
 {
 Define for the whole project:
   UNICODE -- defined by the compiler if the default string type is UnicodeString

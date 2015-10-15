@@ -3,7 +3,7 @@
 
 #define MyAppName "Wakan"
 ; There's better and heavier way via ParseVersion but this will suffice
-#define MyAppVersion StringChange(GetFileVersion('..\Release\Jalet.exe'), '.0.0', '')
+#define MyAppVersion StringChange(GetFileVersion('..\Release\Wakan.exe'), '.0.0', '')
 #define MyAppPublisher "Wakan developers"
 #define MyAppURL "https://bitbucket.org/himselfv/wakan/"
 #define MyAppExeName "wakan.exe"
@@ -30,7 +30,7 @@ OutputDir=.\Output
 OutputBaseFilename=wakan-{#MyAppVersion}-setup
 Compression=lzma
 SolidCompression=yes
-SetupIconFile="..\Jalet_Icon.ico"
+SetupIconFile="..\wakan.ico"
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
@@ -43,7 +43,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Type: files; Name: {app}\wakan.cdt
 
 [Files]
-Source: "..\Release\Jalet.exe"; DestDir: "{app}"; DestName: "wakan.exe"; Flags: ignoreversion
+Source: "..\Release\wakan.exe"; DestDir: "{app}"; DestName: "wakan.exe"; Flags: ignoreversion
 Source: "..\Release\7z.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\wakanh.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\wakan.cfg"; DestDir: "{app}"; Flags: ignoreversion
