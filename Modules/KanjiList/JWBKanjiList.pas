@@ -2052,12 +2052,18 @@ begin
   miCategories.Visible := AClickOnData;
   miLookupIn.Visible := AClickOnData;
 
-  if miCopyAs.Visible then
+  if miCopyAs.Visible then begin
     ReloadCopyFormats;
+    if miCopyAs.Count <= 0 then
+      miCopyAs.Visible := false;
+  end;
   if miCategories.Visible then
     ReloadPopupCategories;
-  if miLookupIn.Visible then
+  if miLookupIn.Visible then begin
     ReloadReferenceLinks;
+    if miLookupIn.Count <= 0 then
+      miLookupIn.Visible := false;
+  end;
 end;
 
 procedure TfKanji.miCopyClick(Sender: TObject);

@@ -150,12 +150,17 @@ begin
  //ARow may be <0 while curword is always last valid selected entry
   miResetColumns.Visible := (ARow=0); //click on header
   miCopyAs.Visible := (ARow>0); //click on data
-  if miCopyAs.Visible then
+  if miCopyAs.Visible then begin
     ReloadCopyFormats;
+    if miCopyAs.Count <= 0 then
+      miCopyAs.Visible := false;
+  end;
   miLookUpIn.Visible := (ARow>0);
-  if miLookUpIn.Visible then
-    ReloadReferenceLinks
-  else
+  if miLookUpIn.Visible then begin
+    ReloadReferenceLinks;
+    if miLookUpIn.Count <= 0 then
+      miLookUpIn.Visible := false;
+  end else
     ClearReferenceLinks; //some could have been in this menu
   miGoToVocab.Visible := (ARow>0) and (FResults[ARow-1].userIndex > 0);
   miAddToVocab.Visible := (ARow>0);
