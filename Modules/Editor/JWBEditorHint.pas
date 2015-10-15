@@ -20,9 +20,6 @@ type
     procedure Hide; reintroduce;
   end;
 
-var
-  fEditorHint: TfEditorHint;
-
 implementation
 uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup;
 

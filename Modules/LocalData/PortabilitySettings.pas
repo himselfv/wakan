@@ -37,10 +37,9 @@ uses IniFiles, JWBStrings, AppData, JWBCore, JWBLanguage, UpgradeFiles;
 {$R *.dfm}
 
 procedure Register;
-var sheet: TPortabilitySettingsPage;
 begin
-  sheet := TPortabilitySettingsPage.Create(fSettings);
-  fSettings.AddSettingsPage(sheet, 'General');
+  PortabilitySettingsPage := TPortabilitySettingsPage.Create(fSettings);
+  fSettings.AddSettingsPage(PortabilitySettingsPage, 'General');
 end;
 
 procedure TPortabilitySettingsPage.WmLoadSettings(var Msg);

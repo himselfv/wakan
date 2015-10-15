@@ -1159,10 +1159,14 @@ begin
     Action := caNone;
   if Action<>caNone then begin
     ScreenTip.EnabledSystemWide := false;
-    fEditor.Close;
-    fWordLookup.Close;
-    fVocab.Close;
-    fKanji.Close;
+    if fEditor <> nil then
+      fEditor.Close;
+    if fWordLookup <> nil then
+      fWordLookup.Close;
+    if fVocab <> nil then
+      fVocab.Close;
+    if fKanji <> nil then
+      fKanji.Close;
   end;
 end;
 

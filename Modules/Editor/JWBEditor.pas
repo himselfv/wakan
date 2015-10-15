@@ -39,7 +39,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ExtCtrls, Buttons, ImgList, ComCtrls, ToolWin, Actions, ActnList,
-  WakanPaintbox, JWBStrings, JWBDicSearch, JWBWakanText, JWBIO;
+  WakanPaintbox, JWBStrings, JWBDicSearch, JWBWakanText, JWBIO, JWBEditorHint;
 
 //If enabled, support multithreaded translation
 {$DEFINE MTHREAD_SUPPORT}
@@ -379,7 +379,9 @@ type
     procedure SelectAll;
     property TextSelection: TTextSelection read GetTextSelection; //Selection block in 0-coords [0..doc.Count]x[0..flen(line)-1]
 
-  public //Hint
+  protected //Hint
+    fEditorHint: TfEditorHint;
+  public
     procedure ShowHint;
     procedure HideHint;
 
@@ -540,7 +542,7 @@ type
 function RectWH(const Left,Top,Width,Height: integer): TRect;
 
 implementation
-uses Types, TextTable, JWBCore, JWBLanguage, JWBEditorHint, JWBKanjiDetails,
+uses Types, TextTable, JWBCore, JWBLanguage, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, KanaConv, JWBUnit, JWBCategories, JWBDic,
   JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
   JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup,
@@ -659,7 +661,7 @@ end;
 
 procedure TfEditor.FormCreate(Sender: TObject);
 begin
-  doc:=TWakanText.Create;
+  doc := TWakanText.Create;
   doc.OnGetDictionaryEntry := DocGetDictionaryEntry;
 
   docfilename:='';
@@ -692,7 +694,10 @@ begin
  //We need to update controls when we set FontSize, and if we set ItemIndex here,
  //it'll get overwritten for some buggy VCL reason. So we use FormShow.
 
-  linl:=TGraphicalLineList.Create;
+  linl := TGraphicalLineList.Create;
+
+  fEditorHint := TfEditorHint.Create(Self);
+
   CopyShort := aCopy.ShortCut;
   CopyAsShort := aCopyAs.ShortCut;
   CutShort := aCut.ShortCut;
@@ -716,6 +721,7 @@ end;
 procedure TfEditor.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(EditorBitmap);
+  FreeAndNil(fEditorHint);
   linl.Free;
   FreeAndNil(doc);
 end;

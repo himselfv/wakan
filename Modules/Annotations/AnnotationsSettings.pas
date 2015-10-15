@@ -35,7 +35,6 @@ uses JWBCore;
 {$R *.dfm}
 
 procedure Register;
-var AnnotationsSettingsPage: TAnnotationsSettingsPage;
 begin
   AnnotationsSettingsPage := TAnnotationsSettingsPage.Create(fSettings);
   fSettings.AddSettingsPage(AnnotationsSettingsPage, '');

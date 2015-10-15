@@ -100,19 +100,17 @@ begin
  Some forms may be singletons and be created on the first use. }
 
   Application.CreateForm(TfMenu, fMenu);
-  Application.CreateForm(TfKanji, fKanji);
-  Application.CreateForm(TfWordLookup, fWordLookup);
   Application.CreateForm(TfSettings, fSettings);
-  Application.CreateForm(TfVocab, fVocab);
-  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
+  Application.CreateForm(TfKanji, fKanji);
   Application.CreateForm(TfKanjiDetails, fKanjiDetails);
-  Application.CreateForm(TfEditor, fEditor);
+  Application.CreateForm(TfWordLookup, fWordLookup);
+  Application.CreateForm(TfKanjiCompounds, fKanjiCompounds);
   Application.CreateForm(TfWordKanji, fWordKanji);
-  Application.CreateForm(TfExamples, fExamples);
+  Application.CreateForm(TfVocab, fVocab);
   Application.CreateForm(TfVocabDetails, fVocabDetails);
   Application.CreateForm(TfVocabFilters, fVocabFilters);
-  Application.CreateForm(TfEditorHint, fEditorHint);
-  Application.CreateForm(TAnnotationsSettingsPage, AnnotationsSettingsPage);
+  Application.CreateForm(TfEditor, fEditor);
+  Application.CreateForm(TfExamples, fExamples);
   PortabilitySettings.Register;
   AnnotationsSettings.Register;
 
