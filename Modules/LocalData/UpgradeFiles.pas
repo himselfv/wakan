@@ -145,6 +145,7 @@ begin
   repeat
     err := DoMove(TargetFilename);
     case err of
+      ERROR_SUCCESS: break;
       ERROR_FILE_EXISTS,
       ERROR_ALREADY_EXISTS:
         if mfAutoRename in FFlags then begin
@@ -154,7 +155,7 @@ begin
         end else
           exit; //for now just skip
     end;
-  until true;
+  until false;
 
   if err <> 0 then
     RaiseLastOsError(err);
