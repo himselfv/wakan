@@ -1,7 +1,7 @@
 unit JWBCommandLine;
 
 interface
-uses SysUtils, JWBStrings;
+uses SysUtils, Generics.Collections, JWBStrings;
 
 type
   EBadUsage = class(Exception);
@@ -9,8 +9,19 @@ type
 procedure BadUsage(msg: string);
 procedure ShowUsage(errmsg: string = '');
 
+type
+  TCommand = class
+  public
+    procedure Initialize; virtual;
+    function AcceptParam(const Param: string): boolean; virtual;
+    function Run: cardinal; virtual;
+  end;
+
+  TCommandList = class(TObjectDictionary<string, TCommand>);
+
 var
   Command: string;
+  CustomCommand: TCommand;
   SkipAutoRepair: boolean;
 
  { Each block of params is only valid (initialized) if that command is in Command }
@@ -49,12 +60,42 @@ var
 
 procedure ParseCommandLine();
 
+//Registers a custom command handler. Secondary modules should use this to extend command line
+procedure RegisterCommand(const Name: string; const Command: TCommand);
+
 implementation
 uses Forms, Windows, JWBCore;
+
+//Initialize to default values before parsing
+procedure TCommand.Initialize;
+begin
+end;
+
+//Parses a param from the command line. Returns true if it was successfuly parsed, false if
+//no more params are expected (perhaps it's something else)
+function TCommand.AcceptParam(const Param: string): boolean;
+begin
+  Result := false;
+end;
+
+//Returns application exit code
+function TCommand.Run: cardinal;
+begin
+  Result := 0;
+end;
 
 procedure BadUsage(msg: string);
 begin
   raise EBadUsage.Create(msg);
+end;
+
+
+var
+  CustomCommands: TCommandList;
+
+procedure RegisterCommand(const Name: string; const Command: TCommand);
+begin
+  CustomCommands.Add(Name.ToLower, Command);
 end;
 
 procedure ShowUsage(errmsg: string);
@@ -183,6 +224,8 @@ begin
    //Command
     if Command='' then begin
       Command := s;
+      if CustomCommands.TryGetValue(Command.ToLower, CustomCommand) then
+        CustomCommand.Initialize;
 
       if Command='makeexamples' then begin
        //Nothing to initialize
@@ -220,6 +263,9 @@ begin
         if i>ParamCount() then BadUsage('"open" requires file name');
         OpenParams.Filename := ParamStr(i);
       end else
+      if CustomCommand <> nil then
+        //Nothing, already initialized, but prevent further processing here
+      else
       if FileExists(s) then begin
         FillChar(OpenParams, sizeof(OpenParams), 0);
         Command := 'open';
@@ -233,11 +279,12 @@ begin
     begin
       if Command='makerad' then begin
         AddFilename(MakeRadParams.Files, ParamStr(i));
-
       end else
       if Command='updatedics' then begin
         AddFilename(UpdateDicsParams.Files, ParamStr(i));
-
+      end else
+      if (CustomCommand <> nil) and CustomCommand.AcceptParam(s) then begin
+        Inc(i);
       end else
         BadUsage('Invalid param: "'+s+'"');
 
@@ -258,5 +305,13 @@ begin
   end;
 
 end;
+
+initialization
+  CustomCommands := TCommandList.Create;
+
+finalization
+ {$IFDEF DEBUG}
+  FreeAndNil(CustomCommands);
+ {$ENDIF}
 
 end.

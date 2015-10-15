@@ -57,12 +57,14 @@ function BackupDir: string;
 function GetBackupFilename(const AFilename: string): string;
 function Backup(const filename: string): string;
 
+function CanWriteWakanIni: boolean;
 function GetWakanIni: TCustomIniFile; //call GetSettingsStore instead
 function GetSettingsStore: TCustomIniFile;
 procedure FreeSettings;
 
 implementation
-uses SysUtils, Forms, ShlObj, Windows, Registry, JWBStrings, JWBPortableMode, UpgradeFiles;
+uses SysUtils, Forms, ShlObj, Windows, Registry, JWBStrings, JWBCore, JWBCommandLine, JWBPortableMode,
+  UpgradeFiles;
 
 { Portable/standalone }
 
@@ -197,16 +199,31 @@ begin
   FreeAndNil(FWakanIni);
 end;
 
+//True if the directory where Wakan resides is writeable for us
+function CanWriteWakanIni: boolean;
+begin
+  //Usually it's better to just try and write, but VirtualStore muddifies the waters
+  if FileExists(AppFolder+'\wakan.ini') then
+    Result := CanAccess(AppFolder+'\wakan.ini', GENERIC_WRITE)
+  else
+    Result := CanAccess(AppFolder, FILE_ADD_FILE);
+end;
 
 // Saves portability settings to wakan.ini. May require administrator permissions.
-procedure SavePortabilityModeSetting(const ModeString: string);
+procedure CommitPortabilityMode(const ModeString: string);
 var ini: TCustomIniFile;
 begin
- //TODO: Try writing to the file and if we cannot, spawn Wakan with administator rights
- //  and some kind of a /setportability [ModeString] command line
-  ini := GetWakanIni;
-  ini.WriteString('General', 'Install', ModeString);
-  ini.UpdateFile;
+  if CanWriteWakanIni then begin
+    ini := GetWakanIni;
+    ini.WriteString('General', 'Install', ModeString);
+    ini.UpdateFile;
+    UpgradeLocalData();
+  end else begin
+    RunElevatedWorker('writeportability ' + ModeString);
+    FreeAndNil(FWakanIni); //Reload
+  end;
+
+  FreeAndNil(FSettingsStore); //settings location could have changed -- recreate later
 end;
 
 
@@ -218,28 +235,17 @@ var ini: TCustomIniFile;
   s: string;
 begin
   ini := GetWakanIni;
-
   s := LowerCase(ini.ReadString('General', 'Install', ''));
 
   if s='' then begin
     s := LowerCase(TfPortableMode.SelectMode(nil));
-    UpgradeLocalData();
-    SavePortabilityModeSetting(s);
-    FreeAndNil(FSettingsStore); //settings location could have changed -- recreate later
+    CommitPortabilityMode(s);
   end else
-  if s='compatible' then begin
-   //This was a mixed mode emulating older Wakan. Not supported anymore.
+  if (s='compatible') //This was a mixed mode emulating older Wakan. Not supported anymore.
+  or (s='upgrade') //A mark from older Wakans that local data upgrade was aborted in the middle.
+  then begin
     s := 'standalone';
-    UpgradeLocalData();
-    SavePortabilityModeSetting(s);
-    FreeAndNil(FSettingsStore);
-  end else
-  if s='upgrade' then begin
-   //A mark from older Wakans that local data upgrade was aborted in the middle.
-    s := 'standalone'; //it was only possible to upgrade to standalone
-    UpgradeLocalData();
-    SavePortabilityModeSetting(s);
-    FreeAndNil(FSettingsStore);
+    CommitPortabilityMode(s);
   end;
 
   if s='standalone' then begin
@@ -254,9 +260,42 @@ end;
 
 
 
+type
+  TWritePortabilityCmd = class(TCommand)
+  protected
+    FModeString: string;
+  public
+    procedure Initialize; override;
+    function AcceptParam(const Param: string): boolean; override;
+    function Run: cardinal; override;
+  end;
+
+procedure TWritePortabilityCmd.Initialize;
+begin
+  FModeString := '';
+end;
+
+function TWritePortabilityCmd.AcceptParam(const Param: string): boolean;
+begin
+  if FModeString = '' then begin
+    FModeString := Param;
+    Result := true;
+  end else
+    Result := false;
+end;
+
+function TWritePortabilityCmd.Run: cardinal;
+begin
+  CommitPortabilityMode(FModeString);
+  Result := 0;
+end;
+
 initialization
+  RegisterCommand('writeportability', TWritePortabilityCmd.Create);
 
 finalization
+ {$IFDEF DEBUG}
   FreeSettings();
+ {$ENDIF}
 
 end.

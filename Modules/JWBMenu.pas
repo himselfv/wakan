@@ -242,7 +242,6 @@ type
 
   private
     initdone:boolean;
-    procedure CheckResolution;
     procedure LoadWakanCfg(const filename: string);
     procedure ApplyUI;
   public
@@ -431,8 +430,13 @@ begin
 
   try
     ParseCommandLine();
+    if JWBCommandLine.CustomCommand <> nil then begin
+      System.ExitCode := CustomCommand.Run();
+      Application.ShowMainForm := false;
+      Application.Terminate;
+    end;
+
     InitLanguage;
-    CheckResolution;
 
     InitLocalData;
     if Command='upgradelocaldata' then begin
@@ -836,19 +840,6 @@ begin
     fWordLookup.RestoreLookupMode;
 
   FormPlacement1.RestoreFormPlacement([roActivate, roJustWrite]); //activate main form, we're starting
-end;
-
-procedure TfMenu.CheckResolution;
-begin
-  if (Screen.Width<800) or (Screen.Height<600) then
-    if Application.MessageBox(
-      pchar(_l('^eThis version of WaKan requires at least 800x600 resolution.'#13#13'Do you really want to continue?')),
-      pchar(_l('#00020^eError')),
-      MB_YESNO or MB_ICONERROR)=idNo then
-    begin
-      Application.Terminate;
-      exit;
-    end;
 end;
 
 procedure TfMenu.LoadWakanCfg(const filename: string);
