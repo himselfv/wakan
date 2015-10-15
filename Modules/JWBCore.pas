@@ -48,6 +48,8 @@ function IsAdministrator: Boolean;
 function IsElevated: Boolean;
 procedure SetButtonElevated(const AButtonHandle: THandle);
 
+function CanAccess(Filename: string; GenericAccessRights: cardinal): boolean;
+
 procedure RegeditAtKey(const key: string);
 
 implementation
@@ -344,6 +346,98 @@ begin
 end;
 {$ELSE}
 begin
+end;
+{$ENDIF}
+
+//Tests if the process has the specified rights to the specified filesystem object
+//Most of the time it's better to just try and access the object, but there are cases when Windows
+//would automatically redirect to VirtualStore and we still want to know.
+function CanAccess(Filename: string; GenericAccessRights: cardinal): boolean;
+{$IFDEF MSWINDOWS}
+const
+  FILE_READ_DATA         = $0001; // file & pipe
+  FILE_LIST_DIRECTORY    = $0001; // directory
+  FILE_WRITE_DATA        = $0002; // file & pipe
+  FILE_ADD_FILE          = $0002; // directory
+  FILE_APPEND_DATA       = $0004; // file
+  FILE_ADD_SUBDIRECTORY  = $0004; // directory
+  FILE_CREATE_PIPE_INSTANCE = $0004; // named pipe
+  FILE_READ_EA           = $0008; // file & directory
+  FILE_WRITE_EA          = $0010; // file & directory
+  FILE_EXECUTE           = $0020; // file
+  FILE_TRAVERSE          = $0020; // directory
+  FILE_DELETE_CHILD      = $0040; // directory
+  FILE_READ_ATTRIBUTES   = $0080; // all
+  FILE_WRITE_ATTRIBUTES  = $0100; // all
+  FILE_ALL_ACCESS        = STANDARD_RIGHTS_REQUIRED or SYNCHRONIZE or $1FF;
+  FILE_GENERIC_READ      = STANDARD_RIGHTS_READ or FILE_READ_DATA or FILE_READ_ATTRIBUTES or FILE_READ_EA or SYNCHRONIZE;
+  FILE_GENERIC_WRITE     = STANDARD_RIGHTS_WRITE or FILE_WRITE_DATA or FILE_WRITE_ATTRIBUTES or FILE_WRITE_EA or
+    FILE_APPEND_DATA or SYNCHRONIZE;
+  FILE_GENERIC_EXECUTE   = STANDARD_RIGHTS_EXECUTE or FILE_READ_ATTRIBUTES or FILE_EXECUTE or SYNCHRONIZE;
+var length: cardinal;
+  security: PSecurityDescriptor;
+  hToken: THandle;
+  hImpersonatedToken: THandle;
+  mapping: GENERIC_MAPPING;
+  privileges: PRIVILEGE_SET;
+  privilegesLength: cardinal;
+  grantedAccess: DWORD;
+  bResult: BOOL;
+begin
+  hToken := INVALID_HANDLE_VALUE;
+  hImpersonatedToken := INVALID_HANDLE_VALUE;
+
+  Assert(not GetFileSecurity(PChar(Filename), OWNER_SECURITY_INFORMATION or GROUP_SECURITY_INFORMATION
+      or DACL_SECURITY_INFORMATION, nil, 0, length ));
+  if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
+    RaiseLastOsError();
+
+  GetMem(security, length);
+  try
+   //NOTE: Maybe we shouldn't RaiseLastOsError()s and just return False instead. It may be that we
+   //  are denied even querying the rights.
+
+    if not GetFileSecurity(PChar(Filename), OWNER_SECURITY_INFORMATION or GROUP_SECURITY_INFORMATION
+      or DACL_SECURITY_INFORMATION, security, length, length ) then
+      RaiseLastOsError();
+
+    if not OpenProcessToken(GetCurrentProcess(), TOKEN_IMPERSONATE or TOKEN_QUERY
+      or TOKEN_DUPLICATE or STANDARD_RIGHTS_READ, hToken) then
+      RaiseLastOsError();
+
+    if not DuplicateToken(hToken, SecurityImpersonation, @hImpersonatedToken) then
+      RaiseLastOsError();
+
+    mapping.GenericRead := FILE_GENERIC_READ;
+    mapping.GenericWrite := FILE_GENERIC_WRITE;
+    mapping.GenericExecute := FILE_GENERIC_EXECUTE;
+    mapping.GenericAll := FILE_ALL_ACCESS;
+
+    privileges.PrivilegeCount := 0;
+    privilegesLength := SizeOf(privileges);
+
+    grantedAccess := 0;
+    bResult := FALSE;
+
+    MapGenericMask(genericAccessRights, mapping);
+
+    if not AccessCheck(security, hImpersonatedToken, genericAccessRights, mapping, privileges,
+      privilegesLength, grantedAccess, bResult) then
+      RaiseLastOsError();
+
+    Result := bResult;
+  finally
+    if hImpersonatedToken <> INVALID_HANDLE_VALUE then
+      CloseHandle(hImpersonatedToken);
+    if hToken <> INVALID_HANDLE_VALUE then
+      CloseHandle(hToken);
+    FreeMem(security);
+  end;
+
+end;
+{$ELSE}
+begin
+  Result := true;
 end;
 {$ENDIF}
 

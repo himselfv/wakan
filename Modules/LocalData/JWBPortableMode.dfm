@@ -13,6 +13,7 @@ object fPortableMode: TfPortableMode
   Font.Style = []
   OldCreateOrder = False
   Position = poOwnerFormCenter
+  OnShow = FormShow
   DesignSize = (
     423
     260)
@@ -81,6 +82,7 @@ object fPortableMode: TfPortableMode
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    OnClick = btnStandaloneClick
   end
   object btnPortable: TButton
     Left = 8

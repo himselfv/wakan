@@ -14,7 +14,8 @@ type
     btnPortable: TButton;
     lblPortableDescription: TLabel;
     procedure btnPortableClick(Sender: TObject);
-    procedure btnIgnoreFilesClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure btnStandaloneClick(Sender: TObject);
   public
     class function SelectMode(AOwner: TComponent): string;
   end;
@@ -24,17 +25,26 @@ const
   MR_PORTABLE = 1002;
 
 implementation
+uses JWBCore, AppData;
 
 {$R *.DFM}
+
+procedure TfPortableMode.FormShow(Sender: TObject);
+begin
+  if not CanWriteWakanIni then begin
+    SetButtonElevated(btnStandalone.Handle);
+    SetButtonElevated(btnPortable.Handle);
+  end;
+end;
+
+procedure TfPortableMode.btnStandaloneClick(Sender: TObject);
+begin
+  ModalResult := MR_STANDALONE;
+end;
 
 procedure TfPortableMode.btnPortableClick(Sender: TObject);
 begin
   ModalResult := MR_PORTABLE;
-end;
-
-procedure TfPortableMode.btnIgnoreFilesClick(Sender: TObject);
-begin
-  ModalResult := MR_STANDALONE;
 end;
 
 class function TfPortableMode.SelectMode(AOwner: TComponent): string;
