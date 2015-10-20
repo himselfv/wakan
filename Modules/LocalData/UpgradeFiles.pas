@@ -54,6 +54,7 @@ type
     constructor Create(const ABasePath, AFilename, ATargetPath: string; AFlags: TMoveFileFlags = []);
     function Description: string; override;
     procedure Run; override;
+    property Flags: TMoveFileFlags read FFlags write FFlags;
   end;
 
   TUpgradeActionList = class(TObjectList<TUpgradeAction>)
@@ -85,22 +86,29 @@ uses UITypes, ShlObj, AppData, JWBCore, JWBLanguage, StdPrompt;
 
 {$R *.dfm}
 
+type
+  TEnumFlag = (
+    efRecursive,   //this and all subdirs
+    efFolders      //also return folders
+  );
+  TEnumFlags = set of TEnumFlag;
+
 //ABasePath and APath must not have slashes at the end.
 //APath must have slash at the beginning if it has at least one component.
-procedure EnumByMask(var List: TFileList; const ABasePath, APath, AMask: string; Recursive: boolean); overload;
+procedure EnumByMask(var List: TFileList; const ABasePath, APath, AMask: string; AFlags: TEnumFlags); overload;
 var sr: TSearchRec;
   attr: integer;
   res: integer;
 begin
   attr := faAnyFile;
-  if not Recursive then
+  if not (efRecursive in AFlags) and not (efFolders in AFlags) then
     attr := attr and not faDirectory;
   res := FindFirst(ABasePath+APath+'\'+AMask, attr, sr);
   while res=0 do begin
-    if recursive and (sr.Attr and faDirectory <> 0) and (sr.Name<>'.') and (sr.Name<>'..') then
-      EnumByMask(List, ABasePath, APath+'\'+sr.Name, AMask, Recursive)
+    if (efRecursive in AFlags) and (sr.Attr and faDirectory <> 0) and (sr.Name<>'.') and (sr.Name<>'..') then
+      EnumByMask(List, ABasePath, APath+'\'+sr.Name, AMask, AFlags)
     else
-    if (sr.Attr and faDirectory = 0) then
+    if (sr.Attr and faDirectory = 0) or ((efFolders in AFlags)  and (sr.Name<>'.') and (sr.Name<>'..')) then
       AddFilename(List, APath+sr.Name);
     res := FindNext(sr);
   end;
@@ -108,14 +116,14 @@ begin
 end;
 
 //Enumerates all files in APath, returns a list of their relative paths and names.
-function EnumByMask(const APath, AMask: string; Recursive: boolean = false): TFileList; overload;
+function EnumByMask(const APath, AMask: string; AFlags: TEnumFlags = []): TFileList; overload;
 var ABasePath: string;
 begin
   SetLength(Result, 0);
   ABasePath := APath;
   if (ABasePath <> '') and (ABasePath[Length(ABasePath)] = '\') then
     delete(ABasePath, Length(ABasePath), 1);
-  EnumByMask(Result, ABasePath, '', AMask, Recursive);
+  EnumByMask(Result, ABasePath, '', AMask, AFlags);
 end;
 
 
@@ -213,7 +221,7 @@ begin
         and DirectoryExists(FSourceBase+'\'+SourceFile)
         and DirectoryExists(FTargetBase+'\'+TargetPath+'\'+TargetFilename) then begin
           //Automatically merge the contents of the folder
-          for ChildFilename in EnumByMask(FSourceBase+'\'+SourceFile, '*', false) do
+          for ChildFilename in EnumByMask(FSourceBase+'\'+SourceFile, '*', [efFolders]) do
             MoveFile(SourceFile+'\'+ChildFilename, TargetPath+'\'+ExtractFilename(SourceFile));
           //Delete the source folder
           if not RemoveDirectory(PChar(FSourceBase+'\'+SourceFile)) then
@@ -221,7 +229,7 @@ begin
           exit;
         end else
         if mfAutoRename in FFlags then begin
-          TargetFilename := CreateIndexedFilename(ExtractFilename(FFilename), RenameIndex);
+          TargetFilename := CreateIndexedFilename(ExtractFilename(SourceFile), RenameIndex);
           Inc(RenameIndex);
           continue; // retry
         end else begin
