@@ -5,10 +5,10 @@ object fUpgradeFiles: TfUpgradeFiles
   ClientHeight = 346
   ClientWidth = 408
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = RUSSIAN_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Name = 'MS Sans Serif'
   Font.Style = []
   OldCreateOrder = False
   DesignSize = (
@@ -24,11 +24,11 @@ object fUpgradeFiles: TfUpgradeFiles
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
     Caption = '#01230^Upgrade data'
-    Font.Charset = DEFAULT_CHARSET
+    Font.Charset = RUSSIAN_CHARSET
     Font.Color = clWindowText
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
     ParentFont = False
     WordWrap = True
     ExplicitWidth = 391
@@ -43,12 +43,6 @@ object fUpgradeFiles: TfUpgradeFiles
     Caption = 
       '#01231^Your Wakan folder has some data which needs to be upgrade' +
       'd.'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
     WordWrap = True
     ExplicitWidth = 389
   end
@@ -62,12 +56,6 @@ object fUpgradeFiles: TfUpgradeFiles
     Caption = 
       '#01233^If you decline, old data will not be accessible. You can ' +
       'perform the upgrade manually from Settings.'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -13
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
     WordWrap = True
   end
   object lbFiles: TListBox
@@ -86,15 +74,8 @@ object fUpgradeFiles: TfUpgradeFiles
     Height = 33
     Anchors = [akLeft, akBottom]
     Caption = '#01234^Upgrade'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Tahoma'
-    Font.Style = []
     ModalResult = 1
-    ParentFont = False
     TabOrder = 1
-    ExplicitTop = 278
   end
   object btnIgnoreFiles: TButton
     Left = 208
@@ -103,14 +84,7 @@ object fUpgradeFiles: TfUpgradeFiles
     Height = 33
     Anchors = [akLeft, akBottom]
     Caption = '#01235^Skip'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Tahoma'
-    Font.Style = []
     ModalResult = 2
-    ParentFont = False
     TabOrder = 2
-    ExplicitTop = 278
   end
 end
