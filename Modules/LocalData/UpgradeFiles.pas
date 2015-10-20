@@ -293,6 +293,14 @@ begin
   Result.AddMoveByMask(AppFolder, '*.lay', UserDataDir);
   Result.AddMoveFile(AppFolder, 'roma_problems.txt', UserDataDir);
   Result.AddMoveFile(AppFolder, 'backup', UserDataDir, [mfAutoMerge, mfAutoRename]);
+
+  if PortabilityMode = pmPortable then begin
+    //Older Wakans had these stored in UserData
+    Result.AddMoveFile(UserDataDir, 'KanjiCopyFormats', ProgramDataDir);
+    Result.AddMoveFile(UserDataDir, 'KanjiLinks', ProgramDataDir);
+    Result.AddMoveFile(UserDataDir, 'ExprCopyFormats', ProgramDataDir);
+    Result.AddMoveFile(UserDataDir, 'ExprLinks', ProgramDataDir);
+  end;
 end;
 
 class function TfUpgradeFiles.ConfirmUpgrade(AOwner: TComponent; ActionList: TUpgradeActionList): boolean;
