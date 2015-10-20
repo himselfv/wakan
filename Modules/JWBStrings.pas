@@ -451,7 +451,7 @@ begin
       if (sRec.Name = '.') or (sRec.Name = '..') then begin
        //Nothing
       end else
-        RemoveDirectory(PChar(dir + '\' + sRec.Name))
+        DeleteDirectory(dir + '\' + sRec.Name)
     else
       DeleteFile(PChar(dir + '\' + sRec.Name));
   until FindNext(sRec) <> 0;
