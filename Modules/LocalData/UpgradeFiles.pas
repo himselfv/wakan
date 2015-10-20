@@ -8,11 +8,12 @@ uses
   StdCtrls, Generics.Collections, JWBStrings;
 
 type
- //Upgrade is performed through UpgradeActions. The simplest is "MoveToAppData" which moves file
- //to the AppData/Roaming/Wakan folder.
+ //Upgrade is performed through UpgradeActions. The simplest is "MoveFile" which
+ //moves file or folder where specified
 
   TProgressHandler = class
     function HandleProgress(const Total, Done: int64): boolean; virtual; abstract;
+    procedure ReportError(ErrorText: string); virtual; abstract;
   end;
 
   TUpgradeAction = class
@@ -22,16 +23,33 @@ type
     procedure Run; virtual; abstract;
   end;
 
+
+ {
+  Moves a file or directory from one place into another.
+   BasePath: source dir
+   Filename: relative path and name of file or folder to move
+   TargetPath: target dir where to reproduce the relative path and put the file
+
+  Directories will automatically be moved with all contents.
+  It's better to MoveFile(dirname) than to move it file by file. In easy cases
+  this'll move the directory in one action, and hard cases are covered.
+
+  Simple errors are reported through ProgressHandler, unpexpected ones are raised.
+ }
+
   TMoveFileFlag = (
-    mfAutoRename    // if the target file exists, automatically rename the new one
+    mfAutoMerge,    // if the target is a folder, merge the contents
+    mfAutoRename    // if the target file exists, give this one a new name
   );
   TMoveFileFlags = set of TMoveFileFlag;
 
   TMoveFile = class(TUpgradeAction)
   protected
-    FBasePath, FFilename, FTargetPath: string;
+    FSourceBase, FFilename: string;
+    FTargetBase: string;
     FFlags: TMoveFileFlags;
-    function DoMove(const TargetFilename: string): integer;
+    function DoMove(const SourceFile, TargetPath, TargetName: string): integer;
+    procedure MoveFile(const SourceFile, TargetPath: string);
   public
     constructor Create(const ABasePath, AFilename, ATargetPath: string; AFlags: TMoveFileFlags = []);
     function Description: string; override;
@@ -40,7 +58,8 @@ type
 
   TUpgradeActionList = class(TObjectList<TUpgradeAction>)
   public
-    procedure AddMoveFile(const ABasePath, AFilename, ATargetPath: string);
+    procedure AddMoveFile(const ABasePath, AFilename, ATargetPath: string; AFlags: TMoveFileFlags = [mfAutoRename]);
+    procedure AddMoveByMask(const ABasePath, AMask, ATargetPath: string; AFlags: TMoveFileFlags = [mfAutoRename]);
   end;
 
   TfUpgradeFiles = class(TJwbForm)
@@ -66,6 +85,40 @@ uses UITypes, ShlObj, AppData, JWBCore, JWBLanguage, StdPrompt;
 
 {$R *.dfm}
 
+//ABasePath and APath must not have slashes at the end.
+//APath must have slash at the beginning if it has at least one component.
+procedure EnumByMask(var List: TFileList; const ABasePath, APath, AMask: string; Recursive: boolean); overload;
+var sr: TSearchRec;
+  attr: integer;
+  res: integer;
+begin
+  attr := faAnyFile;
+  if not Recursive then
+    attr := attr and not faDirectory;
+  res := FindFirst(ABasePath+APath+'\'+AMask, attr, sr);
+  while res=0 do begin
+    if recursive and (sr.Attr and faDirectory <> 0) and (sr.Name<>'.') and (sr.Name<>'..') then
+      EnumByMask(List, ABasePath, APath+'\'+sr.Name, AMask, Recursive)
+    else
+    if (sr.Attr and faDirectory = 0) then
+      AddFilename(List, APath+sr.Name);
+    res := FindNext(sr);
+  end;
+  SysUtils.FindClose(sr);
+end;
+
+//Enumerates all files in APath, returns a list of their relative paths and names.
+function EnumByMask(const APath, AMask: string; Recursive: boolean = false): TFileList; overload;
+var ABasePath: string;
+begin
+  SetLength(Result, 0);
+  ABasePath := APath;
+  if (ABasePath <> '') and (ABasePath[Length(ABasePath)] = '\') then
+    delete(ABasePath, Length(ABasePath), 1);
+  EnumByMask(Result, ABasePath, '', AMask, Recursive);
+end;
+
+
 {
 BasePath: root folder where AFilename is located.
 Filename: target subfolder and file
@@ -74,9 +127,9 @@ TargetPath: where to recreate subfolders and move file
 constructor TMoveFile.Create(const ABasePath, AFilename, ATargetPath: string; AFlags: TMoveFileFlags = []);
 begin
   inherited Create;
-  FBasePath := ABasePath;
+  FSourceBase := ABasePath;
   FFilename := AFilename;
-  FTargetPath := ATargetPath;
+  FTargetBase := ATargetPath;
   FFlags := AFlags;
 end;
 
@@ -107,11 +160,20 @@ begin
 end;
 
 //Moves the file to the target path, using the specified target filename
-function TMoveFile.DoMove(const TargetFilename: string): integer;
+// SourceFile: relative path and name of file or folder to move
+// TargetPath: relative path where to place it
+// TargetName: new filename to use
+// Returns: LastError or 0
+function TMoveFile.DoMove(const SourceFile, TargetPath, TargetName: string): integer;
+var TargetFilename: string;
 begin
+  if TargetPath <> '' then
+    TargetFilename := TargetPath+'\'+TargetName
+  else
+    TargetFilename := TargetName; //MoveFile dislikes double//slashes
   if not MoveFileWithProgress(
-    PChar(FBasePath+'\'+FFilename),
-    PChar(FTargetPath+'\'+ExtractFilePath(FFilename)+'\'+TargetFilename),
+    PChar(FSourceBase+'\'+SourceFile),
+    PChar(FTargetBase+'\'+TargetFilename),
     @CopyProgress,
     pointer(Self),
     MOVEFILE_COPY_ALLOWED) then
@@ -126,29 +188,48 @@ begin
   Result := ChangeFileExt(ABaseFilename, '') + ' (' + IntToStr(AIndex) + ')' + ExtractFileExt(ABaseFilename);
 end;
 
-procedure TMoveFile.Run;
+//Moves one file or folder completely. Minds flags.
+// SourceFile: relative path and name of file or folder to move
+// TargetPath: relative path where to place it. May be different from SourceFile's
+//   relative path due to auto-renaming of something in the middle
+procedure TMoveFile.MoveFile(const SourceFile, TargetPath: string);
 var err: integer;
   RenameIndex: integer;
   TargetFilename: string;
+  ChildFilename: string;
 begin
-  if not FileExists(FBasePath+'\'+FFilename) then
-    exit;
-  SysUtils.ForceDirectories(ExtractFilePath(FTargetPath+'\'+FFilename)); //FFilename might contain subdirs
+  SysUtils.ForceDirectories(ExtractFilePath(FTargetBase+'\'+TargetPath));
 
   RenameIndex := 1;
-  TargetFilename := ExtractFilename(FFilename);
+  TargetFilename := ExtractFilename(SourceFile);
   repeat
-    err := DoMove(TargetFilename);
+    err := DoMove(SourceFile, TargetPath, TargetFilename);
     case err of
       ERROR_SUCCESS: break;
       ERROR_FILE_EXISTS,
       ERROR_ALREADY_EXISTS:
+        if (mfAutoMerge in FFlags)
+        and (RenameIndex = 1) //makes no sense to merge into randomly renamed directories
+        and DirectoryExists(FSourceBase+'\'+SourceFile)
+        and DirectoryExists(FTargetBase+'\'+TargetPath+'\'+TargetFilename) then begin
+          //Automatically merge the contents of the folder
+          for ChildFilename in EnumByMask(FSourceBase+'\'+SourceFile, '*', false) do
+            MoveFile(SourceFile+'\'+ChildFilename, TargetPath+'\'+ExtractFilename(SourceFile));
+          //Delete the source folder
+          if not RemoveDirectory(PChar(FSourceBase+'\'+SourceFile)) then
+            ProgressHandler.ReportError(SourceFile+': Cannot remove folder.');
+          exit;
+        end else
         if mfAutoRename in FFlags then begin
           TargetFilename := CreateIndexedFilename(ExtractFilename(FFilename), RenameIndex);
           Inc(RenameIndex);
           continue; // retry
-        end else
-          exit; //for now just skip
+        end else begin
+          ProgressHandler.ReportError(SourceFile+': file already exists');
+          exit;
+        end;
+    else //unexpected errors
+      break; //and raise error later
     end;
   until false;
 
@@ -156,51 +237,31 @@ begin
     RaiseLastOsError(err);
 end;
 
-procedure TUpgradeActionList.AddMoveFile(const ABasePath, AFilename, ATargetPath: string);
+procedure TMoveFile.Run;
 begin
-  if FileExists(ABasePath+'\'+AFilename) then
-    Self.Add(TMoveFile.Create(ABasePath, AFilename, ATargetPath, [mfAutoRename]));
+  MoveFile(FFilename, ExtractFilePath(FFilename));
 end;
 
-//ABasePath and APath must not have slashes at the end.
-//APath must have slash at the beginning if it has at least one component.
-procedure EnumByMask(var List: TFileList; const ABasePath, APath, AMask: string; Recursive: boolean); overload;
-var sr: TSearchRec;
-  attr: integer;
-  res: integer;
+procedure TUpgradeActionList.AddMoveFile(const ABasePath, AFilename, ATargetPath: string; AFlags: TMoveFileFlags);
 begin
-  attr := faAnyFile;
-  if not Recursive then
-    attr := attr and not faDirectory;
-  res := FindFirst(ABasePath+APath+'\'+AMask, attr, sr);
-  while res=0 do begin
-    if recursive and (sr.Attr and faDirectory <> 0) and (sr.Name<>'.') and (sr.Name<>'..') then
-      EnumByMask(List, ABasePath, APath+'\'+sr.Name, AMask, Recursive)
-    else
-    if (sr.Attr and faDirectory = 0) then
-      AddFilename(List, APath+sr.Name);
-    res := FindNext(sr);
-  end;
-  SysUtils.FindClose(sr);
+  if FileExists(ABasePath+'\'+AFilename)
+  or DirectoryExists(ABasePath+'\'+AFilename) then
+    Self.Add(TMoveFile.Create(ABasePath, AFilename, ATargetPath, AFlags));
 end;
 
-//Enumerates all files in APath, returns a list of their relative paths and names.
-function EnumByMask(const APath, AMask: string; Recursive: boolean): TFileList; overload;
-var ABasePath: string;
+procedure TUpgradeActionList.AddMoveByMask(const ABasePath, AMask, ATargetPath: string; AFlags: TMoveFileFlags);
+var Filename: string;
 begin
-  SetLength(Result, 0);
-  ABasePath := APath;
-  if (ABasePath <> '') and (ABasePath[Length(ABasePath)] = '\') then
-    delete(ABasePath, Length(ABasePath), 1);
-  EnumByMask(Result, ABasePath, '', AMask, Recursive);
+  for Filename in EnumByMask(ABasePath, AMask) do
+    Self.Add(TMoveFile.Create(ABasePath, Filename, ATargetPath, AFlags));
 end;
+
 
 //Builds a list of all upgrade actions in the order of their execution.
 //Standalone/portable mode must be set before calling. Make sure to only add actions relevant to
 //current mode.
 function BuildUpgradeActionList: TUpgradeActionList;
-var Filename: string;
-  AppFolder: string;
+var AppFolder: string;
   AppFolderDrive: string;
   UserDataDir: string;
   VirtualStore: string;
@@ -219,28 +280,19 @@ begin
   //Older Wakans stored these in the application folder
   //We don't require standalone mode because there is a VirtualStore
   //for portable folder too - no harm checking
-  Result.AddMoveFile(VirtualStore, 'wakan.usr', UserDataDir);
-  Result.AddMoveFile(VirtualStore, 'wakan.bak', UserDataDir);
-  Result.AddMoveFile(VirtualStore, 'wakan.cdt', UserDataDir);
-  Result.AddMoveFile(VirtualStore, 'wakan.lay', UserDataDir);
+  Result.AddMoveByMask(VirtualStore, '*.usr', UserDataDir);
+  Result.AddMoveByMask(VirtualStore, '*.bak', UserDataDir);
+  Result.AddMoveByMask(VirtualStore, '*.cdt', UserDataDir);
+  Result.AddMoveByMask(VirtualStore, '*.lay', UserDataDir);
   Result.AddMoveFile(VirtualStore, 'roma_problems.txt', UserDataDir);
-  for Filename in EnumByMask(VirtualStore+'\backup\', '*.*', true) do
-    Result.Add(TMoveFile.Create(VirtualStore, 'backup\'+Filename, UserDataDir, [mfAutoRename]));
+  Result.AddMoveFile(VirtualStore, 'backup', UserDataDir, [mfAutoMerge, mfAutoRename]);
 
-  Result.AddMoveFile(AppFolder, 'wakan.usr', UserDataDir);
-  Result.AddMoveFile(AppFolder, 'wakan.bak', UserDataDir);
-  Result.AddMoveFile(AppFolder, 'wakan.cdt', UserDataDir);
-  Result.AddMoveFile(AppFolder, 'wakan.lay', UserDataDir);
+  Result.AddMoveByMask(AppFolder, '*.usr', UserDataDir);
+  Result.AddMoveByMask(AppFolder, '*.bak', UserDataDir);
+  Result.AddMoveByMask(AppFolder, '*.cdt', UserDataDir);
+  Result.AddMoveByMask(AppFolder, '*.lay', UserDataDir);
   Result.AddMoveFile(AppFolder, 'roma_problems.txt', UserDataDir);
-  for Filename in EnumByMask(AppFolder+'\backup\', '*.*', true) do
-    Result.Add(TMoveFile.Create(AppFolder, 'backup\'+Filename, UserDataDir, [mfAutoRename]));
-
-
-//Do not move dictionaries, they are currently always in Wakan folder
-{  Result.AddMoveByMask(AppFolder, '*.dic', DictionaryDir, false);
-  Result.AddMoveFile(AppFolder, 'edict', DictionaryDir);
-  Result.AddMoveFile(AppFolder, 'edict2', DictionaryDir);
-  Result.AddMoveFile(AppFolder, 'cedict', DictionaryDir); }
+  Result.AddMoveFile(AppFolder, 'backup', UserDataDir, [mfAutoMerge, mfAutoRename]);
 end;
 
 class function TfUpgradeFiles.ConfirmUpgrade(AOwner: TComponent; ActionList: TUpgradeActionList): boolean;
@@ -270,11 +322,27 @@ type
   TVisibleProgressHandler = class(TProgressHandler)
   protected
     LastMaxProgress: int64;
+    Errors: TStringList;
   public
     sp: TSMPromptForm;
+    constructor Create;
+    destructor Destroy; override;
     procedure Start(Action: TUpgradeAction);
     function HandleProgress(const Total, Done: int64): boolean; override;
+    procedure ReportError(ErrorText: string); override;
   end;
+
+constructor TVisibleProgressHandler.Create;
+begin
+  inherited;
+  Errors := TStringList.Create;
+end;
+
+destructor TVisibleProgressHandler.Destroy;
+begin
+  FreeAndNil(Errors);
+  inherited;
+end;
 
 procedure TVisibleProgressHandler.Start(Action: TUpgradeAction);
 begin
@@ -317,6 +385,11 @@ begin
   Result := true;
 end;
 
+procedure TVisibleProgressHandler.ReportError(ErrorText: string);
+begin
+  Errors.Add(ErrorText);
+end;
+
 
 function UpgradeLocalData: boolean;
 var Actions: TUpgradeActionList;
@@ -352,6 +425,11 @@ begin
         progress.Start(Actions[i]);
         Actions[i].Run;
       end;
+
+      if progress.Errors.Count > 0 then
+        MessageBox(0, PChar(progress.Errors.Text),
+          PChar('Not all actions were successfull'),
+          MB_TASKMODAL + MB_ICONERROR);
 
     finally
       FreeAndNil(progress);
