@@ -31,7 +31,8 @@ uses
   TextTableTests in 'Modules\Package\TextTableTests.pas',
   JWBWakanTextTests in 'Modules\Editor\JWBWakanTextTests.pas',
   JWBComponentsTests in 'Modules\Components\JWBComponentsTests.pas',
-  RaineRadicalsTests in 'Modules\KanjiList\RaineRadicalsTests.pas';
+  RaineRadicalsTests in 'Modules\KanjiList\RaineRadicalsTests.pas',
+  UpgradeFilesTests in 'Modules\LocalData\UpgradeFilesTests.pas';
 
 {$R *.RES}
 

@@ -92,6 +92,7 @@
         <DCCReference Include="Modules\Editor\JWBWakanTextTests.pas"/>
         <DCCReference Include="Modules\Components\JWBComponentsTests.pas"/>
         <DCCReference Include="Modules\KanjiList\RaineRadicalsTests.pas"/>
+        <DCCReference Include="Modules\LocalData\UpgradeFilesTests.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
