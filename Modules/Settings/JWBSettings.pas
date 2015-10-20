@@ -795,7 +795,7 @@ begin
   cbMultilineGrids.Checked:=reg.ReadBool('Dict','MultiLineGrids',true);
   cbShowFreq.Checked:=reg.ReadBool('Dict','ShowFreq',false);
   cbOrderFreq.Checked:=reg.ReadBool('Dict','OrderFreq',true);
-  cbDictRefLinksInSubmenu.Checked:=reg.ReadBool('Dict','RefLinksInSubmenu',true);
+  cbDictRefLinksInSubmenu.Checked:=reg.ReadBool('Dict','RefLinksInSubmenu',false);
 
   CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
   CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
