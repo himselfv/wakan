@@ -516,13 +516,13 @@ end;
 //configuration
 function GetCharacterLinksDir: string;
 begin
-  Result := UserDataDir + '\KanjiLinks';
+  Result := ProgramDataDir + '\KanjiLinks';
 end;
 
 //Same for ExpressionLinks
 function GetExpressionLinksDir: string;
 begin
-  Result := UserDataDir + '\ExprLinks';
+  Result := ProgramDataDir + '\ExprLinks';
 end;
 
 //Retrieves a list of all available link files in a folder

@@ -173,7 +173,7 @@ end;
 //configuration
 function GetExprCopyFormatsDir: string;
 begin
-  Result := UserDataDir+'\ExprCopyFormats';
+  Result := ProgramDataDir+'\ExprCopyFormats';
 end;
 
 //Retrieves a list of all avaialable CopyFormat filenames

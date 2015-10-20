@@ -4,6 +4,7 @@ Stores application data and settings, known folders.
 Wakan supports portable and standalone modes.
 
 Standalone mode:
+- Shared data in Program Files\Wakan
 - User data in AppData\Roaming\Wakan
 - Settings in registry
 
@@ -40,8 +41,10 @@ const
   WakanRegKey = 'Software\Labyrinth\Wakan';
   PortabilityMode: TPortabilityMode = pmStandalone;
 
- //Set by SetPortabilityMode()
- //All paths have no trailing slashes
+ {
+  Main data folders. Set by SetPortabilityMode().
+  All paths have no trailing slashes.
+ }
   ProgramDataDir: string = ''; //dictionaries, romanizations
   UserDataDir: string = '';  //wakan.usr, collections
 
@@ -49,7 +52,6 @@ const
 procedure InitLocalData;
 
 procedure SetPortabilityMode(AMode: TPortabilityMode);
-function GetAppDataFolder: string;
 function DictionaryDir: string;
 
 //Call Backup(filename) to make a backup of anything, before breakingly changing
@@ -86,14 +88,23 @@ begin
 end;
 
 
+{
+               Standalone       Roaming
+ProgramData    Wakan folder     Wakan folder
+UserData       AppData\Wakan    Wakan\UserData
+}
 procedure SetPortabilityMode(AMode: TPortabilityMode);
 begin
   PortabilityMode := AMode;
-  case AMode of
-    pmStandalone: UserDataDir := GetAppDataFolder;
-    pmPortable: UserDataDir := AppFolder+'\UserData';
-  end;
   ProgramDataDir := AppFolder;
+  case AMode of
+    pmStandalone: begin
+      UserDataDir := GetAppDataFolder;
+    end;
+    pmPortable: begin
+      UserDataDir := AppFolder+'\UserData';
+    end;
+  end;
 end;
 
 function DictionaryDir: string;

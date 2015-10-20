@@ -1904,7 +1904,7 @@ end;
 
 function GetKanjiCopyFormatsDir: string;
 begin
-  Result := UserDataDir+'\KanjiCopyFormats';
+  Result := ProgramDataDir+'\KanjiCopyFormats';
 end;
 
 //Retrieves a list of all avaialable KanjiCopyFormat filenames

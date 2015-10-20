@@ -8,7 +8,7 @@
 #define MyAppURL "https://bitbucket.org/himselfv/wakan/"
 #define MyAppExeName "wakan.exe"
 
-#define CommonData "{app}\CommonData"
+#define CommonData "{app}"
 ;#define CommonData "{userappdata}\Wakan"  ; this is not correct; wakan can be used by different users
 
 
@@ -35,6 +35,9 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Messages]
+WelcomeLabel2=This will install [name/ver] on your computer.%n%nIf you're upgrading from Wakan 1.67 or earlier, please uninstall that version first. Your user data will be preserved.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -84,44 +87,44 @@ Source: "..\Release\PinYin.rpy"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\Wade-Giles.rpy"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\Yale.rpy"; DestDir: "{app}"; Flags: ignoreversion
 ; Expression copy formats
-Source: "..\Release\UserData\ExprCopyFormats\EDICT line.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprCopyFormats\example-xml.txt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprCopyFormats\Expression (HTML ruby).xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprCopyFormats\Expression.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprCopyFormats\HTML definition list.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprCopyFormats\Text line, no numbers.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprCopyFormats\Text line.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\EDICT line.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\example-xml.txt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\Expression (HTML ruby).xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\Expression.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\HTML definition list.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\Text line, no numbers.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
+Source: "..\Release\ExprCopyFormats\Text line.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
 ; Expression links
-Source: "..\Release\UserData\ExprLinks\00. Look up in Google.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\01. Look up IMI in Google.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\02. Look up DOUIGO in Google.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\03. Kotobank.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\04. Japanese Wikipedia.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\05. Wiktionary EN.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\06. Wiktionary JP.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\google.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\kotobank.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\wikipedia.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\wiktionary-en.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\ExprLinks\wiktionary-ja.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\00. Look up in Google.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\01. Look up IMI in Google.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\02. Look up DOUIGO in Google.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\03. Kotobank.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\04. Japanese Wikipedia.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\05. Wiktionary EN.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\06. Wiktionary JP.url"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\google.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\kotobank.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\wikipedia.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\wiktionary-en.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
+Source: "..\Release\ExprLinks\wiktionary-ja.ico"; DestDir: "{#CommonData}\ExprLinks"; Flags: ignoreversion
 ; Kanji copy formats
-Source: "..\Release\UserData\KanjiCopyFormats\Bracket Text.xslt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiCopyFormats\example-xml.txt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiCopyFormats\HTML.xslt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiCopyFormats\Text.xslt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
+Source: "..\Release\KanjiCopyFormats\Bracket Text.xslt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
+Source: "..\Release\KanjiCopyFormats\example-xml.txt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
+Source: "..\Release\KanjiCopyFormats\HTML.xslt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
+Source: "..\Release\KanjiCopyFormats\Text.xslt"; DestDir: "{#CommonData}\KanjiCopyFormats"; Flags: ignoreversion
 ; Kanji links
-Source: "..\Release\UserData\KanjiLinks\example-link.txt"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\KanjiProject.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\UniHan.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\UniHan.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\Wiktionary EN.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\Wiktionary JP.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\wiktionary-en.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\wiktionary-ja.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\WWWJDIC.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\WWWJDIC.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\ZhongWen.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
-Source: "..\Release\UserData\KanjiLinks\ZhongWen.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\example-link.txt"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\KanjiProject.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\UniHan.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\UniHan.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\Wiktionary EN.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\Wiktionary JP.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\wiktionary-en.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\wiktionary-ja.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\WWWJDIC.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\WWWJDIC.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\ZhongWen.ico"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
+Source: "..\Release\KanjiLinks\ZhongWen.url"; DestDir: "{#CommonData}\KanjiLinks"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
