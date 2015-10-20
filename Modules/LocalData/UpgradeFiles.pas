@@ -214,9 +214,11 @@ begin
   //where they are actually stored.
   AppFolderDrive := ExtractFileDrive(AppFolder);
   VirtualStore := GetSpecialFolderPath(CSIDL_LOCAL_APPDATA) + '\VirtualStore'
-    + Copy(AppFolder, Length(AppFolderDrive), MaxInt); //AppFolder without Drive component
+    + Copy(AppFolder, Length(AppFolderDrive)+1, MaxInt); //AppFolder without Drive component
 
   //Older Wakans stored these in the application folder
+  //We don't require standalone mode because there is a VirtualStore
+  //for portable folder too - no harm checking
   Result.AddMoveFile(VirtualStore, 'wakan.usr', UserDataDir);
   Result.AddMoveFile(VirtualStore, 'wakan.bak', UserDataDir);
   Result.AddMoveFile(VirtualStore, 'wakan.cdt', UserDataDir);
