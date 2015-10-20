@@ -3,11 +3,6 @@ unit UpgradeFiles;
 
 interface
 
-//TODO: Handle "cannot delete the file from source", run as Admin
-
-//TODO: Auto-elevate if needed.
-
-
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, JwbForms,
   StdCtrls, Generics.Collections, JWBStrings;
