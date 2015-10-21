@@ -2,11 +2,11 @@ Wakan is a versatile tool for students of Japanese or Chinese. It features a cha
 
 This is the continuation of the [older Wakan project](http://wakan.manga.cz). Many bugs were fixed, user experience improved and features added - see **[Changes](Changes)**.
 
-Developer builds can be installed over older Wakans although it's not recommended to use both versions side by side.
+Wakan can be installed or used as a portable app. It can be installed over version 1.67, though it's recommended that you uninstall 1.67 first (settings and data will be preserved).
 
 **[All downloads](https://drive.google.com/folderview?id=0B0jSbSrihj-yRDN4WlJXS05BOVE&usp=sharing#list)**
 
-**[Latest version: 1.90](https://googledrive.com/host/0B0jSbSrihj-yRDN4WlJXS05BOVE/wakan-1.90-dev.zip)**
+**[Latest version: 1.92](https://googledrive.com/host/0B0jSbSrihj-yRDN4WlJXS05BOVE/wakan-1.92-setup.exe)**
 
  * Redesigned kanji search panel - share your thoughts
 
