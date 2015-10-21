@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(description="Uploads releases to Google Drive",
 parser.add_argument('filename', help='File to upload')
 parser.add_argument('--description', help='Description')
 parser.add_argument('--folderid', help='Where to place the file (folder id)')
+parser.add_argument('--update', action='store_true', help='Update existing file, if present. Prevents same-name duplicates')
 args = parser.parse_args()
 
 # OAuth2 client setup
@@ -43,8 +44,9 @@ media_body = apiclient.http.MediaFileUpload(
     resumable=True
 )
 # The body contains the metadata for the file.
+file_title = os.path.basename(args.filename)
 body = {
-  'title': os.path.basename(args.filename),
+  'title': file_title,
   'description': args.description,
 }
 
@@ -56,7 +58,23 @@ if args.folderid:
       "id": args.folderid, # The ID of the parent.
     }]
 
-# Perform the request and print the result.
-print "Uploading "+args.filename+"..."
-new_file = drive_service.files().insert(body=body, media_body=media_body).execute()
+file_id = None
+if args.update:
+	if args.folderid:
+		files = drive_service.children().list(folderId=args.folderid, q="title='"+file_title+"'").execute()
+	else:
+		files = drive_service.children().list(folderId='root', q="title='"+file_title+"'").execute()
+	files = files['items']
+	for file in files:
+		print "Namesake found, updating..."
+		file_id = file['id']
+		break
+
+# Perform the request
+if file_id:
+	print "Updating "+args.filename+'...'
+	new_file = drive_service.files().update(fileId=file_id,	body=body, media_body=media_body).execute()
+else:
+	print "Uploading "+args.filename+"..."
+	new_file = drive_service.files().insert(body=body, media_body=media_body).execute()
 print "Done."

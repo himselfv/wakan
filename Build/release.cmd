@@ -8,12 +8,12 @@ filever.py ..\Release\wakan.exe --major > setupver.txt
 if errorlevel 1 goto end
 set /P VERSION= < setupver.txt
 del /Q setupver.txt
-set SETUPFILENAME=Output\wakan-%VERSION%-setup.exe
+set SETUPFILENAME=wakan-%VERSION%-setup.exe
 echo Press any key to upload %SETUPFILENAME%
 pause
 
 
-upload.py %SETUPFILENAME% --folderid %WAKANFOLDERID%
+upload.py Output\%SETUPFILENAME% --folderid %WAKANFOLDERID% --update
 if errorlevel 1 goto end
 
 echo.
