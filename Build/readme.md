@@ -18,7 +18,7 @@
 
 ## AUTOMATED RELEASES
 
-Needs Python 2.7 with oauth2client.
+Needs Python 2.7 with pywin32 and oauth2client.
 
 Run release.cmd and authorize Wakan Release Uploader, then wait.
 Your authorization is stored in upload.credentials, do not commit or share it.
