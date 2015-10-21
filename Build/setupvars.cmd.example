@@ -5,6 +5,11 @@ set RADSTUDIO=C:\Program Files (x86)\Embarcadero\RAD Studio\10.0
 set JPTOOLS=C:\Projects\jptools
 set INNOSETUP=C:\Program Files (x86)\Inno Setup 5
 
+rem Google Drive Folder ID for setup files.
+rem Stays the same no matter what account you use to upload.
+rem If you're uploading to default release folder, no need to change.
+set WAKANFOLDERID=0B0jSbSrihj-yRDN4WlJXS05BOVE
+
 pushd ..
 set WAKAN=%CD%
 popd

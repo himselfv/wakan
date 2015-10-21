@@ -50,15 +50,11 @@ echo.
 rem TODO: Include: history.txt, licence.txt?
 
 
-rem TODO: Automaticaly up the version number, commit the code.
-
 :success
 echo.
 echo Build completed.
-echo Please commit the code to the repository now and up the version number.
 echo.
 goto end
-
 
 :setupvars_fail
 echo.

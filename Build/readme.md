@@ -1,8 +1,8 @@
 ## PREREQUISITES
 
 1. Unicode Delphi (Delphi 2010+). Ansi support is being deprecated.
-2. Inno Setup 5.
-3. Jp-tools (http://code.google.com/p/jp-tools/) which Wakan uses heavily.
+2. Jp-tools (http://code.google.com/p/jp-tools/) which Wakan uses heavily.
+3. Inno Setup 5.
 
 
 ## BUILDING
@@ -14,6 +14,18 @@
 
     * Binary files in Release
     * Installer in Build/Output.
+
+
+## AUTOMATED RELEASES
+
+Needs Python 2.7 with oauth2client.
+
+Run release.cmd and authorize Wakan Release Uploader, then wait.
+Your authorization is stored in upload.credentials, do not commit or share it.
+
+Target folder on Google Drive is set in setupvars.cmd. By default it's Wakan release folder,
+you need authorization to write there.
+You may specify your own folder in setupvars.cmd.
 
 
 ## DEPENDENCIES
