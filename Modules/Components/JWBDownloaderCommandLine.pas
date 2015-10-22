@@ -44,6 +44,9 @@ begin
   Result := true;
 end;
 
+function AttachConsole(dwProcessID: Integer): Boolean; stdcall; external kernel32;
+const ATTACH_PARENT_PROCESS = -1;
+
 function TDownloadCommand.AcceptFlag(const Flag: string): boolean;
 begin
   if SameText(Flag, 'silent') then begin
@@ -51,6 +54,7 @@ begin
     Result := true;
   end else
   if SameText(Flag, 'console') then begin
+    AttachConsole(ATTACH_PARENT_PROCESS);
     Console := true;
     Result := true;
   end else

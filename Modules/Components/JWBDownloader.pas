@@ -1178,7 +1178,7 @@ type
 procedure TConsoleJobProgressHandler.JobOperationChanged(Sender: TObject);
 begin
   if not Silent then
-    writeln(FJob.Operation);
+    writeln('  '+FJob.Operation);
 end;
 
 procedure TConsoleJobProgressHandler.JobProgressChanged(Sender: TObject);
