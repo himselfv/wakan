@@ -476,7 +476,6 @@ begin
   reat := FSource.Read(b,1);
   if reat<1 then raise EMemorySourceError.Create('Package file is corrupt (#3).');
   if (b<>125) and (b<>233) then raise EMemorySourceError.Create('Package file is corrupt (#4).');
-  totfsize:=123;
   fActStart:=FSource.Position;
   while b=125 do
   begin
