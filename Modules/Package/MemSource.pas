@@ -425,20 +425,6 @@ var ph:PKGHeader;
     s:string;
     cryptedheader:boolean;
 
-  procedure ObfuscateText(pc: PAnsiChar; len: integer);
-  begin
-    encseed:=fFileSysCode+totfsize;
-    while len > 0 do begin
-      case pc^ of
-        'A'..'Z': pc^ := AnsiChar(chr((((ord(pc^)-ord('A'))+encmask(26)) mod 26)+ord('A')));
-        'a'..'z': pc^ := AnsiChar(chr((((ord(pc^)-ord('a'))+encmask(26)) mod 26)+ord('a')));
-      else //keep the symbol
-      end;
-      Dec(len);
-      Inc(pc);
-    end;
-  end;
-
 begin
   inherited Create;
   savecurs:=Screen.Cursor;
@@ -516,8 +502,8 @@ begin
       else raise EMemorySourceError.Create('Unsupported load mode in package file.');
     end;
     if fDirectories.Count<=pf.Directory then EMemorySourceError.Create('Package file is corrupt (#13).');
-    ObfuscateText(@pf.FileName[1], Length(pf.FileName));
-    if pf.FileExt<>'*DIR*' then ObfuscateText(@pf.FileExt[1], Length(pf.FileExt));
+    DeobfuscateFilename(fFileSysCode, totfsize, @pf.FileName[1], Length(pf.FileName));
+    if pf.FileExt<>'*DIR*' then DeobfuscateFilename(fFileSysCode, totfsize, @pf.FileExt[1], Length(pf.FileExt));
     if pf.FileExt='*DIR*' then s:=string(pf.FileName)+'\' else s:=string(pf.FileName)+'.'+string(pf.FileExt);
     if pf.Directory=0 then
       mf:=TMemoryFile.Create(self,s,pf.FileLength,loc,lm,nil)

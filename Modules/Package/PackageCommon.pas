@@ -53,6 +53,12 @@ var
 
 function EncMask(const ARange: Integer): Integer;
 
+{ File name obfuscation.
+ Used for file name and extension fields }
+
+procedure ObfuscateFileName(FileSysCode: LongInt; TotFSize: LongInt; pc: PAnsiChar; len: integer);
+procedure DeobfuscateFileName(FileSysCode: LongInt; TotFSize: LongInt; pc: PAnsiChar; len: integer);
+
 implementation
 
 procedure CalculateHuffmanCode(var ha:PKGHuffArray);
@@ -140,5 +146,36 @@ end;
 {$ELSE}
   {$MESSAGE ERROR 'EncMask: Implemented only on x86'}
 {$IFEND}
+
+
+
+procedure ObfuscateFileName(FileSysCode: LongInt; TotFSize: LongInt; pc: PAnsiChar; len: integer);
+begin
+  encseed := FileSysCode + TotFSize;
+  while len > 0 do begin
+    case pc^ of
+      'A'..'Z': pc^ := AnsiChar((ord(pc^)-ord('A')-encmask(26)) mod 26 + ord('A'));
+      'a'..'z': pc^ := AnsiChar((ord(pc^)-ord('a')-encmask(26)) mod 26 + ord('a'));
+    else //keep the symbol
+    end;
+    Dec(len);
+    Inc(pc);
+  end;
+end;
+
+//Basically the same, only subtracts encmask instead of adding
+procedure DeobfuscateFileName(FileSysCode: LongInt; TotFSize: LongInt; pc: PAnsiChar; len: integer);
+begin
+  encseed := FileSysCode + TotFSize;
+  while len > 0 do begin
+    case pc^ of
+      'A'..'Z': pc^ := AnsiChar((ord(pc^)-ord('A')+encmask(26)) mod 26 + ord('A'));
+      'a'..'z': pc^ := AnsiChar((ord(pc^)-ord('a')+encmask(26)) mod 26 + ord('a'));
+    else //keep the symbol
+    end;
+    Dec(len);
+    Inc(pc);
+  end;
+end;
 
 end.
