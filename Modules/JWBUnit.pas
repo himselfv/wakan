@@ -153,35 +153,13 @@ var
   GridFontSize:integer;
 
 
-{ Dictionaries }
-
-type
-  TJaletDictionaryList = class(TDictionaryList)
-  protected
-   {$IFNDEF NODICLOADPROMPT}
-    DicLoadPrompt: TSMPromptForm;
-    procedure DicLoadStart(Sender: TObject);
-    procedure DicLoadEnd(Sender: TObject);
-   {$ENDIF}
-    procedure DicLoadException(Sender: TObject; E: Exception);
-  public
-    function NewDict(const ADictFilename: string): TJaletDic;
-    procedure Rescan(const AIncludeDisabled: boolean = false);
-    procedure AutoUpgradeListed;
-  end;
-
-var
-  dicts: TJaletDictionaryList; //Active dictionary list
-
-
 { Misc }
 
-function StateStr(i:integer):string;
 function DateForm(s:string):string;
 
 implementation
 uses Messages, StrUtils, ShlObj, Registry, AppData, JWBSettings, JWBLanguage,
-  JWBCharData, JWBLegacyMarkup, JWBAutoImport, MemSource;
+  JWBCharData, JWBLegacyMarkup, MemSource;
 
 
 { Romaji conversions }
@@ -404,54 +382,54 @@ var i:integer;
 begin
   FreeAndNil(colarr);
   colarr:=TStringList.Create;
-  colarr.add('0Kanji_Back=FFFFFF,^eBackground');
-  colarr.add('0Kanji_Common=000000,^eCommon characters');
-  colarr.add('0Kanji_Rare=4F4F4F,^eRare characters');
-  colarr.add('0Kanji_Names=005F00,^eCharacters in names');
-  colarr.add('0Kanji_Learned=7F0000,^eLearned characters');
-  colarr.add('0Kanji_RadCommon=000000,^eCommon radicals');
-  colarr.add('0Kanji_RadRare=4F4F4F,^eRare radicals');
-  colarr.add('0Kanji_RadLearned=7F0000,^eLearned radicals');
-  colarr.add('1Dict_Back=FFFFFF,^eBackground');
-  colarr.add('1Dict_Text=000000,^eText');
-  colarr.add('1Dict_UnknownChar=2F2F7F,^eUnknown characters');
-  colarr.add('1Dict_Problematic=DDDDFF,^eProblematic words');
-  colarr.add('1Dict_Unlearned=FFEEDD,^eUnlearned words');
-  colarr.add('1Dict_Learned=BBFFFF,^eLearned words');
-  colarr.add('1Dict_Mastered=BBFFBB,^eMastered words');
-  colarr.add('1Dict_SelBack=BBBBBB,^eBackground (selected)');
-  colarr.add('1Dict_SelProblematic=9999BB,^eProblematic words (selected)');
-  colarr.add('1Dict_SelUnlearned=BBAA99,^eUnlearned words (selected)');
-  colarr.add('1Dict_SelLearned=99BBBB,^eLearned words (selected)');
-  colarr.add('1Dict_SelMastered=77BB77,^eMastered words (selected)');
-  colarr.add('2Mark_Special=7F007F,^eSpecial markers');
-  colarr.add('2Mark_Usage=00007F,^eUsage markers');
-  colarr.add('2Mark_Grammatical=7F0000,^eGrammatical markers');
-  colarr.add('2Mark_Dict=4F4F4F,^eDictionary markers');
-  colarr.add('2Mark_Lesson=004F00,^eLesson markers');
-  colarr.add('3Editor_Back=FFFFFF,^eBackground');
-  colarr.add('3Editor_Text=000000,^eText color');
-  colarr.add('3Editor_ASCII=2F2F2F,^eASCII text');
-  colarr.add('3Editor_Active=FF0000,^eText being written');
-  colarr.add('3Editor_Aftertouch=0000FF,^eText just converted');
-  colarr.add('3Editor_Untranslated=FFFFFF,^eUntranslated text');
-  colarr.add('3Editor_NotFound=003FFF,^eText where translation failed');
-  colarr.add('3Editor_Particle=FFAAFF,^eEstimated particle');
-  colarr.add('3Editor_Translated=EEEEEE,^eWord not in vocabulary');
-  colarr.add('3Editor_Problematic=DDDDFF,^eProblematic vocabulary word');
-  colarr.add('3Editor_Unlearned=FFEEDD,^eUnlearned vocabulary word');
-  colarr.add('3Editor_Learned=BBFFFF,^eLearned vocabulary word');
-  colarr.add('3Editor_Mastered=BBFFBB,^eMastered vocabulary word');
-  colarr.add('3Editor_HintBack=EFEFEF,^eHint background');
-  colarr.add('3Editor_HintSelected=00FFFF,^eHint selected background');
-  colarr.add('3Editor_HintText=000000,^eHint text');
-  colarr.add('3Editor_AozoraTag=C0C0C0,^eAozora Ruby <tag>');
-  colarr.add('3Editor_AozoraComment=C0C0C0,^eAozora Ruby ［comment］');
-  colarr.add('3Editor_AozoraRuby=C0C0C0,^eAozora Ruby 《ruby》');
-  colarr.add('4Popup_Back=A0FFFF,^eBackground');
-  colarr.add('4Popup_Lines=000000,^eLines');
-  colarr.add('4Popup_Card=FFFFFF,^eCharacter card');
-  colarr.add('4Popup_Text=000000,^eText on the caracter card');
+  colarr.add('0Kanji_Back=FFFFFF,^Background');
+  colarr.add('0Kanji_Common=000000,^Common characters');
+  colarr.add('0Kanji_Rare=4F4F4F,^Rare characters');
+  colarr.add('0Kanji_Names=005F00,^Characters in names');
+  colarr.add('0Kanji_Learned=7F0000,^Learned characters');
+  colarr.add('0Kanji_RadCommon=000000,^Common radicals');
+  colarr.add('0Kanji_RadRare=4F4F4F,^Rare radicals');
+  colarr.add('0Kanji_RadLearned=7F0000,^Learned radicals');
+  colarr.add('1Dict_Back=FFFFFF,^Background');
+  colarr.add('1Dict_Text=000000,^Text');
+  colarr.add('1Dict_UnknownChar=2F2F7F,^Unknown characters');
+  colarr.add('1Dict_Problematic=DDDDFF,^Problematic words');
+  colarr.add('1Dict_Unlearned=FFEEDD,^Unlearned words');
+  colarr.add('1Dict_Learned=BBFFFF,^Learned words');
+  colarr.add('1Dict_Mastered=BBFFBB,^Mastered words');
+  colarr.add('1Dict_SelBack=BBBBBB,^Background (selected)');
+  colarr.add('1Dict_SelProblematic=9999BB,^Problematic words (selected)');
+  colarr.add('1Dict_SelUnlearned=BBAA99,^Unlearned words (selected)');
+  colarr.add('1Dict_SelLearned=99BBBB,^Learned words (selected)');
+  colarr.add('1Dict_SelMastered=77BB77,^Mastered words (selected)');
+  colarr.add('2Mark_Special=7F007F,^Special markers');
+  colarr.add('2Mark_Usage=00007F,^Usage markers');
+  colarr.add('2Mark_Grammatical=7F0000,^Grammatical markers');
+  colarr.add('2Mark_Dict=4F4F4F,^Dictionary markers');
+  colarr.add('2Mark_Lesson=004F00,^Lesson markers');
+  colarr.add('3Editor_Back=FFFFFF,^Background');
+  colarr.add('3Editor_Text=000000,^Text color');
+  colarr.add('3Editor_ASCII=2F2F2F,^ASCII text');
+  colarr.add('3Editor_Active=FF0000,^Text being written');
+  colarr.add('3Editor_Aftertouch=0000FF,^Text just converted');
+  colarr.add('3Editor_Untranslated=FFFFFF,^Untranslated text');
+  colarr.add('3Editor_NotFound=003FFF,^Text where translation failed');
+  colarr.add('3Editor_Particle=FFAAFF,^Estimated particle');
+  colarr.add('3Editor_Translated=EEEEEE,^Word not in vocabulary');
+  colarr.add('3Editor_Problematic=DDDDFF,^Problematic vocabulary word');
+  colarr.add('3Editor_Unlearned=FFEEDD,^Unlearned vocabulary word');
+  colarr.add('3Editor_Learned=BBFFFF,^Learned vocabulary word');
+  colarr.add('3Editor_Mastered=BBFFBB,^Mastered vocabulary word');
+  colarr.add('3Editor_HintBack=EFEFEF,^Hint background');
+  colarr.add('3Editor_HintSelected=00FFFF,^Hint selected background');
+  colarr.add('3Editor_HintText=000000,^Hint text');
+  colarr.add('3Editor_AozoraTag=C0C0C0,^Aozora Ruby <tag>');
+  colarr.add('3Editor_AozoraComment=C0C0C0,^Aozora Ruby ［comment］');
+  colarr.add('3Editor_AozoraRuby=C0C0C0,^Aozora Ruby 《ruby》');
+  colarr.add('4Popup_Back=A0FFFF,^Background');
+  colarr.add('4Popup_Lines=000000,^Lines');
+  colarr.add('4Popup_Card=FFFFFF,^Character card');
+  colarr.add('4Popup_Text=000000,^Text on the caracter card');
   FreeAndNil(colval);
   FreeAndNil(colsarr);
   colval:=TStringList.Create;
@@ -771,114 +749,7 @@ end;
 
 
 
-{ Dicts }
-
-{ Creates a new standardly configured dictionary object from a specified file.
-Applies all default settings such as Offline/LoadOnDemand per dict settings. }
-function TJaletDictionaryList.NewDict(const ADictFilename: string): TJaletDic;
-var ADictName: string;
-begin
-  Result := TJaletDic.Create;
- {$IFNDEF NODICLOADPROMPT}
-  Result.OnLoadStart := DicLoadStart;
-  Result.OnLoadEnd := DicLoadEnd;
- {$ENDIF}
-  Result.OnLoadException := DicLoadException;
-  Result.LoadOnDemand := fSettings.CheckBox49.Checked;
-  ADictName := ExtractFilename(ADictFilename);
-  Result.Offline := dicts.IsInGroup(ADictName,GROUP_OFFLINE);
-  try
-    Result.FillInfo(ADictFilename);
-  except
-    Application.MessageBox(
-      pchar(_l('#00321^eCannot register dictionary ')+ADictName+#13#13
-        +(ExceptObject as Exception).Message),
-      pchar(_l('#00020^eError')),
-      MB_ICONERROR or MB_OK);
-  end;
-end;
-
-{$IFNDEF NODICLOADPROMPT}
-procedure TJaletDictionaryList.DicLoadStart(Sender: TObject);
-begin
-  DicLoadPrompt.Free; //just in case
-  DicLoadPrompt := SMMessageDlg(
-    _l('#00323^eDictionary loading'),
-    _l('#00324^eLoading dictionary ')+TJaletDic(Sender).name+'...');
-end;
-
-procedure TJaletDictionaryList.DicLoadEnd(Sender: TObject);
-begin
-  FreeAndNil(DicLoadPrompt);
-end;
-{$ENDIF}
-
-procedure TJaletDictionaryList.DicLoadException(Sender: TObject; E: Exception);
-begin
-  Application.MessageBox(
-    pchar(_l('#00325^eCannot load dictionary ')+TJaletDic(Sender).name+#13#13+E.Message),
-    pchar(_l('#00020^eError')),
-    MB_ICONERROR or MB_OK);
-end;
-
-procedure TJaletDictionaryList.Rescan(const AIncludeDisabled: boolean = false);
-var sr: TSearchRec;
-  dic: TJaletDic;
-  dicName: string;
-begin
-  Self.Clear; //unload+delete all
-   //time can probably be saved on not unloading/reloadings dicts which are fine
-  if FindFirst(DictionaryDir+'\*.dic', faAnyFile, sr)<>0 then
-    exit;
-  repeat
-    if not AIncludeDisabled then begin
-      dicName := ChangeFileExt(ExtractFilename(sr.Name), '');
-      if Self.IsInGroup(dicName, GROUP_NOTUSED) then continue;
-    end;
-
-    dic := TJaletDictionaryList(dicts).NewDict(DictionaryDir+'\'+sr.name);
-    if not dic.tested then begin
-      dic.Free;
-      continue; //some kind of invalid dict
-    end;
-
-    if Uppercase(ExtractFilename(dic.Filename))='JALET.DIC' then
-      Application.MessageBox(
-        pchar(_l('#00326^eIt is not recommended to use old style JALET.DIC dictionary.')),
-        pchar(_l('#00090^eWarning')),
-        MB_ICONWARNING or MB_OK);
-
-    if curlang<>dic.language then begin
-      dic.Free;
-      continue;
-    end;
-
-    dicts.Add(dic);
-    if not dicts.IsInGroup(dic, GROUP_NOTUSED) then
-      dic.Load; //but maybe not actually DemandLoad()
-  until FindNext(sr)<>0;
-  FindClose(sr);
-end;
-
-procedure TJaletDictionaryList.AutoUpgradeListed;
-var i: integer;
-begin
-  for i := 0 to Self.Count-1 do
-    AutoUpdate(Self[i]);
-end;
-
-
 { Misc }
-
-function StateStr(i:integer):string;
-begin
-  case i of
-    0:result:=_l('#00638^eProblematic');
-    1:result:=_l('#00639^eUnlearned');
-    2:result:=_l('#00640^eLearned');
-    3:result:=_l('#00641^eMastered');
-  end;
-end;
 
 function DateForm(s:string):string;
 begin
@@ -900,11 +771,8 @@ initialization
   rpy_db := TPinyinTranslator.Create;
   rpy_user := TPinyinTranslator.Create;
 
-  dicts := TJaletDictionaryList.Create;
-
 finalization
  {$IFDEF CLEAN_DEINIT}
-  FreeAndNil(dicts);
   FreeAndNil(rpy_user);
   FreeAndNil(rpy_db);
   FreeAndNil(roma_user);

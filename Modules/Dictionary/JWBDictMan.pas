@@ -59,7 +59,7 @@ type
   end;
 
 implementation
-uses UITypes, JWBUnit, JWBLanguage, JWBDictImport, JWBDic, JWBDownloader;
+uses UITypes, JWBLanguage, JWBDictionaries, JWBDictImport, JWBDic, JWBDownloader;
 
 {$R *.DFM}
 

@@ -67,7 +67,7 @@ type
 //Main char size: (sizevert-1)*FFontSize
 
 implementation
-uses TextTable, JWBStrings, JWBUnit, StrokeOrder, JWBEdictMarkers, JWBDic, JWBSettings,
+uses TextTable, JWBStrings, JWBUnit, StrokeOrder, JWBEdictMarkers, JWBDictionaries, JWBDic, JWBSettings,
   JWBUserData, KanaConv, JWBCharData, JWBLegacyMarkup, JWBWordGrid;
 
 constructor TKanjiCard.Create(const AChar: string);

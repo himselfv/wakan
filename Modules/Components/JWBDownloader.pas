@@ -149,8 +149,8 @@ function OpenDownloader(AOwner: TComponent; ACategory: string;
 function DownloadComponent(const AName: string): boolean;
 
 implementation
-uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob,
-  JWBDicImportJob, JWBIO, JWBUnit, JWBLanguage, StdPrompt;
+uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob, JWBDictionaries,
+  JWBDicImportJob, JWBIO, JWBLanguage, StdPrompt;
 
 {$R *.dfm}
 

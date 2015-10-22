@@ -160,12 +160,24 @@ type
 
   end;
 
+function StateStr(i:integer):string;
+
 implementation
 uses JWBStrings, JWBLanguage, JWBCore, JWBUnit, JWBSettings, JWBPrint, Printers,
   JWBVocab, JWBMenu, JWBUserData, TextTable, StdPrompt, JWBCategories,
   JWBLegacyMarkup;
 
 {$R *.DFM}
+
+function StateStr(i:integer):string;
+begin
+  case i of
+    0:result:=_l('#00638^eProblematic');
+    1:result:=_l('#00639^eUnlearned');
+    2:result:=_l('#00640^eLearned');
+    3:result:=_l('#00641^eMastered');
+  end;
+end;
 
 procedure TfWordList.FormCreate(Sender: TObject);
 begin

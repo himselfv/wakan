@@ -365,7 +365,7 @@ var
 
 implementation
 uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JWBUnit, StrokeOrder,
- JWBForms, JWBSplash, JWBIO, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
+ JWBForms, JWBSplash, JWBIO, JWBDictionaries, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
  JWBCharDataImport, JWBUserData, JWBSettings, JWBRadicalList, JWBWordLookup,
  JWBKanjiCompounds, JWBExamples, JWBEditor, JWBVocab, JWBVocabDetails,
  JWBVocabFilters, JWBStatistics, JWBKanjiList, JWBKanjiDetails, JWBWordKanji,

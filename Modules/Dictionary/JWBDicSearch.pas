@@ -310,7 +310,7 @@ procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
   DictGroup:integer;var wasfull:boolean);
 
 implementation
-uses Forms, Windows, Math, KanaConv, JWBUnit, JWBSettings, JWBCategories,
+uses Forms, Windows, Math, KanaConv, JWBDictionaries, JWBUnit, JWBSettings, JWBCategories,
   JWBUserData, JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;

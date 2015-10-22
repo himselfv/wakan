@@ -56,6 +56,7 @@ uses
   JWBDictMan in 'Modules\Dictionary\JWBDictMan.pas' {fDictMan},
   JWBDictImport in 'Modules\Dictionary\JWBDictImport.pas' {fDictImport},
   JWBDicImportJob in 'Modules\Dictionary\JWBDicImportJob.pas',
+  JWBDictionaries in 'Modules\Dictionary\JWBDictionaries.pas',
   JWBDic in 'Modules\Dictionary\JWBDic.pas',
   JWBIndex in 'Modules\Dictionary\JWBIndex.pas',
   JWBDicSearch in 'Modules\Dictionary\JWBDicSearch.pas',

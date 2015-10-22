@@ -43,8 +43,8 @@ type
   end;
 
 implementation
-uses StrUtils, WideStrUtils, KanaConv, AppData, JWBUnit, JWBLanguage,
-  JWBComponents, JWBFileType, StdPrompt, JWBDic, JWBDicImportJob;
+uses StrUtils, WideStrUtils, KanaConv, AppData, JWBLanguage, JWBComponents, JWBFileType,
+  StdPrompt, JWBDictionaries, JWBDic, JWBDicImportJob;
 
 {$R *.DFM}
 

@@ -456,8 +456,8 @@ const
 
 implementation
 
-uses JWBMenu, JWBStrings, AppData, KanaConv, JWBUnit, JWBKanjiList, JWBEditor,
-  JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBExamples, JWBVocabDetails,
+uses JWBMenu, JWBStrings, AppData, KanaConv, JWBDictionaries, JWBUnit, JWBKanjiList,
+  JWBEditor, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBExamples, JWBVocabDetails,
   JWBVocabFilters, JWBKanjiDetails, TextTable, JWBLanguage, UnicodeFont,
   JWBKanjiCard, JWBVocab, WakanWordGrid, JWBUserData, JWBDicSearch,
   JWBCharData, ActnList, JWBCharDataImport, JWBIO,

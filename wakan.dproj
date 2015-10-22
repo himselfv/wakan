@@ -233,6 +233,7 @@
             <Form>fDictImport</Form>
         </DCCReference>
         <DCCReference Include="Modules\Dictionary\JWBDicImportJob.pas"/>
+        <DCCReference Include="Modules\Dictionary\JWBDictionaries.pas"/>
         <DCCReference Include="Modules\Dictionary\JWBDic.pas"/>
         <DCCReference Include="Modules\Dictionary\JWBIndex.pas"/>
         <DCCReference Include="Modules\Dictionary\JWBDicSearch.pas"/>
