@@ -24,7 +24,7 @@ procedure LoadStrokeOrder(const AFilename: string);
 var ps: TPackageSource;
   ms: TMemoryStream;
 begin
-  ps:=TPackageSource.Create('wakan.sod',791564,978132,978123);
+  ps:=TPackageSource.Create(AFilename,791564,978132,978123);
   ms:=ps['strokes.bin'].Lock;
   GetMem(sobin,ms.Size);
   ms.Read(sobin^,ms.Size);

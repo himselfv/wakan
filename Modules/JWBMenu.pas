@@ -481,7 +481,7 @@ begin
 
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
-    AppComponents.LoadFromFile('Components.ini');
+    AppComponents.LoadFromFile(AppFolder+'\Components.ini');
 
    { Import now before these packages are loaded }
     if Command='makeexamples'then
@@ -512,9 +512,9 @@ begin
       TCharProp := nil;
       TRadicals := nil;
     end else
-    if FileExists('wakan.chr') then begin
+    if FileExists(AppFolder+'\wakan.chr') then begin
       try
-        LoadCharData('wakan.chr');
+        LoadCharData(AppFolder+'\wakan.chr');
       except
         on E: ECharDataException do
           raise;
@@ -529,7 +529,7 @@ begin
     if Command='makechars' then begin
      { Let the import routine handle what exists and whatnot }
     end else
-    if FileExists('KANJIDIC') and DirectoryExists('Unihan') and FileExists('radicals.txt') then begin
+    if FileExists(AppFolder+'\KANJIDIC') and DirectoryExists(AppFolder+'\Unihan') and FileExists(AppFolder+'\radicals.txt') then begin
      { We can try autoimport }
     end else
       raise Exception.Create(_l('#00346^eFile WAKAN.CHR was not found.'#13
@@ -551,8 +551,8 @@ begin
           fCharDataImport.edtKanjidicFilename.Text := MakeCharsParams.KanjidicFilename;
           fCharDataImport.edtUnihanFolder.Text := MakeCharsParams.UnihanFolder;
         end else begin
-          fCharDataImport.edtKanjidicFilename.Text := 'KANJIDIC';
-          fCharDataImport.edtUnihanFolder.Text := 'Unihan';
+          fCharDataImport.edtKanjidicFilename.Text := AppFolder+'\KANJIDIC';
+          fCharDataImport.edtUnihanFolder.Text := AppFolder+'\Unihan';
         end;
         fCharDataImport.Import;
       finally
@@ -583,7 +583,7 @@ begin
     begin
      //If no filename is set, assume defaults
       if Length(MakeRadParams.Files)<=0 then begin
-        if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
+        if FileExists(AppFolder+'\RADKFILE') then AddFilename(MakeRadParams.Files, AppFolder+'\RADKFILE');
        // if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2'); //not ready for this, it has chars in EUC we can't handle
         if Length(MakeRadParams.Files)<=0 then
           raise Exception.Create(_l('No RADKFILE is found in the application directory. '
@@ -597,16 +597,16 @@ begin
     end;
 
    //Auto-rebuild
-    if not FileExists('wakan.rad') then begin
+    if not FileExists(AppFolder+'\wakan.rad') then begin
       SetLength(MakeRadParams.Files,0);
-      if FileExists('RADKFILE') then AddFilename(MakeRadParams.Files, 'RADKFILE');
-     // if FileExists('RADKFILE2') then AddFilename(MakeRadParams.Files, 'RADKFILE2'); //see above
+      if FileExists(AppFolder+'\RADKFILE') then AddFilename(MakeRadParams.Files, AppFolder+'\RADKFILE');
+     // if FileExists(AppFolder+'\RADKFILE2') then AddFilename(MakeRadParams.Files, AppFolder+'\RADKFILE2'); //see above
       if Length(MakeRadParams.Files)>0 then //else just continue and fail later
         BuildRadicalPackage(MakeRadParams.Files);
     end;
 
    //Radical search
-    if not FileExists('wakan.rad') then
+    if not FileExists(AppFolder+'\wakan.rad') then
     begin
       Application.MessageBox(
         pchar(_l('#00357^eFile WAKAN.RAD was not found.'#13
@@ -616,7 +616,7 @@ begin
       RaineRadicals:=nil;
     end else
       try
-        LoadRaineRadicals('WAKAN.RAD');
+        LoadRaineRadicals(AppFolder+'\WAKAN.RAD');
       except
         on E: Exception do begin
           E.Message := _l('#00358^eCannot load Japanese radicals file.'#13
@@ -632,19 +632,19 @@ begin
    //Stroke-order rebuilding -- before complaining about missing sod
     if Command='makesod' then
     begin
-      StrokeOrder.BuildStrokeOrderPackage('STROKES.CSV', 'wakan.sod');
+      StrokeOrder.BuildStrokeOrderPackage(AppFolder+'\STROKES.CSV', AppFolder+'\wakan.sod');
       Application.ShowMainForm := false;
       Application.Terminate;
       exit;
     end;
 
    //Auto-rebuild
-    if not FileExists('wakan.sod')
-    and FileExists('STROKES.CSV') then
-      StrokeOrder.BuildStrokeOrderPackage('STROKES.CSV', 'wakan.sod');
+    if not FileExists(AppFolder+'\wakan.sod')
+    and FileExists(AppFolder+'\STROKES.CSV') then
+      StrokeOrder.BuildStrokeOrderPackage(AppFolder+'\STROKES.CSV', AppFolder+'\wakan.sod');
 
    //Stroke-order display
-    if not FileExists('wakan.sod') then
+    if not FileExists(AppFolder+'\wakan.sod') then
       Application.MessageBox(
         pchar(_l('#00359^eFile WAKAN.SOD was not found.'#13
           +'Japanese stroke-order display will be disabled.')),
@@ -652,7 +652,7 @@ begin
         MB_OK or MB_ICONERROR)
     else
       try
-        StrokeOrder.LoadStrokeOrder('wakan.sod');
+        StrokeOrder.LoadStrokeOrder(AppFolder+'\wakan.sod');
       except
         on E: Exception do begin
           E.Message := _l('#00360^eCannot load Japanese stroke-order file.'#13
@@ -913,12 +913,12 @@ begin
 
    // Load roma_db; these files must be present
     roma_db.Clear;
-    roma_db.LoadFromFile(KunreishikiRoma);
-    roma_db.LoadFromFile(HepburnRoma);
+    roma_db.LoadFromFile(AppFolder+'\'+KunreishikiRoma);
+    roma_db.LoadFromFile(AppFolder+'\'+HepburnRoma);
    // roma_user was already read from settings
 
     rpy_db.Clear;
-    rpy_db.LoadFromFile(PinYinRoma);
+    rpy_db.LoadFromFile(AppFolder+'\'+PinYinRoma);
    // rpy_user was read from settings
 
   finally

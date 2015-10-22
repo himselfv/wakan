@@ -2062,7 +2062,7 @@ begin
   list := GetRomaList;
   parts := SplitStr(list,',');
   for i := 0 to Length(parts)-1 do
-    roma_user.LoadFromFile(parts[i]+RomajiExt);
+    roma_user.LoadFromFile(ProgramDataDir+'\'+parts[i]+RomajiExt);
 end;
 
 { Same for pinyin }
@@ -2154,7 +2154,7 @@ begin
   list := GetPinyinList;
   parts := SplitStr(list,',');
   for i := 0 to Length(parts)-1 do
-    rpy_user.LoadFromFile(parts[i]+PinyinExt);
+    rpy_user.LoadFromFile(ProgramDataDir+'\'+parts[i]+PinyinExt);
 end;
 
 
