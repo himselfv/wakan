@@ -158,8 +158,8 @@ begin
   encseed := FileSysCode + TotFSize;
   while len > 0 do begin
     case pc^ of
-      'A'..'Z': pc^ := AnsiChar((ord(pc^)-ord('A')-encmask(26)) mod 26 + ord('A'));
-      'a'..'z': pc^ := AnsiChar((ord(pc^)-ord('a')-encmask(26)) mod 26 + ord('a'));
+      'A'..'Z': pc^ := AnsiChar((26+ord(pc^)-ord('A')-encmask(26)) mod 26 + ord('A'));
+      'a'..'z': pc^ := AnsiChar((26+ord(pc^)-ord('a')-encmask(26)) mod 26 + ord('a'));
     else //keep the symbol
     end;
     Dec(len);
