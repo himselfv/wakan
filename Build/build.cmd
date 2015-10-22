@@ -29,7 +29,7 @@ rem Running tests...
 if errorlevel 1 goto end
 
 rem Donwload/update standard resources
-start /wait "" "%BINOUT%\wakan.exe" download radkfile wordfreq_ck edict2 ccedict kanjidic unihan examples_j.pkg
+start /wait "" "%BINOUT%\wakan.exe" download radkfile wordfreq_ck edict2 ccedict kanjidic unihan examples_j.pkg /console
 if errorlevel 1 goto end
 
 rem TODO: Update + rebuild character info? "wakan /updatechars ..."

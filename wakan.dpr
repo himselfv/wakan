@@ -75,8 +75,10 @@ uses
   JWBAutoImport in 'Modules\Components\JWBAutoImport.pas',
   JWBDownloader in 'Modules\Components\JWBDownloader.pas' {fDownloader},
   JWBDownloaderCore in 'Modules\Components\JWBDownloaderCore.pas',
+  JWBDownloaderCommandLine in 'Modules\Components\JWBDownloaderCommandLine.pas',
   JWBComponents in 'Modules\Components\JWBComponents.pas',
   JWBJobs in 'Modules\Components\JWBJobs.pas',
+  JWBConsoleJobRunner in 'Modules\Components\JWBConsoleJobRunner.pas',
   JWBUnpackJob in 'Modules\Components\JWBUnpackJob.pas',
   SevenZipUtils in 'Modules\Components\SevenZipUtils.pas',
   JWBPrint in 'Modules\Print\JWBPrint.pas' {fPrint},
@@ -86,8 +88,7 @@ uses
   AnnotationsSettings in 'Modules\Annotations\AnnotationsSettings.pas' {AnnotationsSettingsPage},
   JWBWordList in 'Modules\JWBWordList.pas' {fWordList},
   Vcl.Themes,
-  Vcl.Styles,
-  JWBDownloaderCommandLine in 'Modules\Components\JWBDownloaderCommandLine.pas';
+  Vcl.Styles;
 
 {$R *.RES}
 {$R WINXP.RES}

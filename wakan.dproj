@@ -280,8 +280,10 @@
             <Form>fDownloader</Form>
         </DCCReference>
         <DCCReference Include="Modules\Components\JWBDownloaderCore.pas"/>
+        <DCCReference Include="Modules\Components\JWBDownloaderCommandLine.pas"/>
         <DCCReference Include="Modules\Components\JWBComponents.pas"/>
         <DCCReference Include="Modules\Components\JWBJobs.pas"/>
+        <DCCReference Include="Modules\Components\JWBConsoleJobRunner.pas"/>
         <DCCReference Include="Modules\Components\JWBUnpackJob.pas"/>
         <DCCReference Include="Modules\Components\SevenZipUtils.pas"/>
         <DCCReference Include="Modules\Print\JWBPrint.pas">
@@ -300,7 +302,6 @@
         <DCCReference Include="Modules\JWBWordList.pas">
             <Form>fWordList</Form>
         </DCCReference>
-        <DCCReference Include="Modules\Components\JWBDownloaderCommandLine.pas"/>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>

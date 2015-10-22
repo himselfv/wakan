@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, VirtualTrees, Buttons, ComCtrls, ImgList, JWBComponents,
-  Generics.Collections, JWBJobs, ExtCtrls, TaskbarCtl, JWBForms;
+  Generics.Collections, JWBJobs, ExtCtrls, TaskbarCtl, JWBForms, JWBDownloaderCore;
 
 type
   TNdFileData = record
@@ -142,6 +142,30 @@ type
 
   end;
 
+  TComponentDownloadJob = class(TJob)
+  protected
+    FComponent: PAppComponent;
+    FDownloadJob: TDownloadJob;
+    FImportJob: TJob;
+    FFatalException: string;
+    FStage: integer;
+    FStageProgress: integer; //between 1 and 1000
+    procedure StartOperation(const AOperation: string; AStage: integer); reintroduce;
+    procedure ChildJobProgressChanged(Sender: TObject);
+    procedure ChildYield(Sender: TObject);
+    procedure SetStageProgress(const AValue: integer);
+    procedure UpdateProgress;
+    procedure ImportDictionary;
+    procedure ImportKanjidic;
+  public
+    constructor Create(AComponent: PAppComponent);
+    destructor Destroy; override;
+    procedure ProcessChunk; override;
+    property DownloadJob: TDownloadJob read FDownloadJob;
+    property ImportJob: TJob read FImportJob;
+    property FatalException: string read FFatalException write FFatalException;
+  end;
+
 function OpenDownloader(AOwner: TComponent): TModalResult; overload;
 function OpenDownloader(AOwner: TComponent; ACategory: string;
   ABaseLanguage: char = #00): TModalResult; overload;
@@ -151,11 +175,9 @@ type
 
 function DownloadComponent(const AName: string): boolean;
 
-function ConsoleDownload(const AName: string): boolean;
-
 implementation
-uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob, JWBDictionaries,
-  JWBDicImportJob, JWBIO, JWBLanguage, StdPrompt;
+uses UITypes, PngImage, JWBStrings, JWBUnpackJob, JWBDictionaries, JWBDicImportJob, JWBIO,
+  JWBLanguage, StdPrompt;
 
 {$R *.dfm}
 
@@ -184,30 +206,6 @@ begin
   end;
 end;
 
-type
-  TComponentDownloadJob = class(TJob)
-  protected
-    FComponent: PAppComponent;
-    FDownloadJob: TDownloadJob;
-    FImportJob: TJob;
-    FFatalException: string;
-    FStage: integer;
-    FStageProgress: integer; //between 1 and 1000
-    procedure StartOperation(const AOperation: string; AStage: integer); reintroduce;
-    procedure ChildJobProgressChanged(Sender: TObject);
-    procedure ChildYield(Sender: TObject);
-    procedure SetStageProgress(const AValue: integer);
-    procedure UpdateProgress;
-    procedure ImportDictionary;
-    procedure ImportKanjidic;
-  public
-    constructor Create(AComponent: PAppComponent);
-    destructor Destroy; override;
-    procedure ProcessChunk; override;
-    property DownloadJob: TDownloadJob read FDownloadJob;
-    property ImportJob: TJob read FImportJob;
-    property FatalException: string read FFatalException write FFatalException;
-  end;
 
 constructor TComponentDownloadJob.Create(AComponent: PAppComponent);
 begin
@@ -1159,68 +1157,6 @@ begin
     FreeAndNil(job);
     FreeAndNil(prog);
   end;
-end;
-
-
-type
-  TConsoleJobProgressHandler = class
-  protected
-    FJob: TJob;
-    FSilent: boolean;
-  public
-    procedure JobOperationChanged(Sender: TObject);
-    procedure JobProgressChanged(Sender: TObject);
-    procedure JobYield(Sender: TObject);
-    procedure ExecuteJob(AJob: TJob);
-    property Silent: boolean read FSilent write FSilent;
-  end;
-
-procedure TConsoleJobProgressHandler.JobOperationChanged(Sender: TObject);
-begin
-  if not Silent then
-    writeln('  '+FJob.Operation);
-end;
-
-procedure TConsoleJobProgressHandler.JobProgressChanged(Sender: TObject);
-begin
-end;
-
-procedure TConsoleJobProgressHandler.JobYield(Sender: TObject);
-begin
-end;
-
-procedure TConsoleJobProgressHandler.ExecuteJob(AJob: TJob);
-begin
-  FJob := AJob;
-  AJob.OnOperationChanged := Self.JobOperationChanged;
-  AJob.OnProgressChanged := Self.JobProgressChanged;
-  repeat
-    AJob.ProcessChunk;
-    JobYield(AJob); //in case this is a straight chunked job
-  until (AJob.State=jsFinished);
-  AJob.OnProgressChanged := nil;
-  AJob.OnOperationChanged := nil;
-  AJob.OnYield := nil;
-end;
-
-function ConsoleDownload(const AName: string): boolean;
-var AComponent: PAppComponent;
-  job: TComponentDownloadJob;
-  prog: TConsoleJobProgressHandler;
-begin
-  AComponent := AppComponents.FindByName(AName);
-  if AComponent=nil then
-    raise EComponentNotFound.Create('Cannot find component information for "'+AName+'".');
-  writeln(_l('01223^Downloading %s...', [AName]));
-  prog := TConsoleJobProgressHandler.Create;
-  job := TComponentDownloadJob.Create(AComponent);
-  try
-    prog.ExecuteJob(job);
-  finally
-    FreeAndNil(job);
-    FreeAndNil(prog);
-  end;
-  Result := true;
 end;
 
 

@@ -4,7 +4,7 @@ unit JWBDownloaderCommandLine;
 }
 
 interface
-uses JWBCommandLine, JWBDownloader;
+uses JWBCommandLine;
 
 type
  { wakan download edict edict2
@@ -22,8 +22,12 @@ type
     function Run: cardinal; override;
   end;
 
+function ConsoleDownload(const AName: string): boolean;
+function SilentDownload(const AName: string): boolean;
+
 implementation
-uses SysUtils, Windows, StdPrompt, JWBLanguage, JWBComponents;
+uses SysUtils, Windows, StdPrompt, JWBLanguage, JWBComponents, JWBDownloader, JWBJobs,
+  JWBConsoleJobRunner;
 
 function TDownloadCommand.GetExecutionTime: TCommandExecutionTime;
 begin
@@ -54,7 +58,8 @@ begin
     Result := true;
   end else
   if SameText(Flag, 'console') then begin
-    AttachConsole(ATTACH_PARENT_PROCESS);
+    if not AttachConsole(ATTACH_PARENT_PROCESS) then
+      AllocConsole();
     Console := true;
     Result := true;
   end else
@@ -64,17 +69,21 @@ end;
 function TDownloadCommand.Run: cardinal;
 var i: integer;
   succeeded: integer;
+  dlResult: boolean;
 begin
   succeeded := 0;
   for i := 0 to Length(ComponentNames)-1 do
     try
-      if Console then begin
-        if ConsoleDownload(ComponentNames[i]) then
-          Inc(succeeded);
-      end else begin
-        if DownloadComponent(ComponentNames[i]) then
-          Inc(succeeded);
-      end;
+      if Silent then
+        dlResult := SilentDownload(ComponentNames[i])
+      else
+      if Console then
+        dlResult := ConsoleDownload(ComponentNames[i])
+      else
+        dlResult := DownloadComponent(ComponentNames[i]);
+
+      if dlResult then
+        Inc(succeeded);
     except
       on E: EComponentNotFound do
         if Console then
@@ -84,6 +93,44 @@ begin
     end;
   Result := Length(ComponentNames) - succeeded;
 end;
+
+
+//Executes a component download job silently
+function SilentDownload(const AName: string): boolean;
+var AComponent: PAppComponent;
+  job: TComponentDownloadJob;
+begin
+  AComponent := AppComponents.FindByName(AName);
+  if AComponent=nil then
+    raise EComponentNotFound.Create('Cannot find component information for "'+AName+'".');
+
+  job := TComponentDownloadJob.Create(AComponent);
+  try
+    RunInConsole(job, _l('01223^Downloading %s...', [AName]), true);
+  finally
+    FreeAndNil(job);
+  end;
+  Result := true;
+
+end;
+
+//Executes a component download job in a console runner
+function ConsoleDownload(const AName: string): boolean;
+var AComponent: PAppComponent;
+  job: TComponentDownloadJob;
+begin
+  AComponent := AppComponents.FindByName(AName);
+  if AComponent=nil then
+    raise EComponentNotFound.Create('Cannot find component information for "'+AName+'".');
+  job := TComponentDownloadJob.Create(AComponent);
+  try
+    RunInConsole(job, _l('01223^Downloading %s...', [AName]));
+  finally
+    FreeAndNil(job);
+  end;
+  Result := true;
+end;
+
 
 initialization
   RegisterCommand('download', TDownloadCommand.Create);
