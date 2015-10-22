@@ -561,7 +561,9 @@ begin
 end;
 
 procedure TPackageBuilder.IncludePath(path:string;mask:string;dirno:longint;recursive:boolean);
-var sr:tsearchrec;
+var
+  res: integer;
+  sr:tsearchrec;
     buf:array[1..2000] of byte;
     pkghf:pkgfile;
     tmpf,hdrf:file;
@@ -576,115 +578,119 @@ var sr:tsearchrec;
     usedcoding:integer;
     s:string;
     hufflen:integer;
-function corr(s:string):string;
-var j:integer;
+
 begin
-  encseed:=FileSysCode+totfsize;
-  result:='';
-  for j:=1 to length(s) do
-    case s[j] of
-      'A'..'Z':result:=result+chr(((26+(ord(s[j])-ord('A'))-encmask(26)) mod 26)+ord('A'));
-      'a'..'z':result:=result+chr(((26+(ord(s[j])-ord('a'))-encmask(26)) mod 26)+ord('a'));
-    else result:=result+s[j];
-  end;
-end;
-begin
-  if ((recursive) and (findfirst(path+mask,faAnyFile,sr)=0)) or
-     ((not recursive) and (findfirst(path+mask,faAnyFile-faDirectory,sr)=0)) then
+  if recursive then
+    res := findfirst(path+mask,faAnyFile,sr)
+  else
+    res := findfirst(path+mask,faAnyFile-faDirectory,sr);
+  if res <> 0 then exit;
+
   repeat
-    if ((sr.attr and faVolumeID=0) and (sr.name<>'.') and (sr.name<>'..')) then
-    begin
-    if (sr.attr and faDirectory=0) then
-    begin
+    if (sr.Attr and faVolumeID <> 0) or (sr.Name = '.') or (sr.Name = '..') then
+      continue;
+
+
+
+    if (sr.attr and faDirectory=0) then begin
+
       assignfile(hdrf,path+sr.name);
       try
-      ab:=false;
-      filemode:=0;
-      reset(hdrf,1);
+        ab:=false;
+        filemode:=0;
+        reset(hdrf,1);
       except
-        Log('Unable to open include file ('+sr.name+').'); ab:=true;
+        Log('Unable to open include file ('+sr.name+').');
+        ab:=true;
       end;
-      if not ab then
-      begin
-      filemode:=2;
-      if pos('.',sr.name)>0 then
-      begin
-        pkghf.FileName:=ShortString(copy(sr.name,1,pos('.',sr.name)-1));
-        pkghf.FileExt:=ShortString(copy(sr.name,pos('.',sr.name)+1,length(sr.name)-pos('.',sr.name)));
-      end else
-      begin
-        pkghf.FileName:=ShortString(sr.name);
-        pkghf.FileExt:='';
+
+      if not ab then begin
+        filemode:=2;
+        if pos('.',sr.name)>0 then begin
+          pkghf.FileName:=ShortString(copy(sr.name,1,pos('.',sr.name)-1));
+          pkghf.FileExt:=ShortString(copy(sr.name,pos('.',sr.name)+1,length(sr.name)-pos('.',sr.name)));
+        end else begin
+          pkghf.FileName:=ShortString(sr.name);
+          pkghf.FileExt:='';
+        end;
+        if inclfname<>'' then pkghf.FileName:=inclfname;
+        inclfname:='';
       end;
-      if inclfname<>'' then pkghf.FileName:=inclfname;
-      inclfname:='';
-      end;
+
     end else begin
       pkghf.FileName:=ShortString(sr.name);
       pkghf.FileExt:='*DIR*';
     end;
+
+
     ax:=true;
-    for i:=1 to length(pkghf.Filename) do if pkghf.FileName[i] in ['a'..'z'] then ax:=false;
-    if (ax) and (length(pkghf.FileName)<=8) then
-    begin
+    for i:=1 to length(pkghf.Filename) do
+      if pkghf.FileName[i] in ['a'..'z'] then ax:=false;
+
+    if ax and (length(pkghf.FileName)<=8) then begin
       pkghf.FileName:=ShortString(LowerCase(string(pkghf.FileName)));
-      if pkghf.FileExt='*DIR*' then pkghf.FileName[1]:=Upcase(pkghf.FileName[1]);
+      if pkghf.FileExt='*DIR*' then
+        pkghf.FileName[1]:=Upcase(pkghf.FileName[1]);
     end;
-    if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=ShortString(lowercase(string(pkghf.FileExt)));
-    if not ab then
-    begin
-    pkghf.FileName:=corr(pkghf.FileName);
-    if pkghf.FileExt<>'*DIR*' then pkghf.FileExt:=corr(pkghf.FileExt);
-    pkghf.pkgtag:='PKGF';
-    b:=125;
-    pkghf.cryptmode:=cryptmode;
-    pkghf.crcmode:=crcmode;
-    if (sr.attr and faDirectory>0) then
-    pkghf.loadmode:=3 else pkghf.loadmode:=loadmode;
-    if (sr.attr and faDirectory=0) then
-    pkghf.filelength:=filesize(hdrf) else pkghf.filelength:=0;
-    if (sr.attr and faDirectory=0) then
-    case packmode of
-      0:begin
-          pkghf.packedlength:=pkghf.filelength;
-          usedcoding:=0;
-        end;
-      1:begin
-          hufflen:=PrepareHuffman(hdrf);
-          if hufflen>pkghf.filelength then
-          begin
+
+    if pkghf.FileExt<>'*DIR*' then
+      pkghf.FileExt:=ShortString(lowercase(string(pkghf.FileExt)));
+
+
+    if not ab then begin
+      ObfuscateFilename(FileSysCode, totfsize, @pkghf.FileName[1], Length(pkghf.FileName));
+      if pkghf.FileExt<>'*DIR*' then
+        ObfuscateFilename(FileSysCode, totfsize, @pkghf.FileExt[1], Length(pkghf.FileExt));
+      pkghf.pkgtag:='PKGF';
+      b:=125;
+      pkghf.cryptmode:=cryptmode;
+      pkghf.crcmode:=crcmode;
+
+      if sr.attr and faDirectory = 0 then begin
+        pkghf.loadmode:=loadmode;
+        pkghf.filelength:=filesize(hdrf);
+      end else begin
+        pkghf.loadmode:=3;
+        pkghf.filelength:=0;
+      end;
+
+      if (sr.attr and faDirectory=0) then
+      case packmode of
+        0:begin
             pkghf.packedlength:=pkghf.filelength;
             usedcoding:=0;
-          end else
-          begin
-            pkghf.packedlength:=hufflen;
-            usedcoding:=1;
           end;
-        end;
-      2:begin
+        1:begin
+            hufflen:=PrepareHuffman(hdrf);
+            if hufflen>pkghf.filelength then begin
+              pkghf.packedlength:=pkghf.filelength;
+              usedcoding:=0;
+            end else
+            begin
+              pkghf.packedlength:=hufflen;
+              usedcoding:=1;
+            end;
+          end;
+        2:begin
           hufflen:=PrepareHuffman(hdrf);
           assignfile(tmpf,'LZ77.TMP');
-//          assignfile(logf,'LZ77.LOG');
+//            assignfile(logf,'LZ77.LOG');
           rewrite(tmpf,1);
-//          rewrite(logf);
+//            rewrite(logf);
           reat:=2000;
-          while reat=2000 do
-          begin
+          while reat=2000 do begin
             reat:=ProcessHuffman(hdrf,buf,2000,true);
             blockwrite(tmpf,buf,reat);
           end;
           seek(hdrf,0);
-          if (filesize(tmpf)<hufflen) and (filesize(tmpf)<pkghf.filelength) then
-          begin
+          if (filesize(tmpf)<hufflen) and (filesize(tmpf)<pkghf.filelength) then begin
             pkghf.packedlength:=filesize(tmpf);
             usedcoding:=2;
           end else
-          if hufflen>pkghf.filelength then
-          begin
+          if hufflen>pkghf.filelength then begin
             pkghf.packedlength:=pkghf.filelength;
             usedcoding:=0;
-          end else
-          begin
+          end else begin
             pkghf.packedlength:=hufflen;
             usedcoding:=1;
             IntBufPos:=1;
@@ -698,103 +704,108 @@ begin
             RotBufSkip:=0;
           end;
           closefile(tmpf);
-//          closefile(logf);
-        end;
+//            closefile(logf);
+        end; //of case 2
       else Crash('Unknown pack mode.');
-    end else pkghf.packedlength:=0;
-    pkghf.packmode:=usedcoding;
-    if (sr.attr and faDirectory=0) and (pkghf.filelength<>0) then
-    Log('Including file '+sr.name+' ('+inttostr(round(pkghf.packedlength/pkghf.filelength*100))+'%)...');
-    s:='   ';
-    case usedcoding of
-      0:s:=s+'Compression:NONE ';
-      1:s:=s+'Compression:HUFFMAN ';
-      2:s:=s+'Compression:LZ77 ';
-    end;
-    case cryptmode of
-      0:s:=s+'Crypting:NONE ';
-      1:s:=s+'Crypting:COMPLEX ';
-      2:s:=s+'Crypting:SIMPLE ';
-    end;
-    case crcmode of
-      0:s:=s+'Safety:NONE ';
-      1:s:=s+'Safety:CRC ';
-    end;
-    Log(s);
-    pkghf.directory:=dirno;
-    pkghf.headercrc:=0;
-    move(pkghf,pkghfarr,sizeof(pkghf));
-    crch:=0;
-    for i:=1 to sizeof(pkghf) do crch:=crch+pkghfarr[i];
-    pkghf.headercrc:=crch;
-    encseed:=totfsize+headercode;
-    move(pkghf,pkghfarr,sizeof(pkghf));
-    for i:=sizeof(pkghf) downto 1 do pkghfarr[i*2]:=pkghfarr[i];
-    for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor encmask(256);
-    blockwrite(pkgf,b,1);
-    blockwrite(pkgf,pkghfarr,sizeof(pkghfarr));
-    totfsize:=totfsize+1+sizeof(pkghfarr);
-    if (sr.attr and faDirectory=0) then
-    begin
-      if usedcoding=2 then
-      begin
-        assignfile(tmpf,'LZ77.TMP');
-        reset(tmpf,1);
+      end
+      else pkghf.packedlength:=0;
+
+      pkghf.packmode:=usedcoding;
+
+      if (sr.attr and faDirectory=0) and (pkghf.filelength<>0) then
+        Log('Including file '+sr.name+' ('+inttostr(round(pkghf.packedlength/pkghf.filelength*100))+'%)...');
+      s:='   ';
+      case usedcoding of
+        0:s:=s+'Compression:NONE ';
+        1:s:=s+'Compression:HUFFMAN ';
+        2:s:=s+'Compression:LZ77 ';
       end;
-      testlen:=0;
-      encseed:=cryptcode+totfsize;
-      reat:=2000;
-      while reat=2000 do
-      begin
-        case usedcoding of
-          0:blockread(hdrf,buf,2000,reat);
-          1:reat:=ProcessHuffman(hdrf,buf,2000,false);
-          2:blockread(tmpf,buf,2000,reat);
-          else Crash('Unknown pack mode.');
+      case cryptmode of
+        0:s:=s+'Crypting:NONE ';
+        1:s:=s+'Crypting:COMPLEX ';
+        2:s:=s+'Crypting:SIMPLE ';
+      end;
+      case crcmode of
+        0:s:=s+'Safety:NONE ';
+        1:s:=s+'Safety:CRC ';
+      end;
+      Log(s);
+
+      pkghf.directory:=dirno;
+      pkghf.headercrc:=0;
+      move(pkghf,pkghfarr,sizeof(pkghf));
+      crch:=0;
+      for i:=1 to sizeof(pkghf) do crch:=crch+pkghfarr[i];
+      pkghf.headercrc:=crch;
+      encseed:=totfsize+headercode;
+      move(pkghf,pkghfarr,sizeof(pkghf));
+      for i:=sizeof(pkghf) downto 1 do pkghfarr[i*2]:=pkghfarr[i];
+      for i:=1 to sizeof(pkghfarr) do pkghfarr[i]:=pkghfarr[i] xor encmask(256);
+      blockwrite(pkgf,b,1);
+      blockwrite(pkgf,pkghfarr,sizeof(pkghfarr));
+      totfsize:=totfsize+1+sizeof(pkghfarr);
+
+      if (sr.attr and faDirectory=0) then begin
+        if usedcoding=2 then begin
+          assignfile(tmpf,'LZ77.TMP');
+          reset(tmpf,1);
         end;
-        if reat>0 then
-        begin
-          inc(testlen,reat);
-          case cryptmode of
-            0:begin end;
-            1:begin
-                encseed:=cryptcode+encmask(1000);
-                for i:=1 to 2000 do buf[i]:=buf[i] xor encmask(256);
-              end;
-            2:for i:=1 to 2000 do buf[i]:=buf[i] xor ((cryptcode*i) mod 256);
-            else Crash('Unknown crypt mode.');
+        testlen:=0;
+        encseed:=cryptcode+totfsize;
+        reat:=2000;
+        while reat=2000 do begin
+          case usedcoding of
+            0:blockread(hdrf,buf,2000,reat);
+            1:reat:=ProcessHuffman(hdrf,buf,2000,false);
+            2:blockread(tmpf,buf,2000,reat);
+            else Crash('Unknown pack mode.');
           end;
-          blockwrite(pkgf,buf,reat);
-          case crcmode of
-            0:begin end;
-            1:if filesize(hdrf)>0 then begin
-                crc:=0;
-                for i:=1 to reat do crc:=(crc+(buf[i] xor i)) mod 12345678;
-                blockwrite(pkgf,crc,sizeof(crc));
-                totfsize:=totfsize+sizeof(crc);
-              end;
-            else Crash('Unknown CRC mode.');
+          if reat>0 then begin
+            inc(testlen,reat);
+            case cryptmode of
+              0:begin end;
+              1:begin
+                  encseed:=cryptcode+encmask(1000);
+                  for i:=1 to 2000 do buf[i]:=buf[i] xor encmask(256);
+                end;
+              2:for i:=1 to 2000 do buf[i]:=buf[i] xor ((cryptcode*i) mod 256);
+              else Crash('Unknown crypt mode.');
+            end;
+            blockwrite(pkgf,buf,reat);
+            case crcmode of
+              0:begin end;
+              1:if filesize(hdrf)>0 then begin
+                  crc:=0;
+                  for i:=1 to reat do crc:=(crc+(buf[i] xor i)) mod 12345678;
+                  blockwrite(pkgf,crc,sizeof(crc));
+                  totfsize:=totfsize+sizeof(crc);
+                end;
+              else Crash('Unknown CRC mode.');
+            end;
           end;
+        end; //of while
+
+        totfsize:=totfsize+pkghf.packedlength;
+//          for i:=256 to 511 do if Huff[i].count>0 then pkgerr('Count err-'+inttostr(i)+'-'+inttostr(Huff[i].count),curcmd);
+        if testlen<>pkghf.packedlength then
+          Crash('Internal error#3.'+inttostr(testlen)+'/'+inttostr(pkghf.packedlength));
+        closefile(hdrf);
+        Log('Included file '+sr.name+'.');
+
+        if usedcoding=2 then begin
+          closefile(tmpf);
+          erase(tmpf);
         end;
+
+      end else begin
+        Log('Directory: '+sr.name+':');
+        inc(LastDirectory);
+        IncludePath(path+sr.name+'\',inclrmask,LastDirectory,true);
       end;
-      totfsize:=totfsize+pkghf.packedlength;
-//      for i:=256 to 511 do if Huff[i].count>0 then pkgerr('Count err-'+inttostr(i)+'-'+inttostr(Huff[i].count),curcmd);
-      if testlen<>pkghf.packedlength then Crash('Internal error#3.'+inttostr(testlen)+'/'+inttostr(pkghf.packedlength));
-      closefile(hdrf);
-      Log('Included file '+sr.name+'.');
-      if usedcoding=2 then
-      begin
-        closefile(tmpf);
-        erase(tmpf);
-      end;
-    end else
-    begin
-      Log('Directory: '+sr.name+':');
-      inc(LastDirectory);
-      IncludePath(path+sr.name+'\',inclrmask,LastDirectory,true);
+
     end;
-    end;
-    end;
+
+
   until findnext(sr)<>0;
   findclose(sr);
 end;
