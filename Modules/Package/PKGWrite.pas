@@ -565,21 +565,19 @@ var
   res: integer;
   sr: TSearchRec;
   pkghf: pkgfile;
-
   AllUppercase: boolean;
-
-    buf:array[1..2000] of byte;
-    tmpf,hdrf:file;
-    b:byte;
-    pkghfarr:array[1..sizeof(pkgfile)*2] of byte;
-    crc:cardinal;
-    crch:byte;
-    i:integer;
-    reat:integer;
-    testlen:integer;
-    usedcoding:integer;
-    s:string;
-    hufflen:integer;
+  buf:array[1..2000] of byte;
+  tmpf,hdrf:file;
+  b:byte;
+  pkghfarr:array[1..sizeof(pkgfile)*2] of byte;
+  crc:cardinal;
+  crch:byte;
+  i:integer;
+  reat:integer;
+  testlen:integer;
+  usedcoding:integer;
+  logmsg:string;
+  hufflen:integer;
 
 begin
   if recursive then
@@ -710,22 +708,22 @@ begin
 
     if (sr.attr and faDirectory=0) and (pkghf.filelength<>0) then
       Log('Including file '+sr.name+' ('+inttostr(round(pkghf.packedlength/pkghf.filelength*100))+'%)...');
-    s:='   ';
+    logmsg:='   ';
     case usedcoding of
-      0:s:=s+'Compression:NONE ';
-      1:s:=s+'Compression:HUFFMAN ';
-      2:s:=s+'Compression:LZ77 ';
+      0:logmsg:=logmsg+'Compression:NONE ';
+      1:logmsg:=logmsg+'Compression:HUFFMAN ';
+      2:logmsg:=logmsg+'Compression:LZ77 ';
     end;
     case cryptmode of
-      0:s:=s+'Crypting:NONE ';
-      1:s:=s+'Crypting:COMPLEX ';
-      2:s:=s+'Crypting:SIMPLE ';
+      0:logmsg:=logmsg+'Crypting:NONE ';
+      1:logmsg:=logmsg+'Crypting:COMPLEX ';
+      2:logmsg:=logmsg+'Crypting:SIMPLE ';
     end;
     case crcmode of
-      0:s:=s+'Safety:NONE ';
-      1:s:=s+'Safety:CRC ';
+      0:logmsg:=logmsg+'Safety:NONE ';
+      1:logmsg:=logmsg+'Safety:CRC ';
     end;
-    Log(s);
+    Log(logmsg);
 
     pkghf.directory:=dirno;
     pkghf.headercrc:=0;

@@ -64,6 +64,7 @@ type
   end;
 
 implementation
+{$WARN UNIT_PLATFORM OFF}
 uses FileCtrl, StdPrompt, JWBStrings, KanjidicReader, UnihanReader, AppData,
   JWBCore, TextTable, JWBFileType, FastArray, JWBLanguage;
 

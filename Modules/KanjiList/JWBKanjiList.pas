@@ -1470,6 +1470,7 @@ begin
       'C':foreCol:=Col('Kanji_Common');
       'U':foreCol:=Col('Kanji_Rare');
       'N':foreCol:=Col('Kanji_Names');
+    else foreCol := clBlack;
     end;
 
     if gdSelected in State then begin

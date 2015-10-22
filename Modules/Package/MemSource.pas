@@ -582,6 +582,32 @@ var pf:PKGFile;
     bitmul,inbitmul:byte;
     curbit:boolean;
     countdiff,countlen:integer;
+
+  // -> buf
+  // <> Huff, bufpos,
+  // <- huffroot, huffpos
+  procedure ReadHuffmanHeader;
+  var i: integer;
+  begin
+    for i := 0 to 255 do Huff[i].count := 0;
+    while buf[bufpos]=1 do begin
+      inc(bufpos);
+      move(buf[bufpos+1], Huff[buf[bufpos]].count, 4);
+      inc(bufpos, 5);
+    end;
+    //if buf[bufpos]<>0 then raise EMemorySourceError.Create('Invalid huffman table.');
+    inc(bufpos);
+
+    CalculateHuffmanCode(Huff);
+
+    huffroot := -1;
+    for i := 0 to Length(Huff) do
+      if Huff[i].active then huffroot:=i;
+    if huffroot < 0 then
+      raise EMemorySourceError.Create('Cannot find Huffman root');
+    huffpos := huffroot;
+  end;
+
 begin
   if MFile=nil then exit;
   HuffReat:=false;
@@ -628,22 +654,11 @@ begin
       1:begin
           bufpos:=1;
           huffbufpos:=1;
-          if not HuffReat then
-          begin
-            for i:=0 to 255 do Huff[i].count:=0;
-            while buf[bufpos]=1 do
-            begin
-              inc(bufpos);
-              move(buf[bufpos+1],Huff[buf[bufpos]].count,4);
-              inc(bufpos,5);
-            end;
-//            if buf[bufpos]<>0 then raise EMemorySourceError.Create('Invalid huffman table.');
-            CalculateHuffmanCode(Huff);
-            for i:=0 to 511 do if Huff[i].active then huffroot:=i;
-            huffpos:=huffroot;
-            inc(bufpos);
+          if not HuffReat then begin
+            ReadHuffmanHeader;
             HuffReat:=true;
           end;
+
           while (bufpos<=curread) and (HuffWrote<pf.FileLength) do
           begin
             bitmul:=1;
@@ -666,24 +681,13 @@ begin
       2:begin
           bufpos:=1;
           huffbufpos:=1;
-          if not HuffReat then
-          begin
-            for i:=0 to 255 do Huff[i].count:=0;
-            while buf[bufpos]=1 do
-            begin
-              inc(bufpos);
-              move(buf[bufpos+1],Huff[buf[bufpos]].count,4);
-              inc(bufpos,5);
-            end;
-//            if buf[bufpos]<>0 then raise EMemorySourceError.Create('Invalid huffman table.');
-            CalculateHuffmanCode(Huff);
-            for i:=0 to 511 do if Huff[i].active then huffroot:=i;
-            huffpos:=huffroot;
-            inc(bufpos);
+          if not HuffReat then begin
+            ReadHuffmanHeader;
             HuffReat:=true;
             rotbufpos:=1;
             state:=1;
           end;
+
           while (bufpos<=curread) and (HuffWrote<pf.FileLength) do
           begin
             bitmul:=1;
