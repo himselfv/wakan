@@ -59,6 +59,10 @@ function EncMask(const ARange: Integer): Integer;
 procedure ObfuscateFileName(FileSysCode: LongInt; TotFSize: LongInt; pc: PAnsiChar; len: integer);
 procedure DeobfuscateFileName(FileSysCode: LongInt; TotFSize: LongInt; pc: PAnsiChar; len: integer);
 
+{ CRC algorithm used in files when enabled }
+
+function CalcCRC(buf: PByte; len: integer): cardinal;
+
 implementation
 
 procedure CalculateHuffmanCode(var ha:PKGHuffArray);
@@ -177,5 +181,23 @@ begin
     Inc(pc);
   end;
 end;
+
+
+{ CRC }
+
+function CalcCRC(buf: PByte; len: integer): cardinal;
+var i: integer;
+begin
+  Result := 0;
+  for i:=1 to len do
+    Result := (Result + cardinal(buf[i-1] xor i)) mod 12345678;
+end;
+
+
+var buf: string;
+initialization
+
+  buf := 'asdbsdasdasds';
+  CalcCRC(@buf[1], Length(buf)*2);
 
 end.

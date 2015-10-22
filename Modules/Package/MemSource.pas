@@ -608,8 +608,7 @@ begin
     case pf.CRCMode of
       0:begin end;
       1:begin
-          crc:=0;
-          for i:=1 to curread do crc:=(crc+(buf[i] xor i)) mod 12345678;
+          crc := CalcCRC(@buf[1], curread);
           reat:=FSource.Read(testcrc,sizeof(testcrc));
           if reat<sizeof(testcrc) then raise EMemorySourceError.Create('Package file is corrupt (#11).');
           if testcrc<>crc then raise EMemorySourceError.Create('Package file is corrupt (#12).');
