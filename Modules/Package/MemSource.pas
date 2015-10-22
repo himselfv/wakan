@@ -425,16 +425,17 @@ var ph:PKGHeader;
     s:string;
     cryptedheader:boolean;
 
-  function corr(s:string):string;
-  var j:integer;
+  procedure ObfuscateText(pc: PChar; len: integer);
   begin
     encseed:=fFileSysCode+totfsize;
-    result:='';
-    for j:=1 to length(s) do
-      case s[j] of
-        'A'..'Z':result:=result+chr((((ord(s[j])-ord('A'))+encmask(26)) mod 26)+ord('A'));
-        'a'..'z':result:=result+chr((((ord(s[j])-ord('a'))+encmask(26)) mod 26)+ord('a'));
-      else result:=result+s[j];
+    while len > 0 do begin
+      case pc^ of
+        'A'..'Z': pc^ := chr((((ord(pc^)-ord('A'))+encmask(26)) mod 26)+ord('A'));
+        'a'..'z': pc^ := chr((((ord(pc^)-ord('a'))+encmask(26)) mod 26)+ord('a'));
+      else //keep the symbol
+      end;
+      Dec(len);
+      Inc(pc);
     end;
   end;
 
@@ -451,6 +452,7 @@ begin
     cryptedheader:=true;
     FSource.Seek(sizeof(pcs),soEnd);
     reat := FSource.Read(pcs,sizeof(pcs));
+    if reat <> sizeof(pcs) then raise EMemorySourceError.Create('Cannot read header');
     if pcs.pkgtag<>65279 then raise EMemorySourceError.Create('Unrecognized package file format.');
     FSource.Seek(pcs.ActualStart,soBeginning);
     reat := FSource.Read(pch,sizeof(pch));
@@ -514,7 +516,8 @@ begin
       else raise EMemorySourceError.Create('Unsupported load mode in package file.');
     end;
     if fDirectories.Count<=pf.Directory then EMemorySourceError.Create('Package file is corrupt (#13).');
-    pf.FileName:=corr(string(pf.FileName)); if pf.FileExt<>'*DIR*' then pf.FileExt:=corr(string(pf.FileExt));
+    ObfuscateText(@pf.FileName[0], Length(pf.FileName));
+    if pf.FileExt<>'*DIR*' then ObfuscateText(@pf.FileExt[0], Length(pf.FileExt));
     if pf.FileExt='*DIR*' then s:=string(pf.FileName)+'\' else s:=string(pf.FileName)+'.'+string(pf.FileExt);
     if pf.Directory=0 then
       mf:=TMemoryFile.Create(self,s,pf.FileLength,loc,lm,nil)
