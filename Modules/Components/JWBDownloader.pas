@@ -146,7 +146,12 @@ function OpenDownloader(AOwner: TComponent): TModalResult; overload;
 function OpenDownloader(AOwner: TComponent; ACategory: string;
   ABaseLanguage: char = #00): TModalResult; overload;
 
+type
+  EComponentNotFound = class(Exception);
+
 function DownloadComponent(const AName: string): boolean;
+
+function ConsoleDownload(const AName: string): boolean;
 
 implementation
 uses UITypes, PngImage, JWBStrings, JWBDownloaderCore, JWBUnpackJob, JWBDictionaries,
@@ -1131,10 +1136,10 @@ var AComponent: PAppComponent;
 begin
   AComponent := AppComponents.FindByName(AName);
   if AComponent=nil then
-    raise Exception.Create('Cannot find component information for "'+AName+'".');
+    raise EComponentNotFound.Create('Cannot find component information for "'+AName+'".');
   prog := SMProgressDlgCreate(
-    _l('01222^Downloading'),
     _l('01223^Downloading %s...', [AName]),
+    _l('01222^Downloading'),
     100,
     {canCancel=}true);
   job := TComponentDownloadJob.Create(AComponent);
@@ -1155,5 +1160,68 @@ begin
     FreeAndNil(prog);
   end;
 end;
+
+
+type
+  TConsoleJobProgressHandler = class
+  protected
+    FJob: TJob;
+    FSilent: boolean;
+  public
+    procedure JobOperationChanged(Sender: TObject);
+    procedure JobProgressChanged(Sender: TObject);
+    procedure JobYield(Sender: TObject);
+    procedure ExecuteJob(AJob: TJob);
+    property Silent: boolean read FSilent write FSilent;
+  end;
+
+procedure TConsoleJobProgressHandler.JobOperationChanged(Sender: TObject);
+begin
+  if not Silent then
+    writeln(FJob.Operation);
+end;
+
+procedure TConsoleJobProgressHandler.JobProgressChanged(Sender: TObject);
+begin
+end;
+
+procedure TConsoleJobProgressHandler.JobYield(Sender: TObject);
+begin
+end;
+
+procedure TConsoleJobProgressHandler.ExecuteJob(AJob: TJob);
+begin
+  FJob := AJob;
+  AJob.OnOperationChanged := Self.JobOperationChanged;
+  AJob.OnProgressChanged := Self.JobProgressChanged;
+  repeat
+    AJob.ProcessChunk;
+    JobYield(AJob); //in case this is a straight chunked job
+  until (AJob.State=jsFinished);
+  AJob.OnProgressChanged := nil;
+  AJob.OnOperationChanged := nil;
+  AJob.OnYield := nil;
+end;
+
+function ConsoleDownload(const AName: string): boolean;
+var AComponent: PAppComponent;
+  job: TComponentDownloadJob;
+  prog: TConsoleJobProgressHandler;
+begin
+  AComponent := AppComponents.FindByName(AName);
+  if AComponent=nil then
+    raise EComponentNotFound.Create('Cannot find component information for "'+AName+'".');
+  writeln(_l('01223^Downloading %s...', [AName]));
+  prog := TConsoleJobProgressHandler.Create;
+  job := TComponentDownloadJob.Create(AComponent);
+  try
+    prog.ExecuteJob(job);
+  finally
+    FreeAndNil(job);
+    FreeAndNil(prog);
+  end;
+  Result := true;
+end;
+
 
 end.

@@ -10,11 +10,20 @@ procedure BadUsage(msg: string);
 procedure ShowUsage(errmsg: string = '');
 
 type
+  TCommandExecutionTime = (
+    etBeforeInit,
+    etAfterAppData,
+    etAfterCharData,
+    etAfterUserData
+  );
   TCommand = class
   public
+    function GetExecutionTime: TCommandExecutionTime; virtual;
     procedure Initialize; virtual;
     function AcceptParam(const Param: string): boolean; virtual;
+    function AcceptFlag(const Flag: string): boolean; virtual;
     function Run: cardinal; virtual;
+    property ExecutionTime: TCommandExecutionTime read GetExecutionTime;
   end;
 
   TCommandList = class(TObjectDictionary<string, TCommand>);
@@ -66,6 +75,12 @@ procedure RegisterCommand(const Name: string; const Command: TCommand);
 implementation
 uses Forms, Windows, JWBCore;
 
+//Describe the moment when to execute the command
+function TCommand.GetExecutionTime: TCommandExecutionTime;
+begin
+  Result := etBeforeInit;
+end;
+
 //Initialize to default values before parsing
 procedure TCommand.Initialize;
 begin
@@ -74,6 +89,11 @@ end;
 //Parses a param from the command line. Returns true if it was successfuly parsed, false if
 //no more params are expected (perhaps it's something else)
 function TCommand.AcceptParam(const Param: string): boolean;
+begin
+  Result := false;
+end;
+
+function TCommand.AcceptFlag(const Flag: string): boolean;
 begin
   Result := false;
 end;
@@ -114,7 +134,8 @@ begin
     +'* makedic <dicfilename> </include filename> [/include filename] '
       +'[/description text] [/language <j|c>] '#13
     +'* updatedics [dicname dicname ...]'#13
-    +'* upgradelocaldata'
+    +'* upgradelocaldata'#13
+    +'* download <component> [component, ...]'#13
     +'Supported flags:'
     +'* [/fast]';
 
@@ -216,10 +237,14 @@ begin
           BadUsage('Invalid option: '+s);
 
       end else
+      if CustomCommand <> nil then begin
+        if not CustomCommand.AcceptFlag(Copy(s, 2, MaxInt)) then
+          BadUsage('Invalid option: '+s);
+
+      end else
         BadUsage('Invalid option: '+s);
 
     end else
-
 
    //Command
     if Command='' then begin
@@ -284,7 +309,7 @@ begin
         AddFilename(UpdateDicsParams.Files, ParamStr(i));
       end else
       if (CustomCommand <> nil) and CustomCommand.AcceptParam(s) then begin
-        Inc(i);
+       //Okay
       end else
         BadUsage('Invalid param: "'+s+'"');
 

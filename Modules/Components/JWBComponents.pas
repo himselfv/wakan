@@ -56,7 +56,6 @@ type
 var
   AppComponents: TAppComponents; //populated on load
 
-
 function IsComponentPresent(const ASource: PAppComponent): boolean;
 
 implementation
@@ -342,6 +341,8 @@ initialization
   AppComponents := TAppComponents.Create;
 
 finalization
+ {$IFDEF CLEAN_DEINIT}
   FreeAndNil(AppComponents);
+ {$ENDIF}
 
 end.

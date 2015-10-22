@@ -115,10 +115,6 @@ object fDownloader: TfDownloader
       Caption = '#01200^Downloading'
       ImageIndex = 2
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object vtJobs: TVirtualStringTree
         Left = 0
         Top = 0
@@ -153,7 +149,7 @@ object fDownloader: TfDownloader
           end
           item
             Position = 1
-            Width = 256
+            Width = 250
             WideText = '#01178^Status'
           end>
       end
@@ -259,7 +255,7 @@ object fDownloader: TfDownloader
     Left = 400
     Top = 8
     Bitmap = {
-      494C010102000C006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010102000C00700010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

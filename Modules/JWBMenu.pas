@@ -430,7 +430,8 @@ begin
 
   try
     ParseCommandLine();
-    if JWBCommandLine.CustomCommand <> nil then begin
+    if (JWBCommandLine.CustomCommand <> nil)
+    and (JWBCommandLine.CustomCommand.ExecutionTime = etBeforeInit) then begin
       System.ExitCode := CustomCommand.Run();
       Application.ShowMainForm := false;
       Application.Terminate;
@@ -447,10 +448,19 @@ begin
       exit;
     end;
 
+    if (JWBCommandLine.CustomCommand <> nil)
+    and (JWBCommandLine.CustomCommand.ExecutionTime = etAfterAppData) then begin
+      System.ExitCode := CustomCommand.Run();
+      Application.ShowMainForm := false;
+      Application.Terminate;
+      exit;
+    end;
+
     fSettings.LoadSettings;
 
     if fSettings.cbShowSplashscreen.Checked
-    and not IsElevatedWorker then begin
+    and not IsElevatedWorker
+    and (JWBCommandLine.CustomCommand = nil) then begin
       fSplash := TfSplash.Create(Application);
       fSplash.Show;
       fSplash.Update;
@@ -471,7 +481,6 @@ begin
 
    { At this point we have loaded basic settings and functionality.
     Package enhancements are going to be loaded now. }
-
     AppComponents.LoadFromFile('Components.ini');
 
    { Import now before these packages are loaded }
@@ -555,6 +564,14 @@ begin
       end;
     end;
 
+
+    if (JWBCommandLine.CustomCommand <> nil)
+    and (JWBCommandLine.CustomCommand.ExecutionTime = etAfterCharData) then begin
+      System.ExitCode := CustomCommand.Run();
+      Application.ShowMainForm := false;
+      Application.Terminate;
+      exit;
+    end;
 
    { Annotations }
     JWBAnnotations.Initialize;
@@ -662,6 +679,14 @@ begin
           +'Application will now exit.'));
     end;
     if Application.Terminated then exit;
+
+    if (JWBCommandLine.CustomCommand <> nil)
+    and (JWBCommandLine.CustomCommand.ExecutionTime = etAfterUserData) then begin
+      System.ExitCode := CustomCommand.Run();
+      Application.ShowMainForm := false;
+      Application.Terminate;
+      exit;
+    end;
 
 
    //Prepare for SwitchLanguage->RescanDicts->AutoUpdate(dic)

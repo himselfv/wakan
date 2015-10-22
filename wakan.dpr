@@ -86,7 +86,8 @@ uses
   AnnotationsSettings in 'Modules\Annotations\AnnotationsSettings.pas' {AnnotationsSettingsPage},
   JWBWordList in 'Modules\JWBWordList.pas' {fWordList},
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  JWBDownloaderCommandLine in 'Modules\Components\JWBDownloaderCommandLine.pas';
 
 {$R *.RES}
 {$R WINXP.RES}

@@ -16,6 +16,11 @@
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
@@ -48,6 +53,9 @@
         <DCC_ExeOutput>Release\</DCC_ExeOutput>
         <DCC_UnitSearchPath>.\Modules;.\Modules\Package;.\Modules\ScaleMM;.\Modules\StdPrompt;.\Modules\TextTable;.\Controls;$(JPTOOLS)\Share;$(JPTOOLS)\KanaConv;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_DependencyCheckOutputName>Release\Jalet.exe</DCC_DependencyCheckOutputName>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <Debugger_RunParams>download edict2 /console</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Alignment>1</DCC_Alignment>
@@ -292,6 +300,7 @@
         <DCCReference Include="Modules\JWBWordList.pas">
             <Form>fWordList</Form>
         </DCCReference>
+        <DCCReference Include="Modules\Components\JWBDownloaderCommandLine.pas"/>
         <RcCompile Include="Assets\ODT\odt.rc">
             <Form>odt.res</Form>
         </RcCompile>

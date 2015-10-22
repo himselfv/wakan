@@ -28,8 +28,10 @@ rem Running tests...
 "%BINOUT%\WakanTests.exe" /nospeed /halt
 if errorlevel 1 goto end
 
+rem Donwload/update standard resources
+start /wait "" "%BINOUT%\wakan.exe" download radkfile wordfreq_ck edict2 ccedict kanjidic unihan examples_j.pkg
+if errorlevel 1 goto end
 
-rem TODO: Update standard dicts? "wakan /updatedics ..."
 rem TODO: Update + rebuild character info? "wakan /updatechars ..."
 
 
