@@ -24,12 +24,12 @@ rem   /p:DCC_BplOutput   can't rebuild BPLs if Delphi is running, but Wakan is s
 msbuild Wakan.groupproj /t:build /p:config=Release /p:OutputPath="%BINOUT%" /p:DCC_ExeOutput="%BINOUT%" /p:DCC_BplOutput="%BINOUT%"
 if errorlevel 1 goto end
 
-rem Running tests...
-"%BINOUT%\WakanTests.exe" /nospeed /halt
+rem Download/update standard resources -- some are needed for tests
+start /wait "" "%BINOUT%\wakan.exe" download radkfile wordfreq_ck edict2 ccedict kanjidic unihan examples_j.pkg /console
 if errorlevel 1 goto end
 
-rem Donwload/update standard resources
-start /wait "" "%BINOUT%\wakan.exe" download radkfile wordfreq_ck edict2 ccedict kanjidic unihan examples_j.pkg /console
+rem Running tests...
+"%BINOUT%\WakanTests.exe" /nospeed /halt
 if errorlevel 1 goto end
 
 rem TODO: Update + rebuild character info? "wakan /updatechars ..."

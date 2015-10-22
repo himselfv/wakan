@@ -144,6 +144,8 @@ begin
     JobYield(AJob); //in case this is a straight chunked job
   until (AJob.State=jsFinished);
   if LineStyle = lsSameLine then begin
+    if (ProgressStyle = psPercentage) and (FMaxProgress > 0) then
+      FProgress := FMaxProgress; //make sure it's 100% because "Done [60%]" looks strange
     SetOperation('Done');
     if not FSilent then
       writeln('');
