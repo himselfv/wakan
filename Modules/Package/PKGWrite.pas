@@ -597,10 +597,10 @@ begin
         Reset(hdrf,1);
       except
         Log('Unable to open include file ('+sr.name+').');
-        FileMode := fmOpenWrite;
+        FileMode := fmOpenReadWrite;
         continue;
       end;
-      FileMode := fmOpenWrite;
+      FileMode := fmOpenReadWrite;
 
       if pos('.',sr.name) > 0 then begin
         pkghf.FileName := ShortString(copy(sr.name,1,pos('.',sr.name)-1));
