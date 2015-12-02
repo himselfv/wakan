@@ -7,6 +7,11 @@ import oauth2client.client
 import oauth2client.file
 import oauth2client.tools
 
+# Drive API docs:
+# https://developers.google.com/resources/api-libraries/documentation/drive/v2/python/latest/
+# https://developers.google.com/apis-explorer/#p/drive/v2/
+# https://developers.google.com/drive/v2/reference/
+
 parser = argparse.ArgumentParser(description="Uploads releases to Google Drive",
 	parents=[oauth2client.tools.argparser])
 parser.add_argument('filename', help='File to upload')
