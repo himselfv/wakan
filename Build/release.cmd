@@ -17,10 +17,13 @@ upload.py Output\%SETUPFILENAME% --folderid %WAKANFOLDERID% --update
 if errorlevel 1 goto end
 
 echo.
-echo Upload completed. Release link:
+echo Upload completed.
+echo Unfortunately, direct links are discontinued by Google. You'll have to go and copy shareable link manually.
 echo.
-echo   https://googledrive.com/host/%WAKANFOLDERID%/%SETUPFILENAME%
-echo.
+rem Release link:
+rem echo.
+rem echo   https://googledrive.com/host/%WAKANFOLDERID%/%SETUPFILENAME%
+rem echo.
 echo Please commit the code to the repository now and up the version number.
 rem TODO: Automaticaly up the version number, commit the code.
 echo.

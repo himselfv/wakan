@@ -56,6 +56,8 @@ Source: "..\Release\Components.ini"; DestDir: "{app}"; Flags: ignoreversion
 Source: "wakan.ini"; DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist
 ; Languages
 Source: "..\Release\lng\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Flags
+Source: "..\Release\Flags\*"; DestDir: "{app}\Flags"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; Help
 Source: "..\Release\wakan_cz.chm"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\wakan_en.chm"; DestDir: "{app}"; DestName: "wakan.chm"; Flags: ignoreversion
