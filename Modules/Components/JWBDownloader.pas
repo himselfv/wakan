@@ -726,6 +726,7 @@ begin
   if Flags.TryGetValue(ACode, Result) then
     exit;
 
+  bmp := nil;
   png := TPngImage.Create;
   try
     try
