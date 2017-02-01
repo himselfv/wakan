@@ -6,7 +6,7 @@ Wakan can be installed or used as a portable app. It can be installed over versi
 
 **[All downloads](https://drive.google.com/folderview?id=0B0jSbSrihj-yRDN4WlJXS05BOVE&usp=sharing#list)**
 
-**[Latest version: 1.92](https://googledrive.com/host/0B0jSbSrihj-yRDN4WlJXS05BOVE/wakan-1.92-setup.exe)**
+**[Latest version: 1.92](https://drive.google.com/open?id=0B0jSbSrihj-ybDJmLUh1bTdlSHc)**
 
  * Redesigned kanji search panel - share your thoughts
 
