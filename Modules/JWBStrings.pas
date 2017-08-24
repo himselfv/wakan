@@ -469,7 +469,7 @@ const SHGFP_TYPE_CURRENT = 0;
 var hr: HRESULT;
 begin
   SetLength(Result, MAX_PATH+1);
-  hr := SHGetFolderPath(0, folderId, 0, SHGFP_TYPE_CURRENT or CSIDL_FLAG_CREATE, @Result[1]);
+  hr := SHGetFolderPath(0, folderId or CSIDL_FLAG_CREATE, 0, SHGFP_TYPE_CURRENT, @Result[1]);
   if FAILED(hr) then
     raise Exception.Create('Cannot obtain special folder path: error 0x'+IntToHex(hr,8));
 
