@@ -111,9 +111,9 @@ object PortabilitySettingsPage: TPortabilitySettingsPage
     ParentFont = False
   end
   object lblUpgradeLocalData: TLabel
-    Left = -4
+    Left = 0
     Top = 118
-    Width = 453
+    Width = 449
     Height = 34
     Anchors = [akLeft, akTop, akRight]
     AutoSize = False
