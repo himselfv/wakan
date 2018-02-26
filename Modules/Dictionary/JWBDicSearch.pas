@@ -776,7 +776,8 @@ begin
       for j:=0 to flength(roma)-flength(dr.infl) do
         if (fcopy(roma,j+1,flength(dr.infl))=dr.infl) or
            ((dr.infl='KKKK') and (j=0) and (core<>'')) then
-        if ((dr.vt<>'K') and (dr.vt<>'I')) or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
+        if ((dr.vt<>'K') and (dr.vt<>'I'))
+           or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
            or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
         begin
           if (flength(dr.defl)+j<=6) and (core+fcopy(roma,1,j)+dr.defl<>w) then
@@ -1155,7 +1156,8 @@ search
     english/other "translated" language in stEn
     kanji/kana/whatever in stEditor/stClipboard
 wt
-  Word character type. "Unknown", "Kanji/kana mixed", "Hiragana", "Katakana"
+  Word character type. "Unknown", "Kanji/kana mixed" (EC_IDG_CHAR), "Hiragana", "Katakana"
+  Only for stJapanese mode.
 sl
   Match results to return.
 wasfull
