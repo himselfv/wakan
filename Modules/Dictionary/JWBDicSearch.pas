@@ -914,7 +914,7 @@ begin
         begin
           partfound:=false;
           if (wt=EC_HIRAGANA)
-          and (i<=flength(_s)) and (i>=flength(_s)-1) //at most last two chars or it'll be slow
+          and (i<flength(_s)) and (i>=flength(_s)-1) //exactly last two chars or it'll be slow
           and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
             partfound:=true;
           if (
