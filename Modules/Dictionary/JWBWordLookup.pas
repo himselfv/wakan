@@ -314,7 +314,9 @@ var lm: TLookupMode;
   wt:TEvalCharType;
   wasfull:boolean;
   text:string;
-  b:boolean;
+  dbroma: string;
+  CanSelect: boolean;
+  i: integer;
 
  //Some search modes do several requests and we can't reuse request object
  //with different settings after it has been Prepare()d.
@@ -449,17 +451,73 @@ begin
       end;
       lmEditorInsert: begin
        //First try the real word insert buffer
-       { Use romaji because EVEN IF YOU PASS KANA, stJapanese search will look
-       in KANJI fields for matches, and we don't have kanji here.
-       There's a EC_HIRAGANA route which converts the request to romaji, but:
-       1. Why not just pass romaji directly?
-       2. It's easily broken by inputs such as そうぞうry (unparsed tail). }
-        text := fEditor.GetInsertRomaji();
+        text := fEditor.GetInsertKana(ikFinal);
         if text <> '' then begin
+         {
+         We want to search for the stuff the user types, which is internally romaji.
+         We have two choices.
+
+         Either we convert it to kana and search by kana, which seems safe, but then
+         stJapanese matches it against KANJI fields in the DB.
+
+         And this is correct since "stJapanese" really means "by expression".
+         It has some corner handling for also looking at reading if the query
+         is kana-only, but we shouldn't rely on that.
+
+         What we really want is to search by reading, that is "stRomaji".
+         BUT NOT BY THE ROMAJI WE HAVE. The user types in UI-preference romaji,
+         dicts are in kunreishiki.
+
+         So we need to:
+         1. Convert whatever is typed to kana (using UI-preference decoder under the hood)
+         2. Convert kana to dictionary roma (kunireishiki).
+         }
+          dbroma := DbKanaToRomaji(text, curlang, []); //keep all chars
           req.st := stRomaji;
-          req.MatchType := mtMatchLeft; //Or "souzoury" would match nothing at all
+          {
+          There are two ways we can approach typing suggestions: lookahead and lookbehind.
+          Lookahead (mtMatchLeft):
+            "souzoury" -> suggest "souzouryoku"
+            Nice, but we'll have to specifically handle accepting suggestion when
+            the word is not fully typed:
+              "souzoury" [Enter] -> "想像力"
+            This is not how Wakan worked or works.
+          Lookbehind (mtBestGuessLeft/mtExactMatch):
+            "souzouryu" -> suggest "souzou"
+            Accepting only accepts the guessed part:
+              "souzoury" [Enter] -> "想像ry" (currently)
+            This is how Wakan always worked.
+
+          ADDITIONALLY, we both preserve and hate any unparsed symbols:
+          - They may be important for some weird dict expression: "オリオンB"
+          - But we still want to continue showing results for そうぞう while the user
+            types "そうぞうry [oku]" (ignore unparsed tail)
+
+          We either have to preserve the tail but search for BestLeftGuess (=> risk too many results),
+          or we just run 2 searches (with the tail and without).
+          }
+          //{$DEFINE EDITOR_INSERT_BESTGUESSMATCH}
+
+        {$IFDEF EDITOR_INSERT_BESTGUESSMATCH}
+          req.MatchType := mtBestGuessLeft;
+        {$ELSE}
+          req.MatchType := mtExactMatch;
+        {$ENDIF}
           req.Prepare;
-          req.Search(text, FResults);
+          req.Search(dbroma, FResults);
+
+        {$IFNDEF EDITOR_INSERT_BESTGUESSMATCH}
+          //If there's a non-hira/kata/bopo tail, trim it and search for the sane part too
+          i := flength(text);
+          while (i >= 1) and not (EvalChar(fgetch(text, i)) in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO]) do
+            Dec(i);
+          if (i > 0) and (i < flength(text)) then begin
+            text := fcopy(text, 1, i);
+            dbroma := DbKanaToRomaji(text, curlang, []); //keep all chars
+            req.Search(dbroma, FResults);
+          end;
+        {$ENDIF}
+
         end else begin
          //If that is empty, show whatever the caret is at
          //Here we're looking at a parsed text so it can be kanji; stJapanese is our best chance
@@ -488,7 +546,7 @@ begin
     end;
     text:=text+' ('+inttostr(FResults.Count)+')';
     curword:=0;
-    if StringGrid.Visible then StringGridSelectCell(self,0,1,b);
+    if StringGrid.Visible then StringGridSelectCell(self,0,1,CanSelect);
     if StringGrid.Visible then StringGrid.Row:=1;
     if StringGrid.Visible then curword:=1;
     WordSelectionChanged;

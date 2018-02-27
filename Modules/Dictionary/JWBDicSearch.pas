@@ -848,41 +848,53 @@ procedure TDicSearchRequest.MakeLookupList(se: TCandidateLookupList; search: str
   wt: TEvalCharType);
 var _s: string;
   i: integer;
-  tmpkana:string;
+  tmpkana: string;
   addGuess: boolean;
+  prior: integer;
 begin
   case st of
-    stRomaji:
-      if not AutoDeflex then begin
-       //No autodeflex => exact roma lookup
-        search := SignatureFrom(search);
-        se.Add(9,length(search),'F',rtRoma,search)
-      end else begin
+    stRomaji: begin
+     //Add exact kunrei roma first, if there's anything that looks like it
+      search := SignatureFrom(search);
+      if search <> '' then
+        se.Add(9,length(search),'F',rtRoma,search);
+
+     //Try to convert romaji to kana if possible for some deeper analysis
+      tmpkana := '';
+      if AutoDeflex or (MatchType = mtBestGuessLeft) then
         if curlang='j'then
           tmpkana:=RomajiToKana('H'+search,'j',[rfReplaceInvalidChars])
         else
           tmpkana:=RomajiToKana(search,'c',[rfReplaceInvalidChars]);
 
-       //Add exact kunrei roma first, if there's anything that looks like it
-        search := SignatureFrom(search);
-        if search <> '' then
-          se.Add(9,length(search),'F',rtRoma,search);
-
-        if pos('?',tmpkana)>0 then begin
-         //Deflex with lower priority since this is probably wrong decoding of roma
+     //We still try to run auto deflexion even for romaji if we have kana
+      if AutoDeflex then begin
+        if pos('?',tmpkana) > 0 then begin
+         //Deflex with lower priority since this is probably a wrong decoding of roma
+          prior := 6;
           tmpkana := repl(tmpkana, '?', '');
-          if tmpkana <> '' then begin
-            Deflex(tmpkana,se,6,5,true);
-           //in any case add non-deflexed kana translation,
-           //since the request could be in different romaji system (ex. mujun instead of mudjun)
-            se.Add(6, flength(tmpkana), 'F', rtNormal, tmpkana)
-          end;
-        end else
-          if tmpkana <> '' then begin
-            Deflex(tmpkana,se,9,8,true);
-            se.Add(9, flength(tmpkana), 'F', rtNormal, tmpkana);
-          end;
+        end  else
+          prior := 9;
+
+        if tmpkana <> '' then begin //even after repl('?','')
+          Deflex(tmpkana, se, prior, prior-1, true);
+         //in any case add non-deflexed kana translation,
+         //since the request could be in different romaji system (ex. mujun instead of mudjun)
+          se.Add(prior, flength(tmpkana), 'F', rtNormal, tmpkana);
+        end;
       end;
+
+     //Add shortened guesses if requested - no deflexion though
+      if MatchType = mtBestGuessLeft then
+        for i:=flength(search)-1 downto 2 do begin //no less than 2 chars because 1 char roma lookups are pointless (I think)
+          //The longer the cut, the lower the priority
+          prior := 8-((flength(search)-i) div 2);
+          if prior < 0 then
+            prior := 0;
+          se.Add(prior, length(search), 'F', rtRoma, fcopy(search,1,i));
+        end;
+    end;
+
     stEnglish:
       se.Add(9, 1, 'F', rtNormal, search);
     stJapanese: begin
