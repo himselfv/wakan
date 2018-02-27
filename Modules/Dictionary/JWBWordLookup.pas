@@ -343,7 +343,8 @@ var lm: TLookupMode;
 
     if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
       Result.dictgroup := 5;
-      Result.MatchType := mtExactMatch;
+      Result.MatchType := mtBestGuessLeft;
+      //In EditorInsert mode we want the best left guess to what's being typed
     end;
 
     Result.AutoDeflex := aInflect.Checked;
@@ -408,21 +409,21 @@ begin
         text := GetSearchText;
         req.st := stRomaji;
         req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        req.Search(text, FResults, EC_UNKNOWN);
         wasfull := req.WasFull;
         FreeAndNil(req);
 
         req := NewSearchRequest;
         req.st := stEnglish;
         req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        req.Search(text, FResults, EC_UNKNOWN);
         wasfull := wasfull and req.WasFull;
         FreeAndNil(req);
 
         req := NewSearchRequest;
         req.st := stJapanese;
         req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        req.Search(text, FResults, EC_UNKNOWN);
         wasfull := wasfull and req.WasFull;
       end;
       lmJp: begin
@@ -430,33 +431,43 @@ begin
 
         req.st := stRomaji;
         req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        req.Search(text, FResults, EC_UNKNOWN);
         wasfull := req.WasFull;
         FreeAndNil(req);
 
         req := NewSearchRequest;
         req.st := stJapanese;
         req.Prepare;
-        req.Search(text, EC_UNKNOWN, FResults);
+        req.Search(text, FResults, EC_UNKNOWN);
         wasfull := wasfull and req.WasFull;
       end;
       lmEn: begin
         req.st := stEnglish;
         req.Prepare;
-        req.Search(GetSearchText, EC_UNKNOWN, FResults);
+        req.Search(GetSearchText, FResults, EC_UNKNOWN);
         wasfull := req.WasFull;
       end;
       lmEditorInsert: begin
-       //First try real word insert buffer
-        text := fEditor.GetInsertKana(ikFinal);
-        wt := EC_UNKNOWN;
-       //If that is empty, show whatever the caret is at
-        if text='' then
-          text:=fEditor.GetWordAtCaret(wt);
-        if text<>'' then begin
-          req.st := stJapanese;
+       //First try the real word insert buffer
+       { Use romaji because EVEN IF YOU PASS KANA, stJapanese search will look
+       in KANJI fields for matches, and we don't have kanji here.
+       There's a EC_HIRAGANA route which converts the request to romaji, but:
+       1. Why not just pass romaji directly?
+       2. It's easily broken by inputs such as そうぞうry (unparsed tail). }
+        text := fEditor.GetInsertRomaji();
+        if text <> '' then begin
+          req.st := stRomaji;
+          req.MatchType := mtMatchLeft; //Or "souzoury" would match nothing at all
           req.Prepare;
-          req.Search(text, EC_UNKNOWN, FResults);
+          req.Search(text, FResults);
+        end else begin
+         //If that is empty, show whatever the caret is at
+         //Here we're looking at a parsed text so it can be kanji; stJapanese is our best chance
+          text := fEditor.GetWordAtCaret(wt);
+          req.st := stJapanese;
+          req.MatchType := mtBestGuessLeft; //This is a completed text, just find the best guess
+          req.Prepare;
+          req.Search(text, FResults, wt);
         end;
         wasfull := req.WasFull;
       end;

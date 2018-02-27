@@ -468,6 +468,7 @@ type
     function ConvertImmediateChar(const c: char): char;
     function ConvertImmediateChars(const str: FString): FString;
   public
+    function GetInsertRomaji: string;
     function GetInsertKana(const AType: TInsertKanaType): FString;
 
   protected //File opening/saving
@@ -1090,7 +1091,7 @@ begin
   Result := TDicSearchRequest.Create;
   Result.st := stJapanese;
   Result.dictgroup := 5;
-  Result.MatchType := mtExactMatch;
+  Result.MatchType := mtBestGuessLeft;
  { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
   which is obviously not what we want. }
   Result.maxwords:=0; //Ignored if Full is true?
@@ -1306,7 +1307,7 @@ begin
     begin
       dicsl.Clear;
       s:=GetDocWord(x,y,wt);
-      req.Search(s, wt, dicsl);
+      req.Search(s, dicsl, wt);
       if dicsl.Count>0 then word:=dicsl[0] else word:=nil;
       a:=SetWordTrans(x,y,[tfScanParticle],word);
       if a=0 then a:=1; //move at least one character forward
@@ -3028,6 +3029,15 @@ begin
   ShowText(false);
 end;
 
+
+{
+Returns the contents of the input buffer.
+}
+function TfEditor.GetInsertRomaji: string;
+begin
+  Result := FInputBuffer;
+end;
+
 {
 Returns the contents of input buffer upgraded for presentation according
 to buffer type (to hiragana/katakana, to FW-latin etc.)
@@ -3374,9 +3384,9 @@ begin
  { GetDocWord makes upper bound guess on the length of the word,
   then search result gives us exact value.
   It may be shorter (itteoku => only ITTE is parsed) or longer (rarely) }
-  if word<>nil then
-    rlen:=word.slen
-  else
+  if word<>nil then begin
+    rlen:=word.inflen
+  end else
     rlen:=flength(dw);
   globdict:=0;
 

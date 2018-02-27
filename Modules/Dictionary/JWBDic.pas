@@ -34,11 +34,12 @@ type
   TDicLookupCursor = class;
 
  { How to match words (exact, match left, right or anywhere) }
-  TMatchType = (
-    mtExactMatch,
-    mtMatchLeft,
-    mtMatchRight,
-    mtMatchAnywhere);
+  TDicMatchType = (
+    dmtExactMatch,
+    dmtMatchLeft,
+    dmtMatchRight,
+    dmtMatchAnywhere
+  );
 
   TIndexType = (
     itWord,
@@ -150,7 +151,7 @@ type
     function ReadIndex:integer; inline;
    {$ENDIF}
     function NewCursor: TDicCursor;
-    function NewLookup(AMatchType: TMatchType): TDicLookupCursor;
+    function NewLookup(AMatchType: TDicMatchType): TDicLookupCursor;
     function GetRecord(Index: integer): TDicCursor;
     property Filename: string read FFilename;
     property Name: string read GetName;
@@ -279,12 +280,12 @@ type
   protected
     FIndexReader: TDicIndexReader;
     FLookupType: TDicLookupType;
-    FMatchType: TMatchType;
+    FMatchType: TDicMatchType;
     FValue: string; //can be FString
     function NextMeaningMatch: boolean;
     function NextAnywhereMatch: boolean;
   public
-    constructor Create(ADic: TJaletDic; AMatchType: TMatchType);
+    constructor Create(ADic: TJaletDic; AMatchType: TDicMatchType);
     destructor Destroy; override;
     procedure LookupKanji(const val: FString); override;
     procedure LookupRomaji(const val: string); override;
@@ -762,7 +763,7 @@ begin
   Result := TDicCursor.Create(Self);
 end;
 
-function TJaletDic.NewLookup(AMatchType: TMatchType): TDicLookupCursor;
+function TJaletDic.NewLookup(AMatchType: TDicMatchType): TDicLookupCursor;
 begin
   Self.Demand;
   case dicver of
@@ -1194,7 +1195,7 @@ Lookup cursor.
 These let you browse through a set of results.
 }
 
-constructor TDicLookupCursorV4.Create(ADic: TJaletDic; AMatchType: TMatchType);
+constructor TDicLookupCursorV4.Create(ADic: TJaletDic; AMatchType: TDicMatchType);
 begin
   inherited Create(ADic);
   FMatchType := AMatchType;
@@ -1213,11 +1214,11 @@ begin
   FLookupType := ltKanji;
   FValue := val;  
   case FMatchType of
-    mtMatchRight: begin
+    dmtMatchRight: begin
       CDict.SetOrder('<Kanji_Ind');
       CDict.Locate(stKanjiReverse,val);
     end;
-    mtMatchAnywhere: begin
+    dmtMatchAnywhere: begin
       CDict.SetOrder('Index_Ind');
       CDict.First;
       NextAnywhereMatch;
@@ -1233,11 +1234,11 @@ begin
   FLookupType := ltRomaji;
   FValue := val;  
   case FMatchType of
-    mtMatchRight: begin
+    dmtMatchRight: begin
       CDict.SetOrder('<Phonetic_Ind');
       CDict.Locate(stSortReverse,val);
     end;
-    mtMatchAnywhere: begin
+    dmtMatchAnywhere: begin
       CDict.SetOrder('Index_Ind');
       CDict.First;
       NextAnywhereMatch;
@@ -1252,8 +1253,8 @@ procedure TDicLookupCursorV4.LookupMeaning(const val: FString);
 begin
   FLookupType := ltMeaning;
   FValue := lowercase(val);
-  if not (FMatchType in [mtExactMatch, mtMatchLeft]) then
-    FMatchType := mtMatchLeft; //other match types are not supported
+  if not (FMatchType in [dmtExactMatch, dmtMatchLeft]) then
+    FMatchType := dmtMatchLeft; //other match types are not supported
   FIndexReader.FindIndexString(itWord,fstrtouni(FValue));
  //This mode requires auto-NextMatch at the start
   NextMatch();
@@ -1277,18 +1278,18 @@ begin
   case FLookupType of
     ltKanji:
       case FMatchType of
-        mtMatchLeft: Result := StartsStr(FValue, CDict.Str(TDictKanji));
-        mtMatchRight: Result := EndsStr(FValue, CDict.Str(TDictKanji));
-        mtExactMatch: Result := FValue=CDict.Str(TDictKanji);
+        dmtMatchLeft: Result := StartsStr(FValue, CDict.Str(TDictKanji));
+        dmtMatchRight: Result := EndsStr(FValue, CDict.Str(TDictKanji));
+        dmtExactMatch: Result := FValue=CDict.Str(TDictKanji);
       else //anywhere
         Result := pos(FValue,CDict.Str(TDictKanji))>0;
       end;
 
     ltRomaji:
       case FMatchType of
-        mtMatchLeft: Result := StartsStr(FValue, CDict.Str(TDictSort));
-        mtMatchRight: Result := EndsStr(FValue, CDict.Str(TDictSort));
-        mtExactMatch: Result := FValue=CDict.Str(TDictSort);
+        dmtMatchLeft: Result := StartsStr(FValue, CDict.Str(TDictSort));
+        dmtMatchRight: Result := EndsStr(FValue, CDict.Str(TDictSort));
+        dmtExactMatch: Result := FValue=CDict.Str(TDictSort);
       else //anywhere
         Result := pos(FValue,CDict.Str(TDictSort))>0;
       end;
@@ -1308,7 +1309,7 @@ begin
         FLookupType := ltNone; //lookup is over
     end
   else
-    if (FLookupType in [ltKanji,ltRomaji]) and (FMatchType=mtMatchAnywhere) then
+    if (FLookupType in [ltKanji,ltRomaji]) and (FMatchType=dmtMatchAnywhere) then
       NextAnywhereMatch
     else
       CDict.Next;
@@ -1325,8 +1326,8 @@ begin
    { Word index only works on first 4 bytes of the word, so we have to manually check after it. }
     ts:=lowercase(Self.GetArticleBody)+' ';
     case FMatchType of
-      mtMatchLeft: if pos(FValue,ts)>0 then break;
-      mtExactMatch: begin
+      dmtMatchLeft: if pos(FValue,ts)>0 then break;
+      dmtExactMatch: begin
         ts := ts + ' ';
        //TODO: support other word breaks in addition to ' ' and ','
         if (pos(lowercase(FValue)+' ',ts)>0) or (pos(lowercase(FValue)+',',ts)>0) then break;

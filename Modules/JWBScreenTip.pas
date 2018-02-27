@@ -170,8 +170,8 @@ begin
  //Trim text to maximal shared part of it between matches
   maxslen := 0;
   for i := 0 to Self.FScreenTipList.Count-1 do
-    if Self.FScreenTipList[i].slen > maxslen then
-      maxslen := Self.FScreenTipList[i].slen;
+    if Self.FScreenTipList[i].inflen > maxslen then
+      maxslen := Self.FScreenTipList[i].inflen;
   if maxslen > 0 then
     FText := copy(FText, 1, maxslen);
 

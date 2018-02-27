@@ -127,33 +127,6 @@ Search result list.
 Populated by TDicSearchRequest.Search().
 }
 type
-(*
-  Our ideal nuclear search result:
-
-  TSearchResult = record
-    score: integer; //lower is better
-    dicindex: integer; //dictinary index
-    dicname: string;
-    artindex: integer; //article index in dictionary
-    entindex: integer; //entry index in article
-    kanji: string; //kanji and kana pair which matched
-    kana: string;
-    freq: integer; //word frequency according to the dictionary, -1 if unavailable
-    sdef: char; //match class -- see TCandidateLookup.verbType
-    slen: integer; { Length of the inflexed expression as it appeared in the text.
-      Different search results are different guesses at deflexion and may assume
-      original expression was of different length. }
-    text: string; //entry text
-    markers: TMarkers; //Full set of entry markers
-  end;
-  PSearchResult = ^TSearchResult;
-
-  We'd then like to group these nuclear results into clusters somehow, but that's
-  still unclear.
-
-  For now, legacy version:
-*)
-
  {
   If several results are really similar, Wakan merges those into one. Header then
   contains the best of everything (lowest sort score, first availabe userindex etc)
@@ -183,7 +156,8 @@ type
     userscore: integer;
    //There's currently only one match class for all grouped entries
     sdef: char; //match class -- see TCandidateLookup.verbType
-    slen: integer; { Length of the inflexed expression as it appeared in the text.
+    inflen: integer; { Length of the inflexed expression in kanji form (for stJapanese
+      == as it appeared in the text).
       Different search results are different guesses at deflexion and may assume
       original expression was of different length. }
     kanji: string; //already simplified if needed, but otherwise no special marks
@@ -240,6 +214,25 @@ type
     stEnglish       //english text
   );
 
+ {
+   How to match words.
+   This is not the same as TDicMatchType as we can do more here.
+  }
+  TMatchType = (
+    mtExactMatch,
+      //Expression text must be matched exactly, except maybe for exact deflexion
+    mtMatchLeft,
+      //Match words that start with this full expression
+    mtMatchRight,
+      //Match words that end with this full expression
+    mtMatchAnywhere,
+      //Match words that contain this full expression
+    mtBestGuessLeft
+      //Try to match the longest leftmost part of the expression text
+      //This is the mode for when you're translating text and not sure where the
+      //word ends.
+    );
+
   TDicSetup = record
     cursor: TDicLookupCursor;
     PriorityClass: integer; //Reflects how high is this dict in the priority list. Lower is better.
@@ -274,7 +267,7 @@ type
     stUserPriorKanji: TSeekObject;
     fldUserPriorCount: integer;
   public
-    procedure Search(search: string; wt: TEvalCharType; sl: TSearchResults);
+    procedure Search(search: string; sl: TSearchResults; wt: TEvalCharType = EC_UNKNOWN);
 
   public //Output
     WasFull: boolean;
@@ -601,7 +594,7 @@ begin
   userIndex := 0;
   userScore := -1;
   sdef := 'F'; //maybe something else?
-  slen := 0;
+  inflen := 0;
   kanji := '';
   kana := '';
   SetLength(articles, 0);
@@ -855,8 +848,8 @@ procedure TDicSearchRequest.MakeLookupList(se: TCandidateLookupList; search: str
   wt: TEvalCharType);
 var _s: string;
   i: integer;
-  partfound:boolean;
   tmpkana:string;
+  addGuess: boolean;
 begin
   case st of
     stRomaji:
@@ -892,55 +885,74 @@ begin
       end;
     stEnglish:
       se.Add(9, 1, 'F', rtNormal, search);
-    stJapanese:
-      case wt of
-      EC_UNKNOWN: begin //Unsophisticated searches usually go this way
-        se.Add(9,flength(search),'F',rtNormal,search); //exactly as typed
-        _s:=ChinTraditional(search);
-        if _s<>search then
-          se.Add(9,flength(_s),'F',rtNormal,_s); //traditionalized version
-        if AutoDeflex then
-          Deflex(_s,se,9,8,true);
-      end;
+    stJapanese: begin
+      //Ignore all weird word types - the auto-translation speed may depend on
+      //not looking at the clearly wrong candidates
+      if not (wt in [EC_UNKNOWN, EC_IDG_CHAR, EC_HIRAGANA, EC_KATAKANA]) then
+        exit;
 
-      EC_IDG_CHAR,
-      EC_HIRAGANA: begin
-        _s:=ChinTraditional(search);
-        if wt=EC_IDG_CHAR then begin
-          Deflex(_s,se,9,8,false); //ignores AutoDeflex
-          se.Add(9, flength(_s), 'F', rtNormal, _s);
-        end;
-       //Generate partial left guesses
-        for i:=flength(_s) downto 1 do
+      _s := ChinTraditional(search);
+
+      //If we're unsure of the type, also preserve the word exactly as typed
+      if (wt=EC_UNKNOWN) and (_s<>search) then
+        se.Add(9, flength(search), 'F', rtNormal, search);
+
+      //Standard (traditionalized) version
+      se.Add(9, flength(_s), 'F', rtNormal, _s);
+
+      if wt=EC_KATAKANA then exit; //nothing more to be tested for katakana
+
+      {
+      This is a bit weird. There are two ways to drop the right part of the word.
+      Deflex accepts "mustsufokay = false" which means it can look for inflected
+      endings in the middle of the word and drop the rest.
+      And we have a tail-drop mechanics below.
+      }
+
+      //If this is a potentially deflexable word, deflex
+      //But only use tail-drop deflex options if we accept left matches
+      if (wt in [EC_UNKNOWN, EC_IDG_CHAR]) and AutoDeflex then
+        Deflex(_s, se, 9, 8, MatchType = mtBestGuessLeft);
+
+     {
+     Generate partial left guesses
+     Here's a list of what this does:
+     1.
+        (PART-DROP)
+     3. Add every shortened version where next character is a kanji:
+           KKaKKaa
+           KKaK
+           KKa
+           K
+        Deflex() covers this too if it runs, but it might be disabled.
+     }
+      if (MatchType in [mtBestGuessLeft, mtExactMatch]) and (wt <> EC_KATAKANA) then
+        for i:=flength(_s)-1 downto 1 do
         begin
-          partfound:=false;
-          if (wt=EC_HIRAGANA)
-          and (i<flength(_s)) and (i>=flength(_s)-1) //exactly last two chars or it'll be slow
+          addGuess := false;
+
+          //In BestGuess, add every single shortened version with non-zero root
+          if (MatchType = mtBestGuessLeft) and (i>1) then
+            addGuess := true;
+
+          //If a sequence ends in 1 or 2 hiragana chars which are together a particle,
+          //add the sequence also without them. (At most 2, or it'll be slow)
+          if not addGuess
+          and (i>=flength(_s)-2)
           and (partl.IndexOf(fcopy(_s,i+1,flength(_s)-i))>-1) then
-            partfound:=true;
-          if (
-            partfound
-            or ((i>1) and (MatchType=mtMatchLeft))
-            or (i=flength(_s))
-            or (EvalChar(fgetch(_s,i))=EC_IDG_CHAR) //if current char is kanji, to the left of it can be a subexpression
-          ) then
+            addGuess := true;
+
+          //Allow some cutting in MatchLeft. This is the way we
+          //inherited it, for now it'll stay.
+          if (MatchType = mtMatchLeft)
+          and (EvalChar(fgetch(_s,i))=EC_IDG_CHAR) then
+            addGuess := true;
+
+          if addGuess then
             se.Add(i, i, 'F', rtNormal, fcopy(_s,1,i));
         end;
-      end;
 
-      EC_KATAKANA: begin
-        _s:=ChinTraditional(search);
-        se.Add(9, fLength(_s), 'F', rtNormal, _s);
-      end;
-
-      { Yep, no default case. This is how it was inherited.
-       We can make EC_IDG_UNKNOWN default but no guarantee auto-translation
-       will not slow down as it may expect Deflex to produce no test candidates
-       for clearly invalid parts of text.
-       We should filter requests by word-type before calling this, then we can
-       use UNKNOWN as default case here. }
-      end;
-
+    end;
   end;
 end;
 
@@ -1055,7 +1067,7 @@ begin
     req.DictGroup := DictGroup;
     req.AutoDeflex := true; //those who use this expect this
     req.Prepare;
-    req.Search(search, wt, sl);
+    req.Search(search, sl, wt);
     wasfull := req.WasFull;
   finally
     req.Free;
@@ -1092,6 +1104,7 @@ procedure TDicSearchRequest.Prepare;
 var di, dj: integer;
   dic: TJaletDic;
   dicSetup: TDicSetup;
+  dicMatchType: TDicMatchType;
   prior: integer;
 begin
   if MaxWords<10 then MaxWords:=10;
@@ -1114,8 +1127,16 @@ begin
     if not dic.loaded or not dicts.IsInGroup(dic,DictGroup) then
       continue;
 
+    case MatchType of
+    mtMatchLeft: dicMatchType := dmtMatchLeft;
+    mtMatchRight: dicMatchType := dmtMatchRight;
+    mtMatchAnywhere: dicMatchType := dmtMatchAnywhere;
+    else //mtExactMatch, mtBestGuessLeft
+      dicMatchType := dmtExactMatch;
+    end;
+
     dic.Demand;
-    dics[di].cursor := dic.NewLookup(MatchType);
+    dics[di].cursor := dic.NewLookup(dicMatchType);
 
    //Calculate priority class. Lowest priority gets 20000, highest gets 0
     prior := dicts.Priority.IndexOf(dic.name);
@@ -1156,15 +1177,24 @@ search
     english/other "translated" language in stEn
     kanji/kana/whatever in stEditor/stClipboard
 wt
-  Word character type. "Unknown", "Kanji/kana mixed" (EC_IDG_CHAR), "Hiragana", "Katakana"
-  Only for stJapanese mode.
+  Word type hint. Only used for stJapanese mode.
+    EC_HIRAGANA: A hiragana-only or hiragana-leading word, perhaps a particle.
+    EC_KATAKANA: A katakana-only or katakana+hiragana tail word.
+    EC_IDG_CHAR: A word starting with a kanji (after perhaps o- or go-) and maybe a tail of mixed kanji/hiragana.
+    EC_UNKNOWN: No word type hint.
+
+  Why pass word type hints? Because the auto-translator already uses these rules
+  to choose where to cut the next word. So it might as well pass them.
+
+  EC_UNKNOWN means guess the type / try everything.
+
 sl
   Match results to return.
 wasfull
   True if we have retrieved all of the available results.
 }
 
-procedure TDicSearchRequest.Search(search: string; wt: TEvalCharType; sl: TSearchResults);
+procedure TDicSearchRequest.Search(search: string; sl: TSearchResults; wt: TEvalCharType);
 var i,di:integer;
 begin
   if search='' then exit;
@@ -1179,8 +1209,8 @@ begin
 
  //Particles are built into the program.
  //Eventually should be moved out to own dictionaries and get common treatment.
-  if wt=EC_UNKNOWN then //assume that otherwise we know what we're doing
-    if st=stJapanese then //for now only this mode, although we can convert stRomaji to kana too
+  if st=stJapanese then //for now only this mode, although we can convert stRomaji to kana too
+    if wt in [EC_UNKNOWN, EC_HIRAGANA] then //assume that otherwise we know what we're doing
       if partl.IndexOf(search)>-1 then
         with sl.AddResult^ do begin
           Reset();
@@ -1191,7 +1221,7 @@ begin
             sdef := 'P';
             entries.Add(_l('#01142^%s particle', [KanaToRomaji(search,'j')]), '');
           end;
-          slen := Length(kanji);
+          inflen := Length(kanji);
         end;
 
  { kanaonly:
@@ -1276,7 +1306,6 @@ var
   sxxr: string; //same in romaji
   sp:integer;   //==lc.priority
   sdef:char;    //==lc.verbType
-  slen:integer; //==lc.len
 
   raw_entries: TEntries;
   markers,kmarkers:TMarkers;
@@ -1314,9 +1343,6 @@ begin
   if sxx='' then exit;
   sp:=lc.priority;
   sdef:=lc.verbType;
-  slen:=lc.len;
-
-  if st in [stRomaji, stEnglish] then slen:=1;
 
  //Initial lookup
  { KanaToRomaji is VERY expensive so let's only call it when really needed }
@@ -1427,7 +1453,13 @@ begin
       else
         scur.kanji := ChinSimplified(dic.GetKanji);
 
-      scur.slen := slen;
+
+      if st = stJapanese then
+        scur.inflen := lc.len
+      else
+       //with stRomaji, stEnglish lc.len doesn't help, but there's no deflexion anyway
+        scur.inflen := flength(scur.kanji);
+
       scur.sdef := sdef;
      {
       TODO: There were two other ways sdef could be set.
@@ -1485,8 +1517,8 @@ begin
           scomp.userscore := scur.userscore;
         end;
         //sometimes we have two identical deflexions, one with longer source match than another
-        if scomp.slen < scur.slen then begin
-          scomp.slen := scur.slen;
+        if scomp.inflen < scur.inflen then begin
+          scomp.inflen := scur.inflen;
           scomp.sdef := scur.sdef;
         end;
 
