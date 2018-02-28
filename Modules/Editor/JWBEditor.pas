@@ -2149,14 +2149,14 @@ begin
 
   if fWordLookup<>nil then begin
     fWordLookup.LookupMode := lmEditorInsert;
+    if dolook and fWordLookup.Visible or (FInputBuffer<>'') then
+      fWordLookup.Look()
+  end;
 
-    if dolook then
-      if fWordLookup.Visible or (FInputBuffer<>'') then
-        fWordLookup.Look()
-      else begin
-        s:=GetDocWord(rcur.x,rcur.y,wt);
-        if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
-      end;
+  //In any mode except active typing show char under cursor
+  if (fKanjiDetails<>nil) and dolook and (FInputBuffer='') then begin
+    s:=GetDocWord(rcur.x,rcur.y,wt);
+    if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
   end;
 
   if mustrepaint then
