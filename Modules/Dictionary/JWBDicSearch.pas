@@ -1621,9 +1621,8 @@ begin
   if sl.Count > 1 then //saves a bit when translating
     sl.SortByFrequency;
 
-  //We could have gathered more results to choose the best; cut the rest
-  if (MaxWords > 0) and (sl.Count > MaxWords) then
-    sl.Trim(MaxWords);
+ //We might have more results than requested and could do sl.Trim(MaxWords) here,
+ //but we have those results anyway -- why delete.
 
  //Add user entries to the beginning
   for i:=0 to sl.Count-1 do

@@ -316,7 +316,6 @@ var lm: TLookupMode;
   text:string;
   dbroma: string;
   CanSelect: boolean;
-  i: integer;
 
  //Some search modes do several requests and we can't reuse request object
  //with different settings after it has been Prepare()d.
@@ -453,85 +452,102 @@ begin
         req.Search(GetSearchText, FResults, EC_UNKNOWN);
         wasfull := req.WasFull;
       end;
+
       lmEditorInsert: begin
-       //First try the real word insert buffer
+        //First try the insert buffer
         text := fEditor.GetInsertKana(ikFinal);
         if text <> '' then begin
          {
          We want to search for the stuff the user types, which is internally romaji.
-         We have two choices.
+         If we convert it and search by kana then stJapanese matches it against
+         KANJI fields in the DB.
 
-         Either we convert it to kana and search by kana, which seems safe, but then
-         stJapanese matches it against KANJI fields in the DB.
-
-         And this is correct since "stJapanese" really means "by expression".
-         It has some corner handling for also looking at reading if the query
+         This is correct since "stJapanese" really means "by expression".
+         It has some corner handling for also looking at readings if the query
          is kana-only, but we shouldn't rely on that.
 
-         What we really want is to search by reading, that is "stRomaji".
-         BUT NOT BY THE ROMAJI WE HAVE. The user types in UI-preference romaji,
-         dicts are in kunreishiki.
+         What we really want is to search by reading (stRomaji), BUT NOT THE ROMAJI
+         WE HAVE. The user types in UI-preference romaji, dicts are in kunreishiki.
 
          So we need to:
          1. Convert whatever is typed to kana (using UI-preference decoder under the hood)
          2. Convert kana to dictionary roma (kunireishiki).
+
+         ADDITIONALLY, we must preserve any unparsed symbols: they may be important
+         for some weird expression like "オリオンA"
          }
           dbroma := DbKanaToRomaji(text, curlang, []); //keep all chars
           req.st := stRomaji;
-          {
-          There are two ways we can approach typing suggestions: lookahead and lookbehind.
-          Lookahead (mtMatchLeft):
-            "souzoury" -> suggest "souzouryoku"
-            Nice, but we'll have to specifically handle accepting suggestion when
-            the word is not fully typed:
-              "souzoury" [Enter] -> "想像力"
-            This is not how Wakan worked or works.
-          Lookbehind (mtBestGuessLeft/mtExactMatch):
-            "souzouryu" -> suggest "souzou"
-            Accepting only accepts the guessed part:
-              "souzoury" [Enter] -> "想像ry" (currently)
-            This is how Wakan always worked.
 
-          ADDITIONALLY, we both preserve and hate any unparsed symbols:
-          - They may be important for some weird dict expression: "オリオンB"
-          - But we still want to continue showing results for そうぞう while the user
-            types "そうぞうry [oku]" (ignore unparsed tail)
+         {
+         LOOKAHEAD/LOOKBEHIND:
+         There are two ways we can approach typing suggestions: lookahead and lookbehind.
 
-          We either have to preserve the tail but search for BestLeftGuess (=> risk too many results),
-          or we just run 2 searches (with the tail and without).
-          }
-          //{$DEFINE EDITOR_INSERT_BESTGUESSMATCH}
+         Lookahead (mtMatchLeft):
+           "souzoury" -> suggest "souzouryoku"
+           Nice, but it'll need some changes to handle accepting suggestion when
+           the word is not fully typed:
+             "souzoury" [Enter] -> "想像力"
 
-        {$IFDEF EDITOR_INSERT_BESTGUESSMATCH}
-          req.MatchType := mtBestGuessLeft;
-          req.MaxWords := 30;
-        {$ELSE}
+         Lookbehind (mtBestGuessLeft/mtExactMatch):
+           "souzouryu" -> suggest "souzou"
+           Accepting only accepts the guessed part:
+             "souzoury" [Enter] -> "想像ry" (currently)
+
+         Wakan has always been lookbehind.
+
+         CHOOSING SUGGESTIONS:
+         As the user types, there are 3 major stages:
+         1. Fully-formed word (そうぞう = 創造)
+         2. Word + yet unparsable roma (そうぞうry)
+         3. Word + yet incomplete tail (そうぞうりょ)
+         4. Extended word (そうぞうりょく = 創造力)
+
+         We want to always suggest the best lookbehind, e.g.
+         1. そうぞう = 創造
+         2. そうぞうry = 創造ry  (so that the suggestion window does not flicker on/off)
+         3. そうぞうりょ = 創造りょ
+
+         #3 is even more important as there are word endings which the user
+         might consider part of the word:
+            あらわれていた [Enter] - we should detect 現れて
+
+         We therefore want the BestGuessLeft, but it gives us too much:
+            そうぞうりょ  gives matches even for そ
+         If we limit by MaxWords we can miss important matches (the user must be
+         able to choose from all of them!)
+         ExactMatch, on the other hand, fails on 2 and 3.
+
+         What we'd really like is to try shorter and shorter guesses until one
+         returned some matches, then say "A-ha! That was the longest fit"
+         and show all those matches and only them.
+
+         The logic is too specific to put into Search() so we're just going
+         to do it here.
+         }
+
           req.MatchType := mtExactMatch;
-        {$ENDIF}
           req.Prepare;
           req.Search(dbroma, FResults);
 
-        {$IFNDEF EDITOR_INSERT_BESTGUESSMATCH}
-          //If there's a non-hira/kata/bopo tail, trim it and search for the sane part too
-          i := flength(text);
-          while (i >= 1) and not (EvalChar(fgetch(text, i)) in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO]) do
-            Dec(i);
-          if (i > 0) and (i < flength(text)) then begin
-            text := fcopy(text, 1, i);
-            dbroma := DbKanaToRomaji(text, curlang, []); //keep all chars
+          while (text <> '') and (FResults.Count <= 0) do begin
+            text := fcopy(text, 1, flength(text)-1);
+            dbroma := DbKanaToRomaji(text, curlang, []);
             req.Search(dbroma, FResults);
           end;
-        {$ENDIF}
 
-        end else begin
-         //If that is empty, show whatever the caret is at
-         //Here we're looking at a parsed text so it can be kanji; stJapanese is our best chance
+        end
+
+        else begin
+         //Show whatever the caret is at
+         //Here we're looking at a parsed text so it's usually kanji; stJapanese is our best chance
           text := fEditor.GetWordAtCaret(wt);
           req.st := stJapanese;
           req.MatchType := mtBestGuessLeft; //This is a completed text, just find the best guess
           req.Prepare;
           req.Search(text, FResults, wt);
         end;
+
         wasfull := req.WasFull;
       end;
     end;
