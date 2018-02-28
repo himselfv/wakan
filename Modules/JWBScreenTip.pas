@@ -161,7 +161,7 @@ begin
       DicSearch(FTextMod,stEnglish,mtExactMatch,FWordType,-1,Self.FScreenTipList,5,wasfull);
     end;
   end else
-    DicSearch(FText,stJapanese,mtExactMatch,FWordType,-1,Self.FScreenTipList,5,wasfull);
+    DicSearch(FText,stJapanese,mtBestGuessLeft,FWordType,-1,Self.FScreenTipList,5,wasfull);
  //We might want to pass MaxMathes to DicSearch before, but it would return us
  //FIRST N words ordered by frequency, not MOST FREQUENT N words.
  //So no choice but to match all, sort and trim here.
