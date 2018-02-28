@@ -117,6 +117,7 @@ type
     procedure Delete(Index: integer);
     procedure Clear;
     function Find(len: integer; verbType: char; const str: string): integer;
+    procedure Sort;
     property Count: integer read FListUsed;
     property Items[Index: integer]: PCandidateLookup read GetItemPtr; default;
   end;
@@ -248,9 +249,10 @@ type
   public //Settings
     st: TSearchType;
     MatchType: TMatchType;
-    MaxWords: integer; //Maximum number of words to look for [ignored if "full" is set?]
-   { Find all matches instead of only most relevant ones (slower) }
-    Full: boolean;
+    MaxWords: integer;
+   { Maximum number of matches to return, <=0 = all.
+     Tries to return the top matches but cuts corners so if you really need the best,
+     pass <=0 and sort the results. }
     DictGroup: TDictGroup;
     dic_ignorekana: boolean; //Do not include kana-only words in results. Half-baked.
     AutoDeflex: boolean; //Search for inflected words/conjugated verbs
@@ -299,8 +301,8 @@ function GuessWord(const AString: string; APos: integer; out AWordType: TEvalCha
 
 //Compability
 procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
-  Full:boolean;wt:TEvalCharType;MaxWords:integer;sl:TSearchResults;
-  DictGroup:integer;var wasfull:boolean);
+  wt:TEvalCharType;MaxWords:integer;sl:TSearchResults; DictGroup:integer;
+  var wasfull:boolean);
 
 implementation
 uses Forms, Windows, Math, KanaConv, JWBDictionaries, JWBUnit, JWBSettings, JWBCategories,
@@ -456,6 +458,27 @@ begin
       Result := k;
       break;
     end;
+end;
+
+//Sort the candidate lookups by priority (higher first)
+procedure TCandidateLookupList.Sort;
+var i, j: integer;
+  tmp: TCandidateLookup;
+begin
+  //Try to keep equal-priority candidates in the original order, as we sometimes
+  //may hint at their sub-priority by the order in which we add them.
+  for i := 1 to Length(Self.FList)-1 do begin
+    j := i-1;
+    if Self.FList[j].priority >= Self.FList[i].priority then
+      continue; //fast case
+    tmp := Self.FList[i];
+    repeat
+      Self.FList[i] := Self.FList[j];
+      Dec(j);
+    until (j < 0) or (Self.FList[j].priority >= tmp.priority);
+    Inc(j);
+    Self.FList[j] := tmp;
+  end;
 end;
 
 
@@ -1066,15 +1089,14 @@ DicSearch()
 Don't use if you're doing a lot of searches, use TDicSearchRequest instead.
 }
 procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
-  Full:boolean;wt:TEvalCharType;MaxWords:integer;sl:TSearchResults;
-  DictGroup:integer;var wasfull:boolean);
+  wt:TEvalCharType;MaxWords:integer;sl:TSearchResults; DictGroup:integer;
+  var wasfull:boolean);
 var req: TDicSearchRequest;
 begin
   req := TDicSearchRequest.Create;
   try
     req.st := st;
     req.MatchType := MatchType;
-    req.Full := Full;
     req.MaxWords := MaxWords;
     req.DictGroup := DictGroup;
     req.AutoDeflex := true; //those who use this expect this
@@ -1098,6 +1120,8 @@ begin
   presentl:=TStringList.Create;
   presentl.Sorted := true; //faster searching
   SetLength(dics, 0);
+  //Default settings
+  MaxWords := -1; //no limit
 end;
 
 destructor TDicSearchRequest.Destroy;
@@ -1119,7 +1143,7 @@ var di, dj: integer;
   dicMatchType: TDicMatchType;
   prior: integer;
 begin
-  if MaxWords<10 then MaxWords:=10;
+  if (MaxWords > 0) and (MaxWords < 10) then MaxWords := 10;
 
   //Destroy existing cursors
   for di := 0 to Length(dics) - 1 do
@@ -1219,6 +1243,12 @@ begin
 
   MakeLookupList(se, search, wt);
 
+  if MaxWords > 0 then begin
+    //Sort the lookup candidates by priority if we may only have to look at the first few
+    //Don't waste CPU if we have to look at all
+    se.Sort;
+  end;
+
  //Particles are built into the program.
  //Eventually should be moved out to own dictionaries and get common treatment.
   if st=stJapanese then //for now only this mode, although we can convert stRomaji to kana too
@@ -1253,11 +1283,33 @@ begin
     )
   );
 
-  for di:=0 to Length(dics)-1 do begin
-    if dics[di].cursor=nil then continue;
-    for i:=0 to se.Count-1 do
-      TestLookupCandidate(dics[di], se[i], sl);
-  end; //of dict enum
+  if MaxWords <= 0 then begin
+   //Loop over dictionaries first as that gives better locality.
+    for di:=0 to Length(dics)-1 do begin
+      if dics[di].cursor=nil then continue;
+      for i:=0 to se.Count-1 do
+        TestLookupCandidate(dics[di], se[i], sl);
+    end;
+  end else begin
+   //If we need N best matches we have to loop over candidates first (in the priority order)
+   {
+    We're doing some voodoo to get best matches from all dictionaries.
+    TestLookupCandidate() will return up to MaxWords matches from EACH dictionary,
+    and then we'll sort and cut them.
+    Otherwise the first dic may eat all the slots on vague requests.
+   }
+    for i:=0 to se.Count-1 do begin
+      for di:=0 to Length(dics)-1 do begin
+        if dics[di].cursor=nil then continue;
+        TestLookupCandidate(dics[di], se[i], sl);
+      end;
+      //Only test for count after all dics are queried
+      if sl.Count > MaxWords then begin
+        WasFull := false;
+        break;
+      end;
+    end;
+  end;
 
   FinalizeResults(sl);
 
@@ -1312,7 +1364,7 @@ procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLoo
   sl: TSearchResults);
 var
   dic: TDicLookupCursor;
-  i: integer;
+  matchCount: integer;
 
   sxx: string;  //==lc.str
   sxxr: string; //same in romaji
@@ -1381,7 +1433,7 @@ begin
         dic.LookupKanji(sxx);
   end;
 
-  i:=0;
+  matchCount := 0;
 
   while dic.HaveMatch do begin
     if (mess=nil) and (now-nowt>1/24/60/60) then
@@ -1544,12 +1596,13 @@ begin
         presentl.AddObject(ssig, TObject(existingIdx));
       end;
 
-      inc(i);
+      Inc(matchCount);
     end;
 
-    if (not Full) and (i>=MaxWords) then
-    begin
-      wasfull:=false;
+   //If we only need N matches, get out.
+   //Note we're still counting to N matches from THIS PARTICULAR DICT. See comments in Search().
+    if (MaxWords > 0) and (matchCount >= MaxWords) then begin
+      WasFull := false;
       break;
     end;
 
@@ -1567,6 +1620,10 @@ var i, j: integer;
 begin
   if sl.Count > 1 then //saves a bit when translating
     sl.SortByFrequency;
+
+  //We could have gathered more results to choose the best; cut the rest
+  if (MaxWords > 0) and (sl.Count > MaxWords) then
+    sl.Trim(MaxWords);
 
  //Add user entries to the beginning
   for i:=0 to sl.Count-1 do

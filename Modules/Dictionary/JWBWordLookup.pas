@@ -330,8 +330,11 @@ var lm: TLookupMode;
     if aDictGroup3.Checked then Result.dictgroup:=3 else
       Result.dictgroup := 1; //we must have some group chosen
 
-    Result.Full := not btnSearch.Enabled; //if "More matches" is yet enabled, then partial
-    Result.MaxWords:=StringGrid.VisibleRowCount;
+    if btnSearch.Enabled then
+      //if "More matches" is yet enabled, then partial
+      Result.MaxWords := StringGrid.VisibleRowCount
+    else
+      Result.MaxWords := -1;
 
    //Match type (left/right/exact)
     if aMatchLeft.Checked then Result.MatchType := mtMatchLeft else
@@ -341,7 +344,8 @@ var lm: TLookupMode;
     if (lm=lmEn) and not (Result.MatchType in [mtExactMatch, mtMatchLeft]) then
       Result.MatchType := mtExactMatch;
 
-    if (not fSettings.cbDictLimitAutoResults.Checked) or aMatchExact.Checked then Result.Full:=true;
+    if (not fSettings.cbDictLimitAutoResults.Checked) or aMatchExact.Checked then
+      Result.MaxWords := -1;
 
     if lm in [lmEditorInsert] then begin //ignore some UI settings in these modes
       Result.dictgroup := 5;
@@ -354,7 +358,7 @@ var lm: TLookupMode;
     Result.MindUserPrior := (lm=lmEditorInsert); //only mind kanji usage priorities in Editor suggestions
 
    //If full search was not requested and autopreview off / too costly
-    if not Result.full
+    if (Result.MaxWords > 0)
     and (not Self.aAutoPreview.Checked or (Result.MatchType=mtMatchAnywhere)) then
       exit; //do not search
   end;
@@ -500,6 +504,7 @@ begin
 
         {$IFDEF EDITOR_INSERT_BESTGUESSMATCH}
           req.MatchType := mtBestGuessLeft;
+          req.MaxWords := 30;
         {$ELSE}
           req.MatchType := mtExactMatch;
         {$ENDIF}
@@ -538,7 +543,7 @@ begin
     else
       text:=_l('#00672^eSearch results');
     btnSearch.Visible := not wasfull  //have more results
-       or (req.full and not btnSearch.Enabled); //just clicked on "Show all" - keep the disabled button
+       or ((req.MaxWords<=0) and not btnSearch.Enabled); //just clicked on "Show all" - keep the disabled button
     case lm of
       lmJp: text:=text+' '+_l('#00673^eby phonetic');
       lmEn: text:=text+' '+_l('#00674^eby meaning');

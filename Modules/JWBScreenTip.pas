@@ -147,7 +147,7 @@ begin
   if FWordType=EC_LATIN_HW then begin
     //Try to look for a latin word
     //DicSearch expects latin text to be raw, contrary to every other case when it's in FChars.
-    DicSearch(FText,stEnglish,mtExactMatch,false,FWordType,-1,Self.FScreenTipList,5,wasfull);
+    DicSearch(FText,stEnglish,mtExactMatch,FWordType,-1,Self.FScreenTipList,5,wasfull);
     if Self.FScreenTipList.Count=0 then begin
      //What the hell are we doing here?! "If nothing matches, try deleting
      //some letters, but only if those are 'ed' or 's'"?
@@ -158,10 +158,10 @@ begin
       else
       if (length(FTextMod)>1) and (FTextMod[Length(FTextMod)]='s') then
         Delete(FTextMod, Length(FTextMod), 1);
-      DicSearch(FTextMod,stEnglish,mtExactMatch,false,FWordType,-1,Self.FScreenTipList,5,wasfull);
+      DicSearch(FTextMod,stEnglish,mtExactMatch,FWordType,-1,Self.FScreenTipList,5,wasfull);
     end;
   end else
-    DicSearch(FText,stJapanese,mtExactMatch,false,FWordType,-1,Self.FScreenTipList,5,wasfull);
+    DicSearch(FText,stJapanese,mtExactMatch,FWordType,-1,Self.FScreenTipList,5,wasfull);
  //We might want to pass MaxMathes to DicSearch before, but it would return us
  //FIRST N words ordered by frequency, not MOST FREQUENT N words.
  //So no choice but to match all, sort and trim here.

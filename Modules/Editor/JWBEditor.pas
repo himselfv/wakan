@@ -1094,8 +1094,7 @@ begin
   Result.MatchType := mtBestGuessLeft;
  { If we used mtMatchLeft, queries like "sama" would get results like "samazama"
   which is obviously not what we want. }
-  Result.maxwords:=0; //Ignored if Full is true?
-  Result.full := true; //Always true in auto-translation?
+  Result.MaxWords := 0; //Always true for auto-translation?
   Result.AutoDeflex := true; //Always true for auto-translation?
  {$IFDEF TL_IGNORE_KANA}
   Result.dic_ignorekana := true;
