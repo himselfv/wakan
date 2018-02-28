@@ -600,7 +600,7 @@ end;
 procedure TfKanji.SetFocusedChars(const Value: FString);
 begin
   if FFocusedChars=Value then exit;
-  SetFocusedChars(Value);
+  SetFocusedCharsLow(Value);
  //TODO: exit if the grid is not yet filled (we'll do the last part later)
   if not KanjiGridSetSelection(Value) then begin
  {$IFDEF AUTODEFOCUS}

@@ -298,7 +298,7 @@ object fKanjiDetails: TfKanjiDetails
       Hint = '#00168^Show/hide stroke order (only for Japanese Jouyou-kanji)'
       AllowAllUp = True
       GroupIndex = 99
-      Caption = '#00162^Stroke count:'
+      Caption = '#00162^Strokes:'
       ParentShowHint = False
       ShowHint = True
       OnClick = btnStrokeOrderClick
@@ -337,6 +337,17 @@ object fKanjiDetails: TfKanjiDetails
       OnMouseMove = pbSimplifiedMouseMove
       OnMouseUp = pbSimplifiedMouseUp
       OnPaint = pbSimplifiedPaint
+    end
+    object btnGoToChars: TSpeedButton
+      Left = 153
+      Top = 153
+      Width = 73
+      Height = 19
+      Hint = '#01239^Locate this character in the kanji grid'
+      Caption = '#01238^Go to grid'
+      ParentShowHint = False
+      ShowHint = True
+      OnClick = btnGoToCharsClick
     end
   end
   object FormPlacement1: TFormPlacement

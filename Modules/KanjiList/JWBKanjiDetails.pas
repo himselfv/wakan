@@ -62,6 +62,7 @@ type
     btnAddToCategory: TSpeedButton;
     lblCharClass: TLabel;
     pbSimplified: TPaintBox;
+    btnGoToChars: TSpeedButton;
     procedure pbKanjiPaint(Sender: TObject);
     procedure pbRadicalPaint(Sender: TObject);
     procedure pbSimplifiedPaint(Sender: TObject);
@@ -107,6 +108,7 @@ type
     procedure pmGoToCategoryClick(Sender: TObject);
     procedure Configure1Click(Sender: TObject);
     procedure btnGoToWordsClick(Sender: TObject);
+    procedure btnGoToCharsClick(Sender: TObject);
 
   protected
     curChars: FString; //displaying information for these characters
@@ -336,6 +338,13 @@ procedure TfKanjiDetails.btnGoToWordsClick(Sender: TObject);
 begin
   fMenu.DisplayMode := 6;
   fKanjiCompounds.SetCharCompounds(Self.curSingleChar);
+end;
+
+procedure TfKanjiDetails.btnGoToCharsClick(Sender: TObject);
+begin
+  fMenu.DisplayMode := 1;
+  fKanji.ResetFilters;
+  fKanji.FocusedChars := Self.curChars;
 end;
 
 procedure TfKanjiDetails.pbKanjiInfoPaint(Sender: TObject);
@@ -593,12 +602,12 @@ begin
     else
     if curLang='c' then begin
       if CChar.Int(TChar.fChStrokeCount)<255 then
-        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TChar.fChStrokeCount)
+        btnStrokeOrder.Caption:=_l('#00162^Strokes:')+' '+CChar.Str(TChar.fChStrokeCount)
       else
         btnStrokeOrder.Caption:=_l('#01117^Strokes');
     end else begin
       if CChar.Int(TChar.fJpStrokeCount)<255 then
-        btnStrokeOrder.Caption:=_l('#00162^Stroke count:')+' '+CChar.Str(TChar.fJpStrokeCount)
+        btnStrokeOrder.Caption:=_l('#00162^Strokes:')+' '+CChar.Str(TChar.fJpStrokeCount)
       else
         btnStrokeOrder.Caption:=_l('#01117^Strokes');
     end;

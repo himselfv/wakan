@@ -175,7 +175,7 @@
 00159>Character details
 00160>Radical:
 00161>Insert character into clipboard
-00162>Stroke count:
+00162>Strokes:
 00163>www.zhongwen.com - Etymological information about the character
 00164>www.csse.monash.edu.au/'jwb/wwwjdic - Jim Breen's WWWJDIC dictionary server
 00165>charts.unicode.org/unihan - UniHan entry for this character
@@ -1347,6 +1347,8 @@
 01236>Upgrading...
 01237+Not all files have been upgraded. You will need to restart the upgrade manually.
 01237>Do you want to abort the operation?
+01238>Go to grid
+01239>Locate this character in the kanji grid
 
 
 ;
