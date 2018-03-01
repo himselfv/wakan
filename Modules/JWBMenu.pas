@@ -1813,14 +1813,9 @@ begin
           fKanji.splDockCompounds.Top := fKanji.pnlDockCompounds.Top - 1;
         end;
         tab1.Down:=true;
-        if fKanji<>nil then begin
-          //Weakly focus the same characters in the grid, but do not reset filters automatically --
-          //the user might be doing some work, we don't want to interfere
-          if fKanjiDetails.GetSelectedCharacters <> fKanji.FocusedChars then
-            fKanji.MaybeSetFocusedChars(fKanjiDetails.GetSelectedCharacters);
+        if fKanji<>nil then
           if fKanji.DrawGrid1.CanFocus then
             fKanji.DrawGrid1.SetFocus;
-        end;
         aModeKanji.Checked:=true;
       end;
     2:begin
