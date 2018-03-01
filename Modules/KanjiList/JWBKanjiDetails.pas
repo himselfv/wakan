@@ -120,6 +120,7 @@ type
     procedure Clear;
     procedure SetCharDetails(chars: FString);
     procedure RefreshDetails;
+    function GetSelectedCharacters: FString;
 
   protected
    { Info box painting }
@@ -340,10 +341,19 @@ begin
   fKanjiCompounds.SetCharCompounds(Self.curSingleChar);
 end;
 
+//Locates the character in the character grid, resetting the filters if needed
 procedure TfKanjiDetails.btnGoToCharsClick(Sender: TObject);
+var i: integer;
 begin
-  fMenu.DisplayMode := 1;
-  fKanji.ResetFilters;
+  if not fKanji.Visible then
+    fMenu.aModeKanji.Execute;
+  //Reset filters only if some of the characters are not visible as is
+  for i := 1 to flength(Self.curChars) do
+    if not fKanji.IsCharacterVisible(fgetch(Self.curChars, i)) then begin
+      fKanji.ResetFilters;
+      fKanji.InvalidateList;
+      break;
+    end;
   fKanji.FocusedChars := Self.curChars;
 end;
 
@@ -458,6 +468,11 @@ end;
 procedure TfKanjiDetails.Clear;
 begin
   SetCharDetails('');
+end;
+
+function TfKanjiDetails.GetSelectedCharacters: FString;
+begin
+  Result := curChars;
 end;
 
 {

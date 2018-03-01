@@ -167,10 +167,10 @@ type
     function GetCellFontSize: integer;
     function GetExpectedColCount: integer;
     procedure KanjiGridSelectionChanged;
+    function FindCharacterListIndex(const ch: FChar): integer;
     function KanjiGridGetSelection: FString;
     function KanjiGridSetSelection(const chars: FString): boolean;
     procedure SetFocusedCharsLow(const Value: FString);
-    procedure SetFocusedChars(const Value: FString);
     procedure CategoryListChanged(Sender: TObject);
     procedure KanjiCategoryEntriesChanged(Sender: TObject);
     procedure ClipboardChanged(Sender: TObject);
@@ -190,7 +190,10 @@ type
     procedure SetCategoryFilter(const ACategories: array of integer;
       AOr, ANot: boolean);
     procedure FilterByRadical(const radno: integer);
-    function GetKanji(cx,cy:integer):string;
+    function GetKanji(cx,cy:integer): string;
+    function IsCharacterVisible(const ch: FChar): boolean;
+    procedure SetFocusedChars(const Value: FString);
+    function MaybeSetFocusedChars(const Value: FString): boolean;
     property FocusedChars: FString read FFocusedChars write SetFocusedChars;
 
   protected //Search filters
@@ -597,6 +600,7 @@ begin
   end;
 end;
 
+//Places focus on the given characters, if any are visible, or resets it
 procedure TfKanji.SetFocusedChars(const Value: FString);
 begin
   if FFocusedChars=Value then exit;
@@ -607,6 +611,27 @@ begin
     Self.KanjiGridSelectionChanged; //as if the user did that
  {$ENDIF}
   end;
+end;
+
+//Places focus on the given characters, if any are visible, or does not change it.
+//While SetFocusedChars MIGHT be implemented to later focus more of these chars
+//as filters are relaxed, MaybeSetFocusedChars makes the decision NOW.
+//If it decides not to change focus, it's over.
+function TfKanji.MaybeSetFocusedChars(const Value: FString): boolean;
+var i: integer;
+begin
+  if FFocusedChars=Value then begin
+    Result := true;
+    exit;
+  end;
+  Result := false;
+  for i := 1 to flength(Value) do
+    if Self.FindCharacterListIndex(fgetch(Value, i)) >= 0 then begin
+      Result := true;
+      break;
+    end;
+  if Result then
+    SetFocusedChars(Value);
 end;
 
 
@@ -1146,6 +1171,25 @@ begin
   Reload;
 end;
 
+//Returns the index of the given character in a currently filtered character list, or -1
+function TfKanji.FindCharacterListIndex(const ch: FChar): integer;
+var i: integer;
+begin
+  Result := -1;
+  for i := 0 to ki.Count-1 do
+    if ch = copy(ki[i],2,4) then begin
+      Result := i;
+      break;
+    end;
+end;
+
+//True if a given character has passed all filters and is present in the grid
+function TfKanji.IsCharacterVisible(const ch: FChar): boolean;
+begin
+  Result := (FindCharacterListIndex(ch)>=0);
+end;
+
+
 
 { Saving to a file }
 
@@ -1366,16 +1410,17 @@ begin
   mr.Right := 0;
   mr.Bottom := 0;
   cols := DrawGrid1.ColCount;
-  for i:=0 to ki.Count-1 do
-    for j := 1 to flength(chars) do
-      if fgetch(chars, j)=copy(ki[i],2,4) then begin
+  for j := 1 to flength(chars) do begin
+    i := Self.FindCharacterListIndex(fgetch(chars, j));
+    if i>=0 then begin
         mr.Left:=i mod cols;
         mr.Top:=i div cols;
         mr.Right:=i mod cols;
         mr.Bottom:=i div cols;
         Result:=true;
         break;
-      end;
+    end;
+  end;
 
  { If nothing was highlighted, we must highlight something so highlight first
   element }
@@ -1901,6 +1946,7 @@ begin
   Self.edtLookup.SetFocus;
 end;
 
+
 { CopyFormats }
 
 function GetKanjiCopyFormatsDir: string;
@@ -2036,7 +2082,6 @@ end;
 
 
 { Right-click menu }
-
 
 procedure TfKanji.PopupMenuPopup(Sender: TObject);
 var p: TPoint;
@@ -2196,7 +2241,7 @@ end;
 
 { Content higlight }
 
-function TfKanji.GetKanji(cx,cy:integer):string;
+function TfKanji.GetKanji(cx,cy:integer): string;
 begin
   if (cy*DrawGrid1.ColCount+cx>=ki.Count) or (cx<0) or (cy<0) then
   begin
