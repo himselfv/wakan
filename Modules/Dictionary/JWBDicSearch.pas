@@ -967,7 +967,7 @@ begin
           addGuess := false;
 
           //In BestGuess, add every single shortened version with non-zero root
-          if (MatchType = mtBestGuessLeft) and (i>1) then
+          if (MatchType = mtBestGuessLeft) and (i>=1) then
             addGuess := true;
 
           //If a sequence ends in 1 or 2 hiragana chars which are together a particle,
