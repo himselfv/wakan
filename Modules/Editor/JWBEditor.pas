@@ -1780,10 +1780,12 @@ function TfEditor.CopyAsClipHtml: Utf8String;
 var startFragment, endFragment: integer;
 begin
   Result := CopyAsHtml;
-  startFragment := pos(Utf8String(HtmlStartFragment),Result);
-  if startFragment <> 0 then startFragment := startFragment + Length(Utf8String(HtmlStartFragment)); //else keep it 0
+  startFragment := pos(Utf8String(HtmlStartFragment),Result)-1;
+  if startFragment <> 0 then
+    startFragment := startFragment + Length(Utf8String(HtmlStartFragment)); //else keep it 0
   endFragment := pos(Utf8String(HtmlEndFragment),Result);
-  if endFragment <= 0 then endFragment := Length(HtmlEndFragment);
+  if endFragment >= 0 then //if it's -1, fine
+    endFragment := endFragment - 1; //we want -1 char before the marker, and 0-based
   Result := Utf8String(GenerateHtmlClipHeader(Length(Result), startFragment, endFragment))+Result;
 end;
 

@@ -826,7 +826,8 @@ begin
   outpln('</head>');
   outpln('<body>');
   if hoClipFragment in Options then
-    outpln(HtmlStartFragment);
+    outp(HtmlStartFragment); //no linebreak! or it'll be included in the paste
+    //HTML shouldn't care about linebreaks but some inserters do
   outp('<p>');
 end;
 
@@ -897,7 +898,7 @@ end;
 
 procedure THtmlFormat.EndDocument;
 begin
-  outpln('</p>');
+  outp('</p>'); //no linebreak! or it'll be included in the paste
   if hoClipFragment in Options then
     outpln(HtmlEndFragment);
   outpln('</body></html>');
