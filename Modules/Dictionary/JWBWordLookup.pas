@@ -253,6 +253,8 @@ begin
   aMatchRight.Enabled:=true;
   aMatchAnywhere.Enabled:=true;
 
+  aInflect.Enabled := not (ANewMode in [lmEditorInsert]); //Editor mode always uses deflexion, so disable the choice
+
  {$IFDEF SEARCH_BUTTON_CAPTION}
   if (not aAutoPreview.Checked) or aMatchAnywhere.Checked then
     btnSearch.Caption:=_l('#00669^eSearch')
@@ -352,7 +354,9 @@ var lm: TLookupMode;
       //In EditorInsert mode we want the best left guess to what's being typed
     end;
 
-    Result.AutoDeflex := aInflect.Checked;
+    Result.AutoDeflex :=
+      (lm in [lmEditorInsert])    //always auto-deflex in editor mode
+      or aInflect.Checked;
     Result.dic_ignorekana := false;
     Result.MindUserPrior := (lm=lmEditorInsert); //only mind kanji usage priorities in Editor suggestions
 
