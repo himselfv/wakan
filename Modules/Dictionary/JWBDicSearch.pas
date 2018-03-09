@@ -960,7 +960,7 @@ begin
       //If this is a potentially deflexable word, deflex
       //But only use tail-drop deflex options if we accept left matches
       if (wt in [EC_UNKNOWN, EC_IDG_CHAR]) and AutoDeflex then
-        Deflex(_s, se, 9, 8, MatchType = mtBestGuessLeft);
+        Deflex(_s, se, 9, 8, MatchType <> mtBestGuessLeft);
 
      {
      Generate partial left guesses
