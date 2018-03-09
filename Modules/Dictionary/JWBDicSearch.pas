@@ -914,6 +914,8 @@ begin
         for k:=0 to suffixl.Count-1 do
           if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
             sufokay:=true;
+        if sufokay then //include suffix in the inflected length if it is recognized
+          ws := ws + flength(suf);
         if sufokay or not mustSufokay then
         begin
           if sufokay and (dr.infl<>'') then
