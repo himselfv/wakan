@@ -1759,7 +1759,13 @@ begin
   FreeAndNil(stream);
 end;
 
-//Generates CF_HTML clipboard header for a text
+{
+Generates CF_HTML clipboard header for a text
+startFragment is a 1-based index to the first character of the fragment contents
+  in the text (just after the <!--StartFragment--> block).
+endFragment is a 1-based index to the first character of the <!--EndFragment-->
+  block.
+}
 function TfEditor.GenerateHtmlClipHeader(const lenHtml: integer;
   const startFragment, endFragment: integer): UnicodeString;
 const
@@ -1772,7 +1778,7 @@ const
 var lenHeader: integer;
 begin
   lenHeader := Length(Format(headerForm,[0,0,0,0]));
-  Result := Format(headerForm,[lenHeader, lenHeader+lenHtml,lenHeader+startFragment,lenHeader+endFragment]);
+  Result := Format(headerForm,[lenHeader, lenHeader+lenHtml,lenHeader+startFragment-1,lenHeader+endFragment-1]);
 end;
 
 //Copies selection as HTML enhanced with a CF_HTML clipboard header
@@ -1780,12 +1786,12 @@ function TfEditor.CopyAsClipHtml: Utf8String;
 var startFragment, endFragment: integer;
 begin
   Result := CopyAsHtml;
-  startFragment := pos(Utf8String(HtmlStartFragment),Result)-1;
+  startFragment := pos(Utf8String(HtmlStartFragment),Result);
   if startFragment <> 0 then
     startFragment := startFragment + Length(Utf8String(HtmlStartFragment)); //else keep it 0
   endFragment := pos(Utf8String(HtmlEndFragment),Result);
-  if endFragment >= 0 then //if it's -1, fine
-    endFragment := endFragment - 1; //we want -1 char before the marker, and 0-based
+//  if endFragment >= 0 then //if it's -1, fine
+//    endFragment := endFragment - 1; //we want -1 char before the marker, and 0-based
   Result := Utf8String(GenerateHtmlClipHeader(Length(Result), startFragment, endFragment))+Result;
 end;
 
