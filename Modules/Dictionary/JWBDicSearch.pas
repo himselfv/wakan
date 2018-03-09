@@ -347,7 +347,11 @@ begin
   Result.sufcat := s[2];
   i := pos('->', s);
   Result.infl := copy(s,3,i-3);
-  if Result.infl<>'KKKK' then
+  if Result.infl='KKKK' then
+    //KKKK are special inflected ending markers which mean "no inflected ending",
+    //like when inflecting "neru -> ne+masu"
+    Result.infl := ''
+  else
     Result.infl := autohextofstr(Result.infl);
   Result.defl := autohextofstr(copy(s,i+2,Length(s)-(i+2)+1));
 end;
@@ -772,6 +776,62 @@ end;
 {
 Deflex()
 Generates a list of possible deflected versions of the word.
+
+Japanese version:
+Looks for the stem of the word, tries to deflex it to a base state with a deflexion table,
+then it must end with one of the few possible verb suffixes.
+There's a number of weak places in this algorithm:
+1. Even without secondary verbs (itteOKU) verb conjugations can be chained (itte rare nakereba)
+  for rather long chains, we don't have the ability to list all of them.
+  The algorithm tries to find the furthest recognizable stem:
+    itterarenaKERE -> itterarenaKU
+  which ends in a valid suffix:
+    kere + BA is valid
+  It'll also generate all midway versions:
+    itterarenai
+    itterareru
+    itteru
+    iu
+  And look for suffixes after them. Most versions will be thrown away as there's no
+  valid suffix.
+2. But sometimes we pass words where the end of the word is unknown. The algorithm
+  should then do a conflicting job:
+    - find the longest viable match which ends in an inflected ending
+    - which then continues with a suffix (but maybe there's more text after that - this is relaxed)
+    - without understanding what "viable" means for the text inbetween!
+
+  There's STILL a way to do this if it is given kanji. Most kanji words are either
+    KANJI[+KANJI]+kana tail
+  Or
+    KANJI+kana+KANJI+kana tail
+  It can potentially scan for up to 2 consecutive (or separated by at most one kana) kanji,
+  and consider any kanji after that to be a sign of the next word.
+
+3. But what if it parses a typing buffer? There's only kana. It really has a conflicting goal:
+   - find the longest match
+   - find the shortest match (because otherwise we might eat other words)
+
+4. So what it should really do IN THIS CASE is something like:
+  - find all possible breakage points where the left part ends in something like
+    inflected stem
+  - BONUS POINTS if there's a matching suffix after that.
+  - REJECT certain cases outright (e.g. empty root; 3+ kanji to the left, long kana span between 2 kanji)
+  - BONUS POINTS if the match is just the right length (not too short, but definitely not too long)
+  - produce all these lookup guesses
+
+5. Additionally, for lookup guesses we need DEFLECTED VERSIONS OF THE ROOT.
+  We probably won't be able to find "itterarenaku" in the dictionary. "itteru" or "iu" are
+  our best chances.
+  On the other hand, if we just match "itte" and leave "rarenaku", that would definitely
+  parse weird.
+  So what we would ideally want is to parse the word down to the root, then construct
+  various inflected verb stages and look for each. The best one would be used.
+  But we don't have this. Sorry.
+
+mustsufokay:
+  If true, the tail after the inflected stem MUST be one of the allowed suffixes exactly.
+  If false, we don't even check. (currently)
+  In other words, currently no option to "prioritize those with suffixes" etc.
 }
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean);
@@ -788,6 +848,7 @@ var ws: integer; //length of w in symbols. Not sure if needed but let's keep it 
     ct: TCandidateLookup;
 begin
   ws:=flength(w);
+
   if curlang='j'then
   begin
     lastkanji:=0;
@@ -802,44 +863,69 @@ begin
     begin
       dr := defll[i];
 
-      for j:=0 to flength(roma)-flength(dr.infl) do
-        if (fcopy(roma,j+1,flength(dr.infl))=dr.infl) or
-           ((dr.infl='KKKK') and (j=0) and (core<>'')) then
-        if ((dr.vt<>'K') and (dr.vt<>'I'))
-           or ((dr.vt='K') and (j=0) and ((core='') or (core='6765')))
-           or ((dr.vt='I') and (j=0) and ((core='') or (core='884C'))) then
-        begin
-          if (flength(dr.defl)+j<=6) and (core+fcopy(roma,1,j)+dr.defl<>w) then
-          begin
-           //Calculate inflected length for this guess
-            if dr.infl<>'KKKK' then
-              ws:=flength(core)+j+flength(dr.infl)
-            else
-              ws:=flength(core);
-           { if ws<=flength(core) then ws:=flength(core)+1;
-            if ws<=1 then ws:=2; } //why +1 in both cases? core is enough
-            if ws<flength(core) then ws:=flength(core);
-            if ws<=1 then ws:=2;
+      //Check inflected ending at every position to the right of the core.
+      //This is probably done to allow for unaccounted middle-of-the word variations.
+      for j:=0 to flength(roma)-flength(dr.infl) do begin
 
-            ad:=core+fcopy(roma,1,j)+dr.defl;
-            suf:=fcopy(roma,j+1+flength(dr.infl),flength(roma)-j-flength(dr.infl));
-            if sl.Find(ws, dr.vt, ad)>=0 then
-              continue; //already added
-            sufokay:=(suf='');
-            for k:=0 to suffixl.Count-1 do
-              if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
-                sufokay:=true;
-            if (sufokay or not mustSufokay) then
-            begin
-              if (sufokay) and (dr.infl<>'KKKK') then
-                sl.Add(priordfl, ws, dr.vt, rtNormal, ad)
-              else
-                sl.Add(1, ws, dr.vt, rtNormal, ad);
-            end;
-          end;
+        if dr.infl = '' then begin
+          //A special inflected ending of "nothing", for iru/eru verbs like "miru -> mi+masu" (no inflected ending)
+
+          if (j<>0) or (core='') then continue; //skip empty guesses
+
+          {
+          Original Wakan had this restriction in place:
+            if (j<>0) or (core='') then continue
+          In other words, only allow empty inflection guesses with kanji root + only straight after the root.
+          I don't see why it's needed. Maybe for speedup? But what about typing suggestions, we don't yet have kanji root.
+
+          Perhaps this was to deter the case of 0-core 0-position 0-inflex = 0-word which matches everything?
+          But we can just require EITHER core [+perhaps 0-position] OR non-0-position.
+          }
+
+        end else begin
+          if fcopy(roma,j+1,flength(dr.infl))=dr.infl then
+            continue; //inflection doesn't match
         end;
-    end;
+
+        //Check kuru/suru kanji match
+        case dr.vt of
+         'K': if (j<>0) or ((core<>'') and (core<>'6765')) then continue;
+         'I': if (j<>0) or ((core<>'') and (core<>'884C')) then continue;
+        //else no restriction
+        end;
+
+        if flength(dr.defl)+j>6 then
+          continue;
+
+        if core+fcopy(roma,1,j)+dr.defl = w then
+          continue; //already have this guess
+
+       //Calculate inflected length for this guess
+        ws:=flength(core)+j+flength(dr.infl);
+        if ws = 0 then continue; //do not consider 0-length guesses
+
+        ad:=core+fcopy(roma,1,j)+dr.defl;
+        if sl.Find(ws, dr.vt, ad)>=0 then
+          continue; //already added
+
+        //Check if the rest of the string is a suffix valid for this guessed verb type/conjugation
+        suf:=fcopy(roma,j+1+flength(dr.infl),flength(roma)-j-flength(dr.infl));
+        sufokay:=(suf='');
+        for k:=0 to suffixl.Count-1 do
+          if (dr.sufcat+suf=suffixl[k]) or ((dr.sufcat='*') and (suffixl[k][1]+suf=suffixl[k])) then
+            sufokay:=true;
+        if sufokay or not mustSufokay then
+        begin
+          if sufokay and (dr.infl<>'') then
+            sl.Add(priordfl, ws, dr.vt, rtNormal, ad)
+          else
+            sl.Add(1, ws, dr.vt, rtNormal, ad);
+        end;
+
+      end; //of j iteration
+    end; //of defll[] enumeration
   end;
+
   if curlang='c'then
   begin
     sl.Add(prior, ws, 'F', rtNormal, w);
