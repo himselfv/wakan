@@ -157,10 +157,23 @@ type
     userscore: integer;
    //There's currently only one match class for all grouped entries
     sdef: char; //match class -- see TCandidateLookup.verbType
-    inflen: integer; { Length of the inflexed expression in kanji form (for stJapanese
-      == as it appeared in the text).
+    inflen: integer; {
+      Length of the inflected expression as it appeared in the search request.
       Different search results are different guesses at deflexion and may assume
-      original expression was of different length. }
+      original expression was of different length.
+
+      Note this returns the length of the original expression, not it's "kanji form".
+      For instance:
+         たべた -> たべる   returns 3
+         食た -> 食る       returns 2
+      If you need the length of the kanji replacement, calculate it yourself
+      by adjusting by the kanji/kana length difference.
+
+      For stRomaji, this returns the length of the inflected match, IN KANA.
+      Matches may be different interpretations of how to translate romaji to
+      kana/latin sequences, but each match has a kana field from which you can
+      figure this out.
+    }
     kanji: string; //already simplified if needed, but otherwise no special marks
     kana: string;
     articles: array of TSearchResArticle;
@@ -1518,10 +1531,10 @@ begin
         scur.kanji := ChinSimplified(dic.GetKanji);
 
 
-      if st = stJapanese then
+      if st in [stJapanese, stRomaji] then
         scur.inflen := lc.len
       else
-       //with stRomaji, stEnglish lc.len doesn't help, but there's no deflexion anyway
+       //with stEnglish lc.len doesn't help, but there's no deflexion anyway
         scur.inflen := flength(scur.kanji);
 
       scur.sdef := sdef;

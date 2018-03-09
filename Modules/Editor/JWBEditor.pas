@@ -272,8 +272,7 @@ type
     procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
     procedure DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
       out kanji, reading: FString; out meaning: string);
-    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer; overload;
-    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer; overload;
+    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
     procedure RefreshLines;
     procedure CopySelection(format:TTextSaveFormat;stream:TStream;
       AnnotMode:TTextAnnotMode=amRuby);
@@ -1316,9 +1315,8 @@ end;
 
 procedure TfEditor.SetTranslation();
 begin
-  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
-  begin
-    SetWordTrans(rcur.x,rcur.y,[tfScanParticle,tfManuallyChosen],false);
+  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then begin
+    SetWordTrans(rcur.x,rcur.y,[tfScanParticle,tfManuallyChosen],fWordLookup.FocusedResult);
     mustrepaint:=true;
     ShowText(true);
   end else
@@ -2176,8 +2174,7 @@ begin
   shiftpressed:=false;
   UpdateScrollbar;
   if fWordLookup<>nil then
-    with fWordLookup do
-      if (StringGrid.RowCount>1) and (StringGrid.Visible) and (ins.x<>-1) then Self.ShowHint else HideHint;
+      if (not fWordLookup.IsEmpty) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
 { Converts startdrag+cursor positions to block selection. }
@@ -2959,9 +2956,12 @@ Can be called several times, updating the provisional insert with the currently
 focused suggestion }
 procedure TfEditor.ResolveInsert(AAcceptSuggestion: boolean);
 var inskana: string;
-  s,s3:string;
+  kanjiRoot, kanaRoot: string;
   i:integer;
-  lp: TCharacterPropArray;
+  insText: string;
+  insProp: TCharacterPropArray;
+  tl: PSearchResult;
+  curTl: TSearchResult;
 begin
   if ins.x=-1 then exit;
 
@@ -2972,27 +2972,36 @@ begin
   end;
 
   inskana := GetInsertKana(ikFinal);
+  tl := nil; //We'll need to edit the search result so we'll copy it locally. Tl will point to it, or to nil
 
   if AAcceptSuggestion and (FInputBufferType = ibHiragana) and not fWordLookup.IsEmpty then begin
-   //Replace with focused dictionary suggestion
-    with fWordLookup do begin
-      s:=curkanji;
-      s3:=curphonetic;
-      //Delete common ending
-      while (s<>'') and (s3<>'') and (fgetch(s,flength(s))=fgetch(s3,flength(s3))) do
-      begin
-        fdelete(s,flength(s),1);
-        fdelete(s3,flength(s3),1);
-      end;
-     { Katakana words are listed without reading in EDICT and sometimes
-      imported as "kanji=katakana, reading=katakana" as a result.
-      So even though kanji==reading, both may be katakana }
-      if (s='') and (EvalChar(curkanji[1]) = EC_KATAKANA) then
-        s:=curkanji //use katakana
-      else
-        s:=s+copy(inskana,length(s3)+1,length(inskana)-length(s3)); //use kanji/hiragana/whatever + tail
-      SetProvisionalInsert(s,nil);
+   //Replace input text with focused dictionary suggestion
+    if fWordLookup.FocusedResult <> nil then begin
+      curTl := fWordLookup.FocusedResult^;
+      tl := @curTl;
+    end else
+      curTl.Reset;
+    //Delete common ending
+    kanjiRoot := curTl.kanji;
+    kanaRoot := curTl.kana;
+    while (kanjiRoot<>'') and (kanaRoot<>'') and (fgetch(kanjiRoot,flength(kanjiRoot))=fgetch(kanaRoot,flength(kanaRoot))) do
+    begin
+      fdelete(kanjiRoot,flength(kanjiRoot),1);
+      fdelete(kanaRoot,flength(kanaRoot),1);
     end;
+    //Katakana-only words might be imported with either empty kanji, empty kana or kanji=kana
+    //Let's handle all these cases well
+    if (curTl.kanji='') or (curTl.kana='') then begin
+      //If either of them is empty, assume kanji==kana (otherwise we'll do weird substitutions)
+      kanjiRoot := '';
+      kanaRoot := '';
+    end;
+    //If kanji==kana and both roots are now empty, we don't need special treatment
+    insText := kanjiRoot+copy(inskana,length(kanaRoot)+1,length(inskana)-length(kanaRoot)); //use kanji/hiragana/whatever + tail
+    //Our existing search result is tailored for the request we did in kana
+    //If we're replacing kana with kanji, we need to adjust the result we're attaching to it
+    curTL.inflen := curTl.inflen + (flength(kanaRoot) - flength(kanjiRoot));
+    SetProvisionalInsert(insText,nil);
   end else
   begin
    //Replacement disabled => Keep hiragana/bopomofo/whatever
@@ -3000,23 +3009,23 @@ begin
     Therefore if the user didn't enter tones we don't know tones. In F03* notation
     we add F030 meaning "try all tones", but this can't be printed and ConvertBopomofo
     just drops these. }
-    s:=ConvertBopomofo(inskana);
-    SetLength(lp, flength(s));
-    for i:=0 to flength(s)-1 do
+    insText:=ConvertBopomofo(inskana);
+    SetLength(insProp, flength(insText));
+    for i:=0 to flength(insText)-1 do
       if i=0 then
         case FInputBufferType of
-          ibHiragana: lp[i].SetChar('H', 9, 0, 1);
-          ibKatakana: lp[i].SetChar('K', 9, 0, 1);
-        else lp[i].SetChar('-', 9, 0, 1)
+          ibHiragana: insProp[i].SetChar('H', 9, 0, 1);
+          ibKatakana: insProp[i].SetChar('K', 9, 0, 1);
+        else insProp[i].SetChar('-', 9, 0, 1)
         end
       else
-        lp[i].SetChar('<', 9, 0, 1); //word continues
-    SetProvisionalInsert(s,lp);
+        insProp[i].SetChar('<', 9, 0, 1); //word continues
+    SetProvisionalInsert(insText, insProp);
   end;
 
  //Attach translation, if available, to the replaced text
   if AAcceptSuggestion then begin
-    i := SetWordTrans(ins.x,ins.y,[tfManuallyChosen],false);
+    i := SetWordTrans(ins.x,ins.y,[tfManuallyChosen], tl); //tl==nil is okay
    { Not all word may be covered, so we reset prop for other chars.
     In older Wakans the rest was colored as match as well. I'm not against it,
     but either way it needs to happen here, not in SetWordTrans }
@@ -3332,30 +3341,6 @@ begin
   ShowText(true);
 end;
 
-{ Set word translation to whatever is selected in Dictionary Search results grid,
- or to the first result if gridfirst==true }
-function TfEditor.SetWordTrans(x,y:integer;flags:TSetWordTransFlags;gridfirst:boolean):integer;
-var i: integer;
-  word: PSearchResult;
-begin
-  with fWordLookup do
-  begin
-    if gridfirst then
-      i:=0
-    else
-      if not StringGrid.Visible then
-        i:=-1
-      else
-        i:=StringGrid.Row-1;
-    if Results.Count=0 then i:=-1;
-    if i<0 then
-      word := nil
-    else
-      word := Results[i];
-  end;
-  Result := SetWordTrans(x,y,flags,word);
-end;
-
 {
 Attaches a deflexion/search result to the position in the text. Colors the
 inflected word. Recognizes and colors particles after the word.
@@ -3478,6 +3463,7 @@ begin
     exit;
   end;
 end;
+
 
 {
 Paints/hides caret.

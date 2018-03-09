@@ -74,6 +74,8 @@ type
     procedure CopyAsText(const AReplace: boolean);
     procedure CopyToClipboard(const AXsltFilename: string; const AReplace: boolean);
     function IsEmpty: boolean;
+    function FocusedResultIndex: integer;
+    function FocusedResult: PSearchResult;
     property Results: TSearchResults read FResults;
 
   end;
@@ -503,7 +505,25 @@ end;
 //True if no results in the table
 function TfWordLookupBase.IsEmpty: boolean;
 begin
-  Result := FResults.Count<=0;
+  Result := (not StringGrid.Visible) or (FResults.Count<=0);
+end;
+
+//Returns the index of the currently focused result in the results list, or -1
+function TfWordLookupBase.FocusedResultIndex: integer;
+begin
+  if (not StringGrid.Visible) or (Results.Count <= 0) then
+    Result := -1
+  else
+    Result := StringGrid.Row - 1;
+end;
+
+//Returns the pointer to the currently focused result, or nil
+function TfWordLookupBase.FocusedResult: PSearchResult;
+begin
+  if (not StringGrid.Visible) or (Results.Count <= 0) then
+    Result := nil
+  else
+    Result := Results[StringGrid.Row-1];
 end;
 
 procedure TfWordLookupBase.btnGoToVocabClick(Sender: TObject);
