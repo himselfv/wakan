@@ -883,7 +883,7 @@ begin
           }
 
         end else begin
-          if fcopy(roma,j+1,flength(dr.infl))=dr.infl then
+          if fcopy(roma,j+1,flength(dr.infl)) <> dr.infl then
             continue; //inflection doesn't match
         end;
 
