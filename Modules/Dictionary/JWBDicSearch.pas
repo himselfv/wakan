@@ -780,10 +780,19 @@ Generates a list of possible deflected versions of the word.
 Japanese version:
 Looks for the stem of the word, tries to deflex it to a base state with a deflexion table,
 then it must end with one of the few possible verb suffixes.
+
 There's a number of weak places in this algorithm:
-1. Even without secondary verbs (itteOKU) verb conjugations can be chained (itte rare nakereba)
-  for rather long chains, we don't have the ability to list all of them.
-  The algorithm tries to find the furthest recognizable stem:
+
+1. It doesn't handle secondary verbs (itteOKU).
+  This is okay since verbs don't get joined randomly. Common combinations are
+  covered in the dictionaries.
+  If the combination is not covered, our goal here is to match it as 2 separate
+  properly recognized words:
+    itte + oku
+
+2. Verb conjugations can be chained into rather long chains (itte rare nakereba).
+  The algorithm doesn't really parse the full chain of conjugations,
+  it just looks for the furthest recognizable stem:
     itterarenaKERE -> itterarenaKU
   which ends in a valid suffix:
     kere + BA is valid
@@ -792,26 +801,48 @@ There's a number of weak places in this algorithm:
     itterareru
     itteru
     iu
-  And look for suffixes after them. Most versions will be thrown away as there's no
-  valid suffix.
-2. But sometimes we pass words where the end of the word is unknown. The algorithm
-  should then do a conflicting job:
-    - find the longest viable match which ends in an inflected ending
-    - which then continues with a suffix (but maybe there's more text after that - this is relaxed)
-    - without understanding what "viable" means for the text inbetween!
+  And look for suffixes after them. Most versions will be thrown away as there's
+  no valid suffix.
 
-  There's STILL a way to do this if it is given kanji. Most kanji words are either
+  So the algorithm relies on being given a correctly cut word. If it's given
+  too much:
+    itterarenakerebanarimasen
+  It'll only suggest
+    itterarenakerebanarimaSU
+  Which won't match anything from the dictionary. Meanwhile
+    itterarenaKERE
+  Won't match since what it continues with (banarimasen) is not a valid suffix.
+
+3. This works for words we type in the dictionary search, as it's not expected
+  to handle multiple words anyway.
+
+  But when we type in the editor, and especially when we translate blocks of text,
+  we DO NOT know where the word ends at all. We can guess the upper limit, but
+  it's the job of the search/deflex to find matches.
+
+  For these cases we have to relax the suffix requirement. The guesses do not have
+  to end in suffix at all.
+
+  The algorithm then has conflicting goals:
+  - Find the longest match ending with a known inflexion, without understanding
+    the inflexions intbetween
+      itterarenaKERE  -- "tterarena" is not even parsed
+  - And also somehow keep it the shortest, otherwise we'll end with eating two
+    words instead of one:
+      itterarenakereba narimaSEN -- we ate too much because the middle is not parsed
+
+4. There are some tricks we could do with kanji. Most kanji words are either
     KANJI[+KANJI]+kana tail
   Or
     KANJI+kana+KANJI+kana tail
-  It can potentially scan for up to 2 consecutive (or separated by at most one kana) kanji,
+  We could scan for up to 2 consecutive kanji, or separated by at most 1 kana,
   and consider any kanji after that to be a sign of the next word.
 
-3. But what if it parses a typing buffer? There's only kana. It really has a conflicting goal:
-   - find the longest match
-   - find the shortest match (because otherwise we might eat other words)
+  But we do not only get tasked to translate kanji:
+  - Some words are usually fully in kana, as with "narimasen"
+  - Sometimes we parse typing buffers. There's only kana as the user types.
 
-4. So what it should really do IN THIS CASE is something like:
+5. So what it should really do IN THIS CASE is something like:
   - find all possible breakage points where the left part ends in something like
     inflected stem
   - BONUS POINTS if there's a matching suffix after that.
