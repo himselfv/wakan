@@ -898,9 +898,11 @@ end;
 
 procedure THtmlFormat.EndDocument;
 begin
-  outp('</p>'); //no linebreak! or it'll be included in the paste
-  if hoClipFragment in Options then
+  if hoClipFragment in Options then begin
+    outp('</p>'); //no linebreak! or it'll be included in the fragment
     outpln(HtmlEndFragment);
+  end else
+    outpln('</p>'); //we still prefer a linebreak with normal html
   outpln('</body></html>');
   inherited EndDocument;
 end;

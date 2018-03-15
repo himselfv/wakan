@@ -1,8 +1,7 @@
 <!DOCTYPE html><html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
 <body>
-<!--StartFragment -->
-<p><ruby>学校<rt>がっこう</ruby>から<ruby>帰宅<rt>きたく</ruby>すると、<ruby>妹<rt>いもうと</ruby>がリビングで<ruby>電話<rt>でんわ</ruby>をしているところだった。</p>
+<!--StartFragment --><p><ruby>学校<rt>がっこう</ruby>から<ruby>帰宅<rt>きたく</ruby>すると、<ruby>妹<rt>いもうと</ruby>がリビングで<ruby>電話<rt>でんわ</ruby>をしているところだった。</p>
 <p><ruby>妹<rt>いもうと</ruby>の<ruby>名前<rt>なまえ</ruby>は、<ruby>高<rt>こう</ruby><ruby>坂<rt>さか</ruby><ruby>桐<rt>きり</ruby><ruby>乃<rt>の</ruby>。<ruby>現在<rt>げんざい</ruby><ruby>十四<rt>じゅうし</ruby><ruby>歳<rt>さい</ruby>。<ruby>近所<rt>きんじょ</ruby>の<ruby>中学校<rt>ちゅうがっこう</ruby>に<ruby>通<rt>つう</ruby>っている<ruby>女子<rt>じょし</ruby><ruby>中学生<rt>ちゅうがくせい</ruby>だ。</p>
 <p><ruby>中学生<rt>latin text</ruby>だ。</p>
 <p><ruby>latin text<rt>ちゅうがくせい</ruby>だ。</p>
@@ -17,6 +16,5 @@
 <p>中学生&lt;ruby tag inside the string&gt;ちゅうがくせい</p>
 <p><ruby>近所<rt>きんじょ</ruby>の［ruby comment］<ruby>中学校<rt>ちゅうがっこう</ruby>に<ruby>通<rt>つう</ruby>っている<ruby>女子<rt>じょし</ruby></p>
 <p>［ruby comment on it's own line］</p>
-<p>中学生ちゅうがくせい</p>
-<!--EndFragment -->
+<p>中学生ちゅうがくせい</p><!--EndFragment -->
 </body></html>
