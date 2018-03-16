@@ -22,9 +22,7 @@ begin
   defll.Clear;
   suffixl.Clear;
   partl.Clear;
-{$IFNDEF AUTOTEST}
   ClearRomaSortRecords;
-{$ENDIF}
 
   sl := TStringList.Create();
   try
@@ -51,9 +49,7 @@ begin
             1: partl.Add(ln);
             2: defll.Add(ln);
             5: AddCharPropType(ln);
-{$IFNDEF AUTOTEST}
             6: AddRomaSortRecord(ln);
-{$ENDIF}
             7: suffixl.Add(copy(ln,1,1)+autohextofstr(copy(ln,2,Length(ln)-1))); //Format: {type:char}{suffix:fhex}
             8: ignorel.Add(fstr(ln));
           end;
