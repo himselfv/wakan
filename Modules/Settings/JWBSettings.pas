@@ -806,9 +806,9 @@ begin
   cbAdjustCharPriorities.Checked:=reg.readBool('Editor','AdjustCharPriorities', true);
   rgReleaseCursorMode.ItemIndex := reg.ReadInteger('Editor','ReleaseCursorMode',0);
   if (fEditor<>nil) and cbEditorAutoloadLast.Checked then begin
-    fEditor.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
-    fEditor.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
-    fEditor.DocEncoding:=FindEncodingByClassName(Reg.ReadString('Editor','DocType',''));
+    fEditor.DocFilename := Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
+    fEditor.DocType := TDocType(Reg.ReadInteger('Editor','DocType',0));
+    fEditor.DocEncoding := FindEncodingByClassName(Reg.ReadString('Editor','DocEncoding',''));
   end;
   Edit34.Text:=inttostr(reg.ReadInteger('Characters','FreqLimit',0));
   exmode:=reg.ReadInteger('Dict','ExMode',0);

@@ -161,7 +161,7 @@ type
 
   public //File opening/saving
     procedure LoadText(const AFilename: string; AEncoding: CEncoding;
-      AAnnotMode:TTextAnnotMode);
+      AAnnotMode: TTextAnnotMode);
     function LoadWakanText(AStream: TStream; ASilent: boolean = false): boolean; overload;
     procedure LoadWakanText(const AFilename:string); overload;
     procedure SaveWakanText(AStream: TStream; ABlock: PTextSelection = nil); overload;
@@ -1138,7 +1138,7 @@ end;
 
 //Loads classic text file in any encoding.
 procedure TWakanText.LoadText(const AFilename: string; AEncoding: CEncoding;
-  AAnnotMode:TTextAnnotMode);
+  AAnnotMode: TTextAnnotMode);
 var c: FChar;
   cp: TCharacterProps;
   s: FString; //current line text

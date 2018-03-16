@@ -232,7 +232,6 @@ type
     procedure aMedFontExecute(Sender: TObject);
     procedure aLargeFontExecute(Sender: TObject);
 
-
   public
     procedure LanguageChanging;
     procedure LanguageChanged;
@@ -256,8 +255,8 @@ type
     function CopyAsOpenDocument: TMemoryStream;
     function CopyAsWakanText: TMemoryStream;
 
-  protected
-    FDocFilename:string;
+  protected //Currently opened document
+    FDocFilename: string;
     FDocType: TDocType;
     FDocEncoding: CEncoding; //for text documents
     function Get_doctr(Index: integer): PCharacterLineProps;
@@ -478,7 +477,8 @@ type
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
   public //File open/save
-    procedure ClearEditor;
+    procedure ClearEditor(const DoRepaint: boolean = true);
+    procedure AutoloadLastFile;
     procedure OpenAnyFile(const AFilename: string);
     procedure OpenFile(const AFilename: string; const AType: TDocType;
       const AEncoding: CEncoding);
@@ -774,7 +774,7 @@ begin
   RepaintText; //hide hint after CloseInsert + font changed
 end;
 
-procedure TfEditor.ClearEditor;
+procedure TfEditor.ClearEditor(const DoRepaint: boolean = true);
 begin
   doc.Clear;
   InvalidateLines;
@@ -783,9 +783,34 @@ begin
   Self.Caption := _l(EditorWindowTitle) + ' - ' + _l('#00678^e<UNNAMED>');
   docfilename:='';
   mustrepaint:=true;
-  ShowText(true);
+  if DoRepaint then
+    ShowText(true);
   FFileChanged := false;
   FullTextTranslated := false;
+end;
+
+{ Autoloads most recently opened file. Called on initialization. }
+procedure TfEditor.AutoloadLastFile;
+var ADocFilename: string;
+begin
+  //Used in conjunction with fSettings which reads the params and stores it here
+  if Self.DocFilename = '' then exit;
+  try
+    //OpenFile() is going to be modifying these and it accepts params as const,
+    //so they won't be reference-incremented.
+    //We have to make a copy, otherwise it'll rewrite DocFilename killing its
+    //own param.
+    ADocFilename := Self.DocFilename;
+    //ADocType and ADocEncoding are by-value
+    fEditor.OpenFile(ADocFilename, fEditor.DocType, fEditor.DocEncoding);
+  except
+    on E: Exception do begin
+     //Re-raise with additional comment
+      E := Exception(AcquireExceptionObject); //needed for some exception types
+      E.Message := 'Cannot autoload your last-used file: '#13+E.Message;
+      raise E;
+    end;
+  end;
 end;
 
 { Opens a file by guessing format/encoding or asking user for it }
@@ -806,15 +831,11 @@ begin
   end;
 end;
 
-procedure TfEditor.OpenFile(const AFilename:string; const AType: TDocType;
+procedure TfEditor.OpenFile(const AFilename: string; const AType: TDocType;
   const AEncoding: CEncoding);
 var LoadAnnotMode: TTextAnnotMode;
 begin
-  docfilename:=AFilename;
-  FDocType := AType;
-  FDocEncoding := AEncoding;
-
-  //by default we set SaveAnnotMode to default, meaning no preference has been chosen
+  //By default we set SaveAnnotMode to default, meaning no preference has been chosen
   //auto-loaded rubys will be saved either way
   SaveAnnotMode := amDefault;
 
@@ -824,10 +845,12 @@ begin
   else
     LoadAnnotMode := amNone;
 
-  doc.Clear;
-  InvalidateLines;
   Screen.Cursor:=crHourGlass;
   try
+    //We need to clear the doc, so do a full clear - we must remain in a stable
+    //state after a failed load.
+    ClearEditor({DoRepaint=}false);
+
     ViewPos:=SourcePos(0,0);
     rcur:=SourcePos(0,0);
     mustrepaint:=true;
@@ -835,11 +858,14 @@ begin
     FullTextTranslated:=false;
 
     case AType of
-      dtText: doc.LoadText(docfilename, AEncoding, LoadAnnotMode);
-      dtWakanText: doc.LoadWakanText(docfilename);
+      dtText: doc.LoadText(AFilename, AEncoding, LoadAnnotMode);
+      dtWakanText: doc.LoadWakanText(AFilename);
     end;
 
-    //Set the caption after we've loaded the text -- it could fail
+    //Set the caption and the internal fields after we've loaded the text -- it could fail
+    FDocFilename := AFilename;
+    FDocType := AType;
+    FDocEncoding := AEncoding;
     Self.Caption:= _l(EditorWindowTitle) + ' - ' + ExtractFilename(AFilename);
 
     ShowText(true);
@@ -921,10 +947,10 @@ begin
     AEncoding := Conv_ChooseType(curlang='c', nil);
 
   SaveToFile(SaveTextDialog.FileName, ADocType, AEncoding, AAnnotMode);
-  docfilename:=SaveTextDialog.FileName;
+  FDocFilename:=SaveTextDialog.FileName;
   FDocType := ADocType;
   FDocEncoding := AEncoding;
-  Self.Caption := _l(EditorWindowTitle) + ' - ' +ExtractFilename(SaveTextDialog.FileName);
+  Self.Caption := _l(EditorWindowTitle) + ' - ' +ExtractFilename(FDocFilename);
 end;
 
 procedure TfEditor.SetFileChanged(Value: boolean);

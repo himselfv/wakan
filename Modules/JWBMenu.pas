@@ -773,18 +773,8 @@ begin
       end else
 
      //Last opened file in Editor
-      if fSettings.cbEditorAutoloadLast.Checked and (fEditor.docfilename<>'') then
-      try
-        fEditor.OpenFile(fEditor.docfilename, fEditor.DocType,
-          fEditor.DocEncoding);
-      except
-        on E: Exception do begin
-         //Re-raise with additional comment
-          E := Exception(AcquireExceptionObject); //required for some exception
-          E.Message := 'Cannot autoload your last-used file: '#13+E.Message;
-          raise E;
-        end;
-      end;
+      if fSettings.cbEditorAutoloadLast.Checked then
+        fEditor.AutoloadLastFile;
     end;
 
   except
