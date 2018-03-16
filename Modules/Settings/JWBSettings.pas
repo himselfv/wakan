@@ -278,8 +278,10 @@ type
     procedure SpeedButton8Click(Sender: TObject);
     procedure SpeedButton3Click(Sender: TObject);
     procedure SpeedButton9Click(Sender: TObject);
-    procedure btnOkClick(Sender: TObject);
     procedure SpeedButton10Click(Sender: TObject);
+    procedure SpeedButton13Click(Sender: TObject);
+    procedure SpeedButton14Click(Sender: TObject);
+    procedure btnOkClick(Sender: TObject);
     procedure edtTestRomajiChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -305,8 +307,6 @@ type
     procedure cbNoCharColorsClick(Sender: TObject);
     procedure cbNoEditorColorsClick(Sender: TObject);
     procedure cbNoWordGridColorsClick(Sender: TObject);
-    procedure SpeedButton13Click(Sender: TObject);
-    procedure SpeedButton14Click(Sender: TObject);
     procedure pcPagesChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure tvContentsCollapsing(Sender: TObject; Node: TTreeNode;
@@ -455,13 +455,17 @@ const
   );
 
 implementation
-
-uses JWBMenu, JWBStrings, AppData, KanaConv, JWBDictionaries, JWBUnit, JWBKanjiList,
-  JWBEditor, JWBKanjiCompounds, JWBWordLookup, JWBCharItem, JWBExamples, JWBVocabDetails,
-  JWBVocabFilters, JWBKanjiDetails, TextTable, JWBLanguage, UnicodeFont,
-  JWBKanjiCard, JWBVocab, WakanWordGrid, JWBUserData, JWBDicSearch,
-  JWBCharData, ActnList, JWBCharDataImport, JWBIO,
-  JWBWordLookupBase, JWBScreenTip, JWBCore;
+uses
+  JWBStrings, JWBUnit, TextTable,
+{$IFNDEF AUTOTEST}
+  ActnList, JWBCore, AppData, JWBIO, JWBLanguage, KanaConv, UnicodeFont,
+  JWBMenu, JWBEditor, JWBKanjiList, JWBKanjiCard, JWBKanjiDetails,
+  WakanWordGrid, JWBWordLookupBase, JWBWordLookup, JWBKanjiCompounds, JWBExamples,
+  JWBUserData, JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBCharItem,
+  JWBCharData, JWBCharDataImport, JWBScreenTip,
+{$ENDIF}
+  JWBDic, JWBDicSearch, JWBDictionaries
+  ;
 
 var colorfrom:integer;
 
@@ -639,6 +643,7 @@ end;
 
 
 procedure TfSettings.LoadSettings;
+{$IFNDEF AUTOTEST}
 var ini: TCustomIniFile;
 begin
   ini := GetSettingsStore;
@@ -666,9 +671,13 @@ begin
   LoadCharDetl(ini);
 
   BroadcastToPages(WM_LOADSETTINGS, NativeUInt(ini), 0);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SaveSettings;
+{$IFNDEF AUTOTEST}
 var ini: TCustomIniFile;
 begin
   FreeSettings(); //trigger reload in case files were changed
@@ -689,9 +698,13 @@ begin
     ini.UpdateFile;
     FreeSettings();
   end;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.LoadRegistrySettings(reg: TCustomIniFile);
+{$IFNDEF AUTOTEST}
 var s: string;
   tmp_int: integer;
   exmode:integer;
@@ -970,9 +983,13 @@ begin
   CharDetDockedVis2 := reg.ReadBool('Layout','CharDetailsVisible2',true);
   SetLayout := reg.ReadInteger('Layout','DisplayLayout',1);
   SetWindows := reg.ReadInteger('Layout','SecondaryWindows',72);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SaveRegistrySettings(reg: TCustomIniFile);
+{$IFNDEF AUTOTEST}
 var setwindows:integer;
   exmode:integer;
   tmp_str: string;
@@ -1233,58 +1250,88 @@ begin
   reg.WriteInteger('Layout','UserFiltersHeight',fVocabFilters.UndockHeight);
   reg.WriteInteger('Layout','UserDetailsHeight',fVocabDetails.UndockHeight);
   reg.WriteInteger('Layout','KanjiCompoundsHeight',fMenu.KanjiCompoundsDockedHeight);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 
 
 procedure TfSettings.btnChangeLanguageClick(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   fLanguage.SelectLanguage;
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton1Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   FontJapaneseGrid:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit1.text,false);
   Edit1.Text:=FontJapaneseGrid;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton4Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   FontEnglish:=ChooseFont([ANSI_CHARSET],FS_ENGLISH_CHARTEST,sup,edit4.text,false);
   Edit4.Text:=FontEnglish;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton5Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   FontSmall:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit5.text,false);
   Edit5.Text:=FontSmall;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton2Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   FontJapanese:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit2.text,false);
   Edit2.Text:=FontJapanese;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton6Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   FontChineseGrid:=ChooseFont([CHINESEBIG5_CHARSET],FS_CHINESE_CHARTEST,sup,edit6.text,false);
   Edit6.Text:=FontChineseGrid;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton7Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   FontChinese:=ChooseFont([CHINESEBIG5_CHARSET],FS_CHINESE_CHARTEST,sup,Edit7.text,false);
   Edit7.Text:=FontChinese;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton8Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   Application.MessageBox(
@@ -1294,9 +1341,13 @@ begin
     MB_OK or MB_ICONINFORMATION);
   FontRadical:=ChooseFont([CHINESEBIG5_CHARSET],FS_RADICAL_CHARTEST,sup,Edit8.Text,false);
   Edit8.Text:=FontRadical;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton3Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   Application.MessageBox(
@@ -1311,9 +1362,13 @@ begin
     MB_OK or MB_ICONINFORMATION);
   FontChineseGridGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit3.Text,false);
   Edit3.Text:=FontChineseGridGB;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton9Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   Application.MessageBox(
@@ -1328,9 +1383,13 @@ begin
     MB_OK or MB_ICONINFORMATION);
   FontChineseGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit9.Text,false);
   Edit9.Text:=FontChineseGB;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton10Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var sup:string;
 begin
   Application.MessageBox(
@@ -1340,10 +1399,36 @@ begin
     pchar(_l('#00566^eNotice')),
   MB_OK or MB_ICONINFORMATION);
   edtKanjiCardFont.Text:=ChooseFont([CHINESEBIG5_CHARSET,GB2312_CHARSET,SHIFTJIS_CHARSET],testkanji,sup,Edit9.Text,false);
+{$ELSE}
+begin
+{$ENDIF}
+end;
+
+procedure TfSettings.SpeedButton13Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
+var sup:string;
+begin
+  FontStrokeOrder:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit32.text,false);
+  Edit32.Text:=FontStrokeOrder;
+{$ELSE}
+begin
+{$ENDIF}
+end;
+
+procedure TfSettings.SpeedButton14Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
+var sup:string;
+begin
+  FontPinYin:=ChooseFont([ANSI_CHARSET],FS_PINYIN_CHARTEST,sup,edit33.text,false);
+  Edit33.Text:=FontPinYin;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.Button1Click(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   if SaveDialog2.Execute then
   begin
     Screen.Cursor:=crHourGlass;
@@ -1354,10 +1439,12 @@ begin
       'Export',
       MB_ICONINFORMATION or MB_OK);
   end;
+{$ENDIF}
 end;
 
 procedure TfSettings.Button2Click(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   Screen.Cursor:=crHourglass;
   if (TChar.CheckIndex) and (TCharProp.CheckIndex) and (TRadicals.CheckIndex) then
     Application.MessageBox(
@@ -1370,10 +1457,12 @@ begin
       pchar(_l('#00570^eIndex check')),
       MB_OK or MB_ICONERROR);
   Screen.Cursor:=crDefault;
+{$ENDIF}
 end;
 
 procedure TfSettings.Button3Click(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   if OpenDialog2.Execute then
   if Application.MessageBox(
     pchar(_l('#00572^eThis action replaces all data in user database.'#13
@@ -1387,10 +1476,12 @@ begin
       'Import',
       MB_ICONINFORMATION or MB_OK);
   end;
+{$ENDIF}
 end;
 
 procedure TfSettings.lbWordPrintFormatClick(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   Edit16.Enabled:=false;
   Edit16.Color:=clBtnFace;
   case lbWordPrintFormat.ItemIndex of
@@ -1410,9 +1501,11 @@ begin
     13:Edit16.Text:='w1m1w2m2';
     14:begin Edit16.Enabled:=true; Edit16.Color:=clWindow; end;
   end;
+{$ENDIF}
 end;
 
 procedure TfSettings.Button4Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var lfound:boolean;
     gfound,gmore:boolean;
     lfn,gfn,gmn:integer;
@@ -1483,10 +1576,14 @@ begin
           pchar(_l('#00094^eSuccess')),
           MB_ICONINFORMATION or MB_OK);
   end;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 //Silent: do not say anything in case of success
 function TfSettings.AutoDetectFonts(Silent:boolean):boolean;
+{$IFNDEF AUTOTEST}
 var s:string;
   missingfonts:string;
   substituted:boolean; //found substitutions for all missing fonts
@@ -1599,6 +1696,10 @@ begin
         pchar(_l('#00350^eFont autodetection')),
         MB_ICONINFORMATION or MB_OK);
   result:=(missingfonts='') or (substituted);
+{$ELSE}
+begin
+  Result := false;
+{$ENDIF}
 end;
 
 procedure TfSettings.Button5Click(Sender: TObject);
@@ -1606,6 +1707,7 @@ begin
   AutoDetectFonts({Silent=}false);
 end;
 
+{$IFNDEF AUTOTEST}
 function CheckFont(var face:string):boolean;
 begin
   while (Length(face)>0) and (face[1]='!') do
@@ -1614,6 +1716,7 @@ begin
   if not Result then
     face:='!'+face;
 end;
+{$ENDIF}
 
 { Checks that all fonts are configured correctly and present in the system.
 If not, opens the configuration dialog to let the user choose some new ones.
@@ -1621,6 +1724,7 @@ Used at loading:
 1. As a part of auto-detection (fonts which weren't detected can be left blank to later ask the user)
 2. When new font setting is added to the app, the user will be asked on the next run to provide a font, if the default one is missing }
 procedure TfSettings.CheckFontsPresent;
+{$IFNDEF AUTOTEST}
 var OldPosition: TPosition;
 begin
   while
@@ -1651,6 +1755,9 @@ begin
     Self.ShowModal;
     Self.Position := OldPosition;
   end;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 //Updates font names on font selection page
@@ -1672,6 +1779,7 @@ end;
 { Populates chardetl with default property set }
 procedure TfSettings.ResetCharDetl;
 begin
+{$IFNDEF AUTOTEST}
   chardetl.Clear;
   chardetl.Add('4;W;N;J;N;M;');
   chardetl.Add('5;W;N;J;N;M;');
@@ -1707,9 +1815,11 @@ begin
   chardetl.Add('100;L;L;B;N;M;');
   chardetl.Add('101;L;L;J;N;M;');
   chardetl.Add('102;L;L;J;N;M;');
+{$ENDIF}
 end;
 
 procedure TfSettings.LoadCharDetl(reg: TCustomIniFile);
+{$IFNDEF AUTOTEST}
 var keys: TStringList;
   i: integer;
 begin
@@ -1735,9 +1845,13 @@ begin
   finally
     FreeAndNil(keys);
   end;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.SaveCharDetl(reg: TCustomIniFile);
+{$IFNDEF AUTOTEST}
 var i: integer;
   WakanCdt: string;
 begin
@@ -1749,10 +1863,14 @@ begin
  //Delete wakan.cdt if it's present. In fact, move it to backup.
   WakanCdt := UserDataDir+'\WAKAN.CDT';
   MoveFile(PChar(WakanCdt), PChar(GetBackupFilename(WakanCdt)));
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 
 procedure TfSettings.ReloadCharDetlList;
+{$IFNDEF AUTOTEST}
 var i:integer;
   ii:integer;
   propType: PCharPropType;
@@ -1777,9 +1895,13 @@ begin
   if (ii>=0) and (ii<ListBox2.Items.Count) then ListBox2.ItemIndex:=ii;
   SpeedButton11.Enabled:=ListBox2.ItemIndex>0;
   SpeedButton12.Enabled:=ListBox2.ItemIndex<ListBox2.Items.Count-1;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.Button7Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var fCharItem: TfCharItem;
 begin
   fCharItem := TfCharItem.Create(Application);
@@ -1790,9 +1912,13 @@ begin
     FreeAndNil(fCharItem);
   end;
   ReloadCharDetlList;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.Button8Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var fCharItem: TfCharItem;
 begin
   if ListBox2.ItemIndex<0 then exit;
@@ -1804,15 +1930,22 @@ begin
     FreeAndNil(fCharItem);
   end;
   ReloadCharDetlList;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.Button9Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 begin
   if ListBox2.ItemIndex<>-1 then
   begin
     chardetl.Delete(ListBox2.ItemIndex);
     ReloadCharDetlList;
   end;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.Button10Click(Sender: TObject);
@@ -1829,18 +1962,22 @@ end;
 
 procedure TfSettings.SpeedButton11Click(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   chardetl.Insert(ListBox2.ItemIndex-1,chardetl[ListBox2.ItemIndex]);
   chardetl.Delete(ListBox2.ItemIndex+1);
   ListBox2.ItemIndex:=ListBox2.ItemIndex-1;
   ReloadCharDetlList;
+{$ENDIF}
 end;
 
 procedure TfSettings.SpeedButton12Click(Sender: TObject);
 begin
+{$IFNDEF AUTOTEST}
   chardetl.Insert(ListBox2.ItemIndex+2,chardetl[ListBox2.ItemIndex]);
   chardetl.Delete(ListBox2.ItemIndex);
   ListBox2.ItemIndex:=ListBox2.ItemIndex+1;
   ReloadCharDetlList;
+{$ENDIF}
 end;
 
 procedure TfSettings.Button11Click(Sender: TObject);
@@ -1849,6 +1986,7 @@ begin
 end;
 
 procedure TfSettings.ComboBox2Change(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var i:integer;
     s:string;
     v:boolean;
@@ -1883,6 +2021,9 @@ begin
   ListBox3.Enabled:=v;
   Button12.Enabled:=v;
   Button14.Enabled:=v;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.ListBox3Click(Sender: TObject);
@@ -1891,6 +2032,7 @@ begin
 end;
 
 procedure TfSettings.Button15Click(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var i:integer;
 begin
   if Application.MessageBox(
@@ -1903,6 +2045,9 @@ begin
     inc(i);
   until GetColorString(i)='';
   ComboBox2Change(self);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.Button14Click(Sender: TObject);
@@ -1933,21 +2078,8 @@ begin
   if fSettings.Visible then ComboBox2Change(sender);
 end;
 
-procedure TfSettings.SpeedButton13Click(Sender: TObject);
-var sup:string;
-begin
-  FontStrokeOrder:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit32.text,false);
-  Edit32.Text:=FontStrokeOrder;
-end;
-
-procedure TfSettings.SpeedButton14Click(Sender: TObject);
-var sup:string;
-begin
-  FontPinYin:=ChooseFont([ANSI_CHARSET],FS_PINYIN_CHARTEST,sup,edit33.text,false);
-  Edit33.Text:=FontPinYin;
-end;
-
 procedure TfSettings.btnImportKanjidicClick(Sender: TObject);
+{$IFNDEF AUTOTEST}
 var fCharDataImport: TfCharDataImport;
 begin
   fCharDataImport := TfCharDataImport.Create(Self);
@@ -1956,6 +2088,9 @@ begin
   finally
     FreeAndNil(fCharDataImport);
   end;
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 //Returns the type ID of the chosen preferred radical type
@@ -1969,6 +2104,7 @@ end;
 { Reloads the list of available romanizations, preserving user selection as
  possible. }
 procedure TfSettings.ReloadRomaSystems;
+{$IFNDEF AUTOTEST}
 var OldList: string;
   sr: TSearchRec;
   res: integer;
@@ -1982,6 +2118,9 @@ begin
   end;
   SysUtils.FindClose(sr);
   SetRomaList(OldList);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 { Returns comma-separated list of selected romanizations, in the priority order. }
@@ -2054,6 +2193,7 @@ end;
 //Reloads all user romanization files in the order they are configured to be load.
 //Called at settings load and every time the setup changes.
 procedure TfSettings.ReloadRomaSetup;
+{$IFNDEF AUTOTEST}
 var list: string;
   parts: TStringArray;
   i: integer;
@@ -2063,11 +2203,15 @@ begin
   parts := SplitStr(list,',');
   for i := 0 to Length(parts)-1 do
     roma_user.LoadFromFile(ProgramDataDir+'\'+parts[i]+RomajiExt);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 { Same for pinyin }
 
 procedure TfSettings.ReloadPinyinSystems;
+{$IFNDEF AUTOTEST}
 var OldList: string;
   sr: TSearchRec;
   res: integer;
@@ -2081,6 +2225,9 @@ begin
   end;
   SysUtils.FindClose(sr);
   SetPinyinList(OldList);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 function TfSettings.GetPinyinList: string;
@@ -2146,6 +2293,7 @@ begin
 end;
 
 procedure TfSettings.ReloadPinyinSetup;
+{$IFNDEF AUTOTEST}
 var list: string;
   parts: TStringArray;
   i: integer;
@@ -2155,6 +2303,9 @@ begin
   parts := SplitStr(list,',');
   for i := 0 to Length(parts)-1 do
     rpy_user.LoadFromFile(ProgramDataDir+'\'+parts[i]+PinyinExt);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 
@@ -2265,11 +2416,14 @@ end;
 procedure TfSettings.tsExprCopyFormatsShow(Sender: TObject);
 begin
   ReloadExprCopyFormats;
+{$IFNDEF AUTOTEST}
   lblExprCopyFormatsEdit.URL := GetExprCopyFormatsDir;
   lblexprCopyFormatsDocs.URL := WikiUrl('CopyFormats');
+{$ENDIF}
 end;
 
 procedure TfSettings.ReloadExprCopyFormats;
+{$IFNDEF AUTOTEST}
 var fname: string;
 begin
   lbExprCopyFormats.Clear;
@@ -2277,6 +2431,9 @@ begin
     lbExprCopyFormats.Items.Add(ChangeFileExt(ExtractFilename(fname),''));
   lbExprCopyFormats.ItemIndex := lbExprCopyFormats.Items.IndexOf(DefaultExprCopyFormatName);
   lbExprCopyFormatsClick(lbExprCopyFormats);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.lbExprCopyFormatsClick(Sender: TObject);
@@ -2287,6 +2444,7 @@ begin
 end;
 
 procedure TfSettings.UpdateExprCopyFormatExample;
+{$IFNDEF AUTOTEST}
 var res: TSearchResult;
 begin
   if DefaultExprCopyFormatName='' then begin
@@ -2315,6 +2473,9 @@ begin
 
   mmExprCopyFormatExample.Text :=
     XsltTransform(res.ToEdictXml, GetExprCopyFormatsDir+'\'+DefaultExprCopyFormatName+'.xslt');
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 
@@ -2323,11 +2484,14 @@ end;
 procedure TfSettings.tsKanjiCopyFormatsShow(Sender: TObject);
 begin
   ReloadKanjiCopyFormats;
+{$IFNDEF AUTOTEST}
   lblKanjiCopyFormatsEdit.URL := GetKanjiCopyFormatsDir;
   lblKanjiCopyFormatsDocs.URL := WikiUrl('CopyFormats');
+{$ENDIF}
 end;
 
 procedure TfSettings.ReloadKanjiCopyFormats;
+{$IFNDEF AUTOTEST}
 var fname: string;
 begin
   lbKanjiCopyFormats.Clear;
@@ -2335,6 +2499,9 @@ begin
     lbKanjiCopyFormats.Items.Add(ChangeFileExt(ExtractFilename(fname),''));
   lbKanjiCopyFormats.ItemIndex := lbKanjiCopyFormats.Items.IndexOf(DefaultKanjiCopyFormatName);
   lbKanjiCopyFormatsClick(lbKanjiCopyFormats);
+{$ELSE}
+begin
+{$ENDIF}
 end;
 
 procedure TfSettings.lbKanjiCopyFormatsClick(Sender: TObject);
@@ -2346,6 +2513,7 @@ end;
 
 procedure TfSettings.UpdateKanjiCopyFormatExample;
 begin
+{$IFNDEF AUTOTEST}
   if DefaultExprCopyFormatName='' then begin
     mmExprCopyFormatExample.Text := '';
     exit;
@@ -2354,6 +2522,7 @@ begin
   mmKanjiCopyFormatExample.Text :=
     XsltTransform(KanjiInfoToXml('間'),
       GetKanjiCopyFormatsDir+'\'+DefaultKanjiCopyFormatName+'.xslt');
+{$ENDIF}
 end;
 
 

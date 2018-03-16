@@ -10,7 +10,8 @@ Throughout this module:
 }
 
 interface
-uses SysUtils, Classes, JWBStrings, TextTable, StdPrompt, JWBDic, JWBVocab1;
+uses SysUtils, Classes, JWBStrings, TextTable, StdPrompt, JWBDic
+  {$IFNDEF AUTOTEST}, JWBVocab1{$ENDIF};
 
 {
 Particle list
@@ -213,10 +214,12 @@ type
     property Items[Index: integer]: PSearchResult read GetItemPtr; default;
   end;
 
+{$IFNDEF AUTOTEST}
 //Converts Vocab1 parsed article to common search result.
 //Why do we even need a separate Vocab1-parsed structure? Because our common
 //TSearchResArticle can change, while Vocab1 format will always stay the same.
 function Vocab1ToSearchRes(const ASource: TVocab1Article): TSearchResArticle;
+{$ENDIF}
 
 {
 Search itself.
@@ -274,6 +277,7 @@ type
 
   protected
     dics: array of TDicSetup; //empty field => dic was not loaded, skip
+   {$IFNDEF AUTOTEST}
     //Cached cursors and seeks for User tables
     CUser: TTextTableCursor; //Order is always 'Kanji_ind' for now, do not change
     stUserKanji: TSeekObject;
@@ -281,6 +285,7 @@ type
     CUserPrior: TTextTableCursor;
     stUserPriorKanji: TSeekObject;
     fldUserPriorCount: integer;
+   {$ENDIF}
   public
     procedure Search(search: string; sl: TSearchResults; wt: TEvalCharType = EC_UNKNOWN);
 
@@ -318,8 +323,9 @@ procedure DicSearch(search:string;st:TSearchType; MatchType: TMatchType;
   var wasfull:boolean);
 
 implementation
-uses Forms, Windows, Math, KanaConv, JWBDictionaries, JWBUnit, JWBSettings, JWBCategories,
-  JWBUserData, JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
+uses Forms, Windows, Math, KanaConv, JWBDictionaries, JWBUnit, JWBSettings,
+ {$IFNDEF AUTOTEST} JWBCategories, JWBUserData, {$ENDIF}
+  JWBLegacyMarkup, JWBLanguage, JWBEdictMarkers;
 
 procedure Deflex(const w:string;sl:TCandidateLookupList;prior,priordfl:byte;mustsufokay:boolean); forward;
 
@@ -716,7 +722,9 @@ begin
   ABody := repl(ABody, '{', '(');
   ABody := repl(ABody, '}', ')');
 
+{$IFNDEF AUTOTEST}
   AKanji := statpref + CheckKnownKanji(kanji);
+{$ENDIF}
   AKana := statpref + kana;
   ABody := statpref + ABody;
 end;
@@ -765,12 +773,14 @@ begin
   Result := Result + '</article>';
 end;
 
+{$IFNDEF AUTOTEST}
 function Vocab1ToSearchRes(const ASource: TVocab1Article): TSearchResArticle;
 begin
   Result.Reset;
   Result.dicname := ASource.dicname;
   Result.entries := ASource.entries;
 end;
+{$ENDIF}
 
 
 {
@@ -1280,8 +1290,10 @@ begin
   //Destroy existing cursors
   for di := 0 to Length(dics) - 1 do
     FreeAndNil(dics[di].cursor);
+{$IFNDEF AUTOTEST}
   FreeAndNil(CUser);
   FreeAndNil(CUserPrior);
+{$ENDIF}
 
   //Verify some configuration? Stuff we can't do.
   if (st=stEnglish) and not (Self.MatchType in [mtExactMatch, mtMatchLeft]) then
@@ -1326,6 +1338,7 @@ begin
     end;
   end;
 
+{$IFNDEF AUTOTEST}
   //Create cached table cursors
   CUser := TTextTableCursor.Create(TUser);
   stUserKanji := TUser.GetSeekObject('Kanji');
@@ -1334,6 +1347,7 @@ begin
   CUserPrior := TTextTableCursor.Create(TUserPrior);
   stUserPriorKanji := TUserPrior.GetSeekObject('Kanji');
   fldUserPriorCount := TUserPrior.Field('Count');
+{$ENDIF}
 end;
 
 {
@@ -1517,6 +1531,7 @@ var
 
   existingIdx: integer;
 
+{$IFNDEF AUTOTEST}
  //Used several times with different kanji_vals
   procedure TryGetUserScore(kanji_val: string);
   begin
@@ -1532,6 +1547,7 @@ var
       CUser.Next;
     end;
   end;
+{$ENDIF}
 
 begin
   dic := ds.cursor;
@@ -1583,6 +1599,7 @@ begin
      //Calculate popularity class
       popclas := GetPopClass(markers)+GetPopClass(kmarkers);
 
+{$IFNDEF AUTOTEST}
       if MindUserPrior
       and CUserPrior.Locate(@stUserPriorKanji,dic.GetKanji) then
         dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
@@ -1594,6 +1611,7 @@ begin
       TryGetUserScore(dic.GetKanji);
       if (UserScore=-1) and (dic.GetKanji<>ChinSimplified(dic.GetKanji)) then
         TryGetUserScore(ChinSimplified(dic.GetKanji));
+{$ENDIF}
 
      //Calculate sorting order -- the bigger the worse (will apear later in list)
       case st of
@@ -1745,7 +1763,9 @@ end;
 procedure TDicSearchRequest.FinalizeResults(sl: TSearchResults);
 var i, j: integer;
   scomp: PSearchResult;
+{$IFNDEF AUTOTEST}
   voc_entry: string;
+{$ENDIF}
   sl2: TStringList;
   sl2i: integer;
   sart: TSearchResArticle;
@@ -1756,6 +1776,7 @@ begin
  //We might have more results than requested and could do sl.Trim(MaxWords) here,
  //but we have those results anyway -- why delete.
 
+{$IFNDEF AUTOTEST}
  //Add user entries to the beginning
   for i:=0 to sl.Count-1 do
     if sl[i].userindex<>0 then
@@ -1801,6 +1822,7 @@ begin
       sart.dicindex := scomp.userindex;
       scomp.InsertArticle(0, sart);
     end;
+{$ENDIF}
 end;
 
 initialization
