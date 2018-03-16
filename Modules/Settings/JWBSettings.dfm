@@ -2176,7 +2176,7 @@ object fSettings: TfSettings
         Font.Style = [fsBold]
         ParentFont = False
       end
-      object CheckBox60: TCheckBox
+      object cbEditorAutosave: TCheckBox
         Left = 3
         Top = 22
         Width = 457
@@ -2184,7 +2184,7 @@ object fSettings: TfSettings
         Caption = '#00969^eAuto-save file on exit'
         TabOrder = 0
       end
-      object CheckBox61: TCheckBox
+      object cbEditorAutoloadLast: TCheckBox
         Left = 3
         Top = 46
         Width = 457

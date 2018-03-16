@@ -742,7 +742,7 @@ begin
         TabControl1Change(tab3);
       end else
      //Last opened file in Editor
-      if (fSettings.CheckBox61.Checked) and (fEditor.docfilename<>'') then
+      if (fSettings.cbEditorAutoloadLast.Checked) and (fEditor.docfilename<>'') then
       try
         fEditor.OpenFile(fEditor.docfilename, fEditor.DocType,
           fEditor.DocEncoding);

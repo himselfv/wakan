@@ -948,7 +948,7 @@ begin
   Result := true;
   if not filechanged then exit;
 
-  if (fSettings.CheckBox60.Checked) and (docfilename<>'') then begin
+  if (fSettings.cbEditorAutosave.Checked) and (docfilename<>'') then begin
    //Auto-"Yes"
     SaveToFile(docfilename, FDocType, FDocEncoding, SaveAnnotMode);
     filechanged := false;

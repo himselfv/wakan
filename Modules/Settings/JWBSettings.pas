@@ -203,8 +203,8 @@ type
     cbSaveAnnotationsToRuby: TCheckBox;
     lblSaveAnnotationsToRubyDesc: TLabel;
     lblSavingAndLoading: TLabel;
-    CheckBox60: TCheckBox;
-    CheckBox61: TCheckBox;
+    cbEditorAutosave: TCheckBox;
+    cbEditorAutoloadLast: TCheckBox;
     cbNoSaveChangesWarning: TCheckBox;
     Label48: TLabel;
     CheckBox43: TCheckBox;
@@ -797,15 +797,15 @@ begin
   cbOrderFreq.Checked:=reg.ReadBool('Dict','OrderFreq',true);
   cbDictRefLinksInSubmenu.Checked:=reg.ReadBool('Dict','RefLinksInSubmenu',false);
 
-  CheckBox60.Checked:=reg.ReadBool('Editor','AutoSave',false);
-  CheckBox61.Checked:=reg.ReadBool('Editor','AutoLoad',false);
+  cbEditorAutosave.Checked:=reg.ReadBool('Editor','AutoSave',false);
+  cbEditorAutoloadLast.Checked:=reg.ReadBool('Editor','AutoLoad',false);
   cbNoSaveChangesWarning.Checked:=reg.ReadBool('Editor','NoSaveChangesWarning',false);
   cbLoadAozoraRuby.Checked:=reg.readBool('Editor','LoadAozoraRuby', true);
   cbAozoraTagsInColor.Checked:=reg.readBool('Editor','AozoraTagsInColor', true);
   cbSaveAnnotationsToRuby.Checked:=reg.readBool('Editor','SaveAnnotationsToRuby', false);
   cbAdjustCharPriorities.Checked:=reg.readBool('Editor','AdjustCharPriorities', true);
   rgReleaseCursorMode.ItemIndex := reg.ReadInteger('Editor','ReleaseCursorMode',0);
-  if (fEditor<>nil) and CheckBox61.Checked then begin
+  if (fEditor<>nil) and cbEditorAutoloadLast.Checked then begin
     fEditor.DocFileName:=Reg.ReadString('Editor','DocFileName',''); //Will load later if DocFileName<>''
     fEditor.DocType:=TDocType(Reg.ReadInteger('Editor','DocType',0));
     fEditor.DocEncoding:=FindEncodingByClassName(Reg.ReadString('Editor','DocType',''));
@@ -1070,8 +1070,8 @@ begin
   reg.WriteBool('Dict','OrderFreq',cbOrderFreq.Checked);
   reg.WriteBool('Dict','RefLinksInSubmenu',cbDictRefLinksInSubmenu.Checked);
 
-  reg.WriteBool('Editor','AutoSave',CheckBox60.Checked);
-  reg.WriteBool('Editor','AutoLoad',CheckBox61.Checked);
+  reg.WriteBool('Editor','AutoSave',cbEditorAutosave.Checked);
+  reg.WriteBool('Editor','AutoLoad',cbEditorAutoloadLast.Checked);
   reg.WriteBool('Editor','NoSaveChangesWarning',cbNoSaveChangesWarning.Checked);
   reg.WriteBool('Editor','LoadAozoraRuby',cbLoadAozoraRuby.Checked);
   reg.WriteBool('Editor','AozoraTagsInColor',cbAozoraTagsInColor.Checked);
