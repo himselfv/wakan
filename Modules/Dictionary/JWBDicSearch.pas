@@ -1487,12 +1487,12 @@ end;
 function GetPopClass(const mk:TMarkers): integer;
 begin
   Result := 40;
-  if fSettings.CheckBox5.Checked then begin
+  if fSettings.cbPreferNounsAndVerbs.Checked then begin
     if TestMarkers(mk,#46#46#58#59#60#61#62#63#106) then dec(Result,5);
     if TestMarkers(mk,#66#67#68#69#70#71#72#73#74#75#76#77#78#79#80#81#82#83#84#85
           +#110#111#112#113#114#115#116#117#118) then dec(Result,5);
   end;
-  if fSettings.CheckBox6.Checked then begin
+  if fSettings.cbPreferPolite.Checked then begin
     if TestMarkers(mk,#86) then dec(Result,1); //honor
     if TestMarkers(mk,#87) then dec(Result,2); //humor
     if TestMarkers(mk,#88) then dec(Result,3); //humble
@@ -1503,7 +1503,7 @@ begin
   if TestMarkers(mk,#94) then inc(Result,20); //outd-kana
   if TestMarkers(mk,#135) then inc(Result,20); //rare
 
-  if fSettings.CheckBox7.Checked and TestMarkers(mk,MarkPop) then dec(Result,150); //pop
+  if fSettings.cbPreferPopular.Checked and TestMarkers(mk,MarkPop) then dec(Result,150); //pop
 end;
 
 procedure TDicSearchRequest.TestLookupCandidate(ds: TDicSetup; lc: PCandidateLookup;
@@ -1603,9 +1603,11 @@ begin
       if MindUserPrior
       and CUserPrior.Locate(@stUserPriorKanji,dic.GetKanji) then
         dec(popclas,10*CUserPrior.Int(fldUserPriorCount));
+{$ENDIF}
 
       UserScore:=-1;
       UserIndex:=0;
+{$IFNDEF AUTOTEST}
       if raw_entries.HasMarker(MarkUsuallyKana) then
         TryGetUserScore(dic.GetPhonetic);
       TryGetUserScore(dic.GetKanji);
@@ -1627,8 +1629,8 @@ begin
       end;
       sort:=sort+10000;
 
-      if (fSettings.CheckBox4.Checked) and (UserScore>-1) then dec(sort,1000);
-      if (fSettings.CheckBox4.Checked) and (UserScore>1) then dec(sort,1000);
+      if (fSettings.cbPreferUserWords.Checked) and (UserScore>-1) then dec(sort,1000);
+      if (fSettings.cbPreferUserWords.Checked) and (UserScore>1) then dec(sort,1000);
       if IsKanaCharKatakana(dic.GetPhonetic, 1) then inc(sort,1000);
       sort:=sort+dic.dic.priority*20000;
       sort:=sort+ds.PriorityClass;
@@ -1761,14 +1763,14 @@ begin
 end;
 
 procedure TDicSearchRequest.FinalizeResults(sl: TSearchResults);
+{$IFNDEF AUTOTEST}
 var i, j: integer;
   scomp: PSearchResult;
-{$IFNDEF AUTOTEST}
   voc_entry: string;
-{$ENDIF}
   sl2: TStringList;
   sl2i: integer;
   sart: TSearchResArticle;
+{$ENDIF}
 begin
   if sl.Count > 1 then //saves a bit when translating
     sl.SortByFrequency;

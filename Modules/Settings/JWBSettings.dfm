@@ -1314,7 +1314,7 @@ object fSettings: TfSettings
         Height = 137
         Caption = '#00442^eSearch results order'
         TabOrder = 0
-        object CheckBox4: TCheckBox
+        object cbPreferUserWords: TCheckBox
           Left = 8
           Top = 16
           Width = 401
@@ -1322,7 +1322,7 @@ object fSettings: TfSettings
           Caption = '#00443^ePrefer words in user dictionary'
           TabOrder = 0
         end
-        object CheckBox5: TCheckBox
+        object cbPreferNounsAndVerbs: TCheckBox
           Left = 8
           Top = 40
           Width = 401
@@ -1330,7 +1330,7 @@ object fSettings: TfSettings
           Caption = '#00444^ePrefer nouns and verbs'
           TabOrder = 1
         end
-        object CheckBox6: TCheckBox
+        object cbPreferPolite: TCheckBox
           Left = 8
           Top = 64
           Width = 385
@@ -1338,7 +1338,7 @@ object fSettings: TfSettings
           Caption = '#00445^ePrefer polite words'
           TabOrder = 2
         end
-        object CheckBox7: TCheckBox
+        object cbPreferPopular: TCheckBox
           Left = 8
           Top = 88
           Width = 377

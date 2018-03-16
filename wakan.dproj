@@ -152,6 +152,7 @@
         </DCCReference>
         <DCCReference Include="Modules\JWBUnit.pas"/>
         <DCCReference Include="Modules\JWBCore.pas"/>
+        <DCCReference Include="Modules\WakanCfg.pas"/>
         <DCCReference Include="Modules\TaskbarCtl.pas"/>
         <DCCReference Include="Modules\JWBClipboard.pas"/>
         <DCCReference Include="Modules\JWBIntTip.pas"/>

@@ -44,10 +44,10 @@ type
     Label10: TLabel;
     tsDictionary: TTabSheet;
     GroupBox3: TGroupBox;
-    CheckBox4: TCheckBox;
-    CheckBox5: TCheckBox;
-    CheckBox6: TCheckBox;
-    CheckBox7: TCheckBox;
+    cbPreferUserWords: TCheckBox;
+    cbPreferNounsAndVerbs: TCheckBox;
+    cbPreferPolite: TCheckBox;
+    cbPreferPopular: TCheckBox;
     cbReplaceKanji: TCheckBox;
     tsWordListPrinting: TTabSheet;
     cbInsideLines: TCheckBox;
@@ -780,10 +780,10 @@ begin
     FontPinYin:=reg.ReadString('Fonts','PinYin','Arial');
   end;
   UpdateFontNames;
-  CheckBox4.Checked:=reg.ReadBool('Dict','PreferUser',true);
-  CheckBox5.Checked:=reg.ReadBool('Dict','PreferNouns',true);
-  CheckBox6.Checked:=reg.ReadBool('Dict','PreferPolite',true);
-  CheckBox7.Checked:=reg.ReadBool('Dict','PreferPopular',true);
+  cbPreferUserWords.Checked:=reg.ReadBool('Dict','PreferUser',true);
+  cbPreferNounsAndVerbs.Checked:=reg.ReadBool('Dict','PreferNouns',true);
+  cbPreferPolite.Checked:=reg.ReadBool('Dict','PreferPolite',true);
+  cbPreferPopular.Checked:=reg.ReadBool('Dict','PreferPopular',true);
   if fWordLookup<>nil then begin
     fWordLookup.aAutoPreview.Checked:=reg.ReadBool('Dict','QuickSearch',true);
     fWordLookup.aInflect.Checked:=reg.ReadBool('Dict','DeflexItalic',true);
@@ -1061,10 +1061,10 @@ begin
   reg.WriteString('Fonts','StrokeOrder',FontStrokeOrder);
   reg.WriteString('Fonts','PinYin',FontPinYin);
   reg.WriteString('Fonts','FontSet','1');
-  reg.WriteBool('Dict','PreferUser',CheckBox4.Checked);
-  reg.WriteBool('Dict','PreferNouns',CheckBox5.Checked);
-  reg.WriteBool('Dict','PreferPolite',CheckBox6.Checked);
-  reg.WriteBool('Dict','PreferPopular',CheckBox7.Checked);
+  reg.WriteBool('Dict','PreferUser',cbPreferUserWords.Checked);
+  reg.WriteBool('Dict','PreferNouns',cbPreferNounsAndVerbs.Checked);
+  reg.WriteBool('Dict','PreferPolite',cbPreferPolite.Checked);
+  reg.WriteBool('Dict','PreferPopular',cbPreferPopular.Checked);
   if fWordLookup<>nil then begin
     reg.WriteBool('Dict','QuickSearch',fWordLookup.aAutoPreview.Checked);
     reg.WriteBool('Dict','DeflexItalic',fWordLookup.aInflect.Checked);
