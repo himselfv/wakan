@@ -749,8 +749,9 @@ begin
       except
         on E: Exception do begin
          //Re-raise with additional comment
-          E.Message := 'Cannot autoload your last-used file: '+E.Message;
-          raise;
+          E := Exception(AcquireExceptionObject); //required for some exception
+          E.Message := 'Cannot autoload your last-used file: '#13+E.Message;
+          raise E;
         end;
       end;
     end;
