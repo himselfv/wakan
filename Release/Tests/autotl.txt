@@ -1,22 +1,74 @@
-﻿# This is not yet parsed automatically, just open it and auto-translate
-気持ち きもち
-忘れて わすれて
-生きていけないし いきていけないし
-出会い であい
-別れ わかれ
-羨ましがられる うらやましがられる
-招かれざる まねかれざる
+﻿# Auto-translate test cases
+# Words which Wakan fails to properly TL or failed to TL at some point.
+# Don't delete fixed ones, keep for tests.
+
+# It's also useful to load this in Wakan to study how it highlights the tails (additional processing by the editor).
+# This is not auto-tested at the moment.
+
+# Must be in UTF16-LE, in the format:
+#   TEXT_LINE  reading_part1 [flags1] [reading_part2 [flags2]] [...]
+
+# WHAT IT CAN TEST:
+#  - That a given decomposition is at least possible
+# WHAT IT CAN'T TEST:
+#  - That a given decomposition will be auto-selected (needs to be done)
+#  - That among identically sounding translations the correct one is chosen (e.g. いる)
+#  - Additional tail coloring (implemented in the editor)
+
+
+
+## BROKEN
+# 上手ければ うまければ 			# broken! the option is not even in the search results
+# もちろんお互いの もちろん おたがい の 		# broken! doesn't find もちろん by kana. probably needs enhanced "kana_only" for bestguessleft
+# もちろんお互いの距離感は据え置きで、だ。
+
+
+# Wrong tail
+気持ち きもち			# NOT: 気持 [きもち] + ち
+忘れて わすれる
+生きていけないし いきる いけない し
+
+# Wrong match
+出会い であい			# NOT: 出会 [しゅっかい] + い
+別れ わかれる  			# Both わかれる and わかれ are fine, though we'd prefer the latter.
+
+# Misses kana -- for cases where kana words are not detected
+さまざまな さまざま な		# Additional tail should include "な"
+ある ある
+ちなみに ちなみに
+とにかく とにかく
+どんな どんな
+あらゆる あらゆる
+ものを ものを
+この この
+
+# Misses particles:
+言葉にも ことば にも 		# NOT: に hlted as part of word instead
+四字熟語の よじじゅくご の
+
+
+明るく あかるい
+長く ながい
+可愛い かわいい
+思っちゃ おもう
+通っている かよう いる		# Slight fail - いる shouldn't be parsed as a separate word
+言いたい いう			# Not いう+たい - たい shouldn't be parsed as a separate word
+
+浮かべて うかべる
+羨ましがられる うらやむ ~しがられる  	# !! Shouldn't this be うらやましい + がる?
+
+招かれざる まねく ~れざる
+招かれざる客 まねかれざるきゃく		# There's such an expression in edict
+
 据え置き すえおき
-上手ければ うまければ # broken
-ちなみに ちなみに match
-とにかく とにかく match
-どんな どんな match
-あらゆる あらゆる match
-ものを ものを match
-もちろんお互いの もちろん match おたがい match の particle # broken
-この この "this"
-言葉にも ことば match にも particle # に hlted as part of word instead
-通っている かよっている match # いる is parsed as a separate word
-言いたい いいたい # たい is parsed as a separate word
-さまざまな さまざま match な particle
-四字熟語の よじじゅくご match の particle
+俺 おれ
+
+# Should recognize and AT LEAST highlight the root (e.g. tabe-).
+食べながら たべる ながら
+
+# Masu-form deflexion
+# Should recognize and correctly highlight the whole word:
+寝ます ねる
+## します する			# !! broken
+
+

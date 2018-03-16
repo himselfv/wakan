@@ -28,11 +28,19 @@ uses
   GUITestRunner,
   TextTestRunner,
   TestingCommon,
+  JWBCore in 'Modules\JWBCore.pas',
+  JWBSettings in 'Modules\Settings\JWBSettings.pas' {fSettings},
+  JWBLegacyMarkup in 'Modules\Vocab\JWBLegacyMarkup.pas',
+  WakanCfg in 'Modules\WakanCfg.pas',
+  JWBDic,
+  JWBDictionaries,
   TextTableTests in 'Modules\Package\TextTableTests.pas',
   JWBWakanTextTests in 'Modules\Editor\JWBWakanTextTests.pas',
   JWBComponentsTests in 'Modules\Components\JWBComponentsTests.pas',
   RaineRadicalsTests in 'Modules\KanjiList\RaineRadicalsTests.pas',
-  UpgradeFilesTests in 'Modules\LocalData\UpgradeFilesTests.pas';
+  UpgradeFilesTests in 'Modules\LocalData\UpgradeFilesTests.pas',
+  JWBDicTests in 'Modules\Dictionary\JWBDicTests.pas',
+  JWBDicSearchTests in 'Modules\Dictionary\JWBDicSearchTests.pas';
 
 {$R *.RES}
 
@@ -41,6 +49,16 @@ var
 
 begin
   Application.Initialize;
+
+  //Initialize wakan global environment
+  //We prefer to load things locally but it's not always possible.
+  LoadWakanCfg(AppFolder + '\wakan.cfg');
+  fSettings := TfSettings.Create(nil);
+  //Load exactly one standard dictionary
+  dicts.Add(dicts.NewDict('edict2.dic'));
+  dicts.PutInGroup(dicts[0], 1, true);
+  dicts[0].Load;
+
   if IsConsole then begin
     if FindCmdLineSwitch('halt') then
       ExitBehavior := rxbHaltOnFailures
