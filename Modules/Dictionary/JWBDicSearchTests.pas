@@ -28,11 +28,15 @@ uses JWBStrings, StreamUtils, Windows, TestingCommon, JWBSettings, JWBUnit;
 //Do not use with parallel processing.
 procedure TDicSearchTestCase.SetUp;
 begin
+  //Run all tests in the standard search configuration
   curlang := 'j';
   fSettings.cbPreferUserWords.Checked := false;
   fSettings.cbPreferNounsAndVerbs.Checked := true;
   fSettings.cbPreferPolite.Checked := true;
   fSettings.cbPreferPopular.Checked := true;
+  fSettings.cbShowFreq.Checked := true;
+  fSettings.cbOrderFreq.Checked := true;
+  fSettings.cbReplaceKanji.Checked := true;
 
   FSearch := TDicSearchRequest.Create();
   FSearch.st := stJapanese;
@@ -84,9 +88,16 @@ end;
 
 
 function EatNextPart(var str: string): string;
-var i_pos: integer;
+var i, i_pos: integer;
 begin
-  i_pos := pos(' ', str);
+  i_pos := 0;
+  i := 1;
+  while i < Length(str) do
+    if (str[i] = ' ') or (str[i]=#09) then begin
+      i_pos := i;
+      break;
+    end else
+      Inc(i);
   if i_pos <= 0 then begin
     Result := str;
     str := '';
@@ -96,7 +107,7 @@ begin
   Result := copy(str, 1, i_pos-1);
 
   Inc(i_pos);
-  while (i_pos <= Length(str)) and (str[i_pos]=' ') do
+  while (i_pos <= Length(str)) and ((str[i_pos]=' ') or (str[i_pos]=#09)) do
     Inc(i_pos);
   if i_pos <= Length(str) then
     str := copy(str, i_pos, MaxInt)
@@ -116,8 +127,21 @@ var expr, pattern: string;
   sl: TSearchResults;
   i: integer;
   match: PSearchResult;
+  anymatch: boolean;
 begin
   expr := EatNextPart(line);
+
+  //Handle flags
+  anymatch := false;
+  if expr = 'A' then begin
+    anymatch := true;
+    expr := EatNextPart(line);
+  end else
+  if expr = 'R' then begin
+    anymatch := false;
+    expr := EatNextPart(line);
+  end;
+
   Check(expr<>'', 'Bad test case: expression can''t be empty');
 
   sl := TSearchResults.Create;
@@ -148,6 +172,8 @@ begin
           break;
         end;
       Check(match<>nil, 'Pattern "'+pattern+'" does not match any of the results');
+      if not anymatch then
+        Check(match=sl[0], 'Priority fail, expected: "'+pattern+'", found: "'+sl[0].kana+'"');
 
       //Remove the detected chunk
       Check(match.inflen <= Length(expr));

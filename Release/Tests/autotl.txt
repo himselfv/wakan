@@ -1,17 +1,23 @@
-﻿# Auto-translate test cases
+﻿# Auto-translate test cases. Must be in UTF16-LE.
 # Words which Wakan fails to properly TL or failed to TL at some point.
 # Don't delete fixed ones, keep for tests.
 
-# It's also useful to load this in Wakan to study how it highlights the tails (additional processing by the editor).
+# It's also useful to load in Wakan to study how it highlights the tails (additional processing by the editor).
 # This is not auto-tested at the moment.
 
-# Must be in UTF16-LE, in the format:
-#   TEXT_LINE  reading_part1 [flags1] [reading_part2 [flags2]] [...]
+# Line format, separated by spaces or tabs:
+#   FLAGS EXPRESSION PATTERN1 [PATTERN2] [...] [~TAIL]
+# Where:
+#   FLAGS = none, A (any) or R (required; the default)
+#     ANY means this match must be possible, R means it must be the auto-selected match
+#   EXPRESSION = expression to decompose
+#   PATTERN1, PATTERN2, ... = deflected parts of decomposed expression
+#   TAIL = the remainder that should not be further decomposed (checked against the remainder from previous steps)
 
 # WHAT IT CAN TEST:
+#  - That a given decomposition will be auto-selected in translation
 #  - That a given decomposition is at least possible
 # WHAT IT CAN'T TEST:
-#  - That a given decomposition will be auto-selected (needs to be done)
 #  - That among identically sounding translations the correct one is chosen (e.g. いる)
 #  - Additional tail coloring (implemented in the editor)
 
@@ -21,19 +27,22 @@
 # 上手ければ うまければ 			# broken! the option is not even in the search results
 # もちろんお互いの もちろん おたがい の 		# broken! doesn't find もちろん by kana. probably needs enhanced "kana_only" for bestguessleft
 # もちろんお互いの距離感は据え置きで、だ。
+# 生きていけないし いきる いけない し		# !! BROKEN: 生き prioritizes いき, not いきる
+羨ましがられる うらやむ ~しがられる  		# !! Shouldn't this be うらやましい + がる?
 
 
 # Wrong tail
-気持ち きもち			# NOT: 気持 [きもち] + ち
+気持ち きもち				# NOT: 気持 [きもち] + ち
 忘れて わすれる
-生きていけないし いきる いけない し
 
 # Wrong match
-出会い であい			# NOT: 出会 [しゅっかい] + い
-別れ わかれる  			# Both わかれる and わかれ are fine, though we'd prefer the latter.
+出会い であい				# NOT: 出会 [しゅっかい] + い
 
-# Misses kana -- for cases where kana words are not detected
-さまざまな さまざま な		# Additional tail should include "な"
+A 別れ わかれ  				# Both わかれる and わかれ are fine, though we prefer the latter.
+A 別れ わかれる
+
+# Misses kana -- when kana words are not detected
+さまざまな さまざま な			# Additional tail should include "な"
 ある ある
 ちなみに ちなみに
 とにかく とにかく
@@ -43,7 +52,7 @@
 この この
 
 # Misses particles:
-言葉にも ことば にも 		# NOT: に hlted as part of word instead
+言葉にも ことば にも 			# NOT: に hlted as part of word instead
 四字熟語の よじじゅくご の
 
 
@@ -51,14 +60,19 @@
 長く ながい
 可愛い かわいい
 思っちゃ おもう
-通っている かよう いる		# Slight fail - いる shouldn't be parsed as a separate word
-言いたい いう			# Not いう+たい - たい shouldn't be parsed as a separate word
+
+言いたい いう				# Not いう+たい - たい shouldn't be parsed as a separate word
+
+
+A 通っている	かよう いる		# Both かよう and とおる are correct, so we accept either
+A 通っている	とおる いる		# But both must be present
+					# !Slight fail - いる shouldn't be parsed as a separate word
 
 浮かべて うかべる
-羨ましがられる うらやむ ~しがられる  	# !! Shouldn't this be うらやましい + がる?
+
 
 招かれざる まねく ~れざる
-招かれざる客 まねかれざるきゃく		# There's such an expression in edict
+招かれざる客 まねかれざるきゃく			# There's such an expression in edict
 
 据え置き すえおき
 俺 おれ
@@ -69,6 +83,6 @@
 # Masu-form deflexion
 # Should recognize and correctly highlight the whole word:
 寝ます ねる
-## します する			# !! broken
+## します する				# !! broken
 
 
