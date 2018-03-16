@@ -667,7 +667,7 @@ begin
   docfilename:='';
   FDocType := dtText;
   FDocEncoding := nil;
-  FileChanged:=false;
+  FileChanged := false;
   FullTextTranslated:=false;
 
   ViewPos := SourcePos(0, 0);
