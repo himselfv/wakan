@@ -66,6 +66,7 @@ uses
   JWBWordLookupBase in 'Modules\Dictionary\JWBWordLookupBase.pas' {fWordLookupBase},
   JWBWordLookup in 'Modules\Dictionary\JWBWordLookup.pas' {fWordLookup},
   JWBKanjiCompounds in 'Modules\Dictionary\JWBKanjiCompounds.pas' {fKanjiCompounds},
+  JWBRomaSort in 'Modules\Vocab\JWBRomaSort.pas',
   JWBVocab1 in 'Modules\Vocab\JWBVocab1.pas',
   JWBVocab in 'Modules\Vocab\JWBVocab.pas' {fVocab},
   JWBVocabDetails in 'Modules\Vocab\JWBVocabDetails.pas' {fVocabDetails},

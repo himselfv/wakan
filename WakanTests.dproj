@@ -93,6 +93,7 @@
             <Form>fSettings</Form>
         </DCCReference>
         <DCCReference Include="Modules\Vocab\JWBLegacyMarkup.pas"/>
+        <DCCReference Include="Modules\Vocab\JWBRomaSort.pas"/>
         <DCCReference Include="Modules\WakanCfg.pas"/>
         <DCCReference Include="Modules\Package\TextTableTests.pas"/>
         <DCCReference Include="Modules\Editor\JWBWakanTextTests.pas"/>

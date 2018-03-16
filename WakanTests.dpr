@@ -31,6 +31,7 @@ uses
   JWBCore in 'Modules\JWBCore.pas',
   JWBSettings in 'Modules\Settings\JWBSettings.pas' {fSettings},
   JWBLegacyMarkup in 'Modules\Vocab\JWBLegacyMarkup.pas',
+  JWBRomaSort in 'Modules\Vocab\JWBRomaSort.pas',
   WakanCfg in 'Modules\WakanCfg.pas',
   JWBDic,
   JWBDictionaries,

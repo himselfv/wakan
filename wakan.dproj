@@ -249,6 +249,7 @@
         <DCCReference Include="Modules\Dictionary\JWBKanjiCompounds.pas">
             <Form>fKanjiCompounds</Form>
         </DCCReference>
+        <DCCReference Include="Modules\Vocab\JWBRomaSort.pas"/>
         <DCCReference Include="Modules\Vocab\JWBVocab1.pas"/>
         <DCCReference Include="Modules\Vocab\JWBVocab.pas">
             <Form>fVocab</Form>

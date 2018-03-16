@@ -10,9 +10,7 @@ uses SysUtils, Classes, JWBStrings,
   JWBDicSearch,
   JWBCharData,
   JWBSettings,
-{$IFNDEF AUTOTEST}
-  JWBUserData,
-{$ENDIF}
+  JWBRomaSort,
   JWBUnit;
 
 procedure LoadWakanCfg(const filename: string);
