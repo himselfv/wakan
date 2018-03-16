@@ -824,12 +824,10 @@ begin
   else
     LoadAnnotMode := amNone;
 
-  Self.Caption:= _l(EditorWindowTitle) + ' - ' + ExtractFilename(AFilename);
   doc.Clear;
   InvalidateLines;
   Screen.Cursor:=crHourGlass;
   try
-
     ViewPos:=SourcePos(0,0);
     rcur:=SourcePos(0,0);
     mustrepaint:=true;
@@ -840,6 +838,9 @@ begin
       dtText: doc.LoadText(docfilename, AEncoding, LoadAnnotMode);
       dtWakanText: doc.LoadWakanText(docfilename);
     end;
+
+    //Set the caption after we've loaded the text -- it could fail
+    Self.Caption:= _l(EditorWindowTitle) + ' - ' + ExtractFilename(AFilename);
 
     ShowText(true);
 

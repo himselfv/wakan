@@ -731,31 +731,6 @@ begin
 
     Self.ApplyUI;
 
-   { Open file in the editor }
-    if fEditor<>nil then begin
-      fEditor.FileChanged := false;
-     //Explicitly specified file
-      if Command='open' then begin
-        fEditor.OpenAnyFile(OpenParams.Filename);
-       //Press "Editor" programmatically
-        tab3.Down := true;
-        TabControl1Change(tab3);
-      end else
-     //Last opened file in Editor
-      if (fSettings.cbEditorAutoloadLast.Checked) and (fEditor.docfilename<>'') then
-      try
-        fEditor.OpenFile(fEditor.docfilename, fEditor.DocType,
-          fEditor.DocEncoding);
-      except
-        on E: Exception do begin
-         //Re-raise with additional comment
-          E := Exception(AcquireExceptionObject); //required for some exception
-          E.Message := 'Cannot autoload your last-used file: '#13+E.Message;
-          raise E;
-        end;
-      end;
-    end;
-
     initdone:=true;
   except
     on E: EBadUsage do begin
@@ -782,9 +757,46 @@ begin
   end;
 
   Self.Enabled := true;
-
-
   ScreenTimer.Enabled:=true;
+
+ //The neccessary initialization is finished, failures in the rest should not terminate the app
+  try
+
+   { Open file in the editor. }
+    if fEditor<>nil then begin
+     //Explicitly specified file
+      if Command='open' then begin
+        fEditor.OpenAnyFile(OpenParams.Filename);
+       //Press "Editor" programmatically
+        tab3.Down := true;
+        TabControl1Change(tab3);
+      end else
+
+     //Last opened file in Editor
+      if fSettings.cbEditorAutoloadLast.Checked and (fEditor.docfilename<>'') then
+      try
+        fEditor.OpenFile(fEditor.docfilename, fEditor.DocType,
+          fEditor.DocEncoding);
+      except
+        on E: Exception do begin
+         //Re-raise with additional comment
+          E := Exception(AcquireExceptionObject); //required for some exception
+          E.Message := 'Cannot autoload your last-used file: '#13+E.Message;
+          raise E;
+        end;
+      end;
+    end;
+
+  except
+    on E: EAbort do begin end;
+    on E: Exception do begin
+      Application.MessageBox(
+        pchar(E.Message+' ('+E.Classname+')'),
+        pchar('Error'),
+        MB_ICONERROR or MB_OK
+      );
+    end;
+  end;
 
  { Done. }
 end;
