@@ -1379,12 +1379,12 @@ wasfull
 procedure TDicSearchRequest.Search(search: string; sl: TSearchResults; wt: TEvalCharType);
 var i,di:integer;
 begin
+  wasfull:=true;
   if search='' then exit;
   mess := nil;
   se.Clear;
   presentl.Clear;
 
-  wasfull:=true;
   nowt:=now;
 
   MakeLookupList(se, search, wt);

@@ -265,6 +265,7 @@ begin
   aMatchAnywhere.Enabled:=true;
 
   aInflect.Enabled := not (ANewMode in [lmEditorInsert]); //Editor mode always uses deflexion, so disable the choice
+  aAutoPreview.Enabled := not (ANewMode in [lmEditorInsert]);
 
  {$IFDEF SEARCH_BUTTON_CAPTION}
   if (not aAutoPreview.Checked) or aMatchAnywhere.Checked then
@@ -272,6 +273,8 @@ begin
   else
     btnSearch.Caption:=_l('#00670^eAll');
  {$ENDIF}
+
+   btnSearch.Enabled := true; //Reenable the search button because this is a new request
 
   if ANewMode = lmEn then begin
     if aMatchRight.Checked or aMatchAnywhere.Checked then
@@ -574,7 +577,8 @@ begin
     else
       text:=_l('#00672^eSearch results');
     btnSearch.Visible := not wasfull  //have more results
-       or ((req.MaxWords<=0) and not btnSearch.Enabled); //just clicked on "Show all" - keep the disabled button
+       or ((req.MaxWords<=0) and not btnSearch.Enabled //HAD more results but clicked on "Show all" - keep the disabled button
+           and (lm <> lmEditorInsert));                //in editor-insert mode hide the disabled button anyway
     case lm of
       lmJp: text:=text+' '+_l('#00673^eby phonetic');
       lmEn: text:=text+' '+_l('#00674^eby meaning');
