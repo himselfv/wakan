@@ -234,7 +234,8 @@ begin
     btnLookupClip.Down := false;
 
 //    edtSearchText.Visible := false;
-//    btnManualMode.Visible := true;
+    btnLookupMode.Visible := false;
+    btnManualMode.Visible := true;
   end else begin
     aLookupAuto.Enabled := true;
     aLookupJtoE.Enabled := true;
@@ -243,7 +244,9 @@ begin
     btnLookupMode.Enabled := true;
     btnLookupClip.Down := aLookupClip.Checked;
 
-//    btnManualMode.Visible := false;
+    btnManualMode.Visible := false;
+    btnLookupMode.Visible := true;
+    btnLookupMode.Left := bevel4.Left + bevel4.Width;
 //    edtSearchText.Visible := true;
   end;
 

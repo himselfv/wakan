@@ -350,7 +350,7 @@ inherited fWordLookup: TfWordLookup
       ExplicitLeft = 595
     end
     object Bevel4: TBevel
-      Left = 238
+      Left = 112
       Top = 0
       Width = 4
       Height = 23
@@ -359,20 +359,19 @@ inherited fWordLookup: TfWordLookup
       ExplicitLeft = 225
     end
     object btnManualMode: TSpeedButton
-      Left = 0
+      Left = 116
       Top = 0
-      Width = 206
+      Width = 126
       Height = 23
       Hint = '#01241^Click to type into the search box'
-      Align = alClient
+      Align = alRight
       AllowAllUp = True
       Caption = '#01240^Manual lookup'
       OnClick = btnManualModeClick
-      ExplicitLeft = -19
-      ExplicitWidth = 73
+      ExplicitLeft = 176
     end
     object btnSearch: TBitBtn
-      Left = 206
+      Left = 80
       Top = 0
       Width = 32
       Height = 23
@@ -403,11 +402,12 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       TabOrder = 2
       OnClick = btnSearchClick
+      ExplicitLeft = 206
     end
     object edtSearchText: TEdit
       Left = 0
       Top = 0
-      Width = 206
+      Width = 80
       Height = 23
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
@@ -421,6 +421,7 @@ inherited fWordLookup: TfWordLookup
       OnChange = edtSearchTextChange
       OnClick = edtSearchTextClick
       OnKeyPress = edtSearchTextKeyPress
+      ExplicitWidth = 206
       ExplicitHeight = 24
     end
     object btnLookupMode: TWinSpeedButton
