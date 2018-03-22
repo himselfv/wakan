@@ -233,7 +233,6 @@ begin
     btnLookupMode.Enabled := false;
     btnLookupClip.Down := false;
 
-//    edtSearchText.Visible := false;
     btnLookupMode.Visible := false;
     btnManualMode.Visible := true;
   end else begin
@@ -247,7 +246,6 @@ begin
     btnManualMode.Visible := false;
     btnLookupMode.Visible := true;
     btnLookupMode.Left := bevel4.Left + bevel4.Width;
-//    edtSearchText.Visible := true;
   end;
 
   if (ANewMode in [lmAuto, lmJp, lmEn]) and not aLookupClip.Checked then
