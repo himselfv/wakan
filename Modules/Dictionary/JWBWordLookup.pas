@@ -59,6 +59,7 @@ type
     aDictGroup3: TAction;
     aMatchAnywhere: TAction;
     aEditorInsert: TAction;
+    btnManualMode: TSpeedButton;
     procedure edtSearchTextChange(Sender: TObject);
     procedure edtSearchTextClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -74,9 +75,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure miLookupEtoJClick(Sender: TObject);
     procedure aLookupClipExecute(Sender: TObject);
-    procedure FormMouseActivate(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y, HitTest: Integer;
-      var MouseActivate: TMouseActivate);
+    procedure btnManualModeClick(Sender: TObject);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -129,14 +128,6 @@ begin
   if edtSearchText.Enabled then edtSearchText.SetFocus;
   Look();
   Clipboard.Watchers.Add(Self.ClipboardChanged);
-end;
-
-procedure TfWordLookup.FormMouseActivate(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y, HitTest: Integer;
-  var MouseActivate: TMouseActivate);
-begin
-  //When in editor-insert mode, reactivate manual mode when the user switches to our window
-  Self.RestoreLookupMode;
 end;
 
 procedure TfWordLookup.SetDefaultColumnWidths;
@@ -241,6 +232,9 @@ begin
     aLookupClip.Enabled := false;
     btnLookupMode.Enabled := false;
     btnLookupClip.Down := false;
+
+//    edtSearchText.Visible := false;
+//    btnManualMode.Visible := true;
   end else begin
     aLookupAuto.Enabled := true;
     aLookupJtoE.Enabled := true;
@@ -248,6 +242,9 @@ begin
     aLookupClip.Enabled := true;
     btnLookupMode.Enabled := true;
     btnLookupClip.Down := aLookupClip.Checked;
+
+//    btnManualMode.Visible := false;
+//    edtSearchText.Visible := true;
   end;
 
   if (ANewMode in [lmAuto, lmJp, lmEn]) and not aLookupClip.Checked then
@@ -687,6 +684,15 @@ end;
 procedure TfWordLookup.btnExamplesClick(Sender: TObject);
 begin
   fMenu.aDictExamples.Execute;
+end;
+
+procedure TfWordLookup.btnManualModeClick(Sender: TObject);
+begin
+  inherited;
+  //When in editor-insert mode, reactivate manual mode when the user clicks at the edit box
+  //Do not reactivate on a simple form-click because the user might want to copy
+  //the results of the automatic search.
+  Self.RestoreLookupMode;
 end;
 
 end.

@@ -358,6 +358,19 @@ inherited fWordLookup: TfWordLookup
       Shape = bsSpacer
       ExplicitLeft = 225
     end
+    object btnManualMode: TSpeedButton
+      Left = 0
+      Top = 0
+      Width = 206
+      Height = 23
+      Hint = '#01241^Click to type into the search box'
+      Align = alClient
+      AllowAllUp = True
+      Caption = '#01240^Manual lookup'
+      OnClick = btnManualModeClick
+      ExplicitLeft = -19
+      ExplicitWidth = 73
+    end
     object btnSearch: TBitBtn
       Left = 206
       Top = 0
