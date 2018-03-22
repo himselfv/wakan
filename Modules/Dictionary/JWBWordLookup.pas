@@ -74,6 +74,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure miLookupEtoJClick(Sender: TObject);
     procedure aLookupClipExecute(Sender: TObject);
+    procedure FormMouseActivate(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y, HitTest: Integer;
+      var MouseActivate: TMouseActivate);
 
   protected
     procedure ClipboardChanged(Sender: TObject);
@@ -126,6 +129,14 @@ begin
   if edtSearchText.Enabled then edtSearchText.SetFocus;
   Look();
   Clipboard.Watchers.Add(Self.ClipboardChanged);
+end;
+
+procedure TfWordLookup.FormMouseActivate(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y, HitTest: Integer;
+  var MouseActivate: TMouseActivate);
+begin
+  //When in editor-insert mode, reactivate manual mode when the user switches to our window
+  Self.RestoreLookupMode;
 end;
 
 procedure TfWordLookup.SetDefaultColumnWidths;
