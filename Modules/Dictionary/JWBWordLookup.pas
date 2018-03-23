@@ -690,13 +690,21 @@ begin
   fMenu.aDictExamples.Execute;
 end;
 
+{
+Switches back to user input when in editor-insert mode. This allows the user to type
+manual searches in the editor dictionary panel.
+Do not reactivate on a simple form-click because the user might want to browse
+or copy the automatic results.
+}
 procedure TfWordLookup.btnManualModeClick(Sender: TObject);
 begin
   inherited;
-  //When in editor-insert mode, reactivate manual mode when the user clicks at the edit box
-  //Do not reactivate on a simple form-click because the user might want to copy
-  //the results of the automatic search.
   Self.RestoreLookupMode;
+  //Forcefully steal focus because even after switching to manual, we might
+  //be in Clipboard mode where the editbox won't steal it automatically.
+  //And we need it stolen, so the Editor knows it's not in charge anymore.
+  if not edtSearchText.Enabled or not edtSearchText.Focused then
+    Self.SetFocus();
 end;
 
 end.
