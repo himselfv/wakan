@@ -402,7 +402,6 @@ inherited fWordLookup: TfWordLookup
       ParentFont = False
       TabOrder = 2
       OnClick = btnSearchClick
-      ExplicitLeft = 206
     end
     object edtSearchText: TEdit
       Left = 0
@@ -421,7 +420,6 @@ inherited fWordLookup: TfWordLookup
       OnChange = edtSearchTextChange
       OnClick = edtSearchTextClick
       OnKeyPress = edtSearchTextKeyPress
-      ExplicitWidth = 206
       ExplicitHeight = 24
     end
     object btnLookupMode: TWinSpeedButton

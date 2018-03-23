@@ -234,6 +234,9 @@ begin
     btnLookupClip.Down := false;
 
     btnLookupMode.Visible := false;
+    //When aligning things in alRight sequence, you have to align with their right
+    //borders, against the right neighbour
+    btnManualMode.Left := btnLookupClip.Left - btnManualMode.Width + 1;
     btnManualMode.Visible := true;
   end else begin
     aLookupAuto.Enabled := true;
@@ -244,8 +247,8 @@ begin
     btnLookupClip.Down := aLookupClip.Checked;
 
     btnManualMode.Visible := false;
+    btnLookupMode.Left := btnLookupClip.Left - btnLookupMode.Width + 1; //put to the left of clipboard button
     btnLookupMode.Visible := true;
-    btnLookupMode.Left := bevel4.Left + bevel4.Width;
   end;
 
   if (ANewMode in [lmAuto, lmJp, lmEn]) and not aLookupClip.Checked then
