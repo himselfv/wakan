@@ -8,13 +8,15 @@ uses
 
 { Shows results from JWBDict.fDict dictionary lookup in another form,
  suited for giving the user hints as they type. }
+{ Ought to be non-activable }
 
 type
   TfEditorHint = class(TForm)
     PaintBox1: TWakanPaintbox;
     procedure PaintBox1Paint(Sender: TObject; Canvas: TCanvas);
   protected
-    FShowing: boolean;
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure WMMouseActivate(var Message: TWMMouseActivate); message WM_MOUSEACTIVATE;
   public
     procedure ShowHint(pos: TPoint);
     procedure Hide; reintroduce;
@@ -24,6 +26,19 @@ implementation
 uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup;
 
 {$R *.DFM}
+
+procedure TfEditorHint.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  //Do not activate by mouse click
+  Params.ExStyle := Params.ExStyle + WS_EX_NOACTIVATE;
+end;
+
+procedure TfEditorHint.WMMouseActivate(var Message: TWMMouseActivate);
+begin
+  //Again, do not activate by mouse click
+  Message.Result := MA_NOACTIVATE;
+end;
 
 { If configured to, shows hint at the position determined by APos.
  To hide it, simply call Hide(). }
@@ -41,22 +56,16 @@ begin
 
   if fSettings.cbHintMeaning.Checked then Self.Height:=44 else Self.Height:=22;
 
- //There's some trouble going on when the form is showing:
- //the host deactivates, tries to Hide us which leads to Hiding in the middle of Showing().
- //Until I fix this I'm keeping this inherited solution with flags.
-  FShowing := true;
-  try
-    Self.Show;
-    Self.Invalidate;
-    PaintBox1.Invalidate; //because the form can be double buffered and consider buffer valid on redraw
-  finally
-    FShowing := false;
-  end;
+  //We do not want to be activated when shown. Do not call Show() use a trick:
+  //ShowWindow(NOACTIVATE) + Visible
+  ShowWindow(Self.Handle, SW_SHOWNOACTIVATE);
+  Self.Visible := True;
+  Self.Invalidate;
+  PaintBox1.Invalidate; //because the form can be double buffered and consider buffer valid on redraw
 end;
 
 procedure TfEditorHint.Hide;
 begin
-  if FShowing then exit;
   if Visible then inherited Hide;
 end;
 

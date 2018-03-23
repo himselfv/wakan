@@ -382,6 +382,7 @@ type
   public
     procedure ShowHint;
     procedure HideHint;
+    procedure UpdateHintVisibility;
 
   protected { Provisional insert.
     Recently typed part of the text, colored in a special way, can be altered
@@ -462,6 +463,7 @@ type
     procedure ClearInsBlock;
     procedure CloseInsert;
     function TryReleaseCursorFromInsert: boolean;
+    procedure RequeryDictSuggestions;
     function NextSuggestion(const ANext: boolean): boolean;
     function ConvertImmediateChar(const c: char): char;
     function ConvertImmediateChars(const str: FString): FString;
@@ -752,6 +754,9 @@ end;
 procedure TfEditor.FormActivate(Sender: TObject);
 begin
   ListBox1.SetFocus;
+  if (fWordLookup <> nil) and (fWordLookup.LookupMode <> lmEditorInsert) then
+    RequeryDictSuggestions();
+  UpdateHintVisibility;
 end;
 
 procedure TfEditor.FormDeactivate(Sender: TObject);
@@ -2121,12 +2126,19 @@ begin
   p.x:=p.x+tmp.x*Self.lastxsiz;
   p.y:=p.y+(tmp.y+1-Self.View)*Self.lastxsiz*Self.lastycnt;
   fEditorHint.ShowHint(p);
-  ListBox1.SetFocus;
 end;
 
 procedure TfEditor.HideHint;
 begin
   if (fEditorHint<>nil) and fEditorHint.Visible then fEditorHint.Hide;
+end;
+
+//Shows or hides the hint window as appropriate to the situation. Does not reset
+//the suggestion list or our position in it
+procedure TfEditor.UpdateHintVisibility;
+begin
+  if fWordLookup<>nil then
+    if (not fWordLookup.IsEmpty) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
 function TfEditor.PaintBoxClientRect: TRect;
@@ -2177,11 +2189,8 @@ begin
     dragstart.y:=rcur.y;
   end;
 
-  if fWordLookup<>nil then begin
-    fWordLookup.LookupMode := lmEditorInsert;
-    if dolook and fWordLookup.Visible or (FInputBuffer<>'') then
-      fWordLookup.Look()
-  end;
+  if dolook then
+    RequeryDictSuggestions;
 
   //In any mode except active typing show char under cursor
   if (fKanjiDetails<>nil) and dolook and (FInputBuffer='') then begin
@@ -2200,8 +2209,7 @@ begin
   mustrepaint:=false;
   shiftpressed:=false;
   UpdateScrollbar;
-  if fWordLookup<>nil then
-      if (not fWordLookup.IsEmpty) and (ins.x<>-1) then Self.ShowHint else HideHint;
+  UpdateHintVisibility;
 end;
 
 { Converts startdrag+cursor positions to block selection. }
@@ -3107,6 +3115,26 @@ begin
   end;
  //Convert characters which weren't taken by kana parser
   Result := ConvertImmediateChars(Result);
+end;
+
+{
+Switches the attached dictionary to the editor insert mode and asks to repopulate
+the list of its typing / translation suggestions.
+Called every time:
+ * an input text changes,
+ * an input text is empty and cursor position changes (for tl suggestions)
+ * an attached dictionary has lost our context for some reason.
+Resets the currently selected suggestion.
+}
+procedure TfEditor.RequeryDictSuggestions;
+begin
+  if fWordLookup = nil then exit;
+  if fWordLookup.LookupMode <> lmEditorInsert then
+    fWordLookup.LookupMode := lmEditorInsert;
+  //Currently the WordLookup itself chooses where to look (InputBuffer or
+  //the word under the cursor)
+  if fWordLookup.Visible or (FInputBuffer<>'') then
+    fWordLookup.Look()
 end;
 
 { If the suggestion box is open, moves to the next/previous suggestions.
