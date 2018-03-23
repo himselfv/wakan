@@ -2991,7 +2991,8 @@ Can be called several times, updating the provisional insert with the currently
 focused suggestion }
 procedure TfEditor.ResolveInsert(AAcceptSuggestion: boolean);
 var inskana: string;
-  kanjiRoot, kanaRoot: string;
+  expr, kana: string;
+  exprRoot, kanaRoot: string;
   i:integer;
   insText: string;
   insProp: TCharacterPropArray;
@@ -3016,26 +3017,42 @@ begin
       tl := @curTl;
     end else
       curTl.Reset;
-    //Delete common ending
-    kanjiRoot := curTl.kanji;
-    kanaRoot := curTl.kana;
-    while (kanjiRoot<>'') and (kanaRoot<>'') and (fgetch(kanjiRoot,flength(kanjiRoot))=fgetch(kanaRoot,flength(kanaRoot))) do
+
+    expr := curTl.kanji;
+    kana := curTl.kana;
+
+    //Kana-only words might be imported with either empty expr, empty kana or expr=kana
+    //Let's handle all these cases well
+    //If either of them is empty, assume kanji==kana (otherwise we'll do weird substitutions)
+    if expr = '' then
+      expr := kana
+    else
+      if kana = '' then
+        kana := expr;
+
+    //Normally, katakana-only words are stored as expr=katakana, read=hiragana
+    //and don't need special treatment (e.g. サボる/さぼる).
+    //But sometimes both are kata: サボる/サボる, or even something more evil:
+    //  仕事をサボる/しごとをサボる
+    //To figure out the root we need the reading fully in hiragana:
+    kana := ToHiragana(kana);
+
+    //Delete common ending.
+    exprRoot := expr;
+    kanaRoot := kana;
+    while (exprRoot<>'') and (kanaRoot<>'') and (fgetch(exprRoot,flength(exprRoot))=fgetch(kanaRoot,flength(kanaRoot))) do
     begin
-      fdelete(kanjiRoot,flength(kanjiRoot),1);
+      fdelete(exprRoot,flength(exprRoot),1);
       fdelete(kanaRoot,flength(kanaRoot),1);
     end;
-    //Katakana-only words might be imported with either empty kanji, empty kana or kanji=kana
-    //Let's handle all these cases well
-    if (curTl.kanji='') or (curTl.kana='') then begin
-      //If either of them is empty, assume kanji==kana (otherwise we'll do weird substitutions)
-      kanjiRoot := '';
-      kanaRoot := '';
-    end;
-    //If kanji==kana and both roots are now empty, we don't need special treatment
-    insText := kanjiRoot+copy(inskana,length(kanaRoot)+1,length(inskana)-length(kanaRoot)); //use kanji/hiragana/whatever + tail
+    //Empty roots mean the whole word is identical in expr and kana forms.
+
+    //Default case works for normal expr/read pairs, for kata/hira and for hira/hira alike
+    insText := exprRoot+copy(inskana,length(kanaRoot)+1,length(inskana)-length(kanaRoot)); //use kanji/hiragana/whatever + tail
     //Our existing search result is tailored for the request we did in kana
     //If we're replacing kana with kanji, we need to adjust the result we're attaching to it
-    curTL.inflen := curTl.inflen + (flength(kanaRoot) - flength(kanjiRoot));
+    curTL.inflen := curTl.inflen + (flength(kanaRoot) - flength(exprRoot));
+
     SetProvisionalInsert(insText,nil);
   end else
   begin
