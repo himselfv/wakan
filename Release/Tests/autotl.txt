@@ -62,6 +62,7 @@ A 別れ わかれる
 思っちゃ おもう
 
 言いたい いう				# Not いう+たい - たい shouldn't be parsed as a separate word
+					# Also not ゆう - even though edict2 also lists this as "popular" reading for 言う (wrongly). We have to rely on their order to prefer いう.
 
 
 A 通っている	かよう いる		# Both かよう and とおる are correct, so we accept either

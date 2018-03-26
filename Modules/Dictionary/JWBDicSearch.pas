@@ -1653,6 +1653,16 @@ begin
           sort := sort + 10000 - freq;
       end;
 
+     {
+      Sometimes dictionaries rely on the entry order. Edict2 lists both いう and ゆう
+      as "popular" readings for 言う, but いう is much more common.
+      Same with articles, popular matches for the same expression might be placed first.
+
+      This is just a hack, but hopefully the converted dictionary keeps the original order,
+      so let's give earlier matches for the same guess _slightly_ more preference.
+     }
+      sort := sort + matchCount;
+
      //Fill in current result
       scur.Reset;
       scur.userindex := UserIndex;
