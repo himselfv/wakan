@@ -2,6 +2,8 @@ unit JWBLanguage;
 {
 Everything related to loading, applying, choosing a translation.
 Unicode-safe.
+
+Translation files have to be in UTF16LE with BOM.
 }
 
 interface
