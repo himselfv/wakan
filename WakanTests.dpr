@@ -56,7 +56,7 @@ begin
   LoadWakanCfg(AppFolder + '\wakan.cfg');
   fSettings := TfSettings.Create(nil);
   //Load exactly one standard dictionary
-  dicts.Add(dicts.NewDict('edict2.dic'));
+  dicts.Add(dicts.NewDict(AppFolder+'\edict2.dic'));
   dicts.PutInGroup(dicts[0], 1, true);
   dicts[0].Load;
 
