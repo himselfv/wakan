@@ -3037,7 +3037,7 @@ begin
     //To figure out the root we need the reading fully in hiragana:
     kana := ToHiragana(kana);
 
-    //Delete common ending.
+    //Delete common ending
     exprRoot := expr;
     kanaRoot := kana;
     while (exprRoot<>'') and (kanaRoot<>'') and (fgetch(exprRoot,flength(exprRoot))=fgetch(kanaRoot,flength(kanaRoot))) do
@@ -3047,11 +3047,21 @@ begin
     end;
     //Empty roots mean the whole word is identical in expr and kana forms.
 
-    //Default case works for normal expr/read pairs, for kata/hira and for hira/hira alike
-    insText := exprRoot+copy(inskana,length(kanaRoot)+1,length(inskana)-length(kanaRoot)); //use kanji/hiragana/whatever + tail
-    //Our existing search result is tailored for the request we did in kana
-    //If we're replacing kana with kanji, we need to adjust the result we're attaching to it
-    curTL.inflen := curTl.inflen + (flength(kanaRoot) - flength(exprRoot));
+    if not StartsStr(inskana, kanaRoot) then begin
+     //In rare weird cases inskana differs from the match kana - e.g. when the match
+     //is by exact db-roma while inskana is converted with user-roma or even fails
+     //to convert at all.
+     //There isn't much we can do here but replace the whole input with the match.
+      insText := expr;
+      curTL.inflen := flength(instext);
+    end else begin
+      //Replace the root with it's expr version
+      //Default case works for normal expr/read pairs, for kata/hira and for hira/hira alike
+      insText := exprRoot+copy(inskana,length(kanaRoot)+1,length(inskana)-length(kanaRoot)); //use kanji/hiragana/whatever + tail
+      //Our existing search result is tailored for the request we did in kana
+      //If we're replacing kana with kanji, we need to adjust the result we're attaching to it
+      curTL.inflen := curTl.inflen + (flength(kanaRoot) - flength(exprRoot));
+    end;
 
     SetProvisionalInsert(insText,nil);
   end else
