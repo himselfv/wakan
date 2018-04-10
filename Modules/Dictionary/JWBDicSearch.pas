@@ -227,7 +227,7 @@ Search itself.
 type
   TSearchType = (
     stJapanese,     //japanese text in Unicode
-    stRomaji,       //romaji input
+    stRomaji,       //romaji input (in user preferred romaji system)
     stEnglish       //english text
   );
 
@@ -1013,43 +1013,38 @@ procedure TDicSearchRequest.MakeLookupList(se: TCandidateLookupList; search: str
   wt: TEvalCharType);
 var _s: string;
   i: integer;
-  tmpkana: string;
+  searchKana: string;
   addGuess: boolean;
   prior: integer;
 begin
   case st of
     stRomaji: begin
-     //Add exact kunrei roma first, if there's anything that looks like it
+     //Convert user-romaji to kana as an intermediate,
+     //since the request could be in a different romaji system (ex. mujun instead of mudjun)
+      if curlang='j'then
+        searchKana:=RomajiToKana('H'+search,'j',[rfReplaceInvalidChars])
+      else
+        searchKana:=RomajiToKana(search,'c',[rfReplaceInvalidChars]);
+
+     //If the conversion was less than perfect use lower priority
+      if pos('?', searchKana) > 0 then begin
+        prior := 6;
+        searchKana := repl(searchKana, '?', '');
+      end  else
+        prior := 9;
+      if searchKana <> '' then begin //even after repl('?','')
+        if AutoDeflex then
+          Deflex(searchKana, se, prior, prior-1, true);
+       //In any case add non-deflexed kana translation
+        se.Add(prior, flength(searchKana), 'F', rtNormal, searchKana);
+      end;
+
+     //Add exact original romaji (it's user-roma and not db-roma, but who knows?)
       search := SignatureFrom(search);
       if search <> '' then
         se.Add(9,length(search),'F',rtRoma,search);
 
-     //Try to convert romaji to kana if possible for some deeper analysis
-      tmpkana := '';
-      if AutoDeflex or (MatchType = mtBestGuessLeft) then
-        if curlang='j'then
-          tmpkana:=RomajiToKana('H'+search,'j',[rfReplaceInvalidChars])
-        else
-          tmpkana:=RomajiToKana(search,'c',[rfReplaceInvalidChars]);
-
-     //We still try to run auto deflexion even for romaji if we have kana
-      if AutoDeflex then begin
-        if pos('?',tmpkana) > 0 then begin
-         //Deflex with lower priority since this is probably a wrong decoding of roma
-          prior := 6;
-          tmpkana := repl(tmpkana, '?', '');
-        end  else
-          prior := 9;
-
-        if tmpkana <> '' then begin //even after repl('?','')
-          Deflex(tmpkana, se, prior, prior-1, true);
-         //in any case add non-deflexed kana translation,
-         //since the request could be in different romaji system (ex. mujun instead of mudjun)
-          se.Add(prior, flength(tmpkana), 'F', rtNormal, tmpkana);
-        end;
-      end;
-
-     //Add shortened guesses if requested - no deflexion though
+     //Add shortened roma guesses if requested - no deflexion though
       if MatchType = mtBestGuessLeft then
         for i:=flength(search)-1 downto 2 do begin //no less than 2 chars because 1 char roma lookups are pointless (I think)
           //The longer the cut, the lower the priority
@@ -1062,6 +1057,7 @@ begin
 
     stEnglish:
       se.Add(9, 1, 'F', rtNormal, search);
+
     stJapanese: begin
       //Ignore all weird word types - the auto-translation speed may depend on
       //not looking at the clearly wrong candidates
@@ -1355,9 +1351,9 @@ Search()
 Searches the dictionary for all candidate translations to the line.
 search
   string to look for:
-    romaji in stJp
-    english/other "translated" language in stEn
-    kanji/kana/whatever in stEditor/stClipboard
+    stJp: romaji (in user preferred romaji system)
+    stEn: english/other "translated" language
+    stEditor/stClipboard: kanji/kana/whatever
 wt
   Word type hint. Only used for stJapanese mode.
     EC_HIRAGANA: A hiragana-only or hiragana-leading word, perhaps a particle.
