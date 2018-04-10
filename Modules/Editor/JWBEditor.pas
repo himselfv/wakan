@@ -3047,7 +3047,7 @@ begin
     end;
     //Empty roots mean the whole word is identical in expr and kana forms.
 
-    if not StartsStr(inskana, kanaRoot) then begin
+    if (kanaRoot <> '') and not StartsStr(kanaRoot, inskana) then begin
      //In rare weird cases inskana differs from the match kana - e.g. when the match
      //is by exact db-roma while inskana is converted with user-roma or even fails
      //to convert at all.
