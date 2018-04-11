@@ -37,7 +37,8 @@ uses
   PortabilitySettings in 'Modules\LocalData\PortabilitySettings.pas' {PortabilitySettingsPage},
   UpgradeFiles in 'Modules\LocalData\UpgradeFiles.pas' {fUpgradeFiles},
   JWBSettings in 'Modules\Settings\JWBSettings.pas' {fSettings},
-  UnicodeFont in 'Modules\Settings\UnicodeFont.pas' {fSelectFont},
+  JWBFontSettings in 'Modules\Settings\JWBFontSettings.pas' {FontSettingsPage},
+  JWBFontSelect in 'Modules\Settings\JWBFontSelect.pas' {fSelectFont},
   JWBCharItem in 'Modules\Settings\JWBCharItem.pas' {fCharItem},
   JWBUserData in 'Modules\UserData\JWBUserData.pas',
   JWBCategories in 'Modules\UserData\JWBCategories.pas',
@@ -116,6 +117,8 @@ begin
   Application.CreateForm(TfVocabFilters, fVocabFilters);
   Application.CreateForm(TfEditor, fEditor);
   Application.CreateForm(TfExamples, fExamples);
+  Application.CreateForm(TFontSettingsPage, FontSettingsPage);
+  JWBFontSettings.Register;
   PortabilitySettings.Register;
   AnnotationsSettings.Register;
 

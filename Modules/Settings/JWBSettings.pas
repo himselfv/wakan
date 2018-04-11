@@ -14,34 +14,6 @@ type
     tsCharacterList: TTabSheet;
     rgKanjiGridSize: TRadioGroup;
     CheckBox1: TCheckBox;
-    tsFonts: TTabSheet;
-    GroupBox1: TGroupBox;
-    Label1: TLabel;
-    Edit1: TEdit;
-    SpeedButton1: TSpeedButton;
-    Label2: TLabel;
-    Edit2: TEdit;
-    SpeedButton2: TSpeedButton;
-    Label4: TLabel;
-    SpeedButton4: TSpeedButton;
-    Edit4: TEdit;
-    GroupBox2: TGroupBox;
-    Label6: TLabel;
-    SpeedButton6: TSpeedButton;
-    Label7: TLabel;
-    SpeedButton7: TSpeedButton;
-    Label8: TLabel;
-    SpeedButton8: TSpeedButton;
-    Edit6: TEdit;
-    Edit7: TEdit;
-    Edit8: TEdit;
-    Label3: TLabel;
-    SpeedButton3: TSpeedButton;
-    Edit3: TEdit;
-    Label9: TLabel;
-    SpeedButton9: TSpeedButton;
-    Edit9: TEdit;
-    Label10: TLabel;
     tsDictionary: TTabSheet;
     GroupBox3: TGroupBox;
     cbPreferUserWords: TCheckBox;
@@ -99,7 +71,6 @@ type
     Label27: TLabel;
     rgShowBopomofo: TRadioGroup;
     edtTestPinyin: TEdit;
-    Button5: TButton;
     tsCharacterDetailsItems: TTabSheet;
     Label34: TLabel;
     ListBox2: TListBox;
@@ -148,16 +119,7 @@ type
     Label46: TLabel;
     edtScreenTipMinCompounds: TEdit;
     edtScreenTipMaxCompounds: TEdit;
-    Label50: TLabel;
-    Edit32: TEdit;
-    SpeedButton13: TSpeedButton;
     cbYomiIgnoreOkurigana: TCheckBox;
-    Label5: TLabel;
-    SpeedButton5: TSpeedButton;
-    Edit5: TEdit;
-    Label51: TLabel;
-    SpeedButton14: TSpeedButton;
-    Edit33: TEdit;
     cbShowFreq: TCheckBox;
     cbOrderFreq: TCheckBox;
     Edit34: TEdit;
@@ -269,19 +231,8 @@ type
     mmKanjiCopyFormatExample: TMemo;
     procedure RadioGroup1Click(Sender: TObject);
     procedure btnChangeLanguageClick(Sender: TObject);
-    procedure SpeedButton1Click(Sender: TObject);
-    procedure SpeedButton4Click(Sender: TObject);
-    procedure SpeedButton5Click(Sender: TObject);
-    procedure SpeedButton2Click(Sender: TObject);
-    procedure SpeedButton6Click(Sender: TObject);
-    procedure SpeedButton7Click(Sender: TObject);
-    procedure SpeedButton8Click(Sender: TObject);
-    procedure SpeedButton3Click(Sender: TObject);
-    procedure SpeedButton9Click(Sender: TObject);
-    procedure SpeedButton10Click(Sender: TObject);
-    procedure SpeedButton13Click(Sender: TObject);
-    procedure SpeedButton14Click(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
+    procedure SpeedButton10Click(Sender: TObject);
     procedure edtTestRomajiChange(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -290,7 +241,6 @@ type
     procedure lbWordPrintFormatClick(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure edtTestPinyinChange(Sender: TObject);
-    procedure Button5Click(Sender: TObject);
     procedure Button7Click(Sender: TObject);
     procedure Button8Click(Sender: TObject);
     procedure Button9Click(Sender: TObject);
@@ -335,12 +285,6 @@ type
     procedure lbExprCopyFormatsClick(Sender: TObject);
     procedure lbKanjiCopyFormatsClick(Sender: TObject);
     procedure tsKanjiCopyFormatsShow(Sender: TObject);
-
-  protected
-    procedure UpdateFontNames;
-  public
-    function AutoDetectFonts(Silent:boolean):boolean;
-    procedure CheckFontsPresent;
 
   protected
     procedure ResetCharDetl;
@@ -458,7 +402,7 @@ implementation
 uses
   JWBStrings, JWBUnit, TextTable,
 {$IFNDEF AUTOTEST}
-  ActnList, JWBCore, AppData, JWBIO, JWBLanguage, KanaConv, UnicodeFont,
+  ActnList, JWBCore, AppData, JWBIO, JWBLanguage, KanaConv, JWBFontSelect,
   JWBMenu, JWBEditor, JWBKanjiList, JWBKanjiCard, JWBKanjiDetails,
   WakanWordGrid, JWBWordLookupBase, JWBWordLookup, JWBKanjiCompounds, JWBExamples,
   JWBUserData, JWBVocab, JWBVocabDetails, JWBVocabFilters, JWBCharItem,
@@ -761,25 +705,6 @@ begin
   rgDetailsCategoryEditorType.ItemIndex:=reg.ReadInteger('KanjiDetails','CategoryEditorType',0);
   cbDetailsShowLinks.Checked:=reg.ReadBool('KanjiDetails','ShowLinks',true);
 
-  if reg.ReadString('Fonts','FontSet','0')<>'1' then
-    AutoDetectFonts({Silent=}true)
-  else begin
-   //There's some safety net for cases when font settings are added:
-   //although we don't run detection again (it'd reset other fonts), we choose
-   //a default font name for a new setting and later check if it's available.
-    FontJapanese:=reg.ReadString('Fonts','Japanese','MS Mincho');
-    FontJapaneseGrid:=reg.ReadString('Fonts','JapaneseGrid','MS Mincho');
-    FontChinese:=reg.ReadString('Fonts','Chinese','MingLiU');
-    FontChineseGrid:=reg.ReadString('Fonts','ChineseGrid','MingLiU');
-    FontChineseGB:=reg.ReadString('Fonts','ChineseGB','SimSun');
-    FontChineseGridGB:=reg.ReadString('Fonts','ChineseGridGB','SimSun');
-    FontSmall:=reg.ReadString('Fonts','Small','MS Gothic');
-    FontRadical:=reg.ReadString('Fonts','Radical','MingLiU');
-    FontEnglish:=reg.ReadString('Fonts','English','Verdana');
-    FontStrokeOrder:=reg.ReadString('Fonts','StrokeOrder','MS Mincho');
-    FontPinYin:=reg.ReadString('Fonts','PinYin','Arial');
-  end;
-  UpdateFontNames;
   cbPreferUserWords.Checked:=reg.ReadBool('Dict','PreferUser',true);
   cbPreferNounsAndVerbs.Checked:=reg.ReadBool('Dict','PreferNouns',true);
   cbPreferPolite.Checked:=reg.ReadBool('Dict','PreferPolite',true);
@@ -1049,18 +974,6 @@ begin
   reg.WriteInteger('KanjiDetails','CategoryEditorType',rgDetailsCategoryEditorType.ItemIndex);
   reg.WriteBool('KanjiDetails','ShowLinks',cbDetailsShowLinks.Checked);
 
-  reg.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
-  reg.WriteString('Fonts','Japanese',FontJapanese);
-  reg.WriteString('Fonts','Small',FontSmall);
-  reg.WriteString('Fonts','ChineseGrid',FontChineseGrid);
-  reg.WriteString('Fonts','ChineseGridGB',FontChineseGridGB);
-  reg.WriteString('Fonts','Chinese',FontChinese);
-  reg.WriteString('Fonts','ChineseGB',FontChineseGB);
-  reg.WriteString('Fonts','Radical',FontRadical);
-  reg.WriteString('Fonts','English',FontEnglish);
-  reg.WriteString('Fonts','StrokeOrder',FontStrokeOrder);
-  reg.WriteString('Fonts','PinYin',FontPinYin);
-  reg.WriteString('Fonts','FontSet','1');
   reg.WriteBool('Dict','PreferUser',cbPreferUserWords.Checked);
   reg.WriteBool('Dict','PreferNouns',cbPreferNounsAndVerbs.Checked);
   reg.WriteBool('Dict','PreferPolite',cbPreferPolite.Checked);
@@ -1256,7 +1169,6 @@ begin
 end;
 
 
-
 procedure TfSettings.btnChangeLanguageClick(Sender: TObject);
 begin
 {$IFNDEF AUTOTEST}
@@ -1264,167 +1176,6 @@ begin
 {$ENDIF}
 end;
 
-procedure TfSettings.SpeedButton1Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontJapaneseGrid:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit1.text,false);
-  Edit1.Text:=FontJapaneseGrid;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton4Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontEnglish:=ChooseFont([ANSI_CHARSET],FS_ENGLISH_CHARTEST,sup,edit4.text,false);
-  Edit4.Text:=FontEnglish;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton5Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontSmall:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit5.text,false);
-  Edit5.Text:=FontSmall;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton2Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontJapanese:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit2.text,false);
-  Edit2.Text:=FontJapanese;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton6Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontChineseGrid:=ChooseFont([CHINESEBIG5_CHARSET],FS_CHINESE_CHARTEST,sup,edit6.text,false);
-  Edit6.Text:=FontChineseGrid;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton7Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontChinese:=ChooseFont([CHINESEBIG5_CHARSET],FS_CHINESE_CHARTEST,sup,Edit7.text,false);
-  Edit7.Text:=FontChinese;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton8Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  Application.MessageBox(
-    pchar(_l('#00564^ePlease make sure that the font you select is a Unicode font with '
-      +'complete "CJK Unified Ideographs" range.'#13'MingLiu is an example of such font.')),
-    pchar(_l('#00364^eNotice')),
-    MB_OK or MB_ICONINFORMATION);
-  FontRadical:=ChooseFont([CHINESEBIG5_CHARSET],FS_RADICAL_CHARTEST,sup,Edit8.Text,false);
-  Edit8.Text:=FontRadical;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton3Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  Application.MessageBox(
-    pchar(_l('#00565^eWhen selecting the font you must ensure that it is really '
-      +'a simplified chinese font.'#13'Some fonts support GB2312 standard but '
-      +'instead of simplified characters they show the traditional ones.'#13
-      +'These fonts would display improper characters in this program.'#13
-      +'You can identify the right font very easily. In the font selection dialog'#13
-      +'look at the first character. If it does not look like an arrow pointing up, '
-      +'you should select another font.')),
-    pchar(_l('#00566^eNotice')),
-    MB_OK or MB_ICONINFORMATION);
-  FontChineseGridGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit3.Text,false);
-  Edit3.Text:=FontChineseGridGB;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton9Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  Application.MessageBox(
-    pchar(_l('#00565^eWhen selecting the font you must ensure that it is really '
-      +'a simplified chinese font.'#13'Some fonts support GB2312 standard but '
-      +'instead of simplified characters they show the traditional ones.'#13
-      +'These fonts would display improper characters in this program.'#13
-      +'You can identify the right font very easily. In the font selection dialog'#13
-      +'look at the first character. If it does not look like an arrow pointing up, '
-      +'you should select another font.')),
-    pchar(_l('#00566^eNotice')),
-    MB_OK or MB_ICONINFORMATION);
-  FontChineseGB:=ChooseFont([GB2312_CHARSET],FS_CHINESEGB_CHARTEST,sup,Edit9.Text,false);
-  Edit9.Text:=FontChineseGB;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton10Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  Application.MessageBox(
-    pchar(_l('#00567^eSome fonts may not be able to display some characters. '
-      +'If you see that some characters look different in style or aren''t '
-      +'displayed properly, select another font.')),
-    pchar(_l('#00566^eNotice')),
-  MB_OK or MB_ICONINFORMATION);
-  edtKanjiCardFont.Text:=ChooseFont([CHINESEBIG5_CHARSET,GB2312_CHARSET,SHIFTJIS_CHARSET],testkanji,sup,Edit9.Text,false);
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton13Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontStrokeOrder:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edit32.text,false);
-  Edit32.Text:=FontStrokeOrder;
-{$ELSE}
-begin
-{$ENDIF}
-end;
-
-procedure TfSettings.SpeedButton14Click(Sender: TObject);
-{$IFNDEF AUTOTEST}
-var sup:string;
-begin
-  FontPinYin:=ChooseFont([ANSI_CHARSET],FS_PINYIN_CHARTEST,sup,edit33.text,false);
-  Edit33.Text:=FontPinYin;
-{$ELSE}
-begin
-{$ENDIF}
-end;
 
 procedure TfSettings.Button1Click(Sender: TObject);
 begin
@@ -1581,199 +1332,20 @@ begin
 {$ENDIF}
 end;
 
-//Silent: do not say anything in case of success
-function TfSettings.AutoDetectFonts(Silent:boolean):boolean;
+procedure TfSettings.SpeedButton10Click(Sender: TObject);
 {$IFNDEF AUTOTEST}
-var s:string;
-  missingfonts:string;
-  substituted:boolean; //found substitutions for all missing fonts
-  FMincho,FGothic: string;
-  FMingLiu,FSimSun: string;
-
-  function _FindFont(const face: string; charset: integer): string;
-  begin
-    Result := FindFont(face,charset);
-    if (face<>'') and (Result='') then
-      missingfonts := missingfonts+','+face;
-  end;
-
+var sup:string;
 begin
-  missingfonts:='';
-  substituted:=true;
-
- { NOTE: Some asian fonts have two names, English one and localized one.
-  Since Windows 2000 both CreateFont and EnumFontFamilies understand both names,
-  although Delphi's Screen.Fonts will only list one. }
-
-  //Japanese fonts
-  FMincho:=_FindFont('MS Mincho',DEFAULT_CHARSET);
-  FGothic:=_FindFont('MS Gothic',DEFAULT_CHARSET);
-
-  //Substitutions
-  if (FMincho='') and (FGothic<>'') then
-    FMincho:=FGothic
-  else
-  if (FMincho<>'') and (FGothic='') then
-    FGothic:=FMincho
-  else
-  if (FMincho='') and (FGothic='') then begin
-    FMincho:=_FindFont('',SHIFTJIS_CHARSET); //any japanese
-    if FMincho='' then begin
-      substituted:=false; //no japanese at all
-      FMincho:='Arial';
-    end;
-    FGothic:=FMincho;
-  end;
-
-  //Chinese fonts
-  FMingLiu:=_FindFont('MingLiU',DEFAULT_CHARSET);
-  FSimSun:=_FindFont('SimSun',DEFAULT_CHARSET);
-
-  //Substitutions
-  if (FMingLiu='') and (FSimSun<>'') then
-    FMingLiu:=FSimSun
-  else
-  if (FMingLiu<>'') and (FSimSun='') then
-    FSimSun:=FMingLiu
-  else
-  if (FMingLiu='') and (FSimSun='') then begin //both missing
-    FMingLiu:=_FindFont('',CHINESEBIG5_CHARSET);
-    FSimSun:=_FindFont('',GB2312_CHARSET);
-    if (FMingLiu='') or (FSimSun='') then begin
-      substituted:=false;
-      if FMingLiu='' then FMingLiu:='Arial';
-      if FSimSun='' then FSimSun:='Arial';
-    end;
-  end;
-
- //Use
-  FontJapanese:=FMincho;
-  FontJapaneseGrid:=FMincho;
-  FontChinese:=FMingLiu;
-  FontChineseGrid:=FMingLiu;
-  FontChineseGB:=FSimSun;
-  FontChineseGridGB:=FSimSun;
-  FontSmall:=FGothic;
-  FontRadical:=FMingLiu;
-  FontEnglish:='Verdana';
-  FontPinYin:='Arial';
-  FontStrokeOrder:=FMincho;
-  UpdateFontNames;
-
-  if missingfonts<>'' then
-  begin
-    delete(missingfonts,1,1);
-    s:=_l('#00578^eFollowing recommended fonts were not found on your system:')+#13#13;
-    s:=s+missingfonts+#13#13;
-    if substituted then
-      s:=s+_l('#00579^eReasonable substitution was found, however for better '
-        +'font quality installation of these fonts and restart'#13'of the '
-        +'autodetection routine is recommended.')
-    else
-      s:=s+_l('#00580^eNo reasonable substitution was found, program will '
-        +'probably display characters incorrectly.'#13+'Installation of these '
-        +'fonts and restart of the autodetection routine is HIGHLY recommended.');
-    s:=s+#13#13;
-    s:=s+_l('#00581^eThese fonts can be found in following Microsoft(R) products:'#13#13
-      +'1. Microsoft(R) Windows(R) XP - Select "Install eastern-Asian fonts" in language settings in Control Panel.'#13
-      +'2. Microsoft(R) Internet Explorer - Install "support for Japanese, traditional Chinese and simplified Chinese writing".'#13
-      +'3. Microsoft(R) Office 2000/XP - Install Japanese, traditional Chinese and simplified Chinese fonts.');
-    if substituted then
-      Application.MessageBox(
-        pchar(s),
-        pchar(_l('#00582^eMissing fonts')),
-        MB_ICONWARNING or MB_OK)
-    else
-      Application.MessageBox(
-        pchar(s),
-        pchar(_l('#00582^eMissing fonts')),
-        MB_ICONERROR or MB_OK);
-  end else
-    if not Silent then
-      Application.MessageBox(
-        pchar(_l('#00583^eCongratulations!'#13#13'All recommended fonts were '
-          +'located on your system and were installed.')),
-        pchar(_l('#00350^eFont autodetection')),
-        MB_ICONINFORMATION or MB_OK);
-  result:=(missingfonts='') or (substituted);
-{$ELSE}
-begin
-  Result := false;
-{$ENDIF}
-end;
-
-procedure TfSettings.Button5Click(Sender: TObject);
-begin
-  AutoDetectFonts({Silent=}false);
-end;
-
-{$IFNDEF AUTOTEST}
-function CheckFont(var face:string):boolean;
-begin
-  while (Length(face)>0) and (face[1]='!') do
-    delete(face,1,1);
-  Result := FindFont(face,DEFAULT_CHARSET)<>'';
-  if not Result then
-    face:='!'+face;
-end;
-{$ENDIF}
-
-{ Checks that all fonts are configured correctly and present in the system.
-If not, opens the configuration dialog to let the user choose some new ones.
-Used at loading:
-1. As a part of auto-detection (fonts which weren't detected can be left blank to later ask the user)
-2. When new font setting is added to the app, the user will be asked on the next run to provide a font, if the default one is missing }
-procedure TfSettings.CheckFontsPresent;
-{$IFNDEF AUTOTEST}
-var OldPosition: TPosition;
-begin
-  while
-       not CheckFont(FontJapanese)
-    or not CheckFont(FontJapaneseGrid)
-    or not CheckFont(FontChinese)
-    or not CheckFont(FontChineseGrid)
-    or not CheckFont(FontChineseGB)
-    or not CheckFont(FontChineseGridGB)
-    or not CheckFont(FontSmall)
-    or not CheckFont(FontRadical)
-    or not CheckFont(FontEnglish)
-    or not CheckFont(FontPinYin)
-    or not CheckFont(FontStrokeOrder)
-  do
-  begin
-    Application.MessageBox(
-      pchar(_l('#00353^eSome standard fonts were not found on your system.'#13
-        +'Please reselect all fonts in the following dialog. Missing fonts are '
-        +'preceded by !.'#13
-        +'Application cannot continue unless all fonts are selected.')),
-      pchar(_l('#00090^eWarning')),
-      MB_ICONWARNING or MB_OK);
-    OldPosition := Self.Position;
-    Self.Position := poScreenCenter;
-    Self.UpdateFontNames;
-    Self.pcPages.ActivePage:=fSettings.tsFonts;
-    Self.ShowModal;
-    Self.Position := OldPosition;
-  end;
+  Application.MessageBox(
+    pchar(_l('#00567^eSome fonts may not be able to display some characters. '
+      +'If you see that some characters look different in style or aren''t '
+      +'displayed properly, select another font.')),
+    pchar(_l('#00566^eNotice')),
+  MB_OK or MB_ICONINFORMATION);
+  edtKanjiCardFont.Text:=ChooseFont([CHINESEBIG5_CHARSET,GB2312_CHARSET,SHIFTJIS_CHARSET],testkanji,sup,edtKanjiCardFont.Text,false);
 {$ELSE}
 begin
 {$ENDIF}
-end;
-
-//Updates font names on font selection page
-procedure TfSettings.UpdateFontNames;
-begin
-  Edit2.Text:=FontJapanese;
-  Edit1.Text:=FontJapaneseGrid;
-  Edit7.Text:=FontChinese;
-  Edit6.Text:=FontChineseGrid;
-  Edit9.Text:=FontChineseGB;
-  Edit3.Text:=FontChineseGridGB;
-  Edit5.Text:=FontSmall;
-  Edit8.Text:=FontRadical;
-  Edit4.Text:=FontEnglish;
-  Edit33.Text:=FontPinYin;
-  Edit32.Text:=FontStrokeOrder;
 end;
 
 { Populates chardetl with default property set }

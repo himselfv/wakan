@@ -27,7 +27,7 @@ object fSettings: TfSettings
     Margins.Left = 9
     Margins.Right = 0
     Margins.Bottom = 0
-    ActivePage = tsDatabaseMaintenance
+    ActivePage = tsCharacterCardPrinting
     Align = alClient
     MultiLine = True
     Style = tsButtons
@@ -36,10 +36,6 @@ object fSettings: TfSettings
     object tsGeneral: TTabSheet
       Caption = 'General'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object sbGeneral: TScrollBox
         Left = 0
         Top = 0
@@ -528,402 +524,6 @@ object fSettings: TfSettings
         end
       end
     end
-    object tsFonts: TTabSheet
-      Tag = 2
-      Caption = 'Fonts'
-      TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
-      object Label4: TLabel
-        Left = 3
-        Top = 362
-        Width = 107
-        Height = 13
-        Caption = '#00923^eEnglish font:'
-      end
-      object SpeedButton4: TSpeedButton
-        Left = 371
-        Top = 362
-        Width = 73
-        Height = 23
-        Caption = '#00452^eChoose'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        OnClick = SpeedButton4Click
-      end
-      object Label5: TLabel
-        Left = 3
-        Top = 336
-        Width = 134
-        Height = 13
-        Caption = '#00456^eFont for small text:'
-      end
-      object SpeedButton5: TSpeedButton
-        Left = 371
-        Top = 336
-        Width = 73
-        Height = 23
-        Caption = '#00452^eChoose'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        OnClick = SpeedButton5Click
-      end
-      object Label51: TLabel
-        Left = 3
-        Top = 390
-        Width = 179
-        Height = 13
-        Caption = '#00924^eRomanization && PinYin font:'
-      end
-      object SpeedButton14: TSpeedButton
-        Left = 371
-        Top = 388
-        Width = 73
-        Height = 23
-        Caption = '#00452^eChoose'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        OnClick = SpeedButton14Click
-      end
-      object GroupBox1: TGroupBox
-        Left = 3
-        Top = 35
-        Width = 457
-        Height = 108
-        Caption = '#00453^eJapanese fonts'
-        TabOrder = 0
-        object Label1: TLabel
-          Left = 8
-          Top = 24
-          Width = 172
-          Height = 13
-          Caption = '#00454^eFont for characters in grid:'
-        end
-        object SpeedButton1: TSpeedButton
-          Left = 368
-          Top = 24
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton1Click
-        end
-        object Label2: TLabel
-          Left = 8
-          Top = 51
-          Width = 158
-          Height = 13
-          Caption = '#00455^eFont for big characters:'
-        end
-        object SpeedButton2: TSpeedButton
-          Left = 368
-          Top = 51
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton2Click
-        end
-        object Label50: TLabel
-          Left = 8
-          Top = 78
-          Width = 166
-          Height = 13
-          Caption = '#00875^eStroke order display font:'
-        end
-        object SpeedButton13: TSpeedButton
-          Left = 368
-          Top = 78
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton13Click
-        end
-        object Edit1: TEdit
-          Left = 240
-          Top = 24
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 0
-          Text = 'MS Mincho'
-        end
-        object Edit2: TEdit
-          Left = 240
-          Top = 51
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 1
-          Text = 'MS Mincho'
-        end
-        object Edit32: TEdit
-          Left = 240
-          Top = 78
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 2
-          Text = 'MS Gothic'
-        end
-      end
-      object Edit4: TEdit
-        Left = 243
-        Top = 362
-        Width = 129
-        Height = 21
-        Color = clBtnFace
-        ReadOnly = True
-        TabOrder = 1
-        Text = 'Arial'
-      end
-      object GroupBox2: TGroupBox
-        Left = 3
-        Top = 148
-        Width = 457
-        Height = 178
-        Caption = '#00457^eChinese fonts:'
-        TabOrder = 2
-        object Label6: TLabel
-          Left = 8
-          Top = 24
-          Width = 241
-          Height = 13
-          Caption = '#00458^eBig5 font for traditional characters in grid:'
-        end
-        object SpeedButton6: TSpeedButton
-          Left = 368
-          Top = 24
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton6Click
-        end
-        object Label7: TLabel
-          Left = 8
-          Top = 76
-          Width = 227
-          Height = 13
-          Caption = '#00459^eBig5 font for big traditional characters:'
-        end
-        object SpeedButton7: TSpeedButton
-          Left = 368
-          Top = 76
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton7Click
-        end
-        object Label8: TLabel
-          Left = 8
-          Top = 145
-          Width = 158
-          Height = 13
-          Caption = '#00460^eComplete unicode font:'
-        end
-        object SpeedButton8: TSpeedButton
-          Left = 368
-          Top = 145
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton8Click
-        end
-        object Label3: TLabel
-          Left = 8
-          Top = 50
-          Width = 256
-          Height = 13
-          Caption = '#00461^eGB2312 font for simplified characters in grid:'
-        end
-        object SpeedButton3: TSpeedButton
-          Left = 368
-          Top = 50
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton3Click
-        end
-        object Label9: TLabel
-          Left = 8
-          Top = 102
-          Width = 242
-          Height = 13
-          Caption = '#00462^eGB2312 font for big simplified characters:'
-        end
-        object SpeedButton9: TSpeedButton
-          Left = 368
-          Top = 102
-          Width = 73
-          Height = 23
-          Caption = '#00452^eChoose'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = [fsBold]
-          ParentFont = False
-          OnClick = SpeedButton9Click
-        end
-        object Label10: TLabel
-          Left = 8
-          Top = 126
-          Width = 479
-          Height = 14
-          Caption = 
-            '#00463^eMake sure that the Big5 and GB2312 fonts are either the ' +
-            'same or at least look the same.'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'Arial'
-          Font.Style = [fsItalic]
-          ParentFont = False
-        end
-        object Edit6: TEdit
-          Left = 240
-          Top = 24
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 0
-          Text = 'MingLiU'
-        end
-        object Edit7: TEdit
-          Left = 240
-          Top = 76
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 1
-          Text = 'MingLiU'
-        end
-        object Edit8: TEdit
-          Left = 240
-          Top = 145
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 2
-          Text = 'MingLiU'
-        end
-        object Edit3: TEdit
-          Left = 240
-          Top = 50
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 3
-          Text = 'SimSun'
-        end
-        object Edit9: TEdit
-          Left = 240
-          Top = 102
-          Width = 129
-          Height = 21
-          Color = clBtnFace
-          ReadOnly = True
-          TabOrder = 4
-          Text = 'SimSun'
-        end
-      end
-      object Button5: TButton
-        Left = 3
-        Top = 3
-        Width = 457
-        Height = 25
-        Caption = '#00464^eSelect recommended fonts'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        ParentFont = False
-        TabOrder = 3
-        OnClick = Button5Click
-      end
-      object Edit5: TEdit
-        Left = 243
-        Top = 336
-        Width = 129
-        Height = 21
-        Color = clBtnFace
-        ReadOnly = True
-        TabOrder = 4
-        Text = 'MS Gothic'
-      end
-      object Edit33: TEdit
-        Left = 243
-        Top = 388
-        Width = 129
-        Height = 21
-        Color = clBtnFace
-        ReadOnly = True
-        TabOrder = 5
-        Text = 'Arial'
-      end
-    end
     object tsColors: TTabSheet
       Tag = 3
       Caption = 'Colors'
@@ -1128,10 +728,6 @@ object fSettings: TfSettings
       Caption = 'Character details'
       ImageIndex = 19
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object cbDetailsShowKanjiClass: TCheckBox
         AlignWithMargins = True
         Left = 3
@@ -1415,10 +1011,6 @@ object fSettings: TfSettings
       Tag = 8
       Caption = 'Popup tool'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label36: TLabel
         Left = 3
         Top = 75
@@ -1671,10 +1263,6 @@ object fSettings: TfSettings
       Tag = 10
       Caption = 'Character cards printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label12: TLabel
         Left = 3
         Top = 0
@@ -1977,10 +1565,6 @@ object fSettings: TfSettings
       Tag = 13
       Caption = 'Editor'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label48: TLabel
         Left = 3
         Top = 3
@@ -2159,10 +1743,6 @@ object fSettings: TfSettings
       Tag = 14
       Caption = 'Editor: Saving and loading:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblSavingAndLoading: TLabel
         Left = 3
         Top = 3
@@ -2207,10 +1787,6 @@ object fSettings: TfSettings
       Tag = 15
       Caption = 'Editor: Printing'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label57: TLabel
         Left = 3
         Top = 3
@@ -2276,10 +1852,6 @@ object fSettings: TfSettings
       Tag = 16
       Caption = 'Editor: Text translator'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label58: TLabel
         Left = 3
         Top = 3
@@ -2333,10 +1905,6 @@ object fSettings: TfSettings
       Tag = 17
       Caption = 'Editor: Aozora Ruby:'
       TabVisible = False
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblAozoraRuby: TLabel
         Left = 3
         Top = 3
@@ -2610,52 +2178,50 @@ object fSettings: TfSettings
     OnCollapsing = tvContentsCollapsing
     Items.NodeData = {
       03070000003C000000000000000000000000000000FFFFFFFF00000000000000
-      0003000000010F2300300030003300390038005E006500470065006E00650072
+      0002000000010F2300300030003300390038005E006500470065006E00650072
       0061006C0046000000000000000000000001000000FFFFFFFF00000000000000
       000000000001142300300030003400310032005E00650052006F006D0061006E
-      0069007A006100740069006F006E0038000000000000000000000002000000FF
-      FFFFFF000000000000000000000000010D2300300030003400350030005E0065
-      0046006F006E00740073003A000000000000000000000003000000FFFFFFFF00
-      0000000000000000000000010E2300300030003500350031005E00650043006F
-      006C006F00720073004A000000000000000000000005000000FFFFFFFF000000
-      00000000000300000001162300300030003200390038005E0065004300680061
-      0072006100630074006500720020006C006900730074004E0000000000000000
-      00000013000000FFFFFFFF000000000000000000000000011823003000300035
-      00330030005E0043006800610072006100630074006500720020006400650074
-      00610069006C0073004A000000000000000000000006000000FFFFFFFF000000
-      00000000000000000001162300300031003100320032005E0044006900730070
-      006C00610079006500640020006900740065006D007300460000000000000000
-      00000014000000FFFFFFFF000000000000000000000000011423003000310031
-      00300031005E00650043006F0070007900200046006F0072006D006100740073
-      0042000000000000000000000007000000FFFFFFFF0000000000000000010000
-      0001122300300030003200310037005E006500440069006300740069006F006E
-      0061007200790046000000000000000000000012000000FFFFFFFF0000000000
-      0000000000000001142300300031003100300031005E00650043006F00700079
-      00200046006F0072006D00610074007300420000000000000000000000080000
-      00FFFFFFFF00000000000000000000000001122300300030003500330038005E
-      00650050006F00700075007000200074006F006F006C003A0000000000000000
-      0000000D000000FFFFFFFF000000000000000004000000010E23003000300039
-      00360036005E00650045006400690074006F0072005400000000000000000000
-      000E000000FFFFFFFF000000000000000000000000011B230030003100300036
-      0036005E00650053006100760069006E006700200061006E00640020006C006F
-      006100640069006E0067003A003E00000000000000000000000F000000FFFFFF
-      FF00000000000000000000000001102300300031003000360035005E00650050
-      00720069006E00740069006E0067004C000000000000000000000010000000FF
-      FFFFFF00000000000000000000000001172300300030003300300030005E0065
-      00540065007800740020007400720061006E0073006C00610074006F00720044
-      000000000000000000000011000000FFFFFFFF00000000000000000000000001
-      132300300031003000360037005E00650041006F007A006F0072006100200052
-      007500620079003E0000000000000000000000FFFFFFFFFFFFFFFF0000000000
-      0000000200000001102300300031003000360031005E00650053007400750064
-      00790069006E00670052000000000000000000000009000000FFFFFFFF000000
-      000000000000000000011A2300300030003400360035005E00650057006F0072
-      00640020006C0069007300740020007000720069006E00740069006E0067005E
-      00000000000000000000000A000000FFFFFFFF00000000000000000000000001
-      202300300030003400380038005E006500430068006100720061006300740065
-      00720020006300610072006400730020007000720069006E00740069006E0067
-      005600000000000000000000000C000000FFFFFFFF0000000000000000000000
-      00011C2300300030003500300034005E00650044006100740061006200610073
-      00650020006D00610069006E00740065006E0061006E0063006500}
+      0069007A006100740069006F006E003A000000000000000000000003000000FF
+      FFFFFF000000000000000000000000010E2300300030003500350031005E0065
+      0043006F006C006F00720073004A000000000000000000000005000000FFFFFF
+      FF00000000000000000300000001162300300030003200390038005E00650043
+      006800610072006100630074006500720020006C006900730074004E00000000
+      0000000000000013000000FFFFFFFF0000000000000000000000000118230030
+      0030003500330030005E00430068006100720061006300740065007200200064
+      0065007400610069006C0073004A000000000000000000000006000000FFFFFF
+      FF00000000000000000000000001162300300031003100320032005E00440069
+      00730070006C00610079006500640020006900740065006D0073004600000000
+      0000000000000014000000FFFFFFFF0000000000000000000000000114230030
+      0031003100300031005E00650043006F0070007900200046006F0072006D0061
+      007400730042000000000000000000000007000000FFFFFFFF00000000000000
+      000100000001122300300030003200310037005E006500440069006300740069
+      006F006E0061007200790046000000000000000000000012000000FFFFFFFF00
+      000000000000000000000001142300300031003100300031005E00650043006F
+      0070007900200046006F0072006D006100740073004200000000000000000000
+      0008000000FFFFFFFF0000000000000000000000000112230030003000350033
+      0038005E00650050006F00700075007000200074006F006F006C003A00000000
+      000000000000000D000000FFFFFFFF000000000000000004000000010E230030
+      0030003900360036005E00650045006400690074006F00720054000000000000
+      00000000000E000000FFFFFFFF000000000000000000000000011B2300300031
+      003000360036005E00650053006100760069006E006700200061006E00640020
+      006C006F006100640069006E0067003A003E00000000000000000000000F0000
+      00FFFFFFFF00000000000000000000000001102300300031003000360035005E
+      0065005000720069006E00740069006E0067004C000000000000000000000010
+      000000FFFFFFFF00000000000000000000000001172300300030003300300030
+      005E006500540065007800740020007400720061006E0073006C00610074006F
+      00720044000000000000000000000011000000FFFFFFFF000000000000000000
+      00000001132300300031003000360037005E00650041006F007A006F00720061
+      00200052007500620079003E0000000000000000000000FFFFFFFFFFFFFFFF00
+      000000000000000200000001102300300031003000360031005E006500530074
+      0075006400790069006E00670052000000000000000000000009000000FFFFFF
+      FF000000000000000000000000011A2300300030003400360035005E00650057
+      006F007200640020006C0069007300740020007000720069006E00740069006E
+      0067005E00000000000000000000000A000000FFFFFFFF000000000000000000
+      00000001202300300030003400380038005E0065004300680061007200610063
+      0074006500720020006300610072006400730020007000720069006E00740069
+      006E0067005600000000000000000000000C000000FFFFFFFF00000000000000
+      0000000000011C2300300030003500300034005E006500440061007400610062
+      0061007300650020006D00610069006E00740065006E0061006E0063006500}
   end
   object Spacer: TPanel
     Left = 177

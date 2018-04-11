@@ -1,4 +1,4 @@
-unit UnicodeFont;
+unit JWBFontSelect;
 
 interface
 

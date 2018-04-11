@@ -365,7 +365,7 @@ var
 implementation
 uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JWBUnit, StrokeOrder,
  JWBForms, JWBSplash, JWBIO, JWBDictionaries, JWBDic, JWBDicSearch, JWBLanguage, JWBCharData,
- JWBCharDataImport, JWBUserData, JWBSettings, JWBRadicalList, JWBWordLookup,
+ JWBCharDataImport, JWBUserData, JWBSettings, JWBFontSettings, JWBRadicalList, JWBWordLookup,
  JWBKanjiCompounds, JWBExamples, JWBEditor, JWBVocab, JWBVocabDetails,
  JWBVocabFilters, JWBStatistics, JWBKanjiList, JWBKanjiDetails, JWBWordKanji,
  JWBDictMan, JWBDictImport, JWBScreenTip, JWBCategories, JWBAnnotations,
@@ -501,7 +501,7 @@ begin
     AutoImportDicts();
 
    //Force user to select fonts
-    fSettings.CheckFontsPresent;
+    FontSettingsPage.CheckFontsPresent;
 
    { Wakan.chr }
 

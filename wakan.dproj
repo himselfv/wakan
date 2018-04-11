@@ -190,7 +190,10 @@
         <DCCReference Include="Modules\Settings\JWBSettings.pas">
             <Form>fSettings</Form>
         </DCCReference>
-        <DCCReference Include="Modules\Settings\UnicodeFont.pas">
+        <DCCReference Include="Modules\Settings\JWBFontSettings.pas">
+            <Form>FontSettingsPage</Form>
+        </DCCReference>
+        <DCCReference Include="Modules\Settings\JWBFontSelect.pas">
             <Form>fSelectFont</Form>
         </DCCReference>
         <DCCReference Include="Modules\Settings\JWBCharItem.pas">
