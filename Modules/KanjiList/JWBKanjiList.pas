@@ -157,11 +157,19 @@ type
     procedure sbRadicalsDropDownClick(Sender: TObject);
     procedure btnGroupsClick(Sender: TObject);
     procedure aSearchByTextExecute(Sender: TObject);
+
+  protected
+    FCellSize: integer;
+    FCellFontSize: integer;
+    procedure ActualizeCellSize;
+    function GetCellSize: integer;
+    function GetCellFontName: string;
+    function GetCellFontSize: integer;
+    procedure SetCellSize(Value: integer);
+    function GetExpectedColCount: integer;
+
   protected
     FFocusedChars: FString;
-    function GetCellSize: integer;
-    function GetCellFontSize: integer;
-    function GetExpectedColCount: integer;
     procedure KanjiGridSelectionChanged;
     function FindCharacterListIndex(const ch: FChar): integer;
     function KanjiGridGetSelection: FString;
@@ -360,26 +368,58 @@ begin
   Self.FSetSortBy := reg.ReadInteger('Characters','Sort',0);
 end;
 
+
+function TfKanji.GetCellFontName: string;
+begin
+  if curLang='j' then
+    Result := FontJapaneseGrid
+  else
+  case fSettings.RadioGroup5.ItemIndex of
+    0: Result := FontChineseGrid;
+    1: Result := FontChineseGridGB;
+    2: Result := FontRadical;
+  else Result := FontChineseGrid;
+  end;
+end;
+
+procedure TfKanji.ActualizeCellSize;
+var NewCellSize: integer;
+begin
+  //Currently the cell size is dictated by fSettings which does not notify us
+  //on changes, so we have to track it the weird way
+  case fSettings.rgKanjiGridSize.ItemIndex of
+    0: NewCellSize:=30;
+    1: NewCellSize:=45;
+    2: NewCellSize:=60;
+  else NewCellSize:=60;
+  end;
+
+  if FCellSize <> NewCellSize then
+    SetCellSize(NewCellSize); //triggering the font size recalculation
+end;
+
 { Returns cell width/height under current settings }
 function TfKanji.GetCellSize: integer;
 begin
-  case fSettings.rgKanjiGridSize.ItemIndex of
-    0: Result:=30;
-    1: Result:=45;
-    2: Result:=60;
-  else Result:=60;
-  end;
+  ActualizeCellSize;
+  Result := FCellSize;
 end;
 
 function TfKanji.GetCellFontSize: integer;
 begin
-  case fSettings.rgKanjiGridSize.ItemIndex of
-    0:Result:=22;
-    1:Result:=37;
-    2:Result:=52;
-  else Result:=52;
-  end;
+  ActualizeCellSize;
+  Result := FCellFontSize;
 end;
+
+procedure TfKanji.SetCellSize(Value: integer);
+var tm: TTextMetric;
+begin
+  if Value <= 10 then Value := 10; //too small, also rules out zero
+  if FCellSize = Value then exit;
+  FCellSize := Value;
+  FCellFontSize := FCellSize - 8; //default rule
+end;
+
 
 { Returns expected column count according to current cell size / width }
 function TfKanji.GetExpectedColCount: integer;
@@ -1529,15 +1569,7 @@ begin
     except end;
   end;
   DrawGrid1.Canvas.FillRect(Rect);
-  if curLang='j' then
-    fontface:=FontJapaneseGrid
-  else
-  case fSettings.RadioGroup5.ItemIndex of
-    0:fontface:=FontChineseGrid;
-    1:fontface:=FontChineseGridGB;
-    2:fontface:=FontRadical;
-  else fontface:=FontChineseGrid;
-  end;
+  fontface := GetCellFontName();
   fontsize := GetCellFontSize();
   DrawGrid1.Canvas.Font.Style:=[];
 
