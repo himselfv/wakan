@@ -156,31 +156,26 @@ const
  }
 
   GothicFonts: array[0..7] of string = (
-    //+. Ideal size. Ugly.
-    //Since XP
-    'MS Gothic', 'ＭＳ ゴシック', 'MS PGothic',
-
-    //No. Narrower characters.
-    //'MS UI Gothic',
-
-    //+. Slightly smaller.
     //Since Windows 8.1, installed by default in Windows 10
     'Yu Gothic', 'YuGothic', '游ゴシック',
 
-    //+. Considerably smaller
     //Since Windows 7
-    'Meiryo', 'メイリオ'
+    'Meiryo', 'メイリオ',
+
+    //Since XP. Ugly.
+    'MS Gothic', 'ＭＳ ゴシック', 'MS PGothic'
+
+    //No. Narrower characters.
+    //'MS UI Gothic'
   );
   GothicFontsSummary: string = 'Yu Gothic/Meiryo/MS Gothic';
 
   MinchoFonts: array[0..5] of string = (
-    //+. Ideal size. Okay-looking.
-    //Since XP
-    'MS Mincho', 'ＭＳ 明朝', 'MS PMincho',
-
-    //+. Considerably smaller.
     //Since Windows 8.1
-    'Yu Mincho', 'YuMincho', '游明朝'
+    'Yu Mincho', 'YuMincho', '游明朝',
+
+    //Since XP. Okay-looking.
+    'MS Mincho', 'ＭＳ 明朝', 'MS PMincho'
   );
   MinchoFontsSummary: string = 'Yu Mincho/MS Mincho';
 
@@ -221,16 +216,15 @@ const
 
   //Also known as heiti
   ChineseSimplifiedSansSerifFonts: array[0..2] of string = (
-    //+. Ideal size. Ugly-ish.
-    'SimHei',
+    //Since Windows Vista. Ugly-ish.
+    'Microsoft YaHei', 'Microsoft YaHei UI',
 
-    //+. Slightly smaller. Ugly-ish.
-    //Since Windows Vista
-    'Microsoft YaHei', 'Microsoft YaHei UI'
+    //Ugly-ish.
+    'SimHei'
   );
 
   ChineseTraditionalSansSerifFonts: array[0..1] of string = (
-    //+. Considerably smaller. Okay-looking.
+    //Okay-looking.
     'Microsoft JhengHei', 'Microsoft JhengHei UI'
   );
 
