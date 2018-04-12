@@ -156,25 +156,31 @@ const
  }
 
   GothicFonts: array[0..7] of string = (
-    //Since Windows 7
-    'Meiryo', 'メイリオ',
-
+    //+. Ideal size. Ugly.
     //Since XP
     'MS Gothic', 'ＭＳ ゴシック', 'MS PGothic',
-    //'MS UI Gothic' //No. Narrower characters.
 
+    //No. Narrower characters.
+    //'MS UI Gothic',
+
+    //+. Slightly smaller.
     //Since Windows 8.1, installed by default in Windows 10
-    //Nice but has a different size to MS Gothic so Wakan doesn't do well with it
-    'Yu Gothic', 'YuGothic', '游ゴシック'
+    'Yu Gothic', 'YuGothic', '游ゴシック',
+
+    //+. Considerably smaller
+    //Since Windows 7
+    'Meiryo', 'メイリオ'
   );
-  GothicFontsSummary: string = 'Meiryo/MS Gothic';
+  GothicFontsSummary: string = 'Yu Gothic/Meiryo/MS Gothic';
 
   MinchoFonts: array[0..5] of string = (
-    //Since Windows 8.1
-    'Yu Mincho', 'YuMincho', '游明朝',
-
+    //+. Ideal size. Okay-looking.
     //Since XP
-    'MS Mincho', 'ＭＳ 明朝', 'MS PMincho'
+    'MS Mincho', 'ＭＳ 明朝', 'MS PMincho',
+
+    //+. Considerably smaller.
+    //Since Windows 8.1
+    'Yu Mincho', 'YuMincho', '游明朝'
   );
   MinchoFontsSummary: string = 'Yu Mincho/MS Mincho';
 
@@ -190,32 +196,41 @@ const
   and combinations. These days they're usually all implemented in a single
   font file but IF we have to resort to them, we should.
  }
-
   //Also known as songti
   ChineseSimplifiedSerifFonts: array[0..2] of string = (
+    //+. Ideal size. Okay looking.
     //Since Windows XP. Present by default on Windows 10
     'SimSun', 'SimSun-ExtB',
-    //Older version, even though it's "New" (N)
+    //Older version, even though it's "New" (N). No difference in looks.
     'NSimSun'
   );
   ChineseSimplifiedSerifFontsSummary = 'SimSun';
 
-  ChineseTraditionalSerifFonts: array[0..9] of string = (
-    //Since Windows Vista&
-    'Microsoft YaHei', 'Microsoft YaHei UI',
-
+  ChineseTraditionalSerifFonts: array[0..2] of string = (
+    //+. Ideal size. Okay-looking.
     //Since at least XP
-    'MingLiU', '細明體', 'PMingLiU', 'MingLiU_HKSCS', '細明體_HKSCS',
-    'MingLiU-ExtB', 'PMingLiU-ExtB', 'MingLiU_HKSCS-ExtB'
+    'MingLiU', '細明體', 'PMingLiU'
+
+    //HKCS and ExtB extensions. These are only extension character sets.
+    //Normally Windows auto-substitutes basic MingLiU for basic characters,
+    //but Wakan circumvents this atm so extensions sets cover almost no characters.
+    //'MingLiU_HKSCS', '細明體_HKSCS',
+    //'MingLiU-ExtB', 'PMingLiU-ExtB', 'MingLiU_HKSCS-ExtB'
   );
   ChineseTraditionalSerifFontsSummary = 'YaHei/MingLiU';
 
   //Also known as heiti
-  ChineseSimplifiedSansSerifFonts: array[0..0] of string = (
-    'SimHei'
+  ChineseSimplifiedSansSerifFonts: array[0..2] of string = (
+    //+. Ideal size. Ugly-ish.
+    'SimHei',
+
+    //+. Slightly smaller. Ugly-ish.
+    //Since Windows Vista
+    'Microsoft YaHei', 'Microsoft YaHei UI'
   );
 
   ChineseTraditionalSansSerifFonts: array[0..1] of string = (
+    //+. Considerably smaller. Okay-looking.
     'Microsoft JhengHei', 'Microsoft JhengHei UI'
   );
 

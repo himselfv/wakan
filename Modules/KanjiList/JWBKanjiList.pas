@@ -12,10 +12,6 @@ uses
 //{$DEFINE INVALIDATE_WITH_DELAY}
 // If set, InvalidateList() will use timer and not just update instanteneously.
 
-//{$DEFINE DRAW_UNSUPPORTED_CHAR_CODES}
-//  For chars which are not found in the specified font, draw char codes instead.
-//  Neat but confusing.
-
 {$DEFINE AUTODEFOCUS}
 //  If the previously selected character is not available under the new filters,
 //  automatically set focus to one of the available characters.
@@ -1548,30 +1544,9 @@ begin
   fontsize := GetCellFontSize();
   DrawGrid1.Canvas.Font.Style:=[];
 
- { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
   r_copy := rect;
-  r_copy.Left := r_copy.Left + 5;
-  r_copy.Top := r_copy.Top + 4;
+  r_copy.Left := r_copy.Left + 1;
   DrawUnicodeChar(DrawGrid1.Canvas, r_copy, fontsize, w, fontface);
-
- {$IFDEF DRAW_UNSUPPORTED_CHAR_CODES}
-  if GetGlyphIndices(DrawGrid1.Canvas.Handle,@w,1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
-    RaiseLastOsError();
-  if w_ind<>$FFFF then
-    TextOutW(DrawGrid1.Canvas.Handle,Rect.Left+5,Rect.Top+4,@w,1)
-  else begin
-   //Draw unicode index instaed
-    ws := IntToHex(Utf16ToUnicodeIndex(w),4);
-    DrawGrid1.Canvas.Font.Name:=FontEnglish;
-    case fSettings.rgKanjiGridSize.ItemIndex of
-      0:DrawGrid1.Canvas.Font.Height:=10;
-      1:DrawGrid1.Canvas.Font.Height:=14;
-      2:DrawGrid1.Canvas.Font.Height:=22;
-    end;
-    r_copy:=Rect;
-    DrawText(DrawGrid1.Canvas.Handle,PChar(ws),Length(ws),r_copy,DT_CENTER or DT_SINGLELINE or DT_VCENTER);
-  end;
- {$ENDIF}
 
   if fSettings.CheckBox1.Checked then
   begin
@@ -1579,8 +1554,10 @@ begin
     DrawGrid1.Canvas.Font.Name:=FontEnglish;
     DrawGrid1.Canvas.Font.Height:=8+4*fSettings.rgKanjiGridSize.ItemIndex;
     DrawGrid1.Canvas.Font.Color:=clWindowText;
-    if curlang='c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TChar.fChStrokeCount));
-    if curlang<>'c' then DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TChar.fJpStrokeCount));
+    if curlang='c' then
+      DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TChar.fChStrokeCount))
+    else
+      DrawGrid1.Canvas.TextOut(Rect.Left+1,Rect.Top+1,TChar.Str(TChar.fJpStrokeCount));
   end;
   fKanjiDetails.pbKanji.Invalidate;
   fKanjiDetails.pbRadical.Invalidate;

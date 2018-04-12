@@ -282,8 +282,8 @@ begin
   pbKanji.Canvas.Brush.Color:=clWindow;
   pbKanji.Canvas.Font.Style:=[];
   if flength(curChars)=1 then begin //can be 0 or multiple chars
-    DrawUnicodeChar(pbKanji.Canvas,Rect(1,1,137,137),137,curChars,f);
-    if btnStrokeOrder.Down then DrawStrokeOrder(pbKanji.Canvas,1,1,137,137,curChars,12,clBlue);
+    DrawUnicodeChar(pbKanji.Canvas,Rect(1,0,137,136),137,curChars,f);
+    if btnStrokeOrder.Down then DrawStrokeOrder(pbKanji.Canvas,1,0,137,136,curChars,12,clBlue);
   end;
 end;
 

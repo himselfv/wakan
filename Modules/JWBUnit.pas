@@ -128,7 +128,8 @@ function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
   const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
 
 procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
-procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
+procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;
+  const fontface:string; const Flags: dword = DT_CENTER or DT_VCENTER);
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
 
@@ -690,8 +691,12 @@ begin
     AddDrawReg(curpbox,fontface,fs,r,ch);
 end;
 
-{ Similar but also handles the case where there's no glyph for the char in the font }
-procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;const fontface:string);
+{
+Draws ONE character centered or left-aligned in a given rectangle.
+If the given character cannot be drawn with the given font, draws its character code instead.
+}
+procedure DrawUnicodeChar(c:TCanvas; rect:TRect; fs:integer; const ch:FString;
+  const fontface:string; const Flags: dword);
 var w: UnicodeString;
   w_ind: word;
   ws: string;
@@ -705,8 +710,7 @@ begin
   if GetGlyphIndices(c.Handle,PChar(w),1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
     RaiseLastOsError();
   if w_ind<>$FFFF then begin
-    DrawText(c.Handle,PWideChar(w),length(w),rect,DT_LEFT or DT_TOP or DT_CALCRECT);
-    DrawText(c.Handle,PWideChar(w),length(w),rect,DT_LEFT or DT_TOP or DT_NOCLIP);
+    DrawText(c.Handle,PWideChar(w),length(w),rect, Flags or DT_SINGLELINE or DT_NOCLIP);
     if curpbox<>nil then
       AddDrawReg(curpbox,fontface,fs,rect,ch);
   end else begin
@@ -714,10 +718,9 @@ begin
     ws := IntToHex(Utf16ToUnicodeIndex(fgetch(ch,1)),4);
     c.Font.Name:=FontEnglish;
     c.Font.Height:=Trunc(fs*0.44);
-    DrawText(c.Handle,PChar(ws),Length(ws),rect,DT_CENTER or DT_SINGLELINE or DT_VCENTER);
+    DrawText(c.Handle,PChar(ws),Length(ws),rect,DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;
 end;
-
 
 
 { Converts raw kana/bopomofo to romaji/kana for presentation }
