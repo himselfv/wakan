@@ -667,6 +667,11 @@ end;
 
 
 {
+On the difference of logical height, pixel height and font size:
+  https://support.microsoft.com/en-us/help/74299/info-calculating-the-logical-height-and-point-size-of-a-font
+}
+
+{
 x, y: Where to draw.
 fs: Font size
 ch: Text
@@ -706,7 +711,7 @@ begin
  { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
   w := fstrtouni(ch);
   c.Font.Name:=fontface;
-  c.Font.Height:=fs;
+  c.Font.Height:=-fs;
   if GetGlyphIndices(c.Handle,PChar(w),1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
     RaiseLastOsError();
   if w_ind<>$FFFF then begin
