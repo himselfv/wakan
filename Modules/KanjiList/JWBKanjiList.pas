@@ -241,8 +241,6 @@ uses Types, UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrin
   AnnotationsSettings;
 
 var ki:TStringList;
-    calfonts:TStringList;
-    caltype:integer;
 
 {$R *.DFM}
 
@@ -265,7 +263,6 @@ begin
   ReloadLookupTypes;
   cbOrAnd.ItemIndex := 0;
   Reload;
-  caltype:=0;
   Self.btnKanjiDetails.Down := fKanjiDetails.Visible;
   Clipboard.Watchers.Add(Self.ClipboardChanged);
   sbOnlyCommon.GroupIndex := 14;
@@ -2242,13 +2239,11 @@ begin
 end;
 
 initialization
-  calfonts:=TStringList.Create;
   ki:=TStringList.Create;
   curkanji:=UH_NOCHAR;
   IntTip.RegisterHighlightHandler(TCustomDrawGrid, KanjiGridHighlightContent);
 
 finalization
   ki.Free;
-  calfonts.Free;
 
 end.
