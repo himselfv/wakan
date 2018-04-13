@@ -669,6 +669,31 @@ end;
 {
 On the difference of logical height, pixel height and font size:
   https://support.microsoft.com/en-us/help/74299/info-calculating-the-logical-height-and-point-size-of-a-font
+In short:
+  Pixels  = pixels on the screen
+  Inches    can contain different number of pixels, depending on the pixel density
+  Points  = universal font size measurement
+  PXI/PPI = Pixels Per Inch, variable
+  PTI     = Font-Points Per Inch = 72
+
+"Logical units" or "logical height" usually means "logical" pixels. Device units
+usually means inches or "physical pixels" (you rarely meet this) depending on
+the context.
+
+Fonts have two important measurements:
+  Character height
+  Cell height       = Character height + Internal leading
+Some fonts have no internal leading, making these equal.
+
+CreateFont accepts the font height in pixels in two ways:
+  +Height   set the cell height
+  -Height   set the character height
+When you need the font to fit a given rectangle, you need the second one,
+otherwise it might appear smaller.
+
+TFont provides two properties:
+  Height    directly translate to CreateFont's Height
+  Size      is a size in font-points, correctly converted to height
 }
 
 {
