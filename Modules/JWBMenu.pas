@@ -1191,7 +1191,7 @@ procedure TfMenu.ClipboardPaintboxPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clWindow;
   Canvas.Font.Color:=clWindowText;
-  DrawUnicode(Canvas,2,2,22,copy(Clipboard.Text,1,200),FontRadical);
+  DrawUnicodeText(Canvas,2,2,22,copy(Clipboard.Text,1,200),FontRadical);
 end;
 
 procedure TfMenu.ClipboardPaintboxMouseMove(Sender: TObject; Shift: TShiftState; X,

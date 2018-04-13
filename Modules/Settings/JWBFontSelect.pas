@@ -77,7 +77,7 @@ begin
   Canvas.Pen.Color:=clWindow;
   Canvas.Rectangle(0,0,PaintBox3.Width,PaintBox3.Height);
   Canvas.Pen.Color:=clWindowText;
-  DrawUnicode(Canvas,1,1,48,teststring,selfont);
+  DrawUnicode(Canvas,1,1,60,teststring,selfont);
 end;
 
 function FindFont_Callback(lpelfe: PLogFont; lpntme: PTextMetric; FontType: dword;

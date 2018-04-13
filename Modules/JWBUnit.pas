@@ -127,8 +127,9 @@ function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
 function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
   const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
 
-procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
-procedure DrawUnicodeChar(c:TCanvas;rect:TRect;fs:integer;const ch:FString;
+procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+procedure DrawUnicodeText(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+procedure DrawUnicodeChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString;
   const fontface:string; const Flags: dword = DT_CENTER or DT_VCENTER);
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
@@ -686,66 +687,138 @@ Fonts have two important measurements:
 Some fonts have no internal leading, making these equal.
 
 CreateFont accepts the font height in pixels in two ways:
-  +Height   set the cell height
-  -Height   set the character height
-When you need the font to fit a given rectangle, you need the second one,
-otherwise it might appear smaller.
+  +Height   set the cell height        (use to display a line of text)
+  -Height   set the character height   (use to fit a character to given rectangle)
 
 TFont provides two properties:
   Height    directly translate to CreateFont's Height
   Size      is a size in font-points, correctly converted to height
 }
 
+
+
 {
+We sometimes want to draw CJK characters exactly filling a given box.
+Fonts have internal leading which is a space automatically inserted above the
+character.
+We have to subtract that to paint starting with the character itself.
+
+Unfortunately, in modern fonts this usually puts the characters too high,
+because the cut-line is placed exactly at the beginning of the symbol.
+
+Wakan is tailored for MS Gothic/MS Mincho fonts which had no declared internal
+leading but left a bit of space on top of the symbol itself.
+
+We therefore will adjust the leading like this:
+ 1. Subtract the full-blown declared leading.
+ 2. Add a tiny decoratory leading to match how it looked with MS Gothic.
+ 3. For known old-style fonts (without explicit leading), ignore #2
+}
+var
+  KnownOldStyleFonts: array[0..7] of string = (
+   'MS Gothic', 'ＭＳ ゴシック', 'MS PGothic', 'MS Pゴシック',
+   'MS Mincho', 'ＭＳ 明朝', 'MS PMincho', 'MS P明朝'
+  );
+
+function GetFontLeadingFix(c: TCanvas; const fontface: string): integer;
+var tm: TTextMetric;
+  i: integer;
+begin
+  GetTextMetrics(c.Handle, tm); //we can cache these if they turn out to be slow
+  Result := tm.tmInternalLeading;
+
+  for i := Low(KnownOldStyleFonts) to High(KnownOldStyleFonts) do
+    if SysUtils.SameStr(KnownOldStyleFonts[i], fontface) then
+      exit; //no further fix needed
+  Result := Trunc(Result * 0.7);
+end;
+
+{
+Draws a single continuous line of CJK unicode characters and adds it to
+the drawing registry.
+This is tailored for CJK only, use DrawUnicodeText if you need mixed western/CJK
+unicode or multiline.
+
 x, y: Where to draw.
-fs: Font size
+fh: Char height in pixels
 ch: Text
 }
-procedure DrawUnicode(c:TCanvas;x,y,fs:integer;const ch:FString;const fontface:string);
+procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+var w:UnicodeString;
+  r: TRect;
+  il: integer;
+begin
+  if ch='' then exit;
+  SetBkMode(c.Handle,TRANSPARENT);
+  c.Font.Name:=fontface;
+  c.Font.Height:=-fh; //"-" => fit by char height
+  w := fstrtouni(ch);
+  il := GetFontLeadingFix(c, fontface);
+  r.Left := x;
+  r.Top := y - il;
+  r.Right := x;
+  r.Bottom := y - il;
+ //We need the rect for AddDrawReg and CALCRECT does not draw
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
+  r.Top := r.Top + il; //exclude il
+  if curpbox<>nil then
+    AddDrawReg(curpbox,fontface,fh,r,ch);
+end;
+
+{
+Same but for mixed text. Does not add this to the drawing registry (it doesn't
+support non-CJK selection anyway)
+
+fh: Font height in pixels. This includes internal leading, making characters
+  smaller but more in line with western characters which need leading.
+}
+procedure DrawUnicodeText(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
 var w:UnicodeString;
   r: TRect;
 begin
   if ch='' then exit;
   SetBkMode(c.Handle,TRANSPARENT);
   c.Font.Name:=fontface;
-  c.Font.Height:=fs;
+  c.Font.Height:=fh; //no "-" => fit by cell height
   w := fstrtouni(ch);
   r.Left := x;
   r.Top := y;
   r.Right := x;
   r.Bottom := y;
- //We need the rect for AddDrawReg and CALCRECT does not draw
-  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_CALCRECT);
   DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
-  if curpbox<>nil then
-    AddDrawReg(curpbox,fontface,fs,r,ch);
 end;
 
 {
-Draws ONE character centered or left-aligned in a given rectangle.
+Draws ONE character in a given rectangle, centered or left-aligned.
 If the given character cannot be drawn with the given font, draws its character code instead.
+
+fh: Char height in pixels.
 }
-procedure DrawUnicodeChar(c:TCanvas; rect:TRect; fs:integer; const ch:FString;
+procedure DrawUnicodeChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString;
   const fontface:string; const Flags: dword);
 var w: UnicodeString;
   w_ind: word;
   ws: string;
+  il: integer;
 begin
   if ch='' then exit;
   SetBkMode(c.Handle,TRANSPARENT);
  { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
   w := fstrtouni(ch);
   c.Font.Name:=fontface;
-  c.Font.Height:=-fs;
+  c.Font.Height:=-fh;
+  il := GetFontLeadingFix(c, fontface);
   if GetGlyphIndices(c.Handle,PChar(w),1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
     RaiseLastOsError();
   if w_ind<>$FFFF then begin
+    rect.Top := rect.Top - il;
     DrawText(c.Handle,PWideChar(w),length(w),rect, Flags or DT_SINGLELINE or DT_NOCLIP);
   end else begin
    //Draw unicode index instead
     ws := IntToHex(Utf16ToUnicodeIndex(fgetch(ch,1)),4);
     c.Font.Name:=FontEnglish;
-    c.Font.Height:=Trunc(fs*0.44);
+    c.Font.Height:=Trunc(fh*0.44);
     DrawText(c.Handle,PChar(ws),Length(ws),rect,DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;
 end;
