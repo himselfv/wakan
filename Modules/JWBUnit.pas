@@ -741,8 +741,6 @@ begin
     RaiseLastOsError();
   if w_ind<>$FFFF then begin
     DrawText(c.Handle,PWideChar(w),length(w),rect, Flags or DT_SINGLELINE or DT_NOCLIP);
-    if curpbox<>nil then
-      AddDrawReg(curpbox,fontface,fs,rect,ch);
   end else begin
    //Draw unicode index instead
     ws := IntToHex(Utf16ToUnicodeIndex(fgetch(ch,1)),4);
