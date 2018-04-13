@@ -128,7 +128,6 @@ type
     procedure aSearchExecute(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
     procedure miUncheckAllCategoriesClick(Sender: TObject);
-    procedure pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
     procedure miAddCategoryClick(Sender: TObject);
     procedure lbCategoriesClick(Sender: TObject);
     procedure lbCategoriesClickCheck(Sender: TObject);
@@ -412,7 +411,6 @@ begin
 end;
 
 procedure TfKanji.SetCellSize(Value: integer);
-var tm: TTextMetric;
 begin
   if Value <= 10 then Value := 10; //too small, also rules out zero
   if FCellSize = Value then exit;
@@ -1828,14 +1826,6 @@ begin
  //SetCurRadicals will trigger filter update
   SearchFilterChanged(Sender);
 end;
-
-procedure TfKanji.pbRadicalsPaint(Sender: TObject; Canvas: TCanvas);
-begin
-  Canvas.Brush.Color := clBtnFace;
-  Canvas.Font := TWakanPaintbox(Sender).Font;
-  DrawUnicode(Canvas,5,2,16,FCurRadChars,FontRadical);
-end;
-
 
 procedure PopupUnder(APopupControl, AAnchorControl: TWinControl);
 var pt: TPoint;
