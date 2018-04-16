@@ -60,6 +60,13 @@ object FontTestForm: TFontTestForm
     Height = 13
     Caption = 'Mode:'
   end
+  object Label2: TLabel
+    Left = 320
+    Top = 350
+    Width = 45
+    Height = 13
+    Caption = 'Shift top:'
+  end
   object cbFonts: TComboBox
     Left = 72
     Top = 8
@@ -143,7 +150,8 @@ object FontTestForm: TFontTestForm
       'By line height'
       'By cell height'
       'By cell height + centered'
-      'By cell height + raise by leading')
+      'By cell height + raise by leading'
+      'By cell height + raise + autoadjust')
   end
   object cbDrawMetrics: TCheckBox
     Left = 320
@@ -166,5 +174,25 @@ object FontTestForm: TFontTestForm
     State = cbChecked
     TabOrder = 7
     OnClick = cbJISFontsOnlyClick
+  end
+  object cbShiftTop: TComboBox
+    Left = 384
+    Top = 347
+    Width = 145
+    Height = 21
+    ItemIndex = 4
+    TabOrder = 8
+    Text = '0'
+    OnChange = cbShiftTopChange
+    Items.Strings = (
+      '-20'
+      '-15'
+      '-10'
+      '-5'
+      '0'
+      '5'
+      '10'
+      '15'
+      '20')
   end
 end

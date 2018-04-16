@@ -22,6 +22,8 @@ type
     cbLayoutMode: TComboBox;
     cbDrawMetrics: TCheckBox;
     cbJISFontsOnly: TCheckBox;
+    Label2: TLabel;
+    cbShiftTop: TComboBox;
     procedure FormShow(Sender: TObject);
     procedure cbFontsChange(Sender: TObject);
     procedure edtTextChange(Sender: TObject);
@@ -31,6 +33,7 @@ type
     procedure cbJISFontsOnlyClick(Sender: TObject);
     procedure PaintBoxPaint(Sender: TObject);
     procedure cbDrawMetricsClick(Sender: TObject);
+    procedure cbShiftTopChange(Sender: TObject);
   public
     procedure ReloadFonts;
 
@@ -190,9 +193,48 @@ begin
   Paintbox.Invalidate;
 end;
 
+procedure TFontTestForm.cbShiftTopChange(Sender: TObject);
+begin
+  Paintbox.Invalidate;
+end;
+
 procedure TFontTestForm.PaintBoxPaint(Sender: TObject);
 begin
   RepaintChar(Paintbox.Canvas, Paintbox.ClientRect);
+end;
+
+
+type
+  TAutoadjustRecord = record
+    n: string;
+    a: integer;
+  end;
+
+const
+  FONT_AUTOADJUST: array[0..4] of TAutoAdjustRecord = (
+    (n:'Meiryo';                a:32),
+    (n:'Meiryo UI';             a:8),
+    (n:'Microsoft JhengHei';    a:14),
+    (n:'Microsoft YaHei';       a:9),
+    (n:'Yu Gothic';             a:10)
+  );
+  {
+  No adjustment needed:
+  - MingLiU (all versions)
+  - SimSun (all versions)
+  - MS Gothic (all versions)
+  - MS Mincho (all versions)
+  }
+
+function GetAutoadjustLeading(const FontName: string; const Height: integer): integer;
+var i: integer;
+begin
+  Result := 0;
+  for i := Low(FONT_AUTOADJUST) to High(FONT_AUTOADJUST) do
+    if SameText(Fontname, FONT_AUTOADJUST[i].n) then begin
+      Result := Trunc(FONT_AUTOADJUST[i].a * Height / 100);
+      break;
+    end;
 end;
 
 procedure TFontTestForm.RepaintChar(Canvas: TCanvas; CanvasRect: TRect);
@@ -201,6 +243,7 @@ var boxSize: integer;
   flags: integer;
   bCentered: boolean;
   tm: TTextMetric;
+  shiftTop: integer;
 begin
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(CanvasRect);
@@ -215,7 +258,7 @@ begin
   //Font size
   case cbLayoutMode.ItemIndex of
     0: Canvas.Font.Height := boxSize; //simple selection by full line height
-    1, 2, 3: Canvas.Font.Height := -boxSize; //simple selection by ignoring the internal leading
+    1, 2, 3, 4: Canvas.Font.Height := -boxSize; //simple selection by ignoring the internal leading
   end;
 
   //Font metrics
@@ -245,12 +288,18 @@ begin
   else
     flags := flags or DT_LEFT or DT_TOP;
 
+  if not TryStrToInt(cbShiftTop.Text, shiftTop) then
+    exit;
+
   //Actual drawing rect (may be adjusted in some layout modes)
   rcd := rc;
-  if cbLayoutMode.ItemIndex = 3 then begin
+  if cbLayoutMode.ItemIndex in [3, 4] then
     //Raise by internal leading
     rcd.Top := rcd.Top - tm.tmInternalLeading;
-  end;
+  rcd.Top := rcd.Top + shiftTop;
+  if cbLayoutMode.ItemIndex in [4] then
+    //Raise by autoadjust
+    rcd.Top := rcd.Top + GetAutoadjustLeading(Canvas.Font.Name, -Canvas.Font.Height);
 
   DrawText(Canvas.Handle, edtText.Text, Length(edtText.Text), rcd, flags or DT_NOCLIP or DT_SINGLELINE);
   //We want to know the final rect too:
