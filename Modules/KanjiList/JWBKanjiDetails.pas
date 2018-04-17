@@ -282,7 +282,7 @@ begin
   pbKanji.Canvas.Brush.Color:=clWindow;
   pbKanji.Canvas.Font.Style:=[];
   if flength(curChars)=1 then begin //can be 0 or multiple chars
-    DrawUnicodeChar(pbKanji.Canvas,Rect(1,0,137,136),137,curChars,f);
+    DrawCJKChar(pbKanji.Canvas,Rect(1,1,137,137),137,curChars,f);
     if btnStrokeOrder.Down then DrawStrokeOrder(pbKanji.Canvas,1,0,137,136,curChars,12,clBlue);
   end;
 end;
@@ -294,7 +294,7 @@ begin
   pbRadical.Canvas.Brush.Color:=clWindow;
   pbRadical.Canvas.Font.Style:=[];
   BeginDrawReg(pbRadical.Canvas);
-  DrawUnicodeChar(pbRadical.Canvas,Rect(1,1,48,48),48,curradical,f);
+  DrawCJKChar(pbRadical.Canvas,Rect(1,1,48,48),48,curradical,f);
   EndDrawReg;
 end;
 
@@ -303,7 +303,7 @@ begin
   pbSimplified.Canvas.Brush.Color:=clWindow;
   pbSimplified.Canvas.Font.Style:=[];
   BeginDrawReg(pbSimplified.Canvas);
-  DrawUnicodeChar(pbSimplified.Canvas,Rect(1,1,48,48),48,cursimple,FontRadical);
+  DrawCJKChar(pbSimplified.Canvas,Rect(1,1,48,48),48,cursimple,FontRadical);
   EndDrawReg;
 end;
 

@@ -1572,8 +1572,9 @@ begin
   DrawGrid1.Canvas.Font.Style:=[];
 
   r_copy := rect;
-  r_copy.Left := r_copy.Left + 1;
-  DrawUnicodeChar(DrawGrid1.Canvas, r_copy, fontsize, w, fontface);
+  r_copy.Left := r_copy.Left + 5;
+  r_copy.Top := r_copy.Top + 4;
+  DrawCJKChar(DrawGrid1.Canvas, r_copy, fontsize, w, fontface);
 
   if fSettings.CheckBox1.Checked then
   begin

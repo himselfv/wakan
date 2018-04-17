@@ -127,10 +127,11 @@ function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
 function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
   const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
 
-procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
 procedure DrawUnicodeText(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
-procedure DrawUnicodeChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString;
-  const fontface:string; const Flags: dword = DT_CENTER or DT_VCENTER);
+procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string); inline;
+procedure DrawCJK(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+procedure DrawCJKChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString;
+  const fontface:string; const Flags: dword = DT_CENTER);
 
 procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
 
@@ -696,6 +697,33 @@ TFont provides two properties:
 }
 
 
+{
+Draws a single continuous line of a random CJK and non-CJK mixed text in the most
+normal and compatible way.
+Use this when you simply want to paint text of unknown origin (clipboard content and so on).
+
+Does not add this to the drawing registry (it doesn't support non-CJK selection anyway).
+
+fh: Font height in pixels. This includes internal leading, making characters
+  smaller but more in line with western characters which need leading.
+}
+procedure DrawUnicodeText(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+var w:UnicodeString;
+  r: TRect;
+begin
+  if ch='' then exit;
+  SetBkMode(c.Handle,TRANSPARENT);
+  c.Font.Name:=fontface;
+  c.Font.Height:=fh; //no "-" => fit by cell height
+  w := fstrtouni(ch);
+  r.Left := x;
+  r.Top := y;
+  r.Right := x;
+  r.Bottom := y;
+  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
+end;
+
+
 
 {
 We sometimes want to draw CJK characters exactly filling a given box.
@@ -722,28 +750,33 @@ var
 
 function GetFontLeadingFix(c: TCanvas; const fontface: string): integer;
 var tm: TTextMetric;
-  i: integer;
+//  i: integer;
+  fh: integer;
 begin
   GetTextMetrics(c.Handle, tm); //we can cache these if they turn out to be slow
+  fh := c.Font.Height;
+  if fh < 0 then fh := -fh;
+  Result := - Trunc(0.86*fh) + tm.tmAscent
+
+  {
   Result := tm.tmInternalLeading;
 
   for i := Low(KnownOldStyleFonts) to High(KnownOldStyleFonts) do
     if SysUtils.SameStr(KnownOldStyleFonts[i], fontface) then
       exit; //no further fix needed
   Result := Trunc(Result * 0.7);
+  }
 end;
 
 {
-Draws a single continuous line of CJK unicode characters and adds it to
-the drawing registry.
-This is tailored for CJK only, use DrawUnicodeText if you need mixed western/CJK
-unicode or multiline.
+Draws a single continuous line of CJK unicode characters and adds it to the drawing registry.
+This is tailored for CJK only.
 
 x, y: Where to draw.
 fh: Char height in pixels
 ch: Text
 }
-procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+procedure DrawCJK(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
 var w:UnicodeString;
   r: TRect;
   il: integer;
@@ -766,27 +799,10 @@ begin
     AddDrawReg(curpbox,fontface,fh,r,ch);
 end;
 
-{
-Same but for mixed text. Does not add this to the drawing registry (it doesn't
-support non-CJK selection anyway)
-
-fh: Font height in pixels. This includes internal leading, making characters
-  smaller but more in line with western characters which need leading.
-}
-procedure DrawUnicodeText(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
-var w:UnicodeString;
-  r: TRect;
+//Compatibility
+procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
 begin
-  if ch='' then exit;
-  SetBkMode(c.Handle,TRANSPARENT);
-  c.Font.Name:=fontface;
-  c.Font.Height:=fh; //no "-" => fit by cell height
-  w := fstrtouni(ch);
-  r.Left := x;
-  r.Top := y;
-  r.Right := x;
-  r.Bottom := y;
-  DrawText(c.Handle,PWideChar(w),length(w),r,DT_LEFT or DT_TOP or DT_NOCLIP);
+  DrawCJK(c, x, y, fh, ch, fontface);
 end;
 
 {
@@ -795,7 +811,7 @@ If the given character cannot be drawn with the given font, draws its character 
 
 fh: Char height in pixels.
 }
-procedure DrawUnicodeChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString;
+procedure DrawCJKChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString;
   const fontface:string; const Flags: dword);
 var w: UnicodeString;
   w_ind: word;

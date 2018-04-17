@@ -122,9 +122,9 @@ object FontTestForm: TFontTestForm
     Top = 270
     Width = 145
     Height = 21
-    ItemIndex = 5
+    ItemIndex = 6
     TabOrder = 4
-    Text = '90'
+    Text = '100'
     OnChange = cbBoxSizeChange
     Items.Strings = (
       '40'
