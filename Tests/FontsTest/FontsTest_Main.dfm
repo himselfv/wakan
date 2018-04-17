@@ -3,7 +3,7 @@ object FontTestForm: TFontTestForm
   Top = 0
   Caption = 'FontTestForm'
   ClientHeight = 407
-  ClientWidth = 589
+  ClientWidth = 1009
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,17 +13,18 @@ object FontTestForm: TFontTestForm
   OldCreateOrder = False
   OnShow = FormShow
   DesignSize = (
-    589
+    1009
     407)
   PixelsPerInch = 96
   TextHeight = 13
   object PaintBox: TPaintBox
     Left = 320
     Top = 8
-    Width = 256
+    Width = 676
     Height = 256
     Anchors = [akLeft, akTop, akRight]
     OnPaint = PaintBoxPaint
+    ExplicitWidth = 256
   end
   object lblFont: TLabel
     Left = 8
@@ -151,7 +152,8 @@ object FontTestForm: TFontTestForm
       'By cell height'
       'By cell height + centered'
       'By cell height + raise by leading'
-      'By cell height + raise + autoadjust')
+      'By cell height + raise + autoadjust'
+      'By baseline')
   end
   object cbDrawMetrics: TCheckBox
     Left = 320

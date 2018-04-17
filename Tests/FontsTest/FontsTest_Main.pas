@@ -258,7 +258,7 @@ begin
   //Font size
   case cbLayoutMode.ItemIndex of
     0: Canvas.Font.Height := boxSize; //simple selection by full line height
-    1, 2, 3, 4: Canvas.Font.Height := -boxSize; //simple selection by ignoring the internal leading
+    1, 2, 3, 4, 5: Canvas.Font.Height := -boxSize; //simple selection by ignoring the internal leading
   end;
 
   //Font metrics
@@ -288,25 +288,28 @@ begin
   else
     flags := flags or DT_LEFT or DT_TOP;
 
-  if not TryStrToInt(cbShiftTop.Text, shiftTop) then
-    exit;
-
   //Actual drawing rect (may be adjusted in some layout modes)
   rcd := rc;
   if cbLayoutMode.ItemIndex in [3, 4] then
     //Raise by internal leading
     rcd.Top := rcd.Top - tm.tmInternalLeading;
+  case cbLayoutMode.ItemIndex of
+    4:  //Raise by autoadjust
+        rcd.Top := rcd.Top + GetAutoadjustLeading(Canvas.Font.Name, -Canvas.Font.Height);
+    5:  //Raise to have the baseline at the predefined level of 11% from the bottom
+        //This is where the baseline is in all the old-school CJK fonts.
+        rcd.Top := rcd.Top + Trunc(0.89*boxSize) - tm.tmAscent;
+  end;
+  if not TryStrToInt(cbShiftTop.Text, shiftTop) then
+    exit;
   rcd.Top := rcd.Top + shiftTop;
-  if cbLayoutMode.ItemIndex in [4] then
-    //Raise by autoadjust
-    rcd.Top := rcd.Top + GetAutoadjustLeading(Canvas.Font.Name, -Canvas.Font.Height);
 
   DrawText(Canvas.Handle, edtText.Text, Length(edtText.Text), rcd, flags or DT_NOCLIP or DT_SINGLELINE);
   //We want to know the final rect too:
   DrawText(Canvas.Handle, edtText.Text, Length(edtText.Text), rcd, flags or DT_NOCLIP or DT_SINGLELINE or DT_CALCRECT);
   if bCentered then
     //In CENTER mode CALCRECT does not adjust the rect.Left, so we need to:
-    rcd.Offset(- (rcd.Width div 2), 0);
+    rcd.Offset(- (rcd.Width div 2) + (rc.Width div 2), 0);
 
   if cbDrawMetrics.Checked then
     DrawMetrics(Canvas, rcd, bCentered);
