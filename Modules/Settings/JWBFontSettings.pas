@@ -45,7 +45,7 @@ type
     btnFontSmall: TSpeedButton;
     btnFontEnglish: TSpeedButton;
     btnFontPinYin: TSpeedButton;
-    procedure Button5Click(Sender: TObject);
+    procedure btnAutodetectFontsClick(Sender: TObject);
     procedure btnFontJapaneseGridClick(Sender: TObject);
     procedure btnFontEnglishClick(Sender: TObject);
     procedure btnFontSmallClick(Sender: TObject);
@@ -367,7 +367,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TFontSettingsPage.Button5Click(Sender: TObject);
+procedure TFontSettingsPage.btnAutodetectFontsClick(Sender: TObject);
 begin
   AutoDetectFonts({Silent=}false);
 end;

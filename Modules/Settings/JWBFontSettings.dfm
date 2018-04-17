@@ -89,6 +89,7 @@ object FontSettingsPage: TFontSettingsPage
     Font.Style = [fsBold]
     ParentFont = False
     TabOrder = 0
+    OnClick = btnAutodetectFontsClick
   end
   object pnlJapaneseFonts: TGroupBox
     Left = 3
