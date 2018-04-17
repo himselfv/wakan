@@ -63,7 +63,7 @@ object FontTestForm: TFontTestForm
   end
   object Label2: TLabel
     Left = 320
-    Top = 350
+    Top = 362
     Width = 45
     Height = 13
     Caption = 'Shift top:'
@@ -179,7 +179,7 @@ object FontTestForm: TFontTestForm
   end
   object cbShiftTop: TComboBox
     Left = 384
-    Top = 347
+    Top = 359
     Width = 145
     Height = 21
     ItemIndex = 4
@@ -196,5 +196,16 @@ object FontTestForm: TFontTestForm
       '10'
       '15'
       '20')
+  end
+  object cbDrawTicks: TCheckBox
+    Left = 320
+    Top = 339
+    Width = 256
+    Height = 17
+    Caption = 'Draw ticks'
+    Checked = True
+    State = cbChecked
+    TabOrder = 9
+    OnClick = cbDrawMetricsClick
   end
 end

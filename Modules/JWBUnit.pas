@@ -726,46 +726,136 @@ end;
 
 
 {
-We sometimes want to draw CJK characters exactly filling a given box.
-Fonts have internal leading which is a space automatically inserted above the
-character.
-We have to subtract that to paint starting with the character itself.
+We sometimes want to draw CJK characters precisely in the middle of the box,
+filling it. Unfortunately, different fonts have different measurements,
 
-Unfortunately, in modern fonts this usually puts the characters too high,
-because the cut-line is placed exactly at the beginning of the symbol.
+The best shot at this is by aligning characters by their baseline, since this is
+how multiple fonts are aligned together normally.
 
-Wakan is tailored for MS Gothic/MS Mincho fonts which had no declared internal
-leading but left a bit of space on top of the symbol itself.
+Unfortunately, different fonts place characters a bit differently. The offset is
+almost guaranteed to be acceptable anyway, but for most likely fonts we want
+to offer a perfect experience.
 
-We therefore will adjust the leading like this:
- 1. Subtract the full-blown declared leading.
- 2. Add a tiny decoratory leading to match how it looked with MS Gothic.
- 3. For known old-style fonts (without explicit leading), ignore #2
+This is a table of adjustments to baselines for some well-known fonts. We align
+their characters to fit old-style fonts with the same baseline.
+
+Notably, there are classical fonts which:
+1. Ignore internal leading entirely (it is set to 0)
+2. Have hardcoded internal leading by placing the character precisely in the center
+  of the character cell and leaving some space to the sides.
+3. All have the baseline in the same place.
+These fonts are therefore entirely interchangeable and don't need any treatment.
+We use them as a reference when adjusting other fonts.
+
+These fonts are any variations of: MS Gothic, MS Mincho, SimSun and MingLiU,
+with the exception that MingLiU fonts have broken baseline (no #3).
+
+Many modern fonts are also similar in that they all put characters roughly
+2% higher above the baseline than the classical fonts.
+
+
 }
+type
+  TFontAdjustment = record
+    n: string;
+    bl: integer; //adjustment to baseline, in %
+  end;
+
 var
-  KnownOldStyleFonts: array[0..7] of string = (
-   'MS Gothic', 'ＭＳ ゴシック', 'MS PGothic', 'MS Pゴシック',
-   'MS Mincho', 'ＭＳ 明朝', 'MS PMincho', 'MS P明朝'
+  FontAdjustments: array[0..34] of TFontAdjustment = (
+  {
+   //These classic reference fonts need no adjustments:
+
+   //Gothic family
+   (n:'MS Gothic'; bl: +0),
+   (n:'MS PGothic'; bl: +0),
+   (n:'MS UI Gothic'; bl: +0),
+   (n:'ＭＳ ゴシック'; bl: +0),
+   (n:'ＭＳ Pゴシック'; bl: +0),
+   (n:'ＭＳ UI ゴシック'; bl: +0),
+
+   //Mincho family
+   (n:'MS Mincho'; bl: +0),
+   (n:'MS PMincho'; bl: +0),
+   (n:'ＭＳ 明朝'; bl: +0),
+   (n:'ＭＳ P明朝'; bl: +0),
+
+   //SimSun family looks like it _might_ benefit from an adjustment, but not really
+   (n:'SimSun'; bl: +0),
+   (n:'SimSun-ExtB'; bl: +0),
+   (n:'NSimSun'; bl: +0),
+  }
+
+   //MingLiU is a classic font family too, but it's baseline is broken
+   (n:'MingLiU'; bl: -5),
+   (n:'MingLiU-ExtB'; bl: -5),
+   (n:'MingLiU_HKSCS'; bl: -5),
+   (n:'MingLiU_HKSCS-ExtB'; bl: -5),
+   (n:'PMingLiU'; bl: -5),
+   (n:'PMingLiU-ExtB'; bl: -5),
+   (n:'PMingLiU_HKSCS'; bl: -5),
+   (n:'PMingLiU_HKSCS-ExtB'; bl: -5),
+   (n:'細明體'; bl: -5),
+   (n:'細明體-ExtB'; bl: -5),
+   (n:'細明體_HKSCS'; bl: -5),
+   (n:'細明體_HKSCS-ExtB'; bl: -5),
+   (n:'P細明體'; bl: -5),
+   (n:'P細明體-ExtB'; bl: -5),
+   (n:'P細明體_HKSCS'; bl: -5),
+   (n:'P細明體_HKSCS-ExtB'; bl: -5),
+
+   //Arial Unicode MS: +2
+   (n:'Arial Unicode MS'; bl: +2),
+
+   //Meiryo font family: +2
+   (n:'Meiryo'; bl: +2),
+   (n:'メイリオ'; bl: +2),
+   (n:'Meiryo UI'; bl: +2),
+   (n:'メイリオ UI'; bl: +2),
+
+   //All Yu Gothic/Yu Mincho fonts are positioned slightly higher than classic
+   (n:'Yu Gothic'; bl: +2),
+   (n:'Yu Gothic Light'; bl: +2),
+   (n:'Yu Gothic Medium'; bl: +2),
+   (n:'Yu Gothic UI'; bl: +2),
+   (n:'Yu Gothic UI Light'; bl: +2),
+   (n:'Yu Gothic UI Semibold'; bl: +2),
+   (n:'Yu Gothic UI Semilight'; bl: +2),
+   (n:'游ゴシック'; bl: +2),
+   (n:'Yu Mincho'; bl: +2),
+   (n:'Yu Mincho Demibold'; bl: +2),
+   (n:'Yu Mincho Light'; bl: +2),
+   (n:'游明朝'; bl: +2),
+
+   //Microsoft JhengHei: +3
+   (n:'Microsoft JhengHei'; bl: +3),
+
+   //Microsoft YaHei:
+   //It's hard to tell, but let's leave at 0 for now
+
+   (n:''; bl: +0)
   );
+
 
 function GetFontLeadingFix(c: TCanvas; const fontface: string): integer;
 var tm: TTextMetric;
-//  i: integer;
+  bl: integer;
+  i: integer;
   fh: integer;
 begin
   GetTextMetrics(c.Handle, tm); //we can cache these if they turn out to be slow
   fh := c.Font.Height;
   if fh < 0 then fh := -fh;
-  Result := - Trunc(0.86*fh) + tm.tmAscent
 
-  {
-  Result := tm.tmInternalLeading;
+  bl := 86;
 
-  for i := Low(KnownOldStyleFonts) to High(KnownOldStyleFonts) do
-    if SysUtils.SameStr(KnownOldStyleFonts[i], fontface) then
-      exit; //no further fix needed
-  Result := Trunc(Result * 0.7);
-  }
+  for i := Low(FontAdjustments) to High(FontAdjustments) do
+    if SysUtils.SameStr(FontAdjustments[i].n, fontface) then begin
+      bl := bl + FontAdjustments[i].bl;
+      break;
+    end;
+
+  Result := - Trunc(bl*fh/100) + tm.tmAscent;
 end;
 
 {

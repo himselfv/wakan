@@ -24,6 +24,7 @@ type
     cbJISFontsOnly: TCheckBox;
     Label2: TLabel;
     cbShiftTop: TComboBox;
+    cbDrawTicks: TCheckBox;
     procedure FormShow(Sender: TObject);
     procedure cbFontsChange(Sender: TObject);
     procedure edtTextChange(Sender: TObject);
@@ -244,6 +245,7 @@ var boxSize: integer;
   bCentered: boolean;
   tm: TTextMetric;
   shiftTop: integer;
+  tick: integer;
 begin
   Canvas.Brush.Color := clWhite;
   Canvas.FillRect(CanvasRect);
@@ -318,6 +320,15 @@ begin
   Canvas.Pen.Color := clRed;
   Canvas.Brush.Style := bsClear;
   Canvas.Rectangle(rc);
+
+  if cbDrawTicks.Checked then begin
+    tick := rc.Top + 10;
+    while tick < rc.Bottom do begin
+      Canvas.PenPos := TPoint.Create(rc.Left, tick);
+      Canvas.LineTo(rc.Left+4, tick);
+      Inc(tick, 10);
+    end;
+  end;
 end;
 
 procedure TFontTestForm.DrawMetrics(Canvas: TCanvas; DrawRect: TRect; Centered: boolean);
