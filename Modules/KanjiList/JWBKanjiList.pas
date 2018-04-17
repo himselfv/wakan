@@ -1572,7 +1572,7 @@ begin
   DrawGrid1.Canvas.Font.Style:=[];
 
   r_copy := rect;
-  r_copy.Left := r_copy.Left + 5;
+  r_copy.Left := r_copy.Left + 2;
   r_copy.Top := r_copy.Top + 4;
   DrawCJKChar(DrawGrid1.Canvas, r_copy, fontsize, w, fontface);
 
