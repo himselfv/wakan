@@ -616,7 +616,7 @@ begin
     exit;
   end;
   c.Font.Name:=fontface;
-  c.Font.Height:=fs;
+  c.Font.Height:=-fs;
   r.Left := 0;
   r.Top := 0;
   r.Right := 0;
