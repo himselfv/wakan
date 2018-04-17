@@ -298,7 +298,7 @@ begin
         rcd.Top := rcd.Top + GetAutoadjustLeading(Canvas.Font.Name, -Canvas.Font.Height);
     5:  //Raise to have the baseline at the predefined level of 11% from the bottom
         //This is where the baseline is in all the old-school CJK fonts.
-        rcd.Top := rcd.Top + Trunc(0.89*boxSize) - tm.tmAscent;
+        rcd.Top := rcd.Top + Trunc(0.84*boxSize) - tm.tmAscent;
   end;
   if not TryStrToInt(cbShiftTop.Text, shiftTop) then
     exit;
