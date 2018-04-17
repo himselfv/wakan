@@ -807,11 +807,11 @@ var
    //Arial Unicode MS: +2
    (n:'Arial Unicode MS'; bl: +2),
 
-   //Meiryo font family: +2
-   (n:'Meiryo'; bl: +2),
-   (n:'メイリオ'; bl: +2),
-   (n:'Meiryo UI'; bl: +2),
-   (n:'メイリオ UI'; bl: +2),
+   //Meiryo font family: +3
+   (n:'Meiryo'; bl: +3),
+   (n:'メイリオ'; bl: +3),
+   (n:'Meiryo UI'; bl: +3),
+   (n:'メイリオ UI'; bl: +3),
 
    //All Yu Gothic/Yu Mincho fonts are positioned slightly higher than classic
    (n:'Yu Gothic'; bl: +2),
