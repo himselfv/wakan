@@ -339,10 +339,10 @@ begin
         +'probably display characters incorrectly.'#13+'Installation of these '
         +'fonts and restart of the autodetection routine is HIGHLY recommended.');
     s:=s+#13#13;
-    s:=s+_l('#01242^These fonts can usually be installed by enabling support for Japanese, '
+    s:=s+_l('#00581^These fonts can usually be installed by enabling support for Japanese, '
     +'traditional Chinese and simplified Chinese writing in your operating system '
-    +'optional components.')+#13
-    +_l('#01243^Please consult the internet for more information');
+    +'optional components.'#13
+    +'Please consult the internet for more information');
     if not SubstitutionFailed then
       Application.MessageBox(
         pchar(s),
