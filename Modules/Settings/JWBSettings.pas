@@ -400,7 +400,7 @@ const
 
 implementation
 uses
-  JWBStrings, JWBUnit, TextTable,
+  JWBStrings, JWBUnit, JWBDrawText, TextTable,
 {$IFNDEF AUTOTEST}
   ActnList, JWBCore, AppData, JWBIO, JWBLanguage, KanaConv, JWBFontSelect,
   JWBMenu, JWBEditor, JWBKanjiList, JWBKanjiCard, JWBKanjiDetails,

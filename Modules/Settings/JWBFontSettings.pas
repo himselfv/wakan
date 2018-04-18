@@ -77,7 +77,7 @@ var
 procedure Register;
 
 implementation
-uses ComCtrls, JWBLanguage, JWBFontSelect, JWBUnit;
+uses ComCtrls, JWBLanguage, JWBFontSelect, JWBUnit, JWBDrawText;
 
 {$R *.dfm}
 

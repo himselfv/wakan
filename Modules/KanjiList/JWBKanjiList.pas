@@ -245,7 +245,7 @@ uses Types, UITypes, JWBIO, JWBUnit, JWBClipboard, JWBMenu, JWBSettings, JWBPrin
   JWBKanjiCompounds, JWBKanjiDetails, JWBFileType, JWBLanguage, JWBKanjiCard,
   KanaConv, JWBCategories, JWBAnnotations, TextTable, JWBCharData, JWBForms,
   JWBIntTip, JWBScreenTip, AppData, JWBWordLookupBase, JWBRefLinks,
-  AnnotationsSettings;
+  AnnotationsSettings, JWBDrawText;
 
 var ki:TStringList;
 

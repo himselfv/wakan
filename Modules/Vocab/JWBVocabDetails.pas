@@ -82,7 +82,7 @@ var
   fVocabDetails: TfVocabDetails;
 
 implementation
-uses TextTable, JWBLanguage, JWBVocab, JWBMenu, JWBUnit, JWBUserData,
+uses TextTable, JWBLanguage, JWBVocab, JWBMenu, JWBUnit, JWBDrawText, JWBUserData,
   JWBVocabFilters, JWBCategories, JWBForms, JWBIntTip;
 
 {$R *.DFM}

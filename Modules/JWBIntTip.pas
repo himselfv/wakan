@@ -69,7 +69,7 @@ procedure ClearSelectionHighlight;
 procedure PaintSelectionHighlight(canv: TCanvas=nil; in_rect: PRect=nil);
 
 implementation
-uses SysUtils, Windows, ExtCtrls, WakanPaintBox, JWBUnit;
+uses SysUtils, Windows, ExtCtrls, WakanPaintBox, JWBUnit, JWBDrawText;
 
 constructor TIntTip.Create;
 begin

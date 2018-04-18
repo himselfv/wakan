@@ -19,7 +19,7 @@ procedure FillWordGrid(grid:TStringGrid;sl:TStringList;stat,learn:boolean);
 
 implementation
 uses Messages, Controls, JWBLanguage, JWBUnit, JWBLegacyMarkup, JWBSettings,
-  KanaConv, JWBIntTip, AnnotationsSettings;
+  KanaConv, JWBDrawText, JWBIntTip, AnnotationsSettings;
 
 //Splits translation record in old Wakan format into parts:
 //  kanji [kana] {translation} rest

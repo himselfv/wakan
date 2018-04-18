@@ -23,7 +23,8 @@ type
   end;
 
 implementation
-uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup;
+uses JWBStrings, JWBUnit, JWBWordLookup, JWBSettings, Grids, JWBLegacyMarkup,
+  JWBDrawText;
 
 {$R *.DFM}
 

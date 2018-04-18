@@ -370,7 +370,7 @@ uses Types, MemSource, TextTable, JWBStrings, AppData, JWBCore, JWBClipboard, JW
  JWBVocabFilters, JWBStatistics, JWBKanjiList, JWBKanjiDetails, JWBWordKanji,
  JWBDictMan, JWBDictImport, JWBScreenTip, JWBCategories, JWBAnnotations,
  JWBCommandLine, JWBAutoImport, JWBComponents, JWBDownloader, JWBCategoryMgr,
- JWBIntTip, UpgradeFiles, WakanCfg;
+ JWBIntTip, UpgradeFiles, WakanCfg, JWBDrawText;
 
 {$R *.DFM}
 

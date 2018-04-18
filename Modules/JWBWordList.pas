@@ -163,8 +163,8 @@ type
 function StateStr(i:integer):string;
 
 implementation
-uses JWBStrings, JWBLanguage, JWBCore, JWBUnit, JWBSettings, JWBPrint, Printers,
-  JWBVocab, JWBMenu, JWBUserData, TextTable, StdPrompt, JWBCategories,
+uses JWBStrings, JWBLanguage, JWBCore, JWBUnit, JWBDrawText, JWBSettings, JWBPrint,
+  Printers, JWBVocab, JWBMenu, JWBUserData, TextTable, StdPrompt, JWBCategories,
   JWBLegacyMarkup;
 
 {$R *.DFM}

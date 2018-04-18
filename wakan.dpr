@@ -19,6 +19,7 @@ uses
   JWBSplash in 'Modules\JWBSplash.pas' {fSplash},
   JWBUnit in 'Modules\JWBUnit.pas',
   JWBCore in 'Modules\JWBCore.pas',
+  JWBDrawText in 'Modules\JWBDrawText.pas',
   WakanCfg in 'Modules\WakanCfg.pas',
   TaskbarCtl in 'Modules\TaskbarCtl.pas',
   JWBClipboard in 'Modules\JWBClipboard.pas',

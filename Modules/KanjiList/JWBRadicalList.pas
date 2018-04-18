@@ -129,7 +129,7 @@ function IndexesToRadicals(const AType: TRadSearchType; const AIndexes: TRadical
 implementation
 
 uses TextTable, JWBCore, JWBUnit, PKGWrite, JWBCategories, JWBIO, JWBCharData,
-  MemSource, JWBIntTip;
+  MemSource, JWBDrawText, JWBIntTip;
 
 {$R *.DFM}
 

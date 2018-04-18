@@ -17,7 +17,8 @@ procedure DrawStrokeOrder(canvas:TCanvas;x,y,w,h:integer;char:string;fontsize:in
 procedure BuildStrokeOrderPackage(const sourceCsv, targetSod: string);
 
 implementation
-uses SysUtils, Dialogs, Windows, MemSource, JWBStrings, JWBCore, JWBUnit, PKGWrite;
+uses SysUtils, Dialogs, Windows, MemSource, JWBStrings, JWBCore, JWBUnit,
+  JWBDrawText, PKGWrite;
 
 
 procedure LoadStrokeOrder(const AFilename: string);

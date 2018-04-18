@@ -68,7 +68,7 @@ var
 
 implementation
 uses TextTable, JWBUnit, JWBWordLookup, JWBMenu, JWBCategories, JWBCharData,
-  JWBKanjiDetails, JWBSettings, JWBIntTip, JWBScreenTip;
+  JWBKanjiDetails, JWBSettings, JWBIntTip, JWBScreenTip, JWBDrawText;
 
 {$R *.DFM}
 

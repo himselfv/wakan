@@ -79,7 +79,7 @@ var
   examfile:TMemoryFile;
 
 implementation
-uses JWBCore, JWBLanguage, JWBUnit, PKGWrite, JWBClipboard, JWBIntTip,
+uses JWBCore, JWBLanguage, JWBUnit, JWBDrawText, PKGWrite, JWBClipboard, JWBIntTip,
   JWBScreenTip, JWBDownloader;
 
 {$R *.DFM}

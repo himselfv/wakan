@@ -548,7 +548,7 @@ uses Types, TextTable, JWBCore, JWBLanguage, JWBKanjiDetails,
   JWBSettings, JWBPrint, StdPrompt, KanaConv, JWBUnit, JWBCategories, JWBDictionaries,
   JWBDic, JWBEdictMarkers, JWBFileType, JWBUserData, JWBCharData, StreamUtils,
   JWBLegacyMarkup, System.Character, JWBMenu, JWBClipboard, JWBWordLookup,
-  JWBIntTip;
+  JWBIntTip, JWBDrawText;
 
 var
   EditorWindowTitle: string = '#00610^eText editor / translator'; //one param: file name

@@ -113,7 +113,7 @@ const
   PopupButtonSep=2;
 
 implementation
-uses JWBUnit, JWBDic, JWBLanguage, JWBSettings, JWBLegacyMarkup,
+uses JWBUnit, JWBDrawText, JWBDic, JWBLanguage, JWBSettings, JWBLegacyMarkup,
   JWBWordGrid, JWBIntTip;
 
 {$R *.DFM}
