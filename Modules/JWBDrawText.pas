@@ -1,9 +1,8 @@
 ﻿unit JWBDrawText;
-
-interface
-uses Graphics, Windows, JWBStrings;
-
+{ Text painting routines. }
 {
+FONTS 101.
+
 PIXELS, INCHES AND POINTS:
   Pixels  = pixels on the logical screen
   Inches    can contain different number of pixels, depending on the pixel density
@@ -85,25 +84,44 @@ II. Modern fonts (Yu Gothic/Yu Mincho/Meiryo and others)
  - Latin chars are arbitrary width
 }
 
+interface
+uses Graphics, Windows, JWBStrings;
 
+{
+Currently selected fonts for the application
+}
+
+var
+  FontStrokeOrder,
+  FontChinese,
+  FontChineseGB,
+  FontChineseGrid,
+  FontChineseGridGB,
+  FontJapaneseGrid,
+  FontJapanese,
+  FontSmall,
+  FontRadical,
+  FontEnglish,
+  FontPinYin:string;
 
 
 {
 Wakan employs 2 methods of painting text
 
-1. Simple/Line painting - paint lines of arbitrary text composed from characters
+1. Normal/Line painting - paint lines of arbitrary text composed from characters
   potentially in different languages.
-  This is how text is normally drawn. All the different fonts are aligned by the
-  baseline.
-
-2. CJK/Char painting - paint single CJK characters or strings of CJK characters.
-  Since CJK chars are always square cells, for CJK painting Wakan ignores
-  the internal leading and tries to fill all the available space.
+  This is how text is normally drawn.
 }
-
 procedure DrawUnicodeText(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
+
+{
+2. CJK/Char painting - paint single CJK characters or strings of CJK characters.
+  CJK chars are always square cells so Wakan ignores the internal leading and
+  tries to fill all the available space.
+}
 procedure DrawCJK(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string);
 procedure DrawCJKChar(c:TCanvas; rect:TRect; fh:integer; const ch:FString; const fontface:string);
+
 
 {
 Draw registry
@@ -131,23 +149,6 @@ function CalcStrWidth(c:TCanvas;const fontface:string;fs:integer;
 function GetCoveredCharNo(c:TCanvas;const fontface:string;fs:integer;
   const ch:FString;x:integer;halfCharRounding:boolean): integer; forward;
 
-
-{
-Currently selected fonts
-}
-
-var
-  FontStrokeOrder,
-  FontChinese,
-  FontChineseGB,
-  FontChineseGrid,
-  FontChineseGridGB,
-  FontJapaneseGrid,
-  FontJapanese,
-  FontSmall,
-  FontRadical,
-  FontEnglish,
-  FontPinYin:string;
 
 
 implementation
