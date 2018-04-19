@@ -4,29 +4,27 @@
 FONTS 101.
 
 PIXELS, INCHES AND POINTS:
-  Pixels  = pixels on the logical screen
-  Inches    can contain different number of pixels, depending on the pixel density
-  PXI/PPI = Pixels Per Inch, variable
-  Points  = universal font size measurement
-  PTI     = Points Per Inch = 72
+Pixels  = pixels on the logical desktop
+Inches    contain different number of pixels, depending on the pixel density
+PXI/PPI = Pixels Per Inch, variable
+Points  = universal font size measurement
+PTI     = Points Per Inch = 72
 
-"Logical units" or "logical height" usually means "logical" pixels. Device units
-usually means inches or "physical pixels" (you rarely meet this) depending on
+"Logical units" or "logical height" usually means logical pixels. Device units
+usually means inches or "physical pixels" (rarely encountered) depending on
 the context.
 
 https://support.microsoft.com/en-us/help/74299/info-calculating-the-logical-height-and-point-size-of-a-font
 
+FONT METRICS AND LAYOUT
+Different fonts lay out characters differently, even if the fonts are the same size.
 
-FONT METRICS AND LAYOUT:
-Different fonts align their characters differently and leave different spacing,
-even when they're the same size.
+Characters from different fonts on a single line are aligned by their baselines.
+This is how text is normally drawn (Word, browsers).
 
-Characters from different fonts are aligned together on a single line by their
-baselines. This is how text is normally drawn (Word, browsers).
-
-Line height        = Ascent + Descent
 Top                = Baseline + Ascent
 Bottom             = Baseline - Descent
+Line height        = Ascent + Descent
 Cell height        = Line height
 Character height   = Line height - Internal leading
 Internal leading   = Space at the top of the character for diacritics etc.
@@ -35,27 +33,24 @@ External leading   = Apps can leave additional space between lines. User-defined
 
 https://msdn.microsoft.com/en-us/library/windows/desktop/dd145122(v=vs.85).aspx
 
-
 LINE HEIGHT AND CHARACTER SIZE
-Fonts with the same height can have different character size:
-  Line/cell height  Full height of the line
-  Character height  Line Height - Internal leading (variable)
+Fonts of the same size can have different character size:
+  Line height        Full height of the line
+  Character height   Line Height - Internal leading (variable)
 Some fonts have no internal leading, making these equal.
 
 CreateFont accepts the font height in pixels in two ways:
   +Height   set the line height        (use to display a line of text)
-  -Height   set the character height   (use to fit a character to given rectangle)
+  -Height   set the character height   (use to fit a character to a given rectangle)
 
 TFont provides two properties:
   Height    directly translate to CreateFont's Height
   Size      is a size in font-points, correctly converted to height
 
-
 FONT SUBSTITUTION
 When a font doesn't have glyphs for some characters, Windows automatically uses
 a different one which has these.
 This only works with some of the system drawing functions.
-
 
 HALFWIDTH AND FULLWIDTH FORMS
 Classic CJK fonts paint latin chars in exactly half-width of CJK chars. Modern
@@ -63,7 +58,6 @@ draw them normally (variable width).
 Unicode has additional full-width latin which is always equal to CJK char. Most
 fonts, classic and modern, implement these.
 https://en.wikipedia.org/wiki/Halfwidth_and_fullwidth_forms
-
 
 CJK FONT FAMILIES AND METRICS
 There are broadly two classes of CJK fonts on Windows:
@@ -82,6 +76,21 @@ II. Modern fonts (Yu Gothic/Yu Mincho/Meiryo and others)
  - Baseline is roughly in the same place, but different fonts place
    the characters slightly differently.
  - Latin chars are arbitrary width
+
+Notably, there are classical fonts which:
+1. Ignore internal leading entirely (it is set to 0)
+2. Have hardcoded internal leading by placing the character precisely in the center
+  of the character cell and leaving some space to the sides.
+3. All have the baseline in the same place.
+These fonts are therefore entirely interchangeable and don't need any treatment.
+We use them as a reference when adjusting other fonts.
+
+These fonts are any variations of: MS Gothic, MS Mincho, SimSun and MingLiU,
+with the exception that MingLiU fonts have broken baseline (no #3).
+
+Many modern fonts are also similar in that they all put characters roughly
+2% higher above the baseline than the classical fonts.
+
 }
 
 interface
@@ -158,8 +167,8 @@ var
   curpbox:TCanvas;
 
 {
-We sometimes want to draw CJK characters precisely in the middle of the box,
-filling it. Unfortunately, different fonts have different measurements,
+Sometimes we need to draw CJK characters precisely, aligned identically
+no matter which font we use.
 
 The best shot at this is by aligning characters by their baseline, since this is
 how multiple fonts are aligned together normally.
@@ -168,31 +177,17 @@ Unfortunately, different fonts place characters a bit differently. The offset is
 almost guaranteed to be acceptable anyway, but for most likely fonts we want
 to offer a perfect experience.
 
-This is a table of adjustments to baselines for some well-known fonts. We align
-their characters to fit old-style fonts with the same baseline.
-
-Notably, there are classical fonts which:
-1. Ignore internal leading entirely (it is set to 0)
-2. Have hardcoded internal leading by placing the character precisely in the center
-  of the character cell and leaving some space to the sides.
-3. All have the baseline in the same place.
-These fonts are therefore entirely interchangeable and don't need any treatment.
-We use them as a reference when adjusting other fonts.
-
-These fonts are any variations of: MS Gothic, MS Mincho, SimSun and MingLiU,
-with the exception that MingLiU fonts have broken baseline (no #3).
-
-Many modern fonts are also similar in that they all put characters roughly
-2% higher above the baseline than the classical fonts.
+This is a table of adjustments to baselines for some well-known fonts. We adjust
+their characters to match old-style fonts on the same baseline.
 }
 type
-  TFontAdjustment = record
+  TFontBaselineAdjustment = record
     n: string;
     bl: integer; //adjustment to baseline, in %
   end;
 
 var
-  FontAdjustments: array[0..34] of TFontAdjustment = (
+  FontAdjustments: array[0..34] of TFontBaselineAdjustment = (
   {
    //These classic reference fonts need no adjustments:
 
@@ -210,7 +205,7 @@ var
    (n:'ＭＳ 明朝'; bl: +0),
    (n:'ＭＳ P明朝'; bl: +0),
 
-   //SimSun family looks like it _might_ benefit from an adjustment, but not really
+   //SimSun family looks like it might benefit from an adjustment, but not really
    (n:'SimSun'; bl: +0),
    (n:'SimSun-ExtB'; bl: +0),
    (n:'NSimSun'; bl: +0),
@@ -243,7 +238,7 @@ var
    (n:'Meiryo UI'; bl: +3),
    (n:'メイリオ UI'; bl: +3),
 
-   //All Yu Gothic/Yu Mincho fonts are positioned slightly higher than classic
+   //Yu Gothic/Yu Mincho: +3
    (n:'Yu Gothic'; bl: +2),
    (n:'Yu Gothic Light'; bl: +2),
    (n:'Yu Gothic Medium'; bl: +2),
@@ -316,8 +311,6 @@ begin
 end;
 
 
-
-
 {
 Draws a single continuous line of CJK unicode characters and adds it to the drawing registry.
 This is tailored for CJK only.
@@ -382,8 +375,6 @@ begin
     DrawText(c.Handle,PChar(ws),Length(ws),rect,DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;
 end;
-
-
 
 
 {
