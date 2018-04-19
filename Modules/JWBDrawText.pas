@@ -97,24 +97,6 @@ interface
 uses Graphics, Windows, JWBStrings;
 
 {
-Currently selected fonts for the application
-}
-
-var
-  FontStrokeOrder,
-  FontChinese,
-  FontChineseGB,
-  FontChineseGrid,
-  FontChineseGridGB,
-  FontJapaneseGrid,
-  FontJapanese,
-  FontSmall,
-  FontRadical,
-  FontEnglish,
-  FontPinYin:string;
-
-
-{
 Wakan employs 2 methods of painting text
 
 1. Normal/Line painting - paint lines of arbitrary text composed from characters
@@ -370,7 +352,6 @@ begin
   end else begin
    //Draw unicode index instead
     ws := IntToHex(Utf16ToUnicodeIndex(fgetch(ch,1)),4);
-    c.Font.Name:=FontEnglish;
     c.Font.Height:=Trunc(fh*0.44);
     DrawText(c.Handle,PChar(ws),Length(ws),rect,DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;

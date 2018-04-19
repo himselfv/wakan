@@ -107,9 +107,20 @@ procedure WriteColors(const reg: TCustomIniFile);
 procedure SetColDefault(i:integer);
 
 
-{ Painting }
-
+{ Painting and currently selected fonts }
 var
+  FontStrokeOrder,
+  FontChinese,
+  FontChineseGB,
+  FontChineseGrid,
+  FontChineseGridGB,
+  FontJapaneseGrid,
+  FontJapanese,
+  FontSmall,
+  FontRadical,
+  FontEnglish,
+  FontPinYin:string;
+
   GridFontSize:integer;
 
 procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string); inline;
