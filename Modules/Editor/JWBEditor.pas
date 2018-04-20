@@ -235,42 +235,18 @@ type
   public
     procedure LanguageChanging;
     procedure LanguageChanged;
-
-  protected
-    CopyShort, CopyAsShort,
-    CutShort, PasteShort,
-    AllShort: TShortCut;
-    CF_HTML: integer;
-    CF_ODT: integer;
-    CF_WAKAN: integer;
-    function GenerateHtmlClipHeader(const lenHtml: integer;
-      const startFragment, endFragment: integer): UnicodeString;
-  public
-    procedure CopyAs; //extended copy to clipboard
-    function CopyAsText: UnicodeString;
-    function CopyAsHtml: Utf8String;
-    function CopyAsClipHtml: Utf8String;
-    function CopyAsRuby: UnicodeString;
-    function CopyAsOpenDocumentTextContent: Utf8String;
-    function CopyAsOpenDocument: TMemoryStream;
-    function CopyAsWakanText: TMemoryStream;
+    procedure SettingsChanged;
 
   protected //Currently opened document
-    FDocFilename: string;
-    FDocType: TDocType;
-    FDocEncoding: CEncoding; //for text documents
     function Get_doctr(Index: integer): PCharacterLineProps;
+    procedure DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
+      out kanji, reading: FString; out meaning: string);
   public
     doc: TWakanText;
-    property DocFilename: string read FDocFilename write FDocFilename;
-    property DocType: TDocType read FDocType write FDocType;
-    property DocEncoding: CEncoding read FDocEncoding write FDocEncoding;
     property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
 
   protected //Unsorted
     procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
-    procedure DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
-      out kanji, reading: FString; out meaning: string);
     function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
     procedure RefreshLines;
     procedure CopySelection(format:TTextSaveFormat;stream:TStream;
@@ -279,23 +255,37 @@ type
     procedure PasteOp;
     procedure PasteText(const chars: FString; const props: TCharacterLineProps;
       AnnotMode: TTextAnnotMode);
-    function IsHalfWidth(x,y:integer):boolean;
-    function PosToWidth(x,y:integer):integer;
-    function WidthToPos(x,y:integer):integer;
-    function HalfUnitsToCursorPos(x,y: integer):integer;
   public
     function GetDocWord(x,y:integer;var wordtype: TEvalCharType):string;
     function GetWordAtCaret(out AWordtype: TEvalCharType): string;
-    function GetClosestCursorPos(x,y:integer):TCursorPos;
-    function GetExactLogicalPos(x,y:integer):TSourcePos;
-    function TryGetExactLogicalPos(x,y: integer):TSourcePos;
 
-  protected
+  protected //Font and font size
     FFontSize: integer;
+    function GetFontName: string;
     procedure SetFontSize(Value: integer);
     procedure cbFontSizeGuessItem(Value: string);
   public
+    property FontName: string read GetFontName;
     property FontSize: integer read FFontSize write SetFontSize;
+
+  //Half-width latin characters
+  protected
+    FEnableHalfWidth: boolean;
+    procedure SetEnableHalfWidth(const Value: boolean);
+    function IsHalfWidth(x, y: integer): boolean;
+  public
+    procedure RetestHalfwidthSupport;
+    property EnableHalfWidth: boolean read FEnableHalfWidth write SetEnableHalfWidth;
+
+  //Position calculation
+  protected
+    function PosToWidth(x,y:integer): integer;
+    function WidthToPos(x,y:integer): integer;
+    function HalfUnitsToCursorPos(x,y: integer): integer;
+  public
+    function GetClosestCursorPos(x,y:integer): TCursorPos;
+    function GetExactLogicalPos(x,y:integer): TSourcePos;
+    function TryGetExactLogicalPos(x,y: integer): TSourcePos;
 
   protected //Mostly repainting
     EditorBitmap: TBitmap;
@@ -471,14 +461,36 @@ type
     function GetInsertRomaji: string;
     function GetInsertKana(const AType: TInsertKanaType): FString;
 
+  protected //Clipboard formats
+    CopyShort, CopyAsShort,
+    CutShort, PasteShort,
+    AllShort: TShortCut;
+    CF_HTML: integer;
+    CF_ODT: integer;
+    CF_WAKAN: integer;
+    function GenerateHtmlClipHeader(const lenHtml: integer;
+      const startFragment, endFragment: integer): UnicodeString;
+  public
+    procedure CopyAs; //extended copy to clipboard
+    function CopyAsText: UnicodeString;
+    function CopyAsHtml: Utf8String;
+    function CopyAsClipHtml: Utf8String;
+    function CopyAsRuby: UnicodeString;
+    function CopyAsOpenDocumentTextContent: Utf8String;
+    function CopyAsOpenDocument: TMemoryStream;
+    function CopyAsWakanText: TMemoryStream;
+
   protected //File opening/saving
+    FDocFilename: string;
+    FDocType: TDocType;
+    FDocEncoding: CEncoding; //for text documents
     FFileChanged: boolean;
     LastAutoSave:TDateTime;
     FFullTextTranslated: boolean; //applied full text translation at least once since loading
      //this is needed for saving in Kana mode -- we don't show a reminder if it's obvious the text was translated
     SaveAnnotMode: TTextAnnotMode; //if we have saved the file once, we remember the choice
     procedure SetFileChanged(Value: boolean);
-  public //File open/save
+  public
     procedure ClearEditor(const DoRepaint: boolean = true);
     procedure AutoloadLastFile;
     procedure OpenAnyFile(const AFilename: string);
@@ -489,10 +501,13 @@ type
     function SaveAs: boolean;
     function CommitFile:boolean;
     function ExportAs: boolean;
+    property DocFilename: string read FDocFilename write FDocFilename;
+    property DocType: TDocType read FDocType write FDocType;
+    property DocEncoding: CEncoding read FDocEncoding write FDocEncoding;
     property FileChanged: boolean read FFileChanged write SetFileChanged;
     property FullTextTranslated: boolean read FFullTextTranslated write FFullTextTranslated;
 
-  protected
+  protected //Automatic translation
     function SetupSearchRequest: TDicSearchRequest;
    {$IFDEF MTHREAD_SUPPORT}
     function CreateTranslationThreads(abfromy, abtoy: integer; var y: integer): TTranslationThreads;
@@ -696,6 +711,8 @@ begin
  //We need to update controls when we set FontSize, and if we set ItemIndex here,
  //it'll get overwritten for some buggy VCL reason. So we use FormShow.
 
+  FEnableHalfWidth := true;
+
   linl := TGraphicalLineList.Create;
 
   fEditorHint := TfEditorHint.Create(Self);
@@ -731,6 +748,7 @@ end;
 procedure TfEditor.FormShow(Sender: TObject);
 begin
   if FFontSize<=0 then FontSize:=FontSizeMedium; //see FormCreate for explanation
+  RetestHalfwidthSupport; //initially
   ShowText(true);
   ListBox1.ItemIndex:=0;
   ListBox1.SetFocus;
@@ -777,6 +795,14 @@ end;
 procedure TfEditor.LanguageChanged;
 begin
   RepaintText; //hide hint after CloseInsert + font changed
+end;
+
+procedure TfEditor.SettingsChanged;
+begin
+  //Fonts might have changed, halfwidth support might have changed
+  Self.RetestHalfwidthSupport;
+  if Self.Visible then
+    Self.RepaintText;
 end;
 
 procedure TfEditor.ClearEditor(const DoRepaint: boolean = true);
@@ -2775,17 +2801,11 @@ begin
               end;
               if showroma then
               begin
-                if curlang='c'then
-                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,2),FontChineseGrid)
-                else
-                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,2),FontJapaneseGrid);
+                DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,2),Self.FontName);
                 fdelete(kanaq,1,2);
               end else
               begin
-                if curlang='c'then
-                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,1),FontChineseGrid)
-                else
-                  DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,1),FontJapaneseGrid);
+                DrawUnicode(canvas,realx+r.Left,realy+r.Top-1,rs,fcopy(kanaq,1,1),Self.FontName);
                 fdelete(kanaq,1,1);
               end;
               inc(cntx,rs);
@@ -2812,10 +2832,7 @@ begin
           rect.Top:=realy+r.Top;
           rect.Bottom:=realy+r.Top+rs*2;
           canvas.FillRect(rect);
-          if curlang='c'then
-            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(doc.GetDoc(cx,cy)),FontChineseGrid)
-          else
-            DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(doc.GetDoc(cx,cy)),FontJapaneseGrid);
+          DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(doc.GetDoc(cx,cy)),Self.FontName);
 
          { Box border for meaning => underline.
           This one is drawn char-by-char, so we check for worddict + valid
@@ -3806,6 +3823,7 @@ begin
   end;
 end;
 
+//JWBWakanText calls this callback to retrieve a dictionary entry associated with a position
 procedure TfEditor.DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
   out kanji, reading: FString; out meaning: string);
 begin
@@ -3836,60 +3854,6 @@ begin
   fcur := RCur;
   AWordtype := EC_UNKNOWN;
   Result := GetDocWord(fcur.x, fcur.y, AWordtype);
-end;
-
-
-{ Font }
-
-procedure TfEditor.SetFontSize(Value: integer);
-begin
-  if FFontSize=Value then exit;
-  FFontSize := Value;
-  aSmallFont.Checked:=(FFontSize=FontSizeSmall);
-  aMedFont.Checked:=(FFontSize=FontSizeMedium);
-  aLargeFont.Checked:=(FFontSize=FontSizeLarge);
-  if cbFontSize.Text<>IntToStr(Value) then begin
-    cbFontSize.Text := IntToStr(Value);
-    cbFontSizeGuessItem(cbFontSize.Text);
-    cbFontSizeChange(cbFontSize);
-  end;
-  RefreshLines;
-end;
-
-//If there's an item in the listbox with the exact same text, select that item
-//instead of just setting text property (there's a difference: ItemIndex is set)
-//Does not call OnChange.
-procedure TfEditor.cbFontSizeGuessItem(Value: string);
-var i: integer;
-begin
-  for i := 0 to cbFontSize.Items.Count - 1 do
-    if cbFontSize.Items[i]=Value then begin
-      cbFontSize.ItemIndex := i;
-      exit;
-    end;
-end;
-
-procedure TfEditor.cbFontSizeChange(Sender: TObject);
-var tmp: integer;
-begin
-  if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then
-    SetFontSize(tmp);
-end;
-
-procedure TfEditor.cbFontSizeExit(Sender: TObject);
-var tmp: integer;
-begin
-  if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then begin
-    SetFontSize(tmp);
-    cbFontSizeGuessItem(cbFontSize.Text);
-  end else
-    cbFontSize.Text := IntToStr(FontSize);
-end;
-
-procedure TfEditor.cbFontSizeKeyPress(Sender: TObject; var Key: Char);
-begin
-  if Ord(Key)=VK_RETURN then
-    ListBox1.SetFocus; //jump to editor
 end;
 
 
@@ -3996,10 +3960,115 @@ begin
   InvalidateCursorPos;
 end;
 
+
+{ Font }
+
+//Returns active main font face
+//Currently this is always the appropriate globally configured font
+function TfEditor.GetFontName: string;
+begin
+  if curlang='c' then
+    Result := FontChineseGrid
+  else
+    Result := FontJapaneseGrid;
+end;
+
+procedure TfEditor.SetFontSize(Value: integer);
+begin
+  if FFontSize=Value then exit;
+  FFontSize := Value;
+  aSmallFont.Checked:=(FFontSize=FontSizeSmall);
+  aMedFont.Checked:=(FFontSize=FontSizeMedium);
+  aLargeFont.Checked:=(FFontSize=FontSizeLarge);
+  if cbFontSize.Text<>IntToStr(Value) then begin
+    cbFontSize.Text := IntToStr(Value);
+    cbFontSizeGuessItem(cbFontSize.Text);
+    cbFontSizeChange(cbFontSize);
+  end;
+  RefreshLines;
+end;
+
+//If there's an item in the listbox with the exact same text, select that item
+//instead of just setting text property (there's a difference: ItemIndex is set)
+//Does not call OnChange.
+procedure TfEditor.cbFontSizeGuessItem(Value: string);
+var i: integer;
+begin
+  for i := 0 to cbFontSize.Items.Count - 1 do
+    if cbFontSize.Items[i]=Value then begin
+      cbFontSize.ItemIndex := i;
+      exit;
+    end;
+end;
+
+procedure TfEditor.cbFontSizeChange(Sender: TObject);
+var tmp: integer;
+begin
+  if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then
+    SetFontSize(tmp);
+end;
+
+procedure TfEditor.cbFontSizeExit(Sender: TObject);
+var tmp: integer;
+begin
+  if TryStrToInt(cbFontSize.Text,tmp) and (tmp>=2) then begin
+    SetFontSize(tmp);
+    cbFontSizeGuessItem(cbFontSize.Text);
+  end else
+    cbFontSize.Text := IntToStr(FontSize);
+end;
+
+procedure TfEditor.cbFontSizeKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Ord(Key)=VK_RETURN then
+    ListBox1.SetFocus; //jump to editor
+end;
+
+
+{
+Half-width latin support.
+This is different from HW/FW typing! FW latin is special latin, HW latin is
+normal latin which monospaced fonts can display 2 in a cell.
+We can still draw HW latin as FW if the font is not monospace.
+}
+
+//Retests whether half-width latin is enabled and the current font supports it.
+//Enables or disables it appropriately.
+procedure TfEditor.RetestHalfwidthSupport;
+var tm: TOutlineTextMetric;
+begin
+  EditorPaintbox.Canvas.Font.Name := Self.FontName;
+  if GetOutlineTextMetrics(EditorPaintbox.Canvas.Handle, sizeof(tm), @tm) = 0 then begin
+    //Cannot query the font details, let's not complain
+    Self.EnableHalfWidth := false;
+    exit;
+  end;
+  {
+  Two values are acceptable:
+    PAN_PROP_EVEN_WIDTH   = the latin characters are of equal width
+    PAN_PROP_MONOSPACED   = EVEN_WIDTH + the height is roughly twice the width (true 2-in-a-cell)
+  EVEN_WIDTH could be used if we shrank the characters proportionally to fit,
+  but we don't bother since most monospaced fonts have MONOSPACED correctly.
+  }
+  Self.EnableHalfWidth := (tm.otmPanoseNumber.bProportion = PAN_PROP_MONOSPACED);
+end;
+
+//Enables or disables the drawing of latin as half-cell monospaced characters.
+//If disabled, all characters will occupy the whole cell.
+procedure TfEditor.SetEnableHalfWidth(const Value: boolean);
+begin
+  if FEnableHalfWidth = Value then exit;
+  FEnableHalfWidth := Value;
+  ReflowText(true);
+  Self.RepaintText;
+end;
+
 function TfEditor.IsHalfWidth(x,y:integer):boolean;
 begin
-  result:=IsHalfWidthChar(doc.GetDoc(x,y));
+  Result := FEnableHalfWidth and IsHalfWidthChar(doc.GetDoc(x,y));
 end;
+
+
 
 { Wakan has "half-width" and "full-width" symbols, and therefore position
  in the string (POS) and the number of "graphical half-units" (WIDTH) are

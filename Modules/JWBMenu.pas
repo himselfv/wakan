@@ -1241,7 +1241,7 @@ begin
   if fKanji.Visible then fKanji.Reload();
   if fWordLookup.Visible then fWordLookup.Look();
   if fVocab.Visible then fVocab.ShowIt(false);
-  if fEditor.Visible then fEditor.RepaintText;
+  if fEditor<>nil then fEditor.SettingsChanged;
 end;
 
 procedure TfMenu.aChangeLanguageExecute(Sender: TObject);
