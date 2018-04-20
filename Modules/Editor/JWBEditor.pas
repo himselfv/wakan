@@ -81,7 +81,7 @@ type
 
   {
   Wakan keeps a list of "graphical lines", i.e. lines as displayed on screen.
-  They refer to a "logical lines", that is, lines from a text document.
+  They refer to "logical lines" from a text document.
   }
   TGraphicalLineInfo = record
     xs: integer; //First character index in a logical line
@@ -237,27 +237,29 @@ type
     procedure LanguageChanged;
     procedure SettingsChanged;
 
-  protected //Currently opened document
+  {
+  Currently opened document's logical content.
+  Organized into lines which are independent of the window width.
+  }
+  protected
     function Get_doctr(Index: integer): PCharacterLineProps;
+    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
+    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
     procedure DocGetDictionaryEntry(Sender: TObject; const APos: TSourcePos;
       out kanji, reading: FString; out meaning: string);
   public
     doc: TWakanText;
     property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
+    function GetDocWord(x,y:integer;var wordtype: TEvalCharType):string;
+    function GetWordAtCaret(out AWordtype: TEvalCharType): string;
 
-  protected //Unsorted
-    procedure GetTextWordInfo(cx,cy:integer;var meaning:string;var reading,kanji:FString);
-    function SetWordTrans(x,y:integer;flags:TSetWordTransFlags;const word:PSearchResult):integer;
-    procedure RefreshLines;
+  protected //Copy and paste operations
     procedure CopySelection(format:TTextSaveFormat;stream:TStream;
       AnnotMode:TTextAnnotMode=amRuby);
     procedure DeleteSelection;
     procedure PasteOp;
     procedure PasteText(const chars: FString; const props: TCharacterLineProps;
       AnnotMode: TTextAnnotMode);
-  public
-    function GetDocWord(x,y:integer;var wordtype: TEvalCharType):string;
-    function GetWordAtCaret(out AWordtype: TEvalCharType): string;
 
   protected //Font and font size
     FFontSize: integer;
@@ -268,7 +270,8 @@ type
     property FontName: string read GetFontName;
     property FontSize: integer read FFontSize write SetFontSize;
 
-  //Half-width latin characters
+  //Common latin characters display mode (half- or full width).
+  //Fullwidth latin is always fullwidth.
   protected
     FEnableHalfWidth: boolean;
     procedure SetEnableHalfWidth(const Value: boolean);
@@ -287,15 +290,23 @@ type
     function GetExactLogicalPos(x,y:integer): TSourcePos;
     function TryGetExactLogicalPos(x,y: integer): TSourcePos;
 
-  protected //Mostly repainting
+  {
+  Core repainting.
+  We paint in EditorPaintbox.Paint => its Invalidate and Repaint work.
+  We RenderText() onto EditorBitmap, post that to EditorPaintbox.Canvas
+  then redraw SelectionBlock and Caret.
+  }
+  protected
     EditorBitmap: TBitmap;
-    mustrepaint:boolean;
     function PaintBoxClientRect: TRect;
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
     procedure RenderText(canvas:TCanvas;r:TRect;ll:TGraphicalLineList;
       view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
     procedure ReflowText(force:boolean=false);
+
+  protected
+    mustrepaint:boolean;
   public
     procedure RepaintText;
     procedure ShowText(dolook:boolean);
@@ -319,6 +330,7 @@ type
     function GetCur: TCursorPos;
     procedure SetCur(Value: TCursorPos);
     procedure SetRCur(const Value: TSourcePos);
+    procedure RefreshLines;
     procedure InvalidateLines;
     procedure InvalidateCursorPos;
     function GetCursorScreenPos: TCursorPos;
@@ -328,7 +340,7 @@ type
     property Cur: TCursorPos read GetCur write SetCur; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     property CursorScreenPos: TCursorPos read GetCursorScreenPos; //visible cursor position -- differs sometimes -- see comments
 
-  protected
+  protected //View and scrollbar
     FViewPos: TSourcePos; //logical coordinates of a first visible graphical line anchor
     FViewLineCached: integer; //index of a first visible graphical line -- cached
     FUpdatingScrollbar: boolean;
@@ -1526,6 +1538,15 @@ begin
     fMenu.aKanjiDetailsExecute(nil);
 end;
 
+function TfEditor.PaintBoxClientRect: TRect;
+begin
+  Result := EditorPaintBox.ClientRect;
+  Result.Left := Result.Left + 1 {normal margin} + 1;
+  Result.Top := Result.Top + 1 {normal margin} + 1;
+  Result.Right := Result.Right - 1 {normal margin} - 18 {ScrollBar} - 1;
+  Result.Bottom := Result.Bottom - 1 {normal margin} - 1;
+end;
+
 procedure TfEditor.EditorPaintBoxPaint(Sender: TObject; Canvas: TCanvas);
 var r: TRect;
 begin
@@ -2167,13 +2188,10 @@ begin
     if (not fWordLookup.IsEmpty) and (ins.x<>-1) then Self.ShowHint else HideHint;
 end;
 
-function TfEditor.PaintBoxClientRect: TRect;
+procedure TfEditor.RepaintText;
 begin
-  Result := EditorPaintBox.ClientRect;
-  Result.Left := Result.Left + 1 {normal margin} + 1;
-  Result.Top := Result.Top + 1 {normal margin} + 1;
-  Result.Right := Result.Right - 1 {normal margin} - 18 {ScrollBar} - 1;
-  Result.Bottom := Result.Bottom - 1 {normal margin} - 1;
+  mustrepaint:=true;
+  ShowText(true);
 end;
 
 { Also updates various controls such as ScrollBar, to match current state }
@@ -3682,12 +3700,6 @@ begin
   oldblock := block;
 end;
 
-procedure TfEditor.RepaintText;
-begin
-  mustrepaint:=true;
-  ShowText(true);
-end;
-
 procedure TfEditor.CopySelection(format:TTextSaveFormat;stream:TStream;
   AnnotMode: TTextAnnotMode);
 var block: TTextSelection;
@@ -4130,7 +4142,7 @@ end;
 {
 y: line no
 x: number of half-width positions from the left
-Returns: number of characters from the start of the line to the closes valid
+Returns: number of characters from the start of the line to the closest valid
   TCursorPos.
   (There's got to be at least one at every line)
 }
