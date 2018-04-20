@@ -2,7 +2,7 @@ object FontTestForm: TFontTestForm
   Left = 0
   Top = 0
   Caption = 'FontTestForm'
-  ClientHeight = 407
+  ClientHeight = 699
   ClientWidth = 1009
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -14,7 +14,7 @@ object FontTestForm: TFontTestForm
   OnShow = FormShow
   DesignSize = (
     1009
-    407)
+    699)
   PixelsPerInch = 96
   TextHeight = 13
   object PaintBox: TPaintBox
@@ -207,5 +207,13 @@ object FontTestForm: TFontTestForm
     State = cbChecked
     TabOrder = 9
     OnClick = cbDrawMetricsClick
+  end
+  object mmPanose: TMemo
+    Left = 8
+    Top = 404
+    Width = 297
+    Height = 289
+    ReadOnly = True
+    TabOrder = 10
   end
 end

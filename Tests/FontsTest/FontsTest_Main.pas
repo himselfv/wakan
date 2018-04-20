@@ -25,6 +25,7 @@ type
     Label2: TLabel;
     cbShiftTop: TComboBox;
     cbDrawTicks: TCheckBox;
+    mmPanose: TMemo;
     procedure FormShow(Sender: TObject);
     procedure cbFontsChange(Sender: TObject);
     procedure edtTextChange(Sender: TObject);
@@ -46,6 +47,8 @@ type
     procedure AddInfo(const ATitle: string; const AValue: string); overload;
     procedure AddInfo(const ATitle: string; const AValue: integer); overload;
     procedure ReloadFontInfo;
+    procedure AddPanose(const ATitle: string; const AValue: integer); overload;
+    procedure ReloadFontPanose;
 
   end;
 
@@ -74,8 +77,7 @@ begin
   Result := 1; //continue
   if lpelfe.lfFaceName[0]='@' then
     exit; //sideways fonts
-//  if lpelfe.lfCharset = SHIFTJIS_CHARSET then
-    TStringList(param).AddObject(lpelfe.lfFaceName, TObject(lpelfe.lfCharSet));
+  TStringList(param).AddObject(lpelfe.lfFaceName, TObject(lpelfe.lfCharSet));
 end;
 
 function ListFonts(const face: string; charset: integer): TStringList;
@@ -162,6 +164,7 @@ begin
   finally
     mmFontInfo.Lines.EndUpdate;
   end;
+  ReloadFontPanose;
 end;
 
 procedure TFontTestForm.AddInfo(const ATitle: string; const AValue: string);
@@ -172,6 +175,42 @@ end;
 procedure TFontTestForm.AddInfo(const ATitle: string; const AValue: integer);
 begin
   AddInfo(ATitle, IntToStr(AValue));
+end;
+
+procedure TFontTestForm.ReloadFontPanose;
+var fontSize: integer;
+  tm: TOutlineTextMetric;
+  tmsize: cardinal;
+begin
+  mmPanose.Lines.BeginUpdate;
+  try
+    mmPanose.Clear;
+    if cbFonts.Text = '' then exit;
+    if not TryStrToInt(cbSize.Text, fontSize) then
+      exit;
+    Paintbox.Canvas.Font.Name := cbFonts.Text;
+    Paintbox.Canvas.Font.Size := fontSize;
+
+    GetOutlineTextMetrics(Paintbox.Canvas.Handle, sizeof(tm), @tm);
+
+    AddPanose('bFamilyType', tm.otmPanoseNumber.bFamilyType);
+    AddPanose('bSerifStyle', tm.otmPanoseNumber.bSerifStyle);
+    AddPanose('bWeight', tm.otmPanoseNumber.bWeight);
+    AddPanose('bProportion', tm.otmPanoseNumber.bProportion);
+    AddPanose('bContrast', tm.otmPanoseNumber.bContrast);
+    AddPanose('bStrokeVariation', tm.otmPanoseNumber.bStrokeVariation);
+    AddPanose('bArmStyle', tm.otmPanoseNumber.bArmStyle);
+    AddPanose('bLetterform', tm.otmPanoseNumber.bLetterform);
+    AddPanose('bMidline', tm.otmPanoseNumber.bMidline);
+    AddPanose('bXHeight', tm.otmPanoseNumber.bXHeight);
+  finally
+    mmPanose.Lines.EndUpdate;
+  end;
+end;
+
+procedure TFontTestForm.AddPanose(const ATitle: string; const AValue: integer);
+begin
+  mmPanose.Lines.Add(ATitle + ' = ' + IntToStr(AValue));
 end;
 
 procedure TFontTestForm.edtTextChange(Sender: TObject);
