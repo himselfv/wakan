@@ -212,7 +212,7 @@ const
     //'MingLiU_HKSCS', '細明體_HKSCS',
     //'MingLiU-ExtB', 'PMingLiU-ExtB', 'MingLiU_HKSCS-ExtB'
   );
-  ChineseTraditionalSerifFontsSummary = 'YaHei/MingLiU';
+  ChineseTraditionalSerifFontsSummary = 'MingLiU';
 
   //Also known as heiti
   ChineseSimplifiedSansSerifFonts: array[0..2] of string = (
