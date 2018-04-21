@@ -299,11 +299,21 @@ type
   protected
     EditorBitmap: TBitmap;
     function PaintBoxClientRect: TRect;
-    procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
-      screenw: integer; vert: boolean);
     procedure RenderText(canvas:TCanvas;r:TRect;ll:TGraphicalLineList;
       view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
-    procedure ReflowText(force:boolean=false);
+
+  //Graphical lines
+  protected
+    linl: TGraphicalLineList; //lines as they show on screen
+    //These layout params are recalculated in RenderText:
+    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
+    lastycnt:integer;
+    printl:integer; //number of lines which fit on the screen last time
+    procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
+      screenw: integer; vert: boolean);
+  public
+    procedure InvalidateLines;
+    procedure ReflowText(force: boolean = false);
 
   protected
     mustrepaint:boolean;
@@ -312,7 +322,6 @@ type
     procedure ShowText(dolook:boolean);
 
   protected
-    linl: TGraphicalLineList; //lines as they show on screen
     FRCur: TSourcePos;
     CursorEnd: boolean; { Cursor is visually "at the end of the previous line",
       although its logical position is at the start of the next graphical line.
@@ -321,17 +330,13 @@ type
     dragstart: TSourcePos; {
       When selecting, the position where we started dragging mouse (before this char).
       Selection block is generated from this on mouse-release. }
-    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
-    lastycnt:integer;
     shiftpressed:boolean; //for mouse selection
-    printl:integer; //number of lines which fit on the screen last time
     FCachedCursorPos:TCursorPos;
     FCursorPosInvalid: boolean;
     function GetCur: TCursorPos;
     procedure SetCur(Value: TCursorPos);
     procedure SetRCur(const Value: TSourcePos);
     procedure RefreshLines;
-    procedure InvalidateLines;
     procedure InvalidateCursorPos;
     function GetCursorScreenPos: TCursorPos;
   public
@@ -2397,12 +2402,24 @@ begin
 end;
 
 {
+Recalculates layout depending on the settings and paintbox size,
+rebuilds graphical lines and redraws the visible part of the text.
+
 x, y:
   start point in logical line coordinates (line:first character)
 l, t, w, h:
   left, top, width, height of the block to draw in on the canvas
 ll:
   graphical line list (all lines for this control)
+printing:
+  We're in printing mode (some special processing)
+onlylinl:
+  Only recalculate layout and lines, but do not actually repaint.
+
+Returns the layout details to be stored for secondary painting:
+
+xsiz (out)
+ycnt (out)
 printl (out):
   total number of lines which fit on the screen
 }
@@ -2905,10 +2922,11 @@ end;
 
 { Makes sure graphical lines and related variables are up to date.
  Use force=true to force full reflow. }
-procedure TfEditor.ReflowText(force:boolean);
+procedure TfEditor.ReflowText(force: boolean);
 begin
   if force then
     InvalidateLines;
+  //Call RenderText with "onlylinl" to only recalculate layout and graphic lines
   RenderText(EditorPaintBox.Canvas,PaintBoxClientRect,linl,-1,printl,
     lastxsiz,lastycnt,false,true);
  //NOTE: We must always have at least one logical and graphical line after reflow (maybe empty)
