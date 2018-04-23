@@ -339,11 +339,11 @@ var w: UnicodeString;
 begin
   if ch='' then exit;
   SetBkMode(c.Handle,TRANSPARENT);
- { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
-  w := fstrtouni(ch);
   c.Font.Name:=fontface;
   c.Font.Height:=-fh;
   il := GetFontLeadingFix(c, fontface);
+ { Some glyphs may be outright impossible to draw -- no suitable fonts, even with substitution }
+  w := fstrtouni(ch);
   if GetGlyphIndices(c.Handle,PChar(w),1,@w_ind, GGI_MARK_NONEXISTING_GLYPHS)=GDI_ERROR then
     RaiseLastOsError();
   if w_ind<>$FFFF then begin
