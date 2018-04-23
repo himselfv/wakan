@@ -2867,7 +2867,7 @@ begin
           rect.Top:=realy+r.Top;
           rect.Bottom:=realy+r.Top+rs*2;
           canvas.FillRect(rect);
-          DrawUnicode(canvas,realx+r.Left,realy+r.Top,rs*2,RecodeChar(doc.GetDoc(cx,cy)),Self.FontName);
+          DrawCJKChar(canvas, rect, rs*2, RecodeChar(doc.GetDoc(cx,cy)), Self.FontName);
 
          { Box border for meaning => underline.
           This one is drawn char-by-char, so we check for worddict + valid
