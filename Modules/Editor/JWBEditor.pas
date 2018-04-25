@@ -298,6 +298,10 @@ type
   }
   protected
     EditorBitmap: TBitmap;
+    //These layout params are recalculated in RenderText:
+    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
+    lastycnt:integer;  //height of one graphical line, in half-chars (depends on whether readings and tls are enabled)
+    printl:integer; //number of lines which fit on the screen last time
     function PaintBoxClientRect: TRect;
     procedure RenderText(canvas:TCanvas;r:TRect;ll:TGraphicalLineList;
       view:integer; var printl,xsiz,ycnt:integer;printing,onlylinl:boolean);
@@ -305,15 +309,11 @@ type
   //Graphical lines
   protected
     linl: TGraphicalLineList; //lines as they show on screen
-    //These layout params are recalculated in RenderText:
-    lastxsiz: integer; //size of one half-char in pixels, at the time of last render
-    lastycnt:integer;
-    printl:integer; //number of lines which fit on the screen last time
     procedure RecalculateGraphicalLines(ll: TGraphicalLineList; rs: integer;
       screenw: integer; vert: boolean);
   public
-    procedure InvalidateLines;
-    procedure ReflowText(force: boolean = false);
+    procedure InvalidateGraphicalLines;
+    procedure CalculateGraphicalLines;
 
   protected
     mustrepaint:boolean;
@@ -779,8 +779,7 @@ end;
 
 procedure TfEditor.FormResize(Sender: TObject);
 begin
-  InvalidateLines;
-  Invalidate;
+  InvalidateGraphicalLines;
  { NormalizeView needs Lines and we don't want to recalculate Lines now --
   the editor might be invisible so why bother. }
   InvalidateNormalizeView;
@@ -825,7 +824,7 @@ end;
 procedure TfEditor.ClearEditor(const DoRepaint: boolean = true);
 begin
   doc.Clear;
-  InvalidateLines;
+  InvalidateGraphicalLines;
   rcur := SourcePos(0, 0);
   ViewPos := SourcePos(0, 0);
   Self.Caption := _l(EditorWindowTitle) + ' - ' + _l('#00678^e<UNNAMED>');
@@ -1566,7 +1565,7 @@ begin
   end else
   if (EditorBitmap.Width<>r.Right-r.Left) or (EditorBitmap.Height<>r.Bottom-r.Top) then
     EditorBitmap.SetSize(r.Right-r.Left,r.Bottom-r.Top);
-  ReflowText(); //because we need View
+  CalculateGraphicalLines(); //because we need View
   if FNormalizeViewPlanned then
     NormalizeView();
   RenderText(EditorBitmap.Canvas,RectWH(0,0,EditorBitmap.Width,EditorBitmap.Height),
@@ -2206,7 +2205,7 @@ var s:string;
   tmp: TCursorPos;
 begin
   if not Visible then exit;
-  ReflowText();
+  CalculateGraphicalLines();
   if linl.Count=0 then
   begin
     rcur := SourcePos(-1, -1);
@@ -2290,17 +2289,29 @@ begin
 end;
 
 {
-We should probably keep graphical lines for the whole document,
-and only re-process the parts which change.
+We should probably keep graphical lines for the whole document and only
+re-process the parts which change.
 But for now we RecalculateGraphicalLines() every full render,
 and start with current position, not with the start of the document.
 }
 
-procedure TfEditor.InvalidateLines;
+procedure TfEditor.InvalidateGraphicalLines;
 begin
   linl.Clear;
   InvalidateViewLine;
   InvalidateCursorPos;
+  EditorPaintbox.Invalidate; //lines are invalidated, the control needs to redraw
+end;
+
+{ Makes sure graphical lines and related variables are available. To force
+ recalculation call InvalidateGraphicalLines }
+procedure TfEditor.CalculateGraphicalLines;
+begin
+  //Call RenderText with "onlylinl" to only recalculate layout and maybe graphical lines,
+  //if they are invalidated
+  RenderText(EditorPaintBox.Canvas,PaintBoxClientRect,linl,-1,printl,
+    lastxsiz,lastycnt,false,true);
+ //NOTE: We must always have at least one logical and graphical line after reflow (maybe empty)
 end;
 
 {
@@ -2920,18 +2931,6 @@ begin
   end;
 end;
 
-{ Makes sure graphical lines and related variables are up to date.
- Use force=true to force full reflow. }
-procedure TfEditor.ReflowText(force: boolean);
-begin
-  if force then
-    InvalidateLines;
-  //Call RenderText with "onlylinl" to only recalculate layout and graphic lines
-  RenderText(EditorPaintBox.Canvas,PaintBoxClientRect,linl,-1,printl,
-    lastxsiz,lastycnt,false,true);
- //NOTE: We must always have at least one logical and graphical line after reflow (maybe empty)
-end;
-
 
 procedure TfEditor.ClearInsBlock;
 var insText: FString;
@@ -3028,7 +3027,7 @@ begin
   lp.InsertChars(ins.x,AProps);
 
   inslen:=flength(AText);
-  ReflowText({force=}true);
+  InvalidateGraphicalLines;
 
   rcur := SourcePos(ins.x+inslen, ins.y);
 end;
@@ -3471,7 +3470,7 @@ end;
 procedure TfEditor.RefreshLines;
 begin
   if linl=nil then exit; //still creating
-  InvalidateLines;
+  InvalidateGraphicalLines;
   mustrepaint:=true;
   ShowText(true);
 end;
@@ -3903,7 +3902,7 @@ begin
     exit;
   end;
 
-  if linl.Count=0 then ReflowText;
+  if linl.Count=0 then CalculateGraphicalLines;
   for i:=0 to linl.Count-1 do
     if (linl[i].ys=rcur.y) and (linl[i].xs<=rcur.x) and (linl[i].xs+linl[i].len>=rcur.x) then
     begin
@@ -4015,7 +4014,7 @@ begin
     cbFontSizeGuessItem(cbFontSize.Text);
     cbFontSizeChange(cbFontSize);
   end;
-  RefreshLines;
+  InvalidateGraphicalLines;
 end;
 
 //If there's an item in the listbox with the exact same text, select that item
@@ -4089,8 +4088,7 @@ procedure TfEditor.SetEnableHalfWidth(const Value: boolean);
 begin
   if FEnableHalfWidth = Value then exit;
   FEnableHalfWidth := Value;
-  ReflowText(true);
-  Self.RepaintText;
+  InvalidateGraphicalLines;
 end;
 
 function TfEditor.IsHalfWidth(x,y:integer):boolean;
