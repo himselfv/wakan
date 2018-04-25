@@ -125,6 +125,7 @@ type
     function FromPoint: TSourcePos; inline;
     function ToPoint: TSourcePos; inline;
     function IsEmpty: boolean; inline;
+    constructor CreateFromTo(const AFrom: TSourcePos; const ATo: TSourcePos);
     class operator Equal(const a: TSourceBlock; const b: TSourceBlock): boolean; inline;
     class operator NotEqual(const a: TSourceBlock; const b: TSourceBlock): boolean; inline;
     class operator BitwiseAnd(const a: TSourceBlock; const b: TSourceBlock): TSourceBlock;
@@ -400,6 +401,14 @@ end;
 function TSourceBlock.IsEmpty: boolean;
 begin
   Result := (Self.toy<Self.fromy) or ((Self.toy=Self.fromy) and (Self.tox<=Self.fromx));
+end;
+
+constructor TSourceBlock.CreateFromTo(const AFrom: TSourcePos; const ATo: TSourcePos);
+begin
+  Self.fromx := AFrom.x;
+  Self.fromy := AFrom.y;
+  Self.tox := ATo.x;
+  Self.toy := ATo.y;
 end;
 
 class operator TSourceBlock.Equal(const a: TSourceBlock; const b: TSourceBlock): boolean;

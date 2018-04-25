@@ -59,6 +59,8 @@ type
   TCursorPos = record
     y: integer; //line, 0-based
     x: integer; //char, 0-based: [0..length(line)], length(line)=after last char
+    class operator Equal(const a: TCursorPos; const b: TCursorPos): boolean; inline;
+    class operator NotEqual(const a: TCursorPos; const b: TCursorPos): boolean; inline;
   end;
   PCursorPos = ^TCursorPos;
 
@@ -231,6 +233,9 @@ type
     procedure aSmallFontExecute(Sender: TObject);
     procedure aMedFontExecute(Sender: TObject);
     procedure aLargeFontExecute(Sender: TObject);
+    procedure ListBox1KeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure EditorPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
 
   public
     procedure LanguageChanging;
@@ -252,6 +257,7 @@ type
     property doctr[Index: integer]: PCharacterLineProps read Get_doctr;
     function GetDocWord(x,y:integer;var wordtype: TEvalCharType):string;
     function GetWordAtCaret(out AWordtype: TEvalCharType): string;
+    procedure InvalidateText;
 
   protected //Copy and paste operations
     procedure CopySelection(format:TTextSaveFormat;stream:TStream;
@@ -322,28 +328,32 @@ type
     procedure ShowText(dolook:boolean);
 
   protected
-    FRCur: TSourcePos;
+    FSourceCur: TSourcePos;  //Cursor position in the source
+    FNormalizeSourceCur: boolean;
+    FCachedCursorPos: TCursorPos;
+    FCursorPosInvalid: boolean;
     CursorEnd: boolean; { Cursor is visually "at the end of the previous line",
       although its logical position is at the start of the next graphical line.
       This is expected in some situations during the editing. }
-    lastmm: TCursorPos; //Last character which felt mouse-click over itself.
-    dragstart: TSourcePos; {
-      When selecting, the position where we started dragging mouse (before this char).
-      Selection block is generated from this on mouse-release. }
-    shiftpressed:boolean; //for mouse selection
-    FCachedCursorPos:TCursorPos;
-    FCursorPosInvalid: boolean;
+    FSelectionLock: integer; //Pressing Shift or holding mouse button both increase this
+    FSelectionStart: TSourcePos; //Selection block starts just before this char
+    FShiftPressed: boolean;
+    FLeftMouseDown: boolean;
+    function GetSourceCur: TSourcePos; inline;
+    procedure SetSourceCur(const Value: TSourcePos);
+    procedure InvalidateNormalizeSourceCur;
+    procedure NormalizeSourceCur;
     function GetCur: TCursorPos;
     procedure SetCur(Value: TCursorPos);
-    procedure SetRCur(const Value: TSourcePos);
-    procedure RefreshLines;
     procedure InvalidateCursorPos;
     function GetCursorScreenPos: TCursorPos;
+    function InSelectionMode: boolean;
   public
     procedure CursorJumpToLine(newy: integer);
-    property RCur: TSourcePos read FRCur write SetRCur; //cursor position in logical coordinates (cursor is before this char)
+    property SourceCur: TSourcePos read GetSourceCur write SetSourceCur; //cursor position in logical coordinates (cursor is before this char)
     property Cur: TCursorPos read GetCur write SetCur; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     property CursorScreenPos: TCursorPos read GetCursorScreenPos; //visible cursor position -- differs sometimes -- see comments
+    property SelectionStart: TSourcePos read FSelectionStart;
 
   protected //View and scrollbar
     FViewPos: TSourcePos; //logical coordinates of a first visible graphical line anchor
@@ -593,6 +603,16 @@ begin
   Result.y := y;
 end;
 
+class operator TCursorPos.Equal(const a: TCursorPos; const b: TCursorPos): boolean;
+begin
+  Result := (a.x = b.x) and (a.y = b.y);
+end;
+
+class operator TCursorPos.NotEqual(const a: TCursorPos; const b: TCursorPos): boolean;
+begin
+  Result := not (a = b);
+end;
+
 function Selection(fromx, fromy, tox, toy: integer): TTextSelection;
 begin
   Result.fromy := fromy;
@@ -705,7 +725,7 @@ begin
   FullTextTranslated:=false;
 
   ViewPos := SourcePos(0, 0);
-  rcur := SourcePos(-1, -1);
+  SourceCur := SourcePos(-1, -1);
   ins := SourcePos(-1, -1);
   inslen:=0;
   cursorend:=false;
@@ -718,10 +738,9 @@ begin
   FCaretPosCache:=-1;
   FCaretVisible:=false;
 
-  shiftpressed:=false;
-  dragstart := SourcePos(-1, -1);
+  FSelectionLock := 0;
+  FSelectionStart := SourcePos(-1, -1);
   oldblock := Selection(-1, -1, -1, -1);
-  lastmm := CursorPos(-1, -1);
   FInsertionState := isTyping;
 
   FFontSize := 0;
@@ -821,11 +840,16 @@ begin
     Self.RepaintText;
 end;
 
+
+{
+File opening-saving
+}
+
 procedure TfEditor.ClearEditor(const DoRepaint: boolean = true);
 begin
   doc.Clear;
   InvalidateGraphicalLines;
-  rcur := SourcePos(0, 0);
+  SourceCur := SourcePos(0, 0);
   ViewPos := SourcePos(0, 0);
   Self.Caption := _l(EditorWindowTitle) + ' - ' + _l('#00678^e<UNNAMED>');
   docfilename:='';
@@ -899,7 +923,7 @@ begin
     ClearEditor({DoRepaint=}false);
 
     ViewPos:=SourcePos(0,0);
-    rcur:=SourcePos(0,0);
+    SourceCur:=SourcePos(0,0);
     mustrepaint:=true;
     FileChanged:=false;
     FullTextTranslated:=false;
@@ -1221,7 +1245,7 @@ var j:integer;
   threadsCreated: boolean;
  {$ENDIF}
 begin
-  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
+  if SelectionStart = SourceCur then
   begin
     if not fSettings.cbTranslateNoLongTextWarning.Checked then
       if Application.MessageBox(
@@ -1339,7 +1363,7 @@ begin
     FreeAndNil(dicsl);
   end;
 
-  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then
+  if SelectionStart = SourceCur then
     FullTextTranslated := true; //translated all text at least once
 
  {$IFDEF TLSPEEDREPORT}
@@ -1389,13 +1413,15 @@ end;
 
 procedure TfEditor.SetTranslation();
 begin
-  if (dragstart.x=rcur.x) and (dragstart.y=rcur.y) then begin
-    SetWordTrans(rcur.x,rcur.y,[tfScanParticle,tfManuallyChosen],fWordLookup.FocusedResult);
+  if SelectionStart = SourceCur then begin
+    SetWordTrans(SourceCur.x,SourceCur.y,[tfScanParticle,tfManuallyChosen],fWordLookup.FocusedResult);
     mustrepaint:=true;
     ShowText(true);
   end else
     AutoTranslate();
 end;
+
+
 
 procedure TfEditor.ListBox1Enter(Sender: TObject);
 begin
@@ -1430,28 +1456,28 @@ begin
     ukn:=false;
     if key=VK_RIGHT then
     begin
-      if rcur.x<flength(doc.Lines[rcur.y]) then
-        rcur := SourcePos(rcur.x+1, rcur.y)
+      if SourceCur.x < flength(doc.Lines[SourceCur.y]) then
+        SourceCur := SourcePos(SourceCur.x+1, SourceCur.y)
       else
-      if rcur.y+1<doc.Lines.Count then
-        rcur := SourcePos(0, rcur.y+1);
+      if SourceCur.y + 1 < doc.Lines.Count then
+        SourceCur := SourcePos(0, SourceCur.y+1);
       CursorEnd := false; //even if not changed rcur
     end else
     if key=VK_LEFT then
     begin
-      if rcur.x>0 then
-        rcur := SourcePos(rcur.x-1, rcur.y)
+      if SourceCur.x > 0 then
+        SourceCur := SourcePos(SourceCur.x-1, SourceCur.y)
       else
-      if rcur.y>0 then
-        rcur := doc.EndOfLine(rcur.y-1);
+      if SourceCur.y > 0 then
+        SourceCur := doc.EndOfLine(SourceCur.y-1);
       CursorEnd := false; //even if not changed rcur
     end else
     if key=VK_UP then CursorJumpToLine(tmp.y-1) else
     if key=VK_DOWN then CursorJumpToLine(tmp.y+1) else
     if key=VK_PRIOR then CursorJumpToLine(tmp.y-ScreenLineCount) else
     if key=VK_NEXT then CursorJumpToLine(tmp.y+ScreenLineCount) else
-    if (key=VK_HOME) and (ssCtrl in Shift) then rcur := SourcePos(0, 0) else
-    if (key=VK_END) and (ssCtrl in Shift) then rcur := doc.EndOfDocument else
+    if (key=VK_HOME) and (ssCtrl in Shift) then SourceCur := SourcePos(0, 0) else
+    if (key=VK_END) and (ssCtrl in Shift) then SourceCur := doc.EndOfDocument else
     if key=VK_HOME then begin
       tmp.x:=0;
       SetCur(tmp);
@@ -1462,17 +1488,19 @@ begin
     end else
     if key=VK_DELETE then begin
       ResolveInsert();
-      if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
+      if SourceCur <> SelectionStart then
         DeleteSelection()
       else
-        doc.DeleteCharacter(rcur.x,rcur.y);
-      RefreshLines;
+        doc.DeleteCharacter(SourceCur.x, SourceCur.y);
+      InvalidateText;
     end else
       ukn:=true;
     if not ukn then
     begin
       ClearInsBlock;
-      if ssShift in Shift then shiftpressed:=true;
+      //Only do this for unhandled keypressed because there are other uses for shift,
+      //such as katakana input:
+      Self.FShiftPressed := (ssShift in Shift);
       tmp := GetCur;
       if (oldCur.x<>tmp.x) or (oldCur.y<>tmp.y) then begin
        //We have moved somewhere else, finalize insert
@@ -1483,6 +1511,13 @@ begin
   end else
   if key=VK_UP then NextSuggestion(false) else
   if key=VK_DOWN then NextSuggestion(true);
+end;
+
+procedure TfEditor.ListBox1KeyUp(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  if key = VK_SHIFT then
+    Self.FShiftPressed := false;
 end;
 
 procedure TfEditor.ListBox1KeyPress(Sender: TObject; var Key: Char);
@@ -1500,15 +1535,19 @@ procedure TfEditor.EditorPaintBoxMouseDown(Sender: TObject;
 begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot move cursor!
-  shiftpressed:=(ssShift in Shift);
   if linl.Count>0 then //else lines are to be recalculated and we can't do much
     cur:=GetClosestCursorPos(X,Y);
+  if not Self.InSelectionMode then
+    Self.FSelectionStart := Self.SourceCur; //reset selection on click
+  if Button = mbLeft then
+    Self.FLeftMouseDown := true;
   mustrepaint:=true;
   ShowText(true);
 end;
 
 procedure TfEditor.EditorPaintBoxMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
+var newCur: TCursorPos;
 begin
   //Sometimes we receive "ssLeft + MouseMove" when we double click something
   //in another window and that window closes, leaving us in editor.
@@ -1524,16 +1563,22 @@ begin
       if Y>EditorPaintBox.Height then
         HandleWheel({down=}true);
       if linl.Count>0 then begin
-        cur:=GetClosestCursorPos(X+lastxsiz div 2,Y);
-        if (cur.x=lastmm.x) and (cur.y=lastmm.y) then exit;
-        lastmm.x:=cur.x;
-        lastmm.y:=cur.y;
+        newCur := GetClosestCursorPos(X+lastxsiz div 2,Y);
+        //Do not repaint/invalidate if nothing has changed
+        if newCur = Self.Cur then exit;
+        Self.Cur := newCur;
       end;
-      shiftpressed:=true;
       ShowText(false);
     end;
 
   IntTip.MouseMove(EditorPaintBox,x,y,false);
+end;
+
+procedure TfEditor.EditorPaintboxMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+    Self.FLeftMouseDown := false;
 end;
 
 procedure TfEditor.EditorPaintBoxDblClick(Sender: TObject);
@@ -2156,9 +2201,8 @@ procedure TfEditor.SelectAll;
 begin
   if not TryReleaseCursorFromInsert() then
     exit; //cannot move cursor!
-  dragstart := SourcePos(0, 0);
+  FSelectionStart := SourcePos(0, 0);
   cur := CursorPos(linl[linl.Count-1].len, linl.Count-1);
-  shiftpressed:=true;
   ShowText(true);
 end;
 
@@ -2202,25 +2246,19 @@ end;
 procedure TfEditor.ShowText(dolook:boolean);
 var s:string;
   wt: TEvalCharType;
-  tmp: TCursorPos;
 begin
   if not Visible then exit;
   CalculateGraphicalLines();
   if linl.Count=0 then
   begin
-    rcur := SourcePos(-1, -1);
+    SourceCur := SourcePos(-1, -1);
     EditorPaintBox.Invalidate;
     EditorScrollBar.Enabled:=false;
     exit;
   end;
 
-  if FRCur.y<0 then FRCur.y:=0;
-  if rcur.y>=doc.Lines.Count then
-    rcur:=doc.EndOfDocument;
-  if FRCur.x<0 then FRCur.x:=0;
-
- //Invalid cursorend => fix
-  tmp := GetCur;
+  //Fix cursor position
+  GetCur();
 
  //Fix view
   if ScrollIntoView then
@@ -2230,19 +2268,12 @@ begin
   if NormalizeView then
     mustrepaint := true;
 
- //Reset dragstart
-  if not shiftpressed then
-  begin
-    dragstart.x:=rcur.x;
-    dragstart.y:=rcur.y;
-  end;
-
   if dolook then
     RequeryDictSuggestions;
 
   //In any mode except active typing show char under cursor
   if (fKanjiDetails<>nil) and dolook and (FInputBuffer='') then begin
-    s:=GetDocWord(rcur.x,rcur.y,wt);
+    s:=GetDocWord(SourceCur.x,SourceCur.y,wt);
     if flength(s)>=1 then fKanjiDetails.SetCharDetails(fgetch(s,1));
   end;
 
@@ -2255,7 +2286,6 @@ begin
   end;
 
   mustrepaint:=false;
-  shiftpressed:=false;
   UpdateScrollbar;
   UpdateHintVisibility;
 end;
@@ -2263,19 +2293,10 @@ end;
 { Converts startdrag+cursor positions to block selection. }
 function TfEditor.GetTextSelection: TTextSelection;
 begin
-  if (rcur.y<dragstart.y) or ((rcur.y=dragstart.y) and (rcur.x<dragstart.x)) then
-  begin
-    Result.fromx:=rcur.x;
-    Result.fromy:=rcur.y;
-    Result.tox:=dragstart.x;
-    Result.toy:=dragstart.y;
-  end else
-  begin
-    Result.fromx:=dragstart.x;
-    Result.fromy:=dragstart.y;
-    Result.tox:=rcur.x;
-    Result.toy:=rcur.y;
-  end;
+  if SourceCur < SelectionStart then
+    Result := TTextSelection.CreateFromTo(SourceCur, SelectionStart)
+  else
+    Result := TTextSelection.CreateFromTo(SelectionStart, SourceCur);
 end;
 
 { Expands selection so that it starts with a nearest word. Selection must be valid. }
@@ -3008,7 +3029,7 @@ var i:integer;
   lp: PCharacterLineProps;
 begin
   if ins.x=-1 then begin
-    ins:=rcur;
+    ins:=SourceCur;
     inslen:=0;
   end;
 
@@ -3029,7 +3050,7 @@ begin
   inslen:=flength(AText);
   InvalidateGraphicalLines;
 
-  rcur := SourcePos(ins.x+inslen, ins.y);
+  SourceCur := SourcePos(ins.x+inslen, ins.y);
 end;
 
 { Irreversibly convert input keystrokes to kana/text, add it to the document and
@@ -3332,15 +3353,15 @@ begin
   end;
   if c=Chr(VK_RETURN) then
   begin
-    doc.SplitLine(rcur.x,rcur.y);
+    doc.SplitLine(SourceCur.x, SourceCur.y);
     FileChanged:=true;
-    rcur := SourcePos(0,rcur.y+1);
-    RefreshLines;
+    SourceCur := SourcePos(0, SourceCur.y+1);
+    InvalidateText;
     exit;
   end;
   if c=Chr(VK_BACK) then
   begin
-    if (dragstart.x<>rcur.x) or (dragstart.y<>rcur.y) then
+    if SourceCur <> SelectionStart then
       DeleteSelection()
     else
     if (cur.x>0) or (cur.y>0) then
@@ -3348,15 +3369,15 @@ begin
       if cur.x>0 then
         Cur := CursorPos(Cur.x-1,Cur.y)
       else //cur.y>0
-        if rcur.x=0 then
+        if SourceCur.x = 0 then
           cur := CursorPos(2550,cur.y-1)
         else
           cur := CursorPos(linl[cur.y-1].len, cur.y-1);
       ShowText(true);
-      doc.DeleteCharacter(rcur);
+      doc.DeleteCharacter(SourceCur);
     end;
     FileChanged:=true;
-    RefreshLines;
+    InvalidateText;
     exit;
   end;
 
@@ -3465,14 +3486,6 @@ begin
   Result := '';
   for i := 1 to flength(str) do
     Result := Result + ConvertImmediateChar(fgetch(str, i));
-end;
-
-procedure TfEditor.RefreshLines;
-begin
-  if linl=nil then exit; //still creating
-  InvalidateGraphicalLines;
-  mustrepaint:=true;
-  ShowText(true);
 end;
 
 {
@@ -3737,9 +3750,9 @@ begin
     else
       AnnotMode := amNone;
 
-  doc.PasteText(rcur, chars, props, AnnotMode, @tmp);
-  rcur := tmp; //end of inserted text
-  RefreshLines;
+  doc.PasteText(SourceCur, chars, props, AnnotMode, @tmp);
+  SourceCur := tmp; //end of inserted text
+  InvalidateText;
   FileChanged:=true;
 end;
 
@@ -3764,7 +3777,7 @@ begin
       try
         tmpDoc := TWakanText.Create;
         Loaded := tmpDoc.LoadWakanText(ms,{silent=}true);
-        doc.PasteDoc(rcur, tmpDoc, @pasteEndPos);
+        doc.PasteDoc(SourceCur, tmpDoc, @pasteEndPos);
       except
         on E: EBadWakanTextFormat do
           Loaded := false;
@@ -3772,8 +3785,8 @@ begin
     finally
       FreeAndNil(tmpDoc);
     end;
-    rcur := pasteEndPos; //end of inserted text
-    RefreshLines;
+    SourceCur := pasteEndPos; //end of inserted text
+    InvalidateText;
     if Loaded then
       FileChanged:=true;
   finally
@@ -3782,7 +3795,7 @@ begin
 
   if not Loaded then begin //default to bare text
     props.Clear;
-    PasteText(Clipboard.Text,props,amDefault); //does RefreshLines/FileChanged internally
+    PasteText(Clipboard.Text,props,amDefault); //does InvalidateText/FileChanged internally
   end;
 
   ShowText(true);
@@ -3793,8 +3806,8 @@ var block: TTextSelection;
 begin
   block := Self.TextSelection;
   doc.DeleteBlock(block);
-  rcur := SourcePos(block.fromx, block.fromy);
-  RefreshLines;
+  SourceCur := SourcePos(block.fromx, block.fromy);
+  InvalidateText;
   FileChanged:=true;
 end;
 
@@ -3880,13 +3893,64 @@ end;
 function TfEditor.GetWordAtCaret(out AWordtype: TEvalCharType): string;
 var fcur: TSourcePos;
 begin
-  fcur := RCur;
+  fcur := SourceCur;
   AWordtype := EC_UNKNOWN;
   Result := GetDocWord(fcur.x, fcur.y, AWordtype);
 end;
 
+{ Called when the document text changes - as a result of loading or editing. }
+procedure TfEditor.InvalidateText;
+begin
+  InvalidateGraphicalLines;
+  InvalidateNormalizeSourceCur;
+  //FOR NOW we're calling ShowText here because it redoes a number of other things
+  //Eventually we should move all that to their own Invalidate* stuff and just
+  //invalidate it here.
+  RepaintText;
+end;
 
-{ Cursor }
+
+{ Cursor and selection }
+
+function TfEditor.GetSourceCur: TSourcePos;
+begin
+  if FNormalizeSourceCur then
+    NormalizeSourceCur;
+  Result := FSourceCur;
+end;
+
+procedure TfEditor.SetSourceCur(const Value: TSourcePos);
+begin
+  //Do not invalidate stuff if nothing has changed
+  if FSourceCur = Value then
+    exit;
+  FSourceCur := Value;
+  if not Self.InSelectionMode then
+    FSelectionStart := FSourceCur;
+  CursorEnd := false;
+  //we can't know whether to put graphical cursor before or after the line wrap
+  //if you know, update CursorEnd after setting RCur
+  InvalidateCursorPos;
+  InvalidateNormalizeSourceCur;
+end;
+
+//Adjust SourceCur to fit the document next time we access it
+procedure TfEditor.InvalidateNormalizeSourceCur;
+begin
+  FNormalizeSourceCur := true;
+end;
+
+//Adjust SourceCur to fit the document
+procedure TfEditor.NormalizeSourceCur;
+begin
+  if FSourceCur.y < 0 then FSourceCur.y := 0;
+  if FSourceCur.y >= doc.Lines.Count then
+    FSourceCur := doc.EndOfDocument;
+  if FSourceCur.x < 0 then FSourceCur.x := 0;
+  FNormalizeSourceCur := false;
+  //We could've checked whether we've changed anything, but whatever:
+  InvalidateCursorPos;
+end;
 
 procedure TfEditor.InvalidateCursorPos;
 begin
@@ -3904,11 +3968,11 @@ begin
 
   if linl.Count=0 then CalculateGraphicalLines;
   for i:=0 to linl.Count-1 do
-    if (linl[i].ys=rcur.y) and (linl[i].xs<=rcur.x) and (linl[i].xs+linl[i].len>=rcur.x) then
+    if (linl[i].ys=SourceCur.y) and (linl[i].xs<=SourceCur.x) and (linl[i].xs+linl[i].len>=SourceCur.x) then
     begin
-      if (not CursorEnd) and (linl[i].xs+linl[i].len=rcur.x)
+      if (not CursorEnd) and (linl[i].xs+linl[i].len=SourceCur.x)
         and (i<linl.Count-1) and (linl[i+1].ys=linl[i].ys) then continue; //exact match goes to the next line
-      Result.x:=rcur.x-linl[i].xs;
+      Result.x:=SourceCur.x-linl[i].xs;
       Result.y:=i;
       exit;
     end;
@@ -3919,9 +3983,9 @@ begin
 
   FCursorPosInvalid := false;
 
- //TODO: Nicety: In complicated cases (no exact matching line found) try to
- // return the closest position (last one with y<=rcur.y and x<=rcur.x or the
- // next one after that, or 0:0).
+ //TODO: In complicated cases (no exact matching line found) try to return
+ //the closest position (last one with y<=rcur.y and x<=rcur.x or the next one
+ //after that, or 0:0).
 end;
 
 { Sets current graphical cursor position }
@@ -3944,7 +4008,7 @@ begin
     newrcur.x:=flength(doc.Lines[newrcur.y]);
     NewCursorEnd:=false;
   end;
-  rcur := newrcur;
+  SourceCur := newrcur;
   CursorEnd := NewCursorEnd;
 end;
 
@@ -3980,14 +4044,11 @@ begin
   SetCur(tmp);
 end;
 
-procedure TfEditor.SetRCur(const Value: TSourcePos);
+function TFEditor.InSelectionMode: boolean;
 begin
-  FRCur := Value;
-  CursorEnd := false;
-   //we can't know whether to put graphical cursor before or after the line wrap
-   //if you know, update CursorEnd after setting RCur
-  InvalidateCursorPos;
+  Result := FShiftPressed or FLeftMouseDown;
 end;
+
 
 
 { Font }

@@ -324,6 +324,7 @@ object fEditor: TfEditor
       OnExit = ListBox1Exit
       OnKeyDown = ListBox1KeyDown
       OnKeyPress = ListBox1KeyPress
+      OnKeyUp = ListBox1KeyUp
     end
   end
   object EditorPaintbox: TWakanPaintbox
@@ -340,6 +341,7 @@ object fEditor: TfEditor
     OnDblClick = EditorPaintBoxDblClick
     OnMouseMove = EditorPaintBoxMouseMove
     OnMouseDown = EditorPaintBoxMouseDown
+    OnMouseUp = EditorPaintboxMouseUp
   end
   object EditorScrollBar: TScrollBar
     Left = 779
