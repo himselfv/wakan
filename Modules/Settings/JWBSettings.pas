@@ -820,7 +820,7 @@ begin
   Edit22.Text:=reg.ReadString('ScreenTrans','LeftRange','20');
   Edit23.Text:=reg.ReadString('ScreenTrans','RightRange','100');
   edtScreenTipMaxDictEntries.Text:=reg.ReadString('ScreenTrans','DictEntries','4');
-  edtScreenTipSizeFactor.Text:=reg.ReadString('ScreenTrans','SizeFactor','12');
+  edtScreenTipSizeFactor.Text:=reg.ReadString('ScreenTrans','SizeFactor','16');
   edtScreenTipMinCompounds.Text:=reg.ReadString('ScreenTrans','MinCompounds','10');
   edtScreenTipMaxCompounds.Text:=reg.ReadString('ScreenTrans','MaxCompounds','40');
   fMenu.btnScreenModeWk.Down:=reg.ReadBool('ScreenTrans','WakanToolTip',true);
