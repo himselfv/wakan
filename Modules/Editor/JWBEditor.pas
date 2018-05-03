@@ -1451,66 +1451,72 @@ var oldCur: TCursorPos;
   IsMoveKey: boolean;
 begin
   oldCur := GetCur;
-  if (ins.x=-1) or (FInsertionState in [isConfirmedAsIs, isConverted]) then
+
+  if (ins.x <> -1) and not (FInsertionState in [isConfirmedAsIs, isConverted]) then begin
+    //Keys while in insertion mode
+
+    if key=VK_UP then NextSuggestion(false) else
+    if key=VK_DOWN then NextSuggestion(true);
+
+    exit;
+  end;
+
+  //Normal mode
+  Self.FShiftPressed := (ssShift in Shift); //before we handle the move keys
+
+  IsMoveKey := true;
+  if key=VK_RIGHT then
   begin
-    Self.FShiftPressed := (ssShift in Shift); //before we handle the move keys
-
-    IsMoveKey := true;
-    if key=VK_RIGHT then
-    begin
-      //If we're breaking the selection mode, there are special rules as to where to jump
-      if not Self.InSelectionMode and (Self.SelectionStart > SourceCur) then
-        //Start from the rightmost selected char
-        SourceCur := doc.NextPos(Self.SelectionStart)
-      else
-       //Start from the cursor
-        SourceCur := doc.NextPos(SourceCur);
-      CursorEnd := false;
-    end else
-    if key=VK_LEFT then
-    begin
-      if not Self.InSelectionMode and (Self.SelectionStart < SourceCur) then
-        SourceCur := doc.PreviousPos(Self.SelectionStart)
-      else
-        SourceCur := doc.PreviousPos(SourceCur);
-      CursorEnd := false;
-    end else
-    if key=VK_UP then CursorJumpToLine(oldCur.y-1) else
-    if key=VK_DOWN then CursorJumpToLine(oldCur.y+1) else
-    if key=VK_PRIOR then CursorJumpToLine(oldCur.y-ScreenLineCount) else
-    if key=VK_NEXT then CursorJumpToLine(oldCur.y+ScreenLineCount) else
-    if (key=VK_HOME) and (ssCtrl in Shift) then SourceCur := SourcePos(0, 0) else
-    if (key=VK_END) and (ssCtrl in Shift) then SourceCur := doc.EndOfDocument else
-    if key=VK_HOME then
-      SetCur(CursorPos(0, oldCur.y))
+    //If we're breaking the selection mode, there are special rules as to where to jump
+    if not Self.InSelectionMode and (Self.SelectionStart > SourceCur) then
+      //Start from the rightmost selected char
+      SourceCur := doc.NextPos(Self.SelectionStart)
     else
-    if key=VK_END then
-      SetCur(CursorPos(MaxWord, oldCur.y)) //I don't think more chars will fit on a graphical line
-    else
-    if key=VK_DELETE then begin
-      ResolveInsert();
-      if SourceCur <> SelectionStart then
-        DeleteSelection()
-      else
-        doc.DeleteCharacter(SourceCur.x, SourceCur.y);
-      InvalidateText;
-    end else begin
-      IsMoveKey := false;
-      //Shift also means other things such as katakana input, so ignore it for non-move keys:
-      Self.FShiftPressed := false;
-    end;
-
-    if IsMoveKey then begin
-      ClearInsBlock;
-      if oldCur <> GetCur then begin
-       //We have moved somewhere else, finalize insert
-        ResolveInsert();
-        ShowText(true);
-      end;
-    end;
+     //Start from the cursor
+      SourceCur := doc.NextPos(SourceCur);
+    CursorEnd := false;
   end else
-  if key=VK_UP then NextSuggestion(false) else
-  if key=VK_DOWN then NextSuggestion(true);
+  if key=VK_LEFT then
+  begin
+    if not Self.InSelectionMode and (Self.SelectionStart < SourceCur) then
+      SourceCur := doc.PreviousPos(Self.SelectionStart)
+    else
+      SourceCur := doc.PreviousPos(SourceCur);
+    CursorEnd := false;
+  end else
+  if key=VK_UP then CursorJumpToLine(oldCur.y-1) else
+  if key=VK_DOWN then CursorJumpToLine(oldCur.y+1) else
+  if key=VK_PRIOR then CursorJumpToLine(oldCur.y-ScreenLineCount) else
+  if key=VK_NEXT then CursorJumpToLine(oldCur.y+ScreenLineCount) else
+  if (key=VK_HOME) and (ssCtrl in Shift) then SourceCur := SourcePos(0, 0) else
+  if (key=VK_END) and (ssCtrl in Shift) then SourceCur := doc.EndOfDocument else
+  if key=VK_HOME then
+    SetCur(CursorPos(0, oldCur.y))
+  else
+  if key=VK_END then
+    SetCur(CursorPos(MaxWord, oldCur.y)) //I don't think more chars will fit on a graphical line
+  else
+  if key=VK_DELETE then begin
+    ResolveInsert();
+    if SourceCur <> SelectionStart then
+      DeleteSelection()
+    else
+      doc.DeleteCharacter(SourceCur.x, SourceCur.y);
+    InvalidateText;
+  end else begin
+    IsMoveKey := false;
+    //Shift also means other things such as katakana input, so ignore it for non-move keys:
+    Self.FShiftPressed := false;
+  end;
+
+  if IsMoveKey then begin
+    ClearInsBlock;
+    if oldCur <> GetCur then begin
+     //We have moved somewhere else, finalize insert
+      ResolveInsert();
+      ShowText(true);
+    end;
+  end;
 end;
 
 procedure TfEditor.ListBox1KeyUp(Sender: TObject; var Key: Word;
