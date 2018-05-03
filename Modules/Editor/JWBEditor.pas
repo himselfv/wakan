@@ -1446,14 +1446,16 @@ end;
 procedure TfEditor.ListBox1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var oldCur: TCursorPos;
-  ukn:boolean;
+  IsMoveKey: boolean;
   tmp: TCursorPos;
 begin
   oldCur:=GetCur;
   tmp:=oldCur;
   if (ins.x=-1) or (FInsertionState in [isConfirmedAsIs, isConverted]) then
   begin
-    ukn:=false;
+    Self.FShiftPressed := (ssShift in Shift); //before we handle the move keys
+
+    IsMoveKey := true;
     if key=VK_RIGHT then
     begin
       if SourceCur.x < flength(doc.Lines[SourceCur.y]) then
@@ -1493,14 +1495,14 @@ begin
       else
         doc.DeleteCharacter(SourceCur.x, SourceCur.y);
       InvalidateText;
-    end else
-      ukn:=true;
-    if not ukn then
-    begin
+    end else begin
+      IsMoveKey := false;
+      //Shift also means other things such as katakana input, so ignore it for non-move keys:
+      Self.FShiftPressed := false;
+    end;
+
+    if IsMoveKey then begin
       ClearInsBlock;
-      //Only do this for unhandled keypressed because there are other uses for shift,
-      //such as katakana input:
-      Self.FShiftPressed := (ssShift in Shift);
       tmp := GetCur;
       if (oldCur.x<>tmp.x) or (oldCur.y<>tmp.y) then begin
        //We have moved somewhere else, finalize insert
