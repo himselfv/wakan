@@ -288,9 +288,9 @@ type
 
   //Position calculation
   protected
-    function PosToWidth(x,y:integer): integer;
+    function PosToWidth(const APos: TCursorPos): integer;
     function WidthToPos(x,y:integer): integer;
-    function HalfUnitsToCursorPos(x,y: integer): integer;
+    function PixelsToCursorPos(x,y: integer): integer;
   public
     function GetClosestCursorPos(x,y:integer): TCursorPos;
     function GetExactLogicalPos(x,y:integer): TSourcePos;
@@ -1576,7 +1576,7 @@ begin
       if Y>EditorPaintBox.Height then
         HandleWheel({down=}true);
       if linl.Count>0 then begin
-        newCur := GetClosestCursorPos(X+lastxsiz div 2,Y);
+        newCur := GetClosestCursorPos(X,Y);
         //Do not repaint/invalidate if nothing has changed
         if newCur = Self.Cur then exit;
         Self.Cur := newCur;
@@ -2229,7 +2229,7 @@ begin
     exit;
   end;
   tmp := CursorScreenPos;
-  tmp.x := PosToWidth(tmp.x, tmp.y);
+  tmp.x := PosToWidth(tmp);
   p:=EditorPaintbox.ClientToScreen(Point(0,4));
   p.x:=p.x+tmp.x*Self.lastxsiz;
   p.y:=p.y+(tmp.y+1-Self.View)*Self.lastxsiz*Self.lastycnt;
@@ -3650,12 +3650,12 @@ begin
   pbRect:=PaintBoxClientRect;
   if not ListBox1.Focused then AState := csHidden;
   if FCaretPosCache=-1 then
-    FCaretPosCache:=PosToWidth(FLastCaretPos.x,FLastCaretPos.y);
+    FCaretPosCache:=PosToWidth(FLastCaretPos);
   if FCaretVisible and IsCursorOnScreen(FLastCaretPos) then
     DrawIt(FLastCaretPos.x,FLastCaretPos.y-View); //invert=>erase
   tmp := CursorScreenPos;
   if (FCaretPosCache=-1) or (FLastCaretPos.x<>tmp.x) or (FLastCaretPos.y<>tmp.y) then
-    FCaretPosCache:=PosToWidth(tmp.x, tmp.y);
+    FCaretPosCache:=PosToWidth(tmp);
   case AState of
     csBlink: FCaretVisible:=not FCaretVisible;
     csVisible: FCaretVisible:=true;
@@ -4057,7 +4057,7 @@ begin
 
   tmp := GetCur;
   if tmp.y=newy then exit; //no changes
-  tmp.x := WidthToPos(PosToWidth(cur.x,cur.y),newy);
+  tmp.x := WidthToPos(PosToWidth(cur),newy);
   tmp.y := newy;
   if tmp.x<0 then tmp.x := linl[tmp.y].len; //over to the right
   SetCur(tmp);
@@ -4194,18 +4194,18 @@ end;
  These functions convert between these two things! They are unrelated to
  pixel widths. }
 
-function TfEditor.PosToWidth(x,y:integer):integer;
+function TfEditor.PosToWidth(const APos: TCursorPos):integer;
 var i,cx,cy:integer;
 begin
-  if (x<0) or (y<0) or (y>=linl.Count) then
+  if (APos.x<0) or (APos.y<0) or (APos.y>=linl.Count) then
   begin
     result:=-1;
     exit;
   end;
-  cx:=linl[y].xs;
-  cy:=linl[y].ys;
+  cx:=linl[APos.y].xs;
+  cy:=linl[APos.y].ys;
   result:=0;
-  for i:=0 to x-1 do
+  for i:=0 to APos.x-1 do
   begin
     if IsHalfWidth(cx,cy) then inc(result) else inc(result,2);
     inc(cx);
@@ -4246,13 +4246,14 @@ begin
 end;
 
 {
-y: line no
-x: number of half-width positions from the left
+y: graphical line no
+x: number of pixels from the left
 Returns: number of characters from the start of the line to the closest valid
-  TCursorPos.
-  (There's got to be at least one at every line)
+  TCursorPos
+Takes into account whether we've clicked on the left or the right half of the
+character cell.
 }
-function TfEditor.HalfUnitsToCursorPos(x,y:integer):integer;
+function TfEditor.PixelsToCursorPos(x,y: integer): integer;
 var i,jx,cx,cy,clen:integer;
 begin
   Assert((y>=0) and (y<linl.Count));
@@ -4264,12 +4265,19 @@ begin
 
   jx:=0;
   i:=0;
-  while i<x do begin //there can't be more characters than half-width positions
-    if clen<=0 then break; //no more text
-    if IsHalfWidth(cx,cy) then inc(jx) else inc(jx,2);
-    if jx>=x then
-    begin
-      if jx=x then result:=i+1 else result:=i;
+  while clen > 0 do begin
+    if IsHalfWidth(cx,cy) then inc(jx, lastxsiz) else inc(jx, 2*lastxsiz);
+    if jx >= x then begin
+      if jx - x > lastxsiz then
+        //last character was full-width + the point is on the left side of it
+        Result := i
+      else
+      if (jx - x > (lastxsiz div 2)) and IsHalfWidth(cx, cy) then
+        //last character was half-width + the point is on the left quarter-side of it
+        Result := i
+      else
+        //either full-width or HW and we're in the rightmost quarter
+        Result := i+1;
       exit;
     end;
     inc(cx);
@@ -4280,7 +4288,8 @@ begin
 end;
 
 {
-Returns closest cursor position to the given screen point.
+Returns closest cursor position to the given screen point, whether to the left or
+to the right.
 Makes sure what you get is a legal text point, not some negative or over-the-end value.
 NOTE:
 - Do not call if linl is cleared (linl.Count=0)
@@ -4289,13 +4298,12 @@ function TfEditor.GetClosestCursorPos(x,y:integer): TCursorPos;
 begin
   if y<0 then y:=0;
   if x<0 then x:=0;
-  Result.x := x div lastxsiz;
   Result.y := y div (lastxsiz*lastycnt)+View;
-  if Result.y>=linl.Count then
-    Result.y:=linl.Count-1;
+  if Result.y >= linl.Count then
+    Result.y := linl.Count-1;
   Assert(Result.y>=0); //we must have at least one line
-  Result.x := HalfUnitsToCursorPos(Result.x, Result.y);
-  Assert(Result.x>=0);
+  Result.x := PixelsToCursorPos(x, Result.y);
+  Assert(Result.x >= 0);
 end;
 
 {
