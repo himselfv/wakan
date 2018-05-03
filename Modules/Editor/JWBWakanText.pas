@@ -181,6 +181,10 @@ type
     procedure AdjustDocument;
     function EndOfDocument: TSourcePos; inline;
     function EndOfLine(const LogicalLineIndex: integer): TSourcePos; inline;
+    function NextPos(const APos: TSourcePos): TSourcePos; inline;
+    function PreviousPos(const APos: TSourcePos): TSourcePos; inline;
+    procedure IncPos(var APos: TSourcePos); inline;
+    procedure DecPos(var APos: TSourcePos); inline;
     procedure GetDictionaryEntry(const APos: TSourcePos; out kanji, reading: FString;
       out meaning: string);
     property Lines: TStringList read doc;
@@ -1125,6 +1129,40 @@ begin
  //Document must already be adjusted as they're using logical lines
   Result.y := LogicalLineIndex;
   Result.x := flength(doc[LogicalLineIndex]);
+end;
+
+function TWakanText.NextPos(const APos: TSourcePos): TSourcePos;
+begin
+  Result := APos;
+  Self.IncPos(Result);
+end;
+
+function TWakanText.PreviousPos(const APos: TSourcePos): TSourcePos;
+begin
+  Result := APos;
+  Self.DecPos(Result);
+end;
+
+//Advances the source position one character further (maybe to the next line)
+procedure TWakanText.IncPos(var APos: TSourcePos);
+begin
+  if APos.x < flength(Self.Lines[APos.y]) then
+    APos.x := APos.x + 1
+  else
+  if APos.y + 1 < Self.Lines.Count then begin
+    APos.y := APos.y + 1;
+    APos.x := 0;
+  end;
+end;
+
+//Moves the source position one character back (maybe to the previous line)
+procedure TWakanText.DecPos(var APos: TSourcePos);
+begin
+  if APos.x > 0 then
+    APos.x := APos.x - 1
+  else
+  if APos.y > 0 then
+    APos := Self.EndOfLine(APos.y-1);
 end;
 
 { Returns dictionary entry information associated with a word beginning at

@@ -343,17 +343,19 @@ type
     procedure SetSourceCur(const Value: TSourcePos);
     procedure InvalidateNormalizeSourceCur;
     procedure NormalizeSourceCur;
+    procedure SetSelectionStart(const Value: TSourcePos);
     function GetCur: TCursorPos;
     procedure SetCur(Value: TCursorPos);
     procedure InvalidateCursorPos;
     function GetCursorScreenPos: TCursorPos;
     function InSelectionMode: boolean;
+    procedure ResetSelection;
   public
     procedure CursorJumpToLine(newy: integer);
     property SourceCur: TSourcePos read GetSourceCur write SetSourceCur; //cursor position in logical coordinates (cursor is before this char)
     property Cur: TCursorPos read GetCur write SetCur; //cursor position (maybe not drawn yet, may differ from where cursor is drawn -- see CursorScreenX/Y)
     property CursorScreenPos: TCursorPos read GetCursorScreenPos; //visible cursor position -- differs sometimes -- see comments
-    property SelectionStart: TSourcePos read FSelectionStart;
+    property SelectionStart: TSourcePos read FSelectionStart write SetSelectionStart;
 
   protected //View and scrollbar
     FViewPos: TSourcePos; //logical coordinates of a first visible graphical line anchor
@@ -475,7 +477,7 @@ type
     FInsertionState: TInsertionState;
     FInputBuffer: string; //collects keypresses
     FInputBufferType: TInputBufferType; //type of data in the buffer (ibAsIs is usually not buffered)
-    procedure HandleKeypress(c: char);
+    procedure HandleKeystroke(c: char);
     procedure ResolveInsert(AAcceptSuggestion: boolean = true);
     procedure ClearInsBlock;
     procedure CloseInsert;
@@ -1447,10 +1449,8 @@ procedure TfEditor.ListBox1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var oldCur: TCursorPos;
   IsMoveKey: boolean;
-  tmp: TCursorPos;
 begin
-  oldCur:=GetCur;
-  tmp:=oldCur;
+  oldCur := GetCur;
   if (ins.x=-1) or (FInsertionState in [isConfirmedAsIs, isConverted]) then
   begin
     Self.FShiftPressed := (ssShift in Shift); //before we handle the move keys
@@ -1458,36 +1458,35 @@ begin
     IsMoveKey := true;
     if key=VK_RIGHT then
     begin
-      if SourceCur.x < flength(doc.Lines[SourceCur.y]) then
-        SourceCur := SourcePos(SourceCur.x+1, SourceCur.y)
+      //If we're breaking the selection mode, there are special rules as to where to jump
+      if not Self.InSelectionMode and (Self.SelectionStart > SourceCur) then
+        //Start from the rightmost selected char
+        SourceCur := doc.NextPos(Self.SelectionStart)
       else
-      if SourceCur.y + 1 < doc.Lines.Count then
-        SourceCur := SourcePos(0, SourceCur.y+1);
-      CursorEnd := false; //even if not changed rcur
+       //Start from the cursor
+        SourceCur := doc.NextPos(SourceCur);
+      CursorEnd := false;
     end else
     if key=VK_LEFT then
     begin
-      if SourceCur.x > 0 then
-        SourceCur := SourcePos(SourceCur.x-1, SourceCur.y)
+      if not Self.InSelectionMode and (Self.SelectionStart < SourceCur) then
+        SourceCur := doc.PreviousPos(Self.SelectionStart)
       else
-      if SourceCur.y > 0 then
-        SourceCur := doc.EndOfLine(SourceCur.y-1);
-      CursorEnd := false; //even if not changed rcur
+        SourceCur := doc.PreviousPos(SourceCur);
+      CursorEnd := false;
     end else
-    if key=VK_UP then CursorJumpToLine(tmp.y-1) else
-    if key=VK_DOWN then CursorJumpToLine(tmp.y+1) else
-    if key=VK_PRIOR then CursorJumpToLine(tmp.y-ScreenLineCount) else
-    if key=VK_NEXT then CursorJumpToLine(tmp.y+ScreenLineCount) else
+    if key=VK_UP then CursorJumpToLine(oldCur.y-1) else
+    if key=VK_DOWN then CursorJumpToLine(oldCur.y+1) else
+    if key=VK_PRIOR then CursorJumpToLine(oldCur.y-ScreenLineCount) else
+    if key=VK_NEXT then CursorJumpToLine(oldCur.y+ScreenLineCount) else
     if (key=VK_HOME) and (ssCtrl in Shift) then SourceCur := SourcePos(0, 0) else
     if (key=VK_END) and (ssCtrl in Shift) then SourceCur := doc.EndOfDocument else
-    if key=VK_HOME then begin
-      tmp.x:=0;
-      SetCur(tmp);
-    end else
-    if key=VK_END then begin
-      tmp.x:=MaxWord; //I don't think more chars will fit on a graphical line
-      SetCur(tmp);
-    end else
+    if key=VK_HOME then
+      SetCur(CursorPos(0, oldCur.y))
+    else
+    if key=VK_END then
+      SetCur(CursorPos(MaxWord, oldCur.y)) //I don't think more chars will fit on a graphical line
+    else
     if key=VK_DELETE then begin
       ResolveInsert();
       if SourceCur <> SelectionStart then
@@ -1501,10 +1500,13 @@ begin
       Self.FShiftPressed := false;
     end;
 
+    //Any keystroke without shift/mouse pressed resets block selection
+    if not Self.InSelectionMode then
+      ResetSelection; //AFTER we've had the chance to do special VK_LEFT/VK_RIGHT selection exit
+
     if IsMoveKey then begin
       ClearInsBlock;
-      tmp := GetCur;
-      if (oldCur.x<>tmp.x) or (oldCur.y<>tmp.y) then begin
+      if oldCur <> GetCur then begin
        //We have moved somewhere else, finalize insert
         ResolveInsert();
         ShowText(true);
@@ -1524,7 +1526,7 @@ end;
 
 procedure TfEditor.ListBox1KeyPress(Sender: TObject; var Key: Char);
 begin
-  HandleKeypress(key);
+  HandleKeystroke(key);
 end;
 
 procedure TfEditor.EditorPaintBoxClick(Sender: TObject);
@@ -3305,7 +3307,7 @@ begin
 end;
 
 //Handles a keystroke directed at the editor
-procedure TfEditor.HandleKeypress(c: char);
+procedure TfEditor.HandleKeystroke(c: char);
 const DEFCPROPS: TCharacterProps = (wordstate:'-';learnstate:9;dicidx:0;docdic:1);
 var CharType: TInputBufferType;
 begin
@@ -3954,6 +3956,11 @@ begin
   InvalidateCursorPos;
 end;
 
+procedure TfEditor.SetSelectionStart(const Value: TSourcePos);
+begin
+  FSelectionStart := Value;
+end;
+
 procedure TfEditor.InvalidateCursorPos;
 begin
   FCursorPosInvalid:=true;
@@ -4046,9 +4053,19 @@ begin
   SetCur(tmp);
 end;
 
-function TFEditor.InSelectionMode: boolean;
+//True if we're currently in the highlight selection mode
+function TfEditor.InSelectionMode: boolean;
 begin
   Result := FShiftPressed or FLeftMouseDown;
+end;
+
+//Resets the selection highlight
+procedure TfEditor.ResetSelection;
+begin
+  FSelectionStart := Self.SourceCur;
+ //Repaint currently rechecks the highlight for changes every time,
+ //so only trigger repaint
+  EditorPaintBox.Invalidate;
 end;
 
 
