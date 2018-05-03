@@ -1500,10 +1500,6 @@ begin
       Self.FShiftPressed := false;
     end;
 
-    //Any keystroke without shift/mouse pressed resets block selection
-    if not Self.InSelectionMode then
-      ResetSelection; //AFTER we've had the chance to do special VK_LEFT/VK_RIGHT selection exit
-
     if IsMoveKey then begin
       ClearInsBlock;
       if oldCur <> GetCur then begin
@@ -1527,6 +1523,13 @@ end;
 procedure TfEditor.ListBox1KeyPress(Sender: TObject; var Key: Char);
 begin
   HandleKeystroke(key);
+
+  //Any keystroke without shift/mouse pressed resets block selection
+  if not Self.InSelectionMode then
+    ResetSelection;
+    //AFTER we've had the chance to:
+    // - do special VK_LEFT/VK_RIGHT selection exit
+    // - do special backspace/del handling
 end;
 
 procedure TfEditor.EditorPaintBoxClick(Sender: TObject);
@@ -3811,6 +3814,7 @@ begin
   block := Self.TextSelection;
   doc.DeleteBlock(block);
   SourceCur := SourcePos(block.fromx, block.fromy);
+  ResetSelection; //explicitly, since it's now invalid
   InvalidateText;
   FileChanged:=true;
 end;
