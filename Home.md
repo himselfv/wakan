@@ -23,13 +23,10 @@ Wakan can be installed or used as a portable app. It can be installed over versi
 
 **[History of changes](Changes)**
 
-**[Dictionaries for Wakan](https://drive.google.com/folderview?id=0B0jSbSrihj-yVmtxMll3aEw0RVE&usp=sharing#list)**
+**[Additional dictionaries](https://drive.google.com/folderview?id=0B0jSbSrihj-yVmtxMll3aEw0RVE&usp=sharing#list)**
 
   * You can import any EDICT/CCEDICT-style dictionary.
   * Some dictionaries [are available for download](https://drive.google.com/folderview?id=0B0jSbSrihj-yVmtxMll3aEw0RVE&usp=sharing#list) (English, German, Russian)
-
-
-### Quickstart
 
 **[Documentation](HelpContents)**
 
