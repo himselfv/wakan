@@ -6,7 +6,7 @@ Wakan can be installed or used as a portable app. It can be installed over versi
 
 **[All downloads](https://drive.google.com/folderview?id=0B0jSbSrihj-yRDN4WlJXS05BOVE&usp=sharing#list)**
 
-**[Latest version: 1.97](https://drive.google.com/open?id=1Xne8BbENjn1mAEQqkjU3ffW1kDON8SkP)**
+**[Latest version: 1.98](https://drive.google.com/open?id=1P6_H6-5Zuk8SuFRl9S-4Z8BV3dsRL2yG)**
 
  * Redesigned kanji search panel - share your thoughts
 
@@ -19,6 +19,7 @@ Wakan can be installed or used as a portable app. It can be installed over versi
  * Streamlined manual dictionary import
  * [Links](CustomLinks) and [copy formats](CopyFormats) for both kanji and words are now stored as standard XSLT and LNK files
  * Support for ENAMDICT tags
+ * Modern font support (Meiryo, Yu Mincho/Gothic and others)
 
 **[History of changes](Changes)**
 
