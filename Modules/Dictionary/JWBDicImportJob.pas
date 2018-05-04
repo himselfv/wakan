@@ -466,14 +466,16 @@ const
 
 {
 Adds an article to the dictionary we're building.
-Also adds it to all indixes.
+Also adds it to all indexes.
 }
 procedure TDicImportJob.AddArticle(const ed: PEdictArticle; const roma: TEdictRoma);
 var freqi: integer;
-  prior: array[0..MaxKanji-1] of string; //strings because we need to convert to string when adding anyway
+  prior: array[0..MaxKanji-1] of integer;
+  prior_this: integer;
   i, j, k: integer;
   s_art: string;
-  kanji_found: boolean;
+  kanji_local_idx: integer;
+  kanji_matches_found: integer;
   add_mark: TMarkers;
   rec: integer;
 
@@ -525,50 +527,61 @@ begin
   Inc(LastArticle);
   s_art := IntToStr(LastArticle);
 
- //Priority
+  //Base priority is either 0 or expression frequency (higher = better).
   for i := 0 to ed.kanji_used - 1 do
-    prior[i] := '0';
+    prior[i] := 0;
   if freql<>nil then
     for i := 0 to ed.kanji_used - 1 do begin
       freqi:=freql.IndexOf(ed.kanji[i].kanji);
       if freqi<>-1 then
-        prior[i]:=IntToStr(integer(freql.Objects[freqi]));
+        prior[i]:=integer(freql.Objects[freqi]);
     end;
 
  //Write out kanji-kana entries
-  for i := 0 to ed.kana_used - 1 do
-    if ed.kana[i].kanji_used=0 then begin
-     //kana matches any kanji
-      for j := 0 to ed.kanji_used - 1 do begin
-        rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, roma[i],
-          string(ToWakanMarkers(ed.kanji[j].markers+ed.kana[i].markers)), prior[j], s_art]);
-       { Markers are converted to (Unicode)String in the previous line. This can potentially
-        lead to marker corruption since markers include illegal Ansi characters.
-        So we set markers again, directly as Ansi (exactly as they are stored) }
-        dic.TTDict.SetAnsiField(rec,3,ToWakanMarkers(ed.kanji[j].markers+ed.kana[i].markers));
-        if charidx<>nil then
-          IndexChars(rec, ed.kanji[j].kanji);
-      end;
-    end else begin
+  for i := 0 to ed.kana_used - 1 do begin
+    kanji_matches_found := 0;
+    for j := 0 to ed.kanji_used - 1 do begin
+
+      kanji_local_idx := -1; //kanji index in kana's personal kanji list
      //kana matches only selected kanjis
-      for j := 0 to ed.kana[i].kanji_used - 1 do begin
-        kanji_found := false;
-        for k := 0 to ed.kanji_used - 1 do
-          if ed.kanji[k].kanji=ed.kana[i].kanji[j] then begin
-            rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[k].kanji, roma[i],
-              string(ToWakanMarkers(ed.kanji[k].markers+ed.kana[i].markers)), prior[k], s_art]);
-            dic.TTDict.SetAnsiField(rec,3,ToWakanMarkers(ed.kanji[k].markers+ed.kana[i].markers)); //see above
-            if charidx<>nil then
-              IndexChars(rec, ed.kanji[k].kanji);
-            kanji_found := true;
+      if ed.kana[i].kanji_used <> 0 then begin
+        for k := 0 to ed.kana[i].kanji_used - 1 do
+          if ed.kanji[j].kanji=ed.kana[i].kanji[k] then begin
+            Inc(kanji_matches_found);
+            kanji_local_idx := k;
             break;
           end;
-        if not kanji_found then begin
-          roma_prob.Writeln(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
-          Inc(ProblemRecords);
-        end;
+        if kanji_local_idx < 0 then
+          continue;
       end;
+
+      //Dictionaries usually put kana and kanji in their usage order, so give
+      //slightly better priority to earlier entries:
+      //   First, sort by kana order,
+      //   For the same kana, sort by kanji order
+      prior_this := prior[j] + (ed.kana_used - i) * ed.kanji_used;
+      if kanji_local_idx >= 0 then
+        prior_this := prior_this - kanji_local_idx //if this kana has a personal kanji list, take position from there
+      else
+        prior_this := prior_this - j;
+
+      rec := dic.TTDict.AddRecord([ed.kana[i].kana, ed.kanji[j].kanji, roma[i],
+        string(ToWakanMarkers(ed.kanji[j].markers+ed.kana[i].markers)), IntToStr(prior_this), s_art]);
+     { Markers are converted to (Unicode)String in the previous line. This can potentially
+      lead to marker corruption since markers include illegal Ansi characters.
+      So we set markers again, directly as Ansi (exactly as they are stored) }
+      dic.TTDict.SetAnsiField(rec,3,ToWakanMarkers(ed.kanji[j].markers+ed.kana[i].markers));
+      if charidx<>nil then
+        IndexChars(rec, ed.kanji[j].kanji);
+
     end;
+
+    //If explicit kanji were set for this kana, and not all of them were found
+    if ed.kana[i].kanji_used <> kanji_matches_found then begin
+      roma_prob.Writeln(fstr('Kana ')+ed.kana[i].kana+fstr(': some of explicit kanji matches not found.'));
+      Inc(ProblemRecords);
+    end;
+  end;
 
  //Additional markers to every entry
   if ed.pop then
