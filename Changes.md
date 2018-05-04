@@ -15,6 +15,7 @@ This page lists changes in various versions of Wakan, in historical order. For c
   * Streamlined manual dictionary import
   * [Links](CustomLinks) and [copy formats](CopyFormats) for both kanji and words are now stored as standard XSLT and LNK files
   * Support for ENAMDICT tags
+  * Modern font support (Meiryo, Yu Mincho/Gothic and others)
 
 
 # 1.87
