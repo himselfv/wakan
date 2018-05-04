@@ -12,10 +12,19 @@ type
     procedure TearDown; override;
   end;
 
-  TAutoTranslateTestCase = class(TDicSearchTestCase)
+  TAutoTranslateTestSuite = class(TTestSuite)
   protected
     function GetTestFilename: string;
+  public
+    procedure LoadTestCases;
+  end;
+
+  TAutoTranslateTestCase = class(TDicSearchTestCase)
+  protected
+    FTestLine: string;
     procedure ProcessTestLine(line: string);
+  public
+    function GetName: string; override;
   published
     procedure AutoTranslate;
   end;
@@ -54,15 +63,16 @@ end;
 
 { Autotranslate }
 
-function TAutoTranslateTestCase.GetTestFilename: string;
+function TAutoTranslateTestSuite.GetTestFilename: string;
 begin
   Result := TestCasesDir+'\autotl.txt';
 end;
 
-procedure TAutoTranslateTestCase.AutoTranslate;
+procedure TAutoTranslateTestSuite.LoadTestCases;
 var lines: TStringList;
   i, j_pos: integer;
   line: string;
+  ATestCase: TAutoTranslateTestCase;
 begin
   lines := TStringList.Create;
   try
@@ -79,13 +89,24 @@ begin
       line := Trim(line);
       if line = '' then continue;
 
-      ProcessTestLine(line);
+      ATestCase := TAutoTranslateTestCase.Create('AutoTranslate');
+      ATestCase.FTestLine := line;
+      Self.addTest(ATestCase);
     end;
   finally
     FreeAndNil(lines);
   end;
 end;
 
+function TAutoTranslateTestCase.GetName: string;
+begin
+  Result := FTestLine;
+end;
+
+procedure TAutoTranslateTestCase.AutoTranslate;
+begin
+  ProcessTestLine(Self.FTestLine);
+end;
 
 function EatNextPart(var str: string): string;
 var i, i_pos: integer;
@@ -190,10 +211,10 @@ end;
 
 
 function DicSearchTests: ITestSuite;
-var ASuite: TTestSuite;
+var ASuite: TAutoTranslateTestSuite;
 begin
-  ASuite := TTestSuite.create('JWBDicSearch');
-  ASuite.addTest(TAutoTranslateTestCase.Suite);
+  ASuite := TAutoTranslateTestSuite.Create('JWBDicSearch');
+  ASuite.LoadTestCases;
   Result := ASuite;
 end;
 
