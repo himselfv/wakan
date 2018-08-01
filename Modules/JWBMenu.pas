@@ -1947,18 +1947,22 @@ end;
 //Called by ScreenTip to handle button clicking
 procedure TfMenu.ScreenTipButtonClick(ASender: TObject; AButtonId: integer);
 begin
+  //This might be called from modal windows too, e.g. fRadicals.
+  //Switching to a different page might ruin whatever our modal is trying to do,
+  //so avoid popping up any ui.
   if AButtonID=0 then exit;
-  if (AButtonID>2) and (not Self.Focused) then Self.Show;
+  if (AButtonID>2) and IsWindowEnabled(Self.Handle) and (not Self.Focused) then Self.Show;
   case AButtonID of
     1: Clipboard.Text := Clipboard.Text + TfScreenTipForm(ASender).Text;
     2: Clipboard.Text := TfScreenTipForm(ASender).Text;
     3:begin
         Clipboard.Text := TfScreenTipForm(ASender).Text;
-        if not fRadical.Visible then fWordLookup.aLookupClip.Execute;
+        if IsWindowEnabled(Self.Handle) then //not in modal
+          fWordLookup.aLookupClip.Execute;
       end;
     4:begin
-        if fRadical.Visible then exit;
-        if not fKanjiDetails.Visible then aKanjiDetails.Execute;
+        if IsWindowEnabled(Self.Handle) then
+          aKanjiDetails.Execute;
         fKanjiDetails.SetCharDetails(fcopy(TfScreenTipForm(ASender).Text ,1,1));
       end;
   end;
