@@ -1947,7 +1947,6 @@ end;
 //Called by ScreenTip to handle button clicking
 procedure TfMenu.ScreenTipButtonClick(ASender: TObject; AButtonId: integer);
 begin
-  if fRadical.Visible then exit;
   if AButtonID=0 then exit;
   if (AButtonID>2) and (not Self.Focused) then Self.Show;
   case AButtonID of
