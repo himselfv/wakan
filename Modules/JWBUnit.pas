@@ -146,8 +146,8 @@ function GetCJKFont: string; overload; inline;
 function GetCJKFont(const lang: char): string; overload; inline;
 function GetCJKGridFont: string; overload; inline;
 function GetCJKGridFont(const lang: char): string; overload; inline;
-function GetKanaFont: string; overload; inline;
-function GetKanaFont(const lang: char): string; overload; inline;
+function GetRomaFont: string; overload; inline;
+function GetRomaFont(const lang: char): string; overload; inline;
 
 //Text drawing functions
 //Where possible, use the most precise function available for your needs
@@ -583,14 +583,14 @@ begin
   end;
 end;
 
-function GetKanaFont: string; overload; inline;
+function GetRomaFont: string; overload; inline;
 begin
   Result := FontPinYin; //currently both languages use the same font
 end;
 
-function GetKanaFont(const lang: char): string; overload; inline;
+function GetRomaFont(const lang: char): string; overload; inline;
 begin
-  Result := GetKanaFont();
+  Result := GetRomaFont();
 end;
 
 {
@@ -614,7 +614,7 @@ begin
     //some places used FontEnglish before unification
     //some places used fs+1 for romaji, others maintained fs
     cnv := KanaToRomajiF(ch,lang); //includes ConvertPinYin
-    DrawUnicode(Canvas,x,y,fs+1,cnv,GetKanaFont(lang));
+    DrawUnicode(Canvas,x,y,fs+1,cnv,GetRomaFont(lang));
   end else
     DrawUnicode(Canvas,x,y,fs,ConvertBopomofo(ch),GetCJKFont(lang));
 end;

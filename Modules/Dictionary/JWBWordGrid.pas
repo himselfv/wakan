@@ -359,7 +359,7 @@ begin
     0: begin //kana/romaji
       Result:=ConvertKana(remexcl(p.Cells[gc.x,gc.y]));
       if showroma then begin
-        FontName:=GetKanaFont(); //DrawKana draws all romaji with this one
+        FontName:=GetRomaFont(); //DrawKana draws all romaji with this one
         FontSize:=GridFontSize+1;
       end else begin
         FontName:=GetCJKFont();

@@ -1885,13 +1885,13 @@ end;
 procedure TfSettings.pbRomajiAsHiraganaPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color := clBtnFace;
-  DrawUnicode(Canvas,1,1,16,RomajiToKana('H'+edtTestRomaji.Text,'j',[]),GetKanaFont('j'));
+  DrawUnicode(Canvas,1,1,16,RomajiToKana('H'+edtTestRomaji.Text,'j',[]),GetCJKFont('j'));
 end;
 
 procedure TfSettings.pbRomajiAsKatakanaPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color := clBtnFace;
-  DrawUnicode(Canvas,1,1,16,RomajiToKana('K'+edtTestRomaji.Text,'j',[]),GetKanaFont('j'));
+  DrawUnicode(Canvas,1,1,16,RomajiToKana('K'+edtTestRomaji.Text,'j',[]),GetCJKFont('j'));
 end;
 
 procedure TfSettings.pbKanaAsRomajiClick(Sender: TObject);
@@ -1927,7 +1927,7 @@ end;
 procedure TfSettings.pbPinyinAsBopomofoPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(Canvas,1,1,16,RomajiToKana(edtTestPinyin.Text,'c',[]),GetKanaFont('c'));
+  DrawKanaForced(Canvas,1,1,16,RomajiToKana(edtTestPinyin.Text,'c',[]));
 end;
 
 procedure TfSettings.pbBopomofoAsPinyinClick(Sender: TObject);

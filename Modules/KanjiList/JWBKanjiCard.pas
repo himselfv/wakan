@@ -259,7 +259,7 @@ begin
   if curlang = 'j' then
     FontReadings := FontJpChGrid
   else
-    FontReadings := GetKanaFont('c');
+    FontReadings := GetRomaFont('c');
 
   InflateRect(TargetRect, -MarginSize div 2, -MarginSize div 2);
 
