@@ -90,7 +90,7 @@ begin
   begin
     Canvas.FillRect(Rect);
     delete(s,1,1);
-    DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall,showroma,curlang);
+    DrawKana(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s);
   end else
   if (length(s)>0) and (s[1]=UH_DRAWWORD_KANJI) then
   begin
@@ -103,7 +103,7 @@ begin
     end
     else Canvas.Font.Color:=Col('Dict_Text');
     if fSettings.cbNoWordGridColors.Checked then Canvas.Font.Color:=clWindowText;
-    DrawUnicode(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmall);
+    DrawUnicode(Canvas,Rect.Left+2,Rect.Top+1,FontSize,s,FontSmallJp);
   end else if not titrow then
   begin
     cursiv:=false;
@@ -359,16 +359,16 @@ begin
     0: begin //kana/romaji
       Result:=ConvertKana(remexcl(p.Cells[gc.x,gc.y]));
       if showroma then begin
-        FontName:=FontPinYin; //DrawKana draws all romaji with this one
+        FontName:=GetKanaFont(); //DrawKana draws all romaji with this one
         FontSize:=GridFontSize+1;
       end else begin
-        FontName:=FontSmall;
+        FontName:=GetCJKFont();
         FontSize:=GridFontSize;
       end;
     end;
     1: begin //kanji
       Result := remexcl(p.Cells[gc.x,gc.y]);
-      FontName:=FontSmall;
+      FontName:=FontSmallJp;
       FontSize:=GridFontSize;
     end
   else //not selectable

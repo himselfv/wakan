@@ -140,8 +140,8 @@ begin
   Canvas.Brush.Color:=clWindow;
   Canvas.Font.Style:=[];
   BeginDrawReg(Canvas); //I really hope this is no temporary canvss
-  if btnDisplayTranslation.Down then DrawUnicode(Canvas,4,4,16,ex_jap,FontSmall);
-  if btnUseSmallFont.Down then DrawUnicode(Canvas,4,16,16,ex_jap,FontSmall);
+  if btnDisplayTranslation.Down then DrawUnicode(Canvas,4,4,16,ex_jap,FontSmallJp);
+  if btnUseSmallFont.Down then DrawUnicode(Canvas,4,16,16,ex_jap,FontSmallJp);
   if btnUseBigFont.Down then DrawUnicode(Canvas,4,6,24,ex_jap,FontJapanese);
   EndDrawReg;
   if btnDisplayTranslation.Down then DrawUnicode(Canvas,4,23,16,fstr(ex_en),FontEnglish);

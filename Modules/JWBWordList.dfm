@@ -599,7 +599,7 @@ object fWordList: TfWordList
         ParentFont = False
         Transparent = True
       end
-      object Shape2: TShape
+      object shapePhonetic: TShape
         Left = 192
         Top = 85
         Width = 381
@@ -607,7 +607,7 @@ object fWordList: TfWordList
         Anchors = [akLeft, akRight, akBottom]
         Brush.Color = clWindow
       end
-      object PaintBox1: TPaintBox
+      object pbPhonetic: TPaintBox
         Left = 193
         Top = 86
         Width = 379
@@ -615,9 +615,9 @@ object fWordList: TfWordList
         Anchors = [akLeft, akRight, akBottom]
         Color = clBtnFace
         ParentColor = False
-        OnPaint = PaintBox1Paint
+        OnPaint = pbPhoneticPaint
       end
-      object Shape5: TShape
+      object shapeWritten: TShape
         Left = 192
         Top = 125
         Width = 381
@@ -640,7 +640,7 @@ object fWordList: TfWordList
         ParentFont = False
         Transparent = True
       end
-      object PaintBox6: TPaintBox
+      object pbWritten: TPaintBox
         Left = 193
         Top = 126
         Width = 379
@@ -648,7 +648,7 @@ object fWordList: TfWordList
         Anchors = [akRight, akBottom]
         Color = clBtnFace
         ParentColor = False
-        OnPaint = PaintBox6Paint
+        OnPaint = pbWrittenPaint
       end
       object RxLabel9: TLabel
         Left = 438
@@ -815,7 +815,7 @@ object fWordList: TfWordList
         ParentFont = False
         Transparent = True
       end
-      object Shape1: TShape
+      object shapeMeaning: TShape
         Left = 192
         Top = 165
         Width = 381
@@ -823,7 +823,7 @@ object fWordList: TfWordList
         Anchors = [akRight, akBottom]
         Brush.Color = clWindow
       end
-      object PaintBox2: TPaintBox
+      object pbMeaning: TPaintBox
         Left = 193
         Top = 166
         Width = 379
@@ -831,7 +831,7 @@ object fWordList: TfWordList
         Anchors = [akRight, akBottom]
         Color = clBtnFace
         ParentColor = False
-        OnPaint = PaintBox2Paint
+        OnPaint = pbMeaningPaint
       end
       object Label54: TLabel
         Left = 24
@@ -1007,8 +1007,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'EvalResults'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel1: TLabel
         Left = 16
         Top = 4
@@ -1230,8 +1228,6 @@ object fWordList: TfWordList
       Left = 0
       Top = 0
       Caption = 'Final'
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object RxLabel2: TLabel
         Left = 16
         Top = 4

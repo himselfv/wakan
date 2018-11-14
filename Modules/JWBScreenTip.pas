@@ -262,7 +262,7 @@ begin
   Self.pb.Canvas.Brush.Color:=Col('Popup_Back');
   Self.pb.Canvas.Pen.Color:=Col('Popup_Text');
   DrawUnicode(Self.pb.Canvas,sep+2+PopupButtonNum*PopupButtonWidth
-    +PopupButtonNum*PopupButtonSep+sep,sep,tpp,FText,FontSmall);
+    +PopupButtonNum*PopupButtonSep+sep,sep,tpp,FText,FontSmallJp);
 
  //Words
   Self.pb.Canvas.Rectangle(sep,sep+tpp+sep,Self.Width-sep,sep+tpp+sep+FScreenTipList.Count*ch);

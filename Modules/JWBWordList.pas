@@ -56,11 +56,11 @@ type
     Label22: TLabel;
     Label23: TLabel;
     Label24: TLabel;
-    Shape2: TShape;
-    PaintBox1: TPaintBox;
-    Shape5: TShape;
+    shapePhonetic: TShape;
+    pbPhonetic: TPaintBox;
+    shapeWritten: TShape;
     Label25: TLabel;
-    PaintBox6: TPaintBox;
+    pbWritten: TPaintBox;
     RxLabel9: TLabel;
     Label30: TLabel;
     Label31: TLabel;
@@ -77,8 +77,8 @@ type
     Button8: TButton;
     Button9: TButton;
     Button10: TButton;
-    Shape1: TShape;
-    PaintBox2: TPaintBox;
+    shapeMeaning: TShape;
+    pbMeaning: TPaintBox;
     RxLabel10: TLabel;
     Label43: TLabel;
     Label45: TLabel;
@@ -130,9 +130,9 @@ type
     procedure Button7Click(Sender: TObject);
     procedure Button5Click(Sender: TObject);
     procedure CheckBox5Click(Sender: TObject);
-    procedure PaintBox1Paint(Sender: TObject);
-    procedure PaintBox6Paint(Sender: TObject);
-    procedure PaintBox2Paint(Sender: TObject);
+    procedure pbPhoneticPaint(Sender: TObject);
+    procedure pbWrittenPaint(Sender: TObject);
+    procedure pbMeaningPaint(Sender: TObject);
     procedure Button10Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -322,30 +322,30 @@ begin
   Edit1.Enabled:=CheckBox5.Checked;
 end;
 
-procedure TfWordList.PaintBox1Paint(Sender: TObject);
+procedure TfWordList.pbPhoneticPaint(Sender: TObject);
 begin
-  PaintBox1.Canvas.Brush.Color:=clWindow;
-  DrawKana(PaintBox1.Canvas,1,1,22,twphonetic,FontJapanese,showroma,curlang);
+  pbPhonetic.Canvas.Brush.Color:=clWindow;
+  DrawKana(pbPhonetic.Canvas,1,1,22,twphonetic);
 end;
 
-procedure TfWordList.PaintBox6Paint(Sender: TObject);
+procedure TfWordList.pbWrittenPaint(Sender: TObject);
 var x:string;
 begin
-  PaintBox6.Canvas.Brush.Color:=clWindow;
+  pbWritten.Canvas.Brush.Color:=clWindow;
   x:=twkanji;
-  PaintBox6.Canvas.Font.Color:=clWindowText;
+  pbWritten.Canvas.Font.Color:=clWindowText;
   if x[1]=UH_UNKNOWN_KANJI then
   begin
     delete(x,1,1);
-    PaintBox6.Canvas.Font.Color:=Col('Dict_UnknownChar');
+    pbWritten.Canvas.Font.Color:=Col('Dict_UnknownChar');
   end;
-  DrawUnicode(PaintBox6.Canvas,1,1,22,x,FontJapanese);
+  DrawUnicode(pbWritten.Canvas,1,1,22,x,FontJapanese);
 end;
 
-procedure TfWordList.PaintBox2Paint(Sender: TObject);
+procedure TfWordList.pbMeaningPaint(Sender: TObject);
 begin
-  PaintBox2.Canvas.Brush.Color:=clWindow;
-  DrawUnicode(PaintBox2.Canvas,1,1,22,fstr(twmeaning),FontEnglish);
+  pbMeaning.Canvas.Brush.Color:=clWindow;
+  DrawUnicode(pbMeaning.Canvas,1,1,22,fstr(twmeaning),FontEnglish);
 end;
 
 procedure TfWordList.Button10Click(Sender: TObject);
@@ -725,12 +725,12 @@ begin
   Button7.Visible:=false;
   Button8.Visible:=false;
   Button9.Visible:=false;
-  Shape1.Visible:=false;
-  Shape2.Visible:=false;
-  Shape5.Visible:=false;
-  PaintBox1.Visible:=false;
-  PaintBox2.Visible:=false;
-  PaintBox6.Visible:=false;
+  shapePhonetic.Visible:=false;
+  shapeWritten.Visible:=false;
+  shapeMeaning.Visible:=false;
+  pbPhonetic.Visible:=false;
+  pbWritten.Visible:=false;
+  pbMeaning.Visible:=false;
   Button10.Visible:=true;
   i:=0;
   case RadioGroup8.ItemIndex of
@@ -749,47 +749,47 @@ begin
   if (i=2) and (CheckBox6.Checked) and (FirstUnknownKanjiIndex(TUser.Str(TUserKanji))>=0) then i:=1;
   if i=1 then
   begin
-    PaintBox1.Visible:=true;
-    Shape2.Visible:=true;
+    pbPhonetic.Visible:=true;
+    shapePhonetic.Visible:=true;
     Label24.Visible:=true;
   end;
   if i=2 then
   begin
-    PaintBox6.Visible:=true;
-    Shape5.Visible:=true;
+    pbWritten.Visible:=true;
+    shapeWritten.Visible:=true;
     Label25.Visible:=true;
   end;
   if i=3 then
   begin
-    PaintBox2.Visible:=true;
-    Shape1.Visible:=true;
+    pbMeaning.Visible:=true;
+    shapeMeaning.Visible:=true;
     Label31.Visible:=true;
   end;
   if i=4 then
   begin
-    PaintBox1.Visible:=true;
-    Shape2.Visible:=true;
+    pbPhonetic.Visible:=true;
+    shapePhonetic.Visible:=true;
     Label24.Visible:=true;
-    PaintBox6.Visible:=true;
-    Shape5.Visible:=true;
+    pbWritten.Visible:=true;
+    shapeWritten.Visible:=true;
     Label25.Visible:=true;
   end;
   if i=5 then
   begin
-    PaintBox1.Visible:=true;
-    Shape2.Visible:=true;
+    pbPhonetic.Visible:=true;
+    shapePhonetic.Visible:=true;
     Label24.Visible:=true;
-    PaintBox2.Visible:=true;
-    Shape1.Visible:=true;
+    pbMeaning.Visible:=true;
+    shapeMeaning.Visible:=true;
     Label31.Visible:=true;
   end;
   if i=6 then
   begin
-    PaintBox6.Visible:=true;
-    Shape5.Visible:=true;
+    pbWritten.Visible:=true;
+    shapeWritten.Visible:=true;
     Label25.Visible:=true;
-    PaintBox2.Visible:=true;
-    Shape1.Visible:=true;
+    pbMeaning.Visible:=true;
+    shapeMeaning.Visible:=true;
     Label31.Visible:=true;
   end;
 end;
@@ -819,12 +819,12 @@ begin
   Button7.Visible:=true;
   Button8.Visible:=true;
   Button9.Visible:=true;
-  Shape1.Visible:=true;
-  Shape2.Visible:=true;
-  Shape5.Visible:=true;
-  PaintBox1.Visible:=true;
-  PaintBox2.Visible:=true;
-  PaintBox6.Visible:=true;
+  shapePhonetic.Visible:=true;
+  shapeWritten.Visible:=true;
+  shapeMeaning.Visible:=true;
+  pbPhonetic.Visible:=true;
+  pbWritten.Visible:=true;
+  pbMeaning.Visible:=true;
   Button10.Visible:=false;
 end;
 

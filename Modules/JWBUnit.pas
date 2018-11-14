@@ -42,9 +42,12 @@ So,
 //See KanaConv.ResolveFlag
 
 var
-  curlang:char;
+  curlang: char;       //currently active eastern language (j or c)
   cromasys:integer;
-  showroma:boolean;
+
+  jshowroma: boolean;  //show romaji instead of kana
+  cshowroma: boolean;  //show pinyin instead of bopomofo
+  showroma: boolean;   //one of the above, depending on the active language
 
  { Romaji translation tables. Populated on load. }
   roma_db: TKanaTranslator;
@@ -109,22 +112,50 @@ procedure SetColDefault(i:integer);
 
 { Painting and currently selected fonts }
 var
-  FontStrokeOrder,
-  FontChinese,
-  FontChineseGB,
-  FontChineseGrid,
-  FontChineseGridGB,
-  FontJapaneseGrid,
-  FontJapanese,
-  FontSmall,
-  FontRadical,
-  FontEnglish,
-  FontPinYin:string;
+  FontJapanese,         //Default Japanese font
+  FontJapaneseGrid,     //Alternative Japanese font for character grid
+  FontSmallJp: string;  { A weird "Japanese font, but small" for certain situations.
+                          Where it is used, it replaces ANY font (Japanese or Chinese),
+                          so it has to support both.
+                          Because of this it's being outphased now }
+
+  //Traditional/Big5 versions
+  FontChinese,          //Default Chinese font
+  FontChineseGrid:      //Alternative Chinese font for character grid
+    string;
+
+  //Simplified/GB2132 versions
+  //Both are used only if configured in Settings, and currently in only a few places (KanjiList + KanjiDetails)
+  FontChineseGB,        //Default Chinese font
+  FontChineseGridGB:    //Alternative Chinese font for character grid.
+    string;
+
+  //Font for drawing radicals. These may contain rare symbols so full unicode font
+  //is recommended.
+  //Also used for drawing Chinese/ChineseGrid in "Both Traditional+Simplified" mode
+  FontRadical: string;
+
+  FontEnglish: string;  //Western translation/meaning and other misc things
+  FontPinYin: string;   //Font for Romaji AND Pinyin. Maybe we'll split them someday (see DrawKana).
+  FontStrokeOrder: string;   //Stroke order only, not stroke count (that's FontEnglish)
 
   GridFontSize:integer;
 
+//Retreives CJK font (Japanese/Chinese) configured for the currently selected language
+function GetCJKFont: string; overload; inline;
+function GetCJKFont(const lang: char): string; overload; inline;
+function GetCJKGridFont: string; overload; inline;
+function GetCJKGridFont(const lang: char): string; overload; inline;
+function GetKanaFont: string; overload; inline;
+function GetKanaFont(const lang: char): string; overload; inline;
+
 procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string); inline;
-procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
+
+//Draws phonetic line: kana/bopomofo or romaji/pinyin, depending on the language and settings.
+//Chooses appropriate font.
+procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string); overload; inline;
+procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload; inline;
+
 
 
 { Misc }
@@ -132,7 +163,7 @@ procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:bool
 function DateForm(s:string):string;
 
 implementation
-uses Messages, StrUtils, ShlObj, Registry, AppData, JWBSettings, JWBLanguage,
+uses Messages, UITypes, StrUtils, ShlObj, Registry, AppData, JWBSettings, JWBLanguage,
   JWBCharData, JWBLegacyMarkup, MemSource, JWBDrawText;
 
 
@@ -503,19 +534,88 @@ begin
   Result := ConvertKana(ch,showroma,curlang);
 end;
 
-//NOTE: If you update fonts here, update DrawGridUpdateSelection() too.
-procedure DrawKana(c:TCanvas;x,y,fs:integer;ch:string;fontface:string;showr:boolean;lang:char);
-var cnv2:string;
+{
+Retrieves Japanese or Chinese font configured for the currently selected language
+TODO:
+  We can cache the fonts in shared variables for speed access
+  and update on curlang chanes.
+}
+function GetCJKFont: string;
 begin
-  c.Font.Style:=[];
-  if showr then
-  begin
-    cnv2:=KanaToRomajiF(ch,lang);
-    DrawUnicode(c,x,y,fs+1,cnv2,FontPinYin);
-  end else
-    DrawUnicode(c,x,y,fs,ConvertBopomofo(ch),fontface);
+  Result := GetCJKFont(curlang);
 end;
 
+function GetCJKFont(const lang: char): string;
+begin
+  if lang <> 'c' then
+    Result := FontJapanese
+  else
+  case fSettings.RadioGroup5.ItemIndex of
+    0: Result := FontChinese;
+    1: Result := FontChineseGB;
+    2: Result := FontRadical;
+  else Result := FontChinese;
+  end;
+end;
+
+function GetCJKGridFont: string;
+begin
+  Result := GetCJKGridFont(curlang);
+end;
+
+function GetCJKGridFont(const lang: char): string; overload; inline;
+begin
+  if lang <> 'c' then
+    Result := FontJapanese
+  else
+  case fSettings.RadioGroup5.ItemIndex of
+    0: Result := FontChineseGrid;
+    1: Result := FontChineseGridGB;
+    2: Result := FontRadical;
+  else Result := FontChineseGrid;
+  end;
+end;
+
+function GetKanaFont: string; overload; inline;
+begin
+  Result := FontPinYin; //currently both languages use the same font
+end;
+
+function GetKanaFont(const lang: char): string; overload; inline;
+begin
+  Result := GetKanaFont();
+end;
+
+{
+DrawKana: Draws phonetics in any eastern language/settings.
+All phonetics are drawn in:
+  Kana, Bopomofo: appropriate CJK font
+  Romaji, Pinyin: FontPinyin
+Some places used FontEnglish for Romaji before the unification. MAYBE we should
+follow this rule. I'll see how much of each style is there.
+}
+procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload; inline;
+var lshowroma: boolean;
+  cnv: FString;
+begin
+  Canvas.Font.Style:=[];
+  if lang='c' then
+    lshowroma := cshowroma
+  else
+    lshowroma := jshowroma;
+  if lshowroma then begin
+    //some places used FontEnglish before unification
+    //some places used fs+1 for romaji, others maintained fs
+    cnv := KanaToRomajiF(ch,lang); //includes ConvertPinYin
+    DrawUnicode(Canvas,x,y,fs+1,cnv,GetKanaFont(lang));
+  end else
+    DrawUnicode(Canvas,x,y,fs,ConvertBopomofo(ch),GetCJKFont(lang));
+end;
+
+procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string);
+begin
+  DrawKana(Canvas,x,y,fs,ch,curlang);
+end;
 
 
 { Misc }

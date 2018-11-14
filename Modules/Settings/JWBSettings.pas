@@ -306,7 +306,6 @@ type
   protected //Romanization
     FKanaExample: string; //current string to romanize, see pbKanaAsRomajiClick
     FBopomofoExample: string;
-    jshowroma, cshowroma: boolean;
     procedure ReloadRomaSystems;
     procedure ReloadPinyinSystems;
     function GetRomaList: string;
@@ -1886,13 +1885,13 @@ end;
 procedure TfSettings.pbRomajiAsHiraganaPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color := clBtnFace;
-  DrawUnicode(Canvas,1,1,16,RomajiToKana('H'+edtTestRomaji.Text,'j',[]),FontSmall);
+  DrawUnicode(Canvas,1,1,16,RomajiToKana('H'+edtTestRomaji.Text,'j',[]),GetKanaFont('j'));
 end;
 
 procedure TfSettings.pbRomajiAsKatakanaPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color := clBtnFace;
-  DrawUnicode(Canvas,1,1,16,RomajiToKana('K'+edtTestRomaji.Text,'j',[]),FontSmall);
+  DrawUnicode(Canvas,1,1,16,RomajiToKana('K'+edtTestRomaji.Text,'j',[]),GetKanaFont('j'));
 end;
 
 procedure TfSettings.pbKanaAsRomajiClick(Sender: TObject);
@@ -1915,10 +1914,7 @@ procedure TfSettings.pbKanaAsRomajiPaint(Sender: TObject; Canvas: TCanvas);
 begin
   if FKanaExample='' then pbKanaAsRomajiClick(nil); //select one
   Canvas.Brush.Color := clBtnFace;
-  if jshowroma then
-    DrawUnicode(Canvas,1,1,16,KanaToRomaji(FKanaExample,'j',[]),FontEnglish)
-  else
-    DrawUnicode(Canvas,1,1,16,FKanaExample,FontSmall);
+  DrawKana(Canvas,1,1,16,FKanaExample,'j');
 end;
 
 procedure TfSettings.edtTestRomajiChange(Sender: TObject);
@@ -1931,7 +1927,7 @@ end;
 procedure TfSettings.pbPinyinAsBopomofoPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=clBtnFace;
-  DrawUnicode(Canvas,1,1,16,RomajiToKana(edtTestPinyin.Text,'c',[]),FontSmall);
+  DrawUnicode(Canvas,1,1,16,RomajiToKana(edtTestPinyin.Text,'c',[]),GetKanaFont('c'));
 end;
 
 procedure TfSettings.pbBopomofoAsPinyinClick(Sender: TObject);
@@ -1954,10 +1950,7 @@ procedure TfSettings.pbBopomofoAsPinyinPaint(Sender: TObject; Canvas: TCanvas);
 begin
   if FBopomofoExample='' then pbBopomofoAsPinyinClick(nil); //select one
   Canvas.Brush.Color := clBtnFace;
-  if cshowroma then
-    DrawUnicode(Canvas,1,1,16,KanaToRomaji(FBopomofoExample,'c',[]),FontPinyin)
-  else
-    DrawUnicode(Canvas,1,1,16,FBopomofoExample,FontSmall);
+  DrawKana(Canvas,1,1,16,FBopomofoExample,'c');
 end;
 
 procedure TfSettings.edtTestPinyinChange(Sender: TObject);

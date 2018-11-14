@@ -111,7 +111,7 @@ begin
     FontChineseGrid:=ini.ReadString('Fonts','ChineseGrid','MingLiU');
     FontChineseGB:=ini.ReadString('Fonts','ChineseGB','SimSun');
     FontChineseGridGB:=ini.ReadString('Fonts','ChineseGridGB','SimSun');
-    FontSmall:=ini.ReadString('Fonts','Small','MS Gothic');
+    FontSmallJp:=ini.ReadString('Fonts','Small','MS Gothic');
     FontRadical:=ini.ReadString('Fonts','Radical','MingLiU');
     FontEnglish:=ini.ReadString('Fonts','English','Verdana');
     FontStrokeOrder:=ini.ReadString('Fonts','StrokeOrder','MS Mincho');
@@ -124,7 +124,7 @@ procedure TFontSettingsPage.SaveSettings(ini: TCustomIniFile);
 begin
   ini.WriteString('Fonts','JapaneseGrid',FontJapaneseGrid);
   ini.WriteString('Fonts','Japanese',FontJapanese);
-  ini.WriteString('Fonts','Small',FontSmall);
+  ini.WriteString('Fonts','Small',FontSmallJp);
   ini.WriteString('Fonts','ChineseGrid',FontChineseGrid);
   ini.WriteString('Fonts','ChineseGridGB',FontChineseGridGB);
   ini.WriteString('Fonts','Chinese',FontChinese);
@@ -319,7 +319,7 @@ begin
   FontChineseGrid:=FMingLiu;
   FontChineseGB:=FSimSun;
   FontChineseGridGB:=FSimSun;
-  FontSmall:=FGothic;
+  FontSmallJp:=FGothic;
   FontRadical:=FMingLiu;
   FontEnglish:='Verdana';
   FontPinYin:='Arial';
@@ -399,7 +399,7 @@ begin
     or not CheckFont(FontChineseGrid)
     or not CheckFont(FontChineseGB)
     or not CheckFont(FontChineseGridGB)
-    or not CheckFont(FontSmall)
+    or not CheckFont(FontSmallJp)
     or not CheckFont(FontRadical)
     or not CheckFont(FontEnglish)
     or not CheckFont(FontPinYin)
@@ -436,7 +436,7 @@ begin
   edtFontChinese.Text:=FontChinese;
   edtFontChineseGB.Text:=FontChineseGB;
   edtFontRadical.Text:=FontRadical;
-  edtFontSmall.Text:=FontSmall;
+  edtFontSmall.Text:=FontSmallJp;
   edtFontEnglish.Text:=FontEnglish;
   edtFontPinYin.Text:=FontPinYin;
 end;
@@ -569,8 +569,8 @@ procedure TFontSettingsPage.btnFontSmallClick(Sender: TObject);
 {$IFNDEF AUTOTEST}
 var sup:string;
 begin
-  FontSmall:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edtFontSmall.text,false);
-  edtFontSmall.Text:=FontSmall;
+  FontSmallJp:=ChooseFont([SHIFTJIS_CHARSET],FS_JAPANESE_CHARTEST,sup,edtFontSmall.text,false);
+  edtFontSmall.Text:=FontSmallJp;
 {$ELSE}
 begin
 {$ENDIF}

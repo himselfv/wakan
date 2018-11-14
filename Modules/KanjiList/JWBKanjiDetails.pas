@@ -1171,7 +1171,7 @@ begin
     end else x:=x+lw;
   end;
   canvas.Font.Style:=[];
-    if (its[1]='U') or (its[1]='R') then fname:=FontSmall else fname:=FontEnglish;
+    if (its[1]='U') or (its[1]='R') then fname:=FontSmallJp else fname:=FontEnglish;
   rh:=fh+2;
   rr:=r;
   if (GetDet(2)='C') and (x<r div 2) then rr:=(r div 2)-5;
@@ -1206,7 +1206,7 @@ end;
 procedure TfKanjiDetails.DrawSingleText(canvas:TCanvas;tp:char;l,t,r,fh:integer;s:string);
 var font:string;
 begin
-  if curLang='c' then font:=FontRadical else font:=FontSmall;
+  if curLang='c' then font:=FontRadical else font:=FontSmallJp;
   if tp='P' then font:=FontEnglish;
   if (tp='U') or (tp='P') then DrawUnicode(canvas,l,t,fh-2,s,font) else
   if (tp='N') or (tp='T') then canvas.TextOut(r-canvas.TextExtent(s).cx,t,s) else
