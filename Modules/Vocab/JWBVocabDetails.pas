@@ -237,7 +237,7 @@ procedure TfVocabDetails.pbKanjiPaint(Sender: TObject; Canvas: TCanvas);
 begin
   pbKanji.Canvas.Brush.Color:=clWindow;
   BeginDrawReg(Canvas);
-  DrawUnicode(Canvas,1,1,22,fVocab.curkanji,FontJapanese);
+  DrawUnicode(Canvas,1,1,22,fVocab.curkanji,GetCJKFont());
   EndDrawReg;
 end;
 

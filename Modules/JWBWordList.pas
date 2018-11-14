@@ -339,7 +339,7 @@ begin
     delete(x,1,1);
     pbWritten.Canvas.Font.Color:=Col('Dict_UnknownChar');
   end;
-  DrawUnicode(pbWritten.Canvas,1,1,22,x,FontJapanese);
+  DrawUnicode(pbWritten.Canvas,1,1,22,x,GetCJKFont());
 end;
 
 procedure TfWordList.pbMeaningPaint(Sender: TObject);

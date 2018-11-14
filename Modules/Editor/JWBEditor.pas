@@ -269,7 +269,7 @@ type
 
   protected //Font and font size
     FFontSize: integer;
-    function GetFontName: string;
+    function GetFontName: string; inline;
     procedure SetFontSize(Value: integer);
     procedure cbFontSizeGuessItem(Value: string);
   public
@@ -4086,10 +4086,7 @@ end;
 //Currently this is always the appropriate globally configured font
 function TfEditor.GetFontName: string;
 begin
-  if curlang='c' then
-    Result := FontChineseGrid
-  else
-    Result := FontJapaneseGrid;
+  Result := GetCJKGridFont();
 end;
 
 procedure TfEditor.SetFontSize(Value: integer);

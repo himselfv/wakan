@@ -33,8 +33,8 @@ type
     FLoaded: boolean;
     FVocabCompounds: TStringList;
     FFullCompounds: TStringList;
-    FOnReadings: string;
-    FKunReadings: string;
+    FOnReadings: string;  //Mandarin readings in Chinese mode (in pinyin)
+    FKunReadings: string; //Cantonese readings in Chinese mode (in pinyin)
     FDefinition: string;
     FStrokeCount: integer;
     FRadical: string;
@@ -244,22 +244,22 @@ var
   HalfCharSz: integer;
   FontJpCh:string;
   FontJpChGrid:string;
-  FontJpEnGrid:string;
+  FontReadings:string;
   j, p: integer;
   s: string;
 begin
   if not FLoaded then
     Reload;
 
-  if curlang = 'j' then begin
-    FontJpCh := FontJapanese;
-    FontJpChGrid := FontJapaneseGrid;
-    FontJpEnGrid := FontJapaneseGrid;
-  end else begin
-    FontJpCh := FontChinese;
-    FontJpChGrid := FontChineseGrid;
-    FontJpEnGrid := FontPinYin;
-  end;
+  FontJpCh := GetCJKFont();
+  FontJpChGrid := GetCJKGridFont();
+
+  //Font for drawing On/Kun readings fields
+  //These are store Madarin/Cantonese readings in Chinese mode so we use different fonts:
+  if curlang = 'j' then
+    FontReadings := FontJpChGrid
+  else
+    FontReadings := GetKanaFont('c');
 
   InflateRect(TargetRect, -MarginSize div 2, -MarginSize div 2);
 
@@ -344,9 +344,9 @@ begin
       Canvas.LineTo(Rect.Right, Rect.Top);
     end;
     Inc(Rect.Top, MarginSize);
-    DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FOnReadings, FontJpEnGrid);
+    DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FOnReadings, FontReadings);
     Inc(Rect.Top, FontSize);
-    DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FKunReadings, FontJpEnGrid);
+    DrawUnicode(Canvas, Rect.Left, Rect.Top, FontSize, FKunReadings, FontReadings);
     Inc(Rect.Top, FontSize);
   end;
 

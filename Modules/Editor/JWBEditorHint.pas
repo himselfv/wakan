@@ -120,7 +120,7 @@ begin
 
 //  PaintBox1.Canvas.Font.Style:=[];
   PaintBox1.Canvas.Font.Color:=Col('Editor_HintText');
-  DrawUnicode(PaintBox1.Canvas,2,2,fs,fcopy(kanjis,1,cw),FontJapaneseGrid);
+  DrawUnicode(PaintBox1.Canvas,2,2,fs,fcopy(kanjis,1,cw),GetCJKGridFont());
 //  PaintBox1.Canvas.Font.Style:=[fsBold];
   PaintBox1.Canvas.Brush.Color:=Col('Editor_HintSelected');
   rect.Left:=2+cw*fs;
@@ -128,10 +128,10 @@ begin
   rect.Bottom:=fs+2;
   rect.Right:=2+cw*fs+cwl*fs;
   PaintBox1.Canvas.FillRect(rect);
-  DrawUnicode(PaintBox1.Canvas,2+cw*fs,2,fs,fcopy(kanjis,cw+1,cwl),FontJapaneseGrid);
+  DrawUnicode(PaintBox1.Canvas,2+cw*fs,2,fs,fcopy(kanjis,cw+1,cwl),GetCJKGridFont());
 //  PaintBox1.Canvas.Font.Style:=[];
   PaintBox1.Canvas.Brush.Color:=Col('Editor_HintBack');
-  DrawUnicode(PaintBox1.Canvas,2+cw*fs+cwl*fs,2,fs,fcopy(kanjis,cw+cwl+1,flength(kanjis)-cwl-cw),FontJapaneseGrid);
+  DrawUnicode(PaintBox1.Canvas,2+cw*fs+cwl*fs,2,fs,fcopy(kanjis,cw+cwl+1,flength(kanjis)-cwl-cw),GetCJKGridFont());
   if fSettings.cbHintMeaning.Checked then
   begin
     PaintBox1.Canvas.Font.Name:=FontEnglish;

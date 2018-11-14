@@ -1099,13 +1099,13 @@ begin
         canvas.Pen.Color:=clBlack;
         case ps[k*2-1] of
           'r':begin t:=tr; ft:=FontEnglish; end;
-          'k':begin t:=tk; ft:=FontJapanese; end;
-          'p':begin t:=tp; ft:=FontJapanese; end;
-          'w':begin t:=tw; ft:=FontJapanese; end;
+          'k':begin t:=tk; ft:=GetCJKFont(); end;
+          'p':begin t:=tp; ft:=GetCJKFont(); end;
+          'w':begin t:=tw; ft:=GetCJKFont(); end;
           'm':begin t:=tm; ft:=FontEnglish; end;
           '-':begin t:=''; ft:=FontEnglish; end;
+        else ft := GetCJKFont();
         end;
-        if (ft=FontJapanese) and (curlang='c') then ft:=FontChinese;
         if (ps[k*2-1]<>'p') then
           DrawUnicode(canvas,ph+round(ph*0.4)+((width-ph*2) div 4)*(k-1),ph*i+round(ph*0.1)+(height-ph*pr) div 2,round(ph*0.8),t,ft)
         else

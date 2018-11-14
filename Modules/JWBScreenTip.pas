@@ -187,10 +187,7 @@ begin
     FKanjiCard.MarginSize := SizeFactor div 2;
     FKanjiCard.MainCharSize := SizeFactor * (vsiz-1);
     FKanjiCard.MaxFullComp := 4;
-    if curlang='c' then
-      FKanjiCard.CalFont := FontChinese
-    else
-      FKanjiCard.CalFont := FontJapanese;
+    FKanjiCard.CalFont := GetCJKFont();
   end;
 end;
 

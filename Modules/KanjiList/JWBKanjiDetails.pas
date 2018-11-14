@@ -270,13 +270,7 @@ end;
 procedure TfKanjiDetails.pbKanjiPaint(Sender: TObject);
 var f:string;
 begin
-  if curLang='c' then
-    case fSettings.RadioGroup5.ItemIndex of
-      0:f:=FontChinese;
-      1:f:=FontChineseGB;
-      2:f:=FontRadical;
-    end
-  else f:=FontJapanese;
+  f := GetCJKFont();
   if btnStrokeOrder.Down then
     if curLang='c' then f:=FontChinese else f:=FontStrokeOrder;
   pbKanji.Canvas.Brush.Color:=clWindow;

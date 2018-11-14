@@ -154,7 +154,7 @@ procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontfac
 //Draws phonetic line: kana/bopomofo or romaji/pinyin, depending on the language and settings.
 //Chooses appropriate font.
 procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string); overload; inline;
-procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload; inline;
+procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload;
 
 
 
@@ -566,7 +566,7 @@ end;
 function GetCJKGridFont(const lang: char): string; overload; inline;
 begin
   if lang <> 'c' then
-    Result := FontJapanese
+    Result := FontJapaneseGrid
   else
   case fSettings.RadioGroup5.ItemIndex of
     0: Result := FontChineseGrid;

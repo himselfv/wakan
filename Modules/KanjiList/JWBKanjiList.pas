@@ -162,7 +162,7 @@ type
     FCellFontSize: integer;
     procedure ActualizeCellSize;
     function GetCellSize: integer;
-    function GetCellFontName: string;
+    function GetCellFontName: string; inline;
     function GetCellFontSize: integer;
     procedure SetCellSize(Value: integer);
     function GetExpectedColCount: integer;
@@ -370,15 +370,7 @@ end;
 
 function TfKanji.GetCellFontName: string;
 begin
-  if curLang='j' then
-    Result := FontJapaneseGrid
-  else
-  case fSettings.RadioGroup5.ItemIndex of
-    0: Result := FontChineseGrid;
-    1: Result := FontChineseGridGB;
-    2: Result := FontRadical;
-  else Result := FontChineseGrid;
-  end;
+  Result := JWBUnit.GetCJKGridFont;
 end;
 
 procedure TfKanji.ActualizeCellSize;

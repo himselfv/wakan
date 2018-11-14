@@ -163,14 +163,14 @@ begin
   if length(FKanji)<KN then exit;
   BeginDrawReg(pb.Canvas);
   pb.Canvas.Brush.Color:=Col('Kanji_Back');
-  DrawUnicode(pb.Canvas,44,4,16,FKanji[KN-1].rad,FontJapaneseGrid);
+  DrawUnicode(pb.Canvas,44,4,16,FKanji[KN-1].rad,GetCJKGridFont);
   case FKanji[KN-1].tp of
     'K':pb.Canvas.Font.Color:=Col('Kanji_Learned');
     'C':pb.Canvas.Font.Color:=Col('Kanji_Common');
     'U':pb.Canvas.Font.Color:=Col('Kanji_Rare');
     'N':pb.Canvas.Font.Color:=Col('Kanji_Names');
   end;
-  DrawUnicode(pb.Canvas,4,2,36,FKanji[KN-1].char,FontJapaneseGrid);
+  DrawUnicode(pb.Canvas,4,2,36,FKanji[KN-1].char,GetCJKGridFont);
   EndDrawReg;
 end;
 

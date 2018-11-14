@@ -96,9 +96,9 @@ procedure TfVocabAdd.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=Self.Color;
   if MeaningOnly then
-    DrawUnicode(Canvas,2,2,22,FFixedPhonetic,GetCJKFont)
+    DrawUnicode(Canvas,2,2,22,FFixedPhonetic,GetCJKFont())
   else
-    DrawUnicode(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,curlang,[]),GetCJKFont);
+    DrawUnicode(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,curlang,[]),GetCJKFont());
 end;
 
 procedure TfVocabAdd.edtPhoneticChange(Sender: TObject);
@@ -110,9 +110,9 @@ procedure TfVocabAdd.pbWrittenPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=Self.Color;
   if MeaningOnly then
-    DrawUnicode(Canvas,2,2,22,FFixedKanji,FontJapanese)
+    DrawUnicode(Canvas,2,2,22,FFixedKanji,GetCJKFont())
   else
-    DrawUnicode(Canvas,2,2,22,FClipText,FontJapanese);
+    DrawUnicode(Canvas,2,2,22,FClipText,GetCJKFont());
 end;
 
 procedure TfVocabAdd.edtMeaningKeyPress(Sender: TObject; var Key: Char);
