@@ -96,9 +96,9 @@ procedure TfVocabAdd.pbPhoneticPaint(Sender: TObject; Canvas: TCanvas);
 begin
   Canvas.Brush.Color:=Self.Color;
   if MeaningOnly then
-    DrawUnicode(Canvas,2,2,22,FFixedPhonetic,GetCJKFont())
+    DrawKanaForced(Canvas,2,2,22,FFixedPhonetic)
   else
-    DrawUnicode(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,curlang,[]),GetCJKFont());
+    DrawKanaForced(Canvas,2,2,22,RomajiToKana(edtPhonetic.Text,curlang,[]));
 end;
 
 procedure TfVocabAdd.edtPhoneticChange(Sender: TObject);

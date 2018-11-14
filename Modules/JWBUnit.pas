@@ -149,12 +149,19 @@ function GetCJKGridFont(const lang: char): string; overload; inline;
 function GetKanaFont: string; overload; inline;
 function GetKanaFont(const lang: char): string; overload; inline;
 
+//Text drawing functions
+//Where possible, use the most precise function available for your needs
+
+//Draw generic text
 procedure DrawUnicode(c:TCanvas; x,y,fh:integer; const ch:FString; const fontface:string); inline;
 
 //Draws phonetic line: kana/bopomofo or romaji/pinyin, depending on the language and settings.
 //Chooses appropriate font.
 procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string); overload; inline;
 procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload;
+//Only kana/bopomofo, ignore the romaji preference:
+procedure DrawKanaForced(Canvas: TCanvas; x,y,fs:integer; ch:string); overload; inline;
+procedure DrawKanaForced(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload;
 
 
 
@@ -594,7 +601,7 @@ All phonetics are drawn in:
 Some places used FontEnglish for Romaji before the unification. MAYBE we should
 follow this rule. I'll see how much of each style is there.
 }
-procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char); overload; inline;
+procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char);
 var lshowroma: boolean;
   cnv: FString;
 begin
@@ -615,6 +622,17 @@ end;
 procedure DrawKana(Canvas: TCanvas; x,y,fs:integer; ch:string);
 begin
   DrawKana(Canvas,x,y,fs,ch,curlang);
+end;
+
+procedure DrawKanaForced(Canvas: TCanvas; x,y,fs:integer; ch:string; lang:char);
+begin
+  Canvas.Font.Style:=[];
+  DrawUnicode(Canvas,x,y,fs,ConvertBopomofo(ch),GetCJKFont(lang));
+end;
+
+procedure DrawKanaForced(Canvas: TCanvas; x,y,fs:integer; ch:string);
+begin
+  DrawKanaForced(Canvas,x,y,fs,ch,curlang);
 end;
 
 
