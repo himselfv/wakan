@@ -223,6 +223,12 @@ begin
     if ec in [EC_HIRAGANA, EC_KATAKANA, EC_BOPOMOFO] then
       Result := Result + s[i]
     else
+    //Bopomofo from the database contains bopomofo encoded tone marks
+    if IsEncodedBopomofoTone(s[i])
+    //Bopomofo from the user sometimes contains visual tone marks
+    or IsBopomofoToneMark(s[i]) then
+      Result := Result + s[i]
+    else
     if (ec in [EC_IDG_CHAR]) and (sfKeepKanji in flags) then
       Result := Result + s[i]
     else
