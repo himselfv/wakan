@@ -268,7 +268,7 @@ o,o
 ㄑㄩㄢ,quan
 ㄑㄩㄝ,que
 ㄑㄩㄣ,qun
-0072,r
+r,r
 ㄖㄢ,ran
 ㄖㄤ,rang
 ㄖㄠ,rao

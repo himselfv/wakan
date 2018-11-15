@@ -122,7 +122,7 @@
 ㄏㄟ,Hei
 ㄏㄣ,Hen
 ㄏㄥ,Heng
-ㄏ006E0067,Hng
+ㄏng,Hng
 ㄏㄨㄥ,Hung
 ㄏㄡ,Hou
 ㄏㄨ,Hu
@@ -219,7 +219,7 @@
 ㄋㄣ,Nen
 ㄋㄟ,Nei
 ㄋㄥ,Neng
-006E0067,Ng
+ng,Ng
 ㄋㄧ,Ni
 ㄋㄧㄢ,Nien
 ㄋㄧㄤ,Niang
@@ -235,7 +235,7 @@
 ㄋㄨㄢ,Nuan
 ㄋㄩㄝ,Nueh:
 ㄋㄨㄛ,No
-006F,O
+o,O
 ㄡ,Ou
 ㄆㄚ,P'a
 ㄆㄞ,P'ai
@@ -268,7 +268,7 @@
 ㄑㄩㄢ,Ch'uan:
 ㄑㄩㄝ,Ch'ueh:
 ㄑㄩㄣ,Ch'un:
-0072,Erh
+r,Erh
 ㄖㄢ,Jan
 ㄖㄤ,Jang
 ㄖㄠ,Jao
@@ -368,7 +368,7 @@
 ㄧ,I
 ㄧㄣ,Yin
 ㄧㄥ,Ying
-ㄧ006F,Yo
+ㄧo,Yo
 ㄩㄥ,Yung
 ㄧㄡ,Yu
 ㄩ,Yu:
