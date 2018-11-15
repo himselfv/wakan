@@ -122,7 +122,8 @@
 ㄏㄟ,Hei
 ㄏㄣ,Hen
 ㄏㄥ,Heng
-ㄏng,Hng
+ㄏㄇ,Hm
+ㄏㄣㄍ,Hng
 ㄏㄨㄥ,Hung
 ㄏㄡ,Hou
 ㄏㄨ,Hu
@@ -190,6 +191,7 @@
 ㄌㄩㄝ,Lywe
 ㄌㄨㄣ,Lwun
 ㄌㄨㄛ,Lwo
+ㄇ,M
 ㄇㄚ,Ma
 ㄇㄞ,Mai
 ㄇㄢ,Man
@@ -219,7 +221,7 @@
 ㄋㄣ,Nen
 ㄋㄟ,Nei
 ㄋㄥ,Neng
-ng,Ng
+ㄣㄍ,Ng
 ㄋㄧ,Ni
 ㄋㄧㄢ,Nyan
 ㄋㄧㄤ,Nyang
@@ -268,7 +270,7 @@ ng,Ng
 ㄑㄩㄢ,Chywan
 ㄑㄩㄝ,Chywe
 ㄑㄩㄣ,Chyun
-r,Er
+ㄦ,r
 ㄖㄢ,Ran
 ㄖㄤ,Rang
 ㄖㄠ,Rau
