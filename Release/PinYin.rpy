@@ -235,7 +235,7 @@ ng,ng
 ㄋㄨㄢ,nuan
 ㄋㄩㄝ,nue:
 ㄋㄨㄛ,nuo
-o,o
+ㄛ,o
 ㄡ,ou
 ㄆㄚ,pa
 ㄆㄞ,pai
@@ -368,7 +368,7 @@ r,r
 ㄧ,yi
 ㄧㄣ,yin
 ㄧㄥ,ying
-ㄧo,yo
+ㄧㄛ,yo
 ㄩㄥ,yong
 ㄧㄡ,you
 ㄩ,yu

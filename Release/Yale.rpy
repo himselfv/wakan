@@ -235,7 +235,7 @@ ng,Ng
 ㄋㄨㄢ,Nwan
 ㄋㄩㄝ,Nywe
 ㄋㄨㄛ,Nwo
-o,O
+ㄛ,O
 ㄡ,Ou
 ㄆㄚ,Pa
 ㄆㄞ,Pai
@@ -368,7 +368,7 @@ r,Er
 ㄧ,Yi
 ㄧㄣ,Yin
 ㄧㄥ,Ying
-ㄧo,Yo
+ㄧㄛ,Yo
 ㄩㄥ,Yung
 ㄧㄡ,You
 ㄩ,Yu
