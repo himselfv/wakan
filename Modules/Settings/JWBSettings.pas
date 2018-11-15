@@ -392,9 +392,10 @@ const
    'おっさんをよべ',
    'えいえん'
   );
-  BopomofoExamples: array[0..1] of string = (
+  BopomofoExamples: array[0..2] of string = (
    'ㄓㄨˋㄧㄣㄈㄨˊㄏㄠˋ',
-   'ㄆㄧㄥˊㄗ˙'
+   'ㄆㄧㄥˊㄗ˙',
+   'ㄦˊㄦˇㄦˋㄦ˙ㄦ'
   );
 
 implementation
