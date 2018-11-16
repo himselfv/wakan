@@ -88,7 +88,7 @@ Source: "..\Release\Kunreishiki.roma"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\PinYin.rpy"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\Wade-Giles.rpy"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\Release\Yale.rpy"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\Release\Palladium.rpy"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\Release\Palladius.rpy"; DestDir: "{app}"; Flags: ignoreversion
 ; Expression copy formats
 Source: "..\Release\ExprCopyFormats\EDICT line.xslt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
 Source: "..\Release\ExprCopyFormats\example-xml.txt"; DestDir: "{#CommonData}\ExprCopyFormats"; Flags: ignoreversion
