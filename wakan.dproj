@@ -33,6 +33,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
+        <VerInfo_Release>1</VerInfo_Release>
         <VCL_Custom_Styles>&quot;Amethyst Kamri|VCLSTYLE|$(PUBLIC)\Documents\RAD Studio\10.0\Styles\AmethystKamri.vsf&quot;;&quot;Silver|VCLSTYLE|$(PUBLIC)\Documents\RAD Studio\10.0\Styles\Silver.vsf&quot;</VCL_Custom_Styles>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
@@ -43,7 +44,7 @@
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_MinorVer>98</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.98.0.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=;FileDescription=Wakan - Japanese &amp; Chinese Learning Tool;FileVersion=1.98.1.0;InternalName=WAKAN;LegalCopyright=(C) Filip Kabrt and others;LegalTrademarks=;OriginalFilename=WAKAN.EXE;ProductName=Wakan;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <DCC_StringChecks>off</DCC_StringChecks>
         <DCC_ExeOutput>Release\</DCC_ExeOutput>
         <DCC_UnitSearchPath>.\Modules;.\Modules\Package;.\Modules\ScaleMM;.\Modules\StdPrompt;.\Modules\TextTable;.\Controls;$(JPTOOLS)\Share;$(JPTOOLS)\KanaConv;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
