@@ -62,6 +62,7 @@ dunit.ini
 # Local files
 Build/setupvars.cmd
 Build/upload.credentials
+Build/Output
 
 # Release
 *.exe
