@@ -9,12 +9,9 @@ Wakan can be installed or used as a portable app. It can be installed over versi
 **[Latest version: 1.98.1](https://drive.google.com/open?id=12o8-D1MQ8i8g_PpIxD-Y007v1QZjqZSm)**
 
  * Fixed Pinyin and Bopomofo tones display
-
  * Added Palladium cyrillization of Chinese
-
  * Modern font support (Meiryo, Yu Mincho/Gothic and others)
-
- * Redesigned kanji search panel - share your thoughts
+ * Redesigned kanji search panel
 
     ![images/kanji-search-panel.png](images/kanji-search-panel.png)
 
