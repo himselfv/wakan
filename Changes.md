@@ -2,7 +2,7 @@
 
 This page lists changes in various versions of Wakan, in historical order. For changes in versions earlier than 1.67, see [old history page](http://wakan.manga.cz/?page=history&lang=en).
 
-# 1.9
+# 1.9x
 
   * Redesigned kanji search panel - share your thoughts
 
@@ -14,8 +14,11 @@ This page lists changes in various versions of Wakan, in historical order. For c
 
   * Streamlined manual dictionary import
   * [Links](CustomLinks) and [copy formats](CopyFormats) for both kanji and words are now stored as standard XSLT and LNK files
-  * Support for ENAMDICT tags
   * Modern font support (Meiryo, Yu Mincho/Gothic and others)
+  * Support for ENAMDICT tags
+  * Added Palladium cyrillization of Chinese
+  * Fixed Pinyin and Bopomofo tone display
+  * More uniform font usage throughout the app
 
 
 # 1.87
