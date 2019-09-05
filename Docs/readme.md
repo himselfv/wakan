@@ -1,1 +1,1 @@
-See the [help contents](HelpContents).
+See the [help contents](HelpContents.md).
