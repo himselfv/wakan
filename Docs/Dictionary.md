@@ -18,28 +18,28 @@ In Japanese mode you can enter inflected forms (like `hatarakimashita`) which ar
 
 In Chinese mode you do not need to enter tones; for example, you can type just `zhongwen`. Entering tones (e.g. `zhong1wen2`) may be helpful in narrowing results. Only Mandarin Chinese is supported at this moment.
 
-Several romanization systems are supported for each language (Hepburn, Kunreisiki and Czech for Japanese; PinYin, Wade/Giles and Yale for Chinese); see [Romanization settings](Settings#Romanization).
+Several romanization systems are supported for each language (Hepburn, Kunreisiki and Czech for Japanese; PinYin, Wade/Giles and Yale for Chinese); see [Romanization settings](Settings.md#Romanization).
 
-**Warning:** Only active dictionaries are searched. You can specify which dictionaries are active in the [dictionary manager](Dictionaries#Dictionary_manager).
+**Warning:** Only active dictionaries are searched. You can specify which dictionaries are active in the [dictionary manager](Dictionaries.md#Dictionary_manager).
 
 ## Results
-Results can be displayed in Roman letters, or in the appropriate phonetic symbols (kana for Japanese, bopomofo for Chinese). This choice can be made in [Romanization settings](Settings#Romanization).
-Definitions of Japanese words from EDICT may contain various [markers](Dictionary#Markers) indicating parts of speech, usage, etc.
+Results can be displayed in Roman letters, or in the appropriate phonetic symbols (kana for Japanese, bopomofo for Chinese). This choice can be made in [Romanization settings](Settings.md#Romanization).
+Definitions of Japanese words from EDICT may contain various [markers](Dictionary.md#Markers) indicating parts of speech, usage, etc.
 
-Popup menu is available for each of the results which lets you copy it [in a number of formats](CopyFormats), or quickly jump to a number of online dictionaries and search sites (see [Custom links](CustomLinks)):
+Popup menu is available for each of the results which lets you copy it [in a number of formats](CopyFormats.md), or quickly jump to a number of online dictionaries and search sites (see [Custom links](CustomLinks.md)):
 
 ![images/dict-popup-menu.png](images/dict-popup-menu.png)
 
 One of formats can be selected as default; if you press `Ctrl-C` the result is copied in that format — click `Copy As > Configure...` to choose it. Multiple records can be selected and copied at the same time.
 
-If the word is in vocabulary, then its learned state of each word is shown by different color (unlearned are blue, learned yellow, mastered green and problematic red). You can change learned state in [vocabulary word details](Vocabulary#Details).
+If the word is in vocabulary, then its learned state of each word is shown by different color (unlearned are blue, learned yellow, mastered green and problematic red). You can change learned state in [vocabulary word details](Vocabulary.md#Details).
 
 ## Window controls
 
   * **"A" button** - Searches only for exact matches for the word or phrase entered (for example if you type `mizu` it does not find `mizukara` or `nomimizu`; if you type `just about` it does not find `just about everything`).
   * **"A+" button** - Searches for words beginning with the syllables or phrase entered (for example if you type `mizu` it does find `mizukara` but not `nomimizu`; if you type `just about` in English -> Japanese mode it does find a Japanese word meaning `just about everything`).
   * **"+A" button** - Searches for words ending with the syllables entered (for example if you type `mizu` it does find `nomimizu` but not `mizukara`). This feature is not supported in English -> Japanese (Chinese) mode.
-  * **Search by clipboard** - Searches for words by the characters stored in [clipboard](MainWindow#Clipboard_viewer).
+  * **Search by clipboard** - Searches for words by the characters stored in [clipboard](MainWindow.md#Clipboard_viewer).
   * ![images/btn_clipadd.png](images/btn_clipadd.png) - Inserts word at the end of the clipboard.
   * ![images/btn_dicthand.png](images/btn_dicthand.png) - Displays all results (if all results are already displayed then this button is disabled).
 
@@ -50,7 +50,7 @@ If the word is in vocabulary, then its learned state of each word is shown by di
   * **Word information** - If the word is in user vocabulary, displays additional information.
   * **Add to vocabulary** - Enables to add word to user vocabulary.
 
-You can alter many your preferences in [settings](Settings).
+You can alter many your preferences in [settings](Settings.md).
 
 # Markers
 Some dictionaries contain grammatical information about words, these are called markers and are displayed in small italic font before and after the meaning.
@@ -61,11 +61,11 @@ Markers can be divided into these groups:
   * **Usage (S)** (displayed in red after meaning) - Information about how and where to use the words.
   * **Special (1)** (displayed in violet before meaning) - Special group categories (like martial arts terms, female speech, ...).
   * **Dictionary (D)** (displayed in grey after meaning) - Dictionary from which the word was taken.
-  * **Lesson (L)** (displayed in green after meaning) - If the word is in vocabulary, it denotes its lesson [category](Vocabulary#Categories) it belongs to.
+  * **Lesson (L)** (displayed in green after meaning) - If the word is in vocabulary, it denotes its lesson [category](Vocabulary.md#Categories) it belongs to.
 
 Wakan marker list is derived from EDICT/JMdict one, actual version of which is provided in [EDICT documentation](http://www.csse.monash.edu.au/~jwb/edict_doc.html). Markers in wakan sometimes have slightly different names and all the `v*` markers are shown simply as `v` (verb) at this time.
 
-Marker names can be [localized](Localization) in which case refer to the localized documentation for the description of their new names.
+Marker names can be [localized](Localization.md) in which case refer to the localized documentation for the description of their new names.
 
 # Word kanji
 ![images/dictkanji.png](images/dictkanji.png)
@@ -77,7 +77,7 @@ This window lists characters in the currently selected word, displaying their me
   * **Grey** characters are uncommon and should not be generally used.
   * **Black** characters are commonly used.
   * **Green** characters are used only in names.
-  * **Blue** characters are marked as learned (you can change this status on the [Details](KanjiDetails) subwindow).
+  * **Blue** characters are marked as learned (you can change this status on the [Details](KanjiDetails.md) subwindow).
 
 # Adding words to vocabulary
 ![images/dictadd.png](images/dictadd.png)
@@ -85,5 +85,5 @@ This window lists characters in the currently selected word, displaying their me
 You can quickly add selected word into your user vocabulary from this window.
 
   * **Meaning** - Allows you to change the meaning of the word before entering it into the vocabulary.
-  * **Category** - Into which vocabulary [category](Vocabulary#Categories) will be the word added.
-  * **Add into vocabulary** - Adds the word into vocabulary. If you entered a new category, then a [new category dialog](Vocabulary#New_category) will be shown.
+  * **Category** - Into which vocabulary [category](Vocabulary.md#Categories) will be the word added.
+  * **Add into vocabulary** - Adds the word into vocabulary. If you entered a new category, then a [new category dialog](Vocabulary.md#New_category) will be shown.

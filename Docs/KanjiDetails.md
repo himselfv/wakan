@@ -10,17 +10,17 @@ This window shows detailed information about the selected character.
 ## Window controls
 
   * ![images/btn_clipadd.png](images/btn_clipadd.png) - Inserts character at the end of the clipboard.
-  * **Set as learned** - Toggles the status of the character between "learned" and "unlearned." Learned characters are displayed in blue in the [character list](KanjiList#Character_cards).
+  * **Set as learned** - Toggles the status of the character between "learned" and "unlearned." Learned characters are displayed in blue in the [character list](KanjiList.md#Character_cards).
 
-The smaller box to the right of the box containing the selected character shows its radical. You can determine which kind of radical is displayed here in the [character list settings](Settings#Character_list). If the character has a simplified variant, it is displayed in a second box to the right of the radical. If the selected character is a simplified character, this second box displays the corresponding traditional character.
+The smaller box to the right of the box containing the selected character shows its radical. You can determine which kind of radical is displayed here in the [character list settings](Settings.md#Character_list). If the character has a simplified variant, it is displayed in a second box to the right of the radical. If the selected character is a simplified character, this second box displays the corresponding traditional character.
 
-The lower part of the window displays other kinds of information (including frequency rankings, stroke counts, index numbers, alternate radicals, and encodings). You can customize which details are displayed in [character details settings](Settings#Character_details). The types of detailed information which can be displayed here are described below.
+The lower part of the window displays other kinds of information (including frequency rankings, stroke counts, index numbers, alternate radicals, and encodings). You can customize which details are displayed in [character details settings](Settings.md#Character_details). The types of detailed information which can be displayed here are described below.
 
-Japanese readings can be displayed in kana or in romaji. Chinese readings can be displayed in PinYin/Wade-Giles/Yale or in bopomofo. You can make these choices in [romanization settings](Settings#Romanization).
+Japanese readings can be displayed in kana or in romaji. Chinese readings can be displayed in PinYin/Wade-Giles/Yale or in bopomofo. You can make these choices in [romanization settings](Settings.md#Romanization).
 
 
 # Kanji details
-Detailed information about characters which can be displayed in the Character details window, or used as search criteria in the [Character list](KanjiList) window.
+Detailed information about characters which can be displayed in the Character details window, or used as search criteria in the [Character list](KanjiList.md) window.
 
 The majority of this information comes from KANJIDIC and Unihan databases. For detailed info on how those are built, please refer to:
 

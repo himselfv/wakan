@@ -17,16 +17,16 @@ This window displays list of characters that were found according to specified s
   * **[Print cards](#Print_cards)** - Prints learning cards for displayed characters.
   * **[Character details](KanjiDetails)** - Displays detailed information about the selected character.
 
-In Japanese mode the program displays only characters used in Japan, and in Chinese mode only traditional or simplified characters are displayed (depending on [settings](Settings#Characters)). You can alter the appearance of character list (size of characters, use of colors) in the [settings](Settings#Characters).
+In Japanese mode the program displays only characters used in Japan, and in Chinese mode only traditional or simplified characters are displayed (depending on [settings](Settings.md#Characters)). You can alter the appearance of character list (size of characters, use of colors) in the [settings](Settings.md#Characters).
 
 ## Colors used for characters:
 
   * **Grey** characters are uncommon and not in general use.
   * **Black** characters are commonly used.
   * **Green** characters are used only in names.
-  * **Blue** characters are those which have been marked as learned (you can do this for a selected character in the [Character details](KanjiDetails) window).
+  * **Blue** characters are those which have been marked as learned (you can do this for a selected character in the [Character details](KanjiDetails.md) window).
 
-**Tip:** Double-clicking on a character adds it to [clipboard](MainWindow#Clipboard_viewer).
+**Tip:** Double-clicking on a character adds it to [clipboard](MainWindow.md#Clipboard_viewer).
 
 # Search & Sort
 ## Search
@@ -45,20 +45,20 @@ Filters:
   * **PinYin** - Display only characters with given PinYin (Chinese reading). You can omit the tone; for example, typing `BA` displays characters with PinYin BA1, BA2, BA3, BA4 or BA5. Any of the Romanization systems (PinYin, Wade-Giles, Yale) may be used; 5, not 0, must be used for specifying neutral tone.
   * **Yomi** - Display characters with given ON or KUN reading (Japanese readings). If you want to search only KUN (Japanese) reading, type `H` before the actual yomi, for example typing `Hka` searches only words with kun reading "ka". For ON-only (Sino-Japanese) searching type `K`. Any of the Romanization systems (Hepburn, Kunreisiki, Czech) may be used.
   * **Definition** - Search by English definition (meaning). Looks for a definition containing the exact text you type in this box.
-  * **Other** - Search by the criterion selected using the dropdown combo box (choices include Four Corner Code, frequency, and index numbers in various texts - see [Character information](KanjiDetails)).
+  * **Other** - Search by the criterion selected using the dropdown combo box (choices include Four Corner Code, frequency, and index numbers in various texts - see [Character information](KanjiDetails.md)).
   * **Stroke #** - Search by stroke count. You can enter range. Button **-/+** broadens the range and button **+/-** tightens the range (used when you miscount the strokes).
   * **Radical** - Search by radical. You can type the radical number(s) or choose radicals from [radicals list](#Radicals).
-  * **SKIP** - Search by [SKIP code](KanjiDetails#SKIP).
-  * **Jouyou** - Search by [Jouyou grade](KanjiDetails#Japanese_information).
+  * **SKIP** - Search by [SKIP code](KanjiDetails.md#SKIP).
+  * **Jouyou** - Search by [Jouyou grade](KanjiDetails.md#Japanese_information).
   * **Sort by** - Determines the order of the characters displayed in the list.
       * **Radical** - Sort by radical and then by stroke count.
       * **Stroke count** - Sort only by stroke count.
       * **Frequency** - Sort by frequency in general text.
       * **Random** - Display characters in random order.
-  * **Learned** - Display only characters marked as learned (you can change that in [Details](KanjiDetails) window)
+  * **Learned** - Display only characters marked as learned (you can change that in [Details](KanjiDetails.md) window)
   * **Non-Learned** - Display only characters not marked as learned.
   * **Common only** - Displays only common characters.
-  * **In clipboard only** - Displays only characters in [clipboard](MainWindow#Clipboard_viewer).
+  * **In clipboard only** - Displays only characters in [clipboard](MainWindow.md#Clipboard_viewer).
   * **All filters off** - Displays all characters (toggles off other buttons, and ignores criteria specified by other controls).
 
 ## Sort
@@ -71,9 +71,9 @@ You can alter the order of the displayed characters in this window.
   * **By radical** - Sort by radical and then by stroke count.
   * **By stroke count** - Sort only by stroke count.
   * **By frequency** - Sort by frequency in general text.
-  * **By learner index** - _In japanese mode only:_ Sort by [learner index](KanjiDetails#Japanese_indexes).
-  * **By Gakken Kanji** - _In japanese mode only:_ Sort by [Gakken Kanji index](KanjiDetails#Japanese_indexes).
-  * **By Remembering Kanji** - _In japanese mode only:_ Sort by [Remembering Kanji index](KanjiDetails#Japanese_indexes).
+  * **By learner index** - _In japanese mode only:_ Sort by [learner index](KanjiDetails.md#Japanese_indexes).
+  * **By Gakken Kanji** - _In japanese mode only:_ Sort by [Gakken Kanji index](KanjiDetails.md#Japanese_indexes).
+  * **By Remembering Kanji** - _In japanese mode only:_ Sort by [Remembering Kanji index](KanjiDetails.md#Japanese_indexes).
   * **Random** - Display characters in random order (for printing random learning cards).
 
 ## Search tips
@@ -111,12 +111,12 @@ Note that in this mode, only characters which contain **all the selected parts**
 
 Displays list of words that contain the selected character.
 
-  * **Dict.** - Displays words in dictionaries. You can specify which dictionaries to use in the [dictionary manager](Dictionary#Dictionary_manager).
-  * **UserDict** - Displays words in user [vocabulary](Vocabulary).
+  * **Dict.** - Displays words in dictionaries. You can specify which dictionaries to use in the [dictionary manager](Dictionary.md#Dictionary_manager).
+  * **UserDict** - Displays words in user [vocabulary](Vocabulary.md).
   * **Only beginning** - If checked, displays only words where the character is the first character.
-  * **Pop** - Displays only words with **pop** [marker](Dictionary#Markers).
+  * **Pop** - Displays only words with **pop** [marker](Dictionary.md#Markers).
 
-Word readings can be displayed in kana/romaji/PinYin/bopomofo. You can alter this in [settings](Settings#Romanization). Meaning can contain various [markers](Dictionary#Markers).
+Word readings can be displayed in kana/romaji/PinYin/bopomofo. You can alter this in [settings](Settings#Romanization). Meaning can contain various [markers](Dictionary.md#Markers).
 
 
 # Character cards
@@ -124,8 +124,8 @@ Word readings can be displayed in kana/romaji/PinYin/bopomofo. You can alter thi
 
 Character cards printing is useful for learning characters. Each printed page contains several "cards" with useful information about each character (radical, meaning, readings, compounds, printed & calligraphy style).
 
-For information about window controls see [Printing](MainWindow#Printing).
+For information about window controls see [Printing](MainWindow.md#Printing).
 
-Print output can be highly customized in [settings](Settings#Character_cards).
+Print output can be highly customized in [settings](Settings.md#Character_cards).
 
-Readings are printed using the current [romanization settings](Settings#Romanization).
+Readings are printed using the current [romanization settings](Settings.md#Romanization).

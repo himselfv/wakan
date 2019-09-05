@@ -10,21 +10,21 @@ You can customize the program in this window.
       * **Fonts** - Which fonts to use for characters and text in various parts of the program.
       * **Colors** - How to color learned/problematic/rare characters.
       * **Portability** - Where to store program information (lets you make Wakan portable)
-  * **Character list** - How characters are displayed in the [Character list](KanjiList).
-      * **Character details** - Controls the appearance of [Kanji details](KanjiDetails) window.
-      * **Detail items** - Select the kinds of [character information](KanjiDetails#Kanji_details) to show in the [Character details](KanjiDetails) window.
-  * **Dictionary** - Settings for [Dictionary](Dictionary).
+  * **Character list** - How characters are displayed in the [Character list](KanjiList.md).
+      * **Character details** - Controls the appearance of [Kanji details](KanjiDetails.md) window.
+      * **Detail items** - Select the kinds of [character information](KanjiDetails.md#Kanji_details) to show in the [Character details](KanjiDetails.md) window.
+  * **Dictionary** - Settings for [Dictionary](Dictionary.md).
       * **Copy formats** - What to copy when you press Ctrl-C in Dictionary
   * **Popup tool**
-  * **Editor** - Settings for [text editor](Editor)
+  * **Editor** - Settings for [text editor](Editor.md)
       * **Saving and loading**
       * **Printing**
-      * **Text translator** - Settings for [text translator](Editor#Text_translator).
+      * **Text translator** - Settings for [text translator](Editor.md#Text_translator).
       * **Aozora Ruby** - How to display Aozora Ruby tags in the text
   * **Studying**
-      * **Word list printing** - Settings for [vocabulary list](Vocabulary) printing.
-      * **Character cards printing** - Settings for [printing character cards](KanjiList#Print).
-  * **Annotations** - Settings for [Annotations feature](Annotations).
+      * **Word list printing** - Settings for [vocabulary list](Vocabulary.md) printing.
+      * **Character cards printing** - Settings for [printing character cards](KanjiList.md#Print).
+  * **Annotations** - Settings for [Annotations feature](Annotations.md).
   * **Database maintenance** - Export/import user database.
 
 
@@ -35,8 +35,8 @@ General program settings can be customized here.
 
   * **Character mode/conversion** - _For chinese mode only:_ Determines how to convert the characters. If **traditional** is selected, then simplified characters will be converted to traditional ones, if **simplified** is selected, then traditional characters will be made into simplified. Otherwise no change will be made and all characters will be shown as is.
   * **Save statistics to disk** - When program statistics is invoked (from the main window), it is also stored to a textfile in folder STAT.
-  * **Differentiate words with non-learned characters** - Words that contain characters that are not set as learned (in the [character details window](KanjiDetails)) are displayed in gray and the characters are also removed from printed vocabulary list.
-  * **Use colors in word grids** - Meaning [markers](Dictionary#Markers) are shown in different colors.
+  * **Differentiate words with non-learned characters** - Words that contain characters that are not set as learned (in the [character details window](KanjiDetails.md)) are displayed in gray and the characters are also removed from printed vocabulary list.
+  * **Use colors in word grids** - Meaning [markers](Dictionary.md#Markers) are shown in different colors.
   * **Show word learned-status by different background color** - Differentiates word learned state (for vocabulary words) by colors.
 
   * **Auto-save user data on exit** - if checked, Wakan will save changes to vocabulary and categories automatically, without asking you
@@ -78,7 +78,7 @@ Wakan ships by default with a bunch of common romanization systems. You can down
 
 Romanization systems are stored in Wakan folder as files with `.roma` extension. Someone may have created a romanization system you want and shared it on the internet.
 
-You can also make your own system - see [Custom romanization systems](CustomRomaji)
+You can also make your own system - see [Custom romanization systems](CustomRomaji.md)
 
 ### Multiple romanization systems
 You can choose one or multiple romanizations to be active. To choose multiple, check the "Multiple" checkbox then mark all appropriate systems in the list.
@@ -106,8 +106,8 @@ More information about character ranges can be found at [www.unicode.org](http:/
 
 You can select different fonts for Japanese mode and for Chinese mode (traditional and simplified fonts are also selected separately).
 
-  * **Font for characters in grid** - Fonts that will be used almost everywhere in the program, most importantly in the [character list](KanjiList) window.
-  * **Font for big characters** - Font for [character details](KanjiDetails) window.
+  * **Font for characters in grid** - Fonts that will be used almost everywhere in the program, most importantly in the [character list](KanjiList.md) window.
+  * **Font for big characters** - Font for [character details](KanjiDetails.md) window.
   * **Font for small text** - Main font for dictionary entries.
   * **Complete Unicode font** - Font that supports whole _CJK Unified Ideographs_ range. It is used mainly for displaying radicals.
   * **Romanization and english font** - Font for text in latin.
@@ -118,7 +118,7 @@ You can select different fonts for Japanese mode and for Chinese mode (tradition
 # Character list
 ![images/settings-character-list.png](images/settings-character-list.png)
 
-Settings for the [character list](KanjiList).
+Settings for the [character list](KanjiList.md).
 
   * **Character size in grid** - Displayed size of characters in grid.
   * **Radical type** - Determines whether to use classical radicals or "modern" radicals (Bushu for japanese, KangXi for chinese). Modern radicals are in many cases more predictable, however many dictionaries are ordered by the classical radicals.
@@ -134,7 +134,7 @@ Settings for the [character list](KanjiList).
 # Dictionary
 ![images/settings-dictionary.png](images/settings-dictionary.png)
 
-Settings for [dictionary](Dictionary).
+Settings for [dictionary](Dictionary.md).
 
   * **Search results order** - Contains several options that affect sort order of dictionary results.
   * **Replace kanji with kana for "kana" words** - Written form for words that contain "kana" [marker](Dictionary#Markers) will be replaced with kana.
@@ -147,17 +147,17 @@ Settings for [dictionary](Dictionary).
 ![images/settings-popup-tool.png](images/settings-popup-tool.png)
 
 # Editor
-Settings for [text editor and translator](Editor).
+Settings for [text editor and translator](Editor.md).
 
 ![images/settings-editor.png](images/settings-editor.png)
 
   * **Break lines only at word boundaries** - Since text translator writes meaning under the words it is more reasonable to break lines at word boundaries even though japanese text normally isn't.
   * **Display lines** - Uses lines to separate words.
-  * **Do not display meaning in learned words** - Hides meaning for words that are in user [vocabulary](Vocabulary) and are set as learned.
-  * **Do not display reading of learned kanji** - Hides reading for characters that are set as learned (can be changed in [character details](KanjiDetails)).
+  * **Do not display meaning in learned words** - Hides meaning for words that are in user [vocabulary](Vocabulary.md) and are set as learned.
+  * **Do not display reading of learned kanji** - Hides reading for characters that are set as learned (can be changed in [character details](KanjiDetails.md)).
   * **Display transcript above kana** - Displays hiragana reading above katakana words, or romaji transcript above all kana (if reading is configured to be in romaji).
   * **Leave space between lines** - Leaves more space between text lines.
-  * **Display words with user-defined translation in bold** - Words that are in user [vocabulary](Vocabulary) and are displayed in bold.
+  * **Display words with user-defined translation in bold** - Words that are in user [vocabulary](Vocabulary.md) and are displayed in bold.
   * **Number of lines reserved to meaning:** - Number of lines of meaning that will appear under words.
       * **Double size** - Meaning will be the same size as the main text (it's half that size by default).
 
@@ -195,20 +195,20 @@ Settings for [text editor and translator](Editor).
 # Word list printing
 ![images/settings-word-list-printing.png](images/settings-word-list-printing.png)
 
-Settings for printing the [vocabulary list](Vocabulary).
+Settings for printing the [vocabulary list](Vocabulary.md).
 
   * **Columns** - What columns will appear in the printed list. If you select "User settings", you can type in the edit box your own 8-character long column settings: each column corresponds to two characters in the string, first identifies the contents of the column (m=meaning, w=written, p=phonetic, r=romaji, k=kana) and the second is the order of the data. You can also type `--` to prolong the preceding column. Please take care with entering user settings, program does not handle well strings in invalid format.
   * **Print horizontal lines** - Prints row separating lines.
   * **Print vertical lines** - Prints column separating lines.
   * **Vary colors** - Shades odd rows.
-  * **Do not print unlearned characters** - Words that contain characters that are not set as learned (in the [character details window](KanjiDetails)) won't have printed written form.
+  * **Do not print unlearned characters** - Words that contain characters that are not set as learned (in the [character details window](KanjiDetails.md)) won't have printed written form.
   * **Number of lines on square page** - Number of rows that will appear on square page (on rectangular page the actual count may vary).
 
 
 # Character cards printing
 ![images/settings-character-cards-printing.png](images/settings-character-cards-printing.png)
 
-Settings for [printing character cards](KanjiList#Character_cards).
+Settings for [printing character cards](KanjiList.md#Character_cards).
 
   * **Vertical number of characters on square page** - Number of characters that will appear vertically on square page. On a rectangular page the number may vary.
   * **Space for compounds** - Horizontal number of characters reserved for compounds. Influences card width.
@@ -229,6 +229,6 @@ Settings for [printing character cards](KanjiList#Character_cards).
 # Database maintenance
 Database settings.
 
-  * **Export user database** - Exports [vocabulary](Vocabulary) database into special [text format](FileFormats#CSV_vocabulary_export).
-  * **Import user database** - Imports [vocabulary](Vocabulary) database from special [text format](FileFormats#CSV_vocabulary_export).
-  * **Check user dictionary categories** - Checks whether all words are in at least lesson [category](Vocabulary#Categories) and exactly one group category.
+  * **Export user database** - Exports [vocabulary](Vocabulary.md) database into special [text format](FileFormats.md#CSV_vocabulary_export).
+  * **Import user database** - Imports [vocabulary](Vocabulary.md) database from special [text format](FileFormats.md#CSV_vocabulary_export).
+  * **Check user dictionary categories** - Checks whether all words are in at least lesson [category](Vocabulary.md#Categories) and exactly one group category.

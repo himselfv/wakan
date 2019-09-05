@@ -9,7 +9,7 @@ These links allow you to quickly look up additional information on an expression
 Advanced users can add their own links to the list.
 
 # Adding custom links
-Custom links are stored as URL files in Wakan user data folder (see [Where does Wakan keep my data?](Portable)). Reference links shown for a character are in `KanjiLinks\` subfolder and those shown for a word or expression are in `ExprLinks\`. The format is the same.
+Custom links are stored as URL files in Wakan user data folder (see [Where does Wakan keep my data?](Portable.md)). Reference links shown for a character are in `KanjiLinks\` subfolder and those shown for a word or expression are in `ExprLinks\`. The format is the same.
 
 Each URL file in these folders defines a link. URL files are text files which look like this:
 ```

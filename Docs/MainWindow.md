@@ -3,7 +3,7 @@ _This page has been ported from the old Wakan help and has not yet been updated.
 # Main window
 ![images/main.png](images/main.png)
 
-The control panel at the top of the main window has four buttons, labeled Characters, Dictionary, Editor and Translator and Vocabulary. These correspond to the four [main areas](#Areas) of the program], which are described below. Each displays the corresponding tool in the lower part of the main window.
+The control panel at the top of the main window has four buttons, labeled Characters, Dictionary, Editor and Translator and Vocabulary. These correspond to the four [main areas](#Areas) of the program, which are described below. Each displays the corresponding tool in the lower part of the main window.
 
 ## Menus
 The [Database menu](#DatabaseMenu) provides access to the user Settings and the Dictionary Manager. It also provides commands for saving and undoing changes in the user database, and displaying [statistics](#Statistics).
@@ -17,7 +17,7 @@ The Help menu provides access to this help, and to the "About" page for Wakan.
   * ![images/btn_japanese.png](images/btn_japanese.png) - Switches program to Japanese mode.
   * ![images/btn_chinese.png](images/btn_chinese.png) - Switches program to Chinese mode.
 
-Switching languages alters the entire user interface. The [Character list](KanjiList) displays only characters relevant to the selected language, the [Dictionary Manager](Dictionary#Dictionary_manager) displays  dictionary files only for that language, and the [Vocabulary](Vocabulary) shows only word lists for that language.
+Switching languages alters the entire user interface. The [Character list](KanjiList.md) displays only characters relevant to the selected language, the [Dictionary Manager](Dictionary.md#Dictionary_manager) displays  dictionary files only for that language, and the [Vocabulary](Vocabulary.md) shows only word lists for that language.
 
 ## Clipboard viewer
 ![images/clip.png](images/clip.png)
@@ -32,21 +32,21 @@ Shows the contents of the Windows clipboard (or the beginning of the contents, i
 # Areas
 Main areas of the program:
 
-  * **[Character list](KanjiList)** - The character list can display all of the characters in the database for the selected language, or the results of a [search](KanjiList#Search) for
-characters with specified properties. The list can be [sorted](KanjiList#Sort) in various ways, and [detailed information](KanjiDetails) can be displayed for a selected character.
-  * **[Dictionary](Dictionary)** - The dictionary window provides the definition for a Japanese or Chinese word, or searches the dictionary for words whose definitions contain an English word
+  * **[Character list](KanjiList.md)** - The character list can display all of the characters in the database for the selected language, or the results of a [search](KanjiList.md#Search) for
+characters with specified properties. The list can be [sorted](KanjiList.md#Sort) in various ways, and [detailed information](KanjiDetails) can be displayed for a selected character.
+  * **[Dictionary](Dictionary.md)** - The dictionary window provides the definition for a Japanese or Chinese word, or searches the dictionary for words whose definitions contain an English word
 or phrase.
-  * **[Editor and translator](Editor)** - Provides an input method (a way of typing words in Roman letters and having them converted to characters) and other features for text editing. In addition, it can display phonetic readings for characters in the context of words, and the meanings of individual words. Integrated dictionary window can be used to translate individual words and to assist in translating longer pieces of text.
-  * **[Vocabulary](Vocabulary)** - The Vocabulary Manager maintains word lists for study purposes, and groups them by categories.
+  * **[Editor and translator](Editor.md)** - Provides an input method (a way of typing words in Roman letters and having them converted to characters) and other features for text editing. In addition, it can display phonetic readings for characters in the context of words, and the meanings of individual words. Integrated dictionary window can be used to translate individual words and to assist in translating longer pieces of text.
+  * **[Vocabulary](Vocabulary.md)** - The Vocabulary Manager maintains word lists for study purposes, and groups them by categories.
 
 
 # Database menu
 
-  * **Save user changes** (Ctrl+F2): Writes all changes made in [vocabulary](Vocabulary) database to disk.
-  * **Cancel user changes** (Ctrl+F3): Cancels all changes in [vocabulary](Vocabulary) database, causing it to revert to the last version saved to disk.
+  * **Save user changes** (Ctrl+F2): Writes all changes made in [vocabulary](Vocabulary.md) database to disk.
+  * **Cancel user changes** (Ctrl+F3): Cancels all changes in [vocabulary](Vocabulary.md) database, causing it to revert to the last version saved to disk.
   * **Statistics**: Shows information about the dictionary files, and statistics on information stored in the user database (learned words and characters, vocabulary entries, etc).
-  * **Dictionary Manager** (Ctrl+F8): Shows the [dictionary manager](Dictionary#Dictionary_manager) (a utility for managing or importing dictionary files).
-  * **Settings**: Shows user preference [settings](Settings).
+  * **Dictionary Manager** (Ctrl+F8): Shows the [dictionary manager](Dictionary.md#Dictionary_manager) (a utility for managing or importing dictionary files).
+  * **Settings**: Shows user preference [settings](Settings.md).
   * **Change language**: Lets you select Wakan user interface language.
   * **Exit** (Alt+X): Closes the program, and asks whether unsaved changes in the databases or the contents of the editor should be saved.
 

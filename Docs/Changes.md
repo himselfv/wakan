@@ -13,7 +13,7 @@ This page lists changes in various versions of Wakan, in historical order. For c
     ![images/downloader-select.png](images/downloader-select.png)
 
   * Streamlined manual dictionary import
-  * [Links](CustomLinks) and [copy formats](CopyFormats) for both kanji and words are now stored as standard XSLT and LNK files
+  * [Links](CustomLinks.md) and [copy formats](CopyFormats.md) for both kanji and words are now stored as standard XSLT and LNK files
   * Modern font support (Meiryo, Yu Mincho/Gothic and others)
   * Support for ENAMDICT tags
   * Added Palladium cyrillization of Chinese
@@ -35,8 +35,8 @@ This page lists changes in various versions of Wakan, in historical order. For c
     ![images/chardetails-category-menu.png](images/chardetails-category-menu.png)
 
   * "Word examples" button in Kanji details.
-  * [Custom links](CustomLinks) for kanji and expressions.
-  * Ctrl-C in dictionary lets you copy results [in different formats](CopyFormats) — right-click dictionary results.
+  * [Custom links](CustomLinks.md) for kanji and expressions.
+  * Ctrl-C in dictionary lets you copy results [in different formats](CopyFormats.md) — right-click dictionary results.
 
     ![images/dict-popup-menu-mini.png](images/dict-popup-menu-mini.png)
 
@@ -44,7 +44,7 @@ This page lists changes in various versions of Wakan, in historical order. For c
 
     ![images/dict-any-matches.png](images/dict-any-matches.png)
 
-  * Redesigned transliteration selection, you can now create [custom romaji](CustomRomaji) systems.
+  * Redesigned transliteration selection, you can now create [custom romaji](CustomRomaji.md) systems.
 
     ![images/custom-romaji.png](images/custom-romaji.png)
 
@@ -85,16 +85,16 @@ This page lists changes in various versions of Wakan, in historical order. For c
 
   * Fullscreen Mode (press F11)
   * Option to not show splash screen on start.
-  * [CommandLine](CommandLine) enhancements:
+  * [CommandLine](CommandLine.md) enhancements:
       * You can open files for editing by passing them to Wakan.
-      * [Dictionaries](Dictionaries) can be imported from the command line.
+      * [Dictionaries](Dictionaries.md) can be imported from the command line.
   * Nicer settings dialog, more pages and more logical grouping of options
   * Dictionary tag list updated to the lastes one for EDICT.
   * Dictionary tags translation. It is now possible to have all those "pop" and "adj-na" tags in your native language.
   * Raine radicals list updated to the latest version.
   * Option to disable "Do you want to save changes?" warning.
   * Option to disable automatic priority adjustment based on what you type (no more "User data changed" messages after editing a text).
-  * Portable Wakan (Issue #108, Issue #19) **1.8.15** - See [Portable](Portable)
+  * Portable Wakan (Issue #108, Issue #19) **1.8.15** - See [Portable](Portable.md)
   * Multi-select kanji and mass-add to groups (Issue #20) **1.8.15**
   * Any font size in Editor (Issue #56) **1.8.15**
   * Category manager, merge and duplicate categories (Issue #57) **1.8.15**

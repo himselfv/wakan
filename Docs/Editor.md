@@ -9,7 +9,7 @@ This utility serves as a text editor and assists in translating text from Japane
 
 **Quick tip:** After loading Japanese or Chinese text, press **Fill** button to fill reading and meanings.
 
-**Warning:** Only active dictionaries are searched. You can specify which dictionaries are active in the [dictionary manager](Dictionary#Dictionary_manager).
+**Warning:** Only active dictionaries are searched. You can specify which dictionaries are active in the [dictionary manager](Dictionary.md#Dictionary_manager).
 
 ## Window controls
   * ![images/btn_transopen.png](images/btn_transopen.png) - Loads text for translation from 16-bit Unicode file or from a special application format that already contains translation information.
@@ -20,9 +20,9 @@ This utility serves as a text editor and assists in translating text from Japane
   * ![images/btn_transfurig.png](images/btn_transfurig.png) - Toggles furigana display.
   * ![images/btn_transmean.png](images/btn_transmean.png) - Toggles displaying meaning under text.
   * ![images/btn_transclear.png](images/btn_transclear.png) - Deletes translation information from whole text.
-  * ![images/btn_transfill.png](images/btn_transfill.png) - Automatically fills reading and meaning to whole text. Program tries to locate every word of the text in the dictionary and stores its reading and meaning. Located words are displayed in different colors (see below). This process can be configured in the [settings](Settings#Editor).
+  * ![images/btn_transfill.png](images/btn_transfill.png) - Automatically fills reading and meaning to whole text. Program tries to locate every word of the text in the dictionary and stores its reading and meaning. Located words are displayed in different colors (see below). This process can be configured in the [settings](Settings.md#Editor).
   * ![images/btn_transchange.png](images/btn_transchange.png) - Sets the translation of the currently selected word in text to the currently selected word in dictionary.
-  * ![images/btn_transprint.png](images/btn_transprint.png) - Displays [print preview](MainWindow#Printing) window with the currently loaded text. Furigana and meaning can be printed too. Text can be printed vertically (right-to-left). All of this can be configured in [settings](Settings#Editor).
+  * ![images/btn_transprint.png](images/btn_transprint.png) - Displays [print preview](MainWindow#Printing) window with the currently loaded text. Furigana and meaning can be printed too. Text can be printed vertically (right-to-left). All of this can be configured in [settings](Settings.md#Editor).
 
 ## Colors in translated text
   * **White** - Untranslated word.
@@ -34,7 +34,7 @@ This utility serves as a text editor and assists in translating text from Japane
   * **Violet** - Katakana-only word.
 
 # How to write Japanese text
-You can freely write text in hiragana or katakana in the editor window. Text entered in romaji is automatically converted to kana using the current [romanization settings](Settings#Romanization). See [romanization tips](Settings#Romanization) for more info. Text written UPPER-CASE is converted to katakana, text written in lower-case is converted to hiragana. Whenever you press SPACE the last entered text is converted to kanji of currently selected word in [dictionary](Dictionary) (you can change the selection by up and down arrow keys). By pressing ENTER you leave the text as it is performing no conversion.
+You can freely write text in hiragana or katakana in the editor window. Text entered in romaji is automatically converted to kana using the current [romanization settings](Settings.md#Romanization). See [romanization tips](Settings.md#Romanization) for more info. Text written UPPER-CASE is converted to katakana, text written in lower-case is converted to hiragana. Whenever you press SPACE the last entered text is converted to kanji of currently selected word in [dictionary](Dictionary.md) (you can change the selection by up and down arrow keys). By pressing ENTER you leave the text as it is performing no conversion.
 
 ## Keyboard summary
 
@@ -82,7 +82,7 @@ You can freely write text in hiragana or katakana in the editor window. Text ent
 # Tips
 
 ## Translating a web page
-You can open the [dictionary](Dictionary) window, select **Search by clipboard**, leave the window open. Then you can select some text on the web page, put it into the clipboard and immediately see the word translation (without even clicking on Wakan window). See the screenshot below.
+You can open the [dictionary](Dictionary.md) window, select **Search by clipboard**, leave the window open. Then you can select some text on the web page, put it into the clipboard and immediately see the word translation (without even clicking on Wakan window). See the screenshot below.
 
 ![images/shot_translateweb.png](images/shot_translateweb.png)
 

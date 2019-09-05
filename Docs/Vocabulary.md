@@ -6,23 +6,23 @@
 Vocabulary manager offers a convenient way to store, organize and print
 your vocabulary.
 
-**Tip:** For information about how to use this program for effective learning see [learning tips](LearningTips).
+**Tip:** For information about how to use this program for effective learning see [learning tips](Tips.md).
 
-To add dictionary words into vocabulary use the [words add screen](Dictionary#Adding_words_to_vocabulary). To add user words into vocabulary use the vocabulary add screen (see below).
+To add dictionary words into vocabulary use the [words add screen](Dictionary.md#Adding_words_to_vocabulary). To add user words into vocabulary use the vocabulary add screen (see below).
 
-Word readings can be displayed in kana/romaji/PinYin/BoPoMoFo. You can alter this in [settings](Settings#Romanization). Meaning can contain various [markers](Dictionary#Markers).
+Word readings can be displayed in kana/romaji/PinYin/BoPoMoFo. You can alter this in [settings](Settings.md#Romanization). Meaning can contain various [markers](Dictionary.md#Markers).
 
 ## Window controls
 
-  * **Learning list** - Quite complex wizard-style utility that allows you to randomly generate list of words, check whether you know them and finally allows you to store them as a separate category or print them. Follow instructions on the screen to build vocabulary list step-by-step. Please note that learning language by trying to memorize large lists of vocabulary is often not very effective (and certainly very boring), for more information see [learning tips](LearningTips).
-  * **Recommend characters** - Stores into [clipboard](MainWindow#Clipboard_viewer) some characters that appear in the vocabulary list and are not yet learned. Characters are selected by complexity and frequency.
-  * **Export** - Exports displayed vocabulary list into text file with special [format](FileFormats#Vocabulary_list_export).
-  * **Import** - Imports vocabulary list from text file with special [format](FileFormats#Vocabulary_list_export).
-  * **Print** - Shows [print preview](PrintPreview) window with the currently displayed vocabulary list. Print properties can be customized in the [settings](Settings#Vocabulary).
+  * **Learning list** - Quite complex wizard-style utility that allows you to randomly generate list of words, check whether you know them and finally allows you to store them as a separate category or print them. Follow instructions on the screen to build vocabulary list step-by-step. Please note that learning language by trying to memorize large lists of vocabulary is often not very effective (and certainly very boring), for more information see [learning tips](Tips.md).
+  * **Recommend characters** - Stores into [clipboard](MainWindow.md#Clipboard_viewer) some characters that appear in the vocabulary list and are not yet learned. Characters are selected by complexity and frequency.
+  * **Export** - Exports displayed vocabulary list into text file with special [format](FileFormats.md#Vocabulary_list_export).
+  * **Import** - Imports vocabulary list from text file with special [format](FileFormats.md#Vocabulary_list_export).
+  * **Print** - Shows [print preview](PrintPreview.md) window with the currently displayed vocabulary list. Print properties can be customized in the [settings](Settings.md#Vocabulary).
 
 ## Secondary windows
 
-  * **Add word** - You can add new words into vocabulary in this window. For adding words from dictionary use the [Dictionary word add window](Dictionary#Add_word_to_vocabulary).
+  * **Add word** - You can add new words into vocabulary in this window. For adding words from dictionary use the [Dictionary word add window](Dictionary.md#Add_word_to_vocabulary).
   * **List settings** - Allows to set filters or change sort order.
   * **Categories** - Displays categories and allows to filter by them.
   * **Word details - Displays details for selected vocabulary word and allows to change them.**
@@ -92,7 +92,7 @@ list.
 ### Window controls
 
   * ![images/btn_categoryall.png](images/btn_categoryall.png) - Checks all displayed categories.
-  * ![images/btn_categoryedit.png](images/btn_categoryedit.png) - Shows [category edit](Vocabulary#New_category) window.
+  * ![images/btn_categoryedit.png](images/btn_categoryedit.png) - Shows [category edit](Vocabulary.md#New_category) window.
   * ![images/btn_categorydelete.png](images/btn_categorydelete.png) - Deletes category. Since all words must belong to at least one category you can't delete category that contains words that do not belong to any other category.
 
 # Add word
@@ -102,8 +102,8 @@ You can add any word into your user vocabulary by using this window.
 
 ## Window controls
 
-  * **Reading** - Romanized reading of the word. Many romanization modes are supported (Hepburn, Kunreisiki, Czech, PinYin, Wade/Giles, Yale), see [romanization settings](Settings#Romanization).
-  * **Written** - This field is taken from the [clipboard](MainWindow#Clipboard_viewer).
+  * **Reading** - Romanized reading of the word. Many romanization modes are supported (Hepburn, Kunreisiki, Czech, PinYin, Wade/Giles, Yale), see [romanization settings](Settings.md#Romanization).
+  * **Written** - This field is taken from the [clipboard](MainWindow.md#Clipboard_viewer).
   * **Meaning** - Meaning of the word.
-  * **Category** - Into which vocabulary [category](Vocabulary#Categories) will be the word added.
-  * **Add into vocabulary** - Adds the word into vocabulary. If you entered a new category, then a [new category dialog](Vocabulary#New_category) will be shown.
+  * **Category** - Into which vocabulary [category](Vocabulary.md#Categories) will be the word added.
+  * **Add into vocabulary** - Adds the word into vocabulary. If you entered a new category, then a [new category dialog](Vocabulary.md#New_category) will be shown.

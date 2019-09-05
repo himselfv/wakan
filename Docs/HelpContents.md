@@ -1,93 +1,93 @@
-You may want to start learning how to use Wakan by reading a description of the [main window](MainWindow), which displays each of the four main areas of the program and provides access to all of the program's capabilities.
+You may want to start learning how to use Wakan by reading a description of the [main window](MainWindow.md), which displays each of the four main areas of the program and provides access to all of the program's capabilities.
 
 # Basic features
-**[Main window](MainWindow)**: Overview of the application window.
+**[Main window](MainWindow.md)**: Overview of the application window.
 
-  * [Clipboard viewer](MainWindow#Clipboard_viewer): shows what you have stored in clipboard
+  * [Clipboard viewer](MainWindow.md#Clipboard_viewer): shows what you have stored in clipboard
 
-**[Character list](KanjiList)**: Browse CJK characters and filter them to find the ones you need.
+**[Character list](KanjiList.md)**: Browse CJK characters and filter them to find the ones you need.
 
-  * [Searching for characters](KanjiList#Search)
-  * [Filtering by radical](KanjiList#Radicals)
-  * [Compound words with a character](KanjiList#Compounds)
-  * [Printing cards](KanjiList#Print_cards)
+  * [Searching for characters](KanjiList.md#Search)
+  * [Filtering by radical](KanjiList.md#Radicals)
+  * [Compound words with a character](KanjiList.md#Compounds)
+  * [Printing cards](KanjiList.md#Print_cards)
 
-**[Character details](KanjiDetails)**: See the details for a selected character.
+**[Character details](KanjiDetails.md)**: See the details for a selected character.
 
-  * [Available details](KanjiDetails#Kanji_details)
-  * [SKIP codes](KanjiDetails#SKIP)
-  * [FourCornerCode](KanjiDetails#FourCornerCode)
+  * [Available details](KanjiDetails.md#Kanji_details)
+  * [SKIP codes](KanjiDetails.md#SKIP)
+  * [FourCornerCode](KanjiDetails.md#FourCornerCode)
 
-**[Dictionary](Dictionary)**: Look up words and their definitions.
+**[Dictionary](Dictionary.md)**: Look up words and their definitions.
 
-  * [Looking up a word](Dictionary#Dictionary)
-  * [Characters in word](Dictionary#Word_kanji)
-  * [Adding words to vocabulary](Dictionary#Adding_word_to_vocabulary)
-  * [Dictionary manager](Dictionaries#Dictionary_manager)
-  * [Importing dictionaries](Dictionaries#Importing_dictionaries)
+  * [Looking up a word](Dictionary.md#Dictionary)
+  * [Characters in word](Dictionary.md#Word_kanji)
+  * [Adding words to vocabulary](Dictionary.md#Adding_word_to_vocabulary)
+  * [Dictionary manager](Dictionaries.md#Dictionary_manager)
+  * [Importing dictionaries](Dictionaries.md#Importing_dictionaries)
 
-**[Editor](Editor)**: Read, translate and edit texts.
+**[Editor](Editor.md)**: Read, translate and edit texts.
 
-  * [Editing texts](Editor#How_to_write_Japanese_text)
-  * [Tips for translation](Editor#Tips)
+  * [Editing texts](Editor.md#How_to_write_Japanese_text)
+  * [Tips for translation](Editor.md#Tips)
 
-**[Vocabulary](Vocabulary)**: Store your own word definitions and mark words as known.
+**[Vocabulary](Vocabulary.md)**: Store your own word definitions and mark words as known.
 
-  * [Adding words to vocabulary](Vocabulary#Add_word)
-  * [Viewing filters](Vocabulary#Filters)
-  * [Word details](Vocabulary#Word_details)
-  * [Categories](Vocabulary#Categories)
-  * [New category dialog](Vocabulary#New_category)
+  * [Adding words to vocabulary](Vocabulary.md#Add_word)
+  * [Viewing filters](Vocabulary.md#Filters)
+  * [Word details](Vocabulary.md#Word_details)
+  * [Categories](Vocabulary.md#Categories)
+  * [New category dialog](Vocabulary.md#New_category)
 
-**[Settings](Settings)**: Configure Wakan to work as you want.
+**[Settings](Settings.md)**: Configure Wakan to work as you want.
 
-  * [General settings](Settings#General)
-  * [Romanization settings](Settings#Romanization)
-  * [Character list settings](Settings#Characters)
-  * [Character details settings](Settings#Character_details)
-  * [Dictionary settings](Settings#Dictionary)
-  * [Font settings](Settings#Fonts)
-  * [Word list printing settings](Settings#Word_list_printing)
-  * [Database settings](Settings#Database_maintenance)
-  * [Text translator settings](Settings#Text_translator)
-  * [Character cards settings](Settings#Character_cards)
+  * [General settings](Settings.md#General)
+  * [Romanization settings](Settings.md#Romanization)
+  * [Character list settings](Settings.md#Characters)
+  * [Character details settings](Settings.md#Character_details)
+  * [Dictionary settings](Settings.md#Dictionary)
+  * [Font settings](Settings.md#Fonts)
+  * [Word list printing settings](Settings.md#Word_list_printing)
+  * [Database settings](Settings.md#Database_maintenance)
+  * [Text translator settings](Settings.md#Text_translator)
+  * [Character cards settings](Settings.md#Character_cards)
 
 **Tips / FAQ**
 
-  * [FAQ](Tips#FAQ)
-  * [Tips for learning](Tips#Learning)
-  * [Tips for locating characters](KanjiList#Search_tips)
-  * [Cool things to do with Wakan](Tips#Things_to_do_with_Wakan)
+  * [FAQ](Tips.md#FAQ)
+  * [Tips for learning](Tips.md#Learning)
+  * [Tips for locating characters](KanjiList.md#Search_tips)
+  * [Cool things to do with Wakan](Tips.md#Things_to_do_with_Wakan)
 
 **Reference**
 
-  * [Romanization reference](Settings#Romanization)
-  * [Dictionary markers overview](Dictionary#Markers)
+  * [Romanization reference](Settings.md#Romanization)
+  * [Dictionary markers overview](Dictionary.md#Markers)
 
 # Advanced topics
 
-  * [Wakan command-line syntax](CommandLine)
+  * [Wakan command-line syntax](CommandLine.md)
 
-  * [Portable version](Portable) and where Wakan keeps your data
+  * [Portable version](Portable.md) and where Wakan keeps your data
 
-  * [Downloader/updater](Downloader): update dictionaries and download new ones with a few mouse clicks
+  * [Downloader/updater](Downloader.md): update dictionaries and download new ones with a few mouse clicks
 
-  * [Add custom Ctrl-C formats](CopyFormats)
+  * [Add custom Ctrl-C formats](CopyFormats.md)
 
-  * [Add custom right-click links](CustomLinks) for kanji and words
+  * [Add custom right-click links](CustomLinks.md) for kanji and words
 
-  * [Localize Wakan](Localization) into your language
+  * [Localize Wakan](Localization.md) into your language
 
-  * [Define custom romanization](CustomRomaji)
+  * [Define custom romanization](CustomRomaji.md)
 
   * File formats used in Wakan:
-      * [Vocabulary list format](FileFormats#Vocabulary_list_export)
-      * [CSV export format](FileFormats#CSV_vocabulary_export)
+      * [Vocabulary list format](FileFormats.md#Vocabulary_list_export)
+      * [CSV export format](FileFormats.md#CSV_vocabulary_export)
 
-  * [Annotations feature](Annotations)
+  * [Annotations feature](Annotations.md)
 
 # Developer topics
 
-  * Description of [a few algorithms used in Wakan](Algorithms)
+  * Description of [a few algorithms used in Wakan](Algorithms.md)
 
-  * [Flicker in user interface and how to fight it](Flicker)
+  * [Flicker in user interface and how to fight it](Flicker.md)
