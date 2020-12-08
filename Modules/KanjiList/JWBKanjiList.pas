@@ -1,4 +1,4 @@
-unit JWBKanjiList;
+﻿unit JWBKanjiList;
 
 interface
 
@@ -820,13 +820,32 @@ end;
 //Don't use for text fields where there's no ambiguity in input / data format.
 procedure TfKanji.ReadAnyTextFilter(flt: TStringList; const tx: string;
   typ: integer; ftype: TFilterType; lang: TLanguageSet);
+var hira1, kata1, franken: FString;
 begin
   ReadFilter(flt, tx, typ, ftype); //search as is
 
   if AnsiChar('j') in lang then begin
-    //also converts raw katakana to hiragana (since RtoK keeps invalid chars):
-    ReadFilter(flt, ToHiragana(RomajiToKana('H'+tx,'j',[])), typ, ftype); //maybe that was romaji?
-    ReadFilter(flt, ToKatakana(RomajiToKana('K'+tx,'j',[])), typ, ftype);
+    //For kana, here's what we have to support:
+    //  - raw hiragana [could also auto-try katakana]
+    //  - raw katakana [could also auto-try hiragana]
+    //  - romaji -> hiragana
+    //  - romaji -> katakana
+
+    //also covers raw katakana to hiragana (since RtoK keeps invalid chars):
+    hira1 := ToHiragana(RomajiToKana('H'+tx,'j',[]));
+    kata1 := ToKatakana(RomajiToKana('K'+tx,'j',[]));
+    ReadFilter(flt, hira1, typ, ftype);
+    ReadFilter(flt, kata1, typ, ftype);
+
+    //And since hiragana and katakana conversions may differ (chuu -> ちゅう, チュ－)
+    //and we have no idea which the dictionary prefers, if any, also try
+    //romaji->hiragana->katakana and romaji->katakana->hiragana (チュウ and ちゅ－)
+    franken := ToHiragana(kata1);
+    if franken <> hira1 then //only if different from direct hiragana
+      ReadFilter(flt, franken, typ, ftype);
+    franken := ToKatakana(hira1);
+    if franken <> kata1 then
+      ReadFilter(flt, franken, typ, ftype);
   end;
 
   if AnsiChar('c') in lang then begin
