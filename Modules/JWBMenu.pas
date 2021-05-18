@@ -1002,6 +1002,7 @@ begin
   if not UserDataChanged then exit;
   Screen.Cursor:=crHourGlass;
   try
+    ForceDirectories(UserDataDir);
     CopyFile(PChar(UserDataDir+'\wakan.usr'),PChar(UserDataDir+'\wakan.bak'),false);
     ReloadKanjiCategories(); //in case they weren't loaded which shouldn't happen
 

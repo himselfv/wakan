@@ -58,6 +58,7 @@ function DictionaryDir: string;
 function BackupDir: string;
 function GetBackupFilename(const AFilename: string): string;
 function Backup(const filename: string): string;
+function BackupMove(const filename: string): string;
 
 function CanWriteWakanIni: boolean;
 function GetWakanIni: TCustomIniFile; //call GetSettingsStore instead
@@ -134,6 +135,15 @@ begin
   Result := GetBackupFilename(filename);
   ForceDirectories(ExtractFileDir(Result));
   if not CopyFile(PChar(filename),pchar(Result),false) then
+    Result := '';
+end;
+
+//Same, but moves the given file to backup instead of making a copy
+function BackupMove(const filename: string): string;
+begin
+  Result := GetBackupFilename(filename);
+  ForceDirectories(ExtractFileDir(Result));
+  if not MoveFile(PChar(filename), PChar(Result)) then
     Result := '';
 end;
 

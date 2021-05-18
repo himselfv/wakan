@@ -1425,7 +1425,6 @@ end;
 procedure TfSettings.SaveCharDetl(reg: TCustomIniFile);
 {$IFNDEF AUTOTEST}
 var i: integer;
-  WakanCdt: string;
 begin
  //Save to registry
   reg.EraseSection('CharDetl');
@@ -1433,8 +1432,7 @@ begin
     reg.WriteString('CharDetl', IntToStr(i), chardetl[i]);
 
  //Delete wakan.cdt if it's present. In fact, move it to backup.
-  WakanCdt := UserDataDir+'\WAKAN.CDT';
-  MoveFile(PChar(WakanCdt), PChar(GetBackupFilename(WakanCdt)));
+  BackupMove(UserDataDir+'\WAKAN.CDT');
 {$ELSE}
 begin
 {$ENDIF}

@@ -235,6 +235,7 @@ begin
   writeln(t,'Count');
   writeln(t,'$CREATE');
   closefile(t);
+  ForceDirectories(ExtractFilePath(package));
   WriteUserPackage(tempDir, package);
   DeleteDirectory(tempDir);
 end;

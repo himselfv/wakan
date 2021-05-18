@@ -256,6 +256,7 @@ begin
 
  //Create roma_problems (can be delayed until needed)
   if roma_prob=nil then begin
+    ForceDirectories(UserDataDir);
     roma_prob := CreateTextFile(UserDataDir+'\roma_problems.txt', TUTF16LEEncoding);
     roma_prob.WriteChar(#$FEFF); //BOM
   end;

@@ -193,6 +193,7 @@ procedure TFileMoveJob.ProcessChunk;
 begin
   if ExtractFilename(FTargetFile)='' then
     FTargetFile := FTargetFile + ExtractFilename(FSourceFile);
+  ForceDirectories(ExtractFilePath(FTargetFile));
   MoveFile(PChar(FSourceFile), PChar(FTargetFile));
   FState := jsFinished;
 end;
