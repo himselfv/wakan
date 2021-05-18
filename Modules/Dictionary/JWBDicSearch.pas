@@ -928,10 +928,10 @@ begin
             continue; //inflection doesn't match
         end;
 
-        //Check kuru/suru kanji match
+        //Check kuru/iku kanji match
         case dr.vt of
-         'K': if (j<>0) or ((core<>'') and (core<>'6765')) then continue;
-         'I': if (j<>0) or ((core<>'') and (core<>'884C')) then continue;
+         'K': if (j<>0) or ((core<>'') and (core<>{$IFNDEF UNICODE}'6765'{$ELSE}#$6765{$ENDIF})) then continue;
+         'I': if (j<>0) or ((core<>'') and (core<>{$IFNDEF UNICODE}'884C'{$ELSE}#$884C{$ENDIF})) then continue;
         //else no restriction
         end;
 

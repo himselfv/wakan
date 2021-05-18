@@ -81,9 +81,11 @@ A 通っている	とおる いる		# But both must be present
 # Should recognize and AT LEAST highlight the root (e.g. tabe-).
 食べながら たべる ながら
 
+# Kuru deflexion
+来る くる
+来た きた
+
 # Masu-form deflexion
 # Should recognize and correctly highlight the whole word:
 寝ます ねる
 ## します する				# !! broken
-
-

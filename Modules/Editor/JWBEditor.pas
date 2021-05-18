@@ -3084,6 +3084,7 @@ var inskana: string;
   insProp: TCharacterPropArray;
   tl: PSearchResult;
   curTl: TSearchResult;
+  kanaMismatch: boolean;
 begin
   if ins.x=-1 then exit;
 
@@ -3133,10 +3134,20 @@ begin
     end;
     //Empty roots mean the whole word is identical in expr and kana forms.
 
+    //In rare cases inskana differs from the match kana entirely:
+    // - suru-verbs (する -> した), but Wakan doesn't deflect and match this to kanji ATM
+    // - kuru-verbs (きた -> くる)
+    //And weird cases like when the match is by exact db-roma while inskana
+    //is converted with user-roma or even fails to convert at all.
+    kanaMismatch := (kanaRoot <> '') and not StartsStr(kanaRoot, inskana);
+
+    //Shoehorn kuru cases into the normal flow
+    if kanaMismatch and (tl.sdef = 'K') then begin
+      kanaRoot := copy(inskana, 1, length(kanaRoot)); //pretend the dictionary reads "きる"
+      kanaMismatch := false;
+    end;
+
     if (kanaRoot <> '') and not StartsStr(kanaRoot, inskana) then begin
-     //In rare weird cases inskana differs from the match kana - e.g. when the match
-     //is by exact db-roma while inskana is converted with user-roma or even fails
-     //to convert at all.
      //There isn't much we can do here but replace the whole input with the match.
       insText := expr;
       curTL.inflen := flength(instext);
