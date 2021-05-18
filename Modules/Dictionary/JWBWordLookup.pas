@@ -331,7 +331,7 @@ var lm: TLookupMode;
   wt:TEvalCharType;
   wasfull:boolean;
   text:string;
-  dbroma: string;
+  roma: string;
   CanSelect: boolean;
 
  //Some search modes do several requests and we can't reuse request object
@@ -485,17 +485,9 @@ begin
          It has some corner handling for also looking at readings if the query
          is kana-only, but we shouldn't rely on that.
 
-         What we really want is to search by reading (stRomaji), BUT NOT THE ROMAJI
-         WE HAVE. The user types in UI-preference romaji, dicts are in kunreishiki.
-
-         So we need to:
-         1. Convert whatever is typed to kana (using UI-preference decoder under the hood)
-         2. Convert kana to dictionary roma (kunireishiki).
-
-         ADDITIONALLY, we must preserve any unparsed symbols: they may be important
-         for some weird expression like "オリオンA"
+         What we really want is to search by reading (stRomaji)
          }
-          dbroma := DbKanaToRomaji(text, curlang, []); //keep all chars
+          roma := KanaToRomaji(text, curlang, []); //keep all chars
           req.st := stRomaji;
 
          {
@@ -547,12 +539,12 @@ begin
 
           req.MatchType := mtExactMatch;
           req.Prepare;
-          req.Search(dbroma, FResults);
+          req.Search(roma, FResults);
 
           while (text <> '') and (FResults.Count <= 0) do begin
             text := fcopy(text, 1, flength(text)-1);
-            dbroma := DbKanaToRomaji(text, curlang, []);
-            req.Search(dbroma, FResults);
+            roma := DbKanaToRomaji(text, curlang, []);
+            req.Search(roma, FResults);
           end;
 
         end
