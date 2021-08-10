@@ -417,7 +417,7 @@ begin
     Self.Position := poScreenCenter;
     Self.UpdateFontNames;
     fSettings.pcPages.ActivePage := Self.Parent as TTabSheet; //our proxy in fSettings
-    Self.ShowModal;
+    fSettings.ShowModal;
     Self.Position := OldPosition;
   end;
 {$ELSE}
